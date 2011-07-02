@@ -44,6 +44,7 @@
 
 #if defined(XP_WIN)
 #include "gfxWindowsPlatform.h"
+#include "gfxD2DSurface.h"
 #elif defined(XP_MACOSX)
 #include "gfxPlatformMac.h"
 #elif defined(MOZ_WIDGET_GTK2)
@@ -114,6 +115,8 @@ static const char *CMForceSRGBPrefName = "gfx.color_management.force_srgb";
 static void ShutdownCMS();
 static void MigratePrefs();
 
+#include "mozilla/gfx/2D.h"
+using namespace mozilla::gfx;
 
 // logs shared across gfx
 #ifdef PR_LOGGING
@@ -148,6 +151,9 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
 }
 
 #define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
+#if defined(XP_MACOSX)
+#define GFX_DOWNLOADABLE_FONTS_ENABLED_LION "gfx.downloadable_fonts.enabled.lion"
+#endif
 #define GFX_DOWNLOADABLE_FONTS_SANITIZE "gfx.downloadable_fonts.sanitize"
 
 #define GFX_PREF_HARFBUZZ_SCRIPTS "gfx.font_rendering.harfbuzz.scripts"
@@ -412,6 +418,101 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
     return ret;
 }
 
+cairo_user_data_key_t kDrawTarget;
+
+RefPtr<DrawTarget>
+gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface)
+{
+#ifdef XP_WIN
+  if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
+    RefPtr<DrawTarget> drawTarget =
+      Factory::CreateDrawTargetForD3D10Texture(static_cast<gfxD2DSurface*>(aSurface)->GetTexture(), FORMAT_B8G8R8A8);
+    aSurface->SetData(&kDrawTarget, drawTarget, NULL);
+    return drawTarget;
+  }
+#endif
+
+  // Can't create a draw target for general cairo surfaces yet.
+  return NULL;
+}
+
+cairo_user_data_key_t kSourceSurface;
+
+void SourceBufferDestroy(void *srcBuffer)
+{
+  static_cast<SourceSurface*>(srcBuffer)->Release();
+}
+
+RefPtr<SourceSurface>
+gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurface)
+{
+  void *userData = aSurface->GetData(&kSourceSurface);
+
+  if (userData) {
+    return static_cast<SourceSurface*>(userData);
+  }
+
+  SurfaceFormat format;
+  if (aSurface->GetContentType() == gfxASurface::CONTENT_ALPHA) {
+    format = FORMAT_A8;
+  } else if (aSurface->GetContentType() == gfxASurface::CONTENT_COLOR) {
+    format = FORMAT_B8G8R8X8;
+  } else {
+    format = FORMAT_B8G8R8A8;
+  }
+
+  RefPtr<SourceSurface> srcBuffer;
+
+#ifdef XP_WIN
+  if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
+    NativeSurface surf;
+    surf.mFormat = format;
+    surf.mType = NATIVE_SURFACE_D3D10_TEXTURE;
+    surf.mSurface = static_cast<gfxD2DSurface*>(aSurface)->GetTexture();
+    mozilla::gfx::DrawTarget *dt = static_cast<mozilla::gfx::DrawTarget*>(aSurface->GetData(&kDrawTarget));
+    if (dt) {
+      dt->Flush();
+    }
+    srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
+  }
+#endif
+
+  if (!srcBuffer) {
+    nsRefPtr<gfxImageSurface> imgSurface = aSurface->GetAsImageSurface();
+
+    if (!imgSurface) {
+      imgSurface = new gfxImageSurface(aSurface->GetSize(), gfxASurface::FormatFromContent(aSurface->GetContentType()));
+      nsRefPtr<gfxContext> ctx = new gfxContext(imgSurface);
+      ctx->SetSource(aSurface);
+      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+      ctx->Paint();
+    }
+
+    srcBuffer = aTarget->CreateSourceSurfaceFromData(imgSurface->Data(),
+                                                     IntSize(imgSurface->GetSize().width, imgSurface->GetSize().height),
+                                                     imgSurface->Stride(),
+                                                     format);
+  }
+
+  srcBuffer->AddRef();
+  aSurface->SetData(&kSourceSurface, srcBuffer, SourceBufferDestroy);
+
+  return srcBuffer;
+}
+
+RefPtr<ScaledFont>
+gfxPlatform::GetScaledFontForFont(gfxFont *aFont)
+{
+  return NULL;
+}
+
+already_AddRefed<gfxASurface>
+gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
+{
+  // Don't know how to do this outside of Windows with D2D yet.
+  return NULL;
+}
+
 nsresult
 gfxPlatform::GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
@@ -430,8 +531,21 @@ PRBool
 gfxPlatform::DownloadableFontsEnabled()
 {
     if (mAllowDownloadableFonts == UNINITIALIZED_VALUE) {
+#if defined(XP_MACOSX)
+        // Work around a serious bug in how Apple handles downloaded fonts
+        // on the most recent developer previews of OS X 10.7 (Lion, builds
+        // 11A480b and 11A494a).  See bug 663688.
+        if (gfxPlatformMac::GetPlatform()->OSXVersion() >= 0x1070) {
+            mAllowDownloadableFonts =
+                Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED_LION, PR_FALSE);
+        } else {
+            mAllowDownloadableFonts =
+                Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED, PR_FALSE);
+        }
+#else
         mAllowDownloadableFonts =
             Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED, PR_FALSE);
+#endif
     }
 
     return mAllowDownloadableFonts;

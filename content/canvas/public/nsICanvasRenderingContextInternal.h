@@ -42,6 +42,7 @@
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
 #include "gfxPattern.h"
+#include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
 { 0xffb42d3c, 0x8281, 0x44c8, \
@@ -60,6 +61,9 @@ class LayerManager;
 }
 namespace ipc {
 class Shmem;
+}
+namespace gfx {
+class SourceSurface;
 }
 }
 
@@ -96,6 +100,11 @@ public:
   // If this canvas context can be represented with a simple Thebes surface,
   // return the surface.  Otherwise returns an error.
   NS_IMETHOD GetThebesSurface(gfxASurface **surface) = 0;
+  
+  // This gets an Azure SourceSurface for the canvas, this will be a snapshot
+  // of the canvas at the time it was called. This will return null for a
+  // non-azure canvas.
+  virtual mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() = 0;
 
   // If this context is opaque, the backing store of the canvas should
   // be created as opaque; all compositing operators should assume the

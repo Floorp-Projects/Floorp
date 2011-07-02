@@ -1,0 +1,19 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml" >
+<script language=javascript>
+
+function draw() {
+  var canv = document.getElementById("canv");
+  var ctx = canv.getContext("2d");
+
+  ctx.fillStyle = "red";
+  // 0 size font shouldn't crash!
+  ctx.font = "0px Arial";
+  ctx.fillText("A", 0, 0);
+  document.documentElement.className = "";
+}
+
+</script>
+<body onload="draw()">
+<canvas id="canv" width="5" height="5"></canvas>
+</body>
+</html>

@@ -63,7 +63,12 @@ class RefTest(object):
 
   def getManifestPath(self, path):
     "Get the path of the manifest, and for remote testing this function is subclassed to point to remote manifest"
-    return self.getFullPath(path)
+    path = self.getFullPath(path)
+    if os.path.isdir(path):
+      defaultManifestPath = os.path.join(path, 'reftest.list')
+      if os.path.exists(defaultManifestPath):
+        path = defaultManifestPath
+    return path
 
   def createReftestProfile(self, options, profileDir, server='localhost'):
     "Sets up a profile for reftest."
@@ -128,9 +133,9 @@ class RefTest(object):
 
   def cleanup(self, profileDir):
     if profileDir:
-      shutil.rmtree(profileDir)
+      shutil.rmtree(profileDir, True)
 
-  def runTests(self, manifest, options):
+  def runTests(self, testPath, options):
     debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,
         options.debuggerInteractive);
 
@@ -148,7 +153,7 @@ class RefTest(object):
 
       # then again to actually run reftest
       self.automation.log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
-      reftestlist = self.getManifestPath(manifest)
+      reftestlist = self.getManifestPath(testPath)
       status = self.automation.runApp(None, browserEnv, options.app, profileDir,
                                  ["-reftest", reftestlist],
                                  utilityPath = options.utilityPath,

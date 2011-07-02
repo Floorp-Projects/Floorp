@@ -91,6 +91,9 @@ pref("dom.indexedDB.enabled", true);
 // Space to allow indexedDB databases before prompting (in MB).
 pref("dom.indexedDB.warningQuota", 50);
 
+// Whether window.performance is enabled
+pref("dom.enable_performance", true);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -98,7 +101,6 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 pref("browser.sessionhistory.optimize_eviction", true);
 
 pref("ui.use_native_colors", true);
-pref("ui.use_native_popup_windows", false);
 pref("ui.click_hold_context_menus", false);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
@@ -188,6 +190,14 @@ pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
 
+// Needed to work around a serious bug in how Apple handles downloaded fonts
+// on the most recent developer previews of OS X 10.7 (Lion, builds 11A480b
+// and 11A494a).  See bug 663688.  On Lion and up this setting overrides
+// gfx.downloadable_fonts.enabled.
+#ifdef XP_MACOSX
+pref("gfx.downloadable_fonts.enabled.lion", false);
+#endif
+
 // see gfx/thebes/gfxUnicodeProperties.h for definitions of script bits
 #ifdef XP_MACOSX
 // use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04)
@@ -200,6 +210,10 @@ pref("gfx.font_rendering.harfbuzz.scripts", 3);
 #ifdef XP_WIN
 pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
+#endif
+
+#ifdef XP_WIN
+pref("gfx.canvas.azure.enabled", true);
 #endif
 
 pref("accessibility.browsewithcaret", false);
@@ -247,7 +261,7 @@ pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
 pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "beep");
-pref("accessibility.typeaheadfind.enablesound", false);
+pref("accessibility.typeaheadfind.enablesound", true);
 pref("accessibility.typeaheadfind.prefillwithselection", true);
 
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
@@ -265,8 +279,11 @@ pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 // Telemetry
 pref("toolkit.telemetry.enabled", false);
-// Telemetry test server to be used until the official one is public
-pref("toolkit.telemetry.server", "http://telemetry.allizom.org");
+pref("toolkit.telemetry.server", "https://data.mozilla.com");
+// Telemetry server owner. Please change if you set toolkit.telemetry.server to a different server
+pref("toolkit.telemetry.server_owner", "Mozilla");
+// Information page about telemetry (temporary ; will be about:telemetry in the end)
+pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -796,6 +813,11 @@ pref("network.websocket.timeout.ping.response", 10);
 // extension with the websocket server
 pref("network.websocket.extensions.stream-deflate", true);
 
+// the maximum number of concurrent websocket sessions. By specification there
+// is never more than one handshake oustanding to an individual host at
+// one time.
+pref("network.websocket.max-connections", 200);
+
 // </ws>
 
 // Server-Sent Events
@@ -1082,7 +1104,7 @@ pref("intl.hyphenation-alias.en", "en-us");
 // and for other subtags of en-*, if no specific patterns are available
 pref("intl.hyphenation-alias.en-*", "en-us");
 
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Standard Symbols L, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
@@ -1763,7 +1785,7 @@ pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
 // We have special support for Monotype Symbol on Windows.
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
 
 // cleartype settings - false implies default system settings 
 
@@ -1812,7 +1834,7 @@ pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 // (i.e. a specific rendering_mode has not been explicitly set).
 // Currently we apply this setting to the sans-serif Microsoft "core Web fonts".
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
-     "Arial,Courier New,Segoe UI,Tahoma,Trebuchet MS,Verdana");
+     "Arial,Consolas,Courier New,Microsoft Sans Serif,Segoe UI,Tahoma,Trebuchet MS,Verdana");
 // The maximum size at which we will force GDI classic mode using
 // force_gdi_classic_for_families.
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 15);
@@ -2291,7 +2313,7 @@ pref("font.size.variable.zh-HK", 15);
 pref("font.size.fixed.zh-HK", 16);
 
 // Apple's Symbol is Unicode so use it
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
 
 // individual font faces to be treated as independent families
 // names are Postscript names of each face
@@ -2340,7 +2362,7 @@ pref("ui.key.menuAccessKeyFocuses", true);
 
 pref("font.alias-list", "sans,sans-serif,serif,monospace,Tms Rmn,Helv,Courier,Times New Roman");
 
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, DejaVu Sans");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, DejaVu Sans");
 
 // Languages only need lists if we have a default that might not be available.
 // Tms Rmn and Helv cannot be used by Thebes but the OS/2 version of FontConfig
@@ -3158,7 +3180,11 @@ pref("image.mem.decodeondraw", false);
 // Minimum timeout for image discarding (in milliseconds). The actual time in
 // which an image must inactive for it to be discarded will vary between this
 // value and twice this value.
-pref("image.mem.min_discard_timeout_ms", 120000);
+//
+// This used to be 120 seconds, but having it that high causes our working
+// set to grow very large. Switching it back to 10 seconds will hopefully
+// be better.
+pref("image.mem.min_discard_timeout_ms", 10000);
 
 // Chunk size for calls to the image decoders
 pref("image.mem.decode_bytes_at_a_time", 200000);
@@ -3204,7 +3230,7 @@ pref("layers.prefer-d3d9", false);
 pref("geo.enabled", true);
 
 // Enable/Disable the orientation API for content
-pref("accelerometer.enabled", true);
+pref("device.motion.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.parser.enable", true);

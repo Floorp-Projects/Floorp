@@ -1,4 +1,5 @@
 Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -26,6 +27,7 @@ function test_tracking() {
     _("Create bookmark. Won't show because we haven't started tracking yet");
     createBmk();
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_eq(tracker.score, 0);
 
     _("Tell the tracker to start tracking changes.");
     Svc.Obs.notify("weave:engine:start-tracking");
@@ -33,27 +35,33 @@ function test_tracking() {
     // We expect two changed items because the containing folder
     // changed as well (new child).
     do_check_eq([id for (id in tracker.changedIDs)].length, 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
     _("Notifying twice won't do any harm.");
     Svc.Obs.notify("weave:engine:start-tracking");
     createBmk();
     do_check_eq([id for (id in tracker.changedIDs)].length, 3);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
 
     _("Let's stop tracking again.");
     tracker.clearChangedIDs();
+    tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
     createBmk();
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_eq(tracker.score, 0);
 
     _("Notifying twice won't do any harm.");
     Svc.Obs.notify("weave:engine:stop-tracking");
     createBmk();
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_eq(tracker.score, 0);
 
   } finally {
     _("Clean up.");
     store.wipe();
     tracker.clearChangedIDs();
+    tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
   }
 }
@@ -65,6 +73,7 @@ function test_onItemChanged() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_eq(tracker.score, 0);
 
   try {
     Svc.Obs.notify("weave:engine:stop-tracking");
@@ -84,11 +93,13 @@ function test_onItemChanged() {
       b, DESCRIPTION_ANNO, "A test description", 0,
       PlacesUtils.annotations.EXPIRE_NEVER);
     do_check_true(tracker.changedIDs[bGUID] > 0);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
   } finally {
     _("Clean up.");
     store.wipe();
     tracker.clearChangedIDs();
+    tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
   }
 }
@@ -97,6 +108,7 @@ function test_onItemMoved() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_eq(tracker.score, 0);
 
   try {
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
@@ -121,7 +133,9 @@ function test_onItemMoved() {
     do_check_eq(tracker.changedIDs['toolbar'], undefined);
     do_check_eq(tracker.changedIDs[fx_guid], undefined);
     do_check_eq(tracker.changedIDs[tb_guid], undefined);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
     tracker.clearChangedIDs();
+    tracker.resetScore();
 
     // Moving a bookmark to a different folder will track the old
     // folder, the new folder and the bookmark.
@@ -131,11 +145,13 @@ function test_onItemMoved() {
     do_check_true(tracker.changedIDs['toolbar'] > 0);
     do_check_eq(tracker.changedIDs[fx_guid], undefined);
     do_check_true(tracker.changedIDs[tb_guid] > 0);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
 
   } finally {
     _("Clean up.");
     store.wipe();
     tracker.clearChangedIDs();
+    tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
   }
 
@@ -144,9 +160,9 @@ function test_onItemMoved() {
 function run_test() {
   initTestLogging("Trace");
 
-  Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Store.Bookmarks").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Tracker.Bookmarks").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Tracker.Bookmarks").level = Log4Moz.Level.Trace;
 
   test_tracking();
   test_onItemChanged();

@@ -58,13 +58,14 @@ class nsXPTType;
 %}
 
 /* this is NOT intended to be scriptable */
-[uuid(215DBE04-94A7-11d2-BA58-00805F8A5DD7)]
+[uuid(7de126a2-ef4b-4e3b-a952-78ce4c133e38)]
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
     readonly attribute nsIIDPtr InterfaceIID;
 
     PRBool isScriptable();
+    PRBool isBuiltinClass();
 
     readonly attribute nsIInterfaceInfo parent;
 

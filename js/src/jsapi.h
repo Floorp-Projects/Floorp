@@ -971,9 +971,7 @@ JS_StringToVersion(const char *string);
                                                    backtracks more than n^3
                                                    times, where n is length
                                                    of the input string */
-#define JSOPTION_ANONFUNFIX     JS_BIT(10)      /* Disallow function () {} in
-                                                   statement context per
-                                                   ECMA-262 Edition 3. */
+/* JS_BIT(10) is currently unused. */
 
 #define JSOPTION_JIT            JS_BIT(11)      /* Enable JIT compilation. */
 
@@ -995,7 +993,7 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_PCCOUNT        JS_BIT(17)      /* Collect per-op execution counts */
 
 /* Options which reflect compile-time properties of scripts. */
-#define JSCOMPILEOPTION_MASK    (JSOPTION_XML | JSOPTION_ANONFUNFIX)
+#define JSCOMPILEOPTION_MASK    (JSOPTION_XML)
 
 #define JSRUNOPTION_MASK        (JS_BITMASK(18) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
@@ -1143,6 +1141,12 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx);
+
+/*
+ * Initialize the 'Reflect' object on a global object.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_InitReflect(JSContext *cx, JSObject *global);
 
 #ifdef JS_HAS_CTYPES
 /*
@@ -2475,9 +2479,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length);
 
 extern JS_PUBLIC_API(JSBool)
-JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp);
-
-extern JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
 
@@ -3309,12 +3310,6 @@ typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
 JS_PUBLIC_API(JSBool)
 JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data);
-
-/*
- * Retrieve a toJSON function. If found, set vp to its result.
- */
-JS_PUBLIC_API(JSBool)
-JS_TryJSON(JSContext *cx, jsval *vp);
 
 /*
  * JSON.parse as specified by ES5.

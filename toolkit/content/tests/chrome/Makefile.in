@@ -107,6 +107,74 @@ _TEST_FILES = 	findbar_window.xul \
 		window_panel.xul \
 		$(NULL)
 
+
+_TEST_FILES +=  \
+		test_bug360220.xul \
+		test_bug365773.xul \
+		test_bug382990.xul \
+		test_bug457632.xul \
+		test_bug460942.xul \
+		test_bug509732.xul \
+		test_bug554279.xul \
+		test_bug557987.xul\
+		test_bug562554.xul \
+		test_button.xul \
+		test_closemenu_attribute.xul \
+		test_colorpicker_popup.xul \
+		test_menulist.xul \
+		test_menuitem_blink.xul \
+		test_menulist_keynav.xul \
+		test_popup_coords.xul \
+		test_popup_recreate.xul \
+		test_popup_preventdefault.xul \
+		test_notificationbox.xul \
+		test_scale.xul \
+		test_radio.xul \
+		test_tabbox.xul \
+		test_progressmeter.xul \
+		test_props.xul \
+		test_statusbar.xul \
+		test_timepicker.xul \
+		test_tree.xul \
+		test_tree_view.xul \
+		test_tree_single.xul \
+		test_textbox_emptytext.xul \
+		test_textbox_number.xul \
+		test_textbox_search.xul \
+		test_toolbar.xul \
+		xul_selectcontrol.js \
+		test_popupincontent.xul \
+		test_panelfrommenu.xul \
+		test_hiddenitems.xul \
+		test_hiddenpaging.xul \
+		test_popup_tree.xul \
+		test_popup_keys.xul \
+		test_popuphidden.xul \
+		test_popup_scaled.xul \
+		test_popupremoving.xul \
+		test_popupremoving_frame.xul \
+		frame_popupremoving_frame.xul \
+		test_position.xul \
+		test_menu.xul \
+		test_menu_hide.xul \
+		test_focus_anons.xul \
+		test_tabindex.xul \
+		test_scrollbar.xul \
+		test_sorttemplate.xul \
+		test_contextmenu_list.xul \
+		test_richlist_direction.xul \
+		test_tooltip.xul \
+		test_popup_attribute.xul \
+		window_popup_attribute.xul \
+                test_popup_button.xul \
+                window_popup_button.xul \
+               	popup_childframe_node.xul \
+		popup_trigger.js \
+		test_tooltip_noautohide.xul \
+		$(NULL)
+
+
+
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
 # textboxes and lists only, so skip this test on Mac
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

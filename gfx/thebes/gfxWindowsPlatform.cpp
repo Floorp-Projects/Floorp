@@ -59,34 +59,36 @@
 
 #include "gfxCrashReporterUtils.h"
 
-#ifdef MOZ_FT2_FONTS
-#include "ft2build.h"
-#include FT_FREETYPE_H
-#include "gfxFT2Fonts.h"
-#include "gfxFT2FontList.h"
-#include "cairo-ft.h"
-#include "nsAppDirectoryServiceDefs.h"
-#else
 #include "gfxGDIFontList.h"
 #include "gfxGDIFont.h"
+
 #ifdef CAIRO_HAS_DWRITE_FONT
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
 #include "gfxDWriteCommon.h"
 #include <dwrite.h>
 #endif
-#endif
+
+#include "gfxUserFontSet.h"
+
+#include <string>
+
+using namespace mozilla::gfx;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
 
 #include <d3d10_1.h>
 
+#include "mozilla/gfx/2D.h"
+
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
+#endif
 
 using namespace mozilla;
 
+#ifdef CAIRO_HAS_D2D_SURFACE
 class D2DCacheReporter :
     public nsIMemoryReporter
 {
@@ -168,14 +170,6 @@ public:
 NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 #endif
 
-#ifdef WINCE
-#include <shlwapi.h>
-#endif
-
-#include "gfxUserFontSet.h"
-
-#include <string>
-
 #define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
 #define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
 
@@ -185,10 +179,6 @@ NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 #define GFX_CLEARTYPE_PARAMS_LEVEL     "gfx.font_rendering.cleartype_params.cleartype_level"
 #define GFX_CLEARTYPE_PARAMS_STRUCTURE "gfx.font_rendering.cleartype_params.pixel_structure"
 #define GFX_CLEARTYPE_PARAMS_MODE      "gfx.font_rendering.cleartype_params.rendering_mode"
-
-#ifdef MOZ_FT2_FONTS
-static FT_Library gPlatformFTLibrary = NULL;
-#endif
 
 #ifdef CAIRO_HAS_DWRITE_FONT
 // DirectWrite is not available on all platforms, we need to use the function
@@ -235,10 +225,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     CoInitialize(NULL); 
 
     mScreenDC = GetDC(NULL);
-
-#ifdef MOZ_FT2_FONTS
-    FT_Init_FreeType(&gPlatformFTLibrary);
-#endif
 
 #ifdef CAIRO_HAS_D2D_SURFACE
     NS_RegisterMemoryReporter(new D2DCacheReporter());
@@ -420,8 +406,10 @@ gfxWindowsPlatform::VerifyD2DDevice(PRBool aAttemptForce)
         mD2DDevice = cairo_d2d_create_device();
     }
 
-    if (mD2DDevice)
+    if (mD2DDevice) {
         reporter.SetSuccessful();
+        mozilla::gfx::Factory::SetDirect3D10Device(cairo_d2d_device_get_device(mD2DDevice));
+    }
 #endif
 }
 
@@ -453,9 +441,6 @@ gfxWindowsPlatform::CreatePlatformFontList()
 {
     mUsingGDIFonts = PR_FALSE;
     gfxPlatformFontList *pfl;
-#ifdef MOZ_FT2_FONTS
-    pfl = new gfxFT2FontList();
-#else
 #ifdef CAIRO_HAS_DWRITE_FONT
     if (AllowDirectWrite() && GetDWriteFactory()) {
         pfl = new gfxDWriteFontList();
@@ -471,7 +456,6 @@ gfxWindowsPlatform::CreatePlatformFontList()
 #endif
     pfl = new gfxGDIFontList();
     mUsingGDIFonts = PR_TRUE;
-#endif
 
     if (NS_SUCCEEDED(pfl->InitFontList())) {
         return pfl;
@@ -503,6 +487,48 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     NS_IF_ADDREF(surf);
 
     return surf;
+}
+
+RefPtr<ScaledFont>
+gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
+{
+  if(mUseDirectWrite) {
+    gfxDWriteFont *font = static_cast<gfxDWriteFont*>(aFont);
+
+    NativeFont nativeFont;
+    nativeFont.mType = NATIVE_FONT_DWRITE_FONT_FACE;
+    nativeFont.mFont = font->GetFontFace();
+    RefPtr<ScaledFont> scaledFont =
+      mozilla::gfx::Factory::CreateScaledFontForNativeFont(nativeFont, font->GetAdjustedSize());
+
+    return scaledFont;
+  }
+}
+
+already_AddRefed<gfxASurface>
+gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
+{
+#ifdef XP_WIN
+  if (aTarget->GetType() == BACKEND_DIRECT2D) {
+    RefPtr<ID3D10Texture2D> texture =
+      static_cast<ID3D10Texture2D*>(aTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE));
+
+    if (!texture) {
+      return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
+    }
+
+    aTarget->Flush();
+
+    nsRefPtr<gfxASurface> surf =
+      new gfxD2DSurface(texture, ContentForFormat(aTarget->GetFormat()));
+
+    surf->SetData(&kDrawTarget, aTarget, NULL);
+
+    return surf.forget();
+  }
+#endif
+
+  return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
 }
 
 nsresult
@@ -572,11 +598,7 @@ gfxWindowsPlatform::CreateFontGroup(const nsAString &aFamilies,
                                     const gfxFontStyle *aStyle,
                                     gfxUserFontSet *aUserFontSet)
 {
-#ifdef MOZ_FT2_FONTS
-    return new gfxFT2FontGroup(aFamilies, aStyle);
-#else
     return new gfxFontGroup(aFamilies, aStyle, aUserFontSet);
-#endif
 }
 
 gfxFontEntry* 
@@ -639,7 +661,6 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aF
 qcms_profile*
 gfxWindowsPlatform::GetPlatformCMSOutputProfile()
 {
-#ifndef MOZ_FT2_FONTS
     WCHAR str[MAX_PATH];
     DWORD size = MAX_PATH;
     BOOL res;
@@ -670,9 +691,6 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
                 NS_ConvertUTF16toUTF8(str).get());
 #endif
     return profile;
-#else
-    return nsnull;
-#endif
 }
 
 PRBool
@@ -686,14 +704,6 @@ gfxWindowsPlatform::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<
 {
     mPrefFonts.Put(aKey, array);
 }
-
-#ifdef MOZ_FT2_FONTS
-FT_Library
-gfxWindowsPlatform::GetFTLibrary()
-{
-    return gPlatformFTLibrary;
-}
-#endif
 
 PRBool
 gfxWindowsPlatform::UseClearTypeForDownloadableFonts()

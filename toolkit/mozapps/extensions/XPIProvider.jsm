@@ -702,7 +702,8 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
-        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE) {
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_TAB) {
       throw new Error("Install manifest specifies unknown type: " + addon.optionsType);
     }
   }
@@ -907,6 +908,33 @@ function loadManifestFromFile(aFile) {
 }
 
 /**
+ * Gets an nsIURI for a file within another file, either a directory or an XPI
+ * file. If aFile is a directory then this will return a file: URI, if it is an
+ * XPI file then it will return a jar: URI.
+ *
+ * @param  aFile
+ *         The file containing the resources, must be either a directory or an
+ *         XPI file
+ * @param  aPath
+ *         The path to find the resource at, "/" separated. If aPath is empty
+ *         then the uri to the root of the contained files will be returned
+ * @return an nsIURI pointing at the resource
+ */
+function getURIForResourceInFile(aFile, aPath) {
+  if (aFile.isDirectory()) {
+    let resource = aFile.clone();
+    if (aPath) {
+      aPath.split("/").forEach(function(aPart) {
+        resource.append(aPart);
+      });
+    }
+    return NetUtil.newURI(resource);
+  }
+
+  return buildJarURI(aFile, aPath);
+}
+
+/**
  * Creates a jar: URI for a file inside a ZIP file.
  *
  * @param  aJarfile
@@ -931,6 +959,12 @@ function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
   Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIChromeFrameMessageManager)
     .sendAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+}
+
+function flushStartupCache() {
+  // Init this, so it will get the notification.
+  Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
+  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
 
 /**
@@ -1206,6 +1240,7 @@ function cleanStagingDir(aDir, aLeafNames) {
     aDir.remove(false);
   }
   catch (e) {
+    WARN("Failed to remove staging dir", e);
     // Failing to remove the staging directory is ignorable
   }
 }
@@ -1236,7 +1271,13 @@ function recursiveRemove(aFile) {
   try {
     while (entry = dirEntries.nextFile)
       recursiveRemove(entry);
-    aFile.remove(true);
+    try {
+      aFile.remove(true);
+    }
+    catch (e) {
+      ERROR("Failed to remove empty directory " + aFile.path, e);
+      throw e;
+    }
   }
   finally {
     dirEntries.close();
@@ -1565,9 +1606,7 @@ var XPIProvider = {
     }
 
     if (flushCaches) {
-      // Init this, so it will get the notification.
-      let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
-      Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+      flushStartupCache();
 
       // UI displayed early in startup (like the compatibility UI) may have
       // caused us to cache parts of the skin or locale in memory. These must
@@ -1882,6 +1921,7 @@ var XPIProvider = {
       if (!stagingDir || !stagingDir.exists() || !stagingDir.isDirectory())
         return;
 
+      let seenFiles = [];
       entries = stagingDir.directoryEntries
                           .QueryInterface(Ci.nsIDirectoryEnumerator);
       while (entries.hasMoreElements()) {
@@ -1893,8 +1933,10 @@ var XPIProvider = {
             id = id.substring(0, id.length - 4);
           }
           else {
-            if (id.substring(id.length - 5).toLowerCase() != ".json")
+            if (id.substring(id.length - 5).toLowerCase() != ".json") {
               WARN("Ignoring file: " + stageDirEntry.path);
+              seenFiles.push(stageDirEntry.leafName);
+            }
             continue;
           }
         }
@@ -1903,6 +1945,7 @@ var XPIProvider = {
         if (!gIDTest.test(id)) {
           WARN("Ignoring directory whose name is not a valid add-on ID: " +
                stageDirEntry.path);
+          seenFiles.push(stageDirEntry.leafName);
           continue;
         }
 
@@ -1919,6 +1962,7 @@ var XPIProvider = {
             LOG("Processing uninstall of " + id + " in " + aLocation.name);
             try {
               aLocation.uninstallAddon(id);
+              seenFiles.push(stageDirEntry.leafName);
             }
             catch (e) {
               ERROR("Failed to uninstall add-on " + id + " in " + aLocation.name, e);
@@ -1944,8 +1988,9 @@ var XPIProvider = {
 
           try {
             fis.init(jsonfile, -1, 0, 0);
-            aManifests[aLocation.name][id] = json.decodeFromStream(fis,
-                                                                   jsonfile.fileSize);
+            let addonObj = json.decodeFromStream(fis, jsonfile.fileSize);
+            aManifests[aLocation.name][id] = new AddonInternal();
+            aManifests[aLocation.name][id].fromJSON(addonObj);
             existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
           }
           catch (e) {
@@ -1955,6 +2000,7 @@ var XPIProvider = {
             fis.close();
           }
         }
+        seenFiles.push(jsonfile.leafName);
 
         // If there was no cached AddonInternal then load it directly
         if (!aManifests[aLocation.name][id]) {
@@ -1963,9 +2009,10 @@ var XPIProvider = {
             existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
           }
           catch (e) {
-            // This add-on can't be installed so just remove it now
-            stageDirEntry.remove(true);
             ERROR("Unable to read add-on manifest from " + stageDirEntry.path, e);
+            // This add-on can't be installed so just remove it now
+            seenFiles.push(stageDirEntry.leafName);
+            continue;
           }
         }
 
@@ -1989,6 +2036,7 @@ var XPIProvider = {
               this.callBootstrapMethod(existingAddonID, oldBootstrap.version,
                                        existingAddon, "uninstall", uninstallReason);
               this.unloadBootstrapScope(existingAddonID);
+              flushStartupCache();
             }
           }
           catch (e) {
@@ -2004,6 +2052,12 @@ var XPIProvider = {
         catch (e) {
           ERROR("Failed to install staged add-on " + id + " in " + aLocation.name,
                 e);
+          // Re-create the staged install
+          AddonInstall.createStagedInstall(aLocation, stageDirEntry,
+                                           aManifests[aLocation.name][id]);
+          // Make sure not to delete the cached manifest json file
+          seenFiles.pop();
+
           delete aManifests[aLocation.name][id];
 
           if (oldBootstrap) {
@@ -2018,11 +2072,11 @@ var XPIProvider = {
       entries.close();
 
       try {
-        recursiveRemove(stagingDir);
+        cleanStagingDir(stagingDir, seenFiles);
       }
       catch (e) {
         // Non-critical, just saves some perf on startup if we clean this up.
-        LOG("Error removing staging dir " + stagingDir.path, e);
+        LOG("Error cleaning staging dir " + stagingDir.path, e);
       }
     }, this);
     return changed;
@@ -2259,6 +2313,9 @@ var XPIProvider = {
 
         // If the new add-on is bootstrapped and active then call its install method
         if (newAddon.active && newAddon.bootstrap) {
+          // Startup cache must be flushed before calling the bootstrap script
+          flushStartupCache();
+
           let installReason = Services.vc.compare(aOldAddon.version, newAddon.version) < 0 ?
                               BOOTSTRAP_REASONS.ADDON_UPGRADE :
                               BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
@@ -2270,7 +2327,6 @@ var XPIProvider = {
           return false;
         }
 
-        // Otherwise the caches will need to be invalidated
         return true;
       }
 
@@ -2445,9 +2501,7 @@ var XPIProvider = {
         if (aOldAddon.type == "theme")
           XPIProvider.enableDefaultTheme();
 
-        // If this was not a bootstrapped add-on then we must force a restart.
-        if (!aOldAddon.bootstrap)
-          return true;
+        return true;
       }
 
       return false;
@@ -2507,6 +2561,7 @@ var XPIProvider = {
 
       // If there is migration data then apply it.
       if (aMigrateData) {
+        LOG("Migrating data from old database");
         // A theme's disabled state is determined by the selected theme
         // preference which is read in loadManifestFromRDF
         if (newAddon.type != "theme")
@@ -2520,6 +2575,7 @@ var XPIProvider = {
         // The version property isn't a perfect check for this but covers the
         // vast majority of cases.
         if (aMigrateData.version == newAddon.version) {
+          LOG("Migrating compatibility info");
           if ("targetApplications" in aMigrateData)
             newAddon.applyCompatibilityUpdate(aMigrateData, true);
         }
@@ -2586,10 +2642,16 @@ var XPIProvider = {
           let oldAddonFile = Cc["@mozilla.org/file/local;1"].
                              createInstance(Ci.nsILocalFile);
           oldAddonFile.persistentDescriptor = oldBootstrap.descriptor;
+
           XPIProvider.callBootstrapMethod(newAddon.id, oldBootstrap.version,
                                           oldAddonFile, "uninstall",
                                           installReason);
           XPIProvider.unloadBootstrapScope(newAddon.id);
+
+          // If the new add-on is bootstrapped then we must flush the caches
+          // before calling the new bootstrap script
+          if (newAddon.bootstrap)
+            flushStartupCache();
         }
 
         if (!newAddon.bootstrap)
@@ -3355,47 +3417,32 @@ var XPIProvider = {
                     createInstance(Ci.nsIPrincipal);
     this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal);
 
-    let bootstrap = aFile.clone();
-    let name = aFile.leafName;
-    let spec;
-
-    if (!bootstrap.exists()) {
+    if (!aFile.exists()) {
       ERROR("Attempted to load bootstrap scope from missing directory " + bootstrap.path);
       return;
     }
 
-    if (bootstrap.isDirectory()) {
-      bootstrap.append("bootstrap.js");
-      let uri = Services.io.newFileURI(bootstrap);
-      spec = uri.spec;
-    } else {
-      spec = buildJarURI(bootstrap, "bootstrap.js").spec;
-    }
-    if (bootstrap.exists()) {
-      let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                   createInstance(Ci.mozIJSSubScriptLoader);
+    let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                 createInstance(Ci.mozIJSSubScriptLoader);
 
-      try {
-        // As we don't want our caller to control the JS version used for the
-        // bootstrap file, we run loadSubScript within the context of the
-        // sandbox with the latest JS version set explicitly.
-        this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ = spec;
-        Components.utils.evalInSandbox(
-          "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
-                     .createInstance(Components.interfaces.mozIJSSubScriptLoader) \
-                     .loadSubScript(__SCRIPT_URI_SPEC__);", this.bootstrapScopes[aId], "ECMAv5");
-      }
-      catch (e) {
-        WARN("Error loading bootstrap.js for " + aId, e);
-      }
+    try {
+      // As we don't want our caller to control the JS version used for the
+      // bootstrap file, we run loadSubScript within the context of the
+      // sandbox with the latest JS version set explicitly.
+      this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ =
+          getURIForResourceInFile(aFile, "bootstrap.js").spec;
+      Components.utils.evalInSandbox(
+        "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
+                   .createInstance(Components.interfaces.mozIJSSubScriptLoader) \
+                   .loadSubScript(__SCRIPT_URI_SPEC__);", this.bootstrapScopes[aId], "ECMAv5");
+    }
+    catch (e) {
+      WARN("Error loading bootstrap.js for " + aId, e);
+    }
 
-      // Copy the reason values from the global object into the bootstrap scope.
-      for (let name in BOOTSTRAP_REASONS)
-        this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
-    }
-    else {
-      WARN("Bootstrap missing for " + aId);
-    }
+    // Copy the reason values from the global object into the bootstrap scope.
+    for (let name in BOOTSTRAP_REASONS)
+      this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
   },
 
   /**
@@ -3443,7 +3490,8 @@ var XPIProvider = {
     let params = {
       id: aId,
       version: aVersion,
-      installPath: aFile.clone()
+      installPath: aFile.clone(),
+      resourceURI: getURIForResourceInFile(aFile, "")
     };
 
     LOG("Calling bootstrap method " + aMethod + " on " + aId + " version " +
@@ -3623,9 +3671,11 @@ var XPIProvider = {
           this.callBootstrapMethod(aAddon.id, aAddon.version, file, "shutdown",
                                    BOOTSTRAP_REASONS.ADDON_UNINSTALL);
         }
+
         this.callBootstrapMethod(aAddon.id, aAddon.version, file, "uninstall",
                                  BOOTSTRAP_REASONS.ADDON_UNINSTALL);
         this.unloadBootstrapScope(aAddon.id);
+        flushStartupCache();
       }
       aAddon._installLocation.uninstallAddon(aAddon.id);
       XPIDatabase.removeAddonMetadata(aAddon);
@@ -3907,9 +3957,10 @@ var XPIDatabase = {
 
     makeAddonVisible: "UPDATE addon SET visible=1 WHERE internal_id=:internal_id",
     removeAddonMetadata: "DELETE FROM addon WHERE internal_id=:internal_id",
-    // Equates to active = visible && !userDisabled && !softDisabled && !appDisabled
+    // Equates to active = visible && !userDisabled && !softDisabled &&
+    //                     !appDisabled && !pendingUninstall
     setActiveAddons: "UPDATE addon SET active=MIN(visible, 1 - userDisabled, " +
-                     "1 - softDisabled, 1 - appDisabled)",
+                     "1 - softDisabled, 1 - appDisabled, 1 - pendingUninstall)",
     setAddonProperties: "UPDATE addon SET userDisabled=:userDisabled, " +
                         "appDisabled=:appDisabled, " +
                         "softDisabled=:softDisabled, " +
@@ -5265,11 +5316,8 @@ function getHashStringForCrypto(aCrypto) {
 }
 
 /**
- * Instantiates an AddonInstall and passes the new object to a callback when
- * it is complete.
+ * Instantiates an AddonInstall.
  *
- * @param  aCallback
- *         The callback to pass the AddonInstall to
  * @param  aInstallLocation
  *         The install location the add-on will be installed into
  * @param  aUrl
@@ -5277,14 +5325,6 @@ function getHashStringForCrypto(aCrypto) {
  *         the add-on will not need to be downloaded
  * @param  aHash
  *         An optional hash for the add-on
- * @param  aName
- *         An optional name for the add-on
- * @param  aType
- *         An optional type for the add-on
- * @param  aIconURL
- *         An optional icon for the add-on
- * @param  aVersion
- *         An optional version for the add-on
  * @param  aReleaseNotesURI
  *         An optional nsIURI of release notes for the add-on
  * @param  aExistingAddon
@@ -5294,9 +5334,8 @@ function getHashStringForCrypto(aCrypto) {
  * @throws if the url is the url of a local file and the hash does not match
  *         or the add-on does not contain an valid install manifest
  */
-function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
-                      aIconURL, aVersion, aReleaseNotesURI, aExistingAddon,
-                      aLoadGroup) {
+function AddonInstall(aInstallLocation, aUrl, aHash, aReleaseNotesURI,
+                      aExistingAddon, aLoadGroup) {
   this.wrapper = new AddonInstallWrapper(this);
   this.installLocation = aInstallLocation;
   this.sourceURI = aUrl;
@@ -5318,9 +5357,74 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
                             .getInterface(Ci.nsIDOMWindow);
   else
     this.window = null;
+}
 
-  if (aUrl instanceof Ci.nsIFileURL) {
-    this.file = aUrl.file.QueryInterface(Ci.nsILocalFile);
+AddonInstall.prototype = {
+  installLocation: null,
+  wrapper: null,
+  stream: null,
+  crypto: null,
+  originalHash: null,
+  hash: null,
+  loadGroup: null,
+  badCertHandler: null,
+  listeners: null,
+  restartDownload: false,
+
+  name: null,
+  type: null,
+  version: null,
+  iconURL: null,
+  releaseNotesURI: null,
+  sourceURI: null,
+  file: null,
+  ownsTempFile: false,
+  certificate: null,
+  certName: null,
+
+  linkedInstalls: null,
+  existingAddon: null,
+  addon: null,
+
+  state: null,
+  error: null,
+  progress: null,
+  maxProgress: null,
+
+  /**
+   * Initialises this install to be a staged install waiting to be applied
+   *
+   * @param  aManifest
+   *         The cached manifest for the staged install
+   */
+  initStagedInstall: function(aManifest) {
+    this.name = aManifest.name;
+    this.type = aManifest.type;
+    this.version = aManifest.version;
+    this.iconURL = aManifest.iconURL;
+    this.releaseNotesURI = aManifest.releaseNotesURI ?
+                           NetUtil.newURI(aManifest.releaseNotesURI) :
+                           null
+    this.sourceURI = aManifest.sourceURI ?
+                     NetUtil.newURI(aManifest.sourceURI) :
+                     null;
+    this.file = null;
+    this.addon = aManifest;
+
+    this.state = AddonManager.STATE_INSTALLED;
+
+    XPIProvider.installs.push(this);
+  },
+
+  /**
+   * Initialises this install to be an install from a local file.
+   *
+   * @param  aCallback
+   *         The callback to pass the initialised AddonInstall to
+   */
+  initLocalInstall: function(aCallback) {
+    this.file = this.sourceURI.QueryInterface(Ci.nsIFileURL)
+                    .file.QueryInterface(Ci.nsILocalFile);
 
     if (!this.file.exists()) {
       WARN("XPI file " + this.file.path + " does not exist");
@@ -5406,8 +5510,23 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
       aCallback(this);
       return;
     }
-  }
-  else {
+  },
+
+  /**
+   * Initialises this install to be a download from a remote url.
+   *
+   * @param  aCallback
+   *         The callback to pass the initialised AddonInstall to
+   * @param  aName
+   *         An optional name for the add-on
+   * @param  aType
+   *         An optional type for the add-on
+   * @param  aIconURL
+   *         An optional icon for the add-on
+   * @param  aVersion
+   *         An optional version for the add-on
+   */
+  initAvailableDownload: function(aName, aType, aIconURL, aVersion, aCallback) {
     this.state = AddonManager.STATE_AVAILABLE;
     this.name = aName;
     this.type = aType;
@@ -5421,40 +5540,7 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
                                              this.wrapper);
 
     aCallback(this);
-  }
-}
-
-AddonInstall.prototype = {
-  installLocation: null,
-  wrapper: null,
-  stream: null,
-  crypto: null,
-  originalHash: null,
-  hash: null,
-  loadGroup: null,
-  badCertHandler: null,
-  listeners: null,
-  restartDownload: false,
-
-  name: null,
-  type: null,
-  version: null,
-  iconURL: null,
-  releaseNotesURI: null,
-  sourceURI: null,
-  file: null,
-  ownsTempFile: false,
-  certificate: null,
-  certName: null,
-
-  linkedInstalls: null,
-  existingAddon: null,
-  addon: null,
-
-  state: null,
-  error: null,
-  progress: null,
-  maxProgress: null,
+  },
 
   /**
    * Starts installation of this add-on from whatever state it is currently at
@@ -6216,10 +6302,12 @@ AddonInstall.prototype = {
                                               this.existingAddon.version,
                                               file, "shutdown", reason);
             }
+
             XPIProvider.callBootstrapMethod(this.existingAddon.id,
                                             this.existingAddon.version,
                                             file, "uninstall", reason);
             XPIProvider.unloadBootstrapScope(this.existingAddon.id);
+            flushStartupCache();
           }
 
           if (!isUpgrade && this.existingAddon.active) {
@@ -6307,6 +6395,22 @@ AddonInstall.prototype = {
 }
 
 /**
+ * Creates a new AddonInstall for an already staged install. Used when
+ * installing the staged install failed for some reason.
+ *
+ * @param  aDir
+ *         The directory holding the staged install
+ * @param  aManifest
+ *         The cached manifest for the install
+ */
+AddonInstall.createStagedInstall = function(aInstallLocation, aDir, aManifest) {
+  let url = Services.io.newFileURI(aDir);
+
+  let install = new AddonInstall(aInstallLocation, aDir);
+  install.initStagedInstall(aManifest);
+};
+
+/**
  * Creates a new AddonInstall to install an add-on from a local file. Installs
  * always go into the profile install location.
  *
@@ -6320,7 +6424,8 @@ AddonInstall.createInstall = function(aCallback, aFile) {
   let url = Services.io.newFileURI(aFile);
 
   try {
-    new AddonInstall(aCallback, location, url);
+    let install = new AddonInstall(location, url);
+    install.initLocalInstall(aCallback);
   }
   catch(e) {
     ERROR("Error creating install", e);
@@ -6350,8 +6455,12 @@ AddonInstall.createDownload = function(aCallback, aUri, aHash, aName, aIconURL,
                                        aVersion, aLoadGroup) {
   let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
   let url = NetUtil.newURI(aUri);
-  new AddonInstall(aCallback, location, url, aHash, aName, null,
-                   aIconURL, aVersion, null, null, aLoadGroup);
+
+  let install = new AddonInstall(location, url, aHash, null, null, aLoadGroup);
+  if (url instanceof Ci.nsIFileURL)
+    install.initLocalInstall(aCallback);
+  else
+    install.initAvailableDownload(aName, null, aIconURL, aVersion, aCallback);
 };
 
 /**
@@ -6374,9 +6483,16 @@ AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
   catch (e) {
     // If the releaseNotesURI cannot be parsed then just ignore it.
   }
-  new AddonInstall(aCallback, aAddon._installLocation, url, aUpdate.updateHash,
-                   aAddon.selectedLocale.name, aAddon.type,
-                   aAddon.iconURL, aUpdate.version, releaseNotesURI, aAddon);
+
+  let install = new AddonInstall(aAddon._installLocation, url,
+                                 aUpdate.updateHash, releaseNotesURI, aAddon);
+  if (url instanceof Ci.nsIFileURL) {
+    install.initLocalInstall(aCallback);
+  }
+  else {
+    install.initAvailableDownload(aAddon.selectedLocale.name, aAddon.type,
+                                  aAddon.iconURL, aUpdate.version, aCallback);
+  }
 };
 
 /**
@@ -6742,6 +6858,18 @@ AddonInternal.prototype = {
     }
 
     return obj;
+  },
+
+  /**
+   * fromJSON should be called to set the properties of this AddonInternal to
+   * those from the passed in object. It is essentially the inverse of toJSON.
+   *
+   * @param  aObj
+   *         A JS object containing properties to be set on this AddonInternal
+   */
+  fromJSON: function(aObj) {
+    for (let prop in aObj)
+      this[prop] = aObj[prop];
   }
 };
 
@@ -7049,13 +7177,16 @@ function AddonWrapper(aAddon) {
     if (!(aAddon instanceof DBAddonInternal)) {
       // Add-on is pending install if there is no associated install (shouldn't
       // happen here) or if the install is in the process of or has successfully
-      // completed the install.
+      // completed the install. If an add-on is pending install then we ignore
+      // any other pending operations.
       if (!aAddon._install || aAddon._install.state == AddonManager.STATE_INSTALLING ||
           aAddon._install.state == AddonManager.STATE_INSTALLED)
-        pending |= AddonManager.PENDING_INSTALL;
+        return AddonManager.PENDING_INSTALL;
     }
     else if (aAddon.pendingUninstall) {
-      pending |= AddonManager.PENDING_UNINSTALL;
+      // If an add-on is pending uninstall then we ignore any other pending
+      // operations
+      return AddonManager.PENDING_UNINSTALL;
     }
 
     if (aAddon.active && isAddonDisabled(aAddon))
@@ -7210,21 +7341,22 @@ function AddonWrapper(aAddon) {
     return result;
   },
 
+  /**
+   * Returns a URI to the selected resource or to the add-on bundle if aPath
+   * is null. URIs to the bundle will always be file: URIs. URIs to resources
+   * will be file: URIs if the add-on is unpacked or jar: URIs if the add-on is
+   * still an XPI file.
+   *
+   * @param  aPath
+   *         The path in the add-on to get the URI for or null to get a URI to
+   *         the file or directory the add-on is installed as.
+   * @return an nsIURI
+   */
   this.getResourceURI = function(aPath) {
-    let bundle = aAddon._sourceBundle.clone();
-
-    if (bundle.isDirectory()) {
-      if (aPath) {
-        aPath.split("/").forEach(function(aPart) {
-          bundle.append(aPart);
-        });
-      }
-      return Services.io.newFileURI(bundle);
-    }
-
     if (!aPath)
-      return Services.io.newFileURI(bundle);
-    return buildJarURI(bundle, aPath);
+      return NetUtil.newURI(aAddon._sourceBundle);
+
+    return getURIForResourceInFile(aAddon._sourceBundle, aPath);
   }
 }
 

@@ -48,6 +48,7 @@
 #include "jsapi.h"
 #include "nsJSUtils.h"
 #include "nsMathUtils.h"
+#include "mozilla/Preferences.h"
 
 #include "nsFrameManager.h"
 #include "nsDisplayList.h"
@@ -85,6 +86,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLCanvasElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLCanvasElement,
+                                                nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentContext)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLCanvasElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLCanvasElement, nsGenericElement)
@@ -231,7 +237,7 @@ nsHTMLCanvasElement::ExtractData(const nsAString& aType,
 
  try_again:
   if (mCurrentContext) {
-    rv = mCurrentContext->GetInputStream(nsPromiseFlatCString(encoderType).get(),
+    rv = mCurrentContext->GetInputStream(encoderType.get(),
                                          nsPromiseFlatString(aOptions).get(),
                                          getter_AddRefs(imgStream));
   } else {
@@ -239,7 +245,7 @@ nsHTMLCanvasElement::ExtractData(const nsAString& aType,
     nsCString enccid("@mozilla.org/image/encoder;2?type=");
     enccid += encoderType;
 
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(nsPromiseFlatCString(enccid).get(), &rv);
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get(), &rv);
     if (NS_SUCCEEDED(rv) && encoder) {
       rv = encoder->InitFromData(emptyCanvas->Data(),
                                  size.width * size.height * 4,
@@ -398,7 +404,7 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
 
   nsresult rv;
   nsCOMPtr<nsICanvasRenderingContextInternal> ctx =
-    do_CreateInstance(nsPromiseFlatCString(ctxString).get(), &rv);
+    do_CreateInstance(ctxString.get(), &rv);
   if (rv == NS_ERROR_OUT_OF_MEMORY) {
     *aContext = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
@@ -616,7 +622,7 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
   if (!frame)
     return;
 
-  frame->MarkLayersActive();
+  frame->MarkLayersActive(nsChangeHint(0));
 
   nsRect invalRect;
   nsRect contentArea = frame->GetContentRect();
@@ -716,4 +722,24 @@ nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::Gr
     return NS_OK;
 
   return mCurrentContext->Render(aContext, aFilter);
+}
+
+nsresult NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult);
+nsresult NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult);
+
+nsresult
+NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
+{
+  PRBool azure = PR_FALSE;
+  nsresult rv = Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
+
+  if (azure) {
+    nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
+    // If Azure fails, fall back to a classic canvas.
+    if (NS_SUCCEEDED(rv)) {
+      return rv;
+    }
+  }
+
+  return NS_NewCanvasRenderingContext2DThebes(aResult);
 }

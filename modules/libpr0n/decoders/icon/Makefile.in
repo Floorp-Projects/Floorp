@@ -69,6 +69,10 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 PLATFORM = mac
 endif
 
+ifeq ($(OS_TARGET),Android)
+PLATFORM = android
+endif
+
 CPPSRCS		= \
 		nsIconURI.cpp \
 		nsIconModule.cpp \

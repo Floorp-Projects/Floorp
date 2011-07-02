@@ -50,15 +50,8 @@
 
 const TEST_URI = "http://www.mozilla.org/";
 
-let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-         getService(Ci.nsIWindowWatcher);
-
-function windowObserver(aSubject, aTopic, aData) {
-  if (aTopic != "domwindowopened")
-    return;
-  ww.unregisterNotification(windowObserver);
-  let organizer = aSubject.QueryInterface(Ci.nsIDOMWindow);
-  waitForFocus(function () {
+function test() {
+  function onLibraryReady(organizer) {
     let contentTree = organizer.document.getElementById("placeContent");
     isnot(contentTree, null, "Sanity check: placeContent tree should exist");
     isnot(organizer.PlacesOrganizer, null, "Sanity check: PlacesOrganizer should exist");
@@ -79,10 +72,8 @@ function windowObserver(aSubject, aTopic, aData) {
     organizer.close();
     // Clean up history.
     waitForClearHistory(finish);
-  }, organizer);
-}
+  }
 
-function test() {
   waitForExplicitFinish();
   // Add an history entry.
   ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
@@ -90,12 +81,7 @@ function test() {
                                null, PlacesUtils.history.TRANSITION_TYPED,
                                false, 0);
 
-  ww.registerNotification(windowObserver);
-  ww.openWindow(null,
-                "chrome://browser/content/places/places.xul",
-                "",
-                "chrome,toolbar=yes,dialog=no,resizable",
-                null);
+  openLibrary(onLibraryReady);
 }
 
 function waitForClearHistory(aCallback) {

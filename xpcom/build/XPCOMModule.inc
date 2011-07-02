@@ -64,10 +64,6 @@
     COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor)
     COMPONENT(MULTIPLEXINPUTSTREAM, nsMultiplexInputStreamConstructor)
 
-#ifndef MOZ_NO_FAST_LOAD
-    COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create)
-#endif
-
     COMPONENT(VARIANT, nsVariantConstructor)
     COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton)
 

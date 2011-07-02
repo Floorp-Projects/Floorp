@@ -313,19 +313,19 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
     nsCOMPtr<nsIMutableArray> headerCells =
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 desiredRole = -1;
+    if (aRowOrColumnHeaderCell == nsAccUtils::eRowHeaderCells)
+      desiredRole = nsIAccessibleRole::ROLE_ROWHEADER;
+    else if (aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells)
+      desiredRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
 
     do {
       nsAccessible* headerCell =
         GetAccService()->GetAccessibleInWeakShell(headerCellElm, mWeakShell);
 
-      if (headerCell &&
-          (aRowOrColumnHeaderCell == nsAccUtils::eRowHeaderCells &&
-              headerCell->Role() == nsIAccessibleRole::ROLE_ROWHEADER ||
-              aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells &&
-              headerCell->Role() == nsIAccessibleRole::ROLE_COLUMNHEADER)) {
+      if (headerCell && headerCell->Role() == desiredRole)
         headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
                                    PR_FALSE);
-      }
     } while ((headerCellElm = iter.NextElem()));
 
     NS_ADDREF(*aHeaderCells = headerCells);
@@ -464,10 +464,22 @@ nsresult
 nsHTMLTableAccessible::GetNameInternal(nsAString& aName)
 {
   nsAccessible::GetNameInternal(aName);
+  if (!aName.IsEmpty())
+    return NS_OK;
 
-  if (aName.IsEmpty())
-    mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary, aName);
+  // Use table caption as a name.
+  nsAccessible* caption = Caption();
+  if (caption) {
+    nsIContent* captionContent = caption->GetContent();
+    if (captionContent) {
+      nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
+      if (!aName.IsEmpty())
+        return NS_OK;
+    }
+  }
 
+  // If no caption then use summary as a name.
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary, aName);
   return NS_OK;
 }
 
@@ -499,11 +511,8 @@ nsHTMLTableAccessible::GetRelationByType(PRUint32 aRelationType,
                                                     aRelation);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aRelationType == nsIAccessibleRelation::RELATION_DESCRIBED_BY) {
-    nsCOMPtr<nsIAccessible> accCaption;
-    GetCaption(getter_AddRefs(accCaption));
-    return nsRelUtils::AddTarget(aRelationType, aRelation, accCaption);
-  }
+  if (aRelationType == nsIAccessibleRelation::RELATION_DESCRIBED_BY)
+    return nsRelUtils::AddTarget(aRelationType, aRelation, Caption());
 
   return NS_OK;
 }
@@ -514,10 +523,9 @@ nsHTMLTableAccessible::GetRelationByType(PRUint32 aRelationType,
 NS_IMETHODIMP
 nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
 {
-  nsAccessible* firstChild = GetChildAt(0);
-  if (firstChild && firstChild->Role() == nsIAccessibleRole::ROLE_CAPTION)
-    NS_ADDREF(*aCaption = firstChild);
+  NS_ENSURE_ARG_POINTER(aCaption);
 
+  NS_IF_ADDREF(*aCaption = Caption());
   return NS_OK;
 }
 
@@ -1204,13 +1212,9 @@ nsHTMLTableAccessible::RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
     const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
   PRBool doUnselectRow = (aTarget == nsISelectionPrivate::TABLESELECTION_ROW);
-
-  nsresult rv = NS_OK;
   PRInt32 count = 0;
-  if (doUnselectRow)
-    rv = GetColumnCount(&count);
-  else
-    rv = GetRowCount(&count);
+  nsresult rv = doUnselectRow ? GetColumnCount(&count) : GetRowCount(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 startRowIdx = doUnselectRow ? aIndex : 0;
   PRInt32 endRowIdx = doUnselectRow ? aIndex : count - 1;
@@ -1268,17 +1272,23 @@ nsHTMLTableAccessible::Description(nsString& aDescription)
   if (!aDescription.IsEmpty())
     return;
 
-  nsCOMPtr<nsIAccessible> captionAccessible;
-  GetCaption(getter_AddRefs(captionAccessible));
-  nsCOMPtr<nsIAccessNode> captionAccessNode = do_QueryInterface(captionAccessible);
-  if (captionAccessNode) {
-    nsCOMPtr<nsIDOMNode> captionNode;
-    captionAccessNode->GetDOMNode(getter_AddRefs(captionNode));
-    nsCOMPtr<nsIContent> captionContent = do_QueryInterface(captionNode);
-    if (captionContent)
+  // Use summary as description if it weren't used as a name.
+  // XXX: get rid code duplication with NameInternal().
+  nsAccessible* caption = Caption();
+  if (caption) {
+    nsIContent* captionContent = caption->GetContent();
+    if (captionContent) {
+      nsAutoString captionText;
       nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent,
-                                                   &aDescription);
+                                                   &captionText);
+
+      if (!captionText.IsEmpty()) { // summary isn't used as a name.
+        mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary,
+                          aDescription);
+      }
+    }
   }
+
 #ifdef SHOW_LAYOUT_HEURISTIC
   if (aDescription.IsEmpty()) {
     PRBool isProbablyForLayout;

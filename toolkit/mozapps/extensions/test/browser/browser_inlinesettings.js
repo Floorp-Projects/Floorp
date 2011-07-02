@@ -8,7 +8,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
-const SETTINGS_ROWS = 5;
+const SETTINGS_ROWS = 8;
 
 var observer = {
   lastData: null,
@@ -62,6 +62,14 @@ function test() {
 
 function end_test() {
   Services.obs.removeObserver(observer, "addon-options-displayed");
+
+  Services.prefs.clearUserPref("extensions.inlinesettings1.bool");
+  Services.prefs.clearUserPref("extensions.inlinesettings1.boolint");
+  Services.prefs.clearUserPref("extensions.inlinesettings1.integer");
+  Services.prefs.clearUserPref("extensions.inlinesettings1.string");
+  Services.prefs.clearUserPref("extensions.inlinesettings1.color");
+  Services.prefs.clearUserPref("extensions.inlinesettings1.file");
+  Services.prefs.clearUserPref("extensions.inlinesettings1.directory");
 
   close_manager(gManagerWindow, function() {
     AddonManager.getAddonByID("inlinesettings1@tests.mozilla.org", function(aAddon) {
@@ -180,10 +188,70 @@ add_test(function() {
       is(gManagerWindow._testValue, "3", "Menulist oncommand handler should've updated the test value");
       delete gManagerWindow._testValue;
 
-      var button = gManagerWindow.document.getElementById("detail-prefs-btn");
-      is_element_hidden(button, "Preferences button should not be visible");
+      Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF0000");
+      setTimeout(function () {
+        input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
+        is(input.color, "#FF0000", "Color picker should have initial value");
+        input.focus();
+        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+        EventUtils.synthesizeKey("VK_RETURN", {}, gManagerWindow);
+        is(input.color, "#FF9900", "Color picker should have updated value");
+        is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
 
-      gCategoryUtilities.openType("extension", run_next_test);
+        setTimeout(function () {
+          mockFilePickerFactory.register();
+
+          try {
+            var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
+            input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
+            is(input.value, "", "Label value should be empty");
+
+            var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+            var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
+
+            _returnFile = profD;
+            _returnValue = Ci.nsIFilePicker.returnOK;
+            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+            is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+            is(input.value, profD.path, "Label value should match file chosen");
+            is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should match file chosen");
+
+            _returnFile = curProcD;
+            _returnValue = Ci.nsIFilePicker.returnCancel;
+            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+            is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+            is(input.value, profD.path, "Label value should not have changed");
+            is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should not have changed");
+
+            button = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "button");
+            input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
+            is(input.value, "", "Label value should be empty");
+   
+            _returnFile = profD;
+            _returnValue = Ci.nsIFilePicker.returnOK;
+            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+            is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+            is(input.value, profD.path, "Label value should match file chosen");
+            is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should match file chosen");
+
+            _returnFile = curProcD;
+            _returnValue = Ci.nsIFilePicker.returnCancel;
+            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+            is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+            is(input.value, profD.path, "Label value should not have changed");
+            is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should not have changed");
+
+          } finally {
+            mockFilePickerFactory.unregister();
+          }
+
+          button = gManagerWindow.document.getElementById("detail-prefs-btn");
+          is_element_hidden(button, "Preferences button should not be visible");
+
+          gCategoryUtilities.openType("extension", run_next_test);
+        }, 0);
+      }, 0);
     }, 1200); // Timeout value from toolkit/content/tests/widgets/test_menulist_keynav.xul
   });
 });
@@ -279,6 +347,7 @@ add_test(function() {
 
     // disable
     var button = gManagerWindow.document.getElementById("detail-disable-btn");
+    button.focus(); // make sure it's in view
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
     settings = grid.querySelectorAll("rows > setting");
@@ -311,3 +380,60 @@ add_test(function() {
     });
   });
 });
+
+var _returnFile, _returnValue, _mode;
+
+function MockFilePicker() { };
+MockFilePicker.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
+  init: function(aParent, aTitle, aMode) {
+    _mode = aMode;
+  },
+  appendFilters: function(aFilterMask) { },
+  appendFilter: function(aTitle, aFilter) { },
+  defaultString: "",
+  defaultExtension: "",
+  filterIndex: 0,
+  displayDirectory: null,
+  get file() {
+    return _returnFile;
+  },
+  get fileURL() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  get files() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  show: function() {
+    return _returnValue;
+  }
+};
+var mockFilePickerFactory = {
+  registrar: Components.manager.QueryInterface(Ci.nsIComponentRegistrar),
+  contractID: "@mozilla.org/filepicker;1",
+  classID: Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID(),
+
+  register: function() {
+    this.registrar.registerFactory(this.classID, "", this.contractID, this);
+  },
+
+  unregister: function() {
+    this.registrar.unregisterFactory(this.classID, this);
+  },
+
+  // nsIFactory
+  createInstance: function(aOuter, aIID) {
+    if (aOuter) {
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    }
+    return new MockFilePicker().QueryInterface(aIID);
+  },
+
+  lockFactory: function(aLock) {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIFactory
+  ])
+};

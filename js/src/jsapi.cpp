@@ -94,10 +94,10 @@
 #include "jsscopeinlines.h"
 #include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 #include "assembler/wtf/Platform.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/String-inl.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -140,12 +140,6 @@ class AutoVersionAPI
         , oldCompileOptions(cx->getCompileOptions())
 #endif
     {
-        /*
-         * Note: ANONFUNFIX in newVersion is ignored for backwards
-         * compatibility, must be set via JS_SetOptions. (Because of this, we
-         * inherit the current ANONFUNFIX setting from the options.
-         */
-        VersionSetAnonFunFix(&newVersion, OptionsHasAnonFunFix(cx->getCompileOptions()));
         this->newVersion = newVersion;
         cx->clearVersionOverride();
         cx->setDefaultVersion(newVersion);
@@ -658,18 +652,6 @@ JSRuntime::init(uint32 maxbytes)
     JMCheckLogging();
 #endif
 
-#ifdef DEBUG
-    functionMeterFilename = getenv("JS_FUNCTION_STATFILE");
-    if (functionMeterFilename) {
-        if (!methodReadBarrierCountMap.init())
-            return false;
-        if (!unjoinedFunctionCountMap.init())
-            return false;
-    }
-    propTreeStatFilename = getenv("JS_PROPTREE_STATFILE");
-    propTreeDumpFilename = getenv("JS_PROPTREE_DUMPFILE");
-#endif
-
 #ifdef JS_TRACER
     InitJIT();
 #endif
@@ -684,7 +666,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     }
 
-    atomsCompartment->setGCLastBytes(8192);
+    atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
 
     if (!js_InitAtomState(this))
         return false;
@@ -707,7 +689,14 @@ JSRuntime::init(uint32 maxbytes)
 #endif
 
     debugMode = false;
-    return js_InitThreads(this);
+    if (!js_InitThreads(this))
+        return false;
+    if (!InitRuntimeNumberState(this))
+        return false;
+    if (!InitRuntimeScriptState(this))
+        return false;
+
+    return true;
 }
 
 JSRuntime::~JSRuntime()
@@ -733,8 +722,9 @@ JSRuntime::~JSRuntime()
     FinishJIT();
 #endif
 
+    FreeRuntimeScriptState(this);
+    FinishRuntimeNumberState(this);
     js_FinishThreads(this);
-    js_FreeRuntimeScriptState(this);
     js_FinishAtomState(this);
 
     js_FinishGC(this);
@@ -807,26 +797,11 @@ JS_DestroyRuntime(JSRuntime *rt)
     Foreground::delete_(rt);
 }
 
-#ifdef JS_REPRMETER
-namespace reprmeter {
-    extern void js_DumpReprMeter();
-}
-#endif
-
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
 #ifdef MOZ_TRACEVIS
     StopTraceVis();
-#endif
-
-#ifdef JS_OPMETER
-    extern void js_DumpOpMeters();
-    js_DumpOpMeters();
-#endif
-
-#ifdef JS_REPRMETER
-    reprmeter::js_DumpReprMeter();
 #endif
 
 #ifdef JS_THREADSAFE
@@ -2726,7 +2701,8 @@ JS_PUBLIC_API(void)
 JS_FlushCaches(JSContext *cx)
 {
 #ifdef JS_TRACER
-    FlushJITCache(cx, &cx->compartment->traceMonitor);
+    if (cx->compartment->hasTraceMonitor())
+        FlushJITCache(cx, cx->compartment->traceMonitor());
 #endif
 }
 
@@ -4142,14 +4118,6 @@ JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    return js_HasLengthProperty(cx, obj, lengthp);
-}
-
-JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp)
 {
@@ -4820,17 +4788,6 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
                                  NULL, NULL, JSPROP_ENUMERATE)) {
             fun = NULL;
         }
-
-#ifdef JS_SCOPE_DEPTH_METER
-        if (fun && obj) {
-            JSObject *pobj = obj;
-            uintN depth = 1;
-
-            while ((pobj = pobj->getParent()) != NULL)
-                ++depth;
-            JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-        }
-#endif
     }
 
   out2:
@@ -5565,15 +5522,11 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     Value spacev = Valueify(space);
     if (!js_Stringify(cx, Valueify(vp), replacer, spacev, sb))
         return false;
+    if (sb.empty()) {
+        JSAtom *nullAtom = cx->runtime->atomState.nullAtom;
+        return callback(nullAtom->chars(), nullAtom->length(), data);
+    }
     return callback(sb.begin(), sb.length(), data);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_TryJSON(JSContext *cx, jsval *vp)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, *vp);
-    return js_TryJSON(cx, Valueify(vp));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5830,7 +5783,7 @@ JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uin
     if (!chars)
         return NULL;
     RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags);
+    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags, NULL);
     cx->free_(chars);
     return reobj;
 }
@@ -5840,7 +5793,7 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
 {
     CHECK_REQUEST(cx);
     RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    return RegExp::createObject(cx, res, chars, length, flags);
+    return RegExp::createObject(cx, res, chars, length, flags, NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -5886,7 +5839,7 @@ JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN fla
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags);
+    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
     cx->free_(chars);
     return obj;
 }
@@ -5895,7 +5848,7 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return RegExp::createObjectNoStatics(cx, chars, length, flags);
+    return RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
 }
 
 JS_PUBLIC_API(JSBool)

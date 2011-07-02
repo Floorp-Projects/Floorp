@@ -18,10 +18,11 @@ var ctx = canvas.getContext('2d');
 ctx.fillStyle = "red";
 ctx.fillRect(0, 0, 1, 1);
 window.addEventListener("MozReftestInvalidate", function () {
-  ctx.fillStyle = "white";
-  ctx.mozTextStyle = "50px bold Arial";
+  ctx.strokeStyle = "white";
+  ctx.font = "50px bold Arial";
   ctx.translate(-8, 18);
-  ctx.mozDrawText("•");
+  ctx.lineWidth = 50;
+  ctx.strokeText("•", 0, 0);
   document.documentElement.className = "";
 }, false);
 

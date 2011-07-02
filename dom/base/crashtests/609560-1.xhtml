@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+<![CDATA[
+
+function x()
+{
+ var p = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+ var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+ frame.onload = y;
+ frame.src = "data:text/html,1";
+ document.body.appendChild(frame);
+ var frameRoot = frame.contentDocument.documentElement;
+
+  function y()
+  {
+    var frameDoc = frameRoot.ownerDocument;
+    frameRoot.appendChild(p);
+    var attr = frameDoc.createAttributeNS("http://www.w3.org/1999/xhtml", "u");
+    attr.w = {};
+    p.setAttributeNode(attr);
+    document.documentElement.removeAttribute("class");
+  }
+}
+
+]]>
+</script>
+</head>
+
+<body onload="setTimeout(x, 0);"></body>
+</html>
