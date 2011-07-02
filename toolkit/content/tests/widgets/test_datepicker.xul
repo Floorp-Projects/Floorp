@@ -15,7 +15,10 @@
       onpopuphidden="testtag_finish()">
 <datepicker id="datepicker"/>
 <datepicker id="datepicker-popup" type="popup"/>
-<datepicker id="datepicker-grid" type="grid"/>
+<hbox onDOMMouseScroll="mouseScrolled = event.getPreventDefault();"
+      onkeypress="pageDownScrolled = event.getPreventDefault();">
+  <datepicker id="datepicker-grid" type="grid"/>
+</hbox>
 </hbox>
 
 <!-- Test-only key bindings, but must not conflict with the application. -->
@@ -36,6 +39,9 @@
 <script>
 <![CDATA[
 
+var mouseScrolled = false;
+var pageDownScrolled = false;
+
 SimpleTest.waitForExplicitFinish();
 
 function testtag_datepickers()
@@ -50,6 +56,16 @@ function testtag_datepickers()
 function testtag_finish()
 {
   ok(!document.getElementById("datepicker-popup").open, "datepicker popup open false again");
+
+  var dpgrid = document.getElementById("datepicker-grid");
+  dpgrid.focus();
+  synthesizeMouseScroll(dpgrid, 5, 5, { delta: 10 });
+  is(mouseScrolled, true, "mouse scrolled default prevented");
+  is(dpgrid.displayedMonth, 2, "mouse scroll changed month");
+
+  synthesizeKey("VK_PAGE_DOWN", { });
+  is(pageDownScrolled, true, "page down scrolled default prevented");
+
   SimpleTest.finish();
 }
 

@@ -685,7 +685,8 @@
     </implementation>
     
     <handlers>
-      <handler event="DOMMouseScroll">
+      <handler event="MozMousePixelScroll" preventdefault="true"/>
+      <handler event="DOMMouseScroll" preventdefault="true">
         <![CDATA[
           if (this._editingColumn)
             return;
@@ -701,7 +702,7 @@
             this.treeBoxObject.scrollByLines(rows);
         ]]>
       </handler>
-      <handler event="MozSwipeGesture">
+      <handler event="MozSwipeGesture" preventdefault="true">
         <![CDATA[
           // Figure out which row to show
           let targetRow = 0;
@@ -754,7 +755,8 @@
             return;
           var row = this.currentIndex;
           var column = this.view.selection.currentColumn;
-          this.startEditing(row, column);
+          if (this.startEditing(row, column))
+            event.preventDefault();
         ]]>
       </handler>
 #endif // XP_MACOSX
@@ -789,8 +791,10 @@
          }
 
          if (checkContainers) {
-           if (this.changeOpenState(this.currentIndex, false))
+           if (this.changeOpenState(this.currentIndex, false)) {
+             event.preventDefault();
              return;
+           }
            else {
              var parentIndex = this.view.getParentIndex(this.currentIndex);
              if (parentIndex >= 0) {
@@ -799,6 +803,7 @@
                }
                this.view.selection.select(parentIndex);
                this.treeBoxObject.ensureRowIsVisible(parentIndex);
+               event.preventDefault();
                return;
              }
            }
@@ -809,6 +814,7 @@
            if (col) {
              this.view.selection.currentColumn = col;
              this.treeBoxObject.ensureCellIsVisible(row, col);
+             event.preventDefault();
            }
          }
         ]]>
@@ -833,8 +839,10 @@
           }
 
           if (checkContainers) {
-            if (this.changeOpenState(row, true))
+            if (this.changeOpenState(row, true)) {
+              event.preventDefault();
               return;
+            }
             else {
               var c = row + 1;
               var view = this.view;
@@ -851,6 +859,7 @@
                 }
                 this.view.selection.timedSelect(c, this._selectDelay);
                 this.treeBoxObject.ensureRowIsVisible(c);
+                event.preventDefault();
                 return;
               }
             }
@@ -861,33 +870,34 @@
             if (col) {
               this.view.selection.currentColumn = col;
               this.treeBoxObject.ensureCellIsVisible(row, col);
+              event.preventDefault();
             }
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="VK_UP"
+      <handler event="keypress" keycode="VK_UP" preventdefault="true"
                modifiers="accel any" action="_moveByOffset(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_DOWN"
+      <handler event="keypress" keycode="VK_DOWN" preventdefault="true"
                modifiers="accel any" action="_moveByOffset(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_UP"
+      <handler event="keypress" keycode="VK_UP" preventdefault="true"
                modifiers="accel any, shift" action="_moveByOffsetShift(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_DOWN"
+      <handler event="keypress" keycode="VK_DOWN" preventdefault="true"
                modifiers="accel any, shift" action="_moveByOffsetShift(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_UP"
+      <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true"
                modifiers="accel any" action="_moveByPage(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN"
+      <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true"
                modifiers="accel any" action="_moveByPage(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_UP"
+      <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true"
                modifiers="accel any, shift" action="_moveByPageShift(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN"
+      <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true"
                modifiers="accel any, shift" action="_moveByPageShift(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_HOME"
+      <handler event="keypress" keycode="VK_HOME" preventdefault="true"
                modifiers="accel any" action="_moveToEdge(0, event);"/>
-      <handler event="keypress" keycode="VK_END"
+      <handler event="keypress" keycode="VK_END" preventdefault="true"
                modifiers="accel any" action="_moveToEdge(this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_HOME"
+      <handler event="keypress" keycode="VK_HOME" preventdefault="true"
                modifiers="accel any, shift" action="_moveToEdgeShift(0, event);"/>
-      <handler event="keypress" keycode="VK_END"
+      <handler event="keypress" keycode="VK_END" preventdefault="true"
                modifiers="accel any, shift" action="_moveToEdgeShift(this.view.rowCount - 1, event);"/>
       <handler event="keypress">
         <![CDATA[
@@ -899,6 +909,7 @@
            if (!this.view.selection.isSelected(c) ||
                (!this.view.selection.single && this._isAccelPressed(event))) {
              this.view.selection.toggleSelect(c);
+             event.preventDefault();
            }
          }
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
@@ -909,7 +920,8 @@
              this.view.selection.timedSelect(l, this._selectDelay);
              this.treeBoxObject.ensureRowIsVisible(l);
            }
-          }
+           event.preventDefault();
+         }
          ]]>
       </handler>
     </handlers>    
