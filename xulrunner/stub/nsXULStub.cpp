@@ -374,9 +374,55 @@ main(int argc, char **argv)
   }
 
   if (!greFound) {
-    Output(PR_FALSE,
-           "Could not find the Mozilla runtime.\n");
+#ifdef XP_MACOSX
+    // Check for <bundle>/Contents/Frameworks/XUL.framework/libxpcom.dylib
+    CFURLRef fwurl = CFBundleCopyPrivateFrameworksURL(appBundle);
+    CFURLRef absfwurl = nsnull;
+    if (fwurl) {
+      absfwurl = CFURLCopyAbsoluteURL(fwurl);
+      CFRelease(fwurl);
+    }
+
+    if (absfwurl) {
+      CFURLRef xulurl =
+        CFURLCreateCopyAppendingPathComponent(NULL, absfwurl,
+                                              CFSTR("XUL.Framework"),
+                                              PR_TRUE);
+
+      if (xulurl) {
+        CFURLRef xpcomurl =
+          CFURLCreateCopyAppendingPathComponent(NULL, xulurl,
+                                                CFSTR("libxpcom.dylib"),
+                                                PR_FALSE);
+
+        if (xpcomurl) {
+          char tbuffer[MAXPATHLEN];
+
+          if (CFURLGetFileSystemRepresentation(xpcomurl, PR_TRUE,
+                                               (UInt8*) tbuffer,
+                                               sizeof(tbuffer)) &&
+              access(tbuffer, R_OK | X_OK) == 0) {
+            if (realpath(tbuffer, greDir)) {
+              greFound = PR_TRUE;
+            }
+            else {
+              greDir[0] = '\0';
+            }
+          }
+
+          CFRelease(xpcomurl);
+        }
+
+        CFRelease(xulurl);
+      }
+
+      CFRelease(absfwurl);
+    }
+#endif
+    if (!greFound) {
+      Output(PR_FALSE, "Could not find the Mozilla runtime.\n");
       return 1;
+    }
   }
 
 #ifdef XP_OS2
@@ -388,7 +434,7 @@ main(int argc, char **argv)
   }
   DosSetExtLIBPATH(tmpPath, BEGIN_LIBPATH);
 #endif
-
+  
   rv = XPCOMGlueStartup(greDir);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_OUT_OF_MEMORY) {
