@@ -3339,6 +3339,73 @@ cancel_and_failure(nsNSSSocketInfo* infoObject)
   return SECFailure;
 }
 
+class nsIsStsHostRunnable : public nsIRunnable
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  nsIsStsHostRunnable(const nsCOMPtr<nsIStrictTransportSecurityService> &stss)
+    : stss(stss), stsEnabled(PR_FALSE), nsrv(NS_ERROR_UNEXPECTED)
+  {}
+
+  nsXPIDLCString hostName;
+
+  nsresult GetResult(PRBool &b) const { b = stsEnabled; return nsrv; }
+
+ private:
+  nsCOMPtr<nsIStrictTransportSecurityService> stss;
+  PRBool stsEnabled;
+  nsresult nsrv;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsIsStsHostRunnable,
+                              nsIRunnable)
+
+NS_IMETHODIMP nsIsStsHostRunnable::Run()
+{
+  nsrv = stss->IsStsHost(hostName, &stsEnabled);
+  return NS_OK;
+}
+
+class nsNotifyCertProblemRunnable : public nsIRunnable
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  nsNotifyCertProblemRunnable(nsIInterfaceRequestor *cb,
+                              nsIInterfaceRequestor *csi,
+                              nsSSLStatus* status,
+                              const nsCString &hostWithPortString)
+  : cb(cb),
+    csi(csi),
+    status(status),
+    hostWithPortString(hostWithPortString),
+    suppressMessage(PR_FALSE)
+  {}
+
+  PRBool GetSuppressMessage() { return suppressMessage; }
+
+ private:
+  nsIInterfaceRequestor* cb;
+  nsIInterfaceRequestor* csi;
+  nsSSLStatus* status;
+  const nsCString& hostWithPortString;
+  PRBool suppressMessage;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNotifyCertProblemRunnable,
+                              nsIRunnable)
+
+NS_IMETHODIMP nsNotifyCertProblemRunnable::Run()
+{
+  nsCOMPtr<nsIBadCertListener2> bcl = do_GetInterface(cb);
+  if (bcl)
+    bcl->NotifyCertProblem(csi, status, hostWithPortString, &suppressMessage);
+  return NS_OK;
+}
+
 static SECStatus
 nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 {
@@ -3522,21 +3589,25 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 
   nsCOMPtr<nsIStrictTransportSecurityService> stss
     = do_GetService(NS_STSSERVICE_CONTRACTID);
-  nsCOMPtr<nsIStrictTransportSecurityService> proxied_stss;
 
-  nsrv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                              NS_GET_IID(nsIStrictTransportSecurityService),
-                              stss, NS_PROXY_SYNC,
-                              getter_AddRefs(proxied_stss));
-  NS_ENSURE_SUCCESS(nsrv, SECFailure);
+  nsCOMPtr<nsIsStsHostRunnable> runnable(new nsIsStsHostRunnable(stss));
+  if (!runnable)
+    return SECFailure;
 
   // now grab the host name to pass to the STS Service
-  nsXPIDLCString hostName;
-  nsrv = infoObject->GetHostName(getter_Copies(hostName));
+  nsrv = infoObject->GetHostName(getter_Copies(runnable->hostName));
+  NS_ENSURE_SUCCESS(nsrv, SECFailure);
+
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  if (!mainThread)
+    return SECFailure;
+
+  // Dispatch SYNC since the result is used below
+  nsrv = mainThread->Dispatch(runnable, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(nsrv, SECFailure);
 
   PRBool strictTransportSecurityEnabled;
-  nsrv = proxied_stss->IsStsHost(hostName, &strictTransportSecurityEnabled);
+  nsrv = runnable->GetResult(strictTransportSecurityEnabled);
   NS_ENSURE_SUCCESS(nsrv, SECFailure);
 
   if (!strictTransportSecurityEnabled) {
@@ -3576,33 +3647,23 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   // giving the caller a chance to suppress the error messages.
 
   PRBool suppressMessage = PR_FALSE;
-  nsresult rv;
 
   // Try to get a nsIBadCertListener2 implementation from the socket consumer.
   nsCOMPtr<nsIInterfaceRequestor> cb;
   infoObject->GetNotificationCallbacks(getter_AddRefs(cb));
   if (cb) {
-    nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                         NS_GET_IID(nsIInterfaceRequestor),
-                         cb,
-                         NS_PROXY_SYNC,
-                         getter_AddRefs(callbacks));
+    nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(infoObject);
 
-    nsCOMPtr<nsIBadCertListener2> bcl = do_GetInterface(callbacks);
-    if (bcl) {
-      nsCOMPtr<nsIBadCertListener2> proxy_bcl;
-      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                           NS_GET_IID(nsIBadCertListener2),
-                           bcl,
-                           NS_PROXY_SYNC,
-                           getter_AddRefs(proxy_bcl));
-      if (proxy_bcl) {
-        nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(infoObject);
-        rv = proxy_bcl->NotifyCertProblem(csi, status, hostWithPortString, 
-                                          &suppressMessage);
-      }
-    }
+    nsCOMPtr<nsNotifyCertProblemRunnable> runnable(
+        new nsNotifyCertProblemRunnable(cb, csi, status, hostWithPortString));
+    if (!runnable)
+      return SECFailure;
+
+    // Dispatch SYNC since the result is used below
+    nsrv = mainThread->Dispatch(runnable, NS_DISPATCH_SYNC);
+    NS_ENSURE_SUCCESS(nsrv, SECFailure);
+
+    suppressMessage = runnable->GetSuppressMessage();
   }
 
   nsCOMPtr<nsIRecentBadCertsService> recentBadCertsService = 
