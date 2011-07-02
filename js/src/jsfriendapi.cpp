@@ -114,3 +114,11 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 
     return obj;
 }
+
+JS_FRIEND_API(uint32)
+JS_ObjectCountDynamicSlots(JSObject *obj)
+{
+    if (obj->hasSlotsArray())
+        return obj->numDynamicSlots(obj->numSlots());
+    return 0;
+}

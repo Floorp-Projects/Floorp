@@ -4316,14 +4316,6 @@ JSObject::copySlotRange(size_t start, const Value *vector, size_t length)
     }
 }
 
-/* Get the number of dynamic slots needed for a given capacity. */
-inline size_t
-JSObject::numDynamicSlots(size_t capacity) const
-{
-    JS_ASSERT(capacity >= numFixedSlots());
-    return isDenseArray() ? capacity : capacity - numFixedSlots();
-}
-
 bool
 JSObject::allocSlots(JSContext *cx, size_t newcap)
 {
