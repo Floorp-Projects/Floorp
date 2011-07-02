@@ -1339,10 +1339,8 @@ GetJSObjectSlotsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
 {
     JS_ASSERT(traceKind == JSTRACE_OBJECT);
     JSObject *obj = (JSObject *)thing;
-    if (obj->hasSlotsArray()) {
-        PRInt64Data *data = (PRInt64Data *) v;
-        data->n += obj->numDynamicSlots(obj->numSlots()) * sizeof(js::Value);
-    }
+    PRInt64Data *data = (PRInt64Data *) v;
+    data->n += JS_ObjectCountDynamicSlots(obj) * sizeof(js::Value);
 }
 #ifdef _MSC_VER
 #pragma optimize("", on)
