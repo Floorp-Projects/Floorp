@@ -439,7 +439,17 @@ namespace
 
     PRBool operator()(nsSMILInstanceTime* aInstanceTime, PRUint32 /*aIndex*/)
     {
-      return aInstanceTime->GetCreator() == mCreator;
+      if (aInstanceTime->GetCreator() != mCreator)
+        return PR_FALSE;
+
+      // If the instance time should be kept (because it is or was the fixed end
+      // point of an interval) then just disassociate it from the creator.
+      if (aInstanceTime->ShouldPreserve()) {
+        aInstanceTime->Unlink();
+        return PR_FALSE;
+      }
+
+      return PR_TRUE;
     }
 
   private:
