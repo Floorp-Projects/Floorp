@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Mouse Capture Tests" align="start"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/javascript" src="/MochiKit/packed.js"></script>
-<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <script>
 <![CDATA[
@@ -160,12 +160,12 @@ function runTests()
   var scrollY = parent ? parent.scrollY : 0;
 
   var b = frames[0].document.getElementById("b");
-  runCaptureTest(b, selectionCallback);
+//  runCaptureTest(b, selectionCallback);
 
   // restore scroll
   if (parent) parent.scroll(scrollX, scrollY);
 
-  frames[0].getSelection().collapseToStart();
+//  frames[0].getSelection().collapseToStart();
 
   var body = frames[0].document.body;
   var fixed = frames[0].document.getElementById("fixed");
