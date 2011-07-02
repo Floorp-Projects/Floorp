@@ -428,12 +428,14 @@ HistoryTracker.prototype = {
   onEndUpdateBatch: function HT_onEndUpdateBatch() {},
   onPageChanged: function HT_onPageChanged() {},
   onTitleChanged: function HT_onTitleChanged() {},
+  onDeleteVisits: function () {},
+  onDeleteURI: function () {},
 
   /* Every add is worth 1 point.
    * OnBeforeDeleteURI will triggger a sync for MULTI-DEVICE (see below)
    * Clearing all history will trigger a sync for MULTI-DEVICE (see below)
    */
-  _upScoreXLarge: function BMT__upScore() {
+  _upScoreXLarge: function HT__upScoreXLarge() {
     this.score += SCORE_INCREMENT_XLARGE;
   },
 
@@ -445,18 +447,16 @@ HistoryTracker.prototype = {
       this.score += SCORE_INCREMENT_SMALL;
     }
   },
-  onDeleteVisits: function onDeleteVisits() {
-  },
-  onBeforeDeleteURI: function onBeforeDeleteURI(uri, guid) {
-    if (this.ignoreAll)
+
+  onBeforeDeleteURI: function onBeforeDeleteURI(uri, guid, reason) {
+    if (this.ignoreAll || reason == Ci.nsINavHistoryObserver.REASON_EXPIRED)
       return;
     this._log.trace("onBeforeDeleteURI: " + uri.spec);
     if (this.addChangedID(guid)) {
       this._upScoreXLarge();
     }
   },
-  onDeleteURI: function HT_onDeleteURI(uri, guid) {
-  },
+
   onClearHistory: function HT_onClearHistory() {
     this._log.trace("onClearHistory");
     this._upScoreXLarge();

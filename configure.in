@@ -8451,7 +8451,10 @@ if test -z "${GLIB_CFLAGS}" -o -z "${GLIB_LIBS}" ; then
 fi
 fi
 
-if test -z "${GLIB_GMODULE_LIBS}" -a -n "${GLIB_CONFIG}"; then
+if test -z "${GLIB_GMODULE_LIBS}" \
+   -a -n "${GLIB_CONFIG}"\
+    -a "${GLIB_CONFIG}" != no\
+; then
     GLIB_GMODULE_LIBS=`$GLIB_CONFIG gmodule --libs`
 fi
 

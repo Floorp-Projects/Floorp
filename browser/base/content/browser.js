@@ -5462,7 +5462,7 @@ function hrefAndLinkNodeForClickEvent(event)
   // If there is no linkNode, try simple XLink.
   let href, baseURI;
   node = event.target;
-  while (node) {
+  while (node && !href) {
     if (node.nodeType == Node.ELEMENT_NODE) {
       href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
       if (href)

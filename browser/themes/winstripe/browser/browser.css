@@ -566,6 +566,16 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
+.bookmark-item[cutting] > .toolbarbutton-icon,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
+  opacity: 0.5;
+}
+
+.bookmark-item[cutting] > .toolbarbutton-text,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
+  opacity: 0.7;
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
