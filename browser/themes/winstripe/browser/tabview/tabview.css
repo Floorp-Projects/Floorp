@@ -204,7 +204,7 @@ html[dir=rtl] .tab.focus {
 ----------------------------------*/
 
 .groupItem {
-  cursor: move;
+  cursor: pointer;
   background-color: #E0EAF5;
   border-radius: 0.4em;
   box-shadow:
@@ -434,6 +434,7 @@ html[dir=rtl] .acceptsDrop {
 }
 
 .titlebar {
+  cursor: move;
   font-size: 12px;
   height: 18px;
 }
