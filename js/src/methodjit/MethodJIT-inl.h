@@ -83,6 +83,9 @@ CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest req
 static inline bool
 RecursiveMethodJIT(JSContext *cx, StackFrame *fp)
 {
+    if (!cx->compartment->hasJaegerCompartment())
+        return false;
+
     /*
      * We can recursively enter the method JIT on a single stack frame by
      * taking back edges, compiling, getting kicked back into the interpreter

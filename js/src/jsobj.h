@@ -636,11 +636,14 @@ struct JSObject : js::gc::Cell {
 
     inline size_t numFixedSlots() const;
 
-  private:
-    inline js::Value* fixedSlots() const;
+    /* Whether this object has any dynamic slots at all. */
     inline bool hasSlotsArray() const;
 
+    /* Get the number of dynamic slots required for a given capacity. */
     inline size_t numDynamicSlots(size_t capacity) const;
+
+  private:
+    inline js::Value* fixedSlots() const;
 
   public:
     /* Minimum size for dynamically allocated slots. */
