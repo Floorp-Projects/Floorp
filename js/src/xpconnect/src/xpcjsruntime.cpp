@@ -1341,7 +1341,7 @@ GetJSObjectSlotsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
     JSObject *obj = (JSObject *)thing;
     if (obj->hasSlotsArray()) {
         PRInt64Data *data = (PRInt64Data *) v;
-        data->n += obj->numSlots() * sizeof(js::Value);
+        data->n += obj->numDynamicSlots(obj->numSlots()) * sizeof(js::Value);
     }
 }
 #ifdef _MSC_VER

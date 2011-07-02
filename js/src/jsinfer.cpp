@@ -157,6 +157,8 @@ static bool InferSpewActive(SpewChannel channel)
     return active[channel];
 }
 
+#ifdef DEBUG
+
 static bool InferSpewColorable()
 {
     /* Only spew colors on xterm-color to not screw up emacs. */
@@ -165,8 +167,6 @@ static bool InferSpewColorable()
         return false;
     return strcmp(env, "xterm-color") == 0;
 }
-
-#ifdef DEBUG
 
 const char *
 types::InferSpewColorReset()
