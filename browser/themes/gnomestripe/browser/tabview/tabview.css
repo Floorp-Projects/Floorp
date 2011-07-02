@@ -190,7 +190,7 @@ html[dir=rtl] .stack-trayed .tab-title {
 ----------------------------------*/
 
 .groupItem {
-  cursor: move;
+  cursor: pointer;
   border: 1px solid rgba(230,230,230,1);
   background-color: window;
   background-image: -moz-linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.1));
@@ -421,6 +421,7 @@ html[dir=rtl] .acceptsDrop {
 }
 
 .titlebar {
+  cursor: move;
   font-size: 12px;
   height: 18px;
 }
