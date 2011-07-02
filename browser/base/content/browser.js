@@ -519,13 +519,6 @@ var gPopupBlockerObserver = {
     else
       blockedPopupAllowSite.removeAttribute("disabled");
 
-    var item = aEvent.target.lastChild;
-    while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
-      var next = item.previousSibling;
-      item.parentNode.removeChild(item);
-      item = next;
-    }
-
     var foundUsablePopupURI = false;
     var pageReport = gBrowser.pageReport;
     if (pageReport) {
@@ -588,6 +581,13 @@ var gPopupBlockerObserver = {
   onPopupHiding: function (aEvent) {
     if (aEvent.target.anchorNode.id == "page-report-button")
       aEvent.target.anchorNode.removeAttribute("open");
+
+    let item = aEvent.target.lastChild;
+    while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
+      let next = item.previousSibling;
+      item.parentNode.removeChild(item);
+      item = next;
+    }
   },
 
   showBlockedPopup: function (aEvent)
