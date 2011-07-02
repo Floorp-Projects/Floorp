@@ -215,6 +215,10 @@ const nsSMILMilestone nsSMILTimedElement::sMaxMilestone(LL_MAXINT, PR_FALSE);
 const PRUint8 nsSMILTimedElement::sMaxNumIntervals = 20;
 const PRUint8 nsSMILTimedElement::sMaxNumInstanceTimes = 100;
 
+// Detect if we arrive in some sort of undetected recursive syncbase dependency
+// relationship
+const PRUint16 nsSMILTimedElement::sMaxUpdateIntervalRecursionDepth = 20;
+
 //----------------------------------------------------------------------
 // Ctor, dtor
 
@@ -231,7 +235,8 @@ nsSMILTimedElement::nsSMILTimedElement()
   mElementState(STATE_STARTUP),
   mSeekState(SEEK_NOT_SEEKING),
   mDeferIntervalUpdates(PR_FALSE),
-  mDoDeferredUpdate(PR_FALSE)
+  mDoDeferredUpdate(PR_FALSE),
+  mUpdateIntervalRecursionDepth(0)
 {
   mSimpleDur.SetIndefinite();
   mMin.SetMillis(0L);
@@ -1895,6 +1900,19 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
   if (mElementState == STATE_STARTUP)
     return;
 
+  // Check that we aren't stuck in infinite recursion updating some syncbase
+  // dependencies. Generally such situations should be detected in advance and
+  // the chain broken in a sensible and predictable manner, so if we're hitting
+  // this assertion we need to work out how to detect the case that's causing
+  // it. In release builds, just bail out before we overflow the stack.
+  if (++mUpdateIntervalRecursionDepth > sMaxUpdateIntervalRecursionDepth) {
+    NS_ABORT_IF_FALSE(PR_FALSE,
+        "Update current interval recursion depth exceeded threshold");
+    return;
+  }
+  // NO EARLY RETURNS ALLOWED AFTER THIS POINT! (If we need one, then switch
+  // mUpdateIntervalRecursionDepth to use an auto incrementer/decrementer.)
+
   // If the interval is active the begin time is fixed.
   const nsSMILInstanceTime* beginTime = mElementState == STATE_ACTIVE
                                       ? mCurrentInterval->Begin()
@@ -1953,6 +1971,8 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
       ResetCurrentInterval();
     }
   }
+
+  --mUpdateIntervalRecursionDepth;
 }
 
 void
