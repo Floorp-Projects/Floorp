@@ -619,6 +619,13 @@ protected:
     SEEK_BACKWARD_FROM_INACTIVE
   };
   nsSMILSeekState                 mSeekState;
+
+  // Used to batch updates to the timing model
+  class AutoIntervalUpdateBatcher;
+  PRPackedBool mDeferIntervalUpdates;
+  PRPackedBool mDoDeferredUpdate; // Set if an update to the current interval
+                                  // was requested while mDeferIntervalUpdates
+                                  // was set
 };
 
 #endif // NS_SMILTIMEDELEMENT_H_
