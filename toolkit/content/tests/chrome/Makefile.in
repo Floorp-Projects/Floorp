@@ -171,9 +171,15 @@ _TEST_FILES +=  \
                	popup_childframe_node.xul \
 		popup_trigger.js \
 		test_tooltip_noautohide.xul \
+		test_deck.xul \
+		test_datepicker.xul \
+		test_menuchecks.xul \
+		test_menulist_null_value.xul \
+		test_tree_hier.xul \
+		test_tree_hier_cell.xul \
+		test_mousescroll.xul \
+		test_mousecapture.xul \
 		$(NULL)
-
-
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
 # textboxes and lists only, so skip this test on Mac
