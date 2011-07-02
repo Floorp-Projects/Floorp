@@ -373,10 +373,8 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
         gcmarker->setMarkColor(XPC_GC_COLOR_GRAY);
     }
     self->TraceXPConnectRoots(trc);
-    if (gcmarker) {
-        js::MarkWeakReferences(gcmarker);
+    if (gcmarker)
         gcmarker->setMarkColor(XPC_GC_COLOR_BLACK);
-    }
 }
 
 static void

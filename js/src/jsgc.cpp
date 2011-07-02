@@ -1776,18 +1776,6 @@ MarkContext(JSTracer *trc, JSContext *acx)
     MarkValue(trc, acx->iterValue, "iterValue");
 }
 
-void
-MarkWeakReferences(GCMarker *trc, JSGCInvocationKind gckind)
-{
-    trc->drainMarkStack();
-    while (js_TraceWatchPoints(trc) ||
-           WeakMapBase::markAllIteratively(trc) ||
-           Debug::mark(trc, gckind))
-    {
-        trc->drainMarkStack();
-    }
-}
-
 JS_REQUIRES_STACK void
 MarkRuntime(JSTracer *trc)
 {
@@ -2251,8 +2239,17 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     }
 
     MarkRuntime(&gcmarker);
-    MarkWeakReferences(&gcmarker, gckind);
     gcmarker.drainMarkStack();
+
+    /*
+     * Mark weak roots.
+     */
+    while (js_TraceWatchPoints(&gcmarker) ||
+           WeakMapBase::markAllIteratively(&gcmarker) ||
+           Debug::mark(&gcmarker, gckind))
+    {
+        gcmarker.drainMarkStack();
+    }
 
     rt->gcMarkingTracer = NULL;
 
