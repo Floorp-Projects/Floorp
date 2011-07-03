@@ -93,10 +93,11 @@ nsMathMLmpaddedFrame::ProcessAttributes()
   /*
   parse the attributes
 
-  width = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit | namedspace)
-  height= [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit)
-  depth = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit)
-  lspace= [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit)
+  width  = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit | namedspace)
+  height = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit | namedspace)
+  depth  = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit | namedspace)
+  lspace = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit | namedspace)
+  voffset= [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit | namedspace)
   */
 
   nsAutoString value;
@@ -137,6 +138,15 @@ nsMathMLmpaddedFrame::ProcessAttributes()
   if (!value.IsEmpty()) {
     ParseAttribute(value, mLeftSpaceSign, mLeftSpace, mLeftSpacePseudoUnit);
   }
+
+  // voffset
+  mVerticalOffsetSign = NS_MATHML_SIGN_INVALID;
+  GetAttribute(mContent, nsnull, nsGkAtoms::voffset_, value);
+  if (!value.IsEmpty()) {
+    ParseAttribute(value, mVerticalOffsetSign, mVerticalOffset, 
+                   mVerticalOffsetPseudoUnit);
+  }
+  
 }
 
 // parse an input string in the following format (see bug 148326 for testcases):
