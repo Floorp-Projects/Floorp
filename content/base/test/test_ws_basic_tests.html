@@ -22,11 +22,8 @@ var params = ["protocol", "resource", "origin", "end"];
 var results = ["test", "/tests/content/base/test/file_ws_basic_tests", "http://mochi.test:8888", "end"];
 
 function forcegc(){
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Components.utils.forceGC();
-  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  wu.garbageCollect();
+  SpecialPowers.forceGC();
+  SpecialPowers.gc();
 }
 
 function finishWSTest() {
