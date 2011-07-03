@@ -84,16 +84,19 @@ private:
   nsCSSValue mHeight;
   nsCSSValue mDepth;
   nsCSSValue mLeftSpace;
+  nsCSSValue mVerticalOffset;
 
   PRInt32    mWidthSign;
   PRInt32    mHeightSign;
   PRInt32    mDepthSign;
   PRInt32    mLeftSpaceSign;
+  PRInt32    mVerticalOffsetSign;
 
   PRInt32    mWidthPseudoUnit;
   PRInt32    mHeightPseudoUnit;
   PRInt32    mDepthPseudoUnit;
   PRInt32    mLeftSpacePseudoUnit;
+  PRInt32    mVerticalOffsetPseudoUnit;
 
   // helpers to process the attributes
   void
