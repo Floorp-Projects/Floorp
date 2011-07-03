@@ -786,7 +786,7 @@ public:
 
   virtual nsresult Init();
   
-  virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement);
+  virtual void AddXMLEventsContent(nsIContent * aXMLEventsElement);
 
   virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
