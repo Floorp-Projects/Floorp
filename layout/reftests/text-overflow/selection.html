@@ -86,7 +86,8 @@ function selectText() {
   for (i = 0; i < divs.length; ++i) {
     addRange(divs[i]);
   }
-  document.documentElement.removeAttribute('class');
+  document.body.offsetHeight;
+  setTimeout(function(){document.documentElement.removeAttribute('class')},1000);
 }
 </script>
 </head><body onload="selectText();">
