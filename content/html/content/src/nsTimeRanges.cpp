@@ -85,3 +85,28 @@ void
 nsTimeRanges::Add(double aStart, double aEnd) {
   mRanges.AppendElement(TimeRange(aStart,aEnd));
 }
+
+void
+nsTimeRanges::Normalize() {
+  if (mRanges.Length() <= 1) {
+    return;
+  }
+  nsAutoTArray<TimeRange, 4> normalized;
+
+  mRanges.Sort(CompareTimeRanges());
+
+  // This merges the intervals
+  TimeRange current(mRanges[0]);
+  for (PRUint32 i = 1; i < mRanges.Length(); i++) {
+    if (current.mEnd >= mRanges[i].mStart) {
+      current.mEnd = NS_MAX(current.mEnd, mRanges[i].mEnd);
+    } else {
+      normalized.AppendElement(current);
+      current = mRanges[i];
+    }
+  }
+
+  normalized.AppendElement(current);
+
+  mRanges = normalized;
+}
