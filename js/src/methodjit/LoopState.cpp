@@ -365,8 +365,16 @@ LoopState::checkRedundantEntry(const InvariantEntry &entry)
         if (entryRedundant(entry, baseEntry))
             return true;
         if (entryRedundant(baseEntry, entry)) {
-            invariantEntries[i--] = invariantEntries.back();
+            /*
+             * Make sure to maintain the existing ordering on how invariant
+             * entries are generated, this is required for e.g. entries which
+             * use temporaries or slot computations which appear before any
+             * bounds checks on the arrays.
+             */
+            for (unsigned j = i; j < length - 1; j++)
+                invariantEntries[j] = invariantEntries[j + 1];
             invariantEntries.popBack();
+            i--;
             length--;
         }
     }
