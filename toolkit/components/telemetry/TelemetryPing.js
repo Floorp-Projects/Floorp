@@ -208,9 +208,8 @@ TelemetryPing.prototype = {
     let memReporters = {};
     while (e.hasMoreElements()) {
       let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-      //  memReporters[mr.path] = mr.amount;
       let id = MEM_HISTOGRAMS[mr.path];
-      if (!id) {
+      if (!id || mr.amount == -1) {
         continue;
       }
 
@@ -224,15 +223,15 @@ TelemetryPing.prototype = {
 
         // Read mr.amount just once so our arithmetic is consistent.
         let curVal = mr.amount;
-        let prevVal = this._prevValues[mr.path];
-        if (!prevVal) {
+        if (!(mr.path in this._prevValues)) {
           // If this is the first time we're reading this reporter, store its
           // current value but don't report it in the telemetry ping, so we
           // ignore the effect startup had on the reporter.
           this._prevValues[mr.path] = curVal;
           continue;
         }
-        val = curVal - prevVal;
+
+        val = curVal - this._prevValues[mr.path];
         this._prevValues[mr.path] = curVal;
       }
       else {
@@ -245,9 +244,7 @@ TelemetryPing.prototype = {
         h = Telemetry.getHistogramById(id);
         this._histograms[mr.path] = h;
       }
-      // hack to deal with some memory reporters returning 0
-      if (val)
-        h.add(val);
+      h.add(val);
     }
     return memReporters;
   },
