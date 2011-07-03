@@ -805,13 +805,13 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                * into the next continuation
                */
               mBuffer.Append(Substring(text, start,
-                                       PR_MIN(end, endLine) - start));
+                                       NS_MIN(end, endLine) - start));
               while (end < endLine && nextSibling) { 
                 AdvanceAndAppendFrame(&frame, aLineIter, &nextSibling);
                 NS_ASSERTION(frame, "Premature end of continuation chain");
                 frame->GetOffsets(start, end);
                 mBuffer.Append(Substring(text, start,
-                                         PR_MIN(end, endLine) - start));
+                                         NS_MIN(end, endLine) - start));
               }
 
               PRBool createdContinuation = PR_FALSE;
