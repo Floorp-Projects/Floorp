@@ -240,7 +240,7 @@ protected:
                                           section.
                                           mHeaderCounter[1] for <h1> etc. */
 
-  nsRefPtr<mozilla::dom::Element> mContent;
+  nsRefPtr<mozilla::dom::Element> mElement;
 
   // For handling table rows
   nsAutoTArray<PRPackedBool, 8> mHasWrittenCellsForRow;
