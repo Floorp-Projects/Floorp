@@ -613,30 +613,37 @@ ContextStack::popFrameAfterOverflow()
 inline JSScript *
 ContextStack::currentScript(jsbytecode **ppc) const
 {
+    if (ppc)
+        *ppc = NULL;
+
     FrameRegs *regs = maybeRegs();
     StackFrame *fp = regs ? regs->fp() : NULL;
     while (fp && fp->isDummyFrame())
         fp = fp->prev();
-    if (!fp) {
-        if (ppc)
-            *ppc = NULL;
+    if (!fp)
         return NULL;
-    }
 
 #ifdef JS_METHODJIT
     mjit::CallSite *inlined = regs->inlined();
     if (inlined) {
         JS_ASSERT(inlined->inlineIndex < fp->jit()->nInlineFrames);
         mjit::InlineFrame *frame = &fp->jit()->inlineFrames()[inlined->inlineIndex];
+        JSScript *script = frame->fun->script();
+        if (script->compartment != cx_->compartment)
+            return NULL;
         if (ppc)
-            *ppc = frame->fun->script()->code + inlined->pcOffset;
-        return frame->fun->script();
+            *ppc = script->code + inlined->pcOffset;
+        return script;
     }
 #endif
 
+    JSScript *script = fp->script();
+    if (script->compartment != cx_->compartment)
+        return NULL;
+
     if (ppc)
         *ppc = fp->pcQuadratic(*this);
-    return fp->script();
+    return script;
 }
 
 inline JSObject *
