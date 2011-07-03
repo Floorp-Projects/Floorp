@@ -62,8 +62,7 @@
 #define NS_MATHML_PSEUDO_UNIT_WIDTH       2
 #define NS_MATHML_PSEUDO_UNIT_HEIGHT      3
 #define NS_MATHML_PSEUDO_UNIT_DEPTH       4
-#define NS_MATHML_PSEUDO_UNIT_LSPACE      5
-#define NS_MATHML_PSEUDO_UNIT_NAMEDSPACE  6
+#define NS_MATHML_PSEUDO_UNIT_NAMEDSPACE  5
 
 nsIFrame*
 NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -254,7 +253,6 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   else if (unit.EqualsLiteral("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
   else if (unit.EqualsLiteral("height")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
   else if (unit.EqualsLiteral("depth"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
-  else if (unit.EqualsLiteral("lspace")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
   else if (!gotPercent) { // percentage can only apply to a pseudo-unit
 
     // see if the unit is a named-space
@@ -297,7 +295,6 @@ void
 nsMathMLmpaddedFrame::UpdateValue(PRInt32                  aSign,
                                   PRInt32                  aPseudoUnit,
                                   const nsCSSValue&        aCSSValue,
-                                  nscoord                  aLeftSpace,
                                   const nsBoundingMetrics& aBoundingMetrics,
                                   nscoord&                 aValueToUpdate) const
 {
@@ -317,10 +314,6 @@ nsMathMLmpaddedFrame::UpdateValue(PRInt32                  aSign,
 
         case NS_MATHML_PSEUDO_UNIT_DEPTH:
              scaler = aBoundingMetrics.descent;
-             break;
-
-        case NS_MATHML_PSEUDO_UNIT_LSPACE:
-             scaler = aLeftSpace;
              break;
 
         default:
@@ -415,25 +408,26 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   pseudoUnit = (mWidthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_WIDTH : mWidthPseudoUnit;
   UpdateValue(mWidthSign, pseudoUnit, mWidth,
-              lspace, mBoundingMetrics, width);
+              mBoundingMetrics, width);
 
   // update "height" (this is the ascent in the terminology of the REC)
   pseudoUnit = (mHeightPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_HEIGHT : mHeightPseudoUnit;
   UpdateValue(mHeightSign, pseudoUnit, mHeight,
-              lspace, mBoundingMetrics, height);
+              mBoundingMetrics, height);
 
   // update "depth" (this is the descent in the terminology of the REC)
   pseudoUnit = (mDepthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_DEPTH : mDepthPseudoUnit;
   UpdateValue(mDepthSign, pseudoUnit, mDepth,
-              lspace, mBoundingMetrics, depth);
+              mBoundingMetrics, depth);
 
-  // update lspace -- should be *last* because lspace is overwritten!!
-  pseudoUnit = (mLeftSpacePseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
-             ? NS_MATHML_PSEUDO_UNIT_LSPACE : mLeftSpacePseudoUnit;
-  UpdateValue(mLeftSpaceSign, pseudoUnit, mLeftSpace,
-              lspace, mBoundingMetrics, lspace);
+  // update lspace
+  if (mLeftSpacePseudoUnit != NS_MATHML_PSEUDO_UNIT_ITSELF) {
+    pseudoUnit = mLeftSpacePseudoUnit;
+    UpdateValue(mLeftSpaceSign, pseudoUnit, mLeftSpace,
+                mBoundingMetrics, lspace);
+  }
 
   // do the padding now that we have everything
   // The idea here is to maintain the invariant that <mpadded>...</mpadded> (i.e.,
