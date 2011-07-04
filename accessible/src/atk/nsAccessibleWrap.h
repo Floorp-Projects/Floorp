@@ -127,6 +127,20 @@ protected:
     AtkObject *mAtkObject;
 
 private:
+
+  /*
+   * do we have text-remove and text-insert signals if not we need to use
+   * text-changed see nsAccessibleWrap::FireAtkTextChangedEvent() and
+   * bug 619002
+   */
+  enum EAvailableAtkSignals {
+    eUnknown,
+    eHaveNewAtkTextSignals,
+    eNoNewAtkSignals
+  };
+
+  static EAvailableAtkSignals gAvailableAtkSignals;
+
     PRUint16 CreateMaiInterfaces(void);
 };
 
