@@ -189,6 +189,7 @@
 #include "nsFocusManager.h"
 #include "nsIXULWindow.h"
 #include "nsEventStateManager.h"
+#include "nsITimedChannel.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #include "nsIDOMXULControlElement.h"
@@ -3002,8 +3003,15 @@ nsGlobalWindow::GetPerformance(nsIDOMPerformance** aPerformance)
         return NS_OK;
       }
       nsRefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
+      nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(mDoc->GetChannel()));
+      PRBool timingEnabled = PR_FALSE;
+      if (!timedChannel ||
+          !NS_SUCCEEDED(timedChannel->GetTimingEnabled(&timingEnabled)) ||
+          !timingEnabled) {
+        timedChannel = nsnull;
+      }
       if (timing) {
-        mPerformance = new nsPerformance(timing);
+        mPerformance = new nsPerformance(timing, timedChannel);
       }
     }
     NS_IF_ADDREF(*aPerformance = mPerformance);
