@@ -15,4 +15,4 @@ HTTP(..) == standards-line-height.html standards-line-height-ref.html
 HTTP(..) == selection.html selection-ref.html
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
-== clipped-elements.html clipped-elements-ref.html
+skip-if(Android) == clipped-elements.html clipped-elements-ref.html
