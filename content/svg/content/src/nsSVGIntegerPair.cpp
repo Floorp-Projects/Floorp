@@ -45,14 +45,14 @@
 
 using namespace mozilla;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGIntegerPair::DOMAnimatedIntegerPair, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGIntegerPair::DOMAnimatedInteger, mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGIntegerPair::DOMAnimatedIntegerPair)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGIntegerPair::DOMAnimatedIntegerPair)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGIntegerPair::DOMAnimatedInteger)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGIntegerPair::DOMAnimatedInteger)
 
-DOMCI_DATA(SVGAnimatedIntegerPair, nsSVGIntegerPair::DOMAnimatedIntegerPair)
+DOMCI_DATA(SVGAnimatedIntegerPair, nsSVGIntegerPair::DOMAnimatedInteger)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGIntegerPair::DOMAnimatedIntegerPair)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGIntegerPair::DOMAnimatedInteger)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedInteger)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedInteger)
@@ -196,7 +196,7 @@ nsSVGIntegerPair::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
                                        PairIndex aIndex,
                                        nsSVGElement *aSVGElement)
 {
-  *aResult = new DOMAnimatedIntegerPair(this, aIndex, aSVGElement);
+  *aResult = new DOMAnimatedInteger(this, aIndex, aSVGElement);
   NS_ADDREF(*aResult);
   return NS_OK;
 }
