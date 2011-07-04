@@ -87,14 +87,9 @@ IsAtomicElement(nsIFrame* aFrame, const nsIAtom* aFrameType)
 {
   NS_PRECONDITION(!aFrame->GetStyleDisplay()->IsBlockOutside(),
                   "unexpected block frame");
-
-  if (aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
-    if (aFrameType != nsGkAtoms::textFrame &&
-        aFrameType != nsGkAtoms::brFrame) {
-      return true;
-    }
-  }
-  return aFrame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE;
+  NS_PRECONDITION(aFrameType != nsGkAtoms::placeholderFrame,
+                  "unexpected placeholder frame");
+  return !aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
 }
 
 static bool
@@ -317,7 +312,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
                                   AlignmentEdges* aAlignmentEdges)
 {
   const nsIAtom* frameType = aFrame->GetType();
-  if (frameType == nsGkAtoms::brFrame) {
+  if (frameType == nsGkAtoms::brFrame ||
+      frameType == nsGkAtoms::placeholderFrame) {
     return;
   }
   const bool isAtomic = IsAtomicElement(aFrame, frameType);
