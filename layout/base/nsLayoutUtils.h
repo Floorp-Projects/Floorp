@@ -934,6 +934,10 @@ public:
   // Get a suitable foreground color for painting text for the frame.
   static nscolor GetTextColor(nsIFrame* aFrame);
 
+  // Get a baseline y position in app units that is snapped to device pixels.
+  static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
+                                      nscoord aY, nscoord aAscent);
+
   static void DrawString(const nsIFrame*      aFrame,
                          nsRenderingContext* aContext,
                          const PRUnichar*     aString,

@@ -57,6 +57,9 @@ const MEM_HISTOGRAMS = {
   "js-gc-heap": "MEMORY_JS_GC_HEAP",
   "resident": "MEMORY_RESIDENT",
   "explicit/layout/all": "MEMORY_LAYOUT_ALL",
+  "explicit/images/content/used/uncompressed":
+    "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED",
+  "heap-used": "MEMORY_HEAP_USED",
   "hard-page-faults": "HARD_PAGE_FAULTS"
 };
 
@@ -191,6 +194,15 @@ TelemetryPing.prototype = {
   _initialized: false,
   _prevValues: {},
 
+  addValue: function addValue(name, id, val) {
+    let h = this._histograms[name];
+    if (!h) {
+      h = Telemetry.getHistogramById(id);
+      this._histograms[name] = h;
+    }
+    h.add(val);
+  },
+
   /**
    * Pull values from about:memory into corresponding histograms
    */
@@ -205,7 +217,6 @@ TelemetryPing.prototype = {
     }
 
     let e = mgr.enumerateReporters();
-    let memReporters = {};
     while (e.hasMoreElements()) {
       let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
       let id = MEM_HISTOGRAMS[mr.path];
@@ -238,15 +249,11 @@ TelemetryPing.prototype = {
         NS_ASSERT(false, "Can't handle memory reporter with units " + mr.units);
         continue;
       }
-
-      let h = this._histograms[mr.path];
-      if (!h) {
-        h = Telemetry.getHistogramById(id);
-        this._histograms[mr.path] = h;
-      }
-      h.add(val);
+      this.addValue(mr.path, id, val);
     }
-    return memReporters;
+    // XXX: bug 660731 will enable this
+    // "explicit" is found differently.
+    //this.addValue("explicit", "MEMORY_EXPLICIT", Math.floor(mgr.explicit / 1024));
   },
   
   /**
