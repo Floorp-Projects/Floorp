@@ -649,7 +649,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Options:
   //   immediately - (bool) if true, no animation will be used
   close: function GroupItem_close(options) {
-    this.removeAll();
+    this.removeAll({dontClose: true});
     GroupItems.unregister(this);
 
     // remove unfreeze event handlers, if item size is frozen
@@ -721,6 +721,21 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // Find closest tab to make active
     let closestTabItem = UI.getClosestTab(closeCenter);
     UI.setActive(closestTabItem);
+  },
+
+  // ----------
+  // Function: closeIfEmpty
+  // Closes the group if it's empty, has no title, is closable, and
+  // autoclose is enabled (see pauseAutoclose()). Returns true if the close
+  // occurred and false otherwise.
+  closeIfEmpty: function() {
+    if (!this._children.length && !this.getTitle() &&
+        !GroupItems.getUnclosableGroupItemId() &&
+        !GroupItems._autoclosePaused) {
+      this.close();
+      return true;
+    }
+    return false;
   },
 
   // ----------
@@ -996,7 +1011,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.addSubscriber(this, "close", function() {
           let count = self._children.length;
           let dontArrange = self.expanded || !self.shouldStack(count);
-          self.remove(item, {dontArrange: dontArrange});
+          let dontClose = !item.closedManually && gBrowser._numPinnedTabs > 0;
+          self.remove(item, {dontArrange: dontArrange, dontClose: dontClose});
 
           if (dontArrange)
             self._freezeItemSize(count);
@@ -1043,6 +1059,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   // Possible options: 
   //   dontArrange - don't rearrange the remaining items
+  //   dontClose - don't close the group even if it normally would
   //   immediately - don't animate
   remove: function GroupItem_remove(a, options) {
     try {
@@ -1091,7 +1108,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (typeof item.setResizable == 'function')
         item.setResizable(true, options.immediately);
 
-      if (!options.dontArrange) {
+      // if a blank tab is selected while restoring a tab the blank tab gets
+      // removed. we need to keep the group alive for the restored tab.
+      if (item.tab._tabViewTabIsRemovedAfterRestore)
+        options.dontClose = true;
+
+      let closed = options.dontClose ? false : this.closeIfEmpty();
+      if (closed)
+        this._makeClosestTabActive();
+      else if (!options.dontArrange) {
         this.arrange({animate: !options.immediately});
         this._unfreezeItemSize({dontArrange: true});
       }
@@ -1706,7 +1731,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       self.arrange();
       var groupItem = drag.info.item.parent;
       if (groupItem)
-        groupItem.remove(drag.info.$el);
+        groupItem.remove(drag.info.$el, {dontClose: true});
       iQ(this.container).removeClass("acceptsDrop");
     }
 
@@ -1840,6 +1865,7 @@ let GroupItems = {
   _arrangesPending: [],
   _removingHiddenGroups: false,
   _delayedModUpdates: [],
+  _autoclosePaused: false,
   minGroupHeight: 110,
   minGroupWidth: 125,
 
@@ -2611,5 +2637,21 @@ let GroupItems = {
     return new Point(
       Math.max(size.x, GroupItems.minGroupWidth),
       Math.max(size.y, GroupItems.minGroupHeight));
+  },
+
+  // ----------
+  // Function: pauseAutoclose()
+  // Temporarily disable the behavior that closes groups when they become
+  // empty. This is used when entering private browsing, to avoid trashing the
+  // user's groups while private browsing is shuffling things around.
+  pauseAutoclose: function GroupItems_pauseAutoclose() {
+    this._autoclosePaused = true;
+  },
+
+  // ----------
+  // Function: unpauseAutoclose()
+  // Re-enables the auto-close behavior.
+  resumeAutoclose: function GroupItems_resumeAutoclose() {
+    this._autoclosePaused = false;
   }
 };
