@@ -355,8 +355,10 @@ let TabView = {
           if (!tabItem)
             return;
 
-          // Switch to the new tab
+          // Switch to the new tab, and close the old group if it's now empty.
+          let oldGroupItem = groupItems.getActiveGroupItem();
           window.gBrowser.selectedTab = tabItem.tab;
+          oldGroupItem.closeIfEmpty();
         });
       }
     }, true);
