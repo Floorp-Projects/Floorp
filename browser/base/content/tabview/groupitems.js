@@ -725,13 +725,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: closeIfEmpty
-  // Closes the group if it's empty, has no title, is closable, and
-  // autoclose is enabled (see pauseAutoclose()). Returns true if the close
-  // occurred and false otherwise.
-  closeIfEmpty: function() {
-    if (!this._children.length && !this.getTitle() &&
-        !GroupItems.getUnclosableGroupItemId() &&
-        !GroupItems._autoclosePaused) {
+  // Closes the group if it's empty, is closable, and autoclose is enabled
+  // (see pauseAutoclose()). Returns true if the close occurred and false
+  // otherwise.
+  closeIfEmpty: function GroupItem_closeIfEmpty() {
+    if (this.isEmpty() && !UI._closedLastVisibleTab &&
+        !GroupItems.getUnclosableGroupItemId() && !GroupItems._autoclosePaused) {
       this.close();
       return true;
     }
@@ -1110,7 +1109,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       // if a blank tab is selected while restoring a tab the blank tab gets
       // removed. we need to keep the group alive for the restored tab.
-      if (item.tab._tabViewTabIsRemovedAfterRestore)
+      if (item.isRemovedAfterRestore)
         options.dontClose = true;
 
       let closed = options.dontClose ? false : this.closeIfEmpty();
