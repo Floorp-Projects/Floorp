@@ -11,19 +11,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.
+# The Original Code is Mozilla Firefox.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Foundation.
+# The Mozilla Foundation <http://www.mozilla.org/>.
 # Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Patrick McManus <mcmanus@ducksong.com>
+#   Josh Matthews <josh@joshmatthews.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -33,51 +33,8 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK ***** */
+# ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
-MODULE         = necko
-LIBRARY_NAME   = nkwebsocket_s
-LIBXUL_LIBRARY = 1
-XPIDL_MODULE   = necko_websocket
-GRE_MODULE     = 1
-FORCE_STATIC_LIB = 1
-
-EXPORTS_NAMESPACES = mozilla/net
-
-XPIDLSRCS = \
-  nsIWebSocketProtocol.idl \
+IPDLSRCS =        \
+  PWebSocket.ipdl \
   $(NULL)
-
-CPPSRCS = \
-  nsWebSocketHandler.cpp \
-  WebSocketChannelParent.cpp \
-  WebSocketChannelChild.cpp \
-  BaseWebSocketChannel.cpp \
-  $(NULL)
-
-EXPORTS_mozilla/net = \
-  nsWebSocketHandler.h \
-  WebSocketChannelParent.h \
-  WebSocketChannelChild.h \
-  BaseWebSocketChannel.h \
-  $(NULL)
-
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../../base/src \
-  -I$(topsrcdir)/content/base/src \
-  -I$(topsrcdir)/content/events/src \
-  -I$(topsrcdir)/xpcom/ds \
-  $(NULL)
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DIMPL_NS_NET

@@ -212,6 +212,10 @@ SpecialPowers.prototype = {
     this.DOMWindowUtils.garbageCollect();
   },
 
+  forceGC: function() {
+    Components.utils.forceGC();
+  },
+
   hasContentProcesses: function() {
     try {
       var rt = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);

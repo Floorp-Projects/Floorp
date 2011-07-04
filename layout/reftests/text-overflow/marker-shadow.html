@@ -14,20 +14,24 @@
   src: url(../fonts/DejaVuSansMono.woff);
 }
 
+/* overflow:hidden will clip off some of our text-shadow too.
+   Give us some padding, so we can put the shadow to the left and bottom
+   and beat the overflow clipping. */
 div {
   font-family: DejaVuSansMono;
-  width: 60px;
+  width: 5em;
+  padding-left: 1em;
+  padding-bottom: 1em;
   overflow: hidden;
   white-space: nowrap;
-  font-size: 14px;
   text-overflow: "...";
-  text-shadow: 0px 2px 2px red;
+  text-shadow: -0.5em 3px 2px red;
 }
 </style>
 </head>
 <body>
-<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;a</div>
+
+<div>HelloKitty</div>
+
 </body>
 </html>
