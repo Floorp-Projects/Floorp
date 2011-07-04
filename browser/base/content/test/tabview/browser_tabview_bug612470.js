@@ -20,7 +20,8 @@ function test() {
     groupItem = createEmptyGroupItem(cw, 200, 200, 20);
     cw.UI.setActive(groupItem);
 
-    executeSoon(function () hideTabView(onHide, win));
+    whenTabViewIsHidden(onHide, win);
+    cw.UI.goToTab(win.gBrowser.tabs[0]);
   };
 
   let onHide = function () {
