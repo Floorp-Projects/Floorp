@@ -347,9 +347,9 @@ public:
 
   virtual void DisableComponentAlpha() { mDisableSubpixelAA = PR_TRUE; }
 
-  void PaintTextWithOffset(nsRenderingContext* aCtx,
-                           nsPoint aOffset,
-                           const nscolor* aColor);
+  void PaintTextToContext(nsRenderingContext* aCtx,
+                          nsPoint aOffset,
+                          const nscolor* aColor);
 
   PRPackedBool mDisableSubpixelAA;
 };
@@ -361,7 +361,7 @@ PaintTextShadowCallback(nsRenderingContext* aCtx,
                         void* aData)
 {
   reinterpret_cast<nsDisplayXULTextBox*>(aData)->
-           PaintTextWithOffset(aCtx, aShadowOffset, &aShadowColor);
+           PaintTextToContext(aCtx, aShadowOffset, &aShadowColor);
 }
 
 void
@@ -372,20 +372,21 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
                                                     mDisableSubpixelAA);
 
   // Paint the text shadow before doing any foreground stuff
-  nsRect drawRect = static_cast<nsTextBoxFrame*>(mFrame)->mTextDrawRect;
+  nsRect drawRect = static_cast<nsTextBoxFrame*>(mFrame)->mTextDrawRect +
+                    ToReferenceFrame();
   nsLayoutUtils::PaintTextShadow(mFrame, aCtx,
                                  drawRect, mVisibleRect,
                                  mFrame->GetStyleColor()->mColor,
                                  PaintTextShadowCallback,
                                  (void*)this);
 
-  PaintTextWithOffset(aCtx, nsPoint(0, 0), nsnull);
+  PaintTextToContext(aCtx, nsPoint(0, 0), nsnull);
 }
 
 void
-nsDisplayXULTextBox::PaintTextWithOffset(nsRenderingContext* aCtx,
-                                         nsPoint aOffset,
-                                         const nscolor* aColor)
+nsDisplayXULTextBox::PaintTextToContext(nsRenderingContext* aCtx,
+                                        nsPoint aOffset,
+                                        const nscolor* aColor)
 {
   static_cast<nsTextBoxFrame*>(mFrame)->
     PaintTitle(*aCtx, mVisibleRect, ToReferenceFrame() + aOffset, aColor);

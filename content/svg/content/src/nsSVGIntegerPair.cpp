@@ -55,7 +55,7 @@ DOMCI_DATA(SVGAnimatedIntegerPair, nsSVGIntegerPair::DOMAnimatedIntegerPair)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGIntegerPair::DOMAnimatedIntegerPair)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedInteger)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedIntegerPair)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedInteger)
 NS_INTERFACE_MAP_END
 
 /* Implementation */

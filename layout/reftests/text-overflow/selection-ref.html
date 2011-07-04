@@ -88,7 +88,8 @@ function selectText() {
   addRange(t1.firstChild);
   var t2 = document.getElementById('t2');
   addRange(t2.firstChild);
-  document.documentElement.removeAttribute('class');
+  document.body.offsetHeight;
+  setTimeout(function(){document.documentElement.removeAttribute('class')},1000);
 }
 </script>
 </head><body onload="selectText();">
