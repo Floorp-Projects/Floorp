@@ -120,4 +120,9 @@ interface nsIDNSService : nsISupports
      * return errors if prefetching is disabled by configuration.
      */
     const unsigned long RESOLVE_SPECULATE = (1 << 4);
+
+    /**
+     * If set, only IPv4 addresses will be returned from resolve/asyncResolve.
+     */
+    const unsigned long RESOLVE_DISABLE_IPV6 = (1 << 5);
 };

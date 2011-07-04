@@ -138,7 +138,7 @@ interface nsISocketTransport : nsITransport
 
     /**
      * connectionFlags is a bitmask that can be used to modify underlying 
-     * behavior of the socket connection.
+     * behavior of the socket connection. See the flags below.
      */
     attribute unsigned long connectionFlags;
 
@@ -158,6 +158,12 @@ interface nsISocketTransport : nsITransport
      * if this flag is set.
      */
     const unsigned long ANONYMOUS_CONNECT = (1 << 1);
+
+    /**
+     * If set, we will skip all IPv6 addresses the host may have and only
+     * connect to IPv4 ones.
+     */
+    const unsigned long DISABLE_IPV6 = (1 << 2);
 
     /**
      * Socket QoS/ToS markings. Valid values are IPTOS_DSCP_AFxx or
