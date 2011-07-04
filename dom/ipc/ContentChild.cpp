@@ -377,13 +377,13 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
     // one, whereupon the callback will turn each measurement into a
     // MemoryReport.
     mgr->EnumerateMultiReporters(getter_AddRefs(e));
-    nsRefPtr<MemoryReportsWrapper> wrappedReports =
-        new MemoryReportsWrapper(&reports);
-    nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback(process);
+    MemoryReportsWrapper wrappedReports(&reports);
+    MemoryReportCallback cb(process);
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsIMemoryMultiReporter> r;
       e->GetNext(getter_AddRefs(r));
-      r->CollectReports(cb, wrappedReports);
+
+      r->CollectReports(&cb, &wrappedReports);
     }
 
     child->Send__delete__(child, reports);
