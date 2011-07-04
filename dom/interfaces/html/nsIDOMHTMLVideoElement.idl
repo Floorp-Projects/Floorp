@@ -48,15 +48,15 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(169f0ff1-511a-453d-86b6-346c1e936122)]
+[scriptable, uuid(00c757ec-db7b-477e-95cd-b2a03b0f8634)]
 interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
 {
-           attribute long width;
+           attribute long width; 
            attribute long height;
   readonly attribute unsigned long videoWidth;
   readonly attribute unsigned long videoHeight;
            attribute DOMString poster;
-
+           
   // A count of the number of video frames that have demuxed from the media
   // resource. If we were playing perfectly, we'd be able to paint this many
   // frames.
