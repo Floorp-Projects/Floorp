@@ -5121,17 +5121,6 @@ ComputeTransformedLength(PropertyProvider& aProvider)
   return iter.GetSkippedOffset() - start;
 }
 
-gfxFloat
-nsTextFrame::GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY)
-{
-  gfxFloat appUnitsPerDevUnit = mTextRun->GetAppUnitsPerDevUnit();
-  gfxFloat baseline = aY + mAscent;
-  gfxRect putativeRect(0, baseline/appUnitsPerDevUnit, 1, 1);
-  if (!aContext->UserToDevicePixelSnapped(putativeRect, PR_TRUE))
-    return baseline;
-  return aContext->DeviceToUser(putativeRect.TopLeft()).y*appUnitsPerDevUnit;
-}
-
 bool
 nsTextFrame::MeasureCharClippedText(gfxContext* aCtx,
                                     nscoord aLeftEdge, nscoord aRightEdge,
@@ -5258,7 +5247,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   const nscoord frameWidth = GetSize().width;
   gfxPoint framePt(aPt.x, aPt.y);
   gfxPoint textBaselinePt(rtl ? gfxFloat(aPt.x + frameWidth) : framePt.x,
-                          GetSnappedBaselineY(ctx, aPt.y));
+             nsLayoutUtils::GetSnappedBaselineY(this, ctx, aPt.y, mAscent));
   PRUint32 startOffset = provider.GetStart().GetSkippedOffset();
   PRUint32 maxLength = ComputeTransformedLength(provider);
   nscoord snappedLeftEdge, snappedRightEdge;

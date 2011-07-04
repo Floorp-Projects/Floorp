@@ -271,8 +271,6 @@ public:
   void AddInlinePrefWidthForFlow(nsRenderingContext *aRenderingContext,
                                  InlinePrefWidthData *aData);
 
-  gfxFloat GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY);
-
   /**
    * Calculate the horizontal bounds of the grapheme clusters that fit entirely
    * inside the given left/right edges (which are positive lengths from the
