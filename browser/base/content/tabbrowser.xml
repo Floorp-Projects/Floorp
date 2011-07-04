@@ -2005,13 +2005,18 @@
            in the current window, in which case this will do nothing. -->
       <method name="replaceTabWithWindow">
         <parameter name="aTab"/>
+        <parameter name="aOptions"/>
         <body>
           <![CDATA[
             if (this.tabs.length == 1)
               return null;
 
+            var options = "chrome,dialog=no,all";
+            for (var name in aOptions)
+              options += "," + name + "=" + aOptions[name];
+
             // tell a new window to take the "dropped" tab
-            return window.openDialog(getBrowserURL(), "_blank", "dialog=no,all", aTab);
+            return window.openDialog(getBrowserURL(), "_blank", options, aTab);
           ]]>
         </body>
       </method>
@@ -3298,6 +3303,17 @@
 
         let canvas = tabPreviews.capture(tab, false);
         dt.setDragImage(canvas, 0, 0);
+
+        // _dragOffsetX/Y give the coordinates that the mouse should be
+        // positioned relative to the corner of the new window created upon
+        // dragend such that the mouse appears to have the same position
+        // relative to the corner of the dragged tab.
+        function clientX(ele) ele.getBoundingClientRect().left;
+        let tabOffsetX = clientX(tab) -
+                         clientX(this.children[0].pinned ? this.children[0] : this);
+        tab._dragOffsetX = event.screenX - window.screenX - tabOffsetX;
+        tab._dragOffsetY = event.screenY - window.screenY;
+
         event.stopPropagation();
       ]]></handler>
 
@@ -3477,6 +3493,11 @@
             }
           }
         }
+
+        // these offsets are only used in dragend, but we need to free them here
+        // as well
+        delete draggedTab._dragOffsetX;
+        delete draggedTab._dragOffsetY;
       ]]></handler>
 
       <handler event="dragend"><![CDATA[
@@ -3491,6 +3512,7 @@
 
         // Disable detach within the browser toolbox
         var eX = event.screenX;
+        var eY = event.screenY;
         var wX = window.screenX;
         // check if the drop point is horizontally within the window
         if (eX > wX && eX < (wX + window.outerWidth)) {
@@ -3498,13 +3520,45 @@
           // also avoid detaching if the the tab was dropped too close to
           // the tabbar (half a tab)
           let endScreenY = bo.screenY + 1.5 * bo.height;
-          let eY = event.screenY;
           if (eY < endScreenY && eY > window.screenY)
             return;
         }
 
         var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-        this.tabbrowser.replaceTabWithWindow(draggedTab);
+        // screen.availLeft et. al. only check the screen that this window is on,
+        // but we want to look at the screen the tab is being dropped onto.
+        var sX = {}, sY = {}, sWidth = {}, sHeight = {};
+        Cc["@mozilla.org/gfx/screenmanager;1"]
+          .getService(Ci.nsIScreenManager)
+          .screenForRect(eX, eY, 1, 1)
+          .GetAvailRect(sX, sY, sWidth, sHeight);
+        // ensure new window entirely within screen
+        var winWidth = Math.min(window.outerWidth, sWidth.value);
+        var winHeight = Math.min(window.outerHeight, sHeight.value);
+        var left = Math.min(Math.max(eX - draggedTab._dragOffsetX, sX.value),
+                            sX.value + sWidth.value - winWidth);
+        var top = Math.min(Math.max(eY - draggedTab._dragOffsetY, sY.value),
+                           sY.value + sHeight.value - winHeight);
+
+        delete draggedTab._dragOffsetX;
+        delete draggedTab._dragOffsetY;
+
+        if (this.tabbrowser.tabs.length == 1) {
+          // resize _before_ move to ensure the window fits the new screen.  if
+          // the window is too large for its screen, the window manager may do
+          // automatic repositioning.
+          window.resizeTo(winWidth, winHeight);
+          window.moveTo(left, top);
+          window.focus();
+        } else {
+          this.tabbrowser.replaceTabWithWindow(draggedTab, { screenX: left,
+                                                             screenY: top,
+#ifndef XP_WIN
+                                                             outerWidth: winWidth,
+                                                             outerHeight: winHeight
+#endif
+                                                             });
+        }
         event.stopPropagation();
       ]]></handler>
 
