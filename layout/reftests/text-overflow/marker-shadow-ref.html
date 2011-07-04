@@ -14,17 +14,20 @@
 
 div {
   font-family: DejaVuSansMono;
-  width: 60px;
-  overflow: hidden;
-  white-space: nowrap;
-  font-size: 14px;
-  text-overflow: "...";
+  padding-left: 1em;
+}
+
+/* We put the text and marker into separate spans, because
+   overflow markers (and their shadows) are drawn separately
+   from the text frame. */
+span {
+  text-shadow: -0.5em 3px 2px red;
 }
 </style>
 </head>
 <body>
-<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;a</div>
+
+<div><span>Hello</span><span>...</span></div>
+
 </body>
 </html>
