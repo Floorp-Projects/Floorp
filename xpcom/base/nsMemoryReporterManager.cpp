@@ -36,12 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemoryReporterManager.h"
 #include "nsArrayEnumerator.h"
-#include "nsISimpleEnumerator.h"
 
 #if defined(XP_LINUX) || defined(XP_MACOSX)
 
@@ -505,157 +503,6 @@ nsMemoryReporterManager::UnregisterMultiReporter(nsIMemoryMultiReporter *reporte
     mozilla::MutexAutoLock autoLock(mMutex);
     if (!mMultiReporters.RemoveObject(reporter))
         return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMemoryReporterManager::GetResident(PRInt64 *aResident)
-{
-    *aResident = ::GetResident();
-    return NS_OK;
-}
-
-struct MemoryReport {
-    MemoryReport(const nsACString &path, PRInt64 amount) 
-    : path(path), amount(amount)
-    {
-        MOZ_COUNT_CTOR(MemoryReport);
-    }
-    ~MemoryReport() 
-    {
-        MOZ_COUNT_DTOR(MemoryReport);
-    }
-    const nsCString path;
-    PRInt64 amount;
-};
-
-// This is just a wrapper for InfallibleTArray<MemoryReport> that implements
-// nsISupports, so it can be passed to nsIMemoryMultiReporter::CollectReports.
-class MemoryReportsWrapper : public nsISupports {
-public:
-    NS_DECL_ISUPPORTS
-    MemoryReportsWrapper(InfallibleTArray<MemoryReport> *r) : mReports(r) { }
-    InfallibleTArray<MemoryReport> *mReports;
-};
-NS_IMPL_ISUPPORTS0(MemoryReportsWrapper)
-
-class MemoryReportCallback : public nsIMemoryMultiReporterCallback
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
-                        PRInt32 aKind, PRInt32 aUnits, PRInt64 aAmount,
-                        const nsACString &aDescription,
-                        nsISupports *aWrappedMRs)
-    {
-        if (aKind == nsIMemoryReporter::KIND_MAPPED && aAmount != PRInt64(-1)) {
-            MemoryReportsWrapper *wrappedMRs =
-                static_cast<MemoryReportsWrapper *>(aWrappedMRs);
-            MemoryReport mr(aPath, aAmount);
-            wrappedMRs->mReports->AppendElement(mr);
-        }
-        return NS_OK;
-    }
-};
-NS_IMPL_ISUPPORTS1(
-  MemoryReportCallback
-, nsIMemoryMultiReporterCallback
-)
-
-// Is path1 a prefix, and thus a parent, of path2?  Eg. "a/b" is a parent of
-// "a/b/c", but "a/bb" is not.
-static bool
-isParent(const nsACString &path1, const nsACString &path2)
-{
-    if (path1.Length() >= path2.Length())
-        return false;
-
-    const nsACString& subStr = Substring(path2, 0, path1.Length());
-    return subStr.Equals(path1) && path2[path1.Length()] == '/';
-}
-
-NS_IMETHODIMP
-nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
-{
-    InfallibleTArray<MemoryReport> mapped;
-    PRInt64 heapUsed = PRInt64(-1);
-
-    // Get "heap-used" and all the KIND_MAPPED measurements from vanilla
-    // reporters.
-    nsCOMPtr<nsISimpleEnumerator> e;
-    EnumerateReporters(getter_AddRefs(e));
-
-    PRBool more;
-    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-        nsCOMPtr<nsIMemoryReporter> r;
-        e->GetNext(getter_AddRefs(r));
-
-        PRInt32 kind;
-        nsresult rv = r->GetKind(&kind);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (kind == nsIMemoryReporter::KIND_MAPPED) {
-            nsCString path;
-            rv = r->GetPath(getter_Copies(path));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            PRInt64 amount;
-            rv = r->GetAmount(&amount);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (amount != PRInt64(-1)) {
-                MemoryReport mr(path, amount);
-                mapped.AppendElement(mr);
-            }
-        } else {
-            nsCString path;
-            rv = r->GetPath(getter_Copies(path));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (path.Equals("heap-used")) {
-                rv = r->GetAmount(&heapUsed);
-                NS_ENSURE_SUCCESS(rv, rv);
-                NS_ENSURE_TRUE(heapUsed != PRInt64(-1), NS_ERROR_FAILURE);
-            }
-        }
-    }
-
-    // Get KIND_MAPPED measurements from multi-reporters, too.
-    nsCOMPtr<nsISimpleEnumerator> e2;
-    EnumerateMultiReporters(getter_AddRefs(e2));
-    nsRefPtr<MemoryReportsWrapper> wrappedMRs =
-        new MemoryReportsWrapper(&mapped);
-    nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback();
-
-    while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
-      nsCOMPtr<nsIMemoryMultiReporter> r;
-      e2->GetNext(getter_AddRefs(r));
-      r->CollectReports(cb, wrappedMRs);
-    }
-
-    // Ignore (by zeroing its amount) any reporter that is a child of another
-    // reporter.  Eg. if we have "explicit/a" and "explicit/a/b", zero the
-    // latter.  This is quadratic in the number of MAPPED reporters, but there
-    // shouldn't be many.
-    for (PRUint32 i = 0; i < mapped.Length(); i++) {
-        const nsCString &iPath = mapped[i].path;
-        for (PRUint32 j = i + 1; j < mapped.Length(); j++) {
-            const nsCString &jPath = mapped[j].path;
-            if (isParent(iPath, jPath)) {
-                mapped[j].amount = 0;
-            } else if (isParent(jPath, iPath)) {
-                mapped[i].amount = 0;
-            }
-        }
-    }
-
-    // Sum all the mapped reporters and heapUsed.
-    *aExplicit = heapUsed;
-    for (PRUint32 i = 0; i < mapped.Length(); i++) {
-        *aExplicit += mapped[i].amount;
-    }
 
     return NS_OK;
 }
