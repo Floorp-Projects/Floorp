@@ -234,6 +234,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "nsXULAppAPI.h"
 
 #include "nsDOMNavigationTiming.h"
+#include "nsITimedChannel.h"
 
 using namespace mozilla;
 
@@ -9075,6 +9076,13 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             props->SetPropertyAsBool(
                 NS_LITERAL_STRING("docshell.newWindowTarget"),
                 PR_TRUE);
+        }
+    }
+
+    if (Preferences::GetBool("dom.enable_performance", PR_FALSE)) {
+        nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(channel));
+        if (timedChannel) {
+            timedChannel->SetTimingEnabled(PR_TRUE);
         }
     }
 
