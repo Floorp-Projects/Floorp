@@ -235,7 +235,6 @@ nsDisplayTextOverflowMarker::Paint(nsDisplayListBuilder* aBuilder,
   nsLayoutUtils::PaintTextShadow(mFrame, aCtx, mRect, mVisibleRect,
                                  foregroundColor, PaintTextShadowCallback,
                                  (void*)this);
-
   aCtx->SetColor(foregroundColor);
   PaintTextToContext(aCtx, nsPoint(0, 0));
 }
@@ -246,10 +245,9 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
 {
   nsStyleContext* sc = mFrame->GetStyleContext();
   nsLayoutUtils::SetFontFromStyle(aCtx, sc);
-
-  nsPoint baselinePt = mRect.TopLeft();
-  baselinePt.y += mAscent;
-
+  gfxFloat y = nsLayoutUtils::GetSnappedBaselineY(mFrame, aCtx->ThebesContext(),
+                                                  mRect.y, mAscent);
+  nsPoint baselinePt(mRect.x, NSToCoordFloor(y));
   nsLayoutUtils::DrawString(mFrame, aCtx, mString.get(),
                             mString.Length(), baselinePt + aOffsetFromRect);
 }
