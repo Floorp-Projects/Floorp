@@ -23,14 +23,6 @@ var gProgressTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-// Used by test_played
-var gPlayedTests = [
-  { name:"big.wav", type:"audio/x-wav", duration:9.0, size:102444 },
-  { name:"sound.ogg", type:"audio/ogg", duration:4.0, size:2603 },
-  { name:"seek.ogv", type:"video/ogg", duration:3.966, size:285310 },
-  { name:"seek.webm", type:"video/webm", duration:3.966 }
-];
-
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
 // anything for testing clone-specific bugs.
 var gCloneTests = gSmallTests.concat([
