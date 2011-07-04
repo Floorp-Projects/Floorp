@@ -251,9 +251,8 @@ TelemetryPing.prototype = {
       }
       this.addValue(mr.path, id, val);
     }
-    // XXX: bug 660731 will enable this
     // "explicit" is found differently.
-    //this.addValue("explicit", "MEMORY_EXPLICIT", Math.floor(mgr.explicit / 1024));
+    this.addValue("explicit", "MEMORY_EXPLICIT", Math.floor(mgr.explicit / 1024));
   },
   
   /**
