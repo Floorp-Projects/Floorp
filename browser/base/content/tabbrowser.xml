@@ -3304,14 +3304,15 @@
         let canvas = tabPreviews.capture(tab, false);
         dt.setDragImage(canvas, 0, 0);
 
-        let bo = this.mTabstrip.boxObject;
-        let paddingStart = this.mTabstrip.scrollboxPaddingStart;
-        // _dragOffset[X|Y] give the coordinates that the mouse should be
+        // _dragOffsetX/Y give the coordinates that the mouse should be
         // positioned relative to the corner of the new window created upon
         // dragend such that the mouse appears to have the same position
         // relative to the corner of the dragged tab.
-        tab._dragOffsetX = event.screenX - tab.boxObject.screenX + paddingStart + bo.screenX - window.screenX;
-        tab._dragOffsetY = event.screenY - tab.boxObject.screenY + bo.screenY - window.screenY;
+        function clientX(ele) ele.getBoundingClientRect().left;
+        let tabOffsetX = clientX(tab) -
+                         clientX(this.children[0].pinned ? this.children[0] : this);
+        tab._dragOffsetX = event.screenX - window.screenX - tabOffsetX;
+        tab._dragOffsetY = event.screenY - window.screenY;
 
         event.stopPropagation();
       ]]></handler>
@@ -3526,16 +3527,18 @@
         var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
         // screen.availLeft et. al. only check the screen that this window is on,
         // but we want to look at the screen the tab is being dropped onto.
-        var sm = Cc["@mozilla.org/gfx/screenmanager;1"].
-                   getService(Ci.nsIScreenManager);
-        var whichScreen = sm.screenForRect(eX, eY, 1, 1);
-        var sX = {}, sY = {}, sW = {}, sH = {};
-        whichScreen.GetAvailRect(sX, sY, sW, sH);
+        var sX = {}, sY = {}, sWidth = {}, sHeight = {};
+        Cc["@mozilla.org/gfx/screenmanager;1"]
+          .getService(Ci.nsIScreenManager)
+          .screenForRect(eX, eY, 1, 1)
+          .GetAvailRect(sX, sY, sWidth, sHeight);
         // ensure new window entirely within screen
-        var winWidth = Math.min(window.outerWidth, sW.value);
-        var winHeight = Math.min(window.outerHeight, sH.value);
-        var aLeft = Math.min(Math.max(eX - draggedTab._dragOffsetX, sX.value), sX.value + sW.value - winWidth);
-        var aTop = Math.min(Math.max(eY - draggedTab._dragOffsetY, sY.value), sY.value + sH.value - winHeight);
+        var winWidth = Math.min(window.outerWidth, sWidth.value);
+        var winHeight = Math.min(window.outerHeight, sHeight.value);
+        var left = Math.min(Math.max(eX - draggedTab._dragOffsetX, sX.value),
+                            sX.value + sWidth.value - winWidth);
+        var top = Math.min(Math.max(eY - draggedTab._dragOffsetY, sY.value),
+                           sY.value + sHeight.value - winHeight);
 
         delete draggedTab._dragOffsetX;
         delete draggedTab._dragOffsetY;
@@ -3545,17 +3548,17 @@
           // the window is too large for its screen, the window manager may do
           // automatic repositioning.
           window.resizeTo(winWidth, winHeight);
-          window.moveTo(aLeft, aTop);
+          window.moveTo(left, top);
           window.focus();
-        }
-        else
-          this.tabbrowser.replaceTabWithWindow(draggedTab, { screenX: aLeft,
-                                                             screenY: aTop,
+        } else {
+          this.tabbrowser.replaceTabWithWindow(draggedTab, { screenX: left,
+                                                             screenY: top,
 #ifndef XP_WIN
                                                              outerWidth: winWidth,
                                                              outerHeight: winHeight
 #endif
                                                              });
+        }
         event.stopPropagation();
       ]]></handler>
 
