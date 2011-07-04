@@ -1419,7 +1419,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .panel-promo-icon {
-  list-style-image: url("chrome://browser/skin/sync-24.png");
+  list-style-image: url("chrome://browser/skin/sync-notification-24.png");
   -moz-margin-end: 10px;
   vertical-align: middle;
 }
