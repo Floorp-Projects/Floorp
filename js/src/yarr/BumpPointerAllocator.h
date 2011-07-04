@@ -34,7 +34,11 @@
 
 namespace WTF {
 
+#if WTF_CPU_SPARC
+#define MINIMUM_BUMP_POOL_SIZE 0x2000
+#else
 #define MINIMUM_BUMP_POOL_SIZE 0x1000
+#endif
 
 class BumpPointerPool {
 public:
