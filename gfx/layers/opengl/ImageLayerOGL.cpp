@@ -579,6 +579,10 @@ ImageLayerOGL::RenderLayer(int,
        gl()->MakeCurrent();
        ioImage = static_cast<MacIOSurfaceImageOGL*>(image.get());
      }
+
+     if (!ioImage) {
+       return;
+     }
      
      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, ioImage->mTexture.GetTextureID());
