@@ -1412,6 +1412,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   box-shadow: 0 1px 1px hsla(0,0%,0%,.25) inset;
+  color: hsl(0,0%,60%);
 }
 
 .panel-promo-message > .text-link {
