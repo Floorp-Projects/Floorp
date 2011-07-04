@@ -100,7 +100,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug618828.js \
                  browser_tabview_bug619937.js \
                  browser_tabview_bug622835.js \
-                 browser_tabview_bug622872.js \
                  browser_tabview_bug623768.js \
                  browser_tabview_bug624265.js \
                  browser_tabview_bug624692.js \
@@ -130,7 +129,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug633788.js \
                  browser_tabview_bug634077.js \
                  browser_tabview_bug634085.js \
-                 browser_tabview_bug634158.js \
                  browser_tabview_bug634672.js \
                  browser_tabview_bug635696.js \
                  browser_tabview_bug640765.js \
@@ -138,13 +136,13 @@ _BROWSER_FILES = \
                  browser_tabview_bug642793.js \
                  browser_tabview_bug643392.js \
                  browser_tabview_bug644097.js \
-                 browser_tabview_bug645653.js \
                  browser_tabview_bug648882.js \
                  browser_tabview_bug649006.js \
                  browser_tabview_bug649307.js \
                  browser_tabview_bug649319.js \
                  browser_tabview_bug650573.js \
                  browser_tabview_bug651311.js \
+                 browser_tabview_bug654721.js \
                  browser_tabview_bug654941.js \
                  browser_tabview_bug655269.js \
                  browser_tabview_bug656778.js \
@@ -159,7 +157,6 @@ _BROWSER_FILES = \
                  browser_tabview_group.js \
                  browser_tabview_launch.js \
                  browser_tabview_multiwindow_search.js \
-                 browser_tabview_orphaned_tabs.js \
                  browser_tabview_privatebrowsing.js \
                  browser_tabview_rtl.js \
                  browser_tabview_search.js \
