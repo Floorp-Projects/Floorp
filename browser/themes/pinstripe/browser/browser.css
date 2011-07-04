@@ -138,6 +138,10 @@ toolbarbutton.chevron > .toolbarbutton-text {
   display: none;
 }
 
+toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
+  display: -moz-box; /* display chevron icon in text mode */
+}
+
 toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   -moz-transform: scaleX(-1);
 }
