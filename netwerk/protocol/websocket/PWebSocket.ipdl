@@ -18,11 +18,11 @@
  *
  * The Initial Developer of the Original Code is
  *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Josh Matthews <josh@joshmatthews.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,42 +38,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PContent;
-include protocol PHttpChannel;
-include protocol PCookieService;
+include protocol PNecko;
 include protocol PBrowser;
-include protocol PWyciwygChannel;
-include protocol PFTPChannel;
-include protocol PWebSocket;
+
+include "mozilla/net/NeckoMessageUtils.h";
+
+using IPC::URI;
 
 namespace mozilla {
 namespace net {
 
-
-//-------------------------------------------------------------------
-sync protocol PNecko
+async protocol PWebSocket
 {
-  manager PContent;
-  manages PHttpChannel;
-  manages PCookieService;
-  manages PWyciwygChannel;
-  manages PFTPChannel;
-  manages PWebSocket;
+  manager PNecko;
 
 parent:
+  // Forwarded methods corresponding to methods on nsIWebSocketProtocolHandler
+  AsyncOpen(URI aURI, nsCString aOrigin, nsCString aProtocol, bool aSecure);
+  Close();
+  SendMsg(nsCString aMsg);
+  SendBinaryMsg(nsCString aMsg);
+
+  DeleteSelf();
+
+child:
+  // Forwarded notifications corresponding to the nsIWebSocketListener interface
+  OnStart(nsCString aProtocol);
+  OnStop(nsresult aStatusCode);
+  OnMessageAvailable(nsCString aMsg);
+  OnBinaryMessageAvailable(nsCString aMsg);
+  OnAcknowledge(PRUint32 aSize);
+  OnServerClose();
+
+  // Only sent in the event that AsyncOpen fails
+  AsyncOpenFailed();
+
   __delete__();
 
-  PCookieService();
-  PWyciwygChannel();
-  PFTPChannel();
-  PWebSocket(PBrowser browser);
-
-  HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
-
-both:
-  PHttpChannel(nullable PBrowser browser);
 };
 
-
-} // namespace net
-} // namespace mozilla
+} //namespace net
+} //namespace mozilla

@@ -523,9 +523,16 @@ let UI = {
 
     Storage.saveVisibilityData(gWindow, "true");
 
+    // Close the active group if it was empty. This will happen when the
+    // user returns to Panorama after looking at an app tab, having
+    // closed all other tabs. (If the user is looking at an orphan tab, then
+    // there is no active group for the purposes of this check.)
     let activeGroupItem = null;
-    if (!UI.getActiveOrphanTab())
+    if (!UI.getActiveOrphanTab()) {
       activeGroupItem = GroupItems.getActiveGroupItem();
+      if (activeGroupItem && activeGroupItem.closeIfEmpty())
+        activeGroupItem = null;
+    }
 
     if (zoomOut && currentTab && currentTab._tabViewTabItem) {
       item = currentTab._tabViewTabItem;
@@ -631,8 +638,10 @@ let UI = {
   // Pauses the storage activity that conflicts with sessionstore updates and 
   // private browsing mode switches. Calls can be nested. 
   storageBusy: function UI_storageBusy() {
-    if (!this._storageBusyCount)
+    if (!this._storageBusyCount) {
       TabItems.pauseReconnecting();
+      GroupItems.pauseAutoclose();
+    }
     
     this._storageBusyCount++;
   },
@@ -650,6 +659,7 @@ let UI = {
   
       TabItems.resumeReconnecting();
       GroupItems._updateTabBar();
+      GroupItems.resumeAutoclose();
     }
   },
 

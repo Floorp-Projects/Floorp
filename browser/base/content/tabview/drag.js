@@ -282,6 +282,11 @@ Drag.prototype = {
     Trenches.hideGuides();
     this.item.isDragging = false;
 
+    if (this.parent && this.parent != this.item.parent &&
+       this.parent.isEmpty()) {
+      this.parent.close();
+    }
+
     if (this.parent && this.parent.expanded)
       this.parent.arrange();
 
