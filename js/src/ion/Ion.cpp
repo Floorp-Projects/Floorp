@@ -126,6 +126,10 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     spew.spewPass("Build SSA");
 
+    if (!SplitCriticalEdges(&builder, graph))
+        return false;
+    spew.spewPass("Split Critical Edges");
+
     if (!ReorderBlocks(graph))
         return false;
     spew.spewPass("Reorder Blocks");

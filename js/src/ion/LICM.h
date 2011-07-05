@@ -79,8 +79,8 @@ class Loop
   private:   
     // These blocks define the loop.  header_ points to the loop header, and footer_
     // points to the basic block that has a backedge back to the loop header.
-    MBasicBlock *header_;
     MBasicBlock *footer_;
+    MBasicBlock *header_;
 
     // The pre-loop block is the first predecessor of the loop header.  It is where
     // the loop is first entered and where hoisted instructions will be placed.
