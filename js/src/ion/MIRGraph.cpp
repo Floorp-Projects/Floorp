@@ -583,7 +583,7 @@ MBasicBlock::getSuccessor(size_t index) const
 void
 MBasicBlock::replaceSuccessor(size_t pos, MBasicBlock *split)
 {
-    lastIns()->replaceEdge(pos, split);
+    lastIns()->replaceSuccessor(pos, split);
 
     // Note, successors-with-phis is not yet set.
     JS_ASSERT(!successorWithPhis_);
