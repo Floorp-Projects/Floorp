@@ -1226,7 +1226,7 @@ IonBuilder::jsop_binary(JSOp op)
 MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
-    MBasicBlock *block = MBasicBlock::New(this, predecessor, pc);
+    MBasicBlock *block = MBasicBlock::New(this, predecessor, pc, MBasicBlock::NORMAL);
     if (!graph().addBlock(block))
         return NULL;
     return block;

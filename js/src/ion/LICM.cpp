@@ -80,9 +80,9 @@ LICM::analyze()
 }
 
 Loop::Loop(MBasicBlock *footer, MBasicBlock *header, MIRGraph &graph)
-  : footer_(footer),
-    header_(header),
-    graph(graph)
+  : graph(graph),
+    footer_(footer),
+    header_(header)
 {
     preLoop_ = header_->getPredecessor(0);
 }

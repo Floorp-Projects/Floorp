@@ -53,6 +53,9 @@ class MIRGenerator;
 class MIRGraph;
 
 bool
+SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph);
+
+bool
 ApplyTypeInformation(MIRGraph &graph);
 
 bool

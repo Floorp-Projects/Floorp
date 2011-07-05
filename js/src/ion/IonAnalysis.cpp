@@ -47,6 +47,36 @@
 using namespace js;
 using namespace js::ion;
 
+// A critical edge is an edge which is neither its successor's only predecessor
+// nor its predecessor's only successor. Critical edges must be split to
+// prevent copy-insertion and code motion from affecting other edges.
+bool
+ion::SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph)
+{
+    size_t preSplitEdges = graph.numBlocks();
+    for (size_t i = 0; i < preSplitEdges; i++) {
+        MBasicBlock *block = graph.getBlock(i);
+        if (block->numSuccessors() < 2)
+            continue;
+        for (size_t i = 0; i < block->numSuccessors(); i++) {
+            MBasicBlock *target = block->getSuccessor(i);
+            if (target->numPredecessors() < 2)
+                continue;
+
+            // Create a new block inheriting from the predecessor.
+            MBasicBlock *split = MBasicBlock::NewSplitEdge(gen, block);
+            if (!graph.addBlock(split))
+                return false;
+            split->end(MGoto::New(target));
+
+            block->replaceSuccessor(i, split);
+            target->replacePredecessor(block, split);
+        }
+    }
+
+    return true;
+}
+
 // The type analyzer attempts to decide every instruction's output type. The
 // following properties of instructions are used:
 //

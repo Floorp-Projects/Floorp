@@ -516,6 +516,11 @@ class MControlInstruction : public MInstruction
         JS_ASSERT(i < numSuccessors());
         return successors[i];
     }
+
+    void replaceEdge(size_t i, MBasicBlock *split) {
+        JS_ASSERT(successors[i]);
+        successors[i] = split;
+    }
 };
 
 template <size_t Arity>
