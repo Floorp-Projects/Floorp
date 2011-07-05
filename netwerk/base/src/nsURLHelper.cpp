@@ -589,15 +589,60 @@ net_FilterURIString(const char *str, nsACString& result)
         p++;
     }
 
+    // Don't strip from the scheme, because other code assumes everything
+    // up to the ':' is the scheme, and it's bad not to have it match.
+    // If there's no ':', strip.
+    PRBool found_colon = PR_FALSE;
+    const char *first = nsnull;
     while (*p) {
-        if (*p == '\t' || *p == '\r' || *p == '\n') {
-            writing = PR_TRUE;
-            // append chars up to but not including *p
-            if (p > str)
-                result.Append(str, p - str);
-            str = p + 1;
+        switch (*p) {
+            case '\t': 
+            case '\r': 
+            case '\n':
+                if (found_colon) {
+                    writing = PR_TRUE;
+                    // append chars up to but not including *p
+                    if (p > str)
+                        result.Append(str, p - str);
+                    str = p + 1;
+                } else {
+                    // remember where the first \t\r\n was in case we find no scheme
+                    if (!first)
+                        first = p;
+                }
+                break;
+
+            case ':':
+                found_colon = PR_TRUE;
+                break;
+
+            case '/':
+            case '@':
+                if (!found_colon) {
+                    // colon also has to precede / or @ to be a scheme
+                    found_colon = PR_TRUE; // not really, but means ok to strip
+                    if (first) {
+                        // go back and replace
+                        p = first;
+                        continue; // process *p again
+                    }
+                }
+                break;
+
+            default:
+                break;
         }
         p++;
+
+        // At end, if there was no scheme, and we hit a control char, fix
+        // it up now.
+        if (!*p && first != nsnull && !found_colon) {
+            // TRICKY - to avoid duplicating code, we reset the loop back
+            // to the point we found something to do
+            p = first;
+            // This also stops us from looping after we finish
+            found_colon = PR_TRUE; // so we'll replace \t\r\n
+        }
     }
 
     // Remove trailing spaces if any
