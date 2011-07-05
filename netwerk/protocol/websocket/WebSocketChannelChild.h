@@ -58,7 +58,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
 
   NS_DECL_ISUPPORTS
 
-  // nsIWebSocketProtocol methods BaseWebSocketChannel didn't implement for us
+  // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
   NS_SCRIPTABLE NS_IMETHOD AsyncOpen(nsIURI *aURI,
                                      const nsACString &aOrigin,

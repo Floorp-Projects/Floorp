@@ -40,7 +40,6 @@
 #ifndef mozilla_net_nsWebSocketHandler_h
 #define mozilla_net_nsWebSocketHandler_h
 
-#include "nsIWebSocketProtocol.h"
 #include "nsIURI.h"
 #include "nsISupports.h"
 #include "nsIInterfaceRequestor.h"
@@ -93,7 +92,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
-  // nsIWebSocketProtocol methods BaseWebSocketChannel didn't implement for us
+  // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
   NS_IMETHOD AsyncOpen(nsIURI *aURI,
                        const nsACString &aOrigin,

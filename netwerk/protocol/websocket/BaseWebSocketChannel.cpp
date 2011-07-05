@@ -63,7 +63,7 @@ BaseWebSocketChannel::BaseWebSocketChannel()
 }
 
 //-----------------------------------------------------------------------------
-// BaseWebSocketChannel::nsIWebSocketProtocol
+// BaseWebSocketChannel::nsIWebSocketChannel
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
