@@ -119,6 +119,7 @@ not yet time to display the next frame.
 #include "nsAudioAvailableEventManager.h"
 #include "nsHTMLMediaElement.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "nsITimer.h"
 
 /*
   The playback state machine class. This manages the decoding in the
@@ -248,6 +249,14 @@ public:
   // Sets the current frame buffer length for the MozAudioAvailable event.
   // Accessed on the main and state machine threads.
   virtual void SetFrameBufferLength(PRUint32 aLength);
+
+  // Schedules the state machine thread to run the state machine.
+  nsresult ScheduleStateMachine();
+
+  // Schedules the state machine thread to run the state machine
+  // in aUsecs microseconds from now, if it's not already scheduled to run
+  // earlier, in which case the request is discarded.
+  nsresult ScheduleStateMachine(PRInt64 aUsecs);
 
 protected:
 
@@ -409,6 +418,10 @@ protected:
   // to call.
   void DecodeThreadRun();
 
+  PRBool IsStateMachineScheduled() const {
+    return !mTimeout.IsNull();
+  }
+
   // The size of the decoded YCbCr frame.
   // Accessed on state machine thread.
   PRUint32 mCbCrSize;
@@ -422,6 +435,15 @@ protected:
 
   // Thread for decoding video in background. The "decode thread".
   nsCOMPtr<nsIThread> mDecodeThread;
+
+  // Timer to call the state machine Run() method. Used by
+  // ScheduleStateMachine(). Access protected by decoder monitor.
+  nsCOMPtr<nsITimer> mTimer;
+
+  // Timestamp at which the next state machine Run() method will be called.
+  // If this is non-null, a call to Run() is scheduled, either by a timer,
+  // or via an event. Access protected by decoder monitor.
+  TimeStamp mTimeout;
 
   // The time that playback started from the system clock. This is used for
   // timing the presentation of video frames when there's no audio.

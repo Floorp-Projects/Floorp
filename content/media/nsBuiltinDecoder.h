@@ -571,6 +571,11 @@ public:
   // if necessary.
   nsresult StartStateMachineThread();
 
+  // Creates the state machine thread. The state machine may wish to create
+  // the state machine thread without running it immediately if it needs to
+  // schedule it to run in future.
+  nsresult CreateStateMachineThread();
+
   /******
    * The following members should be accessed with the decoder lock held.
    ******/
