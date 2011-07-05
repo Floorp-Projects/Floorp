@@ -10,8 +10,8 @@ function checkFunction(obj, name, nargs) {
     assertEq(desc.value.length, nargs, name + " should have .length === " + nargs);
 }
 
-checkFunction(this, "Debug", 1);
+checkFunction(this, "Debugger", 1);
 
-assertEq(Debug.prototype.constructor, Debug);
-assertEq(Object.prototype.toString.call(Debug.prototype), "[object Debug]");
-assertEq(Object.getPrototypeOf(Debug.prototype), Object.prototype);
+assertEq(Debugger.prototype.constructor, Debugger);
+assertEq(Object.prototype.toString.call(Debugger.prototype), "[object Debugger]");
+assertEq(Object.getPrototypeOf(Debugger.prototype), Object.prototype);

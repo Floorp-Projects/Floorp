@@ -1,7 +1,7 @@
 // Object arguments.
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
@@ -9,7 +9,7 @@ dbg.hooks = {
         assertEq(args, frame.arguments);
         assertEq(args instanceof Array, true);
         assertEq(args.length, 2);
-        assertEq(args[0] instanceof Debug.Object, true);
+        assertEq(args[0] instanceof Debugger.Object, true);
         assertEq(args[0].class, args[1]);
         hits++;
     }

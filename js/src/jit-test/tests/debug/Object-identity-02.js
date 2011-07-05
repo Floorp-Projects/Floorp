@@ -1,6 +1,6 @@
-// Different objects get different Debug.Object wrappers.
+// Different objects get different Debugger.Object wrappers.
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {

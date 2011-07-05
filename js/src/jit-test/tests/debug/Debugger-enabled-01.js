@@ -1,10 +1,10 @@
-var desc = Object.getOwnPropertyDescriptor(Debug.prototype, "enabled");
+var desc = Object.getOwnPropertyDescriptor(Debugger.prototype, "enabled");
 assertEq(typeof desc.get, 'function');
 assertEq(typeof desc.set, 'function');
 
 var g = newGlobal('new-compartment');
 var hits;
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 assertEq(dbg.enabled, true);
 dbg.hooks = {debuggerHandler: function () { hits++; }};
 

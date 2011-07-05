@@ -772,7 +772,7 @@ JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbyte
 }
 
 void
-JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debug *dbg, JSScript *script,
+JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script,
                                   JSObject *handler)
 {
     JS_ASSERT_IF(script, script->compartment == this);

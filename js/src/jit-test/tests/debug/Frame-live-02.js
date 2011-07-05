@@ -1,5 +1,5 @@
 // |jit-test| debug
-// Debug.Frame.prototype.live is false for frames that have thrown or been thrown through
+// Debugger.Frame.prototype.live is false for frames that have thrown or been thrown through
 
 load(libdir + "asserts.js");
 
@@ -8,7 +8,7 @@ g.debuggeeGlobal = this;
 g.eval("var finalCheck;");
 g.eval("(" + function () {
         var a = [];
-        var dbg = Debug(debuggeeGlobal);
+        var dbg = Debugger(debuggeeGlobal);
         dbg.hooks = {
             debuggerHandler: function (frame) {
                 a.push(frame);

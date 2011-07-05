@@ -1,8 +1,8 @@
-// Debug.Object.prototype.apply/call works with function proxies
+// Debugger.Object.prototype.apply/call works with function proxies
 
 var g = newGlobal('new-compartment');
 g.eval("function f() { debugger; }");
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {

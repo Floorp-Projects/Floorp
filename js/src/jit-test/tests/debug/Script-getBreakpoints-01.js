@@ -11,7 +11,7 @@ g.eval("var line0 = Error().lineNumber;\n" +
 var s;
 var offsets = [];
 var handlers = [];
-var dbg = Debug(g);
+var dbg = Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         s = frame.eval("f").return.script;

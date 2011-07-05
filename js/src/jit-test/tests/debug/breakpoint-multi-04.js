@@ -1,4 +1,4 @@
-// After clearing one breakpoint, another breakpoint from a different Debug object at the same instruction still works.
+// After clearing one breakpoint, another breakpoint from a different Debugger object at the same instruction still works.
 
 function test(which) {
     var g = newGlobal('new-compartment');
@@ -11,7 +11,7 @@ function test(which) {
     var scripts = [];
     var handlers = [];
     function addDebugger(g, i) {
-        var dbg = Debug(g);
+        var dbg = Debugger(g);
         dbg.hooks = {
             debuggerHandler: function (frame) {
                 var s = frame.eval("f").return.script;

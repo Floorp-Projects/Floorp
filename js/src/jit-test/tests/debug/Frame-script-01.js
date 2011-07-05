@@ -2,7 +2,7 @@
 // Frame.prototype.script for eval frames.
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 
 // Apply |f| to each frame that is |skip| frames up from each frame that
 // executes a 'debugger' statement when evaluating |code| in the global g.
@@ -22,14 +22,14 @@ var savedScript;
 
 ApplyToFrameScript('debugger;', 0,
                    function (script) {
-                       assertEq(script instanceof Debug.Script, true);
+                       assertEq(script instanceof Debugger.Script, true);
                        assertEq(script.live, true);
                        savedScript = script;
                    });
 assertEq(savedScript.live, false);
 ApplyToFrameScript("(function () { eval('debugger;'); })();", 0,
                    function (script) {
-                       assertEq(script instanceof Debug.Script, true);
+                       assertEq(script instanceof Debugger.Script, true);
                        assertEq(script.live, true);
                        savedScript = script;
                    });

@@ -1,6 +1,6 @@
 // hooks.throw is not called for exceptions thrown and handled in the debugger.
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 g.log = '';
 dbg.hooks = {
     debuggerHandler: function (frame) {

@@ -1,7 +1,7 @@
 // |jit-test| debug
-// Debug.Script throws when applied as a constructor.
+// Debugger.Script throws when applied as a constructor.
 
 load(libdir + 'asserts.js');
 
-assertThrowsInstanceOf(function() { Debug.Script(); }, TypeError);
-assertThrowsInstanceOf(function() { new Debug.Script(); }, TypeError);
+assertThrowsInstanceOf(function() { Debugger.Script(); }, TypeError);
+assertThrowsInstanceOf(function() { new Debugger.Script(); }, TypeError);

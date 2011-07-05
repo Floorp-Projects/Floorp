@@ -1,4 +1,4 @@
-// A Debug with live breakpoints is live.
+// A Debugger with live breakpoints is live.
 
 var g = newGlobal('new-compartment');
 g.eval("var line0 = Error().lineNumber;\n" +
@@ -9,7 +9,7 @@ g.eval("var line0 = Error().lineNumber;\n" +
 var N = 4;
 var hits = 0;
 for (var i = 0; i < N; i++) {
-    var dbg = Debug(g);
+    var dbg = Debugger(g);
     dbg.hooks = {
         debuggerHandler: function (frame) {
             var handler = {hit: function () { hits++; }};

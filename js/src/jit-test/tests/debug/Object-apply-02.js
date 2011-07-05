@@ -1,10 +1,10 @@
-// tests calling native functions via Debug.Object.prototype.apply/call
+// tests calling native functions via Debugger.Object.prototype.apply/call
 
 load(libdir + "asserts.js");
 
 var g = newGlobal("new-compartment");
 g.eval("function f() { debugger; }");
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 dbg.hooks = {debuggerHandler: function () {}};
 
 function test(usingApply) {

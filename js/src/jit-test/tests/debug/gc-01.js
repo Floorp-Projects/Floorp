@@ -7,7 +7,7 @@ var expected = 0;
 
 function f() {
     for (var i = 0; i < 20; i++) {
-        var dbg = new Debug(g);
+        var dbg = new Debugger(g);
         dbg.hooks = {num: i, debuggerHandler: function (stack) { actual += this.num; }};
         expected += i;
     }

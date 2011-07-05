@@ -5,11 +5,11 @@ var g = newGlobal('new-compartment');
 g.debuggeeGlobal = this;
 g.dbg = null;
 g.eval("(" + function () {
-        dbg = new Debug(debuggeeGlobal);
+        dbg = new Debugger(debuggeeGlobal);
         dbg.hooks = {
             throw: function (frame, exc) {
-                assertEq(frame instanceof Debug.Frame, true);
-                assertEq(exc instanceof Debug.Object, true);
+                assertEq(frame instanceof Debugger.Frame, true);
+                assertEq(exc instanceof Debugger.Object, true);
                 var s = '!';
                 for (var f = frame; f; f = f.older)
                     if (f.type === "call")

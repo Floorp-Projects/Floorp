@@ -5,13 +5,13 @@ load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
 var f;
-Debug(g).hooks = {
+Debugger(g).hooks = {
     debuggerHandler: function (frame) {
         assertEq(frame.live, true);
         assertEq(frame.type, "call");
         assertEq(frame.this instanceof Object, true);
-        assertEq(frame.older instanceof Debug.Frame, true);
-        assertEq(frame.callee instanceof Debug.Object, true);
+        assertEq(frame.older instanceof Debugger.Frame, true);
+        assertEq(frame.callee instanceof Debugger.Object, true);
         assertEq(frame.generator, false);
         assertEq(frame.constructing, false);
         assertEq(frame.arguments.length, 0);

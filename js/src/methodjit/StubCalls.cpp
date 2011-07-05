@@ -1143,7 +1143,7 @@ stubs::Mod(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::Debugger(VMFrame &f, jsbytecode *pc)
+stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
 {
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
     if (handler || !f.cx->compartment->getDebuggees().empty()) {
@@ -1154,7 +1154,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
                          f.cx->debugHooks->debuggerHandlerData);
         }
         if (st == JSTRAP_CONTINUE)
-            st = Debug::onDebuggerStatement(f.cx, &rval);
+            st = Debugger::onDebuggerStatement(f.cx, &rval);
 
         switch (st) {
           case JSTRAP_THROW:
@@ -1208,7 +1208,7 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
     }
 
     if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))
-        result = Debug::onTrap(f.cx, &rval);
+        result = Debugger::onTrap(f.cx, &rval);
 
     switch (result) {
       case JSTRAP_THROW:

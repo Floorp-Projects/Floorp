@@ -1,7 +1,7 @@
 // Handlers for breakpoints in an eval script are live as long as the script is on the stack.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var log = '';
 dbg.hooks = {
     debuggerHandler: function (frame) {

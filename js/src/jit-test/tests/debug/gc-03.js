@@ -1,9 +1,9 @@
-// Storing a property on a Debug.Object protects it from GC as long as the
+// Storing a property on a Debugger.Object protects it from GC as long as the
 // referent is alive.
 
 var g = newGlobal('new-compartment');
 var N = g.N = 3;
-var dbg = Debug(g);
+var dbg = Debugger(g);
 
 var i = 0;
 dbg.hooks = {

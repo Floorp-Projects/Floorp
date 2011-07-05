@@ -5,7 +5,7 @@ g1.eval("var g2 = newGlobal('same-compartment')");
 var g2 = g1.g2;
 var g1w, g2w;
 
-var dbg = new Debug;
+var dbg = new Debugger;
 function checkHas(hasg1, hasg2) {
     assertEq(dbg.hasDebuggee(g1), hasg1);
     if (typeof g1w === 'object')

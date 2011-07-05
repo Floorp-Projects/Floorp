@@ -1,13 +1,13 @@
 // |jit-test| debug
-// Debug.Script instances with live referents stay alive.
+// Debugger.Script instances with live referents stay alive.
 
 var N = 4;
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var i;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-        assertEq(frame.script instanceof Debug.Script, true);
+        assertEq(frame.script instanceof Debugger.Script, true);
         frame.script.id = i;
     }
 };

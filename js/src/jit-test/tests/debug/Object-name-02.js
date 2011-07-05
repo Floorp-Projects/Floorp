@@ -2,7 +2,7 @@
 
 var g = newGlobal('new-compartment');
 var hits = 0;
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         assertEq(frame.arguments[0].name, undefined);

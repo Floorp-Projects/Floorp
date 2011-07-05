@@ -6,17 +6,17 @@ var g = newGlobal('new-compartment');
 var n = 0;
 var hits;
 
-function addDebug() {
-    var dbg = new Debug(g);
+function addDebugger() {
+    var dbg = new Debugger(g);
     dbg.hooks = {
         debuggerHandler: function (stack) {
             hits++;
-            addDebug();
+            addDebugger();
         }
     };
 }
 
-addDebug();  // now there is one enabled Debug
+addDebugger();  // now there is one enabled Debugger
 hits = 0;
 g.eval("debugger;");  // after this there are two
 assertEq(hits, 1);

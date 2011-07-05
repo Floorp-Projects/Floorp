@@ -1,9 +1,9 @@
 // When the debugger is triggered twice from the same stack frame, the same
-// Debug.Frame object must be passed to the hook both times.
+// Debugger.Frame object must be passed to the hook both times.
 
 var g = newGlobal('new-compartment');
 var hits, frame;
-var dbg = Debug(g);
+var dbg = Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (f) {
         if (hits++ == 0)

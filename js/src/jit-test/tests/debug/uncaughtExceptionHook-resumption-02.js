@@ -5,7 +5,7 @@ var g = newGlobal('new-compartment');
 var log;
 
 function makeDebug(g, name) {
-    var dbg = new Debug(g);
+    var dbg = new Debugger(g);
     dbg.hooks = {
         debuggerHandler: function (frame) {
             log += name;

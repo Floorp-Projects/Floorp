@@ -1,6 +1,6 @@
 // var statements in strict evalWithBindings code behave like strict eval.
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {

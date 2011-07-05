@@ -1,9 +1,9 @@
-// The same object gets the same Debug.Object wrapper at different times, if the difference would be observable.
+// The same object gets the same Debugger.Object wrapper at different times, if the difference would be observable.
 
 var N = HOTLOOP + 4;
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var wrappers = [];
 
 dbg.hooks = {debuggerHandler: function (frame) { wrappers.push(frame.arguments[0]); }};

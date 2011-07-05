@@ -3,7 +3,7 @@
 var g = newGlobal('new-compartment');
 var bphits = 0;
 var handler = {hit: function (frame) { frame.script.clearBreakpoint(this); bphits++; }};
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {

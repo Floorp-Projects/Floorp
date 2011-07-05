@@ -7,7 +7,7 @@ for (var i = 0; i < 4; i++) {
     // Create two globals, one debuggee.
     var g1 = newGlobal('new-compartment');
     var g2 = g1.eval("newGlobal('same-compartment')");
-    var dbg = Debug(g1);
+    var dbg = Debugger(g1);
     dbg.hooks = {debuggerHandler: function () {}};
 
     // Thread a chain of functions through the non-debuggee globals.
@@ -15,7 +15,7 @@ for (var i = 0; i < 4; i++) {
     g2.g = f;
     f = g2.f;
 
-    // Root the Debug objects and non-debuggee globals.
+    // Root the Debugger objects and non-debuggee globals.
     dbgs[i] = dbg;
     nonDebugGlobals[i] = g2;
 }

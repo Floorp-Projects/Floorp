@@ -136,7 +136,7 @@ ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
                 hook(cx, Jsvalify(fp), false, &ok, hookData);
         }
     }
-    Debug::leaveStackFrame(cx);
+    Debugger::leaveStackFrame(cx);
 
     return ok;
 }

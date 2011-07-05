@@ -1,7 +1,7 @@
 // getLineOffsets correctly places the various parts of a ForStatement.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         function handler(line) {

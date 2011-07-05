@@ -3,7 +3,7 @@
 var g = newGlobal('new-compartment');
 var N = g.N = 12; // must be even
 assertEq(N % 2, 0);
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {

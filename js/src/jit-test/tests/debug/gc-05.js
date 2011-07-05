@@ -1,4 +1,4 @@
-// If a Debug survives its debuggee, its object cache must still be swept.
+// If a Debugger survives its debuggee, its object cache must still be swept.
 
 var g2arr = []; // non-debuggee globals
 var xarr = []; // debuggee objects
@@ -7,7 +7,7 @@ var N = 4, M = 4;
 for (var i = 0; i < N; i++) {
     var g1 = newGlobal('new-compartment');
     g1.M = M;
-    var dbg = new Debug(g1);
+    var dbg = new Debugger(g1);
     var g2 = g1.eval("newGlobal('same-compartment')");
     g1.x = g2.eval("x = {};");
 
@@ -26,12 +26,12 @@ assertEq(xarr.length, N);
 
 // Try to make g2arr[i].eval eventually allocate a new object in the same
 // location as a previously gc'd object. If the object caches are not being
-// swept, the pointer coincidence will cause a Debug.Object to be erroneously
+// swept, the pointer coincidence will cause a Debugger.Object to be erroneously
 // reused.
 for (var i = 0; i < N; i++) {
     var obj = xarr[i];
     for (j = 0; j < M; j++) {
-        assertEq(obj instanceof Debug.Object, true);
+        assertEq(obj instanceof Debugger.Object, true);
         g2arr[i].eval("x = x.__proto__ = {};");
         obj = obj.proto;
         assertEq("seen" in obj, false);

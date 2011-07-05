@@ -104,9 +104,9 @@ BEGIN_TEST(testDebugger_getThisStrict)
 }
 END_TEST(testDebugger_getThisStrict)
 
-BEGIN_TEST(testDebugger_debugObjectVsDebugMode)
+BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 {
-    CHECK(JS_DefineDebugObject(cx, global));
+    CHECK(JS_DefineDebuggerObject(cx, global));
     JSObject *debuggee = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
     CHECK(debuggee);
 
@@ -122,7 +122,7 @@ BEGIN_TEST(testDebugger_debugObjectVsDebugMode)
     jsval v = OBJECT_TO_JSVAL(debuggeeWrapper);
     CHECK(JS_SetProperty(cx, global, "debuggee", &v));
 
-    EVAL("var dbg = new Debug(debuggee);\n"
+    EVAL("var dbg = new Debugger(debuggee);\n"
          "var hits = 0;\n"
          "dbg.hooks = {debuggerHandler: function () { hits++; }};\n"
          "debuggee.eval('debugger;');\n"
@@ -143,4 +143,4 @@ BEGIN_TEST(testDebugger_debugObjectVsDebugMode)
     
     return true;
 }
-END_TEST(testDebugger_debugObjectVsDebugMode)
+END_TEST(testDebugger_debuggerObjectVsDebugMode)
