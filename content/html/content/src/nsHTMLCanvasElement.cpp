@@ -733,8 +733,8 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
   PRBool azure = PR_FALSE;
   nsresult rv = Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
 
-  if (azure) {
-    nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
+  if (NS_SUCCEEDED(rv) && azure) {
+    rv = NS_NewCanvasRenderingContext2DAzure(aResult);
     // If Azure fails, fall back to a classic canvas.
     if (NS_SUCCEEDED(rv)) {
       return rv;
