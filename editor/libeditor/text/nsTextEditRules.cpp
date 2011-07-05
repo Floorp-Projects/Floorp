@@ -231,22 +231,6 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
 
     // collapse the selection to the trailing BR if it's at the end of our text node
     CollapseSelectionToTrailingBRIfNeeded(selection);
-    
-    /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
-     * This is difficult, because we cannot know what the level is until after the Bidi algorithm
-     * is applied to the whole paragraph.
-     *
-     * So we set the cursor Bidi level to UNDEFINED here, and the caret code will set it correctly later
-     */
-    if (action == nsEditor::kOpInsertText
-        || action == nsEditor::kOpInsertIMEText) {
-      nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(selection));
-      nsRefPtr<nsFrameSelection> frameSelection;
-      privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));      
-      if (frameSelection) {
-        frameSelection->UndefineCaretBidiLevel();
-      }
-    }
   }
   return res;
 }

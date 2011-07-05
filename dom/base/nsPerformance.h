@@ -49,17 +49,19 @@
 class nsIDocument;
 class nsIURI;
 class nsDOMNavigationTiming;
+class nsITimedChannel;
 
 // Script "performance.timing" object
 class nsPerformanceTiming : public nsIDOMPerformanceTiming
 {
 public:
-  nsPerformanceTiming(nsDOMNavigationTiming* data);
+  nsPerformanceTiming(nsDOMNavigationTiming* aDOMTiming, nsITimedChannel* aChannel);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMPERFORMANCETIMING
 private:
   ~nsPerformanceTiming();
-  nsRefPtr<nsDOMNavigationTiming> mData;
+  nsRefPtr<nsDOMNavigationTiming> mDOMTiming;
+  nsCOMPtr<nsITimedChannel> mChannel;
 };
 
 // Script "performance.navigation" object
@@ -78,7 +80,7 @@ private:
 class nsPerformance : public nsIDOMPerformance
 {
 public:
-  nsPerformance(nsDOMNavigationTiming* timing);
+  nsPerformance(nsDOMNavigationTiming* aDOMTiming, nsITimedChannel* aChannel);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMPERFORMANCE
@@ -86,7 +88,8 @@ public:
 private:
   ~nsPerformance();
 
-  nsRefPtr<nsDOMNavigationTiming> mData;
+  nsRefPtr<nsDOMNavigationTiming> mDOMTiming;
+  nsCOMPtr<nsITimedChannel> mChannel;
   nsCOMPtr<nsIDOMPerformanceTiming> mTiming;
   nsCOMPtr<nsIDOMPerformanceNavigation> mNavigation;
 };

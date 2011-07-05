@@ -51,15 +51,28 @@ class nsDOMNavigationTimingClock;
 class nsIURI;
 class nsIDocument;
 
-class nsDOMNavigationTiming : public nsIDOMPerformanceTiming,
-                              public nsIDOMPerformanceNavigation
+class nsDOMNavigationTiming
 {
 public:
   nsDOMNavigationTiming();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMPERFORMANCETIMING
-  NS_DECL_NSIDOMPERFORMANCENAVIGATION
+  NS_INLINE_DECL_REFCOUNTING(nsDOMNavigationTiming)
+  nsresult GetType(nsDOMPerformanceNavigationType* aNavigationType);
+  nsresult GetRedirectCount(PRUint16* aCount);
+
+  nsresult GetRedirectStart(DOMTimeMilliSec* aRedirectStart);
+  nsresult GetRedirectEnd(DOMTimeMilliSec* aEnd);
+  nsresult GetNavigationStart(DOMTimeMilliSec* aNavigationStart);
+  nsresult GetUnloadEventStart(DOMTimeMilliSec* aStart);
+  nsresult GetUnloadEventEnd(DOMTimeMilliSec* aEnd);
+  nsresult GetFetchStart(DOMTimeMilliSec* aStart);
+  nsresult GetDomLoading(DOMTimeMilliSec* aTime);
+  nsresult GetDomInteractive(DOMTimeMilliSec* aTime);
+  nsresult GetDomContentLoadedEventStart(DOMTimeMilliSec* aStart);
+  nsresult GetDomContentLoadedEventEnd(DOMTimeMilliSec* aEnd);
+  nsresult GetDomComplete(DOMTimeMilliSec* aTime);
+  nsresult GetLoadEventStart(DOMTimeMilliSec* aStart);
+  nsresult GetLoadEventEnd(DOMTimeMilliSec* aEnd);
 
   void NotifyNavigationStart();
   void NotifyFetchStart(nsIURI* aURI, nsDOMPerformanceNavigationType aNavigationType);
@@ -78,6 +91,7 @@ public:
   void NotifyDOMComplete(nsIURI* aURI);
   void NotifyDOMContentLoadedStart(nsIURI* aURI);
   void NotifyDOMContentLoadedEnd(nsIURI* aURI);
+  nsresult TimeStampToDOM(mozilla::TimeStamp aStamp, DOMTimeMilliSec* aResult);
 
 private:
   nsDOMNavigationTiming(const nsDOMNavigationTiming &){};
