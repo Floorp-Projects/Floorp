@@ -57,14 +57,14 @@ XPIDLSRCS = \
   $(NULL)
 
 CPPSRCS = \
-  nsWebSocketHandler.cpp \
+  WebSocketChannel.cpp \
   WebSocketChannelParent.cpp \
   WebSocketChannelChild.cpp \
   BaseWebSocketChannel.cpp \
   $(NULL)
 
 EXPORTS_mozilla/net = \
-  nsWebSocketHandler.h \
+  WebSocketChannel.h \
   WebSocketChannelParent.h \
   WebSocketChannelChild.h \
   BaseWebSocketChannel.h \
