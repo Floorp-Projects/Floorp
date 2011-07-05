@@ -69,13 +69,13 @@ NS_IMETHODIMP_(nsrefcnt) WebSocketChannelChild::Release()
 }
 
 NS_INTERFACE_MAP_BEGIN(WebSocketChannelChild)
-  NS_INTERFACE_MAP_ENTRY(nsIWebSocketProtocol)
+  NS_INTERFACE_MAP_ENTRY(nsIWebSocketChannel)
   NS_INTERFACE_MAP_ENTRY(nsIProtocolHandler)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebSocketProtocol)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebSocketChannel)
 NS_INTERFACE_MAP_END
 
 WebSocketChannelChild::WebSocketChannelChild(bool aSecure)
-: mEventQ(static_cast<nsIWebSocketProtocol*>(this))
+: mEventQ(static_cast<nsIWebSocketChannel*>(this))
 , mIPCOpen(false)
 , mCancelled(false)
 {

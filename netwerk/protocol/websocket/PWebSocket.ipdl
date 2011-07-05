@@ -53,7 +53,7 @@ async protocol PWebSocket
   manager PNecko;
 
 parent:
-  // Forwarded methods corresponding to methods on nsIWebSocketProtocolHandler
+  // Forwarded methods corresponding to methods on nsIWebSocketChannel
   AsyncOpen(URI aURI, nsCString aOrigin, nsCString aProtocol, bool aSecure);
   Close();
   SendMsg(nsCString aMsg);
