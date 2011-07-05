@@ -307,7 +307,8 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
                                      const Point &aOffset,
-                                     Float aSigma)
+                                     Float aSigma,
+                                     CompositionOp aOperator)
 {
   RefPtr<ID3D10ShaderResourceView> srView = NULL;
   if (aSurface->GetType() != SURFACE_D2D1_DRAWTARGET) {
@@ -593,6 +594,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                            mSize.height / Float(tmpSurfSize.height) * dsFactorY));
   mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
     GetPassByIndex(1)->Apply(0);
+  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
 
   mDevice->Draw(4, 0);
 
@@ -603,7 +605,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                            Float(mSize.height) / aSurface->GetSize().height));
   mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->
     GetPassByIndex(0)->Apply(0);
-  mDevice->OMSetBlendState(GetBlendStateForOperator(OP_OVER), NULL, 0xffffffff);
+  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
 
   mDevice->Draw(4, 0);
 
