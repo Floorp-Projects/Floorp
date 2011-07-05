@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,79 +39,13 @@
 
 interface nsIURI;
 interface nsIInterfaceRequestor;
-interface nsIRunnable;
 interface nsILoadGroup;
+interface nsIWebSocketListener;
 
 #include "nsISupports.idl"
 
-/**
- * nsIWebSocketListener
- */
-[scriptable, uuid(b0c27050-31e9-42e5-bc59-499d54b52f99)]
-interface nsIWebSocketListener : nsISupports
-{
-    /**
-     * Called to signify the establishment of the message stream.
-     * Any listener that receives onStart will also receive OnStop.
-     *
-     * @param aContext user defined context
-     */
-    void onStart(in nsISupports aContext);
-
-    /**
-     * Called to signify the completion of the message stream.
-     * OnStop is the final notification the listener will receive and it
-     * completes the WebSocket connection. This event can be received in error
-     * cases even if nsIWebSocketProtocol::Close() has not been called.
-     *
-     * @param aContext user defined context
-     * @param aStatusCode reason for stopping (NS_OK if completed successfully)
-     */
-    void onStop(in nsISupports aContext,
-                in nsresult aStatusCode);
-
-    /**
-     * Called to deliver text message.
-     *
-     * @param aContext user defined context
-     * @param aMsg the message data
-     */
-    void onMessageAvailable(in nsISupports aContext,
-                            in AUTF8String aMsg);
-
-    /**
-     * Called to deliver binary message.
-     *
-     * @param aContext user defined context
-     * @param aMsg the message data
-     */
-    void onBinaryMessageAvailable(in nsISupports aContext,
-                                  in ACString aMsg);
-
-    /**
-     * Called to acknowledge message sent via sendMsg() or sendBinaryMsg.
-     *
-     * @param aContext user defined context
-     * @param aSize number of bytes placed in OS send buffer
-     */
-    void onAcknowledge(in nsISupports aContext, in PRUint32 aSize);
-
-    /**
-     * Called to inform receipt of WebSocket Close message from server.
-     * In the case of errors onStop() can be called without ever
-     * receiving server close.
-     *
-     * No additional messages through onMessageAvailable(),
-     * onBinaryMessageAvailable() or onAcknowledge() will be delievered
-     * to the listener after onServerClose(), though outgoing messages can still
-     * be sent through the nsIWebSocketProtocol connection.
-     */
-    void onServerClose(in nsISupports aContext);
-    
-};
-
-[scriptable, uuid(dc01db59-a513-4c90-824b-085cce06c0aa)]
-interface nsIWebSocketProtocol : nsISupports
+[scriptable, uuid(398a2460-a46d-11e0-8264-0800200c9a66)]
+interface nsIWebSocketChannel : nsISupports
 {
     /**
      * The original URI used to construct the protocol connection. This is used

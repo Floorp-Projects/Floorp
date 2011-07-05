@@ -52,18 +52,19 @@ FORCE_STATIC_LIB = 1
 EXPORTS_NAMESPACES = mozilla/net
 
 XPIDLSRCS = \
-  nsIWebSocketProtocol.idl \
+  nsIWebSocketChannel.idl \
+  nsIWebSocketListener.idl \
   $(NULL)
 
 CPPSRCS = \
-  nsWebSocketHandler.cpp \
+  WebSocketChannel.cpp \
   WebSocketChannelParent.cpp \
   WebSocketChannelChild.cpp \
   BaseWebSocketChannel.cpp \
   $(NULL)
 
 EXPORTS_mozilla/net = \
-  nsWebSocketHandler.h \
+  WebSocketChannel.h \
   WebSocketChannelParent.h \
   WebSocketChannelChild.h \
   BaseWebSocketChannel.h \

@@ -283,21 +283,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 #endif
 
 #ifdef NECKO_PROTOCOL_websocket
-#include "nsWebSocketHandler.h"
+#include "WebSocketChannel.h"
 #include "WebSocketChannelChild.h"
 namespace mozilla {
 namespace net {
 static BaseWebSocketChannel*
-WebSocketHandlerConstructor(bool aSecure)
+WebSocketChannelConstructor(bool aSecure)
 {
   if (IsNeckoChild()) {
     return new WebSocketChannelChild(aSecure);
   }
 
   if (aSecure) {
-    return new nsWebSocketSSLHandler;
+    return new WebSocketSSLChannel;
   } else {
-    return new nsWebSocketHandler;
+    return new WebSocketChannel;
   }
 }
 
@@ -315,15 +315,15 @@ type##Constructor(nsISupports *aOuter, REFNSIID aIID, \
     rv = NS_ERROR_NO_AGGREGATION;                     \
     return rv;                                        \
   }                                                   \
-  inst = WebSocketHandlerConstructor(secure);         \
+  inst = WebSocketChannelConstructor(secure);         \
   NS_ADDREF(inst);                                    \
   rv = inst->QueryInterface(aIID, aResult);           \
   NS_RELEASE(inst);                                   \
   return rv;                                          \
 }
 
-WEB_SOCKET_HANDLER_CONSTRUCTOR(nsWebSocketHandler, false)
-WEB_SOCKET_HANDLER_CONSTRUCTOR(nsWebSocketSSLHandler, true)
+WEB_SOCKET_HANDLER_CONSTRUCTOR(WebSocketChannel, false)
+WEB_SOCKET_HANDLER_CONSTRUCTOR(WebSocketSSLChannel, true)
 #undef WEB_SOCKET_HANDLER_CONSTRUCTOR
 } // namespace mozilla::net
 } // namespace mozilla
@@ -675,7 +675,7 @@ static void nsNetShutdown()
 
 #ifdef NECKO_PROTOCOL_websocket
     // Release the Websocket Admission Manager
-    mozilla::net::nsWebSocketHandler::Shutdown();
+    mozilla::net::WebSocketChannel::Shutdown();
 #endif // NECKO_PROTOCOL_websocket
 }
 
@@ -928,9 +928,9 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
 #ifdef NECKO_PROTOCOL_websocket
     { &kNS_WEBSOCKETPROTOCOLHANDLER_CID, false, NULL,
-      mozilla::net::nsWebSocketHandlerConstructor },
+      mozilla::net::WebSocketChannelConstructor },
     { &kNS_WEBSOCKETSSLPROTOCOLHANDLER_CID, false, NULL,
-      mozilla::net::nsWebSocketSSLHandlerConstructor },
+      mozilla::net::WebSocketSSLChannelConstructor },
 #endif
 #if defined(XP_WIN)
     { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsNotifyAddrListenerConstructor },

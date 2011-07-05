@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,10 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_net_nsWebSocketHandler_h
-#define mozilla_net_nsWebSocketHandler_h
+#ifndef mozilla_net_WebSocketChannel_h
+#define mozilla_net_WebSocketChannel_h
 
-#include "nsIWebSocketProtocol.h"
 #include "nsIURI.h"
 #include "nsISupports.h"
 #include "nsIInterfaceRequestor.h"
@@ -71,15 +71,15 @@ class nsPostMessage;
 class nsWSAdmissionManager;
 class nsWSCompression;
 
-class nsWebSocketHandler : public BaseWebSocketChannel,
-                           public nsIHttpUpgradeListener,
-                           public nsIStreamListener,
-                           public nsIInputStreamCallback,
-                           public nsIOutputStreamCallback,
-                           public nsITimerCallback,
-                           public nsIDNSListener,
-                           public nsIInterfaceRequestor,
-                           public nsIChannelEventSink
+class WebSocketChannel : public BaseWebSocketChannel,
+                         public nsIHttpUpgradeListener,
+                         public nsIStreamListener,
+                         public nsIInputStreamCallback,
+                         public nsIOutputStreamCallback,
+                         public nsITimerCallback,
+                         public nsIDNSListener,
+                         public nsIInterfaceRequestor,
+                         public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
@@ -93,7 +93,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
-  // nsIWebSocketProtocol methods BaseWebSocketChannel didn't implement for us
+  // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
   NS_IMETHOD AsyncOpen(nsIURI *aURI,
                        const nsACString &aOrigin,
@@ -104,24 +104,24 @@ public:
   NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
   NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
 
-  nsWebSocketHandler();
+  WebSocketChannel();
   static void Shutdown();
-  
-  enum {
-      // Non Control Frames
-      kContinuation = 0x0,
-      kText =         0x1,
-      kBinary =       0x2,
 
-      // Control Frames
-      kClose =        0x8,
-      kPing =         0x9,
-      kPong =         0xA
+  enum {
+    // Non Control Frames
+    kContinuation = 0x0,
+    kText =         0x1,
+    kBinary =       0x2,
+
+    // Control Frames
+    kClose =        0x8,
+    kPing =         0x9,
+    kPong =         0xA
   };
-  
-  const static PRUint32 kControlFrameMask = 0x8;
-  const static PRUint8 kMaskBit           = 0x80;
-  const static PRUint8 kFinalFragBit      = 0x80;
+
+  const static PRUint32 kControlFrameMask   = 0x8;
+  const static PRUint8 kMaskBit             = 0x80;
+  const static PRUint8 kFinalFragBit        = 0x80;
 
   // section 7.4.1 defines these
   const static PRUint16 kCloseNormal        = 1000;
@@ -133,7 +133,7 @@ public:
   const static PRUint16 kCloseAbnormal      = 1006;
 
 protected:
-  virtual ~nsWebSocketHandler();
+  virtual ~WebSocketChannel();
 
 private:
   friend class nsPostMessage;
@@ -150,7 +150,7 @@ private:
   nsresult ApplyForAdmission();
   nsresult StartWebsocketData();
   PRUint16 ResultToCloseCode(nsresult resultCode);
-  
+
   void StopSession(nsresult reason);
   void AbortSession(nsresult reason);
   void ReleaseSession();
@@ -166,44 +166,46 @@ private:
   class OutboundMessage
   {
   public:
-      OutboundMessage (nsCString *str)
-          : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(-1)
-      { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
+    OutboundMessage (nsCString *str)
+      : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(-1)
+    { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
 
-      OutboundMessage (nsCString *str, PRInt32 dataLen)
-          : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(dataLen)
-      { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
+    OutboundMessage (nsCString *str, PRInt32 dataLen)
+      : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(dataLen)
+    { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
 
-      OutboundMessage ()
-          : mMsg(nsnull), mIsControl(PR_TRUE), mBinaryLen(-1)
-      { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
+    OutboundMessage ()
+      : mMsg(nsnull), mIsControl(PR_TRUE), mBinaryLen(-1)
+    { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
 
-      ~OutboundMessage()
-      { 
-          MOZ_COUNT_DTOR(WebSocketOutboundMessage);
-          delete mMsg;
-      }
-      
-      PRBool IsControl()  { return mIsControl; }
-      const nsCString *Msg()  { return mMsg; }
-      PRInt32 BinaryLen() { return mBinaryLen; }
-      PRInt32 Length() 
-      { 
-          if (mBinaryLen >= 0)
-              return mBinaryLen;
-          return mMsg ? mMsg->Length() : 0;
-      }
-      PRUint8 *BeginWriting() 
-      { return (PRUint8 *)(mMsg ? mMsg->BeginWriting() : nsnull); }
-      PRUint8 *BeginReading() 
-      { return (PRUint8 *)(mMsg ? mMsg->BeginReading() : nsnull); }
+    ~OutboundMessage()
+    {
+      MOZ_COUNT_DTOR(WebSocketOutboundMessage);
+      delete mMsg;
+    }
+
+    PRBool IsControl()  { return mIsControl; }
+    const nsCString *Msg()  { return mMsg; }
+    PRInt32 BinaryLen() { return mBinaryLen; }
+    PRInt32 Length()
+    {
+      if (mBinaryLen >= 0)
+        return mBinaryLen;
+      return mMsg ? mMsg->Length() : 0;
+    }
+    PRUint8 *BeginWriting() {
+      return (PRUint8 *)(mMsg ? mMsg->BeginWriting() : nsnull);
+    }
+    PRUint8 *BeginReading() {
+      return (PRUint8 *)(mMsg ? mMsg->BeginReading() : nsnull);
+    }
 
   private:
-      nsCString *mMsg;
-      PRBool     mIsControl;
-      PRInt32    mBinaryLen;
+    nsCString *mMsg;
+    PRBool     mIsControl;
+    PRInt32    mBinaryLen;
   };
-  
+
   nsCOMPtr<nsIEventTarget>                 mSocketThread;
   nsCOMPtr<nsIHttpChannelInternal>         mChannel;
   nsCOMPtr<nsIHttpChannel>                 mHttpChannel;
@@ -211,7 +213,7 @@ private:
   nsCOMPtr<nsICancelable>                  mDNSRequest;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIRandomGenerator>             mRandomGenerator;
-  
+
   nsCString                       mHashedSecret;
   nsCString                       mAddress;
 
@@ -228,7 +230,7 @@ private:
   nsCOMPtr<nsITimer>              mPingTimer;
   PRUint32                        mPingTimeout;  /* milliseconds */
   PRUint32                        mPingResponseTimeout;  /* milliseconds */
-  
+
   nsCOMPtr<nsITimer>              mLingeringCloseTimer;
   const static PRInt32            kLingeringCloseTimeout =   1000;
   const static PRInt32            kLingeringCloseThreshold = 50;
@@ -247,7 +249,7 @@ private:
   PRUint32                        mAutoFollowRedirects       : 1;
   PRUint32                        mReleaseOnTransmit         : 1;
   PRUint32                        mTCPClosed                 : 1;
-  
+
   PRInt32                         mMaxMessageSize;
   nsresult                        mStopOnClose;
   PRUint16                        mCloseCode;
@@ -264,7 +266,7 @@ private:
 
   // These are for the send buffers
   const static PRInt32 kCopyBreak = 1000;
-  
+
   OutboundMessage                *mCurrentOut;
   PRUint32                        mCurrentOutSent;
   nsDeque                         mOutgoingMessages;
@@ -278,14 +280,14 @@ private:
   PRUint8                        *mDynamicOutput;
 };
 
-class nsWebSocketSSLHandler : public nsWebSocketHandler
+class WebSocketSSLChannel : public WebSocketChannel
 {
 public:
-    nsWebSocketSSLHandler() { BaseWebSocketChannel::mEncrypted = PR_TRUE; }
+    WebSocketSSLChannel() { BaseWebSocketChannel::mEncrypted = PR_TRUE; }
 protected:
-    virtual ~nsWebSocketSSLHandler() {}
+    virtual ~WebSocketSSLChannel() {}
 };
 
 }} // namespace mozilla::net
 
-#endif // mozilla_net_nsWebSocketHandler_h
+#endif // mozilla_net_WebSocketChannel_h

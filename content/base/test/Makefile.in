@@ -417,8 +417,8 @@ _TEST_FILES2 = \
 		test_bug300992.html \
 		test_websocket_hello.html \
 		file_websocket_hello_wsh.py \
-		test_ws_basic_tests.html \
-		file_ws_basic_tests_wsh.py \
+		test_websocket_basic.html \
+		file_websocket_basic_wsh.py \
 		test_websocket.html \
 		file_websocket_wsh.py \
 		file_websocket_http_resource.txt \
