@@ -1,11 +1,11 @@
 // |jit-test| debug
-// We get the same Debug.Script object instance each time we ask.
+// We get the same Debugger.Script object instance each time we ask.
 
 var global = newGlobal('new-compartment');
 global.eval('function f() { debugger; }');
 global.eval('function g() { debugger; }');
 
-var debug = new Debug(global);
+var debug = new Debugger(global);
 
 function evalAndNoteScripts(prog) {
     var scripts = {};
@@ -23,7 +23,7 @@ function evalAndNoteScripts(prog) {
 }
 
 // If we create a frame for a function and pass it as a value, those should
-// both yield the same Debug.Script instance.
+// both yield the same Debugger.Script instance.
 var scripts = evalAndNoteScripts('f(f)');
 assertEq(scripts.frame, scripts.argument);
 var fScript = scripts.argument;
@@ -33,7 +33,7 @@ scripts = evalAndNoteScripts('f(f)');
 assertEq(scripts.frame, fScript);
 assertEq(scripts.argument, fScript);
 
-// If we call with a different argument, we should get a different Debug.Script.
+// If we call with a different argument, we should get a different Debugger.Script.
 scripts = evalAndNoteScripts('f(g)');
 assertEq(scripts.frame !== scripts.argument, true);
 assertEq(scripts.frame, fScript);

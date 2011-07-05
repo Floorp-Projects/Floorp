@@ -1,7 +1,7 @@
-// Debug.Scripts keep their referents alive.
+// Debugger.Scripts keep their referents alive.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var arr = [];
 dbg.hooks = {debuggerHandler: function (frame) { arr.push(frame.script); }};
 g.eval("for (var i = 0; i < 10; i++) Function('debugger;')();");

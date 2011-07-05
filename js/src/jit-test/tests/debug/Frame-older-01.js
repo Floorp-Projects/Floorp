@@ -3,7 +3,7 @@
 
 var g = newGlobal('new-compartment');
 var result = null;
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         var a = [];

@@ -555,9 +555,9 @@ struct JS_FRIEND_API(JSCompartment) {
     /*
      * There are dueling APIs for debug mode. It can be enabled or disabled via
      * JS_SetDebugModeForCompartment. It is automatically enabled and disabled
-     * by Debug objects. Therefore debugModeBits has the DebugFromC bit set if
-     * the C API wants debug mode and the DebugFromJS bit set if debuggees is
-     * nonempty.
+     * by Debugger objects. Therefore debugModeBits has the DebugFromC bit set
+     * if the C API wants debug mode and the DebugFromJS bit set if debuggees
+     * is nonempty.
      */
     bool debugMode() const { return !!debugModeBits; }
 
@@ -582,7 +582,7 @@ struct JS_FRIEND_API(JSCompartment) {
     js::BreakpointSite *getBreakpointSite(jsbytecode *pc);
     js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc,
                                                   JSObject *scriptObject);
-    void clearBreakpointsIn(JSContext *cx, js::Debug *dbg, JSScript *script, JSObject *handler);
+    void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script, JSObject *handler);
     void clearTraps(JSContext *cx, JSScript *script);
     bool markBreakpointsIteratively(JSTracer *trc);
   private:

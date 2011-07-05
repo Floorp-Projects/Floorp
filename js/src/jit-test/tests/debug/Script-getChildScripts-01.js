@@ -1,10 +1,10 @@
 // Basic getChildScripts tests.
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var log;
 function note(s) {
-    assertEq(s instanceof Debug.Script, true);
+    assertEq(s instanceof Debugger.Script, true);
     log += 'S';
     var c = s.getChildScripts();
     if (c.length > 0) {

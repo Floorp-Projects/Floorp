@@ -2,7 +2,7 @@
 
 load(libdir + "asserts.js");
 
-var dbg = new Debug;
+var dbg = new Debugger;
 
 function check(val) {
     assertThrowsInstanceOf(function () { dbg.hasDebuggee(val); }, TypeError);
@@ -18,9 +18,9 @@ check(1);
 check(NaN);
 check("ok");
 
-// A Debug.Object that belongs to a different Debug object is invalid.
+// A Debugger.Object that belongs to a different Debugger object is invalid.
 var g = newGlobal('new-compartment');
-var dbg2 = new Debug;
+var dbg2 = new Debugger;
 var w = dbg2.addDebuggee(g);
-assertEq(w instanceof Debug.Object, true);
+assertEq(w instanceof Debugger.Object, true);
 check(w);

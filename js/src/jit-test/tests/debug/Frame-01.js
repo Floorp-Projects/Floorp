@@ -1,11 +1,11 @@
 // Test .type and .generator fields of topmost stack frame passed to debuggerHandler.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var expected, hits;
 dbg.hooks = {
     debuggerHandler: function (f) {
-        assertEq(Object.getPrototypeOf(f), Debug.Frame.prototype);
+        assertEq(Object.getPrototypeOf(f), Debugger.Frame.prototype);
         assertEq(f.type, expected.type);
         assertEq(f.generator, expected.generator);
         assertEq(f.constructing, expected.constructing);

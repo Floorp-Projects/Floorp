@@ -5,7 +5,7 @@ var log;
 var arr = [];
 
 function addDebug(msg) {
-    var dbg = new Debug(g);
+    var dbg = new Debugger(g);
     dbg.hooks = {
         debuggerHandler: function (stack) {
             log += msg;

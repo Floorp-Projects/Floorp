@@ -1,6 +1,6 @@
 // In evalWithBindings code, assignment to any name not in the bindings works just as in eval.
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         assertEq(frame.evalWithBindings("y = z; x = w;", {z: 2, w: 3}).return, 3);

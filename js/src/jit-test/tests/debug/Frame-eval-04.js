@@ -1,7 +1,7 @@
 // frame.eval SyntaxErrors are reflected, not thrown
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var exc, SEp;
 dbg.hooks = {
     debuggerHandler: function (frame) {

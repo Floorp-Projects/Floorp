@@ -1,7 +1,7 @@
 // The argument to a breakpoint hit method is a frame.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame1) {

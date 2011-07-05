@@ -1,7 +1,7 @@
 // A breakpoint handler hit method can return {return: val} to force the frame to return.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         g.log += 'D';

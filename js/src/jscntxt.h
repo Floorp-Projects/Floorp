@@ -516,7 +516,7 @@ struct JSRuntime {
     JSCList             watchPointList;
 
     /*
-     * Linked list of all js::Debug objects. This may be accessed by the GC
+     * Linked list of all js::Debugger objects. This may be accessed by the GC
      * thread, if any, or a thread that is in a request and holds gcLock.
      */
     JSCList             debuggerList;

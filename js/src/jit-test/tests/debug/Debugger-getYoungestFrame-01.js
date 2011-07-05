@@ -3,14 +3,14 @@
 load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 assertEq(dbg.getYoungestFrame(), null);
 
 var global = this;
 var frame;
 function f() {
     frame = dbg.getYoungestFrame();
-    assertEq(frame instanceof Debug.Frame, true);
+    assertEq(frame instanceof Debugger.Frame, true);
     assertEq(frame.type, "eval");
     assertEq(frame.older, null);
 }

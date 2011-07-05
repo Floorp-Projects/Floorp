@@ -8,7 +8,7 @@ var handler = {
         g.s += '1';
     }
 };
-var dbg = Debug(g);
+var dbg = Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         g.s += '0';

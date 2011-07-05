@@ -5,12 +5,12 @@ function classOf(obj) {
 }
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         hits++;
-        assertEq(frame.this instanceof Debug.Object, true);
+        assertEq(frame.this instanceof Debugger.Object, true);
         assertEq(frame.this.class, g.v == null ? classOf(g) : classOf(Object(g.v)));
     }
 };

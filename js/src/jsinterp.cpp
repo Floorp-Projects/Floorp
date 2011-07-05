@@ -4470,7 +4470,7 @@ END_VARLEN_CASE
 BEGIN_CASE(JSOP_TRAP)
 {
     Value rval;
-    JSTrapStatus status = Debug::onTrap(cx, &rval);
+    JSTrapStatus status = Debugger::onTrap(cx, &rval);
     switch (status) {
       case JSTRAP_ERROR:
         goto error;
@@ -5539,7 +5539,7 @@ BEGIN_CASE(JSOP_DEBUGGER)
     if (JSDebuggerHandler handler = cx->debugHooks->debuggerHandler)
         st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->debuggerHandlerData);
     if (st == JSTRAP_CONTINUE)
-        st = Debug::onDebuggerStatement(cx, &rval);
+        st = Debugger::onDebuggerStatement(cx, &rval);
     switch (st) {
       case JSTRAP_ERROR:
         goto error;
@@ -6068,7 +6068,7 @@ END_CASE(JSOP_ARRAYPUSH)
         /* Call debugger throw hook if set. */
         if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
             Value rval;
-            JSTrapStatus st = Debug::onThrow(cx, &rval);
+            JSTrapStatus st = Debugger::onThrow(cx, &rval);
             if (st == JSTRAP_CONTINUE) {
                 handler = cx->debugHooks->throwHook;
                 if (handler)

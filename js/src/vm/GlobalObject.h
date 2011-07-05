@@ -154,17 +154,17 @@ class GlobalObject : public ::JSObject {
 
     bool initStandardClasses(JSContext *cx);
 
-    typedef js::Vector<js::Debug *, 0, js::SystemAllocPolicy> DebugVector;
+    typedef js::Vector<js::Debugger *, 0, js::SystemAllocPolicy> DebuggerVector;
 
     // The collection of Debug objects debugging this global. If this global is
     // not a debuggee, this returns either NULL or an empty vector.
-    DebugVector *getDebuggers();
+    DebuggerVector *getDebuggers();
 
     // The same, but create the empty vector if one does not already
     // exist. Returns NULL only on OOM.
-    DebugVector *getOrCreateDebuggers(JSContext *cx);
+    DebuggerVector *getOrCreateDebuggers(JSContext *cx);
 
-    bool addDebug(JSContext *cx, Debug *dbg);
+    bool addDebugger(JSContext *cx, Debugger *dbg);
 };
 
 typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;

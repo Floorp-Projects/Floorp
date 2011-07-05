@@ -1,6 +1,6 @@
 // evalWithBindings code is debuggee code, so it can trip the debugger. It nests!
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var f1;
 var hits = 0;
 dbg.hooks = {

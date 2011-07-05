@@ -3,7 +3,7 @@
 var g = newGlobal('new-compartment');
 var hit = false;
 
-var dbg = Debug(g);
+var dbg = Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (stack) {
         hit = true;

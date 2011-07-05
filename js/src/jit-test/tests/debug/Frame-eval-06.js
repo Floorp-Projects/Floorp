@@ -5,7 +5,7 @@ load(libdir + "asserts.js");
 var g = newGlobal('new-compartment');
 g.eval("function gen(a) { debugger; yield a; }");
 g.eval("function test() { debugger; }");
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var genframe;
 var hits = 0;
 dbg.hooks = {

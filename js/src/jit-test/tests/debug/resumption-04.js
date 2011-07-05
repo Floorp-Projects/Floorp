@@ -3,7 +3,7 @@
 
 var g = newGlobal('new-compartment');
 g.debuggeeGlobal = this;
-g.eval("var dbg = new Debug(debuggeeGlobal);" +
+g.eval("var dbg = new Debugger(debuggeeGlobal);" +
        "dbg.hooks = {debuggerHandler: function () { return {return: '!'}; }};");
 
 function gen() {

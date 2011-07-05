@@ -3,14 +3,14 @@
 load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         assertEq(frame.eval("a").return, 2);
         assertEq(frame.eval("c").return, 4);
         var exc = frame.eval("d").throw;
-        assertEq(exc instanceof Debug.Object, true);
+        assertEq(exc instanceof Debugger.Object, true);
         assertEq(exc.proto, frame.eval("ReferenceError.prototype").return);
         hits++;
     }

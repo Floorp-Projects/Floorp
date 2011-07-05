@@ -3,7 +3,7 @@
 
 var g = newGlobal('new-compartment');
 g.parent = this;
-g.eval("new Debug(parent).hooks = {throw: function () {}};");
+g.eval("new Debugger(parent).hooks = {throw: function () {}};");
 
 var obj = new Error("oops");
 try {

@@ -3,14 +3,14 @@
 load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hit = false;
 dbg.hooks = {
     throw: function (frame, exc) {
         // hooks.throw is called multiple times as the stack is unwound.
         // Only check the first hit.
         assertEq(arguments.length, 2);
-        assertEq(frame instanceof Debug.Frame, true);
+        assertEq(frame instanceof Debugger.Frame, true);
         if (!hit) {
             assertEq(exc, 101);
             assertEq(frame.type, "call");

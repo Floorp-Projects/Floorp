@@ -1,6 +1,6 @@
-// Two references to the same object get the same Debug.Object wrapper.
+// Two references to the same object get the same Debugger.Object wrapper.
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {

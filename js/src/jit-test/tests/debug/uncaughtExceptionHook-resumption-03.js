@@ -2,7 +2,7 @@
 // the original exception continues to propagate.
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var log = '';
 dbg.hooks = {throw: function () { log += "1"; throw new Error("oops"); }};
 dbg.uncaughtExceptionHook = function () { log += "2"; };

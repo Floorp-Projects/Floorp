@@ -1,16 +1,16 @@
-// Debug.Frame.prototype.this in functions, with object values
+// Debugger.Frame.prototype.this in functions, with object values
 
 function classOf(obj) {
     return Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
 }
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         hits++;
-        assertEq(frame.this instanceof Debug.Object, true);
+        assertEq(frame.this instanceof Debugger.Object, true);
         assertEq(frame.this.class, classOf(Object(g.v)));
     }
 };

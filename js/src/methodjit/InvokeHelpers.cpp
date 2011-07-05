@@ -471,7 +471,7 @@ js_InternalThrow(VMFrame &f)
         JSThrowHook handler = cx->debugHooks->throwHook;
         if (handler || !cx->compartment->getDebuggees().empty()) {
             Value rval;
-            JSTrapStatus st = Debug::onThrow(cx, &rval);
+            JSTrapStatus st = Debugger::onThrow(cx, &rval);
             if (st == JSTRAP_CONTINUE && handler) {
                 st = handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
                              cx->debugHooks->throwHookData);

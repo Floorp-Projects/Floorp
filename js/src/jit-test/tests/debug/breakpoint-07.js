@@ -12,7 +12,7 @@ var src = ("var line0 = Error().lineNumber;\n" +
            "}\n");                          // line0 + 8
 g.eval(src);
 
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hits = 0 ;
 dbg.hooks = {
     debuggerHandler: function (frame) {

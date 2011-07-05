@@ -4,7 +4,7 @@
 var g = newGlobal('new-compartment');
 g.debuggeeGlobal = this;
 g.eval("(" + function () {
-        var dbg = new Debug(debuggeeGlobal);
+        var dbg = new Debugger(debuggeeGlobal);
         var prev = null;
         dbg.hooks = {
             debuggerHandler: function (frame) {

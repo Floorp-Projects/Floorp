@@ -1,7 +1,7 @@
 // Frame.prototype.this in strict-mode functions, with primitive values
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
