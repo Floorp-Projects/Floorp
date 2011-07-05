@@ -455,7 +455,7 @@ class MDefinitionIterator
 
 
     MInstruction *getIns() {
-        if (phiIndex_ < block_->numPhis()) 
+        if (phiIndex_ < block_->numPhis())
             return block_->getPhi(phiIndex_);
 
         return *iter_;
@@ -463,8 +463,8 @@ class MDefinitionIterator
 
   public:
     MDefinitionIterator(MBasicBlock *block)
-      : block_(block), 
-        phiIndex_(0), 
+      : block_(block),
+        phiIndex_(0),
         iter_(block->begin())
     { }
 

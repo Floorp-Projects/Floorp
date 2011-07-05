@@ -545,7 +545,7 @@ class MAryControlInstruction : public MControlInstruction
 // Jump to the start of another basic block.
 class MGoto : public MAryControlInstruction<0>
 {
-    MGoto(MBasicBlock *target) { 
+    MGoto(MBasicBlock *target) {
         successors[0] = target;
     }
 
