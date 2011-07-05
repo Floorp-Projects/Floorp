@@ -173,8 +173,7 @@ public:
   virtual void UpdatePlaybackPosition(PRInt64 aTime);
   virtual void StartBuffering();
 
-  // State machine thread run function. Polls the state, sends frames to be
-  // displayed at appropriate times, and generally manages the decode.
+  // State machine thread run function. Defers to RunStateMachine().
   NS_IMETHOD Run();
 
   // This is called on the state machine thread and audio thread.
@@ -215,13 +214,19 @@ public:
   }
 
   PRBool OnStateMachineThread() const {
-    return mDecoder->OnStateMachineThread();
+    return IsCurrentThread(GetStateMachineThread());
   }
-
-  // The decoder object that created this state machine. The decoder
-  // always outlives us since it controls our lifetime. This is accessed
-  // read only on the AV, state machine, audio and main thread.
-  nsBuiltinDecoder* mDecoder;
+ 
+  // The decoder object that created this state machine. The state machine
+  // holds a strong reference to the decoder to ensure that the decoder stays
+  // alive once media element has started the decoder shutdown process, and has
+  // dropped its reference to the decoder. This enables the state machine to
+  // keep using the decoder's monitor until the state machine has finished
+  // shutting down, without fear of the monitor being destroyed. After
+  // shutting down, the state machine will then release this reference,
+  // causing the decoder to be destroyed. This is accessed on the decode,
+  // state machine, audio and main threads.
+  nsRefPtr<nsBuiltinDecoder> mDecoder;
 
   // The decoder monitor must be obtained before modifying this state.
   // NotifyAll on the monitor must be called when the state is changed by
@@ -250,13 +255,22 @@ public:
   // Accessed on the main and state machine threads.
   virtual void SetFrameBufferLength(PRUint32 aLength);
 
-  // Schedules the state machine thread to run the state machine.
+  // Returns the shared state machine thread.
+  static nsIThread* GetStateMachineThread();
+
+  // Schedules the shared state machine thread to run the state machine.
+  // If the state machine thread is the currently running the state machine,
+  // we wait until that has completely finished before running the state
+  // machine again.
   nsresult ScheduleStateMachine();
 
-  // Schedules the state machine thread to run the state machine
+  // Schedules the shared state machine thread to run the state machine
   // in aUsecs microseconds from now, if it's not already scheduled to run
   // earlier, in which case the request is discarded.
   nsresult ScheduleStateMachine(PRInt64 aUsecs);
+
+  // Timer function to implement ScheduleStateMachine(aUsecs).
+  void TimeoutExpired();
 
 protected:
 
@@ -418,8 +432,17 @@ protected:
   // to call.
   void DecodeThreadRun();
 
+  // State machine thread run function. Defers to RunStateMachine().
+  nsresult CallRunStateMachine();
+
+  // Performs one "cycle" of the state machine. Polls the state, and may send
+  // a video frame to be displayed, and generally manages the decode. Called
+  // periodically via timer to ensure the video stays in sync.
+  nsresult RunStateMachine();
+
   PRBool IsStateMachineScheduled() const {
-    return !mTimeout.IsNull();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    return !mTimeout.IsNull() || mRunAgain;
   }
 
   // The size of the decoded YCbCr frame.
@@ -560,6 +583,21 @@ protected:
   // ran fast enough to exhaust all data while the download is starting up.
   // Synchronised via decoder monitor.
   PRPackedBool mQuickBuffering;
+
+  // PR_TRUE if the shared state machine thread is currently running this
+  // state machine.
+  PRPackedBool mIsRunning;
+
+  // PR_TRUE if we should run the state machine again once the current
+  // state machine run has finished.
+  PRPackedBool mRunAgain;
+
+  // PR_TRUE if we've dispatched an event to run the state machine. It's
+  // imperative that we don't dispatch multiple events to run the state
+  // machine at the same time, as our code assume all events are synchronous.
+  // If we dispatch multiple events, the second event can run while the
+  // first is shutting down a thread, causing inconsistent state.
+  PRPackedBool mDispatchedRunEvent;
 
 private:
   // Manager for queuing and dispatching MozAudioAvailable events.  The
