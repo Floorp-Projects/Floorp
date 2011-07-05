@@ -1,4 +1,5 @@
 // The .name of a non-function object is undefined.
+
 var g = newGlobal('new-compartment');
 var hits = 0;
 var dbg = new Debug(g);
@@ -9,6 +10,7 @@ dbg.hooks = {
     }
 };
 g.eval("function f(nonfunction) { debugger; }");
+
 g.eval("f({});");
 g.eval("f(/a*/);");
 g.eval("f({name: 'bad'});");
