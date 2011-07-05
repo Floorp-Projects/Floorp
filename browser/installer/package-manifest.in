@@ -10,12 +10,6 @@
 
 #filter substitution
 
-#if MOZ_UPDATE_CHANNEL == aurora
-#define SHIP_FEEDBACK
-#elif MOZ_UPDATE_CHANNEL == beta
-#define SHIP_FEEDBACK
-#endif
-
 #ifdef XP_MACOSX
 ; Mac bundle stuff
 @APPNAME@/Contents/Info.plist
