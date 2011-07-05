@@ -52,7 +52,8 @@ FORCE_STATIC_LIB = 1
 EXPORTS_NAMESPACES = mozilla/net
 
 XPIDLSRCS = \
-  nsIWebSocketProtocol.idl \
+  nsIWebSocketChannel.idl \
+  nsIWebSocketListener.idl \
   $(NULL)
 
 CPPSRCS = \

@@ -75,7 +75,7 @@ class WebSocketChannelParent : public PWebSocketParent,
   void ActorDestroy(ActorDestroyReason why);
 
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
-  nsCOMPtr<nsIWebSocketProtocol> mChannel;
+  nsCOMPtr<nsIWebSocketChannel> mChannel;
   bool mIPCOpen;
 };
 
