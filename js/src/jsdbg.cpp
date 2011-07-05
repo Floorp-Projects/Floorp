@@ -1177,9 +1177,9 @@ Debugger::getDebuggees(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-Debugger::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
+Debugger::getNewestFrame(JSContext *cx, uintN argc, Value *vp)
 {
-    THISOBJ(cx, vp, Debugger, "getYoungestFrame", thisobj, dbg);
+    THISOBJ(cx, vp, Debugger, "getNewestFrame", thisobj, dbg);
 
     // cx->fp() would return the topmost frame in the current context.
     // Since there may be multiple contexts, use AllFramesIter instead.
@@ -1382,7 +1382,7 @@ JSFunctionSpec Debugger::methods[] = {
     JS_FN("removeDebuggee", Debugger::removeDebuggee, 1, 0),
     JS_FN("hasDebuggee", Debugger::hasDebuggee, 1, 0),
     JS_FN("getDebuggees", Debugger::getDebuggees, 0, 0),
-    JS_FN("getYoungestFrame", Debugger::getYoungestFrame, 0, 0),
+    JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
     JS_FS_END
 };

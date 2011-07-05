@@ -131,7 +131,7 @@ class Debugger {
     static JSBool removeDebuggee(JSContext *cx, uintN argc, Value *vp);
     static JSBool hasDebuggee(JSContext *cx, uintN argc, Value *vp);
     static JSBool getDebuggees(JSContext *cx, uintN argc, Value *vp);
-    static JSBool getYoungestFrame(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getNewestFrame(JSContext *cx, uintN argc, Value *vp);
     static JSBool clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp);
     static JSBool construct(JSContext *cx, uintN argc, Value *vp);
     static JSPropertySpec properties[];
