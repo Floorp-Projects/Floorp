@@ -74,9 +74,9 @@ class Loop
     bool init();
 
     // Identifies hoistable loop invariant instructions and moves them out of the loop.
-    bool optimize();     
+    bool optimize();
 
-  private:   
+  private:
     // These blocks define the loop.  header_ points to the loop header, and footer_
     // points to the basic block that has a backedge back to the loop header.
     MBasicBlock *footer_;
@@ -84,7 +84,7 @@ class Loop
 
     // The pre-loop block is the first predecessor of the loop header.  It is where
     // the loop is first entered and where hoisted instructions will be placed.
-    MBasicBlock* preLoop_;    
+    MBasicBlock* preLoop_;
 
     // This method recursively traverses the graph from the loop footer back through
     // predecessor edges and stops when it reaches the loop header.
@@ -93,12 +93,12 @@ class Loop
 
     bool hoistInstructions(InstructionQueue &toHoist);
 
-    // Utility methods for invariance testing and instruction hoisting.  
+    // Utility methods for invariance testing and instruction hoisting.
     bool isInLoop(MInstruction *ins);
     bool isLoopInvariant(MInstruction *ins);
     bool isHoistable(MInstruction *ins);
 
-    // Worklist and worklist usage methods 
+    // Worklist and worklist usage methods
     InstructionQueue worklist_;
     bool insertInWorklist(MInstruction *ins);
     MInstruction* popFromWorklist();

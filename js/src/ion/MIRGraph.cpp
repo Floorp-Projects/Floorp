@@ -82,7 +82,7 @@ MIRGraph::addBlock(MBasicBlock *block)
 void
 MIRGraph::unmarkBlocks() {
     for (size_t i = 0; i < numBlocks(); i ++) {
-        getBlock(i)->unmark();  
+        getBlock(i)->unmark();
     }
 }
 
@@ -227,7 +227,7 @@ MBasicBlock::setSlot(uint32 slot, MInstruction *ins)
 //      i = i + t   /|   } ...           /|     3: add(0, 2)
 //   } ...          ||                   ||   } ...
 //                  ||                   ||
-// 
+//
 // We assume that the only way such copies can be created is via simple
 // assignment, like (x = y), which will be reflected in the bytecode via
 // a GET[LOCAL,ARG] that inherits into a SET[LOCAL,ARG]. Normal calls
@@ -524,7 +524,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             // does not change, and is really NULL since we always remove
             // from the head of the list,
             MUse *next = use->next();
-            use->ins()->replaceOperand(prev, use, phi); 
+            use->ins()->replaceOperand(prev, use, phi);
             use = next;
         }
 
