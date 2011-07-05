@@ -1,14 +1,13 @@
 // Debug.Object.prototype.name
+
 var g = newGlobal('new-compartment');
 var dbg = Debug(g);
-var name, hits;
-dbg.hooks = {debuggerHandler: function (frame) { hits++; assertEq(frame.callee.name, name); }};
+var name;
+dbg.hooks = {debuggerHandler: function (frame) { name = frame.callee.name; }};
 
-hits = 0;
-name = "f";
 g.eval("(function f() { debugger; })();");
-name = undefined;
+assertEq(name, "f");
 g.eval("(function () { debugger; })();");
-name = "anonymous";
+assertEq(name, undefined);
 g.eval("Function('debugger;')();");
-assertEq(hits, 3);
+assertEq(name, "anonymous");

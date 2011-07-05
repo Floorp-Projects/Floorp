@@ -1608,6 +1608,30 @@ DebugScript_getLive(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static JSBool
+DebugScript_getChildScripts(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get live", obj, script);
+    Debug *dbg = Debug::fromChildJSObject(obj);
+
+    JSObject *result = NewDenseEmptyArray(cx);
+    if (!result)
+        return false;
+    if (JSScript::isValidOffset(script->objectsOffset)) {
+        JSObjectArray *objects = script->objects();
+        for (uint32 i = 0; i < objects->length; i++) {
+            JSObject *obj = objects->vector[i];
+            if (obj->isFunction()) {
+                JSObject *s = dbg->wrapFunctionScript(cx, (JSFunction *) obj);
+                if (!s || !js_NewbornArrayPush(cx, result, ObjectValue(*s)))
+                    return false;
+            }
+        }
+    }
+    vp->setObject(*result);
+    return true;
+}
+
 static bool
 ScriptOffset(JSContext *cx, JSScript *script, const Value &v, size_t *offsetp)
 {
@@ -1999,6 +2023,7 @@ static JSPropertySpec DebugScript_properties[] = {
 };
 
 static JSFunctionSpec DebugScript_methods[] = {
+    JS_FN("getChildScripts", DebugScript_getChildScripts, 0, 0),
     JS_FN("getAllOffsets", DebugScript_getAllOffsets, 0, 0),
     JS_FN("getLineOffsets", DebugScript_getLineOffsets, 1, 0),
     JS_FN("getOffsetLine", DebugScript_getOffsetLine, 0, 0),
