@@ -1,4 +1,4 @@
-// Hooks and Debugger.prototype.getYoungestFrame produce the same Frame object.
+// Hooks and Debugger.prototype.getNewestFrame produce the same Frame object.
 
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
@@ -13,7 +13,7 @@ dbg.hooks = {
     }
 };
 g.h = function () {
-    savedFrame = dbg.getYoungestFrame();
+    savedFrame = dbg.getNewestFrame();
     savedCallee = savedFrame.callee;
     assertEq(savedCallee.name, "f");
 };
