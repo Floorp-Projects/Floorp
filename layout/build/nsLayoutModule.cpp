@@ -1053,7 +1053,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_HTMLAUDIOELEMENT_CONTRACTID, &kNS_HTMLAUDIOELEMENT_CID },
 #endif
   { "@mozilla.org/content/canvas-rendering-context;1?id=2d", &kNS_CANVASRENDERINGCONTEXT2D_CID },
-  { "@mozilla.org/content/canvas-rendering-context;1?id=2dthebes", &kNS_CANVASRENDERINGCONTEXT2DTHEBES_CID },
+  { "@mozilla.org/content/2dthebes-canvas-rendering-context;1", &kNS_CANVASRENDERINGCONTEXT2DTHEBES_CID },
   { "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { "@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &kNS_TEXT_ENCODER_CID },
