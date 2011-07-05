@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_net_nsWebSocketHandler_h
-#define mozilla_net_nsWebSocketHandler_h
+#ifndef mozilla_net_WebSocketChannel_h
+#define mozilla_net_WebSocketChannel_h
 
 #include "nsIURI.h"
 #include "nsISupports.h"
@@ -70,15 +71,15 @@ class nsPostMessage;
 class nsWSAdmissionManager;
 class nsWSCompression;
 
-class nsWebSocketHandler : public BaseWebSocketChannel,
-                           public nsIHttpUpgradeListener,
-                           public nsIStreamListener,
-                           public nsIInputStreamCallback,
-                           public nsIOutputStreamCallback,
-                           public nsITimerCallback,
-                           public nsIDNSListener,
-                           public nsIInterfaceRequestor,
-                           public nsIChannelEventSink
+class WebSocketChannel : public BaseWebSocketChannel,
+                         public nsIHttpUpgradeListener,
+                         public nsIStreamListener,
+                         public nsIInputStreamCallback,
+                         public nsIOutputStreamCallback,
+                         public nsITimerCallback,
+                         public nsIDNSListener,
+                         public nsIInterfaceRequestor,
+                         public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
@@ -103,7 +104,7 @@ public:
   NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
   NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
 
-  nsWebSocketHandler();
+  WebSocketChannel();
   static void Shutdown();
   
   enum {
@@ -132,7 +133,7 @@ public:
   const static PRUint16 kCloseAbnormal      = 1006;
 
 protected:
-  virtual ~nsWebSocketHandler();
+  virtual ~WebSocketChannel();
 
 private:
   friend class nsPostMessage;
@@ -277,14 +278,14 @@ private:
   PRUint8                        *mDynamicOutput;
 };
 
-class nsWebSocketSSLHandler : public nsWebSocketHandler
+class WebSocketSSLChannel : public WebSocketChannel
 {
 public:
-    nsWebSocketSSLHandler() { BaseWebSocketChannel::mEncrypted = PR_TRUE; }
+    WebSocketSSLChannel() { BaseWebSocketChannel::mEncrypted = PR_TRUE; }
 protected:
-    virtual ~nsWebSocketSSLHandler() {}
+    virtual ~WebSocketSSLChannel() {}
 };
 
 }} // namespace mozilla::net
 
-#endif // mozilla_net_nsWebSocketHandler_h
+#endif // mozilla_net_WebSocketChannel_h
