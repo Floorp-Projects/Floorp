@@ -141,7 +141,7 @@ static PRInt64 GetVsize()
   if (!success)
     return -1;
 
-  return s.ullTotalPhys - s.ullAvailPhys;
+  return s.ullTotalVirtual - s.ullAvailVirtual;
 }
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
