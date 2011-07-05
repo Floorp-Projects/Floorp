@@ -389,26 +389,6 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     // free up selectionState range item
     (mHTMLEditor->mRangeUpdater).DropRangeItem(&mRangeItem);
 
-    /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
-     * This is difficult, because we cannot know what the level is until after the Bidi algorithm
-     * is applied to the whole paragraph.
-     *
-     * So we set the cursor Bidi level to UNDEFINED here, and the caret code will set it correctly later
-     */
-    if (action == nsEditor::kOpInsertText
-        || action == nsEditor::kOpInsertIMEText) {
-
-      nsCOMPtr<nsISelection> selection;
-      nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
-      NS_ENSURE_SUCCESS(res, res);
-      nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(selection));
-      nsRefPtr<nsFrameSelection> frameSelection;
-      privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
-      if (frameSelection) {
-        frameSelection->UndefineCaretBidiLevel();
-      }
-    }
-
     // Reset the contenteditable count to its previous value
     if (mRestoreContentEditableCount) {
       nsCOMPtr<nsIDOMDocument> doc;

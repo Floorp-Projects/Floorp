@@ -2594,8 +2594,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   NS_IMETHOD GetBorder(nsMargin& aBorder)=0;
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding)=0;
   NS_IMETHOD GetMargin(nsMargin& aMargin)=0;
-  NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout)=0;
-  NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout)=0;
+  virtual void SetLayoutManager(nsIBoxLayout* aLayout) { }
+  virtual nsIBoxLayout* GetLayoutManager() { return nsnull; }
   NS_HIDDEN_(nsresult) GetClientRect(nsRect& aContentRect);
 
   // For nsSprocketLayout
