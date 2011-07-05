@@ -122,29 +122,7 @@ public:
       gfxWarning() << "Failed to create shared bitmap for old surface.";
     }
 
-    factory()->CreatePathGeometry(byRef(mClippedArea));
-    RefPtr<ID2D1GeometrySink> currentSink;
-    mClippedArea->Open(byRef(currentSink));
-      
-    std::vector<DrawTargetD2D::PushedClip>::iterator iter = mDT->mPushedClips.begin();
-    iter->mPath->GetGeometry()->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
-                                     iter->mTransform, currentSink);
-
-    currentSink->Close();
-
-    iter++;
-    for (;iter != mDT->mPushedClips.end(); iter++) {
-      RefPtr<ID2D1PathGeometry> newGeom;
-      factory()->CreatePathGeometry(byRef(newGeom));
-
-      newGeom->Open(byRef(currentSink));
-      mClippedArea->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
-                                        iter->mTransform, currentSink);
-
-      currentSink->Close();
-
-      mClippedArea = newGeom;
-    }
+    mClippedArea = mDT->GetClippedGeometry();
   }
 
   ID2D1Factory *factory() { return mDT->factory(); }
@@ -163,7 +141,9 @@ public:
     mDT->mTransformDirty = true;
 
     RefPtr<ID2D1RectangleGeometry> rectGeom;
-    factory()->CreateRectangleGeometry(D2D1::InfiniteRect(), byRef(rectGeom));
+    factory()->CreateRectangleGeometry(
+      D2D1::RectF(0, 0, float(mDT->mSize.width), float(mDT->mSize.height)),
+      byRef(rectGeom));
 
     RefPtr<ID2D1PathGeometry> invClippedArea;
     factory()->CreatePathGeometry(byRef(invClippedArea));
@@ -188,7 +168,7 @@ private:
   // with the old dest surface data.
   RefPtr<ID2D1Bitmap> mOldSurfBitmap;
   // This contains the area drawing is clipped to.
-  RefPtr<ID2D1PathGeometry> mClippedArea;
+  RefPtr<ID2D1Geometry> mClippedArea;
 };
 
 DrawTargetD2D::DrawTargetD2D()
@@ -317,6 +297,12 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   Flush();
 
+  AutoSaveRestoreClippedOut restoreClippedOut(this);
+
+  if (!IsOperatorBoundByMask(aOperator)) {
+    restoreClippedOut.Save();
+  }
+
   srView = static_cast<SourceSurfaceD2DTarget*>(aSurface)->GetSRView();
 
   EnsureViews();
@@ -331,34 +317,35 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     }
   }
 
+
   RefPtr<ID3D10RenderTargetView> destRTView = mRTView;
   RefPtr<ID3D10Texture2D> destTexture;
   HRESULT hr;
 
+  RefPtr<ID3D10Texture2D> maskTexture;
+  RefPtr<ID3D10ShaderResourceView> maskSRView;
   if (mPushedClips.size()) {
-    // We need to take clips into account, draw into a temporary surface, which
-    // we then blend back with the proper clips set, using D2D.
-    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_A8_UNORM,
                                mSize.width, mSize.height,
                                1, 1);
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
 
-    hr = mDevice->CreateTexture2D(&desc, NULL, byRef(destTexture));
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to create temporary texture. Size: " << mSize << " Code: " << hr;
-      return;
-    }
+    hr = mDevice->CreateTexture2D(&desc, NULL, byRef(maskTexture));
 
-    hr = mDevice->CreateRenderTargetView(destTexture, NULL, byRef(destRTView));
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to create RenderTargetView. Code: " << hr;
-      return;
-    }
+    RefPtr<ID2D1RenderTarget> rt = CreateRTForTexture(maskTexture);
 
-    float color[4] = { 0, 0, 0, 0 };
-    mDevice->ClearRenderTargetView(destRTView, color);
+    RefPtr<ID2D1SolidColorBrush> brush;
+    rt->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
+    
+    RefPtr<ID2D1Geometry> geometry = GetClippedGeometry();
+
+    rt->BeginDraw();
+    rt->Clear(D2D1::ColorF(0, 0));
+    rt->FillGeometry(geometry, brush);
+    rt->EndDraw();
+
+    mDevice->CreateShaderResourceView(maskTexture, NULL, byRef(maskSRView));
   }
-
 
   IntSize srcSurfSize;
   ID3D10RenderTargetView *rtViews;
@@ -596,8 +583,18 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     SetFloatVector(ShaderConstantRectD3D10(-correctedOffset.x / Float(tmpSurfSize.width), -correctedOffset.y / Float(tmpSurfSize.height),
                                            mSize.width / Float(tmpSurfSize.width) * dsFactorX,
                                            mSize.height / Float(tmpSurfSize.height) * dsFactorY));
-  mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
-    GetPassByIndex(1)->Apply(0);
+
+  if (!mPushedClips.size()) {
+    mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
+      GetPassByIndex(1)->Apply(0);
+  } else {
+    mPrivateData->mEffect->GetVariableByName("mask")->AsShaderResource()->SetResource(maskSRView);
+    mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
+      SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+    mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
+      GetPassByIndex(2)->Apply(0);
+  }
+
   mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
 
   mDevice->Draw(4, 0);
@@ -607,39 +604,17 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     SetFloatVector(ShaderConstantRectD3D10(-aDest.x / aSurface->GetSize().width, -aDest.y / aSurface->GetSize().height,
                                            Float(mSize.width) / aSurface->GetSize().width,
                                            Float(mSize.height) / aSurface->GetSize().height));
-  mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->
-    GetPassByIndex(0)->Apply(0);
+  if (!mPushedClips.size()) {
+    mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->
+      GetPassByIndex(0)->Apply(0);
+  } else {
+    mPrivateData->mEffect->GetTechniqueByName("SampleMaskedTexture")->
+      GetPassByIndex(0)->Apply(0);
+  }
+
   mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
 
   mDevice->Draw(4, 0);
-
-  if (mPushedClips.size()) {
-    // Assert destTexture
-
-    // Blend back using the proper clips.
-    PrepareForDrawing(mRT);
-
-    RefPtr<IDXGISurface> surf;
-    hr = destTexture->QueryInterface((IDXGISurface**) byRef(surf));
-
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to QI texture to surface. Code: " << hr;
-      return;
-    }
-
-    D2D1_BITMAP_PROPERTIES props =
-      D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(mFormat), AlphaMode(mFormat)));
-    RefPtr<ID2D1Bitmap> bitmap;
-    hr = mRT->CreateSharedBitmap(IID_IDXGISurface, surf, 
-                                 &props,  byRef(bitmap));
-
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to create shared bitmap for surface. Code: " << hr;
-      return;
-    }
-
-    mRT->DrawBitmap(bitmap);
-  }
 }
 
 void
@@ -1413,6 +1388,38 @@ DrawTargetD2D::FinalizeRTForOperator(CompositionOp aOperator, const Rect &aBound
   mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
   
   mDevice->Draw(4, 0);
+}
+
+TemporaryRef<ID2D1Geometry>
+DrawTargetD2D::GetClippedGeometry()
+{
+  RefPtr<ID2D1GeometrySink> currentSink;
+  RefPtr<ID2D1PathGeometry> clippedGeometry;
+
+  factory()->CreatePathGeometry(byRef(clippedGeometry));
+  clippedGeometry->Open(byRef(currentSink));
+      
+  std::vector<DrawTargetD2D::PushedClip>::iterator iter = mPushedClips.begin();
+  iter->mPath->GetGeometry()->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                                    iter->mTransform, currentSink);
+
+  currentSink->Close();
+
+  iter++;
+  for (;iter != mPushedClips.end(); iter++) {
+    RefPtr<ID2D1PathGeometry> newGeom;
+    factory()->CreatePathGeometry(byRef(newGeom));
+
+    newGeom->Open(byRef(currentSink));
+    clippedGeometry->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
+                                      iter->mTransform, currentSink);
+
+    currentSink->Close();
+
+    clippedGeometry = newGeom;
+  }
+
+  return clippedGeometry;
 }
 
 TemporaryRef<ID2D1RenderTarget>
