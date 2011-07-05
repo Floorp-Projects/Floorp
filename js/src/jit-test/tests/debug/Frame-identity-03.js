@@ -1,5 +1,5 @@
 // |jit-test| debug
-// Test that we create new Debug.Frames and reuse old ones correctly with recursion.
+// Test that we create new Debugger.Frames and reuse old ones correctly with recursion.
 
 var g = newGlobal('new-compartment');
 g.debuggeeGlobal = this;
@@ -8,7 +8,7 @@ g.eval("(" + function () {
             return ("id" in f) ? f.id : (f.id = nextid++);
         }
 
-        var dbg = new Debug(debuggeeGlobal);
+        var dbg = new Debugger(debuggeeGlobal);
         dbg.hooks = {
             debuggerHandler: function (frame) {
                 var a = [];

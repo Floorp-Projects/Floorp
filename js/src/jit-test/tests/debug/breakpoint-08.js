@@ -11,7 +11,7 @@ g.s = ("line0 = Error().lineNumber;\n" +
        "debugger;\n" +          // line0 + 1
        "result = 'ok';\n");     // line0 + 2
 
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hits = 0, bphits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {

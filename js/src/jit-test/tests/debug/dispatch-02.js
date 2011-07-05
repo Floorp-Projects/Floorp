@@ -1,4 +1,4 @@
-// Disabling a Debug object causes events to stop being delivered to it
+// Disabling a Debugger object causes events to stop being delivered to it
 // immediately, even if we're in the middle of dispatching.
 
 var g = newGlobal('new-compartment');
@@ -6,7 +6,7 @@ var log;
 
 var arr = [];
 for (var i = 0; i < 4; i++) {
-    arr[i] = new Debug(g);
+    arr[i] = new Debugger(g);
     arr[i].hooks = {
         num: i,
         debuggerHandler: function () {

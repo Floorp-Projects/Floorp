@@ -1,7 +1,7 @@
-// Debug.Object.prototype.proto
+// Debugger.Object.prototype.proto
 var g = newGlobal('new-compartment');
 var dbgeval = function () {
-        var dbg = new Debug(g);
+        var dbg = new Debugger(g);
         var hits = 0;
         g.eval("function f() { debugger; }");
         var lastval;

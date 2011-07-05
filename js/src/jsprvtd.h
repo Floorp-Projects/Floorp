@@ -199,7 +199,7 @@ typedef js::InlineMap<JSAtom *, DefnOrHeader, 24> AtomDOHMap;
 
 class Breakpoint;
 class BreakpointSite;
-class Debug;
+class Debugger;
 
 typedef HashMap<jsbytecode *, BreakpointSite *, DefaultHasher<jsbytecode *>, RuntimeAllocPolicy>
     BreakpointSiteMap;

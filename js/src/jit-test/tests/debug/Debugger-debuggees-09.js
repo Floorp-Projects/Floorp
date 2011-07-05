@@ -2,7 +2,7 @@
 // Random objects can be the argument to hasDebuggee and removeDebuggee.
 // If hasDebuggee(x) is false, removeDebuggee(x) does nothing.
 
-var dbg = new Debug;
+var dbg = new Debugger;
 
 function check(obj) {
     // If obj is something we could never debug, hasDebuggee(obj) is false.
@@ -22,6 +22,6 @@ check(g1.eval("({})"));
 // objects in a compartment that is already debugging us
 var g2 = newGlobal('new-compartment');
 g2.parent = this;
-g2.eval("var dbg = new Debug(parent);");
+g2.eval("var dbg = new Debugger(parent);");
 check(g2);
 check(g2.dbg);

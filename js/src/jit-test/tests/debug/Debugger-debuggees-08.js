@@ -1,10 +1,10 @@
 // addDebuggee(obj), where obj is not global, adds obj's global.
 // Adding a debuggee more than once is redundant.
 
-var dbg = new Debug;
+var dbg = new Debugger;
 var g = newGlobal('new-compartment');
 var w = dbg.addDebuggee(g);
-assertEq(w instanceof Debug.Object, true);
+assertEq(w instanceof Debugger.Object, true);
 
 function usual() {
     assertEq(dbg.hasDebuggee(g), true);
@@ -24,9 +24,9 @@ usual();
 dbg.addDebuggee(g.eval("(function () {})"));
 usual();
 
-// w2 is a Debug.Object in g. Treat it like any other object in g; don't auto-unwrap it.
+// w2 is a Debugger.Object in g. Treat it like any other object in g; don't auto-unwrap it.
 g.g2 = newGlobal('new-compartment');
-g.eval("var w2 = new Debug().addDebuggee(g2)");
+g.eval("var w2 = new Debugger().addDebuggee(g2)");
 dbg.addDebuggee(g.w2);
 usual();
 assertEq(!dbg.hasDebuggee(g.g2), true);

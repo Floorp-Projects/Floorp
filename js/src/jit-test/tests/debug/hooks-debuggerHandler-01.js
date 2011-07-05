@@ -1,7 +1,7 @@
 var g = newGlobal('new-compartment');
 g.log = '';
 
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var hooks = {debuggerHandler: function (stack) { g.log += '!'; }};
 dbg.hooks = hooks;
 assertEq(dbg.hooks, hooks);

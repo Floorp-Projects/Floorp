@@ -3,7 +3,7 @@
 load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (stack) {
         return {throw: "oops"};

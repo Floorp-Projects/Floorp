@@ -1,10 +1,10 @@
-// tests calling script functions via Debug.Object.prototype.apply/call
+// tests calling script functions via Debugger.Object.prototype.apply/call
 
 load(libdir + "asserts.js");
 
 var g = newGlobal("new-compartment");
 g.eval("function f() { debugger; }");
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 dbg.hooks = {debuggerHandler: function () {}};
 
 var hits = 0;
@@ -25,7 +25,7 @@ function test(usingApply) {
         assertEq((usingApply ? fn.apply(null, []) : fn.call(null)).return, NaN);
         assertEq((usingApply ? fn.apply() : fn.call()).return, NaN);
 
-        // Throw if a this-value or argument is an object but not a Debug.Object.
+        // Throw if a this-value or argument is an object but not a Debugger.Object.
         assertThrowsInstanceOf(function () { usingApply ? fn.apply({}, []) : fn.call({}); },
                                TypeError);
         assertThrowsInstanceOf(function () { usingApply ? fn.apply(null, [{}]) : fn.call(null, {}); },

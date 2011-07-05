@@ -1,7 +1,7 @@
-// Referents of Debug.Scripts in other compartments always survive per-compartment GC.
+// Referents of Debugger.Scripts in other compartments always survive per-compartment GC.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var arr = [];
 dbg.hooks = {debuggerHandler: function (frame) { arr.push(frame.script); }};
 g.eval("for (var i = 0; i < 100; i++) Function('debugger;')();");

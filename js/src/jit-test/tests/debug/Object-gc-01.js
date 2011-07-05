@@ -1,7 +1,7 @@
-// Debug.Objects keep their referents alive.
+// Debugger.Objects keep their referents alive.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var arr = [];
 dbg.hooks = {debuggerHandler: function (frame) { arr.push(frame.eval("[]").return); }};
 g.eval("for (var i = 0; i < 10; i++) debugger;");

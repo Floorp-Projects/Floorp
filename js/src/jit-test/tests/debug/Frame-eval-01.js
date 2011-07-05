@@ -1,7 +1,7 @@
-// simplest possible test of Debug.Frame.prototype.eval
+// simplest possible test of Debugger.Frame.prototype.eval
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var c;
 dbg.hooks = {debuggerHandler: function (frame) { c = frame.eval("2 + 2"); }};
 g.eval("debugger;");

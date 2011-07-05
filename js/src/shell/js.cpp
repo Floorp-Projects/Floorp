@@ -5910,7 +5910,7 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 #endif
         if (!JS_InitReflect(cx, glob))
             return NULL;
-        if (!JS_DefineDebugObject(cx, glob))
+        if (!JS_DefineDebuggerObject(cx, glob))
             return NULL;
         if (!JS::RegisterPerfMeasurement(cx, glob))
             return NULL;

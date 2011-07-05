@@ -1,4 +1,4 @@
-// clearBreakpoint clears breakpoints for the current Debug object only.
+// clearBreakpoint clears breakpoints for the current Debugger object only.
 
 var g = newGlobal('new-compartment');
 
@@ -11,7 +11,7 @@ var handler = {
 };
 
 function attach(i) {
-    var dbg = Debug(g);
+    var dbg = Debugger(g);
     dbg.hooks = {
         debuggerHandler: function (frame) {
             var s = frame.script;

@@ -205,7 +205,7 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 void
 GlobalDebuggees_finalize(JSContext *cx, JSObject *obj)
 {
-    cx->delete_((GlobalObject::DebugVector *) obj->getPrivate());
+    cx->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
 }
 
 static Class
@@ -215,28 +215,28 @@ GlobalDebuggees_class = {
     EnumerateStub, ResolveStub, ConvertStub, GlobalDebuggees_finalize
 };
 
-GlobalObject::DebugVector *
+GlobalObject::DebuggerVector *
 GlobalObject::getDebuggers()
 {
     Value debuggers = getReservedSlot(DEBUGGERS);
     if (debuggers.isUndefined())
         return NULL;
     JS_ASSERT(debuggers.toObject().clasp == &GlobalDebuggees_class);
-    return (DebugVector *) debuggers.toObject().getPrivate();
+    return (DebuggerVector *) debuggers.toObject().getPrivate();
 }
 
-GlobalObject::DebugVector *
+GlobalObject::DebuggerVector *
 GlobalObject::getOrCreateDebuggers(JSContext *cx)
 {
     assertSameCompartment(cx, this);
-    DebugVector *vec = getDebuggers();
+    DebuggerVector *vec = getDebuggers();
     if (vec)
         return vec;
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &GlobalDebuggees_class, NULL, NULL);
     if (!obj)
         return NULL;
-    vec = cx->new_<DebugVector>();
+    vec = cx->new_<DebuggerVector>();
     if (!vec)
         return NULL;
     obj->setPrivate(vec);
@@ -246,13 +246,13 @@ GlobalObject::getOrCreateDebuggers(JSContext *cx)
 }
 
 bool
-GlobalObject::addDebug(JSContext *cx, Debug *dbg)
+GlobalObject::addDebugger(JSContext *cx, Debugger *dbg)
 {
-    DebugVector *vec = getOrCreateDebuggers(cx);
+    DebuggerVector *vec = getOrCreateDebuggers(cx);
     if (!vec)
         return false;
 #ifdef DEBUG
-    for (Debug **p = vec->begin(); p != vec->end(); p++)
+    for (Debugger **p = vec->begin(); p != vec->end(); p++)
         JS_ASSERT(*p != dbg);
 #endif
     if (vec->empty() && !compartment()->addDebuggee(cx, this))

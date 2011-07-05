@@ -7,7 +7,7 @@ var hits;
 function addDebug() {
     // These loops are here mainly to defeat the conservative GC. :-\
     for (var i = 0; i < 4; i++) {
-        var dbg = new Debug(g);
+        var dbg = new Debugger(g);
         dbg.hooks = {
             dbg: dbg,
             debuggerHandler: function (stack) {
@@ -15,7 +15,7 @@ function addDebug() {
                 for (var j = 0; j < 4; j++) {
                     this.dbg.enabled = false;
                     this.dbg.hooks = {};
-                    this.dbg = new Debug(g);
+                    this.dbg = new Debugger(g);
                 }
                 gc();
             }

@@ -1,4 +1,4 @@
-// Debug hooks fire based on debuggees.
+// Debugger hooks fire based on debuggees.
 
 var g1 = newGlobal('new-compartment');
 g1.eval("var g2 = newGlobal('same-compartment')");
@@ -7,7 +7,7 @@ g1.eval("function f() { debugger; g2.g(); }");
 g2.eval("function g() { debugger; }");
 
 var log;
-var dbg = new Debug;
+var dbg = new Debugger;
 dbg.hooks = {debuggerHandler: function (frame) { log += frame.callee.name; }};
 
 // No debuggees: the debuggerHandler is not called.

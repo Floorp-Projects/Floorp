@@ -1,7 +1,7 @@
 // assigning to local variables in frame.eval code
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
         frame.eval("outerarg = 1; outervar = 2; innerarg = 3; innervar = 4;");

@@ -1,7 +1,7 @@
-// Debug.Object.prototype.name
+// Debugger.Object.prototype.name
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var name;
 dbg.hooks = {debuggerHandler: function (frame) { name = frame.callee.name; }};
 

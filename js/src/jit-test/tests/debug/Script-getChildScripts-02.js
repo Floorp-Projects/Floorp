@@ -1,7 +1,7 @@
 // getChildScripts returns scripts in source order.
 
 var g = newGlobal('new-compartment');
-var dbg = new Debug(g);
+var dbg = new Debugger(g);
 var scripts = [];
 var cs;
 dbg.hooks = {

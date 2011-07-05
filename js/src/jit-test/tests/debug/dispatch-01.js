@@ -5,7 +5,7 @@ var log = '';
 
 function addDebug(n) {
     for (var i = 0; i < n; i++) {
-        var dbg = new Debug(g);
+        var dbg = new Debugger(g);
         dbg.hooks = {
             num: i,
             dbg: dbg,

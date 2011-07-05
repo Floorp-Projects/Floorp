@@ -7,7 +7,7 @@ var g2 = g1.eval("newGlobal('same-compartment')");
 g2.eval("function f() { return 2; }");
 g1.f = g2.f;
 
-var dbg = Debug(g1);
+var dbg = Debugger(g1);
 var s;
 dbg.hooks = {debuggerHandler: function (frame) { s = frame.eval("f").return.script; }};
 g1.eval("debugger;");

@@ -1,7 +1,7 @@
 // reentering the debugger several times via debuggerHandler and apply/call on a single stack
 
 var g = newGlobal("new-compartment");
-var dbg = Debug(g);
+var dbg = Debugger(g);
 
 function test(usingApply) {
     dbg.hooks = {

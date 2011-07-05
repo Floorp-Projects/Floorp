@@ -1,8 +1,8 @@
-// Multiple Debug objects can set breakpoints at the same instruction.
+// Multiple Debugger objects can set breakpoints at the same instruction.
 
 var g = newGlobal('new-compartment');
 function attach(g, i) {
-    var dbg = Debug(g);
+    var dbg = Debugger(g);
     dbg.hooks = {
         debuggerHandler: function (frame) {
             var s = frame.eval("f").return.script;

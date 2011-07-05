@@ -15,5 +15,5 @@ if (!canEnable) {
     g.libdir = libdir;
     g.eval("load(libdir + 'asserts.js');");
     g.parent = this;
-    g.eval("assertThrowsInstanceOf(function () { new Debug(parent); }, Error);");
+    g.eval("assertThrowsInstanceOf(function () { new Debugger(parent); }, Error);");
 }

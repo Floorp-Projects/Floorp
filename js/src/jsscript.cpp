@@ -1400,7 +1400,7 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     hook = cx->debugHooks->destroyScriptHook;
     if (hook)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
-    Debug::onDestroyScript(script);
+    Debugger::onDestroyScript(script);
     JS_ClearScriptTraps(cx, script);
 }
 

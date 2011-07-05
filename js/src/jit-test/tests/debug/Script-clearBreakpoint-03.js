@@ -1,7 +1,7 @@
 // Clearing a breakpoint by handler can clear multiple breakpoints.
 
 var g = newGlobal('new-compartment');
-var dbg = Debug(g);
+var dbg = Debugger(g);
 var s;
 dbg.hooks = {
     debuggerHandler: function (frame) {
