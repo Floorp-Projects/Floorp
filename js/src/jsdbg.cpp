@@ -2768,20 +2768,18 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
     if (!debugProto || !debugProto->ensureClassReservedSlots(cx))
         return false;
 
-    JSObject *frameCtor;
     JSObject *frameProto = js_InitClass(cx, debugCtor, objProto, &DebuggerFrame_class,
                                         DebuggerFrame_construct, 0,
                                         DebuggerFrame_properties, DebuggerFrame_methods,
-                                        NULL, NULL, &frameCtor);
+                                        NULL, NULL);
     if (!frameProto)
         return false;
 
-    JSObject *scriptCtor;
     JSObject *scriptProto = js_InitClass(cx, debugCtor, objProto, &DebuggerScript_class,
                                          DebuggerScript_construct, 0,
                                          DebuggerScript_properties, DebuggerScript_methods,
-                                         NULL, NULL, &scriptCtor);
-    if (!scriptProto || !scriptProto->ensureClassReservedSlots(cx))
+                                         NULL, NULL);
+    if (!scriptProto)
         return false;
 
     JSObject *objectProto = js_InitClass(cx, debugCtor, objProto, &DebuggerObject_class,
