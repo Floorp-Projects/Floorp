@@ -485,6 +485,7 @@ LimitCheck::operator()(JSContext *cx, StackSpace &space, Value *from, uintN nval
     if (*limit - from >= ptrdiff_t(nvals))
         return true;
 
+#ifdef JS_METHODJIT
     if (topncode) {
         /*
          * The current regs.pc may not be intact, set it in case bumping
@@ -492,6 +493,7 @@ LimitCheck::operator()(JSContext *cx, StackSpace &space, Value *from, uintN nval
          */
         cx->regs().updateForNcode(cx->fp()->jit(), topncode);
     }
+#endif
 
     return space.tryBumpLimit(cx, from, nvals, limit);
 }

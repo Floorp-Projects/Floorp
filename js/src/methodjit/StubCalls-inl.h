@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jslogic_h_inl__
+#if !defined jslogic_h_inl__ && defined JS_METHODJIT
 #define jslogic_h_inl__
 
 namespace js {

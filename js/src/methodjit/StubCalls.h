@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jslogic_h__
+#if !defined jslogic_h__ && defined JS_METHODJIT
 #define jslogic_h__
 
 #include "MethodJIT.h"
