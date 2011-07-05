@@ -41,7 +41,8 @@
 #define mozilla_net_WebSocketChannelParent_h
 
 #include "mozilla/net/PWebSocketParent.h"
-#include "mozilla/net/nsWebSocketHandler.h"
+#include "nsIWebSocketListener.h"
+#include "nsIWebSocketChannel.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
