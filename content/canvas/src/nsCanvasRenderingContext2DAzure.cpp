@@ -3430,30 +3430,6 @@ gfxFontGroup *nsCanvasRenderingContext2DAzure::GetCurrentFontStyle()
   return CurrentState().fontGroup;
 }
 
-NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::MozDrawText(const nsAString& textToDraw)
-{
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::MozMeasureText(const nsAString& textToMeasure, float *retVal)
-{
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::MozPathText(const nsAString& textToPath)
-{
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::MozTextAlongPath(const nsAString& textToDraw, PRBool stroke)
-{
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-}
-
 //
 // line caps/joins
 //
@@ -3964,12 +3940,12 @@ nsCanvasRenderingContext2DAzure::DrawWindow(nsIDOMWindow* aWindow, float aX, flo
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::AsyncDrawXULElement(nsIDOMXULElement* aElem, float aX, float aY,
-                                                float aW, float aH,
-                                                const nsAString& aBGColor,
-                                                PRUint32 flags)
+nsCanvasRenderingContext2DAzure::AsyncDrawXULElement(nsIDOMXULElement* aElem,
+                                                     float aX, float aY,
+                                                     float aW, float aH,
+                                                     const nsAString& aBGColor,
+                                                     PRUint32 flags)
 {
-#if 0
     NS_ENSURE_ARG(aElem != nsnull);
 
     // We can't allow web apps to call this until we fix at least the
@@ -3984,6 +3960,7 @@ nsCanvasRenderingContext2DAzure::AsyncDrawXULElement(nsIDOMXULElement* aElem, fl
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
+#if 0
     nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(aElem);
     if (!loaderOwner)
         return NS_ERROR_FAILURE;
