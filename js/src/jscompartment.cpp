@@ -532,7 +532,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         traceMonitor()->sweep(cx);
 #endif
 
-# if defined JS_POLYIC
+# if defined JS_METHODJIT && defined JS_POLYIC
     /*
      * Purge all PICs in the compartment. These can reference type data and
      * need to know which types are pending collection.
