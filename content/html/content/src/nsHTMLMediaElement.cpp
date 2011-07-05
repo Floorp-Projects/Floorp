@@ -1987,11 +1987,11 @@ void nsHTMLMediaElement::NetworkError()
 
 void nsHTMLMediaElement::DecodeError()
 {
+  if (mDecoder) {
+    mDecoder->Shutdown();
+    mDecoder = nsnull;
+  }
   if (mIsLoadingFromSourceChildren) {
-    if (mDecoder) {
-      mDecoder->Shutdown();
-      mDecoder = nsnull;
-    }
     mError = nsnull;
     if (mSourceLoadCandidate) {
       DispatchAsyncSourceError(mSourceLoadCandidate);
