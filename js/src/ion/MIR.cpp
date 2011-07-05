@@ -172,7 +172,7 @@ MInstruction::usedAsType() const
 
     if (IsPowerOfTwo(usedTypes())) {
         // If all uses of this instruction want a specific type, then set the
-        // result as that type. 
+        // result as that type.
         int t;
         JS_FLOOR_LOG2(t, usedTypes());
         return MIRType(t);
