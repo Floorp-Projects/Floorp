@@ -276,23 +276,29 @@ ImageContainerOGL::GetCurrentAsSurface(gfxIntSize *aSize)
       return nsnull;
     }
 
-    size = yuvImage->mSize;
+    size = yuvImage->mData.mPicSize;
 
     nsRefPtr<gfxImageSurface> imageSurface =
       new gfxImageSurface(size, gfxASurface::ImageFormatRGB24);
+  
+    gfx::YUVType type = 
+      gfx::TypeFromSize(yuvImage->mData.mYSize.width,
+                        yuvImage->mData.mYSize.height,
+                        yuvImage->mData.mCbCrSize.width,
+                        yuvImage->mData.mCbCrSize.height);
 
     gfx::ConvertYCbCrToRGB32(yuvImage->mData.mYChannel,
                              yuvImage->mData.mCbChannel,
                              yuvImage->mData.mCrChannel,
                              imageSurface->Data(),
-                             0,
-                             0,
+                             yuvImage->mData.mPicX,
+                             yuvImage->mData.mPicY,
                              size.width,
                              size.height,
                              yuvImage->mData.mYStride,
                              yuvImage->mData.mCbCrStride,
                              imageSurface->Stride(),
-                             yuvImage->mType);
+                             type);
 
     *aSize = size;
     return imageSurface.forget().get();
@@ -432,7 +438,10 @@ ImageLayerOGL::RenderLayer(int,
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
 
-    mOGLManager->BindAndDrawQuad(program);
+    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                yuvImage->mData.GetPictureRect(),
+                                                nsIntSize(yuvImage->mData.mYSize.width,
+                                                          yuvImage->mData.mYSize.height));
 
     // We shouldn't need to do this, but do it anyway just in case
     // someone else forgets.
@@ -666,84 +675,11 @@ PlanarYCbCrImageOGL::~PlanarYCbCrImageOGL()
 void
 PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
 {
-  // For now, we copy the data
-  int width_shift = 0;
-  int height_shift = 0;
-  if (aData.mYSize.width == aData.mCbCrSize.width &&
-      aData.mYSize.height == aData.mCbCrSize.height) {
-     // YV24 format
-     width_shift = 0;
-     height_shift = 0;
-     mType = gfx::YV24;
-  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-             aData.mYSize.height == aData.mCbCrSize.height) {
-    // YV16 format
-    width_shift = 1;
-    height_shift = 0;
-    mType = gfx::YV16;
-  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-             aData.mYSize.height / 2 == aData.mCbCrSize.height ) {
-      // YV12 format
-    width_shift = 1;
-    height_shift = 1;
-    mType = gfx::YV12;
-  } else {
-    NS_ERROR("YCbCr format not supported");
-  }
-  
-  mData = aData;
-  mData.mCbCrStride = mData.mCbCrSize.width = aData.mPicSize.width >> width_shift;
-  // Round up the values for width and height to make sure we sample enough data
-  // for the last pixel - See bug 590735
-  if (width_shift && (aData.mPicSize.width & 1)) {
-    mData.mCbCrStride++;
-    mData.mCbCrSize.width++;
-  }
-  mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
-  if (height_shift && (aData.mPicSize.height & 1)) {
-      mData.mCbCrSize.height++;
-  }
-  mData.mYSize = aData.mPicSize;
-  mData.mYStride = mData.mYSize.width;
-
   // Recycle the previous image main-memory buffer now that we're about to get a new buffer
   if (mBuffer)
     mRecycleBin->RecycleBuffer(mBuffer.forget(), mBufferSize);
-
-  // update buffer size
-  mBufferSize = mData.mCbCrStride * mData.mCbCrSize.height * 2 +
-                mData.mYStride * mData.mYSize.height;
-
-  // get new buffer
-  mBuffer = mRecycleBin->GetBuffer(mBufferSize);
-  if (!mBuffer)
-    return;
-
-  mData.mYChannel = mBuffer;
-  mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
-  mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
-  int cbcr_x = aData.mPicX >> width_shift;
-  int cbcr_y = aData.mPicY >> height_shift;
-
-  for (int i = 0; i < mData.mYSize.height; i++) {
-    memcpy(mData.mYChannel + i * mData.mYStride,
-           aData.mYChannel + ((aData.mPicY + i) * aData.mYStride) + aData.mPicX,
-           mData.mYStride);
-  }
-  for (int i = 0; i < mData.mCbCrSize.height; i++) {
-    memcpy(mData.mCbChannel + i * mData.mCbCrStride,
-           aData.mCbChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-           mData.mCbCrStride);
-  }
-  for (int i = 0; i < mData.mCbCrSize.height; i++) {
-    memcpy(mData.mCrChannel + i * mData.mCbCrStride,
-           aData.mCrChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-           mData.mCbCrStride);
-  }
-
-  // Fix picture rect to be correct
-  mData.mPicX = mData.mPicY = 0;
-  mSize = aData.mPicSize;
+  
+  mBuffer = CopyData(mData, mSize, mBufferSize, aData);
 
   mHasData = PR_TRUE;
 }
@@ -769,60 +705,28 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrImage::Data& aData,
                    GLTexture* aUTexture,
                    GLTexture* aVTexture)
 {
-  GLint alignment;
-
-  if (!((ptrdiff_t)aData.mYStride & 0x7) && !((ptrdiff_t)aData.mYChannel & 0x7)) {
-    alignment = 8;
-  } else if (!((ptrdiff_t)aData.mYStride & 0x3)) {
-    alignment = 4;
-  } else if (!((ptrdiff_t)aData.mYStride & 0x1)) {
-    alignment = 2;
-  } else {
-    alignment = 1;
-  }
-
-  // Set texture alignment for Y plane.
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
-
-  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, aYTexture->GetTextureID());
-  gl->fTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                     0, 0, aData.mYSize.width, aData.mYSize.height,
-                     LOCAL_GL_LUMINANCE,
-                     LOCAL_GL_UNSIGNED_BYTE,
-                     aData.mYChannel);
-
-  if (!((ptrdiff_t)aData.mCbCrStride & 0x7) && 
-      !((ptrdiff_t)aData.mCbChannel & 0x7) &&
-      !((ptrdiff_t)aData.mCrChannel & 0x7))
-  {
-    alignment = 8;
-  } else if (!((ptrdiff_t)aData.mCbCrStride & 0x3)) {
-    alignment = 4;
-  } else if (!((ptrdiff_t)aData.mCbCrStride & 0x1)) {
-    alignment = 2;
-  } else {
-    alignment = 1;
-  }
+  nsIntRect size(0, 0, aData.mYSize.width, aData.mYSize.height);
+  GLuint texture = aYTexture->GetTextureID();
+  nsRefPtr<gfxASurface> surf = new gfxImageSurface(aData.mYChannel,
+                                                   aData.mYSize,
+                                                   aData.mYStride,
+                                                   gfxASurface::ImageFormatA8);
+  gl->UploadSurfaceToTexture(surf, size, texture, true);
   
-  // Set texture alignment for Cb/Cr plane
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
+  size = nsIntRect(0, 0, aData.mCbCrSize.width, aData.mCbCrSize.height);
+  texture = aUTexture->GetTextureID();
+  surf = new gfxImageSurface(aData.mCbChannel,
+                             aData.mCbCrSize,
+                             aData.mCbCrStride,
+                             gfxASurface::ImageFormatA8);
+  gl->UploadSurfaceToTexture(surf, size, texture, true);
 
-  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, aUTexture->GetTextureID());
-  gl->fTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                     0, 0, aData.mCbCrSize.width, aData.mCbCrSize.height,
-                     LOCAL_GL_LUMINANCE,
-                     LOCAL_GL_UNSIGNED_BYTE,
-                     aData.mCbChannel);
-
-  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, aVTexture->GetTextureID());
-  gl->fTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                     0, 0, aData.mCbCrSize.width, aData.mCbCrSize.height,
-                     LOCAL_GL_LUMINANCE,
-                     LOCAL_GL_UNSIGNED_BYTE,
-                     aData.mCrChannel);
-
-  // Reset alignment to default
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+  texture = aVTexture->GetTextureID();
+  surf = new gfxImageSurface(aData.mCrChannel,
+                             aData.mCbCrSize,
+                             aData.mCbCrStride,
+                             gfxASurface::ImageFormatA8);
+  gl->UploadSurfaceToTexture(surf, size, texture, true);
 }
 
 void
@@ -981,6 +885,9 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
         gfxSharedImageSurface::Open(yuv.Udata());
       nsRefPtr<gfxSharedImageSurface> surfV =
         gfxSharedImageSurface::Open(yuv.Vdata());
+
+      mPictureRect = yuv.picture();
+      mSize = surfY->GetSize();
  
       PlanarYCbCrImage::Data data;
       data.mYChannel = surfY->Data();
@@ -1060,11 +967,20 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     yuvProgram->Activate();
     yuvProgram->SetLayerQuadRect(nsIntRect(0, 0,
-                                           mSize.width,
-                                           mSize.height));
+                                           mPictureRect.width,
+                                           mPictureRect.height));
     yuvProgram->SetYCbCrTextureUnits(0, 1, 2);
 
     program = yuvProgram;
+    program->SetLayerTransform(GetEffectiveTransform());
+    program->SetLayerOpacity(GetEffectiveOpacity());
+    program->SetRenderOffset(aOffset);
+
+    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                mPictureRect,
+                                                nsIntSize(mSize.width, mSize.height));
+
+    return;
   }
 
   program->SetLayerTransform(GetEffectiveTransform());

@@ -41,7 +41,8 @@
 #define mozilla_net_WebSocketChannelParent_h
 
 #include "mozilla/net/PWebSocketParent.h"
-#include "mozilla/net/nsWebSocketHandler.h"
+#include "nsIWebSocketListener.h"
+#include "nsIWebSocketChannel.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -75,7 +76,7 @@ class WebSocketChannelParent : public PWebSocketParent,
   void ActorDestroy(ActorDestroyReason why);
 
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
-  nsCOMPtr<nsIWebSocketProtocol> mChannel;
+  nsCOMPtr<nsIWebSocketChannel> mChannel;
   bool mIPCOpen;
 };
 

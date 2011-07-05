@@ -39,7 +39,6 @@
 
 #include "WebSocketLog.h"
 #include "BaseWebSocketChannel.h"
-#include "nsWebSocketHandler.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
@@ -63,7 +62,7 @@ BaseWebSocketChannel::BaseWebSocketChannel()
 }
 
 //-----------------------------------------------------------------------------
-// BaseWebSocketChannel::nsIWebSocketProtocol
+// BaseWebSocketChannel::nsIWebSocketChannel
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
@@ -149,7 +148,7 @@ BaseWebSocketChannel::SetProtocol(const nsACString &aProtocol)
 NS_IMETHODIMP
 BaseWebSocketChannel::GetScheme(nsACString &aScheme)
 {
-  LOG(("BaseWebSocketHandler::GetScheme() %p\n", this));
+  LOG(("BaseWebSocketChannel::GetScheme() %p\n", this));
 
   if (mEncrypted)
     aScheme.AssignLiteral("wss");
@@ -161,7 +160,7 @@ BaseWebSocketChannel::GetScheme(nsACString &aScheme)
 NS_IMETHODIMP
 BaseWebSocketChannel::GetDefaultPort(PRInt32 *aDefaultPort)
 {
-  LOG(("BaseWebSocketHandler::GetDefaultPort() %p\n", this));
+  LOG(("BaseWebSocketChannel::GetDefaultPort() %p\n", this));
 
   if (mEncrypted)
     *aDefaultPort = kDefaultWSSPort;
@@ -173,7 +172,7 @@ BaseWebSocketChannel::GetDefaultPort(PRInt32 *aDefaultPort)
 NS_IMETHODIMP
 BaseWebSocketChannel::GetProtocolFlags(PRUint32 *aProtocolFlags)
 {
-  LOG(("BaseWebSocketHandler::GetProtocolFlags() %p\n", this));
+  LOG(("BaseWebSocketChannel::GetProtocolFlags() %p\n", this));
 
   *aProtocolFlags = URI_NORELATIVE | URI_NON_PERSISTABLE | ALLOWS_PROXY | 
       ALLOWS_PROXY_HTTP | URI_DOES_NOT_RETURN_DATA | URI_DANGEROUS_TO_LOAD;
@@ -184,7 +183,7 @@ NS_IMETHODIMP
 BaseWebSocketChannel::NewURI(const nsACString & aSpec, const char *aOriginCharset,
                              nsIURI *aBaseURI, nsIURI **_retval NS_OUTPARAM)
 {
-  LOG(("BaseWebSocketHandler::NewURI() %p\n", this));
+  LOG(("BaseWebSocketChannel::NewURI() %p\n", this));
 
   PRInt32 port;
   nsresult rv = GetDefaultPort(&port);
@@ -203,7 +202,7 @@ BaseWebSocketChannel::NewURI(const nsACString & aSpec, const char *aOriginCharse
 NS_IMETHODIMP
 BaseWebSocketChannel::NewChannel(nsIURI *aURI, nsIChannel **_retval NS_OUTPARAM)
 {
-  LOG(("BaseWebSocketHandler::NewChannel() %p\n", this));
+  LOG(("BaseWebSocketChannel::NewChannel() %p\n", this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -211,7 +210,7 @@ NS_IMETHODIMP
 BaseWebSocketChannel::AllowPort(PRInt32 port, const char *scheme,
                                 PRBool *_retval NS_OUTPARAM)
 {
-  LOG(("BaseWebSocketHandler::AllowPort() %p\n", this));
+  LOG(("BaseWebSocketChannel::AllowPort() %p\n", this));
 
   // do not override any blacklisted ports
   *_retval = PR_FALSE;

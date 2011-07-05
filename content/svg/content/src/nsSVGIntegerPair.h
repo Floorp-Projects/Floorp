@@ -102,12 +102,12 @@ private:
   PRPackedBool mIsBaseSet;
 
 public:
-  struct DOMAnimatedIntegerPair : public nsIDOMSVGAnimatedInteger
+  struct DOMAnimatedInteger : public nsIDOMSVGAnimatedInteger
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedIntegerPair)
+    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedInteger)
 
-    DOMAnimatedIntegerPair(nsSVGIntegerPair* aVal, PairIndex aIndex, nsSVGElement *aSVGElement)
+    DOMAnimatedInteger(nsSVGIntegerPair* aVal, PairIndex aIndex, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement), mIndex(aIndex) {}
 
     nsSVGIntegerPair* mVal; // kept alive because it belongs to content

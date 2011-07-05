@@ -67,8 +67,7 @@ var resize = {
 // Parameters:
 //   item - The <Item> being dragged
 //   event - The DOM event that kicks off the drag
-//   isFauxDrag - (boolean) true if a faux drag, which is used when simply snapping.
-function Drag(item, event, isFauxDrag) {
+function Drag(item, event) {
   Utils.assert(item && (item.isAnItem || item.isAFauxItem), 
       'must be an item, or at least a faux item');
 
@@ -282,10 +281,8 @@ Drag.prototype = {
     Trenches.hideGuides();
     this.item.isDragging = false;
 
-    if (this.parent && this.parent != this.item.parent &&
-       this.parent.isEmpty()) {
-      this.parent.close();
-    }
+    if (this.parent && this.parent != this.item.parent)
+      this.parent.closeIfEmpty();
 
     if (this.parent && this.parent.expanded)
       this.parent.arrange();
@@ -293,7 +290,7 @@ Drag.prototype = {
     if (this.item.parent)
       this.item.parent.arrange();
 
-    if (!this.item.parent) {
+    if (this.item.isAGroupItem) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
 

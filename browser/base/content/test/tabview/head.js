@@ -81,19 +81,13 @@ function newWindowWithTabView(shownCallback, loadCallback, width, height) {
   let win = window.openDialog(getBrowserURL(), "_blank",
                               "chrome,all,dialog=no,height=" + winHeight +
                               ",width=" + winWidth);
-  let onLoad = function() {
-    win.removeEventListener("load", onLoad, false);
+
+  whenWindowLoaded(win, function () {
     if (typeof loadCallback == "function")
       loadCallback(win);
 
-    let onShown = function() {
-      win.removeEventListener("tabviewshown", onShown, false);
-      shownCallback(win);
-    };
-    win.addEventListener("tabviewshown", onShown, false);
-    win.TabView.toggle();
-  }
-  win.addEventListener("load", onLoad, false);
+    showTabView(function () shownCallback(win), win);
+  });
 }
 
 // ----------
@@ -192,7 +186,7 @@ function whenTabViewIsShown(callback, win) {
 function showSearch(callback, win) {
   win = win || window;
 
-  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  let contentWindow = win.TabView.getContentWindow();
   if (contentWindow.isSearchEnabled()) {
     callback();
     return;
@@ -206,7 +200,7 @@ function showSearch(callback, win) {
 function hideSearch(callback, win) {
   win = win || window;
 
-  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  let contentWindow = win.TabView.getContentWindow();
   if (!contentWindow.isSearchEnabled()) {
     callback();
     return;
@@ -220,7 +214,7 @@ function hideSearch(callback, win) {
 function whenSearchIsEnabled(callback, win) {
   win = win || window;
 
-  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  let contentWindow = win.TabView.getContentWindow();
   if (contentWindow.isSearchEnabled()) {
     callback();
     return;
@@ -236,7 +230,7 @@ function whenSearchIsEnabled(callback, win) {
 function whenSearchIsDisabled(callback, win) {
   win = win || window;
 
-  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  let contentWindow = win.TabView.getContentWindow();
   if (!contentWindow.isSearchEnabled()) {
     callback();
     return;
