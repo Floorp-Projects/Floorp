@@ -360,6 +360,12 @@ public:
                     aFlipped);
   }
 
+  void BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
+                                      const nsIntRect& aTexCoordRect,
+                                      const nsIntSize& aTexSize,
+                                      GLenum aWrapMode = LOCAL_GL_REPEAT);
+                                      
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "OGL"; }
 #endif // MOZ_LAYERS_HAVE_LOG
