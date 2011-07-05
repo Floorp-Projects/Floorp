@@ -18,9 +18,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=630889
 
 /** Test for Bug 630889 **/
 
-var textarea = document.createElement('textarea');
-reflectUnsignedInt(textarea, "rows", true, 2);
-reflectUnsignedInt(textarea, "cols", true, 20);
+var textarea = document.createElement("textarea");
+
+reflectUnsignedInt({
+  element: textarea,
+  attribute: "rows",
+  nonZero: true,
+  defaultValue: 2,
+});
+
+reflectUnsignedInt({
+  element: textarea,
+  attribute: "cols",
+  nonZero: true,
+  defaultValue: 20,
+});
 
 </script>
 </pre>
