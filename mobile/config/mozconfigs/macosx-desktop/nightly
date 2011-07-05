@@ -1,0 +1,17 @@
+# Options for client.mk.
+mk_add_options AUTOCONF=autoconf213
+
+# Global options
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
+ac_cv_visibility_pragma=no
+
+ac_add_options --disable-install-strip
+ac_add_options --disable-installer
+ac_add_options --enable-application=mobile
+ac_add_options --enable-ipc
+
+# Nightlies only since this has a cost in performance
+ac_add_options --enable-js-diagnostics
+
+ac_add_options --enable-debug-symbols="-gdwarf-2"
+export MOZILLA_OFFICIAL=1
