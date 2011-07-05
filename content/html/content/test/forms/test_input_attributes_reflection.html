@@ -23,16 +23,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=551670
 // TODO: maybe make those reflections be tested against all input types.
 
 // .accept
-reflectString(document.createElement("input"), "accept",
-              [ "audio/*", "video/*", "image/*", "image/png",
-                "application/msword", "appplication/pdf" ]);
+reflectString({
+  element: document.createElement("input"),
+  attribute: "accept",
+  otherValues: [ "audio/*", "video/*", "image/*", "image/png",
+                 "application/msword", "appplication/pdf" ],
+});
 
 // .alt
-reflectString(document.createElement("input"), "alt");
+reflectString({
+  element: document.createElement("input"),
+  attribute: "alt",
+});
 
 // .autocomplete
-reflectLimitedEnumerated(document.createElement("input"), "autocomplete",
-                         [ "on", "off" ], [ "", "default", "foo", "tulip" ]);
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "autocomplete",
+  validValues: [ "on", "off" ],
+  invalidValues: [ "", "default", "foo", "tulip" ],
+});
 
 // TODO: autofocus (boolean)
 // TODO: defaultChecked (boolean)
@@ -44,21 +54,32 @@ reflectLimitedEnumerated(document.createElement("input"), "autocomplete",
 // TODO: formAction (URL)
 
 // .formEnctype
-reflectLimitedEnumerated(document.createElement("input"), "formEnctype",
-                         [ "application/x-www-form-urlencoded",
-                           "multipart/form-data", "text/plain" ],
-                         [ "", "foo", "tulip", "multipart/foo" ],
-                         "application/x-www-form-urlencoded");
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "formEnctype",
+  validValues: [ "application/x-www-form-urlencoded", "multipart/form-data",
+                 "text/plain" ],
+  invalidValues: [ "", "foo", "tulip", "multipart/foo" ],
+  defaultValue: "application/x-www-form-urlencoded"
+});
 
 // .formMethod
-reflectLimitedEnumerated(document.createElement("input"), "formMethod",
-                         [ "get", "post" ], [ "", "foo", "tulip" ], "get");
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "formMethod",
+  validValues: [ "get", "post" ],
+  invalidValues: [ "", "foo", "tulip" ],
+  defaultValue: "get"
+});
 
 // TODO: formNoValidate (boolean)
 
 // .formTarget
-reflectString(document.createElement("input"), "formTarget",
-              [ "_blank", "_self", "_parent", "_top" ]);
+reflectString({
+  element: document.createElement("input"),
+  attribute: "formTarget",
+  otherValues: [ "_blank", "_self", "_parent", "_top" ],
+});
 
 // TODO: height (non-negative integer)
 // TODO: indeterminate (boolean)
@@ -69,16 +90,25 @@ reflectString(document.createElement("input"), "formTarget",
 // TODO: multiple (boolean)
 
 // .name
-reflectString(document.createElement("input"), "name",
-              [ "isindex", "_charset_" ]);
+reflectString({
+  element: document.createElement("input"),
+  attribute: "name",
+  otherValues: [ "isindex", "_charset_" ],
+});
 
 // .pattern
-reflectString(document.createElement("input"), "pattern",
-              [ "[0-9][A-Z]{3}" ]);
+reflectString({
+  element: document.createElement("input"),
+  attribute: "pattern",
+  otherValues: [ "[0-9][A-Z]{3}" ],
+});
 
 // .placeholder
-reflectString(document.createElement("input"), "placeholder",
-              [ "foo\nbar", "foo\rbar", "foo\r\nbar" ]);
+reflectString({
+  element: document.createElement("input"),
+  attribute: "placeholder",
+  otherValues: [ "foo\nbar", "foo\rbar", "foo\r\nbar" ],
+});
 
 // TODO: readOnly (boolean)
 // TODO: required (boolean)
@@ -87,15 +117,17 @@ reflectString(document.createElement("input"), "placeholder",
 // TODO: step (not implemented)
 
 // .type
-reflectLimitedEnumerated(document.createElement("input"),
-                         "type",
-                         [ "hidden", "text", "search", "tel", "url", "email",
-                           "password", "checkbox", "radio", "file", "submit",
-                           "image", "reset", "button" ],
-                         [ "this-is-probably-a-wrong-type", "", "tulip" ],
-                         "text",
-                         [ "datetime", "date", "month", "week", "time",
-                           "datetime-local", "number", "range", "color" ]);
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "type",
+  validValues: [ "hidden", "text", "search", "tel", "url", "email", "password",
+                 "checkbox", "radio", "file", "submit", "image", "reset",
+                 "button" ],
+  invalidValues: [ "this-is-probably-a-wrong-type", "", "tulip" ],
+  defaultValue: "text",
+  unsupportedValues: [ "datetime", "date", "month", "week", "time",
+                       "datetime-local", "number", "range", "color" ]
+});
 
 // TODO: defaultValue (reflects @value)
 // .value doesn't reflect a content attribute.
