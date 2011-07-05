@@ -65,7 +65,22 @@ LIRGeneratorX86::visitBox(MBox *box)
         return emitAtUses(box);
 
     MInstruction *inner = box->getInput(0);
-    return defineBox(new LBox(useOrConstant(inner)), box);
+    LBox *lir = new LBox(useOrConstant(inner));
+
+    // If the box wrapped a constant, it needs a new register.
+    if (inner->isConstant())
+        return defineBox(lir, box);
+
+    // Otherwise, we should not define a new register for the payload portion
+    // of the output, so bypass defineBox().
+    uint32 vreg = getVirtualRegister();
+    if (vreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+    lir->setDef(0, LDefinition(vreg, LDefinition::TYPE));
+    lir->setDef(1, LDefinition(inner->id(), LDefinition::PAYLOAD, LDefinition::REDEFINED));
+    box->setId(vreg);
+    return add(lir);
 }
 
 bool
@@ -80,18 +95,22 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
         LBoxToDouble *lir = new LBoxToDouble;
         if (!ensureDefined(inner))
             return false;
-        lir->setOperand(0, usePayloadInRegister(inner));
-        lir->setOperand(1, useType(inner));
+        lir->setOperand(0, useType(inner));
+        lir->setOperand(1, usePayloadInRegister(inner));
         lir->setTemp(0, temp(LDefinition::DOUBLE));
         return define(lir, unbox, LDefinition::DEFAULT);
     }
 
     LUnbox *lir = new LUnbox(unbox->type());
-    lir->setOperand(0, usePayloadInRegister(inner));
-    lir->setOperand(1, useType(inner));
-    if (!defineReuseInput(lir, unbox))
-        return false;
-    return assignSnapshot(lir);
+    lir->setOperand(0, useType(inner));
+    lir->setOperand(1, usePayloadInRegister(inner));
+
+    // Re-use the inner payload's def, for better register allocation.
+    LDefinition::Type type = LDefinition::TypeFrom(unbox->type());
+    lir->setDef(0, LDefinition(VirtualRegisterOfPayload(inner), type, LDefinition::REDEFINED));
+    unbox->setId(VirtualRegisterOfPayload(inner));
+
+    return assignSnapshot(lir) && add(lir);
 }
 
 bool
@@ -119,7 +138,7 @@ LIRGeneratorX86::preparePhi(MPhi *phi)
         uint32 payload_vreg = getVirtualRegister();
         if (payload_vreg >= MAX_VIRTUAL_REGISTERS)
             return false;
-        JS_ASSERT(first_vreg + VREG_INCREMENT == payload_vreg);
+        JS_ASSERT(first_vreg + VREG_DATA_OFFSET == payload_vreg);
     }
 
     return true;
@@ -149,12 +168,12 @@ LIRGeneratorX86::visitPhi(MPhi *ins)
         JS_ASSERT(opd->id());
         JS_ASSERT(opd->inWorklist());
 
-        type->setOperand(i, LUse(opd->id(), LUse::ANY));
-        payload->setOperand(i, LUse(opd->id() + VREG_INCREMENT, LUse::ANY));
+        type->setOperand(i, LUse(opd->id() + VREG_TYPE_OFFSET, LUse::ANY));
+        payload->setOperand(i, LUse(VirtualRegisterOfPayload(opd), LUse::ANY));
     }
 
-    type->setDef(0, LDefinition(ins->id(), LDefinition::TYPE));
-    payload->setDef(0, LDefinition(ins->id() + VREG_INCREMENT, LDefinition::PAYLOAD));
+    type->setDef(0, LDefinition(ins->id() + VREG_TYPE_OFFSET, LDefinition::TYPE));
+    payload->setDef(0, LDefinition(ins->id() + VREG_DATA_OFFSET, LDefinition::PAYLOAD));
     return addPhi(type) && addPhi(payload);
 }
 

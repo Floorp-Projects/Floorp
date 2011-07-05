@@ -120,7 +120,9 @@ static const char *TypeChars[] =
 static void
 PrintDefinition(FILE *fp, const LDefinition &def)
 {
-    fprintf(fp, "[%s:%d", TypeChars[def.type()], def.virtualRegister());
+    fprintf(fp, "[%s", TypeChars[def.type()]);
+    if (def.virtualRegister())
+        fprintf(fp, ":%d", def.virtualRegister());
     if (def.policy() == LDefinition::PRESET) {
         switch (def.output()->kind()) {
           case LAllocation::CONSTANT_VALUE:
@@ -142,6 +144,8 @@ PrintDefinition(FILE *fp, const LDefinition &def)
         }
     } else if (def.policy() == LDefinition::MUST_REUSE_INPUT) {
         fprintf(fp, " (!)");
+    } else if (def.policy() == LDefinition::REDEFINED) {
+        fprintf(fp, " (r)");
     }
     fprintf(fp, "]");
 }

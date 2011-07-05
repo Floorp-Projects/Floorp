@@ -313,6 +313,10 @@ class MInstruction
         return false;
     }
 
+    virtual bool isControlInstruction() {
+        return false;
+    }
+
     // Certain instructions can rewrite definitions in dominated snapshots. For
     // example:
     //   0: getprop
