@@ -16742,7 +16742,7 @@ ctx.shadowOffsetX = 100;
 ctx.fillStyle = '#0f0';
 ctx.fillRect(-100, 0, 200, 50);
 
-isPixel(ctx, 50, 25, 255, 255, 0, 255, 2);
+isPixel(ctx, 50, 25, 0, 255, 0, 255, 2);
 
 }
 </script>
@@ -16768,7 +16768,7 @@ ctx.shadowBlur = 1;
 ctx.fillStyle = '#0f0';
 ctx.fillRect(-10, -10, 120, 70);
 
-isPixel(ctx, 50, 25, 255, 255, 0, 255, 2);
+isPixel(ctx, 50, 25, 0, 255, 0, 255, 2);
 
 }
 </script>
@@ -21503,12 +21503,11 @@ function runTests() {
  
  //test_2d_path_rect_zero_6();	// This test is bogus according to the spec; see bug 407107
 
- // The following tests are disabled due to pending changes in the spec:
- //
+ // These tests are bogus according to the spec: shadows should not be 
+ // drawn if shadowBlur, shadowOffsetX, and shadowOffsetY are all zero, whic
+ // they are in these tests
  //test_2d_shadow_composite_3();
  //test_2d_shadow_composite_4();
- //test_2d_shadow_composite_1();
- //test_2d_shadow_composite_2();
  try {
   test_2d_canvas_readonly();
  } catch (e) {
@@ -23893,6 +23892,16 @@ function runTests() {
   test_2d_shadow_clip_3();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_shadow_clip_3");
+ }
+ try {
+  test_2d_shadow_composite_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_1");
+ }
+ try {
+  test_2d_shadow_composite_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_2");
  }
  try {
   test_2d_shadow_gradient_alpha();
