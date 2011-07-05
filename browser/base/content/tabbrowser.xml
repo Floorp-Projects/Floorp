@@ -96,7 +96,7 @@
         <getter><![CDATA[
           return Array.filter(this.tabs, function(tab) {
             return !tab.hidden && !tab.closing;
-          }, this);
+          });
         ]]></getter>
       </property>
       <field name="mURIFixup" readonly="true">
