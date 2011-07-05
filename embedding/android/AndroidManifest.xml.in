@@ -4,8 +4,7 @@
       package="@ANDROID_PACKAGE_NAME@"
       android:installLocation="auto"
       android:versionCode="@ANDROID_VERSION_CODE@"
-      android:versionName="@MOZ_APP_VERSION@"
-      android:sharedUserId="@MOZ_ANDROID_SHARED_ID@">
+      android:versionName="@MOZ_APP_VERSION@">
     <uses-sdk android:minSdkVersion="5"
               android:targetSdkVersion="5"/>
 
