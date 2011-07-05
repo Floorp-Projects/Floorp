@@ -1,0 +1,13 @@
+ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw32
+
+export MOZILLA_OFFICIAL=1
+export JAVA_HOME=/d/jdk1.6.0_14
+
+ac_add_options --enable-application=xulrunner
+ac_add_options --enable-jemalloc
+ac_add_options --disable-installer
+ac_add_options --disable-tests
+ac_add_options --enable-debug-symbols
+
+mk_add_options MOZ_MAKE_FLAGS=-j1
