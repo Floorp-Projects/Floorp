@@ -621,7 +621,18 @@ protected:
 
     // The spec says we should not draw shadows if the operator is OVER.
     // If it's over and the alpha value is zero, nothing needs to be drawn.
-    return state.op == OP_OVER && NS_GET_A(state.shadowColor) != 0;
+    return NS_GET_A(state.shadowColor) != 0 && 
+      (state.shadowBlur != 0 || state.shadowOffset.x != 0 || state.shadowOffset.y != 0);
+  }
+
+  CompositionOp UsedOperation()
+  {
+    if (NeedToDrawShadow()) {
+      // In this case the shadow rendering will use the operator.
+      return OP_OVER;
+    }
+
+    return CurrentState().op;
   }
 
   /**
@@ -928,7 +939,8 @@ protected:
       
       mCtx->mTarget->DrawSurfaceWithShadow(snapshot, mSurfOffset,
                                            Color::FromABGR(mCtx->CurrentState().shadowColor),
-                                           mCtx->CurrentState().shadowOffset, mSigma);
+                                           mCtx->CurrentState().shadowOffset, mSigma,
+                                           mCtx->CurrentState().op);
     }
 
     DrawTarget* operator->()
@@ -2136,7 +2148,7 @@ nsCanvasRenderingContext2DAzure::FillRect(float x, float y, float w, float h)
 
   AdjustedTarget(this)->FillRect(mgfx::Rect(x, y, w, h),
                                   GeneralPattern().ForStyle(this, STYLE_FILL, mTarget),
-                                  DrawOptions(state.globalAlpha, state.op));
+                                  DrawOptions(state.globalAlpha, UsedOperation()));
 
   return RedrawUser(gfxRect(x, y, w, h));
 }
@@ -2165,7 +2177,7 @@ nsCanvasRenderingContext2DAzure::StrokeRect(float x, float y, float w, float h)
                                 state.dash.Length(),
                                 state.dash.Elements(),
                                 state.dashOffset),
-                  DrawOptions(state.globalAlpha, state.op));
+                  DrawOptions(state.globalAlpha, UsedOperation()));
     return NS_OK;
   } else if (!w) {
     CapStyle cap = CAP_BUTT;
@@ -2180,7 +2192,7 @@ nsCanvasRenderingContext2DAzure::StrokeRect(float x, float y, float w, float h)
                                 state.dash.Length(),
                                 state.dash.Elements(),
                                 state.dashOffset),
-                  DrawOptions(state.globalAlpha, state.op));
+                  DrawOptions(state.globalAlpha, UsedOperation()));
     return NS_OK;
   }
 
@@ -2192,7 +2204,7 @@ nsCanvasRenderingContext2DAzure::StrokeRect(float x, float y, float w, float h)
                               state.dash.Length(),
                               state.dash.Elements(),
                               state.dashOffset),
-                DrawOptions(state.globalAlpha, state.op));
+                DrawOptions(state.globalAlpha, UsedOperation()));
 
   return Redraw();
 }
@@ -2236,7 +2248,7 @@ nsCanvasRenderingContext2DAzure::Fill()
 
   AdjustedTarget(this)->
     Fill(mPath, GeneralPattern().ForStyle(this, STYLE_FILL, mTarget),
-         DrawOptions(CurrentState().globalAlpha, CurrentState().op));
+         DrawOptions(CurrentState().globalAlpha, UsedOperation()));
 
   return Redraw();
 }
@@ -2259,7 +2271,7 @@ nsCanvasRenderingContext2DAzure::Stroke()
                           state.dash.Length(),
                           state.dash.Elements(),
                           state.dashOffset),
-            DrawOptions(state.globalAlpha, state.op));
+            DrawOptions(state.globalAlpha, UsedOperation()));
 
   return Redraw();
 }
@@ -3133,7 +3145,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
           FillGlyphs(scaledFont, buffer,
                       nsCanvasRenderingContext2DAzure::GeneralPattern().
                         ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_FILL, mCtx->mTarget),
-                      DrawOptions(mState->globalAlpha, mState->op));
+                      DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
       } else if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_STROKE) {
         RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
             
@@ -3148,7 +3160,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
                                 state.dash.Length(),
                                 state.dash.Elements(),
                                 state.dashOffset),
-                  DrawOptions(state.globalAlpha, state.op));
+                  DrawOptions(state.globalAlpha, mCtx->UsedOperation()));
 
       }
     }
@@ -3784,7 +3796,7 @@ nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
                 mgfx::Rect(dx, dy, dw, dh),
                 mgfx::Rect(sx, sy, sw, sh),
                 DrawSurfaceOptions(filter),
-                DrawOptions(CurrentState().globalAlpha, CurrentState().op));
+                DrawOptions(CurrentState().globalAlpha, UsedOperation()));
 
   return RedrawUser(gfxRect(dx, dy, dw, dh));
 }

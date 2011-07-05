@@ -483,12 +483,14 @@ public:
    * aColor Color of the drawn shadow
    * aOffset Offset of the shadow
    * aSigma Sigma used for the guassian filter kernel
+   * aOperator Composition operator used
    */
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
                                      const Point &aOffset,
-                                     Float aSigma) = 0;
+                                     Float aSigma,
+                                     CompositionOp aOperator) = 0;
 
   /* 
    * Clear a rectangle on the draw target to transparent black. This will
