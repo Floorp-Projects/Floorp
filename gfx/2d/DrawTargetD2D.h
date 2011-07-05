@@ -79,7 +79,8 @@ public:
                                      const Point &aDest,
                                      const Color &aColor,
                                      const Point &aOffset,
-                                     Float aSigma);
+                                     Float aSigma,
+                                     CompositionOp aOperator);
   virtual void ClearRect(const Rect &aRect);
 
   virtual void CopySurface(SourceSurface *aSurface,
