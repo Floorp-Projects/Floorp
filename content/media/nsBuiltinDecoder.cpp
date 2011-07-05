@@ -871,7 +871,9 @@ void nsBuiltinDecoder::Resume(PRBool aForceBuffering)
 
 void nsBuiltinDecoder::StopProgressUpdates()
 {
-  NS_ASSERTION(IsCurrentThread(mStateMachineThread), "Should be on state machine thread.");
+  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
+               "Should be on state machine or decode thread.");
+  GetReentrantMonitor().AssertCurrentThreadIn();
   mIgnoreProgressData = PR_TRUE;
   if (mStream) {
     mStream->SetReadMode(nsMediaCacheStream::MODE_METADATA);
@@ -880,7 +882,9 @@ void nsBuiltinDecoder::StopProgressUpdates()
 
 void nsBuiltinDecoder::StartProgressUpdates()
 {
-  NS_ASSERTION(IsCurrentThread(mStateMachineThread), "Should be on state machine thread.");
+  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
+               "Should be on state machine or decode thread.");
+  GetReentrantMonitor().AssertCurrentThreadIn();
   mIgnoreProgressData = PR_FALSE;
   if (mStream) {
     mStream->SetReadMode(nsMediaCacheStream::MODE_PLAYBACK);
