@@ -44,6 +44,7 @@
 class nsBoxLayout;
 class nsBoxLayoutState;
 class nsRenderingContext;
+class nsIGridPart;
 struct nsRect;
 
 // 6a529924-c73d-4fae-af7a-0e8084e701d5
@@ -74,6 +75,9 @@ public:
   virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)=0;
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)=0;
   virtual void IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState)=0;
+
+  // Returns this if it is an nsIGridPart, not refcounted
+  virtual nsIGridPart* AsGridPart() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIBoxLayout, NS_IBOX_LAYOUT_IID)
