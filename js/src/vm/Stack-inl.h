@@ -546,7 +546,6 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
                               MaybeConstruct construct, Check check)
 {
     JS_ASSERT(onTop());
-    JS_ASSERT(&regs == &seg_->regs());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
     JS_ASSERT(callee.getFunctionPrivate() == fun);
@@ -559,6 +558,11 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
 
     /* Initialize frame, locals, regs. */
     fp->initCallFrame(cx, callee, fun, script, args.argc(), flags);
+
+    /*
+     * N.B. regs may differ from the active registers, if the parent is about
+     * to repoint the active registers to regs. See UncachedInlineCall.
+     */
     regs.prepareToRun(*fp, script);
     return true;
 }

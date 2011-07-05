@@ -315,15 +315,20 @@ UncachedInlineCall(VMFrame &f, MaybeConstruct construct, void **pret, bool *unji
 
     /*
      * Preserve f.regs.fp while pushing the new frame, for the invariant that
-     * f.regs reflects the state when we entered the stub call.
+     * f.regs reflects the state when we entered the stub call. This handoff is
+     * tricky: we need to make sure that f.regs is not updated to the new
+     * frame, and we also need to ensure that cx->regs still points to f.regs
+     * when space is reserved, in case doing so throws an exception.
      */
     FrameRegs regs = f.regs;
-    PreserveRegsGuard regsGuard(cx, regs);
 
     /* Get pointer to new frame/slots, prepare arguments. */
     LimitCheck check(&f.stackLimit, NULL);
     if (!cx->stack.pushInlineFrame(cx, regs, args, callee, newfun, newscript, construct, check))
         return false;
+
+    /* Finish the handoff to the new frame regs. */
+    PreserveRegsGuard regsGuard(cx, regs);
 
     /* Scope with a call object parented by callee's parent. */
     if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, regs.fp()))
