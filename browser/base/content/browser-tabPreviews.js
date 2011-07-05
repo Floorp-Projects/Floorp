@@ -215,14 +215,16 @@ var ctrlTab = {
     if (this._tabList)
       return this._tabList;
 
-    let list = gBrowser.visibleTabs;
-
-    if (this._closing)
-      this.detachTab(this._closing, list);
+    // Using gBrowser.tabs instead of gBrowser.visibleTabs, as the latter
+    // exlcudes closing tabs, breaking the following loop in case the the
+    // selected tab is closing.
+    let list = Array.filter(gBrowser.tabs, function (tab) !tab.hidden);
 
     // Rotate the list until the selected tab is first
     while (!list[0].selected)
       list.push(list.shift());
+
+    list = list.filter(function (tab) !tab.closing);
 
     if (this.recentlyUsedLimit != 0) {
       let recentlyUsedTabs = this._recentlyUsedTabs;
@@ -370,11 +372,10 @@ var ctrlTab = {
     else
       this._recentlyUsedTabs.push(aTab);
   },
-  detachTab: function ctrlTab_detachTab(aTab, aTabs) {
-    var tabs = aTabs || this._recentlyUsedTabs;
-    var i = tabs.indexOf(aTab);
+  detachTab: function ctrlTab_detachTab(aTab) {
+    var i = this._recentlyUsedTabs.indexOf(aTab);
     if (i >= 0)
-      tabs.splice(i, 1);
+      this._recentlyUsedTabs.splice(i, 1);
   },
 
   open: function ctrlTab_open() {
@@ -498,10 +499,8 @@ var ctrlTab = {
       return;
     }
 
-    this._closing = aTab;
     this._tabList = null;
     this.updatePreviews();
-    this._closing = null;
 
     if (this.selected.hidden)
       this.advanceFocus(false);
