@@ -527,6 +527,10 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   if (!needBiggerTemp) {
     tmpRTView = mTempRTView;
     tmpSRView = mSRView;
+
+    // There could still be content here!
+    float color[4] = { 0, 0, 0, 0 };
+    mDevice->ClearRenderTargetView(tmpRTView, color);
   } else {
     CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
                                srcSurfSize.width,
