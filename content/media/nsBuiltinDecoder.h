@@ -435,7 +435,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // has changed.
   void DurationChanged();
 
-  PRBool OnStateMachineThread() {
+  PRBool OnStateMachineThread() const {
     return IsCurrentThread(mStateMachineThread);
   }
 

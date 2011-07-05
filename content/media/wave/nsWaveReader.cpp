@@ -152,7 +152,7 @@ nsresult nsWaveReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 
 nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   PRBool loaded = LoadRIFFChunk() && LoadFormatChunk() && FindDataOffset();
