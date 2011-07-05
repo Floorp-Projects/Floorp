@@ -141,8 +141,7 @@ interface nsIMemoryReporter : nsISupports
   readonly attribute PRInt32 units;
 
   /*
-   * The numeric value reported by this memory reporter.  -1 means "unknown",
-   * ie. something went wrong when getting the amount.
+   * The numeric value reported by this memory reporter.
    */
   readonly attribute PRInt64 amount;
 
@@ -179,7 +178,7 @@ interface nsIMemoryMultiReporter : nsISupports
                       in nsISupports closure);
 };
 
-[scriptable, uuid(84ba9c85-3372-4423-b7ab-74708b9269a6)]
+[scriptable, uuid(80a93b4c-6fff-4acd-8598-3891074a30ab)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -222,24 +221,6 @@ interface nsIMemoryReporterManager : nsISupports
    * Initialize.
    */
   void init ();
-
-  /*
-   * Get the resident size (aka. RSS, physical memory used).  This reporter
-   * is special-cased because it's interesting, is available on all
-   * platforms, and returns a meaningful result on all common platforms.
-   * -1 means unknown.
-   */
-  readonly attribute PRInt64 resident;
-
-  /*
-   * Get the total size of explicit memory allocations, both at the OS-level
-   * (eg. via mmap, VirtualAlloc) and at the heap level (eg. via malloc,
-   * calloc, operator new).  (Nb: it covers all heap allocations, but will
-   * miss any OS-level ones not covered by memory reporters.)  This reporter
-   * is special-cased because it's interesting, and is moderately difficult
-   * to compute in JS.  -1 means unknown.
-   */
-  readonly attribute PRInt64 explicit;
 };
 
 %{C++

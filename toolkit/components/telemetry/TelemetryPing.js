@@ -251,11 +251,9 @@ TelemetryPing.prototype = {
       }
       this.addValue(mr.path, id, val);
     }
+    // XXX: bug 660731 will enable this
     // "explicit" is found differently.
-    let explicit = mgr.explicit;    // Get it only once, it's reasonably expensive
-    if (explicit != -1) {
-      this.addValue("explicit", "MEMORY_EXPLICIT", Math.floor(explicit / 1024));
-    }
+    //this.addValue("explicit", "MEMORY_EXPLICIT", Math.floor(mgr.explicit / 1024));
   },
   
   /**
