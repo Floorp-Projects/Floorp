@@ -31,9 +31,8 @@
 
       // Some AT may look for this
       testAttrs("nav", {"xml-roles" : "navigation"}, true);
-      testAttrs("header", {"xml-roles" : "banner"}, true);
       testAttrs("footer", {"xml-roles" : "contentinfo"}, true);
-      testAttrs("aside", {"xml-roles" : "note"}, true);
+      testAttrs("aside", {"xml-roles" : "complementary"}, true);
       testAttrs("main", {"xml-roles" : "main"}, true); // ARIA override
 
       // And some AT may look for this
@@ -62,6 +61,11 @@
     href="https://bugzilla.mozilla.org/show_bug.cgi?id=613502"
     title="Map <article> like we do aria role article">
      Mozilla Bug 613502
+  </a>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=610650"
+    title="Change implementation of HTML5 landmark elements to conform">
+     Mozilla Bug 610650
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>

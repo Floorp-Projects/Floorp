@@ -28,6 +28,16 @@ function test() {
     releaseCtrl();
   }
 
+  { // test for bug 667314
+    let tabs = gBrowser.tabs.length;
+    pressCtrlTab();
+    pressCtrlTab(true);
+    EventUtils.synthesizeKey("w", { ctrlKey: true });
+    is(gBrowser.tabs.length, tabs - 1, "Ctrl+Tab -> Ctrl+W removes the selected tab");
+    releaseCtrl();
+  }
+
+  gBrowser.addTab();
   checkTabs(3);
   ctrlTabTest([2, 1, 0], 9, 1);
 
