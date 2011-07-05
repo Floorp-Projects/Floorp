@@ -13,6 +13,7 @@ cbuffer cb0
 {
     float4 QuadDesc;
     float4 TexCoords;
+    float4 MaskTexCoords;
 }
 
 cbuffer cb1
@@ -27,13 +28,22 @@ struct VS_OUTPUT
 {
     float4 Position : SV_Position;
     float2 TexCoord : TEXCOORD0;
+    float2 MaskTexCoord : TEXCOORD1;
 };
 
 Texture2D tex;
+Texture2D mask;
 
 sampler sSampler = sampler_state {
     Filter = MIN_MAG_MIP_LINEAR;
     Texture = tex;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+
+sampler sMaskSampler = sampler_state {
+    Filter = MIN_MAG_MIP_LINEAR;
+    Texture = mask;
     AddressU = Clamp;
     AddressV = Clamp;
 };
@@ -79,12 +89,19 @@ VS_OUTPUT SampleTextureVS(float3 pos : POSITION)
     Output.Position.z = 0;
     Output.TexCoord.x = pos.x * TexCoords.z + TexCoords.x;
     Output.TexCoord.y = pos.y * TexCoords.w + TexCoords.y;
+    Output.MaskTexCoord.x = pos.x * MaskTexCoords.z + MaskTexCoords.x;
+    Output.MaskTexCoord.y = pos.y * MaskTexCoords.w + MaskTexCoords.y;
     return Output;
 }
 
 float4 SampleTexturePS( VS_OUTPUT In) : SV_Target
 {
     return tex.Sample(sSampler, In.TexCoord);
+};
+
+float4 SampleMaskTexturePS( VS_OUTPUT In) : SV_Target
+{
+    return tex.Sample(sSampler, In.TexCoord) * mask.Sample(sMaskSampler, In.MaskTexCoord).a;
 };
 
 float4 SampleShadowHPS( VS_OUTPUT In) : SV_Target
@@ -121,6 +138,23 @@ float4 SampleShadowVPS( VS_OUTPUT In) : SV_Target
     return outputColor;
 };
 
+float4 SampleMaskShadowVPS( VS_OUTPUT In) : SV_Target
+{
+    float4 outputColor = float4(0, 0, 0, 0);
+
+    outputColor += BlurWeights[0].x * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[0].x));
+    outputColor += BlurWeights[0].y * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[0].y));
+    outputColor += BlurWeights[0].z * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[0].z));
+    outputColor += BlurWeights[0].w * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[0].w));
+    outputColor += BlurWeights[1].x * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[1].x));
+    outputColor += BlurWeights[1].y * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[1].y));
+    outputColor += BlurWeights[1].z * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[1].z));
+    outputColor += BlurWeights[1].w * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[1].w));
+    outputColor += BlurWeights[2].x * tex.Sample(sShadowSampler, float2(In.TexCoord.x, In.TexCoord.y + BlurOffsetsV[2].x));
+
+    return outputColor * mask.Sample(sMaskSampler, In.MaskTexCoord).a;
+};
+
 technique10 SampleTexture
 {
     pass P0
@@ -132,6 +166,16 @@ technique10 SampleTexture
     }
 }
 
+technique10 SampleMaskedTexture
+{
+    pass P0
+    {
+        SetRasterizerState(TextureRast);
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleTextureVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleMaskTexturePS()));
+    }
+}
 
 technique10 SampleTextureWithShadow
 {
@@ -153,4 +197,13 @@ technique10 SampleTextureWithShadow
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleShadowVPS()));
     }
-}
+    // Vertical pass - used when using a mask
+    pass P2
+    {
+        SetRasterizerState(TextureRast);
+        SetBlendState(ShadowBlendV, float4(1.0f, 1.0f, 1.0f, 1.0f), 0xffffffff);
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleTextureVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleMaskShadowVPS()));
+    }
+ }
