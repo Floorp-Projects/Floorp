@@ -124,6 +124,7 @@
 #include "jstracer.h"
 #include "jsvector.h"
 #include "jswrapper.h"
+#include "methodjit/MethodJIT.h"
 #include "methodjit/StubCalls.h"
 #include "methodjit/StubCalls-inl.h"
 

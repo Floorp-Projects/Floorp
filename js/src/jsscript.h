@@ -379,11 +379,10 @@ enum JITScriptStatus {
     JITScript_Valid
 };
 
-namespace js {
-namespace mjit { struct JITScript; }
-namespace analyze { class ScriptAnalysis; }
-}
+namespace js { namespace mjit { struct JITScript; } }
 #endif
+
+namespace js { namespace analyze { class ScriptAnalysis; } }
 
 class JSPCCounters {
     size_t numBytecodes;
