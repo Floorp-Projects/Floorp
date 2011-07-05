@@ -85,8 +85,8 @@ LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstru
         return false;
 
 #if defined(JS_NUNBOX32)
-    lir->setDef(0, LDefinition(vreg, LDefinition::TYPE, policy));
-    lir->setDef(1, LDefinition(vreg + 1, LDefinition::PAYLOAD, policy));
+    lir->setDef(0, LDefinition(vreg + VREG_TYPE_OFFSET, LDefinition::TYPE, policy));
+    lir->setDef(1, LDefinition(vreg + VREG_DATA_OFFSET, LDefinition::PAYLOAD, policy));
     if (getVirtualRegister() >= MAX_VIRTUAL_REGISTERS)
         return false;
 #elif defined(JS_PUNBOX64)

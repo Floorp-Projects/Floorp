@@ -67,9 +67,12 @@ class MIRGenerator;
 class MSnapshot;
 
 static const uint32 MAX_VIRTUAL_REGISTERS = (1 << 21) - 1;
+static const uint32 VREG_INCREMENT = 1;
 
 #if defined(JS_NUNBOX32)
 # define BOX_PIECES         2
+static const uint32 VREG_TYPE_OFFSET = 0;
+static const uint32 VREG_DATA_OFFSET = 1;
 #elif defined(JS_PUNBOX64)
 # define BOX_PIECES         1
 #else
@@ -188,6 +191,7 @@ class LAllocation
     inline const LStackSlot *toStackSlot() const;
     inline const LArgument *toArgument() const;
     inline const LConstantIndex *toConstantIndex() const;
+    inline AnyRegister toRegister() const;
 
     const Value *toConstant() const {
         JS_ASSERT(isConstantValue());
@@ -390,7 +394,12 @@ class LDefinition
 
         // One definition per instruction must re-use the first input
         // allocation, which (for now) must be a register.
-        MUST_REUSE_INPUT
+        MUST_REUSE_INPUT,
+
+        // This definition's virtual register is the same as another; this is
+        // for instructions which consume a register and silently define it as
+        // the same register.
+        REDEFINED
     };
 
     enum Type {
@@ -669,8 +678,6 @@ class LSnapshot : public TempObject
     }
 };
 
-static const uint32 VREG_INCREMENT = 1;
-
 class LIRGraph
 {
     Vector<LBlock *, 16, IonAllocPolicy> blocks_;
@@ -710,6 +717,15 @@ LAllocation::LAllocation(const AnyRegister &reg)
         *this = LFloatReg(reg.fpu());
     else
         *this = LGeneralReg(reg.gpr());
+}
+
+AnyRegister
+LAllocation::toRegister() const
+{
+    JS_ASSERT(isRegister());
+    if (isFloatReg())
+        return AnyRegister(toFloatReg()->reg());
+    return AnyRegister(toGeneralReg()->reg());
 }
 
 } // namespace ion

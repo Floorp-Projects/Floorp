@@ -50,6 +50,8 @@ namespace ion {
 // Register spill/restore/resolve marker.
 class LMove : public LInstructionHelper<0, 0, 0>
 {
+    RegisterSet freeRegs;
+
   public:
     struct Entry {
         LAllocation from;
@@ -83,6 +85,9 @@ class LMove : public LInstructionHelper<0, 0, 0>
         entries_[i] = ent;
     }
     void printOperands(FILE *fp);
+    void setFreeRegisters(const RegisterSet &freeRegs) {
+        this->freeRegs = freeRegs;
+    }
 };
 
 // Constant 32-bit integer.

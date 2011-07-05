@@ -336,6 +336,13 @@ class MBasicBlock : public TempObject
         JS_ASSERT(numPredecessors() == 1 || numPredecessors() == 2);
         return getPredecessor(numPredecessors() - 1);
     }
+    bool isLoopBackedge() const {
+        if (!numSuccessors())
+            return false;
+        MBasicBlock *lastSuccessor = getSuccessor(numSuccessors() - 1);
+        return lastSuccessor->isLoopHeader() && lastSuccessor->backedge() == this;
+    }
+
     MIRGenerator *gen() {
         return gen_;
     }

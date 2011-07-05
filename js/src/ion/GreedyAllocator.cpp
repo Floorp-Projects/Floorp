@@ -57,6 +57,9 @@ GreedyAllocator::findDefinitionsInLIR(LInstruction *ins)
         LDefinition *def = ins->getDef(i);
         JS_ASSERT(def->virtualRegister() < graph.numVirtualRegisters());
 
+        if (def->policy() == LDefinition::REDEFINED)
+            continue;
+
         vars[def->virtualRegister()].def = def;
 #ifdef DEBUG
         vars[def->virtualRegister()].ins = ins;
@@ -115,6 +118,12 @@ GetPresetRegister(const LDefinition *def)
 bool
 GreedyAllocator::prescanDefinition(LDefinition *def)
 {
+    // If the definition is fakeo, a redefinition, ignore it entirely. It's not
+    // valid to kill it, and it doesn't matter if an input uses the same
+    // register (thus it does not go into the disallow set).
+    if (def->policy() == LDefinition::REDEFINED)
+        return true;
+
     VirtualRegister *vr = getVirtualRegister(def);
 
     // Add its stack slot and register to the free pool.
@@ -300,7 +309,7 @@ GreedyAllocator::allocateRegisterOperand(LAllocation *a, VirtualRegister *vr)
 }
 
 bool
-GreedyAllocator::allocateAnyOperand(LAllocation *a, VirtualRegister *vr)
+GreedyAllocator::allocateAnyOperand(LAllocation *a, VirtualRegister *vr, bool preferReg)
 {
     if (vr->hasRegister()) {
         *a = LAllocation(vr->reg());
@@ -308,7 +317,7 @@ GreedyAllocator::allocateAnyOperand(LAllocation *a, VirtualRegister *vr)
     }
 
     // Are any registers free? Don't bother if the requestee is a type tag.
-    if (vr->type() != LDefinition::TYPE && !allocatableRegs().empty(vr->isDouble()))
+    if ((preferReg || vr->type() != LDefinition::TYPE) && !allocatableRegs().empty(vr->isDouble()))
         return allocateRegisterOperand(a, vr);
 
     // Otherwise, use a memory operand.
@@ -396,6 +405,10 @@ GreedyAllocator::allocateDefinitions(LInstruction *ins)
 
         LAllocation output;
         switch (def->policy()) {
+          case LDefinition::REDEFINED:
+            // This is purely passthru, so ignore it.
+            continue;
+
           case LDefinition::DEFAULT:
           {
             // Either take the register requested, or allocate a new one.
@@ -650,14 +663,79 @@ GreedyAllocator::mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock
 }
 
 bool
+GreedyAllocator::prepareBackedge(LBlock *block)
+{
+    MBasicBlock *msuccessor = block->mir()->successorWithPhis();
+    if (!msuccessor)
+        return true;
+
+    LBlock *successor = msuccessor->lir();
+
+    uint32 pos = block->mir()->positionInPhiSuccessor();
+    for (size_t i = 0; i < successor->numPhis(); i++) {
+        LPhi *phi = successor->getPhi(i);
+        LAllocation *a = phi->getOperand(pos);
+        if (!a->isUse())
+            continue;
+        VirtualRegister *vr = getVirtualRegister(a->toUse());
+
+        // We ensure a phi always has an allocation, because it's too early to
+        // tell whether something in the loop uses it.
+        LAllocation result;
+        if (!allocateAnyOperand(&result, vr, true))
+            return false;
+
+        // Store the def's exit allocation in the phi's output, as a cheap
+        // trick. At the loop header we'll see this and emit moves from the def
+        // to the phi's final storage.
+        LDefinition *def = phi->getDef(0);
+        *def = LDefinition(def->virtualRegister(), def->type(), LDefinition::PRESET);
+        def->setOutput(result);
+    }
+
+    // At the loop edge we could need to emit mem->mem moves, so tell it which
+    // registers are free (if any).
+    blockInfo(block)->freeOnExit = state.free;
+
+    return true;
+}
+
+bool
+GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
+{
+    BlockInfo *info = blockInfo(backedge);
+
+    for (size_t i = 0; i < header->numPhis(); i++) {
+        LPhi *phi = header->getPhi(i);
+        LDefinition *def = phi->getDef(0);
+        VirtualRegister *vr = getVirtualRegister(def);
+
+        JS_ASSERT(def->policy() == LDefinition::PRESET);
+        const LAllocation *a = def->output();
+
+        if (vr->hasStackSlot() && !info->phis.move(*a, vr->backingStack()))
+            return false;
+
+        if (vr->hasRegister() && vr->reg() != a->toRegister()) {
+            if (!info->phis.move(*a, vr->reg()))
+                return false;
+        }
+    }
+
+    if (info->phis.moves) {
+        info->phis.moves->setFreeRegisters(info->freeOnExit);
+        backedge->insertBefore(*backedge->instructions().rbegin(), info->phis.moves);
+    }
+
+    return true;
+}
+
+bool
 GreedyAllocator::mergePhiState(LBlock *block)
 {
     MBasicBlock *mblock = block->mir();
     if (!mblock->successorWithPhis())
         return true;
-
-    bool isLoopExit = mblock->successorWithPhis()->isLoopHeader() &&
-                      mblock->id() >= mblock->successorWithPhis()->id();
 
     BlockInfo *info = blockInfo(block);
 
@@ -670,87 +748,53 @@ GreedyAllocator::mergePhiState(LBlock *block)
         LPhi *phi = successor->getPhi(i);
         VirtualRegister *def = getVirtualRegister(phi->getDef(0));
 
-        if (!def->hasRegister() && !def->hasStackSlot()) {
-            // The phi has no uses, but this might be because it's a loop exit.
-            // If it's a loop exit, we haven't seen uses yet and must be
-            // pessimistic. Note that this generally results in suboptimal
-            // code, for example, at the loop edge:
-            //
-            //    move (def -> [stack])
-            //    move ([stack] -> phi)
-            //
-            // It should not be difficult to either boil this away or come up
-            // with a trick to pin phis to registers.
-            if (!isLoopExit)
-                continue;
-
-            if (state.free.empty(def->isDouble())) {
-                if (!allocateStack(def))
-                    return false;
-            } else {
-                AnyRegister reg;
-                if (!allocate(def->type(), TEMPORARY, &reg))
-                    return false;
-                assign(def, reg);
-            }
-        }
+        // Ignore non-loop phis with no uses.
+        if (!def->hasRegister() && !def->hasStackSlot())
+            continue;
 
         LAllocation *a = phi->getOperand(pos);
 
         // Handle constant inputs.
         if (a->isConstant()) {
-            LAllocation dest;
-            if (def->hasRegister())
-                dest = LAllocation(def->reg());
-            else
-                dest = def->backingStack();
-            if (!info->phis.move(*a, dest))
+            if (def->hasRegister() && !info->phis.move(*a, def->reg()))
+                return false;
+            if (def->hasStackSlot() && !info->phis.move(*a, def->backingStack()))
                 return false;
             continue;
         }
 
         VirtualRegister *use = getVirtualRegister(a->toUse());
 
-        // The definition contains the storage desired by the successor, and
-        // the use contains the storage currently allocated in this block.
-        if (use->hasRegister() && def->hasRegister()) {
-            // If both are in different registers, perform a parallel move.
-            if (use->reg() != def->reg()) {
-                if (!info->phis.move(use->reg(), def->reg()))
+        // Try to give the use a register.
+        if (!use->hasRegister()) {
+            if (def->hasRegister() && !state[def->reg()]) {
+                assign(use, def->reg());
+            } else {
+                LAllocation unused;
+                if (!allocateAnyOperand(&unused, use, true))
                     return false;
             }
-        } else if (use->hasRegister() && !def->hasRegister()) {
-            // Emit a store to the stack slot.
-            if (!info->phis.move(use->reg(), def->backingStack()))
-                return false;
-        } else {
-            if (def->hasRegister()) {
-                // Is its register free?
-                if (!state[def->reg()]) {
-                    assign(use, def->reg());
-                } else {
-                    // Emit a load from the stack, since eviction is
-                    // inevitable.
-                    if (!allocateStack(use))
-                        return false;
-                    if (!info->phis.move(use->backingStack(), def->reg()))
-                        return false;
-                }
+        }
+
+        // Emit a move from the use to a def register.
+        if (def->hasRegister()) {
+            if (use->hasRegister()) {
+                if (use->reg() != def->reg() && !info->phis.move(use->reg(), def->reg()))
+                    return false;
             } else {
-                if (!allocateStack(use))
+                if (!info->phis.move(use->backingStack(), def->reg()))
                     return false;
+            }
+        }
 
-                AnyRegister reg;
-                if (!allocate(use->type(), TEMPORARY, &reg))
+        // Emit a move from the use to a def stack slot.
+        if (def->hasStackSlot()) {
+            if (use->hasRegister()) {
+                if (!info->phis.move(use->reg(), def->backingStack()))
                     return false;
-
-                // Memory to memory moves are not parallel.
-                LMove *move = new LMove;
-                if (!move->add(use->backingStack(), LAllocation(reg)))
+            } else {
+                if (!info->phis.move(use->backingStack(), def->backingStack()))
                     return false;
-                if (!move->add(LAllocation(reg), def->backingStack()))
-                    return false;
-                block->insertBefore(*block->instructions().rbegin(), move);
             }
         }
     }
@@ -760,8 +804,10 @@ GreedyAllocator::mergePhiState(LBlock *block)
     JS_ASSERT(!spills);
     if (restores)
         block->insertBefore(*block->instructions().rbegin(), restores);
-    if (info->phis.moves)
+    if (info->phis.moves) {
+        info->phis.moves->setFreeRegisters(state.free);
         block->insertBefore(*block->instructions().rbegin(), info->phis.moves);
+    }
 
     return true;
 }
@@ -801,9 +847,13 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
             rightblock->insertBefore(*rightblock->begin(), info->restores.moves);
     }
 
-    // Insert moves for phis.
-    if (!mergePhiState(block))
-        return false;
+    if (mblock->isLoopBackedge()) {
+        if (!prepareBackedge(block))
+            return false;
+    } else {
+        if (!mergePhiState(block))
+            return false;
+    }
 
     return true;
 }
@@ -816,7 +866,7 @@ GreedyAllocator::allocateRegisters()
     for (size_t i = graph.numBlocks() - 1; i < graph.numBlocks(); i--) {
         LBlock *block = graph.getBlock(i);
 
-        // Merge allocation state from our predecessors.
+        // Merge allocation state from our successors.
         if (!mergeAllocationState(block))
             return false;
 
@@ -836,6 +886,13 @@ GreedyAllocator::allocateRegisters()
         // At the top of the block, copy our allocation state for our
         // predecessors.
         blockInfo(block)->in = state;
+
+        // If this is a loop header, insert moves at the backedge from phi
+        // inputs to phi outputs.
+        if (block->mir()->isLoopHeader()) {
+            if (!mergeBackedgeState(block, block->mir()->backedge()->lir()))
+                return false;
+        }
     }
     return true;
 }
