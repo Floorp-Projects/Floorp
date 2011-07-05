@@ -96,7 +96,7 @@ Loop::init()
     JS_ASSERT(header_->id() > header_->getPredecessor(0)->id());
 #ifdef DEBUG
     for (size_t i = 1; i < header_->numPredecessors(); i ++) {
-        JS_ASSERT(header_->id() < header_->getPredecessor(i)->id());
+        JS_ASSERT(header_->id() <= header_->getPredecessor(i)->id());
     }
 #endif    
 
