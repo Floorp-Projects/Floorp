@@ -517,7 +517,7 @@ class MControlInstruction : public MInstruction
         return successors[i];
     }
 
-    void replaceEdge(size_t i, MBasicBlock *split) {
+    void replaceSuccessor(size_t i, MBasicBlock *split) {
         JS_ASSERT(successors[i]);
         successors[i] = split;
     }
