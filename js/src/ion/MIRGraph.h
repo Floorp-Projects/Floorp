@@ -200,8 +200,15 @@ class MBasicBlock : public TempObject
         }
     };
 
+  public:
+    enum Kind {
+        NORMAL,
+        LOOP_HEADER,
+        SPLIT_EDGE
+    };
+
   private:
-    MBasicBlock(MIRGenerator *gen, jsbytecode *pc);
+    MBasicBlock(MIRGenerator *gen, jsbytecode *pc, Kind kind);
     bool init();
     void copySlots(MBasicBlock *from);
     bool inherit(MBasicBlock *pred);
@@ -231,8 +238,9 @@ class MBasicBlock : public TempObject
 
     // Creates a new basic block for a MIR generator. If |pred| is not NULL,
     // its slots and stack depth are initialized from |pred|.
-    static MBasicBlock *New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
+    static MBasicBlock *New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc, Kind kind);
     static MBasicBlock *NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
+    static MBasicBlock *NewSplitEdge(MIRGenerator *gen, MBasicBlock *pred);
 
     void setId(uint32 id) {
         id_ = id;
@@ -273,6 +281,11 @@ class MBasicBlock : public TempObject
     // depth as the entry state to this block. Adding a predecessor
     // automatically creates phi nodes and rewrites uses as needed.
     bool addPredecessor(MBasicBlock *pred);
+
+    // Replaces an edge for a given block with a new block. This is used for
+    // critical edge splitting.
+    void replacePredecessor(MBasicBlock *old, MBasicBlock *split);
+    void replaceSuccessor(size_t pos, MBasicBlock *split);
 
     // Sets a back edge. This places phi nodes and rewrites instructions within
     // the current loop as necessary, and corrects the successor block's initial
@@ -316,11 +329,12 @@ class MBasicBlock : public TempObject
         return instructions_.end();
     }
     bool isLoopHeader() const {
-        return loopSuccessor_ != NULL;
+        return kind_ == LOOP_HEADER;
     }
-    MBasicBlock *getLoopSuccessor() const {
+    MBasicBlock *backedge() const {
         JS_ASSERT(isLoopHeader());
-        return loopSuccessor_;
+        JS_ASSERT(numPredecessors() == 1 || numPredecessors() == 2);
+        return getPredecessor(numPredecessors() - 1);
     }
     MIRGenerator *gen() {
         return gen_;
@@ -422,10 +436,7 @@ class MBasicBlock : public TempObject
     MStart *start_;
     MBasicBlock *successorWithPhis_;
     uint32 positionInPhiSuccessor_;
-
-    // If not NULL, the successor block of the loop for which this block is the
-    // header.
-    MBasicBlock *loopSuccessor_;
+    Kind kind_;
 
     // Utility mark for traversal algorithms.
     bool mark_;

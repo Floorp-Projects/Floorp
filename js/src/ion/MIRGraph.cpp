@@ -87,9 +87,9 @@ MIRGraph::unmarkBlocks() {
 }
 
 MBasicBlock *
-MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
+MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc, Kind kind)
 {
-    MBasicBlock *block = new MBasicBlock(gen, entryPc);
+    MBasicBlock *block = new MBasicBlock(gen, entryPc, kind);
     if (!block->init())
         return NULL;
 
@@ -102,10 +102,16 @@ MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 MBasicBlock *
 MBasicBlock::NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 {
-    return MBasicBlock::New(gen, pred, entryPc);
+    return MBasicBlock::New(gen, pred, entryPc, LOOP_HEADER);
 }
 
-MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
+MBasicBlock *
+MBasicBlock::NewSplitEdge(MIRGenerator *gen, MBasicBlock *pred)
+{
+    return MBasicBlock::New(gen, pred, pred->pc(), SPLIT_EDGE);
+}
+
+MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc, Kind kind)
   : gen_(gen),
     slots_(NULL),
     stackPosition_(gen->firstStackSlot()),
@@ -114,7 +120,7 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     lir_(NULL),
     successorWithPhis_(NULL),
     positionInPhiSuccessor_(0),
-    loopSuccessor_(NULL),
+    kind_(kind),
     mark_(false),
     immediateDominator_(NULL),
     numDominated_(0)
@@ -559,9 +565,6 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         }
     }
 
-    // Set the predecessor's loop successor for use in the register allocator.
-    loopSuccessor_ = successor;
-
     return predecessors_.append(pred);
 }
 
@@ -575,5 +578,33 @@ MBasicBlock *
 MBasicBlock::getSuccessor(size_t index) const
 {
     return lastIns()->getSuccessor(index);
+}
+
+void
+MBasicBlock::replaceSuccessor(size_t pos, MBasicBlock *split)
+{
+    lastIns()->replaceEdge(pos, split);
+
+    // Note, successors-with-phis is not yet set.
+    JS_ASSERT(!successorWithPhis_);
+}
+
+void
+MBasicBlock::replacePredecessor(MBasicBlock *old, MBasicBlock *split)
+{
+    for (size_t i = 0; i < numPredecessors(); i++) {
+        if (getPredecessor(i) == old) {
+            predecessors_[i] = split;
+
+#ifdef DEBUG
+            // The same block should not appear twice in the predecessor list.
+            for (size_t j = i; j < numPredecessors(); j++)
+                JS_ASSERT(predecessors_[j] != old);
+#endif
+
+            return;
+        }
+    }
+    JS_NOT_REACHED("predecessor was not found");
 }
 
