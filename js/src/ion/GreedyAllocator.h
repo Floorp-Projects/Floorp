@@ -170,6 +170,7 @@ class GreedyAllocator
         AllocationState in;
         Mover restores;
         Mover phis;
+        RegisterSet freeOnExit;
     };
 
   private:
@@ -267,7 +268,7 @@ class GreedyAllocator
     // Allocate a physical register for a virtual register, possibly evicting
     // in the process.
     bool allocateRegisterOperand(LAllocation *a, VirtualRegister *vr);
-    bool allocateAnyOperand(LAllocation *a, VirtualRegister *vr);
+    bool allocateAnyOperand(LAllocation *a, VirtualRegister *vr, bool preferReg = false);
     bool allocateFixedOperand(LAllocation *a, VirtualRegister *vr);
 
     bool prescanDefinition(LDefinition *def);
@@ -282,7 +283,9 @@ class GreedyAllocator
     bool allocateRegisters();
     bool allocateRegistersInBlock(LBlock *block);
     bool mergePhiState(LBlock *block);
+    bool prepareBackedge(LBlock *block);
     bool mergeAllocationState(LBlock *block);
+    bool mergeBackedgeState(LBlock *header, LBlock *backedge);
     bool mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock *right);
 
     VirtualRegister *getVirtualRegister(LDefinition *def) {
