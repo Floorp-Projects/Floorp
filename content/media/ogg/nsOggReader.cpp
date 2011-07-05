@@ -178,7 +178,7 @@ PRBool nsOggReader::ReadHeaders(nsOggCodecState* aState)
 
 nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on play state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   // We read packets until all bitstreams have read all their header packets.
@@ -642,8 +642,8 @@ GetChecksum(ogg_page* page)
 
 PRInt64 nsOggReader::RangeStartTime(PRInt64 aOffset)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
+               "Should be on state machine or decode thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream != nsnull, nsnull);
   nsresult res = stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
@@ -666,8 +666,8 @@ struct nsAutoOggSyncState {
 PRInt64 nsOggReader::RangeEndTime(PRInt64 aEndOffset)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
+               "Should be on state machine or decode thread.");
 
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream != nsnull, -1);
