@@ -41,7 +41,7 @@ function ended(e) {
   } catch (e) {
     caught = e.code == DOMException.INDEX_SIZE_ERR;
   }
-  is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on under start bounds range");
+  is(caught, true, "Should throw INDEX_SIZE_ERR on under start bounds range");
   
   caught = false;
   try {
@@ -49,7 +49,7 @@ function ended(e) {
   } catch (e) {
     caught = e.code == DOMException.INDEX_SIZE_ERR;
   }
-  is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on under end bounds range");
+  is(caught, true, "Should throw INDEX_SIZE_ERR on under end bounds range");
 
   caught = false;
   try {
@@ -57,7 +57,7 @@ function ended(e) {
   } catch (e) {
     caught = e.code == DOMException.INDEX_SIZE_ERR;
   }
-  is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on over start bounds range");
+  is(caught, true, "Should throw INDEX_SIZE_ERR on over start bounds range");
   
   caught = false;
   try {
@@ -65,9 +65,8 @@ function ended(e) {
   } catch (e) {
     caught = e.code == DOMException.INDEX_SIZE_ERR;
   }
-  is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on over end bounds range");
-
-  v.src = "";
+  is(caught, true, "Should throw INDEX_SIZE_ERR on over end bounds range");
+  
   v.parentNode.removeChild(v);
   manager.finished(v.token);
 
