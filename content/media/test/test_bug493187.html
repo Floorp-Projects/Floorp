@@ -33,7 +33,6 @@ function canPlayThrough(e) {
     ok(true, "Got canplaythrough after seek for " + v._name);
     v._finished = true;
     v.parentNode.removeChild(v);
-    v.src = "";
     manager.finished(v.token);
   }
 }

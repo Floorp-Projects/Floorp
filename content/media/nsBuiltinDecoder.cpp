@@ -46,7 +46,6 @@
 #include "nsTArray.h"
 #include "VideoUtils.h"
 #include "nsBuiltinDecoder.h"
-#include "nsBuiltinDecoderStateMachine.h"
 
 using namespace mozilla;
 
@@ -123,6 +122,20 @@ PRBool nsBuiltinDecoder::Init(nsHTMLMediaElement* aElement)
   return PR_TRUE;
 }
 
+void nsBuiltinDecoder::Stop()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread");
+
+  // The decode thread must die before the state machine can die.
+  // The state machine must die before the reader.
+  // The state machine must die before the decoder.
+  if (mStateMachineThread)
+    mStateMachineThread->Shutdown();
+
+  mStateMachineThread = nsnull;
+  mDecoderStateMachine = nsnull;
+}
+
 void nsBuiltinDecoder::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -148,6 +161,17 @@ void nsBuiltinDecoder::Shutdown()
   ChangeState(PLAY_STATE_SHUTDOWN);
   nsMediaDecoder::Shutdown();
 
+  // We can't destroy mDecoderStateMachine until mStateMachineThread is shut down.
+  // It's unsafe to Shutdown() the decode thread here, as
+  // nsIThread::Shutdown() may run events, such as JS event handlers,
+  // and we could be running at an unsafe time such as during element
+  // destruction.
+  // So we destroy the decoder on the main thread in an asynchronous event.
+  // See bug 468721.
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(this, &nsBuiltinDecoder::Stop);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+
   nsContentUtils::UnregisterShutdownObserver(this);
 }
 
@@ -159,8 +183,8 @@ nsBuiltinDecoder::~nsBuiltinDecoder()
 }
 
 nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
-                                nsIStreamListener** aStreamListener,
-                                nsMediaDecoder* aCloneDonor)
+                            nsIStreamListener** aStreamListener,
+                            nsMediaDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (aStreamListener) {
@@ -205,7 +229,7 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
 
   ChangeState(PLAY_STATE_LOADING);
 
-  return ScheduleStateMachineThread();
+  return StartStateMachineThread();
 }
 
 nsresult nsBuiltinDecoder::RequestFrameBufferLength(PRUint32 aLength)
@@ -220,25 +244,23 @@ nsresult nsBuiltinDecoder::RequestFrameBufferLength(PRUint32 aLength)
   return res;
 }
 
-nsresult nsBuiltinDecoder::ScheduleStateMachineThread()
+nsresult nsBuiltinDecoder::StartStateMachineThread()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ASSERTION(mDecoderStateMachine,
                "Must have state machine to start state machine thread");
-
-  if (mShuttingDown)
+  if (mStateMachineThread) {
     return NS_OK;
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  nsBuiltinDecoderStateMachine* m =
-    static_cast<nsBuiltinDecoderStateMachine*>(mDecoderStateMachine.get());
-  return m->ScheduleStateMachine();
+  }
+  nsresult rv = NS_NewThread(getter_AddRefs(mStateMachineThread));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mStateMachineThread->Dispatch(mDecoderStateMachine, NS_DISPATCH_NORMAL);
 }
 
 nsresult nsBuiltinDecoder::Play()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  nsresult res = ScheduleStateMachineThread();
+  nsresult res = StartStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
   if (mPlayState == PLAY_STATE_SEEKING) {
     mNextState = PLAY_STATE_PLAYING;
@@ -276,7 +298,7 @@ nsresult nsBuiltinDecoder::Seek(double aTime)
     ChangeState(PLAY_STATE_SEEKING);
   }
 
-  return ScheduleStateMachineThread();
+  return StartStateMachineThread();
 }
 
 nsresult nsBuiltinDecoder::PlaybackRateChanged()
@@ -510,7 +532,7 @@ nsBuiltinDecoder::GetStatistics()
 double nsBuiltinDecoder::ComputePlaybackRate(PRPackedBool* aReliable)
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(NS_IsMainThread() || OnStateMachineThread(),
+  NS_ASSERTION(NS_IsMainThread() || IsCurrentThread(mStateMachineThread),
                "Should be on main or state machine thread.");
 
   PRInt64 length = mStream ? mStream->GetLength() : -1;
@@ -523,7 +545,7 @@ double nsBuiltinDecoder::ComputePlaybackRate(PRPackedBool* aReliable)
 
 void nsBuiltinDecoder::UpdatePlaybackRate()
 {
-  NS_ASSERTION(NS_IsMainThread() || OnStateMachineThread(),
+  NS_ASSERTION(NS_IsMainThread() || IsCurrentThread(mStateMachineThread),
                "Should be on main or state machine thread.");
   GetReentrantMonitor().AssertCurrentThreadIn();
   if (!mStream)
@@ -849,9 +871,7 @@ void nsBuiltinDecoder::Resume(PRBool aForceBuffering)
 
 void nsBuiltinDecoder::StopProgressUpdates()
 {
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
-  GetReentrantMonitor().AssertCurrentThreadIn();
+  NS_ASSERTION(IsCurrentThread(mStateMachineThread), "Should be on state machine thread.");
   mIgnoreProgressData = PR_TRUE;
   if (mStream) {
     mStream->SetReadMode(nsMediaCacheStream::MODE_METADATA);
@@ -860,9 +880,7 @@ void nsBuiltinDecoder::StopProgressUpdates()
 
 void nsBuiltinDecoder::StartProgressUpdates()
 {
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
-  GetReentrantMonitor().AssertCurrentThreadIn();
+  NS_ASSERTION(IsCurrentThread(mStateMachineThread), "Should be on state machine thread.");
   mIgnoreProgressData = PR_FALSE;
   if (mStream) {
     mStream->SetReadMode(nsMediaCacheStream::MODE_PLAYBACK);
@@ -882,8 +900,4 @@ void nsBuiltinDecoder::UpdatePlaybackOffset(PRInt64 aOffset)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   mPlaybackPosition = NS_MAX(aOffset, mPlaybackPosition);
-}
-
-PRBool nsBuiltinDecoder::OnStateMachineThread() const {
-  return IsCurrentThread(nsBuiltinDecoderStateMachine::GetStateMachineThread());
 }

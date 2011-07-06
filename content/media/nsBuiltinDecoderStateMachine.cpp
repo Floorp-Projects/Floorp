@@ -171,32 +171,11 @@ public:
   const PRUint32 mRate;
 };
 
-static PRUint32 gStateMachineCount = 0;
-static nsIThread* gStateMachineThread = 0;
-
-nsIThread* nsBuiltinDecoderStateMachine::GetStateMachineThread() {
-  return gStateMachineThread;
-}
-
-// Shuts down a thread asynchronously.
-class ShutdownThreadEvent : public nsRunnable 
-{
-public:
-  ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
-  ~ShutdownThreadEvent() {}
-  NS_IMETHOD Run() {
-    mThread->Shutdown();
-    mThread = nsnull;
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<nsIThread> mThread;
-};
-
 nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder,
                                                            nsBuiltinDecoderReader* aReader) :
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
+  mAudioReentrantMonitor("media.audiostream"),
   mCbCrSize(0),
   mPlayDuration(0),
   mStartTime(-1),
@@ -212,45 +191,16 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mPositionChangeQueued(PR_FALSE),
   mAudioCompleted(PR_FALSE),
   mGotDurationFromMetaData(PR_FALSE),
-  mStopDecodeThread(PR_TRUE),
-  mDecodeThreadIdle(PR_FALSE),
-  mStopAudioThread(PR_TRUE),
+  mStopDecodeThreads(PR_TRUE),
   mQuickBuffering(PR_FALSE),
-  mEventManager(aDecoder),
-  mIsRunning(PR_FALSE),
-  mRunAgain(PR_FALSE),
-  mDispatchedRunEvent(PR_FALSE),
-  mDecodeThreadWaiting(PR_FALSE)
+  mEventManager(aDecoder)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoderStateMachine);
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  if (gStateMachineCount == 0) {
-    NS_ASSERTION(!gStateMachineThread, "Should have null state machine thread!");
-    nsresult res = NS_NewThread(&gStateMachineThread);
-    NS_ABORT_IF_FALSE(NS_SUCCEEDED(res), "Can't create media state machine thread");
-  }
-  gStateMachineCount++;
 }
 
 nsBuiltinDecoderStateMachine::~nsBuiltinDecoderStateMachine()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MOZ_COUNT_DTOR(nsBuiltinDecoderStateMachine);
-  if (mTimer)
-    mTimer->Cancel();
-  mTimer = nsnull;
-  
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  NS_ABORT_IF_FALSE(gStateMachineCount > 0,
-    "State machine ref count must be > 0");
-  gStateMachineCount--;
-  if (gStateMachineCount == 0) {
-    LOG(PR_LOG_DEBUG, ("Destroying media state machine thread"));
-    nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(gStateMachineThread);
-    NS_RELEASE(gStateMachineThread);
-    gStateMachineThread = nsnull;
-    NS_DispatchToMainThread(event);
-  }
 }
 
 PRBool nsBuiltinDecoderStateMachine::HasFutureAudio() const {
@@ -281,39 +231,8 @@ PRInt64 nsBuiltinDecoderStateMachine::GetDecodedAudioDuration() {
   return audioDecoded;
 }
 
-void nsBuiltinDecoderStateMachine::DecodeThreadRun()
-{
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-  if (mState == DECODER_STATE_DECODING_METADATA) {
-    if (NS_FAILED(DecodeMetadata())) {
-      NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
-                   "Should be in shutdown state if metadata loading fails.");
-      LOG(PR_LOG_DEBUG, ("Decode metadata failed, shutting down decode thread"));
-    }
-  }
-
-  while (mState != DECODER_STATE_SHUTDOWN &&
-         mState != DECODER_STATE_COMPLETED &&
-         !mStopDecodeThread)
-  {
-    if (mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) {
-      DecodeLoop();
-    } else if (mState == DECODER_STATE_SEEKING) {
-      DecodeSeek();
-    }
-  }
-
-  mDecodeThreadIdle = PR_TRUE;
-  LOG(PR_LOG_DEBUG, ("%p Decode thread finished", mDecoder.get()));
-}
-
 void nsBuiltinDecoderStateMachine::DecodeLoop()
 {
-  LOG(PR_LOG_DEBUG, ("%p Start DecodeLoop()", mDecoder.get()));
-
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
 
   // We want to "pump" the decode until we've got a few frames/samples decoded
@@ -348,11 +267,14 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
   MediaQueue<VideoData>& videoQueue = mReader->mVideoQueue;
   MediaQueue<SoundData>& audioQueue = mReader->mAudioQueue;
 
-  // Main decode loop.
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
   PRBool videoPlaying = HasVideo();
   PRBool audioPlaying = HasAudio();
-  while ((mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) &&
-         !mStopDecodeThread &&
+
+  // Main decode loop.
+  while (mState != DECODER_STATE_SHUTDOWN &&
+         !mStopDecodeThreads &&
          (videoPlaying || audioPlaying))
   {
     // We don't want to consider skipping to the next keyframe if we've
@@ -388,7 +310,7 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
 
     {
       skipToNextKeyframe = PR_TRUE;
-      LOG(PR_LOG_DEBUG, ("%p Skipping video decode to the next keyframe", mDecoder.get()));
+      LOG(PR_LOG_DEBUG, ("%p Skipping video decode to the next keyframe", mDecoder));
     }
 
     // Video decode.
@@ -435,8 +357,8 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     // ready state, so that DOM events can fire.
     UpdateReadyState();
 
-    if ((mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) &&
-        !mStopDecodeThread &&
+    if (mState != DECODER_STATE_SHUTDOWN &&
+        !mStopDecodeThreads &&
         (videoPlaying || audioPlaying) &&
         (!audioPlaying || (GetDecodedAudioDuration() >= ampleAudioThreshold &&
                            audioQueue.GetSize() > 0))
@@ -453,29 +375,20 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
       // monitor which will wake us up shortly after we sleep, thus preventing
       // both the decode and audio push threads waiting at the same time.
       // See bug 620326.
-      mDecodeThreadWaiting = PR_TRUE;
-      if (mDecoder->GetState() != nsBuiltinDecoder::PLAY_STATE_PLAYING) {
-        // We're not playing, and the decode is about to wait. This means
-        // the decode thread may not be needed in future. Signal the state
-        // machine thread to run, so it can decide whether to shutdown the
-        // decode thread.
-        ScheduleStateMachine();
-      }
-      mDecoder->GetReentrantMonitor().Wait();
-      mDecodeThreadWaiting = PR_FALSE;
+      mon.Wait();
     }
 
   } // End decode loop.
 
-  if (!mStopDecodeThread &&
+  if (!mStopDecodeThreads &&
       mState != DECODER_STATE_SHUTDOWN &&
       mState != DECODER_STATE_SEEKING)
   {
     mState = DECODER_STATE_COMPLETED;
-    ScheduleStateMachine();
+    mDecoder->GetReentrantMonitor().NotifyAll();
   }
 
-  LOG(PR_LOG_DEBUG, ("%p Exiting DecodeLoop", mDecoder.get()));
+  LOG(PR_LOG_DEBUG, ("%p Shutting down DecodeLoop this=%p", mDecoder, this));
 }
 
 PRBool nsBuiltinDecoderStateMachine::IsPlaying()
@@ -488,7 +401,7 @@ PRBool nsBuiltinDecoderStateMachine::IsPlaying()
 void nsBuiltinDecoderStateMachine::AudioLoop()
 {
   NS_ASSERTION(OnAudioThread(), "Should be on audio thread.");
-  LOG(PR_LOG_DEBUG, ("%p Begun audio thread/loop", mDecoder.get()));
+  LOG(PR_LOG_DEBUG, ("%p Begun audio thread/loop", mDecoder));
   PRInt64 audioDuration = 0;
   PRInt64 audioStartTime = -1;
   PRUint32 channels, rate;
@@ -503,15 +416,6 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     channels = mInfo.mAudioChannels;
     rate = mInfo.mAudioRate;
     NS_ASSERTION(audioStartTime != -1, "Should have audio start time by now");
-
-    // We must hold the monitor while creating or destroying the audio stream,
-    // or whenever we use it off the audio thread.
-    mAudioStream = nsAudioStream::AllocateStream();
-    mAudioStream->Init(channels,
-                       rate,
-                       MOZ_SOUND_DATA_FORMAT);
-    volume = mVolume;
-    mAudioStream->SetVolume(volume);
   }
   while (1) {
 
@@ -522,42 +426,42 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       NS_ASSERTION(mState != DECODER_STATE_DECODING_METADATA,
                    "Should have meta data before audio started playing.");
       while (mState != DECODER_STATE_SHUTDOWN &&
-             !mStopAudioThread &&
+             !mStopDecodeThreads &&
              (!IsPlaying() ||
               mState == DECODER_STATE_BUFFERING ||
               (mReader->mAudioQueue.GetSize() == 0 &&
                !mReader->mAudioQueue.AtEndOfStream())))
       {
-        if (!IsPlaying() && !mAudioStream->IsPaused()) {
-          mAudioStream->Pause();
-        }
         samplesAtLastSleep = audioDuration;
         mon.Wait();
       }
 
       // If we're shutting down, break out and exit the audio thread.
       if (mState == DECODER_STATE_SHUTDOWN ||
-          mStopAudioThread ||
+          mStopDecodeThreads ||
           mReader->mAudioQueue.AtEndOfStream())
       {
         break;
       }
 
-      // We only want to go to the expense of changing the volume if
-      // the volume has changed.
+      // We only want to go to the expense of taking the audio monitor and
+      // changing the volume if it's the first time we've entered the loop
+      // (as we must sync the volume in case it's changed since the
+      // nsAudioStream was created) or if the volume has changed.
       setVolume = volume != mVolume;
       volume = mVolume;
+    }
 
-      if (IsPlaying() && mAudioStream->IsPaused()) {
-        mAudioStream->Resume();
+    if (setVolume || minWriteSamples == -1) {
+      ReentrantMonitorAutoEnter audioMon(mAudioReentrantMonitor);
+      if (mAudioStream) {
+        if (setVolume) {
+          mAudioStream->SetVolume(volume);
+        }
+        if (minWriteSamples == -1) {
+          minWriteSamples = mAudioStream->GetMinWriteSamples();
+        }
       }
-    }
-
-    if (setVolume) {
-      mAudioStream->SetVolume(volume);
-    }
-    if (minWriteSamples == -1) {
-      minWriteSamples = mAudioStream->GetMinWriteSamples();
     }
     NS_ASSERTION(mReader->mAudioQueue.GetSize() > 0,
                  "Should have data to play");
@@ -635,48 +539,52 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   }
   if (mReader->mAudioQueue.AtEndOfStream() &&
       mState != DECODER_STATE_SHUTDOWN &&
-      !mStopAudioThread)
+      !mStopDecodeThreads)
   {
     // Last sample pushed to audio hardware, wait for the audio to finish,
     // before the audio thread terminates.
-    PRBool seeking = PR_FALSE;
-    {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    ReentrantMonitorAutoEnter audioMon(mAudioReentrantMonitor);
+    if (mAudioStream) {
+      PRBool seeking = PR_FALSE;
       PRInt64 oldPosition = -1;
-      PRInt64 position = GetMediaTime();
-      while (oldPosition != position &&
-             mAudioEndTime - position > 0 &&
-             mState != DECODER_STATE_SEEKING &&
-             mState != DECODER_STATE_SHUTDOWN)
-      {
-        const PRInt64 DRAIN_BLOCK_USECS = 100000;
-        Wait(NS_MIN(mAudioEndTime - position, DRAIN_BLOCK_USECS));
-        oldPosition = position;
-        position = GetMediaTime();
-      }
-      seeking = mState == DECODER_STATE_SEEKING;
-    }
 
-    if (!seeking && !mAudioStream->IsPaused()) {
-      mAudioStream->Drain();
-      // Fire one last event for any extra samples that didn't fill a framebuffer.
-      mEventManager.Drain(mAudioEndTime);
+      {
+        ReentrantMonitorAutoExit audioExit(mAudioReentrantMonitor);
+        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+        PRInt64 position = GetMediaTime();
+        while (oldPosition != position &&
+               mAudioEndTime - position > 0 &&
+               mState != DECODER_STATE_SEEKING &&
+               mState != DECODER_STATE_SHUTDOWN)
+        {
+          const PRInt64 DRAIN_BLOCK_USECS = 100000;
+          Wait(NS_MIN(mAudioEndTime - position, DRAIN_BLOCK_USECS));
+          oldPosition = position;
+          position = GetMediaTime();
+        }
+        if (mState == DECODER_STATE_SEEKING) {
+          seeking = PR_TRUE;
+        }
+      }
+
+      if (!seeking && mAudioStream && !mAudioStream->IsPaused()) {
+        mAudioStream->Drain();
+
+        // Fire one last event for any extra samples that didn't fill a framebuffer.
+        mEventManager.Drain(mAudioEndTime);
+      }
     }
+    LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder));
   }
-  LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder.get()));
   {
-    // Must hold lock while shutting down and anulling audio stream to prevent
-    // state machine thread trying to use it while we're destroying it.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mAudioStream->Shutdown();
-    mAudioStream = nsnull;
-    mEventManager.Clear();
     mAudioCompleted = PR_TRUE;
     UpdateReadyState();
-    // Kick the decode thread; it may be sleeping waiting for this to finish.
+    // Kick the decode and state machine threads; they may be sleeping waiting
+    // for this to finish.
     mDecoder->GetReentrantMonitor().NotifyAll();
   }
-  LOG(PR_LOG_DEBUG, ("%p Audio stream finished playing, audio thread exit", mDecoder.get()));
+  LOG(PR_LOG_DEBUG, ("%p Audio stream finished playing, audio thread exit", mDecoder));
 }
 
 PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples,
@@ -684,8 +592,12 @@ PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples,
                                                    PRUint64 aSampleOffset)
 
 {
-  NS_ASSERTION(OnAudioThread(), "Only call on audio thread.");
-  NS_ASSERTION(!mAudioStream->IsPaused(), "Don't play when paused");
+  ReentrantMonitorAutoEnter audioMon(mAudioReentrantMonitor);
+  if (!mAudioStream || mAudioStream->IsPaused()) {
+    // The state machine has paused since we've released the decoder
+    // monitor and acquired the audio monitor. Don't write any audio.
+    return 0;
+  }
   PRUint32 maxSamples = SILENCE_BYTES_CHUNK / aChannels;
   PRUint32 samples = NS_MIN(aSamples, maxSamples);
   PRUint32 numValues = samples * aChannels;
@@ -701,8 +613,6 @@ PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples,
 PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aSampleOffset,
                                                           PRUint32 aChannels)
 {
-  NS_ASSERTION(OnAudioThread(), "Only call on audio thread.");
-  NS_ASSERTION(!mAudioStream->IsPaused(), "Don't play when paused");
   nsAutoPtr<SoundData> sound(mReader->mAudioQueue.PopFront());
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -713,28 +623,34 @@ PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aSampleOffset
   }
   PRInt64 offset = -1;
   PRUint32 samples = 0;
-  // The state machine could have paused since we've released the decoder
-  // monitor and acquired the audio monitor. Rather than acquire both
-  // monitors, the audio stream also maintains whether its paused or not.
-  // This prevents us from doing a blocking write while holding the audio
-  // monitor while paused; we would block, and the state machine won't be
-  // able to acquire the audio monitor in order to resume or destroy the
-  // audio stream.
-  if (!mAudioStream->IsPaused()) {
-    mAudioStream->Write(sound->mAudioData,
-                        sound->AudioDataLength(),
-                        PR_TRUE);
+  {
+    ReentrantMonitorAutoEnter audioMon(mAudioReentrantMonitor);
+    if (!mAudioStream) {
+      return 0;
+    }
+    // The state machine could have paused since we've released the decoder
+    // monitor and acquired the audio monitor. Rather than acquire both
+    // monitors, the audio stream also maintains whether its paused or not.
+    // This prevents us from doing a blocking write while holding the audio
+    // monitor while paused; we would block, and the state machine won't be
+    // able to acquire the audio monitor in order to resume or destroy the
+    // audio stream.
+    if (!mAudioStream->IsPaused()) {
+      mAudioStream->Write(sound->mAudioData,
+                          sound->AudioDataLength(),
+                          PR_TRUE);
 
-    offset = sound->mOffset;
-    samples = sound->mSamples;
+      offset = sound->mOffset;
+      samples = sound->mSamples;
 
-    // Dispatch events to the DOM for the audio just written.
-    mEventManager.QueueWrittenAudioData(sound->mAudioData.get(),
-                                        sound->AudioDataLength(),
-                                        (aSampleOffset + samples) * aChannels);
-  } else {
-    mReader->mAudioQueue.PushFront(sound);
-    sound.forget();
+      // Dispatch events to the DOM for the audio just written.
+      mEventManager.QueueWrittenAudioData(sound->mAudioData.get(),
+                                          sound->AudioDataLength(),
+                                          (aSampleOffset + samples) * aChannels);
+    } else {
+      mReader->mAudioQueue.PushFront(sound);
+      sound.forget();
+    }
   }
   if (offset != -1) {
     mDecoder->UpdatePlaybackOffset(offset);
@@ -751,11 +667,9 @@ nsresult nsBuiltinDecoderStateMachine::Init(nsDecoderStateMachine* aCloneDonor)
   return mReader->Init(cloneReader);
 }
 
-void nsBuiltinDecoderStateMachine::StopPlayback()
+void nsBuiltinDecoderStateMachine::StopPlayback(eStopMode aMode)
 {
-  LOG(PR_LOG_DEBUG, ("%p StopPlayback()", mDecoder.get()));
-
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
                "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
@@ -770,32 +684,55 @@ void nsBuiltinDecoderStateMachine::StopPlayback()
     mPlayDuration += DurationToUsecs(TimeStamp::Now() - mPlayStartTime);
     mPlayStartTime = TimeStamp();
   }
-  // Notify the audio thread, so that it notices that we've stopped playing,
-  // so it can pause audio playback.
-  mDecoder->GetReentrantMonitor().NotifyAll();
-  NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
+  if (HasAudio()) {
+    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+    ReentrantMonitorAutoEnter audioMon(mAudioReentrantMonitor);
+    if (mAudioStream) {
+      if (aMode == AUDIO_PAUSE) {
+        mAudioStream->Pause();
+      } else if (aMode == AUDIO_SHUTDOWN) {
+        mAudioStream->Shutdown();
+        mAudioStream = nsnull;
+        mEventManager.Clear();
+      }
+    }
+  }
 }
 
 void nsBuiltinDecoderStateMachine::StartPlayback()
 {
-  LOG(PR_LOG_DEBUG, ("%p StartPlayback()", mDecoder.get()));
-
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
+               "Should be on state machine thread.");
   NS_ASSERTION(!IsPlaying(), "Shouldn't be playing when StartPlayback() is called");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  LOG(PR_LOG_DEBUG, ("%p StartPlayback", mDecoder.get()));
+  LOG(PR_LOG_DEBUG, ("%p StartPlayback", mDecoder));
   mDecoder->mPlaybackStatistics.Start(TimeStamp::Now());
-  mPlayStartTime = TimeStamp::Now();
+  if (HasAudio()) {
+    PRInt32 rate = mInfo.mAudioRate;
+    PRInt32 channels = mInfo.mAudioChannels;
 
-  NS_ASSERTION(IsPlaying(), "Should report playing by end of StartPlayback()");
-  if (NS_FAILED(StartAudioThread())) {
-    NS_WARNING("Failed to create audio thread"); 
+    {
+      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+      ReentrantMonitorAutoEnter audioMon(mAudioReentrantMonitor);
+      if (mAudioStream) {
+        // We have an audiostream, so it must have been paused the last time
+        // StopPlayback() was called.
+        mAudioStream->Resume();
+      } else {
+        // No audiostream, create one.
+        mAudioStream = nsAudioStream::AllocateStream();
+        mAudioStream->Init(channels, rate, MOZ_SOUND_DATA_FORMAT);
+        mAudioStream->SetVolume(mVolume);
+      }
+    }
   }
+  mPlayStartTime = TimeStamp::Now();
   mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 void nsBuiltinDecoderStateMachine::UpdatePlaybackPositionInternal(PRInt64 aTime)
 {
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
                "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
@@ -856,7 +793,7 @@ void nsBuiltinDecoderStateMachine::SetVolume(double volume)
 double nsBuiltinDecoderStateMachine::GetCurrentTime() const
 {
   NS_ASSERTION(NS_IsMainThread() ||
-               OnStateMachineThread() ||
+               mDecoder->OnStateMachineThread() ||
                OnDecodeThread(),
                "Should be on main, decode, or state machine thread.");
 
@@ -874,8 +811,8 @@ PRInt64 nsBuiltinDecoderStateMachine::GetDuration()
 
 void nsBuiltinDecoderStateMachine::SetDuration(PRInt64 aDuration)
 {
-  NS_ASSERTION(NS_IsMainThread() || OnDecodeThread(),
-               "Should be on main or decode thread.");
+  NS_ASSERTION(NS_IsMainThread() || mDecoder->OnStateMachineThread(),
+    "Should be on main or state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
   if (aDuration == -1) {
@@ -892,7 +829,7 @@ void nsBuiltinDecoderStateMachine::SetDuration(PRInt64 aDuration)
 
 void nsBuiltinDecoderStateMachine::SetEndTime(PRInt64 aEndTime)
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread");
+  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
   mEndTime = aEndTime;
@@ -915,22 +852,20 @@ void nsBuiltinDecoderStateMachine::Shutdown()
 
   // Change state before issuing shutdown request to threads so those
   // threads can start exiting cleanly during the Shutdown call.
-  LOG(PR_LOG_DEBUG, ("%p Changed state to SHUTDOWN", mDecoder.get()));
-  ScheduleStateMachine();
+  LOG(PR_LOG_DEBUG, ("%p Changed state to SHUTDOWN", mDecoder));
   mState = DECODER_STATE_SHUTDOWN;
   mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 void nsBuiltinDecoderStateMachine::StartDecoding()
 {
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
+               "Should be on state machine thread.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mState != DECODER_STATE_DECODING) {
     mDecodeStartTime = TimeStamp::Now();
   }
   mState = DECODER_STATE_DECODING;
-  ScheduleStateMachine();
 }
 
 void nsBuiltinDecoderStateMachine::Play()
@@ -941,16 +876,17 @@ void nsBuiltinDecoderStateMachine::Play()
   // when the state machine notices the decoder's state change to PLAYING.
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mState == DECODER_STATE_BUFFERING) {
-    LOG(PR_LOG_DEBUG, ("%p Changed state from BUFFERING to DECODING", mDecoder.get()));
+    LOG(PR_LOG_DEBUG, ("%p Changed state from BUFFERING to DECODING", mDecoder));
     mState = DECODER_STATE_DECODING;
     mDecodeStartTime = TimeStamp::Now();
+    mDecoder->GetReentrantMonitor().NotifyAll();
   }
-  ScheduleStateMachine();
 }
 
 void nsBuiltinDecoderStateMachine::ResetPlayback()
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
+               "Should be on state machine thread.");
   mVideoFrameEndTime = -1;
   mAudioStartTime = -1;
   mAudioEndTime = -1;
@@ -982,35 +918,25 @@ void nsBuiltinDecoderStateMachine::Seek(double aTime)
   NS_ASSERTION(mEndTime != -1, "Should know end time by now");
   mSeekTime = NS_MIN(mSeekTime, mEndTime);
   mSeekTime = NS_MAX(mStartTime, mSeekTime);
-  LOG(PR_LOG_DEBUG, ("%p Changed state to SEEKING (to %f)", mDecoder.get(), aTime));
+  LOG(PR_LOG_DEBUG, ("%p Changed state to SEEKING (to %f)", mDecoder, aTime));
   mState = DECODER_STATE_SEEKING;
-  ScheduleStateMachine();
 }
 
-void nsBuiltinDecoderStateMachine::StopDecodeThread()
+void nsBuiltinDecoderStateMachine::StopDecodeThreads()
 {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
+               "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  mStopDecodeThread = PR_TRUE;
+  mStopDecodeThreads = PR_TRUE;
   mDecoder->GetReentrantMonitor().NotifyAll();
   if (mDecodeThread) {
-    LOG(PR_LOG_DEBUG, ("%p Shutdown decode thread", mDecoder.get()));
     {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       mDecodeThread->Shutdown();
     }
     mDecodeThread = nsnull;
-    mDecodeThreadIdle = PR_FALSE;
   }
-}
-
-void nsBuiltinDecoderStateMachine::StopAudioThread()
-{
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  mStopAudioThread = PR_TRUE;
-  mDecoder->GetReentrantMonitor().NotifyAll();
   if (mAudioThread) {
-    LOG(PR_LOG_DEBUG, ("%p Shutdown audio thread", mDecoder.get()));
     {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       mAudioThread->Shutdown();
@@ -1020,35 +946,22 @@ void nsBuiltinDecoderStateMachine::StopAudioThread()
 }
 
 nsresult
-nsBuiltinDecoderStateMachine::StartDecodeThread()
+nsBuiltinDecoderStateMachine::StartDecodeThreads()
 {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
+               "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  mStopDecodeThread = PR_FALSE;
-  if ((mDecodeThread && !mDecodeThreadIdle) || mState >= DECODER_STATE_COMPLETED)
-    return NS_OK;
-
-  if (!mDecodeThread) {
+  mStopDecodeThreads = PR_FALSE;
+  if (!mDecodeThread && mState < DECODER_STATE_COMPLETED) {
     nsresult rv = NS_NewThread(getter_AddRefs(mDecodeThread));
     if (NS_FAILED(rv)) {
       mState = DECODER_STATE_SHUTDOWN;
       return rv;
     }
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(this, &nsBuiltinDecoderStateMachine::DecodeLoop);
+    mDecodeThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }
-  nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &nsBuiltinDecoderStateMachine::DecodeThreadRun);
-  mDecodeThread->Dispatch(event, NS_DISPATCH_NORMAL);
-  mDecodeThreadIdle = PR_FALSE;
-  return NS_OK;
-}
-
-nsresult
-nsBuiltinDecoderStateMachine::StartAudioThread()
-{
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  mStopAudioThread = PR_FALSE;
   if (HasAudio() && !mAudioThread) {
     nsresult rv = NS_NewThread(getter_AddRefs(mAudioThread));
     if (NS_FAILED(rv)) {
@@ -1134,410 +1047,310 @@ void nsBuiltinDecoderStateMachine::SetFrameBufferLength(PRUint32 aLength)
   mEventManager.SetSignalBufferLength(aLength);
 }
 
-nsresult nsBuiltinDecoderStateMachine::DecodeMetadata()
+nsresult nsBuiltinDecoderStateMachine::Run()
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(mState == DECODER_STATE_DECODING_METADATA,
-               "Only call when in metadata decoding state");
-
-  LOG(PR_LOG_DEBUG, ("%p Decoding Media Headers", mDecoder.get()));
-  nsresult res;
-  nsVideoInfo info;
-  {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    res = mReader->ReadMetadata(&info);
-  }
-  mInfo = info;
-
-  if (NS_FAILED(res) || (!info.mHasVideo && !info.mHasAudio)) {
-    // Dispatch the event to call DecodeError synchronously. This ensures
-    // we're in shutdown state by the time we exit the decode thread.
-    // If we just moved to shutdown state here on the decode thread, we may
-    // cause the state machine to shutdown/free memory without closing its
-    // media stream properly, and we'll get callbacks from the media stream
-    // causing a crash. Note the state machine shutdown joins this decode
-    // thread during shutdown (and other state machines can run on the state
-    // machine thread while the join is waiting), so it's safe to do this
-    // synchronously.
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::DecodeError);
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
-    return NS_ERROR_FAILURE;
-  }
-  mDecoder->StartProgressUpdates();
-  mGotDurationFromMetaData = (GetDuration() != -1);
-
-  VideoData* videoData = FindStartTime();
-  if (videoData) {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    RenderVideoFrame(videoData, TimeStamp::Now());
-  }
-
-  if (mState == DECODER_STATE_SHUTDOWN) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ASSERTION(mStartTime != -1, "Must have start time");
-  NS_ASSERTION((!HasVideo() && !HasAudio()) ||
-                !mSeekable || mEndTime != -1,
-                "Active seekable media should have end time");
-  NS_ASSERTION(!mSeekable || GetDuration() != -1, "Seekable media should have duration");
-  LOG(PR_LOG_DEBUG, ("%p Media goes from %lld to %lld (duration %lld) seekable=%d",
-                      mDecoder.get(), mStartTime, mEndTime, GetDuration(), mSeekable));
-
-  // Inform the element that we've loaded the metadata and the first frame,
-  // setting the default framebuffer size for audioavailable events.  Also,
-  // if there is audio, let the MozAudioAvailable event manager know about
-  // the metadata.
-  if (HasAudio()) {
-    mEventManager.Init(mInfo.mAudioChannels, mInfo.mAudioRate);
-    // Set the buffer length at the decoder level to be able, to be able
-    // to retrive the value via media element method. The RequestFrameBufferLength
-    // will call the nsBuiltinDecoderStateMachine::SetFrameBufferLength().
-    PRUint32 frameBufferLength = mInfo.mAudioChannels * FRAMEBUFFER_LENGTH_PER_CHANNEL;
-    mDecoder->RequestFrameBufferLength(frameBufferLength);
-  }
-  nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-    new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels, mInfo.mAudioRate);
-  NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
-
-  if (mState == DECODER_STATE_DECODING_METADATA) {
-    LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING_METADATA to DECODING", mDecoder.get()));
-    StartDecoding();
-  }
-
-  if ((mState == DECODER_STATE_DECODING || mState == DECODER_STATE_COMPLETED) &&
-      mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
-      !IsPlaying())
-  {
-    StartPlayback();
-  }
-
-  return NS_OK;
-}
-
-void nsBuiltinDecoderStateMachine::DecodeSeek()
-{
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(mState == DECODER_STATE_SEEKING,
-               "Only call when in seeking state");
-
-  // During the seek, don't have a lock on the decoder state,
-  // otherwise long seek operations can block the main thread.
-  // The events dispatched to the main thread are SYNC calls.
-  // These calls are made outside of the decode monitor lock so
-  // it is safe for the main thread to makes calls that acquire
-  // the lock since it won't deadlock. We check the state when
-  // acquiring the lock again in case shutdown has occurred
-  // during the time when we didn't have the lock.
-  PRInt64 seekTime = mSeekTime;
-  mDecoder->StopProgressUpdates();
-
-  PRBool currentTimeChanged = false;
-  PRInt64 mediaTime = GetMediaTime();
-  if (mediaTime != seekTime) {
-    currentTimeChanged = true;
-    UpdatePlaybackPositionInternal(seekTime);
-  }
-
-  // SeekingStarted will do a UpdateReadyStateForData which will
-  // inform the element and its users that we have no frames
-  // to display
-  {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    nsCOMPtr<nsIRunnable> startEvent =
-      NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStarted);
-    NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
-  }
-
-  if (currentTimeChanged) {
-    // The seek target is different than the current playback position,
-    // we'll need to seek the playback position, so shutdown our decode
-    // and audio threads.
-    StopPlayback();
-    StopAudioThread();
-    ResetPlayback();
-    nsresult res;
-    {
-      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      // Now perform the seek. We must not hold the state machine monitor
-      // while we seek, since the seek reads, which could block on I/O.
-      res = mReader->Seek(seekTime,
-                          mStartTime,
-                          mEndTime,
-                          mediaTime);
-    }
-    if (NS_SUCCEEDED(res)) {
-      SoundData* audio = HasAudio() ? mReader->mAudioQueue.PeekFront() : nsnull;
-      NS_ASSERTION(!audio || (audio->mTime <= seekTime &&
-                              seekTime <= audio->mTime + audio->mDuration),
-                    "Seek target should lie inside the first audio block after seek");
-      PRInt64 startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
-      mAudioStartTime = startTime;
-      mPlayDuration = startTime - mStartTime;
-      if (HasVideo()) {
-        nsAutoPtr<VideoData> video(mReader->mVideoQueue.PeekFront());
-        if (video) {
-          NS_ASSERTION(video->mTime <= seekTime && seekTime <= video->mEndTime,
-                        "Seek target should lie inside the first frame after seek");
-          {
-            ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-            RenderVideoFrame(video, TimeStamp::Now());
-          }
-          mReader->mVideoQueue.PopFront();
-          nsCOMPtr<nsIRunnable> event =
-            NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::Invalidate);
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-        }
-      }
-    }
-  }
-  mDecoder->StartProgressUpdates();
-  if (mState == DECODER_STATE_SHUTDOWN)
-    return;
-
-  // Try to decode another frame to detect if we're at the end...
-  LOG(PR_LOG_DEBUG, ("%p Seek completed, mCurrentFrameTime=%lld\n",
-      mDecoder.get(), mCurrentFrameTime));
-
-  // Change state to DECODING or COMPLETED now. SeekingStopped will
-  // call nsBuiltinDecoderStateMachine::Seek to reset our state to SEEKING
-  // if we need to seek again.
-
-  nsCOMPtr<nsIRunnable> stopEvent;
-  if (GetMediaTime() == mEndTime) {
-    LOG(PR_LOG_DEBUG, ("%p Changed state from SEEKING (to %lld) to COMPLETED",
-                        mDecoder.get(), seekTime));
-    stopEvent = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStoppedAtEnd);
-    mState = DECODER_STATE_COMPLETED;
-  } else {
-    LOG(PR_LOG_DEBUG, ("%p Changed state from SEEKING (to %lld) to DECODING",
-                        mDecoder.get(), seekTime));
-    stopEvent = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStopped);
-    StartDecoding();
-  }
-  {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);
-  }
-
-  // Reset quick buffering status. This ensures that if we began the
-  // seek while quick-buffering, we won't bypass quick buffering mode
-  // if we need to buffer after the seek.
-  mQuickBuffering = PR_FALSE;
-
-  ScheduleStateMachine();
-}
-
-// Runnable to dispose of the decoder and state machine on the main thread.
-class nsDecoderDisposeEvent : public nsRunnable {
-public:
-  nsDecoderDisposeEvent(already_AddRefed<nsBuiltinDecoder> aDecoder)
-    : mDecoder(aDecoder) {}
-  NS_IMETHOD Run() {
-    NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
-    mDecoder = nsnull;
-    return NS_OK;
-  }
-private:
-  nsRefPtr<nsBuiltinDecoder> mDecoder;
-};
-
-// Runnable which dispatches an event to the main thread to dispose of the
-// decoder and state machine. This runs on the state machine thread after
-// the state machine has shutdown, and all events for that state machine have
-// finished running.
-class nsDispatchDisposeEvent : public nsRunnable {
-public:
-  nsDispatchDisposeEvent(already_AddRefed<nsBuiltinDecoder> aDecoder)
-    : mDecoder(aDecoder) {}
-  NS_IMETHOD Run() {
-    NS_DispatchToMainThread(new nsDecoderDisposeEvent(mDecoder.forget()),
-                            NS_DISPATCH_NORMAL);
-    return NS_OK;
-  }
-private:
-  nsRefPtr<nsBuiltinDecoder> mDecoder;
-};
-
-nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
-{
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
+               "Should be on state machine thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream, NS_ERROR_NULL_POINTER);
 
-  switch (mState) {
-    case DECODER_STATE_SHUTDOWN: {
+  while (PR_TRUE) {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    switch (mState) {
+    case DECODER_STATE_SHUTDOWN:
       if (IsPlaying()) {
-        StopPlayback();
+        StopPlayback(AUDIO_SHUTDOWN);
       }
-      StopAudioThread();
-      StopDecodeThread();
+      StopDecodeThreads();
       NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
                    "How did we escape from the shutdown state???");
-      // We must daisy-chain these events to destroy the decoder. We must
-      // destroy the decoder on the main thread, but we can't destroy the
-      // decoder while this thread holds the decoder monitor. We can't
-      // dispatch an event to the main thread to destroy the decoder from
-      // here, as the event may run before the dispatch returns, and we
-      // hold the decoder monitor here. We also want to guarantee that the
-      // state machine is destroyed on the main thread, and so the
-      // event runner running this function (which holds a reference to the
-      // state machine) needs to finish and be released in order to allow
-      // that. So we dispatch an event to run after this event runner has
-      // finished and released its monitor/references. That event then will
-      // dispatch an event to the main thread to release the decoder and
-      // state machine.
-      NS_DispatchToCurrentThread(
-        new nsDispatchDisposeEvent(mDecoder.forget()));
       return NS_OK;
-    }
 
-    case DECODER_STATE_DECODING_METADATA: {
-      // Ensure we have a decode thread to decode metadata.
-      return StartDecodeThread();
-    }
-  
-    case DECODER_STATE_DECODING: {
-      if (mDecoder->GetState() != nsBuiltinDecoder::PLAY_STATE_PLAYING &&
-          IsPlaying())
+    case DECODER_STATE_DECODING_METADATA:
       {
-        // We're playing, but the element/decoder is in paused state. Stop
-        // playing! Note we do this before StopDecodeThread() below because
-        // that blocks this state machine's execution, and can cause a
-        // perceptible delay between the pause command, and playback actually
-        // pausing.
-        StopPlayback();
+        LoadMetadata();
+        if (mState == DECODER_STATE_SHUTDOWN) {
+          continue;
+        }
+
+        VideoData* videoData = FindStartTime();
+        if (videoData) {
+          ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+          RenderVideoFrame(videoData, TimeStamp::Now());
+        }
+
+        // Start the decode threads, so that we can pre buffer the streams.
+        // and calculate the start time in order to determine the duration.
+        if (NS_FAILED(StartDecodeThreads())) {
+          continue;
+        }
+
+        NS_ASSERTION(mStartTime != -1, "Must have start time");
+        NS_ASSERTION((!HasVideo() && !HasAudio()) ||
+                     !mSeekable || mEndTime != -1,
+                     "Active seekable media should have end time");
+        NS_ASSERTION(!mSeekable || GetDuration() != -1, "Seekable media should have duration");
+        LOG(PR_LOG_DEBUG, ("%p Media goes from %lld to %lld (duration %lld) seekable=%d",
+                           mDecoder, mStartTime, mEndTime, GetDuration(), mSeekable));
+
+        if (mState == DECODER_STATE_SHUTDOWN)
+          continue;
+
+        // Inform the element that we've loaded the metadata and the first frame,
+        // setting the default framebuffer size for audioavailable events.  Also,
+        // if there is audio, let the MozAudioAvailable event manager know about
+        // the metadata.
+        if (HasAudio()) {
+          mEventManager.Init(mInfo.mAudioChannels, mInfo.mAudioRate);
+          // Set the buffer length at the decoder level to be able, to be able
+          // to retrive the value via media element method. The RequestFrameBufferLength
+          // will call the nsBuiltinDecoderStateMachine::SetFrameBufferLength().
+          PRUint32 frameBufferLength = mInfo.mAudioChannels * FRAMEBUFFER_LENGTH_PER_CHANNEL;
+          mDecoder->RequestFrameBufferLength(frameBufferLength);
+        }
+        nsCOMPtr<nsIRunnable> metadataLoadedEvent =
+          new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels, mInfo.mAudioRate);
+        NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
+
+        if (mState == DECODER_STATE_DECODING_METADATA) {
+          LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING_METADATA to DECODING", mDecoder));
+          StartDecoding();
+        }
+
+        // Start playback.
+        if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING) {
+          if (!IsPlaying()) {
+            StartPlayback();
+          }
+        }
       }
+      break;
 
-      if (IsPausedAndDecoderWaiting()) {
-        // The decode buffers are full, and playback is paused. Shutdown the
-        // decode thread.
-        StopDecodeThread();
-        return NS_OK;
-      }
-
-      // We're playing and/or our decode buffers aren't full. Ensure we have
-      // an active decode thread.
-      if (NS_FAILED(StartDecodeThread())) {
-        NS_WARNING("Failed to start media decode thread!");
-        return NS_ERROR_FAILURE;
-      }
-
-      AdvanceFrame();
-      NS_ASSERTION(mDecoder->GetState() != nsBuiltinDecoder::PLAY_STATE_PLAYING ||
-                   IsStateMachineScheduled(), "Must have timer scheduled");
-      return NS_OK;
-    }
-
-    case DECODER_STATE_BUFFERING: {
-      if (IsPausedAndDecoderWaiting()) {
-        // The decode buffers are full, and playback is paused. Shutdown the
-        // decode thread.
-        StopDecodeThread();
-        return NS_OK;
-      }
-
-      TimeStamp now = TimeStamp::Now();
-      NS_ASSERTION(!mBufferingStart.IsNull(), "Must know buffering start time.");
-
-      // We will remain in the buffering state if we've not decoded enough
-      // data to begin playback, or if we've not downloaded a reasonable
-      // amount of data inside our buffering time.
-      TimeDuration elapsed = now - mBufferingStart;
-      PRBool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
-      if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
-            elapsed < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
-            (mQuickBuffering ? HasLowDecodedData(QUICK_BUFFERING_LOW_DATA_USECS)
-                            : (GetUndecodedData() < BUFFERING_WAIT * USECS_PER_S)) &&
-            !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
-            !stream->IsSuspended())
+    case DECODER_STATE_DECODING:
       {
-        LOG(PR_LOG_DEBUG,
-            ("%p Buffering: %.3lfs/%ds, timeout in %.3lfs %s",
-              mDecoder.get(),
-              GetUndecodedData() / static_cast<double>(USECS_PER_S),
-              BUFFERING_WAIT,
-              BUFFERING_WAIT - elapsed.ToSeconds(),
-              (mQuickBuffering ? "(quick exit)" : "")));
-        ScheduleStateMachine(USECS_PER_S);
-        return NS_OK;
-      } else {
-        LOG(PR_LOG_DEBUG, ("%p Changed state from BUFFERING to DECODING", mDecoder.get()));
-        LOG(PR_LOG_DEBUG, ("%p Buffered for %.3lfs",
-                            mDecoder.get(),
-                            (now - mBufferingStart).ToSeconds()));
-        StartDecoding();
-      }
+        if (NS_FAILED(StartDecodeThreads())) {
+          continue;
+        }
 
-      // Notify to allow blocked decoder thread to continue
-      mDecoder->GetReentrantMonitor().NotifyAll();
-      UpdateReadyState();
-      if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
-          !IsPlaying())
-      {
-        StartPlayback();
-      }
-      NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
-      return NS_OK;
-    }
-
-    case DECODER_STATE_SEEKING: {
-      // Ensure we have a decode thread to perform the seek.
-     return StartDecodeThread();
-    }
-
-    case DECODER_STATE_COMPLETED: {
-      StopDecodeThread();
-
-      if (mState != DECODER_STATE_COMPLETED) {
-        // While we're waiting for the decode thread to shutdown, we can
-        // change state, for example to seeking or shutdown state.
-        // Whatever changed our state should have scheduled another state
-        // machine run.
-        NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
-        return NS_OK;
-      }
-
-      // Play the remaining media. We want to run AdvanceFrame() at least
-      // once to ensure the current playback position is advanced to the
-      // end of the media, and so that we update the readyState.
-      if (mState == DECODER_STATE_COMPLETED &&
-          (mReader->mVideoQueue.GetSize() > 0 ||
-          (HasAudio() && !mAudioCompleted)))
-      {
         AdvanceFrame();
-        NS_ASSERTION(mDecoder->GetState() != nsBuiltinDecoder::PLAY_STATE_PLAYING ||
-                     IsStateMachineScheduled(),
-                     "Must have timer scheduled");
-        return NS_OK;
+
+        if (mState != DECODER_STATE_DECODING)
+          continue;
+      }
+      break;
+
+    case DECODER_STATE_SEEKING:
+      {
+        // During the seek, don't have a lock on the decoder state,
+        // otherwise long seek operations can block the main thread.
+        // The events dispatched to the main thread are SYNC calls.
+        // These calls are made outside of the decode monitor lock so
+        // it is safe for the main thread to makes calls that acquire
+        // the lock since it won't deadlock. We check the state when
+        // acquiring the lock again in case shutdown has occurred
+        // during the time when we didn't have the lock.
+        PRInt64 seekTime = mSeekTime;
+        mDecoder->StopProgressUpdates();
+
+        PRBool currentTimeChanged = false;
+        PRInt64 mediaTime = GetMediaTime();
+        if (mediaTime != seekTime) {
+          currentTimeChanged = true;
+          UpdatePlaybackPositionInternal(seekTime);
+        }
+
+        // SeekingStarted will do a UpdateReadyStateForData which will
+        // inform the element and its users that we have no frames
+        // to display
+        {
+          ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+          nsCOMPtr<nsIRunnable> startEvent =
+            NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStarted);
+          NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
+        }
+
+        if (currentTimeChanged) {
+          // The seek target is different than the current playback position,
+          // we'll need to seek the playback position, so shutdown our decode
+          // and audio threads.
+          StopPlayback(AUDIO_SHUTDOWN);
+          StopDecodeThreads();
+          ResetPlayback();
+          nsresult res;
+          {
+            ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+            // Now perform the seek. We must not hold the state machine monitor
+            // while we seek, since the seek decodes.
+            res = mReader->Seek(seekTime,
+                                mStartTime,
+                                mEndTime,
+                                mediaTime);
+          }
+          if (NS_SUCCEEDED(res)){
+            SoundData* audio = HasAudio() ? mReader->mAudioQueue.PeekFront() : nsnull;
+            NS_ASSERTION(!audio || (audio->mTime <= seekTime &&
+                                    seekTime <= audio->mTime + audio->mDuration),
+                         "Seek target should lie inside the first audio block after seek");
+            PRInt64 startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
+            mAudioStartTime = startTime;
+            mPlayDuration = startTime - mStartTime;
+            if (HasVideo()) {
+              nsAutoPtr<VideoData> video(mReader->mVideoQueue.PeekFront());
+              if (video) {
+                NS_ASSERTION(video->mTime <= seekTime && seekTime <= video->mEndTime,
+                             "Seek target should lie inside the first frame after seek");
+                {
+                  ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+                  RenderVideoFrame(video, TimeStamp::Now());
+                }
+                mReader->mVideoQueue.PopFront();
+                nsCOMPtr<nsIRunnable> event =
+                  NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::Invalidate);
+                NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+              }
+            }
+          }
+        }
+        mDecoder->StartProgressUpdates();
+        if (mState == DECODER_STATE_SHUTDOWN)
+          continue;
+
+        // Try to decode another frame to detect if we're at the end...
+        LOG(PR_LOG_DEBUG, ("%p Seek completed, mCurrentFrameTime=%lld\n", mDecoder, mCurrentFrameTime));
+
+        // Change state to DECODING or COMPLETED now. SeekingStopped will
+        // call nsBuiltinDecoderStateMachine::Seek to reset our state to SEEKING
+        // if we need to seek again.
+        
+        nsCOMPtr<nsIRunnable> stopEvent;
+        if (GetMediaTime() == mEndTime) {
+          LOG(PR_LOG_DEBUG, ("%p Changed state from SEEKING (to %lld) to COMPLETED",
+                             mDecoder, seekTime));
+          stopEvent = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStoppedAtEnd);
+          mState = DECODER_STATE_COMPLETED;
+        } else {
+          LOG(PR_LOG_DEBUG, ("%p Changed state from SEEKING (to %lld) to DECODING",
+                             mDecoder, seekTime));
+          stopEvent = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStopped);
+          StartDecoding();
+        }
+        mDecoder->GetReentrantMonitor().NotifyAll();
+
+        {
+          ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+          NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);
+        }
+
+        // Reset quick buffering status. This ensures that if we began the
+        // seek while quick-buffering, we won't bypass quick buffering mode
+        // if we need to buffer after the seek.
+        mQuickBuffering = PR_FALSE;
+      }
+      break;
+
+    case DECODER_STATE_BUFFERING:
+      {
+        if (IsPlaying()) {
+          StopPlayback(AUDIO_PAUSE);
+          mDecoder->GetReentrantMonitor().NotifyAll();
+        }
+
+        TimeStamp now = TimeStamp::Now();
+        NS_ASSERTION(!mBufferingStart.IsNull(), "Must know buffering start time.");
+
+        // We will remain in the buffering state if we've not decoded enough
+        // data to begin playback, or if we've not downloaded a reasonable
+        // amount of data inside our buffering time.
+        TimeDuration elapsed = now - mBufferingStart;
+        PRBool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
+        if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
+             elapsed < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
+             (mQuickBuffering ? HasLowDecodedData(QUICK_BUFFERING_LOW_DATA_USECS)
+                              : (GetUndecodedData() < BUFFERING_WAIT * USECS_PER_S)) &&
+             !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
+             !stream->IsSuspended())
+        {
+          LOG(PR_LOG_DEBUG,
+              ("Buffering: %.3lfs/%ds, timeout in %.3lfs %s",
+               GetUndecodedData() / static_cast<double>(USECS_PER_S),
+               BUFFERING_WAIT,
+               BUFFERING_WAIT - elapsed.ToSeconds(),
+               (mQuickBuffering ? "(quick exit)" : "")));
+          Wait(USECS_PER_S);
+          if (mState == DECODER_STATE_SHUTDOWN)
+            continue;
+        } else {
+          LOG(PR_LOG_DEBUG, ("%p Changed state from BUFFERING to DECODING", mDecoder));
+          LOG(PR_LOG_DEBUG, ("%p Buffered for %.3lfs",
+                             mDecoder,
+                             (now - mBufferingStart).ToSeconds()));
+          StartDecoding();
+        }
+
+        if (mState != DECODER_STATE_BUFFERING) {
+          // Notify to allow blocked decoder thread to continue
+          mDecoder->GetReentrantMonitor().NotifyAll();
+          UpdateReadyState();
+          if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING) {
+            if (!IsPlaying()) {
+              StartPlayback();
+            }
+          }
+        }
+        break;
       }
 
-      // StopPlayback in order to reset the IsPlaying() state so audio
-      // is restarted correctly.
-      StopPlayback();
+    case DECODER_STATE_COMPLETED:
+      {
+        if (NS_FAILED(StartDecodeThreads())) {
+          continue;
+        }
 
-      if (mState != DECODER_STATE_COMPLETED) {
-        // While we're presenting a frame we can change state. Whatever changed
-        // our state should have scheduled another state machine run.
-        NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
-        return NS_OK;
+        // Play the remaining media. We want to run AdvanceFrame() at least
+        // once to ensure the current playback position is advanced to the
+        // end of the media, and so that we update the readyState.
+        do {
+          AdvanceFrame();
+        } while (mState == DECODER_STATE_COMPLETED &&
+                 (mReader->mVideoQueue.GetSize() > 0 ||
+                 (HasAudio() && !mAudioCompleted)));
+
+        if (mAudioStream) {
+          // Close the audio stream so that next time audio is used a new stream
+          // is created. The StopPlayback call also resets the IsPlaying() state
+          // so audio is restarted correctly.
+          StopPlayback(AUDIO_SHUTDOWN);
+        }
+
+        if (mState != DECODER_STATE_COMPLETED)
+          continue;
+
+        LOG(PR_LOG_DEBUG, ("%p Shutting down the state machine thread", mDecoder));
+        StopDecodeThreads();
+
+        if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING) {
+          PRInt64 videoTime = HasVideo() ? mVideoFrameEndTime : 0;
+          PRInt64 clockTime = NS_MAX(mEndTime, NS_MAX(videoTime, GetAudioClock()));
+          UpdatePlaybackPosition(clockTime);
+          {
+            ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+            nsCOMPtr<nsIRunnable> event =
+              NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::PlaybackEnded);
+            NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+          }
+        }
+
+        if (mState == DECODER_STATE_COMPLETED) {
+          // We've finished playback. Shutdown the state machine thread, 
+          // in order to save memory on thread stacks, particuarly on Linux.
+          nsCOMPtr<nsIRunnable> event =
+            new ShutdownThreadEvent(mDecoder->mStateMachineThread);
+          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          mDecoder->mStateMachineThread = nsnull;
+          return NS_OK;
+        }
       }
- 
-      StopAudioThread();
-      if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING) {
-        PRInt64 videoTime = HasVideo() ? mVideoFrameEndTime : 0;
-        PRInt64 clockTime = NS_MAX(mEndTime, NS_MAX(videoTime, GetAudioClock()));
-        UpdatePlaybackPosition(clockTime);
-        nsCOMPtr<nsIRunnable> event =
-          NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::PlaybackEnded);
-        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-      }
-      return NS_OK;
+      break;
     }
   }
 
@@ -1547,8 +1360,7 @@ nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
 void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData,
                                                     TimeStamp aTarget)
 {
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
 
   if (aData->mDuplicate) {
@@ -1564,156 +1376,167 @@ void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData,
 PRInt64
 nsBuiltinDecoderStateMachine::GetAudioClock()
 {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  if (!HasAudio())
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
+  if (!mAudioStream || !HasAudio())
     return -1;
-  if (!mAudioStream) {
-    // Audio thread hasn't played any data yet.
-    return mAudioStartTime;
-  }
   PRInt64 t = mAudioStream->GetPosition();
   return (t == -1) ? -1 : t + mAudioStartTime;
 }
 
 void nsBuiltinDecoderStateMachine::AdvanceFrame()
 {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(!HasAudio() || mAudioStartTime != -1,
-               "Should know audio start time if we have audio.");
 
-  if (mDecoder->GetState() != nsBuiltinDecoder::PLAY_STATE_PLAYING) {
-    return;
-  }
+  // When it's time to display a frame, decode the frame and display it.
+  if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING) {
+    if (HasAudio() && mAudioStartTime == -1 && !mAudioCompleted) {
+      // We've got audio (so we should sync off the audio clock), but we've not
+      // played a sample on the audio thread, so we can't get a time from the
+      // audio clock. Just wait and then return, to give the audio clock time
+      // to tick.  This should really wait for a specific signal from the audio
+      // thread rather than polling after a sleep.  See bug 568431 comment 4.
+      Wait(AUDIO_DURATION_USECS);
+      return;
+    }
 
-  // Determine the clock time. If we've got audio, and we've not reached
-  // the end of the audio, use the audio clock. However if we've finished
-  // audio, or don't have audio, use the system clock.
-  PRInt64 clock_time = -1;
-  if (!IsPlaying()) {
-    clock_time = mPlayDuration + mStartTime;
-  } else {
-    PRInt64 audio_time = GetAudioClock();
-    if (HasAudio() && !mAudioCompleted && audio_time != -1) {
-      clock_time = audio_time;
-      // Resync against the audio clock, while we're trusting the
-      // audio clock. This ensures no "drift", particularly on Linux.
-      mPlayDuration = clock_time - mStartTime;
-      mPlayStartTime = TimeStamp::Now();
+    // Determine the clock time. If we've got audio, and we've not reached
+    // the end of the audio, use the audio clock. However if we've finished
+    // audio, or don't have audio, use the system clock.
+    PRInt64 clock_time = -1;
+    if (!IsPlaying()) {
+      clock_time = mPlayDuration + mStartTime;
     } else {
-      // Sound is disabled on this system. Sync to the system clock.
-      clock_time = DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration;
-      // Ensure the clock can never go backwards.
-      NS_ASSERTION(mCurrentFrameTime <= clock_time, "Clock should go forwards");
-      clock_time = NS_MAX(mCurrentFrameTime, clock_time) + mStartTime;
+      PRInt64 audio_time = GetAudioClock();
+      if (HasAudio() && !mAudioCompleted && audio_time != -1) {
+        clock_time = audio_time;
+        // Resync against the audio clock, while we're trusting the
+        // audio clock. This ensures no "drift", particularly on Linux.
+        mPlayDuration = clock_time - mStartTime;
+        mPlayStartTime = TimeStamp::Now();
+      } else {
+        // Sound is disabled on this system. Sync to the system clock.
+        clock_time = DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration;
+        // Ensure the clock can never go backwards.
+        NS_ASSERTION(mCurrentFrameTime <= clock_time, "Clock should go forwards");
+        clock_time = NS_MAX(mCurrentFrameTime, clock_time) + mStartTime;
+      }
     }
-  }
 
-  // Skip frames up to the frame at the playback position, and figure out
-  // the time remaining until it's time to display the next frame.
-  PRInt64 remainingTime = AUDIO_DURATION_USECS;
-  NS_ASSERTION(clock_time >= mStartTime, "Should have positive clock time.");
-  nsAutoPtr<VideoData> currentFrame;
-  if (mReader->mVideoQueue.GetSize() > 0) {
-    VideoData* frame = mReader->mVideoQueue.PeekFront();
-    while (clock_time >= frame->mTime) {
-      mVideoFrameEndTime = frame->mEndTime;
-      currentFrame = frame;
-      mReader->mVideoQueue.PopFront();
-      // Notify the decode thread that the video queue's buffers may have
-      // free'd up space for more frames.
-      mDecoder->GetReentrantMonitor().NotifyAll();
-      mDecoder->UpdatePlaybackOffset(frame->mOffset);
-      if (mReader->mVideoQueue.GetSize() == 0)
-        break;
-      frame = mReader->mVideoQueue.PeekFront();
+    // Skip frames up to the frame at the playback position, and figure out
+    // the time remaining until it's time to display the next frame.
+    PRInt64 remainingTime = AUDIO_DURATION_USECS;
+    NS_ASSERTION(clock_time >= mStartTime, "Should have positive clock time.");
+    nsAutoPtr<VideoData> currentFrame;
+    if (mReader->mVideoQueue.GetSize() > 0) {
+      VideoData* frame = mReader->mVideoQueue.PeekFront();
+      while (clock_time >= frame->mTime) {
+        mVideoFrameEndTime = frame->mEndTime;
+        currentFrame = frame;
+        mReader->mVideoQueue.PopFront();
+        // Notify the decode thread that the video queue's buffers may have
+        // free'd up space for more frames.
+        mDecoder->GetReentrantMonitor().NotifyAll();
+        mDecoder->UpdatePlaybackOffset(frame->mOffset);
+        if (mReader->mVideoQueue.GetSize() == 0)
+          break;
+        frame = mReader->mVideoQueue.PeekFront();
+      }
+      // Current frame has already been presented, wait until it's time to
+      // present the next frame.
+      if (frame && !currentFrame) {
+        PRInt64 now = IsPlaying()
+          ? (DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration)
+          : mPlayDuration;
+        remainingTime = frame->mTime - mStartTime - now;
+      }
     }
-    // Current frame has already been presented, wait until it's time to
-    // present the next frame.
-    if (frame && !currentFrame) {
-      PRInt64 now = IsPlaying()
-        ? (DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration)
-        : mPlayDuration;
-      remainingTime = frame->mTime - mStartTime - now;
-    }
-  }
 
-  // Check to see if we don't have enough data to play up to the next frame.
-  // If we don't, switch to buffering mode.
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
-  if (mState == DECODER_STATE_DECODING &&
-      mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
-      HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_USECS) &&
-      !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
-      !stream->IsSuspended() &&
-      (JustExitedQuickBuffering() || HasLowUndecodedData()))
-  {
-    if (currentFrame) {
-      mReader->mVideoQueue.PushFront(currentFrame.forget());
-    }
-    StartBuffering();
-    ScheduleStateMachine();
-    return;
-  }
-
-  // We've got enough data to keep playing until at least the next frame.
-  // Start playing now if need be.
-  if (!IsPlaying()) {
-    StartPlayback();
-  }
-
-  if (currentFrame) {
-    // Decode one frame and display it.
-    TimeStamp presTime = mPlayStartTime - UsecsToDuration(mPlayDuration) +
-                          UsecsToDuration(currentFrame->mTime - mStartTime);
-    NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
+    // Check to see if we don't have enough data to play up to the next frame.
+    // If we don't, switch to buffering mode.
+    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    if (mState == DECODER_STATE_DECODING &&
+        mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
+        HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_USECS) &&
+        !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
+        !stream->IsSuspended() &&
+        (JustExitedQuickBuffering() || HasLowUndecodedData()))
     {
-      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      // If we have video, we want to increment the clock in steps of the frame
-      // duration.
-      RenderVideoFrame(currentFrame, presTime);
+      if (currentFrame) {
+        mReader->mVideoQueue.PushFront(currentFrame.forget());
+      }
+      StartBuffering();
+      return;
     }
-    mDecoder->GetFrameStatistics().NotifyPresentedFrame();
-    PRInt64 now = DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration;
-    remainingTime = currentFrame->mEndTime - mStartTime - now;
-    currentFrame = nsnull;
-  }
 
-  // Cap the current time to the larger of the audio and video end time.
-  // This ensures that if we're running off the system clock, we don't
-  // advance the clock to after the media end time.
-  if (mVideoFrameEndTime != -1 || mAudioEndTime != -1) {
-    // These will be non -1 if we've displayed a video frame, or played an audio sample.
-    clock_time = NS_MIN(clock_time, NS_MAX(mVideoFrameEndTime, mAudioEndTime));
-    if (clock_time > GetMediaTime()) {
-      // Only update the playback position if the clock time is greater
-      // than the previous playback position. The audio clock can
-      // sometimes report a time less than its previously reported in
-      // some situations, and we need to gracefully handle that.
-      UpdatePlaybackPosition(clock_time);
+    // We've got enough data to keep playing until at least the next frame.
+    // Start playing now if need be.
+    if (!IsPlaying()) {
+      StartPlayback();
+      mDecoder->GetReentrantMonitor().NotifyAll();
+    }
+
+    if (currentFrame) {
+      // Decode one frame and display it.
+      TimeStamp presTime = mPlayStartTime - UsecsToDuration(mPlayDuration) +
+                           UsecsToDuration(currentFrame->mTime - mStartTime);
+      NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
+      {
+        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+        // If we have video, we want to increment the clock in steps of the frame
+        // duration.
+        RenderVideoFrame(currentFrame, presTime);
+      }
+      mDecoder->GetFrameStatistics().NotifyPresentedFrame();
+      PRInt64 now = DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration;
+      remainingTime = currentFrame->mEndTime - mStartTime - now;
+      currentFrame = nsnull;
+    }
+
+    // Cap the current time to the larger of the audio and video end time.
+    // This ensures that if we're running off the system clock, we don't
+    // advance the clock to after the media end time.
+    if (mVideoFrameEndTime != -1 || mAudioEndTime != -1) {
+      // These will be non -1 if we've displayed a video frame, or played an audio sample.
+      clock_time = NS_MIN(clock_time, NS_MAX(mVideoFrameEndTime, mAudioEndTime));
+      if (clock_time > GetMediaTime()) {
+        // Only update the playback position if the clock time is greater
+        // than the previous playback position. The audio clock can
+        // sometimes report a time less than its previously reported in
+        // some situations, and we need to gracefully handle that.
+        UpdatePlaybackPosition(clock_time);
+      }
+    }
+
+    // If the number of audio/video samples queued has changed, either by
+    // this function popping and playing a video sample, or by the audio
+    // thread popping and playing an audio sample, we may need to update our
+    // ready state. Post an update to do so.
+    UpdateReadyState();
+
+    if (remainingTime > 0) {
+      Wait(remainingTime);
+    }
+  } else {
+    if (IsPlaying()) {
+      StopPlayback(AUDIO_PAUSE);
+      mDecoder->GetReentrantMonitor().NotifyAll();
+    }
+
+    if (mState == DECODER_STATE_DECODING ||
+        mState == DECODER_STATE_COMPLETED) {
+      mDecoder->GetReentrantMonitor().Wait();
     }
   }
-
-  // If the number of audio/video samples queued has changed, either by
-  // this function popping and playing a video sample, or by the audio
-  // thread popping and playing an audio sample, we may need to update our
-  // ready state. Post an update to do so.
-  UpdateReadyState();
-
-  ScheduleStateMachine(remainingTime);
 }
 
 void nsBuiltinDecoderStateMachine::Wait(PRInt64 aUsecs) {
-  NS_ASSERTION(OnAudioThread(), "Only call on the audio thread");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   TimeStamp end = TimeStamp::Now() + UsecsToDuration(NS_MAX<PRInt64>(USECS_PER_MS, aUsecs));
   TimeStamp now;
   while ((now = TimeStamp::Now()) < end &&
          mState != DECODER_STATE_SHUTDOWN &&
-         mState != DECODER_STATE_SEEKING &&
-         !mStopAudioThread &&
-         IsPlaying())
+         mState != DECODER_STATE_SEEKING)
   {
     PRInt64 ms = static_cast<PRInt64>(NS_round((end - now).ToSeconds() * 1000));
     if (ms == 0 || ms > PR_UINT32_MAX) {
@@ -1725,7 +1548,7 @@ void nsBuiltinDecoderStateMachine::Wait(PRInt64 aUsecs) {
 
 VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   PRInt64 startTime = 0;
   mStartTime = 0;
@@ -1749,7 +1572,7 @@ VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
   // first acutal audio sample we have, we'll inject silence during playback
   // to ensure the audio starts at the correct time.
   mAudioStartTime = mStartTime;
-  LOG(PR_LOG_DEBUG, ("%p Media start time is %lld", mDecoder.get(), mStartTime));
+  LOG(PR_LOG_DEBUG, ("%p Media start time is %lld", mDecoder, mStartTime));
   return v;
 }
 
@@ -1774,6 +1597,32 @@ void nsBuiltinDecoderStateMachine::UpdateReadyState() {
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
+void nsBuiltinDecoderStateMachine::LoadMetadata()
+{
+  NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
+               "Should be on state machine thread.");
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+
+  LOG(PR_LOG_DEBUG, ("%p Loading Media Headers", mDecoder));
+  nsresult res;
+  nsVideoInfo info;
+  {
+    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+    res = mReader->ReadMetadata(&info);
+  }
+  mInfo = info;
+
+  if (NS_FAILED(res) || (!info.mHasVideo && !info.mHasAudio)) {
+    mState = DECODER_STATE_SHUTDOWN;      
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::DecodeError);
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    return;
+  }
+  mDecoder->StartProgressUpdates();
+  mGotDurationFromMetaData = (GetDuration() != -1);
+}
+
 PRBool nsBuiltinDecoderStateMachine::JustExitedQuickBuffering()
 {
   return !mDecodeStartTime.IsNull() &&
@@ -1784,10 +1633,6 @@ PRBool nsBuiltinDecoderStateMachine::JustExitedQuickBuffering()
 void nsBuiltinDecoderStateMachine::StartBuffering()
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-
-  if (IsPlaying()) {
-    StopPlayback();
-  }
 
   TimeDuration decodeDuration = TimeStamp::Now() - mDecodeStartTime;
   // Go into quick buffering mode provided we've not just left buffering using
@@ -1810,10 +1655,10 @@ void nsBuiltinDecoderStateMachine::StartBuffering()
   UpdateReadyState();
   mState = DECODER_STATE_BUFFERING;
   LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING to BUFFERING, decoded for %.3lfs",
-                     mDecoder.get(), decodeDuration.ToSeconds()));
+                     mDecoder, decodeDuration.ToSeconds()));
   nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
   LOG(PR_LOG_DEBUG, ("%p Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
-    mDecoder.get(),
+    mDecoder,
     stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
     stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)"));
 }
@@ -1824,135 +1669,5 @@ nsresult nsBuiltinDecoderStateMachine::GetBuffered(nsTimeRanges* aBuffered) {
   stream->Pin();
   nsresult res = mReader->GetBuffered(aBuffered, mStartTime);
   stream->Unpin();
-  return res;
-}
-
-PRBool nsBuiltinDecoderStateMachine::IsPausedAndDecoderWaiting() {
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
-
-  return
-    mDecodeThreadWaiting &&
-    mDecoder->GetState() != nsBuiltinDecoder::PLAY_STATE_PLAYING &&
-    (mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING);
-}
-
-nsresult nsBuiltinDecoderStateMachine::Run()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
-
-  return CallRunStateMachine();
-}
-
-nsresult nsBuiltinDecoderStateMachine::CallRunStateMachine()
-{
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
-  // This will be set to PR_TRUE by ScheduleStateMachine() if it's called
-  // while we're in RunStateMachine().
-  mRunAgain = PR_FALSE;
-
-  // Set to PR_TRUE whenever we dispatch an event to run this state machine.
-  // This flag prevents us from dispatching
-  mDispatchedRunEvent = PR_FALSE;
-
-  mTimeout = TimeStamp();
-
-  mIsRunning = PR_TRUE;
-  nsresult res = RunStateMachine();
-  mIsRunning = PR_FALSE;
-
-  if (mRunAgain && !mDispatchedRunEvent) {
-    mDispatchedRunEvent = PR_TRUE;
-    return NS_DispatchToCurrentThread(this);
-  }
-
-  return res;
-}
-
-static void TimeoutExpired(nsITimer *aTimer, void *aClosure) {
-  nsBuiltinDecoderStateMachine *machine =
-    static_cast<nsBuiltinDecoderStateMachine*>(aClosure);
-  NS_ASSERTION(machine, "Must have been passed state machine");
-  machine->TimeoutExpired();
-}
-
-void nsBuiltinDecoderStateMachine::TimeoutExpired()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  NS_ASSERTION(OnStateMachineThread(), "Must be on state machine thread");
-  if (mIsRunning) {
-    mRunAgain = PR_TRUE;
-  } else if (!mDispatchedRunEvent) {
-    // We don't have an event dispatched to run the state machine, so we
-    // can just run it from here.
-    CallRunStateMachine();
-  }
-  // Otherwise, an event has already been dispatched to run the state machine
-  // as soon as possible. Nothing else needed to do, the state machine is
-  // going to run anyway.
-}
-
-nsresult nsBuiltinDecoderStateMachine::ScheduleStateMachine() {
-  return ScheduleStateMachine(0);
-}
-
-nsresult nsBuiltinDecoderStateMachine::ScheduleStateMachine(PRInt64 aUsecs) {
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  NS_ABORT_IF_FALSE(gStateMachineThread,
-    "Must have a state machine thread to schedule");
-
-  if (mState == DECODER_STATE_SHUTDOWN) {
-    return NS_ERROR_FAILURE;
-  }
-  aUsecs = PR_MAX(aUsecs, 0);
-
-  TimeStamp timeout = TimeStamp::Now() + UsecsToDuration(aUsecs);
-  if (!mTimeout.IsNull()) {
-    if (timeout >= mTimeout) {
-      // We've already scheduled a timer set to expire at or before this time,
-      // or have an event dispatched to run the state machine.
-      return NS_OK;
-    }
-    if (mTimer) {
-      // We've been asked to schedule a timer to run before an existing timer.
-      // Cancel the existing timer.
-      mTimer->Cancel();
-    }
-  }
-
-  PRUint32 ms = static_cast<PRUint32>((aUsecs / USECS_PER_MS) & 0xFFFFFFFF);
-  if (ms == 0) {
-    if (mIsRunning) {
-      // We're currently running this state machine on the state machine
-      // thread. Signal it to run again once it finishes its current cycle.
-      mRunAgain = PR_TRUE;
-      return NS_OK;
-    } else if (!mDispatchedRunEvent) {
-      // We're not currently running this state machine on the state machine
-      // thread. Dispatch an event to run one cycle of the state machine.
-      mDispatchedRunEvent = PR_TRUE;
-      return gStateMachineThread->Dispatch(this, NS_DISPATCH_NORMAL);
-    }
-    // We're not currently running this state machine on the state machine
-    // thread, but something has already dispatched an event to run it again,
-    // so just exit; it's going to run real soon.
-    return NS_OK;
-  }
-
-  mTimeout = timeout;
-
-  nsresult res;
-  if (!mTimer) {
-    mTimer = do_CreateInstance("@mozilla.org/timer;1", &res);
-    if (NS_FAILED(res)) return res;
-    mTimer->SetTarget(gStateMachineThread);
-  }
-
-  res = mTimer->InitWithFuncCallback(::TimeoutExpired,
-                                     this,
-                                     ms,
-                                     nsITimer::TYPE_ONE_SHOT);
   return res;
 }

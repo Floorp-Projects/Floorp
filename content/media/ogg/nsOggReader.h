@@ -71,11 +71,15 @@ public:
   virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
 
-  virtual PRBool HasAudio() {
+  virtual PRBool HasAudio()
+  {
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mVorbisState != 0 && mVorbisState->mActive;
   }
 
-  virtual PRBool HasVideo() {
+  virtual PRBool HasVideo()
+  {
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mTheoraState != 0 && mTheoraState->mActive;
   }
 
@@ -85,7 +89,9 @@ public:
 
 private:
 
-  PRBool HasSkeleton() {
+  PRBool HasSkeleton()
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mSkeletonState != 0 && mSkeletonState->mActive;
   }
 
