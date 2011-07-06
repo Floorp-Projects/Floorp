@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "ImageLayers.h"
@@ -387,6 +388,12 @@ Layer::GetEffectiveOpacity()
     opacity *= c->GetOpacity();
   }
   return opacity;
+}
+
+void
+ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+{
+  aAttrs = ContainerLayerAttributes(GetFrameMetrics());
 }
 
 PRBool
