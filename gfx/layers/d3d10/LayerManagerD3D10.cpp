@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <algorithm>
+
 #include "LayerManagerD3D10.h"
 #include "LayerManagerD3D10Effect.h"
 #include "gfxWindowsPlatform.h"
@@ -54,6 +56,7 @@
 
 #include "gfxCrashReporterUtils.h"
 
+using namespace std;
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -225,6 +228,11 @@ LayerManagerD3D10::Initialize()
     mEffect = attachments->mEffect;
     mVertexBuffer = attachments->mVertexBuffer;
     mInputLayout = attachments->mInputLayout;
+  }
+
+  if (HasShadowManager()) {
+    reporter.SetSuccessful();
+    return true;
   }
 
   nsRefPtr<IDXGIDevice> dxgiDevice;
@@ -574,9 +582,13 @@ LayerManagerD3D10::UpdateRenderTarget()
 
   nsRefPtr<ID3D10Texture2D> backBuf;
   
-  hr = mSwapChain->GetBuffer(0, __uuidof(ID3D10Texture2D), (void**)backBuf.StartAssignment());
-  if (FAILED(hr)) {
-    return;
+  if (mSwapChain) {
+    hr = mSwapChain->GetBuffer(0, __uuidof(ID3D10Texture2D), (void**)backBuf.StartAssignment());
+    if (FAILED(hr)) {
+      return;
+    }
+  } else {
+    backBuf = mBackBuffer;
   }
   
   mDevice->CreateRenderTargetView(backBuf, NULL, getter_AddRefs(mRTView));
@@ -585,28 +597,57 @@ LayerManagerD3D10::UpdateRenderTarget()
 void
 LayerManagerD3D10::VerifyBufferSize()
 {
-  DXGI_SWAP_CHAIN_DESC swapDesc;
-  mSwapChain->GetDesc(&swapDesc);
-
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  if (swapDesc.BufferDesc.Width == rect.width &&
-      swapDesc.BufferDesc.Height == rect.height) {
-    return;
-  }
+  HRESULT hr;
+  if (mSwapChain) {
+    DXGI_SWAP_CHAIN_DESC swapDesc;
+    mSwapChain->GetDesc(&swapDesc);
 
-  mRTView = nsnull;
-  if (gfxWindowsPlatform::IsOptimus()) {
-    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
-                              DXGI_FORMAT_B8G8R8A8_UNORM,
-                              0);
+    if (swapDesc.BufferDesc.Width == rect.width &&
+        swapDesc.BufferDesc.Height == rect.height) {
+      return;
+    }
+
+    mRTView = nsnull;
+    if (gfxWindowsPlatform::IsOptimus()) {
+      mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+                                DXGI_FORMAT_B8G8R8A8_UNORM,
+                                0);
+    } else {
+      mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+                                DXGI_FORMAT_B8G8R8A8_UNORM,
+                                DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
+    }
   } else {
-    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
-                              DXGI_FORMAT_B8G8R8A8_UNORM,
-                              DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
-  }
+    D3D10_TEXTURE2D_DESC oldDesc;    
+    if (mBackBuffer) {
+        mBackBuffer->GetDesc(&oldDesc);
+    } else {
+        oldDesc.Width = oldDesc.Height = 0;
+    }
+    if (oldDesc.Width == rect.width &&
+        oldDesc.Height == rect.height) {
+      return;
+    }
 
+    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+                               rect.width, rect.height, 1, 1);
+    desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+    desc.MiscFlags = D3D10_RESOURCE_MISC_SHARED
+                     // FIXME/bug 662109: synchronize using KeyedMutex
+                     /*D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX*/;
+    hr = device()->CreateTexture2D(&desc, nsnull, getter_AddRefs(mBackBuffer));
+    if (FAILED(hr)) {
+        ReportFailure(nsDependentCString("Failed to create shared texture"),
+                      hr);
+        NS_RUNTIMEABORT("Failed to create back buffer");
+    }
+
+    // XXX resize texture?
+    mRTView = nsnull;
+  }
 }
 
 void
@@ -666,6 +707,9 @@ LayerManagerD3D10::Render()
 
   if (mTarget) {
     PaintToTarget();
+  } else if (mBackBuffer) {
+    swap(mBackBuffer, mRemoteFrontBuffer);
+    mRTView = nsnull;
   } else {
     mSwapChain->Present(0, 0);
   }
