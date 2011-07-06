@@ -143,13 +143,13 @@ public:
 
   virtual PRBool HasAudio()
   {
-    NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mHasAudio;
   }
 
   virtual PRBool HasVideo()
   {
-    NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mHasVideo;
   }
 
