@@ -148,15 +148,21 @@ public:
         CodePosition to;
     };
 
+    enum Flag {
+        FIXED
+    };
+
 private:
     Vector<Range, 1, IonAllocPolicy> ranges_;
     LAllocation alloc_;
     VirtualRegister *reg_;
+    uint32 flags_;
 
 public:
 
     LiveInterval(VirtualRegister *reg)
-      : reg_(reg)
+      : reg_(reg),
+        flags_(0)
     { }
 
     static LiveInterval *New(VirtualRegister *reg);
@@ -189,6 +195,14 @@ public:
 
     VirtualRegister *reg() {
         return reg_;
+    }
+
+    bool hasFlag(Flag flag) const {
+        return !!(flags_ & (1 << (uint32)flag));
+    }
+
+    void setFlag(Flag flag) {
+        flags_ |= (1 << (uint32)flag);
     }
 
     bool splitFrom(CodePosition pos, LiveInterval *after);

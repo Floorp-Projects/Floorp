@@ -525,6 +525,7 @@ RegisterAllocator::allocateRegisters()
             LDefinition::Policy pol = current->reg()->def()->policy();
             if (pol == LDefinition::PRESET) {
                 IonSpew(IonSpew_LSRA, " Definition has preset policy.");
+                current->setFlag(LiveInterval::FIXED);
                 if (!assign(*def->output()))
                     return false;
                 continue;
@@ -567,6 +568,7 @@ RegisterAllocator::allocateRegisters()
 
             // Handle the fixed constraint if present
             if (fixedOp) {
+                current->setFlag(LiveInterval::FIXED);
                 if (!assign(LGeneralReg(Register::FromCode(fixedOp->use->registerCode()))))
                     return false;
                 continue;
@@ -709,11 +711,14 @@ RegisterAllocator::assign(LAllocation allocation)
 
                 LiveInterval *it = *i;
                 if (it->start() == current->start()) {
-                    // FIXME (668299): This is a band-aid
                     // We assigned a needed fixed register to another
                     // interval, so we break a very important rule
-                    // and "de-assign" the other one.
-                    IonSpew(IonSpew_LSRA, "  Employing gross deallocation hack");
+                    // and "de-assign" the other one. We can do this
+                    // safely (i.e. be guaranteed to terminate) iff
+                    // the register we are reallocating was not itself
+                    // assigned to fulfill a FIXED constraint.
+                    JS_ASSERT(!it->hasFlag(LiveInterval::FIXED));
+
                     it->setAllocation(LUse(it->reg()->reg(), LUse::ANY));
                     active.removeAt(i);
                     unhandled.enqueue(it);
