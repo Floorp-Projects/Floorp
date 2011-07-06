@@ -50,18 +50,10 @@ _CHROME_FILES = \
 		$(NULL)
 
 _TEST_FILES =	\
+		test_arrowpanel.xul \
                 test_contextmenu_nested.xul \
 		test_tree_column_reorder.xul \
-		test_tree_hier.xul \
-		test_tree_hier_cell.xul \
 		tree_shared.js \
-		test_arrowpanel.xul \
-		test_datepicker.xul \
-		test_deck.xul \
-		test_menuchecks.xul \
-		test_menulist_null_value.xul \
-		test_mousecapture.xul \
-		test_mousescroll.xul \
 		test_mousecapture_area.html \
 		popup_shared.js \
                 test_videocontrols.html \

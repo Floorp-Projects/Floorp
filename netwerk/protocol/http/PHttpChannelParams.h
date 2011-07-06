@@ -83,9 +83,9 @@ struct ParamTraits<mozilla::net::RequestHeaderTuple>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &(aResult->mHeader)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mValue))  ||
-        !ReadParam(aMsg, aIter, &(aResult->mMerge)))
+    if (!ReadParam(aMsg, aIter, &aResult->mHeader) ||
+        !ReadParam(aMsg, aIter, &aResult->mValue)  ||
+        !ReadParam(aMsg, aIter, &aResult->mMerge))
       return false;
 
     return true;
@@ -130,8 +130,8 @@ struct ParamTraits<nsHttpHeaderArray::nsEntry>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &(aResult->header)) ||
-        !ReadParam(aMsg, aIter, &(aResult->value)))
+    if (!ReadParam(aMsg, aIter, &aResult->header) ||
+        !ReadParam(aMsg, aIter, &aResult->value))
       return false;
 
     return true;
@@ -147,12 +147,12 @@ struct ParamTraits<nsHttpHeaderArray>
   {
     paramType& p = const_cast<paramType&>(aParam);
 
-    WriteParam(aMsg, p.Headers());
+    WriteParam(aMsg, p.mHeaders);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &(aResult->Headers())))
+    if (!ReadParam(aMsg, aIter, &aResult->mHeaders))
       return false;
 
     return true;
@@ -180,16 +180,16 @@ struct ParamTraits<nsHttpResponseHead>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &(aResult->mHeaders))             ||
-        !ReadParam(aMsg, aIter, &(aResult->mVersion))             ||
-        !ReadParam(aMsg, aIter, &(aResult->mStatus))              ||
-        !ReadParam(aMsg, aIter, &(aResult->mStatusText))          ||
-        !ReadParam(aMsg, aIter, &(aResult->mContentLength))       ||
-        !ReadParam(aMsg, aIter, &(aResult->mContentType))         ||
-        !ReadParam(aMsg, aIter, &(aResult->mContentCharset))      ||
-        !ReadParam(aMsg, aIter, &(aResult->mCacheControlNoStore)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mCacheControlNoCache)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mPragmaNoCache)))
+    if (!ReadParam(aMsg, aIter, &aResult->mHeaders)             ||
+        !ReadParam(aMsg, aIter, &aResult->mVersion)             ||
+        !ReadParam(aMsg, aIter, &aResult->mStatus)              ||
+        !ReadParam(aMsg, aIter, &aResult->mStatusText)          ||
+        !ReadParam(aMsg, aIter, &aResult->mContentLength)       ||
+        !ReadParam(aMsg, aIter, &aResult->mContentType)         ||
+        !ReadParam(aMsg, aIter, &aResult->mContentCharset)      ||
+        !ReadParam(aMsg, aIter, &aResult->mCacheControlNoStore) ||
+        !ReadParam(aMsg, aIter, &aResult->mCacheControlNoCache) ||
+        !ReadParam(aMsg, aIter, &aResult->mPragmaNoCache))
       return false;
 
     return true;

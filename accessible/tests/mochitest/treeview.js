@@ -18,7 +18,11 @@ function nsTreeTreeView()
   ];
 }
 
-function nsTreeView() { }
+function nsTreeView()
+{
+  this.mTree = null;
+  this.mData = [];
+}
 
 nsTreeView.prototype =
 {
@@ -205,8 +209,6 @@ nsTreeView.prototype =
     return rowIdx;
   },
 
-  mTree: null,
-  mData: [],
   mCyclerStates: [
     createAtom("cyclerState1"),
     createAtom("cyclerState2"),

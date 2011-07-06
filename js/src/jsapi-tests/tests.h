@@ -195,6 +195,18 @@ class JSAPITest
         return JSAPITestString(buf);
     }
 
+    JSAPITestString toSource(long long v) {
+        char buf[40];
+        sprintf(buf, "%lld", v);
+        return JSAPITestString(buf);
+    }
+
+    JSAPITestString toSource(unsigned long long v) {
+        char buf[40];
+        sprintf(buf, "%llu", v);
+        return JSAPITestString(buf);
+    }
+
     JSAPITestString toSource(unsigned int v) {
         return toSource((unsigned long)v);
     }

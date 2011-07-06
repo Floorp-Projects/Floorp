@@ -39,6 +39,12 @@ namespace JSC { namespace Yarr {
 
 #include "RegExpJitTables.h"
 
+#if WTF_CPU_SPARC
+#define BASE_FRAME_SIZE 24
+#else
+#define BASE_FRAME_SIZE 0
+#endif
+
 class CharacterClassConstructor {
 public:
     CharacterClassConstructor(bool isCaseInsensitive = false)
@@ -678,7 +684,7 @@ public:
                     term.inputPosition = currentInputPosition;
                 } else {
                     term.inputPosition = currentInputPosition;
-                    setupDisjunctionOffsets(term.parentheses.disjunction, 0, currentInputPosition);
+                    setupDisjunctionOffsets(term.parentheses.disjunction, BASE_FRAME_SIZE, currentInputPosition);
                     currentCallFrameSize += YarrStackSpaceForBackTrackInfoParentheses;
                 }
                 // Fixed count of 1 could be accepted, if they have a fixed size *AND* if all alternatives are of the same length.
@@ -725,7 +731,7 @@ public:
 
     void setupOffsets()
     {
-        setupDisjunctionOffsets(m_pattern.m_body, 0, 0);
+        setupDisjunctionOffsets(m_pattern.m_body, BASE_FRAME_SIZE, 0);
     }
 
     // This optimization identifies sets of parentheses that we will never need to backtrack.

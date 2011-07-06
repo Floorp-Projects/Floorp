@@ -35,7 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "ShadowBufferD3D9.h"
+#include "gfxSharedImageSurface.h"
+
 #include "ImageLayerD3D9.h"
+#include "ThebesLayerD3D9.h"
+#include "gfxPlatform.h"
 #include "gfxImageSurface.h"
 #include "yuv_convert.h"
 #include "nsIServiceManager.h" 
@@ -287,6 +294,15 @@ ImageLayerD3D9::RenderLayer()
                                                           yuvImage->mSize.height),
                                        1);
 
+    device()->SetVertexShaderConstantF(CBvTextureCoords,
+      ShaderConstantRect(
+        (float)yuvImage->mData.mPicX / yuvImage->mData.mYSize.width,
+        (float)yuvImage->mData.mPicY / yuvImage->mData.mYSize.height,
+        (float)yuvImage->mData.mPicSize.width / yuvImage->mData.mYSize.width,
+        (float)yuvImage->mData.mPicSize.height / yuvImage->mData.mYSize.height
+      ),
+      1);
+
     mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
 
     /*
@@ -333,6 +349,9 @@ ImageLayerD3D9::RenderLayer()
     device()->SetTexture(2, yuvImage->mCrTexture);
 
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+
+    device()->SetVertexShaderConstantF(CBvTextureCoords,
+      ShaderConstantRect(0, 0, 1.0f, 1.0f), 1);
 
   } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
     CairoImageD3D9 *cairoImage =
@@ -386,75 +405,8 @@ PlanarYCbCrImageD3D9::PlanarYCbCrImageD3D9()
 void
 PlanarYCbCrImageD3D9::SetData(const PlanarYCbCrImage::Data &aData)
 {
-  // XXX - For D3D9Ex we really should just copy to systemmem surfaces here.
-  // For now, we copy the data
-  int width_shift = 0;
-  int height_shift = 0;
-  if (aData.mYSize.width == aData.mCbCrSize.width &&
-      aData.mYSize.height == aData.mCbCrSize.height) {
-     // YV24 format
-     width_shift = 0;
-     height_shift = 0;
-     mType = gfx::YV24;
-  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-             aData.mYSize.height == aData.mCbCrSize.height) {
-    // YV16 format
-    width_shift = 1;
-    height_shift = 0;
-    mType = gfx::YV16;
-  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-             aData.mYSize.height / 2 == aData.mCbCrSize.height ) {
-      // YV12 format
-    width_shift = 1;
-    height_shift = 1;
-    mType = gfx::YV12;
-  } else {
-    NS_ERROR("YCbCr format not supported");
-  }
-
-  mData = aData;
-  mData.mCbCrStride = mData.mCbCrSize.width = aData.mPicSize.width >> width_shift;
-  // Round up the values for width and height to make sure we sample enough data
-  // for the last pixel - See bug 590735
-  if (width_shift && (aData.mPicSize.width & 1)) {
-    mData.mCbCrStride++;
-    mData.mCbCrSize.width++;
-  }
-  mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
-  if (height_shift && (aData.mPicSize.height & 1)) {
-      mData.mCbCrSize.height++;
-  }
-  mData.mYSize = aData.mPicSize;
-  mData.mYStride = mData.mYSize.width;
-
-  mBuffer = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height * 2 +
-                        mData.mYStride * mData.mYSize.height];
-  mData.mYChannel = mBuffer;
-  mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
-  mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
-
-  int cbcr_x = aData.mPicX >> width_shift;
-  int cbcr_y = aData.mPicY >> height_shift;
-
-  for (int i = 0; i < mData.mYSize.height; i++) {
-    memcpy(mData.mYChannel + i * mData.mYStride,
-           aData.mYChannel + ((aData.mPicY + i) * aData.mYStride) + aData.mPicX,
-           mData.mYStride);
-  }
-  for (int i = 0; i < mData.mCbCrSize.height; i++) {
-    memcpy(mData.mCbChannel + i * mData.mCbCrStride,
-           aData.mCbChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-           mData.mCbCrStride);
-  }
-  for (int i = 0; i < mData.mCbCrSize.height; i++) {
-    memcpy(mData.mCrChannel + i * mData.mCbCrStride,
-           aData.mCrChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-           mData.mCbCrStride);
-  }
-
-  // Fix picture rect to be correct
-  mData.mPicX = mData.mPicY = 0;
-  mSize = aData.mPicSize;
+  PRUint32 dummy;
+  mBuffer = CopyData(mData, mSize, dummy, aData);
 
   mHasData = PR_TRUE;
 }
@@ -587,20 +539,26 @@ PlanarYCbCrImageD3D9::GetAsSurface()
 {
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(mSize, gfxASurface::ImageFormatRGB24);
+  
+  gfx::YUVType type = 
+    gfx::TypeFromSize(mData.mYSize.width,
+                      mData.mYSize.height,
+                      mData.mCbCrSize.width,
+                      mData.mCbCrSize.height);
 
   // Convert from YCbCr to RGB now
   gfx::ConvertYCbCrToRGB32(mData.mYChannel,
                            mData.mCbChannel,
                            mData.mCrChannel,
                            imageSurface->Data(),
-                           0,
-                           0,
-                           mSize.width,
-                           mSize.height,
+                           mData.mPicX,
+                           mData.mPicY,
+                           mData.mPicSize.width,
+                           mData.mPicSize.height,
                            mData.mYStride,
                            mData.mCbCrStride,
                            imageSurface->Stride(),
-                           mType);
+                           type);
 
   return imageSurface.forget().get();
 }
@@ -642,6 +600,148 @@ CairoImageD3D9::GetAsSurface()
   nsRefPtr<gfxASurface> surface = mCachedSurface;
   return surface.forget();
 }
+
+ShadowImageLayerD3D9::ShadowImageLayerD3D9(LayerManagerD3D9* aManager)
+  : ShadowImageLayer(aManager, nsnull)
+  , LayerD3D9(aManager)
+{
+  mImplData = static_cast<LayerD3D9*>(this);
+}  
+
+ShadowImageLayerD3D9::~ShadowImageLayerD3D9()
+{}
+
+PRBool
+ShadowImageLayerD3D9::Init(const SharedImage& aFront,
+                          const nsIntSize& aSize)
+{
+   if (aFront.type() == SharedImage::TSurfaceDescriptor) {
+    SurfaceDescriptor desc = aFront.get_SurfaceDescriptor();
+    nsRefPtr<gfxASurface> surf = 
+      ShadowLayerForwarder::OpenDescriptor(desc);
+    
+    if (!mBuffer) {
+      mBuffer = new ShadowBufferD3D9(this);
+    }
+    return !!mBuffer;
+  } else {
+    if (!mYCbCrImage) {
+      mYCbCrImage = new PlanarYCbCrImageD3D9();
+    }
+    return !!mYCbCrImage;
+  }
+}
+
+void
+ShadowImageLayerD3D9::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
+{
+  
+  if (aNewFront.type() == SharedImage::TSurfaceDescriptor) {
+    nsRefPtr<gfxASurface> surf = 
+      ShadowLayerForwarder::OpenDescriptor(aNewFront.get_SurfaceDescriptor());
+   
+    if (mBuffer) {
+      mBuffer->Upload(surf, GetVisibleRegion().GetBounds());
+    }
+  } else {
+
+    const YUVImage& yuv = aNewFront.get_YUVImage();
+
+    nsRefPtr<gfxSharedImageSurface> surfY =
+      gfxSharedImageSurface::Open(yuv.Ydata());
+    nsRefPtr<gfxSharedImageSurface> surfU =
+      gfxSharedImageSurface::Open(yuv.Udata());
+    nsRefPtr<gfxSharedImageSurface> surfV =
+      gfxSharedImageSurface::Open(yuv.Vdata());
+
+    PlanarYCbCrImage::Data data;
+    data.mYChannel = surfY->Data();
+    data.mYStride = surfY->Stride();
+    data.mYSize = surfY->GetSize();
+    data.mCbChannel = surfU->Data();
+    data.mCrChannel = surfV->Data();
+    data.mCbCrStride = surfU->Stride();
+    data.mCbCrSize = surfU->GetSize();
+    data.mPicSize = surfY->GetSize();
+    data.mPicX = 0;
+    data.mPicY = 0;
+
+    mYCbCrImage->SetData(data);
+
+  }
+  
+  *aNewBack = aNewFront;
+}
+
+void
+ShadowImageLayerD3D9::DestroyFrontBuffer()
+{
+  Destroy();
+}
+
+void
+ShadowImageLayerD3D9::Disconnect()
+{
+  Destroy();
+}
+
+void
+ShadowImageLayerD3D9::Destroy()
+{
+  mBuffer = nsnull;
+  mYCbCrImage = nsnull;
+}
+
+Layer*
+ShadowImageLayerD3D9::GetLayer()
+{
+  return this;
+}
+
+void
+ShadowImageLayerD3D9::RenderLayer()
+{
+  if (mBuffer) {
+    mBuffer->RenderTo(mD3DManager, GetEffectiveVisibleRegion());
+  } else if (mYCbCrImage) {
+    if (!mYCbCrImage->HasData()) {
+      return;
+    }
+    
+    mYCbCrImage->AllocateTextures(device());
+
+    SetShaderTransformAndOpacity();
+
+    device()->SetVertexShaderConstantF(CBvLayerQuad,
+                                       ShaderConstantRect(0,
+                                                          0,
+                                                          mYCbCrImage->mSize.width,
+                                                          mYCbCrImage->mSize.height),
+                                       1);
+
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
+
+    /*
+     * Send 3d control data and metadata
+     */
+    if (mD3DManager->GetNv3DVUtils()) {
+      // TODO Add 3D support
+    }
+
+    // Linear scaling is default here, adhering to mFilter is difficult since
+    // presumably even with point filtering we'll still want chroma upsampling
+    // to be linear. In the current approach we can't.
+    device()->SetTexture(0, mYCbCrImage->mYTexture);
+    device()->SetTexture(1, mYCbCrImage->mCbTexture);
+    device()->SetTexture(2, mYCbCrImage->mCrTexture);
+
+    device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  } else {
+    NS_ERROR("Unexpected image format.");
+  }
+
+}
+
 
 } /* layers */
 } /* mozilla */

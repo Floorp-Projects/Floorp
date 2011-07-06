@@ -431,6 +431,19 @@ PlacesViewBase.prototype = {
     }
   },
 
+  toggleCutNode: function PVB_toggleCutNode(aNode, aValue) {
+    let elt = aNode._DOMElement;
+    if (elt) {
+      // We may get the popup for menus, but we need the menu itself.
+      if (elt.localName == "menupopup")
+        elt = elt.parentNode;
+      if (aValue)
+        elt.setAttribute("cutting", "true");
+      else
+        elt.removeAttribute("cutting");
+    }
+  },
+
   nodeURIChanged: function PVB_nodeURIChanged(aPlacesNode, aURIString) {
     let elt = aPlacesNode._DOMElement;
     if (!elt)
@@ -658,6 +671,7 @@ PlacesViewBase.prototype = {
     }
 
     if (this._controller) {
+      this._controller.terminate();
       this._viewElt.controllers.removeController(this._controller);
       this._controller = null;
     }

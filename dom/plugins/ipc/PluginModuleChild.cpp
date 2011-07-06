@@ -254,6 +254,15 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 #  error Please copy the initialization code from nsNPAPIPlugin.cpp
 
 #endif
+
+#ifdef XP_MACOSX
+    nsPluginInfo info = nsPluginInfo();
+    rv = pluginFile.GetPluginInfo(info, &mLibrary);
+    if (rv == NS_OK) {
+        mozilla::plugins::PluginUtilsOSX::SetProcessName(info.fName);
+    }
+#endif
+
     return true;
 }
 

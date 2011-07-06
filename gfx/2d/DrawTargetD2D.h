@@ -79,7 +79,8 @@ public:
                                      const Point &aDest,
                                      const Color &aColor,
                                      const Point &aOffset,
-                                     Float aSigma);
+                                     Float aSigma,
+                                     CompositionOp aOperator);
   virtual void ClearRect(const Rect &aRect);
 
   virtual void CopySurface(SourceSurface *aSurface,
@@ -159,6 +160,7 @@ private:
   void PopAllClips();
 
   TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture);
+  TemporaryRef<ID2D1Geometry> GetClippedGeometry();
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
   TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);

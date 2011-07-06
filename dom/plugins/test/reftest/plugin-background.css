@@ -8,7 +8,9 @@ div {
 #good {
   left:0px; top:0px;
   width:220px; height:220px;
-  background-color: rgba(0,255,0, 0.6);
+  /* Core Animation alpha blending rounding differs
+     from the Core Graphics blending, adjust with care */
+  background-color: rgba(0,255,0, 0.51);
   z-index: 0;
 }
 
@@ -56,3 +58,4 @@ embed#plugin {
   left:1px; top:1px;
   z-index: 1;
 }
+

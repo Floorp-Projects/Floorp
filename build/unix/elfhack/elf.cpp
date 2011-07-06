@@ -830,6 +830,19 @@ ElfSymtab_Section::serialize(std::ofstream &file, char ei_class, char ei_data)
     }
 }
 
+Elf_SymValue *
+ElfSymtab_Section::lookup(const char *name, unsigned int type_filter)
+{
+    for (std::vector<Elf_SymValue>::iterator sym = syms.begin();
+         sym != syms.end(); sym++) {
+        if ((type_filter & (1 << ELF32_ST_TYPE(sym->info))) &&
+            (strcmp(sym->name, name) == 0)) {
+            return &*sym;
+        }
+    }
+    return NULL;
+}
+
 const char *
 ElfStrtab_Section::getStr(unsigned int index)
 {
