@@ -1511,6 +1511,16 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             stack[stackDepth - 1] = code->poppedValues[2];
             break;
 
+          case JSOP_SWAP:
+            /* Swap is like pick 1. */
+          case JSOP_PICK: {
+            unsigned pickedDepth = (op == JSOP_SWAP ? 1 : pc[1]);
+            stack[stackDepth - 1] = code->poppedValues[pickedDepth];
+            for (unsigned i = 0; i < pickedDepth; i++)
+                stack[stackDepth - 2 - i] = code->poppedValues[i];
+            break;
+          }
+
           /*
            * Switch and try blocks preserve the stack between the original op
            * and all case statements or exception/finally handlers. Even though
