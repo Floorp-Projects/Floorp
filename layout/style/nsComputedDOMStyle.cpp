@@ -49,7 +49,6 @@
 
 #include "nsDOMError.h"
 #include "nsDOMString.h"
-#include "nsPrintfCString.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -3979,17 +3978,21 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
   nsROCSSPrimitiveValue* timingFunction = GetROCSSPrimitiveValue();
   aValueList->AppendCSSValue(timingFunction);
 
+  nsAutoString tmp;
+
   if (aTimingFunction.mType == nsTimingFunction::Function) {
     // set the value from the cubic-bezier control points
     // (We could try to regenerate the keywords if we want.)
-    timingFunction->SetString(
-      nsPrintfCString(64, "cubic-bezier(%f, %f, %f, %f)",
-                          aTimingFunction.mFunc.mX1,
-                          aTimingFunction.mFunc.mY1,
-                          aTimingFunction.mFunc.mX2,
-                          aTimingFunction.mFunc.mY2));
+    tmp.AppendLiteral("cubic-bezier(");
+    tmp.AppendFloat(aTimingFunction.mFunc.mX1);
+    tmp.AppendLiteral(", ");
+    tmp.AppendFloat(aTimingFunction.mFunc.mY1);
+    tmp.AppendLiteral(", ");
+    tmp.AppendFloat(aTimingFunction.mFunc.mX2);
+    tmp.AppendLiteral(", ");
+    tmp.AppendFloat(aTimingFunction.mFunc.mY2);
+    tmp.AppendLiteral(")");
   } else {
-    nsString tmp;
     tmp.AppendLiteral("steps(");
     tmp.AppendInt(aTimingFunction.mSteps);
     if (aTimingFunction.mType == nsTimingFunction::StepStart) {
@@ -3997,8 +4000,8 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
     } else {
       tmp.AppendLiteral(", end)");
     }
-    timingFunction->SetString(tmp);
   }
+  timingFunction->SetString(tmp);
 }
 
 nsIDOMCSSValue*
