@@ -5454,6 +5454,9 @@ SweepTypeObjectList(JSContext *cx, TypeObject *&objects)
             if (count >= 2)
                 cx->free_(object->propertySet);
 
+            if (object->newScript)
+                cx->free_(object->newScript);
+
             cx->delete_(object);
         }
     }
