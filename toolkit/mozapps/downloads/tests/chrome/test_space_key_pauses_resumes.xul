@@ -64,6 +64,7 @@ function bug413985obs(aWin)
   this.mWin = aWin;
   this.wasPaused = false;
   this.wasResumed = false;
+  this.timer = null; // timer declared here to prevent premature GC 
 }
 bug413985obs.prototype = {
   observe: function(aSubject, aTopic, aData)
@@ -88,8 +89,8 @@ bug413985obs.prototype = {
       this.wasResumed = true;
       // We have to do this on a timer so other JS stuff that handles the UI
       // can actually catch up to us...
-      var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.init(this, 0, Ci.nsITimer.TYPE_ONE_SHOT);
+      this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this.timer.init(this, 0, Ci.nsITimer.TYPE_ONE_SHOT);
     }
 
     if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
