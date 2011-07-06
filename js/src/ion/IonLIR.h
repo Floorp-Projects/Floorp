@@ -206,6 +206,14 @@ class LAllocation : public TempObject
         return reinterpret_cast<const Value *>(bits_ & ~TAG_MASK);
     }
 
+    bool operator ==(const LAllocation &other) const {
+        return bits_ == other.bits_;
+    }
+
+    bool operator !=(const LAllocation &other) const {
+        return bits_ != other.bits_;
+    }
+
     static void PrintAllocation(FILE *fp, const LAllocation *a);
 };
 
@@ -607,6 +615,9 @@ class LBlock : public TempObject
     }
     LPhi *getPhi(size_t index) const {
         return phis_[index];
+    }
+    void removePhi(size_t index) {
+        phis_.erase(&phis_[index]);
     }
     MBasicBlock *mir() const {
         return block_;

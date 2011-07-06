@@ -56,16 +56,24 @@ LIRGraph::LIRGraph()
 uint32
 LBlock::firstId()
 {
-    if (phis_.length())
+    if (phis_.length()) {
         return phis_[0]->id();
-    return instructions_.begin()->id();
+    } else {
+        for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); i++) {
+            if (i->id())
+                return i->id();
+        }
+    }
+    return 0;
 }
 uint32
 LBlock::lastId()
 {
-    if (instructions_.rbegin()->numDefs())
-        return instructions_.rbegin()->getDef(instructions_.rbegin()->numDefs() - 1)->virtualRegister();
-    return instructions_.rbegin()->id();
+    LInstruction *last = *instructions_.rbegin();
+    JS_ASSERT(last->id());
+    if (last->numDefs())
+        return last->getDef(last->numDefs() - 1)->virtualRegister();
+    return last->id();
 }
 
 LSnapshot::LSnapshot(MSnapshot *mir)
