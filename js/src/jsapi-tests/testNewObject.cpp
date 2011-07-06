@@ -57,7 +57,7 @@ BEGIN_TEST(testNewObject_1)
     CHECK(JS_IsArrayObject(cx, obj));
     jsuint len;
     CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK(len == 0);
+    CHECK_EQUAL(len, 0);
 
     // With one argument.
     argv[0] = INT_TO_JSVAL(4);
@@ -66,7 +66,7 @@ BEGIN_TEST(testNewObject_1)
     rt = OBJECT_TO_JSVAL(obj);
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK(len == 4);
+    CHECK_EQUAL(len, 4);
 
     // With N arguments.
     for (size_t i = 0; i < N; i++)
@@ -76,7 +76,7 @@ BEGIN_TEST(testNewObject_1)
     rt = OBJECT_TO_JSVAL(obj);
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK(len == N);
+    CHECK_EQUAL(len, N);
     CHECK(JS_GetElement(cx, obj, N - 1, &v));
     CHECK_SAME(v, INT_TO_JSVAL(N - 1));
 

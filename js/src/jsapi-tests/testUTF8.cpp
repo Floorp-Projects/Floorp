@@ -11,10 +11,10 @@ BEGIN_TEST(testUTF8_bug589917)
     size_t utf8_len = sizeof(output_buffer);
 
     CHECK(JS_EncodeCharacters(cx, surrogate_pair, 2, output_buffer, &utf8_len));
-    CHECK(utf8_len == 4);
+    CHECK_EQUAL(utf8_len, 4);
 
     CHECK(JS_EncodeCharacters(cx, surrogate_pair, 2, NULL, &utf8_len));
-    CHECK(utf8_len == 4);
+    CHECK_EQUAL(utf8_len, 4);
 
     return true;
 }

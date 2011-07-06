@@ -42,9 +42,9 @@ BEGIN_TEST(testResolveRecursion)
     /* Start the essence of the test via invoking the first resolve hook. */
     jsval v;
     EVAL("obj1.x", &v);
-    CHECK(v == JSVAL_FALSE);
-    CHECK(resolveEntryCount == 4);
-    CHECK(resolveExitCount == 4);
+    CHECK_SAME(v, JSVAL_FALSE);
+    CHECK_EQUAL(resolveEntryCount, 4);
+    CHECK_EQUAL(resolveExitCount, 4);
     return true;
 }
 
@@ -69,9 +69,9 @@ struct AutoIncrCounters {
 bool
 doResolve(JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
-    CHECK(resolveExitCount == 0);
+    CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);
-    CHECK(obj == obj1 || obj == obj2);
+    CHECK_EQUAL(obj, obj1 || obj == obj2);
     
     CHECK(JSID_IS_STRING(id));
     
@@ -81,31 +81,31 @@ doResolve(JSObject *obj, jsid id, uintN flags, JSObject **objp)
     if (JS_FlatStringEqualsAscii(str, "x")) {
         if (obj == obj1) {
             /* First resolve hook invocation. */
-            CHECK(resolveEntryCount == 1);
+            CHECK_EQUAL(resolveEntryCount, 1);
             EVAL("obj2.y = true", &v);
-            CHECK(v == JSVAL_TRUE);
+            CHECK_SAME(v, JSVAL_TRUE);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_FALSE, NULL, NULL, 0));
             *objp = obj;
             return true;
         }
         if (obj == obj2) {
-            CHECK(resolveEntryCount == 4);
+            CHECK_EQUAL(resolveEntryCount, 4);
             *objp = NULL;
             return true;
         }
     } else if (JS_FlatStringEqualsAscii(str, "y")) {
         if (obj == obj2) {
-            CHECK(resolveEntryCount == 2);
+            CHECK_EQUAL(resolveEntryCount, 2);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_NULL, NULL, NULL, 0));
             EVAL("obj1.x", &v);
             CHECK(JSVAL_IS_VOID(v));
             EVAL("obj1.y", &v);
-            CHECK(v == JSVAL_ZERO);
+            CHECK_SAME(v, JSVAL_ZERO);
             *objp = obj;
             return true;
         }
         if (obj == obj1) {
-            CHECK(resolveEntryCount == 3);
+            CHECK_EQUAL(resolveEntryCount, 3);
             EVAL("obj1.x", &v);
             CHECK(JSVAL_IS_VOID(v));
             EVAL("obj1.y", &v);
@@ -115,7 +115,7 @@ doResolve(JSObject *obj, jsid id, uintN flags, JSObject **objp)
             EVAL("obj2.x", &v);
             CHECK(JSVAL_IS_VOID(v));
             EVAL("obj1.y = 0", &v);
-            CHECK(v == JSVAL_ZERO);
+            CHECK_SAME(v, JSVAL_ZERO);
             *objp = obj;
             return true;
         }
