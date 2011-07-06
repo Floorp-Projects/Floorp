@@ -53,9 +53,8 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIPresShell.h"
 #include "nsFrameList.h"
@@ -85,11 +84,12 @@ public:
   PRInt32 index;
 };
 
-class nsSplitterFrameInner : public nsIDOMMouseListener, public nsIDOMMouseMotionListener {
-
+class nsSplitterFrameInner : public nsIDOMEventListener
+{
 public:
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
 
   nsSplitterFrameInner(nsSplitterFrame* aSplitter)
   {
@@ -100,18 +100,9 @@ public:
 
   void Disconnect() { mOuter = nsnull; }
 
-  // mouse listener
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return MouseMove(aMouseEvent); }
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
-
-  // mouse motion listener
-  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+  nsresult MouseMove(nsIDOMEvent* aMouseEvent);
 
   void MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent);
   void MouseUp(nsPresContext* aPresContext, nsGUIEvent* aEvent);
@@ -167,14 +158,7 @@ public:
 
 };
 
-
-NS_IMPL_ADDREF(nsSplitterFrameInner)
-NS_IMPL_RELEASE(nsSplitterFrameInner)
-NS_INTERFACE_MAP_BEGIN(nsSplitterFrameInner)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener,nsIDOMMouseListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(nsSplitterFrameInner, nsIDOMEventListener)
 
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
@@ -599,11 +583,13 @@ void
 nsSplitterFrameInner::AddListener(nsPresContext* aPresContext)
 {
   mOuter->GetContent()->
-    AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                          NS_GET_IID(nsIDOMMouseListener));
+    AddEventListener(NS_LITERAL_STRING("mouseup"), this, PR_FALSE, PR_FALSE);
   mOuter->GetContent()->
-    AddEventListenerByIID(static_cast<nsIDOMMouseMotionListener*>(this),
-                          NS_GET_IID(nsIDOMMouseMotionListener));
+    AddEventListener(NS_LITERAL_STRING("mousedown"), this, PR_FALSE, PR_FALSE);
+  mOuter->GetContent()->
+    AddEventListener(NS_LITERAL_STRING("mousemove"), this, PR_FALSE, PR_FALSE);
+  mOuter->GetContent()->
+    AddEventListener(NS_LITERAL_STRING("mouseout"), this, PR_FALSE, PR_FALSE);
 }
 
 void
@@ -611,11 +597,30 @@ nsSplitterFrameInner::RemoveListener()
 {
   ENSURE_TRUE(mOuter);
   mOuter->GetContent()->
-    RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                             NS_GET_IID(nsIDOMMouseListener));
+    RemoveEventListener(NS_LITERAL_STRING("mouseup"), this, PR_FALSE);
   mOuter->GetContent()->
-    RemoveEventListenerByIID(static_cast<nsIDOMMouseMotionListener*>(this),
-                             NS_GET_IID(nsIDOMMouseMotionListener));
+    RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, PR_FALSE);
+  mOuter->GetContent()->
+    RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, PR_FALSE);
+  mOuter->GetContent()->
+    RemoveEventListener(NS_LITERAL_STRING("mouseout"), this, PR_FALSE);
+}
+
+nsresult
+nsSplitterFrameInner::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  if (eventType.EqualsLiteral("mouseup"))
+    return MouseUp(aEvent);
+  if (eventType.EqualsLiteral("mousedown"))
+    return MouseDown(aEvent);
+  if (eventType.EqualsLiteral("mousemove") ||
+      eventType.EqualsLiteral("mouseout"))
+    return MouseMove(aEvent);
+
+  NS_ABORT();
+  return NS_OK;
 }
 
 nsresult
@@ -634,6 +639,8 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 {  
   NS_ENSURE_TRUE(mOuter, NS_OK);
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
+  if (!mouseEvent)
+    return NS_OK;
 
   PRUint16 button = 0;
   mouseEvent->GetButton(&button);
@@ -814,8 +821,9 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
   if (mDragging)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMMouseListener> kungfuDeathGrip(this);
-  mOuter->mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::state, NS_LITERAL_STRING("dragging"), PR_TRUE);
+  nsCOMPtr<nsIDOMEventListener> kungfuDeathGrip(this);
+  mOuter->mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::state,
+                            NS_LITERAL_STRING("dragging"), PR_TRUE);
 
   RemoveListener();
   mDragging = PR_TRUE;

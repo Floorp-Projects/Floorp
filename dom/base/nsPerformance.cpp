@@ -38,9 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPerformance.h"
+#include "TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsIDocShell.h"
+#include "nsITimedChannel.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMNavigationTiming.h"
 
@@ -56,10 +58,12 @@ NS_INTERFACE_MAP_BEGIN(nsPerformanceTiming)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PerformanceTiming)
 NS_INTERFACE_MAP_END
 
-nsPerformanceTiming::nsPerformanceTiming(nsDOMNavigationTiming* aData)
+nsPerformanceTiming::nsPerformanceTiming(nsDOMNavigationTiming* aDOMTiming, 
+                                         nsITimedChannel* aChannel)
 {
-  NS_ASSERTION(aData, "Timing data should be provided");
-  mData = aData;
+  NS_ASSERTION(aDOMTiming, "DOM timing data should be provided");
+  mDOMTiming = aDOMTiming;
+  mChannel = aChannel;  
 }
 
 nsPerformanceTiming::~nsPerformanceTiming()
@@ -69,127 +73,166 @@ nsPerformanceTiming::~nsPerformanceTiming()
 NS_IMETHODIMP
 nsPerformanceTiming::GetNavigationStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetNavigationStart(aTime);
+  return mDOMTiming->GetNavigationStart(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetUnloadEventStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetUnloadEventStart(aTime);
+  return mDOMTiming->GetUnloadEventStart(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetUnloadEventEnd(DOMTimeMilliSec* aTime)
 {
-  return mData->GetUnloadEventEnd(aTime);
+  return mDOMTiming->GetUnloadEventEnd(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetRedirectStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetRedirectStart(aTime);
+  return mDOMTiming->GetRedirectStart(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetRedirectEnd(DOMTimeMilliSec* aTime)
 {
-  return mData->GetRedirectEnd(aTime);
+  return mDOMTiming->GetRedirectEnd(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetFetchStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetFetchStart(aTime);
+  return mDOMTiming->GetFetchStart(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetDomainLookupStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetDomainLookupStart(aTime);
+  if (!mChannel) {
+    return GetFetchStart(aTime);
+  }
+  mozilla::TimeStamp stamp;
+  mChannel->GetDomainLookupStart(&stamp);
+  return mDOMTiming->TimeStampToDOM(stamp, aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetDomainLookupEnd(DOMTimeMilliSec* aTime)
 {
-  return mData->GetDomainLookupEnd(aTime);
+  if (!mChannel) {
+    return GetFetchStart(aTime);
+  }
+  mozilla::TimeStamp stamp;
+  mChannel->GetDomainLookupEnd(&stamp);
+  return mDOMTiming->TimeStampToDOM(stamp, aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetConnectStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetConnectStart(aTime);
+  if (!mChannel) {
+    return GetFetchStart(aTime);
+  }
+  mozilla::TimeStamp stamp;
+  mChannel->GetConnectStart(&stamp);
+  return mDOMTiming->TimeStampToDOM(stamp, aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetConnectEnd(DOMTimeMilliSec* aTime)
 {
-  return mData->GetConnectEnd(aTime);
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetHandshakeStart(DOMTimeMilliSec* aTime)
-{
-  return mData->GetHandshakeStart(aTime);
+  if (!mChannel) {
+    return GetFetchStart(aTime);
+  }
+  mozilla::TimeStamp stamp;
+  mChannel->GetConnectEnd(&stamp);
+  return mDOMTiming->TimeStampToDOM(stamp, aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetRequestStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetRequestStart(aTime);
+  if (!mChannel) {
+    return GetFetchStart(aTime);
+  }
+  mozilla::TimeStamp stamp;
+  mChannel->GetRequestStart(&stamp);
+  return mDOMTiming->TimeStampToDOM(stamp, aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetResponseStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetResponseStart(aTime);
+  if (!mChannel) {
+    return GetFetchStart(aTime);
+  }
+  mozilla::TimeStamp stamp;
+  mChannel->GetResponseStart(&stamp);
+  mozilla::TimeStamp cacheStamp;
+  mChannel->GetCacheReadStart(&cacheStamp);
+  if (stamp.IsNull() || (!cacheStamp.IsNull() && cacheStamp < stamp)) {
+    stamp = cacheStamp;
+  }
+  return mDOMTiming->TimeStampToDOM(stamp, aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetResponseEnd(DOMTimeMilliSec* aTime)
 {
-  return mData->GetResponseEnd(aTime);
+  if (!mChannel) {
+    return GetFetchStart(aTime);
+  }
+  mozilla::TimeStamp stamp;
+  mChannel->GetResponseEnd(&stamp);
+  mozilla::TimeStamp cacheStamp;
+  mChannel->GetCacheReadEnd(&cacheStamp);
+  if (stamp.IsNull() || (!cacheStamp.IsNull() && cacheStamp < stamp)) {
+    stamp = cacheStamp;
+  }
+  return mDOMTiming->TimeStampToDOM(stamp, aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetDomLoading(DOMTimeMilliSec* aTime)
 {
-  return mData->GetDomLoading(aTime);
+  return mDOMTiming->GetDomLoading(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetDomInteractive(DOMTimeMilliSec* aTime)
 {
-  return mData->GetDomInteractive(aTime);
+  return mDOMTiming->GetDomInteractive(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetDomContentLoadedEventStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetDomContentLoadedEventStart(aTime);
+  return mDOMTiming->GetDomContentLoadedEventStart(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetDomContentLoadedEventEnd(DOMTimeMilliSec* aTime)
 {
-  return mData->GetDomContentLoadedEventEnd(aTime);
+  return mDOMTiming->GetDomContentLoadedEventEnd(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetDomComplete(DOMTimeMilliSec* aTime)
 {
-  return mData->GetDomComplete(aTime);
+  return mDOMTiming->GetDomComplete(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetLoadEventStart(DOMTimeMilliSec* aTime)
 {
-  return mData->GetLoadEventStart(aTime);
+  return mDOMTiming->GetLoadEventStart(aTime);
 }
 
 NS_IMETHODIMP
 nsPerformanceTiming::GetLoadEventEnd(DOMTimeMilliSec* aTime)
 {
-  return mData->GetLoadEventEnd(aTime);
+  return mDOMTiming->GetLoadEventEnd(aTime);
 }
 
 
@@ -235,10 +278,12 @@ DOMCI_DATA(Performance, nsPerformance)
 NS_IMPL_ADDREF(nsPerformance)
 NS_IMPL_RELEASE(nsPerformance)
 
-nsPerformance::nsPerformance(nsDOMNavigationTiming* aTiming)
+nsPerformance::nsPerformance(nsDOMNavigationTiming* aDOMTiming, 
+                             nsITimedChannel* aChannel)
 {
-  NS_ASSERTION(aTiming, "Timing data should be provided");
-  mData = aTiming;
+  NS_ASSERTION(aDOMTiming, "DOM timing data should be provided");
+  mDOMTiming = aDOMTiming;
+  mChannel = aChannel;  
 }
 
 nsPerformance::~nsPerformance()
@@ -259,7 +304,7 @@ NS_IMETHODIMP
 nsPerformance::GetTiming(nsIDOMPerformanceTiming** aTiming)
 {
   if (!mTiming) {
-    mTiming = new nsPerformanceTiming(mData);
+    mTiming = new nsPerformanceTiming(mDOMTiming, mChannel);
   }
   NS_IF_ADDREF(*aTiming = mTiming);
   return NS_OK;
@@ -269,7 +314,7 @@ NS_IMETHODIMP
 nsPerformance::GetNavigation(nsIDOMPerformanceNavigation** aNavigation)
 {
   if (!mNavigation) {
-    mNavigation = new nsPerformanceNavigation(mData);
+    mNavigation = new nsPerformanceNavigation(mDOMTiming);
   }
   NS_IF_ADDREF(*aNavigation = mNavigation);
   return NS_OK;

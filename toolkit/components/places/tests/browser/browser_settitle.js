@@ -79,8 +79,8 @@ function test()
     onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
                       aTransitionType) {
     },
-    onTitleChanged: function(aURI, aPageTitle) {
-      this.data.push({ uri: aURI, title: aPageTitle });
+    onTitleChanged: function(aURI, aPageTitle, aGUID) {
+      this.data.push({ uri: aURI, title: aPageTitle, guid: aGUID });
 
       // We only expect one title change.
       //
@@ -107,6 +107,7 @@ function test()
   function confirmResults(data) {
     is(data[0].uri.spec, "http://example.com/tests/toolkit/components/places/tests/browser/title2.html");
     is(data[0].title, "Some title");
+    is(data[0].guid, getColumn("moz_places", "guid", "url", data[0].uri.spec));
 
     data.forEach(function(item) {
       var title = getColumn("moz_places", "title", "url", data[0].uri.spec);

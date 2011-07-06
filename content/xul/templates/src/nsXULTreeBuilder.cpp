@@ -81,6 +81,7 @@ class nsXULTreeBuilder : public nsXULTemplateBuilder,
 public:
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 
     // nsIXULTreeBuilder
     NS_DECL_NSIXULTREEBUILDER
@@ -304,15 +305,42 @@ NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeBuilder)
+
 NS_IMPL_ADDREF_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 NS_IMPL_RELEASE_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mBoxObject)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSelection)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPersistStateStore)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mObservers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+static PRBool TraverseObservers(nsISupports* aElement, void *aData)
+{
+    nsCycleCollectionTraversalCallback *cb =
+        static_cast<nsCycleCollectionTraversalCallback*>(aData);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mObservers[i]");
+    cb->NoteXPCOMChild(aElement);
+    return PR_TRUE;
+}
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBoxObject)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSelection)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPersistStateStore)
+    if (tmp->mObservers) {
+        tmp->mObservers->EnumerateForwards(TraverseObservers, &cb);
+    }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 DOMCI_DATA(XULTreeBuilder, nsXULTreeBuilder)
 
-NS_INTERFACE_MAP_BEGIN(nsXULTreeBuilder)
-  NS_INTERFACE_MAP_ENTRY(nsIXULTreeBuilder)
-  NS_INTERFACE_MAP_ENTRY(nsITreeView)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULTreeBuilder)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXULTreeBuilder)
+    NS_INTERFACE_MAP_ENTRY(nsIXULTreeBuilder)
+    NS_INTERFACE_MAP_ENTRY(nsITreeView)
+    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULTreeBuilder)
 NS_INTERFACE_MAP_END_INHERITING(nsXULTemplateBuilder)
 
 

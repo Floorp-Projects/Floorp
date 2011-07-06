@@ -602,8 +602,11 @@ NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
   NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
-    // window at this size. We don't persist this one-time size.
+    // window at this size & in the normal size mode (since it is the only mode
+    // in which setting dimensions makes sense). We don't persist this one-time
+    // size.
     mIgnoreXULSize = PR_TRUE;
+    mIgnoreXULSizeMode = PR_TRUE;
     return NS_OK;
   }
   PersistentAttributesDirty(PAD_SIZE);
@@ -632,6 +635,7 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
     // window at this size and position. We don't persist this one-time setting.
     mIgnoreXULPosition = PR_TRUE;
     mIgnoreXULSize = PR_TRUE;
+    mIgnoreXULSizeMode = PR_TRUE;
     return NS_OK;
   }
   PersistentAttributesDirty(PAD_POSITION | PAD_SIZE);

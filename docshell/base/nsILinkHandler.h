@@ -48,7 +48,8 @@ class nsGUIEvent;
 
 // Interface ID for nsILinkHandler
 #define NS_ILINKHANDLER_IID \
- { 0x71627c30, 0xd3c5, 0x4ad0,{0xb5, 0x33, 0x6e, 0x01, 0x91, 0xf2, 0x79, 0x32}}
+  { 0xd85670a1, 0x224a, 0x4562, \
+    { 0x87, 0xa9, 0x43, 0xa5, 0x24, 0xe7, 0xd0, 0x1b } }
 
 /**
  * Interface used for handling clicks on links
@@ -66,12 +67,14 @@ public:
    *        string)
    * @param aPostDataStream the POST data to send
    * @param aHeadersDataStream ???
+   * @param aIsTrusted PR_FALSE if the triggerer is an untrusted DOM event.
    */
   NS_IMETHOD OnLinkClick(nsIContent* aContent, 
                          nsIURI* aURI,
                          const PRUnichar* aTargetSpec,
-                         nsIInputStream* aPostDataStream = 0,
-                         nsIInputStream* aHeadersDataStream = 0) = 0;
+                         nsIInputStream* aPostDataStream,
+                         nsIInputStream* aHeadersDataStream,
+                         PRBool aIsTrusted) = 0;
 
   /**
    * Process a click on a link.

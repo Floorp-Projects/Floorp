@@ -1,0 +1,80 @@
+<!DOCTYPE html><html>
+<head><style>
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+.test { 
+  overflow: hidden; 
+  text-overflow: ellipsis;
+  width: 50px;
+  margin-bottom:1em;
+  height: 20px;
+  white-space:nowrap;
+/*border:1px solid red;width: 500px;*/
+}
+.rel { position:relative;}
+input,select,fieldset,textarea,hr,span {
+ border:1px solid black;
+ background: white;
+ color: black;
+ padding:0 40px;
+}
+iframe,img { width: 80px; height:10px; }
+select[size="4"],iframe,textarea,hr { height:10px; margin:0; }
+
+x {visibility:hidden;display:inline-block;margin-left:-10px;width:1000px;}
+</style></head>
+<body>
+
+<div style="position:absolute; top:0; left:0;">
+  <div class="test"><fieldset style="display:inline;"></fieldset></div>
+  <div class="test"><fieldset style="display:inline-block;"></fieldset></div>
+  <div class="test"><fieldset style="display:block;"></fieldset></div>
+
+  <div class="test"><input type="button"></div>
+  <div class="test"><input type="button" style="display:inline-block;"></div>
+  <div class="test"><input type="button" style="display:list-item;"></div>
+  <div class="test"><input type="button" style="display:block;"></div>
+
+  <div class="test"><input type="text"></div>
+  <div class="test"><input type="text" style="display:inline-block;"></div>
+  <div class="test"><input type="text" style="display:block;"></div>
+
+  <div class="test"><textarea></textarea></div>
+  <div class="test"><textarea style="display:inline-block;"></textarea></div>
+  <div class="test"><textarea style="display:block;"></textarea></div>
+
+  <div class="test"><select size="1" style=""><option>&nbsp;<option>&nbsp;</select></div>
+  <div class="test"><select size="1" style="display:block;"><option>&nbsp;<option>&nbsp;</select></div>
+
+  <div class="test"><select size="4" style=""><option>&nbsp;<option>&nbsp;</select></div>
+  <div class="test"><select size="4" style="display:block;"><option>&nbsp;<option>&nbsp;</select></div>
+</div>
+
+<div style="position:absolute; top:0; left:100px;">
+  <div class="test"><iframe src="about:blank" style=""></iframe></div>
+  <div class="test"><iframe src="about:blank" style="display:block"></iframe></div>
+
+  <div class="test">&nbsp;<img src="../image/big.png"></div>
+  <div class="test">&nbsp;<img style="display:inline-block;" src="../image/big.png"></div>
+  <div class="test"><img style="display:block;" src="../image/big.png"></div>
+
+  <div class="test"><hr style="display:inline;background:lime;vertical-align:top;padding-top:100px;padding-bottom:100px; border-width:0"></div>
+  <div class="test"><hr style="display:inline-block;vertical-align:top"></div>
+  <div class="test"><hr style="display:block;"></div>
+
+  <div class="test"><span style="border-width:0"></span></div>
+  <div class="test"><span style="display:inline-block;"></span></div>
+  <div class="test"><span style="display:inline-table;"></span></div>
+  <div class="test"><span style="display:list-item;"></span></div>
+  <div class="test"><span style="display:block;"></span></div>
+  <div class="test rel">1<span style="position:relative;"></span></div>
+  <div class="test rel">2<span style="position:absolute"></span></div>
+  <div class="test rel">3<span style="position:absolute; left:60px"></span></div>
+  <div class="test rel">4<x></x><span style="position:absolute;">abs4</span></div>
+  <div class="test"><span style="float:left"></span></div>
+  <div class="test"><span style="float:left; margin-left:-10px"></span></div>
+  <div class="test"><span style="float:right; margin-right:-10px"></span></div>
+</div>
+
+</body></html>

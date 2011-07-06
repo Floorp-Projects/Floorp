@@ -48,11 +48,13 @@ var gVerbose = (location.href.split(/[\?,]/).indexOf("verbose") !== -1);
 
 var gAddedObserver = false;
 
-const MR_MAPPED = Ci.nsIMemoryReporter.MR_MAPPED;
-const MR_HEAP   = Ci.nsIMemoryReporter.MR_HEAP;
-const MR_OTHER  = Ci.nsIMemoryReporter.MR_OTHER;
+const KIND_MAPPED = Ci.nsIMemoryReporter.KIND_MAPPED;
+const KIND_HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
+const KIND_OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
+const UNITS_BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+const UNITS_COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
 
-const kUnknown = -1;    // used for _memoryUsed if a memory reporter failed
+const kUnknown = -1;    // used for _amount if a memory reporter failed
 
 function onLoad()
 {
@@ -152,27 +154,29 @@ function update()
   //     interface Reporter {
   //       _path:        string;
   //       _kind:        number;
+  //       _units:       number;
+  //       _amount:      number;
   //       _description: string;
-  //       _memoryUsed:  number;
   //     }
   //
   //   After this point we never use the original memory reporter again.
   //
-  // - Note that copying rOrig.memoryUsed (which calls a C++ function under the
-  //   IDL covers) to r._memoryUsed for every reporter now means that the
+  // - Note that copying rOrig.amount (which calls a C++ function under the
+  //   IDL covers) to r._amount for every reporter now means that the
   //   results as consistent as possible -- measurements are made all at
   //   once before most of the memory required to generate this page is
   //   allocated.
   var reportersByProcess = {};
-  var e = mgr.enumerateReporters();
-  while (e.hasMoreElements()) {
-    var rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    var process = rOrig.process === "" ? "Main" : rOrig.process;
+
+  function addReporter(aProcess, aPath, aKind, aUnits, aAmount, aDescription)
+  {
+    var process = aProcess === "" ? "Main" : aProcess;
     var r = {
-      _path:        rOrig.path,
-      _kind:        rOrig.kind,
-      _description: rOrig.description,
-      _memoryUsed:  rOrig.memoryUsed
+      _path:        aPath,
+      _kind:        aKind,
+      _units:       aUnits,
+      _amount:      aAmount,
+      _description: aDescription
     };
     if (!reportersByProcess[process]) {
       reportersByProcess[process] = {};
@@ -180,11 +184,24 @@ function update()
     var reporters = reportersByProcess[process];
     if (reporters[r._path]) {
       // Already an entry;  must be a duplicated reporter.  This can
-      // happen legitimately.  Sum the sizes.
-      reporters[r._path]._memoryUsed += r._memoryUsed;
+      // happen legitimately.  Sum the values.
+      reporters[r._path]._amount += r._amount;
     } else {
       reporters[r._path] = r;
     }
+  }
+
+  // Process vanilla reporters first, then multi-reporters.
+  var e = mgr.enumerateReporters();
+  while (e.hasMoreElements()) {
+    var rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    addReporter(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
+                rOrig.amount, rOrig.description);
+  }
+  var e = mgr.enumerateMultiReporters();
+  while (e.hasMoreElements()) {
+    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    r.collectReports(addReporter, null);
   }
 
   // Generate output for one process at a time.  Always start with the
@@ -226,15 +243,20 @@ function update()
           "reporter to see a detailed description of what it measures.</span>"
           "</div>";
 
-
   var div = document.createElement("div");
   div.innerHTML = text;
   content.appendChild(div);
 }
 
-function cmp_memoryUsed(a, b)
+// Compare two memory reporter nodes.  We want to group together measurements
+// with the same units, so sort first by the nodes' _units field, then sort by
+// the amount if the units are equal.
+function cmpAmount(a, b)
 {
-  return b._memoryUsed - a._memoryUsed
+  if (a._units != b._units)
+    return a._units - b._units;   // use the enum order from nsIMemoryReporter
+  else
+    return b._amount - a._amount;
 };
 
 /**
@@ -256,8 +278,8 @@ function genProcessText(aProcess, aReporters)
    *         interface Node {
    *           _name: string;
    *           _kind:        number;
+   *           _amount:      number;    (non-negative or 'kUnknown')
    *           _description: string;
-   *           _memoryUsed:  number;    (non-negative or 'kUnknown')
    *           _kids:        [Node];
    *           _hasReporter: boolean;   (only defined if 'true')
    *           _hasProblem:  boolean;   (only defined if 'true')
@@ -283,7 +305,7 @@ function genProcessText(aProcess, aReporters)
     // and maybe '._hasReporter'.  This is done top-down from the reporters.
     var t = {
       _name: "falseRoot",
-      _kind: MR_OTHER,
+      _kind: KIND_OTHER,
       _kids: []
     };
     for (var path in aReporters) {
@@ -299,7 +321,7 @@ function genProcessText(aProcess, aReporters)
           } else {
             var v = {
               _name: name,
-              _kind: MR_OTHER,
+              _kind: KIND_OTHER,
               _kids: []
             };
             u._kids.push(v);
@@ -314,20 +336,20 @@ function genProcessText(aProcess, aReporters)
     // treeName at the root.
     t = t._kids[0];
 
-    // Next, fill in '_description' and '_memoryUsed', and maybe '_hasProblem'
+    // Next, fill in '_description' and '_amount', and maybe '_hasProblem'
     // for each node.  This is done bottom-up because for most non-leaf nodes
-    // '_memoryUsed' and '_description' are determined from the child nodes.
+    // '_amount' and '_description' are determined from the child nodes.
     function fillInTree(aT, aPrepath)
     {
       var path = aPrepath ? aPrepath + '/' + aT._name : aT._name;
       if (aT._kids.length === 0) {
         // Leaf node.  Must have a reporter.
         aT._description = getDescription(aReporters, path);
-        var memoryUsed = getBytes(aReporters, path);
-        if (memoryUsed !== kUnknown) {
-          aT._memoryUsed = memoryUsed;
+        var amount = getBytes(aReporters, path);
+        if (amount !== kUnknown) {
+          aT._amount = amount;
         } else {
-          aT._memoryUsed = 0;
+          aT._amount = 0;
           aT._hasProblem = true;
         }
       } else {
@@ -340,33 +362,33 @@ function genProcessText(aProcess, aReporters)
         }
         if (aT._hasReporter === true) {
           aT._description = getDescription(aReporters, path);
-          var memoryUsed = getBytes(aReporters, path);
-          if (memoryUsed !== kUnknown) {
+          var amount = getBytes(aReporters, path);
+          if (amount !== kUnknown) {
             // Non-leaf node with its own reporter.  Use the reporter and add
             // an "other" child node.
-            aT._memoryUsed = memoryUsed;
+            aT._amount = amount;
             var other = {
               _name: "other",
-              _kind: MR_OTHER,
+              _kind: KIND_OTHER,
               _description: "All unclassified " + aT._name + " memory.",
-              _memoryUsed: aT._memoryUsed - childrenBytes,
+              _amount: aT._amount - childrenBytes,
               _kids: []
             };
             aT._kids.push(other);
           } else {
             // Non-leaf node with a reporter that returns kUnknown.
             // Use the sum of the children and mark it as problematic.
-            aT._memoryUsed = childrenBytes;
+            aT._amount = childrenBytes;
             aT._hasProblem = true;
           }
         } else {
           // Non-leaf node without its own reporter.  Derive its size and
           // description entirely from its children.
-          aT._memoryUsed = childrenBytes;
+          aT._amount = childrenBytes;
           aT._description = "The sum of all entries below '" + aT._name + "'.";
         }
       }
-      return aT._memoryUsed;
+      return aT._amount;
     }
     fillInTree(t, "");
 
@@ -376,8 +398,8 @@ function genProcessText(aProcess, aReporters)
     var s = "";
     function getKnownHeapUsedBytes(aT)
     {
-      if (aT._kind === MR_HEAP) {
-        return aT._memoryUsed;
+      if (aT._kind === KIND_HEAP) {
+        return aT._amount;
       } else {
         var n = 0;
         for (var i = 0; i < aT._kids.length; i++) {
@@ -399,24 +421,24 @@ function genProcessText(aProcess, aReporters)
     }
     var heapUnclassified = {
       _name: "heap-unclassified",
-      _kind: MR_HEAP,
+      _kind: KIND_HEAP,
       _description:
         "Memory not classified by a more specific reporter. This includes " +
         "memory allocated by the heap allocator in excess of that requested " +
         "by the application; this can happen when the heap allocator rounds " +
         "up request sizes.",
-      _memoryUsed: unknownHeapUsedBytes,
+      _amount: unknownHeapUsedBytes,
       _hasProblem: hasProblem,
       _kids: []
     }
     t._kids.push(heapUnclassified);
-    t._memoryUsed += unknownHeapUsedBytes;
+    t._amount += unknownHeapUsedBytes;
 
     function shouldOmit(aBytes)
     {
       return !gVerbose &&
-             t._memoryUsed !== kUnknown &&
-             (100 * aBytes / t._memoryUsed) < omitThresholdPerc;
+             t._amount !== kUnknown &&
+             (100 * aBytes / t._amount) < omitThresholdPerc;
     }
 
     /**
@@ -428,30 +450,35 @@ function genProcessText(aProcess, aReporters)
      */
     function filterTree(aT)
     {
-      aT._kids.sort(cmp_memoryUsed);
+      aT._kids.sort(cmpAmount);
 
       for (var i = 0; i < aT._kids.length; i++) {
-        if (shouldOmit(aT._kids[i]._memoryUsed)) {
+        if (shouldOmit(aT._kids[i]._amount)) {
           // This sub-tree is below the significance threshold
           // Remove it and all remaining (smaller) sub-trees, and
           // replace them with a single aggregate node.
           var i0 = i;
           var aggBytes = 0;
-          var aggNames = [];
           for ( ; i < aT._kids.length; i++) {
-            aggBytes += aT._kids[i]._memoryUsed;
-            aggNames.push(aT._kids[i]._name);
+            aggBytes += aT._kids[i]._amount;
           }
           aT._kids.splice(i0);
           var n = i - i0;
           var rSub = {
             _name: "(" + n + " omitted)",
-            _kind: MR_OTHER,
-            _description: "Omitted sub-trees: " + aggNames.join(", ") + ".",
-            _memoryUsed: aggBytes,
+            _kind: KIND_OTHER,
+            _amount: aggBytes,
+            _description: n + " sub-trees that were below the " + 
+                          omitThresholdPerc + "% significance threshold.  " +
+                          "Click 'More verbose' at the bottom of this page " +
+                          "to see them.",
             _kids: []
           };
+          // Add the "omitted" sub-tree at the end and then resort, because the
+          // sum of the omitted sub-trees may be larger than some of the
+          // shown sub-trees.
           aT._kids[i0] = rSub;
+          aT._kids.sort(cmpAmount);
           break;
         }
         filterTree(aT._kids[i]);
@@ -472,6 +499,57 @@ function genProcessText(aProcess, aReporters)
 }
 
 /**
+ * Returns the reporter's amount formatted as a human-readable string (with
+ * units, if applicable).
+ *
+ * @param aReporter
+ *        The reporter whose usage we're formatting
+ * @return The reporter's amount formatted as a human-readable string
+ */
+function formatReporterAmount(aReporter)
+{
+  switch(aReporter._units) {
+    case UNITS_BYTES: return formatBytes(aReporter._amount);
+    case UNITS_COUNT: return formatInt(aReporter._amount);
+    default:          return "(???)"
+  }
+}
+
+/**
+ * Formats an int as a human-readable string.
+ *
+ * @param aN
+ *        The integer to format
+ * @return A human-readable string representing the int
+ */
+function formatInt(aN)
+{
+  var neg = false;
+  if (aN < 0) {
+    neg = true;
+    aN = -aN;
+  }
+  var s = "";
+  while (true) {
+    var k = aN % 1000;
+    aN = Math.floor(aN / 1000);
+    if (aN > 0) {
+      if (k < 10) {
+        s = ",00" + k + s;
+      } else if (k < 100) {
+        s = ",0" + k + s;
+      } else {
+        s = "," + k + s;
+      }
+    } else {
+      s = k + s;
+      break;
+    }
+  }
+  return neg ? "-" + s : s;
+}
+
+/**
  * Converts a byte count to an appropriate string representation.
  *
  * @param aBytes
@@ -481,33 +559,6 @@ function genProcessText(aProcess, aReporters)
 function formatBytes(aBytes)
 {
   var unit = gVerbose ? "B" : "MB";
-
-  function formatInt(aN)
-  {
-    var neg = false;
-    if (aN < 0) {
-      neg = true;
-      aN = -aN;
-    }
-    var s = "";
-    while (true) {
-      var k = aN % 1000;
-      aN = Math.floor(aN / 1000);
-      if (aN > 0) {
-        if (k < 10) {
-          s = ",00" + k + s;
-        } else if (k < 100) {
-          s = ",0" + k + s;
-        } else {
-          s = "," + k + s;
-        }
-      } else {
-        s = k + s;
-        break;
-      }
-    }
-    return neg ? "-" + s : s;
-  }
 
   var s;
   if (gVerbose) {
@@ -557,7 +608,7 @@ function getBytes(aReporters, aPath, aDoNotMark)
 {
   var r = aReporters[aPath];
   if (r) {
-    var bytes = r._memoryUsed;
+    var bytes = r._amount;
     if (!aDoNotMark) {
       r._done = true;
     }
@@ -592,16 +643,50 @@ function genMrValueText(aValue)
 function kindToString(aKind)
 {
   switch (aKind) {
-   case MR_MAPPED: return "(Mapped) ";
-   case MR_HEAP:   return "(Heap) ";
-   case MR_OTHER:  return "";
-   default:        return "(???) ";
+   case KIND_MAPPED: return "(Mapped) ";
+   case KIND_HEAP:   return "(Heap) ";
+   case KIND_OTHER:  return "";
+   default:          return "(???) ";
   }
 }
 
 function escapeQuotes(aStr)
 {
-  return aStr.replace(/'/g, '&#39;');
+  return aStr.replace(/\&/g, '&amp;').replace(/'/g, '&#39;');
+}
+
+// For user-controlled strings.
+function escapeAll(aStr)
+{
+  return aStr.replace(/\&/g, '&amp;').replace(/'/g, '&#39;').
+              replace(/\</g, '&lt;').replace(/>/g, '&gt;').
+              replace(/\"/g, '&quot;');
+}
+
+// Compartment reporter names are URLs and so can include forward slashes.  But
+// forward slash is the memory reporter path separator.  So the memory
+// reporters change them to backslashes.  Undo that here.  
+function flipBackslashes(aStr)
+{
+  return aStr.replace(/\\/g, '/');
+}
+
+// Truncate the URL in a compartment name if not in verbose mode.
+function truncateCompartmentName(aStr)
+{
+  return (gVerbose)
+       ? aStr
+       : aStr.replace(/compartment\((.{40}).*\)/, 'compartment($1...)');
+}
+
+function prepName(aStr)
+{
+  return escapeAll(flipBackslashes(truncateCompartmentName(aStr)));
+}
+
+function prepDesc(aStr)
+{
+  return escapeQuotes(flipBackslashes(aStr));
 }
 
 function genMrNameText(aKind, aDesc, aName, aHasProblem)
@@ -611,8 +696,8 @@ function genMrNameText(aKind, aDesc, aName, aHasProblem)
     "The reported value is the sum of all entries below '" + aName + "', " +
     "which is probably less than the true value.";
   var text = "-- <span class='mrName hasDesc' title='" +
-             kindToString(aKind) + escapeQuotes(aDesc) +
-             "'>" + aName + "</span>";
+             kindToString(aKind) + prepDesc(aDesc) +
+             "'>" + prepName(aName) + "</span>";
   text += aHasProblem
         ? " <span class='mrStar' title=\"" + problemDesc + "\">[*]</span>\n"
         : "\n";
@@ -628,7 +713,7 @@ function genMrNameText(aKind, aDesc, aName, aHasProblem)
  */
 function genTreeText(aT)
 {
-  var treeBytes = aT._memoryUsed;
+  var treeBytes = aT._amount;
   var treeBytesLength = formatBytes(treeBytes).length;
 
   /**
@@ -677,7 +762,7 @@ function genTreeText(aT)
 
     // Indent more if this entry is narrower than its parent, and update
     // aIndentGuide accordingly.
-    var tMemoryUsedStr = formatBytes(aT._memoryUsed);
+    var tMemoryUsedStr = formatBytes(aT._amount);
     var tBytesLength = tMemoryUsedStr.length;
     var extraIndentLength = Math.max(aParentBytesLength - tBytesLength, 0);
     if (extraIndentLength > 0) {
@@ -690,10 +775,10 @@ function genTreeText(aT)
 
     // Generate the percentage.
     var perc = "";
-    if (aT._memoryUsed === treeBytes) {
+    if (aT._amount === treeBytes) {
       perc = "100.0";
     } else {
-      perc = (100 * aT._memoryUsed / treeBytes).toFixed(2);
+      perc = (100 * aT._amount / treeBytes).toFixed(2);
       perc = pad(perc, 5, '0');
     }
     perc = "<span class='mrPerc'>(" + perc + "%)</span> ";
@@ -742,37 +827,38 @@ function genOtherText(aReporters)
   // Generate an array of Reporter-like elements, stripping out all the
   // reporters that have already been handled.  Also find the width of the
   // widest element, so we can format things nicely.
-  var maxBytesLength = 0;
+  var maxAmountLength = 0;
   var rArray = [];
   for (var path in aReporters) {
     var r = aReporters[path];
     if (!r._done) {
       var hasProblem = false;
-      if (r._memoryUsed === kUnknown) {
+      if (r._amount === kUnknown) {
         hasProblem = true;
       }
       var elem = {
         _path:        r._path,
         _kind:        r._kind,
+        _units:       r._units,
+        _amount:      hasProblem ? 0 : r._amount,
         _description: r._description,
-        _memoryUsed:  hasProblem ? 0 : r._memoryUsed,
         _hasProblem:  hasProblem
       };
       rArray.push(elem);
-      var thisBytesLength = formatBytes(elem._memoryUsed).length;
-      if (thisBytesLength > maxBytesLength) {
-        maxBytesLength = thisBytesLength;
+      var thisAmountLength = formatReporterAmount(elem).length;
+      if (thisAmountLength > maxAmountLength) {
+        maxAmountLength = thisAmountLength;
       }
     }
   }
-  rArray.sort(cmp_memoryUsed);
+  rArray.sort(cmpAmount);
 
   // Generate text for the not-yet-printed values.
   var text = "";
   for (var i = 0; i < rArray.length; i++) {
     var elem = rArray[i];
     text += genMrValueText(
-              pad(formatBytes(elem._memoryUsed), maxBytesLength, ' ')) + " ";
+              pad(formatReporterAmount(elem), maxAmountLength, ' ')) + " ";
     text += genMrNameText(elem._kind, elem._description, elem._path,
                           elem._hasProblem);
   }

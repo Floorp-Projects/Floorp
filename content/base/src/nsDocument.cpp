@@ -131,7 +131,6 @@
 #include "nsBidiUtils.h"
 
 #include "nsIDOMUserDataHandler.h"
-#include "nsScriptEventManager.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIParserService.h"
@@ -1861,7 +1860,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mStyleAttrStyleSheet, nsIStyleSheet)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptEventManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXPathEvaluatorTearoff)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
@@ -1917,6 +1915,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   }
   tmp->mFirstChild = nsnull;
 
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mXPathEvaluatorTearoff)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
@@ -1939,16 +1938,27 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
    tmp->mBoxObjectTable = nsnull;
  }
 
+  if (tmp->mListenerManager) {
+    tmp->mListenerManager->Disconnect();
+    tmp->mListenerManager = nsnull;
+  }
+
+  if (tmp->mSubDocuments) {
+    PL_DHashTableDestroy(tmp->mSubDocuments);
+    tmp->mSubDocuments = nsnull;
+  }
+
+  tmp->mAnimationFrameListeners.Clear();
+
+  tmp->mRadioGroups.Clear();
+  
   // nsDocument has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
   // else, and not unlink an awful lot here.
-  //
-  // In rare cases where you think an unlink will help here, add one
-  // manually.
-
-  tmp->mInUnlinkOrDeletion = PR_FALSE;
 
   tmp->mIdentifierMap.Clear();
+  
+  tmp->mInUnlinkOrDeletion = PR_FALSE;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -2035,16 +2045,14 @@ nsIDocument::GetExtraPropertyTable(PRUint16 aCategory)
   return mExtraPropertyTables[aCategory - 1];
 }
 
-nsresult
+void
 nsDocument::AddXMLEventsContent(nsIContent *aXMLEventsElement)
 {
   if (!mXMLEventsManager) {
     mXMLEventsManager = new nsXMLEventsManager();
-    NS_ENSURE_TRUE(mXMLEventsManager, NS_ERROR_OUT_OF_MEMORY);
     AddObserver(mXMLEventsManager);
   }
   mXMLEventsManager->AddXMLEventsContent(aXMLEventsElement);
-  return NS_OK;
 }
 
 void
@@ -6319,17 +6327,6 @@ nsDocument::FlushExternalResources(mozFlushType aType)
   EnumerateExternalResources(Flush, &aType);
 }
 
-nsIScriptEventManager*
-nsDocument::GetScriptEventManager()
-{
-  if (!mScriptEventManager) {
-    mScriptEventManager = new nsScriptEventManager(this);
-    // automatically AddRefs
-  }
-
-  return mScriptEventManager;
-}
-
 void
 nsDocument::SetXMLDeclaration(const PRUnichar *aVersion,
                               const PRUnichar *aEncoding,
@@ -8130,43 +8127,17 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
   return nsnull;
 }
 
+#define DEPRECATED_OPERATION(_op) #_op "Warning",
 static const char* kWarnings[] = {
-  "GetAttributeNodeWarning",
-  "SetAttributeNodeWarning",
-  "GetAttributeNodeNSWarning",
-  "SetAttributeNodeNSWarning",
-  "RemoveAttributeNodeWarning",
-  "CreateAttributeWarning",
-  "CreateAttributeNSWarning",
-  "SpecifiedWarning",
-  "OwnerElementWarning",
-  "NodeNameWarning",
-  "NodeValueWarning",
-  "NodeTypeWarning",
-  "ParentNodeWarning",
-  "ChildNodesWarning",
-  "HasChildNodesWarning",
-  "HasAttributesWarning",
-  "FirstChildWarning",
-  "LastChildWarning",
-  "PreviousSiblingWarning",
-  "NextSiblingWarning",
-  "AttributesWarning",
-  "InsertBeforeWarning",
-  "ReplaceChildWarning",
-  "RemoveChildWarning",
-  "AppendChildWarning",
-  "CloneNodeWarning",
-  "GetOwnerDocumentWarning",
-  "IsSupportedWarning",
-  "IsEqualNodeWarning",
-  "TextContentWarning"
+#include "nsDeprecatedOperationList.h"
+  nsnull
 };
+#undef DEPRECATED_OPERATION
 
 void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
 {
-  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(kWarnings) < 32);
+  PR_STATIC_ASSERT(eDeprecatedOperationCount <= 32);
   if (mWarnedAbout & (1 << aOperation)) {
     return;
   }
@@ -8399,5 +8370,18 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
 
   *aRetVal = retval.forget().get();
   return NS_OK;
+}
+
+PRInt64
+nsIDocument::SizeOf() const
+{
+  PRInt64 size = sizeof(*this);
+
+  for (nsIContent* node = GetFirstChild(); node;
+       node = node->GetNextNode(this)) {
+    size += node->SizeOf();
+  }
+
+  return size;
 }
 

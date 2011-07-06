@@ -54,6 +54,7 @@ nsContentErrors.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
 nsIDocument.h \
+nsDeprecatedOperationList.h \
 nsIDocumentObserver.h \
 nsIMutationObserver.h \
 nsIMutationObserver2.h \
@@ -114,8 +115,6 @@ XPIDLSRCS	= \
 		nsISelectionPrivate.idl  \
 		nsIScriptLoaderObserver.idl  \
 		nsIDroppedLinkHandler.idl \
-		nsIScriptEventHandler.idl \
-		nsIScriptEventManager.idl \
 		nsIImageLoadingContent.idl \
 		nsIObjectLoadingContent.idl \
 		nsIFrameLoader.idl \

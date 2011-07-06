@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="89419Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 89419 test">
+
+  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+  <script type="application/javascript"><![CDATA[
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 89419:
+    // A visited link should have the :visited style applied
+    // to it when displayed on a page which was fetched from
+    // the bfcache.
+    //
+    function testIterator()
+    {
+      // Load a test page containing an image referring to the sjs that returns
+      // a different redirect every time it's loaded.
+      doPageNavigation({
+        uri: getHttpUrl("89419.html"),
+        onNavComplete: nextTest,
+        preventBFCache: true
+      });
+      yield;
+
+      var first = snapshotWindow(TestWindow.getWindow());
+
+      doPageNavigation({
+        uri: "about:blank",
+        onNavComplete: nextTest
+      });
+      yield;
+
+      var second = snapshotWindow(TestWindow.getWindow());
+      function snapshotsEqual(snap1, snap2) {
+        return compareSnapshots(snap1, snap2, true)[0];
+      }
+      ok(!snapshotsEqual(first, second), "about:blank should not be the same as the image web page");
+
+      doPageNavigation({
+        back: true,
+        onNavComplete: nextTest
+      });
+      yield;
+
+      var third = snapshotWindow(TestWindow.getWindow());
+      ok(!snapshotsEqual(third, second), "going back should not be the same as about:blank");
+      ok(snapshotsEqual(first, third), "going back should be the same as the initial load");
+
+      // Tell the framework the test is finished.  Include the final 'yield'
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

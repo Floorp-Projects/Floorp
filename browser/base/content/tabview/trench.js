@@ -574,9 +574,7 @@ var Trenches = {
     this.trenches.forEach(function(t) {
       if (t.el === element)
         return;
-      if (t.parentItem && (t.parentItem.isAFauxItem ||
-         t.parentItem.isDragging ||
-         t.parentItem.isDropTarget))
+      if (t.parentItem && (t.parentItem.isAFauxItem || t.parentItem.isDragging))
         return;
       t.active = true;
       t.calculateActiveRange();
@@ -634,7 +632,7 @@ var Trenches = {
 
     for (var i in this.trenches) {
       var t = this.trenches[i];
-      if (!t.active || t.parentItem.isDropTarget)
+      if (!t.active)
         continue;
       // newRect will be a new rect, or false
       var newRect = t.rectOverlaps(rect,stationaryCorner,assumeConstantSize,keepProportional);

@@ -53,7 +53,6 @@
 
 #include "nsIDOMEventListener.h"
 #include "nsISelectionListener.h"
-#include "nsIDOMMouseMotionListener.h"
 
 #define kTopLeft       NS_LITERAL_STRING("nw")
 #define kTop           NS_LITERAL_STRING("n")
@@ -90,7 +89,7 @@ protected:
 // ResizerMouseMotionListener
 // ==================================================================
 
-class ResizerMouseMotionListener: public nsIDOMMouseMotionListener
+class ResizerMouseMotionListener : public nsIDOMEventListener
 {
 public:
   ResizerMouseMotionListener(nsIHTMLEditor * aEditor);
@@ -101,9 +100,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIDOMEVENTLISTENER
-
-  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent);
 
  protected:
   nsWeakPtr mEditor;

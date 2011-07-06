@@ -701,14 +701,10 @@ var InspectorUI = {
       if (parentNode.defaultView) {
         return parentNode.defaultView.frameElement;
       }
-      if (this.embeddedBrowserParents) {
-        let skipParent = this.embeddedBrowserParents[node];
-        // HTML element? could be iframe?
-        if (skipParent)
-          return skipParent;
-      } else // parent is document element, but no window at defaultView.
-        return null;
-    } else if (!parentNode.localName) {
+      // parent is document element, but no window at defaultView.
+      return null;
+    }
+    if (!parentNode.localName) {
       return null;
     }
     return parentNode;
@@ -722,25 +718,20 @@ var InspectorUI = {
     if (node.contentDocument) {
       // then the node is a frame
       if (index == 0) {
-        if (!this.embeddedBrowserParents)
-          this.embeddedBrowserParents = {};
-        let skipChild = node.contentDocument.documentElement;
-        this.embeddedBrowserParents[skipChild] = node;
-        return skipChild;  // the node's HTMLElement
+        return node.contentDocument.documentElement;  // the node's HTMLElement
       }
       return null;
     }
 
     if (node instanceof GetSVGDocument) {
-      // then the node is a frame
-      if (index == 0) {
-        if (!this.embeddedBrowserParents)
-          this.embeddedBrowserParents = {};
-        let skipChild = node.getSVGDocument().documentElement;
-        this.embeddedBrowserParents[skipChild] = node;
-        return skipChild;  // the node's SVGElement
+      let svgDocument = node.getSVGDocument();
+      if (svgDocument) {
+        // then the node is a frame
+        if (index == 0) {
+          return svgDocument.documentElement;  // the node's SVGElement
+        }
+        return null;
       }
-      return null;
     }
 
     let child = null;

@@ -40,6 +40,7 @@
 
 #include <string>
 #include <sstream>
+#include <stdio.h>
 
 #include "Point.h"
 

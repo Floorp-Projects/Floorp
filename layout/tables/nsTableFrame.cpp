@@ -1086,7 +1086,7 @@ nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   if (aIndex == NS_TABLE_FRAME_OVERFLOW_LIST_INDEX) {
     return nsGkAtoms::overflowList;
   }
-  return nsHTMLContainerFrame::GetAdditionalChildListName(aIndex);
+  return nsnull;
 }
 
 nsRect

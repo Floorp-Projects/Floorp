@@ -129,15 +129,11 @@ function CreateTestWS(ws_location, ws_protocol)
 
 function forcegc()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Components.utils.forceGC();
-  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  wu.garbageCollect();
+  SpecialPowers.forceGC();
+  SpecialPowers.gc();
   setTimeout(function()
   {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    wu.garbageCollect();
+    SpecialPowers.gc();
   }, 1);
 }
 

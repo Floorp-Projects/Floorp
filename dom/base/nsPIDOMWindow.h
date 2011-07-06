@@ -105,7 +105,7 @@ public:
     return mIsActive;
   }
 
-  void SetIsBackground(PRBool aIsBackground)
+  virtual void SetIsBackground(PRBool aIsBackground)
   {
     mIsBackground = aIsBackground;
   }

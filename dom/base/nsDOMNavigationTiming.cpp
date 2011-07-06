@@ -64,6 +64,7 @@ nsDOMNavigationTiming::Clear()
   mFetchStart = 0;
   mRedirectStart = 0;
   mRedirectEnd = 0;
+  mRedirectCount = 0;
   mBeforeUnloadStart = 0;
   mUnloadStart = 0;
   mUnloadEnd = 0;
@@ -77,9 +78,23 @@ nsDOMNavigationTiming::Clear()
   mRedirectCheck = NOT_CHECKED;
 }
 
+nsresult 
+nsDOMNavigationTiming::TimeStampToDOM(mozilla::TimeStamp aStamp, 
+                                      DOMTimeMilliSec* aResult)
+{
+  if (aStamp.IsNull()) {
+    *aResult = 0;
+    return NS_OK;
+  }
+  mozilla::TimeDuration duration = aStamp - mNavigationStartTimeStamp;
+  *aResult = mNavigationStart + static_cast<PRInt32>(duration.ToMilliseconds());
+  return NS_OK;
+}
+
 DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart(){
-  mozilla::TimeDuration duration = mozilla::TimeStamp::Now() - mNavigationStartTimeStamp;
-  return mNavigationStart + static_cast<PRInt32>(duration.ToMilliseconds());
+  DOMTimeMilliSec result; 
+  TimeStampToDOM(mozilla::TimeStamp::Now(), &result);
+  return result;
 }
 
 void
@@ -156,6 +171,7 @@ PRBool
 nsDOMNavigationTiming::ReportRedirects()
 {
   if (mRedirectCheck == NOT_CHECKED) {
+    mRedirectCount = mRedirects.Count();
     if (mRedirects.Count() == 0) {
       mRedirectCheck = NO_REDIRECTS;
     } else {
@@ -166,6 +182,7 @@ nsDOMNavigationTiming::ReportRedirects()
         nsresult rv = ssm->CheckSameOriginURI(curr, mLoadedURI, PR_FALSE);
         if (!NS_SUCCEEDED(rv)) {
           mRedirectCheck = CHECK_FAILED;
+          mRedirectCount = 0;
           break;
         }
       }
@@ -180,8 +197,7 @@ void
 nsDOMNavigationTiming::SetDOMLoadingTimeStamp(nsIURI* aURI, mozilla::TimeStamp aValue)
 {
   mLoadedURI = aURI;
-  mozilla::TimeDuration duration = aValue - mNavigationStartTimeStamp;
-  mDOMLoading = mNavigationStart + (int)(duration.ToMilliseconds());
+  TimeStampToDOM(aValue, &mDOMLoading);
 }
 
 void
@@ -219,18 +235,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
   mDOMContentLoadedEventEnd = DurationFromStart();
 }
 
-
-NS_IMPL_ADDREF(nsDOMNavigationTiming)
-NS_IMPL_RELEASE(nsDOMNavigationTiming)
-
-// QueryInterface implementation for nsDOMNavigationTiming
-NS_INTERFACE_MAP_BEGIN(nsDOMNavigationTiming)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPerformanceTiming)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMPerformanceTiming)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMPerformanceNavigation)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetType(
     nsDOMPerformanceNavigationType* aNavigationType)
 {
@@ -238,17 +243,17 @@ nsDOMNavigationTiming::GetType(
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetRedirectCount(PRUint16* aRedirectCount)
 {
   *aRedirectCount = 0;
   if (ReportRedirects()) {
-    *aRedirectCount = mRedirects.Count();
+    *aRedirectCount = mRedirectCount;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetRedirectStart(DOMTimeMilliSec* aRedirectStart)
 {
   *aRedirectStart = 0;
@@ -258,7 +263,7 @@ nsDOMNavigationTiming::GetRedirectStart(DOMTimeMilliSec* aRedirectStart)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetRedirectEnd(DOMTimeMilliSec* aEnd)
 {
   *aEnd = 0;
@@ -268,14 +273,14 @@ nsDOMNavigationTiming::GetRedirectEnd(DOMTimeMilliSec* aEnd)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetNavigationStart(DOMTimeMilliSec* aNavigationStart)
 {
   *aNavigationStart = mNavigationStart;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetUnloadEventStart(DOMTimeMilliSec* aStart)
 {
   *aStart = 0;
@@ -287,7 +292,7 @@ nsDOMNavigationTiming::GetUnloadEventStart(DOMTimeMilliSec* aStart)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetUnloadEventEnd(DOMTimeMilliSec* aEnd)
 {
   *aEnd = 0;
@@ -299,120 +304,56 @@ nsDOMNavigationTiming::GetUnloadEventEnd(DOMTimeMilliSec* aEnd)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetFetchStart(DOMTimeMilliSec* aStart)
 {
   *aStart = mFetchStart;
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetDomainLookupStart(DOMTimeMilliSec* aStart)
-{
-  // TODO: Implement me! (bug 659126)
-  *aStart = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetDomainLookupEnd(DOMTimeMilliSec* aEnd)
-{
-  // TODO: Implement me! (bug 659126)
-  *aEnd = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetConnectStart(DOMTimeMilliSec* aStart)
-{
-  // TODO: Implement me! (bug 659126)
-  *aStart = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetConnectEnd(DOMTimeMilliSec* aEnd)
-{
-  // TODO: Implement me! (bug 659126)
-  *aEnd = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetHandshakeStart(DOMTimeMilliSec* aStart)
-{
-  // TODO: Implement me! (bug 659126)
-  *aStart = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetRequestStart(DOMTimeMilliSec* aStart)
-{
-  // TODO: Implement me! (bug 659126)
-  *aStart = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetResponseStart(DOMTimeMilliSec* aStart)
-{
-  // TODO: Implement me! (bug 659126)
-  *aStart = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMNavigationTiming::GetResponseEnd(DOMTimeMilliSec* aEnd)
-{
-  // TODO: Implement me! (bug 659126)
-  *aEnd = mFetchStart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetDomLoading(DOMTimeMilliSec* aTime)
 {
   *aTime = mDOMLoading;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetDomInteractive(DOMTimeMilliSec* aTime)
 {
   *aTime = mDOMInteractive;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetDomContentLoadedEventStart(DOMTimeMilliSec* aStart)
 {
   *aStart = mDOMContentLoadedEventStart;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetDomContentLoadedEventEnd(DOMTimeMilliSec* aEnd)
 {
   *aEnd = mDOMContentLoadedEventEnd;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetDomComplete(DOMTimeMilliSec* aTime)
 {
   *aTime = mDOMComplete;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetLoadEventStart(DOMTimeMilliSec* aStart)
 {
   *aStart = mLoadEventStart;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMNavigationTiming::GetLoadEventEnd(DOMTimeMilliSec* aEnd)
 {
   *aEnd = mLoadEventEnd;

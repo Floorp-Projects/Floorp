@@ -207,6 +207,10 @@ public:
            mTextures[2].IsAllocated();
   }
 
+  PRUint8* AllocateBuffer(PRUint32 aSize) {
+    return mRecycleBin->GetBuffer(aSize);
+  }
+
   nsAutoArrayPtr<PRUint8> mBuffer;
   PRUint32 mBufferSize;
   nsRefPtr<RecycleBin> mRecycleBin;
@@ -214,7 +218,6 @@ public:
   Data mData;
   gfxIntSize mSize;
   PRPackedBool mHasData;
-  gfx::YUVType mType; 
 };
 
 
@@ -268,6 +271,7 @@ private:
   nsRefPtr<TextureImage> mTexImage;
   GLTexture mYUVTexture[3];
   gfxIntSize mSize;
+  nsIntRect mPictureRect;
 };
 
 } /* layers */

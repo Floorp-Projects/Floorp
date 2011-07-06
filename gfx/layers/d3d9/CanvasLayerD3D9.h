@@ -46,6 +46,8 @@
 namespace mozilla {
 namespace layers {
 
+class ShadowBufferD3D9;
+
 class THEBES_API CanvasLayerD3D9 :
   public CanvasLayer,
   public LayerD3D9
@@ -89,6 +91,42 @@ protected:
   PRPackedBool mDataIsPremultiplied;
   PRPackedBool mNeedsYFlip;
   PRPackedBool mHasAlpha;
+};
+
+// NB: eventually we'll have separate shadow canvas2d and shadow
+// canvas3d layers, but currently they look the same from the
+// perspective of the compositor process
+class ShadowCanvasLayerD3D9 : public ShadowCanvasLayer,
+                             public LayerD3D9
+{
+public:
+  ShadowCanvasLayerD3D9(LayerManagerD3D9* aManager);
+  virtual ~ShadowCanvasLayerD3D9();
+
+  // CanvasLayer impl
+  virtual void Initialize(const Data& aData);
+  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip);
+
+  // This isn't meaningful for shadow canvas.
+  virtual void Updated(const nsIntRect&) {}
+
+  // ShadowCanvasLayer impl
+  virtual void Swap(const SurfaceDescriptor& aNewFront,
+                    SurfaceDescriptor* aNewBack);
+  virtual void DestroyFrontBuffer();
+  virtual void Disconnect();
+
+  virtual void Destroy();
+
+  // LayerD3D9 implementation
+  virtual Layer* GetLayer();
+  virtual void RenderLayer();
+  virtual void CleanResources();
+  virtual void LayerManagerDestroyed();
+
+private:
+  PRPackedBool mNeedsYFlip;
+  nsRefPtr<ShadowBufferD3D9> mBuffer;
 };
 
 } /* layers */
