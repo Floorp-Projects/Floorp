@@ -47,6 +47,7 @@
 #include "InlineList.h"
 #include "IonLIR.h"
 #include "IonLowering.h"
+#include "BitSet.h"
 
 #include "jsvector.h"
 
@@ -261,6 +262,18 @@ public:
         return intervals_[i];
     }
 
+    bool addInterval(LiveInterval *interval) {
+        JS_ASSERT(interval->numRanges());
+
+        // Preserve ascending order for faster lookups.
+        LiveInterval **i;
+        for (i = intervals_.begin(); i != intervals_.end(); i++) {
+            if (interval->start() < (*i)->start())
+                break;
+        }
+        return intervals_.insert(i, interval);
+    }
+
     size_t numUses() {
         return uses_.length();
     }
@@ -274,12 +287,9 @@ public:
     }
 
     LiveInterval *intervalFor(CodePosition pos);
-
     CodePosition nextUseAfter(CodePosition pos);
-
     CodePosition nextIncompatibleUseAfter(CodePosition after, LAllocation alloc);
-
-    LiveInterval *splitIntervalAfter(VirtualRegister *ins, CodePosition pos);
+    LiveInterval *getFirstInterval();
 
 };
 
@@ -323,6 +333,7 @@ private:
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
     InlineList<LiveInterval> handled;
+    BitSet **liveIn;
     CodePosition *freeUntilPos;
     CodePosition *nextUsePos;
     LiveInterval *current;
@@ -340,6 +351,7 @@ private:
     Register findBestFreeRegister();
     Register findBestBlockedRegister();
     bool canCoexist(LiveInterval *a, LiveInterval *b);
+    bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
 
     CodePosition outputOf(uint32 pos) {
         return CodePosition(pos, CodePosition::OUTPUT);

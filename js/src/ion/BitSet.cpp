@@ -49,7 +49,7 @@ BitSet *
 BitSet::New(unsigned int max)
 {
     BitSet *result = new BitSet(max);
-    if (!result || !result->init())
+    if (!result->init())
         return NULL;
     return result;
 }
