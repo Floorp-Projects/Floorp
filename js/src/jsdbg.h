@@ -85,25 +85,28 @@ class Debugger {
         ObjectWeakMap;
     ObjectWeakMap objects;
 
-    // An ephemeral map from script-holding objects to Debugger.Script instances.
+    // An ephemeral map from script-holding objects to Debugger.Script
+    // instances.
     typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CrossCompartmentMarkPolicy>
         ScriptWeakMap;
 
-    // Map of Debugger.Script instances for garbage-collected JSScripts. For function
-    // scripts, the key is the compiler-created, internal JSFunction; for scripts returned
-    // by JSAPI functions, the key is the "Script"-class JSObject.
+    // Map of Debugger.Script instances for garbage-collected JSScripts. For
+    // function scripts, the key is the compiler-created, internal JSFunction;
+    // for scripts returned by JSAPI functions, the key is the "Script"-class
+    // JSObject.
     ScriptWeakMap heldScripts;
 
-    // An ordinary (non-ephemeral) map from JSScripts to Debugger.Script instances, for eval
-    // scripts that are explicitly freed.
+    // An ordinary (non-ephemeral) map from JSScripts to Debugger.Script
+    // instances, for non-held scripts that are explicitly freed.
     typedef HashMap<JSScript *, JSObject *, DefaultHasher<JSScript *>, SystemAllocPolicy>
         ScriptMap;
 
-    // Map from eval JSScripts to their Debugger.Script objects. "Eval scripts" are scripts
-    // created for 'eval' and similar calls that are explicitly destroyed when the call
-    // returns. Debugger.Script objects are not strong references to such JSScripts; the
-    // Debugger.Script becomes "dead" when the eval call returns.
-    ScriptMap evalScripts;
+    // Map from non-held JSScripts to their Debugger.Script objects. Non-held
+    // scripts are scripts created for eval or JS_Evaluate* calls that are
+    // explicitly destroyed when the call returns. Debugger.Script objects are
+    // not strong references to such JSScripts; the Debugger.Script becomes
+    // "dead" when the eval call returns.
+    ScriptMap nonHeldScripts;
 
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
     void removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
@@ -156,14 +159,14 @@ class Debugger {
 
     // Allocate and initialize a Debugger.Script instance whose referent is |script| and
     // whose holder is |obj|. If |obj| is NULL, this creates a Debugger.Script whose holder
-    // is null, for eval scripts.
+    // is null, for non-held scripts.
     JSObject *newDebuggerScript(JSContext *cx, JSScript *script, JSObject *obj);
 
     // Helper function for wrapFunctionScript and wrapJSAPIscript.
     JSObject *wrapHeldScript(JSContext *cx, JSScript *script, JSObject *obj);
 
-    // Remove script from our table of eval scripts.
-    void destroyEvalScript(JSScript *script);
+    // Remove script from our table of non-held scripts.
+    void destroyNonHeldScript(JSScript *script);
 
     static inline Debugger *fromLinks(JSCList *links);
     inline Breakpoint *firstBreakpoint() const;
@@ -248,21 +251,22 @@ class Debugger {
     //
     bool newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
 
-    // Return the Debugger.Script object for |fun|'s script, or create a new one if needed.
-    // The context |cx| must be in the debugger compartment; |fun| must be a
-    // cross-compartment wrapper referring to the JSFunction in a debuggee compartment.
+    // Return the Debugger.Script object for |fun|'s script, or create a new
+    // one if needed.  The context |cx| must be in the debugger compartment;
+    // |fun| must be a cross-compartment wrapper referring to the JSFunction in
+    // a debuggee compartment.
     JSObject *wrapFunctionScript(JSContext *cx, JSFunction *fun);
 
-    // Return the Debugger.Script object for the Script object |obj|'s JSScript, or create a
-    // new one if needed. The context |cx| must be in the debugger compartment; |obj| must
-    // be a cross-compartment wrapper referring to a script object in a debuggee
-    // compartment.
+    // Return the Debugger.Script object for the Script object |obj|'s
+    // JSScript, or create a new one if needed. The context |cx| must be in the
+    // debugger compartment; |obj| must be a cross-compartment wrapper
+    // referring to a script object in a debuggee compartment.
     JSObject *wrapJSAPIScript(JSContext *cx, JSObject *scriptObj);
 
-    // Return the Debugger.Script object for the eval script |script|, or create a new one if
-    // needed. The context |cx| must be in the debugger compartment; |script| must be a
-    // script in a debuggee compartment.
-    JSObject *wrapEvalScript(JSContext *cx, JSScript *script);
+    // Return the Debugger.Script object for the non-held script |script|, or
+    // create a new one if needed. The context |cx| must be in the debugger
+    // compartment; |script| must be a script in a debuggee compartment.
+    JSObject *wrapNonHeldScript(JSContext *cx, JSScript *script);
 
   private:
     // Prohibit copying.
@@ -288,8 +292,8 @@ class BreakpointSite {
 
   private:
     // The holder object for script, if known, else NULL.  This is NULL for
-    // eval scripts and for JSD1 traps. It is always non-null for JSD2
-    // breakpoints in non-eval scripts.
+    // non-held scripts and for JSD1 traps. It is always non-null for JSD2
+    // breakpoints in held scripts.
     JSObject *scriptObject;
 
     JSCList breakpoints;  // cyclic list of all js::Breakpoints at this instruction

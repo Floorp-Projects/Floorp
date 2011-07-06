@@ -159,22 +159,22 @@ BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
     JS_INIT_CLIST(&breakpoints);
 }
 
-// Precondition: script is live, meaning either it is an eval script that is on
-// the stack or a non-eval script that hasn't been GC'd.
+// Precondition: script is live, meaning either it is a non-held script that is
+// on the stack or a held script that hasn't been GC'd.
 static JSObject *
 ScriptScope(JSContext *cx, JSScript *script, JSObject *holder)
 {
     if (holder)
         return holder;
 
-    // The referent is an eval script. There is no direct reference from script
-    // to the scope, so find it on the stack.
+    // The referent is a non-held script. There is no direct reference from
+    // script to the scope, so find it on the stack.
     for (AllFramesIter i(cx->stack.space()); ; ++i) {
         JS_ASSERT(!i.done());
         if (i.fp()->maybeScript() == script)
             return &i.fp()->scopeChain();
     }
-    JS_NOT_REACHED("ScriptScope: live eval script not on stack");
+    JS_NOT_REACHED("ScriptScope: live non-held script not on stack");
 }
 
 bool
@@ -369,7 +369,7 @@ Debugger::init(JSContext *cx)
                objects.init() &&
                debuggees.init() &&
                heldScripts.init() &&
-               evalScripts.init());
+               nonHeldScripts.init());
     if (!ok)
         js_ReportOutOfMemory(cx);
     return ok;
@@ -911,11 +911,11 @@ Debugger::trace(JSTracer *trc)
     // Debugger.Script objects.
     heldScripts.trace(trc);
 
-    // Trace the map for eval scripts, which are explicitly freed.
-    for (ScriptMap::Range r = evalScripts.all(); !r.empty(); r.popFront()) {
+    // Trace the map for non-held scripts, which are explicitly freed.
+    for (ScriptMap::Range r = nonHeldScripts.all(); !r.empty(); r.popFront()) {
         JSObject *scriptobj = r.front().value;
 
-        // evalScripts should only refer to Debugger.Script objects for
+        // nonHeldScripts should only refer to Debugger.Script objects for
         // scripts that haven't been freed yet.
         JS_ASSERT(scriptobj->getPrivate());
         MarkObject(trc, *scriptobj, "live eval Debugger.Script");
@@ -1407,21 +1407,21 @@ JSFunctionSpec Debugger::methods[] = {
 //   entry in Debugger::heldScripts will be cleaned up by the standard weak
 //   table code.
 //
-// - "Eval scripts": JSScripts generated temporarily for a call to 'eval' or a
-//   related function live until the call completes, at which point the script
-//   is destroyed.
+// - "Non-held scripts": JSScripts generated temporarily for a call to eval or
+//   JS_Evaluate*, live until the call completes, at which point the script is
+//   destroyed.
 //
-//   A Debugger.Script instance for an eval script has no influence on the
-//   JSScript's lifetime. Debugger::evalScripts maps live JSScripts to to their
-//   Debugger.Script objects.  When a destroyScript event tells us that an eval
-//   script is dead, we remove its table entry, and clear its Debugger.Script
-//   object's script pointer, thus marking it dead.
+//   A Debugger.Script instance for a non-held script has no influence on the
+//   JSScript's lifetime. Debugger::nonHeldScripts maps live JSScripts to to
+//   their Debugger.Script objects.  When a destroyScript event tells us that
+//   a non-held script is dead, we remove its table entry, and clear its
+//   Debugger.Script object's script pointer, thus marking it dead.
 //
 // A Debugger.Script's private pointer points directly to the JSScript, or is
 // NULL if the Debugger.Script is dead. The JSSLOT_DEBUGSCRIPT_HOLDER slot
-// refers to the holding object, or is null for eval-like JSScripts. The
-// private pointer is not traced; the holding object reference, if present, is
-// traced via DebuggerScript_trace.
+// refers to the holding object, or is null for non-held JSScripts. The private
+// pointer is not traced; the holding object reference, if present, is traced
+// via DebuggerScript_trace.
 //
 // (We consider a script saved in and retrieved from the eval cache to have
 // been destroyed, and then --- mirabile dictu --- re-created at the same
@@ -1521,14 +1521,14 @@ Debugger::wrapJSAPIScript(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-Debugger::wrapEvalScript(JSContext *cx, JSScript *script)
+Debugger::wrapNonHeldScript(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(cx->compartment != script->compartment);
-    ScriptMap::AddPtr p = evalScripts.lookupForAdd(script);
+    ScriptMap::AddPtr p = nonHeldScripts.lookupForAdd(script);
     if (!p) {
         JSObject *scriptobj = newDebuggerScript(cx, script, NULL);
         // The allocation may have caused a GC, which can remove table entries.
-        if (!scriptobj || !evalScripts.relookupOrAdd(p, script, scriptobj))
+        if (!scriptobj || !nonHeldScripts.relookupOrAdd(p, script, scriptobj))
             return NULL;
     }
 
@@ -1544,18 +1544,18 @@ Debugger::slowPathOnDestroyScript(JSScript *script)
     for (GlobalObjectSet::Range r = debuggees->all(); !r.empty(); r.popFront()) {
         GlobalObject::DebuggerVector *debuggers = r.front()->getDebuggers();
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++)
-            (*p)->destroyEvalScript(script);
+            (*p)->destroyNonHeldScript(script);
     }
 }
 
 void
-Debugger::destroyEvalScript(JSScript *script)
+Debugger::destroyNonHeldScript(JSScript *script)
 {
-    ScriptMap::Ptr p = evalScripts.lookup(script);
+    ScriptMap::Ptr p = nonHeldScripts.lookup(script);
     if (p) {
         JS_ASSERT(GetScriptReferent(p->value) == script);
         ClearScriptReferent(p->value);
-        evalScripts.remove(p);
+        nonHeldScripts.remove(p);
     }
 }
 
@@ -2280,25 +2280,18 @@ DebuggerFrame_getScript(JSContext *cx, uintN argc, Value *vp)
                 return false;
         }
     } else if (fp->isScriptFrame()) {
+        // eval, JS_Evaluate*, and JS_ExecuteScript all create non-function
+        // script frames. However, scripts for JS_ExecuteScript are held by
+        // script objects, and must go in heldScripts, whereas scripts for eval
+        // and JS_Evaluate* latter are explicitly destroyed when the call
+        // returns, and must go in nonHeldScripts. Distinguish the two cases by
+        // checking whether the script has a Script object allocated to it.
         JSScript *script = fp->script();
-        // Both calling a JSAPI script object (via JS_ExecuteScript, say) and
-        // calling 'eval' create non-function script frames. However, scripts
-        // for the former are held by script objects, and must go in
-        // heldScripts, whereas scripts for the latter are explicitly destroyed
-        // when the call returns, and must go in evalScripts. Distinguish the
-        // two cases by checking whether the script has a Script object
-        // allocated to it.
-        if (script->u.object) {
-            JS_ASSERT(!fp->isEvalFrame());
-            scriptObject = debug->wrapJSAPIScript(cx, script->u.object);
-            if (!scriptObject)
-                return false;
-        } else {
-            JS_ASSERT(fp->isEvalFrame());
-            scriptObject = debug->wrapEvalScript(cx, script);
-            if (!scriptObject)
-                return false;
-        }
+        scriptObject = (script->u.object)
+                       ? debug->wrapJSAPIScript(cx, script->u.object)
+                       : debug->wrapNonHeldScript(cx, script);
+        if (!scriptObject)
+            return false;
     }
     vp->setObjectOrNull(scriptObject);
     return true;
