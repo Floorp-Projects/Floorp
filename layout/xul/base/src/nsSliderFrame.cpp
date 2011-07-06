@@ -1044,7 +1044,7 @@ nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
 {
   StopRepeat();
 
-  return NS_OK;
+  return nsBoxFrame::HandleRelease(aPresContext, aEvent, aEventStatus);
 }
 
 void

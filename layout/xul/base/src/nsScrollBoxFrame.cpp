@@ -169,7 +169,7 @@ nsAutoRepeatBoxFrame::HandleRelease(nsPresContext* aPresContext,
   if (!IsActivatedOnHover()) {
     StopRepeat();
   }
-  return NS_OK;
+  return nsButtonBoxFrame::HandleRelease(aPresContext, aEvent, aEventStatus);
 }
 
 NS_IMETHODIMP
