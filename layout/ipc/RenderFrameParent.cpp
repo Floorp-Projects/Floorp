@@ -731,7 +731,7 @@ RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType)
   LayerManager* lm = GetLayerManager();
   ShadowLayerManager* slm = lm->AsShadowManager();
   if (!slm) {
-     NS_WARNING("shadow layers no sprechen D3D backend yet");
+    *aBackendType = LayerManager::LAYERS_NONE;
      return nsnull;
   }
   *aBackendType = lm->GetBackendType();

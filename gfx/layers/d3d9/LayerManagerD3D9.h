@@ -121,6 +121,9 @@ public:
    */
   virtual void Destroy();
 
+  virtual ShadowLayerManager* AsShadowManager()
+  { return this; }
+
   virtual void BeginTransaction();
 
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
