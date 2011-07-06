@@ -717,11 +717,7 @@ PLayersParent*
 RenderFrameParent::AllocPLayers()
 {
   ShadowLayerManager* slm = GetLayerManager()->AsShadowManager();
-  if (!slm) {
-    NS_WARNING("shadow layers no sprechen D3D backend yet");
-    return nsnull;
-  }
-  return new ShadowLayersParent(slm);
+  return slm ? new ShadowLayersParent(slm) : nsnull;
 }
 
 bool
