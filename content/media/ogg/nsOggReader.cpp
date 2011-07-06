@@ -1329,14 +1329,14 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
         ogg_int64_t granulepos = ogg_page_granulepos(&page);
 
         if (HasAudio() &&
-            granulepos != -1 &&
+            granulepos > 0 &&
             serial == mVorbisState->mSerial &&
             audioTime == -1) {
           audioTime = mVorbisState->Time(granulepos);
         }
         
         if (HasVideo() &&
-            granulepos != -1 &&
+            granulepos > 0 &&
             serial == mTheoraState->mSerial &&
             videoTime == -1) {
           videoTime = mTheoraState->StartTime(granulepos);
