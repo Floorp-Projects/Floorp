@@ -110,6 +110,18 @@ FileComponent.prototype =
     }
     do_check_true(threw, "Passing a random object should fail");
 
+    var threw = false
+    try {
+      // Directories fail
+      var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                          .getService(Ci.nsIProperties)
+                          .get("CurWorkD", Ci.nsIFile);
+      var f7 = File(dir)
+    } catch (e) {
+      threw = true;
+    }
+    do_check_true(threw, "Can't create a File object for a directory");
+
     return true;
   },
 
