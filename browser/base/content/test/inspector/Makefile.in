@@ -54,6 +54,7 @@ _BROWSER_FILES = \
 		browser_inspector_treePanel_output.js \
 		browser_inspector_treePanel_input.html \
 		browser_inspector_treePanel_result.html \
+		browser_inspector_registertools.js \
 		browser_inspector_bug_665880.js \
 		$(NULL)
 
