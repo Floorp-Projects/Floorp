@@ -1496,11 +1496,11 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 
       PRUint32 serial = ogg_page_serialno(&page);
       if (mVorbisState && serial == mVorbisSerial) {
-        startTime = nsVorbisState::Time(&mVorbisInfo, granulepos) - aStartTime;
+        startTime = nsVorbisState::Time(&mVorbisInfo, granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
       else if (mTheoraState && serial == mTheoraSerial) {
-        startTime = nsTheoraState::Time(&mTheoraInfo, granulepos) - aStartTime;
+        startTime = nsTheoraState::Time(&mTheoraInfo, granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
       else if (IsKnownStream(serial)) {
@@ -1521,7 +1521,7 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       // find an end time.
       PRInt64 endTime = RangeEndTime(startOffset, endOffset, PR_TRUE);
       if (endTime != -1) {
-        aBuffered->Add(startTime / static_cast<double>(USECS_PER_S),
+        aBuffered->Add((startTime - aStartTime) / static_cast<double>(USECS_PER_S),
                        (endTime - aStartTime) / static_cast<double>(USECS_PER_S));
       }
     }

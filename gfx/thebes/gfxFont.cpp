@@ -2572,9 +2572,9 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
 {
     nsRefPtr<gfxFont>    selectedFont;
 
-    // if this character or the previous one is a join-causer,
+    // if this character is a join-control or the previous is a join-causer,
     // use the same font as the previous range if we can
-    if (gfxFontUtils::IsJoinCauser(aCh) || gfxFontUtils::IsJoinCauser(aPrevCh)) {
+    if (gfxFontUtils::IsJoinControl(aCh) || gfxFontUtils::IsJoinCauser(aPrevCh)) {
         if (aPrevMatchedFont && aPrevMatchedFont->HasCharacter(aCh)) {
             selectedFont = aPrevMatchedFont;
             return selectedFont.forget();

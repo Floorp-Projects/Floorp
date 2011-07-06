@@ -1093,6 +1093,11 @@ PlacesTreeView.prototype = {
       return;
 
     let node = this._getNodeForRow(aRow);
+
+    if (node._cutting) {
+      aProperties.AppendElement(this._getAtomFor("cutting"));
+    }
+
     if (!node._cellProperties) {
       let properties = new Array();
       let itemId = node.itemId;

@@ -81,9 +81,15 @@ public:
           mQuerySetPriority(aQuerySetPriority),
           mContainer(aContainer),
           mResult(aResult),
-          mNext(nsnull) {}
+          mNext(nsnull)
+    {
+      MOZ_COUNT_CTOR(nsTemplateMatch);
+    }
 
-    ~nsTemplateMatch() {}
+    ~nsTemplateMatch()
+    {
+      MOZ_COUNT_DTOR(nsTemplateMatch);
+    }
 
     static nsTemplateMatch*
     Create(nsFixedSizeAllocator& aPool,

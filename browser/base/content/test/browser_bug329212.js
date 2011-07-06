@@ -6,6 +6,10 @@ function test () {
 
     let doc = gBrowser.contentDocument;
     let tooltip = document.getElementById("aHTMLTooltip");
+
+    ok(FillInHTMLTooltip(doc.getElementById("svg1"), "should get title"));
+    is(tooltip.getAttribute("label"), "This is a non-root SVG element title");
+
     ok(FillInHTMLTooltip(doc.getElementById("text1"), "should get title"));
     is(tooltip.getAttribute("label"), "    This            is a title    ");
 

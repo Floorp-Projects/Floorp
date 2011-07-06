@@ -193,6 +193,10 @@ var gVersionInfoPage = {
   /////////////////////////////////////////////////////////////////////////////
   // UpdateListener
   onUpdateFinished: function(aAddon, status) {
+    // If the add-on is now active then it won't have been disabled by startup
+    if (aAddon.active)
+      AddonManagerPrivate.removeStartupChange("disabled", aAddon.id);
+
     if (status != AddonManager.UPDATE_STATUS_NO_ERROR)
       gUpdateWizard.errorItems.push(aAddon);
 
@@ -431,6 +435,10 @@ var gInstallingPage = {
   },
 
   onInstallEnded: function(aInstall) {
+    // Remember that this add-on was updated during startup
+    AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
+                                         aInstall.id);
+
     this.startNextInstall();
   },
 

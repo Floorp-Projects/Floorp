@@ -61,19 +61,15 @@ var observer = {
     dump("onVisit: " + aURI.spec + "\n");
     confirm_results();
   },
-  onTitleChanged: function(aURI, aPageTitle) {},
-  onBeforeDeleteURI: function(aURI) {},
-  onDeleteURI: function(aURI) {},
-  onClearHistory: function() {},
-  onPageChanged: function(aURI, aWhat, aValue) {},
-  onDeleteVisits: function() {},
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsINavHistoryObserver) ||
-        iid.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  onTitleChanged: function () {},
+  onBeforeDeleteURI: function () {},
+  onDeleteURI: function () {},
+  onClearHistory: function () {},
+  onPageChanged: function () {},
+  onDeleteVisits: function () {},
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsINavHistoryObserver
+  ])
 };
 
 histsvc.addObserver(observer, false);

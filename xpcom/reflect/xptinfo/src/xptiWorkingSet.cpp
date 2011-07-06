@@ -45,17 +45,17 @@
 
 using namespace mozilla;
 
-static PRInt64 GetXPTArenaSize(void*)
+static PRInt64 GetXPTArenaSize()
 {
   return XPT_SizeOfArena(gXPTIStructArena);
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(xptiWorkingSet,
                              "explicit/xpti-working-set",
-                             MR_HEAP,
-                             "Memory used by the XPCOM typelib system.",
+                             KIND_HEAP,
+                             UNITS_BYTES,
                              GetXPTArenaSize,
-                             nsnull)
+                             "Memory used by the XPCOM typelib system.")
 
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
 #define XPTI_HASHTABLE_SIZE             2048

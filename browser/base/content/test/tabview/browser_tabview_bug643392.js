@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-
 let state = {
   windows: [{
     tabs: [{

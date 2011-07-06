@@ -30,10 +30,10 @@ var notWorkingYet = false;
 var notWorkingYetDynamic = false;
 var expectedOutput =
 <output>
-  <button anyid="true" label="(Dromaius novaehollandiae) is a large bird"/>
-  <button anyid="true" label="(Tyto alba) Barn Owl"/>
-  <button anyid="true" label="(Corvus corax) Raven"/>
-  <label anyid="true" value="Chameleon"/>
+  <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" label="(Dromaius-novaehollandiae) is a large bird"/>
+  <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Tyto-alba" label="(Tyto-alba) Barn Owl"/>
+  <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Corvus-corax" label="(Corvus-corax) Raven"/>
+  <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" value="Chameleon"/>
 </output>;
 
 var changes = [];
@@ -47,7 +47,7 @@ var changes = [];
 <assign var="?id" expr="concat('(', @id, ')')"/>
 </query>
 <rule>
-<where subject="?id" rel="equals" value="(Dromaius novaehollandiae)"/>
+<where subject="?id" rel="equals" value="(Dromaius-novaehollandiae)"/>
 <action>
 <button uri="?" label="?id is a large bird"/>
 </action>

@@ -44,6 +44,7 @@ include protocol PCookieService;
 include protocol PBrowser;
 include protocol PWyciwygChannel;
 include protocol PFTPChannel;
+include protocol PWebSocket;
 
 namespace mozilla {
 namespace net {
@@ -57,6 +58,7 @@ sync protocol PNecko
   manages PCookieService;
   manages PWyciwygChannel;
   manages PFTPChannel;
+  manages PWebSocket;
 
 parent:
   __delete__();
@@ -64,6 +66,7 @@ parent:
   PCookieService();
   PWyciwygChannel();
   PFTPChannel();
+  PWebSocket(PBrowser browser);
 
   HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
 

@@ -17,19 +17,6 @@ function test() {
     return groupItem;
   }
 
-  let createOrphan = function () {
-    let tab = gBrowser.loadOneTab('about:blank', {inBackground: true});
-    registerCleanupFunction(function () {
-      if (gBrowser.tabs.length > 1)
-        gBrowser.removeTab(gBrowser.tabs[1])
-    });
-
-    let tabItem = tab._tabViewTabItem;
-    tabItem.parent.remove(tabItem);
-
-    return tabItem;
-  }
-
   let testSingleGroupItem = function () {
     let groupItem = cw.GroupItems.groupItems[0];
     is(cw.GroupItems.getActiveGroupItem(), groupItem, "groupItem is active");
@@ -38,9 +25,8 @@ function test() {
     is(cw.UI.getActiveTab(), tabItem, "tabItem is active");
 
     hideGroupItem(groupItem, function () {
-      is(cw.GroupItems.getActiveGroupItem(), null, "groupItem is not active");
       unhideGroupItem(groupItem, function () {
-        is(cw.GroupItems.getActiveGroupItem(), groupItem, "groupItem is active again");
+        is(cw.GroupItems.getActiveGroupItem(), groupItem, "groupItem is still active");
         is(cw.UI.getActiveTab(), tabItem, "tabItem is still active");
         next();
       });
@@ -63,22 +49,7 @@ function test() {
     });
   }
 
-  let testOrphanTab = function () {
-    let groupItem = cw.GroupItems.groupItems[0];
-    let tabItem = groupItem.getChild(0);
-    let tabItem2 = createOrphan();
-
-    hideGroupItem(groupItem, function () {
-      is(cw.UI.getActiveTab(), tabItem2, "tabItem2 is active");
-      unhideGroupItem(groupItem, function () {
-        cw.UI.setActive(tabItem);
-        tabItem2.close();
-        next();
-      });
-    });
-  }
-
-  let tests = [testSingleGroupItem, testTwoGroupItems, testOrphanTab];
+  let tests = [testSingleGroupItem, testTwoGroupItems];
 
   let next = function () {
     let test = tests.shift();

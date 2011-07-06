@@ -53,20 +53,10 @@ function testScenarios(win) {
   is(cw.GroupItems.getActiveGroupItem(), groupItem2, "second groupItem is active");
   is(cw.UI.getActiveTab(), tabItem, "second groupItem's third tab is active");
 
-  // create orphan
+  // drag tab out of group
   tabItem = groupItem2.getChild(0);
   dragOutOfGroup(tabItem.container);
-
-  // move orphan
-  cw.UI.setActive(groupItem2);
-  simulateDragDrop(tabItem.container);
-  assertActiveOrphan(tabItem);
-
-  // resize orphan
-  cw.UI.setActive(groupItem2);
-  let $resizer = cw.iQ('.iq-resizable-handle', tabItem.container);
-  simulateDragDrop($resizer[0]);
-  assertActiveOrphan(tabItem);
+  is(cw.UI.getActiveTab(), tabItem, "the dragged tab is active");
 
   // drag back into group
   dragIntoGroup(tabItem.container);

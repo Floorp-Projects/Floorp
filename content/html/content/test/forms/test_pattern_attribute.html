@@ -33,34 +33,6 @@ function invalidEventHandler(e)
   gInvalid = true;
 }
 
-function checkPatternAttribute(element)
-{
-  ok('pattern' in element, "Element should have the pattern attribute");
-
-  is(element.pattern, "tulip",
-    "pattern IDL attribute value should be 'tulip'");
-  is(element.getAttribute('pattern'), "tulip",
-    "pattern content attribute value should be 'tulip'");
-
-  element.pattern = "foo";
-  is(element.pattern, "foo",
-    "pattern IDL attribute value should be 'foo'");
-  is(element.getAttribute('pattern'), "foo",
-    "pattern content attribute value should be 'foo'");
-
-  element.removeAttribute('pattern');
-  ok(!element.pattern,
-    "Element pattern attribute shouldn't be specified");
-  is(element.getAttribute('pattern'), null,
-    "Element pattern attribute shouldn't be specified");
-
-  element.setAttribute("pattern", "bar");
-  is(element.pattern, "bar",
-    "pattern IDL attribute value should be 'bar'");
-  is(element.getAttribute('pattern'), "bar",
-    "pattern content attribute value should be 'bar'");
-}
-
 function completeValidityCheck(element, alwaysValid, isBarred)
 {
   if (element.type == 'file') {
@@ -285,9 +257,6 @@ function checkPatternValidity(element)
 }
 
 var input = document.getElementById('i');
-
-// All input types should have the pattern attribute.
-checkPatternAttribute(input);
 
 // |validTypes| are the types which accept @pattern
 // and |invalidTypes| are the ones which do not accept it.
