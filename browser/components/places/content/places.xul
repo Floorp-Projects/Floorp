@@ -109,7 +109,9 @@
     <command id="OrganizerCommand_export"
              oncommand="PlacesOrganizer.exportBookmarks();"/>
     <command id="OrganizerCommand_import"
-             oncommand="PlacesOrganizer.importBookmarks();"/>
+             oncommand="PlacesOrganizer.importFromFile();"/>
+    <command id="OrganizerCommand_browserImport"
+             oncommand="PlacesOrganizer.importFromBrowser();"/>
     <command id="OrganizerCommand_backup"
              oncommand="PlacesOrganizer.backupBookmarks();"/>
     <command id="OrganizerCommand_restoreFromFile"
@@ -351,12 +353,17 @@
             <menuseparator/>
             <menuitem id="fileImport"
                       command="OrganizerCommand_import"
-                      label="&cmd.importHTML.label;"
-                      accesskey="&cmd.importHTML.accesskey;"/>
+                      label="&importBookmarksFromHTML.label;"
+                      accesskey="&importBookmarksFromHTML.accesskey;"/>
             <menuitem id="fileExport"
                       command="OrganizerCommand_export"
-                      label="&cmd.exportHTML.label;"
-                      accesskey="&cmd.exportHTML.accesskey;"/>
+                      label="&exportBookmarksToHTML.label;"
+                      accesskey="&exportBookmarksToHTML.accesskey;"/>
+            <menuseparator/>
+            <menuitem id="browserImport"
+                      command="OrganizerCommand_browserImport"
+                      label="&importOtherBrowser.label;"
+                      accesskey="&importOtherBrowser.accesskey;"/>
           </menupopup>
 #ifdef XP_MACOSX
         </toolbarbutton>

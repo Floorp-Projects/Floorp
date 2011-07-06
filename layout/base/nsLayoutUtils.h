@@ -934,6 +934,10 @@ public:
   // Get a suitable foreground color for painting text for the frame.
   static nscolor GetTextColor(nsIFrame* aFrame);
 
+  // Get a baseline y position in app units that is snapped to device pixels.
+  static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
+                                      nscoord aY, nscoord aAscent);
+
   static void DrawString(const nsIFrame*      aFrame,
                          nsRenderingContext* aContext,
                          const PRUnichar*     aString,
@@ -945,6 +949,23 @@ public:
                                 nsRenderingContext* aContext,
                                 const PRUnichar*     aString,
                                 PRInt32              aLength);
+
+  /**
+   * Helper function for drawing text-shadow. The callback's job
+   * is to draw whatever needs to be blurred onto the given context.
+   */
+  typedef void (* TextShadowCallback)(nsRenderingContext* aCtx,
+                                      nsPoint aShadowOffset,
+                                      const nscolor& aShadowColor,
+                                      void* aData);
+
+  static void PaintTextShadow(const nsIFrame*     aFrame,
+                              nsRenderingContext* aContext,
+                              const nsRect&       aTextRect,
+                              const nsRect&       aDirtyRect,
+                              const nscolor&      aForegroundColor,
+                              TextShadowCallback  aCallback,
+                              void*               aCallbackData);
 
   /**
    * Gets the baseline to vertically center text from a font within a

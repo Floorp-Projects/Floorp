@@ -60,6 +60,13 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 == math-as-mstyle-1.xhtml math-as-mstyle-1-ref.xhtml
+== mpadded-1.html mpadded-1-ref.html
+== mpadded-2.html mpadded-2-ref.html
+== mpadded-3.html mpadded-3-ref.html
+== mpadded-4.html mpadded-4-ref.html
+== mpadded-5.html mpadded-5-ref.html
+== mpadded-1-2.html mpadded-1-2-ref.html
+== mpadded-6.html mpadded-6-ref.html
 == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
 != link-1.xhtml link-ref.xhtml

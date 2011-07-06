@@ -16,12 +16,13 @@ namespace mozilla {
 namespace gfx {
 
 #  if defined(MOZILLA_MAY_SUPPORT_NEON)
-void __attribute((noinline)) yuv42x_to_rgb565_row_neon(uint16 *dst,
-                                                       const uint8 *y,
-                                                       const uint8 *u,
-                                                       const uint8 *v,
-                                                       int n,
-                                                       int oddflag)
+void __attribute((noinline,optimize("-fomit-frame-pointer")))
+    yuv42x_to_rgb565_row_neon(uint16 *dst,
+                              const uint8 *y,
+                              const uint8 *u,
+                              const uint8 *v,
+                              int n,
+                              int oddflag)
 {
     static __attribute__((aligned(16))) uint16 acc_r[8] = {
         22840, 22840, 22840, 22840, 22840, 22840, 22840, 22840,

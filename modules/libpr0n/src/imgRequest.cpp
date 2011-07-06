@@ -191,16 +191,16 @@ imgRequest::imgRequest() :
 
 imgRequest::~imgRequest()
 {
-  if (mKeyURI) {
+  if (mURI) {
     nsCAutoString spec;
-    mKeyURI->GetSpec(spec);
+    mURI->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::~imgRequest()", "keyuri", spec.get());
   } else
     LOG_FUNC(gImgLog, "imgRequest::~imgRequest()");
 }
 
 nsresult imgRequest::Init(nsIURI *aURI,
-                          nsIURI *aKeyURI,
+                          nsIURI *aCurrentURI,
                           nsIRequest *aRequest,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
@@ -211,7 +211,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   NS_ABORT_IF_FALSE(!mImage, "Multiple calls to init");
   NS_ABORT_IF_FALSE(aURI, "No uri");
-  NS_ABORT_IF_FALSE(aKeyURI, "No key uri");
+  NS_ABORT_IF_FALSE(aCurrentURI, "No current uri");
   NS_ABORT_IF_FALSE(aRequest, "No request");
   NS_ABORT_IF_FALSE(aChannel, "No channel");
 
@@ -220,7 +220,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mStatusTracker = new imgStatusTracker(nsnull);
 
   mURI = aURI;
-  mKeyURI = aKeyURI;
+  mCurrentURI = aCurrentURI;
   mRequest = aRequest;
   mChannel = aChannel;
   mTimedChannel = do_QueryInterface(mChannel);
@@ -281,8 +281,8 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
   // If we're empty before adding, we have to tell the loader we now have
   // proxies.
   if (mObservers.IsEmpty()) {
-    NS_ABORT_IF_FALSE(mKeyURI, "Trying to SetHasProxies without key uri.");
-    imgLoader::SetHasProxies(mKeyURI);
+    NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
+    imgLoader::SetHasProxies(mURI);
   }
 
   // If we don't have any current observers, we should restart any animation.
@@ -322,14 +322,14 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
     // been cancelled and thus removed from the cache, tell the image loader so
     // we can be evicted from the cache.
     if (mCacheEntry) {
-      NS_ABORT_IF_FALSE(mKeyURI, "Removing last observer without key uri.");
+      NS_ABORT_IF_FALSE(mURI, "Removing last observer without key uri.");
 
-      imgLoader::SetHasNoProxies(mKeyURI, mCacheEntry);
+      imgLoader::SetHasNoProxies(mURI, mCacheEntry);
     } 
 #if defined(PR_LOGGING)
     else {
       nsCAutoString spec;
-      mKeyURI->GetSpec(spec);
+      mURI->GetSpec(spec);
       LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
     }
 #endif
@@ -410,8 +410,8 @@ nsresult imgRequest::GetKeyURI(nsIURI **aKeyURI)
 {
   LOG_FUNC(gImgLog, "imgRequest::GetKeyURI");
 
-  if (mKeyURI) {
-    *aKeyURI = mKeyURI;
+  if (mURI) {
+    *aKeyURI = mURI;
     NS_ADDREF(*aKeyURI);
     return NS_OK;
   }
@@ -438,7 +438,7 @@ void imgRequest::RemoveFromCache()
     if (mCacheEntry)
       imgLoader::RemoveFromCache(mCacheEntry);
     else
-      imgLoader::RemoveFromCache(mKeyURI);
+      imgLoader::RemoveFromCache(mURI);
   }
 
   mCacheEntry = nsnull;
@@ -504,6 +504,71 @@ void imgRequest::UpdateCacheEntrySize()
     mURI->GetSpec(url);
     printf("CACHEPUT: %d %s %d\n", time(NULL), url.get(), imageSize);
 #endif
+  }
+}
+
+void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
+{
+  /* get the expires info */
+  if (aCacheEntry) {
+    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aRequest));
+    if (cacheChannel) {
+      nsCOMPtr<nsISupports> cacheToken;
+      cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
+      if (cacheToken) {
+        nsCOMPtr<nsICacheEntryInfo> entryDesc(do_QueryInterface(cacheToken));
+        if (entryDesc) {
+          PRUint32 expiration;
+          /* get the expiration time from the caching channel's token */
+          entryDesc->GetExpirationTime(&expiration);
+
+          // Expiration time defaults to 0. We set the expiration time on our
+          // entry if it hasn't been set yet.
+          if (aCacheEntry->GetExpiryTime() == 0)
+            aCacheEntry->SetExpiryTime(expiration);
+        }
+      }
+    }
+
+    // Determine whether the cache entry must be revalidated when we try to use it.
+    // Currently, only HTTP specifies this information...
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+    if (httpChannel) {
+      PRBool bMustRevalidate = PR_FALSE;
+
+      httpChannel->IsNoStoreResponse(&bMustRevalidate);
+
+      if (!bMustRevalidate) {
+        httpChannel->IsNoCacheResponse(&bMustRevalidate);
+      }
+
+      if (!bMustRevalidate) {
+        nsCAutoString cacheHeader;
+
+        httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                            cacheHeader);
+        if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
+          bMustRevalidate = PR_TRUE;
+        }
+      }
+
+      // Cache entries default to not needing to validate. We ensure that
+      // multiple calls to this function don't override an earlier decision to
+      // validate by making validation a one-way decision.
+      if (bMustRevalidate)
+        aCacheEntry->SetMustValidate(bMustRevalidate);
+    }
+
+    // We always need to validate file URIs.
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    if (channel) {
+      nsCOMPtr<nsIURI> uri;
+      channel->GetURI(getter_AddRefs(uri));
+      PRBool isfile = PR_FALSE;
+      uri->SchemeIs("file", &isfile);
+      if (isfile)
+        aCacheEntry->SetMustValidate(isfile);
+    }
   }
 }
 
@@ -750,8 +815,6 @@ NS_IMETHODIMP imgRequest::OnDiscard(imgIRequest *aRequest)
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
-  nsresult rv;
-
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   // Figure out if we're multipart
@@ -823,55 +886,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     }
   }
 
-  /* get the expires info */
-  if (mCacheEntry) {
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aRequest));
-    if (cacheChannel) {
-      nsCOMPtr<nsISupports> cacheToken;
-      cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
-      if (cacheToken) {
-        nsCOMPtr<nsICacheEntryInfo> entryDesc(do_QueryInterface(cacheToken));
-        if (entryDesc) {
-          PRUint32 expiration;
-          /* get the expiration time from the caching channel's token */
-          entryDesc->GetExpirationTime(&expiration);
-
-          /* set the expiration time on our entry */
-          mCacheEntry->SetExpiryTime(expiration);
-        }
-      }
-    }
-    //
-    // Determine whether the cache entry must be revalidated when it expires.
-    // If so, then the cache entry must *not* be used during HISTORY loads if
-    // it has expired.
-    //
-    // Currently, only HTTP specifies this information...
-    //
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
-    if (httpChannel) {
-      PRBool bMustRevalidate = PR_FALSE;
-
-      rv = httpChannel->IsNoStoreResponse(&bMustRevalidate);
-
-      if (!bMustRevalidate) {
-        rv = httpChannel->IsNoCacheResponse(&bMustRevalidate);
-      }
-
-      if (!bMustRevalidate) {
-        nsCAutoString cacheHeader;
-
-        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
-                                            cacheHeader);
-        if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
-          bMustRevalidate = PR_TRUE;
-        }
-      }
-
-      mCacheEntry->SetMustValidateIfExpired(bMustRevalidate);
-    }
-  }
-
+  SetCacheValidation(mCacheEntry, aRequest);
 
   // Shouldn't we be dead already if this gets hit?  Probably multipart/x-mixed-replace...
   if (mObservers.IsEmpty()) {
@@ -1239,6 +1254,8 @@ imgRequest::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   NS_ASSERTION(mChannel == oldChannel, "Got a channel redirect for an unknown channel!");
   NS_ASSERTION(newChannel, "Got a redirect to a NULL channel!");
 
+  SetCacheValidation(mCacheEntry, oldChannel);
+
   // Prepare for callback
   mRedirectCallback = callback;
   mNewRedirectChannel = newChannel;
@@ -1253,7 +1270,7 @@ imgRequest::AsyncOnChannelRedirect(nsIChannel *oldChannel,
     }
     return rv;
   }
-  
+
   (void) OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
@@ -1263,7 +1280,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
 {
   NS_ASSERTION(mRedirectCallback, "mRedirectCallback not set in callback");
   NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
-    
+
   if (NS_FAILED(result)) {
       mRedirectCallback->OnRedirectVerifyCallback(result);
       mRedirectCallback = nsnull;
@@ -1275,21 +1292,19 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   mTimedChannel = do_QueryInterface(mChannel);
   mNewRedirectChannel = nsnull;
 
-  // Don't make any cache changes if we're going to point to the same thing. We
-  // compare specs and not just URIs here because URIs that compare as
-  // .Equals() might have different hashes.
+#if defined(PR_LOGGING)
   nsCAutoString oldspec;
-  if (mKeyURI)
-    mKeyURI->GetSpec(oldspec);
+  if (mCurrentURI)
+    mCurrentURI->GetSpec(oldspec);
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());
+#endif
 
   // make sure we have a protocol that returns data rather than opens
   // an external application, e.g. mailto:
-  nsCOMPtr<nsIURI> uri;
-  mChannel->GetURI(getter_AddRefs(uri));
+  mChannel->GetURI(getter_AddRefs(mCurrentURI));
   PRBool doesNotReturnData = PR_FALSE;
   nsresult rv =
-    NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+    NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                         &doesNotReturnData);
 
   if (NS_SUCCEEDED(rv) && doesNotReturnData)
@@ -1299,34 +1314,6 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
     mRedirectCallback->OnRedirectVerifyCallback(rv);
     mRedirectCallback = nsnull;
     return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> newURI;
-  mChannel->GetOriginalURI(getter_AddRefs(newURI));
-  nsCAutoString newspec;
-  if (newURI)
-    newURI->GetSpec(newspec);
-  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new", newspec.get());
-
-  if (oldspec != newspec) {
-    if (mIsInCache) {
-      // Remove the cache entry from the cache, but don't null out mCacheEntry
-      // (as imgRequest::RemoveFromCache() does), because we need it to put
-      // ourselves back in the cache.
-      if (mCacheEntry)
-        imgLoader::RemoveFromCache(mCacheEntry);
-      else
-        imgLoader::RemoveFromCache(mKeyURI);
-    }
-
-    mKeyURI = newURI;
- 
-    if (mIsInCache) {
-      // If we don't still have a URI or cache entry, we don't want to put
-      // ourselves back into the cache.
-      if (mKeyURI && mCacheEntry)
-        imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
-    }
   }
 
   mRedirectCallback->OnRedirectVerifyCallback(NS_OK);

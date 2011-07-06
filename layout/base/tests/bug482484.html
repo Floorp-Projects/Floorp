@@ -1,0 +1,23 @@
+<!DOCTYPE HTML><html><head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div contentEditable="true" id="div"><p id="p">BC</p></div>
+<script>
+  // Position the caret before the "B"
+  var div = document.getElementById('div');
+  div.focus();
+  var p = document.getElementById('p');
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.setStart(p.firstChild, 0)
+  range.setEnd(p.firstChild, 0);
+  sel.addRange(range);
+
+  sendKey('UP', div);  // move UP
+  sendChar('A', div);  // insert "A"
+</script>
+</body>
+</html>

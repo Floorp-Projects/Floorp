@@ -335,16 +335,11 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     break;
 
   case NS_STYLE_LIST_STYLE_DECIMAL:
-  case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
   case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
   case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
   case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
   case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
   case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-  case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-  case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
-  case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
-  case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
   case NS_STYLE_LIST_STYLE_LOWER_GREEK:
   case NS_STYLE_LIST_STYLE_HEBREW:
   case NS_STYLE_LIST_STYLE_ARMENIAN:
@@ -1062,7 +1057,6 @@ nsBulletFrame::AppendCounterText(PRInt32 aListStyleType,
       break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     default: // CSS2 say "A users  agent that does not recognize a numbering system
       // should use 'decimal'
       success = DecimalToText(aOrdinal, result);
@@ -1073,23 +1067,19 @@ nsBulletFrame::AppendCounterText(PRInt32 aListStyleType,
       break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
       success = RomanToText(aOrdinal, result,
                             gLowerRomanCharsA, gLowerRomanCharsB);
       break;
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
       success = RomanToText(aOrdinal, result,
                             gUpperRomanCharsA, gUpperRomanCharsB);
       break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
       success = CharListToText(aOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
       success = CharListToText(aOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
       break;
 
@@ -1371,15 +1361,10 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     default:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
     case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
     case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
     case NS_STYLE_LIST_STYLE_KATAKANA:
     case NS_STYLE_LIST_STYLE_HIRAGANA:
     case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:

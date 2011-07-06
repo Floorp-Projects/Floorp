@@ -1217,7 +1217,8 @@
           }
         ]]>
       </handler>
-      <handler event="DOMMouseScroll">
+      <handler event="MozMousePixelScroll" preventdefault="true"/>
+      <handler event="DOMMouseScroll" preventdefault="true">
         <![CDATA[
           this._increaseOrDecreaseMonth(event.detail < 0 ? -1 : 1);
         ]]>
@@ -1230,9 +1231,9 @@
                action="this._increaseOrDecreaseDateFromEvent(event, -7);"/>
       <handler event="keypress" keycode="VK_DOWN"
                action="this._increaseOrDecreaseDateFromEvent(event, 7);"/>
-      <handler event="keypress" keycode="VK_PAGE_UP"
+      <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true"
                action="this._increaseOrDecreaseMonth(-1);"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN"
+      <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true"
                action="this._increaseOrDecreaseMonth(1);"/>
     </handlers>
   </binding>

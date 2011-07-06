@@ -66,11 +66,8 @@
 #include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMKeyListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMTextListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIView.h"
@@ -98,8 +95,7 @@ static PRBool g_is_scrollable = PR_FALSE;
 
 // TODO auto reload nsWidgetUtils in C.
 class nsWidgetUtils : public nsIObserver,
-                      public nsIDOMMouseMotionListener,
-                      public nsIDOMMouseListener,
+                      public nsIDOMEventListener,
                       public nsIContentPolicy,
                       public nsSupportsWeakReference
 {
@@ -107,20 +103,8 @@ public:
   nsWidgetUtils();
   virtual ~nsWidgetUtils();
 
-  // nsIDOMMouseMotionListener
-  NS_IMETHOD MouseMove(nsIDOMEvent* aDOMEvent);
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aDOMEvent);
-
-  // nsIDOMMouseListener
-  NS_IMETHOD MouseDown(nsIDOMEvent* aDOMEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aDOMEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aDOMEvent);
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aDOMEvent);
-  NS_IMETHOD MouseOver(nsIDOMEvent* aDOMEvent);
-  NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
-
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER 
   NS_DECL_NSICONTENTPOLICY
 
@@ -132,6 +116,9 @@ private:
   PRBool IsXULNode(nsIDOMNode *aNode, PRUint32 *aType = 0);
   nsresult GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
   nsresult UpdateFromEvent(nsIDOMEvent *aDOMEvent);
+  nsresult MouseDown(nsIDOMEvent* aDOMEvent);
+  nsresult MouseUp(nsIDOMEvent* aDOMEvent);
+  nsresult MouseMove(nsIDOMEvent* aDOMEvent);
 
   static void StopPanningCallback(nsITimer *timer, void *closure);
 
@@ -216,7 +203,7 @@ nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWidgetUtils::MouseDown(nsIDOMEvent* aDOMEvent)
 {
   g_is_scrollable = PR_FALSE;
@@ -237,7 +224,7 @@ nsWidgetUtils::StopPanningCallback(nsITimer *timer, void *closure)
   g_panning = PR_FALSE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWidgetUtils::MouseUp(nsIDOMEvent* aDOMEvent)
 {
   nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
@@ -263,7 +250,7 @@ nsWidgetUtils::MouseUp(nsIDOMEvent* aDOMEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
 {
   if (!g_is_scrollable) return NS_OK;
@@ -348,39 +335,21 @@ nsWidgetUtils::ShouldLoad(PRUint32          aContentType,
 }
 
 NS_IMETHODIMP
-nsWidgetUtils::MouseClick(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseDblClick(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWidgetUtils::HandleEvent(nsIDOMEvent* aDOMEvent)
 {
-  return NS_OK;
-}
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
 
-NS_IMETHODIMP
-nsWidgetUtils::MouseOver(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
+  if (eventType.EqualsLiteral("mousedown")) {
+    return MouseDown(aEvent);
+  }
+  if (eventType.EqualsLiteral("mouseup")) {
+    return MouseUp(aEvent);
+  }
+  if (eventType.EqualsLiteral("mousemove")) {
+    return MouseMove(aEvent);
+  }
 
-NS_IMETHODIMP
-nsWidgetUtils::MouseOut(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsWidgetUtils::DragMove(nsIDOMEvent* aDOMEvent)
-{
   return NS_OK;
 }
 
@@ -465,20 +434,12 @@ nsWidgetUtils::RemoveWindowListeners(nsIDOMWindow *aDOMWin)
     // Use capturing, otherwise the normal find next will get activated when ours should
 
     // Remove DOM Text listener for IME text events
-    rv = chromeEventHandler->
-      RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                               NS_GET_IID(nsIDOMMouseListener));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to add Mouse Motion listener\n");
-        return;
-    }
-    rv = chromeEventHandler->
-      RemoveEventListenerByIID(static_cast<nsIDOMMouseMotionListener*>(this),
-                               NS_GET_IID(nsIDOMMouseMotionListener));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to add Mouse Motion listener\n");
-        return;
-    }
+    chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("mousedown"),
+                                            this, PR_FALSE);
+    chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("mouseup"),
+                                            this, PR_FALSE);
+    chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+                                            this, PR_FALSE);
 }
 
 void
@@ -494,27 +455,23 @@ nsWidgetUtils::AttachWindowListeners(nsIDOMWindow *aDOMWin)
     // Use capturing, otherwise the normal find next will get activated when ours should
 
     // Attach menu listeners, this will help us ignore keystrokes meant for menus
-    rv = chromeEventHandler->
-      AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
-                            NS_GET_IID(nsIDOMMouseListener));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to add Mouse Motion listener\n");
-        return;
-    }
-    rv = chromeEventHandler->
-      AddEventListenerByIID(static_cast<nsIDOMMouseMotionListener*>(this),
-                            NS_GET_IID(nsIDOMMouseMotionListener));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to add Mouse Motion listener\n");
-        return;
-    }
+    chromeEventHandler->AddEventListener(NS_LITERAL_STRING("mousedown"), this,
+                                         PR_FALSE, PR_FALSE);
+    chromeEventHandler->AddEventListener(NS_LITERAL_STRING("mouseup"), this,
+                                         PR_FALSE, PR_FALSE);
+    chromeEventHandler->AddEventListener(NS_LITERAL_STRING("mousemove"), this,
+                                         PR_FALSE, PR_FALSE);
 }
 
 nsWidgetUtils::~nsWidgetUtils()
 {
 }
 
-NS_IMPL_ISUPPORTS5(nsWidgetUtils, nsIObserver, nsIDOMMouseMotionListener, nsIDOMMouseListener, nsIContentPolicy, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS4(nsWidgetUtils,
+                   nsIObserver,
+                   nsIDOMEventListener,
+                   nsIContentPolicy,
+                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsWidgetUtils::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)

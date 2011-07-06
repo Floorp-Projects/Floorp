@@ -58,6 +58,7 @@ void* GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance);
 void ReleaseCGLayer(void* cgLayer);
 void Repaint(void* cgLayer, nsIntRect aRect);
 
+bool SetProcessName(const char* aProcessName);
 
 } // namespace PluginUtilsOSX
 } // namespace plugins

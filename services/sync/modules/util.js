@@ -48,6 +48,7 @@ Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/status.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -1200,6 +1201,18 @@ let Utils = {
     });
     // In the common case, checkAppReady just returns true
     return (Utils.checkAppReady = function() true)();
+  },
+
+  /**
+   * Return a value for a backoff interval.  Maximum is eight hours, unless
+   * Status.backoffInterval is higher.
+   *
+   */
+  calculateBackoff: function calculateBackoff(attempts, base_interval) {
+    let backoffInterval = attempts *
+                          (Math.floor(Math.random() * base_interval) +
+                           base_interval);
+    return Math.max(Math.min(backoffInterval, MAXIMUM_BACKOFF_INTERVAL), Status.backoffInterval);
   }
 };
 

@@ -13,18 +13,13 @@ body {
 ----------------------------------*/
 
 .tab {
+  margin: 4px;
   padding-top: 4px;
   -moz-padding-end: 6px;
   padding-bottom: 6px;
   -moz-padding-start: 4px;
   background-color: #E0EAF5;
   border-radius: 0.4em;
-  box-shadow:
-    0 1px 0 #FFFFFF inset,
-    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
-    1px 0 1px rgba(255, 255, 255, 0.8) inset,
-    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
-    0 1px 1.5px rgba(4, 38, 60, 0.4);
   cursor: pointer;
 }
 
@@ -139,8 +134,6 @@ html[dir=rtl] .expander {
   bottom: -20px;
   text-align: center;
   width: 94.5%;
-  white-space: nowrap;
-  overflow: hidden;
   text-shadow: 0 1px rgba(255, 255, 255, 0.6);
 }
 
@@ -209,16 +202,6 @@ html[dir=rtl] .tab.focus {
 
 /* Tab GroupItem
 ----------------------------------*/
-
-.tabInGroupItem {
-  box-shadow: none;
-  background-color: #E0EAF5;
-  margin: 4px;
-}
-
-.tabInGroupItem .favicon {
-  background-color: #E0EAF5;
-}
 
 .groupItem {
   cursor: move;

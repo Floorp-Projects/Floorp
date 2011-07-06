@@ -2862,10 +2862,8 @@ var gDetailView = {
     var xml = xhr.responseXML;
     var settings = xml.querySelectorAll(":root > setting");
 
-    for (var i = 0; i < settings.length; i++) {
+    for (var i = 0, first = true; i < settings.length; i++) {
       var setting = settings[i];
-      if (i == 0)
-        setting.setAttribute("first-row", true);
 
       // Remove setting description, for replacement later
       var desc = stripTextNodes(setting).trim();
@@ -2879,10 +2877,18 @@ var gDetailView = {
         setting.setAttribute("fullpath", "true");
 
       rows.appendChild(setting);
+      var visible = window.getComputedStyle(setting, null).getPropertyValue("display") != "none";
+      if (first && visible) {
+        setting.setAttribute("first-row", true);
+        first = false;
+      }
 
       // Add a new row containing the description
       if (desc) {
         var row = document.createElement("row");
+        if (!visible) {
+          row.setAttribute("unsupported", "true");
+        }
         var label = document.createElement("label");
         label.className = "preferences-description";
         label.textContent = desc;
