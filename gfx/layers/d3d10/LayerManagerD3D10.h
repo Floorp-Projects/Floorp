@@ -38,6 +38,7 @@
 #ifndef GFX_LAYERMANAGERD3D10_H
 #define GFX_LAYERMANAGERD3D10_H
 
+#include "mozilla/layers/ShadowLayers.h"
 #include "Layers.h"
 
 #include <windows.h>
