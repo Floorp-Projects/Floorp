@@ -1,0 +1,22 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>selection scrolling test</title>
+<script type="text/javascript"
+  src="chrome://mochikit/content/MochiKit/packed.js"></script>
+<script type="text/javascript"
+  src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css"
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+window.open("window_selection_scrolling.html", "_blank", 
+            "top=200,left=200,width=300,height=300,scrollbars=yes");
+</script>
+</pre>
+</body>
+</html>

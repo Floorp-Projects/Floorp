@@ -370,6 +370,15 @@ public:
   PRBool GetMouseDownState() const { return mMouseDownState; }
 
   /**
+   * GetMouseDownedFrameSelection returns an instance which is handling
+   * mouse dragging.
+   */
+  static nsFrameSelection* GetMouseDownFrameSelection()
+  {
+    return sDraggingFrameSelection;
+  }
+
+  /**
     if we are in table cell selection mode. aka ctrl click in table cell
    */
   PRBool GetTableCellSelection() const { return mSelectingTableCellMode != 0; }
@@ -598,6 +607,7 @@ public:
 
 
   nsFrameSelection();
+  virtual ~nsFrameSelection();
 
   void StartBatchChanges();
   void EndBatchChanges();
@@ -695,6 +705,8 @@ private:
   nsIContent* GetParentTable(nsIContent *aCellNode) const;
   nsresult CreateAndAddRange(nsINode *aParentNode, PRInt32 aOffset);
   nsresult ClearNormalSelection();
+
+  static nsFrameSelection* sDraggingFrameSelection;
 
   nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
   nsCOMPtr<nsIContent> mStartSelectedCell;
