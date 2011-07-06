@@ -716,27 +716,12 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 PLayersParent*
 RenderFrameParent::AllocPLayers()
 {
-  LayerManager* lm = GetLayerManager();
-  switch (lm->GetBackendType()) {
-  case LayerManager::LAYERS_BASIC: {
-    BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
-    return new ShadowLayersParent(bslm);
-  }
-  case LayerManager::LAYERS_OPENGL: {
-    LayerManagerOGL* lmo = static_cast<LayerManagerOGL*>(lm);
-    return new ShadowLayersParent(lmo);
-  }
-#ifdef MOZ_ENABLE_D3D9_LAYER
-  case LayerManager::LAYERS_D3D9: {
-    LayerManagerD3D9* lmd3d9 = static_cast<LayerManagerD3D9*>(lm);
-    return new ShadowLayersParent(lmd3d9);
-  }
-#endif //MOZ_ENABLE_D3D9_LAYER
-  default: {
+  ShadowLayerManager* slm = GetLayerManager()->AsShadowManager();
+  if (!slm) {
     NS_WARNING("shadow layers no sprechen D3D backend yet");
     return nsnull;
   }
-  }
+  return new ShadowLayersParent(slm);
 }
 
 bool
