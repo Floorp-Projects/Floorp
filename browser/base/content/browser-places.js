@@ -843,6 +843,7 @@ var BookmarksEventHandler = {
 var PlacesMenuDNDHandler = {
   _springLoadDelay: 350, // milliseconds
   _loadTimer: null,
+  _closerTimer: null,
 
   /**
    * Called when the user enters the <menu> element during a drag.
@@ -878,8 +879,9 @@ var PlacesMenuDNDHandler = {
       this._loadTimer.cancel();
       this._loadTimer = null;
     }
-    let closeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    closeTimer.initWithCallback(function() {
+    this._closeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._closeTimer.initWithCallback(function() {
+      this._closeTimer = null;
       let node = PlacesControllerDragHelper.currentDropTarget;
       let inHierarchy = false;
       while (node && !inHierarchy) {
