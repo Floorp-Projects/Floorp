@@ -4554,7 +4554,7 @@ types::CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *scrip
 
     Vector<TypeNewScript::Initializer> initializerList(cx);
     AnalyzeNewScriptProperties(cx, type, script, &baseobj, &initializerList);
-    if (!baseobj || baseobj->slotSpan() == 0 && type->newScriptCleared)
+    if (!baseobj || (baseobj->slotSpan() == 0 && type->newScriptCleared))
         return;
 
     gc::FinalizeKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
