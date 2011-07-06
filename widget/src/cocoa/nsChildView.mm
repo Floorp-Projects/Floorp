@@ -2073,8 +2073,7 @@ nsChildView::DrawOver(LayerManager* aManager, nsIntRect aRect)
   float bottomX = aRect.x + aRect.width;
   float bottomY = aRect.y + aRect.height;
 
-  manager->gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  manager->gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mResizerImage->Texture());
+  TextureImage::ScopedBindTexture texBind(mResizerImage, LOCAL_GL_TEXTURE0);
 
   ColorTextureLayerProgram *program =
     manager->GetColorTextureLayerProgram(mResizerImage->GetShaderProgramType());
