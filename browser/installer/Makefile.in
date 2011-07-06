@@ -92,6 +92,10 @@ ifdef WIN32_OLD_STYLE_JEMALLOC
 DEFINES += -DWIN32_OLD_STYLE_JEMALLOC=1
 endif
 
+ifneq (,$(filter aurora beta,$(MOZ_UPDATE_CHANNEL)))
+DEFINES += -DSHIP_FEEDBACK=1
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 

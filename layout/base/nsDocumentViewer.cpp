@@ -3649,6 +3649,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
 
   nsPrintEventDispatcher beforeAndAfterPrint(mDocument);
+  NS_ENSURE_STATE(!GetIsPrinting());
   // If we are hosting a full-page plugin, tell it to print
   // first. It shows its own native print UI.
   nsCOMPtr<nsIPluginDocument> pDoc(do_QueryInterface(mDocument));
@@ -3722,6 +3723,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   NS_ENSURE_STATE(doc);
 
   nsPrintEventDispatcher beforeAndAfterPrint(doc);
+  NS_ENSURE_STATE(!GetIsPrinting());
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();
 

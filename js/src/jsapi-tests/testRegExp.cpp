@@ -24,15 +24,15 @@ BEGIN_TEST(testGetRegExpFlags)
 
     EVAL("/foopy/", val.addr());
     obj = JSVAL_TO_OBJECT(val.value());
-    CHECK(JS_GetRegExpFlags(cx, obj) == 0);
+    CHECK_EQUAL(JS_GetRegExpFlags(cx, obj), 0);
 
     EVAL("/foopy/g", val.addr());
     obj = JSVAL_TO_OBJECT(val.value());
-    CHECK(JS_GetRegExpFlags(cx, obj) == JSREG_GLOB);
+    CHECK_EQUAL(JS_GetRegExpFlags(cx, obj), JSREG_GLOB);
 
     EVAL("/foopy/gi", val.addr());
     obj = JSVAL_TO_OBJECT(val.value());
-    CHECK(JS_GetRegExpFlags(cx, obj) == (JSREG_FOLD | JSREG_GLOB));
+    CHECK_EQUAL(JS_GetRegExpFlags(cx, obj), (JSREG_FOLD | JSREG_GLOB));
 
     return true;
 }

@@ -61,6 +61,7 @@
 #include "jsbit.h"
 #include "jsvector.h"
 #include "jstypedarray.h"
+#include "jsutil.h"
 
 #include "jsobjinlines.h"
 #include "jstypedarrayinlines.h"
@@ -105,10 +106,16 @@ ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
  * access.  It can be created explicitly and passed to a TypedArray, or
  * can be created implicitly by constructing a TypedArray with a size.
  */
+
+/**
+ * Walks up the prototype chain to find the actual ArrayBuffer data.
+ * This MAY return NULL. Callers should always use js_IsArrayBuffer()
+ * first.
+ */
 JSObject *
 ArrayBuffer::getArrayBuffer(JSObject *obj)
 {
-    while (!js_IsArrayBuffer(obj))
+    while (obj && !js_IsArrayBuffer(obj))
         obj = obj->getProto();
     return obj;
 }
@@ -117,6 +124,10 @@ JSBool
 ArrayBuffer::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     JSObject *arrayBuffer = getArrayBuffer(obj);
+    if (!arrayBuffer) {
+        vp->setInt32(0);
+        return true;
+    }
     vp->setInt32(jsint(ArrayBuffer::getByteLength(arrayBuffer)));
     return true;
 }
@@ -157,7 +168,7 @@ static JSObject *
 DelegateObject(JSContext *cx, JSObject *obj)
 {
     if (!obj->getPrivate()) {
-        JSObject *delegate = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL);
+        JSObject *delegate = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, obj->getProto(), NULL);
         obj->setPrivate(delegate);
         return delegate;
     }
@@ -230,8 +241,11 @@ ArrayBuffer::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     if (!delegateResult)
         return false;
 
-    if (*propp != NULL)
+    if (*propp != NULL) {
+        if (*objp == delegate)
+            *objp = obj;
         return true;
+    }
 
     JSObject *proto = obj->getProto();
     if (!proto) {
@@ -276,6 +290,29 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, J
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom))
         return true;
+
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
+        if (!vp->isObjectOrNull())
+            return JS_TRUE;
+
+        JSObject *pobj = vp->toObjectOrNull();
+
+        JSObject *delegate = DelegateObject(cx, obj);
+        if (!delegate)
+            return false;
+
+        // save the old prototype
+        JSObject *oldDelegateProto = delegate->getProto();
+        if (!SetProto(cx, delegate, pobj, true))
+            return false;
+
+        if (!SetProto(cx, obj, pobj, true)) {
+            // restore proto on delegate
+            JS_ALWAYS_TRUE(SetProto(cx, delegate, oldDelegateProto, true));
+            return false;
+        }
+        return true;
+    }
 
     JSObject *delegate = DelegateObject(cx, obj);
     if (!delegate)

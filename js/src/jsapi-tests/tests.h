@@ -172,7 +172,7 @@ class JSAPITest
                fail(bytes, filename, lineno);
     }
 
-    JSAPITestString toSource(jsval v) {
+    JSAPITestString jsvalToSource(jsval v) {
         JSString *str = JS_ValueToSource(cx, v);
         if (str) {
             JSAutoByteString bytes(cx, str);
@@ -183,9 +183,75 @@ class JSAPITest
         return JSAPITestString("<<error converting value to string>>");
     }
 
-#define CHECK_SAME(actual, expected) \
+    JSAPITestString toSource(long v) {
+        char buf[40];
+        sprintf(buf, "%ld", v);
+        return JSAPITestString(buf);
+    }
+
+    JSAPITestString toSource(unsigned long v) {
+        char buf[40];
+        sprintf(buf, "%lu", v);
+        return JSAPITestString(buf);
+    }
+
+    JSAPITestString toSource(long long v) {
+        char buf[40];
+        sprintf(buf, "%lld", v);
+        return JSAPITestString(buf);
+    }
+
+    JSAPITestString toSource(unsigned long long v) {
+        char buf[40];
+        sprintf(buf, "%llu", v);
+        return JSAPITestString(buf);
+    }
+
+    JSAPITestString toSource(unsigned int v) {
+        return toSource((unsigned long)v);
+    }
+
+    JSAPITestString toSource(int v) {
+        return toSource((long)v);
+    }
+
+    JSAPITestString toSource(bool v) {
+        return JSAPITestString(v ? "true" : "false");
+    }
+
+    JSAPITestString toSource(JSAtom *v) {
+        return jsvalToSource(STRING_TO_JSVAL((JSString*)v));
+    }
+
+    JSAPITestString toSource(JSVersion v) {
+        return JSAPITestString(JS_VersionToString(v));
+    }
+
+    template<typename T>
+    bool checkEqual(const T &actual, const T &expected,
+                    const char *actualExpr, const char *expectedExpr,
+                    const char *filename, int lineno) {
+        return (actual == expected) ||
+            fail(JSAPITestString("CHECK_EQUAL failed: expected (") +
+                 expectedExpr + ") = " + toSource(expected) +
+                 ", got (" + actualExpr + ") = " + toSource(actual), filename, lineno);
+    }
+
+    // There are many cases where the static types of 'actual' and 'expected'
+    // are not identical, and C++ is understandably cautious about automatic
+    // coercions. So catch those cases and forcibly coerce, then use the
+    // identical-type specialization. This may do bad things if the types are
+    // actually *not* compatible.
+    template<typename T, typename U>
+    bool checkEqual(const T &actual, const U &expected,
+                   const char *actualExpr, const char *expectedExpr,
+                   const char *filename, int lineno) {
+        return checkEqual(U(actual), expected, actualExpr, expectedExpr, filename, lineno);
+    }
+
+#define CHECK_EQUAL(actual, expected) \
     do { \
-        if (!checkSame(actual, expected, #actual, #expected, __FILE__, __LINE__)) \
+        if (!checkEqual(actual, expected, #actual, #expected, __FILE__, __LINE__)) \
             return false; \
     } while (false)
 
@@ -196,8 +262,14 @@ class JSAPITest
         return (JS_SameValue(cx, actual, expected, &same) && same) ||
                fail(JSAPITestString("CHECK_SAME failed: expected JS_SameValue(cx, ") +
                     actualExpr + ", " + expectedExpr + "), got !JS_SameValue(cx, " +
-                    toSource(actual) + ", " + toSource(expected) + ")", filename, lineno);
+                    jsvalToSource(actual) + ", " + jsvalToSource(expected) + ")", filename, lineno);
     }
+
+#define CHECK_SAME(actual, expected) \
+    do { \
+        if (!checkSame(actual, expected, #actual, #expected, __FILE__, __LINE__)) \
+            return false; \
+    } while (false)
 
 #define CHECK(expr) \
     do { \

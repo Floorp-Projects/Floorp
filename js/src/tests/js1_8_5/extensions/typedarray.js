@@ -80,6 +80,8 @@ function test()
         check(function() thrown, todo);
     }
 
+    check(function() ArrayBuffer.prototype.byteLength == 0);
+
     var buf, buf2;
 
     buf = new ArrayBuffer(100);
