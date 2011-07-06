@@ -248,6 +248,7 @@ xpc::CompartmentPrivate::~CompartmentPrivate()
 {
     delete waiverWrapperMap;
     delete expandoMap;
+    MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
 }
 
 static JSBool
