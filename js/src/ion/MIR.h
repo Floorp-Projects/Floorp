@@ -388,6 +388,18 @@ class MInstruction
         return false;
     }
 
+    // Operations are classified not by if they can be hoisted but if there is a profit
+    // that we get from hoisting them.  Instructions that are POTENTIAL_WIN will be hoisted
+    // only if they allow another instruction that is a BIG_WIN to be hoisted as well
+    enum HoistWin {
+        NO_WIN,
+        POTENTIAL_WIN,
+        BIG_WIN
+    };
+    virtual HoistWin estimateHoistWin() {
+        return NO_WIN;
+    }
+
   public:
     // Opcode testing and casts.
 #   define OPCODE_CASTS(opcode)                                             \
@@ -469,6 +481,9 @@ class MConstant : public MAryInstruction<0>
     }
     const js::Value *vp() const {
         return &value_;
+    }
+    HoistWin estimateHoistWin() {
+        return POTENTIAL_WIN;
     }
     void printOpcode(FILE *fp);
 };
@@ -727,6 +742,9 @@ class MBitAnd : public MBinaryInstruction
     MIRType requiredInputType(size_t index) const {
         return specialization();
     }
+    HoistWin estimateHoistWin() {
+        return BIG_WIN;
+    }
 };
 
 class MAdd : public MBinaryInstruction
@@ -742,9 +760,11 @@ class MAdd : public MBinaryInstruction
     static MAdd *New(MInstruction *left, MInstruction *right) {
         return new MAdd(left, right);
     }
-
     MIRType requiredInputType(size_t index) const {
         return specialization();
+    }
+    HoistWin estimateHoistWin() {
+        return BIG_WIN;
     }
 };
 

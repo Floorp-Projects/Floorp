@@ -127,7 +127,7 @@ Loop::iterateLoopBlocks(MBasicBlock *current)
     for (MInstructionIterator i = current->begin(); i != current->end(); i ++) {
         MInstruction *ins = *i;
 
-        if (isHoistable(ins)) {
+        if (ins->estimateHoistWin() != MInstruction::NO_WIN) {
             if (!insertInWorklist(ins))
                 return false;
         }
@@ -167,7 +167,7 @@ Loop::optimize()
                 // and it is hoistable...
                 if (!use->ins()->inWorklist() &&
                     isInLoop(use->ins()) &&
-                    isHoistable(use->ins())) {
+                    use->ins()->estimateHoistWin() != MInstruction::NO_WIN) {
 
                     if(!insertInWorklist(use->ins()))
                         return false;
@@ -188,6 +188,15 @@ Loop::optimize()
 bool
 Loop::hoistInstructions(InstructionQueue &toHoist)
 {
+    // Move all instructions to the preLoop_ block just before the control instruction.
+    while (!toHoist.empty()) {
+        MInstruction *ins = toHoist.popCopy();
+        if (shouldHoist(ins) && checkHotness(ins->block())) {
+            ins->block()->remove(ins);
+            preLoop_->insertBefore(preLoop_->lastIns(), ins);
+            ins->setNotLoopInvariant();
+        }
+    }
     return true;
 }
 
@@ -218,13 +227,31 @@ Loop::isLoopInvariant(MInstruction *ins)
 }
 
 bool
-Loop::isHoistable(MInstruction *ins)
+Loop::shouldHoist(MInstruction *ins)
 {
-    if (ins->op() == MInstruction::Op_Phi ||
-        ins->op() == MInstruction::Op_Test ||
-        ins->op() == MInstruction::Op_Goto)
-        return false;
+    JS_ASSERT(ins->estimateHoistWin() != MInstruction::NO_WIN);
 
+    if (ins->estimateHoistWin() == MInstruction::BIG_WIN)
+        return true;
+
+    // Loop through uses, if any are loop invariant and have a big hoist win, then we
+    // should hoist this instruction
+    MUse *use = ins->uses();
+    while (use != NULL) {
+        if (use->ins()->isLoopInvariant() && use->ins()->estimateHoistWin() == MInstruction::BIG_WIN)
+            return true;
+
+        use = use->next();
+    }
+    return false;
+}
+
+bool
+Loop::checkHotness(MBasicBlock *block)
+{
+    // TODO: determine if instructions within this block are worth hoisting.
+    // They might not be if the block is cold enough within the loop.
+    // BUG 669517
     return true;
 }
 
@@ -242,7 +269,5 @@ Loop::popFromWorklist()
 {
     MInstruction* toReturn = worklist_.popCopy();
     toReturn->setNotInWorklist();
-
     return toReturn;
 }
-

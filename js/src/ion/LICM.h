@@ -96,7 +96,14 @@ class Loop
     // Utility methods for invariance testing and instruction hoisting.
     bool isInLoop(MInstruction *ins);
     bool isLoopInvariant(MInstruction *ins);
-    bool isHoistable(MInstruction *ins);
+
+    // Determines if an instruction should be hoisted based on it's win estimate and
+    // the win estimates of it's uses
+    bool shouldHoist(MInstruction *ins);
+
+    // This method determines if this block hot within a loop.  That is, if it's
+    // always or usually run when the loop executes
+    bool checkHotness(MBasicBlock *block);
 
     // Worklist and worklist usage methods
     InstructionQueue worklist_;
