@@ -41,18 +41,19 @@ var summary = 'Array.apply maximum arguments';
 var actual = '';
 var expect = '';
 
+printBugNumber(BUGNUMBER);
+printStatus (summary);
+reportCompare(true, true, "");
 
 //-----------------------------------------------------------------------------
-if (getMaxArgs)
+if (this.getMaxArgs)
     test(getMaxArgs());
+
 //-----------------------------------------------------------------------------
 
 function test(length)
 {
   enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
- 
 
   var a = new Array();
   a[length - 2] = 'length-2';

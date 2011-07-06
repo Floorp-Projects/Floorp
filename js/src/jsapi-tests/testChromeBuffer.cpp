@@ -1,7 +1,7 @@
 #include "tests.h"
 
 JSPrincipals system_principals = {
-    NULL, NULL, NULL, 1, NULL, NULL
+    (char *)"", NULL, NULL, 1, NULL, NULL
 };
 
 JSClass global_class = {
