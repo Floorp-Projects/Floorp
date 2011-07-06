@@ -1427,7 +1427,7 @@ bool
 StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
 {
     if (!isFunctionFrame()) {
-        vp->setUndefined();
+        vp->setNull();
         return true;
     }
 
@@ -1560,6 +1560,9 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     /* Find fun's top-most activation record. */
     StackFrame *fp = js_GetTopStackFrame(cx);
+    if (!fp)
+        return true;
+
     while (!fp->isFunctionFrame() || fp->fun() != fun) {
         fp = fp->prev();
         if (!fp)
@@ -1572,9 +1575,11 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                                           NULL, JSMSG_DEPRECATED_USAGE, js_arguments_str)) {
             return false;
         }
-        if (!js_GetArgsValue(cx, fp, vp))
-                return false;
-    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
+
+        return js_GetArgsValue(cx, fp, vp);
+    }
+
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
         if (!fp->prev())
             return true;
 
@@ -1582,26 +1587,29 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (frame && !frame->getValidCalleeObject(cx, vp))
             return false;
 
-        if (vp->isObject()) {
-            JSObject &caller = vp->toObject();
+        if (!vp->isObject()) {
+            JS_ASSERT(vp->isNull());
+            return true;
+        }
 
-            /* Censor the caller if it is from another compartment. */
-            if (caller.compartment() != cx->compartment) {
-                vp->setNull();
-            } else if (caller.isFunction()) {
-                JSFunction *callerFun = caller.getFunctionPrivate();
-                if (callerFun->isInterpreted() && callerFun->inStrictMode()) {
-                    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
-                                                 JSMSG_CALLER_IS_STRICT);
-                    return false;
-                }
+        /* Censor the caller if it is from another compartment. */
+        JSObject &caller = vp->toObject();
+        if (caller.compartment() != cx->compartment) {
+            vp->setNull();
+        } else if (caller.isFunction()) {
+            JSFunction *callerFun = caller.getFunctionPrivate();
+            if (callerFun->isInterpreted() && callerFun->inStrictMode()) {
+                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                             JSMSG_CALLER_IS_STRICT);
+                return false;
             }
         }
-    } else {
-        JS_NOT_REACHED("fun_getProperty");
+
+        return true;
     }
 
-    return true;
+    JS_NOT_REACHED("fun_getProperty");
+    return false;
 }
 
 

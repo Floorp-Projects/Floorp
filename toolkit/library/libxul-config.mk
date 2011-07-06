@@ -138,6 +138,7 @@ COMPONENT_LIBS += \
 	pipboot \
 	pipnss \
 	appcomps \
+	jsreflect \
 	composer \
 	jetpack_s \
 	telemetry \
