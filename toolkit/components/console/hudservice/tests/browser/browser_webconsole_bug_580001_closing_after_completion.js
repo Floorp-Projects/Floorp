@@ -61,7 +61,6 @@ function testClosingAfterCompletion() {
 
   let errorWhileClosing = false;
   function errorListener(evt) {
-    browser.removeEventListener("error", errorListener, false);
     errorWhileClosing = true;
   }
 
@@ -74,6 +73,7 @@ function testClosingAfterCompletion() {
   // We can't test for errors right away, because the error occures after a
   // setTimeout(..., 0) in the WebConsole code.
   executeSoon(function() {
+    browser.removeEventListener("error", errorListener, false);
     is(errorWhileClosing, false, "no error while closing the WebConsole");
     finishTest();
   });
