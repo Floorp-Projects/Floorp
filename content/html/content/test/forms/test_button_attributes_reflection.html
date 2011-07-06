@@ -21,11 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=551670
 /** Test for Bug 551670 **/
 
 // .type
-reflectLimitedEnumerated(document.createElement("button"),
-                         "type",
-                         [ "submit", "reset", "button" ],
-                         [ "this-is-probably-a-wrong-type", "", "tulip" ],
-                         "submit");
+reflectLimitedEnumerated({
+  element: document.createElement("button"),
+  attribute: "type",
+  validValues: [ "submit", "reset", "button" ],
+  invalidValues: [ "this-is-probably-a-wrong-type", "", "tulip" ],
+  defaultValue: "submit",
+});
 
 </script>
 </pre>
