@@ -6503,10 +6503,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     if (presContext->GetTheme()->
           GetWidgetOverflow(presContext->DeviceContext(), this,
                             disp->mAppearance, &r)) {
-      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-        nsRect& o = aOverflowAreas.Overflow(otype);
-        o.UnionRectEdges(o, r);
-      }
+      nsRect& vo = aOverflowAreas.VisualOverflow();
+      vo.UnionRectEdges(vo, r);
     }
   }
 
