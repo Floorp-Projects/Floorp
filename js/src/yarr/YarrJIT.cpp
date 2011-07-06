@@ -71,6 +71,16 @@ class YarrGenerator : private MacroAssembler {
     static const RegisterID regT1 = SH4Registers::r1;
 
     static const RegisterID returnRegister = SH4Registers::r0;
+#elif WTF_CPU_SPARC
+    static const RegisterID input = SparcRegisters::i0;
+    static const RegisterID index = SparcRegisters::i1;
+    static const RegisterID length = SparcRegisters::i2;
+    static const RegisterID output = SparcRegisters::i3;
+
+    static const RegisterID regT0 = SparcRegisters::i4;
+    static const RegisterID regT1 = SparcRegisters::i5;
+
+    static const RegisterID returnRegister = SparcRegisters::i0;
 #elif WTF_CPU_X86
     static const RegisterID input = X86Registers::eax;
     static const RegisterID index = X86Registers::edx;
@@ -679,7 +689,11 @@ class YarrGenerator : private MacroAssembler {
                 UChar ch2 = nextTerm->patternCharacter;
 
                 int mask = 0;
+#if WTF_CPU_BIG_ENDIAN
+                int chPair = ch2 | (ch << 16);
+#else
                 int chPair = ch | (ch2 << 16);
+#endif
 
                 if (m_pattern.m_ignoreCase) {
                     if (isASCIIAlpha(ch))
@@ -2310,6 +2324,10 @@ class YarrGenerator : private MacroAssembler {
 #elif WTF_CPU_SH4
         push(SH4Registers::r11);
         push(SH4Registers::r13);
+#elif WTF_CPU_SPARC
+        save(Imm32(-m_pattern.m_body->m_callFrameSize * sizeof(void*)));
+        // set m_callFrameSize to 0 avoid and stack movement later.
+        m_pattern.m_body->m_callFrameSize = 0;
 #elif WTF_CPU_MIPS
         // Do nothing.
 #endif
@@ -2335,6 +2353,9 @@ class YarrGenerator : private MacroAssembler {
 #elif WTF_CPU_SH4
         pop(SH4Registers::r13);
         pop(SH4Registers::r11);
+#elif WTF_CPU_SPARC
+        ret_and_restore();
+        return;
 #elif WTF_CPU_MIPS
         // Do nothing
 #endif

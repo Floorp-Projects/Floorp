@@ -48,12 +48,15 @@
 #include "nsIDOMTreeWalker.h"
 #include "nsWeakReference.h"
 #include "nsIEditor.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMKeyListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsWeakReference.h"
 #include "mozISpellI18NUtil.h"
 #include "nsCycleCollectionParticipant.h"
+
+// X.h defines KeyPress
+#ifdef KeyPress
+#undef KeyPress
+#endif
 
 class nsIDOMMouseEventListener;
 class mozInlineSpellWordUtil;
@@ -139,8 +142,10 @@ protected:
                                     nsIDOMRange** aRange);
 };
 
-class mozInlineSpellChecker : public nsIInlineSpellChecker, nsIEditActionListener, nsIDOMFocusListener, nsIDOMMouseListener, nsIDOMKeyListener,
-                                     nsSupportsWeakReference
+class mozInlineSpellChecker : public nsIInlineSpellChecker,
+                              public nsIEditActionListener,
+                              public nsIDOMEventListener,
+                              public nsSupportsWeakReference
 {
 private:
   friend class mozInlineSpellStatus;
@@ -221,31 +226,15 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIEDITACTIONLISTENER
   NS_DECL_NSIINLINESPELLCHECKER
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozInlineSpellChecker, nsIDOMKeyListener)
+  NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozInlineSpellChecker, nsIDOMEventListener)
 
   // returns true if it looks likely that we can enable real-time spell checking
   static PRBool CanEnableInlineSpellChecking();
 
-  /*BEGIN implementations of focus event handler interface*/
-  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
-  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
-  /*END implementations of focus event handler interface*/
-
-  /*BEGIN implementations of mouseevent handler interface*/
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
-  /*END implementations of mouseevent handler interface*/
-
-  /* BEGIN interfaces in to the keylistener  interface. */
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-  /* END interfaces from nsIDOMKeyListener */ 
+  nsresult Blur(nsIDOMEvent* aEvent);
+  nsresult MouseClick(nsIDOMEvent* aMouseEvent);
+  nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
   mozInlineSpellChecker();
   virtual ~mozInlineSpellChecker();
@@ -297,7 +286,7 @@ public:
   // DOM and editor event registration helper routines
   nsresult RegisterEventListeners();
   nsresult UnregisterEventListeners();
-  nsresult HandleNavigationEvent(nsIDOMEvent * aEvent, PRBool aForceWordSpellCheck, PRInt32 aNewPositionOffset = 0);
+  nsresult HandleNavigationEvent(PRBool aForceWordSpellCheck, PRInt32 aNewPositionOffset = 0);
 
   nsresult GetSpellCheckSelection(nsISelection ** aSpellCheckSelection);
   nsresult SaveCurrentSelectionPosition();

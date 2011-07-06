@@ -967,11 +967,11 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  PRInt64 placeId;
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  // If the URI is unknown, this will create a new entry.
-  nsresult rv = history->GetUrlIdFor(aURI, &placeId, PR_TRUE);
+  PRInt64 placeId;
+  nsCAutoString placeGuid;
+  nsresult rv = history->GetOrCreateIdForPage(aURI, &placeId, placeGuid);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the correct index for insertion.  This also ensures the parent exists.
@@ -2424,7 +2424,8 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   PRInt64 placeId;
-  nsresult rv = history->GetUrlIdFor(aURI, &placeId, PR_FALSE);
+  nsCAutoString placeGuid;
+  nsresult rv = history->GetIdForPage(aURI, &placeId, placeGuid);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!placeId) {
     // This URI is unknown, just return null.
@@ -2466,11 +2467,11 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI* aNewURI)
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  // This will create a new page if one doesn't exist.
-  PRInt64 newPlaceId;
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  rv = history->GetUrlIdFor(aNewURI, &newPlaceId, PR_TRUE);
+  PRInt64 newPlaceId;
+  nsCAutoString newPlaceGuid;
+  rv = history->GetOrCreateIdForPage(aNewURI, &newPlaceId, newPlaceGuid);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!newPlaceId)
     return NS_ERROR_INVALID_ARG;
@@ -3064,20 +3065,25 @@ nsNavBookmarks::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
 
 
 NS_IMETHODIMP
-nsNavBookmarks::OnBeforeDeleteURI(nsIURI* aURI, const nsACString& aGUID)
+nsNavBookmarks::OnBeforeDeleteURI(nsIURI* aURI,
+                                  const nsACString& aGUID,
+                                  PRUint16 aReason)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsNavBookmarks::OnDeleteURI(nsIURI* aURI, const nsACString& aGUID)
+nsNavBookmarks::OnDeleteURI(nsIURI* aURI,
+                            const nsACString& aGUID,
+                            PRUint16 aReason)
 {
 #ifdef DEBUG
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   PRInt64 placeId;
+  nsCAutoString placeGuid;
   NS_ABORT_IF_FALSE(
-    history && NS_SUCCEEDED(history->GetUrlIdFor(aURI, &placeId, PR_FALSE)) && !placeId,
+    history && NS_SUCCEEDED(history->GetIdForPage(aURI, &placeId, placeGuid)) && !placeId,
     "OnDeleteURI was notified for a page that still exists?"
   );
 #endif
@@ -3094,7 +3100,9 @@ nsNavBookmarks::OnClearHistory()
 
 
 NS_IMETHODIMP
-nsNavBookmarks::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle)
+nsNavBookmarks::OnTitleChanged(nsIURI* aURI,
+                               const nsAString& aPageTitle,
+                               const nsACString& aGUID)
 {
   // NOOP. We don't consume page titles from moz_places anymore.
   // Title-change notifications are sent from SetItemTitle.
@@ -3103,17 +3111,19 @@ nsNavBookmarks::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle)
 
 
 NS_IMETHODIMP
-nsNavBookmarks::OnPageChanged(nsIURI* aURI, PRUint32 aWhat,
-                              const nsAString& aValue)
+nsNavBookmarks::OnPageChanged(nsIURI* aURI,
+                              PRUint32 aChangedAttribute,
+                              const nsAString& aNewValue,
+                              const nsACString& aGUID)
 {
   nsresult rv;
-  if (aWhat == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
+  if (aChangedAttribute == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
     ItemChangeData changeData;
     rv = aURI->GetSpec(changeData.bookmark.url);
     NS_ENSURE_SUCCESS(rv, rv);
     changeData.property = NS_LITERAL_CSTRING("favicon");
     changeData.isAnnotation = PR_FALSE;
-    changeData.newValue = NS_ConvertUTF16toUTF8(aValue);
+    changeData.newValue = NS_ConvertUTF16toUTF8(aNewValue);
     changeData.bookmark.lastModified = 0;
     changeData.bookmark.type = TYPE_BOOKMARK;
 
@@ -3150,7 +3160,8 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI, PRUint32 aWhat,
 
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime,
-                               const nsACString& aGUID)
+                               const nsACString& aGUID,
+                               PRUint16 aReason)
 {
   // Notify "cleartime" only if all visits to the page have been removed.
   if (!aVisitTime) {

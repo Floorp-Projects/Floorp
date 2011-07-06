@@ -48,19 +48,19 @@ function DummyObserver() {
 
 DummyObserver.prototype = {
   // history observer
-  onBeginUpdateBatch: function() {},
-  onEndUpdateBatch: function() {},
-  onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) {
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onVisit: function (aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) {
     let os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
     os.notifyObservers(null, "dummy-observer-visited", null);
   },
-  onTitleChanged: function(aURI, aPageTitle) {},
-  onBeforeDeleteURI: function(aURI) {},
-  onDeleteURI: function(aURI) {},
-  onClearHistory: function() {},
-  onPageChanged: function(aURI, aWhat, aValue) {},
-  onDeleteVisits: function(aURI, aVisitTime) {},
+  onTitleChanged: function () {},
+  onBeforeDeleteURI: function () {},
+  onDeleteURI: function () {},
+  onClearHistory: function () {},
+  onPageChanged: function () {},
+  onDeleteVisits: function () {},
 
   // bookmark observer
   //onBeginUpdateBatch: function() {},

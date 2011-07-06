@@ -2535,7 +2535,8 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
       if (NS_STYLE_FONT_SIZE_LARGER == value) {
         *aSize = nsStyleUtil::FindNextLargerFontSize(parentSize,
                          baseSize, scaleFactor, aPresContext, eFontSize_CSS);
-        NS_ASSERTION(*aSize > parentSize,
+
+        NS_ASSERTION(*aSize >= parentSize,
                      "FindNextLargerFontSize failed");
       }
       else {

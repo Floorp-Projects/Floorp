@@ -1291,7 +1291,8 @@ nsresult
 nsHttpConnectionMgr::
 nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
                                nsIAsyncInputStream **instream,
-                               nsIAsyncOutputStream **outstream)
+                               nsIAsyncOutputStream **outstream,
+                               PRBool isBackup)
 {
     nsresult rv;
 
@@ -1319,6 +1320,14 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
 
     if (mTransaction->Caps() & NS_HTTP_LOAD_ANONYMOUS)
         tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
+
+    // For backup connections, we disable IPv6. That's because some users have
+    // broken IPv6 connectivity (leading to very long timeouts), and disabling
+    // IPv6 on the backup connection gives them a much better user experience
+    // with dual-stack hosts, though they still pay the 250ms delay for each new
+    // connection. This strategy is also known as "happy eyeballs".
+    if (isBackup)
+        tmpFlags |= nsISocketTransport::DISABLE_IPV6;
 
     socketTransport->SetConnectionFlags(tmpFlags);
 
@@ -1358,7 +1367,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupPrimaryStreams()
 {
     nsresult rv = SetupStreams(getter_AddRefs(mSocketTransport),
                                getter_AddRefs(mStreamIn),
-                               getter_AddRefs(mStreamOut));
+                               getter_AddRefs(mStreamOut),
+                               PR_FALSE);
     LOG(("nsHalfOpenSocket::SetupPrimaryStream [this=%p ent=%s rv=%x]",
          this, mEnt->mConnInfo->Host(), rv));
     if (NS_FAILED(rv)) {
@@ -1376,7 +1386,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupStreams()
 {
     nsresult rv = SetupStreams(getter_AddRefs(mBackupTransport),
                                getter_AddRefs(mBackupStreamIn),
-                               getter_AddRefs(mBackupStreamOut));
+                               getter_AddRefs(mBackupStreamOut),
+                               PR_TRUE);
     LOG(("nsHalfOpenSocket::SetupBackupStream [this=%p ent=%s rv=%x]",
          this, mEnt->mConnInfo->Host(), rv));
     if (NS_FAILED(rv)) {

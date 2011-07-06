@@ -1104,6 +1104,17 @@ mjit::JITScript::~JITScript()
 #endif
 }
 
+size_t
+JSScript::jitDataSize()
+{
+    size_t n = 0;
+    if (jitNormal)
+        n += jitNormal->scriptDataSize(); 
+    if (jitCtor)
+        n += jitCtor->scriptDataSize(); 
+    return n;
+}
+
 /* Please keep in sync with Compiler::finishThisUp! */
 size_t
 mjit::JITScript::scriptDataSize()
@@ -1136,7 +1147,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal)
     void **parity = normal ? &script->jitArityCheckNormal : &script->jitArityCheckCtor;
 
     if (*pjit) {
-        cx->runtime->mjitDataSize -= (*pjit)->scriptDataSize();
         (*pjit)->~JITScript();
         cx->free_(*pjit);
         *pjit = NULL;

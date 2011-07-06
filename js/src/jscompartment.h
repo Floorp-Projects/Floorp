@@ -378,6 +378,7 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t                       gcLastBytes;
 
     bool                         hold;
+    bool                         systemGCChunks;
 
     /*
      * Pool for analysis and intermediate type information in this compartment.

@@ -57,6 +57,21 @@ NS_INTERFACE_MAP_END
 
 /* Implementation */
 
+static nsresult
+GetValueFromString(const nsAString &aValueAsString,
+                   PRBool *aValue)
+{
+  if (aValueAsString.EqualsLiteral("true")) {
+    *aValue = PR_TRUE;
+    return NS_OK;
+  }
+  if (aValueAsString.EqualsLiteral("false")) {
+    *aValue = PR_FALSE;
+    return NS_OK;
+  }
+  return NS_ERROR_DOM_SYNTAX_ERR;
+}
+
 nsresult
 nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
                                  nsSVGElement *aSVGElement,
@@ -64,12 +79,10 @@ nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
 {
   PRBool val;
 
-  if (aValueAsString.EqualsLiteral("true"))
-    val = PR_TRUE;
-  else if (aValueAsString.EqualsLiteral("false"))
-    val = PR_FALSE;
-  else
-    return NS_ERROR_DOM_SYNTAX_ERR;
+  nsresult rv = GetValueFromString(aValueAsString, &val);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   mBaseVal = val;
   if (!mIsAnimated) {
@@ -148,17 +161,17 @@ nsSVGBoolean::SMILBool::ValueFromString(const nsAString& aStr,
                                         nsSMILValue& aValue,
                                         PRBool& aPreventCachingOfSandwich) const
 {
+  PRBool value;
+  nsresult rv = GetValueFromString(aStr, &value);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsSMILValue val(&SMILBoolType::sSingleton);
-
-  if (aStr.EqualsLiteral("true"))
-    val.mU.mBool = PR_TRUE;
-  else if (aStr.EqualsLiteral("false"))
-    val.mU.mBool = PR_FALSE;
-  else
-    return NS_ERROR_FAILURE;
-
+  val.mU.mBool = value;
   aValue = val;
   aPreventCachingOfSandwich = PR_FALSE;
+
   return NS_OK;
 }
 

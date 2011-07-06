@@ -1,0 +1,26 @@
+<html>
+<head>
+  <script type="text/javascript">
+window.onload = function() {
+    var ctx = document.getElementById("c1").getContext("2d");
+
+    ctx.lineWidth = 5;
+
+    ctx.mozDash = [ 5, 10 ];  // 5 on, 10 off
+    ctx.moveTo(50, 50);
+    ctx.lineTo(250, 50);
+    ctx.stroke();
+    ctx.beginPath();
+
+    ctx.mozDashOffset = 5;
+    ctx.moveTo(50, 100);
+    ctx.lineTo(250, 100);
+    ctx.stroke();
+    ctx.beginPath();
+}
+  </script>
+</head>
+<body style="padding: 0px; margin: 0px;">
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

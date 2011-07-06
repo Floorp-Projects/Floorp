@@ -1001,7 +1001,7 @@
         // undetermined state and then schedule a proper check at the next
         // opportunity
         this.setProgress(0, -1);
-        setTimeout(this.updateProgress.bind(this), 0);
+        this._updateProgressTimeout = setTimeout(this.updateProgress.bind(this), 0);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -1028,6 +1028,7 @@
           this.notification.options.installs.forEach(function(aInstall) {
             aInstall.removeListener(this);
           }, this);
+          clearTimeout(this._updateProgressTimeout);
         ]]></body>
       </method>
 

@@ -2884,8 +2884,8 @@ nsCellMapColumnIterator::GetNextFrame(PRInt32* aRow, PRInt32* aColSpan)
 
     ++mFoundCells;
 
-    NS_ASSERTION(cellData = mMap->GetDataAt(*aRow, mCol),
-                 "Giving caller bogus row?");
+    NS_ABORT_IF_FALSE(cellData == mMap->GetDataAt(*aRow, mCol),
+                      "Giving caller bogus row?");
 
     return cellFrame;
   }

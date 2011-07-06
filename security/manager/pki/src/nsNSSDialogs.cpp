@@ -635,15 +635,11 @@ nsNSSDialogs::ShowCertError(nsIInterfaceRequestor *ctx,
   if (NS_FAILED(rv))
     return rv; 
 
-  NS_ConvertUTF8toUTF16 host16(hostName);
-  nsPromiseFlatString flatHostName(host16);
-  nsPromiseFlatString flatMessage(textErrorMessage);
-
-  rv = dialogBlock->SetString(1, flatHostName.get());
+  rv = dialogBlock->SetString(1, NS_ConvertUTF8toUTF16(hostName).get());
   if (NS_FAILED(rv))
     return rv;
   
-  rv = dialogBlock->SetString(2, flatMessage.get());
+  rv = dialogBlock->SetString(2, PromiseFlatString(textErrorMessage).get());
   if (NS_FAILED(rv))
     return rv;
   

@@ -150,67 +150,16 @@ static uint32
 Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length);
 
 /*
- * Contributions from the String class to the set of methods defined for the
- * global object.  escape and unescape used to be defined in the Mocha library,
- * but as ECMA decided to spec them, they've been moved to the core engine
- * and made ECMA-compliant.  (Incomplete escapes are interpreted as literal
- * characters by unescape.)
+ * Global string methods
  */
 
-/*
- * Stuff to emulate the old libmocha escape, which took a second argument
- * giving the type of escape to perform.  Retained for compatibility, and
- * copied here to avoid reliance on net.h, mkparse.c/NET_EscapeBytes.
- */
 
-#define URL_XALPHAS     ((uint8) 1)
-#define URL_XPALPHAS    ((uint8) 2)
-#define URL_PATH        ((uint8) 4)
-
-static const uint8 urlCharType[256] =
-/*      Bit 0           xalpha          -- the alphas
- *      Bit 1           xpalpha         -- as xalpha but
- *                             converts spaces to plus and plus to %20
- *      Bit 2 ...       path            -- as xalphas but doesn't escape '/'
- */
-    /*   0 1 2 3 4 5 6 7 8 9 A B C D E F */
-    {    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,       /* 0x */
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,       /* 1x */
-         0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,       /* 2x   !"#$%&'()*+,-./  */
-         7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,       /* 3x  0123456789:;<=>?  */
-         7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,       /* 4x  @ABCDEFGHIJKLMNO  */
-         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,       /* 5X  PQRSTUVWXYZ[\]^_  */
-         0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,       /* 6x  `abcdefghijklmno  */
-         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,       /* 7X  pqrstuvwxyz{\}~  DEL */
-         0, };
-
-/* This matches the ECMA escape set when mask is 7 (default.) */
-
-#define IS_OK(C, mask) (urlCharType[((uint8) (C))] & (mask))
-
-/* See ECMA-262 Edition 3 B.2.1 */
-JSBool
-js_str_escape(JSContext *cx, uintN argc, Value *vp, Value *rval)
+/* ES5 B.2.1 */
+static JSBool
+str_escape(JSContext *cx, uintN argc, Value *vp)
 {
     const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-
-    jsint mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
-    if (argc > 1) {
-        double d;
-        if (!ValueToNumber(cx, vp[3], &d))
-            return JS_FALSE;
-        if (!JSDOUBLE_IS_FINITE(d) ||
-            (mask = (jsint)d) != d ||
-            mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
-        {
-            char numBuf[12];
-            JS_snprintf(numBuf, sizeof numBuf, "%lx", (unsigned long) mask);
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_STRING_MASK, numBuf);
-            return JS_FALSE;
-        }
-    }
 
     JSLinearString *str = ArgToRootedString(cx, argc, vp, 0);
     if (!str)
@@ -219,19 +168,38 @@ js_str_escape(JSContext *cx, uintN argc, Value *vp, Value *rval)
     size_t length = str->length();
     const jschar *chars = str->chars();
 
+    static const uint8 shouldPassThrough[256] = {
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,       /*    !"#$%&'()*+,-./  */
+         1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,       /*   0123456789:;<=>?  */
+         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,       /*   @ABCDEFGHIJKLMNO  */
+         1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,       /*   PQRSTUVWXYZ[\]^_  */
+         0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,       /*   `abcdefghijklmno  */
+         1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,     /*   pqrstuvwxyz{\}~  DEL */
+    };
+
+    /* In step 7, exactly 69 characters should pass through unencoded. */
+#ifdef DEBUG
+    int count = 0;
+    for (uint i = 0; i < sizeof(shouldPassThrough); i++) {
+        if (shouldPassThrough[i]) {
+            count++;
+        }
+    }
+    JS_ASSERT(count == 69);
+#endif
+
+
     /* Take a first pass and see how big the result string will need to be. */
     size_t newlength = length;
     for (size_t i = 0; i < length; i++) {
-        jschar ch;
-        if ((ch = chars[i]) < 128 && IS_OK(ch, mask))
+        jschar ch = chars[i];
+        if (ch < 128 && shouldPassThrough[ch])
             continue;
-        if (ch < 256) {
-            if (mask == URL_XPALPHAS && ch == ' ')
-                continue;   /* The character will be encoded as '+' */
-            newlength += 2; /* The character will be encoded as %XX */
-        } else {
-            newlength += 5; /* The character will be encoded as %uXXXX */
-        }
+
+        /* The character will be encoded as %XX or %uXXXX. */
+        newlength += (ch < 256) ? 2 : 5;
 
         /*
          * This overflow test works because newlength is incremented by at
@@ -253,17 +221,13 @@ js_str_escape(JSContext *cx, uintN argc, Value *vp, Value *rval)
         return JS_FALSE;
     size_t i, ni;
     for (i = 0, ni = 0; i < length; i++) {
-        jschar ch;
-        if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
+        jschar ch = chars[i];
+        if (ch < 128 && shouldPassThrough[ch]) {
             newchars[ni++] = ch;
         } else if (ch < 256) {
-            if (mask == URL_XPALPHAS && ch == ' ') {
-                newchars[ni++] = '+'; /* convert spaces to pluses */
-            } else {
-                newchars[ni++] = '%';
-                newchars[ni++] = digits[ch >> 4];
-                newchars[ni++] = digits[ch & 0xF];
-            }
+            newchars[ni++] = '%';
+            newchars[ni++] = digits[ch >> 4];
+            newchars[ni++] = digits[ch & 0xF];
         } else {
             newchars[ni++] = '%';
             newchars[ni++] = 'u';
@@ -281,18 +245,11 @@ js_str_escape(JSContext *cx, uintN argc, Value *vp, Value *rval)
         cx->free_(newchars);
         return JS_FALSE;
     }
-    rval->setString(retstr);
+    vp->setString(retstr);
     return JS_TRUE;
 }
-#undef IS_OK
 
-static JSBool
-str_escape(JSContext *cx, uintN argc, Value *vp)
-{
-    return js_str_escape(cx, argc, vp, vp);
-}
-
-/* See ECMA-262 Edition 3 B.2.2 */
+/* ES5 B.2.2 */
 static JSBool
 str_unescape(JSContext *cx, uintN argc, Value *vp)
 {
@@ -311,6 +268,7 @@ str_unescape(JSContext *cx, uintN argc, Value *vp)
     while (i < length) {
         jschar ch = chars[i++];
         if (ch == '%') {
+            /* Incomplete escapes are interpreted as literal characters. */
             if (i + 1 < length &&
                 JS7_ISHEX(chars[i]) && JS7_ISHEX(chars[i + 1]))
             {

@@ -46,6 +46,7 @@
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
+#include "mozilla/net/WebSocketChannelChild.h"
 
 namespace mozilla {
 namespace net {
@@ -163,6 +164,21 @@ NeckoChild::DeallocPWyciwygChannel(PWyciwygChannelChild* channel)
   NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPWyciwygChannel called by non-child!");
 
   WyciwygChannelChild *p = static_cast<WyciwygChannelChild*>(channel);
+  p->ReleaseIPDLReference();
+  return true;
+}
+
+PWebSocketChild*
+NeckoChild::AllocPWebSocket(PBrowserChild* browser)
+{
+  NS_NOTREACHED("AllocPWebSocket should not be called");
+  return nsnull;
+}
+
+bool
+NeckoChild::DeallocPWebSocket(PWebSocketChild* child)
+{
+  WebSocketChannelChild* p = static_cast<WebSocketChannelChild*>(child);
   p->ReleaseIPDLReference();
   return true;
 }

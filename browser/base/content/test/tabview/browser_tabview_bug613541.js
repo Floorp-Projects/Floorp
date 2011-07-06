@@ -20,6 +20,23 @@ function test() {
     return groupItem;
   }
 
+  let hideGroupItem = function (groupItem, callback) {
+    groupItem.addSubscriber(groupItem, 'groupHidden', function () {
+      groupItem.removeSubscriber(groupItem, 'groupHidden');
+      callback();
+    });
+    groupItem.closeAll();
+  }
+
+  let closeGroupItem = function (groupItem, callback) {
+    afterAllTabsLoaded(function () {
+      hideGroupItem(groupItem, function () {
+        groupItem.closeHidden();
+        callback();
+      });
+    });
+  }
+
   let tests = [];
 
   let next = function () {
@@ -189,70 +206,6 @@ function test() {
     });
   }
 
-  // setup: 1 orphan tab
-  // action: exit panorama
-  // expected: nothing should happen
-  let testOrphanTab1 = function () {
-    let groupItem = getGroupItem(0);
-    let tabItem = groupItem.getChild(0);
-    groupItem.remove(tabItem);
-
-    closeGroupItem(groupItem, function () {
-      assertNumberOfGroupItems(0);
-
-      hideTabView(function () {
-        createGroupItem().add(tabItem);
-        next();
-      });
-    });
-  }
-
-  // setup: 1 orphan tab, 1 non-empty group
-  // action: close the group
-  // expected: nothing should happen
-  let testOrphanTab2 = function () {
-    let groupItem = getGroupItem(0);
-    let tabItem = groupItem.getChild(0);
-    groupItem.remove(tabItem);
-
-    closeGroupItem(groupItem, function () {
-      assertNumberOfGroupItems(0);
-
-      let newGroupItem = createGroupItem(1);
-      assertNumberOfGroupItems(1);
-
-      closeGroupItem(newGroupItem, function () {
-        assertNumberOfGroupItems(0);
-        createGroupItem().add(tabItem);
-        hideTabView(next);
-      });
-    });
-  }
-
-  // setup: 1 orphan tab, 1 non-empty group
-  // action: hide the group, exit panorama
-  // expected: nothing should happen
-  let testOrphanTab3 = function () {
-    let groupItem = getGroupItem(0);
-    let tabItem = groupItem.getChild(0);
-    groupItem.remove(tabItem);
-
-    closeGroupItem(groupItem, function () {
-      assertNumberOfGroupItems(0);
-
-      let newGroupItem = createGroupItem(1);
-      assertNumberOfGroupItems(1);
-
-      hideGroupItem(newGroupItem, function () {
-        hideTabView(function () {
-          assertNumberOfGroupItems(0);
-          createGroupItem().add(tabItem);
-          next();
-        });
-      });
-    });
-  }
-
   // setup: 1 non-empty group, 1 empty group
   // action: close non-empty group
   // expected: empty group is re-used, new tab is created and zoomed into
@@ -334,10 +287,6 @@ function test() {
   tests.push({name: 'testPinnedTab2', func: testPinnedTab2});
   tests.push({name: 'testPinnedTab3', func: testPinnedTab3});
   tests.push({name: 'testPinnedTab4', func: testPinnedTab4});
-
-  tests.push({name: 'testOrphanTab1', func: testOrphanTab1});
-  tests.push({name: 'testOrphanTab2', func: testOrphanTab2});
-  tests.push({name: 'testOrphanTab3', func: testOrphanTab3});
 
   tests.push({name: 'testEmptyGroup1', func: testEmptyGroup1});
   tests.push({name: 'testEmptyGroup2', func: testEmptyGroup2});

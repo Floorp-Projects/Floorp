@@ -4,9 +4,25 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/service.js");
 
 function makeRotaryEngine() {
   return new RotaryEngine();
+}
+
+function cleanAndGo(server) {
+  Svc.Prefs.resetBranch("");
+  Records.clearCache();
+  server.stop(run_next_test);
+}
+
+function run_test() {
+  if (DISABLE_TESTS_BUG_604565)
+    return;
+
+  generateNewKeys();
+  run_next_test();
 }
 
 /*
@@ -23,7 +39,7 @@ function makeRotaryEngine() {
  * different scenarios below.
  */
 
-function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
+add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   _("SyncEngine._syncStartup resets sync and wipes server data if there's no or an outdated global record");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -42,7 +58,6 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   engine._store.items = {rekolok: "Rekonstruktionslokomotive"};
@@ -73,13 +88,11 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
-function test_syncStartup_serverHasNewerVersion() {
+add_test(function test_syncStartup_serverHasNewerVersion() {
   _("SyncEngine._syncStartup ");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -89,7 +102,6 @@ function test_syncStartup_serverHasNewerVersion() {
   let server = httpd_setup({
       "/1.1/foo/storage/meta/global": global.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   try {
@@ -105,21 +117,18 @@ function test_syncStartup_serverHasNewerVersion() {
     do_check_eq(error.failureCode, VERSION_OUT_OF_DATE);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_syncStartup_syncIDMismatchResetsClient() {
+add_test(function test_syncStartup_syncIDMismatchResetsClient() {
   _("SyncEngine._syncStartup resets sync if syncIDs don't match");
 
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
   let server = sync_httpd_setup({});
-  do_test_pending();
 
   // global record with a different syncID than our engine has
   let engine = makeRotaryEngine();
@@ -145,14 +154,12 @@ function test_syncStartup_syncIDMismatchResetsClient() {
     do_check_eq(engine.lastSync, 0);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_emptyServer() {
+add_test(function test_processIncoming_emptyServer() {
   _("SyncEngine._processIncoming working with an empty server backend");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -163,7 +170,6 @@ function test_processIncoming_emptyServer() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   try {
@@ -173,14 +179,12 @@ function test_processIncoming_emptyServer() {
     do_check_eq(engine.lastSync, 0);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_createFromServer() {
+add_test(function test_processIncoming_createFromServer() {
   _("SyncEngine._processIncoming creates new records from server data");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -208,7 +212,6 @@ function test_processIncoming_createFromServer() {
       "/1.1/foo/storage/rotary/flying": collection.wbos.flying.handler(),
       "/1.1/foo/storage/rotary/scotsman": collection.wbos.scotsman.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -237,14 +240,12 @@ function test_processIncoming_createFromServer() {
     do_check_eq(engine._store.items['../pathological'], "Pathological Case");
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_reconcile() {
+add_test(function test_processIncoming_reconcile() {
   _("SyncEngine._processIncoming updates local records");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -300,7 +301,6 @@ function test_processIncoming_reconcile() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   engine._store.items = {newerserver: "New data, but not as new as server!",
@@ -359,14 +359,12 @@ function test_processIncoming_reconcile() {
     do_check_eq(engine._store.items.nukeme, undefined);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_mobile_batchSize() {
+add_test(function test_processIncoming_mobile_batchSize() {
   _("SyncEngine._processIncoming doesn't fetch everything at once on mobile clients");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -396,7 +394,6 @@ function test_processIncoming_mobile_batchSize() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -432,14 +429,12 @@ function test_processIncoming_mobile_batchSize() {
     }
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_store_toFetch() {
+add_test(function test_processIncoming_store_toFetch() {
   _("If processIncoming fails in the middle of a batch on mobile, state is saved in toFetch and lastSync.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -476,7 +471,6 @@ function test_processIncoming_store_toFetch() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
 
@@ -502,14 +496,12 @@ function test_processIncoming_store_toFetch() {
     do_check_eq(engine.lastSync, collection.wbos["record-no-99"].modified);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_resume_toFetch() {
+add_test(function test_processIncoming_resume_toFetch() {
   _("toFetch and previousFailed items left over from previous syncs are fetched on the next sync, along with new items.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -552,7 +544,6 @@ function test_processIncoming_resume_toFetch() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
 
@@ -573,14 +564,12 @@ function test_processIncoming_resume_toFetch() {
     do_check_eq(engine._store.items.failed2, "Record No. 2");
     do_check_eq(engine.previousFailed.length, 0);
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_applyIncomingBatchSize_smaller() {
+add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
   _("Ensure that a number of incoming items less than applyIncomingBatchSize is still applied.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -612,7 +601,6 @@ function test_processIncoming_applyIncomingBatchSize_smaller() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
 
@@ -631,14 +619,12 @@ function test_processIncoming_applyIncomingBatchSize_smaller() {
     do_check_eq(engine.previousFailed[1], "record-no-8");
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_applyIncomingBatchSize_multiple() {
+add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
   _("Ensure that incoming items are applied according to applyIncomingBatchSize.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -671,7 +657,6 @@ function test_processIncoming_applyIncomingBatchSize_multiple() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
 
@@ -687,14 +672,12 @@ function test_processIncoming_applyIncomingBatchSize_multiple() {
                 APPLY_BATCH_SIZE * 3);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_failed_items_reported_once() {
+add_test(function test_processIncoming_notify_count() {
   _("Ensure that failed records are reported only once.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -726,23 +709,22 @@ function test_processIncoming_failed_items_reported_once() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
-    let called = 0;
-    let counts;
-
     // Confirm initial environment.
     do_check_eq(engine.lastSync, 0);
     do_check_eq(engine.toFetch.length, 0);
     do_check_eq(engine.previousFailed.length, 0);
     do_check_eq([id for (id in engine._store.items)].length, 0);
 
-    Svc.Obs.add("weave:engine:sync:apply-failed", function(count) {
+    let called = 0;
+    let counts;
+    function onApplied(count) {
       _("Called with " + JSON.stringify(counts));
       counts = count;
       called++;
-    });
+    }
+    Svc.Obs.add("weave:engine:sync:applied", onApplied);
 
     // Do sync.
     engine._syncStartup();
@@ -769,20 +751,19 @@ function test_processIncoming_failed_items_reported_once() {
     do_check_eq(engine.previousFailed.length, 1);
     do_check_eq(engine.previousFailed[0], "record-no-0");
 
-    // Failures weren't notified again because there were no newly failed items.
-    do_check_eq(called, 1);
-    do_check_eq(counts.failed, 3);
-    do_check_eq(counts.applied, 15);
-    do_check_eq(counts.newFailed, 3);
+    do_check_eq(called, 2);
+    do_check_eq(counts.failed, 1);
+    do_check_eq(counts.applied, 3);
+    do_check_eq(counts.newFailed, 0);
+
+    Svc.Obs.remove("weave:engine:sync:applied", onApplied);
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_previousFailed() {
+add_test(function test_processIncoming_previousFailed() {
   _("Ensure that failed records are retried.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -815,7 +796,6 @@ function test_processIncoming_previousFailed() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
     // Confirm initial environment.
@@ -863,14 +843,12 @@ function test_processIncoming_previousFailed() {
     do_check_eq(engine._store.items['record-no-12'], "Record No. 12");
     do_check_eq(engine._store.items['record-no-13'], "Record No. 13");
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_failed_records() {
+add_test(function test_processIncoming_failed_records() {
   _("Ensure that failed records from _reconcile and applyIncomingBatch are refetched.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -934,7 +912,6 @@ function test_processIncoming_failed_records() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": recording_handler(collection)
   });
-  do_test_pending();
 
   try {
 
@@ -946,9 +923,8 @@ function test_processIncoming_failed_records() {
 
     let observerSubject;
     let observerData;
-    Svc.Obs.add("weave:engine:sync:apply-failed",
-                function onApplyFailed(subject, data) {
-      Svc.Obs.remove("weave:engine:sync:apply-failed", onApplyFailed);
+    Svc.Obs.add("weave:engine:sync:applied", function onApplied(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:applied", onApplied);
       observerSubject = subject;
       observerData = data;
     });
@@ -971,6 +947,7 @@ function test_processIncoming_failed_records() {
     // Ensure the observer was notified
     do_check_eq(observerData, engine.name);
     do_check_eq(observerSubject.failed, BOGUS_RECORDS.length);
+    do_check_eq(observerSubject.newFailed, BOGUS_RECORDS.length);
 
     // Testing batching of failed item fetches.
     // Try to sync again. Ensure that we split the request into chunks to avoid
@@ -999,16 +976,15 @@ function test_processIncoming_failed_records() {
     do_check_eq(batchDownload(BOGUS_RECORDS.length), 4);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeRotaryEngine);
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_processIncoming_decrypt_failed() {
+add_test(function test_processIncoming_decrypt_failed() {
   _("Ensure that records failing to decrypt are either replaced or refetched.");
+
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
@@ -1047,7 +1023,6 @@ function test_processIncoming_decrypt_failed() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
 
@@ -1057,9 +1032,8 @@ function test_processIncoming_decrypt_failed() {
 
     let observerSubject;
     let observerData;
-    Svc.Obs.add("weave:engine:sync:apply-failed",
-                function onApplyFailed(subject, data) {
-      Svc.Obs.remove("weave:engine:sync:apply-failed", onApplyFailed);
+    Svc.Obs.add("weave:engine:sync:applied", function onApplied(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:applied", onApplied);
       observerSubject = subject;
       observerData = data;
     });
@@ -1079,14 +1053,12 @@ function test_processIncoming_decrypt_failed() {
     do_check_eq(observerSubject.failed, 4);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_uploadOutgoing_toEmptyServer() {
+add_test(function test_uploadOutgoing_toEmptyServer() {
   _("SyncEngine._uploadOutgoing uploads new records to server");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -1101,7 +1073,6 @@ function test_uploadOutgoing_toEmptyServer() {
       "/1.1/foo/storage/rotary/flying": collection.wbos.flying.handler(),
       "/1.1/foo/storage/rotary/scotsman": collection.wbos.scotsman.handler()
   });
-  do_test_pending();
   generateNewKeys();
 
   let engine = makeRotaryEngine();
@@ -1140,14 +1111,12 @@ function test_uploadOutgoing_toEmptyServer() {
     do_check_eq(collection.wbos.flying.payload, undefined);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_uploadOutgoing_failed() {
+add_test(function test_uploadOutgoing_failed() {
   _("SyncEngine._uploadOutgoing doesn't clear the tracker of objects that failed to upload.");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -1161,7 +1130,6 @@ function test_uploadOutgoing_failed() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1205,15 +1173,12 @@ function test_uploadOutgoing_failed() {
     do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeRotaryEngine);
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
+add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_RECORDS");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -1246,7 +1211,6 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   try {
 
@@ -1265,16 +1229,15 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     do_check_eq(noOfUploads, Math.ceil(234/MAX_UPLOAD_RECORDS));
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeRotaryEngine);
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_syncFinish_noDelete() {
+add_test(function test_syncFinish_noDelete() {
   _("SyncEngine._syncFinish resets tracker's score");
+
+  let syncTesting = new SyncTestingInfrastructure();
   let engine = makeRotaryEngine();
   engine._delete = {}; // Nothing to delete
   engine._tracker.score = 100;
@@ -1282,10 +1245,11 @@ function test_syncFinish_noDelete() {
   // _syncFinish() will reset the engine's score.
   engine._syncFinish();
   do_check_eq(engine.score, 0);
-}
+  run_next_test();
+});
 
 
-function test_syncFinish_deleteByIds() {
+add_test(function test_syncFinish_deleteByIds() {
   _("SyncEngine._syncFinish deletes server records slated for deletion (list of record IDs).");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -1305,7 +1269,6 @@ function test_syncFinish_deleteByIds() {
   let server = httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   try {
@@ -1322,14 +1285,12 @@ function test_syncFinish_deleteByIds() {
     do_check_eq(engine._delete.ids, undefined);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_syncFinish_deleteLotsInBatches() {
+add_test(function test_syncFinish_deleteLotsInBatches() {
   _("SyncEngine._syncFinish deletes server records in batches of 100 (list of record IDs).");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -1359,7 +1320,6 @@ function test_syncFinish_deleteLotsInBatches() {
   let server = httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   try {
@@ -1396,14 +1356,12 @@ function test_syncFinish_deleteLotsInBatches() {
     do_check_eq(engine._delete.ids, undefined);
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
 
-function test_sync_partialUpload() {
+add_test(function test_sync_partialUpload() {
   _("SyncEngine.sync() keeps changedIDs that couldn't be uploaded.");
 
   let syncTesting = new SyncTestingInfrastructure();
@@ -1414,7 +1372,6 @@ function test_sync_partialUpload() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
   generateNewKeys();
 
   let engine = makeRotaryEngine();
@@ -1473,13 +1430,11 @@ function test_sync_partialUpload() {
     }
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
-function test_canDecrypt_noCryptoKeys() {
+add_test(function test_canDecrypt_noCryptoKeys() {
   _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key collection.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -1496,7 +1451,6 @@ function test_canDecrypt_noCryptoKeys() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   try {
@@ -1504,13 +1458,11 @@ function test_canDecrypt_noCryptoKeys() {
     do_check_false(engine.canDecrypt());
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
+});
 
-function test_canDecrypt_true() {
+add_test(function test_canDecrypt_true() {
   _("SyncEngine.canDecrypt returns true if the engine can decrypt the items on the server.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -1527,7 +1479,6 @@ function test_canDecrypt_true() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  do_test_pending();
 
   let engine = makeRotaryEngine();
   try {
@@ -1535,41 +1486,63 @@ function test_canDecrypt_true() {
     do_check_true(engine.canDecrypt());
 
   } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    cleanAndGo(server);
   }
-}
 
+});
 
-function run_test() {
-  if (DISABLE_TESTS_BUG_604565)
-    return;
+add_test(function test_syncapplied_observer() {
+  let syncTesting = new SyncTestingInfrastructure();
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
 
-  generateNewKeys();
+  const NUMBER_OF_RECORDS = 10;
 
-  test_syncStartup_emptyOrOutdatedGlobalsResetsSync();
-  test_syncStartup_serverHasNewerVersion();
-  test_syncStartup_syncIDMismatchResetsClient();
-  test_processIncoming_emptyServer();
-  test_processIncoming_createFromServer();
-  test_processIncoming_reconcile();
-  test_processIncoming_mobile_batchSize();
-  test_processIncoming_store_toFetch();
-  test_processIncoming_resume_toFetch();
-  test_processIncoming_applyIncomingBatchSize_smaller();
-  test_processIncoming_applyIncomingBatchSize_multiple();
-  test_processIncoming_failed_items_reported_once();
-  test_processIncoming_previousFailed();
-  test_processIncoming_failed_records();
-  test_processIncoming_decrypt_failed();
-  test_uploadOutgoing_toEmptyServer();
-  test_uploadOutgoing_failed();
-  test_uploadOutgoing_MAX_UPLOAD_RECORDS();
-  test_syncFinish_noDelete();
-  test_syncFinish_deleteByIds();
-  test_syncFinish_deleteLotsInBatches();
-  test_sync_partialUpload();
-  test_canDecrypt_noCryptoKeys();
-  test_canDecrypt_true();
-}
+  let engine = makeRotaryEngine();
+
+  // Create a batch of server side records.
+  let collection = new ServerCollection();
+  for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    collection.wbos[id] = new ServerWBO(id, payload);
+  }
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = httpd_setup({
+    "/1.1/foo/storage/rotary": collection.handler()
+  });
+
+  let numApplyCalls = 0;
+  let engine_name;
+  let count;
+  function onApplied(subject, data) {
+    numApplyCalls++;
+    engine_name = data;
+    count = subject;
+  }
+
+  Svc.Obs.add("weave:engine:sync:applied", onApplied);
+
+  try {
+    SyncScheduler.hasIncomingItems = false;
+
+    // Do sync.
+    engine._syncStartup();
+    engine._processIncoming();
+
+    do_check_eq([id for (id in engine._store.items)].length, 10);
+
+    do_check_eq(numApplyCalls, 1);
+    do_check_eq(engine_name, "rotary");
+    do_check_eq(count.applied, 10);
+
+    do_check_true(SyncScheduler.hasIncomingItems);
+  } finally {
+    cleanAndGo(server);
+    SyncScheduler.hasIncomingItems = false;
+    Svc.Obs.remove("weave:engine:sync:applied", onApplied);
+  }
+});

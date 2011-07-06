@@ -151,7 +151,7 @@ protected:
   PRUint32                     mSkipLevel;
   nsHashtable                  mAllowedTags;
 
-  nsRefPtr<mozilla::dom::Element> mContent;
+  nsRefPtr<mozilla::dom::Element> mElement;
   nsAString*                   mOutputString;
   nsIParserNode*               mParserNode;
   nsCOMPtr<nsIParserService>   mParserService;

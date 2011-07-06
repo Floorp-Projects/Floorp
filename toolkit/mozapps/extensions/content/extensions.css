@@ -88,40 +88,48 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#detail-row");
 }
 
-settings {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
+setting, row[unsupported="true"] {
+  display: none;
 }
 
 setting[type="bool"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-bool");
 }
 
 setting[type="bool"][localized="true"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-localized-bool");
 }
 
 setting[type="boolint"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-boolint");
 }
 
 setting[type="integer"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
 }
 
 setting[type="control"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
 }
 
 setting[type="string"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
 }
 
 setting[type="color"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-color");
 }
 
 setting[type="file"],
 setting[type="directory"] {
+  display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-path");
 }
 
