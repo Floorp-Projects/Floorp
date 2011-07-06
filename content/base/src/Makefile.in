@@ -129,7 +129,6 @@ CPPSRCS		= \
 		nsRange.cpp \
 		nsReferencedElement.cpp \
 		nsScriptElement.cpp \
-		nsScriptEventManager.cpp \
 		nsScriptLoader.cpp \
 		nsStubDocumentObserver.cpp \
 		nsStubImageDecoderObserver.cpp \

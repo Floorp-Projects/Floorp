@@ -65,6 +65,12 @@ extern double js_copysign(double, double);
 #define js_copysign copysign
 #endif
 
+#if defined(_M_X64) && _MSC_VER <= 1500
+// This is a workaround for fmod bug (http://support.microsoft.com/kb/982107)
+extern "C" double js_myfmod(double x, double y);
+#define fmod js_myfmod
+#endif
+
 /* Consistency wrapper for platform deviations in fmod() */
 static inline double
 js_fmod(double d, double d2)

@@ -1,0 +1,3 @@
+<box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <label style="margin: 0px 300px; text-shadow: blue 4px 10px 2px" value="Shadow"/>
+</box>

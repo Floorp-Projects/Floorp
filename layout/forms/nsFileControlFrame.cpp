@@ -54,7 +54,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
-#include "nsIDOMMouseListener.h"
 #include "nsIPresShell.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -391,7 +390,7 @@ PRBool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
   // only allow the left button
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aMouseEvent);
-  NS_ENSURE_STATE(uiEvent);
+  NS_ENSURE_TRUE(mouseEvent && uiEvent, PR_FALSE);
   PRBool defaultPrevented = PR_FALSE;
   uiEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
@@ -415,7 +414,7 @@ PRBool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
  * This is called when our capture button is clicked
  */
 NS_IMETHODIMP
-nsFileControlFrame::CaptureMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
+nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 {
   nsresult rv;
 
@@ -503,29 +502,25 @@ nsFileControlFrame::CaptureMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 }
 
 /**
- * This is called when our browse button is clicked
- */
-NS_IMETHODIMP
-nsFileControlFrame::BrowseMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-  NS_ASSERTION(mFrame, "We should have been unregistered");
-  if (!ShouldProcessMouseClick(aMouseEvent))
-    return NS_OK;
-  
-  nsHTMLInputElement* input =
-    nsHTMLInputElement::FromContent(mFrame->GetContent());
-  return input ? input->FireAsyncClickHandler() : NS_OK;
-}
-
-/**
  * This is called when we receive any registered events on the control.
- * We've only registered for drop, dragover and click events, and click events
- * already call MouseClick() for us. Here, we handle file drops.
+ * We've only registered for drop, dragover and click events.
  */
 NS_IMETHODIMP
 nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   NS_ASSERTION(mFrame, "We should have been unregistered");
+
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  if (eventType.EqualsLiteral("click")) {
+    if (!ShouldProcessMouseClick(aEvent))
+      return NS_OK;
+    
+    nsHTMLInputElement* input =
+      nsHTMLInputElement::FromContent(mFrame->GetContent());
+    return input ? input->FireAsyncClickHandler() : NS_OK;
+  }
+
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aEvent);
   NS_ENSURE_STATE(uiEvent);
   PRBool defaultPrevented = PR_FALSE;
@@ -539,8 +534,6 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
   if (eventType.EqualsLiteral("dragover")) {
     // Prevent default if we can accept this drag data
     aEvent->PreventDefault();
@@ -838,6 +831,5 @@ nsFileControlFrame::ParseAcceptAttribute(AcceptAttrCallback aCallback,
 ////////////////////////////////////////////////////////////
 // Mouse listener implementation
 
-NS_IMPL_ISUPPORTS2(nsFileControlFrame::MouseListener,
-                   nsIDOMMouseListener,
+NS_IMPL_ISUPPORTS1(nsFileControlFrame::MouseListener,
                    nsIDOMEventListener)

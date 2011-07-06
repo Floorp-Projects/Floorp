@@ -40,10 +40,6 @@ function checkFirstRun(win) {
   is(groupItems.length, 1, "There should be one group");
   is(groupItems[0].getChildren().length, 1, "...with one child");
 
-  let orphanTabCount = contentWindow.GroupItems.getOrphanedTabs().length;
-  // Welcome tab disabled by bug 626754. To be fixed via bug 626926.
-  is(orphanTabCount, 0, "There should also be no orphaned tabs");
-
   ok(!experienced(), "we're not experienced");
 }
 
@@ -55,9 +51,6 @@ function checkNotFirstRun(win) {
   let groupItems = contentWindow.GroupItems.groupItems;
   is(groupItems.length, 1, "There should be one group");
   is(groupItems[0].getChildren().length, 1, "...with one child");
-
-  let orphanTabCount = contentWindow.GroupItems.getOrphanedTabs().length;
-  is(orphanTabCount, 0, "There should also be no orphaned tabs");
 }
 
 function endGame() {

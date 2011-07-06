@@ -47,15 +47,15 @@ ColorLayerD3D9::GetLayer()
   return this;
 }
 
-void
-ColorLayerD3D9::RenderLayer()
+static void
+RenderColorLayerD3D9(ColorLayer* aLayer, LayerManagerD3D9 *aManager)
 {
   // XXX we might be able to improve performance by using
   // IDirect3DDevice9::Clear
 
-  nsIntRect visibleRect = mVisibleRegion.GetBounds();
+  nsIntRect visibleRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
 
-  device()->SetVertexShaderConstantF(
+  aManager->device()->SetVertexShaderConstantF(
     CBvLayerQuad,
     ShaderConstantRect(visibleRect.x,
                        visibleRect.y,
@@ -63,23 +63,36 @@ ColorLayerD3D9::RenderLayer()
                        visibleRect.height),
     1);
 
-  const gfx3DMatrix& transform = GetEffectiveTransform();
-  device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
+  const gfx3DMatrix& transform = aLayer->GetEffectiveTransform();
+  aManager->device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
+  gfxRGBA layerColor(aLayer->GetColor());
   float color[4];
-  float opacity = GetEffectiveOpacity() * mColor.a;
+  float opacity = aLayer->GetEffectiveOpacity() * layerColor.a;
   // output color is premultiplied, so we need to adjust all channels.
   // mColor is not premultiplied.
-  color[0] = (float)(mColor.r * opacity);
-  color[1] = (float)(mColor.g * opacity);
-  color[2] = (float)(mColor.b * opacity);
+  color[0] = (float)(layerColor.r * opacity);
+  color[1] = (float)(layerColor.g * opacity);
+  color[2] = (float)(layerColor.b * opacity);
   color[3] = (float)(opacity);
 
-  device()->SetPixelShaderConstantF(0, color, 1);
+  aManager->device()->SetPixelShaderConstantF(0, color, 1);
 
-  mD3DManager->SetShaderMode(DeviceManagerD3D9::SOLIDCOLORLAYER);
+  aManager->SetShaderMode(DeviceManagerD3D9::SOLIDCOLORLAYER);
 
-  device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  aManager->device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+}
+
+void
+ColorLayerD3D9::RenderLayer()
+{
+  return RenderColorLayerD3D9(this, mD3DManager);
+}
+
+void
+ShadowColorLayerD3D9::RenderLayer()
+{
+  return RenderColorLayerD3D9(this, mD3DManager);
 }
 
 } /* layers */

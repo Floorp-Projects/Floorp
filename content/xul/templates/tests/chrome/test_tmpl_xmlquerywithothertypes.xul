@@ -32,13 +32,13 @@ var expectedOutput =
 <output>
   <groupbox anyid="true" container="true" empty="false">
     <caption label="Reptiles false"/>
-    <label anyid="true" value="Chameleon"/>
+    <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" value="Chameleon"/>
   </groupbox>
   <groupbox anyid="true" container="true" empty="false">
     <caption label="Birds true"/>
-    <label anyid="true" value="Emu"/>
-    <label anyid="true" value="Barn Owl"/>
-    <label anyid="true" value="Raven"/>
+    <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" value="Emu"/>
+    <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Tyto-alba" value="Barn Owl"/>
+    <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Corvus-corax" value="Raven"/>
   </groupbox>
 </output>;
 

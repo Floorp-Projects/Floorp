@@ -326,3 +326,6 @@ patch -p3 < bug640935.patch
 
 # Patch to avoid text relocations on ARM
 patch -p3 < bug646815.patch
+
+# Patch to fix alignment problems with using ARM asm in Thumb mode.
+patch -p3 < bug666931.patch

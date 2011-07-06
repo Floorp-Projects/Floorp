@@ -30,10 +30,10 @@ var notWorkingYet = false;
 var notWorkingYetDynamic = false;
 var expectedOutput =
 <output>
-  <button anyid="true" label="Chameleon 2"/>
-  <button anyid="true" label="Emu 12"/>
-  <button anyid="true" label="Barn Owl 4"/>
-  <button anyid="true" label="Raven 0"/>
+  <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" label="Chameleon 2"/>
+  <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" label="Emu 12"/>
+  <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Tyto-alba" label="Barn Owl 4"/>
+  <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Corvus-corax" label="Raven 0"/>
 </output>;
 
 var changes = [];

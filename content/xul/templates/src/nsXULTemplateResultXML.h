@@ -38,6 +38,7 @@
 #define nsXULTemplateResultXML_h__
 
 #include "nsCOMPtr.h"
+#include "nsIURI.h"
 #include "nsIRDFResource.h"
 #include "nsXULTemplateQueryProcessorXML.h"
 #include "nsIXULTemplateResult.h"
@@ -62,8 +63,11 @@ public:
 
 protected:
 
-    // result id
-    PRUint32 mId;
+    // ID used for persisting data. It is constructed using the mNode's
+    // base uri plus the node's id to form 'baseuri#id'. If the node has no
+    // id, then an id of the form 'row<some number>' is generated. In the
+    // latter case, persistence will not work as there won't be a unique id.
+    nsAutoString mId;
 
     // query that generated the result
     nsCOMPtr<nsXMLQuery> mQuery;

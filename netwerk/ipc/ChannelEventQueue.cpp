@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIChannel.h"
+#include "nsISupports.h"
 #include "mozilla/net/ChannelEventQueue.h"
 
 namespace mozilla {
@@ -51,7 +51,7 @@ ChannelEventQueue::FlushQueue()
   // Events flushed could include destruction of channel (and our own
   // destructor) unless we make sure its refcount doesn't drop to 0 while this
   // method is running.
-  nsCOMPtr<nsIChannel> kungFuDeathGrip(mOwner);
+  nsCOMPtr<nsISupports> kungFuDeathGrip(mOwner);
 
   // Prevent flushed events from flushing the queue recursively
   mFlushing = true;

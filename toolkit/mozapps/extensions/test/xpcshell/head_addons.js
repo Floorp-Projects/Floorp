@@ -430,6 +430,20 @@ function isExtensionInAddonsList(aDir, aId) {
   return isItemInAddonsList("extensions", aDir, aId);
 }
 
+function check_startup_changes(aType, aIds) {
+  var ids = aIds.slice(0);
+  ids.sort();
+  var changes = AddonManager.getStartupChanges(aType);
+  changes.sort();
+
+  // Remove the default theme if it is in the list
+  var pos = changes.indexOf("{972ce4c6-7e08-4474-a285-3208198ce6fd}");
+  if (pos != -1)
+    changes.splice(pos, 1);
+
+  do_check_eq(JSON.stringify(ids), JSON.stringify(changes));
+}
+
 /**
  * Escapes any occurances of &, ", < or > with XML entities.
  *
@@ -1062,6 +1076,9 @@ Services.prefs.setBoolPref("extensions.logging.enabled", true);
 
 // By default only load extensions from the profile install location
 Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_PROFILE);
+
+// By default don't disable add-ons from any scope
+Services.prefs.setIntPref("extensions.autoDisableScopes", 0);
 
 // By default, don't cache add-ons in AddonRepository.jsm
 Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);

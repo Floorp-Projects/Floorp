@@ -90,9 +90,9 @@ public:
    * @param aParentBox [OUT] The box representing the next level up in
    *                   the grid (i.e., row group for a row, grid for a
    *                   row group).
-   * @param aParentGridRow [OUT] The layout manager for aParentBox.
+   * @returns The layout manager for aParentBox.
    */
-  virtual void GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow)=0;
+  virtual nsIGridPart* GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox) = 0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box

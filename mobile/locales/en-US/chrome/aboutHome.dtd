@@ -8,3 +8,4 @@
 <!ENTITY aboutHome.openAllTabs                  "Open all in tabs">
 <!ENTITY aboutHome.noTabs                       "No tabs from last time">
 <!ENTITY aboutHome.noAddons                     "No recommended add-ons">
+<!ENTITY aboutHome.getLocale                    "Change Language">

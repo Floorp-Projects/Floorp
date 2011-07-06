@@ -462,7 +462,7 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
         listener = listenerProxy;
     }
 
-    PRUint16 af = GetAFForLookup(*hostPtr);
+    PRUint16 af = GetAFForLookup(*hostPtr, flags);
 
     nsDNSAsyncRequest *req =
             new nsDNSAsyncRequest(res, *hostPtr, listener, flags, af);
@@ -520,7 +520,7 @@ nsDNSService::Resolve(const nsACString &hostname,
     PR_EnterMonitor(mon);
     nsDNSSyncRequest syncReq(mon);
 
-    PRUint16 af = GetAFForLookup(*hostPtr);
+    PRUint16 af = GetAFForLookup(*hostPtr, flags);
 
     rv = res->ResolveHost(PromiseFlatCString(*hostPtr).get(), flags, af, &syncReq);
     if (NS_SUCCEEDED(rv)) {
@@ -580,9 +580,9 @@ nsDNSService::Observe(nsISupports *subject, const char *topic, const PRUnichar *
 }
 
 PRUint16
-nsDNSService::GetAFForLookup(const nsACString &host)
+nsDNSService::GetAFForLookup(const nsACString &host, PRUint32 flags)
 {
-    if (mDisableIPv6)
+    if (mDisableIPv6 || (flags & RESOLVE_DISABLE_IPV6))
         return PR_AF_INET;
 
     MutexAutoLock lock(mLock);

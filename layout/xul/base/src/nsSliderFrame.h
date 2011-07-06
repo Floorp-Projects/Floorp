@@ -44,7 +44,7 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
-#include "nsIDOMMouseListener.h"
+#include "nsIDOMEventListener.h"
 
 class nsString;
 class nsITimer;
@@ -52,7 +52,7 @@ class nsSliderFrame;
 
 nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsSliderMediator : public nsIDOMMouseListener
+class nsSliderMediator : public nsIDOMEventListener
 {
 public:
 
@@ -65,51 +65,7 @@ public:
 
   virtual void SetSlider(nsSliderFrame* aSlider) { mSlider = aSlider; }
 
- /**
-  * Processes a mouse down event
-  * @param aMouseEvent @see nsIDOMEvent.h 
-  * @returns whether the event was consumed or ignored. @see nsresult
-  */
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-
-  /**
-   * Processes a mouse up event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-
-  /**
-   * Processes a mouse click event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   *
-   */
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse click event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   *
-   */
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse enter event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse leave event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 };
 
 class nsSliderFrame : public nsBoxFrame
@@ -173,10 +129,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
 
   static PRInt32 GetCurrentPosition(nsIContent* content);
   static PRInt32 GetMinPosition(nsIContent* content);

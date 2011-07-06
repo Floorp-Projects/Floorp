@@ -17,14 +17,13 @@ body {
 ----------------------------------*/
 
 .tab {
+  margin: 8px;
   padding-top: 4px;
   -moz-padding-end: 6px;
   padding-bottom: 6px;
   -moz-padding-start: 4px;
-  background-color: #D7D7D7;
+  background-color: rgb(240,240,240);
   border-radius: 0.4em;
-  box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
 }
 
@@ -43,7 +42,7 @@ html[dir=rtl] .thumb {
 }
 
 .favicon {
-  background-color: #D7D7D7;
+  background-color: rgb(240,240,240);
   box-shadow:
     0 -1px 0 rgba(225, 225, 225, 0.8) inset,
     -1px 0 0 rgba(225, 225, 225, 0.8) inset;
@@ -134,8 +133,6 @@ html[dir=rtl] .expander {
   bottom: -20px;
   text-align: center;
   width: 94.5%;
-  white-space: nowrap;
-  overflow: hidden;
   text-shadow: 0 1px rgba(255, 255, 255, 0.6);
 }
 
@@ -192,17 +189,6 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 /* Tab GroupItem
 ----------------------------------*/
-
-.tabInGroupItem {
-  box-shadow: none;
-  border-color: transparent;
-  background-color: rgb(240,240,240);
-  margin: 8px;
-}
-
-.tabInGroupItem .favicon {
-  background-color: rgb(240,240,240);
-}
 
 .groupItem {
   cursor: move;

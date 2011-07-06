@@ -45,7 +45,7 @@ function test() {
 
 function webConsoleCreated(aID)
 {
-  Services.obs.addObserver(this, "web-console-created", false);
+  Services.obs.removeObserver(observer, "web-console-created");
   executeSoon(function (){
     ok(HUDService.hudReferences[aID], "We have a hud reference");
     let console = browser.contentWindow.wrappedJSObject.console;

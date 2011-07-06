@@ -50,14 +50,11 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIDOMMouseListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMContextMenuListener.h"
 #include "nsITimer.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
@@ -176,9 +173,7 @@ protected:
 // with the DOM with AddChromeListeners() and removing itself with
 // RemoveChromeListeners().
 //
-class ChromeTooltipListener : public nsIDOMMouseListener,
-                                public nsIDOMKeyListener,
-                                public nsIDOMMouseMotionListener
+class ChromeTooltipListener : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -186,23 +181,8 @@ public:
   ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
   virtual ~ChromeTooltipListener ( ) ;
 
-    // nsIDOMMouseListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) {	return NS_OK; }
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
-
-    // nsIDOMMouseMotionListener
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-    // nsIDOMKeyListener
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent) ;
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent) ;
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent) ;
 
     // Add/remove the relevant listeners, based on what interfaces
     // the embedding chrome implements.
@@ -266,7 +246,7 @@ private:
 // with the DOM with AddChromeListeners() and removing itself with
 // RemoveChromeListeners().
 //
-class ChromeContextMenuListener : public nsIDOMContextMenuListener
+class ChromeContextMenuListener : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -275,8 +255,7 @@ public:
   virtual ~ChromeContextMenuListener ( ) ;
 
   // nsIDOMContextMenuListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) {	return NS_OK; }
-  NS_IMETHOD ContextMenu ( nsIDOMEvent* aEvent );
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
   // Add/remove the relevant listeners, based on what interfaces
   // the embedding chrome implements.

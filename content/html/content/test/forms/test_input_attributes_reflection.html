@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=551670
+-->
+<head>
+  <title>Test for Bug 551670</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=551670">Mozilla Bug 551670</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 551670 **/
+
+// TODO: maybe make those reflections be tested against all input types.
+
+// .accept
+reflectString(document.createElement("input"), "accept",
+              [ "audio/*", "video/*", "image/*", "image/png",
+                "application/msword", "appplication/pdf" ]);
+
+// .alt
+reflectString(document.createElement("input"), "alt");
+
+// .autocomplete
+reflectLimitedEnumerated(document.createElement("input"), "autocomplete",
+                         [ "on", "off" ], [ "", "default", "foo", "tulip" ]);
+
+// TODO: autofocus (boolean)
+// TODO: defaultChecked (boolean)
+// TODO: checked (boolean)
+// TODO: dirName (not implemented)
+// TODO: disabled (boolean)
+// TODO: form (HTMLFormElement)
+// TODO: files (FileList)
+// TODO: formAction (URL)
+
+// .formEnctype
+reflectLimitedEnumerated(document.createElement("input"), "formEnctype",
+                         [ "application/x-www-form-urlencoded",
+                           "multipart/form-data", "text/plain" ],
+                         [ "", "foo", "tulip", "multipart/foo" ],
+                         "application/x-www-form-urlencoded");
+
+// .formMethod
+reflectLimitedEnumerated(document.createElement("input"), "formMethod",
+                         [ "get", "post" ], [ "", "foo", "tulip" ], "get");
+
+// TODO: formNoValidate (boolean)
+
+// .formTarget
+reflectString(document.createElement("input"), "formTarget",
+              [ "_blank", "_self", "_parent", "_top" ]);
+
+// TODO: height (non-negative integer)
+// TODO: indeterminate (boolean)
+// TODO: list (HTMLElement)
+// TODO: max (not implemented)
+// TODO: maxLength (long)
+// TODO: min (not implemented)
+// TODO: multiple (boolean)
+
+// .name
+reflectString(document.createElement("input"), "name",
+              [ "isindex", "_charset_" ]);
+
+// .pattern
+reflectString(document.createElement("input"), "pattern",
+              [ "[0-9][A-Z]{3}" ]);
+
+// .placeholder
+reflectString(document.createElement("input"), "placeholder",
+              [ "foo\nbar", "foo\rbar", "foo\r\nbar" ]);
+
+// TODO: readOnly (boolean)
+// TODO: required (boolean)
+// TODO: size (unsigned long)
+// TODO: src (URL)
+// TODO: step (not implemented)
+
+// .type
+reflectLimitedEnumerated(document.createElement("input"),
+                         "type",
+                         [ "hidden", "text", "search", "tel", "url", "email",
+                           "password", "checkbox", "radio", "file", "submit",
+                           "image", "reset", "button" ],
+                         [ "this-is-probably-a-wrong-type", "", "tulip" ],
+                         "text",
+                         [ "datetime", "date", "month", "week", "time",
+                           "datetime-local", "number", "range", "color" ]);
+
+// TODO: defaultValue (reflects @value)
+// .value doesn't reflect a content attribute.
+// TODO: valueAsDate (not implemented)
+// TODO: valueAsNumber (not implemented)
+// TODO: selectedOption (not implemented)
+// TODO: width (non-negative integer)
+// .willValidate doesn't reflect a content attribute.
+// .validity doesn't reflect a content attribute.
+// .validationMessage doesn't reflect a content attribute.
+// .labels doesn't reflect a content attribute.
+
+</script>
+</pre>
+</body>
+</html>

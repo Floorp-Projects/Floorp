@@ -51,8 +51,30 @@ NS_IMPL_ISUPPORTS1(nsXULTemplateResultXML, nsIXULTemplateResult)
 nsXULTemplateResultXML::nsXULTemplateResultXML(nsXMLQuery* aQuery,
                                                nsIDOMNode* aNode,
                                                nsXMLBindingSet* aBindings)
-    : mId(++sTemplateId), mQuery(aQuery), mNode(aNode)
+    : mQuery(aQuery), mNode(aNode)
 {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mNode);
+
+    // If the node has an id, create the uri from it. Otherwise, there isn't
+    // anything to identify the node with so just use a somewhat random number.
+    nsCOMPtr<nsIAtom> id = content->GetID();
+    if (id) {
+      nsCOMPtr<nsIURI> uri = content->GetBaseURI();
+      nsCAutoString spec;
+      uri->GetSpec(spec);
+
+      mId = NS_ConvertUTF8toUTF16(spec);
+
+      nsAutoString idstr;
+      id->ToString(idstr);
+      mId += NS_LITERAL_STRING("#") + idstr;
+    }
+    else {
+      nsAutoString rowid(NS_LITERAL_STRING("row"));
+      rowid.AppendInt(++sTemplateId);
+      mId.Assign(rowid);
+    }
+
     if (aBindings)
         mRequiredValues.SetBindingSet(aBindings);
 }
@@ -97,9 +119,7 @@ nsXULTemplateResultXML::GetMayProcessChildren(PRBool* aMayProcessChildren)
 NS_IMETHODIMP
 nsXULTemplateResultXML::GetId(nsAString& aId)
 {
-    nsAutoString rowid(NS_LITERAL_STRING("row"));
-    rowid.AppendInt(mId);
-    aId.Assign(rowid);
+    aId = mId;
     return NS_OK;
 }
 

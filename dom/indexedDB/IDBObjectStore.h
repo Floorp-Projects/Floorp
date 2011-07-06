@@ -119,12 +119,16 @@ public:
   static bool
   DeserializeValue(JSContext* aCx,
                    JSAutoStructuredCloneBuffer& aBuffer,
-                   jsval* aValue);
+                   jsval* aValue,
+                   JSStructuredCloneCallbacks* aCallbacks = nsnull,
+                   void* aClosure = nsnull);
 
   static bool
   SerializeValue(JSContext* aCx,
                  JSAutoStructuredCloneBuffer& aBuffer,
-                 jsval aValue);
+                 jsval aValue,
+                 JSStructuredCloneCallbacks* aCallbacks = nsnull,
+                 void* aClosure = nsnull);
 
   const nsString& Name() const
   {
@@ -158,7 +162,8 @@ public:
   }
 
   nsresult ModifyValueForNewKey(JSAutoStructuredCloneBuffer& aBuffer,
-                                Key& aKey);
+                                Key& aKey,
+                                PRUint64 aOffsetToKeyProp);
 
 protected:
   IDBObjectStore();
@@ -169,7 +174,8 @@ protected:
                       jsval aKeyVal,
                       JSAutoStructuredCloneBuffer& aCloneBuffer,
                       Key& aKey,
-                      nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+                      nsTArray<IndexUpdateInfo>& aUpdateInfoArray,
+                      PRUint64* aOffsetToKeyProp);
 
   nsresult AddOrPut(const jsval& aValue,
                     const jsval& aKey,
@@ -177,8 +183,6 @@ protected:
                     PRUint8 aOptionalArgCount,
                     nsIIDBRequest** _retval,
                     bool aOverwrite);
-
-  nsresult EnsureKeyPathSerializationData(JSContext* aCx);
 
 private:
   nsRefPtr<IDBTransaction> mTransaction;
@@ -193,13 +197,7 @@ private:
   PRUint32 mDatabaseId;
   PRUint32 mStructuredCloneVersion;
 
-  // Used to store a serialized representation of the fake property
-  // entry used to handle autoincrement with keypaths.
-  JSAutoStructuredCloneBuffer mKeyPathSerialization;
-  PRUint32 mKeyPathSerializationOffset;
-
   nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
-
 };
 
 END_INDEXEDDB_NAMESPACE

@@ -88,8 +88,8 @@ inline void nsRegion::nsRectFast::UnionRect (const nsRect& aRect1, const nsRect&
 {
   const nscoord xmost = NS_MAX (aRect1.XMost (), aRect2.XMost ());
   const nscoord ymost = NS_MAX (aRect1.YMost (), aRect2.YMost ());
-  x = PR_MIN (aRect1.x, aRect2.x);
-  y = PR_MIN (aRect1.y, aRect2.y);
+  x = NS_MIN(aRect1.x, aRect2.x);
+  y = NS_MIN(aRect1.y, aRect2.y);
   width  = xmost - x;
   height = ymost - y;
 }

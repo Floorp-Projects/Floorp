@@ -246,8 +246,11 @@ ArrayBuffer::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     if (!delegateResult)
         return false;
 
-    if (*propp != NULL)
+    if (*propp != NULL) {
+        if (*objp == delegate)
+            *objp = obj;
         return true;
+    }
 
     JSObject *proto = obj->getProto();
     if (!proto) {

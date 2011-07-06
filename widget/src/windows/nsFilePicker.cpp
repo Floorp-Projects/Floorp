@@ -97,6 +97,75 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
   return 0;
 }
 
+// Callback hook which will dynamically allocate a buffer large
+// enough for the file picker dialog.
+static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg,
+                                        WPARAM wParam, LPARAM lParam)
+{
+  switch (msg) {
+    case WM_INITDIALOG:
+      {
+        // Finds the child drop down of a File Picker dialog and sets the 
+        // maximum amount of text it can hold when typed in manually.
+        // A wParam of 0 mean 0x7FFFFFFE characters.
+        HWND comboBox = FindWindowEx(GetParent(hwnd), NULL, 
+                                     L"ComboBoxEx32", NULL );
+        if(comboBox)
+          SendMessage(comboBox, CB_LIMITTEXT, 0, 0);
+      }
+      break;
+    case WM_NOTIFY:
+      {
+        LPOFNOTIFYW lpofn = (LPOFNOTIFYW) lParam;
+        // CDN_SELCHANGE is sent when the selection in the list box of the file
+        // selection dialog changes
+        if (lpofn->hdr.code == CDN_SELCHANGE) {
+          HWND parentHWND = GetParent(hwnd);
+
+          // Get the required size for the selected files buffer
+          UINT newBufLength = 0; 
+          int requiredBufLength = CommDlg_OpenSave_GetSpecW(parentHWND, 
+                                                            NULL, 0);
+          if(requiredBufLength >= 0)
+            newBufLength += requiredBufLength;
+          else
+            newBufLength += MAX_PATH;
+
+          // If the user selects multiple files, the buffer contains the 
+          // current directory followed by the file names of the selected 
+          // files. So make room for the directory path.  If the user
+          // selects a single file, it is no harm to add extra space.
+          requiredBufLength = CommDlg_OpenSave_GetFolderPathW(parentHWND, 
+                                                              NULL, 0);
+          if(requiredBufLength >= 0)
+            newBufLength += requiredBufLength;
+          else
+            newBufLength += MAX_PATH;
+
+          // Check if lpstrFile and nMaxFile are large enough
+          if (newBufLength > lpofn->lpOFN->nMaxFile)
+          {
+            if (lpofn->lpOFN->lpstrFile)
+              delete[] lpofn->lpOFN->lpstrFile;
+
+            // We allocate FILE_BUFFER_SIZE more bytes than is needed so that
+            // if the user selects a file and holds down shift and down to 
+            // select  additional items, we will not continuously reallocate
+            newBufLength += FILE_BUFFER_SIZE;
+
+            PRUnichar* filesBuffer = new PRUnichar[newBufLength];
+            ZeroMemory(filesBuffer, newBufLength * sizeof(PRUnichar));
+
+            lpofn->lpOFN->lpstrFile = filesBuffer;
+            lpofn->lpOFN->nMaxFile  = newBufLength;
+          }
+        }
+      }
+      break;
+  }
+  return 0;
+}
+
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
   NS_ENSURE_ARG_POINTER(aReturnVal);
@@ -109,7 +178,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   }
 
   PRBool result = PR_FALSE;
-  PRUnichar fileBuffer[FILE_BUFFER_SIZE+1];
+  nsAutoArrayPtr<PRUnichar> fileBuffer(new PRUnichar[FILE_BUFFER_SIZE+1]);
+            
   wcsncpy(fileBuffer,  mDefault.get(), FILE_BUFFER_SIZE);
   fileBuffer[FILE_BUFFER_SIZE] = '\0'; // null terminate in case copy truncated
 
@@ -229,8 +299,19 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         result = ::GetOpenFileNameW(&ofn);
       }
       else if (mMode == modeOpenMultiple) {
-        ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+        ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | 
+                     OFN_EXPLORER | OFN_ENABLEHOOK;
+
+        // The hook set here ensures that the buffer returned will always be
+        // long enough to hold all selected files.  The hook may modify the
+        // value of ofn.lpstrFile and deallocate the old buffer that it pointed
+        // to (fileBuffer). The hook assumes that the passed in value is heap 
+        // allocated and that the returned value should be freed by the caller.
+        // If the hook changes the buffer, it will deallocate the old buffer.
+        ofn.lpfnHook = FilePickerHook;
+        fileBuffer.forget();
         result = ::GetOpenFileNameW(&ofn);
+        fileBuffer = ofn.lpstrFile;
       }
       else if (mMode == modeSave) {
         ofn.Flags |= OFN_NOREADONLYRETURN;

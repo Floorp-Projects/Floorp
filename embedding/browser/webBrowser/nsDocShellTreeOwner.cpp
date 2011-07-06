@@ -70,7 +70,6 @@
 #include "Link.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGTitleElement.h"
-#include "nsIDOMSVGForeignObjectElem.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
@@ -1059,9 +1058,8 @@ DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 // UseSVGTitle
 //
 // A helper routine that determines whether we're still interested
-// in SVG titles. We need to stop at the SVG root element; that
-// either has no parent, has a non-SVG parent or has an SVG ForeignObject 
-// parent.
+// in SVG titles. We need to stop at the SVG root element that
+// has a document node parent
 //
 static PRBool
 UseSVGTitle(nsIDOMElement *currElement)
@@ -1075,12 +1073,10 @@ UseSVGTitle(nsIDOMElement *currElement)
   if (!parent)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMSVGForeignObjectElement> parentFOContent(do_QueryInterface(parent));
-  if (parentFOContent)
-    return PR_FALSE;
+  PRUint16 nodeType;
+  nsresult rv = parent->GetNodeType(&nodeType);
 
-  nsCOMPtr<nsIDOMSVGElement> parentSVGContent(do_QueryInterface(parent));
-  return (parentSVGContent != nsnull);
+  return NS_SUCCEEDED(rv) && nodeType != nsIDOMNode::DOCUMENT_NODE;
 }
 
 /* void getNodeText (in nsIDOMNode aNode, out wstring aText); */
@@ -1186,17 +1182,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ADDREF(ChromeTooltipListener)
-NS_IMPL_RELEASE(ChromeTooltipListener)
-
-NS_INTERFACE_MAP_BEGIN(ChromeTooltipListener)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseListener)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
-NS_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS1(ChromeTooltipListener, nsIDOMEventListener)
 
 //
 // ChromeTooltipListener ctor
@@ -1264,14 +1250,20 @@ NS_IMETHODIMP
 ChromeTooltipListener::AddTooltipListener()
 {
   if (mEventTarget) {
-    nsIDOMMouseListener *pListener = static_cast<nsIDOMMouseListener *>(this);
-    nsresult rv = mEventTarget->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
-    nsresult rv2 = mEventTarget->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseMotionListener));
-    nsresult rv3 = mEventTarget->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMKeyListener));
-    
-    // if all 3 succeed, we're a go!
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2) && NS_SUCCEEDED(rv3)) 
-      mTooltipListenerInstalled = PR_TRUE;
+    nsresult rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("keydown"),
+                                                 this, PR_FALSE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this,
+                                        PR_FALSE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseout"), this,
+                                        PR_FALSE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mEventTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), this,
+                                        PR_FALSE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mTooltipListenerInstalled = PR_TRUE;
   }
 
   return NS_OK;
@@ -1309,101 +1301,42 @@ NS_IMETHODIMP
 ChromeTooltipListener::RemoveTooltipListener()
 {
   if (mEventTarget) {
-    nsIDOMMouseListener *pListener = static_cast<nsIDOMMouseListener *>(this);
-    nsresult rv = mEventTarget->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
-    nsresult rv2 = mEventTarget->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseMotionListener));
-    nsresult rv3 = mEventTarget->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMKeyListener));
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2) && NS_SUCCEEDED(rv3))
-      mTooltipListenerInstalled = PR_FALSE;
+    nsresult rv =
+      mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), this,
+                                        PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"),
+                                           this, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this,
+                                           PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+                                           this, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mTooltipListenerInstalled = PR_FALSE;
   }
 
   return NS_OK;
 }
 
-
-//
-// KeyDown
-//
-// When the user starts typing, they generaly don't want to see any messy wax
-// builup. Hide the tooltip.
-//
-nsresult
-ChromeTooltipListener::KeyDown(nsIDOMEvent* aMouseEvent)
+NS_IMETHODIMP
+ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  return HideTooltip();
-} // KeyDown
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
 
+  if (eventType.EqualsLiteral("keydown") ||
+      eventType.EqualsLiteral("mousedown") ||
+      eventType.EqualsLiteral("mouseout"))
+    return HideTooltip();
+  if (eventType.EqualsLiteral("mousemove"))
+    return MouseMove(aEvent);
 
-//
-// KeyUp
-// KeyPress
-//
-// We can ignore these as they are already handled by KeyDown
-//
-nsresult
-ChromeTooltipListener::KeyUp(nsIDOMEvent* aMouseEvent)
-{
+  NS_ERROR("Unexpected event type");
   return NS_OK;
-    
-} // KeyUp
-
-nsresult
-ChromeTooltipListener::KeyPress(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-    
-} // KeyPress
-
-
-//
-// MouseDown
-//
-// On a click, hide the tooltip
-//
-nsresult 
-ChromeTooltipListener::MouseDown(nsIDOMEvent* aMouseEvent)
-{
-  return HideTooltip();
-
-} // MouseDown
-
-
-nsresult 
-ChromeTooltipListener::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-    return NS_OK; 
 }
-
-nsresult 
-ChromeTooltipListener::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-    return NS_OK; 
-}
-
-nsresult 
-ChromeTooltipListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
-{
-    return NS_OK; 
-}
-
-nsresult 
-ChromeTooltipListener::MouseOver(nsIDOMEvent* aMouseEvent)
-{
-    return NS_OK; 
-}
-
-
-//
-// MouseOut
-//
-// If we're responding to tooltips, hide the tip whenever the mouse leaves
-// the area it was in.
-nsresult 
-ChromeTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
-{
-  return HideTooltip();
-}
-
 
 //
 // MouseMove
@@ -1641,14 +1574,7 @@ ChromeTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
 } // sAutoHideCallback
 
 
-NS_IMPL_ADDREF(ChromeContextMenuListener)
-NS_IMPL_RELEASE(ChromeContextMenuListener)
-
-NS_INTERFACE_MAP_BEGIN(ChromeContextMenuListener)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMContextMenuListener)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMContextMenuListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(ChromeContextMenuListener, nsIDOMEventListener)
 
 
 //
@@ -1680,10 +1606,12 @@ NS_IMETHODIMP
 ChromeContextMenuListener::AddContextMenuListener()
 {
   if (mEventTarget) {
-    nsIDOMContextMenuListener *pListener = static_cast<nsIDOMContextMenuListener *>(this);
-    nsresult rv = mEventTarget->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMContextMenuListener));
-    if (NS_SUCCEEDED(rv))
-      mContextMenuListenerInstalled = PR_TRUE;
+    nsresult rv =
+      mEventTarget->AddEventListener(NS_LITERAL_STRING("contextmenu"), this,
+                                     PR_FALSE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mContextMenuListenerInstalled = PR_TRUE;
   }
 
   return NS_OK;
@@ -1699,10 +1627,12 @@ NS_IMETHODIMP
 ChromeContextMenuListener::RemoveContextMenuListener()
 {
   if (mEventTarget) {
-    nsIDOMContextMenuListener *pListener = static_cast<nsIDOMContextMenuListener *>(this);
-    nsresult rv = mEventTarget->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMContextMenuListener));
-    if (NS_SUCCEEDED(rv))
-      mContextMenuListenerInstalled = PR_FALSE;
+    nsresult rv =
+      mEventTarget->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this,
+                                        PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mContextMenuListenerInstalled = PR_FALSE;
   }
 
   return NS_OK;
@@ -1763,8 +1693,11 @@ ChromeContextMenuListener::RemoveChromeListeners()
 // end chrome.
 //
 NS_IMETHODIMP
-ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
-{     
+ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
+{
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  NS_ENSURE_TRUE(mouseEvent, NS_ERROR_UNEXPECTED);
+
   nsCOMPtr<nsIDOMNSUIEvent> uievent(do_QueryInterface(aMouseEvent));
 
   if (uievent) {

@@ -62,7 +62,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(bf5e52a3-6ec1-4a6e-8364-9f9222ec8edb)]
+[scriptable, uuid(274213a8-df51-4b52-bfad-d306a1d5f642)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -79,6 +79,10 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void translate(in float x, in float y);
   void transform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
   void setTransform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
+  [implicit_jscontext]
+  attribute jsval mozCurrentTransform; // [ m11, m12, m21, m22, dx, dy ], i.e. row major
+  [implicit_jscontext]
+  attribute jsval mozCurrentTransformInverse;
 
   // compositing
   attribute float globalAlpha; /* default 1.0 -- opaque */
@@ -116,6 +120,10 @@ enum CanvasMultiGetterType {
   attribute DOMString lineCap; /* "butt", "round", "square" (default) */
   attribute DOMString lineJoin; /* "round", "bevel", "miter" (default) */
   attribute float miterLimit; /* default 10 */
+
+  [implicit_jscontext]
+  attribute jsval mozDash; /* default |null| */
+  attribute float mozDashOffset; /* default 0.0 */
 
   // shadows
   attribute float shadowOffsetX;
@@ -155,11 +163,7 @@ enum CanvasMultiGetterType {
   void strokeText(in DOMString text, in float x, in float y, [optional] in float maxWidth);
   nsIDOMTextMetrics measureText(in DOMString text);
 
-  attribute DOMString mozTextStyle; 
-  void mozDrawText(in DOMString textToDraw);
-  float mozMeasureText(in DOMString textToMeasure);
-  void mozPathText(in DOMString textToPath);
-  void mozTextAlongPath(in DOMString textToDraw, in boolean stroke);
+  attribute DOMString mozTextStyle;
 
   // image api
 
