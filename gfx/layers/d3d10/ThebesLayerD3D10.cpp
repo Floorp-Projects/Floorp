@@ -43,6 +43,7 @@
 #include "gfxD2DSurface.h"
 #endif
 
+#include "../d3d9/Nv3DVUtils.h"
 #include "gfxTeeSurface.h"
 #include "gfxUtils.h"
 #include "ReadbackLayer.h"
@@ -284,7 +285,7 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
       device()->CreateTexture2D(&desc, NULL, getter_AddRefs(readbackTexture));
       device()->CopyResource(readbackTexture, mTexture);
 
-      for (int i = 0; i < readbackUpdates.Length(); i++) {
+      for (PRUint32 i = 0; i < readbackUpdates.Length(); i++) {
         mD3DManager->readbackManager()->PostTask(readbackTexture,
                                                  &readbackUpdates[i],
                                                  gfxPoint(newTextureRect.x, newTextureRect.y));
