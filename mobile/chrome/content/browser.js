@@ -81,6 +81,10 @@ function onDebugKeyPress(aEvent) {
   if (!aEvent.ctrlKey)
     return;
 
+  // prevent the keypress from being triggered twice when page is local - bug 655501
+  if (aEvent.originalTarget.nodeName == "html")
+    return;
+
   function doSwipe(aDirection) {
     let evt = document.createEvent("SimpleGestureEvent");
     evt.initSimpleGestureEvent("MozSwipeGesture", true, true, window, null,

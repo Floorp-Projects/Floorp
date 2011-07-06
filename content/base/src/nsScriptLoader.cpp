@@ -1314,11 +1314,12 @@ void
 nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
                            const nsAString &aType)
 {
-  nsRefPtr<nsScriptLoadRequest> request = new nsScriptLoadRequest(nsnull, 0);
-  if (!request) {
+  // Check to see if scripts has been turned off.
+  if (!mEnabled || !mDocument->IsScriptEnabled()) {
     return;
   }
 
+  nsRefPtr<nsScriptLoadRequest> request = new nsScriptLoadRequest(nsnull, 0);
   request->mURI = aURI;
   request->mIsInline = PR_FALSE;
   request->mLoading = PR_TRUE;

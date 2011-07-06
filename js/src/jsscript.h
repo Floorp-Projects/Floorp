@@ -266,24 +266,15 @@ class Bindings {
     }
 
     /*
-     * Function and macros to work with local names as an array of words.
-     * getLocalNameArray returns the array, or null if we are out of memory.
-     * This function must be called only when hasLocalNames().
+     * This method returns the local variable, argument, etc. names used by a
+     * script.  This function must be called only when hasLocalNames().
      *
-     * The supplied pool is used to allocate the returned array, so the caller
-     * is obligated to mark and release to free it.
-     *
-     * The elements of the array with index less than nargs correspond to the
-     * the names of arguments. An index >= nargs addresses a var binding. Use
-     * JS_LOCAL_NAME_TO_ATOM to convert array's element to an atom pointer.
-     * This pointer can be null when the element is for an argument
+     * The elements of the vector with index less than nargs correspond to the
+     * the names of arguments. An index >= nargs addresses a var binding.
+     * The name at an element will be null when the element is for an argument
      * corresponding to a destructuring pattern.
-     *
-     * If nameWord does not name an argument, use JS_LOCAL_NAME_IS_CONST to
-     * check if nameWord corresponds to the const declaration.
      */
-    jsuword *
-    getLocalNameArray(JSContext *cx, JSArenaPool *pool);
+    bool getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp);
 
     /*
      * Returns the slot where the sharp array is stored, or a value < 0 if no
@@ -353,9 +344,7 @@ class Bindings {
      * oldest (i.e., last or right-most to first or left-most in source order).
      *
      * Sometimes iteration order must be from oldest to youngest, however. For
-     * such cases, use js::Bindings::getLocalNameArray. The RAII class
-     * js::AutoLocalNameArray, defined in jscntxt.h, should be used where
-     * possible instead of direct calls to getLocalNameArray.
+     * such cases, use js::Bindings::getLocalNameArray.
      */
     const js::Shape *lastArgument() const;
     const js::Shape *lastVariable() const;
