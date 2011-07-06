@@ -44,9 +44,8 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsUnicharUtils.h"
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #define INTL_HYPHENATIONALIAS_PREFIX "intl.hyphenation-alias."
 
@@ -226,25 +225,30 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
 void
 nsHyphenationManager::LoadAliases()
 {
-  nsIPrefBranch* prefRootBranch = Preferences::GetRootBranch();
-  if (!prefRootBranch) {
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
     return;
   }
   PRUint32 prefCount;
   char **prefNames;
-  nsresult rv = prefRootBranch->GetChildList(INTL_HYPHENATIONALIAS_PREFIX,
-                                             &prefCount, &prefNames);
+  rv = prefBranch->GetChildList(INTL_HYPHENATIONALIAS_PREFIX,
+                                &prefCount, &prefNames);
   if (NS_SUCCEEDED(rv) && prefCount > 0) {
     for (PRUint32 i = 0; i < prefCount; ++i) {
-      nsAdoptingCString value = Preferences::GetCString(prefNames[i]);
-      if (value) {
+      char *prefValue;
+      rv = prefBranch->GetCharPref(prefNames[i], &prefValue);
+      if (NS_SUCCEEDED(rv)) {
         nsCAutoString alias(prefNames[i]);
         alias.Cut(0, strlen(INTL_HYPHENATIONALIAS_PREFIX));
         ToLowerCase(alias);
+        nsCAutoString value(prefValue);
         ToLowerCase(value);
         nsCOMPtr<nsIAtom> aliasAtom = do_GetAtom(alias);
         nsCOMPtr<nsIAtom> valueAtom = do_GetAtom(value);
         mHyphAliases.Put(aliasAtom, valueAtom);
+        NS_Free(prefValue);
       }
     }
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
