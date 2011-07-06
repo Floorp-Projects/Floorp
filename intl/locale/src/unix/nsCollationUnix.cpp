@@ -45,9 +45,6 @@
 #include "nsIPlatformCharset.h"
 #include "nsPosixLocale.h"
 #include "nsCOMPtr.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 //#define DEBUG_UNIX_COLLATION
