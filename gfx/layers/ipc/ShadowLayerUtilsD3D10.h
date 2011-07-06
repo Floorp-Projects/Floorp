@@ -18,7 +18,7 @@
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,61 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef IPC_ShadowLayerUtils_h
-#define IPC_ShadowLayerUtils_h
+#ifndef mozilla_layers_ShadowLayerUtilsD3D10_h
+#define mozilla_layers_ShadowLayerUtilsD3D10_h
 
-#include "IPC/IPCMessageUtils.h"
-#include "Layers.h"
+#define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 
-#if defined(MOZ_ENABLE_D3D10_LAYER)
-# include "mozilla/layers/ShadowLayerUtilsD3D10.h"
-#endif
+struct ID3D10Device;
+struct ID3D10Texture2D;
 
-#if defined(MOZ_X11)
-# include "mozilla/layers/ShadowLayerUtilsX11.h"
-#else
-namespace mozilla { namespace layers {
-struct SurfaceDescriptorX11 {
-  bool operator==(const SurfaceDescriptorX11&) const { return false; }
-};
-} }
-#endif
+namespace mozilla {
+namespace layers {
 
-namespace IPC {
+class SurfaceDescriptorD3D10;
 
-template <>
-struct ParamTraits<mozilla::layers::FrameMetrics>
-{
-  typedef mozilla::layers::FrameMetrics paramType;
+/**
+ * Write into |aDescr| a cross-process descriptor of |aTexture|, if
+ * possible.  Return true iff |aDescr| was successfully set.
+ */
+bool
+GetDescriptor(ID3D10Texture2D* aTexture, SurfaceDescriptorD3D10* aDescr);
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mViewport);
-    WriteParam(aMsg, aParam.mContentSize);
-    WriteParam(aMsg, aParam.mViewportScrollOffset);
-    WriteParam(aMsg, aParam.mDisplayPort);
-    WriteParam(aMsg, aParam.mScrollId);
-  }
+already_AddRefed<ID3D10Texture2D>
+OpenForeign(ID3D10Device* aDevice, const SurfaceDescriptorD3D10& aDescr);
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return (ReadParam(aMsg, aIter, &aResult->mViewport) &&
-            ReadParam(aMsg, aIter, &aResult->mContentSize) &&
-            ReadParam(aMsg, aIter, &aResult->mViewportScrollOffset) &&
-            ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollId));
-  }
-};
+} // namespace layers
+} // namespace mozilla
 
-#if !defined(MOZ_HAVE_SURFACEDESCRIPTORX11)
-template <>
-struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
-  typedef mozilla::layers::SurfaceDescriptorX11 paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
-};
-#endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTOR)
-
-}
-
-#endif // IPC_ShadowLayerUtils_h
+#endif  // mozilla_layers_ShadowLayerUtilsD3D10_h
