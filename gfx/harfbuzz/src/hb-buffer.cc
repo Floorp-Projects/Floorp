@@ -461,23 +461,21 @@ reverse_range (hb_buffer_t *buffer,
 	       unsigned int start,
 	       unsigned int end)
 {
-  unsigned int i, j;
-
-  for (i = start, j = end - 1; i < j; i++, j--) {
-    hb_glyph_info_t t;
-
-    t = buffer->info[i];
-    buffer->info[i] = buffer->info[j];
-    buffer->info[j] = t;
+  hb_glyph_info_t *i = buffer->info + start;
+  hb_glyph_info_t *j = buffer->info + end - 1;
+  while (i < j) {
+    hb_glyph_info_t t = *i;
+    *i++ = *j;
+    *j-- = t;
   }
 
   if (buffer->pos) {
-    for (i = 0, j = end - 1; i < j; i++, j--) {
-      hb_glyph_position_t t;
-
-      t = buffer->pos[i];
-      buffer->pos[i] = buffer->pos[j];
-      buffer->pos[j] = t;
+    hb_glyph_position_t *ii = buffer->pos + start;
+    hb_glyph_position_t *jj = buffer->pos + end - 1;
+    while (ii < jj) {
+      hb_glyph_position_t tt = *ii;
+      *ii++ = *jj;
+      *jj-- = tt;
     }
   }
 }
