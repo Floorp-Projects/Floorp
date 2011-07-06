@@ -1880,8 +1880,10 @@ TypeCompartment::init(JSContext *cx)
 #endif
     typeEmpty.flags = OBJECT_FLAG_UNKNOWN_MASK;
 
+#ifndef JS_CPU_ARM
     if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE)
         inferenceEnabled = true;
+#endif
 }
 
 TypeObject *
