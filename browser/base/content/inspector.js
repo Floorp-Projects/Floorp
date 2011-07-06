@@ -549,7 +549,6 @@ IFrameHighlighter.prototype = {
  */
 var InspectorUI = {
   browser: null,
-  tools: {},
   showTextNodesWithWhitespace: false,
   inspecting: false,
   treeLoaded: false,
@@ -884,13 +883,6 @@ var InspectorUI = {
       delete this.domplateUtils;
     }
 
-    this.saveToolState(this.winID);
-    this.toolsDo(function IUI_toolsHide(aTool) {
-      if (aTool.panel) {
-        aTool.panel.hidePopup();
-      }
-    });
-
     this.inspectCmd.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
     this.winID = null;
@@ -912,7 +904,6 @@ var InspectorUI = {
    */
   startInspecting: function IUI_startInspecting()
   {
-    document.getElementById("inspector-inspect-toolbutton").checked = true;
     this.attachPageListeners();
     this.inspecting = true;
   },
@@ -927,7 +918,6 @@ var InspectorUI = {
       return;
     }
 
-    document.getElementById("inspector-inspect-toolbutton").checked = false;
     this.detachPageListeners();
     this.inspecting = false;
     if (this.highlighter.node) {
@@ -958,11 +948,6 @@ var InspectorUI = {
       }
       this.ioBox.select(this.selection, true, true, aScroll);
     }
-    this.toolsDo(function IUI_toolsOnSelect(aTool) {
-      if (aTool.panel.state == "open") {
-        aTool.onSelect.apply(aTool.context, [aNode]);
-      }
-    });
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -1018,7 +1003,6 @@ var InspectorUI = {
             }, INSPECTOR_NOTIFICATIONS.CLOSED, false);
           } else {
             this.openInspectorUI();
-            this.restoreToolState(winID);
           }
         }
 
@@ -1270,113 +1254,7 @@ var InspectorUI = {
     }
     this._log("END TRACE");
   },
-
-  /**
-   * Register an external tool with the inspector.
-   *
-   * aRegObj = {
-   *   id: "toolname",
-   *   context: myTool,
-   *   label: "Button label",
-   *   icon: "chrome://somepath.png",
-   *   tooltiptext: "Button tooltip",
-   *   accesskey: "S",
-   *   onSelect: object.method,
-   *   onShow: object.method,
-   *   onHide: object.method,
-   *   panel: myTool.panel
-   * }
-   *
-   * @param aRegObj
-   */
-  registerTool: function IUI_RegisterTool(aRegObj) {
-    if (this.tools[aRegObj.id]) {
-      return;
-    } else {
-      let id = aRegObj.id;
-      let buttonId = "inspector-" + id + "-toolbutton";
-      aRegObj.buttonId = buttonId;
-
-      aRegObj.panel.addEventListener("popuphiding",
-        function IUI_toolPanelHiding() {
-          btn.setAttribute("checked", "false");
-        }, false);
-      aRegObj.panel.addEventListener("popupshowing",
-        function IUI_toolPanelShowing() {
-          btn.setAttribute("checked", "true");
-        }, false);
-
-      this.tools[id] = aRegObj;
-    }
-
-    let toolbar = document.getElementById("inspector-toolbar");
-    let btn = document.createElement("toolbarbutton");
-    btn.setAttribute("id", aRegObj.buttonId);
-    btn.setAttribute("label", aRegObj.label);
-    btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
-    btn.setAttribute("accesskey", aRegObj.accesskey);
-    btn.setAttribute("class", "toolbarbutton-text");
-    btn.setAttribute("image", aRegObj.icon || "");
-    toolbar.appendChild(btn);
-
-    btn.addEventListener("click",
-      function IUI_ToolButtonClick(aEvent) {
-        if (btn.getAttribute("checked") == "true") {
-          aRegObj.onHide.apply(aRegObj.context);
-        } else {
-          aRegObj.onShow.apply(aRegObj.context, [InspectorUI.selection]);
-          aRegObj.onSelect.apply(aRegObj.context, [InspectorUI.selection]);
-        }
-      }, false);
-  },
-
-/**
- * Save a list of open tools to the inspector store.
- *
- * @param aWinID The ID of the window used to save the associated tools
- */
-  saveToolState: function IUI_saveToolState(aWinID)
-  {
-    let openTools = {};
-    this.toolsDo(function IUI_toolsSetId(aTool) {
-      if (aTool.panel.state == "open") {
-        openTools[aTool.id] = true;
-      }
-    });
-    InspectorStore.setValue(aWinID, "openTools", openTools);
-  },
-
-/**
- * Restore tools previously save using saveToolState().
- *
- * @param aWinID The ID of the window to which the associated tools are to be
- *               restored.
- */
-  restoreToolState: function IUI_restoreToolState(aWinID)
-  {
-    let openTools = InspectorStore.getValue(aWinID, "openTools");
-    InspectorUI.selection = InspectorUI.selection;
-    if (openTools) {
-      this.toolsDo(function IUI_toolsOnShow(aTool) {
-        if (aTool.id in openTools) {
-          aTool.onShow.apply(aTool.context, [InspectorUI.selection]);
-        }
-      });
-    }
-  },
-  
-  /**
-   * Loop through all registered tools and pass each into the provided function
-   *
-   * @param aFunction The function to which each tool is to be passed
-   */
-  toolsDo: function IUI_toolsDo(aFunction)
-  {
-    for each (let tool in this.tools) {
-      aFunction(tool);
-    }
-  },
-};
+}
 
 /**
  * The Inspector store is used for storing data specific to each tab window.
@@ -1511,3 +1389,4 @@ var InspectorStore = {
 XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
   return document.getElementById("Tools:Inspect");
 });
+
