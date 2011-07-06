@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Font name collision test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- 
+  Font family names in @font-face rules take precedence over locally-available font families,
+  so none of the names of commonly used platform fonts should match against locally available
+  fonts.
+-->
+
+<style type="text/css">
+
+@font-face {
+  font-family: fallback;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+}
+
+body {
+  margin: 50px;
+  font-family: fallback;
+}
+
+table {
+  margin-left: 3em;
+}
+
+table td {
+  font-family: fallback;
+  font-size: 24pt;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<p>All text below should appear in the same "fallback" font face:</p>
+
+<table>
+<tr class="sample"><td>Sample</td></tr>
+<tr class="arial"><td>Arial</td></tr>
+<tr class="timesnewroman"><td>Times New Roman</td></tr>
+<tr class="couriernew"><td>Courier New</td></tr>
+<tr class="futura"><td>Futura</td></tr>
+<tr class="helvetica"><td>Helvetica</td></tr>
+<tr class="times"><td>Times</td></tr>
+<tr class="courier"><td>Courier</td></tr>
+<tr class="bitstreamverasans"><td>Bitstream Vera Sans</td></tr>
+<tr class="dejavusans"><td>DejaVu Sans</td></tr>
+<tr class="freesans"><td>FreeSans</td></tr>
+</table>
+
+</body>
+</html>

@@ -75,8 +75,12 @@
  *
  * "Rhino is not a member of the Monkey family"
  *
- * Before adding a new MSG_DEF at the end, look for JSMSG_UNUSED<n> free
- * index placeholders in the middle of the list.
+ * When removing MSG_DEFs, convert them to JSMSG_UNUSED<n> placeholders:
+ *
+ *    MSG_DEF(JSMSG_UNUSED7,                  7, 0, JSEXN_NONE, "")
+ *
+ * Before adding a new MSG_DEF at the end, look for existing JSMSG_UNUSED<n>
+ * free index placeholders in the middle of the list.
  */
 
 MSG_DEF(JSMSG_NOT_AN_ERROR,             0, 0, JSEXN_NONE, "<Error #0 is reserved>")
@@ -140,7 +144,7 @@ MSG_DEF(JSMSG_BAD_CLASS_RANGE,         57, 0, JSEXN_SYNTAXERR, "invalid range in
 MSG_DEF(JSMSG_BAD_REGEXP_FLAG,         58, 1, JSEXN_SYNTAXERR, "invalid regular expression flag {0}")
 MSG_DEF(JSMSG_NO_INPUT,                59, 5, JSEXN_SYNTAXERR, "no input for /{0}/{1}{2}{3}{4}")
 MSG_DEF(JSMSG_CANT_OPEN,               60, 2, JSEXN_ERR, "can't open {0}: {1}")
-MSG_DEF(JSMSG_BAD_STRING_MASK,         61, 1, JSEXN_ERR, "invalid string escape mask {0}")
+MSG_DEF(JSMSG_UNUSED61,                61, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_UNMATCHED_RIGHT_PAREN,   62, 0, JSEXN_SYNTAXERR, "unmatched ) in regular expression")
 MSG_DEF(JSMSG_END_OF_DATA,             63, 0, JSEXN_INTERNALERR, "unexpected end of data")
 MSG_DEF(JSMSG_SEEK_BEYOND_START,       64, 0, JSEXN_INTERNALERR, "illegal seek beyond start")

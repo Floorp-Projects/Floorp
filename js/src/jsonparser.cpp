@@ -584,7 +584,7 @@ JSONParser::parse(Value *vp)
 
           case FinishArrayElement: {
             Value v = valueStack.popCopy();
-            if (!js_ArrayCompPush(cx, &valueStack.back().toObject(), v))
+            if (!js_NewbornArrayPush(cx, &valueStack.back().toObject(), v))
                 return false;
             token = advanceAfterArrayElement();
             if (token == Comma) {

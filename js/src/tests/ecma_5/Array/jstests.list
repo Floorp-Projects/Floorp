@@ -1,5 +1,6 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Array/
 script length-01.js
+script length-set-object.js
 script regress-599159.js
 script sort-01.js
 script toLocaleString-01.js
