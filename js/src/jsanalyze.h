@@ -246,6 +246,14 @@ GetDefCount(JSScript *script, unsigned offset)
         return 1;
       case JSOP_FILTER:
         return 2;
+      case JSOP_PICK:
+        /*
+         * Pick pops and pushes how deep it looks in the stack + 1
+         * items. i.e. if the stack were |a b[2] c[1] d[0]|, pick 2
+         * would pop b, c, and d to rearrange the stack to |a c[0]
+         * d[1] b[2]|.
+         */
+        return (pc[1] + 1);
       default:
         return js_CodeSpec[*pc].ndefs;
     }
@@ -258,6 +266,8 @@ GetUseCount(JSScript *script, unsigned offset)
     jsbytecode *pc = script->code + offset;
     JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
 
+    if (JSOp(*pc) == JSOP_PICK)
+        return (pc[1] + 1);
     if (js_CodeSpec[*pc].nuses == -1)
         return js_GetVariableStackUses(JSOp(*pc), pc);
     return js_CodeSpec[*pc].nuses;

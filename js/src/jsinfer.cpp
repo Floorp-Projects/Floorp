@@ -3341,6 +3341,16 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         poppedTypes(pc, 0)->addSubset(cx, script, &pushed[3]);
         break;
 
+      case JSOP_SWAP:
+      case JSOP_PICK: {
+        unsigned pickedDepth = (op == JSOP_SWAP ? 1 : pc[1]);
+        /* The last popped value is the last pushed. */
+        poppedTypes(pc, pickedDepth)->addSubset(cx, script, &pushed[pickedDepth]);
+        for (unsigned i = 0; i < pickedDepth; i++)
+            poppedTypes(pc, i)->addSubset(cx, script, &pushed[pickedDepth - 1 - i]);
+        break;
+      }
+
       case JSOP_GETGLOBAL:
       case JSOP_CALLGLOBAL:
       case JSOP_GETGNAME:
