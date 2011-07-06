@@ -70,6 +70,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"
+#include "jslibmath.h"
 
 #include "jsobjinlines.h"
 
