@@ -260,7 +260,7 @@ File(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    nsXPConnect xpc = nsXPConnect::GetXPConnect();
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
     if (!xpc) {
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return JS_FALSE;
