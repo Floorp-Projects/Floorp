@@ -2594,6 +2594,21 @@ JS_SetContextSecurityCallbacks(JSContext *cx, JSSecurityCallbacks *callbacks);
 extern JS_PUBLIC_API(JSSecurityCallbacks *)
 JS_GetSecurityCallbacks(JSContext *cx);
 
+/*
+ * Code running with "trusted" principals will be given a deeper stack
+ * allocation than ordinary scripts. This allows trusted script to run after
+ * untrusted script has exhausted the stack. This function sets the
+ * runtime-wide trusted principal.
+ *
+ * This principals is not held (via JS_HoldPrincipals/JS_DropPrincipals) since
+ * there is no available JSContext. Instead, the caller must ensure that the
+ * given principals stays valid for as long as 'rt' may point to it. If the
+ * principals would be destroyed before 'rt', JS_SetTrustedPrincipals must be
+ * called again, passing NULL for 'prin'.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin);
+
 /************************************************************************/
 
 /*
