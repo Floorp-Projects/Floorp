@@ -60,7 +60,7 @@ const MEM_HISTOGRAMS = {
   "explicit/images/content/used/uncompressed":
     "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED",
   "heap-used": "MEMORY_HEAP_USED",
-  "hard-page-faults": "HARD_PAGE_FAULTS"
+  "page-faults-hard": "PAGE_FAULTS_HARD"
 };
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {

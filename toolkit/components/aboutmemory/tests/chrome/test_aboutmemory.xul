@@ -192,8 +192,8 @@ Other Measurements\n\
 222.00 MB -- other2\n\
 111.00 MB -- other1\n\
 100.00 MB -- heap-unused\n\
-      888 -- other4\n\
       777 -- other3\n\
+      888 -- other4\n\
     (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
@@ -263,8 +263,8 @@ Other Measurements\n\
 232,783,872 B -- other2\n\
 116,391,936 B -- other1\n\
 104,857,600 B -- heap-unused\n\
-          888 -- other4\n\
           777 -- other3\n\
+          888 -- other4\n\
         (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
