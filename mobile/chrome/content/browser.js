@@ -2518,8 +2518,16 @@ var ContentCrashObserver = {
 
 var MemoryObserver = {
   observe: function mo_observe(aSubject, aTopic, aData) {
+    function gc() {
+      window.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
+      Cu.forceGC();
+    };
+
     if (aData == "heap-minimize") {
-      // do non-destructive stuff here.
+      // The JS engine would normally GC on this notification, but since we
+      // disabled that in favor of this method (bug 669346), we should gc here.
+      gc();
       return;
     }
 
@@ -2530,9 +2538,9 @@ var MemoryObserver = {
       tab.resurrect();
     }
 
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
-    Cu.forceGC();
+    // gc *after* throwing out the tabs so we can reclaim that memory.
+    gc();
+
     // Bug 637582 - The low memory condition throws out some stuff that we still
     // need, re-selecting the active tab gets us back to where we need to be.
     let sTab = Browser.selectedTab;
