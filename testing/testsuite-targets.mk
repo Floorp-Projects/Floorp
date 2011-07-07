@@ -64,7 +64,7 @@ RUN_MOCHITEST = \
 RUN_MOCHITEST_REMOTE = \
 	rm -f ./$@.log && \
 	$(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
-	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
+	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) \
 	  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
