@@ -5050,7 +5050,7 @@ static const char *const shell_help_messages[] = {
 "  code.  If your test isn't ridiculously thorough, such that performing this\n"
 "  assertion increases test duration by an order of magnitude, you shouldn't\n"
 "  use this.",
-"getMaxArgs()             Return the maximum number of supported args for a call."
+"getMaxArgs()             Return the maximum number of supported args for a call.",
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
