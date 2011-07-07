@@ -84,6 +84,7 @@ typedef struct soinfo soinfo;
 #define FLAG_ERROR      0x00000002
 #define FLAG_EXE        0x00000004 // The main executable
 #define FLAG_PRELINKED  0x00000008 // This is a pre-linked lib
+#define FLAG_MMAPPED    0x00000010 // The object was loaded through load_mapped_library
 
 #define SOINFO_NAME_LEN 128
 
