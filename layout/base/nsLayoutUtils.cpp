@@ -3160,11 +3160,6 @@ GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
   GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  if (!mozilla::supports_neon()) {
-    defaultFilter = gfxPattern::FILTER_NEAREST;
-  }
-#endif
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
     nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;
 
