@@ -53,9 +53,8 @@ using nsIntSize;
 using mozilla::GraphicsFilterType;
 using mozilla::layers::FrameMetrics;
 using mozilla::layers::SurfaceDescriptorX11;
-using mozilla::LayersBackend;
 using mozilla::null_t;
-using mozilla::WindowsHandle;
+using mozilla::LayersBackend;
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -74,14 +73,13 @@ struct OpCreateContainerLayer  { PLayer layer; };
 struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
 struct OpCreateCanvasLayer     { PLayer layer; };
-
-struct SurfaceDescriptorD3D10 {
-  WindowsHandle handle;
-};
+ 
+// For the "buffer creation" operations, we send an initial front
+// buffer that only contains (transparent) black pixels just so that
+// we can swap it back after the first OpPaint without a special case.
 
 union SurfaceDescriptor {
   Shmem;
-  SurfaceDescriptorD3D10;
   SurfaceDescriptorX11;
 };
 
@@ -103,10 +101,6 @@ struct ThebesBuffer {
   nsIntPoint rotation; 
 };
 union OptionalThebesBuffer { ThebesBuffer; null_t; };
-
-// For the "buffer creation" operations, we send an initial front
-// buffer that only contains (transparent) black pixels just so that
-// we can swap it back after the first OpPaint without a special case.
 
 struct OpCreateThebesBuffer {
   PLayer layer;

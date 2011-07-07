@@ -238,18 +238,9 @@ public:
   PRBool EndTransaction(InfallibleTArray<EditReply>* aReplies);
 
   /**
-   * Set an actor through which layer updates will be pushed.
-   */
-  void SetShadowManager(PLayersChild* aShadowManager)
-  {
-    mShadowManager = aShadowManager;
-  }
-
-  /**
    * True if this is forwarding to a ShadowLayerManager.
    */
   PRBool HasShadowManager() const { return !!mShadowManager; }
-  PLayersChild* GetShadowManager() const { return mShadowManager; }
 
   /**
    * The following Alloc/Open/Destroy interfaces abstract over the
