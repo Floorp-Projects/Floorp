@@ -185,7 +185,10 @@ static PRTime sMaxChromeScriptRunTime;
 static nsIScriptSecurityManager *sSecurityManager;
 
 // nsMemoryPressureObserver observes the memory-pressure notifications
-// and forces a garbage collection and cycle collection when it happens.
+// and forces a garbage collection and cycle collection when it happens, if
+// the appropriate pref is set.
+
+static PRBool sGCOnMemoryPressure;
 
 class nsMemoryPressureObserver : public nsIObserver
 {
@@ -200,8 +203,10 @@ NS_IMETHODIMP
 nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
-  nsJSContext::GarbageCollectNow();
-  nsJSContext::CycleCollectNow();
+  if (sGCOnMemoryPressure) {
+    nsJSContext::GarbageCollectNow();
+    nsJSContext::CycleCollectNow();
+  }
   return NS_OK;
 }
 
@@ -3794,6 +3799,10 @@ nsJSRuntime::Init()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
     return NS_ERROR_FAILURE;
+
+  Preferences::AddBoolVarCache(&sGCOnMemoryPressure,
+                               "javascript.options.gc_on_memory_pressure",
+                               PR_TRUE);
 
   nsIObserver* memPressureObserver = new nsMemoryPressureObserver();
   NS_ENSURE_TRUE(memPressureObserver, NS_ERROR_OUT_OF_MEMORY);
