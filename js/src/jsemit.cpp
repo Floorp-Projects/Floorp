@@ -121,6 +121,7 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     constMap(parser->context),
     constList(parser->context),
     upvarIndices(parser->context),
+    upvarMap(parser->context),
     globalUses(parser->context),
     globalMap(parser->context),
     closedArgs(parser->context),
@@ -133,7 +134,6 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     current = &main;
     firstLine = prolog.currentLine = main.currentLine = lineno;
     prolog.noteMask = main.noteMask = SRCNOTE_CHUNK - 1;
-    memset(&upvarMap, 0, sizeof upvarMap);
 }
 
 bool
@@ -153,9 +153,6 @@ JSCodeGenerator::~JSCodeGenerator()
     /* NB: non-null only after OOM. */
     if (spanDeps)
         cx->free_(spanDeps);
-
-    if (upvarMap.vector)
-        cx->free_(upvarMap.vector);
 }
 
 static ptrdiff_t
@@ -2313,17 +2310,13 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!cg->upvarIndices->add(p, atom, index))
                 return JS_FALSE;
 
-            UpvarCookie *vector = cg->upvarMap.vector;
-            uint32 length = cg->roLexdeps->count();
-            if (!vector || cg->upvarMap.length != length) {
-                vector = (UpvarCookie *) cx->realloc_(vector, length * sizeof *vector);
-                if (!vector) {
-                    JS_ReportOutOfMemory(cx);
-                    return JS_FALSE;
-                }
-                cg->upvarMap.vector = vector;
-                cg->upvarMap.length = length;
-            }
+            UpvarCookies &upvarMap = cg->upvarMap;
+            /* upvarMap should have the same number of UpvarCookies as there are lexdeps. */
+            size_t lexdepCount = cg->roLexdeps->count();
+
+            JS_ASSERT_IF(!upvarMap.empty(), lexdepCount == upvarMap.length());
+            if (upvarMap.empty() && !upvarMap.appendN(UpvarCookie(), lexdepCount))
+                return JS_FALSE;
 
             uintN slot = cookie.slot();
             if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != JSDefinition::ARG) {
@@ -2335,8 +2328,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     slot += tc->fun()->nargs;
             }
 
-            JS_ASSERT(index < cg->upvarMap.length);
-            vector[index].set(skip, slot);
+            JS_ASSERT(index < upvarMap.length());
+            upvarMap[index].set(skip, slot);
         }
 
         pn->pn_op = JSOP_GETFCSLOT;

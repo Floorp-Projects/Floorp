@@ -644,7 +644,8 @@ struct JSCodeGenerator : public JSTreeContext
                                        cloned during execution */
 
     js::OwnedAtomIndexMapPtr upvarIndices; /* map of atoms to upvar indexes */
-    JSUpvarArray    upvarMap;       /* indexed upvar pairs (JS_realloc'ed) */
+
+    js::UpvarCookies upvarMap;      /* indexed upvar slot locations */
 
     typedef js::Vector<js::GlobalSlotArray::Entry, 16> GlobalUseVector;
 
