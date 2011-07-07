@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Font name collision test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- 
+  Font family names in @font-face rules take precedence over locally-available font families,
+  so none of the names of commonly used platform fonts should match against locally available
+  fonts.
+-->
+
+<style type="text/css">
+
+@font-face {
+  font-family: fallback;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+}
+
+body {
+  margin: 50px;
+  font-family: fallback;
+}
+
+table {
+  margin-left: 3em;
+}
+
+@font-face {
+  font-family: Sample;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.sample { font-family: Sample, fallback; }
+
+/* Windows */
+
+@font-face {
+  font-family: Arial;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.arial { font-family: Arial, fallback; }
+
+@font-face {
+  font-family: Times New Roman;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.timesnewroman { font-family: Times New Roman, fallback; }
+
+@font-face {
+  font-family: Courier New;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.couriernew { font-family: Courier New, fallback; }
+
+/* Mac OS X */
+
+@font-face {
+  font-family: Futura;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.futura { font-family: Futura, fallback; }
+
+@font-face {
+  font-family: Helvetica;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.helvetica { font-family: Helvetica, fallback; }
+
+@font-face {
+  font-family: Times;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.times { font-family: Times, fallback; }
+
+@font-face {
+  font-family: Courier;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.courier { font-family: Courier, fallback; }
+
+/* Linux */
+
+@font-face {
+  font-family: Bitstream Vera Sans;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.bitstreamverasans { font-family: Bitstream Vera Sans, fallback; }
+
+@font-face {
+  font-family: DejaVu Sans;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.dejavusans { font-family: DejaVu Sans, fallback; }
+
+@font-face {
+  font-family: FreeSans;
+  src: url(../fonts/bogus-dir/bogus-font.ttf);
+  font-weight: 900;
+}
+
+.freesans { font-family: FreeSans, fallback; }
+
+table {
+  font-family: Sample;
+}
+
+table td {
+  font-size: 24pt;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<p>All text below should appear in the same "fallback" font face:</p>
+
+<table>
+<tr class="sample"><td>Sample</td></tr>
+<tr class="arial"><td>Arial</td></tr>
+<tr class="timesnewroman"><td>Times New Roman</td></tr>
+<tr class="couriernew"><td>Courier New</td></tr>
+<tr class="futura"><td>Futura</td></tr>
+<tr class="helvetica"><td>Helvetica</td></tr>
+<tr class="times"><td>Times</td></tr>
+<tr class="courier"><td>Courier</td></tr>
+<tr class="bitstreamverasans"><td>Bitstream Vera Sans</td></tr>
+<tr class="dejavusans"><td>DejaVu Sans</td></tr>
+<tr class="freesans"><td>FreeSans</td></tr>
+</table>
+
+</body>
+</html>

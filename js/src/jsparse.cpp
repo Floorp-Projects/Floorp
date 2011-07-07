@@ -1821,13 +1821,12 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
              * NB: do not use AutoLocalNameArray because it will release space
              * allocated from cx->tempPool by DefineArg.
              */
-            jsuword *names = funcg.bindings.getLocalNameArray(cx, &cx->tempPool);
-            if (!names) {
+            Vector<JSAtom *> names(cx);
+            if (!funcg.bindings.getLocalNameArray(cx, &names)) {
                 fn = NULL;
             } else {
                 for (uintN i = 0; i < nargs; i++) {
-                    JSAtom *name = JS_LOCAL_NAME_TO_ATOM(names[i]);
-                    if (!DefineArg(fn, name, i, &funcg)) {
+                    if (!DefineArg(fn, names[i], i, &funcg)) {
                         fn = NULL;
                         break;
                     }
@@ -3077,9 +3076,9 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
             }
 
             if (bodyLevel) {
-                tc->decls.update(funAtom, (JSDefinition *) pn);
+                tc->decls.updateFirst(funAtom, (JSDefinition *) pn);
                 pn->pn_defn = true;
-                pn->dn_uses = dn;               /* dn->dn_uses is now pn_link */
+                pn->dn_uses = dn; /* dn->dn_uses is now pn_link */
 
                 if (!MakeDefIntoUse(dn, pn, funAtom, tc))
                     return NULL;
@@ -6676,12 +6675,20 @@ class CompExprTransplanter {
 
 /*
  * A helper for lazily checking for the presence of illegal |yield| or |arguments|
- * tokens inside of generator expressions.
+ * tokens inside of generator expressions. This must be done lazily since we don't
+ * know whether we're in a generator expression until we see the "for" token after
+ * we've already parsed the body expression.
  *
- * Use when entering a parenthesized context. If the nested expression is followed
- * by a |for| token (indicating that the parenthesized expression is a generator
- * expression), use the checkValidBody() method to see if any illegal tokens were
- * found.
+ * Use in any context which may turn out to be inside a generator expression. This
+ * includes parenthesized expressions and argument lists, and it includes the tail
+ * of generator expressions.
+ * 
+ * The guard will keep track of any |yield| or |arguments| tokens that occur while
+ * parsing the body. As soon as the parser reaches the end of the body expression,
+ * call endBody() to reset the context's state, and then immediately call:
+ *
+ * - checkValidBody() if this *did* turn out to be a generator expression
+ * - maybeNoteGenerator() if this *did not* turn out to be a generator expression
  */
 class GenexpGuard {
     JSTreeContext   *tc;
@@ -6703,6 +6710,7 @@ class GenexpGuard {
 
     void endBody();
     bool checkValidBody(JSParseNode *pn);
+    bool maybeNoteGenerator();
 };
 
 void
@@ -6711,6 +6719,13 @@ GenexpGuard::endBody()
     tc->parenDepth--;
 }
 
+/*
+ * Check whether a |yield| or |arguments| token has been encountered in the
+ * body expression, and if so, report an error.
+ *
+ * Call this after endBody() when determining that the body *was* in a
+ * generator expression.
+ */
 bool
 GenexpGuard::checkValidBody(JSParseNode *pn)
 {
@@ -6730,6 +6745,27 @@ GenexpGuard::checkValidBody(JSParseNode *pn)
         return false;
     }
 
+    return true;
+}
+
+/*
+ * Check whether a |yield| token has been encountered in the body expression,
+ * and if so, note that the current function is a generator function.
+ *
+ * Call this after endBody() when determining that the body *was not* in a
+ * generator expression.
+ */
+bool
+GenexpGuard::maybeNoteGenerator()
+{
+    if (tc->yieldCount > 0) {
+        tc->flags |= TCF_FUN_IS_GENERATOR;
+        if (!tc->inFunction()) {
+            tc->parser->reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
+                                          js_yield_str);
+            return false;
+        }
+    }
     return true;
 }
 
@@ -6874,33 +6910,42 @@ CompExprTransplanter::transplant(JSParseNode *pn)
             if (genexp && PN_OP(dn) != JSOP_CALLEE) {
                 JS_ASSERT(!tc->decls.lookupFirst(atom));
 
-                if (dn->pn_pos < root->pn_pos || dn->isPlaceholder()) {
-                    if (dn->pn_pos >= root->pn_pos) {
-                        tc->parent->lexdeps->remove(atom);
-                    } else {
-                        JSDefinition *dn2 = (JSDefinition *)NameNode::create(atom, tc);
-                        if (!dn2)
-                            return false;
+                if (dn->pn_pos < root->pn_pos) {
+                    /*
+                     * The variable originally appeared to be a use of a
+                     * definition or placeholder outside the generator, but now
+                     * we know it is scoped within the comprehension tail's
+                     * clauses. Make it (along with any other uses within the
+                     * generator) a use of a new placeholder in the generator's
+                     * lexdeps.
+                     */
+                    AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(atom);
+                    JSDefinition *dn2 = MakePlaceholder(p, pn, tc);
+                    if (!dn2)
+                        return false;
+                    dn2->pn_pos = root->pn_pos;
 
-                        dn2->pn_type = TOK_NAME;
-                        dn2->pn_op = JSOP_NOP;
-                        dn2->pn_defn = true;
-                        dn2->pn_dflags |= PND_PLACEHOLDER;
-                        dn2->pn_pos = root->pn_pos;
-
-                        JSParseNode **pnup = &dn->dn_uses;
-                        JSParseNode *pnu;
-                        while ((pnu = *pnup) != NULL && pnu->pn_pos >= root->pn_pos) {
-                            pnu->pn_lexdef = dn2;
-                            dn2->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
-                            pnup = &pnu->pn_link;
-                        }
-                        dn2->dn_uses = dn->dn_uses;
-                        dn->dn_uses = *pnup;
-                        *pnup = NULL;
-
-                        dn = dn2;
+                    /* 
+                     * Change all uses of |dn| that lie within the generator's
+                     * |yield| expression into uses of dn2.
+                     */
+                    JSParseNode **pnup = &dn->dn_uses;
+                    JSParseNode *pnu;
+                    while ((pnu = *pnup) != NULL && pnu->pn_pos >= root->pn_pos) {
+                        pnu->pn_lexdef = dn2;
+                        dn2->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
+                        pnup = &pnu->pn_link;
                     }
+                    dn2->dn_uses = dn->dn_uses;
+                    dn->dn_uses = *pnup;
+                    *pnup = NULL;
+                } else if (dn->isPlaceholder()) {
+                    /*
+                     * The variable first occurs free in the 'yield' expression;
+                     * move the existing placeholder node (and all its uses)
+                     * from the parent's lexdeps into the generator's lexdeps.
+                     */
+                    tc->parent->lexdeps->remove(atom);
                     if (!tc->lexdeps->put(atom, dn))
                         return false;
                 }
@@ -7055,8 +7100,12 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
 
         guard.endBody();
 
-        if (isGenexp && !guard.checkValidBody(pn2))
+        if (isGenexp) {
+            if (!guard.checkValidBody(pn2))
+                return NULL;
+        } else if (!guard.maybeNoteGenerator()) {
             return NULL;
+        }
 
         switch (tt) {
 #if JS_HAS_DESTRUCTURING
@@ -7106,9 +7155,6 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
         *pnp = pn2;
         pnp = &pn2->pn_kid2;
     }
-
-    if (!maybeNoteGenerator())
-        return NULL;
 
     pn2 = UnaryNode::create(tc);
     if (!pn2)
@@ -7229,27 +7275,6 @@ static const char js_generator_str[] = "generator";
 #endif /* JS_HAS_GENERATOR_EXPRS */
 #endif /* JS_HAS_GENERATORS */
 
-/*
- * Check whether a |yield| token has been encountered since the last reset point
- * (the creation of the tree context or the current GenexpGuard), and if so,
- * note that the current function is a generator function.
- *
- * Call this after the current GenexpGuard has determined whether it was inside
- * of a generator expression.
- */
-bool
-Parser::maybeNoteGenerator()
-{
-    if (tc->yieldCount > 0) {
-        tc->flags |= TCF_FUN_IS_GENERATOR;
-        if (!tc->inFunction()) {
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
-            return false;
-        }
-    }
-    return true;
-}
-
 JSBool
 Parser::argumentList(JSParseNode *listNode)
 {
@@ -7263,10 +7288,8 @@ Parser::argumentList(JSParseNode *listNode)
         JSParseNode *argNode = assignExpr();
         if (!argNode)
             return JS_FALSE;
-        if (arg0) {
+        if (arg0)
             guard.endBody();
-            arg0 = false;
-        }
 
 #if JS_HAS_GENERATORS
         if (argNode->pn_type == TOK_YIELD &&
@@ -7289,13 +7312,15 @@ Parser::argumentList(JSParseNode *listNode)
                                   js_generator_str);
                 return JS_FALSE;
             }
-        }
+        } else
 #endif
+        if (arg0 && !guard.maybeNoteGenerator())
+            return JS_FALSE;
+
+        arg0 = false;
+
         listNode->append(argNode);
     } while (tokenStream.matchToken(TOK_COMMA));
-
-    if (!maybeNoteGenerator())
-        return JS_FALSE;
 
     if (tokenStream.getToken() != TOK_RP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_AFTER_ARGS);
@@ -8807,12 +8832,14 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             obj = RegExp::createObject(context, context->regExpStatics(),
                                        tokenStream.getTokenbuf().begin(),
                                        tokenStream.getTokenbuf().length(),
-                                       tokenStream.currentToken().t_reflags);
+                                       tokenStream.currentToken().t_reflags,
+                                       &tokenStream);
         } else {
             obj = RegExp::createObjectNoStatics(context,
                                                 tokenStream.getTokenbuf().begin(),
                                                 tokenStream.getTokenbuf().length(),
-                                                tokenStream.currentToken().t_reflags);
+                                                tokenStream.currentToken().t_reflags,
+                                                &tokenStream);
         }
 
         if (!obj)
@@ -8898,10 +8925,10 @@ Parser::parenExpr(JSBool *genexp)
             pn->pn_pos.end = tokenStream.currentToken().pos.end;
             *genexp = JS_TRUE;
         }
-    }
+    } else
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
-    if (!maybeNoteGenerator())
+    if (!guard.maybeNoteGenerator())
         return NULL;
 
     return pn;
