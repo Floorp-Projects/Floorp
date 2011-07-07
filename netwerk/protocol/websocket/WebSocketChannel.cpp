@@ -568,6 +568,12 @@ WebSocketChannel::~WebSocketChannel()
     mContext.forget(&forgettableContext);
     NS_ProxyRelease(mainThread, forgettableContext, PR_FALSE);
   }
+
+  if (mLoadGroup) {
+    nsILoadGroup *forgettableGroup;
+    mLoadGroup.forget(&forgettableGroup);
+    NS_ProxyRelease(mainThread, forgettableGroup, PR_FALSE);
+  }
 }
 
 void

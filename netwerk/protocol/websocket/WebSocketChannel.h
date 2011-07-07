@@ -209,7 +209,6 @@ private:
   nsCOMPtr<nsIEventTarget>                 mSocketThread;
   nsCOMPtr<nsIHttpChannelInternal>         mChannel;
   nsCOMPtr<nsIHttpChannel>                 mHttpChannel;
-  nsCOMPtr<nsILoadGroup>                   mLoadGroup;
   nsCOMPtr<nsICancelable>                  mDNSRequest;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIRandomGenerator>             mRandomGenerator;
