@@ -12,10 +12,11 @@
 <!-- Manage Account -->
 <!ENTITY manageAccount.label          "Manage Account">
 <!ENTITY manageAccount.accesskey      "A">
-<!ENTITY viewQuota.label              "View Quota">
-<!ENTITY changePassword.label         "Change Password">
-<!ENTITY mySyncKey.label              "My Sync Key">
-<!ENTITY resetSync.label              "Reset Sync">
+<!ENTITY viewQuota2.label              "View Quota…">
+<!ENTITY changePassword2.label         "Change Password…">
+<!ENTITY mySyncKey2.label              "My Sync Key…">
+<!ENTITY resetSync2.label              "Reset Sync…">
+
 <!ENTITY addDevice.label              "Add a Device">
 
 <!ENTITY syncMy.label               "Sync My">
