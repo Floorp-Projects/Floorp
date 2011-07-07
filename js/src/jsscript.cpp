@@ -1323,12 +1323,12 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
     script->bindings.transfer(cx, &cg->bindings);
 
-    /*
-     * We initialize fun->u.script to be the script constructed above
-     * so that the debugger has a valid FUN_SCRIPT(fun).
-     */
     fun = NULL;
     if (cg->inFunction()) {
+        /*
+         * We initialize fun->u.i.script to be the script constructed above
+         * so that the debugger has a valid FUN_SCRIPT(fun).
+         */
         fun = cg->fun();
         JS_ASSERT(fun->isInterpreted());
         JS_ASSERT(!fun->script());
@@ -1344,15 +1344,30 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 #endif
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
+    } else {
+        /*
+         * Initialize script->object, if necessary, so that the debugger has a
+         * valid holder object.
+         */
+        if ((cg->flags & TCF_NEED_SCRIPT_OBJECT) && !js_NewScriptObject(cx, script))
+            goto bad;
     }
 
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);
+    if (!cg->parent) {
+        Debugger::onNewScript(cx, script,
+                              fun ? fun : script->u.object ? script->u.object : cg->scopeChain(),
+                              (fun || script->u.object)
+                              ? Debugger::NewHeldScript
+                              : Debugger::NewNonHeldScript);
+    }
 
     return script;
 
 bad:
-    js_DestroyScript(cx, script);
+    if (!script->u.object)
+        js_DestroyScript(cx, script);
     return NULL;
 }
 

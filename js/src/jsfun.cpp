@@ -52,6 +52,7 @@
 #include "jsbool.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
+#include "jsdbg.h"
 #include "jsversion.h"
 #include "jsemit.h"
 #include "jsfun.h"
@@ -2724,6 +2725,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             cfun->script()->owner = NULL;
 #endif
             js_CallNewScriptHook(cx, cfun->script(), cfun);
+            Debugger::onNewScript(cx, cfun->script(), cfun, Debugger::NewHeldScript);
         }
     }
     return clone;

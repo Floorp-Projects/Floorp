@@ -1,5 +1,5 @@
 // When the debugger is triggered from different stack frames that happen to
-// occupy the same memory, it must deliver different Debugger.Frame objects.
+// occupy the same memory, it delivers different Debugger.Frame objects.
 
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
