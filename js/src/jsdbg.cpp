@@ -45,6 +45,7 @@
 #include "jsemit.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
+#include "jstl.h"
 #include "jswrapper.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -343,7 +344,7 @@ enum {
 
 Debugger::Debugger(JSObject *dbg, JSObject *hooks)
   : object(dbg), hooksObject(hooks), uncaughtExceptionHook(NULL), enabled(true),
-    hasDebuggerHandler(false), hasThrowHandler(false),
+    hasDebuggerHandler(false), hasThrowHandler(false), hasNewScriptHandler(false),
     objects(dbg->compartment()->rt), heldScripts(dbg->compartment()->rt)
 {
     // This always happens within a request on some cx.
@@ -511,7 +512,7 @@ Debugger::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
             Value rv;
             cx->clearPendingException();
             if (ExternalInvoke(cx, ObjectValue(*object), fval, 1, &exc, &rv))
-                return parseResumptionValue(ac, true, rv, vp, false);
+                return vp ? parseResumptionValue(ac, true, rv, vp, false) : JSTRAP_CONTINUE;
         }
 
         if (cx->isExceptionPending()) {
@@ -558,7 +559,7 @@ Debugger::newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
 
 JSTrapStatus
 Debugger::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
-                            bool callHook)
+                               bool callHook)
 {
     vp->setUndefined();
     if (!ok)
@@ -676,6 +677,28 @@ Debugger::handleThrow(JSContext *cx, Value *vp)
     return st;
 }
 
+void
+Debugger::handleNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind)
+{
+    JS_ASSERT(hasNewScriptHandler);
+    AutoCompartment ac(cx, hooksObject);
+    if (!ac.enter())
+        return;
+
+    JSObject *dsobj =
+        kind == NewHeldScript ? wrapHeldScript(cx, script, obj) : wrapNonHeldScript(cx, script);
+    if (!dsobj) {
+        handleUncaughtException(ac, NULL, false);
+        return;
+    }
+
+    Value argv[1];
+    argv[0].setObject(*dsobj);
+    Value rv;
+    if (!CallMethodIfPresent(cx, hooksObject, "newScript", 1, argv, &rv))
+        handleUncaughtException(ac, NULL, true);
+}
+
 JSTrapStatus
 Debugger::dispatchHook(JSContext *cx, js::Value *vp, DebuggerObservesMethod observesEvent,
                        DebuggerHandleMethod handleEvent)
@@ -708,6 +731,56 @@ Debugger::dispatchHook(JSContext *cx, js::Value *vp, DebuggerObservesMethod obse
         }
     }
     return JSTRAP_CONTINUE;
+}
+
+static bool
+AddNewScriptRecipients(GlobalObject::DebuggerVector *src, AutoValueVector *dest)
+{
+    bool wasEmpty = dest->length() == 0;
+    for (Debugger **p = src->begin(); p != src->end(); p++) {
+        Debugger *dbg = *p;
+        Value v = ObjectValue(*dbg->toJSObject());
+        if (dbg->observesNewScript() &&
+            (wasEmpty || Find(dest->begin(), dest->end(), v) == dest->end()) &&
+            !dest->append(v))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+void
+Debugger::slowPathOnNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind)
+{
+    // Build the list of recipients. For compile-and-go scripts, this is the
+    // same as the generic Debugger::dispatchHook code, but non-compile-and-go
+    // scripts are not tied to particular globals. We deliver them to every
+    // debugger observing any global in the script's compartment.
+    AutoValueVector triggered(cx);
+    GlobalObject *global;
+    if (script->compileAndGo) {
+        global = obj->getGlobal();
+        if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
+            if (!AddNewScriptRecipients(debuggers, &triggered))
+                return;
+        }
+    } else {
+        global = NULL;
+        GlobalObjectSet &debuggees = script->compartment->getDebuggees();
+        for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+            if (!AddNewScriptRecipients(r.front()->getDebuggers(), &triggered))
+                return;
+        }
+    }
+
+    // Deliver the event to each debugger, checking again as in
+    // Debugger::dispatchHook.
+    for (Value *p = triggered.begin(); p != triggered.end(); p++) {
+        Debugger *dbg = Debugger::fromJSObject(&p->toObject());
+        if ((!global || dbg->debuggees.has(global)) && dbg->hasNewScriptHandler)
+            dbg->handleNewScript(cx, script, obj, kind);
+    }
 }
 
 JSTrapStatus
@@ -806,7 +879,7 @@ Debugger::markKeysInCompartment(JSTracer *tracer, ObjectWeakMap &map)
 // This happens during the initial mark phase, not iterative marking, because
 // all the edges being reported here are strong references.
 //
-void 
+void
 Debugger::markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer)
 {
     JSRuntime *rt = tracer->context->runtime;
@@ -820,7 +893,7 @@ Debugger::markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer)
             markKeysInCompartment(tracer, dbg->objects);
             markKeysInCompartment(tracer, dbg->heldScripts);
         }
-    }         
+    }
 }
 
 // This method has two tasks:
@@ -1009,7 +1082,7 @@ Debugger::setHooks(JSContext *cx, uintN argc, Value *vp)
         return ReportObjectRequired(cx);
     JSObject *hooksobj = &vp[2].toObject();
 
-    bool hasDebuggerHandler, hasThrow;
+    bool hasDebuggerHandler, hasThrow, hasNewScript;
     JSBool found;
     if (!JS_HasProperty(cx, hooksobj, "debuggerHandler", &found))
         return false;
@@ -1017,10 +1090,14 @@ Debugger::setHooks(JSContext *cx, uintN argc, Value *vp)
     if (!JS_HasProperty(cx, hooksobj, "throw", &found))
         return false;
     hasThrow = !!found;
+    if (!JS_HasProperty(cx, hooksobj, "newScript", &found))
+        return false;
+    hasNewScript = !!found;
 
     dbg->hooksObject = hooksobj;
     dbg->hasDebuggerHandler = hasDebuggerHandler;
     dbg->hasThrowHandler = hasThrow;
+    dbg->hasNewScriptHandler = hasNewScript;
     vp->setUndefined();
     return true;
 }
@@ -1478,6 +1555,8 @@ Class DebuggerScript_class = {
 JSObject *
 Debugger::newDebuggerScript(JSContext *cx, JSScript *script, JSObject *holder)
 {
+    assertSameCompartment(cx, object);
+
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
     JS_ASSERT(proto);
     JSObject *scriptobj = NewNonFunction<WithProto::Given>(cx, &DebuggerScript_class, proto, NULL);
@@ -1494,6 +1573,8 @@ JSObject *
 Debugger::wrapHeldScript(JSContext *cx, JSScript *script, JSObject *obj)
 {
     assertSameCompartment(cx, object);
+    JS_ASSERT(cx->compartment != script->compartment);
+    JS_ASSERT(script->compartment == obj->compartment());
 
     ScriptWeakMap::AddPtr p = heldScripts.lookupForAdd(obj);
     if (!p) {
@@ -1523,10 +1604,13 @@ Debugger::wrapJSAPIScript(JSContext *cx, JSObject *obj)
 JSObject *
 Debugger::wrapNonHeldScript(JSContext *cx, JSScript *script)
 {
+    assertSameCompartment(cx, object);
     JS_ASSERT(cx->compartment != script->compartment);
+
     ScriptMap::AddPtr p = nonHeldScripts.lookupForAdd(script);
     if (!p) {
         JSObject *scriptobj = newDebuggerScript(cx, script, NULL);
+
         // The allocation may have caused a GC, which can remove table entries.
         if (!scriptobj || !nonHeldScripts.relookupOrAdd(p, script, scriptobj))
             return NULL;
