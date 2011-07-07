@@ -471,7 +471,7 @@ struct JSScript {
 
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
-    bool            savedCallerFun:1; /* object 0 is caller function */
+    bool            savedCallerFun:1; /* can call getCallerFunction() */
     bool            hasSharps:1;      /* script uses sharp variables */
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
@@ -633,6 +633,7 @@ struct JSScript {
     }
 
     inline JSFunction *getFunction(size_t index);
+    inline JSFunction *getCallerFunction();
 
     inline JSObject *getRegExp(size_t index);
 

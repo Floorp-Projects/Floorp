@@ -2916,10 +2916,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_GETFCSLOT:
               case JSOP_CALLFCSLOT:
               {
-                if (!jp->fun) {
-                    JS_ASSERT(jp->script->savedCallerFun);
-                    jp->fun = jp->script->getFunction(0);
-                }
+                if (!jp->fun)
+                    jp->fun = jp->script->getCallerFunction();
 
                 if (!jp->localNames) {
                     JS_ASSERT(fun == jp->fun);
