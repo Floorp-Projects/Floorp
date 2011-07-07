@@ -1026,6 +1026,8 @@ nsGlobalWindow::~nsGlobalWindow()
 
   CleanUp(PR_TRUE);
 
+  NS_ASSERTION(!mHasDeviceMotion, "Window still registered with device motion.");
+
 #ifdef DEBUG
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
