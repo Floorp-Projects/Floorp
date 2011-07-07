@@ -4460,17 +4460,12 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *p
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
 
-    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
+    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT | TCF_NEED_SCRIPT_OBJECT;
     JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
                                                chars, length, filename, lineno, version);
-    JSObject *scriptObj = NULL;
-    if (script) {
-        scriptObj = js_NewScriptObject(cx, script);
-        if (!scriptObj)
-            js_DestroyScript(cx, script);
-    }
-    LAST_FRAME_CHECKS(cx, scriptObj);
-    return scriptObj;
+    JS_ASSERT_IF(script, script->u.object);
+    LAST_FRAME_CHECKS(cx, script);
+    return script ? script->u.object : NULL;
 }
 
 extern JS_PUBLIC_API(JSObject *)
@@ -4642,18 +4637,14 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 
     JS_ASSERT(i <= len);
     len = i;
-    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
+    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT | TCF_NEED_SCRIPT_OBJECT;
     script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1,
                                      cx->findVersion());
     cx->free_(buf);
     if (!script)
         return NULL;
-
-    JSObject *scriptObj = js_NewScriptObject(cx, script);
-    if (!scriptObj)
-        js_DestroyScript(cx, script);
-
-    return scriptObj;
+    JS_ASSERT(script->u.object);
+    return script->u.object;
 }
 
 JS_PUBLIC_API(JSObject *)

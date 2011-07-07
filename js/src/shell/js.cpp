@@ -2985,24 +2985,45 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *funobj, *parent, *clone;
 
-    if (!argc)
+    if (!argc) {
+        JS_ReportError(cx, "Invalid arguments to clone");
         return JS_FALSE;
+    }
 
     jsval *argv = JS_ARGV(cx, vp);
-    if (VALUE_IS_FUNCTION(cx, argv[0])) {
-        funobj = JSVAL_TO_OBJECT(argv[0]);
-    } else {
-        JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
-        if (!fun)
-            return JS_FALSE;
-        funobj = JS_GetFunctionObject(fun);
+    {
+        JSAutoEnterCompartment ac;
+        if (JSVAL_IS_OBJECT(argv[0]) && JSVAL_TO_OBJECT(argv[0])->isCrossCompartmentWrapper()) {
+            JSObject *obj = JSVAL_TO_OBJECT(argv[0])->unwrap();
+            if (!ac.enter(cx, obj))
+                return JS_FALSE;
+            argv[0] = OBJECT_TO_JSVAL(obj);
+        }
+        if (VALUE_IS_FUNCTION(cx, argv[0])) {
+            funobj = JSVAL_TO_OBJECT(argv[0]);
+        } else {
+            JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
+            if (!fun)
+                return JS_FALSE;
+            funobj = JS_GetFunctionObject(fun);
+        }
     }
+    if (funobj->compartment() != cx->compartment) {
+        JSFunction *fun = funobj->getFunctionPrivate();
+        if (fun->isInterpreted() && fun->u.i.script->compileAndGo) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                                 "function", "compile-and-go");
+            return JS_FALSE;
+        }
+    }
+
     if (argc > 1) {
         if (!JS_ValueToObject(cx, argv[1], &parent))
             return JS_FALSE;
     } else {
-        parent = JS_GetParent(cx, funobj);
+        parent = JS_GetParent(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
     }
+
     clone = JS_CloneFunctionObject(cx, funobj, parent);
     if (!clone)
         return JS_FALSE;

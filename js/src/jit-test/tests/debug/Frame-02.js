@@ -1,5 +1,5 @@
 // When the debugger is triggered twice from the same stack frame, the same
-// Debugger.Frame object must be passed to the hook both times.
+// Debugger.Frame object is passed to the hook both times.
 
 var g = newGlobal('new-compartment');
 var hits, frame;
