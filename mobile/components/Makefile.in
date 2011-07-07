@@ -75,7 +75,6 @@ EXTRA_COMPONENTS = \
         LoginManager.js \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
-        WebappsSupport.js \
         $(NULL)
 
 ifdef MOZ_SAFE_BROWSING
