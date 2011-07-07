@@ -999,7 +999,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
              * Get the prior (cache-filling) eval's saved caller function.
              * See Compiler::compileScript in jsparse.cpp.
              */
-            JSFunction *fun = script->getFunction(0);
+            JSFunction *fun = script->getCallerFunction();
 
             if (fun == caller->fun()) {
                 /*
