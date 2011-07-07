@@ -21,7 +21,4 @@
   <string name="sending_crash_report">&sending_crash_report;</string>
   <string name="exit_label">&exit_label;</string>
   <string name="continue_label">&continue_label;</string>
-
-  <string name="launcher_shortcuts_title">&launcher_shortcuts_title;</string>
-  <string name="launcher_shortcuts_empty">&launcher_shortcuts_empty;</string>
 </resources>
