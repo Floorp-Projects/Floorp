@@ -40,7 +40,6 @@
 #include "WebGLContext.h"
 
 #include "nsIConsoleService.h"
-#include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsContentUtils.h"
@@ -67,6 +66,8 @@
 #include "nsSVGEffects.h"
 
 #include "prenv.h"
+
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -413,22 +414,20 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     DestroyResourcesAndContext();
 
     // Get some prefs for some preferred/overriden things
-    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
-    PRBool forceOSMesa = PR_FALSE;
-    PRBool preferEGL = PR_FALSE;
-    PRBool preferOpenGL = PR_FALSE;
-    PRBool forceEnabled = PR_FALSE;
-    PRBool disabled = PR_FALSE;
-    PRBool verbose = PR_FALSE;
-
-    prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
-    prefService->GetBoolPref("webgl.prefer-egl", &preferEGL);
-    prefService->GetBoolPref("webgl.prefer-native-gl", &preferOpenGL);
-    prefService->GetBoolPref("webgl.force-enabled", &forceEnabled);
-    prefService->GetBoolPref("webgl.disabled", &disabled);
-    prefService->GetBoolPref("webgl.verbose", &verbose);
+    PRBool forceOSMesa =
+        Preferences::GetBool("webgl.force_osmesa", PR_FALSE);
+    PRBool preferEGL =
+        Preferences::GetBool("webgl.prefer-egl", PR_FALSE);
+    PRBool preferOpenGL =
+        Preferences::GetBool("webgl.prefer-native-gl", PR_FALSE);
+    PRBool forceEnabled =
+        Preferences::GetBool("webgl.force-enabled", PR_FALSE);
+    PRBool disabled =
+        Preferences::GetBool("webgl.disabled", PR_FALSE);
+    PRBool verbose =
+        Preferences::GetBool("webgl.verbose", PR_FALSE);
 
     if (disabled)
         return NS_ERROR_FAILURE;

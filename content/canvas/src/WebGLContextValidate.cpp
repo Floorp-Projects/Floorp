@@ -39,8 +39,7 @@
 
 #include "WebGLContext.h"
 
-#include "nsIPrefService.h"
-#include "nsServiceManagerUtils.h"
+#include "mozilla/Preferences.h"
 
 #include "CheckedInt.h"
 
@@ -572,10 +571,10 @@ WebGLContext::InitAndValidateGL()
     }
 
     // Check the shader validator pref
-    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
-    prefService->GetBoolPref("webgl.shader_validator", &mShaderValidation);
+    mShaderValidation =
+        Preferences::GetBool("webgl.shader_validator", mShaderValidation);
 
 #if defined(USE_ANGLE)
     // initialize shader translator
