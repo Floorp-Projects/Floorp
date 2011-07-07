@@ -1475,39 +1475,10 @@ HUD_SERVICE.prototype =
       browser.webProgress.removeProgressListener(hud.progressListener);
       delete hud.progressListener;
 
-      this.unregisterDisplay(displayNode);
+      this.unregisterDisplay(hudId);
 
       window.focus();
     }
-  },
-
-  /**
-   * Clear the specified HeadsUpDisplay
-   *
-   * @param string|nsIDOMNode aHUD
-   *        Either the ID of a HUD or the DOM node corresponding to an outer
-   *        HUD box.
-   * @returns void
-   */
-  clearDisplay: function HS_clearDisplay(aHUD)
-  {
-    if (typeof(aHUD) === "string") {
-      aHUD = this.getHudReferenceById(aHUD).HUDBox;
-    }
-
-    let hudRef = HUDService.getHudReferenceForOutputNode(aHUD);
-
-    if (hudRef) {
-      hudRef.cssNodes = {};
-    }
-
-    var outputNode = aHUD.querySelector(".hud-output-node");
-
-    while (outputNode.firstChild) {
-      outputNode.removeChild(outputNode.firstChild);
-    }
-
-    aHUD.lastTimestamp = 0;
   },
 
   /**
@@ -1740,74 +1711,60 @@ HUD_SERVICE.prototype =
   /**
    * When a display is being destroyed, unregister it first
    *
-   * @param string|nsIDOMNode aHUD
-   *        Either the ID of a HUD or the DOM node corresponding to an outer
-   *        HUD box.
+   * @param string aHUDId
+   *        The ID of a HUD.
    * @returns void
    */
-  unregisterDisplay: function HS_unregisterDisplay(aHUD)
+  unregisterDisplay: function HS_unregisterDisplay(aHUDId)
   {
+    let hud = this.getHudReferenceById(aHUDId);
+
     // Remove children from the output. If the output is not cleared, there can
     // be leaks as some nodes has node.onclick = function; set and GC can't
     // remove the nodes then.
-    HUDService.clearDisplay(aHUD);
+    hud.jsterm.clearOutput();
 
-    var id, outputNode, ownerDoc;
-    if (typeof(aHUD) === "string") {
-      id = aHUD;
-      outputNode = this.getHudReferenceById(aHUD).HUDBox;
-    }
-    else {
-      id = aHUD.getAttribute("id");
-      outputNode = aHUD;
-    }
+    // Make sure that the console panel does not try to call
+    // deactivateHUDForContext() again.
+    hud.consoleWindowUnregisterOnHide = false;
 
-    // remove HUD DOM node and
-    // remove display references from local registries get the outputNode
-    var parent = outputNode.parentNode;
-    var splitters = parent.querySelectorAll("splitter");
-    var len = splitters.length;
-    for (var i = 0; i < len; i++) {
-      if (splitters[i].getAttribute("class") == "hud-splitter") {
-        splitters[i].parentNode.removeChild(splitters[i]);
-        break;
-      }
+    // Remove the HUDBox and the consolePanel if the Web Console is inside a
+    // floating xul:panel.
+    hud.HUDBox.parentNode.removeChild(hud.HUDBox);
+    if (hud.consolePanel) {
+      hud.consolePanel.parentNode.removeChild(hud.consolePanel);
     }
 
-    ownerDoc = outputNode.ownerDocument;
-    ownerDoc.getElementById(id).parentNode.removeChild(outputNode);
-
-    this.hudReferences[id].jsterm.autocompletePopup.destroy();
-
-    this.hudReferences[id].consoleWindowUnregisterOnHide = false;
-
-    // remove the HeadsUpDisplay object from memory
-    if ("cssNodes" in this.hudReferences[id]) {
-      delete this.hudReferences[id].cssNodes;
+    if (hud.splitter.parentNode) {
+      hud.splitter.parentNode.removeChild(hud.splitter);
     }
-    delete this.hudReferences[id];
+
+    hud.jsterm.autocompletePopup.destroy();
+
+    delete this.hudReferences[aHUDId];
+
     // remove the related storage object
-    this.storage.removeDisplay(id);
+    this.storage.removeDisplay(aHUDId);
 
     for (let windowID in this.windowIds) {
-      if (this.windowIds[windowID] == id) {
+      if (this.windowIds[windowID] == aHUDId) {
         delete this.windowIds[windowID];
       }
     }
 
-    this.unregisterActiveContext(id);
+    this.unregisterActiveContext(aHUDId);
 
-    let popupset = outputNode.ownerDocument.getElementById("mainPopupSet");
-    let panels = popupset.querySelectorAll("panel[hudId=" + id + "]");
+    let popupset = hud.chromeDocument.getElementById("mainPopupSet");
+    let panels = popupset.querySelectorAll("panel[hudId=" + aHUDId + "]");
     for (let i = 0; i < panels.length; i++) {
       panels[i].hidePopup();
     }
 
-    let id = ConsoleUtils.supString(id);
+    let id = ConsoleUtils.supString(aHUDId);
     Services.obs.notifyObservers(id, "web-console-destroyed", null);
 
     if (Object.keys(this.hudReferences).length == 0) {
-      let autocompletePopup = outputNode.ownerDocument.
+      let autocompletePopup = hud.chromeDocument.
                               getElementById("webConsole_autocompletePopup");
       if (autocompletePopup) {
         autocompletePopup.parentNode.removeChild(autocompletePopup);
@@ -3261,7 +3218,9 @@ HeadsUpDisplay.prototype = {
       }
 
       panel.removeEventListener("popuphidden", onPopupHidden, false);
-      this.mainPopupSet.removeChild(panel);
+      if (panel.parentNode) {
+        panel.parentNode.removeChild(panel);
+      }
     }).bind(this);
 
     panel.addEventListener("popuphidden", onPopupHidden, false);
@@ -3855,7 +3814,7 @@ HeadsUpDisplay.prototype = {
   {
     let hudId = this.hudId;
     function HUD_clearButton_onCommand() {
-      HUDService.clearDisplay(hudId);
+      HUDService.getHudReferenceById(hudId).jsterm.clearOutput();
     }
 
     let clearButton = this.makeXULNode("toolbarbutton");
@@ -4854,22 +4813,14 @@ JSTerm.prototype = {
 
   clearOutput: function JST_clearOutput()
   {
-    let outputNode = this.outputNode;
-    let hudRef = HUDService.getHudReferenceForOutputNode(outputNode);
+    let hud = HUDService.getHudReferenceById(this.hudId);
+    hud.cssNodes = {};
 
-    if (hudRef) {
-      hudRef.cssNodes = {};
+    while (hud.outputNode.firstChild) {
+      hud.outputNode.removeChild(hud.outputNode.firstChild);
     }
 
-    while (outputNode.firstChild) {
-      outputNode.removeChild(outputNode.firstChild);
-    }
-
-    let hudBox = outputNode;
-    while (!hudBox.classList.contains("hud-box")) {
-      hudBox = hudBox.parentNode;
-    }
-    hudBox.lastTimestamp = 0;
+    hud.HUDBox.lastTimestamp = 0;
   },
 
   /**
