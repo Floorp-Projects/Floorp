@@ -1263,6 +1263,17 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
         SEEK_LOG(PR_LOG_DEBUG, ("Backing off %d bytes, backsteps=%d",
           static_cast<PRInt32>(PAGE_STEP * pow(2.0, backsteps)), backsteps));
         guess -= PAGE_STEP * static_cast<ogg_int64_t>(pow(2.0, backsteps));
+
+        if (guess <= startOffset) {
+          // We've tried to backoff to before the start offset of our seek
+          // range. This means we couldn't find a seek termination position
+          // near the end of the seek range, so just set the seek termination
+          // condition, and break out of the bisection loop. We'll begin
+          // decoding from the start of the seek range.
+          interval = 0;
+          break;
+        }
+
         backsteps = NS_MIN(backsteps + 1, maxBackStep);
         // We reset mustBackoff. If we still need to backoff further, it will
         // be set to PR_TRUE again.
@@ -1329,14 +1340,14 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
         ogg_int64_t granulepos = ogg_page_granulepos(&page);
 
         if (HasAudio() &&
-            granulepos != -1 &&
+            granulepos > 0 &&
             serial == mVorbisState->mSerial &&
             audioTime == -1) {
           audioTime = mVorbisState->Time(granulepos);
         }
         
         if (HasVideo() &&
-            granulepos != -1 &&
+            granulepos > 0 &&
             serial == mTheoraState->mSerial &&
             videoTime == -1) {
           videoTime = mTheoraState->StartTime(granulepos);

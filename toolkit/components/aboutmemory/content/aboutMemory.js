@@ -248,15 +248,22 @@ function update()
   content.appendChild(div);
 }
 
-// Compare two memory reporter nodes.  We want to group together measurements
-// with the same units, so sort first by the nodes' _units field, then sort by
-// the amount if the units are equal.
+// Compare two memory reporter nodes.  The primary sort is on the _units
+// property.  The secondary sort is on the _path property if the _units is
+// UNIT_COUNT, otherwise it is on the _amount property.
 function cmpAmount(a, b)
 {
-  if (a._units != b._units)
+  if (a._units != b._units) {
     return a._units - b._units;   // use the enum order from nsIMemoryReporter
-  else
-    return b._amount - a._amount;
+  }
+  if (a._units == UNITS_COUNT) {
+    if (a._path < b._path)
+      return -1;
+    if (a._path > b._path)
+      return 1;
+    return 0;
+  }
+  return b._amount - a._amount;
 };
 
 /**
