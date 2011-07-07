@@ -447,7 +447,7 @@ Debugger::onThrow(JSContext *cx, js::Value *vp)
 void
 Debugger::onNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind)
 {
-    JS_ASSERT_IF(kind == NewNonHeldScript && script->compileAndGo, obj);
+    JS_ASSERT_IF(kind == NewHeldScript || script->compileAndGo, obj);
     if (!script->compartment->getDebuggees().empty())
         slowPathOnNewScript(cx, script, obj, kind);
 }
