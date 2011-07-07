@@ -60,7 +60,7 @@ BEGIN_TEST(testIsAboutToBeFinalized_bug528645)
             --checkPointersStaticStrings;
         }
     }
-    CHECK(checkPointersStaticStrings == 0);
+    CHECK_EQUAL(checkPointersStaticStrings, 0);
 
     free(checkPointers);
     checkPointers = NULL;

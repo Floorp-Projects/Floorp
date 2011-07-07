@@ -127,16 +127,12 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
         if (JSInterpreterHook hook = cx->debugHooks->callHook)
             fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->callHookData));
     }
-
-    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
 }
 
 bool
 ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
 {
     JSBool ok = okArg;
-
-    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
 
     if (void *hookData = fp->maybeHookData()) {
         if (fp->isFramePushedByExecute()) {
@@ -1367,8 +1363,22 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 extern JS_PUBLIC_API(jsuword *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
+    Vector<JSAtom *> localNames(cx);
+    if (!fun->script()->bindings.getLocalNameArray(cx, &localNames))
+        return NULL;
+
+    /* Munge data into the API this method implements.  Avert your eyes! */
     *markp = JS_ARENA_MARK(&cx->tempPool);
-    return fun->script()->bindings.getLocalNameArray(cx, &cx->tempPool);
+
+    jsuword *names;
+    JS_ARENA_ALLOCATE_CAST(names, jsuword *, &cx->tempPool, localNames.length() * sizeof *names);
+    if (!names) {
+        js_ReportOutOfMemory(cx);
+        return NULL;
+    }
+
+    memcpy(names, localNames.begin(), localNames.length() * sizeof(jsuword));
+    return names;
 }
 
 extern JS_PUBLIC_API(JSAtom *)
@@ -1578,6 +1588,7 @@ JS_GetValidFrameCalleeObject(JSContext *cx, JSStackFrame *fp, jsval *vp)
 
     if (!Valueify(fp)->getValidCalleeObject(cx, &v))
         return false;
+    *vp = v.isObject() ? Jsvalify(v) : JSVAL_VOID;
     *vp = Jsvalify(v);
     return true;
 }

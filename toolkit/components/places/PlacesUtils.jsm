@@ -1722,8 +1722,7 @@ var PlacesUtils = {
    * Serialize a JS object to JSON
    */
   toJSONString: function PU_toJSONString(aObj) {
-    var JSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    return JSON.encode(aObj);
+    return JSON.stringify(aObj);
   },
 
   /**

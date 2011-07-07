@@ -2396,12 +2396,13 @@ CallMethodHelper::~CallMethodHelper()
         for(uint8 i = 0; i < paramCount; i++)
         {
             nsXPTCVariant* dp = GetDispatchParam(i);
-            void* p = dp->val.p;
-            if(!p)
-                continue;
 
             if(dp->IsValArray())
             {
+                void* p = dp->val.p;
+                if(!p)
+                    continue;
+
                 // going to have to cleanup the array and perhaps its contents
                 if(dp->IsValAllocated() || dp->IsValInterface())
                 {
@@ -2438,8 +2439,16 @@ CallMethodHelper::~CallMethodHelper()
             else
             {
                 if(dp->IsValJSRoot())
+                {
+                    NS_ASSERTION(!dp->IsValAllocated() && !dp->IsValInterface(),
+                                 "jsvals are their own class of values");
                     JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
+                    continue;
+                }
 
+                void* p = dp->val.p;
+                if(!p)
+                    continue;
                 if(dp->IsValAllocated())
                     nsMemory::Free(p);
                 else if(dp->IsValInterface())
