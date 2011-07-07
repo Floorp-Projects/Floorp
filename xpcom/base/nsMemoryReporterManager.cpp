@@ -206,8 +206,8 @@ NS_MEMORY_REPORTER_IMPLEMENT(Vsize,
 #endif
 
 #if defined(XP_LINUX) || defined(XP_MACOSX)
-NS_MEMORY_REPORTER_IMPLEMENT(SoftPageFaults,
-    "soft-page-faults",
+NS_MEMORY_REPORTER_IMPLEMENT(PageFaultsSoft,
+    "page-faults-soft",
     KIND_OTHER,
     UNITS_COUNT,
     GetSoftPageFaults,
@@ -221,8 +221,8 @@ NS_MEMORY_REPORTER_IMPLEMENT(SoftPageFaults,
     "and because the OS services a soft page fault without accessing the disk, "
     "they impact performance much less than hard page faults.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(HardPageFaults,
-    "hard-page-faults",
+NS_MEMORY_REPORTER_IMPLEMENT(PageFaultsHard,
+    "page-faults-hard",
     KIND_OTHER,
     UNITS_COUNT,
     GetHardPageFaults,
@@ -421,8 +421,8 @@ nsMemoryReporterManager::Init()
 #endif
 
 #if defined(XP_LINUX) || defined(XP_MACOSX)
-    REGISTER(SoftPageFaults);
-    REGISTER(HardPageFaults);
+    REGISTER(PageFaultsSoft);
+    REGISTER(PageFaultsHard);
 #endif
 
 #if defined(XP_WIN) && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
