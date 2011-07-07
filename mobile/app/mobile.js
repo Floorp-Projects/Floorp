@@ -384,6 +384,10 @@ pref("content.sink.perf_parse_time", 50000000);
 
 pref("javascript.options.mem.high_water_mark", 32);
 
+// Disable the JS engine's gc on memory pressure, since we do one in the mobile
+// browser (bug 669346).
+pref("javascript.options.gc_on_memory_pressure", false);
+
 pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 pref("dom.max_script_run_time", 20);
 
