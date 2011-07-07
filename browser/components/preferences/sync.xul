@@ -98,15 +98,15 @@
                       label="&manageAccount.label;"
                       accesskey="&manageAccount.accesskey;">
                 <menupopup>
-                  <menuitem label="&viewQuota.label;"
+                  <menuitem label="&viewQuota2.label;"
                             oncommand="gSyncPane.openQuotaDialog();"/>
                   <menuseparator/>
-                  <menuitem label="&changePassword.label;"
+                  <menuitem label="&changePassword2.label;"
                             oncommand="gSyncUtils.changePassword();"/>
-                  <menuitem label="&mySyncKey.label;"
+                  <menuitem label="&mySyncKey2.label;"
                             oncommand="gSyncUtils.resetPassphrase();"/>
                   <menuseparator/>
-                  <menuitem label="&resetSync.label;"
+                  <menuitem label="&resetSync2.label;"
                             oncommand="gSyncPane.resetSync();"/>
                 </menupopup>
               </button>
