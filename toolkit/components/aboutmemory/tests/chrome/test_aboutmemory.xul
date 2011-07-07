@@ -70,8 +70,8 @@
   }
 
   var fakeReporters = [
-    f("", "heap-used",          OTHER,  500 * MB),
-    f("", "heap-unused",        OTHER,  100 * MB),
+    f("", "heap-allocated",          OTHER,  500 * MB),
+    f("", "heap-unallocated",        OTHER,  100 * MB),
     f("", "explicit/a",         HEAP,   222 * MB),
     f("", "explicit/b/a",       HEAP,    85 * MB),
     f("", "explicit/b/b",       HEAP,    75 * MB),
@@ -112,7 +112,7 @@
     mgr.registerMultiReporter(fakeMultiReporters[i]);
   }
 
-  // mgr.explicit sums "heap-used" and all the appropriate MAPPED ones:
+  // mgr.explicit sums "heap-allocated" and all the appropriate MAPPED ones:
   // - "explicit/c", "explicit/cc" x 2, "explicit/d", "explicit/e"
   // - but *not* "explicit/c/d" x 2
   // Check explicit now before we add the fake reporters for the fake 2nd
@@ -124,8 +124,8 @@
   dummy = mgr.resident;
 
   var fakeReporters2 = [
-    f("2nd", "heap-used",       OTHER, 1000 * MB),
-    f("2nd", "heap-unused",     OTHER,  100 * MB),
+    f("2nd", "heap-allocated",       OTHER, 1000 * MB),
+    f("2nd", "heap-unallocated",     OTHER,  100 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,   498 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,     1 * MB), // dup: merge
     f("2nd", "explicit/flip\\the\\backslashes",
@@ -137,9 +137,9 @@
                                 OTHER,  666 * MB),
     f("2nd", "other1",          OTHER,  111 * MB),
 
-    // kUnknown should be handled gracefully for "heap-used", non-leaf
+    // kUnknown should be handled gracefully for "heap-allocated", non-leaf
     // reporters, leaf-reporters, and "other" reporters.
-    f("3rd", "heap-used",       OTHER, kUnknown),
+    f("3rd", "heap-allocated",       OTHER, kUnknown),
     f("3rd", "explicit/a",      HEAP,  kUnknown),
     f("3rd", "explicit/a/b",    HEAP,  333 * MB),
     f("3rd", "explicit/a/c",    HEAP,  444 * MB),
@@ -188,10 +188,10 @@ Explicit Allocations\n\
 └────0.58 MB (00.09%) -- (2 omitted)\n\
 \n\
 Other Measurements\n\
-500.00 MB -- heap-used\n\
+500.00 MB -- heap-allocated\n\
 222.00 MB -- other2\n\
 111.00 MB -- other1\n\
-100.00 MB -- heap-unused\n\
+100.00 MB -- heap-unallocated\n\
       777 -- other3\n\
       888 -- other4\n\
     (???) -- unknown-unit\n\
@@ -208,10 +208,10 @@ Explicit Allocations\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-1,000.00 MB -- heap-used\n\
+1,000.00 MB -- heap-allocated\n\
   666.00 MB -- danger<script>window.alert(1)</script>\n\
   111.00 MB -- other1\n\
-  100.00 MB -- heap-unused\n\
+  100.00 MB -- heap-unallocated\n\
 \n\
 3rd Process\n\
 \n\
@@ -224,7 +224,7 @@ Explicit Allocations\n\
 └────0.00 MB (00.00%) -- (2 omitted)\n\
 \n\
 Other Measurements\n\
-0.00 MB -- heap-used [*]\n\
+0.00 MB -- heap-allocated [*]\n\
 0.00 MB -- other1 [*]\n\
 \n\
 ";
@@ -259,10 +259,10 @@ Explicit Allocations\n\
 └──────102,400 B (00.02%) -- e\n\
 \n\
 Other Measurements\n\
-524,288,000 B -- heap-used\n\
+524,288,000 B -- heap-allocated\n\
 232,783,872 B -- other2\n\
 116,391,936 B -- other1\n\
-104,857,600 B -- heap-unused\n\
+104,857,600 B -- heap-unallocated\n\
           777 -- other3\n\
           888 -- other4\n\
         (???) -- unknown-unit\n\
@@ -279,10 +279,10 @@ Explicit Allocations\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-1,048,576,000 B -- heap-used\n\
+1,048,576,000 B -- heap-allocated\n\
   698,351,616 B -- danger<script>window.alert(1)</script>\n\
   116,391,936 B -- other1\n\
-  104,857,600 B -- heap-unused\n\
+  104,857,600 B -- heap-unallocated\n\
 \n\
 3rd Process\n\
 \n\
@@ -296,7 +296,7 @@ Explicit Allocations\n\
 └────────────0 B (00.00%) -- heap-unclassified [*]\n\
 \n\
 Other Measurements\n\
-0 B -- heap-used [*]\n\
+0 B -- heap-allocated [*]\n\
 0 B -- other1 [*]\n\
 \n\
 "
