@@ -353,18 +353,25 @@ struct Registers {
     typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#ifdef _WIN64
+    /* scrach registers of Win64 ABI are xmm0-xmm5 */
+    static const uint32 TotalFPRegisters = 5;
+#else
     static const uint32 TotalFPRegisters = 7;
+#endif
     static const uint32 TempFPRegs = (
           (1 << JSC::X86Registers::xmm0)
         | (1 << JSC::X86Registers::xmm1)
         | (1 << JSC::X86Registers::xmm2)
         | (1 << JSC::X86Registers::xmm3)
         | (1 << JSC::X86Registers::xmm4)
-        | (1 << JSC::X86Registers::xmm5)
+#ifndef _WIN64
         | (1 << JSC::X86Registers::xmm6)
+        | (1 << JSC::X86Registers::xmm7)
+#endif
         ) << TotalRegisters;
     /* For shuffling FP values around, or loading GPRs into a FP reg. */
-    static const FPRegisterID FPConversionTemp = JSC::X86Registers::xmm7;
+    static const FPRegisterID FPConversionTemp = JSC::X86Registers::xmm5;
 #elif defined(JS_CPU_ARM)
     static const uint32 TotalFPRegisters = 3;
     static const uint32 TempFPRegs = (
