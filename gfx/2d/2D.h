@@ -626,6 +626,10 @@ public:
 
   /*
    * Create a path builder with the specified fillmode.
+   *
+   * We need the fill mode up front because of Direct2D.
+   * ID2D1SimplifiedGeometrySink requires the fill mode
+   * to be set before calling BeginFigure().
    */
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const = 0;
 
