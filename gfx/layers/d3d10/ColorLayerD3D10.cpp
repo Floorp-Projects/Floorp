@@ -38,8 +38,6 @@
 
 #include "ColorLayerD3D10.h"
 
-#include "../d3d9/Nv3DVUtils.h"
-
 namespace mozilla {
 namespace layers {
 

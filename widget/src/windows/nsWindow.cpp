@@ -3174,11 +3174,8 @@ GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
     aManagerPrefs->mDisableAcceleration || safeMode;
 }
 
-LayerManager*
-nsWindow::GetLayerManager(PLayersChild* aShadowManager,
-                          LayersBackend aBackendHint,
-                          LayerManagerPersistence aPersistence,
-                          bool* aAllowRetaining)
+mozilla::layers::LayerManager*
+nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowRetaining)
 {
   if (aAllowRetaining) {
     *aAllowRetaining = true;
