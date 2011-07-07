@@ -9,7 +9,7 @@ pref("app.update.interval", 28800);
 pref("app.update.download.backgroundInterval", 60);
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.
-pref("app.update.url.manual", "http://nightly.mozilla.org/");
+pref("app.update.url.manual", "http://www.mozilla.com/firefox/channel/");
 // A default value for the "More information about this update" link
 // supplied in the "An update is available" page of the update wizard. 
 pref("app.update.url.details", "http://www.mozilla.org/projects/%APP%/");
