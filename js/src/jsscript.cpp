@@ -1312,12 +1312,11 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         script->hasSingletons = true;
 
     if (cg->hasUpvarIndices()) {
-        JS_ASSERT(cg->upvarIndices->count() <= cg->upvarMap.length);
-        memcpy(script->upvars()->vector, cg->upvarMap.vector,
-               cg->upvarIndices->count() * sizeof(uint32));
+        JS_ASSERT(cg->upvarIndices->count() <= cg->upvarMap.length());
+        memcpy(script->upvars()->vector, cg->upvarMap.begin(),
+               cg->upvarIndices->count() * sizeof(cg->upvarMap[0]));
         cg->upvarIndices->clear();
-        cx->free_(cg->upvarMap.vector);
-        cg->upvarMap.vector = NULL;
+        cg->upvarMap.clear();
     }
 
     /* Set global for compileAndGo scripts. */
