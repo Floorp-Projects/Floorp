@@ -53,8 +53,7 @@ function testDuplicateErrors() {
                               false);
   openConsole();
 
-  let hudId = HUDService.getHudIdByWindow(content);
-  HUDService.clearDisplay(hudId);
+  HUDService.getHudByWindow(content).jsterm.clearOutput();
 
   Services.console.registerListener(consoleObserver);
 
