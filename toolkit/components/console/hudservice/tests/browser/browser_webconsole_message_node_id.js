@@ -46,10 +46,8 @@ function onLoad() {
   browser.removeEventListener("DOMContentLoaded", onLoad, false);
   openConsole();
 
-  let hudId = HUDService.displaysIndex()[0];
-  let console = browser.contentWindow.wrappedJSObject.console;
-  let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  let outputNode = hudBox.querySelector(".hud-output-node");
+  let console = content.wrappedJSObject.console;
+  let outputNode = HUDService.getHudByWindow(content).outputNode;
 
   console.log("a log message");
 

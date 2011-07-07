@@ -52,6 +52,10 @@ function onLoad() {
 
   openConsole();
 
+  hud = HUDService.getHudByWindow(content);
+  hudId = hud.hudId;
+  outputNode = hud.outputNode;
+
   testConsoleLoggingAPI("log");
   testConsoleLoggingAPI("info");
   testConsoleLoggingAPI("warn");
@@ -62,10 +66,7 @@ function onLoad() {
 }
 
 function testConsoleLoggingAPI(aMethod) {
-  let hudId = HUDService.displaysIndex()[0];
-  let console = browser.contentWindow.wrappedJSObject.console;
-  let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  let outputNode = hudBox.querySelector(".hud-output-node");
+  let console = content.wrappedJSObject.console;
 
   HUDService.clearDisplay(hudId);
 
@@ -108,8 +109,7 @@ function testConsoleLoggingAPI(aMethod) {
 }
 
 function setStringFilter(aId, aValue) {
-  let hudBox = HUDService.getHeadsUpDisplay(aId);
-  hudBox.querySelector(".hud-filter-box").value = aValue;
+  hud.filterBox.value = aValue;
   HUDService.adjustVisibilityOnSearchStringChange(aId, aValue);
 }
 
