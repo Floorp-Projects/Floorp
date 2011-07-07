@@ -68,7 +68,7 @@ function onLoad() {
 function testConsoleLoggingAPI(aMethod) {
   let console = content.wrappedJSObject.console;
 
-  HUDService.clearDisplay(hudId);
+  hud.jsterm.clearOutput();
 
   setStringFilter(hudId, "foo");
   console[aMethod]("foo-bar-baz");
@@ -78,7 +78,7 @@ function testConsoleLoggingAPI(aMethod) {
 
   is(nodes.length, 1, "1 hidden " + aMethod  + " node found (via classList)");
 
-  HUDService.clearDisplay(hudId);
+  hud.jsterm.clearOutput();
 
   // now toggle the current method off - make sure no visible message
 
@@ -90,14 +90,14 @@ function testConsoleLoggingAPI(aMethod) {
 
   is(nodes.length, 1,  aMethod + " logging turned off, 1 message hidden");
 
-  HUDService.clearDisplay(hudId);
+  hud.jsterm.clearOutput();
   HUDService.setFilterState(hudId, aMethod, true);
   console[aMethod]("foo-bar-baz");
   nodes = outputNode.querySelectorAll("description");
 
   is(nodes.length, 1, aMethod + " logging turned on, 1 message shown");
 
-  HUDService.clearDisplay(hudId);
+  hud.jsterm.clearOutput();
   setStringFilter(hudId, "");
 
   // test for multiple arguments.

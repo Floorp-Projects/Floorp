@@ -55,11 +55,11 @@ function testWebDevLimits(aEvent) {
 }
 
 function testJsLimits(aEvent) {
-  HUDService.clearDisplay(gHudId);
   gOldPref = Services.prefs.getIntPref("devtools.hud.loglimit.exception");
   Services.prefs.setIntPref("devtools.hud.loglimit.exception", 10);
 
   let hud = HUDService.hudReferences[gHudId];
+  hud.jsterm.clearOutput();
   outputNode = hud.outputNode;
   hud.console.log("testing JS limits");
 
@@ -87,11 +87,11 @@ function testJsLimits(aEvent) {
 var gCounter, gImage;
 
 function testNetLimits(aEvent) {
-  HUDService.clearDisplay(gHudId);
   gOldPref = Services.prefs.getIntPref("devtools.hud.loglimit.network");
   Services.prefs.setIntPref("devtools.hud.loglimit.network", 10);
 
   let hud = HUDService.hudReferences[gHudId];
+  hud.jsterm.clearOutput();
   outputNode = hud.outputNode;
   hud.console.log("testing Net limits");
 
@@ -124,11 +124,11 @@ function loadImage() {
 }
 
 function testCssLimits(aEvent) {
-  HUDService.clearDisplay(gHudId);
   gOldPref = Services.prefs.getIntPref("devtools.hud.loglimit.cssparser");
   Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", 10);
 
   let hud = HUDService.hudReferences[gHudId];
+  hud.jsterm.clearOutput();
   outputNode = hud.outputNode;
   hud.console.log("testing CSS limits");
 

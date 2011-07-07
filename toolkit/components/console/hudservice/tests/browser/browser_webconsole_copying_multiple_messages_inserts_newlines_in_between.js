@@ -27,7 +27,7 @@ function onLoad() {
 function testNewlines() {
   openConsole();
   hud = HUDService.getHudByWindow(content);
-  HUDService.clearDisplay(hud.hudId);
+  hud.jsterm.clearOutput();
 
   let console = content.wrappedJSObject.console;
   ok(console != null, "we have the console object");
