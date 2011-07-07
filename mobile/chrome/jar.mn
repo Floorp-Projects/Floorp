@@ -64,7 +64,6 @@ chrome.jar:
   content/prompt/select.xul            (content/prompt/select.xul)
   content/prompt/prompt.js             (content/prompt/prompt.js)
   content/share.xul                    (content/share.xul)
-  content/webapps.xul                  (content/webapps.xul)
   content/AnimatedZoom.js              (content/AnimatedZoom.js)
 #ifdef MOZ_SERVICES_SYNC
   content/sync.js                      (content/sync.js)
