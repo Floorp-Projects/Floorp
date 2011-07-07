@@ -186,7 +186,7 @@ js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
 js::ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 {
-    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+    JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
     JSObject *proto;
     if (!js_GetClassPrototype(cx, callee.getGlobal(), JSProto_Object, &proto))
@@ -242,15 +242,15 @@ JSObject *
 js_GetArgsObject(JSContext *cx, StackFrame *fp)
 {
     /*
-     * We must be in a function activation; the function must be lightweight
-     * or else fp must have a variable object.
+     * Arguments and Call objects are owned by the enclosing non-eval function
+     * frame, thus any eval frames must be skipped before testing hasArgsObj.
      */
-    JS_ASSERT_IF(fp->fun()->isHeavyweight(), fp->hasCallObj());
-
+    JS_ASSERT(fp->isFunctionFrame());
     while (fp->isEvalInFunction())
         fp = fp->prev();
 
     /* Create an arguments object for fp only if it lacks one. */
+    JS_ASSERT_IF(fp->fun()->isHeavyweight(), fp->hasCallObj());
     if (fp->hasArgsObj())
         return &fp->argsObj();
 
@@ -2119,7 +2119,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     LeaveTrace(cx);
 
     /* Step 6. */
-    uintN n = uintN(JS_MIN(length, JS_ARGS_LENGTH_MAX));
+    uintN n = uintN(JS_MIN(length, StackSpace::ARGS_LENGTH_MAX));
 
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, n, &args))
@@ -2223,7 +2223,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     uintN argslen;
     const Value *boundArgs = obj->getBoundFunctionArguments(argslen);
 
-    if (argc + argslen > JS_ARGS_LENGTH_MAX) {
+    if (argc + argslen > StackSpace::ARGS_LENGTH_MAX) {
         js_ReportAllocationOverflow(cx);
         return false;
     }
