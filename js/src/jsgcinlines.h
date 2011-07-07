@@ -256,12 +256,8 @@ js_NewGCShape(JSContext *cx)
 }
 
 #if JS_HAS_XML_SUPPORT
-inline JSXML *
-js_NewGCXML(JSContext *cx)
-{
-    return NewGCThing<JSXML>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
-}
+extern JSXML *
+js_NewGCXML(JSContext *cx);
 #endif
-
 
 #endif /* jsgcinlines_h___ */
