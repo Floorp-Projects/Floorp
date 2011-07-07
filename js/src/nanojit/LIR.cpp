@@ -283,7 +283,6 @@ namespace nanojit
         InsSet incoming(_alloc);    // running list of incoming edges into the block
         bool last = true;           // true, when we're processing the last instruction of a block
         LIns* priorBlock = 0;       // prior block that was just processed.
-        LIns* priorIns = 0;         // last instruction encountered
 
         LirReader rdr(finalIns());
         LIns* ins = rdr.read();
@@ -323,8 +322,6 @@ namespace nanojit
                     n.insert(ins);
                 if ( _alt.containsKey(ins) )
                     incoming.put(ins,true);
-
-                priorIns = ins;
             }
         }
 

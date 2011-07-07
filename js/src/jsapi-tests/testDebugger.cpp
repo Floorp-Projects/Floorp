@@ -26,8 +26,8 @@ BEGIN_TEST(testDebugger_bug519719)
          "function f(g) { for (var i = 0; i < 9; i++) call(g); }\n"
          "f(Math.sin);\n"    // record loop, starting in f
          "f(Math.cos);\n");  // side exit in f -> call
-    CHECK(callCount[0] == 20);
-    CHECK(callCount[1] == 20);
+    CHECK_EQUAL(callCount[0], 20);
+    CHECK_EQUAL(callCount[1], 20);
     return true;
 }
 END_TEST(testDebugger_bug519719)

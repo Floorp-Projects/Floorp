@@ -2319,16 +2319,15 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
                 if (script->bindings.hasUpvars()) {
                     Sprint(sp, "\nupvars: {\n");
 
-                    void *mark = JS_ARENA_MARK(&cx->tempPool);
-                    jsuword *localNames = script->bindings.getLocalNameArray(cx, &cx->tempPool);
-                    if (!localNames)
+                    Vector<JSAtom *> localNames(cx);
+                    if (!script->bindings.getLocalNameArray(cx, &localNames))
                         return false;
 
                     JSUpvarArray *uva = script->upvars();
                     uintN upvar_base = script->bindings.countArgsAndVars();
 
                     for (uint32 i = 0, n = uva->length; i < n; i++) {
-                        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[upvar_base + i]);
+                        JSAtom *atom = localNames[upvar_base + i];
                         UpvarCookie cookie = uva->vector[i];
                         JSAutoByteString printable;
                         if (js_AtomToPrintableString(cx, atom, &printable)) {
@@ -2337,7 +2336,6 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
                         }
                     }
 
-                    JS_ARENA_RELEASE(&cx->tempPool, mark);
                     Sprint(sp, "}");
                 }
             }
@@ -3296,24 +3294,6 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-ResolveClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
-{
-    if (!JS_ResolveStandardClass(cx, obj, id, resolved))
-        return JS_FALSE;
-
-    if (!*resolved) {
-        if (JSID_IS_ATOM(id, CLASS_ATOM(cx, Reflect))) {
-            if (!IsStandardClassResolved(obj, &js_ReflectClass) &&
-                !js_InitReflectClass(cx, obj))
-                return JS_FALSE;
-            *resolved = JS_TRUE;
-        }
-    }
-
-    return JS_TRUE;
-}
-
-static JSBool
 split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
     ComplexObject *cpx;
@@ -3335,7 +3315,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **obj
     if (!(flags & JSRESOLVE_ASSIGNING)) {
         JSBool resolved;
 
-        if (!ResolveClass(cx, obj, id, &resolved))
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return JS_FALSE;
 
         if (resolved) {
@@ -3567,7 +3547,7 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     JS_ValueToBoolean(cx, v, &b);
     if (b && (flags & JSRESOLVE_ASSIGNING) == 0) {
-        if (!ResolveClass(cx, obj, id, &resolved))
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return JS_FALSE;
         if (resolved) {
             *objp = obj;
@@ -3654,13 +3634,15 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
             return false;
     }
 
-    *vp = OBJECT_TO_JSVAL(sobj);
-    if (srclen == 0)
+    if (srclen == 0) {
+        JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(sobj));
         return true;
+    }
 
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     JSScript *script = JS_GetFrameScript(cx, fp);
     jsbytecode *pc = JS_GetFramePC(cx, fp);
+    jsval rval;
     {
         JSAutoEnterCompartment ac;
         uintN flags;
@@ -3681,11 +3663,16 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
                                  script->filename,
                                  JS_PCToLineNumber(cx, script, pc),
-                                 vp)) {
+                                 &rval)) {
             return false;
         }
     }
-    return cx->compartment->wrap(cx, Valueify(vp));
+
+    if (!cx->compartment->wrap(cx, Valueify(&rval)))
+        return false;
+
+    JS_SET_RVAL(cx, vp, rval);
+    return true;
 }
 
 static JSBool
@@ -5669,7 +5656,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
 
-    if (!ResolveClass(cx, obj, id, &resolved))
+    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
         return JS_FALSE;
     if (resolved) {
         *objp = obj;
@@ -5931,6 +5918,8 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
         if (!JS_InitCTypesClass(cx, glob))
             return NULL;
 #endif
+        if (!JS_InitReflect(cx, glob))
+            return NULL;
         if (!JS::RegisterPerfMeasurement(cx, glob))
             return NULL;
         if (!JS_DefineFunctions(cx, glob, shell_functions) ||

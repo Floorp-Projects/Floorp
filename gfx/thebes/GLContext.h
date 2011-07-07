@@ -75,8 +75,12 @@ typedef char realGLboolean;
 #include "GLContextSymbols.h"
 
 namespace mozilla {
-namespace gl {
+  namespace layers {
+    class LayerManagerOGL;
+    class ColorTextureLayerProgram;
+  };
 
+namespace gl {
 class GLContext;
 
 class LibrarySymbolLoader
@@ -156,6 +160,13 @@ class TextureImage
 {
     NS_INLINE_DECL_REFCOUNTING(TextureImage)
 public:
+    enum TextureState
+    {
+      Created, // Texture created, but has not had glTexImage called to initialize it.
+      Allocated,  // Texture memory exists, but contents are invalid.
+      Valid  // Texture fully ready to use.
+    };
+
     typedef gfxASurface::gfxContentType ContentType;
 
     virtual ~TextureImage() {}
@@ -192,6 +203,22 @@ public:
     virtual void EndUpdate() = 0;
 
     /**
+     * The Image may contain several textures for different regions (tiles).
+     * These functions iterate over each sub texture image tile.
+     */
+    virtual void BeginTileIteration() {
+    };
+
+    virtual PRBool NextTile() {
+        return PR_FALSE;
+    };
+
+    virtual nsIntRect GetTileRect() {
+        return nsIntRect(nsIntPoint(0,0), mSize);
+    };
+
+    virtual GLuint GetTextureID() = 0;
+    /**
      * Set this TextureImage's size, and ensure a texture has been
      * allocated.  Must not be called between BeginUpdate and EndUpdate.
      * After a resize, the contents are undefined.
@@ -206,7 +233,12 @@ public:
         EndUpdate();
     }
 
-    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion) =0;
+    /**
+     * aSurf - the source surface to update from
+     * aRegion - the region in this image to update
+     * aFrom - offset in the source to update from
+     */
+    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0)) = 0;
 
     virtual void BindTexture(GLenum aTextureUnit) = 0;
     virtual void ReleaseTexture() {};
@@ -233,16 +265,6 @@ public:
         TextureImage *mTexture;
     };
 
-    /**
-     * Return this TextureImage's texture ID for use with GL APIs.
-     * Callers are responsible for properly binding the texture etc.
-     *
-     * The texture is only texture complete after either Resize
-     * or a matching pair of BeginUpdate/EndUpdate have been called.
-     * Otherwise, a texture ID may be returned, but the texture
-     * may not be texture complete.
-     */
-    GLuint Texture() { return mTexture; }
 
     /**
      * Returns the shader program type that should be used to render
@@ -279,17 +301,15 @@ protected:
      * TextureImage from GLContext::CreateTextureImage().  That is,
      * clients must not be given partially-constructed TextureImages.
      */
-    TextureImage(GLuint aTexture, const nsIntSize& aSize,
+    TextureImage(const nsIntSize& aSize,
                  GLenum aWrapMode, ContentType aContentType,
                  PRBool aIsRGB = PR_FALSE)
-        : mTexture(aTexture)
-        , mSize(aSize)
+        : mSize(aSize)
         , mWrapMode(aWrapMode)
         , mContentType(aContentType)
         , mIsRGBFormat(aIsRGB)
     {}
 
-    GLuint mTexture;
     nsIntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
@@ -318,25 +338,19 @@ public:
                       GLenum aWrapMode,
                       ContentType aContentType,
                       GLContext* aContext)
-        : TextureImage(aTexture, aSize, aWrapMode, aContentType)
+        : TextureImage(aSize, aWrapMode, aContentType)
+        , mTexture(aTexture)
         , mTextureState(Created)
         , mGLContext(aContext)
         , mUpdateOffset(0, 0)
     {}
 
-    enum TextureState
-    {
-      Created, // Texture created, but has not had glTexImage called to initialize it.
-      Allocated,  // Texture memory exists, but contents are invalid.
-      Valid  // Texture fully ready to use.
-    };
-    
     virtual void BindTexture(GLenum aTextureUnit);
 
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
     virtual void EndUpdate();
-    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion);
-
+    virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
+    virtual GLuint GetTextureID() { return mTexture; };
     // Returns a surface to draw into
     virtual already_AddRefed<gfxASurface>
       GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt);
@@ -354,6 +368,7 @@ public:
     virtual void Resize(const nsIntSize& aSize);
 protected:
 
+    GLuint mTexture;
     TextureState mTextureState;
     GLContext* mGLContext;
     nsRefPtr<gfxASurface> mUpdateSurface;
@@ -361,6 +376,47 @@ protected:
 
     // The offset into the update surface at which the update rect is located.
     nsIntPoint mUpdateOffset;
+};
+
+/**
+ * A container class that complements many sub TextureImages into a big TextureImage.
+ * Aims to behave just like the real thing.
+ */
+
+class TiledTextureImage
+    : public TextureImage
+{
+public:
+    TiledTextureImage(GLContext* aGL, nsIntSize aSize,
+        TextureImage::ContentType aContentType, PRBool aUseNearestFilter = PR_FALSE);
+    ~TiledTextureImage();
+    void DumpDiv();
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
+    virtual void EndUpdate();
+    virtual void Resize(const nsIntSize& aSize);
+    virtual void BeginTileIteration();
+    virtual PRBool NextTile();
+    virtual nsIntRect GetTileRect();
+    virtual GLuint GetTextureID() {
+        return mImages[mCurrentImage]->GetTextureID();
+    };
+    virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
+    virtual PRBool InUpdate() const { return mInUpdate; };
+    virtual void BindTexture(GLenum);
+protected:
+    unsigned int mCurrentImage;
+    nsTArray< nsRefPtr<TextureImage> > mImages;
+    bool mInUpdate;
+    nsIntSize mSize;
+    unsigned int mTileSize;
+    unsigned int mRows, mColumns;
+    GLContext* mGL;
+    PRBool mUseNearestFilter;
+    // A temporary surface to faciliate cross-tile updates.
+    nsRefPtr<gfxASurface> mUpdateSurface;
+    // The region of update requested
+    nsIntRegion mUpdateRegion;
+    TextureState mTextureState;
 };
 
 struct THEBES_API ContextFormat
@@ -705,6 +761,21 @@ public:
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
                        PRBool aUseNearestFilter=PR_FALSE);
+
+    /**
+     * In EGL we want to use Tiled Texture Images, which we return
+     * from CreateTextureImage above.
+     * Inside TiledTextureImage we need to create actual images and to
+     * prevent infinite recursion we need to differentiate the two
+     * functions.
+     **/
+    virtual already_AddRefed<TextureImage>
+    TileGenFunc(const nsIntSize& aSize,
+                TextureImage::ContentType aContentType,
+                PRBool aUseNearestFilter = PR_FALSE)
+    {
+        return nsnull;
+    };
 
     /**
      * Read the image data contained in aTexture, and return it as an ImageSurface.
