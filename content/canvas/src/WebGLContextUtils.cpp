@@ -46,10 +46,7 @@
 #include "nsIJSContextStack.h"
 #include "jsapi.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIVariant.h"
 
 #include "nsIDOMDocument.h"
@@ -59,6 +56,7 @@
 #include "nsIDOMDataContainerEvent.h"
 
 #include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
 
 #if 0
 #include "nsIContentURIGrouper.h"

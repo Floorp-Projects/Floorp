@@ -43,8 +43,7 @@
 #include "nsWebMReader.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
-#include "nsIServiceManager.h"
-#include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -309,9 +308,9 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
         break;
       }
 
-      nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
       PRInt32 forceStereoMode;
-      if (NS_SUCCEEDED(prefs->GetIntPref("media.webm.force_stereo_mode", &forceStereoMode))) {
+      if (NS_SUCCEEDED(Preferences::GetInt("media.webm.force_stereo_mode",
+                                           &forceStereoMode))) {
         switch (forceStereoMode) {
         case 1:
           mInfo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
