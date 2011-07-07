@@ -124,6 +124,13 @@ JSScript::getFunction(size_t index)
     return fun;
 }
 
+inline JSFunction *
+JSScript::getCallerFunction()
+{
+    JS_ASSERT(savedCallerFun);
+    return getFunction(0);
+}
+
 inline JSObject *
 JSScript::getRegExp(size_t index)
 {
