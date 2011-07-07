@@ -1038,21 +1038,6 @@ var BrowserUI = {
         return this._domWindowClose(browser);
         break;
       case "DOMLinkAdded":
-        // checks for an icon to use for a web app
-        // priority is : icon < apple-touch-icon
-        let rel = json.rel.toLowerCase().split(" ");
-        if ((rel.indexOf("icon") != -1) && !browser.appIcon) {
-          // We should also use the sizes attribute if available
-          // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
-          browser.appIcon = json.href;
-        }
-        else if (rel.indexOf("apple-touch-icon") != -1) {
-          // XXX should we support apple-touch-icon-precomposed ?
-          // see http://developer.apple.com/safari/library/documentation/appleapplications/reference/safariwebcontent/configuringwebapplications/configuringwebapplications.html
-          browser.appIcon = json.href;
-        }
-
-        // Handle favicon changes
         if (Browser.selectedBrowser == browser)
           this._updateIcon(Browser.selectedBrowser.mIconURL);
         break;
@@ -1253,8 +1238,7 @@ var BrowserUI = {
         this.activePanel = RemoteTabsList;
         break;
       case "cmd_quit":
-        // Only close one window
-        this._closeOrQuit();
+        GlobalOverlay.goQuitApplication();
         break;
       case "cmd_close":
         this._closeOrQuit();
