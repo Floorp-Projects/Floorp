@@ -172,7 +172,7 @@
             <hbox>
               <label class="text-link"
                      onclick="gSyncPane.startOver(true); return false;"
-                     value="&deactivateDevice.label;"/>
+                     value="&unlinkDevice.label;"/>
             </hbox>
           </groupbox>
           <hbox id="tosPP" pack="center">
@@ -197,7 +197,7 @@
           </hbox>
           <label class="text-link"
                  onclick="gSyncPane.startOver(true); return false;"
-                 value="&deactivateDevice.label;"/>
+                 value="&unlinkDevice.label;"/>
         </vbox>
       </deck>
   </prefpane>
