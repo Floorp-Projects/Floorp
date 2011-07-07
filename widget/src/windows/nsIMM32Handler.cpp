@@ -293,10 +293,20 @@ nsIMM32Handler::CommitComposition(nsWindow* aWindow, PRBool aForce)
   if (!aForce && !IsComposingWindow(aWindow)) {
     return;
   }
+
+  PRBool associated = aWindow->AssociateDefaultIMC(PR_TRUE);
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("IMM32: CommitComposition, associated=%s\n",
+     associated ? "YES" : "NO"));
+
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   if (IMEContext.IsValid()) {
     ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
     ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+  }
+
+  if (associated) {
+    aWindow->AssociateDefaultIMC(PR_FALSE);
   }
 }
 
@@ -314,9 +324,19 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, PRBool aForce)
   if (!aForce && !IsComposingWindow(aWindow)) {
     return;
   }
+
+  PRBool associated = aWindow->AssociateDefaultIMC(PR_TRUE);
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("IMM32: CancelComposition, associated=%s\n",
+     associated ? "YES" : "NO"));
+
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   if (IMEContext.IsValid()) {
     ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+  }
+
+  if (associated) {
+    aWindow->AssociateDefaultIMC(PR_FALSE);
   }
 }
 
