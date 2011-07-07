@@ -424,6 +424,11 @@ nsDOMFile::Initialize(nsISupports* aOwner,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(exists, NS_ERROR_FILE_NOT_FOUND);
 
+  PRBool isDir;
+  rv = file->IsDirectory(&isDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_FALSE(isDir, NS_ERROR_FILE_IS_DIRECTORY);
+
   mFile = file;
   return NS_OK;
 }
