@@ -710,6 +710,10 @@ class LSnapshot : public TempObject
         JS_ASSERT(i < numSlots_);
         return &slots_[i];
     }
+    void setEntry(size_t i, const LAllocation &alloc) {
+        JS_ASSERT(i < numSlots_);
+        slots_[i] = alloc;
+    }
     MSnapshot *mir() const {
         return mir_;
     }
@@ -746,6 +750,13 @@ public:
             idx_ = 0;
             snapshot_ = true;
         }
+    }
+
+    void replace(const LAllocation &alloc) {
+        if (snapshot_)
+            ins_.snapshot()->setEntry(idx_, alloc);
+        else
+            ins_.setOperand(idx_, alloc);
     }
 
     LAllocation *operator *() const {
