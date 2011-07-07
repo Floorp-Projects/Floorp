@@ -643,13 +643,38 @@ ImageDocument::CreateSyntheticDocument()
   nsresult rv = MediaDocument::CreateSyntheticDocument();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We must declare the image as a block element. If we stay as
+  // an inline element, our parent LineBox will be inline too and
+  // ignore the available height during reflow.
+  // This is bad during printing, it means tall image frames won't know
+  // the size of the paper and cannot break into continuations along
+  // multiple pages.
+  Element* head = GetHeadElement();
+  if (!head) {
+    NS_WARNING("no head on image document!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nsnull,
+                                           kNameSpaceID_XHTML,
+                                           nsIDOMNode::ELEMENT_NODE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<nsGenericHTMLElement> styleContent = NS_NewHTMLStyleElement(nodeInfo.forget());
+  if (!styleContent) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  styleContent->SetInnerHTML(NS_LITERAL_STRING("img { display: block; }"));
+  head->AppendChildTo(styleContent, PR_FALSE);
+
+  // Add the image element
   Element* body = GetBodyElement();
   if (!body) {
     NS_WARNING("no body on image document!");
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::img, nsnull,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
