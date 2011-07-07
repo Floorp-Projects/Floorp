@@ -923,12 +923,14 @@ TabChild::InitWidget(const nsIntSize& size)
       return false;
     }
 
-    LayerManager::LayersBackend be;
-    shadowManager->SendGetParentType(&be);
-    ShadowLayerForwarder* lf =
-        mWidget->GetLayerManager(shadowManager, be)->AsShadowForwarder();
-    NS_ABORT_IF_FALSE(lf && lf->HasShadowManager(),
-                      "PuppetWidget should have shadow manager");
+    LayerManager* lm = mWidget->GetLayerManager();
+    NS_ABORT_IF_FALSE(LayerManager::LAYERS_BASIC == lm->GetBackendType(),
+                      "content processes should only be using BasicLayers");
+
+    BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
+    NS_ABORT_IF_FALSE(!bslm->HasShadowManager(),
+                      "PuppetWidget shouldn't have shadow manager yet");
+    bslm->SetShadowManager(shadowManager);
 
     mRemoteFrame = remoteFrame;
     return true;
