@@ -65,6 +65,7 @@ XPIDLSRCS	= \
 		nsIScriptableInterfaces.idl \
 		xpcIJSWeakReference.idl \
 		xpcIJSGetFactory.idl \
+		nsIJSEngineTelemetryStats.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
