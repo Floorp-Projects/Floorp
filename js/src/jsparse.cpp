@@ -8302,7 +8302,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         matched = tokenStream.matchToken(TOK_RB, TSF_OPERAND);
         if (!matched) {
             for (index = 0; ; index++) {
-                if (index == JS_ARGS_LENGTH_MAX) {
+                if (index == StackSpace::ARGS_LENGTH_MAX) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARRAY_INIT_TOO_BIG);
                     return NULL;
                 }
