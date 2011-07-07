@@ -3379,7 +3379,8 @@ nsresult nsScriptSecurityManager::Init()
     nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
     NS_ENSURE_TRUE(system, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = system->Init();
+    JSPrincipals *jsprin;
+    rv = system->Init(&jsprin);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mSystemPrincipal = system;
@@ -3406,6 +3407,8 @@ nsresult nsScriptSecurityManager::Init()
     JS_SetRuntimeSecurityCallbacks(sRuntime, &securityCallbacks);
     NS_ASSERTION(!oldcallbacks, "Someone else set security callbacks!");
 
+    JS_SetTrustedPrincipals(sRuntime, jsprin);
+
     return NS_OK;
 }
 
@@ -3429,6 +3432,7 @@ nsScriptSecurityManager::Shutdown()
 {
     if (sRuntime) {
         JS_SetRuntimeSecurityCallbacks(sRuntime, NULL);
+        JS_SetTrustedPrincipals(sRuntime, NULL);
         sRuntime = nsnull;
     }
     sEnabledID = JSID_VOID;
