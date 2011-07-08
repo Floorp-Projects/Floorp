@@ -13,6 +13,8 @@ dbg.hooks = {
     }
 };
 
+dbg.uncaughtExceptionHook = function () { hits = -999; };
+
 function test(f) {
     hits = 0;
     f();
