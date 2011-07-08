@@ -124,15 +124,13 @@ WebGLContext::SynthesizeGLError(WebGLenum err)
     // but if there isn't, then we need to check for a gl error
     // that may have occurred before this one and use that code
     // instead.
+    
+    MakeContextCurrent();
 
-    if (mWebGLError == LOCAL_GL_NO_ERROR) {
-        MakeContextCurrent();
+    UpdateWebGLErrorAndClearGLError();
 
-        mWebGLError = gl->fGetError();
-
-        if (mWebGLError == LOCAL_GL_NO_ERROR)
-            mWebGLError = err;
-    }
+    if (!mWebGLError)
+        mWebGLError = err;
 
     return NS_OK;
 }
