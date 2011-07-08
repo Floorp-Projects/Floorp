@@ -546,7 +546,7 @@ WebGLContext::InitAndValidateGL()
         // and check OpenGL error for INVALID_ENUM.
 
         // before we start, we check that no error already occurred, to prevent hiding it in our subsequent error handling
-        error = gl->fGetError();
+        error = gl->GetAndClearError();
         if (error != LOCAL_GL_NO_ERROR) {
             LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
             return PR_FALSE;
@@ -614,9 +614,9 @@ WebGLContext::InitAndValidateGL()
     }
 #endif
 
-    // notice that the point of calling GetError here is not only to check for error,
-    // it is also to reset the error flag so that a subsequent WebGL getError call will give the correct result.
-    error = gl->fGetError();
+    // notice that the point of calling GetAndClearError here is not only to check for error,
+    // it is also to reset the error flags so that a subsequent WebGL getError call will give the correct result.
+    error = gl->GetAndClearError();
     if (error != LOCAL_GL_NO_ERROR) {
         LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
         return PR_FALSE;
