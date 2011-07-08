@@ -133,9 +133,7 @@ static const int kExceptionHandlerThreadInitialStackSize = 64 * 1024;
 
 // This is passed as the context to the MinidumpWriteDump callback.
 typedef struct {
-  ULONG64 memory_base;
-  ULONG memory_size;
-  bool finished;
+  AppMemoryList::const_iterator iter, end;
 } MinidumpCallbackContext;
 
 vector<ExceptionHandler*>* ExceptionHandler::handler_stack_ = NULL;
@@ -926,13 +924,13 @@ BOOL CALLBACK ExceptionHandler::MinidumpWriteDumpCallback(
   case MemoryCallback: {
     MinidumpCallbackContext* callback_context =
         reinterpret_cast<MinidumpCallbackContext*>(context);
-    if (callback_context->finished)
+    if (callback_context->iter == callback_context->end)
       return FALSE;
 
     // Include the specified memory region.
-    callback_output->MemoryBase = callback_context->memory_base;
-    callback_output->MemorySize = callback_context->memory_size;
-    callback_context->finished = true;
+    callback_output->MemoryBase = callback_context->iter->ptr;
+    callback_output->MemorySize = callback_context->iter->length;
+    callback_context->iter++;
     return TRUE;
   }
     
@@ -1015,9 +1013,6 @@ bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
         ++user_streams.UserStreamCount;
       }
 
-      MINIDUMP_CALLBACK_INFORMATION callback;
-      MinidumpCallbackContext context;
-      MINIDUMP_CALLBACK_INFORMATION* callback_pointer = NULL;
       // Older versions of DbgHelp.dll don't correctly put the memory around
       // the faulting instruction pointer into the minidump. This
       // callback will ensure that it gets included.
@@ -1042,22 +1037,25 @@ bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
           // pointer, but settle for whatever's available up to the
           // boundaries of the memory region.
           const ULONG64 kIPMemorySize = 256;
-          context.memory_base = 
+          ULONG64 base = 
             std::max(reinterpret_cast<ULONG64>(info.BaseAddress),
                      instruction_pointer - (kIPMemorySize / 2));
           ULONG64 end_of_range =
             std::min(instruction_pointer + (kIPMemorySize / 2),
                      reinterpret_cast<ULONG64>(info.BaseAddress)
                      + info.RegionSize);
-          context.memory_size =
-            static_cast<ULONG>(end_of_range - context.memory_base);
- 
-          context.finished = false;
-          callback.CallbackRoutine = MinidumpWriteDumpCallback;
-          callback.CallbackParam = reinterpret_cast<void*>(&context);
-          callback_pointer = &callback;
+          ULONG size = static_cast<ULONG>(end_of_range - base);
+          app_memory_info_.push_back(AppMemory(base, size));
         }
       }
+
+      MinidumpCallbackContext context;
+      context.iter = app_memory_info_.begin();
+      context.end = app_memory_info_.end();
+
+      MINIDUMP_CALLBACK_INFORMATION callback;
+      callback.CallbackRoutine = MinidumpWriteDumpCallback;
+      callback.CallbackParam = reinterpret_cast<void*>(&context);
 
       // The explicit comparison to TRUE avoids a warning (C4800).
       success = (minidump_write_dump_(process,
@@ -1066,7 +1064,7 @@ bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
                                       dump_type_,
                                       exinfo ? &except_info : NULL,
                                       &user_streams,
-                                      callback_pointer) == TRUE);
+                                      &callback) == TRUE);
 
       CloseHandle(dump_file);
     }
@@ -1093,6 +1091,22 @@ void ExceptionHandler::UpdateNextID() {
 
   next_minidump_path_ = minidump_path;
   next_minidump_path_c_ = next_minidump_path_.c_str();
+}
+
+void ExceptionHandler::RegisterAppMemory(void *ptr, size_t length) {
+  app_memory_info_.push_back(AppMemory(reinterpret_cast<ULONG64>(ptr),
+                                       static_cast<ULONG>(length)));
+}
+
+void ExceptionHandler::UnregisterAppMemory(void *ptr) {
+  for (AppMemoryList::iterator iter = app_memory_info_.begin();
+       iter != app_memory_info_.end();
+       ++iter) {
+    if (iter->ptr == reinterpret_cast<ULONG64>(ptr)) {
+      app_memory_info_.erase(iter);
+      return;
+    }
+  }
 }
 
 }  // namespace google_breakpad

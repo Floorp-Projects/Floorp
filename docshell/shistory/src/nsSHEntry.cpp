@@ -108,6 +108,7 @@ nsSHEntry::nsSHEntry()
   , mDocIdentifier(gEntryDocIdentifier++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
+  , mURIWasModified(PR_FALSE)
   , mIsFrameNavigation(PR_FALSE)
   , mSaveLayoutState(PR_TRUE)
   , mExpired(PR_FALSE)
@@ -132,6 +133,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mDocIdentifier(other.mDocIdentifier)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
+  , mURIWasModified(other.mURIWasModified)
   , mIsFrameNavigation(other.mIsFrameNavigation)
   , mSaveLayoutState(other.mSaveLayoutState)
   , mExpired(other.mExpired)
@@ -205,6 +207,18 @@ NS_IMETHODIMP nsSHEntry::GetScrollPosition(PRInt32 *x, PRInt32 *y)
 {
   *x = mScrollPositionX;
   *y = mScrollPositionY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::GetURIWasModified(PRBool* aOut)
+{
+  *aOut = mURIWasModified;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetURIWasModified(PRBool aIn)
+{
+  mURIWasModified = aIn;
   return NS_OK;
 }
 

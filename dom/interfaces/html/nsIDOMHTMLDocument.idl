@@ -49,8 +49,9 @@
  *
  * @see <http://www.whatwg.org/html/>
  */
+interface nsISelection;
 
-[scriptable, uuid(3c0ca40f-72c5-4d15-935e-ccaff7953f2c)]
+[scriptable, uuid(3ab3e856-361d-435a-8a4d-b462799945cd)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
   readonly attribute DOMString            URL;
@@ -132,7 +133,7 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
 
 
   // DOM Range
-  DOMString                 getSelection();
+  nsISelection                getSelection();
 
 
   // Mozilla extensions

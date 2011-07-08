@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/*
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is JavaScript Engine testing utilities.
+ * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Bertrand Le Roy
+ * Contributor(s):
+ *    Robert Sayre <sayrer@gmail.com> (original author)
+ *    Alexander J. Vincent <ajvincent@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,45 +36,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-//-----------------------------------------------------------------------------
-var BUGNUMBER = 350256;
-var summary = 'Array.apply maximum arguments: 2^19-1024';
-var actual = '';
-var expect = '';
-
-expectExitCode(0);
-expectExitCode(5);
-
-//-----------------------------------------------------------------------------
-test(Math.pow(2, 19)-1024);
-//-----------------------------------------------------------------------------
-
-function test(length)
-{
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
-
-  var a = new Array();
-  a[length - 2] = 'length-2';
-  a[length - 1] = 'length-1';
-
-  var b = Array.apply(null, a);
-
-  expect = length + ',length-2,length-1';
-  actual = b.length + "," + b[length - 2] + "," + b[length - 1];
-  reportCompare(expect, actual, summary);
-
-  function f() {
-    return arguments.length + "," + arguments[length - 2] + "," +
-      arguments[length - 1];
-  }
-
-  expect = length + ',length-2,length-1';
-  actual = f.apply(null, a);
-
-  reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
+ 
+function run_test() {   
+  do_load_manifest("component-file.manifest");
+  const contractID = "@mozilla.org/tests/component-file;1";
+  do_check_true(contractID in Components.classes);
+  var foo = Components.classes[contractID]
+                      .createInstance(Components.interfaces.nsIClassInfo);
+  do_check_true(Boolean(foo));
+  do_check_true(foo.contractID == contractID);
+  do_check_true(!!foo.wrappedJSObject);
+  do_check_true(foo.wrappedJSObject.doTest());
 }

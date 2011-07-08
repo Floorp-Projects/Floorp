@@ -41,6 +41,7 @@
 #include "WebGLContext.h"
 
 #include "nsString.h"
+#include "nsDebug.h"
 
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
@@ -367,6 +368,32 @@ WebGLContext::BlendFuncSeparate(WebGLenum srcRGB, WebGLenum dstRGB,
     return NS_OK;
 }
 
+GLenum WebGLContext::CheckedBufferData(GLenum target,
+                                       GLsizeiptr size,
+                                       const GLvoid *data,
+                                       GLenum usage)
+{
+    WebGLBuffer *boundBuffer = NULL;
+    if (target == LOCAL_GL_ARRAY_BUFFER) {
+        boundBuffer = mBoundArrayBuffer;
+    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
+        boundBuffer = mBoundElementArrayBuffer;
+    }
+    NS_ABORT_IF_FALSE(boundBuffer != nsnull, "no buffer bound for this target");
+    
+    bool sizeChanges = PRUint32(size) != boundBuffer->ByteLength();
+    if (sizeChanges) {
+        UpdateWebGLErrorAndClearGLError();
+        gl->fBufferData(target, size, data, usage);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        return error;
+    } else {
+        gl->fBufferData(target, size, data, usage);
+        return LOCAL_GL_NO_ERROR;
+    }
+}
+
 NS_IMETHODIMP
 WebGLContext::BufferData(PRInt32 dummy)
 {
@@ -406,13 +433,17 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
     MakeContextCurrent();
+    
+    GLenum error = CheckedBufferData(target, size, 0, usage);
+    if (error) {
+        LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+        return NS_OK;
+    }
 
     boundBuffer->SetByteLength(size);
+    boundBuffer->InvalidateCachedMaxElements();
     if (!boundBuffer->ZeroDataIfElementArray())
         return ErrorOutOfMemory("bufferData: out of memory");
-    boundBuffer->InvalidateCachedMaxElements();
-
-    gl->fBufferData(target, size, 0, usage);
 
     return NS_OK;
 }
@@ -438,12 +469,19 @@ WebGLContext::BufferData_buf(WebGLenum target, JSObject *wb, WebGLenum usage)
 
     MakeContextCurrent();
 
+    GLenum error = CheckedBufferData(target,
+                                     JS_GetArrayBufferByteLength(wb),
+                                     JS_GetArrayBufferData(wb),
+                                     usage);
+    if (error) {
+        LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+        return NS_OK;
+    }
+
     boundBuffer->SetByteLength(JS_GetArrayBufferByteLength(wb));
+    boundBuffer->InvalidateCachedMaxElements();
     if (!boundBuffer->CopyDataIfElementArray(JS_GetArrayBufferData(wb)))
         return ErrorOutOfMemory("bufferData: out of memory");
-    boundBuffer->InvalidateCachedMaxElements();
-
-    gl->fBufferData(target, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb), usage);
 
     return NS_OK;
 }
@@ -469,12 +507,19 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
 
     MakeContextCurrent();
 
+    GLenum error = CheckedBufferData(target,
+                                     wa->byteLength,
+                                     wa->data,
+                                     usage);
+    if (error) {
+        LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+        return NS_OK;
+    }
+
     boundBuffer->SetByteLength(wa->byteLength);
+    boundBuffer->InvalidateCachedMaxElements();
     if (!boundBuffer->CopyDataIfElementArray(wa->data))
         return ErrorOutOfMemory("bufferData: out of memory");
-    boundBuffer->InvalidateCachedMaxElements();
-
-    gl->fBufferData(target, wa->byteLength, wa->data, usage);
 
     return NS_OK;
 }
@@ -685,9 +730,9 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
         if (sub)
-          gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+            gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
         else
-          gl->fCopyTexImage2D(target, level, internalformat, x, y, width, height, 0);
+            gl->fCopyTexImage2D(target, level, internalformat, x, y, width, height, 0);
     } else {
 
         // the rect doesn't fit in the framebuffer
@@ -728,10 +773,11 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
         // now initialize the texture as black
 
         if (sub)
-          gl->fTexSubImage2D(target, level, 0, 0, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
+            gl->fTexSubImage2D(target, level, 0, 0, width, height,
+                               internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
         else
-          gl->fTexImage2D(target, level, internalformat, width, height, 0, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
-
+            gl->fTexImage2D(target, level, internalformat, width, height,
+                            0, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
         free(tempZeroData);
 
         // if we are completely outside of the framebuffer, we can exit now with our black texture
@@ -830,9 +876,31 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (!tex)
         return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
 
-    tex->SetImageInfo(target, level, width, height);
+    const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, WebGLTexture::FaceForTarget(target));
 
-    return CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+    // copyTexImage2D only generates textures with type = UNSIGNED_BYTE
+    GLenum type = LOCAL_GL_UNSIGNED_BYTE;
+
+    bool sizeMayChange = width != imageInfo.mWidth ||
+                         height != imageInfo.mHeight ||
+                         internalformat != imageInfo.mFormat ||
+                         type != imageInfo.mType;
+
+    if (sizeMayChange) {
+        UpdateWebGLErrorAndClearGLError();
+        CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        if (error) {
+            LogMessageIfVerbose("copyTexImage2D generated error %s", ErrorName(error));
+            return NS_OK;
+        }          
+    } else {
+        CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+    }
+    
+    tex->SetImageInfo(target, level, width, height, internalformat, type);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2226,18 +2294,9 @@ WebGLContext::GetError(WebGLenum *_retval)
 {
     MakeContextCurrent();
 
-    // Always call glGetError to clear any pending
-    // real GL error.
-    WebGLenum err = gl->fGetError();
-
-    // mSynthesizedGLError has the first error that occurred,
-    // whether synthesized or real; if it's not NO_ERROR, use it.
-    if (mSynthesizedGLError != LOCAL_GL_NO_ERROR) {
-        err = mSynthesizedGLError;
-        mSynthesizedGLError = LOCAL_GL_NO_ERROR;
-    }
-
-    *_retval = err;
+    UpdateWebGLErrorAndClearGLError();
+    *_retval = mWebGLError;
+    mWebGLError = LOCAL_GL_NO_ERROR;
 
     return NS_OK;
 }
@@ -3107,8 +3166,6 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
     if (!mBoundRenderbuffer || !mBoundRenderbuffer->GLName())
         return ErrorInvalidOperation("renderbufferStorage called on renderbuffer 0");
 
-    MakeContextCurrent();
-
     // certain OpenGL ES renderbuffer formats may not exist on desktop OpenGL
     WebGLenum internalformatForGL = internalformat;
 
@@ -3144,9 +3201,26 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", internalformat);
     }
 
-    gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+    MakeContextCurrent();
+
+    bool sizeChanges = width != mBoundRenderbuffer->width() ||
+                       height != mBoundRenderbuffer->height() ||
+                       internalformat != mBoundRenderbuffer->InternalFormat();
+    if (sizeChanges) {
+        UpdateWebGLErrorAndClearGLError();
+        gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        if (error) {
+            LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+            return NS_OK;
+        }
+    } else {
+        gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+    }
 
     mBoundRenderbuffer->SetInternalFormat(internalformat);
+    mBoundRenderbuffer->SetInternalFormatForGL(internalformatForGL);
     mBoundRenderbuffer->setDimensions(width, height);
     mBoundRenderbuffer->SetInitialized(PR_FALSE);
 
@@ -4044,11 +4118,19 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("shaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
+    
+    const nsPromiseFlatString& flatSource = PromiseFlatString(source);
 
-    if (!NS_IsAscii(nsPromiseFlatString(source).get()))
+    if (!NS_IsAscii(flatSource.get()))
         return ErrorInvalidValue("shaderSource: non-ascii characters found in source");
 
-    shader->SetSource(NS_LossyConvertUTF16toASCII(source));
+    const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
+    
+    const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
+    if (sourceCString.Length() > maxSourceLength)
+        return ErrorInvalidValue("shaderSource: source has more than %d characters", maxSourceLength);
+    
+    shader->SetSource(sourceCString);
 
     shader->SetNeedsTranslation();
 
@@ -4134,6 +4216,35 @@ NS_IMETHODIMP
 WebGLContext::TexImage2D(PRInt32)
 {
     return NS_ERROR_FAILURE;
+}
+
+GLenum WebGLContext::CheckedTexImage2D(GLenum target,
+                                       GLint level,
+                                       GLenum internalFormat,
+                                       GLsizei width,
+                                       GLsizei height,
+                                       GLint border,
+                                       GLenum format,
+                                       GLenum type,
+                                       const GLvoid *data)
+{
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    NS_ABORT_IF_FALSE(tex != nsnull, "no texture bound");
+    const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, WebGLTexture::FaceForTarget(target));
+    bool sizeMayChange = width != imageInfo.mWidth ||
+                         height != imageInfo.mHeight ||
+                         format != imageInfo.mFormat ||
+                         type != imageInfo.mType;
+    if (sizeMayChange) {
+        UpdateWebGLErrorAndClearGLError();
+        gl->fTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        return error;
+    } else {
+        gl->fTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+        return LOCAL_GL_NO_ERROR;
+    }
 }
 
 nsresult
@@ -4227,13 +4338,13 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     if (!tex)
         return ErrorInvalidOperation("texImage2D: no texture is bound to this target");
 
-    tex->SetImageInfo(target, level, width, height, format, type);
-
     MakeContextCurrent();
 
     // Handle ES2 and GL differences in floating point internal formats.  Note that
     // format == internalformat, as checked above and as required by ES.
     internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES2());
+
+    GLenum error = LOCAL_GL_NO_ERROR;
 
     if (byteLength) {
         int dstFormat = GetWebGLTexelFormat(format, type);
@@ -4250,16 +4361,18 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
             !mPixelStoreFlipY)
         {
             // no conversion, no flipping, so we avoid copying anything and just pass the source pointer
-            gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, data);
+            error = CheckedTexImage2D(target, level, internalformat,
+                                      width, height, border, format, type, data);
         }
         else
         {
             nsAutoArrayPtr<PRUint8> convertedData(new PRUint8[bytesNeeded]);
             ConvertImage(width, height, srcStride, dstStride,
-                         (PRUint8*)data, convertedData,
-                         actualSrcFormat, srcPremultiplied,
-                         dstFormat, mPixelStorePremultiplyAlpha, texelSize);
-            gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, convertedData);
+                        (PRUint8*)data, convertedData,
+                        actualSrcFormat, srcPremultiplied,
+                        dstFormat, mPixelStorePremultiplyAlpha, texelSize);
+            error = CheckedTexImage2D(target, level, internalformat,
+                                      width, height, border, format, type, convertedData);
         }
     } else {
         // We need some zero pages, because GL doesn't guarantee the
@@ -4269,12 +4382,18 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         if (!tempZeroData)
             return ErrorOutOfMemory("texImage2D: could not allocate %d bytes (for zero fill)", bytesNeeded);
 
-        gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, tempZeroData);
+        error = CheckedTexImage2D(target, level, internalformat,
+                                  width, height, border, format, type, tempZeroData);
 
         free(tempZeroData);
     }
+    
+    if (error) {
+        LogMessageIfVerbose("texImage2D generated error %s", ErrorName(error));
+        return NS_OK;
+    }
 
-    tex->setDimensions(width, height);
+    tex->SetImageInfo(target, level, width, height, format, type);
 
     return NS_OK;
 }
@@ -4418,9 +4537,10 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     if (!tex)
         return ErrorInvalidOperation("texSubImage2D: no texture is bound to this target");
 
-    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, tex->width(), tex->height()))
+    size_t face = WebGLTexture::FaceForTarget(target);
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.mWidth, imageInfo.mHeight))
         return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
-
 
     MakeContextCurrent();
 

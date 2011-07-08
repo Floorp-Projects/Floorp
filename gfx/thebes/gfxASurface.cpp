@@ -600,13 +600,13 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetProcess(char **process) {
-        *process = strdup("");
+    NS_IMETHOD GetProcess(nsACString &process) {
+        process.Truncate();
         return NS_OK;
     }
 
-    NS_IMETHOD GetPath(char **memoryPath) {
-        *memoryPath = strdup(SurfaceMemoryReporterPathForType(mType));
+    NS_IMETHOD GetPath(nsACString &path) {
+        path.Assign(SurfaceMemoryReporterPathForType(mType));
         return NS_OK;
     }
 
@@ -625,8 +625,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD GetDescription(char **desc) {
-        *desc = strdup("Memory used by gfx surface of the given type.");
+    NS_IMETHOD GetDescription(nsACString &desc) {
+        desc.AssignLiteral("Memory used by gfx surface of the given type.");
         return NS_OK;
     }
 
