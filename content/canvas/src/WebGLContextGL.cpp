@@ -3147,6 +3147,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
     gl->fRenderbufferStorage(target, internalformatForGL, width, height);
 
     mBoundRenderbuffer->SetInternalFormat(internalformat);
+    mBoundRenderbuffer->SetInternalFormatForGL(internalformatForGL);
     mBoundRenderbuffer->setDimensions(width, height);
     mBoundRenderbuffer->SetInitialized(PR_FALSE);
 

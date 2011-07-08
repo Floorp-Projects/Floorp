@@ -664,10 +664,10 @@ protected:
         : mWidth(0), mHeight(0) { }
 
 public:
-    WebGLsizei width() { return mWidth; }
+    WebGLsizei width() const { return mWidth; }
     void width(WebGLsizei value) { mWidth = value; }
 
-    WebGLsizei height() { return mHeight; }
+    WebGLsizei height() const { return mHeight; }
     void height(WebGLsizei value) { mHeight = value; }
 
     void setDimensions(WebGLsizei width, WebGLsizei height) {
@@ -1493,6 +1493,7 @@ public:
         WebGLContextBoundObject(context),
         mName(name),
         mInternalFormat(0),
+        mInternalFormatForGL(0),
         mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE), mInitialized(PR_FALSE)
     { }
 
@@ -1512,6 +1513,32 @@ public:
 
     WebGLenum InternalFormat() const { return mInternalFormat; }
     void SetInternalFormat(WebGLenum aInternalFormat) { mInternalFormat = aInternalFormat; }
+    
+    WebGLenum InternalFormatForGL() const { return mInternalFormatForGL; }
+    void SetInternalFormatForGL(WebGLenum aInternalFormatForGL) { mInternalFormatForGL = aInternalFormatForGL; }
+    
+    PRInt64 MemoryUsage() const {
+        PRInt64 pixels = PRInt64(width()) * PRInt64(height());
+        switch (mInternalFormatForGL) {
+            case LOCAL_GL_STENCIL_INDEX8:
+                return pixels;
+            case LOCAL_GL_RGBA4:
+            case LOCAL_GL_RGB5_A1:
+            case LOCAL_GL_RGB565:
+            case LOCAL_GL_DEPTH_COMPONENT16:
+                return 2 * pixels;
+            case LOCAL_GL_RGB8:
+            case LOCAL_GL_DEPTH_COMPONENT24:
+                return 3*pixels;
+            case LOCAL_GL_RGBA8:
+            case LOCAL_GL_DEPTH24_STENCIL8:
+                return 4*pixels;
+            default:
+                break;
+        }
+        NS_ABORT();
+        return 0;
+    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLRENDERBUFFER
@@ -1519,6 +1546,7 @@ public:
 protected:
     WebGLuint mName;
     WebGLenum mInternalFormat;
+    WebGLenum mInternalFormatForGL;
 
     PRBool mDeleted;
     PRBool mHasEverBeenBound;
@@ -2108,6 +2136,8 @@ class WebGLMemoryReporter
     nsIMemoryReporter *mTextureCountReporter;
     nsIMemoryReporter *mBufferMemoryUsageReporter;
     nsIMemoryReporter *mBufferCountReporter;
+    nsIMemoryReporter *mRenderbufferMemoryUsageReporter;
+    nsIMemoryReporter *mRenderbufferCountReporter;
     nsIMemoryReporter *mContextCountReporter;
 
     static WebGLMemoryReporter* UniqueInstance();
@@ -2183,6 +2213,33 @@ class WebGLMemoryReporter
         return result;
     }
     
+    static PLDHashOperator RenderbufferMemoryUsageFunction(const PRUint32&, WebGLRenderbuffer *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->MemoryUsage();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetRenderbufferMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 bufferMemoryUsageForThisContext = 0;
+            contexts[i]->mMapRenderbuffers.EnumerateRead(RenderbufferMemoryUsageFunction, &bufferMemoryUsageForThisContext);
+            result += bufferMemoryUsageForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetRenderbufferCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapRenderbuffers.Count();
+        }
+        return result;
+    }
+
     static PRInt64 GetContextCount() {
         return Contexts().Length();
     }
