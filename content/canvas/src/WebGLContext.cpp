@@ -89,6 +89,20 @@ NS_MEMORY_REPORTER_IMPLEMENT(WebGLTextureCount,
                              WebGLMemoryReporter::GetTextureCount,
                              "Number of WebGL textures.")
 
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferMemoryUsed,
+                             "webgl-buffer-memory",
+                             KIND_OTHER,
+                             UNITS_BYTES,
+                             WebGLMemoryReporter::GetBufferMemoryUsed,
+                             "Memory used by WebGL buffers. The OpenGL implementation is free to store these buffers in either video memory or main memory.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferCount,
+                             "webgl-buffer-count",
+                             KIND_OTHER,
+                             UNITS_COUNT,
+                             WebGLMemoryReporter::GetBufferCount,
+                             "Number of WebGL buffers.")
+
 NS_MEMORY_REPORTER_IMPLEMENT(WebGLContextCount,
                              "webgl-context-count",
                              KIND_OTHER,
@@ -107,10 +121,14 @@ WebGLMemoryReporter* WebGLMemoryReporter::UniqueInstance()
 WebGLMemoryReporter::WebGLMemoryReporter()
     : mTextureMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureMemoryUsed))
     , mTextureCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureCount))
+    , mBufferMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferMemoryUsed))
+    , mBufferCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferCount))
     , mContextCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLContextCount))
 {
     NS_RegisterMemoryReporter(mTextureMemoryUsageReporter);
     NS_RegisterMemoryReporter(mTextureCountReporter);
+    NS_RegisterMemoryReporter(mBufferMemoryUsageReporter);
+    NS_RegisterMemoryReporter(mBufferCountReporter);
     NS_RegisterMemoryReporter(mContextCountReporter);
 }
 
@@ -118,6 +136,8 @@ WebGLMemoryReporter::~WebGLMemoryReporter()
 {
     NS_UnregisterMemoryReporter(mTextureMemoryUsageReporter);
     NS_UnregisterMemoryReporter(mTextureCountReporter);
+    NS_UnregisterMemoryReporter(mBufferMemoryUsageReporter);
+    NS_UnregisterMemoryReporter(mBufferCountReporter);
     NS_UnregisterMemoryReporter(mContextCountReporter);
 }
 
