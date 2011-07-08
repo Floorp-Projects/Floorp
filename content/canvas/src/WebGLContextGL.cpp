@@ -41,6 +41,7 @@
 #include "WebGLContext.h"
 
 #include "nsString.h"
+#include "nsDebug.h"
 
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
@@ -367,6 +368,32 @@ WebGLContext::BlendFuncSeparate(WebGLenum srcRGB, WebGLenum dstRGB,
     return NS_OK;
 }
 
+GLenum WebGLContext::CheckedBufferData(GLenum target,
+                                       GLsizeiptr size,
+                                       const GLvoid *data,
+                                       GLenum usage)
+{
+    WebGLBuffer *boundBuffer = NULL;
+    if (target == LOCAL_GL_ARRAY_BUFFER) {
+        boundBuffer = mBoundArrayBuffer;
+    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
+        boundBuffer = mBoundElementArrayBuffer;
+    }
+    NS_ABORT_IF_FALSE(boundBuffer != nsnull, "no buffer bound for this target");
+    
+    bool sizeChanges = PRUint32(size) != boundBuffer->ByteLength();
+    if (sizeChanges) {
+        UpdateWebGLErrorAndClearGLError();
+        gl->fBufferData(target, size, data, usage);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        return error;
+    } else {
+        gl->fBufferData(target, size, data, usage);
+        return LOCAL_GL_NO_ERROR;
+    }
+}
+
 NS_IMETHODIMP
 WebGLContext::BufferData(PRInt32 dummy)
 {
@@ -406,13 +433,17 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
     MakeContextCurrent();
+    
+    GLenum error = CheckedBufferData(target, size, 0, usage);
+    if (error) {
+        LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+        return NS_OK;
+    }
 
     boundBuffer->SetByteLength(size);
+    boundBuffer->InvalidateCachedMaxElements();
     if (!boundBuffer->ZeroDataIfElementArray())
         return ErrorOutOfMemory("bufferData: out of memory");
-    boundBuffer->InvalidateCachedMaxElements();
-
-    gl->fBufferData(target, size, 0, usage);
 
     return NS_OK;
 }
@@ -438,12 +469,19 @@ WebGLContext::BufferData_buf(WebGLenum target, JSObject *wb, WebGLenum usage)
 
     MakeContextCurrent();
 
+    GLenum error = CheckedBufferData(target,
+                                     JS_GetArrayBufferByteLength(wb),
+                                     JS_GetArrayBufferData(wb),
+                                     usage);
+    if (error) {
+        LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+        return NS_OK;
+    }
+
     boundBuffer->SetByteLength(JS_GetArrayBufferByteLength(wb));
+    boundBuffer->InvalidateCachedMaxElements();
     if (!boundBuffer->CopyDataIfElementArray(JS_GetArrayBufferData(wb)))
         return ErrorOutOfMemory("bufferData: out of memory");
-    boundBuffer->InvalidateCachedMaxElements();
-
-    gl->fBufferData(target, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb), usage);
 
     return NS_OK;
 }
@@ -469,12 +507,19 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
 
     MakeContextCurrent();
 
+    GLenum error = CheckedBufferData(target,
+                                     wa->byteLength,
+                                     wa->data,
+                                     usage);
+    if (error) {
+        LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+        return NS_OK;
+    }
+
     boundBuffer->SetByteLength(wa->byteLength);
+    boundBuffer->InvalidateCachedMaxElements();
     if (!boundBuffer->CopyDataIfElementArray(wa->data))
         return ErrorOutOfMemory("bufferData: out of memory");
-    boundBuffer->InvalidateCachedMaxElements();
-
-    gl->fBufferData(target, wa->byteLength, wa->data, usage);
 
     return NS_OK;
 }
