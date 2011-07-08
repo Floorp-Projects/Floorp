@@ -2139,6 +2139,9 @@ class WebGLMemoryReporter
     nsIMemoryReporter *mBufferCountReporter;
     nsIMemoryReporter *mRenderbufferMemoryUsageReporter;
     nsIMemoryReporter *mRenderbufferCountReporter;
+    nsIMemoryReporter *mShaderSourcesSizeReporter;
+    nsIMemoryReporter *mShaderTranslationLogsSizeReporter;
+    nsIMemoryReporter *mShaderCountReporter;
     nsIMemoryReporter *mContextCountReporter;
 
     static WebGLMemoryReporter* UniqueInstance();
@@ -2257,6 +2260,51 @@ class WebGLMemoryReporter
         PRInt64 result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
             result += contexts[i]->mMapRenderbuffers.Count();
+        }
+        return result;
+    }
+
+    static PLDHashOperator ShaderSourceSizeFunction(const PRUint32&, WebGLShader *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->Source().Length();
+        return PL_DHASH_NEXT;
+    }
+
+    static PLDHashOperator ShaderTranslationLogSizeFunction(const PRUint32&, WebGLShader *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->TranslationLog().Length();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetShaderSourcesSize() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 shaderSourcesSizeForThisContext = 0;
+            contexts[i]->mMapShaders.EnumerateRead(ShaderSourceSizeFunction, &shaderSourcesSizeForThisContext);
+            result += shaderSourcesSizeForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetShaderTranslationLogsSize() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 shaderTranslationLogsSizeForThisContext = 0;
+            contexts[i]->mMapShaders.EnumerateRead(ShaderTranslationLogSizeFunction, &shaderTranslationLogsSizeForThisContext);
+            result += shaderTranslationLogsSizeForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetShaderCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapShaders.Count();
         }
         return result;
     }
