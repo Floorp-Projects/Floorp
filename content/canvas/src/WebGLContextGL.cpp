@@ -3143,8 +3143,6 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
     if (!mBoundRenderbuffer || !mBoundRenderbuffer->GLName())
         return ErrorInvalidOperation("renderbufferStorage called on renderbuffer 0");
 
-    MakeContextCurrent();
-
     // certain OpenGL ES renderbuffer formats may not exist on desktop OpenGL
     WebGLenum internalformatForGL = internalformat;
 
@@ -3180,7 +3178,23 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", internalformat);
     }
 
-    gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+    MakeContextCurrent();
+
+    bool sizeChanges = width != mBoundRenderbuffer->width() ||
+                       height != mBoundRenderbuffer->height() ||
+                       internalformat != mBoundRenderbuffer->InternalFormat();
+    if (sizeChanges) {
+        UpdateWebGLErrorAndClearGLError();
+        gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        if (error) {
+            LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+            return NS_OK;
+        }
+    } else {
+        gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+    }
 
     mBoundRenderbuffer->SetInternalFormat(internalformat);
     mBoundRenderbuffer->SetInternalFormatForGL(internalformatForGL);
