@@ -4118,11 +4118,19 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("shaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
+    
+    const nsPromiseFlatString& flatSource = PromiseFlatString(source);
 
-    if (!NS_IsAscii(nsPromiseFlatString(source).get()))
+    if (!NS_IsAscii(flatSource.get()))
         return ErrorInvalidValue("shaderSource: non-ascii characters found in source");
 
-    shader->SetSource(NS_LossyConvertUTF16toASCII(source));
+    const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
+    
+    const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
+    if (sourceCString.Length() > maxSourceLength)
+        return ErrorInvalidValue("shaderSource: source has more than %d characters", maxSourceLength);
+    
+    shader->SetSource(sourceCString);
 
     shader->SetNeedsTranslation();
 
