@@ -725,7 +725,7 @@ public:
         WebGLContextBoundObject(context),
         mName(name), mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE),
         mByteLength(0), mTarget(LOCAL_GL_NONE), mData(nsnull)
-    { }
+    {}
 
     ~WebGLBuffer() {
         Delete();
@@ -2106,6 +2106,8 @@ class WebGLMemoryReporter
     
     nsIMemoryReporter *mTextureMemoryUsageReporter;
     nsIMemoryReporter *mTextureCountReporter;
+    nsIMemoryReporter *mBufferMemoryUsageReporter;
+    nsIMemoryReporter *mBufferCountReporter;
     nsIMemoryReporter *mContextCountReporter;
 
     static WebGLMemoryReporter* UniqueInstance();
@@ -2150,6 +2152,33 @@ class WebGLMemoryReporter
         PRInt64 result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
             result += contexts[i]->mMapTextures.Count();
+        }
+        return result;
+    }
+    
+    static PLDHashOperator BufferMemoryUsageFunction(const PRUint32&, WebGLBuffer *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->ByteLength();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetBufferMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 bufferMemoryUsageForThisContext = 0;
+            contexts[i]->mMapBuffers.EnumerateRead(BufferMemoryUsageFunction, &bufferMemoryUsageForThisContext);
+            result += bufferMemoryUsageForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetBufferCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapBuffers.Count();
         }
         return result;
     }
