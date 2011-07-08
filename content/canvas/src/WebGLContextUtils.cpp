@@ -190,3 +190,24 @@ WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
     return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);
 }
 
+const char *
+WebGLContext::ErrorName(GLenum error)
+{
+    switch(error) {
+        case LOCAL_GL_INVALID_ENUM:
+            return "INVALID_ENUM";
+        case LOCAL_GL_INVALID_OPERATION:
+            return "INVALID_OPERATION";
+        case LOCAL_GL_INVALID_VALUE:
+            return "INVALID_VALUE";
+        case LOCAL_GL_OUT_OF_MEMORY:
+            return "OUT_OF_MEMORY";
+        case LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION:
+            return "INVALID_FRAMEBUFFER_OPERATION";
+        case LOCAL_GL_NO_ERROR:
+            return "NO_ERROR";
+        default:
+            NS_ABORT();
+            return "[unknown WebGL error!]";
+    }
+};
