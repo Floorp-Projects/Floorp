@@ -370,6 +370,8 @@ public:
         return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
     }
     nsresult ErrorOutOfMemory(const char *fmt = 0, ...);
+    
+    const char *ErrorName(GLenum error);
 
     WebGLTexture *activeBoundTextureForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
