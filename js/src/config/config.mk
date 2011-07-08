@@ -677,26 +677,29 @@ endif # NSINSTALL_BIN
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2, $(OS_ARCH)))
 INSTALL		= $(NSINSTALL)
 else
-ifeq ($(NSDISTMODE),copy)
-# copy files, but preserve source mtime
-INSTALL		= $(NSINSTALL) -t
-else
-ifeq ($(NSDISTMODE),absolute_symlink)
-# install using absolute symbolic links
+
 ifeq ($(OS_ARCH),Darwin)
-INSTALL		= $(NSINSTALL) -L $(PWD)
+INSTALL_PWD     = $(PWD)
 else
-INSTALL		= $(NSINSTALL) -L `$(NFSPWD)`
+INSTALL_PWD     = `$(NFSPWD)`
 endif # Darwin
-else
-# install using relative symbolic links
-INSTALL		= $(NSINSTALL) -R
-endif # absolute_symlink
-endif # copy
+
+# This isn't laid out as conditional directives so that NSDISTMODE can be
+# target-specific.
+INSTALL         = $(if $(filter copy, $(NSDISTMODE)), $(NSINSTALL) -t, $(if $(filter absolute_symlink, $(NSDISTMODE)), $(NSINSTALL) -L $(INSTALL_PWD), $(NSINSTALL) -R))
+
 endif # WINNT/OS2
 
 # Use nsinstall in copy mode to install files on the system
 SYSINSTALL	= $(NSINSTALL) -t
+
+# Directory nsinstall. Windows and OS/2 nsinstall can't recursively copy
+# directories.
+ifneq (,$(filter WINNT os2-emx,$(HOST_OS_ARCH)))
+DIR_INSTALL = $(PYTHON) $(topsrcdir)/config/nsinstall.py
+else
+DIR_INSTALL = $(INSTALL)
+endif # WINNT/OS2
 
 #
 # Localization build automation
