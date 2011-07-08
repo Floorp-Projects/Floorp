@@ -36,8 +36,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-const Ci = Components.interfaces;
-
 const webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
 
 addMessageListener("WebNavigation:LoadURI", function(message) {
