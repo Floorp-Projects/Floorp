@@ -649,9 +649,9 @@ ImageDocument::CreateSyntheticDocument()
   // This is bad during printing, it means tall image frames won't know
   // the size of the paper and cannot break into continuations along
   // multiple pages.
-  Element* head = GetHeadElement();
-  if (!head) {
-    NS_WARNING("no head on image document!");
+  Element* body = GetBodyElement();
+  if (!body) {
+    NS_WARNING("no body on image document!");
     return NS_ERROR_FAILURE;
   }
 
@@ -665,16 +665,10 @@ ImageDocument::CreateSyntheticDocument()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  styleContent->SetInnerHTML(NS_LITERAL_STRING("img { display: block; }"));
-  head->AppendChildTo(styleContent, PR_FALSE);
+  styleContent->SetTextContent(NS_LITERAL_STRING("img { display: block; }"));
+  body->AppendChildTo(styleContent, PR_FALSE);
 
   // Add the image element
-  Element* body = GetBodyElement();
-  if (!body) {
-    NS_WARNING("no body on image document!");
-    return NS_ERROR_FAILURE;
-  }
-
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::img, nsnull,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
