@@ -2230,11 +2230,11 @@ WebGLContext::GetError(WebGLenum *_retval)
     // real GL error.
     WebGLenum err = gl->GetAndClearError();
 
-    // mSynthesizedGLError has the first error that occurred,
+    // mWebGLError has the first error that occurred,
     // whether synthesized or real; if it's not NO_ERROR, use it.
-    if (mSynthesizedGLError != LOCAL_GL_NO_ERROR) {
-        err = mSynthesizedGLError;
-        mSynthesizedGLError = LOCAL_GL_NO_ERROR;
+    if (mWebGLError != LOCAL_GL_NO_ERROR) {
+        err = mWebGLError;
+        mWebGLError = LOCAL_GL_NO_ERROR;
     }
 
     *_retval = err;
