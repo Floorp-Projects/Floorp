@@ -52,9 +52,7 @@ LIBXUL_LIBRARY = 1
 
 
 ifdef MOZ_ENABLE_GTK2
-ifdef MOZ_ENABLE_GCONF
 DIRS		= gconf
-endif
 endif
 
 CPPSRCS =   \

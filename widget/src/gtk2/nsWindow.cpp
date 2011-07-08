@@ -4229,7 +4229,6 @@ nsWindow::Create(nsIWidget        *aParent,
         Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
 
 #ifdef ACCESSIBILITY
-#ifdef MOZ_ENABLE_GCONF
     nsresult rv;
     if (!sAccessibilityChecked) {
         sAccessibilityChecked = PR_TRUE;
@@ -4251,10 +4250,9 @@ nsWindow::Create(nsIWidget        *aParent,
                 sysPrefService->GetBoolPref(sAccessibilityKey,
                                             &sAccessibilityEnabled);
             }
+
         }
     }
-#endif
-
 #endif
 
 #ifdef MOZ_DFB
