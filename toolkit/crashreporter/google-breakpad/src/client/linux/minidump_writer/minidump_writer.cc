@@ -418,7 +418,8 @@ class MinidumpWriter {
   MinidumpWriter(const char* filename,
                  pid_t crashing_pid,
                  const ExceptionHandler::CrashContext* context,
-                 const MappingList& mappings)
+                 const MappingList& mappings,
+                 const AppMemoryList& appmem)
       : filename_(filename),
         siginfo_(&context->siginfo),
         ucontext_(&context->context),
@@ -432,14 +433,16 @@ class MinidumpWriter {
         crashing_tid_pc_(0),
         dumper_(crashing_pid),
         memory_blocks_(dumper_.allocator()),
-        mapping_info_(mappings) {
+        mapping_info_(mappings),
+        app_memory_info_(appmem) {
   }
 
   // case (2) above
   MinidumpWriter(const char* filename,
                  pid_t pid,
                  pid_t blame_thread,
-                 const MappingList& mappings)
+                 const MappingList& mappings,
+                 const AppMemoryList& appmem)
       : filename_(filename),
         siginfo_(NULL),         // we fill this in if we find blame_thread
         ucontext_(NULL),
@@ -448,7 +451,8 @@ class MinidumpWriter {
         crashing_tid_pc_(0),    // set if we find blame_thread
         dumper_(pid),
         memory_blocks_(dumper_.allocator()),
-        mapping_info_(mappings) {
+        mapping_info_(mappings),
+        app_memory_info_(appmem) {
   }
 
   bool Init() {
@@ -514,6 +518,9 @@ class MinidumpWriter {
     if (!WriteMappings(&dirent))
       return false;
     dir.CopyIndex(dir_index++, &dirent);
+
+    if (!WriteAppMemory())
+      return false;
 
     if (!WriteMemoryListStream(&dirent))
       return false;
@@ -819,6 +826,28 @@ class MinidumpWriter {
       }
 
       list.CopyIndexAfterObject(i, &thread, sizeof(thread));
+    }
+
+    return true;
+  }
+
+  bool WriteAppMemory() {
+    for (AppMemoryList::const_iterator iter = app_memory_info_.begin();
+         iter != app_memory_info_.end();
+         ++iter) {
+      uint8_t* data_copy =
+	(uint8_t*) dumper_.allocator()->Alloc(iter->length);
+      dumper_.CopyFromProcess(data_copy, crashing_tid_, iter->ptr,
+			      iter->length);
+
+      UntypedMDRVA memory(&minidump_writer_);
+      if (!memory.Allocate(iter->length))
+        return false;
+      memory.Copy(data_copy, iter->length);
+      MDMemoryDescriptor desc;
+      desc.start_of_memory_range = (uintptr_t)iter->ptr;
+      desc.memory = memory.location();
+      memory_blocks_.push_back(desc);
     }
 
     return true;
@@ -1362,22 +1391,27 @@ popline:
   wasteful_vector<MDMemoryDescriptor> memory_blocks_;
   // Additional information about some mappings provided by the caller.
   const MappingList& mapping_info_;
+  // Callers can request additional memory regions to be included in
+  // the dump.
+  const AppMemoryList& app_memory_info_;
 };
 
 bool WriteMinidump(const char* filename, pid_t crashing_process,
                    const void* blob, size_t blob_size) {
   MappingList m;
-  return WriteMinidump(filename, crashing_process, blob, blob_size, m);
+  AppMemoryList a;
+  return WriteMinidump(filename, crashing_process, blob, blob_size, m, a);
 }
 
 bool WriteMinidump(const char* filename, pid_t crashing_process,
                    const void* blob, size_t blob_size,
-                   const MappingList& mappings) {
+                   const MappingList& mappings,
+                   const AppMemoryList& appmem) {
   if (blob_size != sizeof(ExceptionHandler::CrashContext))
     return false;
   const ExceptionHandler::CrashContext* context =
       reinterpret_cast<const ExceptionHandler::CrashContext*>(blob);
-  MinidumpWriter writer(filename, crashing_process, context, mappings);
+  MinidumpWriter writer(filename, crashing_process, context, mappings, appmem);
   if (!writer.Init())
     return false;
   return writer.Dump();
@@ -1387,7 +1421,8 @@ bool WriteMinidump(const char* filename, pid_t process,
                    pid_t process_blamed_thread) {
   //TODO: support mappings here
   MappingList m;
-  MinidumpWriter writer(filename, process, process_blamed_thread, m);
+  AppMemoryList a;
+  MinidumpWriter writer(filename, process, process_blamed_thread, m, a);
   if (!writer.Init())
     return false;
   return writer.Dump();

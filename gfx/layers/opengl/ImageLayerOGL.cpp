@@ -938,20 +938,20 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 {
   mOGLManager->MakeCurrent();
 
-  LayerProgram* program;
-
   if (mTexImage) {
-    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
     ColorTextureLayerProgram *colorProgram =
       mOGLManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
 
-    ApplyFilter(mFilter);
-
     colorProgram->Activate();
     colorProgram->SetTextureUnit(0);
-    colorProgram->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
-    program = colorProgram;
+
+    mTexImage->BeginTileIteration();
+    do {
+      TextureImage::ScopedBindTexture texBind(mTexImage, LOCAL_GL_TEXTURE0);
+      ApplyFilter(mFilter);
+      colorProgram->SetLayerQuadRect(mTexImage->GetTileRect());
+      mOGLManager->BindAndDrawQuad(colorProgram);
+    } while (mTexImage->NextTile());
   } else {
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[0].GetTextureID());
@@ -962,7 +962,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE2);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[2].GetTextureID());
     ApplyFilter(mFilter);
-    
+
     YCbCrTextureLayerProgram *yuvProgram = mOGLManager->GetYCbCrLayerProgram();
 
     yuvProgram->Activate();
@@ -970,24 +970,14 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                            mPictureRect.width,
                                            mPictureRect.height));
     yuvProgram->SetYCbCrTextureUnits(0, 1, 2);
+    yuvProgram->SetLayerTransform(GetEffectiveTransform());
+    yuvProgram->SetLayerOpacity(GetEffectiveOpacity());
+    yuvProgram->SetRenderOffset(aOffset);
 
-    program = yuvProgram;
-    program->SetLayerTransform(GetEffectiveTransform());
-    program->SetLayerOpacity(GetEffectiveOpacity());
-    program->SetRenderOffset(aOffset);
-
-    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+    mOGLManager->BindAndDrawQuadWithTextureRect(yuvProgram,
                                                 mPictureRect,
                                                 nsIntSize(mSize.width, mSize.height));
-
-    return;
-  }
-
-  program->SetLayerTransform(GetEffectiveTransform());
-  program->SetLayerOpacity(GetEffectiveOpacity());
-  program->SetRenderOffset(aOffset);
-
-  mOGLManager->BindAndDrawQuad(program);
+ }
 }
 
 

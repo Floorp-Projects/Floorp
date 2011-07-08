@@ -802,7 +802,7 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
         if (isPlainMochitest) {
             SimpleTest.ok(false, funcIdentifier, message);
         } else {
-            dump(funcIdentifier + " " + message);
+            dump(funcIdentifier + " " + message + "\n");
         }
     }
     logError("An error occurred: " + errorMsg + " at " + url + ":" + lineNumber);

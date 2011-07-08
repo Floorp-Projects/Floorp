@@ -1,5 +1,11 @@
 function test() {
   waitForExplicitFinish();
+
+  Services.prefs.setBoolPref(allTabs.prefName, true);
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref(allTabs.prefName);
+  });
+
   allTabs.init();
   nextSequence();
 }

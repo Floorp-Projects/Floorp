@@ -153,6 +153,8 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, js::Value *vp);
 
+    virtual void trace(JSTracer *trc, JSObject *wrapper);
+
     static JSCrossCompartmentWrapper singleton;
 };
 

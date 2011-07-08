@@ -1311,6 +1311,25 @@ setting {
   z-index: 500;
 }
 
+/* openwebapps capabilities ------------------------------------------------------------ */
+.webapps-noperm description.webapps-perm-requested-hint {
+  display: block;
+}
+
+.webapps-perm description.webapps-perm-requested-hint {
+  display: none;
+}
+
+#webapps-icon {
+  width: 32px;
+  height: 32px;
+  margin: @margin_normal@;
+}
+
+#webapps-title {
+  -moz-margin-end: @margin_normal@;
+}
+
 /* Android menu ------------------------------------------------------------ */
 #appmenu {
   background: @color_background_default@;

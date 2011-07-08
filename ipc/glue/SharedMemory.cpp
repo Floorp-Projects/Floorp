@@ -40,6 +40,7 @@
 
 #include <math.h>
 
+#include "nsString.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/ipc/SharedMemory.h"
 

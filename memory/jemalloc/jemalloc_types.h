@@ -73,7 +73,7 @@ typedef struct {
 	 */
 	size_t	mapped;		/* Bytes mapped (not necessarily committed). */
 	size_t	committed;	/* Bytes committed (readable/writable). */
-	size_t	allocated;	/* Bytes allocted (in use by application). */
+	size_t	allocated;	/* Bytes allocated (in use by application). */
 	size_t	dirty;		/* Bytes dirty (committed unused pages). */
 } jemalloc_stats_t;
 
