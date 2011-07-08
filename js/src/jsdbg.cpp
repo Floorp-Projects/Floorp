@@ -414,7 +414,30 @@ Debugger::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
 }
 
 void
-Debugger::slowPathLeaveStackFrame(JSContext *cx)
+Debugger::slowPathOnEnterFrame(JSContext *cx)
+{
+    // Build the list of recipients.
+    AutoValueVector triggered(cx);
+    GlobalObject *global = cx->fp()->scopeChain().getGlobal();
+    if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
+        for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
+            Debugger *dbg = *p;
+            JS_ASSERT(dbg->observesFrame(cx->fp()));
+            if (dbg->observesEnterFrame() && !triggered.append(ObjectValue(*dbg->toJSObject())))
+                return;
+        }
+    }
+
+    // Deliver the event, checking again as in dispatchHook.
+    for (Value *p = triggered.begin(); p != triggered.end(); p++) {
+        Debugger *dbg = Debugger::fromJSObject(&p->toObject());
+        if (dbg->debuggees.has(global) && dbg->observesEnterFrame())
+            dbg->handleEnterFrame(cx);
+    }
+}
+
+void
+Debugger::slowPathOnLeaveFrame(JSContext *cx)
 {
     StackFrame *fp = cx->fp();
     GlobalObject *global = fp->scopeChain().getGlobal();
@@ -675,6 +698,24 @@ Debugger::handleThrow(JSContext *cx, Value *vp)
     if (st == JSTRAP_CONTINUE)
         cx->setPendingException(exc);
     return st;
+}
+
+void
+Debugger::handleEnterFrame(JSContext *cx)
+{
+    StackFrame *fp = cx->fp();
+    AutoCompartment ac(cx, hooksObject);
+    if (!ac.enter())
+        return;
+
+    Value argv[1];
+    if (!getScriptFrame(cx, fp, &argv[0])) {
+        handleUncaughtException(ac, NULL, false);
+        return;
+    }
+    Value rv;
+    if (!CallMethodIfPresent(cx, hooksObject, "enterFrame", 1, argv, &rv))
+        handleUncaughtException(ac, NULL, true);
 }
 
 void
@@ -1082,7 +1123,7 @@ Debugger::setHooks(JSContext *cx, uintN argc, Value *vp)
         return ReportObjectRequired(cx);
     JSObject *hooksobj = &vp[2].toObject();
 
-    bool hasDebuggerHandler, hasThrow, hasNewScript;
+    bool hasDebuggerHandler, hasThrow, hasNewScript, hasEnterFrame;
     JSBool found;
     if (!JS_HasProperty(cx, hooksobj, "debuggerHandler", &found))
         return false;
@@ -1093,11 +1134,15 @@ Debugger::setHooks(JSContext *cx, uintN argc, Value *vp)
     if (!JS_HasProperty(cx, hooksobj, "newScript", &found))
         return false;
     hasNewScript = !!found;
+    if (!JS_HasProperty(cx, hooksobj, "enterFrame", &found))
+        return false;
+    hasEnterFrame = !!found;
 
     dbg->hooksObject = hooksobj;
     dbg->hasDebuggerHandler = hasDebuggerHandler;
     dbg->hasThrowHandler = hasThrow;
     dbg->hasNewScriptHandler = hasNewScript;
+    dbg->hasEnterFrameHandler = hasEnterFrame;
     vp->setUndefined();
     return true;
 }
@@ -1412,13 +1457,13 @@ Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
     JS_ASSERT(debuggees.has(global));
     JS_ASSERT_IF(debugEnum, debugEnum->front() == global);
 
-    // FIXME Debugger::slowPathLeaveStackFrame needs to kill all Debugger.Frame
+    // FIXME Debugger::slowPathOnLeaveFrame needs to kill all Debugger.Frame
     // objects referring to a particular js::StackFrame. This is hard if
     // Debugger objects that are no longer debugging the relevant global might
     // have live Frame objects. So we take the easy way out and kill them
     // here. This is a bug, since it's observable and contrary to the spec. One
     // possible fix would be to put such objects into a compartment-wide bag
-    // which slowPathLeaveStackFrame would have to examine.
+    // which slowPathOnLeaveFrame would have to examine.
     for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
         js::StackFrame *fp = e.front().key;
         if (fp->scopeChain().getGlobal() == global) {
