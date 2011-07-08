@@ -2135,6 +2135,7 @@ class WebGLMemoryReporter
     nsIMemoryReporter *mTextureMemoryUsageReporter;
     nsIMemoryReporter *mTextureCountReporter;
     nsIMemoryReporter *mBufferMemoryUsageReporter;
+    nsIMemoryReporter *mBufferCacheMemoryUsageReporter;
     nsIMemoryReporter *mBufferCountReporter;
     nsIMemoryReporter *mRenderbufferMemoryUsageReporter;
     nsIMemoryReporter *mRenderbufferCountReporter;
@@ -2204,6 +2205,26 @@ class WebGLMemoryReporter
         return result;
     }
     
+    static PLDHashOperator BufferCacheMemoryUsageFunction(const PRUint32&, WebGLBuffer *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        // element array buffers are cached in the WebGL implementation. Other buffers aren't.
+        if (aValue->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
+          *result += aValue->ByteLength();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetBufferCacheMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 bufferCacheMemoryUsageForThisContext = 0;
+            contexts[i]->mMapBuffers.EnumerateRead(BufferCacheMemoryUsageFunction, &bufferCacheMemoryUsageForThisContext);
+            result += bufferCacheMemoryUsageForThisContext;
+        }
+        return result;
+    }
+
     static PRInt64 GetBufferCount() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;

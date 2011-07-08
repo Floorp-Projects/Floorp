@@ -96,6 +96,13 @@ NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferMemoryUsed,
                              WebGLMemoryReporter::GetBufferMemoryUsed,
                              "Memory used by WebGL buffers. The OpenGL implementation is free to store these buffers in either video memory or main memory. This measurement is only a lower bound, actual memory usage may be higher for example if the storage is strided.")
 
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferCacheMemoryUsed,
+                             "webgl-buffer-cache-memory",
+                             KIND_HEAP,
+                             UNITS_BYTES,
+                             WebGLMemoryReporter::GetBufferCacheMemoryUsed,
+                             "Memory used by WebGL buffer caches. The WebGL implementation caches the contents of element array buffers only. This adds up with the webgl-buffer-memory value, but contrary to it, this one represents bytes on the heap, not managed by OpenGL.")
+
 NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferCount,
                              "webgl-buffer-count",
                              KIND_OTHER,
@@ -136,6 +143,7 @@ WebGLMemoryReporter::WebGLMemoryReporter()
     : mTextureMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureMemoryUsed))
     , mTextureCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureCount))
     , mBufferMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferMemoryUsed))
+    , mBufferCacheMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferCacheMemoryUsed))
     , mBufferCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferCount))
     , mRenderbufferMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLRenderbufferMemoryUsed))
     , mRenderbufferCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLRenderbufferCount))
@@ -144,6 +152,7 @@ WebGLMemoryReporter::WebGLMemoryReporter()
     NS_RegisterMemoryReporter(mTextureMemoryUsageReporter);
     NS_RegisterMemoryReporter(mTextureCountReporter);
     NS_RegisterMemoryReporter(mBufferMemoryUsageReporter);
+    NS_RegisterMemoryReporter(mBufferCacheMemoryUsageReporter);    
     NS_RegisterMemoryReporter(mBufferCountReporter);
     NS_RegisterMemoryReporter(mRenderbufferMemoryUsageReporter);
     NS_RegisterMemoryReporter(mRenderbufferCountReporter);
@@ -155,6 +164,7 @@ WebGLMemoryReporter::~WebGLMemoryReporter()
     NS_UnregisterMemoryReporter(mTextureMemoryUsageReporter);
     NS_UnregisterMemoryReporter(mTextureCountReporter);
     NS_UnregisterMemoryReporter(mBufferMemoryUsageReporter);
+    NS_UnregisterMemoryReporter(mBufferCacheMemoryUsageReporter);
     NS_UnregisterMemoryReporter(mBufferCountReporter);
     NS_UnregisterMemoryReporter(mRenderbufferMemoryUsageReporter);
     NS_UnregisterMemoryReporter(mRenderbufferCountReporter);
