@@ -44,15 +44,9 @@
 class nsDOMMemoryReporter: public nsIMemoryReporter {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
   static void Init();
-
-  NS_IMETHOD GetProcess(char** aProcess);
-  NS_IMETHOD GetPath(char** aMemoryPath);
-  NS_IMETHOD GetKind(int* aKnd);
-  NS_IMETHOD GetDescription(char** aDescription);
-  NS_IMETHOD GetUnits(PRInt32* aUnits);
-  NS_IMETHOD GetAmount(PRInt64* aAmount);
 
 private:
   // Protect ctor, use Init() instead.

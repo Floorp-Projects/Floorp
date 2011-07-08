@@ -363,11 +363,11 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
       PRInt32 units;
       PRInt64 amount;
       nsCString desc;
-      r->GetPath(getter_Copies(path));
+      r->GetPath(path);
       r->GetKind(&kind);
       r->GetUnits(&units);
       r->GetAmount(&amount);
-      r->GetDescription(getter_Copies(desc));
+      r->GetDescription(desc);
 
       MemoryReport memreport(process, path, kind, units, amount, desc);
       reports.AppendElement(memreport);
