@@ -722,6 +722,10 @@ public:
         }
     }
 
+    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
+        return width() == other.width() && height() == other.height(); 
+    }
+
 protected:
     WebGLsizei mWidth;
     WebGLsizei mHeight;
@@ -1861,7 +1865,14 @@ public:
             // has at least two among Depth, Stencil, DepthStencil
             return PR_TRUE;
         }
-
+        
+        if (!mDepthAttachment.IsNull() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment))
+            return PR_TRUE;
+        if (!mStencilAttachment.IsNull() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment))
+            return PR_TRUE;
+        if (!mDepthStencilAttachment.IsNull() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment))
+            return PR_TRUE;
+        
         else return PR_FALSE;
     }
 
