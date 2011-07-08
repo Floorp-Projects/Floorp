@@ -1692,6 +1692,50 @@ DebuggerScript_checkThis(JSContext *cx, Value *vp, const char *fnname, bool chec
 #define THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, fnname, obj, script)             \
     THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, vp, fnname, obj, script, true)
 
+static JSBool
+DebuggerScript_getUrl(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get url", obj, script);
+
+    JSString *str = js_NewStringCopyZ(cx, script->filename);
+    if (!str)
+        return false;
+    vp->setString(str);
+    return true;
+}
+
+static JSBool
+DebuggerScript_getStartLine(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get startLine", obj, script);
+    vp->setNumber(script->lineno);
+    return true;
+}
+
+static JSBool
+DebuggerScript_getLineCount(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get lineCount", obj, script);
+
+    // A script's line count is not stored, so we calculate it by reading all
+    // the source notes for the whole script.
+    size_t line = script->lineno, maxLine = line;
+    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+        JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+        if (type == SRC_SETLINE)
+            line = size_t(js_GetSrcNoteOffset(sn, 0));
+        else if (type == SRC_NEWLINE)
+            line++;
+        else
+            continue;
+
+        if (line > maxLine)
+            maxLine = line;
+    }
+
+    vp->setNumber(jsdouble(maxLine + 1 - script->lineno));
+    return true;
+}
 
 static JSBool
 DebuggerScript_getLive(JSContext *cx, uintN argc, Value *vp)
@@ -2114,6 +2158,9 @@ DebuggerScript_construct(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSPropertySpec DebuggerScript_properties[] = {
+    JS_PSG("url", DebuggerScript_getUrl, 0),
+    JS_PSG("startLine", DebuggerScript_getStartLine, 0),
+    JS_PSG("lineCount", DebuggerScript_getLineCount, 0),
     JS_PSG("live", DebuggerScript_getLive, 0),
     JS_PS_END
 };
