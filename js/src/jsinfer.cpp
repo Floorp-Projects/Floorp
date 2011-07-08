@@ -516,6 +516,8 @@ public:
     }
 
     TypeObject * persistentObject() { return object; }
+
+    size_t allocatedSize() { return sizeof(TypeConstraintBaseSubset); }
 };
 
 void
@@ -556,6 +558,8 @@ public:
     void newObjectState(JSContext *cx, TypeObject*, bool) { checkAnalysis(cx); }
 
     bool condensed() { return true; }
+
+    size_t allocatedSize() { return sizeof(TypeConstraintCondensed); }
 };
 
 bool
@@ -4288,6 +4292,8 @@ class TypeIntermediateClearDefinite : public TypeIntermediate
     {
         return object->marked;
     }
+
+    size_t allocatedSize() { return sizeof(TypeIntermediateClearDefinite); }
 };
 
 static bool
@@ -4829,6 +4835,8 @@ class TypeIntermediatePushed : public TypeIntermediate
 
         return false;
     }
+
+    size_t allocatedSize() { return sizeof(TypeIntermediatePushed); }
 };
 
 void
@@ -5633,4 +5641,77 @@ JSScript::sweepAnalysis(JSContext *cx)
          */
         analysis_ = NULL;
     }
+}
+
+size_t
+TypeSet::dynamicSize()
+{
+    size_t res = 0;
+
+    if (objectCount >= 2)
+        res += HashSetCapacity(objectCount) * sizeof(TypeObject *);
+
+    /* Get the total size of any heap-allocated constraints on this set. */
+    TypeConstraint *constraint = constraintList;
+    while (constraint) {
+        res += constraint->allocatedSize();
+        constraint = constraint->next;
+    }
+
+    return res;
+}
+
+static void
+GetObjectListMemoryStats(TypeObject *object, JSCompartment::TypeInferenceMemoryStats *stats)
+{
+    while (object) {
+        stats->objectMain += sizeof(TypeObject);
+
+        if (object->propertyCount >= 2)
+            stats->objectMain += HashSetCapacity(object->propertyCount) * sizeof(Property *);
+
+        unsigned count = object->getPropertyCount();
+        for (unsigned i = 0; i < count; i++) {
+            Property *prop = object->getProperty(i);
+            if (prop) {
+                stats->objectMain += sizeof(Property);
+                stats->objectSets += prop->types.dynamicSize();
+            }
+        }
+
+        object = object->next;
+    }
+}
+
+static void
+GetScriptMemoryStats(JSScript *script, JSCompartment::TypeInferenceMemoryStats *stats)
+{
+    GetObjectListMemoryStats(script->types.typeObjects, stats);
+
+    if (!script->types.typeArray)
+        return;
+
+    unsigned count = script->types.numTypeSets();
+    stats->scriptMain += count * sizeof(TypeSet);
+    for (unsigned i = 0; i < count; i++)
+        stats->scriptSets += script->types.typeArray[i].dynamicSize();
+
+    TypeIntermediate *intermediate = script->types.intermediateList;
+    while (intermediate) {
+        stats->scriptMain += intermediate->allocatedSize();
+        intermediate = intermediate->next;
+    }
+}
+
+void
+JSCompartment::getTypeInferenceMemoryStats(TypeInferenceMemoryStats *stats)
+{
+    GetObjectListMemoryStats(types.objects, stats);
+
+    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        GetScriptMemoryStats(script, stats);
+    }
+
+    stats->poolMain += ArenaAllocatedSize(pool);
 }

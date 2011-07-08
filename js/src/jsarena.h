@@ -286,6 +286,18 @@ ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c, const D &d, cons
     return v ? new (v) T(a, b, c, d, e) : NULL;
 }
 
+inline uintN
+ArenaAllocatedSize(const JSArenaPool &pool)
+{
+    uintN res = 0;
+    const JSArena *a = &pool.first;
+    while (a) {
+        res += (a->limit - (jsuword)a);
+        a = a->next;
+    }
+    return res;
+}
+
 } /* namespace js */
 
 #endif /* __cplusplus */
