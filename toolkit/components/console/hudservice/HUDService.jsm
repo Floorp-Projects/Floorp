@@ -4037,8 +4037,6 @@ function findCompletionBeginning(aStr)
 function JSPropertyProvider(aScope, aInputValue)
 {
   let obj = unwrap(aScope);
-  // Store the scope object, since obj will be modified later on.
-  let win = obj;
 
   // Analyse the aInputValue and find the beginning of the last part that
   // should be completed.
@@ -4077,7 +4075,7 @@ function JSPropertyProvider(aScope, aInputValue)
 
       // Check if prop is a getter function on obj. Functions can change other
       // stuff so we can't execute them to get the next object. Stop here.
-      if (isNonNativeGetter(win, obj, prop)) {
+      if (isNonNativeGetter(obj, prop)) {
         return null;
       }
       try {
