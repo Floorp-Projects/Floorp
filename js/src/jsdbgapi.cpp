@@ -112,6 +112,8 @@ namespace js {
 void
 ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
 {
+    JS_ASSERT(fp == cx->fp());
+
     if (fp->isFramePushedByExecute()) {
         if (JSInterpreterHook hook = cx->debugHooks->executeHook)
             fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->executeHookData));
@@ -119,6 +121,7 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
         if (JSInterpreterHook hook = cx->debugHooks->callHook)
             fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->callHookData));
     }
+    Debugger::onEnterFrame(cx);
 }
 
 bool
@@ -136,7 +139,7 @@ ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
                 hook(cx, Jsvalify(fp), false, &ok, hookData);
         }
     }
-    Debugger::leaveStackFrame(cx);
+    Debugger::onLeaveFrame(cx);
 
     return ok;
 }

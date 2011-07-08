@@ -74,12 +74,13 @@ class Debugger {
     bool hasDebuggerHandler;            // hooks.debuggerHandler
     bool hasThrowHandler;               // hooks.throw
     bool hasNewScriptHandler;           // hooks.newScript
+    bool hasEnterFrameHandler;          // hooks.enterFrame
 
     JSCList breakpoints;                // cyclic list of all js::Breakpoints in this debugger
 
     // Weak references to stack frames that are currently on the stack and thus
     // necessarily alive. We drop them as soon as they leave the stack (see
-    // slowPathLeaveStackFrame) and in removeDebuggee.
+    // slowPathOnLeaveFrame) and in removeDebuggee.
     typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, SystemAllocPolicy>
         FrameMap;
     FrameMap frames;
@@ -159,7 +160,8 @@ class Debugger {
 
     inline bool hasAnyLiveHooks() const;
 
-    static void slowPathLeaveStackFrame(JSContext *cx);
+    static void slowPathOnEnterFrame(JSContext *cx);
+    static void slowPathOnLeaveFrame(JSContext *cx);
     static void slowPathOnNewScript(JSContext *cx, JSScript *script, JSObject *obj,
                                     NewScriptKind kind);
     static void slowPathOnDestroyScript(JSScript *script);
@@ -176,6 +178,8 @@ class Debugger {
     bool observesThrow() const;
     JSTrapStatus handleThrow(JSContext *cx, Value *vp);
 
+    void handleEnterFrame(JSContext *cx);
+
     // Allocate and initialize a Debugger.Script instance whose referent is |script| and
     // whose holder is |obj|. If |obj| is NULL, this creates a Debugger.Script whose holder
     // is null, for non-held scripts.
@@ -187,7 +191,8 @@ class Debugger {
     // Receive a "new script" event from the engine. A new script was compiled
     // or deserialized. If kind is NewHeldScript, obj is the holder
     // object. Otherwise kind is NewNonHeldScript and obj is an arbitrary
-    // object in the same global as the non-held function being called???wtf.
+    // object in the same global as the scope in which the script is being
+    // evaluated.
     void handleNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind);
 
     // Remove script from our table of non-held scripts.
@@ -227,7 +232,8 @@ class Debugger {
     static void detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
 
-    static inline void leaveStackFrame(JSContext *cx);
+    static inline void onEnterFrame(JSContext *cx);
+    static inline void onLeaveFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
     static inline JSTrapStatus onThrow(JSContext *cx, js::Value *vp);
     static inline void onNewScript(JSContext *cx, JSScript *script, JSObject *obj,
@@ -237,6 +243,7 @@ class Debugger {
 
     /**************************************** Functions for use by jsdbg.cpp. */
 
+    inline bool observesEnterFrame() const;
     inline bool observesNewScript() const;
     inline bool observesScope(JSObject *obj) const;
     inline bool observesFrame(StackFrame *fp) const;
@@ -366,6 +373,7 @@ Debugger::hasAnyLiveHooks() const
     return enabled && (hasDebuggerHandler ||
                        hasThrowHandler ||
                        hasNewScriptHandler ||
+                       hasEnterFrameHandler ||
                        !JS_CLIST_IS_EMPTY(&breakpoints));
 }
 
@@ -400,6 +408,12 @@ Debugger::fromJSObject(JSObject *obj)
 }
 
 bool
+Debugger::observesEnterFrame() const
+{
+    return enabled && hasEnterFrameHandler;
+}
+
+bool
 Debugger::observesNewScript() const
 {
     return enabled && hasNewScriptHandler;
@@ -418,10 +432,17 @@ Debugger::observesFrame(StackFrame *fp) const
 }
 
 void
-Debugger::leaveStackFrame(JSContext *cx)
+Debugger::onEnterFrame(JSContext *cx)
+{
+    if (!cx->compartment->getDebuggees().empty())
+        slowPathOnEnterFrame(cx);
+}
+
+void
+Debugger::onLeaveFrame(JSContext *cx)
 {
     if (!cx->compartment->getDebuggees().empty() || !cx->compartment->breakpointSites.empty())
-        slowPathLeaveStackFrame(cx);
+        slowPathOnLeaveFrame(cx);
 }
 
 JSTrapStatus
