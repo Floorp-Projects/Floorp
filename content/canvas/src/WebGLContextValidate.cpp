@@ -476,7 +476,7 @@ WebGLContext::InitAndValidateGL()
     }
 
     mActiveTexture = 0;
-    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
+    mWebGLError = LOCAL_GL_NO_ERROR;
 
     mAttribBuffers.Clear();
 
