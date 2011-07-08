@@ -226,7 +226,7 @@ WebGLContext::WebGLContext()
     mOptionsFrozen = PR_FALSE;
 
     mActiveTexture = 0;
-    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
+    mWebGLError = LOCAL_GL_NO_ERROR;
     mPixelStoreFlipY = PR_FALSE;
     mPixelStorePremultiplyAlpha = PR_FALSE;
     mPixelStoreColorspaceConversion = BROWSER_DEFAULT_WEBGL;
