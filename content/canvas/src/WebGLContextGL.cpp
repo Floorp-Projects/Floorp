@@ -730,9 +730,9 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
         if (sub)
-          gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+            gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
         else
-          gl->fCopyTexImage2D(target, level, internalformat, x, y, width, height, 0);
+            gl->fCopyTexImage2D(target, level, internalformat, x, y, width, height, 0);
     } else {
 
         // the rect doesn't fit in the framebuffer
@@ -773,10 +773,11 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
         // now initialize the texture as black
 
         if (sub)
-          gl->fTexSubImage2D(target, level, 0, 0, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
+            gl->fTexSubImage2D(target, level, 0, 0, width, height,
+                               internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
         else
-          gl->fTexImage2D(target, level, internalformat, width, height, 0, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
-
+            gl->fTexImage2D(target, level, internalformat, width, height,
+                            0, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
         free(tempZeroData);
 
         // if we are completely outside of the framebuffer, we can exit now with our black texture
@@ -875,9 +876,31 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (!tex)
         return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
 
-    tex->SetImageInfo(target, level, width, height);
+    const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, WebGLTexture::FaceForTarget(target));
 
-    return CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+    // copyTexImage2D only generates textures with type = UNSIGNED_BYTE
+    GLenum type = LOCAL_GL_UNSIGNED_BYTE;
+
+    bool sizeMayChange = width != imageInfo.mWidth ||
+                         height != imageInfo.mHeight ||
+                         internalformat != imageInfo.mFormat ||
+                         type != imageInfo.mType;
+
+    if (sizeMayChange) {
+        UpdateWebGLErrorAndClearGLError();
+        CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        if (error) {
+            LogMessageIfVerbose("copyTexImage2D generated error %s", ErrorName(error));
+            return NS_OK;
+        }          
+    } else {
+        CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+    }
+    
+    tex->SetImageInfo(target, level, width, height, internalformat, type);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
