@@ -124,6 +124,27 @@ NS_MEMORY_REPORTER_IMPLEMENT(WebGLRenderbufferCount,
                              WebGLMemoryReporter::GetRenderbufferCount,
                              "Number of WebGL renderbuffers.")
 
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderSourcesSize,
+                             "webgl-shader-sources-size",
+                             KIND_HEAP,
+                             UNITS_BYTES,
+                             WebGLMemoryReporter::GetShaderSourcesSize,
+                             "Combined size of WebGL shader ASCII sources, cached on the heap. This should always be at most a few kilobytes, or dozen kilobytes for very shader-intensive WebGL demos.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderTranslationLogsSize,
+                             "webgl-shader-translationlogs-size",
+                             KIND_HEAP,
+                             UNITS_BYTES,
+                             WebGLMemoryReporter::GetShaderTranslationLogsSize,
+                             "Combined size of WebGL shader ASCII translation logs, cached on the heap.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderCount,
+                             "webgl-shader-count",
+                             KIND_OTHER,
+                             UNITS_COUNT,
+                             WebGLMemoryReporter::GetShaderCount,
+                             "Number of WebGL shaders.")
+
 NS_MEMORY_REPORTER_IMPLEMENT(WebGLContextCount,
                              "webgl-context-count",
                              KIND_OTHER,
@@ -147,6 +168,9 @@ WebGLMemoryReporter::WebGLMemoryReporter()
     , mBufferCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferCount))
     , mRenderbufferMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLRenderbufferMemoryUsed))
     , mRenderbufferCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLRenderbufferCount))
+    , mShaderSourcesSizeReporter(new NS_MEMORY_REPORTER_NAME(WebGLShaderSourcesSize))
+    , mShaderTranslationLogsSizeReporter(new NS_MEMORY_REPORTER_NAME(WebGLShaderTranslationLogsSize))
+    , mShaderCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLShaderCount))
     , mContextCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLContextCount))
 {
     NS_RegisterMemoryReporter(mTextureMemoryUsageReporter);
@@ -156,6 +180,9 @@ WebGLMemoryReporter::WebGLMemoryReporter()
     NS_RegisterMemoryReporter(mBufferCountReporter);
     NS_RegisterMemoryReporter(mRenderbufferMemoryUsageReporter);
     NS_RegisterMemoryReporter(mRenderbufferCountReporter);
+    NS_RegisterMemoryReporter(mShaderSourcesSizeReporter);
+    NS_RegisterMemoryReporter(mShaderTranslationLogsSizeReporter);
+    NS_RegisterMemoryReporter(mShaderCountReporter);
     NS_RegisterMemoryReporter(mContextCountReporter);
 }
 
@@ -168,6 +195,9 @@ WebGLMemoryReporter::~WebGLMemoryReporter()
     NS_UnregisterMemoryReporter(mBufferCountReporter);
     NS_UnregisterMemoryReporter(mRenderbufferMemoryUsageReporter);
     NS_UnregisterMemoryReporter(mRenderbufferCountReporter);
+    NS_UnregisterMemoryReporter(mShaderSourcesSizeReporter);
+    NS_UnregisterMemoryReporter(mShaderTranslationLogsSizeReporter);
+    NS_UnregisterMemoryReporter(mShaderCountReporter);
     NS_UnregisterMemoryReporter(mContextCountReporter);
 }
 
