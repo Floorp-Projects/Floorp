@@ -413,6 +413,12 @@ struct JSRuntime {
     JSCompartment       *gcCurrentCompartment;
 
     /*
+     * If this is non-NULL, all marked objects must belong to this compartment.
+     * This is used to look for compartment bugs.
+     */
+    JSCompartment       *gcCheckCompartment;
+
+    /*
      * We can pack these flags as only the GC thread writes to them. Atomic
      * updates to packed bytes are not guaranteed, so stores issued by one
      * thread may be lost due to unsynchronized read-modify-write cycles on

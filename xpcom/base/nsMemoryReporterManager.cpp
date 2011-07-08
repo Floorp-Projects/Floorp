@@ -603,7 +603,7 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
 
         if (kind == nsIMemoryReporter::KIND_MAPPED) {
             nsCString path;
-            rv = r->GetPath(getter_Copies(path));
+            rv = r->GetPath(path);
             NS_ENSURE_SUCCESS(rv, rv);
 
             PRInt64 amount;
@@ -618,7 +618,7 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
             }
         } else {
             nsCString path;
-            rv = r->GetPath(getter_Copies(path));
+            rv = r->GetPath(path);
             NS_ENSURE_SUCCESS(rv, rv);
 
             if (path.Equals("heap-used")) {
@@ -674,12 +674,12 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
 
 NS_IMPL_ISUPPORTS1(nsMemoryReporter, nsIMemoryReporter)
 
-nsMemoryReporter::nsMemoryReporter(nsCString& process,
-                                   nsCString& path,
+nsMemoryReporter::nsMemoryReporter(nsACString& process,
+                                   nsACString& path,
                                    PRInt32 kind,
                                    PRInt32 units,
                                    PRInt64 amount,
-                                   nsCString& desc)
+                                   nsACString& desc)
 : mProcess(process)
 , mPath(path)
 , mKind(kind)
@@ -693,15 +693,15 @@ nsMemoryReporter::~nsMemoryReporter()
 {
 }
 
-NS_IMETHODIMP nsMemoryReporter::GetProcess(char **aProcess)
+NS_IMETHODIMP nsMemoryReporter::GetProcess(nsACString &aProcess)
 {
-    *aProcess = strdup(mProcess.get());
+    aProcess.Assign(mProcess);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMemoryReporter::GetPath(char **aPath)
+NS_IMETHODIMP nsMemoryReporter::GetPath(nsACString &aPath)
 {
-    *aPath = strdup(mPath.get());
+    aPath.Assign(mPath);
     return NS_OK;
 }
 
@@ -723,9 +723,9 @@ NS_IMETHODIMP nsMemoryReporter::GetAmount(PRInt64 *aAmount)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMemoryReporter::GetDescription(char **aDescription)
+NS_IMETHODIMP nsMemoryReporter::GetDescription(nsACString &aDescription)
 {
-    *aDescription = strdup(mDesc.get());
+    aDescription.Assign(mDesc);
     return NS_OK;
 }
 

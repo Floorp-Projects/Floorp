@@ -481,8 +481,10 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 
     // Process messages from input buffer.
     const char *p;
+    const char *overflowp;
     const char *end;
     if (input_overflow_buf_.empty()) {
+      overflowp = NULL;
       p = input_buf_;
       end = p + bytes_read;
     } else {
@@ -493,7 +495,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         return false;
       }
       input_overflow_buf_.append(input_buf_, bytes_read);
-      p = input_overflow_buf_.data();
+      overflowp = p = input_overflow_buf_.data();
       end = p + input_overflow_buf_.size();
     }
 
@@ -571,7 +573,15 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         break;
       }
     }
-    input_overflow_buf_.assign(p, end - p);
+    if (end == p) {
+      input_overflow_buf_.clear();
+    } else if (!overflowp) {
+      // p is from input_buf_
+      input_overflow_buf_.assign(p, end - p);
+    } else if (p > overflowp) {
+      // p is from input_overflow_buf_
+      input_overflow_buf_.erase(0, p - overflowp);
+    }
     input_overflow_fds_ = std::vector<int>(&fds[fds_i], &fds[num_fds]);
 
     // When the input data buffer is empty, the overflow fds should be too. If
