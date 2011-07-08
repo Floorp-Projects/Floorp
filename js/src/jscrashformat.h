@@ -100,6 +100,11 @@ struct CrashRing
     char buffer[crash_buffer_size];
 };
 
+/* These are the tag values for each entry in the CrashRing. */
+enum {
+    JS_CRASH_TAG_GC = 0x200
+};
+
 } /* namespace crash */
 } /* namespace js */
 

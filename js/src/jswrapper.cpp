@@ -768,4 +768,10 @@ JSCrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType
     return call.origin->wrap(cx, vp);
 }
 
+void
+JSCrossCompartmentWrapper::trace(JSTracer *trc, JSObject *wrapper)
+{
+    MarkCrossCompartmentObject(trc, *wrappedObject(wrapper), "wrappedObject");
+}
+
 JSCrossCompartmentWrapper JSCrossCompartmentWrapper::singleton(0u);
