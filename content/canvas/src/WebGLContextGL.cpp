@@ -4363,7 +4363,6 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     }
 
     tex->SetImageInfo(target, level, width, height, format, type);
-    tex->setDimensions(width, height);
 
     return NS_OK;
 }
@@ -4507,9 +4506,10 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     if (!tex)
         return ErrorInvalidOperation("texSubImage2D: no texture is bound to this target");
 
-    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, tex->width(), tex->height()))
+    size_t face = WebGLTexture::FaceForTarget(target);
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.mWidth, imageInfo.mHeight))
         return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
-
 
     MakeContextCurrent();
 
