@@ -132,7 +132,6 @@ extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
     f.entryfp->script()->compartment->jaegerCompartment()->pushActiveFrame(&f);
-    f.entryncode = f.entryfp->nativeReturnAddress();
     f.entryfp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
     f.regs.clearInlined();
 }
@@ -141,12 +140,13 @@ extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
     f.entryfp->script()->compartment->jaegerCompartment()->popActiveFrame();
-    f.entryfp->setNativeReturnAddress(f.entryncode);
 }
 
 extern "C" void JS_FASTCALL
 SetVMFrameRegs(VMFrame &f)
 {
+    f.oldregs = &f.cx->stack.regs();
+
     /* Restored on exit from EnterMethodJIT. */
     f.cx->stack.repointRegs(&f.regs);
 }
@@ -838,6 +838,7 @@ JaegerCompartment::Initialize()
 #endif
 
     activeFrame_ = NULL;
+    lastUnfinished_ = (JaegerStatus) 0;
 
     return true;
 }
@@ -860,8 +861,8 @@ JaegerCompartment::Finish()
 extern "C" JSBool
 JaegerTrampoline(JSContext *cx, StackFrame *fp, void *code, Value *stackLimit);
 
-JSBool
-mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimit)
+JaegerStatus
+mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimit, bool partial)
 {
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
@@ -875,10 +876,6 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     JS_ASSERT(cx->fp() == fp);
     FrameRegs &oldRegs = cx->regs();
 
-    fp->scopeChain();
-    if (fp->isFunctionFrame() && fp->script()->usesArguments)
-        fp->ensureCoherentArgCount();
-
     JSBool ok;
     {
         AssertCompartmentUnchanged pcc(cx);
@@ -886,8 +883,39 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
         ok = JaegerTrampoline(cx, fp, code, stackLimit);
     }
 
+#ifdef JS_METHODJIT_SPEW
+    prof.stop();
+    JaegerSpew(JSpew_Prof, "script run took %d ms\n", prof.time_ms());
+#endif
+
     /* Undo repointRegs in SetVMFrameRegs. */
     cx->stack.repointRegs(&oldRegs);
+
+    JaegerStatus status = cx->compartment->jaegerCompartment()->lastUnfinished();
+    if (status) {
+        if (partial) {
+            /*
+             * Being called from the interpreter, which will resume execution
+             * where the JIT left off.
+             */
+            return status;
+        }
+
+        /*
+         * Call back into the interpreter to finish the initial frame. This may
+         * invoke EnterMethodJIT again, but will allow partial execution for
+         * that recursive invocation, so we can have at most two VM frames for
+         * a range of inline frames.
+         */
+        InterpMode mode = (status == Jaeger_UnfinishedAtTrap)
+            ? JSINTERP_SKIP_TRAP
+            : JSINTERP_REJOIN;
+        ok = Interpret(cx, fp, mode);
+
+        return ok ? Jaeger_Returned : Jaeger_Throwing;
+    }
+
+    /* The entry frame should have finished. */
     JS_ASSERT(fp == cx->fp());
 
     if (ok) {
@@ -898,30 +926,25 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     /* See comment in mjit::Compiler::emitReturn. */
     fp->markActivationObjectsAsPut();
 
-#ifdef JS_METHODJIT_SPEW
-    prof.stop();
-    JaegerSpew(JSpew_Prof, "script run took %d ms\n", prof.time_ms());
-#endif
-
-    return ok;
+    return ok ? Jaeger_Returned : Jaeger_Throwing;
 }
 
-static inline JSBool
-CheckStackAndEnterMethodJIT(JSContext *cx, StackFrame *fp, void *code)
+static inline JaegerStatus
+CheckStackAndEnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, bool partial)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    JS_CHECK_RECURSION(cx, return Jaeger_Throwing);
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
     Value *stackLimit = cx->stack.space().getStackLimit(cx);
     if (!stackLimit)
-        return false;
+        return Jaeger_Throwing;
 
-    return EnterMethodJIT(cx, fp, code, stackLimit);
+    return EnterMethodJIT(cx, fp, code, stackLimit, partial);
 }
 
-JSBool
-mjit::JaegerShot(JSContext *cx)
+JaegerStatus
+mjit::JaegerShot(JSContext *cx, bool partial)
 {
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
@@ -934,17 +957,17 @@ mjit::JaegerShot(JSContext *cx)
 
     JS_ASSERT(cx->regs().pc == script->code);
 
-    return CheckStackAndEnterMethodJIT(cx, cx->fp(), jit->invokeEntry);
+    return CheckStackAndEnterMethodJIT(cx, cx->fp(), jit->invokeEntry, partial);
 }
 
-JSBool
-js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
+JaegerStatus
+js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint, bool partial)
 {
 #ifdef JS_TRACER
     JS_ASSERT(!TRACE_RECORDER(cx));
 #endif
 
-    return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint);
+    return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint, partial);
 }
 
 NativeMapEntry *

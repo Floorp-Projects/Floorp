@@ -112,7 +112,7 @@ struct VMFrame
     JSContext    *cx;
     Value        *stackLimit;
     StackFrame   *entryfp;
-    void         *entryncode;
+    FrameRegs    *oldregs;
     JSRejoinState stubRejoin;  /* How to rejoin if inside a call from an IC stub. */
 
 #if defined(JS_CPU_X86)
@@ -354,6 +354,29 @@ struct Trampolines {
 #endif
 };
 
+/* Result status of executing mjit code on a frame. */
+enum JaegerStatus
+{
+    /* Entry frame finished, and is throwing an exception. */
+    Jaeger_Throwing = 0,
+
+    /* Entry frame finished, and is returning. */
+    Jaeger_Returned = 1,
+
+    /*
+     * Entry frame did not finish. cx->regs reflects where to resume execution.
+     * This result is only possible if 'partial' is passed as true below.
+     */
+    Jaeger_Unfinished = 2,
+
+    /*
+     * As for Unfinished, but stopped after a TRAP triggered recompilation.
+     * The trap has been reinstalled, but should not execute again when
+     * resuming execution.
+     */
+    Jaeger_UnfinishedAtTrap = 3
+};
+
 /*
  * Method JIT compartment data. Currently, there is exactly one per
  * JS compartment. It would be safe for multiple JS compartments to
@@ -364,6 +387,8 @@ class JaegerCompartment {
     JSC::ExecutableAllocator *execAlloc_;    // allocator for jit code
     Trampolines              trampolines;    // force-return trampolines
     VMFrame                  *activeFrame_;  // current active VMFrame
+    JaegerStatus             lastUnfinished_;// result status of last VM frame,
+                                             // if unfinished
 
     void Finish();
 
@@ -382,6 +407,7 @@ class JaegerCompartment {
     }
 
     void pushActiveFrame(VMFrame *f) {
+        JS_ASSERT(!lastUnfinished_);
         f->previous = activeFrame_;
         f->scratch = NULL;
         activeFrame_ = f;
@@ -390,6 +416,17 @@ class JaegerCompartment {
     void popActiveFrame() {
         JS_ASSERT(activeFrame_);
         activeFrame_ = activeFrame_->previous;
+    }
+
+    void setLastUnfinished(JaegerStatus status) {
+        JS_ASSERT(!lastUnfinished_);
+        lastUnfinished_ = status;
+    }
+
+    JaegerStatus lastUnfinished() {
+        JaegerStatus result = lastUnfinished_;
+        lastUnfinished_ = (JaegerStatus) 0;
+        return result;
     }
 
     void *forceReturnFromExternC() const {
@@ -601,13 +638,14 @@ struct JITScript {
  * Execute the given mjit code. This is a low-level call and callers must
  * provide the same guarantees as JaegerShot/CheckStackAndEnterMethodJIT.
  */
-JSBool EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimit);
+JaegerStatus EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimit,
+                            bool partial);
 
 /* Execute a method that has been JIT compiled. */
-JSBool JaegerShot(JSContext *cx);
+JaegerStatus JaegerShot(JSContext *cx, bool partial);
 
 /* Drop into the middle of a method at an arbitrary point, and execute. */
-JSBool JaegerShotAtSafePoint(JSContext *cx, void *safePoint);
+JaegerStatus JaegerShotAtSafePoint(JSContext *cx, void *safePoint, bool partial);
 
 enum CompileStatus
 {

@@ -391,6 +391,14 @@ FixObjectType(JSContext *cx, JSObject *obj)
 extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval);
 extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, js::types::jstype type);
 
+inline bool
+UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
+{
+    return fp->isConstructing() && cx->typeInferenceEnabled() &&
+           fp->prev() && fp->prev()->isScriptFrame() &&
+           UseNewType(cx, fp->prev()->script(), fp->prev()->pcQuadratic(cx->stack, fp));
+}
+
 /////////////////////////////////////////////////////////////////////
 // Script interface functions
 /////////////////////////////////////////////////////////////////////

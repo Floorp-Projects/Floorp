@@ -102,11 +102,17 @@ class InlineFrameAssembler {
         tempRegs.takeReg(funObjReg);
     }
 
-    DataLabelPtr assemble(void *ncode)
+    DataLabelPtr assemble(void *ncode, jsbytecode *pc)
     {
         JS_ASSERT((flags & ~StackFrame::CONSTRUCTING) == 0);
 
         /* Generate StackFrame::initCallFrameCallerHalf. */
+
+        /* Get the actual flags to write. */
+        JS_ASSERT(!(flags & ~StackFrame::CONSTRUCTING));
+        uint32 flags = this->flags | StackFrame::FUNCTION;
+        if (frameSize.lowered(pc))
+            flags |= StackFrame::LOWERED_CALL_APPLY;
 
         DataLabelPtr ncodePatch;
         if (frameSize.isStatic()) {
@@ -114,7 +120,7 @@ class InlineFrameAssembler {
             AdjustedFrame newfp(sizeof(StackFrame) + frameDepth * sizeof(Value));
 
             Address flagsAddr = newfp.addrOf(StackFrame::offsetOfFlags());
-            masm.store32(Imm32(StackFrame::FUNCTION | flags), flagsAddr);
+            masm.store32(Imm32(flags), flagsAddr);
             Address prevAddr = newfp.addrOf(StackFrame::offsetOfPrev());
             masm.storePtr(JSFrameReg, prevAddr);
             Address ncodeAddr = newfp.addrOf(StackFrame::offsetOfNcode());
@@ -134,7 +140,7 @@ class InlineFrameAssembler {
             masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), newfp);
 
             Address flagsAddr(newfp, StackFrame::offsetOfFlags());
-            masm.store32(Imm32(StackFrame::FUNCTION | flags), flagsAddr);
+            masm.store32(Imm32(flags), flagsAddr);
             Address prevAddr(newfp, StackFrame::offsetOfPrev());
             masm.storePtr(JSFrameReg, prevAddr);
             Address ncodeAddr(newfp, StackFrame::offsetOfNcode());

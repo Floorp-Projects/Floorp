@@ -408,10 +408,6 @@ Recompiler::recompile(bool resetUses)
                 if (JITCodeReturnAddress(*addr)) {
                     JS_ASSERT(fp->jit()->isValidCode(*addr));
                     patchCall(fp->jit(), fp, addr);
-                } else if (nextf && nextf->entryfp == next &&
-                           JITCodeReturnAddress(nextf->entryncode)) {
-                    JS_ASSERT(fp->jit()->isValidCode(nextf->entryncode));
-                    patchCall(fp->jit(), fp, &nextf->entryncode);
                 }
             }
 

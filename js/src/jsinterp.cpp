@@ -615,7 +615,7 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
 
     if (status == mjit::Compile_Okay)
-        return mjit::JaegerShot(cx);
+        return mjit::JaegerShot(cx, false);
 #endif
 
     return Interpret(cx, fp);
@@ -637,8 +637,11 @@ Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
+    /* MaybeConstruct is a subset of InitialFrameFlags */
+    InitialFrameFlags initial = (InitialFrameFlags) construct;
+
     if (args.calleev().isPrimitive()) {
-        js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(construct));
+        js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(initial));
         return false;
     }
 
@@ -653,7 +656,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 #endif
         JS_ASSERT_IF(construct, !clasp->construct);
         if (!clasp->call) {
-            js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(construct));
+            js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(initial));
             return false;
         }
         return CallJSNative(cx, clasp->call, args);
@@ -685,7 +688,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 
     /* Get pointer to new frame/slots, prepare arguments. */
     InvokeFrameGuard ifg;
-    if (!cx->stack.pushInvokeFrame(cx, args, construct, &ifg))
+    if (!cx->stack.pushInvokeFrame(cx, args, initial, &ifg))
         return false;
 
     /* Now that the new frame is rooted, maybe create a call object. */
@@ -745,7 +748,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
             break;
 
         /* Push the stack frame once for the session. */
-        if (!stack.pushInvokeFrame(cx, args_, NO_CONSTRUCT, &ifg_))
+        if (!stack.pushInvokeFrame(cx, args_, INITIAL_NONE, &ifg_))
             return false;
 
         /*
@@ -1868,7 +1871,10 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         if (status == mjit::Compile_Okay) {                                   \
             void *ncode =                                                     \
                 script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);\
-            interpReturnOK = mjit::JaegerShotAtSafePoint(cx, ncode);          \
+            mjit::JaegerStatus status =                                       \
+                mjit::JaegerShotAtSafePoint(cx, ncode, true);                 \
+            CHECK_PARTIAL_METHODJIT(status);                                  \
+            interpReturnOK = (status == mjit::Jaeger_Returned);               \
             if (entryFrame != regs.fp())                                      \
                 goto jit_return;                                              \
             regs.fp()->setFinishedInInterpreter();                            \
@@ -1876,6 +1882,21 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         }                                                                     \
         if (status == mjit::Compile_Abort) {                                  \
             useMethodJIT = false;                                             \
+        }                                                                     \
+    JS_END_MACRO
+
+#define CHECK_PARTIAL_METHODJIT(status)                                       \
+    JS_BEGIN_MACRO                                                            \
+        if (status == mjit::Jaeger_Unfinished) {                              \
+            op = (JSOp) *regs.pc;                                             \
+            RESTORE_INTERP_VARS();                                            \
+            DO_OP();                                                          \
+        } else if (status == mjit::Jaeger_UnfinishedAtTrap) {                 \
+            interpMode = JSINTERP_SKIP_TRAP;                                  \
+            JS_ASSERT(JSOp(*regs.pc) == JSOP_TRAP);                           \
+            op = JSOP_TRAP;                                                   \
+            RESTORE_INTERP_VARS();                                            \
+            DO_OP();                                                          \
         }                                                                     \
     JS_END_MACRO
 
@@ -1909,6 +1930,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         script = regs.fp()->script();                                         \
+        pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);                  \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
@@ -2074,10 +2096,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
         JS_ASSERT_IF(!fp->isGeneratorFrame(), regs.pc == script->code);
-        bool newType = fp->isConstructing() && cx->typeInferenceEnabled() &&
-            fp->prev() && fp->prev()->isScriptFrame() &&
-            UseNewType(cx, fp->prev()->script(), fp->prev()->pcQuadratic(cx->stack, fp));
-        if (!ScriptPrologueOrGeneratorResume(cx, fp, newType))
+        if (!ScriptPrologueOrGeneratorResume(cx, fp, UseNewTypeAtEntry(cx, fp)))
             goto error;
     }
 
@@ -2403,13 +2422,13 @@ BEGIN_CASE(JSOP_STOP)
 #ifdef JS_METHODJIT
   jit_return:
 #endif
+
+        /* The results of lowered call/apply frames need to be shifted. */
+        bool shiftResult = regs.fp()->loweredCallOrApply();
+
         cx->stack.popInlineFrame(regs);
 
-        /* Sync interpreter locals. */
-        script = regs.fp()->script();
-        pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
-        argv = regs.fp()->maybeFormalArgs();
-        atoms = FrameAtomBase(cx, regs.fp());
+        RESTORE_INTERP_VARS();
 
         /* Resume execution in the calling frame. */
         RESET_USE_METHODJIT();
@@ -2418,7 +2437,15 @@ BEGIN_CASE(JSOP_STOP)
                       == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
             script->types.monitor(cx, regs.pc, regs.sp[-1]);
+
+            op = JSOp(*regs.pc);
             len = JSOP_CALL_LENGTH;
+
+            if (shiftResult) {
+                regs.sp[-2] = regs.sp[-1];
+                regs.sp--;
+            }
+
             DO_NEXT_OP(len);
         }
         goto error;
@@ -4158,7 +4185,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
     JS_ASSERT(args.base() >= regs.fp()->base());
 
-    MaybeConstruct construct = *regs.pc == JSOP_NEW ? CONSTRUCT : NO_CONSTRUCT;
+    bool construct = (*regs.pc == JSOP_NEW);
 
     JSObject *callee;
     JSFunction *fun;
@@ -4182,15 +4209,13 @@ BEGIN_CASE(JSOP_FUNAPPLY)
 
     TypeMonitorCall(cx, args, construct);
 
+    InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
+
     JSScript *newScript = fun->script();
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, construct, OOMCheck()))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, initial, OOMCheck()))
         goto error;
 
-    /* Refresh local js::Interpret state. */
-    script = newScript;
-    pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
-    argv = regs.fp()->formalArgsEnd() - fun->nargs;
-    atoms = script->atomMap.vector;
+    RESTORE_INTERP_VARS();
 
     /* Only create call object after frame is rooted. */
     if (fun->isHeavyweight() && !CreateFunCallObject(cx, regs.fp()))
@@ -4209,7 +4234,9 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         if (status == mjit::Compile_Error)
             goto error;
         if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
-            interpReturnOK = mjit::JaegerShot(cx);
+            mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
+            CHECK_PARTIAL_METHODJIT(status);
+            interpReturnOK = (status == mjit::Jaeger_Returned);
             CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }
