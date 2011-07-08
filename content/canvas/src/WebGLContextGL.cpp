@@ -2226,18 +2226,9 @@ WebGLContext::GetError(WebGLenum *_retval)
 {
     MakeContextCurrent();
 
-    // Always call GetAndClearError to clear any pending
-    // real GL error.
-    WebGLenum err = gl->GetAndClearError();
-
-    // mWebGLError has the first error that occurred,
-    // whether synthesized or real; if it's not NO_ERROR, use it.
-    if (mWebGLError != LOCAL_GL_NO_ERROR) {
-        err = mWebGLError;
-        mWebGLError = LOCAL_GL_NO_ERROR;
-    }
-
-    *_retval = err;
+    UpdateWebGLErrorAndClearGLError();
+    *_retval = mWebGLError;
+    mWebGLError = LOCAL_GL_NO_ERROR;
 
     return NS_OK;
 }
