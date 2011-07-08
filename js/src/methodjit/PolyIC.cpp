@@ -646,7 +646,18 @@ class SetPropCompiler : public PICStubCompiler
                 shape->setterOp() != SetCallVar) {
                 return disable("setter");
             }
+            JS_ASSERT(obj->isCall());
             if (pic.typeMonitored) {
+                /*
+                 * Update the types of the locals/args in the script according
+                 * to the possible RHS types of the assignment. Note that the
+                 * shape guards we have performed do not by themselves
+                 * guarantee that future call objects hit will be for the same
+                 * script. We also depend on the fact that the scope chains hit
+                 * at the same bytecode are all isomorphic: the same scripts,
+                 * in the same order (though the properties on their call
+                 * objects may differ due to eval(), DEFFUN, etc.).
+                 */
                 RecompilationMonitor monitor(cx);
                 JSScript *script = obj->getCallObjCalleeFunction()->script();
                 uint16 slot = uint16(shape->shortid);
