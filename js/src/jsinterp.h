@@ -144,6 +144,11 @@ BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
 inline bool
 ComputeThis(JSContext *cx, StackFrame *fp);
 
+enum MaybeConstruct {
+    NO_CONSTRUCT = INITIAL_NONE,
+    CONSTRUCT = INITIAL_CONSTRUCT
+};
+
 /*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
  * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,

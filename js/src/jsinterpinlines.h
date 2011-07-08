@@ -159,7 +159,7 @@ InvokeSessionGuard::invoke(JSContext *cx)
         args_.setActive();  /* From js::Invoke(InvokeArgsGuard) overload. */
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
-        ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
+        ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_, /* partial = */ false);
         cx->regs().pc = stop_;
 #else
         cx->regs().pc = script_->code;

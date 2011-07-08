@@ -3634,7 +3634,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
 
     InlineFrameAssembler inlFrame(masm, callIC, flags);
     callPatch.hasFastNcode = true;
-    callPatch.fastNcodePatch = inlFrame.assemble(NULL);
+    callPatch.fastNcodePatch = inlFrame.assemble(NULL, PC);
 
     callIC.hotJump = masm.jump();
     callIC.joinPoint = callPatch.joinPoint = masm.label();

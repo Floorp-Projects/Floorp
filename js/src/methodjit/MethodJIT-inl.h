@@ -80,28 +80,6 @@ CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest req
     return Compile_Okay;
 }
 
-static inline bool
-RecursiveMethodJIT(JSContext *cx, StackFrame *fp)
-{
-    if (!cx->compartment->hasJaegerCompartment())
-        return false;
-
-    /*
-     * We can recursively enter the method JIT on a single stack frame by
-     * taking back edges, compiling, getting kicked back into the interpreter
-     * and repeating. Watch for this case here, and finish the frame in the
-     * interpreter. :XXX: should be more robust.
-     */
-    static const unsigned RECURSIVE_METHODJIT_LIMIT = 10;
-    VMFrame *f = cx->compartment->jaegerCompartment()->activeFrame();
-    for (unsigned i = 0; i < RECURSIVE_METHODJIT_LIMIT; i++) {
-        if (!f || f->entryfp != fp)
-            return false;
-        f = f->previous;
-    }
-    return true;
-}
-
 /*
  * Called from a backedge in the interpreter to decide if we should transition to the
  * methodjit. If so, we compile the given function.
@@ -109,7 +87,7 @@ RecursiveMethodJIT(JSContext *cx, StackFrame *fp)
 static inline CompileStatus
 CanMethodJITAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *pc)
 {
-    if (!cx->methodJitEnabled || RecursiveMethodJIT(cx, fp))
+    if (!cx->methodJitEnabled)
         return Compile_Abort;
     JITScriptStatus status = script->getJITStatus(fp->isConstructing());
     if (status == JITScript_Invalid)

@@ -80,6 +80,10 @@ StackFrame::resetGeneratorPrev(JSContext *cx)
 inline void
 StackFrame::initInlineFrame(JSFunction *fun, StackFrame *prevfp, jsbytecode *prevpc)
 {
+    /*
+     * Note: no need to ensure the scopeChain is instantiated for inline
+     * frames. Functions which use the scope chain are never inlined.
+     */
     flags_ = StackFrame::FUNCTION;
     exec.fun = fun;
     resetInlinePrev(prevfp, prevpc);
@@ -100,6 +104,7 @@ StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
                           JSScript *script, uint32 nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
+                            LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
     JS_ASSERT(fun == callee.getFunctionPrivate());
@@ -108,7 +113,7 @@ StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | flagsArg;
     exec.fun = fun;
-    args.nactual = nactual;  /* only need to write if over/under-flow */
+    args.nactual = nactual;
     scopeChain_ = callee.getParent();
     ncode_ = NULL;
     initPrev(cx);
@@ -142,18 +147,8 @@ StackFrame::resetCallFrame(JSScript *script)
                            HAS_SCOPECHAIN |
                            HAS_ANNOTATION |
                            HAS_HOOK_DATA |
-                           HAS_CALL_OBJ |
-                           HAS_ARGS_OBJ |
                            FINISHED_IN_INTERP |
                            DOWN_FRAMES_EXPANDED)));
-
-    /*
-     * Since the stack frame is usually popped after PutActivationObjects,
-     * these bits aren't cleared. The activation objects must have actually
-     * been put, though.
-     */
-    JS_ASSERT_IF(flags_ & HAS_CALL_OBJ, callObj().getPrivate() == NULL);
-    JS_ASSERT_IF(flags_ & HAS_ARGS_OBJ, argsObj().getPrivate() == NULL);
 
     flags_ &= FUNCTION |
               OVERFLOW_ARGS |
@@ -171,6 +166,7 @@ StackFrame::initJitFrameCallerHalf(JSContext *cx, StackFrame::Flags flags,
                                     void *ncode)
 {
     JS_ASSERT((flags & ~(CONSTRUCTING |
+                         LOWERED_CALL_APPLY |
                          FUNCTION |
                          OVERFLOW_ARGS |
                          UNDERFLOW_ARGS)) == 0);
@@ -188,8 +184,7 @@ inline void
 StackFrame::initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual)
 {
     exec.fun = fun;
-    if (flags_ & (OVERFLOW_ARGS | UNDERFLOW_ARGS))
-        args.nactual = nactual;
+    args.nactual = nactual;
 }
 
 /*
@@ -210,6 +205,7 @@ StackFrame::initJitFrameLatePrologue(JSContext *cx, Value **limit)
         }
     }
 
+    scopeChain();
     SetValueRangeToUndefined(slots(), script()->nfixed);
     return true;
 }
@@ -287,17 +283,18 @@ struct CopyTo
 inline uintN
 StackFrame::numActualArgs() const
 {
+    /*
+     * args.nactual is always coherent, except for method JIT frames where the
+     * callee does not access its arguments and the number of actual arguments
+     * matches the number of formal arguments. The JIT requires that all frames
+     * which do not have an arguments object and use their arguments have a
+     * coherent args.nactual (even though the below code may not use it), as
+     * JIT code may access the field directly.
+     */
     JS_ASSERT(hasArgs());
     if (JS_UNLIKELY(flags_ & (OVERFLOW_ARGS | UNDERFLOW_ARGS)))
         return hasArgsObj() ? argsObj().initialLength() : args.nactual;
     return numFormalArgs();
-}
-
-inline void
-StackFrame::ensureCoherentArgCount()
-{
-    if (!hasArgsObj())
-        args.nactual = numActualArgs();
 }
 
 inline Value *
@@ -545,7 +542,7 @@ template <class Check>
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                               JSObject &callee, JSFunction *fun, JSScript *script,
-                              MaybeConstruct construct, Check check)
+                              InitialFrameFlags initial, Check check)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
@@ -553,7 +550,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(callee.getFunctionPrivate() == fun);
     JS_ASSERT(fun->script() == script);
 
-    StackFrame::Flags flags = ToFrameFlags(construct);
+    StackFrame::Flags flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, args, fun, script, &flags, check);
     if (!fp)
         return false;
@@ -572,7 +569,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
 JS_ALWAYS_INLINE StackFrame *
 ContextStack::getFixupFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                             JSFunction *fun, JSScript *script, void *ncode,
-                            MaybeConstruct construct, LimitCheck check)
+                            InitialFrameFlags initial, LimitCheck check)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(&regs == &cx->regs());
@@ -580,7 +577,7 @@ ContextStack::getFixupFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args
     JS_ASSERT(args.callee().getFunctionPrivate() == fun);
     JS_ASSERT(fun->script() == script);
 
-    StackFrame::Flags flags = ToFrameFlags(construct);
+    StackFrame::Flags flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, args, fun, script, &flags, check);
     if (!fp)
         return NULL;

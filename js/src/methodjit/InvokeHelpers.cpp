@@ -250,10 +250,10 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
      * members that have been initialized by initJitFrameCallerHalf and the
      * early prologue.
      */
-    MaybeConstruct construct = oldfp->isConstructing();
-    JSFunction *fun          = oldfp->fun();
-    JSScript *script         = fun->script();
-    void *ncode              = oldfp->nativeReturnAddress();
+    InitialFrameFlags initial = oldfp->initialFlags();
+    JSFunction *fun           = oldfp->fun();
+    JSScript *script          = fun->script();
+    void *ncode               = oldfp->nativeReturnAddress();
 
     /* Pop the inline frame. */
     f.regs.popPartialFrame((Value *)oldfp);
@@ -261,7 +261,7 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     /* Reserve enough space for a callee frame. */
     CallArgs args = CallArgsFromSp(nactual, f.regs.sp);
     StackFrame *fp = cx->stack.getFixupFrame(cx, f.regs, args, fun, script, ncode,
-                                             construct, LimitCheck(&f.stackLimit, ncode));
+                                             initial, LimitCheck(&f.stackLimit, ncode));
 
     /*
      * Note: this function is called without f.regs intact, but if the previous
@@ -293,20 +293,28 @@ stubs::CompileFunction(VMFrame &f, uint32 argc)
     JS_ASSERT_IF(f.cx->typeInferenceEnabled(), f.stubRejoin);
     ResetStubRejoin reset(f);
 
-    bool isConstructing = f.fp()->isConstructing();
+    InitialFrameFlags initial = f.fp()->initialFlags();
     f.regs.popPartialFrame((Value *)f.fp());
 
-    return isConstructing ? UncachedNew(f, argc) : UncachedCall(f, argc);
+    if (InitialFrameFlagsAreConstructing(initial))
+        return UncachedNew(f, argc);
+    else if (InitialFrameFlagsAreLowered(initial))
+        return UncachedLoweredCall(f, argc);
+    else
+        return UncachedCall(f, argc);
 }
 
 static inline bool
-UncachedInlineCall(VMFrame &f, MaybeConstruct construct, void **pret, bool *unjittable, uint32 argc)
+UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
+                   void **pret, bool *unjittable, uint32 argc)
 {
     JSContext *cx = f.cx;
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     JSObject &callee = args.callee();
     JSFunction *newfun = callee.getFunctionPrivate();
     JSScript *newscript = newfun->script();
+
+    bool construct = InitialFrameFlagsAreConstructing(initial);
 
     bool newType = construct && cx->typeInferenceEnabled() &&
         types::UseNewType(cx, f.script(), f.pc());
@@ -324,7 +332,7 @@ UncachedInlineCall(VMFrame &f, MaybeConstruct construct, void **pret, bool *unji
 
     /* Get pointer to new frame/slots, prepare arguments. */
     LimitCheck check(&f.stackLimit, NULL);
-    if (!cx->stack.pushInlineFrame(cx, regs, args, callee, newfun, newscript, construct, check))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, callee, newfun, newscript, initial, check))
         return false;
 
     /* Finish the handoff to the new frame regs. */
@@ -389,7 +397,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     /* Try to do a fast inline call before the general Invoke path. */
     if (IsFunctionObject(args.calleev(), &ucr->fun) && ucr->fun->isInterpretedConstructor()) {
         ucr->callee = &args.callee();
-        if (!UncachedInlineCall(f, CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
+        if (!UncachedInlineCall(f, INITIAL_CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
             THROW();
     } else {
         if (!InvokeConstructor(cx, args))
@@ -402,7 +410,15 @@ void * JS_FASTCALL
 stubs::UncachedCall(VMFrame &f, uint32 argc)
 {
     UncachedCallResult ucr;
-    UncachedCallHelper(f, argc, &ucr);
+    UncachedCallHelper(f, argc, false, &ucr);
+    return ucr.codeAddr;
+}
+
+void * JS_FASTCALL
+stubs::UncachedLoweredCall(VMFrame &f, uint32 argc)
+{
+    UncachedCallResult ucr;
+    UncachedCallHelper(f, argc, true, &ucr);
     return ucr.codeAddr;
 }
 
@@ -427,7 +443,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
 }
 
 void
-stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+stubs::UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallResult *ucr)
 {
     ucr->init();
 
@@ -439,7 +455,8 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
 
         if (ucr->fun->isInterpreted()) {
-            if (!UncachedInlineCall(f, NO_CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
+            InitialFrameFlags initial = lowered ? INITIAL_LOWERED : INITIAL_NONE;
+            if (!UncachedInlineCall(f, initial, &ucr->codeAddr, &ucr->unjittable, argc))
                 THROW();
             return;
         }
@@ -872,7 +889,7 @@ EvaluateExcessFrame(VMFrame &f, StackFrame *entryFrame)
         return HandleFinishedFrame(f, entryFrame);
 
     if (void *ncode = AtSafePoint(cx)) {
-        if (!JaegerShotAtSafePoint(cx, ncode))
+        if (!JaegerShotAtSafePoint(cx, ncode, false))
             return false;
         InlineReturn(f);
         AdvanceReturnPC(cx);
@@ -1271,8 +1288,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 #endif
 
     uint32 nextDepth = uint32(-1);
-
-    InterpMode interpMode = JSINTERP_REJOIN;
+    bool skipTrap = false;
 
     if ((cs->format & (JOF_INC | JOF_DEC)) &&
         rejoin != REJOIN_FALLTHROUGH &&
@@ -1359,8 +1375,12 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         break;
 
       case REJOIN_TRAP:
-        /* Watch out for the case where the TRAP removed itself. */
-        interpMode = untrap.trap ? JSINTERP_SKIP_TRAP : JSINTERP_REJOIN;
+        /*
+         * Make sure when resuming in the interpreter we do not execute the
+         * trap again. Watch out for the case where the TRAP removed itself.
+         */
+        if (untrap.trap)
+            skipTrap = true;
         break;
 
       case REJOIN_FALLTHROUGH:
@@ -1428,13 +1448,13 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             if (!js::CreateFunCallObject(cx, fp))
                 return js_InternalThrow(f);
         }
+
+        fp->scopeChain();
         SetValueRangeToUndefined(fp->slots(), script->nfixed);
 
-        /*
-         * Use the normal interpreter mode, which will construct the 'this'
-         * object if this is a constructor frame.
-         */
-        interpMode = JSINTERP_NORMAL;
+        /* Construct the 'this' object for the frame if necessary. */
+        if (!ScriptPrologueOrGeneratorResume(cx, fp, types::UseNewTypeAtEntry(cx, fp)))
+            return js_InternalThrow(f);
         break;
       }
 
@@ -1598,26 +1618,10 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         nextDepth = analysis->getCode(f.regs.pc).stackDepth;
     f.regs.sp = fp->base() + nextDepth;
 
-    /* Reinsert any trap before resuming in the interpreter. */
-    untrap.retrap();
+    /* Mark the entry frame as unfinished, and update the regs to resume at. */
+    JaegerStatus status = skipTrap ? Jaeger_UnfinishedAtTrap : Jaeger_Unfinished;
+    cx->compartment->jaegerCompartment()->setLastUnfinished(status);
+    *f.oldregs = f.regs;
 
-    /* Release lock on analysis data before resuming. */
-    enter.leave();
-
-    if (!Interpret(cx, NULL, interpMode))
-        return js_InternalThrow(f);
-
-    /* The interpreter should have finished its entry frame. */
-    JS_ASSERT(f.regs.fp() == fp);
-
-    /* Force construction of the frame's return value, if it was not set. */
-    fp->returnValue();
-
-    /*
-     * The frame is done, but if it finished in the interpreter the call/args
-     * objects need to be detached from the frame.
-     */
-    fp->putActivationObjects();
-
-    return fp->nativeReturnAddress();
+    return NULL;
 }
