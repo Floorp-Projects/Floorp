@@ -1111,6 +1111,10 @@ nsWindow::Show(PRBool aState)
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+    // For top-level windows, aWidth and aHeight should possibly be
+    // interpreted as frame bounds, but NativeResize treats these as window
+    // bounds (Bug 581866).
+
     mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
 
     if (!mCreated)
@@ -1547,11 +1551,13 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
     else {
         aRect.MoveTo(WidgetToScreenOffset());
     }
+    // mBounds.Size() is the window bounds, not the window-manager frame
+    // bounds (bug 581863).  gdk_window_get_frame_extents would give the
+    // frame bounds, but mBounds.Size() is returned here for consistency
+    // with Resize.
     aRect.SizeTo(mBounds.Size());
-    LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
-         aRect.x, aRect.y,
-         mBounds.width, mBounds.height,
-         aRect.width, aRect.height));
+    LOG(("GetScreenBounds %d,%d | %dx%d\n",
+         aRect.x, aRect.y, aRect.width, aRect.height));
     return NS_OK;
 }
 
@@ -2353,31 +2359,64 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 gboolean
 nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
 {
+    // These events are only received on toplevel windows.
+    //
+    // GDK ensures that the coordinates are the client window top-left wrt the
+    // root window.
+    //
+    //   GDK calculates the cordinates for real ConfigureNotify events on
+    //   managed windows (that would normally be relative to the parent
+    //   window).
+    //
+    //   Synthetic ConfigureNotify events are from the window manager and
+    //   already relative to the root window.  GDK creates all X windows with
+    //   border_width = 0, so synthetic events also indicate the top-left of
+    //   the client window.
+    //
+    //   Override-redirect windows are children of the root window so parent
+    //   coordinates are root coordinates.
+
     LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
-
-    // can we shortcut?
-    if (mBounds.x == aEvent->x &&
-        mBounds.y == aEvent->y)
-        return FALSE;
 
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
         check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
     }
 
-    // Toplevel windows need to have their bounds set so that we can
-    // keep track of our location.  It's not often that the x,y is set
-    // by the layout engine.  Width and height are set elsewhere.
-    nsIntPoint pnt(aEvent->x, aEvent->y);
-    if (mIsTopLevel) {
-        // Need to translate this into the right coordinates
-        mBounds.MoveTo(WidgetToScreenOffset());
-        pnt = mBounds.TopLeft();
+    // This event indicates that the window position may have changed.
+    // mBounds.Size() is updated in OnSizeAllocate().
+
+    // (The gtk_window_get_window_type() function is only available from
+    // version 2.20.)
+    NS_ASSERTION(GTK_IS_WINDOW(aWidget),
+                 "Configure event on widget that is not a GtkWindow");
+    gint type;
+    g_object_get(aWidget, "type", &type, NULL);
+    if (type == GTK_WINDOW_POPUP) {
+        // Override-redirect window
+        //
+        // These windows should not be moved by the window manager, and so any
+        // change in position is a result of our direction.  mBounds has
+        // already been set in Move() or Resize(), and that is more
+        // up-to-date than the position in the ConfigureNotify event if the
+        // event is from an earlier window move.
+        //
+        // Skipping the NS_MOVE dispatch saves context menus from an infinite
+        // loop when nsXULPopupManager::PopupMoved moves the window to the new
+        // position and nsMenuPopupFrame::SetPopupPosition adds
+        // offsetForContextMenu on each iteration.
+        return FALSE;
     }
+
+    // This is wrong, but noautohide titlebar panels currently depend on it
+    // (bug 601545#c13).  mBounds.TopLeft() should refer to the
+    // window-manager frame top-left, but WidgetToScreenOffset() gives the
+    // client window origin.
+    mBounds.MoveTo(WidgetToScreenOffset());
 
     nsGUIEvent event(PR_TRUE, NS_MOVE, this);
 
-    event.refPoint = pnt;
+    event.refPoint = mBounds.TopLeft();
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?
@@ -4405,7 +4444,9 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     ResizeTransparencyBitmap(aWidth, aHeight);
 
     if (mIsTopLevel) {
+        // aX and aY give the position of the window manager frame top-left.
         gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+        // This sets the client window size.
         gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
     }
     else if (mContainer) {
