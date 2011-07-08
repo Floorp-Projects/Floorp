@@ -268,7 +268,7 @@ js_SaveCrashData(uint64 tag, void *ptr, size_t size)
 JS_PUBLIC_API(void)
 JS_EnumerateDiagnosticMemoryRegions(JSEnumerateDiagnosticMemoryCallback callback)
 {
-#if 0
+#if 1
     if (!gInitialized) {
         gInitialized = true;
         (*callback)(&gGCStack, sizeof(gGCStack));
