@@ -939,6 +939,10 @@ public:
 
     struct ImageInfo {
         ImageInfo() : mWidth(0), mHeight(0), mFormat(0), mType(0), mIsDefined(PR_FALSE) {}
+        ImageInfo(WebGLsizei width, WebGLsizei height,
+                  WebGLenum format, WebGLenum type)
+            : mWidth(width), mHeight(height), mFormat(format), mType(type), mIsDefined(PR_TRUE) {}
+
         PRBool operator==(const ImageInfo& a) const {
             return mWidth == a.mWidth && mHeight == a.mHeight &&
                    mFormat == a.mFormat && mType == a.mType;
@@ -1102,7 +1106,7 @@ public:
 
     void SetImageInfo(WebGLenum aTarget, WebGLint aLevel,
                       WebGLsizei aWidth, WebGLsizei aHeight,
-                      WebGLenum aFormat = 0, WebGLenum aType = 0)
+                      WebGLenum aFormat, WebGLenum aType)
     {
         if ( (aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D) )
             return;
@@ -1111,14 +1115,7 @@ public:
 
         EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
 
-        ImageInfo& imageInfo = ImageInfoAt(aLevel, face);
-        imageInfo.mWidth  = aWidth;
-        imageInfo.mHeight = aHeight;
-        if (aFormat)
-            imageInfo.mFormat = aFormat;
-        if (aType)
-            imageInfo.mType = aType;
-        imageInfo.mIsDefined = PR_TRUE;
+        ImageInfoAt(aLevel, face) = ImageInfo(aWidth, aHeight, aFormat, aType);
 
         if (aLevel > 0)
             SetCustomMipmap();
