@@ -89,6 +89,7 @@
             <action android:name="org.mozilla.gecko.restart"/>
           </intent-filter>
         </activity>
+
 #if MOZ_CRASHREPORTER
 	<activity android:name="CrashReporter"
                   android:label="@string/crash_reporter_title"
@@ -98,5 +99,14 @@
           </intent-filter>
 	</activity>
 #endif
+
+        <activity android:name="LauncherShortcuts"
+                  android:label="@string/launcher_shortcuts_title">
+            <!--  This intent-filter allows your shortcuts to be created in the launcher. -->
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest> 

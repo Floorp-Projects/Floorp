@@ -356,6 +356,18 @@ static void DebugPrintAllKeyboardLayouts()
 
 #endif // defined(DEBUG) && defined(PR_LOGGING)
 
+void EnsureLogInitialized()
+{
+#ifdef PR_LOGGING
+  if (!sCocoaLog) {
+    sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
+#ifdef DEBUG
+    DebugPrintAllKeyboardLayouts();
+#endif // DEBUG
+  }
+#endif // PR_LOGGING
+}
+
 #pragma mark -
 
 nsChildView::nsChildView() : nsBaseWidget()
@@ -368,14 +380,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mIsDispatchPaint(PR_FALSE)
 , mPluginInstanceOwner(nsnull)
 {
-#ifdef PR_LOGGING
-  if (!sCocoaLog) {
-    sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
-#ifdef DEBUG
-    DebugPrintAllKeyboardLayouts();
-#endif // DEBUG
-  }
-#endif // PR_LOGGING
+  EnsureLogInitialized();
 
   memset(&mPluginCGContext, 0, sizeof(mPluginCGContext));
 #ifndef NP_NO_QUICKDRAW
