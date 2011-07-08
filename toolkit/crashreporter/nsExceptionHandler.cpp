@@ -1153,6 +1153,32 @@ bool GetAnnotation(const nsACString& key, nsACString& data)
   return true;
 }
 
+nsresult RegisterAppMemory(void* ptr, size_t length)
+{
+  if (!GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
+#if defined(XP_LINUX) || defined(XP_WIN32)
+  gExceptionHandler->RegisterAppMemory(ptr, length);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+nsresult UnregisterAppMemory(void* ptr)
+{
+  if (!GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
+#if defined(XP_LINUX) || defined(XP_WIN32)
+  gExceptionHandler->UnregisterAppMemory(ptr);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 bool GetServerURL(nsACString& aServerURL)
 {
   if (!gExceptionHandler)
@@ -1689,6 +1715,7 @@ OnChildProcessDumpRequested(void* aContext,
   // have access to the library mappings.
   MappingMap::const_iterator iter = 
     child_library_mappings.find(aClientInfo->pid_);
+  google_breakpad::AppMemoryList a;
   if (iter == child_library_mappings.end()) {
     NS_WARNING("No library mappings found for child, can't write minidump!");
     return;
@@ -1698,7 +1725,8 @@ OnChildProcessDumpRequested(void* aContext,
                                       aClientInfo->pid_,
                                       aClientInfo->crash_context,
                                       aClientInfo->crash_context_size,
-                                      iter->second))
+                                      iter->second,
+                                      a))
     return;
 #endif
 

@@ -2053,6 +2053,7 @@ case "$target" in
     else
         MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
     fi
+    MOZ_MEMORY=1
     _PEDANTIC=
     CFLAGS="$CFLAGS -fno-common"
     CXXFLAGS="$CXXFLAGS -fno-common"
@@ -7459,12 +7460,12 @@ else
     ;;
   esac
 
-  if test "$OS_ARCH" != "Darwin"; then
+  if test "$OS_ARCH" != "WINNT"; then
     dnl NB: this must be kept in sync with jemalloc.h
     AC_DEFINE(HAVE_JEMALLOC_VALLOC)
-    AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
-    AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
   fi
+  AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
+  AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)

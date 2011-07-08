@@ -348,17 +348,15 @@ public:
   }
 
 
-  NS_IMETHOD GetProcess(char **process)
+  NS_IMETHOD GetProcess(nsACString &process)
   {
-    *process = strdup("");
+    process.Truncate();
     return NS_OK;
   }
 
-  NS_IMETHOD GetPath(char **memoryPath)
+  NS_IMETHOD GetPath(nsACString &path)
   {
-    nsCString path;
-
-    path.AppendLiteral("explicit/storage/sqlite/");
+    path.AssignLiteral("explicit/storage/sqlite/");
     path.Append(mDBConn.getFilename());
 
     if (mType == Cache_Used) {
@@ -370,8 +368,6 @@ public:
     else if (mType == Stmt_Used) {
       path.AppendLiteral("/stmt-used");
     }
-
-    *memoryPath = ::ToNewCString(path);
     return NS_OK;
   }
 
@@ -406,17 +402,17 @@ public:
     return convertResultCode(rc);
   }
 
-  NS_IMETHOD GetDescription(char **desc)
+  NS_IMETHOD GetDescription(nsACString &desc)
   {
     if (mType == Cache_Used) {
-      *desc = ::strdup("Memory (approximate) used by all pager caches.");
+      desc.AssignLiteral("Memory (approximate) used by all pager caches.");
     }
     else if (mType == Schema_Used) {
-      *desc = ::strdup("Memory (approximate) used to store the schema "
-                       "for all databases associated with the connection");
+      desc.AssignLiteral("Memory (approximate) used to store the schema "
+                          "for all databases associated with the connection");
     }
     else if (mType == Stmt_Used) {
-      *desc = ::strdup("Memory (approximate) used by all prepared statements");
+      desc.AssignLiteral("Memory (approximate) used by all prepared statements");
     }
     return NS_OK;
   }

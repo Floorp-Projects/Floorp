@@ -71,6 +71,7 @@
 #include "nsIFileURL.h"
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
+#include "nsDOMFile.h"
 #include "jsxdrapi.h"
 #include "jscompartment.h"
 #include "jsprf.h"
@@ -233,11 +234,60 @@ Btoa(JSContext *cx, uintN argc, jsval *vp)
     return nsXPConnect::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
+static JSBool
+File(JSContext *cx, uintN argc, jsval *vp)
+{
+    nsresult rv;
+
+    if (!argc) {
+        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
+        return JS_FALSE;
+    }
+
+    nsCOMPtr<nsISupports> native;
+    rv = nsDOMFile::NewFile(getter_AddRefs(native));
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return JS_FALSE;
+    }
+
+    nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+    NS_ASSERTION(initializer, "what?");
+
+    rv = initializer->Initialize(nsnull, cx, nsnull, argc, JS_ARGV(cx, vp));
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return JS_FALSE;
+    }
+
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if (!xpc) {
+        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
+        return JS_FALSE;
+    }
+
+    JSObject* glob = JS_GetGlobalForScopeChain(cx);
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    jsval retval;
+    rv = xpc->WrapNativeToJSVal(cx, glob, native, nsnull,
+                                &NS_GET_IID(nsISupports),
+                                PR_TRUE, &retval, nsnull);
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return JS_FALSE;
+    }
+
+    JS_SET_RVAL(cx, vp, retval);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec gGlobalFun[] = {
     {"dump",    Dump,   1,0},
     {"debug",   Debug,  1,0},
     {"atob",    Atob,   1,0},
     {"btoa",    Btoa,   1,0},
+    {"File",    File,   1,JSFUN_CONSTRUCTOR},
 #ifdef MOZ_CALLGRIND
     {"startCallgrind",  js_StartCallgrind, 0,0},
     {"stopCallgrind",   js_StopCallgrind,  0,0},

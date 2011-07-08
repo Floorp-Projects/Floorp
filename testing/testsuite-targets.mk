@@ -61,6 +61,13 @@ RUN_MOCHITEST = \
 	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
+RUN_MOCHITEST_REMOTE = \
+	rm -f ./$@.log && \
+	$(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
+	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) \
+	  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
   @errors=`grep "TEST-UNEXPECTED-" $@.log` ;\
@@ -73,6 +80,13 @@ define CHECK_TEST_ERROR
   fi
 endef
 endif
+
+mochitest-remote:
+	if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "" ]; \
+          then $(RUN_MOCHITEST_REMOTE); \
+        else \
+          @echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
+        fi
 
 mochitest-plain:
 	$(RUN_MOCHITEST)
