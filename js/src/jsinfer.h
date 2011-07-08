@@ -209,6 +209,8 @@ public:
      * of any script.
      */
     virtual TypeObject * persistentObject() { return NULL; }
+
+    virtual size_t allocatedSize() { return 0; }
 };
 
 /* Coarse flags for the contents of a type set. */
@@ -313,6 +315,7 @@ class TypeSet
     void print(JSContext *cx);
 
     inline void destroy(JSContext *cx);
+    size_t dynamicSize();
 
     /* Whether this set contains a specific type. */
     inline bool hasType(jstype type);
@@ -487,6 +490,8 @@ class TypeIntermediate
 
     /* Whether this subsumes a dynamic type pushed by the bytecode at offset. */
     virtual bool hasDynamicResult(uint32 offset, jstype type) { return false; }
+
+    virtual size_t allocatedSize() = 0;
 };
 
 /*
