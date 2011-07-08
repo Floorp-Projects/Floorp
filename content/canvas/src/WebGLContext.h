@@ -56,6 +56,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsIMemoryReporter.h"
 
 #include "GLContextProvider.h"
 #include "Layers.h"
@@ -320,6 +321,8 @@ class WebGLContext :
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference
 {
+    friend class WebGLMemoryReporter;
+
 public:
     WebGLContext();
     virtual ~WebGLContext();
@@ -468,6 +471,8 @@ protected:
     PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
     PRBool ValidateStencilParamsForDrawCall();
+    
+    static PRUint32 GetTexelSize(WebGLenum format, WebGLenum type);
 
     void Invalidate();
     void DestroyResourcesAndContext();
@@ -909,6 +914,12 @@ protected:
             return is_pot_assuming_nonnegative(mWidth) &&
                    is_pot_assuming_nonnegative(mHeight); // negative sizes should never happen (caught in texImage2D...)
         }
+        PRInt64 MemoryUsage() const {
+            if (!mIsDefined)
+                return 0;
+            PRInt64 texelSize = WebGLContext::GetTexelSize(mFormat, mType);
+            return PRInt64(mWidth) * PRInt64(mHeight) * texelSize;
+        }
         WebGLsizei mWidth, mHeight;
         WebGLenum mFormat, mType;
         PRBool mIsDefined;
@@ -937,6 +948,22 @@ public:
 
     static size_t FaceForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? 0 : target - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    }
+
+    PRInt64 MemoryUsage() const {
+        PRInt64 result = 0;
+        for(size_t face = 0; face < mFacesCount; face++) {
+            if (mHaveGeneratedMipmap) {
+                // Each mipmap level is 1/4 the size of the previous level
+                // 1 + x + x^2 + ... = 1/(1-x)
+                // for x = 1/4, we get 1/(1-1/4) = 4/3
+                result += ImageInfoAt(0, face).MemoryUsage() * 4 / 3;
+            } else {
+                for(size_t level = 0; level <= mMaxLevelWithCustomImages; level++)
+                    result += ImageInfoAt(level, face).MemoryUsage();
+            }
+        }
+        return result;
     }
 
 protected:
@@ -2065,6 +2092,72 @@ WebGLContext::CanGetConcreteObject(const char *info,
     ConcreteObjectType *aConcreteObject;
     return GetConcreteObject(info, aInterface, &aConcreteObject, isNull, isDeleted, PR_FALSE);
 }
+
+class WebGLMemoryReporter
+{
+    WebGLMemoryReporter();
+    ~WebGLMemoryReporter();
+    static WebGLMemoryReporter* sUniqueInstance;
+
+    // here we store plain pointers, not RefPtrs: we don't want the WebGLMemoryReporter unique instance to keep alive all
+    // WebGLContexts ever created.
+    typedef nsTArray<const WebGLContext*> ContextsArrayType;
+    ContextsArrayType mContexts;
+    
+    nsIMemoryReporter *mTextureMemoryUsageReporter;
+    nsIMemoryReporter *mTextureCountReporter;
+    nsIMemoryReporter *mContextCountReporter;
+
+    static WebGLMemoryReporter* UniqueInstance();
+
+    static ContextsArrayType & Contexts() { return UniqueInstance()->mContexts; }
+
+  public:
+
+    static void AddWebGLContext(const WebGLContext* c) {
+        Contexts().AppendElement(c);
+    }
+
+    static void RemoveWebGLContext(const WebGLContext* c) {
+        ContextsArrayType & contexts = Contexts();
+        contexts.RemoveElement(c);
+        if (contexts.IsEmpty()) {
+            delete sUniqueInstance;
+            sUniqueInstance = nsnull;
+        }
+    }
+
+    static PLDHashOperator TextureMemoryUsageFunction(const PRUint32&, WebGLTexture *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->MemoryUsage();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetTextureMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 textureMemoryUsageForThisContext = 0;
+            contexts[i]->mMapTextures.EnumerateRead(TextureMemoryUsageFunction, &textureMemoryUsageForThisContext);
+            result += textureMemoryUsageForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetTextureCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapTextures.Count();
+        }
+        return result;
+    }
+    
+    static PRInt64 GetContextCount() {
+        return Contexts().Length();
+    }
+};
 
 }
 

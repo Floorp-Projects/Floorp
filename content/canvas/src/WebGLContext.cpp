@@ -73,6 +73,54 @@ using namespace mozilla;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 
+WebGLMemoryReporter* WebGLMemoryReporter::sUniqueInstance = nsnull;
+
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLTextureMemoryUsed,
+                             "webgl-texture-memory",
+                             KIND_OTHER,
+                             UNITS_BYTES,
+                             WebGLMemoryReporter::GetTextureMemoryUsed,
+                             "Memory used by WebGL textures. The OpenGL implementation is free to store these textures in either video memory or main memory.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLTextureCount,
+                             "webgl-texture-count",
+                             KIND_OTHER,
+                             UNITS_COUNT,
+                             WebGLMemoryReporter::GetTextureCount,
+                             "Number of WebGL textures.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(WebGLContextCount,
+                             "webgl-context-count",
+                             KIND_OTHER,
+                             UNITS_COUNT,
+                             WebGLMemoryReporter::GetContextCount,
+                             "Number of WebGL contexts.")
+
+WebGLMemoryReporter* WebGLMemoryReporter::UniqueInstance()
+{
+    if (!sUniqueInstance) {
+        sUniqueInstance = new WebGLMemoryReporter;
+    }
+    return sUniqueInstance;
+}
+
+WebGLMemoryReporter::WebGLMemoryReporter()
+    : mTextureMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureMemoryUsed))
+    , mTextureCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureCount))
+    , mContextCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLContextCount))
+{
+    NS_RegisterMemoryReporter(mTextureMemoryUsageReporter);
+    NS_RegisterMemoryReporter(mTextureCountReporter);
+    NS_RegisterMemoryReporter(mContextCountReporter);
+}
+
+WebGLMemoryReporter::~WebGLMemoryReporter()
+{
+    NS_UnregisterMemoryReporter(mTextureMemoryUsageReporter);
+    NS_UnregisterMemoryReporter(mTextureCountReporter);
+    NS_UnregisterMemoryReporter(mContextCountReporter);
+}
+
 nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
 
 nsresult
@@ -165,11 +213,14 @@ WebGLContext::WebGLContext()
     // See OpenGL ES 2.0.25 spec, 6.2 State Tables, table 6.13
     mPixelStorePackAlignment = 4;
     mPixelStoreUnpackAlignment = 4;
+    
+    WebGLMemoryReporter::AddWebGLContext(this);
 }
 
 WebGLContext::~WebGLContext()
 {
     DestroyResourcesAndContext();
+    WebGLMemoryReporter::RemoveWebGLContext(this);
 }
 
 static PLDHashOperator
