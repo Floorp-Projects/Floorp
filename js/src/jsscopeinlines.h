@@ -365,6 +365,12 @@ EmptyShape::getEmptyBlockShape(JSContext *cx)
 }
 
 /* static */ inline EmptyShape *
+EmptyShape::getEmptyCallShape(JSContext *cx)
+{
+    return ensure(cx, &js_CallClass, &cx->compartment->emptyCallShape);
+}
+
+/* static */ inline EmptyShape *
 EmptyShape::getEmptyDeclEnvShape(JSContext *cx)
 {
     return ensure(cx, &js_DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
