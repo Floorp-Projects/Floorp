@@ -4187,6 +4187,35 @@ WebGLContext::TexImage2D(PRInt32)
     return NS_ERROR_FAILURE;
 }
 
+GLenum WebGLContext::CheckedTexImage2D(GLenum target,
+                                       GLint level,
+                                       GLenum internalFormat,
+                                       GLsizei width,
+                                       GLsizei height,
+                                       GLint border,
+                                       GLenum format,
+                                       GLenum type,
+                                       const GLvoid *data)
+{
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    NS_ABORT_IF_FALSE(tex != nsnull, "no texture bound");
+    const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, WebGLTexture::FaceForTarget(target));
+    bool sizeMayChange = width != imageInfo.mWidth ||
+                         height != imageInfo.mHeight ||
+                         format != imageInfo.mFormat ||
+                         type != imageInfo.mType;
+    if (sizeMayChange) {
+        UpdateWebGLErrorAndClearGLError();
+        gl->fTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError(&error);
+        return error;
+    } else {
+        gl->fTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+        return LOCAL_GL_NO_ERROR;
+    }
+}
+
 nsresult
 WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum internalformat,
                               WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
@@ -4278,13 +4307,13 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     if (!tex)
         return ErrorInvalidOperation("texImage2D: no texture is bound to this target");
 
-    tex->SetImageInfo(target, level, width, height, format, type);
-
     MakeContextCurrent();
 
     // Handle ES2 and GL differences in floating point internal formats.  Note that
     // format == internalformat, as checked above and as required by ES.
     internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES2());
+
+    GLenum error = LOCAL_GL_NO_ERROR;
 
     if (byteLength) {
         int dstFormat = GetWebGLTexelFormat(format, type);
@@ -4301,16 +4330,18 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
             !mPixelStoreFlipY)
         {
             // no conversion, no flipping, so we avoid copying anything and just pass the source pointer
-            gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, data);
+            error = CheckedTexImage2D(target, level, internalformat,
+                                      width, height, border, format, type, data);
         }
         else
         {
             nsAutoArrayPtr<PRUint8> convertedData(new PRUint8[bytesNeeded]);
             ConvertImage(width, height, srcStride, dstStride,
-                         (PRUint8*)data, convertedData,
-                         actualSrcFormat, srcPremultiplied,
-                         dstFormat, mPixelStorePremultiplyAlpha, texelSize);
-            gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, convertedData);
+                        (PRUint8*)data, convertedData,
+                        actualSrcFormat, srcPremultiplied,
+                        dstFormat, mPixelStorePremultiplyAlpha, texelSize);
+            error = CheckedTexImage2D(target, level, internalformat,
+                                      width, height, border, format, type, convertedData);
         }
     } else {
         // We need some zero pages, because GL doesn't guarantee the
@@ -4320,11 +4351,18 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         if (!tempZeroData)
             return ErrorOutOfMemory("texImage2D: could not allocate %d bytes (for zero fill)", bytesNeeded);
 
-        gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, tempZeroData);
+        error = CheckedTexImage2D(target, level, internalformat,
+                                  width, height, border, format, type, tempZeroData);
 
         free(tempZeroData);
     }
+    
+    if (error) {
+        LogMessageIfVerbose("texImage2D generated error %s", ErrorName(error));
+        return NS_OK;
+    }
 
+    tex->SetImageInfo(target, level, width, height, format, type);
     tex->setDimensions(width, height);
 
     return NS_OK;
