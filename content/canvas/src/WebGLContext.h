@@ -885,7 +885,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLBuffer, WEBGLBUFFER_PRIVATE_IID)
 class WebGLTexture :
     public nsIWebGLTexture,
     public WebGLZeroingObject,
-    public WebGLRectangleObject,
     public WebGLContextBoundObject
 {
 public:
@@ -1595,6 +1594,7 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
 
 class WebGLFramebufferAttachment
+    : public WebGLRectangleObject
 {
     // deleting a texture or renderbuffer immediately detaches it
     WebGLObjectRefPtr<WebGLTexture> mTexturePtr;
@@ -1630,10 +1630,17 @@ public:
         mRenderbufferPtr = nsnull;
         mTextureLevel = level;
         mTextureCubeMapFace = face;
+        if (tex) {
+            const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+            setDimensions(imageInfo.mWidth, imageInfo.mHeight);
+        } else {
+            setDimensions(0, 0);
+        }
     }
     void SetRenderbuffer(WebGLRenderbuffer *rb) {
         mTexturePtr = nsnull;
         mRenderbufferPtr = rb;
+        setDimensions(rb);
     }
     WebGLTexture *Texture() const {
         return mTexturePtr.get();
@@ -1683,7 +1690,6 @@ public:
 class WebGLFramebuffer :
     public nsIWebGLFramebuffer,
     public WebGLZeroingObject,
-    public WebGLRectangleObject,
     public WebGLContextBoundObject
 {
 public:
@@ -1708,6 +1714,9 @@ public:
     PRBool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(PRBool x) { mHasEverBeenBound = x; }
     WebGLuint GLName() { return mName; }
+    
+    WebGLsizei width() { return mColorAttachment.width(); }
+    WebGLsizei height() { return mColorAttachment.height(); }
 
     nsresult FramebufferRenderbuffer(WebGLenum target,
                                      WebGLenum attachment,
@@ -1744,11 +1753,7 @@ public:
             // finish checking that the 'attachment' parameter is among the allowed values
             if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
                 return mContext->ErrorInvalidEnumInfo("framebufferRenderbuffer: attachment", attachment);
-            if (!isNull) {
-                // ReadPixels needs alpha and size information, but only
-                // for COLOR_ATTACHMENT0
-                setDimensions(wrb);
-            }
+
             mColorAttachment.SetRenderbuffer(wrb);
             break;
         }
@@ -1783,15 +1788,15 @@ public:
         if (target != LOCAL_GL_FRAMEBUFFER)
             return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: target", target);
 
-        if (!isNull && textarget != LOCAL_GL_TEXTURE_2D &&
+        if (textarget != LOCAL_GL_TEXTURE_2D &&
             (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
-            textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
+             textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
             return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
 
-        if (!isNull && level > 0)
+        if (level != 0)
             return mContext->ErrorInvalidValue("framebufferTexture2D: level must be 0");
 
-        WebGLint face = (textarget == LOCAL_GL_TEXTURE_2D) ? 0 : textarget;
+        size_t face = WebGLTexture::FaceForTarget(textarget);
         switch (attachment) {
         case LOCAL_GL_DEPTH_ATTACHMENT:
             mDepthAttachment.SetTexture(wtex, level, face);
@@ -1805,9 +1810,6 @@ public:
         default:
             if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
                 return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: attachment", attachment);
-
-            // keep data for readPixels, function only uses COLOR_ATTACHMENT0
-            setDimensions(wtex);
 
             mColorAttachment.SetTexture(wtex, level, face);
             break;
@@ -1851,13 +1853,15 @@ public:
             // some attachment is incompatible with its attachment point
             return PR_TRUE;
         }
-        else if (int(mDepthAttachment.IsNull()) +
-                 int(mStencilAttachment.IsNull()) +
-                 int(mDepthStencilAttachment.IsNull()) <= 1)
+        
+        if (int(mDepthAttachment.IsNull()) +
+            int(mStencilAttachment.IsNull()) +
+            int(mDepthStencilAttachment.IsNull()) <= 1)
         {
             // has at least two among Depth, Stencil, DepthStencil
             return PR_TRUE;
         }
+
         else return PR_FALSE;
     }
 
