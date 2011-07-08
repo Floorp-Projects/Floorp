@@ -580,6 +580,34 @@ ContentScriptErrorReporter(JSContext* aCx,
   if (consoleService) {
     (void) consoleService->LogMessage(scriptError);
   }
+
+#ifdef DEBUG
+  // Print it to stderr as well, for the benefit of those invoking
+  // mozilla with -console.
+  nsCAutoString error;
+  error.Assign("JavaScript ");
+  if (JSREPORT_IS_STRICT(flags)) {
+    error.Append("strict ");
+  }
+  if (JSREPORT_IS_WARNING(flags)) {
+    error.Append("warning: ");
+  } else {
+    error.Append("error: ");
+  }
+  error.Append(aReport->filename);
+  error.Append(", line ");
+  error.AppendInt(lineNumber, 10);
+  error.Append(": ");
+  if (aReport->ucmessage) {
+    AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(aReport->ucmessage),
+                      error);
+  } else {
+    error.Append(aMessage);
+  }
+
+  fprintf(stderr, "%s\n", error.get());
+  fflush(stderr);
+#endif
 }
 
 nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>*
