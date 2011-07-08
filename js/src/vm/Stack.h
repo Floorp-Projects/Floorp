@@ -303,9 +303,11 @@ CallArgsListFromVp(uintN argc, Value *vp, CallArgsList *prev)
 
 /*****************************************************************************/
 
-enum MaybeConstruct {
-    NO_CONSTRUCT           =          0, /* == false */
-    CONSTRUCT              =       0x80  /* == StackFrame::CONSTRUCTING, asserted below */
+/* Flags specified for a frame as it is constructed. */
+enum InitialFrameFlags {
+    INITIAL_NONE           =          0,
+    INITIAL_CONSTRUCT      =       0x80, /* == StackFrame::CONSTRUCTING, asserted below */
+    INITIAL_LOWERED        =   0x400000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
 };
 
 enum ExecuteType {
@@ -352,7 +354,9 @@ class StackFrame
         HAS_SCOPECHAIN     =    0x80000,  /* frame has scopeChain_ set */
         HAS_PREVPC         =   0x100000,  /* frame has prevpc_ and prevInline_ set */
 
-        DOWN_FRAMES_EXPANDED = 0x200000   /* inlining in down frames has been expanded */
+        /* Method JIT state */
+        DOWN_FRAMES_EXPANDED = 0x200000,  /* inlining in down frames has been expanded */
+        LOWERED_CALL_APPLY   = 0x400000   /* Pushed by a lowered call/apply */
     };
 
   private:
@@ -677,7 +681,6 @@ class StackFrame
     inline uintN numActualArgs() const;
     inline Value *actualArgs() const;
     inline Value *actualArgsEnd() const;
-    inline void ensureCoherentArgCount();
 
     inline Value &canonicalActualArg(uintN i) const;
     template <class Op>
@@ -810,6 +813,12 @@ class StackFrame
      * when setting the scope chain, to indicate whether the new scope chain
      * contains a new call object and thus changes the 'hasCallObj' state.
      *
+     * The method JIT requires that HAS_SCOPECHAIN be set for all frames which
+     * use NAME or related opcodes that can access the scope chain (so it does
+     * not have to test the bit). To ensure this, we always initialize the
+     * scope chain when pushing frames in the VM, and only initialize it when
+     * pushing frames in JIT code when the above situation applies.
+     *
      * NB: 'fp->hasCallObj()' implies that fp->callObj() needs to be 'put' when
      * the frame is popped. Since the scope chain of a non-strict eval frame
      * contains the call object of the parent (function) frame, it is possible
@@ -937,7 +946,7 @@ class StackFrame
     }
 
     bool downFramesExpanded() {
-        return flags_ & DOWN_FRAMES_EXPANDED;
+        return !!(flags_ & DOWN_FRAMES_EXPANDED);
     }
 
     /* Debugger hook data */
@@ -1041,10 +1050,27 @@ class StackFrame
      * Other flags
      */
 
-    MaybeConstruct isConstructing() const {
-        JS_STATIC_ASSERT((int)CONSTRUCT == (int)CONSTRUCTING);
-        JS_STATIC_ASSERT((int)NO_CONSTRUCT == 0);
-        return MaybeConstruct(flags_ & CONSTRUCTING);
+    InitialFrameFlags initialFlags() const {
+        JS_STATIC_ASSERT((int)INITIAL_NONE == 0);
+        JS_STATIC_ASSERT((int)INITIAL_CONSTRUCT == (int)CONSTRUCTING);
+        JS_STATIC_ASSERT((int)INITIAL_LOWERED == (int)LOWERED_CALL_APPLY);
+        uint32 mask = CONSTRUCTING | LOWERED_CALL_APPLY;
+        JS_ASSERT((flags_ & mask) != mask);
+        return InitialFrameFlags(flags_ & mask);
+    }
+
+    bool isConstructing() const {
+        return !!(flags_ & CONSTRUCTING);
+    }
+
+    /*
+     * The method JIT call/apply optimization can erase Function.{call,apply}
+     * invocations from the stack and push the callee frame directly. The base
+     * of these frames will be offset by one value, however, which the
+     * interpreter needs to account for if it ends up popping the frame.
+     */
+    bool loweredCallOrApply() const {
+        return !!(flags_ & LOWERED_CALL_APPLY);
     }
 
     bool isDebuggerFrame() const {
@@ -1160,23 +1186,33 @@ class StackFrame
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
 
 static inline uintN
-ToReportFlags(MaybeConstruct construct)
+ToReportFlags(InitialFrameFlags initial)
 {
-    return uintN(construct);
+    return uintN(initial & StackFrame::CONSTRUCTING);
 }
 
 static inline StackFrame::Flags
-ToFrameFlags(MaybeConstruct construct)
+ToFrameFlags(InitialFrameFlags initial)
 {
-    JS_STATIC_ASSERT((int)CONSTRUCT == (int)StackFrame::CONSTRUCTING);
-    JS_STATIC_ASSERT((int)NO_CONSTRUCT == 0);
-    return StackFrame::Flags(construct);
+    return StackFrame::Flags(initial);
 }
 
-static inline MaybeConstruct
-MaybeConstructFromBool(bool b)
+static inline InitialFrameFlags
+InitialFrameFlagsFromConstructing(bool b)
 {
-    return b ? CONSTRUCT : NO_CONSTRUCT;
+    return b ? INITIAL_CONSTRUCT : INITIAL_NONE;
+}
+
+static inline bool
+InitialFrameFlagsAreConstructing(InitialFrameFlags initial)
+{
+    return !!(initial & INITIAL_CONSTRUCT);
+}
+
+static inline bool
+InitialFrameFlagsAreLowered(InitialFrameFlags initial)
+{
+    return !!(initial & INITIAL_LOWERED);
 }
 
 inline StackFrame *          Valueify(JSStackFrame *fp) { return (StackFrame *)fp; }
@@ -1582,7 +1618,7 @@ class ContextStack
 
     /* Called by Invoke for a scripted function call. */
     bool pushInvokeFrame(JSContext *cx, const CallArgs &args,
-                         MaybeConstruct construct, InvokeFrameGuard *ifg);
+                         InitialFrameFlags initial, InvokeFrameGuard *ifg);
 
     /* Called by Execute for execution of eval or global code. */
     bool pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thisv,
@@ -1608,7 +1644,7 @@ class ContextStack
     template <class Check>
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                          JSObject &callee, JSFunction *fun, JSScript *script,
-                         MaybeConstruct construct, Check check);
+                         InitialFrameFlags initial, Check check);
     void popInlineFrame(FrameRegs &regs);
 
     /* Pop a partially-pushed frame after hitting the limit before throwing. */
@@ -1630,7 +1666,7 @@ class ContextStack
      */
     StackFrame *getFixupFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                               JSFunction *fun, JSScript *script, void *ncode,
-                              MaybeConstruct construct, LimitCheck check);
+                              InitialFrameFlags flags, LimitCheck check);
 
     bool saveFrameChain();
     void restoreFrameChain();

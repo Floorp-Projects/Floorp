@@ -605,7 +605,7 @@ ContextStack::popInvokeArgs(const InvokeArgsGuard &iag)
 
 bool
 ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
-                              MaybeConstruct construct, InvokeFrameGuard *ifg)
+                              InitialFrameFlags initial, InvokeFrameGuard *ifg)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(space().firstUnused() == args.end());
@@ -614,7 +614,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JSFunction *fun = callee.getFunctionPrivate();
     JSScript *script = fun->script();
 
-    StackFrame::Flags flags = ToFrameFlags(construct);
+    StackFrame::Flags flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, args, fun, script, &flags, OOMCheck());
     if (!fp)
         return false;
@@ -960,13 +960,11 @@ StackIter::settleOnNewState()
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 uintN argc = GET_ARGC(pc_);
                 DebugOnly<uintN> spoff = sp_ - fp_->base();
-#if 0
 #ifdef DEBUG
                 if (cx_->stackIterAssertionEnabled) {
                     JS_ASSERT_IF(!fp_->hasImacropc(),
                                  spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
                 }
-#endif
 #endif
                 Value *vp = sp_ - (2 + argc);
 

@@ -637,7 +637,8 @@ class CallCompiler : public BaseCompiler
         RegisterID t0 = inlFrame.tempRegs.takeAnyReg().reg();
 
         /* Generate the inline frame creation. */
-        inlFrame.assemble(ic.funGuard.labelAtOffset(ic.joinPointOffset).executableAddress());
+        void *ncode = ic.funGuard.labelAtOffset(ic.joinPointOffset).executableAddress();
+        inlFrame.assemble(ncode, f.pc());
 
         /* funPtrReg is still valid. Check if a compilation is needed. */
         Address scriptAddr(ic.funPtrReg, offsetof(JSFunction, u) +
@@ -683,7 +684,7 @@ class CallCompiler : public BaseCompiler
         masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), JSFrameReg);
 
         /* Compute the value of ncode to use at this call site. */
-        uint8 *ncode = (uint8 *) f.jit()->code.m_code.executableAddress() + ic.call->codeOffset;
+        ncode = (uint8 *) f.jit()->code.m_code.executableAddress() + ic.call->codeOffset;
         masm.storePtr(ImmPtr(ncode), Address(JSFrameReg, StackFrame::offsetOfNcode()));
 
         masm.jump(Registers::ReturnReg);
@@ -1064,11 +1065,14 @@ class CallCompiler : public BaseCompiler
         JITScript *jit = fp->jit();
         RecompilationMonitor monitor(cx);
 
+        bool lowered = ic.frameSize.lowered(f.pc());
+        JS_ASSERT_IF(lowered, !callingNew);
+
         stubs::UncachedCallResult ucr;
         if (callingNew)
             stubs::UncachedNewHelper(f, ic.frameSize.staticArgc(), &ucr);
         else
-            stubs::UncachedCallHelper(f, ic.frameSize.getArgc(f), &ucr);
+            stubs::UncachedCallHelper(f, ic.frameSize.getArgc(f), lowered, &ucr);
 
         // Watch out in case the IC was invalidated by a recompilation on the calling
         // script. This can happen either if the callee is executed or if it compiles

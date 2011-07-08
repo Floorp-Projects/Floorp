@@ -71,6 +71,7 @@ void JS_FASTCALL SlowNew(VMFrame &f, uint32 argc);
 void JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedNew(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedCall(VMFrame &f, uint32 argc);
+void * JS_FASTCALL UncachedLoweredCall(VMFrame &f, uint32 argc);
 void JS_FASTCALL Eval(VMFrame &f, uint32 argc);
 void JS_FASTCALL ScriptDebugPrologue(VMFrame &f);
 void JS_FASTCALL ScriptDebugEpilogue(VMFrame &f);
@@ -107,7 +108,7 @@ struct UncachedCallResult {
  * These functions either execute the function, return a native code
  * pointer that can be used to call the function, or throw.
  */
-void UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
+void UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallResult *ucr);
 void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);

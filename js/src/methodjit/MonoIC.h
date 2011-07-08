@@ -102,6 +102,10 @@ class FrameSize
         }
         return native ? REJOIN_NATIVE_LOWERED : REJOIN_CALL_PROLOGUE_LOWERED_APPLY;
     }
+
+    bool lowered(jsbytecode *pc) {
+        return !isStatic() || staticArgc() != GET_ARGC(pc);
+    }
 };
 
 namespace ic {
