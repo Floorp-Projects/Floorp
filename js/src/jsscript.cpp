@@ -1291,8 +1291,12 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         script->hasSharps = true;
     if (cg->flags & TCF_STRICT_MODE_CODE)
         script->strictModeCode = true;
-    if (cg->flags & TCF_COMPILE_N_GO)
+    if (cg->flags & TCF_COMPILE_N_GO) {
         script->compileAndGo = true;
+        const StackFrame *fp = cg->parser->callerFrame;
+        if (fp && fp->isFunctionFrame())
+            script->savedCallerFun = true;
+    }
     if (cg->callsEval())
         script->usesEval = true;
     if (cg->flags & TCF_FUN_USES_ARGUMENTS)
