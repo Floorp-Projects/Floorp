@@ -3868,16 +3868,6 @@ nsWindow::Create(nsIWidget        *aParent,
 
     // save our bounds
     mBounds = aRect;
-    if (mWindowType != eWindowType_child &&
-        mWindowType != eWindowType_plugin) {
-        // We only move a toplevel window if someone has actually placed the
-        // window somewhere.  If no placement has taken place, we just let the
-        // window manager Do The Right Thing.
-        //
-        // Indicate that if we're shown, we at least need to have our size set.
-        // If we get explicitly moved, the position will also be set.
-        mNeedsResize = PR_TRUE;
-    }
 
     // figure out our parent window
     GtkWidget      *parentMozContainer = nsnull;
@@ -3912,6 +3902,14 @@ nsWindow::Create(nsIWidget        *aParent,
     case eWindowType_toplevel:
     case eWindowType_invisible: {
         mIsTopLevel = PR_TRUE;
+
+        // We only move a general managed toplevel window if someone has
+        // actually placed the window somewhere.  If no placement has taken
+        // place, we just let the window manager Do The Right Thing.
+        //
+        // Indicate that if we're shown, we at least need to have our size set.
+        // If we get explicitly moved, the position will also be set.
+        mNeedsResize = PR_TRUE;
 
         nsXPIDLString brandName;
         GetBrandName(brandName);
@@ -3949,6 +3947,11 @@ nsWindow::Create(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
+            // With popup windows, we want to control their position, so don't
+            // wait for the window manager to place them (which wouldn't
+            // happen with override-redirect windows anyway).
+            mNeedsMove = PR_TRUE;
+
             // Popups that are not noautohide are only temporary. The are used
             // for menus and the like and disappear when another window is used.
             if (!aInitData->mNoAutoHide) {
