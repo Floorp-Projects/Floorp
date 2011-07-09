@@ -394,6 +394,18 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool condenseTypes(JSContext *cx);
 
+    /* Data for tracking analysis/inference memory usage. */
+    struct TypeInferenceMemoryStats
+    {
+        int64 scriptMain;
+        int64 scriptSets;
+        int64 objectMain;
+        int64 objectSets;
+        int64 poolMain;
+    };
+
+    void getTypeInferenceMemoryStats(TypeInferenceMemoryStats *stats);
+
 #ifdef JS_TRACER
   private:
     /*
@@ -452,10 +464,11 @@ struct JS_FRIEND_API(JSCompartment) {
 
     /*
      * Runtime-shared empty scopes for well-known built-in objects that lack
-     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABDEW
+     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
      */
     js::EmptyShape               *emptyArgumentsShape;
     js::EmptyShape               *emptyBlockShape;
+    js::EmptyShape               *emptyCallShape;
     js::EmptyShape               *emptyDeclEnvShape;
     js::EmptyShape               *emptyEnumeratorShape;
     js::EmptyShape               *emptyWithShape;

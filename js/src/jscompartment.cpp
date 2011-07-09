@@ -85,6 +85,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     propertyTree(thisForCtor()),
     emptyArgumentsShape(NULL),
     emptyBlockShape(NULL),
+    emptyCallShape(NULL),
     emptyDeclEnvShape(NULL),
     emptyEnumeratorShape(NULL),
     emptyWithShape(NULL),
@@ -515,6 +516,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         emptyArgumentsShape = NULL;
     if (emptyBlockShape && IsAboutToBeFinalized(cx, emptyBlockShape))
         emptyBlockShape = NULL;
+    if (emptyCallShape && IsAboutToBeFinalized(cx, emptyCallShape))
+        emptyCallShape = NULL;
     if (emptyDeclEnvShape && IsAboutToBeFinalized(cx, emptyDeclEnvShape))
         emptyDeclEnvShape = NULL;
     if (emptyEnumeratorShape && IsAboutToBeFinalized(cx, emptyEnumeratorShape))

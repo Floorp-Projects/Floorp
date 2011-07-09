@@ -50,6 +50,8 @@
 #include "jsscope.h"
 #include "vm/GlobalObject.h"
 
+#include "jsscopeinlines.h"
+
 namespace js {
 
 inline
@@ -102,7 +104,7 @@ bool
 Bindings::ensureShape(JSContext *cx)
 {
     if (!lastBinding) {
-        lastBinding = EmptyShape::create(cx, &js_CallClass);
+        lastBinding = EmptyShape::getEmptyCallShape(cx);
         if (!lastBinding)
             return false;
     }

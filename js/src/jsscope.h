@@ -636,6 +636,7 @@ struct EmptyShape : public js::Shape
     static inline EmptyShape *getEmptyArgumentsShape(JSContext *cx);
 
     static inline EmptyShape *getEmptyBlockShape(JSContext *cx);
+    static inline EmptyShape *getEmptyCallShape(JSContext *cx);
     static inline EmptyShape *getEmptyDeclEnvShape(JSContext *cx);
     static inline EmptyShape *getEmptyEnumeratorShape(JSContext *cx);
     static inline EmptyShape *getEmptyWithShape(JSContext *cx);
