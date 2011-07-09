@@ -259,7 +259,6 @@ struct SetPropLabels : MacroAssemblerTypedefs {
 
     void setDslotsLoad(MacroAssembler &masm, Label fastPathRejoin, Label beforeLoad,
                        const ValueRemat &rhs) {
-        JS_ASSERT(!rhs.isFPRegister());
         int offset = masm.differenceBetween(fastPathRejoin, beforeLoad);
         setDslotsLoadOffset(offset, rhs.isConstant(), rhs.isTypeKnown());
     }

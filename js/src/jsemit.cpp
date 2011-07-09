@@ -121,13 +121,11 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     constMap(parser->context),
     constList(parser->context),
     upvarIndices(parser->context),
-    upvarMap(parser->context),
     globalUses(parser->context),
     globalMap(parser->context),
     closedArgs(parser->context),
     closedVars(parser->context),
-    traceIndex(0),
-    typesetIndex(0)
+    traceIndex(0)
 {
     flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
@@ -135,6 +133,7 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     current = &main;
     firstLine = prolog.currentLine = main.currentLine = lineno;
     prolog.noteMask = main.noteMask = SRCNOTE_CHUNK - 1;
+    memset(&upvarMap, 0, sizeof upvarMap);
 }
 
 bool
@@ -154,6 +153,9 @@ JSCodeGenerator::~JSCodeGenerator()
     /* NB: non-null only after OOM. */
     if (spanDeps)
         cx->free_(spanDeps);
+
+    if (upvarMap.vector)
+        cx->free_(upvarMap.vector);
 }
 
 static ptrdiff_t
@@ -1426,25 +1428,6 @@ EmitTraceOp(JSContext *cx, JSCodeGenerator *cg)
 }
 
 /*
- * If op is JOF_TYPESET (see the type barriers comment in jsinfer.h), reserve
- * a type set to store its result and append that info to the already-emitted
- * opcode.
- */
-static inline bool
-MaybeEmitTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
-{
-    if (js_CodeSpec[op].format & JOF_TYPESET) {
-        uint32 index = (cg->typesetIndex < UINT16_MAX) ? cg->typesetIndex++ : cg->typesetIndex - 1;
-        if (EmitCheck(cx, cg, JSOP_NOP, 2) < 0)
-            return false;
-        *CG_NEXT(cg)++ = UINT16_HI(index);
-        *CG_NEXT(cg)++ = UINT16_LO(index);
-        return true;
-    }
-    return true;
-}
-
-/*
  * Macro to emit a bytecode followed by a uint16 immediate operand stored in
  * big-endian order, used for arg and var numbers as well as for atomIndexes.
  * NB: We use cx and cg from our caller's lexical environment, and return
@@ -1453,8 +1436,6 @@ MaybeEmitTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 #define EMIT_UINT16_IMM_OP(op, i)                                             \
     JS_BEGIN_MACRO                                                            \
         if (js_Emit3(cx, cg, op, UINT16_HI(i), UINT16_LO(i)) < 0)             \
-            return JS_FALSE;                                                  \
-        if (!MaybeEmitTypeSet(cx, cg, op))                                    \
             return JS_FALSE;                                                  \
     JS_END_MACRO
 
@@ -1857,12 +1838,8 @@ static bool
 EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-
-    if (op == JSOP_GETPROP &&
-        pn->pn_atom == cx->runtime->atomState.lengthAtom) {
-        /* Specialize length accesses for the interpreter. */
-        op = JSOP_LENGTH;
-    }
+    if (op == JSOP_GETPROP && pn->pn_atom == cx->runtime->atomState.lengthAtom)
+        return js_Emit1(cx, cg, JSOP_LENGTH) >= 0;
 
     jsatomid index;
     if (!cg->makeAtomIndex(pn->pn_atom, &index))
@@ -2336,13 +2313,17 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!cg->upvarIndices->add(p, atom, index))
                 return JS_FALSE;
 
-            UpvarCookies &upvarMap = cg->upvarMap;
-            /* upvarMap should have the same number of UpvarCookies as there are lexdeps. */
-            size_t lexdepCount = cg->roLexdeps->count();
-
-            JS_ASSERT_IF(!upvarMap.empty(), lexdepCount == upvarMap.length());
-            if (upvarMap.empty() && !upvarMap.appendN(UpvarCookie(), lexdepCount))
-                return JS_FALSE;
+            UpvarCookie *vector = cg->upvarMap.vector;
+            uint32 length = cg->roLexdeps->count();
+            if (!vector || cg->upvarMap.length != length) {
+                vector = (UpvarCookie *) cx->realloc_(vector, length * sizeof *vector);
+                if (!vector) {
+                    JS_ReportOutOfMemory(cx);
+                    return JS_FALSE;
+                }
+                cg->upvarMap.vector = vector;
+                cg->upvarMap.length = length;
+            }
 
             uintN slot = cookie.slot();
             if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != JSDefinition::ARG) {
@@ -2354,8 +2335,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     slot += tc->fun()->nargs;
             }
 
-            JS_ASSERT(index < upvarMap.length());
-            upvarMap[index].set(skip, slot);
+            JS_ASSERT(index < cg->upvarMap.length);
+            vector[index].set(skip, slot);
         }
 
         pn->pn_op = JSOP_GETFCSLOT;
@@ -2789,16 +2770,6 @@ EmitXMLName(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 }
 #endif
 
-static inline bool
-EmitElemOpBase(JSContext *cx, JSCodeGenerator *cg, JSOp op)
-{
-    if (js_Emit1(cx, cg, op) < 0)
-        return false;
-    if (!MaybeEmitTypeSet(cx, cg, op))
-        return false;
-    return true;
-}
-
 static bool
 EmitSpecialPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
@@ -2812,7 +2783,9 @@ EmitSpecialPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
         return false;
     if (!EmitIndexOp(cx, JSOP_QNAMEPART, index, cg))
         return false;
-    return EmitElemOpBase(cx, cg, op);
+    if (js_Emit1(cx, cg, op) < 0)
+        return false;
+    return true;
 }
 
 static JSBool
@@ -2838,17 +2811,41 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
         JS_ASSERT(op == JSOP_GETPROP);
         op = JSOP_CALLPROP;
     } else if (op == JSOP_GETPROP && pn->pn_type == TOK_DOT) {
-        if (pn2->pn_type == TOK_NAME) {
+        if (pn2->pn_op == JSOP_THIS) {
+            if (pn->pn_atom != cx->runtime->atomState.lengthAtom) {
+                /* Fast path for gets of |this.foo|. */
+                return EmitAtomOp(cx, pn, JSOP_GETTHISPROP, cg);
+            }
+        } else if (pn2->pn_type == TOK_NAME) {
             /*
-             * Try to optimize arguments.length into JSOP_ARGCNT. If type
-             * inference is enabled this is optimized separately.
+             * Try to optimize:
+             *  - arguments.length into JSOP_ARGCNT
+             *  - argname.prop into JSOP_GETARGPROP
+             *  - localname.prop into JSOP_GETLOCALPROP
+             * but don't do this if the property is 'length' -- prefer to emit
+             * JSOP_GETARG, etc., and then JSOP_LENGTH.
              */
             if (!BindNameToSlot(cx, cg, pn2))
                 return JS_FALSE;
-            if (!cx->typeInferenceEnabled() &&
-                pn->pn_atom == cx->runtime->atomState.lengthAtom) {
+            if (pn->pn_atom == cx->runtime->atomState.lengthAtom) {
                 if (pn2->pn_op == JSOP_ARGUMENTS)
                     return js_Emit1(cx, cg, JSOP_ARGCNT) >= 0;
+            } else {
+                switch (pn2->pn_op) {
+                  case JSOP_GETARG:
+                    op = JSOP_GETARGPROP;
+                    goto do_indexconst;
+                  case JSOP_GETLOCAL:
+                    op = JSOP_GETLOCALPROP;
+                  do_indexconst: {
+                        jsatomid atomIndex;
+                        if (!cg->makeAtomIndex(pn->pn_atom, &atomIndex))
+                            return JS_FALSE;
+                        return EmitSlotIndexOp(cx, op, pn2->pn_cookie.asInteger(), atomIndex, cg);
+                    }
+
+                  default:;
+                }
             }
         }
     }
@@ -2930,8 +2927,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 
         /*
          * Try to optimize arguments[0][j]... into JSOP_ARGSUB<0> followed by
-         * one or more index expression and JSOP_GETELEM op pairs. If type
-         * inference is enabled this is optimized separately.
+         * one or more index expression and JSOP_GETELEM op pairs.
          */
         if (left->pn_type == TOK_NAME && next->pn_type == TOK_NUMBER) {
             if (!BindNameToSlot(cx, cg, left))
@@ -2939,7 +2935,6 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(next->pn_dval, &slot) &&
                 jsuint(slot) < JS_BIT(16) &&
-                !cx->typeInferenceEnabled() &&
                 (!cg->inStrictMode() ||
                  (!cg->mutatesParameter() && !cg->callsEval()))) {
                 /*
@@ -2971,7 +2966,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
                 return JS_FALSE;
             if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
                 return JS_FALSE;
-            if (!EmitElemOpBase(cx, cg, JSOP_GETELEM))
+            if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
                 return JS_FALSE;
             next = next->pn_next;
         }
@@ -3007,10 +3002,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             right = pn->pn_right;
         }
 
-        /*
-         * Try to optimize arguments[0] (e.g.) into JSOP_ARGSUB<0>. If type
-         * inference is enabled this is optimized separately.
-         */
+        /* Try to optimize arguments[0] (e.g.) into JSOP_ARGSUB<0>. */
         if (op == JSOP_GETELEM &&
             left->pn_type == TOK_NAME &&
             right->pn_type == TOK_NUMBER) {
@@ -3019,7 +3011,6 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(right->pn_dval, &slot) &&
                 jsuint(slot) < JS_BIT(16) &&
-                !cx->typeInferenceEnabled() &&
                 (!cg->inStrictMode() ||
                  (!cg->mutatesParameter() && !cg->callsEval()))) {
                 left->pn_offset = right->pn_offset = top;
@@ -3039,7 +3030,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
         return JS_FALSE;
     if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
         return JS_FALSE;
-    return EmitElemOpBase(cx, cg, op);
+    return js_Emit1(cx, cg, op) >= 0;
 }
 
 static JSBool
@@ -3887,7 +3878,7 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
                 return JS_FALSE;
-            if (!EmitElemOpBase(cx, cg, JSOP_ENUMELEM))
+            if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                 return JS_FALSE;
             break;
           }
@@ -3979,7 +3970,7 @@ EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * that value on top of the value being destructured, so the stack
              * is one deeper than when we started.
              */
-            if (!EmitElemOpBase(cx, cg, JSOP_GETELEM))
+            if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
                 return JS_FALSE;
             JS_ASSERT(cg->stackDepth == stackDepth + 1);
         }
@@ -4459,7 +4450,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         JS_ASSERT((pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
  
         JSObject *obj = NewDenseAllocatedArray(cx, pn_count);
-        if (!obj)
+        if (!obj || !obj->ensureSlots(cx, pn_count))
             return false;
 
         unsigned idx = 0;
@@ -4467,12 +4458,10 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             Value value;
             if (!pn->getConstantValue(cx, strictChecks, &value))
                 return false;
-            if (!obj->defineProperty(cx, INT_TO_JSID(idx), value, NULL, NULL, JSPROP_ENUMERATE))
-                return false;
+            obj->setDenseArrayElement(idx, value);
         }
         JS_ASSERT(idx == pn_count);
 
-        types::FixArrayType(cx, obj);
         vp->setObject(*obj);
         return true;
       }
@@ -4512,7 +4501,6 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             }
         }
 
-        types::FixObjectType(cx, obj);
         vp->setObject(*obj);
         return true;
       }
@@ -5151,7 +5139,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     JS_ASSERT(pn3->pn_xflags & PNX_SETCALL);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
-                    if (!EmitElemOpBase(cx, cg, JSOP_ENUMELEM))
+                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                 } else
 #if JS_HAS_XML_SUPPORT
@@ -5159,7 +5147,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     JS_ASSERT(pn3->pn_op == JSOP_BINDXMLNAME);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
-                    if (!EmitElemOpBase(cx, cg, JSOP_ENUMELEM))
+                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                 } else
 #endif
@@ -6145,12 +6133,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 } else if (PN_OP(pn2) == JSOP_SETGNAME) {
                     if (!BindGlobal(cx, cg, pn2, pn2->pn_atom))
                         return JS_FALSE;
-                    if (pn2->pn_cookie.isFree()) {
-                        if (!EmitAtomOp(cx, pn2, JSOP_GETGNAME, cg))
-                            return JS_FALSE;
-                    } else {
+                    if (pn2->pn_cookie.isFree())
+                        EmitAtomOp(cx, pn2, JSOP_GETGNAME, cg);
+                    else
                         EMIT_UINT16_IMM_OP(JSOP_GETGLOBAL, pn2->pn_cookie.asInteger());
-                    }
                 } else {
                     EMIT_UINT16_IMM_OP((PN_OP(pn2) == JSOP_SETARG)
                                        ? JSOP_GETARG
@@ -6161,14 +6147,16 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               case TOK_DOT:
                 if (js_Emit1(cx, cg, JSOP_DUP) < 0)
                     return JS_FALSE;
-                if (pn2->pn_atom == cx->runtime->atomState.protoAtom) {
+                if (pn2->pn_atom == cx->runtime->atomState.lengthAtom) {
+                    if (js_Emit1(cx, cg, JSOP_LENGTH) < 0)
+                        return JS_FALSE;
+                } else if (pn2->pn_atom == cx->runtime->atomState.protoAtom) {
                     if (!EmitIndexOp(cx, JSOP_QNAMEPART, atomIndex, cg))
                         return JS_FALSE;
-                    if (!EmitElemOpBase(cx, cg, JSOP_GETELEM))
+                    if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
                         return JS_FALSE;
                 } else {
-                    bool isLength = (pn2->pn_atom == cx->runtime->atomState.lengthAtom);
-                    EMIT_INDEX_OP(isLength ? JSOP_LENGTH : JSOP_GETPROP, atomIndex);
+                    EMIT_INDEX_OP(JSOP_GETPROP, atomIndex);
                 }
                 break;
               case TOK_LB:
@@ -6178,7 +6166,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
                 if (js_Emit1(cx, cg, JSOP_DUP2) < 0)
                     return JS_FALSE;
-                if (!EmitElemOpBase(cx, cg, JSOP_GETELEM))
+                if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
                     return JS_FALSE;
                 break;
               default:;
@@ -6693,8 +6681,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         argc = pn->pn_count - 1;
         if (js_Emit3(cx, cg, PN_OP(pn), ARGC_HI(argc), ARGC_LO(argc)) < 0)
             return JS_FALSE;
-        if (!MaybeEmitTypeSet(cx, cg, PN_OP(pn)))
-            return JS_FALSE;
         if (PN_OP(pn) == JSOP_EVAL) {
             EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
             if (EmitBlockChain(cx, cg) < 0)
@@ -6856,8 +6842,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif /* JS_HAS_GENERATORS */
 
-        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
-            cg->checkSingletonContext()) {
+        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && cg->checkSingletonContext()) {
             if (!EmitSingletonInitialiser(cx, cg, pn))
                 return JS_FALSE;
             break;
@@ -6917,8 +6902,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
-            cg->checkSingletonContext()) {
+        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && cg->checkSingletonContext()) {
             if (!EmitSingletonInitialiser(cx, cg, pn))
                 return JS_FALSE;
             break;
@@ -6946,17 +6930,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
             if (!obj)
                 return JS_FALSE;
-
-            /*
-             * Generate a unique empty shape for obj, to distinguish it from
-             * initializers with the same fields created at other points.
-             * Each initialization site has a unique type, but as the script
-             * hasn't been created yet we don't know what that type is.
-             */
-            Shape *newshape = EmptyShape::create(cx, &js_ObjectClass);
-            if (!newshape)
-                return JS_FALSE;
-            obj->setMap(newshape);
         }
 
         uintN methodInits = 0, slowMethodInits = 0;

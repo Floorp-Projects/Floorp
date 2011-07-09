@@ -580,7 +580,6 @@ namespace js {
 JS_DECLARE_CALLINFO(NewDenseEmptyArray)
 JS_DECLARE_CALLINFO(NewDenseAllocatedArray)
 JS_DECLARE_CALLINFO(NewDenseUnallocatedArray)
-JS_DECLARE_CALLINFO(NewDenseAllocatedEmptyArray)
 }
 JS_DECLARE_CALLINFO(js_NewbornArrayPush_tn)
 JS_DECLARE_CALLINFO(js_EnsureDenseArrayCapacity)

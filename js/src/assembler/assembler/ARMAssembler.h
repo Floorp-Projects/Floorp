@@ -190,7 +190,6 @@ namespace JSC {
             FCPYD = 0x0eb00b40,
             FADDD = 0x0e300b00,
             FNEGD = 0x0eb10b40,
-            FABSD = 0x0eb00bc0,
             FDIVD = 0x0e800b00,
             FSUBD = 0x0e300b40,
             FMULD = 0x0e200b00,
@@ -547,13 +546,6 @@ namespace JSC {
             js::JaegerSpew(js::JSpew_Insns,
                     IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
             m_buffer.putInt(static_cast<ARMWord>(cc) | FNEGD | DD(dd) | DM(dm));
-        }
-
-        void fabsd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fabsd", nameFpRegD(dd), nameFpRegD(dm));
-            m_buffer.putInt(static_cast<ARMWord>(cc) | FABSD | DD(dd) | DM(dm));
         }
 
         void fdivd_r(int dd, int dn, int dm, Condition cc = AL)
@@ -1179,10 +1171,6 @@ namespace JSC {
 
         static ARMWord getOp2(ARMWord imm);
 
-        // Get an operand-2 field for immediate-shifted-registers in arithmetic
-        // instructions.
-        static ARMWord getOp2RegScale(RegisterID reg, ARMWord scale);
-
 #if WTF_ARM_ARCH_VERSION >= 7
         static ARMWord getImm16Op2(ARMWord imm)
         {
@@ -1210,7 +1198,6 @@ namespace JSC {
         void dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset);
         void baseIndexTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
-        void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset, RegisterID index, int32_t scale);
 
         // Constant pool hnadlers
 
@@ -1221,6 +1208,7 @@ namespace JSC {
             return AL | B | (offset & BRANCH_MASK);
         }
 
+    private:
         static char const * nameGpReg(int reg)
         {
             ASSERT(reg <= 16);
@@ -1271,7 +1259,6 @@ namespace JSC {
             return names[ccIndex];
         }
 
-    private:
         // Decodes operand 2 immediate values (for debug output and assertions).
         inline uint32_t decOp2Imm(uint32_t op2)
         {

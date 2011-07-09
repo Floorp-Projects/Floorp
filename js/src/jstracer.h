@@ -1241,7 +1241,7 @@ class TraceRecorder
      * entries of the tracker accordingly.
      */
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation() {
-        if (global_slots != globalObj->getRawSlots())
+        if (global_slots != globalObj->getSlots())
             checkForGlobalObjectReallocationHelper();
     }
     JS_REQUIRES_STACK void checkForGlobalObjectReallocationHelper();
@@ -1636,7 +1636,7 @@ class TraceRecorder
              * Do slot arithmetic manually to avoid getSlotRef assertions which
              * do not need to be satisfied for this purpose.
              */
-            Value *vp = globalObj->getRawSlot(slot, globalObj->getRawSlots());
+            Value *vp = globalObj->getSlots() + slot;
 
             /* If this global is definitely being tracked, then the write is unexpected. */
             if (tracker.has(vp))
@@ -1656,8 +1656,7 @@ class TraceRecorder
     }
 };
 
-/* :FIXME: bug 637856 disabling traceJit if inference is enabled */
-#define TRACING_ENABLED(cx)       ((cx)->traceJitEnabled && !(cx)->typeInferenceEnabled())
+#define TRACING_ENABLED(cx)       ((cx)->traceJitEnabled)
 #define REGEX_JIT_ENABLED(cx)     ((cx)->traceJitEnabled || (cx)->methodJitEnabled)
 
 #define JSOP_IN_RANGE(op,lo,hi)   (uintN((op) - (lo)) <= uintN((hi) - (lo)))

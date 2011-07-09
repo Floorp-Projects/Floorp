@@ -57,15 +57,6 @@ JS_UnwrapObject(JSObject *obj);
 extern JS_FRIEND_API(JSObject *)
 JS_GetFrameScopeChainRaw(JSStackFrame *fp);
 
-extern JS_FRIEND_API(void)
-JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
-
-extern JS_FRIEND_API(JSObject *)
-JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
-
-extern JS_FRIEND_API(uint32)
-JS_ObjectCountDynamicSlots(JSObject *obj);
-
 JS_END_EXTERN_C
 
 #endif /* jsfriendapi_h___ */

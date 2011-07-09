@@ -93,7 +93,6 @@
 
 #include "jsworkers.h"
 
-#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -153,7 +152,6 @@ static volatile bool gCanceled = false;
 static bool enableTraceJit = false;
 static bool enableMethodJit = false;
 static bool enableProfiling = false;
-static bool enableTypeInference = false;
 static bool enableDisassemblyDumps = false;
 
 static bool printTiming = false;
@@ -395,7 +393,7 @@ SetContextOptions(JSContext *cx)
 }
 
 static void
-Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool last)
+Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 {
     JSBool ok, hitEOF;
     JSObject *scriptObj;
@@ -610,7 +608,6 @@ usage(void)
                       "                  methodjit:   JSOPTION_METHODJIT\n"
                       "                  relimit:     JSOPTION_RELIMIT\n"
                       "                  strict:      JSOPTION_STRICT\n"
-                      "                  typeinfer:   JSOPTION_TYPE_INFERENCE\n"
                       "                  werror:      JSOPTION_WERROR\n"
                       "                  xml:         JSOPTION_XML\n"
                       "  -v <version>  Set the JavaScript language version\n"
@@ -663,7 +660,6 @@ static const struct {
     {"methodjit_always",JSOPTION_METHODJIT_ALWAYS},
     {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
-    {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
     {"xml",             JSOPTION_XML},
 };
@@ -774,7 +770,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     argsObj = JS_NewArrayObject(cx, 0, NULL);
     if (!argsObj)
         return 1;
-
     if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
                            NULL, NULL, 0)) {
         return 1;
@@ -871,10 +866,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_PROFILING);
             break;
 
-        case 'n':
-            /* Inference argument already handled. */
-            break;
-           
         case 'o':
           {
             if (++i == argc)
@@ -921,7 +912,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (++i == argc)
                 return usage();
 
-            Process(cx, obj, argv[i], JS_FALSE, i + 1 == argc);
+            Process(cx, obj, argv[i], JS_FALSE);
             if (gExitCode != 0)
                 return gExitCode;
 
@@ -1006,7 +997,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     }
 
     if (filename || isInteractive)
-        Process(cx, obj, filename, forceTTY, true);
+        Process(cx, obj, filename, forceTTY);
     return gExitCode;
 }
 
@@ -1107,7 +1098,6 @@ Load(JSContext *cx, uintN argc, jsval *vp)
             return false;
     }
 
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -1984,10 +1974,6 @@ Trap(JSContext *cx, uintN argc, jsval *vp)
     argv[argc] = STRING_TO_JSVAL(str);
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
-    if (uint32(i) >= script->length) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TRAP_USAGE);
-        return JS_FALSE;
-    }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_SetTrap(cx, script, script->code + i, TrapHandler, STRING_TO_JSVAL(str));
 }
@@ -2645,7 +2631,7 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
             if (!JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
                 return JS_FALSE;
             JSObject *obj;
-            if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
+            if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
                 if (!obj->getProperty(cx, id, &value))
@@ -2757,7 +2743,6 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
                      maxDepth, thingToIgnore);
     if (dumpFile != stdout)
         fclose(dumpFile);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
 
   not_traceable_arg:
@@ -3311,13 +3296,6 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 static JSBool
 split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
-    /*
-     * This can resolve properties which are not on the original object's
-     * prototype chain, breaking assumptions type inference makes about the
-     * possible properties on an object.
-     */
-    types::AddTypePropertyId(cx, obj->getType(), id, types::TYPE_UNKNOWN);
-
     ComplexObject *cpx;
 
     if (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "isInner")) {
@@ -5293,15 +5271,6 @@ its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    if (method->getFunctionPrivate()->isInterpreted() &&
-        method->getFunctionPrivate()->script()->compileAndGo) {
-        /* Can't reparent compileAndGo scripts. */
-        JSAutoByteString nameBytes(cx, name);
-        if (!!nameBytes)
-            JS_ReportError(cx, "can't bind method %s to compileAndGo script", nameBytes.ptr());
-        return JS_FALSE;
-    }
-
     jsid id;
     if (!JS_ValueToId(cx, STRING_TO_JSVAL(name), &id))
         return JS_FALSE;
@@ -5914,8 +5883,6 @@ NewContext(JSRuntime *rt)
         JS_ToggleOptions(cx, JSOPTION_JIT);
     if (enableMethodJit)
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
-    if (enableTypeInference)
-        JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     return cx;
 }
 
@@ -5986,37 +5953,6 @@ int
 Shell(JSContext *cx, int argc, char **argv, char **envp)
 {
     JSAutoRequest ar(cx);
-
-    /*
-     * First check to see if type inference is enabled. This flag must be set
-     * on the compartment when it is constructed.
-     */
-    for (int i = 0; i < argc; i++) {
-        switch (argv[i][1]) {
-          case 'c':
-          case 'f':
-          case 'e':
-          case 'v':
-          case 'S':
-          case 't':
-#ifdef JS_GC_ZEAL
-          case 'Z':
-#endif
-#ifdef MOZ_TRACEVIS
-          case 'T':
-#endif
-          case 'g':
-            ++i;
-            break;
-
-          case 'n':
-            enableTypeInference = !enableTypeInference;
-            JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
-            break;
-
-          default:;
-        }
-    }
 
     JSObject *glob = NewGlobalObject(cx, NEW_COMPARTMENT);
     if (!glob)

@@ -91,15 +91,10 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!obj_proto)
         return NULL;
 
-    /*
-     * Function.prototype and the global object delegate to Object.prototype.
-     * Don't update the prototype if the __proto__ of either object was cleared
-     * after the objects started getting used.
-     */
-    if (!fun_proto->getProto() && fun_proto->getType() != types::GetTypeEmpty(cx))
-        fun_proto->getType()->splicePrototype(cx, obj_proto);
-    if (!obj->getProto() && obj->getType() != types::GetTypeEmpty(cx))
-        obj->getType()->splicePrototype(cx, obj_proto);
+    /* Function.prototype and the global object delegate to Object.prototype. */
+    fun_proto->setProto(obj_proto);
+    if (!obj->getProto())
+        obj->setProto(obj_proto);
 
     return fun_proto;
 }
@@ -115,14 +110,6 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     if (!obj)
         return NULL;
 
-    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "Global", "",
-                                                                   JSProto_Object, NULL);
-    if (!type || !obj->setTypeAndUniqueShape(cx, type))
-        return NULL;
-    if (clasp->ext.equality)
-        MarkTypeObjectFlags(cx, type, types::OBJECT_FLAG_SPECIAL_EQUALITY);
-    type->singleton = obj;
-
     GlobalObject *globalObj = obj->asGlobal();
     globalObj->makeVarObj();
     globalObj->syncSpecialEquality();
@@ -133,7 +120,6 @@ GlobalObject::create(JSContext *cx, Class *clasp)
         return NULL;
     globalObj->setSlot(REGEXP_STATICS, ObjectValue(*res));
     globalObj->setFlags(0);
-
     return globalObj;
 }
 

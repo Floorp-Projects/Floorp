@@ -183,42 +183,15 @@ InlineReturn(VMFrame &f)
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32 argc)
 {
-    CallArgs args = CallArgsFromSp(argc, f.regs.sp);
-    if (!Invoke(f.cx, args))
+    if (!Invoke(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
-
-    f.script()->types.monitor(f.cx, f.pc(), args.rval());
 }
 
 void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
-    CallArgs args = CallArgsFromSp(argc, f.regs.sp);
-    if (!InvokeConstructor(f.cx, args))
+    if (!InvokeConstructor(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
-
-    f.script()->types.monitor(f.cx, f.pc(), args.rval());
-}
-
-static inline bool
-CheckStackQuota(VMFrame &f)
-{
-    JS_ASSERT(f.regs.sp == f.fp()->base());
-
-    /* Include extra space for inlined frames, loop temporaries and any pushed callee frame. */
-    uintN nvals = f.fp()->script()->nslots + StackSpace::STACK_JIT_EXTRA;
-
-    if ((Value *)f.regs.sp + nvals < f.stackLimit)
-        return true;
-
-    if (f.cx->stack.space().tryBumpLimit(NULL, f.regs.sp, nvals, &f.stackLimit))
-        return true;
-
-    /* Remove the current partially-constructed frame before throwing. */
-    f.cx->stack.popFrameAfterOverflow();
-    js_ReportOverRecursed(f.cx);
-
-    return false;
 }
 
 /*
@@ -228,8 +201,15 @@ CheckStackQuota(VMFrame &f)
 void JS_FASTCALL
 stubs::HitStackQuota(VMFrame &f)
 {
-    if (!CheckStackQuota(f))
-        THROW();
+    /* Include space to push another frame. */
+    uintN nvals = f.fp()->script()->nslots + VALUES_PER_STACK_FRAME;
+    JS_ASSERT(f.regs.sp == f.fp()->base());
+    if (f.cx->stack.space().tryBumpLimit(NULL, f.regs.sp, nvals, &f.stackLimit))
+        return;
+
+    f.cx->stack.popFrameAfterOverflow();
+    js_ReportOverRecursed(f.cx);
+    THROW();
 }
 
 /*
@@ -261,42 +241,69 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     /* Reserve enough space for a callee frame. */
     CallArgs args = CallArgsFromSp(nactual, f.regs.sp);
     StackFrame *fp = cx->stack.getFixupFrame(cx, f.regs, args, fun, script, ncode,
-                                             construct, LimitCheck(&f.stackLimit, ncode));
-
-    /*
-     * Note: this function is called without f.regs intact, but if the previous
-     * call failed it will use ncode to set f.regs to reflect the state at the
-     * call site. We can't use the value for ncode now as generating the
-     * exception may have caused us to discard the caller's code.
-     */
-    if (!fp)
+                                             construct, LimitCheck(&f.stackLimit));
+    if (!fp) {
+        /*
+         * The PC is not coherent with the current frame, so fix it up for
+         * exception handling.
+         */
+        f.regs.pc = f.jit()->nativeToPC(ncode);
         THROWV(NULL);
+    }
 
     /* The caller takes care of assigning fp to regs. */
     return fp;
 }
 
-struct ResetStubRejoin {
-    VMFrame &f;
-    ResetStubRejoin(VMFrame &f) : f(f) {}
-    ~ResetStubRejoin() { f.stubRejoin = 0; }
-};
-
 void * JS_FASTCALL
-stubs::CompileFunction(VMFrame &f, uint32 argc)
+stubs::CompileFunction(VMFrame &f, uint32 nactual)
 {
     /*
-     * Note: the stubRejoin kind for the frame was written before the call, and
-     * needs to be cleared out on all return paths (doing this directly in the
-     * IC stub will not handle cases where we recompiled or threw).
+     * We have a partially constructed frame. That's not really good enough to
+     * compile though because we could throw, so get a full, adjusted frame.
      */
-    JS_ASSERT_IF(f.cx->typeInferenceEnabled(), f.stubRejoin);
-    ResetStubRejoin reset(f);
+    JSContext *cx = f.cx;
+    StackFrame *fp = f.fp();
 
-    bool isConstructing = f.fp()->isConstructing();
-    f.regs.popPartialFrame((Value *)f.fp());
+    /*
+     * Since we can only use members set by initJitFrameCallerHalf,
+     * we must carefully extract the callee from the nactual.
+     */
+    JSObject &callee = fp->formalArgsEnd()[-(int(nactual) + 2)].toObject();
+    JSFunction *fun = callee.getFunctionPrivate();
+    JSScript *script = fun->script();
 
-    return isConstructing ? UncachedNew(f, argc) : UncachedCall(f, argc);
+    /* FixupArity expect to be called after the early prologue. */
+    fp->initJitFrameEarlyPrologue(fun, nactual);
+
+    if (nactual != fp->numFormalArgs()) {
+        fp = (StackFrame *)FixupArity(f, nactual);
+        if (!fp)
+            return NULL;
+    }
+
+    /* Finish frame initialization. */
+    if (!fp->initJitFrameLatePrologue(cx, &f.stackLimit))
+        THROWV(NULL);
+
+    /* These would have been initialized by the prologue. */
+    f.regs.prepareToRun(*fp, script);
+
+    if (fun->isHeavyweight() && !js::CreateFunCallObject(cx, fp))
+        THROWV(NULL);
+
+    CompileStatus status = CanMethodJIT(cx, script, fp, CompileRequest_JIT);
+    if (status == Compile_Okay)
+        return script->getJIT(fp->isConstructing())->invokeEntry;
+
+    /* Function did not compile... interpret it. */
+    JSBool ok = Interpret(cx, fp);
+    InlineReturn(f);
+
+    if (!ok)
+        THROWV(NULL);
+
+    return NULL;
 }
 
 static inline bool
@@ -308,64 +315,36 @@ UncachedInlineCall(VMFrame &f, MaybeConstruct construct, void **pret, bool *unji
     JSFunction *newfun = callee.getFunctionPrivate();
     JSScript *newscript = newfun->script();
 
-    bool newType = construct && cx->typeInferenceEnabled() &&
-        types::UseNewType(cx, f.script(), f.pc());
-
-    types::TypeMonitorCall(cx, args, construct);
-
-    /*
-     * Preserve f.regs.fp while pushing the new frame, for the invariant that
-     * f.regs reflects the state when we entered the stub call. This handoff is
-     * tricky: we need to make sure that f.regs is not updated to the new
-     * frame, and we also need to ensure that cx->regs still points to f.regs
-     * when space is reserved, in case doing so throws an exception.
-     */
-    FrameRegs regs = f.regs;
-
     /* Get pointer to new frame/slots, prepare arguments. */
-    LimitCheck check(&f.stackLimit, NULL);
-    if (!cx->stack.pushInlineFrame(cx, regs, args, callee, newfun, newscript, construct, check))
+    LimitCheck check(&f.stackLimit);
+    if (!cx->stack.pushInlineFrame(cx, f.regs, args, callee, newfun, newscript, construct, check))
         return false;
 
-    /* Finish the handoff to the new frame regs. */
-    PreserveRegsGuard regsGuard(cx, regs);
-
     /* Scope with a call object parented by callee's parent. */
-    if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, regs.fp()))
+    if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, f.fp()))
         return false;
 
     /* Try to compile if not already compiled. */
     if (newscript->getJITStatus(f.fp()->isConstructing()) == JITScript_None) {
-        CompileStatus status = CanMethodJIT(cx, newscript, regs.fp(), CompileRequest_Interpreter);
+        CompileStatus status = CanMethodJIT(cx, newscript, f.fp(), CompileRequest_Interpreter);
         if (status == Compile_Error) {
             /* A runtime exception was thrown, get out. */
-            f.cx->stack.popInlineFrame(regs);
+            InlineReturn(f);
             return false;
         }
         if (status == Compile_Abort)
             *unjittable = true;
     }
 
-    /*
-     * If newscript was successfully compiled, run it. Skip for calls which
-     * will be constructing a new type object for 'this'.
-     */
-    if (!newType) {
-        if (JITScript *jit = newscript->getJIT(regs.fp()->isConstructing())) {
-            *pret = jit->invokeEntry;
-
-            /* Restore the old fp around and let the JIT code repush the new fp. */
-            regs.popFrame((Value *) regs.fp());
-            return true;
-        }
+    /* If newscript was successfully compiled, run it. */
+    if (JITScript *jit = newscript->getJIT(f.fp()->isConstructing())) {
+        *pret = jit->invokeEntry;
+        return true;
     }
 
     /* Otherwise, run newscript in the interpreter. */
     bool ok = !!Interpret(cx, cx->fp());
-    f.cx->stack.popInlineFrame(regs);
-
-    if (ok)
-        f.script()->types.monitor(cx, f.pc(), args.rval());
+    InlineReturn(f);
 
     *pret = NULL;
     return ok;
@@ -394,7 +373,6 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     } else {
         if (!InvokeConstructor(cx, args))
             THROW();
-        f.script()->types.monitor(cx, f.pc(), args.rval());
     }
 }
 
@@ -414,8 +392,6 @@ stubs::Eval(VMFrame &f, uint32 argc)
     if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), args.calleev())) {
         if (!Invoke(f.cx, args))
             THROW();
-
-        f.script()->types.monitor(f.cx, f.pc(), args.rval());
         return;
     }
 
@@ -423,7 +399,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
     if (!DirectEval(f.cx, args))
         THROW();
 
-    f.script()->types.monitor(f.cx, f.pc(), args.rval());
+    f.regs.sp = args.spAfterCall();
 }
 
 void
@@ -447,7 +423,6 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         if (ucr->fun->isNative()) {
             if (!CallJSNative(cx, ucr->fun->u.n.native, args))
                 THROW();
-            f.script()->types.monitor(cx, f.pc(), args.rval());
             return;
         }
     }
@@ -455,7 +430,6 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     if (!Invoke(f.cx, args))
         THROW();
 
-    f.script()->types.monitor(cx, f.pc(), args.rval());
     return;
 }
 
@@ -466,40 +440,10 @@ stubs::PutActivationObjects(VMFrame &f)
     f.fp()->putActivationObjects();
 }
 
-static void
-RemoveOrphanedNative(JSContext *cx, StackFrame *fp)
-{
-    /*
-     * Remove fp from the list of frames holding a reference on the orphaned
-     * native pools. If all the references have been removed, release all the
-     * pools. We don't release pools piecemeal as a pool can be referenced by
-     * multiple frames.
-     */
-    JaegerCompartment *jc = cx->compartment->jaegerCompartment();
-    if (jc->orphanedNativeFrames.empty())
-        return;
-    for (unsigned i = 0; i < jc->orphanedNativeFrames.length(); i++) {
-        if (fp == jc->orphanedNativeFrames[i]) {
-            jc->orphanedNativeFrames[i] = jc->orphanedNativeFrames.back();
-            jc->orphanedNativeFrames.popBack();
-            break;
-        }
-    }
-    if (jc->orphanedNativeFrames.empty()) {
-        for (unsigned i = 0; i < jc->orphanedNativePools.length(); i++)
-            jc->orphanedNativePools[i]->release();
-        jc->orphanedNativePools.clear();
-    }
-}
-
 extern "C" void *
 js_InternalThrow(VMFrame &f)
 {
     JSContext *cx = f.cx;
-
-    // The current frame may have an associated orphaned native, if the native
-    // or SplatApplyArgs threw an exception.
-    RemoveOrphanedNative(cx, f.fp());
 
     // It's possible that from within RunTracer(), Interpret() returned with
     // an error and finished the frame (i.e., called ScriptEpilogue), but has
@@ -524,7 +468,8 @@ js_InternalThrow(VMFrame &f)
     JSThrowHook handler = f.cx->debugHooks->throwHook;
     if (handler) {
         Value rval;
-        switch (handler(cx, f.script(), f.pc(), Jsvalify(&rval), cx->debugHooks->throwHookData)) {
+        switch (handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
+                        cx->debugHooks->throwHookData)) {
           case JSTRAP_ERROR:
             cx->clearPendingException();
             return NULL;
@@ -575,19 +520,6 @@ js_InternalThrow(VMFrame &f)
 
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
-
-    if (!fp->jit()) {
-        /*
-         * This frame had JIT code at one point, but it has since been
-         * discarded due to a recompilation. Recompile it now. This can only
-         * fail due to OOM, in which case that OOM will propagate above the
-         * JaegerShot activation.
-         */
-        CompileStatus status = TryCompile(cx, fp);
-        if (status != Compile_Okay)
-            return NULL;
-    }
-
     return script->nativeCodeForPC(fp->isConstructing(), pc);
 }
 
@@ -920,10 +852,10 @@ static void
 DisableTraceHint(JITScript *jit, ic::TraceICInfo &ic)
 {
     Repatcher repatcher(jit);
-    UpdateTraceHintSingle(repatcher, ic.traceHint, ic.fastTarget);
+    UpdateTraceHintSingle(repatcher, ic.traceHint, ic.jumpTarget);
 
     if (ic.hasSlowTraceHint)
-        UpdateTraceHintSingle(repatcher, ic.slowTraceHint, ic.slowTarget);
+        UpdateTraceHintSingle(repatcher, ic.slowTraceHint, ic.jumpTarget);
 }
 
 static void
@@ -1010,23 +942,9 @@ RunTracer(VMFrame &f)
     loopCounter = NULL;
     hits = 1;
 #endif
-
-    {
-        /*
-         * While the tracer is running, redirect the regs to a local variable here.
-         * If the tracer exits during an inlined frame, it will synthesize those
-         * frames, point f.regs.fp at them and then enter the interpreter. If the
-         * interpreter pops the frames it will not be reflected here as a local
-         * set of regs is used by the interpreter, and f->regs end up pointing at
-         * garbage, confusing the recompiler.
-         */
-        FrameRegs regs = f.regs;
-        PreserveRegsGuard regsGuard(cx, regs);
-
-        tpa = MonitorTracePoint(f.cx, &blacklist, traceData, traceEpoch,
-                                loopCounter, hits);
-        JS_ASSERT(!TRACE_RECORDER(cx));
-    }
+    tpa = MonitorTracePoint(f.cx, &blacklist, traceData, traceEpoch,
+                            loopCounter, hits);
+    JS_ASSERT(!TRACE_RECORDER(cx));
 
 #if JS_MONOIC
     ic.loopCounterStart = *loopCounter;
@@ -1128,496 +1046,3 @@ stubs::InvokeTracer(VMFrame &f)
 # endif /* JS_MONOIC */
 #endif /* JS_TRACER */
 
-/* :XXX: common out with identical copy in Compiler.cpp */
-#if defined(JS_METHODJIT_SPEW)
-static const char *OpcodeNames[] = {
-# define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) #name,
-# include "jsopcode.tbl"
-# undef OPDEF
-};
-#endif
-
-static void
-FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
-{
-    /* Finish an increment operation on a LOCAL or ARG. These do not involve property accesses. */
-    JS_ASSERT(rejoin == REJOIN_POS || rejoin == REJOIN_BINARY);
-
-    JSContext *cx = f.cx;
-
-    JSOp op = js_GetOpcode(cx, f.script(), f.pc());
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-
-    unsigned i = GET_SLOTNO(f.pc());
-    Value *var = (JOF_TYPE(cs->format) == JOF_LOCAL) ? f.fp()->slots() + i : &f.fp()->formalArg(i);
-
-    if (rejoin == REJOIN_POS) {
-        double d = ov.toNumber();
-        double N = (cs->format & JOF_INC) ? 1 : -1;
-        if (!nv.setNumber(d + N))
-            f.script()->types.monitorOverflow(cx, f.pc());
-    }
-
-    *var = nv;
-    *vp = (cs->format & JOF_POST) ? ov : nv;
-}
-
-static bool
-FinishObjIncOp(VMFrame &f, RejoinState rejoin, Value objv, Value ov, Value nv, Value *vp)
-{
-    /*
-     * Finish a property access increment operation on a GNAME, NAME or PROP. We don't need
-     * to handle ELEM as these are always stubbed.
-     */
-    JS_ASSERT(rejoin == REJOIN_BINDNAME || rejoin == REJOIN_GETTER ||
-              rejoin == REJOIN_POS || rejoin == REJOIN_BINARY);
-
-    JSContext *cx = f.cx;
-
-    JSObject *obj = ValueToObject(cx, &objv);
-    if (!obj)
-        return false;
-
-    JSOp op = js_GetOpcode(cx, f.script(), f.pc());
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    JS_ASSERT(JOF_TYPE(cs->format) == JOF_ATOM);
-
-    jsid id = ATOM_TO_JSID(f.script()->getAtom(GET_SLOTNO(f.pc())));
-
-    if (rejoin == REJOIN_BINDNAME && !obj->getProperty(cx, id, &ov))
-        return false;
-
-    if (rejoin == REJOIN_BINDNAME || rejoin == REJOIN_GETTER) {
-        double d;
-        if (!ValueToNumber(cx, ov, &d))
-            return false;
-        ov.setNumber(d);
-    }
-
-    if (rejoin == REJOIN_BINDNAME || rejoin == REJOIN_GETTER || rejoin == REJOIN_POS) {
-        double d = ov.toNumber();
-        double N = (cs->format & JOF_INC) ? 1 : -1;
-        if (!nv.setNumber(d + N))
-            f.script()->types.monitorOverflow(cx, f.pc());
-    }
-
-    uint32 setPropFlags = (cs->format & JOF_NAME)
-                          ? JSRESOLVE_ASSIGNING
-                          : JSRESOLVE_ASSIGNING | JSRESOLVE_QUALIFIED;
-
-    {
-        JSAutoResolveFlags rf(cx, setPropFlags);
-        if (!obj->setProperty(cx, id, &nv, f.script()->strictModeCode))
-            return false;
-    }
-
-    *vp = (cs->format & JOF_POST) ? ov : nv;
-    return true;
-}
-
-extern "C" void *
-js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VMFrame &f)
-{
-    JSRejoinState jsrejoin = f.fp()->rejoin();
-    RejoinState rejoin;
-    if (jsrejoin & 0x1) {
-        /* Rejoin after a scripted call finished. Restore f.regs.pc and f.regs.inlined (NULL) */
-        uint32 pcOffset = jsrejoin >> 1;
-        f.regs.pc = f.fp()->script()->code + pcOffset;
-        f.regs.clearInlined();
-        rejoin = REJOIN_SCRIPTED;
-    } else {
-        rejoin = (RejoinState) (jsrejoin >> 1);
-    }
-
-    JSContext *cx = f.cx;
-    StackFrame *fp = f.regs.fp();
-    JSScript *script = fp->script();
-
-    jsbytecode *pc = f.regs.pc;
-    analyze::UntrapOpcode untrap(cx, script, pc);
-
-    JSOp op = JSOp(*pc);
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-
-    analyze::AutoEnterAnalysis enter(cx);
-
-    analyze::ScriptAnalysis *analysis = script->analysis(cx);
-    if (analysis && !analysis->ranBytecode())
-        analysis->analyzeBytecode(cx);
-    if (!analysis || analysis->OOM()) {
-        js_ReportOutOfMemory(cx);
-        return js_InternalThrow(f);
-    }
-
-    /*
-     * f.regs.sp is not normally maintained by stubs (except for call prologues
-     * where it indicates the new frame), so is not expected to be coherent
-     * here. Update it to its value at the start of the opcode.
-     */
-    Value *oldsp = f.regs.sp;
-    f.regs.sp = fp->base() + analysis->getCode(pc).stackDepth;
-
-    jsbytecode *nextpc = pc + analyze::GetBytecodeLength(pc);
-    Value *nextsp = NULL;
-    if (nextpc != script->code + script->length)
-        nextsp = fp->base() + analysis->getCode(nextpc).stackDepth;
-
-    JS_ASSERT(&cx->regs() == &f.regs);
-
-#ifdef JS_METHODJIT_SPEW
-    JaegerSpew(JSpew_Recompile, "interpreter rejoin (file \"%s\") (line \"%d\") (op %s) (opline \"%d\")\n",
-               script->filename, script->lineno, OpcodeNames[op], js_PCToLineNumber(cx, script, pc));
-#endif
-
-    uint32 nextDepth = uint32(-1);
-
-    InterpMode interpMode = JSINTERP_REJOIN;
-
-    if ((cs->format & (JOF_INC | JOF_DEC)) &&
-        rejoin != REJOIN_FALLTHROUGH &&
-        rejoin != REJOIN_RESUME &&
-        rejoin != REJOIN_THIS_PROTOTYPE &&
-        rejoin != REJOIN_CHECK_ARGUMENTS) {
-        /* We may reenter the interpreter while finishing the INC/DEC operation. */
-        nextDepth = analysis->getCode(nextpc).stackDepth;
-        untrap.retrap();
-        enter.leave();
-
-        switch (op) {
-          case JSOP_INCLOCAL:
-          case JSOP_DECLOCAL:
-          case JSOP_LOCALINC:
-          case JSOP_LOCALDEC:
-          case JSOP_INCARG:
-          case JSOP_DECARG:
-          case JSOP_ARGINC:
-          case JSOP_ARGDEC:
-            if (rejoin != REJOIN_BINARY || !analysis->incrementInitialValueObserved(pc)) {
-                /* Stack layout is 'V', 'N' or 'N+1' (only if the N is not needed) */
-                FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[-1], &nextsp[-1]);
-            } else {
-                /* Stack layout is 'N N+1' */
-                FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[0], &nextsp[-1]);
-            }
-            break;
-
-          case JSOP_INCGNAME:
-          case JSOP_DECGNAME:
-          case JSOP_GNAMEINC:
-          case JSOP_GNAMEDEC:
-          case JSOP_INCNAME:
-          case JSOP_DECNAME:
-          case JSOP_NAMEINC:
-          case JSOP_NAMEDEC:
-          case JSOP_INCPROP:
-          case JSOP_DECPROP:
-          case JSOP_PROPINC:
-          case JSOP_PROPDEC:
-            if (rejoin != REJOIN_BINARY || !analysis->incrementInitialValueObserved(pc)) {
-                /* Stack layout is 'OBJ V', 'OBJ N' or 'OBJ N+1' (only if the N is not needed) */
-                if (!FinishObjIncOp(f, rejoin, nextsp[-1], nextsp[0], nextsp[0], &nextsp[-1]))
-                    return js_InternalThrow(f);
-            } else {
-                /* Stack layout is 'N OBJ N+1' */
-                if (!FinishObjIncOp(f, rejoin, nextsp[0], nextsp[-1], nextsp[1], &nextsp[-1]))
-                    return js_InternalThrow(f);
-            }
-            break;
-
-          default:
-            JS_NOT_REACHED("Bad op");
-        }
-        rejoin = REJOIN_FALLTHROUGH;
-    }
-
-    switch (rejoin) {
-      case REJOIN_SCRIPTED: {
-#ifdef JS_NUNBOX32
-        uint64 rvalBits = ((uint64)returnType << 32) | (uint32)returnData;
-#elif JS_PUNBOX64
-        uint64 rvalBits = (uint64)returnType | (uint64)returnData;
-#else
-#error "Unknown boxing format"
-#endif
-        nextsp[-1].setRawBits(rvalBits);
-
-        /*
-         * When making a scripted call at monitored sites, it is the caller's
-         * responsibility to update the pushed type set.
-         */
-        script->types.monitor(cx, pc, nextsp[-1]);
-        f.regs.pc = nextpc;
-        break;
-      }
-
-      case REJOIN_NONE:
-        JS_NOT_REACHED("Unpossible rejoin!");
-        break;
-
-      case REJOIN_RESUME:
-        break;
-
-      case REJOIN_TRAP:
-        /* Watch out for the case where the TRAP removed itself. */
-        interpMode = untrap.trap ? JSINTERP_SKIP_TRAP : JSINTERP_REJOIN;
-        break;
-
-      case REJOIN_FALLTHROUGH:
-        f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_NATIVE:
-      case REJOIN_NATIVE_LOWERED: {
-        /*
-         * We don't rejoin until after the native stub finishes execution, in
-         * which case the return value will be in memory. For lowered natives,
-         * the return value will be in the 'this' value's slot.
-         */
-        if (rejoin == REJOIN_NATIVE_LOWERED)
-            nextsp[-1] = nextsp[0];
-
-        /* Release this reference on the orphaned native stub. */
-        RemoveOrphanedNative(cx, fp);
-
-        /*
-         * Note: there is no need to monitor the result of the native, the
-         * native stub will always do a type check before finishing.
-         */
-        f.regs.pc = nextpc;
-        break;
-      }
-
-      case REJOIN_PUSH_BOOLEAN:
-        nextsp[-1].setBoolean(returnReg != NULL);
-        f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_PUSH_OBJECT:
-        nextsp[-1].setObject(* (JSObject *) returnReg);
-        f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_DEFLOCALFUN:
-        fp->slots()[GET_SLOTNO(pc)].setObject(* (JSObject *) returnReg);
-        f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_THIS_PROTOTYPE: {
-        JSObject *callee = &fp->callee();
-        JSObject *proto = f.regs.sp[0].isObject() ? &f.regs.sp[0].toObject() : NULL;
-        JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
-        if (!obj)
-            return js_InternalThrow(f);
-        fp->formalArgs()[-1].setObject(*obj);
-
-        if (script->debugMode || Probes::callTrackingActive(cx))
-            js::ScriptDebugPrologue(cx, fp);
-        break;
-      }
-
-      case REJOIN_CHECK_ARGUMENTS: {
-        /*
-         * Do all the work needed in arity check JIT prologues after the
-         * arguments check occurs (FixupArity has been called if needed, but
-         * the stack check and late prologue have not been performed.
-         */
-        if (!CheckStackQuota(f))
-            return js_InternalThrow(f);
-        if (fp->fun()->isHeavyweight()) {
-            if (!js::CreateFunCallObject(cx, fp))
-                return js_InternalThrow(f);
-        }
-        SetValueRangeToUndefined(fp->slots(), script->nfixed);
-
-        /*
-         * Use the normal interpreter mode, which will construct the 'this'
-         * object if this is a constructor frame.
-         */
-        interpMode = JSINTERP_NORMAL;
-        break;
-      }
-
-      case REJOIN_CALL_PROLOGUE:
-      case REJOIN_CALL_PROLOGUE_LOWERED_CALL:
-      case REJOIN_CALL_PROLOGUE_LOWERED_APPLY:
-        if (returnReg) {
-            uint32 argc = 0;
-            if (rejoin == REJOIN_CALL_PROLOGUE)
-                argc = GET_ARGC(pc);
-            else if (rejoin == REJOIN_CALL_PROLOGUE_LOWERED_CALL)
-                argc = GET_ARGC(pc) - 1;
-            else
-                argc = f.u.call.dynamicArgc;
-
-            /*
-             * The caller frame's code was discarded, but we still need to
-             * execute the callee and have a JIT code pointer to do so.
-             * Set the argc and frame registers as the call path does, but set
-             * the callee frame's return address to jump back into the
-             * Interpoline, and change the caller frame's rejoin to reflect the
-             * state after the call.
-             */
-            f.regs.restorePartialFrame(oldsp); /* f.regs.sp stored the new frame */
-            f.scratch = (void *) argc;         /* The interpoline will load f.scratch into argc */
-            f.fp()->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolineScripted));
-            fp->setRejoin(REJOIN_SCRIPTED | ((pc - script->code) << 1));
-            return returnReg;
-        } else {
-            /*
-             * The call has already finished, and the return value is on the
-             * stack. For lowered call/apply, the return value has been stored
-             * in the wrong slot, so adjust it here.
-             */
-            f.regs.pc = nextpc;
-            if (rejoin != REJOIN_CALL_PROLOGUE) {
-                /* Same offset return value as for lowered native calls. */
-                nextsp[-1] = nextsp[0];
-            }
-        }
-        break;
-
-      case REJOIN_CALL_SPLAT: {
-        /* Leave analysis early and do the Invoke which SplatApplyArgs prepared. */
-        nextDepth = analysis->getCode(nextpc).stackDepth;
-        untrap.retrap();
-        enter.leave();
-        f.regs.sp = nextsp + 2 + f.u.call.dynamicArgc;
-        if (!Invoke(cx, CallArgsFromSp(f.u.call.dynamicArgc, f.regs.sp)))
-            return js_InternalThrow(f);
-        nextsp[-1] = nextsp[0];
-        f.regs.pc = nextpc;
-        break;
-      }
-
-      case REJOIN_GETTER:
-        /*
-         * Match the PC to figure out whether this property fetch is part of a
-         * fused opcode which needs to be finished.
-         */
-        switch (op) {
-          case JSOP_NAME:
-          case JSOP_GETGNAME:
-          case JSOP_GETGLOBAL:
-          case JSOP_GETPROP:
-          case JSOP_GETXPROP:
-          case JSOP_LENGTH:
-            /* Non-fused opcode, state is already correct for the next op. */
-            f.regs.pc = nextpc;
-            break;
-
-          case JSOP_CALLGNAME:
-            if (!ComputeImplicitThis(cx, &fp->scopeChain(), nextsp[-2], &nextsp[-1]))
-                return js_InternalThrow(f);
-            f.regs.pc = nextpc;
-            break;
-
-          case JSOP_CALLGLOBAL:
-            /* |this| is always undefined for CALLGLOBAL. */
-            nextsp[-1].setUndefined();
-            f.regs.pc = nextpc;
-            break;
-
-          case JSOP_CALLPROP: {
-            /*
-             * CALLPROP is compiled in terms of GETPROP for known strings.
-             * In such cases the top two entries are in place, but are swapped.
-             */
-            JS_ASSERT(nextsp[-2].isString());
-            Value tmp = nextsp[-2];
-            nextsp[-2] = nextsp[-1];
-            nextsp[-1] = tmp;
-            f.regs.pc = nextpc;
-            break;
-          }
-
-          case JSOP_INSTANCEOF: {
-            /*
-             * If we recompiled from a getprop used within JSOP_INSTANCEOF,
-             * the stack looks like 'LHS RHS protov'. Inline the remaining
-             * portion of fun_hasInstance.
-             */
-            if (f.regs.sp[0].isPrimitive()) {
-                js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, f.regs.sp[-1], NULL);
-                return js_InternalThrow(f);
-            }
-            nextsp[-1].setBoolean(js_IsDelegate(cx, &f.regs.sp[0].toObject(), f.regs.sp[-2]));
-            f.regs.pc = nextpc;
-            break;
-          }
-
-          default:
-            JS_NOT_REACHED("Bad rejoin getter op");
-        }
-        break;
-
-      case REJOIN_POS:
-        /* Convert-to-number which might be part of an INC* op. */
-        JS_ASSERT(op == JSOP_POS);
-        f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_BINARY:
-        /* Binary arithmetic op which might be part of an INC* op. */
-        JS_ASSERT(op == JSOP_ADD || op == JSOP_SUB || op == JSOP_MUL || op == JSOP_DIV);
-        f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_BRANCH: {
-        /*
-         * This must be an opcode fused with IFNE/IFEQ. Unfused IFNE/IFEQ are
-         * implemented in terms of ValueToBoolean, which is infallible and
-         * cannot trigger recompilation.
-         */
-        bool takeBranch = false;
-        analyze::UntrapOpcode untrap(cx, script, nextpc);
-        switch (JSOp(*nextpc)) {
-          case JSOP_IFNE:
-          case JSOP_IFNEX:
-            takeBranch = returnReg != NULL;
-            break;
-          case JSOP_IFEQ:
-          case JSOP_IFEQX:
-            takeBranch = returnReg == NULL;
-            break;
-          default:
-            JS_NOT_REACHED("Bad branch op");
-        }
-        if (takeBranch)
-            f.regs.pc = nextpc + GET_JUMP_OFFSET(nextpc);
-        else
-            f.regs.pc = nextpc + analyze::GetBytecodeLength(nextpc);
-        break;
-      }
-
-      default:
-        JS_NOT_REACHED("Missing rejoin");
-    }
-
-    if (nextDepth == uint32(-1))
-        nextDepth = analysis->getCode(f.regs.pc).stackDepth;
-    f.regs.sp = fp->base() + nextDepth;
-
-    /* Reinsert any trap before resuming in the interpreter. */
-    untrap.retrap();
-
-    /* Release lock on analysis data before resuming. */
-    enter.leave();
-
-    if (!Interpret(cx, NULL, interpMode))
-        return js_InternalThrow(f);
-
-    /* The interpreter should have finished its entry frame. */
-    JS_ASSERT(f.regs.fp() == fp);
-
-    /* Force construction of the frame's return value, if it was not set. */
-    fp->returnValue();
-
-    /*
-     * The frame is done, but if it finished in the interpreter the call/args
-     * objects need to be detached from the frame.
-     */
-    fp->putActivationObjects();
-
-    return fp->nativeReturnAddress();
-}

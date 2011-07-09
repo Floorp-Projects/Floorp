@@ -7,14 +7,14 @@ function doNothing() { }
 function myparent(nested) {
   if (nested) {
     /* JSOP_CALL to doNothing in myparent with nested = true. */
-    trap(myparent, 32, "success()");
+    trap(myparent, 24, "success()");
     doNothing();
   } else {
     doNothing();
   }
 }
 /* JSOP_CALL to doNothing in myparent with nested = false. */
-trap(myparent, 47, "myparent(true)");
+trap(myparent, 35, "myparent(true)");
 
 function success() {
   x = "success";

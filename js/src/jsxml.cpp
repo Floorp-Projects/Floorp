@@ -71,7 +71,6 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
@@ -83,7 +82,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 
 /*
  * NOTES
@@ -6442,10 +6440,8 @@ xml_setLocalName(JSContext *cx, uintN argc, jsval *vp)
     JSLinearString *namestr;
 
     NON_LIST_XML_METHOD_PROLOG;
-    if (!JSXML_HAS_NAME(xml)) {
-        vp[0] = JSVAL_VOID;
+    if (!JSXML_HAS_NAME(xml))
         return JS_TRUE;
-    }
 
     if (argc == 0) {
         namestr = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
@@ -6470,7 +6466,6 @@ xml_setLocalName(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     if (namestr)
         xml->name->setQNameLocalName(namestr);
-    vp[0] = JSVAL_VOID;
     return JS_TRUE;
 }
 
@@ -6543,10 +6538,8 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
 
         /* XXXbe have to test membership to see whether GetNamespace added */
-        if (XMLARRAY_HAS_MEMBER(&nsowner->xml_namespaces, ns, NULL)) {
-            vp[0] = JSVAL_VOID;
+        if (XMLARRAY_HAS_MEMBER(&nsowner->xml_namespaces, ns, NULL))
             return JS_TRUE;
-        }
     } else {
         /*
          * At this point, we know prefix of nameqn is null, so its uri can't
@@ -6569,7 +6562,6 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
             ns = XMLARRAY_MEMBER(nsarray, i, JSObject);
             if (ns && EqualStrings(ns->getNameURI(), nameqn->getNameURI())) {
                 nameqn->setNamePrefix(ns->getNamePrefix());
-                vp[0] = JSVAL_VOID;
                 return JS_TRUE;
             }
         }
@@ -6888,14 +6880,11 @@ xml_setSettings(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
         ok = SetDefaultXMLSettings(cx, obj);
     } else {
-        if (JSVAL_IS_PRIMITIVE(v)) {
-            vp[0] = JSVAL_VOID;
+        if (JSVAL_IS_PRIMITIVE(v))
             return JS_TRUE;
-        }
         settings = JSVAL_TO_OBJECT(v);
         ok = CopyXMLSettings(cx, settings, obj);
     }
-    vp[0] = JSVAL_VOID;
     return ok;
 }
 
@@ -7081,7 +7070,9 @@ js_NewXMLObject(JSContext *cx, JSXMLClass xml_class)
 static JSObject *
 NewXMLObject(JSContext *cx, JSXML *xml)
 {
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_XMLClass, NULL, NULL);
+    JSObject *obj;
+
+    obj = NewNonFunction<WithProto::Class>(cx, &js_XMLClass, NULL, NULL);
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
@@ -7116,40 +7107,22 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
-                                   NULL, qname_methods, NULL, NULL);
-    if (!proto)
-        return NULL;
-
-    /* Properties of QName objects are not modeled by type inference. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    MarkTypeObjectUnknownProperties(cx, type);
-    MarkTypeObjectUnknownProperties(cx, proto->getType());
-
-    return proto;
+    return js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
+                        NULL, qname_methods, NULL, NULL);
 }
 
 JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
+    /* Define the isXMLName function. */
+    if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
+        return NULL;
+
     /* Define the XML class constructor and prototype. */
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
                                    NULL, xml_methods, xml_static_props, xml_static_methods);
     if (!proto)
         return NULL;
-
-    /* Define the isXMLName function. */
-    if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
-        return NULL;
-
-    /* Properties of XML objects are not modeled by type inference. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    MarkTypeObjectUnknownProperties(cx, type);
-    MarkTypeObjectUnknownProperties(cx, proto->getType());
 
     JSXML *xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)
@@ -7191,7 +7164,6 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
                               JSPROP_READONLY | JSPROP_PERMANENT)) {
         return NULL;
     }
-
     return proto;
 }
 
@@ -7226,8 +7198,7 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
          * names, its prefix and uri references are copied to the QName.
          * The parent remains set and links back to global.
          */
-        if (!obj->clearType(cx))
-            return false;
+        obj->clearProto();
 
         v.setObject(*obj);
     }
@@ -7425,7 +7396,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     if (!IsFunctionQName(cx, qn, &funid))
         return JS_FALSE;
 
-    obj = cx->stack.currentScriptedScopeChain();
+    obj = &js_GetTopStackFrame(cx)->scopeChain();
     do {
         /* Skip any With object that can wrap XML. */
         target = obj;

@@ -68,18 +68,18 @@ class StubCompiler
     };
 
     struct CrossJumpInScript {
-        CrossJumpInScript(Jump from, jsbytecode *pc, uint32 inlineIndex)
-          : from(from), pc(pc), inlineIndex(inlineIndex)
+        CrossJumpInScript(Jump from, jsbytecode *pc)
+          : from(from), pc(pc)
         { }
 
         Jump from;
         jsbytecode *pc;
-        uint32 inlineIndex;
     };
 
     JSContext *cx;
     Compiler &cc;
     FrameState &frame;
+    JSScript *script;
 
   public:
     Assembler masm;
@@ -94,7 +94,7 @@ class StubCompiler
     Vector<Jump, 8, SystemAllocPolicy> jumpList;
 
   public:
-    StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame);
+    StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
 
     size_t size() {
         return masm.size();
@@ -135,12 +135,10 @@ class StubCompiler
     /* Finish all native code patching. */
     void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
     bool jumpInScript(Jump j, jsbytecode *target);
-    unsigned crossJump(Jump j, Label l);
+    void crossJump(Jump j, Label l);
 
-    Call emitStubCall(void *ptr, RejoinState rejoin);
-    Call emitStubCall(void *ptr, RejoinState rejoin, int32 slots);
-
-    void patchJoin(unsigned i, bool script, Assembler::Address address, AnyRegisterID reg);
+    Call emitStubCall(void *ptr, uint32 id);
+    Call emitStubCall(void *ptr, int32 slots, uint32 id);
 };
 
 } /* namepsace mjit */

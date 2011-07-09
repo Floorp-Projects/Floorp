@@ -1,4 +1,4 @@
 // |jit-test| debug
 function f() { eval(''); }
-trap(f, 8, '');
+trap(f, 6, '');
 f();

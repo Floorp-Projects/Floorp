@@ -65,19 +65,15 @@ JaegerTrampoline:
     call SetVMFrameRegs
     call PushActiveVMFrame
     popl  %edx
-
-    movl 28(%esp), %ebp
-    jmp  *72(%esp)
+    jmp  *16(%ebp)
 .size   JaegerTrampoline, . - JaegerTrampoline
 
 / void JaegerTrampolineReturn()
 .global JaegerTrampolineReturn
 .type   JaegerTrampolineReturn, @function
 JaegerTrampolineReturn:
-    movl  %esi, 0x18(%ebp)
-    movl  %edi, 0x1C(%ebp)
-    movl  %esp, %ebp
-    addl  $0x38, %ebp
+    movl  %edx, 0x18(%ebx)
+    movl  %ecx, 0x1C(%ebx)
     pushl %esp
     call PopActiveVMFrame
 

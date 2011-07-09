@@ -48,13 +48,13 @@ namespace js {
 inline JSUint32
 ArrayBuffer::getByteLength(JSObject *obj)
 {
-    return obj->getFixedSlot(JSSLOT_ARRAY_BYTELENGTH).toPrivateUint32();
+    return *((JSUint32*) obj->slots);
 }
 
 inline uint8 *
-ArrayBuffer::getDataOffset(JSObject *obj)
-{
-    return (uint8 *) obj->getFixedSlot(JSSLOT_ARRAY_DATA).toPrivate();
+ArrayBuffer::getDataOffset(JSObject *obj) {
+    uint64 *base = ((uint64*)obj->slots) + 1;
+    return (uint8*) base;
 }
 }
 #endif /* jstypedarrayinlines_h */
