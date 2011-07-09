@@ -76,7 +76,6 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
@@ -87,7 +86,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 
 #ifdef JS_TRACER
 
@@ -2248,7 +2246,7 @@ class SplitMatchResult {
 
 template<class Matcher>
 static JSObject *
-SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch, TypeObject *type)
+SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch)
 {
     size_t strLength = str->length();
     SplitMatchResult result;
@@ -2347,8 +2345,6 @@ SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch
                     if (!sub || !splits.append(StringValue(sub)))
                         return NULL;
                 } else {
-                    /* Only string entries have been accounted for so far. */
-                    AddTypePropertyId(cx, type, JSID_VOID, UndefinedValue());
                     if (!splits.append(UndefinedValue()))
                         return NULL;
                 }
@@ -2442,11 +2438,6 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Array);
-    if (!type)
-        return false;
-    AddTypePropertyId(cx, type, JSID_VOID, types::TYPE_STRING);
-
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32 limit;
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2482,7 +2473,6 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         JSObject *aobj = NewDenseEmptyArray(cx);
         if (!aobj)
             return false;
-        aobj->setType(type);
         vp->setObject(*aobj);
         return true;
     }
@@ -2493,7 +2483,6 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         JSObject *aobj = NewDenseCopiedArray(cx, 1, &v);
         if (!aobj)
             return false;
-        aobj->setType(type);
         vp->setObject(*aobj);
         return true;
     }
@@ -2504,16 +2493,15 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     /* Steps 11-15. */
     JSObject *aobj;
     if (re) {
-        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()), type);
+        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()));
     } else {
         // NB: sepstr is anchored through its storage in vp[2].
-        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
+        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr));
     }
     if (!aobj)
         return false;
 
     /* Step 16. */
-    aobj->setType(type);
     vp->setObject(*aobj);
     return true;
 }
@@ -3181,23 +3169,20 @@ js_InitStringClass(JSContext *cx, JSObject *global)
     JS_ASSERT(global->isGlobal());
     JS_ASSERT(global->isNative());
 
+    /*
+     * Define escape/unescape, the URI encode/decode functions, and maybe
+     * uneval on the global object.
+     */
+    if (!JS_DefineFunctions(cx, global, string_functions))
+        return NULL;
+
     /* Create and initialize String.prototype. */
     JSObject *objectProto;
     if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
         return NULL;
 
     JSObject *proto = NewObject<WithProto::Class>(cx, &js_StringClass, objectProto, global);
-    if (!proto)
-        return NULL;
-
-    types::TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
-                                                                        "String", "prototype",
-                                                                        JSProto_Object,
-                                                                        proto->getProto());
-    if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
-        return NULL;
-
-    if (!proto->asString()->init(cx, cx->runtime->emptyString))
+    if (!proto || !proto->asString()->init(cx, cx->runtime->emptyString))
         return NULL;
 
     /* Now create the String function. */
@@ -3210,8 +3195,14 @@ js_InitStringClass(JSContext *cx, JSObject *global)
     FUN_CLASP(ctor) = &js_StringClass;
 
     /* Define String.prototype and String.prototype.constructor. */
-    if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                              ObjectValue(*proto), PropertyStub, StrictPropertyStub,
+                              JSPROP_PERMANENT | JSPROP_READONLY) ||
+        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+                               ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0))
+    {
         return NULL;
+    }
 
     /* Add properties and methods to the prototype and the constructor. */
     if (!JS_DefineFunctions(cx, proto, string_methods) ||
@@ -3221,18 +3212,8 @@ js_InitStringClass(JSContext *cx, JSObject *global)
     }
 
     /* Pre-brand String and String.prototype for trace-jitted code. */
-    if (!cx->typeInferenceEnabled()) {
-        proto->brand(cx);
-        ctor->brand(cx);
-    }
-
-    jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    AddTypePropertyId(cx, proto->getType(), lengthId, TYPE_INT32);
-
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    AddTypePropertyId(cx, type, JSID_VOID, TYPE_STRING);
+    proto->brand(cx);
+    ctor->brand(cx);
 
     /*
      * Make sure proto's emptyShape is available to be shared by String
@@ -3242,18 +3223,11 @@ js_InitStringClass(JSContext *cx, JSObject *global)
      *
      * All callers of JSObject::initSharingEmptyShape depend on this.
      */
-    if (!type->getEmptyShape(cx, &js_StringClass, FINALIZE_OBJECT0))
+    if (!proto->getEmptyShape(cx, &js_StringClass, FINALIZE_OBJECT0))
         return NULL;
 
     /* Install the fully-constructed String and String.prototype. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
-        return NULL;
-
-    /*
-     * Define escape/unescape, the URI encode/decode functions, and maybe
-     * uneval on the global object.
-     */
-    if (!JS_DefineFunctions(cx, global, string_functions))
         return NULL;
 
     return proto;

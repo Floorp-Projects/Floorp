@@ -75,7 +75,6 @@
 #include "jsxml.h"
 #endif
 
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
@@ -230,9 +229,9 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
     }
 
     if (pobj->getArrayLength() > 0) {
-        size_t initlen = pobj->getDenseArrayInitializedLength();
+        size_t capacity = pobj->getDenseArrayCapacity();
         Value *vp = pobj->getDenseArrayElements();
-        for (size_t i = 0; i < initlen; ++i, ++vp) {
+        for (size_t i = 0; i < capacity; ++i, ++vp) {
             if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
                 if (!Enumerate(cx, obj, pobj, INT_TO_JSID(i), true, flags, ht, props))
@@ -354,15 +353,6 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         return true;
     }
 
-    /*
-     * Notify type inference of the custom iterator.  This only needs to be done
-     * if this is coming from a 'for in' loop, not a call to Iterator itself.
-     * If an Iterator object is used in a for loop then the values fetched in
-     * that loop are unknown, whether there is a custom __iterator__ or not.
-     */
-    if (!(flags & JSITER_OWNONLY))
-        types::MarkIteratorUnknown(cx);
-
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
     Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
@@ -421,7 +411,8 @@ NewIteratorObject(JSContext *cx, uintN flags)
         EmptyShape *emptyEnumeratorShape = EmptyShape::getEmptyEnumeratorShape(cx);
         if (!emptyEnumeratorShape)
             return NULL;
-        obj->init(cx, &js_IteratorClass, types::GetTypeEmpty(cx), NULL, NULL, false);
+
+        obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
         obj->setMap(emptyEnumeratorShape);
         return obj;
     }
@@ -473,9 +464,6 @@ VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &key
 {
     JS_ASSERT(!(flags & JSITER_FOREACH));
 
-    if (obj)
-        types::MarkTypeObjectFlags(cx, obj->getType(), types::OBJECT_FLAG_ITERATED);
-
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
         return false;
@@ -522,9 +510,6 @@ VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &k
                       Value *vp)
 {
     JS_ASSERT(flags & JSITER_FOREACH);
-
-    if (obj)
-        types::MarkTypeObjectFlags(cx, obj->getType(), types::OBJECT_FLAG_ITERATED);
 
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
@@ -1443,9 +1428,6 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 
     MarkStandardClassInitializedNoProto(obj, &js_StopIterationClass);
 
-    proto = js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
-                         NULL, NULL, NULL, NULL);
-    if (proto)
-        types::AddTypeProperty(cx, obj->getType(), js_StopIteration_str, ObjectValue(*proto));
-    return proto;
+    return js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
+                        NULL, NULL, NULL, NULL);
 }

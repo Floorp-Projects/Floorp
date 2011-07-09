@@ -7,4 +7,5 @@ function f(a, b, c) {
     this.restoreWindow(a, b, c);
     eval();
 }
+dis(f);
 f(1, 2, 3);

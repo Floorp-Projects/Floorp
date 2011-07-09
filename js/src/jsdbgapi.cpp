@@ -69,7 +69,6 @@
 
 #include "jsatominlines.h"
 #include "jsdbgapiinlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
@@ -216,8 +215,7 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
             return JS_FALSE;
         }
 
-        mjit::ReleaseScriptCode(cx, script, true);
-        mjit::ReleaseScriptCode(cx, script, false);
+        mjit::ReleaseScriptCode(cx, script);
         script->debugMode = !!debug;
     }
 #endif
@@ -244,7 +242,10 @@ js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
     js::mjit::JITScript *jit = script->jitNormal ? script->jitNormal : script->jitCtor;
     if (jit && script->singleStepMode != jit->singleStepMode) {
         js::mjit::Recompiler recompiler(cx, script);
-        recompiler.recompile();
+        if (!recompiler.recompile()) {
+            script->singleStepMode = !singleStep;
+            return JS_FALSE;
+        }
     }
 #endif
     return JS_TRUE;
@@ -336,8 +337,6 @@ JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, jsval closure)
 {
-    JS_ASSERT(uint32(pc - script->code) < script->length);
-
     JSTrap *junk, *trap, *twin;
     JSRuntime *rt;
     uint32 sample;
@@ -385,7 +384,8 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
         js::mjit::Recompiler recompiler(cx, script);
-        recompiler.recompile();
+        if (!recompiler.recompile())
+            return JS_FALSE;
     }
 #endif
 
@@ -436,13 +436,8 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
-        JSCompartment *oldCompartment = cx->compartment;
-        cx->setCompartment(script->compartment);
-
         mjit::Recompiler recompiler(cx, script);
         recompiler.recompile();
-
-        cx->setCompartment(oldCompartment);
     }
 #endif
 }
@@ -767,9 +762,6 @@ FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
 JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
-    /* Capture possible effects of the calls to nativeSetSlot below. */
-    types::AddTypePropertyId(cx, obj->getType(), id, types::TYPE_UNKNOWN);
-
     assertSameCompartment(cx, obj);
     JSRuntime *rt = cx->runtime;
     DBG_LOCK(rt);
@@ -1091,8 +1083,6 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                              obj->getClass()->name);
         return false;
     }
-
-    types::MarkTypePropertyConfigured(cx, obj->getType(), propid);
 
     JSObject *pobj;
     JSProperty *prop;
@@ -1436,7 +1426,7 @@ JS_PUBLIC_API(JSStackFrame *)
 JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 {
     StackFrame *fp = Valueify(*iteratorp);
-    *iteratorp = Jsvalify((fp == NULL) ? js_GetTopStackFrame(cx, FRAME_EXPAND_ALL) : fp->prev());
+    *iteratorp = Jsvalify((fp == NULL) ? js_GetTopStackFrame(cx) : fp->prev());
     return *iteratorp;
 }
 
@@ -1449,7 +1439,7 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->pcQuadratic(cx->stack);
+    return Valueify(fp)->pcQuadratic(cx);
 }
 
 JS_PUBLIC_API(JSStackFrame *)
@@ -1711,7 +1701,6 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!script)
         return false;
 
-    script->isUncachedEval = true;
     bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, Valueify(rval));
 
     js_DestroyScript(cx, script);
@@ -2503,9 +2492,9 @@ jstv_Filename(JSStackFrame *fp)
 inline uintN
 jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 {
-    while (fp && fp->pcQuadratic(cx->stack) == NULL)
+    while (fp && fp->pcQuadratic(cx) == NULL)
         fp = fp->prev();
-    return (fp && fp->pcQuadratic(cx->stack)) ? js_FramePCToLineNumber(cx, fp) : 0;
+    return (fp && fp->pcQuadratic(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
 }
 
 /* Collect states here and distribute to a matching buffer, if any */

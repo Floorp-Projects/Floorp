@@ -111,11 +111,6 @@ struct JS_FRIEND_API(ArrayBuffer) {
     static inline unsigned int getByteLength(JSObject *obj);
 
     static inline uint8 * getDataOffset(JSObject *obj);
-
-    /* Reserved slots for array buffer objects. */
-    static const uint32 JSSLOT_ARRAY_BYTELENGTH = 0;
-    static const uint32 JSSLOT_ARRAY_DATA = 1;
-    static const uint32 JSSLOT_ARRAY_RESERVED_SLOTS = 2;
 };
 
 /*

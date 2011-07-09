@@ -141,8 +141,6 @@ typedef enum JSOp {
                                      that needs fixup when in global code (see
                                      Compiler::compileScript) */
 #define JOF_GNAME        (1U<<25) /* predicted global name */
-#define JOF_TYPESET      (1U<<26) /* has a trailing 2 byte immediate indexing
-                                     the set of observed types */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)

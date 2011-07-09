@@ -90,7 +90,6 @@
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsregexpinlines.h"
@@ -111,7 +110,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 
 /*
  * This class is a version-establising barrier at the head of a VM entry or
@@ -662,7 +660,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
 
     if (!(atomsCompartment = this->new_<JSCompartment>(this)) ||
-        !atomsCompartment->init(NULL) ||
+        !atomsCompartment->init() ||
         !compartments.append(atomsCompartment)) {
         Foreground::delete_(atomsCompartment);
         return false;
@@ -3021,9 +3019,9 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
     AutoHoldCompartment hold(compartment);
 
     JSCompartment *saved = cx->compartment;
-    cx->setCompartment(compartment);
+    cx->compartment = compartment;
     JSObject *obj = JS_NewGlobalObject(cx, clasp);
-    cx->setCompartment(saved);
+    cx->compartment = saved;
 
     return obj;
 }
@@ -3043,12 +3041,8 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
-    if (obj) {
-        if (clasp->ext.equality)
-            MarkTypeObjectFlags(cx, obj->getType(), OBJECT_FLAG_SPECIAL_EQUALITY);
+    if (obj)
         obj->syncSpecialEquality();
-        MarkTypeObjectUnknownProperties(cx, obj->getType());
-    }
 
     JS_ASSERT_IF(obj, obj->getParent());
     return obj;
@@ -3069,10 +3063,8 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
-    if (obj) {
+    if (obj)
         obj->syncSpecialEquality();
-        MarkTypeObjectUnknownProperties(cx, obj->getType());
-    }
     return obj;
 }
 
@@ -3515,36 +3507,31 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    JSAtom *nameAtom = js_Atomize(cx, name, strlen(name));
-    if (!nameAtom)
+    JSAtom *atom = js_Atomize(cx, name, strlen(name));
+    if (!atom)
         return JS_FALSE;
-    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(nameAtom), JSRESOLVE_QUALIFIED, &obj2, &prop))
+    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         js_ReportIsNotDefined(cx, name);
         return JS_FALSE;
     }
-
     if (obj2 != obj || !obj->isNative()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
                              alias, name, obj2->getClass()->name);
         return JS_FALSE;
     }
-    JSAtom *aliasAtom = js_Atomize(cx, alias, strlen(alias));
-    if (!aliasAtom) {
+    atom = js_Atomize(cx, alias, strlen(alias));
+    if (!atom) {
         ok = JS_FALSE;
     } else {
-        /* Alias the properties within the type information for the object. */
-        AliasTypeProperties(cx, obj->getType(), ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom));
-
         shape = (Shape *)prop;
-        ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(aliasAtom),
+        ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
                                    shape->getter(), shape->setter(), shape->slot,
                                    shape->attributes(), shape->getFlags() | Shape::ALIAS,
                                    shape->shortid)
               != NULL);
     }
-
     return ok;
 }
 
@@ -4194,8 +4181,7 @@ JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSO
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
-    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent,
-                          JSID_TO_ATOM(id));
+    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, JSID_TO_ATOM(id));
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4222,15 +4208,6 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     }
 
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    if (!fun->isInterpreted())
-        return CloneFunctionObject(cx, fun, parent);
-
-    if (fun->script()->compileAndGo) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
-        return NULL;
-    }
-
     if (!FUN_FLAT_CLOSURE(fun))
         return CloneFunctionObject(cx, fun, parent);
 
@@ -4266,11 +4243,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
             obj = obj->getParent();
         }
 
-        Value v;
-        if (!obj->getProperty(cx, r.front().propid, &v))
+        if (!obj->getProperty(cx, r.front().propid, clone->getFlatClosureUpvars() + i))
             return NULL;
-        fun->script()->types.setUpvar(cx, i, v);
-        clone->getFlatClosureUpvars()[i] = v;
     }
 
     return clone;
@@ -4358,10 +4332,6 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
     for (; fs->name; fs++) {
         flags = fs->flags;
 
-        JSAtom *atom = js_Atomize(cx, fs->name, strlen(fs->name));
-        if (!atom)
-            return JS_FALSE;
-
         /*
          * Define a generic arity N+1 static method for the arity N prototype
          * method if flags contains JSFUN_GENERIC_NATIVE.
@@ -4374,8 +4344,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             }
 
             flags &= ~JSFUN_GENERIC_NATIVE;
-            fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
-                                    js_generic_native_method_dispatcher,
+            fun = JS_DefineFunction(cx, ctor, fs->name,
+                                    Jsvalify(js_generic_native_method_dispatcher),
                                     fs->nargs + 1,
                                     flags & ~JSFUN_TRCINFO);
             if (!fun)
@@ -4390,7 +4360,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                 return JS_FALSE;
         }
 
-        fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(fs->call), fs->nargs, flags);
+        fun = JS_DefineFunction(cx, obj, fs->name, fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
     }
@@ -4756,10 +4726,17 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         goto out2;
 
     {
+        EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
+        if (!emptyCallShape) {
+            fun = NULL;
+            goto out2;
+        }
+        AutoShapeRooter shapeRoot(cx, emptyCallShape);
+
         AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
         MUST_FLOW_THROUGH("out");
 
-        Bindings bindings(cx);
+        Bindings bindings(cx, emptyCallShape);
         AutoBindingsRooter root(cx, bindings);
         for (i = 0; i < nargs; i++) {
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]));
@@ -4952,8 +4929,6 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
         LAST_FRAME_CHECKS(cx, script);
         return false;
     }
-    script->isUncachedEval = true;
-
     JS_ASSERT(script->getVersion() == compileVersion);
 
     bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));

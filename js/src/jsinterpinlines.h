@@ -124,30 +124,13 @@ InvokeSessionGuard::invoke(JSContext *cx)
     /* Prevent spurious accessing-callee-after-rval assert. */
     args_.calleeHasBeenReset();
 
-    if (!optimized())
-        return Invoke(cx, args_);
-
-    /*
-     * Update the types of each argument. The 'this' type and missing argument
-     * types were handled when the invoke session was created.
-     */
-    for (unsigned i = 0; i < Min(argc(), nformals_); i++)
-        script_->types.setArgument(cx, i, (*this)[i]);
-
 #ifdef JS_METHODJIT
-    mjit::JITScript *jit = script_->getJIT(false /* !constructing */);
-    if (!jit) {
-        /* Watch in case the code was thrown away due a recompile. */
-        mjit::CompileStatus status = mjit::TryCompile(cx, ifg_.fp());
-        if (status == mjit::Compile_Error)
-            return false;
-        JS_ASSERT(status == mjit::Compile_Okay);
-        jit = script_->getJIT(false);
-    }
     void *code;
-    if (!(code = jit->invokeEntry))
-        return Invoke(cx, args_);
+    if (!optimized() || !(code = script_->getJIT(false /* !constructing */)->invokeEntry))
+#else
+    if (!optimized())
 #endif
+        return Invoke(cx, args_);
 
     /* Clear any garbage left from the last Invoke. */
     StackFrame *fp = ifg_.fp();
@@ -359,12 +342,12 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
 }
 
 inline bool
-ScriptPrologue(JSContext *cx, StackFrame *fp, bool newType)
+ScriptPrologue(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(), fp->hasCallObj());
 
     if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
+        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
         if (!obj)
             return false;
         fp->functionThis().setObject(*obj);
@@ -397,10 +380,10 @@ ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 }
 
 inline bool
-ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp, bool newType)
+ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp)
 {
     if (!fp->isGeneratorFrame())
-        return ScriptPrologue(cx, fp, newType);
+        return ScriptPrologue(cx, fp);
     if (cx->compartment->debugMode)
         ScriptDebugPrologue(cx, fp);
     return true;

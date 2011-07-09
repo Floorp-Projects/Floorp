@@ -42,7 +42,6 @@
 /*
  * JS Array interface.
  */
-#include "jscntxt.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsatom.h"
@@ -51,26 +50,41 @@
 /* Small arrays are dense, no matter what. */
 const uintN MIN_SPARSE_INDEX = 256;
 
-inline uint32
-JSObject::getDenseArrayInitializedLength()
+inline JSObject::EnsureDenseResult
+JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
 {
     JS_ASSERT(isDenseArray());
-    return initializedLength;
-}
+    uintN currentCapacity = numSlots();
 
-inline void
-JSObject::setDenseArrayInitializedLength(uint32 length)
-{
-    JS_ASSERT(isDenseArray());
-    JS_ASSERT(length <= getDenseArrayCapacity());
-    initializedLength = length;
-}
+    uintN requiredCapacity;
+    if (extra == 1) {
+        /* Optimize for the common case. */
+        if (index < currentCapacity)
+            return ED_OK;
+        requiredCapacity = index + 1;
+        if (requiredCapacity == 0) {
+            /* Overflow. */
+            return ED_SPARSE;
+        }
+    } else {
+        requiredCapacity = index + extra;
+        if (requiredCapacity < index) {
+            /* Overflow. */
+            return ED_SPARSE;
+        }
+        if (requiredCapacity <= currentCapacity)
+            return ED_OK;
+    }
 
-inline bool
-JSObject::isPackedDenseArray()
-{
-    JS_ASSERT(isDenseArray());
-    return flags & PACKED_ARRAY;
+    /*
+     * We use the extra argument also as a hint about number of non-hole
+     * elements to be inserted.
+     */
+    if (requiredCapacity > MIN_SPARSE_INDEX &&
+        willBeSparseDenseArray(requiredCapacity, extra)) {
+        return ED_SPARSE;
+    }
+    return growSlots(cx, requiredCapacity) ? ED_OK : ED_FAILED;
 }
 
 extern bool
@@ -94,6 +108,26 @@ js_IdIsIndex(jsid id, jsuint *indexp)
     return js_StringIsIndex(JSID_TO_ATOM(id), indexp);
 }
 
+extern js::Class js_ArrayClass, js_SlowArrayClass;
+
+inline bool
+JSObject::isDenseArray() const
+{
+    return getClass() == &js_ArrayClass;
+}
+
+inline bool
+JSObject::isSlowArray() const
+{
+    return getClass() == &js_SlowArrayClass;
+}
+
+inline bool
+JSObject::isArray() const
+{
+    return isDenseArray() || isSlowArray();
+}
+
 /*
  * Dense arrays are not native -- aobj->isNative() for a dense array aobj
  * results in false, meaning aobj->map does not point to a js::Shape.
@@ -113,8 +147,11 @@ js_IdIsIndex(jsid id, jsuint *indexp)
  * Callers of js_GetProtoIfDenseArray must take care to use the original object
  * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
  */
-inline JSObject *
-js_GetProtoIfDenseArray(JSObject *obj);
+static JS_INLINE JSObject *
+js_GetProtoIfDenseArray(JSObject *obj)
+{
+    return obj->isDenseArray() ? obj->getProto() : obj;
+}
 
 extern JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj);
@@ -129,17 +166,9 @@ namespace js
 extern JSObject * JS_FASTCALL
 NewDenseEmptyArray(JSContext *cx, JSObject *proto=NULL);
 
-/* Create a dense array with length and capacity == 'length', initialized length set to 0. */
+/* Create a dense array with length and capacity == 'length'. */
 extern JSObject * JS_FASTCALL
 NewDenseAllocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
-
-/*
- * Create a dense array with length, capacity and initialized length == 'length', and filled with holes.
- * This is a kludge, as the tracer doesn't yet track/update initialized length when initializing
- * array elements.
- */
-extern JSObject * JS_FASTCALL
-NewDenseAllocatedEmptyArray(JSContext *cx, uint length, JSObject *proto=NULL);
 
 /*
  * Create a dense array with a set length, but without allocating space for the
@@ -207,19 +236,14 @@ extern bool
 js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
              void *arg, void *tmp, JSMergeSortElemType elemType);
 
-/* Natives exposed for optimization by the interpreter and JITs. */
+/*
+ * The Array.prototype.sort fast-native entry point is exported for joined
+ * function optimization in js{interp,tracer}.cpp.
+ */
 namespace js {
-
 extern JSBool
 array_sort(JSContext *cx, uintN argc, js::Value *vp);
-
-extern JSBool
-array_push(JSContext *cx, uintN argc, js::Value *vp);
-
-extern JSBool
-array_pop(JSContext *cx, uintN argc, js::Value *vp);
-
-} /* namespace js */
+}
 
 #ifdef DEBUG
 extern JSBool

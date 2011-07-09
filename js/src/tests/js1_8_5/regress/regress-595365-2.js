@@ -30,11 +30,8 @@ function add_p0to127(o) {
 function add_p128(o) {
   o.p200 = ++i;
 }
-var oarr = [];
-for (var i = 0; i < 2; i++)
-  oarr[i] = {};
-var o = add_p0to127(oarr[0]);
-var o2 = add_p0to127(oarr[1]);
+var o = add_p0to127({});
+var o2 = add_p0to127({});
 var o_shape127 = shapeOf(o);
 assertEq(o_shape127, shapeOf(o2));
 add_p128(o);
