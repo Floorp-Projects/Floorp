@@ -1551,19 +1551,12 @@ Parser::functionBody()
     return pn;
 }
 
-/*
- * Creates a placeholder JSDefinition node for |atom| and adds it to the
- * current lexdeps.
- */
+/* Create a placeholder JSDefinition node for |atom|. */
 static JSDefinition *
-MakePlaceholder(AtomDefnAddPtr &p, JSParseNode *pn, JSTreeContext *tc)
+MakePlaceholder(JSParseNode *pn, JSTreeContext *tc)
 {
-    JSAtom *atom = pn->pn_atom;
-    JSDefinition *dn = (JSDefinition *) NameNode::create(atom, tc);
+    JSDefinition *dn = (JSDefinition *) NameNode::create(pn->pn_atom, tc);
     if (!dn)
-        return NULL;
-
-    if (!tc->lexdeps->add(p, atom, dn))
         return NULL;
 
     dn->pn_type = TOK_NAME;
@@ -1896,23 +1889,20 @@ struct BindData {
 };
 
 static bool
-BindLocalVariable(JSContext *cx, JSTreeContext *tc, JSAtom *atom, BindingKind kind, bool isArg)
+BindLocalVariable(JSContext *cx, JSTreeContext *tc, JSParseNode *pn, BindingKind kind)
 {
     JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
 
-    /*
-     * Don't bind a variable with the hidden name 'arguments', per ECMA-262.
-     * Instead 'var arguments' always restates the predefined property of the
-     * activation objects whose name is 'arguments'. Assignment to such a
-     * variable must be handled specially.
-     *
-     * Special case: an argument named 'arguments' *does* shadow the predefined
-     * arguments property.
-     */
-    if (atom == cx->runtime->atomState.argumentsAtom && !isArg)
-        return true;
+    /* 'arguments' can be bound as a local only via a destructuring formal parameter. */
+    JS_ASSERT_IF(pn->pn_atom == cx->runtime->atomState.argumentsAtom, kind == VARIABLE);
 
-    return tc->bindings.add(cx, atom, kind);
+    uintN index = tc->bindings.countVars();
+    if (!tc->bindings.add(cx, pn->pn_atom, kind))
+        return false;
+
+    pn->pn_cookie.set(tc->staticLevel, index);
+    pn->pn_dflags |= PND_BOUND;
+    return true;
 }
 
 #if JS_HAS_DESTRUCTURING
@@ -2785,8 +2775,8 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                      * inherited lexdeps into uses of a new outer definition
                      * allows us to handle both these cases in a natural way.
                      */
-                    outer_dn = MakePlaceholder(p, dn, tc);
-                    if (!outer_dn)
+                    outer_dn = MakePlaceholder(dn, tc);
+                    if (!outer_dn || !tc->lexdeps->add(p, atom, outer_dn))
                         return false;
                 }
             }
@@ -3184,10 +3174,8 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
             if (apn->pn_op != JSOP_SETLOCAL)
                 continue;
 
-            uint16 index = funtc.bindings.countVars();
-            if (!BindLocalVariable(context, &funtc, apn->pn_atom, VARIABLE, true))
+            if (!BindLocalVariable(context, &funtc, apn, VARIABLE))
                 return NULL;
-            apn->pn_cookie.set(funtc.staticLevel, index);
         }
     }
 #endif
@@ -3773,7 +3761,7 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
 }
 
 static bool
-BindTopLevelVar(JSContext *cx, BindData *data, JSParseNode *pn, JSAtom *varname, JSTreeContext *tc)
+BindTopLevelVar(JSContext *cx, BindData *data, JSParseNode *pn, JSTreeContext *tc)
 {
     JS_ASSERT(pn->pn_op == JSOP_NAME);
     JS_ASSERT(!tc->inFunction());
@@ -3826,11 +3814,19 @@ BindTopLevelVar(JSContext *cx, BindData *data, JSParseNode *pn, JSAtom *varname,
 }
 
 static bool
-BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, JSParseNode *pn,
-                  JSAtom *name, JSTreeContext *tc)
+BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, JSTreeContext *tc)
 {
     JS_ASSERT(tc->inFunction());
 
+    JSParseNode *pn = data->pn;
+    JSAtom *name = pn->pn_atom;
+
+    /*
+     * Don't create a local variable with the name 'arguments', per ECMA-262.
+     * Instead, 'var arguments' always restates that predefined binding of the
+     * lexical environment for function activations. Assignments to arguments
+     * must be handled specially -- see NoteLValue.
+     */
     if (name == cx->runtime->atomState.argumentsAtom) {
         pn->pn_op = JSOP_ARGUMENTS;
         pn->pn_dflags |= PND_BOUND;
@@ -3848,12 +3844,9 @@ BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, JSParseNod
          */
         kind = (data->op == JSOP_DEFCONST) ? CONSTANT : VARIABLE;
 
-        uintN index = tc->bindings.countVars();
-        if (!BindLocalVariable(cx, tc, name, kind, false))
+        if (!BindLocalVariable(cx, tc, pn, kind))
             return false;
         pn->pn_op = JSOP_GETLOCAL;
-        pn->pn_cookie.set(tc->staticLevel, index);
-        pn->pn_dflags |= PND_BOUND;
         return true;
     }
 
@@ -4012,9 +4005,9 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         pn->pn_dflags |= PND_CONST;
 
     if (tc->inFunction())
-        return BindFunctionLocal(cx, data, mdl, pn, atom, tc);
+        return BindFunctionLocal(cx, data, mdl, tc);
 
-    return BindTopLevelVar(cx, data, pn, atom, tc);
+    return BindTopLevelVar(cx, data, pn, tc);
 }
 
 static bool
@@ -6917,8 +6910,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                      * generator) a use of a new placeholder in the generator's
                      * lexdeps.
                      */
-                    AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(atom);
-                    JSDefinition *dn2 = MakePlaceholder(p, pn, tc);
+                    JSDefinition *dn2 = MakePlaceholder(pn, tc);
                     if (!dn2)
                         return false;
                     dn2->pn_pos = root->pn_pos;
@@ -6937,6 +6929,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                     dn2->dn_uses = dn->dn_uses;
                     dn->dn_uses = *pnup;
                     *pnup = NULL;
+                    if (!tc->lexdeps->put(atom, dn2))
+                        return false;
                 } else if (dn->isPlaceholder()) {
                     /*
                      * The variable first occurs free in the 'yield' expression;
@@ -7101,8 +7095,9 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
         if (isGenexp) {
             if (!guard.checkValidBody(pn2))
                 return NULL;
-        } else if (!guard.maybeNoteGenerator()) {
-            return NULL;
+        } else {
+            if (!guard.maybeNoteGenerator())
+                return NULL;
         }
 
         switch (tt) {
@@ -8761,8 +8756,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                      * - Be left as a free variable definition if we never
                      *   see the real definition.
                      */
-                    dn = MakePlaceholder(p, pn, tc);
-                    if (!dn)
+                    dn = MakePlaceholder(pn, tc);
+                    if (!dn || !tc->lexdeps->add(p, dn->pn_atom, dn))
                         return NULL;
 
                     /*
