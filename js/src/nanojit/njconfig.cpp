@@ -96,7 +96,7 @@ namespace nanojit
         harden_nop_insertion = false;
 
 #if defined(NANOJIT_ARM)
-        NanoStaticAssert(NJ_COMPILER_ARM_ARCH >= 5 && NJ_COMPILER_ARM_ARCH <= 7);
+        NanoStaticAssert(NJ_COMPILER_ARM_ARCH >= 4 && NJ_COMPILER_ARM_ARCH <= 7);
         arm_arch = NJ_COMPILER_ARM_ARCH;
         arm_vfp = (arm_arch >= 7);
 
