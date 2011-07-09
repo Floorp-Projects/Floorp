@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jslogic_h__ && defined JS_METHODJIT
+#ifndef jslogic_h__
 #define jslogic_h__
 
 #include "MethodJIT.h"
@@ -59,7 +59,6 @@ JSObject * JS_FASTCALL NewInitObject(VMFrame &f, JSObject *base);
 void JS_FASTCALL Trap(VMFrame &f, uint32 trapTypes);
 void JS_FASTCALL Debugger(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Interrupt(VMFrame &f, jsbytecode *pc);
-void JS_FASTCALL RecompileForInline(VMFrame &f);
 void JS_FASTCALL InitElem(VMFrame &f, uint32 last);
 void JS_FASTCALL InitProp(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL InitMethod(VMFrame &f, JSAtom *atom);
@@ -136,6 +135,7 @@ void JS_FASTCALL GetPropNoCache(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL CallElem(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetElem(VMFrame &f);
+void JS_FASTCALL Length(VMFrame &f);
 void JS_FASTCALL CallName(VMFrame &f);
 void JS_FASTCALL PushImplicitThisForGlobal(VMFrame &f);
 void JS_FASTCALL GetUpvar(VMFrame &f, uint32 index);
@@ -217,32 +217,10 @@ void JS_FASTCALL FastInstanceOf(VMFrame &f);
 void JS_FASTCALL ArgCnt(VMFrame &f);
 void JS_FASTCALL Unbrand(VMFrame &f);
 
-/*
- * Helper for triggering recompilation should a name read miss a type barrier,
- * produce undefined or -0.
- */
-void JS_FASTCALL TypeBarrierHelper(VMFrame &f, uint32 which);
-void JS_FASTCALL TypeBarrierReturn(VMFrame &f, Value *vp);
-void JS_FASTCALL NegZeroHelper(VMFrame &f);
-
-void JS_FASTCALL CallPropSwap(VMFrame &f);
-void JS_FASTCALL CheckArgumentTypes(VMFrame &f);
-
-#ifdef DEBUG
-void JS_FASTCALL AssertArgumentTypes(VMFrame &f);
-#endif
-
-void JS_FASTCALL MissedBoundsCheckEntry(VMFrame &f);
-void JS_FASTCALL MissedBoundsCheckHead(VMFrame &f);
-void * JS_FASTCALL InvariantFailure(VMFrame &f, void *repatchCode);
-
 template <bool strict> int32 JS_FASTCALL ConvertToTypedInt(JSContext *cx, Value *vp);
 void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);
 
 void JS_FASTCALL Exception(VMFrame &f);
-
-JSObject * JS_FASTCALL
-NewDenseUnallocatedArray(VMFrame &f, uint32 length);
 
 } /* namespace stubs */
 
@@ -261,9 +239,6 @@ inline FuncPtr FunctionTemplateConditional(bool cond, FuncPtr a, FuncPtr b) {
 
 extern "C" void *
 js_InternalThrow(js::VMFrame &f);
-
-extern "C" void *
-js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VMFrame &f);
 
 #endif /* jslogic_h__ */
 

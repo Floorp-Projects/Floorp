@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jslogic_h_inl__ && defined JS_METHODJIT
+#ifndef jslogic_h_inl__
 #define jslogic_h_inl__
 
 namespace js {
@@ -76,7 +76,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
             (shape)->slot != SHAPE_INVALID_SLOT &&                            \
             !(obj)->brandedOrHasMethodBarrier()) {                            \
             /* Fast path for, e.g., plain Object instance properties. */      \
-            (obj)->nativeSetSlotWithType(cx, shape, *vp);                     \
+            (obj)->nativeSetSlot((shape)->slot, *vp);                         \
         } else {                                                              \
             if (!js_NativeSet(cx, obj, shape, false, strict, vp))             \
                 THROW();                                                      \

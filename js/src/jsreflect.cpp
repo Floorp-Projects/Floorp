@@ -60,7 +60,6 @@
 #include "jsbool.h"
 #include "jsval.h"
 #include "jsvalue.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsobj.h"
 #include "jsarray.h"
@@ -3270,13 +3269,6 @@ JS_InitReflect(JSContext *cx, JSObject *obj)
 {
     JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, obj);
     if (!Reflect)
-        return NULL;
-
-    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
-                                                                   "Reflect", "",
-                                                                   JSProto_Object,
-                                                                   Reflect->getProto());
-    if (!type || !Reflect->setTypeAndUniqueShape(cx, type))
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, "Reflect", OBJECT_TO_JSVAL(Reflect),

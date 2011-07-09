@@ -332,18 +332,6 @@ JSWrapper::trace(JSTracer *trc, JSObject *wrapper)
     MarkObject(trc, *wrappedObject(wrapper), "wrappedObject");
 }
 
-JSObject *
-JSWrapper::wrappedObject(const JSObject *wrapper)
-{
-    return wrapper->getProxyPrivate().toObjectOrNull();
-}
-
-JSWrapper *
-JSWrapper::wrapperHandler(const JSObject *wrapper)
-{
-    return static_cast<JSWrapper *>(wrapper->getProxyHandler());
-}
-
 bool
 JSWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp)
 {
@@ -436,13 +424,13 @@ AutoCompartment::enter()
     if (origin != destination) {
         LeaveTrace(context);
 
-        context->setCompartment(destination);
+        context->compartment = destination;
         JSObject *scopeChain = target->getGlobal();
         JS_ASSERT(scopeChain->isNative());
 
         frame.construct();
         if (!context->stack.pushDummyFrame(context, *scopeChain, &frame.ref())) {
-            context->setCompartment(origin);
+            context->compartment = origin;
             return false;
         }
 
@@ -662,10 +650,6 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 bool
 JSCrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
-    /* Notify type inference of custom iterators, see GetCustomIterator. */
-    if (!(flags & JSITER_OWNONLY))
-        types::MarkIteratorUnknown(cx);
-
     PIERCE(cx, wrapper, GET,
            NOTHING,
            JSWrapper::iterate(cx, wrapper, flags, vp),

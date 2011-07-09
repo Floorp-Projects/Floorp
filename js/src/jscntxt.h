@@ -54,7 +54,6 @@
 #include "jsgc.h"
 #include "jsgcchunk.h"
 #include "jshashtable.h"
-#include "jsinfer.h"
 #include "jsinterp.h"
 #include "jsobj.h"
 #include "jspropertycache.h"
@@ -506,9 +505,6 @@ struct JSRuntime {
      */
     JSBool              debugMode;
 
-    /* Had an out-of-memory error which did not populate an exception. */
-    JSBool              hadOutOfMemory;
-
 #ifdef JS_TRACER
     /* True if any debug hooks not supported by the JIT are enabled. */
     bool debuggerInhibitsJIT() const {
@@ -936,8 +932,6 @@ struct JSContext
     /* GC heap compartment. */
     JSCompartment       *compartment;
 
-    inline void setCompartment(JSCompartment *compartment);
-
     /* Current execution stack. */
     js::ContextStack    stack;
 
@@ -1160,10 +1154,6 @@ struct JSContext
 
     inline js::mjit::JaegerCompartment *jaegerCompartment();
 #endif
-
-    bool                 inferenceEnabled;
-
-    bool typeInferenceEnabled() { return inferenceEnabled; }
 
     /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled();
@@ -1438,9 +1428,7 @@ class AutoGCRooter {
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
         BINDINGS =    -16, /* js::Bindings */
-        SHAPEVECTOR = -17, /* js::AutoShapeVector */
-        TYPE =        -18, /* js::types::AutoTypeRooter */
-        VALARRAY =    -19  /* js::AutoValueArrayRooter */
+        SHAPEVECTOR = -17  /* js::AutoShapeVector */
     };
 
     private:
@@ -2277,11 +2265,6 @@ TriggerAllOperationCallbacks(JSRuntime *rt);
 
 } /* namespace js */
 
-/*
- * Get the topmost scripted frame in a context. Note: if the topmost frame is
- * in the middle of an inline call, that call will be expanded. To avoid this,
- * use cx->stack.currentScript or cx->stack.currentScriptedScopeChain.
- */
 extern js::StackFrame *
 js_GetScriptedCaller(JSContext *cx, js::StackFrame *fp);
 
@@ -2299,33 +2282,18 @@ LeaveTrace(JSContext *cx);
 extern bool
 CanLeaveTrace(JSContext *cx);
 
-#ifdef JS_METHODJIT
-namespace mjit {
-    void ExpandInlineFrames(JSContext *cx, bool all);
-}
-#endif
-
 } /* namespace js */
 
 /*
  * Get the current frame, first lazily instantiating stack frames if needed.
  * (Do not access cx->fp() directly except in JS_REQUIRES_STACK code.)
  *
- * LeaveTrace is defined in jstracer.cpp if JS_TRACER is defined.
- *
- * If the stack contains frames inlined by the method JIT, kind specifies
- * which ones to expand.
+ * Defined in jstracer.cpp if JS_TRACER is defined.
  */
 static JS_FORCES_STACK JS_INLINE js::StackFrame *
-js_GetTopStackFrame(JSContext *cx, js::FrameExpandKind expand)
+js_GetTopStackFrame(JSContext *cx)
 {
     js::LeaveTrace(cx);
-
-#ifdef JS_METHODJIT
-    if (expand != js::FRAME_EXPAND_NONE)
-        js::mjit::ExpandInlineFrames(cx, expand == js::FRAME_EXPAND_ALL);
-#endif
-
     return cx->maybefp();
 }
 
@@ -2461,25 +2429,6 @@ class AutoShapeVector : public AutoVectorRooter<const Shape *>
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
-
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class AutoValueArray : public AutoGCRooter
-{
-    js::Value *start_;
-    unsigned length_;
-
-  public:
-    AutoValueArray(JSContext *cx, js::Value *start, unsigned length
-                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoGCRooter(cx, VALARRAY), start_(start), length_(length)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    Value *start() const { return start_; }
-    unsigned length() const { return length_; }
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

@@ -293,8 +293,8 @@ struct GetElementIC : public BasePolyIC {
         hasLastStringStub = false;
     }
     void purge(Repatcher &repatcher);
-    LookupStatus update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
-    LookupStatus attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id,
+    LookupStatus update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
+    LookupStatus attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                Value *vp);
     LookupStatus attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                   Value *vp);
@@ -448,14 +448,8 @@ struct PICInfo : public BasePolyIC {
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
 
-    // Whether type properties need to be updated to reflect generated stubs.
-    bool typeMonitored : 1;
-
     // Offset from start of fast path to initial shape guard.
     uint32 shapeGuard;
-
-    // Possible types of the RHS, for monitored SETPROP PICs.
-    types::ClonedTypeSet *rhsTypes;
     
     inline bool isSet() const {
         return kind == SET || kind == SETMETHOD;
@@ -545,17 +539,11 @@ struct PICInfo : public BasePolyIC {
         inlinePathPatched = false;
         shapeRegHasBaseShape = true;
     }
-
-    ~PICInfo() {
-        if (typeMonitored)
-            UnwantedForeground::free_(rhsTypes);
-    }
 };
 
 #ifdef JS_POLYIC
 void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *);
-void JS_FASTCALL GetPropNoCache(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL SetProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL CallProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL Name(VMFrame &f, ic::PICInfo *);

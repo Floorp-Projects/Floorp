@@ -88,8 +88,8 @@ LoadFromTypedArray(Assembler &masm, js::TypedArray *tarray, T address,
         masm.load32(address, dataReg);
         masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
         Jump safeInt = masm.branch32(Assembler::Below, dataReg, Imm32(0x80000000));
-        masm.convertUInt32ToDouble(dataReg, Registers::FPConversionTemp);
-        masm.breakDouble(Registers::FPConversionTemp, typeReg, dataReg);
+        masm.convertUInt32ToDouble(dataReg, FPRegisters::First);
+        masm.breakDouble(FPRegisters::First, typeReg, dataReg);
         safeInt.linkTo(masm.label(), &masm);
         break;
       }
@@ -97,16 +97,16 @@ LoadFromTypedArray(Assembler &masm, js::TypedArray *tarray, T address,
       case js::TypedArray::TYPE_FLOAT64:
       {
         if (tarray->type == js::TypedArray::TYPE_FLOAT32)
-            masm.loadFloat(address, Registers::FPConversionTemp);
+            masm.loadFloat(address, FPRegisters::First);
         else
-            masm.loadDouble(address, Registers::FPConversionTemp);
+            masm.loadDouble(address, FPRegisters::First);
         // Make sure NaN gets canonicalized.
         Jump notNaN = masm.branchDouble(Assembler::DoubleEqual,
-                                        Registers::FPConversionTemp,
-                                        Registers::FPConversionTemp);
-        masm.loadStaticDouble(&js_NaN, Registers::FPConversionTemp, dataReg);
+                                        FPRegisters::First,
+                                        FPRegisters::First);
+        masm.loadStaticDouble(&js_NaN, FPRegisters::First, dataReg);
         notNaN.linkTo(masm.label(), &masm);
-        masm.breakDouble(Registers::FPConversionTemp, typeReg, dataReg);
+        masm.breakDouble(FPRegisters::First, typeReg, dataReg);
         break;
       }
     }
@@ -320,7 +320,8 @@ GenConversionForIntArray(Assembler &masm, js::TypedArray *tarray, const ValueRem
 // |dataReg| (and volatile registers) are preserved across any conversion
 // process.
 //
-// Constants are left untouched. Any other value is placed into destReg.
+// Constants are left untouched. Any other value is placed into
+// FPRegisters::First.
 static void
 GenConversionForFloatArray(Assembler &masm, js::TypedArray *tarray, const ValueRemat &vr,
                            FPRegisterID destReg, uint32 saveMask)
@@ -456,13 +457,13 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
 
             RegisterID newReg;
             if (!avail.empty()) {
-                newReg = avail.takeAnyReg().reg();
+                newReg = avail.takeAnyReg();
             } else {
                 // If no registers meet the ideal set, relax a constraint and spill.
                 avail = allowMask & ~pinned;
 
                 if (!avail.empty()) {
-                    newReg = avail.takeAnyReg().reg();
+                    newReg = avail.takeAnyReg();
                     saveRHS.preserve(Registers::maskReg(newReg));
                 } else {
                     // Oh no! *All* single byte registers are pinned. This
@@ -524,23 +525,15 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
       }
 
       case js::TypedArray::TYPE_FLOAT32:
-      case js::TypedArray::TYPE_FLOAT64: {
-        /*
-         * Use a temporary for conversion. Inference is disabled, so no FP
-         * registers are live.
-         */
-        Registers regs(Registers::TempFPRegs);
-        FPRegisterID temp = regs.takeAnyReg().fpreg();
-
+      case js::TypedArray::TYPE_FLOAT64:
         if (!ConstantFoldForFloatArray(cx, &vr))
             return false;
-        GenConversionForFloatArray(masm, tarray, vr, temp, saveMask);
+        GenConversionForFloatArray(masm, tarray, vr, FPRegisters::First, saveMask);
         if (vr.isConstant())
             StoreToFloatArray(masm, tarray, ImmDouble(vr.value().toDouble()), address);
         else
-            StoreToFloatArray(masm, tarray, temp, address);
+            StoreToFloatArray(masm, tarray, FPRegisters::First, address);
         break;
-      }
     }
 
     return true;

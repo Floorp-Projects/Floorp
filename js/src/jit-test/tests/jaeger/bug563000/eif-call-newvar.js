@@ -2,9 +2,11 @@
 setDebug(true);
 
 function callee() {
+  assertJit();
   evalInFrame(1, "var x = 'success'");
 }
 function caller(code) {
+  assertJit();
   eval(code);
   callee();
   return x;

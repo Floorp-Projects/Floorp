@@ -102,9 +102,7 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_NULL                = 0x06,
     JSVAL_TYPE_OBJECT              = 0x07,
 
-    /* The below types never appear in a jsval; they are only used in tracing and type inference. */
-
-    JSVAL_TYPE_UNKNOWN             = 0x20,
+    /* The below types never appear in a jsval; they are only used in tracing. */
 
     JSVAL_TYPE_NONFUNOBJ           = 0x57,
     JSVAL_TYPE_FUNOBJ              = 0x67,
@@ -266,7 +264,6 @@ typedef enum JSWhyMagic
     JS_THIS_POISON,              /* used in debug builds to catch tracing errors */
     JS_ARG_POISON,               /* used in debug builds to catch tracing errors */
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
-    JS_LAZY_ARGUMENTS,           /* lazy arguments value on the stack */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 

@@ -57,11 +57,7 @@ namespace js {
     _(Insns)                \
     _(VMFrame)              \
     _(PICs)                 \
-    _(SlowCalls)            \
-    _(Analysis)             \
-    _(Regalloc)             \
-    _(Inlining)             \
-    _(Recompile)
+    _(SlowCalls)
 
 enum JaegerSpewChannel {
 #define _(name) JSpew_##name,
