@@ -22,10 +22,9 @@ function test()
     browser.removeEventListener("load", arguments.callee, true);
 
     openConsole();
-    is(HUDService.displaysIndex().length, 1, "Web Console was opened");
 
-    hudId = HUDService.displaysIndex()[0];
-    hud = HUDService.getHeadsUpDisplay(hudId);
+    hud = HUDService.getHudByWindow(content);
+    ok(hud, "Web Console is now open");
 
     HUDService.lastFinishedRequestCallback = function(aRequest) {
       lastRequest = aRequest;
@@ -151,11 +150,9 @@ function testLiveFilteringOnSearchStrings() {
 }
 
 function countMessageNodes() {
-  let outputNode = hud.querySelector(".hud-output-node");
-
-  let messageNodes = outputNode.querySelectorAll(".hud-msg-node");
+  let messageNodes = hud.outputNode.querySelectorAll(".hud-msg-node");
   let displayedMessageNodes = 0;
-  let view = outputNode.ownerDocument.defaultView;
+  let view = hud.chromeWindow;
   for (let i = 0; i < messageNodes.length; i++) {
     let computedStyle = view.getComputedStyle(messageNodes[i], null);
     if (computedStyle.display !== "none")
@@ -167,6 +164,6 @@ function countMessageNodes() {
 
 function setStringFilter(aValue)
 {
-  hud.querySelector(".hud-filter-box").value = aValue;
-  HUDService.adjustVisibilityOnSearchStringChange(hudId, aValue);
+  hud.filterBox.value = aValue;
+  HUDService.adjustVisibilityOnSearchStringChange(hud.hudId, aValue);
 }

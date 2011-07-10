@@ -73,6 +73,11 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 
+#define FLAG_ALT        0x01
+#define FLAG_CONTROL    0x02
+#define FLAG_SHIFT      0x04
+#define FLAG_META       0x08
+
 const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
   {
     eNavigationDirection_Last,   // NS_VK_END
@@ -140,6 +145,7 @@ NS_IMPL_ISUPPORTS4(nsXULPopupManager,
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),
   mCachedMousePoint(0, 0),
+  mCachedModifiers(0),
   mActiveMenuBar(nsnull),
   mPopups(nsnull),
   mNoHidePanels(nsnull),
@@ -462,6 +468,8 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
     }
   }
 
+  mCachedModifiers = 0;
+
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aEvent);
   if (uiEvent) {
     uiEvent->GetRangeParent(getter_AddRefs(mRangeParent));
@@ -475,6 +483,22 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
       nsEvent* event;
       event = privateEvent->GetInternalNSEvent();
       if (event) {
+        if (event->eventStructType == NS_MOUSE_EVENT ||
+            event->eventStructType == NS_KEY_EVENT) {
+          nsInputEvent* inputEvent = static_cast<nsInputEvent*>(event);
+          if (inputEvent->isAlt) {
+            mCachedModifiers |= FLAG_ALT;
+          }
+          if (inputEvent->isControl) {
+            mCachedModifiers |= FLAG_CONTROL;
+          }
+          if (inputEvent->isShift) {
+            mCachedModifiers |= FLAG_SHIFT;
+          }
+          if (inputEvent->isMeta) {
+            mCachedModifiers |= FLAG_META;
+          }
+        }
         nsIDocument* doc = aPopup->GetCurrentDoc();
         if (doc) {
           nsIPresShell* presShell = doc->GetShell();
@@ -1187,9 +1211,18 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   }
 
   event.refPoint = mCachedMousePoint;
+
+  event.isAlt = !!(mCachedModifiers & FLAG_ALT);
+  event.isControl = !!(mCachedModifiers & FLAG_CONTROL);
+  event.isShift = !!(mCachedModifiers & FLAG_SHIFT);
+  event.isMeta = !!(mCachedModifiers & FLAG_META);
+
   nsEventDispatcher::Dispatch(popup, presContext, &event, nsnull, &status);
+
   mCachedMousePoint = nsIntPoint(0, 0);
   mOpeningPopup = nsnull;
+
+  mCachedModifiers = 0;
 
   // if a panel, blur whatever has focus so that the panel can take the focus.
   // This is done after the popupshowing event in case that event is cancelled.

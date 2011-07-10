@@ -1862,13 +1862,8 @@ const ContentTouchHandler = {
   },
 
   tapDown: function tapDown(aX, aY) {
-    // Ensure that the content process has gets an activate event
     let browser = getBrowser();
-    let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     browser.focus();
-    try {
-      fl.activateRemoteFrame();
-    } catch (e) {}
 
     // if the page might capture touch events, we give it the option
     this.updateCanCancel(aX, aY);
@@ -2850,6 +2845,7 @@ Tab.prototype = {
 
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     fl.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+    fl.eventMode = Ci.nsIFrameLoader.EVENT_MODE_DONT_FORWARD_TO_CHILD;
 
     return browser;
   },
@@ -2998,12 +2994,7 @@ Tab.prototype = {
       Elements.browsers.selectedPanel = notification;
       browser.active = true;
       document.getElementById("tabs").selectedTab = this._chromeTab;
-
-      // Ensure that the content process has gets an activate event
-      try {
-        let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-        fl.activateRemoteFrame();
-      } catch (e) {}
+      browser.focus();
     } else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");

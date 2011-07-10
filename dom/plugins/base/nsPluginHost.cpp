@@ -226,10 +226,6 @@ PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 #define BRAND_PROPERTIES_URL "chrome://branding/locale/brand.properties"
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
 
-// #defines for plugin cache and prefs
-#define NS_PREF_MAX_NUM_CACHED_PLUGINS "browser.plugins.max_num_cached_plugins"
-#define DEFAULT_NUMBER_OF_STOPPED_PLUGINS 10
-
 #ifdef CALL_SAFETY_ON
 // By default we run OOPP, so we don't want to cover up crashes.
 PRBool gSkipPluginSafeCalls = PR_TRUE;
@@ -484,7 +480,7 @@ nsresult nsPluginHost::ReloadPlugins(PRBool reloadPages)
 
   // we are re-scanning plugins. New plugins may have been added, also some
   // plugins may have been removed, so we should probably shut everything down
-  // but don't touch running (active and  not stopped) plugins
+  // but don't touch running (active and not stopped) plugins
 
   // check if plugins changed, no need to do anything else
   // if no changes to plugins have been made
@@ -959,8 +955,7 @@ nsresult nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
 #endif
 
   // Note that we're not setting up a plugin instance here; the stream
-  // listener's OnStartRequest will handle doing that, looking for
-  // stopped plugins, etc, etc.
+  // listener's OnStartRequest will handle doing that.
 
   return NewEmbeddedPluginStreamListener(uri, aOwner, nsnull, aListener);
 }
@@ -1055,20 +1050,6 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
         bCanHandleInternally = PR_TRUE;
   }
 
-  if (FindStoppedPluginForURL(aURL, aOwner) == NS_OK) {
-    PLUGIN_LOG(PLUGIN_LOG_NOISY,
-    ("nsPluginHost::InstantiateEmbeddedPlugin FoundStopped mime=%s\n", aMimeType));
-
-    if (!isJava && bCanHandleInternally) {
-      nsNPAPIPluginInstance* instance;
-      aOwner->GetInstance(&instance);
-      NewEmbeddedPluginStream(aURL, aOwner, instance);
-      NS_IF_RELEASE(instance);
-    }
-
-    return NS_OK;
-  }
-
   // if we don't have a MIME type at this point, we still have one more chance by
   // opening the stream and seeing if the server hands one back
   if (!aMimeType)
@@ -1136,20 +1117,6 @@ nsresult nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
   aMimeType, aOwner, urlSpec.get()));
 #endif
 
-  if (FindStoppedPluginForURL(aURI, aOwner) == NS_OK) {
-    PLUGIN_LOG(PLUGIN_LOG_NOISY,
-    ("nsPluginHost::InstantiateFullPagePlugin FoundStopped mime=%s\n",aMimeType));
-
-
-    nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
-    if (!pluginTag || !pluginTag->mIsJavaPlugin) {
-      nsRefPtr<nsNPAPIPluginInstance> instance;
-      aOwner->GetInstance(getter_AddRefs(instance));
-      NewFullPagePluginStream(aURI, instance.get(), aStreamListener);
-    }
-    return NS_OK;
-  }
-
   nsresult rv = SetUpPluginInstance(aMimeType, aURI, aOwner);
 
   if (NS_OK == rv) {
@@ -1204,31 +1171,6 @@ nsPluginHost::TagForPlugin(nsNPAPIPlugin* aPlugin)
   // a plugin should never exist without a corresponding tag
   NS_ERROR("TagForPlugin has failed");
   return nsnull;
-}
-
-nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
-                                               nsIPluginInstanceOwner *aOwner)
-{
-  nsCAutoString url;
-  if (!aURL)
-    return NS_ERROR_FAILURE;
-
-  aURL->GetAsciiSpec(url);
-
-  nsNPAPIPluginInstance *instance = FindStoppedInstance(url.get());
-  if (instance && !instance->IsRunning()) {
-    aOwner->SetInstance(instance);
-    instance->SetOwner(aOwner);
-
-    instance->Start();
-    aOwner->CreateWidget();
-
-    // If we've got a native window, the let the plugin know about it.
-    aOwner->SetWindow();
-
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
 }
 
 nsresult nsPluginHost::SetUpPluginInstance(const char *aMimeType,
@@ -3255,39 +3197,17 @@ nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance)
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHost::StopPluginInstance called instance=%p\n",aInstance));
 
-  nsNPAPIPluginInstance* instance = aInstance;
-  if (instance->HasStartedDestroying())
+  if (aInstance->HasStartedDestroying()) {
     return NS_OK;
+  }
+
+  nsPluginTag* pluginTag = TagForPlugin(aInstance->GetPlugin());
 
   aInstance->Stop();
+  aInstance->Destroy();
+  mInstances.RemoveElement(aInstance);
 
-  // if the plugin does not want to be 'cached' just remove it
-  PRBool doCache = PR_TRUE;
-  aInstance->ShouldCache(&doCache);
-  if (doCache) {
-    // try to get the max cached plugins from a pref or use default
-    PRUint32 cachedPluginLimit;
-    nsresult rv = NS_ERROR_FAILURE;
-    if (mPrefService)
-      rv = mPrefService->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS, (int*)&cachedPluginLimit);
-    if (NS_FAILED(rv))
-      cachedPluginLimit = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
-    
-    if (StoppedInstanceCount() >= cachedPluginLimit) {
-      nsNPAPIPluginInstance *oldestInstance = FindOldestStoppedInstance();
-      if (oldestInstance) {
-        nsPluginTag* pluginTag = TagForPlugin(oldestInstance->GetPlugin());
-        oldestInstance->Destroy();
-        mInstances.RemoveElement(oldestInstance);
-        OnPluginInstanceDestroyed(pluginTag);
-      }
-    }
-  } else {
-    nsPluginTag* pluginTag = TagForPlugin(instance->GetPlugin());
-    instance->Destroy();
-    mInstances.RemoveElement(instance);
-    OnPluginInstanceDestroyed(pluginTag);
-  }
+  OnPluginInstanceDestroyed(pluginTag);
 
   return NS_OK;
 }
@@ -4011,57 +3931,6 @@ nsPluginHost::FindInstance(const char *mimetype)
   }
 
   return nsnull;
-}
-
-nsNPAPIPluginInstance*
-nsPluginHost::FindStoppedInstance(const char *url)
-{
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance *instance = mInstances[i];
-
-    nsIURI *uri = instance->GetURI();
-    if (!uri)
-      continue;
-
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    if (!PL_strcmp(url, spec.get()) && !instance->IsRunning())
-      return instance;
-  }
-
-  return nsnull;
-}
-
-nsNPAPIPluginInstance*
-nsPluginHost::FindOldestStoppedInstance()
-{
-  nsNPAPIPluginInstance *oldestInstance = nsnull;
-  TimeStamp oldestTime = TimeStamp::Now();
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance *instance = mInstances[i];
-    if (instance->IsRunning())
-      continue;
-
-    TimeStamp time = instance->LastStopTime();
-    if (time < oldestTime) {
-      oldestTime = time;
-      oldestInstance = instance;
-    }
-  }
-
-  return oldestInstance;
-}
-
-PRUint32
-nsPluginHost::StoppedInstanceCount()
-{
-  PRUint32 stoppedCount = 0;
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance *instance = mInstances[i];
-    if (!instance->IsRunning())
-      stoppedCount++;
-  }
-  return stoppedCount;
 }
 
 nsTArray< nsRefPtr<nsNPAPIPluginInstance> >*

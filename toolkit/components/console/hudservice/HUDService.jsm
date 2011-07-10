@@ -1197,15 +1197,14 @@ NetworkPanel.prototype =
  * Ensures that the number of message nodes of type aCategory don't exceed that
  * category's line limit by removing old messages as needed.
  *
- * @param nsIDOMNode aConsoleNode
- *        The DOM node (richlistbox aka outputNode) that holds the output of the
- *        console.
+ * @param aHUDId aHUDId
+ *        The HeadsUpDisplay ID.
  * @param integer aCategory
  *        The category of message nodes to limit.
  * @return number
  *         The current user-selected log limit.
  */
-function pruneConsoleOutputIfNecessary(aConsoleNode, aCategory)
+function pruneConsoleOutputIfNecessary(aHUDId, aCategory)
 {
   // Get the log limit, either from the pref or from the constant.
   let logLimit;
@@ -1216,13 +1215,15 @@ function pruneConsoleOutputIfNecessary(aConsoleNode, aCategory)
     logLimit = DEFAULT_LOG_LIMIT;
   }
 
-  let scrollBox = aConsoleNode.scrollBoxObject.element;
+  let hudRef = HUDService.getHudReferenceById(aHUDId);
+  let outputNode = hudRef.outputNode;
+
+  let scrollBox = outputNode.scrollBoxObject.element;
   let oldScrollHeight = scrollBox.scrollHeight;
-  let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(aConsoleNode);
-  let hudRef = HUDService.getHudReferenceForOutputNode(aConsoleNode);
+  let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(outputNode);
 
   // Prune the nodes.
-  let messageNodes = aConsoleNode.querySelectorAll(".webconsole-msg-" +
+  let messageNodes = outputNode.querySelectorAll(".webconsole-msg-" +
       CATEGORY_CLASS_FRAGMENTS[aCategory]);
   let removeNodes = messageNodes.length - logLimit;
   for (let i = 0; i < removeNodes; i++) {
@@ -1475,39 +1476,10 @@ HUD_SERVICE.prototype =
       browser.webProgress.removeProgressListener(hud.progressListener);
       delete hud.progressListener;
 
-      this.unregisterDisplay(displayNode);
+      this.unregisterDisplay(hudId);
 
       window.focus();
     }
-  },
-
-  /**
-   * Clear the specified HeadsUpDisplay
-   *
-   * @param string|nsIDOMNode aHUD
-   *        Either the ID of a HUD or the DOM node corresponding to an outer
-   *        HUD box.
-   * @returns void
-   */
-  clearDisplay: function HS_clearDisplay(aHUD)
-  {
-    if (typeof(aHUD) === "string") {
-      aHUD = this.getOutputNodeById(aHUD);
-    }
-
-    let hudRef = HUDService.getHudReferenceForOutputNode(aHUD);
-
-    if (hudRef) {
-      hudRef.cssNodes = {};
-    }
-
-    var outputNode = aHUD.querySelector(".hud-output-node");
-
-    while (outputNode.firstChild) {
-      outputNode.removeChild(outputNode.firstChild);
-    }
-
-    aHUD.lastTimestamp = 0;
   },
 
   /**
@@ -1623,8 +1595,7 @@ HUD_SERVICE.prototype =
   adjustVisibilityForMessageType:
   function HS_adjustVisibilityForMessageType(aHUDId, aPrefKey, aState)
   {
-    let displayNode = this.getOutputNodeById(aHUDId);
-    let outputNode = displayNode.querySelector(".hud-output-node");
+    let outputNode = this.getHudReferenceById(aHUDId).outputNode;
     let doc = outputNode.ownerDocument;
 
     // Look for message nodes ("hud-msg-node") with the given preference key
@@ -1683,9 +1654,7 @@ HUD_SERVICE.prototype =
   adjustVisibilityOnSearchStringChange:
   function HS_adjustVisibilityOnSearchStringChange(aHUDId, aSearchString)
   {
-    let displayNode = this.getOutputNodeById(aHUDId);
-    let outputNode = displayNode.querySelector(".hud-output-node");
-    let doc = outputNode.ownerDocument;
+    let outputNode = this.getHudReferenceById(aHUDId).outputNode;
 
     let nodes = outputNode.querySelectorAll(".hud-msg-node");
 
@@ -1743,74 +1712,60 @@ HUD_SERVICE.prototype =
   /**
    * When a display is being destroyed, unregister it first
    *
-   * @param string|nsIDOMNode aHUD
-   *        Either the ID of a HUD or the DOM node corresponding to an outer
-   *        HUD box.
+   * @param string aHUDId
+   *        The ID of a HUD.
    * @returns void
    */
-  unregisterDisplay: function HS_unregisterDisplay(aHUD)
+  unregisterDisplay: function HS_unregisterDisplay(aHUDId)
   {
+    let hud = this.getHudReferenceById(aHUDId);
+
     // Remove children from the output. If the output is not cleared, there can
     // be leaks as some nodes has node.onclick = function; set and GC can't
     // remove the nodes then.
-    HUDService.clearDisplay(aHUD);
+    hud.jsterm.clearOutput();
 
-    var id, outputNode, ownerDoc;
-    if (typeof(aHUD) === "string") {
-      id = aHUD;
-      outputNode = this.getHeadsUpDisplay(aHUD);
-    }
-    else {
-      id = aHUD.getAttribute("id");
-      outputNode = aHUD;
-    }
+    // Make sure that the console panel does not try to call
+    // deactivateHUDForContext() again.
+    hud.consoleWindowUnregisterOnHide = false;
 
-    // remove HUD DOM node and
-    // remove display references from local registries get the outputNode
-    var parent = outputNode.parentNode;
-    var splitters = parent.querySelectorAll("splitter");
-    var len = splitters.length;
-    for (var i = 0; i < len; i++) {
-      if (splitters[i].getAttribute("class") == "hud-splitter") {
-        splitters[i].parentNode.removeChild(splitters[i]);
-        break;
-      }
+    // Remove the HUDBox and the consolePanel if the Web Console is inside a
+    // floating xul:panel.
+    hud.HUDBox.parentNode.removeChild(hud.HUDBox);
+    if (hud.consolePanel) {
+      hud.consolePanel.parentNode.removeChild(hud.consolePanel);
     }
 
-    ownerDoc = outputNode.ownerDocument;
-    ownerDoc.getElementById(id).parentNode.removeChild(outputNode);
-
-    this.hudReferences[id].jsterm.autocompletePopup.destroy();
-
-    this.hudReferences[id].consoleWindowUnregisterOnHide = false;
-
-    // remove the HeadsUpDisplay object from memory
-    if ("cssNodes" in this.hudReferences[id]) {
-      delete this.hudReferences[id].cssNodes;
+    if (hud.splitter.parentNode) {
+      hud.splitter.parentNode.removeChild(hud.splitter);
     }
-    delete this.hudReferences[id];
+
+    hud.jsterm.autocompletePopup.destroy();
+
+    delete this.hudReferences[aHUDId];
+
     // remove the related storage object
-    this.storage.removeDisplay(id);
+    this.storage.removeDisplay(aHUDId);
 
     for (let windowID in this.windowIds) {
-      if (this.windowIds[windowID] == id) {
+      if (this.windowIds[windowID] == aHUDId) {
         delete this.windowIds[windowID];
       }
     }
 
-    this.unregisterActiveContext(id);
+    this.unregisterActiveContext(aHUDId);
 
-    let popupset = outputNode.ownerDocument.getElementById("mainPopupSet");
-    let panels = popupset.querySelectorAll("panel[hudId=" + id + "]");
+    let popupset = hud.chromeDocument.getElementById("mainPopupSet");
+    let panels = popupset.querySelectorAll("panel[hudId=" + aHUDId + "]");
     for (let i = 0; i < panels.length; i++) {
       panels[i].hidePopup();
     }
 
-    let id = ConsoleUtils.supString(id);
+    let id = ConsoleUtils.supString(aHUDId);
     Services.obs.notifyObservers(id, "web-console-destroyed", null);
 
     if (Object.keys(this.hudReferences).length == 0) {
-      let autocompletePopup = outputNode.ownerDocument.
+      let autocompletePopup = hud.chromeDocument.
                               getElementById("webConsole_autocompletePopup");
       if (autocompletePopup) {
         autocompletePopup.parentNode.removeChild(autocompletePopup);
@@ -1884,6 +1839,18 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Returns the HeadsUpDisplay object associated to a content window.
+   *
+   * @param nsIDOMWindow aContentWindow
+   * @returns object
+   */
+  getHudByWindow: function HS_getHudByWindow(aContentWindow)
+  {
+    let hudId = this.getHudIdByWindow(aContentWindow);
+    return hudId ? this.hudReferences[hudId] : null;
+  },
+
+  /**
    * Returns the hudId that is corresponding to the hud activated for the
    * passed aContentWindow. If there is no matching hudId null is returned.
    *
@@ -1897,27 +1864,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Returns the hudReference for a given output node.
-   *
-   * @param nsIDOMNode aNode (currently either a xul:vbox as returned by
-   *        getOutputNodeById() or a richlistbox).
-   * @returns a HUD | null
-   */
-  getHudReferenceForOutputNode: function HS_getHudReferenceForOutputNode(aNode)
-  {
-    let node = aNode;
-    // starting from richlistbox, need to find hudbox
-    while (!node.id && !node.classList.contains("hud-box")) {
-      if (node.parentNode) {
-        node = node.parentNode;
-      } else {
-        return null;
-      }
-    }
-    return this.getHudReferenceById(node.id);
-  },
-
-  /**
    * Returns the hudReference for a given id.
    *
    * @param string aId
@@ -1926,38 +1872,6 @@ HUD_SERVICE.prototype =
   getHudReferenceById: function HS_getHudReferenceById(aId)
   {
     return aId in this.hudReferences ? this.hudReferences[aId] : null;
-  },
-
-  /**
-   * Gets the Web Console DOM node, the .hud-box.
-   *
-   * @param string id
-   *        The Heads Up Display DOM Id
-   * @returns nsIDOMNode
-   */
-  getHeadsUpDisplay: function HS_getHeadsUpDisplay(aId)
-  {
-    return aId in this.hudReferences ? this.hudReferences[aId].HUDBox : null;
-  },
-
-  /**
-   * Gets the Web Console DOM node, the .hud-box.
-   *
-   * @param string aId
-   * @returns nsIDOMNode
-   */
-  getOutputNodeById: function HS_getOutputNodeById(aId)
-  {
-    return this.getHeadsUpDisplay(aId);
-  },
-
-  /**
-   * Gets an array that contains all the HUD IDs.
-   * @returns array
-   */
-  displaysIndex: function HS_displaysIndex()
-  {
-    return Object.keys(this.hudReferences);
   },
 
   /**
@@ -1979,9 +1893,7 @@ HUD_SERVICE.prototype =
    * @returns string
    */
   getFilterStringByHUDId: function HS_getFilterStringbyHUDId(aHUDId) {
-    var hud = this.getHeadsUpDisplay(aHUDId);
-    var filterStr = hud.querySelectorAll(".hud-filter-box")[0].value;
-    return filterStr;
+    return this.getHudReferenceById(aHUDId).filterBox.value;
   },
 
   /**
@@ -2105,18 +2017,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Get OutputNode by Id
-   *
-   * @param string aId
-   * @returns nsIDOMNode (richlistbox)
-   */
-  getConsoleOutputNode: function HS_getConsoleOutputNode(aId)
-  {
-    let displayNode = this.getHeadsUpDisplay(aId);
-    return displayNode.querySelector(".hud-output-node");
-  },
-
-  /**
    * Inform user that the Web Console API has been replaced by a script
    * in a content page.
    *
@@ -2202,23 +2102,6 @@ HUD_SERVICE.prototype =
    * @returns Specific Gecko 'ApplicationHooks' Object/Mixin
    */
   applicationHooks: null,
-
-  getChromeWindowFromContentWindow:
-  function HS_getChromeWindowFromContentWindow(aContentWindow)
-  {
-    if (!aContentWindow) {
-      throw new Error("Cannot get contentWindow via nsILoadContext");
-    }
-    var win = aContentWindow.QueryInterface(Ci.nsIDOMWindow)
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShellTreeItem)
-      .rootTreeItem
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow)
-      .QueryInterface(Ci.nsIDOMChromeWindow);
-    return win;
-  },
 
   /**
    * Requests that haven't finished yet.
@@ -2690,29 +2573,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Passed a HUDId, the corresponding window is returned
-   *
-   * @param string aHUDId
-   * @returns nsIDOMWindow
-   */
-  getContentWindowFromHUDId: function HS_getContentWindowFromHUDId(aHUDId)
-  {
-    var hud = this.getHeadsUpDisplay(aHUDId);
-    var nodes = hud.parentNode.childNodes;
-
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i];
-
-      if (node.localName == "stack" &&
-          node.firstChild &&
-          node.firstChild.contentWindow) {
-        return node.firstChild.contentWindow;
-      }
-    }
-    throw new Error("HS_getContentWindowFromHUD: Cannot get contentWindow");
-  },
-
-  /**
    * Creates a generator that always returns a unique number for use in the
    * indexes
    *
@@ -2912,7 +2772,7 @@ HUD_SERVICE.prototype =
    */
   animate: function HS_animate(aHUDId, aDirection, aCallback)
   {
-    let hudBox = this.getOutputNodeById(aHUDId);
+    let hudBox = this.getHudReferenceById(aHUDId).HUDBox;
     if (!hudBox.classList.contains("animated")) {
       if (aCallback) {
         aCallback();
@@ -3147,7 +3007,7 @@ function HeadsUpDisplay(aConfig)
   // create textNode Factory:
   this.textFactory = NodeFactory("text", "xul", this.chromeDocument);
 
-  this.chromeWindow = HUDService.getChromeWindowFromContentWindow(this.contentWindow);
+  this.chromeWindow = this.chromeDocument.defaultView;
 
   // create a panel dynamically and attach to the parentNode
   this.createHUD();
@@ -3318,7 +3178,9 @@ HeadsUpDisplay.prototype = {
       }
 
       panel.removeEventListener("popuphidden", onPopupHidden, false);
-      this.mainPopupSet.removeChild(panel);
+      if (panel.parentNode) {
+        panel.parentNode.removeChild(panel);
+      }
     }).bind(this);
 
     panel.addEventListener("popuphidden", onPopupHidden, false);
@@ -3912,7 +3774,7 @@ HeadsUpDisplay.prototype = {
   {
     let hudId = this.hudId;
     function HUD_clearButton_onCommand() {
-      HUDService.clearDisplay(hudId);
+      HUDService.getHudReferenceById(hudId).jsterm.clearOutput();
     }
 
     let clearButton = this.makeXULNode("toolbarbutton");
@@ -4175,8 +4037,6 @@ function findCompletionBeginning(aStr)
 function JSPropertyProvider(aScope, aInputValue)
 {
   let obj = unwrap(aScope);
-  // Store the scope object, since obj will be modified later on.
-  let win = obj;
 
   // Analyse the aInputValue and find the beginning of the last part that
   // should be completed.
@@ -4215,7 +4075,7 @@ function JSPropertyProvider(aScope, aInputValue)
 
       // Check if prop is a getter function on obj. Functions can change other
       // stuff so we can't execute them to get the next object. Stop here.
-      if (isNonNativeGetter(win, obj, prop)) {
+      if (isNonNativeGetter(obj, prop)) {
         return null;
       }
       try {
@@ -4911,22 +4771,14 @@ JSTerm.prototype = {
 
   clearOutput: function JST_clearOutput()
   {
-    let outputNode = this.outputNode;
-    let hudRef = HUDService.getHudReferenceForOutputNode(outputNode);
+    let hud = HUDService.getHudReferenceById(this.hudId);
+    hud.cssNodes = {};
 
-    if (hudRef) {
-      hudRef.cssNodes = {};
+    while (hud.outputNode.firstChild) {
+      hud.outputNode.removeChild(hud.outputNode.firstChild);
     }
 
-    while (outputNode.firstChild) {
-      outputNode.removeChild(outputNode.firstChild);
-    }
-
-    let hudBox = outputNode;
-    while (!hudBox.classList.contains("hud-box")) {
-      hudBox = hudBox.parentNode;
-    }
-    hudBox.lastTimestamp = 0;
+    hud.HUDBox.lastTimestamp = 0;
   },
 
   /**
@@ -5850,7 +5702,7 @@ ConsoleUtils = {
 
     HUDService.regroupOutput(outputNode);
 
-    if (pruneConsoleOutputIfNecessary(outputNode, aNode.category) == 0) {
+    if (pruneConsoleOutputIfNecessary(aHUDId, aNode.category) == 0) {
       // We can't very well scroll to make the message node visible if the log
       // limit is zero and the node was destroyed in the first place.
       return;
