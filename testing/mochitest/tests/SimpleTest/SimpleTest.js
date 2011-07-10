@@ -109,7 +109,7 @@ SimpleTest.todo = function(condition, name, diag) {
 SimpleTest._getCurrentTestURL = function() {
     return parentRunner && parentRunner.currentTestURL ||
            typeof gTestPath == "string" && gTestPath ||
-           "";
+           "unknown test url";
 };
 
 SimpleTest._logResult = function(test, passString, failString) {
