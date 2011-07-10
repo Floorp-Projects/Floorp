@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsMaemoNetworkManager.h"
 #include "mozilla/Services.h"
+#include "nsCRT.h"
 
 NS_IMPL_ISUPPORTS2(nsMaemoNetworkLinkService,
                    nsINetworkLinkService,
@@ -67,6 +68,16 @@ NS_IMETHODIMP
 nsMaemoNetworkLinkService::GetLinkStatusKnown(PRBool *aIsKnown)
 {
   *aIsKnown = nsMaemoNetworkManager::GetLinkStatusKnown();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMaemoNetworkLinkService::GetLinkType(PRUint32 *aLinkType)
+{
+  NS_ENSURE_ARG_POINTER(aLinkType);
+
+  // XXX This function has not yet been implemented for this platform
+  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
   return NS_OK;
 }
 

@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Makoto Kato <m_kato@ga2.so-net.ne.jp> (Original Author)
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,13 +37,14 @@
 
 package org.mozilla.gecko;
 
-import android.content.*;
+import android.telephony.*;
 
-public class GeckoConnectivityReceiver
-    extends BroadcastReceiver
+public class GeckoPhoneStateListener
+    extends PhoneStateListener
 {
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onDataConnectionStateChanged(int state, int networkType) {
         GeckoAppShell.onNetworkStateChange(true);
     }
 }
+
