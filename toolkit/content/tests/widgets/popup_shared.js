@@ -133,6 +133,16 @@ function eventOccurred(event)
       matches = eventitem[0] == event.type && eventitem[1] == event.target.id;
     }
 
+    var modifiersMask = eventitem[2];
+    if (modifiersMask) {
+      var m = "";
+      m += event.altKey ? '1' : '0';
+      m += event.ctrlKey ? '1' : '0';
+      m += event.shiftKey ? '1' : '0';
+      m += event.metaKey ? '1' : '0';
+      is(m, modifiersMask, test.testname + " modifiers mask matches");
+    }
+
     var expectedState;
     switch (event.type) {
       case "popupshowing": expectedState = "showing"; break;

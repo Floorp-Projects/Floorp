@@ -1657,6 +1657,93 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
   }// if end. bubble up process
 }// end of HandleAccessKey
 
+void
+nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* frameLoader) {
+  nsFrameLoader* fml = static_cast<nsFrameLoader*>(frameLoader);
+  PBrowserParent* remoteBrowser = fml->GetRemoteBrowser();
+  TabParent* remote = static_cast<TabParent*>(remoteBrowser);
+  if (!remote) {
+    return;
+  }
+
+  if (aEvent->eventStructType == NS_MOUSE_EVENT) {
+    nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
+    remote->SendRealMouseEvent(*mouseEvent);
+  }
+
+  if (aEvent->eventStructType == NS_KEY_EVENT) {
+    nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(aEvent);
+    remote->SendRealKeyEvent(*keyEvent);
+  }
+
+  if (aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
+    nsMouseScrollEvent* scrollEvent = static_cast<nsMouseScrollEvent*>(aEvent);
+    remote->SendMouseScrollEvent(*scrollEvent);
+  }
+}
+
+PRBool
+nsEventStateManager::IsRemoteTarget(nsIContent* target) {
+  return target &&
+         target->Tag() == nsGkAtoms::browser &&
+         target->IsXUL() &&
+         target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
+                             nsGkAtoms::_true, eIgnoreCase);
+}
+
+
+PRBool
+nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
+                                             nsIFrame* aTargetFrame,
+                                             nsEventStatus *aStatus) {
+
+  switch (aEvent->eventStructType) {
+    case NS_KEY_EVENT:
+    case NS_MOUSE_SCROLL_EVENT:
+      break;
+    case NS_MOUSE_EVENT:
+      if (aEvent->message == NS_MOUSE_BUTTON_DOWN ||
+          aEvent->message == NS_MOUSE_BUTTON_UP ||
+          aEvent->message == NS_MOUSE_MOVE) {
+        break;
+      }
+    default:
+      return PR_FALSE;
+  }
+
+  nsIContent* target = mCurrentTargetContent;
+  if (!target && aTargetFrame) {
+    target = aTargetFrame->GetContent();
+  }
+
+  if (*aStatus == nsEventStatus_eConsumeNoDefault ||
+      !target ||
+      !IsRemoteTarget(target)) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(target);
+  if (!loaderOwner) {
+    return PR_FALSE;
+  }
+
+  nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+  if (!frameLoader) {
+    return PR_FALSE;
+  }
+
+  PRUint32 eventMode;
+  frameLoader->GetEventMode(&eventMode);
+  if (eventMode == nsIFrameLoader::EVENT_MODE_DONT_FORWARD_TO_CHILD) {
+    return PR_FALSE;
+  }
+
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aTargetFrame);
+  aEvent->refPoint = pt.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
+
+  DispatchCrossProcessEvent(aEvent, frameLoader);
+  return PR_TRUE;
+}
 
 //
 // CreateClickHoldTimer
@@ -2905,6 +2992,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG_POINTER(aStatus);
 
+  HandleCrossProcessEvent(aEvent, aTargetFrame, aStatus);
+
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nsnull;
 
@@ -3420,6 +3509,10 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIFrame* aTargetFrame,
                                   nsEventStatus* aStatus)
 {
+  if (aTargetFrame && IsRemoteTarget(aTargetFrame->GetContent())) {
+    return;
+  }
+
   PRInt32 cursor = NS_STYLE_CURSOR_DEFAULT;
   imgIContainer* container = nsnull;
   PRBool haveHotspot = PR_FALSE;

@@ -56,10 +56,7 @@ function onLoad() {
 
 function testButtonClicked()
 {
-  let hudId = HUDService.displaysIndex()[0];
-  let console = browser.contentWindow.wrappedJSObject.console;
-  let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  let outputNode = hudBox.querySelector(".hud-output-node");
+  let outputNode = HUDService.getHudByWindow(content).outputNode;
   let nodes = outputNode.querySelectorAll(".hud-msg-node");
   is(nodes.length, 2, "two nodes");
   ok(/start/.test(nodes[0].textContent), "start found");

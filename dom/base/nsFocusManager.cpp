@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/TabParent.h"
+
 #include "nsFocusManager.h"
 
 #include "nsIInterfaceRequestor.h"
@@ -1531,14 +1533,14 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
       NotifyFocusStateChange(content, shouldShowFocusRing, PR_FALSE);
     }
 
-    // if an object/plug-in is being blurred, move the system focus to the
-    // parent window, otherwise events will still get fired at the plugin.
+    // if an object/plug-in/remote browser is being blurred, move the system focus
+    // to the parent window, otherwise events will still get fired at the plugin.
     // But don't do this if we are blurring due to the window being lowered,
     // otherwise, the parent window can get raised again.
-    if (mActiveWindow && aAdjustWidgets) {
+    if (mActiveWindow) {
       nsIFrame* contentFrame = content->GetPrimaryFrame();
       nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
-      if (objectFrame) {
+      if (aAdjustWidgets && objectFrame) {
         // note that the presshell's widget is being retrieved here, not the one
         // for the object frame.
         nsIViewManager* vm = presShell->GetViewManager();
@@ -1548,6 +1550,15 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
           if (widget)
             widget->SetFocus(PR_FALSE);
         }
+      }
+
+      // if the object being blurred is a remote browser, deactivate remote content
+      TabParent* remote = GetRemoteForContent(content);
+      if (remote) {
+        remote->Deactivate();
+  #ifdef DEBUG_FOCUS
+      printf("*Remote browser deactivated\n");
+  #endif
       }
     }
   }
@@ -1746,12 +1757,21 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
 
       NotifyFocusStateChange(aContent, aWindow->ShouldShowFocusRing(), PR_TRUE);
 
-      // if this is an object/plug-in, focus the plugin's widget.  Note that we might
+      // if this is an object/plug-in/remote browser, focus its widget.  Note that we might
       // no longer be in the same document, due to the events we fired above when
       // aIsNewDocument.
-      if (aAdjustWidgets && presShell->GetDocument() == aContent->GetDocument()) {
-        if (objectFrameWidget)
+      if (presShell->GetDocument() == aContent->GetDocument()) {
+        if (aAdjustWidgets && objectFrameWidget)
           objectFrameWidget->SetFocus(PR_FALSE);
+
+        // if the object being focused is a remote browser, activate remote content
+        TabParent* remote = GetRemoteForContent(aContent);
+        if (remote) {
+          remote->Activate();
+#ifdef DEBUG_FOCUS
+          printf("*Remote browser activated\n");
+#endif
+        }
       }
 
       PRUint32 reason = GetFocusMoveReason(aFlags);
@@ -2946,6 +2966,28 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
   }
 
   return rootElement;
+}
+
+TabParent*
+nsFocusManager::GetRemoteForContent(nsIContent* aContent) {
+  if (!aContent ||
+      aContent->Tag() != nsGkAtoms::browser ||
+      !aContent->IsXUL() ||
+      !aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
+                             nsGkAtoms::_true, eIgnoreCase))
+    return nsnull;
+
+  nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(aContent);
+  if (!loaderOwner)
+    return nsnull;
+
+  nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+  if (!frameLoader)
+    return nsnull;
+
+  PBrowserParent* remoteBrowser = frameLoader->GetRemoteBrowser();
+  TabParent* remote = static_cast<TabParent*>(remoteBrowser);
+  return remote;
 }
 
 void
