@@ -106,11 +106,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                                char **location,
                                jsval *exception);
 
-    nsresult ReadScript(StartupCache *cache, nsIURI *uri, 
-                        JSContext *cx, JSObject **scriptObj);
-    nsresult WriteScript(StartupCache *cache, JSObject *scriptObj,
-                         nsIFile *component, nsIURI *uri, JSContext *cx);
-
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
     nsCOMPtr<nsIThreadJSContextStack> mContextStack;
