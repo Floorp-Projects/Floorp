@@ -50,6 +50,7 @@ namespace mozilla {
 namespace gfx {
 
 class SourceSurfaceD2DTarget;
+class GradientStopsD2D;
 
 struct PrivateD3D10DataD2D
 {
@@ -154,9 +155,8 @@ private:
   void MarkChanged();
 
   ID3D10BlendState *GetBlendStateForOperator(CompositionOp aOperator);
-  ID2D1RenderTarget *GetRTForOperator(CompositionOp aOperator);
-  void FinalizeRTForOperator(CompositionOp aOperator, const Rect &aBounds);
-  void EnsureViews();
+  ID2D1RenderTarget *GetRTForOperation(CompositionOp aOperator, const Pattern &aPattern);
+  void FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aPattern, const Rect &aBounds);  void EnsureViews();
   void PopAllClips();
 
   TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture);
@@ -164,6 +164,12 @@ private:
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
   TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
+
+  TemporaryRef<ID3D10Texture1D> CreateGradientTexture(const GradientStopsD2D *aStops);
+
+  void SetupEffectForRadialGradient(const RadialGradientPattern *aPattern);
+
+  static const uint32_t test = 4;
 
   IntSize mSize;
 

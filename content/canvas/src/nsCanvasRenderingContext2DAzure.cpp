@@ -194,79 +194,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-protected:
-  nsCanvasGradientAzure(Type aType) : mType(aType)
-  {}
-
-  nsTArray<GradientStop> mRawStops;
-  RefPtr<GradientStops> mStops;
-  Type mType;
-};
-
-class nsCanvasRadialGradientAzure : public nsCanvasGradientAzure
-{
-public:
-  nsCanvasRadialGradientAzure(const Point &aBeginOrigin, Float aBeginRadius,
-                              const Point &aEndOrigin, Float aEndRadius)
-    : nsCanvasGradientAzure(RADIAL)
-    , mCenter(aEndOrigin)
-    , mRadius(aEndRadius)
-  {
-    mOffsetStart = aBeginRadius / mRadius;
-
-    mOffsetRatio = 1 - mOffsetStart;
-    mOrigin = ((mCenter * aBeginRadius) - (aBeginOrigin * mRadius)) /
-              (aBeginRadius - mRadius);
-  }
-
-
-  /* nsIDOMCanvasGradient */
-  NS_IMETHOD AddColorStop (float offset,
-                            const nsAString& colorstr)
-  {
-    if (!FloatValidate(offset) || offset < 0.0 || offset > 1.0) {
-      return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
-
-    nscolor color;
-    nsCSSParser parser;
-    nsresult rv = parser.ParseColorString(nsString(colorstr),
-                                          nsnull, 0, &color);
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    mStops = nsnull;
-
-    GradientStop newStop;
-
-    newStop.offset = offset * mOffsetRatio + mOffsetStart;
-    newStop.color = Color::FromABGR(color);
-
-    mRawStops.AppendElement(newStop);
-
-    return NS_OK;
-  }
-
-  // XXX - Temporary gradient code, this will be fixed soon as per bug 666097
-  Point mCenter;
-  Float mRadius;
-  Point mOrigin;
-
-  Float mOffsetStart;
-  Float mOffsetRatio;
-};
-
-class nsCanvasLinearGradientAzure : public nsCanvasGradientAzure
-{
-public:
-  nsCanvasLinearGradientAzure(const Point &aBegin, const Point &aEnd)
-    : nsCanvasGradientAzure(LINEAR)
-    , mBegin(aBegin)
-    , mEnd(aEnd)
-  {
-  }
-
   /* nsIDOMCanvasGradient */
   NS_IMETHOD AddColorStop (float offset,
                             const nsAString& colorstr)
@@ -293,6 +220,44 @@ public:
     mRawStops.AppendElement(newStop);
 
     return NS_OK;
+  }
+
+protected:
+  nsCanvasGradientAzure(Type aType) : mType(aType)
+  {}
+
+  nsTArray<GradientStop> mRawStops;
+  RefPtr<GradientStops> mStops;
+  Type mType;
+};
+
+class nsCanvasRadialGradientAzure : public nsCanvasGradientAzure
+{
+public:
+  nsCanvasRadialGradientAzure(const Point &aBeginOrigin, Float aBeginRadius,
+                              const Point &aEndOrigin, Float aEndRadius)
+    : nsCanvasGradientAzure(RADIAL)
+    , mCenter1(aBeginOrigin)
+    , mCenter2(aEndOrigin)
+    , mRadius1(aBeginRadius)
+    , mRadius2(aEndRadius)
+  {
+  }
+
+  Point mCenter1;
+  Point mCenter2;
+  Float mRadius1;
+  Float mRadius2;
+};
+
+class nsCanvasLinearGradientAzure : public nsCanvasGradientAzure
+{
+public:
+  nsCanvasLinearGradientAzure(const Point &aBegin, const Point &aEnd)
+    : nsCanvasGradientAzure(LINEAR)
+    , mBegin(aBegin)
+    , mEnd(aEnd)
+  {
   }
 
 protected:
@@ -827,8 +792,8 @@ protected:
           static_cast<nsCanvasRadialGradientAzure*>(state.gradientStyles[aStyle].get());
 
         mPattern = new (mRadialGradientPattern.addr())
-          RadialGradientPattern(gradient->mCenter, gradient->mOrigin, gradient->mRadius,
-                                gradient->GetGradientStopsForTarget(aRT));
+          RadialGradientPattern(gradient->mCenter1, gradient->mCenter2, gradient->mRadius1,
+                                gradient->mRadius2, gradient->GetGradientStopsForTarget(aRT));
       } else if (state.patternStyles[aStyle]) {
         if (aCtx->mCanvasElement) {
           CanvasUtils::DoDrawImageSecurityCheck(aCtx->HTMLCanvasElement(),
