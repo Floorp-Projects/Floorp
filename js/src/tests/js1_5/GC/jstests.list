@@ -17,10 +17,10 @@ skip script regress-338653.js # slow, killed on x86_64
 script regress-341877-01.js
 script regress-341877-02.js
 skip script regress-346794.js # slow, killed
-script regress-348532.js
+skip-if(Android) script regress-348532.js
 script regress-352606.js
 skip script regress-383269-01.js # unreliable - based on GC timing
 skip script regress-383269-02.js # unreliable - based on GC timing
 script regress-390078.js
 script regress-418128.js
-script regress-440558.js
+skip-if(Android) script regress-440558.js
