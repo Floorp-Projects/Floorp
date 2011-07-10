@@ -59,7 +59,6 @@ function testPageReload() {
 
   browser.removeEventListener("DOMContentLoaded", testPageReload, false);
 
-  let hudId = HUDService.displaysIndex()[0];
   let console = browser.contentWindow.wrappedJSObject.console;
 
   is(typeof console, "object", "window.console is an object, after page reload");

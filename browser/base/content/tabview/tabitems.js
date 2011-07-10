@@ -265,8 +265,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let tabData = null;
     let self = this;
     let imageDataCb = function(imageData) {
+      // we could have been unlinked while waiting for the thumbnail to load
+      if (!self.tab)
+        return;
+
       Utils.assertThrow(tabData, "tabData");
-      
       tabData.imageData = imageData;
 
       let currentUrl = self.tab.linkedBrowser.currentURI.spec;

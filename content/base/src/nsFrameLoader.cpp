@@ -327,6 +327,7 @@ nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
   , mRenderMode(RENDER_MODE_DEFAULT)
+  , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
 {
 }
 
@@ -537,6 +538,7 @@ NS_IMETHODIMP
 nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 {
   *aDocShell = nsnull;
+  nsresult rv = NS_OK;
 
   // If we have an owner, make sure we have a docshell and return
   // that. If not, we're most likely in the middle of being torn down,
@@ -547,7 +549,7 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
       return rv;
     if (mRemoteFrame) {
       NS_WARNING("No docshells for remote frames!");
-      return NS_ERROR_NOT_AVAILABLE;
+      return rv;
     }
     NS_ASSERTION(mDocShell,
                  "MaybeCreateDocShell succeeded, but null mDocShell");
@@ -556,7 +558,7 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   *aDocShell = mDocShell;
   NS_IF_ADDREF(*aDocShell);
 
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -1340,36 +1342,19 @@ nsFrameLoader::SetOwnerContent(nsIContent* aContent)
 bool
 nsFrameLoader::ShouldUseRemoteProcess()
 {
-  // Check for *disabled* multi-process first: environment, prefs, attribute
-  // Then check for *enabled* multi-process pref: attribute, prefs
+  // Check for *disabled* multi-process first: environment, pref
+  // Then check for *enabled* multi-process attribute
   // Default is not-remote.
 
-  if (PR_GetEnv("MOZ_DISABLE_OOP_TABS")) {
+  if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
+      Preferences::GetBool("dom.ipc.tabs.disabled", PR_FALSE)) {
     return false;
   }
 
-  PRBool remoteDisabled =
-    Preferences::GetBool("dom.ipc.tabs.disabled", PR_FALSE);
-  if (remoteDisabled) {
-    return false;
-  }
-
-  static nsIAtom* const *const remoteValues[] = {
-    &nsGkAtoms::_false,
-    &nsGkAtoms::_true,
-    nsnull
-  };
-
-  switch (mOwnerContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::Remote,
-                                         remoteValues, eCaseMatters)) {
-  case 0:
-    return false;
-  case 1:
-    return true;
-  }
-
-  PRBool remoteEnabled = Preferences::GetBool("dom.ipc.tabs.enabled", PR_FALSE);
-  return (bool) remoteEnabled;
+  return (bool) mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::Remote,
+                                           nsGkAtoms::_true,
+                                           eCaseMatters);
 }
 
 nsresult
@@ -1676,6 +1661,20 @@ nsFrameLoader::SetRenderMode(PRUint32 aRenderMode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::GetEventMode(PRUint32* aEventMode)
+{
+  *aEventMode = mEventMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetEventMode(PRUint32 aEventMode)
+{
+  mEventMode = aEventMode;
+  return NS_OK;
+}
+
 nsIntSize
 nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
 {
@@ -1782,6 +1781,15 @@ NS_IMETHODIMP
 nsFrameLoader::ActivateRemoteFrame() {
   if (mRemoteBrowser) {
     mRemoteBrowser->Activate();
+    return NS_OK;
+  }
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::DeactivateRemoteFrame() {
+  if (mRemoteBrowser) {
+    mRemoteBrowser->Deactivate();
     return NS_OK;
   }
   return NS_ERROR_UNEXPECTED;
