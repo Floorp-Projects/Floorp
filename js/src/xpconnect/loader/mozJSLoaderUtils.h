@@ -13,16 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is mozilla.org.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Robert Ginda <rginda@netscape.com>
+ *   Michael Wu <mwu@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,35 +37,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsapi.h"
-#include "nsCOMPtr.h"
-#include "mozIJSSubScriptLoader.h"
-#include "nsIScriptSecurityManager.h"
+#ifndef mozJSLoaderUtils_h
+#define mozJSLoaderUtils_h
 
-#define MOZ_JSSUBSCRIPTLOADER_CID                    \
-{ /* 829814d6-1dd2-11b2-8e08-82fa0a339b00 */         \
-    0x929814d6,                                      \
-    0x1dd2,                                          \
-    0x11b2,                                          \
-    {0x8e, 0x08, 0x82, 0xfa, 0x0a, 0x33, 0x9b, 0x00} \
+#include "nsString.h"
+#include "jsapi.h"
+
+class nsIURI;
+namespace mozilla {
+namespace scache {
+class StartupCache;
+}
 }
 
-class nsIIOService;
+nsresult
+ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
+                 JSContext *cx, JSObject **scriptObj);
 
-class mozJSSubScriptLoader : public mozIJSSubScriptLoader
-{
-public:
-    mozJSSubScriptLoader();
-    virtual ~mozJSSubScriptLoader();
-
-    // all the interface method declarations...
-    NS_DECL_ISUPPORTS
-    NS_DECL_MOZIJSSUBSCRIPTLOADER
-
-private:
-    nsresult ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_obj,
-                        jschar *charset, const char *uriStr,
-                        nsIIOService *serv, JSObject **scriptObjp);
-
-    nsCOMPtr<nsIPrincipal> mSystemPrincipal;
-};
+nsresult
+WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
+                  JSContext *cx, JSObject *scriptObj);
+#endif /* mozJSLoaderUtils_h */
