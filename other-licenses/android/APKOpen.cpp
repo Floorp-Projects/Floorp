@@ -238,7 +238,7 @@ SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
 SHELL_WRAPPER1(removeObserver, jstring)
-SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
+SHELL_WRAPPER2(onChangeNetworkLinkStatus, jstring, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
 
 static void * xul_handle = NULL;
