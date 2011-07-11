@@ -56,7 +56,6 @@ void(function (scriptScope) {
     "testRunner.js",
 
     // To be included after the files above.
-    "mockFilePicker.js",
     "mockTransferForContinuing.js",
     "toolkitFunctions.js",
   ];

@@ -28,3 +28,5 @@ mochikit.jar:
 
   content/MochiKit/packed.js (MochiKit/packed.js)
 
+% resource mochikit %modules/
+  modules/MockFilePicker.jsm (MockFilePicker.jsm)
