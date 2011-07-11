@@ -282,8 +282,10 @@ LinearScanAllocator::createDataStructures()
     outputMovesFor = lir->mir()->allocate<MoveGroup*>(graph.numVirtualRegisters());
     freeUntilPos = lir->mir()->allocate<CodePosition>(RegisterCodes::Total);
     nextUsePos = lir->mir()->allocate<CodePosition>(RegisterCodes::Total);
-    vregs = lir->mir()->allocate<VirtualRegister>(graph.numVirtualRegisters());
-    if (!liveIn || !inputMovesFor || !outputMovesFor || !freeUntilPos || !nextUsePos || !vregs)
+    if (!liveIn || !inputMovesFor || !outputMovesFor || !freeUntilPos || !nextUsePos)
+        return false;
+
+    if (!vregs.init(lir->mir(), graph.numVirtualRegisters()))
         return false;
 
     // Build virtual register objects
@@ -299,21 +301,21 @@ LinearScanAllocator::createDataStructures()
                     }
                 }
             } else {
-                if (!vregs[ins->id()].init(ins->id(), block, *ins, NULL))
+                if (!vregs[*ins].init(ins->id(), block, *ins, NULL))
                     return false;
             }
             if (ins->numTemps()) {
                 for (size_t j = 0; j < ins->numTemps(); j++) {
-                    uint32 reg = ins->getTemp(j)->virtualRegister();
-                    if (!vregs[reg].init(reg, block, *ins, ins->getTemp(j)))
+                    LDefinition *def = ins->getTemp(j);
+                    if (!vregs[def].init(def->virtualRegister(), block, *ins, def))
                         return false;
                 }
             }
         }
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi *phi = block->getPhi(j);
-            uint32 reg = phi->getDef(0)->virtualRegister();
-            if (!vregs[reg].init(phi->id(), block, phi, phi->getDef(0)))
+            LDefinition *def = phi->getDef(0);
+            if (!vregs[def].init(phi->id(), block, phi, def))
                 return false;
         }
     }
@@ -387,37 +389,35 @@ LinearScanAllocator::buildLivenessInfo()
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
             for (size_t i = 0; i < ins->numDefs(); i++) {
                 if (ins->getDef(i)->policy() != LDefinition::REDEFINED) {
-                    uint32 reg = ins->getDef(i)->virtualRegister();
+                    LDefinition *def = ins->getDef(i);
                     // Ensure that if there aren't any uses, there's at least
                     // some interval for the output to go into.
-                    if (vregs[reg].getInterval(0)->numRanges() == 0)
-                        vregs[reg].getInterval(0)->addRange(outputOf(*ins), outputOf(*ins));
-                    vregs[reg].getInterval(0)->setFrom(outputOf(*ins));
-                    live->remove(reg);
+                    if (vregs[def].getInterval(0)->numRanges() == 0)
+                        vregs[def].getInterval(0)->addRange(outputOf(*ins), outputOf(*ins));
+                    vregs[def].getInterval(0)->setFrom(outputOf(*ins));
+                    live->remove(def->virtualRegister());
                 }
             }
-            for (size_t i = 0; i < ins->numTemps(); i++) {
-                uint32 reg = ins->getTemp(i)->virtualRegister();
-                vregs[reg].getInterval(0)->addRange(outputOf(*ins), outputOf(*ins));
-            }
+
+            for (size_t i = 0; i < ins->numTemps(); i++)
+                vregs[ins->getTemp(i)].getInterval(0)->addRange(outputOf(*ins), outputOf(*ins));
+
             for (LInstruction::InputIterator alloc(**ins);
                  alloc.more();
                  alloc.next())
             {
                 if (alloc->isUse()) {
                     LUse *use = alloc->toUse();
-                    uint32 reg = use->virtualRegister();
-
                     if (use->policy() != LUse::KEEPALIVE)
-                        vregs[reg].addUse(LOperand(use, *ins));
+                        vregs[use].addUse(LOperand(use, *ins));
 
                     if (ins->id() == block->firstId()) {
-                        vregs[reg].getInterval(0)->addRange(inputOf(*ins), inputOf(*ins));
+                        vregs[use].getInterval(0)->addRange(inputOf(*ins), inputOf(*ins));
                     } else {
-                        vregs[reg].getInterval(0)->addRange(outputOf(block->firstId()),
+                        vregs[use].getInterval(0)->addRange(outputOf(block->firstId()),
                                                             inputOf(*ins));
                     }
-                    live->insert(reg);
+                    live->insert(use->virtualRegister());
                 }
             }
         }
@@ -440,9 +440,10 @@ LinearScanAllocator::buildLivenessInfo()
         // the loop header.
         if (mblock->isLoopHeader()) {
             MBasicBlock *backedge = mblock->backedge();
-            for (BitSet::Iterator i(live->begin()); i != live->end(); i++)
+            for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
                 vregs[*i].getInterval(0)->addRange(outputOf(block->firstId()),
                                                    outputOf(backedge->lir()->lastId()));
+            }
         }
 
         liveIn[mblock->id()] = live;
@@ -552,8 +553,7 @@ LinearScanAllocator::allocateRegisters()
                 LInstruction *ins = current->reg()->ins();
                 JS_ASSERT(ins->numOperands() > 0);
                 JS_ASSERT(ins->getOperand(0)->isUse());
-                uint32 inputReg = ins->getOperand(0)->toUse()->virtualRegister();
-                LiveInterval *inputInterval = vregs[inputReg].intervalFor(inputOf(ins));
+                LiveInterval *inputInterval = vregs[ins->getOperand(0)].intervalFor(inputOf(ins));
                 JS_ASSERT(inputInterval);
                 JS_ASSERT(inputInterval->getAllocation()->isGeneralReg());
                 if (!assign(*inputInterval->getAllocation()))
@@ -719,7 +719,7 @@ LinearScanAllocator::resolveControlFlow()
                     IonSpew(IonSpew_LSRA, "   Known as register %u at phi input",
                             phiInput->toUse()->virtualRegister());
 
-                    from = vregs[phiInput->toUse()->virtualRegister()].intervalFor(predecessorEnd);
+                    from = vregs[phiInput].intervalFor(predecessorEnd);
                 } else {
                     from = reg->intervalFor(predecessorEnd);
                 }
@@ -760,7 +760,7 @@ LinearScanAllocator::reifyAllocations()
             // Erase operands
             for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
                 if (alloc->isUse()) {
-                    VirtualRegister *vreg = &vregs[alloc->toUse()->virtualRegister()];
+                    VirtualRegister *vreg = &vregs[*alloc];
                     LiveInterval *interval = vreg->intervalFor(inputOf(ins->id()));
                     if (!interval) {
                         IonSpew(IonSpew_LSRA, "  WARNING: Unsuccessful time travel attempt: "
@@ -776,7 +776,7 @@ LinearScanAllocator::reifyAllocations()
             // Erase temporaries
             for (size_t j = 0; j < ins->numTemps(); j++) {
                 LDefinition *def = ins->getTemp(j);
-                VirtualRegister *vreg = &vregs[def->virtualRegister()];
+                VirtualRegister *vreg = &vregs[def];
                 LiveInterval *interval = vreg->intervalFor(outputOf(ins->id()));
                 JS_ASSERT(interval);
                 LAllocation *alloc = interval->getAllocation();
@@ -787,7 +787,7 @@ LinearScanAllocator::reifyAllocations()
             // Erase definitions
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition *def = ins->getDef(j);
-                VirtualRegister *vreg = &vregs[def->virtualRegister()];
+                VirtualRegister *vreg = &vregs[def];
                 LiveInterval *interval = vreg->intervalFor(outputOf(ins->id()));
                 JS_ASSERT(interval);
                 LAllocation *alloc = interval->getAllocation();
@@ -1095,8 +1095,7 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
 bool
 LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
 {
-    VirtualRegister *vreg = &vregs[pos.ins()];
-    JS_ASSERT(vreg->ins());
+    JS_ASSERT(vregs[pos].ins());
 
     MoveGroup **move;
     switch (pos.subpos()) {

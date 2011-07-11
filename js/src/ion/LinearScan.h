@@ -320,6 +320,41 @@ class VirtualRegister : public TempObject
     LiveInterval *getFirstInterval();
 };
 
+class VirtualRegisterMap
+{
+  private:
+    VirtualRegister *vregs_;
+
+  public:
+    VirtualRegisterMap()
+      : vregs_(NULL)
+    { }
+
+    bool init(MIRGenerator *gen, uint32 numVregs) {
+        vregs_ = gen->allocate<VirtualRegister>(numVregs);
+        if (!vregs_)
+            return false;
+        memset(vregs_, 0, sizeof(VirtualRegister) * numVregs);
+        return true;
+    }
+    VirtualRegister &operator[](int index) {
+        return vregs_[index];
+    }
+    VirtualRegister &operator[](const LAllocation *alloc) {
+        JS_ASSERT(alloc->isUse());
+        return vregs_[alloc->toUse()->virtualRegister()];
+    }
+    VirtualRegister &operator[](const LDefinition *def) {
+        return vregs_[def->virtualRegister()];
+    }
+    VirtualRegister &operator[](const CodePosition &pos) {
+        return vregs_[pos.ins()];
+    }
+    VirtualRegister &operator[](const LInstruction *ins) {
+        return vregs_[ins->id()];
+    }
+};
+
 typedef HashMap<uint32,
                 LInstruction *,
                 DefaultHasher<uint32>,
@@ -353,7 +388,7 @@ class LinearScanAllocator
 
     // Computed inforamtion
     BitSet **liveIn;
-    VirtualRegister *vregs;
+    VirtualRegisterMap vregs;
     MoveGroup **inputMovesFor;
     MoveGroup **outputMovesFor;
     uint32 tempSlot;
