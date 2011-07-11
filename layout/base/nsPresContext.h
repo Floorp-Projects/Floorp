@@ -394,11 +394,6 @@ public:
     return PR_FALSE;
   }
 
-  /**
-   * Access Nav's magic font scaler value
-   */
-  PRInt32 FontScaler() const { return mFontScaler; }
-
   /** 
    * Get the default colors
    */
