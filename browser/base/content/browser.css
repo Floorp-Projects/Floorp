@@ -500,3 +500,6 @@ statuspanel[label=""] {
 .panel-inner-arrowcontentfooter[footertype="promobox"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#promobox");
 }
+
+/* highlighter */
+%include highlighter.css

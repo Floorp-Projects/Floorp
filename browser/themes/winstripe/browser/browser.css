@@ -2434,3 +2434,21 @@ panel[dimmed="true"] {
   border-top-left-radius: .3em;
   margin-left: 1em;
 }
+
+/* Highlighter */
+
+.highlighter-veil {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#highlighter-close-button {
+  list-style-image: url("chrome://browser/skin/KUI-close.png");
+  top: 12px;
+  right: 12px;
+  cursor: pointer;
+}
+
+#highlighter-close-button:-moz-locale-dir(rtl)  {
+  right: auto;
+  left: 12px;
+}
