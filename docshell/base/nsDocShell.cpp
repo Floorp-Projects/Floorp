@@ -9192,7 +9192,17 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     // Load attributes depend on load type...
     switch (mLoadType) {
     case LOAD_HISTORY:
-        loadFlags |= nsIRequest::VALIDATE_NEVER;
+        {
+            // Only send VALIDATE_NEVER if mLSHE's URI was never changed via
+            // push/replaceState (bug 669671).
+            PRBool uriModified = PR_FALSE;
+            if (mLSHE) {
+                mLSHE->GetURIWasModified(&uriModified);
+            }
+
+            if (!uriModified)
+                loadFlags |= nsIRequest::VALIDATE_NEVER;
+        }
         break;
 
     case LOAD_RELOAD_CHARSET_CHANGE:
@@ -9853,6 +9863,15 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // data, if there is any.
     newSHEntry->SetStateData(scContainer);
     newSHEntry->SetPostData(nsnull);
+
+    // If this push/replaceState changed the document's current URI and the new
+    // URI differs from the old URI in more than the hash, or if the old
+    // SHEntry's URI was modified in this way by a push/replaceState call
+    // set URIWasModified to true for the current SHEntry (bug 669671).
+    PRBool sameExceptHashes = PR_TRUE, oldURIWasModified = PR_FALSE;
+    newURI->EqualsExceptRef(mCurrentURI, &sameExceptHashes);
+    oldOSHE->GetURIWasModified(&oldURIWasModified);
+    newSHEntry->SetURIWasModified(!sameExceptHashes || oldURIWasModified);
 
     // Step 5: If aReplace is false, indicating that we're doing a pushState
     // rather than a replaceState, notify bfcache that we've added a page to

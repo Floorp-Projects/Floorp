@@ -30,10 +30,9 @@ function test()
     browser.removeEventListener("load", arguments.callee, true);
 
     openConsole();
-    is(HUDService.displaysIndex().length, 1, "Web Console was opened");
 
-    hudId = HUDService.displaysIndex()[0];
-    hud = HUDService.getHeadsUpDisplay(hudId);
+    hud = HUDService.getHudByWindow(content);
+    ok(hud, "Web Console is now open");
 
     HUDService.lastFinishedRequestCallback = function(aRequest) {
       lastRequest = aRequest;
@@ -153,8 +152,7 @@ function testNetworkPanel()
 {
   // Open the NetworkPanel. The functionality of the NetworkPanel is tested
   // within separate test files.
-  let filterBox = hud.querySelector(".hud-filter-box");
-  let networkPanel = HUDService.openNetworkPanel(filterBox, lastRequest);
+  let networkPanel = HUDService.openNetworkPanel(hud.filterBox, lastRequest);
   is(networkPanel, lastRequest.panels[0].get(),
     "Network panel stored on lastRequest object");
 

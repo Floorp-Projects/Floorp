@@ -246,22 +246,25 @@ public:
    * aStops GradientStops object for this gradient, this should match the
    *        backend type of the draw target this pattern will be used with.
    */
-  RadialGradientPattern(const Point &aCenter,
-                        const Point &aOrigin,
-                        Float aRadius,
+  RadialGradientPattern(const Point &aCenter1,
+                        const Point &aCenter2,
+                        Float aRadius1,
+                        Float aRadius2,
                         GradientStops *aStops)
-    : mCenter(aCenter)
-    , mOrigin(aOrigin)
-    , mRadius(aRadius)
+    : mCenter1(aCenter1)
+    , mCenter2(aCenter2)
+    , mRadius1(aRadius1)
+    , mRadius2(aRadius2)
     , mStops(aStops)
   {
   }
 
   virtual PatternType GetType() const { return PATTERN_RADIAL_GRADIENT; }
 
-  Point mCenter;
-  Point mOrigin;
-  Float mRadius;
+  Point mCenter1;
+  Point mCenter2;
+  Float mRadius1;
+  Float mRadius2;
   RefPtr<GradientStops> mStops;
 };
 
@@ -626,6 +629,10 @@ public:
 
   /*
    * Create a path builder with the specified fillmode.
+   *
+   * We need the fill mode up front because of Direct2D.
+   * ID2D1SimplifiedGeometrySink requires the fill mode
+   * to be set before calling BeginFigure().
    */
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const = 0;
 

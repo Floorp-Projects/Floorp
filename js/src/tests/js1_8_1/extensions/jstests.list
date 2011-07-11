@@ -9,7 +9,7 @@ script regress-452498-224.js
 script regress-466905-04.js
 skip script regress-466905-05.js  # no-op in browser, fails in shell - see bug 554793
 script regress-477158.js
-script regress-477187.js
+skip-if(Android) script regress-477187.js
 script regress-520572.js
 script new-parenthesization.js
 fails-if(Android) script strict-warning.js

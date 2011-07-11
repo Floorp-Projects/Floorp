@@ -628,6 +628,7 @@ pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
 pref("javascript.options.mem.gc_per_compartment", true);
 pref("javascript.options.mem.log", false);
+pref("javascript.options.gc_on_memory_pressure", true);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
@@ -3219,14 +3220,22 @@ pref("network.tcp.sendbuffer", 131072);
 #endif
 
 // Whether to disable acceleration for all widgets.
+#ifdef MOZ_E10S_COMPAT
+pref("layers.acceleration.disabled", true);
+#else
 pref("layers.acceleration.disabled", false);
+#endif
 
 // Whether to force acceleration on, ignoring blacklists.
 pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
 // Whether to disable the automatic detection and use of direct2d.
+#ifdef MOZ_E10S_COMPAT
+pref("gfx.direct2d.disabled", true);
+#else
 pref("gfx.direct2d.disabled", false);
+#endif
 // Whether to attempt to enable Direct2D regardless of automatic detection or
 // blacklisting
 pref("gfx.direct2d.force-enabled", false);
