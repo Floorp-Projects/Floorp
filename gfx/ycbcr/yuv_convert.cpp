@@ -31,6 +31,22 @@ const int kFractionBits = 16;
 const int kFractionMax = 1 << kFractionBits;
 const int kFractionMask = ((1 << kFractionBits) - 1);
 
+NS_GFX_(YUVType) TypeFromSize(int ywidth, 
+                              int yheight, 
+                              int cbcrwidth, 
+                              int cbcrheight)
+{
+  if (ywidth == cbcrwidth && yheight == cbcrheight) {
+    return YV24;
+  }
+  else if (ywidth / 2 == cbcrwidth && yheight == cbcrheight) {
+    return YV16;
+  }
+  else {
+    return YV12;
+  }
+}
+
 // Convert a frame of YUV to 32 bit ARGB.
 NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
                                   const uint8* u_buf,

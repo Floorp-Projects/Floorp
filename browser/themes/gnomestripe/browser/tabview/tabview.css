@@ -13,17 +13,13 @@ body {
 ----------------------------------*/
 
 .tab {
+  margin: 4px;
   padding-top: 4px;
   -moz-padding-end: 6px;
   padding-bottom: 6px;
   -moz-padding-start: 4px;
   background-color: #D7D7D7;
   border-radius: 0.4em;
-  box-shadow: 0 1px 0 #FFFFFF inset,
-              0 -1px 1px rgba(255, 255, 255, 0.4) inset,
-              1px 0 1px rgba(255, 255, 255, 0.4) inset,
-              -1px 0 1px rgba(255, 255, 255, 0.4) inset,
-              0 1px 1.5px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
 
@@ -142,8 +138,6 @@ html[dir=rtl] .expander {
   top: 100%;
   text-align: center;
   width: 94.5%;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 .stacked {
@@ -194,12 +188,6 @@ html[dir=rtl] .stack-trayed .tab-title {
 
 /* Tab GroupItem
 ----------------------------------*/
-
-.tabInGroupItem {
-  border: none;
-  box-shadow: none !important;
-  margin: 4px;
-}
 
 .groupItem {
   cursor: move;

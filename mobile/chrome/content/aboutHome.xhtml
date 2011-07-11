@@ -83,10 +83,16 @@
           <img src="chrome://browser/skin/images/throbber.png"/>
         </div>
       </div>
-  
-      <div id="footer-wrapper">
-        <span id="feedback" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.feedbackURL" onclick="openLink(this);" role="button">&aboutHome.giveFeedback;</span><span id="support" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.support.baseURL" onclick="openLink(this);" role="button">&aboutHome.getHelp;</span>
+
+      <div id="locale" class="section-row" style="display: none;" onclick="openLocalePicker();" role="button">
+         <div>&aboutHome.getLocale;</div>
       </div>
+
+      <div id="footer-wrapper">
+        <span id="feedback" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.feedbackURL" onclick="openLink(this);" role="button">&aboutHome.giveFeedback;</span
+        ><span id="support" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.support.baseURL" onclick="openLink(this);" role="button">&aboutHome.getHelp;</span>
+      </div>
+
     </div>
   </div>
 
@@ -124,6 +130,12 @@
       return gChromeWin;
     }
 
+    function openLocalePicker() {
+      let win = getChromeWin();
+      win.BrowserUI.showPanel("prefs-container");
+      win.document.getElementById("prefs-languages").click();
+    }
+
     function init() {
       initTabs();
       initAddons();
@@ -132,6 +144,7 @@
       if (prefs.getBoolPref("browser.firstrun.show.uidiscovery")) {
         startDiscovery();
         prefs.setBoolPref("browser.firstrun.show.uidiscovery", false);
+        document.getElementById("locale").style.display = "block";
       } else {
         endDiscovery();
       }

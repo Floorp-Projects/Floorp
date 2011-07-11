@@ -1492,7 +1492,7 @@ nsObjectFrame::GetImageContainer(LayerManager* aManager)
   if (!manager) {
     return nsnull;
   }
-  
+
   nsRefPtr<ImageContainer> container;
 
   // XXX - in the future image containers will be manager independent and
@@ -1559,18 +1559,18 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
 
 #ifdef XP_MACOSX
-  if (aManager &&
-      aManager->GetBackendType() == LayerManager::LAYERS_OPENGL &&
-      mInstanceOwner->UseAsyncRendering() &&
-      mInstanceOwner->GetEventModel() == NPEventModelCocoa &&
-      mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics)
-  {
+  if (aManager && aManager->GetBackendType() ==
+      LayerManager::LAYERS_OPENGL && 
+      !mInstanceOwner->UseAsyncRendering() &&
+      mInstanceOwner->IsRemoteDrawingCoreAnimation() &&
+      mInstanceOwner->GetEventModel() == NPEventModelCocoa) {
     return LAYER_ACTIVE;
   }
 #endif
 
-  if (!mInstanceOwner->UseAsyncRendering())
+  if (!mInstanceOwner->UseAsyncRendering()) {
     return LAYER_NONE;
+  }
 
   return LAYER_ACTIVE;
 }

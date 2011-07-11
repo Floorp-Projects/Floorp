@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const PATH = "/submit/telemetry/test-ping";
 const SERVER = "http://localhost:4444";
+const IGNORE_HISTOGRAM = "test::ignore_me";
 
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
@@ -22,8 +23,8 @@ const BinaryInputStream = Components.Constructor(
 var httpserver = new nsHttpServer();
 
 function telemetry_ping () {
-  let tp = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-  tp.observe(tp, "test-ping", SERVER);
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  TelemetryPing.observe(null, "test-ping", SERVER);
 }
 
 function nonexistentServerObserver(aSubject, aTopic, aData) {
@@ -40,6 +41,8 @@ function nonexistentServerObserver(aSubject, aTopic, aData) {
 function telemetryObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(telemetryObserver, aTopic);
   httpserver.registerPathHandler(PATH, checkHistograms);
+  const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  Telemetry.newHistogram(IGNORE_HISTOGRAM, 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
   telemetry_ping();
 }
 
@@ -85,9 +88,10 @@ function checkHistograms(request, response) {
 
   const TELEMETRY_PING = "TELEMETRY_PING";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
-  do_check_true(TELEMETRY_PING in payload.histograms)
+  do_check_true(TELEMETRY_PING in payload.histograms);
+  do_check_false(IGNORE_HISTOGRAM in payload.histograms);
 
-  // There should be one successful report from the previos telemetry ping
+  // There should be one successful report from the previous telemetry ping.
   const expected_tc = {
     range: [1, 2],
     bucket_count: 3,

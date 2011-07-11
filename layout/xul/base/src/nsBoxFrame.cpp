@@ -2017,21 +2017,6 @@ nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
   mFrames = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
 }
 
-NS_IMETHODIMP
-nsBoxFrame::SetLayoutManager(nsIBoxLayout* aLayout)
-{
-  mLayoutManager = aLayout;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxFrame::GetLayoutManager(nsIBoxLayout** aLayout)
-{
-  *aLayout = mLayoutManager;
-  NS_IF_ADDREF(*aLayout);
-  return NS_OK;
-}
-
 nsresult
 nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect)
 {

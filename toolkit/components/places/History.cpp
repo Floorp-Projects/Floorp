@@ -499,9 +499,11 @@ public:
    *        The new title to notify about.
    */
   NotifyTitleObservers(const nsCString& aSpec,
-                       const nsString& aTitle)
+                       const nsString& aTitle,
+                       const nsCString& aGUID)
   : mSpec(aSpec)
   , mTitle(aTitle)
+  , mGUID(aGUID)
   {
   }
 
@@ -514,13 +516,14 @@ public:
     NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
     nsCOMPtr<nsIURI> uri;
     (void)NS_NewURI(getter_AddRefs(uri), mSpec);
-    navHistory->NotifyTitleChange(uri, mTitle);
+    navHistory->NotifyTitleChange(uri, mTitle, mGUID);
 
     return NS_OK;
   }
 private:
   const nsCString mSpec;
   const nsString mTitle;
+  const nsCString mGUID;
 };
 
 /**
@@ -697,7 +700,7 @@ public:
 
       // Notify about title change if needed.
       if ((!known && !place.title.IsVoid()) || place.titleChanged) {
-        event = new NotifyTitleObservers(place.spec, place.title);
+        event = new NotifyTitleObservers(place.spec, place.title, place.guid);
         rv = NS_DispatchToMainThread(event);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -1166,7 +1169,7 @@ public:
     }
 
     nsCOMPtr<nsIRunnable> event =
-      new NotifyTitleObservers(mPlace.spec, mPlace.title);
+      new NotifyTitleObservers(mPlace.spec, mPlace.title, mPlace.guid);
     nsresult rv = NS_DispatchToMainThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
 

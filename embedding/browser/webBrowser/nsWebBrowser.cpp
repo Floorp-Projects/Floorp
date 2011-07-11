@@ -494,7 +494,9 @@ NS_IMETHODIMP nsWebBrowser::SetItemType(PRInt32 aItemType)
     NS_ENSURE_TRUE((aItemType == typeContentWrapper || aItemType == typeChromeWrapper), NS_ERROR_FAILURE);
     mContentType = aItemType;
     if (mDocShellAsItem)
-        mDocShellAsItem->SetItemType(mContentType == typeChromeWrapper ? typeChrome : typeContent);
+        mDocShellAsItem->SetItemType(mContentType == typeChromeWrapper
+                                         ? static_cast<PRInt32>(typeChrome)
+                                         : static_cast<PRInt32>(typeContent));
     return NS_OK;
 }
 
@@ -804,7 +806,8 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
     case nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER:
         {
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           SetItemType(aValue ? typeChromeWrapper : typeContentWrapper);
+           SetItemType(aValue ? static_cast<PRInt32>(typeChromeWrapper)
+                              : static_cast<PRInt32>(typeContentWrapper));
         }
         break;
     default:

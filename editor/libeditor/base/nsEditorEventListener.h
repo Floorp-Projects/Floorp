@@ -42,22 +42,19 @@
 #include "nsCOMPtr.h"
 
 #include "nsIDOMEvent.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMTextListener.h"
-#include "nsIDOMCompositionListener.h"
-#include "nsIDOMFocusListener.h"
+#include "nsIDOMEventListener.h"
 
 #include "nsCaret.h"
+
+// X.h defines KeyPress
+#ifdef KeyPress
+#undef KeyPress
+#endif
 
 class nsEditor;
 class nsIDOMDragEvent;
 
-class nsEditorEventListener : public nsIDOMKeyListener,
-                              public nsIDOMTextListener,
-                              public nsIDOMCompositionListener,
-                              public nsIDOMMouseListener,
-                              public nsIDOMFocusListener
+class nsEditorEventListener : public nsIDOMEventListener
 {
 public:
   nsEditorEventListener();
@@ -70,27 +67,13 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  // nsIDOMKeyListener
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-
-  // nsIDOMTextListener
   NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
-
-  // nsIDOMCompositionListener
   NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
-
-  // nsIDOMMouseListener
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
-
-  // nsIDOMFocusListener
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 

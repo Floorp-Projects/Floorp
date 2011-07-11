@@ -52,7 +52,7 @@ fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuz
 
 # Test with mix of <html:img> and <svg:image> referring to the same images,
 # with a variety of preserveAspectRatio values in play.
-fails-if(Android) == img-and-image-1.html img-and-image-1-ref.svg
+random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 
 # More complex <img> tests
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html

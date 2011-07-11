@@ -69,9 +69,6 @@ static PRUint32 gTotalDDBSize = 0;
 // Returns true if an image of aWidth x aHeight is allowed and legal.
 static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
 {
-  NS_ASSERTION(aWidth > 0, "invalid image width");
-  NS_ASSERTION(aHeight > 0, "invalid image height");
-
   // reject over-wide or over-tall images
   const PRInt32 k64KLimit = 0x0000FFFF;
   if (NS_UNLIKELY(aWidth > k64KLimit || aHeight > k64KLimit )) {
@@ -79,9 +76,8 @@ static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
     return PR_FALSE;
   }
 
-  // protect against division by zero - this really shouldn't happen
-  // if our consumers were well behaved, but they aren't (bug 368427)
-  if (NS_UNLIKELY(aHeight == 0)) {
+  // protect against invalid sizes
+  if (NS_UNLIKELY(aHeight <= 0 || aWidth <= 0)) {
     return PR_FALSE;
   }
 

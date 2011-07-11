@@ -3,8 +3,10 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+Cu.import("resource://gre/modules/Services.jsm");
 
 function test_histogram(histogram_type, name, min, max, bucket_count) {
   var h = Telemetry.newHistogram(name, min, max, bucket_count, histogram_type);
@@ -29,6 +31,15 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
 
   do_check_eq(gh.min, min)
   do_check_eq(gh.max, max)
+
+  do_check_false(gh.static); 
+
+  // Check that booleans work with nonboolean histograms
+  h.add(false);
+  h.add(true);
+  var s = h.snapshot().counts;
+  do_check_eq(s[0], 2)
+  do_check_eq(s[1], 2)
 }
 
 function expect_fail(f) {
@@ -54,11 +65,14 @@ function test_boolean_histogram()
     sum += v;
     h.add(v);
   }
+  h.add(true);
+  h.add(false);
   var s = h.snapshot();
   do_check_eq(s.histogram_type, Telemetry.HISTOGRAM_BOOLEAN);
   // last bucket should always be 0 since .add parameters are normalized to either 0 or 1
-  do_check_eq(s.counts[2],0);
-  do_check_eq(s.sum, 2);
+  do_check_eq(s.counts[2], 0);
+  do_check_eq(s.sum, 3);
+  do_check_eq(s.counts[0], 2);
 }
 
 function test_getHistogramById() {
@@ -73,6 +87,19 @@ function test_getHistogramById() {
   do_check_eq(s.histogram_type, Telemetry.HISTOGRAM_EXPONENTIAL);
   do_check_eq(s.min, 1);
   do_check_eq(s.max, 10000);
+  do_check_true(s.static);
+}
+
+// Check that telemetry doesn't record in private mode
+function test_privateMode() {
+  var h = Telemetry.newHistogram("test::private_mode_boolean", 1,2,3, Telemetry.HISTOGRAM_BOOLEAN);
+  var orig = h.snapshot();
+  Telemetry.canRecord = false;
+  h.add(1);
+  do_check_eq(uneval(orig), uneval(h.snapshot()));
+  Telemetry.canRecord = true;
+  h.add(1);
+  do_check_neq(uneval(orig), uneval(h.snapshot()));
 }
 
 function run_test()
@@ -89,4 +116,5 @@ function run_test()
 
   test_boolean_histogram();
   test_getHistogramById();
+  test_privateMode();
 }

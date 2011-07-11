@@ -104,7 +104,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
     PRBool useLayersPref;
-    nsresult rv = prefs->GetBoolPref("mozilla.plugins.use_layers", &useLayersPref);
+    nsresult rv = prefs->GetBoolPref("plugins.use_layers", &useLayersPref);
     if (NS_SUCCEEDED(rv))
       mUsePluginLayersPref = useLayersPref;
   }
@@ -717,6 +717,22 @@ nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #ifdef XP_MACOSX
   *aModel = (PRInt32)mDrawingModel;
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
+
+nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
+{
+#ifdef XP_MACOSX
+  if (!mPlugin)
+      return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+      return NS_ERROR_FAILURE;
+  
+  return library->IsRemoteDrawingCoreAnimation(&mNPP, aDrawing);
 #else
   return NS_ERROR_FAILURE;
 #endif

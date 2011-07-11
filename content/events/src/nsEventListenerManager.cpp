@@ -272,6 +272,13 @@ static const EventTypeData sEventTypes[] = {
 PRUint32 nsEventListenerManager::sCreatedCount = 0;
 
 nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
+  mMayHavePaintEventListener(PR_FALSE),
+  mMayHaveMutationListeners(PR_FALSE),
+  mMayHaveCapturingListeners(PR_FALSE),
+  mMayHaveSystemGroupListeners(PR_FALSE),
+  mMayHaveAudioAvailableEventListener(PR_FALSE),
+  mMayHaveTouchEventListener(PR_FALSE),
+  mNoListenerForEvent(0),
   mTarget(aTarget)
 {
   NS_ASSERTION(aTarget, "unexpected null pointer");
