@@ -2581,7 +2581,7 @@ nsAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
   if (aIndex < 0 || aIndex >= static_cast<PRInt32>(AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  *aURI = AnchorURIAt(aIndex).get();
+  nsRefPtr<nsIURI>(AnchorURIAt(aIndex)).forget(aURI);
   return NS_OK;
 }
 

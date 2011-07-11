@@ -41,6 +41,8 @@ asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html
 
 fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 
+== text-measure.html text-measure-ref.html
+
 == strokeText-path.html strokeText-path-ref.html
 
 # gradient off-by-one, fails on windows and linux
@@ -54,3 +56,10 @@ fails-if(cocoaWidget) == linear-gradient-1b.html linear-gradient-1-ref.html
 == evenodd-fill-1.html evenodd-fill-ref.html
 == evenodd-fill-2.html evenodd-fill-ref.html
 == evenodd-fill-3.html nonzero-fill-2.html
+
+== dash-sanity.html data:text/html,<body>Pass
+random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
+
+== ctm-sanity.html data:text/html,<body>Pass
+fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033
+== ctm-1.html ctm-1-ref.html

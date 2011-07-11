@@ -178,7 +178,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 //focus
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMFocusListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsISelectionController.h"
 
 #include "nsBidiUtils.h"
@@ -261,7 +261,7 @@ protected:
 
 /** editor Implementation of the FocusListener interface
  */
-class nsDocViewerFocusListener : public nsIDOMFocusListener
+class nsDocViewerFocusListener : public nsIDOMEventListener
 {
 public:
   /** default constructor
@@ -271,15 +271,9 @@ public:
    */
   virtual ~nsDocViewerFocusListener();
 
-
-/*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
 
-/*BEGIN implementations of focus event handler interface*/
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
-  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
-/*END implementations of focus event handler interface*/
   nsresult             Init(DocumentViewerImpl *aDocViewer);
 
 private:
@@ -455,7 +449,7 @@ protected:
   nsCOMPtr<nsIPresShell>   mPresShell;
 
   nsCOMPtr<nsISelectionListener> mSelectionListener;
-  nsCOMPtr<nsIDOMFocusListener> mFocusListener;
+  nsRefPtr<nsDocViewerFocusListener> mFocusListener;
 
   nsCOMPtr<nsIContentViewer> mPreviousViewer;
   nsCOMPtr<nsISHEntry> mSHEntry;
@@ -814,7 +808,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     return rv;
 
   // Save old listener so we can unregister it
-  nsCOMPtr<nsIDOMFocusListener> oldFocusListener = mFocusListener;
+  nsRefPtr<nsDocViewerFocusListener> oldFocusListener = mFocusListener;
 
   // focus listener
   //
@@ -828,13 +822,18 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   mFocusListener = focusListener;
 
   if (mDocument) {
-    rv = mDocument->AddEventListenerByIID(mFocusListener,
-                                          NS_GET_IID(nsIDOMFocusListener));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
+    mDocument->AddEventListener(NS_LITERAL_STRING("focus"),
+                                mFocusListener,
+                                PR_FALSE, PR_FALSE);
+    mDocument->AddEventListener(NS_LITERAL_STRING("blur"),
+                                mFocusListener,
+                                PR_FALSE, PR_FALSE);
+
     if (oldFocusListener) {
-      rv = mDocument->RemoveEventListenerByIID(oldFocusListener,
-                                               NS_GET_IID(nsIDOMFocusListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove focus listener");
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"),
+                                     oldFocusListener, PR_FALSE);
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"),
+                                     oldFocusListener, PR_FALSE);
     }
   }
 
@@ -1413,8 +1412,10 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   SyncParentSubDocMap();
 
   if (mFocusListener && mDocument) {
-    mDocument->AddEventListenerByIID(mFocusListener,
-                                     NS_GET_IID(nsIDOMFocusListener));
+    mDocument->AddEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
+                                PR_FALSE, PR_FALSE);
+    mDocument->AddEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
+                                PR_FALSE, PR_FALSE);
   }
 
   // XXX re-enable image animations once that works correctly
@@ -1491,8 +1492,10 @@ DocumentViewerImpl::Close(nsISHEntry *aSHEntry)
     }
 
   if (mFocusListener && mDocument) {
-    mDocument->RemoveEventListenerByIID(mFocusListener,
-                                        NS_GET_IID(nsIDOMFocusListener));
+    mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
+                                   PR_FALSE);
+    mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
+                                   PR_FALSE);
   }
 
   return NS_OK;
@@ -3528,8 +3531,7 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
 }
 
 //nsDocViewerFocusListener
-NS_IMPL_ISUPPORTS2(nsDocViewerFocusListener,
-                   nsIDOMFocusListener,
+NS_IMPL_ISUPPORTS1(nsDocViewerFocusListener,
                    nsIDOMEventListener)
 
 nsDocViewerFocusListener::nsDocViewerFocusListener()
@@ -3542,59 +3544,38 @@ nsDocViewerFocusListener::~nsDocViewerFocusListener(){}
 nsresult
 nsDocViewerFocusListener::HandleEvent(nsIDOMEvent* aEvent)
 {
+  NS_ENSURE_STATE(mDocViewer);
+
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = mDocViewer->GetPresShell(getter_AddRefs(shell));
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
+  PRInt16 selectionStatus;
+  selCon->GetDisplaySelection(&selectionStatus);
+
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  if (eventType.EqualsLiteral("focus")) {
+    // If selection was disabled, re-enable it.
+    if(selectionStatus == nsISelectionController::SELECTION_DISABLED ||
+       selectionStatus == nsISelectionController::SELECTION_HIDDEN) {
+      selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+      selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+    }
+  } else {
+    NS_ABORT_IF_FALSE(eventType.EqualsLiteral("blur"),
+                      "Unexpected event type");
+    // If selection was on, disable it.
+    if(selectionStatus == nsISelectionController::SELECTION_ON ||
+       selectionStatus == nsISelectionController::SELECTION_ATTENTION) {
+      selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+      selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+    }
+  }
+
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIPresShell> shell;
-  if(!mDocViewer)
-    return NS_ERROR_FAILURE;
-
-  nsresult result = mDocViewer->GetPresShell(getter_AddRefs(shell));
-  if(NS_FAILED(result) || !shell)
-    return result?result:NS_ERROR_FAILURE;
-  nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(shell);
-  PRInt16 selectionStatus;
-  selCon->GetDisplaySelection(&selectionStatus);
-
-  // If selection was disabled, re-enable it.
-  if(selectionStatus == nsISelectionController::SELECTION_DISABLED ||
-     selectionStatus == nsISelectionController::SELECTION_HIDDEN)
-  {
-    selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-    selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsDocViewerFocusListener::Blur(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIPresShell> shell;
-  if(!mDocViewer)
-    return NS_ERROR_FAILURE;
-
-  nsresult result = mDocViewer->GetPresShell(getter_AddRefs(shell));
-  if(NS_FAILED(result) || !shell)
-    return result?result:NS_ERROR_FAILURE;
-  nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(shell);
-  PRInt16 selectionStatus;
-  selCon->GetDisplaySelection(&selectionStatus);
-
-  // If selection was on, disable it.
-  if(selectionStatus == nsISelectionController::SELECTION_ON ||
-     selectionStatus == nsISelectionController::SELECTION_ATTENTION)
-  {
-    selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
-    selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
-  }
-  return result;
-}
-
 
 nsresult
 nsDocViewerFocusListener::Init(DocumentViewerImpl *aDocViewer)
@@ -3675,6 +3656,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     return pDoc->Print();
 
   if (!mPrintEngine) {
+    NS_ENSURE_STATE(mDeviceContext);
     mPrintEngine = new nsPrintEngine();
 
     rv = mPrintEngine->Initialize(this, mContainer, mDocument, 

@@ -102,6 +102,11 @@ static const char gTextUriListType[] = "text/uri-list";
 static const char gTextPlainUTF8Type[] = "text/plain;charset=utf-8";
 
 static void
+invisibleSourceDragBegin(GtkWidget        *aWidget,
+                         GdkDragContext   *aContext,
+                         gpointer          aData);
+
+static void
 invisibleSourceDragEnd(GtkWidget        *aWidget,
                        GdkDragContext   *aContext,
                        gpointer          aData);
@@ -135,6 +140,8 @@ nsDragService::nsDragService()
     gtk_widget_realize(mHiddenWidget);
     // hook up our internal signals so that we can get some feedback
     // from our drag source
+    g_signal_connect(mHiddenWidget, "drag_begin",
+                     G_CALLBACK(invisibleSourceDragBegin), this);
     g_signal_connect(mHiddenWidget, "drag_data_get",
                      G_CALLBACK(invisibleSourceDragDataGet), this);
     g_signal_connect(mHiddenWidget, "drag_end",
@@ -302,6 +309,9 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     if (!sourceList)
         return NS_OK;
 
+    // stored temporarily until the drag-begin signal has been received
+    mSourceRegion = aRegion;
+
     // save our action type
     GdkDragAction action = GDK_ACTION_DEFAULT;
 
@@ -331,41 +341,9 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                              1,
                                              &event);
 
-    if (!context) {
-        rv = NS_ERROR_FAILURE;
-    } else {
-        PRBool needsFallbackIcon = PR_FALSE;
-        nsIntRect dragRect;
-        nsPresContext* pc;
-        nsRefPtr<gfxASurface> surface;
-        if (mHasImage || mSelection) {
-          DrawDrag(aDOMNode, aRegion, mScreenX, mScreenY,
-                   &dragRect, getter_AddRefs(surface), &pc);
-        }
+    mSourceRegion = nsnull;
 
-        if (surface) {
-          PRInt32 sx = mScreenX, sy = mScreenY;
-          ConvertToUnscaledDevPixels(pc, &sx, &sy);
-
-          PRInt32 offsetX = sx - dragRect.x;
-          PRInt32 offsetY = sy - dragRect.y;
-          if (!SetAlphaPixmap(surface, context, offsetX, offsetY, dragRect)) {
-            GdkPixbuf* dragPixbuf =
-              nsImageToPixbuf::SurfaceToPixbuf(surface, dragRect.width, dragRect.height);
-            if (dragPixbuf) {
-              gtk_drag_set_icon_pixbuf(context, dragPixbuf, offsetX, offsetY);
-              g_object_unref(dragPixbuf);
-            } else {
-              needsFallbackIcon = PR_TRUE;
-            }
-          }
-        } else {
-          needsFallbackIcon = PR_TRUE;
-        }
-
-        if (needsFallbackIcon)
-          gtk_drag_set_icon_default(context);
-
+    if (context) {
         // GTK uses another hidden window for receiving mouse events.
         mGrabWidget = gtk_grab_get_current();
         if (mGrabWidget) {
@@ -375,6 +353,9 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
             g_signal_connect(mGrabWidget, "event-after",
                              G_CALLBACK(OnSourceGrabEventAfter), NULL);
         }
+    }
+    else {
+        rv = NS_ERROR_FAILURE;
     }
 
     gtk_target_list_unref(sourceList);
@@ -1583,6 +1564,44 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             }
         }
     }
+}
+
+void nsDragService::SetDragIcon(GdkDragContext* aContext)
+{
+    nsIntRect dragRect;
+    nsPresContext* pc;
+    nsRefPtr<gfxASurface> surface;
+    if (mHasImage || mSelection) {
+      DrawDrag(mSourceNode, mSourceRegion, mScreenX, mScreenY,
+               &dragRect, getter_AddRefs(surface), &pc);
+    }
+
+    if (surface) {
+        PRInt32 sx = mScreenX, sy = mScreenY;
+        ConvertToUnscaledDevPixels(pc, &sx, &sy);
+
+        PRInt32 offsetX = sx - dragRect.x;
+        PRInt32 offsetY = sy - dragRect.y;
+        if (!SetAlphaPixmap(surface, aContext, offsetX, offsetY, dragRect)) {
+            GdkPixbuf* dragPixbuf =
+              nsImageToPixbuf::SurfaceToPixbuf(surface, dragRect.width, dragRect.height);
+            if (dragPixbuf) {
+                gtk_drag_set_icon_pixbuf(aContext, dragPixbuf, offsetX, offsetY);
+                g_object_unref(dragPixbuf);
+            }
+        }
+    }
+}
+
+static void
+invisibleSourceDragBegin(GtkWidget        *aWidget,
+                         GdkDragContext   *aContext,
+                         gpointer          aData)
+{
+    PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleSourceDragBegin"));
+    nsDragService *dragService = (nsDragService *)aData;
+
+    dragService->SetDragIcon(aContext);
 }
 
 static void

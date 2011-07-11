@@ -445,7 +445,6 @@ nsHttpResponseHead::UpdateHeaders(nsHttpHeaderArray &headers)
         const char *val = headers.PeekHeaderAt(i, header);
 
         if (!val) {
-            NS_NOTREACHED("null header value");
             continue;
         }
 

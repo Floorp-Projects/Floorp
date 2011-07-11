@@ -3669,15 +3669,15 @@ nsGenericElement::SaveSubtreeState()
 
 // Generic DOMNode implementations
 
-// When replacing, aRefContent is the content being replaced; when
+// When replacing, aRefChild is the content being replaced; when
 // inserting it's the content before which we're inserting.  In the
 // latter case it may be null.
 static
 PRBool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
-                        PRBool aIsReplace, nsIContent* aRefContent)
+                        PRBool aIsReplace, nsINode* aRefChild)
 {
   NS_PRECONDITION(aNewChild, "Must have new child");
-  NS_PRECONDITION(!aIsReplace || aRefContent,
+  NS_PRECONDITION(!aIsReplace || aRefChild,
                   "Must have ref content for replace");
   NS_PRECONDITION(aParent->IsNodeOfType(nsINode::eDOCUMENT) ||
                   aParent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
@@ -3712,12 +3712,12 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       if (rootElement) {
         // Already have a documentElement, so this is only OK if we're
         // replacing it.
-        return aIsReplace && rootElement == aRefContent;
+        return aIsReplace && rootElement == aRefChild;
       }
 
       // We don't have a documentElement yet.  Our one remaining constraint is
       // that the documentElement must come after the doctype.
-      if (!aRefContent) {
+      if (!aRefChild) {
         // Appending is just fine.
         return PR_TRUE;
       }
@@ -3735,7 +3735,7 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       }
 
       PRInt32 doctypeIndex = aParent->IndexOf(docTypeContent);
-      PRInt32 insertIndex = aParent->IndexOf(aRefContent);
+      PRInt32 insertIndex = aParent->IndexOf(aRefChild);
 
       // Now we're OK in the following two cases only:
       // 1) We're replacing something that's not before the doctype
@@ -3757,7 +3757,7 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
       if (docTypeContent) {
         // Already have a doctype, so this is only OK if we're replacing it
-        return aIsReplace && docTypeContent == aRefContent;
+        return aIsReplace && docTypeContent == aRefChild;
       }
 
       // We don't have a doctype yet.  Our one remaining constraint is
@@ -3769,17 +3769,17 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         return PR_TRUE;
       }
 
-      if (!aRefContent) {
+      if (!aRefChild) {
         // Trying to append a doctype, but have a documentElement
         return PR_FALSE;
       }
 
       PRInt32 rootIndex = aParent->IndexOf(rootElement);
-      PRInt32 insertIndex = aParent->IndexOf(aRefContent);
+      PRInt32 insertIndex = aParent->IndexOf(aRefChild);
 
       // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
-      // we end up replacing aRefContent or we end up before it.  Either one is
-      // ok as long as aRefContent is not after rootElement.
+      // we end up replacing aRefChild or we end up before it.  Either one is
+      // ok as long as aRefChild is not after rootElement.
       return insertIndex <= rootIndex;
     }
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
@@ -3806,8 +3806,7 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         }
         // If we can put this content at the the right place, we might be ok;
         // if not, we bail out.
-        if (!IsAllowedAsChild(childContent, aParent, aIsReplace,
-                              aRefContent)) {
+        if (!IsAllowedAsChild(childContent, aParent, aIsReplace, aRefChild)) {
           return PR_FALSE;
         }
       }
@@ -3877,8 +3876,9 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
-    // If we're replacing, fire for node-to-be-replaced
-    if (aReplace) {
+    // If we're replacing, fire for node-to-be-replaced.
+    // If aRefChild == aNewChild then we'll fire for it in check below
+    if (aReplace && aRefChild != aNewChild) {
       nsContentUtils::MaybeFireNodeRemoved(aRefChild, this, GetOwnerDoc());
     }
 
@@ -3899,7 +3899,6 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
 
   nsIDocument* doc = GetOwnerDoc();
   nsIContent* newContent = static_cast<nsIContent*>(aNewChild);
-  nsIContent* refContent;
   PRInt32 insPos;
 
   mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, PR_TRUE);
@@ -3910,23 +3909,13 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     if (insPos < 0) {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
-
-    if (aRefChild == aNewChild) {
-      return NS_OK;
-    }
-
-    NS_ASSERTION(aRefChild->IsNodeOfType(eCONTENT),
-                 "A child node must be nsIContent!");
-
-    refContent = static_cast<nsIContent*>(aRefChild);
   }
   else {
     insPos = GetChildCount();
-    refContent = nsnull;
   }
 
   // Make sure that the inserted node is allowed as a child of its new parent.
-  if (!IsAllowedAsChild(newContent, this, aReplace, refContent)) {
+  if (!IsAllowedAsChild(newContent, this, aReplace, aRefChild)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -3934,8 +3923,6 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
 
   // If we're replacing
   if (aReplace) {
-    refContent = GetChildAt(insPos + 1);
-
     res = RemoveChildAt(insPos, PR_TRUE);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -3956,9 +3943,6 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
       NS_ERROR("How come our flags didn't catch this?");
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
-    
-    NS_ASSERTION(!(oldParent == this && removeIndex == insPos),
-                 "invalid removeIndex");
 
     res = oldParent->RemoveChildAt(removeIndex, PR_TRUE);
     NS_ENSURE_SUCCESS(res, res);
@@ -5048,7 +5032,10 @@ nsGenericElement::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVis
                                                        nsIURI** aURI) const
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
-      !NS_IS_TRUSTED_EVENT(aVisitor.mEvent) ||
+      (!NS_IS_TRUSTED_EVENT(aVisitor.mEvent) &&
+       (aVisitor.mEvent->message != NS_MOUSE_CLICK) &&
+       (aVisitor.mEvent->message != NS_KEY_PRESS) &&
+       (aVisitor.mEvent->message != NS_UI_ACTIVATE)) ||
       !aVisitor.mPresContext ||
       (aVisitor.mEvent->flags & NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS)) {
     return PR_FALSE;
@@ -5094,7 +5081,7 @@ nsGenericElement::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
       nsAutoString target;
       GetLinkTarget(target);
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                  PR_FALSE, PR_TRUE);
+                                  PR_FALSE, PR_TRUE, PR_TRUE);
       // Make sure any ancestor links don't also TriggerLink
       aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS;
     }
@@ -5197,7 +5184,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         nsAutoString target;
         GetLinkTarget(target);
         nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                    PR_TRUE, PR_TRUE);
+                                    PR_TRUE, PR_TRUE, NS_IS_TRUSTED_EVENT(aVisitor.mEvent));
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
     }

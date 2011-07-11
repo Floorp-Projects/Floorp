@@ -389,25 +389,6 @@ AsyncResource.prototype = {
     // actual fetch, so be warned!
     XPCOMUtils.defineLazyGetter(ret, "obj", function() JSON.parse(ret));
 
-    // Notify if we get a 401 to maybe try again with a new URI.
-    // TODO: more retry logic.
-    if (status == 401) {
-      // Create an object to allow observers to decide if we should try again.
-      let subject = {
-        newUri: "",
-        resource: this,
-        response: ret
-      }
-      Observers.notify("weave:resource:status:401", subject);
-
-      // Do the same type of request but with the new URI.
-      if (subject.newUri != "") {
-        this.uri = subject.newUri;
-        this._doRequest(action, this._data, this._callback);
-        return;
-      }
-    }
-
     this._callback(null, ret);
   },
 

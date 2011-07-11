@@ -564,6 +564,9 @@ struct JSScript {
             return JITScript_Invalid;
         return JITScript_Valid;
     }
+
+    // This method is implemented in MethodJIT.h.
+    JS_FRIEND_API(size_t) jitDataSize();/* Size of the JITScript and all sections */
 #endif
 
     JS_FRIEND_API(size_t) totalSize();  /* Size of the JSScript and all sections */

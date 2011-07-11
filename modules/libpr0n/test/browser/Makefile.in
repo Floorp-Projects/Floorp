@@ -49,6 +49,8 @@ _BROWSER_FILES = head.js \
                  imageX2.html \
                  animated.gif \
                  animated2.gif \
+		 browser_bug666317.js \
+		 big.png \
                  $(NULL)
 
 libs::	$(_BROWSER_FILES)
