@@ -58,6 +58,7 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "mozJSComponentLoader.h"
+#include "mozJSLoaderUtils.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
@@ -384,108 +385,6 @@ ReportOnCaller(JSCLContextHelper &helper,
     helper.reportErrorAfterPop(buf);
 
     return NS_OK;
-}
-
-static nsresult
-ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
-                     JSObject **scriptObj)
-{
-    *scriptObj = nsnull;
-
-    PRUint32 size;
-    nsresult rv = stream->Read32(&size);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    char *data;
-    rv = stream->ReadBytes(size, &data);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSXDRState *xdr = JS_XDRNewMem(cx, JSXDR_DECODE);
-    NS_ENSURE_TRUE(xdr, NS_ERROR_OUT_OF_MEMORY);
-
-    xdr->userdata = stream;
-    JS_XDRMemSetData(xdr, data, size);
-
-    if (!JS_XDRScriptObject(xdr, scriptObj)) {
-        rv = NS_ERROR_FAILURE;
-    }
-
-    // Update data in case ::JS_XDRScript called back into C++ code to
-    // read an XPCOM object.
-    //
-    // In that case, the serialization process must have flushed a run
-    // of counted bytes containing JS data at the point where the XPCOM
-    // object starts, after which an encoding C++ callback from the JS
-    // XDR code must have written the XPCOM object directly into the
-    // nsIObjectOutputStream.
-    //
-    // The deserialization process will XDR-decode counted bytes up to
-    // but not including the XPCOM object, then call back into C++ to
-    // read the object, then read more counted bytes and hand them off
-    // to the JSXDRState, so more JS data can be decoded.
-    //
-    // This interleaving of JS XDR data and XPCOM object data may occur
-    // several times beneath the call to ::JS_XDRScript, above.  At the
-    // end of the day, we need to free (via nsMemory) the data owned by
-    // the JSXDRState.  So we steal it back, nulling xdr's buffer so it
-    // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
-
-    uint32 length;
-    data = static_cast<char*>(JS_XDRMemGetData(xdr, &length));
-    if (data) {
-        JS_XDRMemSetData(xdr, nsnull, 0);
-    }
-    JS_XDRDestroy(xdr);
-
-    // If data is null now, it must have been freed while deserializing an
-    // XPCOM object (e.g., a principal) beneath ::JS_XDRScript.
-    if (data) {
-        nsMemory::Free(data);
-    }
-
-    return rv;
-}
-
-static nsresult
-WriteScriptToStream(JSContext *cx, JSObject *scriptObj,
-                    nsIObjectOutputStream *stream)
-{
-    JSXDRState *xdr = JS_XDRNewMem(cx, JSXDR_ENCODE);
-    NS_ENSURE_TRUE(xdr, NS_ERROR_OUT_OF_MEMORY);
-
-    xdr->userdata = stream;
-    nsresult rv = NS_OK;
-
-    if (JS_XDRScriptObject(xdr, &scriptObj)) {
-        // Get the encoded JSXDRState data and write it.  The JSXDRState owns
-        // this buffer memory and will free it beneath ::JS_XDRDestroy.
-        //
-        // If an XPCOM object needs to be written in the midst of the JS XDR
-        // encoding process, the C++ code called back from the JS engine (e.g.,
-        // nsEncodeJSPrincipals in caps/src/nsJSPrincipals.cpp) will flush data
-        // from the JSXDRState to aStream, then write the object, then return
-        // to JS XDR code with xdr reset so new JS data is encoded at the front
-        // of the xdr's data buffer.
-        //
-        // However many XPCOM objects are interleaved with JS XDR data in the
-        // stream, when control returns here from ::JS_XDRScript, we'll have
-        // one last buffer of data to write to aStream.
-
-        uint32 size;
-        const char* data = reinterpret_cast<const char*>
-                                           (JS_XDRMemGetData(xdr, &size));
-        NS_ASSERTION(data, "no decoded JSXDRState data!");
-
-        rv = stream->Write32(size);
-        if (NS_SUCCEEDED(rv)) {
-            rv = stream->WriteBytes(data, size);
-        }
-    } else {
-        rv = NS_ERROR_FAILURE; // likely to be a principals serialization error
-    }
-
-    JS_XDRDestroy(xdr);
-    return rv;
 }
 
 mozJSComponentLoader::mozJSComponentLoader()
@@ -849,66 +748,6 @@ class JSPrincipalsHolder
     JSPrincipals *mPrincipals;
 };
 
-/* static */
-nsresult
-mozJSComponentLoader::ReadScript(StartupCache* cache, nsIURI *uri,
-                                 JSContext *cx, JSObject **scriptObj)
-{
-    nsresult rv;
-    
-    nsCAutoString spec(kJSCachePrefix);
-    rv = NS_PathifyURI(uri, spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsAutoArrayPtr<char> buf;   
-    PRUint32 len;
-    rv = cache->GetBuffer(spec.get(), getter_Transfers(buf), 
-                          &len);
-    if (NS_FAILED(rv)) {
-        return rv; // don't warn since NOT_AVAILABLE is an ok error
-    }
-
-    LOG(("Found %s in startupcache\n", spec.get()));
-    nsCOMPtr<nsIObjectInputStream> ois;
-    rv = NS_NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
-    NS_ENSURE_SUCCESS(rv, rv);
-    buf.forget();
-
-    return ReadScriptFromStream(cx, ois, scriptObj);
-}
-
-nsresult
-mozJSComponentLoader::WriteScript(StartupCache* cache, JSObject *scriptObj,
-                                  nsIFile *component, nsIURI *uri, JSContext *cx)
-{
-    nsresult rv;
-
-    nsCAutoString spec(kJSCachePrefix);
-    rv = NS_PathifyURI(uri, spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("Writing %s to startupcache\n", spec.get()));
-    nsCOMPtr<nsIObjectOutputStream> oos;
-    nsCOMPtr<nsIStorageStream> storageStream; 
-    rv = NS_NewObjectOutputWrappedStorageStream(getter_AddRefs(oos),
-                                                getter_AddRefs(storageStream),
-                                                true);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = WriteScriptToStream(cx, scriptObj, oos);
-    oos->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
- 
-    nsAutoArrayPtr<char> buf;
-    PRUint32 len;
-    rv = NS_NewBufferFromStorageStream(storageStream, getter_Transfers(buf), 
-                                       &len);
-    NS_ENSURE_SUCCESS(rv, rv);
- 
-    rv = cache->PutBuffer(spec.get(), buf, len);
-    return rv;
-}
-
 nsresult
 mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                                         nsIURI *aURI,
@@ -1015,8 +854,12 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     PRBool writeToCache = PR_FALSE;
     StartupCache* cache = StartupCache::GetSingleton();
 
+    nsCAutoString cachePath(kJSCachePrefix);
+    rv = NS_PathifyURI(aURI, cachePath);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (cache) {
-        rv = ReadScript(cache, aURI, cx, &scriptObj);
+        rv = ReadCachedScript(cache, cachePath, cx, &scriptObj);
         if (NS_SUCCEEDED(rv)) {
             LOG(("Successfully loaded %s from startupcache\n", nativePath.get()));
         } else {
@@ -1170,7 +1013,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
     if (writeToCache) {
         // We successfully compiled the script, so cache it. 
-        rv = WriteScript(cache, scriptObj, aComponentFile, aURI, cx);
+        rv = WriteCachedScript(cache, cachePath, cx, scriptObj);
 
         // Don't treat failure to write as fatal, since we might be working
         // with a read-only cache.
