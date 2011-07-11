@@ -610,19 +610,6 @@ protected:
   NS_HIDDEN_(nsresult) SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue);
 
   /**
-   * Helper method for NS_IMPL_STRING_ATTR_DEFAULT_VALUE macro.
-   * Gets the value of an attribute, returns specified default value if the
-   * attribute isn't set. Only works for attributes in null namespace.
-   *
-   * @param aAttr    name of attribute.
-   * @param aDefault default-value to return if attribute isn't set.
-   * @param aResult  result value [out]
-   */
-  NS_HIDDEN_(nsresult) GetStringAttrWithDefault(nsIAtom* aAttr,
-                                                const char* aDefault,
-                                                nsAString& aResult);
-
-  /**
    * Helper method for NS_IMPL_BOOL_ATTR macro.
    * Gets value of boolean attribute. Only works for attributes in null
    * namespace.
@@ -1082,23 +1069,6 @@ protected:
   _class::Set##_method(const nsAString& aValue)                      \
   {                                                                  \
     return SetAttrHelper(nsGkAtoms::_atom, aValue);                  \
-  }
-
-/**
- * A macro to implement the getter and setter for a given string
- * valued content property with a default value.
- * The method uses the generic GetAttr and SetAttr methods.
- */
-#define NS_IMPL_STRING_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
-  NS_IMETHODIMP                                                      \
-  _class::Get##_method(nsAString& aValue)                            \
-  {                                                                  \
-    return GetStringAttrWithDefault(nsGkAtoms::_atom, _default, aValue);\
-  }                                                                  \
-  NS_IMETHODIMP                                                      \
-  _class::Set##_method(const nsAString& aValue)                      \
-  {                                                                  \
-    return SetAttrHelper(nsGkAtoms::_atom, aValue);                \
   }
 
 /**
