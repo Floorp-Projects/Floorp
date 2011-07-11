@@ -1682,7 +1682,7 @@ var WebappsUI = {
     if (!aManifest) {
       // Try every way to get an icon
       let browser = Browser.selectedBrowser;
-      let icon = browser.appIcon;
+      let icon = browser.appIcon.href;
       if (!icon)
         icon = browser.mIconURL;
       if (!icon) 
