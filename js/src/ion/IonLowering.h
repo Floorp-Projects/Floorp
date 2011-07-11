@@ -105,6 +105,7 @@ class LIRGenerator : public MInstructionVisitor
     inline LUse useFixed(MInstruction *mir, Register reg);
     inline LUse useFixed(MInstruction *mir, FloatRegister reg);
     inline LAllocation useOrConstant(MInstruction *mir);
+    inline LAllocation useKeepaliveOrConstant(MInstruction *mir);
     inline LAllocation useRegisterOrConstant(MInstruction *mir);
 
     // Adds a box operand to an instruction, where |n| is the operand number to

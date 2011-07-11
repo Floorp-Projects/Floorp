@@ -136,6 +136,14 @@ LIRGenerator::useRegisterOrConstant(MInstruction *mir)
     return use(mir, LUse(LUse::REGISTER));
 }
 
+LAllocation
+LIRGenerator::useKeepaliveOrConstant(MInstruction *mir)
+{
+    if (mir->isConstant())
+        return LAllocation(mir->toConstant()->vp());
+    return use(mir, LUse(LUse::KEEPALIVE));
+}
+
 LUse
 LIRGenerator::useFixed(MInstruction *mir, Register reg)
 {

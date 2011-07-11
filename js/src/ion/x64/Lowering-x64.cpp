@@ -148,7 +148,7 @@ LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
     for (size_t i = 0; i < mir->numOperands(); i++) {
         MInstruction *ins = mir->getInput(i);
         LAllocation *a = snapshot->getEntry(i);
-        *a = useOrConstant(ins);
+        *a = useKeepaliveOrConstant(ins);
     }
 }
 
