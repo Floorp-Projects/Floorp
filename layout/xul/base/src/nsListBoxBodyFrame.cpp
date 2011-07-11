@@ -164,7 +164,7 @@ NS_IMPL_ISUPPORTS1(nsListScrollSmoother, nsITimerCallback)
 
 nsListBoxBodyFrame::nsListBoxBodyFrame(nsIPresShell* aPresShell,
                                        nsStyleContext* aContext,
-                                       nsIBoxLayout* aLayoutManager)
+                                       nsBoxLayout* aLayoutManager)
   : nsBoxFrame(aPresShell, aContext, PR_FALSE, aLayoutManager),
     mTopFrame(nsnull),
     mBottomFrame(nsnull),
@@ -1508,12 +1508,12 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
 
 // Creation Routines ///////////////////////////////////////////////////////////////////////
 
-already_AddRefed<nsIBoxLayout> NS_NewListBoxLayout();
+already_AddRefed<nsBoxLayout> NS_NewListBoxLayout();
 
 nsIFrame*
 NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIBoxLayout> layout = NS_NewListBoxLayout();
+  nsCOMPtr<nsBoxLayout> layout = NS_NewListBoxLayout();
   if (!layout) {
     return nsnull;
   }
