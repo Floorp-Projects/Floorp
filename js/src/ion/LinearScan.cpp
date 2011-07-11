@@ -838,8 +838,10 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     if (!reg->addInterval(newInterval))
         return false;
 
-    if (!moveBefore(pos, interval, newInterval))
-        return false;
+    if (interval->end() == newInterval->start().previous()) {
+        if (!moveBefore(pos, interval, newInterval))
+            return false;
+    }
 
     IonSpew(IonSpew_LSRA, "  Split interval to %u = [%u, %u]",
             interval->reg()->reg(), interval->start().pos(),
