@@ -50,7 +50,7 @@ class nsListBoxLayout : public nsGridRowGroupLayout
 public:
   nsListBoxLayout();
 
-  // nsIBoxLayout
+  // nsBoxLayout
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
   virtual nsSize GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
