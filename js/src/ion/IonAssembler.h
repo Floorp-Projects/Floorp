@@ -195,6 +195,9 @@ class TypedRegisterSet
         take(reg);
         return reg;
     }
+    void clear() {
+        bits_ = 0;
+    }
 };
 
 typedef TypedRegisterSet<Register> GeneralRegisterSet;
@@ -274,6 +277,10 @@ class RegisterSet {
         if (isFloat)
             return AnyRegister(takeFloat());
         return AnyRegister(takeGeneral());
+    }
+    void clear() {
+        gpr_.clear();
+        fpu_.clear();
     }
 };
 
