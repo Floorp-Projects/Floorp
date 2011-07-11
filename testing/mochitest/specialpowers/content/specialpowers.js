@@ -38,8 +38,13 @@
  * order to be used as a replacement for UniversalXPConnect
  */
 
-var Ci = Components.interfaces;
 var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+
+var MockFilePicker;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function SpecialPowers(window) {
   this.window = window;
@@ -311,6 +316,12 @@ SpecialPowers.prototype = {
     Components.classes["@mozilla.org/eventlistenerservice;1"].
       getService(Components.interfaces.nsIEventListenerService).
       removeSystemEventListener(target, type, listener, useCapture);
+  },
+
+  get MockFilePicker() {
+    if (!MockFilePicker)
+      Cu.import("resource://mochikit/MockFilePicker.jsm");
+    return MockFilePicker;
   }
 };
 

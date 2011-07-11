@@ -64,18 +64,12 @@ function callSaveWithMockObjects(aSaveFunction) {
   // ensure that, even in case of exceptions during the function's execution,
   // the mock object factories are unregistered before proceeding with the other
   // tests in the suite.
-  mockFilePickerRegisterer.register();
+  mockTransferForContinuingRegisterer.register();
   try {
-    mockTransferForContinuingRegisterer.register();
-    try {
-      aSaveFunction();
-    }
-    finally {
-      mockTransferForContinuingRegisterer.unregister();
-    }
+    aSaveFunction();
   }
   finally {
-    mockFilePickerRegisterer.unregister();
+    mockTransferForContinuingRegisterer.unregister();
   }
 }
 

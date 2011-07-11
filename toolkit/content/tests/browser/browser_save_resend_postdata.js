@@ -34,6 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://mochikit/MockFilePicker.jsm");
+MockFilePicker.reset();
+
 /**
  * Test for bug 471962 <https://bugzilla.mozilla.org/show_bug.cgi?id=471962>:
  * When saving an inner frame as file only, the POST data of the outer page is
@@ -110,10 +113,11 @@ function test() {
 
       // Create the folder the page will be saved into.
       var destDir = createTemporarySaveDirectory();
+      var file = destDir.clone();
+      file.append("no_default_file_name");
+      MockFilePicker.returnFiles = [file];
       try {
         // Call the appropriate save function defined in contentAreaUtils.js.
-        mockFilePickerSettings.destDir = destDir;
-        mockFilePickerSettings.filterIndex = 1; // kSaveAsType_URL
         callSaveWithMockObjects(function() {
           var docToSave = innerFrame.contentDocument;
           // We call internalSave instead of saveDocument to bypass the history
@@ -130,7 +134,7 @@ function test() {
           throw "Unexpected failure, the inner frame couldn't be saved!";
 
         // Read the entire saved file.
-        var fileContents = readShortFile(mockFilePickerResults.selectedFile);
+        var fileContents = readShortFile(file);
 
         // Check if outer POST data is found (bug 471962).
         ok(fileContents.indexOf("inputfield=outer") === -1,
