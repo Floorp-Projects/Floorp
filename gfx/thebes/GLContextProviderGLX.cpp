@@ -234,9 +234,12 @@ GLXLibrary::EnsureInitialized()
     }
 
     if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
-        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap))
+        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
+                                         (LibrarySymbolLoader::PlatformLookupFunction)xGetProcAddress))
     {
         mHasTextureFromPixmap = PR_TRUE;
+    } else {
+        NS_WARNING("Texture from pixmap disabled");
     }
 
     gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
