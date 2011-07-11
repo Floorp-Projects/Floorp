@@ -763,7 +763,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
           self.lastTestSeen = line.split("|")[1].strip()
         if stackFixerFunction:
           line = stackFixerFunction(line)
-        self.log.info(line.rstrip())
+        self.log.info(line.rstrip().decode("UTF-8", "ignore"))
         if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
           self.dumpScreen(utilityPath)
 

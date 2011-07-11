@@ -64,7 +64,7 @@ protected:
   nsListItemFrame(nsIPresShell* aPresShell,
                   nsStyleContext *aContext,
                   PRBool aIsRoot = nsnull,
-                  nsIBoxLayout* aLayoutManager = nsnull);
+                  nsBoxLayout* aLayoutManager = nsnull);
   virtual ~nsListItemFrame();
 
 }; // class nsListItemFrame

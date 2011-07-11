@@ -2053,7 +2053,6 @@ case "$target" in
     else
         MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
     fi
-    MOZ_MEMORY=1
     _PEDANTIC=
     CFLAGS="$CFLAGS -fno-common"
     CXXFLAGS="$CXXFLAGS -fno-common"
@@ -7699,7 +7698,7 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 AC_SUBST(STDCXX_COMPAT)
 
 if test -n "$STDCXX_COMPAT"; then
-   eval $($PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
+   eval $(CXX="$CXX" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
    AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
    AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
 fi

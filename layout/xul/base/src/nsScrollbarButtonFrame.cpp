@@ -49,7 +49,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsSliderFrame.h"
-#include "nsIScrollbarFrame.h"
+#include "nsScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsRepeatService.h"
 #include "nsGUIEvent.h"
@@ -245,7 +245,7 @@ nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll)
   else if (curpos > maxpos)
     curpos = maxpos;
 
-  nsIScrollbarFrame* sb = do_QueryFrame(scrollbar);
+  nsScrollbarFrame* sb = do_QueryFrame(scrollbar);
   if (sb) {
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     if (m) {

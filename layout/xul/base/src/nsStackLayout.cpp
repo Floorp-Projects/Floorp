@@ -52,7 +52,7 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 
-nsIBoxLayout* nsStackLayout::gInstance = nsnull;
+nsBoxLayout* nsStackLayout::gInstance = nsnull;
 
 #define SPECIFIED_LEFT (1 << NS_SIDE_LEFT)
 #define SPECIFIED_RIGHT (1 << NS_SIDE_RIGHT)
@@ -60,7 +60,7 @@ nsIBoxLayout* nsStackLayout::gInstance = nsnull;
 #define SPECIFIED_BOTTOM (1 << NS_SIDE_BOTTOM)
 
 nsresult
-NS_NewStackLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
+NS_NewStackLayout( nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout)
 {
   if (!nsStackLayout::gInstance) {
     nsStackLayout::gInstance = new nsStackLayout();

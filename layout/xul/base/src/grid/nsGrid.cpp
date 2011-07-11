@@ -596,7 +596,7 @@ nsGrid::GetPartFromBox(nsIBox* aBox)
   if (!aBox)
     return nsnull;
 
-  nsIBoxLayout* layout = aBox->GetLayoutManager();
+  nsBoxLayout* layout = aBox->GetLayoutManager();
   return layout ? layout->AsGridPart() : nsnull;
 }
 
