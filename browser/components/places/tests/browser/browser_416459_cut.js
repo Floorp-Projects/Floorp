@@ -6,13 +6,14 @@ const TEST_URL = "http://example.com/";
 
 let gLibrary;
 let gItemId;
+let PlacesOrganizer;
 
 function test() {
   waitForExplicitFinish();
   gLibrary = openLibrary(onLibraryReady);
 }
 
-function onLibraryReady(library) {
+function onLibraryReady() {
   PlacesOrganizer = gLibrary.PlacesOrganizer;
 
   // Sanity checks.

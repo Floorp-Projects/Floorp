@@ -380,11 +380,12 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
 
 nsresult
 nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
+                                      PRBool aForceThebes,
                                       nsICanvasRenderingContextInternal **aContext)
 {
   NS_ENSURE_ARG(aContext);
 
-  NS_LossyConvertUTF16toASCII ctxId(aContextId);
+  NS_ConvertUTF16toUTF8 ctxId(aContextId);
 
   // check that ctxId is clamped to A-Za-z0-9_-
   for (PRUint32 i = 0; i < ctxId.Length(); i++) {
@@ -401,6 +402,10 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
 
   nsCString ctxString("@mozilla.org/content/canvas-rendering-context;1?id=");
   ctxString.Append(ctxId);
+
+  if (aForceThebes && ctxId.EqualsASCII("2d")) {
+    ctxString.AssignASCII("@mozilla.org/content/2dthebes-canvas-rendering-context;1");
+  }
 
   nsresult rv;
   nsCOMPtr<nsICanvasRenderingContextInternal> ctx =
@@ -433,8 +438,10 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 {
   nsresult rv;
 
-  if (mCurrentContextId.IsEmpty()) {
-    rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
+  PRBool forceThebes = PR_FALSE;
+
+  while (mCurrentContextId.IsEmpty()) {
+    rv = GetContextHelper(aContextId, forceThebes, getter_AddRefs(mCurrentContext));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!mCurrentContext) {
       return NS_OK;
@@ -506,11 +513,18 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
     rv = UpdateContext(contextProps);
     if (NS_FAILED(rv)) {
       mCurrentContext = nsnull;
+      if (!forceThebes) {
+        // Try again with a Thebes context
+        forceThebes = PR_TRUE;
+        continue;
+      }
       return rv;
     }
 
     mCurrentContextId.Assign(aContextId);
-  } else if (!mCurrentContextId.Equals(aContextId)) {
+    break;
+  }
+  if (!mCurrentContextId.Equals(aContextId)) {
     //XXX eventually allow for more than one active context on a given canvas
     return NS_OK;
   }
@@ -535,7 +549,7 @@ nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
   nsresult rv;
 
   if (mCurrentContextId.IsEmpty()) {
-    rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
+    rv = GetContextHelper(aContextId, PR_FALSE, getter_AddRefs(mCurrentContext));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!mCurrentContext) {
       return NS_OK;
@@ -698,6 +712,12 @@ nsHTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
 
   return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
+}
+
+PRBool
+nsHTMLCanvasElement::ShouldForceInactiveLayer(LayerManager *aManager)
+{
+  return !mCurrentContext || mCurrentContext->ShouldForceInactiveLayer(aManager);
 }
 
 void

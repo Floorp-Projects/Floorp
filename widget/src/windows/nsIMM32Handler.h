@@ -131,6 +131,14 @@ public:
 
   static PRBool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
 
+#ifdef DEBUG
+  /**
+   * IsIMEAvailable() returns TRUE when current keyboard layout has IME.
+   * Otherwise, FALSE.
+   */
+  static PRBool IsIMEAvailable() { return sIsIME; }
+#endif
+
   // If aForce is TRUE, these methods doesn't check whether we have composition
   // or not.  If you don't set it to TRUE, these method doesn't commit/cancel
   // the composition on uexpected window.

@@ -6503,10 +6503,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     if (presContext->GetTheme()->
           GetWidgetOverflow(presContext->DeviceContext(), this,
                             disp->mAppearance, &r)) {
-      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-        nsRect& o = aOverflowAreas.Overflow(otype);
-        o.UnionRectEdges(o, r);
-      }
+      nsRect& vo = aOverflowAreas.VisualOverflow();
+      vo.UnionRectEdges(vo, r);
     }
   }
 
@@ -6631,7 +6629,7 @@ nsFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
  * is needed because the split inline's style context is the parent of the
  * anonymous block's style context.
  *
- * If aFrame is not ananonymous block, null is returned.
+ * If aFrame is not an anonymous block, null is returned.
  */
 static nsIFrame*
 GetIBSpecialSiblingForAnonymousBlock(nsIFrame* aFrame)
