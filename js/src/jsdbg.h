@@ -44,6 +44,7 @@
 
 #include "jsapi.h"
 #include "jsclist.h"
+#include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jshashtable.h"
@@ -81,7 +82,7 @@ class Debugger {
     // Weak references to stack frames that are currently on the stack and thus
     // necessarily alive. We drop them as soon as they leave the stack (see
     // slowPathOnLeaveFrame) and in removeDebuggee.
-    typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, SystemAllocPolicy>
+    typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, RuntimeAllocPolicy>
         FrameMap;
     FrameMap frames;
 
@@ -103,7 +104,7 @@ class Debugger {
 
     // An ordinary (non-ephemeral) map from JSScripts to Debugger.Script
     // instances, for non-held scripts that are explicitly freed.
-    typedef HashMap<JSScript *, JSObject *, DefaultHasher<JSScript *>, SystemAllocPolicy>
+    typedef HashMap<JSScript *, JSObject *, DefaultHasher<JSScript *>, RuntimeAllocPolicy>
         ScriptMap;
 
     // Map from non-held JSScripts to their Debugger.Script objects. Non-held
@@ -202,7 +203,7 @@ class Debugger {
     inline Breakpoint *firstBreakpoint() const;
 
   public:
-    Debugger(JSObject *dbg, JSObject *hooks);
+    Debugger(JSContext *cx, JSObject *dbg, JSObject *hooks);
     ~Debugger();
 
     bool init(JSContext *cx);

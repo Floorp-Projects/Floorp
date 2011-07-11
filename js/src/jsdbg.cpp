@@ -342,13 +342,14 @@ enum {
     JSSLOT_DEBUG_COUNT
 };
 
-Debugger::Debugger(JSObject *dbg, JSObject *hooks)
+Debugger::Debugger(JSContext *cx, JSObject *dbg, JSObject *hooks)
   : object(dbg), hooksObject(hooks), uncaughtExceptionHook(NULL), enabled(true),
     hasDebuggerHandler(false), hasThrowHandler(false), hasNewScriptHandler(false),
-    objects(dbg->compartment()->rt), heldScripts(dbg->compartment()->rt)
+    frames(cx), objects(cx), heldScripts(cx), nonHeldScripts(cx)
 {
-    // This always happens within a request on some cx.
-    JSRuntime *rt = dbg->compartment()->rt;
+    assertSameCompartment(cx, dbg, hooks);
+    
+    JSRuntime *rt = cx->runtime;
     AutoLockGC lock(rt);
     JS_APPEND_LINK(&link, &rt->debuggerList);
     JS_INIT_CLIST(&breakpoints);
@@ -1358,7 +1359,7 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
     if (!hooks)
         return false;
 
-    Debugger *dbg = cx->new_<Debugger>(obj, hooks);
+    Debugger *dbg = cx->new_<Debugger>(cx, obj, hooks);
     if (!dbg)
         return false;
     obj->setPrivate(dbg);
