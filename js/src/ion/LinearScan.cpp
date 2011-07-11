@@ -278,10 +278,12 @@ LinearScanAllocator::createDataStructures()
     allowedRegs = RegisterSet::All();
 
     liveIn = lir->mir()->allocate<BitSet*>(graph.numBlocks());
+    inputMovesFor = lir->mir()->allocate<MoveGroup*>(graph.numVirtualRegisters());
+    outputMovesFor = lir->mir()->allocate<MoveGroup*>(graph.numVirtualRegisters());
     freeUntilPos = lir->mir()->allocate<CodePosition>(RegisterCodes::Total);
     nextUsePos = lir->mir()->allocate<CodePosition>(RegisterCodes::Total);
     vregs = lir->mir()->allocate<VirtualRegister>(graph.numVirtualRegisters());
-    if (!liveIn || !freeUntilPos || !nextUsePos || !vregs)
+    if (!liveIn || !inputMovesFor || !outputMovesFor || !freeUntilPos || !nextUsePos || !vregs)
         return false;
 
     // Build virtual register objects
@@ -315,6 +317,10 @@ LinearScanAllocator::createDataStructures()
                 return false;
         }
     }
+
+    // Initialize input/output move records
+    memset(inputMovesFor, 0, sizeof(MoveGroup *) * graph.numBlocks());
+    memset(outputMovesFor, 0, sizeof(MoveGroup *) * graph.numBlocks());
 
     return true;
 }
@@ -468,6 +474,10 @@ LinearScanAllocator::buildLivenessInfo()
 bool
 LinearScanAllocator::allocateRegisters()
 {
+    // Allocate the bottom of the stack for spills
+    if (!stackAssignment.allocateDoubleSlot(&tempSlot))
+        return false;
+
     // Enqueue intervals for allocation
     for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         LiveInterval *live = vregs[i].getInterval(0);
@@ -743,11 +753,7 @@ LinearScanAllocator::reifyAllocations()
 
         // Erase all operand, temp, and def LUses using computed intervals
         for (LInstructionIterator ins(block->begin()); ins != block->end(); ins++) {
-            // Moves don't have any LUses to erase, anyway
-            if (!ins->id()) {
-                JS_ASSERT(ins->isMove());
-                continue;
-            }
+            JS_ASSERT(ins->id());
 
             IonSpew(IonSpew_LSRA, " Visiting instruction %u", ins->id());
 
@@ -786,7 +792,18 @@ LinearScanAllocator::reifyAllocations()
                 JS_ASSERT(interval);
                 LAllocation *alloc = interval->getAllocation();
                 JS_ASSERT(!alloc->isUse());
-                def->setOutput(*alloc);
+
+                ins->getDef(j)->setOutput(*alloc);
+            }
+
+            // Insert moves
+            if (inputMovesFor[ins->id()]) {
+                if (!inputMovesFor[ins->id()]->toInstructionsBefore(block, *ins, tempSlot))
+                    return false;
+            }
+            if (outputMovesFor[ins->id()]) {
+                if (!outputMovesFor[ins->id()]->toInstructionsBefore(block, *ins, tempSlot))
+                    return false;
             }
         }
 
@@ -989,11 +1006,14 @@ LinearScanAllocator::findBestFreeRegister()
         }
     }
 
-    // Search freeUntilPos for largest value
+    // Search freeUntilPos for largest value, and update freeRegs
+    freeRegs.clear();
     Register best = Register::FromCode(0);
     for (uint32 i = 0; i < RegisterCodes::Total; i++) {
+        Register reg = Register::FromCode(i);
+        freeRegs.add(reg);
         if (freeUntilPos[i] > freeUntilPos[best.code()])
-            best = Register::FromCode(i);
+            best = reg;
     }
 
     return best;
@@ -1078,22 +1098,24 @@ LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterv
     VirtualRegister *vreg = &vregs[pos.ins()];
     JS_ASSERT(vreg->ins());
 
-    LMove *move = NULL;
-    if (vreg->ins()->isPhi()) {
-        move = new LMove;
-        vreg->block()->insertBefore(*vreg->block()->begin(), move);
-    } else {
-        LInstructionReverseIterator riter(vreg->ins());
-        riter++;
-        if (riter != vreg->block()->rend() && riter->isMove()) {
-            move = riter->toMove();
-        } else {
-            move = new LMove;
-            vreg->block()->insertBefore(vreg->ins(), move);
-        }
+    MoveGroup **move;
+    switch (pos.subpos()) {
+      case CodePosition::INPUT:
+        move = &inputMovesFor[pos.ins()];
+        break;
+      case CodePosition::OUTPUT:
+        move = &outputMovesFor[pos.ins()];
+        break;
+      default:
+        JS_NOT_REACHED("Unknown subposition");
+        return false;
+    }
+    if (!*move) {
+        *move = new MoveGroup;
+        (*move)->setFreeRegisters(freeRegs);
     }
 
-    return move->add(from->getAllocation(), to->getAllocation());
+    return (*move)->add(from->getAllocation(), to->getAllocation());
 }
 
 #ifdef DEBUG
@@ -1151,26 +1173,10 @@ LinearScanAllocator::validateIntervals()
 void
 LinearScanAllocator::validateAllocations()
 {
-    // Verify final intervals are valid and do not conflict
     for (IntervalIterator i(handled.begin()); i != handled.end(); i++) {
         for (IntervalIterator j(handled.begin()); j != i; j++) {
             JS_ASSERT(*i != *j);
             JS_ASSERT(canCoexist(*i, *j));
-        }
-    }
-
-    // Verify all moves are filled in with physical allocations
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        LBlock *block = graph.getBlock(i);
-        for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            if (ins->isMove()) {
-                LMove *move = ins->toMove();
-                for (size_t j = 0; j < move->numEntries(); j++) {
-                    LMove::Entry *entry = move->getEntry(j);
-                    JS_ASSERT(!entry->from->isUse());
-                    JS_ASSERT(!entry->to->isUse());
-                }
-            }
         }
     }
 }

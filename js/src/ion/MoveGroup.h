@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   Andrew Drake <adrake@adrake.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,65 +39,63 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_x86_stack_assignment_h__
-#define jsion_cpu_x86_stack_assignment_h__
+#ifndef js_ion_movegroup_h__
+#define js_ion_movegroup_h__
+
+#include "IonLIR.h"
 
 namespace js {
 namespace ion {
 
-class StackAssignmentX86
+// Register spill/restore/resolve marker.
+class MoveGroup : public TempObject
 {
-    js::Vector<uint32, 4, IonAllocPolicy> normalSlots;
-    js::Vector<uint32, 4, IonAllocPolicy> doubleSlots;
-    uint32 height_;
+    RegisterSet freeRegs;
 
   public:
-    StackAssignmentX86() : height_(0)
-    { }
+    struct Entry {
+        LAllocation *from;
+        LAllocation *to;
 
-    void freeSlot(uint32 index) {
-        normalSlots.append(index);
-    }
-    void freeDoubleSlot(uint32 index) {
-        doubleSlots.append(index);
-    }
+        Entry () { }
+        Entry(LAllocation *from, LAllocation *to)
+          : from(from),
+            to(to)
+        { }
+    };
 
-    bool allocateDoubleSlot(uint32 *index) {
-        if (!doubleSlots.empty()) {
-            *index = doubleSlots.popCopy();
-            return false;
-        }
-        if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT)) {
-            normalSlots.append(height_++);
-            JS_ASSERT(!ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT));
-        }
-        *index = height_;
-        height_ += 2;
-        return height_ < MAX_STACK_SLOTS;
-    }
+  private:
+    Vector<Entry, 1, IonAllocPolicy> entries_;
 
-    bool allocateSlot(uint32 *index) {
-        if (!normalSlots.empty()) {
-            *index = normalSlots.popCopy();
-            return true;
-        }
-        if (!doubleSlots.empty()) {
-            *index = doubleSlots.popCopy();
-            return normalSlots.append(*index + 1);
-        }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
+  public:
+    bool add(LAllocation *from, LAllocation *to) {
+        return entries_.append(Entry(from, to));
     }
-
-    uint32 stackHeight() const {
-        return height_;
+    bool add(const Entry &ent) {
+        return entries_.append(ent);
     }
+    size_t numEntries() {
+        return entries_.length();
+    }
+    Entry *getEntry(size_t i) {
+        return &entries_[i];
+    }
+    void setEntry(size_t i, Entry ent) {
+        entries_[i] = ent;
+    }
+    void setFreeRegisters(const RegisterSet &freeRegs) {
+        this->freeRegs = freeRegs;
+    }
+    bool toInstructionsBefore(LBlock *block, LInstruction *ins, uint32 stack);
+    bool toInstructionsAfter(LBlock *block, LInstruction *ins, uint32 stack);
+#ifdef DEBUG
+    void spewWorkStack(const Vector<Entry, 0, IonAllocPolicy>& workStack);
+#else
+    void spewWorkStack(const Vector<Entry, 0, IonAllocPolicy>& workStack) { };
+#endif
 };
 
-typedef StackAssignmentX86 StackAssignment;
+}
+}
 
-} // namespace ion
-} // namespace js
-
-#endif // jsion_cpu_x86_stack_assignment_h__
-
+#endif

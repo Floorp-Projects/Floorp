@@ -147,24 +147,9 @@ PrintDefinition(FILE *fp, const LDefinition &def)
     if (def.virtualRegister())
         fprintf(fp, ":%d", def.virtualRegister());
     if (def.policy() == LDefinition::PRESET) {
-        switch (def.output()->kind()) {
-          case LAllocation::CONSTANT_VALUE:
-          case LAllocation::CONSTANT_INDEX:
-            fprintf(fp, " (c)");
-            break;
-          case LAllocation::GPR:
-            fprintf(fp, " (%s)", def.output()->toGeneralReg()->reg().name());
-            break;
-          case LAllocation::FPU:
-            fprintf(fp, " (%s)", def.output()->toFloatReg()->reg().name());
-            break;
-          case LAllocation::ARGUMENT:
-            fprintf(fp, " (arg %d)", def.output()->toArgument()->index());
-            break;
-          default:
-            JS_NOT_REACHED("unexpected preset allocation type");
-            break;
-        }
+        fprintf(fp, " (");
+        LAllocation::PrintAllocation(fp, def.output());
+        fprintf(fp, ")");
     } else if (def.policy() == LDefinition::MUST_REUSE_INPUT) {
         fprintf(fp, " (!)");
     } else if (def.policy() == LDefinition::REDEFINED) {
@@ -258,20 +243,5 @@ LInstruction::print(FILE *fp)
                 fprintf(fp, ", ");
         }
         fprintf(fp, ")");
-    }
-}
-
-void
-LMove::printOperands(FILE *fp)
-{
-    for (size_t i = 0; i < numEntries(); i++) {
-        Entry *e = getEntry(i);
-        fprintf(fp, "[");
-        LAllocation::PrintAllocation(fp, e->from);
-        fprintf(fp, " -> ");
-        LAllocation::PrintAllocation(fp, e->to);
-        fprintf(fp, "]");
-        if (i != numEntries() - 1)
-            fprintf(fp, ", ");
     }
 }
