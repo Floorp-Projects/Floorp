@@ -1186,7 +1186,7 @@ _cairo_d2d_create_strokestyle_for_stroke_style(const cairo_stroke_style_t *style
 							       line_join, 
 							       (FLOAT)style->miter_limit,
 							       dashStyle,
-							       (FLOAT)style->dash_offset),
+							       FLOAT(style->dash_offset) / style->line_width),
 							       dashes,
 							       style->num_dashes,
 							       &strokeStyle);
