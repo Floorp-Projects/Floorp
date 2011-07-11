@@ -381,16 +381,13 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         eventWindow->SetPersistenceTimer(PAD_MISC);
         result = nsEventStatus_eConsumeDoDefault;
 
-        nsCOMPtr<nsPIDOMWindow> ourWindow = do_GetInterface(docShell);
-        if (ourWindow) {
-          // Let the application know if it's in fullscreen mode so it
-          // can update its UI.
-          if (modeEvent->mSizeMode == nsSizeMode_Fullscreen) {
+        // min, max, and normal are all the same to apps, but for
+        // fullscreen we need to let them know so they can update
+        // their ui. 
+        if (modeEvent->mSizeMode == nsSizeMode_Fullscreen) {
+          nsCOMPtr<nsIDOMWindowInternal> ourWindow = do_GetInterface(docShell);
+          if (ourWindow)
             ourWindow->SetFullScreen(PR_TRUE);
-          }
-
-          // And always fire a user-defined sizemodechange event on the window
-          ourWindow->DispatchCustomEvent("sizemodechange");
         }
 
         // Note the current implementation of SetSizeMode just stores

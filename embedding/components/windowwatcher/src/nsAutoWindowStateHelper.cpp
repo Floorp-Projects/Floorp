@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -75,11 +75,38 @@ nsAutoWindowStateHelper::~nsAutoWindowStateHelper()
 PRBool
 nsAutoWindowStateHelper::DispatchCustomEvent(const char *aEventName)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mWindow);
-  if (!window) {
+  if (!mWindow) {
     return PR_TRUE;
   }
 
-  return window->DispatchCustomEvent(aEventName);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
+  }
+#endif
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  mWindow->GetDocument(getter_AddRefs(domdoc));
+
+  nsCOMPtr<nsIDOMEvent> event;
+
+  PRBool defaultActionEnabled = PR_TRUE;
+
+  if (domdoc) {
+    domdoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+    if (privateEvent) {
+      event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), PR_TRUE, PR_TRUE);
+
+      privateEvent->SetTrusted(PR_TRUE);
+
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mWindow));
+
+      target->DispatchEvent(event, &defaultActionEnabled);
+    }
+  }
+
+  return defaultActionEnabled;
 }
 
