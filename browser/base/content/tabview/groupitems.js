@@ -191,6 +191,7 @@ function GroupItem(listOfEls, options) {
       self.$titleShield.show();
       if (self.getTitle())
         gTabView.firstUseExperienced = true;
+      self.save();
     })
     .focus(function() {
       self._unfreezeItemSize();
