@@ -54,7 +54,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIScrollableFrame.h"
-#include "nsIScrollbarFrame.h"
+#include "nsScrollbarFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsStyleContext.h"
@@ -214,8 +214,8 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
   if (scrollFrame) {
     nsIBox* verticalScrollbar = scrollFrame->GetScrollbarBox(PR_TRUE);
-    if (verticalScrollbar) {
-      nsIScrollbarFrame* scrollbarFrame = do_QueryFrame(verticalScrollbar);
+    nsScrollbarFrame* scrollbarFrame = do_QueryFrame(verticalScrollbar);
+    if (scrollbarFrame) {
       scrollbarFrame->SetScrollbarMediatorContent(GetContent());
     }
   }
@@ -353,7 +353,7 @@ nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
 ///////////// nsIScrollbarMediator ///////////////
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
+nsListBoxBodyFrame::PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
 { 
   if (mScrolling || mRowHeight == 0)
     return NS_OK;
@@ -423,7 +423,7 @@ nsListBoxBodyFrame::VisibilityChanged(PRBool aVisible)
 }
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
+nsListBoxBodyFrame::ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
   if (aOldIndex == aNewIndex)
     return NS_OK;
