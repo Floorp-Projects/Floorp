@@ -42,9 +42,19 @@
 /**
  * Network link status monitoring service.
  */
-[scriptable, uuid(61618a52-ea91-4277-a4ab-ebe10d7b9a64)]
+[scriptable, uuid(f7d3be87-7403-4a1e-b89f-2797776e9b08)]
 interface nsINetworkLinkService : nsISupports
 {
+  /* Link type constants */
+  const unsigned long LINK_TYPE_UNKNOWN = 0;
+  const unsigned long LINK_TYPE_ETHERNET = 1;
+  const unsigned long LINK_TYPE_USB = 2;
+  const unsigned long LINK_TYPE_WIFI = 3;
+  const unsigned long LINK_TYPE_WIMAX = 4;
+  const unsigned long LINK_TYPE_2G = 5;
+  const unsigned long LINK_TYPE_3G = 6;
+  const unsigned long LINK_TYPE_4G = 7;
+
   /**
    * This is set to true when the system is believed to have a usable
    * network connection.
@@ -62,6 +72,11 @@ interface nsINetworkLinkService : nsISupports
    * This is set to true when we believe that isLinkUp is accurate.
    */
   readonly attribute boolean linkStatusKnown;
+
+  /**
+   * The type of network connection.
+   */
+  readonly attribute unsigned long linkType;
 };
 
 %{C++
@@ -85,4 +100,36 @@ interface nsINetworkLinkService : nsISupports
  * linkStatusKnown is now false.
  */
 #define NS_NETWORK_LINK_DATA_UNKNOWN "unknown"
+
+/**
+ * We send notifications through nsIObserverService with topic
+ * NS_NETWORK_LINK_TYPE_TOPIC whenever the network connection type
+ * changes. We pass one of the valid connection type constants
+ * below as the aData parameter of the notification.
+ */
+#define NS_NETWORK_LINK_TYPE_TOPIC "network:link-type-changed"
+
+/** We were unable to determine the network connection type */
+#define NS_NETWORK_LINK_TYPE_UNKNOWN  "unknown"
+
+/** A standard wired ethernet connection */
+#define NS_NETWORK_LINK_TYPE_ETHERNET    "ethernet"
+
+/** A connection via a USB port */
+#define NS_NETWORK_LINK_TYPE_USB    "usb"
+
+/** A connection via a WiFi access point (IEEE802.11) */
+#define NS_NETWORK_LINK_TYPE_WIFI "wifi"
+
+/** A connection via WiMax (IEEE802.16) */
+#define NS_NETWORK_LINK_TYPE_WIMAX "wimax"
+
+/** A '2G' mobile connection (e.g. GSM, GPRS, EDGE) */
+#define NS_NETWORK_LINK_TYPE_2G "2g"
+
+/** A '3G' mobile connection (e.g. UMTS, CDMA) */
+#define NS_NETWORK_LINK_TYPE_3G "3g"
+
+/** A '4G' mobile connection (e.g. LTE, UMB) */
+#define NS_NETWORK_LINK_TYPE_4G "4g"
 %}
