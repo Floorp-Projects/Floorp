@@ -379,6 +379,11 @@ public:
   }
 
   /**
+   * Call AbortDragForSelection() when we abort handling the drag as selecting.
+   */
+  void AbortDragForSelection();
+
+  /**
     if we are in table cell selection mode. aka ctrl click in table cell
    */
   PRBool GetTableCellSelection() const { return mSelectingTableCellMode != 0; }
@@ -616,7 +621,11 @@ public:
 
   nsIPresShell *GetShell()const  { return mShell; }
 
-  void DisconnectFromPresShell() { StopAutoScrollTimer(); mShell = nsnull; }
+  void DisconnectFromPresShell()
+  {
+    AbortDragForSelection();
+    mShell = nsnull;
+  }
 private:
   nsresult TakeFocus(nsIContent *aNewFocus,
                      PRUint32 aContentOffset,
