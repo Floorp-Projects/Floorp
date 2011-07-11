@@ -30,7 +30,6 @@ browser.jar:
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/fullscreen-video.xhtml        (content/fullscreen-video.xhtml)
-        content/browser/highlighter.xhtml             (content/highlighter.xhtml)
 *       content/browser/inspector.html                (content/inspector.html)
 *       content/browser/scratchpad.xul                (content/scratchpad.xul)
 *       content/browser/scratchpad.js                 (content/scratchpad.js)
