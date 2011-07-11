@@ -286,7 +286,7 @@ JSONSpewer::spewLIR(MIRGraph *mir)
 }
 
 void
-JSONSpewer::spewIntervals(RegisterAllocator *regalloc)
+JSONSpewer::spewIntervals(LinearScanAllocator *regalloc)
 {
     if (!fp_)
         return;

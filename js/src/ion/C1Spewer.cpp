@@ -94,7 +94,7 @@ C1Spewer::spewCFG(const char *pass)
 }
 
 void
-C1Spewer::spewIntervals(const char *pass, RegisterAllocator *regalloc)
+C1Spewer::spewIntervals(const char *pass, LinearScanAllocator *regalloc)
 {
     if (!spewout_)
         return;
@@ -131,7 +131,7 @@ DumpLIR(FILE *fp, LInstruction *ins)
 }
 
 void
-C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, RegisterAllocator *regalloc, size_t &nextId)
+C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regalloc, size_t &nextId)
 {
     LBlock *lir = block->lir();
 
@@ -145,8 +145,10 @@ C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, RegisterAllocator *regallo
                     fprintf(fp, "%d object \"", (i == 0) ? vreg->reg() : nextId++);
                     LAllocation::PrintAllocation(fp, live->getAllocation());
                     fprintf(fp, "\" %d -1", vreg->reg());
-                    for (size_t j = 0; j < live->numRanges(); j++)
-                        fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(), live->getRange(j)->to.pos());
+                    for (size_t j = 0; j < live->numRanges(); j++) {
+                        fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(),
+                                live->getRange(j)->to.pos());
+                    }
                     for (size_t j = 0; j < vreg->numUses(); j++)
                         fprintf(fp, " %d M", vreg->getUse(j)->ins->id() * 2);
                     fprintf(fp, " \"\"\n");
