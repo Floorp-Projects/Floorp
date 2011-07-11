@@ -548,14 +548,6 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     rt = cx->runtime;
     preBytes = rt->gcBytes;
     JS_GC(cx);
-    fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
-           (unsigned long)preBytes, (unsigned long)rt->gcBytes,
-#if defined(XP_UNIX) && !defined(__SYMBIAN32__)
-           (unsigned long)sbrk(0)
-#else
-           0
-#endif
-           );
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
