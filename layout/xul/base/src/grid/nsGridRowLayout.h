@@ -53,8 +53,8 @@ class nsBoxLayoutState;
 class nsGrid;
 
 /**
- * A common base class for nsGridRowLeafLayout (the nsIBoxLayout object
- * for a grid row or column) and nsGridRowGroupLayout (the nsIBoxLayout
+ * A common base class for nsGridRowLeafLayout (the nsBoxLayout object
+ * for a grid row or column) and nsGridRowGroupLayout (the nsBoxLayout
  * object for a grid row group or column group).
  */
 // XXXldb This needs a name that indicates that it's a base class for
