@@ -171,7 +171,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     spew.spewPass("Allocate registers");
 #else
-    RegisterAllocator regalloc(&lirgen, lir);
+    LinearScanAllocator regalloc(&lirgen, lir);
     if (!regalloc.go())
         return false;
     spew.spewPass("Allocate Registers", &regalloc);

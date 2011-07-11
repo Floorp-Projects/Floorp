@@ -111,7 +111,7 @@ class IonSpewer
 
     bool init();
     void spewPass(const char *pass);
-    void spewPass(const char *pass, RegisterAllocator *ra);
+    void spewPass(const char *pass, LinearScanAllocator *ra);
     void finish();
 
 };
