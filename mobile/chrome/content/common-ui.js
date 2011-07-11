@@ -1753,7 +1753,13 @@ var WebappsUI = {
   },
   
   updateWebappsInstall: function updateWebappsInstall(aNode) {
-    return !document.getElementById("main-window").hasAttribute("webapp");
+    if (document.getElementById("main-window").hasAttribute("webapp"))
+      return false;
+
+    let browser = Browser.selectedBrowser;
+
+    let webapp = Cc["@mozilla.org/webapps/support;1"].getService(Ci.nsIWebappsSupport);
+    return !(webapp && webapp.isApplicationInstalled(browser.currentURI.spec));
   },
   
   install: function(aURI, aTitle, aIcon) {
