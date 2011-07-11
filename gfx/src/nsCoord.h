@@ -413,6 +413,11 @@ inline PRInt32 NSToIntRound(float aValue)
   return NS_lroundf(aValue);
 }
 
+inline PRInt32 NSToIntRound(double aValue)
+{
+  return NS_lround(aValue);
+}
+
 inline PRInt32 NSToIntRoundUp(float aValue)
 {
   return PRInt32(NS_floorf(aValue + 0.5f));
