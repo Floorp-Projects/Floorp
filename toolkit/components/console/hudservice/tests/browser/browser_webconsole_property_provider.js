@@ -54,9 +54,7 @@ function testPropertyProvider() {
 
   openConsole();
 
-  hudId = HUDService.displaysIndex()[0];
-
-  var HUD = HUDService.hudReferences[hudId];
+  var HUD = HUDService.getHudByWindow(content);
   var jsterm = HUD.jsterm;
   var context = jsterm.sandbox.window;
   var completion;

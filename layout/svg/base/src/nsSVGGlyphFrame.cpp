@@ -415,8 +415,8 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
-  PRUint16 mask = GetHittestMask();
-  if (!mask) {
+  PRUint16 hitTestFlags = GetHitTestFlags();
+  if (!hitTestFlags) {
     return nsnull;
   }
 
@@ -431,7 +431,7 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
   //
   //   http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
   //
-  // Currently we just test the character cells if GetHittestMask says we're
+  // Currently we just test the character cells if GetHitTestFlags says we're
   // supposed to be testing either the fill OR the stroke:
 
   PRInt32 i;
@@ -448,7 +448,7 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
                                    PresContext()->AppUnitsToGfxUnits(aPoint.y)));
 
   PRBool isHit = PR_FALSE;
-  if (mask & HITTEST_MASK_FILL || mask & HITTEST_MASK_STROKE) {
+  if (hitTestFlags & SVG_HIT_TEST_FILL || hitTestFlags & SVG_HIT_TEST_STROKE) {
     isHit = context->PointInFill(userSpacePoint);
   }
 

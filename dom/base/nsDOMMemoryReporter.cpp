@@ -54,31 +54,31 @@ nsDOMMemoryReporter::Init()
 }
 
 NS_IMETHODIMP
-nsDOMMemoryReporter::GetProcess(char** aProcess)
+nsDOMMemoryReporter::GetProcess(nsACString &aProcess)
 {
   // "" means the main process.
-  *aProcess = strdup("");
+  aProcess.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMMemoryReporter::GetPath(char** aMemoryPath)
+nsDOMMemoryReporter::GetPath(nsACString &aMemoryPath)
 {
-  *aMemoryPath = strdup("explicit/dom");
+  aMemoryPath.AssignLiteral("explicit/dom");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMMemoryReporter::GetKind(int* aKind)
+nsDOMMemoryReporter::GetKind(PRInt32* aKind)
 {
   *aKind = KIND_HEAP;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMMemoryReporter::GetDescription(char** aDescription)
+nsDOMMemoryReporter::GetDescription(nsACString &aDescription)
 {
-  *aDescription = strdup("Memory used by the DOM.");
+  aDescription.AssignLiteral("Memory used by the DOM.");
   return NS_OK;
 }
 

@@ -89,11 +89,6 @@ const TESTS = [
     category: "CSS Parser",
     matchString: "foobarCanvasCssParser",
   },
-  { // #15
-    file: "test-bug-595934-getselection.html",
-    category: "content javascript",
-    matchString: "getSelection",
-  },
   { // #16
     file: "test-bug-595934-image.html",
     category: "Image",

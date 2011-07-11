@@ -9089,6 +9089,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   dummy_timeout.AddRef();
 
   last_insertion_point = mTimeoutInsertionPoint;
+  // If we ever start setting mTimeoutInsertionPoint to a non-dummy timeout,
+  // the logic in ResetTimersForNonBackgroundWindow will need to change.
   mTimeoutInsertionPoint = &dummy_timeout;
 
   for (timeout = FirstTimeout();
@@ -9426,7 +9428,16 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
 
   TimeStamp now = TimeStamp::Now();
 
-  for (nsTimeout *timeout = FirstTimeout(); IsTimeout(timeout); ) {
+  // If mTimeoutInsertionPoint is non-null, we're in the middle of firing
+  // timers and the timers we're planning to fire all come before
+  // mTimeoutInsertionPoint; mTimeoutInsertionPoint itself is a dummy timeout
+  // with an mWhen that may be semi-bogus.  In that case, we don't need to do
+  // anything with mTimeoutInsertionPoint or anything before it, so should
+  // start at the timer after mTimeoutInsertionPoint, if there is one.
+  // Otherwise, start at the beginning of the list.
+  for (nsTimeout *timeout = mTimeoutInsertionPoint ?
+         mTimeoutInsertionPoint->Next() : FirstTimeout();
+       IsTimeout(timeout); ) {
     // It's important that this check be <= so that we guarantee that
     // taking NS_MAX with |now| won't make a quantity equal to
     // timeout->mWhen below.

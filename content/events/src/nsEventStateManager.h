@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsCOMArray.h"
+#include "nsIFrameLoader.h"
 #include "nsIFrame.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -426,6 +427,12 @@ protected:
   PRBool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();
   PRBool IsTargetCrossProcess(nsGUIEvent *aEvent);
+
+  void DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* remote);
+  PRBool IsRemoteTarget(nsIContent* target);
+  PRBool HandleCrossProcessEvent(nsEvent *aEvent,
+                                 nsIFrame* aTargetFrame,
+                                 nsEventStatus *aStatus);
 
 private:
   static inline void DoStateChange(mozilla::dom::Element* aElement,

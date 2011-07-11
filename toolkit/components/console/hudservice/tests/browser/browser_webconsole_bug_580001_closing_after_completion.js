@@ -55,9 +55,7 @@ function testClosingAfterCompletion() {
 
   openConsole();
 
-  hudId = HUDService.displaysIndex()[0];
-  hudBox = HUDService.getHeadsUpDisplay(hudId);
-  let inputNode = hudBox.querySelector(".jsterm-input-node");
+  let inputNode = HUDService.getHudByWindow(content).jsterm.inputNode;
 
   let errorWhileClosing = false;
   function errorListener(evt) {
