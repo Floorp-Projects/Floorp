@@ -376,6 +376,7 @@ CPPSRCS +=	MIR.cpp \
 		LICM.cpp \
 		ValueNumbering.cpp \
 		LinearScan.cpp \
+		MoveGroup.cpp \
 		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

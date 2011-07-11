@@ -345,8 +345,8 @@ class LConstantIndex : public LAllocation
 class LStackSlot : public LAllocation
 {
   public:
-    explicit LStackSlot(uint32 slot)
-      : LAllocation(STACK_SLOT, slot)
+    explicit LStackSlot(uint32 slot, bool isDouble = false)
+      : LAllocation(isDouble ? DOUBLE_SLOT : STACK_SLOT, slot)
     { }
 
     bool isDouble() const {
@@ -482,6 +482,10 @@ class LDefinition
     }
     void setOutput(const LAllocation &a) {
         output_ = a;
+        if (!a.isUse()) {
+            bits_ &= ~(POLICY_MASK << POLICY_SHIFT);
+            bits_ |= PRESET << POLICY_SHIFT;
+        }
     }
 
     static inline Type TypeFrom(MIRType type) {
