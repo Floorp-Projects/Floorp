@@ -61,8 +61,6 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -71,8 +69,11 @@
 #include "nsProxyRelease.h"
 #include "prlog.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "mozilla/Preferences.h"
 
 #include "nsXULAppAPI.h"
+
+using namespace mozilla;
 
 static const PRUint32 kRescheduleLimit = 3;
 
@@ -1029,11 +1030,8 @@ nsOfflineManifestItem::CheckNewManifestContentHash(nsIRequest *aRequest)
 void
 nsOfflineManifestItem::ReadStrictFileOriginPolicyPref()
 {
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     mStrictFileOriginPolicy =
-        (!prefs ||
-         NS_FAILED(prefs->GetBoolPref("security.fileuri.strict_origin_policy",
-                                      &mStrictFileOriginPolicy)));
+        Preferences::GetBool("security.fileuri.strict_origin_policy", PR_TRUE);
 }
 
 NS_IMETHODIMP

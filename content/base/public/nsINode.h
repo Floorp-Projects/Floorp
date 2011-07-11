@@ -708,6 +708,7 @@ public:
    * See nsIDOMEventTarget
    */
   NS_DECL_NSIDOMEVENTTARGET
+  using nsIDOMEventTarget::AddEventListener;
 
   /**
    * Adds a mutation observer to be notified when this node, or any of its

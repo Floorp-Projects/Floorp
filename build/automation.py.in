@@ -367,6 +367,7 @@ user_pref("security.warn_viewing_mixed", false);
 user_pref("app.update.enabled", false);
 user_pref("browser.panorama.experienced_first_run", true); // Assume experienced
 user_pref("dom.w3c_touch_events.enabled", true);
+user_pref("toolkit.telemetry.prompted", true);
 
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
@@ -729,6 +730,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     stackFixerProcess = None
     stackFixerFunction = None
     didTimeout = False
+    hitMaxTime = False
     if proc.stdout is None:
       self.log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
     else:
@@ -756,7 +758,6 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         logsource = stackFixerProcess.stdout
 
       (line, didTimeout) = self.readWithTimeout(logsource, timeout)
-      hitMaxTime = False
       while line != "" and not didTimeout:
         if "TEST-START" in line and "|" in line:
           self.lastTestSeen = line.split("|")[1].strip()

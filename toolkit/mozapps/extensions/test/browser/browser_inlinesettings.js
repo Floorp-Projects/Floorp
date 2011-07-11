@@ -133,6 +133,7 @@ add_test(function() {
     // Force bindings to apply
     settings[0].clientTop;
 
+    ok(settings[0].hasAttribute("first-row"), "First visible row should have first-row attribute");
     Services.prefs.setBoolPref("extensions.inlinesettings1.bool", false);
     var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[0], "anonid", "input");
     isnot(input.checked, true, "Checkbox should have initial value");
@@ -143,6 +144,7 @@ add_test(function() {
     isnot(input.checked, true, "Checkbox should have updated value");
     is(Services.prefs.getBoolPref("extensions.inlinesettings1.bool"), false, "Bool pref should have been updated");
 
+    ok(!settings[1].hasAttribute("first-row"), "Not the first row");
     Services.prefs.setIntPref("extensions.inlinesettings1.boolint", 0);
     var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[1], "anonid", "input");
     isnot(input.checked, true, "Checkbox should have initial value");
@@ -153,6 +155,7 @@ add_test(function() {
     isnot(input.checked, true, "Checkbox should have updated value");
     is(Services.prefs.getIntPref("extensions.inlinesettings1.boolint"), 2, "BoolInt pref should have been updated");
 
+    ok(!settings[2].hasAttribute("first-row"), "Not the first row");
     Services.prefs.setIntPref("extensions.inlinesettings1.integer", 0);
     var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[2], "anonid", "input");
     is(input.value, "0", "Number box should have initial value");
@@ -165,6 +168,7 @@ add_test(function() {
     is(input.value, "12", "Number box should have updated value");
     is(Services.prefs.getIntPref("extensions.inlinesettings1.integer"), 12, "Integer pref should have been updated");
 
+    ok(!settings[3].hasAttribute("first-row"), "Not the first row");
     Services.prefs.setCharPref("extensions.inlinesettings1.string", "foo");
     var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[3], "anonid", "input");
     is(input.value, "foo", "Text box should have initial value");
@@ -175,84 +179,79 @@ add_test(function() {
     is(input.value, "bar", "Text box should have updated value");
     is(Services.prefs.getCharPref("extensions.inlinesettings1.string"), "bar", "String pref should have been updated");
 
+    ok(!settings[4].hasAttribute("first-row"), "Not the first row");
     var input = settings[4].firstElementChild;
     is(input.value, "1", "Menulist should have initial value");
     input.focus();
     EventUtils.synthesizeKey("b", {}, gManagerWindow);
     is(input.value, "2", "Menulist should have updated value");
     is(gManagerWindow._testValue, "2", "Menulist oncommand handler should've updated the test value");
+    delete gManagerWindow._testValue;
 
-    setTimeout(function () {
-      EventUtils.synthesizeKey("c", {}, gManagerWindow);
-      is(input.value, "3", "Menulist should have updated value");
-      is(gManagerWindow._testValue, "3", "Menulist oncommand handler should've updated the test value");
-      delete gManagerWindow._testValue;
+    ok(!settings[5].hasAttribute("first-row"), "Not the first row");
+    Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF0000");
+    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
+    is(input.color, "#FF0000", "Color picker should have initial value");
+    input.focus();
+    EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+    EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+    EventUtils.synthesizeKey("VK_RETURN", {}, gManagerWindow);
+    input.hidePopup();
+    is(input.color, "#FF9900", "Color picker should have updated value");
+    is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
 
-      Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF0000");
-      setTimeout(function () {
-        input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
-        is(input.color, "#FF0000", "Color picker should have initial value");
-        input.focus();
-        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
-        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
-        EventUtils.synthesizeKey("VK_RETURN", {}, gManagerWindow);
-        is(input.color, "#FF9900", "Color picker should have updated value");
-        is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
+    try {
+      mockFilePickerFactory.register();
 
-        setTimeout(function () {
-          mockFilePickerFactory.register();
+      ok(!settings[6].hasAttribute("first-row"), "Not the first row");
+      var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
+      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
+      is(input.value, "", "Label value should be empty");
 
-          try {
-            var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
-            input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
-            is(input.value, "", "Label value should be empty");
+      var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 
-            var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
-            var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
+      _returnFile = profD;
+      _returnValue = Ci.nsIFilePicker.returnOK;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+      is(input.value, profD.path, "Label value should match file chosen");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should match file chosen");
 
-            _returnFile = profD;
-            _returnValue = Ci.nsIFilePicker.returnOK;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
-            is(input.value, profD.path, "Label value should match file chosen");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should match file chosen");
+      _returnFile = curProcD;
+      _returnValue = Ci.nsIFilePicker.returnCancel;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+      is(input.value, profD.path, "Label value should not have changed");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should not have changed");
 
-            _returnFile = curProcD;
-            _returnValue = Ci.nsIFilePicker.returnCancel;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
-            is(input.value, profD.path, "Label value should not have changed");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should not have changed");
+      ok(!settings[7].hasAttribute("first-row"), "Not the first row");
+      button = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "button");
+      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
+      is(input.value, "", "Label value should be empty");
 
-            button = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "button");
-            input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
-            is(input.value, "", "Label value should be empty");
-   
-            _returnFile = profD;
-            _returnValue = Ci.nsIFilePicker.returnOK;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
-            is(input.value, profD.path, "Label value should match file chosen");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should match file chosen");
+      _returnFile = profD;
+      _returnValue = Ci.nsIFilePicker.returnOK;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+      is(input.value, profD.path, "Label value should match file chosen");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should match file chosen");
 
-            _returnFile = curProcD;
-            _returnValue = Ci.nsIFilePicker.returnCancel;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
-            is(input.value, profD.path, "Label value should not have changed");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should not have changed");
+      _returnFile = curProcD;
+      _returnValue = Ci.nsIFilePicker.returnCancel;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+      is(input.value, profD.path, "Label value should not have changed");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should not have changed");
 
-          } finally {
-            mockFilePickerFactory.unregister();
-          }
+    } finally {
+      mockFilePickerFactory.unregister();
 
-          button = gManagerWindow.document.getElementById("detail-prefs-btn");
-          is_element_hidden(button, "Preferences button should not be visible");
+      button = gManagerWindow.document.getElementById("detail-prefs-btn");
+      is_element_hidden(button, "Preferences button should not be visible");
 
-          gCategoryUtilities.openType("extension", run_next_test);
-        }, 0);
-      }, 0);
-    }, 1200); // Timeout value from toolkit/content/tests/widgets/test_menulist_keynav.xul
+      gCategoryUtilities.openType("extension", run_next_test);
+    }
   });
 });
 
@@ -269,31 +268,41 @@ add_test(function() {
 
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
-    is(settings.length, 3, "Grid should have settings children");
+    is(settings.length, 5, "Grid should have settings children");
 
     // Force bindings to apply
     settings[0].clientTop;
 
     var node = settings[0];
+    node = settings[0];
+    is_element_hidden(node, "Unsupported settings should not be visible");
+    ok(!node.hasAttribute("first-row"), "Hidden row is not the first row");
+
+    node = settings[1];
     is(node.nodeName, "setting", "Should be a setting node");
+    ok(node.hasAttribute("first-row"), "First visible row should have first-row attribute");
     var description = gManagerWindow.document.getAnonymousElementByAttribute(node, "class", "preferences-description");
     is(description.textContent.trim(), "", "Description node should be empty");
 
     node = node.nextSibling;
     is(node.nodeName, "row", "Setting should be followed by a row node");
+    is_element_visible(node, "Description should be visible");
     is(node.textContent, "Description Attribute", "Description should be in this row");
 
-    node = settings[1];
+    node = settings[2];
     is(node.nodeName, "setting", "Should be a setting node");
+    ok(!node.hasAttribute("first-row"), "Not the first row");
     description = gManagerWindow.document.getAnonymousElementByAttribute(node, "class", "preferences-description");
     is(description.textContent.trim(), "", "Description node should be empty");
 
     node = node.nextSibling;
     is(node.nodeName, "row", "Setting should be followed by a row node");
+    is_element_visible(node, "Description should be visible");
     is(node.textContent, "Description Text Node", "Description should be in this row");
 
-    node = settings[2];
+    node = settings[3];
     is(node.nodeName, "setting", "Should be a setting node");
+    ok(!node.hasAttribute("first-row"), "Not the first row");
     description = gManagerWindow.document.getAnonymousElementByAttribute(node, "class", "preferences-description");
     is(description.textContent.trim(), "", "Description node should be empty");
     var button = node.firstElementChild;
@@ -301,7 +310,16 @@ add_test(function() {
 
     node = node.nextSibling;
     is(node.nodeName, "row", "Setting should be followed by a row node");
+    is_element_visible(node, "Description should be visible");
     is(node.textContent.trim(), "This is a test, all this text should be visible", "Description should be in this row");
+
+    node = settings[4];
+    is_element_hidden(node, "Unsupported settings should not be visible");
+    ok(!node.hasAttribute("first-row"), "Hidden row is not the first row");
+
+    node = node.nextSibling;
+    is(node.nodeName, "row", "Setting should be followed by a row node");
+    is_element_hidden(node, "Descriptions of unsupported settings should not be visible");
     
     var button = gManagerWindow.document.getElementById("detail-prefs-btn");
     is_element_hidden(button, "Preferences button should not be visible");

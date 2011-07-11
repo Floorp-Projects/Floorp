@@ -52,12 +52,10 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIFrame.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMContextMenuListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsXULPopupListener : public nsIDOMMouseListener,
-                           public nsIDOMContextMenuListener
+class nsXULPopupListener : public nsIDOMEventListener
 {
 public:
     // aElement is the element that the popup is attached to. If aIsContext is
@@ -69,25 +67,10 @@ public:
 
     // nsISupports
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULPopupListener,
-                                             nsIDOMMouseListener)
-
-    // nsIDOMMouseListener
-    NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-    NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-    NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-    NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-    NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-    // nsIDOMContextMenuListener
-    NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
-
-    // nsIDOMEventListener
-    NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; }
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsXULPopupListener)
+    NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
-
     // open the popup. aEvent is the event that triggered the popup such as
     // a mouse click and aTargetContent is the target of this event.
     virtual nsresult LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent);
@@ -96,12 +79,6 @@ protected:
     virtual void ClosePopup();
 
 private:
-
-    // PreLaunchPopup is called before LaunchPopup to ensure that the event is
-    // suitable and to initialize the XUL document's popupNode to the event
-    // target.
-    nsresult PreLaunchPopup(nsIDOMEvent* aMouseEvent);
-
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
     // When a context menu is opened, focus the target of the contextmenu event.
     nsresult FireFocusOnTargetContent(nsIDOMNode* aTargetNode);
@@ -116,12 +93,5 @@ private:
     // true if a context popup
     PRBool mIsContext;
 };
-
-// Construct a new nsXULPopupListener and return in aListener. See the
-// nsXULPopupListener constructor for details about the aElement and
-// aIsContext arguments.
-nsresult
-NS_NewXULPopupListener(nsIDOMElement* aElement, PRBool aIsContext,
-                       nsIDOMEventListener** aListener);
 
 #endif // nsXULPopupListener_h___

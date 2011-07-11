@@ -123,9 +123,7 @@
     catch (exc) {}
 
     try {
-      var str = Cc["@mozilla.org/supports-string;1"].
-                createInstance(Ci.nsISupportsString);
-      str.data = "foo";
+      var str = PlacesUtils.toISupportsString("foo");
       query = PlacesUtils.history.getNewQuery();
       query.tags = str;
       do_throw("Passing nsISupportsString to SetTags should fail");

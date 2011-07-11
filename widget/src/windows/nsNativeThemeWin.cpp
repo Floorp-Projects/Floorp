@@ -515,10 +515,10 @@ nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
   nsEventStates eventState = GetContentState(aFrame, aWidgetType);
   if (eventState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE))
     return TS_ACTIVE;
-  if (wantFocused && eventState.HasState(NS_EVENT_STATE_FOCUS))
-    return TS_FOCUSED;
   if (eventState.HasState(NS_EVENT_STATE_HOVER))
     return TS_HOVER;
+  if (wantFocused && eventState.HasState(NS_EVENT_STATE_FOCUS))
+    return TS_FOCUSED;
 
   return TS_NORMAL;
 }
@@ -943,12 +943,13 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_DROPDOWN: {
       nsIContent* content = aFrame->GetContent();
       PRBool isHTML = content && content->IsHTML();
+      PRBool useDropBorder = isHTML || IsMenuListEditable(aFrame);
       nsEventStates eventState = GetContentState(aFrame, aWidgetType);
 
-      /* On vista, in HTML, we use CBP_DROPBORDER instead of DROPFRAME for HTML content;
-       * this gives us the thin outline in HTML content, instead of the gradient-filled
-       * background */
-      if (isHTML)
+      /* On Vista/Win7, we use CBP_DROPBORDER instead of DROPFRAME for HTML
+       * content or for editable menulists; this gives us the thin outline,
+       * instead of the gradient-filled background */
+      if (useDropBorder)
         aPart = CBP_DROPBORDER;
       else
         aPart = CBP_DROPFRAME;
@@ -960,7 +961,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       } else if (IsOpenButton(aFrame)) {
         aState = TS_ACTIVE;
       } else {
-        if (isHTML && eventState.HasState(NS_EVENT_STATE_FOCUS))
+        if (useDropBorder && (eventState.HasState(NS_EVENT_STATE_FOCUS) || IsFocused(aFrame)))
           aState = TS_ACTIVE;
         else if (eventState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE))
           aState = TS_ACTIVE;
@@ -1004,7 +1005,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         isOpen = IsOpenButton(aFrame);
 
       if (nsUXThemeData::sIsVistaOrLater) {
-        if (isHTML) {
+        if (isHTML || IsMenuListEditable(aFrame)) {
           if (isOpen) {
             /* Hover is propagated, but we need to know whether we're
              * hovering just the combobox frame, not the dropdown frame.

@@ -33,7 +33,7 @@ window.onload = function() {
   while (e.hasMoreElements()) {
     var mr =
       e.getNext().QueryInterface(Components.interfaces.nsIMemoryReporter);
-    memoryCounter += mr.memoryUsed;
+    memoryCounter += mr.amount;
   }
   ok(memoryCounter > 0, "we should be using a nonzero amount of memory");
   ok(true, "yay, didn't crash!");

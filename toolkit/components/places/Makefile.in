@@ -87,7 +87,6 @@ CPPSRCS = \
   nsNavHistoryResult.cpp \
   nsNavBookmarks.cpp \
   nsMaybeWeakPtr.cpp \
-  nsMorkHistoryImporter.cpp \
   nsPlacesModule.cpp \
   SQLFunctions.cpp \
   Helpers.cpp \
@@ -97,6 +96,12 @@ CPPSRCS = \
   PlaceInfo.cpp \
   VisitInfo.cpp \
   $(NULL)
+
+ifdef MOZ_MORKREADER
+CPPSRCS += nsMorkHistoryImporter.cpp
+else
+CPPSRCS += nsNoMorkStubImporter.cpp
+endif
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 

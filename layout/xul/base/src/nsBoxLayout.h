@@ -68,6 +68,8 @@ public:
   virtual void AddMargin(nsIBox* aChild, nsSize& aSize);
   virtual void AddMargin(nsSize& aSize, const nsMargin& aMargin);
 
+  virtual nsIGridPart* AsGridPart() { return nsnull; }
+
   static void AddLargestSize(nsSize& aSize, const nsSize& aToAdd);
   static void AddSmallestSize(nsSize& aSize, const nsSize& aToAdd);
 };

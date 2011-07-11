@@ -65,13 +65,21 @@ class TelemetryImpl : public nsITelemetry
 public:
   TelemetryImpl();
   ~TelemetryImpl();
+  
+  static bool CanRecord();
+  static already_AddRefed<nsITelemetry> CreateTelemetryInstance();
+  static void ShutdownTelemetry();
 
 private:
   // This is used for speedy JS string->Telemetry::ID conversions
   typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
   typedef nsTHashtable<CharPtrEntryType> HistogramMapType;
   HistogramMapType mHistogramMap;
+  bool mCanRecord;
+  static TelemetryImpl *sTelemetry;
 };
+
+TelemetryImpl*  TelemetryImpl::sTelemetry = NULL;
 
 // A initializer to initialize histogram collection
 StatisticsRecorder gStatisticsRecorder;
@@ -113,13 +121,13 @@ HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucketCount,
 
   switch (histogramType) {
   case nsITelemetry::HISTOGRAM_EXPONENTIAL:
-    *result = Histogram::FactoryGet(name, min, max, bucketCount, Histogram::kNoFlags);
+    *result = Histogram::FactoryGet(name, min, max, bucketCount, Histogram::kUmaTargetedHistogramFlag);
     break;
   case nsITelemetry::HISTOGRAM_LINEAR:
-    *result = LinearHistogram::FactoryGet(name, min, max, bucketCount, Histogram::kNoFlags);
+    *result = LinearHistogram::FactoryGet(name, min, max, bucketCount, Histogram::kUmaTargetedHistogramFlag);
     break;
   case nsITelemetry::HISTOGRAM_BOOLEAN:
-    *result = BooleanHistogram::FactoryGet(name, Histogram::kNoFlags);
+    *result = BooleanHistogram::FactoryGet(name, Histogram::kUmaTargetedHistogramFlag);
     break;
   default:
     return NS_ERROR_INVALID_ARG;
@@ -164,6 +172,7 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
   h->SnapshotSample(&ss);
   JSObject *counts_array;
   JSObject *rarray;
+  jsval static_histogram = h->flags() && Histogram::kUmaTargetedHistogramFlag ? JSVAL_TRUE : JSVAL_FALSE;
   const size_t count = h->bucket_count();
   if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), NULL, NULL, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), NULL, NULL, JSPROP_ENUMERATE)
@@ -174,6 +183,7 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
         && FillRanges(cx, rarray, h)
         && (counts_array = JS_NewArrayObject(cx, count, NULL))
         && JS_DefineProperty(cx, obj, "counts", OBJECT_TO_JSVAL(counts_array), NULL, NULL, JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "static", static_histogram, NULL, NULL, JSPROP_ENUMERATE)
         )) {
     return JS_FALSE;
   }
@@ -188,19 +198,31 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
 JSBool
 JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
 {
-  jsval *argv = JS_ARGV(cx, vp);
-  JSString *str;
-  if (!JS_ConvertArguments(cx, argc, argv, "i", &str))
+  if (!argc) {
+    JS_ReportError(cx, "Expected one argument");
     return JS_FALSE;
-  if (!JSVAL_IS_INT(argv[0]))
+  }
+
+  jsval v = JS_ARGV(cx, vp)[0];
+  int32 value;
+
+  if (!(JSVAL_IS_NUMBER(v) || JSVAL_IS_BOOLEAN(v))) {
+    JS_ReportError(cx, "Not a number");
     return JS_FALSE;
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
-  PRUint32 value = JSVAL_TO_INT(argv[0]);
-  if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
-    h->Add(!!value);
-  else
-    h->Add(value);
+  }
+
+  if (!JS_ValueToECMAInt32(cx, v, &value)) {
+    return JS_FALSE;
+  }
+
+  if (TelemetryImpl::CanRecord()) {
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
+    if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
+      h->Add(!!value);
+    else
+      h->Add(value);
+  }
   return JS_TRUE;
 }
 
@@ -236,7 +258,9 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
           && JS_DefineFunction (cx, obj, "snapshot", JSHistogram_Snapshot, 1, 0)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-TelemetryImpl::TelemetryImpl() {
+TelemetryImpl::TelemetryImpl():
+mCanRecord(true)
+{
   mHistogramMap.Init(Telemetry::HistogramCount);
 }
 
@@ -251,6 +275,7 @@ TelemetryImpl::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, 
   nsresult rv = HistogramGet(PromiseFlatCString(name).get(), min, max, bucketCount, histogramType, &h);
   if (NS_FAILED(rv))
     return rv;
+  h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
   return WrapAndReturnHistogram(h, cx, ret);
 }
 
@@ -307,16 +332,43 @@ TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *re
   return WrapAndReturnHistogram(h, cx, ret);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TelemetryImpl, nsITelemetry)
-
-already_AddRefed<nsITelemetry>
-CreateTelemetryInstance()
-{
-  nsCOMPtr<nsITelemetry> telemetry = new TelemetryImpl();
-  return telemetry.forget();
+NS_IMETHODIMP
+TelemetryImpl::GetCanRecord(PRBool *ret) {
+  *ret = mCanRecord;
+  return NS_OK;
 }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, CreateTelemetryInstance)
+NS_IMETHODIMP
+TelemetryImpl::SetCanRecord(PRBool canRecord) {
+  mCanRecord = !!canRecord;
+  return NS_OK;
+}
+
+bool
+TelemetryImpl::CanRecord() {
+  return !sTelemetry || sTelemetry->mCanRecord;
+}
+
+already_AddRefed<nsITelemetry>
+TelemetryImpl::CreateTelemetryInstance()
+{
+  NS_ABORT_IF_FALSE(sTelemetry == NULL, "CreateTelemetryInstance may only be called once, via GetService()");
+  sTelemetry = new TelemetryImpl(); 
+  // AddRef for the local reference
+  NS_ADDREF(sTelemetry);
+  // AddRef for the caller
+  NS_ADDREF(sTelemetry);
+  return sTelemetry;
+}
+
+void
+TelemetryImpl::ShutdownTelemetry()
+{
+  NS_IF_RELEASE(sTelemetry);
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(TelemetryImpl, nsITelemetry)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, TelemetryImpl::CreateTelemetryInstance)
 
 #define NS_TELEMETRY_CID \
   {0xaea477f2, 0xb3a2, 0x469c, {0xaa, 0x29, 0x0a, 0x82, 0xd1, 0x32, 0xb8, 0x29}}
@@ -339,7 +391,7 @@ const Module kTelemetryModule = {
   NULL,
   NULL,
   NULL,
-  NULL,
+  TelemetryImpl::ShutdownTelemetry
 };
 
 } // anonymous namespace
@@ -350,6 +402,9 @@ namespace Telemetry {
 void
 Accumulate(ID aHistogram, PRUint32 aSample)
 {
+  if (!TelemetryImpl::CanRecord()) {
+    return;
+  }
   Histogram *h;
   nsresult rv = GetHistogramByEnumId(aHistogram, &h);
   if (NS_SUCCEEDED(rv))

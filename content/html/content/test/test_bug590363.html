@@ -22,19 +22,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=590363
 
 var testData = [
   /* type to test | is the value reset when changing to file then reverting */
-  [ "button", false ],
+  [ "button",   false ],
   [ "checkbox", false ],
-  [ "hidden", false ],
-  [ "reset", false ],
-  [ "image", false ],
-  [ "radio", false ],
-  [ "submit", false ],
-  [ "tel", true ],
-  [ "text", true ],
-  [ "url", true ],
-  [ "email", true ],
-  [ "search", true ],
+  [ "hidden",   false ],
+  [ "reset",    false ],
+  [ "image",    false ],
+  [ "radio",    false ],
+  [ "submit",   false ],
+  [ "tel",      true ],
+  [ "text",     true ],
+  [ "url",      true ],
+  [ "email",    true ],
+  [ "search",   true ],
   [ "password", true ],
+  [ "number",   true ],
+  // 'file' is treated separatly.
+];
+
+var todoTypes = [
+  "datetime", "date", "month", "week", "time", "datetime-local", "range", "color"
 ];
 
 var length = testData.length;
@@ -42,9 +48,17 @@ for (var i=0; i<length; ++i) {
   for (var j=0; j<length; ++j) {
     var e = document.createElement('input');
     e.type = testData[i][0];
-    e.value = "foo";
+
+    var expectedValue;
+    if (testData[i][0] == 'number' || testData[j][0] == 'number') {
+      expectedValue = '42';
+    } else {
+      expectedValue = "foo";
+    }
+    e.value = expectedValue;
+
     e.type = testData[j][0];
-    is(e.value, "foo", ".value should still return the same value after " +
+    is(e.value, expectedValue, ".value should still return the same value after " +
        "changing type from " + testData[i][0] + " to " + testData[j][0]);
   }
 }
@@ -65,6 +79,13 @@ for each (var data in testData) {
     is(e.value, 'foo', ".value should still return the same value after " +
        "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
   }
+}
+
+// TODO checks
+for each (var type in todoTypes) {
+  var e = document.createElement('input');
+  e.type = type;
+  todo_is(e.type, type, type + " type isn't supported yet");
 }
 
 </script>

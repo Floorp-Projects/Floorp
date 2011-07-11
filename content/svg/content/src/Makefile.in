@@ -85,6 +85,7 @@ CPPSRCS		= \
 		nsSVGGraphicElement.cpp \
 		nsSVGImageElement.cpp \
 		nsSVGInteger.cpp \
+		nsSVGIntegerPair.cpp \
 		nsSVGLength2.cpp \
 		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
@@ -92,6 +93,7 @@ CPPSRCS		= \
 		nsSVGMatrix.cpp \
 		nsSVGMetadataElement.cpp \
 		nsSVGNumber2.cpp \
+		nsSVGNumberPair.cpp \
 		nsSVGPathDataParser.cpp \
 		nsSVGPathElement.cpp \
 		nsSVGPathGeometryElement.cpp \
@@ -144,12 +146,14 @@ CPPSRCS += nsSVGAnimateElement.cpp \
            nsSVGSetElement.cpp \
            nsSVGTransformSMILType.cpp \
            nsSVGTransformSMILAttr.cpp \
+           SVGIntegerPairSMILType.cpp \
            SVGLengthListSMILType.cpp \
            SVGMotionSMILType.cpp \
            SVGMotionSMILAttr.cpp \
            SVGMotionSMILAnimationFunction.cpp \
            SVGMotionSMILPathUtils.cpp \
            SVGNumberListSMILType.cpp \
+           SVGNumberPairSMILType.cpp \
            SVGOrientSMILType.cpp \
            SVGPathSegListSMILType.cpp \
            SVGPointListSMILType.cpp \

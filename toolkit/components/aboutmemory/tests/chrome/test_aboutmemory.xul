@@ -18,38 +18,58 @@
   var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Remove all the real reporters;  save them to restore at the end.
+  // Remove all the real reporters and multi-reporters;  save them to
+  // restore at the end.
   var e = mgr.enumerateReporters(); 
   var realReporters = [];
   var dummy = 0;
   while (e.hasMoreElements()) {
-    var mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    // Get the memoryUsed field, even though we don't use it, just to test
+    var r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    // Get the |amount| field, even though we don't use it, just to test
     // that the reporter doesn't crash or anything.
-    dummy += mr.memoryUsed;
-    mgr.unregisterReporter(mr);
-    realReporters.push(mr);
+    dummy += r.amount;
+    mgr.unregisterReporter(r);
+    realReporters.push(r);
+  }
+  e = mgr.enumerateMultiReporters(); 
+  var realMultiReporters = [];
+  var dummy = 0;
+  while (e.hasMoreElements()) {
+    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    // Call collectReports, even though we don't use its results, just to
+    // test that the multi-reporter doesn't crash or anything.
+    r.collectReports(function(){}, null);
+    mgr.unregisterMultiReporter(r);
+    realMultiReporters.push(r);
   }
 
   // Setup various fake-but-deterministic reporters.
   const KB = 1024;
   const MB = KB * KB;
   const kUnknown = -1;
-  const MAPPED = Ci.nsIMemoryReporter.MR_MAPPED;
-  const HEAP   = Ci.nsIMemoryReporter.MR_HEAP;
-  const OTHER  = Ci.nsIMemoryReporter.MR_OTHER;
+  const MAPPED = Ci.nsIMemoryReporter.KIND_MAPPED;
+  const HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
 
-  function f(aProcess, aPath, aKind, aMemoryUsed) {
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+  const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT; 
+
+  function f2(aProcess, aPath, aKind, aUnits, aAmount) {
     return {
       process:     aProcess,
       path:        aPath,
       kind:        aKind,
+      units:       aUnits,
       description: "(description)",
-      memoryUsed:  aMemoryUsed 
+      amount:      aAmount 
     };
   }
 
-  fakeReporters = [
+  function f(aProcess, aPath, aKind, aAmount) {
+    return f2(aProcess, aPath, aKind, BYTES, aAmount);
+  }
+
+  var fakeReporters = [
     f("", "heap-used",          OTHER,  500 * MB),
     f("", "heap-unused",        OTHER,  100 * MB),
     f("", "explicit/a",         HEAP,   222 * MB),
@@ -57,23 +77,50 @@
     f("", "explicit/b/b",       HEAP,    75 * MB),
     f("", "explicit/b/c/a",     HEAP,    70 * MB),
     f("", "explicit/b/c/b",     HEAP,     2 * MB), // omitted
-    f("", "explicit/c",         MAPPED, 123 * MB),
-    f("", "explicit/d",         MAPPED, 499 * KB), // omitted
-    f("", "explicit/e",         MAPPED, 100 * KB), // omitted
-    f("", "explicit/f/g/h/i",   HEAP,    20 * MB),
-    f("", "explicit/g",         HEAP,    14 * MB), // internal
     f("", "explicit/g",         HEAP,     1 * MB), // internal, dup: merge
     f("", "explicit/g/a",       HEAP,     6 * MB),
     f("", "explicit/g/b",       HEAP,     5 * MB),
     f("", "other1",             OTHER,  111 * MB),
-    f("", "other2",             OTHER,  222 * MB),
+    f2("", "other4",            OTHER,  COUNT, 888),
+    f2("", "unknown-unit",      OTHER,  /*bogus unit*/999, 999)
+  ];
+  var fakeMultiReporters = [
+     { collectReports: function(cbObj, closure) {
+          function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
+          f("explicit/c",       MAPPED, BYTES, 123 * MB);
+          f("explicit/d",       MAPPED, BYTES, 499 * KB); // omitted
+          f("explicit/e",       MAPPED, BYTES, 100 * KB); // omitted
+          f("explicit/f/g/h/i", HEAP,   BYTES,  20 * MB);
+       }
+     },
+     { collectReports: function(cbObj, closure) {
+          function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
+          f("explicit/g",       HEAP,   BYTES,  14 * MB); // internal
+          f("other2",           OTHER,  BYTES, 222 * MB);
+          f("other3",           OTHER,  COUNT, 777);
+       }
+     }
+  ];
+  for (var i = 0; i < fakeReporters.length; i++) {
+    mgr.registerReporter(fakeReporters[i]);
+  }
+  for (var i = 0; i < fakeMultiReporters.length; i++) {
+    mgr.registerMultiReporter(fakeMultiReporters[i]);
+  }
 
+  var fakeReporters2 = [
     f("2nd", "heap-used",       OTHER, 1000 * MB),
     f("2nd", "heap-unused",     OTHER,  100 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,   498 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,     1 * MB), // dup: merge
-    f("2nd", "explicit/b",      HEAP,   400 * MB),
-    f("2nd", "other1",          OTHER,  777 * MB),
+    f("2nd", "explicit/flip\\the\\backslashes",
+                                HEAP,   200 * MB),
+    f("2nd", "explicit/compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)",
+                                HEAP,   200 * MB),
+    // The escaping of compartment names must prevent this script from running.
+    f("2nd", "danger<script>window.alert(1)</script>",
+                                OTHER,  666 * MB),
+    f("2nd", "other1",          OTHER,  111 * MB),
 
     // kUnknown should be handled gracefully for "heap-used", non-leaf
     // reporters, leaf-reporters, and "other" reporters.
@@ -85,9 +132,10 @@
     f("3rd", "explicit/b",      MAPPED,kUnknown),
     f("3rd", "other1",          OTHER, kUnknown)
   ];
-  for (var i = 0; i < fakeReporters.length; i++) {
-    mgr.registerReporter(fakeReporters[i]);
+  for (var i = 0; i < fakeReporters2.length; i++) {
+    mgr.registerReporter(fakeReporters2[i]);
   }
+  fakeReporters = fakeReporters.concat(fakeReporters2);
   ]]>
   </script>
 
@@ -126,6 +174,9 @@ Other Measurements\n\
 222.00 MB -- other2\n\
 111.00 MB -- other1\n\
 100.00 MB -- heap-unused\n\
+      888 -- other4\n\
+      777 -- other3\n\
+    (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
 \n\
@@ -134,12 +185,14 @@ Explicit Allocations\n\
 ├────499.00 MB (49.90%) -- a\n\
 │    └──499.00 MB (49.90%) -- b\n\
 │       └──499.00 MB (49.90%) -- c\n\
-├────400.00 MB (40.00%) -- b\n\
+├────200.00 MB (20.00%) -- flip/the/backslashes\n\
+├────200.00 MB (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mo...)\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
 1,000.00 MB -- heap-used\n\
-  777.00 MB -- other1\n\
+  666.00 MB -- danger<script>window.alert(1)</script>\n\
+  111.00 MB -- other1\n\
   100.00 MB -- heap-unused\n\
 \n\
 3rd Process\n\
@@ -189,6 +242,9 @@ Other Measurements\n\
 232,783,872 B -- other2\n\
 116,391,936 B -- other1\n\
 104,857,600 B -- heap-unused\n\
+          888 -- other4\n\
+          777 -- other3\n\
+        (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
 \n\
@@ -197,12 +253,14 @@ Explicit Allocations\n\
 ├────523,239,424 B (49.90%) -- a\n\
 │    └──523,239,424 B (49.90%) -- b\n\
 │       └──523,239,424 B (49.90%) -- c\n\
-├────419,430,400 B (40.00%) -- b\n\
+├────209,715,200 B (20.00%) -- flip/the/backslashes\n\
+├────209,715,200 B (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
 1,048,576,000 B -- heap-used\n\
-  814,743,552 B -- other1\n\
+  698,351,616 B -- danger<script>window.alert(1)</script>\n\
+  116,391,936 B -- other1\n\
   104,857,600 B -- heap-unused\n\
 \n\
 3rd Process\n\
@@ -224,13 +282,20 @@ Other Measurements\n\
 
   function finish()
   {
-    // Unregister fake reporters, re-register the real reporters, just in
-    // case subsequent tests rely on them.
+    // Unregister fake reporters and multi-reporters, re-register the real
+    // reporters and multi-reporters, just in case subsequent tests rely on
+    // them.
     for (var i = 0; i < fakeReporters.length; i++) {
       mgr.unregisterReporter(fakeReporters[i]);
     }
+    for (var i = 0; i < fakeMultiReporters.length; i++) {
+      mgr.unregisterMultiReporter(fakeMultiReporters[i]);
+    }
     for (var i = 0; i < realReporters.length; i++) {
       mgr.registerReporter(realReporters[i]);
+    }
+    for (var i = 0; i < realMultiReporters.length; i++) {
+      mgr.registerMultiReporter(realMultiReporters[i]);
     }
     SimpleTest.finish();
   }

@@ -1,5 +1,14 @@
 <svg width="640px" height="480px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.0">
   <title>This is a root SVG element's title</title>
+  <foreignObject>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <body>
+        <svg xmlns="http://www.w3.org/2000/svg" id="svg1">
+          <title>This is a non-root SVG element title</title>
+        </svg>
+      </body>
+    </html>
+  </foreignObject>
   <text id="text1" x="10px" y="32px" font-size="24px">
     This contains only &lt;title&gt;
     <title>

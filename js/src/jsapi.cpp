@@ -666,6 +666,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     }
 
+    atomsCompartment->systemGCChunks = true;
     atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
 
     if (!js_InitAtomState(this))

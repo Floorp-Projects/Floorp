@@ -58,6 +58,9 @@
 #include "nsArrayEnumerator.h"
 #include "nsIRwsService.h"
 #include <stdlib.h>
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 //------------------------------------------------------------------------
 
@@ -296,10 +299,7 @@ void nsMIMEInfoOS2::SetDefaultAppHandle(PRUint32 aHandle)
 nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrefService> thePrefsService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (!thePrefsService) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
   /* Convert SimpleURI to StandardURL */
   nsCOMPtr<nsIURI> uri = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
@@ -314,20 +314,14 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
   nsCAutoString uProtocol;
   uri->GetScheme(uProtocol);
 
-  nsCAutoString prefName;
-  prefName = NS_LITERAL_CSTRING("applications.") + uProtocol;
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
-  nsXPIDLCString prefString;
-  if (NS_SUCCEEDED(rv)) {
-    rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(prefString));
-  }
+  nsCAutoString branchName = NS_LITERAL_CSTRING("applications.") + uProtocol;
+  nsCAutoString prefName = branchName + branchName;
+  nsAdoptingCString prefString = Preferences::GetCString(prefName.get());
 
   nsCAutoString applicationName;
   nsCAutoString parameters;
 
-  if (NS_FAILED(rv) || prefString.IsEmpty()) {
+  if (prefString.IsEmpty()) {
     char szAppFromINI[CCHMAXPATH];
     char szParamsFromINI[MAXINIPARAMLENGTH];
     /* did OS2.INI contain application? */
@@ -385,57 +379,58 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
     /* Put application name in parameters */
     applicationName.Append(prefString);
 
-    prefName.Append(".");
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
-    if (NS_SUCCEEDED(rv) && prefBranch) {
-      rv = prefBranch->GetCharPref("parameters", getter_Copies(prefString));
-      /* If parameters have been specified, use them instead of the separate entities */
-      if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-        parameters.Append(" ");
-        parameters.Append(prefString);
+    branchName.Append(".");
+    prefName = branchName + NS_LITERAL_CSTRING("parameters");
+    prefString = Preferences::GetCString(prefName.get());
+    /* If parameters have been specified, use them instead of the separate entities */
+    if (!prefString.IsEmpty()) {
+      parameters.Append(" ");
+      parameters.Append(prefString);
 
-        PRInt32 pos = parameters.Find(url.get());
-        if (pos != kNotFound) {
-          nsCAutoString uURL;
-          aURL->GetSpec(uURL);
-          NS_UnescapeURL(uURL);
-          uURL.Cut(0, uProtocol.Length()+1);
-          parameters.Replace(pos, url.Length(), uURL);
-          replaced = PR_TRUE;
+      PRInt32 pos = parameters.Find(url.get());
+      if (pos != kNotFound) {
+        nsCAutoString uURL;
+        aURL->GetSpec(uURL);
+        NS_UnescapeURL(uURL);
+        uURL.Cut(0, uProtocol.Length()+1);
+        parameters.Replace(pos, url.Length(), uURL);
+        replaced = PR_TRUE;
+      }
+    } else {
+      /* port */
+      if (!uPort.IsEmpty()) {
+        prefName = branchName + NS_LITERAL_CSTRING("port");
+        prefString = Preferences::GetCString(prefName.get());
+        if (!prefString.IsEmpty()) {
+          parameters.Append(" ");
+          parameters.Append(prefString);
         }
-      } else {
-        /* port */
-        if (!uPort.IsEmpty()) {
-          rv = prefBranch->GetCharPref("port", getter_Copies(prefString));
-          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-            parameters.Append(" ");
-            parameters.Append(prefString);
-          }
+      }
+      /* username */
+      if (!uUsername.IsEmpty()) {
+        prefName = branchName + NS_LITERAL_CSTRING("username");
+        prefString = Preferences::GetCString(prefName.get());
+        if (!prefString.IsEmpty()) {
+          parameters.Append(" ");
+          parameters.Append(prefString);
         }
-        /* username */
-        if (!uUsername.IsEmpty()) {
-          rv = prefBranch->GetCharPref("username", getter_Copies(prefString));
-          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-            parameters.Append(" ");
-            parameters.Append(prefString);
-          }
+      }
+      /* password */
+      if (!uPassword.IsEmpty()) {
+        prefName = branchName + NS_LITERAL_CSTRING("password");
+        prefString = Preferences::GetCString(prefName.get());
+        if (!prefString.IsEmpty()) {
+          parameters.Append(" ");
+          parameters.Append(prefString);
         }
-        /* password */
-        if (!uPassword.IsEmpty()) {
-          rv = prefBranch->GetCharPref("password", getter_Copies(prefString));
-          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-            parameters.Append(" ");
-            parameters.Append(prefString);
-          }
-        }
-        /* host */
-        if (!uHost.IsEmpty()) {
-          rv = prefBranch->GetCharPref("host", getter_Copies(prefString));
-          if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-            parameters.Append(" ");
-            parameters.Append(prefString);
-          }
+      }
+      /* host */
+      if (!uHost.IsEmpty()) {
+        prefName = branchName + NS_LITERAL_CSTRING("host");
+        prefString = Preferences::GetCString(prefName.get());
+        if (!prefString.IsEmpty()) {
+          parameters.Append(" ");
+          parameters.Append(prefString);
         }
       }
     }

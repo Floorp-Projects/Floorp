@@ -63,7 +63,10 @@
 #include "nsIStringBundle.h"
 #include "nsLocalHandlerApp.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 #include <stdlib.h>     // for system()
+
+using namespace mozilla;
 
 //------------------------------------------------------------------------
 
@@ -196,39 +199,27 @@ ParseMIMEType(const nsAString::const_iterator& aStart_iter,
 nsresult
 nsOSHelperAppService::GetFileLocation(const char* aPrefName,
                                       const char* aEnvVarName,
-                                      PRUnichar** aFileLocation) {
+                                      nsAString& aFileLocation) {
   LOG(("-- GetFileLocation.  Pref: '%s'  EnvVar: '%s'\n",
        aPrefName,
        aEnvVarName));
   NS_PRECONDITION(aPrefName, "Null pref name passed; don't do that!");
-  
-  nsresult rv;
-  *aFileLocation = nsnull;
+
+  aFileLocation.Truncate();
   /* The lookup order is:
      1) user pref
      2) env var
      3) pref
   */
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
   /*
     If we have an env var we should check whether the pref is a user
     pref.  If we do not, we don't care.
   */
-  nsCOMPtr<nsISupportsString> prefFileName;
-  PRBool isUserPref = PR_FALSE;
-  prefBranch->PrefHasUserValue(aPrefName, &isUserPref);
-  if (isUserPref) {
-    rv = prefBranch->GetComplexValue(aPrefName,
-                                     NS_GET_IID(nsISupportsString),
-                                     getter_AddRefs(prefFileName));
-    if (NS_SUCCEEDED(rv)) {
-      return prefFileName->ToString(aFileLocation);
-    }
+  if (Preferences::HasUserValue(aPrefName) &&
+      NS_SUCCEEDED(Preferences::GetString(aPrefName, &aFileLocation))) {
+    return NS_OK;
   }
 
   if (aEnvVarName && *aEnvVarName) {
@@ -244,25 +235,13 @@ nsOSHelperAppService::GetFileLocation(const char* aPrefName,
       rv = file->InitWithNativePath(nsDependentCString(prefValue));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsAutoString unicodePath;
-      rv = file->GetPath(unicodePath);
+      rv = file->GetPath(aFileLocation);
       NS_ENSURE_SUCCESS(rv, rv);
-      
-      *aFileLocation = ToNewUnicode(unicodePath);
-      if (!*aFileLocation)
-        return NS_ERROR_OUT_OF_MEMORY;
       return NS_OK;
     }
   }
-  
-  rv = prefBranch->GetComplexValue(aPrefName,
-                                   NS_GET_IID(nsISupportsString),
-                                   getter_AddRefs(prefFileName));
-  if (NS_SUCCEEDED(rv)) {
-    return prefFileName->ToString(aFileLocation);
-  }
-  
-  return rv;
+
+  return Preferences::GetString(aPrefName, &aFileLocation);
 }
 
 
@@ -277,11 +256,10 @@ nsOSHelperAppService::LookUpTypeAndDescription(const nsAString& aFileExtension,
   LOG(("-- LookUpTypeAndDescription for extension '%s'\n",
        NS_LossyConvertUTF16toASCII(aFileExtension).get()));
   nsresult rv = NS_OK;
-  nsXPIDLString mimeFileName;
+  nsAutoString mimeFileName;
 
   rv = GetFileLocation("helpers.private_mime_types_file",
-                       nsnull,
-                       getter_Copies(mimeFileName));
+                       nsnull, mimeFileName);
   if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
     rv = GetTypeAndDescriptionFromMimetypesFile(mimeFileName,
                                                 aFileExtension,
@@ -293,8 +271,7 @@ nsOSHelperAppService::LookUpTypeAndDescription(const nsAString& aFileExtension,
   }
   if (NS_FAILED(rv) || aMajorType.IsEmpty()) {
     rv = GetFileLocation("helpers.global_mime_types_file",
-                         nsnull,
-                         getter_Copies(mimeFileName));
+                         nsnull, mimeFileName);
     if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
       rv = GetTypeAndDescriptionFromMimetypesFile(mimeFileName,
                                                   aFileExtension,
@@ -506,11 +483,10 @@ nsOSHelperAppService::LookUpExtensionsAndDescription(const nsAString& aMajorType
        NS_LossyConvertUTF16toASCII(aMajorType).get(),
        NS_LossyConvertUTF16toASCII(aMinorType).get()));
   nsresult rv = NS_OK;
-  nsXPIDLString mimeFileName;
+  nsAutoString mimeFileName;
 
   rv = GetFileLocation("helpers.private_mime_types_file",
-                       nsnull,
-                       getter_Copies(mimeFileName));
+                       nsnull, mimeFileName);
   if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
     rv = GetExtensionsAndDescriptionFromMimetypesFile(mimeFileName,
                                                       aMajorType,
@@ -522,8 +498,7 @@ nsOSHelperAppService::LookUpExtensionsAndDescription(const nsAString& aMajorType
   }
   if (NS_FAILED(rv) || aFileExtensions.IsEmpty()) {
     rv = GetFileLocation("helpers.global_mime_types_file",
-                         nsnull,
-                         getter_Copies(mimeFileName));
+                         nsnull, mimeFileName);
     if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
       rv = GetExtensionsAndDescriptionFromMimetypesFile(mimeFileName,
                                                         aMajorType,
@@ -909,11 +884,10 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
        NS_LossyConvertUTF16toASCII(aMajorType).get(),
        NS_LossyConvertUTF16toASCII(aMinorType).get()));
   nsresult rv = NS_OK;
-  nsXPIDLString mailcapFileName;
+  nsAutoString mailcapFileName;
 
   rv = GetFileLocation("helpers.private_mailcap_file",
-                       "PERSONAL_MAILCAP",
-                       getter_Copies(mailcapFileName));
+                       "PERSONAL_MAILCAP", mailcapFileName);
   if (NS_SUCCEEDED(rv) && !mailcapFileName.IsEmpty()) {
     rv = GetHandlerAndDescriptionFromMailcapFile(mailcapFileName,
                                                  aMajorType,
@@ -927,8 +901,7 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
   }
   if (NS_FAILED(rv) || aHandler.IsEmpty()) {
     rv = GetFileLocation("helpers.global_mailcap_file",
-                         "MAILCAP",
-                         getter_Copies(mailcapFileName));
+                         "MAILCAP", mailcapFileName);
     if (NS_SUCCEEDED(rv) && !mailcapFileName.IsEmpty()) {
       rv = GetHandlerAndDescriptionFromMailcapFile(mailcapFileName,
                                                    aMajorType,
@@ -1145,22 +1118,16 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 
   /* if applications.protocol is in prefs, then we have an external protocol handler */
   nsresult rv;
-  nsCAutoString prefName;
-  prefName = NS_LITERAL_CSTRING("applications.") + nsDependentCString(aProtocolScheme);
+  nsCAutoString branchName =
+    NS_LITERAL_CSTRING("applications.") + nsDependentCString(aProtocolScheme);
+  nsCAutoString prefName = branchName + branchName;
 
-  nsCOMPtr<nsIPrefService> thePrefsService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
-    if (NS_SUCCEEDED(rv)) {
-      nsXPIDLCString prefString;
-      rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(prefString));
-      *aHandlerExists = NS_SUCCEEDED(rv) && !prefString.IsEmpty();
-      if (*aHandlerExists) {
-        return NS_OK;
-      }
-    }
+  nsAdoptingCString prefString = Preferences::GetCString(prefName.get());
+  *aHandlerExists = !prefString.IsEmpty();
+  if (*aHandlerExists) {
+    return NS_OK;
   }
+
   /* Check the OS/2 INI for the protocol */
   char szAppFromINI[CCHMAXPATH];
   char szParamsFromINI[MAXINIPARAMLENGTH];
@@ -1642,14 +1609,12 @@ NS_IMETHODIMP
 nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrefService> thePrefsService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString prefName = NS_LITERAL_CSTRING("applications.") + aScheme;
-  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCAutoString branchName = NS_LITERAL_CSTRING("applications.") + aScheme;
   nsCAutoString applicationName;
 
-  rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
-  if (NS_FAILED(rv)) {
+  nsCAutoString prefName = branchName + branchName;
+  nsAdoptingCString prefString = Preferences::GetCString(prefName.get());
+  if (!prefString) { // failed
     char szAppFromINI[CCHMAXPATH];
     char szParamsFromINI[MAXINIPARAMLENGTH];
     /* did OS2.INI contain application? */
@@ -1661,12 +1626,8 @@ nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsASt
     } else {
       return NS_ERROR_NOT_AVAILABLE;
     }
-  } else {
-    nsXPIDLCString prefString;
-    rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(prefString));
-    if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
-      applicationName.Append(prefString);
-    }
+  } else if (!prefString.IsEmpty()) { // succeeded and not empty
+    applicationName.Append(prefString);
   }
 
 

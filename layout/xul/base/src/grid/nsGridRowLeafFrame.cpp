@@ -75,12 +75,7 @@ nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
   // if our columns have made our padding larger add it in.
   nsresult rv = nsBoxFrame::GetBorderAndPadding(aBorderAndPadding);
 
-  nsCOMPtr<nsIBoxLayout> layout;
-  GetLayoutManager(getter_AddRefs(layout));
-  if (!layout)
-    return rv;
-
-  nsCOMPtr<nsIGridPart> part = do_QueryInterface(layout);
+  nsIGridPart* part = nsGrid::GetPartFromBox(this);
   if (!part)
     return rv;
     
