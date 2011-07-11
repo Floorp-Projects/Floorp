@@ -79,7 +79,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIViewManager.h"
 #include "nsDOMError.h"
-#include "nsIMenuFrame.h"
 
 using namespace mozilla;
 
