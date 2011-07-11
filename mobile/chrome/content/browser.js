@@ -1493,7 +1493,7 @@ Browser.WebProgress.prototype = {
           tab.hostChanged = true;
           tab.browser.lastLocation = location;
           tab.browser.userTypedValue = "";
-          tab.browser.appIcon = null;
+          tab.browser.appIcon = { href: null, size:-1 };
 
 #ifdef MOZ_CRASH_REPORTER
           if (CrashReporter.enabled)
