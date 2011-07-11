@@ -60,7 +60,7 @@ class nsListBoxBodyFrame : public nsBoxFrame,
                            public nsIReflowCallback
 {
   nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                     nsIBoxLayout* aLayoutManager);
+                     nsBoxLayout* aLayoutManager);
   virtual ~nsListBoxBodyFrame();
 
 public:

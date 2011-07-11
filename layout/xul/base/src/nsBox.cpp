@@ -53,7 +53,7 @@
 #include "nsIDocument.h"
 #include "nsITheme.h"
 #include "nsIServiceManager.h"
-#include "nsIBoxLayout.h"
+#include "nsBoxLayout.h"
 #include "FrameLayerBuilder.h"
 
 using namespace mozilla;
