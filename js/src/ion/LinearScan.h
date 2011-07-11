@@ -56,7 +56,7 @@ namespace ion {
 
 struct LOperand
 {
-public:
+  public:
     LUse *use;
     LInstruction *ins;
 
@@ -69,21 +69,45 @@ public:
 
 class VirtualRegister;
 
+/*
+ * Represents with better-than-instruction precision a position in the
+ * instruction stream.
+ *
+ * An issue comes up when dealing live intervals as to how to represent
+ * information such as "this register is only needed for the input of
+ * this instruction, it can be clobbered in the output". Just having ranges
+ * of instruction IDs is insufficiently expressive to denote all possibilities.
+ * This class solves this issue by associating an extra bit with the instruction
+ * ID which indicates whether the position is the input half or output half of
+ * an instruction. This way, an interval that ends in the input halg of an
+ * instruction will not intersect with the interval that starts in its output
+ * half, so they could be assigned the same register without requiring a special
+ * case in the register allocator.
+ *
+ * Doing this also allows live intervals to be inclusive, which makes much of
+ * the legwork cleaner. Temporaries and clobbers are represented as intervals
+ * consisting only of the output half of an instruction, and thus require no
+ * special consideration.
+ */
 class CodePosition
 {
-private:
-    CodePosition(const uint32 &bits) :
-      bits_(bits)
+  private:
+    CodePosition(const uint32 &bits)
+      : bits_(bits)
     { }
 
     static const unsigned int INSTRUCTION_SHIFT = 1;
     static const unsigned int SUBPOSITION_MASK = 1;
     uint32 bits_;
 
-public:
+  public:
     static const CodePosition MAX;
     static const CodePosition MIN;
 
+    /*
+     * This is the half of the instruction this code position represents, as
+     * described in the huge comment above.
+     */
     enum SubPosition {
         INPUT,
         OUTPUT
@@ -137,13 +161,23 @@ public:
     }
 };
 
+/*
+ * A live interval is a set of disjoint ranges of code positions where a
+ * virtual register is live. Linear scan register allocation operates on
+ * these intervals, splitting them as necessary and assigning allocations
+ * to them as it runs.
+ */
 class LiveInterval : public InlineListNode<LiveInterval>
 {
-public:
+  public:
+    /*
+     * A range is a contiguous sequence of CodePositions where the virtual
+     * register associated with this interval is live.
+     */
     struct Range {
-        Range(CodePosition f, CodePosition t) :
-          from(f),
-          to(t)
+        Range(CodePosition f, CodePosition t)
+          : from(f),
+            to(t)
         { }
         CodePosition from;
         CodePosition to;
@@ -153,20 +187,18 @@ public:
         FIXED
     };
 
-private:
+  private:
     Vector<Range, 1, IonAllocPolicy> ranges_;
     LAllocation alloc_;
     VirtualRegister *reg_;
     uint32 flags_;
 
-public:
+  public:
 
     LiveInterval(VirtualRegister *reg)
       : reg_(reg),
         flags_(0)
     { }
-
-    static LiveInterval *New(VirtualRegister *reg);
 
     bool addRange(CodePosition from, CodePosition to);
 
@@ -209,9 +241,14 @@ public:
     bool splitFrom(CodePosition pos, LiveInterval *after);
 };
 
+/*
+ * Represents all of the register allocation state associated with a virtual
+ * register, including all associated intervals and pointers to relevant LIR
+ * structures.
+ */
 class VirtualRegister : public TempObject
 {
-private:
+  private:
     uint32 reg_;
     LBlock *block_;
     LInstruction *ins_;
@@ -219,12 +256,12 @@ private:
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
     Vector<LOperand, 0, IonAllocPolicy> uses_;
 
-public:
-    VirtualRegister() :
-      reg_(0),
-      block_(NULL),
-      ins_(NULL),
-      intervals_()
+  public:
+    VirtualRegister()
+      : reg_(0),
+        block_(NULL),
+        ins_(NULL),
+        intervals_()
     { }
 
     bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
@@ -232,36 +269,29 @@ public:
         block_ = block;
         ins_ = ins;
         def_ = def;
-        LiveInterval *initial = LiveInterval::New(this);
+        LiveInterval *initial = new LiveInterval(this);
         if (!initial)
             return false;
         return intervals_.append(initial);
     }
-
     uint32 reg() {
         return reg_;
     }
-
     LBlock *block() {
         return block_;
     }
-
     LInstruction *ins() {
         return ins_;
     }
-
     LDefinition *def() {
         return def_;
     }
-
     size_t numIntervals() {
         return intervals_.length();
     }
-
     LiveInterval *getInterval(size_t i) {
         return intervals_[i];
     }
-
     bool addInterval(LiveInterval *interval) {
         JS_ASSERT(interval->numRanges());
 
@@ -273,15 +303,12 @@ public:
         }
         return intervals_.insert(i, interval);
     }
-
     size_t numUses() {
         return uses_.length();
     }
-
     LOperand *getUse(size_t i) {
         return &uses_[i];
     }
-
     bool addUse(LOperand operand) {
         return uses_.append(operand);
     }
@@ -290,7 +317,6 @@ public:
     CodePosition nextUseAfter(CodePosition pos);
     CodePosition nextIncompatibleUseAfter(CodePosition after, LAllocation alloc);
     LiveInterval *getFirstInterval();
-
 };
 
 typedef HashMap<uint32,
@@ -305,9 +331,9 @@ typedef HashMap<uint32,
 
 typedef InlineList<LiveInterval>::iterator IntervalIterator;
 
-class RegisterAllocator
+class LinearScanAllocator
 {
-private:
+  private:
     friend class C1Spewer;
     friend class JSONSpewer;
 
@@ -332,7 +358,9 @@ private:
     UnhandledQueue unhandled;
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
+#ifdef DEBUG
     InlineList<LiveInterval> handled;
+#endif
     BitSet **liveIn;
     CodePosition *freeUntilPos;
     CodePosition *nextUsePos;
@@ -353,6 +381,14 @@ private:
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
 
+#ifdef DEBUG
+    void validateIntervals();
+    void validateAllocations();
+#else
+    inline void validateIntervals() { };
+    inline void validateAllocations() { };
+#endif
+
     CodePosition outputOf(uint32 pos) {
         return CodePosition(pos, CodePosition::OUTPUT);
     }
@@ -366,8 +402,8 @@ private:
         return CodePosition(ins->id(), CodePosition::INPUT);
     }
 
-public:
-    RegisterAllocator(LIRGenerator *lir, LIRGraph &graph)
+  public:
+    LinearScanAllocator(LIRGenerator *lir, LIRGraph &graph)
       : lir(lir),
         graph(graph)
     { }

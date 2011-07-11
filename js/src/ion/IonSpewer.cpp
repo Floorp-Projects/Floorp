@@ -76,7 +76,7 @@ IonSpewer::spewPass(const char *pass)
 }
 
 void
-IonSpewer::spewPass(const char *pass, RegisterAllocator *ra)
+IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 {
     c1Spewer.spewCFG(pass);
     c1Spewer.spewIntervals(pass, ra);
