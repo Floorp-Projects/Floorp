@@ -73,8 +73,9 @@ struct AnyRegisterID {
     inline JSC::MacroAssembler::RegisterID reg();
     inline JSC::MacroAssembler::FPRegisterID fpreg();
 
-    bool isReg() { return reg_ < JSC::MacroAssembler::TotalRegisters; }
     bool isSet() { return reg_ != unsigned(-1); }
+    bool isReg() { return reg_ < JSC::MacroAssembler::TotalRegisters; }
+    bool isFPReg() { return isSet() && !isReg(); }
 
     inline const char * name();
 

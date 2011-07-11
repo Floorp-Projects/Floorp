@@ -42,6 +42,7 @@
 
 #include "jscntxt.h"
 #include "jstypedarray.h"
+#include "jstypedarrayinlines.h"
 
 #include "jsnuminlines.h"
 
@@ -55,62 +56,6 @@ typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 typedef JSC::MacroAssembler::Jump Jump;
 typedef JSC::MacroAssembler::Imm32 Imm32;
 typedef JSC::MacroAssembler::ImmDouble ImmDouble;
-
-template <typename T>
-static void
-LoadFromTypedArray(Assembler &masm, js::TypedArray *tarray, T address,
-                   RegisterID typeReg, RegisterID dataReg)
-{
-    switch (tarray->type) {
-      case js::TypedArray::TYPE_INT8:
-        masm.load8SignExtend(address, dataReg);
-        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
-        break;
-      case js::TypedArray::TYPE_UINT8:
-      case js::TypedArray::TYPE_UINT8_CLAMPED:
-        masm.load8ZeroExtend(address, dataReg);
-        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
-        break;
-      case js::TypedArray::TYPE_INT16:
-        masm.load16SignExtend(address, dataReg);
-        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
-        break;
-      case js::TypedArray::TYPE_UINT16:
-        masm.load16(address, dataReg);
-        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
-        break;
-      case js::TypedArray::TYPE_INT32:
-        masm.load32(address, dataReg);
-        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
-        break;
-      case js::TypedArray::TYPE_UINT32:
-      {
-        masm.load32(address, dataReg);
-        masm.move(ImmType(JSVAL_TYPE_INT32), typeReg);
-        Jump safeInt = masm.branch32(Assembler::Below, dataReg, Imm32(0x80000000));
-        masm.convertUInt32ToDouble(dataReg, Registers::FPConversionTemp);
-        masm.breakDouble(Registers::FPConversionTemp, typeReg, dataReg);
-        safeInt.linkTo(masm.label(), &masm);
-        break;
-      }
-      case js::TypedArray::TYPE_FLOAT32:
-      case js::TypedArray::TYPE_FLOAT64:
-      {
-        if (tarray->type == js::TypedArray::TYPE_FLOAT32)
-            masm.loadFloat(address, Registers::FPConversionTemp);
-        else
-            masm.loadDouble(address, Registers::FPConversionTemp);
-        // Make sure NaN gets canonicalized.
-        Jump notNaN = masm.branchDouble(Assembler::DoubleEqual,
-                                        Registers::FPConversionTemp,
-                                        Registers::FPConversionTemp);
-        masm.loadStaticDouble(&js_NaN, Registers::FPConversionTemp, dataReg);
-        notNaN.linkTo(masm.label(), &masm);
-        masm.breakDouble(Registers::FPConversionTemp, typeReg, dataReg);
-        break;
-      }
-    }
-}
 
 static inline bool
 ConstantFoldForFloatArray(JSContext *cx, ValueRemat *vr)
@@ -150,16 +95,6 @@ ConstantFoldForFloatArray(JSContext *cx, ValueRemat *vr)
     }
     *vr = ValueRemat::FromConstant(DoubleValue(d));
     return true;
-}
-
-static inline int32
-ClampIntForUint8Array(int32 x)
-{
-    if (x < 0)
-        return 0;
-    if (x > 255)
-        return 255;
-    return x;
 }
 
 static inline bool
@@ -207,39 +142,6 @@ ConstantFoldForIntArray(JSContext *cx, js::TypedArray *tarray, ValueRemat *vr)
     *vr = ValueRemat::FromConstant(Int32Value(i32));
 
     return true;
-}
-
-template <typename S, typename T>
-static void
-StoreToIntArray(Assembler &masm, js::TypedArray *tarray, S src, T address)
-{
-    switch (tarray->type) {
-      case js::TypedArray::TYPE_INT8:
-      case js::TypedArray::TYPE_UINT8:
-      case js::TypedArray::TYPE_UINT8_CLAMPED:
-        masm.store8(src, address);
-        break;
-      case js::TypedArray::TYPE_INT16:
-      case js::TypedArray::TYPE_UINT16:
-        masm.store16(src, address);
-        break;
-      case js::TypedArray::TYPE_INT32:
-      case js::TypedArray::TYPE_UINT32:
-        masm.store32(src, address);
-        break;
-      default:
-        JS_NOT_REACHED("unknown int array type");
-    }
-}
-
-template <typename S, typename T>
-static void
-StoreToFloatArray(Assembler &masm, js::TypedArray *tarray, S src, T address)
-{
-    if (tarray->type == js::TypedArray::TYPE_FLOAT32)
-        masm.storeFloat(src, address);
-    else
-        masm.storeDouble(src, address);
 }
 
 // Generate code that will ensure a dynamically typed value, pinned in |vr|,
@@ -293,26 +195,8 @@ GenConversionForIntArray(Assembler &masm, js::TypedArray *tarray, const ValueRem
     }
 
     // Performing clamping, if needed.
-    if (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED) {
-        //     cmp dr, 0
-        //     jge _min
-        //     mov dr, 0
-        //     jump _done
-        // _min:
-        //     cmp dr, 255
-        //     jle _done
-        //     mov dr, 255
-        // _done:
-        //
-        Jump j = masm.branch32(Assembler::GreaterThanOrEqual, vr.dataReg(), Imm32(0));
-        masm.move(Imm32(0), vr.dataReg());
-        Jump done = masm.jump();
-        j.linkTo(masm.label(), &masm);
-        j = masm.branch32(Assembler::LessThanOrEqual, vr.dataReg(), Imm32(255));
-        masm.move(Imm32(255), vr.dataReg());
-        j.linkTo(masm.label(), &masm);
-        done.linkTo(masm.label(), &masm);
-    }
+    if (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED)
+        masm.clampInt32ToUint8(vr.dataReg());
 }
 
 // Generate code that will ensure a dynamically typed value, pinned in |vr|,
@@ -513,9 +397,9 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
         saveLHS.restore();
 
         if (vr.isConstant())
-            StoreToIntArray(masm, tarray, Imm32(vr.value().toInt32()), address);
+            masm.storeToTypedIntArray(tarray->type, Imm32(vr.value().toInt32()), address);
         else
-            StoreToIntArray(masm, tarray, vr.dataReg(), address);
+            masm.storeToTypedIntArray(tarray->type, vr.dataReg(), address);
 
         // Note that this will finish restoring the damage from the
         // earlier register swap.
@@ -536,9 +420,9 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
             return false;
         GenConversionForFloatArray(masm, tarray, vr, temp, saveMask);
         if (vr.isConstant())
-            StoreToFloatArray(masm, tarray, ImmDouble(vr.value().toDouble()), address);
+            masm.storeToTypedFloatArray(tarray->type, ImmDouble(vr.value().toDouble()), address);
         else
-            StoreToFloatArray(masm, tarray, temp, address);
+            masm.storeToTypedFloatArray(tarray->type, temp, address);
         break;
       }
     }
