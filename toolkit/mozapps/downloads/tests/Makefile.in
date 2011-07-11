@@ -54,3 +54,6 @@ XPCSHELL_TESTS = \
 DIRS += chrome
 
 include $(topsrcdir)/config/rules.mk
+
+libs:: 
+	$(INSTALL) $(topsrcdir)/testing/mochitest/MockFilePicker.jsm $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
