@@ -864,6 +864,248 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
             loadDynamicSlot(objReg, obj->dynamicSlotIndex(shape->slot), typeReg, dataReg);
     }
 
+    // Load a value from a typed array's packed data vector into dataReg.
+    // This function expects the following combinations of typeReg, dataReg and tempReg:
+    // 1) for all INT arrays other than UINT32:
+    //    - dataReg is a GP-register
+    //    - typeReg is optional
+    //    - tempReg is not set
+    // 2) for UINT32:
+    //    - dataReg is either a FP-register or a GP-register
+    //    - typeReg is set if dataReg is a GP-register
+    //    - tempReg is set if dataReg is a FP-register
+    // 3) for FLOAT32 and FLOAT64:
+    //    - dataReg is either a FP-register or a GP-register
+    //    - typeReg is set if dataReg is a GP-register
+    //    - tempReg is not set
+    template <typename T>
+    void loadFromTypedArray(int atype, T address, MaybeRegisterID typeReg,
+                            AnyRegisterID dataReg, MaybeRegisterID tempReg)
+    {
+        // If dataReg is an FP-register we don't use typeReg.
+        JS_ASSERT_IF(dataReg.isFPReg(), !typeReg.isSet());
+
+        // We only need tempReg for Uint32Array and only if dataReg is an FP-register.
+        JS_ASSERT_IF(atype != js::TypedArray::TYPE_UINT32 || dataReg.isReg(), !tempReg.isSet());
+
+        switch (atype) {
+          case js::TypedArray::TYPE_INT8:
+            load8SignExtend(address, dataReg.reg());
+            if (typeReg.isSet())
+                move(ImmType(JSVAL_TYPE_INT32), typeReg.reg());
+            break;
+          case js::TypedArray::TYPE_UINT8:
+          case js::TypedArray::TYPE_UINT8_CLAMPED:
+            load8ZeroExtend(address, dataReg.reg());
+            if (typeReg.isSet())
+                move(ImmType(JSVAL_TYPE_INT32), typeReg.reg());
+            break;
+          case js::TypedArray::TYPE_INT16:
+            load16SignExtend(address, dataReg.reg());
+            if (typeReg.isSet())
+                move(ImmType(JSVAL_TYPE_INT32), typeReg.reg());
+            break;
+          case js::TypedArray::TYPE_UINT16:
+            load16(address, dataReg.reg());
+            if (typeReg.isSet())
+                move(ImmType(JSVAL_TYPE_INT32), typeReg.reg());
+            break;
+          case js::TypedArray::TYPE_INT32:
+            load32(address, dataReg.reg());
+            if (typeReg.isSet())
+                move(ImmType(JSVAL_TYPE_INT32), typeReg.reg());
+            break;
+          case js::TypedArray::TYPE_UINT32:
+          {
+            // For Uint32Array the result is either int32 or double.
+            // If dataReg is a GP-register, load a double or int32 into dataReg/typeReg.
+            // If dataReg is a FP-register, load the value as double.
+            if (dataReg.isReg()) {
+                load32(address, dataReg.reg());
+                move(ImmType(JSVAL_TYPE_INT32), typeReg.reg());
+                Jump safeInt = branch32(Assembler::Below, dataReg.reg(), Imm32(0x80000000));
+                convertUInt32ToDouble(dataReg.reg(), Registers::FPConversionTemp);
+                breakDouble(Registers::FPConversionTemp, typeReg.reg(), dataReg.reg());
+                safeInt.linkTo(label(), this);
+            } else {
+                load32(address, tempReg.reg());
+                convertUInt32ToDouble(tempReg.reg(), dataReg.fpreg());
+            }
+            break;
+          }
+          case js::TypedArray::TYPE_FLOAT32:
+          case js::TypedArray::TYPE_FLOAT64:
+          {
+            FPRegisterID fpreg = dataReg.isReg()
+                               ? Registers::FPConversionTemp
+                               : dataReg.fpreg();
+            if (atype == js::TypedArray::TYPE_FLOAT32)
+                loadFloat(address, fpreg);
+            else
+                loadDouble(address, fpreg);
+            // Make sure NaN gets canonicalized. If dataReg is not an FP-register
+            // we have to use loadStaticDouble as we were probably called from an
+            // IC and we can't use slowLoadConstantDouble.
+            Jump notNaN = branchDouble(Assembler::DoubleEqual, fpreg, fpreg);
+            if (dataReg.isReg())
+                loadStaticDouble(&js_NaN, Registers::FPConversionTemp, dataReg.reg());
+            else
+                slowLoadConstantDouble(js_NaN, fpreg);
+            notNaN.linkTo(label(), this);
+            if (dataReg.isReg())
+                breakDouble(Registers::FPConversionTemp, typeReg.reg(), dataReg.reg());
+            break;
+          }
+        }
+    }
+
+    void loadFromTypedArray(int atype, RegisterID objReg, Int32Key key,
+                            MaybeRegisterID typeReg, AnyRegisterID dataReg,
+                            MaybeRegisterID tempReg)
+    {
+        int shift = TypedArray::slotWidth(atype);
+
+        if (key.isConstant()) {
+            Address addr(objReg, key.index() * shift);
+            loadFromTypedArray(atype, addr, typeReg, dataReg, tempReg);
+        } else {
+            Assembler::Scale scale = Assembler::TimesOne;
+            switch (shift) {
+              case 2:
+                scale = Assembler::TimesTwo;
+                break;
+              case 4:
+                scale = Assembler::TimesFour;
+                break;
+              case 8:
+                scale = Assembler::TimesEight;
+                break;
+            }
+            BaseIndex addr(objReg, key.reg(), scale);
+            loadFromTypedArray(atype, addr, typeReg, dataReg, tempReg);
+        }
+    }
+
+    template <typename S, typename T>
+    void storeToTypedIntArray(int atype, S src, T address)
+    {
+        switch (atype) {
+          case js::TypedArray::TYPE_INT8:
+          case js::TypedArray::TYPE_UINT8:
+          case js::TypedArray::TYPE_UINT8_CLAMPED:
+            store8(src, address);
+            break;
+          case js::TypedArray::TYPE_INT16:
+          case js::TypedArray::TYPE_UINT16:
+            store16(src, address);
+            break;
+          case js::TypedArray::TYPE_INT32:
+          case js::TypedArray::TYPE_UINT32:
+            store32(src, address);
+            break;
+          default:
+            JS_NOT_REACHED("unknown int array type");
+        }
+    }
+
+    template <typename S, typename T>
+    void storeToTypedFloatArray(int atype, S src, T address)
+    {
+        if (atype == js::TypedArray::TYPE_FLOAT32)
+            storeFloat(src, address);
+        else
+            storeDouble(src, address);
+    }
+
+    template <typename T>
+    void storeToTypedArray(int atype, ValueRemat vr, T address)
+    {
+        if (atype == js::TypedArray::TYPE_FLOAT32 || atype == js::TypedArray::TYPE_FLOAT64) {
+            if (vr.isConstant())
+                storeToTypedFloatArray(atype, ImmDouble(vr.value().toDouble()), address);
+            else
+                storeToTypedFloatArray(atype, vr.fpReg(), address);
+        } else {
+            if (vr.isConstant())
+                storeToTypedIntArray(atype, Imm32(vr.value().toInt32()), address);
+            else
+                storeToTypedIntArray(atype, vr.dataReg(), address);
+        }
+    }
+
+    void storeToTypedArray(int atype, RegisterID objReg, Int32Key key, ValueRemat vr)
+    {
+        int shift = TypedArray::slotWidth(atype);
+        if (key.isConstant()) {
+            Address addr(objReg, key.index() * shift);
+            storeToTypedArray(atype, vr, addr);
+        } else {
+            Assembler::Scale scale = Assembler::TimesOne;
+            switch (shift) {
+            case 2:
+                scale = Assembler::TimesTwo;
+                break;
+            case 4:
+                scale = Assembler::TimesFour;
+                break;
+            case 8:
+                scale = Assembler::TimesEight;
+                break;
+            }
+            BaseIndex addr(objReg, key.reg(), scale);
+            storeToTypedArray(atype, vr, addr);
+        }
+    }
+
+    void clampInt32ToUint8(RegisterID reg)
+    {
+        Jump j = branch32(Assembler::GreaterThanOrEqual, reg, Imm32(0));
+        move(Imm32(0), reg);
+        Jump done = jump();
+        j.linkTo(label(), this);
+        j = branch32(Assembler::LessThanOrEqual, reg, Imm32(255));
+        move(Imm32(255), reg);
+        j.linkTo(label(), this);
+        done.linkTo(label(), this);
+    }
+
+    // Inline version of js_TypedArray_uint8_clamp_double.
+    void clampDoubleToUint8(FPRegisterID fpReg, FPRegisterID fpTemp, RegisterID reg)
+    {
+        JS_ASSERT(fpTemp != Registers::FPConversionTemp);
+
+        // <= 0 or NaN ==> 0
+        zeroDouble(fpTemp);
+        Jump positive = branchDouble(Assembler::DoubleGreaterThan, fpReg, fpTemp);
+        move(Imm32(0), reg);
+        Jump done1 = jump();
+
+        // Add 0.5 and truncate.
+        positive.linkTo(label(), this);
+        slowLoadConstantDouble(0.5, fpTemp);
+        addDouble(fpReg, fpTemp);
+        Jump notInt = branchTruncateDoubleToInt32(fpTemp, reg);
+
+        // > 255 ==> 255
+        Jump inRange = branch32(Assembler::BelowOrEqual, reg, Imm32(255));
+        notInt.linkTo(label(), this);
+        move(Imm32(255), reg);
+        Jump done2 = jump();
+
+        // Check if we had a tie.
+        inRange.linkTo(label(), this);
+        convertInt32ToDouble(reg, Registers::FPConversionTemp);
+        Jump done3 = branchDouble(Assembler::DoubleNotEqual, fpTemp, Registers::FPConversionTemp);
+
+        // It was a tie. Mask out the ones bit to get an even value.
+        // See js_TypedArray_uint8_clamp_double for the reasoning behind this.
+        and32(Imm32(~1), reg);
+
+        done1.linkTo(label(), this);
+        done2.linkTo(label(), this);
+        done3.linkTo(label(), this);
+    }
+
     Address objPropAddress(JSObject *obj, RegisterID objReg, uint32 slot)
     {
         if (obj->isFixedSlot(slot))
