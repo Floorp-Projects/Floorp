@@ -649,10 +649,6 @@ nsPresContext::GetUserPreferences()
     // get a presshell.
     return;
   }
-    
-  mFontScaler =
-    Preferences::GetInt("browser.display.base_font_scaler", mFontScaler);
-
 
   mAutoQualityMinFontSizePixelsPref =
     Preferences::GetInt("browser.display.auto_quality_min_font_size");
