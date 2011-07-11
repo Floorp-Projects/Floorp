@@ -2460,28 +2460,13 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     // Load the array's packed data vector.
     masm.loadPtr(Address(objReg, js::TypedArray::dataOffset()), objReg);
 
+    Int32Key key = idRemat.isConstant()
+                 ? Int32Key::FromConstant(v.toInt32())
+                 : Int32Key::FromRegister(idRemat.dataReg());
+
     js::TypedArray *tarray = js::TypedArray::fromJSObject(obj);
-    int shift = tarray->slotWidth();
-    if (idRemat.isConstant()) {
-        int32 index = v.toInt32();
-        Address addr(objReg, index * shift);
-        LoadFromTypedArray(masm, tarray, addr, typeReg, objReg);
-    } else {
-        Assembler::Scale scale = Assembler::TimesOne;
-        switch (shift) {
-          case 2:
-            scale = Assembler::TimesTwo;
-            break;
-          case 4:
-            scale = Assembler::TimesFour;
-            break;
-          case 8:
-            scale = Assembler::TimesEight;
-            break;
-        }
-        BaseIndex addr(objReg, idRemat.dataReg(), scale);
-        LoadFromTypedArray(masm, tarray, addr, typeReg, objReg);
-    }
+    MaybeRegisterID tempReg;
+    masm.loadFromTypedArray(tarray->type, objReg, key, typeReg, objReg, tempReg);
 
     Jump done = masm.jump();
 

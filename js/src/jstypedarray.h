@@ -191,7 +191,11 @@ struct JS_FRIEND_API(TypedArray) {
     void *data;
 
     inline int slotWidth() const {
-        switch (type) {
+        return slotWidth(type);
+    }
+
+    static inline uint32 slotWidth(int atype) {
+        switch (atype) {
           case js::TypedArray::TYPE_INT8:
           case js::TypedArray::TYPE_UINT8:
           case js::TypedArray::TYPE_UINT8_CLAMPED:
@@ -206,7 +210,7 @@ struct JS_FRIEND_API(TypedArray) {
           case js::TypedArray::TYPE_FLOAT64:
             return 8;
           default:
-            JS_NOT_REACHED("invalid typed array");
+            JS_NOT_REACHED("invalid typed array type");
             return 0;
         }
     }
