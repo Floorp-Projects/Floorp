@@ -250,6 +250,9 @@ class AutoScriptUntrapper {
 public:
     AutoScriptUntrapper(JSContext *cx, JSScript *script, jsbytecode **pc)
         : cx(cx), script(script), origPC(*pc)
+#ifdef DEBUG
+          , assertionBefore(false)
+#endif
     {
         jsbytecode *newCode = js_UntrapScriptCode(cx, script);
         if (newCode == script->code) {
