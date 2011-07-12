@@ -132,6 +132,19 @@ class Assembler : public AssemblerX86Shared
               JS_NOT_REACHED("unexpected operand kind");
           }
       }
+      void movq(const Register &src, const Operand &dest) {
+          switch (dest.kind()) {
+            case Operand::REG:
+              masm.movq_rr(src.code(), dest.reg());
+              break;
+            case Operand::REG_DISP:
+              masm.movq_rm(src.code(), dest.disp(), dest.base());
+              break;
+            default:
+              JS_NOT_REACHED("unexpected operand kind");
+          }
+      }
+
       void addq(Imm32 imm, const Operand &dest) {
           switch (dest.kind()) {
             case Operand::REG:

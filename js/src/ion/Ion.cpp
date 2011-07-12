@@ -180,12 +180,10 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     spew.spewPass("Allocate Registers", &regalloc);
 #endif
 
-#if 0
     CodeGenerator codegen(&builder, lir);
     if (!codegen.generate())
         return false;
     spew.spewPass("Code generation");
-#endif
 
     spew.finish();
 
