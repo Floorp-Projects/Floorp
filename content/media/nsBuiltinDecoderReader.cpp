@@ -190,8 +190,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
 }
 
 nsBuiltinDecoderReader::nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder)
-  : mReentrantMonitor("media.decoderreader"),
-    mDecoder(aDecoder)
+  : mDecoder(aDecoder)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoderReader);
 }
@@ -275,7 +274,6 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
         PRBool skip = PR_FALSE;
         eof = !DecodeVideoFrame(skip, 0);
         {
-          ReentrantMonitorAutoExit exitReaderMon(mReentrantMonitor);
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
           if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
             return NS_ERROR_FAILURE;
@@ -300,7 +298,6 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       }
     }
     {
-      ReentrantMonitorAutoExit exitReaderMon(mReentrantMonitor);
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
       if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
         return NS_ERROR_FAILURE;
@@ -320,7 +317,6 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       while (!eof && mAudioQueue.GetSize() == 0) {
         eof = !DecodeAudioData();
         {
-          ReentrantMonitorAutoExit exitReaderMon(mReentrantMonitor);
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
           if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
             return NS_ERROR_FAILURE;

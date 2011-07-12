@@ -398,12 +398,10 @@ private:
   PRBool mEndOfStream;
 };
 
-// Encapsulates the decoding and reading of media data. Reading can be done
-// on either the state machine thread (when loading and seeking) or on
-// the reader thread (when it's reading and decoding). The reader encapsulates
-// the reading state and maintains it's own monitor to ensure thread safety
-// and correctness. Never hold the nsBuiltinDecoder's monitor when calling into
-// this class.
+// Encapsulates the decoding and reading of media data. Reading can only be
+// done on the decode thread thread. Never hold the decoder monitor when
+// calling into this class. Unless otherwise specified, methods and fields of
+// this class can only be accessed on the decode thread.
 class nsBuiltinDecoderReader : public nsRunnable {
 public:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
@@ -452,10 +450,12 @@ public:
                         PRInt64 aEndTime,
                         PRInt64 aCurrentTime) = 0;
 
-  // Queue of audio samples. This queue is threadsafe.
+  // Queue of audio samples. This queue is threadsafe, and is accessed from
+  // the audio, decoder, state machine, and main threads.
   MediaQueue<SoundData> mAudioQueue;
 
-  // Queue of video samples. This queue is threadsafe.
+  // Queue of video samples. This queue is threadsafe, and is accessed from
+  // the decoder, state machine, and main threads.
   MediaQueue<VideoData> mVideoQueue;
 
   // Populates aBuffered with the time ranges which are buffered. aStartTime
@@ -492,16 +492,10 @@ protected:
     return DecodeVideoFrame(f, 0);
   }
 
-  // The lock which we hold whenever we read or decode. This ensures the thread
-  // safety of the reader and its data fields.
-  ReentrantMonitor mReentrantMonitor;
-
-  // Reference to the owning decoder object. Do not hold the
-  // reader's monitor when accessing this.
+  // Reference to the owning decoder object.
   nsBuiltinDecoder* mDecoder;
 
-  // Stores presentation info required for playback. The reader's monitor
-  // must be held when accessing this.
+  // Stores presentation info required for playback.
   nsVideoInfo mInfo;
 };
 
