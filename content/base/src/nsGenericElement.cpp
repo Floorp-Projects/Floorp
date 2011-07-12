@@ -146,6 +146,7 @@
 #include "prprf.h"
 
 #include "nsSVGFeatures.h"
+#include "nsDOMMemoryReporter.h"
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
@@ -5372,3 +5373,15 @@ nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aRetu
 
   return rv;
 }
+
+PRInt64
+nsGenericElement::SizeOf() const
+{
+  PRInt64 size = MemoryReporter::GetBasicSize<nsGenericElement, Element>(this);
+
+  size -= sizeof(mAttrsAndChildren);
+  size += mAttrsAndChildren.SizeOf();
+
+  return size;
+}
+
