@@ -200,6 +200,9 @@ class LAllocation : public TempObject
     bool isMemory() const {
         return isStackSlot() || isArgument();
     }
+    bool isDouble() const {
+        return kind() == DOUBLE_SLOT || kind() == FPU;
+    }
     inline LUse *toUse();
     inline const LUse *toUse() const;
     inline const LGeneralReg *toGeneralReg() const;

@@ -91,7 +91,7 @@ struct Label
     bool bound_   : 1;
 
     // Disallow assignment.
-    void operator =(const Label &label) { }
+    void operator =(const Label &label);
 
   public:
     static const int32 INVALID_OFFSET = -1;

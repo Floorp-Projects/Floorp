@@ -64,6 +64,25 @@ ToRegister(const LDefinition *def)
     return ToRegister(*def->output());
 }
 
+static inline FloatRegister
+ToFloatRegister(const LAllocation &a)
+{
+    JS_ASSERT(a.isFloatReg());
+    return a.toFloatReg()->reg();
+}
+
+static inline FloatRegister
+ToFloatRegister(const LAllocation *a)
+{
+    return ToFloatRegister(*a);
+}
+
+static inline FloatRegister
+ToFloatRegister(const LDefinition *def)
+{
+    return ToFloatRegister(*def->output());
+}
+
 } // ion
 } // js
 
