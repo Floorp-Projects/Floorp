@@ -134,9 +134,6 @@ function server_headers(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-let did401 = false;
-Observers.add("weave:resource:status:401", function() { did401 = true; });
-
 let quotaValue;
 Observers.add("weave:service:quota:remaining",
               function (subject) { quotaValue = subject; });
@@ -232,7 +229,6 @@ add_test(function test_get_protected_fail() {
   let res2 = new AsyncResource("http://localhost:8080/protected");
   res2.get(function (error, content) {
     do_check_eq(error, null);
-    do_check_true(did401);
     do_check_eq(content, "This path exists and is protected - failed");
     do_check_eq(content.status, 401);
     do_check_false(content.success);
@@ -545,48 +541,6 @@ add_test(function test_preserve_exceptions() {
     do_check_neq(error, null);
     do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
     do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
-    run_next_test();
-  });
-});
-
-add_test(function test_401_redirect() {
-  let redirRequest;
-  let redirToOpen = function(subject) {
-    subject.newUri = "http://localhost:8080/open";
-    redirRequest = subject;
-  };
-  Observers.add("weave:resource:status:401", redirToOpen);
-
-  _("Notification of 401 can redirect to another uri");
-  did401 = false;
-  let res12 = new AsyncResource("http://localhost:8080/protected");
-  res12.get(function (error, content) {
-    do_check_eq(error, null);
-    do_check_eq(res12.spec, "http://localhost:8080/open");
-    do_check_eq(content, "This path exists");
-    do_check_eq(content.status, 200);
-    do_check_true(content.success);
-    do_check_eq(res12.data, content);
-    do_check_true(did401);
-    do_check_eq(redirRequest.response, "This path exists and is protected - failed");
-    do_check_eq(redirRequest.response.status, 401);
-    do_check_false(redirRequest.response.success);
-
-    Observers.remove("weave:resource:status:401", redirToOpen);
-    run_next_test();
-  });
-});
-
-add_test(function test_401_no_redirect() {
-  _("Removing the observer should result in the original 401");
-  did401 = false;
-  let res13 = new AsyncResource("http://localhost:8080/protected");
-  res13.get(function (error, content) {
-    do_check_eq(error, null);
-    do_check_true(did401);
-    do_check_eq(content, "This path exists and is protected - failed");
-    do_check_eq(content.status, 401);
-    do_check_false(content.success);
     run_next_test();
   });
 });

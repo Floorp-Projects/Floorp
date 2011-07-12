@@ -259,18 +259,20 @@ nsPluginInstanceOwner::UseAsyncRendering()
 #endif
 
   PRBool useAsyncRendering;
-  return (mInstance &&
+  PRBool result = (mInstance &&
           NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
           useAsyncRendering &&
 #ifdef XP_MACOSX
-          mObjectFrame && mObjectFrame->GetImageContainer().get() &&
-          mObjectFrame->GetImageContainer().get()->GetBackendType() == 
+          container &&
+          container->GetBackendType() == 
                   LayerManager::LAYERS_OPENGL
 #else
           (!mPluginWindow ||
            mPluginWindow->type == NPWindowTypeDrawable)
 #endif
           );
+
+    return result;
 }
 
 nsIntSize
@@ -532,7 +534,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
   nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
 
   rv = lh->OnLinkClick(mContent, uri, unitarget.get(), 
-                       aPostStream, headersDataStream);
+                       aPostStream, headersDataStream, PR_TRUE);
 
   return rv;
 }
@@ -1358,6 +1360,18 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
   mInstance->GetDrawingModel((PRInt32*)&drawingModel);
   return drawingModel;
+}
+
+PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
+{
+  if (!mInstance)
+    return PR_FALSE;
+
+  PRBool coreAnimation;
+  if (!NS_SUCCEEDED(mInstance->IsRemoteDrawingCoreAnimation(&coreAnimation)))
+    return PR_FALSE;
+
+  return coreAnimation;
 }
 
 NPEventModel nsPluginInstanceOwner::GetEventModel()

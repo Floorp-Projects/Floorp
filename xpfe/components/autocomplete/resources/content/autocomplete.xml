@@ -14,6 +14,8 @@
     </resources>
 
     <content sizetopopup="pref">
+      <children includes="menupopup"/>
+
       <xul:hbox class="autocomplete-textbox-container" flex="1" align="center">
         <children includes="image|deck|stack|box">
           <xul:image class="autocomplete-icon" allowevents="true"/>

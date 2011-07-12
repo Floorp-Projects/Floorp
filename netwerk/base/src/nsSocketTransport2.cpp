@@ -942,6 +942,8 @@ nsSocketTransport::ResolveHost()
     PRUint32 dnsFlags = 0;
     if (mConnectionFlags & nsSocketTransport::BYPASS_CACHE)
         dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
+    if (mConnectionFlags & nsSocketTransport::DISABLE_IPV6)
+        dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
 
     SendStatus(STATUS_RESOLVING);
     rv = dns->AsyncResolve(SocketHost(), dnsFlags, this, nsnull,

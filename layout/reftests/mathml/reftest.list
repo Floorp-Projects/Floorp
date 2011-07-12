@@ -12,6 +12,11 @@
 == mfenced-5b.xhtml mfenced-5-ref.xhtml
 == mfenced-5c.xhtml mfenced-5-ref.xhtml
 == mfenced-5d.xhtml mfenced-5-ref.xhtml
+== mfenced-6.html mfenced-6-ref.html
+== mfenced-7.html mfenced-7-ref.html
+!= mfenced-8.html mfenced-8-ref.html
+== mfenced-9.html mfenced-9-ref.html
+fails-if(winWidget) == mfenced-10.html mfenced-10-ref.html
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
@@ -60,6 +65,13 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 == math-as-mstyle-1.xhtml math-as-mstyle-1-ref.xhtml
+== mpadded-1.html mpadded-1-ref.html
+== mpadded-2.html mpadded-2-ref.html
+== mpadded-3.html mpadded-3-ref.html
+== mpadded-4.html mpadded-4-ref.html
+== mpadded-5.html mpadded-5-ref.html
+== mpadded-1-2.html mpadded-1-2-ref.html
+== mpadded-6.html mpadded-6-ref.html
 == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
 != link-1.xhtml link-ref.xhtml

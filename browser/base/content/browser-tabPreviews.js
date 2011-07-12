@@ -215,14 +215,16 @@ var ctrlTab = {
     if (this._tabList)
       return this._tabList;
 
-    let list = gBrowser.visibleTabs;
-
-    if (this._closing)
-      this.detachTab(this._closing, list);
+    // Using gBrowser.tabs instead of gBrowser.visibleTabs, as the latter
+    // exlcudes closing tabs, breaking the following loop in case the the
+    // selected tab is closing.
+    let list = Array.filter(gBrowser.tabs, function (tab) !tab.hidden);
 
     // Rotate the list until the selected tab is first
     while (!list[0].selected)
       list.push(list.shift());
+
+    list = list.filter(function (tab) !tab.closing);
 
     if (this.recentlyUsedLimit != 0) {
       let recentlyUsedTabs = this._recentlyUsedTabs;
@@ -370,11 +372,10 @@ var ctrlTab = {
     else
       this._recentlyUsedTabs.push(aTab);
   },
-  detachTab: function ctrlTab_detachTab(aTab, aTabs) {
-    var tabs = aTabs || this._recentlyUsedTabs;
-    var i = tabs.indexOf(aTab);
+  detachTab: function ctrlTab_detachTab(aTab) {
+    var i = this._recentlyUsedTabs.indexOf(aTab);
     if (i >= 0)
-      tabs.splice(i, 1);
+      this._recentlyUsedTabs.splice(i, 1);
   },
 
   open: function ctrlTab_open() {
@@ -498,10 +499,8 @@ var ctrlTab = {
       return;
     }
 
-    this._closing = aTab;
     this._tabList = null;
     this.updatePreviews();
-    this._closing = null;
 
     if (this.selected.hidden)
       this.advanceFocus(false);
@@ -596,6 +595,7 @@ var allTabs = {
     delete this.tabCloseButton;
     return this.tabCloseButton = document.getElementById("allTabs-tab-close-button");
   },
+  get toolbarButton() document.getElementById("alltabs-button"),
   get previews () this.container.getElementsByClassName("allTabs-preview"),
   get isOpen () this.panel.state == "open" || this.panel.state == "showing",
 
@@ -633,7 +633,7 @@ var allTabs = {
 
   prefName: "browser.allTabs.previews",
   readPref: function allTabs_readPref() {
-    var allTabsButton = document.getElementById("alltabs-button");
+    var allTabsButton = this.toolbarButton;
     if (!allTabsButton)
       return;
 
@@ -698,6 +698,17 @@ var allTabs = {
   },
 
   open: function allTabs_open() {
+    var allTabsButton = this.toolbarButton;
+    if (allTabsButton &&
+        allTabsButton.getAttribute("type") == "menu") {
+      // Without setTimeout, the menupopup won't stay open when invoking
+      // "View > Show All Tabs" and the menu bar auto-hides.
+      setTimeout(function () {
+        allTabsButton.open = true;
+      }, 0);
+      return;
+    }
+
     this.init();
 
     if (this.isOpen)

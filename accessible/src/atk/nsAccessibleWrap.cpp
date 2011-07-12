@@ -67,6 +67,9 @@
 #include "nsMaiInterfaceDocument.h"
 #include "nsMaiInterfaceImage.h"
 
+nsAccessibleWrap::EAvailableAtkSignals nsAccessibleWrap::gAvailableAtkSignals =
+  eUnknown;
+
 //defined in nsApplicationAccessibleWrap.cpp
 extern "C" GType g_atk_hyperlink_impl_type;
 
@@ -1081,7 +1084,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         nsString newName;
         accessible->GetName(newName);
         NS_ConvertUTF16toUTF8 utf8Name(newName);
-        if (!utf8Name.Equals(atkObj->name))
+        if (!atkObj->name || !utf8Name.Equals(atkObj->name))
           atk_object_set_name(atkObj, utf8Name.get());
 
         break;
@@ -1368,25 +1371,29 @@ nsAccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
     PRBool isFromUserInput = aEvent->IsFromUserInput();
     char* signal_name = nsnull;
 
-    if (gHaveNewTextSignals) {
-        nsAutoString text;
-        event->GetModifiedText(text);
-        signal_name = g_strconcat(isInserted ? "text-insert" : "text-remove",
-                                  isFromUserInput ? "" : "::system", NULL);
-        g_signal_emit_by_name(aObject, signal_name, start, length,
-                              NS_ConvertUTF16toUTF8(text).get());
-    } else {
-        // XXX remove this code and the gHaveNewTextSignals check when we can
-        // stop supporting old atk since it doesn't really work anyway
-        // see bug 619002
-        signal_name = g_strconcat(isInserted ? "text_changed::insert" :
-                                  "text_changed::delete",
-                                  isFromUserInput ? "" : kNonUserInputEvent, NULL);
-        g_signal_emit_by_name(aObject, signal_name, start, length);
-    }
+  if (gAvailableAtkSignals == eUnknown)
+    gAvailableAtkSignals = g_signal_lookup("text-insert", ATK_TYPE_TEXT) ?
+      eHaveNewAtkTextSignals : eNoNewAtkSignals;
 
-    g_free(signal_name);
-    return NS_OK;
+  if (gAvailableAtkSignals == eNoNewAtkSignals) {
+    // XXX remove this code and the gHaveNewTextSignals check when we can
+    // stop supporting old atk since it doesn't really work anyway
+    // see bug 619002
+    signal_name = g_strconcat(isInserted ? "text_changed::insert" :
+                              "text_changed::delete",
+                              isFromUserInput ? "" : kNonUserInputEvent, NULL);
+    g_signal_emit_by_name(aObject, signal_name, start, length);
+  } else {
+    nsAutoString text;
+    event->GetModifiedText(text);
+    signal_name = g_strconcat(isInserted ? "text-insert" : "text-remove",
+                              isFromUserInput ? "" : "::system", NULL);
+    g_signal_emit_by_name(aObject, signal_name, start, length,
+                          NS_ConvertUTF16toUTF8(text).get());
+  }
+
+  g_free(signal_name);
+  return NS_OK;
 }
 
 nsresult

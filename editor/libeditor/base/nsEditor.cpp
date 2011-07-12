@@ -331,11 +331,9 @@ nsresult
 nsEditor::CreateEventListeners()
 {
   // Don't create the handler twice
-  if (mEventListener)
-    return NS_OK;
-  mEventListener = do_QueryInterface(
-    static_cast<nsIDOMKeyListener*>(new nsEditorEventListener()));
-  NS_ENSURE_TRUE(mEventListener, NS_ERROR_OUT_OF_MEMORY);
+  if (!mEventListener) {
+    mEventListener = new nsEditorEventListener();
+  }
   return NS_OK;
 }
 

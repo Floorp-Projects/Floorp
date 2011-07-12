@@ -334,11 +334,18 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
   selection.currentIndex = 0;
   tree.focus();
 
+  var keyPressDefaultPrevented = 0;
+  function keyPressListener(event) {
+    keyPressDefaultPrevented++;
+  }
+
   // check that cursor up and down keys navigate up and down
   // select event fires after a delay so don't expect it. The reason it fires after a delay
   // is so that cursor navigation allows quicking skimming over a set of items without
   // actually firing events in-between, improving performance. The select event will only
   // be fired on the row where the cursor stops.
+  window.addEventListener("keypress", keyPressListener, false);
+
   synthesizeKeyExpectEvent("VK_DOWN", {}, tree, "!select", "key down");
   testtag_tree_TreeSelection_State(tree, testid + "key down", 1, [1], 0);
 
@@ -599,6 +606,9 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
 
   // restore the scroll position to the start of the page
   synthesizeKey("VK_HOME", {});
+
+  window.removeEventListener("keypress", keyPressListener, false);
+  is(keyPressDefaultPrevented, multiple ? 63 : 40, "key press default prevented");
 }
 
 function testtag_tree_UI_editing(tree, testid, rowInfo)
@@ -1181,13 +1191,23 @@ function testtag_tree_mousescroll(aTree)
     is(aTree.treeBoxObject.getFirstVisibleRow(), aStart, "mouse-scroll horizontal starting " + aStart + " delta " + aDelta
        + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
   }
-  
+
+  var defaultPrevented = 0;
+
+  function mouseScrollListener(event) {
+    defaultPrevented++;
+  }
+  window.addEventListener("DOMMouseScroll", mouseScrollListener, false);
+
   kinds.forEach(function(aKind) {
     helper(2, -1, aKind);
     helper(2, 1, aKind);
     helper(2, -2, aKind);
     helper(2, 2, aKind);
   });
+
+  window.removeEventListener("DOMMouseScroll", mouseScrollListener, false);
+  is(defaultPrevented, 16, "mouse scroll event default prevented");
 }
 
 function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumber, aAfter)

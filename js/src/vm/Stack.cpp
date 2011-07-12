@@ -302,11 +302,17 @@ StackSegment::popCall()
 /*****************************************************************************/
 
 StackSpace::StackSpace()
-  : base_(NULL),
+  : seg_(NULL),
+    base_(NULL),
+    conservativeEnd_(NULL),
+#ifdef XP_WIN
     commitEnd_(NULL),
-    end_(NULL),
-    seg_(NULL)
-{}
+#endif
+    defaultEnd_(NULL),
+    trustedEnd_(NULL)
+{
+    assertInvariants();
+}
 
 bool
 StackSpace::init()
@@ -320,27 +326,32 @@ StackSpace::init()
     if (p != check)
         return false;
     base_ = reinterpret_cast<Value *>(p);
-    commitEnd_ = base_ + COMMIT_VALS;
-    end_ = base_ + CAPACITY_VALS;
+    conservativeEnd_ = commitEnd_ = base_ + COMMIT_VALS;
+    trustedEnd_ = base_ + CAPACITY_VALS;
+    defaultEnd_ = trustedEnd_ - BUFFER_VALS;
 #elif defined(XP_OS2)
     if (DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE | OBJ_ANY) &&
         DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
         return false;
     base_ = reinterpret_cast<Value *>(p);
-    end_ = commitEnd_ = base_ + CAPACITY_VALS;
+    trustedEnd_ = base_ + CAPACITY_VALS;
+    conservativeEnd_ = defaultEnd_ = trustedEnd_ - BUFFER_VALS;
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (p == MAP_FAILED)
         return false;
     base_ = reinterpret_cast<Value *>(p);
-    end_ = commitEnd_ = base_ + CAPACITY_VALS;
+    trustedEnd_ = base_ + CAPACITY_VALS;
+    conservativeEnd_ = defaultEnd_ = trustedEnd_ - BUFFER_VALS;
 #endif
+    assertInvariants();
     return true;
 }
 
 StackSpace::~StackSpace()
 {
+    assertInvariants();
     JS_ASSERT(!seg_);
     if (!base_)
         return;
@@ -402,55 +413,75 @@ StackSpace::mark(JSTracer *trc)
     }
 }
 
-#ifdef XP_WIN
 JS_FRIEND_API(bool)
-StackSpace::bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
+StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report,
+                            Value *from, ptrdiff_t nvals) const
 {
-    if (end_ - from < nvals) {
-        js_ReportOverRecursed(maybecx);
+    assertInvariants();
+
+    bool trusted = !cx->compartment ||
+                   cx->compartment->principals == cx->runtime->trustedPrincipals();
+    Value *end = trusted ? trustedEnd_ : defaultEnd_;
+
+    /*
+     * conservativeEnd_ must stay below defaultEnd_: if conservativeEnd_ were
+     * to be bumped past defaultEnd_, untrusted JS would be able to consume the
+     * buffer space at the end of the stack reserved for trusted JS.
+     */
+
+    if (end - from < nvals) {
+        if (report)
+            js_ReportOverRecursed(cx);
         return false;
     }
 
-    Value *newCommit = commitEnd_;
-    Value *request = from + nvals;
+#ifdef XP_WIN
+    if (commitEnd_ - from < nvals) {
+        Value *newCommit = commitEnd_;
+        Value *request = from + nvals;
 
-    /* Use a dumb loop; will probably execute once. */
-    JS_ASSERT((end_ - newCommit) % COMMIT_VALS == 0);
-    do {
-        newCommit += COMMIT_VALS;
-        JS_ASSERT((end_ - newCommit) >= 0);
-    } while (newCommit < request);
+        /* Use a dumb loop; will probably execute once. */
+        JS_ASSERT((trustedEnd_ - newCommit) % COMMIT_VALS == 0);
+        do {
+            newCommit += COMMIT_VALS;
+            JS_ASSERT((trustedEnd_ - newCommit) >= 0);
+        } while (newCommit < request);
 
-    /* The cast is safe because CAPACITY_BYTES is small. */
-    int32 size = static_cast<int32>(newCommit - commitEnd_) * sizeof(Value);
+        /* The cast is safe because CAPACITY_BYTES is small. */
+        int32 size = static_cast<int32>(newCommit - commitEnd_) * sizeof(Value);
 
-    if (!VirtualAlloc(commitEnd_, size, MEM_COMMIT, PAGE_READWRITE)) {
-        js_ReportOverRecursed(maybecx);
-        return false;
+        if (!VirtualAlloc(commitEnd_, size, MEM_COMMIT, PAGE_READWRITE)) {
+            if (report)
+                js_ReportOverRecursed(cx);
+            return false;
+        }
+
+        commitEnd_ = newCommit;
+        conservativeEnd_ = Min(commitEnd_, defaultEnd_);
+        assertInvariants();
     }
+#endif
 
-    commitEnd_ = newCommit;
     return true;
 }
-#endif
 
 bool
-StackSpace::tryBumpLimit(JSContext *maybecx, Value *from, uintN nvals, Value **limit)
+StackSpace::tryBumpLimit(JSContext *cx, Value *from, uintN nvals, Value **limit)
 {
-    if (!ensureSpace(maybecx, from, nvals))
+    if (!ensureSpace(cx, REPORT_ERROR, from, nvals))
         return false;
-#ifdef XP_WIN
-    *limit = commitEnd_;
-#else
-    *limit = end_;
-#endif
+    *limit = conservativeEnd_;
     return true;
 }
 
 size_t
 StackSpace::committedSize()
 {
+#ifdef XP_WIN
     return (commitEnd_ - base_) * sizeof(Value);
+#else
+    return (trustedEnd_ - base_) * sizeof(Value);
+#endif
 }
 
 /*****************************************************************************/
@@ -516,17 +547,18 @@ ContextStack::containsSlow(const StackFrame *target) const
  * there is space for nvars slots on top of the stack.
  */
 Value *
-ContextStack::ensureOnTop(JSContext *cx, uintN nvars, MaybeExtend extend, bool *pushedSeg)
+ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
+                          MaybeExtend extend, bool *pushedSeg)
 {
     Value *firstUnused = space().firstUnused();
 
     if (onTop() && extend) {
-        if (!space().ensureSpace(cx, firstUnused, nvars))
+        if (!space().ensureSpace(cx, report, firstUnused, nvars))
             return NULL;
         return firstUnused;
     }
 
-    if (!space().ensureSpace(cx, firstUnused, VALUES_PER_STACK_SEGMENT + nvars))
+    if (!space().ensureSpace(cx, report, firstUnused, VALUES_PER_STACK_SEGMENT + nvars))
         return NULL;
 
     FrameRegs *regs;
@@ -559,7 +591,7 @@ bool
 ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
 {
     uintN nvars = 2 + argc;
-    Value *firstUnused = ensureOnTop(cx, nvars, CAN_EXTEND, &iag->pushedSeg_);
+    Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &iag->pushedSeg_);
     if (!firstUnused)
         return false;
 
@@ -595,7 +627,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JSScript *script = fun->script();
 
     StackFrame::Flags flags = ToFrameFlags(construct);
-    StackFrame *fp = getCallFrame(cx, args, fun, script, &flags, OOMCheck());
+    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, fun, script, &flags);
     if (!fp)
         return false;
 
@@ -642,7 +674,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     }
 
     uintN nvars = 2 /* callee, this */ + VALUES_PER_STACK_FRAME + script->nslots;
-    Value *firstUnused = ensureOnTop(cx, nvars, extend, &efg->pushedSeg_);
+    Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, extend, &efg->pushedSeg_);
     if (!firstUnused)
         return NULL;
 
@@ -662,10 +694,11 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
 }
 
 bool
-ContextStack::pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg)
+ContextStack::pushDummyFrame(JSContext *cx, MaybeReportError report, JSObject &scopeChain,
+                             DummyFrameGuard *dfg)
 {
     uintN nvars = VALUES_PER_STACK_FRAME;
-    Value *firstUnused = ensureOnTop(cx, nvars, CAN_EXTEND, &dfg->pushedSeg_);
+    Value *firstUnused = ensureOnTop(cx, report, nvars, CAN_EXTEND, &dfg->pushedSeg_);
     if (!firstUnused)
         return NULL;
 
@@ -709,7 +742,7 @@ ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrame
     uintN vplen = (Value *)genfp - genvp;
 
     uintN nvars = vplen + VALUES_PER_STACK_FRAME + genfp->numSlots();
-    Value *firstUnused = ensureOnTop(cx, nvars, CAN_EXTEND, &gfg->pushedSeg_);
+    Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &gfg->pushedSeg_);
     if (!firstUnused)
         return false;
 
@@ -755,14 +788,30 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 bool
 ContextStack::saveFrameChain()
 {
+    /*
+     * The StackSpace uses the context's current compartment to determine
+     * whether to allow access to the privileged end-of-stack buffer.
+     * However, we always want saveFrameChain to have access to this privileged
+     * buffer since it gets used to prepare calling trusted JS. To force this,
+     * we clear the current compartment (which is interpreted by ensureSpace as
+     * 'trusted') and either restore it on OOM or let resetCompartment()
+     * clobber it.
+     */
+    JSCompartment *original = cx_->compartment;
+    cx_->compartment = NULL;
+
     bool pushedSeg;
-    if (!ensureOnTop(cx_, 0, CANT_EXTEND, &pushedSeg))
+    if (!ensureOnTop(cx_, DONT_REPORT_ERROR, 0, CANT_EXTEND, &pushedSeg)) {
+        cx_->compartment = original;
+        js_ReportOverRecursed(cx_);
         return false;
+    }
+
     JS_ASSERT(pushedSeg);
     JS_ASSERT(!hasfp());
-    cx_->resetCompartment();
-
     JS_ASSERT(onTop() && seg_->isEmpty());
+
+    cx_->resetCompartment();
     return true;
 }
 

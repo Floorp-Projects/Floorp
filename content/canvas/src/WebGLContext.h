@@ -56,6 +56,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsIMemoryReporter.h"
 
 #include "GLContextProvider.h"
 #include "Layers.h"
@@ -320,6 +321,8 @@ class WebGLContext :
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference
 {
+    friend class WebGLMemoryReporter;
+
 public:
     WebGLContext();
     virtual ~WebGLContext();
@@ -367,6 +370,8 @@ public:
         return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
     }
     nsresult ErrorOutOfMemory(const char *fmt = 0, ...);
+    
+    const char *ErrorName(GLenum error);
 
     WebGLTexture *activeBoundTextureForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
@@ -391,6 +396,23 @@ public:
     // after it's been presented to the compositor. This function does that if needed.
     // See section 2.2 in the WebGL spec.
     void EnsureBackbufferClearedAsNeeded();
+
+    // checks for GL errors, clears any pending GL error, stores the current GL error in currentGLError,
+    // and copies it into mWebGLError if it doesn't already have an error set
+    void UpdateWebGLErrorAndClearGLError(GLenum *currentGLError) {
+        // get and clear GL error in ALL cases
+        *currentGLError = gl->GetAndClearError();
+        // only store in mWebGLError if is hasn't already recorded an error
+        if (!mWebGLError)
+            mWebGLError = *currentGLError;
+    }
+    
+    // checks for GL errors, clears any pending GL error,
+    // and stores the current GL error into mWebGLError if it doesn't already have an error set
+    void UpdateWebGLErrorAndClearGLError() {
+        GLenum currentGLError;
+        UpdateWebGLErrorAndClearGLError(&currentGLError);
+    }
 
 protected:
     void SetDontKnowIfNeedFakeBlack() {
@@ -424,7 +446,7 @@ protected:
     PRPackedBool mOptionsFrozen;
 
     WebGLuint mActiveTexture;
-    WebGLenum mSynthesizedGLError;
+    WebGLenum mWebGLError;
 
     // whether shader validation is supported
     PRBool mShaderValidation;
@@ -468,6 +490,8 @@ protected:
     PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
     PRBool ValidateStencilParamsForDrawCall();
+    
+    static PRUint32 GetTexelSize(WebGLenum format, WebGLenum type);
 
     void Invalidate();
     void DestroyResourcesAndContext();
@@ -548,6 +572,24 @@ protected:
     PRInt32 MaxTextureSizeForTarget(WebGLenum target) const {
         return target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
     }
+    
+    /** like glBufferData but if the call may change the buffer size, checks any GL error generated
+     * by this glBufferData call and returns it */
+    GLenum CheckedBufferData(GLenum target,
+                             GLsizeiptr size,
+                             const GLvoid *data,
+                             GLenum usage);
+    /** like glTexImage2D but if the call may change the texture size, checks any GL error generated
+     * by this glTexImage2D call and returns it */
+    GLenum CheckedTexImage2D(GLenum target,
+                             GLint level,
+                             GLenum internalFormat,
+                             GLsizei width,
+                             GLsizei height,
+                             GLint border,
+                             GLenum format,
+                             GLenum type,
+                             const GLvoid *data);
 
     // the buffers bound to the current program's attribs
     nsTArray<WebGLVertexAttribData> mAttribBuffers;
@@ -659,10 +701,10 @@ protected:
         : mWidth(0), mHeight(0) { }
 
 public:
-    WebGLsizei width() { return mWidth; }
+    WebGLsizei width() const { return mWidth; }
     void width(WebGLsizei value) { mWidth = value; }
 
-    WebGLsizei height() { return mHeight; }
+    WebGLsizei height() const { return mHeight; }
     void height(WebGLsizei value) { mHeight = value; }
 
     void setDimensions(WebGLsizei width, WebGLsizei height) {
@@ -678,6 +720,10 @@ public:
             mWidth = 0;
             mHeight = 0;
         }
+    }
+
+    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
+        return width() == other.width() && height() == other.height(); 
     }
 
 protected:
@@ -720,7 +766,7 @@ public:
         WebGLContextBoundObject(context),
         mName(name), mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE),
         mByteLength(0), mTarget(LOCAL_GL_NONE), mData(nsnull)
-    { }
+    {}
 
     ~WebGLBuffer() {
         Delete();
@@ -843,7 +889,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLBuffer, WEBGLBUFFER_PRIVATE_IID)
 class WebGLTexture :
     public nsIWebGLTexture,
     public WebGLZeroingObject,
-    public WebGLRectangleObject,
     public WebGLContextBoundObject
 {
 public:
@@ -890,8 +935,14 @@ protected:
     // we store information about the various images that are part of
     // this texture (cubemap faces, mipmap levels)
 
+public:
+
     struct ImageInfo {
         ImageInfo() : mWidth(0), mHeight(0), mFormat(0), mType(0), mIsDefined(PR_FALSE) {}
+        ImageInfo(WebGLsizei width, WebGLsizei height,
+                  WebGLenum format, WebGLenum type)
+            : mWidth(width), mHeight(height), mFormat(format), mType(type), mIsDefined(PR_TRUE) {}
+
         PRBool operator==(const ImageInfo& a) const {
             return mWidth == a.mWidth && mHeight == a.mHeight &&
                    mFormat == a.mFormat && mType == a.mType;
@@ -909,12 +960,16 @@ protected:
             return is_pot_assuming_nonnegative(mWidth) &&
                    is_pot_assuming_nonnegative(mHeight); // negative sizes should never happen (caught in texImage2D...)
         }
+        PRInt64 MemoryUsage() const {
+            if (!mIsDefined)
+                return 0;
+            PRInt64 texelSize = WebGLContext::GetTexelSize(mFormat, mType);
+            return PRInt64(mWidth) * PRInt64(mHeight) * texelSize;
+        }
         WebGLsizei mWidth, mHeight;
         WebGLenum mFormat, mType;
         PRBool mIsDefined;
     };
-
-public:
 
     ImageInfo& ImageInfoAt(size_t level, size_t face = 0) {
 #ifdef DEBUG
@@ -937,6 +992,22 @@ public:
 
     static size_t FaceForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? 0 : target - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    }
+
+    PRInt64 MemoryUsage() const {
+        PRInt64 result = 0;
+        for(size_t face = 0; face < mFacesCount; face++) {
+            if (mHaveGeneratedMipmap) {
+                // Each mipmap level is 1/4 the size of the previous level
+                // 1 + x + x^2 + ... = 1/(1-x)
+                // for x = 1/4, we get 1/(1-1/4) = 4/3
+                result += ImageInfoAt(0, face).MemoryUsage() * 4 / 3;
+            } else {
+                for(size_t level = 0; level <= mMaxLevelWithCustomImages; level++)
+                    result += ImageInfoAt(level, face).MemoryUsage();
+            }
+        }
+        return result;
     }
 
 protected:
@@ -1035,7 +1106,7 @@ public:
 
     void SetImageInfo(WebGLenum aTarget, WebGLint aLevel,
                       WebGLsizei aWidth, WebGLsizei aHeight,
-                      WebGLenum aFormat = 0, WebGLenum aType = 0)
+                      WebGLenum aFormat, WebGLenum aType)
     {
         if ( (aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D) )
             return;
@@ -1044,14 +1115,7 @@ public:
 
         EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
 
-        ImageInfo& imageInfo = ImageInfoAt(aLevel, face);
-        imageInfo.mWidth  = aWidth;
-        imageInfo.mHeight = aHeight;
-        if (aFormat)
-            imageInfo.mFormat = aFormat;
-        if (aType)
-            imageInfo.mType = aType;
-        imageInfo.mIsDefined = PR_TRUE;
+        ImageInfoAt(aLevel, face) = ImageInfo(aWidth, aHeight, aFormat, aType);
 
         if (aLevel > 0)
             SetCustomMipmap();
@@ -1466,6 +1530,7 @@ public:
         WebGLContextBoundObject(context),
         mName(name),
         mInternalFormat(0),
+        mInternalFormatForGL(0),
         mDeleted(PR_FALSE), mHasEverBeenBound(PR_FALSE), mInitialized(PR_FALSE)
     { }
 
@@ -1485,6 +1550,32 @@ public:
 
     WebGLenum InternalFormat() const { return mInternalFormat; }
     void SetInternalFormat(WebGLenum aInternalFormat) { mInternalFormat = aInternalFormat; }
+    
+    WebGLenum InternalFormatForGL() const { return mInternalFormatForGL; }
+    void SetInternalFormatForGL(WebGLenum aInternalFormatForGL) { mInternalFormatForGL = aInternalFormatForGL; }
+    
+    PRInt64 MemoryUsage() const {
+        PRInt64 pixels = PRInt64(width()) * PRInt64(height());
+        switch (mInternalFormatForGL) {
+            case LOCAL_GL_STENCIL_INDEX8:
+                return pixels;
+            case LOCAL_GL_RGBA4:
+            case LOCAL_GL_RGB5_A1:
+            case LOCAL_GL_RGB565:
+            case LOCAL_GL_DEPTH_COMPONENT16:
+                return 2 * pixels;
+            case LOCAL_GL_RGB8:
+            case LOCAL_GL_DEPTH_COMPONENT24:
+                return 3*pixels;
+            case LOCAL_GL_RGBA8:
+            case LOCAL_GL_DEPTH24_STENCIL8:
+                return 4*pixels;
+            default:
+                break;
+        }
+        NS_ABORT();
+        return 0;
+    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLRENDERBUFFER
@@ -1492,6 +1583,7 @@ public:
 protected:
     WebGLuint mName;
     WebGLenum mInternalFormat;
+    WebGLenum mInternalFormatForGL;
 
     PRBool mDeleted;
     PRBool mHasEverBeenBound;
@@ -1503,6 +1595,7 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
 
 class WebGLFramebufferAttachment
+    : public WebGLRectangleObject
 {
     // deleting a texture or renderbuffer immediately detaches it
     WebGLObjectRefPtr<WebGLTexture> mTexturePtr;
@@ -1538,10 +1631,17 @@ public:
         mRenderbufferPtr = nsnull;
         mTextureLevel = level;
         mTextureCubeMapFace = face;
+        if (tex) {
+            const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+            setDimensions(imageInfo.mWidth, imageInfo.mHeight);
+        } else {
+            setDimensions(0, 0);
+        }
     }
     void SetRenderbuffer(WebGLRenderbuffer *rb) {
         mTexturePtr = nsnull;
         mRenderbufferPtr = rb;
+        setDimensions(rb);
     }
     WebGLTexture *Texture() const {
         return mTexturePtr.get();
@@ -1591,7 +1691,6 @@ public:
 class WebGLFramebuffer :
     public nsIWebGLFramebuffer,
     public WebGLZeroingObject,
-    public WebGLRectangleObject,
     public WebGLContextBoundObject
 {
 public:
@@ -1616,6 +1715,9 @@ public:
     PRBool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(PRBool x) { mHasEverBeenBound = x; }
     WebGLuint GLName() { return mName; }
+    
+    WebGLsizei width() { return mColorAttachment.width(); }
+    WebGLsizei height() { return mColorAttachment.height(); }
 
     nsresult FramebufferRenderbuffer(WebGLenum target,
                                      WebGLenum attachment,
@@ -1652,11 +1754,7 @@ public:
             // finish checking that the 'attachment' parameter is among the allowed values
             if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
                 return mContext->ErrorInvalidEnumInfo("framebufferRenderbuffer: attachment", attachment);
-            if (!isNull) {
-                // ReadPixels needs alpha and size information, but only
-                // for COLOR_ATTACHMENT0
-                setDimensions(wrb);
-            }
+
             mColorAttachment.SetRenderbuffer(wrb);
             break;
         }
@@ -1691,15 +1789,15 @@ public:
         if (target != LOCAL_GL_FRAMEBUFFER)
             return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: target", target);
 
-        if (!isNull && textarget != LOCAL_GL_TEXTURE_2D &&
+        if (textarget != LOCAL_GL_TEXTURE_2D &&
             (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
-            textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
+             textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
             return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
 
-        if (!isNull && level > 0)
+        if (level != 0)
             return mContext->ErrorInvalidValue("framebufferTexture2D: level must be 0");
 
-        WebGLint face = (textarget == LOCAL_GL_TEXTURE_2D) ? 0 : textarget;
+        size_t face = WebGLTexture::FaceForTarget(textarget);
         switch (attachment) {
         case LOCAL_GL_DEPTH_ATTACHMENT:
             mDepthAttachment.SetTexture(wtex, level, face);
@@ -1713,9 +1811,6 @@ public:
         default:
             if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
                 return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: attachment", attachment);
-
-            // keep data for readPixels, function only uses COLOR_ATTACHMENT0
-            setDimensions(wtex);
 
             mColorAttachment.SetTexture(wtex, level, face);
             break;
@@ -1759,13 +1854,22 @@ public:
             // some attachment is incompatible with its attachment point
             return PR_TRUE;
         }
-        else if (int(mDepthAttachment.IsNull()) +
-                 int(mStencilAttachment.IsNull()) +
-                 int(mDepthStencilAttachment.IsNull()) <= 1)
+        
+        if (int(mDepthAttachment.IsNull()) +
+            int(mStencilAttachment.IsNull()) +
+            int(mDepthStencilAttachment.IsNull()) <= 1)
         {
             // has at least two among Depth, Stencil, DepthStencil
             return PR_TRUE;
         }
+        
+        if (!mDepthAttachment.IsNull() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment))
+            return PR_TRUE;
+        if (!mStencilAttachment.IsNull() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment))
+            return PR_TRUE;
+        if (!mDepthStencilAttachment.IsNull() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment))
+            return PR_TRUE;
+        
         else return PR_FALSE;
     }
 
@@ -2065,6 +2169,199 @@ WebGLContext::CanGetConcreteObject(const char *info,
     ConcreteObjectType *aConcreteObject;
     return GetConcreteObject(info, aInterface, &aConcreteObject, isNull, isDeleted, PR_FALSE);
 }
+
+class WebGLMemoryReporter
+{
+    WebGLMemoryReporter();
+    ~WebGLMemoryReporter();
+    static WebGLMemoryReporter* sUniqueInstance;
+
+    // here we store plain pointers, not RefPtrs: we don't want the WebGLMemoryReporter unique instance to keep alive all
+    // WebGLContexts ever created.
+    typedef nsTArray<const WebGLContext*> ContextsArrayType;
+    ContextsArrayType mContexts;
+    
+    nsIMemoryReporter *mTextureMemoryUsageReporter;
+    nsIMemoryReporter *mTextureCountReporter;
+    nsIMemoryReporter *mBufferMemoryUsageReporter;
+    nsIMemoryReporter *mBufferCacheMemoryUsageReporter;
+    nsIMemoryReporter *mBufferCountReporter;
+    nsIMemoryReporter *mRenderbufferMemoryUsageReporter;
+    nsIMemoryReporter *mRenderbufferCountReporter;
+    nsIMemoryReporter *mShaderSourcesSizeReporter;
+    nsIMemoryReporter *mShaderTranslationLogsSizeReporter;
+    nsIMemoryReporter *mShaderCountReporter;
+    nsIMemoryReporter *mContextCountReporter;
+
+    static WebGLMemoryReporter* UniqueInstance();
+
+    static ContextsArrayType & Contexts() { return UniqueInstance()->mContexts; }
+
+  public:
+
+    static void AddWebGLContext(const WebGLContext* c) {
+        Contexts().AppendElement(c);
+    }
+
+    static void RemoveWebGLContext(const WebGLContext* c) {
+        ContextsArrayType & contexts = Contexts();
+        contexts.RemoveElement(c);
+        if (contexts.IsEmpty()) {
+            delete sUniqueInstance;
+            sUniqueInstance = nsnull;
+        }
+    }
+
+    static PLDHashOperator TextureMemoryUsageFunction(const PRUint32&, WebGLTexture *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->MemoryUsage();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetTextureMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 textureMemoryUsageForThisContext = 0;
+            contexts[i]->mMapTextures.EnumerateRead(TextureMemoryUsageFunction, &textureMemoryUsageForThisContext);
+            result += textureMemoryUsageForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetTextureCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapTextures.Count();
+        }
+        return result;
+    }
+    
+    static PLDHashOperator BufferMemoryUsageFunction(const PRUint32&, WebGLBuffer *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->ByteLength();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetBufferMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 bufferMemoryUsageForThisContext = 0;
+            contexts[i]->mMapBuffers.EnumerateRead(BufferMemoryUsageFunction, &bufferMemoryUsageForThisContext);
+            result += bufferMemoryUsageForThisContext;
+        }
+        return result;
+    }
+    
+    static PLDHashOperator BufferCacheMemoryUsageFunction(const PRUint32&, WebGLBuffer *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        // element array buffers are cached in the WebGL implementation. Other buffers aren't.
+        if (aValue->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
+          *result += aValue->ByteLength();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetBufferCacheMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 bufferCacheMemoryUsageForThisContext = 0;
+            contexts[i]->mMapBuffers.EnumerateRead(BufferCacheMemoryUsageFunction, &bufferCacheMemoryUsageForThisContext);
+            result += bufferCacheMemoryUsageForThisContext;
+        }
+        return result;
+    }
+
+    static PRInt64 GetBufferCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapBuffers.Count();
+        }
+        return result;
+    }
+    
+    static PLDHashOperator RenderbufferMemoryUsageFunction(const PRUint32&, WebGLRenderbuffer *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->MemoryUsage();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetRenderbufferMemoryUsed() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 bufferMemoryUsageForThisContext = 0;
+            contexts[i]->mMapRenderbuffers.EnumerateRead(RenderbufferMemoryUsageFunction, &bufferMemoryUsageForThisContext);
+            result += bufferMemoryUsageForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetRenderbufferCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapRenderbuffers.Count();
+        }
+        return result;
+    }
+
+    static PLDHashOperator ShaderSourceSizeFunction(const PRUint32&, WebGLShader *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->Source().Length();
+        return PL_DHASH_NEXT;
+    }
+
+    static PLDHashOperator ShaderTranslationLogSizeFunction(const PRUint32&, WebGLShader *aValue, void *aData)
+    {
+        PRInt64 *result = (PRInt64*) aData;
+        *result += aValue->TranslationLog().Length();
+        return PL_DHASH_NEXT;
+    }
+
+    static PRInt64 GetShaderSourcesSize() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 shaderSourcesSizeForThisContext = 0;
+            contexts[i]->mMapShaders.EnumerateRead(ShaderSourceSizeFunction, &shaderSourcesSizeForThisContext);
+            result += shaderSourcesSizeForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetShaderTranslationLogsSize() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            PRInt64 shaderTranslationLogsSizeForThisContext = 0;
+            contexts[i]->mMapShaders.EnumerateRead(ShaderTranslationLogSizeFunction, &shaderTranslationLogsSizeForThisContext);
+            result += shaderTranslationLogsSizeForThisContext;
+        }
+        return result;
+    }
+    
+    static PRInt64 GetShaderCount() {
+        const ContextsArrayType & contexts = Contexts();
+        PRInt64 result = 0;
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            result += contexts[i]->mMapShaders.Count();
+        }
+        return result;
+    }
+
+    static PRInt64 GetContextCount() {
+        return Contexts().Length();
+    }
+};
 
 }
 

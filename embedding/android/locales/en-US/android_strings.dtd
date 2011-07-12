@@ -16,3 +16,6 @@
 <!ENTITY  sending_crash_report "Sending crash report\u2026">
 <!ENTITY  exit_label "Exit">
 <!ENTITY  continue_label "Continue">
+
+<!ENTITY  launcher_shortcuts_title "&brandShortName; Web Apps">
+<!ENTITY  launcher_shortcuts_empty "No web apps were found">

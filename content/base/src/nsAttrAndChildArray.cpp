@@ -847,3 +847,21 @@ nsAttrAndChildArray::SetChildAtPos(void** aPos, nsIContent* aChild,
     next->mPreviousSibling = aChild;
   }
 }
+
+PRInt64
+nsAttrAndChildArray::SizeOf() const
+{
+  PRInt64 size = sizeof(*this);
+
+  if (mImpl) {
+    // Don't add the size taken by *mMappedAttrs because it's shared.
+
+    // mBuffer cointains InternalAttr and nsIContent* (even if it's void**)
+    // so, we just have to compute the size of *mBuffer given that this object
+    // doesn't own the children list.
+    size += mImpl->mBufferSize * sizeof(*(mImpl->mBuffer)) + NS_IMPL_EXTRA_SIZE;
+  }
+
+  return size;
+}
+

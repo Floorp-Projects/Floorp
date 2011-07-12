@@ -842,7 +842,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
     }
   }
   
-  nsIScrollbarFrame *sf = do_QueryFrame(aCurrFrame);
+  nsScrollbarFrame *sf = do_QueryFrame(aCurrFrame);
   if (sf) {
     if (!aCurrFrame->IsHorizontal()) {
       if (!aResult->mVScrollbar) {
@@ -3553,6 +3553,9 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   // out and to paint.
   nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext);
 
+  // Obtain opacity value for the image.
+  float opacity = textContext->GetStyleDisplay()->mOpacity;
+
   // Obtain the margins for the text and then deflate our rect by that 
   // amount.  The text is assumed to be contained within the deflated rect.
   nsRect textRect(aTextRect);
@@ -3619,8 +3622,19 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   PRUint8 direction = aTextRTL ? NS_STYLE_DIRECTION_RTL :
                                  NS_STYLE_DIRECTION_LTR;
 
+  gfxContext* ctx = aRenderingContext.ThebesContext();
+  if (opacity != 1.0f) {
+    ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  }
+
   nsLayoutUtils::DrawString(this, &aRenderingContext, text.get(), text.Length(),
                             textRect.TopLeft() + nsPoint(0, baseline), direction);
+
+  if (opacity != 1.0f) {
+    ctx->PopGroupToSource();
+    ctx->Paint(opacity);
+  }
+
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_STOP_TIMER("Render Outline Text");
   NS_TIMELINE_MARK_TIMER("Render Outline Text");
@@ -4134,7 +4148,7 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
+nsTreeBodyFrame::ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
   ScrollParts parts = GetScrollParts();
 
@@ -4153,7 +4167,7 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 a
 }
   
 NS_IMETHODIMP
-nsTreeBodyFrame::PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
+nsTreeBodyFrame::PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
 {
   ScrollParts parts = GetScrollParts();
   

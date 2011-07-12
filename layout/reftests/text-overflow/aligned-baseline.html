@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Testcase for bug 668919</title>
+
+<style>
+.tab-title {
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 5em;
+  height:25px;
+}
+
+.c1 { font-size: 14px; }
+.c2 { font-size: 15px; }
+.c3 { font-size: 16px; }
+.c4 { font-size: 17px; }
+.c5 { font-size: 18px; }
+.c6 { font-size: 19px; }
+.c7 { font-size: 20px; }
+.c8 { font-size: 24px; }
+.c9 { font-size: 28px; }
+.c10 { font-size: 32px; }
+.c11 { font-size: 36px; }
+
+.p0  { padding-top:0; }
+.p1  { padding-top:0.1px; }
+.p2  { padding-top:0.2px; }
+
+.col2 .tab-title { text-shadow: 1px 1px 1px blue; }
+</style>
+    </head>
+<body>
+
+<div style="position:absolute; top: 0px;">
+<div class="tab-title c1 p0">CSS is awesome</div>
+<div class="tab-title c1 p2">CSS is awesome</div>
+<div class="tab-title c1 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 100px;">
+<div class="tab-title c2 p0">CSS is awesome</div>
+<div class="tab-title c2 p2">CSS is awesome</div>
+<div class="tab-title c2 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 200px;">
+<div class="tab-title c3 p0">CSS is awesome</div>
+<div class="tab-title c3 p2">CSS is awesome</div>
+<div class="tab-title c3 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 300px;">
+<div class="tab-title c4 p0">CSS is awesome</div>
+<div class="tab-title c4 p2">CSS is awesome</div>
+<div class="tab-title c4 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 400px;">
+<div class="tab-title c5 p0">CSS is awesome</div>
+<div class="tab-title c5 p2">CSS is awesome</div>
+<div class="tab-title c5 p3">CSS is awesome</div>
+</div>
+
+<div class="col2" style="position:absolute; top: 0px; left:8em;">
+<div style="position:absolute; top: 0px;">
+<div class="tab-title c1 p0">CSS is awesome</div>
+<div class="tab-title c1 p2">CSS is awesome</div>
+<div class="tab-title c1 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 100px;">
+<div class="tab-title c2 p0">CSS is awesome</div>
+<div class="tab-title c2 p2">CSS is awesome</div>
+<div class="tab-title c2 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 200px;">
+<div class="tab-title c3 p0">CSS is awesome</div>
+<div class="tab-title c3 p2">CSS is awesome</div>
+<div class="tab-title c3 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 300px;">
+<div class="tab-title c4 p0">CSS is awesome</div>
+<div class="tab-title c4 p2">CSS is awesome</div>
+<div class="tab-title c4 p3">CSS is awesome</div>
+</div>
+
+<div style="position:absolute; top: 400px;">
+<div class="tab-title c5 p0">CSS is awesome</div>
+<div class="tab-title c5 p2">CSS is awesome</div>
+<div class="tab-title c5 p3">CSS is awesome</div>
+</div>
+</div>
+
+
+</body>
+</html>

@@ -39,6 +39,7 @@
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 
 [
   ["AllPagesList", "popup_autocomplete", "cmd_openLocation"],
@@ -555,17 +556,14 @@ var BrowserUI = {
       CharsetMenu.init();
 
       // If some add-ons were disabled during during an application update, alert user
-      if (Services.prefs.prefHasUserValue("extensions.disabledAddons")) {
-        let addons = Services.prefs.getCharPref("extensions.disabledAddons").split(",");
-        if (addons.length > 0) {
-          let disabledStrings = Strings.browser.GetStringFromName("alertAddonsDisabled");
-          let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
-          let image = "chrome://browser/skin/images/alert-addons-30.png";
+      let addonIDs = AddonManager.getStartupChanges("disabled");
+      if (addonIDs.length > 0) {
+        let disabledStrings = Strings.browser.GetStringFromName("alertAddonsDisabled");
+        let label = PluralForm.get(addonIDs.length, disabledStrings).replace("#1", addonIDs.length);
+        let image = "chrome://browser/skin/images/alert-addons-30.png";
 
-          let alerts = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
-          alerts.showAlertNotification(image, Strings.browser.GetStringFromName("alertAddons"), label, false, "", null);
-        }
-        Services.prefs.clearUserPref("extensions.disabledAddons");
+        let alerts = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
+        alerts.showAlertNotification(image, Strings.browser.GetStringFromName("alertAddons"), label, false, "", null);
       }
 
 #ifdef MOZ_UPDATER
@@ -1040,6 +1038,35 @@ var BrowserUI = {
         return this._domWindowClose(browser);
         break;
       case "DOMLinkAdded":
+        // checks for an icon to use for a web app
+        // apple-touch-icon size is 57px and default size is 16px
+        let rel = json.rel.toLowerCase().split(" ");
+        if (rel.indexOf("icon") != -1) {
+          // We use the sizes attribute if available
+          // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
+          let size = 16;
+          if (json.sizes) {
+            let sizes = json.sizes.toLowerCase().split(" ");
+            sizes.forEach(function(item) {
+              if (item != "any") {
+                let [w, h] = item.split("x");
+                size = Math.max(Math.min(w, h), size);
+              }
+            });
+          }
+          if (size > browser.appIcon.size) {
+            browser.appIcon.href = json.href;
+            browser.appIcon.size = size;
+          }
+        }
+        else if ((rel.indexOf("apple-touch-icon") != -1) && (browser.appIcon.size < 57)) {
+          // XXX should we support apple-touch-icon-precomposed ?
+          // see http://developer.apple.com/safari/library/documentation/appleapplications/reference/safariwebcontent/configuringwebapplications/configuringwebapplications.html
+          browser.appIcon.href = json.href;
+          browser.appIcon.size = 57;
+        }
+
+        // Handle favicon changes
         if (Browser.selectedBrowser == browser)
           this._updateIcon(Browser.selectedBrowser.mIconURL);
         break;
@@ -1240,7 +1267,8 @@ var BrowserUI = {
         this.activePanel = RemoteTabsList;
         break;
       case "cmd_quit":
-        GlobalOverlay.goQuitApplication();
+        // Only close one window
+        this._closeOrQuit();
         break;
       case "cmd_close":
         this._closeOrQuit();

@@ -51,49 +51,13 @@
 #include "nsTextFormatter.h"
 #include "nsCSSProps.h"
 
-#define POSITIVE_SCALE_FACTOR 1.10 /* 10% */
-#define NEGATIVE_SCALE_FACTOR .90  /* 10% */
-
-
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
-
-/*
- * Return the scaling percentage given a font scaler
- * Lifted from layutil.c
- */
-float nsStyleUtil::GetScalingFactor(PRInt32 aScaler)
-{
-  double scale = 1.0;
-  double mult;
-  PRInt32 count;
-
-  if(aScaler < 0)   {
-    count = -aScaler;
-    mult = NEGATIVE_SCALE_FACTOR;
-  }
-  else {
-    count = aScaler;
-    mult = POSITIVE_SCALE_FACTOR;
-  }
-
-  /* use the percentage scaling factor to the power of the pref */
-  while(count--) {
-    scale *= mult;
-  }
-
-  return (float)scale;
-}
-
-
 //------------------------------------------------------------------------------
 // Font Algorithm Code
 //------------------------------------------------------------------------------
 
 nscoord
 nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
-                               float aScalingFactor, nsPresContext* aPresContext,
+                               nsPresContext* aPresContext,
                                nsFontSizeType aFontSizeType)
 {
 #define sFontSizeTableMin  9 
@@ -212,7 +176,6 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
     dFontSize = (factor * aBasePointSize) / 100;
   }
 
-  dFontSize *= aScalingFactor;
 
   if (1.0 < dFontSize) {
     return (nscoord)dFontSize;
@@ -226,7 +189,7 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 //------------------------------------------------------------------------------
 
 nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                             float aScalingFactor, nsPresContext* aPresContext,
+                                             nsPresContext* aPresContext,
                                              nsFontSizeType aFontSizeType)
 {
   PRInt32 index;
@@ -250,26 +213,26 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
     indexMax = 6;
   }
   
-  smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
-  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType); 
+  smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aPresContext, aFontSizeType);
+  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType); 
   if (aFontSize > smallestIndexFontSize) {
     if (aFontSize < NSToCoordRound(float(largestIndexFontSize) * 1.5)) { // smaller will be in HTML table
       // find largest index smaller than current
       for (index = indexMax; index >= indexMin; index--) {
-        indexFontSize = CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+        indexFontSize = CalcFontPointSize(index, aBasePointSize, aPresContext, aFontSizeType);
         if (indexFontSize < aFontSize)
           break;
       } 
       // set up points beyond table for interpolation purposes
       if (indexFontSize == smallestIndexFontSize) {
         smallerIndexFontSize = indexFontSize - onePx;
-        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
       } else if (indexFontSize == largestIndexFontSize) {
-        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
         largerIndexFontSize = NSToCoordRound(float(largestIndexFontSize) * 1.5);
       } else {
-        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
-        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
       }
       // compute the relative position of the parent size between the two closest indexed sizes
       relativePosition = float(aFontSize - indexFontSize) / float(largerIndexFontSize - indexFontSize);            
@@ -291,13 +254,14 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
 //------------------------------------------------------------------------------
 
 nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                            float aScalingFactor, nsPresContext* aPresContext,
+                                            nsPresContext* aPresContext,
                                             nsFontSizeType aFontSizeType)
 {
   PRInt32 index;
   PRInt32 indexMin;
   PRInt32 indexMax;
   float relativePosition;
+  nscoord adjustment;
   nscoord largerSize;
   nscoord indexFontSize = aFontSize; // XXX initialize to quell a spurious gcc3.2 warning
   nscoord smallestIndexFontSize;
@@ -315,38 +279,39 @@ nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
     indexMax = 6;
   }
   
-  smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
-  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType); 
+  smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aPresContext, aFontSizeType);
+  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType); 
   if (aFontSize > (smallestIndexFontSize - onePx)) {
     if (aFontSize < largestIndexFontSize) { // larger will be in HTML table
       // find smallest index larger than current
       for (index = indexMin; index <= indexMax; index++) { 
-        indexFontSize = CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+        indexFontSize = CalcFontPointSize(index, aBasePointSize, aPresContext, aFontSizeType);
         if (indexFontSize > aFontSize)
           break;
       }
       // set up points beyond table for interpolation purposes
       if (indexFontSize == smallestIndexFontSize) {
         smallerIndexFontSize = indexFontSize - onePx;
-        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
       } else if (indexFontSize == largestIndexFontSize) {
-        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
-        largerIndexFontSize = NSToCoordRound(float(largestIndexFontSize) * 1.5);
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
+        largerIndexFontSize = NSCoordSaturatingMultiply(largestIndexFontSize, 1.5);
       } else {
-        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
-        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
       }
       // compute the relative position of the parent size between the two closest indexed sizes
       relativePosition = float(aFontSize - smallerIndexFontSize) / float(indexFontSize - smallerIndexFontSize);
       // set the new size to have the same relative position between the next largest two indexed sizes
-      largerSize = indexFontSize + NSToCoordRound(relativePosition * (largerIndexFontSize - indexFontSize));      
+      adjustment = NSCoordSaturatingNonnegativeMultiply(largerIndexFontSize - indexFontSize, relativePosition);
+      largerSize = NSCoordSaturatingAdd(indexFontSize, adjustment);
     }
     else {  // larger than HTML table, increase by 50%
-      largerSize = NSToCoordRound(float(aFontSize) * 1.5);
+      largerSize = NSCoordSaturatingMultiply(aFontSize, 1.5);
     }
   }
   else { // smaller than HTML table, increase by 1px
-    largerSize = aFontSize + onePx; 
+    largerSize = NSCoordSaturatingAdd(aFontSize, onePx);
   }
   return largerSize;
 }

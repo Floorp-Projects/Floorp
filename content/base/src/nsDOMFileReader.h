@@ -80,7 +80,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIDOMFILEREADER
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMFileReader, nsXHREventTarget)
 
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::);
         
@@ -109,14 +108,19 @@ public:
 
   nsresult Init();
 
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMFileReader,
+                                           nsXHREventTarget) 
+  void RootResultArrayBuffer();
+
 protected:
   enum eDataFormat {
+    FILE_AS_ARRAYBUFFER,
     FILE_AS_BINARY,
     FILE_AS_TEXT,
     FILE_AS_DATAURL
   };
 
-  nsresult ReadFileContent(nsIDOMBlob *aFile, const nsAString &aCharset, eDataFormat aDataFormat); 
+  nsresult ReadFileContent(JSContext* aCx, nsIDOMBlob *aFile, const nsAString &aCharset, eDataFormat aDataFormat); 
   nsresult GetAsText(const nsACString &aCharset,
                      const char *aFileData, PRUint32 aDataLen, nsAString &aResult);
   nsresult GetAsDataURL(nsIDOMBlob *aFile, const char *aFileData, PRUint32 aDataLen, nsAString &aResult); 
@@ -151,6 +155,8 @@ protected:
 
   PRUint64 mReadTotal;
   PRUint64 mReadTransferred;
+  
+  JSObject* mResultArrayBuffer;
 };
 
 #endif

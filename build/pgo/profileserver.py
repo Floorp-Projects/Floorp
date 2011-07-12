@@ -91,7 +91,6 @@ if __name__ == '__main__':
   t.start()
   
   automation.setServerInfo("localhost", PORT)
-  automation.initializeProfile(PROFILE_DIRECTORY)
   browserEnv = automation.environment()
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
   browserEnv["MOZ_JAR_LOG_DIR"] = MOZ_JAR_LOG_DIR
@@ -102,6 +101,7 @@ if __name__ == '__main__':
   for i in range(0, num_runs):
       if num_runs != 1:
           print "Starting profiling run %d of %d" % (i + 1, num_runs)
+      automation.initializeProfile(PROFILE_DIRECTORY)
       status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY, {},
                                  debuggerInfo=debuggerInfo,
                                  # the profiling HTML doesn't output anything,

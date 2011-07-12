@@ -48,6 +48,7 @@ public:
   void Init(PRUint8 aAttrEnum) {
     mAnimVal = nsnull;
     mAttrEnum = aAttrEnum;
+    mIsBaseSet = PR_FALSE;
   }
 
   void SetBaseValue(const nsAString& aValue,
@@ -58,6 +59,14 @@ public:
 
   void SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement);
   void GetAnimValue(nsAString& aValue, const nsSVGElement *aSVGElement) const;
+
+  // Returns PR_TRUE if the animated value of this string has been explicitly
+  // set (either by animation, or by taking on the base value which has been
+  // explicitly set by markup or a DOM call), PR_FALSE otherwise.
+  // If this returns PR_FALSE, the animated value is still valid, that is,
+  // useable, and represents the default base value of the attribute.
+  PRBool IsExplicitlySet() const
+    { return !!mAnimVal || mIsBaseSet; }
 
   nsresult ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
                                nsSVGElement *aSVGElement);
@@ -70,6 +79,7 @@ private:
 
   nsAutoPtr<nsString> mAnimVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
+  PRPackedBool mIsBaseSet;
 
 public:
   struct DOMAnimatedString : public nsIDOMSVGAnimatedString

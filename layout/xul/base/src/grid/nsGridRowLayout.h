@@ -53,8 +53,8 @@ class nsBoxLayoutState;
 class nsGrid;
 
 /**
- * A common base class for nsGridRowLeafLayout (the nsIBoxLayout object
- * for a grid row or column) and nsGridRowGroupLayout (the nsIBoxLayout
+ * A common base class for nsGridRowLeafLayout (the nsBoxLayout object
+ * for a grid row or column) and nsGridRowGroupLayout (the nsBoxLayout
  * object for a grid row group or column group).
  */
 // XXXldb This needs a name that indicates that it's a base class for
@@ -68,7 +68,7 @@ public:
   virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nsnull; }
   virtual nsGridLayout2* CastToGridLayout() { return nsnull; }
   virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull);
-  virtual void GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow);
+  virtual nsIGridPart* GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox);
   virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                                 nsIBox* aPrevBox,
                                 const nsFrameList::Slice& aNewChildren);
@@ -77,6 +77,8 @@ public:
   virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);
+
+  virtual nsIGridPart* AsGridPart() { return this; }
 
 protected:
   virtual void ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)=0;

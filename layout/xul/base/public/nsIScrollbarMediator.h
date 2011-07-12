@@ -42,19 +42,16 @@
 
 #include "nsQueryFrame.h"
 
-class nsIScrollbarFrame;
+class nsScrollbarFrame;
 
 class nsIScrollbarMediator
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsIScrollbarMediator)
 
-  // The nsIFrame aScrollbar argument below denotes the
-  // scrollbar that's firing the notification. It should be
-  // where the same object as where nsIScrollbarFrame is implemented
-
-  NS_IMETHOD PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
-  NS_IMETHOD ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+  // The aScrollbar argument denotes the scrollbar that's firing the notification.
+  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
+  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
   NS_IMETHOD VisibilityChanged(PRBool aVisible) = 0;
 };

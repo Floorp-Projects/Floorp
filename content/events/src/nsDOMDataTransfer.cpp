@@ -255,7 +255,7 @@ nsDOMDataTransfer::GetFiles(nsIDOMFileList** aFileList)
       if (!file)
         continue;
 
-      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file);
+      nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(file);
 
       if (!mFiles->Append(domFile))
         return NS_ERROR_FAILURE;
