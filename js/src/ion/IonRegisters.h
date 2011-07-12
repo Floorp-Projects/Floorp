@@ -68,7 +68,7 @@ struct Register {
         return r;
     }
     Code code() const {
-        JS_ASSERT(code_ < Registers::Total);
+        JS_ASSERT((uint32)code_ < Registers::Total);
         return code_;
     }
     const char *name() const {
@@ -94,7 +94,7 @@ struct FloatRegister {
         return r;
     }
     Code code() const {
-        JS_ASSERT(code_ < FloatRegisters::Total);
+        JS_ASSERT((uint32)code_ < FloatRegisters::Total);
         return code_;
     }
     const char *name() const {
