@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 </head>
@@ -18,13 +19,41 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
 </div>
 <script type="text/javascript">
 
-var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.reset();
-MockFilePicker.returnValue = MockFilePicker.returnOK;
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var wu = SpecialPowers.DOMWindowUtils;
+function MockFilePicker() { };
+MockFilePicker.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
+  init: function(aParent, aTitle, aMode) { },
+  appendFilters: function(aFilterMask) { },
+  appendFilter: function(aTitle, aFilter) { },
+  defaultString: "",
+  defaultExtension: "",
+  filterIndex: 0,
+  displayDirectory: null,
+  file: null,
+  get fileURL() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  get files() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  show: function MFP_show() {
+    return Ci.nsIFilePicker.returnOK;
+  }
+};
+
+var mockFilePickerRegisterer = 
+  new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
 
 function test() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var wu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindowUtils);
+                  
+
+  mockFilePickerRegisterer.register();
   try {
     var domActivateEvents;
     var fileInput = document.getElementById("file");
@@ -47,8 +76,15 @@ function test() {
     is(domActivateEvents, 1, "click on button should only fire 1 DOMActivate event");
 
   } finally {
-    SimpleTest.finish();
+    SimpleTest.executeSoon(unregister);
+    
   }
+}
+
+function unregister()
+{
+  mockFilePickerRegisterer.unregister();
+  SimpleTest.finish();
 }
 
 window.onload = function() {
