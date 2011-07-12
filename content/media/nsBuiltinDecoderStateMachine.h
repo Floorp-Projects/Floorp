@@ -356,23 +356,14 @@ protected:
   // to audio stream to play audio data.
   void AudioLoop();
 
-  // Stop or pause playback of media. This has two modes, denoted by
-  // aMode being either AUDIO_PAUSE or AUDIO_SHUTDOWN.
-  //
-  // AUDIO_PAUSE: Suspends the audio stream to be resumed later.
-  // This does not close the OS based audio stream 
-  //
-  // AUDIO_SHUTDOWN: Closes and destroys the audio stream and
-  // releases any OS resources.
-  //
-  // The decoder monitor must be held with exactly one lock count. Called
-  // on the state machine thread.
-  enum eStopMode {AUDIO_PAUSE, AUDIO_SHUTDOWN};
-  void StopPlayback(eStopMode aMode);
+  // Sets internal state which causes playback of media to pause.
+  // The decoder monitor must be held. Called on the main, state machine,
+  // and decode threads.
+  void StopPlayback();
 
-  // Resume playback of media. Must be called with the decode monitor held.
-  // This resumes a paused audio stream. The decoder monitor must be held with
-  // exactly one lock count. Called on the state machine thread.
+  // Sets internal state which causes playback of media to begin or resume.
+  // Must be called with the decode monitor held. Called on the state machine
+  // and decode threads.
   void StartPlayback();
 
   // Moves the decoder into decoding state. Called on the state machine
@@ -417,12 +408,6 @@ protected:
   // Decode thread run function. Determines which of the Decode*() functions
   // to call.
   void DecodeThreadRun();
-
-  // ReentrantMonitor on mAudioStream. This monitor must be held in
-  // order to delete or use the audio stream. This stops us destroying
-  // the audio stream while it's being used on another thread
-  // (typically when it's being written to on the audio thread).
-  ReentrantMonitor mAudioReentrantMonitor;
 
   // The size of the decoded YCbCr frame.
   // Accessed on state machine thread.
@@ -470,9 +455,10 @@ protected:
   // this value. Accessed on main and state machine thread.
   PRInt64 mSeekTime;
 
-  // The audio stream resource. Used on the state machine, audio, and
-  // main threads. You must hold the mAudioReentrantMonitor, and must
-  // NOT hold the decoder monitor when using the audio stream!
+  // The audio stream resource. Used on the state machine, and audio threads.
+  // This is created and destroyed on the audio thread, while holding the
+  // decoder monitor, so if this is used off the audio thread, you must
+  // first acquire the decoder monitor and check that it is non-null.
   nsRefPtr<nsAudioStream> mAudioStream;
 
   // The reader, don't call its methods with the decoder monitor held.
