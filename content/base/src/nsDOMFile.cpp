@@ -150,20 +150,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMFileBase)
 NS_IMPL_RELEASE(nsDOMFileBase)
 
-static nsresult
-DOMFileResult(nsresult rv)
-{
-  if (rv == NS_ERROR_FILE_NOT_FOUND) {
-    return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
-  }
-
-  if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_FILES) {
-    return NS_ERROR_DOM_FILE_NOT_READABLE_ERR;
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsDOMFileBase::GetName(nsAString &aFileName)
 {
