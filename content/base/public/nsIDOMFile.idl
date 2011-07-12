@@ -73,9 +73,10 @@ interface nsIDOMFile : nsIDOMBlob
   [noscript] readonly attribute DOMString mozFullPathInternal;
 };
 
-[scriptable, uuid(c4a77171-039b-4f84-97f9-820fb51626af)]
+[scriptable, builtinclass, uuid(006d2cde-ec18-41d4-acc3-43682dd418e2)]
 interface nsIDOMMozBlobBuilder : nsISupports
 {
   nsIDOMBlob getBlob([optional] in DOMString contentType);
+  nsIDOMFile getFile(in DOMString name, [optional] in DOMString contentType);
   [implicit_jscontext] void append(in jsval data);
 };
