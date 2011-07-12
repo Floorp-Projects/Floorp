@@ -27,66 +27,63 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "PageBlock.h"
+#include "assembler/wtf/Platform.h"
+
+#if ENABLE_ASSEMBLER && WTF_OS_OS2
+
+#define INCL_DOS
+#include <os2.h>
+
 #include "wtf/Assertions.h"
 
-#if WTF_OS_UNIX && !WTF_OS_SYMBIAN
-#include <unistd.h>
-#endif
-
-#if WTF_OS_WINDOWS
-#include <malloc.h>
-#include <windows.h>
-#endif
-
-#if WTF_OS_SYMBIAN
-#include <e32hal.h>
-#include <e32std.h>
-#endif
-
-#if WTF_OS_OS2
-#include <stdlib.h>
-#endif
+#include "OSAllocator.h"
 
 namespace WTF {
 
-static size_t s_pageSize;
-
-#if (WTF_OS_UNIX && !WTF_OS_SYMBIAN) || WTF_OS_OS2
-
-inline size_t systemPageSize()
+static inline ULONG protection(bool writable, bool executable)
 {
-    return getpagesize();
+    return (PAG_READ | (writable ? PAG_WRITE : 0) | (executable ? PAG_EXECUTE : 0));
 }
 
-#elif WTF_OS_WINDOWS
-
-inline size_t systemPageSize()
+void* OSAllocator::reserveUncommitted(size_t bytes, Usage, bool writable, bool executable)
 {
-    static size_t size = 0;
-    SYSTEM_INFO system_info;
-    GetSystemInfo(&system_info);
-    size = system_info.dwPageSize;
-    return size;
+    void* result = NULL;
+    if (DosAllocMem(&result, bytes, OBJ_ANY | protection(writable, executable)) &&
+        DosAllocMem(&result, bytes, protection(writable, executable)))
+    {   CRASH();
+    }
+    return result;
 }
 
-#elif WTF_OS_SYMBIAN
-
-inline size_t systemPageSize()
+void* OSAllocator::reserveAndCommit(size_t bytes, Usage, bool writable, bool executable)
 {
-    static TInt page_size = 0;
-    UserHal::PageSizeInBytes(page_size);
-    return page_size;
+    void* result = NULL;
+    if (DosAllocMem(&result, bytes, OBJ_ANY | PAG_COMMIT | protection(writable, executable)) &&
+        DosAllocMem(&result, bytes, PAG_COMMIT | protection(writable, executable)))
+    {   CRASH();
+    }
+    return result;
+
 }
 
-#endif
-
-size_t pageSize()
+void OSAllocator::commit(void* address, size_t bytes, bool writable, bool executable)
 {
-    if (!s_pageSize)
-        s_pageSize = systemPageSize();
-    ASSERT(isPowerOfTwo(s_pageSize));
-    return s_pageSize;
+if (DosSetMem(address, bytes, PAG_COMMIT | protection(writable, executable)))
+    CRASH();
+}
+
+void OSAllocator::decommit(void* address, size_t bytes)
+{
+if (DosSetMem(address, bytes, PAG_DECOMMIT))
+    CRASH();
+}
+
+void OSAllocator::releaseDecommitted(void* address, size_t bytes)
+{
+if (DosFreeMem(address))
+    CRASH();
 }
 
 } // namespace WTF
+
+#endif
