@@ -172,11 +172,6 @@ public:
   virtual void UpdatePlaybackPosition(PRInt64 aTime);
   virtual void StartBuffering();
 
-
-  // Load metadata Called on the state machine thread. The decoder monitor must be held with
-  // exactly one lock count.
-  virtual void LoadMetadata();
-
   // State machine thread run function. Polls the state, sends frames to be
   // displayed at appropriate times, and generally manages the decode.
   NS_IMETHOD Run();
@@ -214,11 +209,11 @@ public:
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
-  PRBool OnAudioThread() {
+  PRBool OnAudioThread() const {
     return IsCurrentThread(mAudioThread);
   }
 
-  PRBool OnStateMachineThread() {
+  PRBool OnStateMachineThread() const {
     return mDecoder->OnStateMachineThread();
   }
 
@@ -410,6 +405,10 @@ protected:
   // hardware, so this can only be used as a upper bound. The decoder monitor
   // must be held when calling this. Called on the decoder thread.
   PRInt64 GetDecodedAudioDuration();
+
+  // Load metadata. Called on the decode thread. The decoder monitor
+  // must be held with exactly one lock count.
+  nsresult DecodeMetadata();
 
   // ReentrantMonitor on mAudioStream. This monitor must be held in
   // order to delete or use the audio stream. This stops us destroying
