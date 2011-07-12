@@ -1066,7 +1066,7 @@ WeaveSvc.prototype = {
       return;
     }
 
-    let reason = this._checkSync([kSyncNotLoggedIn, kFirstSyncChoiceNotMade]);
+    let reason = this._checkSync([kSyncNotLoggedIn]);
 
     // Can't autoconnect if we're missing these values.
     if (!reason) {
