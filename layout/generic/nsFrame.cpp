@@ -2609,8 +2609,8 @@ nsFrame::ExpandSelectionByMouseMove(nsFrameSelection* aFrameSelection,
 
   nsIScrollableFrame* scrollableFrame =
     FindNearestScrollableFrameForSelection(this, selectionRoot);
-  // If a non-scrollable content captures by script, we may not be able to find
-  // any scrollable frame.
+  // If a non-scrollable content captures by script and there is no scrollable
+  // frame between the selection root and this, we don't need to do anymore.
   if (!scrollableFrame) {
     return NS_OK;
   }
@@ -2619,8 +2619,8 @@ nsFrame::ExpandSelectionByMouseMove(nsFrameSelection* aFrameSelection,
 
   if (!handleTableSelection) {
     nsIScrollableFrame* selectionRootScrollableFrame =
-      FindNearestScrollableFrameForSelection(selectionRoot->GetPrimaryFrame());
-    NS_ENSURE_TRUE(selectionRootScrollableFrame, NS_OK);
+      FindNearestScrollableFrameForSelection(selectionRoot->GetPrimaryFrame(),
+                                             selectionRoot);
     while (scrollableFrame) {
       // We don't need to scroll the selection root frame when the mouse cursor
       // is on its edge because selection root frame will be scrolled when the
