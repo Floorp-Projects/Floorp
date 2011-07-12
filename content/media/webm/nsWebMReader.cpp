@@ -209,7 +209,7 @@ void nsWebMReader::Cleanup()
 
 nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on state machine thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   nestegg_io io;
