@@ -52,11 +52,20 @@
 
 using namespace mozilla;
 
-class nsDOMMultipartBlob : public nsDOMFileBase
+class nsDOMMultipartFile : public nsDOMFileBase
 {
 public:
+  // Create as a file
+  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> > aBlobs,
+                     const nsAString& aName,
+                     const nsAString& aContentType)
+    : nsDOMFileBase(aName, aContentType, PR_UINT64_MAX),
+      mBlobs(aBlobs)
+  {
+  }
+
   // Create as a blob
-  nsDOMMultipartBlob(nsTArray<nsCOMPtr<nsIDOMBlob> > aBlobs,
+  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> > aBlobs,
                      const nsAString& aContentType)
     : nsDOMFileBase(aContentType, PR_UINT64_MAX),
       mBlobs(aBlobs)
@@ -74,7 +83,7 @@ protected:
 };
 
 NS_IMETHODIMP
-nsDOMMultipartBlob::GetSize(PRUint64* aLength)
+nsDOMMultipartFile::GetSize(PRUint64* aLength)
 {
   if (mLength == PR_UINT64_MAX) {
     CheckedUint64 length = 0;
@@ -101,7 +110,7 @@ nsDOMMultipartBlob::GetSize(PRUint64* aLength)
 }
 
 NS_IMETHODIMP
-nsDOMMultipartBlob::GetInternalStream(nsIInputStream** aStream)
+nsDOMMultipartFile::GetInternalStream(nsIInputStream** aStream)
 {
   nsresult rv;
   *aStream = nsnull;
@@ -126,7 +135,7 @@ nsDOMMultipartBlob::GetInternalStream(nsIInputStream** aStream)
 }
 
 already_AddRefed<nsIDOMBlob>
-nsDOMMultipartBlob::CreateSlice(PRUint64 aStart, PRUint64 aLength,
+nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
                                 const nsAString& aContentType)
 {
   // If we clamped to nothing we create an empty blob
@@ -153,7 +162,7 @@ nsDOMMultipartBlob::CreateSlice(PRUint64 aStart, PRUint64 aLength,
                           getter_AddRefs(firstBlob));
       NS_ENSURE_SUCCESS(rv, nsnull);
 
-      // Avoid wrapping a single blob inside an nsDOMMultipartBlob
+      // Avoid wrapping a single blob inside an nsDOMMultipartFile
       if (length == upperBound) {
         return firstBlob.forget();
       }
@@ -188,7 +197,7 @@ nsDOMMultipartBlob::CreateSlice(PRUint64 aStart, PRUint64 aLength,
   }
 
   // we can create our blob now
-  nsCOMPtr<nsIDOMBlob> blob = new nsDOMMultipartBlob(blobs, aContentType);
+  nsCOMPtr<nsIDOMBlob> blob = new nsDOMMultipartFile(blobs, aContentType);
   return blob.forget();
 }
 
@@ -317,9 +326,33 @@ nsDOMBlobBuilder::GetBlob(const nsAString& aContentType,
 
   Flush();
 
-  nsCOMPtr<nsIDOMBlob> blob = new nsDOMMultipartBlob(mBlobs,
+  nsCOMPtr<nsIDOMBlob> blob = new nsDOMMultipartFile(mBlobs,
                                                      aContentType);
   blob.forget(aBlob);
+
+  // NB: This is a willful violation of the spec.  The spec says that
+  // the existing contents of the BlobBuilder should be included
+  // in the next blob produced.  This seems silly and has been raised
+  // on the WHATWG listserv.
+  mBlobs.Clear();
+
+  return NS_OK;
+}
+
+/* nsIDOMBlob getFile (in DOMString name, [optional] in DOMString contentType); */
+NS_IMETHODIMP
+nsDOMBlobBuilder::GetFile(const nsAString& aName,
+                          const nsAString& aContentType,
+                          nsIDOMFile** aFile)
+{
+  NS_ENSURE_ARG(aFile);
+
+  Flush();
+
+  nsCOMPtr<nsIDOMFile> file = new nsDOMMultipartFile(mBlobs,
+                                                     aName,
+                                                     aContentType);
+  file.forget(aFile);
 
   // NB: This is a willful violation of the spec.  The spec says that
   // the existing contents of the BlobBuilder should be included
