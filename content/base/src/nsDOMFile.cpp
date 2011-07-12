@@ -164,14 +164,6 @@ DOMFileResult(nsresult rv)
   return rv;
 }
 
-/* static */ nsresult
-nsDOMFileFile::NewFile(nsISupports* *aNewObject)
-{
-  nsCOMPtr<nsISupports> file = do_QueryObject(new nsDOMFileFile());
-  file.forget(aNewObject);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDOMFileBase::GetName(nsAString &aFileName)
 {
@@ -200,54 +192,6 @@ nsDOMFileBase::GetMozFullPathInternal(nsAString &aFileName)
 }
 
 NS_IMETHODIMP
-nsDOMFileFile::GetSize(PRUint64 *aFileSize)
-{
-  if (IsSizeUnknown()) {
-    NS_ASSERTION(mWholeFile,
-                 "Should only use lazy size when using the whole file");
-    PRInt64 fileSize;
-    nsresult rv = mFile->GetFileSize(&fileSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-  
-    if (fileSize < 0) {
-      return NS_ERROR_FAILURE;
-    }
-  
-    mLength = fileSize;
-  }
-
-  *aFileSize = mLength;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMFileFile::GetType(nsAString &aType)
-{
-  if (mContentType.IsVoid()) {
-    NS_ASSERTION(mWholeFile,
-                 "Should only use lazy ContentType when using the whole file");
-    nsresult rv;
-    nsCOMPtr<nsIMIMEService> mimeService =
-      do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCAutoString mimeType;
-    rv = mimeService->GetTypeFromFile(mFile, mimeType);
-    if (NS_FAILED(rv)) {
-      mimeType.Truncate();
-    }
-
-    AppendUTF8toUTF16(mimeType, mContentType);
-    mContentType.SetIsVoid(PR_FALSE);
-  }
-
-  aType = mContentType;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMFileBase::GetSize(PRUint64 *aSize)
 {
   *aSize = mLength;
@@ -259,22 +203,6 @@ nsDOMFileBase::GetType(nsAString &aType)
 {
   aType = mContentType;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMFileBase::GetInternalStream(nsIInputStream **aStream)
-{
-  // Must be overridden
-  NS_NOTREACHED("Must override GetInternalStream");
-  
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDOMFileFile::GetMozFullPathInternal(nsAString &aFilename)
-{
-  NS_ASSERTION(mIsFile, "Should only be called on files");
-  return mFile->GetPath(aFilename);
 }
 
 // Makes sure that aStart and aEnd is less then or equal to aSize and greater
@@ -339,18 +267,13 @@ nsDOMFileBase::MozSlice(PRInt64 aStart, PRInt64 aEnd,
   return *aBlob ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
-const PRUint32 sFileStreamFlags =
-  nsIFileInputStream::CLOSE_ON_EOF |
-  nsIFileInputStream::REOPEN_ON_REWIND |
-  nsIFileInputStream::DEFER_OPEN;
-
 NS_IMETHODIMP
-nsDOMFileFile::GetInternalStream(nsIInputStream **aStream)
+nsDOMFileBase::GetInternalStream(nsIInputStream **aStream)
 {
-  return mWholeFile ?
-    NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags) :
-    NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
-                                      -1, -1, sFileStreamFlags);
+  // Must be overridden
+  NS_NOTREACHED("Must override GetInternalStream");
+  
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -416,6 +339,83 @@ nsDOMFileFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
 {
   nsCOMPtr<nsIDOMBlob> t = new nsDOMFileFile(this, aStart, aLength, aContentType);
   return t.forget();
+}
+
+/* static */ nsresult
+nsDOMFileFile::NewFile(nsISupports* *aNewObject)
+{
+  nsCOMPtr<nsISupports> file = do_QueryObject(new nsDOMFileFile());
+  file.forget(aNewObject);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFileFile::GetMozFullPathInternal(nsAString &aFilename)
+{
+  NS_ASSERTION(mIsFile, "Should only be called on files");
+  return mFile->GetPath(aFilename);
+}
+
+NS_IMETHODIMP
+nsDOMFileFile::GetSize(PRUint64 *aFileSize)
+{
+  if (IsSizeUnknown()) {
+    NS_ASSERTION(mWholeFile,
+                 "Should only use lazy size when using the whole file");
+    PRInt64 fileSize;
+    nsresult rv = mFile->GetFileSize(&fileSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    if (fileSize < 0) {
+      return NS_ERROR_FAILURE;
+    }
+  
+    mLength = fileSize;
+  }
+
+  *aFileSize = mLength;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFileFile::GetType(nsAString &aType)
+{
+  if (mContentType.IsVoid()) {
+    NS_ASSERTION(mWholeFile,
+                 "Should only use lazy ContentType when using the whole file");
+    nsresult rv;
+    nsCOMPtr<nsIMIMEService> mimeService =
+      do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString mimeType;
+    rv = mimeService->GetTypeFromFile(mFile, mimeType);
+    if (NS_FAILED(rv)) {
+      mimeType.Truncate();
+    }
+
+    AppendUTF8toUTF16(mimeType, mContentType);
+    mContentType.SetIsVoid(PR_FALSE);
+  }
+
+  aType = mContentType;
+
+  return NS_OK;
+}
+
+const PRUint32 sFileStreamFlags =
+  nsIFileInputStream::CLOSE_ON_EOF |
+  nsIFileInputStream::REOPEN_ON_REWIND |
+  nsIFileInputStream::DEFER_OPEN;
+
+NS_IMETHODIMP
+nsDOMFileFile::GetInternalStream(nsIInputStream **aStream)
+{
+  return mWholeFile ?
+    NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags) :
+    NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
+                                      -1, -1, sFileStreamFlags);
 }
 
 NS_IMETHODIMP
