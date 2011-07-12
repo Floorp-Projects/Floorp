@@ -152,11 +152,19 @@ ArrayBuffer::class_constructor(JSContext *cx, uintN argc, Value *vp)
 static inline JSBool
 AllocateSlots(JSContext *cx, JSObject *obj, uint32 size)
 {
-    uint32 bytes = size + sizeof(js::Value);
-    if (size > sizeof(js::Value) * ARRAYBUFFER_RESERVED_SLOTS - sizeof(js::Value) ) {
-        obj->slots = (js::Value *)cx->calloc_(bytes);
-        if (!obj->slots)
+    uint32 bytes = size + sizeof(Value);
+    if (size > sizeof(Value) * ARRAYBUFFER_RESERVED_SLOTS - sizeof(Value) ) {
+        JS_ASSERT(!obj->hasSlotsArray());
+        Value *tmpslots = (Value *)cx->calloc_(bytes);
+        if (!tmpslots)
             return false;
+        obj->slots = tmpslots;
+        /*
+         * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
+         * |capacity * sizeof(Value)| may underestimate the size by up to
+         * |sizeof(Value) - 1| bytes.
+         */
+        obj->capacity = bytes / sizeof(Value);
     } else {
         memset(obj->slots, 0, bytes);
     }
