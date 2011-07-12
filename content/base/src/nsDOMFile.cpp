@@ -254,7 +254,7 @@ nsDOMFileBase::MozSlice(PRInt64 aStart, PRInt64 aEnd,
   nsresult rv = GetSize(&thisLength);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!optional_argc) {
+  if (optional_argc < 2) {
     aEnd = (PRInt64)thisLength;
   }
 
