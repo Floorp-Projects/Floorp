@@ -244,16 +244,32 @@ nsresult nsBuiltinDecoder::RequestFrameBufferLength(PRUint32 aLength)
   return res;
 }
 
-nsresult nsBuiltinDecoder::StartStateMachineThread()
+nsresult nsBuiltinDecoder::CreateStateMachineThread()
 {
+  if (mShuttingDown)
+    return NS_OK;
   NS_ASSERTION(mDecoderStateMachine,
                "Must have state machine to start state machine thread");
   if (mStateMachineThread) {
     return NS_OK;
   }
-  nsresult rv = NS_NewThread(getter_AddRefs(mStateMachineThread));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return mStateMachineThread->Dispatch(mDecoderStateMachine, NS_DISPATCH_NORMAL);
+  nsresult res = NS_NewThread(getter_AddRefs(mStateMachineThread));
+  if (NS_FAILED(res)) {
+    Shutdown();
+    return res;    
+  }
+  return NS_OK;
+}
+
+nsresult nsBuiltinDecoder::StartStateMachineThread()
+{
+  if (mShuttingDown)
+    return NS_OK;
+  NS_ASSERTION(mDecoderStateMachine,
+               "Must have state machine to start state machine thread");
+  nsresult res = CreateStateMachineThread();
+  if (NS_FAILED(res)) return res;
+  return mStateMachineThread->Dispatch(mDecoderStateMachine, NS_DISPATCH_NORMAL); 
 }
 
 nsresult nsBuiltinDecoder::Play()
