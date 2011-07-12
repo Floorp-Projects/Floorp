@@ -52,24 +52,22 @@
 
 using namespace mozilla;
 
-class nsDOMMultipartBlob : public nsDOMFile
+class nsDOMMultipartBlob : public nsDOMFileBase
 {
 public:
+  // Create as a blob
   nsDOMMultipartBlob(nsTArray<nsCOMPtr<nsIDOMBlob> > aBlobs,
                      const nsAString& aContentType)
-    : nsDOMFile(nsnull, aContentType),
+    : nsDOMFileBase(aContentType, PR_UINT64_MAX),
       mBlobs(aBlobs)
   {
-    mIsFullFile = false;
-    mStart = 0;
-    mLength = 0;
   }
+
+  already_AddRefed<nsIDOMBlob>
+  CreateSlice(PRUint64 aStart, PRUint64 aLength, const nsAString& aContentType);
 
   NS_IMETHOD GetSize(PRUint64*);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
-  NS_IMETHOD MozSlice(PRInt64 aStart, PRInt64 aEnd,
-                      const nsAString& aContentType, PRUint8 optional_argc,
-                      nsIDOMBlob **aBlob);
 
 protected:
   nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
@@ -78,32 +76,26 @@ protected:
 NS_IMETHODIMP
 nsDOMMultipartBlob::GetSize(PRUint64* aLength)
 {
-  nsresult rv;
-  *aLength = 0;
+  if (mLength == PR_UINT64_MAX) {
+    CheckedUint64 length = 0;
+  
+    PRUint32 i;
+    PRUint32 len = mBlobs.Length();
+    for (i = 0; i < len; i++) {
+      nsIDOMBlob* blob = mBlobs.ElementAt(i).get();
+      PRUint64 l = 0;
+  
+      nsresult rv = blob->GetSize(&l);
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      length += l;
+    }
+  
+    NS_ENSURE_TRUE(length.valid(), NS_ERROR_FAILURE);
 
-  if (mLength) {
-    *aLength = mLength;
-    return NS_OK;
+    mLength = length.value();
   }
 
-  CheckedUint64 length = 0;
-
-  PRUint32 i;
-  PRUint32 len = mBlobs.Length();
-  for (i = 0; i < len; i++) {
-    nsIDOMBlob* blob = mBlobs.ElementAt(i).get();
-    PRUint64 l = 0;
-
-    rv = blob->GetSize(&l);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    length += l;
-  }
-
-  if (!length.valid())
-    return NS_ERROR_FAILURE;
-
-  mLength = length.value();
   *aLength = mLength;
   return NS_OK;
 }
@@ -133,34 +125,15 @@ nsDOMMultipartBlob::GetInternalStream(nsIInputStream** aStream)
   return CallQueryInterface(stream, aStream);
 }
 
-NS_IMETHODIMP
-nsDOMMultipartBlob::MozSlice(PRInt64 aStart, PRInt64 aEnd,
-                             const nsAString& aContentType,
-                             PRUint8 optional_argc,
-                             nsIDOMBlob **aBlob)
+already_AddRefed<nsIDOMBlob>
+nsDOMMultipartBlob::CreateSlice(PRUint64 aStart, PRUint64 aLength,
+                                const nsAString& aContentType)
 {
-  nsresult rv;
-  *aBlob = nsnull;
-
-  // Truncate aStart and aEnd so that we stay within this file.
-  PRUint64 thisLength;
-  rv = GetSize(&thisLength);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!optional_argc) {
-    aEnd = (PRInt64)thisLength;
-  }
-
-  // Modifies aStart and aEnd.
-  ParseSize((PRInt64)thisLength, aStart, aEnd);
-
   // If we clamped to nothing we create an empty blob
   nsTArray<nsCOMPtr<nsIDOMBlob> > blobs;
 
-  PRUint64 length = aEnd - aStart;
+  PRUint64 length = aLength;
   PRUint64 skipStart = aStart;
-
-  NS_ABORT_IF_FALSE(PRUint64(aStart) + length <= thisLength, "Er, what?");
 
   // Prune the list of blobs if we can
   PRUint32 i;
@@ -168,22 +141,21 @@ nsDOMMultipartBlob::MozSlice(PRInt64 aStart, PRInt64 aEnd,
     nsIDOMBlob* blob = mBlobs[i].get();
 
     PRUint64 l;
-    rv = blob->GetSize(&l);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = blob->GetSize(&l);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
     if (skipStart < l) {
       PRUint64 upperBound = NS_MIN<PRUint64>(l - skipStart, length);
 
       nsCOMPtr<nsIDOMBlob> firstBlob;
-      rv = mBlobs.ElementAt(i)->MozSlice(skipStart, skipStart + upperBound,
-                                         aContentType, 2,
-                                         getter_AddRefs(firstBlob));
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = blob->MozSlice(skipStart, skipStart + upperBound,
+                          aContentType, 2,
+                          getter_AddRefs(firstBlob));
+      NS_ENSURE_SUCCESS(rv, nsnull);
 
       // Avoid wrapping a single blob inside an nsDOMMultipartBlob
       if (length == upperBound) {
-        firstBlob.forget(aBlob);
-        return NS_OK;
+        return firstBlob.forget();
       }
 
       blobs.AppendElement(firstBlob);
@@ -199,14 +171,14 @@ nsDOMMultipartBlob::MozSlice(PRInt64 aStart, PRInt64 aEnd,
     nsIDOMBlob* blob = mBlobs[i].get();
 
     PRUint64 l;
-    rv = blob->GetSize(&l);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = blob->GetSize(&l);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
     if (length < l) {
       nsCOMPtr<nsIDOMBlob> lastBlob;
-      rv = mBlobs.ElementAt(i)->MozSlice(0, length, aContentType, 2,
-                                         getter_AddRefs(lastBlob));
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = blob->MozSlice(0, length, aContentType, 2,
+                          getter_AddRefs(lastBlob));
+      NS_ENSURE_SUCCESS(rv, nsnull);
 
       blobs.AppendElement(lastBlob);
     } else {
@@ -217,8 +189,7 @@ nsDOMMultipartBlob::MozSlice(PRInt64 aStart, PRInt64 aEnd,
 
   // we can create our blob now
   nsCOMPtr<nsIDOMBlob> blob = new nsDOMMultipartBlob(blobs, aContentType);
-  blob.forget(aBlob);
-  return NS_OK;
+  return blob.forget();
 }
 
 class nsDOMBlobBuilder : public nsIDOMMozBlobBuilder

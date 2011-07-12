@@ -132,23 +132,23 @@ nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
   return NS_OK;
 }
 
-// nsDOMFile implementation
+////////////////////////////////////////////////////////////////////////////
+// nsDOMFileBase implementation
 
-DOMCI_DATA(File, nsDOMFile)
-DOMCI_DATA(Blob, nsDOMFile)
+DOMCI_DATA(File, nsDOMFileBase)
+DOMCI_DATA(Blob, nsDOMFileBase)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMFile)
+NS_INTERFACE_MAP_BEGIN(nsDOMFileBase)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFullFile)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFile)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, mIsFullFile)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFullFile)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, mIsFile)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFile)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsDOMFile)
-NS_IMPL_RELEASE(nsDOMFile)
+NS_IMPL_ADDREF(nsDOMFileBase)
+NS_IMPL_RELEASE(nsDOMFileBase)
 
 static nsresult
 DOMFileResult(nsresult rv)
@@ -165,24 +165,25 @@ DOMFileResult(nsresult rv)
 }
 
 /* static */ nsresult
-nsDOMFile::NewFile(nsISupports* *aNewObject)
+nsDOMFileFile::NewFile(nsISupports* *aNewObject)
 {
-  nsCOMPtr<nsISupports> file = do_QueryObject(new nsDOMFile(nsnull));
+  nsCOMPtr<nsISupports> file = do_QueryObject(new nsDOMFileFile());
   file.forget(aNewObject);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetName(nsAString &aFileName)
+nsDOMFileBase::GetName(nsAString &aFileName)
 {
-  NS_ASSERTION(mIsFullFile, "Should only be called on files");
-  return mFile->GetLeafName(aFileName);
+  NS_ASSERTION(mIsFile, "Should only be called on files");
+  aFileName = mName;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetMozFullPath(nsAString &aFileName)
+nsDOMFileBase::GetMozFullPath(nsAString &aFileName)
 {
-  NS_ASSERTION(mIsFullFile, "Should only be called on files");
+  NS_ASSERTION(mIsFile, "Should only be called on files");
   if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
     return GetMozFullPathInternal(aFileName);
   }
@@ -191,16 +192,19 @@ nsDOMFile::GetMozFullPath(nsAString &aFileName)
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetMozFullPathInternal(nsAString &aFilename)
+nsDOMFileBase::GetMozFullPathInternal(nsAString &aFileName)
 {
-  NS_ASSERTION(mIsFullFile, "Should only be called on files");
-  return mFile->GetPath(aFilename);
+  NS_ASSERTION(mIsFile, "Should only be called on files");
+  aFileName.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetSize(PRUint64 *aFileSize)
+nsDOMFileFile::GetSize(PRUint64 *aFileSize)
 {
-  if (mIsFullFile) {
+  if (IsSizeUnknown()) {
+    NS_ASSERTION(mWholeFile,
+                 "Should only use lazy size when using the whole file");
     PRInt64 fileSize;
     nsresult rv = mFile->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -209,19 +213,20 @@ nsDOMFile::GetSize(PRUint64 *aFileSize)
       return NS_ERROR_FAILURE;
     }
   
-    *aFileSize = fileSize;
+    mLength = fileSize;
   }
-  else {
-    *aFileSize = mLength;
-  }
+
+  *aFileSize = mLength;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetType(nsAString &aType)
+nsDOMFileFile::GetType(nsAString &aType)
 {
-  if (mContentType.IsEmpty() && mFile && mIsFullFile) {
+  if (mContentType.IsVoid()) {
+    NS_ASSERTION(mWholeFile,
+                 "Should only use lazy ContentType when using the whole file");
     nsresult rv;
     nsCOMPtr<nsIMIMEService> mimeService =
       do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
@@ -230,11 +235,11 @@ nsDOMFile::GetType(nsAString &aType)
     nsCAutoString mimeType;
     rv = mimeService->GetTypeFromFile(mFile, mimeType);
     if (NS_FAILED(rv)) {
-      aType.Truncate();
-      return NS_OK;
+      mimeType.Truncate();
     }
 
     AppendUTF8toUTF16(mimeType, mContentType);
+    mContentType.SetIsVoid(PR_FALSE);
   }
 
   aType = mContentType;
@@ -242,9 +247,39 @@ nsDOMFile::GetType(nsAString &aType)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMFileBase::GetSize(PRUint64 *aSize)
+{
+  *aSize = mLength;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFileBase::GetType(nsAString &aType)
+{
+  aType = mContentType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFileBase::GetInternalStream(nsIInputStream **aStream)
+{
+  // Must be overridden
+  NS_NOTREACHED("Must override GetInternalStream");
+  
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMFileFile::GetMozFullPathInternal(nsAString &aFilename)
+{
+  NS_ASSERTION(mIsFile, "Should only be called on files");
+  return mFile->GetPath(aFilename);
+}
+
 // Makes sure that aStart and aEnd is less then or equal to aSize and greater
 // than 0
-void
+static void
 ParseSize(PRInt64 aSize, PRInt64& aStart, PRInt64& aEnd)
 {
   CheckedInt64 newStartOffset = aStart;
@@ -280,9 +315,9 @@ ParseSize(PRInt64 aSize, PRInt64& aStart, PRInt64& aEnd)
 }
 
 NS_IMETHODIMP
-nsDOMFile::MozSlice(PRInt64 aStart, PRInt64 aEnd,
-                    const nsAString& aContentType, PRUint8 optional_argc,
-                    nsIDOMBlob **aBlob)
+nsDOMFileBase::MozSlice(PRInt64 aStart, PRInt64 aEnd,
+                        const nsAString& aContentType, PRUint8 optional_argc,
+                        nsIDOMBlob **aBlob)
 {
   *aBlob = nsnull;
 
@@ -298,9 +333,10 @@ nsDOMFile::MozSlice(PRInt64 aStart, PRInt64 aEnd,
   ParseSize((PRInt64)thisLength, aStart, aEnd);
   
   // Create the new file
-  NS_ADDREF(*aBlob = new nsDOMFile(this, aStart, aEnd - aStart, aContentType));
-  
-  return NS_OK;
+  *aBlob = CreateSlice((PRUint64)aStart, (PRUint64)(aEnd - aStart),
+                       aContentType).get();
+
+  return *aBlob ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 const PRUint32 sFileStreamFlags =
@@ -309,16 +345,16 @@ const PRUint32 sFileStreamFlags =
   nsIFileInputStream::DEFER_OPEN;
 
 NS_IMETHODIMP
-nsDOMFile::GetInternalStream(nsIInputStream **aStream)
+nsDOMFileFile::GetInternalStream(nsIInputStream **aStream)
 {
-  return mIsFullFile ?
+  return mWholeFile ?
     NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags) :
     NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
                                       -1, -1, sFileStreamFlags);
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL)
+nsDOMFileBase::GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL)
 {
   NS_ENSURE_STATE(aPrincipal);
 
@@ -346,9 +382,9 @@ nsDOMFile::GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL)
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetSendInfo(nsIInputStream** aBody,
-                       nsACString& aContentType,
-                       nsACString& aCharset)
+nsDOMFileBase::GetSendInfo(nsIInputStream** aBody,
+                           nsACString& aContentType,
+                           nsACString& aCharset)
 {
   nsresult rv;
 
@@ -368,12 +404,26 @@ nsDOMFile::GetSendInfo(nsIInputStream** aBody,
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////
+// nsDOMFileFile implementation
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsDOMFileFile, nsDOMFileBase,
+                             nsIJSNativeInitializer)
+
+already_AddRefed<nsIDOMBlob>
+nsDOMFileFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
+                           const nsAString& aContentType)
+{
+  nsCOMPtr<nsIDOMBlob> t = new nsDOMFileFile(this, aStart, aLength, aContentType);
+  return t.forget();
+}
+
 NS_IMETHODIMP
-nsDOMFile::Initialize(nsISupports* aOwner,
-                      JSContext* aCx,
-                      JSObject* aObj,
-                      PRUint32 aArgc,
-                      jsval* aArgv)
+nsDOMFileFile::Initialize(nsISupports* aOwner,
+                          JSContext* aCx,
+                          JSObject* aObj,
+                          PRUint32 aArgc,
+                          jsval* aArgv)
 {
   nsresult rv;
 
@@ -430,44 +480,21 @@ nsDOMFile::Initialize(nsISupports* aOwner,
   NS_ENSURE_FALSE(isDir, NS_ERROR_FILE_IS_DIRECTORY);
 
   mFile = file;
+  file->GetLeafName(mName);
+
   return NS_OK;
 }
 
-// nsDOMMemoryFile Implementation
-NS_IMETHODIMP
-nsDOMMemoryFile::GetName(nsAString &aFileName)
+////////////////////////////////////////////////////////////////////////////
+// nsDOMMemoryFile implementation
+
+already_AddRefed<nsIDOMBlob>
+nsDOMMemoryFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
+                             const nsAString& aContentType)
 {
-  NS_ASSERTION(mIsFullFile, "Should only be called on files");
-  aFileName = mName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMMemoryFile::GetSize(PRUint64 *aFileSize)
-{
-  *aFileSize = mLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMMemoryFile::MozSlice(PRInt64 aStart, PRInt64 aEnd,
-                          const nsAString& aContentType, PRUint8 optional_argc,
-                          nsIDOMBlob **aBlob)
-{
-  *aBlob = nsnull;
-
-  if (!optional_argc) {
-    aEnd = (PRInt64)mLength;
-  }
-
-  // Truncate aLength and aStart so that we stay within this file.
-  ParseSize((PRInt64)mLength, aStart, aEnd);
-
-  // Create the new file
-  NS_ADDREF(*aBlob = new nsDOMMemoryFile(this, aStart, aEnd - aStart,
-                                         aContentType));
-  
-  return NS_OK;
+  nsCOMPtr<nsIDOMBlob> t =
+    new nsDOMMemoryFile(this, aStart, aLength, aContentType);
+  return t.forget();
 }
 
 NS_IMETHODIMP
@@ -479,14 +506,7 @@ nsDOMMemoryFile::GetInternalStream(nsIInputStream **aStream)
   return DataOwnerAdapter::Create(mDataOwner, mStart, mLength, aStream);
 }
 
-NS_IMETHODIMP
-nsDOMMemoryFile::GetMozFullPathInternal(nsAString &aFilename)
-{
-  NS_ASSERTION(mIsFullFile, "Should only be called on files");
-  aFilename.Truncate();
-  return NS_OK;
-}
-
+////////////////////////////////////////////////////////////////////////////
 // nsDOMFileList implementation
 
 DOMCI_DATA(FileList, nsDOMFileList)
@@ -516,6 +536,7 @@ nsDOMFileList::Item(PRUint32 aIndex, nsIDOMFile **aFile)
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////
 // nsDOMFileError implementation
 
 DOMCI_DATA(FileError, nsDOMFileError)
@@ -535,6 +556,9 @@ nsDOMFileError::GetCode(PRUint16* aCode)
   *aCode = mCode;
   return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////
+// nsDOMFileInternalUrlHolder implementation
 
 nsDOMFileInternalUrlHolder::nsDOMFileInternalUrlHolder(nsIDOMBlob* aFile,
                                                        nsIPrincipal* aPrincipal
