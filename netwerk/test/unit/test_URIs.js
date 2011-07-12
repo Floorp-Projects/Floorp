@@ -707,11 +707,6 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
 
   do_info("testing " + aTest.spec +
           " doesn't equal self with '" + aSuffix + "' appended");
-  if (aTest.spec == "file://") {
-    do_info("TODO: bug 656853");
-    todo_check_false(origURI.equals(testURI));
-    return;  // bail out early since file:// doesn't handle hash refs at all
-  }
 
   do_check_false(origURI.equals(testURI));
 
@@ -748,13 +743,6 @@ function do_test_mutate_ref(aTest, aSuffix) {
   var refURIWithoutSuffix = NetUtil.newURI(aTest.spec);
 
   var testURI             = NetUtil.newURI(aTest.spec);
-
-  if (aTest.spec == "file://") {
-    do_info("TODO: bug 656853");
-    testURI.ref = aSuffix;
-    do_check_uri_eq(testURI, refURIWithSuffix, todo_check_true);
-    return; // bail out early since file:// doesn't handle hash refs at all
-  }
 
   // First: Try setting .ref to our suffix
   do_info("testing that setting .ref on " + aTest.spec +
