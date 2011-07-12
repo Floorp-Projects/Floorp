@@ -357,6 +357,43 @@ add_test(function test_sync_at_startup() {
   Service.delayedAutoConnect(0);
 });
 
+let timer;
+add_test(function test_no_autoconnect_during_wizard() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Simulate the Sync setup wizard.
+  Svc.Prefs.set("firstSync", "notReady");
+
+  // Ensure we don't actually try to sync.
+  function onSyncStart() {
+    do_throw("Should not get here!");
+  }
+  Svc.Obs.add("weave:service:sync:start", onSyncStart);
+
+  // First wait >100ms (nsITimers can take up to that much time to fire, so
+  // we can account for the timer in delayedAutoconnect) and then two event
+  // loop ticks (to account for the Utils.nextTick() in _autoConnect).
+  let ticks = 2;
+  function wait() {
+    if (ticks) {
+      ticks -= 1;
+      Utils.nextTick(wait);
+      return;
+    }
+    Svc.Obs.remove("weave:service:sync:start", onSyncStart);
+
+    Svc.Prefs.resetBranch("");
+    SyncScheduler.setDefaults();
+    Clients.resetClient();
+
+    server.stop(run_next_test);    
+  }
+  timer = Utils.namedTimer(wait, 150, {}, "timer");
+
+  Service.delayedAutoConnect(0);
+});
+
 add_test(function test_idle_adjustSyncInterval() {
   // Confirm defaults.
   do_check_eq(SyncScheduler.idle, false);
