@@ -1351,6 +1351,18 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
   rv = ParseURL(PromiseFlatString(aURL));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Don't allow https:// to open ws://
+  nsCOMPtr<nsIURI> originURI;
+  PRBool originHTTPS;
+  if (!mSecure && 
+      !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
+                            PR_FALSE) &&
+      NS_SUCCEEDED(NS_NewURI(getter_AddRefs(originURI), mUTF16Origin)) &&
+      NS_SUCCEEDED(originURI->SchemeIs("https", &originHTTPS)) &&
+      originHTTPS) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   // sets the protocol
   if (!aProtocol.IsEmpty()) {
     rv = SetProtocol(PromiseFlatString(aProtocol));

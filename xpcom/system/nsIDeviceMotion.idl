@@ -57,14 +57,16 @@ interface nsIDeviceMotionListener : nsISupports
   void onMotionChange(in nsIDeviceMotionData aMotionData);
 };
 
-[scriptable, uuid(4B04E228-0B33-43FC-971F-AF60CEDB1C21)]
+[scriptable, uuid(B6E5C463-AAA6-44E2-BD07-7A7DC6192E68)]
 interface nsIDeviceMotion : nsISupports
 {
   void addListener(in nsIDeviceMotionListener aListener);
   void removeListener(in nsIDeviceMotionListener aListener);
 
-  void addWindowListener(in nsIDOMWindow aWindow);
-  void removeWindowListener(in nsIDOMWindow aWindow);
+  // Holds pointers, not AddRef objects -- it is up to the caller
+  // to call RemoveWindowListener before the window is deleted.
+  [noscript] void addWindowListener(in nsIDOMWindow aWindow);
+  [noscript] void removeWindowListener(in nsIDOMWindow aWindow);
 
 };
 

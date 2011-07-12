@@ -107,7 +107,7 @@
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
 #include "nsBoxFrame.h"
-#include "nsIBoxLayout.h"
+#include "nsBoxLayout.h"
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsContentErrors.h"
@@ -318,7 +318,7 @@ NS_NewTreeBodyFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // grid
 nsresult
-NS_NewGridLayout2 ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
+NS_NewGridLayout2 ( nsIPresShell* aPresShell, nsBoxLayout** aNewLayout );
 nsIFrame*
 NS_NewGridRowLeafFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -3947,7 +3947,7 @@ static
 nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
                              nsStyleContext* aStyleContext)
 {
-  nsCOMPtr<nsIBoxLayout> layout;
+  nsCOMPtr<nsBoxLayout> layout;
   NS_NewGridLayout2(aPresShell, getter_AddRefs(layout));
   if (!layout) {
     return nsnull;

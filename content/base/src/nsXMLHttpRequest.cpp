@@ -1600,13 +1600,6 @@ void nsXMLHttpRequest::CreateResponseBlob(nsIRequest *request)
   nsCOMPtr<nsICachingChannel> cc(do_QueryInterface(request));
   if (cc) {
     cc->GetCacheFile(getter_AddRefs(file));
-    if (!file) {
-      // cacheAsFile returns false if caching is inhibited
-      PRBool cacheAsFile = PR_FALSE;
-      if (NS_SUCCEEDED(cc->GetCacheAsFile(&cacheAsFile)) && cacheAsFile) {
-        
-      }
-    }
   } else {
     nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(request);
     if (fc) {
@@ -1621,20 +1614,8 @@ void nsXMLHttpRequest::CreateResponseBlob(nsIRequest *request)
       cc->GetCacheToken(getter_AddRefs(cacheToken));
     }
 
-    NS_ConvertASCIItoUTF16 wideContentType(contentType);
-
-    nsCOMPtr<nsIDOMBlob> blob =
-      new nsDOMFile(file, wideContentType, cacheToken);
-
-    // XXXkhuey this is a complete hack ... but we need to get 6 out the door
-    // The response blob here should not be a File object, it should only
-    // be a Blob.  Unfortunately, because nsDOMFile has grown through
-    // accretion over the years and is in dangerous need of a refactoring,
-    // slicing it is the easiest way to get there ...
-    PRUint64 size = 0;
-    blob->GetSize(&size);
-    blob->MozSlice(0, size, wideContentType, 2, getter_AddRefs(mResponseBlob));
-    
+    mResponseBlob =
+      new nsDOMFileFile(file, NS_ConvertASCIItoUTF16(contentType), cacheToken);
     mResponseBody.Truncate();
     mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   }
@@ -1906,19 +1887,9 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
       if (blobData) {
         memcpy(blobData, mResponseBody.BeginReading(), blobLen);
 
-        NS_ConvertASCIItoUTF16 wideContentType(contentType);
-        nsCOMPtr<nsIDOMBlob> blob =
-          new nsDOMMemoryFile(blobData, blobLen, EmptyString(),
-                              wideContentType);
-
-        // XXXkhuey this is a complete hack ... but we need to get 6 out the door
-        // The response blob here should not be a File object, it should only
-        // be a Blob.  Unfortunately, because nsDOMFile has grown through
-        // accretion over the years and is in dangerous need of a refactoring,
-        // slicing it is the easiest way to get there ...
-        blob->MozSlice(0, blobLen, wideContentType,
-                       2, getter_AddRefs(mResponseBlob));
-
+        mResponseBlob =
+          new nsDOMMemoryFile(blobData, blobLen,
+                              NS_ConvertASCIItoUTF16(contentType));
         mResponseBody.Truncate();
       }
       NS_ASSERTION(mResponseBodyUnicode.IsVoid(),

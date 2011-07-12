@@ -502,6 +502,7 @@ _TEST_FILES2 = \
 		somedatas.resource \
 		somedatas.resource^headers^ \
 		delayedServerEvents.sjs \
+		test_bug664916.html \
 		test_bug666604.html \
 		$(NULL)
 

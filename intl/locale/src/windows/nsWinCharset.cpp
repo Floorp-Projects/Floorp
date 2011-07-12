@@ -46,6 +46,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsITimelineService.h"
 #include "nsPlatformCharset.h"
+#include "nsEncoderDecoderUtils.h"
 
 static const char* kWinCharsets[][3] = {
 #include "wincharset.properties.h"
@@ -79,6 +80,7 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
       NS_ARRAY_LENGTH(kWinCharsets), key, outCharset);
   if (NS_FAILED(rv)) {
     outCharset.AssignLiteral("windows-1252");
+    return NS_SUCCESS_USING_FALLBACK_LOCALE;
   }
   return rv;
 }

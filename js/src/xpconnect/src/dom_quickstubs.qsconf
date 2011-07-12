@@ -876,7 +876,7 @@ customMethodCalls = {
         'thisType': 'nsGenericElement'
         },
     'nsIDOMElement_GetTagName': {
-        'thisType': 'nsINode',
+        'thisType': 'nsGenericElement',
         'code': 'nsString result = self->NodeName();',
         'canFail': False
         },

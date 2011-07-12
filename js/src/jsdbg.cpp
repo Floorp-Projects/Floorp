@@ -2951,13 +2951,13 @@ ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
             JSObject *argsobj = &vp[3].toObject();
             if (!js_GetLengthProperty(cx, argsobj, &callArgc))
                 return false;
-            callArgc = uintN(JS_MIN(callArgc, JS_ARGS_LENGTH_MAX));
+            callArgc = uintN(JS_MIN(callArgc, StackSpace::ARGS_LENGTH_MAX));
             if (!argv.growBy(callArgc) || !GetElements(cx, argsobj, callArgc, argv.begin()))
                 return false;
             callArgv = argv.begin();
         }
     } else {
-        callArgc = argc > 0 ? uintN(JS_MIN(argc - 1, JS_ARGS_LENGTH_MAX)) : 0;
+        callArgc = argc > 0 ? uintN(JS_MIN(argc - 1, StackSpace::ARGS_LENGTH_MAX)) : 0;
         callArgv = vp + 3;
     }
     for (uintN i = 0; i < callArgc; i++) {

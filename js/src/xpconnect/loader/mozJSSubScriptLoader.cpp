@@ -41,6 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozJSSubScriptLoader.h"
+#include "mozJSLoaderUtils.h"
 
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
@@ -58,10 +59,15 @@
 #include "nsScriptLoader.h"
 
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/scache/StartupCache.h"
+#include "mozilla/scache/StartupCacheUtils.h"
+
+using namespace mozilla::scache;
 
 /* load() error msgs, XXX localize? */
 #define LOAD_ERROR_NOSERVICE "Error creating IO Service."
@@ -90,6 +96,89 @@ mozJSSubScriptLoader::~mozJSSubScriptLoader()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozJSSubScriptLoader, mozIJSSubScriptLoader)
+
+static nsresult
+ReportError(JSContext *cx, const char *msg)
+{
+    JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+    return NS_OK;
+}
+
+nsresult
+mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_obj,
+                                 jschar *charset, const char *uriStr,
+                                 nsIIOService *serv, JSObject **scriptObjp)
+{
+    nsCOMPtr<nsIChannel>     chan;
+    nsCOMPtr<nsIInputStream> instream;
+    JSPrincipals    *jsPrincipals;
+    JSErrorReporter  er;
+
+    nsresult rv;
+    // Instead of calling NS_OpenURI, we create the channel ourselves and call
+    // SetContentType, to avoid expensive MIME type lookups (bug 632490).
+    rv = NS_NewChannel(getter_AddRefs(chan), uri, serv,
+                       nsnull, nsnull, nsIRequest::LOAD_NORMAL);
+    if (NS_SUCCEEDED(rv)) {
+        chan->SetContentType(NS_LITERAL_CSTRING("application/javascript"));
+        rv = chan->Open(getter_AddRefs(instream));
+    }
+
+    if (NS_FAILED(rv)) {
+        return ReportError(cx, LOAD_ERROR_NOSTREAM);
+    }
+    
+    PRInt32 len = -1;
+
+    rv = chan->GetContentLength(&len);
+    if (NS_FAILED(rv) || len == -1) {
+        return ReportError(cx, LOAD_ERROR_NOCONTENT);
+    }
+
+    nsCString buf;
+    rv = NS_ReadInputStreamToString(instream, buf, len);
+    if (NS_FAILED(rv))
+        return rv;
+
+    /* we can't hold onto jsPrincipals as a module var because the
+     * JSPRINCIPALS_DROP macro takes a JSContext, which we won't have in the
+     * destructor */
+    rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
+    if (NS_FAILED(rv) || !jsPrincipals) {
+        return ReportError(cx, LOAD_ERROR_NOPRINCIPALS);
+    }
+
+    /* set our own error reporter so we can report any bad things as catchable
+     * exceptions, including the source/line number */
+    er = JS_SetErrorReporter(cx, mozJSLoaderErrorReporter);
+
+    if (charset) {
+        nsString script;
+        rv = nsScriptLoader::ConvertToUTF16(
+                nsnull, reinterpret_cast<const PRUint8*>(buf.get()), len,
+                nsDependentString(reinterpret_cast<PRUnichar*>(charset)), nsnull, script);
+
+        if (NS_FAILED(rv)) {
+            JSPRINCIPALS_DROP(cx, jsPrincipals);
+            return ReportError(cx, LOAD_ERROR_BADCHARSET);
+        }
+
+        *scriptObjp =
+            JS_CompileUCScriptForPrincipals(cx, target_obj, jsPrincipals,
+                                            reinterpret_cast<const jschar*>(script.get()),
+                                            script.Length(), uriStr, 1);
+    } else {
+        *scriptObjp = JS_CompileScriptForPrincipals(cx, target_obj, jsPrincipals, buf.get(),
+                                                         len, uriStr, 1);
+    }
+
+    JSPRINCIPALS_DROP(cx, jsPrincipals);
+
+    /* repent for our evil deeds */
+    JS_SetErrorReporter(cx, er);
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP /* args and return value are delt with using XPConnect and JSAPI */
 mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
@@ -227,17 +316,6 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
-    PRInt32   len = -1;
-    PRUint32  readcount = 0;  // Total amount of data read
-    PRUint32  lastReadCount = 0;  // Amount of data read in last Read() call
-    nsAutoArrayPtr<char> buf;
-    
-    JSString        *errmsg;
-    JSErrorReporter  er;
-    JSPrincipals    *jsPrincipals;
-    
-    nsCOMPtr<nsIChannel>     chan;
-    nsCOMPtr<nsIInputStream> instream;
     nsCOMPtr<nsIURI> uri;
     nsCAutoString uriStr;
     nsCAutoString scheme;
@@ -261,32 +339,27 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         return NS_ERROR_FAILURE;
     }
 
+    StartupCache* cache = StartupCache::GetSingleton();
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
-    if (!serv)
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSERVICE);
-        goto return_exception;
+    if (!serv) {
+        return ReportError(cx, LOAD_ERROR_NOSERVICE);
     }
 
     // Make sure to explicitly create the URI, since we'll need the
     // canonicalized spec.
     rv = NS_NewURI(getter_AddRefs(uri), urlbytes.ptr(), nsnull, serv);
     if (NS_FAILED(rv)) {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOURI);
-        goto return_exception;
+        return ReportError(cx, LOAD_ERROR_NOURI);
     }
 
     rv = uri->GetSpec(uriStr);
     if (NS_FAILED(rv)) {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSPEC);
-        goto return_exception;
+        return ReportError(cx, LOAD_ERROR_NOSPEC);
     }    
 
     rv = uri->GetScheme(scheme);
-    if (NS_FAILED(rv))
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSCHEME);
-        goto return_exception;
+    if (NS_FAILED(rv)) {
+        return ReportError(cx, LOAD_ERROR_NOSCHEME);
     }
 
     if (!scheme.EqualsLiteral("chrome"))
@@ -294,10 +367,8 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         // This might be a URI to a local file, though!
         nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
         nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(innerURI);
-        if (!fileURL)
-        {
-            errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_URI_NOT_LOCAL);
-            goto return_exception;
+        if (!fileURL) {
+            return ReportError(cx, LOAD_ERROR_URI_NOT_LOCAL);
         }
 
         // For file URIs prepend the filename with the filename of the
@@ -309,104 +380,38 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         uriStr = tmp;
     }
 
-    // Instead of calling NS_OpenURI, we create the channel ourselves and call
-    // SetContentType, to avoid expensive MIME type lookups (bug 632490).
-    rv = NS_NewChannel(getter_AddRefs(chan), uri, serv,
-                       nsnull, nsnull, nsIRequest::LOAD_NORMAL);
-    if (NS_SUCCEEDED(rv))
-    {
-        chan->SetContentType(NS_LITERAL_CSTRING("application/javascript"));
-        rv = chan->Open(getter_AddRefs(instream));
+    bool writeScript = false;
+    JSObject *scriptObj = nsnull;
+    JSVersion version = cx->findVersion();
+    nsCAutoString cachePath;
+    cachePath.AppendPrintf("jssubloader/%d", version);
+    NS_PathifyURI(uri, cachePath);
+
+    if (cache)
+        rv = ReadCachedScript(cache, cachePath, cx, &scriptObj);
+    if (!scriptObj) {
+        rv = ReadScript(uri, cx, target_obj, charset, (char *)uriStr.get(), serv, &scriptObj);
+        writeScript = true;
     }
 
-    if (NS_FAILED(rv))
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSTREAM);
-        goto return_exception;
-    }
-    
-    rv = chan->GetContentLength (&len);
-    if (NS_FAILED(rv) || len == -1)
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOCONTENT);
-        goto return_exception;
-    }
+    if (NS_FAILED(rv) || !scriptObj)
+        return rv;
 
-    buf = new char[len + 1];
-    if (!buf)
-        return NS_ERROR_OUT_OF_MEMORY;
-    buf[len] = '\0';
-    
-    do {
-        rv = instream->Read (buf + readcount, len - readcount, &lastReadCount);
-        if (NS_FAILED(rv))
-        {
-            errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_BADREAD);
-            goto return_exception;
-        }
-        readcount += lastReadCount;
-    } while (lastReadCount && readcount != PRUint32(len));
-    
-    if (static_cast<PRUint32>(len) != readcount)
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_READUNDERFLOW);
-        goto return_exception;
-    }
+    ok = false;
+    if (scriptObj)
+        ok = JS_ExecuteScriptVersion(cx, target_obj, scriptObj, rval, version);
 
-    /* we can't hold onto jsPrincipals as a module var because the
-     * JSPRINCIPALS_DROP macro takes a JSContext, which we won't have in the
-     * destructor */
-    rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
-    if (NS_FAILED(rv) || !jsPrincipals)
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOPRINCIPALS);
-        goto return_exception;
-    }
-
-    /* set our own error reporter so we can report any bad things as catchable
-     * exceptions, including the source/line number */
-    er = JS_SetErrorReporter (cx, mozJSLoaderErrorReporter);
-
-    if (charset)
-    {
-        nsString script;
-        rv = nsScriptLoader::ConvertToUTF16(
-                nsnull, reinterpret_cast<PRUint8*>(buf.get()), len,
-                nsDependentString(reinterpret_cast<PRUnichar*>(charset)), nsnull, script);
-
-        if (NS_FAILED(rv))
-        {
-            JSPRINCIPALS_DROP(cx, jsPrincipals);
-            errmsg = JS_NewStringCopyZ(cx, LOAD_ERROR_BADCHARSET);
-            goto return_exception;
-        }
-        ok = JS_EvaluateUCScriptForPrincipals(cx, target_obj, jsPrincipals,
-                                              reinterpret_cast<const jschar*>(script.get()),
-                                              script.Length(), uriStr.get(), 1, rval);
-    }
-    else
-    {
-        ok = JS_EvaluateScriptForPrincipals(cx, target_obj, jsPrincipals,
-                                            buf, len, uriStr.get(), 1, rval);
-    }
-
-    JSPRINCIPALS_DROP(cx, jsPrincipals);
-
-    if (ok)
-    {
+    if (ok) {
         JSAutoEnterCompartment rac;
-
         if (!rac.enter(cx, result_obj) || !JS_WrapValue(cx, rval))
             return NS_ERROR_UNEXPECTED; 
     }
 
-    /* repent for our evil deeds */
-    JS_SetErrorReporter (cx, er);
+    if (cache && ok && writeScript) {
+        WriteCachedScript(cache, cachePath, cx, scriptObj);
+    }
 
     cc->SetReturnValueWasSet (ok);
     return NS_OK;
-
- return_exception:
-    JS_SetPendingException (cx, STRING_TO_JSVAL(errmsg));
-    return NS_OK;
 }
+

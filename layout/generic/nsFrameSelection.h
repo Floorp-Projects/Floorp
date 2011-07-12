@@ -370,6 +370,20 @@ public:
   PRBool GetMouseDownState() const { return mMouseDownState; }
 
   /**
+   * GetMouseDownedFrameSelection returns an instance which is handling
+   * mouse dragging.
+   */
+  static nsFrameSelection* GetMouseDownFrameSelection()
+  {
+    return sDraggingFrameSelection;
+  }
+
+  /**
+   * Call AbortDragForSelection() when we abort handling the drag as selecting.
+   */
+  void AbortDragForSelection();
+
+  /**
     if we are in table cell selection mode. aka ctrl click in table cell
    */
   PRBool GetTableCellSelection() const { return mSelectingTableCellMode != 0; }
@@ -598,6 +612,7 @@ public:
 
 
   nsFrameSelection();
+  virtual ~nsFrameSelection();
 
   void StartBatchChanges();
   void EndBatchChanges();
@@ -606,7 +621,11 @@ public:
 
   nsIPresShell *GetShell()const  { return mShell; }
 
-  void DisconnectFromPresShell() { StopAutoScrollTimer(); mShell = nsnull; }
+  void DisconnectFromPresShell()
+  {
+    AbortDragForSelection();
+    mShell = nsnull;
+  }
 private:
   nsresult TakeFocus(nsIContent *aNewFocus,
                      PRUint32 aContentOffset,
@@ -695,6 +714,8 @@ private:
   nsIContent* GetParentTable(nsIContent *aCellNode) const;
   nsresult CreateAndAddRange(nsINode *aParentNode, PRInt32 aOffset);
   nsresult ClearNormalSelection();
+
+  static nsFrameSelection* sDraggingFrameSelection;
 
   nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
   nsCOMPtr<nsIContent> mStartSelectedCell;

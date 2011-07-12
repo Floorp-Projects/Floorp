@@ -12,6 +12,11 @@
 == mfenced-5b.xhtml mfenced-5-ref.xhtml
 == mfenced-5c.xhtml mfenced-5-ref.xhtml
 == mfenced-5d.xhtml mfenced-5-ref.xhtml
+== mfenced-6.html mfenced-6-ref.html
+== mfenced-7.html mfenced-7-ref.html
+!= mfenced-8.html mfenced-8-ref.html
+== mfenced-9.html mfenced-9-ref.html
+fails-if(winWidget) == mfenced-10.html mfenced-10-ref.html
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml

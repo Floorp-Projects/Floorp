@@ -383,6 +383,7 @@ public:
   virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
+  virtual NS_HIDDEN_(PRBool) DispatchCustomEvent(const char *aEventName);
 
   // nsIDOMStorageWindow
   NS_DECL_NSIDOMSTORAGEWINDOW
@@ -729,8 +730,6 @@ protected:
     return GetParentInternal() != nsnull;
   }
 
-  PRBool DispatchCustomEvent(const char *aEventName);
-
   // If aLookForCallerOnJSStack is true, this method will look at the JS stack
   // to determine who the caller is.  If it's false, it'll use |this| as the
   // caller.
@@ -914,8 +913,14 @@ protected:
 
   // These member variable are used only on inner windows.
   nsRefPtr<nsEventListenerManager> mListenerManager;
+  // mTimeouts is generally sorted by mWhen, unless mTimeoutInsertionPoint is
+  // non-null.  In that case, the dummy timeout pointed to by
+  // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
+  // that come after it.
   PRCList                       mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
+  // This is a dummy timeout at the moment; if that ever changes, the logic in
+  // ResetTimersForNonBackgroundWindow needs to change.
   nsTimeout*                    mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;

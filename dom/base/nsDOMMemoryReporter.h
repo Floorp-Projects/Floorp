@@ -41,18 +41,46 @@
 #include "nsIMemoryReporter.h"
 
 
+/**
+ * Helper methods for the DOM Memory Reporter.
+ */
+namespace mozilla {
+  namespace dom {
+    namespace MemoryReporter {
+      /**
+       * It will compute the basic size of an object. This means the size of the
+       * object itself plus everything owned by its superclasses.  This will not
+       * include the size of objects owned by this objects (which have to be
+       * manually added to ::SizeOf), but does include the size of any pointers
+       * to those objects stored in this object.
+       */
+      template <class TypeCurrent, class TypeParent>
+      inline PRInt64 GetBasicSize(const TypeCurrent* const obj) {
+        return obj->TypeParent::SizeOf() - sizeof(TypeParent)
+                                         + sizeof(TypeCurrent);
+      }
+    }
+  }
+}
+
+/**
+ * Helper macros to declare/implement SizeOf() method for DOM objects.
+ */
+#define NS_DECL_DOM_MEMORY_REPORTER_SIZEOF  \
+  virtual PRInt64 SizeOf() const;
+
+#define NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(TypeCurrent, TypeParent) \
+  virtual PRInt64 SizeOf() const {                                           \
+    return mozilla::dom::MemoryReporter::GetBasicSize<TypeCurrent,           \
+                                                      TypeParent>(this);     \
+  }
+
 class nsDOMMemoryReporter: public nsIMemoryReporter {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
   static void Init();
-
-  NS_IMETHOD GetProcess(char** aProcess);
-  NS_IMETHOD GetPath(char** aMemoryPath);
-  NS_IMETHOD GetKind(int* aKnd);
-  NS_IMETHOD GetDescription(char** aDescription);
-  NS_IMETHOD GetUnits(PRInt32* aUnits);
-  NS_IMETHOD GetAmount(PRInt64* aAmount);
 
 private:
   // Protect ctor, use Init() instead.
