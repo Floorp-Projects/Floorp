@@ -46,8 +46,9 @@
 using namespace js;
 using namespace js::ion;
 
-ValueNumberer::ValueNumberer(MIRGraph &graph)
-  : graph_(graph)
+ValueNumberer::ValueNumberer(MIRGraph &graph, bool pessimistic)
+  : graph_(graph),
+    pessimisticPass_(pessimistic)
 { }
 
 
@@ -85,6 +86,11 @@ ValueNumberer::computeValueNumbers()
     // The algorithm is the simple RPO-based algorithm from
     // "SCC-Based Value Numbering" by Cooper and Simpson
     //
+    // If we are performing a pessimistic pass, then we assume that every
+    // definition is in its own congruence class, since we know nothing about
+    // values that enter Phi nodes through back edges. We then make one pass
+    // through the graph, ignoring back edges. This yields less congruences on
+    // any graph with back-edges, but is much faster to perform.
 
     IonSpew(IonSpew_GVN, "Numbering instructions");
 
@@ -92,6 +98,18 @@ ValueNumberer::computeValueNumbers()
 
     if (!values.init())
         return false;
+
+    // Assign unique value numbers if pessimistic.
+    // It might be productive to do this in the MInstruction constructor or
+    // possibly in a previous pass, if it seems reasonable.
+    if (pessimisticPass_) {
+        for (size_t i = 0; i < graph_.numBlocks(); i++) {
+            MBasicBlock *block = graph_.getBlock(i);
+
+            for (MDefinitionIterator iter(block); iter.more(); iter.next())
+                iter->setValueNumber(iter->id());
+        }
+    }
 
     bool changed = true;
 
@@ -119,6 +137,11 @@ ValueNumberer::computeValueNumbers()
             }
         }
         values.clear();
+
+        // If we are doing a pessimistic pass, we only go once through the
+        // instruction list.
+        if (pessimisticPass_)
+            break;
     }
     return true;
 }
