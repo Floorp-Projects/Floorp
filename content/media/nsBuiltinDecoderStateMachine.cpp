@@ -496,6 +496,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   PRBool setVolume;
   PRInt32 minWriteSamples = -1;
   PRInt64 samplesAtLastSleep = 0;
+
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mAudioCompleted = PR_FALSE;
@@ -503,13 +504,27 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     channels = mInfo.mAudioChannels;
     rate = mInfo.mAudioRate;
     NS_ASSERTION(audioStartTime != -1, "Should have audio start time by now");
+  }
 
-    // We must hold the monitor while creating or destroying the audio stream,
-    // or whenever we use it off the audio thread.
-    mAudioStream = nsAudioStream::AllocateStream();
-    mAudioStream->Init(channels,
-                       rate,
-                       MOZ_SOUND_DATA_FORMAT);
+  // It is unsafe to call some methods of nsAudioStream with the decoder
+  // monitor held, as on Android those methods do a synchronous dispatch to
+  // the main thread. If the audio thread holds the decoder monitor while
+  // it does a synchronous dispatch to the main thread, we can get deadlocks
+  // if the main thread tries to acquire the decoder monitor before the
+  // dispatched event has finished (or even started!) running. Methods which
+  // are unsafe to call with the decoder monitor held are documented as such
+  // in nsAudioStream.h.
+  nsRefPtr<nsAudioStream> audioStream = nsAudioStream::AllocateStream();
+  audioStream->Init(channels, rate, MOZ_SOUND_DATA_FORMAT);
+
+  {
+    // We must hold the monitor while setting mAudioStream or whenever we query
+    // the playback position off the audio thread. This ensures the audio stream
+    // is always alive when we use it off the audio thread. Note that querying
+    // the playback position does not do a synchronous dispatch to the main
+    // thread, so it's safe to call with the decoder monitor held.
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mAudioStream = audioStream;
     volume = mVolume;
     mAudioStream->SetVolume(volume);
   }
@@ -548,6 +563,9 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       setVolume = volume != mVolume;
       volume = mVolume;
 
+      // Note audio stream IsPaused() does not do synchronous dispatch to the
+      // main thread on Android, so can be called safely with the decoder
+      // monitor held.
       if (IsPlaying() && mAudioStream->IsPaused()) {
         mAudioStream->Resume();
       }
@@ -665,10 +683,9 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   }
   LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder.get()));
   {
-    // Must hold lock while shutting down and anulling audio stream to prevent
+    // Must hold lock while anulling the audio stream to prevent
     // state machine thread trying to use it while we're destroying it.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mAudioStream->Shutdown();
     mAudioStream = nsnull;
     mEventManager.Clear();
     mAudioCompleted = PR_TRUE;
@@ -676,6 +693,12 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     // Kick the decode thread; it may be sleeping waiting for this to finish.
     mDecoder->GetReentrantMonitor().NotifyAll();
   }
+
+  // Must not hold the decoder monitor while we shutdown the audio stream, as
+  // it makes a synchronous dispatch on Android.
+  audioStream->Shutdown();
+  audioStream = nsnull;
+
   LOG(PR_LOG_DEBUG, ("%p Audio stream finished playing, audio thread exit", mDecoder.get()));
 }
 
@@ -1568,10 +1591,16 @@ nsBuiltinDecoderStateMachine::GetAudioClock()
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   if (!HasAudio())
     return -1;
+  // We must hold the decoder monitor while using the audio stream off the
+  // audio thread to ensure that it doesn't get destroyed on the audio thread
+  // while we're using it.
   if (!mAudioStream) {
     // Audio thread hasn't played any data yet.
     return mAudioStartTime;
   }
+  // Note that querying the playback position does not do a synchronous
+  // dispatch to the main thread on Android, so it's safe to call with
+  // the decoder monitor held here.
   PRInt64 t = mAudioStream->GetPosition();
   return (t == -1) ? -1 : t + mAudioStartTime;
 }
