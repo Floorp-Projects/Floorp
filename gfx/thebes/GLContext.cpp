@@ -1009,21 +1009,22 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
             if (mIsGLES2) {
                 if (IsExtensionSupported(OES_depth32)) {
                     depthType = LOCAL_GL_DEPTH_COMPONENT32;
+                    cf.depth = 32;
                 } else if (IsExtensionSupported(OES_depth24)) {
                     depthType = LOCAL_GL_DEPTH_COMPONENT24;
+                    cf.depth = 24;
                 } else {
                     depthType = LOCAL_GL_DEPTH_COMPONENT16;
+                   cf.depth = 16;
                 }
             } else {
                 depthType = LOCAL_GL_DEPTH_COMPONENT24;
+                cf.depth = 24;
             }
 
             fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
-            fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                                 mIsGLES2 ? LOCAL_GL_DEPTH_COMPONENT16
-                                          : LOCAL_GL_DEPTH_COMPONENT24,
+            fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, depthType,
                                  aSize.width, aSize.height);
-            cf.depth = mIsGLES2 ? 16 : 24;
         }
 
         if (stencil) {
