@@ -10,9 +10,6 @@ var gProvider;
 
 const SETTINGS_ROWS = 8;
 
-Components.utils.import("resource://mochikit/MockFilePicker.jsm");
-MockFilePicker.reset();
-
 var observer = {
   lastData: null,
   observe: function(aSubject, aTopic, aData) {
@@ -204,6 +201,8 @@ add_test(function() {
     is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
 
     try {
+      mockFilePickerFactory.register();
+
       ok(!settings[6].hasAttribute("first-row"), "Not the first row");
       var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
       input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
@@ -212,17 +211,17 @@ add_test(function() {
       var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
       var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 
-      MockFilePicker.returnFiles = [profD];
-      MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
+      _returnFile = profD;
+      _returnValue = Ci.nsIFilePicker.returnOK;
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      is(MockFilePicker.mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+      is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
       is(input.value, profD.path, "Label value should match file chosen");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should match file chosen");
 
-      MockFilePicker.returnFiles = [curProcD];
-      MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
+      _returnFile = curProcD;
+      _returnValue = Ci.nsIFilePicker.returnCancel;
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      is(MockFilePicker.mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+      is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
       is(input.value, profD.path, "Label value should not have changed");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should not have changed");
 
@@ -231,21 +230,23 @@ add_test(function() {
       input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
       is(input.value, "", "Label value should be empty");
 
-      MockFilePicker.returnFiles = [profD];
-      MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
+      _returnFile = profD;
+      _returnValue = Ci.nsIFilePicker.returnOK;
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      is(MockFilePicker.mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+      is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
       is(input.value, profD.path, "Label value should match file chosen");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should match file chosen");
 
-      MockFilePicker.returnFiles = [curProcD];
-      MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
+      _returnFile = curProcD;
+      _returnValue = Ci.nsIFilePicker.returnCancel;
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      is(MockFilePicker.mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+      is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
       is(input.value, profD.path, "Label value should not have changed");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should not have changed");
 
     } finally {
+      mockFilePickerFactory.unregister();
+
       button = gManagerWindow.document.getElementById("detail-prefs-btn");
       is_element_hidden(button, "Preferences button should not be visible");
 
@@ -397,3 +398,60 @@ add_test(function() {
     });
   });
 });
+
+var _returnFile, _returnValue, _mode;
+
+function MockFilePicker() { };
+MockFilePicker.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
+  init: function(aParent, aTitle, aMode) {
+    _mode = aMode;
+  },
+  appendFilters: function(aFilterMask) { },
+  appendFilter: function(aTitle, aFilter) { },
+  defaultString: "",
+  defaultExtension: "",
+  filterIndex: 0,
+  displayDirectory: null,
+  get file() {
+    return _returnFile;
+  },
+  get fileURL() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  get files() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  show: function() {
+    return _returnValue;
+  }
+};
+var mockFilePickerFactory = {
+  registrar: Components.manager.QueryInterface(Ci.nsIComponentRegistrar),
+  contractID: "@mozilla.org/filepicker;1",
+  classID: Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID(),
+
+  register: function() {
+    this.registrar.registerFactory(this.classID, "", this.contractID, this);
+  },
+
+  unregister: function() {
+    this.registrar.unregisterFactory(this.classID, this);
+  },
+
+  // nsIFactory
+  createInstance: function(aOuter, aIID) {
+    if (aOuter) {
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    }
+    return new MockFilePicker().QueryInterface(aIID);
+  },
+
+  lockFactory: function(aLock) {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIFactory
+  ])
+};
