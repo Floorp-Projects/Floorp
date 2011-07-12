@@ -94,7 +94,8 @@ class IonBuilder : public MIRGenerator
             IF_TRUE_EMPTY_ELSE, // if() { }, empty else
             IF_ELSE_TRUE,       // if() { X } else { }
             IF_ELSE_FALSE,      // if() { } else { X }
-            DO_WHILE_LOOP,      // do (x) while (x)
+            DO_WHILE_LOOP_BODY, // do { x } while ()
+            DO_WHILE_LOOP_COND, // do { } while (x)
             WHILE_LOOP_COND,    // while (x) { }
             WHILE_LOOP_BODY,    // while () { x }
             FOR_LOOP_COND,      // for (; x;) { }
@@ -139,7 +140,8 @@ class IonBuilder : public MIRGenerator
 
         inline bool isLoop() const {
             switch (state) {
-              case DO_WHILE_LOOP:
+              case DO_WHILE_LOOP_COND:
+              case DO_WHILE_LOOP_BODY:
               case WHILE_LOOP_COND:
               case WHILE_LOOP_BODY:
                 return true;
@@ -175,7 +177,8 @@ class IonBuilder : public MIRGenerator
     ControlStatus processIfEnd(CFGState &state);
     ControlStatus processIfElseTrueEnd(CFGState &state);
     ControlStatus processIfElseFalseEnd(CFGState &state);
-    ControlStatus processDoWhileEnd(CFGState &state);
+    ControlStatus processDoWhileBodyEnd(CFGState &state);
+    ControlStatus processDoWhileCondEnd(CFGState &state);
     ControlStatus processWhileCondEnd(CFGState &state);
     ControlStatus processWhileBodyEnd(CFGState &state);
     ControlStatus processForCondEnd(CFGState &state);

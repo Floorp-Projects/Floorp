@@ -502,8 +502,11 @@ IonBuilder::processCfgEntry(CFGState &state)
       case CFGState::IF_ELSE_FALSE:
         return processIfElseFalseEnd(state);
 
-      case CFGState::DO_WHILE_LOOP:
-        return processDoWhileEnd(state);
+      case CFGState::DO_WHILE_LOOP_BODY:
+        return processDoWhileBodyEnd(state);
+
+      case CFGState::DO_WHILE_LOOP_COND:
+        return processDoWhileCondEnd(state);
 
       case CFGState::WHILE_LOOP_COND:
         return processWhileCondEnd(state);
@@ -662,10 +665,27 @@ IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
 }
 
 IonBuilder::ControlStatus
-IonBuilder::processDoWhileEnd(CFGState &state)
+IonBuilder::processDoWhileBodyEnd(CFGState &state)
 {
     if (!processDeferredContinues(state))
         return ControlStatus_Error;
+
+    MBasicBlock *header = newBlock(current, state.loop.updatepc);
+    if (!header)
+        return ControlStatus_Error;
+    current->end(MGoto::New(header));
+
+    state.state = CFGState::DO_WHILE_LOOP_COND;
+    state.stopAt = state.loop.updateEnd;
+    pc = state.loop.updatepc;
+    current = header;
+    return ControlStatus_Jumped;
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processDoWhileCondEnd(CFGState &state)
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
 
     MInstruction *last = NULL;
     if (current) {
@@ -925,7 +945,7 @@ IonBuilder::assertValidTraceOp(JSOp op)
 
     jsbytecode *expected_ifne;
     switch (state.state) {
-      case CFGState::DO_WHILE_LOOP:
+      case CFGState::DO_WHILE_LOOP_BODY:
         expected_ifne = state.stopAt;
         break;
 
@@ -943,19 +963,26 @@ IonBuilder::assertValidTraceOp(JSOp op)
 IonBuilder::ControlStatus
 IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
 {
-    int offset = js_GetSrcNoteOffset(sn, 0);
-    jsbytecode *ifne = pc + offset;
+    // do { } while() loops have the following structure:
+    //    NOP         ; SRC_WHILE (offset to COND)
+    //    TRACE       ; SRC_WHILE (offset to IFNE)
+    //    ...         ; body
+    //    ...
+    //    COND        ; start of condition
+    //    ...
+    //    IFNE ->     ; goes to TRACE
+    int condition_offset = js_GetSrcNoteOffset(sn, 0);
+    jsbytecode *conditionpc = pc + condition_offset;
+
+    jssrcnote *sn2 = js_GetSrcNote(script, pc+1);
+    int offset = js_GetSrcNoteOffset(sn2, 0);
+    jsbytecode *ifne = pc + offset + 1;
     JS_ASSERT(ifne > pc);
 
     // Verify that the IFNE goes back to a trace op.
     JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_TRACE);
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
-    // do { } while() loops have the following structure:
-    //    NOP         ; SRC_WHILE (offset to IFNE)
-    //    TRACE       ; SRC_WHILE (offset to IFNE)
-    //    ...
-    //    IFNE ->     ; goes to TRACE
     MBasicBlock *header = newLoopHeader(current, pc);
     if (!header)
         return ControlStatus_Error;
@@ -963,9 +990,14 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
 
     current = header;
     jsbytecode *bodyStart = GetNextPc(GetNextPc(pc));
+    jsbytecode *bodyEnd = conditionpc;
     jsbytecode *exitpc = GetNextPc(ifne);
-    if (!pushLoop(CFGState::DO_WHILE_LOOP, ifne, header, bodyStart, ifne, exitpc))
+    if (!pushLoop(CFGState::DO_WHILE_LOOP_BODY, conditionpc, header, bodyStart, bodyEnd, exitpc, conditionpc))
         return ControlStatus_Error;
+
+    CFGState &state = cfgStack_.back();
+    state.loop.updatepc = conditionpc;
+    state.loop.updateEnd = ifne;
 
     pc = bodyStart;
     return ControlStatus_Jumped;
