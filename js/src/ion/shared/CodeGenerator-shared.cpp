@@ -68,8 +68,6 @@ CodeGeneratorShared::generate()
         return false;
     if (!generateBody())
         return false;
-    if (!generateEpilogue())
-        return false;
     return true;
 }
 

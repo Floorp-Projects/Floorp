@@ -46,6 +46,7 @@
 #include "CodeGenerator-x86-shared.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
+#include "CodeGenerator-shared-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -54,6 +55,7 @@ CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &grap
   : CodeGeneratorShared(gen, graph),
     masm(masm)
 {
+    stackDepth_ = graph.stackHeight();
 }
 
 bool
@@ -80,6 +82,20 @@ CodeGeneratorX86Shared::visitGoto(LGoto *jump)
 bool
 CodeGeneratorX86Shared::visitMove(LMove *move)
 {
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitAddI(LAddI *ins)
+{
+    const LAllocation *lhs = ins->getOperand(0);
+    const LAllocation *rhs = ins->getOperand(1);
+
+    if (rhs->isConstant())
+        masm.addl(Imm32(ToInt32(rhs)), ToOperand(lhs));
+    else
+        masm.addl(ToOperand(rhs), ToRegister(lhs));
+
     return true;
 }
 

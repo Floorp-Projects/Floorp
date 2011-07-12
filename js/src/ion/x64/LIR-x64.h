@@ -60,6 +60,10 @@ class LBox : public LInstructionHelper<1, 1, 0>
     {
         setOperand(0, payload);
     }
+
+    MIRType type() const {
+        return type_;
+    }
 };
 
 // Given an untyped input, guards on whether it's an integer and returns an
@@ -77,14 +81,13 @@ class LUnboxBoolean : public LInstructionHelper<1, 1, 1>
 
 // Given an untyped input, guards on whether it's an integer and returns an
 // integer payload.
-class LUnboxInteger : public LInstructionHelper<1, 1, 1>
+class LUnboxInteger : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(UnboxInteger);
 
-    LUnboxInteger(const LAllocation &input, const LDefinition &temp) {
+    LUnboxInteger(const LAllocation &input) {
         setOperand(0, input);
-        setTemp(0, temp);
     }
 };
 

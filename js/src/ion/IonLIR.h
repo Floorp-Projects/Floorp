@@ -824,6 +824,9 @@ class LIRGraph
         // Note that the stack height is counted in slots.
         stackHeight_ = stackHeight;
     }
+    uint32 stackHeight() const {
+        return stackHeight_;
+    }
 };
 
 LAllocation::LAllocation(const AnyRegister &reg)

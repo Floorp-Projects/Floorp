@@ -54,9 +54,12 @@ class CodeGeneratorShared : public LInstructionVisitor
     LIRGraph &graph;
     LBlock *current;
 
+    static inline int32 ToInt32(const LAllocation *a) {
+        return a->toConstant()->toInt32();
+    }
+
   private:
     virtual bool generatePrologue() = 0;
-    virtual bool generateEpilogue() = 0;
     bool generateBody();
 
   public:
