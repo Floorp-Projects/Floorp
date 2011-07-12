@@ -403,8 +403,7 @@ nsresult nsOggReader::DecodeVorbis(ogg_packet* aPacket) {
 PRBool nsOggReader::DecodeAudioData()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on playback or decode thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   NS_ASSERTION(mVorbisState!=0, "Need Vorbis state to decode audio");
 
   // Read the next data packet. Skip any non-data packets we encounter.
@@ -507,8 +506,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                      PRInt64 aTimeThreshold)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on state machine or AV thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -557,8 +555,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
 
 PRInt64 nsOggReader::ReadOggPage(ogg_page* aPage)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on play state machine or decode thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   mReentrantMonitor.AssertCurrentThreadIn();
 
   int ret = 0;
@@ -597,8 +594,7 @@ PRInt64 nsOggReader::ReadOggPage(ogg_page* aPage)
 
 ogg_packet* nsOggReader::NextOggPacket(nsOggCodecState* aCodecState)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on play state machine or decode thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   mReentrantMonitor.AssertCurrentThreadIn();
 
   if (!aCodecState || !aCodecState->mActive) {
@@ -797,8 +793,7 @@ PRInt64 nsOggReader::RangeEndTime(PRInt64 aStartOffset,
 
 nsresult nsOggReader::GetSeekRanges(nsTArray<SeekRange>& aRanges)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   mReentrantMonitor.AssertCurrentThreadIn();
   nsTArray<nsByteRange> cached;
   nsresult res = mDecoder->GetCurrentStream()->GetCachedRanges(cached);
@@ -838,8 +833,7 @@ nsOggReader::SelectSeekRange(const nsTArray<SeekRange>& ranges,
                              PRInt64 aEndTime,
                              PRBool aExact)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   PRInt64 so = 0;
   PRInt64 eo = mDecoder->GetCurrentStream()->GetLength();
   PRInt64 st = aStartTime;
@@ -1053,8 +1047,7 @@ nsresult nsOggReader::Seek(PRInt64 aTarget,
                            PRInt64 aCurrentTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
   nsresult res;
   nsMediaStream* stream = mDecoder->GetCurrentStream();
@@ -1183,8 +1176,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
                                     const SeekRange& aRange,
                                     PRUint32 aFuzz)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   nsresult res;
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 

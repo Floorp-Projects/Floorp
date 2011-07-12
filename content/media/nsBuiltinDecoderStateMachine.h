@@ -217,9 +217,6 @@ public:
     return mDecoder->OnStateMachineThread();
   }
 
-  // Decode loop, called on the decode thread.
-  void DecodeLoop();
-
   // The decoder object that created this state machine. The decoder
   // always outlives us since it controls our lifetime. This is accessed
   // read only on the AV, state machine, audio and main thread.
@@ -291,8 +288,7 @@ protected:
   // Dispatches an asynchronous event to update the media element's ready state.
   void UpdateReadyState();
 
-  // Resets playback timing data. Called when we seek, on the state machine
-  // thread.
+  // Resets playback timing data. Called when we seek, on the decode thread.
   void ResetPlayback();
 
   // Returns the audio clock, if we have audio, or -1 if we don't.
@@ -410,6 +406,18 @@ protected:
   // must be held with exactly one lock count.
   nsresult DecodeMetadata();
 
+  // Seeks to mSeekTarget. Called on the decode thread. The decoder monitor
+  // must be held with exactly one lock count.
+  void DecodeSeek();
+
+  // Decode loop, decodes data until EOF or shutdown.
+  // Called on the decode thread.
+  void DecodeLoop();
+
+  // Decode thread run function. Determines which of the Decode*() functions
+  // to call.
+  void DecodeThreadRun();
+
   // ReentrantMonitor on mAudioStream. This monitor must be held in
   // order to delete or use the audio stream. This stops us destroying
   // the audio stream while it's being used on another thread
@@ -526,6 +534,13 @@ protected:
   // PR_FALSE while decode thread should be running. Accessed state machine
   // and decode threads. Syncrhonised by decoder monitor.
   PRPackedBool mStopDecodeThread;
+
+  // PR_TRUE when the decode thread run function has finished, but the thread
+  // has not necessarily been shut down yet. This can happen if we switch
+  // from COMPLETED state to SEEKING before the state machine has a chance
+  // to run in the COMPLETED state and shutdown the decode thread.
+  // Synchronised by the decoder monitor.
+  PRPackedBool mDecodeThreadIdle;
 
   // PR_FALSE while audio thread should be running. Accessed state machine
   // and audio threads. Syncrhonised by decoder monitor.
