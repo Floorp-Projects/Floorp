@@ -269,6 +269,9 @@ public:
   // on the appropriate threads.
   virtual PRBool OnDecodeThread() const = 0;
 
+  // Returns PR_TRUE if the current thread is the state machine thread.
+  virtual PRBool OnStateMachineThread() const = 0;
+
   virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus() = 0;
 
   // Cause state transitions. These methods obtain the decoder monitor
@@ -425,19 +428,13 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Tells our nsMediaStream to put all loads in the background.
   virtual void MoveLoadsToBackground();
 
-  // Stop the state machine thread and drop references to the thread and
-  // state machine.
-  void Stop();
-
   void AudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength, float aTime);
 
   // Called by the state machine to notify the decoder that the duration
   // has changed.
   void DurationChanged();
 
-  PRBool OnStateMachineThread() const {
-    return IsCurrentThread(mStateMachineThread);
-  }
+  PRBool OnStateMachineThread() const;
 
   PRBool OnDecodeThread() const {
     return mDecoderStateMachine->OnDecodeThread();
@@ -567,14 +564,9 @@ public:
   // Notifies the element that decoding has failed.
   void DecodeError();
 
-  // Ensures the state machine thread is running, starting a new one
-  // if necessary.
-  nsresult StartStateMachineThread();
-
-  // Creates the state machine thread. The state machine may wish to create
-  // the state machine thread without running it immediately if it needs to
-  // schedule it to run in future.
-  nsresult CreateStateMachineThread();
+  // Schedules the state machine to run one cycle on the shared state
+  // machine thread. Main thread only.
+  nsresult ScheduleStateMachineThread();
 
   /******
    * The following members should be accessed with the decoder lock held.
@@ -594,9 +586,6 @@ public:
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
   nsChannelStatistics mPlaybackStatistics;
-
-  // Thread to manage playback state machine.
-  nsCOMPtr<nsIThread> mStateMachineThread;
 
   // The current playback position of the media resource in units of
   // seconds. This is updated approximately at the framerate of the
