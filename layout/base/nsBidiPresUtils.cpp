@@ -817,8 +817,13 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                                          NS_MIN(end, endLine) - start));
               }
 
+              if (end < endLine) {
+                mPrevContent = nsnull;
+                break;
+              }
+
               PRBool createdContinuation = PR_FALSE;
-              if (end >= endLine && PRUint32(endLine) < text.Length()) {
+              if (PRUint32(endLine) < text.Length()) {
                 /*
                  * Timing is everything here: if the frame already has a bidi
                  * continuation, we need to make the continuation fluid *before*
