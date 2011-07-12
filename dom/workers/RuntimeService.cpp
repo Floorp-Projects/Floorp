@@ -1,0 +1,1089 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Web Workers.
+ *
+ * The Initial Developer of the Original Code is
+ *   The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "RuntimeService.h"
+
+#include "nsIDOMChromeWindow.h"
+#include "nsIDocument.h"
+#include "nsIEffectiveTLDService.h"
+#include "nsIObserverService.h"
+#include "nsIPrincipal.h"
+#include "nsIJSContextStack.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsISupportsPriority.h"
+#include "nsPIDOMWindow.h"
+
+#include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
+#include "nsDOMJSUtils.h"
+#include "nsGlobalWindow.h"
+#include "nsNetUtil.h"
+#include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
+#include "nsXPCOM.h"
+#include "nsXPCOMPrivate.h"
+
+#include "Events.h"
+#include "EventTarget.h"
+#include "Worker.h"
+#include "WorkerPrivate.h"
+
+USING_WORKERS_NAMESPACE
+
+using mozilla::MutexAutoLock;
+using mozilla::MutexAutoUnlock;
+using mozilla::Preferences;
+
+// The size of the worker runtime heaps in bytes.
+#define WORKER_RUNTIME_HEAPSIZE 32 * 1024 * 1024
+
+// The size of the C stack in bytes.
+#define WORKER_CONTEXT_NATIVE_STACK_LIMIT sizeof(size_t) * 32 * 1024
+
+// The maximum number of threads to use for workers, overridable via pref.
+#define MAX_WORKERS_PER_DOMAIN 10
+
+// The default number of seconds that close handlers will be allowed to run.
+#define MAX_SCRIPT_RUN_TIME_SEC 10
+
+#define PREF_WORKERS_ENABLED "dom.workers.enabled"
+#define PREF_WORKERS_MAX_PER_DOMAIN "dom.workers.maxPerDomain"
+#define PREF_WORKERS_GCZEAL "dom.workers.gczeal"
+#define PREF_MAX_SCRIPT_RUN_TIME "dom.max_script_run_time"
+
+PR_STATIC_ASSERT(MAX_WORKERS_PER_DOMAIN >= 1);
+
+namespace {
+
+const PRUint32 kNoIndex = PRUint32(-1);
+
+const PRUint32 kRequiredJSContextOptions =
+  JSOPTION_DONT_REPORT_UNCAUGHT | JSOPTION_NO_SCRIPT_RVAL;
+
+PRUint32 gMaxWorkersPerDomain = MAX_WORKERS_PER_DOMAIN;
+
+// Does not hold an owning reference.
+RuntimeService* gRuntimeService = nsnull;
+
+enum {
+  ID_Worker = 0,
+  ID_ChromeWorker,
+  ID_MessageEvent,
+  ID_ErrorEvent,
+
+  ID_COUNT
+};
+
+// These are jsids for the main runtime. Only touched on the main thread.
+jsid gStringIDs[ID_COUNT] = { JSID_VOID };
+
+const char* gStringChars[] = {
+  "Worker",
+  "ChromeWorker",
+  "MessageEvent",
+  "ErrorEvent"
+
+  // XXX Don't care about ProgressEvent since it should never leak to the main
+  // thread.
+};
+
+PR_STATIC_ASSERT(NS_ARRAY_LENGTH(gStringChars) == ID_COUNT);
+
+enum {
+  PREF_strict = 0,
+  PREF_werror,
+  PREF_relimit,
+  PREF_tracejit,
+  PREF_methodjit,
+  PREF_jitprofiling,
+  PREF_methodjit_always,
+
+#ifdef JS_GC_ZEAL
+  PREF_gczeal,
+#endif
+
+  PREF_COUNT
+};
+
+#define JS_OPTIONS_DOT_STR "javascript.options."
+
+const char* gPrefsToWatch[] = {
+  JS_OPTIONS_DOT_STR "strict",
+  JS_OPTIONS_DOT_STR "werror",
+  JS_OPTIONS_DOT_STR "relimit",
+  JS_OPTIONS_DOT_STR "tracejit.content",
+  JS_OPTIONS_DOT_STR "methodjit.content",
+  JS_OPTIONS_DOT_STR "jitprofiling.content",
+  JS_OPTIONS_DOT_STR "methodjit_always"
+
+#ifdef JS_GC_ZEAL
+  , PREF_WORKERS_GCZEAL
+#endif
+};
+
+PR_STATIC_ASSERT(NS_ARRAY_LENGTH(gPrefsToWatch) == PREF_COUNT);
+
+int
+PrefCallback(const char* aPrefName, void* aClosure)
+{
+  AssertIsOnMainThread();
+
+  RuntimeService* rts = static_cast<RuntimeService*>(aClosure);
+  NS_ASSERTION(rts, "This should never be null!");
+
+  NS_NAMED_LITERAL_CSTRING(jsOptionStr, JS_OPTIONS_DOT_STR);
+
+  if(StringBeginsWith(nsDependentCString(aPrefName), jsOptionStr)) {
+    PRUint32 newOptions = kRequiredJSContextOptions;
+    if (Preferences::GetBool(gPrefsToWatch[PREF_strict])) {
+      newOptions |= JSOPTION_STRICT;
+    }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_werror])) {
+      newOptions |= JSOPTION_WERROR;
+    }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_relimit])) {
+      newOptions |= JSOPTION_RELIMIT;
+    }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_tracejit])) {
+      newOptions |= JSOPTION_JIT;
+    }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit])) {
+      newOptions |= JSOPTION_METHODJIT;
+    }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_jitprofiling])) {
+      newOptions |= JSOPTION_PROFILING;
+    }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit_always])) {
+      newOptions |= JSOPTION_METHODJIT_ALWAYS;
+    }
+    RuntimeService::SetDefaultJSContextOptions(newOptions);
+    rts->UpdateAllWorkerJSContextOptions();
+  }
+#ifdef JS_GC_ZEAL
+  else if (!strcmp(aPrefName, gPrefsToWatch[PREF_gczeal])) {
+    PRInt32 gczeal = Preferences::GetInt(gPrefsToWatch[PREF_gczeal]);
+    RuntimeService::SetDefaultGCZeal(PRUint8(NS_MIN(NS_MAX(gczeal, 0), 3)));
+    rts->UpdateAllWorkerGCZeal();
+  }
+#endif
+  return 0;
+}
+
+void
+ErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aReport)
+{
+  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
+  return worker->ReportError(aCx, aMessage, aReport);
+}
+
+JSBool
+OperationCallback(JSContext* aCx)
+{
+  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
+  return worker->OperationCallback(aCx);
+}
+
+JSContext*
+CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
+{
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  NS_ASSERTION(!aWorkerPrivate->GetJSContext(), "Already has a context!");
+
+  JSRuntime* runtime = JS_NewRuntime(WORKER_RUNTIME_HEAPSIZE);
+  if (!runtime) {
+    NS_WARNING("Could not create new runtime!");
+    return nsnull;
+  }
+
+  // ChromeWorker has extra clone callbacks for passing threadsafe XPCOM
+  // components.
+  JSStructuredCloneCallbacks* callbacks =
+    aWorkerPrivate->IsChromeWorker() ?
+    ChromeWorkerStructuredCloneCallbacks() :
+    WorkerStructuredCloneCallbacks();
+
+  JS_SetStructuredCloneCallbacks(runtime, callbacks);
+
+  JSContext* workerCx = JS_NewContext(runtime, 0);
+  if (!workerCx) {
+    JS_DestroyRuntime(runtime);
+    NS_WARNING("Could not create new context!");
+    return nsnull;
+  }
+
+  JS_SetContextPrivate(workerCx, aWorkerPrivate);
+
+  JS_SetErrorReporter(workerCx, ErrorReporter);
+
+  JS_SetOperationCallback(workerCx, OperationCallback);
+
+  JS_SetNativeStackQuota(workerCx, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
+
+  NS_ASSERTION((aWorkerPrivate->GetJSContextOptions() &
+                kRequiredJSContextOptions) == kRequiredJSContextOptions,
+               "Somehow we lost our required options!");
+  JS_SetOptions(workerCx, aWorkerPrivate->GetJSContextOptions());
+
+#ifdef JS_GC_ZEAL
+  {
+    PRUint8 zeal = aWorkerPrivate->GetGCZeal();
+    NS_ASSERTION(zeal <= 3, "Bad zeal value!");
+
+    PRUint32 frequency = zeal <= 2 ? JS_DEFAULT_ZEAL_FREQ : 1;
+    JS_SetGCZeal(workerCx, zeal, frequency, false);
+  }
+#endif
+
+  if (aWorkerPrivate->IsChromeWorker()) {
+    JS_SetVersion(workerCx, JSVERSION_LATEST);
+  }
+
+  return workerCx;
+}
+
+class WorkerThreadRunnable : public nsRunnable
+{
+  WorkerPrivate* mWorkerPrivate;
+
+public:
+  WorkerThreadRunnable(WorkerPrivate* aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
+  {
+    NS_ASSERTION(mWorkerPrivate, "This should never be null!");
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    WorkerPrivate* workerPrivate = mWorkerPrivate;
+    mWorkerPrivate = nsnull;
+
+    workerPrivate->AssertIsOnWorkerThread();
+
+    JSContext* cx = CreateJSContextForWorker(workerPrivate);
+    if (!cx) {
+      // XXX need to fire an error at parent.
+      NS_ERROR("Failed to create runtime and context!");
+      return NS_ERROR_FAILURE;
+    }
+
+    {
+      JSAutoRequest ar(cx);
+
+      workerPrivate->DoRunLoop(cx);
+
+      // XXX Bug 666963 - CTypes can create another JSContext for use with
+      // closures, and then it holds that context in a reserved slot on the
+      // CType prototype object. We have to destroy that context before we can
+      // destroy the runtime, and we also have to make sure that it isn't the
+      // last context to be destroyed (otherwise it will assert). To accomplish
+      // this we unset our context's global object and GC, hopefully collecting
+      // the CType prototype object. Then we can destroy our context and the
+      // runtime. Once this bug is resolved we can remove this nastiness and
+      // simply call JS_DestroyContextNoGC on our context.
+      JS_SetGlobalObject(cx, nsnull);
+      JS_GC(cx);
+    }
+
+    JSRuntime* rt = JS_GetRuntime(cx);
+    JS_DestroyContextNoGC(cx);
+    JS_DestroyRuntime(rt);
+
+    workerPrivate->ScheduleDeletion();
+    return NS_OK;
+  }
+};
+
+} /* anonymous namespace */
+
+BEGIN_WORKERS_NAMESPACE
+
+// Entry point for the DOM.
+JSBool
+ResolveWorkerClasses(JSContext* aCx, JSObject* aObj, jsid aId, uintN aFlags,
+                     JSObject** aObjp)
+{
+  AssertIsOnMainThread();
+
+  // Don't care about assignments or declarations, bail now.
+  if (aFlags & (JSRESOLVE_ASSIGNING | JSRESOLVE_DECLARING)) {
+    *aObjp = nsnull;
+    return true;
+  }
+
+  // Make sure our strings are interned.
+  if (JSID_IS_VOID(gStringIDs[0])) {
+    for (PRUint32 i = 0; i < ID_COUNT; i++) {
+      JSString* str = JS_InternString(aCx, gStringChars[i]);
+      if (!str) {
+        while (i) {
+          gStringIDs[--i] = JSID_VOID;
+        }
+        return false;
+      }
+      gStringIDs[i] = INTERNED_STRING_TO_JSID(aCx, str);
+    }
+  }
+
+  bool isChrome = false;
+  bool shouldResolve = false;
+
+  for (PRUint32 i = 0; i < ID_COUNT; i++) {
+    if (aId == gStringIDs[i]) {
+      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+      NS_ASSERTION(ssm, "This should never be null!");
+
+      PRBool enabled;
+      if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &enabled))) {
+        NS_WARNING("IsCapabilityEnabled failed!");
+        isChrome = PR_FALSE;
+      }
+
+      isChrome = !!enabled;
+
+      // Don't resolve if this is ChromeWorker and we're not chrome. Otherwise
+      // always resolve.
+      shouldResolve = aId == gStringIDs[ID_ChromeWorker] ? isChrome : true;
+      break;
+    }
+  }
+
+  if (shouldResolve) {
+    // Don't do anything if workers are disabled.
+    if (!isChrome && !Preferences::GetBool(PREF_WORKERS_ENABLED)) {
+      *aObjp = nsnull;
+      return true;
+    }
+
+    // XXX Hack to prevent instanceof checks failing on the main thread.
+    jsval windowEventTarget;
+    if (!JS_GetProperty(aCx, aObj, "EventTarget", &windowEventTarget)) {
+      return false;
+    }
+
+    JSObject* eventTarget = nsnull;
+    if (!JSVAL_IS_PRIMITIVE(windowEventTarget)) {
+      jsval protoVal;
+      if (!JS_GetProperty(aCx, JSVAL_TO_OBJECT(windowEventTarget), "prototype",
+                          &protoVal)) {
+        return false;
+      }
+
+      if (!JSVAL_IS_PRIMITIVE(protoVal)) {
+        eventTarget = events::InitEventTargetClass(aCx, aObj,
+                                                   JSVAL_TO_OBJECT(protoVal));
+        if (!eventTarget) {
+          return false;
+        }
+      }
+    }
+
+    if (!eventTarget) {
+      eventTarget = events::InitEventTargetClass(aCx, aObj, nsnull);
+      if (!eventTarget) {
+        return false;
+      }
+    }
+
+    JSObject* worker = worker::InitClass(aCx, aObj, eventTarget, true);
+    if (!worker) {
+      return false;
+    }
+
+    if (isChrome && !chromeworker::InitClass(aCx, aObj, worker, true)) {
+      return false;
+    }
+
+    if (!events::InitClasses(aCx, aObj)) {
+      return false;
+    }
+
+    *aObjp = aObj;
+    return true;
+  }
+
+  // Not resolved.
+  *aObjp = nsnull;
+  return true;
+}
+
+void
+CancelWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->CancelWorkersForWindow(aCx, aWindow);
+  }
+}
+
+void
+SuspendWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->SuspendWorkersForWindow(aCx, aWindow);
+  }
+}
+
+void
+ResumeWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->ResumeWorkersForWindow(aCx, aWindow);
+  }
+}
+
+END_WORKERS_NAMESPACE
+
+PRUint32 RuntimeService::sDefaultJSContextOptions = kRequiredJSContextOptions;
+
+PRInt32 RuntimeService::sCloseHandlerTimeoutSeconds = MAX_SCRIPT_RUN_TIME_SEC;
+
+#ifdef JS_GC_ZEAL
+PRUint8 RuntimeService::sDefaultGCZeal = 0;
+#endif
+
+RuntimeService::RuntimeService()
+: mDomainMapMutex("RuntimeService::mDomainMapMutex"), mObserved(false),
+  mShuttingDown(false), mNavigatorStringsLoaded(false)
+{
+  AssertIsOnMainThread();
+  NS_ASSERTION(!gRuntimeService, "More than one service!");
+}
+
+RuntimeService::~RuntimeService()
+{
+  AssertIsOnMainThread();
+
+  // gRuntimeService can be null if Init() fails.
+  NS_ASSERTION(!gRuntimeService || gRuntimeService == this,
+               "More than one service!");
+
+  gRuntimeService = nsnull;
+}
+
+// static
+RuntimeService*
+RuntimeService::GetOrCreateService()
+{
+  AssertIsOnMainThread();
+
+  if (!gRuntimeService) {
+    nsRefPtr<RuntimeService> service = new RuntimeService();
+    if (NS_FAILED(service->Init())) {
+      NS_WARNING("Failed to initialize!");
+      service->Cleanup();
+      return nsnull;
+    }
+
+    // The observer service now owns us until shutdown.
+    gRuntimeService = service;
+  }
+
+  return gRuntimeService;
+}
+
+// static
+RuntimeService*
+RuntimeService::GetService()
+{
+  return gRuntimeService;
+}
+
+bool
+RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+{
+  aWorkerPrivate->AssertIsOnParentThread();
+
+  WorkerPrivate* parent = aWorkerPrivate->GetParent();
+  if (!parent) {
+    AssertIsOnMainThread();
+
+    if (mShuttingDown) {
+      JS_ReportError(aCx, "Cannot create worker during shutdown!");
+      return false;
+    }
+  }
+
+  WorkerDomainInfo* domainInfo;
+  bool queued = false;
+  {
+    const nsCString& domain = aWorkerPrivate->Domain();
+
+    MutexAutoLock lock(mDomainMapMutex);
+
+    if (!mDomainMap.Get(domain, &domainInfo)) {
+      NS_ASSERTION(!parent, "Shouldn't have a parent here!");
+
+      domainInfo = new WorkerDomainInfo();
+      domainInfo->mDomain = domain;
+
+      if (!mDomainMap.Put(domain, domainInfo)) {
+        delete domainInfo;
+        domainInfo = nsnull;
+      }
+    }
+
+    if (domainInfo) {
+      queued = gMaxWorkersPerDomain &&
+               domainInfo->ActiveWorkerCount() >= gMaxWorkersPerDomain &&
+               !domain.IsEmpty();
+
+      if (queued) {
+        domainInfo->mQueuedWorkers.AppendElement(aWorkerPrivate);
+      }
+      else if (parent) {
+        domainInfo->mChildWorkerCount++;
+      }
+      else {
+        domainInfo->mActiveWorkers.AppendElement(aWorkerPrivate);
+      }
+    }
+  }
+
+  if (!domainInfo) {
+    JS_ReportOutOfMemory(aCx);
+    return false;
+  }
+
+  // From here on out we must call UnregisterWorker if something fails!
+  if (parent) {
+    if (!parent->AddChildWorker(aCx, aWorkerPrivate)) {
+      UnregisterWorker(aCx, aWorkerPrivate);
+      return false;
+    }
+  }
+  else {
+    if (!mNavigatorStringsLoaded) {
+      if (NS_FAILED(NS_GetNavigatorAppName(mNavigatorStrings.mAppName)) ||
+          NS_FAILED(NS_GetNavigatorAppVersion(mNavigatorStrings.mAppVersion)) ||
+          NS_FAILED(NS_GetNavigatorPlatform(mNavigatorStrings.mPlatform)) ||
+          NS_FAILED(NS_GetNavigatorUserAgent(mNavigatorStrings.mUserAgent))) {
+        JS_ReportError(aCx, "Failed to load navigator strings!");
+        UnregisterWorker(aCx, aWorkerPrivate);
+        return false;
+      }
+
+      mNavigatorStringsLoaded = true;
+    }
+
+    nsPIDOMWindow* window = aWorkerPrivate->GetWindow();
+
+    nsTArray<WorkerPrivate*>* windowArray;
+    if (!mWindowMap.Get(window, &windowArray)) {
+      NS_ASSERTION(!parent, "Shouldn't have a parent here!");
+
+      windowArray = new nsTArray<WorkerPrivate*>(1);
+
+      if (!mWindowMap.Put(window, windowArray)) {
+        delete windowArray;
+        UnregisterWorker(aCx, aWorkerPrivate);
+        JS_ReportOutOfMemory(aCx);
+        return false;
+      }
+    }
+
+    NS_ASSERTION(!windowArray->Contains(aWorkerPrivate),
+                 "Already know about this worker!");
+    windowArray->AppendElement(aWorkerPrivate);
+  }
+
+  if (!queued && !ScheduleWorker(aCx, aWorkerPrivate)) {
+    return false;
+  }
+
+  return true;
+}
+
+void
+RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+{
+  aWorkerPrivate->AssertIsOnParentThread();
+
+  WorkerPrivate* parent = aWorkerPrivate->GetParent();
+  if (!parent) {
+    AssertIsOnMainThread();
+  }
+
+  WorkerPrivate* queuedWorker = nsnull;
+  {
+    const nsCString& domain = aWorkerPrivate->Domain();
+
+    MutexAutoLock lock(mDomainMapMutex);
+
+    WorkerDomainInfo* domainInfo;
+    if (!mDomainMap.Get(domain, &domainInfo)) {
+      NS_ERROR("Don't have an entry for this domain!");
+    }
+
+    // Remove old worker from everywhere.
+    PRUint32 index = domainInfo->mQueuedWorkers.IndexOf(aWorkerPrivate);
+    if (index != kNoIndex) {
+      // Was queued, remove from the list.
+      domainInfo->mQueuedWorkers.RemoveElementAt(index);
+    }
+    else if (parent) {
+      NS_ASSERTION(domainInfo->mChildWorkerCount, "Must be non-zero!");
+      domainInfo->mChildWorkerCount--;
+    }
+    else {
+      NS_ASSERTION(domainInfo->mActiveWorkers.Contains(aWorkerPrivate),
+                   "Don't know about this worker!");
+      domainInfo->mActiveWorkers.RemoveElement(aWorkerPrivate);
+    }
+
+    // See if there's a queued worker we can schedule.
+    if (domainInfo->ActiveWorkerCount() < gMaxWorkersPerDomain &&
+        !domainInfo->mQueuedWorkers.IsEmpty()) {
+      queuedWorker = domainInfo->mQueuedWorkers[0];
+      domainInfo->mQueuedWorkers.RemoveElementAt(0);
+
+      if (queuedWorker->GetParent()) {
+        domainInfo->mChildWorkerCount++;
+      }
+      else {
+        domainInfo->mActiveWorkers.AppendElement(queuedWorker);
+      }
+    }
+
+    if (!domainInfo->ActiveWorkerCount()) {
+      NS_ASSERTION(domainInfo->mQueuedWorkers.IsEmpty(), "Huh?!");
+      mDomainMap.Remove(domain);
+    }
+  }
+
+  if (parent) {
+    parent->RemoveChildWorker(aCx, aWorkerPrivate);
+  }
+  else {
+    nsPIDOMWindow* window = aWorkerPrivate->GetWindow();
+
+    nsTArray<WorkerPrivate*>* windowArray;
+    if (!mWindowMap.Get(window, &windowArray)) {
+      NS_ERROR("Don't have an entry for this window!");
+    }
+
+    NS_ASSERTION(windowArray->Contains(aWorkerPrivate),
+                 "Don't know about this worker!");
+    windowArray->RemoveElement(aWorkerPrivate);
+
+    if (windowArray->IsEmpty()) {
+      NS_ASSERTION(!queuedWorker, "How can this be?!");
+      mWindowMap.Remove(window);
+    }
+  }
+
+  if (queuedWorker && !ScheduleWorker(aCx, queuedWorker)) {
+    UnregisterWorker(aCx, queuedWorker);
+  }
+}
+
+bool
+RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+{
+  if (!aWorkerPrivate->Start()) {
+    // This is ok, means that we didn't need to make a thread for this worker.
+    return true;
+  }
+
+  nsCOMPtr<nsIThread> thread;
+  if (NS_FAILED(NS_NewThread(getter_AddRefs(thread), nsnull))) {
+    UnregisterWorker(aCx, aWorkerPrivate);
+    JS_ReportError(aCx, "Could not create new thread!");
+    return false;
+  }
+
+  nsCOMPtr<nsISupportsPriority> priority = do_QueryInterface(thread);
+  if (!priority ||
+      NS_FAILED(priority->SetPriority(nsISupportsPriority::PRIORITY_LOWEST))) {
+    NS_WARNING("Could not lower the new thread's priority!");
+  }
+
+#ifdef DEBUG
+  aWorkerPrivate->SetThread(thread);
+#endif
+
+  nsCOMPtr<nsIRunnable> runnable = new WorkerThreadRunnable(aWorkerPrivate);
+  if (NS_FAILED(thread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+    UnregisterWorker(aCx, aWorkerPrivate);
+    JS_ReportError(aCx, "Could not dispatch to new thread!");
+    return false;
+  }
+
+  return true;
+}
+
+nsresult
+RuntimeService::Init()
+{
+  AssertIsOnMainThread();
+
+  PRBool ok = mDomainMap.Init();
+  NS_ENSURE_STATE(ok);
+
+  ok = mWindowMap.Init();
+  NS_ENSURE_STATE(ok);
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> obs =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mObserved = true;
+
+  for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(gPrefsToWatch); index++) {
+    if (NS_FAILED(Preferences::RegisterCallback(PrefCallback,
+                                                gPrefsToWatch[index], this))) {
+      NS_WARNING("Failed to register pref callback?!");
+    }
+    PrefCallback(gPrefsToWatch[index], this);
+  }
+
+  // We assume atomic 32bit reads/writes. If this assumption doesn't hold on
+  // some wacky platform then the worst that could happen is that the close
+  // handler will run for a slightly different amount of time.
+  if (NS_FAILED(Preferences::AddIntVarCache(&sCloseHandlerTimeoutSeconds,
+                                            PREF_MAX_SCRIPT_RUN_TIME,
+                                            MAX_SCRIPT_RUN_TIME_SEC))) {
+      NS_WARNING("Failed to register timeout cache?!");
+  }
+
+  PRInt32 maxPerDomain = Preferences::GetInt(PREF_WORKERS_MAX_PER_DOMAIN,
+                                             MAX_WORKERS_PER_DOMAIN);
+  gMaxWorkersPerDomain = NS_MAX(0, maxPerDomain);
+
+  return NS_OK;
+}
+
+// This spins the event loop until all workers are finished and their threads
+// have been joined.
+void
+RuntimeService::Cleanup()
+{
+  AssertIsOnMainThread();
+
+  mShuttingDown = true;
+
+  if (mDomainMap.IsInitialized()) {
+    MutexAutoLock lock(mDomainMapMutex);
+
+    nsAutoTArray<WorkerPrivate*, 100> workers;
+    mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
+
+    if (!workers.IsEmpty()) {
+      nsIThread* currentThread;
+
+      // Cancel all top-level workers.
+      {
+        MutexAutoUnlock unlock(mDomainMapMutex);
+
+        currentThread = NS_GetCurrentThread();
+        NS_ASSERTION(currentThread, "This should never be null!");
+
+        AutoSafeJSContext cx;
+
+        for (PRUint32 index = 0; index < workers.Length(); index++) {
+          if (!workers[index]->Kill(cx)) {
+            NS_WARNING("Failed to cancel worker!");
+          }
+        }
+      }
+
+      // And make sure all their final messages have run and all their threads
+      // have joined.
+      while (mDomainMap.Count()) {
+        MutexAutoUnlock unlock(mDomainMapMutex);
+
+        if (NS_FAILED(NS_ProcessNextEvent(currentThread))) {
+          NS_WARNING("Something bad happened!");
+          break;
+        }
+      }
+    }
+  }
+
+  if (mWindowMap.IsInitialized()) {
+    NS_ASSERTION(!mWindowMap.Count(), "All windows should have been released!");
+  }
+
+  if (mObserved) {
+    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(gPrefsToWatch); index++) {
+      Preferences::UnregisterCallback(PrefCallback, gPrefsToWatch[index], this);
+    }
+
+    nsCOMPtr<nsIObserverService> obs =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    NS_WARN_IF_FALSE(obs, "Failed to get observer service?!");
+
+    if (obs) {
+      nsresult rv =
+        obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID);
+      mObserved = !NS_SUCCEEDED(rv);
+    }
+  }
+}
+
+// static
+PLDHashOperator
+RuntimeService::AddAllTopLevelWorkersToArray(const nsACString& aKey,
+                                             WorkerDomainInfo* aData,
+                                             void* aUserArg)
+{
+  nsTArray<WorkerPrivate*>* array =
+    static_cast<nsTArray<WorkerPrivate*>*>(aUserArg);
+
+#ifdef DEBUG
+  for (PRUint32 index = 0; index < aData->mActiveWorkers.Length(); index++) {
+    NS_ASSERTION(!aData->mActiveWorkers[index]->GetParent(),
+                 "Shouldn't have a parent in this list!");
+  }
+#endif
+
+  array->AppendElements(aData->mActiveWorkers);
+
+  // These might not be top-level workers...
+  for (PRUint32 index = 0; index < aData->mQueuedWorkers.Length(); index++) {
+    WorkerPrivate* worker = aData->mQueuedWorkers[index];
+    if (!worker->GetParent()) {
+      array->AppendElement(worker);
+    }
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+void
+RuntimeService::GetWorkersForWindow(nsPIDOMWindow* aWindow,
+                                    nsTArray<WorkerPrivate*>& aWorkers)
+{
+  AssertIsOnMainThread();
+
+  nsTArray<WorkerPrivate*>* workers;
+  if (mWindowMap.Get(aWindow, &workers)) {
+    NS_ASSERTION(!workers->IsEmpty(), "Should have been removed!");
+    aWorkers.AppendElements(*workers);
+  }
+  else {
+    NS_ASSERTION(aWorkers.IsEmpty(), "Should be empty!");
+  }
+}
+
+void
+RuntimeService::CancelWorkersForWindow(JSContext* aCx,
+                                       nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+
+  nsAutoTArray<WorkerPrivate*, 100> workers;
+  GetWorkersForWindow(aWindow, workers);
+
+  if (!workers.IsEmpty()) {
+    AutoSafeJSContext cx(aCx);
+    for (PRUint32 index = 0; index < workers.Length(); index++) {
+      if (!workers[index]->Cancel(aCx)) {
+        NS_WARNING("Failed to cancel worker!");
+      }
+    }
+  }
+}
+
+void
+RuntimeService::SuspendWorkersForWindow(JSContext* aCx,
+                                        nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+
+  nsAutoTArray<WorkerPrivate*, 100> workers;
+  GetWorkersForWindow(aWindow, workers);
+
+  if (!workers.IsEmpty()) {
+    JSAutoRequest ar(aCx);
+    for (PRUint32 index = 0; index < workers.Length(); index++) {
+      if (!workers[index]->Suspend(aCx)) {
+        NS_WARNING("Failed to cancel worker!");
+      }
+    }
+  }
+}
+
+void
+RuntimeService::ResumeWorkersForWindow(JSContext* aCx,
+                                       nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+
+  nsAutoTArray<WorkerPrivate*, 100> workers;
+  GetWorkersForWindow(aWindow, workers);
+
+  if (!workers.IsEmpty()) {
+    JSAutoRequest ar(aCx);
+    for (PRUint32 index = 0; index < workers.Length(); index++) {
+      if (!workers[index]->Resume(aCx)) {
+        NS_WARNING("Failed to cancel worker!");
+      }
+    }
+  }
+}
+
+void
+RuntimeService::UpdateAllWorkerJSContextOptions()
+{
+  AssertIsOnMainThread();
+
+  nsAutoTArray<WorkerPrivate*, 100> workers;
+  {
+    MutexAutoLock lock(mDomainMapMutex);
+
+    mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
+  }
+
+  if (!workers.IsEmpty()) {
+    AutoSafeJSContext cx;
+    for (PRUint32 index = 0; index < workers.Length(); index++) {
+      workers[index]->UpdateJSContextOptions(cx, GetDefaultJSContextOptions());
+    }
+  }
+}
+
+#ifdef JS_GC_ZEAL
+void
+RuntimeService::UpdateAllWorkerGCZeal()
+{
+  AssertIsOnMainThread();
+
+  nsAutoTArray<WorkerPrivate*, 100> workers;
+  {
+    MutexAutoLock lock(mDomainMapMutex);
+
+    mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
+  }
+
+  if (!workers.IsEmpty()) {
+    AutoSafeJSContext cx;
+    for (PRUint32 index = 0; index < workers.Length(); index++) {
+      workers[index]->UpdateGCZeal(cx, GetDefaultGCZeal());
+    }
+  }
+}
+#endif
+
+// nsISupports
+NS_IMPL_ISUPPORTS1(RuntimeService, nsIObserver)
+
+// nsIObserver
+NS_IMETHODIMP
+RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
+                        const PRUnichar* aData)
+{
+  AssertIsOnMainThread();
+
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID)) {
+    Cleanup();
+    return NS_OK;
+  }
+
+  NS_NOTREACHED("Unknown observer topic!");
+  return NS_OK;
+}
+
+RuntimeService::AutoSafeJSContext::AutoSafeJSContext(JSContext* aCx)
+: mContext(aCx ? aCx : GetSafeContext())
+{
+  AssertIsOnMainThread();
+
+  if (mContext) {
+    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
+    NS_ASSERTION(stack, "This should never be null!");
+
+    if (NS_FAILED(stack->Push(mContext))) {
+      NS_ERROR("Couldn't push safe JSContext!");
+      mContext = nsnull;
+      return;
+    }
+
+    JS_BeginRequest(mContext);
+  }
+}
+
+RuntimeService::AutoSafeJSContext::~AutoSafeJSContext()
+{
+  AssertIsOnMainThread();
+
+  if (mContext) {
+    JS_ReportPendingException(mContext);
+
+    JS_EndRequest(mContext);
+
+    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
+    NS_ASSERTION(stack, "This should never be null!");
+
+    JSContext* cx;
+    if (NS_FAILED(stack->Pop(&cx))) {
+      NS_ERROR("Failed to pop safe context!");
+    }
+    if (cx != mContext) {
+      NS_ERROR("Mismatched context!");
+    }
+  }
+}
+
+// static
+JSContext*
+RuntimeService::AutoSafeJSContext::GetSafeContext()
+{
+  AssertIsOnMainThread();
+
+  nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
+  NS_ASSERTION(stack, "This should never be null!");
+
+  JSContext* cx;
+  if (NS_FAILED(stack->GetSafeJSContext(&cx))) {
+    NS_ERROR("Couldn't get safe JSContext!");
+    return nsnull;
+  }
+
+  NS_ASSERTION(!JS_IsExceptionPending(cx), "Already has an exception?!");
+  return cx;
+}
