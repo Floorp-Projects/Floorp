@@ -38,50 +38,53 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "CodeGenerator-x64.h"
+#include "ion/shared/CodeGenerator-shared-inl.h"
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+using namespace js;
+using namespace js::ion;
 
-namespace js {
-namespace ion {
-
-class StackAssignment
+CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
+  : CodeGeneratorX86Shared(gen, graph, thisFromCtor()->masm)
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
-    uint32 height_;
+}
 
-  public:
-    StackAssignment() : height_(0)
-    { }
+bool
+CodeGenerator::generatePrologue()
+{
+    return true;
+}
 
-    void freeSlot(uint32 index) {
-        slots.append(index);
-    }
+bool
+CodeGenerator::generateEpilogue()
+{
+    return true;
+}
 
-    void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
-    }
+bool
+CodeGenerator::visitValue(LValue *value)
+{
+    jsval_layout jv;
+    jv.asBits = JSVAL_BITS(Jsvalify(value->value()));
 
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
-    }
+    LDefinition *reg = value->getDef(0);
 
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
-        }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
-    }
+    if (value->value().isMarkable())
+        masm.movq(ImmGCPtr(jv.asPtr), ToRegister(reg));
+    else
+        masm.movq(ImmWord(jv.asBits), ToRegister(reg));
+    return true;
+}
 
-    uint32 stackHeight() const {
-        return height_;
-    }
-};
-
-} // namespace ion
-} // namespace js
-
-#endif // jsion_cpu_x64_stack_assignment_h__
+bool
+CodeGenerator::visitReturn(LReturn *ret)
+{
+#ifdef DEBUG
+    LAllocation *result = ret->getOperand(0);
+    JS_ASSERT(ToRegister(result) == JSReturnReg);
+#endif
+    masm.pop(rbp);
+    masm.ret();
+    return true;
+}
 

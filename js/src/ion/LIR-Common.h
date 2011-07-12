@@ -42,10 +42,27 @@
 #ifndef jsion_lir_common_h__
 #define jsion_lir_common_h__
 
+#include "ion/shared/Assembler-shared.h"
+
 // This file declares LIR instructions that are common to every platform.
 
 namespace js {
 namespace ion {
+
+// Assembly label marker placed at the top of blocks.
+class LLabel : public LInstructionHelper<0, 0, 0>
+{
+    Label label_;
+
+  public:
+    LIR_HEADER(Label);
+
+    LLabel()
+    { }
+    Label *label() {
+        return &label_;
+    }
+};
 
 // Fully resolved allocation-to-allocation move.
 class LMove : public LInstructionHelper<1, 1, 0>
@@ -95,6 +112,22 @@ class LDouble : public LInstructionHelper<1, 0, 0>
     { }
 };
 
+// A constant Value.
+class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
+{
+    Value v_;
+
+  public:
+    LIR_HEADER(Value);
+
+    LValue(const Value &v) : v_(v)
+    { }
+
+    Value value() const {
+        return v_;
+    }
+};
+
 // Formal argument for a function, returning a box. Formal arguments are
 // initially read from the stack.
 class LParameter : public LInstructionHelper<BOX_PIECES, 0, 0>
@@ -114,6 +147,10 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     LGoto(MBasicBlock *block)
       : block_(block)
     { }
+
+    MBasicBlock *target() const {
+        return block_;
+    }
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.

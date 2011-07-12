@@ -44,6 +44,7 @@
 #include "ion/IonLowering-inl.h"
 #include "Lowering-x86.h"
 #include "Lowering-x86-inl.h"
+#include "Assembler-x86.h"
 
 using namespace js;
 using namespace js::ion;
@@ -65,10 +66,14 @@ LIRGeneratorX86::visitBox(MBox *box)
         return emitAtUses(box);
 
     MInstruction *inner = box->getInput(0);
-    LBox *lir = new LBox(useOrConstant(inner));
 
-    // If the box wrapped a constant, it needs a new register.
     if (inner->isConstant())
+        return defineBox(new LValue(inner->toConstant()->value()), box);
+
+    LBox *lir = new LBox(use(inner), inner->type());
+
+    // If the box wrapped a double, it needs a new register.
+    if (inner->type() == MIRType_Double)
         return defineBox(lir, box);
 
     // Otherwise, we should not define a new register for the payload portion

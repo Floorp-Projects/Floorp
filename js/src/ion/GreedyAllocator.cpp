@@ -839,12 +839,12 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
     for (size_t i = 1; i < mblock->numSuccessors(); i++) {
         LBlock *rightblock = mblock->getSuccessor(i)->lir();
 
-        for (size_t i = 0; i < RegisterCodes::Total; i++) {
+        for (size_t i = 0; i < Registers::Total; i++) {
             AnyRegister reg = AnyRegister(Register::FromCode(i));
             if (!mergeRegisterState(reg, leftblock, rightblock))
                 return false;
         }
-        for (size_t i = 0; i < FloatRegisterCodes::Total; i++) {
+        for (size_t i = 0; i < FloatRegisters::Total; i++) {
             AnyRegister reg = AnyRegister(FloatRegister::FromCode(i));
             if (!mergeRegisterState(reg, leftblock, rightblock))
                 return false;
@@ -853,8 +853,8 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
         // If there were parallel moves, append them now.
         BlockInfo *info = blockInfo(rightblock);
         if (info->restores.moves) {
-            LInstruction *before = *rightblock->begin();
-            if (!info->restores.moves->toInstructionsBefore(rightblock, before, tempSlot))
+            LInstruction *after = *rightblock->begin();
+            if (!info->restores.moves->toInstructionsAfter(rightblock, after, tempSlot))
                 return false;
         }
     }

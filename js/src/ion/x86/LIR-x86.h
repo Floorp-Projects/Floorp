@@ -49,11 +49,19 @@ namespace ion {
 
 class LBox : public LInstructionHelper<2, 1, 0>
 {
+    MIRType type_;
+
   public:
     LIR_HEADER(Box);
 
-    LBox(const LAllocation &in_payload) {
+    LBox(const LAllocation &in_payload, MIRType type)
+      : type_(type)
+    {
         setOperand(0, in_payload);
+    }
+
+    MIRType type() const {
+        return type_;
     }
 };
 

@@ -39,9 +39,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_assembler_h__
-#define jsion_cpu_assembler_h__
+#ifndef jsion_cpu_registers_h__
+#define jsion_cpu_registers_h__
 
+#include "jstypes.h"
 #if defined(JS_CPU_X86)
 # include "x86/Architecture-x86.h"
 #elif defined(JS_CPU_X64)
@@ -49,62 +50,68 @@
 #elif defined(JS_CPU_ARM)
 # include "arm/Architecture-ARM.h"
 #endif
+#include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
 namespace ion {
 
 struct Register {
-    typedef RegisterCodes Codes;
+    typedef Registers Codes;
     typedef Codes::Code Code;
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
 
     Code code_;
 
     static Register FromCode(uint32 i) {
-        JS_ASSERT(i < RegisterCodes::Total);
-        Register r = { (RegisterCodes::Code)i };
+        JS_ASSERT(i < Registers::Total);
+        Register r = { (Registers::Code)i };
         return r;
     }
     Code code() const {
-        JS_ASSERT(code_ < (int32)RegisterCodes::Total);
+        JS_ASSERT(code_ < Registers::Total);
         return code_;
     }
     const char *name() const {
-        return RegisterCodes::GetName(code());
+        return Registers::GetName(code());
     }
-
     bool operator ==(const Register &other) const {
         return code_ == other.code_;
+    }
+    bool operator !=(const Register &other) const {
+        return code_ != other.code_;
     }
 };
 
 struct FloatRegister {
-    typedef FloatRegisterCodes Codes;
+    typedef FloatRegisters Codes;
     typedef Codes::Code Code;
 
     Code code_;
 
     static FloatRegister FromCode(uint32 i) {
-        JS_ASSERT(i < FloatRegisterCodes::Total);
-        FloatRegister r = { (FloatRegisterCodes::Code)i };
+        JS_ASSERT(i < FloatRegisters::Total);
+        FloatRegister r = { (FloatRegisters::Code)i };
         return r;
     }
     Code code() const {
-        JS_ASSERT(code_ < (int32)FloatRegisterCodes::Total);
+        JS_ASSERT(code_ < FloatRegisters::Total);
         return code_;
     }
     const char *name() const {
-        return FloatRegisterCodes::GetName(code());
+        return FloatRegisters::GetName(code());
     }
-
     bool operator ==(const FloatRegister &other) const {
         return code_ == other.code_;
+    }
+    bool operator !=(const FloatRegister &other) const {
+        return code_ != other.code_;
     }
 };
 
 struct AnyRegister {
     union {
-        RegisterCodes::Code gpr_;
-        FloatRegisterCodes::Code fpu_;
+        Registers::Code gpr_;
+        FloatRegisters::Code fpu_;
     };
     bool isFloat_;
 
@@ -287,16 +294,5 @@ class RegisterSet {
 } // namespace js
 } // namespace ion
 
-#if defined(JS_CPU_X86)
-# include "x86/Assembler-x86.h"
-# include "x86/StackAssignment-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/Assembler-x64.h"
-# include "x64/StackAssignment-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/Assembler-ARM.h"
-# include "arm/StackAssignment-arm.h"
-#endif
-
-#endif // jsion_cpu_assembler_h__
+#endif // jsion_cpu_registers_h__
 

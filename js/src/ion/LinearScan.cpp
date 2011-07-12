@@ -280,8 +280,8 @@ LinearScanAllocator::createDataStructures()
     liveIn = lir->mir()->allocate<BitSet*>(graph.numBlocks());
     inputMovesFor = lir->mir()->allocate<MoveGroup*>(graph.numVirtualRegisters());
     outputMovesFor = lir->mir()->allocate<MoveGroup*>(graph.numVirtualRegisters());
-    freeUntilPos = lir->mir()->allocate<CodePosition>(RegisterCodes::Total);
-    nextUsePos = lir->mir()->allocate<CodePosition>(RegisterCodes::Total);
+    freeUntilPos = lir->mir()->allocate<CodePosition>(Registers::Total);
+    nextUsePos = lir->mir()->allocate<CodePosition>(Registers::Total);
     if (!liveIn || !inputMovesFor || !outputMovesFor || !freeUntilPos || !nextUsePos)
         return false;
 
@@ -988,7 +988,7 @@ LinearScanAllocator::findBestFreeRegister()
 {
     // Update freeUntilPos for search
     IonSpew(IonSpew_LSRA, "  Computing freeUntilPos");
-    for (size_t i = 0; i < RegisterCodes::Total; i++) {
+    for (size_t i = 0; i < Registers::Total; i++) {
         if (allowedRegs.has(Register::FromCode(i)))
             freeUntilPos[i] = CodePosition::MAX;
         else
@@ -1011,7 +1011,7 @@ LinearScanAllocator::findBestFreeRegister()
     // Search freeUntilPos for largest value, and update freeRegs
     freeRegs.clear();
     Register best = Register::FromCode(0);
-    for (uint32 i = 0; i < RegisterCodes::Total; i++) {
+    for (uint32 i = 0; i < Registers::Total; i++) {
         Register reg = Register::FromCode(i);
         freeRegs.add(reg);
         if (freeUntilPos[i] > freeUntilPos[best.code()])
@@ -1032,7 +1032,7 @@ LinearScanAllocator::findBestBlockedRegister()
 {
     // Update nextUsePos for search
     IonSpew(IonSpew_LSRA, "  Computing nextUsePos");
-    for (size_t i = 0; i < RegisterCodes::Total; i++) {
+    for (size_t i = 0; i < Registers::Total; i++) {
         if (allowedRegs.has(Register::FromCode(i)))
             nextUsePos[i] = CodePosition::MAX;
         else
@@ -1062,7 +1062,7 @@ LinearScanAllocator::findBestBlockedRegister()
 
     // Search nextUsePos for largest value
     Register best = Register::FromCode(0);
-    for (size_t i = 0; i < RegisterCodes::Total; i++) {
+    for (size_t i = 0; i < Registers::Total; i++) {
         if (nextUsePos[i] > nextUsePos[best.code()])
             best = Register::FromCode(i);
     }

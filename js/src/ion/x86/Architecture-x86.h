@@ -42,6 +42,8 @@
 #ifndef jsion_cpu_x86_regs_h__
 #define jsion_cpu_x86_regs_h__
 
+#include "assembler/assembler/X86Assembler.h"
+
 namespace js {
 namespace ion {
 
@@ -49,18 +51,9 @@ static const ptrdiff_t STACK_SLOT_SIZE       = 4;
 static const uint32 MAX_STACK_SLOTS          = 256;
 static const uint32 DOUBLE_STACK_ALIGNMENT   = 2;
 
-class RegisterCodes {
+class Registers {
   public:
-    enum Code {
-        EAX,
-        ECX,
-        EDX,
-        EBX,
-        ESP,
-        EBP,
-        ESI,
-        EDI
-    };
+    typedef JSC::X86Registers::RegisterID Code;
 
     static const char *GetName(Code code) {
         static const char *Names[] = { "eax", "ecx", "edx", "ebx",
@@ -74,41 +67,32 @@ class RegisterCodes {
     static const uint32 AllMask = (1 << Total) - 1;
 
     static const uint32 VolatileMask =
-        (1 << EAX) |
-        (1 << ECX) |
-        (1 << EDX);
+        (1 << JSC::X86Registers::eax) |
+        (1 << JSC::X86Registers::ecx) |
+        (1 << JSC::X86Registers::edx);
 
     static const uint32 NonVolatileMask =
-        (1 << EBX) |
-        (1 << ESI) |
-        (1 << EDI) |
-        (1 << EBP);
+        (1 << JSC::X86Registers::ebx) |
+        (1 << JSC::X86Registers::esi) |
+        (1 << JSC::X86Registers::edi) |
+        (1 << JSC::X86Registers::ebp);
 
     static const uint32 SingleByteRegs =
-        (1 << EAX) |
-        (1 << ECX) |
-        (1 << EDX) |
-        (1 << EBX);
+        (1 << JSC::X86Registers::eax) |
+        (1 << JSC::X86Registers::ecx) |
+        (1 << JSC::X86Registers::edx) |
+        (1 << JSC::X86Registers::ebx);
 
     static const uint32 NonAllocatableMask =
-        (1 << ESP) |
-        (1 << EBP);
+        (1 << JSC::X86Registers::esp) |
+        (1 << JSC::X86Registers::ebp);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
-class FloatRegisterCodes {
+class FloatRegisters {
   public:
-    enum Code {
-        XMM0,
-        XMM1,
-        XMM2,
-        XMM3,
-        XMM4,
-        XMM5,
-        XMM6,
-        XMM7
-    };
+    typedef JSC::X86Registers::XMMRegisterID Code;
 
     static const char *GetName(Code code) {
         static const char *Names[] = { "xmm0", "xmm1", "xmm2", "xmm3",
