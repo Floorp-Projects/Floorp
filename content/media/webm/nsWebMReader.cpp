@@ -767,7 +767,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
                             PRInt64 aCurrentTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
+  NS_ASSERTION(mDecoder->OnDecodeThread(),
                "Should be on state machine thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
   if (CanDecodeToTarget(aTarget, aCurrentTime)) {

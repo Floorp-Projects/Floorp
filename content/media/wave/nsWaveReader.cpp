@@ -256,8 +256,7 @@ PRBool nsWaveReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
 nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
