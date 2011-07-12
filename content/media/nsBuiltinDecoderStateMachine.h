@@ -445,6 +445,11 @@ protected:
     return !mTimeout.IsNull() || mRunAgain;
   }
 
+  // Returns PR_TRUE if we're not playing and the decode thread has filled its
+  // decode buffers and is waiting. We can shut the decode thread down in this
+  // case as it may not be needed again.
+  PRBool IsPausedAndDecoderWaiting();
+
   // The size of the decoded YCbCr frame.
   // Accessed on state machine thread.
   PRUint32 mCbCrSize;
@@ -598,6 +603,11 @@ protected:
   // If we dispatch multiple events, the second event can run while the
   // first is shutting down a thread, causing inconsistent state.
   PRPackedBool mDispatchedRunEvent;
+
+  // PR_TRUE if the decode thread has gone filled its buffers and is now
+  // waiting to be awakened before it continues decoding. Synchronized
+  // by the decoder monitor.
+  PRPackedBool mDecodeThreadWaiting;
 
 private:
   // Manager for queuing and dispatching MozAudioAvailable events.  The
