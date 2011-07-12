@@ -38,16 +38,25 @@
 #ifndef nsBoxLayout_h___
 #define nsBoxLayout_h___
 
-#include "nsIBoxLayout.h"
+#include "nsISupports.h"
+#include "nsIFrame.h"
 
-class nsBoxLayout : public nsIBoxLayout {
+#define NS_BOX_LAYOUT_IID \
+{ 0x09d522a7, 0x304c, 0x4137, \
+ { 0xaf, 0xc9, 0xe0, 0x80, 0x2e, 0x89, 0xb7, 0xe8 } }
+
+class nsIGridPart;
+
+class nsBoxLayout : public nsISupports {
 
 public:
 
-  nsBoxLayout();
+  nsBoxLayout() {}
   virtual ~nsBoxLayout() {}
 
   NS_DECL_ISUPPORTS
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_BOX_LAYOUT_IID)
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
 
@@ -57,12 +66,12 @@ public:
   virtual nscoord GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                                 nsIBox* aPrevBox,
-                                const nsFrameList::Slice& aNewChildren);
+                                const nsFrameList::Slice& aNewChildren) {}
   virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
-                                const nsFrameList::Slice& aNewChildren);
-  virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
-  virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
-  virtual void IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState);
+                                const nsFrameList::Slice& aNewChildren) {}
+  virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList) {}
+  virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList) {}
+  virtual void IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState) {}
 
   virtual void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
   virtual void AddMargin(nsIBox* aChild, nsSize& aSize);
@@ -73,6 +82,8 @@ public:
   static void AddLargestSize(nsSize& aSize, const nsSize& aToAdd);
   static void AddSmallestSize(nsSize& aSize, const nsSize& aToAdd);
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsBoxLayout, NS_BOX_LAYOUT_IID)
 
 #endif
 

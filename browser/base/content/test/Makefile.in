@@ -220,6 +220,7 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  browser_tabs_isActive.js \
                  browser_tabs_owner.js \
+                 browser_urlbarCopying.js \
                  browser_urlbarTrimURLs.js \
                  browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
@@ -255,6 +256,7 @@ _BROWSER_FILES = \
                  browser_addon_bar_shortcut.js \
                  browser_addon_bar_aomlistener.js \
                  test_bug628179.html \
+                 browser_minimize.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

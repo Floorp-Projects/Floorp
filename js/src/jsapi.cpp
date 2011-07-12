@@ -637,7 +637,8 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 #endif
 
 JSRuntime::JSRuntime()
-  : gcChunkAllocator(&defaultGCChunkAllocator)
+  : gcChunkAllocator(&defaultGCChunkAllocator),
+    trustedPrincipals_(NULL)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
@@ -4176,6 +4177,12 @@ JS_GetSecurityCallbacks(JSContext *cx)
   return cx->securityCallbacks
          ? cx->securityCallbacks
          : cx->runtime->securityCallbacks;
+}
+
+JS_PUBLIC_API(void)
+JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin)
+{
+    rt->setTrustedPrincipals(prin);
 }
 
 JS_PUBLIC_API(JSFunction *)

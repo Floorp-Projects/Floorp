@@ -1,0 +1,19 @@
+# HG changeset patch
+# Parent 5479a346b95b82162c72419a95cbb4022cbbfe4d
+# User Ed Morley <bmo@edmorley.co.uk>
+Bug 631155 - undefined return value in function '_cairo_surface_wrapper_flush'; r=jrmuizel
+
+diff --git a/gfx/cairo/cairo/src/cairo-surface-wrapper.c b/gfx/cairo/cairo/src/cairo-surface-wrapper.c
+--- a/gfx/cairo/cairo/src/cairo-surface-wrapper.c
++++ b/gfx/cairo/cairo/src/cairo-surface-wrapper.c
+@@ -712,9 +712,10 @@ _cairo_surface_wrapper_fini (cairo_surfa
+ }
+ 
+ cairo_status_t
+ _cairo_surface_wrapper_flush (cairo_surface_wrapper_t *wrapper)
+ {
+     if (wrapper->target->backend->flush) {
+ 	return wrapper->target->backend->flush(wrapper->target);
+     }
++    return CAIRO_STATUS_SUCCESS;
+ }

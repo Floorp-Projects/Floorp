@@ -4819,6 +4819,13 @@ EnableStackWalkingAssertion(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
+static JSBool
+GetMaxArgs(JSContext *cx, uintN arg, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(StackSpace::ARGS_LENGTH_MAX));
+    return JS_TRUE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
     JS_FN("revertVersion",  RevertVersion,  0,0),
@@ -4919,6 +4926,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("newGlobal",      NewGlobal,      1,0),
     JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
     JS_FN("enableStackWalkingAssertion",EnableStackWalkingAssertion,1,0),
+    JS_FN("getMaxArgs",     GetMaxArgs,     0,0),
     JS_FS_END
 };
 
@@ -5064,6 +5072,7 @@ static const char *const shell_help_messages[] = {
 "  code.  If your test isn't ridiculously thorough, such that performing this\n"
 "  assertion increases test duration by an order of magnitude, you shouldn't\n"
 "  use this.",
+"getMaxArgs()             Return the maximum number of supported args for a call.",
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
@@ -6070,6 +6079,21 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
     }
 }
 
+JSBool
+ShellPrincipalsSubsume(JSPrincipals *, JSPrincipals *)
+{
+    return JS_TRUE;
+}
+
+JSPrincipals shellTrustedPrincipals = {
+    (char *)"[shell trusted principals]",
+    NULL,
+    NULL,
+    1,
+    NULL, /* nobody should be destroying this */
+    ShellPrincipalsSubsume
+};
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -6155,6 +6179,8 @@ main(int argc, char **argv, char **envp)
     rt = JS_NewRuntime(160L * 1024L * 1024L);
     if (!rt)
         return 1;
+
+    JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
 
     if (!InitWatchdog(rt))
         return 1;

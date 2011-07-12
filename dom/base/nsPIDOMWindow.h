@@ -80,8 +80,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x6c05ae9d, 0x4ad1, 0x4e92, \
-  { 0x9c, 0x95, 0xd3, 0x54, 0xea, 0x0f, 0xb9, 0x48 } }
+{ 0xa595249b, 0x1e74, 0x467e, \
+ { 0x92, 0x56, 0x58, 0xff, 0x07, 0x1b, 0xc2, 0x96 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -578,6 +578,12 @@ public:
    * Return the window id of this window
    */
   PRUint64 WindowID() const { return mWindowID; }
+
+  /**
+   * Dispatch a custom event with name aEventName targeted at this window.
+   * Returns whether the default action should be performed.
+   */
+  virtual PRBool DispatchCustomEvent(const char *aEventName) = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

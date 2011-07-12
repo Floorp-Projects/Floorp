@@ -19,12 +19,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=660663
 <pre id="test">
 <script type="application/javascript">
 /** Test for Bug 660663 **/
-reflectLimitedEnumerated(document.createElement("div"),
-                         "dir",
-                         ["ltr", "rtl"],
-                         ["cheesecake", ""],
-                         undefined, // There is no default value.
-                         ["auto"]);
+reflectLimitedEnumerated({
+  element: document.createElement("div"),
+  attribute: "dir",
+  validValues: ["ltr", "rtl"],
+  invalidValues: ["cheesecake", ""],
+  unsupportedValues: ["auto"]
+});
 </script>
 </pre>
 </body>
