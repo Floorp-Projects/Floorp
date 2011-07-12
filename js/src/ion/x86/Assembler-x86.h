@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,25 +42,89 @@
 #ifndef jsion_cpu_x86_assembler_h__
 #define jsion_cpu_x86_assembler_h__
 
-#include "ion/IonAssembler.h"
+#include "ion/shared/Assembler-shared.h"
+#include "assembler/assembler/X86Assembler.h"
 
 namespace js {
 namespace ion {
 
-static const Register eax = { RegisterCodes::EAX };
-static const Register ecx = { RegisterCodes::ECX };
-static const Register edx = { RegisterCodes::EDX };
-static const Register ebx = { RegisterCodes::EBX };
-static const Register esp = { RegisterCodes::ESP };
-static const Register ebp = { RegisterCodes::EBP };
-static const Register esi = { RegisterCodes::ESI };
-static const Register edi = { RegisterCodes::EDI };
+static const Register eax = { JSC::X86Registers::eax };
+static const Register ecx = { JSC::X86Registers::ecx };
+static const Register edx = { JSC::X86Registers::edx };
+static const Register ebx = { JSC::X86Registers::ebx };
+static const Register esp = { JSC::X86Registers::esp };
+static const Register ebp = { JSC::X86Registers::ebp };
+static const Register esi = { JSC::X86Registers::esi };
+static const Register edi = { JSC::X86Registers::edi };
 
 static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 
+class Operand
+{
+  public:
+    enum Kind {
+        REG,
+        REG_DISP,
+        FPREG
+    };
+
+    Kind kind_ : 2;
+    int32 base_ : 5;
+    int32 disp_;
+
+  public:
+    explicit Operand(const Register &reg)
+      : kind_(REG),
+        base_(reg.code())
+    { }
+    explicit Operand(const FloatRegister &reg)
+      : kind_(FPREG),
+        base_(reg.code())
+    { }
+    Operand(const Register &reg, int32 disp)
+      : kind_(REG_DISP),
+        base_(reg.code()),
+        disp_(disp)
+    { }
+
+    Kind kind() const {
+        return kind_;
+    }
+    Register reg() const {
+        JS_ASSERT(kind() == REG);
+        return Register::FromCode(base_);
+    }
+    FloatRegisters::Code fpu() const {
+        JS_ASSERT(kind() == FPREG);
+        return (FloatRegisters::Code)base_;
+    }
+    int32 displacement() const {
+        JS_ASSERT(kind() == REG_DISP);
+        return disp_;
+    }
+};
+
 } // namespace js
 } // namespace ion
+
+#include "ion/shared/Assembler-x86-shared.h"
+
+namespace js {
+namespace ion {
+
+class Assembler : public AssemblerX86Shared
+{
+  public:
+    using AssemblerX86Shared::movl;
+
+    void movl(const ImmGCPtr &ptr, const Register &dest) {
+        masm.movl_i32r(ptr.value, dest.code());
+    }
+};
+
+} // namespace ion
+} // namespace js
 
 #endif // jsion_cpu_x86_assembler_h__
 

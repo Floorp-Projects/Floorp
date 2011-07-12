@@ -39,49 +39,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+#ifndef jsion_codegen_h__
+#define jsion_codegen_h__
+
+#include "ion/IonLIR.h"
 
 namespace js {
 namespace ion {
 
-class StackAssignment
+class CodeGeneratorShared : public LInstructionVisitor
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
-    uint32 height_;
+  protected:
+    MIRGenerator *gen;
+    LIRGraph &graph;
+    LBlock *current;
+
+  private:
+    virtual bool generatePrologue() = 0;
+    virtual bool generateEpilogue() = 0;
+    bool generateBody();
 
   public:
-    StackAssignment() : height_(0)
-    { }
+    CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph);
 
-    void freeSlot(uint32 index) {
-        slots.append(index);
-    }
+    bool generate();
 
-    void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
-    }
-
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
-    }
-
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
-        }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
-    }
-
-    uint32 stackHeight() const {
-        return height_;
-    }
+  public:
+    // Opcodes that are the same on all platforms.
+    virtual bool visitParameter(LParameter *param);
 };
 
-} // namespace ion
-} // namespace js
+} // ion
+} // js
 
-#endif // jsion_cpu_x64_stack_assignment_h__
+#endif // jsion_codegen_h__
 

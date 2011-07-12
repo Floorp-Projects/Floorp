@@ -170,7 +170,7 @@ PrintUse(FILE *fp, const LUse *use)
         // Unfortunately, we don't know here whether the virtual register is a
         // float or a double. Should we steal a bit in LUse for help? For now,
         // nothing defines any fixed xmm registers.
-        fprintf(fp, "%s", RegisterCodes::GetName(RegisterCodes::Code(use->registerCode())));
+        fprintf(fp, "%s", Registers::GetName(Registers::Code(use->registerCode())));
     }
     if (use->killedAtStart())
         fprintf(fp, "!");

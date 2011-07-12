@@ -38,50 +38,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#if defined(JS_CPU_X86)
+# include "ion/x86/Assembler-x86.h"
+#else
+# include "ion/x64/Assembler-x64.h"
+#endif
+#include "CodeGenerator-x86-shared.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+using namespace js;
+using namespace js::ion;
 
-namespace js {
-namespace ion {
-
-class StackAssignment
+CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph, AssemblerX86Shared &masm)
+  : CodeGeneratorShared(gen, graph),
+    masm(masm)
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
-    uint32 height_;
+}
 
-  public:
-    StackAssignment() : height_(0)
-    { }
+bool
+CodeGeneratorX86Shared::visitLabel(LLabel *label)
+{
+    masm.bind(label->label());
+    return true;
+}
 
-    void freeSlot(uint32 index) {
-        slots.append(index);
-    }
+bool
+CodeGeneratorX86Shared::visitGoto(LGoto *jump)
+{
+    LBlock *target = jump->target()->lir();
+    LLabel *header = target->begin()->toLabel();
 
-    void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
-    }
+    // Don't bother emitting a jump if we'll flow through to the next block.
+    if (current->mir()->id() + 1 == target->mir()->id())
+        return true;
 
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
-    }
+    masm.jmp(header->label());
+    return true;
+}
 
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
-        }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
-    }
-
-    uint32 stackHeight() const {
-        return height_;
-    }
-};
-
-} // namespace ion
-} // namespace js
-
-#endif // jsion_cpu_x64_stack_assignment_h__
+bool
+CodeGeneratorX86Shared::visitMove(LMove *move)
+{
+    return true;
+}
 

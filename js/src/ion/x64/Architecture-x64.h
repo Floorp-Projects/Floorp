@@ -42,32 +42,17 @@
 #ifndef jsion_cpu_x64_regs_h__
 #define jsion_cpu_x64_regs_h__
 
+#include "assembler/assembler/X86Assembler.h"
+
 namespace js {
 namespace ion {
 
 static const ptrdiff_t STACK_SLOT_SIZE       = 8;
 static const uint32 MAX_STACK_SLOTS          = 256;
 
-class RegisterCodes {
+class Registers {
   public:
-    enum Code {
-        RAX,
-        RCX,
-        RDX,
-        RBX,
-        RSP,
-        RBP,
-        RSI,
-        RDI,
-        R8,
-        R9,
-        R10,
-        R11,
-        R12,
-        R13,
-        R14,
-        R15
-    };
+    typedef JSC::X86Registers::RegisterID Code;
 
     static const char *GetName(Code code) {
         static const char *Names[] = { "rax", "rcx", "rdx", "rbx",
@@ -83,65 +68,48 @@ class RegisterCodes {
     static const uint32 AllMask = (1 << Total) - 1;
 
     static const uint32 VolatileMask =
-        (1 << RAX) |
-        (1 << RCX) |
-        (1 << RDX) |
+        (1 << JSC::X86Registers::eax) |
+        (1 << JSC::X86Registers::ecx) |
+        (1 << JSC::X86Registers::edx) |
 # if !defined(_WIN64)
-        (1 << RSI) |
-        (1 << RDI) |
+        (1 << JSC::X86Registers::esi) |
+        (1 << JSC::X86Registers::edi) |
 # endif
-        (1 << R8) |
-        (1 << R9) |
-        (1 << R10) |
-        (1 << R11);
+        (1 << JSC::X86Registers::r8) |
+        (1 << JSC::X86Registers::r9) |
+        (1 << JSC::X86Registers::r10) |
+        (1 << JSC::X86Registers::r11);
 
     static const uint32 NonVolatileMask =
-        (1 << RBX) |
+        (1 << JSC::X86Registers::ebx) |
 #if defined(_WIN64)
-        (1 << RSI) |
-        (1 << RDI) |
+        (1 << JSC::X86Registers::esi) |
+        (1 << JSC::X86Registers::edi) |
 #endif
-        (1 << RBP) |
-        (1 << R12) |
-        (1 << R13) |
-        (1 << R14) |
-        (1 << R15);
+        (1 << JSC::X86Registers::ebp) |
+        (1 << JSC::X86Registers::r12) |
+        (1 << JSC::X86Registers::r13) |
+        (1 << JSC::X86Registers::r14) |
+        (1 << JSC::X86Registers::r15);
 
     static const uint32 SingleByteRegs = VolatileMask | NonVolatileMask;
 
     static const uint32 NonAllocatableMask =
-        (1 << RSP) |
-        (1 << RBP) |
-        (1 << R11);         // JSC uses this as a scratch register.
+        (1 << JSC::X86Registers::esp) |
+        (1 << JSC::X86Registers::ebp) |
+        (1 << JSC::X86Registers::r11);         // JSC uses this as a scratch register.
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
-class FloatRegisterCodes {
+class FloatRegisters {
   public:
-    enum Code {
-        XMM0,
-        XMM1,
-        XMM2,
-        XMM3,
-        XMM4,
-        XMM5,
-        XMM6,
-        XMM7,
-        XMM8,
-        XMM9,
-        XMM10,
-        XMM11,
-        XMM12,
-        XMM13,
-        XMM14,
-        XMM15
-    };
+    typedef JSC::X86Registers::XMMRegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "xmm0", "xmm1", "xmm2", "xmm3",
-                                       "xmm4", "xmm5", "xmm6", "xmm7",
-                                       "xmm8", "xmm9", "xmm10", "xmm11",
+        static const char *Names[] = { "xmm0",  "xmm1",  "xmm2",  "xmm3",
+                                       "xmm4",  "xmm5",  "xmm6",  "xmm7",
+                                       "xmm8",  "xmm9",  "xmm10", "xmm11",
                                        "xmm12", "xmm13", "xmm14", "xmm15" };
         return Names[code];
     }
@@ -153,12 +121,12 @@ class FloatRegisterCodes {
 
     static const uint32 VolatileMask = 
 #if defined(_WIN64)
-        (1 << XMM0) |
-        (1 << XMM1) |
-        (1 << XMM2) |
-        (1 << XMM3) |
-        (1 << XMM4) |
-        (1 << XMM5);
+        (1 << JSC::X86Registers::xmm0) |
+        (1 << JSC::X86Registers::xmm1) |
+        (1 << JSC::X86Registers::xmm2) |
+        (1 << JSC::X86Registers::xmm3) |
+        (1 << JSC::X86Registers::xmm4) |
+        (1 << JSC::X86Registers::xmm5);
 #else
         AllMask;
 #endif

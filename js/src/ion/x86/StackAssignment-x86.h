@@ -45,14 +45,14 @@
 namespace js {
 namespace ion {
 
-class StackAssignmentX86
+class StackAssignment
 {
     js::Vector<uint32, 4, IonAllocPolicy> normalSlots;
     js::Vector<uint32, 4, IonAllocPolicy> doubleSlots;
     uint32 height_;
 
   public:
-    StackAssignmentX86() : height_(0)
+    StackAssignment() : height_(0)
     { }
 
     void freeSlot(uint32 index) {
@@ -93,8 +93,6 @@ class StackAssignmentX86
         return height_;
     }
 };
-
-typedef StackAssignmentX86 StackAssignment;
 
 } // namespace ion
 } // namespace js

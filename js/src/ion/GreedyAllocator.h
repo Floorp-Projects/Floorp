@@ -70,8 +70,8 @@ class GreedyAllocator
         LDefinition *def;
         uint32 stackSlot_;
         union {
-            RegisterCodes::Code gprCode;
-            FloatRegisterCodes::Code fpuCode;
+            Registers::Code gprCode;
+            FloatRegisters::Code fpuCode;
             uint32 registerCode;
         };
         bool hasRegister_;
@@ -151,8 +151,8 @@ class GreedyAllocator
 
     struct AllocationState {
         RegisterSet free;
-        VirtualRegister *gprs[RegisterCodes::Total];
-        VirtualRegister *fpus[FloatRegisterCodes::Total];
+        VirtualRegister *gprs[Registers::Total];
+        VirtualRegister *fpus[FloatRegisters::Total];
 
         VirtualRegister *& operator[](const AnyRegister &reg) {
             if (reg.isFloat())
