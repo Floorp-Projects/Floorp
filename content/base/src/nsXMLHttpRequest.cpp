@@ -1600,13 +1600,6 @@ void nsXMLHttpRequest::CreateResponseBlob(nsIRequest *request)
   nsCOMPtr<nsICachingChannel> cc(do_QueryInterface(request));
   if (cc) {
     cc->GetCacheFile(getter_AddRefs(file));
-    if (!file) {
-      // cacheAsFile returns false if caching is inhibited
-      PRBool cacheAsFile = PR_FALSE;
-      if (NS_SUCCEEDED(cc->GetCacheAsFile(&cacheAsFile)) && cacheAsFile) {
-        
-      }
-    }
   } else {
     nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(request);
     if (fc) {
@@ -1616,8 +1609,13 @@ void nsXMLHttpRequest::CreateResponseBlob(nsIRequest *request)
   if (file) {
     nsCAutoString contentType;
     mChannel->GetContentType(contentType);
-    mResponseBlob = new nsDOMFile(file,
-                                  NS_ConvertASCIItoUTF16(contentType));
+    nsCOMPtr<nsISupports> cacheToken;
+    if (cc) {
+      cc->GetCacheToken(getter_AddRefs(cacheToken));
+    }
+
+    mResponseBlob =
+      new nsDOMFileFile(file, NS_ConvertASCIItoUTF16(contentType), cacheToken);
     mResponseBody.Truncate();
     mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   }
@@ -1888,8 +1886,9 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
       void *blobData = PR_Malloc(blobLen);
       if (blobData) {
         memcpy(blobData, mResponseBody.BeginReading(), blobLen);
+
         mResponseBlob =
-          new nsDOMMemoryFile(blobData, blobLen, EmptyString(),
+          new nsDOMMemoryFile(blobData, blobLen,
                               NS_ConvertASCIItoUTF16(contentType));
         mResponseBody.Truncate();
       }

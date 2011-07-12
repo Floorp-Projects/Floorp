@@ -219,6 +219,11 @@ class ExceptionHandler {
                       size_t mapping_size,
                       size_t file_offset);
 
+  // Calling RegisterAppMemory(p, len) causes len bytes starting
+  // at address p to be copied to the minidump when a crash happens.
+  void RegisterAppMemory(void *ptr, size_t length);
+  void UnregisterAppMemory(void *ptr);
+
  private:
   void Init(const std::string &dump_path,
             const int server_fd);
@@ -278,6 +283,10 @@ class ExceptionHandler {
   // Callers can add extra info about mappings for cases where the
   // dumper code cannot extract enough information from /proc/<pid>/maps.
   MappingList mapping_info_;
+
+  // Callers can request additional memory regions to be included in
+  // the dump.
+  AppMemoryList app_memory_info_;
 };
 
 }  // namespace google_breakpad

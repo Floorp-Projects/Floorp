@@ -9,20 +9,22 @@ body {
 }
 canvas {
   -moz-box-flex: 1;
-  height: 100px;
-  opacity: 0.5;
+  opacity: 0.999;
   border: 1px solid black;
 }
 </style>
+</head>
+<body>
+<canvas id="c" width="100" height="100"></canvas>
 <script>
+var ctx = document.getElementById("c").getContext('2d');
+ctx.fillStyle = "lime";
+ctx.fillRect(0, 0, 100, 100);
 function doTest() {
-  document.body.style.width = "500px";
+  document.body.style.width = "502px";
   document.documentElement.removeAttribute("class");
 }
 window.addEventListener("MozReftestInvalidate", doTest, false);
 </script>
-</head>
-<body>
-<canvas></canvas>
 </body>
 </html>

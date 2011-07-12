@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Test for bug 624329 context menu position"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        context="menu">
+
+  <title><label>Test for bug 624329 context menu position</label></title>
+
+  <script>
+    opener.SimpleTest.waitForFocus(opener.childFocused, window);
+  </script>
+
+  <menupopup id="menu">
+    <!-- The bug demonstrated only when the accesskey was presented separately
+         from the label.
+         e.g. because the accesskey is not a letter in the label.
+
+         The bug demonstrates only on the first show of the context menu
+         unless menu items are removed/added each time the menu is
+         constructed. -->
+    <menuitem label="Long label to ensure the popup would hit the right of the screen" accesskey="1"/>
+  </menupopup>
+</window>

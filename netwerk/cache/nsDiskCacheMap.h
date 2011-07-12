@@ -99,7 +99,6 @@ struct nsDiskCacheEntry;
 #define kMinRecordCount    512
 
 #define kSeparateFile      0
-#define kMaxDataFileSize   5 * 1024 * 1024  // 5 MB (in bytes) 
 #define kBuckets           (1 << 5)    // must be a power of 2!
 
 // Maximum size in K which can be stored in the location (see eFileSizeMask).

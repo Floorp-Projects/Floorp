@@ -83,10 +83,12 @@ SDK_SUFFIX    = $(PKG_SUFFIX)
 SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 
 # JavaScript Shell packaging
+ifndef LIBXUL_SDK
 JSSHELL_BINS  = \
   $(DIST)/bin/js$(BIN_SUFFIX) \
-  $(DIST)/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX) \
   $(NULL)
+ifndef MOZ_NATIVE_NSPR
+JSSHELL_BINS += $(DIST)/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX)
 ifeq ($(OS_ARCH),WINNT)
 JSSHELL_BINS += $(DIST)/bin/mozcrt19$(DLL_SUFFIX)
 else
@@ -95,7 +97,9 @@ JSSHELL_BINS += \
   $(DIST)/bin/$(LIB_PREFIX)plc4$(DLL_SUFFIX) \
   $(NULL)
 endif
+endif # MOZ_NATIVE_NSPR
 MAKE_JSSHELL  = $(ZIP) -9j $(PKG_JSSHELL) $(JSSHELL_BINS)
+endif # LIBXUL_SDK
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 _ABS_DIST = $(call core_abspath,$(DIST))
@@ -163,7 +167,7 @@ RPM_CMD = \
   echo Creating RPM && \
   mkdir -p $(RPMBUILD_SOURCEDIR) && \
   $(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-  	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
 	-DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
 	< $(RPM_INCIDENTALS)/mozilla.desktop \
 	> $(RPMBUILD_SOURCEDIR)/$(MOZ_APP_NAME).desktop && \
@@ -404,19 +408,23 @@ NON_OMNIJAR_FILES += \
 PACK_OMNIJAR	= \
   rm -f omni.jar components/binary.manifest && \
   grep -h '^binary-component' components/*.manifest > binary.manifest ; \
-  sed -e 's/^binary-component/\#binary-component/' components/components.manifest > components.manifest && \
-  mv components.manifest components && \
-  zip -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
+  for m in components/*.manifest; do \
+    sed -e 's/^binary-component/\#binary-component/' $$m > tmp.manifest && \
+    mv tmp.manifest $$m; \
+  done; \
+  $(ZIP) -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
   $(GENERATE_CACHE) && \
   $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
 UNPACK_OMNIJAR	= \
   $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR_AB_CD) ./ ./ && \
-  unzip -o omni.jar && \
+  $(UNZIP) -o omni.jar && \
   rm -f components/binary.manifest && \
-  sed -e 's/^\#binary-component/binary-component/' components/components.manifest > components.manifest && \
-  mv components.manifest components
+  for m in components/*.manifest; do \
+    sed -e 's/^\#binary-component/binary-component/' $$m > tmp.manifest && \
+    mv tmp.manifest $$m; \
+  done
 
 MAKE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)) && \
 	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(CREATE_PRECOMPLETE_CMD)) && $(INNER_MAKE_PACKAGE)
@@ -683,10 +691,12 @@ endif
 ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
+ifndef LIBXUL_SDK
 # Package JavaScript Shell
 	@echo "Packaging JavaScript Shell..."
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
+endif # LIBXUL_SDK
 
 make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
 	@echo "Compressing..."
@@ -801,7 +811,7 @@ UPLOAD_FILES= \
   $(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 checksum:
-	mkdir -p `dirname $CHECKSUM_FILE`
+	mkdir -p `dirname $(CHECKSUM_FILE)`
 	@$(PYTHON) $(MOZILLA_DIR)/build/checksums.py \
 		-o $(CHECKSUM_FILE) \
 		-d $(CHECKSUM_ALGORITHM) \
@@ -816,6 +826,16 @@ upload: checksum
 	$(PYTHON) $(MOZILLA_DIR)/build/upload.py --base-path $(DIST) \
 		$(UPLOAD_FILES) \
 		$(CHECKSUM_FILE)
+
+ifeq (WINNT,$(OS_TARGET))
+CODESIGHS_PACKAGE = $(INSTALLER_PACKAGE)
+else
+CODESIGHS_PACKAGE = $(DIST)/$(PACKAGE)
+endif
+
+codesighs:
+	$(PYTHON) $(topsrcdir)/tools/codesighs/codesighs.py \
+	  "$(DIST)/$(MOZ_PKG_DIR)" "$(CODESIGHS_PACKAGE)"
 
 ifndef MOZ_PKG_SRCDIR
 MOZ_PKG_SRCDIR = $(topsrcdir)

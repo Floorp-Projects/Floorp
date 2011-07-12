@@ -36,15 +36,16 @@ function check() {
   });
 }
 
-var nodes;
-var testName;
+var nodes = getNodes();
+var testName = "empty";
+var mutateCount = 0;
 
-nodes = getNodes();
-check("empty");
+check();
 
 // Set up listeners
 root = $('content');
 root.addEventListener("DOMNodeInserted", function(e) {
+  mutateCount++;
   is(e.isTrusted, true, "untrusted mutation event");
   var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null, false);
   do {
@@ -53,6 +54,7 @@ root.addEventListener("DOMNodeInserted", function(e) {
   } while(w.nextNode());
 }, false);
 root.addEventListener("DOMNodeRemoved", function(e) {
+  mutateCount++;
   is(e.isTrusted, true, "untrusted mutation event");
   var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null, false);
   do {
@@ -109,6 +111,48 @@ check();
 testName = "normalizing";
 root.normalize();
 check();
+
+testName = "self replace firstChild";
+mutateCount = 0;
+root.replaceChild(root.firstChild, root.firstChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self replace second child";
+mutateCount = 0;
+root.replaceChild(root.firstChild.nextSibling, root.firstChild.nextSibling);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self replace lastChild";
+mutateCount = 0;
+root.replaceChild(root.lastChild, root.lastChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self insertBefore firstChild";
+mutateCount = 0;
+root.insertBefore(root.firstChild, root.firstChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self insertBefore second child";
+mutateCount = 0;
+root.insertBefore(root.firstChild.nextSibling, root.firstChild.nextSibling);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "self insertBefore lastChild";
+mutateCount = 0;
+root.insertBefore(root.lastChild, root.lastChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
+
+testName = "appendChild last";
+mutateCount = 0;
+root.appendChild(root.lastChild);
+check();
+is(mutateCount, 2, "should remove and reinsert " + testName);
 
 testName = "prepare script/style";
 script = document.createElement("script");

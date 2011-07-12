@@ -265,10 +265,10 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
     } else
 #endif
     {
-        char line[256];
+        char line[256] = { '\0' };
         fputs(prompt, gOutFile);
         fflush(gOutFile);
-        if (!fgets(line, sizeof line, file))
+        if (!fgets(line, sizeof line, file) && errno != EINTR || feof(file))
             return JS_FALSE;
         strcpy(bufp, line);
     }
@@ -548,14 +548,6 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     rt = cx->runtime;
     preBytes = rt->gcBytes;
     JS_GC(cx);
-    fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
-           (unsigned long)preBytes, (unsigned long)rt->gcBytes,
-#if defined(XP_UNIX) && !defined(__SYMBIAN32__)
-           (unsigned long)sbrk(0)
-#else
-           0
-#endif
-           );
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif

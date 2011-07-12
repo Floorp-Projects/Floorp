@@ -125,9 +125,18 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 };
 
 /**
+ * interface for callback to be passed to Cu.schedulePreciseGC
+ */
+[scriptable, function, uuid(71000535-b0fd-44d1-8ce0-909760e3953c)]
+interface ScheduledGCCallback : nsISupports
+{
+    void callback();
+};
+
+/**
 * interface of Components.utils
 */
-[scriptable, uuid(45857850-a08e-4fe9-a582-77fe03e3676f)]
+[scriptable, uuid(fed2d752-6cb3-4135-97b0-2c290e541e2d)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -231,6 +240,13 @@ interface nsIXPCComponents_Utils : nsISupports
      * Force an immediate garbage collection cycle.
      */
     void forceGC();
+
+    /*
+     * Schedule a garbage collection cycle for a point in the future when no JS
+     * is running. Call the provided function once this has occurred.
+     */
+    [implicit_jscontext]
+    void schedulePreciseGC(in ScheduledGCCallback callback);
 
     /*
      * To be called from JS only.

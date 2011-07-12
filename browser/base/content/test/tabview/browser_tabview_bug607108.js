@@ -22,15 +22,16 @@ function test() {
     let content = cw.document.getElementById("content");
 
     // drag to create a new group
-    EventUtils.synthesizeMouse(content, 350, 50, {type: "mousedown"}, cw);
+    EventUtils.synthesizeMouse(content, 400, 50, {type: "mousedown"}, cw);
     EventUtils.synthesizeMouse(content, 500, 250, {type: "mousemove"}, cw);
     EventUtils.synthesizeMouse(content, 500, 250, {type: "mouseup"}, cw);
+
+    assertNumberOfGroupItems(2);
 
     // enter a title for the new group
     EventUtils.synthesizeKey("t", {}, cw);
     EventUtils.synthesizeKey("VK_RETURN", {}, cw);
 
-    assertNumberOfGroupItems(2);
 
     let groupItem = cw.GroupItems.groupItems[1];
     is(groupItem.getTitle(), "t", "new groupItem's title is correct");
@@ -43,11 +44,10 @@ function test() {
     groupItem.closeAll();
   };
 
-  let testDropOnOrphan = function (callback) {
+  let testDragOutOfGroup = function (callback) {
     assertNumberOfGroupItems(1);
 
     let groupItem = cw.GroupItems.groupItems[0];
-    dragTabOutOfGroup(groupItem);
     dragTabOutOfGroup(groupItem);
     assertNumberOfGroupItems(2);
 
@@ -64,7 +64,7 @@ function test() {
     registerCleanupFunction(function () win.close());
 
     for (let i = 0; i < 2; i++)
-      win.gBrowser.loadOneTab("about:blank", {inBackground: true});
+      win.gBrowser.addTab();
   };
 
   let onShow = function (win) {
@@ -76,9 +76,7 @@ function test() {
 
     waitForFocus(function () {
       testCreateGroup(function () {
-        testDropOnOrphan(function () {
-          waitForFocus(finish);
-        });
+        testDragOutOfGroup(finish);
       });
     }, cw);
   };

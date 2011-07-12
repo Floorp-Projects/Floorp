@@ -50,7 +50,7 @@
 #include "nsSprocketLayout.h"
 
 nsresult
-NS_NewGridLayout2( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout)
+NS_NewGridLayout2( nsIPresShell* aPresShell, nsBoxLayout** aNewLayout)
 {
   *aNewLayout = new nsGridLayout2(aPresShell);
   NS_IF_ADDREF(*aNewLayout);
@@ -78,13 +78,7 @@ nsGridLayout2::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   // XXX This should be set a better way!
   mGrid.SetBox(aBox);
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIBoxLayout> lm;
-    aBox->GetLayoutManager(getter_AddRefs(lm));
-    NS_ASSERTION(lm == this, "setting incorrect box");
-  }
-#endif
+  NS_ASSERTION(aBox->GetLayoutManager() == this, "setting incorrect box");
 
   nsresult rv = nsStackLayout::Layout(aBox, aBoxLayoutState);
 #ifdef DEBUG_grid
@@ -108,14 +102,7 @@ nsGridLayout2::GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequesto
 {
   // XXX This should be set a better way!
   mGrid.SetBox(aBox);
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIBoxLayout> lm;
-    aBox->GetLayoutManager(getter_AddRefs(lm));
-    NS_ASSERTION(lm == this, "setting incorrect box");
-  }
-#endif
-
+  NS_ASSERTION(aBox->GetLayoutManager() == this, "setting incorrect box");
   return &mGrid;
 }
 

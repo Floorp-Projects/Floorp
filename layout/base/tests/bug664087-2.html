@@ -1,0 +1,26 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="/MochiKit/packed.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <textarea dir="rtl" onfocus="typeIntoMe()"></textarea>
+    <script>
+      function start() {
+        document.querySelector("textarea").focus();
+      }
+      function typeIntoMe() {
+        setTimeout(function() {
+          synthesizeKey("a", {});
+          synthesizeKey("VK_ENTER", {});
+          synthesizeKey("c", {});
+          synthesizeKey("VK_UP", {});
+          synthesizeKey("VK_END", {});
+          synthesizeKey("b", {});
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }
+    </script>
+  </body>
+</html>

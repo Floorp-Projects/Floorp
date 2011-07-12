@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(2a630b50-61b6-41b3-996d-70be67fbbcb0)]
+[scriptable, uuid(8e09c825-da49-4a39-876b-ce2ff767dbe1)]
 interface nsIDOMPerformanceTiming : nsISupports
 {
   readonly attribute DOMTimeMilliSec navigationStart;
@@ -52,7 +52,6 @@ interface nsIDOMPerformanceTiming : nsISupports
   readonly attribute DOMTimeMilliSec domainLookupEnd;
   readonly attribute DOMTimeMilliSec connectStart;
   readonly attribute DOMTimeMilliSec connectEnd;
-  readonly attribute DOMTimeMilliSec handshakeStart;
   readonly attribute DOMTimeMilliSec requestStart;
   readonly attribute DOMTimeMilliSec responseStart;
   readonly attribute DOMTimeMilliSec responseEnd;

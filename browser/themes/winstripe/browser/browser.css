@@ -566,6 +566,16 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
+.bookmark-item[cutting] > .toolbarbutton-icon,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
+  opacity: 0.5;
+}
+
+.bookmark-item[cutting] > .toolbarbutton-text,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
+  opacity: 0.7;
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
@@ -592,8 +602,8 @@ menuitem.bookmark-item {
 }
 
 #navigator-toolbox[iconsize=large][mode=icons] > #nav-bar {
-  padding-left: 2px;
-  padding-right: 2px;
+  -moz-padding-start: 0;
+  -moz-padding-end: 2px;
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
@@ -655,17 +665,18 @@ menuitem.bookmark-item {
 }
 
 #nav-bar .toolbarbutton-1[disabled="true"] {
-  opacity: .8;
+  opacity: .4;
 }
 
 #nav-bar .toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon {
-  opacity: .5;
+  opacity: 1;
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
 #nav-bar .toolbarbutton-1:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
-#nav-bar .toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):not([checked="true"]):not([open="true"]):not(:active):hover {
+#nav-bar .toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):not([checked="true"]):not([open="true"]):not(:active):hover,
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):not([open]):not(:active):hover > .toolbarbutton-icon {
   background-color: hsla(190,60%,70%,.5);
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
@@ -784,14 +795,26 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
-  border-radius: 10000px;
-  padding: 0;
-  width: 30px;
-  height: 30px;
+  margin: -5px 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0;
   position: relative;
   z-index: 1;
-  margin-top: -2px;
-  margin-bottom: -2px;
+  border-radius: 0 10000px 10000px 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:-moz-locale-dir(rtl) {
+  border-radius: 10000px 0 0 10000px;
+}
+
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button > .toolbarbutton-icon {
+  border-radius: 10000px;
+  padding: 5px;
   border: none;
   background-image: -moz-linear-gradient(rgba(251,252,253,.97), rgba(246,247,248,.5) 49%, 
                                          rgba(231,232,233,.45) 51%, rgba(225,226,229,.2));
@@ -802,7 +825,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
               0 1px 1px rgba(0,0,0,.3);
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
               0 0 0 2px rgba(255,255,255,.1) inset,
               0 0 0 1px hsla(190,50%,40%,.3),
@@ -811,8 +834,8 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
               0 0 5px 1px hsl(190,90%,80%);
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):hover:active,
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button[open="true"] {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):hover:active > .toolbarbutton-icon,
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button[open="true"] > .toolbarbutton-icon {
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
               0 0 2px rgba(0,0,0,.4) inset,
               0 0 0 1px rgba(0,0,0,.65),
@@ -1528,7 +1551,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .panel-promo-icon {
-  list-style-image: url("chrome://browser/skin/sync-24.png");
+  list-style-image: url("chrome://browser/skin/sync-notification-24.png");
   -moz-margin-end: 10px;
   vertical-align: middle;
 }
@@ -1616,6 +1639,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin: 0;
   padding: 2px 0 4px;
   -moz-border-image: url(tabbrowser/tab.png) 4 3 0 / 4px 3px 0 repeat stretch;
+  border-radius: 0;
 }
 
 .tabbrowser-tab:hover,
@@ -2409,4 +2433,28 @@ panel[dimmed="true"] {
   border-left-style: solid;
   border-top-left-radius: .3em;
   margin-left: 1em;
+}
+
+/* Highlighter */
+
+.highlighter-veil {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#highlighter-close-button {
+  list-style-image: url("chrome://browser/skin/KUI-close.png");
+  top: 12px;
+  right: 12px;
+  cursor: pointer;
+}
+
+#highlighter-close-button:-moz-locale-dir(rtl)  {
+  right: auto;
+  left: 12px;
+}
+
+#highlighter-veil-transparentbox {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+  outline: 1px dashed rgba(255,255,255,0.5);
+  outline-offset: -1px;
 }

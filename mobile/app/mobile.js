@@ -137,7 +137,7 @@ pref("browser.sessionstore.resume_session_once", false);
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.resume_from_crash_timeout", 60); // minutes
 pref("browser.sessionstore.interval", 10000); // milliseconds
-pref("browser.sessionstore.max_tabs_undo", 5);
+pref("browser.sessionstore.max_tabs_undo", 1);
 
 /* these should help performance */
 pref("mozilla.widget.force-24bpp", true);
@@ -383,6 +383,10 @@ pref("content.sink.perf_deflect_count", 1000000);
 pref("content.sink.perf_parse_time", 50000000);
 
 pref("javascript.options.mem.high_water_mark", 32);
+
+// Disable the JS engine's gc on memory pressure, since we do one in the mobile
+// browser (bug 669346).
+pref("javascript.options.gc_on_memory_pressure", false);
 
 pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 pref("dom.max_script_run_time", 20);

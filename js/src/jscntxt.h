@@ -376,6 +376,7 @@ struct JSRuntime {
 
     /* Garbage collector state, used by jsgc.c. */
     js::GCChunkSet      gcChunkSet;
+    js::GCChunkSet      gcSystemChunkSet;
 
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
@@ -410,6 +411,12 @@ struct JSRuntime {
 
     /* Compartment that is currently involved in per-compartment GC */
     JSCompartment       *gcCurrentCompartment;
+
+    /*
+     * If this is non-NULL, all marked objects must belong to this compartment.
+     * This is used to look for compartment bugs.
+     */
+    JSCompartment       *gcCheckCompartment;
 
     /*
      * We can pack these flags as only the GC thread writes to them. Atomic
@@ -596,6 +603,12 @@ struct JSRuntime {
 #define JS_THREAD_DATA(cx)      (&(cx)->runtime->threadData)
 #endif
 
+  private:
+    JSPrincipals        *trustedPrincipals_;
+  public:
+    void setTrustedPrincipals(JSPrincipals *p) { trustedPrincipals_ = p; }
+    JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
+
     /*
      * Object shape (property cache structural type) identifier generator.
      *
@@ -616,11 +629,6 @@ struct JSRuntime {
 
     JSWrapObjectCallback wrapObjectCallback;
     JSPreWrapCallback    preWrapObjectCallback;
-
-#ifdef JS_METHODJIT
-    /* This measures the size of JITScripts, native maps and IC structs. */
-    size_t               mjitDataSize;
-#endif
 
     /*
      * To ensure that cx->malloc does not cause a GC, we set this flag during

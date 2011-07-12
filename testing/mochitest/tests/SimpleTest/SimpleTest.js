@@ -109,7 +109,7 @@ SimpleTest.todo = function(condition, name, diag) {
 SimpleTest._getCurrentTestURL = function() {
     return parentRunner && parentRunner.currentTestURL ||
            typeof gTestPath == "string" && gTestPath ||
-           "";
+           "unknown test url";
 };
 
 SimpleTest._logResult = function(test, passString, failString) {
@@ -802,7 +802,7 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
         if (isPlainMochitest) {
             SimpleTest.ok(false, funcIdentifier, message);
         } else {
-            dump(funcIdentifier + " " + message);
+            dump(funcIdentifier + " " + message + "\n");
         }
     }
     logError("An error occurred: " + errorMsg + " at " + url + ":" + lineNumber);

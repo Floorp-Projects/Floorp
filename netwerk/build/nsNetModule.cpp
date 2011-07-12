@@ -64,6 +64,7 @@
 #include "nsNetStrings.h"
 #include "nsDNSPrefetch.h"
 #include "nsAboutProtocolHandler.h"
+#include "nsXULAppAPI.h"
 
 #include "nsNetCID.h"
 
@@ -282,11 +283,48 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 #endif
 
 #ifdef NECKO_PROTOCOL_websocket
-#include "nsWebSocketHandler.h"
+#include "WebSocketChannel.h"
+#include "WebSocketChannelChild.h"
 namespace mozilla {
 namespace net {
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocketHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocketSSLHandler)
+static BaseWebSocketChannel*
+WebSocketChannelConstructor(bool aSecure)
+{
+  if (IsNeckoChild()) {
+    return new WebSocketChannelChild(aSecure);
+  }
+
+  if (aSecure) {
+    return new WebSocketSSLChannel;
+  } else {
+    return new WebSocketChannel;
+  }
+}
+
+#define WEB_SOCKET_HANDLER_CONSTRUCTOR(type, secure)  \
+static nsresult                                       \
+type##Constructor(nsISupports *aOuter, REFNSIID aIID, \
+                  void **aResult)                     \
+{                                                     \
+  nsresult rv;                                        \
+                                                      \
+  BaseWebSocketChannel * inst;                        \
+                                                      \
+  *aResult = NULL;                                    \
+  if (NULL != aOuter) {                               \
+    rv = NS_ERROR_NO_AGGREGATION;                     \
+    return rv;                                        \
+  }                                                   \
+  inst = WebSocketChannelConstructor(secure);         \
+  NS_ADDREF(inst);                                    \
+  rv = inst->QueryInterface(aIID, aResult);           \
+  NS_RELEASE(inst);                                   \
+  return rv;                                          \
+}
+
+WEB_SOCKET_HANDLER_CONSTRUCTOR(WebSocketChannel, false)
+WEB_SOCKET_HANDLER_CONSTRUCTOR(WebSocketSSLChannel, true)
+#undef WEB_SOCKET_HANDLER_CONSTRUCTOR
 } // namespace mozilla::net
 } // namespace mozilla
 #endif
@@ -637,7 +675,7 @@ static void nsNetShutdown()
 
 #ifdef NECKO_PROTOCOL_websocket
     // Release the Websocket Admission Manager
-    mozilla::net::nsWebSocketHandler::Shutdown();
+    mozilla::net::WebSocketChannel::Shutdown();
 #endif // NECKO_PROTOCOL_websocket
 }
 
@@ -890,9 +928,9 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
 #ifdef NECKO_PROTOCOL_websocket
     { &kNS_WEBSOCKETPROTOCOLHANDLER_CID, false, NULL,
-      mozilla::net::nsWebSocketHandlerConstructor },
+      mozilla::net::WebSocketChannelConstructor },
     { &kNS_WEBSOCKETSSLPROTOCOLHANDLER_CID, false, NULL,
-      mozilla::net::nsWebSocketSSLHandlerConstructor },
+      mozilla::net::WebSocketSSLChannelConstructor },
 #endif
 #if defined(XP_WIN)
     { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsNotifyAddrListenerConstructor },

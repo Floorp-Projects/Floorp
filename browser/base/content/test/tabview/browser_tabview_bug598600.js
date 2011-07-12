@@ -58,10 +58,8 @@ function test() {
     let onTabViewShow = function() {
       newWin.removeEventListener("tabviewshown", onTabViewShow, false);
 
-      let contentWindow = newWin.document.getElementById("tab-view").contentWindow;
-
+      let contentWindow = newWin.TabView.getContentWindow();
       is(contentWindow.GroupItems.groupItems.length, 2, "Has two group items");
-      is(contentWindow.GroupItems.getOrphanedTabs().length, 0, "No orphan tabs");
 
       // clean up and finish
       newWin.close();

@@ -92,9 +92,7 @@ var consoleObserver = {
 
     Services.console.unregisterListener(this);
 
-    hudId = HUDService.displaysIndex()[0];
-    hud = HUDService.hudReferences[hudId];
-    outputNode = hud.outputNode;
+    let outputNode = HUDService.getHudByWindow(content).outputNode;
 
     executeSoon(function() {
       let msg = "Found the error message after page reload";

@@ -65,6 +65,8 @@ typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
   __out  ID3D10Effect **ppEffect
 );
 
+using namespace std;
+
 namespace mozilla {
 namespace gfx {
 
@@ -120,29 +122,7 @@ public:
       gfxWarning() << "Failed to create shared bitmap for old surface.";
     }
 
-    factory()->CreatePathGeometry(byRef(mClippedArea));
-    RefPtr<ID2D1GeometrySink> currentSink;
-    mClippedArea->Open(byRef(currentSink));
-      
-    std::vector<DrawTargetD2D::PushedClip>::iterator iter = mDT->mPushedClips.begin();
-    iter->mPath->GetGeometry()->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
-                                     iter->mTransform, currentSink);
-
-    currentSink->Close();
-
-    iter++;
-    for (;iter != mDT->mPushedClips.end(); iter++) {
-      RefPtr<ID2D1PathGeometry> newGeom;
-      factory()->CreatePathGeometry(byRef(newGeom));
-
-      newGeom->Open(byRef(currentSink));
-      mClippedArea->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
-                                        iter->mTransform, currentSink);
-
-      currentSink->Close();
-
-      mClippedArea = newGeom;
-    }
+    mClippedArea = mDT->GetClippedGeometry();
   }
 
   ID2D1Factory *factory() { return mDT->factory(); }
@@ -161,7 +141,9 @@ public:
     mDT->mTransformDirty = true;
 
     RefPtr<ID2D1RectangleGeometry> rectGeom;
-    factory()->CreateRectangleGeometry(D2D1::InfiniteRect(), byRef(rectGeom));
+    factory()->CreateRectangleGeometry(
+      D2D1::RectF(0, 0, float(mDT->mSize.width), float(mDT->mSize.height)),
+      byRef(rectGeom));
 
     RefPtr<ID2D1PathGeometry> invClippedArea;
     factory()->CreatePathGeometry(byRef(invClippedArea));
@@ -186,7 +168,7 @@ private:
   // with the old dest surface data.
   RefPtr<ID2D1Bitmap> mOldSurfBitmap;
   // This contains the area drawing is clipped to.
-  RefPtr<ID2D1PathGeometry> mClippedArea;
+  RefPtr<ID2D1Geometry> mClippedArea;
 };
 
 DrawTargetD2D::DrawTargetD2D()
@@ -247,7 +229,7 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
 {
   RefPtr<ID2D1Bitmap> bitmap;
 
-  ID2D1RenderTarget *rt = GetRTForOperator(aOptions.mCompositionOp);
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()));
   
   PrepareForDrawing(rt);
 
@@ -297,7 +279,7 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
 
   rt->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha, D2DFilter(aSurfOptions.mFilter), D2DRect(srcRect));
 
-  FinalizeRTForOperator(aOptions.mCompositionOp, aDest);
+  FinalizeRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()), aDest);
 }
 
 void
@@ -305,7 +287,8 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
                                      const Point &aOffset,
-                                     Float aSigma)
+                                     Float aSigma,
+                                     CompositionOp aOperator)
 {
   RefPtr<ID3D10ShaderResourceView> srView = NULL;
   if (aSurface->GetType() != SURFACE_D2D1_DRAWTARGET) {
@@ -313,6 +296,12 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   }
 
   Flush();
+
+  AutoSaveRestoreClippedOut restoreClippedOut(this);
+
+  if (!IsOperatorBoundByMask(aOperator)) {
+    restoreClippedOut.Save();
+  }
 
   srView = static_cast<SourceSurfaceD2DTarget*>(aSurface)->GetSRView();
 
@@ -328,34 +317,35 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     }
   }
 
+
   RefPtr<ID3D10RenderTargetView> destRTView = mRTView;
   RefPtr<ID3D10Texture2D> destTexture;
   HRESULT hr;
 
+  RefPtr<ID3D10Texture2D> maskTexture;
+  RefPtr<ID3D10ShaderResourceView> maskSRView;
   if (mPushedClips.size()) {
-    // We need to take clips into account, draw into a temporary surface, which
-    // we then blend back with the proper clips set, using D2D.
-    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_A8_UNORM,
                                mSize.width, mSize.height,
                                1, 1);
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
 
-    hr = mDevice->CreateTexture2D(&desc, NULL, byRef(destTexture));
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to create temporary texture. Size: " << mSize << " Code: " << hr;
-      return;
-    }
+    hr = mDevice->CreateTexture2D(&desc, NULL, byRef(maskTexture));
 
-    hr = mDevice->CreateRenderTargetView(destTexture, NULL, byRef(destRTView));
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to create RenderTargetView. Code: " << hr;
-      return;
-    }
+    RefPtr<ID2D1RenderTarget> rt = CreateRTForTexture(maskTexture);
 
-    float color[4] = { 0, 0, 0, 0 };
-    mDevice->ClearRenderTargetView(destRTView, color);
+    RefPtr<ID2D1SolidColorBrush> brush;
+    rt->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
+    
+    RefPtr<ID2D1Geometry> geometry = GetClippedGeometry();
+
+    rt->BeginDraw();
+    rt->Clear(D2D1::ColorF(0, 0));
+    rt->FillGeometry(geometry, brush);
+    rt->EndDraw();
+
+    mDevice->CreateShaderResourceView(maskTexture, NULL, byRef(maskSRView));
   }
-
 
   IntSize srcSurfSize;
   ID3D10RenderTargetView *rtViews;
@@ -446,6 +436,11 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     mDevice->CreateRenderTargetView(tmpDSTexture, NULL,  byRef(dsRTView));
     mDevice->CreateShaderResourceView(tmpDSTexture, NULL,  byRef(dsSRView));
 
+    // We're not guaranteed the texture we created will be empty, we've
+    // seen old content at least on NVidia drivers.
+    float color[4] = { 0, 0, 0, 0 };
+    mDevice->ClearRenderTargetView(dsRTView, color);
+
     rtViews = dsRTView;
     mDevice->OMSetRenderTargets(1, &rtViews, NULL);
 
@@ -519,6 +514,10 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   if (!needBiggerTemp) {
     tmpRTView = mTempRTView;
     tmpSRView = mSRView;
+
+    // There could still be content here!
+    float color[4] = { 0, 0, 0, 0 };
+    mDevice->ClearRenderTargetView(tmpRTView, color);
   } else {
     CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
                                srcSurfSize.width,
@@ -584,8 +583,19 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     SetFloatVector(ShaderConstantRectD3D10(-correctedOffset.x / Float(tmpSurfSize.width), -correctedOffset.y / Float(tmpSurfSize.height),
                                            mSize.width / Float(tmpSurfSize.width) * dsFactorX,
                                            mSize.height / Float(tmpSurfSize.height) * dsFactorY));
-  mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
-    GetPassByIndex(1)->Apply(0);
+
+  if (mPushedClips.size()) {
+    mPrivateData->mEffect->GetVariableByName("mask")->AsShaderResource()->SetResource(maskSRView);
+    mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
+      SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+    mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
+      GetPassByIndex(2)->Apply(0);
+  } else {
+    mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
+      GetPassByIndex(1)->Apply(0);
+  }
+
+  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
 
   mDevice->Draw(4, 0);
 
@@ -594,39 +604,17 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     SetFloatVector(ShaderConstantRectD3D10(-aDest.x / aSurface->GetSize().width, -aDest.y / aSurface->GetSize().height,
                                            Float(mSize.width) / aSurface->GetSize().width,
                                            Float(mSize.height) / aSurface->GetSize().height));
-  mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->
-    GetPassByIndex(0)->Apply(0);
-  mDevice->OMSetBlendState(GetBlendStateForOperator(OP_OVER), NULL, 0xffffffff);
+  if (mPushedClips.size()) {
+    mPrivateData->mEffect->GetTechniqueByName("SampleMaskedTexture")->
+      GetPassByIndex(0)->Apply(0);
+  } else {
+    mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->
+      GetPassByIndex(0)->Apply(0);
+  }
+
+  mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
 
   mDevice->Draw(4, 0);
-
-  if (mPushedClips.size()) {
-    // Assert destTexture
-
-    // Blend back using the proper clips.
-    PrepareForDrawing(mRT);
-
-    RefPtr<IDXGISurface> surf;
-    hr = destTexture->QueryInterface((IDXGISurface**) byRef(surf));
-
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to QI texture to surface. Code: " << hr;
-      return;
-    }
-
-    D2D1_BITMAP_PROPERTIES props =
-      D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(mFormat), AlphaMode(mFormat)));
-    RefPtr<ID2D1Bitmap> bitmap;
-    hr = mRT->CreateSharedBitmap(IID_IDXGISurface, surf, 
-                                 &props,  byRef(bitmap));
-
-    if (FAILED(hr)) {
-      gfxWarning() << "Failure to create shared bitmap for surface. Code: " << hr;
-      return;
-    }
-
-    mRT->DrawBitmap(bitmap);
-  }
 }
 
 void
@@ -660,8 +648,10 @@ DrawTargetD2D::CopySurface(SourceSurface *aSurface,
                            const IntRect &aSourceRect,
                            const IntPoint &aDestination)
 {
-  Rect srcRect(aSourceRect.x, aSourceRect.y, aSourceRect.width, aSourceRect.height);
-  Rect dstRect(aDestination.x, aDestination.y, aSourceRect.width, aSourceRect.height);
+  Rect srcRect(Float(aSourceRect.x), Float(aSourceRect.y),
+               Float(aSourceRect.width), Float(aSourceRect.height));
+  Rect dstRect(Float(aDestination.x), Float(aDestination.y),
+               Float(aSourceRect.width), Float(aSourceRect.height));
 
   mRT->SetTransform(D2D1::IdentityMatrix());
   mRT->PushAxisAlignedClip(D2DRect(dstRect), D2D1_ANTIALIAS_MODE_ALIASED);
@@ -703,7 +693,7 @@ DrawTargetD2D::FillRect(const Rect &aRect,
                         const Pattern &aPattern,
                         const DrawOptions &aOptions)
 {
-  ID2D1RenderTarget *rt = GetRTForOperator(aOptions.mCompositionOp);
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
 
   PrepareForDrawing(rt);
 
@@ -713,7 +703,7 @@ DrawTargetD2D::FillRect(const Rect &aRect,
     rt->FillRectangle(D2DRect(aRect), brush);
   }
 
-  FinalizeRTForOperator(aOptions.mCompositionOp, aRect);
+  FinalizeRTForOperation(aOptions.mCompositionOp, aPattern, aRect);
 }
 
 void
@@ -722,7 +712,7 @@ DrawTargetD2D::StrokeRect(const Rect &aRect,
                           const StrokeOptions &aStrokeOptions,
                           const DrawOptions &aOptions)
 {
-  ID2D1RenderTarget *rt = GetRTForOperator(aOptions.mCompositionOp);
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
 
   PrepareForDrawing(rt);
 
@@ -734,7 +724,7 @@ DrawTargetD2D::StrokeRect(const Rect &aRect,
     rt->DrawRectangle(D2DRect(aRect), brush, aStrokeOptions.mLineWidth, strokeStyle);
   }
 
-  FinalizeRTForOperator(aOptions.mCompositionOp, aRect);
+  FinalizeRTForOperation(aOptions.mCompositionOp, aPattern, aRect);
 }
 
 void
@@ -744,7 +734,7 @@ DrawTargetD2D::StrokeLine(const Point &aStart,
                           const StrokeOptions &aStrokeOptions,
                           const DrawOptions &aOptions)
 {
-  ID2D1RenderTarget *rt = GetRTForOperator(aOptions.mCompositionOp);
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
 
   PrepareForDrawing(rt);
 
@@ -756,7 +746,7 @@ DrawTargetD2D::StrokeLine(const Point &aStart,
     rt->DrawLine(D2DPoint(aStart), D2DPoint(aEnd), brush, aStrokeOptions.mLineWidth, strokeStyle);
   }
 
-  FinalizeRTForOperator(aOptions.mCompositionOp, Rect(0, 0, Float(mSize.width), Float(mSize.height)));
+  FinalizeRTForOperation(aOptions.mCompositionOp, aPattern, Rect(0, 0, Float(mSize.width), Float(mSize.height)));
 }
 
 void
@@ -772,7 +762,7 @@ DrawTargetD2D::Stroke(const Path *aPath,
 
   const PathD2D *d2dPath = static_cast<const PathD2D*>(aPath);
 
-  ID2D1RenderTarget *rt = GetRTForOperator(aOptions.mCompositionOp);
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
 
   PrepareForDrawing(rt);
 
@@ -784,7 +774,7 @@ DrawTargetD2D::Stroke(const Path *aPath,
     rt->DrawGeometry(d2dPath->mGeometry, brush, aStrokeOptions.mLineWidth, strokeStyle);
   }
 
-  FinalizeRTForOperator(aOptions.mCompositionOp, Rect(0, 0, Float(mSize.width), Float(mSize.height)));
+  FinalizeRTForOperation(aOptions.mCompositionOp, aPattern, Rect(0, 0, Float(mSize.width), Float(mSize.height)));
 }
 
 void
@@ -799,7 +789,7 @@ DrawTargetD2D::Fill(const Path *aPath,
 
   const PathD2D *d2dPath = static_cast<const PathD2D*>(aPath);
 
-  ID2D1RenderTarget *rt = GetRTForOperator(aOptions.mCompositionOp);
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
 
   PrepareForDrawing(rt);
 
@@ -815,7 +805,7 @@ DrawTargetD2D::Fill(const Path *aPath,
     d2dPath->mGeometry->GetBounds(D2D1::IdentityMatrix(), &d2dbounds);
     bounds = ToRect(d2dbounds);
   }
-  FinalizeRTForOperator(aOptions.mCompositionOp, bounds);
+  FinalizeRTForOperation(aOptions.mCompositionOp, aPattern, bounds);
 }
 
 void
@@ -831,7 +821,7 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
 
   ScaledFontDWrite *font = static_cast<ScaledFontDWrite*>(aFont);
 
-  ID2D1RenderTarget *rt = GetRTForOperator(aOptions.mCompositionOp);
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
 
   PrepareForDrawing(rt);
 
@@ -867,7 +857,7 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
     rt->DrawGlyphRun(D2D1::Point2F(), &glyphRun, brush);
   }
 
-  FinalizeRTForOperator(aOptions.mCompositionOp, Rect(0, 0, (Float)mSize.width, (Float)mSize.height));
+  FinalizeRTForOperation(aOptions.mCompositionOp, aPattern, Rect(0, 0, (Float)mSize.width, (Float)mSize.height));
 }
 
 void
@@ -996,13 +986,13 @@ DrawTargetD2D::CreatePathBuilder(FillRule aFillRule) const
 }
 
 TemporaryRef<GradientStops>
-DrawTargetD2D::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops) const
+DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops) const
 {
   D2D1_GRADIENT_STOP *stops = new D2D1_GRADIENT_STOP[aNumStops];
 
   for (uint32_t i = 0; i < aNumStops; i++) {
-    stops[i].position = aStops[i].offset;
-    stops[i].color = D2DColor(aStops[i].color);
+    stops[i].position = rawStops[i].offset;
+    stops[i].color = D2DColor(rawStops[i].color);
   }
 
   RefPtr<ID2D1GradientStopCollection> stopCollection;
@@ -1300,9 +1290,9 @@ DrawTargetD2D::GetBlendStateForOperator(CompositionOp aOperator)
  * drawing operation other than OVER is required.
  */
 ID2D1RenderTarget*
-DrawTargetD2D::GetRTForOperator(CompositionOp aOperator)
+DrawTargetD2D::GetRTForOperation(CompositionOp aOperator, const Pattern &aPattern)
 {
-  if (aOperator == OP_OVER) {
+  if (aOperator == OP_OVER && !IsPatternSupportedByD2D(aPattern)) {
     return mRT;
   }
 
@@ -1341,9 +1331,9 @@ DrawTargetD2D::GetRTForOperator(CompositionOp aOperator)
  * to the surface.
  */
 void
-DrawTargetD2D::FinalizeRTForOperator(CompositionOp aOperator, const Rect &aBounds)
+DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aPattern, const Rect &aBounds)
 {
-  if (aOperator == OP_OVER) {
+  if (aOperator == OP_OVER && !IsPatternSupportedByD2D(aPattern)) {
     return;
   }
 
@@ -1387,17 +1377,62 @@ DrawTargetD2D::FinalizeRTForOperator(CompositionOp aOperator, const Rect &aBound
   viewport.TopLeftY = 0;
 
   mDevice->RSSetViewports(1, &viewport);
-  mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(mSRView);
   mPrivateData->mEffect->GetVariableByName("QuadDesc")->AsVector()->
     SetFloatVector(ShaderConstantRectD3D10(-1.0f, 1.0f, 2.0f, -2.0f));
-  mPrivateData->mEffect->GetVariableByName("TexCoords")->AsVector()->
-    SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
 
-  mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->GetPassByIndex(0)->Apply(0);
+  if (!IsPatternSupportedByD2D(aPattern)) {
+    mPrivateData->mEffect->GetVariableByName("TexCoords")->AsVector()->
+      SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+    mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(mSRView);
+    mPrivateData->mEffect->GetTechniqueByName("SampleTexture")->GetPassByIndex(0)->Apply(0);
+  } else if (aPattern.GetType() == PATTERN_RADIAL_GRADIENT) {
+    const RadialGradientPattern *pat = static_cast<const RadialGradientPattern*>(&aPattern);
+
+    if (pat->mCenter1 == pat->mCenter2 && pat->mRadius1 == pat->mRadius2) {
+      // Draw nothing!
+      return;
+    }
+
+    mPrivateData->mEffect->GetVariableByName("mask")->AsShaderResource()->SetResource(mSRView);
+
+    SetupEffectForRadialGradient(pat);
+  }
 
   mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), NULL, 0xffffffff);
   
   mDevice->Draw(4, 0);
+}
+
+TemporaryRef<ID2D1Geometry>
+DrawTargetD2D::GetClippedGeometry()
+{
+  RefPtr<ID2D1GeometrySink> currentSink;
+  RefPtr<ID2D1PathGeometry> clippedGeometry;
+
+  factory()->CreatePathGeometry(byRef(clippedGeometry));
+  clippedGeometry->Open(byRef(currentSink));
+      
+  std::vector<DrawTargetD2D::PushedClip>::iterator iter = mPushedClips.begin();
+  iter->mPath->GetGeometry()->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                                    iter->mTransform, currentSink);
+
+  currentSink->Close();
+
+  iter++;
+  for (;iter != mPushedClips.end(); iter++) {
+    RefPtr<ID2D1PathGeometry> newGeom;
+    factory()->CreatePathGeometry(byRef(newGeom));
+
+    newGeom->Open(byRef(currentSink));
+    clippedGeometry->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
+                                      iter->mTransform, currentSink);
+
+    currentSink->Close();
+
+    clippedGeometry = newGeom;
+  }
+
+  return clippedGeometry;
 }
 
 TemporaryRef<ID2D1RenderTarget>
@@ -1482,6 +1517,12 @@ DrawTargetD2D::PopAllClips()
 TemporaryRef<ID2D1Brush>
 DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 {
+  if (IsPatternSupportedByD2D(aPattern)) {
+    RefPtr<ID2D1SolidColorBrush> colBrush;
+    mRT->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), byRef(colBrush));
+    return colBrush;
+  }
+
   if (aPattern.GetType() == PATTERN_COLOR) {
     RefPtr<ID2D1SolidColorBrush> colBrush;
     Color color = static_cast<const ColorPattern*>(&aPattern)->mColor;
@@ -1520,13 +1561,15 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       return NULL;
     }
 
-    mRT->CreateRadialGradientBrush(D2D1::RadialGradientBrushProperties(D2DPoint(pat->mCenter),
-                                                                       D2DPoint(pat->mOrigin - pat->mCenter),
-                                                                       pat->mRadius,
-                                                                       pat->mRadius),
-                                   D2D1::BrushProperties(aAlpha),
-                                   stops->mStopCollection,
-                                   byRef(gradBrush));
+    // This will not be a complex radial gradient brush.
+    mRT->CreateRadialGradientBrush(
+      D2D1::RadialGradientBrushProperties(D2DPoint(pat->mCenter1),
+                                          D2D1::Point2F(),
+                                          pat->mRadius2, pat->mRadius2),
+      D2D1::BrushProperties(aAlpha),
+      stops->mStopCollection,
+      byRef(gradBrush));
+
     return gradBrush;
   } else if (aPattern.GetType() == PATTERN_SURFACE) {
     RefPtr<ID2D1BitmapBrush> bmBrush;
@@ -1627,16 +1670,169 @@ DrawTargetD2D::CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
   }
 
 
-  HRESULT hr = factory()->CreateStrokeStyle(D2D1::StrokeStyleProperties(capStyle, capStyle,
-                                                                        capStyle, joinStyle,
-                                                                        aStrokeOptions.mMiterLimit),
-                                            NULL, 0, byRef(style));
+  HRESULT hr;
+  if (aStrokeOptions.mDashPattern) {
+    typedef vector<Float> FloatVector;
+    // D2D "helpfully" multiplies the dash pattern by the line width.
+    // That's not what cairo does, or is what <canvas>'s dash wants.
+    // So fix the multiplication in advance.
+    Float lineWidth = aStrokeOptions.mLineWidth;
+    FloatVector dash(aStrokeOptions.mDashPattern,
+                     aStrokeOptions.mDashPattern + aStrokeOptions.mDashLength);
+    for (FloatVector::iterator it = dash.begin(); it != dash.end(); ++it) {
+      *it /= lineWidth;
+    }
+
+    hr = factory()->CreateStrokeStyle(
+      D2D1::StrokeStyleProperties(capStyle, capStyle,
+                                  capStyle, joinStyle,
+                                  aStrokeOptions.mMiterLimit,
+                                  D2D1_DASH_STYLE_CUSTOM,
+                                  aStrokeOptions.mDashOffset),
+      &dash[0], // data() is not C++98, although it's in recent gcc
+                // and VC10's STL
+      dash.size(),
+      byRef(style));
+  } else {
+    hr = factory()->CreateStrokeStyle(
+      D2D1::StrokeStyleProperties(capStyle, capStyle,
+                                  capStyle, joinStyle,
+                                  aStrokeOptions.mMiterLimit),
+      NULL, 0, byRef(style));
+  }
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create Direct2D stroke style.";
   }
 
   return style;
+}
+
+TemporaryRef<ID3D10Texture1D>
+DrawTargetD2D::CreateGradientTexture(const GradientStopsD2D *aStops)
+{
+  CD3D10_TEXTURE1D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 4096, 1, 1);
+
+  std::vector<D2D1_GRADIENT_STOP> rawStops;
+  rawStops.resize(aStops->mStopCollection->GetGradientStopCount());
+  aStops->mStopCollection->GetGradientStops(&rawStops.front(), rawStops.size());
+
+  std::vector<unsigned char> textureData;
+  textureData.resize(4096 * 4);
+  unsigned char *texData = &textureData.front();
+
+  float prevColorPos = 0;
+  float nextColorPos = 1.0f;
+  D2D1_COLOR_F prevColor = rawStops[0].color;
+  D2D1_COLOR_F nextColor = prevColor;
+
+  if (rawStops.size() >= 2) {
+    nextColor = rawStops[1].color;
+    nextColorPos = rawStops[1].position;
+  }
+
+  uint32_t stopPosition = 2;
+
+  // Not the most optimized way but this will do for now.
+  for (int i = 0; i < 4096; i++) {
+    // The 4095 seems a little counter intuitive, but we want the gradient
+    // color at offset 0 at the first pixel, and at offset 1.0f at the last
+    // pixel.
+    float pos = float(i) / 4095;
+
+    if (pos > nextColorPos) {
+      prevColor = nextColor;
+      prevColorPos = nextColorPos;
+      if (rawStops.size() > stopPosition) {
+        nextColor = rawStops[stopPosition].color;
+        nextColorPos = rawStops[stopPosition++].position;
+      } else {
+        nextColorPos = 1.0f;
+      }
+    }
+
+    float interp = (pos - prevColorPos) / (nextColorPos - prevColorPos);
+
+    Color newColor(prevColor.r + (nextColor.r - prevColor.r) * interp,
+                    prevColor.g + (nextColor.g - prevColor.g) * interp,
+                    prevColor.b + (nextColor.b - prevColor.b) * interp,
+                    prevColor.a + (nextColor.a - prevColor.a) * interp);
+
+    texData[i * 4] = (char)(255.0f * newColor.b);
+    texData[i * 4 + 1] = (char)(255.0f * newColor.g);
+    texData[i * 4 + 2] = (char)(255.0f * newColor.r);
+    texData[i * 4 + 3] = (char)(255.0f * newColor.a);
+  }
+
+  D3D10_SUBRESOURCE_DATA data;
+  data.pSysMem = &textureData.front();
+
+  RefPtr<ID3D10Texture1D> tex;
+  mDevice->CreateTexture1D(&desc, &data, byRef(tex));
+
+  return tex;
+}
+
+void
+DrawTargetD2D::SetupEffectForRadialGradient(const RadialGradientPattern *aPattern)
+{
+  mPrivateData->mEffect->GetTechniqueByName("SampleRadialGradient")->GetPassByIndex(0)->Apply(0);
+  mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
+    SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+
+  float dimensions[] = { float(mSize.width), float(mSize.height), 0, 0 };
+  mPrivateData->mEffect->GetVariableByName("dimensions")->AsVector()->
+    SetFloatVector(dimensions);
+
+  const GradientStopsD2D *stops =
+    static_cast<const GradientStopsD2D*>(aPattern->mStops.get());
+
+  RefPtr<ID3D10Texture1D> tex = CreateGradientTexture(stops);
+
+  RefPtr<ID3D10ShaderResourceView> srView;
+  mDevice->CreateShaderResourceView(tex, NULL, byRef(srView));
+
+  mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(srView);
+
+  Point dc = aPattern->mCenter2 - aPattern->mCenter1;
+  float dr = aPattern->mRadius2 - aPattern->mRadius1;
+
+  float diffv[] = { dc.x, dc.y, dr, 0 };
+  mPrivateData->mEffect->GetVariableByName("diff")->AsVector()->
+    SetFloatVector(diffv);
+
+  float center1[] = { aPattern->mCenter1.x, aPattern->mCenter1.y, dr, 0 };
+  mPrivateData->mEffect->GetVariableByName("center1")->AsVector()->
+    SetFloatVector(center1);
+
+  mPrivateData->mEffect->GetVariableByName("radius1")->AsScalar()->
+    SetFloat(aPattern->mRadius1);
+  mPrivateData->mEffect->GetVariableByName("sq_radius1")->AsScalar()->
+    SetFloat(pow(aPattern->mRadius1, 2));
+
+  Matrix invTransform = mTransform;
+
+  if (!invTransform.Invert()) {
+    // Bail if the matrix is singular.
+    return;
+  }
+  float matrix[] = { invTransform._11, invTransform._12, 0, 0,
+                      invTransform._21, invTransform._22, 0, 0,
+                      invTransform._31, invTransform._32, 1.0f, 0,
+                      0, 0, 0, 1.0f };
+
+  mPrivateData->mEffect->GetVariableByName("DeviceSpaceToUserSpace")->
+    AsMatrix()->SetMatrix(matrix);
+
+  float A = dc.x * dc.x + dc.y * dc.y - dr * dr;
+  if (A == 0) {
+    mPrivateData->mEffect->GetTechniqueByName("SampleRadialGradient")->
+      GetPassByIndex(1)->Apply(0);
+  } else {
+    mPrivateData->mEffect->GetVariableByName("A")->AsScalar()->SetFloat(A);
+    mPrivateData->mEffect->GetTechniqueByName("SampleRadialGradient")->
+      GetPassByIndex(0)->Apply(0);
+  }
 }
 
 ID2D1Factory*

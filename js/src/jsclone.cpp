@@ -46,6 +46,13 @@
 
 using namespace js;
 
+JS_FRIEND_API(uint64_t)
+js_GetSCOffset(JSStructuredCloneWriter* writer)
+{
+  JS_ASSERT(writer);
+  return writer->output().count() * sizeof(uint64_t);
+}
+
 namespace js
 {
 

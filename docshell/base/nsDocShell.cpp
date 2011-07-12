@@ -104,11 +104,13 @@
 #include "nsIViewManager.h"
 #include "nsIScriptChannel.h"
 #include "nsIOfflineCacheUpdate.h"
+#include "nsITimedChannel.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
 #include "IHistory.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -232,6 +234,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "nsXULAppAPI.h"
 
 #include "nsDOMNavigationTiming.h"
+#include "nsITimedChannel.h"
 
 using namespace mozilla;
 
@@ -675,7 +678,9 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
     case LOAD_NORMAL_BYPASS_CACHE:
     case LOAD_NORMAL_BYPASS_PROXY:
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
+    case LOAD_NORMAL_REPLACE:
     case LOAD_LINK:
+    case LOAD_STOP_CONTENT:
         result = nsIDOMPerformanceNavigation::TYPE_NAVIGATE;
         break;
     case LOAD_HISTORY:
@@ -688,8 +693,6 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
         result = nsIDOMPerformanceNavigation::TYPE_RELOAD;
         break;
-    case LOAD_NORMAL_REPLACE:
-    case LOAD_STOP_CONTENT:
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_REFRESH:
     case LOAD_BYPASS_HISTORY:
@@ -6116,6 +6119,20 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     nsresult rv = aChannel->GetURI(getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsITimedChannel> timingChannel =
+        do_QueryInterface(aChannel);
+    if (timingChannel) {
+        TimeStamp channelCreationTime;
+        rv = timingChannel->GetChannelCreation(&channelCreationTime);
+        if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
+            PRUint32 interval = (PRUint32)
+                (TimeStamp::Now() - channelCreationTime)
+                .ToMilliseconds();
+            Telemetry::Accumulate(Telemetry::TOTAL_CONTENT_PAGE_LOAD_TIME, 
+                                  interval);
+        }
+    }
+
     // Timing is picked up by the window, we don't need it anymore
     mTiming = nsnull;
 
@@ -9062,6 +9079,13 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         }
     }
 
+    if (Preferences::GetBool("dom.enable_performance", PR_FALSE)) {
+        nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(channel));
+        if (timedChannel) {
+            timedChannel->SetTimingEnabled(PR_TRUE);
+        }
+    }
+
     rv = DoChannelLoad(channel, uriLoader, aBypassClassifier);
 
     //
@@ -9168,7 +9192,17 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     // Load attributes depend on load type...
     switch (mLoadType) {
     case LOAD_HISTORY:
-        loadFlags |= nsIRequest::VALIDATE_NEVER;
+        {
+            // Only send VALIDATE_NEVER if mLSHE's URI was never changed via
+            // push/replaceState (bug 669671).
+            PRBool uriModified = PR_FALSE;
+            if (mLSHE) {
+                mLSHE->GetURIWasModified(&uriModified);
+            }
+
+            if (!uriModified)
+                loadFlags |= nsIRequest::VALIDATE_NEVER;
+        }
         break;
 
     case LOAD_RELOAD_CHARSET_CHANGE:
@@ -9829,6 +9863,15 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // data, if there is any.
     newSHEntry->SetStateData(scContainer);
     newSHEntry->SetPostData(nsnull);
+
+    // If this push/replaceState changed the document's current URI and the new
+    // URI differs from the old URI in more than the hash, or if the old
+    // SHEntry's URI was modified in this way by a push/replaceState call
+    // set URIWasModified to true for the current SHEntry (bug 669671).
+    PRBool sameExceptHashes = PR_TRUE, oldURIWasModified = PR_FALSE;
+    newURI->EqualsExceptRef(mCurrentURI, &sameExceptHashes);
+    oldOSHE->GetURIWasModified(&oldURIWasModified);
+    newSHEntry->SetURIWasModified(!sameExceptHashes || oldURIWasModified);
 
     // Step 5: If aReplace is false, indicating that we're doing a pushState
     // rather than a replaceState, notify bfcache that we've added a page to
@@ -11468,17 +11511,21 @@ public:
   OnLinkClickEvent(nsDocShell* aHandler, nsIContent* aContent,
                    nsIURI* aURI,
                    const PRUnichar* aTargetSpec,
-                   nsIInputStream* aPostDataStream = 0, 
-                   nsIInputStream* aHeadersDataStream = 0);
+                   nsIInputStream* aPostDataStream, 
+                   nsIInputStream* aHeadersDataStream,
+                   PRBool aIsTrusted);
 
   NS_IMETHOD Run() {
     nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
     nsAutoPopupStatePusher popupStatePusher(window, mPopupState);
 
-    mHandler->OnLinkClickSync(mContent, mURI,
-                              mTargetSpec.get(), mPostDataStream,
-                              mHeadersDataStream,
-                              nsnull, nsnull);
+    nsCxPusher pusher;
+    if (mIsTrusted || pusher.Push(mContent)) {
+      mHandler->OnLinkClickSync(mContent, mURI,
+                                mTargetSpec.get(), mPostDataStream,
+                                mHeadersDataStream,
+                                nsnull, nsnull);
+    }
     return NS_OK;
   }
 
@@ -11490,6 +11537,7 @@ private:
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent>     mContent;
   PopupControlState        mPopupState;
+  PRBool                   mIsTrusted;
 };
 
 OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
@@ -11497,13 +11545,15 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
                                    nsIURI* aURI,
                                    const PRUnichar* aTargetSpec,
                                    nsIInputStream* aPostDataStream,
-                                   nsIInputStream* aHeadersDataStream)
+                                   nsIInputStream* aHeadersDataStream,
+                                   PRBool aIsTrusted)
   : mHandler(aHandler)
   , mURI(aURI)
   , mTargetSpec(aTargetSpec)
   , mPostDataStream(aPostDataStream)
   , mHeadersDataStream(aHeadersDataStream)
   , mContent(aContent)
+  , mIsTrusted(aIsTrusted)
 {
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
 
@@ -11517,7 +11567,8 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         nsIURI* aURI,
                         const PRUnichar* aTargetSpec,
                         nsIInputStream* aPostDataStream,
-                        nsIInputStream* aHeadersDataStream)
+                        nsIInputStream* aHeadersDataStream,
+                        PRBool aIsTrusted)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
@@ -11545,7 +11596,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
 
   nsCOMPtr<nsIRunnable> ev =
       new OnLinkClickEvent(this, aContent, aURI, target.get(),
-                           aPostDataStream, aHeadersDataStream);
+                           aPostDataStream, aHeadersDataStream, aIsTrusted);
   return NS_DispatchToCurrentThread(ev);
 }
 

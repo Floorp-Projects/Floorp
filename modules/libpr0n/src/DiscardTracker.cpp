@@ -117,6 +117,35 @@ DiscardTracker::Remove(DiscardTrackerNode *node)
   node->prev = node->next = nsnull;
 }
 
+/*
+ * Discard all the images we're tracking.
+ */
+void
+DiscardTracker::DiscardAll()
+{
+  if (!sInitialized)
+    return;
+
+  // Remove the sentinel from the list so that the only elements in the list
+  // which don't track an image are the head and tail.
+  Remove(&sSentinel);
+
+  // Discard all tracked images.
+  for (DiscardTrackerNode *node = sHead.next;
+       node != &sTail; node = sHead.next) {
+    NS_ABORT_IF_FALSE(node->curr, "empty node!");
+    Remove(node);
+    node->curr->Discard();
+  }
+
+  // Add the sentinel back to the (now empty) list.
+  Reset(&sSentinel);
+
+  // Because the sentinel is the only element in the list, the next timer event
+  // would be a no-op.  Disable the timer as an optimization.
+  TimerOff();
+}
+
 /**
  * Initialize the tracker.
  */

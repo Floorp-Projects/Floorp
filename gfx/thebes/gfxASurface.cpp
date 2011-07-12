@@ -600,28 +600,33 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetProcess(char **process) {
-        *process = strdup("");
+    NS_IMETHOD GetProcess(nsACString &process) {
+        process.Truncate();
         return NS_OK;
     }
 
-    NS_IMETHOD GetPath(char **memoryPath) {
-        *memoryPath = strdup(SurfaceMemoryReporterPathForType(mType));
+    NS_IMETHOD GetPath(nsACString &path) {
+        path.Assign(SurfaceMemoryReporterPathForType(mType));
         return NS_OK;
     }
 
     NS_IMETHOD GetKind(PRInt32 *kind) {
-        *kind = MR_OTHER;
+        *kind = KIND_OTHER;
+        return NS_OK;
+    }
+    
+    NS_IMETHOD GetUnits(PRInt32 *units) {
+        *units = UNITS_BYTES;
         return NS_OK;
     }
 
-    NS_IMETHOD GetDescription(char **desc) {
-        *desc = strdup("Memory used by gfx surface of the given type.");
+    NS_IMETHOD GetAmount(PRInt64 *amount) {
+        *amount = gSurfaceMemoryUsed[mType];
         return NS_OK;
     }
 
-    NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) {
-        *memoryUsed = gSurfaceMemoryUsed[mType];
+    NS_IMETHOD GetDescription(nsACString &desc) {
+        desc.AssignLiteral("Memory used by gfx surface of the given type.");
         return NS_OK;
     }
 

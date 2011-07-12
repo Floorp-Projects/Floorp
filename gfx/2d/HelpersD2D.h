@@ -151,6 +151,29 @@ static inline int BytesPerPixel(SurfaceFormat aFormat)
   }
 }
 
+static bool IsPatternSupportedByD2D(const Pattern &aPattern)
+{
+  if (aPattern.GetType() != PATTERN_RADIAL_GRADIENT) {
+    return false;
+  }
+
+  const RadialGradientPattern *pat =
+    static_cast<const RadialGradientPattern*>(&aPattern);
+  
+  if (pat->mRadius1 != 0) {
+    return true;
+  }
+
+  Point diff = pat->mCenter2 - pat->mCenter1;
+
+  if (sqrt(diff.x * diff.x + diff.y * diff.y) >= pat->mRadius2) {
+    // Inner point lies outside the circle.
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * This structure is used to pass rectangles to our shader constant. We can use
  * this for passing rectangular areas to SetVertexShaderConstant. In the format

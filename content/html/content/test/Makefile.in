@@ -119,6 +119,8 @@ _TEST_FILES = \
 		test_bug372098.html \
 		test_bug375003-1.html \
 		test_bug375003-2.html \
+		test_bug383383.html \
+		test_bug383383_2.xhtml \
 		test_bug384419.html \
 		test_bug386496.html \
 		test_bug386728.html \
@@ -181,7 +183,6 @@ _TEST_FILES = \
 		test_bug536895.html \
 		test_bug458037.xhtml \
 		test_bug556645.html \
-		test_bug551670.html \
 		test_bug555567.html \
 		test_bug557620.html \
 		test_bug456229.html \
@@ -217,8 +218,7 @@ _TEST_FILES = \
 		test_bug555840.html \
 		test_bug561636.html \
 		test_bug590363.html \
-		test_bug557628-1.html \
-		test_bug557628-2.html \
+		test_bug557628.html \
 		test_bug592802.html \
 		test_bug595429.html \
 		test_bug595447.html \
@@ -241,7 +241,6 @@ _TEST_FILES = \
 		test_bug297761.html \
 		file_bug297761.html \
 		test_bug607145.html \
-		test_bug601061.html \
 		test_bug596511.html \
 		reflect.js \
 		test_bug611189.html \
@@ -262,7 +261,6 @@ _TEST_FILES = \
 		test_bug622558.html \
 		test_bug622597.html \
 		test_bug636336.html \
-		test_bug630889.html \
 		test_bug610212.html \
 		test_bug633058.html \
 		test_bug641219.html \
@@ -275,6 +273,7 @@ _TEST_FILES = \
 		test_bug659596.html \
 		test_bug659743.xml \
 		test_bug660663.html \
+		test_bug586786.html \
 		test_restore_from_parser_fragment.html \
 		$(NULL)
 

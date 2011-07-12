@@ -107,20 +107,38 @@ struct DrawOptions {
  * mLineJoin     - Join style used for joining lines.
  * mLineCap      - Cap style used for capping lines.
  * mMiterLimit   - Miter limit in units of linewidth
+ * mDashPattern  - Series of on/off userspace lengths defining dash.
+ *                 Owned by the caller; must live at least as long as
+ *                 this StrokeOptions.
+ *                 mDashPattern != null <=> mDashLength > 0.
+ * mDashLength   - Number of on/off lengths in mDashPattern.
+ * mDashOffset   - Userspace offset within mDashPattern at which stroking
+ *                 begins.
  */
 struct StrokeOptions {
   StrokeOptions(Float aLineWidth = 1.0f,
                 JoinStyle aLineJoin = JOIN_MITER_OR_BEVEL,
                 CapStyle aLineCap = CAP_BUTT,
-                Float aMiterLimit = 10.0f)
+                Float aMiterLimit = 10.0f,
+                size_t aDashLength = 0,
+                const Float* aDashPattern = 0,
+                Float aDashOffset = 0.f)
     : mLineWidth(aLineWidth)
     , mMiterLimit(aMiterLimit)
+    , mDashPattern(aDashLength > 0 ? aDashPattern : 0)
+    , mDashLength(aDashLength)
+    , mDashOffset(aDashOffset)
     , mLineJoin(aLineJoin)
     , mLineCap(aLineCap)
-  {}
+  {
+    MOZ_ASSERT(aDashLength == 0 || aDashPattern);
+  }
 
   Float mLineWidth;
   Float mMiterLimit;
+  const Float* mDashPattern;
+  size_t mDashLength;
+  Float mDashOffset;
   JoinStyle mLineJoin : 4;
   CapStyle mLineCap : 3;
 };
@@ -228,22 +246,25 @@ public:
    * aStops GradientStops object for this gradient, this should match the
    *        backend type of the draw target this pattern will be used with.
    */
-  RadialGradientPattern(const Point &aCenter,
-                        const Point &aOrigin,
-                        Float aRadius,
+  RadialGradientPattern(const Point &aCenter1,
+                        const Point &aCenter2,
+                        Float aRadius1,
+                        Float aRadius2,
                         GradientStops *aStops)
-    : mCenter(aCenter)
-    , mOrigin(aOrigin)
-    , mRadius(aRadius)
+    : mCenter1(aCenter1)
+    , mCenter2(aCenter2)
+    , mRadius1(aRadius1)
+    , mRadius2(aRadius2)
     , mStops(aStops)
   {
   }
 
   virtual PatternType GetType() const { return PATTERN_RADIAL_GRADIENT; }
 
-  Point mCenter;
-  Point mOrigin;
-  Float mRadius;
+  Point mCenter1;
+  Point mCenter2;
+  Float mRadius1;
+  Float mRadius2;
   RefPtr<GradientStops> mStops;
 };
 
@@ -465,12 +486,14 @@ public:
    * aColor Color of the drawn shadow
    * aOffset Offset of the shadow
    * aSigma Sigma used for the guassian filter kernel
+   * aOperator Composition operator used
    */
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
                                      const Point &aOffset,
-                                     Float aSigma) = 0;
+                                     Float aSigma,
+                                     CompositionOp aOperator) = 0;
 
   /* 
    * Clear a rectangle on the draw target to transparent black. This will
@@ -606,6 +629,10 @@ public:
 
   /*
    * Create a path builder with the specified fillmode.
+   *
+   * We need the fill mode up front because of Direct2D.
+   * ID2D1SimplifiedGeometrySink requires the fill mode
+   * to be set before calling BeginFigure().
    */
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const = 0;
 

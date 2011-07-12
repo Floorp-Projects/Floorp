@@ -34,8 +34,7 @@ function contentLoaded(aEvent) {
 }
 
 function buttonClicked() {
-  let hudId = HUDService.getHudIdByWindow(content);
-  let outputNode = HUDService.getOutputNodeById(hudId);
+  let outputNode = HUDService.getHudByWindow(content).outputNode;
 
   let msg = "the error from the external script was logged";
   testLogEntry(outputNode, "bogus", msg);

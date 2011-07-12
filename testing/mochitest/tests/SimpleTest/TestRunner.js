@@ -42,13 +42,7 @@ TestRunner._urls = [];
 TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
 
-// running in e10s build and need to use IPC?
-if (typeof SpecialPowers != 'undefined') {
-    TestRunner.ipcMode = SpecialPowers.hasContentProcesses();
-} else {
-    TestRunner.ipcMode = false;
-}
-
+TestRunner.ipcMode = SpecialPowers.hasContentProcesses();
 TestRunner._expectingProcessCrash = false;
 
 /**
@@ -170,9 +164,7 @@ TestRunner._makeIframe = function (url, retry) {
 TestRunner.runTests = function (/*url...*/) {
     TestRunner.log("SimpleTest START");
 
-    if (typeof SpecialPowers != "undefined") {
-        SpecialPowers.registerProcessCrashObservers();
-    }
+    SpecialPowers.registerProcessCrashObservers();
 
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
@@ -233,10 +225,6 @@ TestRunner.runNextTest = function() {
 };
 
 TestRunner.expectChildProcessCrash = function() {
-    if (typeof SpecialPowers == "undefined") {
-        throw "TestRunner.expectChildProcessCrash must only be called from plain mochitests.";
-    }
-
     TestRunner._expectingProcessCrash = true;
 };
 
@@ -278,14 +266,10 @@ TestRunner.testFinished = function(tests) {
         TestRunner.runNextTest();
     }
 
-    if (typeof SpecialPowers != 'undefined') {
-        SpecialPowers.executeAfterFlushingMessageQueue(function() {
-            cleanUpCrashDumpFiles();
-            runNextTest();
-        });
-    } else {
+    SpecialPowers.executeAfterFlushingMessageQueue(function() {
+        cleanUpCrashDumpFiles();
         runNextTest();
-    }
+    });
 };
 
 /**

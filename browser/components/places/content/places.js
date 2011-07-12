@@ -24,6 +24,7 @@
  *   Asaf Romano <mano@mozilla.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Drew Willcoxon <adw@mozilla.com>
+ *   Steffen Wilberg <steffen.wilberg@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -114,6 +115,8 @@ var PlacesOrganizer = {
     // remove the "Properties" context-menu item, we've our own details pane
     document.getElementById("placesContext")
             .removeChild(document.getElementById("placesContext_show:info"));
+
+    gPrivateBrowsingListener.init();
   },
 
   QueryInterface: function PO_QueryInterface(aIID) {
@@ -145,6 +148,7 @@ var PlacesOrganizer = {
   },
 
   destroy: function PO_destroy() {
+    gPrivateBrowsingListener.uninit();
   },
 
   _location: null,
@@ -364,19 +368,24 @@ var PlacesOrganizer = {
   },
 
   /**
-   * Show the migration wizard for importing from a file.
+   * Show the migration wizard for importing passwords,
+   * cookies, history, preferences, and bookmarks.
    */
-  importBookmarks: function PO_import() {
-    // XXX: ifdef it to be non-modal (non-"sheet") on mac (see bug 259039)
-    var features = "modal,centerscreen,chrome,resizable=no";
+  importFromBrowser: function PO_importFromBrowser() {
+#ifdef XP_MACOSX
+    // On Mac, the window is not modal
+    let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
+    if (win) {
+      win.focus();
+      return;
+    }
 
-    // The migrator window will set this to true when it closes, if the user
-    // chose to migrate from a specific file.
-    window.fromFile = false;
-    openDialog("chrome://browser/content/migration/migration.xul",
-               "migration", features, "bookmarks");
-    if (window.fromFile)
-      this.importFromFile();
+    let features = "centerscreen,chrome,resizable=no";
+#else
+    let features = "modal,centerscreen,chrome,resizable=no";
+#endif
+    window.openDialog("chrome://browser/content/migration/migration.xul",
+                      "migration", features);
   },
 
   /**
@@ -1339,5 +1348,42 @@ var ViewMenu = {
     var sortConst = "SORT_BY_" + colLookupTable[columnId].key + "_" + aDirection;
     result.sortingAnnotation = colLookupTable[columnId].anno || "";
     result.sortingMode = Ci.nsINavHistoryQueryOptions[sortConst];
+  }
+}
+
+/**
+ * Disables the "Import and Backup->Import From Another Browser" menu item
+ * in private browsing mode.
+ */
+let gPrivateBrowsingListener = {
+  _cmd_import: null,
+
+  init: function PO_PB_init() {
+    this._cmd_import = document.getElementById("OrganizerCommand_browserImport");
+
+    let pbs = Cc["@mozilla.org/privatebrowsing;1"].
+              getService(Ci.nsIPrivateBrowsingService);
+    if (pbs.privateBrowsingEnabled)
+      this.updateUI(true);
+
+    Services.obs.addObserver(this, "private-browsing", false);
+  },
+
+  uninit: function PO_PB_uninit() {
+    Services.obs.removeObserver(this, "private-browsing");
+  },
+
+  observe: function PO_PB_observe(aSubject, aTopic, aData) {
+    if (aData == "enter")
+      this.updateUI(true);
+    else if (aData == "exit")
+      this.updateUI(false);
+  },
+
+  updateUI: function PO_PB_updateUI(PBmode) {
+    if (PBmode)
+      this._cmd_import.setAttribute("disabled", "true");
+    else
+      this._cmd_import.removeAttribute("disabled");
   }
 };
