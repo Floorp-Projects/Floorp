@@ -246,7 +246,7 @@ File(JSContext *cx, uintN argc, jsval *vp)
     }
 
     nsCOMPtr<nsISupports> native;
-    rv = nsDOMFile::NewFile(getter_AddRefs(native));
+    rv = nsDOMFileFile::NewFile(getter_AddRefs(native));
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return JS_FALSE;
