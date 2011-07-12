@@ -421,6 +421,7 @@ VPATH +=	$(srcdir)/assembler \
 
 CPPSRCS += \
 		Assertions.cpp \
+		OSAllocatorOS2.cpp \
 		OSAllocatorPosix.cpp \
 		OSAllocatorWin.cpp \
 		PageBlock.cpp \
@@ -450,6 +451,7 @@ CPPSRCS += 	Assertions.cpp \
         Logging.cpp \
 		MacroAssemblerARM.cpp \
 		MacroAssemblerX86Common.cpp \
+		OSAllocatorOS2.cpp \
 		OSAllocatorPosix.cpp \
 		OSAllocatorWin.cpp \
 		PageBlock.cpp \
