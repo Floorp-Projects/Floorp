@@ -1226,6 +1226,8 @@ nsCanvasRenderingContext2DAzure::SetDimensions(PRInt32 width, PRInt32 height)
     mZero = PR_TRUE;
     height = 1;
     width = 1;
+  } else {
+    mZero = PR_FALSE;
   }
 
   // Check that the dimensions are sane
