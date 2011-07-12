@@ -1464,11 +1464,6 @@ js_HasOwnProperty(JSContext *cx, js::LookupPropOp lookup, JSObject *obj, jsid id
                   JSObject **objp, JSProperty **propp);
 
 extern JSBool
-js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs,
-                               const js::Value &getter, const js::Value &setter,
-                               const js::Value &value, js::Value *vp);
-
-extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 #ifdef OLD_GETTER_SETTER_METHODS
@@ -1718,8 +1713,18 @@ js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, JSObject *receiver, 
                               uint32 getHow, js::Value *vp,
                               const js::Shape **shapeOut, JSObject **holderOut);
 
-extern JSBool
-js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+namespace js {
+
+bool
+GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, PropertyDescriptor *desc);
+
+bool
+GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+
+bool
+NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value *vp);
+
+}
 
 extern JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, js::Value *vp);
