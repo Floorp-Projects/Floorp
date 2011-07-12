@@ -1,0 +1,25 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1.9999, true)">
+  <title>Test animation of the "stdDeviation" &lt;number-optional-number&gt; attribute on "feGaussianBlur" elements</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <filter id="filter" x="0" y="0" width="1" height="1" filterRes="1000">
+    <feGaussianBlur stdDeviation="50">
+      <animate attributeName="stdDeviation"
+               calcMode="linear"
+               begin="0s" dur="2s"
+               from="100,100" to="0"
+               fill="freeze"/>
+    </feGaussianBlur>
+  </filter>
+  <rect width="100%" height="100%" fill="lime"/>
+  <g transform="translate(50, 0)">
+    <circle fill="red" cx="100" cy="100" r="98" transform="translate(50, 0)" filter="url(#filter)"/>
+  </g>
+  <circle fill="lime" cx="200" cy="100" r="100"/>
+</svg>

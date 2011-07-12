@@ -1019,6 +1019,10 @@ struct nsCycleCollector
     nsTPtrArray<PtrInfo> *mWhiteNodes;
     PRUint32 mWhiteNodeCount;
 
+    // mVisitedRefCounted and mVisitedGCed are only used for telemetry
+    PRUint32 mVisitedRefCounted;
+    PRUint32 mVisitedGCed;
+
     nsPurpleBuffer mPurpleBuf;
 
     void RegisterRuntime(PRUint32 langID, 
@@ -1623,6 +1627,7 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
         Fault("zero refcount", mCurrPi);
     if (refCount == PR_UINT32_MAX)
         Fault("overflowing refcount", mCurrPi);
+    sCollector->mVisitedRefCounted++;
     DescribeNode(refCount, objSz, objName);
 }
 
@@ -1631,6 +1636,7 @@ GCGraphBuilder::DescribeGCedNode(PRBool isMarked, size_t objSz,
                                  const char *objName)
 {
     PRUint32 refCount = isMarked ? PR_UINT32_MAX : 0;
+    sCollector->mVisitedGCed++;
     DescribeNode(refCount, objSz, objName);
 }
 
@@ -2195,6 +2201,8 @@ nsCycleCollector::nsCycleCollector() :
     mCollectedObjects(0),
     mWhiteNodes(nsnull),
     mWhiteNodeCount(0),
+    mVisitedRefCounted(0),
+    mVisitedGCed(0),
 #ifdef DEBUG_CC
     mPurpleBuf(mParams, mStats),
     mPtrLog(nsnull)
@@ -2568,6 +2576,8 @@ nsCycleCollector::PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes)
     printf("cc: nsCycleCollector::PrepareForCollection()\n");
 #endif
     mCollectionStart = TimeStamp::Now();
+    mVisitedRefCounted = 0;
+    mVisitedGCed = 0;
 
     mCollectionInProgress = PR_TRUE;
 
@@ -2602,6 +2612,9 @@ nsCycleCollector::CleanupAfterCollection()
     printf("cc: CleanupAfterCollection(), total time %ums\n", interval);
 #endif
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR, interval);
+    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_REF_COUNTED, mVisitedRefCounted);
+    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_GCED, mVisitedGCed);
+    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_COLLECTED, mWhiteNodeCount);
 
 #ifdef DEBUG_CC
     ExplainLiveExpectedGarbage();
@@ -3414,6 +3427,8 @@ public:
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+        mCollector->GCIfNeeded(PR_FALSE);
+
         MutexAutoLock autoLock(mLock);
 
         if (!mRunning)
@@ -3425,8 +3440,6 @@ public:
 
         NS_ASSERTION(!mListener, "Should have cleared this already!");
         mListener = aListener;
-
-        mCollector->GCIfNeeded(PR_FALSE);
 
         mRequest.Notify();
         mReply.Wait();

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Bug 670226</title>
+  <style type="text/css">
+   pre:first-letter { float:left; color: lime}
+  </style>
+  <script type="text/javascript">
+function boom()
+{
+  var p = document.getElementById("p");
+  p.style.fontSize="16pt";
+}
+ </script>
+ </head>
+ <body onload="boom()">
+  <pre id="p" dir="rtl">a+b
+c</pre>
+ </body>
+</html>

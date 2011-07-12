@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=664955
+-->
+<head>
+  <title>Test for Bug 664955</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=664955">Mozilla Bug 664955</a>
+<p id="display" style="font-size: 10000000000px"> <!-- must be superior to nscoord_MAX * 60 --> 
+<span id="larger" style="font-size: larger">
+<span id="larger-again" style="font-size: larger">
+</span>
+</span>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 664955 **/
+var parentSize = document.defaultView.getComputedStyle($('display'), "").fontSize;
+var largerSize = document.defaultView.getComputedStyle($('larger'), "").fontSize;
+var largerAgainSize = document.defaultView.getComputedStyle($('larger-again'), "").fontSize;
+
+is(parentSize, largerSize, "font size is larger than max font size");
+is(parentSize, largerAgainSize, "font size is larger than max font size");
+
+</script>
+</pre>
+</body>
+</html>
+

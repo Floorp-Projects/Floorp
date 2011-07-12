@@ -143,13 +143,15 @@ let historyObserver = {
   onClearHistory: function() {},
   onDeleteVisits: function() {},
 
-  onPageChanged: function historyObserver_onPageChanged(pageURI, what, value) {
+  onPageChanged: function historyObserver_onPageChanged(pageURI, what, value, guid) {
     if (what != Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)
       return;
 
     // dump tables, useful if the test fails.
     //dump_table("moz_places");
     //dump_table("moz_favicons");
+
+    do_check_guid_for_uri(pageURI, guid);
 
     // Ensure we have been called by the last test.
     do_check_true(pageURI.equals(NetUtil.newURI("http://testfinal.bar/")));

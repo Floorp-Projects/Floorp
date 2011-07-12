@@ -2104,17 +2104,6 @@ nsGenericHTMLElement::SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetStringAttrWithDefault(nsIAtom* aAttr,
-                                               const char* aDefault,
-                                               nsAString& aResult)
-{
-  if (!GetAttr(kNameSpaceID_None, aAttr, aResult)) {
-    CopyASCIItoUTF16(aDefault, aResult);
-  }
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, PRBool aValue)
 {
   if (aValue) {

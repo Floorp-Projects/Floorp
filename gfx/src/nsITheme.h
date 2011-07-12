@@ -130,6 +130,12 @@ public:
    * overflow area is required by the native widget. Otherwise it will
    * fill in aResult with the desired overflow area, in appunits, relative
    * to the frame origin, and return PR_TRUE.
+   *
+   * This overflow area is used to determine what area needs to be
+   * repainted when the widget changes.  However, it does not affect the
+   * widget's size or what area is reachable by scrollbars.  (In other
+   * words, in layout terms, it affects visual overflow but not
+   * scrollable overflow.)
    */
   virtual PRBool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,

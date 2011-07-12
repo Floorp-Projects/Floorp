@@ -76,6 +76,7 @@ class DiscardTracker
     static void Remove(struct DiscardTrackerNode *node);
     static void Shutdown();
     static void ReloadTimeout();
+    static void DiscardAll();
   private:
     static nsresult Initialize();
     static nsresult TimerOn();

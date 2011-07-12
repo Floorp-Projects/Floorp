@@ -6399,28 +6399,15 @@ g.addColorStop(1, '#f00');
 ctx.fillStyle = g;
 ctx.fillRect(0, 0, 100, 50);
 
-if (IsAzureEnabled()) {
-  // XXX - See Bug 666097.
-  todo_isPixel(ctx, 1, 1, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 50, 1, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 98, 1, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 1, 25, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 50, 25, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 98, 25, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 1, 48, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 50, 48, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 98, 48, 0, 255, 0, 255, 0);
-} else {
-  isPixel(ctx, 1, 1, 0, 255, 0, 255, 0);
-  isPixel(ctx, 50, 1, 0, 255, 0, 255, 0);
-  isPixel(ctx, 98, 1, 0, 255, 0, 255, 0);
-  isPixel(ctx, 1, 25, 0, 255, 0, 255, 0);
-  isPixel(ctx, 50, 25, 0, 255, 0, 255, 0);
-  isPixel(ctx, 98, 25, 0, 255, 0, 255, 0);
-  isPixel(ctx, 1, 48, 0, 255, 0, 255, 0);
-  isPixel(ctx, 50, 48, 0, 255, 0, 255, 0);
-  isPixel(ctx, 98, 48, 0, 255, 0, 255, 0);
-}
+isPixel(ctx, 1, 1, 0, 255, 0, 255, 0);
+isPixel(ctx, 50, 1, 0, 255, 0, 255, 0);
+isPixel(ctx, 98, 1, 0, 255, 0, 255, 0);
+isPixel(ctx, 1, 25, 0, 255, 0, 255, 0);
+isPixel(ctx, 50, 25, 0, 255, 0, 255, 0);
+isPixel(ctx, 98, 25, 0, 255, 0, 255, 0);
+isPixel(ctx, 1, 48, 0, 255, 0, 255, 0);
+isPixel(ctx, 50, 48, 0, 255, 0, 255, 0);
+isPixel(ctx, 98, 48, 0, 255, 0, 255, 0);
 
 }
 </script>
@@ -6570,29 +6557,15 @@ g.addColorStop(1, '#0f0');
 ctx.fillStyle = g;
 ctx.fillRect(0, 0, 100, 50);
 
-
-if (IsAzureEnabled()) {
-  // XXX - See Bug 666097.
-  todo_isPixel(ctx, 1, 1, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 50, 1, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 98, 1, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 1, 25, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 50, 25, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 98, 25, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 1, 48, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 50, 48, 0, 255, 0, 255, 0);
-  todo_isPixel(ctx, 98, 48, 0, 255, 0, 255, 0);
-} else {
-  isPixel(ctx, 1, 1, 0, 255, 0, 255, 0);
-  isPixel(ctx, 50, 1, 0, 255, 0, 255, 0);
-  isPixel(ctx, 98, 1, 0, 255, 0, 255, 0);
-  isPixel(ctx, 1, 25, 0, 255, 0, 255, 0);
-  isPixel(ctx, 50, 25, 0, 255, 0, 255, 0);
-  isPixel(ctx, 98, 25, 0, 255, 0, 255, 0);
-  isPixel(ctx, 1, 48, 0, 255, 0, 255, 0);
-  isPixel(ctx, 50, 48, 0, 255, 0, 255, 0);
-  isPixel(ctx, 98, 48, 0, 255, 0, 255, 0);
-}
+isPixel(ctx, 1, 1, 0, 255, 0, 255, 0);
+isPixel(ctx, 50, 1, 0, 255, 0, 255, 0);
+isPixel(ctx, 98, 1, 0, 255, 0, 255, 0);
+isPixel(ctx, 1, 25, 0, 255, 0, 255, 0);
+isPixel(ctx, 50, 25, 0, 255, 0, 255, 0);
+isPixel(ctx, 98, 25, 0, 255, 0, 255, 0);
+isPixel(ctx, 1, 48, 0, 255, 0, 255, 0);
+isPixel(ctx, 50, 48, 0, 255, 0, 255, 0);
+isPixel(ctx, 98, 48, 0, 255, 0, 255, 0);
 
 }
 </script>
@@ -16742,7 +16715,7 @@ ctx.shadowOffsetX = 100;
 ctx.fillStyle = '#0f0';
 ctx.fillRect(-100, 0, 200, 50);
 
-isPixel(ctx, 50, 25, 255, 255, 0, 255, 2);
+isPixel(ctx, 50, 25, 0, 255, 0, 255, 2);
 
 }
 </script>
@@ -16768,7 +16741,7 @@ ctx.shadowBlur = 1;
 ctx.fillStyle = '#0f0';
 ctx.fillRect(-10, -10, 120, 70);
 
-isPixel(ctx, 50, 25, 255, 255, 0, 255, 2);
+isPixel(ctx, 50, 25, 0, 255, 0, 255, 2);
 
 }
 </script>
@@ -21419,6 +21392,27 @@ function test_zero_dimensions_imagedata() {
 }
 </script>
 
+<p>Canvas test: getImageData_after_zero_canvas</p>
+<canvas id="c686" width="100" height="100"></canvas>
+<script type="text/javascript">
+function test_getImageData_after_zero_canvas() {
+    var c = document.getElementById("c686");
+    var ctx = c.getContext("2d");
+    ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+    ctx.fillRect(0, 0, c.width, c.height);
+    var oldimgdata = ctx.getImageData(0, 0, c.width, c.height);
+    c.width = c.height = 0;
+    c.width = c.height = 100;
+    ctx.fillRect(0, 0, c.width, c.height);
+    var imgdata = ctx.getImageData(0, 0, c.width, c.height);
+    var same = false;
+    ok(imgdata.data.length === oldimgdata.data.length, "not the same length");
+    for (var i = 0; i < imgdata.data.length; ++i)
+        same = imgdata.data[i] === oldimgdata.data[i];
+    ok(same, "changing dimensions broke canvas");
+}
+</script>
+
 <script>
 
 function asyncTestsDone() {
@@ -21503,12 +21497,11 @@ function runTests() {
  
  //test_2d_path_rect_zero_6();	// This test is bogus according to the spec; see bug 407107
 
- // The following tests are disabled due to pending changes in the spec:
- //
+ // These tests are bogus according to the spec: shadows should not be 
+ // drawn if shadowBlur, shadowOffsetX, and shadowOffsetY are all zero, whic
+ // they are in these tests
  //test_2d_shadow_composite_3();
  //test_2d_shadow_composite_4();
- //test_2d_shadow_composite_1();
- //test_2d_shadow_composite_2();
  try {
   test_2d_canvas_readonly();
  } catch (e) {
@@ -23895,6 +23888,16 @@ function runTests() {
   ok(false, "unexpected exception thrown in: test_2d_shadow_clip_3");
  }
  try {
+  test_2d_shadow_composite_1();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_1");
+ }
+ try {
+  test_2d_shadow_composite_2();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_2");
+ }
+ try {
   test_2d_shadow_gradient_alpha();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_shadow_gradient_alpha");
@@ -24678,6 +24681,12 @@ function runTests() {
   test_zero_dimensions_imagedata();
  } catch(e) {
   ok(false, "unexpected exception thrown in: test_zero_dimensions_imagedata");
+ }
+ try {
+  test_getImageData_after_zero_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_getImageData_after_zero_canvas");
  }
  try {
   // run this test last since it replaces the getContext method

@@ -61,8 +61,7 @@
     function randomClick() {
        // First focus the remote frame, then dispatch click. This way remote frame gets focus before
        // mouse event.
-       document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
-                                      .frameLoader.activateRemoteFrame();
+       document.getElementById('page').focus();
        var frameLoader = document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
        var x = parseInt(Math.random() * 100);
        var y = parseInt(Math.random() * 100);
@@ -73,8 +72,7 @@
     function keyPress() {
        // First focus the remote frame, then dispatch click. This way remote frame gets focus before
        // mouse event.
-       document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
-                                      .frameLoader.activateRemoteFrame();
+       document.getElementById('page').focus();
        var frameLoader = document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
 
        var keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_A;
@@ -280,7 +278,6 @@
                oncommand="document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.delayRemoteDialogs = this.checked;"/>
   </toolbar>
 
-  <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"
-           onfocus="this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.activateRemoteFrame();"/>
+  <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"/>
   <label id="messageLog" value="" crop="center"/>
 </window>

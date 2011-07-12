@@ -53,7 +53,7 @@
 #include "nsIDocument.h"
 #include "nsITheme.h"
 #include "nsIServiceManager.h"
-#include "nsIBoxLayout.h"
+#include "nsBoxLayout.h"
 #include "FrameLayerBuilder.h"
 
 using namespace mozilla;
@@ -426,20 +426,6 @@ nsBox::DoesNeedRecalc(nscoord aCoord)
 {
   return (aCoord == -1);
 }
-
-NS_IMETHODIMP
-nsBox::SetLayoutManager(nsIBoxLayout* aLayout)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBox::GetLayoutManager(nsIBoxLayout** aLayout)
-{
-  *aLayout = nsnull;
-  return NS_OK;
-}
-
 
 nsSize
 nsBox::GetPrefSize(nsBoxLayoutState& aState)

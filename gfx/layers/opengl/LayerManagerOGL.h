@@ -138,6 +138,14 @@ public:
 
   virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
 
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize)
+  {
+      if (!mGLContext)
+          return false;
+      PRInt32 maxSize = mGLContext->GetMaxTextureSize();
+      return aSize <= gfxIntSize(maxSize, maxSize);
+  }
+
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
 
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
@@ -359,6 +367,12 @@ public:
                     aProg->AttribLocation(LayerProgram::TexCoordAttrib),
                     aFlipped);
   }
+
+  void BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
+                                      const nsIntRect& aTexCoordRect,
+                                      const nsIntSize& aTexSize,
+                                      GLenum aWrapMode = LOCAL_GL_REPEAT);
+                                      
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "OGL"; }

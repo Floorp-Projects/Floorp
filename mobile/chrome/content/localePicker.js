@@ -346,9 +346,11 @@ function start() {
     }
   }
 
-  if (matchingLocale && matchingLocale != chrome.getSelectedLocale("browser"))
-    LocaleUI.language = matchingLocale;
-  else {
+  if (matchingLocale) {
+    if (matchingLocale != chrome.getSelectedLocale("browser"))
+      LocaleUI.language = matchingLocale;
+    LocaleUI.closeWindow();
+  } else {
     LocaleUI._language = chrome.getSelectedLocale("browser");
     LocaleUI.updateStrings();
   }

@@ -102,6 +102,7 @@ CPPSRCS += \
         ImageLayerD3D9.cpp \
         ColorLayerD3D9.cpp \
         CanvasLayerD3D9.cpp \
+        ShadowBufferD3D9.cpp \
         DeviceManagerD3D9.cpp \
         Nv3DVUtils.cpp \
         $(NULL)

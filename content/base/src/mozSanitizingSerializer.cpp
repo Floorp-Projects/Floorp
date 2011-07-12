@@ -84,9 +84,6 @@ static inline PRUnichar* escape(const nsString& source)
 nsresult NS_NewSanitizingHTMLSerializer(nsIContentSerializer** aSerializer)
 {
   mozSanitizingHTMLSerializer* it = new mozSanitizingHTMLSerializer();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ADDREF(it);
   *aSerializer = it;
   return NS_OK;
@@ -248,11 +245,11 @@ mozSanitizingHTMLSerializer::AppendElementStart(Element* aElement,
 {
   NS_ENSURE_ARG(aElement);
 
-  mContent = aElement;
+  mElement = aElement;
 
   mOutputString = &aStr;
 
-  PRInt32 id = GetIdForContent(mContent);
+  PRInt32 id = GetIdForContent(mElement);
 
   PRBool isContainer = IsContainer(id);
 
@@ -264,7 +261,7 @@ mozSanitizingHTMLSerializer::AppendElementStart(Element* aElement,
     rv = DoAddLeaf(id, EmptyString());
   }
 
-  mContent = 0;
+  mElement = nsnull;
   mOutputString = nsnull;
 
   return rv;
@@ -276,20 +273,20 @@ mozSanitizingHTMLSerializer::AppendElementEnd(Element* aElement,
 {
   NS_ENSURE_ARG(aElement);
 
-  mContent = aElement;
+  mElement = aElement;
 
   mOutputString = &aStr;
 
-  nsresult rv = NS_OK;
-  PRInt32 id = GetIdForContent(mContent);
+  PRInt32 id = GetIdForContent(mElement);
 
   PRBool isContainer = IsContainer(id);
 
+  nsresult rv = NS_OK;
   if (isContainer) {
     rv = DoCloseContainer(id);
   }
 
-  mContent = 0;
+  mElement = nsnull;
   mOutputString = nsnull;
 
   return rv;

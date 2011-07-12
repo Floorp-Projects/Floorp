@@ -1477,6 +1477,9 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 551463-1.html 551463-1-ref.html
 == 551699-1.html 551699-1-ref.html
 == 552334-1.html 552334-1-ref.html
+# 553571 depends on MS Indic shaping behavior and Win7 font support;
+# not expected to be reliable on XP or non-Windows platforms
+random-if(!winWidget) random-if(/^Windows\x20NT\x205/.test(http.oscpu)) != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref
 random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
 fails-if(Android) == 557087-1.html 557087-ref.html
@@ -1542,7 +1545,7 @@ random-if(!winWidget) == 574907-2.html 574907-2-ref.html
 random-if(!winWidget) fails-if(winWidget&&!d2d) random-if(winWidget&&d2d) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(/Mac\x20OS\x20X\x2010\.5/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP and bug 627560 for OSX 10.5
+== 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
 fails-if(Android) == 579808-1.html 579808-1-ref.html
@@ -1619,7 +1622,7 @@ fails-if(Android) == 625409-1.html 625409-1-ref.html
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
 fails-if(Android) == 632423-1.html 632423-1-ref.html
-skip-if(Android) fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
+skip-if(Android) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 == 633344-1.html 633344-1-ref.html
 fails-if(Android) == 634232-1.html 634232-1-ref.html
@@ -1643,7 +1646,9 @@ HTTP(..) == 654057-1.html 654057-1-ref.html
 fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 652775-1.html 652775-1-ref.html
 == 655549-1.html 655549-1-ref.html
-!= 656875.html about:blank
 == 658952.html 658952-ref.html
 == 664127-1.xul 664127-1-ref.xul
 == 660682-1.html 660682-1-ref.html
+!= 669015-1.xul 669015-1-notref.xul
+== 668319-1.xul about:blank
+== 670442-1.html 670442-1-ref.html

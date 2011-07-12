@@ -821,13 +821,18 @@ public:
     {
         return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
     }
-
+    // GLContext interface - returns Tiled Texture Image in our case
     virtual already_AddRefed<TextureImage>
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
                        PRBool aUseNearestFilter=PR_FALSE);
 
+    // a function to generate Tiles for Tiled Texture Image
+    virtual already_AddRefed<TextureImage>
+    TileGenFunc(const nsIntSize& aSize,
+                TextureImage::ContentType aContentType,
+                PRBool aUseNearestFilter = PR_FALSE);
     // hold a reference to the given surface
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf) {
@@ -1108,7 +1113,8 @@ public:
                     GLenum aWrapMode,
                     ContentType aContentType,
                     GLContext* aContext)
-        : TextureImage(aTexture, aSize, aWrapMode, aContentType)
+        : TextureImage(aSize, aWrapMode, aContentType)
+        , mTexture(aTexture)
         , mGLContext(aContext)
         , mUpdateFormat(gfxASurface::ImageFormatUnknown)
         , mSurface(nsnull)
@@ -1302,10 +1308,10 @@ public:
         return;         // mTexture is bound
     }
 
-    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion)
+    virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
     {
         nsIntRect bounds = aRegion.GetBounds();
-  
+
         nsIntRegion region;
         if (!mCreated) {
             bounds = nsIntRect(0, 0, mSize.width, mSize.height);
@@ -1319,7 +1325,7 @@ public:
             if (mUpdateSurface) {
                 nsRefPtr<gfxContext> ctx = new gfxContext(mUpdateSurface);
                 gfxUtils::ClipToRegion(ctx, aRegion);
-                ctx->SetSource(aSurf);
+                ctx->SetSource(aSurf, gfxPoint(-aFrom.x, -aFrom.y));
                 ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
                 ctx->Paint();
                 mUpdateSurface = nsnull;
@@ -1331,7 +1337,7 @@ public:
                                                  region,
                                                  mTexture,
                                                  !mCreated,
-                                                 bounds.TopLeft(),
+                                                 bounds.TopLeft() + aFrom,
                                                  PR_FALSE);
         }
 
@@ -1342,9 +1348,13 @@ public:
     virtual void BindTexture(GLenum aTextureUnit)
     {
         mGLContext->fActiveTexture(aTextureUnit);
-        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, Texture());
+        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
         mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
     }
+
+    virtual GLuint GetTextureID() {
+        return mTexture;
+    };
 
     virtual PRBool InUpdate() const { return !!mUpdateSurface; }
 
@@ -1576,6 +1586,7 @@ protected:
     nsRefPtr<gfxASurface> mUpdateSurface;
     EGLSurface mSurface;
     EGLConfig mConfig;
+    GLuint mTexture;
     EGLImageKHR mImageKHR;
 
     PRPackedBool mCreated;
@@ -1589,6 +1600,15 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  GLenum aWrapMode,
                                  PRBool aUseNearestFilter)
 {
+    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType);
+    return t.forget();
+};
+
+already_AddRefed<TextureImage>
+GLContextEGL::TileGenFunc(const nsIntSize& aSize,
+                                 TextureImage::ContentType aContentType,
+                                 PRBool aUseNearestFilter)
+{
   MakeCurrent();
 
   GLuint texture;
@@ -1598,13 +1618,13 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
   fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
 
   nsRefPtr<TextureImageEGL> teximage =
-      new TextureImageEGL(texture, aSize, aWrapMode, aContentType, this);
+      new TextureImageEGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, this);
 
   GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
   fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
   fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
+  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
   return teximage.forget();
 }

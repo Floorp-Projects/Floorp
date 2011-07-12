@@ -10,12 +10,6 @@
 
 #filter substitution
 
-#if MOZ_UPDATE_CHANNEL == aurora
-#define SHIP_FEEDBACK
-#elif MOZ_UPDATE_CHANNEL == beta
-#define SHIP_FEEDBACK
-#endif
-
 #ifdef XP_MACOSX
 ; Mac bundle stuff
 @APPNAME@/Contents/Info.plist
@@ -51,6 +45,9 @@
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
+#ifdef MOZ_MEMORY_DARWIN
+@BINPATH@/@DLL_PREFIX@jemalloc@DLL_SUFFIX@
+#endif
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
@@ -63,7 +60,15 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #ifdef XP_WIN32
-#ifndef MOZ_MEMORY
+#ifdef MOZ_MEMORY
+#ifdef WIN32_OLD_STYLE_JEMALLOC
+@BINPATH@/mozcrt19.dll
+@BINPATH@/mozcpp19.dll
+#else
+@BINPATH@/jemalloc.dll
+#endif
+#endif
+#else
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll
@@ -78,10 +83,7 @@
 @BINPATH@/msvcp100.dll
 @BINPATH@/msvcr100.dll
 #endif
-#else
-@BINPATH@/mozcrt19.dll
-@BINPATH@/mozcpp19.dll
-#endif
+
 #endif
 
 [browser]
@@ -99,7 +101,6 @@
 #else
 @BINPATH@/mozsqlt3@DLL_SUFFIX@
 #endif
-@BINPATH@/README.txt
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
 @BINPATH@/run-mozilla.sh

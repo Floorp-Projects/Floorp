@@ -37,4 +37,6 @@ sys.argv.pop(0)
 script = sys.argv[0]
 
 sys.path[0:0] = [os.path.dirname(script)] + paths
-execfile(script, {'__name__': '__main__', '__file__': script})
+__name__ = '__main__'
+__file__ = script
+execfile(script)

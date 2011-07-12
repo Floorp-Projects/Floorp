@@ -96,8 +96,9 @@ function open()
 {
   var url;
   var postData = {};
+  var mayInheritPrincipal = {value: false};
   if (browser)
-    url = browser.getShortcutOrURI(dialog.input.value, postData);
+    url = browser.getShortcutOrURI(dialog.input.value, postData, mayInheritPrincipal);
   else
     url = dialog.input.value;
 
@@ -106,7 +107,11 @@ function open()
     // fixup the URI
     switch (dialog.openWhereList.value) {
       case "0":
-        browser.loadURI(url, null, postData.value, true);
+        var webNav = Components.interfaces.nsIWebNavigation;
+        var flags = webNav.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+        if (!mayInheritPrincipal.value)
+          flags |= webNav.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+        browser.gBrowser.loadURIWithFlags(url, flags, null, null, postData.value);
         break;
       case "1":
         window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no",

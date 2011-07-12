@@ -45,8 +45,9 @@ struct MemoryReport {
   nsCString process;
   nsCString path;
   PRInt32 kind;
+  PRInt32 units;
+  PRInt64 amount;
   nsCString desc;
-  PRInt64 memoryUsed;
 };
 
 protocol PMemoryReportRequest {

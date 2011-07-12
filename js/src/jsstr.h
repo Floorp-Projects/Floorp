@@ -486,10 +486,6 @@ DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
 
 } /* namespace js */
 
-/* Export a few natives and a helper to other files in SpiderMonkey. */
-extern JSBool
-js_str_escape(JSContext *cx, uintN argc, js::Value *argv, js::Value *rval);
-
 /*
  * The String.prototype.replace fast-native entry point is exported for joined
  * function optimization in js{interp,tracer}.cpp.
