@@ -1559,9 +1559,14 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
 
 #ifdef XP_MACOSX
-  if (aManager && aManager->GetBackendType() ==
-      LayerManager::LAYERS_OPENGL && 
-      !mInstanceOwner->UseAsyncRendering() &&
+  // Layer painting not supported without OpenGL
+  if (aManager && aManager->GetBackendType() !=
+      LayerManager::LAYERS_OPENGL) {
+    return LAYER_NONE;
+  }
+
+  // Synchronous painting, but with (gecko) layers.
+  if (!mInstanceOwner->UseAsyncRendering() &&
       mInstanceOwner->IsRemoteDrawingCoreAnimation() &&
       mInstanceOwner->GetEventModel() == NPEventModelCocoa) {
     return LAYER_ACTIVE;
