@@ -864,6 +864,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
             loadDynamicSlot(objReg, obj->dynamicSlotIndex(shape->slot), typeReg, dataReg);
     }
 
+#ifdef JS_METHODJIT_TYPED_ARRAY
     // Load a value from a typed array's packed data vector into dataReg.
     // This function expects the following combinations of typeReg, dataReg and tempReg:
     // 1) for all INT arrays other than UINT32:
@@ -1105,6 +1106,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         done2.linkTo(label(), this);
         done3.linkTo(label(), this);
     }
+#endif /* JS_METHODJIT_TYPED_ARRAY */
 
     Address objPropAddress(JSObject *obj, RegisterID objReg, uint32 slot)
     {

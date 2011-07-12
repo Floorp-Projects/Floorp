@@ -1194,6 +1194,7 @@ mjit::Compiler::jsop_setelem_dense()
     stubcc.rejoin(Changes(2));
 }
 
+#ifdef JS_METHODJIT_TYPED_ARRAY
 void
 mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
 {
@@ -1247,12 +1248,25 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
              * 2) For Uint8ClampedArray the register must be writable.
              * 3) If the value is definitely int32 (and the array is not
              *    Uint8ClampedArray) we don't have to allocate a new register.
+             * 4) If id and value have the same backing (e.g. arr[i] = i) and
+             *    we need a byte register, we have to allocate a new register
+             *    because we've already pinned a key register and can't use
+             *    tempRegInMaskForData.
              */
             MaybeRegisterID reg;
             bool needsByteReg = (atype == TypedArray::TYPE_INT8 ||
                                  atype == TypedArray::TYPE_UINT8 ||
                                  atype == TypedArray::TYPE_UINT8_CLAMPED);
-            if (!value->isType(JSVAL_TYPE_INT32) || atype == TypedArray::TYPE_UINT8_CLAMPED) {
+            FrameEntry *id = frame.peek(-2);
+            if (!value->isType(JSVAL_TYPE_INT32) || atype == TypedArray::TYPE_UINT8_CLAMPED ||
+                (needsByteReg && frame.haveSameBacking(id, value))) {
+                // Pin value so that we don't evict it.
+                MaybeRegisterID dataReg;
+                if (value->mightBeType(JSVAL_TYPE_INT32) && !frame.haveSameBacking(id, value)) {
+                    dataReg = frame.tempRegForData(value);
+                    frame.pinReg(dataReg.reg());
+                }
+
                 // x86 has 4 single byte registers. Worst case we've pinned 3
                 // registers, one for each of object, key and value. This means
                 // there must be at least one single byte register available.
@@ -1261,6 +1275,8 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
                 else
                     reg = frame.allocReg();
                 *allocated = true;
+                if (dataReg.isSet())
+                    frame.unpinReg(dataReg.reg());
             } else {
                 if (needsByteReg)
                     reg = frame.tempRegInMaskForData(value, Registers::SingleByteRegs).reg();
@@ -1326,6 +1342,7 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
         }
     }
 }
+
 void
 mjit::Compiler::jsop_setelem_typed(int atype)
 {
@@ -1346,21 +1363,15 @@ mjit::Compiler::jsop_setelem_typed(int atype)
         stubcc.linkExit(guard, Uses(3));
     }
 
-    // Pin value. We don't use pinEntry here because it may also
-    // pin a type register and convertForTypedArray assumes we've
-    // pinned at most 3 registers (object, key and value).
-    MaybeRegisterID dataReg;
-    if (value->mightBeType(JSVAL_TYPE_INT32) && !value->isConstant()) {
-        dataReg = frame.tempRegForData(value);
-        frame.pinReg(dataReg.reg());
-    }
+    // Pin value.
+    ValueRemat vr;
+    frame.pinEntry(value, vr, /* breakDouble = */ false);
 
     // Allocate and pin object and key regs.
     Int32Key key = id->isConstant()
                  ? Int32Key::FromConstant(id->getValue().toInt32())
                  : Int32Key::FromRegister(frame.tempRegForData(id));
 
-    JS_ASSERT_IF(frame.haveSameBacking(id, value), dataReg.isSet());
     bool pinKey = !key.isConstant() && !frame.haveSameBacking(id, value);
     if (pinKey)
         frame.pinReg(key.reg());
@@ -1377,12 +1388,19 @@ mjit::Compiler::jsop_setelem_typed(int atype)
     // Load the array's packed data vector.
     masm.loadPtr(Address(objReg, js::TypedArray::dataOffset()), objReg);
 
-    // Convert the value.
+    // Unpin value so that convertForTypedArray can assign a new data
+    // register using tempRegInMaskForData.
+    frame.unpinEntry(vr);
+
+    // Make sure key is pinned.
+    if (frame.haveSameBacking(id, value)) {
+        frame.pinReg(key.reg());
+        pinKey = true;
+    }
+    JS_ASSERT(pinKey == !id->isConstant());
+
     bool allocated;
-    ValueRemat vr;
     convertForTypedArray(atype, &vr, &allocated);
-    if (dataReg.isSet())
-        frame.unpinReg(dataReg.reg());
 
     // Store the value.
     masm.storeToTypedArray(atype, objReg, key, vr);
@@ -1402,6 +1420,7 @@ mjit::Compiler::jsop_setelem_typed(int atype)
     frame.shimmy(2);
     stubcc.rejoin(Changes(2));
 }
+#endif /* JS_METHODJIT_TYPED_ARRAY */
 
 bool
 mjit::Compiler::jsop_setelem(bool popGuaranteed)
@@ -1428,6 +1447,8 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
             jsop_setelem_dense();
             return true;
         }
+
+#ifdef JS_METHODJIT_TYPED_ARRAY
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
             (value->mightBeType(JSVAL_TYPE_INT32) || value->mightBeType(JSVAL_TYPE_DOUBLE))) {
             // Inline typed array path. Look at the proto to determine the typed array type.
@@ -1438,6 +1459,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
                 return true;
             }
         }
+#endif
     }
 
     SetElementICInfo ic = SetElementICInfo(JSOp(*PC));
@@ -1814,6 +1836,7 @@ mjit::Compiler::jsop_getelem_args()
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 }
 
+#ifdef JS_METHODJIT_TYPED_ARRAY
 void
 mjit::Compiler::jsop_getelem_typed(int atype)
 {
@@ -1910,6 +1933,7 @@ mjit::Compiler::jsop_getelem_typed(int atype)
 
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 }
+#endif /* JS_METHODJIT_TYPED_ARRAY */
 
 bool
 mjit::Compiler::jsop_getelem(bool isCall)
@@ -1934,6 +1958,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
             jsop_getelem_args();
             return true;
         }
+
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
             !arrayPrototypeHasIndexedProperty()) {
@@ -1942,6 +1967,8 @@ mjit::Compiler::jsop_getelem(bool isCall)
             jsop_getelem_dense(packed);
             return true;
         }
+
+#ifdef JS_METHODJIT_TYPED_ARRAY
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             // Inline typed array path. Look at the proto to determine the typed array type.
@@ -1952,6 +1979,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
                 return true;
             }
         }
+#endif
     }
 
     frame.forgetMismatchedObject(obj);

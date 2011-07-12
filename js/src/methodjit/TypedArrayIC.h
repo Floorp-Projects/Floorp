@@ -49,7 +49,7 @@
 namespace js {
 namespace mjit {
 
-#ifdef JS_POLYIC_TYPED_ARRAY
+#ifdef JS_METHODJIT_TYPED_ARRAY
 
 typedef JSC::MacroAssembler::RegisterID RegisterID;
 typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
@@ -430,7 +430,7 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
     return true;
 }
 
-#endif // defined(JS_POLYIC) && (defined JS_CPU_X86 || defined JS_CPU_X64)
+#endif /* JS_METHODJIT_TYPED_ARRAY */
 
 } /* namespace mjit */
 } /* namespace js */
