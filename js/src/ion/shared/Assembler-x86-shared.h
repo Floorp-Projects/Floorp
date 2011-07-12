@@ -76,6 +76,44 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexepcted operand kind");
         }
     }
+    void movl(const Register &src, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.movl_rr(src.code(), dest.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.movl_rm(src.code(), dest.disp(), dest.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+
+    void movsd(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.movsd_rr(src.fpu(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.movsd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void movsd(const FloatRegister &src, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::FPREG:
+            masm.movsd_rr(src.code(), dest.fpu());
+            break;
+          case Operand::REG_DISP:
+            masm.movsd_rm(src.code(), dest.disp(), dest.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+
     void jmp(Label *label) {
         if (label->bound()) {
             // The jump can be immediately patched to the correct destination.

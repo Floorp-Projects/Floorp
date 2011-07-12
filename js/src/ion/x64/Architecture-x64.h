@@ -60,7 +60,7 @@ class Registers {
     static const char *GetName(Code code) {
         static const char *Names[] = { "rax", "rcx", "rdx", "rbx",
                                        "rsp", "rbp", "rsi", "rdi",
-                                       "r8",  "r9", "r10", "r11",
+                                       "r8",  "r9",  "r10", "r11",
                                        "r12", "r13", "r14", "r15" };
         return Names[code];
     }
@@ -100,9 +100,7 @@ class Registers {
     static const uint32 SingleByteRegs = VolatileMask | NonVolatileMask;
 
     static const uint32 NonAllocatableMask =
-        (1 << JSC::X86Registers::esp) |
-        (1 << JSC::X86Registers::ebp) |
-        (1 << JSC::X86Registers::r11);         // JSC uses this as a scratch register.
+        (1 << JSC::X86Registers::esp);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };

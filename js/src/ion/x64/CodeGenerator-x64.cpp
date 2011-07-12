@@ -58,6 +58,24 @@ CodeGenerator::generatePrologue()
 }
 
 bool
+CodeGenerator::visitMove(LMove *move)
+{
+    JS_ASSERT(move->from()->isDouble() == move->to()->isDouble());
+    if (move->from()->isDouble()) {
+        if (move->from()->isFloatReg())
+            masm.movsd(ToFloatRegister(move->from()), ToOperand(move->to()));
+        else
+            masm.movsd(ToOperand(move->from()), ToFloatRegister(move->to()));
+    } else {
+        if (move->from()->isGeneralReg())
+            masm.movq(ToRegister(move->from()), ToOperand(move->to()));
+        else
+            masm.movq(ToOperand(move->from()), ToRegister(move->to()));
+    }
+    return true;
+}
+
+bool
 CodeGenerator::visitValue(LValue *value)
 {
     jsval_layout jv;

@@ -62,6 +62,7 @@ class CodeGenerator : public CodeGeneratorX86Shared
     bool generatePrologue();
 
   public:
+    bool visitMove(LMove *move);
     bool visitBox(LBox *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);

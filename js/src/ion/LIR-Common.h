@@ -65,14 +65,24 @@ class LLabel : public LInstructionHelper<0, 0, 0>
 };
 
 // Fully resolved allocation-to-allocation move.
-class LMove : public LInstructionHelper<1, 1, 0>
+class LMove : public LInstructionHelper<0, 0, 0>
 {
+    LAllocation from_;
+    LAllocation to_;
+
   public:
     LIR_HEADER(Move);
 
-    LMove(const LAllocation &from, const LAllocation &to) {
-        setOperand(0, from);
-        setDef(0, LDefinition(LDefinition::POINTER, to));
+    LMove(const LAllocation &from, const LAllocation &to)
+      : from_(from),
+        to_(to)
+    { }
+
+    const LAllocation *from() {
+        return &from_;
+    }
+    const LAllocation *to() {
+        return &to_;
     }
 };
 

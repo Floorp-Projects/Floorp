@@ -89,8 +89,7 @@ class Registers {
         (1 << JSC::X86Registers::ebx);
 
     static const uint32 NonAllocatableMask =
-        (1 << JSC::X86Registers::esp) |
-        (1 << JSC::X86Registers::ebp);
+        (1 << JSC::X86Registers::esp);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
