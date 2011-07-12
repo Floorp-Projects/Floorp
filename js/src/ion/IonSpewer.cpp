@@ -97,6 +97,19 @@ IonSpewer::finish()
 #ifdef DEBUG
 FILE *ion::IonSpewFile = NULL;
 
+static bool
+ContainsFlag(const char *str, const char *flag)
+{
+    size_t flaglen = strlen(flag);
+    const char *index = strstr(str, flag);
+    while (index) {
+        if ((index == str || index[-1] == ' ') && (index[flaglen] == 0 || index[flaglen] == ' '))
+            return true;
+        index = strstr(index + flaglen, flag);
+    }
+    return false;
+}
+
 void
 ion::CheckLogging()
 {
@@ -124,17 +137,17 @@ ion::CheckLogging()
         exit(0);
         /*NOTREACHED*/
     }
-    if (strstr(env, "aborts"))
+    if (ContainsFlag(env, "aborts"))
         LoggingBits |= (1 << uint32(IonSpew_Abort));
-    if (strstr(env, "mir"))
+    if (ContainsFlag(env, "mir"))
         LoggingBits |= (1 << uint32(IonSpew_MIR));
-    if (strstr(env, "gvn"))
+    if (ContainsFlag(env, "gvn"))
         LoggingBits |= (1 << uint32(IonSpew_GVN));
-    if (strstr(env, "licm"))
+    if (ContainsFlag(env, "licm"))
         LoggingBits |= (1 << uint32(IonSpew_LICM));
-    if (strstr(env, "lsra"))
+    if (ContainsFlag(env, "lsra"))
         LoggingBits |= (1 << uint32(IonSpew_LSRA));
-    if (strstr(env, "all"))
+    if (ContainsFlag(env, "all"))
         LoggingBits = uint32(-1);
 
     IonSpewFile = stderr;
