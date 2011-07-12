@@ -73,6 +73,8 @@
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 
+#include "nsIConsoleService.h"
+
 #include "nsStyleSet.h"
 
 using namespace mozilla;
@@ -342,17 +344,7 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
   rv = nsFontFaceLoader::CheckLoadAllowed(principal, aFontFaceSrc->mURI, 
                                           ps->GetDocument());
   if (NS_FAILED(rv)) {
-#ifdef PR_LOGGING
-    if (LOG_ENABLED()) {
-      nsCAutoString fontURI, referrerURI;
-      aFontFaceSrc->mURI->GetSpec(fontURI);
-      if (aFontFaceSrc->mReferrer)
-        aFontFaceSrc->mReferrer->GetSpec(referrerURI);
-      LOG(("fontdownloader download blocked - font uri: (%s) "
-           "referrer uri: (%s) err: %8.8x\n", 
-          fontURI.get(), referrerURI.get(), rv));
-    }
-#endif    
+    LogMessage(aProxy, "download not allowed", nsIScriptError::errorFlag, rv);
     return rv;
   }
 
@@ -696,4 +688,106 @@ nsUserFontSet::FindRuleForEntry(gfxFontEntry *aFontEntry)
     }
   }
   return nsnull;
+}
+
+nsresult
+nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
+                          const char        *aMessage,
+                          PRUint32          aFlags,
+                          nsresult          aStatus)
+{
+  nsCOMPtr<nsIConsoleService>
+    console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!console) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_ConvertUTF16toUTF8 familyName(aProxy->FamilyName());
+  nsCAutoString fontURI;
+  aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
+
+  char weightKeywordBuf[8]; // plenty to sprintf() a PRUint16
+  const char *weightKeyword;
+  const nsAFlatCString& weightKeywordString =
+    nsCSSProps::ValueToKeyword(aProxy->Weight(),
+                               nsCSSProps::kFontWeightKTable);
+  if (weightKeywordString.Length() > 0) {
+    weightKeyword = weightKeywordString.get();
+  } else {
+    sprintf(weightKeywordBuf, "%u", aProxy->Weight());
+    weightKeyword = weightKeywordBuf;
+  }
+
+  nsPrintfCString
+    msg(1024,
+        "downloadable font: %s "
+        "(font-family: \"%s\" style:%s weight:%s stretch:%s src index:%d)",
+        aMessage,
+        familyName.get(),
+        aProxy->IsItalic() ? "italic" : "normal",
+        weightKeyword,
+        nsCSSProps::ValueToKeyword(aProxy->Stretch(),
+                                   nsCSSProps::kFontStretchKTable).get(),
+        aProxy->mSrcIndex);
+
+  if (aStatus != 0) {
+    msg.Append(": ");
+    switch (aStatus) {
+    case NS_ERROR_DOM_BAD_URI:
+      msg.Append("bad URI or cross-site access not allowed");
+      break;
+    case NS_ERROR_CONTENT_BLOCKED:
+      msg.Append("content blocked");
+      break;
+    default:
+      msg.Append("status=");
+      msg.AppendInt(aStatus);
+      break;
+    }
+  }
+  msg.Append("\nsource: ");
+  msg.Append(fontURI);
+
+#ifdef PR_LOGGING
+  if (PR_LOG_TEST(sUserFontsLog, PR_LOG_DEBUG)) {
+    PR_LOG(sUserFontsLog, PR_LOG_DEBUG,
+           ("userfonts (%p) %s", this, msg.get()));
+  }
+#endif
+
+  // try to give the user an indication of where the rule came from
+  nsCSSFontFaceRule* rule = FindRuleForEntry(aProxy);
+  nsString href;
+  nsString text;
+  nsresult rv;
+  if (rule) {
+    rv = rule->GetCssText(text);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMCSSStyleSheet> sheet;
+    rv = rule->GetParentStyleSheet(getter_AddRefs(sheet));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = sheet->GetHref(href);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIScriptError2> scriptError =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint64 windowID = GetPresContext()->Document()->OuterWindowID();
+  rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(msg).get(),
+                                     href.get(),   // file
+                                     text.get(),   // src line
+                                     0, 0,         // line & column number
+                                     aFlags,       // flags
+                                     "CSS Loader", // category (make separate?)
+                                     windowID);
+  if (NS_SUCCEEDED(rv)){
+    nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scriptError);
+    if (logError) {
+      console->LogMessage(logError);
+    }
+  }
+
+  return NS_OK;
 }
