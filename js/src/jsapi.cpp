@@ -3715,7 +3715,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    return js_GetOwnPropertyDescriptor(cx, obj, id, Valueify(vp));
+    return GetOwnPropertyDescriptor(cx, obj, id, Valueify(vp));
 }
 
 static JSBool

@@ -409,19 +409,6 @@ IndicatePropertyNotFound(JSContext *cx, PropertyDescriptor *desc)
 }
 
 static bool
-MakePropertyDescriptorObject(JSContext *cx, jsid id, PropertyDescriptor *desc, Value *vp)
-{
-    if (!desc->obj) {
-        vp->setUndefined();
-        return true;
-    }
-    uintN attrs = desc->attrs;
-    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : UndefinedValue();
-    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : UndefinedValue();
-    return js_NewPropertyDescriptorObject(cx, id, attrs, getter, setter, desc->value, vp);
-}
-
-static bool
 ValueToBool(JSContext *cx, const Value &v, bool *bp)
 {
     *bp = !!js_ValueToBoolean(v);
@@ -554,7 +541,7 @@ JSScriptedProxyHandler::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
     AutoValueRooter tvr(cx);
     AutoValueRooter fval(cx);
     return GetFundamentalTrap(cx, handler, ATOM(defineProperty), fval.addr()) &&
-           MakePropertyDescriptorObject(cx, id, desc, tvr.addr()) &&
+           NewPropertyDescriptorObject(cx, desc, tvr.addr()) &&
            Trap2(cx, handler, fval.value(), id, tvr.value(), tvr.addr());
 }
 
@@ -717,7 +704,7 @@ JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set
     AutoPendingProxyOperation pending(cx, proxy);
     AutoPropertyDescriptorRooter desc(cx);
     return JSProxy::getPropertyDescriptor(cx, proxy, id, set, &desc) &&
-           MakePropertyDescriptorObject(cx, id, &desc, vp);
+           NewPropertyDescriptorObject(cx, &desc, vp);
 }
 
 bool
@@ -736,7 +723,7 @@ JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool 
     AutoPendingProxyOperation pending(cx, proxy);
     AutoPropertyDescriptorRooter desc(cx);
     return JSProxy::getOwnPropertyDescriptor(cx, proxy, id, set, &desc) &&
-           MakePropertyDescriptorObject(cx, id, &desc, vp);
+           NewPropertyDescriptorObject(cx, &desc, vp);
 }
 
 bool

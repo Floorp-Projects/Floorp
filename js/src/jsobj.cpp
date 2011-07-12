@@ -1720,86 +1720,101 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, Value *vp)
                        JSACC_PROTO, vp, &attrs);
 }
 
-extern JSBool
-js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs,
-                               const Value &getter, const Value &setter,
-                               const Value &value, Value *vp)
+namespace js {
+
+bool
+NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value *vp)
 {
+    if (!desc->obj) {
+        vp->setUndefined();
+        return true;
+    }
+    uintN attrs = desc->attrs;
+    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : UndefinedValue();
+    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : UndefinedValue();
+
     /* We have our own property, so start creating the descriptor. */
-    JSObject *desc = NewBuiltinClassInstance(cx, &js_ObjectClass);
-    if (!desc)
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    if (!obj)
         return false;
-    vp->setObject(*desc);    /* Root and return. */
 
     const JSAtomState &atomState = cx->runtime->atomState;
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        if (!desc->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom), getter,
-                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
-            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom), setter,
-                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
+        if (!obj->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom), getter,
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
+            !obj->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom), setter,
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
             return false;
         }
     } else {
-        if (!desc->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), value,
-                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
-            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
-                                  BooleanValue((attrs & JSPROP_READONLY) == 0),
-                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
+        if (!obj->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), desc->value,
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
+            !obj->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
+                                 BooleanValue((attrs & JSPROP_READONLY) == 0),
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
             return false;
         }
     }
 
-    return desc->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
-                                BooleanValue((attrs & JSPROP_ENUMERATE) != 0),
-                                PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) &&
-           desc->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
-                                BooleanValue((attrs & JSPROP_PERMANENT) == 0),
-                                PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE);
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
+                             BooleanValue((attrs & JSPROP_ENUMERATE) != 0),
+                             PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
+        !obj->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
+                             BooleanValue((attrs & JSPROP_PERMANENT) == 0),
+                             PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
+        return false;
+    }
+
+    vp->setObject(*obj);
+    return true;
 }
 
-JSBool
-js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+bool
+GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, PropertyDescriptor *desc)
 {
     if (obj->isProxy())
-        return JSProxy::getOwnPropertyDescriptor(cx, obj, id, false, vp);
+        return JSProxy::getOwnPropertyDescriptor(cx, obj, id, false, desc);
 
     JSObject *pobj;
     JSProperty *prop;
     if (!js_HasOwnProperty(cx, obj->getOps()->lookupProperty, obj, id, &pobj, &prop))
         return false;
     if (!prop) {
-        vp->setUndefined();
+        desc->obj = NULL;
         return true;
     }
 
-    Value roots[] = { UndefinedValue(), UndefinedValue(), UndefinedValue() };
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
-    unsigned attrs;
     bool doGet = true;
     if (pobj->isNative()) {
         Shape *shape = (Shape *) prop;
-        attrs = shape->attributes();
-        if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        desc->attrs = shape->attributes();
+        if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
             doGet = false;
-            if (attrs & JSPROP_GETTER)
-                roots[0] = shape->getterValue();
-            if (attrs & JSPROP_SETTER)
-                roots[1] = shape->setterValue();
+            if (desc->attrs & JSPROP_GETTER)
+                desc->getter = CastAsPropertyOp(shape->getterValue().toObjectOrNull());
+            if (desc->attrs & JSPROP_SETTER)
+                desc->setter = CastAsStrictPropertyOp(shape->setterValue().toObjectOrNull());
         }
     } else {
-        if (!pobj->getAttributes(cx, id, &attrs))
+        if (!pobj->getAttributes(cx, id, &desc->attrs))
             return false;
     }
 
-    if (doGet && !obj->getProperty(cx, id, &roots[2]))
+    if (doGet && !obj->getProperty(cx, id, &desc->value))
         return false;
 
-    return js_NewPropertyDescriptorObject(cx, id,
-                                          attrs,
-                                          roots[0], /* getter */
-                                          roots[1], /* setter */
-                                          roots[2], /* value */
-                                          vp);
+    desc->obj = obj;
+    return true;
+}
+
+bool
+GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    AutoPropertyDescriptorRooter desc(cx);
+    return GetOwnPropertyDescriptor(cx, obj, id, &desc) &&
+           NewPropertyDescriptorObject(cx, &desc, vp);
+}
+
 }
 
 static bool
@@ -1835,7 +1850,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
     AutoIdRooter nameidr(cx);
     if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), nameidr.addr()))
         return JS_FALSE;
-    return js_GetOwnPropertyDescriptor(cx, obj, nameidr.id(), vp);
+    return GetOwnPropertyDescriptor(cx, obj, nameidr.id(), vp);
 }
 
 static JSBool
@@ -1889,7 +1904,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id, Value* vp, bool *foundp)
      * We must go through the method read barrier in case id is 'get' or 'set'.
      * There is no obvious way to defer cloning a joined function object whose
      * identity will be used by DefinePropertyOnObject, e.g., or reflected via
-     * js_GetOwnPropertyDescriptor, as the getter or setter callable object.
+     * js::GetOwnPropertyDescriptor, as the getter or setter callable object.
      */
     return !!obj->getProperty(cx, id, vp);
 }
