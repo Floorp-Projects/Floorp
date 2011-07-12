@@ -149,7 +149,7 @@ nsDOMMultipartBlob::CreateSlice(PRUint64 aStart, PRUint64 aLength,
 
       nsCOMPtr<nsIDOMBlob> firstBlob;
       rv = blob->MozSlice(skipStart, skipStart + upperBound,
-                          aContentType, 2,
+                          aContentType, 3,
                           getter_AddRefs(firstBlob));
       NS_ENSURE_SUCCESS(rv, nsnull);
 
@@ -176,7 +176,7 @@ nsDOMMultipartBlob::CreateSlice(PRUint64 aStart, PRUint64 aLength,
 
     if (length < l) {
       nsCOMPtr<nsIDOMBlob> lastBlob;
-      rv = blob->MozSlice(0, length, aContentType, 2,
+      rv = blob->MozSlice(0, length, aContentType, 3,
                           getter_AddRefs(lastBlob));
       NS_ENSURE_SUCCESS(rv, nsnull);
 
