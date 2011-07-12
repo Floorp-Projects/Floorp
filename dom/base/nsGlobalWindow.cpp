@@ -91,9 +91,9 @@
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"
-#include "nsDOMThreadService.h"
 #include "nsAutoJSValHolder.h"
 #include "nsDOMMediaQueryList.h"
+#include "mozilla/dom/workers/Workers.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -1244,18 +1244,11 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   NS_ASSERTION(IsInnerWindow(), "Don't free inner objects on an outer window");
 
   // Kill all of the workers for this window.
-  nsDOMThreadService* dts = nsDOMThreadService::get();
-  if (dts) {
-    nsIScriptContext *scx = GetContextInternal();
-
-    JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
-
-    // Have to suspend this request here because CancelWorkersForGlobal will
-    // lock until the worker has died and that could cause a deadlock.
-    JSAutoSuspendRequest asr(cx);
-
-    dts->CancelWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
-  }
+  nsIScriptContext *scx = GetContextInternal();
+  JSContext *cx = scx ?
+                  static_cast<JSContext*>(scx->GetNativeContext()) :
+                  nsnull;
+  mozilla::dom::workers::CancelWorkersForWindow(cx, this);
 
   // Close all IndexedDB databases for this window.
   indexedDB::IndexedDatabaseManager* idbManager =
@@ -9928,11 +9921,13 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
   if (!suspended) {
     DisableDeviceMotionUpdates();
 
-    nsDOMThreadService* dts = nsDOMThreadService::get();
-    if (dts) {
-      dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
-    }
-  
+    // Suspend all of the workers for this window.
+    nsIScriptContext *scx = GetContextInternal();
+    JSContext *cx = scx ?
+                    static_cast<JSContext*>(scx->GetNativeContext()) :
+                    nsnull;
+    mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
+
     TimeStamp now = TimeStamp::Now();
     for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
       // Set mTimeRemaining to be the time remaining for this timer.
@@ -10004,10 +9999,12 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
   if (shouldResume) {
     EnableDeviceMotionUpdates();
 
-    nsDOMThreadService* dts = nsDOMThreadService::get();
-    if (dts) {
-      dts->ResumeWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
-    }
+    // Resume all of the workers for this window.
+    nsIScriptContext *scx = GetContextInternal();
+    JSContext *cx = scx ?
+                    static_cast<JSContext*>(scx->GetNativeContext()) :
+                    nsnull;
+    mozilla::dom::workers::ResumeWorkersForWindow(cx, this);
 
     // Restore all of the timeouts, using the stored time remaining
     // (stored in timeout->mTimeRemaining).

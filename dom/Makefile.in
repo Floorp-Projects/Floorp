@@ -62,7 +62,6 @@ DIRS = \
   interfaces/json \
   interfaces/offline \
   interfaces/geolocation \
-  interfaces/threads \
   interfaces/notification \
   interfaces/svg \
   $(NULL)
@@ -81,6 +80,7 @@ DIRS += \
   indexedDB \
   system \
   ipc \
+  workers \
   $(NULL)
 
 ifdef ENABLE_TESTS

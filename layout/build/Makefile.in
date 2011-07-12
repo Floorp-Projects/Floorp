@@ -103,7 +103,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/notification/$(LIB_PREFIX)jsdomnotification_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/system/$(LIB_PREFIX)domsystem_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/threads/$(LIB_PREFIX)domthreads_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/workers/$(LIB_PREFIX)domworkers_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/indexedDB/$(LIB_PREFIX)dom_indexeddb_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
@@ -274,7 +274,6 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/src/storage \
 		   -I$(topsrcdir)/dom/src/offline \
 		   -I$(topsrcdir)/dom/src/geolocation \
-		   -I$(topsrcdir)/dom/src/threads \
 		   -I. \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \
