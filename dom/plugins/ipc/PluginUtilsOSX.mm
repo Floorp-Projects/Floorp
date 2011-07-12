@@ -177,8 +177,14 @@ void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop()
 
 
 #define UNDOCUMENTED_SESSION_CONSTANT ((int)-2)
-static void *mozilla::plugins::PluginUtilsOSX::sApplicationASN = NULL;
-static void *mozilla::plugins::PluginUtilsOSX::sApplicationInfoItem = NULL;
+namespace mozilla {
+namespace plugins {
+namespace PluginUtilsOSX {
+  static void *sApplicationASN = NULL;
+  static void *sApplicationInfoItem = NULL;
+}
+}
+}
 
 bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
