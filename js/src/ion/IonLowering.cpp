@@ -110,26 +110,23 @@ LIRGenerator::visitParameter(MParameter *param)
 {
     ptrdiff_t offset;
     if (param->index() == -2)
-        offset = StackFrame::offsetOfCallee(gen->fun());
+        offset = CALLEE_FRAME_SLOT;
     else if (param->index() == -1)
-        offset = StackFrame::offsetOfThis(gen->fun());
+        offset = THIS_FRAME_SLOT;
     else
-        offset = StackFrame::offsetOfFormalArg(gen->fun(), param->index());
-
-    JS_ASSERT(offset % sizeof(Value) == 0);
-    JS_ASSERT(offset % STACK_SLOT_SIZE == 0);
+        offset = 2 + param->index();
 
     LParameter *ins = new LParameter;
     if (!defineBox(ins, param, LDefinition::PRESET))
         return false;
 
-    offset /= STACK_SLOT_SIZE;
+    offset *= sizeof(Value);
 #if defined(JS_NUNBOX32)
 # if defined(IS_BIG_ENDIAN)
     ins->getDef(0)->setOutput(LArgument(offset));
-    ins->getDef(1)->setOutput(LArgument(offset + 1));
+    ins->getDef(1)->setOutput(LArgument(offset + 4));
 # else
-    ins->getDef(0)->setOutput(LArgument(offset + 1));
+    ins->getDef(0)->setOutput(LArgument(offset + 4));
     ins->getDef(1)->setOutput(LArgument(offset));
 # endif
 #elif defined(JS_PUNBOX64)

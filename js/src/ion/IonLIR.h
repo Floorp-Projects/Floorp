@@ -75,6 +75,9 @@ class MSnapshot;
 static const uint32 MAX_VIRTUAL_REGISTERS = (1 << 21) - 1;
 static const uint32 VREG_INCREMENT = 1;
 
+static const uint32 CALLEE_FRAME_SLOT = 0;
+static const uint32 THIS_FRAME_SLOT = 1;
+
 #if defined(JS_NUNBOX32)
 # define BOX_PIECES         2
 static const uint32 VREG_TYPE_OFFSET = 0;
