@@ -2241,8 +2241,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
                   case SRC_WHILE:
+                    /* First instuction (NOP) contains offset to condition */
                     ++pc;
-                    tail = js_GetSrcNoteOffset(sn, 0) - 1;
+                    /* Second instruction (TRACE) contains offset to JSOP_IFNE */
+                    sn = js_GetSrcNote(jp->script, pc);
+                    tail = js_GetSrcNoteOffset(sn, 0);
                     LOCAL_ASSERT(pc[tail] == JSOP_IFNE ||
                                  pc[tail] == JSOP_IFNEX);
                     js_printf(jp, "\tdo {\n");
