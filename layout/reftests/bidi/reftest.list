@@ -82,3 +82,4 @@ fails-if(Android) == 386339.html 386339-ref.html
 == 612843-1.html 612843-1-ref.html
 == 613157-1.html 613157-1-ref.html
 == 613157-2.html 613157-2-ref.html
+== 670226-1.html 670226-1-ref.html

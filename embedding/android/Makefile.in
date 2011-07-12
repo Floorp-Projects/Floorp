@@ -52,6 +52,7 @@ JAVAFILES = \
   GeckoEvent.java \
   GeckoSurfaceView.java \
   GeckoInputConnection.java \
+  GeckoPhoneStateListener.java \
   AlertNotification.java \
   $(NULL)
 
@@ -59,6 +60,7 @@ PROCESSEDJAVAFILES = \
   App.java \
   Restarter.java \
   NotificationHandler.java \
+  LauncherShortcuts.java \
   $(NULL)
 
 
@@ -116,6 +118,8 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/notification_icon_text.xml \
+  res/layout/launch_app_list.xml \
+  res/layout/launch_app_listitem.xml \
   $(NULL)
 
 RES_VALUES = res/values/colors.xml res/values/themes.xml

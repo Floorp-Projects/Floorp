@@ -28,6 +28,7 @@ ok(blobBuilder, "BlobBuilder should exist");
 
 ok(blobBuilder.append, "BlobBuilder should have an append method");
 ok(blobBuilder.getBlob, "BlobBuilder should have a getBlob method");
+ok(blobBuilder.getFile, "BlobBuilder should have a getFile method");
 
 try {
 blobBuilder.append();
@@ -38,8 +39,43 @@ ok(true, "an empty argument to append should throw");
 
 blobBuilder.append("squiggle");
 let blob1 = blobBuilder.getBlob();
+ok(blob1 instanceof Blob, "getBlob should produce Blobs");
+ok(!(blob1 instanceof File), "getBlob should not produce Files");
+is(blob1.type, "", "getBlob with no argument should return Blob with empty type");
+is(blob1.size, 8, "getBlob should return Blob with correct size");
+
 blobBuilder.append("ohai");
-let blob2 = blobBuilder.getBlob();
+let blob2 = blobBuilder.getFile("thefilename");
+ok(blob2 instanceof Blob, "getFile should produce Blobs");
+ok(blob2 instanceof File, "getFile should produce Files");
+is(blob2.name, "thefilename", "getFile should produces Files with correct name");
+is(blob2.type, "", "getFile with no second argument should return File with empty type");
+is(blob2.size, 4, "getFile should return Blob with correct size");
+
+blobBuilder.append("steak");
+let blob3 = blobBuilder.getBlob("content/type");
+ok(blob3 instanceof Blob, "getBlob should produce Blobs");
+ok(!(blob3 instanceof File), "getBlob should not produce Files");
+is(blob3.type, "content/type", "getBlob with no argument should return Blob with empty type");
+is(blob3.size, 5, "getBlob should return Blob with correct size");
+
+blobBuilder.append("apples");
+let blob4 = blobBuilder.getFile("the other filename", "text/plain");
+ok(blob4 instanceof Blob, "getFile should produce Blobs");
+ok(blob4 instanceof File, "getFile should produce Files");
+is(blob4.name, "the other filename", "getFile should produces Files with correct name");
+is(blob4.type, "text/plain", "getFile with second argument should return File with correct type");
+is(blob4.size, 6, "getFile should return Blob with correct size");
+
+blobBuilder.append("boletes");
+let blob5 = blobBuilder.getFile("");
+ok(blob5 instanceof Blob, "getFile should produce Blobs");
+ok(blob5 instanceof File, "getFile should produce Files");
+is(blob5.name, "", "getFile with empty name should produces Files with empty name");
+is(blob5.type, "", "getFile with no second argument should return File with correct type");
+is(blob5.size, 7, "getFile should return Blob with correct size");
+testFile(blob5, "boletes", "Test empty-named File from BlobBuilder.getFile");
+
 
 let aB = new ArrayBuffer(16);
 var int8View = new Int8Array(aB);
@@ -54,10 +90,10 @@ let testData =
                              {start: 0, length: 3, contents: "foo"},
                              {start: 3, length:6, contents:  "barbaz"},
                              {start: 6, length: 3, contents:  "baz"},
-                             {start: 6, length: 6, elength: 3, contents: "baz"},
+                             {start: 6, length: 6, contents: "baz"},
                              {start: 0, length: 9, contents:  "foobarbaz"},
-                             {start: 0, length: 11, elength: 9, contents: "foobarbaz"},
-                             {start: 10, length: 5, elength: 0, contents: ""}]],
+                             {start: 0, length: 11, contents: "foobarbaz"},
+                             {start: 10, length: 5, contents: ""}]],
     // Test string, Blob, string
     [["foo", blob1, "baz"], [{start: 0, length: 3, contents:  "foo"},
                              {start: 3, length: 8, contents:  "squiggle"},
@@ -69,7 +105,7 @@ let testData =
                              {start: 10, length: 2, contents: "os"},
                              {start: 1, length: 3, contents:  "qui"},
                              {start: 12, length: 3, contents: "qui"},
-                             {start: 40, length: 20, elength: 0, contents: ""}]],
+                             {start: 40, length: 20, contents: ""}]],
     // Test blobs all the way down
     [[blob2, blob1, blob2], [{start: 0, length: 4, contents:  "ohai"},
                              {start: 4, length: 8, contents:  "squiggle"},
@@ -84,7 +120,7 @@ let testData =
     // Test type coercion of a number
     [[3, aB, "foo"],        [{start: 0, length: 8, contents:  "3ABCDEFG"},
                              {start: 8, length:10, contents:  "HIJKLMNOPf"},
-                             {start: 17, length: 4, elength: 3, contents: "foo"},
+                             {start: 17, length: 4, contents: "foo"},
                              {start: 4, length: 8, contents:  "DEFGHIJK"}]]
  ];
 
@@ -110,17 +146,16 @@ function doTest(data) {
     let blob = bb.getBlob();
     ok(blob, "Test " + testCounter + " got blob");
     ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
-    //ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
+    ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
 
     let slice = blob.mozSlice(test.start, test.start + test.length);
     ok(slice, "Test " + testCounter + " got slice");
     ok(slice instanceof Blob, "Test " + testCounter + " slice is a Blob");
-    //ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");
-    is(slice.size,"elength" in test ? test.elength : test.length,
+    ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");
+    is(slice.size, test.contents.length,
        "Test " + testCounter + " slice is correct size");
 
-    testFile(slice, test.contents, "Test " + testCounter,
-             "elength" in test ? test.elength : test.length);
+    testFile(slice, test.contents, "Test " + testCounter);
   }
   tests.forEach(runTest);
   SpecialPowers.gc();

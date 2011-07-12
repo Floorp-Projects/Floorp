@@ -709,7 +709,7 @@ CheckStackAndEnterMethodJIT(JSContext *cx, StackFrame *fp, void *code)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    Value *stackLimit = cx->stack.space().getStackLimit(cx);
+    Value *stackLimit = cx->stack.space().getStackLimit(cx, REPORT_ERROR);
     if (!stackLimit)
         return false;
 

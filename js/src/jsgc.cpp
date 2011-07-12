@@ -60,6 +60,8 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscompartment.h"
+#include "jscrashreport.h"
+#include "jscrashformat.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbg.h"
@@ -240,9 +242,7 @@ Arena::finalize(JSContext *cx)
                 if (!newFreeSpanStart)
                     newFreeSpanStart = thing;
                 t->finalize(cx);
-#ifdef DEBUG
                 memset(t, JS_FREE_PATTERN, sizeof(T));
-#endif
             }
         }
     }
@@ -2663,6 +2663,12 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
         (*c)->setGCLastBytes((*c)->gcBytes, gckind);
 }
 
+struct GCCrashData
+{
+    int isRegen;
+    int isCompartment;
+};
+
 void
 js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 {
@@ -2683,6 +2689,11 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     }
 
     RecordNativeStackTopForGC(cx);
+
+    GCCrashData crashData;
+    crashData.isRegen = rt->shapeGen & SHAPE_OVERFLOW_BIT;
+    crashData.isCompartment = !!comp;
+    js_SaveCrashData(crash::JS_CRASH_TAG_GC, &crashData, sizeof(crashData));
 
     GCTIMER_BEGIN(rt, comp);
 
@@ -2722,6 +2733,8 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
     rt->gcChunkAllocationSinceLastGC = false;
     GCTIMER_END(gckind == GC_LAST_CONTEXT);
+
+    js_SnapshotGCStack();
 }
 
 namespace js {

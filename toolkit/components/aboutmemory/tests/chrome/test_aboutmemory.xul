@@ -77,6 +77,8 @@
     f("", "explicit/b/b",       HEAP,    75 * MB),
     f("", "explicit/b/c/a",     HEAP,    70 * MB),
     f("", "explicit/b/c/b",     HEAP,     2 * MB), // omitted
+    f("", "explicit/c",         MAPPED, 100 * MB),
+    f("", "explicit/c/d",       MAPPED,  13 * MB), // subsumed by parent
     f("", "explicit/g",         HEAP,     1 * MB), // internal, dup: merge
     f("", "explicit/g/a",       HEAP,     6 * MB),
     f("", "explicit/g/b",       HEAP,     5 * MB),
@@ -87,7 +89,9 @@
   var fakeMultiReporters = [
      { collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
-          f("explicit/c",       MAPPED, BYTES, 123 * MB);
+          f("explicit/c/d",     MAPPED, BYTES,  10 * MB), // dup, subsumed by parent
+          f("explicit/cc",      MAPPED, BYTES,  13 * MB);
+          f("explicit/cc",      MAPPED, BYTES,  10 * MB); // dup
           f("explicit/d",       MAPPED, BYTES, 499 * KB); // omitted
           f("explicit/e",       MAPPED, BYTES, 100 * KB); // omitted
           f("explicit/f/g/h/i", HEAP,   BYTES,  20 * MB);
@@ -107,6 +111,17 @@
   for (var i = 0; i < fakeMultiReporters.length; i++) {
     mgr.registerMultiReporter(fakeMultiReporters[i]);
   }
+
+  // mgr.explicit sums "heap-used" and all the appropriate MAPPED ones:
+  // - "explicit/c", "explicit/cc" x 2, "explicit/d", "explicit/e"
+  // - but *not* "explicit/c/d" x 2
+  // Check explicit now before we add the fake reporters for the fake 2nd
+  // and subsequent processes.
+  is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");
+ 
+  // Access mgr.resident just to make sure it doesn't crash.  We can't check
+  // its actual value because it's non-deterministic.
+  dummy = mgr.resident;
 
   var fakeReporters2 = [
     f("2nd", "heap-used",       OTHER, 1000 * MB),
@@ -157,7 +172,10 @@ Explicit Allocations\n\
 │      ├──70.00 MB (11.23%) -- a\n\
 │      └───2.00 MB (00.32%) -- (1 omitted)\n\
 ├──222.00 MB (35.60%) -- a\n\
-├──123.00 MB (19.72%) -- c\n\
+├──100.00 MB (16.04%) -- c\n\
+│  ├───77.00 MB (12.35%) -- other\n\
+│  └───23.00 MB (03.69%) -- d\n\
+├───23.00 MB (03.69%) -- cc\n\
 ├───20.00 MB (03.21%) -- f\n\
 │   └──20.00 MB (03.21%) -- g\n\
 │      └──20.00 MB (03.21%) -- h\n\
@@ -174,8 +192,8 @@ Other Measurements\n\
 222.00 MB -- other2\n\
 111.00 MB -- other1\n\
 100.00 MB -- heap-unused\n\
-      888 -- other4\n\
       777 -- other3\n\
+      888 -- other4\n\
     (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
@@ -224,7 +242,10 @@ Explicit Allocations\n\
 │      ├──73,400,320 B (11.23%) -- a\n\
 │      └───2,097,152 B (00.32%) -- b\n\
 ├──232,783,872 B (35.60%) -- a\n\
-├──128,974,848 B (19.72%) -- c\n\
+├──104,857,600 B (16.04%) -- c\n\
+│  ├───80,740,352 B (12.35%) -- other\n\
+│  └───24,117,248 B (03.69%) -- d\n\
+├───24,117,248 B (03.69%) -- cc\n\
 ├───20,971,520 B (03.21%) -- f\n\
 │   └──20,971,520 B (03.21%) -- g\n\
 │      └──20,971,520 B (03.21%) -- h\n\
@@ -242,8 +263,8 @@ Other Measurements\n\
 232,783,872 B -- other2\n\
 116,391,936 B -- other1\n\
 104,857,600 B -- heap-unused\n\
-          888 -- other4\n\
           777 -- other3\n\
+          888 -- other4\n\
         (???) -- unknown-unit\n\
 \n\
 2nd Process\n\

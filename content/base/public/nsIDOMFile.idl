@@ -47,7 +47,7 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIDOMBlob;
 
-[scriptable, uuid(d5237f31-443a-460b-9e42-449a135346f0)]
+[scriptable, builtinclass, uuid(d5237f31-443a-460b-9e42-449a135346f0)]
 interface nsIDOMBlob : nsISupports
 {
   readonly attribute unsigned long long size;
@@ -58,12 +58,12 @@ interface nsIDOMBlob : nsISupports
   // moz-filedata: protocol handler
   [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
 
-  [optional_argc] nsIDOMBlob mozSlice(in long long start,
+  [optional_argc] nsIDOMBlob mozSlice([optional] in long long start,
                                       [optional] in long long end,
                                       [optional] in DOMString contentType);
 };
 
-[scriptable, uuid(b096ef67-7b77-47f8-8e70-5d8ee36416bf)]
+[scriptable, builtinclass, uuid(b096ef67-7b77-47f8-8e70-5d8ee36416bf)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;
@@ -73,9 +73,10 @@ interface nsIDOMFile : nsIDOMBlob
   [noscript] readonly attribute DOMString mozFullPathInternal;
 };
 
-[scriptable, uuid(c4a77171-039b-4f84-97f9-820fb51626af)]
+[scriptable, builtinclass, uuid(006d2cde-ec18-41d4-acc3-43682dd418e2)]
 interface nsIDOMMozBlobBuilder : nsISupports
 {
   nsIDOMBlob getBlob([optional] in DOMString contentType);
+  nsIDOMFile getFile(in DOMString name, [optional] in DOMString contentType);
   [implicit_jscontext] void append(in jsval data);
 };
