@@ -1068,6 +1068,8 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
             mZero = PR_TRUE;
             height = 1;
             width = 1;
+        } else {
+            mZero = PR_FALSE;
         }
 
         gfxASurface::gfxImageFormat format = GetImageFormat();
