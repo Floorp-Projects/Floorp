@@ -2872,6 +2872,50 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
     return NewPropertyDescriptorObject(cx, &desc, vp);
 }
 
+static JSBool
+DebuggerObject_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+
+    AutoIdVector keys(cx);
+    {
+        AutoCompartment ac(cx, obj);
+        if (!ac.enter())
+            return false;
+
+        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
+            return false;
+    }
+
+    AutoValueVector vals(cx);
+    if (!vals.resize(keys.length()))
+        return false;
+
+    for (size_t i = 0, len = keys.length(); i < len; i++) {
+         jsid id = keys[i];
+         if (JSID_IS_INT(id)) {
+             JSString *str = js_ValueToString(cx, Int32Value(JSID_TO_INT(id)));
+             if (!str)
+                 return false;
+             vals[i].setString(str);
+         } else if (JSID_IS_ATOM(id)) {
+             vals[i].setString(JSID_TO_STRING(id));
+             if (!cx->compartment->wrap(cx, &vals[i]))
+                 return false;
+         } else {
+             vals[i].setObject(*JSID_TO_OBJECT(id));
+             if (!dbg->wrapDebuggeeValue(cx, &vals[i]))
+                 return false;
+         }
+    }
+
+    JSObject *aobj = NewDenseCopiedArray(cx, vals.length(), vals.begin());
+    if (!aobj)
+        return false;
+    vp->setObject(*aobj);
+    return true;
+}
+
 
 enum ApplyOrCallMode { ApplyMode, CallMode };
 
@@ -2962,6 +3006,7 @@ static JSPropertySpec DebuggerObject_properties[] = {
 
 static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
+    JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FS_END
