@@ -4102,7 +4102,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 {
     bool let, forInVar, first;
 #if JS_HAS_BLOCK_SCOPE
-    bool forInLet, popScope;
+    bool popScope;
     JSStmtInfo *stmt, *scopeStmt;
 #endif
     ptrdiff_t off, noteIndex, tmp;
@@ -4129,7 +4129,6 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     let = (pn->pn_op == JSOP_NOP);
     forInVar = (pn->pn_xflags & PNX_FORINVAR) != 0;
 #if JS_HAS_BLOCK_SCOPE
-    forInLet = let && forInVar;
     popScope = (inLetHead || (let && (cg->flags & TCF_IN_FOR_INIT)));
     if (popScope) {
         stmt = cg->topStmt;
