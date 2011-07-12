@@ -60,10 +60,10 @@ class CodeGenerator : public CodeGeneratorX86Shared
     CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
 
     bool generatePrologue();
-    bool generateEpilogue();
 
   public:
     bool visitBox(LBox *box);
+    bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
     bool visitReturn(LReturn *ret);
 };

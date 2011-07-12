@@ -62,7 +62,19 @@ class AssemblerX86Shared
 
   public:
     void movl(const Imm32 &imm32, const Register &dest) {
-        masm.movl_i32r(imm32.i32, dest.code());
+        masm.movl_i32r(imm32.value, dest.code());
+    }
+    void movl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.movl_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.movl_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
     }
     void jmp(Label *label) {
         if (label->bound()) {
@@ -95,6 +107,55 @@ class AssemblerX86Shared
     }
     void ret() {
         masm.ret();
+    }
+
+    void cmpl(Imm32 imm, const Operand &op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.cmpl_ir(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.cmpl_im(imm.value, op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void addl(Imm32 imm, const Operand &op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.addl_ir(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.addl_im(imm.value, op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void subl(Imm32 imm, const Operand &op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.subl_ir(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.subl_im(imm.value, op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void addl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.addl_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.addl_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
     }
 };
 

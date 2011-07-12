@@ -49,9 +49,9 @@ namespace ion {
 // Used for 32-bit immediates which do not require relocation.
 struct Imm32
 {
-    int32_t i32;
+    int32_t value;
 
-    Imm32(int32_t i32) : i32(i32)
+    Imm32(int32_t value) : value(value)
     { }
 };
 

@@ -59,6 +59,7 @@ static const Register edi = { JSC::X86Registers::edi };
 
 static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
+static const Register StackPointer = esp;
 
 class Operand
 {
@@ -91,15 +92,19 @@ class Operand
     Kind kind() const {
         return kind_;
     }
-    Register reg() const {
+    Registers::Code reg() const {
         JS_ASSERT(kind() == REG);
-        return Register::FromCode(base_);
+        return (Registers::Code)base_;
+    }
+    Registers::Code base() const {
+        JS_ASSERT(kind() == REG_DISP);
+        return (Registers::Code)base_;
     }
     FloatRegisters::Code fpu() const {
         JS_ASSERT(kind() == FPREG);
         return (FloatRegisters::Code)base_;
     }
-    int32 displacement() const {
+    int32 disp() const {
         JS_ASSERT(kind() == REG_DISP);
         return disp_;
     }

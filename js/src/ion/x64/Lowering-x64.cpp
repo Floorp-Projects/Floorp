@@ -92,7 +92,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
         return define(ins, unbox) && assignSnapshot(ins);
       }
       case MIRType_Int32: {
-        LUnboxInteger *ins = new LUnboxInteger(useRegister(box), temp(LDefinition::INTEGER));
+        LUnboxInteger *ins = new LUnboxInteger(useRegister(box));
         return define(ins, unbox) && assignSnapshot(ins);
       }
       case MIRType_String: {

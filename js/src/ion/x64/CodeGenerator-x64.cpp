@@ -52,12 +52,8 @@ CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
 bool
 CodeGenerator::generatePrologue()
 {
-    return true;
-}
-
-bool
-CodeGenerator::generateEpilogue()
-{
+    if (graph.stackHeight())
+        masm.subq(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), rsp);
     return true;
 }
 
@@ -76,6 +72,54 @@ CodeGenerator::visitValue(LValue *value)
     return true;
 }
 
+static inline JSValueShiftedTag
+MIRTypeToShiftedTag(MIRType type)
+{
+    switch (type) {
+      case MIRType_Int32:
+        return JSVAL_SHIFTED_TAG_INT32;
+      case MIRType_String:
+        return JSVAL_SHIFTED_TAG_STRING;
+      case MIRType_Boolean:
+        return JSVAL_SHIFTED_TAG_BOOLEAN;
+      case MIRType_Object:
+        return JSVAL_SHIFTED_TAG_OBJECT;
+      default:
+        JS_NOT_REACHED("unexpected type");
+        return JSVAL_SHIFTED_TAG_NULL;
+    }
+}
+
+bool
+CodeGenerator::visitBox(LBox *box)
+{
+    const LAllocation *in = box->getOperand(0);
+    const LDefinition *result = box->getDef(0);
+
+    if (box->type() != MIRType_Double) {
+        JSValueShiftedTag tag = MIRTypeToShiftedTag(box->type());
+        masm.movq(ImmWord(tag), ToRegister(result));
+        masm.orq(ToOperand(in), ToRegister(result));
+    } else {
+        JS_NOT_REACHED("NYI");
+    }
+    return true;
+}
+
+bool
+CodeGenerator::visitUnboxInteger(LUnboxInteger *unbox)
+{
+    const LAllocation *value = unbox->getOperand(0);
+    const LDefinition *result = unbox->getDef(0);
+
+    masm.movq(ToOperand(value), ToRegister(result));
+    masm.shlq(Imm32(JSVAL_TAG_SHIFT), ToRegister(result));
+    masm.cmpl(Imm32(JSVAL_TAG_INT32), ToOperand(result));
+    masm.movl(ToOperand(value), ToRegister(result));
+
+    return true;
+}
+
 bool
 CodeGenerator::visitReturn(LReturn *ret)
 {
@@ -83,7 +127,8 @@ CodeGenerator::visitReturn(LReturn *ret)
     LAllocation *result = ret->getOperand(0);
     JS_ASSERT(ToRegister(result) == JSReturnReg);
 #endif
-    masm.pop(rbp);
+    if (graph.stackHeight())
+        masm.addq(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), Operand(rsp));
     masm.ret();
     return true;
 }
