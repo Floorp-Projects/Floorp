@@ -344,13 +344,21 @@ protected:
   // queued here. Called on the audio thread.
   PRUint32 PlayFromAudioQueue(PRUint64 aSampleOffset, PRUint32 aChannels);
 
-  // Stops the decode threads. The decoder monitor must be held with exactly
+  // Stops the decode thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
-  void StopDecodeThreads();
+  void StopDecodeThread();
 
-  // Starts the decode threads. The decoder monitor must be held with exactly
+  // Stops the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
-  nsresult StartDecodeThreads();
+  void StopAudioThread();
+
+  // Starts the decode thread. The decoder monitor must be held with exactly
+  // one lock count. Called on the state machine thread.
+  nsresult StartDecodeThread();
+
+  // Starts the audio thread. The decoder monitor must be held with exactly
+  // one lock count. Called on the state machine thread.
+  nsresult StartAudioThread();
 
   // The main loop for the audio thread. Sent to the thread as
   // an nsRunnableMethod. This continually does blocking writes to
@@ -516,9 +524,13 @@ protected:
   // the media index/metadata. Accessed on the state machine thread.
   PRPackedBool mGotDurationFromMetaData;
     
-  // PR_FALSE while decode threads should be running. Accessed on audio, 
-  // state machine and decode threads. Syncrhonised by decoder monitor.
-  PRPackedBool mStopDecodeThreads;
+  // PR_FALSE while decode thread should be running. Accessed state machine
+  // and decode threads. Syncrhonised by decoder monitor.
+  PRPackedBool mStopDecodeThread;
+
+  // PR_FALSE while audio thread should be running. Accessed state machine
+  // and audio threads. Syncrhonised by decoder monitor.
+  PRPackedBool mStopAudioThread;
 
   // If this is PR_TRUE while we're in buffering mode, we can exit early,
   // as it's likely we may be able to playback. This happens when we enter
