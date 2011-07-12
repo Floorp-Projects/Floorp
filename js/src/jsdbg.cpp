@@ -2831,6 +2831,48 @@ DebuggerObject_getScript(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static JSBool
+DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+
+    jsid id;
+    if (!ValueToId(cx, argc >= 1 ? vp[2] : UndefinedValue(), &id))
+        return false;
+
+    // Bug: This can cause the debuggee to run!
+    AutoPropertyDescriptorRooter desc(cx);
+    {
+        AutoCompartment ac(cx, obj);
+        if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
+            return false;
+
+        if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+            return false;
+    }
+
+    if (desc.obj) {
+        // Rewrap the debuggee values in desc for the debugger.
+        if (!dbg->wrapDebuggeeValue(cx, &desc.value))
+            return false;
+        if (desc.attrs & JSPROP_GETTER) {
+            Value get = ObjectOrNullValue(CastAsObject(desc.getter));
+            if (!dbg->wrapDebuggeeValue(cx, &get))
+                return false;
+            desc.getter = CastAsPropertyOp(get.toObjectOrNull());
+        }
+        if (desc.attrs & JSPROP_SETTER) {
+            Value set = ObjectOrNullValue(CastAsObject(desc.setter));
+            if (!dbg->wrapDebuggeeValue(cx, &set))
+                return false;
+            desc.setter = CastAsStrictPropertyOp(set.toObjectOrNull());
+        }
+    }
+
+    return NewPropertyDescriptorObject(cx, &desc, vp);
+}
+
+
 enum ApplyOrCallMode { ApplyMode, CallMode };
 
 static JSBool
@@ -2919,6 +2961,7 @@ static JSPropertySpec DebuggerObject_properties[] = {
 };
 
 static JSFunctionSpec DebuggerObject_methods[] = {
+    JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FS_END
