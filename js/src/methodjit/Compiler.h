@@ -705,13 +705,17 @@ class Compiler : public BaseCompiler
     void jsop_initprop();
     void jsop_initelem();
     void jsop_setelem_dense();
+#ifdef JS_METHODJIT_TYPED_ARRAY
     void jsop_setelem_typed(int atype);
     void convertForTypedArray(int atype, ValueRemat *vr, bool *allocated);
+#endif
     bool jsop_setelem(bool popGuaranteed);
     bool jsop_getelem(bool isCall);
     void jsop_getelem_dense(bool isPacked);
     void jsop_getelem_args();
+#ifdef JS_METHODJIT_TYPED_ARRAY
     void jsop_getelem_typed(int atype);
+#endif
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
