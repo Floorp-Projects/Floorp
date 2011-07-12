@@ -782,7 +782,7 @@ GetHelper::GetSuccessResult(JSContext* aCx,
 {
   bool result = IDBObjectStore::DeserializeValue(aCx, mCloneBuffer, aVal);
 
-  mCloneBuffer.clear(aCx);
+  mCloneBuffer.clear();
 
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   return NS_OK;
@@ -1056,7 +1056,7 @@ GetAllHelper::GetSuccessResult(JSContext* aCx,
   nsresult rv = ConvertCloneBuffersToArray(aCx, mCloneBuffers, aVal);
 
   for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-    mCloneBuffers[index].clear(aCx);
+    mCloneBuffers[index].clear();
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
