@@ -79,6 +79,7 @@
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsCrossSiteListenerProxy.h"
+#include "nsDOMThreadService.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsHtml5Module.h"
 #include "nsCrossSiteListenerProxy.h"
@@ -342,6 +343,8 @@ nsLayoutStatics::Shutdown()
 
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();
+
+  nsDOMThreadService::Shutdown();
 
 #ifdef MOZ_SYDNEYAUDIO
   nsAudioStream::ShutdownLibrary();
