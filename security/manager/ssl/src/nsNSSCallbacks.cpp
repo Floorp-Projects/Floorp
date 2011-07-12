@@ -77,6 +77,8 @@ nsHTTPDownloadEvent::Run()
   // had been setup, and brings blue UI for EV certs.
   // chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
 
+  chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
+
   // Create a loadgroup for this new channel.  This way if the channel
   // is redirected, we'll have a way to cancel the resulting channel.
   nsCOMPtr<nsILoadGroup> lg = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
