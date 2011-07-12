@@ -345,7 +345,8 @@ class VirtualRegister : public TempObject
     }
 
     LiveInterval *intervalFor(CodePosition pos);
-    CodePosition nextUseAfter(CodePosition pos);
+    LOperand *nextUseAfter(CodePosition pos);
+    CodePosition nextUsePosAfter(CodePosition pos);
     CodePosition nextIncompatibleUseAfter(CodePosition after, LAllocation alloc);
     LiveInterval *getFirstInterval();
 };
@@ -433,6 +434,8 @@ class LinearScanAllocator
     CodePosition *freeUntilPos;
     CodePosition *nextUsePos;
     LiveInterval *current;
+    LOperand *firstUse;
+    CodePosition firstUsePos;
 
     bool createDataStructures();
     bool buildLivenessInfo();
@@ -474,7 +477,8 @@ class LinearScanAllocator
   public:
     LinearScanAllocator(LIRGenerator *lir, LIRGraph &graph)
       : lir(lir),
-        graph(graph)
+        graph(graph),
+        firstUsePos(CodePosition::MAX)
     { }
 
     bool go();
