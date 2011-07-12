@@ -44,6 +44,7 @@
 #include "IonLowering-inl.h"
 #include "MIR.h"
 #include "MIRGraph.h"
+#include "jsbool.h"
 
 using namespace js;
 using namespace ion;
@@ -150,6 +151,13 @@ LIRGenerator::visitTest(MTest *test)
     MInstruction *opd = test->getInput(0);
     MBasicBlock *ifTrue = test->ifTrue();
     MBasicBlock *ifFalse = test->ifFalse();
+
+    if (opd->isConstant()) {
+        MConstant *ins = opd->toConstant();
+        JSBool truthy = js_ValueToBoolean(ins->value());
+        MBasicBlock *target = truthy ? ifTrue : ifFalse;
+        return add(new LGoto(target));
+    }
 
     if (opd->type() == MIRType_Value) {
         LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse);
@@ -336,6 +344,9 @@ LIRGenerator::visitBlock(MBasicBlock *block)
         block->getPhi(i)->setInWorklist();
 #endif
     }
+
+    // Insert a label - this must be the first instruction in the block.
+    current->add(new LLabel());
 
     for (MInstructionIterator iter = block->begin(); *iter != block->lastIns(); iter++) {
         if (!visitInstruction(*iter))

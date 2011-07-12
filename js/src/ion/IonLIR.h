@@ -48,10 +48,16 @@
 #include "jscntxt.h"
 #include "IonAllocPolicy.h"
 #include "InlineList.h"
-#include "IonAssembler.h"
 #include "FixedArityList.h"
 #include "LOpcodes.h"
 #include "TypeOracle.h"
+#include "IonRegisters.h"
+
+#if defined(JS_CPU_X86)
+# include "x86/StackAssignment-x86.h"
+#elif defined(JS_CPU_X64)
+# include "x64/StackAssignment-x64.h"
+#endif
 
 namespace js {
 namespace ion {
@@ -73,6 +79,8 @@ static const uint32 VREG_INCREMENT = 1;
 # define BOX_PIECES         2
 static const uint32 VREG_TYPE_OFFSET = 0;
 static const uint32 VREG_DATA_OFFSET = 1;
+static const uint32 TYPE_INDEX = 0;
+static const uint32 PAYLOAD_INDEX = 1;
 #elif defined(JS_PUNBOX64)
 # define BOX_PIECES         1
 #else
@@ -515,6 +523,7 @@ class LDefinition
 #undef LIROP
 
 class LSnapshot;
+class LInstructionVisitor;
 
 class LInstruction : public TempObject,
                      public InlineListNode<LInstruction>
@@ -588,6 +597,16 @@ class LInstruction : public TempObject,
     inline L##name *to##name();
     LIR_OPCODE_LIST(LIROP)
 #   undef LIROP
+
+    virtual bool accept(LInstructionVisitor *visitor) = 0;
+};
+
+class LInstructionVisitor
+{
+  public:
+#define VISIT_INS(op) virtual bool visit##op(L##op *) { JS_NOT_REACHED("implement " #op); return false; }
+    LIR_OPCODE_LIST(VISIT_INS)
+#undef VISIT_INS
 };
 
 typedef InlineList<LInstruction>::iterator LInstructionIterator;
@@ -830,6 +849,9 @@ LAllocation::toRegister() const
 #define LIR_HEADER(opcode)                                                  \
     Opcode op() const {                                                     \
         return LInstruction::LOp_##opcode;                                  \
+    }                                                                       \
+    bool accept(LInstructionVisitor *visitor) {                             \
+        return visitor->visit##opcode(this);                                \
     }
 
 #include "LIR-Common.h"

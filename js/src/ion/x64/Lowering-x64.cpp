@@ -42,6 +42,7 @@
 #include "ion/MIR.h"
 #include "Lowering-x64.h"
 #include "ion/IonLowering-inl.h"
+#include "Assembler-x64.h"
 
 using namespace js;
 using namespace js::ion;
@@ -71,7 +72,10 @@ LIRGeneratorX64::visitBox(MBox *box)
     if (opd->isConstant() && !box->emitAtUses())
         return emitAtUses(box);
 
-    LBox *ins = new LBox(opd->type(), useRegisterOrConstant(opd));
+    if (opd->isConstant())
+        return define(new LValue(opd->toConstant()->value()), box, LDefinition(LDefinition::BOX));
+
+    LBox *ins = new LBox(opd->type(), useRegister(opd));
     return define(ins, box, LDefinition(LDefinition::BOX));
 }
 

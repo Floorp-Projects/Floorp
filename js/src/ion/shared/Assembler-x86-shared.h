@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,49 +39,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+#ifndef jsion_assembler_x86_shared__
+#define jsion_assembler_x86_shared__
+
+#include "assembler/assembler/X86Assembler.h"
 
 namespace js {
 namespace ion {
 
-class StackAssignment
+class AssemblerX86Shared
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
-    uint32 height_;
+  protected:
+    JSC::X86Assembler masm;
+
+    typedef JSC::X86Assembler::JmpSrc JmpSrc;
+    typedef JSC::X86Assembler::JmpDst JmpDst;
 
   public:
-    StackAssignment() : height_(0)
-    { }
-
-    void freeSlot(uint32 index) {
-        slots.append(index);
+    bool oom() const {
+        return masm.oom();
     }
 
-    void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
+  public:
+    void movl(const Imm32 &imm32, const Register &dest) {
+        masm.movl_i32r(imm32.i32, dest.code());
     }
-
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
-    }
-
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
+    void jmp(Label *label) {
+        if (label->bound()) {
+            // The jump can be immediately patched to the correct destination.
+            masm.linkJump(masm.jmp(), JmpDst(label->offset()));
+        } else {
+            // Thread the jump list through the unpatched jump targets.
+            JmpSrc j = masm.jmp();
+            JmpSrc prev = JmpSrc(label->use(j.offset()));
+            masm.setNextJump(j, prev);
         }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
+    }
+    void bind(Label *label) {
+        JSC::MacroAssembler::Label jsclabel;
+        if (label->used()) {
+            bool more;
+            JSC::X86Assembler::JmpSrc jmp(label->offset());
+            do {
+                JSC::X86Assembler::JmpSrc next;
+                more = masm.nextJump(jmp, &next);
+                masm.linkJump(jmp, masm.label());
+                jmp = next;
+            } while (more);
+        }
+        label->bind(masm.label().offset());
     }
 
-    uint32 stackHeight() const {
-        return height_;
+    void pop(const Register &reg) {
+        masm.pop_r(reg.code());
+    }
+    void ret() {
+        masm.ret();
     }
 };
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_cpu_x64_stack_assignment_h__
+#endif // jsion_assembler_x86_shared__
 

@@ -360,6 +360,7 @@ CPPSRCS += 	MethodJIT.cpp \
 
 # Ion
 VPATH +=	$(srcdir)/ion
+VPATH +=	$(srcdir)/ion/shared
 
 CPPSRCS +=	MIR.cpp \
 		IonBuilder.cpp \
@@ -377,9 +378,11 @@ CPPSRCS +=	MIR.cpp \
 		ValueNumbering.cpp \
 		LinearScan.cpp \
 		MoveGroup.cpp \
+		CodeGenerator-shared.cpp \
 		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
+CPPSRCS +=	CodeGenerator-x86-shared.cpp
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
@@ -395,10 +398,12 @@ endif
 #CPPSRCS		+= only_on_x86_64.cpp
 VPATH +=	$(srcdir)/ion/x64
 CPPSRCS += 	Lowering-x64.cpp
+CPPSRCS +=	CodeGenerator-x64.cpp
 else
 #CPPSRCS		+= only_on_x86.cpp
 VPATH +=	$(srcdir)/ion/x86
 CPPSRCS +=	Lowering-x86.cpp
+CPPSRCS +=	CodeGenerator-x86.cpp
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s
 endif

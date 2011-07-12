@@ -39,49 +39,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+#ifndef jsion_codegen_x86_shared_h__
+#define jsion_codegen_x86_shared_h__
+
+#include "ion/shared/CodeGenerator-shared.h"
 
 namespace js {
 namespace ion {
 
-class StackAssignment
+class CodeGeneratorX86Shared : public CodeGeneratorShared
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
-    uint32 height_;
+    AssemblerX86Shared &masm;
 
   public:
-    StackAssignment() : height_(0)
-    { }
+    CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph, AssemblerX86Shared &masm);
 
-    void freeSlot(uint32 index) {
-        slots.append(index);
-    }
-
-    void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
-    }
-
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
-    }
-
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
-        }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
-    }
-
-    uint32 stackHeight() const {
-        return height_;
-    }
+  public:
+    virtual bool visitLabel(LLabel *label);
+    virtual bool visitMove(LMove *move);
+    virtual bool visitGoto(LGoto *jump);
 };
 
-} // namespace ion
-} // namespace js
+} // ion
+} // js
 
-#endif // jsion_cpu_x64_stack_assignment_h__
+#endif // jsion_codegen_x86_shared_h__
 

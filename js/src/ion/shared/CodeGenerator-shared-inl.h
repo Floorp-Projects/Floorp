@@ -39,49 +39,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+#ifndef jsion_codegen_inl_h__
+#define jsion_codegen_inl_h__
 
 namespace js {
 namespace ion {
 
-class StackAssignment
+static inline Register
+ToRegister(const LAllocation &a)
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
-    uint32 height_;
+    JS_ASSERT(a.isGeneralReg());
+    return a.toGeneralReg()->reg();
+}
 
-  public:
-    StackAssignment() : height_(0)
-    { }
+static inline Register
+ToRegister(const LAllocation *a)
+{
+    return ToRegister(*a);
+}
 
-    void freeSlot(uint32 index) {
-        slots.append(index);
-    }
+static inline Register
+ToRegister(const LDefinition *def)
+{
+    return ToRegister(*def->output());
+}
 
-    void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
-    }
+} // ion
+} // js
 
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
-    }
-
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
-        }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
-    }
-
-    uint32 stackHeight() const {
-        return height_;
-    }
-};
-
-} // namespace ion
-} // namespace js
-
-#endif // jsion_cpu_x64_stack_assignment_h__
+#endif // jsion_codegen_inl_h__
 

@@ -38,50 +38,44 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "CodeGenerator-shared.h"
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+using namespace js;
+using namespace js::ion;
 
-namespace js {
-namespace ion {
-
-class StackAssignment
+CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
+  : gen(gen),
+    graph(graph)
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
-    uint32 height_;
+}
 
-  public:
-    StackAssignment() : height_(0)
-    { }
-
-    void freeSlot(uint32 index) {
-        slots.append(index);
-    }
-
-    void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
-    }
-
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
-    }
-
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
+bool
+CodeGeneratorShared::generateBody()
+{
+    for (size_t i = 0; i < graph.numBlocks(); i++) {
+        current = graph.getBlock(i);
+        for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
+            iter->accept(this);
         }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
     }
+    return true;
+}
 
-    uint32 stackHeight() const {
-        return height_;
-    }
-};
+bool
+CodeGeneratorShared::generate()
+{
+    if (!generatePrologue())
+        return false;
+    if (!generateBody())
+        return false;
+    if (!generateEpilogue())
+        return false;
+    return true;
+}
 
-} // namespace ion
-} // namespace js
-
-#endif // jsion_cpu_x64_stack_assignment_h__
+bool
+CodeGeneratorShared::visitParameter(LParameter *param)
+{
+    return true;
+}
 
