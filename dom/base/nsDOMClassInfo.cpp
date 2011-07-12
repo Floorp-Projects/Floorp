@@ -460,7 +460,7 @@
 #include "nsIDOMGeoPositionError.h"
 
 // Workers
-#include "mozilla/dom/workers/Workers.h"
+#include "nsDOMWorker.h"
 
 #include "nsDOMFile.h"
 #include "nsDOMFileReader.h"
@@ -598,6 +598,9 @@ DOMCI_DATA(ContentFrameMessageManager, void)
 
 DOMCI_DATA(DOMPrototype, void)
 DOMCI_DATA(DOMConstructor, void)
+
+DOMCI_DATA(Worker, void)
+DOMCI_DATA(ChromeWorker, void)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
@@ -1428,6 +1431,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(MathMLElement, Element, nsElementSH,
                                      ELEMENT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(Worker, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeWorker, nsDOMGenericSH,
+                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderingContext, nsWebGLViewportHandlerSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLBuffer, nsDOMGenericSH,
@@ -1564,6 +1572,8 @@ struct nsConstructorFuncMapData
 
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ChromeWorker, nsDOMWorker::NewChromeWorker)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
 };
@@ -4146,6 +4156,18 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(Worker, nsIWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ChromeWorker, nsIWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderingContext, nsIDOMWebGLRenderingContext)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWebGLRenderingContext)
   DOM_CLASSINFO_MAP_END
@@ -6056,30 +6078,8 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
   const nsGlobalNameStruct *name_struct;
   rv = GetNameStruct(NS_ConvertASCIItoUTF16(dom_class->name), &name_struct);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   if (!name_struct) {
-    // This isn't a normal DOM object, see if this constructor lives on its
-    // prototype chain.
-    jsval val;
-    if (!JS_GetProperty(cx, obj, "prototype", &val)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(val));
-    JSObject *dot_prototype = JSVAL_TO_OBJECT(val);
-
-    JSObject *proto = JS_GetPrototype(cx, dom_obj);
-    for ( ; proto; proto = JS_GetPrototype(cx, proto)) {
-      if (proto == dot_prototype) {
-        *bp = PR_TRUE;
-        break;
-      }
-    }
-
-    return NS_OK;
+    return rv;
   }
 
   if (name_struct->mType != nsGlobalNameStruct::eTypeClassConstructor &&
@@ -6714,10 +6714,6 @@ ContentWindowGetter(JSContext *cx, uintN argc, jsval *vp)
   return ::JS_GetProperty(cx, obj, "content", vp);
 }
 
-static JSNewResolveOp sOtherResolveFuncs[] = {
-  mozilla::dom::workers::ResolveWorkerClasses
-};
-
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsid id, PRUint32 flags,
@@ -6943,16 +6939,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // with there.
   if (!(flags & JSRESOLVE_ASSIGNING)) {
     JSAutoRequest ar(cx);
-
-    // Resolve special classes.
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sOtherResolveFuncs); i++) {
-      if (!sOtherResolveFuncs[i](cx, obj, id, flags, objp)) {
-        return NS_ERROR_FAILURE;
-      }
-      if (*objp) {
-        return NS_OK;
-      }
-    }
 
     // Call GlobalResolve() after we call FindChildWithName() so
     // that named child frames will override external properties

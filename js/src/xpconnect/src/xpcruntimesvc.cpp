@@ -41,9 +41,6 @@
 
 #include "xpcprivate.h"
 
-#include "mozilla/dom/workers/Workers.h"
-using mozilla::dom::workers::ResolveWorkerClasses;
-
 NS_INTERFACE_MAP_BEGIN(BackstagePass)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
@@ -75,17 +72,9 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
     JSBool resolved;
 
-    *_retval = !!JS_ResolveStandardClass(cx, obj, id, &resolved);
-    if(!*_retval)
-        return NS_OK;
-
-    if(resolved)
-    {
+    *_retval = JS_ResolveStandardClass(cx, obj, id, &resolved);
+    if(*_retval && resolved)
         *objp = obj;
-        return NS_OK;
-    }
-
-    *_retval = !!ResolveWorkerClasses(cx, obj, id, flags, objp);
     return NS_OK;
 }
 
