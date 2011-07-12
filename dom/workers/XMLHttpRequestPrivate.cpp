@@ -955,7 +955,7 @@ public:
       intN error = 0;
 
       jsval body;
-      if (mBody.read(&body, cx)) {
+      if (mBody.read(cx, &body)) {
         if (NS_FAILED(xpc->JSValToVariant(cx, &body,
                                           getter_AddRefs(variant)))) {
           error = INVALID_STATE_ERR;
@@ -965,7 +965,7 @@ public:
         error = DATA_CLONE_ERR;
       }
 
-      mBody.clear(cx);
+      mBody.clear();
 
       if (error) {
         return error;
