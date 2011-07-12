@@ -51,6 +51,9 @@ static const ptrdiff_t STACK_SLOT_SIZE       = 4;
 static const uint32 MAX_STACK_SLOTS          = 256;
 static const uint32 DOUBLE_STACK_ALIGNMENT   = 2;
 
+// +1 stack slot for pushing the return address.
+static const uint32 ION_FRAME_OVERHEAD       = 1;
+
 class Registers {
   public:
     typedef JSC::X86Registers::RegisterID Code;
@@ -60,6 +63,8 @@ class Registers {
                                        "esp", "ebp", "esi", "edi" };
         return Names[code];
     }
+
+    static const Code StackPointer = JSC::X86Registers::esp;
 
     static const uint32 Total = 8;
     static const uint32 Allocatable = 6;

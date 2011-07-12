@@ -75,6 +75,10 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
     LUnbox(MIRType type)
       : type_(type)
     { }
+
+    MIRType type() const {
+        return type_;
+    }
 };
 
 class LBoxToDouble : public LInstructionHelper<1, 2, 1>

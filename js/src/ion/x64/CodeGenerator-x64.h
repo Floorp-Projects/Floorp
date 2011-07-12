@@ -61,11 +61,12 @@ class CodeGenerator : public CodeGeneratorX86Shared
     CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
 
     bool generatePrologue();
-    bool generateEpilogue();
 
   public:
     bool visitValue(LValue *value);
     bool visitReturn(LReturn *ret);
+    bool visitBox(LBox *box);
+    bool visitUnboxInteger(LUnboxInteger *unbox);
 };
 
 } // ion

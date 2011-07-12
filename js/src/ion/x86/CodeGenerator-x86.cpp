@@ -52,12 +52,8 @@ CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
 bool
 CodeGenerator::generatePrologue()
 {
-    return true;
-}
-
-bool
-CodeGenerator::generateEpilogue()
-{
+    if (graph.stackHeight())
+        masm.subl(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), Operand(esp));
     return true;
 }
 
@@ -78,6 +74,24 @@ CodeGenerator::visitValue(LValue *value)
     return true;
 }
 
+static inline JSValueTag 
+MIRTypeToTag(MIRType type)
+{
+    switch (type) {
+      case MIRType_Boolean:
+        return JSVAL_TAG_BOOLEAN;
+      case MIRType_Int32:
+        return JSVAL_TAG_INT32;
+      case MIRType_String:
+        return JSVAL_TAG_STRING;
+      case MIRType_Object:
+        return JSVAL_TAG_OBJECT;
+      default:
+        JS_NOT_REACHED("no payload...");
+    }
+    return JSVAL_TAG_NULL;
+}
+
 bool
 CodeGenerator::visitBox(LBox *box)
 {
@@ -93,26 +107,16 @@ CodeGenerator::visitBox(LBox *box)
         // On x86, the input operand and the output payload have the same
         // virtual register. All that needs to be written is the type tag for
         // the type definition.
-        JSValueTag tag;
-        switch (box->type()) {
-          case MIRType_Boolean:
-            tag = JSVAL_TAG_BOOLEAN;
-            break;
-          case MIRType_Int32:
-            tag = JSVAL_TAG_INT32;
-            break;
-          case MIRType_String:
-            tag = JSVAL_TAG_STRING;
-            break;
-          case MIRType_Object:
-            tag = JSVAL_TAG_OBJECT;
-            break;
-          default:
-            JS_NOT_REACHED("no payload...");
-            return false;
-        }
-        masm.movl(Imm32(tag), ToRegister(type));
+        masm.movl(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
     }
+    return true;
+}
+
+bool
+CodeGenerator::visitUnbox(LUnbox *unbox)
+{
+    LAllocation *type = unbox->getOperand(TYPE_INDEX);
+    masm.cmpl(Imm32(MIRTypeToTag(unbox->type())), ToOperand(type));
     return true;
 }
 
@@ -126,7 +130,8 @@ CodeGenerator::visitReturn(LReturn *ret)
     JS_ASSERT(ToRegister(type) == JSReturnReg_Type);
     JS_ASSERT(ToRegister(payload) == JSReturnReg_Data);
 #endif
-    masm.pop(ebp);
+    if (graph.stackHeight())
+        masm.addl(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), Operand(esp));
     masm.ret();
     return true;
 }
