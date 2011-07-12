@@ -151,7 +151,8 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     spew.spewPass("Apply types");
 
-    ValueNumberer gvn(graph);
+    // FIXME(671442) this should be an option
+    ValueNumberer gvn(graph, ION_GVN_PESSIMISTIC);
     if (!gvn.analyze())
         return false;
     spew.spewPass("GVN");
