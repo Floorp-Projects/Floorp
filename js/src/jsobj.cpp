@@ -1729,76 +1729,43 @@ NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value
         vp->setUndefined();
         return true;
     }
+    uintN attrs = desc->attrs;
+    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : UndefinedValue();
+    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : UndefinedValue();
 
     /* We have our own property, so start creating the descriptor. */
-    PropDesc d;
-    d.initFromPropertyDescriptor(*desc);
-    if (!d.makeObject(cx))
-        return false;
-    *vp = d.pd;
-    return true;
-}
-
-void
-PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
-{
-    pd.setUndefined();
-    attrs = uint8(desc.attrs);
-    if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        hasGet = (desc.attrs & JSPROP_GETTER) != 0;
-        get = hasGet ? CastAsObjectJsval(desc.getter) : UndefinedValue();
-        hasSet = (desc.attrs & JSPROP_SETTER) != 0;
-        set = hasSet ? CastAsObjectJsval(desc.setter) : UndefinedValue();
-        hasValue = false;
-        value.setUndefined();
-        hasWritable = false;
-    } else {
-        hasGet = false;
-        get.setUndefined();
-        hasSet = false;
-        set.setUndefined();
-        hasValue = true;
-        value = desc.value;
-        hasWritable = true;
-    }
-    hasEnumerable = true;
-    hasConfigurable = true;
-}
-
-bool
-PropDesc::makeObject(JSContext *cx)
-{
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj)
         return false;
 
     const JSAtomState &atomState = cx->runtime->atomState;
-    if ((hasConfigurable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
-                              BooleanValue((attrs & JSPROP_PERMANENT) == 0),
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) ||
-        (hasEnumerable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
-                              BooleanValue((attrs & JSPROP_ENUMERATE) != 0),
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) ||
-        (hasGet &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom), get,
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) ||
-        (hasSet &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom), set,
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) ||
-        (hasValue &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), value,
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) ||
-        (hasWritable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
-                              BooleanValue((attrs & JSPROP_READONLY) == 0),
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)))
-    {
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        if (!obj->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom), getter,
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
+            !obj->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom), setter,
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
+            return false;
+        }
+    } else {
+        if (!obj->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), desc->value,
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
+            !obj->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
+                                 BooleanValue((attrs & JSPROP_READONLY) == 0),
+                                 PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
+            return false;
+        }
+    }
+
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
+                             BooleanValue((attrs & JSPROP_ENUMERATE) != 0),
+                             PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE) ||
+        !obj->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
+                             BooleanValue((attrs & JSPROP_PERMANENT) == 0),
+                             PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE)) {
         return false;
     }
 
-    pd.setObject(*obj);
+    vp->setObject(*obj);
     return true;
 }
 
@@ -1958,7 +1925,7 @@ PropDesc::PropDesc()
 }
 
 bool
-PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
+PropDesc::initialize(JSContext* cx, const Value &origval)
 {
     Value v = origval;
 
@@ -2019,22 +1986,28 @@ PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &found))
         return false;
     if (found) {
+        if ((v.isPrimitive() || !js_IsCallable(v)) && !v.isUndefined()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+                                 js_getter_str);
+            return false;
+        }
         hasGet = true;
         get = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
-        if (checkAccessors && !checkGetter(cx))
-            return false;
     }
 
     /* 8.10.7 step 8 */
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &found))
         return false;
     if (found) {
+        if ((v.isPrimitive() || !js_IsCallable(v)) && !v.isUndefined()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+                                 js_setter_str);
+            return false;
+        }
         hasSet = true;
         set = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
-        if (checkAccessors && !checkSetter(cx))
-            return false;
     }
 
     /* 8.10.7 step 9 */
@@ -2442,9 +2415,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const jsid &id, const PropDe
     return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
 }
 
-namespace js {
-
-bool
+static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc, bool throwError,
                bool *rval)
 {
@@ -2458,8 +2429,6 @@ DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &des
     }
 
     return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
-}
-
 }
 
 JSBool
@@ -2481,22 +2450,23 @@ js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, const Value &descrip
 static JSBool
 obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
 {
+    /* 15.2.3.6 steps 1 and 5. */
     JSObject *obj;
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperty", &obj))
-        return false;
+        return JS_FALSE;
+    vp->setObject(*obj);
 
-    jsid id;
-    if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), &id))
+    /* 15.2.3.6 step 2. */
+    AutoIdRooter nameidr(cx);
+    if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), nameidr.addr()))
         return JS_FALSE;
 
-    const Value descval = argc >= 3 ? vp[4] : UndefinedValue();
+    /* 15.2.3.6 step 3. */
+    const Value &descval = argc >= 3 ? vp[4] : UndefinedValue();
 
+    /* 15.2.3.6 step 4 */
     JSBool junk;
-    if (!js_DefineOwnProperty(cx, obj, id, descval, &junk))
-        return false;
-
-    vp->setObject(*obj);
-    return true;
+    return js_DefineOwnProperty(cx, obj, nameidr.id(), descval, &junk);
 }
 
 static bool

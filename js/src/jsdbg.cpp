@@ -43,7 +43,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsemit.h"
-#include "jsexn.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
 #include "jstl.h"
@@ -2917,82 +2916,6 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static bool
-CheckArgCompartment(JSContext *cx, JSObject *obj, const Value &v,
-                    const char *methodname, const char *propname)
-{
-    if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
-                             methodname, propname);
-        return false;
-    }
-    return true;
-}
-
-static JSBool
-DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
-{
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
-
-    jsid id;
-    if (!ValueToId(cx, argc >= 1 ? vp[2] : UndefinedValue(), &id))
-        return JS_FALSE;
-
-    const Value &descval = argc >= 2 ? vp[3] : UndefinedValue();
-    AutoPropDescArrayRooter descs(cx);
-    PropDesc *desc = descs.append();
-    if (!desc || !desc->initialize(cx, descval, false))
-        return false;
-
-    desc->pd.setUndefined();
-    if ((desc->hasValue && (!dbg->unwrapDebuggeeValue(cx, &desc->value) ||
-                            !CheckArgCompartment(cx, obj, desc->value, "defineProperty",
-                                                 "value"))) ||
-        (desc->hasGet && (!dbg->unwrapDebuggeeValue(cx, &desc->get) ||
-                          !CheckArgCompartment(cx, obj, desc->get, "defineProperty", "get") ||
-                          !desc->checkGetter(cx))) ||
-        (desc->hasSet && (!dbg->unwrapDebuggeeValue(cx, &desc->set) ||
-                          !CheckArgCompartment(cx, obj, desc->set, "defineProperty", "set") ||
-                          !desc->checkSetter(cx))))
-    {
-        return false;
-    }
-
-    {
-        AutoCompartment ac(cx, obj);
-        if (!ac.enter() ||
-            !ac.destination->wrapId(cx, &id) ||
-            !ac.destination->wrap(cx, &desc->value) ||
-            !ac.destination->wrap(cx, &desc->get) ||
-            !ac.destination->wrap(cx, &desc->set))
-        {
-            return false;
-        }
-
-        // Defining a property on a proxy requiers the pd field to contain
-        // a descriptor object. Reconstitute it.
-        if (obj->isProxy() && !desc->makeObject(cx))
-            return false;
-
-        bool ignored;
-        if (!DefineProperty(cx, obj, id, *desc, true, &ignored)) {
-            if (cx->isExceptionPending()) {
-                Value exc = cx->getPendingException();
-                if (exc.isObject() && exc.toObject().isError()) {
-                    cx->clearPendingException();
-                    ac.leave();
-                    JSObject *copyobj = js_CopyErrorObject(cx, &exc.toObject(), dbg->toJSObject());
-                    if (copyobj)
-                        cx->setPendingException(ObjectValue(*copyobj));
-                }
-            }
-            return false;
-        }
-    }
-
-    vp->setUndefined();
-    return true;
-}
 
 enum ApplyOrCallMode { ApplyMode, CallMode };
 
@@ -3084,7 +3007,6 @@ static JSPropertySpec DebuggerObject_properties[] = {
 static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
     JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
-    JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FS_END
