@@ -162,9 +162,7 @@ add_test(function test_masterpassword_locked_retry_interval() {
   Service.verifyLogin = Service._verifyLogin;
   SyncScheduler.scheduleAtInterval = SyncScheduler._scheduleAtInterval;
 
-  Svc.Prefs.resetBranch("");
-  SyncScheduler.setDefaults();
-  Clients.resetClient();
+  Service.startOver();
   server.stop(run_next_test);
 });
 
@@ -204,6 +202,7 @@ add_test(function test_scheduleNextSync() {
       Svc.Prefs.resetBranch("");
       SyncScheduler.syncTimer.clear();
       Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
+      Service.startOver();
       server.stop(run_next_test);
     }, this);
   });
@@ -243,12 +242,8 @@ add_test(function test_handleSyncError() {
   let server = sync_httpd_setup();
   setUp();
  
-  let origLockedSync = Service._lockedSync;
-  Service._lockedSync = function () {
-    // Force a sync fail.
-    Service._loggedIn = false;
-    origLockedSync.call(Service);
-  };
+  // Force sync to fail.
+  Svc.Prefs.set("firstSync", "notReady");
 
   _("Ensure expected initial environment.");
   do_check_eq(SyncScheduler._syncErrors, 0);
@@ -298,8 +293,7 @@ add_test(function test_handleSyncError() {
   do_check_true(Status.enforceBackoff);
   SyncScheduler.syncTimer.clear();
 
-  Service._lockedSync = origLockedSync;
-  SyncScheduler.setDefaults();
+  Service.startOver();
   server.stop(run_next_test);
 });
 
@@ -334,9 +328,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.idle);
 
-  Svc.Prefs.resetBranch("");
-  SyncScheduler.setDefaults();
-  Clients.resetClient();
+  Service.startOver();
   server.stop(run_next_test);
 });
 
@@ -344,10 +336,7 @@ add_test(function test_sync_at_startup() {
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
 
-    Svc.Prefs.resetBranch("");
-    SyncScheduler.setDefaults();
-    Clients.resetClient();
-
+    Service.startOver();
     server.stop(run_next_test);
   });
 
@@ -365,11 +354,11 @@ add_test(function test_no_autoconnect_during_wizard() {
   // Simulate the Sync setup wizard.
   Svc.Prefs.set("firstSync", "notReady");
 
-  // Ensure we don't actually try to sync.
-  function onSyncStart() {
+  // Ensure we don't actually try to sync (or log in for that matter).
+  function onLoginStart() {
     do_throw("Should not get here!");
   }
-  Svc.Obs.add("weave:service:sync:start", onSyncStart);
+  Svc.Obs.add("weave:service:login:start", onLoginStart);
 
   // First wait >100ms (nsITimers can take up to that much time to fire, so
   // we can account for the timer in delayedAutoconnect) and then two event
@@ -381,12 +370,9 @@ add_test(function test_no_autoconnect_during_wizard() {
       Utils.nextTick(wait);
       return;
     }
-    Svc.Obs.remove("weave:service:sync:start", onSyncStart);
+    Svc.Obs.remove("weave:service:login:start", onLoginStart);
 
-    Svc.Prefs.resetBranch("");
-    SyncScheduler.setDefaults();
-    Clients.resetClient();
-
+    Service.startOver();
     server.stop(run_next_test);    
   }
   timer = Utils.namedTimer(wait, 150, {}, "timer");
