@@ -259,7 +259,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
      * Finds and returns the address of a known object and slot.
      */
     Address objSlotRef(JSObject *obj, RegisterID reg, uint32 slot) {
-        move(ImmPtr(&obj->slots), reg);
+        move(ImmPtr((char *)obj + JSObject::offsetOfSlots()), reg);
         loadPtr(reg, reg);
         return Address(reg, slot * sizeof(Value));
     }
@@ -672,7 +672,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         fails.rangeCheck = guardArrayCapacity(objReg, key);
 
         RegisterID dslotsReg = objReg;
-        loadPtr(Address(objReg, offsetof(JSObject, slots)), dslotsReg);
+        loadPtr(Address(objReg, JSObject::offsetOfSlots()), dslotsReg);
 
         // Load the slot out of the array.
         if (key.isConstant()) {
@@ -707,7 +707,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
     void loadDynamicSlot(RegisterID objReg, uint32 slot,
                          RegisterID typeReg, RegisterID dataReg) {
-        loadPtr(Address(objReg, offsetof(JSObject, slots)), dataReg);
+        loadPtr(Address(objReg, JSObject::offsetOfSlots()), dataReg);
         loadValueAsComponents(Address(dataReg, slot * sizeof(Value)), typeReg, dataReg);
     }
 

@@ -225,8 +225,7 @@ class ArgumentsObject : public ::JSObject
     inline js::ArgumentsData *data() const;
 
     inline const js::Value &element(uint32 i) const;
-    inline js::Value *elements() const;
-    inline js::Value *addressOfElement(uint32 i);
+    inline const js::Value *elements() const;
     inline void setElement(uint32 i, const js::Value &v);
 };
 
