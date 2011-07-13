@@ -2060,6 +2060,7 @@ gfxFontGroup::BuildFontList()
 PRBool
 gfxFontGroup::FindPlatformFont(const nsAString& aName,
                                const nsACString& aGenericName,
+                               PRBool aUseFontSet,
                                void *aClosure)
 {
     gfxFontGroup *fontGroup = static_cast<gfxFontGroup*>(aClosure);
@@ -2068,21 +2069,23 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
     PRBool needsBold;
     gfxFontEntry *fe = nsnull;
 
-    // First, look up in the user font set...
-    // If the fontSet matches the family, we must not look for a platform
-    // font of the same name, even if we fail to actually get a fontEntry
-    // here; we'll fall back to the next name in the CSS font-family list.
     PRBool foundFamily = PR_FALSE;
-    gfxUserFontSet *fs = fontGroup->GetUserFontSet();
-    if (fs) {
-        // If the fontSet matches the family, but the font has not yet finished
-        // loading (nor has its load timeout fired), the fontGroup should wait
-        // for the download, and not actually draw its text yet.
-        PRBool waitForUserFont = PR_FALSE;
-        fe = fs->FindFontEntry(aName, *fontStyle, foundFamily,
-                               needsBold, waitForUserFont);
-        if (!fe && waitForUserFont) {
-            fontGroup->mSkipDrawing = PR_TRUE;
+    if (aUseFontSet) {
+        // First, look up in the user font set...
+        // If the fontSet matches the family, we must not look for a platform
+        // font of the same name, even if we fail to actually get a fontEntry
+        // here; we'll fall back to the next name in the CSS font-family list.
+        gfxUserFontSet *fs = fontGroup->GetUserFontSet();
+        if (fs) {
+            // If the fontSet matches the family, but the font has not yet finished
+            // loading (nor has its load timeout fired), the fontGroup should wait
+            // for the download, and not actually draw its text yet.
+            PRBool waitForUserFont = PR_FALSE;
+            fe = fs->FindFontEntry(aName, *fontStyle, foundFamily,
+                                   needsBold, waitForUserFont);
+            if (!fe && waitForUserFont) {
+                fontGroup->mSkipDrawing = PR_TRUE;
+            }
         }
     }
 
@@ -2144,7 +2147,7 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
                           void *closure)
 {
     return ForEachFontInternal(mFamilies, mStyle.language,
-                               PR_TRUE, PR_TRUE, fc, closure);
+                               PR_TRUE, PR_TRUE, PR_TRUE, fc, closure);
 }
 
 PRBool
@@ -2154,19 +2157,22 @@ gfxFontGroup::ForEachFont(const nsAString& aFamilies,
                           void *closure)
 {
     return ForEachFontInternal(aFamilies, aLanguage,
-                               PR_FALSE, PR_TRUE, fc, closure);
+                               PR_FALSE, PR_TRUE, PR_TRUE, fc, closure);
 }
 
 struct ResolveData {
     ResolveData(gfxFontGroup::FontCreationCallback aCallback,
                 nsACString& aGenericFamily,
+                PRBool aUseFontSet,
                 void *aClosure) :
         mCallback(aCallback),
         mGenericFamily(aGenericFamily),
+        mUseFontSet(aUseFontSet),
         mClosure(aClosure) {
     }
     gfxFontGroup::FontCreationCallback mCallback;
     nsCString mGenericFamily;
+    PRBool mUseFontSet;
     void *mClosure;
 };
 
@@ -2175,6 +2181,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                                   nsIAtom *aLanguage,
                                   PRBool aResolveGeneric,
                                   PRBool aResolveFontName,
+                                  PRBool aUseFontSet,
                                   FontCreationCallback fc,
                                   void *closure)
 {
@@ -2267,18 +2274,17 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             }
         }
 
+        NS_LossyConvertUTF16toASCII gf(genericFamily);
         if (generic) {
-            ForEachFontInternal(family, groupAtom, PR_FALSE,
-                                aResolveFontName, fc, closure);
+            fc(family, gf, PR_FALSE, closure);
         } else if (!family.IsEmpty()) {
-            NS_LossyConvertUTF16toASCII gf(genericFamily);
             if (aResolveFontName) {
-                ResolveData data(fc, gf, closure);
+                ResolveData data(fc, gf, aUseFontSet, closure);
                 PRBool aborted = PR_FALSE, needsBold;
                 nsresult rv = NS_OK;
                 PRBool foundFamily = PR_FALSE;
                 PRBool waitForUserFont = PR_FALSE;
-                if (mUserFontSet &&
+                if (aUseFontSet && mUserFontSet &&
                     mUserFontSet->FindFontEntry(family, mStyle, foundFamily,
                                                 needsBold, waitForUserFont))
                 {
@@ -2298,7 +2304,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                     return PR_FALSE;
             }
             else {
-                if (!fc(family, gf, closure))
+                if (!fc(family, gf, aUseFontSet, closure))
                     return PR_FALSE;
             }
         }
@@ -2310,7 +2316,8 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             prefName.Append(groupString);
             nsAdoptingString value = Preferences::GetString(prefName.get());
             if (value) {
-                ForEachFontInternal(value, groupAtom, PR_FALSE, aResolveFontName,
+                ForEachFontInternal(value, groupAtom, PR_FALSE,
+                                    aResolveFontName, PR_FALSE,
                                     fc, closure);
             }
         }
@@ -2325,7 +2332,8 @@ PRBool
 gfxFontGroup::FontResolverProc(const nsAString& aName, void *aClosure)
 {
     ResolveData *data = reinterpret_cast<ResolveData*>(aClosure);
-    return (data->mCallback)(aName, data->mGenericFamily, data->mClosure);
+    return (data->mCallback)(aName, data->mGenericFamily, data->mUseFontSet,
+                             data->mClosure);
 }
 
 gfxTextRun *
