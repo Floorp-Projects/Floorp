@@ -332,7 +332,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
   server.stop(run_next_test);
 });
 
-add_test(function test_sync_at_startup() {
+add_test(function test_autoconnect() {
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
 
@@ -342,6 +342,39 @@ add_test(function test_sync_at_startup() {
 
   let server = sync_httpd_setup();
   setUp();
+
+  Service.delayedAutoConnect(0);
+});
+
+add_test(function test_autoconnect_mp_locked() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Pretend user did not unlock master password.
+  let origLocked = Utils.mpLocked;
+  Utils.mpLocked = function() true;
+
+  let origPP = Service.__lookupGetter__("passphrase");
+  delete Service.passphrase;
+  Service.__defineGetter__("passphrase", function() {
+    throw "User canceled Master Password entry";
+  });
+
+  // A locked master password will still trigger a sync, but then we'll hit
+  // MASTER_PASSWORD_LOCKED and hence MASTER_PASSWORD_LOCKED_RETRY_INTERVAL.
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    Utils.nextTick(function aLittleBitAfterLoginError() {
+      do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
+
+      Utils.mpLocked = origLocked;
+      delete Service.passphrase;
+      Service.__defineGetter__("passphrase", origPP);
+
+      Service.startOver();
+      server.stop(run_next_test);
+    });
+  });
 
   Service.delayedAutoConnect(0);
 });
