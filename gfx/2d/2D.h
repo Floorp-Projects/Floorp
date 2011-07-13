@@ -492,7 +492,9 @@ public:
 
   /*
    * Blend a surface to the draw target with a shadow. The shadow is drawn as a
-   * gaussian blur using a specified sigma.
+   * gaussian blur using a specified sigma. The shadow is clipped to the size
+   * of the input surface, so the input surface should contain a transparent
+   * border the size of the approximate coverage of the blur (3 * aSigma).
    * NOTE: This function works in device space!
    *
    * aSurface Source surface to draw.
