@@ -43,7 +43,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsemit.h"
-#include "jsexn.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
 #include "jstl.h"
@@ -2929,6 +2928,36 @@ CheckArgCompartment(JSContext *cx, JSObject *obj, const Value &v,
     return true;
 }
 
+// Convert Debugger.Objects in decs to debuggee values.
+// Reject non-callable getters and setters.
+static bool
+UnwrapPropDesc(JSContext *cx, Debugger *dbg, JSObject *obj, PropDesc *desc)
+{
+    return (!desc->hasValue || (dbg->unwrapDebuggeeValue(cx, &desc->value) &&
+                                CheckArgCompartment(cx, obj, desc->value, "defineProperty",
+                                                    "value"))) &&
+           (!desc->hasGet || (dbg->unwrapDebuggeeValue(cx, &desc->get) &&
+                              CheckArgCompartment(cx, obj, desc->get, "defineProperty", "get") &&
+                              desc->checkGetter(cx))) &&
+           (!desc->hasSet || (dbg->unwrapDebuggeeValue(cx, &desc->set) &&
+                              CheckArgCompartment(cx, obj, desc->set, "defineProperty", "set") &&
+                              desc->checkSetter(cx)));
+}
+
+// Rewrap *idp and the fields of *desc for the current compartment.  Also:
+// defining a property on a proxy requiers the pd field to contain a descriptor
+// object, so reconstitute desc->pd if needed.
+static bool
+WrapIdAndPropDesc(JSContext *cx, JSObject *obj, jsid *idp, PropDesc *desc)
+{
+    JSCompartment *comp = cx->compartment;
+    return comp->wrapId(cx, idp) &&
+           comp->wrap(cx, &desc->value) &&
+           comp->wrap(cx, &desc->get) &&
+           comp->wrap(cx, &desc->set) &&
+           (!obj->isProxy() || desc->makeObject(cx));
+}
+
 static JSBool
 DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
 {
@@ -2938,61 +2967,72 @@ DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
     if (!ValueToId(cx, argc >= 1 ? vp[2] : UndefinedValue(), &id))
         return JS_FALSE;
 
-    const Value &descval = argc >= 2 ? vp[3] : UndefinedValue();
+    const Value &descval = argc >= 1 ? vp[3] : UndefinedValue();
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
     if (!desc || !desc->initialize(cx, descval, false))
         return false;
 
     desc->pd.setUndefined();
-    if ((desc->hasValue && (!dbg->unwrapDebuggeeValue(cx, &desc->value) ||
-                            !CheckArgCompartment(cx, obj, desc->value, "defineProperty",
-                                                 "value"))) ||
-        (desc->hasGet && (!dbg->unwrapDebuggeeValue(cx, &desc->get) ||
-                          !CheckArgCompartment(cx, obj, desc->get, "defineProperty", "get") ||
-                          !desc->checkGetter(cx))) ||
-        (desc->hasSet && (!dbg->unwrapDebuggeeValue(cx, &desc->set) ||
-                          !CheckArgCompartment(cx, obj, desc->set, "defineProperty", "set") ||
-                          !desc->checkSetter(cx))))
-    {
+    if (!UnwrapPropDesc(cx, dbg, obj, desc))
         return false;
+
+    {
+        AutoCompartment ac(cx, obj);
+        if (!ac.enter() || !WrapIdAndPropDesc(cx, obj, &id, desc))
+            return false;
+
+        ErrorCopier ec(ac, dbg->toJSObject());
+        bool dummy;
+        if (!DefineProperty(cx, obj, id, *desc, true, &dummy))
+            return false;
+    }
+
+    vp->setUndefined();
+    return true;
+}
+
+static JSBool
+DebuggerObject_defineProperties(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    REQUIRE_ARGC("Debugger.Object.defineProperties", 1);
+    JSObject *props = ToObject(cx, &vp[2]);
+    if (!props)
+        return false;
+
+    AutoIdVector ids(cx);
+    AutoPropDescArrayRooter descs(cx);
+    if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
+        return false;
+    size_t n = ids.length();
+
+    for (size_t i = 0; i < n; i++) {
+        if (!UnwrapPropDesc(cx, dbg, obj, &descs[i]))
+            return false;
     }
 
     {
         AutoCompartment ac(cx, obj);
-        if (!ac.enter() ||
-            !ac.destination->wrapId(cx, &id) ||
-            !ac.destination->wrap(cx, &desc->value) ||
-            !ac.destination->wrap(cx, &desc->get) ||
-            !ac.destination->wrap(cx, &desc->set))
-        {
+        if (!ac.enter())
             return false;
+        for (size_t i = 0; i < n; i++) {
+            if (!WrapIdAndPropDesc(cx, obj, &ids[i], &descs[i]))
+                return false;
         }
 
-        // Defining a property on a proxy requiers the pd field to contain
-        // a descriptor object. Reconstitute it.
-        if (obj->isProxy() && !desc->makeObject(cx))
-            return false;
-
-        bool ignored;
-        if (!DefineProperty(cx, obj, id, *desc, true, &ignored)) {
-            if (cx->isExceptionPending()) {
-                Value exc = cx->getPendingException();
-                if (exc.isObject() && exc.toObject().isError()) {
-                    cx->clearPendingException();
-                    ac.leave();
-                    JSObject *copyobj = js_CopyErrorObject(cx, &exc.toObject(), dbg->toJSObject());
-                    if (copyobj)
-                        cx->setPendingException(ObjectValue(*copyobj));
-                }
-            }
-            return false;
+        ErrorCopier ec(ac, dbg->toJSObject());
+        for (size_t i = 0; i < n; i++) {
+            bool dummy;
+            if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
+                return false;
         }
     }
 
     vp->setUndefined();
     return true;
 }
+
 
 enum ApplyOrCallMode { ApplyMode, CallMode };
 
@@ -3085,6 +3125,7 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
     JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
+    JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FS_END
