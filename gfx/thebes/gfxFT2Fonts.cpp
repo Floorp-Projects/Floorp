@@ -339,8 +339,9 @@ FontFamily::FindStyleVariations()
 
 PRBool
 gfxFT2FontGroup::FontCallback(const nsAString& fontName,
-                             const nsACString& genericName,
-                             void *closure)
+                              const nsACString& genericName,
+                              PRBool aUseFontSet,
+                              void *closure)
 {
     nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(closure);
 
@@ -449,6 +450,7 @@ PRUint32 getUTF8CharAndNext(const PRUint8 *aString, PRUint8 *aLength)
 static PRBool
 AddFontNameToArray(const nsAString& aName,
                    const nsACString& aGenericName,
+                   PRBool aUseFontSet,
                    void *aClosure)
 {
     if (!aName.IsEmpty()) {
