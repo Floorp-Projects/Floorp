@@ -1730,8 +1730,12 @@ NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value
         return true;
     }
     uintN attrs = desc->attrs;
-    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : UndefinedValue();
-    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : UndefinedValue();
+    Value getter = ((attrs & JSPROP_GETTER) && desc->getter)
+                   ? CastAsObjectJsval(desc->getter)
+                   : UndefinedValue();
+    Value setter = ((attrs & JSPROP_SETTER) && desc->setter)
+                   ? CastAsObjectJsval(desc->setter)
+                   : UndefinedValue();
 
     /* We have our own property, so start creating the descriptor. */
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
@@ -1791,9 +1795,9 @@ GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, PropertyDescript
         if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
             doGet = false;
             if (desc->attrs & JSPROP_GETTER)
-                desc->getter = CastAsPropertyOp(shape->getterValue().toObjectOrNull());
+                desc->getter = CastAsPropertyOp(shape->getterObject());
             if (desc->attrs & JSPROP_SETTER)
-                desc->setter = CastAsStrictPropertyOp(shape->setterValue().toObjectOrNull());
+                desc->setter = CastAsStrictPropertyOp(shape->setterObject());
         }
     } else {
         if (!pobj->getAttributes(cx, id, &desc->attrs))
