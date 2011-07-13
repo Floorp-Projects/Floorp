@@ -137,6 +137,7 @@ public:
   bool InitD3D10Data();
 
   static ID2D1Factory *factory();
+  static TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
 
   operator std::string() const {
     std::stringstream stream;
@@ -163,7 +164,6 @@ private:
   TemporaryRef<ID2D1Geometry> GetClippedGeometry();
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
-  TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
 
   TemporaryRef<ID3D10Texture1D> CreateGradientTexture(const GradientStopsD2D *aStops);
 
