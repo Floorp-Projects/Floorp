@@ -4839,7 +4839,7 @@ mjit::Compiler::enterBlock(JSObject *obj)
     uintN count = OBJ_BLOCK_COUNT(cx, obj);
     uintN limit = base + count;
     for (uintN slot = base, i = 0; slot < limit; slot++, i++) {
-        const Value &v = obj->getSlotRef(slot);
+        const Value &v = obj->getSlot(slot);
         if (v.isBoolean() && v.toBoolean())
             frame.setClosedVar(oldFrameDepth + i);
     }
