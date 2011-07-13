@@ -1568,6 +1568,35 @@ let UI = {
       url = gFavIconService.getFaviconImageForPage(tab.linkedBrowser.currentURI).spec;
 
     return url;
+  },
+
+  // ----------
+  // Function: notifySessionRestoreEnabled
+  // Notify the user that session restore has been automatically enabled
+  // by showing a banner that expects no user interaction. It fades out after
+  // some seconds.
+  notifySessionRestoreEnabled: function UI_notifySessionRestoreEnabled() {
+    let brandBundle = gWindow.document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+    let notificationText = tabviewBundle.formatStringFromName(
+      "tabview.notification.sessionStore", [brandShortName], 1);
+
+    let banner = iQ("<div>")
+      .text(notificationText)
+      .addClass("banner")
+      .appendTo("body");
+
+    let onFadeOut = function () {
+      banner.remove();
+    };
+
+    let onFadeIn = function () {
+      setTimeout(function () {
+        banner.animate({opacity: 0}, {duration: 1500, complete: onFadeOut});
+      }, 5000);
+    };
+
+    banner.animate({opacity: 0.7}, {duration: 1500, complete: onFadeIn});
   }
 };
 
