@@ -380,6 +380,20 @@ public:
    */
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const = 0;
 
+  /* This functions gets the bounds of this path. These bounds are not
+   * guaranteed to be tight. A transform may be specified that gives the bounds
+   * after application of the transform.
+   */
+  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const = 0;
+
+  /* This function gets the bounds of the stroke of this path using the
+   * specified strokeoptions. These bounds are not guaranteed to be tight.
+   * A transform may be specified that gives the bounds after application of
+   * the transform.
+   */
+  virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
+                                const Matrix &aTransform = Matrix()) const = 0;
+
   /* This gets the fillrule this path's builder was created with. This is not
    * mutable.
    */
