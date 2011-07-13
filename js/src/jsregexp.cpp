@@ -57,6 +57,8 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 
@@ -839,32 +841,16 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     if (!proto->initRegExp(cx, re.get()))
         return NULL;
 
-    /*
-     * Now add the standard methods to RegExp.prototype, and pre-brand for
-     * better shape-guarding code.
-     */
-    if (!JS_DefineFunctions(cx, proto, regexp_methods))
+    if (!DefinePropertiesAndBrand(cx, proto, NULL, regexp_methods))
         return NULL;
-    proto->brand(cx);
 
-    /* Create the RegExp constructor. */
-    JSAtom *regExpAtom = CLASS_ATOM(cx, RegExp);
-    JSFunction *ctor =
-        js_NewFunction(cx, NULL, regexp_construct, 2, JSFUN_CONSTRUCTOR, global, regExpAtom);
+    JSFunction *ctor = global->createConstructor(cx, regexp_construct, &js_RegExpClass,
+                                                 CLASS_ATOM(cx, RegExp), 2);
     if (!ctor)
         return NULL;
 
-    /* RegExp creates regular expressions. */
-    FUN_CLASP(ctor) = &js_RegExpClass;
-
-    /* Define RegExp.prototype and RegExp.prototype.constructor. */
-    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                              ObjectValue(*proto), PropertyStub, StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                               ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0)) {
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
-    }
 
     /* Add static properties to the RegExp constructor. */
     if (!JS_DefineProperties(cx, ctor, regexp_static_props) ||
@@ -877,10 +863,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    /* Install the fully-constructed RegExp and RegExp.prototype in global. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
         return NULL;
 
     return proto;
 }
-

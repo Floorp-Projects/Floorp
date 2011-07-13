@@ -169,7 +169,7 @@ public:
    */
   Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; }
 
-  static void LayerManagerD3D10::ReportFailure(const nsACString &aMsg, HRESULT aCode);
+  static void ReportFailure(const nsACString &aMsg, HRESULT aCode);
 
 private:
   void SetupPipeline();

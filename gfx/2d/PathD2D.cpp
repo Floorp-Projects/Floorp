@@ -344,5 +344,40 @@ PathD2D::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   return !!result;
 }
 
+Rect
+PathD2D::GetBounds(const Matrix &aTransform) const
+{
+  D2D1_RECT_F bounds;
+
+  HRESULT hr = mGeometry->GetBounds(D2DMatrix(aTransform), &bounds);
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to get stroked bounds for path. Code: " << hr;
+    bounds.bottom = bounds.left = bounds.right = bounds.top = 0;
+  }
+
+  return ToRect(bounds);
+}
+
+Rect
+PathD2D::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
+                          const Matrix &aTransform) const
+{
+  D2D1_RECT_F bounds;
+
+  RefPtr<ID2D1StrokeStyle> strokeStyle =
+    DrawTargetD2D::CreateStrokeStyleForOptions(aStrokeOptions);
+  HRESULT hr =
+    mGeometry->GetWidenedBounds(aStrokeOptions.mLineWidth, strokeStyle,
+                                D2DMatrix(aTransform), &bounds);
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to get stroked bounds for path. Code: " << hr;
+    bounds.bottom = bounds.left = bounds.right = bounds.top = 0;
+  }
+
+  return ToRect(bounds);
+}
+
 }
 }
