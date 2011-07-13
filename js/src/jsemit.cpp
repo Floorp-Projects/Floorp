@@ -5412,7 +5412,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             labelIndex = INVALID_ATOMID;
             while (!STMT_IS_LOOP(stmt) && stmt->type != STMT_SWITCH)
                 stmt = stmt->down;
-            noteType = (stmt->type == STMT_SWITCH) ? SRC_NULL : SRC_BREAK;
+            noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
         }
 
         if (EmitGoto(cx, cg, stmt, &stmt->breaks, labelIndex, noteType) < 0)
