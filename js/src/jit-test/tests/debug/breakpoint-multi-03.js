@@ -3,13 +3,11 @@
 var g = newGlobal('new-compartment');
 function attach(g, i) {
     var dbg = Debugger(g);
-    dbg.hooks = {
-        debuggerHandler: function (frame) {
-            var s = frame.eval("f").return.script;
-            var offs = s.getLineOffsets(g.line0 + 3);
-            for (var j = 0; j < offs.length; j++)
-                s.setBreakpoint(offs[j], {hit: function () { g.log += "" + i; }});
-        }
+    dbg.onDebuggerStatement = function (frame) {
+        var s = frame.eval("f").return.script;
+        var offs = s.getLineOffsets(g.line0 + 3);
+        for (var j = 0; j < offs.length; j++)
+            s.setBreakpoint(offs[j], {hit: function () { g.log += "" + i; }});
     };
 }
 

@@ -9,16 +9,14 @@ g.eval("(" + function () {
         }
 
         var dbg = new Debugger(debuggeeGlobal);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                var a = [];
-                for (; frame; frame = frame.older)
-                    a.push(frame);
-                var s = '';
-                while (a.length)
-                    s += id(a.pop());
-                results.push(s);
-            }
+        dbg.onDebuggerStatement = function (frame) {
+            var a = [];
+            for (; frame; frame = frame.older)
+                a.push(frame);
+            var s = '';
+            while (a.length)
+                s += id(a.pop());
+            results.push(s);
         };
     } + ")();");
 

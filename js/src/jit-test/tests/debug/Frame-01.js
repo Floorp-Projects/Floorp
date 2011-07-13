@@ -3,14 +3,12 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var expected, hits;
-dbg.hooks = {
-    debuggerHandler: function (f) {
-        assertEq(Object.getPrototypeOf(f), Debugger.Frame.prototype);
-        assertEq(f.type, expected.type);
-        assertEq(f.generator, expected.generator);
-        assertEq(f.constructing, expected.constructing);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (f) {
+    assertEq(Object.getPrototypeOf(f), Debugger.Frame.prototype);
+    assertEq(f.type, expected.type);
+    assertEq(f.generator, expected.generator);
+    assertEq(f.constructing, expected.constructing);
+    hits++;
 };
 
 function test(code, expectobj, expectedHits) {

@@ -3,7 +3,7 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var name;
-dbg.hooks = {debuggerHandler: function (frame) { name = frame.callee.name; }};
+dbg.onDebuggerStatement = function (frame) { name = frame.callee.name; };
 
 g.eval("(function f() { debugger; })();");
 assertEq(name, "f");

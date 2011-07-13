@@ -8,11 +8,9 @@ var hits;
 
 function addDebugger() {
     var dbg = new Debugger(g);
-    dbg.hooks = {
-        debuggerHandler: function (stack) {
-            hits++;
-            addDebugger();
-        }
+    dbg.onDebuggerStatement = function (stack) {
+        hits++;
+        addDebugger();
     };
 }
 

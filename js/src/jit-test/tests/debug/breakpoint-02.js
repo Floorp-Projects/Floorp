@@ -9,7 +9,7 @@ g1.f = g2.f;
 
 var dbg = Debugger(g1);
 var s;
-dbg.hooks = {debuggerHandler: function (frame) { s = frame.eval("f").return.script; }};
+dbg.onDebuggerStatement = function (frame) { s = frame.eval("f").return.script; };
 g1.eval("debugger;");
 
 assertThrowsInstanceOf(function () { s.setBreakpoint(0, {}); }, Error);

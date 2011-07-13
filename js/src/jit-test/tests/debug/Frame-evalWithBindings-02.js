@@ -3,13 +3,11 @@ var g = newGlobal('new-compartment');
 var dbg = new Debugger;
 var global = dbg.addDebuggee(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        var obj = frame.arguments[0];
-        var expected = frame.arguments[1];
-        assertEq(frame.evalWithBindings("obj.toString()", {obj: obj}).return, expected);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    var obj = frame.arguments[0];
+    var expected = frame.arguments[1];
+    assertEq(frame.evalWithBindings("obj.toString()", {obj: obj}).return, expected);
+    hits++;
 };
 
 g.eval("function f(obj, expected) { debugger; }");

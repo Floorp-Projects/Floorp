@@ -10,17 +10,17 @@ function test(objexpr, descs) {
     g.eval("obj = (" + objexpr + ");");
     var gobjw = gw.getOwnPropertyDescriptor("obj").value;
     try {
-	gobjw.defineProperties(descs);
+        gobjw.defineProperties(descs);
     } catch (exc) {
-	exca = exc;
+        exca = exc;
     }
 
     var indirectEval = eval;
     var obj = indirectEval("(" + objexpr + ");");
     try {
-	Object.defineProperties(obj, descs);
+        Object.defineProperties(obj, descs);
     } catch (exc) {
-	excb = exc;
+        excb = exc;
     }
 
     assertEq(Object.getPrototypeOf(exca), Object.getPrototypeOf(excb));

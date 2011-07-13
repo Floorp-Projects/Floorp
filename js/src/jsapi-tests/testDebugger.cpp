@@ -124,7 +124,7 @@ BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 
     EVAL("var dbg = new Debugger(debuggee);\n"
          "var hits = 0;\n"
-         "dbg.hooks = {debuggerHandler: function () { hits++; }};\n"
+         "dbg.onDebuggerStatement = function () { hits++; };\n"
          "debuggee.eval('debugger;');\n"
          "hits;\n",
          &v);
@@ -173,10 +173,8 @@ BEGIN_TEST(testDebugger_newScriptHook)
 
     EXEC("var dbg = Debugger(g1);\n"
          "var hits = 0;\n"
-         "dbg.hooks = {\n"
-         "    newScript: function (s) {\n"
-         "        hits += Number(s instanceof Debugger.Script);\n"
-         "    }\n"
+         "dbg.onNewScript = function (s) {\n"
+         "    hits += Number(s instanceof Debugger.Script);\n"
          "};\n");
 
     // Since g1 is a debuggee and g2 is not, g1.eval should trigger newScript

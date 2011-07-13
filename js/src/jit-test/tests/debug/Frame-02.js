@@ -4,13 +4,11 @@
 var g = newGlobal('new-compartment');
 var hits, frame;
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (f) {
-        if (hits++ == 0)
-            frame = f;
-        else
-            assertEq(f, frame);
-    }
+dbg.onDebuggerStatement = function (f) {
+    if (hits++ == 0)
+        frame = f;
+    else
+        assertEq(f, frame);
 };
 
 hits = 0;

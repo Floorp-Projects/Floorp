@@ -4,11 +4,7 @@ var g = newGlobal('new-compartment');
 var hit = false;
 
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (stack) {
-        hit = true;
-    }
-};
+dbg.onDebuggerStatement = function (stack) { hit = true; };
 
 debugger;
 assertEq(hit, false, "raw debugger statement in debugger compartment should not hit");

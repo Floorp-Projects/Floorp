@@ -11,7 +11,7 @@ for (var i = 0; i < N; i++) {
     var g2 = g1.eval("newGlobal('same-compartment')");
     g1.x = g2.eval("x = {};");
 
-    dbg.hooks = {debuggerHandler: function (frame) { xarr.push(frame.eval("x").return); }};
+    dbg.onDebuggerStatement = function (frame) { xarr.push(frame.eval("x").return); };
     g1.eval("debugger;");
     g2arr.push(g2);
 

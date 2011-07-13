@@ -5,18 +5,16 @@ var g2 = newGlobal('new-compartment');
 var dbg = Debugger(g1, g2);
 var hits = 0;
 var snapshot = [];
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-	if (hits++ === 0) {
-	    assertEq(frame.eval("x();"), null);
-	} else {
-	    for (var f = frame; f; f = f.older) {
-		if (f.type === "call")
-		    snapshot.push(f);
-	    }
-	    dbg.removeDebuggee(g2);
-	    return null;
-	}
+dbg.onDebuggerStatement = function (frame) {
+    if (hits++ === 0) {
+        assertEq(frame.eval("x();"), null);
+    } else {
+        for (var f = frame; f; f = f.older) {
+            if (f.type === "call")
+                snapshot.push(f);
+        }
+        dbg.removeDebuggee(g2);
+        return null;
     }
 };
 

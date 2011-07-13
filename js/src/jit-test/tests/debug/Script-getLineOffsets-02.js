@@ -2,20 +2,18 @@
 
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        function handler(line) {
-            return {hit: function (frame) { g.log += "" + line; }};
-        }
+dbg.onDebuggerStatement = function (frame) {
+    function handler(line) {
+        return {hit: function (frame) { g.log += "" + line; }};
+    }
 
-        var s = frame.eval("f").return.script;
-        for (var line = 2; line <= 6; line++) {
-            var offs = s.getLineOffsets(g.line0 + line);
-            var h = handler(line);
-            for (var i = 0; i < offs.length; i++) {
-                assertEq(s.getOffsetLine(offs[i]), g.line0 + line);
-                s.setBreakpoint(offs[i], h);
-            }
+    var s = frame.eval("f").return.script;
+    for (var line = 2; line <= 6; line++) {
+        var offs = s.getLineOffsets(g.line0 + line);
+        var h = handler(line);
+        for (var i = 0; i < offs.length; i++) {
+            assertEq(s.getOffsetLine(offs[i]), g.line0 + line);
+            s.setBreakpoint(offs[i], h);
         }
     }
 };

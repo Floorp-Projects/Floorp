@@ -5,7 +5,7 @@ g.eval("var obj = {};");
 
 var dbg = Debugger(g);
 var obj;
-dbg.hooks = {debuggerHandler: function (frame) { obj = frame.eval("obj").return; }};
+dbg.onDebuggerStatement = function (frame) { obj = frame.eval("obj").return; };
 g.eval("debugger;");
 
 assertEq(obj.getOwnPropertyDescriptor(), undefined);

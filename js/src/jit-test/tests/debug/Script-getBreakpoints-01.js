@@ -12,18 +12,16 @@ var s;
 var offsets = [];
 var handlers = [];
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        s = frame.eval("f").return.script;
-        var off;
+dbg.onDebuggerStatement = function (frame) {
+    s = frame.eval("f").return.script;
+    var off;
 
-        for (var i = 0; i < 3; i++) {
-            var off = s.getLineOffsets(g.line0 + 2 + i)[0];
-            assertEq(typeof off, 'number');
-            handlers[i] = {};
-            s.setBreakpoint(off, handlers[i]);
-            offsets[i] = off;
-        }
+    for (var i = 0; i < 3; i++) {
+        var off = s.getLineOffsets(g.line0 + 2 + i)[0];
+        assertEq(typeof off, 'number');
+        handlers[i] = {};
+        s.setBreakpoint(off, handlers[i]);
+        offsets[i] = off;
     }
 };
 g.eval("debugger;");

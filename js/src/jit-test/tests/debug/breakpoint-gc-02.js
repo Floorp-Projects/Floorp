@@ -10,17 +10,15 @@ var N = 4;
 var hits = 0;
 for (var i = 0; i < N; i++) {
     var dbg = Debugger(g);
-    dbg.hooks = {
-        debuggerHandler: function (frame) {
-            var handler = {hit: function () { hits++; }};
-            var s = frame.eval("f").return.script;
-            var offs = s.getLineOffsets(g.line0 + 2);
-            for (var j = 0; j < offs.length; j++)
-                s.setBreakpoint(offs[j], handler);
-        }
-    }
+    dbg.onDebuggerStatement = function (frame) {
+        var handler = {hit: function () { hits++; }};
+        var s = frame.eval("f").return.script;
+        var offs = s.getLineOffsets(g.line0 + 2);
+        for (var j = 0; j < offs.length; j++)
+            s.setBreakpoint(offs[j], handler);
+    };
     g.eval('debugger;');
-    dbg.hooks = {};
+    dbg.onDebuggerStatement = null;
     dbg = null;
 }
 

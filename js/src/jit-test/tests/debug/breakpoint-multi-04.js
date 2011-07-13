@@ -12,15 +12,13 @@ function test(which) {
     var handlers = [];
     function addDebugger(g, i) {
         var dbg = Debugger(g);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                var s = frame.eval("f").return.script;
-                scripts[i] = s;
-                var offs = s.getLineOffsets(g.line0 + 2);
-                var handler = {hit: function (frame) { log += '' + i; } };
-                s.setBreakpoint(0, handler);
-                handlers[i] = handler;
-            }
+        dbg.onDebuggerStatement = function (frame) {
+            var s = frame.eval("f").return.script;
+            scripts[i] = s;
+            var offs = s.getLineOffsets(g.line0 + 2);
+            var handler = {hit: function (frame) { log += '' + i; } };
+            s.setBreakpoint(0, handler);
+            handlers[i] = handler;
         };
     }
 

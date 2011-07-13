@@ -7,13 +7,11 @@ var dbg = new Debugger(g);
 // Apply |f| to each frame that is |skip| frames up from each frame that
 // executes a 'debugger' statement when evaluating |code| in the global g.
 function ApplyToFrameScript(code, skip, f) {
-    dbg.hooks = {
-        debuggerHandler: function (frame) {
-            while (skip-- > 0)
-                frame = frame.older;
-            assertEq(frame.type, "eval");
-            f(frame.script);
-        }
+    dbg.onDebuggerStatement = function (frame) {
+        while (skip-- > 0)
+            frame = frame.older;
+        assertEq(frame.type, "eval");
+        f(frame.script);
     };
     g.eval(code);
 }

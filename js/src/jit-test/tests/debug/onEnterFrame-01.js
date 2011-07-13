@@ -3,15 +3,13 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var type;
-dbg.hooks = {
-    enterFrame: function (frame) {
-	try {
-	    assertEq(frame instanceof Debugger.Frame, true);
-	    assertEq(frame.live, true);
-	    type = frame.type;
-	} catch (exc) {
-	    type = "Exception thrown: " + exc;
-	}
+dbg.onEnterFrame = function (frame) {
+    try {
+        assertEq(frame instanceof Debugger.Frame, true);
+        assertEq(frame.live, true);
+        type = frame.type;
+    } catch (exc) {
+        type = "Exception thrown: " + exc;
     }
 };
 

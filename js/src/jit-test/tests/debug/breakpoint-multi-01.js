@@ -3,23 +3,21 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var log = '';
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        log += 'D';
-        function handler(i) {
-            return {hit: function (frame) { log += '' + i; }};
-        }
-        var f = frame.eval("f").return;
-        var s = f.script;
-        var offs = s.getLineOffsets(g.line0 + 2);
-        for (var i = 0; i < 10; i++) {
-            var bp = handler(i);
-            for (var j = 0; j < offs.length; j++)
-                s.setBreakpoint(offs[j], bp);
-        }
-        assertEq(f.call().return, 42);
-        log += 'X';
+dbg.onDebuggerStatement = function (frame) {
+    log += 'D';
+    function handler(i) {
+        return {hit: function (frame) { log += '' + i; }};
     }
+    var f = frame.eval("f").return;
+    var s = f.script;
+    var offs = s.getLineOffsets(g.line0 + 2);
+    for (var i = 0; i < 10; i++) {
+        var bp = handler(i);
+        for (var j = 0; j < offs.length; j++)
+            s.setBreakpoint(offs[j], bp);
+    }
+    assertEq(f.call().return, 42);
+    log += 'X';
 };
 
 g.eval("var line0 = Error().lineNumber;\n" +

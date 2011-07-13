@@ -6,11 +6,9 @@ var log;
 
 function makeDebug(g, name) {
     var dbg = new Debugger(g);
-    dbg.hooks = {
-        debuggerHandler: function (frame) {
-            log += name;
-            throw new Error(name);
-        }
+    dbg.onDebuggerStatement = function (frame) {
+        log += name;
+        throw new Error(name);
     };
     dbg.uncaughtExceptionHook = function (exc) {
         assertEq(exc.message, name);

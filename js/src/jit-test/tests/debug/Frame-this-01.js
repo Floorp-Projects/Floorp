@@ -3,11 +3,9 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        hits++;
-        assertEq(frame.this, g.v);
-    }
+dbg.onDebuggerStatement = function (frame) {
+    hits++;
+    assertEq(frame.this, g.v);
 };
 
 g.eval("function f() { 'use strict'; debugger; }");

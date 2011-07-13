@@ -342,13 +342,15 @@ enum {
     JSSLOT_DEBUG_COUNT
 };
 
-Debugger::Debugger(JSContext *cx, JSObject *dbg, JSObject *hooks)
-  : object(dbg), hooksObject(hooks), uncaughtExceptionHook(NULL), enabled(true),
-    hasDebuggerHandler(false), hasThrowHandler(false), hasNewScriptHandler(false),
+Debugger::Debugger(JSContext *cx, JSObject *dbg)
+  : object(dbg), uncaughtExceptionHook(NULL), enabled(true),
     frames(cx), objects(cx), heldScripts(cx), nonHeldScripts(cx)
 {
-    assertSameCompartment(cx, dbg, hooks);
-    
+    assertSameCompartment(cx, dbg);
+
+    for (int i = 0; i < HookCount; i++)
+        hooks[i] = NULL;
+
     JSRuntime *rt = cx->runtime;
     AutoLockGC lock(rt);
     JS_APPEND_LINK(&link, &rt->debuggerList);
@@ -433,7 +435,7 @@ Debugger::slowPathOnEnterFrame(JSContext *cx)
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
         if (dbg->debuggees.has(global) && dbg->observesEnterFrame())
-            dbg->handleEnterFrame(cx);
+            dbg->fireEnterFrame(cx);
     }
 }
 
@@ -644,20 +646,16 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
             ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
 
-bool
-Debugger::observesDebuggerStatement() const
-{
-    return enabled && hasDebuggerHandler;
-}
-
 JSTrapStatus
-Debugger::handleDebuggerStatement(JSContext *cx, Value *vp)
+Debugger::fireDebuggerStatement(JSContext *cx, Value *vp)
 {
+    JSObject *hook = hooks[OnDebuggerStatement];
+    JS_ASSERT(hook);
+    JS_ASSERT(hook->isCallable());
+
     // Grab cx->fp() before pushing a dummy frame.
     StackFrame *fp = cx->fp();
-
-    JS_ASSERT(hasDebuggerHandler);
-    AutoCompartment ac(cx, hooksObject);
+    AutoCompartment ac(cx, object);
     if (!ac.enter())
         return JSTRAP_ERROR;
 
@@ -666,25 +664,22 @@ Debugger::handleDebuggerStatement(JSContext *cx, Value *vp)
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
-    bool ok = CallMethodIfPresent(cx, hooksObject, "debuggerHandler", 1, argv, &rv);
+    bool ok = ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
-bool
-Debugger::observesThrow() const
-{
-    return enabled && hasThrowHandler;
-}
-
 JSTrapStatus
-Debugger::handleThrow(JSContext *cx, Value *vp)
+Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
 {
+    JSObject *hook = hooks[OnExceptionUnwind];
+    JS_ASSERT(hook);
+    JS_ASSERT(hook->isCallable());
+
     StackFrame *fp = cx->fp();
     Value exc = cx->getPendingException();
-
     cx->clearPendingException();
-    JS_ASSERT(hasThrowHandler);
-    AutoCompartment ac(cx, hooksObject);
+
+    AutoCompartment ac(cx, object);
     if (!ac.enter())
         return JSTRAP_ERROR;
 
@@ -694,7 +689,7 @@ Debugger::handleThrow(JSContext *cx, Value *vp)
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
-    bool ok = CallMethodIfPresent(cx, hooksObject, "throw", 2, argv, &rv);
+    bool ok = ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 2, argv, &rv);
     JSTrapStatus st = parseResumptionValue(ac, ok, rv, vp);
     if (st == JSTRAP_CONTINUE)
         cx->setPendingException(exc);
@@ -702,10 +697,14 @@ Debugger::handleThrow(JSContext *cx, Value *vp)
 }
 
 void
-Debugger::handleEnterFrame(JSContext *cx)
+Debugger::fireEnterFrame(JSContext *cx)
 {
+    JSObject *hook = hooks[OnEnterFrame];
+    JS_ASSERT(hook);
+    JS_ASSERT(hook->isCallable());
+
     StackFrame *fp = cx->fp();
-    AutoCompartment ac(cx, hooksObject);
+    AutoCompartment ac(cx, object);
     if (!ac.enter())
         return;
 
@@ -715,15 +714,18 @@ Debugger::handleEnterFrame(JSContext *cx)
         return;
     }
     Value rv;
-    if (!CallMethodIfPresent(cx, hooksObject, "enterFrame", 1, argv, &rv))
+    if (!ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
         handleUncaughtException(ac, NULL, true);
 }
 
 void
-Debugger::handleNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind)
+Debugger::fireNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind)
 {
-    JS_ASSERT(hasNewScriptHandler);
-    AutoCompartment ac(cx, hooksObject);
+    JSObject *hook = hooks[OnNewScript];
+    JS_ASSERT(hook);
+    JS_ASSERT(hook->isCallable());
+
+    AutoCompartment ac(cx, object);
     if (!ac.enter())
         return;
 
@@ -737,14 +739,15 @@ Debugger::handleNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScr
     Value argv[1];
     argv[0].setObject(*dsobj);
     Value rv;
-    if (!CallMethodIfPresent(cx, hooksObject, "newScript", 1, argv, &rv))
+    if (!ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
         handleUncaughtException(ac, NULL, true);
 }
 
 JSTrapStatus
-Debugger::dispatchHook(JSContext *cx, js::Value *vp, DebuggerObservesMethod observesEvent,
-                       DebuggerHandleMethod handleEvent)
+Debugger::dispatchHook(JSContext *cx, js::Value *vp, Hook which)
 {
+    JS_ASSERT(which == OnDebuggerStatement || which == OnExceptionUnwind);
+
     // Determine which debuggers will receive this event, and in what order.
     // Make a copy of the list, since the original is mutable and we will be
     // calling into arbitrary JS.
@@ -755,7 +758,7 @@ Debugger::dispatchHook(JSContext *cx, js::Value *vp, DebuggerObservesMethod obse
     if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger *dbg = *p;
-            if ((dbg->*observesEvent)()) {
+            if (dbg->enabled && dbg->hooks[which]) {
                 if (!triggered.append(ObjectValue(*dbg->toJSObject())))
                     return JSTRAP_ERROR;
             }
@@ -766,8 +769,10 @@ Debugger::dispatchHook(JSContext *cx, js::Value *vp, DebuggerObservesMethod obse
     // should still be delivered.
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
-        if (dbg->debuggees.has(global) && (dbg->*observesEvent)()) {
-            JSTrapStatus st = (dbg->*handleEvent)(cx, vp);
+        if (dbg->debuggees.has(global) && dbg->enabled && dbg->hooks[which]) {
+            JSTrapStatus st = (which == OnDebuggerStatement)
+                              ? dbg->fireDebuggerStatement(cx, vp)
+                              : dbg->fireExceptionUnwind(cx, vp);
             if (st != JSTRAP_CONTINUE)
                 return st;
         }
@@ -820,8 +825,8 @@ Debugger::slowPathOnNewScript(JSContext *cx, JSScript *script, JSObject *obj, Ne
     // Debugger::dispatchHook.
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
-        if ((!global || dbg->debuggees.has(global)) && dbg->hasNewScriptHandler)
-            dbg->handleNewScript(cx, script, obj, kind);
+        if ((!global || dbg->debuggees.has(global)) && dbg->enabled && dbg->hooks[OnNewScript])
+            dbg->fireNewScript(cx, script, obj, kind);
     }
 }
 
@@ -1007,7 +1012,11 @@ Debugger::traceObject(JSTracer *trc, JSObject *obj)
 void
 Debugger::trace(JSTracer *trc)
 {
-    MarkObject(trc, *hooksObject, "hooks");
+    for (int i = 0; i < HookCount; i++) {
+        if (hooks[i])
+            MarkObject(trc, *hooks[i], "hooks");
+    }
+
     if (uncaughtExceptionHook)
         MarkObject(trc, *uncaughtExceptionHook, "hooks");
 
@@ -1108,44 +1117,42 @@ Class Debugger::jsclass = {
 };
 
 JSBool
-Debugger::getHooks(JSContext *cx, uintN argc, Value *vp)
+Debugger::getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
-    THISOBJ(cx, vp, Debugger, "get hooks", thisobj, dbg);
-    vp->setObject(*dbg->hooksObject);
+    THISOBJ(cx, vp, Debugger, "getHook", thisobj, dbg);
+    vp->setObjectOrNull(dbg->hooks[which]);
     return true;
 }
 
 JSBool
-Debugger::setHooks(JSContext *cx, uintN argc, Value *vp)
+Debugger::setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
-    REQUIRE_ARGC("Debugger.set hooks", 1);
-    THISOBJ(cx, vp, Debugger, "set hooks", thisobj, dbg);
-    if (!vp[2].isObject())
+    REQUIRE_ARGC("Debugger.setHook", 1);
+    THISOBJ(cx, vp, Debugger, "setHook", thisobj, dbg);
+    if (!vp[2].isObjectOrNull())
         return ReportObjectRequired(cx);
-    JSObject *hooksobj = &vp[2].toObject();
-
-    bool hasDebuggerHandler, hasThrow, hasNewScript, hasEnterFrame;
-    JSBool found;
-    if (!JS_HasProperty(cx, hooksobj, "debuggerHandler", &found))
+    JSObject *hook = vp[2].toObjectOrNull();
+    if (hook && !hook->isCallable()) {
+        js_ReportIsNotFunction(cx, vp, JSV2F_SEARCH_STACK);
         return false;
-    hasDebuggerHandler = !!found;
-    if (!JS_HasProperty(cx, hooksobj, "throw", &found))
-        return false;
-    hasThrow = !!found;
-    if (!JS_HasProperty(cx, hooksobj, "newScript", &found))
-        return false;
-    hasNewScript = !!found;
-    if (!JS_HasProperty(cx, hooksobj, "enterFrame", &found))
-        return false;
-    hasEnterFrame = !!found;
-
-    dbg->hooksObject = hooksobj;
-    dbg->hasDebuggerHandler = hasDebuggerHandler;
-    dbg->hasThrowHandler = hasThrow;
-    dbg->hasNewScriptHandler = hasNewScript;
-    dbg->hasEnterFrameHandler = hasEnterFrame;
+    }
+    dbg->hooks[which] = hook;
     vp->setUndefined();
     return true;
+}
+
+template <Debugger::Hook which>
+JSBool
+Debugger::getHook(JSContext *cx, uintN argc, Value *vp)
+{
+    return getHookImpl(cx, argc, vp, which);
+}
+
+template <Debugger::Hook which>
+JSBool
+Debugger::setHook(JSContext *cx, uintN argc, Value *vp)
+{
+    return setHookImpl(cx, argc, vp, which);
 }
 
 JSBool
@@ -1355,11 +1362,7 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
     for (uintN slot = JSSLOT_DEBUG_FRAME_PROTO; slot < JSSLOT_DEBUG_COUNT; slot++)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
 
-    JSObject *hooks = NewBuiltinClassInstance(cx, &js_ObjectClass);
-    if (!hooks)
-        return false;
-
-    Debugger *dbg = cx->new_<Debugger>(cx, obj, hooks);
+    Debugger *dbg = cx->new_<Debugger>(cx, obj);
     if (!dbg)
         return false;
     obj->setPrivate(dbg);
@@ -1493,8 +1496,15 @@ Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
 }
 
 JSPropertySpec Debugger::properties[] = {
-    JS_PSGS("hooks", Debugger::getHooks, Debugger::setHooks, 0),
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
+    JS_PSGS("onDebuggerStatement", Debugger::getHook<OnDebuggerStatement>,
+            Debugger::setHook<OnDebuggerStatement>, 0),
+    JS_PSGS("onExceptionUnwind", Debugger::getHook<OnExceptionUnwind>,
+            Debugger::setHook<OnExceptionUnwind>, 0),
+    JS_PSGS("onNewScript", Debugger::getHook<OnNewScript>,
+            Debugger::setHook<OnNewScript>, 0),
+    JS_PSGS("onEnterFrame", Debugger::getHook<OnEnterFrame>,
+            Debugger::setHook<OnEnterFrame>, 0),
     JS_PSGS("uncaughtExceptionHook", Debugger::getUncaughtExceptionHook,
             Debugger::setUncaughtExceptionHook, 0),
     JS_PS_END

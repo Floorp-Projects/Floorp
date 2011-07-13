@@ -4,13 +4,11 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-	var arr = frame.script.getChildScripts();
-	assertEq(arr.length, 1);
-	assertEq(arr[0], frame.eval("h").return.script);
-	hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    var arr = frame.script.getChildScripts();
+    assertEq(arr.length, 1);
+    assertEq(arr[0], frame.eval("h").return.script);
+    hits++;
 };
 
 g.eval("function f(s) { eval(s); }");

@@ -5,22 +5,20 @@ var N = g.N = 12; // must be even
 assertEq(N % 2, 0);
 var dbg = new Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        var n = frame.eval("n").return;
-        if (n === 0) {
-            for (var i = 0; i <= N; i++) {
-                assertEq(frame.type, 'call');
-                assertEq(frame.callee.name, i % 2 === 0 ? 'even' : 'odd');
-                assertEq(frame.eval("n").return, i);
-                frame = frame.older;
-            }
+dbg.onDebuggerStatement = function (frame) {
+    var n = frame.eval("n").return;
+    if (n === 0) {
+        for (var i = 0; i <= N; i++) {
             assertEq(frame.type, 'call');
-            assertEq(frame.callee.name, undefined);
+            assertEq(frame.callee.name, i % 2 === 0 ? 'even' : 'odd');
+            assertEq(frame.eval("n").return, i);
             frame = frame.older;
-            assertEq(frame.type, 'eval');
-            hits++;
         }
+        assertEq(frame.type, 'call');
+        assertEq(frame.callee.name, undefined);
+        frame = frame.older;
+        assertEq(frame.type, 'eval');
+        hits++;
     }
 };
 

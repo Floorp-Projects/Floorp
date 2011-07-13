@@ -9,14 +9,12 @@ var debug = new Debugger(global);
 
 function evalAndNoteScripts(prog) {
     var scripts = {};
-    debug.hooks = {
-        debuggerHandler: function(frame) {
-            if (frame.type == "call")
-                assertEq(frame.script, frame.callee.script);
-            scripts.frame = frame.script;
-            if (frame.arguments[0])
-                scripts.argument = frame.arguments[0].script;
-        }
+    debug.onDebuggerStatement = function(frame) {
+        if (frame.type == "call")
+            assertEq(frame.script, frame.callee.script);
+        scripts.frame = frame.script;
+        if (frame.arguments[0])
+            scripts.argument = frame.arguments[0].script;
     };
     global.eval(prog);
     return scripts;

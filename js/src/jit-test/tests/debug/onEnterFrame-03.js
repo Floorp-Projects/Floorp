@@ -7,17 +7,15 @@ g.a = ".";
 var dbg = Debugger(g);
 var nestCount = 0, N = 9;
 var log = "";
-dbg.hooks = {
-    enterFrame: function (frame) {
-	assertEq(frame.type, "eval");
-	if (nestCount < N) {
-	    log += '(';
-	    nestCount++;
-	    var a = frame.eval("a").return;
-	    log += a;
-	    nestCount--;
-	    log += ')';
-	}
+dbg.onEnterFrame = function (frame) {
+    assertEq(frame.type, "eval");
+    if (nestCount < N) {
+        log += '(';
+        nestCount++;
+        var a = frame.eval("a").return;
+        log += a;
+        nestCount--;
+        log += ')';
     }
 };
 

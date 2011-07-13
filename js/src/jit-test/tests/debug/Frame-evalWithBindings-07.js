@@ -2,11 +2,9 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        assertEq(frame.evalWithBindings("var i = a*a + b*b; i === 25;", {a: 3, b: 4}).return, true);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    assertEq(frame.evalWithBindings("var i = a*a + b*b; i === 25;", {a: 3, b: 4}).return, true);
+    hits++;
 };
 g.eval("'use strict'; debugger;");
 assertEq(hits, 1);

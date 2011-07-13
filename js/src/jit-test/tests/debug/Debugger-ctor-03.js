@@ -4,9 +4,9 @@
 var canEnable = true;
 if (typeof setDebugMode === 'function') {
     try {
-	setDebugMode(true);
+        setDebugMode(true);
     } catch (exc) {
-	canEnable = false;
+        canEnable = false;
     }
 }
 

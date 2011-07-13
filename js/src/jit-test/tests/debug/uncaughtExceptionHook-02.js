@@ -3,7 +3,7 @@
 
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
-dbg.hooks = {debuggerHandler: function () { return {oops: "bad resumption value"}; }};
+dbg.onDebuggerStatement = function () { return {oops: "bad resumption value"}; };
 dbg.uncaughtExceptionHook = function (exc) {
     assertEq(exc instanceof TypeError, true);
     return {return: "pass"};

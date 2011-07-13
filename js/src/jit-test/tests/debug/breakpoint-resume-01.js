@@ -2,17 +2,15 @@
 
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        function hit(frame) {
-            return {throw: frame.eval("new Error('PASS')").return};
-        }
-
-        var s = frame.script;
-        var offs = s.getLineOffsets(g.line0 + 3);
-        for (var i = 0; i < offs.length; i++)
-            s.setBreakpoint(offs[i], {hit: hit});
+dbg.onDebuggerStatement = function (frame) {
+    function hit(frame) {
+        return {throw: frame.eval("new Error('PASS')").return};
     }
+
+    var s = frame.script;
+    var offs = s.getLineOffsets(g.line0 + 3);
+    for (var i = 0; i < offs.length; i++)
+        s.setBreakpoint(offs[i], {hit: hit});
 };
 
 g.s = null;

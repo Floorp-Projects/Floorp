@@ -6,30 +6,28 @@ var debuggers = [];
 var hits = 0;
 function attach(g, i) {
     var dbg = Debugger(g);
-    dbg.hooks = {
-        debuggerHandler: function (frame) {
-            var s = frame.script;
-            var offs = s.getLineOffsets(g.line0 + 2);
-            var hitAny = false;
-            var handler = {
-                hit: function (frame) {
-                    assertEq(this, handler);
-                    assertEq(frame.script, s);
-                    var bps = s.getBreakpoints();
-                    assertEq(bps.length, offs.length);
-                    for (var i = 0; i < bps.length; i++)
-                        assertEq(bps[i], handler);
+    dbg.onDebuggerStatement = function (frame) {
+        var s = frame.script;
+        var offs = s.getLineOffsets(g.line0 + 2);
+        var hitAny = false;
+        var handler = {
+            hit: function (frame) {
+                assertEq(this, handler);
+                assertEq(frame.script, s);
+                var bps = s.getBreakpoints();
+                assertEq(bps.length, offs.length);
+                for (var i = 0; i < bps.length; i++)
+                    assertEq(bps[i], handler);
 
-                    if (!hitAny) {
-                        hitAny = true;
-                        hits++;
-                    }
+                if (!hitAny) {
+                    hitAny = true;
+                    hits++;
                 }
-            };
-            for (var i = 0; i < offs.length; i++)
-                s.setBreakpoint(offs[i], handler);
-            hits++;
-        }
+            }
+        };
+        for (var i = 0; i < offs.length; i++)
+            s.setBreakpoint(offs[i], handler);
+        hits++;
     };
     debuggers[i] = dbg;
 }

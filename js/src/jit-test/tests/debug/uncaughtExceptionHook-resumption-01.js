@@ -5,7 +5,7 @@ load(libdir + "asserts.js");
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var rv;
-dbg.hooks = {debuggerHandler: function () { throw 15; }};
+dbg.onDebuggerStatement = function () { throw 15; };
 dbg.uncaughtExceptionHook = function (exc) {
     assertEq(exc, 15);
     return rv;
