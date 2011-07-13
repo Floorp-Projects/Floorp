@@ -2315,8 +2315,19 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             size_t lexdepCount = cg->roLexdeps->count();
 
             JS_ASSERT_IF(!upvarMap.empty(), lexdepCount == upvarMap.length());
-            if (upvarMap.empty() && !upvarMap.appendN(UpvarCookie(), lexdepCount))
-                return JS_FALSE;
+            if (upvarMap.empty()) {
+                /* Lazily initialize the upvar map with exactly the necessary capacity. */
+                if (lexdepCount <= upvarMap.sMaxInlineStorage) {
+                    JS_ALWAYS_TRUE(upvarMap.growByUninitialized(lexdepCount));
+                } else {
+                    void *buf = upvarMap.allocPolicy().malloc_(lexdepCount * sizeof(UpvarCookie));
+                    if (!buf)
+                        return JS_FALSE;
+                    upvarMap.replaceRawBuffer(static_cast<UpvarCookie *>(buf), lexdepCount);
+                }
+                for (size_t i = 0; i < lexdepCount; ++i)
+                    upvarMap[i] = UpvarCookie();
+            }
 
             uintN slot = cookie.slot();
             if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != JSDefinition::ARG) {
