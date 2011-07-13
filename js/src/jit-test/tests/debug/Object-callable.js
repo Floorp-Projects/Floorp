@@ -3,11 +3,9 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        assertEq(frame.arguments[0].callable, frame.arguments[1]);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    assertEq(frame.arguments[0].callable, frame.arguments[1]);
+    hits++;
 };
 
 g.eval("function f(obj, iscallable) { debugger; }");

@@ -66,16 +66,18 @@ class Debugger {
     JSCList link;                       // See JSRuntime::debuggerList.
     JSObject *object;                   // The Debugger object. Strong reference.
     GlobalObjectSet debuggees;          // Debuggee globals. Cross-compartment weak references.
-    JSObject *hooksObject;              // See Debugger.prototype.hooks. Strong reference.
     JSObject *uncaughtExceptionHook;    // Strong reference.
     bool enabled;
 
-    // True if hooksObject had a property of the respective name when the hooks
-    // property was set.
-    bool hasDebuggerHandler;            // hooks.debuggerHandler
-    bool hasThrowHandler;               // hooks.throw
-    bool hasNewScriptHandler;           // hooks.newScript
-    bool hasEnterFrameHandler;          // hooks.enterFrame
+    enum Hook {
+        OnDebuggerStatement,
+        OnExceptionUnwind,
+        OnNewScript,
+        OnEnterFrame,
+        HookCount
+    };
+
+    JSObject *hooks[HookCount];
 
     JSCList breakpoints;                // cyclic list of all js::Breakpoints in this debugger
 
@@ -144,7 +146,11 @@ class Debugger {
 
     static Class jsclass;
     static JSBool getHooks(JSContext *cx, uintN argc, Value *vp);
-    static JSBool setHooks(JSContext *cx, uintN argc, Value *vp);
+
+    template <Hook which> static JSBool getHook(JSContext *cx, uintN argc, Value *vp);
+    template <Hook which> static JSBool setHook(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
+    static JSBool setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
     static JSBool getEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
@@ -167,19 +173,11 @@ class Debugger {
                                     NewScriptKind kind);
     static void slowPathOnDestroyScript(JSScript *script);
 
-    typedef bool (Debugger::*DebuggerObservesMethod)() const;
-    typedef JSTrapStatus (Debugger::*DebuggerHandleMethod)(JSContext *, Value *) const;
-    static JSTrapStatus dispatchHook(JSContext *cx, js::Value *vp,
-                                     DebuggerObservesMethod observesEvent,
-                                     DebuggerHandleMethod handleEvent);
+    static JSTrapStatus dispatchHook(JSContext *cx, js::Value *vp, Hook which);
 
-    bool observesDebuggerStatement() const;
-    JSTrapStatus handleDebuggerStatement(JSContext *cx, Value *vp);
-
-    bool observesThrow() const;
-    JSTrapStatus handleThrow(JSContext *cx, Value *vp);
-
-    void handleEnterFrame(JSContext *cx);
+    JSTrapStatus fireDebuggerStatement(JSContext *cx, Value *vp);
+    JSTrapStatus fireExceptionUnwind(JSContext *cx, Value *vp);
+    void fireEnterFrame(JSContext *cx);
 
     // Allocate and initialize a Debugger.Script instance whose referent is |script| and
     // whose holder is |obj|. If |obj| is NULL, this creates a Debugger.Script whose holder
@@ -194,7 +192,7 @@ class Debugger {
     // object. Otherwise kind is NewNonHeldScript and obj is an arbitrary
     // object in the same global as the scope in which the script is being
     // evaluated.
-    void handleNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind);
+    void fireNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind);
 
     // Remove script from our table of non-held scripts.
     void destroyNonHeldScript(JSScript *script);
@@ -203,7 +201,7 @@ class Debugger {
     inline Breakpoint *firstBreakpoint() const;
 
   public:
-    Debugger(JSContext *cx, JSObject *dbg, JSObject *hooks);
+    Debugger(JSContext *cx, JSObject *dbg);
     ~Debugger();
 
     bool init(JSContext *cx);
@@ -236,7 +234,7 @@ class Debugger {
     static inline void onEnterFrame(JSContext *cx);
     static inline void onLeaveFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
-    static inline JSTrapStatus onThrow(JSContext *cx, js::Value *vp);
+    static inline JSTrapStatus onExceptionUnwind(JSContext *cx, js::Value *vp);
     static inline void onNewScript(JSContext *cx, JSScript *script, JSObject *obj,
                                    NewScriptKind kind);
     static inline void onDestroyScript(JSScript *script);
@@ -371,10 +369,10 @@ class Breakpoint {
 bool
 Debugger::hasAnyLiveHooks() const
 {
-    return enabled && (hasDebuggerHandler ||
-                       hasThrowHandler ||
-                       hasNewScriptHandler ||
-                       hasEnterFrameHandler ||
+    return enabled && (hooks[OnDebuggerStatement] ||
+                       hooks[OnExceptionUnwind] ||
+                       hooks[OnNewScript] ||
+                       hooks[OnEnterFrame] ||
                        !JS_CLIST_IS_EMPTY(&breakpoints));
 }
 
@@ -411,13 +409,13 @@ Debugger::fromJSObject(JSObject *obj)
 bool
 Debugger::observesEnterFrame() const
 {
-    return enabled && hasEnterFrameHandler;
+    return enabled && hooks[OnEnterFrame];
 }
 
 bool
 Debugger::observesNewScript() const
 {
-    return enabled && hasNewScriptHandler;
+    return enabled && hooks[OnNewScript];
 }
 
 bool
@@ -451,19 +449,15 @@ Debugger::onDebuggerStatement(JSContext *cx, js::Value *vp)
 {
     return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
-           : dispatchHook(cx, vp,
-                          DebuggerObservesMethod(&Debugger::observesDebuggerStatement),
-                          DebuggerHandleMethod(&Debugger::handleDebuggerStatement));
+           : dispatchHook(cx, vp, OnDebuggerStatement);
 }
 
 JSTrapStatus
-Debugger::onThrow(JSContext *cx, js::Value *vp)
+Debugger::onExceptionUnwind(JSContext *cx, js::Value *vp)
 {
     return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
-           : dispatchHook(cx, vp,
-                          DebuggerObservesMethod(&Debugger::observesThrow),
-                          DebuggerHandleMethod(&Debugger::handleThrow));
+           : dispatchHook(cx, vp, OnExceptionUnwind);
 }
 
 void

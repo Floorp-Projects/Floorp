@@ -6,17 +6,15 @@ g.debuggeeGlobal = this;
 g.dbg = null;
 g.eval("(" + function () {
         dbg = new Debugger(debuggeeGlobal);
-        dbg.hooks = {
-            throw: function (frame, exc) {
-                assertEq(frame instanceof Debugger.Frame, true);
-                assertEq(exc instanceof Debugger.Object, true);
-                var s = '!';
-                for (var f = frame; f; f = f.older)
-                    if (f.type === "call")
-                        s += f.callee.name;
-                s += ', ';
-                debuggeeGlobal.log += s;
-            }
+        dbg.onExceptionUnwind = function (frame, exc) {
+            assertEq(frame instanceof Debugger.Frame, true);
+            assertEq(exc instanceof Debugger.Object, true);
+            var s = '!';
+            for (var f = frame; f; f = f.older)
+                if (f.type === "call")
+                    s += f.callee.name;
+            s += ', ';
+            debuggeeGlobal.log += s;
         };
     } + ")();");
 

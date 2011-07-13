@@ -8,7 +8,8 @@ var expected = 0;
 function f() {
     for (var i = 0; i < 20; i++) {
         var dbg = new Debugger(g);
-        dbg.hooks = {num: i, debuggerHandler: function (stack) { actual += this.num; }};
+        dbg.num = i;
+        dbg.onDebuggerStatement = function (stack) { actual += this.num; };
         expected += i;
     }
 }

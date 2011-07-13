@@ -2,10 +2,8 @@
 
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        frame.eval("outerarg = 1; outervar = 2; innerarg = 3; innervar = 4;");
-    }
+dbg.onDebuggerStatement = function (frame) {
+    frame.eval("outerarg = 1; outervar = 2; innerarg = 3; innervar = 4;");
 };
 
 var result = g.eval("(" + function outer(outerarg) {

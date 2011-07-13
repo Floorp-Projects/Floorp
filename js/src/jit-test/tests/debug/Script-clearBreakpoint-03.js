@@ -3,10 +3,8 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var s;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        s = frame.eval("f").return.script;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    s = frame.eval("f").return.script;
 };
 g.eval("var line0 = Error().lineNumber;\n" +
        "function f(a, b) {\n" +     // line0 + 1

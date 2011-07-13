@@ -14,17 +14,15 @@ g.eval(src);
 
 var dbg = Debugger(g);
 var hits = 0 ;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        var s = frame.eval("gcd").return.script;
-        var offs;
-        for (var lineno = g.line0 + 2; (offs = s.getLineOffsets(lineno)).length > 0; lineno++) {
-            for (var i = 0; i < offs.length; i++)
-                s.setBreakpoint(offs[i], {hit: function (f) { hits++; }});
-        }
-        assertEq(lineno > g.line0 + 7, true);
-        assertEq(lineno <= g.line0 + 9, true);
+dbg.onDebuggerStatement = function (frame) {
+    var s = frame.eval("gcd").return.script;
+    var offs;
+    for (var lineno = g.line0 + 2; (offs = s.getLineOffsets(lineno)).length > 0; lineno++) {
+        for (var i = 0; i < offs.length; i++)
+            s.setBreakpoint(offs[i], {hit: function (f) { hits++; }});
     }
+    assertEq(lineno > g.line0 + 7, true);
+    assertEq(lineno <= g.line0 + 9, true);
 };
 
 g.eval("debugger;");

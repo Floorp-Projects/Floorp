@@ -8,7 +8,7 @@ for (var i = 0; i < 4; i++) {
     var g1 = newGlobal('new-compartment');
     var g2 = g1.eval("newGlobal('same-compartment')");
     var dbg = Debugger(g1);
-    dbg.hooks = {debuggerHandler: function () {}};
+    dbg.onDebuggerStatement = function () {};
 
     // Thread a chain of functions through the non-debuggee globals.
     g2.eval("function f() { return g() + 1; }");

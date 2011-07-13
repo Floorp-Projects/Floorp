@@ -4,11 +4,7 @@ load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (stack) {
-        return {throw: "oops"};
-    }
-};
+dbg.onDebuggerStatement = function (stack) { return {throw: "oops"}; };
 
 assertThrowsValue(function () { g.eval("debugger;"); }, "oops");
 

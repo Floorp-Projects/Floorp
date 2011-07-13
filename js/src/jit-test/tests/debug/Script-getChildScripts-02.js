@@ -4,12 +4,10 @@ var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var scripts = [];
 var cs;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-	scripts.push(frame.script);
-	if (scripts.length === 1)
-	    cs = frame.script.getChildScripts();
-    }
+dbg.onDebuggerStatement = function (frame) {
+    scripts.push(frame.script);
+    if (scripts.length === 1)
+        cs = frame.script.getChildScripts();
 };
 
 g.eval("function f() { debugger; }\n" +

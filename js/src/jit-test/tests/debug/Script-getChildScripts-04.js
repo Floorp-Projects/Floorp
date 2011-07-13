@@ -6,10 +6,8 @@ g.eval("function h(a) { eval(a); }");
 
 var dbg = Debugger(g);
 var arr, kscript;
-dbg.hooks = {
-    newScript: function (script) { arr = script.getChildScripts(); },
-    debuggerHandler: function (frame) { kscript = frame.callee.script; }
-};
+dbg.onNewScript = function (script) { arr = script.getChildScripts(); };
+dbg.onDebuggerStatement = function (frame) { kscript = frame.callee.script; };
 
 g.h("function k(a) { debugger; return a + 1; } k(-1);");
 assertEq(kscript instanceof Debugger.Script, true);

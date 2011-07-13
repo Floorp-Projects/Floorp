@@ -1,11 +1,11 @@
-// We detect and stop the runaway recursion caused by making hooks.enterFrame a wrapper of a debuggee function.
+// We detect and stop the runaway recursion caused by making onEnterFrame a wrapper of a debuggee function.
 
 var g = newGlobal('new-compartment');
 g.n = 0;
 g.eval("function f(frame) { n++; return 42; }");
 print('ok');
 var dbg = Debugger(g);
-dbg.hooks = {enterFrame: g.f};
+dbg.onEnterFrame = g.f;
 
 // Since enterFrame cannot throw, the InternalError is reported and execution proceeds.
 var x = g.f();

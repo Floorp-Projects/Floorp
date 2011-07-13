@@ -5,11 +5,9 @@ var N = 4;
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var i;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        assertEq(frame.script instanceof Debugger.Script, true);
-        frame.script.id = i;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    assertEq(frame.script instanceof Debugger.Script, true);
+    frame.script.id = i;
 };
 
 g.eval('var arr = [];')
@@ -19,11 +17,9 @@ for (i = 0; i < N; i++)  // loop to defeat conservative GC
 gc();
 
 var hits;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        hits++;
-        assertEq(frame.script.id, i);
-    }
+dbg.onDebuggerStatement = function (frame) {
+    hits++;
+    assertEq(frame.script.id, i);
 };
 hits = 0;
 for (i = 0; i < N; i++)

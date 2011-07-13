@@ -4,15 +4,13 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var seen = WeakMap();
 var hits = 0;
-dbg.hooks = {
-    newScript: function (s) {
-	// Exceptions thrown from newScript are swept under the rug, but they
-	// will at least prevent hits from being the expected number.
-	assertEq(s instanceof Debugger.Script, true);
-	assertEq(!seen.has(s), true);
-	seen.set(s, true);
-	hits++;
-    }
+dbg.onNewScript = function (s) {
+    // Exceptions thrown from onNewScript are swept under the rug, but they
+    // will at least prevent hits from being the expected number.
+    assertEq(s instanceof Debugger.Script, true);
+    assertEq(!seen.has(s), true);
+    seen.set(s, true);
+    hits++;
 };
 
 dbg.uncaughtExceptionHook = function () { hits = -999; };

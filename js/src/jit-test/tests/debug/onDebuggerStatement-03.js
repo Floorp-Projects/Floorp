@@ -4,11 +4,9 @@ var g = newGlobal('new-compartment');
 var calls = 0;
 
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (stack) {
-        calls++;
-        debugger;
-    }
+dbg.onDebuggerStatement = function (stack) {
+    calls++;
+    debugger;
 };
 
 assertEq(g.eval("debugger; 7;"), 7);

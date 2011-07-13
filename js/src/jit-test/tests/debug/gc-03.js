@@ -6,10 +6,8 @@ var N = g.N = 3;
 var dbg = Debugger(g);
 
 var i = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        frame.arguments[0].id = i++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    frame.arguments[0].id = i++;
 };
 g.eval("function f(x) { debugger; }");
 g.eval("var arr = [], j; for (j = 0; j < N; j++) arr[j] = {};");
@@ -19,7 +17,7 @@ assertEq(i, N);
 gc(); gc();
 
 i = 0;
-dbg.hooks.debuggerHandler = function (frame) {
+dbg.onDebuggerStatement = function (frame) {
     assertEq(frame.arguments[0].id, i++)
 }
 g.eval("for (j = 0; j < N; j++) f(arr[j]);");

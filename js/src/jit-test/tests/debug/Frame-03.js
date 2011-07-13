@@ -5,13 +5,11 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var hits;
 var a = [];
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        for (var i = 0; i < a.length; i++) 
-            assertEq(a[i] === frame, false);
-        a.push(frame);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    for (var i = 0; i < a.length; i++) 
+        assertEq(a[i] === frame, false);
+    a.push(frame);
+    hits++;
 };
 
 g.eval("function f() { debugger; }");

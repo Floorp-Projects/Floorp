@@ -12,13 +12,11 @@ var handler = {
 
 function attach(i) {
     var dbg = Debugger(g);
-    dbg.hooks = {
-        debuggerHandler: function (frame) {
-            var s = frame.script;
-            var offs = s.getLineOffsets(g.line0 + 2);
-            for (var i = 0; i < offs.length; i++)
-                s.setBreakpoint(offs[i], handler);
-        }
+    dbg.onDebuggerStatement = function (frame) {
+        var s = frame.script;
+        var offs = s.getLineOffsets(g.line0 + 2);
+        for (var i = 0; i < offs.length; i++)
+            s.setBreakpoint(offs[i], handler);
     };
 }
 for (var i = 0; i < 4; i++)

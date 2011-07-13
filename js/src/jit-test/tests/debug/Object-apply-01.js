@@ -5,11 +5,10 @@ load(libdir + "asserts.js");
 var g = newGlobal("new-compartment");
 g.eval("function f() { debugger; }");
 var dbg = new Debugger(g);
-dbg.hooks = {debuggerHandler: function () {}};
 
 var hits = 0;
 function test(usingApply) {
-    dbg.hooks.debuggerHandler = function (frame) {
+    dbg.onDebuggerStatement = function (frame) {
         var fn = frame.arguments[0];
         var cv = usingApply ? fn.apply(null, [9, 16]) : fn.call(null, 9, 16);
         assertEq(Object.keys(cv).join(","), "return");
@@ -36,7 +35,7 @@ function test(usingApply) {
 
     // The callee receives the right arguments even if more arguments are provided
     // than the callee's .length.
-    dbg.hooks.debuggerHandler = function (frame) {
+    dbg.onDebuggerStatement = function (frame) {
         assertEq((usingApply ? frame.arguments[0].apply(null, ['one', 'two'])
                              : frame.arguments[0].call(null, 'one', 'two')).return,
                  2);
@@ -45,7 +44,7 @@ function test(usingApply) {
     g.eval("f(function () { return arguments.length; });");
 
     // Exceptions are reported as {throw:} completion values.
-    dbg.hooks.debuggerHandler = function (frame) {
+    dbg.onDebuggerStatement = function (frame) {
         var lose = frame.arguments[0];
         var cv = usingApply ? lose.apply(null, []) : lose.call(null);
         assertEq(Object.keys(cv).join(","), "throw");

@@ -5,17 +5,15 @@ g.args = null;
 var dbg = new Debugger(g);
 var hits;
 var v;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        hits++;
-        var args = frame.arguments;
-        assertEq(args instanceof Array, true);
-        assertEq(Array.isArray(args), false);
-        assertEq(args, frame.arguments);
-        assertEq(args.length, g.args.length);
-        for (var i = 0; i < args.length; i++)
-            assertEq(args[i], g.args[i]);
-    }
+dbg.onDebuggerStatement = function (frame) {
+    hits++;
+    var args = frame.arguments;
+    assertEq(args instanceof Array, true);
+    assertEq(Array.isArray(args), false);
+    assertEq(args, frame.arguments);
+    assertEq(args.length, g.args.length);
+    for (var i = 0; i < args.length; i++)
+        assertEq(args[i], g.args[i]);
 };
 
 // no formal parameters

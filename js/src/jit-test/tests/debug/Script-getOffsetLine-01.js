@@ -3,12 +3,10 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var hits;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        var knownLine = frame.eval("line").return;
-        assertEq(frame.script.getOffsetLine(frame.offset), knownLine);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    var knownLine = frame.eval("line").return;
+    assertEq(frame.script.getOffsetLine(frame.offset), knownLine);
+    hits++;
 };
 
 hits = 0;
