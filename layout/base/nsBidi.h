@@ -773,7 +773,7 @@ public:
    *      The array does not need to be initialized.<p>
    *      The index map will result in <code>aIndexMap[aLogicalIndex]==aVisualIndex</code>.
    */
-  nsresult ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
+  static nsresult ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
 #endif // FULL_BIDI_ENGINE
   /**
    * This is a convenience function that does not use a nsBidi object.
@@ -794,7 +794,7 @@ public:
    *      The array does not need to be initialized.<p>
    *      The index map will result in <code>aIndexMap[aVisualIndex]==aLogicalIndex</code>.
    */
-  nsresult ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
+  static nsresult ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
 
 #ifdef FULL_BIDI_ENGINE
   /**
@@ -917,7 +917,7 @@ private:
 
   void ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel);
 
-  PRBool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
+  static PRBool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
 
   PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
                          PRUnichar *dest, PRUint16 options);
