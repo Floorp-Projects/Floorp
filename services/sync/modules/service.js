@@ -1066,7 +1066,7 @@ WeaveSvc.prototype = {
       return;
     }
 
-    let reason = this._checkSync([kSyncNotLoggedIn]);
+    let reason = this._checkSync();
 
     // Can't autoconnect if we're missing these values.
     if (!reason) {
@@ -1392,8 +1392,6 @@ WeaveSvc.prototype = {
     else if ((Status.login == MASTER_PASSWORD_LOCKED) &&
              Utils.mpLocked())
       reason = kSyncMasterPasswordLocked;
-    else if (!this._loggedIn)
-      reason = kSyncNotLoggedIn;
     else if (Svc.Prefs.get("firstSync") == "notReady")
       reason = kFirstSyncChoiceNotMade;
 
