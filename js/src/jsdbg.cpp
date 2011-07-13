@@ -2834,7 +2834,7 @@ DebuggerObject_getScript(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "getOwnPropertyDescriptor", dbg, obj);
 
     jsid id;
     if (!ValueToId(cx, argc >= 1 ? vp[2] : UndefinedValue(), &id))
@@ -2875,7 +2875,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerObject_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "getOwnPropertyNames", dbg, obj);
 
     AutoIdVector keys(cx);
     {
@@ -2961,7 +2961,7 @@ WrapIdAndPropDesc(JSContext *cx, JSObject *obj, jsid *idp, PropDesc *desc)
 static JSBool
 DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "defineProperty", dbg, obj);
 
     jsid id;
     if (!ValueToId(cx, argc >= 1 ? vp[2] : UndefinedValue(), &id))
@@ -2995,7 +2995,7 @@ DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerObject_defineProperties(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "defineProperties", dbg, obj);
     REQUIRE_ARGC("Debugger.Object.defineProperties", 1);
     JSObject *props = ToObject(cx, &vp[2]);
     if (!props)
@@ -3033,6 +3033,24 @@ DebuggerObject_defineProperties(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+// This does a non-strict delete, as a matter of API design. The case where the
+// property is non-configurable isn't necessarily exceptional here.
+static JSBool
+DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    Value arg = argc > 0 ? vp[2] : UndefinedValue();
+    jsid id;
+    if (!ValueToId(cx, arg, &id))
+        return false;
+
+    AutoCompartment ac(cx, obj);
+    if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
+        return false;
+
+    ErrorCopier ec(ac, dbg->toJSObject());
+    return obj->deleteProperty(cx, id, vp, false);
+}
 
 enum ApplyOrCallMode { ApplyMode, CallMode };
 
@@ -3126,6 +3144,7 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
+    JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FS_END
