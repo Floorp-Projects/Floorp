@@ -143,12 +143,9 @@ struct PropDesc {
 
     PropDesc();
 
+  public:
     /* 8.10.5 ToPropertyDescriptor(Obj) */
-    bool initialize(JSContext* cx, const js::Value &v, bool checkAccessors=true);
-
-    /* 8.10.4 FromPropertyDescriptor(Desc) */
-    void initFromPropertyDescriptor(const PropertyDescriptor &desc);
-    bool makeObject(JSContext *cx);
+    bool initialize(JSContext* cx, const js::Value &v);
 
     /* 8.10.1 IsAccessorDescriptor(desc) */
     bool isAccessorDescriptor() const {
@@ -197,9 +194,6 @@ struct PropDesc {
     js::StrictPropertyOp setter() const {
         return js::CastAsStrictPropertyOp(setterObject());
     }
-
-    inline bool checkGetter(JSContext *cx);
-    inline bool checkSetter(JSContext *cx);
 };
 
 typedef Vector<PropDesc, 1> PropDescArray;
@@ -1250,7 +1244,6 @@ struct JSObject : js::gc::Cell {
     inline bool isCall() const;
     inline bool isRegExp() const;
     inline bool isScript() const;
-    inline bool isError() const;
     inline bool isXML() const;
     inline bool isXMLId() const;
     inline bool isNamespace() const;
@@ -1636,15 +1629,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &val
 extern bool
 LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         JSObject **objp, JSProperty **propp);
-
-
-/*
- * Define a property as specified by the ES5 [[DefineOwnProperty]] algorithms,
- * sections 8.12.9 and (for arrays) 15.4.5.1.
- */
-extern bool
-DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc, bool throwError,
-               bool *rval);
 
 /*
  * Constant to pass to js_LookupPropertyWithFlags to infer bits from current
