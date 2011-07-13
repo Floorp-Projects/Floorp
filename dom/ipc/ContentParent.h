@@ -262,6 +262,8 @@ private:
     virtual bool RecvAddFileWatch(const nsString& root);
     virtual bool RecvRemoveFileWatch(const nsString& root);
 
+    virtual void ProcessingError(Result what) MOZ_OVERRIDE;
+
     GeckoChildProcessHost* mSubprocess;
 
     PRInt32 mGeolocationWatchID;

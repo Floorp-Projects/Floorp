@@ -13,6 +13,8 @@
 # include <sys/resource.h>
 #endif
 
+#include "chrome/common/process_watcher.h"
+
 #include "CrashReporterParent.h"
 #include "History.h"
 #include "IDBFactory.h"
@@ -330,6 +332,26 @@ ContentParent::OnChannelConnected(int32 pid)
         }
 #endif
     }
+}
+
+void
+ContentParent::ProcessingError(Result what)
+{
+    if (MsgDropped == what) {
+        // Messages sent after crashes etc. are not a big deal.
+        return;
+    }
+    // Other errors are big deals.  This ensures the process is
+    // eventually killed, but doesn't immediately KILLITWITHFIRE
+    // because we want to get a minidump if possible.  After a timeout
+    // though, the process is forceably killed.
+    if (!KillProcess(OtherProcess(), 1, false)) {
+        NS_WARNING("failed to kill subprocess!");
+    }
+    XRE_GetIOMessageLoop()->PostTask(
+        FROM_HERE,
+        NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated,
+                            OtherProcess(), /*force=*/true));
 }
 
 namespace {
