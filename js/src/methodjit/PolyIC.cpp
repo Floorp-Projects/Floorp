@@ -237,7 +237,7 @@ class SetPropCompiler : public PICStubCompiler
             // below.
             //
             int32 diff = int32(JSObject::getFixedSlotOffset(0)) -
-                         int32(offsetof(JSObject, slots));
+                         int32(JSObject::offsetOfSlots());
             JS_ASSERT(diff != 0);
             offset  = (int32(shape->slot) * sizeof(Value)) + diff;
         } else {
@@ -353,7 +353,7 @@ class SetPropCompiler : public PICStubCompiler
                 if (!slowExits.append(overCapacity))
                     return error();
 
-                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.shapeReg);
+                masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.shapeReg);
                 Address address(pic.shapeReg, shape->slot * sizeof(Value));
                 masm.storeValue(pic.u.vr, address);
             }
@@ -377,7 +377,7 @@ class SetPropCompiler : public PICStubCompiler
         } else if (shape->hasDefaultSetter()) {
             Address address(pic.objReg, JSObject::getFixedSlotOffset(shape->slot));
             if (!inlineSlot) {
-                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
+                masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.objReg);
                 address = Address(pic.objReg, shape->slot * sizeof(Value));
             }
 
@@ -422,7 +422,7 @@ class SetPropCompiler : public PICStubCompiler
             {
                 if (shape->setterOp() == SetCallVar)
                     slot += fun->nargs;
-                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
+                masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.objReg);
 
                 Address dslot(pic.objReg, (slot + JSObject::CALL_RESERVED_SLOTS) * sizeof(Value));
                 masm.storeValue(pic.u.vr, dslot);
@@ -1418,7 +1418,7 @@ class ScopeNameCompiler : public PICStubCompiler
         escapedFrame.linkTo(masm.label(), &masm);
 
         {
-            masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
+            masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.objReg);
 
             if (kind == VAR)
                 slot += fun->nargs;
@@ -2607,7 +2607,7 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
     skipUpdate.linkTo(masm.label(), &masm);
 
     // Store the value back.
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
     if (hasConstantKey) {
         Address slot(objReg, keyValue * sizeof(Value));
         masm.storeValue(vr, slot);
