@@ -2344,7 +2344,6 @@ public:
      */
     typedef PRBool (*FontCreationCallback) (const nsAString& aName,
                                             const nsACString& aGenericName,
-                                            PRBool aUseFontSet,
                                             void *closure);
     PRBool ForEachFont(const nsAString& aFamilies,
                        nsIAtom *aLanguage,
@@ -2458,14 +2457,11 @@ protected:
      * and with actual font names.  If false then fc() is called with each
      * family name in aFamilies (after resolving CSS/Gecko generic family names
      * if aResolveGeneric).
-     * If aUseFontSet is true, the fontgroup's user font set is checked;
-     * if false then it is skipped.
      */
     PRBool ForEachFontInternal(const nsAString& aFamilies,
                                nsIAtom *aLanguage,
                                PRBool aResolveGeneric,
                                PRBool aResolveFontName,
-                               PRBool aUseFontSet,
                                FontCreationCallback fc,
                                void *closure);
 
@@ -2473,7 +2469,6 @@ protected:
 
     static PRBool FindPlatformFont(const nsAString& aName,
                                    const nsACString& aGenericName,
-                                   PRBool aUseFontSet,
                                    void *closure);
 
     static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
