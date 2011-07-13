@@ -214,9 +214,28 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     return aStatus;
   }
 
+  if (NS_SUCCEEDED(aStatus)) {
+    // for HTTP requests, check whether the request _actually_ succeeded;
+    // the "request status" in aStatus does not necessarily indicate this,
+    // because HTTP responses such as 404 (Not Found) will still result in
+    // a success code and potentially an HTML error page from the server
+    // as the resulting data. We don't want to use that as a font.
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+    if (httpChannel) {
+      PRBool succeeded;
+      nsresult rv = httpChannel->GetRequestSucceeded(&succeeded);
+      if (NS_SUCCEEDED(rv) && !succeeded) {
+        aStatus = NS_ERROR_NOT_AVAILABLE;
+      }
+    }
+  }
+
   // The userFontSet is responsible for freeing the downloaded data
   // (aString) when finished with it; the pointer is no longer valid
   // after OnLoadComplete returns.
+  // This is called even in the case of a failed download (HTTP 404, etc),
+  // as there may still be data to be freed (e.g. an error page),
+  // and we need the fontSet to initiate loading the next source.
   PRBool fontUpdate = userFontSet->OnLoadComplete(mFontEntry,
                                                   aString, aStringLen,
                                                   aStatus);

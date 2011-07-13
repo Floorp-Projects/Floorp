@@ -296,15 +296,14 @@ private slots:
 
     void VisibleScreenAreaChanged(const QRect& rect) {
         if (mTopLevelWidget) {
-            QRect r = mTopLevelWidget->geometry().toRect();
-            if (rect.height()) {
-                r.setHeight(rect.height());
-            }
+            QRegion region(scene()->views()[0]->rect());
+            region -= rect;
+            QRectF bounds = mapRectFromScene(region.boundingRect());
 
             nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
             if (observerService) {
                 QString rect = QString("{\"left\": %1, \"top\": %2, \"right\": %3, \"bottom\": %4}")
-                                       .arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+                                       .arg(bounds.x()).arg(bounds.y()).arg(bounds.width()).arg(bounds.height());
                 observerService->NotifyObservers(nsnull, "softkb-change", rect.utf16());
             }
         }
