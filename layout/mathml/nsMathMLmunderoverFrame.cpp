@@ -419,8 +419,7 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
 
   mBoundingMetrics.ascent = 
     bmBase.ascent + overDelta1 + bmOver.ascent + bmOver.descent;
-  mBoundingMetrics.descent = 
-    bmBase.descent + underDelta1 + bmUnder.ascent + bmUnder.descent;
+  mBoundingMetrics.descent = bmBase.descent;
   mBoundingMetrics.leftBearing = 
     NS_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
   mBoundingMetrics.rightBearing = 
@@ -463,6 +462,9 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
 
   mBoundingMetrics.width =
     NS_MAX(dxAnonymousBase + bmAnonymousBase.width, dxUnder + bmUnder.width);
+  // At this point, mBoundingMetrics.ascent = bmAnonymousBase.ascent 
+  mBoundingMetrics.descent = 
+    bmAnonymousBase.descent + underDelta1 + bmUnder.ascent + bmUnder.descent;
   mBoundingMetrics.leftBearing =
     NS_MIN(dxAnonymousBase + bmAnonymousBase.leftBearing, dxUnder + bmUnder.leftBearing);
   mBoundingMetrics.rightBearing = 
