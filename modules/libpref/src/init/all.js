@@ -817,6 +817,10 @@ pref("network.websocket.extensions.stream-deflate", true);
 // one time.
 pref("network.websocket.max-connections", 200);
 
+// by default scripts loaded from a https:// origin can only open secure
+// (i.e. wss://) websockets.
+pref("network.websocket.allowInsecureFromHTTPS", false);
+
 // </ws>
 
 // Server-Sent Events

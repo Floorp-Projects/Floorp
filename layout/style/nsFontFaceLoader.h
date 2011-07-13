@@ -102,6 +102,11 @@ protected:
                   nsTArray<FontFaceRuleRecord>& oldRules,
                   PRBool& aFontSetModified);
 
+  virtual nsresult LogMessage(gfxProxyFontEntry *aProxy,
+                              const char *aMessage,
+                              PRUint32 aFlags = nsIScriptError::errorFlag,
+                              nsresult aStatus = 0);
+
   nsPresContext *mPresContext;  // weak reference
 
   // Set of all loaders pointing to us. These are not strong pointers,

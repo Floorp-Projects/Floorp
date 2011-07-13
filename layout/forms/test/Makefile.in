@@ -83,6 +83,15 @@ _CHROME_FILES = \
 		test_bug536567.html \
 		$(NULL)
 
+ifeq (WINNT,$(OS_ARCH))
+$(warning test_bug665540.html disabled due to bug 670053)
+else
+_CHROME_FILES += \
+		test_bug665540.html \
+		     bug665540_window.xul \
+		$(NULL)
+endif
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 

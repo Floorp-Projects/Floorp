@@ -1927,13 +1927,31 @@ nsFrameSelection::SetMouseDownState(PRBool aState)
   mMouseDownState = aState;
 
   if (mMouseDownState) {
+    if (sDraggingFrameSelection) {
+      sDraggingFrameSelection->AbortDragForSelection();
+    }
     sDraggingFrameSelection = this;
   } else {
-    sDraggingFrameSelection = nsnull;
+    if (sDraggingFrameSelection == this) {
+      sDraggingFrameSelection = nsnull;
+    }
     mDragSelectingCells = PR_FALSE;
     PostReason(nsISelectionListener::MOUSEUP_REASON);
     NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL); //notify that reason is mouse up please.
   }
+}
+
+void
+nsFrameSelection::AbortDragForSelection()
+{
+  if (sDraggingFrameSelection == this) {
+    sDraggingFrameSelection = nsnull;
+    mMouseDownState = PR_FALSE;
+    mDragSelectingCells = PR_FALSE;
+    PostReason(nsISelectionListener::NO_REASON);
+    NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
+  }
+  StopAutoScrollTimer();
 }
 
 nsISelection*

@@ -111,6 +111,16 @@ class GlobalObject : public ::JSObject {
   public:
     static GlobalObject *create(JSContext *cx, Class *clasp);
 
+    /*
+     * Create an object to serve as [[Prototype]] for instances of the given
+     * class, using |Object.prototype| as its [[Prototype]].  Users creating
+     * prototype objects with particular internal structure (e.g. reserved
+     * slots guaranteed to contain values of particular types) must immediately
+     * complete the minimal initialization to make the returned object safe to
+     * touch.
+     */
+    JSObject *createBlankPrototype(JSContext *cx, js::Class *clasp);
+
     void setThrowTypeError(JSFunction *fun) {
         Value &v = getSlotRef(THROWTYPEERROR);
         // Our bootstrapping code is currently too convoluted to correctly and

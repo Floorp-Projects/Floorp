@@ -45,6 +45,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsStringAPI.h"
+#include "nsCRT.h"
 
 // Define NetworkManager API constants. This avoids a dependency on
 // NetworkManager-devel.
@@ -84,6 +85,16 @@ nsNetworkManagerListener::GetIsLinkUp(PRBool* aIsUp) {
 nsresult
 nsNetworkManagerListener::GetLinkStatusKnown(PRBool* aKnown) {
   *aKnown = mNetworkManagerActive;
+  return NS_OK;
+}
+
+nsresult
+nsNetworkManagerListener::GetLinkType(PRUint32 *aLinkType)
+{
+  NS_ENSURE_ARG_POINTER(aLinkType);
+
+  // XXX This function has not yet been implemented for this platform
+  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
   return NS_OK;
 }
 

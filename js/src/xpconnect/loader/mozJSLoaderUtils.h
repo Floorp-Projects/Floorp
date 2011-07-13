@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Michael Wu <mwu@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,31 +37,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIMenuFrame_h___
-#define nsIMenuFrame_h___
+#ifndef mozJSLoaderUtils_h
+#define mozJSLoaderUtils_h
 
-#include "nsQueryFrame.h"
+#include "nsString.h"
+#include "jsapi.h"
 
-enum nsMenuListType {
-  eNotMenuList,
-  eReadonlyMenuList,
-  eEditableMenuList
-};
+class nsIURI;
+namespace mozilla {
+namespace scache {
+class StartupCache;
+}
+}
 
-// this interface exists solely because native themes need to call into it.
-// Only menu frames should implement it
+nsresult
+ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
+                 JSContext *cx, JSObject **scriptObj);
 
-class nsIMenuFrame
-{
-public:
-  NS_DECL_QUERYFRAME_TARGET(nsIMenuFrame)
-
-  virtual PRBool IsOpen() = 0;
-  virtual PRBool IsMenu() = 0;
-  virtual PRBool IsOnMenuBar() = 0;
-  virtual PRBool IsOnActiveMenuBar() = 0;
-  virtual nsMenuListType GetParentMenuListType() = 0;
-};
-
-#endif
-
+nsresult
+WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
+                  JSContext *cx, JSObject *scriptObj);
+#endif /* mozJSLoaderUtils_h */

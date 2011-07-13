@@ -67,6 +67,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprobes.h"
 #include "jsregexp.h"
 #include "jsscope.h"
 #include "jsstaticcheck.h"
@@ -141,7 +142,7 @@ str_encodeURI(JSContext *cx, uintN argc, Value *vp);
 static JSBool
 str_encodeURI_Component(JSContext *cx, uintN argc, Value *vp);
 
-static const uint32 OVERLONG_UTF8 = UINT32_MAX;
+static const uint32 INVALID_UTF8 = UINT32_MAX;
 
 static uint32
 Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length);
@@ -3163,24 +3164,13 @@ StringObject::assignInitialShape(JSContext *cx)
 }
 
 JSObject *
-js_InitStringClass(JSContext *cx, JSObject *global)
+js_InitStringClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(global->isGlobal());
-    JS_ASSERT(global->isNative());
+    JS_ASSERT(obj->isNative());
 
-    /*
-     * Define escape/unescape, the URI encode/decode functions, and maybe
-     * uneval on the global object.
-     */
-    if (!JS_DefineFunctions(cx, global, string_functions))
-        return NULL;
+    GlobalObject *global = obj->asGlobal();
 
-    /* Create and initialize String.prototype. */
-    JSObject *objectProto;
-    if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
-        return NULL;
-
-    JSObject *proto = NewObject<WithProto::Class>(cx, &js_StringClass, objectProto, global);
+    JSObject *proto = global->createBlankPrototype(cx, &js_StringClass);
     if (!proto || !proto->asString()->init(cx, cx->runtime->emptyString))
         return NULL;
 
@@ -3214,19 +3204,15 @@ js_InitStringClass(JSContext *cx, JSObject *global)
     proto->brand(cx);
     ctor->brand(cx);
 
-    /*
-     * Make sure proto's emptyShape is available to be shared by String
-     * objects. JSObject::emptyShape is a one-slot cache. If we omit this, some
-     * other class could snap it up. (The risk is particularly great for
-     * Object.prototype.)
-     *
-     * All callers of JSObject::initSharingEmptyShape depend on this.
-     */
-    if (!proto->getEmptyShape(cx, &js_StringClass, FINALIZE_OBJECT0))
-        return NULL;
-
     /* Install the fully-constructed String and String.prototype. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
+        return NULL;
+
+    /*
+     * Define escape/unescape, the URI encode/decode functions, and maybe
+     * uneval on the global object.
+     */
+    if (!JS_DefineFunctions(cx, global, string_functions))
         return NULL;
 
     return proto;
@@ -3238,7 +3224,9 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     if (!CheckStringLength(cx, length))
         return NULL;
 
-    return JSFixedString::new_(cx, chars, length);
+    JSFixedString *s = JSFixedString::new_(cx, chars, length);
+    Probes::createString(cx, s, length);
+    return s;
 }
 
 static JS_ALWAYS_INLINE JSFixedString *
@@ -3259,6 +3247,7 @@ NewShortString(JSContext *cx, const jschar *chars, size_t length)
     jschar *storage = str->init(length);
     PodCopy(storage, chars, length);
     storage[length] = 0;
+    Probes::createString(cx, str, length);
     return str;
 }
 
@@ -3289,6 +3278,7 @@ NewShortString(JSContext *cx, const char *chars, size_t length)
             *p++ = (unsigned char)*chars++;
         *p = 0;
     }
+    Probes::createString(cx, str, length);
     return str;
 }
 
@@ -3379,7 +3369,9 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
     if (JSLinearString *staticStr = JSAtom::lookupStatic(chars, length))
         return staticStr;
 
-    return JSDependentString::new_(cx, base, chars, length);
+    JSLinearString *s = JSDependentString::new_(cx, base, chars, length);
+    Probes::createString(cx, s, length);
+    return s;
 }
 
 JSFixedString *
@@ -5643,8 +5635,8 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
             JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
             ucs4Char = ucs4Char<<6 | (*utf8Buffer++ & 0x3F);
         }
-        if (JS_UNLIKELY(ucs4Char < minucs4Char)) {
-            ucs4Char = OVERLONG_UTF8;
+        if (JS_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF))) {
+            ucs4Char = INVALID_UTF8;
         } else if (ucs4Char == 0xFFFE || ucs4Char == 0xFFFF) {
             ucs4Char = 0xFFFD;
         }
