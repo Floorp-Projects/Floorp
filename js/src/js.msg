@@ -368,3 +368,4 @@ MSG_DEF(JSMSG_DEBUG_NOT_IDLE,         281, 0, JSEXN_ERR, "can't start debugging:
 MSG_DEF(JSMSG_DEBUG_BAD_OFFSET,       282, 0, JSEXN_TYPEERR, "invalid script offset")
 MSG_DEF(JSMSG_DEBUG_BAD_LINE,         283, 0, JSEXN_TYPEERR, "invalid line number")
 MSG_DEF(JSMSG_DEBUG_NOT_DEBUGGING,    284, 0, JSEXN_ERR, "can't set breakpoint: script global is not a debuggee")
+MSG_DEF(JSMSG_DEBUG_COMPARTMENT_MISMATCH, 285, 2, JSEXN_TYPEERR, "{0}: descriptor .{1} property is an object in a different compartment than the target object")
