@@ -1647,6 +1647,14 @@ DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &des
                bool *rval);
 
 /*
+ * Read property descriptors from props, as for Object.defineProperties. See
+ * ES5 15.2.3.7 steps 3-5.
+ */
+extern bool
+ReadPropertyDescriptors(JSContext *cx, JSObject *props, bool checkAccessors,
+                        AutoIdVector *ids, AutoPropDescArrayRooter *descs);
+
+/*
  * Constant to pass to js_LookupPropertyWithFlags to infer bits from current
  * bytecode.
  */

@@ -2499,30 +2499,42 @@ obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
     return true;
 }
 
+namespace js {
+
+bool
+ReadPropertyDescriptors(JSContext *cx, JSObject *props, bool checkAccessors,
+                        AutoIdVector *ids, AutoPropDescArrayRooter *descs)
+{
+    if (!GetPropertyNames(cx, props, JSITER_OWNONLY, ids))
+        return false;
+
+    for (size_t i = 0, len = ids->length(); i < len; i++) {
+        jsid id = (*ids)[i];
+        PropDesc* desc = descs->append();
+        Value v;
+        if (!desc || !props->getProperty(cx, id, &v) || !desc->initialize(cx, v, checkAccessors))
+            return false;
+    }
+    return true;
+}
+
+} /* namespace js */
+
 static bool
 DefineProperties(JSContext *cx, JSObject *obj, JSObject *props)
 {
     AutoIdVector ids(cx);
-    if (!GetPropertyNames(cx, props, JSITER_OWNONLY, &ids))
+    AutoPropDescArrayRooter descs(cx);
+    if (!ReadPropertyDescriptors(cx, props, true, &ids, &descs))
         return false;
 
-     AutoPropDescArrayRooter descs(cx);
-     size_t len = ids.length();
-     for (size_t i = 0; i < len; i++) {
-         jsid id = ids[i];
-         PropDesc* desc = descs.append();
-         Value v;
-         if (!desc || !props->getProperty(cx, id, &v) || !desc->initialize(cx, v))
-             return false;
-     }
+    bool dummy;
+    for (size_t i = 0, len = ids.length(); i < len; i++) {
+        if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
+            return false;
+    }
 
-     bool dummy;
-     for (size_t i = 0; i < len; i++) {
-         if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
-             return false;
-     }
-
-     return true;
+    return true;
 }
 
 extern JSBool
