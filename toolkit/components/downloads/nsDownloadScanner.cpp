@@ -480,10 +480,10 @@ nsDownloadScanner::Scan::DoScanAES()
 #pragma warning(disable: 4509)
   HRESULT hr;
   nsRefPtr<IAttachmentExecute> ae;
-  __try {
+  MOZ_SEH_TRY {
     hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_ALL,
                           IID_IAttachmentExecute, getter_AddRefs(ae));
-  } __except(ExceptionFilterFunction(GetExceptionCode())) {
+  } MOZ_SEH_EXCEPT(ExceptionFilterFunction(GetExceptionCode())) {
     return CheckAndSetState(AVSCAN_NOTSTARTED,AVSCAN_FAILED);
   }
 
@@ -492,7 +492,7 @@ nsDownloadScanner::Scan::DoScanAES()
     AVScanState newState;
     if (SUCCEEDED(hr)) {
       PRBool gotException = PR_FALSE;
-      __try {
+      MOZ_SEH_TRY {
         (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
         (void)ae->SetLocalPath(mPath.BeginWriting());
         // Provide the src for everything but data: schemes.
@@ -501,13 +501,13 @@ nsDownloadScanner::Scan::DoScanAES()
 
         // Save() will invoke the scanner
         hr = ae->Save();
-      } __except(ExceptionFilterFunction(GetExceptionCode())) {
+      } MOZ_SEH_EXCEPT(ExceptionFilterFunction(GetExceptionCode())) {
         gotException = PR_TRUE;
       }
 
-      __try {
+      MOZ_SEH_TRY {
         ae = NULL;
-      } __except(ExceptionFilterFunction(GetExceptionCode())) {
+      } MOZ_SEH_EXCEPT(ExceptionFilterFunction(GetExceptionCode())) {
         gotException = PR_TRUE;
       }
 
@@ -555,9 +555,9 @@ nsDownloadScanner::Scan::DoScan()
     }
   }
 
-  __try {
+  MOZ_SEH_TRY {
     CoUninitialize();
-  } __except(ExceptionFilterFunction(GetExceptionCode())) {
+  } MOZ_SEH_EXCEPT(ExceptionFilterFunction(GetExceptionCode())) {
     // Not much we can do at this point...
   }
 }
