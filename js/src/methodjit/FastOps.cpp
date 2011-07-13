@@ -1449,15 +1449,16 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         }
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
-        if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
-            (value->mightBeType(JSVAL_TYPE_INT32) || value->mightBeType(JSVAL_TYPE_DOUBLE))) {
+        if ((value->mightBeType(JSVAL_TYPE_INT32) || value->mightBeType(JSVAL_TYPE_DOUBLE)) &&
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
+            types->getObjectCount() == 1) {
             // Inline typed array path. Look at the proto to determine the typed array type.
-            if (types::TypeObject *objType = types->getSingleObject()) {
-                int atype = objType->proto->getClass() - TypedArray::slowClasses;
-                JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
-                jsop_setelem_typed(atype);
-                return true;
-            }
+            types::TypeObject *object = types->getObject(0);
+            types->addFreeze(cx);
+            int atype = object->proto->getClass() - TypedArray::slowClasses;
+            JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
+            jsop_setelem_typed(atype);
+            return true;
         }
 #endif
     }
@@ -1970,14 +1971,15 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
-            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
+            types->getObjectCount() == 1) {
             // Inline typed array path. Look at the proto to determine the typed array type.
-            if (types::TypeObject *objType = types->getSingleObject()) {
-                int atype = objType->proto->getClass() - TypedArray::slowClasses;
-                JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
-                jsop_getelem_typed(atype);
-                return true;
-            }
+            types::TypeObject *object = types->getObject(0);
+            types->addFreeze(cx);
+            int atype = object->proto->getClass() - TypedArray::slowClasses;
+            JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
+            jsop_getelem_typed(atype);
+            return true;
         }
 #endif
     }
