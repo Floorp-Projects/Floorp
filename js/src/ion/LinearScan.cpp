@@ -321,8 +321,8 @@ LinearScanAllocator::createDataStructures()
     }
 
     // Initialize input/output move records
-    memset(inputMovesFor, 0, sizeof(MoveGroup *) * graph.numBlocks());
-    memset(outputMovesFor, 0, sizeof(MoveGroup *) * graph.numBlocks());
+    memset(inputMovesFor, 0, sizeof(MoveGroup *) * graph.numVirtualRegisters());
+    memset(outputMovesFor, 0, sizeof(MoveGroup *) * graph.numVirtualRegisters());
 
     return true;
 }
