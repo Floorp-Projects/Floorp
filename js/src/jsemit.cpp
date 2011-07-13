@@ -4109,7 +4109,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 {
     bool let, forInVar, first;
 #if JS_HAS_BLOCK_SCOPE
-    bool forInLet, popScope;
+    bool popScope;
     JSStmtInfo *stmt, *scopeStmt;
 #endif
     ptrdiff_t off, noteIndex, tmp;
@@ -4136,7 +4136,6 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     let = (pn->pn_op == JSOP_NOP);
     forInVar = (pn->pn_xflags & PNX_FORINVAR) != 0;
 #if JS_HAS_BLOCK_SCOPE
-    forInLet = let && forInVar;
     popScope = (inLetHead || (let && (cg->flags & TCF_IN_FOR_INIT)));
     if (popScope) {
         stmt = cg->topStmt;
@@ -4901,9 +4900,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /* Set loop and enclosing label update offsets, for continue. */
+        off = CG_OFFSET(cg);
         stmt = &stmtInfo;
         do {
-            stmt->update = CG_OFFSET(cg);
+            stmt->update = off;
         } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
 
         /* Compile the loop condition, now that continues know where to go. */
@@ -4924,7 +4924,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (!js_SetSrcNoteOffset(cx, cg, noteIndex2, 0, beq - top))
             return JS_FALSE;
-        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, 1 + (beq - top)))
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, 1 + (off - top)))
             return JS_FALSE;
         ok = js_PopStatementCG(cx, cg);
         break;

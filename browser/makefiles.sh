@@ -98,7 +98,6 @@ if [ "$ENABLE_TESTS" ]; then
     browser/components/places/tests/Makefile
     browser/components/places/tests/chrome/Makefile
     browser/components/places/tests/browser/Makefile
-    browser/components/places/tests/perf/Makefile
     browser/components/privatebrowsing/test/Makefile
     browser/components/privatebrowsing/test/browser/Makefile
     browser/components/safebrowsing/content/test/Makefile

@@ -280,8 +280,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x4776aa9a, 0xa886, 0x40c9, \
- { 0xae, 0x4c, 0x4d, 0x92, 0xe2, 0xf0, 0xd9, 0x61 } }
+{ 0xc7abbb40, 0x2571, 0x4d12, \
+ { 0x8f, 0x89, 0x0d, 0x4f, 0x55, 0xc0, 0x92, 0xf6 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -293,6 +293,10 @@ class nsINode : public nsIDOMEventTarget,
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
+
+  virtual PRInt64 SizeOf() const {
+    return sizeof(*this);
+  }
 
   friend class nsNodeUtils;
   friend class nsNodeWeakReference;

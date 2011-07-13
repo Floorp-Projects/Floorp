@@ -98,6 +98,9 @@ RCFILE    = nptest.rc
 RESFILE   = nptest.res
 DEFFILE   = $(win_srcdir)/nptest.def
 OS_LIBS  += $(call EXPAND_LIBNAME,msimg32)
+
+# Windows opt builds without PGO break nptest.dll
+MOZ_OPTIMIZE=
 endif
 
 include $(topsrcdir)/config/rules.mk
