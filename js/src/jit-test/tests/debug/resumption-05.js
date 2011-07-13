@@ -5,20 +5,18 @@ var g = newGlobal('new-compartment');
 g.debuggeeGlobal = this;
 g.eval("(" + function () { 
         var dbg = new Debugger(debuggeeGlobal);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                if (frame.callee === null) {
-                    // The first debugger statement below.
-                    debuggeeGlobal.log += "1";
-                    var cv = frame.eval("f();");
-                    assertEq(cv, null);
-                    debuggeeGlobal.log += "2";
-                } else {
-                    // The second debugger statement.
-                    debuggeeGlobal.log += "3";
-                    assertEq(frame.callee.name, "f");
-                    return null;
-                }
+        dbg.onDebuggerStatement = function (frame) {
+            if (frame.callee === null) {
+                // The first debugger statement below.
+                debuggeeGlobal.log += "1";
+                var cv = frame.eval("f();");
+                assertEq(cv, null);
+                debuggeeGlobal.log += "2";
+            } else {
+                // The second debugger statement.
+                debuggeeGlobal.log += "3";
+                assertEq(frame.callee.name, "f");
+                return null;
             }
         };
     } + ")()");

@@ -1,10 +1,10 @@
-// After hooks.throw throws, if uncaughtExceptionHook returns undefined,
-// the original exception continues to propagate.
+// After an onExceptionUnwind hook throws, if uncaughtExceptionHook returns
+// undefined, the original exception continues to propagate.
 
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var log = '';
-dbg.hooks = {throw: function () { log += "1"; throw new Error("oops"); }};
+dbg.onExceptionUnwind = function () { log += "1"; throw new Error("oops"); };
 dbg.uncaughtExceptionHook = function () { log += "2"; };
 
 g.eval("var x = new Error('oops');");

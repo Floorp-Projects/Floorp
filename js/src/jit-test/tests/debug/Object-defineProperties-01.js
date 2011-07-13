@@ -16,16 +16,16 @@ function test(objexpr, descs) {
 
     var ids = Object.keys(descs);
     for (var i = 0; i < ids.length; i++) {
-	var actual = gobjw.getOwnPropertyDescriptor(ids[i]);
-	var expected = Object.getOwnPropertyDescriptor(obj, ids[i]);
-	assertEq(Object.getPrototypeOf(actual), Object.prototype);
-	assertEq(actual.configurable, expected.configurable);
-	assertEq(actual.enumerable, expected.enumerable);
-	for (var j = 0; j < descProps; j++) {
-	    var prop = descProps[j];
-	    assertEq(prop in actual, prop in expected);
-	    assertEq(actual[prop], expected[prop]);
-	}
+        var actual = gobjw.getOwnPropertyDescriptor(ids[i]);
+        var expected = Object.getOwnPropertyDescriptor(obj, ids[i]);
+        assertEq(Object.getPrototypeOf(actual), Object.prototype);
+        assertEq(actual.configurable, expected.configurable);
+        assertEq(actual.enumerable, expected.enumerable);
+        for (var j = 0; j < descProps; j++) {
+            var prop = descProps[j];
+            assertEq(prop in actual, prop in expected);
+            assertEq(actual[prop], expected[prop]);
+        }
     }
 }
 

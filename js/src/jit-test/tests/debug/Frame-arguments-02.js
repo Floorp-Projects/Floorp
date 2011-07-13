@@ -3,16 +3,14 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        var args = frame.arguments;
-        assertEq(args, frame.arguments);
-        assertEq(args instanceof Array, true);
-        assertEq(args.length, 2);
-        assertEq(args[0] instanceof Debugger.Object, true);
-        assertEq(args[0].class, args[1]);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    var args = frame.arguments;
+    assertEq(args, frame.arguments);
+    assertEq(args instanceof Array, true);
+    assertEq(args.length, 2);
+    assertEq(args[0] instanceof Debugger.Object, true);
+    assertEq(args[0].class, args[1]);
+    hits++;
 };
 
 g.eval("function f(obj, cls) { debugger; }");

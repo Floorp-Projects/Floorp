@@ -7,12 +7,10 @@ function classOf(obj) {
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        hits++;
-        assertEq(frame.this instanceof Debugger.Object, true);
-        assertEq(frame.this.class, g.v == null ? classOf(g) : classOf(Object(g.v)));
-    }
+dbg.onDebuggerStatement = function (frame) {
+    hits++;
+    assertEq(frame.this instanceof Debugger.Object, true);
+    assertEq(frame.this.class, g.v == null ? classOf(g) : classOf(Object(g.v)));
 };
 
 g.eval("function f() { debugger; }");

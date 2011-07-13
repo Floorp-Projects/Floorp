@@ -7,14 +7,12 @@ var log;
 var arr = [];
 for (var i = 0; i < 4; i++) {
     arr[i] = new Debugger(g);
-    arr[i].hooks = {
-        num: i,
-        debuggerHandler: function () {
-            log += this.num;
-            // Disable them all.
-            for (var j = 0; j < arr.length; j++)
-                arr[j].enabled = false;
-        }
+    arr[i].num = i;
+    arr[i].onDebuggerStatement = function () {
+        log += this.num;
+        // Disable them all.
+        for (var j = 0; j < arr.length; j++)
+            arr[j].enabled = false;
     };
 }
 

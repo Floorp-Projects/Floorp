@@ -4,11 +4,9 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var log;
-dbg.hooks = {
-    debuggerHandler: function () {
-        log += 'x';
-        throw new TypeError("fail");
-    }
+dbg.onDebuggerStatement = function () {
+    log += 'x';
+    throw new TypeError("fail");
 };
 dbg.uncaughtExceptionHook = function (exc) {
     assertEq(this, dbg);

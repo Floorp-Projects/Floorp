@@ -4,18 +4,16 @@ var g = newGlobal('new-compartment');
 g.line0 = null;
 var dbg = Debugger(g);
 var where;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        var s = frame.script;
-        var offs;
-        var lineno = g.line0 + where;
-        offs = s.getLineOffsets(lineno);
-        for (var i = 0; i < offs.length; i++) {
-            assertEq(s.getOffsetLine(offs[i]), lineno);
-            s.setBreakpoint(offs[i], {hit: function (frame) { g.log += 'B'; }});
-        }
-        g.log += 'A';
+dbg.onDebuggerStatement = function (frame) {
+    var s = frame.script;
+    var offs;
+    var lineno = g.line0 + where;
+    offs = s.getLineOffsets(lineno);
+    for (var i = 0; i < offs.length; i++) {
+        assertEq(s.getOffsetLine(offs[i]), lineno);
+        s.setBreakpoint(offs[i], {hit: function (frame) { g.log += 'B'; }});
     }
+    g.log += 'A';
 };
 
 function test(s) {

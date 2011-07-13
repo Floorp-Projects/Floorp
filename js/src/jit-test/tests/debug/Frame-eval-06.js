@@ -8,14 +8,12 @@ g.eval("function test() { debugger; }");
 var dbg = new Debugger(g);
 var genframe;
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        if (frame.callee.name == 'gen')
-            genframe = frame;
-        else
-            assertThrowsInstanceOf(function () { genframe.eval("a"); }, Error);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    if (frame.callee.name == 'gen')
+        genframe = frame;
+    else
+        assertThrowsInstanceOf(function () { genframe.eval("a"); }, Error);
+    hits++;
 };
 g.eval("var it = gen(42); assertEq(it.next(), 42); test();");
 assertEq(hits, 2);

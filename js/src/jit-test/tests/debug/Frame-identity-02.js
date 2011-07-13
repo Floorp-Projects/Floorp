@@ -8,14 +8,12 @@ g.debuggeeGlobal = this;
 g.eval("(" + function () {
         var dbg = new Debugger(debuggeeGlobal);
         var prev = null;
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                assertEq(frame === prev, false);
-                if (prev)
-                    assertEq(prev.live, false);
-                prev = frame;
-                return {throw: debuggeeGlobal.i};
-            }
+        dbg.onDebuggerStatement = function (frame) {
+            assertEq(frame === prev, false);
+            if (prev)
+                assertEq(prev.live, false);
+            prev = frame;
+            return {throw: debuggeeGlobal.i};
         };
     } + ")();");
 

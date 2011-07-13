@@ -13,16 +13,14 @@ g.s = ("line0 = Error().lineNumber;\n" +
 
 var dbg = Debugger(g);
 var hits = 0, bphits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        assertEq(frame.type, 'eval');
-        assertEq(frame.script.getBreakpoints().length, 0);
-        var h = {hit: function (frame) { bphits++; }};
-        var offs = frame.script.getLineOffsets(g.line0 + 2);
-        for (var i = 0; i < offs.length; i++)
-            frame.script.setBreakpoint(offs[i], h);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    assertEq(frame.type, 'eval');
+    assertEq(frame.script.getBreakpoints().length, 0);
+    var h = {hit: function (frame) { bphits++; }};
+    var offs = frame.script.getLineOffsets(g.line0 + 2);
+    for (var i = 0; i < offs.length; i++)
+        frame.script.setBreakpoint(offs[i], h);
+    hits++;
 };
 
 for (var i = 0; i < 3; i++) {

@@ -9,14 +9,12 @@ var handler = {
     }
 };
 var dbg = Debugger(g);
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        g.s += '0';
-        var line0 = frame.script.getOffsetLine(frame.offset);
-        var offs = frame.script.getLineOffsets(line0 + 2);
-        for (var i = 0; i < offs.length; i++)
-            frame.script.setBreakpoint(offs[i], handler);
-    }
+dbg.onDebuggerStatement = function (frame) {
+    g.s += '0';
+    var line0 = frame.script.getOffsetLine(frame.offset);
+    var offs = frame.script.getLineOffsets(line0 + 2);
+    for (var i = 0; i < offs.length; i++)
+        frame.script.setBreakpoint(offs[i], handler);
 };
 g.eval("debugger;\n" +
        "s += 'a';\n" +  // line0 + 1

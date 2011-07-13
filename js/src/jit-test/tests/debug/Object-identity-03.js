@@ -6,7 +6,7 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var wrappers = [];
 
-dbg.hooks = {debuggerHandler: function (frame) { wrappers.push(frame.arguments[0]); }};
+dbg.onDebuggerStatement = function (frame) { wrappers.push(frame.arguments[0]); };
 g.eval("var originals = []; function f(x) { originals.push(x); debugger; }");
 for (var i = 0; i < N; i++)
     g.eval("f({});");
@@ -18,7 +18,7 @@ for (var i = 0; i < N; i++)
 
 gc();
 
-dbg.hooks = {debuggerHandler: function (frame) { assertEq(frame.arguments[0], wrappers.pop()); }};
+dbg.onDebuggerStatement = function (frame) { assertEq(frame.arguments[0], wrappers.pop()); };
 g.eval("function h(x) { debugger; }");
 for (var i = 0; i < N; i++)
     g.eval("h(originals.pop());");

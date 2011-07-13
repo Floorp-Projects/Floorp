@@ -16,16 +16,14 @@ g.eval("var hits = 0;");
 g.eval("(" + function () {
         var a = [];
         var dbg = Debugger(debuggeeGlobal);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                var loc = debuggeeGlobal.loc;
-                a[loc] = frame;
-                for (var i = 0; i < a.length; i++) {
-                    assertEq(a[i] === frame, i === loc);
-                    assertEq(!!(a[i] && a[i].live), i >= loc);
-                }
-                hits++;
+        dbg.onDebuggerStatement = function (frame) {
+            var loc = debuggeeGlobal.loc;
+            a[loc] = frame;
+            for (var i = 0; i < a.length; i++) {
+                assertEq(a[i] === frame, i === loc);
+                assertEq(!!(a[i] && a[i].live), i >= loc);
             }
+            hits++;
         };
     } + ")()");
 

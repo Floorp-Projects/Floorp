@@ -1,5 +1,5 @@
-// Debuggers with enabled throw hooks should not be GC'd even if they are
-// otherwise unreachable.
+// Debuggers with enabled onExceptionUnwind hooks should not be GC'd even if
+// they are otherwise unreachable.
 
 load(libdir + "asserts.js");
 
@@ -10,7 +10,8 @@ var expected = 0;
 function f() {
     for (var i = 0; i < 20; i++) {
         var dbg = new Debugger(g);
-        dbg.hooks = {num: i, throw: function (stack, exc) { actual += this.num; }};
+        dbg.num = i;
+        dbg.onExceptionUnwind = function (stack, exc) { actual += this.num; };
         expected += i;
     }
 }

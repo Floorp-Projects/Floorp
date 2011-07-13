@@ -6,7 +6,7 @@ var g = newGlobal('new-compartment');
 var hits;
 var dbg = new Debugger(g);
 assertEq(dbg.enabled, true);
-dbg.hooks = {debuggerHandler: function () { hits++; }};
+dbg.onDebuggerStatement = function () { hits++; };
 
 var vals = [true, false, null, undefined, NaN, "blah", {}];
 for (var i = 0; i < vals.length; i++) {

@@ -4,25 +4,23 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var hits;
 var expected;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-	var args = frame.arguments;
-	var obj = args[0], id = args[1];
-	var desc = obj.getOwnPropertyDescriptor(id);
-	if (expected === undefined) {
-	    assertEq(desc, undefined);
-	} else {
-	    assertEq(desc instanceof Object, true);
-	    assertEq(desc.enumerable, expected.enumerable);
-	    assertEq(desc.configurable, expected.configurable);
-	    assertEq(desc.hasOwnProperty("value"), true);
-	    assertEq(desc.value, expected.value);
-	    assertEq(desc.writable, expected.writable === undefined ? true : expected.writable);
-	    assertEq("get" in desc, false);
-	    assertEq("set" in desc, false);
-	}
-	hits++;
+dbg.onDebuggerStatement = function (frame) {
+    var args = frame.arguments;
+    var obj = args[0], id = args[1];
+    var desc = obj.getOwnPropertyDescriptor(id);
+    if (expected === undefined) {
+        assertEq(desc, undefined);
+    } else {
+        assertEq(desc instanceof Object, true);
+        assertEq(desc.enumerable, expected.enumerable);
+        assertEq(desc.configurable, expected.configurable);
+        assertEq(desc.hasOwnProperty("value"), true);
+        assertEq(desc.value, expected.value);
+        assertEq(desc.writable, expected.writable === undefined ? true : expected.writable);
+        assertEq("get" in desc, false);
+        assertEq("set" in desc, false);
     }
+    hits++;
 };
 
 g.eval("function f(obj, id) { debugger; }");

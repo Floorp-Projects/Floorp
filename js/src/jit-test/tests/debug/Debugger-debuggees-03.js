@@ -8,7 +8,7 @@ g2.eval("function g() { debugger; }");
 
 var log;
 var dbg = new Debugger;
-dbg.hooks = {debuggerHandler: function (frame) { log += frame.callee.name; }};
+dbg.onDebuggerStatement = function (frame) { log += frame.callee.name; };
 
 // No debuggees: the debuggerHandler is not called.
 log = '';

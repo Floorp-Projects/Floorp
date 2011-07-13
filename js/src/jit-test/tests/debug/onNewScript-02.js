@@ -4,13 +4,11 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var seen = WeakMap();
 var hits;
-dbg.hooks = {
-    newScript: function (s) {
-	assertEq(s instanceof Debugger.Script, true);
-	assertEq(!seen.has(s), true);
-	seen.set(s, true);
-	hits++;
-    }
+dbg.onNewScript = function (s) {
+    assertEq(s instanceof Debugger.Script, true);
+    assertEq(!seen.has(s), true);
+    seen.set(s, true);
+    hits++;
 };
 
 dbg.uncaughtExceptionHook = function () { hits = -999; };
@@ -30,7 +28,7 @@ test(function () { g.eval("function g(a, b) { return b===0?a:g(b,a%b); }"); });
 // eval declaring multiple functions
 test(function () {
     g.eval("function e(i) { return i===0||o(i-1); }\n" +
-	   "function o(i) { return i!==0&&e(i-1); }\n");
+           "function o(i) { return i!==0&&e(i-1); }\n");
 });
 
 // eval declaring nested functions
@@ -56,7 +54,7 @@ test(function () { g.eval("var it = (obj[p] for (p in obj));"); });
 
 // eval creating several instances of a closure
 test(function () { g.eval("for (var i = 0; i < 7; i++)\n" +
-			  "    obj = function () { return obj; };\n"); });
+                          "    obj = function () { return obj; };\n"); });
 
 // non-strict-mode direct eval
 g.eval("function e(s) { eval(s); }");

@@ -6,16 +6,12 @@ var log = '';
 function addDebug(n) {
     for (var i = 0; i < n; i++) {
         var dbg = new Debugger(g);
-        dbg.hooks = {
-            num: i,
-            dbg: dbg,
-            debuggerHandler: function (stack) {
-                log += this.num + ', ';
-                this.dbg.enabled = false;
-                this.dbg.hooks = {};
-                this.dbg = null;
-                gc();
-            }
+        dbg.num = i;
+        dbg.onDebuggerStatement = function (stack) {
+            log += this.num + ', ';
+            this.enabled = false;
+            this.onDebuggerStatement = null;
+            gc();
         };
     }
     dbg = null;

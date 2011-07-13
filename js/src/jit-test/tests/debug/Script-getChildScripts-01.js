@@ -8,13 +8,13 @@ function note(s) {
     log += 'S';
     var c = s.getChildScripts();
     if (c.length > 0) {
-	log += '[';
-	for (var i = 0; i < c.length; i++)
-	    note(c[i]);
-	log += ']';
+        log += '[';
+        for (var i = 0; i < c.length; i++)
+            note(c[i]);
+        log += ']';
     }
 }
-dbg.hooks = {debuggerHandler: function (frame) { note(frame.script); }};
+dbg.onDebuggerStatement = function (frame) { note(frame.script); };
 
 function test(code, expected) {
     log = '';

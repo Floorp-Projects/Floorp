@@ -9,12 +9,10 @@ g.eval("var finalCheck;");
 g.eval("(" + function () {
         var a = [];
         var dbg = Debugger(debuggeeGlobal);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                a.push(frame);
-                for (var i = 0; i < a.length; i++)
-                    assertEq(a[i].live, true);
-            }
+        dbg.onDebuggerStatement = function (frame) {
+            a.push(frame);
+            for (var i = 0; i < a.length; i++)
+                assertEq(a[i].live, true);
         };
         finalCheck = function (n) {
             assertEq(a.length, n);

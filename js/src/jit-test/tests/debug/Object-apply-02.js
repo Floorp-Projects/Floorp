@@ -5,10 +5,9 @@ load(libdir + "asserts.js");
 var g = newGlobal("new-compartment");
 g.eval("function f() { debugger; }");
 var dbg = new Debugger(g);
-dbg.hooks = {debuggerHandler: function () {}};
 
 function test(usingApply) {
-    dbg.hooks.debuggerHandler = function (frame) {
+    dbg.onDebuggerStatement = function (frame) {
         var max = frame.arguments[0];
         var cv = usingApply ? max.apply(null, [9, 16]) : max.call(null, 9, 16);
         assertEq(cv.return, 16);
@@ -25,7 +24,7 @@ function test(usingApply) {
     };
     g.eval("f(Math.max);");
 
-    dbg.hooks.debuggerHandler = function (frame) {
+    dbg.onDebuggerStatement = function (frame) {
         var push = frame.arguments[0];
         var arr = frame.arguments[1];
         var cv;

@@ -8,16 +8,14 @@ g.debuggeeGlobal = this;
 g.eval("(" + function () {
         var how, what;
         var dbg = new Debugger(debuggeeGlobal);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                if (frame.callee.name === "configure") {
-                    how = frame.arguments[0];
-                    what = frame.arguments[1];
-                } else {
-                    var resume = {};
-                    resume[how] = what;
-                    return resume;
-                }
+        dbg.onDebuggerStatement = function (frame) {
+            if (frame.callee.name === "configure") {
+                how = frame.arguments[0];
+                what = frame.arguments[1];
+            } else {
+                var resume = {};
+                resume[how] = what;
+                return resume;
             }
         };
     } + ")();");

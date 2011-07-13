@@ -6068,7 +6068,7 @@ END_CASE(JSOP_ARRAYPUSH)
         /* Call debugger throw hook if set. */
         if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
             Value rval;
-            JSTrapStatus st = Debugger::onThrow(cx, &rval);
+            JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
             if (st == JSTRAP_CONTINUE) {
                 handler = cx->debugHooks->throwHook;
                 if (handler)

@@ -9,9 +9,7 @@ function addDebug(g, id) {
     debuggerGlobal.print = function (s) { log += s; };
     debuggerGlobal.eval(
         'var dbg = new Debugger(debuggee);\n' +
-        'dbg.hooks = {\n' +
-        '    debuggerHandler: function () { print(id); debugger; print(id); }\n' +
-        '};\n');
+        'dbg.onDebuggerStatement = function () { print(id); debugger; print(id); };\n');
     return debuggerGlobal;
 }
 

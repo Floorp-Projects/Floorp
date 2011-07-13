@@ -5,7 +5,7 @@ var dbgeval = function () {
         var hits = 0;
         g.eval("function f() { debugger; }");
         var lastval;
-        dbg.hooks = {debuggerHandler: function (frame) { lastval = frame.arguments[0]; }};
+        dbg.onDebuggerStatement = function (frame) { lastval = frame.arguments[0]; };
         return function dbgeval(s) {
             g.eval("f(" + s + ");");
             return lastval;

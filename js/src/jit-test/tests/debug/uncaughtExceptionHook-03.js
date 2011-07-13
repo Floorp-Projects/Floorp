@@ -5,18 +5,16 @@ var g = newGlobal('new-compartment');
 g.debuggeeGlobal = this;
 g.eval("(" + function () {
         var dbg = Debugger(debuggeeGlobal);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                if (frame.callee === null) {
-                    debuggeeGlobal.log += '1';
-                    var cv = frame.eval("f();");
-                    debuggeeGlobal.log += '2';
-                    assertEq(cv, null);
-                } else {
-                    assertEq(frame.callee.name, "f");
-                    debuggeeGlobal.log += '3';
-                    throw new ReferenceError("oops");
-                }
+        dbg.onDebuggerStatement = function (frame) {
+            if (frame.callee === null) {
+                debuggeeGlobal.log += '1';
+                var cv = frame.eval("f();");
+                debuggeeGlobal.log += '2';
+                assertEq(cv, null);
+            } else {
+                assertEq(frame.callee.name, "f");
+                debuggeeGlobal.log += '3';
+                throw new ReferenceError("oops");
             }
         };
     } + ")();");

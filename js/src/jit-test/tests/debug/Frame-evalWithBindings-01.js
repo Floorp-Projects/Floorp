@@ -3,12 +3,10 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var hits = 0;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        assertEq(frame.evalWithBindings("x", {x: 2}).return, 2);
-        assertEq(frame.evalWithBindings("x + y", {x: 2}).return, 5);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    assertEq(frame.evalWithBindings("x", {x: 2}).return, 2);
+    assertEq(frame.evalWithBindings("x + y", {x: 2}).return, 5);
+    hits++;
 };
 
 // in global code

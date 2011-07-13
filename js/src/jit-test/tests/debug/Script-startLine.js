@@ -1,13 +1,11 @@
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var start, count;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-	assertEq(start, undefined);
-	start = frame.script.startLine;
-	count = frame.script.lineCount;
-	assertEq(typeof frame.script.url, 'string');
-    }
+dbg.onDebuggerStatement = function (frame) {
+    assertEq(start, undefined);
+    start = frame.script.startLine;
+    count = frame.script.lineCount;
+    assertEq(typeof frame.script.url, 'string');
 };
 
 function test(f) {
@@ -20,22 +18,22 @@ function test(f) {
 
 test(function () {
     g.eval("first = Error().lineNumber;\n" +
-	   "debugger;\n" +
-	   "last = Error().lineNumber;\n");
+           "debugger;\n" +
+           "last = Error().lineNumber;\n");
 });
 
 test(function () {
     g.evaluate("first = Error().lineNumber;\n" +
-	       "debugger;\n" +
-	       Array(17000).join("\n") +
-	       "last = Error().lineNumber;\n");
+               "debugger;\n" +
+               Array(17000).join("\n") +
+               "last = Error().lineNumber;\n");
 });
 
 test(function () {
     g.eval("function f1() { first = Error().lineNumber\n" +
-	   "    debugger;\n" +
-	   "    last = Error().lineNumber; }\n" +
-	   "f1();");
+           "    debugger;\n" +
+           "    last = Error().lineNumber; }\n" +
+           "f1();");
 });
 
 g.eval("function f2() {\n" +

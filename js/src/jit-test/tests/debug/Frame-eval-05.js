@@ -3,10 +3,8 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var cv;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        cv = frame.eval("'use strict'; var a = 2; h();");
-    }
+dbg.onDebuggerStatement = function (frame) {
+    cv = frame.eval("'use strict'; var a = 2; h();");
 };
 g.a = 1;
 g.eval("function f(s) { function h() { return a; } eval(s); debugger; } ");

@@ -4,13 +4,11 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var hits = 0;
 var savedFrame, savedCallee;
-dbg.hooks = {
-    debuggerHandler: function (frame) {
-        assertEq(frame, savedFrame);
-        assertEq(frame.live, true);
-        assertEq(frame.callee, savedCallee);
-        hits++;
-    }
+dbg.onDebuggerStatement = function (frame) {
+    assertEq(frame, savedFrame);
+    assertEq(frame.live, true);
+    assertEq(frame.callee, savedCallee);
+    hits++;
 };
 g.h = function () {
     savedFrame = dbg.getNewestFrame();
