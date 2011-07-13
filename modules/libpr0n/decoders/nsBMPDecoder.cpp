@@ -48,8 +48,7 @@
 #include "nsIInputStream.h"
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
-
-#include "prlog.h"
+#include "ImageLogging.h"
 
 namespace mozilla {
 namespace imagelib {
