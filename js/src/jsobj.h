@@ -305,9 +305,12 @@ class ValidateWriter;
  * The slots member is a pointer to the slot vector for the object.
  * This can be either a fixed array allocated immediately after the object,
  * or a dynamically allocated array.  A dynamic array can be tested for with
- * hasSlotsArray().  In all cases, capacity gives the number of usable slots.
- * Two objects with the same shape have the same number of fixed slots,
- * and either both have or neither have dynamically allocated slot arrays.
+ * hasSlotsArray().  In all cases but one, capacity gives the number of usable
+ * slots. The exception is for ArrayBuffer where capacity gives the number of
+ * whole slots in the slots array (which includes one word for the array's
+ * length); there may be a fraction of a slot left over at the end.
+ * Two objects with the same shape have the same number of fixed slots, and
+ * either both have or neither have dynamically allocated slot arrays.
  *
  * If you change this struct, you'll probably need to change the AccSet values
  * in jsbuiltins.h.
@@ -386,7 +389,8 @@ struct JSObject : js::gc::Cell {
     JSObject    *proto;                     /* object's prototype */
     JSObject    *parent;                    /* object's parent */
     void        *privateData;               /* private data */
-    jsuword     capacity;                   /* capacity of slots */
+    jsuword     capacity;                   /* number of slots; for ArrayBuffer the number 
+                                               may be be non-integral, so this may underestimate */
     js::Value   *slots;                     /* dynamically allocated slots,
                                                or pointer to fixedSlots() */
 

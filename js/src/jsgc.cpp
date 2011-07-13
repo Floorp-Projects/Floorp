@@ -369,6 +369,7 @@ Chunk::allocateArena(JSContext *cx, unsigned thingKind)
     --info.numFree;
 
     JSRuntime *rt = info.runtime;
+    Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes + ArenaSize);
     JS_ATOMIC_ADD(&rt->gcBytes, ArenaSize);
     JS_ATOMIC_ADD(&comp->gcBytes, ArenaSize);
     if (comp->gcBytes >= comp->gcTriggerBytes)
@@ -388,6 +389,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
 #endif
     JSCompartment *comp = aheader->compartment;
 
+    Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes - ArenaSize);
     JS_ASSERT(size_t(rt->gcBytes) >= ArenaSize);
     JS_ASSERT(size_t(comp->gcBytes) >= ArenaSize);
 #ifdef JS_THREADSAFE
@@ -2199,6 +2201,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
             (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT))
         {
             compartment->freeLists.checkEmpty();
+            Probes::GCEndSweepPhase(compartment);
             if (callback)
                 JS_ALWAYS_TRUE(callback(cx, compartment, JSCOMPARTMENT_DESTROY));
             if (compartment->principals)
@@ -2351,9 +2354,17 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         comp->finalizeShapeArenaLists(cx);
         GCTIMESTAMP(sweepShapeEnd);
     } else {
+        /*
+         * Some sweeping is not compartment-specific. Start a NULL-compartment
+         * phase to demarcate all of that. (The compartment sweeps will nest
+         * within.)
+         */
+        Probes::GCStartSweepPhase(NULL);
         SweepCrossCompartmentWrappers(cx);
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
+            Probes::GCStartSweepPhase(*c);
             (*c)->finalizeObjectArenaLists(cx);
+        }
 
         GCTIMESTAMP(sweepObjectEnd);
 
@@ -2362,8 +2373,10 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
         GCTIMESTAMP(sweepStringEnd);
 
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
             (*c)->finalizeShapeArenaLists(cx);
+            Probes::GCEndSweepPhase(*c);
+        }
 
         GCTIMESTAMP(sweepShapeEnd);
     }
@@ -2382,6 +2395,9 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
          * script's filename. See bug 323267.
          */
         js_SweepScriptFilenames(rt);
+
+        /* non-compartmental sweep pieces */
+        Probes::GCEndSweepPhase(NULL);
     }
 
 #ifndef JS_THREADSAFE
@@ -2695,6 +2711,16 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     js_SaveCrashData(crash::JS_CRASH_TAG_GC, &crashData, sizeof(crashData));
 
     GCTIMER_BEGIN(rt, comp);
+
+    struct AutoGCProbe {
+        JSCompartment *comp;
+        AutoGCProbe(JSCompartment *comp) : comp(comp) {
+            Probes::GCStart(comp);
+        }
+        ~AutoGCProbe() {
+            Probes::GCEnd(comp); /* background thread may still be sweeping */
+        }
+    } autoGCProbe(comp);
 
     do {
         /*

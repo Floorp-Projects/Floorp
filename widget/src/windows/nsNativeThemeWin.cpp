@@ -55,7 +55,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIMenuFrame.h"
+#include "nsMenuFrame.h"
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
 #include "nsWindow.h"
@@ -148,7 +148,7 @@ nsNativeThemeWin::~nsNativeThemeWin() {
 static PRBool IsTopLevelMenu(nsIFrame *aFrame)
 {
   PRBool isTopLevel(PR_FALSE);
-  nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+  nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
   if (menuFrame) {
     isTopLevel = menuFrame->IsOnMenuBar();
   }
@@ -1062,7 +1062,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isHover = PR_FALSE;
-      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
       nsEventStates eventState = GetContentState(aFrame, aWidgetType);
 
       isTopLevel = IsTopLevelMenu(aFrame);
@@ -2759,7 +2759,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isContainer = PR_FALSE;
-      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
       nsEventStates eventState = GetContentState(aFrame, aWidgetType);
 
       // We indicate top-level-ness using aPart. 0 is a normal menu item,

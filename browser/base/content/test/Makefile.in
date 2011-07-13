@@ -256,6 +256,7 @@ _BROWSER_FILES = \
                  browser_addon_bar_shortcut.js \
                  browser_addon_bar_aomlistener.js \
                  test_bug628179.html \
+                 browser_minimize.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

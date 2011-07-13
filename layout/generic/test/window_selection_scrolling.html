@@ -94,6 +94,7 @@
 
 var body = document.body;
 
+var div_container = document.getElementById("container");
 var div_fixed = document.getElementById("fixed");
 var div_subframe1 = document.getElementById("static_overflow");
 var div_subframe2 = document.getElementById("static_overflow_inner");
@@ -680,6 +681,71 @@ var gTests = [
     description: "The scrollable div element (subframe1) should be scrolled by moving mouse from body to the top edge of the div element",
     test: function () {
       synthesizeMouse(div_subframe1, -5, -5, { type: "mousedown" });
+      synthesizeMouse(div_subframe1, 50, 10, { type: "mousemove" });
+      return true;
+    },
+    resetAllElementsBeforeTest: false,
+    testTarget: function () { return div_subframe1; },
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
+  },
+
+  // Scroll subframe1 on its edge when container (non-scrollable element) is
+  // capturing mouse events
+  //   visible scrollable elements: body, div_subframe1
+  {
+    description: "The scrollable div element (subframe1) should be scrolled by moving mouse from subframe1 to the right edge of the div element (container is capturing mouse events)",
+    prepare: function () {
+      div_subframe1.style.display = "block";
+      div_subframe1.onmousedown = function () { div_container.setCapture(); }
+    },
+    test: function () {
+      synthesizeMouse(div_subframe1, 50, 50, { type: "mousedown" });
+      synthesizeMouse(div_subframe1, div_subframe1.clientWidth - 10, 50,
+                      { type: "mousemove" });
+      return true;
+    },
+    resetAllElementsBeforeTest: true,
+    testTarget: function () { return div_subframe1; },
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return getScrollRightMost(div_subframe1); },
+    scrollIsExpected: true,
+  },
+
+  {
+    description: "The scrollable div element (subframe1) should be scrolled by moving mouse from subframe1 to the left edge of the div element (container is capturing mouse events)",
+    test: function () {
+      synthesizeMouse(div_subframe1, 50, 50, { type: "mousedown" });
+      synthesizeMouse(div_subframe1, 10, 50, { type: "mousemove" });
+      return true;
+    },
+    resetAllElementsBeforeTest: false,
+    testTarget: function () { return div_subframe1; },
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
+  },
+
+  {
+    description: "The scrollable div element (subframe1) should be scrolled by moving mouse from subframe1 to the bottom edge of the div element (container is capturing mouse events)",
+    test: function () {
+      synthesizeMouse(div_subframe1, 50, 50, { type: "mousedown" });
+      synthesizeMouse(div_subframe1, 50, div_subframe1.clientHeight - 10,
+                      { type: "mousemove" });
+      return true;
+    },
+    resetAllElementsBeforeTest: false,
+    testTarget: function () { return div_subframe1; },
+    expectedScrollTop: function () { return getScrollBottomMost(div_subframe1); },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
+  },
+
+  {
+    description: "The scrollable div element (subframe1) should be scrolled by moving mouse from subframe1 to the top edge of the div element (container is capturing mouse events)",
+    test: function () {
+      synthesizeMouse(div_subframe1, 50, 50, { type: "mousedown" });
       synthesizeMouse(div_subframe1, 50, 10, { type: "mousemove" });
       return true;
     },

@@ -48,13 +48,6 @@ PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM =
 const nsIntRect nsIntRect::kMaxSizedIntRect(0, 0, INT_MAX, INT_MAX);
 
 #ifdef DEBUG
-static bool IsFloatInteger(float aFloat)
-{
-  return fabs(aFloat - NS_round(aFloat)) < 1e-6;
-}
-#endif
-
-#ifdef DEBUG
 // Diagnostics
 
 FILE* operator<<(FILE* out, const nsRect& rect)

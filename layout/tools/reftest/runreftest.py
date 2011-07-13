@@ -88,6 +88,8 @@ class RefTest(object):
       prefsFile.write('user_pref("reftest.thisChunk", %d);\n' % options.thisChunk)
     if options.logFile != None:
       prefsFile.write('user_pref("reftest.logFile", "%s");\n' % options.logFile)
+    if options.ignoreWindowSize != False:
+      prefsFile.write('user_pref("reftest.ignoreWindowSize", true);\n')
 
     for v in options.extraPrefs:
       thispref = v.split("=")
@@ -253,6 +255,11 @@ class ReftestOptions(OptionParser):
                     dest = "skipSlowTests", action = "store_true",
                     help = "skip tests marked as slow when running")
     defaults["skipSlowTests"] = False
+
+    self.add_option("--ignore-window-size",
+                    dest = "ignoreWindowSize", action = "store_true",
+                    help = "ignore the window size, which may cause spurious failures and passes")
+    defaults["ignoreWindowSize"] = False
 
     self.add_option("--install-extension",
                     action = "append", dest = "extensionsToInstall",
