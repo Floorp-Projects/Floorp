@@ -195,7 +195,7 @@ CPPSRCS		= \
 # doing!
 INSTALLED_HEADERS = \
 		js-config.h \
-		$(CURDIR)/jsautocfg.h \
+		jsautocfg.h \
 		$(CURDIR)/jsautokw.h \
 		js.msg \
 		jsalloc.h \
@@ -552,11 +552,6 @@ ifndef BUILD_OPT
 MOCHAFILE	= 1
 endif
 
-ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
-HOST_SIMPLE_PROGRAMS += host_jscpucfg$(HOST_BIN_SUFFIX)
-GARBAGE += jscpucfg.o jsautocfg.h jsautocfg.tmp host_jscpucfg$(HOST_BIN_SUFFIX)
-endif
-
 # Define keyword generator before rules.mk, see bug 323979 comment 50
 
 HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
@@ -755,6 +750,12 @@ DEFINES		+= -D__STDC_LIMIT_MACROS
 
 INCLUDES	+= -I$(srcdir)
 
+GARBAGE		+= jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
+
+ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
+TARGETS		+= jscpucfg$(HOST_BIN_SUFFIX)
+endif
+
 ifdef JS_THREADSAFE
 DEFINES		+= -DJS_THREADSAFE
 endif
@@ -893,6 +894,45 @@ jsdtoa.o: jsdtoa.cpp Makefile.in
 	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
 
+export:: jsautocfg.h
+
+ifeq (,$(CROSS_COMPILE)$(GNU_CC)$(filter-out WINNT,$(OS_ARCH)))
+jsautocfg.h:
+	$(TOUCH) $@
+else
+jsautocfg.h: jscpucfg$(HOST_BIN_SUFFIX)
+	@$(RM) $@ jsautocfg.tmp
+	./jscpucfg > jsautocfg.tmp
+	mv jsautocfg.tmp $@
+endif
+
+# jscpucfg is a strange target
+# Needs to be built with the host compiler but needs to include
+# the mdcpucfg for the target so it needs the appropriate target defines
+ifdef HOST_NSPR_MDCPUCFG
+HOST_CXX := $(HOST_CXX) -DMDCPUCFG=$(TARGET_NSPR_MDCPUCFG)
+HOST_CXXFLAGS := $(patsubst -DXP_%,,$(HOST_CXXFLAGS))
+endif
+
+ifdef CROSS_COMPILE
+# jscpucfg needs to know when it's supposed to produce a config for the target
+JSCPUCFG_DEFINES = $(ACDEFINES)
+endif
+
+ifeq ($(OS_ARCH),QNX)
+ifneq ($(OS_TARGET),NTO)
+# QNX's compiler apparently can't build a binary directly from a source file.
+jscpucfg.o: jscpucfg.cpp Makefile.in
+	$(HOST_CXX) $(HOST_CXXFLAGS) -c $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
+
+jscpucfg: jscpucfg.o
+	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) -o $@ $<
+endif
+else
+jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
+	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(HOST_OUTOPTION)$@ $<
+endif
+
 # Compute the linker flags that programs linking against SpiderMonkey should
 # pass to get SpiderMonkey and its dependencies, beyond just the -L and -l
 # for the SpiderMonkey library itself.
@@ -948,34 +988,6 @@ ifneq (,$(IMPORT_LIBRARY))
 	$(SYSINSTALL) $(IMPORT_LIBRARY) $(DESTDIR)$(libdir)
 endif
 
-export:: jsautocfg.h
-
-# host_jscpucfg is a strange target
-# Needs to be built with the host compiler but needs to include
-# the mdcpucfg for the target so it needs the appropriate target defines
-host_jscpucfg.$(OBJ_SUFFIX): HOST_CXX += -DMDCPUCFG=$(TARGET_NSPR_MDCPUCFG)
-host_jscpucfg.$(OBJ_SUFFIX): HOST_CXXFLAGS := $(patsubst -DXP_%,,$(HOST_CXXFLAGS))
-
-ifdef CROSS_COMPILE
-# jscpucfg needs to know when it's supposed to produce a config for the target
-host_jscpucfg.$(OBJ_SUFFIX): HOST_CXXFLAGS += $(ACDEFINES)
-endif
-
-# Extra dependancies and rules for auto-generated headers
-host_jscpucfg.$(OBJ_SUFFIX): Makefile.in
-
-# Use CURDIR to avoid finding a jsautocfg.h in the source tree (from a
-# previous build?) via VPATH when we're building in a separate tree.
-ifeq (,$(CROSS_COMPILE)$(GNU_CC)$(filter-out WINNT,$(OS_ARCH)))
-$(CURDIR)/jsautocfg.h:
-	$(TOUCH) $@
-else
-$(CURDIR)/jsautocfg.h: host_jscpucfg$(HOST_BIN_SUFFIX)
-	@$(RM) jsautocfg.tmp
-	./host_jscpucfg$(HOST_BIN_SUFFIX) > jsautocfg.tmp \
-	&& mv jsautocfg.tmp $@
-endif
-
 # Extra dependancies and rules for auto-generated headers
 host_jskwgen.$(OBJ_SUFFIX): jsversion.h jskeyword.tbl
 
@@ -992,7 +1004,7 @@ $(CURDIR)/jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
 	./host_jsoplengen$(HOST_BIN_SUFFIX) $@
 
 # Force auto-header generation before compiling any source that may use them
-$(patsubst %.cc,%.$(OBJ_SUFFIX),$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX))): $(CURDIR)/jsautocfg.h $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
+$(patsubst %.cc,%.$(OBJ_SUFFIX),$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX))): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
 
 ifdef MOZ_ETW
 ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
