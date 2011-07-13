@@ -200,7 +200,7 @@ AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, cons
      * Load obj->slots. If ic->objConst, then this clobbers objReg, because
      * ic->objReg == ic->shapeReg.
      */
-    masm.loadPtr(Address(ic->objReg, offsetof(JSObject, slots)), ic->shapeReg);
+    masm.loadPtr(Address(ic->objReg, JSObject::offsetOfSlots()), ic->shapeReg);
 
     /* Test if overwriting a function-tagged slot. */
     Address slot(ic->shapeReg, sizeof(Value) * shape->slot);
@@ -213,7 +213,7 @@ AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, cons
     /* Restore shapeReg to obj->slots, since we clobbered it. */
     if (ic->objConst)
         masm.move(ImmPtr(obj), ic->objReg);
-    masm.loadPtr(Address(ic->objReg, offsetof(JSObject, slots)), ic->shapeReg);
+    masm.loadPtr(Address(ic->objReg, JSObject::offsetOfSlots()), ic->shapeReg);
 
     /* If the object test fails, shapeReg is still obj->slots. */
     isNotObject.linkTo(masm.label(), &masm);
