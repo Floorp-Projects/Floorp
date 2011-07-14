@@ -26,8 +26,8 @@ function onTabViewWindowLoaded() {
   ok(group1.getChildren().some(function(child) child == tab1Item), "The tab was made in our new group");
   is(group1.getChildren().length, 1, "Only one tab in the first group");
 
-  group1.addSubscriber(group1, "close", function() {
-    group1.removeSubscriber(group1, "close");
+  group1.addSubscriber("close", function onClose() {
+    group1.removeSubscriber("close", onClose);
 
     let onTabViewHidden = function() {
       window.removeEventListener("tabviewhidden", onTabViewHidden, false);
@@ -45,16 +45,11 @@ function onTabViewWindowLoaded() {
     });
   });
 
-  group1.addSubscriber(group1, "groupHidden", function() {
-    group1.removeSubscriber(group1, "groupHidden");
-
+  hideGroupItem(group1, function () {
     // close undo group
     let closeButton = group1.$undoContainer.find(".close");
     EventUtils.sendMouseEvent(
       { type: "click" }, closeButton[0], contentWindow);
   });
-
-  // Get rid of the group and its children
-  group1.closeAll();
 }
 
