@@ -155,7 +155,6 @@ class TokenStream;
 struct Token;
 struct TokenPos;
 struct TokenPtr;
-class UpvarCookie;
 
 class TempAllocPolicy;
 
@@ -193,10 +192,9 @@ class Bindings;
 class MultiDeclRange;
 class ParseMapPool;
 class DefnOrHeader;
-typedef InlineMap<JSAtom *, JSDefinition *, 24> AtomDefnMap;
-typedef InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
-typedef InlineMap<JSAtom *, DefnOrHeader, 24> AtomDOHMap;
-typedef Vector<UpvarCookie, 8> UpvarCookies;
+typedef js::InlineMap<JSAtom *, JSDefinition *, 24> AtomDefnMap;
+typedef js::InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
+typedef js::InlineMap<JSAtom *, DefnOrHeader, 24> AtomDOHMap;
 
 } /* namespace js */
 

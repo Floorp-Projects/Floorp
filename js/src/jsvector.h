@@ -306,10 +306,6 @@ class Vector : private AllocPolicy
         return *this;
     }
 
-    AllocPolicy &allocPolicy() {
-        return *this;
-    }
-
     enum { InlineLength = N };
 
     size_t length() const {
