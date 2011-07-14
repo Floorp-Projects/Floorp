@@ -862,7 +862,6 @@ if [ "$ENABLE_TESTS" ]; then
     embedding/test/Makefile
     extensions/cookie/test/Makefile
     extensions/pref/Makefile
-    intl/locale/tests_multilocale/Makefile
     js/src/xpconnect/tests/mochitest/Makefile
     layout/forms/test/Makefile
     layout/generic/test/Makefile
