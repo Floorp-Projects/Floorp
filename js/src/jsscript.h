@@ -695,30 +695,11 @@ extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
 
-namespace js {
-
-extern bool
-InitRuntimeScriptState(JSRuntime *rt);
-
-/*
- * On JS_DestroyRuntime(rt), forcibly free script filename prefixes and any
- * script filename table entries that have not been GC'd.
- *
- * This allows script filename prefixes to outlive any context in rt.
- */
-extern void
-FreeRuntimeScriptState(JSRuntime *rt);
-
-} /* namespace js */
-
 extern void
 js_MarkScriptFilename(const char *filename);
 
 extern void
-js_MarkScriptFilenames(JSRuntime *rt);
-
-extern void
-js_SweepScriptFilenames(JSRuntime *rt);
+js_SweepScriptFilenames(JSCompartment *comp);
 
 /*
  * New-script-hook calling is factored from js_NewScriptFromCG so that it
