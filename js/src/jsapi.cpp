@@ -695,8 +695,6 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     if (!InitRuntimeNumberState(this))
         return false;
-    if (!InitRuntimeScriptState(this))
-        return false;
 
     return true;
 }
@@ -724,7 +722,6 @@ JSRuntime::~JSRuntime()
     FinishJIT();
 #endif
 
-    FreeRuntimeScriptState(this);
     FinishRuntimeNumberState(this);
     js_FinishThreads(this);
     js_FinishAtomState(this);
