@@ -3048,7 +3048,7 @@ DebuggerObject_defineProperties(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "deleteProperty", dbg, obj);
     Value arg = argc > 0 ? vp[2] : UndefinedValue();
     jsid id;
     if (!ValueToId(cx, arg, &id))
@@ -3060,6 +3060,97 @@ DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
 
     ErrorCopier ec(ac, dbg->toJSObject());
     return obj->deleteProperty(cx, id, vp, false);
+}
+
+enum SealHelperOp { Seal, Freeze, PreventExtensions };
+
+static JSBool
+DebuggerObject_sealHelper(JSContext *cx, uintN argc, Value *vp, SealHelperOp op, const char *name)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, name, dbg, obj);
+
+    AutoCompartment ac(cx, obj);
+    if (!ac.enter())
+        return false;
+
+    ErrorCopier ec(ac, dbg->toJSObject());
+    bool ok;
+    if (op == Seal) {
+        ok = obj->seal(cx);
+    } else if (op == Freeze) {
+        ok = obj->freeze(cx);
+    } else {
+        JS_ASSERT(op == PreventExtensions);
+        if (!obj->isExtensible())
+            return true;
+        AutoIdVector props(cx);
+        ok = obj->preventExtensions(cx, &props);
+    }
+    if (!ok)
+        return false;
+    vp->setUndefined();
+    return ok;
+}
+
+static JSBool
+DebuggerObject_seal(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebuggerObject_sealHelper(cx, argc, vp, Seal, "seal");
+}
+
+static JSBool
+DebuggerObject_freeze(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebuggerObject_sealHelper(cx, argc, vp, Freeze, "freeze");
+}
+
+static JSBool
+DebuggerObject_preventExtensions(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebuggerObject_sealHelper(cx, argc, vp, PreventExtensions, "preventExtensions");
+}
+
+static JSBool
+DebuggerObject_isSealedHelper(JSContext *cx, uintN argc, Value *vp, SealHelperOp op,
+                              const char *name)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, name, dbg, obj);
+
+    AutoCompartment ac(cx, obj);
+    if (!ac.enter())
+        return false;
+
+    ErrorCopier ec(ac, dbg->toJSObject());
+    bool r;
+    if (op == Seal) {
+        if (!obj->isSealed(cx, &r))
+            return false;
+    } else if (op == Freeze) {
+        if (!obj->isFrozen(cx, &r))
+            return false;
+    } else {
+        r = obj->isExtensible();
+    }
+    vp->setBoolean(r);
+    return true;
+}
+
+static JSBool
+DebuggerObject_isSealed(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebuggerObject_isSealedHelper(cx, argc, vp, Seal, "isSealed");
+}
+
+static JSBool
+DebuggerObject_isFrozen(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebuggerObject_isSealedHelper(cx, argc, vp, Freeze, "isFrozen");
+}
+
+static JSBool
+DebuggerObject_isExtensible(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebuggerObject_isSealedHelper(cx, argc, vp, PreventExtensions, "isExtensible");
 }
 
 enum ApplyOrCallMode { ApplyMode, CallMode };
@@ -3155,6 +3246,12 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
+    JS_FN("seal", DebuggerObject_seal, 0, 0),
+    JS_FN("freeze", DebuggerObject_freeze, 0, 0),
+    JS_FN("preventExtensions", DebuggerObject_preventExtensions, 0, 0),
+    JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
+    JS_FN("isFrozen", DebuggerObject_isFrozen, 0, 0),
+    JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FS_END
