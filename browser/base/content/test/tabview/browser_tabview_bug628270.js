@@ -25,20 +25,6 @@ function test() {
     return cw.GroupItems.groupItems[index];
   }
 
-  let restoreTab = function (callback) {
-    let tab = undoCloseTab(0);
-
-    if (tab._tabViewTabItem._reconnected) {
-      callback();
-      return;
-    }
-
-    tab._tabViewTabItem.addSubscriber(tab, 'reconnected', function () {
-      tab._tabViewTabItem.removeSubscriber(tab, 'reconnected');
-      afterAllTabsLoaded(callback);
-    });
-  }
-
   let activateFirstGroupItem = function () {
     let activeTabItem = getGroupItem(0).getChild(0);
     cw.GroupItems.updateActiveGroupItemAndTabBar(activeTabItem);

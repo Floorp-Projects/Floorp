@@ -36,12 +36,7 @@ function test() {
     let groupItem = cw.GroupItems.groupItems[1];
     is(groupItem.getTitle(), "t", "new groupItem's title is correct");
 
-    groupItem.addSubscriber(groupItem, "close", function () {
-      groupItem.removeSubscriber(groupItem, "close");
-      executeSoon(callback);
-    });
-
-    groupItem.closeAll();
+    closeGroupItem(groupItem, callback);
   };
 
   let testDragOutOfGroup = function (callback) {
