@@ -952,8 +952,10 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
 PRBool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
 {
   NS_ENSURE_TRUE(aNode, PR_FALSE);  // oops
-  NS_ENSURE_TRUE(aOffset, PR_TRUE);
-  
+  if (!aOffset) {
+    return PR_TRUE;
+  }
+
   if (IsTextNode(aNode))
   {
     return PR_FALSE;
