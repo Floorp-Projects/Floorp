@@ -1117,7 +1117,7 @@ Class Debugger::jsclass = {
 };
 
 JSBool
-Debugger::getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
+Debugger::getHook(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
     THISOBJ(cx, vp, Debugger, "getHook", thisobj, dbg);
     vp->setObjectOrNull(dbg->hooks[which]);
@@ -1125,7 +1125,7 @@ Debugger::getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 }
 
 JSBool
-Debugger::setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
+Debugger::setHook(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
     REQUIRE_ARGC("Debugger.setHook", 1);
     THISOBJ(cx, vp, Debugger, "setHook", thisobj, dbg);
@@ -1139,20 +1139,6 @@ Debugger::setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
     dbg->hooks[which] = hook;
     vp->setUndefined();
     return true;
-}
-
-template <Debugger::Hook which>
-JSBool
-Debugger::getHook(JSContext *cx, uintN argc, Value *vp)
-{
-    return getHookImpl(cx, argc, vp, which);
-}
-
-template <Debugger::Hook which>
-JSBool
-Debugger::setHook(JSContext *cx, uintN argc, Value *vp)
-{
-    return setHookImpl(cx, argc, vp, which);
 }
 
 JSBool
@@ -1193,6 +1179,54 @@ Debugger::setEnabled(JSContext *cx, uintN argc, Value *vp)
     dbg->enabled = enabled;
     vp->setUndefined();
     return true;
+}
+
+JSBool
+Debugger::getOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp)
+{
+    return getHook(cx, argc, vp, OnDebuggerStatement);
+}
+
+JSBool
+Debugger::setOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp)
+{
+    return setHook(cx, argc, vp, OnDebuggerStatement);
+}
+
+JSBool
+Debugger::getOnExceptionUnwind(JSContext *cx, uintN argc, Value *vp)
+{
+    return getHook(cx, argc, vp, OnExceptionUnwind);
+}
+
+JSBool
+Debugger::setOnExceptionUnwind(JSContext *cx, uintN argc, Value *vp)
+{
+    return setHook(cx, argc, vp, OnExceptionUnwind);
+}
+
+JSBool
+Debugger::getOnNewScript(JSContext *cx, uintN argc, Value *vp)
+{
+    return getHook(cx, argc, vp, OnNewScript);
+}
+
+JSBool
+Debugger::setOnNewScript(JSContext *cx, uintN argc, Value *vp)
+{
+    return setHook(cx, argc, vp, OnNewScript);
+}
+
+JSBool
+Debugger::getOnEnterFrame(JSContext *cx, uintN argc, Value *vp)
+{
+    return getHook(cx, argc, vp, OnEnterFrame);
+}
+
+JSBool
+Debugger::setOnEnterFrame(JSContext *cx, uintN argc, Value *vp)
+{
+    return setHook(cx, argc, vp, OnEnterFrame);
 }
 
 JSBool
@@ -1497,14 +1531,11 @@ Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
 
 JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
-    JS_PSGS("onDebuggerStatement", Debugger::getHook<OnDebuggerStatement>,
-            Debugger::setHook<OnDebuggerStatement>, 0),
-    JS_PSGS("onExceptionUnwind", Debugger::getHook<OnExceptionUnwind>,
-            Debugger::setHook<OnExceptionUnwind>, 0),
-    JS_PSGS("onNewScript", Debugger::getHook<OnNewScript>,
-            Debugger::setHook<OnNewScript>, 0),
-    JS_PSGS("onEnterFrame", Debugger::getHook<OnEnterFrame>,
-            Debugger::setHook<OnEnterFrame>, 0),
+    JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
+            Debugger::setOnDebuggerStatement, 0),
+    JS_PSGS("onExceptionUnwind", Debugger::getOnExceptionUnwind, Debugger::setOnExceptionUnwind, 0),
+    JS_PSGS("onNewScript", Debugger::getOnNewScript, Debugger::setOnNewScript, 0),
+    JS_PSGS("onEnterFrame", Debugger::getOnEnterFrame, Debugger::setOnEnterFrame, 0),
     JS_PSGS("uncaughtExceptionHook", Debugger::getUncaughtExceptionHook,
             Debugger::setUncaughtExceptionHook, 0),
     JS_PS_END
