@@ -309,7 +309,8 @@ private: // methods
                        imgIRequest *aExistingRequest,
                        imgIRequest **aProxyRequest,
                        nsIChannelPolicy *aPolicy,
-                       nsIPrincipal* aLoadingPrincipal);
+                       nsIPrincipal* aLoadingPrincipal,
+                       PRInt32 aCORSMode);
   PRBool ValidateRequestWithNewChannel(imgRequest *request, nsIURI *aURI,
                                        nsIURI *aInitialDocumentURI,
                                        nsIURI *aReferrerURI,
@@ -319,7 +320,8 @@ private: // methods
                                        imgIRequest *aExistingRequest,
                                        imgIRequest **aProxyRequest,
                                        nsIChannelPolicy *aPolicy,
-                                       nsIPrincipal* aLoadingPrincipal);
+                                       nsIPrincipal* aLoadingPrincipal,
+                                       PRInt32 aCORSMode);
 
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                     imgIDecoderObserver *aObserver,

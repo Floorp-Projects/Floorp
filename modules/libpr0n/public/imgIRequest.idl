@@ -52,7 +52,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(62f58f12-3076-44fc-a742-5b648dac21bc)]
+[scriptable, uuid(c3bf4e2a-f64b-4ac1-a84e-18631b1802ab)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -131,6 +131,27 @@ interface imgIRequest : nsIRequest
    * The principal gotten from the channel the image was loaded from.
    */
   readonly attribute nsIPrincipal imagePrincipal;
+
+  /**
+   * CORS modes images can be loaded with.
+   *
+   * By default, all images are loaded with CORS_NONE and cannot be used
+   * cross-origin in context like WebGL.
+   *
+   * If an HTML img element has the crossorigin attribute set, the imgIRequest
+   * will be validated for cross-origin usage with CORS, and, if successful,
+   * will have its CORS mode set to the relevant type.
+   */
+  //@{
+  const long CORS_NONE = 1;
+  const long CORS_ANONYMOUS = 2;
+  const long CORS_USE_CREDENTIALS = 3;
+  //@}
+
+  /**
+   * The CORS mode that this image was loaded with. 
+   */
+  readonly attribute long CORSMode;
 
   /**
    * Cancels this request as in nsIRequest::Cancel(); further, also nulls out
