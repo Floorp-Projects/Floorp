@@ -331,6 +331,12 @@ protected:
   nsresult ChangeTextSize(PRInt32 change);
   nsresult ChangeFullZoom(PRInt32 change);
   /**
+   * Computes actual delta value used for scrolling.  If user customized the
+   * scrolling speed and/or direction, this would return the customized value.
+   * Otherwise, it would return the original delta value of aMouseEvent.
+   */
+  PRInt32 ComputeWheelDeltaFor(nsMouseScrollEvent* aMouseEvent);
+  /**
    * Computes the action for the aMouseEvent with prefs.  The result is
    * MOUSE_SCROLL_N_LINES, MOUSE_SCROLL_PAGE, MOUSE_SCROLL_HISTORY,
    * MOUSE_SCROLL_ZOOM, MOUSE_SCROLL_PIXELS or -1.
