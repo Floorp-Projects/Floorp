@@ -255,13 +255,17 @@ class VirtualRegister : public TempObject
     LDefinition *def_;
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
     Vector<LOperand, 0, IonAllocPolicy> uses_;
+    LMoveGroup *inputMoves_;
+    LMoveGroup *outputMoves_;
 
   public:
     VirtualRegister()
       : reg_(0),
         block_(NULL),
         ins_(NULL),
-        intervals_()
+        intervals_(),
+        inputMoves_(NULL),
+        outputMoves_(NULL)
     { }
 
     bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
@@ -311,6 +315,18 @@ class VirtualRegister : public TempObject
     }
     bool addUse(LOperand operand) {
         return uses_.append(operand);
+    }
+    void setInputMoves(LMoveGroup *moves) {
+        inputMoves_ = moves;
+    }
+    LMoveGroup *inputMoves() {
+        return inputMoves_;
+    }
+    void setOutputMoves(LMoveGroup *moves) {
+        outputMoves_ = moves;
+    }
+    LMoveGroup *outputMoves() {
+        return outputMoves_;
     }
 
     LiveInterval *intervalFor(CodePosition pos);
@@ -388,8 +404,6 @@ class LinearScanAllocator
     // Computed inforamtion
     BitSet **liveIn;
     VirtualRegisterMap vregs;
-    LMoveGroup **inputMovesFor;
-    LMoveGroup **outputMovesFor;
 
     // Allocation state
     StackAssignment stackAssignment;
@@ -420,6 +434,7 @@ class LinearScanAllocator
     Register findBestFreeRegister();
     Register findBestBlockedRegister();
     bool canCoexist(LiveInterval *a, LiveInterval *b);
+    LMoveGroup *getMoveGroupBefore(CodePosition pos);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
 
 #ifdef DEBUG
