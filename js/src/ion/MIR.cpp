@@ -401,6 +401,18 @@ MBitAnd::New(MInstruction *left, MInstruction *right)
     return new MBitAnd(left, right);
 }
 
+MBitOr *
+MBitOr::New(MInstruction *left, MInstruction *right)
+{
+    return new MBitOr(left, right);
+}
+
+MBitXOr *
+MBitXOr::New(MInstruction *left, MInstruction *right)
+{
+    return new MBitXOr(left, right);
+}
+
 MSnapshot *
 MSnapshot::New(MBasicBlock *block, jsbytecode *pc)
 {

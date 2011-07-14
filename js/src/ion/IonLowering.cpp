@@ -206,7 +206,19 @@ LIRGenerator::doBitOp(JSOp op, MInstruction *ins)
 bool
 LIRGenerator::visitBitAnd(MBitAnd *ins)
 {
-    return doBitOp(JSOP_AND, ins);
+    return doBitOp(JSOP_BITAND, ins);
+}
+
+bool
+LIRGenerator::visitBitOr(MBitOr *ins)
+{
+    return doBitOp(JSOP_BITOR, ins);
+}
+
+bool
+LIRGenerator::visitBitXOr(MBitXOr *ins)
+{
+    return doBitOp(JSOP_BITXOR, ins);
 }
 
 bool
