@@ -138,6 +138,8 @@ public:
   // returns an estimate of the memory used by this imgFrame
   PRUint32 EstimateMemoryUsed() const;
 
+  PRUint8 GetPaletteDepth() const { return mPaletteDepth; }
+
 private: // methods
   PRUint32 PaletteDataLength() const {
     return ((1 << mPaletteDepth) * sizeof(PRUint32));
