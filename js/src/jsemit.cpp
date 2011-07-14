@@ -3090,6 +3090,58 @@ AllocateSwitchConstant(JSContext *cx)
     return pv;
 }
 
+/*
+ * Sometimes, let-slots are pushed to the JS stack before we logically enter
+ * the let scope. For example,
+ *     for (let x = EXPR;;) BODY
+ * compiles to roughly {enterblock; EXPR; setlocal x; BODY; leaveblock} even
+ * though EXPR is evaluated in the enclosing scope; it does not see x.
+ *
+ * In those cases we use TempPopScope around the code to emit EXPR. It
+ * temporarily removes the let-scope from the JSCodeGenerator's scope stack and
+ * emits extra bytecode to ensure that js::GetBlockChain also finds the correct
+ * scope at run time.
+ */
+class TempPopScope {
+    JSStmtInfo *savedStmt;
+    JSStmtInfo *savedScopeStmt;
+    JSObjectBox *savedBlockBox;
+
+  public:
+#ifdef DEBUG
+    TempPopScope() : savedStmt(NULL) {}
+#endif
+
+    bool popBlock(JSContext *cx, JSCodeGenerator *cg) {
+        savedStmt = cg->topStmt;
+        savedScopeStmt = cg->topScopeStmt;
+        savedBlockBox = cg->blockChainBox;
+
+        if (cg->topStmt->type == STMT_FOR_LOOP || cg->topStmt->type == STMT_FOR_IN_LOOP)
+            js_PopStatement(cg);
+        JS_ASSERT(STMT_LINKS_SCOPE(cg->topStmt));
+        JS_ASSERT(cg->topStmt->flags & SIF_SCOPE);
+        js_PopStatement(cg);
+
+        /*
+         * Since we have changed the block chain, emit an instruction marking
+         * the change for the benefit of dynamic GetScopeChain callers such as
+         * the debugger.
+         *
+         * FIXME bug 671360 - The JSOP_NOP instruction should not be necessary.
+         */
+        return js_Emit1(cx, cg, JSOP_NOP) >= 0 && EmitBlockChain(cx, cg);
+    }
+
+    bool repushBlock(JSContext *cx, JSCodeGenerator *cg) {
+        JS_ASSERT(savedStmt);
+        cg->topStmt = savedStmt;
+        cg->topScopeStmt = savedScopeStmt;
+        cg->blockChainBox = savedBlockBox;
+        return js_Emit1(cx, cg, JSOP_NOP) >= 0 && EmitBlockChain(cx, cg);
+    }
+};
+
 static JSBool
 EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
            JSStmtInfo *stmtInfo)
@@ -3122,13 +3174,13 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
      */
     pn2 = pn->pn_right;
 #if JS_HAS_BLOCK_SCOPE
+    TempPopScope tps;
     if (pn2->pn_type == TOK_LEXICALSCOPE) {
         /*
-         * Push the body's block scope before discriminant code-gen for proper
-         * static block scope linkage in case the discriminant contains a let
-         * expression.  The block's locals must lie under the discriminant on
-         * the stack so that case-dispatch bytecodes can find the discriminant
-         * on top of stack.
+         * Push the body's block scope before discriminant code-gen to reflect
+         * the order of slots on the stack. The block's locals must lie under
+         * the discriminant on the stack so that case-dispatch bytecodes can
+         * find the discriminant on top of stack.
          */
         box = pn2->pn_objbox;
         js_PushBlockScope(cg, stmtInfo, box, -1);
@@ -3139,13 +3191,11 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             return JS_FALSE;
 
         /*
-         * Pop the switch's statement info around discriminant code-gen.  Note
-         * how this leaves cg->blockChain referencing the switch's
-         * block scope object, which is necessary for correct block parenting
-         * in the case where the discriminant contains a let expression.
+         * Pop the switch's statement info around discriminant code-gen, which
+         * belongs in the enclosing scope.
          */
-        cg->topStmt = stmtInfo->down;
-        cg->topScopeStmt = stmtInfo->downScope;
+        if (!tps.popBlock(cx, cg))
+            return JS_FALSE;
     }
 #ifdef __GNUC__
     else {
@@ -3170,11 +3220,14 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         js_PushStatement(cg, stmtInfo, STMT_SWITCH, top);
     } else {
         /* Re-push the switch's statement info record. */
-        cg->topStmt = cg->topScopeStmt = stmtInfo;
-        cg->blockChainBox = stmtInfo->blockBox;
+        if (!tps.repushBlock(cx, cg))
+            return JS_FALSE;
 
-        /* Set the statement info record's idea of top. */
-        stmtInfo->update = top;
+        /*
+         * Set the statement info record's idea of top. Reset top too, since
+         * repushBlock emits code.
+         */
+        stmtInfo->update = top = CG_OFFSET(cg);
 
         /* Advance pn2 to refer to the switch case list. */
         pn2 = pn2->expr();
@@ -4108,10 +4161,6 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
               JSBool inLetHead, ptrdiff_t *headNoteIndex)
 {
     bool let, forInVar, first;
-#if JS_HAS_BLOCK_SCOPE
-    bool popScope;
-    JSStmtInfo *stmt, *scopeStmt;
-#endif
     ptrdiff_t off, noteIndex, tmp;
     JSParseNode *pn2, *pn3, *next;
     JSOp op;
@@ -4136,15 +4185,8 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     let = (pn->pn_op == JSOP_NOP);
     forInVar = (pn->pn_xflags & PNX_FORINVAR) != 0;
 #if JS_HAS_BLOCK_SCOPE
-    popScope = (inLetHead || (let && (cg->flags & TCF_IN_FOR_INIT)));
-    if (popScope) {
-        stmt = cg->topStmt;
-        scopeStmt = cg->topScopeStmt;
-    }
-# ifdef __GNUC__
-    else stmt = scopeStmt = NULL;   /* quell GCC overwarning */
-# endif
-    JS_ASSERT(!popScope || let);
+    bool popScope = (inLetHead || (let && (cg->flags & TCF_IN_FOR_INIT)));
+    JS_ASSERT_IF(popScope, let);
 #endif
 
     off = noteIndex = -1;
@@ -4280,10 +4322,9 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
 #if JS_HAS_BLOCK_SCOPE
                 /* Evaluate expr in the outer lexical scope if requested. */
-                if (popScope) {
-                    cg->topStmt = stmt->down;
-                    cg->topScopeStmt = scopeStmt->downScope;
-                }
+                TempPopScope tps;
+                if (popScope && !tps.popBlock(cx, cg))
+                    return JS_FALSE;
 #endif
 
                 oldflags = cg->flags;
@@ -4293,11 +4334,8 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 cg->flags |= oldflags & TCF_IN_FOR_INIT;
 
 #if JS_HAS_BLOCK_SCOPE
-                if (popScope) {
-                    cg->topStmt = stmt;
-                    cg->topScopeStmt = scopeStmt;
-                    JS_ASSERT(cg->blockChainBox == scopeStmt->blockBox);
-                }
+                if (popScope && !tps.repushBlock(cx, cg))
+                    return JS_FALSE;
 #endif
             }
         }
@@ -4972,8 +5010,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             cg->flags &= ~TCF_IN_FOR_INIT;
 
             /* Compile the object expression to the right of 'in'. */
-            if (!js_EmitTree(cx, cg, pn2->pn_right))
-                return JS_FALSE;
+            {
+                TempPopScope tps;
+                if (type == TOK_LET && !tps.popBlock(cx, cg))
+                    return JS_FALSE;
+                if (!js_EmitTree(cx, cg, pn2->pn_right))
+                    return JS_FALSE;
+                if (type == TOK_LET && !tps.repushBlock(cx, cg))
+                    return JS_FALSE;
+            }
 
             /*
              * Emit a bytecode to convert top of stack value to the iterator
