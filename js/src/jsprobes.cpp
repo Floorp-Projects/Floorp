@@ -42,6 +42,7 @@
 #include "jsinterp.h"
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jsstaticcheck.h"
 #include "jsstr.h"
 
 #ifdef __APPLE__
@@ -56,6 +57,63 @@
 using namespace js;
 
 const char Probes::nullName[] = "(null)";
+const char Probes::anonymousName[] = "(anonymous)";
+
+bool Probes::ProfilingActive = true;
+
+bool
+Probes::controlProfilers(JSContext *cx, bool toState)
+{
+    JSBool ok = JS_TRUE;
+#if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND) || defined(MOZ_VTUNE)
+    jsval dummy;
+#endif
+
+    if (! ProfilingActive && toState) {
+#ifdef MOZ_SHARK
+        if (! js_StartShark(cx, 0, &dummy))
+            ok = JS_FALSE;
+#endif
+#ifdef MOZ_CALLGRIND
+        if (! js_StartCallgrind(cx, 0, &dummy))
+            ok = JS_FALSE;
+#endif
+#ifdef MOZ_VTUNE
+        if (! js_ResumeVtune(cx, 0, &dummy))
+            ok = JS_FALSE;
+#endif
+    } else if (ProfilingActive && ! toState) {
+#ifdef MOZ_SHARK
+        if (! js_StopShark(cx, 0, &dummy))
+            ok = JS_FALSE;
+#endif
+#ifdef MOZ_CALLGRIND
+        if (! js_StopCallgrind(cx, 0, &dummy))
+            ok = JS_FALSE;
+#endif
+#ifdef MOZ_VTUNE
+        if (! js_PauseVtune(cx, 0, &dummy))
+            ok = JS_FALSE;
+#endif
+    }
+
+    ProfilingActive = toState;
+
+    return ok;
+}
+
+void
+Probes::current_location(JSContext *cx, int* lineno, char const **filename)
+{
+    JSScript *script = js_GetCurrentScript(cx);
+    if (! script) {
+        *lineno = -1;
+        *filename = "(uninitialized)";
+        return;
+    }
+    *lineno = js_PCToLineNumber(cx, script, js_GetCurrentBytecodePC(cx));
+    *filename = ScriptFilename(script);
+}
 
 const char *
 Probes::FunctionClassname(const JSFunction *fun)
@@ -78,69 +136,6 @@ Probes::FunctionLineNumber(JSContext *cx, const JSFunction *fun)
         return (int) JS_GetScriptBaseLineNumber(cx, FUN_SCRIPT(fun));
 
     return 0;
-}
-
-/*
- * This function is used to convert function arguments and return value (jsval)
- * into the following based on each value's type tag:
- *
- *      jsval      returned
- *      -------------------
- *      STRING  -> void *
- *      INT     -> int
- *      DOUBLE  -> double *
- *      BOOLEAN -> int
- *      OBJECT  -> void *
- *
- * All are presented as void * for DTrace consumers to use, after shifting or
- * masking out the JavaScript type bits. This allows D scripts to use ints and
- * booleans directly and copyinstr() for string arguments, when types are known
- * beforehand.
- *
- * This is used by the function-args and function-rval probes, which also
- * provide raw (unmasked) jsvals should type info be useful from D scripts.
- */
-#if 0
-static void *
-jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
-{
-    if (argval.isNull())
-        return (void *)JS_TYPE_STR(JSTYPE_NULL);
-
-    if (argval.isUndefined())
-        return (void *)JS_TYPE_STR(JSTYPE_VOID);
-
-    if (argval.isBoolean())
-        return (void *)argval.toBoolean();
-
-    if (argval.isNumber()) {
-        if (argval.isInt32())
-            return (void *)argval.toInt32();
-        // FIXME Now what?
-        //return (void *)argval.toDouble();
-    }
-
-    return argval.toGCThing();
-}
-#endif
-
-const char *
-Probes::FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString *bytes)
-{
-    if (!fun)
-        return nullName;
-
-    JSAtom *atom = fun->atom;
-    if (!atom) {
-        /*
-         * TODO: maybe do more work here to figure out the name of the property
-         * or variable that held the anonymous function that we're calling, if anyone
-         * cares; an easy workaround is to just give your anonymous functions names.
-         */
-        return nullName;
-    }
-
-    return bytes->encode(cx, atom) ? bytes->ptr() : nullName;
 }
 
 #ifdef INCLUDE_MOZILLA_DTRACE

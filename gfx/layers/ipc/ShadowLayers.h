@@ -238,9 +238,23 @@ public:
   PRBool EndTransaction(InfallibleTArray<EditReply>* aReplies);
 
   /**
+   * Set an actor through which layer updates will be pushed.
+   */
+  void SetShadowManager(PLayersChild* aShadowManager)
+  {
+    mShadowManager = aShadowManager;
+  }
+
+  void SetParentBackendType(LayersBackend aBackendType)
+  {
+    mParentBackend = aBackendType;
+  }
+
+  /**
    * True if this is forwarding to a ShadowLayerManager.
    */
   PRBool HasShadowManager() const { return !!mShadowManager; }
+  PLayersChild* GetShadowManager() const { return mShadowManager; }
 
   /**
    * The following Alloc/Open/Destroy interfaces abstract over the
@@ -316,7 +330,10 @@ public:
    */
   PLayerChild* ConstructShadowFor(ShadowableLayer* aLayer);
 
-  LayersBackend GetParentBackendType();
+  LayersBackend GetParentBackendType()
+  {
+    return mParentBackend;
+  }
 
   /*
    * No need to use double buffer in system memory with GPU rendering,

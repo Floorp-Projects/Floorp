@@ -84,8 +84,6 @@ nsHapticFeedback::PerformSimpleAction(PRInt32 aType)
         dbus_message_unref(msg);
         return NS_ERROR_FAILURE;
     }
-    return NS_OK;
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+    return NS_OK;
 }
