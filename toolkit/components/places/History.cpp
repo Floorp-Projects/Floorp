@@ -56,7 +56,6 @@
 #include "nsNetUtil.h"
 #include "nsIXPConnect.h"
 #include "mozilla/Util.h"
-#include "nsContentUtils.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
@@ -1279,8 +1278,6 @@ History::NotifyVisited(nsIURI* aURI)
 {
   NS_ASSERTION(aURI, "Ruh-roh!  A NULL URI was passed to us!");
 
-  nsAutoScriptBlocker scriptBlocker;
-
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     mozilla::dom::ContentParent* cpp = 
       mozilla::dom::ContentParent::GetSingleton(PR_FALSE);
@@ -1301,17 +1298,14 @@ History::NotifyVisited(nsIURI* aURI)
     return;
   }
 
-  // Update status of each Link node.
-  {
-    // RemoveEntry will destroy the array, this iterator should not survive it.
-    ObserverArray::ForwardIterator iter(key->array);
-    while (iter.HasMore()) {
-      Link* link = iter.GetNext();
-      link->SetLinkState(eLinkState_Visited);
-      // Verify that the observers hash doesn't mutate while looping through
-      // the links associated with this URI.
-      MOZ_ASSERT(key == mObservers.GetEntry(aURI));
-    }
+  // Walk through the array, and update each Link node.
+  const ObserverArray& observers = key->array;
+  ObserverArray::index_type len = observers.Length();
+  for (ObserverArray::index_type i = 0; i < len; i++) {
+    Link* link = observers[i];
+    link->SetLinkState(eLinkState_Visited);
+    NS_ASSERTION(len == observers.Length(),
+                 "Calling SetLinkState added or removed an observer!");
   }
 
   // All the registered nodes can now be removed for this URI.
