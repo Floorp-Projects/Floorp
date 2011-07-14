@@ -56,7 +56,7 @@
         onload="gSyncQuota.init()"
         buttons="accept,cancel"
         title="&quota.dialogTitle.label;"
-        ondialogcancel="return true;"
+        ondialogcancel="return gSyncQuota.onCancel();"
         ondialogaccept="return gSyncQuota.onAccept();">
 
   <script type="application/javascript"
