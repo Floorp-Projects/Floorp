@@ -1117,31 +1117,6 @@ Class Debugger::jsclass = {
 };
 
 JSBool
-Debugger::getHook(JSContext *cx, uintN argc, Value *vp, Hook which)
-{
-    THISOBJ(cx, vp, Debugger, "getHook", thisobj, dbg);
-    vp->setObjectOrNull(dbg->hooks[which]);
-    return true;
-}
-
-JSBool
-Debugger::setHook(JSContext *cx, uintN argc, Value *vp, Hook which)
-{
-    REQUIRE_ARGC("Debugger.setHook", 1);
-    THISOBJ(cx, vp, Debugger, "setHook", thisobj, dbg);
-    if (!vp[2].isObjectOrNull())
-        return ReportObjectRequired(cx);
-    JSObject *hook = vp[2].toObjectOrNull();
-    if (hook && !hook->isCallable()) {
-        js_ReportIsNotFunction(cx, vp, JSV2F_SEARCH_STACK);
-        return false;
-    }
-    dbg->hooks[which] = hook;
-    vp->setUndefined();
-    return true;
-}
-
-JSBool
 Debugger::getEnabled(JSContext *cx, uintN argc, Value *vp)
 {
     THISOBJ(cx, vp, Debugger, "get enabled", thisobj, dbg);
@@ -1177,6 +1152,31 @@ Debugger::setEnabled(JSContext *cx, uintN argc, Value *vp)
     }
 
     dbg->enabled = enabled;
+    vp->setUndefined();
+    return true;
+}
+
+JSBool
+Debugger::getHook(JSContext *cx, uintN argc, Value *vp, Hook which)
+{
+    THISOBJ(cx, vp, Debugger, "getHook", thisobj, dbg);
+    vp->setObjectOrNull(dbg->hooks[which]);
+    return true;
+}
+
+JSBool
+Debugger::setHook(JSContext *cx, uintN argc, Value *vp, Hook which)
+{
+    REQUIRE_ARGC("Debugger.setHook", 1);
+    THISOBJ(cx, vp, Debugger, "setHook", thisobj, dbg);
+    if (!vp[2].isObjectOrNull())
+        return ReportObjectRequired(cx);
+    JSObject *hook = vp[2].toObjectOrNull();
+    if (hook && !hook->isCallable()) {
+        js_ReportIsNotFunction(cx, vp, JSV2F_SEARCH_STACK);
+        return false;
+    }
+    dbg->hooks[which] = hook;
     vp->setUndefined();
     return true;
 }
