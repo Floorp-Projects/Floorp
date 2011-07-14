@@ -3560,25 +3560,32 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         return NS_ERROR_FAILURE;
     }
 
-    // Bug 656277 - Prevent loading WebGL textures from cross-domain images
+    // We disallow loading cross-domain images that have not been validated
+    // with CORS as WebGL textures. The reason for doing that is that timing
+    // attacks on WebGL shaders are able to retrieve approximations of the
+    // pixel values in WebGL textures; see bug 655987.
     //
-    // We disallow loading cross-domain images as WebGL textures. The reason for doing that
-    // is that timing attacks on WebGL shaders are able to retrieve approximations of the pixel values
-    // in WebGL textures, see bug 655987.
-    //
-    // To prevent a loophole where a Canvas2D would be used as a proxy to load cross-domain textures,
-    // we also disallow loading textures from write-only Canvas2D's.
+    // To prevent a loophole where a Canvas2D would be used as a proxy to load
+    // cross-domain textures, we also disallow loading textures from write-only
+    // Canvas2D's.
 
-    // part 1: check that the DOM element is same-origin.
+    // part 1: check that the DOM element is same-origin, or has otherwise been
+    // validated for cross-domain use.
     // if res.mPrincipal == null, no need for the origin check. See DoDrawImageSecurityCheck.
     // this case happens in the mochitest for images served from mochi.test:8888
     if (res.mPrincipal) {
         PRBool subsumes;
         nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
         if (NS_FAILED(rv) || !subsumes) {
-            LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element. "
-                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
-            return NS_ERROR_DOM_SECURITY_ERR;
+            PRInt32 corsmode;
+            if (!res.mImageRequest || NS_FAILED(res.mImageRequest->GetCORSMode(&corsmode))) {
+                corsmode = imgIRequest::CORS_NONE;
+            }
+            if (corsmode == imgIRequest::CORS_NONE) {
+                LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
+                                    "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+                return NS_ERROR_DOM_SECURITY_ERR;
+            }
         }
     }
 
