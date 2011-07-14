@@ -1385,10 +1385,18 @@ public:
     // line.  If mMouseScrollEvent is a page scroll event, the unit of this
     // value is page.
     PRInt32 mComputedScrollAmount;
+    PRInt32 mComputedScrollAction;
   } mReply;
 
   enum {
     NOT_FOUND = PR_UINT32_MAX
+  };
+
+  // values of mComputedScrollAction
+  enum {
+    SCROLL_ACTION_NONE,
+    SCROLL_ACTION_LINE,
+    SCROLL_ACTION_PAGE
   };
 };
 
