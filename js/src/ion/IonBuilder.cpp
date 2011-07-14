@@ -72,6 +72,8 @@ void
 IonBuilder::SetupOpcodeFlags()
 {
     SnapshotBefore[JSOP_BITAND] = true;
+    SnapshotBefore[JSOP_BITOR] = true;
+    SnapshotBefore[JSOP_BITXOR] = true;
     SnapshotBefore[JSOP_ADD] = true;
 }
 
@@ -375,6 +377,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_ifeq(JSOP_IFEQ);
 
       case JSOP_BITAND:
+      case JSOP_BITOR:
+      case JSOP_BITXOR:
         return jsop_binary(op);
 
       case JSOP_ADD:
@@ -1237,6 +1241,14 @@ IonBuilder::jsop_binary(JSOp op)
     switch (op) {
       case JSOP_BITAND:
         ins = MBitAnd::New(left, right);
+        break;
+
+      case JSOP_BITOR:
+        ins = MBitOr::New(left, right);
+        break;
+
+      case JSOP_BITXOR:
+        ins = MBitXOr::New(left, right);
         break;
         
       case JSOP_ADD:
