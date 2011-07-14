@@ -278,11 +278,9 @@ LinearScanAllocator::createDataStructures()
     allowedRegs = RegisterSet::All();
 
     liveIn = lir->mir()->allocate<BitSet*>(graph.numBlocks());
-    inputMovesFor = lir->mir()->allocate<LMoveGroup*>(graph.numVirtualRegisters());
-    outputMovesFor = lir->mir()->allocate<LMoveGroup*>(graph.numVirtualRegisters());
     freeUntilPos = lir->mir()->allocate<CodePosition>(Registers::Total);
     nextUsePos = lir->mir()->allocate<CodePosition>(Registers::Total);
-    if (!liveIn || !inputMovesFor || !outputMovesFor || !freeUntilPos || !nextUsePos)
+    if (!liveIn || !freeUntilPos || !nextUsePos)
         return false;
 
     if (!vregs.init(lir->mir(), graph.numVirtualRegisters()))
@@ -319,10 +317,6 @@ LinearScanAllocator::createDataStructures()
                 return false;
         }
     }
-
-    // Initialize input/output move records
-    memset(inputMovesFor, 0, sizeof(LMoveGroup *) * graph.numVirtualRegisters());
-    memset(outputMovesFor, 0, sizeof(LMoveGroup *) * graph.numVirtualRegisters());
 
     return true;
 }
@@ -789,14 +783,30 @@ LinearScanAllocator::reifyAllocations()
                 LAllocation *alloc = interval->getAllocation();
                 JS_ASSERT(!alloc->isUse());
 
-                ins->getDef(j)->setOutput(*alloc);
+                // Populate move groups with moves associated with this definition
+                if (def->policy() != LDefinition::REDEFINED) {
+                    for (size_t k = 1; k < vreg->numIntervals(); k++)  {
+                        LiveInterval *from = vreg->getInterval(k - 1);
+                        LiveInterval *to = vreg->getInterval(k);
+                        if (!moveBefore(to->start(), from, to))
+                            return false;
+                    }
+                }
+
+                def->setOutput(*alloc);
             }
 
-            // Insert moves
-            if (inputMovesFor[ins->id()])
-                block->insertBefore(*ins, inputMovesFor[ins->id()]);
-            if (outputMovesFor[ins->id()])
-                block->insertBefore(*ins, outputMovesFor[ins->id()]);
+            // Insert move groups
+            if (vregs[*ins].inputMoves()) {
+                IonSpew(IonSpew_LSRA, "  Inserting %d moves for input",
+                        vregs[*ins].inputMoves()->numMoves());
+                block->insertBefore(*ins, vregs[*ins].inputMoves());
+            }
+            if (vregs[*ins].outputMoves()) {
+                IonSpew(IonSpew_LSRA, "  Inserting %d moves for output",
+                        vregs[*ins].outputMoves()->numMoves());
+                block->insertBefore(*ins, vregs[*ins].outputMoves());
+            }
         }
 
         // Throw away the now useless phis
@@ -819,7 +829,7 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
 
     VirtualRegister *reg = interval->reg();
 
-    // Do the split and insert a move
+    // Do the split
     LiveInterval *newInterval = new LiveInterval(reg);
     if (!interval->splitFrom(pos, newInterval))
         return false;
@@ -830,10 +840,9 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     if (!reg->addInterval(newInterval))
         return false;
 
-    if (interval->end() == newInterval->start().previous()) {
-        if (!moveBefore(pos, interval, newInterval))
-            return false;
-    }
+    // We'll need a move group later, insert it now.
+    if (!getMoveGroupBefore(pos))
+        return false;
 
     IonSpew(IonSpew_LSRA, "  Split interval to %u = [%u, %u]",
             interval->reg()->reg(), interval->start().pos(),
@@ -1086,29 +1095,45 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
     return true;
 }
 
-bool
-LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
+LMoveGroup *
+LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
 {
-    JS_ASSERT(vregs[pos].ins());
+    VirtualRegister *vreg = &vregs[pos];
+    JS_ASSERT(vreg->ins());
 
-    LMoveGroup **move;
+    LMoveGroup *moves;
     switch (pos.subpos()) {
       case CodePosition::INPUT:
-        move = &inputMovesFor[pos.ins()];
+        if (vreg->inputMoves()) {
+            moves = vreg->inputMoves();
+        } else {
+            moves = new LMoveGroup;
+            moves->setFreeRegisters(freeRegs);
+            vreg->setInputMoves(moves);
+        }
         break;
       case CodePosition::OUTPUT:
-        move = &outputMovesFor[pos.ins()];
+        if (vreg->outputMoves()) {
+            moves = vreg->outputMoves();
+        } else {
+            moves = new LMoveGroup;
+            moves->setFreeRegisters(freeRegs);
+            vreg->setOutputMoves(moves);
+        }
         break;
       default:
         JS_NOT_REACHED("Unknown subposition");
-        return false;
-    }
-    if (!*move) {
-        *move = new LMoveGroup;
-        (*move)->setFreeRegisters(freeRegs);
+        return NULL;
     }
 
-    return (*move)->add(from->getAllocation(), to->getAllocation());
+    return moves;
+}
+
+bool
+LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
+{
+    LMoveGroup *moves = getMoveGroupBefore(pos);
+    return moves->add(from->getAllocation(), to->getAllocation());
 }
 
 #ifdef DEBUG
