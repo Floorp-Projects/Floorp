@@ -131,17 +131,6 @@ js_ObjectToOuterObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-inline bool
-NULLABLE_OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
-{
-    if (!obj) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
-        return false;
-    }
-    OBJ_TO_INNER_OBJECT(cx, obj);
-    return !!obj;
-}
-
 #if JS_HAS_OBJ_PROTO_PROP
 
 static JSBool
