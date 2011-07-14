@@ -244,6 +244,11 @@ private:
    */
   nsRefPtr<ID3D10Texture2D> mBackBuffer;
   nsRefPtr<ID3D10Texture2D> mRemoteFrontBuffer;
+  /*
+   * If we're remote content, this is the root of the shadowable tree
+   * we send to the compositor.
+   */
+  nsRefPtr<DummyRoot> mRootForShadowTree;
 
   /*
    * Copies the content of our backbuffer to the set transaction target.
