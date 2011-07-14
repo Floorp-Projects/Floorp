@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +40,7 @@
 #include "gfxUtils.h"
 #include "nsRect.h"
 
+#include "../d3d9/Nv3DVUtils.h"
 #include "ThebesLayerD3D10.h"
 #include "ReadbackProcessor.h"
 
@@ -372,6 +373,56 @@ ContainerLayerD3D10::Validate()
     }
     layer = layer->GetNextSibling();
   }
+}
+
+ShadowContainerLayerD3D10::ShadowContainerLayerD3D10(LayerManagerD3D10 *aManager) 
+  : ShadowContainerLayer(aManager, NULL)
+  , LayerD3D10(aManager)
+{
+  mImplData = static_cast<LayerD3D10*>(this);
+}
+
+ShadowContainerLayerD3D10::~ShadowContainerLayerD3D10() {}
+
+void
+ShadowContainerLayerD3D10::InsertAfter(Layer* aChild, Layer* aAfter)
+{
+  mFirstChild = aChild;
+}
+
+void
+ShadowContainerLayerD3D10::RemoveChild(Layer* aChild)
+{
+
+}
+
+void
+ShadowContainerLayerD3D10::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+{
+  DefaultComputeEffectiveTransforms(aTransformToSurface);
+}
+
+LayerD3D10*
+ShadowContainerLayerD3D10::GetFirstChildD3D10()
+{
+  return static_cast<LayerD3D10*>(mFirstChild->ImplData());
+}
+
+void
+ShadowContainerLayerD3D10::RenderLayer()
+{
+  LayerD3D10* layerToRender = GetFirstChildD3D10();
+  layerToRender->RenderLayer();
+}
+
+void
+ShadowContainerLayerD3D10::Validate()
+{
+}
+ 
+void
+ShadowContainerLayerD3D10::LayerManagerDestroyed()
+{
 }
 
 } /* layers */

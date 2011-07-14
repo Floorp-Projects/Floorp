@@ -40,6 +40,9 @@
 
 #include "mozilla/dom/PBrowserChild.h"
 #include "BasicLayers.h"
+#if defined(MOZ_ENABLE_D3D10_LAYER)
+# include "LayerManagerD3D10.h"
+#endif
 
 #include "gfxPlatform.h"
 #include "PuppetWidget.h"
@@ -330,10 +333,27 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 }
 
 LayerManager*
-PuppetWidget::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
+PuppetWidget::GetLayerManager(PLayersChild* aShadowManager,
+                              LayersBackend aBackendHint,
+                              LayerManagerPersistence aPersistence,
+                              bool* aAllowRetaining)
 {
   if (!mLayerManager) {
-    mLayerManager = new BasicShadowLayerManager(this);
+    // The backend hint is a temporary placeholder until Azure, when
+    // all content-process layer managers will be BasicLayerManagers.
+#if defined(MOZ_ENABLE_D3D10_LAYER)
+    if (LayerManager::LAYERS_D3D10 == aBackendHint) {
+      nsRefPtr<LayerManagerD3D10> m = new LayerManagerD3D10(this);
+      m->AsShadowForwarder()->SetShadowManager(aShadowManager);
+      if (m->Initialize()) {
+        mLayerManager = m;
+      }
+    }
+#endif
+    if (!mLayerManager) {
+      mLayerManager = new BasicShadowLayerManager(this);
+      mLayerManager->AsShadowForwarder()->SetShadowManager(aShadowManager);
+    }
   }
   if (aAllowRetaining) {
     *aAllowRetaining = true;
@@ -538,10 +558,15 @@ PuppetWidget::DispatchPaintEvent()
                          nsCAutoString("PuppetWidget"), nsnull);
 #endif
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
-    AutoLayerManagerSetup setupLayerManager(this, ctx,
-                                            BasicLayerManager::BUFFER_NONE);
-    DispatchEvent(&event, status);  
+    LayerManager* lm = GetLayerManager();
+    if (LayerManager::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
+      DispatchEvent(&event, status);
+    } else {
+      nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
+      AutoLayerManagerSetup setupLayerManager(this, ctx,
+                                              BasicLayerManager::BUFFER_NONE);
+      DispatchEvent(&event, status);  
+    }
   }
 
   nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);

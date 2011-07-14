@@ -44,8 +44,12 @@
 #include "IPC/IPCMessageUtils.h"
 #include "Layers.h"
 
+#if defined(MOZ_ENABLE_D3D10_LAYER)
+# include "mozilla/layers/ShadowLayerUtilsD3D10.h"
+#endif
+
 #if defined(MOZ_X11)
-#  include "mozilla/layers/ShadowLayerUtilsX11.h"
+# include "mozilla/layers/ShadowLayerUtilsX11.h"
 #else
 namespace mozilla { namespace layers {
 struct SurfaceDescriptorX11 {

@@ -295,12 +295,18 @@ protected:
 
     NS_IMETHOD Run() {
       if (mFrame) {
+        // need to block script to avoid bug 669767
+        nsAutoScriptBlocker scriptBlocker;
+
         nsCOMPtr<nsIPresShell> shell =
           mFrame->PresContext()->GetPresShell();
         PRBool observes = shell->ObservesNativeAnonMutationsForPrint();
         shell->ObserveNativeAnonMutationsForPrint(PR_TRUE);
+        // This can cause the frame to be destroyed (and call Revoke()
         mFrame->EnsureEditorInitialized();
         shell->ObserveNativeAnonMutationsForPrint(observes);
+
+        NS_ASSERTION(mFrame,"Frame destroyed even though we had a scriptblocker");
         mFrame->FinishedInitializer();
       }
       return NS_OK;

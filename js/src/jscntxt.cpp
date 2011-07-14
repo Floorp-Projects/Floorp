@@ -149,6 +149,20 @@ ThreadData::triggerOperationCallback(JSRuntime *rt)
 
 } /* namespace js */
 
+JSScript *
+js_GetCurrentScript(JSContext *cx)
+{
+#ifdef JS_TRACER
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    if (JS_ON_TRACE(cx)) {
+        VMSideExit *bailExit = JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit;
+        return bailExit ? bailExit->script : NULL;
+    }
+#endif
+    return cx->hasfp() ? cx->fp()->maybeScript() : NULL;
+}
+
+
 #ifdef JS_THREADSAFE
 
 JSThread *

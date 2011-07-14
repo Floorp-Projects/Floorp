@@ -75,6 +75,7 @@ EXPORTS_mozilla/plugins = \
   PluginScriptableObjectUtils-inl.h \
   PluginInstanceChild.h \
   PluginInstanceParent.h \
+  PluginUtilsOSX.h \
   AStream.h \
   BrowserStreamChild.h \
   BrowserStreamParent.h \

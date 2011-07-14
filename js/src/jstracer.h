@@ -364,6 +364,7 @@ struct FrameInfo;
 
 struct VMSideExit : public nanojit::SideExit
 {
+    JSScript* script;
     jsbytecode* pc;
     jsbytecode* imacpc;
     intptr_t sp_adj;

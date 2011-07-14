@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "ImageLogging.h"
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 
@@ -71,7 +72,6 @@
 #include "netCore.h"
 
 #include "nsURILoader.h"
-#include "ImageLogging.h"
 
 #include "nsIComponentRegistrar.h"
 

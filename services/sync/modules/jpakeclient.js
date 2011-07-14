@@ -41,12 +41,13 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://services-sync/log4moz.js");
-Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");
 
 const EXPORTED_SYMBOLS = ["JPAKEClient"];
 
+const REQUEST_TIMEOUT         = 60; // 1 minute
 const JPAKE_SIGNERID_SENDER   = "sender";
 const JPAKE_SIGNERID_RECEIVER = "receiver";
 const JPAKE_LENGTH_SECRET     = 8;
@@ -136,7 +137,6 @@ function JPAKEClient(observer) {
 
   this._jpake = Cc["@mozilla.org/services-crypto/sync-jpake;1"]
                   .createInstance(Ci.nsISyncJPAKE);
-  this._auth = new NoOpAuthenticator();
 
   this._setClientID();
 }
@@ -240,16 +240,21 @@ JPAKEClient.prototype = {
             for each (byte in bytes)].join("");
   },
 
+  _newRequest: function _newRequest(uri) {
+    let request = new RESTRequest(uri);
+    request.setHeader("X-KeyExchange-Id", this._clientID);
+    request.timeout = REQUEST_TIMEOUT;
+    return request;
+  },
+
   /*
    * Steps of J-PAKE procedure
    */
 
   _getChannel: function _getChannel(callback) {
     this._log.trace("Requesting channel.");
-    let resource = new AsyncResource(this._serverUrl + "new_channel");
-    resource.authenticator = this._auth;
-    resource.setHeader("X-KeyExchange-Id", this._clientID);
-    resource.get(Utils.bind2(this, function handleChannel(error, response) {
+    let request = this._newRequest(this._serverUrl + "new_channel");
+    request.get(Utils.bind2(this, function handleChannel(error) {
       if (this._finished)
         return;
 
@@ -258,16 +263,15 @@ JPAKEClient.prototype = {
         this.abort(JPAKE_ERROR_CHANNEL);
         return;
       }
-      if (response.status != 200) {
+      if (request.response.status != 200) {
         this._log.error("Error acquiring channel ID. Server responded with HTTP "
-                        + response.status);
+                        + request.response.status);
         this.abort(JPAKE_ERROR_CHANNEL);
         return;
       }
 
-      let channel;
       try {
-        this._channel = response.obj;
+        this._channel = JSON.parse(request.response.body);
       } catch (ex) {
         this._log.error("Server responded with invalid JSON.");
         this.abort(JPAKE_ERROR_CHANNEL);
@@ -287,10 +291,8 @@ JPAKEClient.prototype = {
   // Generic handler for uploading data.
   _putStep: function _putStep(callback) {
     this._log.trace("Uploading message " + this._outgoing.type);
-    let resource = new AsyncResource(this._channelUrl);
-    resource.authenticator = this._auth;
-    resource.setHeader("X-KeyExchange-Id", this._clientID);
-    resource.put(this._outgoing, Utils.bind2(this, function (error, response) {
+    let request = this._newRequest(this._channelUrl);
+    request.put(this._outgoing, Utils.bind2(this, function (error) {
       if (this._finished)
         return;
 
@@ -299,15 +301,15 @@ JPAKEClient.prototype = {
         this.abort(JPAKE_ERROR_NETWORK);
         return;
       }
-      if (response.status != 200) {
+      if (request.response.status != 200) {
         this._log.error("Could not upload data. Server responded with HTTP "
-                        + response.status);
+                        + request.response.status);
         this.abort(JPAKE_ERROR_SERVER);
         return;
       }
       // There's no point in returning early here since the next step will
       // always be a GET so let's pause for twice the poll interval.
-      this._etag = response.headers["etag"];
+      this._etag = request.response.headers["etag"];
       Utils.namedTimer(function () { callback(); }, this._pollInterval * 2,
                        this, "_pollTimer");
     }));
@@ -317,13 +319,12 @@ JPAKEClient.prototype = {
   _pollTries: 0,
   _getStep: function _getStep(callback) {
     this._log.trace("Retrieving next message.");
-    let resource = new AsyncResource(this._channelUrl);
-    resource.authenticator = this._auth;
-    resource.setHeader("X-KeyExchange-Id", this._clientID);
-    if (this._etag)
-      resource.setHeader("If-None-Match", this._etag);
+    let request = this._newRequest(this._channelUrl);
+    if (this._etag) {
+      request.setHeader("If-None-Match", this._etag);
+    }
 
-    resource.get(Utils.bind2(this, function (error, response) {
+    request.get(Utils.bind2(this, function (error) {
       if (this._finished)
         return;
 
@@ -333,7 +334,7 @@ JPAKEClient.prototype = {
         return;
       }
 
-      if (response.status == 304) {
+      if (request.response.status == 304) {
         this._log.trace("Channel hasn't been updated yet. Will try again later.");
         if (this._pollTries >= this._maxTries) {
           this._log.error("Tried for " + this._pollTries + " times, aborting.");
@@ -347,20 +348,20 @@ JPAKEClient.prototype = {
       }
       this._pollTries = 0;
 
-      if (response.status == 404) {
+      if (request.response.status == 404) {
         this._log.error("No data found in the channel.");
         this.abort(JPAKE_ERROR_NODATA);
         return;
       }
-      if (response.status != 200) {
+      if (request.response.status != 200) {
         this._log.error("Could not retrieve data. Server responded with HTTP "
-                        + response.status);
+                        + request.response.status);
         this.abort(JPAKE_ERROR_SERVER);
         return;
       }
 
       try {
-        this._incoming = response.obj;
+        this._incoming = JSON.parse(request.response.body);
       } catch (ex) {
         this._log.error("Server responded with invalid JSON.");
         this.abort(JPAKE_ERROR_INVALID);
@@ -373,17 +374,16 @@ JPAKEClient.prototype = {
 
   _reportFailure: function _reportFailure(reason, callback) {
     this._log.debug("Reporting failure to server.");
-    let resource = new AsyncResource(this._serverUrl + "report");
-    resource.authenticator = this._auth;
-    resource.setHeader("X-KeyExchange-Id", this._clientID);
-    resource.setHeader("X-KeyExchange-Cid", this._channel);
-    resource.setHeader("X-KeyExchange-Log", reason);
-    resource.post("", Utils.bind2(this, function (error, response) {
-      if (error)
+    let request = this._newRequest(this._serverUrl + "report");
+    request.setHeader("X-KeyExchange-Cid", this._channel);
+    request.setHeader("X-KeyExchange-Log", reason);
+    request.post("", Utils.bind2(this, function (error) {
+      if (error) {
         this._log.warn("Report failed: " + error);
-      else if (response.status != 200)
+      } else if (request.response.status != 200) {
         this._log.warn("Report failed. Server responded with HTTP "
-                       + response.status);
+                       + request.response.status);
+      }
 
       // Do not block on errors, we're done or aborted by now anyway.
       callback();
