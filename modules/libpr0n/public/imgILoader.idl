@@ -63,6 +63,11 @@ interface nsIChannelPolicy;
 [scriptable, uuid(20a5e3e9-0d5b-482c-9f41-942b5f19e5a3)]
 interface imgILoader : nsISupports
 {
+  // Extra flags to pass to loadImage if you want a load to use CORS
+  // validation.
+  const unsigned long LOAD_CORS_ANONYMOUS = 1 << 16;
+  const unsigned long LOAD_CORS_USE_CREDENTIALS = 1 << 17;
+
   /**
    * Start the load and decode of an image.
    * @param aURI the URI to load
