@@ -82,7 +82,7 @@ function checkSecondLoad()
 
   var loader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
   var listener = new ImageListener(checkClone, secondLoadDone);
-  requests.push(loader.loadImage(uri, null, null, null, listener, null, 0, null, null, null));
+  requests.push(loader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null));
   listener.synchronous = false;
 }
 
@@ -185,7 +185,7 @@ function startImageCallback(otherCb)
     // Make sure we can load the same image immediately out of the cache.
     do_test_pending();
     var listener2 = new ImageListener(null, function(foo, bar) { do_test_finished(); });
-    requests.push(loader.loadImage(uri, null, null, null, listener2, null, 0, null, null, null));
+    requests.push(loader.loadImage(uri, null, null, null, null, listener2, null, 0, null, null, null));
     listener2.synchronous = false;
 
     // Now that we've started another load, chain to the callback.
@@ -199,7 +199,7 @@ function run_test()
 
   do_test_pending();
   var listener = new ImageListener(startImageCallback(checkClone), firstLoadDone);
-  var req = loader.loadImage(uri, null, null, null, listener, null, 0, null, null, null);
+  var req = loader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null);
   requests.push(req);
 
   // Ensure that we don't cause any mayhem when we lock an image.

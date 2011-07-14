@@ -205,7 +205,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
                           void *aCacheId,
-                          void *aLoadId)
+                          void *aLoadId,
+                          nsIPrincipal* aLoadingPrincipal)
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
@@ -224,6 +225,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mRequest = aRequest;
   mChannel = aChannel;
   mTimedChannel = do_QueryInterface(mChannel);
+
+  mLoadingPrincipal = aLoadingPrincipal;
 
   mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
 
