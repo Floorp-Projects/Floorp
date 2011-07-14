@@ -158,7 +158,6 @@ class Debugger {
     static JSBool setOnNewScript(JSContext *cx, uintN argc, Value *vp);
     static JSBool getOnEnterFrame(JSContext *cx, uintN argc, Value *vp);
     static JSBool setOnEnterFrame(JSContext *cx, uintN argc, Value *vp);
-
     static JSBool getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
     static JSBool setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
     static JSBool addDebuggee(JSContext *cx, uintN argc, Value *vp);
