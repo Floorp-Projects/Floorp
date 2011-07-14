@@ -1714,19 +1714,36 @@ out:
 JS_FRIEND_API(uintN)
 js_GetScriptLineExtent(JSScript *script)
 {
+
+    bool counting;
     uintN lineno;
+    uintN maxLineNo;
     jssrcnote *sn;
     JSSrcNoteType type;
 
     lineno = script->lineno;
+    maxLineNo = 0;
+    counting = true;
     for (sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         type = (JSSrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
+            if (maxLineNo < lineno)
+                maxLineNo = lineno;
             lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
+            counting = true;
+            if (maxLineNo < lineno)
+                maxLineNo = lineno;
+            else
+                counting = false;
         } else if (type == SRC_NEWLINE) {
-            lineno++;
+            if (counting)
+                lineno++;
         }
     }
+
+    if (maxLineNo > lineno)
+        lineno = maxLineNo;
+
     return 1 + lineno - script->lineno;
 }
 

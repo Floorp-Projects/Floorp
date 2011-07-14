@@ -46,8 +46,11 @@
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(MOZ_WIDGET_COCOA)
+#include "PluginUtilsOSX.h"
 #include "nsCoreAnimationSupport.h"
 #include "base/timer.h"
+
+using namespace mozilla::plugins::PluginUtilsOSX;
 #endif
 
 #include "npfunctions.h"
@@ -524,7 +527,7 @@ private:
 #ifdef XP_MACOSX
     // Current IOSurface available for rendering
     // We can't use thebes gfxASurface like other platforms.
-    nsAutoPtr<nsIOSurface> mCurrentIOSurface; 
+    nsDoubleBufferCARenderer mDoubleBufferCARenderer; 
 #endif
 
     // (Not to be confused with mBackSurface).  This is a recent copy

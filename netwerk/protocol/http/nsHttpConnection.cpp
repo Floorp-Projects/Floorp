@@ -630,6 +630,12 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     mTransaction->Close(reason);
     mTransaction = nsnull;
 
+    if (mCallbacks) {
+        nsIInterfaceRequestor *cbs = nsnull;
+        mCallbacks.swap(cbs);
+        NS_ProxyRelease(mCallbackTarget, cbs);
+    }
+
     if (NS_FAILED(reason))
         Close(reason);
 

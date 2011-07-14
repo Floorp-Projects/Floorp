@@ -4405,6 +4405,7 @@ TraceRecorder::snapshot(ExitType exitType)
                                            0;
     exit->exitType = exitType;
     exit->pc = pc;
+    exit->script = fp->maybeScript();
     exit->imacpc = fp->maybeImacropc();
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
@@ -8221,8 +8222,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
             JS_ASSERT(slot < cfp->numFormalArgs());
             vp = &cfp->formalArg(slot);
             nr.v = *vp;
-        } else if (shape->getterOp() == GetCallVar ||
-                   shape->getterOp() == GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar) {
             JS_ASSERT(slot < cfp->numSlots());
             vp = &cfp->slots()[slot];
             nr.v = *vp;
@@ -8267,8 +8267,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
         if (shape->getterOp() == GetCallArg) {
             JS_ASSERT(slot < ArgClosureTraits::slot_count(obj));
             slot += ArgClosureTraits::slot_offset(obj);
-        } else if (shape->getterOp() == GetCallVar ||
-                   shape->getterOp() == GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar) {
             JS_ASSERT(slot < VarClosureTraits::slot_count(obj));
             slot += VarClosureTraits::slot_offset(obj);
         } else {
@@ -8301,14 +8300,12 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
             cx_ins
         };
         const CallInfo* ci;
-        if (shape->getterOp() == GetCallArg) {
+        if (shape->getterOp() == GetCallArg)
             ci = &GetClosureArg_ci;
-        } else if (shape->getterOp() == GetCallVar ||
-                   shape->getterOp() == GetCallVarChecked) {
+        else if (shape->getterOp() == GetCallVar)
             ci = &GetClosureVar_ci;
-        } else {
+        else
             RETURN_STOP("dynamic property of Call object");
-        }
 
         // Now assert that our use of shape->shortid was in fact kosher.
         JS_ASSERT(shape->hasShortID());
@@ -16568,19 +16565,6 @@ TraceRecorder::record_JSOP_CALLGNAME()
 {
     return record_JSOP_CALLNAME();
 }
-
-#define DBG_STUB(OP)                                                          \
-    JS_REQUIRES_STACK AbortableRecordingStatus                                \
-    TraceRecorder::record_##OP()                                              \
-    {                                                                         \
-        RETURN_STOP_A("can't trace " #OP);                                    \
-    }
-
-DBG_STUB(JSOP_GETUPVAR_DBG)
-DBG_STUB(JSOP_CALLUPVAR_DBG)
-DBG_STUB(JSOP_DEFFUN_DBGFC)
-DBG_STUB(JSOP_DEFLOCALFUN_DBGFC)
-DBG_STUB(JSOP_LAMBDA_DBGFC)
 
 #ifdef JS_JIT_SPEW
 /*
