@@ -145,14 +145,20 @@ class Debugger {
     static void markKeysInCompartment(JSTracer *tracer, ObjectWeakMap &map);
 
     static Class jsclass;
-    static JSBool getHooks(JSContext *cx, uintN argc, Value *vp);
 
-    template <Hook which> static JSBool getHook(JSContext *cx, uintN argc, Value *vp);
-    template <Hook which> static JSBool setHook(JSContext *cx, uintN argc, Value *vp);
-    static JSBool getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
-    static JSBool setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
     static JSBool getEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getHook(JSContext *cx, uintN argc, Value *vp, Hook which);
+    static JSBool setHook(JSContext *cx, uintN argc, Value *vp, Hook which);
+    static JSBool getOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp);
+    static JSBool setOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getOnExceptionUnwind(JSContext *cx, uintN argc, Value *vp);
+    static JSBool setOnExceptionUnwind(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getOnNewScript(JSContext *cx, uintN argc, Value *vp);
+    static JSBool setOnNewScript(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getOnEnterFrame(JSContext *cx, uintN argc, Value *vp);
+    static JSBool setOnEnterFrame(JSContext *cx, uintN argc, Value *vp);
+
     static JSBool getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
     static JSBool setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
     static JSBool addDebuggee(JSContext *cx, uintN argc, Value *vp);
