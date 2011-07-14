@@ -21,6 +21,7 @@
  *  Dan Mills <thunder@mozilla.com>
  *  Myk Melez <myk@mozilla.org>
  *  Anant Narayanan <anant@kix.in>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *  Richard Newman <rnewman@mozilla.com>
  *  Marina Samuel <msamuel@mozilla.com>
  *
@@ -66,10 +67,16 @@ Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/main.js");
+
+const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
+                            INFO_COLLECTION_USAGE,
+                            INFO_COLLECTION_COUNTS,
+                            INFO_QUOTA];
 
 /*
  * Service singleton
@@ -1978,19 +1985,53 @@ WeaveSvc.prototype = {
     Clients.sendCommand(command, args);
   },
 
-  _getInfo: function _getInfo(what)
-    this._catch(this._notify(what, "", function() {
-      let url = this.userBaseURL + "info/" + what;
-      let response = new Resource(url).get();
-      if (response.status != 200)
-        return null;
-      return response.obj;
-    }))(),
+  /**
+   * Fetch storage info from the server.
+   * 
+   * @param type
+   *        String specifying what info to fetch from the server. Must be one
+   *        of the INFO_* values. See Sync Storage Server API spec for details.
+   * @param callback
+   *        Callback function with signature (error, data) where `data' is
+   *        the return value from the server already parsed as JSON.
+   * 
+   * @return RESTRequest instance representing the request, allowing callers
+   *         to cancel the request.
+   */
+  getStorageInfo: function getStorageInfo(type, callback) {
+    if (STORAGE_INFO_TYPES.indexOf(type) == -1) {
+      throw "Invalid value for 'type': " + type;
+    }
 
-  getCollectionUsage: function getCollectionUsage()
-    this._getInfo("collection_usage"),
+    let info_type = "info/" + type;
+    this._log.trace("Retrieving '" + info_type + "'...");
+    let url = this.userBaseURL + info_type;
+    return new SyncStorageRequest(url).get(function onComplete(error) {
+      // Note: 'this' is the request.
+      if (error) {
+        this._log.debug("Failed to retrieve '" + info_type + "': " +
+                        Utils.exceptionStr(error));
+        return callback(error);
+      }
+      if (this.response.status != 200) {
+        this._log.debug("Failed to retrieve '" + info_type +
+                        "': server responded with HTTP" +
+                        this.response.status);
+        return callback(this.response);
+      }
 
-  getQuota: function getQuota() this._getInfo("quota")
+      let result;
+      try {
+        result = JSON.parse(this.response.body);
+      } catch (ex) {
+        this._log.debug("Server returned invalid JSON for '" + info_type +
+                        "': " + this.response.body);
+        return callback(ex);
+      }
+      this._log.trace("Successfully retrieved '" + info_type + "'.");
+      return callback(null, result);
+    });
+  }
 
 };
 

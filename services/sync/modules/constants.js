@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -195,6 +196,12 @@ JPAKE_ERROR_NODATA:                    "jpake.error.nodata",
 JPAKE_ERROR_KEYMISMATCH:               "jpake.error.keymismatch",
 JPAKE_ERROR_WRONGMESSAGE:              "jpake.error.wrongmessage",
 JPAKE_ERROR_USERABORT:                 "jpake.error.userabort",
+
+// info types for Service.getStorageInfo
+INFO_COLLECTIONS:                      "collections",
+INFO_COLLECTION_USAGE:                 "collection_usage",
+INFO_COLLECTION_COUNTS:                "collection_counts",
+INFO_QUOTA:                            "quota",
 
 // Ways that a sync can be disabled (messages only to be printed in debug log)
 kSyncMasterPasswordLocked:             "User elected to leave Master Password locked",
