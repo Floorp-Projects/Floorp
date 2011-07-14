@@ -2106,7 +2106,7 @@ DebuggerScript_getLineOffsets(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.Script.setBreakpoint", 2);
@@ -2144,7 +2144,7 @@ fail1:
     return false;
 }
 
-JSBool
+static JSBool
 DebuggerScript_getBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "getBreakpoints", obj, script);
@@ -2180,7 +2180,7 @@ DebuggerScript_getBreakpoints(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 DebuggerScript_clearBreakpoint(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.Script.clearBreakpoint", 1);
@@ -2196,7 +2196,7 @@ DebuggerScript_clearBreakpoint(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 DebuggerScript_clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "clearBreakpoint", obj, script);
@@ -2368,7 +2368,7 @@ Class DebuggerArguments_class = {
 };
 
 // The getter used for each element of frame.arguments. See DebuggerFrame_getArguments.
-JSBool
+static JSBool
 DebuggerArguments_getArg(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *callee = &CallArgsFromVp(argc, vp).callee();
@@ -2401,7 +2401,7 @@ DebuggerArguments_getArg(JSContext *cx, uintN argc, Value *vp)
     return Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
 }
 
-JSBool
+static JSBool
 DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get arguments", thisobj, fp);
