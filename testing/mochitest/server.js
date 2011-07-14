@@ -662,6 +662,11 @@ function testListing(metadata, response)
             TR(TD("Passed"), TD("Failed"), TD("Todo"), TD("Test Files")),
             linksToTableRows(links, 0)
           ),
+
+          BR(),
+          TABLE({cellpadding: 0, cellspacing: 0, border: 1, bordercolor: "red", id: "fail-table"}
+          ),
+
           DIV({class: "clear"})
         )
       )
