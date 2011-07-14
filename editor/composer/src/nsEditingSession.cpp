@@ -557,7 +557,9 @@ nsEditingSession::RemoveListenersAndControllers(nsIDOMWindow *aWindow,
 NS_IMETHODIMP
 nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
-  NS_ENSURE_TRUE(mDoneSetup, NS_OK);
+  if (!mDoneSetup) {
+    return NS_OK;
+  }
 
   NS_ENSURE_TRUE(aWindow, NS_ERROR_NULL_POINTER);
 
