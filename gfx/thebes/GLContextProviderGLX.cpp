@@ -252,14 +252,24 @@ GLXLibrary::EnsureInitialized()
     return PR_TRUE;
 }
 
+PRBool
+GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
+{
+    if (!EnsureInitialized()) {
+        return PR_FALSE;
+    }
+    
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
 GLXPixmap 
 GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 {
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
-        return 0;
-    }
-
-    if (!EnsureInitialized()) {
+    if (!SupportsTextureFromPixmap(aSurface)) {
         return 0;
     }
 
