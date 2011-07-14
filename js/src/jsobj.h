@@ -761,6 +761,8 @@ struct JSObject : js::gc::Cell {
      */
     bool sealOrFreeze(JSContext *cx, ImmutabilityType it);
 
+    bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
+
   public:
     bool isExtensible() const { return !(flags & NOT_EXTENSIBLE); }
     bool preventExtensions(JSContext *cx, js::AutoIdVector *props);
@@ -769,6 +771,9 @@ struct JSObject : js::gc::Cell {
     inline bool seal(JSContext *cx) { return sealOrFreeze(cx, SEAL); }
     /* ES5 15.2.3.9: non-extensible, all properties non-configurable, all data props read-only */
     bool freeze(JSContext *cx) { return sealOrFreeze(cx, FREEZE); }
+
+    bool isSealed(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, SEAL, resultp); }
+    bool isFrozen(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, FREEZE, resultp); }
         
     /*
      * Primitive-specific getters and setters.
