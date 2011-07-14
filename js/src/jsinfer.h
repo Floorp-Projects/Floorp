@@ -433,6 +433,12 @@ class TypeSet
     /* Get the single value which can appear in this type set, otherwise NULL. */
     JSObject *getSingleton(JSContext *cx);
 
+    /*
+     * Get the typed array type of all objects in this set. Returns
+     * TypedArray::TYPE_MAX if the set contains different array types.
+     */
+    int getTypedArrayType(JSContext *cx);
+
     /* Mark all current and future types in this set as pushed by script/pc. */
     void pushAllTypes(JSContext *cx, JSScript *script, jsbytecode *pc);
 
