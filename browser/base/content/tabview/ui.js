@@ -400,19 +400,26 @@ let UI = {
 
     if (this._activeTab) {
       this._activeTab.makeDeactive();
-      this._activeTab.removeSubscriber(this, "close");
+      this._activeTab.removeSubscriber("close", this._onActiveTabClosed);
     }
+
     this._activeTab = tabItem;
 
     if (this._activeTab) {
-      let self = this;
-      this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
-        if (self._activeTab == closedTabItem)
-          self._setActiveTab(null);
-      });
-
+      this._activeTab.addSubscriber("close", this._onActiveTabClosed);
       this._activeTab.makeActive();
     }
+  },
+
+  // ----------
+  // Function: _onActiveTabClosed
+  // Handles when the currently active tab gets closed.
+  //
+  // Parameters:
+  //  - the <TabItem> that is closed
+  _onActiveTabClosed: function UI__onActiveTabClosed(tabItem){
+    if (UI._activeTab == tabItem)
+      UI._setActiveTab(null);
   },
 
   // ----------
