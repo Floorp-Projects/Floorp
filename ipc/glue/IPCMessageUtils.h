@@ -75,6 +75,10 @@ namespace mozilla {
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
 typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
 typedef LayerManager::LayersBackend LayersBackend;
+typedef gfxASurface::gfxImageFormat PixelFormat;
+// This is a cross-platform approximation to HANDLE, which we expect
+// to be typedef'd to void* or thereabouts.
+typedef uintptr_t WindowsHandle;
 
 // XXX there are out of place and might be generally useful.  Could
 // move to nscore.h or something.
@@ -504,7 +508,7 @@ struct ParamTraits<mozilla::gfxSurfaceType>
   }
 };
 
- template<>
+template<>
 struct ParamTraits<mozilla::LayersBackend>
 {
   typedef mozilla::LayersBackend paramType;
@@ -531,6 +535,38 @@ struct ParamTraits<mozilla::LayersBackend>
       return true;
     }
     return false;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::PixelFormat>
+{
+  typedef mozilla::PixelFormat paramType;
+
+  static bool IsLegalPixelFormat(const paramType& format)
+  {
+    return (gfxASurface::ImageFormatARGB32 <= format &&
+            format < gfxASurface::ImageFormatUnknown);
+  }
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    if (!IsLegalPixelFormat(param)) {
+      NS_RUNTIMEABORT("Unknown pixel format");
+    }
+    WriteParam(msg, int32(param));
+    return;
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    int32 format;
+    if (!ReadParam(msg, iter, &format) ||
+        !IsLegalPixelFormat(paramType(format))) {
+      return false;
+    }
+    *result = paramType(format);
+    return true;
   }
 };
 
