@@ -1849,6 +1849,44 @@ TypeSet::knownNonEmpty(JSContext *cx)
     return false;
 }
 
+int
+TypeSet::getTypedArrayType(JSContext *cx)
+{
+    int arrayType = TypedArray::TYPE_MAX;
+    unsigned count = getObjectCount();
+
+    for (unsigned i = 0; i < count; i++) {
+        TypeObject *object = getObject(i);
+        if (!object)
+            continue;
+
+        JS_ASSERT(!object->hasAnyFlags(OBJECT_FLAG_NON_TYPED_ARRAY));
+        int objArrayType = object->proto->getClass() - TypedArray::slowClasses;
+        JS_ASSERT(objArrayType >= 0 && objArrayType < TypedArray::TYPE_MAX);
+
+        /*
+         * Set arrayType to the type of the first array. Return if there is an array
+         * of another type.
+         */
+        if (arrayType == TypedArray::TYPE_MAX)
+            arrayType = objArrayType;
+        else if (arrayType != objArrayType)
+            return TypedArray::TYPE_MAX;
+    }
+
+    /*
+     * Assume the caller checked that OBJECT_FLAG_NON_TYPED_ARRAY is not set.
+     * This means the set contains at least one object because sets with no
+     * objects have all object flags.
+     */
+    JS_ASSERT(arrayType != TypedArray::TYPE_MAX);
+
+    /* Recompile when another typed array is added to this set. */
+    addFreeze(cx);
+
+    return arrayType;
+}
+
 JSObject *
 TypeSet::getSingleton(JSContext *cx)
 {
