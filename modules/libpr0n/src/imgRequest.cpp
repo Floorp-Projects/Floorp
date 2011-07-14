@@ -185,8 +185,8 @@ NS_IMPL_ISUPPORTS8(imgRequest,
 
 imgRequest::imgRequest() : 
   mCacheId(0), mValidator(nsnull), mImageSniffers("image-sniffing-services"),
-  mWindowId(0), mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE),
-  mGotData(PR_FALSE), mIsInCache(PR_FALSE)
+  mWindowId(0), mCORSMode(imgIRequest::CORS_NONE), mDecodeRequested(PR_FALSE),
+  mIsMultiPartChannel(PR_FALSE), mGotData(PR_FALSE), mIsInCache(PR_FALSE)
 {}
 
 imgRequest::~imgRequest()
@@ -206,7 +206,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           imgCacheEntry *aCacheEntry,
                           void *aCacheId,
                           void *aLoadId,
-                          nsIPrincipal* aLoadingPrincipal)
+                          nsIPrincipal* aLoadingPrincipal,
+                          PRInt32 aCORSMode)
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
@@ -227,6 +228,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mTimedChannel = do_QueryInterface(mChannel);
 
   mLoadingPrincipal = aLoadingPrincipal;
+  mCORSMode = aCORSMode;
 
   mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
 
