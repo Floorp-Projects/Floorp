@@ -4304,7 +4304,7 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
   PRBool defaultActionEnabled = PR_TRUE;
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   nsContentUtils::DispatchTrustedEvent(doc,
-                                       static_cast<nsIScriptGlobalObject*>(this),
+                                       GetOuterWindow(),
                                        NS_ConvertASCIItoUTF16(aEventName),
                                        PR_TRUE, PR_TRUE, &defaultActionEnabled);
 
