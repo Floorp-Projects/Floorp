@@ -131,6 +131,9 @@ JSCompartment::init()
     if (!crossCompartmentWrappers.init())
         return false;
 
+    if (!scriptFilenameTable.init())
+        return false;
+
     regExpAllocator = rt->new_<WTF::BumpPointerAllocator>();
     if (!regExpAllocator)
         return false;
