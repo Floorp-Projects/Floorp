@@ -384,7 +384,6 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 # Default command macros; can be overridden in <arch>.mk.
 #
 CCC = $(CXX)
-NFSPWD = $(CONFIG_TOOLS)/nfspwd
 PURIFY = purify $(PURIFYOPTIONS)
 QUANTIFY = quantify $(QUANTIFYOPTIONS)
 ifdef CROSS_COMPILE
@@ -678,15 +677,9 @@ ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2, $(OS_ARCH)))
 INSTALL		= $(NSINSTALL)
 else
 
-ifeq ($(OS_ARCH),Darwin)
-INSTALL_PWD     = $(PWD)
-else
-INSTALL_PWD     = `$(NFSPWD)`
-endif # Darwin
-
 # This isn't laid out as conditional directives so that NSDISTMODE can be
 # target-specific.
-INSTALL         = $(if $(filter copy, $(NSDISTMODE)), $(NSINSTALL) -t, $(if $(filter absolute_symlink, $(NSDISTMODE)), $(NSINSTALL) -L $(INSTALL_PWD), $(NSINSTALL) -R))
+INSTALL         = $(if $(filter copy, $(NSDISTMODE)), $(NSINSTALL) -t, $(if $(filter absolute_symlink, $(NSDISTMODE)), $(NSINSTALL) -L $(PWD), $(NSINSTALL) -R))
 
 endif # WINNT/OS2
 
