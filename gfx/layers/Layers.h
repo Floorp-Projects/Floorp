@@ -79,9 +79,11 @@ class ImageLayer;
 class ColorLayer;
 class ImageContainer;
 class CanvasLayer;
-class ShadowLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
+class ShadowLayer;
+class ShadowLayerForwarder;
+class ShadowLayerManager;
 class SpecificLayerAttributes;
 
 /**
@@ -114,6 +116,10 @@ public:
             mViewportScrollOffset == aOther.mViewportScrollOffset &&
             mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
             mScrollId == aOther.mScrollId);
+  }
+  PRBool operator!=(const FrameMetrics& aOther) const
+  { 
+    return !operator==(aOther);
   }
 
   PRBool IsDefault() const
@@ -282,6 +288,12 @@ public:
    */
   virtual void Destroy() { mDestroyed = PR_TRUE; mUserData.Clear(); }
   PRBool IsDestroyed() { return mDestroyed; }
+
+  virtual ShadowLayerForwarder* AsShadowForwarder()
+  { return nsnull; }
+
+  virtual ShadowLayerManager* AsShadowManager()
+  { return nsnull; }
 
   /**
    * Start a new transaction. Nested transactions are not allowed so
@@ -1071,7 +1083,10 @@ public:
   void SetFrameMetrics(const FrameMetrics& aFrameMetrics)
   {
     mFrameMetrics = aFrameMetrics;
+    Mutated();
   }
+
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs);
 
   // These getters can be used anytime.
 
