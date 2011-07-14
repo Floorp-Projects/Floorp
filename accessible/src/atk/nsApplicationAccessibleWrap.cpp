@@ -223,7 +223,10 @@ window_added (AtkObject *atk_obj,
               guint     index,
               AtkObject *child)
 {
-  guint id =  g_signal_lookup ("create", MAI_TYPE_ATK_OBJECT);
+  if (!IS_MAI_OBJECT(child))
+      return;
+
+  static guint id =  g_signal_lookup ("create", MAI_TYPE_ATK_OBJECT);
   g_signal_emit (child, id, 0);
 }
 
@@ -232,7 +235,10 @@ window_removed (AtkObject *atk_obj,
                 guint     index,
                 AtkObject *child)
 {
-  guint id =  g_signal_lookup ("destroy", MAI_TYPE_ATK_OBJECT);
+  if (!IS_MAI_OBJECT(child))
+      return;
+
+  static guint id =  g_signal_lookup ("destroy", MAI_TYPE_ATK_OBJECT);
   g_signal_emit (child, id, 0);
 }
 
