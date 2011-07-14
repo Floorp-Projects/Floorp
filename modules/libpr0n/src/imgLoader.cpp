@@ -1140,7 +1140,8 @@ PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                                                 nsLoadFlags aLoadFlags,
                                                 imgIRequest *aExistingRequest,
                                                 imgIRequest **aProxyRequest,
-                                                nsIChannelPolicy *aPolicy)
+                                                nsIChannelPolicy *aPolicy,
+                                                nsIPrincipal* aLoadingPrincipal)
 {
   // now we need to insert a new channel request object inbetween the real
   // request and the proxy that basically delays loading the image until it
@@ -1243,7 +1244,8 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 PRBool aCanMakeNewChannel,
                                 imgIRequest *aExistingRequest,
                                 imgIRequest **aProxyRequest,
-                                nsIChannelPolicy *aPolicy = nsnull)
+                                nsIChannelPolicy *aPolicy,
+                                nsIPrincipal* aLoadingPrincipal)
 {
   LOG_SCOPE(gImgLog, "imgLoader::ValidateEntry");
 
@@ -1357,7 +1359,8 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
     return ValidateRequestWithNewChannel(request, aURI, aInitialDocumentURI,
                                          aReferrerURI, aLoadGroup, aObserver,
                                          aCX, aLoadFlags, aExistingRequest,
-                                         aProxyRequest, aPolicy);
+                                         aProxyRequest, aPolicy,
+                                         aLoadingPrincipal);
   } 
 
   return !validateRequest;
@@ -1487,11 +1490,12 @@ nsresult imgLoader::EvictEntries(imgCacheQueue &aQueueToClear)
                                   nsIRequest::VALIDATE_ONCE_PER_SESSION)
 
 
-/* imgIRequest loadImage (in nsIURI aURI, in nsIURI initialDocumentURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
+/* imgIRequest loadImage (in nsIURI aURI, in nsIURI initialDocumentURI, in nsIPrincipal loadingPrincipal, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
 
 NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, 
                                    nsIURI *aInitialDocumentURI,
                                    nsIURI *aReferrerURI,
+                                   nsIPrincipal* aLoadingPrincipal,
                                    nsILoadGroup *aLoadGroup,
                                    imgIDecoderObserver *aObserver,
                                    nsISupports *aCX,
@@ -1556,7 +1560,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
                       aLoadGroup, aObserver, aCX, requestFlags, PR_TRUE,
-                      aRequest, _retval, aPolicy)) {
+                      aRequest, _retval, aPolicy, aLoadingPrincipal)) {
       request = getter_AddRefs(entry->GetRequest());
 
       // If this entry has no proxies, its request has no reference to the entry.
@@ -1613,7 +1617,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     newChannel->SetLoadGroup(loadGroup);
 
     void *cacheId = NS_GetCurrentThread();
-    request->Init(aURI, aURI, loadGroup, newChannel, entry, cacheId, aCX);
+    request->Init(aURI, aURI, loadGroup, newChannel, entry, cacheId, aCX,
+                  aLoadingPrincipal);
 
     // Pass the windowID of the loading document, if possible.
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
@@ -1742,7 +1747,8 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
       // XXX -- should this be changed? it's pretty much verbatim from the old
       // code, but seems nonsensical.
       if (ValidateEntry(entry, uri, nsnull, nsnull, nsnull, aObserver, aCX,
-                        requestFlags, PR_FALSE, nsnull, nsnull)) {
+                        requestFlags, PR_FALSE, nsnull, nsnull, nsnull,
+                        nsnull)) {
         request = getter_AddRefs(entry->GetRequest());
       } else {
         nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(channel));
@@ -1798,7 +1804,10 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // We use originalURI here to fulfil the imgIRequest contract on GetURI.
     nsCOMPtr<nsIURI> originalURI;
     channel->GetOriginalURI(getter_AddRefs(originalURI));
-    request->Init(originalURI, uri, channel, channel, entry, NS_GetCurrentThread(), aCX);
+
+    // No principal specified here, because we're not passed one.
+    request->Init(originalURI, uri, channel, channel, entry,
+                  NS_GetCurrentThread(), aCX, nsnull);
 
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
     NS_ADDREF(pl);
@@ -2092,6 +2101,8 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   LOG_MSG_WITH_PARAM(gImgLog, "imgCacheValidator::OnStartRequest creating new request", "uri", spec.get());
 #endif
 
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = mRequest->GetLoadingPrincipal();
+
   // Doom the old request's cache entry
   mRequest->RemoveFromCache();
 
@@ -2101,7 +2112,8 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // We use originalURI here to fulfil the imgIRequest contract on GetURI.
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
-  mNewRequest->Init(originalURI, uri, channel, channel, mNewEntry, NS_GetCurrentThread(), mContext);
+  mNewRequest->Init(originalURI, uri, channel, channel, mNewEntry,
+                    NS_GetCurrentThread(), mContext, loadingPrincipal);
 
   ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(mNewRequest));
 
