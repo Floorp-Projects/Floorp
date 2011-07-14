@@ -2878,7 +2878,8 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = cx->new_<JSCompartment>(rt);
     if (compartment && compartment->init()) {
-        compartment->isSystemCompartment = principals && !strcmp(principals->codebase, "[System Principal]");
+        // The trusted compartment is a system compartment.
+        compartment->isSystemCompartment = principals && rt->trustedPrincipals() == principals;
         if (principals) {
             compartment->principals = principals;
             JSPRINCIPALS_HOLD(cx, principals);
