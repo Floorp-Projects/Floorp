@@ -1598,18 +1598,10 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
  * same way as non-call bytecodes.
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_GETFCSLOT_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_CALLUPVAR_DBG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETFCSLOT_LENGTH == JSOP_CALLFCSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
-
-/*
- * Same for debuggable flat closures defined at top level in another function
- * or program fragment.
- */
-JS_STATIC_ASSERT(JSOP_DEFFUN_FC_LENGTH == JSOP_DEFFUN_DBGFC_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
@@ -4582,47 +4574,6 @@ BEGIN_CASE(JSOP_SETLOCAL)
 }
 END_SET_CASE(JSOP_SETLOCAL)
 
-BEGIN_CASE(JSOP_GETUPVAR_DBG)
-BEGIN_CASE(JSOP_CALLUPVAR_DBG)
-{
-    JSFunction *fun = regs.fp()->fun();
-    JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
-    JS_ASSERT(fun->u.i.wrapper);
-
-    /* Scope for tempPool mark and local names allocation in it. */
-    JSObject *obj, *obj2;
-    JSProperty *prop;
-    jsid id;
-    JSAtom *atom;
-    {
-        Vector<JSAtom *> names(cx);
-        if (!fun->script()->bindings.getLocalNameArray(cx, &names))
-            goto error;
-
-        uintN index = fun->script()->bindings.countArgsAndVars() + GET_UINT16(regs.pc);
-        atom = names[index];
-        id = ATOM_TO_JSID(atom);
-
-        if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
-            goto error;
-    }
-
-    if (!prop) {
-        atomNotDefined = atom;
-        goto atom_not_defined;
-    }
-
-    /* Minimize footprint with generic code instead of NATIVE_GET. */
-    Value *vp = regs.sp;
-    PUSH_NULL();
-    if (!obj->getProperty(cx, id, vp))
-        goto error;
-
-    if (op == JSOP_CALLUPVAR_DBG)
-        PUSH_UNDEFINED();
-}
-END_CASE(JSOP_GETUPVAR_DBG)
-
 BEGIN_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_CALLFCSLOT)
 {
@@ -4807,14 +4758,11 @@ BEGIN_CASE(JSOP_DEFFUN)
 END_CASE(JSOP_DEFFUN)
 
 BEGIN_CASE(JSOP_DEFFUN_FC)
-BEGIN_CASE(JSOP_DEFFUN_DBGFC)
 {
     JSFunction *fun;
     LOAD_FUNCTION(0);
 
-    JSObject *obj = (op == JSOP_DEFFUN_FC)
-                    ? js_NewFlatClosure(cx, fun, JSOP_DEFFUN_FC, JSOP_DEFFUN_FC_LENGTH)
-                    : js_NewDebuggableFlatClosure(cx, fun);
+    JSObject *obj = js_NewFlatClosure(cx, fun, JSOP_DEFFUN_FC, JSOP_DEFFUN_FC_LENGTH);
     if (!obj)
         goto error;
 
@@ -4896,20 +4844,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN_FC)
-
-BEGIN_CASE(JSOP_DEFLOCALFUN_DBGFC)
-{
-    JSFunction *fun;
-    LOAD_FUNCTION(SLOTNO_LEN);
-
-    JSObject *obj = js_NewDebuggableFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    uint32 slot = GET_SLOTNO(regs.pc);
-    regs.fp()->slots()[slot].setObject(*obj);
-}
-END_CASE(JSOP_DEFLOCALFUN_DBGFC)
 
 BEGIN_CASE(JSOP_LAMBDA)
 {
@@ -5023,19 +4957,6 @@ BEGIN_CASE(JSOP_LAMBDA_FC)
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA_FC)
-
-BEGIN_CASE(JSOP_LAMBDA_DBGFC)
-{
-    JSFunction *fun;
-    LOAD_FUNCTION(0);
-
-    JSObject *obj = js_NewDebuggableFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_LAMBDA_DBGFC)
 
 BEGIN_CASE(JSOP_CALLEE)
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());

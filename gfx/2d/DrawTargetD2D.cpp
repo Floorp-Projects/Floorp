@@ -295,6 +295,9 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     return;
   }
 
+  // XXX - This function is way too long, it should be split up soon to make
+  // it more graspable!
+
   Flush();
 
   AutoSaveRestoreClippedOut restoreClippedOut(this);
@@ -325,6 +328,9 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   RefPtr<ID3D10Texture2D> maskTexture;
   RefPtr<ID3D10ShaderResourceView> maskSRView;
   if (mPushedClips.size()) {
+    // Here we render a mask of the clipped out area for use as an input to the
+    // shadow drawing.
+
     CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_A8_UNORM,
                                mSize.width, mSize.height,
                                1, 1);
@@ -579,15 +585,23 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   rtViews = destRTView;
   mDevice->OMSetRenderTargets(1, &rtViews, NULL);
 
+  Point shadowDest = aDest + aOffset;
+
+  mPrivateData->mEffect->GetVariableByName("QuadDesc")->AsVector()->
+    SetFloatVector(ShaderConstantRectD3D10(-1.0f + ((shadowDest.x / mSize.width) * 2.0f),
+                                           1.0f - (shadowDest.y / mSize.height * 2.0f),
+                                           (Float(aSurface->GetSize().width) / mSize.width) * 2.0f,
+                                           (-Float(aSurface->GetSize().height) / mSize.height) * 2.0f));
   mPrivateData->mEffect->GetVariableByName("TexCoords")->AsVector()->
-    SetFloatVector(ShaderConstantRectD3D10(-correctedOffset.x / Float(tmpSurfSize.width), -correctedOffset.y / Float(tmpSurfSize.height),
-                                           mSize.width / Float(tmpSurfSize.width) * dsFactorX,
-                                           mSize.height / Float(tmpSurfSize.height) * dsFactorY));
+    SetFloatVector(ShaderConstantRectD3D10(0, 0, Float(srcSurfSize.width) / tmpSurfSize.width,
+                                                 Float(srcSurfSize.height) / tmpSurfSize.height));
 
   if (mPushedClips.size()) {
     mPrivateData->mEffect->GetVariableByName("mask")->AsShaderResource()->SetResource(maskSRView);
     mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
-      SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+      SetFloatVector(ShaderConstantRectD3D10(shadowDest.x / mSize.width, shadowDest.y / mSize.width,
+                                             Float(aSurface->GetSize().width) / mSize.width,
+                                             Float(aSurface->GetSize().height) / mSize.height));
     mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
       GetPassByIndex(2)->Apply(0);
   } else {
@@ -599,12 +613,20 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   mDevice->Draw(4, 0);
 
+  mPrivateData->mEffect->GetVariableByName("QuadDesc")->AsVector()->
+    SetFloatVector(ShaderConstantRectD3D10(-1.0f + ((aDest.x / mSize.width) * 2.0f),
+                                           1.0f - (aDest.y / mSize.height * 2.0f),
+                                           (Float(aSurface->GetSize().width) / mSize.width) * 2.0f,
+                                           (-Float(aSurface->GetSize().height) / mSize.height) * 2.0f));
   mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(static_cast<SourceSurfaceD2DTarget*>(aSurface)->GetSRView());
   mPrivateData->mEffect->GetVariableByName("TexCoords")->AsVector()->
-    SetFloatVector(ShaderConstantRectD3D10(-aDest.x / aSurface->GetSize().width, -aDest.y / aSurface->GetSize().height,
-                                           Float(mSize.width) / aSurface->GetSize().width,
-                                           Float(mSize.height) / aSurface->GetSize().height));
+    SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+
   if (mPushedClips.size()) {
+    mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
+      SetFloatVector(ShaderConstantRectD3D10(aDest.x / mSize.width, aDest.y / mSize.width,
+                                             Float(aSurface->GetSize().width) / mSize.width,
+                                             Float(aSurface->GetSize().height) / mSize.height));
     mPrivateData->mEffect->GetTechniqueByName("SampleMaskedTexture")->
       GetPassByIndex(0)->Apply(0);
   } else {

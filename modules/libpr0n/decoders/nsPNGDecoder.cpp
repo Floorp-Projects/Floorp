@@ -42,6 +42,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPNGDecoder.h"
+#include "ImageLogging.h"
 
 #include "nsMemory.h"
 #include "nsRect.h"

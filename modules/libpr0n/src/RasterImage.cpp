@@ -53,7 +53,6 @@
 #include "nsAutoPtr.h"
 #include "nsStringStream.h"
 #include "prmem.h"
-#include "prlog.h"
 #include "prenv.h"
 #include "nsTime.h"
 #include "ImageLogging.h"

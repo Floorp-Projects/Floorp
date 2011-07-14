@@ -2222,8 +2222,14 @@ SessionStoreService.prototype = {
       if (!aWindow._hosts)
         return;
       for (var [host, isPinned] in Iterator(aWindow._hosts)) {
-        var list = CookieSvc.getCookiesFromHost(host);
-        while (list.hasMoreElements()) {
+        let list;
+        try {
+          list = CookieSvc.getCookiesFromHost(host);
+        }
+        catch (ex) {
+          debug("getCookiesFromHost failed. Host: " + host);
+        }
+        while (list && list.hasMoreElements()) {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
           // aWindow._hosts will only have hosts with the right privacy rules,
           // so there is no need to do anything special with this call to
@@ -2952,8 +2958,11 @@ SessionStoreService.prototype = {
         // so we can just set the URL to null.
         browser.__SS_restore_data = { url: null };
         browser.__SS_restore_tab = aTab;
+        if (didStartLoad)
+          browser.stop();
         didStartLoad = true;
-        browser.loadURI(tabData.userTypedValue, null, null, true);
+        browser.loadURIWithFlags(tabData.userTypedValue,
+                                 Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
       }
     }
 
