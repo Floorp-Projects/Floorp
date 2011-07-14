@@ -90,6 +90,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitMove(LMove *move);
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
+    virtual bool visitBitOp(LBitOp *ins);
 };
 
 } // ion

@@ -183,6 +183,42 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexepcted operand kind");
         }
     }
+    void orl(Imm32 imm, const Operand &op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.orl_ir(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.orl_im(imm.value, op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void xorl(Imm32 imm, const Operand &op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.xorl_ir(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.xorl_im(imm.value, op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void andl(Imm32 imm, const Operand &op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.andl_ir(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.andl_im(imm.value, op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
     void addl(const Operand &src, const Register &dest) {
         switch (src.kind()) {
           case Operand::REG:
@@ -190,6 +226,42 @@ class AssemblerX86Shared
             break;
           case Operand::REG_DISP:
             masm.addl_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void orl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.orl_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.orl_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void xorl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.xorl_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.xorl_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void andl(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.andl_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.andl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
             JS_NOT_REACHED("unexepcted operand kind");

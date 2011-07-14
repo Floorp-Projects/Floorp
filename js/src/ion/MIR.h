@@ -767,6 +767,46 @@ class MBitAnd : public MBinaryInstruction
     }
 };
 
+class MBitOr : public MBinaryInstruction
+{
+    MBitOr(MInstruction *left, MInstruction *right)
+      : MBinaryInstruction(left, right)
+    {
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BitOr);
+    static MBitOr *New(MInstruction *left, MInstruction *right);
+
+    MIRType requiredInputType(size_t index) const {
+        return specialization();
+    }
+    HoistWin estimateHoistWin() {
+        return BIG_WIN;
+    }
+};
+
+class MBitXOr : public MBinaryInstruction
+{
+    MBitXOr(MInstruction *left, MInstruction *right)
+      : MBinaryInstruction(left, right)
+    {
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BitXOr);
+    static MBitXOr *New(MInstruction *left, MInstruction *right);
+
+    MIRType requiredInputType(size_t index) const {
+        return specialization();
+    }
+    HoistWin estimateHoistWin() {
+        return BIG_WIN;
+    }
+};
+
 class MAdd : public MBinaryInstruction
 {
     MAdd(MInstruction *left, MInstruction *right)

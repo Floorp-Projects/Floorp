@@ -53,6 +53,8 @@ namespace ion {
     _(Test)                                                                 \
     _(Phi)                                                                  \
     _(BitAnd)                                                               \
+    _(BitOr)                                                                \
+    _(BitXOr)                                                               \
     _(Add)                                                                  \
     _(Return)                                                               \
     _(Copy)                                                                 \

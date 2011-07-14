@@ -229,6 +229,10 @@ class LBitOp : public LInstructionHelper<1, 2, 0>
         setOperand(0, left);
         setOperand(1, right);
     }
+
+    JSOp bitop() {
+        return op_;
+    }
 };
 
 // Returns from the function being compiled (not used in inlined frames). The
