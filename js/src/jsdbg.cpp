@@ -1407,7 +1407,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
             GlobalObject::DebuggerVector *v = r.front()->getDebuggers();
             for (Debugger **p = v->begin(); p != v->end(); p++) {
                 JSCompartment *next = (*p)->object->compartment();
-                if (visited.find(next) == visited.end() && !visited.append(next))
+                if (Find(visited, next) == visited.end() && !visited.append(next))
                     return false;
             }
         }
