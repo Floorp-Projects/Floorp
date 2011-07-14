@@ -227,6 +227,23 @@ private:
   nsRefPtr<gfxContext> mTarget;
 
   /*
+   * We use a double-buffered "window surface" to display our content
+   * in the compositor process, if we're remote.  The textures act
+   * like the backing store for an OS window --- we render the layer
+   * tree into the back texture and send it to the compositor, then
+   * swap back/front textures.  This means, obviously, that we've lost
+   * all layer tree information after rendering.
+   *
+   * The remote front buffer is the texture currently being displayed
+   * by chrome.  We keep a reference to it to simplify resource
+   * management; if we didn't, then there can be periods during IPC
+   * transport when neither process holds a "real" ref.  That's
+   * solvable but not worth the complexity.
+   */
+  nsRefPtr<ID3D10Texture2D> mBackBuffer;
+  nsRefPtr<ID3D10Texture2D> mRemoteFrontBuffer;
+
+  /*
    * Copies the content of our backbuffer to the set transaction target.
    */
   void PaintToTarget();
