@@ -813,6 +813,10 @@ LinearScanAllocator::reifyAllocations()
         while (block->numPhis())
             block->removePhi(0);
     }
+
+    // Set the graph overall stack height
+    graph.setStackHeight(stackAssignment.stackHeight());
+
     return true;
 }
 
