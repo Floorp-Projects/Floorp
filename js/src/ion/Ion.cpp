@@ -82,7 +82,8 @@ IonContext::~IonContext()
     SetIonContext(NULL);
 }
 
-bool ion::InitializeIon()
+bool
+ion::InitializeIon()
 {
 #ifdef JS_THREADSAFE
     if (!IonTLSInitialized) {
@@ -98,28 +99,53 @@ bool ion::InitializeIon()
 }
 
 #ifdef JS_THREADSAFE
-IonContext *ion::GetIonContext()
+IonContext *
+ion::GetIonContext()
 {
     return (IonContext *)PR_GetThreadPrivate(IonTLSIndex);
 }
 
-bool ion::SetIonContext(IonContext *ctx)
+bool
+ion::SetIonContext(IonContext *ctx)
 {
     return PR_SetThreadPrivate(IonTLSIndex, ctx) == PR_SUCCESS;
 }
 #else
-IonContext *ion::GetIonContext()
+IonContext *
+ion::GetIonContext()
 {
     JS_ASSERT(GlobalIonContext);
     return GlobalIonContext;
 }
 
-bool ion::SetIonContext(IonContext *ctx)
+bool
+ion::SetIonContext(IonContext *ctx)
 {
     GlobalIonContext = ctx;
     return true;
 }
 #endif
+
+void
+IonCode::release()
+{
+    if (pool_)
+        pool_->release();
+#ifdef DEBUG
+    pool_ = NULL;
+    code_ = NULL;
+#endif
+}
+
+void
+IonScript::Destroy(JSContext *cx, JSScript *script)
+{
+    if (!script->ion)
+        return;
+
+    script->ion->method.release();
+    cx->free_(script->ion);
+}
 
 static bool
 TestCompiler(IonBuilder &builder, MIRGraph &graph)
