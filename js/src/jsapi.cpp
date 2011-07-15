@@ -1523,6 +1523,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
      */
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
+
     assertSameCompartment(cx, obj);
 
     return obj->asGlobal()->initStandardClasses(cx);
@@ -4595,8 +4596,9 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 
     /* Read in the whole file, then compile it. */
     if (fp == stdin) {
-        JS_ASSERT(len == 0);
-        len = 8;  /* start with a small buffer, expand as necessary */
+        if (len == 0)
+            len = 8;  /* start with a small buffer, expand as necessary */
+
         int c;
         bool hitEOF = false;
         while (!hitEOF) {
@@ -4623,7 +4625,9 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             return NULL;
 
         int c;
-        while ((c = fast_getc(fp)) != EOF)
+        // The |i < len| is necessary for files that lie about their length,
+        // e.g. /dev/zero and /dev/random.  See bug 669434.
+        while (i < len && (c = fast_getc(fp)) != EOF)
             buf[i++] = (jschar) (unsigned char) c;
     }
 
