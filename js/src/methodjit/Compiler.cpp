@@ -1032,17 +1032,9 @@ mjit::Compiler::generateMethod()
             frame.pushSynced();
           END_CASE(JSOP_ARGUMENTS)
 
-          BEGIN_CASE(JSOP_FORARG)
-            iterNext();
-            frame.storeArg(GET_SLOTNO(PC), true);
-            frame.pop();
-          END_CASE(JSOP_FORARG)
-
-          BEGIN_CASE(JSOP_FORLOCAL)
-            iterNext();
-            frame.storeLocal(GET_SLOTNO(PC), true);
-            frame.pop();
-          END_CASE(JSOP_FORLOCAL)
+          BEGIN_CASE(JSOP_ITERNEXT)
+            iterNext(GET_INT8(PC));
+          END_CASE(JSOP_ITERNEXT)
 
           BEGIN_CASE(JSOP_DUP)
             frame.dup();
@@ -1663,24 +1655,6 @@ mjit::Compiler::generateMethod()
             break;
           }
           END_CASE(JSOP_LOCALDEC)
-
-          BEGIN_CASE(JSOP_FORNAME)
-            jsop_forname(script->getAtom(fullAtomIndex(PC)));
-          END_CASE(JSOP_FORNAME)
-
-          BEGIN_CASE(JSOP_FORGNAME)
-            jsop_forgname(script->getAtom(fullAtomIndex(PC)));
-          END_CASE(JSOP_FORGNAME)
-
-          BEGIN_CASE(JSOP_FORPROP)
-            jsop_forprop(script->getAtom(fullAtomIndex(PC)));
-          END_CASE(JSOP_FORPROP)
-
-          BEGIN_CASE(JSOP_FORELEM)
-            // This opcode is for the decompiler; it is succeeded by an
-            // ENUMELEM, which performs the actual array store.
-            iterNext();
-          END_CASE(JSOP_FORELEM)
 
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(script->getAtom(fullAtomIndex(PC)), true);
@@ -4132,13 +4106,13 @@ mjit::Compiler::iter(uintN flags)
 }
 
 /*
- * This big nasty function emits a fast-path for native iterators, producing
- * a temporary value on the stack for FORLOCAL,ARG,GLOBAL,etc ops to use.
+ * This big nasty function implements JSOP_ITERNEXT, which is used in the head
+ * of a for-in loop to put the next value on the stack.
  */
 void
-mjit::Compiler::iterNext()
+mjit::Compiler::iterNext(ptrdiff_t offset)
 {
-    FrameEntry *fe = frame.peek(-1);
+    FrameEntry *fe = frame.peek(-offset);
     RegisterID reg = frame.tempRegForData(fe);
 
     /* Is it worth trying to pin this longer? Prolly not. */
@@ -4182,6 +4156,7 @@ mjit::Compiler::iterNext()
     frame.freeReg(T2);
 
     stubcc.leave();
+    stubcc.masm.move(Imm32(offset), Registers::ArgReg1);
     OOL_STUBCALL(stubs::IterNext);
 
     frame.pushUntypedPayload(JSVAL_TYPE_STRING, T3);
@@ -5016,65 +4991,3 @@ mjit::Compiler::jsop_callelem_slow()
     frame.pushSynced();
     frame.pushSynced();
 }
-
-void
-mjit::Compiler::jsop_forprop(JSAtom *atom)
-{
-    // Before: ITER OBJ
-    // After:  ITER OBJ ITER
-    frame.dupAt(-2);
-
-    // Before: ITER OBJ ITER 
-    // After:  ITER OBJ ITER VALUE
-    iterNext();
-
-    // Before: ITER OBJ ITER VALUE
-    // After:  ITER OBJ VALUE
-    frame.shimmy(1);
-
-    // Before: ITER OBJ VALUE
-    // After:  ITER VALUE
-    jsop_setprop(atom, false);
-
-    // Before: ITER VALUE
-    // After:  ITER
-    frame.pop();
-}
-
-void
-mjit::Compiler::jsop_forname(JSAtom *atom)
-{
-    // Before: ITER
-    // After:  ITER SCOPEOBJ
-    jsop_bindname(atom, false);
-    jsop_forprop(atom);
-}
-
-void
-mjit::Compiler::jsop_forgname(JSAtom *atom)
-{
-    // Before: ITER
-    // After:  ITER GLOBAL
-    jsop_bindgname();
-
-    // Before: ITER GLOBAL
-    // After:  ITER GLOBAL ITER
-    frame.dupAt(-2);
-
-    // Before: ITER GLOBAL ITER 
-    // After:  ITER GLOBAL ITER VALUE
-    iterNext();
-
-    // Before: ITER GLOBAL ITER VALUE
-    // After:  ITER GLOBAL VALUE
-    frame.shimmy(1);
-
-    // Before: ITER GLOBAL VALUE
-    // After:  ITER VALUE
-    jsop_setgname(atom, false);
-
-    // Before: ITER VALUE
-    // After:  ITER
-    frame.pop();
-}
-

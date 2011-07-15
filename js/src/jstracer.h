@@ -1374,7 +1374,8 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus getThis(nanojit::LIns*& this_ins);
 
     JS_REQUIRES_STACK void storeMagic(JSWhyMagic why, tjit::Address addr);
-    JS_REQUIRES_STACK AbortableRecordingStatus unboxNextValue(nanojit::LIns* &v_ins);
+    JS_REQUIRES_STACK AbortableRecordingStatus unboxNextValue(Value &iterobj_val,
+                                                              nanojit::LIns* &v_ins);
 
     JS_REQUIRES_STACK VMSideExit* enterDeepBailCall();
     JS_REQUIRES_STACK void leaveDeepBailCall();
