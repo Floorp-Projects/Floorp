@@ -67,7 +67,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -198,7 +198,7 @@ nsXPInstallManager::InitManagerWithInstallInfo(nsIXPIInstallInfo* aInstallInfo)
     nsresult rv = aInstallInfo->GetTriggerInfo(&triggers);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMWindowInternal> win;
+    nsCOMPtr<nsIDOMWindow> win;
     rv = aInstallInfo->GetOriginatingWindow(getter_AddRefs(win));
     if (NS_SUCCEEDED(rv))
     {
@@ -217,7 +217,7 @@ nsXPInstallManager::InitManagerWithInstallInfo(nsIXPIInstallInfo* aInstallInfo)
 }
 
 NS_IMETHODIMP
-nsXPInstallManager::InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
+nsXPInstallManager::InitManager(nsIDOMWindow* aParentWindow, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
 {
     if ( !aTriggers || aTriggers->Size() == 0 )
     {
@@ -368,7 +368,7 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
 {
     *aRetval = PR_FALSE;
 
-    nsCOMPtr<nsIDOMWindowInternal> parentWindow( do_QueryInterface(aParent) );
+    nsCOMPtr<nsIDOMWindow> parentWindow = aParent;
     nsCOMPtr<nsIDialogParamBlock> params;
     nsresult rv = LoadParams( aCount, aPackageList, getter_AddRefs(params) );
 
@@ -412,7 +412,7 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
 }
 
 #ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
-PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWindow, const PRUnichar **aPackage)
+PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const PRUnichar **aPackage)
 {
     // get the dialog strings
     nsXPIDLString applyNowText;
@@ -524,7 +524,7 @@ nsXPInstallManager::OpenProgressDialog(const PRUnichar **aPackageList, PRUint32 
     if (NS_SUCCEEDED(rv) && !type.IsEmpty()) {
         nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
 
-        nsCOMPtr<nsIDOMWindowInternal> recentWindow;
+        nsCOMPtr<nsIDOMWindow> recentWindow;
         wm->GetMostRecentWindow(type.get(), getter_AddRefs(recentWindow));
         if (recentWindow) {
             nsCOMPtr<nsIObserverService> os =

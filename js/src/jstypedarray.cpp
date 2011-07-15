@@ -778,8 +778,7 @@ class TypedArrayTemplate
         } else if (vp->isPrimitive()) {
             JS_ASSERT(vp->isString() || vp->isUndefined() || vp->isBoolean());
             if (vp->isString()) {
-                // note that ValueToNumber will always succeed with a string arg
-                JS_ALWAYS_TRUE(ValueToNumber(cx, *vp, &d));
+                JS_ALWAYS_TRUE(ToNumber(cx, *vp, &d));
             } else if (vp->isUndefined()) {
                 d = js_NaN;
             } else {
@@ -1299,7 +1298,7 @@ class TypedArrayTemplate
 
         if (v.isPrimitive() && !v.isMagic()) {
             jsdouble dval;
-            ValueToNumber(cx, v, &dval);
+            JS_ALWAYS_TRUE(ToNumber(cx, v, &dval));
             return NativeType(dval);
         }
 
