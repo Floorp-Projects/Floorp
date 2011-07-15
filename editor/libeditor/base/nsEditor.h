@@ -372,7 +372,7 @@ protected:
   // install the event listeners for the editor 
   virtual nsresult InstallEventListeners();
 
-  virtual nsresult CreateEventListeners();
+  virtual void CreateEventListeners();
 
   // unregister and release our event listeners
   virtual void RemoveEventListeners();
