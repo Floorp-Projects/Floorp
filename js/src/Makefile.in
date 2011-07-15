@@ -361,6 +361,7 @@ CPPSRCS += 	MethodJIT.cpp \
 		$(NULL)
 
 # Ion
+ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion
 VPATH +=	$(srcdir)/ion/shared
 
@@ -382,7 +383,7 @@ CPPSRCS +=	MIR.cpp \
 		MoveGroup.cpp \
 		CodeGenerator-shared.cpp \
 		$(NULL)
-
+endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 CPPSRCS +=	CodeGenerator-x86-shared.cpp
 ifeq (x86_64, $(TARGET_CPU))
@@ -411,11 +412,13 @@ ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
 endif
+ifdef ENABLE_ION
 ifeq (arm, $(TARGET_CPU))
 #CPPSRCS		+= only_on_arm.cpp
 VPATH +=	$(srcdir)/ion/arm
 CPPSRCS +=	Lowering-arm.cpp
 endif
+endif #ENABLE_ION
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
 ASFILES +=	TrampolineSparc.s
 endif
