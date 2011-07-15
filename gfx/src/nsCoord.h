@@ -98,15 +98,6 @@ inline nscoord NSToCoordRound(float aValue)
 #endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
 }
 
-inline nscoord NSToCoordRound(double aValue)
-{
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
-  return NS_lroundup30((float)aValue);
-#else
-  return nscoord(NS_floor(aValue + 0.5f));
-#endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
-}
-
 inline nscoord NSToCoordRoundWithClamp(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
@@ -363,11 +354,6 @@ inline nscoord NSToCoordFloor(float aValue)
   return nscoord(NS_floorf(aValue));
 }
 
-inline nscoord NSToCoordFloor(double aValue)
-{
-  return nscoord(NS_floor(aValue));
-}
-
 inline nscoord NSToCoordFloorClamped(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
@@ -391,33 +377,10 @@ inline nscoord NSToCoordCeil(float aValue)
   return nscoord(NS_ceilf(aValue));
 }
 
-inline nscoord NSToCoordCeil(double aValue)
-{
-  return nscoord(NS_ceil(aValue));
-}
-
 inline nscoord NSToCoordCeilClamped(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
-  NS_WARN_IF_FALSE(aValue <= nscoord_MAX,
-                   "Overflowed nscoord_MAX in conversion to nscoord");
-  if (aValue >= nscoord_MAX) {
-    return nscoord_MAX;
-  }
-  NS_WARN_IF_FALSE(aValue >= nscoord_MIN,
-                   "Overflowed nscoord_MIN in conversion to nscoord");
-  if (aValue <= nscoord_MIN) {
-    return nscoord_MIN;
-  }
-#endif
-  return NSToCoordCeil(aValue);
-}
-
-inline nscoord NSToCoordCeilClamped(double aValue)
-{
-#ifndef NS_COORD_IS_FLOAT
-  // Bounds-check before converting out of double, to avoid overflow
   NS_WARN_IF_FALSE(aValue <= nscoord_MAX,
                    "Overflowed nscoord_MAX in conversion to nscoord");
   if (aValue >= nscoord_MAX) {
