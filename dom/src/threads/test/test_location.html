@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Location
+-->
+<head>
+  <title>Test for DOM Worker Location</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+  var thisFilename = "test_location.html";
+  var workerFilename = "location_worker.js";
+
+  var href = window.location.href
+  var baseHref = href.substr(0, href.lastIndexOf("/") + 1);
+
+  var path = window.location.pathname;
+  var basePath = path.substr(0, path.lastIndexOf("/") + 1);
+
+  var strings = {
+    "href": baseHref + workerFilename,
+    "protocol": window.location.protocol,
+    "host": window.location.host,
+    "hostname": window.location.hostname,
+    "port": window.location.port,
+    "pathname": basePath + workerFilename,
+    "search": "",
+    "hash": ""
+  };
+
+  is(thisFilename, href.substr(href.lastIndexOf("/") + 1));
+
+  var worker = new Worker(workerFilename);
+
+  worker.onmessage = function(event) {
+    if (event.data.string == "testfinished") {
+      is(event.data.value, strings["href"]);
+      SimpleTest.finish();
+      return;
+    }
+    ok(event.data.string in strings);
+    is(event.data.value, strings[event.data.string]);
+  };
+
+  worker.onerror = function(event) {
+    ok(false, "Worker had an error: " + event.data);
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

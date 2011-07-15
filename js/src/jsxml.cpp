@@ -508,8 +508,7 @@ NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
      * AttributeName is an internal anonymous class which instances are not
      * exposed to scripts.
      */
-    JSObject *parent = GetGlobalForScopeChain(cx);
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_AttributeNameClass, NULL, parent);
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_AttributeNameClass, NULL, NULL);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -7073,8 +7072,7 @@ NewXMLObject(JSContext *cx, JSXML *xml)
 {
     JSObject *obj;
 
-    JSObject *parent = GetGlobalForScopeChain(cx);
-    obj = NewNonFunction<WithProto::Class>(cx, &js_XMLClass, NULL, parent);
+    obj = NewNonFunction<WithProto::Class>(cx, &js_XMLClass, NULL, NULL);
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
@@ -7618,8 +7616,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
                 return JS_FALSE;
         }
 
-        JSObject *parent = GetGlobalForScopeChain(cx);
-        filterobj = NewNonFunction<WithProto::Given>(cx, &js_XMLFilterClass, NULL, parent);
+        filterobj = NewNonFunction<WithProto::Given>(cx, &js_XMLFilterClass, NULL, NULL);
         if (!filterobj)
             return JS_FALSE;
 
