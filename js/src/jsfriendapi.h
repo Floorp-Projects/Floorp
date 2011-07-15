@@ -57,7 +57,7 @@ JS_UnwrapObject(JSObject *obj);
 extern JS_FRIEND_API(JSObject *)
 JS_GetFrameScopeChainRaw(JSStackFrame *fp);
 
-extern JS_FRIEND_API(void)
+extern JS_FRIEND_API(JSBool)
 JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
 extern JS_FRIEND_API(JSObject *)

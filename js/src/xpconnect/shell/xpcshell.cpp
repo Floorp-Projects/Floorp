@@ -1252,9 +1252,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 if (!JS_DeepFreezeObject(cx, obj))
                     return JS_FALSE;
                 gobj = JS_NewGlobalObject(cx, &global_class);
-                if (!gobj)
+                if (!gobj || !JS_SplicePrototype(cx, gobj, obj))
                     return JS_FALSE;
-                JS_SplicePrototype(cx, gobj, obj);
                 JS_SetParent(cx, gobj, NULL);
                 JS_SetGlobalObject(cx, gobj);
                 obj = gobj;

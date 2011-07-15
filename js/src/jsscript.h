@@ -494,7 +494,6 @@ struct JSScript {
     bool            isUncachedEval:1; /* script came from EvaluateScript */
     bool            calledWithNew:1;  /* script has been called using 'new' */
     bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
-    bool            ranInference:1;   /* script has been analyzed by type inference */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
@@ -552,7 +551,7 @@ struct JSScript {
      * Associates this script with a specific function, constructing a new type
      * object for the function.
      */
-    bool typeSetFunction(JSContext *cx, JSFunction *fun);
+    bool typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton = false);
 
     /* Global object for this script, if compileAndGo. */
     js::GlobalObject *global_;
@@ -582,6 +581,7 @@ struct JSScript {
   public:
 
     bool hasAnalysis() { return analysis_ != NULL; }
+    void clearAnalysis() { analysis_ = NULL; }
 
     js::analyze::ScriptAnalysis *analysis(JSContext *cx) {
         if (!analysis_)
@@ -596,7 +596,6 @@ struct JSScript {
     js::types::TypeScript types;
 
     inline bool isAboutToBeFinalized(JSContext *cx);
-    void sweepAnalysis(JSContext *cx);
 
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to

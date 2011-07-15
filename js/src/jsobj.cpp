@@ -2543,7 +2543,7 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
     vp->setObject(*obj); /* Root and prepare for eventual return. */
 
     /* Don't track types or array-ness for objects created here. */
-    MarkTypeObjectUnknownProperties(cx, obj->getType());
+    MarkTypeObjectUnknownProperties(cx, obj->type());
 
     /* 15.2.3.5 step 4. */
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2946,41 +2946,15 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
 
     if (obj && newType) {
         /*
-         * Make an object with a new, unique type to use as the 'this' value
-         * for the call. This object will likely be assigned to the prototype
-         * property of a function, and we want to distinguish it from other
-         * objects sharing the same prototype. See UseNewType in jsinfer.cpp.
+         * Reshape the object and give it a (lazily instantiated) singleton
+         * type before passing it as the 'this' value for the call.
          */
-        JS_ASSERT(cx->typeInferenceEnabled());
-        JSScript *calleeScript = callee->getFunctionPrivate()->script();
-
-#ifdef DEBUG
-        static unsigned count = 0;
-        char *name = (char *) alloca(30);
-        JS_snprintf(name, 30, "SpecializedThis:%u", ++count);
-#else
-        char *name = NULL;
-#endif
-
-        types::AutoEnterTypeInference enter(cx);
-        types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "",
-                                                                       JSProto_Object,
-                                                                       obj->getProto());
-
-        /*
-         * Reanalyze the callee script to recover any properties and the base
-         * type definitely has, and generate associated constraints for
-         * invalidating those definite properties on the new type.
-         */
-        types::CheckNewScriptProperties(cx, type, calleeScript);
-
-        obj = CreateThisForFunctionWithType(cx, type, obj->getParent());
-        if (!obj)
+        obj->clear(cx);
+        if (!obj->setSingletonType(cx))
             return NULL;
-        type->singleton = obj;
-        if (type->newScript)
-            obj->setMap((Shape *) type->newScript->shape);
-        calleeScript->types.setThis(cx, (types::jstype) type);
+
+        JSScript *calleeScript = callee->getFunctionPrivate()->script();
+        calleeScript->types.setThis(cx, types::Type::ObjectType(obj));
     }
 
     return obj;
@@ -3534,10 +3508,6 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
                                                   gc::FinalizeKind(finalizeKind()));
     if (!clone)
         return NULL;
-    if (getProto() == proto) {
-        if (!clone->setTypeAndUniqueShape(cx, getType()))
-            return NULL;
-    }
     if (isNative()) {
         if (clone->isFunction() && (compartment() != clone->compartment())) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -3924,10 +3894,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* The default 'new' object for Object.prototype has unknown properties. */
-    TypeObject *newType = proto->getNewType(cx);
-    if (!newType)
-        return NULL;
-    MarkTypeObjectUnknownProperties(cx, newType);
+    proto->getNewType(cx, NULL, /* markUnknown = */ true);
 
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
@@ -3966,7 +3933,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
                 return false;
             if (!obj->addProperty(cx, id, PropertyStub, StrictPropertyStub, slot, attrs, 0, 0))
                 return false;
-            AddTypePropertyId(cx, obj->getType(), id, v);
+            AddTypePropertyId(cx, obj, id, v);
 
             named = true;
             return true;
@@ -4033,36 +4000,18 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (!proto)
         return NULL;
 
-    /*
-     * Specialize the key for inference, which only wants to see function,
-     * object, array and typed array keys.
-     */
-    JSProtoKey typeKey = (clasp == &js_FunctionClass) ? JSProto_Function : JSProto_Object;
-
-    TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
-                                                                 clasp->name, "prototype",
-                                                                 typeKey, proto->getProto());
-    if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
+    if (!proto->setSingletonType(cx))
         return NULL;
-    protoType->singleton = proto;
 
     if (clasp == &js_ArrayClass && !proto->makeDenseArraySlow(cx))
         return NULL;
-
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-
-    /* Mark types with a special equality hook as having unknown properties. */
-    if (clasp->ext.equality) {
-        MarkTypeObjectUnknownProperties(cx, type);
-        MarkTypeObjectUnknownProperties(cx, proto->getType());
-    }
 
     proto->syncSpecialEquality();
 
     /* After this point, control must exit via label bad or out. */
     AutoObjectRooter tvr(cx, proto);
+
+    TypeObject *type;
 
     JSObject *ctor;
     bool named = false;
@@ -4123,12 +4072,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
                                                 0, NULL, &rval)) {
                 goto bad;
             }
-            if (rval.isObject() && &rval.toObject() != proto) {
+            if (rval.isObject() && &rval.toObject() != proto)
                 proto = &rval.toObject();
-                type = proto->getNewType(cx);
-                if (!type)
-                    goto bad;
-            }
         }
 
         /* Connect constructor and prototype by named properties. */
@@ -4138,8 +4083,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
         }
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
-        if (ctor->getClass() == clasp)
-            ctor->getType()->splicePrototype(cx, proto);
+        if (ctor->getClass() == clasp && !ctor->splicePrototype(cx, proto))
+            goto bad;
     }
 
     /* Add properties and methods to the prototype and the constructor. */
@@ -4326,17 +4271,17 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
      * type to give these objects a larger number of fixed slots when future
      * objects are constructed.
      */
-    if (type->newScript) {
-        gc::FinalizeKind kind = gc::FinalizeKind(type->newScript->finalizeKind);
+    if (!hasLazyType() && type()->newScript) {
+        gc::FinalizeKind kind = gc::FinalizeKind(type()->newScript->finalizeKind);
         unsigned newScriptSlots = gc::GetGCKindSlots(kind);
         if (newScriptSlots == numFixedSlots() && gc::CanBumpFinalizeKind(kind)) {
             kind = gc::BumpFinalizeKind(kind);
-            JSObject *obj = NewReshapedObject(cx, type, getParent(), kind, type->newScript->shape);
+            JSObject *obj = NewReshapedObject(cx, type(), getParent(), kind, type()->newScript->shape);
             if (!obj)
                 return false;
 
-            type->newScript->finalizeKind = kind;
-            type->newScript->shape = obj->lastProperty();
+            type()->newScript->finalizeKind = kind;
+            type()->newScript->shape = obj->lastProperty();
         }
     }
 
@@ -4527,20 +4472,6 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
         oldproto = oldproto->getProto();
     }
 
-    TypeObject *type = proto ? proto->getNewType(cx) : GetTypeEmpty(cx);
-    if (!type)
-        return false;
-
-    /*
-     * Setting __proto__ on an object that has escaped and may be referenced by
-     * other heap objects can only be done if the properties of both objects are unknown.
-     * Type sets containing this object will contain the original type but not the
-     * new type of the object, which is OK since we treat objects in type sets with
-     * unknown properties as interchangeable.
-     */
-    MarkTypeObjectUnknownProperties(cx, obj->getType());
-    MarkTypeObjectUnknownProperties(cx, type);
-
     if (checkForCycles) {
         for (JSObject *obj2 = proto; obj2; obj2 = obj2->getProto()) {
             if (obj2 == obj) {
@@ -4550,6 +4481,34 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
             }
         }
     }
+
+    if (obj->hasSingletonType()) {
+        /*
+         * Just splice the prototype, but mark the properties as unknown for
+         * consistent behavior.
+         */
+        if (!obj->splicePrototype(cx, proto))
+            return false;
+        MarkTypeObjectUnknownProperties(cx, obj->type());
+        return true;
+    }
+
+    TypeObject *type = proto
+        ? proto->getNewType(cx, NULL, /* markUnknown = */ true)
+        : GetTypeEmpty(cx);
+    if (!type)
+        return false;
+
+    /*
+     * Setting __proto__ on an object that has escaped and may be referenced by
+     * other heap objects can only be done if the properties of both objects
+     * are unknown. Type sets containing this object will contain the original
+     * type but not the new type of the object, so we need to go and scan the
+     * entire compartment for type sets which have these objects and mark them
+     * as containing generic objects.
+     */
+    MarkTypeObjectUnknownProperties(cx, obj->type(), true);
+    MarkTypeObjectUnknownProperties(cx, type, true);
 
     obj->setType(type);
     return true;
@@ -4704,7 +4663,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
         return NULL;
 
     obj->syncSpecialEquality();
-    MarkTypeObjectUnknownProperties(cx, obj->getType());
+    MarkTypeObjectUnknownProperties(cx, obj->type());
 
     Value rval;
     if (!InvokeConstructorWithGivenThis(cx, obj, cval, argc, argv, &rval))
@@ -5026,8 +4985,8 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
         JSProperty *prop;
 
         /* Type information for getter/setter properties is unknown. */
-        AddTypePropertyId(cx, obj->getType(), id, TYPE_UNKNOWN);
-        MarkTypePropertyConfigured(cx, obj->getType(), id);
+        AddTypePropertyId(cx, obj, id, types::Type::UnknownType());
+        MarkTypePropertyConfigured(cx, obj, id);
 
         /*
          * If we are defining a getter whose setter was already defined, or
@@ -5086,9 +5045,9 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
          * Type information for normal native properties should reflect the
          * initial value of the property.
          */
-        AddTypePropertyId(cx, obj->getType(), id, value);
+        AddTypePropertyId(cx, obj, id, value);
         if (attrs & JSPROP_READONLY)
-            MarkTypePropertyConfigured(cx, obj->getType(), id);
+            MarkTypePropertyConfigured(cx, obj, id);
     }
 
     /* Get obj's own scope if it has one, or create a new one for obj. */
@@ -5595,7 +5554,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     }
 
     /* Record values produced by shapes without a default getter. */
-    AddTypePropertyId(cx, obj->getType(), shape->propid, *vp);
+    AddTypePropertyId(cx, obj, shape->propid, *vp);
 
     return true;
 }
@@ -5612,7 +5571,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
-    AddTypePropertyId(cx, obj->getType(), shape->propid, *vp);
+    AddTypePropertyId(cx, obj, shape->propid, *vp);
 
     uint32 slot;
     int32 sample;
@@ -5703,7 +5662,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
 
         /* Record non-undefined values produced by the class getter hook. */
         if (!vp->isUndefined())
-            AddTypePropertyId(cx, obj->getType(), id, *vp);
+            AddTypePropertyId(cx, obj, id, *vp);
 
         /*
          * Give a strict warning if foo.bar is evaluated by a script for an

@@ -1017,9 +1017,9 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 {
     JS_ASSERT(isDenseArray());
 
-    MarkTypeObjectFlags(cx, getType(),
-                            OBJECT_FLAG_NON_PACKED_ARRAY |
-                            OBJECT_FLAG_NON_DENSE_ARRAY);
+    MarkTypeObjectFlags(cx, this,
+                        OBJECT_FLAG_NON_PACKED_ARRAY |
+                        OBJECT_FLAG_NON_DENSE_ARRAY);
     markDenseArrayNotPacked(cx);
 
     /*
@@ -1031,7 +1031,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     /* Create a native scope. */
     js::gc::FinalizeKind kind = js::gc::FinalizeKind(arenaHeader()->getThingKind());
-    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, getType(), kind))
+    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, getType(cx), kind))
         return false;
 
     backfillDenseArrayHoles(cx);
@@ -1445,7 +1445,7 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
         for (unsigned i = 0; i < count; i++) {
             if (vector[i].isMagic(JS_ARRAY_HOLE))
                 continue;
-            jstype valtype = GetValueType(cx, vector[i]);
+            Type valtype = GetValueType(cx, vector[i]);
             types->addType(cx, valtype);
         }
     }
@@ -1460,7 +1460,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     if (count == 0)
         return JS_TRUE;
 
-    if (updateTypes && !InitArrayTypes(cx, obj->getType(), vector, count))
+    if (updateTypes && !InitArrayTypes(cx, obj->getType(cx), vector, count))
         return JS_FALSE;
 
     /*
@@ -1531,7 +1531,7 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
     if (!vector || !length)
         return true;
 
-    if (!InitArrayTypes(cx, obj->getType(), vector, length))
+    if (!InitArrayTypes(cx, obj->getType(cx), vector, length))
         return false;
 
     /* Avoid ensureDenseArrayElements to skip sparse array checks there. */
@@ -2422,8 +2422,8 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
      * array, a generic array type otherwise.
      */
     TypeObject *type;
-    if (obj->isArray()) {
-        type = obj->getType();
+    if (obj->isArray() && !obj->hasSingletonType()) {
+        type = obj->type();
     } else {
         type = GetTypeNewObject(cx, JSProto_Array);
         if (!type)
@@ -2603,9 +2603,8 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj = NewDenseCopiedArray(cx, initlen, vector);
         if (!nobj)
             return JS_FALSE;
-        if (nobj->getProto() == aobj->getProto())
-            nobj->setType(aobj->getType());
-        nobj->setType(aobj->getType());
+        if (nobj->getProto() == aobj->getProto() && !aobj->hasSingletonType())
+            nobj->setType(aobj->type());
         nobj->setArrayLength(cx, length);
         if (!aobj->isPackedDenseArray())
             nobj->markDenseArrayNotPacked(cx);
@@ -2710,8 +2709,8 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
 
     /* Get the type object for the returned array, as for array_splice. */
     TypeObject *type;
-    if (obj->isArray()) {
-        type = obj->getType();
+    if (obj->isArray() && !obj->hasSingletonType()) {
+        type = obj->type();
     } else {
         type = GetTypeNewObject(cx, JSProto_Array);
         if (!type)
@@ -3197,20 +3196,10 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
-    /*
-     * Add the length property for all arrays with this prototype. Arrays whose
-     * length overflows to a uint32 will be caught by setArrayLength.
-     */
-    jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    AddTypePropertyId(cx, proto->getType(), lengthId, TYPE_INT32);
-
     proto->setArrayLength(cx, 0);
 
     /* The default 'new' object for Array.prototype has unknown properties. */
-    TypeObject *newType = proto->getNewType(cx);
-    if (!newType)
-        return NULL;
-    MarkTypeObjectUnknownProperties(cx, newType);
+    proto->getNewType(cx, NULL, /* markUnknown = */ true);
 
     return proto;
 }

@@ -668,7 +668,12 @@ ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal);
 
 // Expand either the topmost stack frame or all stack frames inlined by the JIT.
 void
-ExpandInlineFrames(JSContext *cx, bool all);
+ExpandInlineFrames(JSCompartment *compartment, bool all);
+
+// Return all VMFrames in a compartment to the interpreter. This must be
+// followed by destroying all JIT code in the compartment.
+void
+ClearAllFrames(JSCompartment *compartment);
 
 // Information about a frame inlined during compilation.
 struct InlineFrame

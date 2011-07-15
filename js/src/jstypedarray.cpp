@@ -1758,11 +1758,12 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
-    jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);           \
-    AddTypePropertyId(cx, proto->getType(), lengthId, types::TYPE_INT32);      \
-    AddTypePropertyId(cx, proto->getType(), JSID_VOID, types::TYPE_INT32);     \
-    if (_typedArray::ArrayElementTypeMayBeDouble())                            \
-        AddTypePropertyId(cx, proto->getType(), JSID_VOID, types::TYPE_DOUBLE); \
+    AddTypePropertyId(cx, proto, JSID_VOID,                                    \
+                      types::Type::Int32Type());                               \
+    if (_typedArray::ArrayElementTypeMayBeDouble()) {                          \
+        AddTypePropertyId(cx, proto, JSID_VOID,                                \
+                          types::Type::DoubleType());                          \
+    }                                                                          \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \

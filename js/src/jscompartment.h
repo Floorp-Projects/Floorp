@@ -392,8 +392,6 @@ struct JS_FRIEND_API(JSCompartment) {
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
 
-    bool condenseTypes(JSContext *cx);
-
     /* Data for tracking analysis/inference memory usage. */
     struct TypeInferenceMemoryStats
     {

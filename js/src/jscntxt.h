@@ -2301,7 +2301,7 @@ CanLeaveTrace(JSContext *cx);
 
 #ifdef JS_METHODJIT
 namespace mjit {
-    void ExpandInlineFrames(JSContext *cx, bool all);
+    void ExpandInlineFrames(JSCompartment *compartment, bool all);
 }
 #endif
 
@@ -2323,7 +2323,7 @@ js_GetTopStackFrame(JSContext *cx, js::FrameExpandKind expand)
 
 #ifdef JS_METHODJIT
     if (expand != js::FRAME_EXPAND_NONE)
-        js::mjit::ExpandInlineFrames(cx, expand == js::FRAME_EXPAND_ALL);
+        js::mjit::ExpandInlineFrames(cx->compartment, expand == js::FRAME_EXPAND_ALL);
 #endif
 
     return cx->maybefp();

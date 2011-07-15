@@ -419,7 +419,9 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         break;
 
       case ACCSET_OBJ_TYPE:
-        ok = OK_OBJ_FIELD(LIR_ldp, type) ||
+        ok = ((op == LIR_ldp) &&
+              disp == (int)JSObject::offsetOfType() &&
+              couldBeObjectOrString(base)) ||
             (op == LIR_ldp && disp == offsetof(types::TypeObject, proto));
         break;
 

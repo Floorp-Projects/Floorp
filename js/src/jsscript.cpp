@@ -1363,14 +1363,14 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 #endif
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
-        if (!script->typeSetFunction(cx, fun))
-            goto bad;
 
         /* Watch for scripts whose functions will not be cloned. These are singletons. */
-        if (cx->typeInferenceEnabled() && cg->parent && cg->parent->compiling() &&
-            cg->parent->asCodeGenerator()->checkSingletonContext()) {
-            fun->getType()->singleton = fun;
-        }
+        bool singleton =
+            cx->typeInferenceEnabled() && cg->parent && cg->parent->compiling() &&
+            cg->parent->asCodeGenerator()->checkSingletonContext();
+
+        if (!script->typeSetFunction(cx, fun, singleton))
+            goto bad;
 
         fun->u.i.script = script;
     }
@@ -1485,7 +1485,7 @@ DestroyScript(JSContext *cx, JSScript *script)
 
     JS_ASSERT(!script->hasAnalysis());
 
-    script->types.destroy(cx);
+    script->types.destroy();
 
 #ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, script, true);

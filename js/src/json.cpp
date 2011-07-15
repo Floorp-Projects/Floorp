@@ -911,13 +911,7 @@ JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj)
 {
     JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj);
-    if (!JSON)
-        return NULL;
-
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, js_JSON_str, "",
-                                                            JSProto_Object,
-                                                            JSON->getProto());
-    if (!type || !JSON->setTypeAndUniqueShape(cx, type))
+    if (!JSON || !JSON->setSingletonType(cx))
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),

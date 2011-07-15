@@ -1489,7 +1489,13 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
-        if (!cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
+        /*
+         * :XXX: Ignore calls to this native when inference is enabled,
+         * with METHODJIT_ALWAYS recompilation can happen and discard the
+         * script's jitcode.
+         */
+        if (!cx->typeInferenceEnabled() &&
+            !cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return JS_FALSE;
         }
@@ -3316,7 +3322,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **obj
      * prototype chain, breaking assumptions type inference makes about the
      * possible properties on an object.
      */
-    types::AddTypePropertyId(cx, obj->getType(), id, types::TYPE_UNKNOWN);
+    types::AddTypePropertyId(cx, obj, id, types::Type::UnknownType());
 
     ComplexObject *cpx;
 

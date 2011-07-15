@@ -398,7 +398,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
          * to capture the type effect on the intermediate value.
          */
         if (rval.isUndefined() && (js_CodeSpec[*f.pc()].format & (JOF_INC|JOF_DEC)))
-            AddTypePropertyId(cx, obj->getType(), id, TYPE_UNDEFINED);
+            AddTypePropertyId(cx, obj, id, Type::UndefinedType());
     }
 
     f.script()->types.monitor(cx, f.pc(), rval);
@@ -453,7 +453,7 @@ stubs::GetElem(VMFrame &f)
             f.script()->types.monitor(cx, f.pc(), regs.sp[-2]);
             return;
         }
-        MarkTypeObjectFlags(cx, f.script()->fun->getType(),
+        MarkTypeObjectFlags(cx, f.script()->fun,
                             OBJECT_FLAG_CREATED_ARGUMENTS);
         JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
     }
@@ -1063,7 +1063,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
     JSAtom *atom;
     GET_ATOM_FROM_BYTECODE(f.script(), f.pc(), 0, atom);
 
-    AddTypePropertyId(cx, obj->getType(), ATOM_TO_JSID(atom), TYPE_DOUBLE);
+    AddTypePropertyId(cx, obj, ATOM_TO_JSID(atom), Type::DoubleType());
 }
 
 void JS_FASTCALL
@@ -1275,7 +1275,7 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
-    ExpandInlineFrames(f.cx, true);
+    ExpandInlineFrames(f.cx->compartment, true);
     Recompiler recompiler(f.cx, f.script());
     recompiler.recompile(/* resetUses */ false);
 }
@@ -1334,7 +1334,7 @@ stubs::This(VMFrame &f)
      */
     if (f.regs.inlined()) {
         JSFunction *fun = f.jit()->inlineFrames()[f.regs.inlined()->inlineIndex].fun;
-        MarkTypeObjectFlags(f.cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
+        MarkTypeObjectFlags(f.cx, fun, OBJECT_FLAG_UNINLINEABLE);
     }
 
     if (!ComputeThis(f.cx, f.fp()))
@@ -2832,13 +2832,13 @@ stubs::AssertArgumentTypes(VMFrame &f)
     JSFunction *fun = fp->fun();
     JSScript *script = fun->script();
 
-    jstype type = GetValueType(f.cx, fp->thisValue());
-    if (!TypeMatches(f.cx, script->types.thisTypes(), type))
+    Type type = GetValueType(f.cx, fp->thisValue());
+    if (!script->types.thisTypes()->hasType(type))
         TypeFailure(f.cx, "Missing type for this: %s", TypeString(type));
 
     for (unsigned i = 0; i < fun->nargs; i++) {
         type = GetValueType(f.cx, fp->formalArg(i));
-        if (!TypeMatches(f.cx, script->types.argTypes(i), type))
+        if (!script->types.argTypes(i)->hasType(type))
             TypeFailure(f.cx, "Missing type for arg %d: %s", i, TypeString(type));
     }
 }
@@ -2872,7 +2872,7 @@ stubs::InvariantFailure(VMFrame &f, void *rval)
     JS_ASSERT(!script->failedBoundsCheck);
     script->failedBoundsCheck = true;
 
-    ExpandInlineFrames(f.cx, true);
+    ExpandInlineFrames(f.cx->compartment, true);
 
     Recompiler recompiler(f.cx, script);
     recompiler.recompile();

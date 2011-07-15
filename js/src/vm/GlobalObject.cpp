@@ -96,10 +96,10 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
      * Don't update the prototype if the __proto__ of either object was cleared
      * after the objects started getting used.
      */
-    if (!fun_proto->getProto() && fun_proto->getType() != types::GetTypeEmpty(cx))
-        fun_proto->getType()->splicePrototype(cx, obj_proto);
-    if (!obj->getProto() && obj->getType() != types::GetTypeEmpty(cx))
-        obj->getType()->splicePrototype(cx, obj_proto);
+    if (fun_proto->shouldSplicePrototype(cx) && !fun_proto->splicePrototype(cx, obj_proto))
+        return NULL;
+    if (obj->shouldSplicePrototype(cx) && !obj->splicePrototype(cx, obj_proto))
+        return NULL;
 
     return fun_proto;
 }
@@ -112,16 +112,8 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, NULL, NULL);
-    if (!obj)
+    if (!obj || !obj->setSingletonType(cx))
         return NULL;
-
-    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "Global", "",
-                                                                   JSProto_Object, NULL);
-    if (!type || !obj->setTypeAndUniqueShape(cx, type))
-        return NULL;
-    if (clasp->ext.equality)
-        MarkTypeObjectFlags(cx, type, types::OBJECT_FLAG_SPECIAL_EQUALITY);
-    type->singleton = obj;
 
     GlobalObject *globalObj = obj->asGlobal();
     globalObj->makeVarObj();

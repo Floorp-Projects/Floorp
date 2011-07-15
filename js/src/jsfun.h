@@ -481,9 +481,8 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
      * preserve the type's property that if it is singleton there is only a
      * single object with its type in existence.
      */
-    if (ignoreSingletonClone && fun->getType()->singleton) {
+    if (ignoreSingletonClone && fun->hasSingletonType()) {
         JS_ASSERT(fun->getProto() == proto);
-        JS_ASSERT(fun->getType()->singleton == fun);
         fun->setParent(parent);
         return fun;
     }

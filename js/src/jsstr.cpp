@@ -2348,7 +2348,7 @@ SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch
                         return NULL;
                 } else {
                     /* Only string entries have been accounted for so far. */
-                    AddTypePropertyId(cx, type, JSID_VOID, UndefinedValue());
+                    AddTypeProperty(cx, type, NULL, UndefinedValue());
                     if (!splits.append(UndefinedValue()))
                         return NULL;
                 }
@@ -2445,7 +2445,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Array);
     if (!type)
         return false;
-    AddTypePropertyId(cx, type, JSID_VOID, types::TYPE_STRING);
+    AddTypeProperty(cx, type, NULL, Type::StringType());
 
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32 limit;
@@ -3187,14 +3187,7 @@ js_InitStringClass(JSContext *cx, JSObject *global)
         return NULL;
 
     JSObject *proto = NewObject<WithProto::Class>(cx, &js_StringClass, objectProto, global);
-    if (!proto)
-        return NULL;
-
-    types::TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
-                                                                        "String", "prototype",
-                                                                        JSProto_Object,
-                                                                        proto->getProto());
-    if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
+    if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
     if (!proto->asString()->init(cx, cx->runtime->emptyString))
@@ -3226,14 +3219,6 @@ js_InitStringClass(JSContext *cx, JSObject *global)
         ctor->brand(cx);
     }
 
-    jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    AddTypePropertyId(cx, proto->getType(), lengthId, TYPE_INT32);
-
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    AddTypePropertyId(cx, type, JSID_VOID, TYPE_STRING);
-
     /*
      * Make sure proto's emptyShape is available to be shared by String
      * objects. JSObject::emptyShape is a one-slot cache. If we omit this, some
@@ -3242,6 +3227,9 @@ js_InitStringClass(JSContext *cx, JSObject *global)
      *
      * All callers of JSObject::initSharingEmptyShape depend on this.
      */
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
     if (!type->getEmptyShape(cx, &js_StringClass, FINALIZE_OBJECT0))
         return NULL;
 

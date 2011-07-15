@@ -870,15 +870,8 @@ JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
     JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj);
-    if (!Math)
+    if (!Math || !Math->setSingletonType(cx))
         return NULL;
-
-    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, js_Math_str, "",
-                                                                   JSProto_Object,
-                                                                   Math->getProto());
-    if (!type || !Math->setTypeAndUniqueShape(cx, type))
-        return NULL;
-    type->singleton = Math;
 
     if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {

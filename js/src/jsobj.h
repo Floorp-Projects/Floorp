@@ -377,8 +377,10 @@ struct JSObject : js::gc::Cell {
         HAS_EQUALITY              =  0x200,
         VAROBJ                    =  0x400,
         PACKED_ARRAY              =  0x800,
-        METHOD_THRASH_COUNT_MASK  = 0x3000,
-        METHOD_THRASH_COUNT_SHIFT =     12,
+        SINGLETON_TYPE            = 0x1000,
+        LAZY_TYPE                 = 0x2000,
+        METHOD_THRASH_COUNT_MASK  = 0x30000,
+        METHOD_THRASH_COUNT_SHIFT =      16,
         METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
 
         /* The top 5 bits of an object's flags are its number of fixed slots. */
@@ -406,7 +408,6 @@ struct JSObject : js::gc::Cell {
         jsuword initializedLength;
     };
 
-    js::types::TypeObject *type;            /* object's type and prototype */
     JSObject    *parent;                    /* object's parent */
     void        *privateData;               /* private data */
     jsuword     capacity;                   /* total number of available slots */
@@ -415,6 +416,16 @@ struct JSObject : js::gc::Cell {
     js::Value   *slots;                     /* dynamically allocated slots,
                                                or pointer to fixedSlots() for
                                                dense arrays. */
+
+    /*
+     * The object's type and prototype. For objects with the LAZY_TYPE flag
+     * set, this is the prototype's default 'new' type and can only be used
+     * to get that prototype.
+     */
+    js::types::TypeObject *type_;
+
+    /* Make the type object to use for LAZY_TYPE objects. */
+    void makeLazyType(JSContext *cx);
 
   public:
 
@@ -758,19 +769,58 @@ struct JSObject : js::gc::Cell {
     /* Extend this object to have shape as its last-added property. */
     inline void extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom = false);
 
-    js::types::TypeObject* getType() const { return type; }
+    /*
+     * Whether this is the only object which has its specified type. This
+     * object will have its type constructed lazily as needed by analysis.
+     */
+    bool hasSingletonType() const { return flags & SINGLETON_TYPE; }
+
+    /*
+     * Whether the object's type has not been constructed yet. If an object
+     * might have a lazy type, use getType() below, otherwise type().
+     */
+    bool hasLazyType() const { return flags & LAZY_TYPE; }
+
+    /*
+     * Marks this object as having a singleton type, and leave the type lazy.
+     * Constructs a new, unique shape for the object.
+     */
+    inline bool setSingletonType(JSContext *cx);
+
+    inline js::types::TypeObject *getType(JSContext *cx);
+
+    js::types::TypeObject *type() const {
+        JS_ASSERT(!hasLazyType());
+        return type_;
+    }
+
+    js::types::TypeObject *gctype() const {
+        /* Direct field access for use by GC. */
+        return type_;
+    }
+
+    static inline size_t offsetOfType() { return offsetof(JSObject, type_); }
 
     inline bool clearType(JSContext *cx);
     inline void setType(js::types::TypeObject *newType);
-    inline bool setTypeAndUniqueShape(JSContext *cx, js::types::TypeObject *newType);
     inline bool setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType);
     inline void setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape);
 
-    inline js::types::TypeObject *getNewType(JSContext *cx, JSScript *script = NULL);
-    void makeNewType(JSContext *cx, JSScript *script);
+    inline js::types::TypeObject *getNewType(JSContext *cx, JSScript *script = NULL,
+                                             bool markUnknown = false);
+    void makeNewType(JSContext *cx, JSScript *script, bool markUnknown);
+
+    /* Set a new prototype for an object with a singleton type. */
+    bool splicePrototype(JSContext *cx, JSObject *proto);
+
+    /*
+     * For bootstrapping, whether to splice a prototype for Function.prototype
+     * or the global object.
+     */
+    bool shouldSplicePrototype(JSContext *cx);
 
     JSObject * getProto() const {
-        return type->proto;
+        return type_->proto;
     }
 
     JSObject *getParent() const {
@@ -1130,6 +1180,15 @@ struct JSObject : js::gc::Cell {
      * Back to generic stuff.
      */
     inline bool isCallable();
+
+    /* Do initialization required immediately after allocation. */
+    void earlyInit(jsuword capacity) {
+        this->capacity = capacity;
+
+        /* Stops obj from being scanned until initializated. */
+        type_ = NULL;
+        lastProp = NULL;
+    }
 
     /* The map field is not initialized here and should be set separately. */
     void init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,

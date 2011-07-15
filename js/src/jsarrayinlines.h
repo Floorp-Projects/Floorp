@@ -48,7 +48,7 @@ JSObject::markDenseArrayNotPacked(JSContext *cx)
     JS_ASSERT(isDenseArray());
     if (flags & PACKED_ARRAY) {
         flags ^= PACKED_ARRAY;
-        MarkTypeObjectFlags(cx, getType(), js::types::OBJECT_FLAG_NON_PACKED_ARRAY);
+        MarkTypeObjectFlags(cx, this, js::types::OBJECT_FLAG_NON_PACKED_ARRAY);
     }
 }
 

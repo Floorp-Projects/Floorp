@@ -1012,7 +1012,7 @@ class ScriptAnalysis
         return typeBarriers(pc - script->code);
     }
     void addTypeBarrier(JSContext *cx, const jsbytecode *pc,
-                        types::TypeSet *target, types::jstype type);
+                        types::TypeSet *target, types::Type type);
 
     /* Remove obsolete type barriers at the given offset. */
     void pruneTypeBarriers(uint32 offset);
@@ -1027,7 +1027,7 @@ class ScriptAnalysis
     /* Break all type barriers used in computing v. */
     void breakTypeBarriersSSA(JSContext *cx, const SSAValue &v);
 
-    inline void addPushedType(JSContext *cx, uint32 offset, uint32 which, types::jstype type);
+    inline void addPushedType(JSContext *cx, uint32 offset, uint32 which, types::Type type);
 
     types::TypeSet *getValueTypes(const SSAValue &v) {
         switch (v.kind()) {
