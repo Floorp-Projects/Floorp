@@ -55,26 +55,3 @@ function addResourceAlias() {
   resProt.setSubstitution("services-crypto", uri);
 }
 addResourceAlias();
-
-
-// Some tests hang on OSX debug builds. See bug 604565.
-let DISABLE_TESTS_BUG_604565 = false;
-#ifdef XP_MACOSX
-#ifdef DEBUG
-DISABLE_TESTS_BUG_604565 = true;
-#endif
-#endif
-
-// test_jpakeclient.js produces random failures on Windows 7
-let DISABLE_TESTS_BUG_618233 = false;
-#ifdef XP_WIN
-DISABLE_TESTS_BUG_618233 = true;
-#endif
-
-// test_service_login.js persistently fails on Windows opt builds
-let DISABLE_TESTS_BUG_664090 = false;
-#ifdef XP_WIN
-#ifndef DEBUG
-DISABLE_TESTS_BUG_664090 = true;
-#endif
-#endif

@@ -76,7 +76,6 @@ CPPSRCS = \
   nsScreenGtk.cpp \
   nsScreenManagerGtk.cpp \
   nsImageToPixbuf.cpp \
-  nsAccessibilityHelper.cpp \
   nsGtkIMModule.cpp \
   WidgetTraceEvent.cpp \
   $(NULL)

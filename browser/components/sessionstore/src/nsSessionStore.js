@@ -304,33 +304,31 @@ SessionStoreService.prototype = {
     this._sessionFileBackup.append("sessionstore.bak");
 
     // get string containing session state
-    var iniString;
     var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
              getService(Ci.nsISessionStartup);
     try {
       if (ss.doRestore() ||
           ss.sessionType == Ci.nsISessionStartup.DEFER_SESSION)
-        iniString = ss.state;
+        this._initialState = ss.state;
     }
     catch(ex) { dump(ex + "\n"); } // no state to restore, which is ok
 
-    if (iniString) {
+    if (this._initialState) {
       try {
         // If we're doing a DEFERRED session, then we want to pull pinned tabs
         // out so they can be restored.
         if (ss.sessionType == Ci.nsISessionStartup.DEFER_SESSION) {
-          let [iniState, remainingState] = this._prepDataForDeferredRestore(iniString);
+          let [iniState, remainingState] = this._prepDataForDeferredRestore(this._initialState);
           // If we have a iniState with windows, that means that we have windows
           // with app tabs to restore.
           if (iniState.windows.length)
             this._initialState = iniState;
+          else
+            this._initialState = null;
           if (remainingState.windows.length)
             this._lastSessionState = remainingState;
         }
         else {
-          // parse the session state into JS objects
-          this._initialState = JSON.parse(iniString);
-
           let lastSessionCrashed =
             this._initialState.session && this._initialState.session.state &&
             this._initialState.session.state == STATE_RUNNING_STR;
@@ -342,7 +340,7 @@ SessionStoreService.prototype = {
               // replace the crashed session with a restore-page-only session
               let pageData = {
                 url: "about:sessionrestore",
-                formdata: { "#sessionData": iniString }
+                formdata: { "#sessionData": JSON.stringify(this._initialState) }
               };
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
             }
@@ -811,7 +809,7 @@ SessionStoreService.prototype = {
           // We'll cheat a little bit and reuse _prepDataForDeferredRestore
           // even though it wasn't built exactly for this.
           let [appTabsState, normalTabsState] =
-            this._prepDataForDeferredRestore(JSON.stringify({ windows: [closedWindowState] }));
+            this._prepDataForDeferredRestore({ windows: [closedWindowState] });
 
           // These are our pinned tabs, which we should restore
           if (appTabsState.windows.length) {
@@ -2222,8 +2220,14 @@ SessionStoreService.prototype = {
       if (!aWindow._hosts)
         return;
       for (var [host, isPinned] in Iterator(aWindow._hosts)) {
-        var list = CookieSvc.getCookiesFromHost(host);
-        while (list.hasMoreElements()) {
+        let list;
+        try {
+          list = CookieSvc.getCookiesFromHost(host);
+        }
+        catch (ex) {
+          debug("getCookiesFromHost failed. Host: " + host);
+        }
+        while (list && list.hasMoreElements()) {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
           // aWindow._hosts will only have hosts with the right privacy rules,
           // so there is no need to do anything special with this call to
@@ -2952,8 +2956,11 @@ SessionStoreService.prototype = {
         // so we can just set the URL to null.
         browser.__SS_restore_data = { url: null };
         browser.__SS_restore_tab = aTab;
+        if (didStartLoad)
+          browser.stop();
         didStartLoad = true;
-        browser.loadURI(tabData.userTypedValue, null, null, true);
+        browser.loadURIWithFlags(tabData.userTypedValue,
+                                 Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
       }
     }
 
@@ -3785,12 +3792,11 @@ SessionStoreService.prototype = {
    * this._lastSessionState and will be kept in case the user explicitly wants
    * to restore the previous session (publicly exposed as restoreLastSession).
    *
-   * @param stateString
-   *        The state string, presumably from nsISessionStartup.state
+   * @param state
+   *        The state, presumably from nsISessionStartup.state
    * @returns [defaultState, state]
    */
-  _prepDataForDeferredRestore: function sss__prepDataForDeferredRestore(stateString) {
-    let state = JSON.parse(stateString);
+  _prepDataForDeferredRestore: function sss__prepDataForDeferredRestore(state) {
     let defaultState = { windows: [], selectedWindow: 1 };
 
     state.selectedWindow = state.selectedWindow || 1;
