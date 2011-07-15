@@ -914,7 +914,9 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
 
     EnsureMessageManager();
   } else {
-    mRemoteBrowser->Move(size);
+    nsRect dimensions;
+    NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), false);
+    mRemoteBrowser->UpdateDimensions(dimensions, size);
   }
 
   return true;
@@ -1600,13 +1602,51 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   return NS_OK;
 }
 
+nsresult
+nsFrameLoader::GetWindowDimensions(nsRect& aRect)
+{
+  // Need to get outer window position here
+  nsIDocument* doc = mOwnerContent->GetDocument();
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (doc->GetDisplayDocument()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIWebNavigation> parentAsWebNav =
+    do_GetInterface(doc->GetScriptGlobalObject());
+
+  if (!parentAsWebNav) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsWebNav));
+
+  NS_ASSERTION(mIsTopLevelContent, "Outer dimensions must be taken only from TopLevel content");
+
+  nsCOMPtr<nsIDocShellTreeOwner> parentOwner;
+  if (NS_FAILED(parentAsItem->GetTreeOwner(getter_AddRefs(parentOwner))) ||
+      !parentOwner) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_GetInterface(parentOwner));
+  treeOwnerAsWin->GetPosition(&aRect.x, &aRect.y);
+  treeOwnerAsWin->GetSize(&aRect.width, &aRect.height);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
 {
   if (mRemoteFrame) {
     if (mRemoteBrowser) {
       nsIntSize size = GetSubDocumentSize(aIFrame);
-      mRemoteBrowser->Move(size);
+      nsRect dimensions;
+      NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
     return NS_OK;
   }
