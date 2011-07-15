@@ -50,6 +50,10 @@ void __attribute((noinline,optimize("-fomit-frame-pointer")))
      */
     asm volatile (
 ".fpu neon\n"
+/* Allow to build on targets not supporting neon, and force the object file
+ * target to avoid bumping the final binary target */
+".arch armv7-a\n"
+".object_arch armv4t\n"
 ".macro convert_macroblock size\n"
 /* load up to 16 source pixels */
 	".if \\size == 16\n"
