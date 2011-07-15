@@ -218,6 +218,11 @@ public:
                                      EWhichChildAtPoint aWhichChild);
 
   /**
+   * Return the focused child if any.
+   */
+  virtual nsAccessible* FocusedChild();
+
+  /**
    * Return calculated group level based on accessible hierarchy.
    */
   virtual PRInt32 GetLevelInternal();
