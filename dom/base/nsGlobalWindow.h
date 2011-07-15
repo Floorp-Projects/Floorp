@@ -67,7 +67,6 @@
 #include "nsIDOMNavigatorGeolocation.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
 #include "nsIDOMLocation.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMJSWindow.h"
@@ -97,7 +96,6 @@
 #include "prclist.h"
 #include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorageList.h"
-#include "nsIDOMStorageWindow.h"
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageIndexedDB.h"
 #include "nsIDOMOfflineResourceList.h"
@@ -276,7 +274,6 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventTarget,
-                       public nsIDOMStorageWindow,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
@@ -325,9 +322,6 @@ public:
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
 
-  // nsIDOMWindowInternal
-  NS_DECL_NSIDOMWINDOWINTERNAL
-
   // nsIDOMWindowPerformance
   NS_DECL_NSIDOMWINDOWPERFORMANCE
 
@@ -370,12 +364,12 @@ public:
                                               nsISupports *aState,
                                               PRBool aForceReuseInnerWindow);
   void DispatchDOMWindowCreated();
-  virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindowInternal *aOpener,
+  virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindow* aOpener,
                                            PRBool aOriginalOpener);
   virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
 
-  virtual NS_HIDDEN_(nsIDOMWindow *) EnterModalState();
-  virtual NS_HIDDEN_(void) LeaveModalState(nsIDOMWindow *aWindow);
+  virtual NS_HIDDEN_(nsIDOMWindow*) EnterModalState();
+  virtual NS_HIDDEN_(void) LeaveModalState(nsIDOMWindow* aWindow);
 
   virtual NS_HIDDEN_(PRBool) CanClose();
   virtual NS_HIDDEN_(nsresult) ForceClose();
@@ -385,8 +379,8 @@ public:
   virtual NS_HIDDEN_(void) UpdateTouchState();
   virtual NS_HIDDEN_(PRBool) DispatchCustomEvent(const char *aEventName);
 
-  // nsIDOMStorageWindow
-  NS_DECL_NSIDOMSTORAGEWINDOW
+  // nsIDOMStorageIndexedDB
+  NS_DECL_NSIDOMSTORAGEINDEXEDDB
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -582,7 +576,7 @@ protected:
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 
   // Get the parent, returns null if this is a toplevel window
-  nsIDOMWindowInternal *GetParentInternal();
+  nsIDOMWindow* GetParentInternal();
 
   // popup tracking
   PRBool IsPopupSpamWindow()

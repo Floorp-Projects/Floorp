@@ -47,7 +47,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-nsIDOMWindowInternal*
+nsIDOMWindow*
 inLayoutUtils::GetWindowFor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIDOMDocument> doc1;
@@ -55,17 +55,12 @@ inLayoutUtils::GetWindowFor(nsIDOMNode* aNode)
   return GetWindowFor(doc1.get());
 }
 
-nsIDOMWindowInternal*
+nsIDOMWindow*
 inLayoutUtils::GetWindowFor(nsIDOMDocument* aDoc)
 {
   nsCOMPtr<nsIDOMWindow> window;
   aDoc->GetDefaultView(getter_AddRefs(window));
-  if (!window) {
-    return nsnull;
-  }
-  
-  nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(window);
-  return windowInternal;
+  return window;
 }
 
 nsIPresShell* 

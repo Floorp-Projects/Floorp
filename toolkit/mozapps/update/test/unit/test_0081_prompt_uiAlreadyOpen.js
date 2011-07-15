@@ -101,7 +101,7 @@ var WindowWatcherFactory = {
 
 var WindowMediator = {
   getMostRecentWindow: function(aWindowType) {
-    return { getInterface: XPCOMUtils.generateQI([AUS_Ci.nsIDOMWindowInternal]) };
+    return { getInterface: XPCOMUtils.generateQI([AUS_Ci.nsIDOMWindow]) };
   },
 
   QueryInterface: function(aIID) {

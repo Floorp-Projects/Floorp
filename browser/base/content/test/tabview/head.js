@@ -83,9 +83,11 @@ function newWindowWithTabView(shownCallback, loadCallback, width, height) {
                               ",width=" + winWidth);
 
   whenWindowLoaded(win, function () {
-    if (typeof loadCallback == "function")
+    if (loadCallback)
       loadCallback(win);
+  });
 
+  whenDelayedStartupFinished(win, function () {
     showTabView(function () shownCallback(win), win);
   });
 }

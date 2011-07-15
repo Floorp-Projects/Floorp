@@ -1478,14 +1478,26 @@ is_latin_shortcut_key(quint32 aKeyval)
             (Qt::Key_A <= aKeyval && aKeyval <= Qt::Key_Z));
 }
 
-PRBool
+nsEventStatus
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
     nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, aCommand, this);
 
-    DispatchEvent(&event);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
 
-    return PR_TRUE;
+    return status;
+}
+
+nsEventStatus
+nsWindow::DispatchContentCommandEvent(PRInt32 aMsg)
+{
+    nsContentCommandEvent event(PR_TRUE, aMsg, this);
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+
+    return status;
 }
 
 nsEventStatus
@@ -1621,6 +1633,46 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
             nsEventStatus_eConsumeNoDefault :
             nsEventStatus_eIgnore;
     }
+
+    // Look for specialized app-command keys
+    switch (aEvent->key()) {
+        case Qt::Key_Back:
+            return DispatchCommandEvent(nsWidgetAtoms::Back);
+        case Qt::Key_Forward:
+            return DispatchCommandEvent(nsWidgetAtoms::Forward);
+        case Qt::Key_Refresh:
+            return DispatchCommandEvent(nsWidgetAtoms::Reload);
+        case Qt::Key_Stop:
+            return DispatchCommandEvent(nsWidgetAtoms::Stop);
+        case Qt::Key_Search:
+            return DispatchCommandEvent(nsWidgetAtoms::Search);
+        case Qt::Key_Favorites:
+            return DispatchCommandEvent(nsWidgetAtoms::Bookmarks);
+        case Qt::Key_HomePage:
+            return DispatchCommandEvent(nsWidgetAtoms::Home);
+        case Qt::Key_Copy:
+        case Qt::Key_F16: // F16, F20, F18, F14 are old keysyms for Copy Cut Paste Undo
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_COPY);
+        case Qt::Key_Cut:
+        case Qt::Key_F20:
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_CUT);
+        case Qt::Key_Paste:
+        case Qt::Key_F18:
+        case Qt::Key_F9:
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_PASTE);
+        case Qt::Key_F14:
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
+    }
+
+#ifdef MOZ_X11
+    // Qt::Key_Redo and Qt::Key_Undo are not available yet.
+    if (aEvent->nativeVirtualKey() == 0xff66) {
+        return DispatchContentCommandEvent(NS_CONTENT_COMMAND_REDO);
+    }
+    if (aEvent->nativeVirtualKey() == 0xff65) {
+        return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
+    }
+#endif // MOZ_X11
 
     nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
     InitKeyEvent(event, aEvent);

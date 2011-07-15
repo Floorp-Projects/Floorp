@@ -5238,7 +5238,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_GETOBJECT:
     {
       *aRetValue = 0;
-      if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
+      // Do explicit casting to make it working on 64bit systems (see bug 649236
+      // for details).
+      DWORD objId = static_cast<DWORD>(lParam);
+      if (objId == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
         nsAccessible *rootAccessible = GetRootAccessible(); // Held by a11y cache
         if (rootAccessible) {
           IAccessible *msaaAccessible = NULL;

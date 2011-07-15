@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsIPrintSettings.idl"
 
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsIWebProgressListener;
 
 %{ C++
@@ -53,17 +53,16 @@ interface nsIWebProgressListener;
  * The nsIDocShellFile    
  */
 
-[scriptable, uuid(6317f32c-9bc7-11d3-bccc-0060b0fc76bd)]
+[scriptable, uuid(1b373597-6132-49f7-940e-6ff62fca5d35)]
 interface nsIContentViewerFile : nsISupports
 {
-  /* readonly attribute boolean printable; */
   readonly attribute boolean printable;
 
   [noscript] void print(in boolean aSilent,
                         in FILE    aDebugFile, 
                         in nsIPrintSettings aPrintSettings);
 
-  [noscript] void printWithParent(in nsIDOMWindowInternal aParentWin,
+  [noscript] void printWithParent(in nsIDOMWindow aParentWin,
                                   in nsIPrintSettings aThePrintSettings,
                                   in nsIWebProgressListener aWPListener);
 

@@ -179,7 +179,7 @@ nsHTMLImageAccessible::DoAction(PRUint8 aIndex)
 
     nsIDocument* document = mContent->GetOwnerDoc();
     nsCOMPtr<nsPIDOMWindow> piWindow = document->GetWindow();
-    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(piWindow));
+    nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(piWindow);
     NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
     nsCOMPtr<nsIDOMWindow> tmp;
     return win->Open(longDesc, EmptyString(), EmptyString(),

@@ -79,7 +79,7 @@ function WindowListener(aURL, aCallback) {
 WindowListener.prototype = {
   onOpenWindow: function(aXULWindow) {
     var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindowInternal);
+                              .getInterface(Ci.nsIDOMWindow);
     var self = this;
     domwindow.addEventListener("load", function() {
       domwindow.removeEventListener("load", arguments.callee, false);

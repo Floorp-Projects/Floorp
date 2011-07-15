@@ -420,7 +420,7 @@ static PRUint32 GetSecurityStateFromSecurityInfo(nsISupports *info)
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Notify(nsIDOMHTMLFormElement* aDOMForm,
-                              nsIDOMWindowInternal* aWindow, nsIURI* actionURL,
+                              nsIDOMWindow* aWindow, nsIURI* actionURL,
                               PRBool* cancelSubmit)
 {
   // Return NS_OK unless we want to prevent this form from submitting.
@@ -1791,12 +1791,12 @@ NS_IMETHODIMP nsUIContext::GetInterface(const nsIID & uuid, void * *result)
   nsresult rv;
 
   if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
-    nsCOMPtr<nsIDOMWindowInternal> internal = do_QueryInterface(mWindow, &rv);
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mWindow, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsIPrompt *prompt;
 
-    rv = internal->GetPrompter(&prompt);
+    rv = window->GetPrompter(&prompt);
     *result = prompt;
   } else if (uuid.Equals(NS_GET_IID(nsIDOMWindow))) {
     *result = mWindow;

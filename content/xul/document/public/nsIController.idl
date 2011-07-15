@@ -70,7 +70,7 @@ interface nsICommandController : nsISupports
 
 /*
   An API for registering commands in groups, to allow for 
-  updating via nsIDOMWindowInternal::UpdateCommands.
+  updating via nsIDOMWindow::UpdateCommands.
 */
 interface nsISimpleEnumerator;
 
