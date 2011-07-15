@@ -51,6 +51,9 @@ static const Register rcx = { JSC::X86Registers::ecx };
 static const Register rbp = { JSC::X86Registers::ebp };
 static const Register rsp = { JSC::X86Registers::esp };
 
+static const Register InvalidReg = { JSC::X86Registers::invalid_reg };
+static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
+
 static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
 
@@ -175,6 +178,24 @@ class Assembler : public AssemblerX86Shared
               JS_NOT_REACHED("unexpected operand kind");
           }
       }
+
+    void mov(const Imm32 &imm32, const Register &dest) {
+        movq(ImmWord(imm32.value), dest);
+    }
+    void mov(const Operand &src, const Register &dest) {
+        movq(src, dest);
+    }
+    void mov(const Register &src, const Operand &dest) {
+        movq(src, dest);
+    }
+    void reserveStack(int32 amount) {
+        if (amount)
+            subq(Imm32(amount), rsp);
+    }
+    void freeStack(int32 amount) {
+        if (amount)
+            addq(Imm32(amount), Operand(rsp));
+    }
 };
 
 } // namespace js

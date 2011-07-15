@@ -48,7 +48,6 @@
 #include "IonLIR.h"
 #include "IonLowering.h"
 #include "BitSet.h"
-#include "MoveGroup.h"
 
 #include "jsvector.h"
 
@@ -389,9 +388,8 @@ class LinearScanAllocator
     // Computed inforamtion
     BitSet **liveIn;
     VirtualRegisterMap vregs;
-    MoveGroup **inputMovesFor;
-    MoveGroup **outputMovesFor;
-    uint32 tempSlot;
+    LMoveGroup **inputMovesFor;
+    LMoveGroup **outputMovesFor;
 
     // Allocation state
     StackAssignment stackAssignment;

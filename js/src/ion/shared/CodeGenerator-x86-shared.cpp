@@ -38,11 +38,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if defined(JS_CPU_X86)
-# include "ion/x86/Assembler-x86.h"
-#else
-# include "ion/x64/Assembler-x64.h"
-#endif
 #include "CodeGenerator-x86-shared.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
@@ -51,11 +46,19 @@
 using namespace js;
 using namespace js::ion;
 
-CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph, AssemblerX86Shared &masm)
+CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph)
   : CodeGeneratorShared(gen, graph),
-    masm(masm)
+    frameDepth_(graph.stackHeight() * sizeof(STACK_SLOT_SIZE)),
+    framePushed_(0)
 {
-    stackDepth_ = graph.stackHeight();
+
+}
+
+bool
+CodeGeneratorX86Shared::generatePrologue()
+{
+    masm.reserveStack(frameDepth_);
+    return true;
 }
 
 bool
@@ -78,13 +81,7 @@ CodeGeneratorX86Shared::visitGoto(LGoto *jump)
     masm.jmp(header->label());
     return true;
 }
-
-bool
-CodeGeneratorX86Shared::visitMove(LMove *move)
-{
-    return true;
-}
-
+    
 bool
 CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 {

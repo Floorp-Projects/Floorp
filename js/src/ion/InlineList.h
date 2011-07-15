@@ -89,6 +89,11 @@ class InlineList
             iter = iter->next;
             return old;
         }
+        iterator operator --(int) {
+            iterator old(*this);
+            iter = iter->prev;
+            return old;
+        }
         T * operator *() {
             return static_cast<T *>(iter);
         }
@@ -231,6 +236,23 @@ class InlineList
         t->prev->next = t->next;
         t->next->prev = t->prev;
         t->next = t->prev = NULL;
+    }
+
+    bool empty() const {
+        return begin() == end();
+    }
+
+    T *pop() {
+        iterator iter = end();
+        iter--;
+        T *t = *iter;
+        remove(*iter);
+        return t;
+    }
+    T *peekBack() {
+        iterator iter = end();
+        iter--;
+        return *iter;
     }
 };
 

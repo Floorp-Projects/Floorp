@@ -57,6 +57,9 @@ static const Register ebp = { JSC::X86Registers::ebp };
 static const Register esi = { JSC::X86Registers::esi };
 static const Register edi = { JSC::X86Registers::edi };
 
+static const Register InvalidReg = { JSC::X86Registers::invalid_reg };
+static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
+
 static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 static const Register StackPointer = esp;
@@ -125,6 +128,24 @@ class Assembler : public AssemblerX86Shared
 
     void movl(const ImmGCPtr &ptr, const Register &dest) {
         masm.movl_i32r(ptr.value, dest.code());
+    }
+
+    void mov(const Imm32 &imm32, const Register &dest) {
+        movl(imm32, dest);
+    }
+    void mov(const Operand &src, const Register &dest) {
+        movl(src, dest);
+    }
+    void mov(const Register &src, const Operand &dest) {
+        movl(src, dest);
+    }
+    void reserveStack(int32 amount) {
+        if (amount)
+            subl(Imm32(amount), Operand(esp));
+    }
+    void freeStack(int32 amount) {
+        if (amount)
+            addl(Imm32(amount), Operand(esp));
     }
 };
 

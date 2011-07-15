@@ -44,7 +44,7 @@
 
 #define LIR_COMMON_OPCODE_LIST(_)   \
     _(Label)                        \
-    _(Move)                         \
+    _(MoveGroup)                    \
     _(Integer)                      \
     _(Pointer)                      \
     _(Double)                       \

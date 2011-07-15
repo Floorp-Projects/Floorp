@@ -45,33 +45,23 @@ using namespace js;
 using namespace js::ion;
 
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
-  : CodeGeneratorX86Shared(gen, graph, thisFromCtor()->masm)
+  : CodeGeneratorX86Shared(gen, graph),
+    moveHelper(thisFromCtor())
 {
 }
 
 bool
-CodeGenerator::generatePrologue()
+CodeGenerator::visitMoveGroup(LMoveGroup *group)
 {
-    if (graph.stackHeight())
-        masm.subl(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), Operand(esp));
-    return true;
-}
+    if (!moveGroupResolver.resolve(group))
+        return false;
 
-bool
-CodeGenerator::visitMove(LMove *move)
-{
-    JS_ASSERT(move->from()->isDouble() == move->to()->isDouble());
-    if (move->from()->isDouble()) {
-        if (move->from()->isFloatReg())
-            masm.movsd(ToFloatRegister(move->from()), ToOperand(move->to()));
-        else
-            masm.movsd(ToOperand(move->from()), ToFloatRegister(move->to()));
-    } else {
-        if (move->from()->isGeneralReg())
-            masm.movl(ToRegister(move->from()), ToOperand(move->to()));
-        else
-            masm.movl(ToOperand(move->from()), ToRegister(move->to()));
-    }
+    moveHelper.setup(group);
+
+    for (size_t i = 0; i < moveGroupResolver.numMoves(); i++)
+        moveHelper.emit(moveGroupResolver.getMove(i));
+
+    moveHelper.finish();
     return true;
 }
 
@@ -119,8 +109,7 @@ CodeGenerator::visitBox(LBox *box)
     JS_ASSERT(!a->isConstant());
 
     if (box->type() == MIRType_Double) {
-        LDefinition *payload = box->getDef(PAYLOAD_INDEX);
-        // break doubles
+        JS_NOT_REACHED("NYI");
     } else {
         // On x86, the input operand and the output payload have the same
         // virtual register. All that needs to be written is the type tag for
@@ -148,8 +137,7 @@ CodeGenerator::visitReturn(LReturn *ret)
     JS_ASSERT(ToRegister(type) == JSReturnReg_Type);
     JS_ASSERT(ToRegister(payload) == JSReturnReg_Data);
 #endif
-    if (graph.stackHeight())
-        masm.addl(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), Operand(esp));
+    masm.freeStack(frameDepth_);
     masm.ret();
     return true;
 }
