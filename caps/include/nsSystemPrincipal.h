@@ -59,7 +59,7 @@ public:
     NS_DECL_NSIPRINCIPAL
     NS_DECL_NSISERIALIZABLE
 
-    nsresult Init();
+    nsresult Init(JSPrincipals **jsprin);
 
     nsSystemPrincipal();
 

@@ -38,9 +38,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
 interface nsIDOMElement;
-interface nsIDOMWindowInternal;
 
 [scriptable, uuid(7B4A099F-6F6E-4565-977B-FB622ADBFF49)]
 interface inIFlasher : nsISupports 

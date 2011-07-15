@@ -1,0 +1,36 @@
+#highlighter-container {
+  pointer-events: none;
+}
+
+#highlighter-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#highlighter-veil-container {
+  overflow: hidden;
+}
+
+.highlighter-veil,
+#highlighter-veil-middlebox,
+#highlighter-veil-transparentbox {
+  -moz-transition-property: width, height;
+  -moz-transition-duration: 0.1s;
+  -moz-transition-timing-function: linear;
+}
+
+#highlighter-veil-bottombox,
+#highlighter-veil-rightbox {
+  -moz-box-flex: 1;
+}
+
+#highlighter-veil-middlebox:-moz-locale-dir(rtl) {
+  -moz-box-direction: reverse;
+}
+
+#highlighter-close-button {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 1;
+}

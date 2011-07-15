@@ -1477,8 +1477,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     // If the renderer is backed by an IOSurface, resize it as required.
     mIOSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
     if (mIOSurface) {
-      nsIOSurface *attachSurface = nsIOSurface::LookupSurface(
-                                      mIOSurface->GetIOSurfaceID());
+      nsRefPtr<nsIOSurface> attachSurface = nsIOSurface::LookupSurface(
+                                              mIOSurface->GetIOSurfaceID());
       if (attachSurface) {
         mCARenderer.AttachIOSurface(attachSurface);
       } else {

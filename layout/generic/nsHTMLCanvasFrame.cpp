@@ -106,6 +106,9 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager)
   {
+    if (CanvasElementFromContent(mFrame->GetContent())->ShouldForceInactiveLayer(aManager))
+      return LAYER_INACTIVE;
+
     // If compositing is cheap, just do that
     if (aManager->IsCompositingCheap())
       return mozilla::LAYER_ACTIVE;

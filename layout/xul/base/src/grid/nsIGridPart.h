@@ -53,7 +53,7 @@ class nsGridLayout2;
   { 0xb3, 0x6c, 0x69, 0xf7, 0xc1, 0x95, 0x67, 0x7b } }
 
 /**
- * An additional interface implemented by nsIBoxLayout implementations
+ * An additional interface implemented by nsBoxLayout implementations
  * for parts of a grid (excluding cells, which are not special).
  */
 class nsIGridPart : public nsISupports {

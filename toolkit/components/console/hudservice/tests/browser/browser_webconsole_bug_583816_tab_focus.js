@@ -10,7 +10,7 @@
 
 const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 
-let inputNode;
+let HUD, inputNode;
 
 function tabLoad(aEvent) {
   browser.removeEventListener(aEvent.type, arguments.callee, true);
@@ -18,11 +18,9 @@ function tabLoad(aEvent) {
   waitForFocus(function() {
     openConsole();
 
-    let hudId = HUDService.getHudIdByWindow(content);
-    HUD = HUDService.hudReferences[hudId];
+    HUD = HUDService.getHudByWindow(content);
 
-    let display = HUDService.getOutputNodeById(hudId);
-    inputNode = display.querySelector(".jsterm-input-node");
+    inputNode = HUD.jsterm.inputNode;
 
     inputNode.focus();
     executeSoon(function() {

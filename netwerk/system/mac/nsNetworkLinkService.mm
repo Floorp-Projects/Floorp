@@ -41,6 +41,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 #import <Cocoa/Cocoa.h>
 #import <netinet/in.h>
@@ -73,6 +74,16 @@ nsNetworkLinkService::GetLinkStatusKnown(PRBool *aIsUp)
 {
     *aIsUp = mStatusKnown;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetworkLinkService::GetLinkType(PRUint32 *aLinkType)
+{
+  NS_ENSURE_ARG_POINTER(aLinkType);
+
+  // XXX This function has not yet been implemented for this platform
+  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

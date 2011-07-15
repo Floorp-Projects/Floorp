@@ -4395,6 +4395,7 @@ struct CompartmentPrivate
           waiverWrapperMap(nsnull),
           expandoMap(nsnull)
     {
+        MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
 
     CompartmentPrivate(nsISupports *ptr, bool wantXrays, bool cycleCollectionEnabled)
@@ -4405,6 +4406,7 @@ struct CompartmentPrivate
           waiverWrapperMap(nsnull),
           expandoMap(nsnull)
     {
+        MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
 
     ~CompartmentPrivate();

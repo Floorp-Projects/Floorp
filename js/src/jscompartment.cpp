@@ -137,6 +137,9 @@ JSCompartment::init(JSContext *cx)
     if (!crossCompartmentWrappers.init())
         return false;
 
+    if (!scriptFilenameTable.init())
+        return false;
+
     regExpAllocator = rt->new_<WTF::BumpPointerAllocator>();
     if (!regExpAllocator)
         return false;
@@ -233,8 +236,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         global = cx->fp()->scopeChain().getGlobal();
     } else {
         global = cx->globalObject;
-        OBJ_TO_INNER_OBJECT(cx, global);
-        if (!global)
+        if (!NULLABLE_OBJ_TO_INNER_OBJECT(cx, global))
             return false;
     }
 

@@ -150,6 +150,7 @@ CPPSRCS		= \
 		jsgcmark.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
+		jscrashreport.cpp \
 		jshash.cpp \
 		jsinfer.cpp \
 		jsinterp.cpp \
@@ -207,6 +208,7 @@ INSTALLED_HEADERS = \
 		jsclone.h \
 		jscntxt.h \
 		jscompat.h \
+		jscrashreport.h \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
@@ -424,6 +426,7 @@ VPATH +=	$(srcdir)/assembler \
 
 CPPSRCS += \
 		Assertions.cpp \
+		OSAllocatorOS2.cpp \
 		OSAllocatorPosix.cpp \
 		OSAllocatorWin.cpp \
 		PageBlock.cpp \
@@ -453,6 +456,7 @@ CPPSRCS += 	Assertions.cpp \
         Logging.cpp \
 		MacroAssemblerARM.cpp \
 		MacroAssemblerX86Common.cpp \
+		OSAllocatorOS2.cpp \
 		OSAllocatorPosix.cpp \
 		OSAllocatorWin.cpp \
 		PageBlock.cpp \
@@ -661,10 +665,10 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 54 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 52 \
 		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
-	$(srcdir)/config/check_source_count.py UnwantedForeground:: 33 \
+	$(srcdir)/config/check_source_count.py UnwantedForeground:: 31 \
 		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
 
 ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
@@ -784,6 +788,11 @@ ifdef MOZ_VTUNE
 CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
 EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+endif
+
+ifdef MOZ_ETW
+# This will get the ETW provider resources into the library mozjs.dll
+RESFILE = ETWProvider.res
 endif
 
 # HP-UX does not require the extra linking of "-lm"
@@ -1001,6 +1010,22 @@ $(CURDIR)/jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
 
 # Force auto-header generation before compiling any source that may use them
 $(patsubst %.cc,%.$(OBJ_SUFFIX),$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX))): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
+
+ifdef MOZ_ETW
+ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
+	$(MC) -um -mof $^
+
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): ETWProvider.h
+
+ETWProvider.res: ETWProvider.rc
+	$(RC) -r -i "$(SDKDIR)Include" $^
+
+export:: ETWProvider.res
+
+install:: ETWProvider.mof ETWProvider.man
+	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
+
+endif
 
 ifdef HAVE_DTRACE
 $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d

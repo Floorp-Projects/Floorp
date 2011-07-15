@@ -49,8 +49,7 @@ let observer = {
 };
 
 function findLocationNode() {
-  hudId = HUDService.displaysIndex()[0];
-  outputNode = HUDService.hudReferences[hudId].outputNode;
+  outputNode = HUDService.getHudByWindow(content).outputNode;
 
   let locationNode = outputNode.querySelector(".webconsole-location");
   ok(locationNode, "we have the location node");

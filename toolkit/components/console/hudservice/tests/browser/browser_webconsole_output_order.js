@@ -53,11 +53,8 @@ function testOutputOrder() {
 
   openConsole();
 
-  hudId = HUDService.displaysIndex()[0];
-
-  let HUD = HUDService.hudReferences[hudId];
-  let jsterm = HUD.jsterm;
-  outputNode = jsterm.outputNode;
+  let jsterm = HUDService.getHudByWindow(content).jsterm;
+  let outputNode = jsterm.outputNode;
 
   jsterm.clearOutput();
   jsterm.execute("console.log('foo', 'bar');");

@@ -3443,15 +3443,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_GETUPVAR_DBG:
-      case JSOP_CALLUPVAR_DBG:
-        pushed[0].addType(cx, Type::UnknownType());
-        if (op == JSOP_CALLUPVAR_DBG) {
-            pushed[1].addType(cx, Type::UndefinedType());
-            pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType());
-        }
-        break;
-
       case JSOP_GETARG:
       case JSOP_CALLARG:
       case JSOP_GETLOCAL:

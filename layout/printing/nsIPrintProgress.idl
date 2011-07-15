@@ -39,17 +39,17 @@
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsIObserver;
 interface nsIPrompt;
 
-[scriptable, uuid(7E46BC35-FB7D-4b45-AB35-82FD61015380)]
+[scriptable, uuid(594fd36d-5b1b-412f-a74e-ab72099a5bb2)]
 interface nsIPrintProgress: nsIWebProgressListener {
 
   /* Open the progress dialog
      you can specify parameters through an xpcom object
   */
-  void openProgressDialog(in nsIDOMWindowInternal parent, 
+  void openProgressDialog(in nsIDOMWindow parent, 
                           in string dialogURL, 
                           in nsISupports parameters, 
                           in nsIObserver openDialogObserver,

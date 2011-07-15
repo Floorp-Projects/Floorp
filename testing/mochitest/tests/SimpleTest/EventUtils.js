@@ -220,6 +220,13 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
     var left = rect.left + aOffsetX;
     var top = rect.top + aOffsetY;
 
+    // body's bounding client rect depends its scroll position.
+    var body = aTarget.ownerDocument.body;
+    if (body == aTarget) {
+      left += aTarget.scrollLeft;
+      top += aTarget.scrollTop;
+    }
+
     if (aEvent.type) {
       utils.sendMouseEvent(aEvent.type, left, top, button, clickCount, modifiers);
     }
@@ -282,8 +289,14 @@ function synthesizeMouseScroll(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 
     var rect = aTarget.getBoundingClientRect();
 
-    var left = rect.left;
-    var top = rect.top;
+    var left = rect.left + aOffsetX;
+    var top = rect.top + aOffsetY;
+
+    // body's bounding client rect depends its scroll position.
+    if (aTarget.ownerDocument.body == aTarget) {
+      left += aTarget.scrollLeft;
+      top += aTarget.scrollTop;
+    }
 
     var type = aEvent.type || "DOMMouseScroll";
     var axis = aEvent.axis || "vertical";
@@ -294,7 +307,7 @@ function synthesizeMouseScroll(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
     if (aEvent.isMomentum) {
       scrollFlags |= kIsMomentum;
     }
-    utils.sendMouseScrollEvent(type, left + aOffsetX, top + aOffsetY, button,
+    utils.sendMouseScrollEvent(type, left, top, button,
                                scrollFlags, aEvent.delta, modifiers);
   }
 }

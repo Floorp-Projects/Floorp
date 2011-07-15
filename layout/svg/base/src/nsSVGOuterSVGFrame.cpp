@@ -49,7 +49,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -837,7 +837,7 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
   if (!mContent->GetParent()) {
     // Our content is the document element
     nsCOMPtr<nsISupports> container = PresContext()->GetContainer();
-    nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
+    nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);
     if (window) {
       nsCOMPtr<nsIDOMElement> frameElement;
       window->GetFrameElement(getter_AddRefs(frameElement));

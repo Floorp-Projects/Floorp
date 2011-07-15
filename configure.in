@@ -123,7 +123,7 @@ CAIRO_VERSION=1.10
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
 WINDRES_VERSION=2.14.90
-W32API_VERSION=3.8
+W32API_VERSION=3.14
 GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
@@ -317,6 +317,12 @@ case "$target" in
     if test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/  -lstlport_static"
+    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a  -lstlport_static"
+    elif test "$target" != "arm-android-eabi"; then
+       dnl fail if we're not building with NDKr4
+       AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
     fi
 
     CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
@@ -870,8 +876,7 @@ EOF
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
-        # Server 2003 is the highest version supported
-        MOZ_WINSDK_MAXVER=0x05020000
+        MOZ_WINSDK_MAXVER=0x06010000
     fi # !GNU_CC
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
@@ -2255,13 +2260,17 @@ ia64*-hpux*)
         MOZ_DEBUG_FLAGS="-g" # We want inlining
     ;;
     esac
-    ;;
 
+    if test -z "$MC"; then 
+        MC=mc.exe  
+    fi
+    ;;
 *-mingw*)
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
     DLL_SUFFIX=.dll
     RC=rc.exe
+    MC=mc.exe
     # certain versions of cygwin's makedepend barf on the 
     # #include <string> vs -I./dist/include/string issue so don't use it
     SYSTEM_MAKEDEPEND=
@@ -2549,6 +2558,7 @@ ia64*-hpux*)
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
     RC=rc.exe
+    MC=mc.exe
     RCFLAGS='-n'
     MOZ_USER_DIR="Mozilla"
     ZIP="$ZIP -X"
@@ -5681,6 +5691,23 @@ fi
 AC_SUBST(MOZ_IPDL_TESTS)
 
 dnl ========================================================
+dnl = Turns off code necessary for e10s compatibility
+dnl ========================================================
+dnl This is a temporary flag to be removed in bug 662601 when
+dnl it's no longer needed
+
+MOZ_E10S_COMPAT=
+
+MOZ_ARG_ENABLE_BOOL(e10s-compat,
+[  --enable-e10s-compat     Turns off code for e10s compat],
+    MOZ_E10S_COMPAT=1,
+    MOZ_E10S_COMPAT=)
+
+if test -n "$MOZ_E10S_COMPAT"; then
+    AC_DEFINE(MOZ_E10S_COMPAT)
+fi
+
+dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
@@ -7459,12 +7486,12 @@ else
     ;;
   esac
 
-  if test "$OS_ARCH" != "Darwin"; then
+  if test "$OS_ARCH" != "WINNT"; then
     dnl NB: this must be kept in sync with jemalloc.h
     AC_DEFINE(HAVE_JEMALLOC_VALLOC)
-    AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
-    AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
   fi
+  AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
+  AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
@@ -7528,6 +7555,26 @@ MOZ_ARG_ENABLE_BOOL(gctimer,
     MOZ_GCTIMER= )
 if test -n "$MOZ_GCTIMER"; then
     AC_DEFINE(MOZ_GCTIMER)
+fi
+
+dnl ========================================================
+dnl ETW - Event Tracing for Windows
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(ETW,
+[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting
+                          (needs Windows Vista+ SDK)],
+    MOZ_ETW=1,
+    MOZ_ETW= )
+if test -n "$MOZ_ETW"; then
+    AC_DEFINE(MOZ_ETW)
+fi
+
+if test -n "$MOZ_ETW"; then
+    if test -z "$MOZ_WINSDK_TARGETVER"; then
+        AC_MSG_ERROR([--enable-ETW is only valid on Windows])
+    elif test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+        AC_MSG_ERROR([--enable-ETW requires the Windows Vista SDK or newer])
+    fi
 fi
 
 dnl ========================================================
@@ -7681,7 +7728,7 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 AC_SUBST(STDCXX_COMPAT)
 
 if test -n "$STDCXX_COMPAT"; then
-   eval $($PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
+   eval $(CXX="$CXX" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
    AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
    AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
 fi
@@ -8834,6 +8881,7 @@ AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(LD)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
+AC_SUBST(MC)
 AC_SUBST(WINDRES)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
@@ -8866,6 +8914,7 @@ AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
+AC_SUBST(MOZ_ETW)
 AC_SUBST(MOZ_PROFILING)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)

@@ -42,12 +42,11 @@
 
 #ifdef JS_TRACER
 
+// nanojit.h includes windows.h, so undo the obnoxious #defines, if needed
 #include "nanojit/nanojit.h"
-#include "jsvalue.h"
+#include "jswin.h"
 
-#ifdef THIS
-#undef THIS
-#endif
+#include "jsvalue.h"
 
 enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_NEITHER };
 enum { 

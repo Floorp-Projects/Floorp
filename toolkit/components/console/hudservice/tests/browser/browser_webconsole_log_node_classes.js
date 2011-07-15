@@ -54,10 +54,8 @@ function testLogNodeClasses() {
 
   openConsole();
 
-  hudId = HUDService.displaysIndex()[0];
   let console = browser.contentWindow.wrappedJSObject.console;
-  hudBox = HUDService.getHeadsUpDisplay(hudId);
-  outputNode = hudBox.querySelector(".hud-output-node");
+  let outputNode = HUDService.getHudByWindow(content).outputNode;
 
   ok(console, "console exists");
   console.log("I am a log message");

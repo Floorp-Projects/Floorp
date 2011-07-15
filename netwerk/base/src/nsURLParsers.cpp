@@ -426,6 +426,8 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
 #if defined(XP_WIN) || defined(XP_OS2)
                 // if the authority looks like a drive number then we
                 // really want to treat it as part of the path
+                // [a-zA-Z][:|]{/\}
+                // i.e one of:   c:   c:\foo  c:/foo  c|  c|\foo  c|/foo
                 if ((specLen > 3) && (spec[3] == ':' || spec[3] == '|') &&
                     nsCRT::IsAsciiAlpha(spec[2]) &&
                     ((specLen == 4) || (spec[4] == '/') || (spec[4] == '\\'))) {
@@ -433,16 +435,17 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
                     break;  
                 } 
 #endif
-                p = (const char *) memchr(spec + 2, '/', specLen - 2);
+                // Ignore apparent authority; path is everything after it
+                for (p = spec + 2; p < spec + specLen; ++p) {
+                    if (*p == '/' || *p == '?' || *p == '#' || *p == ';')
+                        break;
+                }
             }
-            if (p) {
-                SET_RESULT(auth, 0, -1);
+            SET_RESULT(auth, 0, -1);
+            if (p && p != spec+specLen)
                 SET_RESULT(path, p - spec, specLen - (p - spec));
-            }
-            else {
-                SET_RESULT(auth, 0, -1);
+            else
                 SET_RESULT(path, 0, -1);
-            }
             return;
         }
     default:

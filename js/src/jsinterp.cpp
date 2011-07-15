@@ -633,7 +633,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
     /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
 
     CallArgs args = argsRef;
-    JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
+    JS_ASSERT(args.argc() <= StackSpace::ARGS_LENGTH_MAX);
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
@@ -772,7 +772,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
 
         /* Hoist dynamic checks from CheckStackAndEnterMethodJIT. */
         JS_CHECK_RECURSION(cx, return false);
-        stackLimit_ = stack.space().getStackLimit(cx);
+        stackLimit_ = stack.space().getStackLimit(cx, REPORT_ERROR);
         if (!stackLimit_)
             return false;
 
@@ -1119,10 +1119,8 @@ LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result
     }
 
     double l, r;
-    if (!ValueToNumber(cx, lvalue, &l) ||
-        !ValueToNumber(cx, rvalue, &r)) {
+    if (!ToNumber(cx, lvalue, &l) || !ToNumber(cx, rvalue, &r))
         return false;
-    }
     *result = JSDOUBLE_COMPARE(l, ==, r, false);
     return true;
 }
@@ -1229,7 +1227,10 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
 
             if (fun->isConstructor()) {
                 args.thisv().setMagicWithObjectOrNullPayload(NULL);
-                return CallJSNativeConstructor(cx, fun->u.n.native, args);
+            Probes::calloutBegin(cx, fun);
+            bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
+            Probes::calloutEnd(cx, fun);
+            return ok;
             }
 
             if (!fun->isInterpretedConstructor())
@@ -1273,7 +1274,9 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
     bool ok;
     if (clasp == &js_FunctionClass && (fun = callee.getFunctionPrivate())->isConstructor()) {
         args.thisv().setMagicWithObjectOrNullPayload(thisobj);
+        Probes::calloutBegin(cx, fun);
         ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
+        Probes::calloutEnd(cx, fun);
     } else if (clasp->construct) {
         args.thisv().setMagicWithObjectOrNullPayload(thisobj);
         ok = CallJSNativeConstructor(cx, clasp->construct, args);
@@ -1410,7 +1413,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 {
     if (cs->format & JOF_POST) {
         double d;
-        if (!ValueToNumber(cx, *vp, &d))
+        if (!ToNumber(cx, *vp, &d))
             return JS_FALSE;
         vp->setNumber(d);
         (cs->format & JOF_INC) ? ++d : --d;
@@ -1419,7 +1422,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
     }
 
     double d;
-    if (!ValueToNumber(cx, *vp, &d))
+    if (!ToNumber(cx, *vp, &d))
         return JS_FALSE;
     (cs->format & JOF_INC) ? ++d : --d;
     vp->setNumber(d);
@@ -1622,18 +1625,10 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
  * same way as non-call bytecodes.
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_GETFCSLOT_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_CALLUPVAR_DBG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETFCSLOT_LENGTH == JSOP_CALLFCSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
-
-/*
- * Same for debuggable flat closures defined at top level in another function
- * or program fragment.
- */
-JS_STATIC_ASSERT(JSOP_DEFFUN_FC_LENGTH == JSOP_DEFFUN_DBGFC_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
@@ -3048,10 +3043,8 @@ END_CASE(JSOP_CASEX)
                 cond = result OP 0;                                           \
             } else {                                                          \
                 double l, r;                                                  \
-                if (!ValueToNumber(cx, lval, &l) ||                           \
-                    !ValueToNumber(cx, rval, &r)) {                           \
+                if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))       \
                     goto error;                                               \
-                }                                                             \
                 cond = JSDOUBLE_COMPARE(l, OP, r, false);                     \
             }                                                                 \
         }                                                                     \
@@ -3181,7 +3174,7 @@ BEGIN_CASE(JSOP_ADD)
             regs.sp--;
         } else {
             double l, r;
-            if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
+            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
                 goto error;
             l += r;
             if (!regs.sp[-2].setNumber(l) &&
@@ -3199,10 +3192,8 @@ END_CASE(JSOP_ADD)
         Value rval = regs.sp[-1];                                             \
         Value lval = regs.sp[-2];                                             \
         double d1, d2;                                                        \
-        if (!ValueToNumber(cx, lval, &d1) ||                                  \
-            !ValueToNumber(cx, rval, &d2)) {                                  \
+        if (!ToNumber(cx, lval, &d1) || !ToNumber(cx, rval, &d2))             \
             goto error;                                                       \
-        }                                                                     \
         double d = d1 OP d2;                                                  \
         regs.sp--;                                                            \
         if (!regs.sp[-1].setNumber(d) &&                                      \
@@ -3226,10 +3217,8 @@ BEGIN_CASE(JSOP_DIV)
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
     double d1, d2;
-    if (!ValueToNumber(cx, lval, &d1) ||
-        !ValueToNumber(cx, rval, &d2)) {
+    if (!ToNumber(cx, lval, &d1) || !ToNumber(cx, rval, &d2))
         goto error;
-    }
     regs.sp--;
     if (d2 == 0) {
         const Value *vp;
@@ -3269,10 +3258,8 @@ BEGIN_CASE(JSOP_MOD)
         regs.sp[-1].setInt32(mod);
     } else {
         double d1, d2;
-        if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-            !ValueToNumber(cx, regs.sp[-1], &d2)) {
+        if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
             goto error;
-        }
         regs.sp--;
         if (d2 == 0) {
             regs.sp[-1].setDouble(js_NaN);
@@ -3318,7 +3305,7 @@ BEGIN_CASE(JSOP_NEG)
         regs.sp[-1].setInt32(i);
     } else {
         double d;
-        if (!ValueToNumber(cx, regs.sp[-1], &d))
+        if (!ToNumber(cx, regs.sp[-1], &d))
             goto error;
         d = -d;
         if (!regs.sp[-1].setNumber(d) && !ref.isDouble())
@@ -3328,7 +3315,7 @@ BEGIN_CASE(JSOP_NEG)
 END_CASE(JSOP_NEG)
 
 BEGIN_CASE(JSOP_POS)
-    if (!ValueToNumber(cx, &regs.sp[-1]))
+    if (!ToNumber(cx, &regs.sp[-1]))
         goto error;
     if (!regs.sp[-1].isInt32())
         script->types.monitorOverflow(cx, regs.pc);
@@ -4211,7 +4198,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
 
     JSScript *newScript = fun->script();
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, initial, OOMCheck()))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, initial))
         goto error;
 
     RESTORE_INTERP_VARS();
@@ -4727,47 +4714,6 @@ BEGIN_CASE(JSOP_SETLOCAL)
 }
 END_SET_CASE(JSOP_SETLOCAL)
 
-BEGIN_CASE(JSOP_GETUPVAR_DBG)
-BEGIN_CASE(JSOP_CALLUPVAR_DBG)
-{
-    JSFunction *fun = regs.fp()->fun();
-    JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
-    JS_ASSERT(fun->u.i.wrapper);
-
-    /* Scope for tempPool mark and local names allocation in it. */
-    JSObject *obj, *obj2;
-    JSProperty *prop;
-    jsid id;
-    JSAtom *atom;
-    {
-        Vector<JSAtom *> names(cx);
-        if (!fun->script()->bindings.getLocalNameArray(cx, &names))
-            goto error;
-
-        uintN index = fun->script()->bindings.countArgsAndVars() + GET_UINT16(regs.pc);
-        atom = names[index];
-        id = ATOM_TO_JSID(atom);
-
-        if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
-            goto error;
-    }
-
-    if (!prop) {
-        atomNotDefined = atom;
-        goto atom_not_defined;
-    }
-
-    /* Minimize footprint with generic code instead of NATIVE_GET. */
-    Value *vp = regs.sp;
-    PUSH_NULL();
-    if (!obj->getProperty(cx, id, vp))
-        goto error;
-
-    if (op == JSOP_CALLUPVAR_DBG)
-        PUSH_UNDEFINED();
-}
-END_CASE(JSOP_GETUPVAR_DBG)
-
 BEGIN_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_CALLFCSLOT)
 {
@@ -4953,14 +4899,11 @@ BEGIN_CASE(JSOP_DEFFUN)
 END_CASE(JSOP_DEFFUN)
 
 BEGIN_CASE(JSOP_DEFFUN_FC)
-BEGIN_CASE(JSOP_DEFFUN_DBGFC)
 {
     JSFunction *fun;
     LOAD_FUNCTION(0);
 
-    JSObject *obj = (op == JSOP_DEFFUN_FC)
-                    ? js_NewFlatClosure(cx, fun, JSOP_DEFFUN_FC, JSOP_DEFFUN_FC_LENGTH)
-                    : js_NewDebuggableFlatClosure(cx, fun);
+    JSObject *obj = js_NewFlatClosure(cx, fun, JSOP_DEFFUN_FC, JSOP_DEFFUN_FC_LENGTH);
     if (!obj)
         goto error;
 
@@ -5042,20 +4985,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN_FC)
-
-BEGIN_CASE(JSOP_DEFLOCALFUN_DBGFC)
-{
-    JSFunction *fun;
-    LOAD_FUNCTION(SLOTNO_LEN);
-
-    JSObject *obj = js_NewDebuggableFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    uint32 slot = GET_SLOTNO(regs.pc);
-    regs.fp()->slots()[slot].setObject(*obj);
-}
-END_CASE(JSOP_DEFLOCALFUN_DBGFC)
 
 BEGIN_CASE(JSOP_LAMBDA)
 {
@@ -5170,19 +5099,6 @@ BEGIN_CASE(JSOP_LAMBDA_FC)
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA_FC)
-
-BEGIN_CASE(JSOP_LAMBDA_DBGFC)
-{
-    JSFunction *fun;
-    LOAD_FUNCTION(0);
-
-    JSObject *obj = js_NewDebuggableFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_LAMBDA_DBGFC)
 
 BEGIN_CASE(JSOP_CALLEE)
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
@@ -5480,7 +5396,7 @@ BEGIN_CASE(JSOP_INITELEM)
     if (rref.isMagic(JS_ARRAY_HOLE)) {
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(jsuint(JSID_TO_INT(id)) < JS_ARGS_LENGTH_MAX);
+        JS_ASSERT(jsuint(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
         if (js_GetOpcode(cx, script, regs.pc + JSOP_INITELEM_LENGTH) == JSOP_ENDINIT &&
             !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1))) {
             goto error;
