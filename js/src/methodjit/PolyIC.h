@@ -455,7 +455,7 @@ struct PICInfo : public BasePolyIC {
     uint32 shapeGuard;
 
     // Possible types of the RHS, for monitored SETPROP PICs.
-    types::ClonedTypeSet *rhsTypes;
+    types::TypeSet *rhsTypes;
     
     inline bool isSet() const {
         return kind == SET || kind == SETMETHOD;
@@ -544,11 +544,6 @@ struct PICInfo : public BasePolyIC {
         BasePolyIC::reset();
         inlinePathPatched = false;
         shapeRegHasBaseShape = true;
-    }
-
-    ~PICInfo() {
-        if (typeMonitored)
-            UnwantedForeground::free_(rhsTypes);
     }
 };
 

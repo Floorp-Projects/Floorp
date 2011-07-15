@@ -143,12 +143,12 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 
     for (unsigned i = 0; i < growArrays.length(); i++) {
         JaegerSpew(JSpew_Analysis, "loop grow array at %u: %s\n", lifetime->head,
-                   growArrays[i]->name());
+                   types::TypeString(types::Type::ObjectType(growArrays[i])));
     }
 
     for (unsigned i = 0; i < modifiedProperties.length(); i++) {
         JaegerSpew(JSpew_Analysis, "loop modified property at %u: %s %s\n", lifetime->head,
-                   modifiedProperties[i].object->name(),
+                   types::TypeString(types::Type::ObjectType(modifiedProperties[i].object)),
                    TypeIdString(modifiedProperties[i].id));
     }
 
@@ -167,7 +167,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
      * had indirect modification of their arguments.
      */
     if (outerScript->fun) {
-        if (TypeSet::HasObjectFlags(cx, outerScript->fun->getType(), OBJECT_FLAG_UNINLINEABLE))
+        if (TypeSet::HasObjectFlags(cx, outerScript->fun->getType(cx), OBJECT_FLAG_UNINLINEABLE))
             this->skipAnalysis = true;
     }
 
@@ -543,14 +543,14 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
     if (!growArrays.empty()) {
         unsigned count = objTypes->getObjectCount();
         for (unsigned i = 0; i < count; i++) {
-            TypeObject *object = objTypes->getObject(i);
-            if (object) {
-                for (unsigned j = 0; j < growArrays.length(); j++) {
-                    if (object == growArrays[j]) {
-                        JaegerSpew(JSpew_Analysis, "Object might grow inside loop\n");
-                        return false;
-                    }
-                }
+            if (objTypes->getSingleObject(i) != NULL) {
+                JaegerSpew(JSpew_Analysis, "Object might be a singleton");
+                return false;
+            }
+            TypeObject *object = objTypes->getTypeObject(i);
+            if (object && hasGrowArray(object)) {
+                JaegerSpew(JSpew_Analysis, "Object might grow inside loop\n");
+                return false;
             }
         }
     }
@@ -837,10 +837,10 @@ LoopState::invariantLength(const CrossSSAValue &obj)
      * updating array lengths.
      */
     for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-        TypeObject *object = objTypes->getObject(i);
-        if (!object)
-            continue;
-        if (object->unknownProperties() || hasModifiedProperty(object, JSID_VOID))
+        if (objTypes->getSingleObject(i) != NULL)
+            return NULL;
+        TypeObject *object = objTypes->getTypeObject(i);
+        if (object && hasModifiedProperty(object, JSID_VOID))
             return NULL;
     }
     objTypes->addFreeze(cx);
@@ -890,10 +890,10 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
 
     /* Check that the property is definite and not written anywhere in the loop. */
     TypeSet *objTypes = ssa->getValueTypes(obj);
-    if (objTypes->unknown() || objTypes->getObjectCount() != 1)
+    if (objTypes->unknownObject() || objTypes->getObjectCount() != 1)
         return NULL;
-    TypeObject *object = objTypes->getObject(0);
-    if (object->unknownProperties() || hasModifiedProperty(object, id) || id != MakeTypeId(cx, id))
+    TypeObject *object = objTypes->getTypeObject(0);
+    if (!object || object->unknownProperties() || hasModifiedProperty(object, id) || id != MakeTypeId(cx, id))
         return NULL;
     TypeSet *propertyTypes = object->getProperty(cx, id, false);
     if (!propertyTypes)
@@ -1762,14 +1762,14 @@ LoopState::analyzeLoopBody(unsigned frame)
              * Mark the modset as unknown if the index might be non-integer,
              * we don't want to consider the SETELEM PIC here.
              */
-            if (objTypes->unknown() || elemTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32) {
+            if (objTypes->unknownObject() || elemTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32) {
                 unknownModset = true;
                 break;
             }
 
             objTypes->addFreeze(cx);
             for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-                TypeObject *object = objTypes->getObject(i);
+                TypeObject *object = objTypes->getTypeObject(i);
                 if (!object)
                     continue;
                 if (!addModifiedProperty(object, JSID_VOID))
@@ -1798,14 +1798,14 @@ LoopState::analyzeLoopBody(unsigned frame)
             jsid id = MakeTypeId(cx, ATOM_TO_JSID(atom));
 
             TypeSet *objTypes = analysis->poppedTypes(pc, 1);
-            if (objTypes->unknown()) {
+            if (objTypes->unknownObject()) {
                 unknownModset = true;
                 break;
             }
 
             objTypes->addFreeze(cx);
             for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-                TypeObject *object = objTypes->getObject(i);
+                TypeObject *object = objTypes->getTypeObject(i);
                 if (!object)
                     continue;
                 if (!addModifiedProperty(object, id))

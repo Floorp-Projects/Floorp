@@ -169,7 +169,7 @@ mjit::Compiler::compile()
     } else if (status != Compile_Retry) {
         *checkAddr = JS_UNJITTABLE_SCRIPT;
         if (outerScript->fun) {
-            types::MarkTypeObjectFlags(cx, outerScript->fun->getType(),
+            types::MarkTypeObjectFlags(cx, outerScript->fun,
                                        types::OBJECT_FLAG_UNINLINEABLE);
         }
     }
@@ -283,16 +283,21 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
         unsigned count = calleeTypes->getObjectCount();
         bool okay = true;
         for (unsigned i = 0; i < count; i++) {
-            types::TypeObject *object = calleeTypes->getObject(i);
-            if (!object)
-                continue;
-
-            if (!object->singleton || !object->singleton->isFunction()) {
+            if (calleeTypes->getTypeObject(i) != NULL) {
                 okay = false;
                 break;
             }
 
-            JSFunction *fun = object->singleton->getFunctionPrivate();
+            JSObject *obj = calleeTypes->getSingleObject(i);
+            if (!obj)
+                continue;
+
+            if (!obj->isFunction()) {
+                okay = false;
+                break;
+            }
+
+            JSFunction *fun = obj->getFunctionPrivate();
             if (!fun->isInterpreted()) {
                 okay = false;
                 break;
@@ -336,7 +341,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
                 break;
             }
 
-            if (types::TypeSet::HasObjectFlags(cx, fun->getType(),
+            if (types::TypeSet::HasObjectFlags(cx, fun->getType(cx),
                                                types::OBJECT_FLAG_UNINLINEABLE)) {
                 okay = false;
                 break;
@@ -364,11 +369,11 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
          * back up when compiling the call site.
          */
         for (unsigned i = 0; i < count; i++) {
-            types::TypeObject *object = calleeTypes->getObject(i);
-            if (!object)
+            JSObject *obj = calleeTypes->getSingleObject(i);
+            if (!obj)
                 continue;
 
-            JSFunction *fun = object->singleton->getFunctionPrivate();
+            JSFunction *fun = obj->getFunctionPrivate();
             JSScript *script = fun->script();
 
             CompileStatus status = addInlineFrame(script, nextDepth, index, pc);
@@ -1623,7 +1628,7 @@ mjit::Compiler::generateMethod()
                 applyTricks = LazyArgsObj;
                 pushSyncedEntry(0);
             } else if (cx->typeInferenceEnabled() && !script->strictModeCode &&
-                       !script->fun->getType()->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
+                       !script->fun->getType(cx)->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
                 frame.push(MagicValue(JS_LAZY_ARGUMENTS));
             } else {
                 jsop_arguments(REJOIN_FALLTHROUGH);
@@ -1832,7 +1837,7 @@ mjit::Compiler::generateMethod()
 
                 /* Watch for overflow in constant propagation. */
                 types::TypeSet *pushed = pushedTypeSet(0);
-                if (!v.isInt32() && pushed && !pushed->hasType(types::TYPE_DOUBLE)) {
+                if (!v.isInt32() && pushed && !pushed->hasType(types::Type::DoubleType())) {
                     script->types.monitorOverflow(cx, PC);
                     return Compile_Retry;
                 }
@@ -2832,7 +2837,7 @@ mjit::Compiler::jsop_getglobal(uint32 index)
     }
 
     if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
-        !globalObj->getType()->unknownProperties()) {
+        !globalObj->type()->unknownProperties()) {
         Value *value = &globalObj->getSlotRef(slot);
         if (!value->isUndefined()) {
             watchGlobalReallocation();
@@ -3896,7 +3901,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             popActiveFrame();
             if (status == Compile_Abort) {
                 /* The callee is uncompileable, mark it as uninlineable and retry. */
-                types::MarkTypeObjectFlags(cx, script->fun->getType(),
+                types::MarkTypeObjectFlags(cx, script->fun,
                                            types::OBJECT_FLAG_UNINLINEABLE);
                 return Compile_Retry;
             }
@@ -4176,7 +4181,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         return true;
     }
 
-    if (JSOp(*PC) == JSOP_LENGTH && cx->typeInferenceEnabled() && !hasTypeBarriers(PC)) {
+    if (JSOp(*PC) == JSOP_LENGTH && cx->typeInferenceEnabled() &&
+        !hasTypeBarriers(PC) && knownPushedType(0) == JSVAL_TYPE_INT32) {
         /* Check if this is an array we can make a loop invariant entry for. */
         if (loop && loop->generatingInvariants()) {
             CrossSSAValue topv(a->inlineIndex, analysis->poppedValue(PC, 0));
@@ -4275,10 +4281,13 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     JSOp op = JSOp(*PC);
     jsid id = ATOM_TO_JSID(atom);
     types::TypeSet *types = frame.extra(top).types;
-    if (op == JSOP_GETPROP && types && !types->unknown() && types->getObjectCount() == 1 &&
-        !types->getObject(0)->unknownProperties() && id == types::MakeTypeId(cx, id)) {
+    if (op == JSOP_GETPROP && types && !types->unknownObject() &&
+        types->getObjectCount() == 1 &&
+        types->getTypeObject(0) != NULL &&
+        !types->getTypeObject(0)->unknownProperties() &&
+        id == types::MakeTypeId(cx, id)) {
         JS_ASSERT(usePropCache);
-        types::TypeObject *object = types->getObject(0);
+        types::TypeObject *object = types->getTypeObject(0);
         types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
         if (!propertyTypes)
             return false;
@@ -4714,7 +4723,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
     *testObject = false;
 
     types::TypeSet *types = frame.extra(top).types;
-    if (!types || types->unknown())
+    if (!types || types->unknownObject())
         return false;
 
     JSObject *singleton = types->getSingleton(cx);
@@ -4744,8 +4753,8 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
       case JSVAL_TYPE_UNKNOWN:
         if (types->getObjectCount() == 1 && !top->isNotType(JSVAL_TYPE_OBJECT)) {
             JS_ASSERT_IF(top->isTypeKnown(), top->isType(JSVAL_TYPE_OBJECT));
-            types::TypeObject *object = types->getObject(0);
-            if (object->proto) {
+            types::TypeObject *object = types->getTypeObject(0);
+            if (object && object->proto) {
                 if (!testSingletonProperty(object->proto, id))
                     return false;
                 types->addFreeze(cx);
@@ -4786,18 +4795,17 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
         return false;
 
     types::TypeSet *pushedTypes = pushedTypeSet(0);
-    if (pushedTypes->unknown() || pushedTypes->baseFlags() != 0)
+    if (pushedTypes->unknownObject() || pushedTypes->baseFlags() != 0)
         return false;
 
     /* Check every pushed value is a singleton. */
     for (unsigned i = 0; i < pushedTypes->getObjectCount(); i++) {
-        types::TypeObject *object = pushedTypes->getObject(i);
-        if (object && !object->singleton)
+        if (pushedTypes->getTypeObject(i) != NULL)
             return false;
     }
 
     types::TypeSet *objTypes = analysis->poppedTypes(PC, 0);
-    if (objTypes->unknown() || objTypes->getObjectCount() == 0)
+    if (objTypes->unknownObject() || objTypes->getObjectCount() == 0)
         return false;
 
     pushedTypes->addFreeze(cx);
@@ -4811,7 +4819,9 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
      */
     uint32 last = 0;
     for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-        types::TypeObject *object = objTypes->getObject(i);
+        if (objTypes->getSingleObject(i) != NULL)
+            return false;
+        types::TypeObject *object = objTypes->getTypeObject(i);
         if (!object) {
             results.append(NULL);
             continue;
@@ -4825,7 +4835,9 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
         if (!testSingletonProperty(object->proto, id))
             return false;
 
-        types::TypeSet *protoTypes = object->proto->getType()->getProperty(cx, id, false);
+        types::TypeSet *protoTypes = object->proto->getType(cx)->getProperty(cx, id, false);
+        if (!protoTypes)
+            return false;
         JSObject *singleton = protoTypes->getSingleton(cx);
         if (!singleton)
             return false;
@@ -4853,13 +4865,13 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
     RegisterID pushreg = frame.allocReg();
     frame.unpinReg(reg);
 
-    Address typeAddress(reg, offsetof(JSObject, type));
+    Address typeAddress(reg, JSObject::offsetOfType());
 
     Vector<Jump> rejoins(CompilerAllocPolicy(cx, *this));
     MaybeJump lastMiss;
 
     for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-        types::TypeObject *object = objTypes->getObject(i);
+        types::TypeObject *object = objTypes->getTypeObject(i);
         if (!object) {
             JS_ASSERT(results[i] == NULL);
             continue;
@@ -4872,7 +4884,7 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
          * for the bytecode; this bytecode may have type barriers. Redirect to
          * the stub to update said pushed types.
          */
-        if (!pushedTypes->hasType((types::jstype) results[i]->getType())) {
+        if (!pushedTypes->hasType(types::Type::ObjectType(results[i]))) {
             JS_ASSERT(hasTypeBarriers(PC));
             if (i == last) {
                 stubcc.linkExit(masm.jump(), Uses(1));
@@ -4986,10 +4998,12 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
     jsid id = ATOM_TO_JSID(atom);
     types::TypeSet *types = frame.extra(lhs).types;
     if (JSOp(*PC) == JSOP_SETPROP && id == types::MakeTypeId(cx, id) &&
-        types && !types->unknown() && types->getObjectCount() == 1 &&
-        !types->getObject(0)->unknownProperties()) {
+        types && !types->unknownObject() &&
+        types->getObjectCount() == 1 &&
+        types->getTypeObject(0) != NULL &&
+        !types->getTypeObject(0)->unknownProperties()) {
         JS_ASSERT(usePropCache);
-        types::TypeObject *object = types->getObject(0);
+        types::TypeObject *object = types->getTypeObject(0);
         types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
         if (!propertyTypes)
             return false;
@@ -5022,14 +5036,16 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
     pic.atom = atom;
 
     if (monitored(PC)) {
-        types::TypeSet *types = frame.extra(rhs).types;
         pic.typeMonitored = true;
-        pic.rhsTypes = (types::ClonedTypeSet *) cx->calloc_(sizeof(types::ClonedTypeSet));
-        if (!pic.rhsTypes) {
-            js_ReportOutOfMemory(cx);
-            return false;
+        types::TypeSet *types = frame.extra(rhs).types;
+        if (!types) {
+            /* Handle FORNAME and other compound opcodes. Yuck. */
+            types = types::TypeSet::make(cx, "unknownRHS");
+            if (!types)
+                return false;
+            types->addType(cx, types::Type::UnknownType());
         }
-        types::TypeSet::Clone(cx, types, pic.rhsTypes);
+        pic.rhsTypes = types;
     } else {
         pic.typeMonitored = false;
         pic.rhsTypes = NULL;
@@ -5644,7 +5660,7 @@ mjit::Compiler::iter(uintN flags)
     stubcc.linkExit(mismatchedObject, Uses(1));
 
     /* Compare shape of object's prototype with iterator. */
-    masm.loadPtr(Address(reg, offsetof(JSObject, type)), T1);
+    masm.loadPtr(Address(reg, JSObject::offsetOfType()), T1);
     masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
     masm.loadShape(T1, T1);
     masm.loadPtr(Address(nireg, offsetof(NativeIterator, shapes_array)), T2);
@@ -5658,9 +5674,9 @@ mjit::Compiler::iter(uintN flags)
      * (i.e. it must be a plain object), so we do not need to generate
      * a loop here.
      */
-    masm.loadPtr(Address(reg, offsetof(JSObject, type)), T1);
+    masm.loadPtr(Address(reg, JSObject::offsetOfType()), T1);
     masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
-    masm.loadPtr(Address(T1, offsetof(JSObject, type)), T1);
+    masm.loadPtr(Address(T1, JSObject::offsetOfType()), T1);
     masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
     Jump overlongChain = masm.branchPtr(Assembler::NonZero, T1, T1);
     stubcc.linkExit(overlongChain, Uses(1));
@@ -5906,14 +5922,14 @@ mjit::Compiler::jsop_getgname(uint32 index)
     jsid id = ATOM_TO_JSID(atom);
     JSValueType type = JSVAL_TYPE_UNKNOWN;
     if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
-        !globalObj->getType()->unknownProperties()) {
+        !globalObj->type()->unknownProperties()) {
         /*
          * Get the type tag for the global either straight off it (in case this
          * is an INCGNAME op, and the pushed type set is wrong) or from the
          * pushed type set (if this is a GETGNAME op, and the property may have
          * a type barrier on it).
          */
-        types::TypeSet *propertyTypes = globalObj->getType()->getProperty(cx, id, false);
+        types::TypeSet *propertyTypes = globalObj->type()->getProperty(cx, id, false);
         if (!propertyTypes)
             return;
         types::TypeSet *types = (JSOp(*PC) == JSOP_GETGNAME || JSOp(*PC) == JSOP_CALLGNAME)
@@ -6121,14 +6137,14 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
 
     jsid id = ATOM_TO_JSID(atom);
     if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
-        !globalObj->getType()->unknownProperties()) {
+        !globalObj->type()->unknownProperties()) {
         /*
          * Note: object branding is disabled when inference is enabled. With
          * branding there is no way to ensure that a non-function property
          * can't get a function later and cause the global object to become
          * branded, requiring a shape change if it changes again.
          */
-        types::TypeSet *types = globalObj->getType()->getProperty(cx, id, false);
+        types::TypeSet *types = globalObj->type()->getProperty(cx, id, false);
         if (!types)
             return;
         const js::Shape *shape = globalObj->nativeLookup(ATOM_TO_JSID(atom));
@@ -6306,7 +6322,7 @@ mjit::Compiler::jsop_instanceof()
     Label loop = masm.label();
 
     /* Walk prototype chain, break out on NULL or hit. */
-    masm.loadPtr(Address(obj, offsetof(JSObject, type)), obj);
+    masm.loadPtr(Address(obj, JSObject::offsetOfType()), obj);
     masm.loadPtr(Address(obj, offsetof(types::TypeObject, proto)), obj);
     Jump isFalse2 = masm.branchTestPtr(Assembler::Zero, obj, obj);
     Jump isTrue = masm.branchPtr(Assembler::NotEqual, obj, proto);
@@ -6397,10 +6413,10 @@ mjit::Compiler::jsop_newinit()
 
     if (isArray) {
         masm.move(Imm32(count), Registers::ArgReg1);
-        INLINE_STUBCALL(stubs::NewInitArray, REJOIN_NONE);
+        INLINE_STUBCALL(stubs::NewInitArray, REJOIN_PUSH_OBJECT);
     } else {
         masm.move(ImmPtr(baseobj), Registers::ArgReg1);
-        INLINE_STUBCALL(stubs::NewInitObject, REJOIN_NONE);
+        INLINE_STUBCALL(stubs::NewInitObject, REJOIN_PUSH_OBJECT);
     }
     frame.takeReg(Registers::ReturnReg);
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
@@ -7148,7 +7164,7 @@ mjit::Compiler::mayPushUndefined(uint32 pushed)
      * value pushed by the bytecode, recompilation will *NOT* be triggered.
      */
     types::TypeSet *types = analysis->pushedTypes(PC, pushed);
-    return types->hasType(types::TYPE_UNDEFINED);
+    return types->hasType(types::Type::UndefinedType());
 }
 
 types::TypeSet *
@@ -7212,9 +7228,9 @@ mjit::Compiler::arrayPrototypeHasIndexedProperty()
      * unknown or has an indexed property, those will be reflected in
      * Array.prototype.
      */
-    if (proto->getType()->unknownProperties())
+    if (proto->getType(cx)->unknownProperties())
         return true;
-    types::TypeSet *arrayTypes = proto->getType()->getProperty(cx, JSID_VOID, false);
+    types::TypeSet *arrayTypes = proto->getType(cx)->getProperty(cx, JSID_VOID, false);
     return !arrayTypes || arrayTypes->knownNonEmpty(cx);
 }
 
@@ -7312,33 +7328,38 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
 
     Vector<Jump> matches(CompilerAllocPolicy(cx, *this));
 
-    if (types->hasType(types::TYPE_INT32))
+    if (types->hasType(types::Type::Int32Type()))
         matches.append(masm.testInt32(Assembler::Equal, typeReg));
 
-    if (types->hasType(types::TYPE_DOUBLE))
+    if (types->hasType(types::Type::DoubleType()))
         matches.append(masm.testDouble(Assembler::Equal, typeReg));
 
-    if (types->hasType(types::TYPE_UNDEFINED))
+    if (types->hasType(types::Type::UndefinedType()))
         matches.append(masm.testUndefined(Assembler::Equal, typeReg));
 
-    if (types->hasType(types::TYPE_BOOLEAN))
+    if (types->hasType(types::Type::BooleanType()))
         matches.append(masm.testBoolean(Assembler::Equal, typeReg));
 
-    if (types->hasType(types::TYPE_STRING))
+    if (types->hasType(types::Type::StringType()))
         matches.append(masm.testString(Assembler::Equal, typeReg));
 
-    if (types->hasType(types::TYPE_NULL))
+    if (types->hasType(types::Type::NullType()))
         matches.append(masm.testNull(Assembler::Equal, typeReg));
 
-    unsigned count = types->getObjectCount();
+    unsigned count = 0;
+    if (types->hasType(types::Type::AnyObjectType()))
+        matches.append(masm.testObject(Assembler::Equal, typeReg));
+    else
+        count = types->getObjectCount();
+
     if (count != 0) {
         Jump notObject = masm.testObject(Assembler::NotEqual, typeReg);
-
-        Address typeAddress(dataReg, offsetof(JSObject, type));
+        Address typeAddress(dataReg, JSObject::offsetOfType());
 
         for (unsigned i = 0; i < count; i++) {
-            types::TypeObject *object = types->getObject(i);
-            if (object)
+            if (JSObject *object = types->getSingleObject(i))
+                matches.append(masm.branchPtr(Assembler::Equal, dataReg, ImmPtr(object)));
+            else if (types::TypeObject *object = types->getTypeObject(i))
                 matches.append(masm.branchPtr(Assembler::Equal, typeAddress, ImmPtr(object)));
         }
 

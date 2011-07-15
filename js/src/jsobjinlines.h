@@ -128,7 +128,7 @@ JSObject::unbrand(JSContext *cx)
 inline JSBool
 JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
 {
-    js::types::MarkTypePropertyConfigured(cx, getType(), id);
+    js::types::MarkTypePropertyConfigured(cx, this, id);
     js::AttributesOp op = getOps()->setAttributes;
     return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
 }
@@ -140,11 +140,11 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     if (op) {
         if (!op(cx, this, receiver, id, vp))
             return false;
-        js::types::AddTypePropertyId(cx, getType(), id, *vp);
+        js::types::AddTypePropertyId(cx, this, id, *vp);
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
-        JS_ASSERT(js::types::TypeHasProperty(cx, getType(), id, *vp));
+        JS_ASSERT_IF(!hasSingletonType(), js::types::TypeHasProperty(cx, type(), id, *vp));
     }
     return true;
 }
@@ -158,8 +158,9 @@ JSObject::getProperty(JSContext *cx, jsid id, js::Value *vp)
 inline JSBool
 JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
 {
-    js::types::AddTypePropertyId(cx, getType(), id, js::types::TYPE_UNDEFINED);
-    js::types::MarkTypePropertyConfigured(cx, getType(), id);
+    js::types::AddTypePropertyId(cx, this, id,
+                                 js::types::Type::UndefinedType());
+    js::types::MarkTypePropertyConfigured(cx, this, id);
     js::DeleteIdOp op = getOps()->deleteProperty;
     return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
 }
@@ -169,7 +170,7 @@ JSObject::syncSpecialEquality()
 {
     if (clasp->ext.equality) {
         flags |= JSObject::HAS_EQUALITY;
-        JS_ASSERT(getType()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
+        JS_ASSERT_IF(!hasLazyType(), type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     }
 }
 
@@ -448,11 +449,12 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
          * Mark the type of this object as possibly not a dense array, per the
          * requirements of OBJECT_FLAG_NON_DENSE_ARRAY.
          */
-        js::types::MarkTypeObjectFlags(cx, getType(),
+        js::types::MarkTypeObjectFlags(cx, this,
                                        js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
                                        js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
         jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-        js::types::AddTypePropertyId(cx, getType(), lengthId, js::types::TYPE_DOUBLE);
+        js::types::AddTypePropertyId(cx, this, lengthId,
+                                     js::types::Type::DoubleType());
     }
 
     setPrivate((void*) length);
@@ -505,7 +507,7 @@ JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
 inline void
 JSObject::setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val)
 {
-    js::types::AddTypePropertyId(cx, getType(), JSID_VOID, val);
+    js::types::AddTypePropertyId(cx, this, JSID_VOID, val);
     setDenseArrayElement(idx, val);
 }
 
@@ -784,8 +786,35 @@ JSObject::setWithThis(JSObject *thisp)
     getFixedSlotRef(JSSLOT_WITH_THIS).setObject(*thisp);
 }
 
+inline bool
+JSObject::setSingletonType(JSContext *cx)
+{
+    if (!cx->typeInferenceEnabled())
+        return true;
+
+    JS_ASSERT(!lastProp->previous());
+    JS_ASSERT(!hasLazyType());
+    JS_ASSERT_IF(getProto(), type() == getProto()->getNewType(cx, NULL));
+
+    flags |= SINGLETON_TYPE | LAZY_TYPE;
+
+    js::Shape *shape = js::EmptyShape::create(cx, getClass());
+    if (!shape)
+        return false;
+    setMap(shape);
+    return true;
+}
+
 inline js::types::TypeObject *
-JSObject::getNewType(JSContext *cx, JSScript *script)
+JSObject::getType(JSContext *cx)
+{
+    if (hasLazyType())
+        makeLazyType(cx);
+    return type_;
+}
+
+inline js::types::TypeObject *
+JSObject::getNewType(JSContext *cx, JSScript *script, bool markUnknown)
 {
     if (isDenseArray() && !makeDenseArraySlow(cx))
         return NULL;
@@ -803,8 +832,10 @@ JSObject::getNewType(JSContext *cx, JSScript *script)
          */
         if (newType->newScript && newType->newScript->script != script)
             newType->clearNewScript(cx);
+        if (markUnknown && cx->typeInferenceEnabled() && !newType->unknownProperties())
+            newType->markUnknown(cx);
     } else {
-        makeNewType(cx, script);
+        makeNewType(cx, script, markUnknown);
     }
     return newType;
 }
@@ -812,10 +843,11 @@ JSObject::getNewType(JSContext *cx, JSScript *script)
 inline bool
 JSObject::clearType(JSContext *cx)
 {
+    JS_ASSERT(!hasSingletonType());
     js::types::TypeObject *newType = js::types::GetTypeEmpty(cx);
     if (!newType)
         return false;
-    type = newType;
+    type_ = newType;
     return true;
 }
 
@@ -828,32 +860,17 @@ JSObject::setType(js::types::TypeObject *newType)
         JS_ASSERT(obj != this);
 #endif
     JS_ASSERT_IF(hasSpecialEquality(), newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
-    type = newType;
-}
-
-inline bool
-JSObject::setTypeAndUniqueShape(JSContext *cx, js::types::TypeObject *newType)
-{
-    setType(newType);
-
-    if (!isNative())
-        return true;
-    JS_ASSERT(nativeEmpty());
-
-    js::Shape *shape = js::EmptyShape::create(cx, getClass());
-    if (!shape)
-        return false;
-    setMap(shape);
-    return true;
+    JS_ASSERT(!hasSingletonType());
+    type_ = newType;
 }
 
 inline bool
 JSObject::setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType)
 {
-    JS_ASSERT(nativeEmpty() && type->canProvideEmptyShape(getClass()));
+    JS_ASSERT(nativeEmpty() && newType->canProvideEmptyShape(getClass()));
     setType(newType);
 
-    js::Shape *shape = type->getEmptyShape(cx, getClass(), finalizeKind());
+    js::Shape *shape = type()->getEmptyShape(cx, getClass(), finalizeKind());
     if (!shape)
         return false;
     setMap(shape);
@@ -1011,7 +1028,7 @@ inline void
 JSObject::nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value)
 {
     nativeSetSlot(shape->slot, value);
-    js::types::AddTypePropertyId(cx, getType(), shape->propid, value);
+    js::types::AddTypePropertyId(cx, this, shape->propid, value);
 }
 
 inline bool
@@ -1206,7 +1223,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
                    gc::FinalizeKind kind)
 {
     JS_ASSERT(clasp->isNative());
-    JS_ASSERT(type == obj->getType());
+    JS_ASSERT(type == obj->type());
 
     /* Share proto's emptyShape only if obj is similar to proto. */
     js::EmptyShape *empty = NULL;
@@ -1617,7 +1634,7 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
     if (!obj || !obj->ensureSlots(cx, baseobj->numSlots()))
         return NULL;
 
-    obj->type = type;
+    obj->setType(type);
     obj->flags = baseobj->flags;
     obj->lastProp = baseobj->lastProp;
     obj->objShape = baseobj->objShape;
@@ -1641,7 +1658,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
     global->setSlot(key, ObjectValue(*ctor));
     global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
 
-    types::AddTypePropertyId(cx, global->getType(), id, ObjectValue(*ctor));
+    types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
     if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0)) {
         global->setSlot(key, UndefinedValue());
         global->setSlot(key + JSProto_LIMIT, UndefinedValue());

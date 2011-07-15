@@ -197,7 +197,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
 
     Value v;
     if (tryBinaryConstantFold(cx, frame, op, lhs, rhs, &v)) {
-        if (!v.isInt32() && typeSet && !typeSet->hasType(types::TYPE_DOUBLE)) {
+        if (!v.isInt32() && typeSet && !typeSet->hasType(types::Type::DoubleType())) {
             /*
              * OK to ignore failure here, we aren't performing the operation
              * itself. Note that monitorOverflow will propagate the type as
@@ -393,7 +393,7 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
      * we do not yet know the possible types of the division's operands.
      */
     types::TypeSet *resultTypes = pushedTypeSet(0);
-    if (resultTypes && !resultTypes->hasType(types::TYPE_DOUBLE)) {
+    if (resultTypes && !resultTypes->hasType(types::Type::DoubleType())) {
         /*
          * Call a stub and try harder to convert to int32, failing that trigger
          * recompilation of this script.
@@ -946,7 +946,7 @@ mjit::Compiler::jsop_mod()
     Value v;
     if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, &v)) {
         types::TypeSet *pushed = pushedTypeSet(0);
-        if (!v.isInt32() && pushed && !pushed->hasType(types::TYPE_DOUBLE)) {
+        if (!v.isInt32() && pushed && !pushed->hasType(types::Type::DoubleType())) {
             script->types.monitorOverflow(cx, PC);
             return false;
         }

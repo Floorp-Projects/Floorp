@@ -83,7 +83,7 @@ JS_GetFrameScopeChainRaw(JSStackFrame *fp)
     return &Valueify(fp)->scopeChain();
 }
 
-JS_FRIEND_API(void)
+JS_FRIEND_API(JSBool)
 JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     /*
@@ -92,26 +92,15 @@ JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto)
      * does not nuke type information for the object.
      */
     CHECK_REQUEST(cx);
-    obj->getType()->splicePrototype(cx, proto);
+    return obj->splicePrototype(cx, proto);
 }
 
 JS_FRIEND_API(JSObject *)
 JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     JSObject *obj = JS_NewObject(cx, clasp, proto, parent);
-    if (!obj)
+    if (!obj || !obj->setSingletonType(cx))
         return NULL;
-
-    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "Unique", "",
-                                                                   JSProto_Object, proto);
-    if (!type)
-        return NULL;
-    if (obj->hasSpecialEquality())
-        types::MarkTypeObjectFlags(cx, type, types::OBJECT_FLAG_SPECIAL_EQUALITY);
-    if (!obj->setTypeAndUniqueShape(cx, type))
-        return NULL;
-    type->singleton = obj;
-
     return obj;
 }
 

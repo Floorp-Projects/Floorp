@@ -829,14 +829,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
     JS_ASSERT(objectProto);
 
     JSObject *proto = NewObject<WithProto::Class>(cx, &js_RegExpClass, objectProto, global);
-    if (!proto)
-        return NULL;
-
-    types::TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
-                                                                        "RegExp", "prototype",
-                                                                        JSProto_Object,
-                                                                        proto->getProto());
-    if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
+    if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
     AlreadyIncRefed<RegExp> re = RegExp::create(cx, cx->runtime->emptyString, 0, NULL);
@@ -902,14 +895,6 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
      */
     if (!type->getEmptyShape(cx, &js_RegExpClass, FINALIZE_OBJECT0))
         return NULL;
-
-    /* Capture properties added individually to each RegExp object. */
-    AddTypeProperty(cx, protoType, "source", TYPE_STRING);
-    AddTypeProperty(cx, protoType, "global", TYPE_BOOLEAN);
-    AddTypeProperty(cx, protoType, "ignoreCase", TYPE_BOOLEAN);
-    AddTypeProperty(cx, protoType, "multiline", TYPE_BOOLEAN);
-    AddTypeProperty(cx, protoType, "sticky", TYPE_BOOLEAN);
-    AddTypeProperty(cx, protoType, "lastIndex", TYPE_INT32);
 
     /* Install the fully-constructed RegExp and RegExp.prototype in global. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))

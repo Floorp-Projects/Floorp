@@ -540,7 +540,7 @@ ContextStack::ensureOnTop(JSContext *cx, uintN nvars, MaybeExtend extend, bool *
 {
     Value *firstUnused = space().firstUnused();
 
-    if (onTop() && extend) {
+    if (onTop() && extend && (!cx->hasfp() || !cx->regs().inlined())) {
         if (!space().ensureSpace(cx, firstUnused, nvars))
             return NULL;
         return firstUnused;
@@ -1027,7 +1027,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     savedOption_(savedOption)
 {
 #ifdef JS_METHODJIT
-    mjit::ExpandInlineFrames(cx, true);
+    mjit::ExpandInlineFrames(cx->compartment, true);
 #endif
 
     if (StackSegment *seg = cx->stack.seg_) {

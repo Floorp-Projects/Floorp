@@ -682,8 +682,10 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     JSObject *obj;
     if (clasp->flags & JSCLASS_IS_GLOBAL) {
         obj = JS_NewGlobalObject(cx, clasp);
-        if (obj && proto)
-            JS_SplicePrototype(cx, obj, proto);
+        if (obj && proto) {
+            if (!JS_SplicePrototype(cx, obj, proto))
+                obj = NULL;
+        }
     } else if (uniqueType) {
         obj = JS_NewObjectWithUniqueType(cx, clasp, proto, parent);
     } else {
