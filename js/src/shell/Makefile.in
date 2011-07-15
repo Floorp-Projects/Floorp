@@ -48,6 +48,7 @@ PROGRAM         = js$(BIN_SUFFIX)
 CPPSRCS		= \
   js.cpp \
   jsworkers.cpp \
+  jsoptparse.cpp \
   $(NULL)
 
 DEFINES         += -DEXPORT_JS_API
