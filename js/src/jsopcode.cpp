@@ -243,10 +243,16 @@ class AutoScriptUntrapper {
     JSScript *script;
     jsbytecode *origPC;
     jsbytecode *newPC;
+#ifdef DEBUG
+    bool assertionBefore;
+#endif
 
 public:
     AutoScriptUntrapper(JSContext *cx, JSScript *script, jsbytecode **pc)
         : cx(cx), script(script), origPC(*pc)
+#ifdef DEBUG
+          , assertionBefore(false)
+#endif
     {
         jsbytecode *newCode = js_UntrapScriptCode(cx, script);
         if (newCode == script->code) {
@@ -256,6 +262,10 @@ public:
             script->main += newCode - script->code;
             *pc = newPC = origPC + (newCode - script->code);
             script->code = newCode;
+#ifdef DEBUG
+            assertionBefore = cx->stackIterAssertionEnabled;
+            cx->stackIterAssertionEnabled = false;
+#endif
         }
     }
     ~AutoScriptUntrapper()
@@ -266,6 +276,9 @@ public:
             cx->free_(script->code);
             script->code = oldCode;
             script->main -= delta;
+#ifdef DEBUG
+            cx->stackIterAssertionEnabled = assertionBefore;
+#endif
         }
     }
 };
