@@ -791,7 +791,7 @@ JS_NewRuntime(uint32 maxbytes)
     if (!mem)
         return NULL;
 
-#ifdef JS_METHODJIT
+#if defined(JS_METHODJIT) && defined(JS_ION)
     if (!ion::InitializeIon())
         return NULL;
 #endif
