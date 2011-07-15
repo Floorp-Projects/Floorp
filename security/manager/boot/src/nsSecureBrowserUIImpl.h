@@ -91,7 +91,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSISSLSTATUSPROVIDER
 
-  NS_IMETHOD Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindowInternal* window,
+  NS_IMETHOD Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow* window,
                     nsIURI *actionURL, PRBool* cancelSubmit);
   NS_IMETHOD NotifyInvalidSubmit(nsIDOMHTMLFormElement* formNode,
                                  nsIArray* invalidElements) { return NS_OK; };

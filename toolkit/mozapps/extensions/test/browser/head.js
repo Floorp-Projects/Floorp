@@ -304,7 +304,7 @@ function wait_for_window_open(aCallback) {
       Services.wm.removeListener(this);
 
       let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowInternal);
+                             .getInterface(Ci.nsIDOMWindow);
       domwindow.addEventListener("load", function() {
         domwindow.removeEventListener("load", arguments.callee, false);
         executeSoon(function() {

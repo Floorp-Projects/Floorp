@@ -86,7 +86,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let context = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
-  getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindowInternal])
+  getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow])
 };
 
 function FilePickerService() {

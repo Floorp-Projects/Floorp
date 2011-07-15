@@ -189,7 +189,7 @@ nsUnknownContentTypeDialog.prototype = {
   reallyShow: function() {
     try {
       var ir = this.mContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      var dwi = ir.getInterface(Components.interfaces.nsIDOMWindowInternal);
+      var dwi = ir.getInterface(Components.interfaces.nsIDOMWindow);
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
       this.mDialog = ww.openWindow(dwi,
@@ -279,7 +279,7 @@ nsUnknownContentTypeDialog.prototype = {
     var nsIFilePicker = Components.interfaces.nsIFilePicker;
     var picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     var windowTitle = bundle.GetStringFromName("saveDialogTitle");
-    var parent = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowInternal);
+    var parent = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);
     picker.init(parent, windowTitle, nsIFilePicker.modeSave);
     picker.defaultString = aDefaultFile;
 

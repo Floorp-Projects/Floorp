@@ -45,7 +45,6 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsSize.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"

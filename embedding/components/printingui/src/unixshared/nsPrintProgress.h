@@ -45,7 +45,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIPrintStatusFeedback.h"
 #include "nsIObserver.h"
 #include "nsString.h"
@@ -62,14 +62,14 @@ public:
 	virtual ~nsPrintProgress();
 
 private:
-  nsresult ReleaseListeners(void);
+  nsresult ReleaseListeners();
 
   PRBool                            m_closeProgress;
   PRBool                            m_processCanceled;
   nsString                          m_pendingStatus;
   PRInt32                           m_pendingStateFlags;
   PRInt32                           m_pendingStateValue;
-  nsCOMPtr<nsIDOMWindowInternal>    m_dialog;
+  nsCOMPtr<nsIDOMWindow>            m_dialog;
   nsCOMPtr<nsISupportsArray>        m_listenerList;
   nsCOMPtr<nsIObserver>             m_observer;
   nsCOMPtr<nsIPrintSettings>        m_PrintSetting;

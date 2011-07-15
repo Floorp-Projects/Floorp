@@ -43,7 +43,7 @@
 #include "nsDOMUIEvent.h"
 #include "nsIPresShell.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
@@ -95,7 +95,7 @@ nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
     nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
     if (container)
     {
-       nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
+       nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);
        if (window)
           mView = do_QueryInterface(window);
     }
