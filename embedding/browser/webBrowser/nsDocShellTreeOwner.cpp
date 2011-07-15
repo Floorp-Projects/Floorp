@@ -980,49 +980,37 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
 already_AddRefed<nsIWebBrowserChrome>
 nsDocShellTreeOwner::GetWebBrowserChrome()
 {
-  nsIWebBrowserChrome* chrome = nsnull;
-  if (mWebBrowserChromeWeak != nsnull) {
-    mWebBrowserChromeWeak->
-                        QueryReferent(NS_GET_IID(nsIWebBrowserChrome),
-                                      reinterpret_cast<void**>(&chrome));
+  nsCOMPtr<nsIWebBrowserChrome> chrome;
+  if (mWebBrowserChromeWeak) {
+    chrome = do_QueryReferent(mWebBrowserChromeWeak);
   } else if (mWebBrowserChrome) {
     chrome = mWebBrowserChrome;
-    NS_ADDREF(mWebBrowserChrome);
   }
-
-  return chrome;
+  return chrome.forget();
 }
 
 already_AddRefed<nsIEmbeddingSiteWindow>
 nsDocShellTreeOwner::GetOwnerWin()
 {
-  nsIEmbeddingSiteWindow* win = nsnull;
-  if (mWebBrowserChromeWeak != nsnull) {
-    mWebBrowserChromeWeak->
-                        QueryReferent(NS_GET_IID(nsIEmbeddingSiteWindow),
-                                      reinterpret_cast<void**>(&win));
+  nsCOMPtr<nsIEmbeddingSiteWindow> win;
+  if (mWebBrowserChromeWeak) {
+    win = do_QueryReferent(mWebBrowserChromeWeak);
   } else if (mOwnerWin) {
     win = mOwnerWin;
-    NS_ADDREF(mOwnerWin);
   }
-
-  return win;
+  return win.forget();
 }
 
 already_AddRefed<nsIInterfaceRequestor>
 nsDocShellTreeOwner::GetOwnerRequestor()
 {
-  nsIInterfaceRequestor* req = nsnull;
-  if (mWebBrowserChromeWeak != nsnull) {
-    mWebBrowserChromeWeak->
-                        QueryReferent(NS_GET_IID(nsIInterfaceRequestor),
-                                      reinterpret_cast<void**>(&req));
+  nsCOMPtr<nsIInterfaceRequestor> req;
+  if (mWebBrowserChromeWeak) {
+    req = do_QueryReferent(mWebBrowserChromeWeak);
   } else if (mOwnerRequestor) {
     req = mOwnerRequestor;
-    NS_ADDREF(mOwnerRequestor);
   }
-
-  return req;
+  return req.forget();
 }
 
 
