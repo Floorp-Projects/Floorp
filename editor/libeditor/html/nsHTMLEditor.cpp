@@ -439,14 +439,14 @@ nsHTMLEditor::FindSelectionRoot(nsINode *aNode)
   return content.forget();
 }
 
-nsresult
+/* virtual */
+void
 nsHTMLEditor::CreateEventListeners()
 {
   // Don't create the handler twice
   if (!mEventListener) {
     mEventListener = new nsHTMLEditorEventListener();
   }
-  return NS_OK;
 }
 
 nsresult

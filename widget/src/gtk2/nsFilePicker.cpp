@@ -54,7 +54,6 @@
 #include "prlink.h"
 
 #include "nsFilePicker.h"
-#include "nsAccessibilityHelper.h"
 
 #if (MOZ_PLATFORM_MAEMO == 5)
 #include <hildon-fm-2/hildon/hildon-file-chooser-dialog.h>
@@ -425,7 +424,7 @@ confirm_overwrite_file(GtkWidget *parent, nsILocalFile* file)
     gtk_window_group_add_window(parent_window->group, GTK_WINDOW(dialog));
   }
 
-  PRBool result = (RunDialog(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
+  PRBool result = (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
 
   gtk_widget_destroy(dialog);
 
@@ -550,7 +549,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
   }
 
   gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser), PR_TRUE);
-  gint response = RunDialog(GTK_DIALOG(file_chooser));
+  gint response = gtk_dialog_run(GTK_DIALOG(file_chooser));
 
   switch (response) {
     case GTK_RESPONSE_OK:

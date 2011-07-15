@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIDOMWindowInternal.idl"
+#include "nsIDOMWindow.idl"
 
 // interface for accessing RDF-specific data from the window datasource
 [scriptable, uuid(3722A5B9-5323-4ed0-BB1A-8299F27A4E89)]
@@ -46,5 +46,5 @@ interface nsIWindowDataSource : nsISupports
     /**
      * for the given resource name, return the window
      */
-    nsIDOMWindowInternal getWindowForResource(in string inResource);
+    nsIDOMWindow getWindowForResource(in string inResource);
 };

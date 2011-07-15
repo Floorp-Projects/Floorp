@@ -200,8 +200,8 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
     if (NS_FAILED(rv)) return rv;
     return mAuthPrompter->QueryInterface(aIID, aSink);
   }
-  if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
-    return GetWindowDOMWindow(reinterpret_cast<nsIDOMWindowInternal**>(aSink));
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
+    return GetWindowDOMWindow(reinterpret_cast<nsIDOMWindow**>(aSink));
   }   
   if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
     NS_SUCCEEDED(EnsureContentTreeOwner()) &&
@@ -971,7 +971,7 @@ NS_IMETHODIMP nsXULWindow::EnsurePrompter()
   if (mPrompter)
     return NS_OK;
    
-  nsCOMPtr<nsIDOMWindowInternal> ourWindow;
+  nsCOMPtr<nsIDOMWindow> ourWindow;
   nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWindowWatcher> wwatch = 
@@ -987,7 +987,7 @@ NS_IMETHODIMP nsXULWindow::EnsureAuthPrompter()
   if (mAuthPrompter)
     return NS_OK;
       
-  nsCOMPtr<nsIDOMWindowInternal> ourWindow;
+  nsCOMPtr<nsIDOMWindow> ourWindow;
   nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -1158,7 +1158,7 @@ PRBool nsXULWindow::LoadSizeFromXUL()
 
   if (gotSize) {
     // constrain to screen size
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    nsCOMPtr<nsIDOMWindow> domWindow;
     GetWindowDOMWindow(getter_AddRefs(domWindow));
     if (domWindow) {
       nsCOMPtr<nsIDOMScreen> screen;
@@ -1248,7 +1248,7 @@ PRBool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
     }
 
     if (sizeMode == nsSizeMode_Fullscreen) {
-      nsCOMPtr<nsIDOMWindowInternal> ourWindow;
+      nsCOMPtr<nsIDOMWindow> ourWindow;
       GetWindowDOMWindow(getter_AddRefs(ourWindow));
       ourWindow->SetFullScreen(PR_TRUE);
     } else {
@@ -1558,7 +1558,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow)
+NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindow** aDOMWindow)
 {
   NS_ENSURE_STATE(mDocShell);
 
