@@ -51,7 +51,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIFocusManager.h"
 #include "nsIDOMEventTarget.h"
 
@@ -315,15 +314,10 @@ nsCommandManager::GetControllerForCommand(const char *aCommand,
         return NS_ERROR_FAILURE;
   }
 
-  if (aTargetWindow)
-  {
+  if (aTargetWindow) {
     // get the controller for this particular window
-    nsCOMPtr<nsIDOMWindowInternal> domWindowInternal = do_QueryInterface(aTargetWindow);
-    if (!domWindowInternal)
-      return NS_ERROR_FAILURE;
-
     nsCOMPtr<nsIControllers> controllers;
-    rv = domWindowInternal->GetControllers(getter_AddRefs(controllers));
+    rv = aTargetWindow->GetControllers(getter_AddRefs(controllers));
     if (NS_FAILED(rv))
       return rv;
     if (!controllers)

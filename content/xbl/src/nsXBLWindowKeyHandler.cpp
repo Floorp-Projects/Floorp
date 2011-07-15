@@ -54,7 +54,6 @@
 #include "nsINativeKeyBindings.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsFocusManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsIURI.h"

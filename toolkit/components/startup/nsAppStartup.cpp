@@ -46,7 +46,6 @@
 
 #include "nsIAppShellService.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
@@ -344,7 +343,7 @@ nsAppStartup::Quit(PRUint32 aMode)
             ferocity = eAttemptQuit;
             nsCOMPtr<nsISupports> window;
             windowEnumerator->GetNext(getter_AddRefs(window));
-            nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(window));
+            nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(window);
             if (domWindow) {
               PRBool closed = PR_FALSE;
               domWindow->GetClosed(&closed);

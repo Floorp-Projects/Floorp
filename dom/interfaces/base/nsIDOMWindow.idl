@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Vidur Apparao <vidur@netscape.com> (original author)
  *   Johnny Stenback <jst@netscape.com>
+ *   Neil Deakin <enndeakin@sympatico.ca>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,8 +41,29 @@
 
 #include "domstubs.idl"
 
+%{ C++
+#include "jspubtd.h"
+%}
+
+interface nsIAnimationFrameListener;
+interface nsIControllers;
+interface nsIDOMBlob;
+interface nsIDOMLocation;
+interface nsIDOMMediaQueryList;
 interface nsIDOMOfflineResourceList;
+interface nsIDOMPerformance;
+interface nsIDOMStorage;
+interface nsIDOMStorageList;
+interface nsIPrompt;
 interface nsISelection;
+interface nsIVariant;
+
+[scriptable, uuid(8fc58f56-f769-4368-a098-edd08550cf1a)]
+interface nsIDOMMozURLProperty : nsISupports
+{
+  DOMString createObjectURL(in nsIDOMBlob blob);
+  void revokeObjectURL(in DOMString URL);
+};
 
 /**
  * The nsIDOMWindow interface is the primary interface for a DOM
@@ -51,9 +74,15 @@ interface nsISelection;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(90fec5b7-c58b-463f-a147-f91b6b104a96)]
+[scriptable, uuid(972cb379-6bdc-4544-8b46-8d721e12e906)]
 interface nsIDOMWindow : nsISupports
 {
+  // the current browsing context
+  readonly attribute nsIDOMWindow                       window;
+
+  /* [replaceable] self */
+  readonly attribute nsIDOMWindow                       self;
+
   /**
    * Accessor for the document in this window.
    */
@@ -66,6 +95,21 @@ interface nsIDOMWindow : nsISupports
    */
            attribute DOMString                          name;
 
+  /* The setter that takes a string argument needs to be special cased! */
+  readonly attribute nsIDOMLocation                     location;
+
+  readonly attribute nsIDOMHistory                      history;
+
+
+  /* [replaceable] locationbar */
+  readonly attribute nsIDOMBarProp                      locationbar;
+
+  /* [replaceable] menubar */
+  readonly attribute nsIDOMBarProp                      menubar;
+
+  /* [replaceable] personalbar */
+  readonly attribute nsIDOMBarProp                      personalbar;
+
   /**
    * Accessor for the object that controls whether or not scrollbars
    * are shown in this window.
@@ -73,6 +117,25 @@ interface nsIDOMWindow : nsISupports
    * This attribute is "replaceable" in JavaScript
    */
   readonly attribute nsIDOMBarProp                      scrollbars;
+
+  /* [replaceable] statusbar */
+  readonly attribute nsIDOMBarProp                      statusbar;
+
+  /* [replaceable] toolbar */
+  readonly attribute nsIDOMBarProp                      toolbar;
+
+  /* [replaceable] */
+           attribute DOMString                          status;
+
+  void                      close();
+  void                      stop();
+  void                      focus();
+  void                      blur();
+
+
+  // other browsing contexts
+  /* [replaceable] length */
+  readonly attribute unsigned long                      length;
 
   /**
    * Accessor for the root of this hierarchy of windows. This root may
@@ -83,6 +146,8 @@ interface nsIDOMWindow : nsISupports
    * This property is "replaceable" in JavaScript */
   readonly attribute nsIDOMWindow                       top;
 
+           attribute nsIDOMWindow                       opener;
+
   /**
    * Accessor for this window's parent window, or the window itself if
    * there is no parent, or if the parent is of different type
@@ -90,13 +155,94 @@ interface nsIDOMWindow : nsISupports
    */
   readonly attribute nsIDOMWindow                       parent;
 
+  readonly attribute nsIDOMElement                      frameElement;
+
+
+  // the user agent
+  readonly attribute nsIDOMNavigator                    navigator;
+
   /**
    * Get the application cache object for this window.
    */
   readonly attribute nsIDOMOfflineResourceList          applicationCache;
 
 
+  // user prompts
+  void                      alert(in DOMString text);
+  boolean                   confirm(in DOMString text);
+
+  // prompt() should return a null string if cancel is pressed
+  DOMString                 prompt([optional] in DOMString aMessage,
+                                   [optional] in DOMString aInitial);
+
+  void                      print();
+
+  nsIVariant                showModalDialog(in DOMString aURI,
+                                            [optional] in nsIVariant aArgs,
+                                            [optional] in DOMString aOptions);
+
+
+  // cross-document messaging
+  /**
+   * Implements a safe message-passing system which can cross same-origin
+   * boundaries.
+   *
+   * This method, when called, causes a MessageEvent to be asynchronously
+   * dispatched at the primary document for the window upon which this method is
+   * called.  (Note that the postMessage property on windows is allAccess and
+   * thus is readable cross-origin.)  The dispatched event will have message as
+   * its data, the calling context's window as its source, and an origin
+   * determined by the calling context's main document URI.  The targetOrigin
+   * argument specifies a URI and is used to restrict the message to be sent
+   * only when the target window has the same origin as targetOrigin (since,
+   * when the sender and the target have different origins, neither can read the
+   * location of the other).
+   * 
+   * @see <http://www.whatwg.org/html/#dom-window-postmessage>
+   */
+  [implicit_jscontext, binaryname(PostMessageMoz)]
+    void postMessage(in jsval message, in DOMString targetOrigin);
+
+
+  // WindowBase64
+  // Ascii base64 data to binary data and vice versa...
+  DOMString                 atob(in DOMString aAsciiString);
+  DOMString                 btoa(in DOMString aBase64Data);
+
+
+  // WindowSessionStorage
+  /**
+   * Session storage for the current browsing context.
+   */
+  readonly attribute nsIDOMStorage sessionStorage;
+
+
+  // WindowLocalStorage
+  /**
+   * Local storage for the current browsing context.
+   */
+  readonly attribute nsIDOMStorage localStorage;
+
+
+  // DOM Range
+  /**
+   * Method for accessing this window's selection object.
+   */
+  nsISelection              getSelection();
+
+
   // CSSOM-View
+  // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-window-interface
+  nsIDOMMediaQueryList      matchMedia(in DOMString media_query_list);
+
+  readonly attribute nsIDOMScreen                       screen;
+
+  // viewport
+           attribute long                               innerWidth;
+           attribute long                               innerHeight;
+
+
+  // viewport scrolling
   /**
    * Accessor for the current x scroll position in this window in
    * pixels.
@@ -105,6 +251,9 @@ interface nsIDOMWindow : nsISupports
    */
   readonly attribute long                               scrollX;
 
+  /* The offset in pixels by which the window is scrolled */
+  readonly attribute long                               pageXOffset;
+
   /**
    * Accessor for the current y scroll position in this window in
    * pixels.
@@ -112,6 +261,11 @@ interface nsIDOMWindow : nsISupports
    * This attribute is "replaceable" in JavaScript
    */
   readonly attribute long                               scrollY;
+
+  /* The offset in pixels by which the window is scrolled */
+  readonly attribute long                               pageYOffset;
+
+  void                      scroll(in long xScroll, in long yScroll);
 
   /**
    * Method for scrolling this window to an absolute pixel offset.
@@ -125,11 +279,11 @@ interface nsIDOMWindow : nsISupports
   void                      scrollBy(in long xScrollDif, in long yScrollDif);
 
 
-  // DOM Range
-  /**
-   * Method for accessing this window's selection object.
-   */
-  nsISelection              getSelection();
+  // client
+           attribute long                        screenX;
+           attribute long                        screenY;
+           attribute long                        outerWidth;
+           attribute long                        outerHeight;
 
 
   // CSSOM
@@ -177,4 +331,120 @@ interface nsIDOMWindow : nsISupports
    * Method for sizing this window to the content in the window.
    */
   void                      sizeToContent();
+
+  /* [replaceable] content */
+  readonly attribute nsIDOMWindow                       content;
+
+  /* [replaceable] prompter */
+  [noscript] readonly attribute nsIPrompt               prompter;
+
+  readonly attribute boolean                            closed;
+  // http://wiki.whatwg.org/wiki/Crypto
+  readonly attribute nsIDOMCrypto                       crypto;
+  readonly attribute nsIDOMPkcs11                       pkcs11;
+
+  // XXX Shouldn't this be in nsIDOMChromeWindow?
+  /* [replaceable] controllers */
+  readonly attribute nsIControllers                     controllers;
+
+           attribute DOMString                          defaultStatus;
+
+  readonly attribute float                              mozInnerScreenX;
+  readonly attribute float                              mozInnerScreenY;
+
+  /* The maximum offset that the window can be scrolled to
+     (i.e., the document width/height minus the scrollport width/height) */
+  readonly attribute long                               scrollMaxX;
+  readonly attribute long                               scrollMaxY;
+
+           attribute boolean                            fullScreen;
+
+  void                      back();
+  void                      forward();
+  void                      home();
+
+  void                      moveTo(in long xPos, in long yPos);
+  void                      moveBy(in long xDif, in long yDif);
+  void                      resizeTo(in long width, in long height);
+  void                      resizeBy(in long widthDif, in long heightDif);
+
+  /**
+   * Open a new window with this one as the parent.  This method will
+   * NOT examine the JS stack for purposes of determining a caller.
+   * This window will be used for security checks during the search by
+   * name and the default character set on the newly opened window
+   * will just be the default character set of this window.
+   */
+  [noscript] nsIDOMWindow   open(in DOMString url, in DOMString name,
+                                 in DOMString options);
+
+  /**
+   * This method works like open except that aExtraArgument gets
+   * converted into the array window.arguments in JS, if
+   * aExtraArgument is a nsISupportsArray then the individual items in
+   * the array are inserted into window.arguments, and primitive
+   * nsISupports (nsISupportsPrimitives) types are converted to native
+   * JS types when possible.
+   */
+  [noscript] nsIDOMWindow   openDialog(in DOMString url, in DOMString name,
+                                       in DOMString options,
+                                       in nsISupports aExtraArgument);
+
+  // XXX Should this be in nsIDOMChromeWindow?
+  void                      updateCommands(in DOMString action);
+
+  /* Find in page.
+   * @param str: the search pattern
+   * @param caseSensitive: is the search caseSensitive
+   * @param backwards: should we search backwards
+   * @param wrapAround: should we wrap the search
+   * @param wholeWord: should we search only for whole words
+   * @param searchInFrames: should we search through all frames
+   * @param showDialog: should we show the Find dialog
+   */
+  boolean                   find([optional] in DOMString str,
+                                 [optional] in boolean caseSensitive,
+                                 [optional] in boolean backwards,
+                                 [optional] in boolean wrapAround,
+                                 [optional] in boolean wholeWord,
+                                 [optional] in boolean searchInFrames,
+                                 [optional] in boolean showDialog);
+
+  /**
+   * Returns the number of times this document for this window has
+   * been painted to the screen.
+   */
+  readonly attribute unsigned long long mozPaintCount;
+
+  /**
+   * Request a refresh of this browser window.
+   *
+   * @see <http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html>
+   */
+  void
+    mozRequestAnimationFrame([optional] in nsIAnimationFrameListener aListener);
+
+  /**
+   * The current animation start time in milliseconds since the epoch.
+   */
+  readonly attribute long long mozAnimationStartTime;
+
+  /**
+   * @see <http://dev.w3.org/2006/webapi/FileAPI/#creating-revoking>
+   */
+  readonly attribute nsIDOMMozURLProperty URL;
+
+  /**
+   * Global storage, accessible by domain.
+   */
+  readonly attribute nsIDOMStorageList globalStorage;
+};
+
+[scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]
+interface nsIDOMWindowPerformance : nsISupports
+{
+  /**
+   * A namespace to hold performance related data and statistics.
+   */
+  readonly attribute nsIDOMPerformance performance;
 };

@@ -56,7 +56,7 @@ members = [
     #   - nsIDOMLocation.reload
     #   - nsIDOMNSHistory.go
     #   - nsIDOMJSPluginArray.refresh
-    #   - nsIDOMWindowInternal.postMessage
+    #   - nsIDOMWindow.postMessage
     #   - nsIDOMJSWindow.{prompt,setTimeout,setInterval,open,openDialog}
     #
     # (And nsIDOMModalContentWindow.returnValue is an attribute of type
@@ -72,6 +72,9 @@ members = [
     'nsIDOMWindow.getSelection',
     'nsIDOMWindow.scrollByLines',
     'nsIDOMWindow.getComputedStyle',
+    'nsIDOMWindow.sessionStorage',
+    'nsIDOMWindow.localStorage',
+    'nsIDOMWindow.globalStorage',
     'nsIDOMJSWindow.dump',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
@@ -357,7 +360,6 @@ members = [
     'nsIDOMStorage.removeItem',
     'nsIDOMStorage.clear',
     'nsIDOMStorageItem.value',
-    'nsIDOMStorageWindow.*',
 
     # dom/interfaces/stylesheets - None.
 

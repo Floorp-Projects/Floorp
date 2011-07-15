@@ -144,7 +144,7 @@ function populateDM(DownloadData)
 /**
  * Returns an instance to the download manager window
  *
- * @return an instance of nsIDOMWindowInternal
+ * @return an instance of nsIDOMWindow
  */
 function getDMWindow()
 {

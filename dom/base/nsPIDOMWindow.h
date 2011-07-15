@@ -40,11 +40,11 @@
 #ifndef nsPIDOMWindow_h__
 #define nsPIDOMWindow_h__
 
-#include "nsISupports.h"
+#include "nsIDOMWindow.h"
+
 #include "nsIDOMLocation.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
@@ -80,10 +80,10 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xa595249b, 0x1e74, 0x467e, \
- { 0x92, 0x56, 0x58, 0xff, 0x07, 0x1b, 0xc2, 0x96 } }
+{ 0x1bfacc26, 0xad77, 0x42bb, \
+  { 0xb9, 0xbb, 0xa0, 0x19, 0xc8, 0x27, 0x5c, 0x0e } }
 
-class nsPIDOMWindow : public nsIDOMWindowInternal
+class nsPIDOMWindow : public nsIDOMWindow
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOW_IID)
@@ -396,7 +396,7 @@ public:
    * SetOpenerWindow is called.  It might never be true, of course, if the
    * window does not have an opener when it's created.
    */
-  virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener,
+  virtual void SetOpenerWindow(nsIDOMWindow* aOpener,
                                PRBool aOriginalOpener) = 0;
 
   virtual void EnsureSizeUpToDate() = 0;

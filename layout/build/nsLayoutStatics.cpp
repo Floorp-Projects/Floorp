@@ -176,11 +176,7 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  rv = nsCellMap::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsCellMap");
-    return rv;
-  }
+  nsCellMap::Init();
 
   nsCSSRendering::Init();
 

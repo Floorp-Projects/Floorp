@@ -50,7 +50,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
