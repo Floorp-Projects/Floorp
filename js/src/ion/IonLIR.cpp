@@ -245,3 +245,19 @@ LInstruction::print(FILE *fp)
         fprintf(fp, ")");
     }
 }
+
+void
+LMoveGroup::printOperands(FILE *fp)
+{
+    for (size_t i = 0; i < numMoves(); i++) {
+        const LMove &move = getMove(i);
+        fprintf(fp, "[");
+        LAllocation::PrintAllocation(fp, move.from());
+        fprintf(fp, " -> ");
+        LAllocation::PrintAllocation(fp, move.to());
+        fprintf(fp, "]");
+        if (i != numMoves() - 1)
+            fprintf(fp, ", ");
+    }
+}
+

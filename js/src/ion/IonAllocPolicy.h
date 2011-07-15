@@ -46,6 +46,7 @@
 #include "jsarena.h"
 
 #include "Ion.h"
+#include "InlineList.h"
 
 namespace js {
 namespace ion {
@@ -111,6 +112,22 @@ struct TempObject
 public:
     inline void *operator new(size_t nbytes, void *pos) {
         return pos;
+    }
+};
+
+template <typename T>
+class TempObjectPool
+{
+    InlineList<T> freed_;
+
+  public:
+    T *allocate() {
+        if (freed_.empty())
+            return new T();
+        return freed_.pop();
+    }
+    void free(T *obj) {
+        freed_.insert(obj);
     }
 };
 

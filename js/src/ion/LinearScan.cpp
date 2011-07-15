@@ -278,8 +278,8 @@ LinearScanAllocator::createDataStructures()
     allowedRegs = RegisterSet::All();
 
     liveIn = lir->mir()->allocate<BitSet*>(graph.numBlocks());
-    inputMovesFor = lir->mir()->allocate<MoveGroup*>(graph.numVirtualRegisters());
-    outputMovesFor = lir->mir()->allocate<MoveGroup*>(graph.numVirtualRegisters());
+    inputMovesFor = lir->mir()->allocate<LMoveGroup*>(graph.numVirtualRegisters());
+    outputMovesFor = lir->mir()->allocate<LMoveGroup*>(graph.numVirtualRegisters());
     freeUntilPos = lir->mir()->allocate<CodePosition>(Registers::Total);
     nextUsePos = lir->mir()->allocate<CodePosition>(Registers::Total);
     if (!liveIn || !inputMovesFor || !outputMovesFor || !freeUntilPos || !nextUsePos)
@@ -321,8 +321,8 @@ LinearScanAllocator::createDataStructures()
     }
 
     // Initialize input/output move records
-    memset(inputMovesFor, 0, sizeof(MoveGroup *) * graph.numVirtualRegisters());
-    memset(outputMovesFor, 0, sizeof(MoveGroup *) * graph.numVirtualRegisters());
+    memset(inputMovesFor, 0, sizeof(LMoveGroup *) * graph.numVirtualRegisters());
+    memset(outputMovesFor, 0, sizeof(LMoveGroup *) * graph.numVirtualRegisters());
 
     return true;
 }
@@ -475,10 +475,6 @@ LinearScanAllocator::buildLivenessInfo()
 bool
 LinearScanAllocator::allocateRegisters()
 {
-    // Allocate the bottom of the stack for spills
-    if (!stackAssignment.allocateDoubleSlot(&tempSlot))
-        return false;
-
     // Enqueue intervals for allocation
     for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         LiveInterval *live = vregs[i].getInterval(0);
@@ -797,14 +793,10 @@ LinearScanAllocator::reifyAllocations()
             }
 
             // Insert moves
-            if (inputMovesFor[ins->id()]) {
-                if (!inputMovesFor[ins->id()]->toInstructionsBefore(block, *ins, tempSlot))
-                    return false;
-            }
-            if (outputMovesFor[ins->id()]) {
-                if (!outputMovesFor[ins->id()]->toInstructionsBefore(block, *ins, tempSlot))
-                    return false;
-            }
+            if (inputMovesFor[ins->id()])
+                block->insertBefore(*ins, inputMovesFor[ins->id()]);
+            if (outputMovesFor[ins->id()])
+                block->insertBefore(*ins, outputMovesFor[ins->id()]);
         }
 
         // Throw away the now useless phis
@@ -1099,7 +1091,7 @@ LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterv
 {
     JS_ASSERT(vregs[pos].ins());
 
-    MoveGroup **move;
+    LMoveGroup **move;
     switch (pos.subpos()) {
       case CodePosition::INPUT:
         move = &inputMovesFor[pos.ins()];
@@ -1112,7 +1104,7 @@ LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterv
         return false;
     }
     if (!*move) {
-        *move = new MoveGroup;
+        *move = new LMoveGroup;
         (*move)->setFreeRegisters(freeRegs);
     }
 

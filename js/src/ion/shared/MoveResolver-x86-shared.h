@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Andrew Drake <adrake@adrake.org>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,63 +39,64 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef js_ion_movegroup_h__
-#define js_ion_movegroup_h__
+#ifndef jsion_move_resolver_x86_shared_h__
+#define jsion_move_resolver_x86_shared_h__
 
-#include "IonLIR.h"
+#include "ion/shared/CodeGenerator-shared.h"
 
 namespace js {
 namespace ion {
 
-// Register spill/restore/resolve marker.
-class MoveGroup : public TempObject
+class CodeGenerator;
+
+class MoveResolverX86
 {
-    RegisterSet freeRegs;
+    bool inCycle_;
+    CodeGenerator *codegen;
+
+    RegisterSet freeRegs_;
+
+    // These store stack offsets to spill locations, snapshotting
+    // codegen->framePushed_ at the time they were allocated. They are -1 if no
+    // stack space has been allocated for that particular spill.
+    int32 pushedAtCycle_;
+    int32 pushedAtSpill_;
+    int32 pushedAtDoubleSpill_;
+
+    // These are registers that are available for temporary use. They may be
+    // assigned InvalidReg. If no corresponding spill space has been assigned,
+    // then these registers do not need to be spilled.
+    Register spilledReg_;
+    FloatRegister spilledFloatReg_;
+
+    // These registers are available for resolving cycles.
+    Register cycleReg_;
+    FloatRegister cycleFloatReg_;
+
+    void assertDone();
+    void assertValidMove(const LAllocation *from, const LAllocation *to);
+    Register tempReg();
+    FloatRegister tempFloatReg();
+    Operand cycleSlot() const;
+    Operand spillSlot() const;
+    Operand doubleSpillSlot() const;
+
+    void emitMove(const LAllocation *from, const LAllocation *to);
+    void emitDoubleMove(const LAllocation *from, const LAllocation *to);
+    void breakCycle(const LAllocation *from, const LAllocation *to);
+    void completeCycle(const LAllocation *from, const LAllocation *to);
 
   public:
-    struct Entry {
-        LAllocation *from;
-        LAllocation *to;
-
-        Entry () { }
-        Entry(LAllocation *from, LAllocation *to)
-          : from(from),
-            to(to)
-        { }
-    };
-
-  private:
-    Vector<Entry, 1, IonAllocPolicy> entries_;
-
-  public:
-    bool add(LAllocation *from, LAllocation *to) {
-        return entries_.append(Entry(from, to));
-    }
-    bool add(const Entry &ent) {
-        return entries_.append(ent);
-    }
-    size_t numEntries() {
-        return entries_.length();
-    }
-    Entry *getEntry(size_t i) {
-        return &entries_[i];
-    }
-    void setEntry(size_t i, Entry ent) {
-        entries_[i] = ent;
-    }
-    void setFreeRegisters(const RegisterSet &freeRegs) {
-        this->freeRegs = freeRegs;
-    }
-    bool toInstructionsBefore(LBlock *block, LInstruction *ins, uint32 stack);
-    bool toInstructionsAfter(LBlock *block, LInstruction *ins, uint32 stack);
-#ifdef DEBUG
-    void spewWorkStack(const Vector<Entry, 0, IonAllocPolicy>& workStack);
-#else
-    void spewWorkStack(const Vector<Entry, 0, IonAllocPolicy>& workStack) { };
-#endif
+    MoveResolverX86(CodeGenerator *codegen);
+    ~MoveResolverX86();
+    FloatRegister reserveDouble();
+    void setup(LMoveGroup *group);
+    void emit(const MoveGroupResolver::Move &move);
+    void finish();
 };
 
-}
-}
+} // ion
+} // js
 
-#endif
+#endif // jsion_move_resolver_x86_shared_h__
+
