@@ -146,7 +146,7 @@ NS_IMETHODIMP
 inFlasher::DrawElementOutline(nsIDOMElement* aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
-  nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
+  nsCOMPtr<nsIDOMWindow> window = inLayoutUtils::GetWindowFor(aElement);
   if (!window) return NS_OK;
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
   if (!presShell) return NS_OK;
@@ -183,7 +183,7 @@ NS_IMETHODIMP
 inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
-  nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
+  nsCOMPtr<nsIDOMWindow> window = inLayoutUtils::GetWindowFor(aElement);
   if (!window) {
     return NS_OK;
   }

@@ -221,6 +221,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
     const char *tokenEnd = 0;
     const char *valueStart = str;
     const char *valueEnd = 0;
+    PRBool seenEquals = PR_FALSE;
 
     NS_ASSERTION(!nsCRT::IsAsciiSpace(*str), "should be after whitespace.");
 
@@ -231,7 +232,10 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
 
     // Skip over whitespace, '=', and whitespace
     while (nsCRT::IsAsciiSpace(*str)) ++str;
-    if (*str == '=') ++str;
+    if (*str == '=') {
+      ++str;
+      seenEquals = PR_TRUE;
+    }
     while (nsCRT::IsAsciiSpace(*str)) ++str;
 
     PRBool needUnquote = PR_FALSE;
@@ -267,6 +271,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
     // a 'single' line value with no charset and lang.
     // If so, copy it and return.
     if (tokenEnd - tokenStart == paramLen &&
+        seenEquals &&
         !nsCRT::strncasecmp(tokenStart, aParamName, paramLen))
     {
       // if the parameter spans across multiple lines we have to strip out the
@@ -286,13 +291,16 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
     // case B, C, and D
     else if (tokenEnd - tokenStart > paramLen &&
              !nsCRT::strncasecmp(tokenStart, aParamName, paramLen) &&
+             seenEquals &&
              *(tokenStart + paramLen) == '*')
     {
       const char *cp = tokenStart + paramLen + 1; // 1st char pass '*'
       PRBool needUnescape = *(tokenEnd - 1) == '*';
       // the 1st line of a multi-line parameter or a single line  that needs 
       // unescaping. ( title*0*=  or  title*= )
-      if ((*cp == '0' && needUnescape) || (tokenEnd - tokenStart == paramLen + 1))
+      // only allowed for token form, not for quoted-string
+      if (!needUnquote &&
+          ((*cp == '0' && needUnescape) || (tokenEnd - tokenStart == paramLen + 1)))
       {
         // look for single quotation mark(')
         const char *sQuote1 = PL_strchr(valueStart, 0x27);

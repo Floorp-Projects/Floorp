@@ -81,10 +81,6 @@ public:
                                  nsEventStatus*  aEventStatus,
                                  PRBool aControlHeld)  { return NS_OK; }
 
-  NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
-                        nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus) { return NS_OK; }
-
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
@@ -105,6 +101,8 @@ protected:
   }
   
   PRInt32 mIncrement;  
+
+  void Deactivate();
 };
 
 #endif

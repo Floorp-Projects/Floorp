@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLTextAreaElement attributes reflection</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLTextAreaElement attributes reflection **/
+
+var textarea = document.createElement("textarea");
+
+reflectUnsignedInt({
+  element: textarea,
+  attribute: "rows",
+  nonZero: true,
+  defaultValue: 2,
+});
+
+reflectUnsignedInt({
+  element: textarea,
+  attribute: "cols",
+  nonZero: true,
+  defaultValue: 20,
+});
+
+</script>
+</pre>
+</body>
+</html>

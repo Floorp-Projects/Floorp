@@ -54,7 +54,7 @@
 #include "nsXPITriggerInfo.h"
 #include "nsIXPIProgressDialog.h"
 #include "nsIChromeRegistry.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIObserver.h"
 #include "nsIBadCertListener2.h"
 #include "nsISSLErrorListener.h"
@@ -108,7 +108,7 @@ class nsXPInstallManager : public nsIXPIDialogService,
         NS_DECL_NSISSLERRORLISTENER
         NS_DECL_NSICHANNELEVENTSINK
 
-        NS_IMETHOD InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
+        NS_IMETHOD InitManager(nsIDOMWindow* aParentWindow, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
 
     private:
         nsresult    InitManagerInternal();
@@ -118,7 +118,7 @@ class nsXPInstallManager : public nsIXPIDialogService,
         NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
         NS_IMETHOD  LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams);
 #ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
-        PRBool      ConfirmChromeInstall(nsIDOMWindowInternal* aParentWindow, const PRUnichar** aPackage);
+        PRBool      ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const PRUnichar** aPackage);
 #endif
         PRBool      VerifyHash(nsXPITriggerItem* aItem);
         PRInt32     GetIndexFromURL(const PRUnichar* aUrl);
@@ -137,7 +137,7 @@ class nsXPInstallManager : public nsIXPIDialogService,
 
         nsCOMPtr<nsIXPIProgressDialog>  mDlg;
 
-        nsCOMPtr<nsIDOMWindowInternal>  mParentWindow;
+        nsCOMPtr<nsIDOMWindow>          mParentWindow;
         nsCOMPtr<nsILoadGroup>          mLoadGroup;
 };
 

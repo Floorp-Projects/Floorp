@@ -24,11 +24,30 @@ cbuffer cb1
     float4 ShadowColor;
 }
 
+cbuffer cb2
+{
+    float3x3 DeviceSpaceToUserSpace;
+    float2 dimensions;
+    // Precalculate as much as we can!
+    float3 diff;
+    float2 center1;
+    float A;
+    float radius1;
+    float sq_radius1;
+}
+
 struct VS_OUTPUT
 {
     float4 Position : SV_Position;
     float2 TexCoord : TEXCOORD0;
     float2 MaskTexCoord : TEXCOORD1;
+};
+
+struct VS_RADIAL_OUTPUT
+{
+    float4 Position : SV_Position;
+    float2 MaskTexCoord : TEXCOORD0;
+    float2 PixelCoord : TEXCOORD1;
 };
 
 Texture2D tex;
@@ -94,6 +113,25 @@ VS_OUTPUT SampleTextureVS(float3 pos : POSITION)
     return Output;
 }
 
+VS_RADIAL_OUTPUT SampleRadialVS(float3 pos : POSITION)
+{
+    VS_RADIAL_OUTPUT Output;
+    Output.Position.w = 1.0f;
+    Output.Position.x = pos.x * QuadDesc.z + QuadDesc.x;
+    Output.Position.y = pos.y * QuadDesc.w + QuadDesc.y;
+    Output.Position.z = 0;
+    Output.MaskTexCoord.x = pos.x * MaskTexCoords.z + MaskTexCoords.x;
+    Output.MaskTexCoord.y = pos.y * MaskTexCoords.w + MaskTexCoords.y;
+
+    // For the radial gradient pixel shader we need to pass in the pixel's
+    // coordinates in user space for the color to be correctly determined.
+
+    Output.PixelCoord.x = ((Output.Position.x + 1.0f) / 2.0f) * dimensions.x;
+    Output.PixelCoord.y = ((1.0f - Output.Position.y) / 2.0f) * dimensions.y;
+    Output.PixelCoord.xy = mul(float3(Output.PixelCoord.x, Output.PixelCoord.y, 1.0f), DeviceSpaceToUserSpace).xy;
+    return Output;
+}
+
 float4 SampleTexturePS( VS_OUTPUT In) : SV_Target
 {
     return tex.Sample(sSampler, In.TexCoord);
@@ -102,6 +140,68 @@ float4 SampleTexturePS( VS_OUTPUT In) : SV_Target
 float4 SampleMaskTexturePS( VS_OUTPUT In) : SV_Target
 {
     return tex.Sample(sSampler, In.TexCoord) * mask.Sample(sMaskSampler, In.MaskTexCoord).a;
+};
+
+float4 SampleRadialGradientPS( VS_RADIAL_OUTPUT In) : SV_Target
+{
+    // Radial gradient painting is defined as the set of circles whose centers
+    // are described by C(t) = (C2 - C1) * t + C1; with radii
+    // R(t) = (R2 - R1) * t + R1; for R(t) > 0. This shader solves the
+    // quadratic equation that arises when calculating t for pixel (x, y).
+    //
+    // A more extensive derrivation can be found in the pixman radial gradient
+    // code.
+ 
+    float2 p = In.PixelCoord;
+    float3 dp = float3(p - center1, radius1);
+
+    // dpx * dcx + dpy * dcy + r * dr
+    float B = dot(dp, diff);
+
+    float C = pow(dp.x, 2) + pow(dp.y, 2) - sq_radius1;
+
+    float det = pow(B, 2) - A * C;
+
+    if (det < 0) {
+      return float4(0, 0, 0, 0);
+    }
+
+    float sqrt_det = sqrt(abs(det));
+
+    float2 t = (B + float2(sqrt_det, -sqrt_det)) / A;
+
+    float2 isValid = step(float2(-radius1, -radius1), t * diff.z);
+
+    if (max(isValid.x, isValid.y) <= 0) {
+      return float4(0, 0, 0, 0);
+    }
+
+    float upper_t = lerp(t.y, t.x, isValid.x);
+
+    // Multiply the output color by the input mask for the operation.
+    return tex.Sample(sSampler, float2(upper_t, 0.5)) * mask.Sample(sMaskSampler, In.MaskTexCoord).a;
+};
+
+float4 SampleRadialGradientA0PS( VS_RADIAL_OUTPUT In) : SV_Target
+{
+    // This simpler shader is used for the degenerate case where A is 0,
+    // i.e. we're actually solving a linear equation.
+
+    float2 p = In.PixelCoord;
+    float3 dp = float3(p - center1, radius1);
+
+    // dpx * dcx + dpy * dcy + r * dr
+    float B = dot(dp, diff);
+
+    float C = pow(dp.x, 2) + pow(dp.y, 2) - pow(radius1, 2);
+
+    float t = 0.5 * C / B;
+
+    if (-radius1 >= t * diff.z) {
+      return float4(0, 0, 0, 0);
+    }
+
+    return tex.Sample(sSampler, float2(t, 0.5)) * mask.Sample(sMaskSampler, In.MaskTexCoord).a;
 };
 
 float4 SampleShadowHPS( VS_OUTPUT In) : SV_Target
@@ -163,6 +263,24 @@ technique10 SampleTexture
         SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleTextureVS()));
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleTexturePS()));
+    }
+}
+
+technique10 SampleRadialGradient
+{
+    pass P0
+    {
+        SetRasterizerState(TextureRast);
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientPS()));
+    }
+    pass P1
+    {
+        SetRasterizerState(TextureRast);
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientA0PS()));
     }
 }
 

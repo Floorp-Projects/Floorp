@@ -463,7 +463,10 @@ ImageLayerOGL::RenderLayer(int,
 
     if (cairoImage->mSurface) {
         pixmap = sGLXLibrary.CreatePixmap(cairoImage->mSurface);
-        sGLXLibrary.BindTexImage(pixmap);
+        NS_ASSERTION(pixmap, "Failed to create pixmap!");
+        if (pixmap) {
+            sGLXLibrary.BindTexImage(pixmap);
+        }
     }
 #endif
 
@@ -569,7 +572,7 @@ ImageLayerOGL::RenderLayer(int,
         gl()->fDisableVertexAttribArray(texCoordAttribIndex);
     }
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
-    if (cairoImage->mSurface) {
+    if (cairoImage->mSurface && pixmap) {
         sGLXLibrary.ReleaseTexImage(pixmap);
         sGLXLibrary.DestroyPixmap(pixmap);
     }
@@ -767,7 +770,7 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   mSize = aData.mSize;
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
-  if (sGLXLibrary.HasTextureFromPixmap()) {
+  if (sGLXLibrary.SupportsTextureFromPixmap(aData.mSurface)) {
     mSurface = aData.mSurface;
     if (mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
       mLayerProgram = gl::RGBALayerProgramType;
@@ -938,20 +941,20 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 {
   mOGLManager->MakeCurrent();
 
-  LayerProgram* program;
-
   if (mTexImage) {
-    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
     ColorTextureLayerProgram *colorProgram =
       mOGLManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
 
-    ApplyFilter(mFilter);
-
     colorProgram->Activate();
     colorProgram->SetTextureUnit(0);
-    colorProgram->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
-    program = colorProgram;
+
+    mTexImage->BeginTileIteration();
+    do {
+      TextureImage::ScopedBindTexture texBind(mTexImage, LOCAL_GL_TEXTURE0);
+      ApplyFilter(mFilter);
+      colorProgram->SetLayerQuadRect(mTexImage->GetTileRect());
+      mOGLManager->BindAndDrawQuad(colorProgram);
+    } while (mTexImage->NextTile());
   } else {
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[0].GetTextureID());
@@ -962,7 +965,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE2);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[2].GetTextureID());
     ApplyFilter(mFilter);
-    
+
     YCbCrTextureLayerProgram *yuvProgram = mOGLManager->GetYCbCrLayerProgram();
 
     yuvProgram->Activate();
@@ -970,24 +973,14 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                            mPictureRect.width,
                                            mPictureRect.height));
     yuvProgram->SetYCbCrTextureUnits(0, 1, 2);
+    yuvProgram->SetLayerTransform(GetEffectiveTransform());
+    yuvProgram->SetLayerOpacity(GetEffectiveOpacity());
+    yuvProgram->SetRenderOffset(aOffset);
 
-    program = yuvProgram;
-    program->SetLayerTransform(GetEffectiveTransform());
-    program->SetLayerOpacity(GetEffectiveOpacity());
-    program->SetRenderOffset(aOffset);
-
-    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+    mOGLManager->BindAndDrawQuadWithTextureRect(yuvProgram,
                                                 mPictureRect,
                                                 nsIntSize(mSize.width, mSize.height));
-
-    return;
-  }
-
-  program->SetLayerTransform(GetEffectiveTransform());
-  program->SetLayerOpacity(GetEffectiveOpacity());
-  program->SetRenderOffset(aOffset);
-
-  mOGLManager->BindAndDrawQuad(program);
+ }
 }
 
 

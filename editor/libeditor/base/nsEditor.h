@@ -372,7 +372,7 @@ protected:
   // install the event listeners for the editor 
   virtual nsresult InstallEventListeners();
 
-  virtual nsresult CreateEventListeners();
+  virtual void CreateEventListeners();
 
   // unregister and release our event listeners
   virtual void RemoveEventListeners();
@@ -566,7 +566,8 @@ public:
   
   static PRInt32 GetIndexOf(nsIDOMNode *aParent, nsIDOMNode *aChild);
   static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
-  
+  static nsCOMPtr<nsIDOMNode> GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, PRInt32 aOffset);
+
   static nsresult GetStartNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outStartNode, PRInt32 *outStartOffset);
   static nsresult GetEndNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outEndNode, PRInt32 *outEndOffset);
 #if DEBUG_JOE

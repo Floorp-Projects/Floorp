@@ -129,7 +129,7 @@ function test() {
   }
 
   function getCanvas(width, height) {
-    let win = window.QueryInterface(Ci.nsIDOMWindowInternal);
+    let win = window.QueryInterface(Ci.nsIDOMWindow);
     let doc = win.document;
     let canvas = doc.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     canvas.width = width;

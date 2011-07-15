@@ -412,7 +412,6 @@ struct JSObject : js::gc::Cell {
     void        *privateData;               /* private data */
     jsuword     capacity;                   /* total number of available slots */
 
-  private:
     js::Value   *slots;                     /* dynamically allocated slots,
                                                or pointer to fixedSlots() for
                                                dense arrays. */
@@ -1457,6 +1456,13 @@ OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
         obj = op(cx, obj);
 }
 
+/*
+ * It is safe to call with input obj == NULL. Return true iff output obj is
+ * non-NULL.
+ */
+extern JS_FRIEND_API(bool)
+NULLABLE_OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj);
+
 inline void
 OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 {
@@ -1907,10 +1913,6 @@ js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
 extern JS_FRIEND_API(JSBool)
 js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
                      JSObject **protop, js::Class *clasp = NULL);
-
-extern JSBool
-js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
-                     uintN attrs);
 
 /*
  * Wrap boolean, number or string as Boolean, Number or String object.

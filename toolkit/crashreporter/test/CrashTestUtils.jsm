@@ -29,6 +29,9 @@ CrashTestUtils.crash = lib.declare("Crash",
                                    ctypes.default_abi,
                                    ctypes.void_t,
                                    ctypes.int16_t);
+CrashTestUtils.saveAppMemory = lib.declare("SaveAppMemory",
+                                           ctypes.default_abi,
+                                           ctypes.uint64_t);
 
 CrashTestUtils.lockDir = lib.declare("LockDir",
                                      ctypes.default_abi,
@@ -47,3 +50,8 @@ CrashTestUtils.dumpHasInstructionPointerMemory =
               ctypes.default_abi,
               ctypes.bool,
               ctypes.char.ptr);
+
+CrashTestUtils.dumpCheckMemory = lib.declare("DumpCheckMemory",
+                                             ctypes.default_abi,
+                                             ctypes.bool,
+                                             ctypes.char.ptr);

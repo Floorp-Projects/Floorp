@@ -53,10 +53,7 @@ function testPropertyPanel() {
 
   openConsole();
 
-  hudId = HUDService.displaysIndex()[0];
-
-  var HUD = HUDService.hudReferences[hudId];
-  var jsterm = HUD.jsterm;
+  var jsterm = HUDService.getHudByWindow(content).jsterm;
 
   let propPanel = jsterm.openPropertyPanel("Test", [
     1,

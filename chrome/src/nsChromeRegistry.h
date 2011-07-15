@@ -63,7 +63,7 @@
 
 #include "mozilla/Omnijar.h"
 
-class nsIDOMWindowInternal;
+class nsIDOMWindow;
 class nsIURL;
 
 // The chrome registry is actually split between nsChromeRegistryChrome and
@@ -130,7 +130,7 @@ protected:
 
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
 
-  static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
+  static nsresult RefreshWindow(nsIDOMWindow* aWindow);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 

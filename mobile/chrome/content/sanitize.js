@@ -90,6 +90,21 @@ Sanitizer.prototype = {
   },
   
   items: {
+    // Clear Sync account before passwords so that Sync still has access to the
+    // credentials to clean up device-specific records on the server. Also
+    // disable it before wiping history so we don't accidentally sync that.
+    syncAccount: {
+      clear: function ()
+      {
+        WeaveGlue.disconnect();
+      },
+
+      get canClear()
+      {
+        return (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED);
+      }
+    },
+
     cache: {
       clear: function ()
       {
@@ -279,18 +294,6 @@ Sanitizer.prototype = {
       get canClear()
       {
         return true;
-      }
-    },
-
-    syncAccount: {
-      clear: function ()
-      {
-        WeaveGlue.disconnect();
-      },
-
-      get canClear()
-      {
-        return (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED);
       }
     }
   }

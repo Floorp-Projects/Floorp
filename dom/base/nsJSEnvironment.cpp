@@ -185,7 +185,10 @@ static PRTime sMaxChromeScriptRunTime;
 static nsIScriptSecurityManager *sSecurityManager;
 
 // nsMemoryPressureObserver observes the memory-pressure notifications
-// and forces a garbage collection and cycle collection when it happens.
+// and forces a garbage collection and cycle collection when it happens, if
+// the appropriate pref is set.
+
+static PRBool sGCOnMemoryPressure;
 
 class nsMemoryPressureObserver : public nsIObserver
 {
@@ -200,8 +203,10 @@ NS_IMETHODIMP
 nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
-  nsJSContext::GarbageCollectNow();
-  nsJSContext::CycleCollectNow();
+  if (sGCOnMemoryPressure) {
+    nsJSContext::GarbageCollectNow();
+    nsJSContext::CycleCollectNow();
+  }
   return NS_OK;
 }
 
@@ -1836,7 +1841,9 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 #ifdef NS_FUNCTION_TIMER
   {
     JSObject *obj = static_cast<JSObject *>(aHandler);
-    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
+    if (obj->isFunctionProxy())
+      obj = obj->unwrap(NULL);
+    JSString *id = JS_GetFunctionId(GET_FUNCTION_PRIVATE(mContext, obj));
     JSAutoByteString bytes;
     const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
     NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
@@ -3802,6 +3809,10 @@ nsJSRuntime::Init()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
     return NS_ERROR_FAILURE;
+
+  Preferences::AddBoolVarCache(&sGCOnMemoryPressure,
+                               "javascript.options.gc_on_memory_pressure",
+                               PR_TRUE);
 
   nsIObserver* memPressureObserver = new nsMemoryPressureObserver();
   NS_ENSURE_TRUE(memPressureObserver, NS_ERROR_OUT_OF_MEMORY);

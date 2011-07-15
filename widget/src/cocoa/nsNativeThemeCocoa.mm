@@ -280,6 +280,15 @@ static int EnumSizeForCocoaSize(NSControlSize cocoaControlSize) {
     return regularControlSize;
 }
 
+static NSControlSize CocoaSizeForEnum(PRInt32 enumControlSize) {
+  if (enumControlSize == miniControlSize)
+    return NSMiniControlSize;
+  else if (enumControlSize == smallControlSize)
+    return NSSmallControlSize;
+  else
+    return NSRegularControlSize;
+}
+
 static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, const float marginSet[][3][4])
 {
   if (!marginSet)
@@ -557,6 +566,49 @@ struct CellRenderSettings {
 };
 
 /*
+ * This is a helper method that returns the required NSControlSize given a size
+ * and the size of the three controls plus a tolerance.
+ * size - The width or the height of the element to draw.
+ * sizes - An array with the all the width/height of the element for its
+ *         different sizes.
+ * tolerance - The tolerance as passed to DrawCellWithSnapping.
+ * NOTE: returns NSRegularControlSize if all values in 'sizes' are zero.
+ */
+static NSControlSize FindControlSize(CGFloat size, CGFloat* sizes, CGFloat tolerance)
+{
+  for (PRUint32 i = miniControlSize; i <= regularControlSize; ++i) {
+    if (sizes[i] == 0) {
+      continue;
+    }
+
+    CGFloat next = 0;
+    // Find next value.
+    for (PRUint32 j = i+1; j <= regularControlSize; ++j) {
+      if (sizes[j] != 0) {
+        next = sizes[j];
+        break;
+      }
+    }
+
+    // If it's the latest value, we pick it.
+    if (next == 0) {
+      return CocoaSizeForEnum(i);
+    }
+
+    if (size <= sizes[i] + tolerance && size < next) {
+      return CocoaSizeForEnum(i);
+    }
+  }
+
+  // If we are here, that means sizes[] was an array with only empty values
+  // or the algorithm above is wrong.
+  // The former can happen but the later would be wrong.
+  NS_ASSERTION(sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0,
+               "We found no control! We shouldn't be there!");
+  return CocoaSizeForEnum(regularControlSize);
+}
+
+/*
  * Draw the given NSCell into the given cgContext with a nice control size.
  *
  * This function is similar to DrawCellWithScaling, but it decides what
@@ -583,18 +635,12 @@ static void DrawCellWithSnapping(NSCell *cell,
   const NSSize smallSize = sizes[EnumSizeForCocoaSize(NSSmallControlSize)];
   const NSSize regularSize = sizes[EnumSizeForCocoaSize(NSRegularControlSize)];
 
-  NSControlSize controlSizeX = NSRegularControlSize, controlSizeY = NSRegularControlSize;
   HIRect drawRect = destRect;
 
-  if (rectWidth <= miniSize.width + snapTolerance && rectWidth < smallSize.width)
-    controlSizeX = NSMiniControlSize;
-  else if(rectWidth <= smallSize.width + snapTolerance && rectWidth < regularSize.width)
-    controlSizeX = NSSmallControlSize;
-
-  if (rectHeight <= miniSize.height + snapTolerance && rectHeight < smallSize.height)
-    controlSizeY = NSMiniControlSize;
-  else if(rectHeight <= smallSize.height + snapTolerance && rectHeight < regularSize.height)
-    controlSizeY = NSSmallControlSize;
+  CGFloat controlWidths[3] = { miniSize.width, smallSize.width, regularSize.width };
+  NSControlSize controlSizeX = FindControlSize(rectWidth, controlWidths, snapTolerance);
+  CGFloat controlHeights[3] = { miniSize.height, smallSize.height, regularSize.height };
+  NSControlSize controlSizeY = FindControlSize(rectHeight, controlHeights, snapTolerance);
 
   NSControlSize controlSize = NSRegularControlSize;
   int sizeIndex = 0;

@@ -44,16 +44,9 @@
 //
 
 #include "nsBox.h"
-#include "nsPresContext.h"
 #include "nsCOMPtr.h"
-#include "nsIContent.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIFrame.h"
 #include "nsBoxLayout.h"
-
-nsBoxLayout::nsBoxLayout()
-{
-}
 
 void
 nsBoxLayout::AddBorderAndPadding(nsIBox* aBox, nsSize& aSize)
@@ -131,42 +124,4 @@ nsBoxLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSize2)
      aSize.height = aSize2.height;
 }
 
-void
-nsBoxLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
-                              nsIBox* aPrevBox,
-                              const nsFrameList::Slice& aNewChildren)
-{
-}
-
-void
-nsBoxLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
-                              const nsFrameList::Slice& aNewChildren)
-{
-}
-
-void
-nsBoxLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
-{
-}
-
-void
-nsBoxLayout::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
-{
-}
-
-void
-nsBoxLayout::IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState)
-{
-}
-
-// nsISupports
-NS_IMPL_ADDREF(nsBoxLayout)
-NS_IMPL_RELEASE(nsBoxLayout)
-
-//
-// QueryInterface
-//
-NS_INTERFACE_MAP_BEGIN(nsBoxLayout)
-  NS_INTERFACE_MAP_ENTRY(nsIBoxLayout)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(nsBoxLayout, nsBoxLayout)

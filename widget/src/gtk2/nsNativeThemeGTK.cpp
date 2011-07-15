@@ -54,7 +54,7 @@
 #include "nsILookAndFeel.h"
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
-#include "nsIMenuFrame.h"
+#include "nsMenuFrame.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsRenderingContext.h"
@@ -332,7 +332,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_MENUSEPARATOR ||
             aWidgetType == NS_THEME_MENUARROW) {
           PRBool isTopLevel = PR_FALSE;
-          nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+          nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
           if (menuFrame) {
             isTopLevel = menuFrame->IsOnMenuBar();
           }

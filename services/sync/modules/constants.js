@@ -199,7 +199,6 @@ JPAKE_ERROR_USERABORT:                 "jpake.error.userabort",
 // Ways that a sync can be disabled (messages only to be printed in debug log)
 kSyncMasterPasswordLocked:             "User elected to leave Master Password locked",
 kSyncWeaveDisabled:                    "Weave is disabled",
-kSyncNotLoggedIn:                      "User is not logged in",
 kSyncNetworkOffline:                   "Network is offline",
 kSyncBackoffNotMet:                    "Trying to sync before the server said it's okay",
 kFirstSyncChoiceNotMade:               "User has not selected an action for first sync",

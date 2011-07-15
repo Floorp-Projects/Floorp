@@ -60,7 +60,6 @@
 #endif // MOZ_WIDGET_QT
 
 #include "mozilla/dom/ContentParent.h"
-using mozilla::dom::ContentParent;
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
@@ -254,6 +253,8 @@ static char **gQtOnlyArgv;
 #include "nsGTKToolkit.h"
 #endif
 #include "BinaryPath.h"
+
+using mozilla::dom::ContentParent;
 
 // Save literal putenv string to environment variable.
 static void
@@ -970,6 +971,13 @@ NS_IMETHODIMP
 nsXULAppInfo::AppendAppNotesToCrashReport(const nsACString& data)
 {
   return CrashReporter::AppendAppNotesToCrashReport(data);
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::RegisterAppMemory(PRUint64 pointer,
+                                PRUint64 len)
+{
+  return CrashReporter::RegisterAppMemory((void *)pointer, len);
 }
 
 NS_IMETHODIMP
@@ -2411,7 +2419,7 @@ static nsGTKToolkit* GetGTKToolkit()
   nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
   if (!svc)
     return nsnull;
-  nsCOMPtr<nsIDOMWindowInternal> window;
+  nsCOMPtr<nsIDOMWindow> window;
   svc->GetHiddenDOMWindow(getter_AddRefs(window));
   if (!window)
     return nsnull;
@@ -2536,9 +2544,9 @@ NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 #include <dwrite.h>
 
 typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
-  __in   DWRITE_FACTORY_TYPE factoryType,
-  __in   REFIID iid,
-  __out  IUnknown **factory
+  DWRITE_FACTORY_TYPE factoryType,
+  REFIID iid,
+  IUnknown **factory
 );
 
 #ifdef DEBUG_DWRITE_STARTUP

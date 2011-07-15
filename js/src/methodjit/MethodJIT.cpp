@@ -936,7 +936,7 @@ CheckStackAndEnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, bool part
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
-    Value *stackLimit = cx->stack.space().getStackLimit(cx);
+    Value *stackLimit = cx->stack.space().getStackLimit(cx, REPORT_ERROR);
     if (!stackLimit)
         return Jaeger_Throwing;
 

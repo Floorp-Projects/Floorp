@@ -44,6 +44,7 @@ interface imgIRequest;
 
 interface nsIChannel;
 interface nsILoadGroup;
+interface nsIPrincipal;
 interface nsIStreamListener;
 interface nsIURI;
 
@@ -59,14 +60,20 @@ interface nsIChannelPolicy;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(47fbc3e7-c654-4ffb-83fc-a861394145ee)]
+[scriptable, uuid(20a5e3e9-0d5b-482c-9f41-942b5f19e5a3)]
 interface imgILoader : nsISupports
 {
+  // Extra flags to pass to loadImage if you want a load to use CORS
+  // validation.
+  const unsigned long LOAD_CORS_ANONYMOUS = 1 << 16;
+  const unsigned long LOAD_CORS_USE_CREDENTIALS = 1 << 17;
+
   /**
    * Start the load and decode of an image.
    * @param aURI the URI to load
    * @param aInitialDocumentURI the URI that 'initiated' the load -- used for 3rd party cookie blocking
    * @param aReferrerURI the 'referring' URI
+   * @param aLoadingPrincipal the principal of the loading document
    * @param aLoadGroup Loadgroup to put the image load into
    * @param aObserver the observer (may be null)
    * @param aCX some random data
@@ -85,6 +92,7 @@ interface imgILoader : nsISupports
   imgIRequest loadImage(in nsIURI aURI,
                         in nsIURI aInitialDocumentURL,
                         in nsIURI aReferrerURI,
+                        in nsIPrincipal aLoadingPrincipal,
                         in nsILoadGroup aLoadGroup,
                         in imgIDecoderObserver aObserver,
                         in nsISupports aCX,

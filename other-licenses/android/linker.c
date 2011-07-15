@@ -940,7 +940,8 @@ load_segments(int fd, size_t offset, void *header, soinfo *si)
             TRACE("[ %d - Trying to load segment from '%s' @ 0x%08x "
                   "(0x%08x). p_vaddr=0x%08x p_offset=0x%08x ]\n", pid, si->name,
                   (unsigned)tmp, len, phdr->p_vaddr, phdr->p_offset);
-            if (fd == -1 || PFLAGS_TO_PROT(phdr->p_flags) & PROT_WRITE) {
+            if (fd == -1 || ((si->flags & FLAG_MMAPPED) &&
+                             PFLAGS_TO_PROT(phdr->p_flags) & PROT_WRITE)) {
                 pbase = mmap(tmp, len, PROT_WRITE,
                              MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
                 if (pbase != MAP_FAILED) {
@@ -950,7 +951,7 @@ load_segments(int fd, size_t offset, void *header, soinfo *si)
                     DL_ERR("%s: Memcpy mapping of segment failed!", si->name);
             } else {
                 pbase = mmap(tmp, len, PFLAGS_TO_PROT(phdr->p_flags),
-                             MAP_SHARED | MAP_FIXED, fd,
+                             ((si->flags & FLAG_MMAPPED) ? MAP_SHARED : MAP_PRIVATE) | MAP_FIXED, fd,
                              offset + ((phdr->p_offset) & (~PAGE_MASK)));
             }
             if (pbase == MAP_FAILED) {
@@ -1240,7 +1241,7 @@ load_mapped_library(const char * name, int fd,
      * segments */
     si->base = req_base;
     si->size = ext_sz;
-    si->flags = 0;
+    si->flags = FLAG_MMAPPED;
     si->entry = 0;
     si->dynamic = (unsigned *)-1;
     if (alloc_mem_region(si) < 0)
@@ -1518,7 +1519,8 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
 
         /* crappy hack part 2: make this page writable */
         void * reloc_page = reloc & ~PAGE_MASK;
-        if (reloc < ro_region_end && reloc_page != remapped_page) {
+        if ((si->flags & FLAG_MMAPPED) &&
+            (reloc < ro_region_end && reloc_page != remapped_page)) {
             if (remapped_page != NULL)
                 mprotect(remapped_page, PAGE_SIZE, PROT_READ | PROT_EXEC);
             memcpy(copy_page, reloc_page, PAGE_SIZE);

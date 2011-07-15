@@ -2673,9 +2673,9 @@ DocumentViewerImpl::Print(PRBool            aSilent,
 #endif
 }
 
-/* [noscript] void printWithParent (in nsIDOMWindowInternal aParentWin, in nsIPrintSettings aThePrintSettings, in nsIWebProgressListener aWPListener); */
+/* [noscript] void printWithParent (in nsIDOMWindow aParentWin, in nsIPrintSettings aThePrintSettings, in nsIWebProgressListener aWPListener); */
 NS_IMETHODIMP 
-DocumentViewerImpl::PrintWithParent(nsIDOMWindowInternal *aParentWin, nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener)
+DocumentViewerImpl::PrintWithParent(nsIDOMWindow*, nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener)
 {
 #ifdef NS_PRINTING
   return Print(aThePrintSettings, aWPListener);
@@ -3649,6 +3649,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
 
   nsPrintEventDispatcher beforeAndAfterPrint(mDocument);
+  NS_ENSURE_STATE(!GetIsPrinting());
   // If we are hosting a full-page plugin, tell it to print
   // first. It shows its own native print UI.
   nsCOMPtr<nsIPluginDocument> pDoc(do_QueryInterface(mDocument));
@@ -3722,6 +3723,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   NS_ENSURE_STATE(doc);
 
   nsPrintEventDispatcher beforeAndAfterPrint(doc);
+  NS_ENSURE_STATE(!GetIsPrinting());
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();
 
@@ -4286,7 +4288,7 @@ DocumentViewerImpl::OnDonePrinting()
     if (mDeferredWindowClose) {
       mDeferredWindowClose = PR_FALSE;
       nsCOMPtr<nsISupports> container = do_QueryReferent(mContainer);
-      nsCOMPtr<nsIDOMWindowInternal> win = do_GetInterface(container);
+      nsCOMPtr<nsIDOMWindow> win = do_GetInterface(container);
       if (win)
         win->Close();
     } else if (mClosingWhilePrinting) {
