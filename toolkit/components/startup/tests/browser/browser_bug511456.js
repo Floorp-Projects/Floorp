@@ -66,7 +66,7 @@ var Watcher = {
 
   onOpenWindow: function(win) {
     var domwindow = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                       .getInterface(Components.interfaces.nsIDOMWindowInternal);
+                       .getInterface(Components.interfaces.nsIDOMWindow);
     var self = this;
     domwindow.addEventListener("load", function() {
       domwindow.removeEventListener("load", arguments.callee, false);

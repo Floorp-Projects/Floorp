@@ -827,7 +827,7 @@ var AddonManagerInternal = {
    * @param  aMimetype
    *         The mimetype of add-ons being installed
    * @param  aSource
-   *         The nsIDOMWindowInternal that started the installs
+   *         The nsIDOMWindow that started the installs
    * @param  aURI
    *         the nsIURI that started the installs
    * @param  aInstalls

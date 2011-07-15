@@ -46,9 +46,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
@@ -427,12 +426,11 @@ nsCoreUtils::GetScreenCoordsForWindow(nsINode *aNode)
 
   nsCOMPtr<nsIDOMWindow> window;
   domDoc->GetDefaultView(getter_AddRefs(window));
-  nsCOMPtr<nsIDOMWindowInternal> windowInter(do_QueryInterface(window));
-  if (!windowInter)
+  if (!window)
     return coords;
 
-  windowInter->GetScreenX(&coords.x);
-  windowInter->GetScreenY(&coords.y);
+  window->GetScreenX(&coords.x);
+  window->GetScreenY(&coords.y);
   return coords;
 }
 

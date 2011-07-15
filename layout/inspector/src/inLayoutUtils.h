@@ -42,7 +42,7 @@ class nsBindingManager;
 class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMNode;
-class nsIDOMWindowInternal;
+class nsIDOMWindow;
 class nsEventStateManager;
 class nsIFrame;
 class nsIPresShell;
@@ -51,8 +51,8 @@ class nsISupports;
 class inLayoutUtils
 {
 public:
-  static nsIDOMWindowInternal* GetWindowFor(nsIDOMNode* aNode);
-  static nsIDOMWindowInternal* GetWindowFor(nsIDOMDocument* aDoc);
+  static nsIDOMWindow* GetWindowFor(nsIDOMNode* aNode);
+  static nsIDOMWindow* GetWindowFor(nsIDOMDocument* aDoc);
   static nsIPresShell* GetPresShellFor(nsISupports* aThing);
   static nsIFrame* GetFrameFor(nsIDOMElement* aElement);
   static nsEventStateManager* GetEventStateManagerFor(nsIDOMElement *aElement);

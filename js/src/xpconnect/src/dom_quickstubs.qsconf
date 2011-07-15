@@ -56,7 +56,7 @@ members = [
     #   - nsIDOMLocation.reload
     #   - nsIDOMNSHistory.go
     #   - nsIDOMJSPluginArray.refresh
-    #   - nsIDOMWindowInternal.postMessage
+    #   - nsIDOMWindow.postMessage
     #   - nsIDOMJSWindow.{prompt,setTimeout,setInterval,open,openDialog}
     #
     # (And nsIDOMModalContentWindow.returnValue is an attribute of type

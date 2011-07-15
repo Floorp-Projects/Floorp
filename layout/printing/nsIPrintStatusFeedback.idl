@@ -38,16 +38,16 @@
 #include "nsISupports.idl"
 
 interface nsIDocShell;
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 
-[scriptable, uuid(19855DFF-3248-4902-B196-93EE4C477880)]
+[scriptable, uuid(e439d3eb-b1ed-449c-aaf7-c693e399b16f)]
 interface nsIPrintStatusFeedback : nsISupports {
 
 	void showStatusString(in wstring status);
 	void startMeteors();
 	void stopMeteors();
 	void showProgress(in long percent);
-	[noscript] void setDocShell(in nsIDocShell shell, in nsIDOMWindowInternal window);
+	[noscript] void setDocShell(in nsIDocShell shell, in nsIDOMWindow window);
 	void closeWindow();
 };
 

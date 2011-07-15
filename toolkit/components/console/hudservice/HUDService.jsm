@@ -4434,7 +4434,7 @@ JSTerm.prototype = {
 
   get _window()
   {
-    return this.context.get().QueryInterface(Ci.nsIDOMWindowInternal);
+    return this.context.get().QueryInterface(Ci.nsIDOMWindow);
   },
 
   /**

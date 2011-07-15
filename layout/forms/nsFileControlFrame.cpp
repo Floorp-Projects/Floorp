@@ -422,7 +422,7 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   if (!ShouldProcessMouseClick(aMouseEvent))
     return NS_OK;
 
-  // Get parent nsIDOMWindowInternal object.
+  // Get parent nsPIDOMWindow object.
   nsIContent* content = mFrame->GetContent();
   if (!content)
     return NS_ERROR_FAILURE;

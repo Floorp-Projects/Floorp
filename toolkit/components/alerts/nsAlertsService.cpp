@@ -40,7 +40,6 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
-using mozilla::dom::ContentChild;
 
 #include "nsAlertsService.h"
 
@@ -52,7 +51,7 @@ using mozilla::dom::ContentChild;
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIWindowWatcher.h"
 #include "nsDependentString.h"
 #include "nsWidgetsCID.h"
@@ -64,6 +63,8 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 #define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xul"
 
 #endif // !ANDROID
+
+using mozilla::dom::ContentChild;
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsAlertsService, nsIAlertsService, nsIAlertsProgressListener)
 

@@ -117,7 +117,7 @@ HelperAppLauncherDialog.prototype = {
     // Use file picker to show dialog.
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let windowTitle = "";
-    let parent = aContext.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal);
+    let parent = aContext.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     picker.init(parent, windowTitle, Ci.nsIFilePicker.modeSave);
     picker.defaultString = aDefaultFile;
 
