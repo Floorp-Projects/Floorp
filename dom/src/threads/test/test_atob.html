@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script src="atob_worker.js" language="javascript"></script>
+<script class="testbody" type="text/javascript">
+
+  var dataIndex = 0;
+
+  var worker = new Worker("atob_worker.js");
+  worker.onmessage = function(event) {
+    switch (event.data.type) {
+      case "done":
+        is(dataIndex, data.length, "Saw all values");
+        SimpleTest.finish();
+        return;
+      case "btoa":
+        is(btoa(data[dataIndex]), event.data.value,
+           "Good btoa value " + dataIndex);
+        break;
+      case "atob":
+        is(atob(btoa(data[dataIndex])) + "", event.data.value,
+           "Good round trip value " + dataIndex);
+        dataIndex++;
+        break;
+      default:
+        ok(false, "Worker posted a bad message: " + event.message);
+        worker.terminate();
+        SimpleTest.finish();
+    }
+  }
+
+  worker.onerror = function(event) {
+    ok(false, "Worker threw an error: " + event.message);
+    worker.terminate();
+    SimpleTest.finish();
+  }
+
+  worker.postMessage("go");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
