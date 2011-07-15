@@ -39,41 +39,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_h__
-#define jsion_ion_h__
+#ifndef jsion_coderef_h__
+#define jsion_coderef_h__
 
-#include "jscntxt.h"
-#include "IonCode.h"
+namespace JSC {
+    class ExecutablePool;
+}
 
 namespace js {
 namespace ion {
 
-class TempAllocator;
-
-// An Ion context is needed to enter into either an Ion method or an instance
-// of the Ion compiler. It points to a temporary allocator and the active
-// JSContext.
-class IonContext
+class IonCode
 {
-  public:
-    IonContext(JSContext *cx, TempAllocator *temp);
-    ~IonContext();
+    uint8 *code_;
+    size_t size_;
+    JSC::ExecutablePool *pool_;
 
-    JSContext *cx;
-    TempAllocator *temp;
+  public:
+    IonCode()
+      : code_(NULL),
+        pool_(NULL)
+    { }
+    IonCode(uint8 *code, size_t size, JSC::ExecutablePool *pool)
+      : code_(code),
+        size_(size),
+        pool_(pool)
+    { }
+
+    uint8 *code() const {
+        return code_;
+    }
+    size_t size() const {
+        return size_;
+    }
+    void release();
 };
 
-// Initialize Ion statically for all JSRuntimes.
-bool InitializeIon();
+// An IonScript attaches Ion-generated information to a JSScript.
+struct IonScript
+{
+    IonCode method;
 
-// Get and set the current Ion context.
-IonContext *GetIonContext();
-bool SetIonContext(IonContext *ctx);
-
-bool Go(JSContext *cx, JSScript *script, js::StackFrame *fp);
+    static void Destroy(JSContext *cx, JSScript *script);
+};
 
 }
 }
 
-#endif // jsion_ion_h__
+#endif // jsion_coderef_h__
 
