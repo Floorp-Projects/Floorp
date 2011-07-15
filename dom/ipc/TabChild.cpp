@@ -284,9 +284,8 @@ TabChild::GetVisibility(PRBool* aVisibility)
 NS_IMETHODIMP
 TabChild::SetVisibility(PRBool aVisibility)
 {
-  NS_NOTREACHED("TabChild::SetVisibility not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // should the platform support this? Bug 666365
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -556,6 +555,13 @@ TabChild::RecvActivate()
   return true;
 }
 
+bool TabChild::RecvDeactivate()
+{
+  nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(mWebNav);
+  browser->Deactivate();
+  return true;
+}
+
 bool
 TabChild::RecvMouseEvent(const nsString& aType,
                          const float&    aX,
@@ -570,6 +576,31 @@ TabChild::RecvMouseEvent(const nsString& aType,
   NS_ENSURE_TRUE(utils, true);
   utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
                         aIgnoreRootScrollFrame);
+  return true;
+}
+
+bool
+TabChild::RecvRealMouseEvent(const nsMouseEvent& event)
+{
+  nsMouseEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  return true;
+}
+
+bool
+TabChild::RecvMouseScrollEvent(const nsMouseScrollEvent& event)
+{
+  nsMouseScrollEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  return true;
+}
+
+
+bool
+TabChild::RecvRealKeyEvent(const nsKeyEvent& event)
+{
+  nsKeyEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
   return true;
 }
 

@@ -62,6 +62,13 @@ MarkString(JSTracer *trc, JSString *str, const char *name);
 void
 MarkObject(JSTracer *trc, JSObject &obj, const char *name);
 
+/*
+ * Mark an object that may be in a different compartment from the compartment
+ * being GC'd. (Although it won't be marked if it's in the wrong compartment.)
+ */
+void
+MarkCrossCompartmentObject(JSTracer *trc, JSObject &obj, const char *name);
+
 void
 MarkObjectWithPrinter(JSTracer *trc, JSObject &obj, JSTraceNamePrinter printer,
 		      const void *arg, size_t index);
@@ -101,6 +108,13 @@ MarkValueRaw(JSTracer *trc, const js::Value &v);
 
 void
 MarkValue(JSTracer *trc, const js::Value &v, const char *name);
+
+/*
+ * Mark a value that may be in a different compartment from the compartment
+ * being GC'd. (Although it won't be marked if it's in the wrong compartment.)
+ */
+void
+MarkCrossCompartmentValue(JSTracer *trc, const js::Value &v, const char *name);
 
 void
 MarkValueRange(JSTracer *trc, Value *beg, Value *end, const char *name);

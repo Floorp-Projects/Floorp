@@ -114,7 +114,7 @@
 #include "nsIDOMMimeTypeArray.h"
 #include "nsIDOMMimeType.h"
 #include "nsIDOMLocation.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMJSWindow.h"
 #include "nsIDOMWindowCollection.h"
@@ -1574,7 +1574,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ChromeWorker, nsDOMWorker::NewChromeWorker)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFile::NewFile)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
 };
 
@@ -2392,9 +2392,7 @@ nsDOMClassInfo::Init()
       DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
       DOM_CLASSINFO_MAP_END
@@ -2402,9 +2400,7 @@ nsDOMClassInfo::Init()
       DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
       DOM_CLASSINFO_MAP_END
     }
@@ -2413,18 +2409,14 @@ nsDOMClassInfo::Init()
       DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
       DOM_CLASSINFO_MAP_END
     } else {
       DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
       DOM_CLASSINFO_MAP_END
     }
   }
@@ -3143,10 +3135,8 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
   DOM_CLASSINFO_MAP_END
 
@@ -4038,9 +4028,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
   DOM_CLASSINFO_MAP_END
@@ -5567,7 +5555,7 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     JSString *val = ::JS_ValueToString(cx, *vp);
     NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMWindow> window = do_QueryWrappedNative(wrapper);
     NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIDOMLocation> location;
@@ -6911,7 +6899,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         jsval v;
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = WrapNative(cx, wrapperObj, child_win,
-                        &NS_GET_IID(nsIDOMWindowInternal), PR_TRUE, &v,
+                        &NS_GET_IID(nsIDOMWindow), PR_TRUE, &v,
                         getter_AddRefs(holder));
         NS_ENSURE_SUCCESS(rv, rv);
 

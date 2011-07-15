@@ -12,5 +12,5 @@ script regress-332472.js
 script regress-333728.js
 script regress-342359.js
 script regress-347674.js
-script regress-350650-n.js
+skip-if(Android) script regress-350650-n.js
 script regress-350837.js

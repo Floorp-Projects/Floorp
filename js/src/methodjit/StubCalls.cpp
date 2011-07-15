@@ -868,10 +868,8 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
             cond = cmp OP 0;                                                  \
         } else {                                                              \
             double l, r;                                                      \
-            if (!ValueToNumber(cx, lval, &l) ||                               \
-                !ValueToNumber(cx, rval, &r)) {                               \
+            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))           \
                 THROWV(JS_FALSE);                                             \
-            }                                                                 \
             cond = JSDOUBLE_COMPARE(l, OP, r, false);                         \
         }                                                                     \
         regs.sp[-2].setBoolean(cond);                                         \
@@ -993,10 +991,8 @@ StubEqualityOp(VMFrame &f)
                 cond = equal == EQ;
             } else {
                 double l, r;
-                if (!ValueToNumber(cx, lval, &l) ||
-                    !ValueToNumber(cx, rval, &r)) {
+                if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
                     return false;
-                }
 
                 if (EQ)
                     cond = JSDOUBLE_COMPARE(l, ==, r, false);
@@ -1123,7 +1119,7 @@ stubs::Add(VMFrame &f)
 
         } else {
             double l, r;
-            if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
+            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
                 THROW();
             l += r;
             if (!regs.sp[-2].setNumber(l) &&
@@ -1149,10 +1145,8 @@ stubs::Sub(VMFrame &f)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
     double d1, d2;
-    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+    if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
         THROW();
-    }
     double d = d1 - d2;
     if (!regs.sp[-2].setNumber(d))
         MonitorArithmeticOverflow(f, regs.sp[-2]);
@@ -1164,10 +1158,8 @@ stubs::Mul(VMFrame &f)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
     double d1, d2;
-    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+    if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
         THROW();
-    }
     double d = d1 * d2;
     if (!regs.sp[-2].setNumber(d))
         f.script()->types.monitorOverflow(cx, f.pc());
@@ -1181,10 +1173,8 @@ stubs::Div(VMFrame &f)
     FrameRegs &regs = f.regs;
 
     double d1, d2;
-    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+    if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
         THROW();
-    }
     if (d2 == 0) {
         const Value *vp;
 #ifdef XP_WIN
@@ -1223,10 +1213,8 @@ stubs::Mod(VMFrame &f)
         regs.sp[-2].setInt32(mod);
     } else {
         double d1, d2;
-        if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-            !ValueToNumber(cx, regs.sp[-1], &d2)) {
+        if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
             THROW();
-        }
         if (d2 == 0) {
             regs.sp[-2].setDouble(js_NaN);
         } else {
@@ -1346,7 +1334,7 @@ void JS_FASTCALL
 stubs::Neg(VMFrame &f)
 {
     double d;
-    if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
+    if (!ToNumber(f.cx, f.regs.sp[-1], &d))
         THROW();
     d = -d;
     if (!f.regs.sp[-1].setNumber(d))
@@ -1421,7 +1409,7 @@ stubs::InitElem(VMFrame &f, uint32 last)
     if (rref.isMagic(JS_ARRAY_HOLE)) {
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(jsuint(JSID_TO_INT(id)) < JS_ARGS_LENGTH_MAX);
+        JS_ASSERT(jsuint(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
         if (last && !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
@@ -1645,7 +1633,7 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
     } else {
         Value v;
         double d;
-        if (!ValueToNumber(cx, ref, &d))
+        if (!ToNumber(cx, ref, &d))
             return false;
         if (POST) {
             ref.setNumber(d);
@@ -2576,7 +2564,7 @@ stubs::Unbrand(VMFrame &f)
 void JS_FASTCALL
 stubs::Pos(VMFrame &f)
 {
-    if (!ValueToNumber(f.cx, &f.regs.sp[-1]))
+    if (!ToNumber(f.cx, &f.regs.sp[-1]))
         THROW();
     if (!f.regs.sp[-1].isInt32())
         f.script()->types.monitorOverflow(f.cx, f.pc());

@@ -107,6 +107,7 @@ public:
     virtual bool RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction, const PRUint32& aReason);
     virtual bool RecvGetIMEOpenState(PRBool* aValue);
     virtual bool RecvSetIMEOpenState(const PRBool& aValue);
+    virtual bool RecvSetCursor(const PRUint32& aValue);
     virtual bool RecvGetDPI(float* aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
@@ -127,12 +128,16 @@ public:
     void Show(const nsIntSize& size);
     void Move(const nsIntSize& size);
     void Activate();
+    void Deactivate();
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         PRInt32 aButton, PRInt32 aClickCount,
                         PRInt32 aModifiers, PRBool aIgnoreRootScrollFrame);
     void SendKeyEvent(const nsAString& aType, PRInt32 aKeyCode,
                       PRInt32 aCharCode, PRInt32 aModifiers,
                       PRBool aPreventDefault);
+    bool SendRealMouseEvent(nsMouseEvent& event);
+    bool SendMouseScrollEvent(nsMouseScrollEvent& event);
+    bool SendRealKeyEvent(nsKeyEvent& event);
 
     virtual PDocumentRendererParent*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,

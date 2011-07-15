@@ -125,7 +125,6 @@ public:
     nsISVGGlyphFragmentNode_id,
     nsISVGSVGFrame_id,
     nsIScrollableFrame_id,
-    nsIScrollbarFrame_id,
     nsIScrollbarMediator_id,
     nsISelectControlFrame_id,
     nsIStatefulFrame_id,

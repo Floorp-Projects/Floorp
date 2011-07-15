@@ -205,13 +205,8 @@ CheckStackQuota(VMFrame &f)
 {
     JS_ASSERT(f.regs.sp == f.fp()->base());
 
-    /* Include extra space for inlined frames, loop temporaries and any pushed callee frame. */
-    uintN nvals = f.fp()->script()->nslots + StackSpace::STACK_JIT_EXTRA;
-
-    if ((Value *)f.regs.sp + nvals < f.stackLimit)
-        return true;
-
-    if (f.cx->stack.space().tryBumpLimit(NULL, f.regs.sp, nvals, &f.stackLimit))
+    f.stackLimit = f.cx->stack.space().getStackLimit(f.cx, DONT_REPORT_ERROR);
+    if (f.stackLimit)
         return true;
 
     /* Remove the current partially-constructed frame before throwing. */
@@ -260,17 +255,14 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
 
     /* Reserve enough space for a callee frame. */
     CallArgs args = CallArgsFromSp(nactual, f.regs.sp);
-    StackFrame *fp = cx->stack.getFixupFrame(cx, f.regs, args, fun, script, ncode,
-                                             initial, LimitCheck(&f.stackLimit, ncode));
+    StackFrame *fp = cx->stack.getFixupFrame(cx, DONT_REPORT_ERROR, args, fun,
+                                             script, ncode, initial, &f.stackLimit);
 
-    /*
-     * Note: this function is called without f.regs intact, but if the previous
-     * call failed it will use ncode to set f.regs to reflect the state at the
-     * call site. We can't use the value for ncode now as generating the
-     * exception may have caused us to discard the caller's code.
-     */
-    if (!fp)
+    if (!fp) {
+        f.regs.updateForNcode(f.jit(), ncode);
+        js_ReportOverRecursed(cx);
         THROWV(NULL);
+    }
 
     /* The caller takes care of assigning fp to regs. */
     return fp;
@@ -331,8 +323,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     FrameRegs regs = f.regs;
 
     /* Get pointer to new frame/slots, prepare arguments. */
-    LimitCheck check(&f.stackLimit, NULL);
-    if (!cx->stack.pushInlineFrame(cx, regs, args, callee, newfun, newscript, initial, check))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, callee, newfun, newscript, initial, &f.stackLimit))
         return false;
 
     /* Finish the handoff to the new frame regs. */
@@ -1206,7 +1197,7 @@ FinishObjIncOp(VMFrame &f, RejoinState rejoin, Value objv, Value ov, Value nv, V
 
     if (rejoin == REJOIN_BINDNAME || rejoin == REJOIN_GETTER) {
         double d;
-        if (!ValueToNumber(cx, ov, &d))
+        if (!ToNumber(cx, ov, &d))
             return false;
         ov.setNumber(d);
     }

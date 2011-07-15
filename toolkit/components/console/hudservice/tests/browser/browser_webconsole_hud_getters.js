@@ -53,9 +53,7 @@ function testHUDGetters() {
 
   openConsole();
 
-  hudId = HUDService.displaysIndex()[0];
-
-  var HUD = HUDService.hudReferences[hudId];
+  var HUD = HUDService.getHudByWindow(content);
   var jsterm = HUD.jsterm;
   var klass = jsterm.inputNode.getAttribute("class");
   ok(klass == "jsterm-input-node", "We have the input node.");

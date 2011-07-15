@@ -629,6 +629,7 @@ pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
 pref("javascript.options.mem.gc_per_compartment", true);
 pref("javascript.options.mem.log", false);
+pref("javascript.options.gc_on_memory_pressure", true);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
@@ -816,6 +817,10 @@ pref("network.websocket.extensions.stream-deflate", true);
 // is never more than one handshake oustanding to an individual host at
 // one time.
 pref("network.websocket.max-connections", 200);
+
+// by default scripts loaded from a https:// origin can only open secure
+// (i.e. wss://) websockets.
+pref("network.websocket.allowInsecureFromHTTPS", false);
 
 // </ws>
 
@@ -1293,6 +1298,17 @@ pref("layout.word_select.stop_at_punctuation", true);
 // 3 = caret moves and blinks as when there is no selection; word delete
 //     deletes the selection (Unix default)
 pref("layout.selection.caret_style", 0);
+
+// Prefs for auto scrolling by mouse drag.  When the mouse cursor is on edge of
+// inner scrollable frame than the selection root, the frame will be scrolled.
+// |.edge_width| defines the edge width by CSS pixels.
+// |.amout| defines the scrolling speed by CSS pixels.  The auto scroll method
+// uses scroll to a point function.  When the mouse cursor is on the edge, it
+// tries to scroll the frame to the point which is away from the edge.  The
+// value means how far the point is from edge in CSS pixels.
+// I.e., larger value makes faster scroll.
+pref("layout.selection.drag.autoscroll.inner_frame.edge_width", 32);
+pref("layout.selection.drag.autoscroll.inner_frame.amount", 8);
 
 // pref to control whether or not to replace backslashes with Yen signs
 // in documents encoded in one of Japanese legacy encodings (EUC-JP, 
@@ -3209,14 +3225,22 @@ pref("network.tcp.sendbuffer", 131072);
 #endif
 
 // Whether to disable acceleration for all widgets.
+#ifdef MOZ_E10S_COMPAT
+pref("layers.acceleration.disabled", true);
+#else
 pref("layers.acceleration.disabled", false);
+#endif
 
 // Whether to force acceleration on, ignoring blacklists.
 pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
 // Whether to disable the automatic detection and use of direct2d.
+#ifdef MOZ_E10S_COMPAT
+pref("gfx.direct2d.disabled", true);
+#else
 pref("gfx.direct2d.disabled", false);
+#endif
 // Whether to attempt to enable Direct2D regardless of automatic detection or
 // blacklisting
 pref("gfx.direct2d.force-enabled", false);

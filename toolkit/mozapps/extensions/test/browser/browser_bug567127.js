@@ -75,7 +75,7 @@ WindowOpenListener.prototype = {
 
     this.window = window;
     this.domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindowInternal);
+                           .getInterface(Components.interfaces.nsIDOMWindow);
     this.domwindow.addEventListener("load", this, false);
   },
 
