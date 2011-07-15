@@ -122,7 +122,6 @@ TabChild::TabChild(PRUint32 aChromeFlags)
   : mRemoteFrame(nsnull)
   , mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
-  , mOuterRect(0, 0, 0, 0)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -262,20 +261,9 @@ NS_IMETHODIMP
 TabChild::GetDimensions(PRUint32 aFlags, PRInt32* aX,
                              PRInt32* aY, PRInt32* aCx, PRInt32* aCy)
 {
-  if (aX) {
-    *aX = mOuterRect.x;
-  }
-  if (aY) {
-    *aY = mOuterRect.y;
-  }
-  if (aCx) {
-    *aCx = mOuterRect.width;
-  }
-  if (aCy) {
-    *aCy = mOuterRect.height;
-  }
+  NS_NOTREACHED("TabChild::GetDimensions not supported in TabChild");
 
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -546,16 +534,9 @@ TabChild::RecvShow(const nsIntSize& size)
 }
 
 bool
-TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
+TabChild::RecvMove(const nsIntSize& size)
 {
-#ifdef DEBUG
-    printf("[TabChild] Update Dimensions to (x,y,w,h)= (%ud, %ud, %ud, %ud) and move to (w,h)= (%ud, %ud)\n", rect.x, rect.y, rect.width, rect.height, size.width, size.height);
-#endif
-
-    mOuterRect.x = rect.x;
-    mOuterRect.y = rect.y;
-    mOuterRect.width = rect.width;
-    mOuterRect.height = rect.height;
+    printf("[TabChild] RESIZE to (w,h)= (%ud, %ud)\n", size.width, size.height);
 
     mWidget->Resize(0, 0, size.width, size.height,
                     PR_TRUE);
@@ -563,7 +544,6 @@ TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
     baseWin->SetPositionAndSize(0, 0, size.width, size.height,
                                 PR_TRUE);
-
     return true;
 }
 

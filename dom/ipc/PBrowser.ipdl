@@ -239,7 +239,7 @@ child:
 
     LoadURL(nsCString uri);
 
-    UpdateDimensions(nsRect rect, nsIntSize size);
+    Move(nsIntSize size);
 
     /**
      * Sending an activate message moves focus to the child.
