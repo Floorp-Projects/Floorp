@@ -530,7 +530,9 @@ struct JSScript {
     JSPCCounters    pcCounters;
 
   public:
+#ifdef JS_ION
     js::ion::IonScript *ion;          /* Information attached by Ion */
+#endif
 
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to
