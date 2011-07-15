@@ -99,28 +99,6 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// InBody: true if node is a descendant of the body
-//                  
-PRBool 
-nsTextEditUtils::InBody(nsIDOMNode *node, nsIEditor *editor)
-{
-  NS_ENSURE_TRUE(node, PR_FALSE);
-
-  nsCOMPtr<nsIDOMElement> rootElement;
-  editor->GetRootElement(getter_AddRefs(rootElement));
-
-  nsCOMPtr<nsIDOMNode> tmp;
-  nsCOMPtr<nsIDOMNode> p = node;
-  while (p != rootElement)
-  {
-    if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
-      return PR_FALSE;
-    p = tmp;
-  }
-  return PR_TRUE;
-}
-
-///////////////////////////////////////////////////////////////////////////
 // nsAutoEditInitRulesTrigger methods
 //
 nsAutoEditInitRulesTrigger::nsAutoEditInitRulesTrigger( nsPlaintextEditor *aEd, nsresult &aRes) : mEd(aEd), mRes(aRes)
