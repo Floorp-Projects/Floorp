@@ -96,7 +96,6 @@
 #include "prclist.h"
 #include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorageList.h"
-#include "nsIDOMStorageWindow.h"
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageIndexedDB.h"
 #include "nsIDOMOfflineResourceList.h"
@@ -275,7 +274,6 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventTarget,
-                       public nsIDOMStorageWindow,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
@@ -381,8 +379,8 @@ public:
   virtual NS_HIDDEN_(void) UpdateTouchState();
   virtual NS_HIDDEN_(PRBool) DispatchCustomEvent(const char *aEventName);
 
-  // nsIDOMStorageWindow
-  NS_DECL_NSIDOMSTORAGEWINDOW
+  // nsIDOMStorageIndexedDB
+  NS_DECL_NSIDOMSTORAGEINDEXEDDB
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
