@@ -51,8 +51,11 @@ static const ptrdiff_t STACK_SLOT_SIZE       = 4;
 static const uint32 MAX_STACK_SLOTS          = 256;
 static const uint32 DOUBLE_STACK_ALIGNMENT   = 2;
 
-// +1 stack slot for pushing the return address.
-static const uint32 ION_FRAME_OVERHEAD       = 1;
+// In bytes. +1 stack slot for pushing the return address.
+static const uint32 ION_FRAME_PREFIX_SIZE    = 4;
+
+// In bytes. +2 slots needed for potential memory->memory move spills.
+static const uint32 ION_FRAME_SLACK_SIZE     = 8;
 
 class Registers {
   public:

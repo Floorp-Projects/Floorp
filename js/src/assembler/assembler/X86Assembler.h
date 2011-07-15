@@ -83,6 +83,7 @@ namespace X86Registers {
         r14,
         r15
 #endif
+        ,invalid_reg
     } RegisterID;
 
     typedef enum {
@@ -104,6 +105,7 @@ namespace X86Registers {
         xmm14,
         xmm15
 #endif
+       ,invalid_xmm
     } XMMRegisterID;
 
     static const char* nameFPReg(XMMRegisterID fpreg)

@@ -597,17 +597,12 @@ GreedyAllocator::allocateRegistersInBlock(LBlock *block)
             return false;
 
         // Step 6. Insert move instructions.
-        if (restores) {
-            if (!restores->toInstructionsAfter(block, ins, tempSlot))
-                return false;
-        }
-        if (spills) {
-            if (!spills->toInstructionsAfter(block, ins, tempSlot))
-                return false;
-        }
+        if (restores)
+            block->insertAfter(ins, restores);
+        if (spills) 
+            block->insertAfter(ins, spills);
         if (aligns) {
-            if (!aligns->toInstructionsBefore(block, ins, tempSlot))
-                return false;
+            block->insertBefore(ins, aligns);
             ri++;
         }
     }
@@ -728,8 +723,7 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
     if (info->phis.moves) {
         info->phis.moves->setFreeRegisters(info->freeOnExit);
         LInstruction *ins = *backedge->instructions().rbegin();
-        if (!info->phis.moves->toInstructionsBefore(backedge, ins, tempSlot))
-            return false;
+        backedge->insertBefore(ins, info->phis.moves);
     }
 
     return true;
@@ -808,14 +802,11 @@ GreedyAllocator::mergePhiState(LBlock *block)
     JS_ASSERT(!aligns);
     JS_ASSERT(!spills);
     LInstruction *before = *block->instructions().rbegin();
-    if (restores) {
-        if (!restores->toInstructionsBefore(block, before, tempSlot))
-            return false;
-    }
+    if (restores)
+        block->insertBefore(before, restores);
     if (info->phis.moves) {
         info->phis.moves->setFreeRegisters(state.free);
-        if (!info->phis.moves->toInstructionsBefore(block, before, tempSlot))
-            return false;
+        block->insertBefore(before, info->phis.moves);
     }
 
     return true;
@@ -852,11 +843,8 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
 
         // If there were parallel moves, append them now.
         BlockInfo *info = blockInfo(rightblock);
-        if (info->restores.moves) {
-            LInstruction *after = *rightblock->begin();
-            if (!info->restores.moves->toInstructionsAfter(rightblock, after, tempSlot))
-                return false;
-        }
+        if (info->restores.moves)
+            rightblock->insertAfter(*rightblock->begin(), info->restores.moves);
     }
 
     if (mblock->isLoopBackedge()) {
@@ -921,8 +909,6 @@ GreedyAllocator::allocate()
     for (size_t i = 0; i < graph.numBlocks(); i++)
         new (&blocks[i]) BlockInfo();
 
-    if (!stackSlots.allocateDoubleSlot(&tempSlot))
-        return false;
     findDefinitions();
     if (!allocateRegisters())
         return false;

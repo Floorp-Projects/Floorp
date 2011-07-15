@@ -139,10 +139,6 @@ class AssemblerX86Shared
         }
         label->bind(masm.label().offset());
     }
-
-    void pop(const Register &reg) {
-        masm.pop_r(reg.code());
-    }
     void ret() {
         masm.ret();
     }
@@ -262,6 +258,19 @@ class AssemblerX86Shared
             break;
           case Operand::REG_DISP:
             masm.andl_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+
+    void push(const Operand &src) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.push_r(src.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.push_m(src.disp(), src.reg());
             break;
           default:
             JS_NOT_REACHED("unexepcted operand kind");

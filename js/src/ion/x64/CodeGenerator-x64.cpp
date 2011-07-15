@@ -45,33 +45,23 @@ using namespace js;
 using namespace js::ion;
 
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
-  : CodeGeneratorX86Shared(gen, graph, thisFromCtor()->masm)
+  : CodeGeneratorX86Shared(gen, graph),
+    moveHelper(thisFromCtor())
 {
 }
 
 bool
-CodeGenerator::generatePrologue()
+CodeGenerator::visitMoveGroup(LMoveGroup *group)
 {
-    if (graph.stackHeight())
-        masm.subq(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), rsp);
-    return true;
-}
+    if (!moveGroupResolver.resolve(group))
+        return false;
 
-bool
-CodeGenerator::visitMove(LMove *move)
-{
-    JS_ASSERT(move->from()->isDouble() == move->to()->isDouble());
-    if (move->from()->isDouble()) {
-        if (move->from()->isFloatReg())
-            masm.movsd(ToFloatRegister(move->from()), ToOperand(move->to()));
-        else
-            masm.movsd(ToOperand(move->from()), ToFloatRegister(move->to()));
-    } else {
-        if (move->from()->isGeneralReg())
-            masm.movq(ToRegister(move->from()), ToOperand(move->to()));
-        else
-            masm.movq(ToOperand(move->from()), ToRegister(move->to()));
-    }
+    moveHelper.setup(group);
+
+    for (size_t i = 0; i < moveGroupResolver.numMoves(); i++)
+        moveHelper.emit(moveGroupResolver.getMove(i));
+
+    moveHelper.finish();
     return true;
 }
 
@@ -145,8 +135,7 @@ CodeGenerator::visitReturn(LReturn *ret)
     LAllocation *result = ret->getOperand(0);
     JS_ASSERT(ToRegister(result) == JSReturnReg);
 #endif
-    if (graph.stackHeight())
-        masm.addq(Imm32(graph.stackHeight() * STACK_SLOT_SIZE), Operand(rsp));
+    masm.freeStack(frameDepth_);
     masm.ret();
     return true;
 }

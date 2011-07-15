@@ -43,6 +43,7 @@
 #define jsion_codegen_h__
 
 #include "ion/IonLIR.h"
+#include "ion/MoveGroupResolver.h"
 
 namespace js {
 namespace ion {
@@ -53,6 +54,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     MIRGenerator *gen;
     LIRGraph &graph;
     LBlock *current;
+    MoveGroupResolver moveGroupResolver;
 
     static inline int32 ToInt32(const LAllocation *a) {
         return a->toConstant()->toInt32();

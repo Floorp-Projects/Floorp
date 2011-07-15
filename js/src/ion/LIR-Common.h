@@ -64,25 +64,54 @@ class LLabel : public LInstructionHelper<0, 0, 0>
     }
 };
 
-// Fully resolved allocation-to-allocation move.
-class LMove : public LInstructionHelper<0, 0, 0>
+class LMove
 {
-    LAllocation from_;
-    LAllocation to_;
+    LAllocation *from_;
+    LAllocation *to_;
 
   public:
-    LIR_HEADER(Move);
-
-    LMove(const LAllocation &from, const LAllocation &to)
+    LMove(LAllocation *from, LAllocation *to)
       : from_(from),
         to_(to)
     { }
 
-    const LAllocation *from() {
-        return &from_;
+    LAllocation *from() {
+        return from_;
     }
-    const LAllocation *to() {
-        return &to_;
+    const LAllocation *from() const {
+        return from_;
+    }
+    LAllocation *to() {
+        return to_;
+    }
+    const LAllocation *to() const {
+        return to_;
+    }
+};
+
+class LMoveGroup : public LInstructionHelper<0, 0, 0>
+{
+    RegisterSet freeRegs_;
+    js::Vector<LMove, 2, IonAllocPolicy> moves_;
+
+  public:
+    LIR_HEADER(MoveGroup);
+
+    void printOperands(FILE *fp);
+    bool add(LAllocation *from, LAllocation *to) {
+        return moves_.append(LMove(from, to));
+    }
+    size_t numMoves() const {
+        return moves_.length();
+    }
+    const LMove &getMove(size_t i) const {
+        return moves_[i];
+    }
+    void setFreeRegisters(const RegisterSet &freeRegs) {
+        freeRegs_ = freeRegs;
+    }
+    const RegisterSet &freeRegs() const {
+        return freeRegs_;
     }
 };
 

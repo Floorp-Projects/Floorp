@@ -45,7 +45,6 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "IonLIR.h"
-#include "MoveGroup.h"
 
 namespace js {
 namespace ion {
@@ -53,7 +52,7 @@ namespace ion {
 class GreedyAllocator
 {
     struct Mover {
-        MoveGroup *moves;
+        LMoveGroup *moves;
 
         Mover() : moves(NULL)
         { }
@@ -61,7 +60,7 @@ class GreedyAllocator
         template <typename From, typename To>
         bool move(const From &from, const To &to) {
             if (!moves)
-                moves = new MoveGroup;
+                moves = new LMoveGroup;
             return moves->add(LAllocation::New(from), LAllocation::New(to));
         }
     };
@@ -183,7 +182,6 @@ class GreedyAllocator
     AllocationState state;
     StackAssignment stackSlots;
     BlockInfo *blocks;
-    uint32 tempSlot;
 
     // Aligns: If a register shuffle must occur to align input parameters (for
     //         example, ecx loading into fixed edx), it goes here.
@@ -198,27 +196,27 @@ class GreedyAllocator
     //   Spills
     //   Restores
     // 
-    MoveGroup *aligns;
-    MoveGroup *spills;
-    MoveGroup *restores;
+    LMoveGroup *aligns;
+    LMoveGroup *spills;
+    LMoveGroup *restores;
 
     bool restore(const LAllocation &from, const AnyRegister &to) {
         if (!restores)
-            restores = new MoveGroup;
+            restores = new LMoveGroup;
         return restores->add(LAllocation::New(from), LAllocation::New(to));
     }
 
     template <typename LA, typename LB>
     bool spill(const LA &from, const LB &to) {
         if (!spills)
-            spills = new MoveGroup;
+            spills = new LMoveGroup;
         return spills->add(LAllocation::New(from), LAllocation::New(to));
     }
 
     template <typename LA, typename LB>
     bool align(const LA &from, const LB &to) {
         if (!aligns)
-            aligns = new MoveGroup;
+            aligns = new LMoveGroup;
         return aligns->add(LAllocation::New(from), LAllocation::New(to));
     }
 
