@@ -5601,31 +5601,32 @@ js_OneUcs4ToUtf8Char(uint8 *utf8Buffer, uint32 ucs4Char)
 static uint32
 Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
 {
-    JS_ASSERT(1 <= utf8Length && utf8Length <= 4);
-
-    if (utf8Length == 1) {
-        JS_ASSERT(!(*utf8Buffer & 0x80));
-        return *utf8Buffer;
-    }
-
-    JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
-              (0x100 - (1 << (8 - utf8Length))));
-    uint32 ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
-    while (--utf8Length) {
-        JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
-        ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
-    }
-
+    uint32 ucs4Char;
+    uint32 minucs4Char;
     /* from Unicode 3.1, non-shortest form is illegal */
     static const uint32 minucs4Table[] = {
         0x00000080, 0x00000800, 0x00010000
     };
 
-    uint32 minucs4Char = minucs4Table[utf8Length - 2];
-    if (JS_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)))
-        ucs4Char = INVALID_UTF8;
-    else if (ucs4Char == 0xFFFE || ucs4Char == 0xFFFF)
-        ucs4Char = 0xFFFD;
+    JS_ASSERT(utf8Length >= 1 && utf8Length <= 4);
+    if (utf8Length == 1) {
+        ucs4Char = *utf8Buffer;
+        JS_ASSERT(!(ucs4Char & 0x80));
+    } else {
+        JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) ==
+                  (0x100 - (1 << (8-utf8Length))));
+        ucs4Char = *utf8Buffer++ & ((1<<(7-utf8Length))-1);
+        minucs4Char = minucs4Table[utf8Length-2];
+        while (--utf8Length) {
+            JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
+            ucs4Char = ucs4Char<<6 | (*utf8Buffer++ & 0x3F);
+        }
+        if (JS_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF))) {
+            ucs4Char = INVALID_UTF8;
+        } else if (ucs4Char == 0xFFFE || ucs4Char == 0xFFFF) {
+            ucs4Char = 0xFFFD;
+        }
+    }
     return ucs4Char;
 }
 
