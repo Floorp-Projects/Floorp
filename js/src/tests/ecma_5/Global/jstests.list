@@ -11,3 +11,4 @@ script eval-native-callback-is-indirect.js
 script direct-eval-but-not.js
 script eval-in-strict-eval-in-normal-function.js
 script bug660612.js
+script decodeURI-decodes-FFFE-FFFF.js
