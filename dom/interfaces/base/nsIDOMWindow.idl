@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Vidur Apparao <vidur@netscape.com> (original author)
  *   Johnny Stenback <jst@netscape.com>
+ *   Neil Deakin <enndeakin@sympatico.ca>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,6 +52,8 @@ interface nsIDOMLocation;
 interface nsIDOMMediaQueryList;
 interface nsIDOMOfflineResourceList;
 interface nsIDOMPerformance;
+interface nsIDOMStorage;
+interface nsIDOMStorageList;
 interface nsIPrompt;
 interface nsISelection;
 interface nsIVariant;
@@ -70,7 +74,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(7e0db7f5-34c2-4a26-9eba-0d261c588652)]
+[scriptable, uuid(972cb379-6bdc-4544-8b46-8d721e12e906)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -204,6 +208,20 @@ interface nsIDOMWindow : nsISupports
   // Ascii base64 data to binary data and vice versa...
   DOMString                 atob(in DOMString aAsciiString);
   DOMString                 btoa(in DOMString aBase64Data);
+
+
+  // WindowSessionStorage
+  /**
+   * Session storage for the current browsing context.
+   */
+  readonly attribute nsIDOMStorage sessionStorage;
+
+
+  // WindowLocalStorage
+  /**
+   * Local storage for the current browsing context.
+   */
+  readonly attribute nsIDOMStorage localStorage;
 
 
   // DOM Range
@@ -415,6 +433,11 @@ interface nsIDOMWindow : nsISupports
    * @see <http://dev.w3.org/2006/webapi/FileAPI/#creating-revoking>
    */
   readonly attribute nsIDOMMozURLProperty URL;
+
+  /**
+   * Global storage, accessible by domain.
+   */
+  readonly attribute nsIDOMStorageList globalStorage;
 };
 
 [scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]
