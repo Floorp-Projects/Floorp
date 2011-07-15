@@ -209,9 +209,9 @@ TabParent::Show(const nsIntSize& size)
 }
 
 void
-TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
+TabParent::Move(const nsIntSize& size)
 {
-    unused << SendUpdateDimensions(rect, size);
+    unused << SendMove(size);
 }
 
 void
