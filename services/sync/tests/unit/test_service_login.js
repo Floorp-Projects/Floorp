@@ -22,6 +22,10 @@ function run_test() {
   let logger = Log4Moz.repository.rootLogger;
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
+  run_next_test();
+}
+
+add_test(function test_offline() {
   try {
     _("The right bits are set when we're offline.");
     Services.io.offline = true;
@@ -32,8 +36,14 @@ function run_test() {
     Services.io.offline = false;
   } finally {
     Svc.Prefs.resetBranch("");
+    run_next_test();
   }
- 
+});
+
+function setup() {
+  Service.serverURL = "http://localhost:8080/";
+  Service.clusterURL = "http://localhost:8080/";
+
   let janeHelper = track_collections_helper();
   let janeU      = janeHelper.with_updated_collection;
   let janeColls  = janeHelper.collections;
@@ -41,11 +51,10 @@ function run_test() {
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;
 
-  do_test_pending();
-  let server = httpd_setup({
+  return httpd_setup({
     "/1.1/johndoe/info/collections": login_handling(johnHelper.handler),
     "/1.1/janedoe/info/collections": login_handling(janeHelper.handler),
-      
+
     // We need these handlers because we test login, and login
     // is where keys are generated or fetched.
     // TODO: have Jane fetch her keys, not generate them...
@@ -54,11 +63,12 @@ function run_test() {
     "/1.1/janedoe/storage/crypto/keys": janeU("crypto", new ServerWBO("keys").handler()),
     "/1.1/janedoe/storage/meta/global": janeU("meta",   new ServerWBO("global").handler())
   });
+}
+
+add_test(function test_login_logout() {
+  let server = setup();
 
   try {
-    Service.serverURL = "http://localhost:8080/";
-    Service.clusterURL = "http://localhost:8080/";
-
     _("Force the initial state.");
     Status.service = STATUS_OK;
     do_check_eq(Status.service, STATUS_OK);
@@ -98,7 +108,7 @@ function run_test() {
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
-    
+
     _("Calling login() with parameters when the client is unconfigured sends notification.");
     let notified = false;
     Svc.Obs.add("weave:service:setup-complete", function() {
@@ -106,7 +116,7 @@ function run_test() {
     });
     Service.username = "";
     Service.password = "";
-    Service.passphrase = "";    
+    Service.passphrase = "";
     Service.login("janedoe", "ilovejohn", "bar");
     do_check_true(notified);
     do_check_eq(Status.service, STATUS_OK);
@@ -121,10 +131,19 @@ function run_test() {
     Service.logout();
     do_check_false(Service.isLoggedIn);
 
-    /*
-     * Testing login-on-sync.
-     */
-    
+  } finally {
+    Svc.Prefs.resetBranch("");
+    server.stop(run_next_test);
+  }
+});
+
+add_test(function test_login_on_sync() {
+  let server = setup();
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "bar";
+
+  try {
     _("Sync calls login.");
     let oldLogin = Service.login;
     let loginCalled = false;
@@ -133,19 +152,18 @@ function run_test() {
       Status.login = LOGIN_SUCCEEDED;
       this._loggedIn = false;           // So that sync aborts.
       return true;
-    }
-    try {
-      Service.sync();
-    } catch (ex) {}
-    
+    };
+
+    Service.sync();
+
     do_check_true(loginCalled);
     Service.login = oldLogin;
-    
+
     // Stub mpLocked.
     let mpLockedF = Utils.mpLocked;
     let mpLocked = true;
     Utils.mpLocked = function() mpLocked;
-    
+
     // Stub scheduleNextSync. This gets called within checkSyncStatus if we're
     // ready to sync, so use it as an indicator.
     let scheduleNextSyncF = SyncScheduler.scheduleNextSync;
@@ -153,38 +171,37 @@ function run_test() {
     SyncScheduler.scheduleNextSync = function(wait) {
       scheduleCalled = true;
       scheduleNextSyncF.call(this, wait);
-    }
-    
+    };
+
     // Autoconnect still tries to connect in the background (useful behavior:
     // for non-MP users and unlocked MPs, this will detect version expiry
     // earlier).
-    // 
+    //
     // Consequently, non-MP users will be logged in as in the pre-Bug 543784 world,
     // and checkSyncStatus reflects that by waiting for login.
-    // 
+    //
     // This process doesn't apply if your MP is still locked, so we make
     // checkSyncStatus accept a locked MP in place of being logged in.
-    // 
+    //
     // This test exercises these two branches.
-    
+
     _("We're ready to sync if locked.");
     Service.enabled = true;
     Services.io.offline = false;
     SyncScheduler.checkSyncStatus();
     do_check_true(scheduleCalled);
-    
+
+    _("... and also if we're not locked.");
     scheduleCalled = false;
     mpLocked = false;
-    
-    _("... and not if not.");
     SyncScheduler.checkSyncStatus();
-    do_check_false(scheduleCalled);
+    do_check_true(scheduleCalled);
     SyncScheduler.scheduleNextSync = scheduleNextSyncF;
-    
+
     // TODO: need better tests around master password prompting. See Bug 620583.
 
     mpLocked = true;
-    
+
     // Testing exception handling if master password dialog is canceled.
     // Do this by stubbing out Service.passphrase.
     let oldPP = Service.__lookupGetter__("passphrase");
@@ -193,16 +210,16 @@ function run_test() {
                            function() {
                              throw "User canceled Master Password entry";
                            });
-    
+
     let oldClearSyncTriggers = SyncScheduler.clearSyncTriggers;
     let oldLockedSync = Service._lockedSync;
-    
+
     let cSTCalled = false;
     let lockedSyncCalled = false;
-    
+
     SyncScheduler.clearSyncTriggers = function() { cSTCalled = true; };
     Service._lockedSync = function() { lockedSyncCalled = true; };
-    
+
     _("If master password is canceled, login fails and we report lockage.");
     do_check_false(!!Service.login());
     do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
@@ -210,18 +227,18 @@ function run_test() {
     _("Locked? " + Utils.mpLocked());
     _("checkSync reports the correct term.");
     do_check_eq(Service._checkSync(), kSyncMasterPasswordLocked);
-    
+
     _("Sync doesn't proceed and clears triggers if MP is still locked.");
     Service.sync();
-    
+
     do_check_true(cSTCalled);
     do_check_false(lockedSyncCalled);
 
     // N.B., a bunch of methods are stubbed at this point. Be careful putting
     // new tests after this point!
-    
+
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(do_test_finished);
+    server.stop(run_next_test);
   }
-}
+});

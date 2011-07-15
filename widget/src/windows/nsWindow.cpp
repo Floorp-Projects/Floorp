@@ -5235,7 +5235,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_GETOBJECT:
     {
       *aRetValue = 0;
-      if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
+      // Do explicit casting to make it working on 64bit systems (see bug 649236
+      // for details).
+      DWORD objId = static_cast<DWORD>(lParam);
+      if (objId == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
         nsAccessible *rootAccessible = GetRootAccessible(); // Held by a11y cache
         if (rootAccessible) {
           IAccessible *msaaAccessible = NULL;
@@ -6453,6 +6456,8 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   // Before dispatching line scroll event, we should get the current scroll
   // event target information for pixel scroll.
   PRBool dispatchPixelScrollEvent = PR_FALSE;
+  PRBool reversePixelScrollDirection = PR_FALSE;
+  PRInt32 actualScrollAction = nsQueryContentEvent::SCROLL_ACTION_NONE;
   PRInt32 pixelsPerUnit = 0;
   // the amount is the number of lines (or pages) per WHEEL_DELTA
   PRInt32 computedScrollAmount = isPageScroll ? 1 :
@@ -6481,7 +6486,8 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     // If the necessary interger isn't larger than 0, we should assume that
     // the event failed for us.
     if (queryEvent.mSucceeded) {
-      if (isPageScroll) {
+      actualScrollAction = queryEvent.mReply.mComputedScrollAction;
+      if (actualScrollAction == nsQueryContentEvent::SCROLL_ACTION_PAGE) {
         if (isVertical) {
           pixelsPerUnit = queryEvent.mReply.mPageHeight;
         } else {
@@ -6490,14 +6496,18 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
       } else {
         pixelsPerUnit = queryEvent.mReply.mLineHeight;
       }
-      // XXX Currently, we don't support the case that the computed delta has
-      //     different sign.
       computedScrollAmount = queryEvent.mReply.mComputedScrollAmount;
-      if (testEvent.delta < 0) {
-        computedScrollAmount *= -1;
+      if (pixelsPerUnit > 0 && computedScrollAmount != 0 &&
+          actualScrollAction != nsQueryContentEvent::SCROLL_ACTION_NONE) {
+        dispatchPixelScrollEvent = PR_TRUE;
+        // If original delta's sign and computed delta's one are different,
+        // we need to reverse the pixel scroll direction at dispatching it.
+        reversePixelScrollDirection =
+          (testEvent.delta > 0 && computedScrollAmount < 0) ||
+          (testEvent.delta < 0 && computedScrollAmount > 0);
+        // scroll amount must be positive.
+        computedScrollAmount = NS_ABS(computedScrollAmount);
       }
-      dispatchPixelScrollEvent =
-        (pixelsPerUnit > 0) && (computedScrollAmount > 0);
     }
   }
 
@@ -6552,8 +6562,12 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   nsMouseScrollEvent pixelEvent(PR_TRUE, NS_MOUSE_PIXEL_SCROLL, this);
   InitEvent(pixelEvent);
-  pixelEvent.scrollFlags = nsMouseScrollEvent::kAllowSmoothScroll |
-    (scrollEvent.scrollFlags & ~nsMouseScrollEvent::kHasPixels);
+  pixelEvent.scrollFlags = nsMouseScrollEvent::kAllowSmoothScroll;
+  pixelEvent.scrollFlags |= isVertical ?
+    nsMouseScrollEvent::kIsVertical : nsMouseScrollEvent::kIsHorizontal;
+  if (actualScrollAction == nsQueryContentEvent::SCROLL_ACTION_PAGE) {
+    pixelEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+  }
   // Use same modifier state for pixel scroll event.
   pixelEvent.isShift     = scrollEvent.isShift;
   pixelEvent.isControl   = scrollEvent.isControl;
@@ -6561,13 +6575,16 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   pixelEvent.isAlt       = scrollEvent.isAlt;
 
   PRInt32 nativeDeltaForPixel = nativeDelta + sRemainingDeltaForPixel;
+  // Pixel scroll event won't be recomputed the scroll amout and direction by
+  // ESM.  Therefore, we need to set the computed amout and direction here.
+  PRInt32 orienterForPixel = reversePixelScrollDirection ? -orienter : orienter;
 
   double deltaPerPixel =
     (double)WHEEL_DELTA / computedScrollAmount / pixelsPerUnit;
   pixelEvent.delta =
-    RoundDelta((double)nativeDeltaForPixel * orienter / deltaPerPixel);
+    RoundDelta((double)nativeDeltaForPixel * orienterForPixel / deltaPerPixel);
   PRInt32 recomputedNativeDelta =
-    (PRInt32)(pixelEvent.delta * orienter * deltaPerPixel);
+    (PRInt32)(pixelEvent.delta * orienterForPixel * deltaPerPixel);
   sRemainingDeltaForPixel = nativeDeltaForPixel - recomputedNativeDelta;
   if (pixelEvent.delta != 0) {
     aHandled = DispatchWindowEvent(&pixelEvent);

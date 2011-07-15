@@ -718,11 +718,9 @@ CheckCaretDrawingState() {
     if (!window)
       return;
 
-    nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(window);
-
     nsCOMPtr<nsIDOMDocument> domDoc;
     nsCOMPtr<nsIDocument> focusedDoc;
-    windowInternal->GetDocument(getter_AddRefs(domDoc));
+    window->GetDocument(getter_AddRefs(domDoc));
     focusedDoc = do_QueryInterface(domDoc);
     if (!focusedDoc)
       return;
