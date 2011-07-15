@@ -457,7 +457,6 @@ Script::analyze(JSContext *cx, JSScript *script)
           case JSOP_DECNAME:
           case JSOP_NAMEINC:
           case JSOP_NAMEDEC:
-          case JSOP_FORNAME:
             usesScope = true;
             break;
 
@@ -579,8 +578,7 @@ Script::analyze(JSContext *cx, JSScript *script)
             break;
           }
 
-          case JSOP_SETLOCAL:
-          case JSOP_FORLOCAL: {
+          case JSOP_SETLOCAL: {
             uint32 local = GET_SLOTNO(pc);
 
             /*

@@ -1143,7 +1143,7 @@ struct JSContext
     /* Random number generator state, used by jsmath.cpp. */
     int64               rngSeed;
 
-    /* Location to stash the iteration value between JSOP_MOREITER and JSOP_FOR*. */
+    /* Location to stash the iteration value between JSOP_MOREITER and JSOP_ITERNEXT. */
     js::Value           iterValue;
 
 #ifdef JS_TRACER
