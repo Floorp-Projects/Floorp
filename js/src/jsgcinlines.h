@@ -248,11 +248,8 @@ js_NewGCObject(JSContext *cx, js::gc::FinalizeKind kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::GCThingSizeMap[kind]);
-    if (obj) {
-        obj->capacity = js::gc::GetGCKindSlots(kind);
-        obj->type = NULL;     /* :FIXME: remove (see MarkChildren) */
-        obj->lastProp = NULL; /* Stops obj from being scanned until initializated. */
-    }
+    if (obj)
+        obj->earlyInit(js::gc::GetGCKindSlots(kind));
     return obj;
 }
 

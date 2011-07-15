@@ -3249,7 +3249,8 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     if(newProto.get() == oldProto.get())
         return NS_OK;
 
-    JS_SplicePrototype(ccx, GetFlatJSObject(), newProto->GetJSProtoObject());
+    if (!JS_SplicePrototype(ccx, GetFlatJSObject(), newProto->GetJSProtoObject()))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     SetProto(newProto);
 

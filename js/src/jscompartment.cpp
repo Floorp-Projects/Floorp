@@ -572,29 +572,34 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
 #endif
 
-    if (!activeAnalysis && types.inferenceEnabled) {
-        bool ok = true;
+    if (!activeAnalysis) {
+        /*
+         * Sweep analysis information and everything depending on it from the
+         * compartment, including all remaining mjit code if inference is
+         * enabled in the compartment.
+         */
+        if (types.inferenceEnabled) {
+#ifdef JS_METHODJIT
+            mjit::ClearAllFrames(this);
+#endif
 
-        for (JSCList *cursor = scripts.next; ok && cursor != &scripts; cursor = cursor->next) {
-            JSScript *script = reinterpret_cast<JSScript *>(cursor);
-            ok = script->types.condenseTypes(cx);
+            for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+                JSScript *script = reinterpret_cast<JSScript *>(cursor);
+                script->types.sweep(cx);
+            }
         }
 
-        if (ok)
-            ok = condenseTypes(cx);
-
-        /*
-         * We should have skipped later condensing only if we disabled type
-         * inference due to an allocation failure while condensing types.
-         */
-        JS_ASSERT(ok == types.inferenceEnabled);
+        types.sweep(cx);
     }
 
-    types.sweep(cx);
-
+    /*
+     * Finalize dead type objects in the compartment. There won't be any if
+     * activeAnalysis is set, but we need to clear the mark bits.
+     */
+    types.finalizeObjects();
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        script->sweepAnalysis(cx);
+        script->types.finalizeObjects();
     }
 
     if (!activeAnalysis) {

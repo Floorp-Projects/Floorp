@@ -256,7 +256,7 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
      * Mark all functions which have ever had arguments objects constructed,
      * which will prevent lazy arguments optimizations in the method JIT.
      */
-    MarkTypeObjectFlags(cx, fp->fun()->getType(),
+    MarkTypeObjectFlags(cx, fp->fun(),
                         OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
 
     while (fp->isEvalInFunction())
@@ -1528,7 +1528,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                                  * method barrier CloneFunctionObject will have
                                  * ignored the attempt to clone the function.
                                  */
-                                JS_ASSERT_IF(!clone->getType()->singleton, clone != &funobj);
+                                JS_ASSERT_IF(!clone->hasSingletonType(), clone != &funobj);
                                 *vp = v;
                                 overwriteCallee(*clone);
                                 return true;
@@ -1591,7 +1591,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * check any calls that were inlined.
      */
     if (fun->isInterpreted())
-        MarkTypeObjectFlags(cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
+        MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
 
     /* Set to early to null in case of error */
     vp->setNull();
@@ -1618,7 +1618,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
         if (inlined) {
             JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
-            MarkTypeObjectFlags(cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
+            MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
         }
     }
 #endif
@@ -1733,16 +1733,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
     if (!js_GetClassPrototype(cx, parent, JSProto_Object, &objProto))
         return NULL;
     JSObject *proto = NewNativeClassInstance(cx, &js_ObjectClass, objProto, parent);
-    if (!proto)
-        return NULL;
-
-    /* Make a new type for the prototype object. */
-
-    TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
-                                                                 obj->getType()->name(),
-                                                                 "prototype",
-                                                                 JSProto_Object, objProto);
-    if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
+    if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
     /*
@@ -2671,10 +2662,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
      * The default 'new' object for Function.prototype has unknown properties.
      * This will be used for generic scripted functions, e.g. from non-compileAndGo code.
      */
-    TypeObject *newType = proto->getNewType(cx);
-    if (!newType)
-        return NULL;
-    MarkTypeObjectUnknownProperties(cx, newType);
+    proto->getNewType(cx, NULL, /* markUnknown = */ true);
 
     JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
@@ -2691,7 +2679,6 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
-    fun->getType()->functionScript = script;
     script->fun = fun;
     js_CallNewScriptHook(cx, script, fun);
 
@@ -2722,23 +2709,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         funobj = NewFunction(cx, parent);
         if (!funobj)
             return NULL;
-        if (native) {
-            const char *name = NULL;
-#ifdef DEBUG
-            JSAutoByteString bytes;
-            if (atom)
-                name = js_AtomToPrintableString(cx, atom, &bytes);
-            else
-                name = "Unnamed";
-#endif
-            TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "",
-                                                                    JSProto_Function,
-                                                                    funobj->getProto());
-            if (!type || !funobj->setTypeAndUniqueShape(cx, type))
-                return NULL;
-            type->isFunctionNative = true;
-            type->singleton = funobj;
-        }
+        if (native && !funobj->setSingletonType(cx))
+            return NULL;
     }
     JS_ASSERT(!funobj->getPrivate());
     fun = (JSFunction *) funobj;
@@ -2800,8 +2772,8 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
          * will have been caught by CloneFunctionObject coming from function
          * definitions or read barriers, so will not get here.
          */
-        if (fun->getProto() == proto && !fun->getType()->singleton)
-            clone->setTypeAndShape(fun->getType(), fun->lastProperty());
+        if (fun->getProto() == proto && !fun->hasSingletonType())
+            clone->setTypeAndShape(fun->type(), fun->lastProperty());
 
         clone->setPrivate(fun);
     } else {
@@ -2835,16 +2807,6 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             cfun->script()->owner = NULL;
 #endif
             js_CallNewScriptHook(cx, cfun->script(), cfun);
-        } else {
-            TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "ClonedFunction", "",
-                                                                    JSProto_Function,
-                                                                    clone->getProto());
-            if (!type || !clone->setTypeAndUniqueShape(cx, type))
-                return NULL;
-            if (fun->getType()->unknownProperties())
-                MarkTypeObjectUnknownProperties(cx, type);
-            else
-                type->isFunctionNative = true;
         }
     }
     return clone;

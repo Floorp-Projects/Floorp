@@ -758,7 +758,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
          */
         script_->types.setThis(cx, thisv);
         for (unsigned i = argc; i < fun->nargs; i++)
-            script_->types.setArgument(cx, i, types::TYPE_UNDEFINED);
+            script_->types.setArgument(cx, i, types::Type::UndefinedType());
 
         StackFrame *fp = ifg_.fp();
 #ifdef JS_METHODJIT
@@ -3504,7 +3504,7 @@ do_incop:
      * type information, and types.monitor will not be update the object itself.
      */
     if (regs.sp[-1].isUndefined())
-        AddTypePropertyId(cx, obj->getType(), id, types::TYPE_UNDEFINED);
+        AddTypePropertyId(cx, obj, id, types::Type::UndefinedType());
 
     const JSCodeSpec *cs = &js_CodeSpec[op];
     JS_ASSERT(cs->ndefs == 1);
@@ -4014,8 +4014,7 @@ BEGIN_CASE(JSOP_GETELEM)
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
-        MarkTypeObjectFlags(cx, script->fun->getType(),
-                            types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        MarkTypeObjectFlags(cx, script->fun, types::OBJECT_FLAG_CREATED_ARGUMENTS);
         JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
     }
 
@@ -4639,7 +4638,7 @@ BEGIN_CASE(JSOP_ARGUMENTS)
     if (cx->typeInferenceEnabled() && !script->strictModeCode) {
         if (!script->ensureRanInference(cx))
             goto error;
-        if (script->fun->getType()->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
+        if (script->fun->type()->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
             if (!js_GetArgsValue(cx, regs.fp(), &rval))
                 goto error;
         } else {

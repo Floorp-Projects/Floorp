@@ -208,9 +208,6 @@ class SetPropCompiler : public PICStubCompiler
 
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)
     {
-        if (pic.rhsTypes)
-            types::SweepClonedTypes(pic.rhsTypes);
-
         SetPropLabels &labels = pic.setPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr));
         repatcher.repatch(labels.getInlineShapeData(pic.fastPathStart, pic.shapeGuard),
@@ -320,7 +317,7 @@ class SetPropCompiler : public PICStubCompiler
             JSObject *proto = obj->getProto();
             RegisterID lastReg = pic.objReg;
             while (proto) {
-                masm.loadPtr(Address(lastReg, offsetof(JSObject, type)), pic.shapeReg);
+                masm.loadPtr(Address(lastReg, JSObject::offsetOfType()), pic.shapeReg);
                 masm.loadPtr(Address(pic.shapeReg, offsetof(types::TypeObject, proto)), pic.shapeReg);
                 Jump protoGuard = masm.guardShape(pic.shapeReg, proto);
                 if (!otherGuards.append(protoGuard))
@@ -486,6 +483,24 @@ class SetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
+    bool updateMonitoredTypes()
+    {
+        JS_ASSERT(pic.typeMonitored);
+
+        RecompilationMonitor monitor(cx);
+        jsid id = ATOM_TO_JSID(atom);
+
+        if (!obj->getType(cx)->unknownProperties()) {
+            types::AutoEnterTypeInference enter(cx);
+            types::TypeSet *types = obj->getType(cx)->getProperty(cx, id, true);
+            if (!types)
+                return false;
+            pic.rhsTypes->addSubset(cx, types);
+        }
+
+        return !monitor.recompiled();
+    }
+
     LookupStatus update()
     {
         JS_ASSERT(pic.hit);
@@ -614,12 +629,8 @@ class SetPropCompiler : public PICStubCompiler
             if (obj->numSlots() != slots)
                 return disable("insufficient slot capacity");
 
-            if (pic.typeMonitored) {
-                RecompilationMonitor monitor(cx);
-                types::AddTypePropertySet(cx, obj->getType(), shape->propid, pic.rhsTypes);
-                if (monitor.recompiled())
-                    return Lookup_Uncacheable;
-            }
+            if (pic.typeMonitored && !updateMonitoredTypes())
+                return Lookup_Uncacheable;
 
             return generateStub(initialShape, shape, true);
         }
@@ -633,12 +644,8 @@ class SetPropCompiler : public PICStubCompiler
         if (shape->hasDefaultSetter()) {
             if (!shape->hasSlot())
                 return disable("invalid slot");
-            if (pic.typeMonitored) {
-                RecompilationMonitor monitor(cx);
-                types::AddTypePropertySet(cx, obj->getType(), shape->propid, pic.rhsTypes);
-                if (monitor.recompiled())
-                    return Lookup_Uncacheable;
-            }
+            if (pic.typeMonitored && !updateMonitoredTypes())
+                return Lookup_Uncacheable;
         } else {
             if (shape->hasSetterValue())
                 return disable("scripted setter");
@@ -663,10 +670,13 @@ class SetPropCompiler : public PICStubCompiler
                 uint16 slot = uint16(shape->shortid);
                 if (!script->types.ensureTypeArray(cx))
                     return error();
-                if (shape->setterOp() == SetCallArg)
-                    script->types.setArgument(cx, slot, pic.rhsTypes);
-                else
-                    script->types.setLocal(cx, slot, pic.rhsTypes);
+                {
+                    types::AutoEnterTypeInference enter(cx);
+                    if (shape->setterOp() == SetCallArg)
+                        pic.rhsTypes->addSubset(cx, script->types.argTypes(slot));
+                    else
+                        pic.rhsTypes->addSubset(cx, script->types.localTypes(slot));
+                }
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }

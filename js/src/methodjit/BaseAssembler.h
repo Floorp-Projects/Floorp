@@ -1138,36 +1138,43 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
         Vector<Jump> matches(cx);
 
-        if (types->hasType(types::TYPE_DOUBLE)) {
+        if (types->hasType(types::Type::DoubleType())) {
             /* Type sets containing double also contain int. */
             if (!matches.append(testNumber(Assembler::Equal, address)))
                 return false;
-        } else if (types->hasType(types::TYPE_INT32)) {
+        } else if (types->hasType(types::Type::Int32Type())) {
             if (!matches.append(testInt32(Assembler::Equal, address)))
                 return false;
         }
 
-        if (types->hasType(types::TYPE_UNDEFINED)) {
+        if (types->hasType(types::Type::UndefinedType())) {
             if (!matches.append(testUndefined(Assembler::Equal, address)))
                 return false;
         }
 
-        if (types->hasType(types::TYPE_BOOLEAN)) {
+        if (types->hasType(types::Type::BooleanType())) {
             if (!matches.append(testBoolean(Assembler::Equal, address)))
                 return false;
         }
 
-        if (types->hasType(types::TYPE_STRING)) {
+        if (types->hasType(types::Type::StringType())) {
             if (!matches.append(testString(Assembler::Equal, address)))
                 return false;
         }
 
-        if (types->hasType(types::TYPE_NULL)) {
+        if (types->hasType(types::Type::NullType())) {
             if (!matches.append(testNull(Assembler::Equal, address)))
                 return false;
         }
 
-        unsigned count = types->getObjectCount();
+        unsigned count = 0;
+        if (types->hasType(types::Type::AnyObjectType())) {
+            if (!matches.append(testObject(Assembler::Equal, address)))
+                return false;
+        } else {
+            count = types->getObjectCount();
+        }
+
         if (count != 0) {
             if (!mismatches->append(testObject(Assembler::NotEqual, address)))
                 return false;
@@ -1175,10 +1182,19 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
             RegisterID reg = tempRegs.takeAnyReg().reg();
 
             loadPayload(address, reg);
-            loadPtr(Address(reg, offsetof(JSObject, type)), reg);
 
             for (unsigned i = 0; i < count; i++) {
-                types::TypeObject *object = types->getObject(i);
+                JSObject *object = types->getSingleObject(i);
+                if (object) {
+                    if (!matches.append(branchPtr(Assembler::Equal, reg, ImmPtr(object))))
+                        return false;
+                }
+            }
+
+            loadPtr(Address(reg, JSObject::offsetOfType()), reg);
+
+            for (unsigned i = 0; i < count; i++) {
+                types::TypeObject *object = types->getTypeObject(i);
                 if (object) {
                     if (!matches.append(branchPtr(Assembler::Equal, reg, ImmPtr(object))))
                         return false;

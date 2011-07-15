@@ -89,19 +89,21 @@ public:
     void recompile(bool resetUses = true);
 
     static void
-    expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *inlined,
+    expandInlineFrames(JSCompartment *compartment, StackFrame *fp, mjit::CallSite *inlined,
                        StackFrame *next, VMFrame *f);
+
+    static void patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script);
 
 private:
     JSContext *cx;
     JSScript *script;
 
     static void patchCall(JITScript *jit, StackFrame *fp, void **location);
-    static void patchNative(JSContext *cx, JITScript *jit, StackFrame *fp,
+    static void patchNative(JSCompartment *compartment, JITScript *jit, StackFrame *fp,
                             jsbytecode *pc, CallSite *inline_, RejoinState rejoin);
 
     static StackFrame *
-    expandInlineFrameChain(JSContext *cx, StackFrame *outer, InlineFrame *inner);
+    expandInlineFrameChain(StackFrame *outer, InlineFrame *inner);
 
     /* Detach jit from any IC callers. */
     static void cleanup(JITScript *jit);

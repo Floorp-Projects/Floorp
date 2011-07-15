@@ -474,7 +474,7 @@ VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &key
     JS_ASSERT(!(flags & JSITER_FOREACH));
 
     if (obj)
-        types::MarkTypeObjectFlags(cx, obj->getType(), types::OBJECT_FLAG_ITERATED);
+        types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
 
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
@@ -524,7 +524,7 @@ VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &k
     JS_ASSERT(flags & JSITER_FOREACH);
 
     if (obj)
-        types::MarkTypeObjectFlags(cx, obj->getType(), types::OBJECT_FLAG_ITERATED);
+        types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
 
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
@@ -1446,6 +1446,6 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     proto = js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
                          NULL, NULL, NULL, NULL);
     if (proto)
-        types::AddTypeProperty(cx, obj->getType(), js_StopIteration_str, ObjectValue(*proto));
+        types::AddTypeProperty(cx, obj->type(), js_StopIteration_str, ObjectValue(*proto));
     return proto;
 }

@@ -241,7 +241,7 @@ class Compiler : public BaseCompiler
         JSAtom *atom;
         bool hasTypeCheck;
         bool typeMonitored;
-        types::ClonedTypeSet *rhsTypes;
+        types::TypeSet *rhsTypes;
         ValueRemat vr;
 #ifdef JS_HAS_IC_LABELS
         union {

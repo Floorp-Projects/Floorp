@@ -7116,19 +7116,8 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
-                                   NULL, qname_methods, NULL, NULL);
-    if (!proto)
-        return NULL;
-
-    /* Properties of QName objects are not modeled by type inference. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    MarkTypeObjectUnknownProperties(cx, type);
-    MarkTypeObjectUnknownProperties(cx, proto->getType());
-
-    return proto;
+    return js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
+                        NULL, qname_methods, NULL, NULL);
 }
 
 JSObject *
@@ -7143,13 +7132,6 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     /* Define the isXMLName function. */
     if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
         return NULL;
-
-    /* Properties of XML objects are not modeled by type inference. */
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-    MarkTypeObjectUnknownProperties(cx, type);
-    MarkTypeObjectUnknownProperties(cx, proto->getType());
 
     JSXML *xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)

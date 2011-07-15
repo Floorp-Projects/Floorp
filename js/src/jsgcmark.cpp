@@ -627,8 +627,9 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
      * set first, and must be marked in case constructing the map triggered GC.
      * :FIXME: need autorooters for type objects, remove this hack.
      */
-    if (obj->type && !obj->type->marked)
-        obj->type->trace(gcmarker);
+    types::TypeObject *type = obj->gctype();
+    if (type && !type->marked)
+        type->trace(gcmarker);
 
     if (obj->isNewborn())
         return;
@@ -706,8 +707,9 @@ void
 MarkChildren(JSTracer *trc, JSObject *obj)
 {
     /* :FIXME: see ScanObject. */
-    if (obj->type && !obj->type->marked)
-        obj->type->trace(trc);
+    types::TypeObject *type = obj->gctype();
+    if (type && !type->marked)
+        type->trace(trc);
 
     /* If obj has no map, it must be a newborn. */
     if (obj->isNewborn())
