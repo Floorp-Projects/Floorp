@@ -336,9 +336,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   if (mIsExpired)
     return nil;
   
-  nsCOMPtr<nsIAccessible> focusedGeckoChild;
-  mGeckoAccessible->GetFocusedChild (getter_AddRefs (focusedGeckoChild));
-  
+  nsAccessible* focusedGeckoChild = mGeckoAccessible->FocusedChild();
   if (focusedGeckoChild) {
     mozAccessible *focusedChild = GetNativeFromGeckoAccessible(focusedGeckoChild);
     if (focusedChild)
