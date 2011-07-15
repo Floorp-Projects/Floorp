@@ -416,8 +416,15 @@ function testScope(aTester, aTest) {
     self.SimpleTest.copyToProfile(filename);
   };
 
+  this.expectUncaughtException = function test_expectUncaughtException() {
+    self.SimpleTest.expectUncaughtException();
+  };
+
   this.finish = function test_finish() {
     self.__done = true;
+    if (self.SimpleTest._expectingUncaughtException) {
+      self.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
+    }
     if (self.__waitTimer) {
       self.executeSoon(function() {
         if (self.__done && self.__waitTimer) {
