@@ -53,6 +53,9 @@
 #include "plstr.h"
 #include "prtime.h"
 #include "nsString.h"
+#include "mozilla/AutoRestore.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Helper class: InstanceTimeComparator
@@ -1915,13 +1918,12 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
   // the chain broken in a sensible and predictable manner, so if we're hitting
   // this assertion we need to work out how to detect the case that's causing
   // it. In release builds, just bail out before we overflow the stack.
+  AutoRestore<PRUint16> depthRestorer(mUpdateIntervalRecursionDepth);
   if (++mUpdateIntervalRecursionDepth > sMaxUpdateIntervalRecursionDepth) {
     NS_ABORT_IF_FALSE(PR_FALSE,
         "Update current interval recursion depth exceeded threshold");
     return;
   }
-  // NO EARLY RETURNS ALLOWED AFTER THIS POINT! (If we need one, then switch
-  // mUpdateIntervalRecursionDepth to use an auto incrementer/decrementer.)
 
   // If the interval is active the begin time is fixed.
   const nsSMILInstanceTime* beginTime = mElementState == STATE_ACTIVE
@@ -1981,8 +1983,6 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
       ResetCurrentInterval();
     }
   }
-
-  --mUpdateIntervalRecursionDepth;
 }
 
 void
