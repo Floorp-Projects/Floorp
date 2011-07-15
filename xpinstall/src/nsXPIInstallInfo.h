@@ -38,7 +38,7 @@
 
 #include "nsXPITriggerInfo.h"
 #include "nsIXPIInstallInfo.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
 
@@ -48,14 +48,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPIINSTALLINFO
 
-  nsXPIInstallInfo(nsIDOMWindowInternal *aOriginatingWindow,
+  nsXPIInstallInfo(nsIDOMWindow *aOriginatingWindow,
                    nsIURI *aOriginatingURI, nsXPITriggerInfo *aTriggerInfo,
                    PRUint32 aChromeType);
 
 private:
   ~nsXPIInstallInfo();
 
-  nsCOMPtr<nsIDOMWindowInternal> mOriginatingWindow;
+  nsCOMPtr<nsIDOMWindow> mOriginatingWindow;
   nsCOMPtr<nsIURI> mOriginatingURI;
   nsXPITriggerInfo* mTriggerInfo;
   PRUint32 mChromeType;

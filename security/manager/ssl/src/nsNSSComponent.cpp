@@ -76,7 +76,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMSmartCardEvent.h"
 #include "nsIDOMCrypto.h"
 #include "nsThreadUtils.h"
@@ -548,13 +547,13 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
   // NOTE: it's not an error to say that we aren't going to dispatch
   // the event.
   {
-    nsCOMPtr<nsIDOMWindowInternal> intWindow = do_QueryInterface(domWin);
-    if (!intWindow) {
+    nsCOMPtr<nsIDOMWindow> domWindow = domWin;
+    if (!domWindow) {
       return NS_OK; // nope, it's not an internal window
     }
 
     nsCOMPtr<nsIDOMCrypto> crypto;
-    intWindow->GetCrypto(getter_AddRefs(crypto));
+    domWindow->GetCrypto(getter_AddRefs(crypto));
     if (!crypto) {
       return NS_OK; // nope, it doesn't have a crypto property
     }

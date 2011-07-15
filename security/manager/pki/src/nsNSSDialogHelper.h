@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 
 /**
  * Common class that uses the window watcher service to open a
@@ -52,7 +52,7 @@ public:
   //The params is going to be either a nsIPKIParamBlock or
   //nsIDialogParamBlock
   static nsresult openDialog(
-                  nsIDOMWindowInternal *window,
+                  nsIDOMWindow *window,
                   const char *url,
                   nsISupports *params,
                   PRBool modal = PR_TRUE);

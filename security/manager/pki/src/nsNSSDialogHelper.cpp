@@ -51,7 +51,7 @@ static const char kOpenWindowParam[] = "centerscreen,chrome,titlebar";
 
 nsresult
 nsNSSDialogHelper::openDialog(
-    nsIDOMWindowInternal *window,
+    nsIDOMWindow *window,
     const char *url,
     nsISupports *params,
     PRBool modal)
@@ -61,16 +61,10 @@ nsNSSDialogHelper::openDialog(
            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsIDOMWindowInternal *parent = window;
+  nsCOMPtr<nsIDOMWindow> parent = window;
 
-  nsCOMPtr<nsIDOMWindowInternal> activeParent;
   if (!parent) {
-    nsCOMPtr<nsIDOMWindow> active;
-    windowWatcher->GetActiveWindow(getter_AddRefs(active));
-    if (active) {
-      active->QueryInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(activeParent));
-      parent = activeParent;
-    }
+    windowWatcher->GetActiveWindow(getter_AddRefs(parent));
   }
 
   nsCOMPtr<nsIDOMWindow> newWindow;

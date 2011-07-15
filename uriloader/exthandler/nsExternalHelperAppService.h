@@ -77,7 +77,7 @@
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsITransfer;
-class nsIDOMWindowInternal;
+class nsIDOMWindow;
 
 /**
  * The helper app service. Responsible for handling content that Mozilla
@@ -286,7 +286,7 @@ protected:
    * Used to close the window on a timer, to avoid any exceptions that are
    * thrown if we try to close the window before it's fully loaded.
    */
-  nsCOMPtr<nsIDOMWindowInternal> mWindowToClose;
+  nsCOMPtr<nsIDOMWindow> mWindowToClose;
   nsCOMPtr<nsITimer> mTimer;
 
   /**

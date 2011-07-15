@@ -42,7 +42,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -56,14 +55,14 @@
 //
 
 static nsresult GetDOMWindow(nsIXULWindow* inWindow,
-                             nsCOMPtr<nsIDOMWindowInternal> &outDOMWindow);
+                             nsCOMPtr<nsIDOMWindow> &outDOMWindow);
 static nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell);
 static void GetAttribute(nsIXULWindow *inWindow, const nsAString &inAttribute,
                          nsAString &outValue);
 static void GetWindowType(nsIXULWindow* inWindow, nsString &outType);
 
 // fetch the nsIDOMWindow(Internal) from a XUL Window
-nsresult GetDOMWindow(nsIXULWindow *aWindow, nsCOMPtr<nsIDOMWindowInternal> &aDOMWindow)
+nsresult GetDOMWindow(nsIXULWindow *aWindow, nsCOMPtr<nsIDOMWindow> &aDOMWindow)
 {
   nsCOMPtr<nsIDocShell> docShell;
 
@@ -256,7 +255,7 @@ NS_IMETHODIMP nsASDOMWindowEnumerator::GetNext(nsISupports **retval)
 
   *retval = nsnull;
   if (mCurrentPosition) {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    nsCOMPtr<nsIDOMWindow> domWindow;
     GetDOMWindow(mCurrentPosition->mWindow, domWindow);
     CallQueryInterface(domWindow, retval);
     mCurrentPosition = FindNext();
