@@ -2393,7 +2393,6 @@ nsDOMClassInfo::Init()
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
       DOM_CLASSINFO_MAP_END
@@ -2402,7 +2401,6 @@ nsDOMClassInfo::Init()
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
       DOM_CLASSINFO_MAP_END
     }
@@ -2412,7 +2410,6 @@ nsDOMClassInfo::Init()
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
       DOM_CLASSINFO_MAP_END
     } else {
@@ -2420,7 +2417,6 @@ nsDOMClassInfo::Init()
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
         DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
       DOM_CLASSINFO_MAP_END
     }
   }
@@ -3141,7 +3137,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
   DOM_CLASSINFO_MAP_END
 
@@ -4034,7 +4029,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
   DOM_CLASSINFO_MAP_END
