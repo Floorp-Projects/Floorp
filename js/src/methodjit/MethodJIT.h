@@ -289,6 +289,9 @@ enum RejoinState {
      */
     REJOIN_CHECK_ARGUMENTS,
 
+    /* A GC while making a call object occurred, discarding the script's jitcode. */
+    REJOIN_CREATE_CALL_OBJECT,
+
     /*
      * State after calling a stub which returns a JIT code pointer for a call
      * or NULL for an already-completed call.
