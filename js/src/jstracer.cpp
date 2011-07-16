@@ -15474,6 +15474,12 @@ TraceRecorder::record_JSOP_EVAL()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_TOID()
+{
+    return ARECORD_STOP;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENUMELEM()
 {
     /*

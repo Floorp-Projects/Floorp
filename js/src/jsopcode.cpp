@@ -4793,6 +4793,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 return NULL;
         }
 
+        if (cs->format & JOF_DECOMPOSE)
+            pc += GetDecomposeLength(op);
+
         pc += len;
     }
 
@@ -5494,6 +5497,9 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
         oplen = cs->length;
         if (oplen < 0)
             oplen = js_GetVariableBytecodeLength(pc);
+
+        if (cs->format & JOF_DECOMPOSE)
+            continue;
 
         /*
          * A (C ? T : E) expression requires skipping either T (if target is in
