@@ -4794,7 +4794,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
         }
 
         if (cs->format & JOF_DECOMPOSE)
-            pc += GetDecomposeLength(op);
+            pc += GetDecomposeLength(pc, cs->length);
 
         pc += len;
     }

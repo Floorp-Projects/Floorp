@@ -2396,6 +2396,8 @@ BEGIN_CASE(JSOP_STOP)
         JS_ASSERT((uintN)(regs.sp - regs.fp()->slots()) <= script->nslots);
         jsbytecode *imacpc = regs.fp()->imacropc();
         regs.pc = imacpc + js_CodeSpec[*imacpc].length;
+        if (js_CodeSpec[*imacpc].format & JOF_DECOMPOSE)
+            regs.pc += GetDecomposeLength(imacpc, js_CodeSpec[*imacpc].length);
         regs.fp()->clearImacropc();
         LEAVE_ON_SAFE_POINT();
         atoms = script->atomMap.vector;
@@ -3489,7 +3491,7 @@ BEGIN_CASE(JSOP_GNAMEDEC)
                     tmp = inc;
                 rref.getInt32Ref() = inc;
                 PUSH_INT32(tmp);
-                len = JSOP_INCNAME_LENGTH + GetDecomposeLength(op);
+                len = JSOP_INCNAME_LENGTH + GetDecomposeLength(regs.pc, JSOP_INCNAME_LENGTH);
                 DO_NEXT_OP(len);
             }
         }
@@ -3566,7 +3568,7 @@ do_incop:
         regs.sp[-1 - cs->nuses] = regs.sp[-1];
         regs.sp -= cs->nuses;
     }
-    len = cs->length + GetDecomposeLength(op);
+    len = cs->length + GetDecomposeLength(regs.pc, cs->length);
     DO_NEXT_OP(len);
 }
 }

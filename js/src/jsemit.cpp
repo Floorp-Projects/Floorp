@@ -209,6 +209,13 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
 #else
     extra = 0;
 #endif
+    if ((cs->format & JOF_TMPSLOT_MASK) || extra) {
+        uintN depth = (uintN) cg->stackDepth +
+                      ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT) +
+                      extra;
+        if (depth > cg->maxStackDepth)
+            cg->maxStackDepth = depth;
+    }
 
     nuses = js_GetStackUses(cs, op, pc);
     cg->stackDepth -= nuses;
@@ -244,20 +251,12 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
         cg->maxStackDepth = cg->stackDepth;
 }
 
-/*
- * Table of decomposed lengths for each bytecode, initially zeroed. Every
- * opcode always has the same decomposed code generated for it, and rather than
- * track/maintain this info in a static table like jsopcode.tbl, we just update
- * this table for opcodes which have actually been emitted.
- */
-uint8 js_decomposeLengthTable[256] = {};
-
 static inline void
-SetDecomposeLength(JSOp op, uintN length)
+UpdateDecomposeLength(JSCodeGenerator *cg, uintN start)
 {
-    JS_ASSERT(length < 256);
-    JS_ASSERT_IF(js_decomposeLengthTable[op], js_decomposeLengthTable[op] == length);
-    js_decomposeLengthTable[op] = length;
+    uintN end = CG_OFFSET(cg);
+    JS_ASSERT(uintN(end - start) < 256);
+    CG_CODE(cg, start)[-1] = end - start;
 }
 
 ptrdiff_t
@@ -2917,6 +2916,8 @@ EmitPropIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     if (!EmitPropOp(cx, pn, op, cg, false))
         return false;
+    if (js_Emit1(cx, cg, JSOP_NOP) < 0)
+        return false;
 
     /*
      * The stack is the same depth before/after INCPROP, so no balancing to do
@@ -2957,7 +2958,7 @@ EmitPropIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     if (post && js_Emit1(cx, cg, JSOP_POP) < 0)    // RESULT
         return false;
 
-    SetDecomposeLength(op, CG_OFFSET(cg) - start);
+    UpdateDecomposeLength(cg, start);
 
     return true;
 }
@@ -2966,6 +2967,8 @@ static bool
 EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     if (!EmitAtomOp(cx, pn, op, cg))
+        return false;
+    if (js_Emit1(cx, cg, JSOP_NOP) < 0)
         return false;
 
     /* Remove the result to restore the stack depth before the INCNAME. */
@@ -3006,7 +3009,7 @@ EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     if (post && js_Emit1(cx, cg, JSOP_POP) < 0)    // RESULT
         return false;
 
-    SetDecomposeLength(op, CG_OFFSET(cg) - start);
+    UpdateDecomposeLength(cg, start);
 
     return true;
 }
@@ -3147,6 +3150,8 @@ EmitElemIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     if (!EmitElemOp(cx, pn, op, cg))
         return false;
+    if (js_Emit1(cx, cg, JSOP_NOP) < 0)
+        return false;
 
     /* INCELEM pops two values and pushes one, so restore the initial depth. */
     cg->stackDepth++;
@@ -3194,7 +3199,7 @@ EmitElemIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     if (post && js_Emit1(cx, cg, JSOP_POP) < 0)  // RESULT
         return false;
 
-    SetDecomposeLength(op, CG_OFFSET(cg) - start);
+    UpdateDecomposeLength(cg, start);
 
     return true;
 }
