@@ -865,12 +865,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    /*
-     * Capture properties added to each RegExp object. These are normal data
-     * properties with fixed type (modulo sets from script, which barriers
-     * and analysis will capture), so avoid the need to update the types each
-     * time a RegExp object is initialized.
-     */
+    /* Capture normal data properties pregenerated for RegExp objects. */
     TypeObject *type = proto->getNewType(cx);
     if (!type)
         return NULL;
