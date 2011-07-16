@@ -2185,12 +2185,12 @@ ASTSerializer::statement(JSParseNode *pn, Value *dst)
         if (PN_TYPE(head) == TOK_IN) {
             Value var, expr;
 
-            return (!head->pn_kid1
-                    ? pattern(head->pn_kid2, NULL, &var)
-                    : variableDeclaration(head->pn_kid1,
-                                          PN_TYPE(head->pn_kid1) == TOK_LET,
-                                          &var)) &&
-                   expression(head->pn_kid3, &expr) &&
+            return (PN_TYPE(head->pn_left) == TOK_VAR
+                    ? variableDeclaration(head->pn_left, false, &var)
+                    : PN_TYPE(head->pn_left) == TOK_LET
+                    ? variableDeclaration(head->pn_left, true, &var)
+                    : pattern(head->pn_left, NULL, &var)) &&
+                   expression(head->pn_right, &expr) &&
                    builder.forInStatement(var, expr, stmt, isForEach, &pn->pn_pos, dst);
         }
 
@@ -2208,13 +2208,40 @@ ASTSerializer::statement(JSParseNode *pn, Value *dst)
         LOCAL_ASSERT(pn->pn_count == 2);
 
         JSParseNode *prelude = pn->pn_head;
-        JSParseNode *loop = prelude->pn_next;
+        JSParseNode *body = prelude->pn_next;
 
-        LOCAL_ASSERT(PN_TYPE(prelude) == TOK_VAR && PN_TYPE(loop) == TOK_FOR);
+        LOCAL_ASSERT((PN_TYPE(prelude) == TOK_VAR && PN_TYPE(body) == TOK_FOR) ||
+                     (PN_TYPE(prelude) == TOK_SEMI && PN_TYPE(body) == TOK_LEXICALSCOPE));
 
+        JSParseNode *loop;
         Value var;
-        if (!variableDeclaration(prelude, false, &var))
-            return false;
+
+        if (PN_TYPE(prelude) == TOK_VAR) {
+            loop = body;
+
+            if (!variableDeclaration(prelude, false, &var))
+                return false;
+        } else {
+            loop = body->pn_expr;
+
+            LOCAL_ASSERT(PN_TYPE(loop->pn_left) == TOK_IN &&
+                         PN_TYPE(loop->pn_left->pn_left) == TOK_LET &&
+                         loop->pn_left->pn_left->pn_count == 1);
+
+            JSParseNode *pnlet = loop->pn_left->pn_left;
+
+            VarDeclKind kind = VARDECL_LET;
+            NodeVector dtors(cx);
+            Value patt, init, dtor;
+
+            if (!pattern(pnlet->pn_head, &kind, &patt) ||
+                !expression(prelude->pn_kid, &init) ||
+                !builder.variableDeclarator(patt, init, &pnlet->pn_pos, &dtor) ||
+                !dtors.append(dtor) ||
+                !builder.variableDeclaration(dtors, kind, &pnlet->pn_pos, &var)) {
+                return false;
+            }
+        }
 
         JSParseNode *head = loop->pn_left;
         JS_ASSERT(PN_TYPE(head) == TOK_IN);
@@ -2223,7 +2250,7 @@ ASTSerializer::statement(JSParseNode *pn, Value *dst)
 
         Value expr, stmt;
 
-        return expression(head->pn_kid3, &expr) &&
+        return expression(head->pn_right, &expr) &&
                statement(loop->pn_right, &stmt) &&
                builder.forInStatement(var, expr, stmt, isForEach, &pn->pn_pos, dst);
       }
@@ -2328,8 +2355,8 @@ ASTSerializer::comprehensionBlock(JSParseNode *pn, Value *dst)
     bool isForEach = pn->pn_iflags & JSITER_FOREACH;
 
     Value patt, src;
-    return pattern(in->pn_kid2, NULL, &patt) &&
-           expression(in->pn_kid3, &src) &&
+    return pattern(in->pn_left, NULL, &patt) &&
+           expression(in->pn_right, &src) &&
            builder.comprehensionBlock(patt, src, isForEach, &in->pn_pos, dst);
 }
 
