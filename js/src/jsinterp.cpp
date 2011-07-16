@@ -3429,8 +3429,10 @@ BEGIN_CASE(JSOP_DECELEM)
 BEGIN_CASE(JSOP_ELEMINC)
 BEGIN_CASE(JSOP_ELEMDEC)
 
-    if (cx->typeInferenceEnabled())
-        DO_NEXT_OP(JSOP_INCELEM_LENGTH);
+    if (cx->typeInferenceEnabled()) {
+        len = JSOP_INCELEM_LENGTH;
+        DO_NEXT_OP(len);
+    }
 
     /*
      * Delay fetching of id until we have the object to ensure the proper
@@ -3445,8 +3447,10 @@ BEGIN_CASE(JSOP_DECPROP)
 BEGIN_CASE(JSOP_PROPINC)
 BEGIN_CASE(JSOP_PROPDEC)
 
-    if (cx->typeInferenceEnabled())
-        DO_NEXT_OP(JSOP_INCPROP_LENGTH);
+    if (cx->typeInferenceEnabled()) {
+        len = JSOP_INCPROP_LENGTH;
+        DO_NEXT_OP(len);
+    }
 
     LOAD_ATOM(0, atom);
     id = ATOM_TO_JSID(atom);
@@ -3467,8 +3471,10 @@ BEGIN_CASE(JSOP_DECGNAME)
 BEGIN_CASE(JSOP_GNAMEINC)
 BEGIN_CASE(JSOP_GNAMEDEC)
 {
-    if (cx->typeInferenceEnabled())
-        DO_NEXT_OP(JSOP_INCNAME_LENGTH);
+    if (cx->typeInferenceEnabled()) {
+        len = JSOP_INCNAME_LENGTH;
+        DO_NEXT_OP(len);
+    }
 
     obj = &regs.fp()->scopeChain();
 
