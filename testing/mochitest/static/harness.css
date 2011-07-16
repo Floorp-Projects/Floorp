@@ -49,6 +49,10 @@ table#test-table {
   padding: 0;
 }
 
+.hide-results-table #test-table {
+  display: none;
+}
+
 div.container {
   margin: 1em;
 }
