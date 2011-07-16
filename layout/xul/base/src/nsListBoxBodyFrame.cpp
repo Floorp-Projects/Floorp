@@ -1106,6 +1106,22 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
                      NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
+static bool
+IsListItemChild(nsListBoxBodyFrame* aParent, nsIContent* aChild,
+                nsIFrame** aChildFrame)
+{
+  *aChildFrame = nsnull;
+  if (!aChild->IsXUL() || aChild->Tag() != nsGkAtoms::listitem) {
+    return false;
+  }
+  nsIFrame* existingFrame = aChild->GetPrimaryFrame();
+  if (existingFrame && existingFrame->GetParent() != aParent) {
+    return false;
+  }
+  *aChildFrame = existingFrame;
+  return true;
+}
+
 //
 // Get the nsIBox for the first visible listitem, and if none exists,
 // create one.
@@ -1153,6 +1169,14 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
   }
 
   if (startContent) {  
+    nsIFrame* existingFrame;
+    if (!IsListItemChild(this, startContent, &existingFrame)) {
+      return GetFirstItemBox(++aOffset, aCreated);
+    }
+    if (existingFrame) {
+      return existingFrame->IsBoxFrame() ? existingFrame : nsnull;
+    }
+
     // Either append the new frame, or prepend it (at index 0)
     // XXX check here if frame was even created, it may not have been if
     //     display: none was on listitem content
@@ -1203,21 +1227,16 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
       // There is a content node that wants a frame.
       nsIContent *nextContent = parentContent->GetChildAt(i + aOffset + 1);
 
-      if (!nextContent->IsXUL() ||
-          nextContent->Tag() != nsGkAtoms::listitem)
+      nsIFrame* existingFrame;
+      if (!IsListItemChild(this, nextContent, &existingFrame)) {
         return GetNextItemBox(aBox, ++aOffset, aCreated);
-
-      nsPresContext* presContext = PresContext();
-      nsIFrame* existingFrame = nextContent->GetPrimaryFrame();
-
-      if (existingFrame && existingFrame->GetParent() != this)
-        return GetNextItemBox(aBox, ++aOffset, aCreated);
-
+      }
       if (!existingFrame) {
         // Either append the new frame, or insert it after the current frame
         PRBool isAppend = result != mLinkupFrame && mRowsToPrepend <= 0;
         nsIFrame* prevFrame = isAppend ? nsnull : aBox;
       
+        nsPresContext* presContext = PresContext();
         nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
         fc->CreateListBoxContent(presContext, this, prevFrame, nextContent,
                                  &result, isAppend, PR_FALSE, nsnull);

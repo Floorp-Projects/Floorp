@@ -391,9 +391,10 @@ def main():
 
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
-            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
+            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, packageName=options.app)
         else:
-            dm = dm_auto
+            dm = dm_none
+            dm.verifyPackage(options.app)
     else:
          dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
     automation.setDeviceManager(dm)

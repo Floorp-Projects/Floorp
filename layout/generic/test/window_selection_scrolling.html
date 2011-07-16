@@ -6,36 +6,36 @@
   src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <style type="text/css">
-  /* this is opened in 300px x 300px window */
+  /* this is opened in 500px x 500px window */
   #container {
-    width: 500px;
-    height: 500px;
+    width: 700px;
+    height: 700px;
   }
   #fixed {
     position: fixed;
-    left: 30px;
-    right: 30px;
-    top: 30px;
-    bottom: 30px;
+    left: 60px;
+    right: 60px;
+    top: 60px;
+    bottom: 60px;
     overflow: auto;
     border: blue 1px solid;
   }
   #static_overflow {
-    margin: 30px;
+    margin: 60px;
     width: 200px;
     height: 200px;
     overflow: auto;
     border: orange 1px solid;
   }
   #static_overflow_inner {
-    margin: 30px;
+    margin: 60px;
     width: 300px;
     height: 300px;
     overflow: auto;
     border: red 1px solid;
   }
   #iframe {
-    margin: 30px;
+    margin: 60px;
     width: 300px;
     height: 300px;
   }
@@ -45,7 +45,7 @@
     height: 150px;
   }
   #textarea {
-    margin: 30px;
+    margin: 60px;
     width: 100px;
     height: 100px;
   }
@@ -195,7 +195,7 @@ var gTests = [
     description: "Selection root (body) element should be scrolled by moving mouse to right of body",
     test: function () {
       synthesizeMouse(body, 100, 100, { type: "mousedown" });
-      synthesizeMouse(body, 400, 100, { type: "mousemove" });
+      synthesizeMouse(body, 600, 100, { type: "mousemove" });
       return true;
     },
     resetAllElementsBeforeTest: true,
@@ -223,7 +223,7 @@ var gTests = [
     description: "Selection root (body) element should be scrolled by moving mouse to bottom of body",
     test: function () {
       synthesizeMouse(body, 100, 100, { type: "mousedown" });
-      synthesizeMouse(body, 100, 400, { type: "mousemove" });
+      synthesizeMouse(body, 100, 600, { type: "mousemove" });
       return true;
     },
     resetAllElementsBeforeTest: false,
@@ -247,14 +247,10 @@ var gTests = [
     scrollIsExpected: true,
   },
 
-  // Don't scroll the selection root (body) element on its edge
+  // Scroll the selection root (body) element on its edge
   //   visible scrollable elements: body
   {
-    description: "Selection root (body) element should NOT be scrolled by moving mouse to right edge of body",
-    prepare: function () {
-      body.scrollTop = 50;
-      body.scrollLeft = 50;
-    },
+    description: "Selection root (body) element should be scrolled by moving mouse to right edge of body",
     test: function () {
       synthesizeMouse(body, 100, 100, { type: "mousedown" });
       synthesizeMouse(body, body.clientWidth - 10, 100, { type: "mousemove" });
@@ -262,13 +258,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: true,
     testTarget: function () { return body; },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return getScrollRightMost(body); },
+    scrollIsExpected: true,
   },
 
   {
-    description: "Selection root (body) element should NOT be scrolled by moving mouse to left edge of body",
+    description: "Selection root (body) element should be scrolled by moving mouse to bottom edge of body",
     test: function () {
       synthesizeMouse(body, 100, 100, { type: "mousedown" });
       synthesizeMouse(body, 100, body.clientHeight - 10, { type: "mousemove" });
@@ -276,13 +272,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return body; },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return getScrollBottomMost(body); },
+    expectedScrollLeft: function () { return getScrollRightMost(body); },
+    scrollIsExpected: true,
   },
 
   {
-    description: "Selection root (body) element should NOT be scrolled by moving mouse to bottom edge of body",
+    description: "Selection root (body) element should be scrolled by moving mouse to top edge of body",
     test: function () {
       synthesizeMouse(body, 100, 100, { type: "mousedown" });
       synthesizeMouse(body, 100, 10, { type: "mousemove" });
@@ -290,13 +286,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return body; },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return getScrollRightMost(body); },
+    scrollIsExpected: true,
   },
 
   {
-    description: "Selection root (body) element should NOT be scrolled by moving mouse to top edge of body",
+    description: "Selection root (body) element should be scrolled by moving mouse to left edge of body",
     test: function () {
       synthesizeMouse(body, 100, 100, { type: "mousedown" });
       synthesizeMouse(body, 10, 100, { type: "mousemove" });
@@ -304,9 +300,9 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return body; },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
   },
 
   // Scroll fixed div on its edge (from fixed div)
@@ -967,7 +963,7 @@ var gTests = [
         textarea.scrollTop = 30;
         return false;
       }
-      synthesizeMouse(body, 10, 10, { type: "mousedown" });
+      synthesizeMouse(body, 50, 50, { type: "mousedown" });
       synthesizeMouse(textarea, 50, textarea.clientHeight - 10,
                       { type: "mousemove" });
       return true;
@@ -982,7 +978,7 @@ var gTests = [
   {
     description: "The textarea element should NOT be scrolled when dragging for selection is started in body element (cursor is moved to top edge)",
     test: function () {
-      synthesizeMouse(body, 10, 10, { type: "mousedown" });
+      synthesizeMouse(body, 50, 50, { type: "mousedown" });
       synthesizeMouse(textarea, 50, 10, { type: "mousemove" });
       return true;
     },
@@ -1026,20 +1022,14 @@ var gTests = [
     scrollIsExpected: true,
   },
 
-  // Don't scroll the textarea element on its edge
+  // Scroll the textarea element on its edge
   //   visible scrollable elements: body, textarea
   {
-    description: "The textarea element should NOT be scrolled by moving mouse to its bottom edge",
+    description: "The textarea element should be scrolled by moving mouse to its bottom edge",
     prepare: function () {
       textarea.style.display = "inline";
-      textarea.scrollTop = 30;
     },
     test: function () {
-      if (textarea.scrollTop != 30) {
-        textarea.scrollTop = 30;
-        return false;
-      }
-
       synthesizeMouse(textarea, 50, 50, { type: "mousedown" });
       synthesizeMouse(textarea, 50, textarea.clientHeight - 10,
                       { type: "mousemove" });
@@ -1047,13 +1037,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: true,
     testTarget: function () { return textarea; },
-    expectedScrollTop: function () { return 30; },
+    expectedScrollTop: function () { return getScrollBottomMost(textarea); },
     expectedScrollLeft: function () { return 0; },
-    scrollIsExpected: false,
+    scrollIsExpected: true,
   },
 
   {
-    description: "The textarea element should NOT be scrolled by moving mouse to its top edge",
+    description: "The textarea element should be scrolled by moving mouse to its top edge",
     test: function () {
       synthesizeMouse(textarea, 50, 50, { type: "mousedown" });
       synthesizeMouse(textarea, 50, 10, { type: "mousemove" });
@@ -1061,9 +1051,9 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return textarea; },
-    expectedScrollTop: function () { return 30; },
+    expectedScrollTop: function () { return 0; },
     expectedScrollLeft: function () { return 0; },
-    scrollIsExpected: false,
+    scrollIsExpected: true,
   },
 
   // Don't scroll iframe when selecting parent's body
@@ -1076,7 +1066,7 @@ var gTests = [
       getBodyOfIframe(iframe2).scrollLeft = 50;
     },
     test: function () {
-      synthesizeMouse(body, 10, 10, { type: "mousedown" });
+      synthesizeMouse(body, 50, 50, { type: "mousedown" });
       synthesizeMouse(iframe2, iframe2.clientWidth - 10, 100,
                       { type: "mousemove" });
       return true;
@@ -1091,7 +1081,7 @@ var gTests = [
   {
     description: "The iframe element should NOT be scrolled when dragging for selection is started from its parent's body element (cursor is moved to the left edge of the iframe)",
     test: function () {
-      synthesizeMouse(body, 10, 10, { type: "mousedown" });
+      synthesizeMouse(body, 50, 50, { type: "mousedown" });
       synthesizeMouse(iframe2, 10, 100, { type: "mousemove" });
       return true;
     },
@@ -1105,7 +1095,7 @@ var gTests = [
   {
     description: "The iframe element should NOT be scrolled when dragging for selection is started from its parent's body element (cursor is moved to the bottom edge of the iframe)",
     test: function () {
-      synthesizeMouse(body, 10, 10, { type: "mousedown" });
+      synthesizeMouse(body, 50, 50, { type: "mousedown" });
       synthesizeMouse(iframe2, 100, iframe2.clientHeight - 10,
                       { type: "mousemove" });
       return true;
@@ -1120,7 +1110,7 @@ var gTests = [
   {
     description: "The iframe element should NOT be scrolled when dragging for selection is started from its parent's body element (cursor is moved to the top edge of the iframe)",
     test: function () {
-      synthesizeMouse(body, 100, 100, { type: "mousedown" });
+      synthesizeMouse(body, 50, 50, { type: "mousedown" });
       synthesizeMouse(iframe2, 100, 10, { type: "mousemove" });
       return true;
     },
@@ -1192,14 +1182,12 @@ var gTests = [
     scrollIsExpected: true,
   },
 
-  // Don't scroll the iframe on its edge
+  // Scroll the iframe on its edge
   //   visible scrollable elements: body, iframe (child of body)
   {
-    description: "The iframe element should NOT be scrolled by moving mouse to its right edge",
+    description: "The iframe element should be scrolled by moving mouse to its right edge",
     prepare: function () {
       iframe2.style.display = "inline";
-      getBodyOfIframe(iframe2).scrollTop = 50;
-      getBodyOfIframe(iframe2).scrollLeft = 50;
     },
     test: function () {
       synthesizeMouse(iframe2, 100, 100, { type: "mousedown" });
@@ -1209,13 +1197,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: true,
     testTarget: function () { return getBodyOfIframe(iframe2); },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return getScrollRightMost(this.testTarget()); },
+    scrollIsExpected: true,
   },
 
   {
-    description: "The iframe element should NOT be scrolled by moving mouse to its left edge",
+    description: "The iframe element should be scrolled by moving mouse to its left edge",
     test: function () {
       synthesizeMouse(iframe2, 100, 100, { type: "mousedown" });
       synthesizeMouse(iframe2, 10, 100, { type: "mousemove" });
@@ -1223,13 +1211,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return getBodyOfIframe(iframe2); },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
   },
 
   {
-    description: "The iframe element should NOT be scrolled by moving mouse to its bottom edge",
+    description: "The iframe element should be scrolled by moving mouse to its bottom edge",
     test: function () {
       synthesizeMouse(iframe2, 100, 100, { type: "mousedown" });
       synthesizeMouse(iframe2, 100, getBodyOfIframe(iframe2).clientHeight - 10,
@@ -1238,13 +1226,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return getBodyOfIframe(iframe2); },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return getScrollBottomMost(this.testTarget()); },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
   },
 
   {
-    description: "The iframe element should NOT be scrolled by moving mouse to its top edge",
+    description: "The iframe element should be scrolled by moving mouse to its top edge",
     test: function () {
       synthesizeMouse(iframe2, 100, 100, { type: "mousedown" });
       synthesizeMouse(iframe2, 100, 10, { type: "mousemove" });
@@ -1252,9 +1240,9 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return getBodyOfIframe(iframe2); },
-    expectedScrollTop: function () { return 50; },
-    expectedScrollLeft: function () { return 50; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
   },
 
   // Scroll the div_subframe1 when it captures mouse events and the cursor
@@ -1320,16 +1308,14 @@ var gTests = [
     scrollIsExpected: true,
   },
 
-  // Don't scroll the div_subframe1 when it captures mouse events and the
-  // cursor is on its edge.
+  // Scroll the div_subframe1 when it captures mouse events and the cursor is
+  // on its edge.
   //   visible scrollable elements: body, div_subframe1
   {
-    description: "The scrollable div element (subframe1) should NOT be scrolled by moving mouse to its right edge when it captures mouse events",
+    description: "The scrollable div element (subframe1) should be scrolled by moving mouse to its right edge when it captures mouse events",
     prepare: function () {
       div_subframe1.style.display = "block";
       div_subframe1.onmousedown = function () { div_subframe1.setCapture(); }
-      div_subframe1.scrollTop = 30;
-      div_subframe1.scrollLeft = 30;
     },
     test: function () {
       synthesizeMouse(div_subframe1, 100, 100, { type: "mousedown" });
@@ -1339,13 +1325,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: true,
     testTarget: function () { return div_subframe1; },
-    expectedScrollTop: function () { return 30; },
-    expectedScrollLeft: function () { return 30; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return getScrollRightMost(div_subframe1); },
+    scrollIsExpected: true,
   },
 
   {
-    description: "The scrollable div element (subframe1) should NOT be scrolled by moving mouse to its left edge when it captures mouse events",
+    description: "The scrollable div element (subframe1) should be scrolled by moving mouse to its left edge when it captures mouse events",
     test: function () {
       synthesizeMouse(div_subframe1, 100, 100, { type: "mousedown" });
       synthesizeMouse(div_subframe1, 10, 100, { type: "mousemove" });
@@ -1353,13 +1339,13 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return div_subframe1; },
-    expectedScrollTop: function () { return 30; },
-    expectedScrollLeft: function () { return 30; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
   },
 
   {
-    description: "The scrollable div element (subframe1) should NOT be scrolled by moving mouse to its bottom edge when it captures mouse events",
+    description: "The scrollable div element (subframe1) should be scrolled by moving mouse to its bottom edge when it captures mouse events",
     test: function () {
       synthesizeMouse(div_subframe1, 100, 100, { type: "mousedown" });
       synthesizeMouse(div_subframe1, 100, div_subframe1.clientHeight - 10,
@@ -1368,9 +1354,9 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return div_subframe1; },
-    expectedScrollTop: function () { return 30; },
-    expectedScrollLeft: function () { return 30; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return getScrollBottomMost(div_subframe1); },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
   },
 
   {
@@ -1382,9 +1368,9 @@ var gTests = [
     },
     resetAllElementsBeforeTest: false,
     testTarget: function () { return div_subframe1; },
-    expectedScrollTop: function () { return 30; },
-    expectedScrollLeft: function () { return 30; },
-    scrollIsExpected: false,
+    expectedScrollTop: function () { return 0; },
+    expectedScrollLeft: function () { return 0; },
+    scrollIsExpected: true,
   },
 ];
 
