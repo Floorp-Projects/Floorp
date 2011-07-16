@@ -143,6 +143,8 @@ typedef enum JSOp {
 #define JOF_GNAME        (1U<<25) /* predicted global name */
 #define JOF_TYPESET      (1U<<26) /* has a trailing 2 byte immediate indexing
                                      the set of observed types */
+#define JOF_DECOMPOSE    (1U<<27) /* followed by an equivalent decomposed
+                                   * version of the opcode */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
@@ -520,6 +522,16 @@ Sprint(Sprinter *sp, const char *format, ...);
 
 extern bool
 CallResultEscapes(jsbytecode *pc);
+
+static inline uintN
+GetDecomposeLength(JSOp op)
+{
+    /* Table of lengths, updated on demand. See SetDecomposeLength. */
+    extern uint8 js_decomposeLengthTable[];
+    JS_ASSERT(js_CodeSpec[op].format & JOF_DECOMPOSE);
+    JS_ASSERT(js_decomposeLengthTable[op]);
+    return js_decomposeLengthTable[op];
+}
 
 }
 #endif

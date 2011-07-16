@@ -625,10 +625,6 @@ class Compiler : public BaseCompiler
                                    Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
     bool inlineCallHelper(uint32 argc, bool callingNew, FrameSize &callFrameSize);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
-    bool jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
-    CompileStatus jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
-    CompileStatus jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
-    void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
     void jsop_callgname_epilogue();
@@ -716,6 +712,7 @@ class Compiler : public BaseCompiler
 #ifdef JS_METHODJIT_TYPED_ARRAY
     void jsop_getelem_typed(int atype);
 #endif
+    void jsop_toid();
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);

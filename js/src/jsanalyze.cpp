@@ -463,12 +463,18 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             defineCount = code->defineCount = 0;
         }
 
-        unsigned nuses = GetUseCount(script, offset);
-        unsigned ndefs = GetDefCount(script, offset);
+        /*
+         * Treat decompose ops as no-ops which do not adjust the stack. We will
+         * pick up the stack depths as we go through the decomposed version.
+         */
+        if (!(js_CodeSpec[op].format & JOF_DECOMPOSE)) {
+            unsigned nuses = GetUseCount(script, offset);
+            unsigned ndefs = GetDefCount(script, offset);
 
-        JS_ASSERT(stackDepth >= nuses);
-        stackDepth -= nuses;
-        stackDepth += ndefs;
+            JS_ASSERT(stackDepth >= nuses);
+            stackDepth -= nuses;
+            stackDepth += ndefs;
+        }
 
         switch (op) {
 
@@ -488,10 +494,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:
-          case JSOP_INCNAME:
-          case JSOP_DECNAME:
-          case JSOP_NAMEINC:
-          case JSOP_NAMEDEC:
           case JSOP_FORNAME:
           case JSOP_QNAMEPART:
           case JSOP_QNAMECONST:
@@ -1374,6 +1376,13 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             freezeNewValues(cx, offset);
         }
 
+        JSOp op = (JSOp)*pc;
+
+        if (js_CodeSpec[op].format & JOF_DECOMPOSE) {
+            offset = successorOffset;
+            continue;
+        }
+
         unsigned nuses = GetUseCount(script, offset);
         unsigned ndefs = GetDefCount(script, offset);
         JS_ASSERT(stackDepth >= nuses);
@@ -1441,7 +1450,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
         stackDepth += ndefs;
 
-        JSOp op = (JSOp)*pc;
         switch (op) {
           case JSOP_SETARG:
           case JSOP_SETLOCAL:
