@@ -739,7 +739,7 @@ mjit::Compiler::generatePrologue()
         /* Create the call object. */
         if (script->fun->isHeavyweight()) {
             prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::CreateFunCallObject, REJOIN_NONE);
+            INLINE_STUBCALL(stubs::CreateFunCallObject, REJOIN_CREATE_CALL_OBJECT);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -2634,7 +2634,7 @@ mjit::Compiler::generateMethod()
             JSObject *regex = script->getRegExp(fullAtomIndex(PC));
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(regex), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::RegExp, REJOIN_NONE);
+            INLINE_STUBCALL(stubs::RegExp, REJOIN_PUSH_OBJECT);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
@@ -3310,7 +3310,7 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
 
         int32 frameDepthAdjust;
         if (applyTricks == LazyArgsObj) {
-            OOL_STUBCALL(stubs::Arguments, REJOIN_NONE);
+            OOL_STUBCALL(stubs::Arguments, REJOIN_RESUME);
             frameDepthAdjust = +1;
         } else {
             frameDepthAdjust = 0;
