@@ -524,13 +524,14 @@ extern bool
 CallResultEscapes(jsbytecode *pc);
 
 static inline uintN
-GetDecomposeLength(JSOp op)
+GetDecomposeLength(jsbytecode *pc, size_t len)
 {
-    /* Table of lengths, updated on demand. See SetDecomposeLength. */
-    extern uint8 js_decomposeLengthTable[];
-    JS_ASSERT(js_CodeSpec[op].format & JOF_DECOMPOSE);
-    JS_ASSERT(js_decomposeLengthTable[op]);
-    return js_decomposeLengthTable[op];
+    /*
+     * The last byte of a DECOMPOSE op stores the decomposed length. This can
+     * vary across different instances of an opcode due to INDEXBASE ops.
+     */
+    JS_ASSERT_IF(JSOp(*pc) != JSOP_TRAP, size_t(js_CodeSpec[*pc].length) == len);
+    return (uintN) pc[len - 1];
 }
 
 }

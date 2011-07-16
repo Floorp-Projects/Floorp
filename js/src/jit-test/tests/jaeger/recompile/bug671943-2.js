@@ -1,4 +1,5 @@
-schedulegc(11);
+if (typeof schedulegc != 'undefined')
+  schedulegc(11);
 function foo(n) {
   if (n == 10)
     foo.apply = function(a, b) { return b[0]; }
