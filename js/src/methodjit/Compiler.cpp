@@ -1625,6 +1625,12 @@ mjit::Compiler::generateMethod()
              * the slow path in JSOP_FUNAPPLY will create the args object.
              */
             if (canUseApplyTricks()) {
+                /*
+                 * Check for interrupts at the JSOP_ARGUMENTS when using
+                 * apply tricks, see inlineCallHelper().
+                 */
+                interruptCheckHelper();
+
                 applyTricks = LazyArgsObj;
                 pushSyncedEntry(0);
             } else if (cx->typeInferenceEnabled() && !script->strictModeCode &&
@@ -3357,14 +3363,19 @@ mjit::Compiler::canUseApplyTricks()
 bool
 mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize &callFrameSize)
 {
-    /* Check for interrupts on function call */
-    interruptCheckHelper();
-
     int32 speculatedArgc;
     if (applyTricks == LazyArgsObj) {
         frame.pop();
         speculatedArgc = 1;
     } else {
+        /*
+         * Check for interrupts on function call. We don't do this for lazy
+         * arguments objects as the interrupt may kick this frame into the
+         * interpreter, which doesn't know about the apply tricks. Instead, we
+         * do the interrupt check at the start of the JSOP_ARGUMENTS.
+         */
+        interruptCheckHelper();
+
         speculatedArgc = callImmArgc;
     }
 
@@ -4164,7 +4175,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     /* Handle length accesses on known strings without using a PIC. */
     if (atom == cx->runtime->atomState.lengthAtom &&
         top->isType(JSVAL_TYPE_STRING) &&
-        !hasTypeBarriers(PC)) {
+        (!cx->typeInferenceEnabled() || knownPushedType(0) == JSVAL_TYPE_INT32)) {
         if (top->isConstant()) {
             JSString *str = top->getValue().toString();
             Value v;
