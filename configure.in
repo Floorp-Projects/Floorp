@@ -7470,12 +7470,20 @@ else
       WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$MOZ_CRT_CPU_ARCH"
       MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
     else
-      MOZ_MEMORY_LDFLAGS='-MANIFEST:NO -LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
       if test -z "$MOZ_DEBUG"; then
         WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
       else
         WIN32_CRT_LIBS="msvcrtd.lib msvcprtd.lib"
       fi
+      dnl Look for a broken crtdll.obj
+      WIN32_CRTDLL_FULLPATH=`lib -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
+      lib -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
+      if grep -q '__imp__?free' crtdll.obj; then
+        MOZ_MEMORY_LDFLAGS='-MANIFEST:NO -LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      else
+        MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
+      fi
+      rm crtdll.obj
     fi
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"

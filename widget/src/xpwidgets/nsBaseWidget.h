@@ -115,9 +115,7 @@ public:
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   virtual nsDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();
-  virtual LayerManager*   GetLayerManager(PLayersChild* aShadowManager,
-                                          LayersBackend aBackendHint,
-                                          LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+  virtual LayerManager*   GetLayerManager(LayerManagerPersistence aPersistence,
                                           bool* aAllowRetaining = nsnull);
   using nsIWidget::GetLayerManager;
 
