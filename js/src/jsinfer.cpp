@@ -530,10 +530,7 @@ public:
         : TypeConstraint("prop"), script(script), pc(pc),
           assign(assign), target(target), id(id)
     {
-        JS_ASSERT(script && pc);
-
-        /* If the target is NULL, this is as an inc/dec on the property. */
-        JS_ASSERT_IF(!target, assign);
+        JS_ASSERT(script && pc && target);
     }
 
     void newType(JSContext *cx, TypeSet *source, Type type);
@@ -979,8 +976,6 @@ static inline void
 PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *object,
                bool assign, TypeSet *target, jsid id)
 {
-    JS_ASSERT_IF(!target, assign);
-
     /* Monitor assigns on the 'prototype' property. */
     if (assign && id == id_prototype(cx)) {
         cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
@@ -1004,23 +999,15 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     }
 
     /* Capture the effects of a standard property access. */
-    if (target) {
-        TypeSet *types = object->getProperty(cx, id, assign);
-        if (!types)
-            return;
-        if (assign)
-            target->addSubset(cx, types);
-        else if (UsePropertyTypeBarrier(pc))
-            types->addSubsetBarrier(cx, script, pc, target);
-        else
-            types->addSubset(cx, target);
-    } else {
-        TypeSet *readTypes = object->getProperty(cx, id, false);
-        TypeSet *writeTypes = object->getProperty(cx, id, true);
-        if (!readTypes || !writeTypes)
-            return;
-        readTypes->addArith(cx, writeTypes);
-    }
+    TypeSet *types = object->getProperty(cx, id, assign);
+    if (!types)
+        return;
+    if (assign)
+        target->addSubset(cx, types);
+    else if (UsePropertyTypeBarrier(pc))
+        types->addSubsetBarrier(cx, script, pc, target);
+    else
+        types->addSubset(cx, target);
 }
 
 /* Whether the JSObject/TypeObject referent of an access on type cannot be determined. */
@@ -2176,14 +2163,6 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
     InferSpew(ISpewOps, "addMonitorNeeded:%s #%u:%05u",
               returnOnly ? " returnOnly" : "", script->id(), offset);
 
-    /*
-     * When monitoring side effects for incops, mark the result of the opcode
-     * as unknown. These bytecodes are not JOF_TYPESET so there is no place to
-     * add type barriers at.
-     */
-    if (js_CodeSpec[*pc].format & (JOF_INC | JOF_DEC))
-        analysis->addPushedType(cx, offset, 0, Type::UnknownType());
-
     /* Dynamically monitor this call to keep track of its result types. */
     if (js_CodeSpec[*pc].format & JOF_INVOKE)
         code.monitoredTypesReturn = true;
@@ -2250,6 +2229,8 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
                     continue;
                 jsbytecode *pc = script->code + i;
                 UntrapOpcode untrap(cx, script, pc);
+                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+                    continue;
                 unsigned defCount = GetDefCount(script, i);
                 if (ExtendedDef(pc))
                     defCount++;
@@ -3373,16 +3354,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_INCGNAME:
-      case JSOP_DECGNAME:
-      case JSOP_GNAMEINC:
-      case JSOP_GNAMEDEC: {
-        jsid id = GetAtomId(cx, script, pc, 0);
-        PropertyAccess(cx, script, pc, script->global()->type(), true, NULL, id);
-        PropertyAccess(cx, script, pc, script->global()->type(), false, &pushed[0], id);
-        break;
-      }
-
       case JSOP_NAME:
       case JSOP_CALLNAME: {
         /*
@@ -3415,13 +3386,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_SETCONST:
         cx->compartment->types.monitorBytecode(cx, script, offset);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
-        break;
-
-      case JSOP_INCNAME:
-      case JSOP_DECNAME:
-      case JSOP_NAMEINC:
-      case JSOP_NAMEDEC:
-        cx->compartment->types.monitorBytecode(cx, script, offset);
         break;
 
       case JSOP_GETXPROP: {
@@ -3549,15 +3513,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_INCPROP:
-      case JSOP_DECPROP:
-      case JSOP_PROPINC:
-      case JSOP_PROPDEC: {
-        jsid id = GetAtomId(cx, script, pc, 0);
-        poppedTypes(pc, 0)->addGetProperty(cx, script, pc, &pushed[0], id);
-        break;
-      }
-
       /*
        * We only consider ELEM accesses on integers below. Any element access
        * which is accessing a non-integer property must be monitored.
@@ -3579,17 +3534,18 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_INCELEM:
-      case JSOP_DECELEM:
-      case JSOP_ELEMINC:
-      case JSOP_ELEMDEC:
-        poppedTypes(pc, 1)->addGetProperty(cx, script, pc, &pushed[0], JSID_VOID);
-        break;
-
       case JSOP_SETELEM:
       case JSOP_SETHOLE:
         poppedTypes(pc, 2)->addSetProperty(cx, script, pc, poppedTypes(pc, 0), JSID_VOID);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
+        break;
+
+      case JSOP_TOID:
+        /*
+         * This is only used for element inc/dec ops; any id produced which
+         * is not an integer must be monitored.
+         */
+        pushed[0].addType(cx, Type::Int32Type());
         break;
 
       case JSOP_THIS:
@@ -4006,9 +3962,11 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         jsbytecode *pc = script->code + offset;
         UntrapOpcode untrap(cx, script, pc);
 
-        if (code && !analyzeTypesBytecode(cx, offset, state)) {
-            cx->compartment->types.setPendingNukeTypes(cx);
-            return;
+        if (code && !(js_CodeSpec[*pc].format & JOF_DECOMPOSE)) {
+            if (!analyzeTypesBytecode(cx, offset, state)) {
+                cx->compartment->types.setPendingNukeTypes(cx);
+                return;
+            }
         }
 
         offset += GetBytecodeLength(pc);
@@ -4587,6 +4545,9 @@ ScriptAnalysis::printTypes(JSContext *cx)
         jsbytecode *pc = script->code + offset;
         UntrapOpcode untrap(cx, script, pc);
 
+        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+            continue;
+
         unsigned defCount = GetDefCount(script, offset);
         if (!defCount)
             continue;
@@ -4668,6 +4629,9 @@ ScriptAnalysis::printTypes(JSContext *cx)
         UntrapOpcode untrap(cx, script, pc);
 
         PrintBytecode(cx, script, pc);
+
+        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+            continue;
 
         if (js_CodeSpec[*pc].format & JOF_TYPESET) {
             TypeSet *types = script->types.bytecodeTypes(pc);
@@ -4832,29 +4796,12 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
      * For inc/dec ops, we need to go back and reanalyze the affected opcode
      * taking the overflow into account. We won't see an explicit adjustment
      * of the type of the thing being inc/dec'ed, nor will adding TYPE_DOUBLE to
-     * the pushed value affect that type. We only handle inc/dec operations
-     * that do not have an object lvalue; INCNAME/INCPROP/INCELEM and friends
-     * should call addTypeProperty to reflect the property change.
+     * the pushed value affect that type.
      */
     JSOp op = JSOp(*pc);
     const JSCodeSpec *cs = &js_CodeSpec[op];
     if (cs->format & (JOF_INC | JOF_DEC)) {
         switch (op) {
-          case JSOP_INCGNAME:
-          case JSOP_DECGNAME:
-          case JSOP_GNAMEINC:
-          case JSOP_GNAMEDEC: {
-            jsid id = GetAtomId(cx, script, pc, 0);
-            TypeObject *global = script->global()->type();
-            if (!global->unknownProperties()) {
-                TypeSet *types = global->getProperty(cx, id, true);
-                if (!types)
-                    break;
-                types->addType(cx, type);
-            }
-            break;
-          }
-
           case JSOP_INCLOCAL:
           case JSOP_DECLOCAL:
           case JSOP_LOCALINC:
@@ -4933,7 +4880,7 @@ TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Val
 {
     UntrapOpcode untrap(cx, script, pc);
 
-    /* Allow the non-TYPESET scenario to simplify stubs invoked by INC* ops. Yuck. */
+    /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
     if (!(js_CodeSpec[*pc].format & JOF_TYPESET))
         return;
 
@@ -5011,9 +4958,11 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
       case JSOP_ENDITER:
         return true;
 
-      /* DUP can be applied to values pushed by other opcodes we don't model. */
+      /* Ops which can manipulate values pushed by opcodes we don't model. */
       case JSOP_DUP:
       case JSOP_DUP2:
+      case JSOP_SWAP:
+      case JSOP_PICK:
         return true;
 
       /* We don't keep track of state indicating whether there is a pending exception. */
@@ -5123,6 +5072,9 @@ TypeScript::checkBytecode(JSContext *cx, jsbytecode *pc, const js::Value *sp)
 {
     AutoEnterTypeInference enter(cx);
     UntrapOpcode untrap(cx, script(), pc);
+
+    if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+        return;
 
     if (!script()->hasAnalysis() || !script()->analysis(cx)->ranInference())
         return;

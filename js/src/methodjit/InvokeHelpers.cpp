@@ -1170,59 +1170,6 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
     *vp = (cs->format & JOF_POST) ? ov : nv;
 }
 
-static bool
-FinishObjIncOp(VMFrame &f, RejoinState rejoin, Value objv, Value ov, Value nv, Value *vp)
-{
-    /*
-     * Finish a property access increment operation on a GNAME, NAME or PROP. We don't need
-     * to handle ELEM as these are always stubbed.
-     */
-    JS_ASSERT(rejoin == REJOIN_BINDNAME || rejoin == REJOIN_GETTER ||
-              rejoin == REJOIN_POS || rejoin == REJOIN_BINARY);
-
-    JSContext *cx = f.cx;
-
-    JSObject *obj = ValueToObject(cx, &objv);
-    if (!obj)
-        return false;
-
-    JSOp op = js_GetOpcode(cx, f.script(), f.pc());
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    JS_ASSERT(JOF_TYPE(cs->format) == JOF_ATOM);
-
-    jsid id = ATOM_TO_JSID(f.script()->getAtom(GET_SLOTNO(f.pc())));
-
-    if (rejoin == REJOIN_BINDNAME && !obj->getProperty(cx, id, &ov))
-        return false;
-
-    if (rejoin == REJOIN_BINDNAME || rejoin == REJOIN_GETTER) {
-        double d;
-        if (!ToNumber(cx, ov, &d))
-            return false;
-        ov.setNumber(d);
-    }
-
-    if (rejoin == REJOIN_BINDNAME || rejoin == REJOIN_GETTER || rejoin == REJOIN_POS) {
-        double d = ov.toNumber();
-        double N = (cs->format & JOF_INC) ? 1 : -1;
-        if (!nv.setNumber(d + N))
-            f.script()->types.monitorOverflow(cx, f.pc());
-    }
-
-    uint32 setPropFlags = (cs->format & JOF_NAME)
-                          ? JSRESOLVE_ASSIGNING
-                          : JSRESOLVE_ASSIGNING | JSRESOLVE_QUALIFIED;
-
-    {
-        JSAutoResolveFlags rf(cx, setPropFlags);
-        if (!obj->setProperty(cx, id, &nv, f.script()->strictModeCode))
-            return false;
-    }
-
-    *vp = (cs->format & JOF_POST) ? ov : nv;
-    return true;
-}
-
 extern "C" void *
 js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VMFrame &f)
 {
@@ -1282,59 +1229,26 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     bool skipTrap = false;
 
     if ((cs->format & (JOF_INC | JOF_DEC)) &&
-        rejoin != REJOIN_FALLTHROUGH &&
-        rejoin != REJOIN_RESUME &&
-        rejoin != REJOIN_THIS_PROTOTYPE &&
-        rejoin != REJOIN_CHECK_ARGUMENTS) {
-        /* We may reenter the interpreter while finishing the INC/DEC operation. */
+        (rejoin == REJOIN_POS || rejoin == REJOIN_BINARY)) {
+        /*
+         * We may reenter the interpreter while finishing the INC/DEC operation
+         * on a local or arg (property INC/DEC operations will rejoin into the
+         * decomposed version of the op.
+         */
+        JS_ASSERT(cs->format & (JOF_LOCAL | JOF_QARG));
+
         nextDepth = analysis->getCode(nextpc).stackDepth;
         untrap.retrap();
         enter.leave();
 
-        switch (op) {
-          case JSOP_INCLOCAL:
-          case JSOP_DECLOCAL:
-          case JSOP_LOCALINC:
-          case JSOP_LOCALDEC:
-          case JSOP_INCARG:
-          case JSOP_DECARG:
-          case JSOP_ARGINC:
-          case JSOP_ARGDEC:
-            if (rejoin != REJOIN_BINARY || !analysis->incrementInitialValueObserved(pc)) {
-                /* Stack layout is 'V', 'N' or 'N+1' (only if the N is not needed) */
-                FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[-1], &nextsp[-1]);
-            } else {
-                /* Stack layout is 'N N+1' */
-                FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[0], &nextsp[-1]);
-            }
-            break;
-
-          case JSOP_INCGNAME:
-          case JSOP_DECGNAME:
-          case JSOP_GNAMEINC:
-          case JSOP_GNAMEDEC:
-          case JSOP_INCNAME:
-          case JSOP_DECNAME:
-          case JSOP_NAMEINC:
-          case JSOP_NAMEDEC:
-          case JSOP_INCPROP:
-          case JSOP_DECPROP:
-          case JSOP_PROPINC:
-          case JSOP_PROPDEC:
-            if (rejoin != REJOIN_BINARY || !analysis->incrementInitialValueObserved(pc)) {
-                /* Stack layout is 'OBJ V', 'OBJ N' or 'OBJ N+1' (only if the N is not needed) */
-                if (!FinishObjIncOp(f, rejoin, nextsp[-1], nextsp[0], nextsp[0], &nextsp[-1]))
-                    return js_InternalThrow(f);
-            } else {
-                /* Stack layout is 'N OBJ N+1' */
-                if (!FinishObjIncOp(f, rejoin, nextsp[0], nextsp[-1], nextsp[1], &nextsp[-1]))
-                    return js_InternalThrow(f);
-            }
-            break;
-
-          default:
-            JS_NOT_REACHED("Bad op");
+        if (rejoin != REJOIN_BINARY || !analysis->incrementInitialValueObserved(pc)) {
+            /* Stack layout is 'V', 'N' or 'N+1' (only if the N is not needed) */
+            FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[-1], &nextsp[-1]);
+        } else {
+            /* Stack layout is 'N N+1' */
+            FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[0], &nextsp[-1]);
         }
+
         rejoin = REJOIN_FALLTHROUGH;
     }
 
