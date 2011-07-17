@@ -82,10 +82,10 @@ endef
 endif
 
 mochitest-remote:
-	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "" ]; \
+	if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "" ]; \
           then $(RUN_MOCHITEST_REMOTE); \
         else \
-          echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
+          @echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
         fi
 
 mochitest-plain:
