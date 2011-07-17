@@ -76,6 +76,8 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
@@ -1144,7 +1146,7 @@ str_lastIndexOf(JSContext *cx, uintN argc, Value *vp)
                 i = j;
         } else {
             double d;
-            if (!ValueToNumber(cx, vp[3], &d))
+            if (!ToNumber(cx, vp[3], &d))
                 return false;
             if (!JSDOUBLE_IS_NaN(d)) {
                 d = js_DoubleToInteger(d);
@@ -2442,7 +2444,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     uint32 limit;
     if (argc > 1 && !vp[3].isUndefined()) {
         jsdouble d;
-        if (!ValueToNumber(cx, vp[3], &d))
+        if (!ToNumber(cx, vp[3], &d))
             return false;
         limit = js_DoubleToECMAUint32(d);
     } else {
@@ -3175,36 +3177,20 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Now create the String function. */
-    JSAtom *atom = CLASS_ATOM(cx, String);
-    JSFunction *ctor = js_NewFunction(cx, NULL, js_String, 1, JSFUN_CONSTRUCTOR, global, atom);
+    JSFunction *ctor = global->createConstructor(cx, js_String, &js_StringClass,
+                                                 CLASS_ATOM(cx, String), 1);
     if (!ctor)
         return NULL;
 
-    /* String creates string objects. */
-    FUN_CLASP(ctor) = &js_StringClass;
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
+        return NULL;
 
-    /* Define String.prototype and String.prototype.constructor. */
-    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                              ObjectValue(*proto), PropertyStub, StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                               ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0))
+    if (!DefinePropertiesAndBrand(cx, proto, NULL, string_methods) ||
+        !DefinePropertiesAndBrand(cx, ctor, NULL, string_static_methods))
     {
         return NULL;
     }
 
-    /* Add properties and methods to the prototype and the constructor. */
-    if (!JS_DefineFunctions(cx, proto, string_methods) ||
-        !JS_DefineFunctions(cx, ctor, string_static_methods))
-    {
-        return NULL;
-    }
-
-    /* Pre-brand String and String.prototype for trace-jitted code. */
-    proto->brand(cx);
-    ctor->brand(cx);
-
-    /* Install the fully-constructed String and String.prototype. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
         return NULL;
 

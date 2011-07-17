@@ -112,6 +112,13 @@ class GlobalObject : public ::JSObject {
     static GlobalObject *create(JSContext *cx, Class *clasp);
 
     /*
+     * Create a constructor function with the specified name and length using
+     * ctor, a method which creates objects with the given class.
+     */
+    JSFunction *
+    createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name, uintN length);
+
+    /*
      * Create an object to serve as [[Prototype]] for instances of the given
      * class, using |Object.prototype| as its [[Prototype]].  Users creating
      * prototype objects with particular internal structure (e.g. reserved
@@ -161,6 +168,21 @@ class GlobalObject : public ::JSObject {
 
     bool initStandardClasses(JSContext *cx);
 };
+
+/*
+ * Define ctor.prototype = proto as non-enumerable, non-configurable, and
+ * non-writable; define proto.constructor = ctor as non-enumerable but
+ * configurable and writable.
+ */
+extern bool
+LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
+
+/*
+ * Define properties, then functions, on the object, then brand for tracing
+ * benefits.
+ */
+extern bool
+DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFunctionSpec *fs);
 
 } // namespace js
 

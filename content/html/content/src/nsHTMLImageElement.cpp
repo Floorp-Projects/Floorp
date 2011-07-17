@@ -45,7 +45,6 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsSize.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"
@@ -107,6 +106,9 @@ public:
 
   // override from nsGenericHTMLElement
   NS_IMETHOD GetDraggable(PRBool* aDraggable);
+
+  // override from nsImageLoadingContent
+  nsImageLoadingContent::CORSMode GetCORSMode();
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
@@ -225,6 +227,17 @@ NS_IMPL_URI_ATTR(nsHTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
+static const nsAttrValue::EnumTable kCrossOriginTable[] = {
+  { "",                nsImageLoadingContent::CORS_NONE },
+  { "anonymous",       nsImageLoadingContent::CORS_ANONYMOUS },
+  { "use-credentials", nsImageLoadingContent::CORS_USE_CREDENTIALS },
+  { 0 }
+};
+// Default crossOrigin mode is CORS_NONE.
+static const nsAttrValue::EnumTable* kCrossOriginDefault = &kCrossOriginTable[0];
+
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLImageElement, CrossOrigin, crossOrigin, kCrossOriginDefault->tag)
+
 NS_IMETHODIMP
 nsHTMLImageElement::GetDraggable(PRBool* aDraggable)
 {
@@ -337,6 +350,9 @@ nsHTMLImageElement::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsGkAtoms::crossOrigin) {
+      return aResult.ParseEnumValue(aValue, kCrossOriginTable, PR_FALSE);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return PR_TRUE;
@@ -632,4 +648,17 @@ nsHTMLImageElement::CopyInnerTo(nsGenericElement* aDest) const
     CreateStaticImageClone(static_cast<nsHTMLImageElement*>(aDest));
   }
   return nsGenericHTMLElement::CopyInnerTo(aDest);
+}
+
+nsImageLoadingContent::CORSMode
+nsHTMLImageElement::GetCORSMode()
+{
+  nsImageLoadingContent::CORSMode ret = nsImageLoadingContent::CORS_NONE;
+
+  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::crossOrigin);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    ret = (nsImageLoadingContent::CORSMode) value->GetEnumValue();
+  }
+
+  return ret;
 }

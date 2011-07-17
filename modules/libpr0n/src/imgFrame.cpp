@@ -168,7 +168,7 @@ imgFrame::~imgFrame()
 }
 
 nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, 
-                        gfxASurface::gfxImageFormat aFormat, PRInt8 aPaletteDepth /* = 0 */)
+                        gfxASurface::gfxImageFormat aFormat, PRUint8 aPaletteDepth /* = 0 */)
 {
   // assert for properties that should be verified by decoders, warn for properties related to bad content
   if (!AllowedImageSize(aWidth, aHeight))

@@ -380,6 +380,20 @@ public:
    */
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const = 0;
 
+  /* This functions gets the bounds of this path. These bounds are not
+   * guaranteed to be tight. A transform may be specified that gives the bounds
+   * after application of the transform.
+   */
+  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const = 0;
+
+  /* This function gets the bounds of the stroke of this path using the
+   * specified strokeoptions. These bounds are not guaranteed to be tight.
+   * A transform may be specified that gives the bounds after application of
+   * the transform.
+   */
+  virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
+                                const Matrix &aTransform = Matrix()) const = 0;
+
   /* This gets the fillrule this path's builder was created with. This is not
    * mutable.
    */
@@ -478,7 +492,9 @@ public:
 
   /*
    * Blend a surface to the draw target with a shadow. The shadow is drawn as a
-   * gaussian blur using a specified sigma.
+   * gaussian blur using a specified sigma. The shadow is clipped to the size
+   * of the input surface, so the input surface should contain a transparent
+   * border the size of the approximate coverage of the blur (3 * aSigma).
    * NOTE: This function works in device space!
    *
    * aSurface Source surface to draw.
