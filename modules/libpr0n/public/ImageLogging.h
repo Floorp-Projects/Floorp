@@ -37,12 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef ImageLogging_h
+#define ImageLogging_h
+
+// In order for FORCE_PR_LOG below to work, we have to define it before the
+// first time prlog is #included.
+#if defined(PR_LOG)
+#error "Must #include ImageLogging.h before before any IPDL-generated files or other files that #include prlog.h."
+#endif
+
+#if defined(MOZ_LOGGING)
+#define FORCE_PR_LOG
+#endif
+
 #include "prlog.h"
 #include "prinrval.h"
-
 #include "nsString.h"
 
 #if defined(PR_LOGGING)
+// Declared in imgRequest.cpp.
 extern PRLogModuleInfo *gImgLog;
 
 #define GIVE_ME_MS_NOW() PR_IntervalToMilliseconds(PR_IntervalNow())
@@ -212,8 +225,8 @@ public:
              NS_LITERAL_CSTRING(s),        \
              NS_LITERAL_CSTRING(m))
 
-
 #else
+
 #define LOG_SCOPE(l, s)
 #define LOG_SCOPE_WITH_PARAM(l, s, pn, pv)
 #define LOG_FUNC(l, s)
@@ -221,6 +234,9 @@ public:
 #define LOG_STATIC_FUNC(l, s)
 #define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv)
 #define LOG_MSG(l, s, m)
-#endif
+
+#endif // if defined(PR_LOGGING)
 
 #define LOG_MSG_WITH_PARAM LOG_FUNC_WITH_PARAM
+
+#endif // ifndef ImageLogging_h

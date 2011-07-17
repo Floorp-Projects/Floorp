@@ -69,6 +69,25 @@ public:
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_NSIIMAGELOADINGCONTENT
 
+  enum CORSMode {
+    /**
+     * The default of not using CORS to validate cross-origin loads.
+     */
+    CORS_NONE,
+
+    /**
+     * Validate cross-site loads using CORS, but do not send any credentials
+     * (cookies, HTTP auth logins, etc) along with the request.
+     */
+    CORS_ANONYMOUS,
+
+    /**
+     * Validate cross-site loads using CORS, and send credentials such as cookies
+     * and HTTP auth logins along with the request.
+     */
+    CORS_USE_CREDENTIALS
+  };
+
 protected:
   /**
    * LoadImage is called by subclasses when the appropriate
@@ -158,6 +177,12 @@ protected:
   // Sets blocking state only if the desired state is different from the
   // current one. See the comment for mBlockingOnload for more information.
   void SetBlockingOnload(PRBool aBlocking);
+
+  /**
+   * Returns the CORS mode that will be used for all future image loads. The
+   * default implementation returns CORS_NONE unconditionally.
+   */
+  virtual CORSMode GetCORSMode();
 
 private:
   /**

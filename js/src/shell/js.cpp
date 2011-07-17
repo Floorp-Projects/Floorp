@@ -2213,6 +2213,8 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             break;
           }
           case SRC_SWITCH:
+            if (js_GetOpcode(cx, script, script->code + offset) == JSOP_GOTO)
+                break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)

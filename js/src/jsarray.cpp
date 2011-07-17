@@ -555,7 +555,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
         return false;
 
     jsdouble d;
-    if (!ValueToNumber(cx, *vp, &d))
+    if (!ToNumber(cx, *vp, &d))
         return false;
 
     if (d != newlen) {
@@ -1737,7 +1737,7 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ValueToNumber(cx, session.rval(), &cmp))
+    if (!ToNumber(cx, session.rval(), &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */

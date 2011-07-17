@@ -141,7 +141,7 @@ function test()
 
   // Close the UI if necessary
   let win = Services.ww.getWindowByName("Sanatize", null);
-  if (win && (win instanceof Ci.nsIDOMWindowInternal))
+  if (win && (win instanceof Ci.nsIDOMWindow))
     win.close();
 
   // Start the test when the sanitize window loads
@@ -154,7 +154,7 @@ function test()
   // Let the methods that run onload finish before we test
   let doTest = function() setTimeout(function() {
     let win = Services.ww.getWindowByName("Sanitize", null)
-                .QueryInterface(Ci.nsIDOMWindowInternal);
+                .QueryInterface(Ci.nsIDOMWindow);
 
     for (let i = 0; i < tests.length; i++)
       tests[i](win);

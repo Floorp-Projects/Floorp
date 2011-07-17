@@ -3041,6 +3041,15 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
     return TRUE;
 }
 
+PRBool
+nsWindow::DispatchContentCommandEvent(PRInt32 aMsg)
+{
+  nsEventStatus status;
+  nsContentCommandEvent event(PR_TRUE, aMsg, this);
+  DispatchEvent(&event, status);
+  return TRUE;
+}
+
 static PRUint32
 GetCharCodeFor(const GdkEventKey *aEvent, guint aShiftState,
                gint aGroup)
@@ -3187,6 +3196,20 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
             return DispatchCommandEvent(nsWidgetAtoms::Bookmarks);
         case XF86XK_HomePage:
             return DispatchCommandEvent(nsWidgetAtoms::Home);
+        case XF86XK_Copy:
+        case GDK_F16:  // F16, F20, F18, F14 are old keysyms for Copy Cut Paste Undo
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_COPY);
+        case XF86XK_Cut:
+        case GDK_F20:
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_CUT);
+        case XF86XK_Paste:
+        case GDK_F18:
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_PASTE);
+        case GDK_Redo:
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_REDO);
+        case GDK_Undo:
+        case GDK_F14:
+            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
     }
 #endif /* ! AIX */
 #endif /* MOZ_X11 */
