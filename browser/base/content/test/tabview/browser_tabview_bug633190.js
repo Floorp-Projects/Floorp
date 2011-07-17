@@ -71,8 +71,8 @@ function testCreateTabAndThen(callback) {
 
       registerCleanupFunction(function () gBrowser.removeTab(tab))
 
-      tabItem.addSubscriber(tabItem, "zoomedIn", function() {
-        tabItem.removeSubscriber(tabItem, "zoomedIn");
+      tabItem.addSubscriber("zoomedIn", function onZoomedIn() {
+        tabItem.removeSubscriber("zoomedIn", onZoomedIn);
 
         is(gBrowser.selectedTab, tab,
           "The selected tab is the same as the newly opened tab");
