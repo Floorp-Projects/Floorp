@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsJPEGDecoder.h"
+#include "ImageLogging.h"
 
 #include "imgIContainerObserver.h"
 
@@ -47,7 +48,6 @@
 
 #include "nspr.h"
 #include "nsCRT.h"
-#include "ImageLogging.h"
 #include "gfxColor.h"
 
 #include "jerror.h"
@@ -385,13 +385,10 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     /* Used to set up image size so arrays can be allocated */
     jpeg_calc_output_dimensions(&mInfo);
 
-
-    // Use EnsureCleanFrame so we don't create a new frame if we're being
-    // reused for e.g. multipart/x-replace
     PRUint32 imagelength;
-    if (NS_FAILED(mImage->EnsureCleanFrame(0, 0, 0, mInfo.image_width, mInfo.image_height,
-                                           gfxASurface::ImageFormatRGB24,
-                                           &mImageData, &imagelength))) {
+    if (NS_FAILED(mImage->EnsureFrame(0, 0, 0, mInfo.image_width, mInfo.image_height,
+                                      gfxASurface::ImageFormatRGB24,
+                                      &mImageData, &imagelength))) {
       mState = JPEG_ERROR;
       PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,

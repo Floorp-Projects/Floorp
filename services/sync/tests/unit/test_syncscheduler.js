@@ -162,9 +162,7 @@ add_test(function test_masterpassword_locked_retry_interval() {
   Service.verifyLogin = Service._verifyLogin;
   SyncScheduler.scheduleAtInterval = SyncScheduler._scheduleAtInterval;
 
-  Svc.Prefs.resetBranch("");
-  SyncScheduler.setDefaults();
-  Clients.resetClient();
+  Service.startOver();
   server.stop(run_next_test);
 });
 
@@ -204,6 +202,7 @@ add_test(function test_scheduleNextSync() {
       Svc.Prefs.resetBranch("");
       SyncScheduler.syncTimer.clear();
       Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
+      Service.startOver();
       server.stop(run_next_test);
     }, this);
   });
@@ -243,12 +242,8 @@ add_test(function test_handleSyncError() {
   let server = sync_httpd_setup();
   setUp();
  
-  let origLockedSync = Service._lockedSync;
-  Service._lockedSync = function () {
-    // Force a sync fail.
-    Service._loggedIn = false;
-    origLockedSync.call(Service);
-  };
+  // Force sync to fail.
+  Svc.Prefs.set("firstSync", "notReady");
 
   _("Ensure expected initial environment.");
   do_check_eq(SyncScheduler._syncErrors, 0);
@@ -298,8 +293,7 @@ add_test(function test_handleSyncError() {
   do_check_true(Status.enforceBackoff);
   SyncScheduler.syncTimer.clear();
 
-  Service._lockedSync = origLockedSync;
-  SyncScheduler.setDefaults();
+  Service.startOver();
   server.stop(run_next_test);
 });
 
@@ -334,25 +328,87 @@ add_test(function test_client_sync_finish_updateClientMode() {
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.idle);
 
-  Svc.Prefs.resetBranch("");
-  SyncScheduler.setDefaults();
-  Clients.resetClient();
+  Service.startOver();
   server.stop(run_next_test);
 });
 
-add_test(function test_sync_at_startup() {
+add_test(function test_autoconnect() {
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
 
-    Svc.Prefs.resetBranch("");
-    SyncScheduler.setDefaults();
-    Clients.resetClient();
-
+    Service.startOver();
     server.stop(run_next_test);
   });
 
   let server = sync_httpd_setup();
   setUp();
+
+  Service.delayedAutoConnect(0);
+});
+
+add_test(function test_autoconnect_mp_locked() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Pretend user did not unlock master password.
+  let origLocked = Utils.mpLocked;
+  Utils.mpLocked = function() true;
+
+  let origPP = Service.__lookupGetter__("passphrase");
+  delete Service.passphrase;
+  Service.__defineGetter__("passphrase", function() {
+    throw "User canceled Master Password entry";
+  });
+
+  // A locked master password will still trigger a sync, but then we'll hit
+  // MASTER_PASSWORD_LOCKED and hence MASTER_PASSWORD_LOCKED_RETRY_INTERVAL.
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    Utils.nextTick(function aLittleBitAfterLoginError() {
+      do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
+
+      Utils.mpLocked = origLocked;
+      delete Service.passphrase;
+      Service.__defineGetter__("passphrase", origPP);
+
+      Service.startOver();
+      server.stop(run_next_test);
+    });
+  });
+
+  Service.delayedAutoConnect(0);
+});
+
+let timer;
+add_test(function test_no_autoconnect_during_wizard() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Simulate the Sync setup wizard.
+  Svc.Prefs.set("firstSync", "notReady");
+
+  // Ensure we don't actually try to sync (or log in for that matter).
+  function onLoginStart() {
+    do_throw("Should not get here!");
+  }
+  Svc.Obs.add("weave:service:login:start", onLoginStart);
+
+  // First wait >100ms (nsITimers can take up to that much time to fire, so
+  // we can account for the timer in delayedAutoconnect) and then two event
+  // loop ticks (to account for the Utils.nextTick() in _autoConnect).
+  let ticks = 2;
+  function wait() {
+    if (ticks) {
+      ticks -= 1;
+      Utils.nextTick(wait);
+      return;
+    }
+    Svc.Obs.remove("weave:service:login:start", onLoginStart);
+
+    Service.startOver();
+    server.stop(run_next_test);    
+  }
+  timer = Utils.namedTimer(wait, 150, {}, "timer");
 
   Service.delayedAutoConnect(0);
 });

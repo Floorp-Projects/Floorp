@@ -131,6 +131,17 @@ js_ObjectToOuterObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
+JS_FRIEND_API(bool)
+NULLABLE_OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
+{
+    if (!obj) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return false;
+    }
+    OBJ_TO_INNER_OBJECT(cx, obj);
+    return !!obj;
+}
+
 #if JS_HAS_OBJ_PROTO_PROP
 
 static JSBool
@@ -3797,20 +3808,21 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
         ctor = proto;
     } else {
-        JSFunction *fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom);
+        /*
+         * Create the constructor, not using GlobalObject::createConstructor
+         * because the constructor currently must have |obj| as its parent.
+         * (FIXME: remove this dependency on the exact identity of the parent,
+         * perhaps as part of bug 638316.)
+         */
+        JSFunction *fun =
+            js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom);
         if (!fun)
             goto bad;
+        FUN_CLASP(fun) = clasp;
 
         AutoValueRooter tvr2(cx, ObjectValue(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
             goto bad;
-
-        /*
-         * Remember the class this function is a constructor for so that
-         * we know to create an object of this class when we call the
-         * constructor.
-         */
-        FUN_CLASP(fun) = clasp;
 
         /*
          * Optionally construct the prototype object, before the class has
@@ -3829,33 +3841,19 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
                 proto = &rval.toObject();
         }
 
-        /* Connect constructor and prototype by named properties. */
-        if (!js_SetClassPrototype(cx, ctor, proto,
-                                  JSPROP_READONLY | JSPROP_PERMANENT)) {
+        if (!LinkConstructorAndPrototype(cx, ctor, proto))
             goto bad;
-        }
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (ctor->getClass() == clasp)
             ctor->setProto(proto);
     }
 
-    /* Add properties and methods to the prototype and the constructor. */
-    if ((ps && !JS_DefineProperties(cx, proto, ps)) ||
-        (fs && !JS_DefineFunctions(cx, proto, fs)) ||
-        (static_ps && !JS_DefineProperties(cx, ctor, static_ps)) ||
-        (static_fs && !JS_DefineFunctions(cx, ctor, static_fs))) {
+    if (!DefinePropertiesAndBrand(cx, proto, ps, fs) ||
+        (ctor != proto && !DefinePropertiesAndBrand(cx, ctor, static_ps, static_fs)))
+    {
         goto bad;
     }
-
-    /*
-     * Pre-brand the prototype and constructor if they have built-in methods.
-     * This avoids extra shape guard branch exits in the tracejitted code.
-     */
-    if (fs)
-        proto->brand(cx);
-    if (ctor != proto && static_fs)
-        ctor->brand(cx);
 
     /*
      * Make sure proto's emptyShape is available to be shared by objects of
@@ -6104,28 +6102,6 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
     }
 
     return FindClassPrototype(cx, scopeobj, protoKey, protop, clasp);
-}
-
-JSBool
-js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
-{
-    /*
-     * Use the given attributes for the prototype property of the constructor,
-     * as user-defined constructors have a DontDelete prototype (which may be
-     * reset), while native or "system" constructors have DontEnum | ReadOnly |
-     * DontDelete.
-     */
-    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                              ObjectOrNullValue(proto), PropertyStub, StrictPropertyStub, attrs)) {
-        return JS_FALSE;
-    }
-
-    /*
-     * ECMA says that Object.prototype.constructor, or f.prototype.constructor
-     * for a user-defined function f, is DontEnum.
-     */
-    return proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                                 ObjectOrNullValue(ctor), PropertyStub, StrictPropertyStub, 0);
 }
 
 JSObject *

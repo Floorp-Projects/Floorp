@@ -230,29 +230,31 @@ public:
    */
   nsresult SetSize(PRInt32 aWidth, PRInt32 aHeight);
 
-  nsresult EnsureCleanFrame(PRUint32 aFramenum, PRInt32 aX, PRInt32 aY,
-                            PRInt32 aWidth, PRInt32 aHeight,
-                            gfxASurface::gfxImageFormat aFormat,
-                            PRUint8** imageData,
-                            PRUint32* imageLength);
 
   /**
-   * Adds to the end of the list of frames.
+   * Ensures that a given frame number exists with the given parameters, and
+   * returns pointers to the data storage for that frame.
+   * It is not possible to create sparse frame arrays; you can only append
+   * frames to the current frame array.
    */
-  nsresult AppendFrame(PRInt32 aX, PRInt32 aY,
+  nsresult EnsureFrame(PRUint32 aFramenum, PRInt32 aX, PRInt32 aY,
+                       PRInt32 aWidth, PRInt32 aHeight,
+                       gfxASurface::gfxImageFormat aFormat,
+                       PRUint8 aPaletteDepth,
+                       PRUint8** imageData,
+                       PRUint32* imageLength,
+                       PRUint32** paletteData,
+                       PRUint32* paletteLength);
+
+  /**
+   * A shorthand for EnsureFrame, above, with aPaletteDepth = 0 and paletteData
+   * and paletteLength set to null.
+   */
+  nsresult EnsureFrame(PRUint32 aFramenum, PRInt32 aX, PRInt32 aY,
                        PRInt32 aWidth, PRInt32 aHeight,
                        gfxASurface::gfxImageFormat aFormat,
                        PRUint8** imageData,
                        PRUint32* imageLength);
-
-  nsresult AppendPalettedFrame(PRInt32 aX, PRInt32 aY,
-                               PRInt32 aWidth, PRInt32 aHeight,
-                               gfxASurface::gfxImageFormat aFormat,
-                               PRUint8 aPaletteDepth,
-                               PRUint8**  imageData,
-                               PRUint32*  imageLength,
-                               PRUint32** paletteData,
-                               PRUint32*  paletteLength);
 
   void FrameUpdated(PRUint32 aFrameNum, nsIntRect& aUpdatedRect);
 

@@ -41,7 +41,7 @@
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 
 #include "TaskbarTabPreview.h"
-#include "nsWindowGFX.h"
+#include "nsWindowGfx.h"
 #include "nsUXThemeData.h"
 #include <nsITaskbarPreviewController.h>
 

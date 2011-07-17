@@ -112,7 +112,7 @@ dnl ========================================================
 PERL_VERSION=5.006
 PYTHON_VERSION=2.5
 WINDRES_VERSION=2.14.90
-W32API_VERSION=3.8
+W32API_VERSION=3.14
 
 MSMANIFEST_TOOL=
 
@@ -308,6 +308,12 @@ case "$target" in
     if test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/  -lstlport_static"
+    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a  -lstlport_static"
+    elif test "$target" != "arm-android-eabi"; then
+       dnl fail if we're not building with NDKr4
+       AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
     fi
 
     CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
@@ -871,8 +877,7 @@ EOF
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
-        # Server 2003 is the highest version supported
-        MOZ_WINSDK_MAXVER=0x05020000
+        MOZ_WINSDK_MAXVER=0x06010000
     fi # !GNU_CC
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
