@@ -462,9 +462,6 @@ DOMCI_CLASS(MozTouchEvent)
 
 DOMCI_CLASS(MathMLElement)
 
-DOMCI_CLASS(Worker)
-DOMCI_CLASS(ChromeWorker)
-
 // WebGL
 DOMCI_CLASS(WebGLRenderingContext)
 DOMCI_CLASS(WebGLBuffer)
