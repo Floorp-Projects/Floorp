@@ -274,6 +274,7 @@ _TEST_FILES = \
 		test_bug659596.html \
 		test_bug659743.xml \
 		test_bug660663.html \
+		test_bug664299.html \
 		test_bug666666.html \
 		test_restore_from_parser_fragment.html \
 		$(NULL)
