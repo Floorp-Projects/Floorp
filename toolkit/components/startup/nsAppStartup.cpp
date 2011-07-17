@@ -55,7 +55,6 @@
 #include "nsIPromptService.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
-#include "nsITimelineService.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
