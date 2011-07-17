@@ -723,7 +723,11 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
 
   NS_ConvertUTF16toUTF8 familyName(aProxy->FamilyName());
   nsCAutoString fontURI;
-  aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
+  if (aProxy->mSrcList[aProxy->mSrcIndex].mURI) {
+    aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
+  } else {
+    fontURI.AppendLiteral("(invalid URI)");
+  }
 
   char weightKeywordBuf[8]; // plenty to sprintf() a PRUint16
   const char *weightKeyword;
