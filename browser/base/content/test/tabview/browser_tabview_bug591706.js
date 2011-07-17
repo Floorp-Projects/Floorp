@@ -46,8 +46,8 @@ function onTabViewWindowLoaded() {
   is(group.getChildren()[0].tab.linkedBrowser.contentWindow.location, secondTab.linkedBrowser.contentWindow.location, "The second tab was there first");
   is(group.getChildren()[1].tab.linkedBrowser.contentWindow.location, firstTab.linkedBrowser.contentWindow.location, "The first tab was just added and went to the end of the line");
   
-  group.addSubscriber(group, "close", function() {
-    group.removeSubscriber(group, "close");
+  group.addSubscriber("close", function onClose() {
+    group.removeSubscriber("close", onClose);
 
     ok(group.isEmpty(), "The group is empty again");
 
