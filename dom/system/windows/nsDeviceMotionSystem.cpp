@@ -147,8 +147,11 @@ void nsDeviceMotionSystem::Startup()
   if (mSensor)
     started = mSensor->Startup();
 
-  if (!started)
+  if (!started) {
+    delete mSensor;
+    mSensor = nsnull;
     return;
+  }
 
   mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
   if (mUpdateTimer)
