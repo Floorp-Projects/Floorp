@@ -50,6 +50,7 @@ function SpecialPowers(window) {
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
   addMessageListener("SPPingService", this._messageListener);
+  this._consoleListeners = [];
 }
 
 function bindDOMWindowUtils(sp, window) {
@@ -196,6 +197,32 @@ SpecialPowers.prototype = {
   },
   removeChromeEventListener: function(type, listener, capture) {
     removeEventListener(type, listener, capture);
+  },
+
+  addErrorConsoleListener: function(listener) {
+    var consoleListener = {
+      userListener: listener,
+      observe: function(consoleMessage) {
+        this.userListener(consoleMessage.message);
+      }
+    };
+
+    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
+                                       .registerListener(consoleListener);
+
+    this._consoleListeners.push(consoleListener);
+  },
+
+  removeErrorConsoleListener: function(listener) {
+    for (var index in this._consoleListeners) {
+      var consoleListener = this._consoleListeners[index];
+      if (consoleListener.userListener == listener) {
+        Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
+                                           .unregisterListener(consoleListener);
+        this._consoleListeners = this._consoleListeners.splice(index, 1);
+        break;
+      }
+    }
   },
 
   getFullZoom: function(window) {
