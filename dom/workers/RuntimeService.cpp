@@ -306,24 +306,29 @@ public:
 
     {
       JSAutoRequest ar(cx);
-
       workerPrivate->DoRunLoop(cx);
-
-      // XXX Bug 666963 - CTypes can create another JSContext for use with
-      // closures, and then it holds that context in a reserved slot on the
-      // CType prototype object. We have to destroy that context before we can
-      // destroy the runtime, and we also have to make sure that it isn't the
-      // last context to be destroyed (otherwise it will assert). To accomplish
-      // this we unset our context's global object and GC, hopefully collecting
-      // the CType prototype object. Then we can destroy our context and the
-      // runtime. Once this bug is resolved we can remove this nastiness and
-      // simply call JS_DestroyContextNoGC on our context.
-      JS_SetGlobalObject(cx, nsnull);
-      JS_GC(cx);
     }
 
     JSRuntime* rt = JS_GetRuntime(cx);
-    JS_DestroyContextNoGC(cx);
+
+    // XXX Bug 666963 - CTypes can create another JSContext for use with
+    // closures, and then it holds that context in a reserved slot on the CType
+    // prototype object. We have to destroy that context before we can destroy
+    // the runtime, and we also have to make sure that it isn't the last context
+    // to be destroyed (otherwise it will assert). To accomplish this we create
+    // an unused dummy context, destroy our real context, and then destroy the
+    // dummy. Once this bug is resolved we can remove this nastiness and simply
+    // call JS_DestroyContextNoGC on our context.
+    JSContext* dummyCx = JS_NewContext(rt, 0);
+    if (dummyCx) {
+      JS_DestroyContext(cx);
+      JS_DestroyContext(dummyCx);
+    }
+    else {
+      NS_WARNING("Failed to create dummy context!");
+      JS_DestroyContext(cx);
+    }
+
     JS_DestroyRuntime(rt);
 
     workerPrivate->ScheduleDeletion();
