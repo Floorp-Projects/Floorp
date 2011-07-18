@@ -1017,8 +1017,8 @@ nsWebSocket::ParseURL(const nsString& aURL)
   rv = parsedURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsXPIDLCString origin;
-  rv = mPrincipal->GetOrigin(getter_Copies(origin));
+  nsCString origin;
+  rv = nsContentUtils::GetASCIIOrigin(mPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
   if (scheme.LowerCaseEqualsLiteral("ws")) {
