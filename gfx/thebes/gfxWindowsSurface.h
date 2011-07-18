@@ -98,6 +98,10 @@ public:
         FastMovePixels(aSourceRect, aDestTopLeft);
     }
 
+    // The memory used by this surface lives in this process's address space,
+    // but not in the heap.
+    virtual MemoryLocation MemoryLocation() { return MEMORY_IN_PROCESS_NONHEAP; }
+
 private:
     PRPackedBool mOwnsDC;
     PRPackedBool mForPrinting;
