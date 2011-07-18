@@ -52,7 +52,6 @@ _TEST_FILES = \
 		test_bug372345.html \
 		test_bug410986.html \
 		test_bug414526.html \
-		test_bug417418.html \
 		test_bug432225.html \
 		test_bug439808.html \
 		test_bug455992.html \
