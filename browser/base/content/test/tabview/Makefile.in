@@ -167,7 +167,6 @@ _BROWSER_FILES = \
                  head.js \
                  search1.html \
                  search2.html \
-                 test_bug599626.html \
                  test_bug600645.html \
                  test_bug644097.html \
                  $(NULL)
