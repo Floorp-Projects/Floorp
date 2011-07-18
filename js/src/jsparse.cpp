@@ -74,6 +74,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsprobes.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -929,6 +930,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!cg.init(cx, JSTreeContext::USED_AS_TREE_CONTEXT))
         return NULL;
 
+    Probes::compileScriptBegin(cx, filename, lineno);
+
     MUST_FLOW_THROUGH("out");
 
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
@@ -1122,6 +1125,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
   out:
     JS_FinishArenaPool(&codePool);
     JS_FinishArenaPool(&notePool);
+    Probes::compileScriptEnd(cx, script, filename, lineno);
     return script;
 
   too_many_slots:
@@ -8939,7 +8943,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!ValueToNumber(cx, StringValue(pn->pn_atom), &d))
+                if (!ToNumber(cx, StringValue(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;

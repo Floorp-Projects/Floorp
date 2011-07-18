@@ -42,6 +42,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPNGDecoder.h"
+#include "ImageLogging.h"
 
 #include "nsMemory.h"
 #include "nsRect.h"
@@ -116,7 +117,8 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                                gfxASurface::gfxImageFormat format)
 {
   PRUint32 imageDataLength;
-  nsresult rv = mImage->AppendFrame(x_offset, y_offset, width, height, format,
+  nsresult rv = mImage->EnsureFrame(GetFrameCount(), x_offset, y_offset,
+                                    width, height, format,
                                     &mImageData, &imageDataLength);
   if (NS_FAILED(rv))
     longjmp(png_jmpbuf(mPNG), 5); // NS_ERROR_OUT_OF_MEMORY

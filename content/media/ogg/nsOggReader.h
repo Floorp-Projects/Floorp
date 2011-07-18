@@ -89,13 +89,6 @@ private:
     return mSkeletonState != 0 && mSkeletonState->mActive;
   }
 
-  // Returns PR_TRUE if we should decode up to the seek target rather than
-  // seeking to the target using a bisection search or index-assisted seek.
-  // We should do this if the seek target (aTarget, in usecs), lies not too far
-  // ahead of the current playback position (aCurrentTime, in usecs).
-  PRBool CanDecodeToTarget(PRInt64 aTarget,
-                           PRInt64 aCurrentTime);
-
   // Seeks to the keyframe preceeding the target time using available
   // keyframe indexes.
   enum IndexedSeekResult {

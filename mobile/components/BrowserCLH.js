@@ -118,6 +118,23 @@ function showPanelWhenReady(aWindow, aPage) {
   }, false);
 }
 
+function haveSystemLocale() {
+  let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+  chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
+  let availableLocales = chrome.getLocalesForPackage("browser");
+
+  let localeService = Cc["@mozilla.org/intl/nslocaleservice;1"].getService(Ci.nsILocaleService);
+  let systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
+  systemLocale = systemLocale.split("-")[0];
+  let systemLocaleRegEx = new RegExp("^" + systemLocale);
+
+  while (availableLocales.hasMore()) {
+    let locale = availableLocales.getNext();
+    if (systemLocaleRegEx.test(locale))
+      return true;
+  }
+  return false;
+}
 
 function BrowserCLH() { }
 
@@ -211,7 +228,8 @@ BrowserCLH.prototype = {
         }
 
         // Show the locale selector if we have a new profile
-        if (needHomepageOverride() == "new profile" && Services.prefs.getBoolPref("browser.firstrun.show.localepicker")) {
+        if (needHomepageOverride() == "new profile" && Services.prefs.getBoolPref("browser.firstrun.show.localepicker") && !haveSystemLocale()) {
+
           browserWin = openWindow(null, "chrome://browser/content/localePicker.xul", "_blank", "chrome,dialog=no,all", defaultURL);
           aCmdLine.preventDefault = true;
           return;

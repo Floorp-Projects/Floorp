@@ -115,7 +115,7 @@ extern unsigned rl_kill;
 extern unsigned rl_quit;
 extern char	*rl_complete();
 extern int	rl_list_possib();
-extern void	rl_ttyset();
+extern void	rl_ttyset(int);
 extern void	rl_add_slash();
 
 #if	!defined(HAVE_STDLIB)

@@ -21392,6 +21392,27 @@ function test_zero_dimensions_imagedata() {
 }
 </script>
 
+<p>Canvas test: getImageData_after_zero_canvas</p>
+<canvas id="c686" width="100" height="100"></canvas>
+<script type="text/javascript">
+function test_getImageData_after_zero_canvas() {
+    var c = document.getElementById("c686");
+    var ctx = c.getContext("2d");
+    ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+    ctx.fillRect(0, 0, c.width, c.height);
+    var oldimgdata = ctx.getImageData(0, 0, c.width, c.height);
+    c.width = c.height = 0;
+    c.width = c.height = 100;
+    ctx.fillRect(0, 0, c.width, c.height);
+    var imgdata = ctx.getImageData(0, 0, c.width, c.height);
+    var same = false;
+    ok(imgdata.data.length === oldimgdata.data.length, "not the same length");
+    for (var i = 0; i < imgdata.data.length; ++i)
+        same = imgdata.data[i] === oldimgdata.data[i];
+    ok(same, "changing dimensions broke canvas");
+}
+</script>
+
 <script>
 
 function asyncTestsDone() {
@@ -24660,6 +24681,12 @@ function runTests() {
   test_zero_dimensions_imagedata();
  } catch(e) {
   ok(false, "unexpected exception thrown in: test_zero_dimensions_imagedata");
+ }
+ try {
+  test_getImageData_after_zero_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_getImageData_after_zero_canvas");
  }
  try {
   // run this test last since it replaces the getContext method

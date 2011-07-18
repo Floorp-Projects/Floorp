@@ -93,7 +93,6 @@
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsITimelineService.h"
 #include "nsDOMScriptObjectHolder.h"
 #include "prmem.h"
 #include "WrapperFactory.h"
@@ -1833,7 +1832,9 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 #ifdef NS_FUNCTION_TIMER
   {
     JSObject *obj = static_cast<JSObject *>(aHandler);
-    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
+    if (obj->isFunctionProxy())
+      obj = obj->unwrap(NULL);
+    JSString *id = JS_GetFunctionId(GET_FUNCTION_PRIVATE(mContext, obj));
     JSAutoByteString bytes;
     const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
     NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
@@ -2097,8 +2098,6 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     NS_TIME_FUNCTION_MIN(1.0);
-
-    NS_TIMELINE_MARK_FUNCTION("js script deserialize");
 
     PRUint32 size;
     rv = aStream->Read32(&size);
@@ -3691,32 +3690,32 @@ ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
   return jsPrincipals;
 }
 
-static JSObject*
-DOMReadStructuredClone(JSContext* cx,
-                       JSStructuredCloneReader* reader,
-                       uint32 tag,
-                       uint32 data,
-                       void* closure)
+JSObject*
+NS_DOMReadStructuredClone(JSContext* cx,
+                          JSStructuredCloneReader* reader,
+                          uint32 tag,
+                          uint32 data,
+                          void* closure)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return nsnull;
 }
 
-static JSBool
-DOMWriteStructuredClone(JSContext* cx,
-                        JSStructuredCloneWriter* writer,
-                        JSObject* obj,
-                        void *closure)
+JSBool
+NS_DOMWriteStructuredClone(JSContext* cx,
+                           JSStructuredCloneWriter* writer,
+                           JSObject* obj,
+                           void *closure)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return JS_FALSE;
 }
 
-static void
-DOMStructuredCloneError(JSContext* cx,
-                        uint32 errorid)
+void
+NS_DOMStructuredCloneError(JSContext* cx,
+                           uint32 errorid)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
@@ -3760,9 +3759,9 @@ nsJSRuntime::Init()
 
   // Set up the structured clone callbacks.
   static JSStructuredCloneCallbacks cloneCallbacks = {
-    DOMReadStructuredClone,
-    DOMWriteStructuredClone,
-    DOMStructuredCloneError
+    NS_DOMReadStructuredClone,
+    NS_DOMWriteStructuredClone,
+    NS_DOMStructuredCloneError
   };
   JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
 

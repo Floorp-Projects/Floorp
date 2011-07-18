@@ -202,6 +202,22 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
     return !v.isFalse();
 }
 
+JSFunction *
+GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
+                                uintN length)
+{
+    JSFunction *fun = js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, this, name);
+    if (!fun)
+        return NULL;
+
+    /*
+     * Remember the class this function is a constructor for so that we know to
+     * create an object of this class when we call the constructor.
+     */
+    FUN_CLASP(fun) = clasp;
+    return fun;
+}
+
 JSObject *
 GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
 {
@@ -224,6 +240,25 @@ GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
         return NULL;
 
     return proto;
+}
+
+bool
+LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
+{
+    return ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                                ObjectValue(*proto), PropertyStub, StrictPropertyStub,
+                                JSPROP_PERMANENT | JSPROP_READONLY) &&
+           proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+                                 ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0);
+}
+
+bool
+DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFunctionSpec *fs)
+{
+    if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
+        return false;
+    obj->brand(cx);
+    return true;
 }
 
 void

@@ -62,7 +62,7 @@ public:
   imgFrame();
   ~imgFrame();
 
-  nsresult Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, gfxASurface::gfxImageFormat aFormat, PRInt8 aPaletteDepth = 0);
+  nsresult Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, gfxASurface::gfxImageFormat aFormat, PRUint8 aPaletteDepth = 0);
   nsresult Optimize();
 
   void Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
@@ -138,6 +138,8 @@ public:
   // returns an estimate of the memory used by this imgFrame
   PRUint32 EstimateMemoryUsed() const;
 
+  PRUint8 GetPaletteDepth() const { return mPaletteDepth; }
+
 private: // methods
   PRUint32 PaletteDataLength() const {
     return ((1 << mPaletteDepth) * sizeof(PRUint32));
@@ -188,7 +190,7 @@ private: // data
   PRInt32      mDisposalMethod;
 
   gfxASurface::gfxImageFormat mFormat;
-  PRInt8       mPaletteDepth;
+  PRUint8      mPaletteDepth;
   PRInt8       mBlendMethod;
   PRPackedBool mSinglePixel;
   PRPackedBool mNeverUseDeviceSurface;

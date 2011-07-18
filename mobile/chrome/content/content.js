@@ -1331,6 +1331,7 @@ TouchEventHandler.init();
 
 var SelectionHandler = {
   cache: {},
+  selectedText: "",
   
   init: function() {
     addMessageListener("Browser:SelectionStart", this);
@@ -1345,6 +1346,8 @@ var SelectionHandler = {
 
     switch (aMessage.name) {
       case "Browser:SelectionStart": {
+        this.selectedText = "";
+
         // Position the caret using a fake mouse click
         utils.sendMouseEventToWindow("mousedown", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
         utils.sendMouseEventToWindow("mouseup", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
@@ -1365,6 +1368,18 @@ var SelectionHandler = {
           return;
 
         let range = selection.getRangeAt(0).QueryInterface(Ci.nsIDOMNSRange);
+        if (!range)
+          return;
+
+        // Cache the selected text since the selection might be gone by the time we get the "end" message
+        this.selectedText = selection.toString().trim();
+
+        // If the range didn't have any text, let's bail
+        if (!this.selectedText.length) {
+          selection.collapseToStart();
+          return;
+        }
+
         this.cache = { start: {}, end: {} };
         let rects = range.getClientRects();
         for (let i=0; i<rects.length; i++) {
@@ -1381,12 +1396,14 @@ var SelectionHandler = {
       }
 
       case "Browser:SelectionEnd": {
-        let selection = content.getSelection();
-        let str = selection.toString();
-        selection.collapseToStart();
-        if (str.length) {
+        try {
+          // The selection might already be gone
+          content.getSelection().collapseToStart();
+        } catch(e) {}
+
+        if (this.selectedText.length) {
           let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-          clipboard.copyString(str);
+          clipboard.copyString(this.selectedText);
           sendAsyncMessage("Browser:SelectionCopied", { succeeded: true });
         } else {
           sendAsyncMessage("Browser:SelectionCopied", { succeeded: false });
@@ -1395,6 +1412,11 @@ var SelectionHandler = {
       }
 
       case "Browser:SelectionMove":
+        // Hack to avoid setting focus in a textbox [Bugs 654352 & 667243]
+        let elemUnder = elementFromPoint(json.x - scrollOffset.x, json.y - scrollOffset.y);
+        if (elemUnder && elemUnder instanceof Ci.nsIDOMHTMLInputElement || elemUnder instanceof Ci.nsIDOMHTMLTextAreaElement)
+          return;
+
         if (json.type == "end") {
           this.cache.end.x = json.x - scrollOffset.x;
           this.cache.end.y = json.y - scrollOffset.y;
@@ -1409,6 +1431,9 @@ var SelectionHandler = {
           utils.sendMouseEventToWindow("mousedown", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
           utils.sendMouseEventToWindow("mouseup", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
         }
+
+        // Cache the selected text since the selection might be gone by the time we get the "end" message
+        this.selectedText = content.getSelection().toString().trim();
         break;
     }
   }

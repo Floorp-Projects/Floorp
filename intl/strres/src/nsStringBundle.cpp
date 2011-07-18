@@ -61,7 +61,6 @@
 #include "nsCOMArray.h"
 #include "nsTextFormatter.h"
 #include "nsIErrorService.h"
-#include "nsITimelineService.h"
 #include "nsICategoryManager.h"
 
 #include "nsPrintfCString.h"
@@ -127,8 +126,6 @@ nsStringBundle::LoadProperties()
   nsCOMPtr<nsIInputStream> in;
   rv = channel->Open(getter_AddRefs(in));
   if (NS_FAILED(rv)) return rv;
-
-  NS_TIMELINE_MARK_FUNCTION("loading properties");
 
   NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && in, NS_ERROR_FAILURE);

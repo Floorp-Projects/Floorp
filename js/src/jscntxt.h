@@ -375,7 +375,7 @@ struct JSRuntime {
     uint32              protoHazardShape;
 
     /* Garbage collector state, used by jsgc.c. */
-    js::GCChunkSet      gcChunkSet;
+    js::GCChunkSet      gcUserChunkSet;
     js::GCChunkSet      gcSystemChunkSet;
 
     js::RootedValueMap  gcRootsHash;
@@ -2287,6 +2287,9 @@ js_GetScriptedCaller(JSContext *cx, js::StackFrame *fp);
 
 extern jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx);
+
+extern JSScript *
+js_GetCurrentScript(JSContext* cx);
 
 extern bool
 js_CurrentPCIsInImacro(JSContext *cx);

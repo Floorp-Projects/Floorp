@@ -2712,7 +2712,7 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
         nsIScriptContext *scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIDOMWindowInternal> domWin =
+            nsCOMPtr<nsIDOMWindow> domWin =
                 do_QueryInterface(scriptContext->GetGlobalObject());
             if (domWin)
                 domWin->GetPrompter(getter_AddRefs(prompter));
