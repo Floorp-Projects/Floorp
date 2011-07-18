@@ -143,20 +143,30 @@ public:
     CHROME_BIT = PR_BIT(0),
     USED_BIT   = PR_BIT(1),
     RAW_BIT    = PR_BIT(2),
+    HEAP_BIT   = PR_BIT(3),
 
-    ChromeUsedRaw             = CHROME_BIT | USED_BIT | RAW_BIT,
-    ChromeUsedUncompressed    = CHROME_BIT | USED_BIT,
-    ChromeUnusedRaw           = CHROME_BIT | RAW_BIT,
-    ChromeUnusedUncompressed  = CHROME_BIT,
-    ContentUsedRaw            = USED_BIT | RAW_BIT,
-    ContentUsedUncompressed   = USED_BIT,
-    ContentUnusedRaw          = RAW_BIT,
-    ContentUnusedUncompressed = 0
+    ChromeUsedRaw                     = CHROME_BIT | USED_BIT | RAW_BIT | HEAP_BIT,
+    ChromeUsedUncompressedHeap        = CHROME_BIT | USED_BIT | HEAP_BIT,
+    ChromeUsedUncompressedNonheap     = CHROME_BIT | USED_BIT,
+    ChromeUnusedRaw                   = CHROME_BIT | RAW_BIT | HEAP_BIT,
+    ChromeUnusedUncompressedHeap      = CHROME_BIT | HEAP_BIT,
+    ChromeUnusedUncompressedNonheap   = CHROME_BIT,
+    ContentUsedRaw                    = USED_BIT | RAW_BIT | HEAP_BIT,
+    ContentUsedUncompressedHeap       = USED_BIT | HEAP_BIT,
+    ContentUsedUncompressedNonheap    = USED_BIT,
+    ContentUnusedRaw                  = RAW_BIT | HEAP_BIT,
+    ContentUnusedUncompressedHeap     = HEAP_BIT,
+    ContentUnusedUncompressedNonheap  = 0
   };
 
   imgMemoryReporter(ReporterType aType)
     : mType(aType)
-  { }
+  {
+    // If the RAW bit is set, HEAP should also be set, because we don't
+    // currently understand storing compressed image data off the heap.
+    NS_ASSERTION(!(aType & RAW_BIT) || (aType & HEAP_BIT),
+                 "RAW bit should imply HEAP bit.");
+  }
 
   NS_DECL_ISUPPORTS
 
@@ -170,27 +180,40 @@ public:
   {
     if (mType == ChromeUsedRaw) {
       path.AssignLiteral("explicit/images/chrome/used/raw");
-    } else if (mType == ChromeUsedUncompressed) {
-      path.AssignLiteral("explicit/images/chrome/used/uncompressed");
+    } else if (mType == ChromeUsedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/chrome/used/uncompressed-heap");
+    } else if (mType == ChromeUsedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/chrome/used/uncompressed-nonheap");
     } else if (mType == ChromeUnusedRaw) {
       path.AssignLiteral("explicit/images/chrome/unused/raw");
-    } else if (mType == ChromeUnusedUncompressed) {
-      path.AssignLiteral("explicit/images/chrome/unused/uncompressed");
+    } else if (mType == ChromeUnusedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/chrome/unused/uncompressed-heap");
+    } else if (mType == ChromeUnusedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/chrome/unused/uncompressed-nonheap");
     } else if (mType == ContentUsedRaw) {
       path.AssignLiteral("explicit/images/content/used/raw");
-    } else if (mType == ContentUsedUncompressed) {
-      path.AssignLiteral("explicit/images/content/used/uncompressed");
+    } else if (mType == ContentUsedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/content/used/uncompressed-heap");
+    } else if (mType == ContentUsedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/content/used/uncompressed-nonheap");
     } else if (mType == ContentUnusedRaw) {
       path.AssignLiteral("explicit/images/content/unused/raw");
-    } else if (mType == ContentUnusedUncompressed) {
-      path.AssignLiteral("explicit/images/content/unused/uncompressed");
+    } else if (mType == ContentUnusedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/content/unused/uncompressed-heap");
+    } else if (mType == ContentUnusedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/content/unused/uncompressed-nonheap");
     }
     return NS_OK;
   }
 
   NS_IMETHOD GetKind(PRInt32 *kind)
   {
-    *kind = KIND_HEAP;
+    if (mType & HEAP_BIT) {
+      *kind = KIND_HEAP;
+    }
+    else {
+      *kind = KIND_MAPPED;
+    }
     return NS_OK;
   }
 
@@ -230,9 +253,11 @@ public:
       return PL_DHASH_NEXT;
 
     if (rtype & RAW_BIT) {
-      arg->value += image->GetSourceDataSize();
+      arg->value += image->GetSourceHeapSize();
+    } else if (rtype & HEAP_BIT) {
+      arg->value += image->GetDecodedHeapSize();
     } else {
-      arg->value += image->GetDecodedDataSize();
+      arg->value += image->GetDecodedNonheapSize();
     }
 
     return PL_DHASH_NEXT;
@@ -255,19 +280,27 @@ public:
   {
     if (mType == ChromeUsedRaw) {
       desc.AssignLiteral("Memory used by in-use chrome images (compressed data).");
-    } else if (mType == ChromeUsedUncompressed) {
+    } else if (mType == ChromeUsedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by in-use chrome images (uncompressed data).");
+    } else if (mType == ChromeUsedUncompressedNonheap) {
       desc.AssignLiteral("Memory used by in-use chrome images (uncompressed data).");
     } else if (mType == ChromeUnusedRaw) {
       desc.AssignLiteral("Memory used by not in-use chrome images (compressed data).");
-    } else if (mType == ChromeUnusedUncompressed) {
+    } else if (mType == ChromeUnusedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by not in-use chrome images (uncompressed data).");
+    } else if (mType == ChromeUnusedUncompressedNonheap) {
       desc.AssignLiteral("Memory used by not in-use chrome images (uncompressed data).");
     } else if (mType == ContentUsedRaw) {
       desc.AssignLiteral("Memory used by in-use content images (compressed data).");
-    } else if (mType == ContentUsedUncompressed) {
+    } else if (mType == ContentUsedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by in-use content images (uncompressed data).");
+    } else if (mType == ContentUsedUncompressedNonheap) {
       desc.AssignLiteral("Memory used by in-use content images (uncompressed data).");
     } else if (mType == ContentUnusedRaw) {
       desc.AssignLiteral("Memory used by not in-use content images (compressed data).");
-    } else if (mType == ContentUnusedUncompressed) {
+    } else if (mType == ContentUnusedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by not in-use content images (uncompressed data).");
+    } else if (mType == ContentUnusedUncompressedNonheap) {
       desc.AssignLiteral("Memory used by not in-use content images (uncompressed data).");
     }
     return NS_OK;
@@ -881,13 +914,17 @@ nsresult imgLoader::InitCache()
     sCacheMaxSize = 5 * 1024 * 1024;
 
   NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedRaw));
-  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedUncompressedNonheap));
   NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedRaw));
-  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedUncompressedNonheap));
   NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedRaw));
-  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedUncompressedNonheap));
   NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedRaw));
-  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedUncompressedNonheap));
   
   return NS_OK;
 }
