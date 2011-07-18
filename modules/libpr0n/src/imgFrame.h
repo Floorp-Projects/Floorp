@@ -135,8 +135,12 @@ public:
     return mImageSurface;
   }
 
-  // returns an estimate of the memory used by this imgFrame
-  PRUint32 EstimateMemoryUsed() const;
+  // These functions estimate how much heap and non-heap memory the imgFrame is
+  // using.  Note that these only report memory within the current process; an
+  // imgFrame's surface might be using memory outside the current process (e.g.
+  // gfxXlibSurface).
+  PRUint32 EstimateHeapMemoryUsed() const;
+  PRUint32 EstimateNonheapMemoryUsed() const;
 
   PRUint8 GetPaletteDepth() const { return mPaletteDepth; }
 
