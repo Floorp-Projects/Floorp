@@ -122,10 +122,10 @@ struct IterateData
       : runtimeObject(0)
       , runtimeAtomsTable(0)
       , runtimeContexts(0)
-      , runtimeThreadsNormal(0)
-      , runtimeThreadsTemporary(0)
-      , runtimeThreadsRegexpCode(0)
-      , runtimeThreadsStackCommitted(0)
+      , runtimeNormal(0)
+      , runtimeTemporary(0)
+      , runtimeRegexpCode(0)
+      , runtimeStackCommitted(0)
       , gcHeapChunkTotal(0)
       , gcHeapChunkCleanUnused(0)
       , gcHeapChunkDirtyUnused(0)
@@ -153,10 +153,10 @@ struct IterateData
     int64_t runtimeObject;
     int64_t runtimeAtomsTable;
     int64_t runtimeContexts;
-    int64_t runtimeThreadsNormal;
-    int64_t runtimeThreadsTemporary;
-    int64_t runtimeThreadsRegexpCode;
-    int64_t runtimeThreadsStackCommitted;
+    int64_t runtimeNormal;
+    int64_t runtimeTemporary;
+    int64_t runtimeRegexpCode;
+    int64_t runtimeStackCommitted;
     int64_t gcHeapChunkTotal;
     int64_t gcHeapChunkCleanUnused;
     int64_t gcHeapChunkDirtyUnused;

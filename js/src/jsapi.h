@@ -2323,6 +2323,9 @@ JS_ShutDown(void);
 JS_PUBLIC_API(void *)
 JS_GetRuntimePrivate(JSRuntime *rt);
 
+extern JS_PUBLIC_API(JSRuntime *)
+JS_GetRuntime(JSContext *cx);
+
 JS_PUBLIC_API(void)
 JS_SetRuntimePrivate(JSRuntime *rt, void *data);
 
@@ -2343,7 +2346,10 @@ extern JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsInRequest(JSContext *cx);
+JS_IsInRequest(JSRuntime *rt);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsInSuspendedRequest(JSRuntime *rt);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -2425,14 +2431,14 @@ class JSAutoCheckRequest {
     JSAutoCheckRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM) {
 #if defined JS_THREADSAFE && defined DEBUG
         mContext = cx;
-        JS_ASSERT(JS_IsInRequest(cx));
+        JS_ASSERT(JS_IsInRequest(JS_GetRuntime(cx)));
 #endif
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~JSAutoCheckRequest() {
 #if defined JS_THREADSAFE && defined DEBUG
-        JS_ASSERT(JS_IsInRequest(mContext));
+        JS_ASSERT(JS_IsInRequest(JS_GetRuntime(mContext)));
 #endif
     }
 
@@ -4489,7 +4495,7 @@ extern JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_TriggerAllOperationCallbacks(JSRuntime *rt);
+JS_TriggerRuntimeOperationCallback(JSRuntime *rt);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);
@@ -5260,24 +5266,6 @@ JS_ThrowStopIteration(JSContext *cx);
 
 extern JS_PUBLIC_API(intptr_t)
 JS_GetCurrentThread();
-
-/*
- * Associate the current thread with the given context.  This is done
- * implicitly by JS_NewContext.
- *
- * Returns the old thread id for this context, which should be treated as
- * an opaque value.  This value is provided for comparison to 0, which
- * indicates that ClearContextThread has been called on this context
- * since the last SetContextThread, or non-0, which indicates the opposite.
- */
-extern JS_PUBLIC_API(intptr_t)
-JS_GetContextThread(JSContext *cx);
-
-extern JS_PUBLIC_API(intptr_t)
-JS_SetContextThread(JSContext *cx);
-
-extern JS_PUBLIC_API(intptr_t)
-JS_ClearContextThread(JSContext *cx);
 
 /*
  * A JS runtime always has an "owner thread". The owner thread is set when the
