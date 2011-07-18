@@ -382,6 +382,9 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
     return;
   const FrameMetrics metrics = container->GetFrameMetrics();
   const ViewID scrollId = metrics.mScrollId;
+  const gfx3DMatrix transform = aLayer->GetTransform();
+  aXScale *= GetXScale(transform);
+  aYScale *= GetYScale(transform);
 
   if (metrics.IsScrollable()) {
     nscoord auPerDevPixel = aFrameLoader->GetPrimaryFrameOfOwningContent()
@@ -417,9 +420,6 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
 
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    const gfx3DMatrix transform = aLayer->GetTransform();
-    aXScale *= GetXScale(transform);
-    aYScale *= GetYScale(transform);
     BuildViewMap(oldContentViews, newContentViews, aFrameLoader, child,
                  aXScale, aYScale);
   }
