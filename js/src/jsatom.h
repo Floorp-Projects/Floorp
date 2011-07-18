@@ -240,10 +240,6 @@ struct JSAtomState
 {
     js::AtomSet         atoms;
 
-#ifdef JS_THREADSAFE
-    JSThinLock          lock;
-#endif
-
     /*
      * From this point until the end of struct definition the struct must
      * contain only js::PropertyName fields. We use this to access the storage
