@@ -445,7 +445,7 @@ ValidateCORS(imgRequest* request, PRInt32 corsmode, nsIPrincipal* loadingPrincip
     if (otherprincipal && loadingPrincipal) {
       PRBool equals = PR_FALSE;
       otherprincipal->Equals(loadingPrincipal, &equals);
-      return !equals;
+      return equals;
     }
   }
 
