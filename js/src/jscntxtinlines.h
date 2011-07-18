@@ -87,7 +87,7 @@ GetGlobalForScopeChain(JSContext *cx)
 inline GSNCache *
 GetGSNCache(JSContext *cx)
 {
-    return &JS_THREAD_DATA(cx)->gsnCache;
+    return &cx->runtime->gsnCache;
 }
 
 class AutoNamespaceArray : protected AutoGCRooter {

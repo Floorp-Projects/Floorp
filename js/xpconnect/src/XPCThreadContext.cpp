@@ -55,7 +55,6 @@ using namespace mozilla;
 XPCJSContextStack::~XPCJSContextStack()
 {
     if (mOwnSafeJSContext) {
-        JS_SetContextThread(mOwnSafeJSContext);
         JS_DestroyContext(mOwnSafeJSContext);
         mOwnSafeJSContext = nsnull;
     }
@@ -109,7 +108,6 @@ GetPrincipalFromCx(JSContext *cx)
 bool
 XPCJSContextStack::Push(JSContext *cx)
 {
-    MOZ_ASSERT_IF(cx, JS_GetContextThread(cx));
     if (mStack.Length() == 0) {
         mStack.AppendElement(cx);
         return true;
@@ -423,7 +421,7 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
     }
 
     if (cx && !sMainJSThread && NS_IsMainThread()) {
-        sMainJSThread = js::GetContextThread(cx);
+        sMainJSThread = js::GetOwnerThread(cx);
 
         sMainThreadData = data;
 
