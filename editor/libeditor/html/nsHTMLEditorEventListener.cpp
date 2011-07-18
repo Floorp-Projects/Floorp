@@ -62,6 +62,8 @@
 /*
  * nsHTMLEditorEventListener implementation
  *
+ * The only reason we need this is so a context mouse-click
+ *  moves the caret or selects an element as it does for normal click
  */
 
 #ifdef DEBUG
@@ -132,8 +134,17 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   nsresult res = mouseEvent->GetButton(&buttonNumber);
   NS_ENSURE_SUCCESS(res, res);
 
-  PRBool isContextClick = buttonNumber == 2;
+  PRBool isContextClick;
 
+#if defined(XP_MACOSX)
+  // Ctrl+Click for context menu
+  res = mouseEvent->GetCtrlKey(&isContextClick);
+  NS_ENSURE_SUCCESS(res, res);
+#else
+  // Right mouse button for Windows, UNIX
+  isContextClick = buttonNumber == 2;
+#endif
+  
   PRInt32 clickCount;
   res = mouseEvent->GetDetail(&clickCount);
   NS_ENSURE_SUCCESS(res, res);
@@ -234,8 +245,14 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
           }
         }
 
-        if (isContextClick && !nsHTMLEditUtils::IsImage(node))
+// XXX: should we call nsHTMLEditUtils::IsTableElement here?
+// that also checks for thead, tbody, tfoot
+        if (nsTextEditUtils::IsBody(node) ||
+            nsHTMLEditUtils::IsTableCellOrCaption(node) ||
+            nsHTMLEditUtils::IsTableRow(node) ||
+            nsHTMLEditUtils::IsTable(node))
         {
+          // This will place caret just inside table cell or at start of body
           selection->Collapse(parent, offset);
         }
         else
