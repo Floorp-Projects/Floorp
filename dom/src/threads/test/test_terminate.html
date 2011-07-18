@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker terminate feature
+-->
+<head>
+  <title>Test for DOM Worker Navigator</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+
+  var messageCount = 0;
+  var intervalCount = 0;
+
+  var interval;
+
+  function testCount() {
+    is(messageCount, 21, "Received another message after terminated!");
+    if (intervalCount++ == 5) {
+      clearInterval(interval);
+      SimpleTest.finish();
+    }
+  }
+
+  var worker = new Worker("terminate_worker.js");
+  worker.onmessage = function(event) {
+    is(event.data, "Still alive!", "Bad message!");
+    if (messageCount++ == 20) {
+      worker.terminate();
+      interval = setInterval(testCount, 1000);
+    }
+  };
+
+  worker.onerror = function(event) {
+    ok(false, "Worker had an error: " + event.data);
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
