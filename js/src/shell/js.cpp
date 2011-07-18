@@ -398,7 +398,7 @@ SetContextOptions(JSContext *cx)
  * is meaningless for UTF-8) but causes a syntax error unless we skip it.
  */
 static void
-SkipUTF8BOM(FILE* file, size_t size)
+SkipUTF8BOM(FILE* file)
 {
     if (!js_CStringsAreUTF8)
         return;
@@ -452,7 +452,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
     if (!forceTTY && !isatty(fileno(file)))
     {
-        SkipUTF8BOM(file, size);
+        SkipUTF8BOM(file);
 
         /*
          * It's not interactive - just execute it.
