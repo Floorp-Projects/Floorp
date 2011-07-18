@@ -158,8 +158,8 @@ MoveGroupResolver::resolve(LMoveGroup *group)
                     // traversal (which would indicate two moves to the same
                     // destination).
                     JS_ASSERT(!pm->cycle);
-                    if (!orderedMoves_.append(Move(blocking->move, true)));
-                        return true;
+                    if (!orderedMoves_.append(Move(blocking->move, true)))
+                        return false;
                     pm->cycle = true;
                     hasCycles_ = true;
                     pending_.remove(blocking);
