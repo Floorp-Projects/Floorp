@@ -54,8 +54,6 @@
 
 #include "rdfIDataSource.h"
 
-#include "nsITimelineService.h"
-
 PRInt32 nsRDFXMLSerializer::gRefCnt = 0;
 nsIRDFContainerUtils* nsRDFXMLSerializer::gRDFC;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_instanceOf;
@@ -1104,7 +1102,6 @@ NS_IMETHODIMP
 nsRDFXMLSerializer::Serialize(nsIOutputStream* aStream)
 {
     nsresult rv;
-    NS_TIMELINE_START_TIMER("rdf/xml-ser");
 
     rv = CollectNamespaces();
     if (NS_FAILED(rv)) return rv;
@@ -1144,8 +1141,6 @@ nsRDFXMLSerializer::Serialize(nsIOutputStream* aStream)
     }
 
     rv = SerializeEpilogue(aStream);
-    NS_TIMELINE_STOP_TIMER("rdf/xml-ser");
-    NS_TIMELINE_MARK("rdf/xml-ser");
 
     return rv;
 }

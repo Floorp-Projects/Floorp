@@ -106,7 +106,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsPriority.h"
 #include "nsIThreadManager.h"
-#include "nsITimelineService.h"
 #include "nsITimer.h"
 #include "nsITraceRefcnt.h"
 #include "nsIUUIDGenerator.h"

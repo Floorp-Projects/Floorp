@@ -61,7 +61,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIProxiedProtocolHandler.h"
 #include "nsIProxyInfo.h"
-#include "nsITimelineService.h"
 #include "nsEscape.h"
 #include "nsNetCID.h"
 #include "nsIRecyclingAllocator.h"
@@ -605,7 +604,6 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aURI);
-    NS_TIMELINE_MARK_URI("nsIOService::NewChannelFromURI(%s)", aURI);
 
     nsCAutoString scheme;
     rv = aURI->GetScheme(scheme);
