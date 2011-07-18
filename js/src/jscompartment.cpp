@@ -847,7 +847,9 @@ JSCompartment::sweepBreakpoints(JSContext *cx)
         BreakpointSite *site = e.front().value;
         if (site->scriptObject) {
             bool scriptGone = IsAboutToBeFinalized(cx, site->scriptObject);
-            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
+            Breakpoint *nextbp;
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+                nextbp = bp->nextInSite();
                 if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
                     bp->destroy(cx, &e);
             }
