@@ -82,6 +82,8 @@ public:
    */
   nsContentView* GetContentView(ViewID aId = FrameMetrics::ROOT_SCROLL_ID);
 
+  void ContentViewScaleChanged(nsContentView* aView);
+
   void ShadowLayersUpdated();
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder* aBuilder,
