@@ -17,7 +17,7 @@ function test1() {
     ok(!TabView.isVisible(), "Tab View is not visible");
     showTabView(test2);
   });
-  EventUtils.synthesizeKey("E", { accelKey: true, shiftKey: true }, contentWindow);
+  EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, contentWindow);
 }
 
 function test2() {
@@ -58,7 +58,7 @@ function test4() {
     executeSoon(function() {
       is(gBrowser.tabs.length, 1, "There is one tab after removing one");
 
-      EventUtils.synthesizeKey("T", { accelKey: true, shiftKey: true }, contentWindow);
+      EventUtils.synthesizeKey("t", { accelKey: true, shiftKey: true }, contentWindow);
       is(gBrowser.tabs.length, 2, "There are two tabs after restoring one");
 
       gBrowser.tabs[0].linkedBrowser.loadURI("about:blank");
@@ -96,7 +96,7 @@ function test9() {
 function test10() {
   is(gBrowser.tabs.length, 1, "There is one tab before cmd/ctrl + shift + a is pressed");
   // it would open about:addons on a new tab if it passes through the white list.
-  EventUtils.synthesizeKey("A", { accelKey: true, shiftKey: true }, contentWindow);
+  EventUtils.synthesizeKey("a", { accelKey: true, shiftKey: true }, contentWindow);
 
   executeSoon(function() {
     is(gBrowser.tabs.length, 1, "There is still one tab after cmd/ctrl + shift + a is pressed");

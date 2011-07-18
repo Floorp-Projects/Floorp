@@ -177,8 +177,14 @@ void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop()
 
 
 #define UNDOCUMENTED_SESSION_CONSTANT ((int)-2)
-static void *mozilla::plugins::PluginUtilsOSX::sApplicationASN = NULL;
-static void *mozilla::plugins::PluginUtilsOSX::sApplicationInfoItem = NULL;
+namespace mozilla {
+namespace plugins {
+namespace PluginUtilsOSX {
+  static void *sApplicationASN = NULL;
+  static void *sApplicationInfoItem = NULL;
+}
+}
+}
 
 bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -270,3 +276,137 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
   return true;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
+
+namespace mozilla {
+namespace plugins {
+namespace PluginUtilsOSX {
+
+size_t nsDoubleBufferCARenderer::GetFrontSurfaceWidth() {
+  if (!HasFrontSurface()) {
+    return 0;
+  }
+
+  return mFrontSurface->GetWidth();
+}
+
+size_t nsDoubleBufferCARenderer::GetFrontSurfaceHeight() {
+  if (!HasFrontSurface()) {
+    return 0;
+  }
+
+  return mFrontSurface->GetHeight();
+}
+
+size_t nsDoubleBufferCARenderer::GetBackSurfaceWidth() {
+  if (!HasBackSurface()) {
+    return 0;
+  }
+
+  return mBackSurface->GetWidth();
+}
+
+size_t nsDoubleBufferCARenderer::GetBackSurfaceHeight() {
+  if (!HasBackSurface()) {
+    return 0;
+  }
+
+  return mBackSurface->GetHeight();
+}
+
+IOSurfaceID nsDoubleBufferCARenderer::GetFrontSurfaceID() {
+  if (!HasFrontSurface()) {
+    return 0;
+  }
+
+  return mFrontSurface->GetIOSurfaceID();
+}
+
+bool nsDoubleBufferCARenderer::HasBackSurface() {
+  return !!mBackSurface;
+}
+
+bool nsDoubleBufferCARenderer::HasFrontSurface() {
+  return !!mFrontSurface;
+}
+
+bool nsDoubleBufferCARenderer::HasCALayer() {
+  return !!mCALayer;
+}
+
+void nsDoubleBufferCARenderer::SetCALayer(void *aCALayer) {
+  mCALayer = aCALayer;
+}
+
+bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight) {
+  if (!mCALayer) {
+    return false;
+  }
+
+  mFrontSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
+  if (!mFrontSurface) {
+    return false;
+  }
+
+  mFrontRenderer = new nsCARenderer();
+  if (!mFrontRenderer) {
+    mFrontSurface = nsnull;
+    return false;
+  }
+
+  nsRefPtr<nsIOSurface> ioSurface = nsIOSurface::LookupSurface(mFrontSurface->GetIOSurfaceID());
+  if (!ioSurface) {
+    mFrontRenderer = nsnull;
+    mFrontSurface = nsnull;
+    return false;
+  }
+
+  mFrontRenderer->AttachIOSurface(ioSurface);
+
+  nsresult result = mFrontRenderer->SetupRenderer(mCALayer, 
+                        ioSurface->GetWidth(), 
+                        ioSurface->GetHeight());
+
+  return result == NS_OK;
+}
+
+void nsDoubleBufferCARenderer::Render() {
+  if (!HasFrontSurface()) {
+    return;
+  }
+
+  mFrontRenderer->Render(GetFrontSurfaceWidth(), GetFrontSurfaceHeight(), nsnull);
+}
+
+void nsDoubleBufferCARenderer::SwapSurfaces() {
+  if (mFrontRenderer) {
+    mFrontRenderer->DettachCALayer();
+  }
+
+  nsRefPtr<nsCARenderer> prevFrontRenderer = mFrontRenderer;
+  nsRefPtr<nsIOSurface> prevFrontSurface = mFrontSurface;
+
+  mFrontRenderer = mBackRenderer;
+  mFrontSurface = mBackSurface;
+
+  mBackRenderer = prevFrontRenderer;
+  mBackSurface = prevFrontSurface;
+
+  if (mFrontRenderer) {
+    mFrontRenderer->AttachCALayer(mCALayer);
+  }
+}
+
+void nsDoubleBufferCARenderer::ClearFrontSurface() {
+  mFrontRenderer = nsnull;
+  mFrontSurface = nsnull;
+}
+
+void nsDoubleBufferCARenderer::ClearBackSurface() {
+  mBackRenderer = nsnull;
+  mBackSurface = nsnull;
+}
+
+} //PluginUtilsOSX
+} //plugins
+} //mozilla
+

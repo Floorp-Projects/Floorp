@@ -48,8 +48,7 @@
 #include "nsIInputStream.h"
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
-
-#include "prlog.h"
+#include "ImageLogging.h"
 
 namespace mozilla {
 namespace imagelib {
@@ -229,7 +228,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 
         PRUint32 imageLength;
         if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
-            rv = mImage->AppendFrame(0, 0, mBIH.width, real_height, gfxASurface::ImageFormatARGB32,
+            rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, gfxASurface::ImageFormatARGB32,
                                      (PRUint8**)&mImageData, &imageLength);
         } else {
             // mRow is not used for RLE encoded images
@@ -241,7 +240,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                 PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
                 return;
             }
-            rv = mImage->AppendFrame(0, 0, mBIH.width, real_height, gfxASurface::ImageFormatRGB24,
+            rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, gfxASurface::ImageFormatRGB24,
                                      (PRUint8**)&mImageData, &imageLength);
         }
         if (NS_FAILED(rv) || !mImageData) {

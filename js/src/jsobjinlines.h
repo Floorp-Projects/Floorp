@@ -135,12 +135,12 @@ JSObject::finalize(JSContext *cx)
     if (isNewborn())
         return;
 
+    js::Probes::finalizeObject(this);
+
     /* Finalize obj first, in case it needs map and slots. */
     js::Class *clasp = getClass();
     if (clasp->finalize)
         clasp->finalize(cx, this);
-
-    js::Probes::finalizeObject(this);
 
     finish(cx);
 }
@@ -1108,8 +1108,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
     JSObject *global;
     if (!cx->hasfp()) {
         global = cx->globalObject;
-        OBJ_TO_INNER_OBJECT(cx, global);
-        if (!global)
+        if (!NULLABLE_OBJ_TO_INNER_OBJECT(cx, global))
             return NULL;
     } else {
         global = cx->fp()->scopeChain().getGlobal();

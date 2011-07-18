@@ -249,16 +249,8 @@ let SyncScheduler = {
    */
   checkSyncStatus: function checkSyncStatus() {
     // Should we be syncing now, if not, cancel any sync timers and return
-    // if we're in backoff, we'll schedule the next sync
-    let ignore = [kSyncBackoffNotMet];
-
-    // We're ready to sync even if we're not logged in... so long as the
-    // master password isn't locked.
-    if (Utils.mpLocked()) {
-      ignore.push(kSyncNotLoggedIn);
-      ignore.push(kSyncMasterPasswordLocked);
-    }
-
+    // if we're in backoff, we'll schedule the next sync.
+    let ignore = [kSyncBackoffNotMet, kSyncMasterPasswordLocked];
     let skip = Weave.Service._checkSync(ignore);
     this._log.trace("_checkSync returned \"" + skip + "\".");
     if (skip) {

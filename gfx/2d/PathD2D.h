@@ -107,6 +107,11 @@ public:
 
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const;
 
+  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const;
+
+  virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
+                                const Matrix &aTransform = Matrix()) const;
+
   virtual FillRule GetFillRule() const { return mFillRule; }
 
   ID2D1Geometry *GetGeometry() { return mGeometry; }

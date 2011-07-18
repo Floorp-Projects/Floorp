@@ -52,7 +52,7 @@ const static int stack_snapshot_max_size = 32768;
 
 #if defined(XP_WIN)
 
-#include <Windows.h>
+#include <windows.h>
 
 static bool
 GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, size_t size)
@@ -79,7 +79,8 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
     *stack_len = len;
 
     /* Get the register state. */
-#if JS_BITS_PER_WORD == 32
+#if defined(_MSC_VER) && JS_BITS_PER_WORD == 32
+    /* ASM version for win2k that doesn't support RtlCaptureContext */
     uint32 vip, vsp, vbp;
     __asm {
     Label:
@@ -94,9 +95,15 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
 #else
     CONTEXT context;
     RtlCaptureContext(&context);
+#if JS_BITS_PER_WORD == 32
+    regs->ip = context.Eip;
+    regs->sp = context.Esp;
+    regs->bp = context.Ebp;
+#else
     regs->ip = context.Rip;
     regs->sp = context.Rsp;
     regs->bp = context.Rbp;
+#endif
 #endif
 
     memcpy(buffer, (void *)p, len);
@@ -104,7 +111,7 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
     return true;
 }
 
-#elif defined(__linux__) && (defined(__x86_64__) || defined(__i386__))
+#elif 0
 
 #include <unistd.h>
 #include <ucontext.h>

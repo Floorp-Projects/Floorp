@@ -51,7 +51,7 @@ function onTabViewWindowLoaded(win) {
     // Here, we just expand the group, click elsewhere, and make sure
     // it collapsed.
     let stage1expanded = function() {
-      group.removeSubscriber("test stage 1", "expanded", stage1expanded);
+      group.removeSubscriber("expanded", stage1expanded);
     
       ok(group.expanded, "The group is now expanded.");
       is(expander[0].style.display, "none", "The expander is hidden!");
@@ -60,14 +60,14 @@ function onTabViewWindowLoaded(win) {
       ok(overlay, "The expanded tray exists.");
       let $overlay = contentWindow.iQ(overlay);
       
-      group.addSubscriber("test stage 1", "collapsed", stage1collapsed);
+      group.addSubscriber("collapsed", stage1collapsed);
       // null type means "click", for some reason...
       EventUtils.synthesizeMouse(contentWindow.document.body, 10, $overlay.bounds().bottom + 5,
                                  {type: null}, contentWindow);
     };
     
     let stage1collapsed = function() {
-      group.removeSubscriber("test stage 1", "collapsed", stage1collapsed);
+      group.removeSubscriber("collapsed", stage1collapsed);
       ok(!group.expanded, "The group is no longer expanded.");
       isnot(expander[0].style.display, "none", "The expander is visible!");
       let expanderBounds = expander.bounds();
@@ -76,7 +76,7 @@ function onTabViewWindowLoaded(win) {
       ok(stackCenter.y < expanderBounds.center().y, "The expander is below the stack.");
   
       // now, try opening it up again.
-      group.addSubscriber("test stage 2", "expanded", stage2expanded);
+      group.addSubscriber("expanded", stage2expanded);
       EventUtils.sendMouseEvent({ type: "click" }, expander[0], contentWindow);
     };
   
@@ -84,7 +84,7 @@ function onTabViewWindowLoaded(win) {
     // Now make sure every child of the group shows up within this "tray", and
     // click on one of them and make sure we go into the tab and the tray collapses.
     let stage2expanded = function() {
-      group.removeSubscriber("test stage 2", "expanded", stage2expanded);
+      group.removeSubscriber("expanded", stage2expanded);
     
       ok(group.expanded, "The group is now expanded.");
       is(expander[0].style.display, "none", "The expander is hidden!");
@@ -132,27 +132,27 @@ function onTabViewWindowLoaded(win) {
       }
 
       // okay, expand this group one last time
-      group.addSubscriber("test stage 3", "expanded", stage3expanded);
+      group.addSubscriber("expanded", stage3expanded);
       EventUtils.sendMouseEvent({ type: "click" }, expander[0], contentWindow);
     }
 
     // STAGE 3:
     // Ensure that stack still shows the same top item after a expand and a collapse.
     let stage3expanded = function() {
-      group.removeSubscriber("test stage 3", "expanded", stage3expanded);
+      group.removeSubscriber("expanded", stage3expanded);
 
       ok(group.expanded, "The group is now expanded.");
       let overlay = contentWindow.document.getElementById("expandedTray");    
       let $overlay = contentWindow.iQ(overlay);
 
-      group.addSubscriber("test stage 3", "collapsed", stage3collapsed);
+      group.addSubscriber("collapsed", stage3collapsed);
       // null type means "click", for some reason...
       EventUtils.synthesizeMouse(contentWindow.document.body, 10, $overlay.bounds().bottom + 5,
                                  {type: null}, contentWindow);
     };
 
     let stage3collapsed = function() {
-      group.removeSubscriber("test stage 3", "collapsed", stage3collapsed);
+      group.removeSubscriber("collapsed", stage3collapsed);
 
       ok(!group.expanded, "The group is no longer expanded.");
       isnot(expander[0].style.display, "none", "The expander is visible!");
@@ -176,7 +176,7 @@ function onTabViewWindowLoaded(win) {
       contentWindow.UI.setActive(originalTabItem);
 
       // now, try opening it up again.
-      group.addSubscriber("test stage 4", "expanded", stage4expanded);
+      group.addSubscriber("expanded", stage4expanded);
       EventUtils.sendMouseEvent({ type: "click" }, expander[0], contentWindow);
     };
 
@@ -185,7 +185,7 @@ function onTabViewWindowLoaded(win) {
     // enter Panorama (i.e., zoom into this other group), and make sure we can go to
     // it and that the tray gets collapsed.
     let stage4expanded = function() {
-      group.removeSubscriber("test stage 4", "expanded", stage4expanded);
+      group.removeSubscriber("expanded", stage4expanded);
     
       ok(group.expanded, "The group is now expanded.");
       is(expander[0].style.display, "none", "The expander is hidden!");
@@ -231,7 +231,7 @@ function onTabViewWindowLoaded(win) {
     }
   
     // get the ball rolling
-    group.addSubscriber("test stage 1", "expanded", stage1expanded);
+    group.addSubscriber("expanded", stage1expanded);
     EventUtils.sendMouseEvent({ type: "click" }, expander[0], contentWindow);
   }, win);
 }
