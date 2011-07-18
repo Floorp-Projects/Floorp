@@ -1663,7 +1663,8 @@ var CharsetMenu = {
 var WebappsUI = {
   _dialog: null,
   _manifest: null,
-
+  _perms: [],
+  
   checkBox: function(aEvent) {
     let elem = aEvent.originalTarget;
     let perm = elem.getAttribute("perm");
@@ -1692,7 +1693,8 @@ var WebappsUI = {
       aManifest = {
         uri: browser.currentURI.spec,
         name: browser.contentTitle,
-        icon: icon
+        icon: icon,
+        capabilities: [],
       };
     }
 
@@ -1706,10 +1708,12 @@ var WebappsUI = {
 
     let uri = Services.io.newURI(aManifest.uri, null, null);
 
-    let perms = [["offline", "offline-app"], ["geoloc", "geo"], ["notifications", "desktop-notifications"]];
+    let perms = [["offline", "offline-app"], ["geoloc", "geo"], ["notifications", "desktop-notification"]];
+    let self = this;
     perms.forEach(function(tuple) {
       let elem = document.getElementById("webapps-" + tuple[0] + "-checkbox");
       let currentPerm = Services.perms.testExactPermission(uri, tuple[1]);
+      self._perms[tuple[1]] = (currentPerm == Ci.nsIPermissionManager.ALLOW_ACTION);
       if ((aManifest.capabilities && (aManifest.capabilities.indexOf(tuple[1]) != -1)) || (currentPerm == Ci.nsIPermissionManager.ALLOW_ACTION))
         elem.checked = true;
       else
@@ -1733,7 +1737,9 @@ var WebappsUI = {
   _updatePermission: function updatePermission(aId, aPerm) {
     try {
       let uri = Services.io.newURI(this._manifest.uri, null, null);
-      Services.perms.add(uri, aPerm, document.getElementById(aId).checked ? Ci.nsIPermissionManager.ALLOW_ACTION : Ci.nsIPermissionManager.DENY_ACTION);
+      let currentState = document.getElementById(aId).checked;
+      if (currentState != this._perms[aPerm])
+        Services.perms.add(uri, aPerm, currentState ? Ci.nsIPermissionManager.ALLOW_ACTION : Ci.nsIPermissionManager.DENY_ACTION);
     } catch(e) {
       Cu.reportError(e);
     }
