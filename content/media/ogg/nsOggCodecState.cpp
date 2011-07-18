@@ -182,11 +182,9 @@ nsresult nsOggCodecState::PageIn(ogg_page* aPage) {
   return NS_OK;
 }
 
-PRBool
-nsOggCodecState::PacketOutUntilGranulepos()
-{
+nsresult nsOggCodecState::PacketOutUntilGranulepos(PRBool& aFoundGranulepos) {
   int r;
-  PRBool foundGp = PR_FALSE;
+  aFoundGranulepos = PR_FALSE;
   // Extract packets from the sync state until either no more packets
   // come out, or we get a data packet with non -1 granulepos.
   do {
@@ -202,15 +200,15 @@ nsOggCodecState::PacketOutUntilGranulepos()
         // then use the granulepos to figure out the granulepos of the
         // preceeding packets.
         mUnstamped.AppendElement(clone);
-        foundGp = packet.granulepos != -1;
+        aFoundGranulepos = packet.granulepos > 0;
       }
     }
-  } while (r != 0 && !foundGp);
+  } while (r != 0 && !aFoundGranulepos);
   if (ogg_stream_check(&mState)) {
     NS_WARNING("Unrecoverable error in ogg_stream_packetout");
     return NS_ERROR_FAILURE;
   }
-  return foundGp;
+  return NS_OK;
 }
 
 nsTheoraState::nsTheoraState(ogg_page* aBosPage) :
@@ -377,7 +375,10 @@ nsTheoraState::PageIn(ogg_page* aPage)
                "Page must be for this stream!");
   if (ogg_stream_pagein(&mState, aPage) == -1)
     return NS_ERROR_FAILURE;
-  PRBool foundGp = PacketOutUntilGranulepos();
+  PRBool foundGp;
+  nsresult res = PacketOutUntilGranulepos(foundGp);
+  if (NS_FAILED(res))
+    return res;
   if (foundGp && mDoneReadingHeaders) {
     // We've found a packet with a granulepos, and we've loaded our metadata
     // and initialized our decoder. Determine granulepos of buffered packets.
@@ -622,7 +623,10 @@ nsVorbisState::PageIn(ogg_page* aPage)
                "Page must be for this stream!");
   if (ogg_stream_pagein(&mState, aPage) == -1)
     return NS_ERROR_FAILURE;
-  PRBool foundGp = PacketOutUntilGranulepos();
+  PRBool foundGp;
+  nsresult res = PacketOutUntilGranulepos(foundGp);
+  if (NS_FAILED(res))
+    return res;
   if (foundGp && mDoneReadingHeaders) {
     // We've found a packet with a granulepos, and we've loaded our metadata
     // and initialized our decoder. Determine granulepos of buffered packets.
