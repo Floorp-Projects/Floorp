@@ -346,7 +346,7 @@ class CellIter: public CellIterImpl
             lists->copyFreeListToArena(kind);
         }
 #ifdef DEBUG
-        counter = &JS_THREAD_DATA(cx)->noGCOrAllocationCheck;
+        counter = &cx->runtime->noGCOrAllocationCheck;
         ++*counter;
 #endif
         init(comp, kind);
@@ -384,7 +384,7 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
                  kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
 #endif
     JS_ASSERT(!cx->runtime->gcRunning);
-    JS_ASSERT(!JS_THREAD_DATA(cx)->noGCOrAllocationCheck);
+    JS_ASSERT(!cx->runtime->noGCOrAllocationCheck);
 
 #ifdef JS_GC_ZEAL
     if (cx->runtime->needZealousGC())
@@ -411,7 +411,7 @@ TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
                  kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
 #endif
     JS_ASSERT(!cx->runtime->gcRunning);
-    JS_ASSERT(!JS_THREAD_DATA(cx)->noGCOrAllocationCheck);
+    JS_ASSERT(!cx->runtime->noGCOrAllocationCheck);
 
 #ifdef JS_GC_ZEAL
     if (cx->runtime->needZealousGC())
