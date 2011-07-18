@@ -263,22 +263,12 @@ RegExpObject::setSticky(bool enabled)
 
 /* RegExpPrivate inlines. */
 
-inline RegExpPrivateCache *
-detail::RegExpPrivate::getOrCreateCache(JSContext *cx)
-{
-    if (RegExpPrivateCache *cache = cx->threadData()->getOrCreateRegExpPrivateCache(cx))
-        return cache;
-
-    js_ReportOutOfMemory(cx);
-    return NULL;
-}
-
 inline bool
 detail::RegExpPrivate::cacheLookup(JSContext *cx, JSAtom *atom, RegExpFlag flags,
                                    RegExpPrivateCacheKind targetKind,
                                    AlreadyIncRefed<RegExpPrivate> *result)
 {
-    RegExpPrivateCache *cache = getOrCreateCache(cx);
+    RegExpPrivateCache *cache = cx->runtime->getRegExpPrivateCache(cx);
     if (!cache)
         return false;
 
@@ -307,7 +297,7 @@ detail::RegExpPrivate::cacheInsert(JSContext *cx, JSAtom *atom, RegExpPrivateCac
      * so we have to re-lookup the cache (and inside the cache) after the
      * allocation is performed.
      */
-    RegExpPrivateCache *cache = getOrCreateCache(cx);
+    RegExpPrivateCache *cache = cx->runtime->getRegExpPrivateCache(cx);
     if (!cache)
         return false;
 
@@ -401,7 +391,7 @@ detail::RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, Token
 
 #ifdef JS_METHODJIT
     if (isJITRuntimeEnabled(cx) && !yarrPattern.m_containsBackreferences) {
-        JSC::ExecutableAllocator *execAlloc = cx->threadData()->getOrCreateExecutableAllocator(cx);
+        JSC::ExecutableAllocator *execAlloc = cx->runtime->getExecutableAllocator(cx);
         if (!execAlloc) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -414,7 +404,7 @@ detail::RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, Token
     }
 #endif
 
-    WTF::BumpPointerAllocator *bumpAlloc = cx->threadData()->getOrCreateBumpPointerAllocator(cx);
+    WTF::BumpPointerAllocator *bumpAlloc = cx->runtime->getBumpPointerAllocator(cx);
     if (!bumpAlloc) {
         js_ReportOutOfMemory(cx);
         return false;
@@ -510,11 +500,13 @@ detail::RegExpPrivate::decref(JSContext *cx)
     if (--refCount != 0)
         return;
 
-    RegExpPrivateCache *cache;
-    if (source->isAtom() && (cache = cx->threadData()->getRegExpPrivateCache())) {
-        RegExpPrivateCache::Ptr ptr = cache->lookup(&source->asAtom());
-        if (ptr && ptr->value.rep() == this)
-            cache->remove(ptr);
+    if (RegExpPrivateCache *cache = cx->runtime->maybeRegExpPrivateCache()) {
+        if (source->isAtom()) {
+            if (RegExpPrivateCache::Ptr p = cache->lookup(&source->asAtom())) {
+                if (p->value.rep() == this)
+                    cache->remove(p);
+            }
+        }
     }
 
 #ifdef DEBUG
