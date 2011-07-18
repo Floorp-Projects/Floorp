@@ -90,7 +90,6 @@
 #include "nsTreeUtils.h"
 #include "nsChildIterator.h"
 #include "nsITheme.h"
-#include "nsITimelineService.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
@@ -3616,9 +3615,6 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
     fontMet->GetStrikeout(offset, size);
     aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
   }
-#ifdef MOZ_TIMELINE
-  NS_TIMELINE_START_TIMER("Render Outline Text");
-#endif
   PRUint8 direction = aTextRTL ? NS_STYLE_DIRECTION_RTL :
                                  NS_STYLE_DIRECTION_LTR;
 
@@ -3635,10 +3631,6 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
     ctx->Paint(opacity);
   }
 
-#ifdef MOZ_TIMELINE
-  NS_TIMELINE_STOP_TIMER("Render Outline Text");
-  NS_TIMELINE_MARK_TIMER("Render Outline Text");
-#endif
 }
 
 void

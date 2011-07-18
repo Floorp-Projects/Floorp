@@ -138,7 +138,6 @@
 #include "nsIDOMXULDocument.h"
 
 #include "nsReadableUtils.h"
-#include "nsITimelineService.h"
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
@@ -3002,7 +3001,6 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsIURI* aDocumentURI,
                                   const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
-    NS_TIMELINE_MARK_FUNCTION("chrome script deserialize");
     nsresult rv;
 
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull ||

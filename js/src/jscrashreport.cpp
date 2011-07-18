@@ -111,7 +111,7 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
     return true;
 }
 
-#elif defined(__linux__) && (defined(__x86_64__) || defined(__i386__))
+#elif 0
 
 #include <unistd.h>
 #include <ucontext.h>
