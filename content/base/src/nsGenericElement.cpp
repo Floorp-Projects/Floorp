@@ -146,6 +146,7 @@
 #include "prprf.h"
 
 #include "nsSVGFeatures.h"
+#include "nsDOMMemoryReporter.h"
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
@@ -1330,7 +1331,7 @@ nsIContent*
 nsIContent::GetEditingHost()
 {
   // If this isn't editable, return NULL.
-  NS_ENSURE_TRUE(HasFlag(NODE_IS_EDITABLE), nsnull);
+  NS_ENSURE_TRUE(IsEditableInternal(), nsnull);
 
   nsIDocument* doc = GetCurrentDoc();
   NS_ENSURE_TRUE(doc, nsnull);
@@ -5372,3 +5373,15 @@ nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aRetu
 
   return rv;
 }
+
+PRInt64
+nsGenericElement::SizeOf() const
+{
+  PRInt64 size = MemoryReporter::GetBasicSize<nsGenericElement, Element>(this);
+
+  size -= sizeof(mAttrsAndChildren);
+  size += mAttrsAndChildren.SizeOf();
+
+  return size;
+}
+

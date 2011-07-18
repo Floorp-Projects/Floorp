@@ -135,6 +135,10 @@ let UI = {
   // Used to keep track of allowed browser keys.
   _browserKeys: null,
 
+  // Variable: _browserKeysWithShift
+  // Used to keep track of allowed browser keys with Shift key combination.
+  _browserKeysWithShift: null,
+
   // Variable: ignoreKeypressForSearch
   // Used to prevent keypress being handled after quitting search mode.
   ignoreKeypressForSearch: false,
@@ -396,19 +400,26 @@ let UI = {
 
     if (this._activeTab) {
       this._activeTab.makeDeactive();
-      this._activeTab.removeSubscriber(this, "close");
+      this._activeTab.removeSubscriber("close", this._onActiveTabClosed);
     }
+
     this._activeTab = tabItem;
 
     if (this._activeTab) {
-      let self = this;
-      this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
-        if (self._activeTab == closedTabItem)
-          self._setActiveTab(null);
-      });
-
+      this._activeTab.addSubscriber("close", this._onActiveTabClosed);
       this._activeTab.makeActive();
     }
+  },
+
+  // ----------
+  // Function: _onActiveTabClosed
+  // Handles when the currently active tab gets closed.
+  //
+  // Parameters:
+  //  - the <TabItem> that is closed
+  _onActiveTabClosed: function UI__onActiveTabClosed(tabItem){
+    if (UI._activeTab == tabItem)
+      UI._setActiveTab(null);
   },
 
   // ----------
@@ -432,6 +443,13 @@ let UI = {
           this._setActiveTab(activeTab);
       }
     }
+  },
+
+  // ----------
+  // Function: clearActiveTab
+  // Sets the active tab to 'null'.
+  clearActiveTab: function UI_clearActiveTab() {
+    this._setActiveTab(null);
   },
 
   // ----------
@@ -466,7 +484,6 @@ let UI = {
 
     var self = this;
     var currentTab = this._currentTab;
-    var item = null;
 
     this._reorderTabItemsOnShow.forEach(function(groupItem) {
       groupItem.reorderTabItemsBasedOnTabOrder();
@@ -491,7 +508,7 @@ let UI = {
     Storage.saveVisibilityData(gWindow, "true");
 
     if (zoomOut && currentTab && currentTab._tabViewTabItem) {
-      item = currentTab._tabViewTabItem;
+      let item = currentTab._tabViewTabItem;
       // If there was a previous currentTab we want to animate
       // its thumbnail (canvas) for the zoom out.
       // Note that we start the animation on the chrome thread.
@@ -512,6 +529,7 @@ let UI = {
         TabItems.resumePainting();
       });
     } else {
+      self.clearActiveTab();
       dispatchEvent(event);
 
       // Flush pending updates
@@ -973,11 +991,15 @@ let UI = {
       "selectAll", "find"
     ].forEach(function(key) {
       let element = gWindow.document.getElementById("key_" + key);
-      keys[key] = element.getAttribute("key").toLocaleLowerCase().charCodeAt(0);
+      let code = element.getAttribute("key").toLocaleLowerCase().charCodeAt(0);
+      keys[code] = key;
     });
+    this._browserKeys = keys;
 
-    // for key combinations with shift key, the charCode of upper case letters 
-    // are different to the lower case ones so need to handle them differently.
+    keys = {};
+    // The lower case letters are passed to processBrowserKeys() even with shift 
+    // key when stimulating a key press using EventUtils.synthesizeKey() so need 
+    // to handle both upper and lower cases here.
     [
 #ifdef XP_UNIX
       "redo",
@@ -986,11 +1008,10 @@ let UI = {
       "privatebrowsing"
     ].forEach(function(key) {
       let element = gWindow.document.getElementById("key_" + key);
-      keys[key] = element.getAttribute("key").toLocaleUpperCase().charCodeAt(0);
+      let code = element.getAttribute("key").toLocaleLowerCase().charCodeAt(0);
+      keys[code] = key;
     });
-
-    delete this._browserKeys;
-    this._browserKeys = keys;
+    this._browserKeysWithShift = keys;
   },
 
   // ----------
@@ -1022,44 +1043,25 @@ let UI = {
 #endif
           let preventDefault = true;
           if (evt.shiftKey) {
-            switch (evt.charCode) {
-              case self._browserKeys.tabview:
+            // when a user presses ctrl+shift+key, upper case letter charCode 
+            // is passed to processBrowserKeys() so converting back to lower 
+            // case charCode before doing the check
+            let lowercaseCharCode =
+              String.fromCharCode(evt.charCode).toLocaleLowerCase().charCodeAt(0);
+            if (lowercaseCharCode in self._browserKeysWithShift) {
+              let key = self._browserKeysWithShift[lowercaseCharCode];
+              if (key == "tabview")
                 self.exit();
-                break;
-#ifdef XP_UNIX
-              case self._browserKeys.redo:
-#endif
-              case self._browserKeys.closeWindow:
-              case self._browserKeys.undoCloseTab:
-              case self._browserKeys.undoCloseWindow:
-              case self._browserKeys.privatebrowsing:
+              else
                 preventDefault = false;
-                break;
             }
           } else {
-            switch (evt.charCode) {
-              case self._browserKeys.find:
+            if (evt.charCode in self._browserKeys) {
+              let key = self._browserKeys[evt.charCode];
+              if (key == "find")
                 self.enableSearch();
-                break;
-#ifdef XP_UNIX
-              case self._browserKeys.quitApplication:
-#else
-              case self._browserKeys.redo:
-#endif
-#ifdef XP_MACOSX
-              case self._browserKeys.preferencesCmdMac:
-              case self._browserKeys.minimizeWindow:
-              case self._browserKeys.hideThisAppCmdMac:
-#endif
-              case self._browserKeys.newNavigator:
-              case self._browserKeys.newNavigatorTab:
-              case self._browserKeys.undo:
-              case self._browserKeys.cut:
-              case self._browserKeys.copy:
-              case self._browserKeys.paste:
-              case self._browserKeys.selectAll:
+              else
                 preventDefault = false;
-                break;
             }
           }
           if (preventDefault) {
@@ -1568,6 +1570,35 @@ let UI = {
       url = gFavIconService.getFaviconImageForPage(tab.linkedBrowser.currentURI).spec;
 
     return url;
+  },
+
+  // ----------
+  // Function: notifySessionRestoreEnabled
+  // Notify the user that session restore has been automatically enabled
+  // by showing a banner that expects no user interaction. It fades out after
+  // some seconds.
+  notifySessionRestoreEnabled: function UI_notifySessionRestoreEnabled() {
+    let brandBundle = gWindow.document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+    let notificationText = tabviewBundle.formatStringFromName(
+      "tabview.notification.sessionStore", [brandShortName], 1);
+
+    let banner = iQ("<div>")
+      .text(notificationText)
+      .addClass("banner")
+      .appendTo("body");
+
+    let onFadeOut = function () {
+      banner.remove();
+    };
+
+    let onFadeIn = function () {
+      setTimeout(function () {
+        banner.animate({opacity: 0}, {duration: 1500, complete: onFadeOut});
+      }, 5000);
+    };
+
+    banner.animate({opacity: 0.7}, {duration: 1500, complete: onFadeIn});
   }
 };
 

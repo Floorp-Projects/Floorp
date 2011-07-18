@@ -364,5 +364,5 @@ load text-overflow-form-elements.html
 load text-overflow-iframe.html
 load text-overflow-bug666751-1.html
 load text-overflow-bug666751-2.html
-asserts(2) load text-overflow-bug670564.xhtml # asserts(2) for bug 651342
+asserts(2) load text-overflow-bug670564.xhtml # asserts(2) for bug 436470
 load 667025.html

@@ -310,7 +310,8 @@ inline static void DidAnimateAttr(Element *aFilterPrimitive)
   }
 }
 
-inline static void DidAnimateAttrViaParent(Element *aFilterPrimitive) {
+inline static void DidAnimateAttrViaParent(Element *aFilterPrimitive)
+{
   // No frame, use parent's
   NS_ASSERTION(!aFilterPrimitive->GetPrimaryFrame(), "Not expecting a frame");
   nsIContent *parent = aFilterPrimitive->GetFlattenedTreeParent();

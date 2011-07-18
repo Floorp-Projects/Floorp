@@ -36,7 +36,19 @@ function compareSnapshots(s1, s2, expected) {
   var s1Str, s2Str;
   var correct = false;
   if (gWindowUtils) {
-    correct = ((gWindowUtils.compareCanvases(s1, s2, {}) == 0) == expected);
+    // First, check that the canvases are the same size.
+    var equal;
+    if (s1.width != s2.width || s1.height != s2.height) {
+      equal = false;
+    } else {
+      try {
+        equal = (gWindowUtils.compareCanvases(s1, s2, {}) == 0);
+      } catch (e) {
+        equal = false;
+        ok(false, "Exception thrown from compareCanvases: " + e);
+      }
+    }
+    correct = (equal == expected);
   }
 
   if (!correct) {

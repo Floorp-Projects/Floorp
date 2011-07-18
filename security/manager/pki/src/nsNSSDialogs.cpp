@@ -47,7 +47,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIPrompt.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -113,7 +113,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   *_canceled = PR_FALSE;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
 
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
@@ -148,7 +148,7 @@ nsNSSDialogs::GetPassword(nsIInterfaceRequestor *ctx,
   nsresult rv;
   *_canceled = PR_FALSE;
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
   nsCOMPtr<nsIDialogParamBlock> block = 
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
   if (!block) return NS_ERROR_FAILURE;
@@ -204,7 +204,7 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   *_retval = PR_TRUE;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
 
   nsCOMPtr<nsIPKIParamBlock> block =
            do_CreateInstance(NS_PKIPARAMBLOCK_CONTRACTID);
@@ -216,7 +216,7 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
     return rv;
 
   rv = nsNSSDialogHelper::openDialog(parent, 
-                                   "chrome://pippki/content/downloadcert.xul",
+                                     "chrome://pippki/content/downloadcert.xul",
                                      block);
   if (NS_FAILED(rv)) return rv;
 
@@ -251,7 +251,7 @@ nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
   nsresult rv;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
 
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
@@ -275,7 +275,7 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   *canceled = PR_FALSE;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
 
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
@@ -346,7 +346,7 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx,
   *canceled = PR_FALSE;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
 
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
@@ -396,7 +396,7 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   nsresult rv;
   *_retval = PR_TRUE;
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
   if (!block) return NS_ERROR_FAILURE;
@@ -430,7 +430,7 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   nsresult rv;
   *_retval = PR_TRUE;
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
   if (!block) return NS_ERROR_FAILURE;
@@ -473,7 +473,7 @@ nsNSSDialogs::ViewCert(nsIInterfaceRequestor *ctx,
     return rv;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
 
   rv = nsNSSDialogHelper::openDialog(parent,
                                      "chrome://pippki/content/certViewer.xul",
@@ -488,7 +488,7 @@ nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeyge
   nsresult rv;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(aCtx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(aCtx);
 
   rv = nsNSSDialogHelper::openDialog(parent,
                                      "chrome://pippki/content/createCertInfo.xul",
@@ -504,7 +504,7 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
   *aCanceled = PR_FALSE;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(aCtx);
+  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(aCtx);
 
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
@@ -584,23 +584,15 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor *aCtx, nsIProtectedAuth
     nsresult rv = NS_ERROR_FAILURE;
     
     // Get the parent window for the dialog
-    nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(aCtx);
+    nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(aCtx);
     
     nsCOMPtr<nsIWindowWatcher> windowWatcher = 
         do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
     if (NS_FAILED(rv))
         return rv;
     
-    nsCOMPtr<nsIDOMWindowInternal> activeParent;
-    if (!parent)
-    {
-        nsCOMPtr<nsIDOMWindow> active;
-        windowWatcher->GetActiveWindow(getter_AddRefs(active));
-        if (active)
-        {
-            active->QueryInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(activeParent));
-            parent = activeParent;
-        }
+    if (!parent) {
+        windowWatcher->GetActiveWindow(getter_AddRefs(parent));
     }
     
     nsCOMPtr<nsIDOMWindow> newWindow;

@@ -369,8 +369,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrintSettings);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrefChangedTimer);
-  if (tmp->mBidiUtils)
-    tmp->mBidiUtils->Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
@@ -395,8 +393,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
     tmp->mPrefChangedTimer->Cancel();
     tmp->mPrefChangedTimer = nsnull;
   }
-  if (tmp->mBidiUtils)
-    tmp->mBidiUtils->Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -1461,15 +1457,6 @@ nsPresContext::SetBidiEnabled() const
   }
 }
 
-nsBidiPresUtils*
-nsPresContext::GetBidiUtils()
-{
-  if (!mBidiUtils)
-    mBidiUtils = new nsBidiPresUtils;
-
-  return mBidiUtils;
-}
-
 void
 nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceRestyle)
 {
@@ -1510,15 +1497,6 @@ PRUint32
 nsPresContext::GetBidi() const
 {
   return Document()->GetBidiOptions();
-}
-
-PRUint32
-nsPresContext::GetBidiMemoryUsed()
-{
-  if (!mBidiUtils)
-    return 0;
-
-  return mBidiUtils->EstimateMemoryUsed();
 }
 
 #endif //IBMBIDI

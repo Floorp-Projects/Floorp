@@ -40,7 +40,8 @@ IPDLSRCS =					\
   PTestShutdownSub.ipdl				\
   PTestShutdownSubsub.ipdl			\
   PTestStackHooks.ipdl				\
-  PTestSyncWakeup.ipdl				\
+  PTestSyncError.ipdl                           \
   PTestSyncHang.ipdl                            \
+  PTestSyncWakeup.ipdl				\
   PTestSysVShmem.ipdl				\
   $(NULL)
