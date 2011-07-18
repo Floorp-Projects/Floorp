@@ -1253,7 +1253,7 @@ var SelectionHelper = {
     return this._end = document.getElementById("selectionhandle-end");
   },
 
-  showPopup: function ch_showPopup(aMessage) {
+  showPopup: function sh_showPopup(aMessage) {
     if (!this.enabled || aMessage.json.types.indexOf("content-text") == -1)
       return false;
 
@@ -1302,11 +1302,16 @@ var SelectionHelper = {
     return true;
   },
 
-  hide: function ch_hide() {
+  hide: function sh_hide() {
     if (this._start.hidden)
       return;
 
-    this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionEnd", {});
+    try {
+      this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionEnd", {});
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
     this.popupState = null;
     Services.prefs.setBoolPref("accessibility.browsewithcaret", false);
 
