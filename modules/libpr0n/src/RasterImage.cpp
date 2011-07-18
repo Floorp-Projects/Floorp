@@ -745,21 +745,44 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
   return rv;
 }
 
+namespace {
+
 PRUint32
-RasterImage::GetDecodedDataSize()
+GetDecodedSize(const nsTArray<imgFrame *> &aFrames,
+               gfxASurface::MemoryLocation aLocation)
 {
   PRUint32 val = 0;
-  for (PRUint32 i = 0; i < mFrames.Length(); ++i) {
-    imgFrame *frame = mFrames.SafeElementAt(i, nsnull);
+  for (PRUint32 i = 0; i < aFrames.Length(); ++i) {
+    imgFrame *frame = aFrames.SafeElementAt(i, nsnull);
     NS_ABORT_IF_FALSE(frame, "Null frame in frame array!");
-    val += frame->EstimateMemoryUsed();
+    val += frame->EstimateMemoryUsed(aLocation);
   }
 
   return val;
 }
 
+} // anonymous namespace
+
 PRUint32
-RasterImage::GetSourceDataSize()
+RasterImage::GetDecodedHeapSize()
+{
+  return GetDecodedSize(mFrames, gfxASurface::MEMORY_IN_PROCESS_HEAP);
+}
+
+PRUint32
+RasterImage::GetDecodedNonheapSize()
+{
+  return GetDecodedSize(mFrames, gfxASurface::MEMORY_IN_PROCESS_NONHEAP);
+}
+
+PRUint32
+RasterImage::GetDecodedOutOfProcessSize()
+{
+  return GetDecodedSize(mFrames, gfxASurface::MEMORY_OUT_OF_PROCESS);
+}
+
+PRUint32
+RasterImage::GetSourceHeapSize()
 {
   PRUint32 sourceDataSize = mSourceData.Length();
   
