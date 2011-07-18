@@ -781,7 +781,7 @@ JSScript::initCounts(JSContext *cx)
 
     /* Enable interrupts in any interpreter frames running on this script. */
     InterpreterFrames *frames;
-    for (frames = JS_THREAD_DATA(cx)->interpreterFrames; frames; frames = frames->older)
+    for (frames = cx->runtime->interpreterFrames; frames; frames = frames->older)
         frames->enableInterruptsIfRunning(this);
 
     return true;
@@ -1735,7 +1735,7 @@ JSScript::ensureHasDebug(JSContext *cx)
      * debug state is destroyed.
      */
     InterpreterFrames *frames;
-    for (frames = JS_THREAD_DATA(cx)->interpreterFrames; frames; frames = frames->older)
+    for (frames = cx->runtime->interpreterFrames; frames; frames = frames->older)
         frames->enableInterruptsIfRunning(this);
 
     return true;
