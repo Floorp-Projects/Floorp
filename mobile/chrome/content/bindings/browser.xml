@@ -918,16 +918,8 @@
 
           _getContentSize: function() {
             let self = this.self;
-            if (this.isRoot()) {
-              // XXX Bug 626792 means contentWidth and contentHeight aren't always
-              // updated immediately. This makes the displayport go haywire so
-              // use contentDocument properties.
-              return { width: self._contentDocumentWidth * this._scale,
-                       height: self._contentDocumentHeight * this._scale };
-            } else {
-              return { width: this._contentView.contentWidth,
-                       height: this._contentView.contentHeight };
-            }
+            return { width: this._contentView.contentWidth,
+                     height: this._contentView.contentHeight };
           },
 
           _getViewportSize: function() {
@@ -936,7 +928,8 @@
               let bcr = self.getBoundingClientRect();
               return { width: bcr.width, height: bcr.height };
             } else {
-              return { width: this._contentView.viewportWidth, height: this._contentView.viewportHeight };
+              return { width: this._contentView.viewportWidth,
+                       height: this._contentView.viewportHeight };
             }
           },
 

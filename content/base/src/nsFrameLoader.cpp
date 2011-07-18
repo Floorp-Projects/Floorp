@@ -119,6 +119,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::layout;
 typedef FrameMetrics::ViewID ViewID;
 
 #include "jsapi.h"
@@ -170,7 +171,7 @@ nsContentView::Update(const ViewConfig& aConfig)
 
   // View changed.  Try to locate our subdoc frame and invalidate
   // it if found.
-  if (!mOwnerContent) {
+  if (!mFrameLoader) {
     if (IsRoot()) {
       // Oops, don't have a frame right now.  That's OK; the view
       // config persists and will apply to the next frame we get, if we
@@ -182,10 +183,13 @@ nsContentView::Update(const ViewConfig& aConfig)
     }
   }
 
-  nsIFrame* frame = mOwnerContent->GetPrimaryFrame();
+  if (RenderFrameParent* rfp = mFrameLoader->GetCurrentRemoteFrame()) {
+    rfp->ContentViewScaleChanged(this);
+  }
 
   // XXX could be clever here and compute a smaller invalidation
   // rect
+  nsIFrame* frame = mFrameLoader->GetPrimaryFrameOfOwningContent();
   InvalidateFrame(frame);
   return NS_OK;
 }
