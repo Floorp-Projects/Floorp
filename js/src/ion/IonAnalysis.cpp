@@ -176,7 +176,7 @@ TypeAnalyzer::populate()
                 MCopy *copy = i->toCopy();
                 MUseIterator uses(copy);
                 while (uses.more())
-                    uses->ins()->replaceOperand(uses, copy->getOperand(0));
+                    uses->node()->replaceOperand(uses, copy->getOperand(0));
                 i = copy->block()->removeAt(i);
                 continue;
             }
@@ -219,9 +219,13 @@ TypeAnalyzer::inspectUses(MDefinition *ins)
     // information.
     MUseIterator uses(ins);
     while (uses.more()) {
-        if (uses->ins()->adjustForInputs()) {
-            if (!addToWorklist(uses->ins()))
-                return false;
+        MNode *node = uses->node();
+        if (node->isDefinition()) {
+            MDefinition *def = node->toDefinition();
+            if (def->adjustForInputs()) {
+                if (!addToWorklist(def))
+                    return false;
+            }
         }
         uses.next();
     }
@@ -285,7 +289,12 @@ TypeAnalyzer::rewriteUses(MDefinition *old, MInstruction *ins)
 
     MUseIterator iter(old);
     while (iter.more()) {
-        MDefinition *use = iter->ins();
+        MNode *node = iter->node();
+
+        if (node->isSnapshot())
+            continue;
+
+        MDefinition *use = node->toDefinition();
 
         // We try to replace uses that accept any representation (boxed or
         // unboxed). Note, we dp not rewrite snapshots yet because at this
@@ -293,9 +302,7 @@ TypeAnalyzer::rewriteUses(MDefinition *old, MInstruction *ins)
         // after the newly inserted unbox instruction. This is deferred until
         // lowering.
         MIRType required = use->requiredInputType(iter->index());
-        if ((required != MIRType_Any && required != ins->type()) || use->isSnapshot()) {
-            if (use->isSnapshot())
-                ins->rewritesDef();
+        if (required != MIRType_Any && required != ins->type()) {
             iter.next();
             continue;
         }
@@ -351,7 +358,11 @@ TypeAnalyzer::fixup(MDefinition *ins)
 
     MUseIterator uses(ins);
     while (uses.more()) {
-        MDefinition *use = uses->ins();
+        MNode *node = uses->node();
+        if (!node->isDefinition())
+            continue;
+
+        MDefinition *use = node->toDefinition();
         MIRType required = use->requiredInputType(uses->index());
         MIRType actual = ins->type();
 
