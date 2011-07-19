@@ -818,12 +818,12 @@ class MTruncateToInt32 : public MUnaryInstruction
     }
 };
 
-class MBinaryBitInstruction
+class MBinaryBitwiseInstruction
   : public MBinaryInstruction,
     public BitwisePolicy
 {
   protected:
-    MBinaryBitInstruction(MDefinition *left, MDefinition *right)
+    MBinaryBitwiseInstruction(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Int32);
@@ -839,10 +839,10 @@ class MBinaryBitInstruction
     void infer(const TypeOracle::Binary &b);
 };
 
-class MBitAnd : public MBinaryBitInstruction
+class MBitAnd : public MBinaryBitwiseInstruction
 {
     MBitAnd(MDefinition *left, MDefinition *right)
-      : MBinaryBitInstruction(left, right)
+      : MBinaryBitwiseInstruction(left, right)
     { }
 
   public:
@@ -850,10 +850,10 @@ class MBitAnd : public MBinaryBitInstruction
     static MBitAnd *New(MDefinition *left, MDefinition *right);
 };
 
-class MBitOr : public MBinaryBitInstruction
+class MBitOr : public MBinaryBitwiseInstruction
 {
     MBitOr(MDefinition *left, MDefinition *right)
-      : MBinaryBitInstruction(left, right)
+      : MBinaryBitwiseInstruction(left, right)
     { }
 
   public:
@@ -861,10 +861,10 @@ class MBitOr : public MBinaryBitInstruction
     static MBitOr *New(MDefinition *left, MDefinition *right);
 };
 
-class MBitXor : public MBinaryBitInstruction
+class MBitXor : public MBinaryBitwiseInstruction
 {
     MBitXor(MDefinition *left, MDefinition *right)
-      : MBinaryBitInstruction(left, right)
+      : MBinaryBitwiseInstruction(left, right)
     { }
 
   public:

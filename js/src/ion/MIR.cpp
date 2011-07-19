@@ -351,7 +351,7 @@ MReturn::New(MDefinition *ins)
 }
 
 void
-MBinaryBitInstruction::infer(const TypeOracle::Binary &b)
+MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
 {
     if (b.lhs == MIRType_Object || b.rhs == MIRType_Object)
         specialization_ = MIRType_None;

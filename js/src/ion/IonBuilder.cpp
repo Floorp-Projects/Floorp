@@ -1221,7 +1221,7 @@ IonBuilder::jsop_bitop(JSOp op)
     MDefinition *right = current->pop();
     MDefinition *left = current->pop();
 
-    MBinaryBitInstruction *ins;
+    MBinaryBitwiseInstruction *ins;
     switch (op) {
       case JSOP_BITAND:
         ins = MBitAnd::New(left, right);
