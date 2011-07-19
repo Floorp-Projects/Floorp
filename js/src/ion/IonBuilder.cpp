@@ -1221,7 +1221,7 @@ IonBuilder::jsop_bitop(JSOp op)
     MDefinition *right = current->pop();
     MDefinition *left = current->pop();
 
-    MBinaryInstruction *ins;
+    MBinaryBitInstruction *ins;
     switch (op) {
       case JSOP_BITAND:
         ins = MBitAnd::New(left, right);
@@ -1241,6 +1241,8 @@ IonBuilder::jsop_bitop(JSOp op)
     }
 
     current->add(ins);
+    ins->infer(oracle->binaryOp(script, pc));
+
     current->push(ins);
     return true;
 }

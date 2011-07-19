@@ -763,73 +763,113 @@ class MUnbox : public MUnaryInstruction
     }
 };
 
-// Converts a value or typed input to a primitve. The input must be a primitive
-// at runtime, otherwise, a bailout occurs.
-class MConvertPrim : public MUnaryInstruction
+// Converts a primitive (either typed or untyped) to a double. If the input is
+// not primitive at runtime, a bailout occurs.
+class MToDouble : public MUnaryInstruction
 {
-    MConvertPrim(MDefinition *ins, MIRType type)
-      : MUnaryInstruction(ins)
+    MToDouble(MDefinition *def)
+      : MUnaryInstruction(def)
     {
-        setResultType(type);
+        setResultType(MIRType_Double);
     }
 
   public:
-    INSTRUCTION_HEADER(ConvertPrim);
-    static MConvertPrim *New(MDefinition *ins, MIRType type)
+    INSTRUCTION_HEADER(ToDouble);
+    static MToDouble *New(MDefinition *def)
     {
-        return new MConvertPrim(ins, type);
+        return new MToDouble(def);
     }
 };
 
-class MBitAnd : public MBinaryInstruction
+// Converts a primitive (either typed or untyped) to an int32. If the input is
+// not primitive at runtime, a bailout occurs. If the input cannot be converted
+// to an int32 without loss (i.e. "5.5" or undefined) then a bailout occurs.
+class MToInt32 : public MUnaryInstruction
 {
-    MBitAnd(MDefinition *left, MDefinition *right)
+    MToInt32(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToInt32);
+    static MToInt32 *New(MDefinition *def)
+    {
+        return new MToInt32(def);
+    }
+};
+
+// Converts a value or typed input to a truncated int32, for use with bitwise
+// operations. This is an infallible ValueToECMAInt32.
+class MTruncateToInt32 : public MUnaryInstruction
+{
+    MTruncateToInt32(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(TruncateToInt32);
+    static MTruncateToInt32 *New(MDefinition *def)
+    {
+        return new MTruncateToInt32(def);
+    }
+};
+
+class MBinaryBitInstruction
+  : public MBinaryInstruction,
+    public BitwisePolicy
+{
+  protected:
+    MBinaryBitInstruction(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Int32);
     }
+
+  public:
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    HoistWin estimateHoistWin() {
+        return BIG_WIN;
+    }
+    void infer(const TypeOracle::Binary &b);
+};
+
+class MBitAnd : public MBinaryBitInstruction
+{
+    MBitAnd(MDefinition *left, MDefinition *right)
+      : MBinaryBitInstruction(left, right)
+    { }
 
   public:
     INSTRUCTION_HEADER(BitAnd);
     static MBitAnd *New(MDefinition *left, MDefinition *right);
-
-    HoistWin estimateHoistWin() {
-        return BIG_WIN;
-    }
 };
 
-class MBitOr : public MBinaryInstruction
+class MBitOr : public MBinaryBitInstruction
 {
     MBitOr(MDefinition *left, MDefinition *right)
-      : MBinaryInstruction(left, right)
-    {
-        setResultType(MIRType_Int32);
-    }
+      : MBinaryBitInstruction(left, right)
+    { }
 
   public:
     INSTRUCTION_HEADER(BitOr);
     static MBitOr *New(MDefinition *left, MDefinition *right);
-
-    HoistWin estimateHoistWin() {
-        return BIG_WIN;
-    }
 };
 
-class MBitXor : public MBinaryInstruction
+class MBitXor : public MBinaryBitInstruction
 {
     MBitXor(MDefinition *left, MDefinition *right)
-      : MBinaryInstruction(left, right)
-    {
-        setResultType(MIRType_Int32);
-    }
+      : MBinaryBitInstruction(left, right)
+    { }
 
   public:
     INSTRUCTION_HEADER(BitXor);
     static MBitXor *New(MDefinition *left, MDefinition *right);
-
-    HoistWin estimateHoistWin() {
-        return BIG_WIN;
-    }
 };
 
 class MBinaryArithInstruction

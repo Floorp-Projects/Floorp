@@ -60,7 +60,9 @@ namespace ion {
     _(Copy)                                                                 \
     _(Box)                                                                  \
     _(Unbox)                                                                \
-    _(ConvertPrim)                                                          \
+    _(ToDouble)                                                             \
+    _(ToInt32)                                                              \
+    _(TruncateToInt32)                                                      \
     _(Start)
 
 

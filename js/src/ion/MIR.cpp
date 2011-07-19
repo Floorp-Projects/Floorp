@@ -351,6 +351,15 @@ MReturn::New(MDefinition *ins)
 }
 
 void
+MBinaryBitInstruction::infer(const TypeOracle::Binary &b)
+{
+    if (b.lhs == MIRType_Object || b.rhs == MIRType_Object)
+        specialization_ = MIRType_None;
+    else
+        specialization_ = MIRType_Int32;
+}
+
+void
 MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
 {
     if (b.lhs == MIRType_Int32 && b.rhs == MIRType_Int32) {
