@@ -643,7 +643,9 @@ class MGoto : public MAryControlInstruction<0>
 
 // Tests if the input instruction evaluates to true or false, and jumps to the
 // start of a corresponding basic block.
-class MTest : public MAryControlInstruction<1>
+class MTest
+  : public MAryControlInstruction<1>,
+    public BoxInputsPolicy
 {
     MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false)
     {
@@ -663,10 +665,15 @@ class MTest : public MAryControlInstruction<1>
     MBasicBlock *ifFalse() const {
         return getSuccessor(1);
     }
+    TypePolicy *typePolicy() {
+        return this;
+    }
 };
 
 // Returns from this function to the previous caller.
-class MReturn : public MAryControlInstruction<1>
+class MReturn
+  : public MAryControlInstruction<1>,
+    public BoxInputsPolicy
 {
     MReturn(MDefinition *ins)
     {
@@ -676,6 +683,10 @@ class MReturn : public MAryControlInstruction<1>
   public:
     INSTRUCTION_HEADER(Return);
     static MReturn *New(MDefinition *ins);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
 };
 
 class MUnaryInstruction : public MAryInstruction<1>
