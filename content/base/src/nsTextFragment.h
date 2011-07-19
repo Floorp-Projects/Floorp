@@ -81,7 +81,7 @@ class nsCString;
  * This class does not have a virtual destructor therefore it is not
  * meant to be subclassed.
  */
-class nsTextFragment {
+class NS_FINAL_CLASS nsTextFragment {
 public:
   static nsresult Init();
   static void Shutdown();
