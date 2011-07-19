@@ -39,67 +39,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_coderef_h__
-#define jsion_coderef_h__
+#ifndef jsion_ion_compartment_h__
+#define jsion_ion_compartment_h__
 
-#include "jscell.h"
-
-namespace JSC {
-    class ExecutablePool;
-}
+#include "IonCode.h"
 
 namespace js {
 namespace ion {
 
-class IonCode : public gc::Cell
-{
-    uint8 *code_;
-    uint32 size_;
-    JSC::ExecutablePool *pool_;
-    uint32 padding_;
-
-    IonCode()
-      : code_(NULL),
-        pool_(NULL)
-    { }
-    IonCode(uint8 *code, uint32 size, JSC::ExecutablePool *pool)
-      : code_(code),
-        size_(size),
-        pool_(pool)
-    { }
-
-  public:
-    uint8 *code() const {
-        return code_;
-    }
-    uint32 size() const {
-        return size_;
-    }
-    void finalize(JSContext *cx);
-
-    // Allocates a new IonCode object which will be managed by the GC. If no
-    // object can be allocated, NULL is returned. On failure, |pool| is
-    // automatically released, so the code may be freed.
-    static IonCode *New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool);
+struct IonTrampolines {
+    IonCode *ionTrampoline;
 };
 
-#define ION_DISABLED_SCRIPT ((IonScript *)0x1)
+class IonCompartment {
+    JSC::ExecutableAllocator *execAlloc_;
+    IonTrampolines           trampolines;
 
-// An IonScript attaches Ion-generated information to a JSScript.
-struct IonScript
-{
-    IonCode *method;
-
-  private:
-    void trace(JSTracer *trc, JSScript *script);
+    void Finish() { }
 
   public:
-    static void Trace(JSTracer *trc, JSScript *script);
-    static void Destroy(JSContext *cx, JSScript *script);
+    bool Initialize() {
+        execAlloc_ = new JSC::ExecutableAllocator();
+        trampolines.ionTrampoline = GenerateTrampoline(execAlloc_);
+
+        if (!trampolines.ionTrampoline)
+            return false;
+
+        return true;
+    }
+
+    ~IonCompartment() { Finish(); }
+
+    JSC::ExecutableAllocator *execAlloc() {
+        return execAlloc_;
+    }
+
+    IonCode *GenerateTrampoline(JSC::ExecutableAllocator *execAlloc);
 };
 
-}
-}
 
-#endif // jsion_coderef_h__
+} // namespace js
+} // namespace ion
+
+#endif // jsion_ion_compartment_h__
 

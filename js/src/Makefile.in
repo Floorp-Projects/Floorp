@@ -404,11 +404,13 @@ endif
 VPATH +=	$(srcdir)/ion/x64
 CPPSRCS += 	Lowering-x64.cpp
 CPPSRCS +=	CodeGenerator-x64.cpp
+CPPSRCS +=	Trampoline-x64.cpp
 else
 #CPPSRCS		+= only_on_x86.cpp
 VPATH +=	$(srcdir)/ion/x86
 CPPSRCS +=	Lowering-x86.cpp
 CPPSRCS +=	CodeGenerator-x86.cpp
+CPPSRCS +=	Trampoline-x86.cpp
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s
 endif
