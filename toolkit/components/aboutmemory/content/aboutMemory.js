@@ -48,11 +48,11 @@ var gVerbose = (location.href.split(/[\?,]/).indexOf("verbose") !== -1);
 
 var gAddedObserver = false;
 
-const KIND_MAPPED = Ci.nsIMemoryReporter.KIND_MAPPED;
-const KIND_HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
-const KIND_OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
-const UNITS_BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
-const UNITS_COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
+const KIND_NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
+const KIND_HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
+const KIND_OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
+const UNITS_BYTES  = Ci.nsIMemoryReporter.UNITS_BYTES;
+const UNITS_COUNT  = Ci.nsIMemoryReporter.UNITS_COUNT;
 
 const kUnknown = -1;    // used for _amount if a memory reporter failed
 
@@ -649,10 +649,10 @@ function genMrValueText(aValue)
 function kindToString(aKind)
 {
   switch (aKind) {
-   case KIND_MAPPED: return "(Mapped) ";
-   case KIND_HEAP:   return "(Heap) ";
-   case KIND_OTHER:  return "";
-   default:          return "(???) ";
+   case KIND_NONHEAP: return "(Non-heap) ";
+   case KIND_HEAP:    return "(Heap) ";
+   case KIND_OTHER:   return "";
+   default:           return "(???) ";
   }
 }
 
