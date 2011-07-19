@@ -490,7 +490,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
                    public nsIScriptObjectPrincipal,
-                   public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
+                   public nsIRadioGroupContainer,
                    public nsIApplicationCacheContainer,
                    public nsStubMutationObserver,
                    public nsIDOMDocumentTouch

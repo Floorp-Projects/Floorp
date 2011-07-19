@@ -106,8 +106,8 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
         JS_ALWAYS_TRUE(ValueToECMAInt32(cx, L, &nL));
         JS_ALWAYS_TRUE(ValueToECMAInt32(cx, R, &nR));
     } else {
-        JS_ALWAYS_TRUE(ValueToNumber(cx, L, &dL));
-        JS_ALWAYS_TRUE(ValueToNumber(cx, R, &dR));
+        JS_ALWAYS_TRUE(ToNumber(cx, L, &dL));
+        JS_ALWAYS_TRUE(ToNumber(cx, R, &dR));
     }
 
     switch (op) {

@@ -1494,6 +1494,17 @@ nsDocAccessible::NotifyOfInitialUpdate()
 
   // Build initial tree.
   CacheChildrenInSubtree(this);
+
+  // Fire reorder event after the document tree is constructed. Note, since
+  // this reorder event is processed by parent document then events targeted to
+  // this document may be fired prior to this reorder event. If this is
+  // a problem then consider to keep event processing per tab document.
+  if (!IsRoot()) {
+    nsRefPtr<AccEvent> reorderEvent =
+      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, GetParent(),
+                   eAutoDetect, AccEvent::eCoalesceFromSameSubtree);
+    ParentDocument()->FireDelayedAccessibleEvent(reorderEvent);
+  }
 }
 
 void

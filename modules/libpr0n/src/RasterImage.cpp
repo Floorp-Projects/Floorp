@@ -864,48 +864,6 @@ RasterImage::InternalAddFrame(PRUint32 framenum,
 }
 
 nsresult
-RasterImage::AppendFrame(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-                         PRInt32 aHeight,
-                         gfxASurface::gfxImageFormat aFormat,
-                         PRUint8 **imageData,
-                         PRUint32 *imageLength)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(imageData);
-  NS_ENSURE_ARG_POINTER(imageLength);
-
-  return InternalAddFrame(mFrames.Length(), aX, aY, aWidth, aHeight, aFormat, 
-                          /* aPaletteDepth = */ 0, imageData, imageLength,
-                          /* aPaletteData = */ nsnull, 
-                          /* aPaletteLength = */ nsnull);
-}
-
-nsresult
-RasterImage::AppendPalettedFrame(PRInt32 aX, PRInt32 aY,
-                                 PRInt32 aWidth, PRInt32 aHeight,
-                                 gfxASurface::gfxImageFormat aFormat,
-                                 PRUint8 aPaletteDepth,
-                                 PRUint8 **imageData,
-                                 PRUint32 *imageLength,
-                                 PRUint32 **paletteData,
-                                 PRUint32 *paletteLength)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(imageData);
-  NS_ENSURE_ARG_POINTER(imageLength);
-  NS_ENSURE_ARG_POINTER(paletteData);
-  NS_ENSURE_ARG_POINTER(paletteLength);
-
-  return InternalAddFrame(mFrames.Length(), aX, aY, aWidth, aHeight, aFormat, 
-                          aPaletteDepth, imageData, imageLength,
-                          paletteData, paletteLength);
-}
-
-nsresult
 RasterImage::SetSize(PRInt32 aWidth, PRInt32 aHeight)
 {
   if (mError)
@@ -943,10 +901,12 @@ RasterImage::SetSize(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 nsresult
-RasterImage::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
-                              PRInt32 aWidth, PRInt32 aHeight,
-                              gfxASurface::gfxImageFormat aFormat,
-                              PRUint8 **imageData, PRUint32 *imageLength)
+RasterImage::EnsureFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
+                         PRInt32 aWidth, PRInt32 aHeight,
+                         gfxASurface::gfxImageFormat aFormat,
+                         PRUint8 aPaletteDepth,
+                         PRUint8 **imageData, PRUint32 *imageLength,
+                         PRUint32 **paletteData, PRUint32 *paletteLength)
 {
   if (mError)
     return NS_ERROR_FAILURE;
@@ -954,39 +914,62 @@ RasterImage::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
   NS_ENSURE_ARG_POINTER(imageData);
   NS_ENSURE_ARG_POINTER(imageLength);
   NS_ABORT_IF_FALSE(aFrameNum <= mFrames.Length(), "Invalid frame index!");
+
+  if (aPaletteDepth > 0) {
+    NS_ENSURE_ARG_POINTER(paletteData);
+    NS_ENSURE_ARG_POINTER(paletteLength);
+  }
+
   if (aFrameNum > mFrames.Length())
     return NS_ERROR_INVALID_ARG;
 
   // Adding a frame that doesn't already exist.
   if (aFrameNum == mFrames.Length())
     return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat, 
-                            /* aPaletteDepth = */ 0, imageData, imageLength,
-                            /* aPaletteData = */ nsnull, 
-                            /* aPaletteLength = */ nsnull);
+                            aPaletteDepth, imageData, imageLength,
+                            paletteData, paletteLength);
 
   imgFrame *frame = GetImgFrame(aFrameNum);
   if (!frame)
     return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat, 
-                            /* aPaletteDepth = */ 0, imageData, imageLength,
-                            /* aPaletteData = */ nsnull, 
-                            /* aPaletteLength = */ nsnull);
+                            aPaletteDepth, imageData, imageLength,
+                            paletteData, paletteLength);
 
   // See if we can re-use the frame that already exists.
   nsIntRect rect = frame->GetRect();
   if (rect.x == aX && rect.y == aY && rect.width == aWidth &&
-      rect.height == aHeight && frame->GetFormat() == aFormat) {
-    // We can re-use the frame if it has image data.
+      rect.height == aHeight && frame->GetFormat() == aFormat &&
+      frame->GetPaletteDepth() == aPaletteDepth) {
     frame->GetImageData(imageData, imageLength);
-    if (*imageData) {
+    if (paletteData) {
+      frame->GetPaletteData(paletteData, paletteLength);
+    }
+
+    // We can re-use the frame if it has image data.
+    if (*imageData && paletteData && *paletteData) {
+      return NS_OK;
+    }
+    if (*imageData && !paletteData) {
       return NS_OK;
     }
   }
 
   DeleteImgFrame(aFrameNum);
-  return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat, 
-                          /* aPaletteDepth = */ 0, imageData, imageLength,
-                          /* aPaletteData = */ nsnull, 
-                          /* aPaletteLength = */ nsnull);
+  return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat,
+                          aPaletteDepth, imageData, imageLength,
+                          paletteData, paletteLength);
+}
+
+nsresult
+RasterImage::EnsureFrame(PRUint32 aFramenum, PRInt32 aX, PRInt32 aY,
+                         PRInt32 aWidth, PRInt32 aHeight,
+                         gfxASurface::gfxImageFormat aFormat,
+                         PRUint8** imageData, PRUint32* imageLength)
+{
+  return EnsureFrame(aFramenum, aX, aY, aWidth, aHeight, aFormat,
+                     /* aPaletteDepth = */ 0, imageData, imageLength,
+                     /* aPaletteData = */ nsnull,
+                     /* aPaletteLength = */ nsnull);
 }
 
 void

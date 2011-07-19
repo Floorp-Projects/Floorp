@@ -215,13 +215,15 @@ nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
   // and include transparency to allow for optimization of opaque images
   if (mGIFStruct.images_decoded) {
     // Image data is stored with original depth and palette
-    rv = mImage->AppendPalettedFrame(mGIFStruct.x_offset, mGIFStruct.y_offset,
-                                     mGIFStruct.width, mGIFStruct.height,
-                                     format, aDepth, &mImageData, &imageDataLength,
-                                     &mColormap, &mColormapSize);
+    rv = mImage->EnsureFrame(mGIFStruct.images_decoded,
+                             mGIFStruct.x_offset, mGIFStruct.y_offset,
+                             mGIFStruct.width, mGIFStruct.height,
+                             format, aDepth, &mImageData, &imageDataLength,
+                             &mColormap, &mColormapSize);
   } else {
     // Regardless of depth of input, image is decoded into 24bit RGB
-    rv = mImage->AppendFrame(mGIFStruct.x_offset, mGIFStruct.y_offset,
+    rv = mImage->EnsureFrame(mGIFStruct.images_decoded,
+                             mGIFStruct.x_offset, mGIFStruct.y_offset,
                              mGIFStruct.width, mGIFStruct.height,
                              format, &mImageData, &imageDataLength);
   }

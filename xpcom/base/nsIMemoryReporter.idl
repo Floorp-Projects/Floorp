@@ -247,7 +247,7 @@ interface nsIMemoryReporterManager : nsISupports
 /*
  * Note that this defaults 'process' to "", which is usually what's desired.
  */
-#define NS_MEMORY_REPORTER_IMPLEMENT(_classname, _path, _kind, _units, _amountFunction, _desc) \
+#define NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
     class MemoryReporter_##_classname : public nsIMemoryReporter {                            \
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
@@ -258,7 +258,12 @@ interface nsIMemoryReporterManager : nsISupports
       NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _amountFunction(); return NS_OK; }     \
       NS_IMETHOD GetDescription(nsACString &desc) { desc.Assign(_desc); return NS_OK; } \
     };                                                                                        \
-    NS_IMPL_ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
+    NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
+
+#define NS_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
+        NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _)
+#define NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
+        NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _THREADSAFE_)
 
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
 

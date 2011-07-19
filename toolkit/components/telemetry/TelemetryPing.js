@@ -59,7 +59,7 @@ const MEM_HISTOGRAMS = {
   "explicit/layout/all": "MEMORY_LAYOUT_ALL",
   "explicit/images/content/used/uncompressed":
     "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED",
-  "heap-used": "MEMORY_HEAP_USED",
+  "heap-allocated": "MEMORY_HEAP_ALLOCATED",
   "page-faults-hard": "PAGE_FAULTS_HARD"
 };
 
@@ -186,10 +186,12 @@ function getSimpleMeasurements() {
     // uptime in minutes
     uptime: Math.round((new Date() - si.process) / 60000)
   }
-  for each (let field in ["main", "firstPaint", "sessionRestored"]) {
-    if (!(field in si))
-      continue;
-    ret[field] = si[field] - si.process
+  if (si.process) {
+    for each (let field in ["main", "firstPaint", "sessionRestored"]) {
+      if (!(field in si))
+        continue;
+      ret[field] = si[field] - si.process
+    }
   }
   return ret;
 }

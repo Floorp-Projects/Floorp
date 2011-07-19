@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,6 +38,7 @@
 #ifndef GFX_CONTAINERLAYERD3D10_H
 #define GFX_CONTAINERLAYERD3D10_H
 
+#include "Layers.h"
 #include "LayerManagerD3D10.h"
 
 namespace mozilla {
@@ -71,33 +72,6 @@ public:
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
-};
-
-// This is a bare-bones implementation of a container layer, only
-// enough to contain a shadow "window texture".  This impl doesn't
-// honor the transform/cliprect/etc. when rendering.
-class ShadowContainerLayerD3D10 : public ShadowContainerLayer,
-                                  public LayerD3D10
-{
-public:
-  ShadowContainerLayerD3D10(LayerManagerD3D10 *aManager);
-  ~ShadowContainerLayerD3D10();
-
-  void InsertAfter(Layer* aChild, Layer* aAfter);
-
-  void RemoveChild(Layer* aChild);
-
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface);
-
-  /* LayerD3D10 implementation */
-  virtual LayerD3D10 *GetFirstChildD3D10();
-  virtual Layer* GetLayer() { return this; }
-  virtual void RenderLayer();
-  virtual void Validate();
-  virtual void LayerManagerDestroyed();
-
-private:
-    
 };
 
 } /* layers */

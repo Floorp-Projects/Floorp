@@ -57,7 +57,7 @@
 #include "nsXULPopupManager.h"
 #include "nsEventStateManager.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSUIEvent.h"
