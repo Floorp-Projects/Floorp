@@ -158,8 +158,6 @@ class IonBuilder : public MIRGenerator
     IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                MIRGraph &graph, TypeOracle *oracle);
 
-    static void SetupOpcodeFlags();
-
   public:
     bool build();
 
@@ -208,9 +206,8 @@ class IonBuilder : public MIRGenerator
 
     // Please see the Big Honkin' Comment about how snapshots work in
     // IonBuilder.cpp, near the definition for this function.
-    bool snapshotAfter();
-    bool snapshotBefore();
-    bool snapshot(jsbytecode *pc);
+    bool snapshotAt(MInstruction *ins, jsbytecode *pc);
+    bool snapshotAfter(MInstruction *ins);
 
     bool pushConstant(const Value &v);
     bool jsop_binary(JSOp op);
@@ -223,7 +220,6 @@ class IonBuilder : public MIRGenerator
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
     Vector<LoopInfo, 4, IonAllocPolicy> loops_;
     TypeOracle *oracle;
-    bool sideEffectsOccurred_;
 };
 
 } // namespace ion

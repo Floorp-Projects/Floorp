@@ -60,7 +60,6 @@ namespace ion {
     _(Copy)                                                                 \
     _(Box)                                                                  \
     _(Unbox)                                                                \
-    _(Snapshot)                                                             \
     _(Start)
 
 
