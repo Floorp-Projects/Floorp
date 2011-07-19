@@ -249,20 +249,14 @@ VectorImage::GetCurrentFrameRect(nsIntRect& aRect)
 }
 
 PRUint32
-VectorImage::GetDecodedHeapSize()
+VectorImage::GetDecodedDataSize()
 {
   // XXXdholbert TODO: return num bytes used by helper SVG doc. (bug 590790)
   return sizeof(*this);
 }
 
 PRUint32
-VectorImage::GetDecodedNonheapSize()
-{
-  return 0;
-}
-
-PRUint32
-VectorImage::GetSourceHeapSize()
+VectorImage::GetSourceDataSize()
 {
   // We're not storing the source data -- we just feed that directly to
   // our helper SVG document as we receive it, for it to parse.
