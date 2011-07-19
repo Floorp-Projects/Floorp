@@ -52,7 +52,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsICommandLineRunner.h"
 #include "nsIWindowMediator.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
@@ -191,7 +190,7 @@ private:
 
 #if (MOZ_PLATFORM_MAEMO == 5)
 static nsresult
-GetMostRecentWindow(const PRUnichar* aType, nsIDOMWindowInternal** aWindow)
+GetMostRecentWindow(const PRUnichar* aType, nsIDOMWindow** aWindow)
 {
   nsCOMPtr<nsIWindowMediator> wm = do_GetService("@mozilla.org/appshell/window-mediator;1");
   if (wm)
@@ -234,7 +233,7 @@ OssoSetWindowOrientation(PRBool aPortrait)
   // depending on the current rotation
   // NOTE: We only update the most recent top-level window so this is only
   //       suitable for apps with only one window.
-  nsCOMPtr<nsIDOMWindowInternal> window;
+  nsCOMPtr<nsIDOMWindow> window;
   GetMostRecentWindow(EmptyString().get(), getter_AddRefs(window));
   GtkWidget* widget = WidgetForDOMWindow(window);
   if (widget && widget->window) {
@@ -355,7 +354,7 @@ OssoDbusCallback(const gchar *interface, const gchar *method,
 
   // The "top_application" method just wants us to focus the top-most window.
   if (!strcmp("top_application", method)) {
-    nsCOMPtr<nsIDOMWindowInternal> window;
+    nsCOMPtr<nsIDOMWindow> window;
     GetMostRecentWindow(NS_LITERAL_STRING("").get(), getter_AddRefs(window));
     if (window)
       window->Focus();

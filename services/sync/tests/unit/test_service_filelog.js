@@ -8,10 +8,6 @@ Cu.import("resource://services-sync/log4moz.js");
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 
 function run_test() {
-  if (DISABLE_TESTS_BUG_664090) {
-    return;
-  }
-
   run_next_test();
 }
 

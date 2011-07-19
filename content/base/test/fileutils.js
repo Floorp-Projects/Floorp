@@ -220,6 +220,7 @@ function testSlice(file, size, type, contents, fileType) {
   is(slice.mozSlice(0, 10, "hello/world").type, "hello/world", fileType + " slice-slice hello/world type");
   is(slice.mozSlice(0, 10, "hello/world").size, 10, fileType + " slice-slice hello/world size");
 
+  // Start, end, expected size
   var indexes = [[0, size, size],
                  [0, 1234, 1234],
                  [size-500, size, 500],
@@ -228,6 +229,7 @@ function testSlice(file, size, type, contents, fileType) {
                  [0, 0, 0],
                  [1000, 1000, 0],
                  [size, size, 0],
+                 [undefined, undefined, size],
                  [0, undefined, size],
                  [100, undefined, size-100],
                  [-100, undefined, 100],
@@ -244,7 +246,12 @@ function testSlice(file, size, type, contents, fileType) {
   for (var i = 0; i < indexes.length; ++i) {
     var sliceContents;
     var testName;
-    if (indexes[i][1] == undefined) {
+    if (indexes[i][0] == undefined) {
+      slice = file.mozSlice();
+      sliceContents = contents.slice();
+      testName = fileType + " slice()";
+    }
+    else if (indexes[i][1] == undefined) {
       slice = file.mozSlice(indexes[i][0]);
       sliceContents = contents.slice(indexes[i][0]);
       testName = fileType + " slice(" + indexes[i][0] + ")";

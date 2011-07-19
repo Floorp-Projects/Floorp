@@ -123,7 +123,7 @@
 #  if defined(HAVE_ARM_SIMD)
 #    define MOZILLA_MAY_SUPPORT_ARMV6 1
 #  endif
-#  if defined(HAVE_ARM_SIMD)
+#  if defined(HAVE_ARM_NEON)
 #    define MOZILLA_MAY_SUPPORT_NEON 1
 #  endif
 

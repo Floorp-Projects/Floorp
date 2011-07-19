@@ -23,4 +23,7 @@ function run_test()
   var x = read_file("decodeFromStream-01.json");
   do_check_eq(x["JSON Test Pattern pass3"]["The outermost value"], "must be an object or array.");
   do_check_eq(x["JSON Test Pattern pass3"]["In this test"], "It is an object.");
+
+  x = read_file("decodeFromStream-small.json");
+  do_check_eq(x.toSource(), "({})", "empty object parsed");
 }

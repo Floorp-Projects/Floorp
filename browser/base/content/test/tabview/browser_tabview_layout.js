@@ -82,8 +82,8 @@ function testEmptyGroupItem(contentWindow) {
     }
 
     // Shut down
-    emptyGroupItem.addSubscriber(emptyGroupItem, "close", function() {
-      emptyGroupItem.removeSubscriber(emptyGroupItem, "close");
+    emptyGroupItem.addSubscriber("close", function onClose() {
+      emptyGroupItem.removeSubscriber("close", onClose);
   
       // check the number of groups.
       is(contentWindow.GroupItems.groupItems.length, --groupItemCount,

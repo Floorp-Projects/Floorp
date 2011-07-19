@@ -76,6 +76,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsprobes.h"
 #include "jsproxy.h"
 #include "jsregexp.h"
 #include "jsscope.h"
@@ -506,7 +507,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToNumber(cx, tvr.value(), dp);
+    return ToNumber(cx, tvr.value(), dp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -630,14 +631,13 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 /*
  * Has a new runtime ever been created?  This flag is used to detect unsafe
  * changes to js_CStringsAreUTF8 after a runtime has been created, and to
- * ensure that "first checks" on runtime creation are run only once.
+ * control things that should happen only once across all runtimes.
  */
-#ifdef DEBUG
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
-#endif
 
 JSRuntime::JSRuntime()
-  : gcChunkAllocator(&defaultGCChunkAllocator)
+  : gcChunkAllocator(&defaultGCChunkAllocator),
+    trustedPrincipals_(NULL)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
@@ -666,7 +666,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     }
 
-    atomsCompartment->systemGCChunks = true;
+    atomsCompartment->isSystemCompartment = true;
     atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
 
     if (!js_InitAtomState(this))
@@ -695,8 +695,6 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     if (!InitRuntimeNumberState(this))
         return false;
-    if (!InitRuntimeScriptState(this))
-        return false;
 
     return true;
 }
@@ -724,7 +722,6 @@ JSRuntime::~JSRuntime()
     FinishJIT();
 #endif
 
-    FreeRuntimeScriptState(this);
     FinishRuntimeNumberState(this);
     js_FinishThreads(this);
     js_FinishAtomState(this);
@@ -749,8 +746,11 @@ JSRuntime::~JSRuntime()
 JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes)
 {
-#ifdef DEBUG
     if (!js_NewRuntimeWasCalled) {
+#ifdef MOZ_ETW
+        EventRegisterMozillaSpiderMonkey();
+#endif
+#ifdef DEBUG
         /*
          * This code asserts that the numbers associated with the error names
          * in jsmsg.def are monotonically increasing.  It uses values for the
@@ -775,10 +775,10 @@ JS_NewRuntime(uint32 maxbytes)
     JS_END_MACRO;
 #include "js.msg"
 #undef MSG_DEF
+#endif /* DEBUG */
 
         js_NewRuntimeWasCalled = JS_TRUE;
     }
-#endif /* DEBUG */
 
     void *mem = OffTheBooks::calloc_(sizeof(JSRuntime));
     if (!mem)
@@ -810,6 +810,10 @@ JS_ShutDown(void)
     js_CleanupLocks();
 #endif
     PRMJ_NowShutdown();
+
+#ifdef MOZ_ETW
+    EventUnregisterMozillaSpiderMonkey();
+#endif
 }
 
 JS_PUBLIC_API(void *)
@@ -1519,6 +1523,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
      */
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
+
     assertSameCompartment(cx, obj);
 
     return obj->asGlobal()->initStandardClasses(cx);
@@ -2716,7 +2721,9 @@ JS_PUBLIC_API(JSString *)
 JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length, intN type)
 {
     CHECK_REQUEST(cx);
-    return JSExternalString::new_(cx, chars, length, type, NULL);
+    JSString *s = JSExternalString::new_(cx, chars, length, type, NULL);
+    Probes::createString(cx, s, length);
+    return s;
 }
 
 extern JS_PUBLIC_API(JSString *)
@@ -4152,6 +4159,12 @@ JS_GetSecurityCallbacks(JSContext *cx)
          : cx->runtime->securityCallbacks;
 }
 
+JS_PUBLIC_API(void)
+JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin)
+{
+    rt->setTrustedPrincipals(prin);
+}
+
 JS_PUBLIC_API(JSFunction *)
 JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                JSObject *parent, const char *name)
@@ -4583,8 +4596,9 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 
     /* Read in the whole file, then compile it. */
     if (fp == stdin) {
-        JS_ASSERT(len == 0);
-        len = 8;  /* start with a small buffer, expand as necessary */
+        if (len == 0)
+            len = 8;  /* start with a small buffer, expand as necessary */
+
         int c;
         bool hitEOF = false;
         while (!hitEOF) {
@@ -4611,7 +4625,9 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             return NULL;
 
         int c;
-        while ((c = fast_getc(fp)) != EOF)
+        // The |i < len| is necessary for files that lie about their length,
+        // e.g. /dev/zero and /dev/random.  See bug 669434.
+        while (i < len && (c = fast_getc(fp)) != EOF)
             buf[i++] = (jschar) (unsigned char) c;
     }
 

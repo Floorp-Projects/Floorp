@@ -69,8 +69,8 @@ nsPrintProgress::~nsPrintProgress()
   (void)ReleaseListeners();
 }
 
-/* void openProgressDialog (in nsIDOMWindowInternal parent, in string dialogURL, in nsISupports parameters); */
-NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
+/* void openProgressDialog (in nsIDOMWindow parent, in string dialogURL, in nsISupports parameters); */
+NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
                                                   const char *dialogURL,
                                                   nsISupports *parameters, 
                                                   nsIObserver *openDialogObserver,
@@ -342,8 +342,8 @@ NS_IMETHODIMP nsPrintProgress::ShowProgress(PRInt32 percent)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* [noscript] void setDocShell (in nsIDocShell shell, in nsIDOMWindowInternal window); */
-NS_IMETHODIMP nsPrintProgress::SetDocShell(nsIDocShell *shell, nsIDOMWindowInternal *window)
+/* [noscript] void setDocShell (in nsIDocShell shell, in nsIDOMWindow window); */
+NS_IMETHODIMP nsPrintProgress::SetDocShell(nsIDocShell *shell, nsIDOMWindow *window)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

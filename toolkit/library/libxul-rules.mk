@@ -45,6 +45,12 @@ LOCAL_INCLUDES += \
 
 OS_LIBS += $(LIBICONV)
 
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),Darwin)
+EXTRA_DSO_LDOPTS += -L$(DIST)/lib -ljemalloc
+endif
+endif
+
 DEFINES += \
 	-D_IMPL_NS_COM \
 	-D_IMPL_NS_STRINGAPI \

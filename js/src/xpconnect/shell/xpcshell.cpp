@@ -548,14 +548,6 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     rt = cx->runtime;
     preBytes = rt->gcBytes;
     JS_GC(cx);
-    fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
-           (unsigned long)preBytes, (unsigned long)rt->gcBytes,
-#if defined(XP_UNIX) && !defined(__SYMBIAN32__)
-           (unsigned long)sbrk(0)
-#else
-           0
-#endif
-           );
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
@@ -1758,6 +1750,10 @@ FindObjectPrincipals(JSContext *cx, JSObject *obj)
     return gJSPrincipals;
 }
 
+// defined in nsScriptSecurityManager.cpp
+NS_IMPORT JSPrincipals *
+NS_DefaultObjectPrincipalFinder(JSContext *cx, JSObject *obj);
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1911,7 +1907,7 @@ main(int argc, char **argv, char **envp)
 
         JSSecurityCallbacks *cb = JS_GetRuntimeSecurityCallbacks(rt);
         NS_ASSERTION(cb, "We are assuming that nsScriptSecurityManager::Init() has been run");
-        NS_ASSERTION(!cb->findObjectPrincipals, "Your pigeon is in my hole!");
+        NS_ASSERTION(cb->findObjectPrincipals == NS_DefaultObjectPrincipalFinder, "Your pigeon is in my hole!");
         cb->findObjectPrincipals = FindObjectPrincipals;
 
 #ifdef TEST_TranslateThis

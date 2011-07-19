@@ -62,14 +62,15 @@ nsMathMLFrame::GetMathMLFrameType()
   return eMathMLFrameType_Ordinary;  
 }
 
-// snippet of code used by <mstyle> and <mtable>, which are the only
-// two tags where the displaystyle attribute is allowed by the spec.
+// snippet of code used by <mstyle>, <mtable> and <math> which are the only
+// three tags where the displaystyle attribute is allowed by the spec.
 /* static */ void
 nsMathMLFrame::FindAttrDisplaystyle(nsIContent*         aContent,
                                     nsPresentationData& aPresentationData)
 {
   NS_ASSERTION(aContent->Tag() == nsGkAtoms::mstyle_ ||
-               aContent->Tag() == nsGkAtoms::mtable_, "bad caller");
+               aContent->Tag() == nsGkAtoms::mtable_ ||
+               aContent->Tag() == nsGkAtoms::math, "bad caller");
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::_false, &nsGkAtoms::_true, nsnull};
   // see if the explicit displaystyle attribute is there
@@ -219,6 +220,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
       if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
         aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
       }
+      FindAttrDisplaystyle(content, aPresentationData);
       aPresentationData.mstyle = frame->GetFirstContinuation();
       break;
     }

@@ -9,11 +9,9 @@ function onContentLoaded()
 {
   browser.removeEventListener("load", arguments.callee, true);
 
-  hudId = HUDService.displaysIndex()[0];
-  HUD = HUDService.hudReferences[hudId].HUDBox;
-  jsterm = HUDService.hudReferences[hudId].jsterm;
-  let filterBox = HUD.querySelector(".hud-filter-box");
-  let outputNode = HUD.querySelector(".hud-output-node");
+  let HUD = HUDService.getHudByWindow(content);
+  let jsterm = HUD.jsterm;
+  let outputNode = HUD.outputNode;
 
   let msg = "The unknown CSS property warning is displayed only once";
   let node = outputNode.firstChild;
