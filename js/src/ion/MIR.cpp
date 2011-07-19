@@ -76,7 +76,7 @@ MInstruction::valueHash() const
 {
     HashNumber out = op();
     for (size_t i = 0; i < numOperands(); i++) {
-        uint32 valueNumber = getInput(i)->valueNumber();
+        uint32 valueNumber = getOperand(i)->valueNumber();
         out = valueNumber + (out << 6) + (out << 16) - out;
     }
     return out;
@@ -92,7 +92,7 @@ MInstruction::congruentTo(MInstruction * const &ins) const
         return false;
 
     for (size_t i = 0; i < numOperands(); i++) {
-        if (getInput(i)->valueNumber() != ins->getInput(i)->valueNumber())
+        if (getOperand(i)->valueNumber() != ins->getOperand(i)->valueNumber())
             return false;
     }
 
@@ -117,7 +117,7 @@ MInstruction::printOpcode(FILE *fp)
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
     for (size_t j = 0; j < numOperands(); j++) {
-        getInput(j)->printName(fp);
+        getOperand(j)->printName(fp);
         if (j != numOperands() - 1)
             fprintf(fp, " ");
     }
@@ -151,7 +151,7 @@ MInstruction::removeUse(MUse *prev, MUse *use)
 void
 MInstruction::replaceOperand(MUse *prev, MUse *use, MInstruction *ins)
 {
-    MInstruction *used = getInput(use->index());
+    MInstruction *used = getOperand(use->index());
     if (used == ins)
         return;
 
@@ -171,7 +171,7 @@ MInstruction::replaceOperand(MUseIterator &use, MInstruction *ins)
 void
 MInstruction::replaceOperand(size_t index, MInstruction *ins)
 {
-    MInstruction *old = getInput(index);
+    MInstruction *old = getOperand(index);
     for (MUseIterator uses(old); uses.more(); uses.next()) {
         if (uses->index() == index && uses->ins() == this) {
             replaceOperand(uses.prev(), *uses, ins);
@@ -180,12 +180,6 @@ MInstruction::replaceOperand(size_t index, MInstruction *ins)
     }
 
     JS_NOT_REACHED("could not find use");
-}
-
-void
-MInstruction::setOperand(size_t index, MInstruction *ins)
-{
-    getOperand(index)->setInstruction(ins);
 }
 
 static inline bool
@@ -306,7 +300,7 @@ MCopy::New(MInstruction *ins)
 {
     // Don't create nested copies.
     if (ins->isCopy())
-        ins = ins->toCopy()->getInput(0);
+        ins = ins->toCopy()->getOperand(0);
 
     return new MCopy(ins);
 }
@@ -333,14 +327,13 @@ bool
 MPhi::addInput(MInstruction *ins)
 {
     for (size_t i = 0; i < inputs_.length(); i++) {
-        if (getInput(i) == ins)
+        if (getOperand(i) == ins)
             return true;
     }
 
     ins->addUse(this, inputs_.length());
 
-    MOperand *operand = MOperand::New(ins);
-    if (!inputs_.append(operand))
+    if (!inputs_.append(ins))
         return false;
     return true;
 }
@@ -380,10 +373,10 @@ MBinaryInstruction::adjustForInputs()
     if (specialization() == MIRType_Value)
         return false;
 
-    MIRType lhsActual = getInput(0)->type();
-    MIRType lhsUsedAs = getInput(0)->usedAsType();
-    MIRType rhsActual = getInput(1)->type();
-    MIRType rhsUsedAs = getInput(1)->usedAsType();
+    MIRType lhsActual = getOperand(0)->type();
+    MIRType lhsUsedAs = getOperand(0)->usedAsType();
+    MIRType rhsActual = getOperand(1)->type();
+    MIRType rhsUsedAs = getOperand(1)->usedAsType();
 
     if (HasComplexNumberConversion(lhsActual) ||
         HasComplexNumberConversion(lhsUsedAs) ||
@@ -432,7 +425,7 @@ MSnapshot::MSnapshot(MBasicBlock *block, jsbytecode *pc)
 bool
 MSnapshot::init(MBasicBlock *block)
 {
-    operands_ = block->gen()->allocate<MOperand *>(stackDepth());
+    operands_ = block->gen()->allocate<MInstruction *>(stackDepth());
     if (!operands_)
         return false;
     return true;

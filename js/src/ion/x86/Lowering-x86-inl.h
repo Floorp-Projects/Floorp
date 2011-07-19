@@ -56,7 +56,7 @@ static inline uint32
 VirtualRegisterOfPayload(MInstruction *mir)
 {
     if (mir->isBox()) {
-        MInstruction *inner = mir->toBox()->getInput(0);
+        MInstruction *inner = mir->toBox()->getOperand(0);
         if (!inner->isConstant())
             return inner->id();
     }

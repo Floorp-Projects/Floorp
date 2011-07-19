@@ -212,11 +212,11 @@ Loop::isLoopInvariant(MInstruction *ins)
     for (size_t i = 0; i < ins->numOperands(); i ++) {
 
         // If the operand is in the loop and not loop invariant itself...
-        if (isInLoop(ins->getInput(i)) &&
-            !ins->getInput(i)->isLoopInvariant()) {
+        if (isInLoop(ins->getOperand(i)) &&
+            !ins->getOperand(i)->isLoopInvariant()) {
 
             if (IonSpewEnabled(IonSpew_LICM)) {
-                ins->getInput(i)->printName(IonSpewFile);
+                ins->getOperand(i)->printName(IonSpewFile);
                 fprintf(IonSpewFile, " is in the loop.\n");
             }
 

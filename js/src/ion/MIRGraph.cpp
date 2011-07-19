@@ -493,7 +493,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
     // give every assignment its own unique SSA name. See
     // MBasicBlock::setVariable for more information.
     for (uint32 i = 0; i < stackPosition_; i++) {
-        MInstruction *entryDef = entrySnapshot()->getInput(i);
+        MInstruction *entryDef = entrySnapshot()->getOperand(i);
         MInstruction *exitDef = pred->slots_[i].ins;
 
         // If the entry definition and exit definition do not differ, then
@@ -510,7 +510,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         MUse *use = entryDef->uses();
         MUse *prev = NULL;
         while (use) {
-            JS_ASSERT(use->ins()->getOperand(use->index())->ins() == entryDef);
+            JS_ASSERT(use->ins()->getOperand(use->index()) == entryDef);
 
             // Uses are initially sorted, with the head of the list being the
             // most recently inserted. This ordering is maintained while
@@ -561,7 +561,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             successor->setSlot(i, phi);
 
             // The use replacement should have updated the snapshot.
-            JS_ASSERT(successor->entrySnapshot()->getInput(i) == phi);
+            JS_ASSERT(successor->entrySnapshot()->getOperand(i) == phi);
         }
     }
 

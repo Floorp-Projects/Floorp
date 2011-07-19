@@ -407,7 +407,7 @@ class MBasicBlock : public TempObject
     }
     MInstruction *getEntrySlot(size_t i) const {
         JS_ASSERT(i < numEntrySlots());
-        return entrySnapshot()->getInput(i);
+        return entrySnapshot()->getOperand(i);
     }
 
     LBlock *lir() const {

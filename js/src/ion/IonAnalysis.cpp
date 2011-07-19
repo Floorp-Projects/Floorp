@@ -176,7 +176,7 @@ TypeAnalyzer::populate()
                 MCopy *copy = i->toCopy();
                 MUseIterator uses(copy);
                 while (uses.more())
-                    uses->ins()->replaceOperand(uses, copy->getInput(0));
+                    uses->ins()->replaceOperand(uses, copy->getOperand(0));
                 i = copy->block()->removeAt(i);
                 continue;
             }
@@ -196,7 +196,7 @@ TypeAnalyzer::inspectOperands(MInstruction *ins)
         MIRType required = ins->requiredInputType(i);
         if (required >= MIRType_Value)
             continue;
-        ins->getInput(i)->useAsType(required);
+        ins->getOperand(i)->useAsType(required);
     }
 
     return true;
@@ -235,7 +235,7 @@ TypeAnalyzer::propagateUsedTypes(MInstruction *ins)
     // Propagate the phi's used types to each input.
     MPhi *phi = ins->toPhi();
     for (size_t i = 0; i < phi->numOperands(); i++) {
-        MInstruction *input = phi->getInput(i);
+        MInstruction *input = phi->getOperand(i);
         bool changed = input->addUsedTypes(phi->usedTypes());
         if (changed && (input->isPhi() || ins->isCopy())) {
             // If the set of types on the input changed, and the input will
@@ -315,7 +315,7 @@ TypeAnalyzer::specializePhi(MPhi *phi)
 
     // See if all its inputs can be specialized at their definition.
     for (size_t i = 0; i < phi->numOperands(); i++) {
-        MInstruction *ins = phi->getInput(i);
+        MInstruction *ins = phi->getOperand(i);
         if (ins->type() == usedAs)
             continue;
 

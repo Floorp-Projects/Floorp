@@ -66,7 +66,7 @@ LIRGeneratorX64::visitConstant(MConstant *ins)
 bool
 LIRGeneratorX64::visitBox(MBox *box)
 {
-    MInstruction *opd = box->getInput(0);
+    MInstruction *opd = box->getOperand(0);
 
     // If the operand is a constant, emit near its uses.
     if (opd->isConstant() && !box->emitAtUses())
@@ -82,7 +82,7 @@ LIRGeneratorX64::visitBox(MBox *box)
 bool
 LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 {
-    MInstruction *box = unbox->getInput(0);
+    MInstruction *box = unbox->getOperand(0);
 
     switch (unbox->type()) {
       // Integers, booleans, and strings both need two outputs: the payload
@@ -120,7 +120,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 bool
 LIRGeneratorX64::visitReturn(MReturn *ret)
 {
-    MInstruction *opd = ret->getInput(0);
+    MInstruction *opd = ret->getOperand(0);
     JS_ASSERT(opd->type() == MIRType_Value);
 
     LReturn *ins = new LReturn;
@@ -150,7 +150,7 @@ LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
 {
     MSnapshot *mir = snapshot->mir();
     for (size_t i = 0; i < mir->numOperands(); i++) {
-        MInstruction *ins = mir->getInput(i);
+        MInstruction *ins = mir->getOperand(i);
         LAllocation *a = snapshot->getEntry(i);
         *a = useKeepaliveOrConstant(ins);
     }

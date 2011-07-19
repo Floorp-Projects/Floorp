@@ -152,31 +152,6 @@ class MUseIterator
     inline MUse *unlink();
 };
 
-class MOperand : public TempObject
-{
-    friend class MInstruction;
-
-    MInstruction *ins_;
-
-    MOperand(MInstruction *ins)
-      : ins_(ins)
-    { }
-
-    void setInstruction(MInstruction *ins) {
-        ins_ = ins;
-    }
-
-  public:
-    static MOperand *New(MInstruction *ins)
-    {
-        return new MOperand(ins);
-    }
-
-    MInstruction *ins() const {
-        return ins_;
-    }
-};
-
 // An MInstruction is an SSA name and definition. It has an opcode, a list of
 // operands, and a list of its uses by subsequent instructions.
 class MInstruction
@@ -309,11 +284,8 @@ class MInstruction
     size_t useCount() const;
 
     // Returns the instruction at a given operand.
-    virtual MOperand *getOperand(size_t index) const = 0;
+    virtual MInstruction *getOperand(size_t index) const = 0;
     virtual size_t numOperands() const = 0;
-    inline MInstruction *getInput(size_t index) const {
-        return getOperand(index)->ins();
-    }
 
     // Returns the input type this instruction expects.
     virtual MIRType requiredInputType(size_t index) const {
@@ -372,7 +344,7 @@ class MInstruction
     // Adds a use from a node that is being recycled during operand
     // replacement.
     void addUse(MUse *use) {
-        JS_ASSERT(use->ins()->getInput(use->index()) == this);
+        JS_ASSERT(use->ins()->getOperand(use->index()) == this);
         use->setNext(uses_);
         uses_ = use;
     }
@@ -428,12 +400,11 @@ class MInstruction
 
   protected:
     // Sets a raw operand; instruction implementation dependent.
-    virtual void setOperand(size_t index, MOperand *operand) = 0;
-    void setOperand(size_t index, MInstruction *ins);
+    virtual void setOperand(size_t index, MInstruction *operand) = 0;
 
     // Initializes an operand for the first time.
     void initOperand(size_t index, MInstruction *ins) {
-        setOperand(index, MOperand::New(ins));
+        setOperand(index, ins);
         ins->addUse(this, index);
     }
 
@@ -454,14 +425,14 @@ template <size_t Arity>
 class MAryInstruction : public MInstruction
 {
   protected:
-    FixedArityList<MOperand *, Arity> operands_;
+    FixedArityList<MInstruction *, Arity> operands_;
 
-    void setOperand(size_t index, MOperand *operand) {
+    void setOperand(size_t index, MInstruction *operand) {
         operands_[index] = operand;
     }
 
   public:
-    MOperand *getOperand(size_t index) const {
+    MInstruction *getOperand(size_t index) const {
         return operands_[index];
     }
     size_t numOperands() const {
@@ -565,15 +536,15 @@ class MControlInstruction : public MInstruction
 template <size_t Arity>
 class MAryControlInstruction : public MControlInstruction
 {
-    FixedArityList<MOperand *, Arity> operands_;
+    FixedArityList<MInstruction *, Arity> operands_;
 
   protected:
-    void setOperand(size_t index, MOperand *operand) {
+    void setOperand(size_t index, MInstruction *operand) {
         operands_[index] = operand;
     }
 
   public:
-    MOperand *getOperand(size_t index) const {
+    MInstruction *getOperand(size_t index) const {
         return operands_[index];
     }
     size_t numOperands() const {
@@ -743,7 +714,7 @@ class MUnbox : public MUnaryInstruction
     }
 
     MInstruction *rewrittenDef() const {
-        return getInput(0);
+        return getOperand(0);
     }
 };
 
@@ -830,7 +801,7 @@ class MAdd : public MBinaryInstruction
 
 class MPhi : public MInstruction
 {
-    js::Vector<MOperand *, 2, IonAllocPolicy> inputs_;
+    js::Vector<MInstruction *, 2, IonAllocPolicy> inputs_;
     uint32 slot_;
 
     MPhi(uint32 slot)
@@ -840,7 +811,7 @@ class MPhi : public MInstruction
     }
 
   protected:
-    void setOperand(size_t index, MOperand *operand) {
+    void setOperand(size_t index, MInstruction *operand) {
         inputs_[index] = operand;
     }
 
@@ -848,7 +819,7 @@ class MPhi : public MInstruction
     INSTRUCTION_HEADER(Phi);
     static MPhi *New(uint32 slot);
 
-    MOperand *getOperand(size_t index) const {
+    MInstruction *getOperand(size_t index) const {
         return inputs_[index];
     }
     size_t numOperands() const {
@@ -870,7 +841,7 @@ class MSnapshot : public MInstruction
 {
     friend class MBasicBlock;
 
-    MOperand **operands_;
+    MInstruction **operands_;
     uint32 stackDepth_;
     jsbytecode *pc_;
 
@@ -879,7 +850,7 @@ class MSnapshot : public MInstruction
     void inherit(MBasicBlock *state);
 
   protected:
-    void setOperand(size_t index, MOperand *operand) {
+    void setOperand(size_t index, MInstruction *operand) {
         JS_ASSERT(index < stackDepth_);
         operands_[index] = operand;
     }
@@ -896,7 +867,7 @@ class MSnapshot : public MInstruction
     size_t numOperands() const {
         return stackDepth_;
     }
-    MOperand *getOperand(size_t index) const {
+    MInstruction *getOperand(size_t index) const {
         JS_ASSERT(index < stackDepth_);
         return operands_[index];
     }
