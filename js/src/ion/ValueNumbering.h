@@ -45,9 +45,6 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 
-// FIXME(671442) this should be an option
-#define ION_GVN_PESSIMISTIC false
-
 namespace js {
 namespace ion {
 
@@ -93,7 +90,7 @@ class ValueNumberer
     bool computeValueNumbers();
 
   public:
-    ValueNumberer(MIRGraph &graph, bool pessimistic);
+    ValueNumberer(MIRGraph &graph, bool optimistic);
     bool analyze();
 };
 
