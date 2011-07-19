@@ -91,6 +91,8 @@ class MoveGroupResolver
         { }
     };
 
+    typedef InlineList<MoveGroupResolver::PendingMove>::iterator PendingMoveIterator;
+
   private:
     // Moves that are definitely unblocked (constants to registers). These are
     // emitted last.
