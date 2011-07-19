@@ -400,10 +400,10 @@ MBitOr::New(MDefinition *left, MDefinition *right)
     return new MBitOr(left, right);
 }
 
-MBitXOr *
-MBitXOr::New(MDefinition *left, MDefinition *right)
+MBitXor *
+MBitXor::New(MDefinition *left, MDefinition *right)
 {
-    return new MBitXOr(left, right);
+    return new MBitXor(left, right);
 }
 
 MSnapshot *
