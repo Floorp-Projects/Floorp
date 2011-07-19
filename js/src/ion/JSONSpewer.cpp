@@ -219,7 +219,7 @@ JSONSpewer::spewMIR(MIRGraph *mir)
 
             beginListProperty("inputs");
             for (size_t i = 0; i < ins->numOperands(); i++)
-                integerValue(ins->getInput(i)->id());
+                integerValue(ins->getOperand(i)->id());
             endList();
 
             beginListProperty("uses");

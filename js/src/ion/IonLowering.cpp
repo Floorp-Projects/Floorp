@@ -145,7 +145,7 @@ LIRGenerator::visitGoto(MGoto *ins)
 bool
 LIRGenerator::visitTest(MTest *test)
 {
-    MInstruction *opd = test->getInput(0);
+    MInstruction *opd = test->getOperand(0);
     MBasicBlock *ifTrue = test->ifTrue();
     MBasicBlock *ifFalse = test->ifFalse();
 
@@ -190,8 +190,8 @@ ReorderCommutative(MInstruction **lhsp, MInstruction **rhsp)
 bool
 LIRGenerator::doBitOp(JSOp op, MInstruction *ins)
 {
-    MInstruction *lhs = ins->getInput(0);
-    MInstruction *rhs = ins->getInput(1);
+    MInstruction *lhs = ins->getOperand(0);
+    MInstruction *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
         ReorderCommutative(&lhs, &rhs);
@@ -224,8 +224,8 @@ LIRGenerator::visitBitXOr(MBitXOr *ins)
 bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
-    MInstruction *lhs = ins->getInput(0);
-    MInstruction *rhs = ins->getInput(1);
+    MInstruction *lhs = ins->getOperand(0);
+    MInstruction *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
         ReorderCommutative(&lhs, &rhs);
@@ -260,7 +260,7 @@ LIRGenerator::lowerPhi(MPhi *ins)
     if (!phi)
         return false;
     for (size_t i = 0; i < ins->numOperands(); i++) {
-        MInstruction *opd = ins->getInput(i);
+        MInstruction *opd = ins->getOperand(i);
         phi->setOperand(i, LUse(opd->id(), LUse::ANY));
     }
     phi->setDef(0, LDefinition(ins->id(), LDefinition::TypeFrom(ins->type())));
@@ -369,7 +369,7 @@ LIRGenerator::visitBlock(MBasicBlock *block)
         uint32 position = block->positionInPhiSuccessor();
         for (size_t i = 0; i < successor->numPhis(); i++) {
             MPhi *phi = successor->getPhi(i);
-            MInstruction *opd = phi->getInput(position);
+            MInstruction *opd = phi->getOperand(position);
             if (opd->emitAtUses() && !opd->id()) {
                 if (!ensureDefined(opd))
                     return false;
