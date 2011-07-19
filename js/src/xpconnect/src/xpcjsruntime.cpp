@@ -46,6 +46,7 @@
 
 #include "jsgcchunk.h"
 #include "nsIMemoryReporter.h"
+#include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
 
@@ -1320,6 +1321,14 @@ private:
                         if ('/' == *cur) {
                             *cur = '\\';
                         }
+                    }
+                    // If it's the system compartment, append the address.
+                    // This means that multiple system compartments (and there
+                    // can be many) can be distinguished.
+                    if (c->isSystemCompartment) {
+                        static const int maxLength = 31;   // ample; 64-bit address max is 18 chars
+                        nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                        name.Append(address);
                     }
                 } else {
                     name = NS_LITERAL_CSTRING("null-codebase");
