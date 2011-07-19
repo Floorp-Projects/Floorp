@@ -235,9 +235,7 @@ ValueNumberer::eliminateRedundancies()
             IonSpew(IonSpew_GVN, "instruction %d is dominated by instruction %d (from block %d)",
                     ins->id(), dom->id(), dom->block()->id());
 
-            MUseIterator uses(ins);
-            while (uses.more())
-                uses->node()->replaceOperand(uses, dom);
+            ins->replaceAllUsesWith(dom);
 
             JS_ASSERT(ins->useCount() == 0);
             JS_ASSERT(ins->block() == block);

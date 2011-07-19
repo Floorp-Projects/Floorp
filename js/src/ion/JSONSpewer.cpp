@@ -223,11 +223,8 @@ JSONSpewer::spewMIR(MIRGraph *mir)
             endList();
 
             beginListProperty("uses");
-            for (MUseIterator use(*ins); use.more(); use.next()) {
-                if (!use->node()->isDefinition())
-                    continue;
-                integerValue(use->node()->toDefinition()->id());
-            }
+            for (MUseDefIterator use(*ins); use; use++)
+                integerValue(use.def()->id());
             endList();
 
             endObject();
