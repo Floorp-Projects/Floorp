@@ -400,19 +400,26 @@ let UI = {
 
     if (this._activeTab) {
       this._activeTab.makeDeactive();
-      this._activeTab.removeSubscriber(this, "close");
+      this._activeTab.removeSubscriber("close", this._onActiveTabClosed);
     }
+
     this._activeTab = tabItem;
 
     if (this._activeTab) {
-      let self = this;
-      this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
-        if (self._activeTab == closedTabItem)
-          self._setActiveTab(null);
-      });
-
+      this._activeTab.addSubscriber("close", this._onActiveTabClosed);
       this._activeTab.makeActive();
     }
+  },
+
+  // ----------
+  // Function: _onActiveTabClosed
+  // Handles when the currently active tab gets closed.
+  //
+  // Parameters:
+  //  - the <TabItem> that is closed
+  _onActiveTabClosed: function UI__onActiveTabClosed(tabItem){
+    if (UI._activeTab == tabItem)
+      UI._setActiveTab(null);
   },
 
   // ----------
@@ -436,6 +443,13 @@ let UI = {
           this._setActiveTab(activeTab);
       }
     }
+  },
+
+  // ----------
+  // Function: clearActiveTab
+  // Sets the active tab to 'null'.
+  clearActiveTab: function UI_clearActiveTab() {
+    this._setActiveTab(null);
   },
 
   // ----------
@@ -470,7 +484,6 @@ let UI = {
 
     var self = this;
     var currentTab = this._currentTab;
-    var item = null;
 
     this._reorderTabItemsOnShow.forEach(function(groupItem) {
       groupItem.reorderTabItemsBasedOnTabOrder();
@@ -495,7 +508,7 @@ let UI = {
     Storage.saveVisibilityData(gWindow, "true");
 
     if (zoomOut && currentTab && currentTab._tabViewTabItem) {
-      item = currentTab._tabViewTabItem;
+      let item = currentTab._tabViewTabItem;
       // If there was a previous currentTab we want to animate
       // its thumbnail (canvas) for the zoom out.
       // Note that we start the animation on the chrome thread.
@@ -516,6 +529,7 @@ let UI = {
         TabItems.resumePainting();
       });
     } else {
+      self.clearActiveTab();
       dispatchEvent(event);
 
       // Flush pending updates

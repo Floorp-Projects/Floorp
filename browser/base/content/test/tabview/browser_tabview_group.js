@@ -37,8 +37,8 @@ function testEmptyGroupItem(contentWindow) {
   is(contentWindow.GroupItems.groupItems.length, ++groupItemCount,
      "The number of groups is increased by 1");
 
-  emptyGroupItem.addSubscriber(emptyGroupItem, "close", function() {
-    emptyGroupItem.removeSubscriber(emptyGroupItem, "close");
+  emptyGroupItem.addSubscriber("close", function onClose() {
+    emptyGroupItem.removeSubscriber("close", onClose);
 
     // check the number of groups.
     is(contentWindow.GroupItems.groupItems.length, --groupItemCount,
@@ -75,12 +75,12 @@ function testGroupItemWithTabItem(contentWindow) {
     ok(tabItem, "Tab item exists");
 
     let tabItemClosed = false;
-    tabItem.addSubscriber(tabItem, "close", function() {
-      tabItem.removeSubscriber(tabItem, "close");
+    tabItem.addSubscriber("close", function onClose() {
+      tabItem.removeSubscriber("close", onClose);
       tabItemClosed = true;
     });
-    tabItem.addSubscriber(tabItem, "tabRemoved", function() {
-      tabItem.removeSubscriber(tabItem, "tabRemoved");
+    tabItem.addSubscriber("tabRemoved", function onTabRemoved() {
+      tabItem.removeSubscriber("tabRemoved", onTabRemoved);
 
       ok(tabItemClosed, "The tab item is closed");
       is(groupItem.getChildren().length, --tabItemCount,

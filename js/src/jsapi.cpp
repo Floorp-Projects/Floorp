@@ -109,6 +109,10 @@
 #include "jsxml.h"
 #endif
 
+#ifdef JS_METHODJIT
+#include "ion/Ion.h"
+#endif
+
 using namespace js;
 using namespace js::gc;
 
@@ -783,6 +787,11 @@ JS_NewRuntime(uint32 maxbytes)
     void *mem = OffTheBooks::calloc_(sizeof(JSRuntime));
     if (!mem)
         return NULL;
+
+#if defined(JS_METHODJIT) && defined(JS_ION)
+    if (!ion::InitializeIon())
+        return NULL;
+#endif
 
     JSRuntime *rt = new (mem) JSRuntime();
     if (!rt->init(maxbytes)) {

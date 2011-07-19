@@ -83,6 +83,7 @@ namespace X86Registers {
         r14,
         r15
 #endif
+        ,invalid_reg
     } RegisterID;
 
     typedef enum {
@@ -94,15 +95,28 @@ namespace X86Registers {
         xmm5,
         xmm6,
         xmm7
+#if WTF_CPU_X86_64
+       ,xmm8,
+        xmm9,
+        xmm10,
+        xmm11,
+        xmm12,
+        xmm13,
+        xmm14,
+        xmm15
+#endif
+       ,invalid_xmm
     } XMMRegisterID;
 
     static const char* nameFPReg(XMMRegisterID fpreg)
     {
-        static const char* xmmnames[8]
+        static const char* xmmnames[16]
           = { "%xmm0", "%xmm1", "%xmm2", "%xmm3",
-              "%xmm4", "%xmm5", "%xmm6", "%xmm7" };
+              "%xmm4", "%xmm5", "%xmm6", "%xmm7",
+              "%xmm8", "%xmm9", "%xmm10", "%xmm11",
+              "%xmm12", "%xmm13", "%xmm14", "%xmm15" };
         int off = (XMMRegisterID)fpreg - (XMMRegisterID)xmm0;
-        return (off < 0 || off > 7) ? "%xmm?" : xmmnames[off];
+        return (off < 0 || off > 15) ? "%xmm?" : xmmnames[off];
     }
 
     static const char* nameIReg(int szB, RegisterID reg)
@@ -328,12 +342,16 @@ public:
         {
         }
 
-    private:
         JmpSrc(int offset)
             : m_offset(offset)
         {
         }
 
+        int offset() const {
+            return m_offset;
+        }
+
+    private:
         int m_offset;
     };
     
@@ -350,14 +368,17 @@ public:
         bool isUsed() const { return m_used; }
         void used() { m_used = true; }
         bool isValid() const { return m_offset != -1; }
-    private:
+
         JmpDst(int offset)
             : m_offset(offset)
             , m_used(false)
         {
             ASSERT(m_offset == offset);
         }
-
+        int offset() const {
+            return m_offset;
+        }
+    private:
         signed int m_offset : 31;
         bool m_used : 1;
     };
@@ -438,7 +459,9 @@ public:
 
     void addl_mr(int offset, RegisterID base, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "add        %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(4,base), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_ADD_GvEv, dst, base, offset);
     }
 
@@ -532,7 +555,9 @@ public:
 
     void andl_mr(int offset, RegisterID base, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "andl       %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(4,base), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_AND_GvEv, dst, base, offset);
     }
 
@@ -2335,6 +2360,24 @@ public:
     // code has been finalized it is (platform support permitting) within a non-
     // writable region of memory; to modify the code in an execute-only execuable
     // pool the 'repatch' and 'relink' methods should be used.
+    
+    // Like Lua's emitter, we thread jump lists through the unpatched target
+    // field, which will get fixed up when the label (which has a pointer to
+    // the head of the jump list) is bound.
+    bool nextJump(const JmpSrc& from, JmpSrc* next)
+    {
+        char* code = reinterpret_cast<char*>(m_formatter.data());
+        int32 offset = getInt32(code + from.m_offset);
+        if (offset == -1)
+            return false;
+        *next = JmpSrc(offset);
+        return true;
+    }
+    void setNextJump(const JmpSrc& from, const JmpSrc &to)
+    {
+        char* code = reinterpret_cast<char*>(m_formatter.data());
+        setInt32(code + from.m_offset, to.m_offset);
+    }
 
     void linkJump(JmpSrc from, JmpDst to)
     {
@@ -2493,6 +2536,10 @@ private:
         reinterpret_cast<void**>(where)[-1] = value;
     }
 
+    static int32_t getInt32(void* where)
+    {
+        return reinterpret_cast<int32_t*>(where)[-1];
+    }
     static void setInt32(void* where, int32_t value)
     {
         reinterpret_cast<int32_t*>(where)[-1] = value;

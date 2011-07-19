@@ -68,8 +68,6 @@
 #include "prefapi_private_data.h"
 #include "PrefTuple.h"
 
-#include "nsITimelineService.h"
-
 #include "mozilla/Omnijar.h"
 #include "nsZipArchive.h"
 
@@ -810,14 +808,6 @@ Preferences::WritePrefFile(nsIFile* aFile)
 static nsresult openPrefFile(nsIFile* aFile)
 {
   nsCOMPtr<nsIInputStream> inStr;
-
-#if MOZ_TIMELINE
-  {
-    nsCAutoString str;
-    aFile->GetNativePath(str);
-    NS_TIMELINE_MARK_FUNCTION1("load pref file", str.get());
-  }
-#endif
 
   nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
   if (NS_FAILED(rv)) 

@@ -79,15 +79,10 @@ if (params.closeWhenDone) {
   TestRunner.onComplete = goQuitApplication;
 }
 
-// hide the test results table if MOZ_HIDE_RESULTS_TABLE=1 was used
-if (params.hideResultsTable) {
-  document.documentElement.classList.add("hide-results-table");
-}
-
 // logFile to write our results
 if (params.logFile) {
-  MozillaFileLogger.init(params.logFile);
-  TestRunner.logger.addListener("mozLogger", fileLevel + "", MozillaFileLogger.getLogCallback());
+  var spl = new SpecialPowersLogger(params.logFile);
+  TestRunner.logger.addListener("mozLogger", fileLevel + "", spl.getLogCallback());
 }
 
 // if we get a quiet param, don't log to the console
