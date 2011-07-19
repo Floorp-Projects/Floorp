@@ -49,37 +49,53 @@ namespace JSC {
 namespace js {
 namespace ion {
 
-class IonCode
+class IonCode : public gc::Cell
 {
     uint8 *code_;
-    size_t size_;
+    uint32 size_;
     JSC::ExecutablePool *pool_;
+    uint32 padding_;
 
-  public:
     IonCode()
       : code_(NULL),
         pool_(NULL)
     { }
-    IonCode(uint8 *code, size_t size, JSC::ExecutablePool *pool)
+    IonCode(uint8 *code, uint32 size, JSC::ExecutablePool *pool)
       : code_(code),
         size_(size),
         pool_(pool)
     { }
 
+  public:
     uint8 *code() const {
         return code_;
     }
-    size_t size() const {
+    uint32 size() const {
         return size_;
     }
-    void release();
+    void finalize(JSContext *cx);
+
+    // Allocates a new IonCode object which will be managed by the GC. If no
+    // object can be allocated, NULL is returned. On failure, |pool| is
+    // automatically released, so the code may be freed.
+    static IonCode *New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool);
 };
+
+#define ION_DISABLED_SCRIPT ((IonScript *)0x1)
 
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
 {
-    IonCode method;
+    IonCode *method;
 
+  private:
+    void trace(JSTracer *trc, JSScript *script);
+
+  public:
+    static void Trace(JSTracer *trc, JSScript *script) {
+        if (script->ion && script->ion != ION_DISABLED_SCRIPT)
+            script->ion->trace(trc, script);
+    }
     static void Destroy(JSContext *cx, JSScript *script);
 };
 
