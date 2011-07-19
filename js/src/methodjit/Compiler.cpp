@@ -1522,12 +1522,8 @@ mjit::Compiler::generateMethod()
         // VMFrame::fp to the correct fp for the entry point. We need to copy
         // that value here to FpReg so that FpReg also has the correct sp.
         // Otherwise, we would simply be using a stale FpReg value.
-        // Additionally, we check the interrupt flag to allow interrupting
-        // deeply nested exception handling.
-        if (op == JSOP_ENTERBLOCK && analysis->getCode(PC).exceptionEntry) {
+        if (op == JSOP_ENTERBLOCK && analysis->getCode(PC).exceptionEntry)
             masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
-            interruptCheckHelper();
-        }
 
         if (trap) {
             prepareStubCall(Uses(0));
