@@ -133,10 +133,9 @@ MBasicBlock::init()
     slots_ = gen()->allocate<StackSlot>(gen()->nslots());
     if (!slots_)
         return false;
-    MSnapshot *snapshot = new MSnapshot(this, pc());
-    if (!snapshot->init(this))
+    entrySnapshot_ = new MSnapshot(this, pc());
+    if (!entrySnapshot_->init(this))
         return false;
-    add(snapshot);
     return true;
 }
 

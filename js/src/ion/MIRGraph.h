@@ -400,7 +400,7 @@ class MBasicBlock : public TempObject
     MDefinition *getSlot(uint32 index);
 
     MSnapshot *entrySnapshot() const {
-        return instructions_.begin()->toSnapshot();
+        return entrySnapshot_;
     }
     size_t numEntrySlots() const {
         return entrySnapshot()->numOperands();
@@ -443,6 +443,7 @@ class MBasicBlock : public TempObject
     uint32 id_;
     LBlock *lir_;
     MStart *start_;
+    MSnapshot *entrySnapshot_;
     MBasicBlock *successorWithPhis_;
     uint32 positionInPhiSuccessor_;
     Kind kind_;

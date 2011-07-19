@@ -86,6 +86,7 @@ class MBasicBlock;
 class MUse;
 class MIRGraph;
 class MUseIterator;
+class MSnapshot;
 
 // A node is an entry in the MIR graph. It has two kinds:
 //   MInstruction: an instruction which appears in the IR stream.
@@ -96,11 +97,19 @@ class MUseIterator;
 // nodes holding such a reference (its use chain).
 class MNode : public TempObject
 {
+  protected:
+    MBasicBlock *block_;    // Containing basic block.
+
   public:
     enum Kind {
         Definition,
         Snapshot
     };
+
+    MNode() : block_(NULL)
+    { }
+    MNode(MBasicBlock *block) : block_(block)
+    { }
 
     virtual Kind kind() const = 0;
 
@@ -114,9 +123,10 @@ class MNode : public TempObject
     bool isSnapshot() const {
         return kind() == Snapshot;
     }
-
-    // Returns the basic block this node is in.
-    virtual MBasicBlock *block() const = 0;
+    MBasicBlock *block() const {
+        JS_ASSERT(block_);
+        return block_;
+    }
 
     // Replaces an operand, taking care to update use chains. No memory is
     // allocated; the existing data structures are re-linked.
@@ -129,6 +139,9 @@ class MNode : public TempObject
   protected:
     // Sets a raw operand, ignoring updating use information.
     virtual void setOperand(size_t index, MDefinition *operand) = 0;
+
+    // Initializes an operand for the first time.
+    inline void initOperand(size_t index, MDefinition *ins);
 };
 
 // Represents a use of a node.
@@ -213,7 +226,6 @@ class MDefinition : public MNode
     };
 
   private:
-    MBasicBlock *block_;    // Containing basic block.
     MUse *uses_;            // Use chain.
     uint32 id_;             // Instruction ID, which after block re-ordering
                             // is sorted within a basic block.
@@ -244,8 +256,7 @@ class MDefinition : public MNode
 
   public:
     MDefinition()
-      : block_(NULL),
-        uses_(NULL),
+      : uses_(NULL),
         id_(0),
         valueNumber_(0),
         resultType_(MIRType_None),
@@ -307,10 +318,6 @@ class MDefinition : public MNode
         return hasFlags(LOOP_INVARIANT);
     }
 
-    MBasicBlock *block() const {
-        JS_ASSERT(block_);
-        return block_;
-    }
     MIRType type() const {
         return resultType_;
     }
@@ -375,13 +382,13 @@ class MDefinition : public MNode
         setFlags(EMIT_AT_USES);
     }
 
-    void addUse(MDefinition *ins, size_t index) {
-        uses_ = MUse::New(uses_, ins, index);
+    void addUse(MNode *node, size_t index) {
+        uses_ = MUse::New(uses_, node, index);
     }
 
     // Adds a use from a node that is being recycled during operand
     // replacement.
-    void addUse(MUse *use) {
+    void linkUse(MUse *use) {
         JS_ASSERT(use->node()->getOperand(use->index()) == this);
         use->setNext(uses_);
         uses_ = use;
@@ -439,12 +446,6 @@ class MDefinition : public MNode
         return isPhi();
     }
 
-    // Initializes an operand for the first time.
-    void initOperand(size_t index, MDefinition *ins) {
-        setOperand(index, ins);
-        ins->addUse(this, index);
-    }
-
     void setResultType(MIRType type) {
         resultType_ = type;
     }
@@ -456,8 +457,21 @@ class MInstruction
   : public MDefinition,
     public InlineListNode<MInstruction>
 {
+    MSnapshot *snapshot_;
+
   public:
+    MInstruction() : snapshot_(NULL)
+    { }
+
     virtual bool accept(MInstructionVisitor *visitor) = 0;
+
+    void setSnapshot(MSnapshot *snapshot) {
+        JS_ASSERT(!snapshot_);
+        snapshot_ = snapshot;
+    }
+    MSnapshot *snapshot() const {
+        return snapshot_;
+    }
 };
 
 #define INSTRUCTION_HEADER(opcode)                                          \
@@ -884,7 +898,7 @@ class MPhi : public MDefinition
 // A snapshot contains the information needed to reconstruct the interpreter
 // state from a position in the JIT. See the big comment near snapshot() in
 // IonBuilder.cpp.
-class MSnapshot : public MInstruction
+class MSnapshot : public MNode
 {
     friend class MBasicBlock;
 
@@ -903,14 +917,11 @@ class MSnapshot : public MInstruction
     }
 
   public:
-    INSTRUCTION_HEADER(Snapshot);
     static MSnapshot *New(MBasicBlock *block, jsbytecode *pc);
 
-    void printOpcode(FILE *fp);
-    MIRType requiredInputType(size_t index) const {
-        return MIRType_Any;
+    MNode::Kind kind() const {
+        return MNode::Snapshot;
     }
-
     size_t numOperands() const {
         return stackDepth_;
     }
@@ -924,9 +935,6 @@ class MSnapshot : public MInstruction
     uint32 stackDepth() const {
         return stackDepth_;
     }
-
-    HashNumber valueHash() const;
-    bool congruentTo(MDefinition * const &ins) const;
 };
 
 #undef INSTRUCTION_HEADER
@@ -967,6 +975,12 @@ MInstruction *MDefinition::toInstruction()
 {
     JS_ASSERT(!isPhi());
     return (MInstruction *)this;
+}
+
+void MNode::initOperand(size_t index, MDefinition *ins)
+{
+    setOperand(index, ins);
+    ins->addUse(this, index);
 }
 
 } // namespace ion

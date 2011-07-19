@@ -295,15 +295,6 @@ LIRGenerator::visitReturn(MReturn *ins)
     return false;
 }
 
-bool
-LIRGenerator::visitSnapshot(MSnapshot *snapshot)
-{
-    JS_ASSERT(!snapshot->inWorklist());
-    last_snapshot_ = snapshot;
-    last_snapshot_->setInWorklist();
-    return true;
-}
-
 void
 LIRGenerator::rewriteDefsInSnapshots(MInstruction *ins, MDefinition *old)
 {
@@ -330,6 +321,8 @@ LIRGenerator::visitInstruction(MInstruction *ins)
         rewriteDefsInSnapshots(ins, ins->rewrittenDef());
     if (!ins->accept(this))
         return false;
+    if (ins->snapshot())
+        last_snapshot_ = ins->snapshot();
     if (gen->errored())
         return false;
 #ifdef DEBUG
