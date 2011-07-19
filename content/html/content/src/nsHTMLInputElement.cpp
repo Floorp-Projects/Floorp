@@ -1854,22 +1854,8 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled
   aVisitor.mCanHandle = PR_FALSE;
-  if (IsDisabled()) {
+  if (IsElementDisabledForEvents(aVisitor.mEvent->message, GetPrimaryFrame())) {
     return NS_OK;
-  }
-
-  // For some reason or another we also need to check if the style shows us
-  // as disabled.
-  {
-    nsIFrame* frame = GetPrimaryFrame();
-    if (frame) {
-      const nsStyleUserInterface* uiStyle = frame->GetStyleUserInterface();
-
-      if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-          uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
-        return NS_OK;
-      }
-    }
   }
 
   // Initialize the editor if needed.

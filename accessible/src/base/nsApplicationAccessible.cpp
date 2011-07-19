@@ -133,13 +133,6 @@ nsApplicationAccessible::Description(nsString &aDescription)
   aDescription.Truncate();
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetKeyboardShortcut(nsAString &aKeyboardShortcut)
-{
-  aKeyboardShortcut.Truncate();
-  return NS_OK;
-}
-
 PRUint64
 nsApplicationAccessible::State()
 {
