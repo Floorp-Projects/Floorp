@@ -157,7 +157,7 @@ MNode::replaceOperand(MUse *prev, MUse *use, MDefinition *ins)
 
     used->removeUse(prev, use);
     setOperand(use->index(), ins);
-    ins->addUse(use);
+    ins->linkUse(use);
 }
 
 void
@@ -417,7 +417,8 @@ MSnapshot::New(MBasicBlock *block, jsbytecode *pc)
 }
 
 MSnapshot::MSnapshot(MBasicBlock *block, jsbytecode *pc)
-  : stackDepth_(block->stackDepth()),
+  : MNode(block),
+    stackDepth_(block->stackDepth()),
     pc_(pc)
 {
 }
@@ -438,20 +439,3 @@ MSnapshot::inherit(MBasicBlock *block)
         initOperand(i, block->getSlot(i));
 }
 
-void
-MSnapshot::printOpcode(FILE *fp)
-{
-    PrintOpcodeName(fp, op());
-}
-
-HashNumber
-MSnapshot::valueHash() const
-{
-    return id();
-}
-
-bool
-MSnapshot::congruentTo(MDefinition *const &ins) const
-{
-    return ins->id() == id();
-}

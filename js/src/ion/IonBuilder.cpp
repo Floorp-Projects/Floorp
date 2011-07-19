@@ -59,22 +59,10 @@ IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAll
                        MIRGraph &graph, TypeOracle *oracle)
   : MIRGenerator(temp, script, fun, graph),
     cx(cx),
-    oracle(oracle),
-    sideEffectsOccurred_(false)
+    oracle(oracle)
 {
     pc = script->code;
     atoms = script->atomMap.vector;
-}
-
-static bool SnapshotBefore[256];
-
-void
-IonBuilder::SetupOpcodeFlags()
-{
-    SnapshotBefore[JSOP_BITAND] = true;
-    SnapshotBefore[JSOP_BITOR] = true;
-    SnapshotBefore[JSOP_BITXOR] = true;
-    SnapshotBefore[JSOP_ADD] = true;
 }
 
 static inline int32
@@ -198,7 +186,10 @@ IonBuilder::build()
     // before MStart is technically invalid, since the snapshot has uses maybe
     // not yet defined. So MStart is the highest we can hoist any fallible
     // operations.
-    current->makeStart(new MStart);
+    MStart *start = new MStart;
+    if (!snapshotAt(start, pc))
+        return false;
+    current->makeStart(start);
 
     if (!traverseBytecode())
         return false;
@@ -284,18 +275,8 @@ IonBuilder::traverseBytecode()
         // take an early snapshot if beneficial.
 
         JSOp op = JSOp(*pc);
-        if (SnapshotBefore[op] && !snapshotBefore())
-            return false;
-
         if (!inspectOpcode(op))
             return false;
-
-        if (sideEffectsOccurred_) {
-            JS_ASSERT(JSOp(*pc) == op);
-            sideEffectsOccurred_ = false;
-            if (!snapshotAfter())
-                return false;
-        }
 
         pc += js_CodeSpec[op].length;
     }
@@ -1306,43 +1287,26 @@ IonBuilder::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 //
 // Effectful instructions, of course, need to take a snapshot after completion,
 // where the interpreter will not attempt to repeat the operation. For this,
-// snapshotAfter() must be used.
-//
-// However, non-effectful instructions might want snapshots too. For example,
-// ADD sometimes needs an overflow guard, but using a pre-existing snapshot
-// could hold more variables live than needed, which would generate extra
-// spills. Therefore, instructions can request a new snapshot that will resume
-// at the current opcode, called snapshotBefore(). It is important to call this
-// before mutating the stack, as the snapshot must be resumeable at the start
-// of the opcode.
-//
-// To help reduce errors, before-snapshots are allocated automatically by the
-// main bytecode loop, via annotations on opcodes. After-snapshots are also
-// taken automatically, but instructions are responsible for annotating when
-// side effects occur.
+// snapshotAfter() must be used. The snapshot is attached directly to the
+// effectful instruction to ensure that no intermediate instructions could be
+// injected in between by a future analysis pass.
 //
 // During LIR construction, if an instruction can bail back to the interpreter,
 // we create an LBailout, which uses the last known snapshot to request
 // register/stack assignments for every live value.
 bool
-IonBuilder::snapshot(jsbytecode *pc)
+IonBuilder::snapshotAfter(MInstruction *ins)
+{
+    return snapshotAt(ins, GetNextPc(pc));
+}
+
+bool
+IonBuilder::snapshotAt(MInstruction *ins, jsbytecode *pc)
 {
     MSnapshot *snapshot = MSnapshot::New(current, pc);
     if (!snapshot)
         return false;
-    current->add(snapshot);
+    ins->setSnapshot(snapshot);
     return true;
-}
-
-bool
-IonBuilder::snapshotAfter()
-{
-    return snapshot(GetNextPc(pc));
-}
-
-bool
-IonBuilder::snapshotBefore()
-{
-    return snapshot(pc);
 }
 

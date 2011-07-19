@@ -100,7 +100,6 @@ ion::InitializeIon()
         IonTLSInitialized = true;
     }
 #endif
-    IonBuilder::SetupOpcodeFlags();
     CheckLogging();
     return true;
 }
