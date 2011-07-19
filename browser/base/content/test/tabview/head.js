@@ -133,11 +133,13 @@ function showTabView(callback, win) {
   win = win || window;
 
   if (win.TabView.isVisible()) {
-    callback();
+    waitForFocus(callback, win);
     return;
   }
 
-  whenTabViewIsShown(callback, win);
+  whenTabViewIsShown(function() {
+    waitForFocus(callback, win);
+  }, win);
   win.TabView.show();
 }
 
