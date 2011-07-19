@@ -65,7 +65,7 @@ LIRGeneratorX86::visitBox(MBox *box)
     if (!box->emitAtUses())
         return emitAtUses(box);
 
-    MInstruction *inner = box->getInput(0);
+    MInstruction *inner = box->getOperand(0);
 
     if (inner->isConstant())
         return defineBox(new LValue(inner->toConstant()->value()), box);
@@ -94,7 +94,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     // An unbox on x86 reads in a type tag (either in memory or a register) and
     // a payload. Unlike most instructions conusming a box, we ask for the type
     // second, so that the result can re-use the first input.
-    MInstruction *inner = unbox->getInput(0);
+    MInstruction *inner = unbox->getOperand(0);
 
     if (unbox->type() == MIRType_Double) {
         LBoxToDouble *lir = new LBoxToDouble;
@@ -121,7 +121,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
 bool
 LIRGeneratorX86::visitReturn(MReturn *ret)
 {
-    MInstruction *opd = ret->getInput(0);
+    MInstruction *opd = ret->getOperand(0);
     JS_ASSERT(opd->type() == MIRType_Value);
 
     LReturn *ins = new LReturn;
@@ -168,7 +168,7 @@ LIRGeneratorX86::visitPhi(MPhi *ins)
         return false;
 
     for (size_t i = 0; i < ins->numOperands(); i++) {
-        MInstruction *opd = ins->getInput(i);
+        MInstruction *opd = ins->getOperand(i);
         JS_ASSERT(opd->type() == MIRType_Value);
         JS_ASSERT(opd->id());
         JS_ASSERT(opd->inWorklist());
@@ -187,7 +187,7 @@ LIRGeneratorX86::fillSnapshot(LSnapshot *snapshot)
 {
     MSnapshot *mir = snapshot->mir();
     for (size_t i = 0; i < mir->numOperands(); i++) {
-        MInstruction *ins = mir->getInput(i);
+        MInstruction *ins = mir->getOperand(i);
         LAllocation *type = snapshot->getEntry(i * 2);
         LAllocation *payload = snapshot->getEntry(i * 2 + 1);
 
