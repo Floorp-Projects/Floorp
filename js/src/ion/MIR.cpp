@@ -161,25 +161,31 @@ MNode::replaceOperand(MUse *prev, MUse *use, MDefinition *ins)
 }
 
 void
-MNode::replaceOperand(MUseIterator &use, MDefinition *ins)
+MNode::replaceOperand(size_t index, MDefinition *def)
 {
-    size_t index = use->index();
-    use.next();
-    replaceOperand(index, ins);
-}
-
-void
-MNode::replaceOperand(size_t index, MDefinition *ins)
-{
-    MDefinition *old = getOperand(index);
-    for (MUseIterator uses(old); uses.more(); uses.next()) {
-        if (uses->index() == index && uses->node() == this) {
-            replaceOperand(uses.prev(), *uses, ins);
+    MUse *prev = NULL;
+    MUse *current = getOperand(index)->uses();
+    while (current) {
+        if (current->index() == index && current->node() == this) {
+            replaceOperand(prev, current, def);
             return;
         }
+        prev = current;
+        current = current->next();
     }
 
     JS_NOT_REACHED("could not find use");
+}
+
+void
+MDefinition::replaceAllUsesWith(MDefinition *dom)
+{
+    while (uses_) {
+        MUse *use = uses_;
+        uses_ = uses_->next();
+        use->node()->setOperand(use->index(), dom);
+        dom->linkUse(use);
+    }
 }
 
 static inline bool
