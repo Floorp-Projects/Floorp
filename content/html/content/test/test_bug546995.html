@@ -13,7 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=546995
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=546995">Mozilla Bug 546995</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  <input id='i'>
   <textarea id='t'></textarea>
   <select id='s'></select>
   <button id='b'></button>
@@ -36,7 +35,6 @@ function checkAutofocusIDLAttribute(element)
 }
 
 // TODO: keygen should be added when correctly implemented, see bug 101019.
-checkAutofocusIDLAttribute(document.getElementById('i'));
 checkAutofocusIDLAttribute(document.getElementById('t'));
 checkAutofocusIDLAttribute(document.getElementById('s'));
 checkAutofocusIDLAttribute(document.getElementById('b'));
