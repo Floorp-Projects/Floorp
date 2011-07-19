@@ -244,6 +244,13 @@ LIRGenerator::visitStart(MStart *start)
 }
 
 bool
+LIRGenerator::visitConvertPrim(MConvertPrim *convert)
+{
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
 LIRGenerator::visitCopy(MCopy *ins)
 {
     JS_NOT_REACHED("unexpected copy");

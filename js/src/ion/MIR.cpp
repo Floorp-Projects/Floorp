@@ -351,7 +351,7 @@ MReturn::New(MDefinition *ins)
 }
 
 void
-MBinaryInstruction::infer(const TypeOracle::Binary &b)
+MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
 {
     if (b.lhs == MIRType_Int32 && b.rhs == MIRType_Int32) {
         specialization_ = MIRType_Int32;
@@ -361,37 +361,13 @@ MBinaryInstruction::infer(const TypeOracle::Binary &b)
         setResultType(specialization_);
     } else if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
         specialization_ = MIRType_Any;
-        setResultType(b.rval);
+        if (CoercesToDouble(b.lhs) || CoercesToDouble(b.rhs))
+            setResultType(MIRType_Double);
+        else
+            setResultType(MIRType_Int32);
     } else {
-        specialization_ = MIRType_Value;
+        specialization_ = MIRType_None;
     }
-}
-
-static inline bool
-HasComplexNumberConversion(MIRType type)
-{
-    return type >= MIRType_String && type < MIRType_Value;
-}
-
-bool
-MBinaryInstruction::adjustForInputs()
-{
-    if (specialization() == MIRType_Value)
-        return false;
-
-    MIRType lhsActual = getOperand(0)->type();
-    MIRType lhsUsedAs = getOperand(0)->usedAsType();
-    MIRType rhsActual = getOperand(1)->type();
-    MIRType rhsUsedAs = getOperand(1)->usedAsType();
-
-    if (HasComplexNumberConversion(lhsActual) ||
-        HasComplexNumberConversion(lhsUsedAs) ||
-        HasComplexNumberConversion(rhsActual) ||
-        HasComplexNumberConversion(rhsUsedAs)) {
-        specialization_ = MIRType_Value;
-        return true;
-    }
-    return false;
 }
 
 MBitAnd *

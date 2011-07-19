@@ -48,6 +48,7 @@
 
 #include "jscntxt.h"
 #include "TypeOracle.h"
+#include "TypePolicy.h"
 #include "IonAllocPolicy.h"
 #include "InlineList.h"
 #include "MOpcodes.h"
@@ -130,12 +131,19 @@ class MNode : public TempObject
         return block_;
     }
 
+    // Instructions needing to hook into type analysis should return a
+    // TypePolicy.
+    virtual TypePolicy *typePolicy() {
+        return NULL;
+    }
+
     // Replaces an operand, taking care to update use chains. No memory is
     // allocated; the existing data structures are re-linked.
     void replaceOperand(MUse *prev, MUse *use, MDefinition *ins);
     void replaceOperand(size_t index, MDefinition *ins);
 
     inline MDefinition *toDefinition();
+    inline MSnapshot *toSnapshot();
 
   protected:
     // Sets a raw operand, ignoring updating use information.
@@ -258,6 +266,7 @@ class MDefinition : public MNode
     void setValueNumber(uint32 vn) {
         valueNumber_ = vn;
     }
+
     bool inWorklist() const {
         return hasFlags(IN_WORKLIST);
     }
@@ -276,11 +285,9 @@ class MDefinition : public MNode
     void setLoopInvariant() {
         setFlags(LOOP_INVARIANT);
     }
-
     void setNotLoopInvariant() {
         removeFlags(LOOP_INVARIANT);
     }
-
     bool isLoopInvariant() {
         return hasFlags(LOOP_INVARIANT);
     }
@@ -304,13 +311,6 @@ class MDefinition : public MNode
 
     // Number of uses of this instruction.
     size_t useCount() const;
-
-    // Allows an instruction to despecialize if its input types are too complex
-    // to handle. Returns false on no change, true if the specialization was
-    // downgraded.
-    virtual bool adjustForInputs() {
-        return false;
-    }
 
     virtual bool isControlInstruction() {
         return false;
@@ -339,16 +339,12 @@ class MDefinition : public MNode
   public:   // Functions for analysis phases.
     // Analyzes inputs and uses and updates type information. If type
     // information changed, returns true, otherwise, returns false.
-    bool addUsedTypes(uint32 types) {
-        uint32 newTypes = types | usedTypes();
-        if (newTypes == usedTypes())
-            return false;
-        usedTypes_ = newTypes;
-        return true;
+    void addUsedTypes(uint32 types) {
+        usedTypes_ = types | usedTypes();
     }
-    bool useAsType(MIRType type) {
+    void useAsType(MIRType type) {
         JS_ASSERT(type < MIRType_Value);
-        return addUsedTypes(1 << uint32(type));
+        addUsedTypes(1 << uint32(type));
     }
     uint32 usedTypes() const {
         return usedTypes_;
@@ -436,7 +432,8 @@ class MUseDefIterator
     }
     void next() {
         current_ = next_;
-        next_ = search(next_->next());
+        if (next_)
+            next_ = search(next_->next());
     }
 
   public:
@@ -692,27 +689,12 @@ class MUnaryInstruction : public MAryInstruction<1>
 
 class MBinaryInstruction : public MAryInstruction<2>
 {
-    // Specifies three levels of specialization:
-    //  - < Value. This input is expected and required.
-    //  - == Value. Try to convert to the expected return type.
-    //  - == None. This op should not be specialized.
-    MIRType specialization_;
-
   protected:
     MBinaryInstruction(MDefinition *left, MDefinition *right)
-      : specialization_(MIRType_None)
     {
         initOperand(0, left);
         initOperand(1, right);
     }
-
-    MIRType specialization() const {
-        return specialization_;
-    }
-
-  public:
-    void infer(const TypeOracle::Binary &b);
-    bool adjustForInputs();
 };
 
 // Wraps an SSA name in a new SSA name. This is used for correctness while
@@ -770,6 +752,24 @@ class MUnbox : public MUnaryInstruction
     }
 };
 
+// Converts a value or typed input to a primitve. The input must be a primitive
+// at runtime, otherwise, a bailout occurs.
+class MConvertPrim : public MUnaryInstruction
+{
+    MConvertPrim(MDefinition *ins, MIRType type)
+      : MUnaryInstruction(ins)
+    {
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ConvertPrim);
+    static MConvertPrim *New(MDefinition *ins, MIRType type)
+    {
+        return new MConvertPrim(ins, type);
+    }
+};
+
 class MBitAnd : public MBinaryInstruction
 {
     MBitAnd(MDefinition *left, MDefinition *right)
@@ -821,10 +821,25 @@ class MBitXor : public MBinaryInstruction
     }
 };
 
-class MAdd : public MBinaryInstruction
+class MBinaryArithInstruction
+  : public MBinaryInstruction,
+    public BinaryArithPolicy
+{
+  public:
+    MBinaryArithInstruction(MDefinition *left, MDefinition *right)
+      : MBinaryInstruction(left, right)
+    { }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    void infer(const TypeOracle::Binary &b);
+};
+
+class MAdd : public MBinaryArithInstruction
 {
     MAdd(MDefinition *left, MDefinition *right)
-      : MBinaryInstruction(left, right)
+      : MBinaryArithInstruction(left, right)
     {
         setResultType(MIRType_Value);
     }
@@ -843,9 +858,11 @@ class MPhi : public MDefinition
 {
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
     uint32 slot_;
+    bool triedToSpecialize_;
 
     MPhi(uint32 slot)
-      : slot_(slot)
+      : slot_(slot),
+        triedToSpecialize_(false)
     {
         setResultType(MIRType_Value);
     }
@@ -867,6 +884,13 @@ class MPhi : public MDefinition
     }
     uint32 slot() const {
         return slot_;
+    }
+    bool triedToSpecialize() const {
+        return triedToSpecialize_;
+    }
+    void specialize(MIRType type) {
+        triedToSpecialize_ = true;
+        setResultType(type);
     }
     bool addInput(MDefinition *ins);
 };
@@ -929,6 +953,12 @@ MDefinition *MNode::toDefinition()
 {
     JS_ASSERT(isDefinition());
     return (MDefinition *)this;
+}
+
+MSnapshot *MNode::toSnapshot()
+{
+    JS_ASSERT(isSnapshot());
+    return (MSnapshot *)this;
 }
 
 MInstruction *MDefinition::toInstruction()
