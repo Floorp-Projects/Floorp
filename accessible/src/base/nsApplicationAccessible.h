@@ -129,6 +129,9 @@ public:
 
   virtual void InvalidateChildren();
 
+  // ActionAccessible
+  virtual KeyBinding AccessKey() const;
+
 protected:
 
   // nsAccessible
