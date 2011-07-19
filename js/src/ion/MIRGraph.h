@@ -471,11 +471,10 @@ class MDefinitionIterator
         return *iter_;
     }
 
-  public:
-    MDefinitionIterator(MBasicBlock *block)
-      : block_(block),
-        phiIndex_(0),
-        iter_(block->begin())
+    MDefinitionIterator(const MDefinitionIterator *old)
+      : block_(old->block_),
+        phiIndex_(old->phiIndex_),
+        iter_(old->iter_)
     { }
 
     void next() {
@@ -483,6 +482,29 @@ class MDefinitionIterator
             phiIndex_++;
         else
             iter_++;
+    }
+
+    bool more() const {
+        return phiIndex_ < block_->numPhis() || iter_ != block_->lastIns();
+    }
+
+  public:
+    MDefinitionIterator(MBasicBlock *block)
+      : block_(block),
+        phiIndex_(0),
+        iter_(block->begin())
+    { }
+
+    MDefinitionIterator operator ++(int) {
+        MDefinitionIterator old(this);
+        if (more())
+            next();
+
+        return old;
+    }
+
+    operator bool() const {
+        return more();
     }
 
     MDefinition *operator *() {
@@ -493,9 +515,6 @@ class MDefinitionIterator
         return getIns();
     }
 
-    bool more() {
-        return phiIndex_ < block_->numPhis() || iter_ != block_->lastIns();
-    }
 };
 
 } // namespace ion
