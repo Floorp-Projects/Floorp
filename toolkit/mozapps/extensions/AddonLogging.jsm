@@ -37,6 +37,8 @@
 # ***** END LICENSE BLOCK *****
 */
 
+"use strict";
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -44,6 +46,8 @@ const Cr = Components.results;
 const KEY_PROFILEDIR                  = "ProfD";
 const FILE_EXTENSIONS_LOG             = "extensions.log";
 const PREF_LOGGING_ENABLED            = "extensions.logging.enabled";
+
+const LOGGER_FILE_PERM                = parseInt("666", 8);
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
@@ -119,7 +123,7 @@ AddonLogger.prototype = {
       var logfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS_LOG]);
       var stream = Cc["@mozilla.org/network/file-output-stream;1"].
                    createInstance(Ci.nsIFileOutputStream);
-      stream.init(logfile, 0x02 | 0x08 | 0x10, 0666, 0); // write, create, append
+      stream.init(logfile, 0x02 | 0x08 | 0x10, LOGGER_FILE_PERM, 0); // write, create, append
       var writer = Cc["@mozilla.org/intl/converter-output-stream;1"].
                    createInstance(Ci.nsIConverterOutputStream);
       writer.init(stream, "UTF-8", 0, 0x0000);
