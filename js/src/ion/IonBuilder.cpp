@@ -1232,7 +1232,7 @@ IonBuilder::jsop_binary(JSOp op)
         break;
 
       case JSOP_BITXOR:
-        ins = MBitXOr::New(left, right);
+        ins = MBitXor::New(left, right);
         break;
         
       case JSOP_ADD:

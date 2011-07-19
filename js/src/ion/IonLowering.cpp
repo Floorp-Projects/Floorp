@@ -216,7 +216,7 @@ LIRGenerator::visitBitOr(MBitOr *ins)
 }
 
 bool
-LIRGenerator::visitBitXOr(MBitXOr *ins)
+LIRGenerator::visitBitXor(MBitXor *ins)
 {
     return doBitOp(JSOP_BITXOR, ins);
 }
@@ -295,30 +295,11 @@ LIRGenerator::visitReturn(MReturn *ins)
     return false;
 }
 
-void
-LIRGenerator::rewriteDefsInSnapshots(MInstruction *ins, MDefinition *old)
-{
-    MUseIterator iter(old);
-    while (iter.more()) {
-        MNode *node = iter->node();
-        if (node->isDefinition()) {
-            MDefinition *def = node->toDefinition();
-            if (!def->isSnapshot() || def->inWorklist()) {
-                iter.next();
-                continue;
-            }
-            def->replaceOperand(iter, ins);
-        }
-    }
-}
-
 bool
 LIRGenerator::visitInstruction(MInstruction *ins)
 {
     if (!gen->ensureBallast())
         return false;
-    if (ins->rewritesDef())
-        rewriteDefsInSnapshots(ins, ins->rewrittenDef());
     if (!ins->accept(this))
         return false;
     if (ins->snapshot())
