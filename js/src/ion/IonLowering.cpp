@@ -244,7 +244,21 @@ LIRGenerator::visitStart(MStart *start)
 }
 
 bool
-LIRGenerator::visitConvertPrim(MConvertPrim *convert)
+LIRGenerator::visitToDouble(MToDouble *convert)
+{
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
+LIRGenerator::visitToInt32(MToInt32 *convert)
+{
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
+LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
 {
     JS_NOT_REACHED("NYI");
     return false;
