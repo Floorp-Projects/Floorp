@@ -52,12 +52,11 @@
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsWebShellWindow.h"
 
 #include "nsIEnumerator.h"
 #include "nsCRT.h"
-#include "nsITimelineService.h"
 #include "prprf.h"    
 
 #include "nsWidgetsCID.h"
@@ -120,7 +119,7 @@ nsAppShellService::SetXPConnectSafeContext()
     do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMWindowInternal> junk;
+  nsCOMPtr<nsIDOMWindow> junk;
   JSContext *cx;
   rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -139,7 +138,7 @@ nsresult nsAppShellService::ClearXPConnectSafeContext()
     return rv;
   }
 
-  nsCOMPtr<nsIDOMWindowInternal> junk;
+  nsCOMPtr<nsIDOMWindow> junk;
   JSContext *cx;
   rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -454,7 +453,7 @@ nsAppShellService::GetHiddenWindow(nsIXULWindow **aWindow)
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenDOMWindow(nsIDOMWindowInternal **aWindow)
+nsAppShellService::GetHiddenDOMWindow(nsIDOMWindow **aWindow)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell;
@@ -463,7 +462,7 @@ nsAppShellService::GetHiddenDOMWindow(nsIDOMWindowInternal **aWindow)
   rv = mHiddenWindow->GetDocShell(getter_AddRefs(docShell));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIDOMWindowInternal> hiddenDOMWindow(do_GetInterface(docShell, &rv));
+  nsCOMPtr<nsIDOMWindow> hiddenDOMWindow(do_GetInterface(docShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aWindow = hiddenDOMWindow;
@@ -472,7 +471,7 @@ nsAppShellService::GetHiddenDOMWindow(nsIDOMWindowInternal **aWindow)
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindowInternal **aWindow,
+nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
                                                JSContext    **aJSContext)
 {
     nsresult rv = NS_OK;
@@ -481,15 +480,15 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindowInternal **aWindow,
         *aJSContext = nsnull;
 
         if ( mHiddenWindow ) {
-            // Convert hidden window to nsIDOMWindowInternal and extract its JSContext.
+            // Convert hidden window to nsIDOMWindow and extract its JSContext.
             do {
                 // 1. Get doc for hidden window.
                 nsCOMPtr<nsIDocShell> docShell;
                 rv = mHiddenWindow->GetDocShell(getter_AddRefs(docShell));
                 if (NS_FAILED(rv)) break;
 
-                // 2. Convert that to an nsIDOMWindowInternal.
-                nsCOMPtr<nsIDOMWindowInternal> hiddenDOMWindow(do_GetInterface(docShell));
+                // 2. Convert that to an nsIDOMWindow.
+                nsCOMPtr<nsIDOMWindow> hiddenDOMWindow(do_GetInterface(docShell));
                 if(!hiddenDOMWindow) break;
 
                 // 3. Get script global object for the window.

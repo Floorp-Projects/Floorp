@@ -131,6 +131,17 @@ js_ObjectToOuterObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
+JS_FRIEND_API(bool)
+NULLABLE_OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
+{
+    if (!obj) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return false;
+    }
+    OBJ_TO_INNER_OBJECT(cx, obj);
+    return !!obj;
+}
+
 #if JS_HAS_OBJ_PROTO_PROP
 
 static JSBool
@@ -954,9 +965,6 @@ static JS_ALWAYS_INLINE JSScript *
 EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN staticLevel,
                 JSPrincipals *principals, JSObject &scopeobj, JSScript **bucket)
 {
-    if (!principals)
-        return NULL;
-
     /*
      * Cache local eval scripts indexed by source qualified by scope.
      *
@@ -984,7 +992,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
             script->getVersion() == version &&
             !script->hasSingletons &&
             (script->principals == principals ||
-             (script->principals &&
+             (principals && script->principals &&
               principals->subsume(principals, script->principals) &&
               script->principals->subsume(script->principals, principals)))) {
             /*
@@ -3769,15 +3777,21 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
      * (3) is not enough without addressing the bootstrapping dependency on (1)
      * and (2).
      */
+
+    /*
+     * Create the prototype object.  (GlobalObject::createBlankPrototype isn't
+     * used because it parents the prototype object to the global and because
+     * it uses WithProto::Given.  FIXME: Undo dependencies on this parentage
+     * [which already needs to happen for bug 638316], figure out nicer
+     * semantics for null-protoProto, and use createBlankPrototype.)
+     */
     JSObject *proto = NewObject<WithProto::Class>(cx, clasp, protoProto, obj);
-    if (!proto)
+    if (!proto || !proto->getEmptyShape(cx, proto->clasp, gc::FINALIZE_OBJECT0))
         return NULL;
 
     proto->syncSpecialEquality();
 
     /* After this point, control must exit via label bad or out. */
-    AutoObjectRooter tvr(cx, proto);
-
     JSObject *ctor;
     bool named = false;
     if (!constructor) {
@@ -3843,22 +3857,6 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     {
         goto bad;
     }
-
-    /*
-     * Make sure proto's emptyShape is available to be shared by objects of
-     * this class.  JSObject::emptyShape is a one-slot cache. If we omit this,
-     * some other class could snap it up. (The risk is particularly great for
-     * Object.prototype.)
-     *
-     * All callers of JSObject::initSharingEmptyShape depend on this.
-     *
-     * FIXME: bug 592296 -- js_InitArrayClass should pass &js_SlowArrayClass
-     * and make the Array.prototype slow from the start.
-     */
-    JS_ASSERT_IF(proto->clasp != clasp,
-                 clasp == &js_ArrayClass && proto->clasp == &js_SlowArrayClass);
-    if (!proto->getEmptyShape(cx, proto->clasp, FINALIZE_OBJECT0))
-        goto bad;
 
     if (clasp->flags & (JSCLASS_FREEZE_PROTO|JSCLASS_FREEZE_CTOR)) {
         JS_ASSERT_IF(ctor == proto, !(clasp->flags & JSCLASS_FREEZE_CTOR));

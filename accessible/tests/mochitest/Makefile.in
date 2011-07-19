@@ -97,7 +97,6 @@ _TEST_FILES =\
 		test_elm_listbox.xul \
 		test_elm_nsApplicationAcc.html \
 		test_elm_plugin.html \
-		test_keys.html \
  		test_nsIAccessible_selects.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleImage.html \

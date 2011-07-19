@@ -36,6 +36,7 @@
     }
 
     var invokerChecker = gOpenerWnd.invokerChecker;
+    var asyncInvokerChecker = gOpenerWnd.asyncInvokerChecker;
 
     const STATE_BUSY = gOpenerWnd.STATE_BUSY;
     const EVENT_DOCUMENT_LOAD_COMPLETE =
@@ -47,6 +48,8 @@
     const EVENT_STATE_CHANGE = gOpenerWnd.EVENT_STATE_CHANGE;
     const nsIAccessibleStateChangeEvent =
       gOpenerWnd.nsIAccessibleStateChangeEvent;
+
+    //gOpenerWnd.gA11yEventDumpToConsole = true; // debug
 
     ////////////////////////////////////////////////////////////////////////////
     // Hacks to make xul:tabbrowser work.
@@ -132,7 +135,7 @@
       this.eventSeq = [
         // We don't expect state change event for busy true since things happen
         // quickly and it's coalesced.
-        new invokerChecker(EVENT_REORDER, getContainer),
+        new asyncInvokerChecker(EVENT_REORDER, getContainer),
         new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getDocument),
         new stateBusyChecker(false)
       ];
@@ -155,7 +158,7 @@
 
       this.eventSeq = [
         new documentReloadChecker(true),
-        new invokerChecker(EVENT_REORDER, getContainer),
+        new asyncInvokerChecker(EVENT_REORDER, getContainer),
         new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getDocument),
         new stateBusyChecker(false)
       ];
@@ -178,7 +181,7 @@
 
       this.eventSeq = [
         new documentReloadChecker(false),
-        new invokerChecker(EVENT_REORDER, getContainer),
+        new asyncInvokerChecker(EVENT_REORDER, getContainer),
         new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getDocument),
         new stateBusyChecker(false)
       ];
@@ -202,7 +205,7 @@
       this.eventSeq = [
         // We don't expect state change for busy true, load stopped events since
         // things happen quickly and it's coalesced.
-        new invokerChecker(EVENT_REORDER, getContainer),
+        new asyncInvokerChecker(EVENT_REORDER, getContainer),
         new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getDocument),
         new stateBusyChecker(false)
       ];

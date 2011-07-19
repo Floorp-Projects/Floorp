@@ -69,11 +69,8 @@ GetGlobalForScopeChain(JSContext *cx)
         return cx->fp()->scopeChain().getGlobal();
 
     JSObject *scope = cx->globalObject;
-    if (!scope) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+    if (!NULLABLE_OBJ_TO_INNER_OBJECT(cx, scope))
         return NULL;
-    }
-    OBJ_TO_INNER_OBJECT(cx, scope);
     return scope->asGlobal();
 }
 

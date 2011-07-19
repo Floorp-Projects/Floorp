@@ -28,10 +28,10 @@ function onTabViewWindowLoaded(win) {
   
     function check() {
       if (groupOrTab == 'group') {
-        group.removeSubscriber(group, "groupHidden", check);
+        group.removeSubscriber("groupHidden", check);
         group.closeHidden();
       } else
-        tab.removeSubscriber(tab, "tabRemoved", check);
+        tab.removeSubscriber("tabRemoved", check);
   
       is(contentWindow.GroupItems.getActiveGroupItem(), originalGroup,
         "The original group is active.");
@@ -42,10 +42,10 @@ function onTabViewWindowLoaded(win) {
     }
   
     if (groupOrTab == 'group') {
-      group.addSubscriber(group, "groupHidden", check);
+      group.addSubscriber("groupHidden", check);
       group.closeAll();
     } else {
-      tab.addSubscriber(tab, "tabRemoved", check);
+      tab.addSubscriber("tabRemoved", check);
       tab.close();
     }
   }

@@ -26,8 +26,8 @@ function test() {
     cw.TabItems.pausePainting();
 
     groupItem.getChildren().forEach(function (tabItem) {
-      tabItem.addSubscriber(tabItem, "updated", function () {
-        tabItem.removeSubscriber(tabItem, "updated");
+      tabItem.addSubscriber("updated", function onUpdated() {
+        tabItem.removeSubscriber("updated", onUpdated);
         tabItem._testLastTabUpdateTime = tabItem._lastTabUpdateTime;
 
         if (--numTabsToUpdate)

@@ -47,8 +47,7 @@ const Cm = Components.manager;
 
 // Execute the following code while keeping the current scope clean.
 void(function (scriptScope) {
-  var rootDir = getRootDirectory(gTestPath);
-  const kBaseUrl = rootDir + "common/";
+  const kBaseUrl = "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/";
 
   // If you add files here, add them to "Makefile.in" too.
   var scriptNames = [

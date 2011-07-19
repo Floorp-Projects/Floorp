@@ -1204,7 +1204,7 @@ function closeUpdateWindow() {
 /**
  * Gets the update window.
  *
- * @return The nsIDOMWindowInternal for the Update Window if it is open and null
+ * @return The nsIDOMWindow for the Update Window if it is open and null
  *         if it isn't.
  */
 function getUpdateWindow() {
