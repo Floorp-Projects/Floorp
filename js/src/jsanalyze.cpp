@@ -1929,6 +1929,8 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
 void
 ScriptAnalysis::printSSA(JSContext *cx)
 {
+    AutoEnterAnalysis enter(cx);
+
     printf("\n");
 
     for (unsigned offset = 0; offset < script->length; offset++) {

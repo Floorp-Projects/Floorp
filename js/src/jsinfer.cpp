@@ -3151,6 +3151,13 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         }
     }
 
+    /*
+     * Treat decomposed ops as no-ops, we will analyze the decomposed version
+     * instead. (We do, however, need to look at introduced phi nodes).
+     */
+    if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+        return true;
+
     for (unsigned i = 0; i < defCount; i++) {
         pushed[i].setIntermediate();
         InferSpew(ISpewOps, "typeSet: %sT%p%s pushed%u #%u:%05u",
@@ -3962,11 +3969,9 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         jsbytecode *pc = script->code + offset;
         UntrapOpcode untrap(cx, script, pc);
 
-        if (code && !(js_CodeSpec[*pc].format & JOF_DECOMPOSE)) {
-            if (!analyzeTypesBytecode(cx, offset, state)) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                return;
-            }
+        if (code && !analyzeTypesBytecode(cx, offset, state)) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
 
         offset += GetBytecodeLength(pc);

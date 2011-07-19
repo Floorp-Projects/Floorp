@@ -4448,6 +4448,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 cs = &js_CodeSpec[op];
                 len = cs->length;
                 DECOMPILE_CODE(pc, len);
+                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+                    len += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
                 *pc = JSOP_TRAP;
                 todo = -2;
                 break;
@@ -4793,8 +4795,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 return NULL;
         }
 
-        if (cs->format & JOF_DECOMPOSE)
-            pc += GetDecomposeLength(pc, cs->length);
+        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+            pc += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
 
         pc += len;
     }
