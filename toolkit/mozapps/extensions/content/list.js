@@ -75,6 +75,8 @@ const kDialog = "dialog";
  * result:  The dlgtype of button that was used to dismiss the dialog. 
  */
 
+"use strict";
+
 var gButtons = { };
 
 function init() {
