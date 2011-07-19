@@ -127,7 +127,7 @@ Loop::iterateLoopBlocks(MBasicBlock *current)
     for (MInstructionIterator i = current->begin(); i != current->end(); i ++) {
         MInstruction *ins = *i;
 
-        if (ins->estimateHoistWin() != MDefinition::NO_WIN) {
+        if (ins->hasHoistWin()) {
             if (!insertInWorklist(ins))
                 return false;
         }
@@ -160,24 +160,18 @@ Loop::optimize()
                 return false;
 
             // Loop through uses of invariant instruction and add back to work list.
-            MUse *use = ins->uses();
-            while (use != NULL) {
-                if (!use->node()->isDefinition()) {
-                    use = use->next();
+            for (MUseDefIterator iter(ins->toDefinition()); iter; iter++) {
+                MDefinition *consumer = iter.def();
+
+                if (consumer->inWorklist())
                     continue;
-                }
-                MDefinition *def = use->node()->toDefinition();
-                // If this use is not already in the work list
-                // and it is in the loop
-                // and it is hoistable...
-                if (!def->inWorklist() &&
-                    isInLoop(def) &&
-                    def->estimateHoistWin() != MDefinition::NO_WIN)
-                {
-                    if (!insertInWorklist(def->toInstruction()))
+
+                // if the consumer of this invariant instruction is in the
+                // loop, and it is also worth hoisting, then process it.
+                if (isInLoop(consumer) && consumer->hasHoistWin()) {
+                    if (insertInWorklist(consumer->toInstruction()))
                         return false;
                 }
-                use = use->next();
             }
 
             if (IonSpewEnabled(IonSpew_LICM))
@@ -234,22 +228,19 @@ Loop::isLoopInvariant(MInstruction *ins)
 bool
 Loop::shouldHoist(MInstruction *ins)
 {
-    JS_ASSERT(ins->estimateHoistWin() != MDefinition::NO_WIN);
+    JS_ASSERT(ins->hasHoistWin());
 
     if (ins->estimateHoistWin() == MDefinition::BIG_WIN)
         return true;
 
-    // Loop through uses, if any are loop invariant and have a big hoist win, then we
-    // should hoist this instruction
-    MUse *use = ins->uses();
-    while (use != NULL) {
-        if (use->node()->isDefinition()) {
-            MDefinition *def = use->node()->toDefinition();
-            if (def->isLoopInvariant() && def->estimateHoistWin() == MDefinition::BIG_WIN)
-                return true;
-        }
-
-        use = use->next();
+    // If any consumers of this instruction are loop invariant and are worth
+    // hoisting, then we should hoist this instruction.
+    //
+    // Note that this instruction is already a loop invariant; we are just
+    // deciding whether to remove it from the loop.
+    for (MUseDefIterator use(ins->toDefinition()); use; use++) {
+        if (use.def()->isLoopInvariant() && use.def()->hasHoistWin())
+            return true;
     }
     return false;
 }
