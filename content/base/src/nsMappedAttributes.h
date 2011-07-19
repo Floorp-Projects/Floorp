@@ -108,12 +108,6 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  PRInt64 SizeOf() const {
-    NS_ASSERTION(mAttrCount == mBufferSize,
-                 "mBufferSize and mAttrCount are expected to be the same.");
-    return sizeof(*this) - sizeof(void*) + mAttrCount * sizeof(InternalAttr);
-  }
-
 private:
   nsMappedAttributes(const nsMappedAttributes& aCopy);
   ~nsMappedAttributes();

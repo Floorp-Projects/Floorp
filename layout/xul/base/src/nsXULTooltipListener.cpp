@@ -61,8 +61,6 @@
 #include "nsIRootBox.h"
 #include "nsEventDispatcher.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/Element.h"
-
 
 using namespace mozilla;
 
