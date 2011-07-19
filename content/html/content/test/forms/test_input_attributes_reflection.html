@@ -40,11 +40,28 @@ reflectLimitedEnumerated({
   invalidValues: [ "", "default", "foo", "tulip" ],
 });
 
-// TODO: autofocus (boolean)
-// TODO: defaultChecked (boolean)
-// TODO: checked (boolean)
+// .autofocus
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "autofocus",
+});
+
+// .defaultChecked
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: { idl: "defaultChecked", content: "checked" },
+});
+
+// .checked doesn't reflect a content attribute.
+
 // TODO: dirName (not implemented)
-// TODO: disabled (boolean)
+
+// .disabled
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "disabled",
+});
+
 // TODO: form (HTMLFormElement)
 // TODO: files (FileList)
 // TODO: formAction (URL)
@@ -68,7 +85,11 @@ reflectLimitedEnumerated({
   defaultValue: "get"
 });
 
-// TODO: formNoValidate (boolean)
+// .formNoValidate
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "formNoValidate",
+});
 
 // .formTarget
 reflectString({
@@ -78,12 +99,19 @@ reflectString({
 });
 
 // TODO: height (non-negative integer)
-// TODO: indeterminate (boolean)
+
+// .indeterminate doesn't reflect a content attribute.
+
 // TODO: list (HTMLElement)
 // TODO: max (not implemented)
 // TODO: maxLength (long)
 // TODO: min (not implemented)
-// TODO: multiple (boolean)
+
+// .multiple
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "multiple",
+});
 
 // .name
 reflectString({
@@ -106,8 +134,17 @@ reflectString({
   otherValues: [ "foo\nbar", "foo\rbar", "foo\r\nbar" ],
 });
 
-// TODO: readOnly (boolean)
-// TODO: required (boolean)
+// .readOnly
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "readOnly",
+});
+
+// .required
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "required",
+});
 
 // .size
 reflectUnsignedInt({
