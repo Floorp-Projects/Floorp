@@ -157,6 +157,7 @@ function update()
   //       _units:       number;
   //       _amount:      number;
   //       _description: string;
+  //       _nMerged:     number;  (only defined if >= 2)
   //     }
   //
   //   After this point we never use the original memory reporter again.
@@ -182,10 +183,19 @@ function update()
       reportersByProcess[process] = {};
     }
     var reporters = reportersByProcess[process];
-    if (reporters[r._path]) {
+    var reporter = reporters[r._path];
+    if (reporter) {
       // Already an entry;  must be a duplicated reporter.  This can
-      // happen legitimately.  Sum the values.
-      reporters[r._path]._amount += r._amount;
+      // happen legitimately.  Sum the values (accounting for possible kUnknown
+      // amounts), and mark the reporter as a dup.  We mark dups because it's
+      // useful to know when a reporter is duplicated;  it might be worth
+      // investigating and splitting up to have non-duplicated names.
+      if (reporter._amount !== kUnknown && r._amount !== kUnknown) {
+        reporter._amount += r._amount;
+      } else if (reporter._amount === kUnknown && r._amount !== kUnknown) {
+        reporter._amount = r._amount;
+      }
+      reporter._nMerged = reporter._nMerged ? reporter._nMerged + 1 : 2;
     } else {
       reporters[r._path] = r;
     }
@@ -283,13 +293,14 @@ function genProcessText(aProcess, aReporters)
    *
    * @return The built tree.  The tree nodes have this structure:
    *         interface Node {
-   *           _name: string;
+   *           _name:        string;
    *           _kind:        number;
    *           _amount:      number;    (non-negative or 'kUnknown')
    *           _description: string;
    *           _kids:        [Node];
    *           _hasReporter: boolean;   (only defined if 'true')
    *           _hasProblem:  boolean;   (only defined if 'true')
+   *           _nMerged:     number;    (only defined if >= 2)
    *         }
    */
   function buildTree()
@@ -307,9 +318,10 @@ function genProcessText(aProcess, aReporters)
       return undefined;
     }
 
-    // We want to process all reporters that begin with 'treeName'.
-    // First we build the tree but only filling in '_name', '_kind', '_kids'
-    // and maybe '._hasReporter'.  This is done top-down from the reporters.
+    // We want to process all reporters that begin with 'treeName'.  First we
+    // build the tree but only filling in '_name', '_kind', '_units', '_kids',
+    // maybe '_hasReporter' and maybe '_nMerged'.  This is done top-down from
+    // the reporters.
     var t = {
       _name: "falseRoot",
       _kind: KIND_OTHER,
@@ -337,6 +349,9 @@ function genProcessText(aProcess, aReporters)
         }
         u._kind = r._kind;
         u._hasReporter = true;
+        if (r._nMerged) {
+          u._nMerged = r._nMerged;
+        }
       }
     }
     // Using falseRoot makes the above code simpler.  Now discard it, leaving
@@ -695,19 +710,25 @@ function prepDesc(aStr)
   return escapeQuotes(flipBackslashes(aStr));
 }
 
-function genMrNameText(aKind, aDesc, aName, aHasProblem)
+function genMrNameText(aKind, aDesc, aName, aHasProblem, aNMerged)
 {
-  const problemDesc =
-    "Warning: this memory reporter was unable to compute a useful value. " +
-    "The reported value is the sum of all entries below '" + aName + "', " +
-    "which is probably less than the true value.";
   var text = "-- <span class='mrName hasDesc' title='" +
              kindToString(aKind) + prepDesc(aDesc) +
              "'>" + prepName(aName) + "</span>";
-  text += aHasProblem
-        ? " <span class='mrStar' title=\"" + problemDesc + "\">[*]</span>\n"
-        : "\n";
-  return text;
+  if (aHasProblem) {
+    const problemDesc =
+      "Warning: this memory reporter was unable to compute a useful value. " +
+      "The reported value is the sum of all entries below '" + aName + "', " +
+      "which is probably less than the true value.";
+    text += " <span class='mrStar' title=\"" + problemDesc + "\">[*]</span>";
+  }
+  if (aNMerged) {
+    const dupDesc = "This value is the sum of " + aNMerged +
+                    " memory reporters that all have the same path.";
+    text += " <span class='mrStar' title=\"" + dupDesc + "\">[" + 
+            aNMerged + "]</span>";
+  }
+  return text + '\n';
 }
 
 /**
@@ -791,7 +812,7 @@ function genTreeText(aT)
 
     var text = indent + genMrValueText(tMemoryUsedStr) + " " + perc +
                genMrNameText(aT._kind, aT._description, aT._name,
-                             aT._hasProblem);
+                             aT._hasProblem, aT._nMerged);
 
     for (var i = 0; i < aT._kids.length; i++) {
       // 3 is the standard depth, the callee adjusts it if necessary.
@@ -848,7 +869,8 @@ function genOtherText(aReporters)
         _units:       r._units,
         _amount:      hasProblem ? 0 : r._amount,
         _description: r._description,
-        _hasProblem:  hasProblem
+        _hasProblem:  hasProblem,
+        _nMerged:     r._nMerged
       };
       rArray.push(elem);
       var thisAmountLength = formatReporterAmount(elem).length;
@@ -866,7 +888,7 @@ function genOtherText(aReporters)
     text += genMrValueText(
               pad(formatReporterAmount(elem), maxAmountLength, ' ')) + " ";
     text += genMrNameText(elem._kind, elem._description, elem._path,
-                          elem._hasProblem);
+                          elem._hasProblem, elem._nMerged);
   }
 
   // Nb: the newlines give nice spacing if we cut+paste into a text buffer.
