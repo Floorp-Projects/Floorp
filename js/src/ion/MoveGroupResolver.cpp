@@ -48,8 +48,6 @@ MoveGroupResolver::MoveGroupResolver()
 {
 }
 
-typedef InlineList<MoveGroupResolver::PendingMove>::iterator PendingMoveIterator;
-
 bool
 MoveGroupResolver::buildWorklist(LMoveGroup *group)
 {
