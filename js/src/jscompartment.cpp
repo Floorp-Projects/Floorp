@@ -73,6 +73,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcLastBytes(0),
     hold(false),
+#ifdef JS_ION
+    ionCompartment_(NULL),
+#endif
 #ifdef JS_TRACER
     traceMonitor_(NULL),
 #endif
@@ -80,9 +83,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     active(false),
 #ifdef JS_METHODJIT
     jaegerCompartment_(NULL),
-#endif
-#ifdef JS_ION
-    ionCompartment_(NULL),
 #endif
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
@@ -108,6 +108,10 @@ JSCompartment::~JSCompartment()
 {
 #if ENABLE_YARR_JIT
     Foreground::delete_(regExpAllocator);
+#endif
+
+#ifdef JS_ION
+    Foreground::delete_(ionCompartment_);
 #endif
 
 #ifdef JS_METHODJIT
@@ -148,18 +152,22 @@ JSCompartment::init()
 
 #ifdef JS_ION
 bool
-JSCompartment::ensureIonCompartmentExists()
+JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 {
     using namespace js::ion;
     if (ionCompartment_)
         return true;
 
-    IonCompartment *ic = new IonCompartment();
-    if (!ic->Initialize()) {
-        delete ic;
+    // Set the compartment early, so linking works.
+    ionCompartment_ = cx->new_<IonCompartment>();
+
+    if (!ionCompartment_ || !ionCompartment_->initialize(cx)) {
+        if (ionCompartment_)
+            delete ionCompartment_;
+        ionCompartment_ = NULL;
         return false;
     }
-    ionCompartment_ = ic;
+
     return true;
 }
 #endif
