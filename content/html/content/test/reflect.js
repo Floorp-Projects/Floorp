@@ -334,3 +334,105 @@ function reflectLimitedEnumerated(aParameters)
   });
 }
 
+/**
+ * Checks that a given attribute is correctly reflected as a boolean.
+ *
+ * @param aParameters    Object    object containing the parameters, which are:
+ *  - element            Element   node to test on
+ *  - attribute          String    name of the attribute
+ *     OR
+ *    attribute          Object    object containing two attributes, 'content' and 'idl'
+ */
+function reflectBoolean(aParameters)
+{
+  var element = aParameters.element;
+  var contentAttr = typeof aParameters.attribute === "string"
+                      ? aParameters.attribute : aParameters.attribute.content;
+  var idlAttr = typeof aParameters.attribute === "string"
+                  ? aParameters.attribute : aParameters.attribute.idl;
+
+  ok(idlAttr in element,
+     idlAttr + " should be an IDL attribute of this element");
+  is(typeof element[idlAttr], "boolean",
+     idlAttr + " IDL attribute should be a boolean");
+
+  // Tests when the attribute isn't set.
+  is(element.getAttribute(contentAttr), null,
+     "When not set, the content attribute should be null.");
+  is(element[idlAttr], false,
+     "When not set, the IDL attribute should return false");
+
+  /**
+   * Test various values.
+   * Each value to test is actually an object containing a 'value' property
+   * containing the value to actually test, a 'stringified' property containing
+   * the stringified value and a 'result' property containing the expected
+   * result when the value is set to the IDL attribute.
+   */
+  var valuesToTest = [
+    { value: true, stringified: "true", result: true },
+    { value: false, stringified: "false", result: false },
+    { value: "true", stringified: "true", result: true },
+    { value: "false", stringified: "false", result: true },
+    { value: "foo", stringified: "foo", result: true },
+    { value: idlAttr, stringified: idlAttr, result: true },
+    { value: contentAttr, stringified: contentAttr, result: true },
+    { value: "null", stringified: "null", result: true },
+    { value: "undefined", stringified: "undefined", result: true },
+    { value: "", stringified: "", result: false },
+    { value: undefined, stringified: "undefined", result: false },
+    { value: null, stringified: "null", result: false },
+    { value: +0, stringified: "0", result: false },
+    { value: -0, stringified: "0", result: false },
+    { value: NaN, stringified: "NaN", result: false },
+    { value: 42, stringified: "42", result: true },
+    { value: Infinity, stringified: "Infinity", result: true },
+    { value: -Infinity, stringified: "-Infinity", result: true },
+    // ES5, verse 9.2.
+    { value: { toString: function() { return "foo" } }, stringified: "foo",
+      result: true },
+    { value: { valueOf: function() { return "foo" } },
+      stringified: "[object Object]", result: true },
+    { value: { valueOf: function() { return "quux" }, toString: undefined },
+      stringified: "quux", result: true },
+    { value: { valueOf: function() { return "foo" },
+               toString: function() { return "bar" } }, stringified: "bar",
+      result: true },
+    { value: { valueOf: function() { return false } },
+      stringified: "[object Object]", result: true },
+    { value: { foo: false, bar: false }, stringified: "[object Object]",
+      result: true },
+    { value: { }, stringified: "[object Object]", result: true },
+  ];
+
+  valuesToTest.forEach(function(v) {
+    element.setAttribute(contentAttr, v.value);
+    is(element[idlAttr], true,
+       "IDL attribute should return always return 'true' if the content attribute has been set");
+    if (v.value === null) {
+      // bug 667856
+      todo(element.getAttribute(contentAttr), v.stringified,
+           "Content attribute should return the stringified value it has been set to.");
+    } else {
+      is(element.getAttribute(contentAttr), v.stringified,
+         "Content attribute should return the stringified value it has been set to.");
+    }
+    element.removeAttribute(contentAttr);
+
+    element[idlAttr] = v.value;
+    is(element[idlAttr], v.result, "IDL attribute should return " + v.result);
+    is(element.getAttribute(contentAttr), v.result ? "" : null,
+       v.result ? "Content attribute should return the empty string."
+                : "Content attribute should return null.");
+    is(element.hasAttribute(contentAttr), v.result,
+       v.result ? contentAttr + " should not be present"
+                : contentAttr + " should be present");
+    element.removeAttribute(contentAttr);
+  });
+
+  // Tests after removeAttribute() is called. Should be equivalent with not set.
+  is(element.getAttribute(contentAttr), null,
+     "When not set, the content attribute should be null.");
+  is(element[contentAttr], false,
+     "When not set, the IDL attribute should return false");
+}
