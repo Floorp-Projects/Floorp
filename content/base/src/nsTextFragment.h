@@ -47,6 +47,8 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsTraceRefcnt.h"
+#include "nsDOMMemoryReporter.h"
+
 class nsString;
 class nsCString;
 
@@ -223,6 +225,21 @@ public:
     PRUint32 mIsBidi : 1;
     PRUint32 mLength : 29;
   };
+
+  /**
+   * Returns the size taken in memory by this text fragment.
+   * @return the size taken in memory by this text fragment.
+   */
+  PRInt64 SizeOf() const
+  {
+    PRInt64 size = sizeof(*this);
+
+    if (mState.mInHeap) {
+      size += GetLength() * Is2b() ? sizeof(*m2b) : sizeof(*m1b);
+    }
+
+    return size;
+  }
 
 private:
   void ReleaseText();
