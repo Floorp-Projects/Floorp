@@ -111,13 +111,13 @@ C1Spewer::spewIntervals(const char *pass, LinearScanAllocator *regalloc)
 }
 
 static void
-DumpInstruction(FILE *fp, MInstruction *ins)
+DumpDefinition(FILE *fp, MDefinition *def)
 {
     fprintf(fp, "      ");
-    fprintf(fp, "%u %lu ", ins->id(), ins->useCount());
-    ins->printName(fp);
+    fprintf(fp, "%u %lu ", def->id(), def->useCount());
+    def->printName(fp);
     fprintf(fp, " ");
-    ins->printOpcode(fp);
+    def->printOpcode(fp);
     fprintf(fp, " <|@\n");
 }
 
@@ -193,7 +193,7 @@ C1Spewer::spewCFG(FILE *fp, MBasicBlock *block)
     fprintf(fp, "        size %d\n", (int)block->numEntrySlots());
     fprintf(fp, "        method \"None\"\n");
     for (uint32 i = 0; i < block->numEntrySlots(); i++) {
-        MInstruction *ins = block->getEntrySlot(i);
+        MDefinition *ins = block->getEntrySlot(i);
         fprintf(fp, "        ");
         fprintf(fp, "%d ", i);
         ins->printName(fp);
@@ -205,9 +205,9 @@ C1Spewer::spewCFG(FILE *fp, MBasicBlock *block)
 
     fprintf(fp, "    begin_HIR\n");
     for (size_t i = 0; i < block->numPhis(); i++)
-        DumpInstruction(fp, block->getPhi(i));
+        DumpDefinition(fp, block->getPhi(i));
     for (MInstructionIterator i = block->begin(); i != block->end(); i++)
-        DumpInstruction(fp, *i);
+        DumpDefinition(fp, *i);
     fprintf(fp, "    end_HIR\n");
 
     if (block->lir()) {

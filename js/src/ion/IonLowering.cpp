@@ -58,7 +58,7 @@ LIRGenerator::emitAtUses(MInstruction *mir)
 }
 
 LUse
-LIRGenerator::use(MInstruction *mir, LUse policy)
+LIRGenerator::use(MDefinition *mir, LUse policy)
 {
     // It is illegal to call use() on an instruction with two defs.
 #if BOX_PIECES > 1
@@ -145,7 +145,7 @@ LIRGenerator::visitGoto(MGoto *ins)
 bool
 LIRGenerator::visitTest(MTest *test)
 {
-    MInstruction *opd = test->getOperand(0);
+    MDefinition *opd = test->getOperand(0);
     MBasicBlock *ifTrue = test->ifTrue();
     MBasicBlock *ifFalse = test->ifFalse();
 
@@ -175,10 +175,10 @@ LIRGenerator::visitTest(MTest *test)
 }
 
 static void
-ReorderCommutative(MInstruction **lhsp, MInstruction **rhsp)
+ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
 {
-    MInstruction *lhs = *lhsp;
-    MInstruction *rhs = *rhsp;
+    MDefinition *lhs = *lhsp;
+    MDefinition *rhs = *rhsp;
 
     // Put the constant in the left-hand side, if there is one.
     if (lhs->isConstant()) {
@@ -190,8 +190,8 @@ ReorderCommutative(MInstruction **lhsp, MInstruction **rhsp)
 bool
 LIRGenerator::doBitOp(JSOp op, MInstruction *ins)
 {
-    MInstruction *lhs = ins->getOperand(0);
-    MInstruction *rhs = ins->getOperand(1);
+    MDefinition *lhs = ins->getOperand(0);
+    MDefinition *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
         ReorderCommutative(&lhs, &rhs);
@@ -224,8 +224,8 @@ LIRGenerator::visitBitXOr(MBitXOr *ins)
 bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
-    MInstruction *lhs = ins->getOperand(0);
-    MInstruction *rhs = ins->getOperand(1);
+    MDefinition *lhs = ins->getOperand(0);
+    MDefinition *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
         ReorderCommutative(&lhs, &rhs);
@@ -251,6 +251,13 @@ LIRGenerator::visitCopy(MCopy *ins)
 }
 
 bool
+LIRGenerator::visitPhi(MPhi *phi)
+{
+    JS_NOT_REACHED("should not call accept() on phis");
+    return false;
+}
+
+bool
 LIRGenerator::lowerPhi(MPhi *ins)
 {
     // The virtual register of the phi was determined in the first pass.
@@ -260,18 +267,11 @@ LIRGenerator::lowerPhi(MPhi *ins)
     if (!phi)
         return false;
     for (size_t i = 0; i < ins->numOperands(); i++) {
-        MInstruction *opd = ins->getOperand(i);
+        MDefinition *opd = ins->getOperand(i);
         phi->setOperand(i, LUse(opd->id(), LUse::ANY));
     }
     phi->setDef(0, LDefinition(ins->id(), LDefinition::TypeFrom(ins->type())));
     return addPhi(phi);
-}
-
-bool
-LIRGenerator::visitPhi(MPhi *ins)
-{
-    JS_NOT_REACHED("Not used.");
-    return true;
 }
 
 bool
@@ -305,11 +305,11 @@ LIRGenerator::visitSnapshot(MSnapshot *snapshot)
 }
 
 void
-LIRGenerator::rewriteDefsInSnapshots(MInstruction *ins, MInstruction *old)
+LIRGenerator::rewriteDefsInSnapshots(MInstruction *ins, MDefinition *old)
 {
     MUseIterator iter(old);
     while (iter.more()) {
-        MInstruction *use = iter->ins();
+        MDefinition *use = iter->ins();
         if (!ins->isSnapshot() || ins->inWorklist()) {
             iter.next();
             continue;
@@ -369,7 +369,7 @@ LIRGenerator::visitBlock(MBasicBlock *block)
         uint32 position = block->positionInPhiSuccessor();
         for (size_t i = 0; i < successor->numPhis(); i++) {
             MPhi *phi = successor->getPhi(i);
-            MInstruction *opd = phi->getOperand(position);
+            MDefinition *opd = phi->getOperand(position);
             if (opd->emitAtUses() && !opd->id()) {
                 if (!ensureDefined(opd))
                     return false;
@@ -400,7 +400,7 @@ LIRGenerator::generate()
         MBasicBlock *block = graph.getBlock(i);
         current = block->lir();
         for (size_t j = 0; j < block->numPhis(); j++) {
-            if (!block->getPhi(j)->accept(this))
+            if (!lowerPhi(block->getPhi(j)))
                 return false;
         }
     }

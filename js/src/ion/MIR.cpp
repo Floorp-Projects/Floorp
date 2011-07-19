@@ -47,7 +47,7 @@ using namespace js;
 using namespace js::ion;
 
 static void
-PrintOpcodeName(FILE *fp, MInstruction::Opcode op)
+PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
 {
     static const char *names[] =
     {
@@ -62,7 +62,7 @@ PrintOpcodeName(FILE *fp, MInstruction::Opcode op)
 }
 
 void
-MInstruction::printName(FILE *fp)
+MDefinition::printName(FILE *fp)
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, "%u", id());
@@ -72,7 +72,7 @@ MInstruction::printName(FILE *fp)
 }
 
 HashNumber
-MInstruction::valueHash() const
+MDefinition::valueHash() const
 {
     HashNumber out = op();
     for (size_t i = 0; i < numOperands(); i++) {
@@ -83,7 +83,7 @@ MInstruction::valueHash() const
 }
 
 bool
-MInstruction::congruentTo(MInstruction * const &ins) const
+MDefinition::congruentTo(MDefinition * const &ins) const
 {
     if (numOperands() != ins->numOperands())
         return false;
@@ -112,7 +112,7 @@ static const char *MirTypeNames[] =
 };
 
 void
-MInstruction::printOpcode(FILE *fp)
+MDefinition::printOpcode(FILE *fp)
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
@@ -124,7 +124,7 @@ MInstruction::printOpcode(FILE *fp)
 }
 
 size_t
-MInstruction::useCount() const
+MDefinition::useCount() const
 {
     MUse *use = uses();
     size_t count = 0;
@@ -136,7 +136,7 @@ MInstruction::useCount() const
 }
 
 MUse *
-MInstruction::removeUse(MUse *prev, MUse *use)
+MDefinition::removeUse(MUse *prev, MUse *use)
 {
     if (!prev) {
         JS_ASSERT(uses_ = use);
@@ -149,9 +149,9 @@ MInstruction::removeUse(MUse *prev, MUse *use)
 }
 
 void
-MInstruction::replaceOperand(MUse *prev, MUse *use, MInstruction *ins)
+MDefinition::replaceOperand(MUse *prev, MUse *use, MDefinition *ins)
 {
-    MInstruction *used = getOperand(use->index());
+    MDefinition *used = getOperand(use->index());
     if (used == ins)
         return;
 
@@ -161,7 +161,7 @@ MInstruction::replaceOperand(MUse *prev, MUse *use, MInstruction *ins)
 }
 
 void
-MInstruction::replaceOperand(MUseIterator &use, MInstruction *ins)
+MDefinition::replaceOperand(MUseIterator &use, MDefinition *ins)
 {
     size_t index = use->index();
     use.next();
@@ -169,9 +169,9 @@ MInstruction::replaceOperand(MUseIterator &use, MInstruction *ins)
 }
 
 void
-MInstruction::replaceOperand(size_t index, MInstruction *ins)
+MDefinition::replaceOperand(size_t index, MDefinition *ins)
 {
-    MInstruction *old = getOperand(index);
+    MDefinition *old = getOperand(index);
     for (MUseIterator uses(old); uses.more(); uses.next()) {
         if (uses->index() == index && uses->ins() == this) {
             replaceOperand(uses.prev(), *uses, ins);
@@ -189,7 +189,7 @@ IsPowerOfTwo(uint32 n)
 }
 
 MIRType
-MInstruction::usedAsType() const
+MDefinition::usedAsType() const
 {
     // usedTypes() should never have MIRType_Value in its set.
     JS_ASSERT(!(usedTypes() & (1 << MIRType_Value)));
@@ -226,7 +226,7 @@ MConstant::valueHash() const
     return (HashNumber)value_.asRawBits();
 }
 bool
-MConstant::congruentTo(MInstruction * const &ins) const
+MConstant::congruentTo(MDefinition * const &ins) const
 {
     if (!ins->isConstant())
         return false;
@@ -287,7 +287,7 @@ MParameter::valueHash() const
 }
 
 bool
-MParameter::congruentTo(MInstruction * const &ins) const
+MParameter::congruentTo(MDefinition * const &ins) const
 {
     if (!ins->isParameter())
         return false;
@@ -296,7 +296,7 @@ MParameter::congruentTo(MInstruction * const &ins) const
 }
 
 MCopy *
-MCopy::New(MInstruction *ins)
+MCopy::New(MDefinition *ins)
 {
     // Don't create nested copies.
     if (ins->isCopy())
@@ -306,7 +306,7 @@ MCopy::New(MInstruction *ins)
 }
 
 MTest *
-MTest::New(MInstruction *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {
     return new MTest(ins, ifTrue, ifFalse);
 }
@@ -324,7 +324,7 @@ MPhi::New(uint32 slot)
 }
 
 bool
-MPhi::addInput(MInstruction *ins)
+MPhi::addInput(MDefinition *ins)
 {
     for (size_t i = 0; i < inputs_.length(); i++) {
         if (getOperand(i) == ins)
@@ -339,7 +339,7 @@ MPhi::addInput(MInstruction *ins)
 }
 
 MReturn *
-MReturn::New(MInstruction *ins)
+MReturn::New(MDefinition *ins)
 {
     return new MReturn(ins);
 }
@@ -389,19 +389,19 @@ MBinaryInstruction::adjustForInputs()
 }
 
 MBitAnd *
-MBitAnd::New(MInstruction *left, MInstruction *right)
+MBitAnd::New(MDefinition *left, MDefinition *right)
 {
     return new MBitAnd(left, right);
 }
 
 MBitOr *
-MBitOr::New(MInstruction *left, MInstruction *right)
+MBitOr::New(MDefinition *left, MDefinition *right)
 {
     return new MBitOr(left, right);
 }
 
 MBitXOr *
-MBitXOr::New(MInstruction *left, MInstruction *right)
+MBitXOr::New(MDefinition *left, MDefinition *right)
 {
     return new MBitXOr(left, right);
 }
@@ -425,7 +425,7 @@ MSnapshot::MSnapshot(MBasicBlock *block, jsbytecode *pc)
 bool
 MSnapshot::init(MBasicBlock *block)
 {
-    operands_ = block->gen()->allocate<MInstruction *>(stackDepth());
+    operands_ = block->gen()->allocate<MDefinition *>(stackDepth());
     if (!operands_)
         return false;
     return true;
@@ -451,7 +451,7 @@ MSnapshot::valueHash() const
 }
 
 bool
-MSnapshot::congruentTo(MInstruction *const &ins) const
+MSnapshot::congruentTo(MDefinition *const &ins) const
 {
     return ins->id() == id();
 }

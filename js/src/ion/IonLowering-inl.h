@@ -49,7 +49,7 @@ namespace js {
 namespace ion {
 
 template <size_t X, size_t Y> bool
-LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, const LDefinition &def)
+LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LDefinition &def)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
@@ -64,20 +64,20 @@ LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, const 
 }
 
 template <size_t X, size_t Y> bool
-LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, LDefinition::Policy policy)
+LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, LDefinition::Policy policy)
 {
     LDefinition::Type type = LDefinition::TypeFrom(mir->type());
     return define(lir, mir, LDefinition(type, policy));
 }
 
 template <size_t Ops, size_t Temps> bool
-LIRGenerator::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MInstruction *mir)
+LIRGenerator::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir)
 {
     return define(lir, mir, LDefinition::MUST_REUSE_INPUT);
 }
 
 template <size_t Ops, size_t Temps> bool
-LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
+LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
                         LDefinition::Policy policy)
 {
     uint32 vreg = getVirtualRegister();
@@ -98,10 +98,10 @@ LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstru
 }
 
 bool
-LIRGenerator::ensureDefined(MInstruction *mir)
+LIRGenerator::ensureDefined(MDefinition *mir)
 {
     if (mir->emitAtUses()) {
-        if (!mir->accept(this))
+        if (!mir->toInstruction()->accept(this))
             return false;
         JS_ASSERT(mir->id());
     }
@@ -109,19 +109,19 @@ LIRGenerator::ensureDefined(MInstruction *mir)
 }
 
 LUse
-LIRGenerator::useRegister(MInstruction *mir)
+LIRGenerator::useRegister(MDefinition *mir)
 {
     return use(mir, LUse(LUse::REGISTER));
 }
 
 LUse
-LIRGenerator::use(MInstruction *mir)
+LIRGenerator::use(MDefinition *mir)
 {
     return use(mir, LUse(LUse::ANY));
 }
 
 LAllocation
-LIRGenerator::useOrConstant(MInstruction *mir)
+LIRGenerator::useOrConstant(MDefinition *mir)
 {
     if (mir->isConstant())
         return LAllocation(mir->toConstant()->vp());
@@ -129,7 +129,7 @@ LIRGenerator::useOrConstant(MInstruction *mir)
 }
 
 LAllocation
-LIRGenerator::useRegisterOrConstant(MInstruction *mir)
+LIRGenerator::useRegisterOrConstant(MDefinition *mir)
 {
     if (mir->isConstant())
         return LAllocation(mir->toConstant()->vp());
@@ -137,7 +137,7 @@ LIRGenerator::useRegisterOrConstant(MInstruction *mir)
 }
 
 LAllocation
-LIRGenerator::useKeepaliveOrConstant(MInstruction *mir)
+LIRGenerator::useKeepaliveOrConstant(MDefinition *mir)
 {
     if (mir->isConstant())
         return LAllocation(mir->toConstant()->vp());
@@ -145,13 +145,13 @@ LIRGenerator::useKeepaliveOrConstant(MInstruction *mir)
 }
 
 LUse
-LIRGenerator::useFixed(MInstruction *mir, Register reg)
+LIRGenerator::useFixed(MDefinition *mir, Register reg)
 {
     return use(mir, LUse(reg));
 }
 
 LUse
-LIRGenerator::useFixed(MInstruction *mir, FloatRegister reg)
+LIRGenerator::useFixed(MDefinition *mir, FloatRegister reg)
 {
     return use(mir, LUse(reg));
 }
