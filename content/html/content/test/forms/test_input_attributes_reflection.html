@@ -54,7 +54,9 @@ reflectBoolean({
 
 // .checked doesn't reflect a content attribute.
 
-// TODO: dirName (not implemented)
+// .dirName
+todo("dirName" in document.createElement("input"),
+     "dirName isn't implemented yet");
 
 // .disabled
 reflectBoolean({
@@ -103,9 +105,14 @@ reflectString({
 // .indeterminate doesn't reflect a content attribute.
 
 // TODO: list (HTMLElement)
-// TODO: max (not implemented)
+
+// .max
+todo("max" in document.createElement("input"), "max isn't implemented yet");
+
 // TODO: maxLength (long)
-// TODO: min (not implemented)
+
+// .min
+todo("min" in document.createElement("input"), "min isn't implemented yet");
 
 // .multiple
 reflectBoolean({
@@ -155,7 +162,9 @@ reflectUnsignedInt({
 });
 
 // TODO: src (URL)
-// TODO: step (not implemented)
+
+// .step
+todo("step" in document.createElement("input"), "step isn't implemented yet");
 
 // .type
 reflectLimitedEnumerated({
@@ -178,10 +187,21 @@ reflectString({
 });
 
 // .value doesn't reflect a content attribute.
-// TODO: valueAsDate (not implemented)
-// TODO: valueAsNumber (not implemented)
-// TODO: selectedOption (not implemented)
+
+// .valueAsDate
+todo("valueAsDate" in document.createElement("input"),
+     "valueAsDate isn't implemented yet");
+
+// .valueAsNumber
+todo("valueAsNumber" in document.createElement("input"),
+     "valueAsNumber isn't implemented yet");
+
+// .selectedOption
+todo("selectedOption" in document.createElement("input"),
+     "selectedOption isn't implemented yet");
+
 // TODO: width (non-negative integer)
+
 // .willValidate doesn't reflect a content attribute.
 // .validity doesn't reflect a content attribute.
 // .validationMessage doesn't reflect a content attribute.
