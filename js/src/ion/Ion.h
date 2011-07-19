@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_h__
+#if !defined(jsion_ion_h__) && defined(JS_ION)
 #define jsion_ion_h__
 
 #include "jscntxt.h"
@@ -49,6 +49,44 @@ namespace js {
 namespace ion {
 
 class TempAllocator;
+
+struct IonOptions
+{
+    // If Ion is supported, this toggles whether Ion is used.
+    //
+    // Default: false
+    bool enabled;
+
+    // Toggles whether global value numbering is used.
+    //
+    // Default: true
+    bool gvn;
+
+    // Toggles whether global value numbering is optimistic (true) or
+    // pessimistic (false).
+    //
+    // Default: true
+    bool gvnIsOptimistic;
+
+    // Toggles whether loop invariant code motion is performed.
+    //
+    // Default: true
+    bool licm;
+
+    // Toggles whether Linear Scan Register Allocation is used. If LSRA is not
+    // used, then Greedy Register Allocation is used instead.
+    //
+    // Default: false
+    bool lsra;
+
+    IonOptions()
+      : enabled(false),
+        gvn(true),
+        gvnIsOptimistic(true),
+        licm(true),
+        lsra(false)
+    { }
+};
 
 // An Ion context is needed to enter into either an Ion method or an instance
 // of the Ion compiler. It points to a temporary allocator and the active
@@ -71,6 +109,8 @@ IonContext *GetIonContext();
 bool SetIonContext(IonContext *ctx);
 
 bool Go(JSContext *cx, JSScript *script, js::StackFrame *fp);
+
+extern IonOptions js_IonOptions;
 
 }
 }
