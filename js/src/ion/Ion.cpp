@@ -59,11 +59,16 @@
 # include "arm/Lowering-arm.h"
 # include "arm/CodeGenerator-arm.h"
 #endif
+#include "jsgcmark.h"
+#include "jsgcinlines.h"
 
 using namespace js;
 using namespace js::ion;
 
 IonOptions ion::js_IonOptions;
+
+// Assert that IonCode is gc::Cell aligned.
+JS_STATIC_ASSERT(sizeof(IonCode) % gc::Cell::CellSize == 0);
 
 #ifdef JS_THREADSAFE
 static bool IonTLSInitialized = false;
@@ -128,15 +133,31 @@ ion::SetIonContext(IonContext *ctx)
 }
 #endif
 
+IonCode *
+IonCode::New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool)
+{
+    IonCode *codeObj = NewGCThing<IonCode>(cx, gc::FINALIZE_IONCODE, sizeof(IonCode));
+    if (!codeObj) {
+        pool->release();
+        return NULL;
+    }
+
+    new (codeObj) IonCode(code, size, pool);
+    return codeObj;
+}
+
 void
-IonCode::release()
+IonCode::finalize(JSContext *cx)
 {
     if (pool_)
         pool_->release();
-#ifdef DEBUG
-    pool_ = NULL;
-    code_ = NULL;
-#endif
+}
+
+void
+IonScript::trace(JSTracer *trc, JSScript *script)
+{
+    if (method)
+        MarkIonCode(trc, method, "method");
 }
 
 void
@@ -145,7 +166,6 @@ IonScript::Destroy(JSContext *cx, JSScript *script)
     if (!script->ion || script->ion == ION_DISABLED_SCRIPT)
         return;
 
-    script->ion->method.release();
     cx->free_(script->ion);
 }
 

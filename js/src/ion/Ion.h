@@ -88,8 +88,6 @@ struct IonOptions
     { }
 };
 
-#define ION_DISABLED_SCRIPT ((IonScript *)0x1)
-
 enum MethodStatus
 {
     Method_CantCompile,

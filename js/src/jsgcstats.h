@@ -136,6 +136,7 @@ struct GCTimer
     uint64 sweepStringEnd;
     uint64 sweepShapeEnd;
     uint64 sweepDestroyEnd;
+    uint64 sweepIonCodeEnd;
     uint64 end;
 
     bool isCompartmental;
