@@ -51,9 +51,9 @@
 #include "nsBoxFrame.h"
 #include "nsGridLayout2.h"
 
-already_AddRefed<nsIBoxLayout> NS_NewGridRowLeafLayout()
+already_AddRefed<nsBoxLayout> NS_NewGridRowLeafLayout()
 {
-  nsIBoxLayout* layout = new nsGridRowLeafLayout();
+  nsBoxLayout* layout = new nsGridRowLeafLayout();
   NS_IF_ADDREF(layout);
   return layout;
 } 

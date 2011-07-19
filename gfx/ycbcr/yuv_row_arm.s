@@ -36,6 +36,9 @@
 
     .arch   armv7-a
     .fpu    neon
+/* Allow to build on targets not supporting neon, and force the object file
+ * target to avoid bumping the final binary target */
+    .object_arch armv4t
     .text
     .align
 

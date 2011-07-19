@@ -180,8 +180,5 @@ function test() {
   ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
 
   // Open Library.
-  openLibrary(function (library) {
-    gLibrary = library;
-    nextTest();
-  });
+  gLibrary = openLibrary(nextTest);
 }

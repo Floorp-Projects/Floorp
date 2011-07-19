@@ -116,7 +116,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsFocusManager.h"
@@ -5095,7 +5095,7 @@ nsDocument::GetLocation(nsIDOMLocation **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
-  nsCOMPtr<nsIDOMWindowInternal> w(do_QueryInterface(mScriptGlobalObject));
+  nsCOMPtr<nsIDOMWindow> w = do_QueryInterface(mScriptGlobalObject);
 
   if (!w) {
     return NS_OK;
@@ -5108,8 +5108,7 @@ Element*
 nsIDocument::GetHtmlElement()
 {
   Element* rootElement = GetRootElement();
-  if (rootElement && rootElement->Tag() == nsGkAtoms::html &&
-      rootElement->IsHTML())
+  if (rootElement && rootElement->IsHTML(nsGkAtoms::html))
     return rootElement;
   return nsnull;
 }

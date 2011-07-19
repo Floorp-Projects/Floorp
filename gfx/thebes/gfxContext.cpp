@@ -63,6 +63,15 @@ gfxContext::gfxContext(gfxASurface *surface) :
 
     mCairo = cairo_create(surface->CairoSurface());
     mFlags = surface->GetDefaultContextFlags();
+    if (mSurface->GetRotateForLandscape()) {
+        // Rotate page 90 degrees to draw landscape page on portrait paper
+        gfxIntSize size = mSurface->GetSize();
+        Translate(gfxPoint(0, size.width));
+        gfxMatrix matrix(0, -1,
+                         1,  0,
+                         0,  0);
+        Multiply(matrix);
+    }
 }
 gfxContext::~gfxContext()
 {

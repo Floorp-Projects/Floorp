@@ -1017,8 +1017,8 @@ nsWebSocket::ParseURL(const nsString& aURL)
   rv = parsedURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsXPIDLCString origin;
-  rv = mPrincipal->GetOrigin(getter_Copies(origin));
+  nsCString origin;
+  rv = nsContentUtils::GetASCIIOrigin(mPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
   if (scheme.LowerCaseEqualsLiteral("ws")) {
@@ -1350,6 +1350,18 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
   // parses the url
   rv = ParseURL(PromiseFlatString(aURL));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Don't allow https:// to open ws://
+  nsCOMPtr<nsIURI> originURI;
+  PRBool originHTTPS;
+  if (!mSecure && 
+      !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
+                            PR_FALSE) &&
+      NS_SUCCEEDED(NS_NewURI(getter_AddRefs(originURI), mUTF16Origin)) &&
+      NS_SUCCEEDED(originURI->SchemeIs("https", &originHTTPS)) &&
+      originHTTPS) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // sets the protocol
   if (!aProtocol.IsEmpty()) {

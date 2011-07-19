@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "imgRequest.h"
+#include "ImageLogging.h"
 
 /* We end up pulling in windows.h because we eventually hit gfxWindowsSurface;
  * windows.h defines LoadImage, so we have to #undef it or imgLoader::LoadImage
@@ -54,7 +55,6 @@
 #include "VectorImage.h"
 
 #include "imgILoader.h"
-#include "ImageLogging.h"
 
 #include "netCore.h"
 
@@ -185,8 +185,8 @@ NS_IMPL_ISUPPORTS8(imgRequest,
 
 imgRequest::imgRequest() : 
   mCacheId(0), mValidator(nsnull), mImageSniffers("image-sniffing-services"),
-  mWindowId(0), mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE),
-  mGotData(PR_FALSE), mIsInCache(PR_FALSE)
+  mWindowId(0), mCORSMode(imgIRequest::CORS_NONE), mDecodeRequested(PR_FALSE),
+  mIsMultiPartChannel(PR_FALSE), mGotData(PR_FALSE), mIsInCache(PR_FALSE)
 {}
 
 imgRequest::~imgRequest()
@@ -205,7 +205,9 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
                           void *aCacheId,
-                          void *aLoadId)
+                          void *aLoadId,
+                          nsIPrincipal* aLoadingPrincipal,
+                          PRInt32 aCORSMode)
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
@@ -224,6 +226,9 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mRequest = aRequest;
   mChannel = aChannel;
   mTimedChannel = do_QueryInterface(mChannel);
+
+  mLoadingPrincipal = aLoadingPrincipal;
+  mCORSMode = aCORSMode;
 
   mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
 

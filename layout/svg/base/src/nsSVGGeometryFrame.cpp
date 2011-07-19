@@ -338,9 +338,9 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
 }
 
 PRUint16
-nsSVGGeometryFrame::GetHittestMask()
+nsSVGGeometryFrame::GetHitTestFlags()
 {
-  PRUint16 mask = 0;
+  PRUint16 flags = 0;
 
   switch(GetStyleVisibility()->mPointerEvents) {
   case NS_STYLE_POINTER_EVENTS_NONE:
@@ -349,49 +349,49 @@ nsSVGGeometryFrame::GetHittestMask()
   case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
     if (GetStyleVisibility()->IsVisible()) {
       if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
-        mask |= HITTEST_MASK_FILL;
+        flags |= SVG_HIT_TEST_FILL;
       if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
-        mask |= HITTEST_MASK_STROKE;
+        flags |= SVG_HIT_TEST_STROKE;
       if (GetStyleSVG()->mStrokeOpacity > 0)
-        mask |= HITTEST_MASK_CHECK_MRECT;
+        flags |= SVG_HIT_TEST_CHECK_MRECT;
     }
     break;
   case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
     if (GetStyleVisibility()->IsVisible()) {
-      mask |= HITTEST_MASK_FILL;
+      flags |= SVG_HIT_TEST_FILL;
     }
     break;
   case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
     if (GetStyleVisibility()->IsVisible()) {
-      mask |= HITTEST_MASK_STROKE;
+      flags |= SVG_HIT_TEST_STROKE;
     }
     break;
   case NS_STYLE_POINTER_EVENTS_VISIBLE:
     if (GetStyleVisibility()->IsVisible()) {
-      mask |= HITTEST_MASK_FILL | HITTEST_MASK_STROKE;
+      flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
     }
     break;
   case NS_STYLE_POINTER_EVENTS_PAINTED:
     if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
-      mask |= HITTEST_MASK_FILL;
+      flags |= SVG_HIT_TEST_FILL;
     if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
-      mask |= HITTEST_MASK_STROKE;
+      flags |= SVG_HIT_TEST_STROKE;
     if (GetStyleSVG()->mStrokeOpacity)
-      mask |= HITTEST_MASK_CHECK_MRECT;
+      flags |= SVG_HIT_TEST_CHECK_MRECT;
     break;
   case NS_STYLE_POINTER_EVENTS_FILL:
-    mask |= HITTEST_MASK_FILL;
+    flags |= SVG_HIT_TEST_FILL;
     break;
   case NS_STYLE_POINTER_EVENTS_STROKE:
-    mask |= HITTEST_MASK_STROKE;
+    flags |= SVG_HIT_TEST_STROKE;
     break;
   case NS_STYLE_POINTER_EVENTS_ALL:
-    mask |= HITTEST_MASK_FILL | HITTEST_MASK_STROKE;
+    flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
     break;
   default:
     NS_ERROR("not reached");
     break;
   }
 
-  return mask;
+  return flags;
 }

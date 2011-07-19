@@ -116,6 +116,8 @@ _TEST_FILES = \
 		test_bug668513.html \
 		bug668513_redirect.html \
 		bug668513_redirect.html^headers^ \
+		test_bug669671.html \
+		file_bug669671.sjs \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

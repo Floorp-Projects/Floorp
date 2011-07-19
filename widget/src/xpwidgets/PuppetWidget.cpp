@@ -505,6 +505,16 @@ PuppetWidget::OnIMESelectionChange(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PuppetWidget::SetCursor(nsCursor aCursor)
+{
+  if (!mTabChild ||
+      !mTabChild->SendSetCursor(aCursor)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 nsresult
 PuppetWidget::DispatchPaintEvent()
 {

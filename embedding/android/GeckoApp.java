@@ -61,6 +61,7 @@ import android.util.*;
 import android.net.*;
 import android.database.*;
 import android.provider.*;
+import android.telephony.*;
 
 abstract public class GeckoApp
     extends Activity
@@ -77,6 +78,7 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
+    private PhoneStateListener mPhoneStateListener;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -232,6 +234,8 @@ abstract public class GeckoApp
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectivityReceiver = new GeckoConnectivityReceiver();
 
+        mPhoneStateListener = new GeckoPhoneStateListener();
+
         if (!checkAndSetLaunchState(LaunchState.PreLaunch,
                                     LaunchState.Launching))
             return;
@@ -258,12 +262,21 @@ abstract public class GeckoApp
         if (GeckoAppShell.getFreeSpace() > GeckoAppShell.kFreeSpaceThreshold &&
             (!libxulFile.exists() ||
              new File(getApplication().getPackageResourcePath()).lastModified()
-             >= libxulFile.lastModified()))
+             >= libxulFile.lastModified())) {
             surfaceView.mSplashStatusMsg =
                 getResources().getString(R.string.splash_screen_installing_libs);
-        else
+            File[] libs = cacheFile.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(".so");
+                }
+            });
+            for (int i = 0; i < libs.length; i++) {
+                libs[i].delete();
+            }
+        } else {
             surfaceView.mSplashStatusMsg =
                 getResources().getString(R.string.splash_screen_loading);
+        }
         mLibLoadThread.start();
     }
 
@@ -303,7 +316,7 @@ abstract public class GeckoApp
             Log.i("GeckoApp", "Intent : ACTION_MAIN");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
         }
-        else if (action.equals("org.mozilla.fennec.WEBAPP")) {
+        else if (action.equals("org.mozilla.gecko.WEBAPP")) {
             String uri = intent.getStringExtra("args");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i("GeckoApp","Intent : WEBAPP - " + uri);
@@ -326,6 +339,10 @@ abstract public class GeckoApp
         super.onPause();
 
         unregisterReceiver(mConnectivityReceiver);
+
+        TelephonyManager tm = (TelephonyManager)
+            GeckoApp.mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
+        tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
     }
 
     @Override
@@ -344,6 +361,13 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
+
+        TelephonyManager tm = (TelephonyManager)
+            GeckoApp.mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
+        tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
+
+        // Notify if network state changed since we paused
+        GeckoAppShell.onNetworkStateChange(true);
     }
 
     @Override

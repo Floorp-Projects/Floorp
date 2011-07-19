@@ -57,6 +57,8 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 
@@ -814,62 +816,41 @@ static JSFunctionSpec regexp_methods[] = {
 };
 
 JSObject *
-js_InitRegExpClass(JSContext *cx, JSObject *global)
+js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(global->isGlobal());
-    JS_ASSERT(global->isNative());
+    JS_ASSERT(obj->isNative());
 
-    /* Create and initialize RegExp.prototype. */
-    JSObject *objectProto;
-    if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
-        return NULL;
-    JS_ASSERT(objectProto);
+    GlobalObject *global = obj->asGlobal();
 
-    JSObject *proto = NewObject<WithProto::Class>(cx, &js_RegExpClass, objectProto, global);
+    JSObject *proto = global->createBlankPrototype(cx, &js_RegExpClass);
     if (!proto)
         return NULL;
 
     AlreadyIncRefed<RegExp> re = RegExp::create(cx, cx->runtime->emptyString, 0, NULL);
     if (!re)
         return NULL;
-#ifdef DEBUG
-    assertSameCompartment(cx, proto, re->compartment);
-#endif
 
     /*
      * Associate the empty regular expression with RegExp.prototype, and define
      * the initial non-method properties of any regular expression instance.
      * These must be added before methods to preserve slot layout.
      */
+#ifdef DEBUG
+    assertSameCompartment(cx, proto, re->compartment);
+#endif
     if (!proto->initRegExp(cx, re.get()))
         return NULL;
 
-    /*
-     * Now add the standard methods to RegExp.prototype, and pre-brand for
-     * better shape-guarding code.
-     */
-    if (!JS_DefineFunctions(cx, proto, regexp_methods))
+    if (!DefinePropertiesAndBrand(cx, proto, NULL, regexp_methods))
         return NULL;
-    proto->brand(cx);
 
-    /* Create the RegExp constructor. */
-    JSAtom *regExpAtom = CLASS_ATOM(cx, RegExp);
-    JSFunction *ctor =
-        js_NewFunction(cx, NULL, regexp_construct, 2, JSFUN_CONSTRUCTOR, global, regExpAtom);
+    JSFunction *ctor = global->createConstructor(cx, regexp_construct, &js_RegExpClass,
+                                                 CLASS_ATOM(cx, RegExp), 2);
     if (!ctor)
         return NULL;
 
-    /* RegExp creates regular expressions. */
-    FUN_CLASP(ctor) = &js_RegExpClass;
-
-    /* Define RegExp.prototype and RegExp.prototype.constructor. */
-    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                              ObjectValue(*proto), PropertyStub, StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                               ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0)) {
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
-    }
 
     /* Add static properties to the RegExp constructor. */
     if (!JS_DefineProperties(cx, ctor, regexp_static_props) ||
@@ -882,21 +863,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
         return NULL;
     }
 
-    /*
-     * Make sure proto's emptyShape is available to be shared by objects of
-     * this class.  JSObject::emptyShape is a one-slot cache. If we omit this,
-     * some other class could snap it up. (The risk is particularly great for
-     * Object.prototype.)
-     *
-     * All callers of JSObject::initSharingEmptyShape depend on this.
-     */
-    if (!proto->getEmptyShape(cx, &js_RegExpClass, FINALIZE_OBJECT0))
-        return NULL;
-
-    /* Install the fully-constructed RegExp and RegExp.prototype in global. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
         return NULL;
 
     return proto;
 }
-

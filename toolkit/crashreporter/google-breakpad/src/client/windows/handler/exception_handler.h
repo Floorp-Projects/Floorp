@@ -67,6 +67,7 @@
 
 #include <string>
 #include <vector>
+#include <list>
 
 #include "client/windows/common/ipc_protocol.h"
 #include "client/windows/crash_generation/crash_generation_client.h"
@@ -77,6 +78,16 @@ namespace google_breakpad {
 
 using std::vector;
 using std::wstring;
+
+// These entries store a list of memory regions that the client wants included
+// in the minidump.
+struct AppMemory {
+  AppMemory(ULONG64 ptr, ULONG length) : ptr(ptr), length(length) {}
+
+  ULONG64 ptr;
+  ULONG length;
+};
+typedef std::list<AppMemory> AppMemoryList;
 
 class ExceptionHandler {
  public:
@@ -221,6 +232,11 @@ class ExceptionHandler {
 
   // Returns whether out-of-process dump generation is used or not.
   bool IsOutOfProcess() const { return crash_generation_client_.get() != NULL; }
+
+  // Calling RegisterAppMemory(p, len) causes len bytes starting
+  // at address p to be copied to the minidump when a crash happens.
+  void RegisterAppMemory(void *ptr, size_t length);
+  void UnregisterAppMemory(void *ptr);
 
  private:
   friend class AutoExceptionHandler;
@@ -421,6 +437,10 @@ class ExceptionHandler {
   // EXCEPTION_SINGLE_STEP exceptions.  Leave this false (the default)
   // to not interfere with debuggers.
   bool handle_debug_exceptions_;
+
+  // Callers can request additional memory regions to be included in
+  // the dump.
+  AppMemoryList app_memory_info_;
 
   // A stack of ExceptionHandler objects that have installed unhandled
   // exception filters.  This vector is used by HandleException to determine

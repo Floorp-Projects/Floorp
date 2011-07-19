@@ -50,7 +50,7 @@ function wait_for_install_dialog(aCallback) {
       Services.wm.removeListener(this);
 
       var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowInternal);
+                                .getInterface(Ci.nsIDOMWindow);
       waitForFocus(function() {
         info("Saw install dialog");
         is(domwindow.document.location.href, XPINSTALL_URL, "Should have seen the right window open");

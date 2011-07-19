@@ -9,5 +9,5 @@ script function-bind.js
 script function-call.js
 script redefine-arguments-length.js
 script builtin-no-prototype.js
-script Function-arguments-gc.js
+skip-if(Android) script Function-arguments-gc.js
 script builtin-no-construct.js

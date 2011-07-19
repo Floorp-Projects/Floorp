@@ -595,6 +595,7 @@ var allTabs = {
     delete this.tabCloseButton;
     return this.tabCloseButton = document.getElementById("allTabs-tab-close-button");
   },
+  get toolbarButton() document.getElementById("alltabs-button"),
   get previews () this.container.getElementsByClassName("allTabs-preview"),
   get isOpen () this.panel.state == "open" || this.panel.state == "showing",
 
@@ -632,7 +633,7 @@ var allTabs = {
 
   prefName: "browser.allTabs.previews",
   readPref: function allTabs_readPref() {
-    var allTabsButton = document.getElementById("alltabs-button");
+    var allTabsButton = this.toolbarButton;
     if (!allTabsButton)
       return;
 
@@ -697,6 +698,17 @@ var allTabs = {
   },
 
   open: function allTabs_open() {
+    var allTabsButton = this.toolbarButton;
+    if (allTabsButton &&
+        allTabsButton.getAttribute("type") == "menu") {
+      // Without setTimeout, the menupopup won't stay open when invoking
+      // "View > Show All Tabs" and the menu bar auto-hides.
+      setTimeout(function () {
+        allTabsButton.open = true;
+      }, 0);
+      return;
+    }
+
     this.init();
 
     if (this.isOpen)

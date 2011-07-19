@@ -62,7 +62,7 @@ function performTest() {
     HUD.console.log("message for tab " + i);
   }
 
-  let displays = HUDService.displaysIndex();
+  let displays = Object.keys(HUDService.hudReferences);
   is(displays.length, 4, "four displays found");
 
   win2.close();
@@ -72,7 +72,7 @@ function performTest() {
     win1.gBrowser.removeTab(openTabs[1]);
 
     executeSoon(function() {
-      displays = HUDService.displaysIndex();
+      displays = Object.keys(HUDService.hudReferences);
       is(displays.length, 0, "no displays found");
       ok(!HUDService.storage, "no storage found");
       ok(!HUDService.httpObserver, "no httpObserver found");

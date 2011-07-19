@@ -567,7 +567,7 @@ pref("plugins.hide_infobar_for_missing_plugin", false);
 pref("plugins.hide_infobar_for_outdated_plugin", false);
 
 #ifdef XP_MACOSX
-pref("plugins.use_layers", false);
+pref("plugins.use_layers", true);
 pref("plugins.hide_infobar_for_carbon_failure_plugin", false);
 #endif
 
@@ -898,6 +898,10 @@ pref("dom.ipc.plugins.enabled.i386.javaappletplugin.plugin", true);
 pref("dom.ipc.plugins.enabled.x86_64", true);
 #else
 pref("dom.ipc.plugins.enabled", true);
+#endif
+
+#ifdef MOZ_E10S_COMPAT
+pref("browser.tabs.remote", true);
 #endif
 
 // This pref governs whether we attempt to work around problems caused by

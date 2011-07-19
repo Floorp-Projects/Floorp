@@ -43,8 +43,7 @@
 #include "nsWebMReader.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
-#include "nsIServiceManager.h"
-#include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -210,8 +209,7 @@ void nsWebMReader::Cleanup()
 
 nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   nestegg_io io;
   io.read = webm_read;
@@ -226,8 +224,7 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
   uint64_t duration = 0;
   r = nestegg_duration(mContext, &duration);
   if (r == 0) {
-    ReentrantMonitorAutoExit exitReaderMon(mReentrantMonitor);
-    ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDecoder->GetStateMachine()->SetDuration(duration / NS_PER_USEC);
   }
 
@@ -309,9 +306,9 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
         break;
       }
 
-      nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
       PRInt32 forceStereoMode;
-      if (NS_SUCCEEDED(prefs->GetIntPref("media.webm.force_stereo_mode", &forceStereoMode))) {
+      if (NS_SUCCEEDED(Preferences::GetInt("media.webm.force_stereo_mode",
+                                           &forceStereoMode))) {
         switch (forceStereoMode) {
         case 1:
           mInfo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
@@ -412,7 +409,7 @@ ogg_packet nsWebMReader::InitOggPacket(unsigned char* aData,
  
 PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
 {
-  mReentrantMonitor.AssertCurrentThreadIn();
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   int r = 0;
   unsigned int count = 0;
@@ -590,9 +587,8 @@ nsReturnRef<NesteggPacketHolder> nsWebMReader::NextPacket(TrackType aTrackType)
 
 PRBool nsWebMReader::DecodeAudioData()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-    "Should be on state machine thread or decode thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+
   nsAutoRef<NesteggPacketHolder> holder(NextPacket(AUDIO));
   if (!holder) {
     mAudioQueue.Finish();
@@ -605,9 +601,7 @@ PRBool nsWebMReader::DecodeAudioData()
 PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                       PRInt64 aTimeThreshold)
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on state machine or decode thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -653,7 +647,6 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       }
       mVideoPackets.PushFront(next_holder.disown());
     } else {
-      ReentrantMonitorAutoExit exitMon(mReentrantMonitor);
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
       nsBuiltinDecoderStateMachine* s =
         static_cast<nsBuiltinDecoderStateMachine*>(mDecoder->GetStateMachine());
@@ -757,32 +750,19 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   return PR_TRUE;
 }
 
-PRBool nsWebMReader::CanDecodeToTarget(PRInt64 aTarget,
-                                       PRInt64 aCurrentTime)
-{
-  return aTarget >= aCurrentTime &&
-         aTarget - aCurrentTime < SEEK_DECODE_MARGIN;
-}
-
 nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime,
                             PRInt64 aCurrentTime)
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread(),
-               "Should be on state machine thread.");
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
-  if (CanDecodeToTarget(aTarget, aCurrentTime)) {
-    LOG(PR_LOG_DEBUG, ("%p Seek target (%lld) is close to current time (%lld), "
-                       "will just decode to it", mDecoder, aCurrentTime, aTarget));
-  } else {
-    if (NS_FAILED(ResetDecode())) {
-      return NS_ERROR_FAILURE;
-    }
-    PRUint32 trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
-    int r = nestegg_track_seek(mContext, trackToSeek, aTarget * NS_PER_USEC);
-    if (r != 0) {
-      return NS_ERROR_FAILURE;
-    }
+  if (NS_FAILED(ResetDecode())) {
+    return NS_ERROR_FAILURE;
+  }
+  PRUint32 trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
+  int r = nestegg_track_seek(mContext, trackToSeek, aTarget * NS_PER_USEC);
+  if (r != 0) {
+    return NS_ERROR_FAILURE;
   }
   return DecodeToTarget(aTarget);
 }

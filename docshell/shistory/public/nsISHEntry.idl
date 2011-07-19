@@ -59,7 +59,7 @@ class nsDocShellEditorData;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 
 
-[scriptable, uuid(5f3ebf43-6944-45fb-b1b1-78a05bf9370b)]
+[scriptable, uuid(b92d403e-f5ec-4b81-b0e3-6e6c241cef2d)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -169,6 +169,19 @@ interface nsISHEntry : nsIHistoryEntry
      * is a session history entry for
      */
     attribute ACString contentType; 
+
+    /**
+     * If we created this SHEntry via history.pushState or modified it via
+     * history.replaceState, and if we changed the SHEntry's URI via the
+     * push/replaceState call, and if the SHEntry's new URI differs from its
+     * old URI by more than just the hash, then we set this field to true.
+     *
+     * Additionally, if this SHEntry was created by calling pushState from a
+     * SHEntry whose URI was modified, this SHEntry's URIWasModified field is
+     * true.
+     *
+     */
+    attribute boolean URIWasModified;
  
     /** Set/Get scrollers' positon in anchored pages */
     void setScrollPosition(in long x, in long y);

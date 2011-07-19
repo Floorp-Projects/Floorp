@@ -29,7 +29,7 @@
 
 #include "assembler/wtf/Platform.h"
 
-#if ENABLE_ASSEMBLER && WTF_OS_UNIX && !WTF_OS_SYMBIAN
+#if WTF_OS_UNIX && !WTF_OS_SYMBIAN
 
 #include "OSAllocator.h"
 

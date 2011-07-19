@@ -90,19 +90,15 @@ function tab2Loaded(aEvent) {
 function tab1Reloaded(aEvent) {
   tab1.linkedBrowser.removeEventListener(aEvent.type, arguments.callee, true);
 
-  let hudId1 = HUDService.getHudIdByWindow(tab1.linkedBrowser.contentWindow);
-
-  let display1 = HUDService.getOutputNodeById(hudId1);
-  let outputNode1 = display1.querySelector(".hud-output-node");
+  let hud1 = HUDService.getHudByWindow(tab1.linkedBrowser.contentWindow);
+  let outputNode1 = hud1.outputNode;
 
   let msg = "Found the iframe network request in tab1";
   testLogEntry(outputNode1, TEST_IFRAME_URI, msg, true);
 
-  let hudId2 = HUDService.getHudIdByWindow(tab2.linkedBrowser.contentWindow);
-  let display2 = HUDService.getOutputNodeById(hudId2);
-  let outputNode2 = display2.querySelector(".hud-output-node");
+  let hud2 = HUDService.getHudByWindow(tab2.linkedBrowser.contentWindow);
+  let outputNode2 = hud2.outputNode;
 
-  isnot(display1, display2, "the two HUD displays must be different");
   isnot(outputNode1, outputNode2,
         "the two HUD outputNodes must be different");
 

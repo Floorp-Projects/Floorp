@@ -317,16 +317,11 @@ function localesMatch(aLocale1, aLocale2) {
 function start() {
   let mouseModule = new MouseModule();
 
+  // if we have gotten this far, we can assume that we don't have anything matching the system
+  // locale and we should show the locale picker
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
   chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
   let availableLocales = chrome.getLocalesForPackage("browser");
-
-  let localeService = Cc["@mozilla.org/intl/nslocaleservice;1"].getService(Ci.nsILocaleService);
-  let systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
-  let matchingLocale = "";
-
-  let bestMatch = NO_MATCH;
-
   let strings = Services.strings.createBundle("chrome://browser/content/languages.properties");
   LocaleUI.availableLocales = [];
   while (availableLocales.hasMore()) {
@@ -336,24 +331,10 @@ function start() {
     try { label = strings.GetStringFromName(locale); }
     catch (e) { }
     LocaleUI.availableLocales.push({addon: { id: locale, name: label, targetLocale: locale }});
-
-    // see if we have a locale that looks like the system locale
-    // if it is not the current locale, switch to it
-    let match = localesMatch(systemLocale, locale);
-    if (match > bestMatch) {
-      bestMatch = match;
-      matchingLocale = locale;
-    }
   }
 
-  if (matchingLocale) {
-    if (matchingLocale != chrome.getSelectedLocale("browser"))
-      LocaleUI.language = matchingLocale;
-    LocaleUI.closeWindow();
-  } else {
-    LocaleUI._language = chrome.getSelectedLocale("browser");
-    LocaleUI.updateStrings();
-  }
+  LocaleUI._language = chrome.getSelectedLocale("browser");
+  LocaleUI.updateStrings();
 
   // update the page strings and show the correct page
   LocaleUI.defaultLanguage = LocaleUI._language;

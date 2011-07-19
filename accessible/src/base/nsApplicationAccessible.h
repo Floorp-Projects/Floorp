@@ -91,7 +91,6 @@ public:
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
   NS_IMETHOD GetName(nsAString &aName);
   NS_IMETHOD GetValue(nsAString &aValue);
-  NS_IMETHOD GetKeyboardShortcut(nsAString &aKeyboardShortcut);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
@@ -129,6 +128,9 @@ public:
                                      EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
+
+  // ActionAccessible
+  virtual KeyBinding AccessKey() const;
 
 protected:
 

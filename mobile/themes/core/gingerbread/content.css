@@ -55,6 +55,11 @@
   outline-offset: -2px;
 }
 
+::-moz-selection {
+  background-color: @color_background_highlight@;
+  color: @color_text_highlight@;
+}
+
 /* Style the scrollbars */
 html xul|scrollbar {
   display: none;

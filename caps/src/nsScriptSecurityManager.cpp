@@ -2712,7 +2712,7 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
         nsIScriptContext *scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIDOMWindowInternal> domWin =
+            nsCOMPtr<nsIDOMWindow> domWin =
                 do_QueryInterface(scriptContext->GetGlobalObject());
             if (domWin)
                 domWin->GetPrompter(getter_AddRefs(prompter));
@@ -3325,6 +3325,41 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
     return rv;
 }
 
+///////////////////////////////////
+// Default ObjectPrincipalFinder //
+///////////////////////////////////
+
+// The default JSSecurityCallbacks::findObjectPrincipals is necessary since
+// scripts run (and ask for object principals) during startup before
+// nsJSRuntime::Init() has been called (which resets findObjectPrincipals).
+
+// Defined NS_EXPORT for linkage with debug-only assert in xpcshell
+NS_EXPORT JSPrincipals *
+NS_DefaultObjectPrincipalFinder(JSContext *cx, JSObject *obj)
+{
+    nsScriptSecurityManager *ssm = nsScriptSecurityManager::GetScriptSecurityManager();
+    if (!ssm) {
+        return nsnull;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = ssm->GetObjectPrincipal(cx, obj, getter_AddRefs(principal));
+    if (NS_FAILED(rv) || !principal) {
+        return nsnull;
+    }
+
+    JSPrincipals *jsPrincipals = nsnull;
+    principal->GetJSPrincipals(cx, &jsPrincipals);
+
+    // nsIPrincipal::GetJSPrincipals() returns a strong reference to the
+    // JS principals, but the caller of this function expects a weak
+    // reference. So we need to release here.
+
+    JSPRINCIPALS_DROP(cx, jsPrincipals);
+
+    return jsPrincipals;
+}
+
 /////////////////////////////////////////////
 // Constructor, Destructor, Initialization //
 /////////////////////////////////////////////
@@ -3379,7 +3414,8 @@ nsresult nsScriptSecurityManager::Init()
     nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
     NS_ENSURE_TRUE(system, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = system->Init();
+    JSPrincipals *jsprin;
+    rv = system->Init(&jsprin);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mSystemPrincipal = system;
@@ -3396,7 +3432,7 @@ nsresult nsScriptSecurityManager::Init()
     static JSSecurityCallbacks securityCallbacks = {
         CheckObjectAccess,
         NULL,
-        NULL,
+        NS_DefaultObjectPrincipalFinder,
         ContentSecurityPolicyPermitsJSAction
     };
 
@@ -3405,6 +3441,8 @@ nsresult nsScriptSecurityManager::Init()
 #endif
     JS_SetRuntimeSecurityCallbacks(sRuntime, &securityCallbacks);
     NS_ASSERTION(!oldcallbacks, "Someone else set security callbacks!");
+
+    JS_SetTrustedPrincipals(sRuntime, jsprin);
 
     return NS_OK;
 }
@@ -3429,6 +3467,7 @@ nsScriptSecurityManager::Shutdown()
 {
     if (sRuntime) {
         JS_SetRuntimeSecurityCallbacks(sRuntime, NULL);
+        JS_SetTrustedPrincipals(sRuntime, NULL);
         sRuntime = nsnull;
     }
     sEnabledID = JSID_VOID;

@@ -212,6 +212,10 @@ _BROWSER_FILES = \
                  browser_clearplugindata_noage.html \
                  browser_popupUI.js \
                  browser_sanitizeDialog.js \
+                 browser_save_video.js \
+                 bug564387.html \
+                 bug564387_video1.ogv \
+                 bug564387_video1.ogv^headers^ \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
                  browser_tab_dragdrop.js \
@@ -220,6 +224,7 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  browser_tabs_isActive.js \
                  browser_tabs_owner.js \
+                 browser_urlbarCopying.js \
                  browser_urlbarTrimURLs.js \
                  browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
@@ -255,6 +260,7 @@ _BROWSER_FILES = \
                  browser_addon_bar_shortcut.js \
                  browser_addon_bar_aomlistener.js \
                  test_bug628179.html \
+                 browser_minimize.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

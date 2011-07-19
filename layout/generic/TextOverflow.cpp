@@ -556,10 +556,20 @@ TextOverflow::PruneDisplayListContents(nsDisplayList*        aList,
       nsRect rect = itemFrame->GetScrollableOverflowRect() +
                     itemFrame->GetOffsetTo(mBlock);
       if (mLeft.IsNeeded() && rect.x < aInsideMarkersArea.x) {
-        charClip->mLeftEdge = aInsideMarkersArea.x - rect.x;
+        nscoord left = aInsideMarkersArea.x - rect.x;
+        if (NS_UNLIKELY(left < 0)) {
+          item->~nsDisplayItem();
+          continue;
+        }
+        charClip->mLeftEdge = left;
       }
       if (mRight.IsNeeded() && rect.XMost() > aInsideMarkersArea.XMost()) {
-        charClip->mRightEdge = rect.XMost() - aInsideMarkersArea.XMost();
+        nscoord right = rect.XMost() - aInsideMarkersArea.XMost();
+        if (NS_UNLIKELY(right < 0)) {
+          item->~nsDisplayItem();
+          continue;
+        }
+        charClip->mRightEdge = right;
       }
     }
 
