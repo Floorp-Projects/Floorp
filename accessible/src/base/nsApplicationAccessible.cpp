@@ -377,6 +377,12 @@ nsApplicationAccessible::InvalidateChildren()
   // and RemoveChild() method calls.
 }
 
+KeyBinding
+nsApplicationAccessible::AccessKey() const
+{
+  return KeyBinding();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible protected methods
 
