@@ -540,7 +540,7 @@ GetHashEntryAttributesSize(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
   PRInt64 size = *static_cast<PRInt64*>(aArg);
 
   NS_ASSERTION(entry->mAttributes, "entry->mAttributes should not be null!");
-  size += sizeof(*entry->mAttributes);
+  size += entry->mAttributes->SizeOf();
 
   return PL_DHASH_NEXT;
 }
