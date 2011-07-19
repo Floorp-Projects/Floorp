@@ -110,6 +110,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/AutoRestore.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -10877,25 +10878,6 @@ nsDocShell::GetRootScrollFrame()
     return shell->GetRootScrollFrameAsScrollableExternal();
 }
 
-#ifdef DEBUG
-class nsDebugAutoBoolTrueSetter
-{
-public:
-    nsDebugAutoBoolTrueSetter(PRPackedBool *aBool)
-        : mBool(aBool)
-    {
-        *mBool = PR_TRUE;
-    }
-
-    ~nsDebugAutoBoolTrueSetter()
-    {
-        *mBool = PR_FALSE;
-    }
-protected:
-    PRPackedBool *mBool;
-};
-#endif
-
 NS_IMETHODIMP
 nsDocShell::EnsureScriptEnvironment()
 {
@@ -10915,7 +10897,8 @@ nsDocShell::EnsureScriptEnvironment()
 
     // Yeah, this isn't re-entrant safe, but that's ok since if we
     // re-enter this method, we'll infinitely loop...
-    nsDebugAutoBoolTrueSetter boolSetter(&mInEnsureScriptEnv);
+    AutoRestore<PRPackedBool> boolSetter(mInEnsureScriptEnv);
+    mInEnsureScriptEnv = PR_TRUE;
 #endif
 
     nsCOMPtr<nsIDOMScriptObjectFactory> factory =
