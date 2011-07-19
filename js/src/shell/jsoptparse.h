@@ -242,6 +242,7 @@ class OptionParser
     Option *findOption(char shortflag);
     const Option *findOption(char shortflag) const;
     Option *findOption(const char *longflag);
+    const Option *findOption(const char *longflag) const;
     Option *findArgument(const char *name);
     const Option *findArgument(const char *name) const;
 
@@ -289,9 +290,13 @@ class OptionParser
     bool addOptionalVariadicArg(const char *name);
 
     int getIntOption(char shortflag) const;
+    int getIntOption(const char *longflag) const;
     const char *getStringOption(char shortflag) const;
+    const char *getStringOption(const char *longflag) const;
     bool getBoolOption(char shortflag) const;
+    bool getBoolOption(const char *longflag) const;
     MultiStringRange getMultiStringOption(char shortflag) const;
+    MultiStringRange getMultiStringOption(const char *longflag) const;
 
     /* 
      * Return whether the help option was present (and thus help was already

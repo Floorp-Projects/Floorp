@@ -157,6 +157,27 @@ PrintParagraph(const char *text, uintN startColno, const uintN limitColno, bool 
     }
 }
 
+static const char *
+OptionFlagsToFormatInfo(char shortflag, bool isValued, size_t *length)
+{
+    static const char *fmt[4] = { "  -%c --%s ",
+                                  "  --%s ",
+                                  "  -%c --%s=%s ",
+                                  "  --%s=%s " };
+
+    // How mny chars w/o longflag?
+    size_t lengths[4] = { strlen(fmt[0]) - 3,
+                          strlen(fmt[1]) - 3,
+                          strlen(fmt[2]) - 5,
+                          strlen(fmt[3]) - 5 };
+    int index = isValued ? 2 : 0;
+    if (!shortflag)
+        index++;
+
+    *length = lengths[index];
+    return fmt[index];
+}
+
 OptionParser::Result
 OptionParser::printHelp(const char *progname)
 {
@@ -199,30 +220,39 @@ OptionParser::printHelp(const char *progname)
 
     if (!options.empty()) {
         printf("Options:\n");
-
-        static const char fmt[] = "  -%c --%s ";
-        size_t fmtChars = sizeof(fmt) - 3; /* How many chars w/o longflag? */
-        static const char fmtValued[] = "  -%c --%s=%s ";
-        size_t fmtValuedChars = sizeof(fmtValued) - 5;
-
+                                
         /* Calculate sizes for column alignment. */
         size_t lhsLen = 0;
         for (Option **it = options.begin(), **end = options.end(); it != end; ++it) {
             Option *opt = *it;
             size_t longflagLen = strlen(opt->longflag);
-            size_t len = opt->isValued()
-                         ? fmtValuedChars + longflagLen + strlen(opt->asValued()->metavar)
-                         : fmtChars + longflagLen;
+
+            size_t fmtLen;
+            OptionFlagsToFormatInfo(opt->shortflag, opt->isValued(), &fmtLen);
+
+            size_t len = fmtLen + longflagLen;
+            if (opt->isValued())
+                len += strlen(opt->asValued()->metavar);
             lhsLen = JS_MAX(lhsLen, len);
         }
 
         /* Print option help text. */
         for (Option **it = options.begin(), **end = options.end(); it != end; ++it) {
             Option *opt = *it;
-            size_t chars = opt->isValued()
-                           ? printf(fmtValued, opt->shortflag, opt->longflag,
-                                    opt->asValued()->metavar)
-                           : printf(fmt, opt->shortflag, opt->longflag);
+            size_t fmtLen;
+            const char *fmt = OptionFlagsToFormatInfo(opt->shortflag, opt->isValued(), &fmtLen);
+            size_t chars;
+            if (opt->isValued()) {
+                if (opt->shortflag)
+                    chars = printf(fmt, opt->shortflag, opt->longflag, opt->asValued()->metavar);
+                else
+                    chars = printf(fmt, opt->longflag, opt->asValued()->metavar);
+            } else {
+                if (opt->shortflag)
+                    chars = printf(fmt, opt->shortflag, opt->longflag);
+                else
+                    chars = printf(fmt, opt->longflag);
+            }
             for (; chars < lhsLen; ++chars)
                 putchar(' ');
             PrintParagraph(opt->help, lhsLen, helpWidth, false);
@@ -404,6 +434,31 @@ OptionParser::getMultiStringOption(char shortflag) const
     return MultiStringRange(mso->strings.begin(), mso->strings.end());
 }
 
+bool
+OptionParser::getBoolOption(const char *longflag) const
+{
+    return findOption(longflag)->asBoolOption()->value;
+}
+
+int
+OptionParser::getIntOption(const char *longflag) const
+{
+    return findOption(longflag)->asIntOption()->value;
+}
+
+const char *
+OptionParser::getStringOption(const char *longflag) const
+{
+    return findOption(longflag)->asStringOption()->value;
+}
+
+MultiStringRange
+OptionParser::getMultiStringOption(const char *longflag) const
+{
+    const MultiStringOption *mso = findOption(longflag)->asMultiStringOption();
+    return MultiStringRange(mso->strings.begin(), mso->strings.end());
+}
+
 OptionParser::~OptionParser()
 {
     for (Option **it = options.begin(), **end = options.end(); it != end; ++it)
@@ -449,6 +504,12 @@ OptionParser::findOption(const char *longflag)
     }
 
     return strcmp(helpOption.longflag, longflag) ? NULL : &helpOption;
+}
+
+const Option *
+OptionParser::findOption(const char *longflag) const
+{
+    return const_cast<OptionParser *>(this)->findOption(longflag);
 }
 
 /* Argument accessors */
