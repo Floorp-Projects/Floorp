@@ -53,8 +53,8 @@ class ValueNumberer
   private:
     struct ValueHasher
     {
-        typedef MInstruction * Lookup;
-        typedef MInstruction * Key;
+        typedef MDefinition * Lookup;
+        typedef MDefinition * Key;
         static HashNumber hash(const Lookup &ins) {
             return ins->valueHash();
         }
@@ -64,14 +64,14 @@ class ValueNumberer
         }
     };
 
-    typedef HashMap<MInstruction *,
+    typedef HashMap<MDefinition *,
                     uint32,
                     ValueHasher,
                     IonAllocPolicy> ValueMap;
 
     struct DominatingValue
     {
-        MInstruction *def;
+        MDefinition *def;
         uint32 validUntil;
     };
 
@@ -83,8 +83,8 @@ class ValueNumberer
     MIRGraph &graph_;
     bool pessimisticPass_;
 
-    uint32 lookupValue(ValueMap &values, MInstruction *ins);
-    MInstruction *findDominatingInstruction(InstructionMap &defs, MInstruction *ins, size_t index);
+    uint32 lookupValue(ValueMap &values, MDefinition *ins);
+    MDefinition *findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index);
     bool eliminateRedundancies();
 
     bool computeValueNumbers();

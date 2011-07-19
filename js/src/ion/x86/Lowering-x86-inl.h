@@ -53,10 +53,10 @@ namespace ion {
 // redefines its input payload if its input is not constant. Therefore, it is
 // illegal to request a box's payload by adding VREG_DATA_OFFSET to its raw id.
 static inline uint32
-VirtualRegisterOfPayload(MInstruction *mir)
+VirtualRegisterOfPayload(MDefinition *mir)
 {
     if (mir->isBox()) {
-        MInstruction *inner = mir->toBox()->getOperand(0);
+        MDefinition *inner = mir->toBox()->getOperand(0);
         if (!inner->isConstant())
             return inner->id();
     }
@@ -64,7 +64,7 @@ VirtualRegisterOfPayload(MInstruction *mir)
 }
 
 LUse
-LIRGeneratorX86::useType(MInstruction *mir, LUse::Policy policy)
+LIRGeneratorX86::useType(MDefinition *mir, LUse::Policy policy)
 {
     JS_ASSERT(mir->id());
     JS_ASSERT(mir->type() == MIRType_Value);
@@ -73,7 +73,7 @@ LIRGeneratorX86::useType(MInstruction *mir, LUse::Policy policy)
 }
 
 LUse
-LIRGeneratorX86::usePayload(MInstruction *mir, LUse::Policy policy)
+LIRGeneratorX86::usePayload(MDefinition *mir, LUse::Policy policy)
 {
     JS_ASSERT(mir->id());
     JS_ASSERT(mir->type() == MIRType_Value);
@@ -82,13 +82,13 @@ LIRGeneratorX86::usePayload(MInstruction *mir, LUse::Policy policy)
 }
 
 LUse
-LIRGeneratorX86::usePayloadInRegister(MInstruction *mir)
+LIRGeneratorX86::usePayloadInRegister(MDefinition *mir)
 {
     return usePayload(mir, LUse::REGISTER);
 }
 
 bool
-LIRGeneratorX86::fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir)
+LIRGeneratorX86::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
 {
     if (!ensureDefined(mir))
         return false;

@@ -600,7 +600,7 @@ IonBuilder::processIfElseFalseEnd(CFGState &state)
 }
 
 bool
-IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
+IonBuilder::finalizeLoop(CFGState &state, MDefinition *last)
 {
     JS_ASSERT(!state.loop.continues);
 
@@ -691,7 +691,7 @@ IonBuilder::processDoWhileCondEnd(CFGState &state)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
 
-    MInstruction *last = NULL;
+    MDefinition *last = NULL;
     if (current) {
         last = current->pop();
         state.loop.successor = newBlock(current, GetNextPc(pc));
@@ -716,7 +716,7 @@ IonBuilder::processWhileCondEnd(CFGState &state)
     JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
 
     // Balance the stack past the IFNE.
-    MInstruction *ins = current->pop();
+    MDefinition *ins = current->pop();
 
     // Create the body and successor blocks.
     MBasicBlock *body = newBlock(current, state.loop.bodyStart);
@@ -756,7 +756,7 @@ IonBuilder::processForCondEnd(CFGState &state)
     JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
 
     // Balance the stack past the IFNE.
-    MInstruction *ins = current->pop();
+    MDefinition *ins = current->pop();
 
     // Create the body and successor blocks.
     MBasicBlock *body = newBlock(current, state.loop.bodyStart);
@@ -1127,7 +1127,7 @@ IonBuilder::jsop_ifeq(JSOp op)
         return false;
     }
 
-    MInstruction *ins = current->pop();
+    MDefinition *ins = current->pop();
 
     // Create true and false branches.
     MBasicBlock *ifTrue = newBlock(current, trueStart);
@@ -1196,24 +1196,27 @@ IonBuilder::jsop_ifeq(JSOp op)
 IonBuilder::ControlStatus
 IonBuilder::processReturn(JSOp op)
 {
-    MInstruction *ins;
+    MDefinition *def;
     switch (op) {
       case JSOP_RETURN:
-        ins = current->pop();
+        def = current->pop();
         break;
 
       case JSOP_STOP:
-        ins = MConstant::New(UndefinedValue());
+      {
+        MInstruction *ins = MConstant::New(UndefinedValue());
         current->add(ins);
+        def = ins;
         break;
+      }
 
       default:
-        ins = NULL;
+        def = NULL;
         JS_NOT_REACHED("unknown return op");
         break;
     }
 
-    MReturn *ret = MReturn::New(ins);
+    MReturn *ret = MReturn::New(def);
     current->end(ret);
 
     // Make sure no one tries to use this block now.
@@ -1234,8 +1237,8 @@ bool
 IonBuilder::jsop_binary(JSOp op)
 {
     // Pop inputs.
-    MInstruction *right = current->pop();
-    MInstruction *left = current->pop();
+    MDefinition *right = current->pop();
+    MDefinition *left = current->pop();
 
     MBinaryInstruction *ins;
     switch (op) {
@@ -1285,7 +1288,7 @@ IonBuilder::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
     return block;
 }
 
-// A snapshot is a mapping of stack slots to MInstructions. It is used to
+// A snapshot is a mapping of stack slots to MDefinitions. It is used to
 // capture the environment such that if a guard fails, and IonMonkey needs
 // to exit back to the interpreter, the interpreter state can be
 // reconstructed.

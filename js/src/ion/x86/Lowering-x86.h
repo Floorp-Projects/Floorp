@@ -57,27 +57,27 @@ class LIRGeneratorX86 : public LIRGenerator
   protected:
     // Uses components of a nunbox. Must be in a use request (startUsing,
     // stopUsing).
-    LUse useType(MInstruction *mir, LUse::Policy policy);
-    LUse useTypeOrConstant(MInstruction *mir);
-    LUse usePayload(MInstruction *mir, LUse::Policy policy);
-    LUse usePayloadInRegister(MInstruction *mir);
+    LUse useType(MDefinition *mir, LUse::Policy policy);
+    LUse useTypeOrConstant(MDefinition *mir);
+    LUse usePayload(MDefinition *mir, LUse::Policy policy);
+    LUse usePayloadInRegister(MDefinition *mir);
 
     // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload. Does not modify the operands, instead expecting a
     // policy to already be set.
-    bool fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir);
+    bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
 
     void fillSnapshot(LSnapshot *snapshot);
     bool preparePhi(MPhi *phi);
 
-    bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs);
+    bool lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
 
   public:
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
     bool visitConstant(MConstant *ins);
     bool visitReturn(MReturn *ret);
-    bool visitPhi(MPhi *phi);
+    bool lowerPhi(MPhi *phi);
 };
 
 typedef LIRGeneratorX86 LIRBuilder;

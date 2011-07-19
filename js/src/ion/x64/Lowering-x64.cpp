@@ -48,7 +48,7 @@ using namespace js;
 using namespace js::ion;
 
 bool
-LIRGeneratorX64::fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir)
+LIRGeneratorX64::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
 {
     lir->setOperand(n, useRegister(mir));
     return true;
@@ -66,7 +66,7 @@ LIRGeneratorX64::visitConstant(MConstant *ins)
 bool
 LIRGeneratorX64::visitBox(MBox *box)
 {
-    MInstruction *opd = box->getOperand(0);
+    MDefinition *opd = box->getOperand(0);
 
     // If the operand is a constant, emit near its uses.
     if (opd->isConstant() && !box->emitAtUses())
@@ -82,7 +82,7 @@ LIRGeneratorX64::visitBox(MBox *box)
 bool
 LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 {
-    MInstruction *box = unbox->getOperand(0);
+    MDefinition *box = unbox->getOperand(0);
 
     switch (unbox->type()) {
       // Integers, booleans, and strings both need two outputs: the payload
@@ -120,7 +120,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 bool
 LIRGeneratorX64::visitReturn(MReturn *ret)
 {
-    MInstruction *opd = ret->getOperand(0);
+    MDefinition *opd = ret->getOperand(0);
     JS_ASSERT(opd->type() == MIRType_Value);
 
     LReturn *ins = new LReturn;
@@ -139,25 +139,19 @@ LIRGeneratorX64::preparePhi(MPhi *phi)
     return true;
 }
 
-bool
-LIRGeneratorX64::visitPhi(MPhi *phi)
-{
-    return lowerPhi(phi);
-}
-
 void
 LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
 {
     MSnapshot *mir = snapshot->mir();
     for (size_t i = 0; i < mir->numOperands(); i++) {
-        MInstruction *ins = mir->getOperand(i);
+        MDefinition *ins = mir->getOperand(i);
         LAllocation *a = snapshot->getEntry(i);
         *a = useKeepaliveOrConstant(ins);
     }
 }
 
 bool
-LIRGeneratorX64::lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs)
+LIRGeneratorX64::lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useOrConstant(rhs));

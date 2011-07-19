@@ -80,6 +80,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     }
 }
 
+class MDefinition;
 class MInstruction;
 class MBasicBlock;
 class MUse;
@@ -88,13 +89,13 @@ class MIRGraph;
 // Represents a use of a definition.
 class MUse : public TempObject
 {
-    friend class MInstruction;
+    friend class MDefinition;
 
     MUse *next_;            // Next use in the use chain.
-    MInstruction *ins_;     // The instruction that is using this operand.
+    MDefinition *ins_;     // The instruction that is using this operand.
     uint32 index_;          // The index of this operand in its owner.
 
-    MUse(MUse *next, MInstruction *owner, uint32 index)
+    MUse(MUse *next, MDefinition *owner, uint32 index)
       : next_(next), ins_(owner), index_(index)
     { }
 
@@ -103,12 +104,12 @@ class MUse : public TempObject
     }
 
   public:
-    static inline MUse *New(MUse *next, MInstruction *owner, uint32 index)
+    static inline MUse *New(MUse *next, MDefinition *owner, uint32 index)
     {
         return new MUse(next, owner, index);
     }
 
-    MInstruction *ins() const {
+    MDefinition *ins() const {
         return ins_;
     }
     uint32 index() const {
@@ -121,12 +122,12 @@ class MUse : public TempObject
 
 class MUseIterator
 {
-    MInstruction *def;
+    MDefinition *def;
     MUse *use;
     MUse *prev_;
 
   public:
-    inline MUseIterator(MInstruction *def);
+    inline MUseIterator(MDefinition *def);
 
     bool more() const {
         return !!use;
@@ -152,11 +153,8 @@ class MUseIterator
     inline MUse *unlink();
 };
 
-// An MInstruction is an SSA name and definition. It has an opcode, a list of
-// operands, and a list of its uses by subsequent instructions.
-class MInstruction
-  : public TempObject,
-    public InlineListNode<MInstruction>
+// An MDefinition is an SSA name.
+class MDefinition : public TempObject
 {
     friend class MBasicBlock;
     friend class Loop;
@@ -199,7 +197,7 @@ class MInstruction
     }
 
   public:
-    MInstruction()
+    MDefinition()
       : block_(NULL),
         uses_(NULL),
         id_(0),
@@ -214,7 +212,7 @@ class MInstruction
     virtual void printOpcode(FILE *fp);
 
     virtual HashNumber valueHash() const;
-    virtual bool congruentTo(MInstruction * const &ins) const;
+    virtual bool congruentTo(MDefinition* const &ins) const;
 
     uint32 id() const {
         JS_ASSERT(block_);
@@ -284,7 +282,7 @@ class MInstruction
     size_t useCount() const;
 
     // Returns the instruction at a given operand.
-    virtual MInstruction *getOperand(size_t index) const = 0;
+    virtual MDefinition *getOperand(size_t index) const = 0;
     virtual size_t numOperands() const = 0;
 
     // Returns the input type this instruction expects.
@@ -320,7 +318,7 @@ class MInstruction
     void setRewritesDef() {
         setFlags(REWRITES_DEF);
     }
-    virtual MInstruction *rewrittenDef() const {
+    virtual MDefinition *rewrittenDef() const {
         JS_NOT_REACHED("Opcodes which can rewrite defs must implement this.");
         return NULL;
     }
@@ -333,11 +331,11 @@ class MInstruction
 
     // Replaces an operand, taking care to update use chains. No memory is
     // allocated; the existing data structures are re-linked.
-    void replaceOperand(MUse *prev, MUse *use, MInstruction *ins);
-    void replaceOperand(MUseIterator &use, MInstruction *ins);
-    void replaceOperand(size_t index, MInstruction *ins);
+    void replaceOperand(MUse *prev, MUse *use, MDefinition *ins);
+    void replaceOperand(MUseIterator &use, MDefinition *ins);
+    void replaceOperand(size_t index, MDefinition *ins);
 
-    void addUse(MInstruction *ins, size_t index) {
+    void addUse(MDefinition *ins, size_t index) {
         uses_ = MUse::New(uses_, ins, index);
     }
 
@@ -396,14 +394,17 @@ class MInstruction
     MIR_OPCODE_LIST(OPCODE_CASTS)
 #   undef OPCODE_CASTS
 
-    virtual bool accept(MInstructionVisitor *visitor) = 0;
+    inline MInstruction *toInstruction();
+    bool isInstruction() const {
+        return isPhi();
+    }
 
   protected:
     // Sets a raw operand; instruction implementation dependent.
-    virtual void setOperand(size_t index, MInstruction *operand) = 0;
+    virtual void setOperand(size_t index, MDefinition *operand) = 0;
 
     // Initializes an operand for the first time.
-    void initOperand(size_t index, MInstruction *ins) {
+    void initOperand(size_t index, MDefinition *ins) {
         setOperand(index, ins);
         ins->addUse(this, index);
     }
@@ -413,9 +414,19 @@ class MInstruction
     }
 };
 
+// An instruction is an SSA name that is inserted into a basic block's IR
+// stream.
+class MInstruction
+  : public MDefinition,
+    public InlineListNode<MInstruction>
+{
+  public:
+    virtual bool accept(MInstructionVisitor *visitor) = 0;
+};
+
 #define INSTRUCTION_HEADER(opcode)                                          \
     Opcode op() const {                                                     \
-        return MInstruction::Op_##opcode;                                   \
+        return MDefinition::Op_##opcode;                                    \
     }                                                                       \
     bool accept(MInstructionVisitor *visitor) {                             \
         return visitor->visit##opcode(this);                                \
@@ -425,14 +436,14 @@ template <size_t Arity>
 class MAryInstruction : public MInstruction
 {
   protected:
-    FixedArityList<MInstruction *, Arity> operands_;
+    FixedArityList<MDefinition*, Arity> operands_;
 
-    void setOperand(size_t index, MInstruction *operand) {
+    void setOperand(size_t index, MDefinition *operand) {
         operands_[index] = operand;
     }
 
   public:
-    MInstruction *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const {
         return operands_[index];
     }
     size_t numOperands() const {
@@ -473,7 +484,7 @@ class MConstant : public MAryInstruction<0>
     void printOpcode(FILE *fp);
 
     HashNumber valueHash() const;
-    bool congruentTo(MInstruction * const &ins) const;
+    bool congruentTo(MDefinition * const &ins) const;
 };
 
 // A reference to a formal parameter.
@@ -501,7 +512,7 @@ class MParameter : public MAryInstruction<0>
     void printOpcode(FILE *fp);
 
     HashNumber valueHash() const;
-    bool congruentTo(MInstruction * const &ins) const;
+    bool congruentTo(MDefinition * const &ins) const;
 };
 
 class MControlInstruction : public MInstruction
@@ -536,15 +547,15 @@ class MControlInstruction : public MInstruction
 template <size_t Arity>
 class MAryControlInstruction : public MControlInstruction
 {
-    FixedArityList<MInstruction *, Arity> operands_;
+    FixedArityList<MDefinition *, Arity> operands_;
 
   protected:
-    void setOperand(size_t index, MInstruction *operand) {
+    void setOperand(size_t index, MDefinition *operand) {
         operands_[index] = operand;
     }
 
   public:
-    MInstruction *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const {
         return operands_[index];
     }
     size_t numOperands() const {
@@ -572,7 +583,7 @@ class MGoto : public MAryControlInstruction<0>
 // start of a corresponding basic block.
 class MTest : public MAryControlInstruction<1>
 {
-    MTest(MInstruction *ins, MBasicBlock *if_true, MBasicBlock *if_false)
+    MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false)
     {
         successors[0] = if_true;
         successors[1] = if_false;
@@ -581,7 +592,7 @@ class MTest : public MAryControlInstruction<1>
 
   public:
     INSTRUCTION_HEADER(Test);
-    static MTest *New(MInstruction *ins,
+    static MTest *New(MDefinition *ins,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse);
 
     MIRType requiredInputType(size_t index) const {
@@ -599,14 +610,14 @@ class MTest : public MAryControlInstruction<1>
 // Returns from this function to the previous caller.
 class MReturn : public MAryControlInstruction<1>
 {
-    MReturn(MInstruction *ins)
+    MReturn(MDefinition *ins)
     {
         initOperand(0, ins);
     }
 
   public:
     INSTRUCTION_HEADER(Return);
-    static MReturn *New(MInstruction *ins);
+    static MReturn *New(MDefinition *ins);
 
     MIRType requiredInputType(size_t index) const {
         return MIRType_Value;
@@ -616,7 +627,7 @@ class MReturn : public MAryControlInstruction<1>
 class MUnaryInstruction : public MAryInstruction<1>
 {
   protected:
-    MUnaryInstruction(MInstruction *ins)
+    MUnaryInstruction(MDefinition *ins)
     {
         initOperand(0, ins);
     }
@@ -631,7 +642,7 @@ class MBinaryInstruction : public MAryInstruction<2>
     MIRType specialization_;
 
   protected:
-    MBinaryInstruction(MInstruction *left, MInstruction *right)
+    MBinaryInstruction(MDefinition *left, MDefinition *right)
       : specialization_(MIRType_None)
     {
         initOperand(0, left);
@@ -651,7 +662,7 @@ class MBinaryInstruction : public MAryInstruction<2>
 // constructing SSA, and is removed immediately after the initial SSA is built.
 class MCopy : public MUnaryInstruction
 {
-    MCopy(MInstruction *ins)
+    MCopy(MDefinition *ins)
       : MUnaryInstruction(ins)
     {
         setResultType(ins->type());
@@ -659,7 +670,7 @@ class MCopy : public MUnaryInstruction
 
   public:
     INSTRUCTION_HEADER(Copy);
-    static MCopy *New(MInstruction *ins);
+    static MCopy *New(MDefinition *ins);
 
     MIRType requiredInputType(size_t index) const {
         return MIRType_Any;
@@ -669,7 +680,7 @@ class MCopy : public MUnaryInstruction
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction
 {
-    MBox(MInstruction *ins)
+    MBox(MDefinition *ins)
       : MUnaryInstruction(ins)
     {
         setResultType(MIRType_Value);
@@ -677,7 +688,7 @@ class MBox : public MUnaryInstruction
 
   public:
     INSTRUCTION_HEADER(Box);
-    static MBox *New(MInstruction *ins)
+    static MBox *New(MDefinition *ins)
     {
         // Cannot box a box.
         JS_ASSERT(ins->type() != MIRType_Value);
@@ -695,7 +706,7 @@ class MBox : public MUnaryInstruction
 // deoptimization.
 class MUnbox : public MUnaryInstruction
 {
-    MUnbox(MInstruction *ins, MIRType type)
+    MUnbox(MDefinition *ins, MIRType type)
       : MUnaryInstruction(ins)
     {
         JS_ASSERT(ins->type() == MIRType_Value);
@@ -704,7 +715,7 @@ class MUnbox : public MUnaryInstruction
 
   public:
     INSTRUCTION_HEADER(Unbox);
-    static MUnbox *New(MInstruction *ins, MIRType type)
+    static MUnbox *New(MDefinition *ins, MIRType type)
     {
         return new MUnbox(ins, type);
     }
@@ -713,14 +724,14 @@ class MUnbox : public MUnaryInstruction
         return MIRType_Value;
     }
 
-    MInstruction *rewrittenDef() const {
+    MDefinition *rewrittenDef() const {
         return getOperand(0);
     }
 };
 
 class MBitAnd : public MBinaryInstruction
 {
-    MBitAnd(MInstruction *left, MInstruction *right)
+    MBitAnd(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Int32);
@@ -728,7 +739,7 @@ class MBitAnd : public MBinaryInstruction
 
   public:
     INSTRUCTION_HEADER(BitAnd);
-    static MBitAnd *New(MInstruction *left, MInstruction *right);
+    static MBitAnd *New(MDefinition *left, MDefinition *right);
 
     MIRType requiredInputType(size_t index) const {
         return specialization();
@@ -740,7 +751,7 @@ class MBitAnd : public MBinaryInstruction
 
 class MBitOr : public MBinaryInstruction
 {
-    MBitOr(MInstruction *left, MInstruction *right)
+    MBitOr(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Int32);
@@ -748,7 +759,7 @@ class MBitOr : public MBinaryInstruction
 
   public:
     INSTRUCTION_HEADER(BitOr);
-    static MBitOr *New(MInstruction *left, MInstruction *right);
+    static MBitOr *New(MDefinition *left, MDefinition *right);
 
     MIRType requiredInputType(size_t index) const {
         return specialization();
@@ -760,7 +771,7 @@ class MBitOr : public MBinaryInstruction
 
 class MBitXOr : public MBinaryInstruction
 {
-    MBitXOr(MInstruction *left, MInstruction *right)
+    MBitXOr(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Int32);
@@ -768,7 +779,7 @@ class MBitXOr : public MBinaryInstruction
 
   public:
     INSTRUCTION_HEADER(BitXOr);
-    static MBitXOr *New(MInstruction *left, MInstruction *right);
+    static MBitXOr *New(MDefinition *left, MDefinition *right);
 
     MIRType requiredInputType(size_t index) const {
         return specialization();
@@ -780,7 +791,7 @@ class MBitXOr : public MBinaryInstruction
 
 class MAdd : public MBinaryInstruction
 {
-    MAdd(MInstruction *left, MInstruction *right)
+    MAdd(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Value);
@@ -788,7 +799,7 @@ class MAdd : public MBinaryInstruction
 
   public:
     INSTRUCTION_HEADER(Add);
-    static MAdd *New(MInstruction *left, MInstruction *right) {
+    static MAdd *New(MDefinition *left, MDefinition *right) {
         return new MAdd(left, right);
     }
     MIRType requiredInputType(size_t index) const {
@@ -799,9 +810,9 @@ class MAdd : public MBinaryInstruction
     }
 };
 
-class MPhi : public MInstruction
+class MPhi : public MDefinition
 {
-    js::Vector<MInstruction *, 2, IonAllocPolicy> inputs_;
+    js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
     uint32 slot_;
 
     MPhi(uint32 slot)
@@ -811,7 +822,7 @@ class MPhi : public MInstruction
     }
 
   protected:
-    void setOperand(size_t index, MInstruction *operand) {
+    void setOperand(size_t index, MDefinition *operand) {
         inputs_[index] = operand;
     }
 
@@ -819,7 +830,7 @@ class MPhi : public MInstruction
     INSTRUCTION_HEADER(Phi);
     static MPhi *New(uint32 slot);
 
-    MInstruction *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const {
         return inputs_[index];
     }
     size_t numOperands() const {
@@ -828,7 +839,7 @@ class MPhi : public MInstruction
     uint32 slot() const {
         return slot_;
     }
-    bool addInput(MInstruction *ins);
+    bool addInput(MDefinition *ins);
     MIRType requiredInputType(size_t index) const {
         return MIRType_Value;
     }
@@ -841,7 +852,7 @@ class MSnapshot : public MInstruction
 {
     friend class MBasicBlock;
 
-    MInstruction **operands_;
+    MDefinition **operands_;
     uint32 stackDepth_;
     jsbytecode *pc_;
 
@@ -850,7 +861,7 @@ class MSnapshot : public MInstruction
     void inherit(MBasicBlock *state);
 
   protected:
-    void setOperand(size_t index, MInstruction *operand) {
+    void setOperand(size_t index, MDefinition *operand) {
         JS_ASSERT(index < stackDepth_);
         operands_[index] = operand;
     }
@@ -867,7 +878,7 @@ class MSnapshot : public MInstruction
     size_t numOperands() const {
         return stackDepth_;
     }
-    MInstruction *getOperand(size_t index) const {
+    MDefinition *getOperand(size_t index) const {
         JS_ASSERT(index < stackDepth_);
         return operands_[index];
     }
@@ -879,13 +890,13 @@ class MSnapshot : public MInstruction
     }
 
     HashNumber valueHash() const;
-    bool congruentTo(MInstruction * const &ins) const;
+    bool congruentTo(MDefinition * const &ins) const;
 };
 
 #undef INSTRUCTION_HEADER
 
 inline
-MUseIterator::MUseIterator(MInstruction *def)
+MUseIterator::MUseIterator(MDefinition *def)
   : def(def),
     use(def->uses()),
     prev_(NULL)
@@ -902,13 +913,19 @@ MUseIterator::unlink()
 
 // Implement opcode casts now that the compiler can see the inheritance.
 #define OPCODE_CASTS(opcode)                                                \
-    M##opcode *MInstruction::to##opcode()                                   \
+    M##opcode *MDefinition::to##opcode()                                    \
     {                                                                       \
         JS_ASSERT(is##opcode());                                            \
         return static_cast<M##opcode *>(this);                              \
     }
 MIR_OPCODE_LIST(OPCODE_CASTS)
 #undef OPCODE_CASTS
+
+MInstruction *MDefinition::toInstruction()
+{
+    JS_ASSERT(!isPhi());
+    return (MInstruction *)this;
+}
 
 } // namespace ion
 } // namespace js
