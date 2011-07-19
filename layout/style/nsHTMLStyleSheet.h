@@ -101,7 +101,6 @@ public:
     UniqueMappedAttributes(nsMappedAttributes* aMapped);
   void DropMappedAttributes(nsMappedAttributes* aMapped);
 
-  PRInt64 SizeOf() const;
 
 private: 
   // These are not supported and are not implemented! 

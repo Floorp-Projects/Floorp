@@ -499,7 +499,6 @@ public:
   typedef mozilla::dom::Element Element;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
 
   using nsINode::GetScriptTypeID;
 
