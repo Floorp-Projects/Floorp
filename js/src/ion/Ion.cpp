@@ -48,6 +48,7 @@
 #include "LICM.h"
 #include "ValueNumbering.h"
 #include "LinearScan.h"
+#include "jscompartment.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
@@ -160,6 +161,13 @@ IonScript::trace(JSTracer *trc, JSScript *script)
 }
 
 void
+IonScript::Trace(JSTracer *trc, JSScript *script)
+{
+    if (script->ion && script->ion != ION_DISABLED_SCRIPT)
+        script->ion->trace(trc, script);
+}
+
+void
 IonScript::Destroy(JSContext *cx, JSScript *script)
 {
     if (!script->ion || script->ion == ION_DISABLED_SCRIPT)
@@ -245,6 +253,8 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
 {
     TempAllocator temp(&cx->tempPool);
     IonContext ictx(cx, &temp);
+
+    cx->compartment->ensureIonCompartmentExists();
 
     MIRGraph graph;
     DummyOracle oracle;

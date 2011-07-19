@@ -291,6 +291,9 @@ struct TraceMonitor {
 namespace mjit {
 class JaegerCompartment;
 }
+namespace ion {
+class IonCompartment;
+}
 }
 
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
@@ -379,6 +382,14 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool                         hold;
     bool                         systemGCChunks;
+
+#ifdef JS_ION
+  private:
+    js::ion::IonCompartment *ionCompartment_;
+
+  public:
+    bool ensureIonCompartmentExists();
+#endif
 
 #ifdef JS_TRACER
   private:
