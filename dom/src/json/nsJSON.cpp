@@ -545,9 +545,10 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 {
   nsresult rv;
 
-  // This can happen with short UTF-8 messages
+  // This can happen with short UTF-8 messages (<4 bytes)
   if (!mSniffBuffer.IsEmpty()) {
-    rv = ProcessBytes(mSniffBuffer.get(), mSniffBuffer.Length());
+    // Just consume mSniffBuffer
+    rv = ProcessBytes(nsnull, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -617,6 +618,9 @@ nsJSONListener::ProcessBytes(const char* aBuffer, PRUint32 aByteLength)
                    buffer[2] != 0x00 && buffer[3] != 0x00) {
           charset = "UTF-8";
         }
+      } else {
+        // Not enough bytes to sniff, assume UTF-8
+        charset = "UTF-8";
       }
     }
 
@@ -634,6 +638,9 @@ nsJSONListener::ProcessBytes(const char* aBuffer, PRUint32 aByteLength)
     NS_ENSURE_SUCCESS(rv, rv);
     mSniffBuffer.Truncate();
   }
+
+  if (!aBuffer)
+    return NS_OK;
 
   if (mNeedsConverter) {
     rv = ConsumeConverted(aBuffer, aByteLength);

@@ -2104,17 +2104,6 @@ nsGenericHTMLElement::SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetStringAttrWithDefault(nsIAtom* aAttr,
-                                               const char* aDefault,
-                                               nsAString& aResult)
-{
-  if (!GetAttr(kNameSpaceID_None, aAttr, aResult)) {
-    CopyASCIItoUTF16(aDefault, aResult);
-  }
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, PRBool aValue)
 {
   if (aValue) {
@@ -2884,6 +2873,20 @@ nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
   element->UpdateFormOwner(false, aNewElement);
 
   return PR_TRUE;
+}
+
+PRBool 
+nsGenericHTMLFormElement::IsElementDisabledForEvents(PRUint32 aMessage, 
+                                                    nsIFrame* aFrame)
+{
+  PRBool disabled = IsDisabled();
+  if (!disabled && aFrame) {
+    const nsStyleUserInterface* uiStyle = aFrame->GetStyleUserInterface();
+    disabled = uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+      uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
+
+  }
+  return disabled && aMessage != NS_MOUSE_MOVE;
 }
 
 void

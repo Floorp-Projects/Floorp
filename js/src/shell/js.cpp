@@ -392,6 +392,34 @@ SetContextOptions(JSContext *cx)
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
+/*
+ * Some UTF-8 files, notably those written using Notepad, have a Unicode
+ * Byte-Order-Mark (BOM) as their first character. This is useless (byte-order
+ * is meaningless for UTF-8) but causes a syntax error unless we skip it.
+ */
+static void
+SkipUTF8BOM(FILE* file)
+{
+    if (!js_CStringsAreUTF8)
+        return;
+
+    int ch1 = fgetc(file);
+    int ch2 = fgetc(file);
+    int ch3 = fgetc(file);
+
+    // Skip the BOM
+    if (ch1 == 0xEF && ch2 == 0xBB && ch3 == 0xBF)
+        return;
+
+    // No BOM - revert
+    if (ch3 != EOF)
+        ungetc(ch3, file);
+    if (ch2 != EOF)
+        ungetc(ch2, file);
+    if (ch1 != EOF)
+        ungetc(ch1, file);
+}
+
 static void
 Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 {
@@ -424,6 +452,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
     if (!forceTTY && !isatty(fileno(file)))
     {
+        SkipUTF8BOM(file);
+
         /*
          * It's not interactive - just execute it.
          *
@@ -2213,6 +2243,8 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             break;
           }
           case SRC_SWITCH:
+            if (js_GetOpcode(cx, script, script->code + offset) == JSOP_GOTO)
+                break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
@@ -4797,6 +4829,13 @@ EnableStackWalkingAssertion(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
+static JSBool
+GetMaxArgs(JSContext *cx, uintN arg, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(StackSpace::ARGS_LENGTH_MAX));
+    return JS_TRUE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
     JS_FN("revertVersion",  RevertVersion,  0,0),
@@ -4857,6 +4896,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("evalInFrame",    EvalInFrame,    2,0),
     JS_FN("shapeOf",        ShapeOf,        1,0),
     JS_FN("resolver",       Resolver,       1,0),
+    JS_FN("pauseProfilers", js_PauseProfilers, 0,0),
+    JS_FN("resumeProfilers", js_ResumeProfilers, 0,0),
 #ifdef MOZ_CALLGRIND
     JS_FN("startCallgrind", js_StartCallgrind,  0,0),
     JS_FN("stopCallgrind",  js_StopCallgrind,   0,0),
@@ -4897,6 +4938,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("newGlobal",      NewGlobal,      1,0),
     JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
     JS_FN("enableStackWalkingAssertion",EnableStackWalkingAssertion,1,0),
+    JS_FN("getMaxArgs",     GetMaxArgs,     0,0),
     JS_FS_END
 };
 
@@ -4993,6 +5035,8 @@ static const char *const shell_help_messages[] = {
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 "resolver(src[, proto])   Create object with resolve hook that copies properties\n"
 "                         from src. If proto is omitted, use Object.prototype.",
+"pauseProfilers()         Pause all profilers that can be paused",
+"resumeProfilers()        Resume profilers if they are paused",
 #ifdef MOZ_CALLGRIND
 "startCallgrind()         Start callgrind instrumentation",
 "stopCallgrind()          Stop callgrind instrumentation",
@@ -5042,6 +5086,7 @@ static const char *const shell_help_messages[] = {
 "  code.  If your test isn't ridiculously thorough, such that performing this\n"
 "  assertion increases test duration by an order of magnitude, you shouldn't\n"
 "  use this.",
+"getMaxArgs()             Return the maximum number of supported args for a call.",
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
@@ -6046,6 +6091,21 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
     }
 }
 
+JSBool
+ShellPrincipalsSubsume(JSPrincipals *, JSPrincipals *)
+{
+    return JS_TRUE;
+}
+
+JSPrincipals shellTrustedPrincipals = {
+    (char *)"[shell trusted principals]",
+    NULL,
+    NULL,
+    1,
+    NULL, /* nobody should be destroying this */
+    ShellPrincipalsSubsume
+};
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -6131,6 +6191,8 @@ main(int argc, char **argv, char **envp)
     rt = JS_NewRuntime(160L * 1024L * 1024L);
     if (!rt)
         return 1;
+
+    JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
 
     if (!InitWatchdog(rt))
         return 1;

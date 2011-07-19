@@ -248,15 +248,22 @@ function update()
   content.appendChild(div);
 }
 
-// Compare two memory reporter nodes.  We want to group together measurements
-// with the same units, so sort first by the nodes' _units field, then sort by
-// the amount if the units are equal.
+// Compare two memory reporter nodes.  The primary sort is on the _units
+// property.  The secondary sort is on the _path property if the _units is
+// UNIT_COUNT, otherwise it is on the _amount property.
 function cmpAmount(a, b)
 {
-  if (a._units != b._units)
+  if (a._units != b._units) {
     return a._units - b._units;   // use the enum order from nsIMemoryReporter
-  else
-    return b._amount - a._amount;
+  }
+  if (a._units == UNITS_COUNT) {
+    if (a._path < b._path)
+      return -1;
+    if (a._path > b._path)
+      return 1;
+    return 0;
+  }
+  return b._amount - a._amount;
 };
 
 /**
@@ -410,9 +417,9 @@ function genProcessText(aProcess, aReporters)
     }
 
     // A special case:  compute the derived "heap-unclassified" value.  Don't
-    // mark "heap-used" when we get its size because we want it to appear in
-    // the "Other Measurements" list.
-    var heapUsedBytes = getBytes(aReporters, "heap-used", true);
+    // mark "heap-allocated" when we get its size because we want it to appear
+    // in the "Other Measurements" list.
+    var heapUsedBytes = getBytes(aReporters, "heap-allocated", true);
     var unknownHeapUsedBytes = 0;
     var hasProblem = true;
     if (heapUsedBytes !== kUnknown) {
@@ -424,9 +431,8 @@ function genProcessText(aProcess, aReporters)
       _kind: KIND_HEAP,
       _description:
         "Memory not classified by a more specific reporter. This includes " +
-        "memory allocated by the heap allocator in excess of that requested " +
-        "by the application; this can happen when the heap allocator rounds " +
-        "up request sizes.",
+        "waste due to internal fragmentation in the heap allocator (caused when " +
+        "the allocator rounds up request sizes).",
       _amount: unknownHeapUsedBytes,
       _hasProblem: hasProblem,
       _kids: []

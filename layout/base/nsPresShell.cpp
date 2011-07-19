@@ -236,7 +236,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
-PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
 CapturingContentInfo nsIPresShell::gCaptureInfo =
   { PR_FALSE /* mAllowed */,     PR_FALSE /* mRetargetToElement */,
     PR_FALSE /* mPreventDrag */, nsnull /* mContent */ };
@@ -1434,15 +1433,6 @@ public:
     return PL_DHASH_NEXT;
   }
 
-  static PLDHashOperator LiveShellBidiSizeEnumerator(PresShellPtrKey *aEntry,
-                                                     void *userArg)
-  {
-    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
-    PRUint32 *val = (PRUint32*)userArg;
-    *val += aShell->mPresContext->GetBidiMemoryUsed();
-    return PL_DHASH_NEXT;
-  }
-
   static PRUint32
   EstimateShellsMemory(nsTHashtable<PresShellPtrKey>::Enumerator aEnumerator)
   {
@@ -1454,10 +1444,6 @@ public:
                                   
   static PRInt64 SizeOfLayoutMemoryReporter() {
     return EstimateShellsMemory(LiveShellSizeEnumerator);
-  }
-
-  static PRInt64 SizeOfBidiMemoryReporter() {
-    return EstimateShellsMemory(LiveShellBidiSizeEnumerator);
   }
 
 protected:
@@ -1675,13 +1661,6 @@ NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
     PresShell::SizeOfLayoutMemoryReporter,
     "Memory used by layout PresShell, PresContext, and other related areas.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
-    "explicit/layout/bidi",
-    KIND_HEAP,
-    UNITS_BYTES,
-    PresShell::SizeOfBidiMemoryReporter,
-    "Memory used by layout Bidi processor.")
-
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
 {
@@ -1710,7 +1689,6 @@ PresShell::PresShell()
   static bool registeredReporter = false;
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
     Preferences::AddBoolVarCache(&sSynthMouseMove,
                                  "layout.reflow.synthMouseMove", PR_TRUE);
     registeredReporter = true;
@@ -1866,9 +1844,6 @@ PresShell::Init(nsIDocument* aDocument,
 #ifdef MOZ_XUL
       os->AddObserver(this, "chrome-flush-skin-caches", PR_FALSE);
 #endif
-#ifdef ACCESSIBILITY
-      os->AddObserver(this, "a11y-init-or-shutdown", PR_FALSE);
-#endif
     }
   }
 
@@ -1954,9 +1929,6 @@ PresShell::Destroy()
       os->RemoveObserver(this, "user-sheet-removed");
 #ifdef MOZ_XUL
       os->RemoveObserver(this, "chrome-flush-skin-caches");
-#endif
-#ifdef ACCESSIBILITY
-      os->RemoveObserver(this, "a11y-init-or-shutdown");
 #endif
     }
   }
@@ -7004,9 +6976,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       accEvent->mAccessible =
         accService->GetRootDocumentAccessible(this, nsContentUtils::IsSafeToRunScript());
 
-      // Ensure this is set in case a11y was activated before any
-      // nsPresShells existed to observe "a11y-init-or-shutdown" topic
-      gIsAccessibilityActive = PR_TRUE;
       return NS_OK;
     }
   }
@@ -8253,12 +8222,6 @@ PresShell::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-#ifdef ACCESSIBILITY
-  if (!nsCRT::strcmp(aTopic, "a11y-init-or-shutdown")) {
-    gIsAccessibilityActive = aData && *aData == '1';
-    return NS_OK;
-  }
-#endif
   NS_WARNING("unrecognized topic in PresShell::Observe");
   return NS_ERROR_FAILURE;
 }
@@ -9349,6 +9312,12 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 }
 
 #ifdef ACCESSIBILITY
+bool
+nsIPresShell::IsAccessibilityActive()
+{
+  return GetAccService() != nsnull;
+}
+
 nsAccessibilityService*
 nsIPresShell::AccService()
 {

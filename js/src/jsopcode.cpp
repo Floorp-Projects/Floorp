@@ -243,10 +243,16 @@ class AutoScriptUntrapper {
     JSScript *script;
     jsbytecode *origPC;
     jsbytecode *newPC;
+#ifdef DEBUG
+    bool assertionBefore;
+#endif
 
 public:
     AutoScriptUntrapper(JSContext *cx, JSScript *script, jsbytecode **pc)
         : cx(cx), script(script), origPC(*pc)
+#ifdef DEBUG
+          , assertionBefore(false)
+#endif
     {
         jsbytecode *newCode = js_UntrapScriptCode(cx, script);
         if (newCode == script->code) {
@@ -256,6 +262,10 @@ public:
             script->main += newCode - script->code;
             *pc = newPC = origPC + (newCode - script->code);
             script->code = newCode;
+#ifdef DEBUG
+            assertionBefore = cx->stackIterAssertionEnabled;
+            cx->stackIterAssertionEnabled = false;
+#endif
         }
     }
     ~AutoScriptUntrapper()
@@ -266,6 +276,9 @@ public:
             cx->free_(script->code);
             script->code = oldCode;
             script->main -= delta;
+#ifdef DEBUG
+            cx->stackIterAssertionEnabled = assertionBefore;
+#endif
         }
     }
 };
@@ -2241,8 +2254,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
                   case SRC_WHILE:
+                    /* First instuction (NOP) contains offset to condition */
                     ++pc;
-                    tail = js_GetSrcNoteOffset(sn, 0) - 1;
+                    /* Second instruction (TRACE) contains offset to JSOP_IFNE */
+                    sn = js_GetSrcNote(jp->script, pc);
+                    tail = js_GetSrcNoteOffset(sn, 0);
                     LOCAL_ASSERT(pc[tail] == JSOP_IFNE ||
                                  pc[tail] == JSOP_IFNEX);
                     js_printf(jp, "\tdo {\n");
@@ -2912,8 +2928,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
               }
 
-              case JSOP_GETUPVAR_DBG:
-              case JSOP_CALLUPVAR_DBG:
               case JSOP_GETFCSLOT:
               case JSOP_CALLFCSLOT:
               {
@@ -4096,7 +4110,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_LAMBDA:
               case JSOP_LAMBDA_FC:
-              case JSOP_LAMBDA_DBGFC:
 #if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
@@ -4485,7 +4498,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_DEFFUN:
               case JSOP_DEFFUN_FC:
-              case JSOP_DEFFUN_DBGFC:
                 LOAD_FUNCTION(0);
                 todo = -2;
                 goto do_function;

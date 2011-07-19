@@ -65,4 +65,4 @@ script regress-470223.js
 script regress-470388-01.js
 script regress-470388-02.js
 script regress-470388-03.js
-script regress-474771.js
+skip-if(Android) script regress-474771.js

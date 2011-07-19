@@ -21,14 +21,12 @@ function tabLoaded() {
 
   // See bugs 574036, 586386 and 587617.
 
-  hudId = HUDService.displaysIndex()[0];
-  let HUD = HUDService.hudReferences[hudId].HUDBox;
-  let filterBox = HUD.querySelector(".hud-filter-box");
-  outputNode = HUD.querySelector(".hud-output-node");
+  let HUD = HUDService.getHudByWindow(content);
+  outputNode = HUD.outputNode;
   let selection = getSelection();
-  let jstermInput = HUD.querySelector(".jsterm-input-node");
-  let console = browser.contentWindow.wrappedJSObject.console;
-  let contentSelection = browser.contentWindow.wrappedJSObject.getSelection();
+  let jstermInput = HUD.jsterm.inputNode;
+  let console = content.wrappedJSObject.console;
+  let contentSelection = content.wrappedJSObject.getSelection();
 
   let make_selection = function () {
     let controller =

@@ -15,10 +15,25 @@ function httpd_setup (handlers) {
 }
 
 function httpd_handler(statusCode, status, body) {
-  return function(request, response) {
+  return function handler(request, response) {
+    // Allow test functions to inspect the request.
+    request.body = readBytesFromInputStream(request.bodyInputStream);
+    handler.request = request;
+
     response.setStatusLine(request.httpVersion, statusCode, status);
-    response.bodyOutputStream.write(body, body.length);
+    if (body) {
+      response.bodyOutputStream.write(body, body.length);
+    }
   };
+}
+
+function basic_auth_header(user, password) {
+  return "Basic " + btoa(user + ":" + Utils.encodeUTF8(password));
+}
+
+function basic_auth_matches(req, user, password) {
+  return req.hasHeader("Authorization") &&
+         (req.getHeader("Authorization") == basic_auth_header(user, password));
 }
 
 function httpd_basic_auth_handler(body, metadata, response) {

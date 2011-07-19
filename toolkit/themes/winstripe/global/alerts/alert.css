@@ -95,5 +95,5 @@ label {
   -moz-padding-start: 5px;
   -moz-padding-end: 5px;
   margin-bottom: 8px;
-  -moz-box-align: center; /* also hard-coded in alert.js, see bug 311557 */
+  -moz-box-align: center;
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -567,6 +567,12 @@ WebSocketChannel::~WebSocketChannel()
     nsISupports *forgettableContext;
     mContext.forget(&forgettableContext);
     NS_ProxyRelease(mainThread, forgettableContext, PR_FALSE);
+  }
+
+  if (mLoadGroup) {
+    nsILoadGroup *forgettableGroup;
+    mLoadGroup.forget(&forgettableGroup);
+    NS_ProxyRelease(mainThread, forgettableGroup, PR_FALSE);
   }
 }
 

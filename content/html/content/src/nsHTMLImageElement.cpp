@@ -45,7 +45,6 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsSize.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"
@@ -107,6 +106,9 @@ public:
 
   // override from nsGenericHTMLElement
   NS_IMETHOD GetDraggable(PRBool* aDraggable);
+
+  // override from nsImageLoadingContent
+  nsImageLoadingContent::CORSMode GetCORSMode();
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
@@ -225,6 +227,17 @@ NS_IMPL_URI_ATTR(nsHTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
+static const nsAttrValue::EnumTable kCrossOriginTable[] = {
+  { "",                nsImageLoadingContent::CORS_NONE },
+  { "anonymous",       nsImageLoadingContent::CORS_ANONYMOUS },
+  { "use-credentials", nsImageLoadingContent::CORS_USE_CREDENTIALS },
+  { 0 }
+};
+// Default crossOrigin mode is CORS_NONE.
+static const nsAttrValue::EnumTable* kCrossOriginDefault = &kCrossOriginTable[0];
+
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLImageElement, CrossOrigin, crossorigin, kCrossOriginDefault->tag)
+
 NS_IMETHODIMP
 nsHTMLImageElement::GetDraggable(PRBool* aDraggable)
 {
@@ -287,11 +300,13 @@ nsHTMLImageElement::GetWidthHeight()
     }
   }
 
+  NS_ASSERTION(size.width >= 0, "negative width");
+  NS_ASSERTION(size.height >= 0, "negative height");
   return size;
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetHeight(PRInt32* aHeight)
+nsHTMLImageElement::GetHeight(PRUint32* aHeight)
 {
   *aHeight = GetWidthHeight().height;
 
@@ -299,7 +314,7 @@ nsHTMLImageElement::GetHeight(PRInt32* aHeight)
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::SetHeight(PRInt32 aHeight)
+nsHTMLImageElement::SetHeight(PRUint32 aHeight)
 {
   nsAutoString val;
   val.AppendInt(aHeight);
@@ -309,7 +324,7 @@ nsHTMLImageElement::SetHeight(PRInt32 aHeight)
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetWidth(PRInt32* aWidth)
+nsHTMLImageElement::GetWidth(PRUint32* aWidth)
 {
   *aWidth = GetWidthHeight().width;
 
@@ -317,7 +332,7 @@ nsHTMLImageElement::GetWidth(PRInt32* aWidth)
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::SetWidth(PRInt32 aWidth)
+nsHTMLImageElement::SetWidth(PRUint32 aWidth)
 {
   nsAutoString val;
   val.AppendInt(aWidth);
@@ -335,6 +350,9 @@ nsHTMLImageElement::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsGkAtoms::crossorigin) {
+      return aResult.ParseEnumValue(aValue, kCrossOriginTable, PR_FALSE);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return PR_TRUE;
@@ -576,7 +594,7 @@ nsHTMLImageElement::Initialize(nsISupports* aOwner, JSContext* aContext,
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
+nsHTMLImageElement::GetNaturalHeight(PRUint32* aNaturalHeight)
 {
   NS_ENSURE_ARG_POINTER(aNaturalHeight);
 
@@ -592,12 +610,15 @@ nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
     return NS_OK;
   }
 
-  image->GetHeight(aNaturalHeight);
+  PRInt32 height;
+  if (NS_SUCCEEDED(image->GetHeight(&height))) {
+    *aNaturalHeight = height;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
+nsHTMLImageElement::GetNaturalWidth(PRUint32* aNaturalWidth)
 {
   NS_ENSURE_ARG_POINTER(aNaturalWidth);
 
@@ -613,7 +634,10 @@ nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
     return NS_OK;
   }
 
-  image->GetWidth(aNaturalWidth);
+  PRInt32 width;
+  if (NS_SUCCEEDED(image->GetWidth(&width))) {
+    *aNaturalWidth = width;
+  }
   return NS_OK;
 }
 
@@ -624,4 +648,17 @@ nsHTMLImageElement::CopyInnerTo(nsGenericElement* aDest) const
     CreateStaticImageClone(static_cast<nsHTMLImageElement*>(aDest));
   }
   return nsGenericHTMLElement::CopyInnerTo(aDest);
+}
+
+nsImageLoadingContent::CORSMode
+nsHTMLImageElement::GetCORSMode()
+{
+  nsImageLoadingContent::CORSMode ret = nsImageLoadingContent::CORS_NONE;
+
+  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::crossorigin);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    ret = (nsImageLoadingContent::CORSMode) value->GetEnumValue();
+  }
+
+  return ret;
 }

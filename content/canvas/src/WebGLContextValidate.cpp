@@ -39,8 +39,7 @@
 
 #include "WebGLContext.h"
 
-#include "nsIPrefService.h"
-#include "nsServiceManagerUtils.h"
+#include "mozilla/Preferences.h"
 
 #include "CheckedInt.h"
 
@@ -329,6 +328,34 @@ PRBool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
     }
 }
 
+PRUint32 WebGLContext::GetTexelSize(WebGLenum format, WebGLenum type)
+{
+    if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
+        int multiplier = type == LOCAL_GL_FLOAT ? 4 : 1;
+        switch (format) {
+            case LOCAL_GL_ALPHA:
+            case LOCAL_GL_LUMINANCE:
+                return 1 * multiplier;
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                return 2 * multiplier;
+            case LOCAL_GL_RGB:
+                return 3 * multiplier;
+            case LOCAL_GL_RGBA:
+                return 4 * multiplier;
+            default:
+                break;
+        }
+    } else if (type == LOCAL_GL_UNSIGNED_SHORT_4_4_4_4 ||
+               type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
+               type == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
+    {
+        return 2;
+    }
+
+    NS_ABORT();
+    return 0;
+}
+
 PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
                                               PRUint32 *texelSize, const char *info)
 {
@@ -449,7 +476,7 @@ WebGLContext::InitAndValidateGL()
     }
 
     mActiveTexture = 0;
-    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
+    mWebGLError = LOCAL_GL_NO_ERROR;
 
     mAttribBuffers.Clear();
 
@@ -519,7 +546,7 @@ WebGLContext::InitAndValidateGL()
         // and check OpenGL error for INVALID_ENUM.
 
         // before we start, we check that no error already occurred, to prevent hiding it in our subsequent error handling
-        error = gl->fGetError();
+        error = gl->GetAndClearError();
         if (error != LOCAL_GL_NO_ERROR) {
             LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
             return PR_FALSE;
@@ -572,10 +599,10 @@ WebGLContext::InitAndValidateGL()
     }
 
     // Check the shader validator pref
-    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
-    prefService->GetBoolPref("webgl.shader_validator", &mShaderValidation);
+    mShaderValidation =
+        Preferences::GetBool("webgl.shader_validator", mShaderValidation);
 
 #if defined(USE_ANGLE)
     // initialize shader translator
@@ -587,9 +614,9 @@ WebGLContext::InitAndValidateGL()
     }
 #endif
 
-    // notice that the point of calling GetError here is not only to check for error,
-    // it is also to reset the error flag so that a subsequent WebGL getError call will give the correct result.
-    error = gl->fGetError();
+    // notice that the point of calling GetAndClearError here is not only to check for error,
+    // it is also to reset the error flags so that a subsequent WebGL getError call will give the correct result.
+    error = gl->GetAndClearError();
     if (error != LOCAL_GL_NO_ERROR) {
         LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
         return PR_FALSE;

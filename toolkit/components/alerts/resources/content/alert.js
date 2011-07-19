@@ -127,14 +127,6 @@ function onAlertLoad()
   var alertBox = document.getElementById("alertBox");
   alertBox.orient = (gOrigin & NS_ALERT_HORIZONTAL) ? "vertical" : "horizontal";
 
-  // The above doesn't cause the labels in alertTextBox to reflow,
-  // see bug 311557. As the theme's -moz-box-align css rule gets ignored,
-  // we work around the bug by setting the align property.
-  if (gOrigin & NS_ALERT_HORIZONTAL)
-  {
-    document.getElementById("alertTextBox").align = "center";
-  }
-
   sizeToContent();
 
   // Work around a bug where sizeToContent() leaves a border outside of the content

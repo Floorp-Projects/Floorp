@@ -50,8 +50,7 @@ function testCSSPruning() {
   browser.removeEventListener("DOMContentLoaded",testCSSPruning, false);
 
   openConsole();
-  let hudId = HUDService.getHudIdByWindow(content);
-  let hudRef = HUDService.getHudReferenceById(hudId);
+  let hudRef = HUDService.getHudByWindow(content);
 
   populateConsoleRepeats(hudRef);
   ok(hudRef.cssNodes["css log x"], "repeated nodes in cssNodes");
@@ -68,7 +67,6 @@ function testCSSPruning() {
 }
 
 function countMessageNodes() {
-  let hudId = HUDService.getHudIdByWindow(content);
-  let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  return hudBox.querySelectorAll(".hud-msg-node").length;
+  let outputNode = HUDService.getHudByWindow(content).outputNode;
+  return outputNode.querySelectorAll(".hud-msg-node").length;
 }

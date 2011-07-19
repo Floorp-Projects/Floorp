@@ -29,14 +29,14 @@ function testCloseLastGroup() {
       { type: "click" }, groupItem.$undoContainer[0], contentWindow);
   };
 
-  groupItem.addSubscriber(groupItem, "groupHidden", function() {
-    groupItem.removeSubscriber(groupItem, "groupHidden");
+  groupItem.addSubscriber("groupHidden", function onHidden() {
+    groupItem.removeSubscriber("groupHidden", onHidden);
     // it should still stay after 3 ms.
     setTimeout(checkExistence, 3);
   });
 
-  groupItem.addSubscriber(groupItem, "groupShown", function() {
-    groupItem.removeSubscriber(groupItem, "groupShown");
+  groupItem.addSubscriber("groupShown", function onShown() {
+    groupItem.removeSubscriber("groupShown", onShown);
 
     let endGame = function() {
       window.removeEventListener("tabviewhidden", endGame, false);

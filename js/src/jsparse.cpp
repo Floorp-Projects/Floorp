@@ -74,6 +74,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsprobes.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -929,6 +930,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!cg.init(cx, JSTreeContext::USED_AS_TREE_CONTEXT))
         return NULL;
 
+    Probes::compileScriptBegin(cx, filename, lineno);
+
     MUST_FLOW_THROUGH("out");
 
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
@@ -1123,6 +1126,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
   out:
     JS_FinishArenaPool(&codePool);
     JS_FinishArenaPool(&notePool);
+    Probes::compileScriptEnd(cx, script, filename, lineno);
     return script;
 
   too_many_slots:
@@ -1554,19 +1558,12 @@ Parser::functionBody()
     return pn;
 }
 
-/*
- * Creates a placeholder JSDefinition node for |atom| and adds it to the
- * current lexdeps.
- */
+/* Create a placeholder JSDefinition node for |atom|. */
 static JSDefinition *
-MakePlaceholder(AtomDefnAddPtr &p, JSParseNode *pn, JSTreeContext *tc)
+MakePlaceholder(JSParseNode *pn, JSTreeContext *tc)
 {
-    JSAtom *atom = pn->pn_atom;
-    JSDefinition *dn = (JSDefinition *) NameNode::create(atom, tc);
+    JSDefinition *dn = (JSDefinition *) NameNode::create(pn->pn_atom, tc);
     if (!dn)
-        return NULL;
-
-    if (!tc->lexdeps->add(p, atom, dn))
         return NULL;
 
     dn->pn_type = TOK_NAME;
@@ -2787,8 +2784,8 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                      * inherited lexdeps into uses of a new outer definition
                      * allows us to handle both these cases in a natural way.
                      */
-                    outer_dn = MakePlaceholder(p, dn, tc);
-                    if (!outer_dn)
+                    outer_dn = MakePlaceholder(dn, tc);
+                    if (!outer_dn || !tc->lexdeps->add(p, atom, outer_dn))
                         return false;
                 }
             }
@@ -6919,8 +6916,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                      * generator) a use of a new placeholder in the generator's
                      * lexdeps.
                      */
-                    AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(atom);
-                    JSDefinition *dn2 = MakePlaceholder(p, pn, tc);
+                    JSDefinition *dn2 = MakePlaceholder(pn, tc);
                     if (!dn2)
                         return false;
                     dn2->pn_pos = root->pn_pos;
@@ -6939,6 +6935,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                     dn2->dn_uses = dn->dn_uses;
                     dn->dn_uses = *pnup;
                     *pnup = NULL;
+                    if (!tc->lexdeps->put(atom, dn2))
+                        return false;
                 } else if (dn->isPlaceholder()) {
                     /*
                      * The variable first occurs free in the 'yield' expression;
@@ -8302,7 +8300,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         matched = tokenStream.matchToken(TOK_RB, TSF_OPERAND);
         if (!matched) {
             for (index = 0; ; index++) {
-                if (index == JS_ARGS_LENGTH_MAX) {
+                if (index == StackSpace::ARGS_LENGTH_MAX) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARRAY_INIT_TOO_BIG);
                     return NULL;
                 }
@@ -8763,8 +8761,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                      * - Be left as a free variable definition if we never
                      *   see the real definition.
                      */
-                    dn = MakePlaceholder(p, pn, tc);
-                    if (!dn)
+                    dn = MakePlaceholder(pn, tc);
+                    if (!dn || !tc->lexdeps->add(p, dn->pn_atom, dn))
                         return NULL;
 
                     /*
@@ -8946,7 +8944,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!ValueToNumber(cx, StringValue(pn->pn_atom), &d))
+                if (!ToNumber(cx, StringValue(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;

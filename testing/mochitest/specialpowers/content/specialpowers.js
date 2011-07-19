@@ -208,6 +208,12 @@ SpecialPowers.prototype = {
              .createInstance(Ci.nsIXMLHttpRequest);
   },
 
+  loadURI: function(window, uri, referrer, charset, x, y) {
+    var webNav = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation);
+    webNav.loadURI(uri, referrer, charset, x, y);
+  },
+
   gc: function() {
     this.DOMWindowUtils.garbageCollect();
   },
@@ -297,15 +303,27 @@ SpecialPowers.prototype = {
   },
 
   addSystemEventListener: function(target, type, listener, useCapture) {
-    Components.classes["@mozilla.org/eventlistenerservice;1"].
-      getService(Components.interfaces.nsIEventListenerService).
+    Cc["@mozilla.org/eventlistenerservice;1"].
+      getService(Ci.nsIEventListenerService).
       addSystemEventListener(target, type, listener, useCapture);
   },
   removeSystemEventListener: function(target, type, listener, useCapture) {
-    Components.classes["@mozilla.org/eventlistenerservice;1"].
-      getService(Components.interfaces.nsIEventListenerService).
+    Cc["@mozilla.org/eventlistenerservice;1"].
+      getService(Ci.nsIEventListenerService).
       removeSystemEventListener(target, type, listener, useCapture);
-  }
+  },
+
+  setLogFile: function(path) {
+    this._mfl = new MozillaFileLogger(path);
+  },
+
+  log: function(data) {
+    this._mfl.log(data);
+  },
+
+  closeLogFile: function() {
+    this._mfl.close();
+  },
 };
 
 // Expose everything but internal APIs (starting with underscores) to
@@ -342,12 +360,9 @@ SpecialPowersManager.prototype = {
   handleEvent: function handleEvent(aEvent) {
     var window = aEvent.target.defaultView;
 
-    // Need to make sure we are called on what we care about -
-    // content windows. DOMWindowCreated is called on *all* HTMLDocuments,
-    // some of which belong to chrome windows or other special content.
-    //
+    // only add SpecialPowers to data pages, not about:*
     var uri = window.document.documentURIObject;
-    if (uri.scheme === "chrome" || uri.spec.split(":")[0] == "about") {
+    if (uri.spec.split(":")[0] == "about") {
       return;
     }
 

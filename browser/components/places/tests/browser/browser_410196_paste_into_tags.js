@@ -24,12 +24,10 @@ let PlacesOrganizer;
 
 function test() {
   waitForExplicitFinish();
-  openLibrary(onLibraryReady);
+  gLibrary = openLibrary(onLibraryReady);
 }
 
-function onLibraryReady(library) {
-  gLibrary = library;
-
+function onLibraryReady() {
   ok(PlacesUtils, "PlacesUtils in scope");
   ok(PlacesUIUtils, "PlacesUIUtils in scope");
 

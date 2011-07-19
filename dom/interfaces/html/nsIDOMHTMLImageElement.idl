@@ -50,17 +50,18 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(cf8a8744-ec3b-474e-8f2b-8def3da2344a)]
+[scriptable, uuid(ce760602-0528-493d-966d-65d4ee52347d)]
 interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
 {
            attribute DOMString        alt;
            attribute DOMString        src;
+           attribute DOMString        crossOrigin;
            attribute DOMString        useMap;
            attribute boolean          isMap;
-           attribute long             width;
-           attribute long             height;
-  readonly attribute long             naturalWidth;
-  readonly attribute long             naturalHeight;
+           attribute unsigned long    width;
+           attribute unsigned long    height;
+  readonly attribute unsigned long    naturalWidth;
+  readonly attribute unsigned long    naturalHeight;
   readonly attribute boolean          complete;
 
 
