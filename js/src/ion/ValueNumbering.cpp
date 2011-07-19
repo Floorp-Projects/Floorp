@@ -46,9 +46,9 @@
 using namespace js;
 using namespace js::ion;
 
-ValueNumberer::ValueNumberer(MIRGraph &graph, bool pessimistic)
+ValueNumberer::ValueNumberer(MIRGraph &graph, bool optimistic)
   : graph_(graph),
-    pessimisticPass_(pessimistic)
+    pessimisticPass_(!optimistic)
 { }
 
 

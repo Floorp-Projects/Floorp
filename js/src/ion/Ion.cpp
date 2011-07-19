@@ -63,6 +63,8 @@
 using namespace js;
 using namespace js::ion;
 
+IonOptions ion::js_IonOptions;
+
 #ifdef JS_THREADSAFE
 static bool IonTLSInitialized = false;
 static PRUintn IonTLSIndex;
@@ -177,16 +179,19 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     spew.spewPass("Apply types");
 
-    // FIXME(671442) this should be an option
-    ValueNumberer gvn(graph, ION_GVN_PESSIMISTIC);
-    if (!gvn.analyze())
-        return false;
-    spew.spewPass("GVN");
+    if (js_IonOptions.gvn) {
+        ValueNumberer gvn(graph, js_IonOptions.gvnIsOptimistic);
+        if (!gvn.analyze())
+            return false;
+        spew.spewPass("GVN");
+    }
 
-    LICM licm(graph);
-    if (!licm.analyze())
-        return false;
-    spew.spewPass("LICM");
+    if (js_IonOptions.licm) {
+        LICM licm(graph);
+        if (!licm.analyze())
+            return false;
+        spew.spewPass("LICM");
+    }
 
     LIRGraph lir;
     LIRBuilder lirgen(&builder, graph, lir);
@@ -194,18 +199,17 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     spew.spewPass("Generate LIR");
 
-    // FIXME (668350): Add an environment variable toggle for this.
-#ifndef ION_LSRA
-    GreedyAllocator greedy(&builder, lir);
-    if (!greedy.allocate())
-        return false;
-    spew.spewPass("Allocate registers");
-#else
-    LinearScanAllocator regalloc(&lirgen, lir);
-    if (!regalloc.go())
-        return false;
-    spew.spewPass("Allocate Registers", &regalloc);
-#endif
+    if (js_IonOptions.lsra) {
+        LinearScanAllocator regalloc(&lirgen, lir);
+        if (!regalloc.go())
+            return false;
+        spew.spewPass("Allocate Registers", &regalloc);
+    } else {
+        GreedyAllocator greedy(&builder, lir);
+        if (!greedy.allocate())
+            return false;
+        spew.spewPass("Allocate Registers");
+    }
 
     CodeGenerator codegen(&builder, lir);
     if (!codegen.generate())
