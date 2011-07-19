@@ -57,6 +57,8 @@
 #include "jsgcinlines.h"
 #include "jsscopeinlines.h"
 
+#include "ion/IonCompartment.h"
+
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
 #endif
@@ -78,6 +80,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     active(false),
 #ifdef JS_METHODJIT
     jaegerCompartment_(NULL),
+#endif
+#ifdef JS_ION
+    ionCompartment_(NULL),
 #endif
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
@@ -140,6 +145,24 @@ JSCompartment::init()
 
     return true;
 }
+
+#ifdef JS_ION
+bool
+JSCompartment::ensureIonCompartmentExists()
+{
+    using namespace js::ion;
+    if (ionCompartment_)
+        return true;
+
+    IonCompartment *ic = new IonCompartment();
+    if (!ic->Initialize()) {
+        delete ic;
+        return false;
+    }
+    ionCompartment_ = ic;
+    return true;
+}
+#endif
 
 #ifdef JS_METHODJIT
 bool
