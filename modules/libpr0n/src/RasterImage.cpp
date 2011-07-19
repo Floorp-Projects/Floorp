@@ -54,8 +54,8 @@
 #include "nsStringStream.h"
 #include "prmem.h"
 #include "prenv.h"
-#include "nsTime.h"
 #include "ImageLogging.h"
+#include "mozilla/TimeStamp.h"
 
 #include "nsPNGDecoder.h"
 #include "nsGIFDecoder2.h"
@@ -66,6 +66,7 @@
 
 #include "gfxContext.h"
 
+using namespace mozilla;
 using namespace mozilla::imagelib;
 
 // a mask for flags that will affect the decoding
@@ -2692,14 +2693,14 @@ imgDecodeWorker::Run()
 
   // Loop control
   PRBool haveMoreData = PR_TRUE;
-  nsTime deadline(PR_Now() + 1000 * gMaxMSBeforeYield);
+  TimeStamp deadline = TimeStamp::Now() + TimeDuration::FromMilliseconds(gMaxMSBeforeYield);
 
   // We keep decoding chunks until one of three possible events occur:
   // 1) We don't have any data left to decode
   // 2) The decode completes
   // 3) We hit the deadline and need to yield to keep the UI snappy
   while (haveMoreData && !image->IsDecodeFinished() &&
-         (nsTime(PR_Now()) < deadline)) {
+         (TimeStamp::Now() < deadline)) {
 
     // Decode a chunk of data
     rv = image->DecodeSomeData(maxBytes);
