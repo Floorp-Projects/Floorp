@@ -536,14 +536,13 @@ class Mochitest(object):
 
     return browserEnv
 
-  def buildURLOptions(self, options, env):
+  def buildURLOptions(self, options):
     """ Add test control options from the command line to the url 
 
         URL parameters to test URL:
 
         autorun -- kick off tests automatically
         closeWhenDone -- runs quit.js after tests
-        hideResultsTable -- hides the table of individual test results
         logFile -- logs test run to an absolute path
         totalChunks -- how many chunks to split tests into
         thisChunk -- which chunk to run
@@ -579,8 +578,6 @@ class Mochitest(object):
         self.urlOpts.append("loops=%d" % options.loops)
       if os.path.isfile(self.oldcwd + self.TEST_PATH + options.testPath) and options.loops > 0:
         self.urlOpts.append("testname=%s" % (self.TEST_PATH + options.testPath))
-      if "MOZ_HIDE_RESULTS_TABLE" in env and env["MOZ_HIDE_RESULTS_TABLE"] == "1":
-        self.urlOpts.append("hideResultsTable=1")
 
   def cleanup(self, manifest, options):
     """ remove temporary files and profile """
@@ -636,7 +633,7 @@ class Mochitest(object):
     self.startWebSocketServer(options, debuggerInfo)
 
     testURL = self.buildTestPath(options)
-    self.buildURLOptions(options, browserEnv)
+    self.buildURLOptions(options)
     if len(self.urlOpts) > 0:
       testURL += "?" + "&".join(self.urlOpts)
 
@@ -719,9 +716,6 @@ class Mochitest(object):
     elif (options.a11y):
       testRoot = 'a11y'
  
-    if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
-      options.hideResultsTable = True
-
     #TODO: when we upgrade to python 2.6, just use json.dumps(options.__dict__)
     content = "{"
     content += '"testRoot": "%s", ' % (testRoot) 
