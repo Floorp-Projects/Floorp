@@ -369,6 +369,10 @@ class MDefinition : public MNode
         return NO_WIN;
     }
 
+    bool hasHoistWin() {
+        return estimateHoistWin() != NO_WIN;
+    }
+
   public:
     // Opcode testing and casts.
 #   define OPCODE_CASTS(opcode)                                             \
@@ -417,7 +421,7 @@ class MUseIterator
     }
 };
 
-// An MUseIterator walks over uses in a definition, skipping any use that is
+// An MUseDefIterator walks over uses in a definition, skipping any use that is
 // not a definition. Items from the use list must not be deleted during
 // iteration.
 class MUseDefIterator
