@@ -360,7 +360,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_BITAND:
       case JSOP_BITOR:
       case JSOP_BITXOR:
-        return jsop_binary(op);
+        return jsop_bitop(op);
 
       case JSOP_ADD:
       	return jsop_binary(op);
@@ -1215,7 +1215,7 @@ IonBuilder::pushConstant(const Value &v)
 }
 
 bool
-IonBuilder::jsop_binary(JSOp op)
+IonBuilder::jsop_bitop(JSOp op)
 {
     // Pop inputs.
     MDefinition *right = current->pop();
@@ -1235,6 +1235,25 @@ IonBuilder::jsop_binary(JSOp op)
         ins = MBitXor::New(left, right);
         break;
         
+      default:
+        JS_NOT_REACHED("unexpected bitop");
+        return false;
+    }
+
+    current->add(ins);
+    current->push(ins);
+    return true;
+}
+
+bool
+IonBuilder::jsop_binary(JSOp op)
+{
+    // Pop inputs.
+    MDefinition *right = current->pop();
+    MDefinition *left = current->pop();
+
+    MBinaryArithInstruction *ins;
+    switch (op) {
       case JSOP_ADD:
         ins = MAdd::New(left, right);
         break;
