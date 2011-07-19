@@ -58,7 +58,7 @@ BoxInputsPolicy::adjustInputs(MInstruction *ins)
     for (size_t i = 0; i < ins->numOperands(); i++) {
         MDefinition *in = ins->getOperand(i);
         if (in->type() == MIRType_Value)
-            return true;
+            continue;
         MBox *box = MBox::New(in);
         ins->block()->insertBefore(ins, box);
         ins->replaceOperand(i, box);
