@@ -104,8 +104,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsJSUtils.h"
 
-#include "mozilla/dom/Element.h"
-
 // Helper classes
 
 /***********************************************************************/

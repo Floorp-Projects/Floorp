@@ -45,7 +45,6 @@
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
 #include "nsEventStates.h"
-#include "mozilla/dom/Element.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"

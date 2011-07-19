@@ -8383,11 +8383,3 @@ nsIDocument::SizeOf() const
   return size;
 }
 
-PRInt64
-nsDocument::SizeOf() const
-{
-  PRInt64 size = MemoryReporter::GetBasicSize<nsDocument, nsIDocument>(this);
-  size += mAttrStyleSheet ? mAttrStyleSheet->SizeOf() : 0;
-  return size;
-}
-
