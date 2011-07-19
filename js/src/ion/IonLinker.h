@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79:
  *
@@ -24,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Andrew Scheff <ascheff@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,13 +39,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "assembler/assembler/MacroAssembler.h"
+#ifndef jsion_linker_h__
+#define jsion_linker_h__
+
+#include "jscntxt.h"
+#include "jscompartment.h"
+#include "ion/IonCode.h"
 #include "ion/IonCompartment.h"
+#include "assembler/jit/ExecutableAllocator.h"
 
-using namespace js::ion;
+#if defined(JS_CPU_X86)
+# include "ion/x86/Assembler-x86.h"
+#elif defined(JS_CPU_X64)
+# include "ion/x64/Assembler-x64.h"
+#endif
 
-IonCode *
-IonCompartment::generateEnterJIT(JSContext *cx)
+namespace js {
+namespace ion {
+
+template <typename T>
+class LinkerT
 {
-    return NULL;
-}
+    T &masm;
+
+    IonCode *fail(JSContext *cx) {
+        js_ReportOutOfMemory(cx);
+        return NULL;
+    }
+
+    IonCode *newCode(JSContext *cx, IonCompartment *comp) {
+        JSC::ExecutablePool *pool;
+        void *result = comp->execAlloc()->alloc(masm.size(), &pool);
+        if (!result)
+            return fail(cx);
+        masm.executableCopy(result);
+        return IonCode::New(cx, (uint8 *)result, masm.size(), pool);
+    }
+
+  public:
+    LinkerT(T &masm)
+      : masm(masm)
+    { }
+
+    IonCode *newCode(JSContext *cx) {
+        return newCode(cx, cx->compartment->ionCompartment());
+    }
+};
+
+typedef LinkerT<Assembler> Linker;
+
+} // namespace ion
+} // namespace js
+
+#endif // jsion_linker_h__
+

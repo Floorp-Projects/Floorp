@@ -388,7 +388,10 @@ struct JS_FRIEND_API(JSCompartment) {
     js::ion::IonCompartment *ionCompartment_;
 
   public:
-    bool ensureIonCompartmentExists();
+    bool ensureIonCompartmentExists(JSContext *cx);
+    js::ion::IonCompartment *ionCompartment() {
+        return ionCompartment_;
+    }
 #endif
 
 #ifdef JS_TRACER

@@ -42,12 +42,13 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "ion/IonCompartment.h"
+#include "ion/IonLinker.h"
 
 using namespace js::ion;
 using namespace JSC;
 
 IonCode *
-IonCompartment::GenerateTrampoline(JSC::ExecutableAllocator *execAlloc)
+IonCompartment::generateEnterJIT(JSContext *cx)
 {
     typedef MacroAssembler::Label Label;
     typedef MacroAssembler::Jump Jump;
@@ -126,14 +127,7 @@ IonCompartment::GenerateTrampoline(JSC::ExecutableAllocator *execAlloc)
     // Restore old stack frame pointer
     masm.pop(X86Registers::ebp);
 
-    bool ok;
-    JSC::ExecutablePool *pool;
-    LinkBuffer buffer(&masm, execAlloc, &pool, &ok);
-    if (!ok)
-        return NULL;
-
-    uint8 *result = (uint8*)buffer.finalizeCodeAddendum().dataLocation();
-    IonCode *toReturn = new IonCode(result, masm.size(), pool);
-    return toReturn;
+    LinkerT<MacroAssembler> linker(masm);
+    return linker.newCode(cx);
 }
 

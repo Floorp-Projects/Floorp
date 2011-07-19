@@ -47,34 +47,22 @@
 namespace js {
 namespace ion {
 
-struct IonTrampolines {
-    IonCode *ionTrampoline;
-};
-
 class IonCompartment {
     JSC::ExecutableAllocator *execAlloc_;
-    IonTrampolines           trampolines;
 
-    void Finish() { }
+    // Trampolines.
+    IonCode *enterJIT_;
+
+    IonCode *generateEnterJIT(JSContext *cx);
 
   public:
-    bool Initialize() {
-        execAlloc_ = new JSC::ExecutableAllocator();
-        trampolines.ionTrampoline = GenerateTrampoline(execAlloc_);
-
-        if (!trampolines.ionTrampoline)
-            return false;
-
-        return true;
-    }
-
-    ~IonCompartment() { Finish(); }
+    bool initialize(JSContext *cx);
+    IonCompartment();
+    ~IonCompartment();
 
     JSC::ExecutableAllocator *execAlloc() {
         return execAlloc_;
     }
-
-    IonCode *GenerateTrampoline(JSC::ExecutableAllocator *execAlloc);
 };
 
 

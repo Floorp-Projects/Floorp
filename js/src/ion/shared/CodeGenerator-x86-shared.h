@@ -43,11 +43,7 @@
 #define jsion_codegen_x86_shared_h__
 
 #include "ion/shared/CodeGenerator-shared.h"
-#if defined(JS_CPU_X86)
-# include "ion/x86/Assembler-x86.h"
-#elif defined(JS_CPU_X64)
-# include "ion/x64/Assembler-x64.h"
-#endif
+#include "ion/IonLinker.h"
 
 namespace js {
 namespace ion {
