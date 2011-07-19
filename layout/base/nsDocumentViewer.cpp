@@ -195,6 +195,8 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 //switch to page layout
 #include "nsGfxCIID.h"
 
+#include "mozilla/dom/Element.h"
+
 using namespace mozilla;
 
 #ifdef NS_DEBUG
