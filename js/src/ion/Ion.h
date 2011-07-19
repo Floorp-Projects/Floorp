@@ -88,6 +88,14 @@ struct IonOptions
     { }
 };
 
+#define ION_DISABLED_SCRIPT ((IonScript *)0x1)
+
+enum MethodStatus
+{
+    Method_CantCompile,
+    Method_Compiled
+};
+
 // An Ion context is needed to enter into either an Ion method or an instance
 // of the Ion compiler. It points to a temporary allocator and the active
 // JSContext.
@@ -101,6 +109,8 @@ class IonContext
     TempAllocator *temp;
 };
 
+extern IonOptions js_IonOptions;
+
 // Initialize Ion statically for all JSRuntimes.
 bool InitializeIon();
 
@@ -108,9 +118,13 @@ bool InitializeIon();
 IonContext *GetIonContext();
 bool SetIonContext(IonContext *ctx);
 
-bool Go(JSContext *cx, JSScript *script, js::StackFrame *fp);
+MethodStatus Compile(JSContext *cx, JSScript *script, js::StackFrame *fp);
+bool FireMahLaser(JSContext *cx);
 
-extern IonOptions js_IonOptions;
+static inline bool IsEnabled()
+{
+    return js_IonOptions.enabled;
+}
 
 }
 }
