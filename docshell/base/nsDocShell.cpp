@@ -53,7 +53,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorage.h"
 #include "nsPIDOMStorage.h"
 #include "nsIDocumentViewer.h"
@@ -71,7 +70,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPoint.h"
 #include "nsGfxCIID.h"
@@ -111,6 +110,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/AutoRestore.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -174,9 +174,6 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIWyciwygChannel.h"
-
-// The following are for bug #13871: Prevent frameset spoofing
-#include "nsIHTMLDocument.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -923,8 +920,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
         *aSink = mScriptGlobal;
     }
-    else if ((aIID.Equals(NS_GET_IID(nsIDOMWindowInternal)) ||
-              aIID.Equals(NS_GET_IID(nsPIDOMWindow)) ||
+    else if ((aIID.Equals(NS_GET_IID(nsPIDOMWindow)) ||
               aIID.Equals(NS_GET_IID(nsIDOMWindow))) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
         return mScriptGlobal->QueryInterface(aIID, aSink);
@@ -2776,15 +2772,14 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
         return PR_FALSE;
     }
 
-    nsCOMPtr<nsIDOMWindow> targetWindow(do_GetInterface(aTargetItem));
-    nsCOMPtr<nsIDOMWindowInternal> targetInternal(do_QueryInterface(targetWindow));
-    if (!targetInternal) {
+    nsCOMPtr<nsIDOMWindow> targetWindow = do_GetInterface(aTargetItem);
+    if (!targetWindow) {
         NS_ERROR("This should not happen, really");
         return PR_FALSE;
     }
 
-    nsCOMPtr<nsIDOMWindowInternal> targetOpener;
-    targetInternal->GetOpener(getter_AddRefs(targetOpener));
+    nsCOMPtr<nsIDOMWindow> targetOpener;
+    targetWindow->GetOpener(getter_AddRefs(targetOpener));
     nsCOMPtr<nsIWebNavigation> openerWebNav(do_GetInterface(targetOpener));
     nsCOMPtr<nsIDocShellTreeItem> openerItem(do_QueryInterface(openerWebNav));
 
@@ -2798,8 +2793,7 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
 static PRBool
 ItemIsActive(nsIDocShellTreeItem *aItem)
 {
-    nsCOMPtr<nsIDOMWindow> tmp(do_GetInterface(aItem));
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(tmp));
+    nsCOMPtr<nsIDOMWindow> window(do_GetInterface(aItem));
 
     if (window) {
         PRBool isClosed;
@@ -2989,7 +2983,7 @@ PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsIDocument *doc = presShell->GetDocument();
 
-  nsCOMPtr<nsIDOMWindowInternal> domwin(doc->GetWindow());
+  nsCOMPtr<nsIDOMWindow> domwin(doc->GetWindow());
 
   nsCOMPtr<nsIWidget> widget;
   nsIViewManager* vm = presShell->GetViewManager();
@@ -8234,7 +8228,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         
         PRBool isNewWindow = PR_FALSE;
         if (!targetDocShell) {
-            nsCOMPtr<nsIDOMWindowInternal> win =
+            nsCOMPtr<nsIDOMWindow> win =
                 do_GetInterface(GetAsSupports(this));
             NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
@@ -8290,7 +8284,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     // So, the best we can do, is to tear down the new window
                     // that was just created!
                     //
-                    nsCOMPtr<nsIDOMWindowInternal> domWin =
+                    nsCOMPtr<nsIDOMWindow> domWin =
                         do_GetInterface(targetDocShell);
                     if (domWin) {
                         domWin->Close();
@@ -10884,25 +10878,6 @@ nsDocShell::GetRootScrollFrame()
     return shell->GetRootScrollFrameAsScrollableExternal();
 }
 
-#ifdef DEBUG
-class nsDebugAutoBoolTrueSetter
-{
-public:
-    nsDebugAutoBoolTrueSetter(PRPackedBool *aBool)
-        : mBool(aBool)
-    {
-        *mBool = PR_TRUE;
-    }
-
-    ~nsDebugAutoBoolTrueSetter()
-    {
-        *mBool = PR_FALSE;
-    }
-protected:
-    PRPackedBool *mBool;
-};
-#endif
-
 NS_IMETHODIMP
 nsDocShell::EnsureScriptEnvironment()
 {
@@ -10922,7 +10897,8 @@ nsDocShell::EnsureScriptEnvironment()
 
     // Yeah, this isn't re-entrant safe, but that's ok since if we
     // re-enter this method, we'll infinitely loop...
-    nsDebugAutoBoolTrueSetter boolSetter(&mInEnsureScriptEnv);
+    AutoRestore<PRPackedBool> boolSetter(mInEnsureScriptEnv);
+    mInEnsureScriptEnv = PR_TRUE;
 #endif
 
     nsCOMPtr<nsIDOMScriptObjectFactory> factory =

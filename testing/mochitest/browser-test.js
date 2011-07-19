@@ -58,6 +58,7 @@ Tester.prototype = {
   EventUtils: {},
   SimpleTest: {},
 
+  loops: 0,
   checker: null,
   currentTestIndex: -1,
   lastStartTime: null,
@@ -69,6 +70,10 @@ Tester.prototype = {
   },
 
   start: function Tester_start() {
+    //if testOnLoad was not called, then gConfig is not defined
+    if(!gConfig)
+      gConfig = readConfig();
+    this.loops = gConfig.loops;
     this.dumper.dump("*** Start BrowserChrome Test Results ***\n");
     this._cs.registerListener(this);
 
@@ -124,33 +129,40 @@ Tester.prototype = {
   },
 
   finish: function Tester_finish(aSkipSummary) {
-    this._cs.unregisterListener(this);
-
-    this.dumper.dump("\nINFO TEST-START | Shutdown\n");
-    if (this.tests.length) {
-      this.dumper.dump("Browser Chrome Test Summary\n");
-
-      function sum(a,b) a+b;
-      var passCount = this.tests.map(function (f) f.passCount).reduce(sum);
-      var failCount = this.tests.map(function (f) f.failCount).reduce(sum);
-      var todoCount = this.tests.map(function (f) f.todoCount).reduce(sum);
-
-      this.dumper.dump("\tPassed: " + passCount + "\n" +
-                       "\tFailed: " + failCount + "\n" +
-                       "\tTodo: " + todoCount + "\n");
-    } else {
-      this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " +
-                       "No tests to run. Did you pass an invalid --test-path?");
+    if(this.loops > 0){
+      --this.loops;
+      this.currentTestIndex = -1;
+      this.nextTest();
     }
-
-    this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
-
-    this.dumper.done();
-
-    // Tests complete, notify the callback and return
-    this.callback(this.tests);
-    this.callback = null;
-    this.tests = null;
+    else{
+      this._cs.unregisterListener(this);
+  
+      this.dumper.dump("\nINFO TEST-START | Shutdown\n");
+      if (this.tests.length) {
+        this.dumper.dump("Browser Chrome Test Summary\n");
+  
+        function sum(a,b) a+b;
+        var passCount = this.tests.map(function (f) f.passCount).reduce(sum);
+        var failCount = this.tests.map(function (f) f.failCount).reduce(sum);
+        var todoCount = this.tests.map(function (f) f.todoCount).reduce(sum);
+  
+        this.dumper.dump("\tPassed: " + passCount + "\n" +
+                         "\tFailed: " + failCount + "\n" +
+                         "\tTodo: " + todoCount + "\n");
+      } else {
+        this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " +
+                         "No tests to run. Did you pass an invalid --test-path?");
+      }
+  
+      this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
+  
+      this.dumper.done();
+  
+      // Tests complete, notify the callback and return
+      this.callback(this.tests);
+      this.callback = null;
+      this.tests = null;
+    }
   },
 
   observe: function Tester_observe(aConsoleMessage) {
@@ -417,8 +429,15 @@ function testScope(aTester, aTest) {
     self.SimpleTest.copyToProfile(filename);
   };
 
+  this.expectUncaughtException = function test_expectUncaughtException() {
+    self.SimpleTest.expectUncaughtException();
+  };
+
   this.finish = function test_finish() {
     self.__done = true;
+    if (self.SimpleTest._expectingUncaughtException) {
+      self.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
+    }
     if (self.__waitTimer) {
       self.executeSoon(function() {
         if (self.__done && self.__waitTimer) {

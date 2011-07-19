@@ -43,13 +43,13 @@ function test() {
   }
 
   let testDragOutOfExpandedStackedGroup = function () {
-    groupItem.addSubscriber(groupItem, "expanded", function () {
-      groupItem.removeSubscriber(groupItem, "expanded");
+    groupItem.addSubscriber("expanded", function onExpanded() {
+      groupItem.removeSubscriber("expanded", onExpanded);
       dragTabItem();
     });
 
-    groupItem.addSubscriber(groupItem, "collapsed", function () {
-      groupItem.removeSubscriber(groupItem, "collapsed");
+    groupItem.addSubscriber("collapsed", function onCollapsed() {
+      groupItem.removeSubscriber("collapsed", onCollapsed);
 
       let secondGroup = cw.GroupItems.groupItems[1];
       closeGroupItem(secondGroup, function () hideTabView(finishTest));

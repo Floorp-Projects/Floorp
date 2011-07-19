@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsHTMLInputElement.h"
+
 #include "nsIDOMHTMLInputElement.h"
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
@@ -111,7 +113,6 @@
 
 // input type=image
 #include "nsImageLoadingContent.h"
-#include "nsIDOMWindowInternal.h"
 
 #include "mozAutoDocUpdate.h"
 #include "nsContentCreatorFunctions.h"
@@ -124,8 +125,6 @@
 // JS headers are needed for the pattern attribute.
 #include "jsapi.h"
 #include "jscntxt.h"
-
-#include "nsHTMLInputElement.h"
 
 using namespace mozilla::dom;
 
@@ -268,7 +267,7 @@ AsyncClickHandler::Run()
 {
   nsresult rv;
 
-  // Get parent nsIDOMWindowInternal object.
+  // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = mInput->GetOwnerDoc();
   if (!doc)
     return NS_ERROR_FAILURE;
@@ -884,9 +883,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (mType == NS_FORM_INPUT_RADIO && aName == nsGkAtoms::required) {
-      nsIRadioGroupContainer* c = GetRadioGroupContainer();
-      nsCOMPtr<nsIRadioGroupContainer_MOZILLA_2_0_BRANCH> container =
-        do_QueryInterface(c);
+      nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
 
       if (container) {
         nsAutoString name;
@@ -1855,22 +1852,8 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled
   aVisitor.mCanHandle = PR_FALSE;
-  if (IsDisabled()) {
+  if (IsElementDisabledForEvents(aVisitor.mEvent->message, GetPrimaryFrame())) {
     return NS_OK;
-  }
-
-  // For some reason or another we also need to check if the style shows us
-  // as disabled.
-  {
-    nsIFrame* frame = GetPrimaryFrame();
-    if (frame) {
-      const nsStyleUserInterface* uiStyle = frame->GetStyleUserInterface();
-
-      if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-          uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
-        return NS_OK;
-      }
-    }
   }
 
   // Initialize the editor if needed.
@@ -3358,10 +3341,8 @@ nsHTMLInputElement::AddedToRadioGroup()
 
     // We initialize the validity of the element to the validity of the group
     // because we assume UpdateValueMissingState() will be called after.
-    nsCOMPtr<nsIRadioGroupContainer_MOZILLA_2_0_BRANCH> container2 =
-      do_QueryInterface(container);
     SetValidityState(VALIDITY_STATE_VALUE_MISSING,
-                     container2->GetValueMissingState(name));
+                     container->GetValueMissingState(name));
   }
 }
 
@@ -3748,9 +3729,7 @@ nsHTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
                               : HasAttr(kNameSpaceID_None, nsGkAtoms::required);
   bool valueMissing = false;
 
-  nsIRadioGroupContainer* c = GetRadioGroupContainer();
-  nsCOMPtr<nsIRadioGroupContainer_MOZILLA_2_0_BRANCH> container =
-    do_QueryInterface(c);
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
 
   if (!container) {
     SetValidityState(VALIDITY_STATE_VALUE_MISSING, required && !selected);

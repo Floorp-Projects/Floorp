@@ -58,8 +58,8 @@ function testGroups(groupItemOne, groupItemTwo, contentWindow) {
      "The first tab item in group two is active");
   
   let tabItem = groupItemOne.getChild(1);
-  tabItem.addSubscriber(tabItem, "tabRemoved", function() {
-    tabItem.removeSubscriber(tabItem, "tabRemoved");
+  tabItem.addSubscriber("tabRemoved", function onTabRemoved() {
+    tabItem.removeSubscriber("tabRemoved", onTabRemoved);
 
     is(groupItemOne.getChildren().length, 1,
       "The num of childen in group one is 1");
@@ -76,8 +76,8 @@ function testGroups(groupItemOne, groupItemTwo, contentWindow) {
          "The num of childen in group one is 2");
 
       // clean up and finish
-      groupItemTwo.addSubscriber(groupItemTwo, "close", function() {
-        groupItemTwo.removeSubscriber(groupItemTwo, "close");
+      groupItemTwo.addSubscriber("close", function onClose() {
+        groupItemTwo.removeSubscriber("close", onClose);
 
         gBrowser.removeTab(groupItemOne.getChild(1).tab);
         is(contentWindow.GroupItems.groupItems.length, 1, "Has only one group");

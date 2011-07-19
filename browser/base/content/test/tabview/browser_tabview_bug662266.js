@@ -18,8 +18,8 @@ function test() {
     ok(groupItem.isStacked(), "groupItem is now stacked");
     is(win.gBrowser.tabs.length, 5, "we have five tabs");
 
-    groupItem.addSubscriber(groupItem, "expanded", function onExpanded() {
-      groupItem.removeSubscriber(groupItem, "expanded");
+    groupItem.addSubscriber("expanded", function onExpanded() {
+      groupItem.removeSubscriber("expanded", onExpanded);
 
       ok(groupItem.expanded, "groupItem is expanded");
       let bounds = children[1].getBounds();

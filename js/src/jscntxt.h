@@ -375,7 +375,7 @@ struct JSRuntime {
     uint32              protoHazardShape;
 
     /* Garbage collector state, used by jsgc.c. */
-    js::GCChunkSet      gcChunkSet;
+    js::GCChunkSet      gcUserChunkSet;
     js::GCChunkSet      gcSystemChunkSet;
 
     js::RootedValueMap  gcRootsHash;

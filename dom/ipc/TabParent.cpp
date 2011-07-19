@@ -209,9 +209,9 @@ TabParent::Show(const nsIntSize& size)
 }
 
 void
-TabParent::Move(const nsIntSize& size)
+TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
 {
-    unused << SendMove(size);
+    unused << SendUpdateDimensions(rect, size);
 }
 
 void
@@ -744,7 +744,8 @@ PRenderFrameParent*
 TabParent::AllocPRenderFrame()
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  return new RenderFrameParent(frameLoader);
+  NS_WARN_IF_FALSE(frameLoader, "'message sent to unknown actor ID' coming up");
+  return frameLoader ? new RenderFrameParent(frameLoader) : nsnull;
 }
 
 bool

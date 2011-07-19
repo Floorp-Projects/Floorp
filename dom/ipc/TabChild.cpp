@@ -122,6 +122,7 @@ TabChild::TabChild(PRUint32 aChromeFlags)
   : mRemoteFrame(nsnull)
   , mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
+  , mOuterRect(0, 0, 0, 0)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -261,9 +262,20 @@ NS_IMETHODIMP
 TabChild::GetDimensions(PRUint32 aFlags, PRInt32* aX,
                              PRInt32* aY, PRInt32* aCx, PRInt32* aCy)
 {
-  NS_NOTREACHED("TabChild::GetDimensions not supported in TabChild");
+  if (aX) {
+    *aX = mOuterRect.x;
+  }
+  if (aY) {
+    *aY = mOuterRect.y;
+  }
+  if (aCx) {
+    *aCx = mOuterRect.width;
+  }
+  if (aCy) {
+    *aCy = mOuterRect.height;
+  }
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -460,13 +472,11 @@ TabChild::DestroyWindow()
 void
 TabChild::ActorDestroy(ActorDestroyReason why)
 {
-  if (mTabChildGlobal) {
-    // The messageManager relays messages via the TabChild which
-    // no longer exists.
-    static_cast<nsFrameMessageManager*>
-      (mTabChildGlobal->mMessageManager.get())->Disconnect();
-    mTabChildGlobal->mMessageManager = nsnull;
-  }
+  // The messageManager relays messages via the TabChild which
+  // no longer exists.
+  static_cast<nsFrameMessageManager*>
+    (mTabChildGlobal->mMessageManager.get())->Disconnect();
+  mTabChildGlobal->mMessageManager = nsnull;
 }
 
 TabChild::~TabChild()
@@ -479,13 +489,11 @@ TabChild::~TabChild()
       DestroyCx();
     }
     
-    if (mTabChildGlobal) {
-      nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(PR_FALSE);
-      if (elm) {
-        elm->Disconnect();
-      }
-      mTabChildGlobal->mTabChild = nsnull;
+    nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(PR_FALSE);
+    if (elm) {
+      elm->Disconnect();
     }
+    mTabChildGlobal->mTabChild = nsnull;
 }
 
 bool
@@ -500,7 +508,7 @@ TabChild::RecvLoadURL(const nsCString& uri)
         NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
     }
 
-    return true;
+    return NS_SUCCEEDED(rv);
 }
 
 bool
@@ -515,11 +523,7 @@ TabChild::RecvShow(const nsIntSize& size)
     }
 
     if (!InitWidget(size)) {
-        // We can fail to initialize our widget if the <browser
-        // remote> has already been destroyed, and we couldn't hook
-        // into the parent-process's layer system.  That's not a fatal
-        // error.
-        return true;
+        return false;
     }
 
     baseWindow->InitWindow(0, mWidget,
@@ -542,12 +546,16 @@ TabChild::RecvShow(const nsIntSize& size)
 }
 
 bool
-TabChild::RecvMove(const nsIntSize& size)
+TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
 {
-    printf("[TabChild] RESIZE to (w,h)= (%ud, %ud)\n", size.width, size.height);
-    if (!mRemoteFrame) {
-        return true;
-    }
+#ifdef DEBUG
+    printf("[TabChild] Update Dimensions to (x,y,w,h)= (%ud, %ud, %ud, %ud) and move to (w,h)= (%ud, %ud)\n", rect.x, rect.y, rect.width, rect.height, size.width, size.height);
+#endif
+
+    mOuterRect.x = rect.x;
+    mOuterRect.y = rect.y;
+    mOuterRect.width = rect.width;
+    mOuterRect.height = rect.height;
 
     mWidget->Resize(0, 0, size.width, size.height,
                     PR_TRUE);
@@ -555,6 +563,7 @@ TabChild::RecvMove(const nsIntSize& size)
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
     baseWin->SetPositionAndSize(0, 0, size.width, size.height,
                                 PR_TRUE);
+
     return true;
 }
 
@@ -786,9 +795,7 @@ bool
 TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
   if (!mCx && !InitTabChildGlobal())
-    // This can happen if we're half-destroyed.  It's not a fatal
-    // error.
-    return true;
+    return false;
 
   LoadFrameScriptInternal(aURL);
   return true;
@@ -838,12 +845,10 @@ public:
 bool
 TabChild::RecvDestroy()
 {
-  if (mTabChildGlobal) {
-    // Let the frame scripts know the child is being closed
-    nsContentUtils::AddScriptRunner(
-      new UnloadScriptEvent(this, mTabChildGlobal)
-    );
-  }
+  // Let the frame scripts know the child is being closed
+  nsContentUtils::AddScriptRunner(
+    new UnloadScriptEvent(this, mTabChildGlobal)
+  );
 
   // XXX what other code in ~TabChild() should we be running here?
   DestroyWindow();
@@ -961,8 +966,7 @@ TabChild::InitWidget(const nsIntSize& size)
 
     NS_ABORT_IF_FALSE(0 == remoteFrame->ManagedPLayersChild().Length(),
                       "shouldn't have a shadow manager yet");
-    LayerManager::LayersBackend be;
-    PLayersChild* shadowManager = remoteFrame->SendPLayersConstructor(&be);
+    PLayersChild* shadowManager = remoteFrame->SendPLayersConstructor();
     if (!shadowManager) {
       NS_WARNING("failed to construct LayersChild");
       // This results in |remoteFrame| being deleted.
@@ -970,11 +974,14 @@ TabChild::InitWidget(const nsIntSize& size)
       return false;
     }
 
-    ShadowLayerForwarder* lf =
-        mWidget->GetLayerManager(shadowManager, be)->AsShadowForwarder();
-    NS_ABORT_IF_FALSE(lf && lf->HasShadowManager(),
-                      "PuppetWidget should have shadow manager");
-    lf->SetParentBackendType(be);
+    LayerManager* lm = mWidget->GetLayerManager();
+    NS_ABORT_IF_FALSE(LayerManager::LAYERS_BASIC == lm->GetBackendType(),
+                      "content processes should only be using BasicLayers");
+
+    BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
+    NS_ABORT_IF_FALSE(!bslm->HasShadowManager(),
+                      "PuppetWidget shouldn't have shadow manager yet");
+    bslm->SetShadowManager(shadowManager);
 
     mRemoteFrame = remoteFrame;
     return true;
