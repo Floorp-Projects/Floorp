@@ -496,6 +496,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void finalizeObjectArenaLists(JSContext *cx);
     void finalizeStringArenaLists(JSContext *cx);
     void finalizeShapeArenaLists(JSContext *cx);
+    void finalizeIonCodeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);

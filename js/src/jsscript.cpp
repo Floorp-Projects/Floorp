@@ -1518,6 +1518,10 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
 
+#ifdef JS_ION
+    ion::IonScript::Trace(trc, script);
+#endif
+
     script->bindings.trace(trc);
 }
 

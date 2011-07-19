@@ -402,6 +402,7 @@ struct JSRuntime {
     void                *gcMarkStackRopes[js::ROPES_MARK_STACK_SIZE / sizeof(void *)];
     void                *gcMarkStackXMLs[js::XML_MARK_STACK_SIZE / sizeof(void *)];
     void                *gcMarkStackLarges[js::LARGE_MARK_STACK_SIZE / sizeof(void *)];
+    void                *gcMarkStackIonCode[js::IONCODE_MARK_STACK_SIZE / sizeof(void *)];
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
