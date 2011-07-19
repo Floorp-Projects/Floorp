@@ -54,7 +54,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsProgressFrame.h"
 #include "nsMenuFrame.h"
-#include "mozilla/dom/Element.h"
 
 nsNativeTheme::nsNativeTheme()
 : mAnimatedContentTimeout(PR_UINT32_MAX)
