@@ -99,7 +99,6 @@
 
 #include "nsIFrame.h"
 #include "nsIParserService.h"
-#include "mozilla/dom/Element.h"
 
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";

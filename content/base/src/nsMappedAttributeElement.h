@@ -46,7 +46,6 @@
 #define NS_MAPPEDATTRIBUTEELEMENT_H_
 
 #include "nsStyledElement.h"
-#include "nsDOMMemoryReporter.h"
 
 class nsMappedAttributes;
 struct nsRuleData;
@@ -66,9 +65,6 @@ protected:
   {}
 
 public:
-  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsMappedAttributeElement,
-                                              nsMappedAttributeElementBase)
-
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);

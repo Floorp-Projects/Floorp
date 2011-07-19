@@ -46,9 +46,9 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "TimeStamp.h"
-#include "nsIURI.h"
 
 class nsDOMNavigationTimingClock;
+class nsIURI;
 class nsIDocument;
 
 class nsDOMNavigationTiming
