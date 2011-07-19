@@ -510,6 +510,10 @@
             return selectedVal;
 
           let uri = gBrowser.currentURI;
+          // Only copy exposable URIs
+          try {
+            uri = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup).createExposableURI(uri);
+          } catch (ex) {}
 
           // If the entire URL is selected, just use the actual loaded URI.
           if (inputVal == selectedVal) {
