@@ -634,10 +634,14 @@ nsDeviceContext::BeginPage(void)
 
     if (NS_FAILED(rv)) return rv;
 
-    /* We need to get a new surface for each page on the Mac */
 #ifdef XP_MACOSX
+    // We need to get a new surface for each page on the Mac, as the
+    // CGContextRefs are only good for one page.
+    // And we don't null it out in EndPage because mPrintingSurface needs
+    // to be available also in-between EndPage/BeginPage (bug 665218).
     mDeviceContextSpec->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
 #endif
+
     rv = mPrintingSurface->BeginPage();
 
     return rv;
@@ -647,13 +651,6 @@ nsresult
 nsDeviceContext::EndPage(void)
 {
     nsresult rv = mPrintingSurface->EndPage();
-
-    /* We need to release the CGContextRef in the surface here, plus it's
-       not something you would want anyway, as these CGContextRefs are only good
-       for one page. */
-#ifdef XP_MACOSX
-    mPrintingSurface = nsnull;
-#endif
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndPage();
