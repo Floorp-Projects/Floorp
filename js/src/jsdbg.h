@@ -62,13 +62,6 @@ class Debugger {
   public:
     enum NewScriptKind { NewNonHeldScript, NewHeldScript };
 
-  private:
-    JSCList link;                       // See JSRuntime::debuggerList.
-    JSObject *object;                   // The Debugger object. Strong reference.
-    GlobalObjectSet debuggees;          // Debuggee globals. Cross-compartment weak references.
-    JSObject *uncaughtExceptionHook;    // Strong reference.
-    bool enabled;
-
     enum Hook {
         OnDebuggerStatement,
         OnExceptionUnwind,
@@ -77,8 +70,23 @@ class Debugger {
         HookCount
     };
 
-    JSObject *hooks[HookCount];
+    enum {
+        JSSLOT_DEBUG_PROTO_START,
+        JSSLOT_DEBUG_FRAME_PROTO = JSSLOT_DEBUG_PROTO_START,
+        JSSLOT_DEBUG_OBJECT_PROTO,
+        JSSLOT_DEBUG_SCRIPT_PROTO,
+        JSSLOT_DEBUG_PROTO_STOP,
+        JSSLOT_DEBUG_HOOK_START = JSSLOT_DEBUG_PROTO_STOP,
+        JSSLOT_DEBUG_HOOK_STOP = JSSLOT_DEBUG_HOOK_START + HookCount,
+        JSSLOT_DEBUG_COUNT = JSSLOT_DEBUG_HOOK_STOP
+    };
 
+  private:
+    JSCList link;                       // See JSRuntime::debuggerList.
+    JSObject *object;                   // The Debugger object. Strong reference.
+    GlobalObjectSet debuggees;          // Debuggee globals. Cross-compartment weak references.
+    JSObject *uncaughtExceptionHook;    // Strong reference.
+    bool enabled;
     JSCList breakpoints;                // cyclic list of all js::Breakpoints in this debugger
 
     // Weak references to stack frames that are currently on the stack and thus
@@ -148,8 +156,8 @@ class Debugger {
 
     static JSBool getEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
-    static JSBool getHook(JSContext *cx, uintN argc, Value *vp, Hook which);
-    static JSBool setHook(JSContext *cx, uintN argc, Value *vp, Hook which);
+    static JSBool getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
+    static JSBool setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
     static JSBool getOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp);
     static JSBool setOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp);
     static JSBool getOnExceptionUnwind(JSContext *cx, uintN argc, Value *vp);
@@ -170,7 +178,8 @@ class Debugger {
     static JSPropertySpec properties[];
     static JSFunctionSpec methods[];
 
-    inline bool hasAnyLiveHooks() const;
+    JSObject *getHook(Hook hook) const;
+    bool hasAnyLiveHooks() const;
 
     static void slowPathOnEnterFrame(JSContext *cx);
     static void slowPathOnLeaveFrame(JSContext *cx);
@@ -371,16 +380,6 @@ class Breakpoint {
     JSObject *getHandler() const { return handler; }
 };
 
-bool
-Debugger::hasAnyLiveHooks() const
-{
-    return enabled && (hooks[OnDebuggerStatement] ||
-                       hooks[OnExceptionUnwind] ||
-                       hooks[OnNewScript] ||
-                       hooks[OnEnterFrame] ||
-                       !JS_CLIST_IS_EMPTY(&breakpoints));
-}
-
 Debugger *
 Debugger::fromLinks(JSCList *links)
 {
@@ -414,13 +413,13 @@ Debugger::fromJSObject(JSObject *obj)
 bool
 Debugger::observesEnterFrame() const
 {
-    return enabled && hooks[OnEnterFrame];
+    return enabled && getHook(OnEnterFrame);
 }
 
 bool
 Debugger::observesNewScript() const
 {
-    return enabled && hooks[OnNewScript];
+    return enabled && getHook(OnNewScript);
 }
 
 bool

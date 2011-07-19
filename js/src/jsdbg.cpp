@@ -335,21 +335,11 @@ Breakpoint::nextInSite()
 
 // === Debugger hook dispatch
 
-enum {
-    JSSLOT_DEBUG_FRAME_PROTO,
-    JSSLOT_DEBUG_OBJECT_PROTO,
-    JSSLOT_DEBUG_SCRIPT_PROTO,
-    JSSLOT_DEBUG_COUNT
-};
-
 Debugger::Debugger(JSContext *cx, JSObject *dbg)
   : object(dbg), uncaughtExceptionHook(NULL), enabled(true),
     frames(cx), objects(cx), heldScripts(cx), nonHeldScripts(cx)
 {
     assertSameCompartment(cx, dbg);
-
-    for (int i = 0; i < HookCount; i++)
-        hooks[i] = NULL;
 
     JSRuntime *rt = cx->runtime;
     AutoLockGC lock(rt);
@@ -414,6 +404,24 @@ Debugger::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
     }
     vp->setObject(*p->value);
     return true;
+}
+
+JSObject *
+Debugger::getHook(Hook hook) const
+{
+    JS_ASSERT(hook >= 0 && hook < HookCount);
+    const Value &v = object->getReservedSlot(JSSLOT_DEBUG_HOOK_START + hook);
+    return v.isUndefined() ? NULL : &v.toObject();
+}
+
+bool
+Debugger::hasAnyLiveHooks() const
+{
+    return enabled && (getHook(OnDebuggerStatement) ||
+                       getHook(OnExceptionUnwind) ||
+                       getHook(OnNewScript) ||
+                       getHook(OnEnterFrame) ||
+                       !JS_CLIST_IS_EMPTY(&breakpoints));
 }
 
 void
@@ -649,7 +657,7 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
 JSTrapStatus
 Debugger::fireDebuggerStatement(JSContext *cx, Value *vp)
 {
-    JSObject *hook = hooks[OnDebuggerStatement];
+    JSObject *hook = getHook(OnDebuggerStatement);
     JS_ASSERT(hook);
     JS_ASSERT(hook->isCallable());
 
@@ -671,7 +679,7 @@ Debugger::fireDebuggerStatement(JSContext *cx, Value *vp)
 JSTrapStatus
 Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
 {
-    JSObject *hook = hooks[OnExceptionUnwind];
+    JSObject *hook = getHook(OnExceptionUnwind);
     JS_ASSERT(hook);
     JS_ASSERT(hook->isCallable());
 
@@ -699,7 +707,7 @@ Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
 void
 Debugger::fireEnterFrame(JSContext *cx)
 {
-    JSObject *hook = hooks[OnEnterFrame];
+    JSObject *hook = getHook(OnEnterFrame);
     JS_ASSERT(hook);
     JS_ASSERT(hook->isCallable());
 
@@ -721,7 +729,7 @@ Debugger::fireEnterFrame(JSContext *cx)
 void
 Debugger::fireNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind)
 {
-    JSObject *hook = hooks[OnNewScript];
+    JSObject *hook = getHook(OnNewScript);
     JS_ASSERT(hook);
     JS_ASSERT(hook->isCallable());
 
@@ -758,7 +766,7 @@ Debugger::dispatchHook(JSContext *cx, js::Value *vp, Hook which)
     if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger *dbg = *p;
-            if (dbg->enabled && dbg->hooks[which]) {
+            if (dbg->enabled && dbg->getHook(which)) {
                 if (!triggered.append(ObjectValue(*dbg->toJSObject())))
                     return JSTRAP_ERROR;
             }
@@ -769,7 +777,7 @@ Debugger::dispatchHook(JSContext *cx, js::Value *vp, Hook which)
     // should still be delivered.
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
-        if (dbg->debuggees.has(global) && dbg->enabled && dbg->hooks[which]) {
+        if (dbg->debuggees.has(global) && dbg->enabled && dbg->getHook(which)) {
             JSTrapStatus st = (which == OnDebuggerStatement)
                               ? dbg->fireDebuggerStatement(cx, vp)
                               : dbg->fireExceptionUnwind(cx, vp);
@@ -825,7 +833,7 @@ Debugger::slowPathOnNewScript(JSContext *cx, JSScript *script, JSObject *obj, Ne
     // Debugger::dispatchHook.
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
-        if ((!global || dbg->debuggees.has(global)) && dbg->enabled && dbg->hooks[OnNewScript])
+        if ((!global || dbg->debuggees.has(global)) && dbg->enabled && dbg->getHook(OnNewScript))
             dbg->fireNewScript(cx, script, obj, kind);
     }
 }
@@ -1012,11 +1020,6 @@ Debugger::traceObject(JSTracer *trc, JSObject *obj)
 void
 Debugger::trace(JSTracer *trc)
 {
-    for (int i = 0; i < HookCount; i++) {
-        if (hooks[i])
-            MarkObject(trc, *hooks[i], "hooks");
-    }
-
     if (uncaughtExceptionHook)
         MarkObject(trc, *uncaughtExceptionHook, "hooks");
 
@@ -1157,26 +1160,31 @@ Debugger::setEnabled(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-Debugger::getHook(JSContext *cx, uintN argc, Value *vp, Hook which)
+Debugger::getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
+    JS_ASSERT(which >= 0 && which < HookCount);
     THISOBJ(cx, vp, Debugger, "getHook", thisobj, dbg);
-    vp->setObjectOrNull(dbg->hooks[which]);
+    *vp = dbg->object->getReservedSlot(JSSLOT_DEBUG_HOOK_START + which);
     return true;
 }
 
 JSBool
-Debugger::setHook(JSContext *cx, uintN argc, Value *vp, Hook which)
+Debugger::setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
+    JS_ASSERT(which >= 0 && which < HookCount);
     REQUIRE_ARGC("Debugger.setHook", 1);
     THISOBJ(cx, vp, Debugger, "setHook", thisobj, dbg);
-    if (!vp[2].isObjectOrNull())
-        return ReportObjectRequired(cx);
-    JSObject *hook = vp[2].toObjectOrNull();
-    if (hook && !hook->isCallable()) {
-        js_ReportIsNotFunction(cx, vp, JSV2F_SEARCH_STACK);
+    const Value &v = vp[2];
+    if (v.isObject()) {
+        if (!v.toObject().isCallable()) {
+            js_ReportIsNotFunction(cx, vp, JSV2F_SEARCH_STACK);
+            return false;
+        }
+    } else if (!v.isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_CALLABLE_OR_UNDEFINED);
         return false;
     }
-    dbg->hooks[which] = hook;
+    dbg->object->setReservedSlot(JSSLOT_DEBUG_HOOK_START + which, v);
     vp->setUndefined();
     return true;
 }
@@ -1184,49 +1192,49 @@ Debugger::setHook(JSContext *cx, uintN argc, Value *vp, Hook which)
 JSBool
 Debugger::getOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp)
 {
-    return getHook(cx, argc, vp, OnDebuggerStatement);
+    return getHookImpl(cx, argc, vp, OnDebuggerStatement);
 }
 
 JSBool
 Debugger::setOnDebuggerStatement(JSContext *cx, uintN argc, Value *vp)
 {
-    return setHook(cx, argc, vp, OnDebuggerStatement);
+    return setHookImpl(cx, argc, vp, OnDebuggerStatement);
 }
 
 JSBool
 Debugger::getOnExceptionUnwind(JSContext *cx, uintN argc, Value *vp)
 {
-    return getHook(cx, argc, vp, OnExceptionUnwind);
+    return getHookImpl(cx, argc, vp, OnExceptionUnwind);
 }
 
 JSBool
 Debugger::setOnExceptionUnwind(JSContext *cx, uintN argc, Value *vp)
 {
-    return setHook(cx, argc, vp, OnExceptionUnwind);
+    return setHookImpl(cx, argc, vp, OnExceptionUnwind);
 }
 
 JSBool
 Debugger::getOnNewScript(JSContext *cx, uintN argc, Value *vp)
 {
-    return getHook(cx, argc, vp, OnNewScript);
+    return getHookImpl(cx, argc, vp, OnNewScript);
 }
 
 JSBool
 Debugger::setOnNewScript(JSContext *cx, uintN argc, Value *vp)
 {
-    return setHook(cx, argc, vp, OnNewScript);
+    return setHookImpl(cx, argc, vp, OnNewScript);
 }
 
 JSBool
 Debugger::getOnEnterFrame(JSContext *cx, uintN argc, Value *vp)
 {
-    return getHook(cx, argc, vp, OnEnterFrame);
+    return getHookImpl(cx, argc, vp, OnEnterFrame);
 }
 
 JSBool
 Debugger::setOnEnterFrame(JSContext *cx, uintN argc, Value *vp)
 {
-    return setHook(cx, argc, vp, OnEnterFrame);
+    return setHookImpl(cx, argc, vp, OnEnterFrame);
 }
 
 JSBool
@@ -1389,11 +1397,12 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(proto->getClass() == &Debugger::jsclass);
 
     // Make the new Debugger object. Each one has a reference to
-    // Debugger.{Frame,Object,Script}.prototype in reserved slots.
+    // Debugger.{Frame,Object,Script}.prototype in reserved slots. The rest of
+    // the reserved slots are for hooks; they default to undefined.
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &Debugger::jsclass, proto, NULL);
     if (!obj || !obj->ensureClassReservedSlots(cx))
         return false;
-    for (uintN slot = JSSLOT_DEBUG_FRAME_PROTO; slot < JSSLOT_DEBUG_COUNT; slot++)
+    for (uintN slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
 
     Debugger *dbg = cx->new_<Debugger>(cx, obj);
@@ -3326,8 +3335,8 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
     if (!objectProto)
         return false;
 
-    debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
-    debugProto->setReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO, ObjectValue(*objectProto));
-    debugProto->setReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO, ObjectValue(*scriptProto));
+    debugProto->setReservedSlot(Debugger::JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
+    debugProto->setReservedSlot(Debugger::JSSLOT_DEBUG_OBJECT_PROTO, ObjectValue(*objectProto));
+    debugProto->setReservedSlot(Debugger::JSSLOT_DEBUG_SCRIPT_PROTO, ObjectValue(*scriptProto));
     return true;
 }

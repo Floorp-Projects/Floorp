@@ -22,7 +22,7 @@ dbg.onDebuggerStatement = function (frame) {
 g.f();
 assertEq(g.s, "Dx");
 
-dbg.onDebuggerStatement = null;
+dbg.onDebuggerStatement = undefined;
 
 for (var i = 0; i < bp.length; i++)
     bp[i].hit = function () { g.s += 'B'; };
