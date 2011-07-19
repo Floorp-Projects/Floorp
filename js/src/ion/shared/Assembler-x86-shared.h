@@ -59,6 +59,12 @@ class AssemblerX86Shared
     bool oom() const {
         return masm.oom();
     }
+    size_t size() const {
+        return masm.size();
+    }
+    void executableCopy(uint8 *buffer) {
+        masm.executableCopy(buffer);
+    }
 
   public:
     void movl(const Imm32 &imm32, const Register &dest) {

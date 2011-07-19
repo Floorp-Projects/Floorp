@@ -133,6 +133,29 @@ ion::SetIonContext(IonContext *ctx)
 }
 #endif
 
+IonCompartment::IonCompartment()
+  : execAlloc_(NULL),
+    enterJIT_(NULL)
+{
+}
+
+bool
+IonCompartment::initialize(JSContext *cx)
+{
+    execAlloc_ = new JSC::ExecutableAllocator();
+    enterJIT_ = generateEnterJIT(cx);
+
+    if (!enterJIT_)
+        return false;
+
+    return true;
+}
+
+IonCompartment::~IonCompartment()
+{
+    delete execAlloc_;
+}
+
 IonCode *
 IonCode::New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool)
 {
@@ -254,7 +277,8 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
     TempAllocator temp(&cx->tempPool);
     IonContext ictx(cx, &temp);
 
-    cx->compartment->ensureIonCompartmentExists();
+    if (!cx->compartment->ensureIonCompartmentExists(cx))
+        return false;
 
     MIRGraph graph;
     DummyOracle oracle;
