@@ -54,7 +54,7 @@ namespace ion {
     _(Phi)                                                                  \
     _(BitAnd)                                                               \
     _(BitOr)                                                                \
-    _(BitXOr)                                                               \
+    _(BitXor)                                                               \
     _(Add)                                                                  \
     _(Return)                                                               \
     _(Copy)                                                                 \
