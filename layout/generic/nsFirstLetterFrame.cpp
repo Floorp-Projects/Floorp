@@ -256,41 +256,43 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   aMetrics.UnionOverflowAreasWithDesiredBounds();
   ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
 
-  // Create a continuation or remove existing continuations based on
-  // the reflow completion status.
-  if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
-    if (aReflowState.mLineLayout) {
-      aReflowState.mLineLayout->SetFirstLetterStyleOK(PR_FALSE);
-    }
-    nsIFrame* kidNextInFlow = kid->GetNextInFlow();
-    if (kidNextInFlow) {
-      // Remove all of the childs next-in-flows
-      static_cast<nsContainerFrame*>(kidNextInFlow->GetParent())
-        ->DeleteNextInFlowChild(aPresContext, kidNextInFlow, PR_TRUE);
-    }
-  }
-  else {
-    // Create a continuation for the child frame if it doesn't already
-    // have one.
-    if (!GetStyleDisplay()->IsFloating()) {
-      nsIFrame* nextInFlow;
-      rv = CreateNextInFlow(aPresContext, kid, nextInFlow);
-      if (NS_FAILED(rv)) {
-        return rv;
+  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+    // Create a continuation or remove existing continuations based on
+    // the reflow completion status.
+    if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+      if (aReflowState.mLineLayout) {
+        aReflowState.mLineLayout->SetFirstLetterStyleOK(PR_FALSE);
       }
-
-      // And then push it to our overflow list
-      const nsFrameList& overflow = mFrames.RemoveFramesAfter(kid);
-      if (overflow.NotEmpty()) {
-        SetOverflowFrames(aPresContext, overflow);
+      nsIFrame* kidNextInFlow = kid->GetNextInFlow();
+      if (kidNextInFlow) {
+        // Remove all of the childs next-in-flows
+        static_cast<nsContainerFrame*>(kidNextInFlow->GetParent())
+          ->DeleteNextInFlowChild(aPresContext, kidNextInFlow, PR_TRUE);
       }
-    } else if (!kid->GetNextInFlow()) {
-      // For floating first letter frames (if a continuation wasn't already
-      // created for us) we need to put the continuation with the rest of the
-      // text that the first letter frame was made out of.
-      nsIFrame* continuation;
-      rv = CreateContinuationForFloatingParent(aPresContext, kid,
-                                               &continuation, PR_TRUE);
+    }
+    else {
+      // Create a continuation for the child frame if it doesn't already
+      // have one.
+      if (!GetStyleDisplay()->IsFloating()) {
+        nsIFrame* nextInFlow;
+        rv = CreateNextInFlow(aPresContext, kid, nextInFlow);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+    
+        // And then push it to our overflow list
+        const nsFrameList& overflow = mFrames.RemoveFramesAfter(kid);
+        if (overflow.NotEmpty()) {
+          SetOverflowFrames(aPresContext, overflow);
+        }
+      } else if (!kid->GetNextInFlow()) {
+        // For floating first letter frames (if a continuation wasn't already
+        // created for us) we need to put the continuation with the rest of the
+        // text that the first letter frame was made out of.
+        nsIFrame* continuation;
+        rv = CreateContinuationForFloatingParent(aPresContext, kid,
+                                                 &continuation, PR_TRUE);
+      }
     }
   }
 
