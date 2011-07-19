@@ -64,7 +64,7 @@ RUN_MOCHITEST = \
 RUN_MOCHITEST_REMOTE = \
 	rm -f ./$@.log && \
 	$(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
-	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) \
+	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
 	  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
@@ -81,11 +81,12 @@ define CHECK_TEST_ERROR
 endef
 endif
 
+mochitest-remote: DM_TRANS?=adb
 mochitest-remote:
-	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "" ]; \
+	if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "usb" -o "$(DM_TRANS)" = "adb" ]; \
           then $(RUN_MOCHITEST_REMOTE); \
         else \
-          echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
+          @echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
         fi
 
 mochitest-plain:
@@ -148,7 +149,7 @@ reftest:
 reftest-remote: TEST_PATH?=layout/reftests/reftest.list
 reftest-remote: DM_TRANS?=adb
 reftest-remote:
-	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "" ]; \
+	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "" -o "$(DM_TRANS)" = "adb" ]; \
 	  then ln -s $(abspath $(topsrcdir)) _tests/reftest/tests;$(call REMOTE_REFTEST,tests/$(TEST_PATH)); $(CHECK_TEST_ERROR); \
         else \
           echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \

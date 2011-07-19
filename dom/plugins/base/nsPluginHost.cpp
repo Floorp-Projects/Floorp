@@ -2273,18 +2273,12 @@ nsresult nsPluginHost::LoadPlugins()
   return NS_OK;
 }
 
-#include "nsITimelineService.h"
-
 // if aCreatePluginList is false we will just scan for plugins
 // and see if any changes have been made to the plugins.
 // This is needed in ReloadPlugins to prevent possible recursive reloads
 nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged)
 {
   Telemetry::AutoTimer<Telemetry::FIND_PLUGINS> telemetry;
-  // let's start timing if we are only really creating the plugin list
-  if (aCreatePluginList) {
-    NS_TIMELINE_START_TIMER("LoadPlugins");
-  }
 
 #ifdef CALL_SAFETY_ON
   // check preferences on whether or not we want to try safe calls to plugins
@@ -2458,9 +2452,6 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
   // No more need for cached plugins. Clear it up.
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
-
-  NS_TIMELINE_STOP_TIMER("LoadPlugins");
-  NS_TIMELINE_MARK_TIMER("LoadPlugins");
 
   return NS_OK;
 }

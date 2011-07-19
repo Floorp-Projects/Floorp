@@ -44,6 +44,8 @@ var expect;
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
+var arguments = [];
+
 expect = '[object Arguments]';
 actual = (function(){return (arguments + '');})(); 
 reportCompare(expect, actual, summary);

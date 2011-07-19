@@ -91,12 +91,14 @@
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 
+#include "jsoptparse.h"
 #include "jsworkers.h"
 
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "methodjit/MethodJIT.h"
+#include "ion/Ion.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -113,6 +115,7 @@
 #endif
 
 using namespace js;
+using namespace js::cli;
 
 typedef enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -392,8 +395,36 @@ SetContextOptions(JSContext *cx)
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
+/*
+ * Some UTF-8 files, notably those written using Notepad, have a Unicode
+ * Byte-Order-Mark (BOM) as their first character. This is useless (byte-order
+ * is meaningless for UTF-8) but causes a syntax error unless we skip it.
+ */
 static void
-Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
+SkipUTF8BOM(FILE* file)
+{
+    if (!js_CStringsAreUTF8)
+        return;
+
+    int ch1 = fgetc(file);
+    int ch2 = fgetc(file);
+    int ch3 = fgetc(file);
+
+    // Skip the BOM
+    if (ch1 == 0xEF && ch2 == 0xBB && ch3 == 0xBF)
+        return;
+
+    // No BOM - revert
+    if (ch3 != EOF)
+        ungetc(ch3, file);
+    if (ch2 != EOF)
+        ungetc(ch2, file);
+    if (ch1 != EOF)
+        ungetc(ch1, file);
+}
+
+static void
+Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
 {
     JSBool ok, hitEOF;
     JSObject *scriptObj;
@@ -424,6 +455,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
     if (!forceTTY && !isatty(fileno(file)))
     {
+        SkipUTF8BOM(file);
+
         /*
          * It's not interactive - just execute it.
          *
@@ -572,79 +605,6 @@ cleanup:
     return;
 }
 
-static int
-usage(void)
-{
-    fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [options] [scriptfile] [scriptarg...]\n"
-                      "Options:\n"
-                      "  -h            Display this information\n"
-                      "  -z            Create a split global object\n"
-                      "                Warning: this option is probably not useful\n"
-                      "  -P            Deeply freeze the global object prototype\n"
-                      "  -s            Toggle JSOPTION_STRICT flag\n"
-                      "  -w            Report strict warnings\n"
-                      "  -W            Do not report strict warnings\n"
-                      "  -x            Toggle JSOPTION_XML flag\n"
-                      "  -U            Enable UTF-8 C-strings; also affects scripts loaded via\n"
-                      "                run, snarf, read, or entered into the REPL\n"
-                      "  -C            Compile-only; do not execute\n"
-                      "  -i            Enable interactive read-eval-print loop\n"
-                      "  -j            Enable the TraceMonkey tracing JIT\n"
-                      "  -m            Enable the JaegerMonkey method JIT\n"
-                      "  -a            Always method JIT, ignore internal tuning\n"
-                      "                This only has effect with -m\n"
-                      "  -p            Enable loop profiling for TraceMonkey\n"
-                      "  -d            Enable debug mode\n"
-                      "  -b            Print timing statistics\n"
-                      "  -t <timeout>  Interrupt long-running execution after <timeout> seconds, where\n"
-                      "                <timeout> <= 1800.0. Negative values indicate no timeout (default).\n"
-                      "  -c <size>     Suggest stack chunk size of <size> bytes. Default is 8192.\n"
-                      "                Warning: this option is currently ignored.\n"
-                      "  -o <option>   Enable a context option flag by name\n"
-                      "                Possible values:\n"
-                      "                  atline:      JSOPTION_ATLINE\n"
-                      "                  tracejit:    JSOPTION_JIT\n"
-                      "                  methodjit:   JSOPTION_METHODJIT\n"
-                      "                  relimit:     JSOPTION_RELIMIT\n"
-                      "                  strict:      JSOPTION_STRICT\n"
-                      "                  werror:      JSOPTION_WERROR\n"
-                      "                  xml:         JSOPTION_XML\n"
-                      "  -v <version>  Set the JavaScript language version\n"
-                      "                Possible values:\n"
-                      "                  150:  JavaScript 1.5\n"
-                      "                  160:  JavaScript 1.6\n"
-                      "                  170:  JavaScript 1.7\n"
-                      "                  180:  JavaScript 1.8\n"
-                      "                  185:  JavaScript 1.8.5 (default)\n"
-                      "  -f <file>     Load and execute JavaScript source <file>\n"
-                      "                Note: this option switches to non-interactive mode.\n"
-                      "  -e <source>   Execute JavaScript <source>\n"
-                      "                Note: this option switches to non-interactive mode.\n"
-                      "  -S <size>     Set the maximum size of the stack to <size> bytes\n"
-                      "                Default is %u.\n", DEFAULT_MAX_STACK_SIZE);
-#ifdef DEBUG
-    fprintf(gErrFile, "  -A <max>      After <max> memory allocations, act like we're OOM.\n");
-    fprintf(gErrFile, "  -O            At exit, print the number of memory allocations in \n"
-                      "                the program.\n");
-#endif
-#ifdef JS_THREADSAFE
-    fprintf(gErrFile, "  -g <n>        Sleep for <n> seconds before starting (default: 0)\n");
-#endif
-#ifdef JS_GC_ZEAL
-    fprintf(gErrFile, "  -Z <n>[,<f>[,<c>]]  Set GC zeal to <n>.\n"
-                      "                Possible values for <n>:\n"
-                      "                  0:  no additional GCs\n"
-                      "                  1:  additional GCs at common danger points\n"
-                      "                  2:  GC every <f> allocations (<f> defaults to 100)\n"
-                      "                If <c> = 1, do compartment GCs. Otherwise full.\n");
-#endif
-#ifdef MOZ_TRACEVIS
-    fprintf(gErrFile, "  -T  Start TraceVis\n");
-#endif
-    return 2;
-}
-
 /*
  * JSContext option name to flag map. The option names are in alphabetical
  * order for better reporting.
@@ -721,285 +681,6 @@ ParseZealArg(JSContext *cx, const char *arg)
     JS_SetGCZeal(cx, (uint8)zeal, freq, !!compartment);
 }
 #endif
-
-static int
-ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
-{
-    int i, j, length;
-    JSObject *argsObj;
-    char *filename = NULL;
-    JSBool isInteractive = JS_TRUE;
-    JSBool forceTTY = JS_FALSE;
-
-    /*
-     * Scan past all optional arguments so we can create the arguments object
-     * before processing any -f options, which must interleave properly with
-     * -v and -w options.  This requires two passes, and without getopt, we'll
-     * have to keep the option logic here and in the second for loop in sync.
-     */
-    for (i = 0; i < argc; i++) {
-        if (argv[i][0] != '-' || argv[i][1] == '\0') {
-            ++i;
-            break;
-        }
-        switch (argv[i][1]) {
-          case 'c':
-          case 'f':
-          case 'e':
-          case 'v':
-          case 'S':
-          case 't':
-#ifdef JS_GC_ZEAL
-          case 'Z':
-#endif
-#ifdef MOZ_TRACEVIS
-          case 'T':
-#endif
-          case 'g':
-          case 'A':
-            ++i;
-            break;
-          default:;
-        }
-    }
-
-    /*
-     * Create arguments early and define it to root it, so it's safe from any
-     * GC calls nested below, and so it is available to -f <file> arguments.
-     */
-    argsObj = JS_NewArrayObject(cx, 0, NULL);
-    if (!argsObj)
-        return 1;
-    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
-                           NULL, NULL, 0)) {
-        return 1;
-    }
-
-    length = argc - i;
-    for (j = 0; j < length; j++) {
-        JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
-        if (!str)
-            return 1;
-        if (!JS_DefineElement(cx, argsObj, j, STRING_TO_JSVAL(str),
-                              NULL, NULL, JSPROP_ENUMERATE)) {
-            return 1;
-        }
-    }
-
-    for (i = 0; i < argc; i++) {
-        if (argv[i][0] != '-' || argv[i][1] == '\0') {
-            filename = argv[i++];
-            isInteractive = JS_FALSE;
-            break;
-        }
-
-        switch (argv[i][1]) {
-        case 'v':
-            if (++i == argc)
-                return usage();
-
-            JS_SetVersion(cx, (JSVersion) atoi(argv[i]));
-            break;
-
-#ifdef JS_GC_ZEAL
-        case 'Z':
-            if (++i == argc)
-                return usage();
-            ParseZealArg(cx, argv[i]);
-            break;
-#endif
-#ifdef DEBUG
-        case 'A':
-            /* Handled at the very start of main(). */
-            ++i; /* skip the argument */
-            break;
-
-        case 'O':
-            OOM_printAllocationCount = JS_TRUE;
-            break;
-#endif
-        case 'w':
-            reportWarnings = JS_TRUE;
-            break;
-
-        case 'W':
-            reportWarnings = JS_FALSE;
-            break;
-
-        case 's':
-            JS_ToggleOptions(cx, JSOPTION_STRICT);
-            break;
-
-        case 'E':
-            JS_ToggleOptions(cx, JSOPTION_RELIMIT);
-            break;
-
-        case 'x':
-            JS_ToggleOptions(cx, JSOPTION_XML);
-            break;
-
-        case 'b':
-            printTiming = true;
-            break;
-
-        case 'j':
-            enableTraceJit = !enableTraceJit;
-            JS_ToggleOptions(cx, JSOPTION_JIT);
-#if defined(JS_TRACER) && defined(DEBUG)
-            js::InitJITStatsClass(cx, JS_GetGlobalObject(cx));
-            JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
-                            &js::jitstats_class, NULL, 0);
-#endif
-            break;
-
-        case 'm':
-            enableMethodJit = !enableMethodJit;
-            JS_ToggleOptions(cx, JSOPTION_METHODJIT);
-            break;
-
-        case 'a':
-            JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
-            break;
-
-        case 'p':
-            enableProfiling = !enableProfiling;
-            JS_ToggleOptions(cx, JSOPTION_PROFILING);
-            break;
-
-        case 'o':
-          {
-            if (++i == argc)
-                return usage();
-
-            uint32 flag = MapContextOptionNameToFlag(cx, argv[i]);
-            if (flag == 0)
-                return gExitCode;
-            JS_ToggleOptions(cx, flag);
-            break;
-          }
-        case 'P':
-            if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
-                JSObject *gobj;
-
-                if (!JS_DeepFreezeObject(cx, obj))
-                    return JS_FALSE;
-                gobj = JS_NewGlobalObject(cx, &global_class);
-                if (!gobj)
-                    return JS_FALSE;
-                if (!JS_SetPrototype(cx, gobj, obj))
-                    return JS_FALSE;
-                JS_SetParent(cx, gobj, NULL);
-                JS_SetGlobalObject(cx, gobj);
-                obj = gobj;
-            }
-            break;
-
-        case 't':
-            if (++i == argc)
-                return usage();
-
-            if (!SetTimeoutValue(cx, atof(argv[i])))
-                return JS_FALSE;
-
-            break;
-
-        case 'c':
-            /* set stack chunk size */
-            gStackChunkSize = atoi(argv[++i]);
-            break;
-
-        case 'f':
-            if (++i == argc)
-                return usage();
-
-            Process(cx, obj, argv[i], JS_FALSE);
-            if (gExitCode != 0)
-                return gExitCode;
-
-            /*
-             * XXX: js -f foo.js should interpret foo.js and then
-             * drop into interactive mode, but that breaks the test
-             * harness. Just execute foo.js for now.
-             */
-            isInteractive = JS_FALSE;
-            break;
-
-        case 'e':
-        {
-            jsval rval;
-
-            if (++i == argc)
-                return usage();
-
-            /* Pass a filename of -e to imitate PERL */
-            JS_EvaluateScript(cx, obj, argv[i], strlen(argv[i]),
-                              "-e", 1, &rval);
-
-            isInteractive = JS_FALSE;
-            break;
-
-        }
-        case 'C':
-            compileOnly = JS_TRUE;
-            isInteractive = JS_FALSE;
-            break;
-
-        case 'i':
-            isInteractive = forceTTY = JS_TRUE;
-            break;
-
-        case 'S':
-            if (++i == argc)
-                return usage();
-
-            /* Set maximum stack size. */
-            gMaxStackSize = atoi(argv[i]);
-            break;
-
-        case 'd':
-            JS_SetRuntimeDebugMode(JS_GetRuntime(cx), JS_TRUE);
-            JS_SetDebugMode(cx, JS_TRUE);
-            break;
-
-        case 'D':
-            enableDisassemblyDumps = true;
-            JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
-            break;
-
-        case 'z':
-            obj = split_setup(cx, JS_FALSE);
-            if (!obj)
-                return gExitCode;
-            break;
-#ifdef MOZ_TRACEVIS
-        case 'T':
-            if (++i == argc)
-                return usage();
-
-            StartTraceVis(argv[i]);
-            break;
-#endif
-#ifdef JS_THREADSAFE
-        case 'g':
-            if (++i == argc)
-                return usage();
-
-            PR_Sleep(PR_SecondsToInterval(atoi(argv[i])));
-            break;
-#endif
-
-        case 'U': /* Already handled in main() */
-            break;
-
-        default:
-            return usage();
-        }
-    }
-
-    if (filename || isInteractive)
-        Process(cx, obj, filename, forceTTY);
-    return gExitCode;
-}
 
 static JSBool
 Version(JSContext *cx, uintN argc, jsval *vp)
@@ -5964,8 +5645,157 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
     return glob;
 }
 
+static bool
+BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
+{
+    MultiStringRange msr = op->getMultiStringArg("scriptArgs");
+    JSObject *scriptArgs = JS_NewArrayObject(cx, 0, NULL);
+    if (!scriptArgs)
+        return false;
+    if (!JS_DefineProperty(cx, obj, "scriptArgs", OBJECT_TO_JSVAL(scriptArgs), NULL, NULL, 0))
+        return false;
+
+    for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {
+        const char *scriptArg = msr.front();
+        JSString *str = JS_NewStringCopyZ(cx, scriptArg);
+        if (!str ||
+            !JS_DefineElement(cx, scriptArgs, i, STRING_TO_JSVAL(str), NULL, NULL,
+                              JSPROP_ENUMERATE)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static int
+OptionFailure(const char *option, const char *str)
+{
+    fprintf(stderr, "Unrecognized option for %s: %s\n", option, str);
+    return EXIT_FAILURE;
+}
+
+static int
+ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
+{
+    if (op->getBoolOption('a'))
+        JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
+
+    if (op->getBoolOption('m')) {
+        enableMethodJit = true;
+        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
+    }
+
+#ifdef JS_GC_ZEAL
+    if (const char *zeal = op->getStringOption('Z'))
+        ParseZealArg(cx, zeal);
+#endif
+
+    if (op->getBoolOption('j')) {
+        enableTraceJit = true;
+        JS_ToggleOptions(cx, JSOPTION_JIT);
+#if defined(JS_TRACER) && defined(DEBUG)
+        js::InitJITStatsClass(cx, JS_GetGlobalObject(cx));
+        JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
+                        &js::jitstats_class, NULL, 0);
+#endif
+    }
+
+    if (op->getBoolOption('p')) {
+        enableProfiling = true;
+        JS_ToggleOptions(cx, JSOPTION_PROFILING);
+    }
+
+    if (op->getBoolOption('d')) {
+        JS_SetRuntimeDebugMode(JS_GetRuntime(cx), true);
+        JS_SetDebugMode(cx, true);
+    }
+
+    if (op->getBoolOption('b'))
+        printTiming = true;
+
+    if (op->getBoolOption('D')) {
+        enableDisassemblyDumps = true;
+        JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
+    }
+
+#if defined(JS_ION)
+    if (op->getBoolOption("ion"))
+        ion::js_IonOptions.enabled = true;
+
+    if (const char *str = op->getStringOption("ion-gvn")) {
+        if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.gvn = false;
+        else if (strcmp(str, "pessimistic") == 0)
+            ion::js_IonOptions.gvnIsOptimistic = false;
+        else
+            return OptionFailure("ion-gvn", str);
+    }
+
+    if (const char *str = op->getStringOption("ion-licm")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.licm = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.licm = false;
+        else
+            return OptionFailure("ion-licm", str);
+    }
+
+    if (const char *str = op->getStringOption("ion-regalloc")) {
+        if (strcmp(str, "lsra") == 0)
+            ion::js_IonOptions.lsra = true;
+        else if (strcmp(str, "greedy") == 0)
+            ion::js_IonOptions.lsra = false;
+        else
+            return OptionFailure("ion-regalloc", str);
+    }
+#endif
+
+    /* |scriptArgs| gets bound on the global before any code is run. */
+    if (!BindScriptArgs(cx, obj, op))
+        return EXIT_FAILURE;
+
+    MultiStringRange filePaths = op->getMultiStringOption('f');
+    MultiStringRange codeChunks = op->getMultiStringOption('e');
+
+    if (filePaths.empty() && codeChunks.empty() && !op->getStringArg("script")) {
+        Process(cx, obj, NULL, true); /* Interactive. */
+        return gExitCode;
+    }
+
+    while (!filePaths.empty() || !codeChunks.empty()) {
+        size_t fpArgno = filePaths.empty() ? -1 : filePaths.argno();
+        size_t ccArgno = codeChunks.empty() ? -1 : codeChunks.argno();
+        if (fpArgno < ccArgno) {
+            char *path = filePaths.front();
+            Process(cx, obj, path, false);
+            if (gExitCode)
+                return gExitCode;
+            filePaths.popFront();
+        } else {
+            const char *code = codeChunks.front();
+            jsval rval;
+            if (!JS_EvaluateScript(cx, obj, code, strlen(code), "-e", 1, &rval))
+                return EXIT_FAILURE;
+            codeChunks.popFront();
+        }
+    }
+
+    /* The |script| argument is processed after all options. */
+    if (const char *path = op->getStringArg("script")) {
+        Process(cx, obj, path, false);
+        if (gExitCode)
+            return gExitCode;
+    }
+
+    if (op->getBoolOption('i'))
+        Process(cx, obj, NULL, true);
+
+    return gExitCode ? gExitCode : EXIT_SUCCESS;
+}
+
 int
-Shell(JSContext *cx, int argc, char **argv, char **envp)
+Shell(JSContext *cx, OptionParser *op, char **envp)
 {
     JSAutoRequest ar(cx);
 
@@ -6025,7 +5855,7 @@ Shell(JSContext *cx, int argc, char **argv, char **envp)
     }
 #endif
 
-    int result = ProcessArgs(cx, glob, argv, argc);
+    int result = ProcessArgs(cx, glob, op);
 
 #ifdef JS_THREADSAFE
     js::workers::finish(cx, gWorkerThreadPool);
@@ -6079,20 +5909,6 @@ JSPrincipals shellTrustedPrincipals = {
 int
 main(int argc, char **argv, char **envp)
 {
-#ifdef DEBUG
-    /* Check the allocation count first, or else we'll miss allocations. */
-    for (int i = 0; i < argc; i++)
-    {
-      if (strlen(argv[i]) == 2 && argv[i][0] == '-' && argv[i][1] == 'A')
-      {
-        if (++i == argc)
-          return usage();
-        OOM_maxAllocations = atoi(argv[i]);
-        break;
-      }
-    }
-#endif
-
     int stackDummy;
     JSRuntime *rt;
     JSContext *cx;
@@ -6141,15 +5957,95 @@ main(int argc, char **argv, char **envp)
     MaybeOverrideOutFileFromEnv("JS_STDERR", stderr, &gErrFile);
     MaybeOverrideOutFileFromEnv("JS_STDOUT", stdout, &gOutFile);
 
-    argc--;
-    argv++;
+    OptionParser op("Usage: {progname} [options] [[script] scriptArgs*]");
 
-    int i;
-    for (i = 0; i < argc; i++) {
-        if (argv[i][0] == '-' && argv[i][1] == 'U' && argv[i][2] == '\0') {
-            JS_SetCStringsAreUTF8();
-        }
+    op.setDescription("The SpiderMonkey shell provides a command line interface to the "
+        "JavaScript engine. Code and file options provided via the command line are "
+        "run left to right. If provided, the optional script argument is run after "
+        "all options have been processed. Just-In-Time compilation modes may be enabled via "
+        "command line options.");
+    op.setDescriptionWidth(72);
+    op.setHelpWidth(80);
+    op.setVersion(JS_GetImplementationVersion());
+
+    if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
+        || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
+        || !op.addBoolOption('i', "shell", "Enter prompt after running code")
+        || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
+        || !op.addBoolOption('j', "tracejit", "Enable the JaegerMonkey trace JIT")
+        || !op.addBoolOption('p', "profiling", "Enable runtime profiling select JIT mode")
+        || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
+        || !op.addBoolOption('a', "always-mjit",
+                             "Do not try to run in the interpreter before "
+                             "method jitting. Note that this has no particular effect on the "
+                             "tracer; it still kicks in if enabled.")
+        || !op.addBoolOption('D', "dump-bytecode", "Dump bytecode with exec count for all scripts")
+        || !op.addBoolOption('b', "print-timing", "Print sub-ms runtime for each file that's run")
+#ifdef DEBUG
+        || !op.addIntOption('A', "oom-after", "COUNT", "Trigger OOM after COUNT allocations", -1)
+        || !op.addBoolOption('O', "print-alloc", "Print the number of allocations at exit")
+#endif
+        || !op.addBoolOption('U', "utf8", "C strings passed to the JSAPI are UTF-8 encoded")
+#ifdef JS_GC_ZEAL
+        || !op.addStringOption('Z', "gc-zeal", "N[,F[,C]]",
+                               "N indicates \"zealousness\":\n"
+                               "  0: no additional GCs\n"
+                               "  1: additional GCs at common danger points\n"
+                               "  2: GC every F allocations (default: 100)\n"
+                               "If C is 1, compartmental GCs are performed; otherwise, full")
+#endif
+        || !op.addOptionalStringArg("script", "A script to execute (after all options)")
+        || !op.addOptionalMultiStringArg("scriptArgs",
+                                         "String arguments to bind as |scriptArgs| in the "
+                                         "shell's global")
+#ifdef JS_ION
+        || !op.addBoolOption('\0', "ion", "Enable IonMonkey")
+        || !op.addStringOption('\0', "ion-gvn", "[mode]",
+                               "Specify Ion global value numbering:\n"
+                               "  off: disable GVN\n"
+                               "  pessimistic: use pessimistic GVN\n"
+                               "  optimistic: (default) use optimistic GVN")
+        || !op.addStringOption('\0', "ion-licm", "on/off",
+                               "Loop invariant code motion (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-regalloc", "[mode]",
+                               "Specify Ion register allocation:\n"
+                               "  greedy: Greedy register allocation (default)\n"
+                               "  lsra: Linear Scan register allocation")
+#endif
+    )
+    {
+        return EXIT_FAILURE;
     }
+
+    switch (op.parseArgs(argc, argv)) {
+      case OptionParser::ParseHelp:
+        return EXIT_SUCCESS;
+      case OptionParser::ParseError:
+        op.printHelp(argv[0]);
+        return EXIT_FAILURE;
+      case OptionParser::Fail:
+        return EXIT_FAILURE;
+      case OptionParser::Okay:
+        break;
+    }
+
+    if (op.getHelpOption())
+        return EXIT_SUCCESS;
+
+#ifdef DEBUG
+    /* 
+     * Process OOM options as early as possible so that we can observe as many
+     * allocations as possible.
+     */
+    if (op.getIntOption('A') >= 0)
+        OOM_maxAllocations = op.getIntOption('A');
+    if (op.getBoolOption('O'))
+        OOM_printAllocationCount = true;
+#endif
+
+    /* Must be done before we create the JSRuntime. */
+    if (op.getBoolOption('U'))
+        JS_SetCStringsAreUTF8();
 
 #ifdef XP_WIN
     // Set the timer calibration delay count to 0 so we get high
@@ -6174,7 +6070,7 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
-    result = Shell(cx, argc, argv, envp);
+    result = Shell(cx, &op, envp);
 
 #ifdef DEBUG
     if (OOM_printAllocationCount)

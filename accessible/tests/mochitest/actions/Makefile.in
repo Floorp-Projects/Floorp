@@ -51,6 +51,8 @@ _TEST_FILES =\
 		test_general.html \
 		test_general.xul \
 		test_inputs.html \
+		test_keys_menu.xul \
+		test_keys.html \
 		test_link.html \
 		test_media.html \
 		test_tree.xul \

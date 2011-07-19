@@ -45,7 +45,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUConvPropertySearch.h"
-#include "nsITimelineService.h"
 #include "nsCharsetAlias.h"
 
 //--------------------------------------------------------------
@@ -71,16 +70,12 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
 {
    if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
 
-   NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
-
    nsCAutoString key(aAlias);
    ToLowerCase(key);
 
    nsresult rv = nsUConvPropertySearch::SearchPropertyValue(kAliases,
       NS_ARRAY_LENGTH(kAliases), key, oResult);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
-  NS_TIMELINE_MARK_TIMER("nsCharsetAlias2:GetPreferred");
   return rv;
 }
 

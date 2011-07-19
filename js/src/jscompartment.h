@@ -291,6 +291,9 @@ struct TraceMonitor {
 namespace mjit {
 class JaegerCompartment;
 }
+namespace ion {
+class IonCompartment;
+}
 }
 
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
@@ -398,6 +401,17 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool                         hold;
     bool                         isSystemCompartment;
+
+#ifdef JS_ION
+  private:
+    js::ion::IonCompartment *ionCompartment_;
+
+  public:
+    bool ensureIonCompartmentExists(JSContext *cx);
+    js::ion::IonCompartment *ionCompartment() {
+        return ionCompartment_;
+    }
+#endif
 
 #ifdef JS_TRACER
   private:
@@ -517,6 +531,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void finalizeObjectArenaLists(JSContext *cx);
     void finalizeStringArenaLists(JSContext *cx);
     void finalizeShapeArenaLists(JSContext *cx);
+    void finalizeIonCodeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
