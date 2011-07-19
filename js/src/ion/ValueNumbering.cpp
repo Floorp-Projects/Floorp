@@ -237,7 +237,7 @@ ValueNumberer::eliminateRedundancies()
 
             MUseIterator uses(ins);
             while (uses.more())
-                uses->ins()->replaceOperand(uses, dom);
+                uses->node()->replaceOperand(uses, dom);
 
             JS_ASSERT(ins->useCount() == 0);
             JS_ASSERT(ins->block() == block);

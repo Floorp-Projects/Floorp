@@ -85,18 +85,63 @@ class MInstruction;
 class MBasicBlock;
 class MUse;
 class MIRGraph;
+class MUseIterator;
 
-// Represents a use of a definition.
+// A node is an entry in the MIR graph. It has two kinds:
+//   MInstruction: an instruction which appears in the IR stream.
+//   MSnapshot: a list of instructions that correspond to the state of the
+//              interpreter stack. 
+//
+// Nodes can hold references to MDefinitions. Each MDefinition has a list of
+// nodes holding such a reference (its use chain).
+class MNode : public TempObject
+{
+  public:
+    enum Kind {
+        Definition,
+        Snapshot
+    };
+
+    virtual Kind kind() const = 0;
+
+    // Returns the definition at a given operand.
+    virtual MDefinition *getOperand(size_t index) const = 0;
+    virtual size_t numOperands() const = 0;
+
+    bool isDefinition() const {
+        return kind() == Definition;
+    }
+    bool isSnapshot() const {
+        return kind() == Snapshot;
+    }
+
+    // Returns the basic block this node is in.
+    virtual MBasicBlock *block() const = 0;
+
+    // Replaces an operand, taking care to update use chains. No memory is
+    // allocated; the existing data structures are re-linked.
+    void replaceOperand(MUse *prev, MUse *use, MDefinition *ins);
+    void replaceOperand(MUseIterator &use, MDefinition *ins);
+    void replaceOperand(size_t index, MDefinition *ins);
+
+    inline MDefinition *toDefinition();
+
+  protected:
+    // Sets a raw operand, ignoring updating use information.
+    virtual void setOperand(size_t index, MDefinition *operand) = 0;
+};
+
+// Represents a use of a node.
 class MUse : public TempObject
 {
     friend class MDefinition;
 
     MUse *next_;            // Next use in the use chain.
-    MDefinition *ins_;     // The instruction that is using this operand.
+    MNode *node_;           // The node that is using this operand.
     uint32 index_;          // The index of this operand in its owner.
 
-    MUse(MUse *next, MDefinition *owner, uint32 index)
-      : next_(next), ins_(owner), index_(index)
+    MUse(MUse *next, MNode *owner, uint32 index)
+      : next_(next), node_(owner), index_(index)
     { }
 
     void setNext(MUse *next) {
@@ -104,13 +149,13 @@ class MUse : public TempObject
     }
 
   public:
-    static inline MUse *New(MUse *next, MDefinition *owner, uint32 index)
+    static inline MUse *New(MUse *next, MNode *owner, uint32 index)
     {
         return new MUse(next, owner, index);
     }
 
-    MDefinition *ins() const {
-        return ins_;
+    MNode *node() const {
+        return node_;
     }
     uint32 index() const {
         return index_;
@@ -154,7 +199,7 @@ class MUseIterator
 };
 
 // An MDefinition is an SSA name.
-class MDefinition : public TempObject
+class MDefinition : public MNode
 {
     friend class MBasicBlock;
     friend class Loop;
@@ -170,7 +215,8 @@ class MDefinition : public TempObject
   private:
     MBasicBlock *block_;    // Containing basic block.
     MUse *uses_;            // Use chain.
-    uint32 id_;             // Ordered id for register allocation.
+    uint32 id_;             // Instruction ID, which after block re-ordering
+                            // is sorted within a basic block.
     uint32 valueNumber_;    // The instruction's value number (see GVN for details in use)
     MIRType resultType_;    // Actual result type.
     uint32 usedTypes_;      // Set of used types.
@@ -213,6 +259,10 @@ class MDefinition : public TempObject
 
     virtual HashNumber valueHash() const;
     virtual bool congruentTo(MDefinition* const &ins) const;
+
+    MNode::Kind kind() const {
+        return MNode::Definition;
+    }
 
     uint32 id() const {
         JS_ASSERT(block_);
@@ -281,10 +331,6 @@ class MDefinition : public TempObject
     // Number of uses of this instruction.
     size_t useCount() const;
 
-    // Returns the instruction at a given operand.
-    virtual MDefinition *getOperand(size_t index) const = 0;
-    virtual size_t numOperands() const = 0;
-
     // Returns the input type this instruction expects.
     virtual MIRType requiredInputType(size_t index) const {
         return MIRType_None;
@@ -329,12 +375,6 @@ class MDefinition : public TempObject
         setFlags(EMIT_AT_USES);
     }
 
-    // Replaces an operand, taking care to update use chains. No memory is
-    // allocated; the existing data structures are re-linked.
-    void replaceOperand(MUse *prev, MUse *use, MDefinition *ins);
-    void replaceOperand(MUseIterator &use, MDefinition *ins);
-    void replaceOperand(size_t index, MDefinition *ins);
-
     void addUse(MDefinition *ins, size_t index) {
         uses_ = MUse::New(uses_, ins, index);
     }
@@ -342,7 +382,7 @@ class MDefinition : public TempObject
     // Adds a use from a node that is being recycled during operand
     // replacement.
     void addUse(MUse *use) {
-        JS_ASSERT(use->ins()->getOperand(use->index()) == this);
+        JS_ASSERT(use->node()->getOperand(use->index()) == this);
         use->setNext(uses_);
         uses_ = use;
     }
@@ -398,10 +438,6 @@ class MDefinition : public TempObject
     bool isInstruction() const {
         return isPhi();
     }
-
-  protected:
-    // Sets a raw operand; instruction implementation dependent.
-    virtual void setOperand(size_t index, MDefinition *operand) = 0;
 
     // Initializes an operand for the first time.
     void initOperand(size_t index, MDefinition *ins) {
@@ -920,6 +956,12 @@ MUseIterator::unlink()
     }
 MIR_OPCODE_LIST(OPCODE_CASTS)
 #undef OPCODE_CASTS
+
+MDefinition *MNode::toDefinition()
+{
+    JS_ASSERT(isDefinition());
+    return (MDefinition *)this;
+}
 
 MInstruction *MDefinition::toInstruction()
 {

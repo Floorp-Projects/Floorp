@@ -149,7 +149,7 @@ MDefinition::removeUse(MUse *prev, MUse *use)
 }
 
 void
-MDefinition::replaceOperand(MUse *prev, MUse *use, MDefinition *ins)
+MNode::replaceOperand(MUse *prev, MUse *use, MDefinition *ins)
 {
     MDefinition *used = getOperand(use->index());
     if (used == ins)
@@ -161,7 +161,7 @@ MDefinition::replaceOperand(MUse *prev, MUse *use, MDefinition *ins)
 }
 
 void
-MDefinition::replaceOperand(MUseIterator &use, MDefinition *ins)
+MNode::replaceOperand(MUseIterator &use, MDefinition *ins)
 {
     size_t index = use->index();
     use.next();
@@ -169,11 +169,11 @@ MDefinition::replaceOperand(MUseIterator &use, MDefinition *ins)
 }
 
 void
-MDefinition::replaceOperand(size_t index, MDefinition *ins)
+MNode::replaceOperand(size_t index, MDefinition *ins)
 {
     MDefinition *old = getOperand(index);
     for (MUseIterator uses(old); uses.more(); uses.next()) {
-        if (uses->index() == index && uses->ins() == this) {
+        if (uses->index() == index && uses->node() == this) {
             replaceOperand(uses.prev(), *uses, ins);
             return;
         }

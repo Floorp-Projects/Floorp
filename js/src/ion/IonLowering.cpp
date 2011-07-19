@@ -309,12 +309,15 @@ LIRGenerator::rewriteDefsInSnapshots(MInstruction *ins, MDefinition *old)
 {
     MUseIterator iter(old);
     while (iter.more()) {
-        MDefinition *use = iter->ins();
-        if (!ins->isSnapshot() || ins->inWorklist()) {
-            iter.next();
-            continue;
+        MNode *node = iter->node();
+        if (node->isDefinition()) {
+            MDefinition *def = node->toDefinition();
+            if (!def->isSnapshot() || def->inWorklist()) {
+                iter.next();
+                continue;
+            }
+            def->replaceOperand(iter, ins);
         }
-        use->replaceOperand(iter, ins);
     }
 }
 
