@@ -601,6 +601,14 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         }
     }
 
+#ifdef JS_ION
+    if (ion::IsEnabled()) {
+        ion::MethodStatus status = ion::Compile(cx, script, fp);
+        if (status == ion::Method_Compiled)
+            return ion::FireMahLaser(cx);
+    }
+#endif
+
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
@@ -4110,8 +4118,14 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     TRACE_0(EnterFrame);
 
 #ifdef JS_ION
-    if (ion::Go(cx, script, regs.fp()))
-        return true;
+    if (ion::IsEnabled()) {
+        ion::MethodStatus status = ion::Compile(cx, script, regs.fp());
+        if (status == ion::Method_Compiled) {
+            interpReturnOK = ion::FireMahLaser(cx);
+            CHECK_INTERRUPT_HANDLER();
+            goto jit_return;
+        }
+    }
 #endif
 #ifdef JS_METHODJIT
     {

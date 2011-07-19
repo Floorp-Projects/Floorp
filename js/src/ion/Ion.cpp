@@ -142,7 +142,7 @@ IonCode::release()
 void
 IonScript::Destroy(JSContext *cx, JSScript *script)
 {
-    if (!script->ion)
+    if (!script->ion || script->ion == ION_DISABLED_SCRIPT)
         return;
 
     script->ion->method.release();
@@ -238,13 +238,34 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
     return true;
 }
 
-bool
-ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
+MethodStatus
+ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
 {
-    if (!IonCompile(cx, script, fp))
-        return false;
+    JS_ASSERT(ion::IsEnabled());
 
-    // This will change when we can execute code.
-    return false;
+    if (script->ion) {
+        if (script->ion == ION_DISABLED_SCRIPT)
+            return Method_CantCompile;
+
+        // This will be enabled once we can run code.
+        return Method_CantCompile;
+    }
+
+    if (!IonCompile(cx, script, fp)) {
+        script->ion = ION_DISABLED_SCRIPT;
+        return Method_CantCompile;
+    }
+
+    // This will be enabled once we can run code.
+    return Method_CantCompile;
+}
+
+bool
+ion::FireMahLaser(JSContext *cx)
+{
+    JS_ASSERT(ion::IsEnabled());
+
+    // This will be enabled once we run code.
+    return true;
 }
 
