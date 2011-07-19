@@ -5,11 +5,11 @@ load(libdir + 'asserts.js');
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 gc();  // don't assert marking debug hooks
-assertEq(dbg.onDebuggerStatement, null);
+assertEq(dbg.onDebuggerStatement, undefined);
 
 function f() {}
 
-assertThrowsInstanceOf(function () { dbg.onDebuggerStatement = undefined; }, TypeError);
+assertThrowsInstanceOf(function () { dbg.onDebuggerStatement = null; }, TypeError);
 assertThrowsInstanceOf(function () { dbg.onDebuggerStatement = "bad"; }, TypeError);
 assertThrowsInstanceOf(function () { dbg.onDebuggerStatement = {}; }, TypeError);
 dbg.onDebuggerStatement = f;

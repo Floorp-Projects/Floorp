@@ -18,7 +18,7 @@ for (var i = 0; i < N; i++) {
             s.setBreakpoint(offs[j], handler);
     };
     g.eval('debugger;');
-    dbg.onDebuggerStatement = null;
+    dbg.onDebuggerStatement = undefined;
     dbg = null;
 }
 
