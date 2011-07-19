@@ -11,12 +11,12 @@ function addDebug() {
         dbg.onDebuggerStatement = function (stack) {
             hits++;
             this.enabled = false;
-            this.onDebuggerStatement = null;
+            this.onDebuggerStatement = undefined;
             gc();
         };
         if (i > 0) {
             dbg.enabled = false;
-            dbg.onDebuggerStatement = null;
+            dbg.onDebuggerStatement = undefined;
             dbg = null;
         }
     }

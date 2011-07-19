@@ -10,7 +10,7 @@ function addDebug(n) {
         dbg.onDebuggerStatement = function (stack) {
             log += this.num + ', ';
             this.enabled = false;
-            this.onDebuggerStatement = null;
+            this.onDebuggerStatement = undefined;
             gc();
         };
     }
