@@ -383,7 +383,23 @@ MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
 ifdef MOZ_OMNIJAR
-GENERATE_CACHE ?= true
+
+ifdef GENERATE_CACHE
+ifneq (1_,$(if $(CROSS_COMPILE),1,0)_$(UNIVERSAL_BINARY))
+ifdef RUN_TEST_PROGRAM
+_ABS_RUN_TEST_PROGRAM = $(call core_abspath,$(RUN_TEST_PROGRAM))
+endif
+
+GENERATE_CACHE = \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$$PWD" -a "$$PWD" -f $(topsrcdir)/toolkit/mozapps/installer/precompile_cache.js -e 'populate_startupcache("omni.jar", "startupCache.zip");' && \
+  rm -rf jsloader && \
+  $(UNZIP) startupCache.zip && \
+  rm startupCache.zip && \
+  $(ZIP) -r9m omni.jar jsloader
+endif
+else
+GENERATE_CACHE = true
+endif
 
 OMNIJAR_FILES	= \
   chrome \
