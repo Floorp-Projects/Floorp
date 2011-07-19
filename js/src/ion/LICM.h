@@ -94,7 +94,7 @@ class Loop
     bool hoistInstructions(InstructionQueue &toHoist);
 
     // Utility methods for invariance testing and instruction hoisting.
-    bool isInLoop(MInstruction *ins);
+    bool isInLoop(MDefinition *ins);
     bool isLoopInvariant(MInstruction *ins);
 
     // Determines if an instruction should be hoisted based on it's win estimate and

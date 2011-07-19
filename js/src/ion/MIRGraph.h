@@ -160,7 +160,7 @@ class MIRGraph
     MBasicBlock *getBlock(size_t i) const {
         return blocks_[i];
     }
-    void allocInstructionId(MInstruction *ins) {
+    void allocDefinitionId(MDefinition *ins) {
         // This intentionally starts above 0. The id 0 is in places used to
         // indicate a failure to perform an operation on an instruction.
         idGen_ += 2;
@@ -180,15 +180,15 @@ class MBasicBlock : public TempObject
     static const uint32 NotACopy = uint32(-1);
 
     struct StackSlot {
-        MInstruction *ins;
+        MDefinition *def;
         uint32 copyOf;
         union {
             uint32 firstCopy; // copyOf == NotACopy: first copy in the linked list
             uint32 nextCopy;  // copyOf != NotACopy: next copy in the linked list
         };
 
-        void set(MInstruction *ins) {
-            this->ins = ins;
+        void set(MDefinition *def) {
+            this->def = def;
             copyOf = NotACopy;
             firstCopy = NotACopy;
         }
@@ -217,7 +217,7 @@ class MBasicBlock : public TempObject
     void assertUsesAreNotWithin(MUse *use);
 
     // Sets a slot, taking care to rewrite copies.
-    void setSlot(uint32 slot, MInstruction *ins);
+    void setSlot(uint32 slot, MDefinition *ins);
 
     // Pushes a copy of a slot.
     void pushCopy(uint32 slot);
@@ -249,11 +249,11 @@ class MBasicBlock : public TempObject
     }
 
     // Gets the instruction associated with various slot types.
-    MInstruction *peek(int32 depth);
+    MDefinition *peek(int32 depth);
 
     // Initializes a slot value; must not be called for normal stack
     // operations, as it will not create new SSA names for copies.
-    void initSlot(uint32 index, MInstruction *ins);
+    void initSlot(uint32 index, MDefinition *ins);
 
     // Sets the instruction associated with various slot types. The
     // instruction must lie at the top of the stack.
@@ -261,12 +261,12 @@ class MBasicBlock : public TempObject
     bool setArg(uint32 arg);
 
     // Tracks an instruction as being pushed onto the operand stack.
-    void push(MInstruction *ins);
+    void push(MDefinition *ins);
     void pushArg(uint32 arg);
     void pushLocal(uint32 local);
 
     // Returns the top of the stack, then decrements the virtual stack pointer.
-    MInstruction *pop();
+    MDefinition *pop();
 
     // Adds an instruction to this block's instruction list. |ins| may be NULL
     // to simplify OOM checking.
@@ -397,7 +397,7 @@ class MBasicBlock : public TempObject
     // This function retrieves the internal instruction associated with a
     // slot, and should not be used for normal stack operations. It is an
     // internal helper that is also used to enhance spew.
-    MInstruction *getSlot(uint32 index);
+    MDefinition *getSlot(uint32 index);
 
     MSnapshot *entrySnapshot() const {
         return instructions_.begin()->toSnapshot();
@@ -405,7 +405,7 @@ class MBasicBlock : public TempObject
     size_t numEntrySlots() const {
         return entrySnapshot()->numOperands();
     }
-    MInstruction *getEntrySlot(size_t i) const {
+    MDefinition *getEntrySlot(size_t i) const {
         JS_ASSERT(i < numEntrySlots());
         return entrySnapshot()->getOperand(i);
     }
@@ -463,7 +463,7 @@ class MDefinitionIterator
     MInstructionIterator iter_;
 
 
-    MInstruction *getIns() {
+    MDefinition *getIns() {
         if (phiIndex_ < block_->numPhis())
             return block_->getPhi(phiIndex_);
 
@@ -484,11 +484,11 @@ class MDefinitionIterator
             iter_++;
     }
 
-    MInstruction *operator *() {
+    MDefinition *operator *() {
         return getIns();
     }
 
-    MInstruction *operator ->() {
+    MDefinition *operator ->() {
         return getIns();
     }
 

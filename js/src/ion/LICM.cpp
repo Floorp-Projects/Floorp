@@ -169,7 +169,7 @@ Loop::optimize()
                     isInLoop(use->ins()) &&
                     use->ins()->estimateHoistWin() != MInstruction::NO_WIN) {
 
-                    if(!insertInWorklist(use->ins()))
+                    if (!insertInWorklist(use->ins()->toInstruction()))
                         return false;
                 }
                 use = use->next();
@@ -201,7 +201,7 @@ Loop::hoistInstructions(InstructionQueue &toHoist)
 }
 
 bool
-Loop::isInLoop(MInstruction *ins)
+Loop::isInLoop(MDefinition *ins)
 {
     return ins->block()->id() >= header_->id();
 }

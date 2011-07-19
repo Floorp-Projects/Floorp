@@ -57,16 +57,15 @@ class LIRGeneratorX64 : public LIRGenerator
   protected:
     void fillSnapshot(LSnapshot *snapshot);
     bool preparePhi(MPhi *phi);
-    bool fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir);
+    bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
 
-    bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs);
+    bool lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
 
   public:
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
     bool visitConstant(MConstant *ins);
     bool visitReturn(MReturn *ret);
-    bool visitPhi(MPhi *phi);
 };
 
 typedef LIRGeneratorX64 LIRBuilder;

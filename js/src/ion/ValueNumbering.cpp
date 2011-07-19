@@ -53,7 +53,7 @@ ValueNumberer::ValueNumberer(MIRGraph &graph, bool optimistic)
 
 
 uint32
-ValueNumberer::lookupValue(ValueMap &values, MInstruction *ins)
+ValueNumberer::lookupValue(ValueMap &values, MDefinition *ins)
 {
 
     ValueMap::AddPtr p = values.lookupForAdd(ins);
@@ -100,7 +100,7 @@ ValueNumberer::computeValueNumbers()
         return false;
 
     // Assign unique value numbers if pessimistic.
-    // It might be productive to do this in the MInstruction constructor or
+    // It might be productive to do this in the MDefinition constructor or
     // possibly in a previous pass, if it seems reasonable.
     if (pessimisticPass_) {
         for (size_t i = 0; i < graph_.numBlocks(); i++) {
@@ -121,7 +121,7 @@ ValueNumberer::computeValueNumbers()
             MDefinitionIterator iter(block);
 
             while (iter.more()) {
-                MInstruction *ins = *iter;
+                MDefinition *ins = *iter;
 
                 uint32 value = lookupValue(values, ins);
 
@@ -146,11 +146,11 @@ ValueNumberer::computeValueNumbers()
     return true;
 }
 
-MInstruction *
-ValueNumberer::findDominatingInstruction(InstructionMap &defs, MInstruction *ins, size_t index)
+MDefinition *
+ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index)
 {
     InstructionMap::Ptr p = defs.lookup(ins->valueNumber());
-    MInstruction *dom;
+    MDefinition *dom;
     if (!p || index > p->value.validUntil) {
         DominatingValue value;
         value.def = ins;
@@ -222,7 +222,7 @@ ValueNumberer::eliminateRedundancies()
         MInstructionIterator i = block->begin();
         while (i != block->lastIns()) {
             MInstruction *ins = *i;
-            MInstruction *dom = findDominatingInstruction(defs, ins, index);
+            MDefinition *dom = findDominatingDef(defs, ins, index);
 
             if (!dom)
                 return false; // Insertion failed
