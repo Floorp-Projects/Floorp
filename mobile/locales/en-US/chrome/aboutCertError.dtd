@@ -14,9 +14,6 @@ be replaced at runtime with the name of the server to which the user
 was trying to connect. -->
 <!ENTITY certerror.introPara1 "You have asked &brandShortName; to connect
 securely to <b>#1</b>, but we can't confirm that your connection is secure.">
-<!ENTITY certerror.introPara2 "Normally, when you try to connect securely,
-sites will present trusted identification to prove that you are
-going to the right place. However, this site's identity can't be verified.">
 
 <!ENTITY certerror.whatShouldIDo.heading "What Should I Do?">
 <!ENTITY certerror.whatShouldIDo.content "If you usually connect to

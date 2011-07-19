@@ -50,6 +50,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js"
+const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js"
 
 /**
  * Special Powers Exception - used to throw exceptions nicely
@@ -91,6 +92,7 @@ SpecialPowersObserver.prototype = {
           this._messageManager.addMessageListener("SPProcessCrashService", this);
           this._messageManager.addMessageListener("SPPingService", this);
 
+          this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
           this._messageManager.loadFrameScript(CHILD_SCRIPT, true);
           this._isFrameScriptLoaded = true;
         }
