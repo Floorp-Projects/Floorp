@@ -126,7 +126,8 @@
   var fakeReporters2 = [
     f("2nd", "heap-allocated",  OTHER,  1000 * MB),
     f("2nd", "heap-unallocated",OTHER,   100 * MB),
-    f("2nd", "explicit/a/b/c",  HEAP,    498 * MB),
+    f("2nd", "explicit/a/b/c",  HEAP,    497 * MB),
+    f("2nd", "explicit/a/b/c",  HEAP,      1 * MB), // dup: merge
     f("2nd", "explicit/a/b/c",  HEAP,      1 * MB), // dup: merge
     f("2nd", "explicit/flip\\the\\backslashes",
                                 HEAP,    200 * MB),
@@ -138,12 +139,14 @@
     f("2nd", "other1",          OTHER,   111 * MB),
 
     // kUnknown should be handled gracefully for "heap-allocated", non-leaf
-    // reporters, leaf-reporters, and "other" reporters.
+    // reporters, leaf-reporters, "other" reporters, and duplicated reporters.
     f("3rd", "heap-allocated",  OTHER,   kUnknown),
     f("3rd", "explicit/a",      HEAP,    kUnknown),
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
     f("3rd", "explicit/a/c",    HEAP,    444 * MB),
+    f("3rd", "explicit/a/c",    HEAP,    kUnknown), // dup: merge
     f("3rd", "explicit/a/d",    HEAP,    kUnknown),
+    f("3rd", "explicit/a/d",    HEAP,    kUnknown), // dup: merge
     f("3rd", "explicit/b",      NONHEAP, kUnknown),
     f("3rd", "other1",          OTHER,   kUnknown)
   ];
@@ -174,13 +177,13 @@ Explicit Allocations\n\
 ├──222.00 MB (35.60%) -- a\n\
 ├──100.00 MB (16.04%) -- c\n\
 │  ├───77.00 MB (12.35%) -- other\n\
-│  └───23.00 MB (03.69%) -- d\n\
-├───23.00 MB (03.69%) -- cc\n\
+│  └───23.00 MB (03.69%) -- d [2]\n\
+├───23.00 MB (03.69%) -- cc [2]\n\
 ├───20.00 MB (03.21%) -- f\n\
 │   └──20.00 MB (03.21%) -- g\n\
 │      └──20.00 MB (03.21%) -- h\n\
 │         └──20.00 MB (03.21%) -- i\n\
-├───15.00 MB (02.41%) -- g\n\
+├───15.00 MB (02.41%) -- g [2]\n\
 │   ├───6.00 MB (00.96%) -- a\n\
 │   ├───5.00 MB (00.80%) -- b\n\
 │   └───4.00 MB (00.64%) -- other\n\
@@ -202,7 +205,7 @@ Explicit Allocations\n\
 1,000.00 MB (100.0%) -- explicit\n\
 ├────499.00 MB (49.90%) -- a\n\
 │    └──499.00 MB (49.90%) -- b\n\
-│       └──499.00 MB (49.90%) -- c\n\
+│       └──499.00 MB (49.90%) -- c [3]\n\
 ├────200.00 MB (20.00%) -- flip/the/backslashes\n\
 ├────200.00 MB (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mo...)\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
@@ -218,7 +221,7 @@ Other Measurements\n\
 Explicit Allocations\n\
 777.00 MB (100.0%) -- explicit\n\
 ├──777.00 MB (100.0%) -- a [*]\n\
-│  ├──444.00 MB (57.14%) -- c\n\
+│  ├──444.00 MB (57.14%) -- c [2]\n\
 │  ├──333.00 MB (42.86%) -- b\n\
 │  └────0.00 MB (00.00%) -- (1 omitted)\n\
 └────0.00 MB (00.00%) -- (2 omitted)\n\
@@ -244,13 +247,13 @@ Explicit Allocations\n\
 ├──232,783,872 B (35.60%) -- a\n\
 ├──104,857,600 B (16.04%) -- c\n\
 │  ├───80,740,352 B (12.35%) -- other\n\
-│  └───24,117,248 B (03.69%) -- d\n\
-├───24,117,248 B (03.69%) -- cc\n\
+│  └───24,117,248 B (03.69%) -- d [2]\n\
+├───24,117,248 B (03.69%) -- cc [2]\n\
 ├───20,971,520 B (03.21%) -- f\n\
 │   └──20,971,520 B (03.21%) -- g\n\
 │      └──20,971,520 B (03.21%) -- h\n\
 │         └──20,971,520 B (03.21%) -- i\n\
-├───15,728,640 B (02.41%) -- g\n\
+├───15,728,640 B (02.41%) -- g [2]\n\
 │   ├───6,291,456 B (00.96%) -- a\n\
 │   ├───5,242,880 B (00.80%) -- b\n\
 │   └───4,194,304 B (00.64%) -- other\n\
@@ -273,7 +276,7 @@ Explicit Allocations\n\
 1,048,576,000 B (100.0%) -- explicit\n\
 ├────523,239,424 B (49.90%) -- a\n\
 │    └──523,239,424 B (49.90%) -- b\n\
-│       └──523,239,424 B (49.90%) -- c\n\
+│       └──523,239,424 B (49.90%) -- c [3]\n\
 ├────209,715,200 B (20.00%) -- flip/the/backslashes\n\
 ├────209,715,200 B (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
@@ -289,9 +292,9 @@ Other Measurements\n\
 Explicit Allocations\n\
 814,743,552 B (100.0%) -- explicit\n\
 ├──814,743,552 B (100.0%) -- a [*]\n\
-│  ├──465,567,744 B (57.14%) -- c\n\
+│  ├──465,567,744 B (57.14%) -- c [2]\n\
 │  ├──349,175,808 B (42.86%) -- b\n\
-│  └────────────0 B (00.00%) -- d [*]\n\
+│  └────────────0 B (00.00%) -- d [*] [2]\n\
 ├────────────0 B (00.00%) -- b [*]\n\
 └────────────0 B (00.00%) -- heap-unclassified [*]\n\
 \n\
