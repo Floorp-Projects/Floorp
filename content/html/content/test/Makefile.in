@@ -72,7 +72,6 @@ _TEST_FILES = \
 		test_bug3348.html \
 		test_bug6296.html \
 		test_bug24958.html \
-		test_bug41464.html \
 		bug100533_load.html \
 		bug100533_iframe.html \
 		test_bug100533.html \
@@ -179,7 +178,6 @@ _TEST_FILES = \
 		test_bug529859.html \
 		test_bug535043.html \
 		test_bug547850.html \
-		test_bug457800.html \
 		test_bug536891.html \
 		test_bug536895.html \
 		test_bug458037.xhtml \
