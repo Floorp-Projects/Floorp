@@ -62,7 +62,7 @@ class AssemblerX86Shared
     size_t size() const {
         return masm.size();
     }
-    void executableCopy(uint8 *buffer) {
+    void executableCopy(void *buffer) {
         masm.executableCopy(buffer);
     }
 
