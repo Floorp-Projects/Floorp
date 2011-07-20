@@ -105,8 +105,7 @@ AtomDecls::lookupMulti(JSAtom *atom)
     DefnOrHeader &doh = p.value();
     if (doh.isHeader())
         return MultiDeclRange(doh.header());
-    else
-        return MultiDeclRange(doh.defn());
+    return MultiDeclRange(doh.defn());
 }
 
 inline bool
