@@ -55,11 +55,19 @@ function reflectString(aParameters)
   element.removeAttribute(contentAttr);
 
   element[idlAttr] = null;
-  todo_is(element.getAttribute(contentAttr), "null",
-     "null should have been stringified to 'null'");
-  todo_is(element[idlAttr], "null",
-     "null should have been stringified to 'null'");
-  element.removeAttribute(contentAttr);
+  // TODO: remove this ugly hack when null stringification will work as expected.
+  if (element.localName == "textarea" && idlAttr == "wrap") {
+    is(element.getAttribute(contentAttr), "null",
+       "null should have been stringified to 'null'");
+    is(element[idlAttr], "null", "null should have been stringified to 'null'");
+    element.removeAttribute(contentAttr);
+  } else {
+    todo_is(element.getAttribute(contentAttr), "null",
+       "null should have been stringified to 'null'");
+    todo_is(element[idlAttr], "null",
+       "null should have been stringified to 'null'");
+    element.removeAttribute(contentAttr);
+  }
 
   // Tests various strings.
   var stringsToTest = [

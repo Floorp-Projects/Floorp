@@ -26,31 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345822
 
 /** Test for Bug 345822 **/
 
-function checkRequiredAttribute(element)
-{
-  ok('required' in element, "Element should have the required attribute");
-
-  ok(!element.required, "Element required attribute should be disabled");
-  is(element.getAttribute('required'), null,
-    "Element required attribute should be disabled");
-
-  element.required = true;
-  ok(element.required, "Element required attribute should be enabled");
-  isnot(element.getAttribute('required'), null,
-    "Element required attribute should be enabled");
-
-  element.removeAttribute('required');
-  element.setAttribute('required', '');
-  ok(element.required, "Element required attribute should be enabled");
-  isnot(element.getAttribute('required'), null,
-    "Element required attribute should be enabled");
-
-  element.removeAttribute('required');
-  ok(!element.required, "Element required attribute should be disabled");
-  is(element.getAttribute('required'), null,
-    "Element required attribute should be disabled");
-}
-
 function checkNotSufferingFromBeingMissing(element, doNotApply)
 {
   ok(!element.validity.valueMissing,
@@ -324,7 +299,6 @@ function checkInputRequiredValidityForFile()
   document.forms[0].removeChild(element);
 }
 
-checkRequiredAttribute(document.createElement('textarea'));
 checkTextareaRequiredValidity();
 
 // The require attribute behavior depend of the input type.
