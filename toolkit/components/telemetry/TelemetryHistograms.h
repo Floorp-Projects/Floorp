@@ -68,6 +68,8 @@ HISTOGRAM(PAGE_FAULTS_HARD, 8, 64 * 1024, 13, EXPONENTIAL, "Hard page faults (si
 #endif
 HISTOGRAM(SHUTDOWN_OK, 0, 1, 2, BOOLEAN, "Did the browser start after a successful shutdown")
 
+HISTOGRAM(IMAGE_DECODE_LATENCY, 50, 5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")
+
 /**
  * Networking telemetry
  */
