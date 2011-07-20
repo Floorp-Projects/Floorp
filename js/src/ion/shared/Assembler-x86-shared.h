@@ -56,6 +56,23 @@ class AssemblerX86Shared
     typedef JSC::X86Assembler::JmpDst JmpDst;
 
   public:
+    enum Condition {
+        Equal = JSC::X86Assembler::ConditionE,
+        NotEqual = JSC::X86Assembler::ConditionNE,
+        Above = JSC::X86Assembler::ConditionA,
+        AboveOrEqual = JSC::X86Assembler::ConditionAE,
+        Below = JSC::X86Assembler::ConditionB,
+        BelowOrEqual = JSC::X86Assembler::ConditionBE,
+        GreaterThan = JSC::X86Assembler::ConditionG,
+        GreaterThanOrEqual = JSC::X86Assembler::ConditionGE,
+        LessThan = JSC::X86Assembler::ConditionL,
+        LessThanOrEqual = JSC::X86Assembler::ConditionLE,
+        Overflow = JSC::X86Assembler::ConditionO,
+        Signed = JSC::X86Assembler::ConditionS,
+        Zero = JSC::X86Assembler::ConditionE,
+        NonZero = JSC::X86Assembler::ConditionNE
+    };
+
     bool oom() const {
         return masm.oom();
     }
@@ -120,6 +137,17 @@ class AssemblerX86Shared
         }
     }
 
+    void j(Condition cond, Label *label) {
+        if (label->bound()) {
+            // The jump can be immediately patched to the correct destination.
+            masm.linkJump(masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond)), JmpDst(label->offset()));
+        } else {
+            // Thread the jump list through the unpatched jump targets.
+            JmpSrc j = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
+            JmpSrc prev = JmpSrc(label->use(j.offset()));
+            masm.setNextJump(j, prev);
+        }
+    }
     void jmp(Label *label) {
         if (label->bound()) {
             // The jump can be immediately patched to the correct destination.
@@ -145,8 +173,25 @@ class AssemblerX86Shared
         }
         label->bind(masm.label().offset());
     }
+
     void ret() {
         masm.ret();
+    }
+    void call(const Operand &op) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.call(op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.call_m(op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+
+    void breakpoint() {
+        masm.int3();
     }
 
     void cmpl(Imm32 imm, const Operand &op) {
@@ -270,17 +315,39 @@ class AssemblerX86Shared
         }
     }
 
+    void shll(const Imm32 imm, const Register &dest) {
+        masm.shll_i8r(imm.value, dest.code());
+    }
+
     void push(const Operand &src) {
         switch (src.kind()) {
           case Operand::REG:
             masm.push_r(src.reg());
             break;
           case Operand::REG_DISP:
-            masm.push_m(src.disp(), src.reg());
+            masm.push_m(src.disp(), src.base());
             break;
           default:
             JS_NOT_REACHED("unexepcted operand kind");
         }
+    }
+    void push(const Register &src) {
+        masm.push_r(src.code());
+    }
+    void pop(const Operand &src) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.pop_r(src.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.pop_m(src.disp(), src.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
+    void pop(const Register &src) {
+        masm.pop_r(src.code());
     }
 };
 
