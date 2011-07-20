@@ -42,8 +42,6 @@
  * from an add-on's remote update manifest.
  */
 
-"use strict";
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 

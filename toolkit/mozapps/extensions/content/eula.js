@@ -35,8 +35,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-"use strict";
-
 function Startup() {
   var bundle = document.getElementById("extensionsStrings");
   var addon = window.arguments[0].addon;
