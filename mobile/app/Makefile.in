@@ -88,7 +88,11 @@ include $(topsrcdir)/config/rules.mk
 
 GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+ifndef MOZ_BUILD_DATE
 APP_BUILDID = $(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid)
+else
+APP_BUILDID = $(MOZ_BUILD_DATE)
+endif
 APP_ICON = mobile
 APP_SPLASH = splash
 
