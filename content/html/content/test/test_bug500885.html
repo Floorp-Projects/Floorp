@@ -20,6 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
 <script type="text/javascript">
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function MockFilePicker() { };
