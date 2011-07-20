@@ -2324,7 +2324,6 @@ typedef struct JSDumpingTracer {
     JSTracer            base;
     JSDHashTable        visited;
     JSBool              ok;
-    JSCompartment       *comp;
     void                *startThing;
     void                *thingToFind;
     void                *thingToIgnore;
@@ -2368,10 +2367,6 @@ DumpNotify(JSTracer *trc, void *thing, uint32 kind)
          */
         if (thing == dtrc->startThing)
             return;
-
-        if (dtrc->comp && ((js::gc::Cell *) thing)->compartment() != dtrc->comp)
-            return;
-
         entry = (JSDHashEntryStub *)
             JS_DHashTableOperate(&dtrc->visited, thing, JS_DHASH_ADD);
         if (!entry) {
@@ -2489,8 +2484,6 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
     JSHeapDumpNode *node, *children, *next, *parent;
     size_t depth;
     JSBool thingToFindWasTraced;
-    JSCompartment *comp = startThing ? ((js::gc::Cell *) startThing)->compartment() : NULL;
-    startThing = NULL;
 
     if (maxDepth == 0)
         return JS_TRUE;
@@ -2503,7 +2496,6 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
         return JS_FALSE;
     }
     dtrc.ok = JS_TRUE;
-    dtrc.comp = comp;
     dtrc.startThing = startThing;
     dtrc.thingToFind = thingToFind;
     dtrc.thingToIgnore = thingToIgnore;
