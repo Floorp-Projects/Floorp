@@ -46,6 +46,7 @@
 
 #include "jsgcchunk.h"
 #include "nsIMemoryReporter.h"
+#include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
 
@@ -1266,7 +1267,7 @@ static XPConnectGCChunkAllocator gXPCJSChunkAllocator;
 #ifdef MOZ_MEMORY
 #define JS_GC_HEAP_KIND  nsIMemoryReporter::KIND_HEAP
 #else
-#define JS_GC_HEAP_KIND  nsIMemoryReporter::KIND_MAPPED
+#define JS_GC_HEAP_KIND  nsIMemoryReporter::KIND_NONHEAP
 #endif
 
 // We have per-compartment GC heap totals, so we can't put the total GC heap
@@ -1291,11 +1292,11 @@ GetJSStack()
 
 NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStack,
     "explicit/js/stack",
-    KIND_MAPPED,
+    KIND_NONHEAP,
     nsIMemoryReporter::UNITS_BYTES,
     GetJSStack,
     "Memory used for the JavaScript stack.  This is the committed portion "
-    "of the stack;  any uncommitted portion is not measured because it "
+    "of the stack; any uncommitted portion is not measured because it "
     "hardly costs anything.")
 
 class XPConnectJSCompartmentsMultiReporter : public nsIMemoryMultiReporter
@@ -1320,6 +1321,14 @@ private:
                         if ('/' == *cur) {
                             *cur = '\\';
                         }
+                    }
+                    // If it's the system compartment, append the address.
+                    // This means that multiple system compartments (and there
+                    // can be many) can be distinguished.
+                    if (c->isSystemCompartment) {
+                        static const int maxLength = 31;   // ample; 64-bit address max is 18 chars
+                        nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                        name.Append(address);
                     }
                 } else {
                     name = NS_LITERAL_CSTRING("null-codebase");
@@ -1622,7 +1631,7 @@ public:
 
 #ifdef JS_METHODJIT
             DO(mkPath(name, "mjit-code"),
-               nsIMemoryReporter::KIND_MAPPED, stats->mjitCode,
+               nsIMemoryReporter::KIND_NONHEAP, stats->mjitCode,
     "Memory used by the method JIT to hold generated code.");
 
             DO(mkPath(name, "mjit-data"),
@@ -1632,7 +1641,7 @@ public:
 #endif
 #ifdef JS_TRACER
             DO(mkPath(name, "tjit-code"),
-               nsIMemoryReporter::KIND_MAPPED, stats->tjitCode,
+               nsIMemoryReporter::KIND_NONHEAP, stats->tjitCode,
     "Memory used by the trace JIT to hold generated code.");
 
             DO(mkPath(name, "tjit-data/allocators-main"),
