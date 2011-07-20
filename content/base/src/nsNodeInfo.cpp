@@ -55,6 +55,8 @@
 #include NEW_H
 #include "nsFixedSizeAllocator.h"
 #include "prprf.h"
+#include "nsIDocument.h"
+#include "nsGkAtoms.h"
 
 static const size_t kNodeInfoPoolSizes[] = {
   sizeof(nsNodeInfo)
