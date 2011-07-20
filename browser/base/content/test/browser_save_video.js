@@ -20,12 +20,14 @@ function test() {
       return;
     gBrowser.removeEventListener("pageshow", pageShown);
 
-    document.addEventListener("popupshown", contextMenuOpened);
+    executeSoon(function () {
+      document.addEventListener("popupshown", contextMenuOpened);
 
-    var video1 = gBrowser.contentDocument.getElementById("video1");
-    EventUtils.synthesizeMouseAtCenter(video1,
-                                       { type: "contextmenu", button: 2 },
-                                       gBrowser.contentWindow);
+      var video1 = gBrowser.contentDocument.getElementById("video1");
+      EventUtils.synthesizeMouseAtCenter(video1,
+                                         { type: "contextmenu", button: 2 },
+                                         gBrowser.contentWindow);
+    });
   });
 
   function contextMenuOpened(event) {
