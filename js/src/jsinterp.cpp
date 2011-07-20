@@ -5994,18 +5994,18 @@ END_CASE(JSOP_ARRAYPUSH)
             }
 
             switch (st) {
-            case JSTRAP_ERROR:
+              case JSTRAP_ERROR:
                 cx->clearPendingException();
                 goto error;
-            case JSTRAP_RETURN:
+              case JSTRAP_RETURN:
                 cx->clearPendingException();
                 regs.fp()->setReturnValue(rval);
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
-            case JSTRAP_THROW:
+              case JSTRAP_THROW:
                 cx->setPendingException(rval);
-            case JSTRAP_CONTINUE:
-            default:;
+              case JSTRAP_CONTINUE:
+              default:;
             }
             CHECK_INTERRUPT_HANDLER();
         }

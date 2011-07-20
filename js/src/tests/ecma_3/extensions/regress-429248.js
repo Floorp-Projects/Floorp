@@ -54,8 +54,9 @@ function test()
  
   function c() { do{}while(0) }
 
-  if (typeof trap == 'function')
+  if (typeof trap == 'function' && typeof setDebug == 'function')
   {
+    setDebug(true);
     trap(c, 0, "");
   }
   c + '';
