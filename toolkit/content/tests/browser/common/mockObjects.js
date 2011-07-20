@@ -73,7 +73,7 @@ MockObjectRegisterer.prototype = {
     this._mockFactory = {
       createInstance: function MF_createInstance(aOuter, aIid) {
         if (aOuter != null)
-          throw Cr.NS_ERROR_NO_AGGREGATION;
+          throw Components.results.NS_ERROR_NO_AGGREGATION;
         return new providedConstructor().QueryInterface(aIid);
       }
     };
@@ -82,7 +82,7 @@ MockObjectRegisterer.prototype = {
       getService(Components.interfaces.nsIUUIDGenerator).generateUUID();
 
     // Preserve the original CID
-    var componentRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+    var componentRegistrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     this._originalCID = componentRegistrar.contractIDToCID(this._contractID);
 
     // Replace the original factory with the mock one.
@@ -100,7 +100,7 @@ MockObjectRegisterer.prototype = {
       throw new Exception("Invalid object state when calling unregister()");
 
     // Free references to the mock factory.
-    var componentRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+    var componentRegistrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     componentRegistrar.unregisterFactory(this._cid,
                                          this._mockFactory);
 
