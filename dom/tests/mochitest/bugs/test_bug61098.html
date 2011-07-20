@@ -33,6 +33,7 @@ function registerMockPromptService()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+  var Ci = Components.interfaces;
 
   function MockPrompt(aDOMWindow) {
     this.domWindow = aDOMWindow;
