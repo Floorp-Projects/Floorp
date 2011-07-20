@@ -62,6 +62,7 @@
 #endif
 #include "jsgcmark.h"
 #include "jsgcinlines.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -188,11 +189,22 @@ IonCode::finalize(JSContext *cx)
         pool_->release();
 }
 
+IonScript::IonScript()
+  : method_(NULL)
+{
+}
+
+IonScript *
+IonScript::New(JSContext *cx)
+{
+    return cx->new_<IonScript>();
+}
+
 void
 IonScript::trace(JSTracer *trc, JSScript *script)
 {
-    if (method)
-        MarkIonCode(trc, method, "method");
+    if (method_)
+        MarkIonCode(trc, method_, "method");
 }
 
 void
@@ -309,11 +321,10 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
     JS_ASSERT(ion::IsEnabled());
 
     if (script->ion) {
-        if (script->ion == ION_DISABLED_SCRIPT)
+        if (script->ion == ION_DISABLED_SCRIPT || !script->ion->method())
             return Method_CantCompile;
 
-        // This will be enabled once we can run code.
-        return Method_CantCompile;
+        return Method_Compiled;
     }
 
     if (!IonCompile(cx, script, fp)) {
@@ -321,16 +332,49 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
         return Method_CantCompile;
     }
 
-    // This will be enabled once we can run code.
-    return Method_CantCompile;
+    return Method_Compiled;
 }
 
 bool
-ion::FireMahLaser(JSContext *cx)
+ion::Cannon(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(ion::IsEnabled());
 
-    // This will be enabled once we run code.
-    return true;
+    EnterIonCode enterJIT = cx->compartment->ionCompartment()->enterJIT(cx);
+    if (!enterJIT)
+        return false;
+
+    int argc = 0;
+    Value *argv = NULL;
+
+    if (fp->isFunctionFrame()) {
+        argc = fp->fun()->nargs + 2;
+        argv = fp->formalArgs() - 2;
+    }
+
+    JSScript *script = fp->script();
+    IonScript *ion = script->ion;
+    IonCode *code = ion->method();
+    void *jitcode = code->raw();
+
+    FrameRegs &oldRegs = cx->regs();
+    cx->stack.repointRegs(NULL);
+
+    JSBool ok;
+    Value result;
+    {
+        AssertCompartmentUnchanged pcc(cx);
+        JSAutoResolveFlags rf(cx, RESOLVE_INFER);
+        ok = enterJIT(jitcode, argc, argv, &result);
+    }
+
+    cx->stack.repointRegs(&oldRegs);
+    JS_ASSERT(fp == cx->fp());
+
+    // The trampoline wrote the return value but did not set the HAS_RVAL flag.
+    fp->setReturnValue(result);
+    fp->markActivationObjectsAsPut();
+
+    return !!ok;
 }
 

@@ -117,7 +117,7 @@ IonContext *GetIonContext();
 bool SetIonContext(IonContext *ctx);
 
 MethodStatus Compile(JSContext *cx, JSScript *script, js::StackFrame *fp);
-bool FireMahLaser(JSContext *cx);
+bool Cannon(JSContext *cx, StackFrame *fp);
 
 static inline bool IsEnabled()
 {
