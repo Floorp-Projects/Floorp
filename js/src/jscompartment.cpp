@@ -73,9 +73,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcLastBytes(0),
     hold(false),
-#ifdef JS_ION
-    ionCompartment_(NULL),
-#endif
 #ifdef JS_TRACER
     traceMonitor_(NULL),
 #endif
@@ -98,6 +95,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     initialStringShape(NULL),
     debugMode(rt->debugMode),
     mathCache(NULL)
+#ifdef JS_ION
+    , ionCompartment_(NULL)
+#endif
 {
     JS_INIT_CLIST(&scripts);
 
