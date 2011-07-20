@@ -82,46 +82,56 @@ class Debugger {
     };
 
   private:
-    JSCList link;                       // See JSRuntime::debuggerList.
-    JSObject *object;                   // The Debugger object. Strong reference.
-    GlobalObjectSet debuggees;          // Debuggee globals. Cross-compartment weak references.
-    JSObject *uncaughtExceptionHook;    // Strong reference.
+    JSCList link;                       /* See JSRuntime::debuggerList. */
+    JSObject *object;                   /* The Debugger object. Strong reference. */
+    GlobalObjectSet debuggees;          /* Debuggee globals. Cross-compartment weak references. */
+    JSObject *uncaughtExceptionHook;    /* Strong reference. */
     bool enabled;
-    JSCList breakpoints;                // cyclic list of all js::Breakpoints in this debugger
+    JSCList breakpoints;                /* cyclic list of all js::Breakpoints in this debugger */
 
-    // Weak references to stack frames that are currently on the stack and thus
-    // necessarily alive. We drop them as soon as they leave the stack (see
-    // slowPathOnLeaveFrame) and in removeDebuggee.
+    /*
+     * Weak references to stack frames that are currently on the stack and thus
+     * necessarily alive. We drop them as soon as they leave the stack (see
+     * slowPathOnLeaveFrame) and in removeDebuggee.
+     */
     typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, RuntimeAllocPolicy>
         FrameMap;
     FrameMap frames;
 
-    // The map from debuggee objects to their Debugger.Object instances.
+    /* The map from debuggee objects to their Debugger.Object instances. */
     typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CrossCompartmentMarkPolicy>
         ObjectWeakMap;
     ObjectWeakMap objects;
 
-    // An ephemeral map from script-holding objects to Debugger.Script
-    // instances.
+    /* An ephemeral map from script-holding objects to Debugger.Script */
+    /*
+     * instances.
+     */
     typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CrossCompartmentMarkPolicy>
         ScriptWeakMap;
 
-    // Map of Debugger.Script instances for garbage-collected JSScripts. For
-    // function scripts, the key is the compiler-created, internal JSFunction;
-    // for scripts returned by JSAPI functions, the key is the "Script"-class
-    // JSObject.
+    /*
+     * Map of Debugger.Script instances for garbage-collected JSScripts. For
+     * function scripts, the key is the compiler-created, internal JSFunction;
+     * for scripts returned by JSAPI functions, the key is the "Script"-class
+     * JSObject.
+     */
     ScriptWeakMap heldScripts;
 
-    // An ordinary (non-ephemeral) map from JSScripts to Debugger.Script
-    // instances, for non-held scripts that are explicitly freed.
+    /*
+     * An ordinary (non-ephemeral) map from JSScripts to Debugger.Script
+     * instances, for non-held scripts that are explicitly freed.
+     */
     typedef HashMap<JSScript *, JSObject *, DefaultHasher<JSScript *>, RuntimeAllocPolicy>
         ScriptMap;
 
-    // Map from non-held JSScripts to their Debugger.Script objects. Non-held
-    // scripts are scripts created for eval or JS_Evaluate* calls that are
-    // explicitly destroyed when the call returns. Debugger.Script objects are
-    // not strong references to such JSScripts; the Debugger.Script becomes
-    // "dead" when the eval call returns.
+    /*
+     * Map from non-held JSScripts to their Debugger.Script objects. Non-held
+     * scripts are scripts created for eval or JS_Evaluate* calls that are
+     * explicitly destroyed when the call returns. Debugger.Script objects are
+     * not strong references to such JSScripts; the Debugger.Script becomes
+     * "dead" when the eval call returns.
+     */
     ScriptMap nonHeldScripts;
 
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
@@ -129,19 +139,20 @@ class Debugger {
                               GlobalObjectSet::Enum *compartmentEnum,
                               GlobalObjectSet::Enum *debugEnum);
 
-    // Cope with an error or exception in a debugger hook.
-    //
-    // If callHook is true, then call the uncaughtExceptionHook, if any. If
-    // additionally vp is non-null, then parse the value returned by
-    // uncaughtExceptionHook as a resumption value.
-    //
-    // If there is no uncaughtExceptionHook, or if it fails, report and clear
-    // the pending exception on ac.context and return JSTRAP_ERROR.
-    //
-    // This always calls ac.leave(); ac is a parameter because this method must
-    // do some things in the debugger compartment and some things in the
-    // debuggee compartment.
-    //
+    /*
+     * Cope with an error or exception in a debugger hook.
+     *
+     * If callHook is true, then call the uncaughtExceptionHook, if any. If
+     * additionally vp is non-null, then parse the value returned by
+     * uncaughtExceptionHook as a resumption value.
+     *
+     * If there is no uncaughtExceptionHook, or if it fails, report and clear
+     * the pending exception on ac.context and return JSTRAP_ERROR.
+     *
+     * This always calls ac.leave(); ac is a parameter because this method must
+     * do some things in the debugger compartment and some things in the
+     * debuggee compartment.
+     */
     JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
     JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
                                       bool callHook = true);
@@ -193,22 +204,26 @@ class Debugger {
     JSTrapStatus fireExceptionUnwind(JSContext *cx, Value *vp);
     void fireEnterFrame(JSContext *cx);
 
-    // Allocate and initialize a Debugger.Script instance whose referent is |script| and
-    // whose holder is |obj|. If |obj| is NULL, this creates a Debugger.Script whose holder
-    // is null, for non-held scripts.
+    /*
+     * Allocate and initialize a Debugger.Script instance whose referent is |script| and
+     * whose holder is |obj|. If |obj| is NULL, this creates a Debugger.Script whose holder
+     * is null, for non-held scripts.
+     */
     JSObject *newDebuggerScript(JSContext *cx, JSScript *script, JSObject *obj);
 
-    // Helper function for wrapFunctionScript and wrapJSAPIscript.
+    /* Helper function for wrapFunctionScript and wrapJSAPIscript. */
     JSObject *wrapHeldScript(JSContext *cx, JSScript *script, JSObject *obj);
 
-    // Receive a "new script" event from the engine. A new script was compiled
-    // or deserialized. If kind is NewHeldScript, obj is the holder
-    // object. Otherwise kind is NewNonHeldScript and obj is an arbitrary
-    // object in the same global as the scope in which the script is being
-    // evaluated.
+    /*
+     * Receive a "new script" event from the engine. A new script was compiled
+     * or deserialized. If kind is NewHeldScript, obj is the holder
+     * object. Otherwise kind is NewNonHeldScript and obj is an arbitrary
+     * object in the same global as the scope in which the script is being
+     * evaluated.
+     */
     void fireNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind);
 
-    // Remove script from our table of non-held scripts.
+    /* Remove script from our table of non-held scripts. */
     void destroyNonHeldScript(JSScript *script);
 
     static inline Debugger *fromLinks(JSCList *links);
@@ -225,20 +240,21 @@ class Debugger {
 
     /*********************************** Methods for interaction with the GC. */
 
-    // A Debugger object is live if:
-    //   * the Debugger JSObject is live (Debugger::trace handles this case); OR
-    //   * it is in the middle of dispatching an event (the event dispatching
-    //     code roots it in this case); OR
-    //   * it is enabled, and it is debugging at least one live compartment,
-    //     and at least one of the following is true:
-    //       - it has a debugger hook installed
-    //       - it has a breakpoint set on a live script
-    //       - it has a watchpoint set on a live object.
-    //
-    // The last case is handled by the mark() method. If it finds any Debugger
-    // objects that are definitely live but not yet marked, it marks them and
-    // returns true. If not, it returns false.
-    //
+    /*
+     * A Debugger object is live if:
+     *   * the Debugger JSObject is live (Debugger::trace handles this case); OR
+     *   * it is in the middle of dispatching an event (the event dispatching
+     *     code roots it in this case); OR
+     *   * it is enabled, and it is debugging at least one live compartment,
+     *     and at least one of the following is true:
+     *       - it has a debugger hook installed
+     *       - it has a breakpoint set on a live script
+     *       - it has a watchpoint set on a live object.
+     *
+     * The last case is handled by the mark() method. If it finds any Debugger
+     * objects that are definitely live but not yet marked, it marks them and
+     * returns true. If not, it returns false.
+     */
     static void markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer);
     static bool mark(GCMarker *trc, JSGCInvocationKind gckind);
     static void sweepAll(JSContext *cx);
@@ -261,63 +277,72 @@ class Debugger {
     inline bool observesScope(JSObject *obj) const;
     inline bool observesFrame(StackFrame *fp) const;
 
-    // Precondition: *vp is a value from a debuggee compartment and cx is in
-    // the debugger's compartment.
-    //
-    // Wrap *vp for the debugger compartment, wrap it in a Debugger.Object if it's
-    // an object, store the result in *vp, and return true.
-    //
+    /*
+     * Precondition: *vp is a value from a debuggee compartment and cx is in
+     * the debugger's compartment.
+     *
+     * Wrap *vp for the debugger compartment, wrap it in a Debugger.Object if it's
+     * an object, store the result in *vp, and return true.
+     */
     bool wrapDebuggeeValue(JSContext *cx, Value *vp);
 
-    // NOT the inverse of wrapDebuggeeValue.
-    //
-    // Precondition: cx is in the debugger compartment. *vp is a value in that
-    // compartment. (*vp is a "debuggee value", meaning it is the debugger's
-    // reflection of a value in the debuggee.)
-    //
-    // If *vp is a Debugger.Object, store the referent in *vp. Otherwise, if *vp
-    // is an object, throw a TypeError, because it is not a debuggee
-    // value. Otherwise *vp is a primitive, so leave it alone.
-    //
-    // The value is not rewrapped for any debuggee compartment.
-    //
+    /*
+     * NOT the inverse of wrapDebuggeeValue.
+     *
+     * Precondition: cx is in the debugger compartment. *vp is a value in that
+     * compartment. (*vp is a "debuggee value", meaning it is the debugger's
+     * reflection of a value in the debuggee.)
+     *
+     * If *vp is a Debugger.Object, store the referent in *vp. Otherwise, if *vp
+     * is an object, throw a TypeError, because it is not a debuggee
+     * value. Otherwise *vp is a primitive, so leave it alone.
+     *
+     * The value is not rewrapped for any debuggee compartment.
+     */
     bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
 
-    // Store the Debugger.Frame object for the frame fp in *vp.
+    /* Store the Debugger.Frame object for the frame fp in *vp. */
     bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
 
-    // Precondition: we are in the debuggee compartment (ac is entered) and ok
-    // is true if the operation in the debuggee compartment succeeded, false on
-    // error or exception.
-    //
-    // Postcondition: we are in the debugger compartment (ac is not entered)
-    // whether creating the new completion value succeeded or not.
-    //
-    // On success, a completion value is in vp and ac.context does not have a
-    // pending exception. (This ordinarily returns true even if the ok argument
-    // is false.)
-    //
+    /*
+     * Precondition: we are in the debuggee compartment (ac is entered) and ok
+     * is true if the operation in the debuggee compartment succeeded, false on
+     * error or exception.
+     *
+     * Postcondition: we are in the debugger compartment (ac is not entered)
+     * whether creating the new completion value succeeded or not.
+     *
+     * On success, a completion value is in vp and ac.context does not have a
+     * pending exception. (This ordinarily returns true even if the ok argument
+     * is false.)
+     */
     bool newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
 
-    // Return the Debugger.Script object for |fun|'s script, or create a new
-    // one if needed.  The context |cx| must be in the debugger compartment;
-    // |fun| must be a cross-compartment wrapper referring to the JSFunction in
-    // a debuggee compartment.
+    /*
+     * Return the Debugger.Script object for |fun|'s script, or create a new
+     * one if needed.  The context |cx| must be in the debugger compartment;
+     * |fun| must be a cross-compartment wrapper referring to the JSFunction in
+     * a debuggee compartment.
+     */
     JSObject *wrapFunctionScript(JSContext *cx, JSFunction *fun);
 
-    // Return the Debugger.Script object for the Script object |obj|'s
-    // JSScript, or create a new one if needed. The context |cx| must be in the
-    // debugger compartment; |obj| must be a cross-compartment wrapper
-    // referring to a script object in a debuggee compartment.
+    /*
+     * Return the Debugger.Script object for the Script object |obj|'s
+     * JSScript, or create a new one if needed. The context |cx| must be in the
+     * debugger compartment; |obj| must be a cross-compartment wrapper
+     * referring to a script object in a debuggee compartment.
+     */
     JSObject *wrapJSAPIScript(JSContext *cx, JSObject *scriptObj);
 
-    // Return the Debugger.Script object for the non-held script |script|, or
-    // create a new one if needed. The context |cx| must be in the debugger
-    // compartment; |script| must be a script in a debuggee compartment.
+    /*
+     * Return the Debugger.Script object for the non-held script |script|, or
+     * create a new one if needed. The context |cx| must be in the debugger
+     * compartment; |script| must be a script in a debuggee compartment.
+     */
     JSObject *wrapNonHeldScript(JSContext *cx, JSScript *script);
 
   private:
-    // Prohibit copying.
+    /* Prohibit copying. */
     Debugger(const Debugger &);
     Debugger & operator=(const Debugger &);
 };
@@ -333,14 +358,16 @@ class BreakpointSite {
     const JSOp realOpcode;
 
   private:
-    // The holder object for script, if known, else NULL.  This is NULL for
-    // non-held scripts and for JSD1 traps. It is always non-null for JSD2
-    // breakpoints in held scripts.
+    /*
+     * The holder object for script, if known, else NULL.  This is NULL for
+     * non-held scripts and for JSD1 traps. It is always non-null for JSD2
+     * breakpoints in held scripts.
+     */
     JSObject *scriptObject;
 
-    JSCList breakpoints;  // cyclic list of all js::Breakpoints at this instruction
-    size_t enabledCount;  // number of breakpoints in the list that are enabled
-    JSTrapHandler trapHandler;  // jsdbgapi trap state
+    JSCList breakpoints;  /* cyclic list of all js::Breakpoints at this instruction */
+    size_t enabledCount;  /* number of breakpoints in the list that are enabled */
+    JSTrapHandler trapHandler;  /* jsdbgapi trap state */
     Value trapClosure;
 
     bool recompile(JSContext *cx, bool forTrap);
