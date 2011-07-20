@@ -105,6 +105,7 @@
 
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
