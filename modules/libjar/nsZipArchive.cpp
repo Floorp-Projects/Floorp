@@ -65,7 +65,6 @@
 #if defined(XP_WIN)
 #include <windows.h>
 #endif
-#include "mozilla/Telemetry.h"
 
 /**
  * Global allocator used with zlib. Destroyed in module shutdown.
@@ -1081,7 +1080,6 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName
   nsZipCursor cursor(item, aZip, mAutoBuf, size, doCRC);
   mReturnBuf = cursor.Read(&mReadlen);
   if (!mReturnBuf) {
-    Telemetry::Accumulate(Telemetry::ZIPARCHIVE_CRC, false);
     return;
   }
 
@@ -1090,6 +1088,4 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName
     mReturnBuf = nsnull;
     return;
   }
-
-  Telemetry::Accumulate(Telemetry::ZIPARCHIVE_CRC, true);
 }
