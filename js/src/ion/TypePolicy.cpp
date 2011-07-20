@@ -85,7 +85,7 @@ BinaryArithPolicy::respecialize(MInstruction *ins)
     // Check if any input would coerce to a double.
     if (CoercesToDouble(lhs->type()) || CoercesToDouble(rhs->type())) {
         if (ins->type() != MIRType_Double) {
-            ins->setResultType(MIRType_Int32);
+            ins->setResultType(MIRType_Double);
             return true;
         }
     }
@@ -102,7 +102,7 @@ BinaryArithPolicy::adjustInputs(MInstruction *ins)
     JS_ASSERT(ins->type() == MIRType_Double || ins->type() == MIRType_Int32);
 
     for (size_t i = 0; i < 2; i++) {
-        MDefinition *in = ins->getOperand(0);
+        MDefinition *in = ins->getOperand(i);
         if (in->type() == ins->type())
             continue;
 
