@@ -99,22 +99,31 @@ interface nsIMemoryReporter : nsISupports
   /*
    * There are three categories of memory reporters:
    *
-   *  - MAPPED: memory allocated directly by the OS, e.g. by calling mmap,
-   *    VirtualAlloc, or vm_allocate.  Reporters in this category must have
-   *    units UNITS_BYTES and must have a path starting with "explicit".
-   *
    *  - HEAP: memory allocated by the heap allocator, e.g. by calling malloc,
    *    calloc, realloc, memalign, operator new, or operator new[].  Reporters
    *    in this category must have units UNITS_BYTES and must have a path
    *    starting with "explicit".
+
+   *  - NONHEAP: memory which the program explicitly allocated, but does not
+   *    live on the heap.  Such memory is commonly allocated by calling one of
+   *    the OS's memory-mapping functions (e.g. mmap, VirtualAlloc, or
+   *    vm_allocate).  Reporters in this category must have units UNITS_BYTES
+   *    and must have a path starting with "explicit".
    *
    *  - OTHER: reporters which don't fit into either of these categories. Such
    *    reporters must have a path that does not start with "explicit" and may
    *    have any units.
    */
-  const PRInt32 KIND_MAPPED = 0;
-  const PRInt32 KIND_HEAP   = 1;
-  const PRInt32 KIND_OTHER  = 2;
+  const PRInt32 KIND_NONHEAP = 0;
+  const PRInt32 KIND_HEAP    = 1;
+  const PRInt32 KIND_OTHER   = 2;
+
+  /*
+   * KIND_MAPPED is a deprecated synonym for KIND_NONHEAP.  We keep it around
+   * to as not to break extensions which might use this interface, but we will
+   * remove it eventually.
+   */
+  const PRInt32 KIND_MAPPED  = 0;
 
   /*
    * The reporter kind.  See KIND_* above.

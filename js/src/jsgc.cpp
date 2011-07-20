@@ -2450,6 +2450,9 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
 #endif
+
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        js::CheckCompartmentScripts(*c);
 }
 
 #ifdef JS_THREADSAFE

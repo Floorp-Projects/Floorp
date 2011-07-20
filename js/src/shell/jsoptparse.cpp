@@ -165,7 +165,7 @@ OptionFlagsToFormatInfo(char shortflag, bool isValued, size_t *length)
                                   "  -%c --%s=%s ",
                                   "  --%s=%s " };
 
-    // How mny chars w/o longflag?
+    /* How mny chars w/o longflag? */
     size_t lengths[4] = { strlen(fmt[0]) - 3,
                           strlen(fmt[1]) - 3,
                           strlen(fmt[2]) - 5,

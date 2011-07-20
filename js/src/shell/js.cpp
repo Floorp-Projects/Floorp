@@ -5700,7 +5700,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
                         &js::jitstats_class, NULL, 0);
 #endif
     }
-
+    
     if (op->getBoolOption('p')) {
         enableProfiling = true;
         JS_ToggleOptions(cx, JSOPTION_PROFILING);
