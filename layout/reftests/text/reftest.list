@@ -98,3 +98,5 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 == auto-hyphenation-5.html auto-hyphenation-5-ref.html
 == auto-hyphenation-6.html auto-hyphenation-6-ref.html
 == auto-hyphenation-7.html auto-hyphenation-7-ref.html
+== auto-hyphenation-sv-1.html auto-hyphenation-sv-1-ref.html # test swedish patterns
+!= auto-hyphenation-sv-1.html auto-hyphenation-sv-1-notref.html # verify swedish != english
