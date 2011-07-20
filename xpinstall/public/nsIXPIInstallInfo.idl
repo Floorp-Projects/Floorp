@@ -40,7 +40,7 @@
 
 [ptr] native triggerInfoPtr(nsXPITriggerInfo);
 
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsIDocShell;
 interface nsIURI;
 
@@ -59,7 +59,7 @@ interface nsIXPIInstallInfo : nsISupports
   /**
    * The original window that initiated the install.
    */
-  readonly attribute nsIDOMWindowInternal originatingWindow;
+  readonly attribute nsIDOMWindow originatingWindow;
   
   /**
    * The original URI calling the install. This is the URI that would have been

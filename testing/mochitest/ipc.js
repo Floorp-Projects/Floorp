@@ -45,16 +45,6 @@ function ipcEvent(e) {
     var data = JSON.parse(e.getData("data"));
 
     switch(type) {
-    case 'LoggerInit':
-      MozillaFileLogger.init(data.filename);
-      break;
-    case 'Logger':
-      var logger = MozillaFileLogger.getLogCallback();
-      logger({"num":data.num, "level":data.level, "info": Array(data.info)});
-      break;
-    case 'LoggerClose':
-      MozillaFileLogger.close();
-      break;
     case 'waitForFocus':
       if (content)
         var wrapper = content.wrappedJSObject.frames[0].SimpleTest;

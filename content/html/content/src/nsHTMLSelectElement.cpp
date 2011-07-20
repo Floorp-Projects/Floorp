@@ -1504,24 +1504,15 @@ nsHTMLSelectElement::GetAttributeMappingFunction() const
 nsresult
 nsHTMLSelectElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  aVisitor.mCanHandle = PR_FALSE;
-  // Do not process any DOM events if the element is disabled
-  // XXXsmaug This is not the right thing to do. But what is?
-  if (IsDisabled()) {
-    return NS_OK;
-  }
-
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
   nsIFrame* formFrame = nsnull;
+  if (formControlFrame) {
+    formFrame = do_QueryFrame(formControlFrame);
+  }
 
-  if (formControlFrame &&
-      (formFrame = do_QueryFrame(formControlFrame))) {
-    const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
-
-    if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
-      return NS_OK;
-    }
+  aVisitor.mCanHandle = PR_FALSE;
+  if (IsElementDisabledForEvents(aVisitor.mEvent->message, formFrame)) {
+    return NS_OK;
   }
 
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);

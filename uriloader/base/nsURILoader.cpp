@@ -66,7 +66,6 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsReadableUtils.h"
 #include "nsDOMError.h"
 

@@ -36,16 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsBarProps.h"
+
 #include "nsCOMPtr.h"
 #include "nscore.h"
-#include "nsBarProps.h"
 #include "nsGlobalWindow.h"
 #include "nsStyleConsts.h"
 #include "nsIDocShell.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollable.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsDOMClassInfo.h"
 
 //

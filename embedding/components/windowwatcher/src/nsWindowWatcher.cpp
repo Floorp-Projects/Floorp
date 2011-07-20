@@ -57,7 +57,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMModalContentWindow.h"
 #include "nsIPrompt.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -1778,8 +1777,7 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
   nsCOMPtr<nsPIDOMWindow> piOpenedWindow(do_GetInterface(aOpenedItem));
   if (piOpenedWindow) {
     if (aParent) {
-      nsCOMPtr<nsIDOMWindowInternal> internalParent(do_QueryInterface(aParent));
-      piOpenedWindow->SetOpenerWindow(internalParent, aWindowIsNew); // damnit
+      piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
 
       if (aWindowIsNew) {
 #ifdef DEBUG

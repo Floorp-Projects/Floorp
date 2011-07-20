@@ -64,7 +64,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIIOService.h"
 #include "nsIJARProtocolHandler.h"
 #include "nsIObserverService.h"
@@ -351,7 +351,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
 // theme stuff
 
 
-static void FlushSkinBindingsForWindow(nsIDOMWindowInternal* aWindow)
+static void FlushSkinBindingsForWindow(nsIDOMWindow* aWindow)
 {
   // Get the DOM document.
   nsCOMPtr<nsIDOMDocument> domDocument;
@@ -383,7 +383,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     nsCOMPtr<nsISupports> protoWindow;
     windowEnumerator->GetNext(getter_AddRefs(protoWindow));
     if (protoWindow) {
-      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(protoWindow);
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(protoWindow);
       if (domWindow)
         FlushSkinBindingsForWindow(domWindow);
     }
@@ -398,7 +398,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     nsCOMPtr<nsISupports> protoWindow;
     windowEnumerator->GetNext(getter_AddRefs(protoWindow));
     if (protoWindow) {
-      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(protoWindow);
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(protoWindow);
       if (domWindow)
         RefreshWindow(domWindow);
     }
@@ -428,7 +428,7 @@ static PRBool IsChromeURI(nsIURI* aURI)
 }
 
 // XXXbsmedberg: move this to windowmediator
-nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
+nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 {
   // Deal with our subframes first.
   nsCOMPtr<nsIDOMWindowCollection> frames;
@@ -439,8 +439,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   for (j = 0; j < length; j++) {
     nsCOMPtr<nsIDOMWindow> childWin;
     frames->Item(j, getter_AddRefs(childWin));
-    nsCOMPtr<nsIDOMWindowInternal> childInt(do_QueryInterface(childWin));
-    RefreshWindow(childInt);
+    RefreshWindow(childWin);
   }
 
   nsresult rv;
@@ -568,8 +567,7 @@ nsChromeRegistry::ReloadChrome()
         nsCOMPtr<nsISupports> protoWindow;
         rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
         if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIDOMWindowInternal> domWindow =
-            do_QueryInterface(protoWindow);
+          nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(protoWindow);
           if (domWindow) {
             nsCOMPtr<nsIDOMLocation> location;
             domWindow->GetLocation(getter_AddRefs(location));

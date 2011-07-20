@@ -41,14 +41,14 @@
 #include "nsISupports.idl"
 
 interface nsIDOMHTMLFormElement;
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsIURI;
 interface nsIArray;
 
-[scriptable, uuid(0b3cc84d-25d2-448e-ae71-746ee6e41c2d)]
+[scriptable, uuid(534ab795-6a99-4195-bfab-cfdd7836657d)]
 interface nsIFormSubmitObserver: nsISupports
 {
-  void notify(in nsIDOMHTMLFormElement formNode, in nsIDOMWindowInternal window, in nsIURI actionURL, out boolean cancelSubmit);
+  void notify(in nsIDOMHTMLFormElement formNode, in nsIDOMWindow window, in nsIURI actionURL, out boolean cancelSubmit);
 
   void notifyInvalidSubmit(in nsIDOMHTMLFormElement formNode,
                            in nsIArray invalidElements);
