@@ -39,10 +39,7 @@ function test1() {
     ok(!contentWindow.ThumbnailStorage._shouldSaveThumbnail(newTab), 
        "Should not save the thumbnail for tab");
 
-    tabItem.addSubscriber(tabItem, "deniedToCacheImageData", function() {
-      tabItem.removeSubscriber(tabItem, "deniedToCacheImageData");
-      test2();
-    });
+    whenDeniedToCacheImageData(tabItem, test2);
     tabItem.save(true);
     HttpRequestObserver.cacheControlValue = null;
   });
@@ -59,10 +56,7 @@ function test2() {
     ok(contentWindow.ThumbnailStorage._shouldSaveThumbnail(newTab), 
        "Should save the thumbnail for tab");
 
-    tabItem.addSubscriber(tabItem, "savedCachedImageData", function() {
-      tabItem.removeSubscriber(tabItem, "savedCachedImageData");
-      test3();
-    });
+    whenSavedCachedImageData(tabItem, test3);
     tabItem.save(true);
   });
 }
@@ -82,11 +76,7 @@ function test3() {
     ok(contentWindow.ThumbnailStorage._shouldSaveThumbnail(newTab),
        "Should save the thumbnail for tab");
 
-    tabItem.addSubscriber(tabItem, "savedCachedImageData", function() {
-      tabItem.removeSubscriber(tabItem, "savedCachedImageData");
-
-      test4();
-    });
+    whenSavedCachedImageData(tabItem, test4);
     tabItem.save(true);
   });
 }
@@ -104,11 +94,7 @@ function test4() {
     ok(contentWindow.ThumbnailStorage._shouldSaveThumbnail(newTab),
        "Should save the thumbnail for tab");
 
-    tabItem.addSubscriber(tabItem, "savedCachedImageData", function() {
-      tabItem.removeSubscriber(tabItem, "savedCachedImageData");
-
-      test5();
-    });
+    whenSavedCachedImageData(tabItem, test5);
     tabItem.save(true);
   });
 }
@@ -124,9 +110,7 @@ function test5() {
     ok(!contentWindow.ThumbnailStorage._shouldSaveThumbnail(newTab),
        "Should not the thumbnail for tab");
 
-    tabItem.addSubscriber(tabItem, "deniedToCacheImageData", function() {
-      tabItem.removeSubscriber(tabItem, "deniedToCacheImageData");
-
+    whenDeniedToCacheImageData(tabItem, function () {
       hideTabView(function () {
         gBrowser.removeTab(gBrowser.tabs[1]);
         finish();
@@ -154,3 +138,17 @@ let HttpRequestObserver = {
     Services.obs.removeObserver(this, "http-on-examine-response");
   }
 };
+
+function whenSavedCachedImageData(tabItem, callback) {
+  tabItem.addSubscriber("savedCachedImageData", function onSaved() {
+    tabItem.removeSubscriber("savedCachedImageData", onSaved);
+    callback();
+  });
+}
+
+function whenDeniedToCacheImageData(tabItem, callback) {
+  tabItem.addSubscriber("deniedToCacheImageData", function onDenied() {
+    tabItem.removeSubscriber("deniedToCacheImageData", onDenied);
+    callback();
+  });
+}

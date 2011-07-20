@@ -54,10 +54,23 @@ write_func(void *closure, const unsigned char *data, unsigned int length)
     return CAIRO_STATUS_SUCCESS;
 }
 
-gfxPSSurface::gfxPSSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPoints)
-    : mStream(aStream), mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
+gfxPSSurface::gfxPSSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPoints, PageOrientation aOrientation)
+    : mStream(aStream), mXDPI(-1), mYDPI(-1), mOrientation(aOrientation)
 {
-    cairo_surface_t* ps_surface = cairo_ps_surface_create_for_stream(write_func, (void*)mStream, mSize.width, mSize.height);
+    mSize = gfxIntSize(aSizeInPoints.width, aSizeInPoints.height);
+
+    // The PS output does not specify the page size so to print
+    // landscape we need to rotate the drawing 90 degrees and print on
+    // portrait paper. If printing landscape, swap the width/height
+    // supplied to cairo to select a portrait print area. gfxContext
+    // will perform the rotation when GetRotateForLandscape() is TRUE.
+    gfxIntSize cairoSize;
+    if (mOrientation == PORTRAIT) {
+        cairoSize = mSize;
+    } else {
+        cairoSize = gfxIntSize(mSize.height, mSize.width);
+    }
+    cairo_surface_t* ps_surface = cairo_ps_surface_create_for_stream(write_func, (void*)mStream, cairoSize.width, cairoSize.height);
     cairo_ps_surface_restrict_to_level(ps_surface, CAIRO_PS_LEVEL_2);
     Init(ps_surface);
 }
@@ -69,6 +82,11 @@ gfxPSSurface::~gfxPSSurface()
 nsresult
 gfxPSSurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
 {
+    if (mOrientation == PORTRAIT) {
+      cairo_ps_surface_dsc_comment (mSurface, "%%Orientation: Portrait");
+    } else {
+      cairo_ps_surface_dsc_comment (mSurface, "%%Orientation: Landscape");
+    }
     return NS_OK;
 }
 

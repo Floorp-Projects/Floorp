@@ -57,8 +57,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>&certerror.pagetitle;</title>
-    <link rel="stylesheet" href="chrome://browser/skin/aboutCertError.css" type="text/css" media="all" />
-    <link rel="stylesheet" href="chrome://browser/content/aboutCertError.css" type="text/css" media="all" />
+    <meta name="viewport" content="width=device-width; user-scalable=false" /> 
+    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
     <!-- This page currently uses the same favicon as neterror.xhtml.
          If the location of the favicon is changed for both pages, the
          FAVICON_ERRORPAGE_URL symbol in toolkit/components/places/src/nsFaviconService.h
@@ -218,28 +218,27 @@
       function toggle(id) {
         var el = document.getElementById(id);
         if (el.getAttribute("collapsed"))
-          el.removeAttribute("collapsed");
+          el.setAttribute("collapsed", false);
         else
           el.setAttribute("collapsed", true);
       }
     ]]></script>
   </head>
 
-  <body dir="&locale.dir;">
+  <body id="errorPage" class="certerror" dir="&locale.dir;">
+
+   <!-- Error Title -->
+   <div id="errorTitle">
+     <h1 class="errorTitleText">&certerror.longpagetitle;</h1>
+   </div>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer">
-    
-      <!-- Error Title -->
-      <div id="errorTitle">
-        <h1 id="errorTitleText">&certerror.longpagetitle;</h1>
-      </div>
-      
+
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
       <div id="errorLongContent">
         <div id="introContent">
           <p id="introContentP1">&certerror.introPara1;</p>
-          <p>&certerror.introPara2;</p>
         </div>
         
         <div id="whatShouldIDoContent">

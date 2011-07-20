@@ -169,31 +169,29 @@ void nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame*  aNewGroup,
                                         nsTableRowGroupFrame*& aPrevGroup)
 {
   nsCellMap* newMap = new nsCellMap(aNewGroup, mBCInfo != nsnull);
-  if (newMap) {
-    nsCellMap* prevMap = nsnull;
-    nsCellMap* lastMap = mFirstMap;
-    if (aPrevGroup) {
-      nsCellMap* map = mFirstMap;
-      while (map) {
-        lastMap = map;
-        if (map->GetRowGroup() == aPrevGroup) {
-          prevMap = map;
-          break;
-        }
-        map = map->GetNextSibling();
+  nsCellMap* prevMap = nsnull;
+  nsCellMap* lastMap = mFirstMap;
+  if (aPrevGroup) {
+    nsCellMap* map = mFirstMap;
+    while (map) {
+      lastMap = map;
+      if (map->GetRowGroup() == aPrevGroup) {
+        prevMap = map;
+        break;
       }
+      map = map->GetNextSibling();
     }
-    if (!prevMap) {
-      if (aPrevGroup) {
-        prevMap = lastMap;
-        aPrevGroup = (prevMap) ? prevMap->GetRowGroup() : nsnull;
-      }
-      else {
-        aPrevGroup = nsnull;
-      }
-    }
-    InsertGroupCellMap(prevMap, *newMap);
   }
+  if (!prevMap) {
+    if (aPrevGroup) {
+      prevMap = lastMap;
+      aPrevGroup = (prevMap) ? prevMap->GetRowGroup() : nsnull;
+    }
+    else {
+      aPrevGroup = nsnull;
+    }
+  }
+  InsertGroupCellMap(prevMap, *newMap);
 }
 
 void nsTableCellMap::RemoveGroupCellMap(nsTableRowGroupFrame* aGroup)
@@ -1177,14 +1175,11 @@ nsCellMap::~nsCellMap()
 }
 
 /* static */
-nsresult
+void
 nsCellMap::Init()
 {
-  NS_ASSERTION(!sEmptyRow, "How did that happen?");
+  NS_ABORT_IF_FALSE(!sEmptyRow, "How did that happen?");
   sEmptyRow = new nsCellMap::CellDataArray();
-  NS_ENSURE_TRUE(sEmptyRow, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
 }
 
 /* static */

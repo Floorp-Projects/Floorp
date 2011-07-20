@@ -507,7 +507,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToNumber(cx, tvr.value(), dp);
+    return ToNumber(cx, tvr.value(), dp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -666,7 +666,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     }
 
-    atomsCompartment->systemGCChunks = true;
+    atomsCompartment->isSystemCompartment = true;
     atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
 
     if (!js_InitAtomState(this))
@@ -695,8 +695,6 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     if (!InitRuntimeNumberState(this))
         return false;
-    if (!InitRuntimeScriptState(this))
-        return false;
 
     return true;
 }
@@ -724,7 +722,6 @@ JSRuntime::~JSRuntime()
     FinishJIT();
 #endif
 
-    FreeRuntimeScriptState(this);
     FinishRuntimeNumberState(this);
     js_FinishThreads(this);
     js_FinishAtomState(this);
@@ -1526,6 +1523,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
      */
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
+
     assertSameCompartment(cx, obj);
 
     return obj->asGlobal()->initStandardClasses(cx);
@@ -4598,8 +4596,9 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 
     /* Read in the whole file, then compile it. */
     if (fp == stdin) {
-        JS_ASSERT(len == 0);
-        len = 8;  /* start with a small buffer, expand as necessary */
+        if (len == 0)
+            len = 8;  /* start with a small buffer, expand as necessary */
+
         int c;
         bool hitEOF = false;
         while (!hitEOF) {
@@ -4626,7 +4625,9 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             return NULL;
 
         int c;
-        while ((c = fast_getc(fp)) != EOF)
+        // The |i < len| is necessary for files that lie about their length,
+        // e.g. /dev/zero and /dev/random.  See bug 669434.
+        while (i < len && (c = fast_getc(fp)) != EOF)
             buf[i++] = (jschar) (unsigned char) c;
     }
 

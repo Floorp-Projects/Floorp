@@ -2875,6 +2875,20 @@ nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
   return PR_TRUE;
 }
 
+PRBool 
+nsGenericHTMLFormElement::IsElementDisabledForEvents(PRUint32 aMessage, 
+                                                    nsIFrame* aFrame)
+{
+  PRBool disabled = IsDisabled();
+  if (!disabled && aFrame) {
+    const nsStyleUserInterface* uiStyle = aFrame->GetStyleUserInterface();
+    disabled = uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+      uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
+
+  }
+  return disabled && aMessage != NS_MOUSE_MOVE;
+}
+
 void
 nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
                                           Element* aFormIdElement)
