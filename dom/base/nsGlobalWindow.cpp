@@ -242,7 +242,6 @@
 #include "mozAutoDocUpdate.h"
 
 #include "mozilla/Telemetry.h"
-#include "nsLocation.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
