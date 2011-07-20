@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads RegExp statics
+-->
+<head>
+  <title>Test for DOM Worker Threads RegExp statics</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  const WORKER_COUNT = 25;
+
+  var doneWorkers = 0;
+  function onmessage(event) {
+    if (++doneWorkers == WORKER_COUNT) {
+      ok(true, "All messages received from workers");
+      SimpleTest.finish();
+    }
+  }
+
+  function onerror(event) {
+    ok(false, "Worker had an error: " + event.data);
+    SimpleTest.finish();
+  };
+
+  for (var i = 0; i < WORKER_COUNT; i++) {
+    var worker = new Worker("regExpStatics_worker.js");
+    worker.onmessage = onmessage;
+    worker.onerror = onerror;
+    worker.postMessage("start");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

@@ -86,6 +86,8 @@ nsSystemPrincipal::Release()
 // Methods implementing nsIPrincipal //
 ///////////////////////////////////////
 
+#define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
+
 NS_IMETHODIMP
 nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
                                   char** aSubjectName,
@@ -195,7 +197,7 @@ nsSystemPrincipal::GetURI(nsIURI** aURI)
 NS_IMETHODIMP 
 nsSystemPrincipal::GetOrigin(char** aOrigin)
 {
-    *aOrigin = ToNewCString(NS_LITERAL_CSTRING("[System Principal]"));
+    *aOrigin = ToNewCString(NS_LITERAL_CSTRING(SYSTEM_PRINCIPAL_SPEC));
     return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -307,11 +309,6 @@ nsSystemPrincipal::Write(nsIObjectOutputStream* aStream)
 nsSystemPrincipal::nsSystemPrincipal()
 {
 }
-
-// Don't rename the system principal!
-// The JS engine (NewCompartment) relies on this name. 
-// XXX: bug 669123 will fix this hack.
-#define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
 
 nsresult
 nsSystemPrincipal::Init(JSPrincipals **jsprin)

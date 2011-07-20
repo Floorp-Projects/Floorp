@@ -45,8 +45,8 @@ class nsIRadioVisitor;
 class nsIFormControl;
 
 #define NS_IRADIOGROUPCONTAINER_IID   \
-{ 0x06de7839, 0xd0db, 0x47d3, \
-  { 0x82, 0x90, 0x3c, 0xb8, 0x62, 0x2e, 0xd9, 0x66 } }
+{ 0x22924a01, 0x4360, 0x401b, \
+  { 0xb1, 0xd1, 0x56, 0x8d, 0xf5, 0xa3, 0xda, 0x71 } }
 
 /**
  * A container that has multiple radio groups in it, defined by name.
@@ -132,19 +132,6 @@ public:
   NS_IMETHOD GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
                                 PRInt32 *aPositionIndex,
                                 PRInt32 *aItemsInGroup) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioGroupContainer,
-                              NS_IRADIOGROUPCONTAINER_IID)
-
-#define NS_IRADIOGROUPCONTAINER_MOZILLA_2_0_BRANCH_IID \
-{ 0xaa9ec446, 0xcdc7, 0x4030, \
-  { 0xab, 0x02, 0xda, 0x44, 0xee, 0xb1, 0x80, 0x0a } }
-
-class nsIRadioGroupContainer_MOZILLA_2_0_BRANCH : public nsIRadioGroupContainer
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRADIOGROUPCONTAINER_MOZILLA_2_0_IID)
 
   virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const = 0;
   virtual void RadioRequiredChanged(const nsAString& aName,
@@ -153,7 +140,7 @@ public:
   virtual void SetValueMissingState(const nsAString& aName, bool aValue) = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
-                              NS_IRADIOGROUPCONTAINER_MOZILLA_2_0_BRANCH_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioGroupContainer,
+                              NS_IRADIOGROUPCONTAINER_IID)
 
 #endif /* nsIRadioGroupContainer_h__ */

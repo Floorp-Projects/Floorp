@@ -97,11 +97,6 @@ pref("dom.indexedDB.enabled", true);
 // Space to allow indexedDB databases before prompting (in MB).
 pref("dom.indexedDB.warningQuota", 50);
 
-// Whether or not Web Workers are enabled.
-pref("dom.workers.enabled", true);
-// The number of workers per domain allowed to run concurrently.
-pref("dom.workers.maxPerDomain", 20);
-
 // Whether window.performance is enabled
 pref("dom.enable_performance", true);
 

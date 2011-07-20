@@ -655,11 +655,6 @@ protected:
      * @param aURI the URI of the overlay that failed to load
      */
     void ReportMissingOverlay(nsIURI* aURI);
-    
-#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
-    // timing
-    nsTime mLoadStart;
-#endif
 
     class CachedChromeStreamListener : public nsIStreamListener {
     protected:
