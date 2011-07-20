@@ -40,13 +40,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "assembler/assembler/MacroAssembler.h"
-#include "assembler/assembler/LinkBuffer.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"
 
 using namespace js::ion;
 using namespace JSC;
 
+/* This method generates a trampoline on x86 for a c++ function with
+ * the following signature:
+ *   void blah(void *code, int argc, Value *argv, Value *vp)
+ *   ...using standard cdecl calling convention
+ */
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
