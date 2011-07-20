@@ -14854,10 +14854,10 @@ TraceRecorder::record_JSOP_MOREITER()
     LIns* cond_ins;
 
     /*
-     * JSOP_FOR* already guards on this, but in certain rare cases we might
+     * JSOP_ITERNEXT already guards on this, but in certain rare cases we might
      * record misformed loop traces. Note that it's not necessary to guard on
-     * ni->flags (nor do we in unboxNextValue), because the different
-     * iteration type will guarantee a different entry typemap.
+     * ni->flags (nor do we in unboxNextValue), because the different iteration
+     * type will guarantee a different entry typemap.
      */
     if (iterobj->hasClass(&js_IteratorClass)) {
         guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
@@ -14891,6 +14891,16 @@ TraceRecorder::record_JSOP_MOREITER()
     // See the comment in DeepBail about "clobbering deep bails".
     stack(-1, iterobj_ins);
 
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_ITERNEXT()
+{
+    LIns* v_ins;
+    Value &iterobj_val = stackval(-GET_INT8(cx->regs().pc));
+    CHECK_STATUS_A(unboxNextValue(iterobj_val, v_ins));
+    stack(0, v_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -14943,9 +14953,8 @@ TraceRecorder::storeMagic(JSWhyMagic why, Address addr)
 #endif
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::unboxNextValue(LIns* &v_ins)
+TraceRecorder::unboxNextValue(Value &iterobj_val, LIns* &v_ins)
 {
-    Value &iterobj_val = stackval(-1);
     JSObject *iterobj = &iterobj_val.toObject();
     LIns* iterobj_ins = get(&iterobj_val);
 
@@ -15001,60 +15010,6 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
     v_ins = unbox_value(cx->iterValue, iterValueAddr, snapshot(BRANCH_EXIT));
     storeMagic(JS_NO_ITER_VALUE, iterValueAddr);
 
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORNAME()
-{
-    Value* vp;
-    LIns* x_ins;
-    NameResult nr;
-    CHECK_STATUS_A(name(vp, x_ins, nr));
-    if (!nr.tracked)
-        RETURN_STOP_A("forname on non-tracked value not supported");
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    set(vp, v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORGNAME()
-{
-    return record_JSOP_FORNAME();
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORPROP()
-{
-    return ARECORD_STOP;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORELEM()
-{
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    stack(0, v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORARG()
-{
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    arg(GET_ARGNO(cx->regs().pc), v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORLOCAL()
-{
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    var(GET_SLOTNO(cx->regs().pc), v_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -15176,13 +15131,25 @@ TraceRecorder::record_JSOP_BINDNAME()
     if (!fp->isFunctionFrame()) {
         obj = &fp->scopeChain();
 
+#ifdef DEBUG
+        StackFrame *fp2 = fp;
+#endif
+
         /*
          * In global code, fp->scopeChain can only contain blocks whose values
          * are still on the stack.  We never use BINDNAME to refer to these.
          */
         while (obj->isBlock()) {
             // The block's values are still on the stack.
-            JS_ASSERT(obj->getPrivate() == fp);
+#ifdef DEBUG
+            // NB: fp2 can't be a generator frame, because !fp->hasFunction.
+            while (obj->getPrivate() != fp2) {
+                JS_ASSERT(fp2->isEvalFrame());
+                fp2 = fp2->prev();
+                if (!fp2)
+                    JS_NOT_REACHED("bad stack frame");
+            }
+#endif
             obj = obj->getParent();
             // Blocks always have parents.
             JS_ASSERT(obj);

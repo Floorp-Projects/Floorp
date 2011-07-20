@@ -105,11 +105,14 @@ JS_BEGIN_EXTERN_C
  * TOK_WHILE    binary      pn_left: cond, pn_right: body
  * TOK_DO       binary      pn_left: body, pn_right: cond
  * TOK_FOR      binary      pn_left: either
- *                            for/in loop: a binary TOK_IN node with
- *                              pn_left:  TOK_VAR or TOK_NAME to left of 'in'
- *                                if TOK_VAR, its pn_xflags may have PNX_POPVAR
+ *                            for/in loop: a ternary TOK_IN node with
+ *                              pn_kid1:  TOK_VAR to left of 'in', or NULL
+ *                                its pn_xflags may have PNX_POPVAR
  *                                and PNX_FORINVAR bits set
- *                              pn_right: object expr to right of 'in'
+ *                              pn_kid2: TOK_NAME or destructuring expr
+ *                                to left of 'in'; if pn_kid1, then this
+ *                                is a clone of pn_kid1->pn_head
+ *                              pn_kid3: object expr to right of 'in'
  *                            for(;;) loop: a ternary TOK_RESERVED node with
  *                              pn_kid1:  init expr before first ';'
  *                              pn_kid2:  cond expr before second ';'
@@ -461,10 +464,15 @@ protected:
     }
 
     static JSParseNode *create(JSParseNodeArity arity, JSTreeContext *tc);
+    static JSParseNode *create(JSParseNodeArity arity, js::TokenKind type, JSOp op,
+                               const js::TokenPos &pos, JSTreeContext *tc);
 
 public:
     static JSParseNode *newBinaryOrAppend(js::TokenKind tt, JSOp op, JSParseNode *left,
                                           JSParseNode *right, JSTreeContext *tc);
+
+    static JSParseNode *newTernary(js::TokenKind tt, JSOp op, JSParseNode *kid1, JSParseNode *kid2,
+                                   JSParseNode *kid3, JSTreeContext *tc);
 
     /*
      * The pn_expr and lexdef members are arms of an unsafe union. Unless you
@@ -705,12 +713,38 @@ struct UnaryNode : public JSParseNode {
 };
 
 struct BinaryNode : public JSParseNode {
+    static inline BinaryNode *create(TokenKind type, JSOp op, const TokenPos &pos,
+                                     JSParseNode *left, JSParseNode *right,
+                                     JSTreeContext *tc) {
+        BinaryNode *pn = (BinaryNode *) JSParseNode::create(PN_BINARY, type, op, pos, tc);
+        if (pn) {
+            pn->pn_left = left;
+            pn->pn_right = right;
+        }
+        return pn;
+    }
+
     static inline BinaryNode *create(JSTreeContext *tc) {
         return (BinaryNode *)JSParseNode::create(PN_BINARY, tc);
     }
 };
 
 struct TernaryNode : public JSParseNode {
+    static inline TernaryNode *create(TokenKind type, JSOp op,
+                                      JSParseNode *kid1, JSParseNode *kid2, JSParseNode *kid3,
+                                      JSTreeContext *tc) {
+        TokenPos pos;
+        pos.begin = (kid1 ? kid1 : kid2)->pn_pos.begin;
+        pos.end = kid3->pn_pos.end;
+        TernaryNode *pn = (TernaryNode *) JSParseNode::create(PN_TERNARY, type, op, pos, tc);
+        if (pn) {
+            pn->pn_kid1 = kid1;
+            pn->pn_kid2 = kid2;
+            pn->pn_kid3 = kid3;
+        }
+        return pn;
+    }
+
     static inline TernaryNode *create(JSTreeContext *tc) {
         return (TernaryNode *)JSParseNode::create(PN_TERNARY, tc);
     }
@@ -1236,6 +1270,8 @@ private:
     JSParseNode *xmlElementOrList(JSBool allowList);
     JSParseNode *xmlElementOrListRoot(JSBool allowList);
 #endif /* JS_HAS_XML_SUPPORT */
+
+    bool setAssignmentLhsOps(JSParseNode *pn, JSOp op);
 };
 
 inline bool

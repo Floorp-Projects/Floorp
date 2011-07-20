@@ -660,7 +660,10 @@ nsWSRunObject::AdjustWhitespace()
   // this routine examines a run of ws and tries to get rid of some unneeded nbsp's,
   // replacing them with regualr ascii space if possible.  Keeping things simple
   // for now and just trying to fix up the trailing ws in the run.
-  NS_ENSURE_TRUE(mLastNBSPNode, NS_OK); // nothing to do!
+  if (!mLastNBSPNode) {
+    // nothing to do!
+    return NS_OK;
+  }
   nsresult res = NS_OK;
   WSFragment *curRun = mStartRun;
   while (curRun)

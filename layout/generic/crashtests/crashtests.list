@@ -334,6 +334,7 @@ load 570289-1.html
 load 571618-1.svg
 asserts(1) load 571975-1.html # bug 574889
 load 574958.xhtml
+asserts(0-4) load 578977.html # bug 610331
 load 580504-1.xhtml
 load 585598-1.xhtml
 asserts(0-11) load 586806-1.html # Bug 439258
@@ -365,4 +366,5 @@ load text-overflow-iframe.html
 load text-overflow-bug666751-1.html
 load text-overflow-bug666751-2.html
 asserts(2) load text-overflow-bug670564.xhtml # asserts(2) for bug 436470
+load text-overflow-bug671796.xhtml
 load 667025.html
