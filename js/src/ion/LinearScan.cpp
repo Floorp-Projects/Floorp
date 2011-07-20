@@ -402,8 +402,7 @@ LinearScanAllocator::buildLivenessInfo()
             {
                 if (alloc->isUse()) {
                     LUse *use = alloc->toUse();
-                    if (use->policy() != LUse::KEEPALIVE)
-                        vregs[use].addUse(LOperand(use, *ins));
+                    vregs[use].addUse(LOperand(use, *ins));
 
                     if (ins->id() == block->firstId()) {
                         vregs[use].getInterval(0)->addRange(inputOf(*ins), inputOf(*ins));
@@ -490,7 +489,6 @@ LinearScanAllocator::allocateRegisters()
         // Shift active intervals to the inactive or handled sets as appropriate
         for (IntervalIterator i(active.begin()); i != active.end(); ) {
             LiveInterval *it = *i;
-            JS_ASSERT(it->getAllocation()->isGeneralReg());
             JS_ASSERT(it->numRanges() > 0);
 
             if (it->end() < position) {
@@ -507,7 +505,6 @@ LinearScanAllocator::allocateRegisters()
         // Shift inactive intervals to the active or handled sets as appropriate
         for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
             LiveInterval *it = *i;
-            JS_ASSERT(it->getAllocation()->isGeneralReg());
             JS_ASSERT(it->numRanges() > 0);
 
             if (it->end() < position) {
@@ -738,81 +735,96 @@ LinearScanAllocator::resolveControlFlow()
 bool
 LinearScanAllocator::reifyAllocations()
 {
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        LBlock *block = graph.getBlock(i);
+    // Enqueue all handled intervals for reification
+    JS_ASSERT(inactive.empty());
+    for (IntervalIterator i(active.begin()); i != active.end(); ) {
+        LiveInterval *interval = *i;
+        i = active.removeAt(i);
+        unhandled.enqueue(interval);
+    }
+    for (IntervalIterator i(handled.begin()); i != handled.end(); ) {
+        LiveInterval *interval = *i;
+        i = handled.removeAt(i);
+        unhandled.enqueue(interval);
+    }
 
-        // Erase all operand, temp, and def LUses using computed intervals
-        for (LInstructionIterator ins(block->begin()); ins != block->end(); ins++) {
-            JS_ASSERT(ins->id());
+    // Handle each interval in sequence
+    uint32 last = 1;
+    RegisterSet freeRegs(RegisterSet::All());
+    LiveInterval *interval;
+    while ((interval = unhandled.dequeue()) != NULL) {
+        VirtualRegister *reg = interval->reg();
 
-            IonSpew(IonSpew_LSRA, " Visiting instruction %u", ins->id());
+        IonSpew(IonSpew_LSRA, " Reifying interval %u = [%u,%u]", reg->reg(), interval->start(),
+                interval->end());
 
-            // Erase operands
-            for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
-                if (alloc->isUse()) {
-                    VirtualRegister *vreg = &vregs[*alloc];
-                    LiveInterval *interval = vreg->intervalFor(inputOf(ins->id()));
-                    if (!interval) {
-                        IonSpew(IonSpew_LSRA, "  WARNING: Unsuccessful time travel attempt: "
-                                "Use of %d in %d", vreg->reg(), ins->id());
-                        continue;
-                    }
-                    LAllocation *newAlloc = interval->getAllocation();
-                    JS_ASSERT(!newAlloc->isUse());
-                    alloc.replace(*newAlloc);
-                }
-            }
+        // Set free registers on all moves up to this point
+        for (uint32 i = last; i <= interval->start().ins(); i++) {
+            if (vregs[i].inputMoves())
+                vregs[i].inputMoves()->setFreeRegisters(freeRegs);
+            if (vregs[i].outputMoves())
+                vregs[i].outputMoves()->setFreeRegisters(freeRegs);
+        }
+        last = interval->start().ins() + 1;
 
-            // Erase temporaries
-            for (size_t j = 0; j < ins->numTemps(); j++) {
-                LDefinition *def = ins->getTemp(j);
-                VirtualRegister *vreg = &vregs[def];
-                LiveInterval *interval = vreg->intervalFor(outputOf(ins->id()));
-                JS_ASSERT(interval);
-                LAllocation *alloc = interval->getAllocation();
-                JS_ASSERT(!alloc->isUse());
-                def->setOutput(*alloc);
-            }
-
-            // Erase definitions
-            for (size_t j = 0; j < ins->numDefs(); j++) {
-                LDefinition *def = ins->getDef(j);
-                VirtualRegister *vreg = &vregs[def];
-                LiveInterval *interval = vreg->intervalFor(outputOf(ins->id()));
-                JS_ASSERT(interval);
-                LAllocation *alloc = interval->getAllocation();
-                JS_ASSERT(!alloc->isUse());
-
-                // Populate move groups with moves associated with this definition
-                if (def->policy() != LDefinition::REDEFINED) {
-                    for (size_t k = 1; k < vreg->numIntervals(); k++)  {
-                        LiveInterval *from = vreg->getInterval(k - 1);
-                        LiveInterval *to = vreg->getInterval(k);
-                        if (!moveBefore(to->start(), from, to))
-                            return false;
-                    }
-                }
-
-                def->setOutput(*alloc);
-            }
-
-            // Insert move groups
-            if (vregs[*ins].inputMoves()) {
-                IonSpew(IonSpew_LSRA, "  Inserting %d moves for input",
-                        vregs[*ins].inputMoves()->numMoves());
-                block->insertBefore(*ins, vregs[*ins].inputMoves());
-            }
-            if (vregs[*ins].outputMoves()) {
-                IonSpew(IonSpew_LSRA, "  Inserting %d moves for output",
-                        vregs[*ins].outputMoves()->numMoves());
-                block->insertBefore(*ins, vregs[*ins].outputMoves());
+        // Bookkeeping for active intervals
+        for (IntervalIterator i(active.begin()); i != active.end(); ) {
+            if (i->end() < interval->start()) {
+                if (i->getAllocation()->isRegister())
+                    freeRegs.add(i->getAllocation()->toRegister());
+                i = active.removeAt(i);
+            } else if (i->covers(interval->start())) {
+                i++;
+            } else {
+                if (i->getAllocation()->isRegister())
+                    freeRegs.add(i->getAllocation()->toRegister());
+                LiveInterval *save = *i;
+                i = active.removeAt(i);
+                inactive.insert(save);
             }
         }
+        for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
+            if (i->end() < interval->start()) {
+                i = active.removeAt(i);
+                if (i->getAllocation()->isRegister())
+                    freeRegs.add(i->getAllocation()->toRegister());
+            } else if (i->covers(interval->start())) {
+                if (i->getAllocation()->isRegister())
+                    freeRegs.take(i->getAllocation()->toRegister());
+                LiveInterval *save = *i;
+                i = inactive.removeAt(i);
+                active.insert(save);
+            } else {
+                i++;
+            }
+        }
+        active.insert(interval);
+        if (interval->getAllocation()->isRegister())
+            freeRegs.take(interval->getAllocation()->toRegister());
 
-        // Throw away the now useless phis
-        while (block->numPhis())
-            block->removePhi(0);
+        // Erase all uses of this interval
+        for (size_t i = 0; i < reg->numUses(); i++) {
+            LOperand *use = reg->getUse(i);
+            LAllocation *alloc = use->use;
+            CodePosition pos = inputOf(use->ins);
+            if (interval->covers(pos))
+                *alloc = *interval->getAllocation();
+        }
+
+        if (interval->index() == 0) {
+            // Erase the def of this interval if it's the first one
+            reg->def()->setOutput(*interval->getAllocation());
+        } else {
+            // Insert moves for this interval otherwise
+            LiveInterval *from = reg->getInterval(interval->index() - 1);
+            if (!moveBefore(interval->start(), from, interval))
+                return false;
+        }
     }
+
+    // Strip phis out
+    for (size_t i = 0; i < graph.numBlocks(); i++)
+        graph.getBlock(i)->clearPhis();
 
     // Set the graph overall stack height
     graph.setStackHeight(stackAssignment.stackHeight());
@@ -834,7 +846,7 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     VirtualRegister *reg = interval->reg();
 
     // Do the split
-    LiveInterval *newInterval = new LiveInterval(reg);
+    LiveInterval *newInterval = new LiveInterval(reg, interval->index() + 1);
     if (!interval->splitFrom(pos, newInterval))
         return false;
 
@@ -942,10 +954,7 @@ LinearScanAllocator::assign(LAllocation allocation)
         }
     }
 
-    if (allocation.isGeneralReg())
-        active.insert(current);
-    else
-        finishInterval(current);
+    active.insert(current);
 
     return true;
 }
@@ -1000,16 +1009,20 @@ LinearScanAllocator::findBestFreeRegister()
             freeUntilPos[i] = CodePosition::MIN;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        Register reg = i->getAllocation()->toGeneralReg()->reg();
-        freeUntilPos[reg.code()] = CodePosition::MIN;
-        IonSpew(IonSpew_LSRA, "   Register %u not free", reg.code());
+        if (i->getAllocation()->isGeneralReg()) {
+            Register reg = i->getAllocation()->toGeneralReg()->reg();
+            freeUntilPos[reg.code()] = CodePosition::MIN;
+            IonSpew(IonSpew_LSRA, "   Register %u not free", reg.code());
+        }
     }
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
-        Register reg = i->getAllocation()->toGeneralReg()->reg();
-        CodePosition pos = current->intersect(*i);
-        if (pos != CodePosition::MIN && pos < freeUntilPos[reg.code()]) {
-            freeUntilPos[reg.code()] = pos;
-            IonSpew(IonSpew_LSRA, "   Register %u free until %u", reg.code(), pos.pos());
+        if (i->getAllocation()->isGeneralReg()) {
+            Register reg = i->getAllocation()->toGeneralReg()->reg();
+            CodePosition pos = current->intersect(*i);
+            if (pos != CodePosition::MIN && pos < freeUntilPos[reg.code()]) {
+                freeUntilPos[reg.code()] = pos;
+                IonSpew(IonSpew_LSRA, "   Register %u free until %u", reg.code(), pos.pos());
+            }
         }
     }
 
@@ -1044,24 +1057,28 @@ LinearScanAllocator::findBestBlockedRegister()
             nextUsePos[i] = CodePosition::MIN;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        Register reg = i->getAllocation()->toGeneralReg()->reg();
-        CodePosition nextUse = i->reg()->nextUseAfter(current->start());
-        IonSpew(IonSpew_LSRA, "   Register %u next used %u", reg.code(), nextUse.pos());
+        if (i->getAllocation()->isGeneralReg()) {
+            Register reg = i->getAllocation()->toGeneralReg()->reg();
+            CodePosition nextUse = i->reg()->nextUseAfter(current->start());
+            IonSpew(IonSpew_LSRA, "   Register %u next used %u", reg.code(), nextUse.pos());
 
-        if (i->start() == current->start()) {
-            IonSpew(IonSpew_LSRA, "    Disqualifying due to recency.");
-            nextUsePos[reg.code()] = current->start();
-        } else {
-            nextUsePos[reg.code()] = nextUse;
+            if (i->start() == current->start()) {
+                IonSpew(IonSpew_LSRA, "    Disqualifying due to recency.");
+                nextUsePos[reg.code()] = current->start();
+            } else {
+                nextUsePos[reg.code()] = nextUse;
+            }
         }
     }
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
-        Register reg = i->getAllocation()->toGeneralReg()->reg();
-        CodePosition pos = i->reg()->nextUseAfter(current->start());
-        JS_ASSERT(i->covers(pos) || i->end() == pos);
-        if (pos < nextUsePos[reg.code()]) {
-            nextUsePos[reg.code()] = pos;
-            IonSpew(IonSpew_LSRA, "   Register %u next used %u", reg.code(), pos.pos());
+        if (i->getAllocation()->isGeneralReg()) {
+            Register reg = i->getAllocation()->toGeneralReg()->reg();
+            CodePosition pos = i->reg()->nextUseAfter(current->start());
+            JS_ASSERT(i->covers(pos) || i->end() == pos);
+            if (pos < nextUsePos[reg.code()]) {
+                nextUsePos[reg.code()] = pos;
+                IonSpew(IonSpew_LSRA, "   Register %u next used %u", reg.code(), pos.pos());
+            }
         }
     }
 
@@ -1108,29 +1125,30 @@ LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
     LMoveGroup *moves;
     switch (pos.subpos()) {
       case CodePosition::INPUT:
-        if (vreg->inputMoves()) {
-            moves = vreg->inputMoves();
-        } else {
-            moves = new LMoveGroup;
-            moves->setFreeRegisters(freeRegs);
-            vreg->setInputMoves(moves);
-        }
-        break;
+        if (vreg->inputMoves())
+            return vreg->inputMoves();
+
+        moves = new LMoveGroup;
+        vreg->setInputMoves(moves);
+        if (vreg->outputMoves())
+            vreg->block()->insertBefore(vreg->outputMoves(), moves);
+        else
+            vreg->block()->insertBefore(vreg->ins(), moves);
+        return moves;
+
       case CodePosition::OUTPUT:
-        if (vreg->outputMoves()) {
-            moves = vreg->outputMoves();
-        } else {
-            moves = new LMoveGroup;
-            moves->setFreeRegisters(freeRegs);
-            vreg->setOutputMoves(moves);
-        }
-        break;
+        if (vreg->outputMoves())
+            return vreg->outputMoves();
+
+        moves = new LMoveGroup;
+        vreg->setOutputMoves(moves);
+        vreg->block()->insertBefore(vreg->ins(), moves);
+        return moves;
+
       default:
         JS_NOT_REACHED("Unknown subposition");
         return NULL;
     }
-
-    return moves;
 }
 
 bool
@@ -1151,7 +1169,6 @@ void
 LinearScanAllocator::validateIntervals()
 {
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        JS_ASSERT(i->getAllocation()->isGeneralReg());
         JS_ASSERT(i->numRanges() > 0);
         JS_ASSERT(i->covers(current->start()));
 
@@ -1160,7 +1177,6 @@ LinearScanAllocator::validateIntervals()
     }
 
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
-        JS_ASSERT(i->getAllocation()->isGeneralReg());
         JS_ASSERT(i->numRanges() > 0);
         JS_ASSERT(i->end() >= current->start());
         JS_ASSERT(!i->covers(current->start()));
@@ -1200,6 +1216,15 @@ LinearScanAllocator::validateAllocations()
             JS_ASSERT(*i != *j);
             JS_ASSERT(canCoexist(*i, *j));
         }
+        bool found = false;
+        for (size_t j = 0; j < i->reg()->numIntervals(); j++) {
+            if (i->reg()->getInterval(j) == *i) {
+                JS_ASSERT(j == i->index());
+                found = true;
+                break;
+            }
+        }
+        JS_ASSERT(found);
     }
 }
 #endif
