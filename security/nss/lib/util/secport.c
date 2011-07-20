@@ -180,6 +180,10 @@ PORT_SetError(int value)
 #ifdef DEBUG_jp96085
     PORT_Assert(value != SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
 #endif
+    if (value == SEC_ERROR_NO_MEMORY &&
+        PR_GetEnv("NSS_DEBUG_SEC_ERROR_NO_MEMORY")) {
+        PR_Assert("SEC_ERROR_NO_MEMORY: attach minidump to bug 662557", __FILE__, __LINE__);
+    }
     PR_SetError(value, 0);
     return;
 }
