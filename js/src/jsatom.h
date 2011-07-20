@@ -115,7 +115,7 @@ struct DefaultHasher<jsid>
     typedef jsid Lookup;
     static HashNumber hash(const Lookup &l) {
         JS_ASSERT(l == js_CheckForStringIndex(l));
-        return JSID_BITS(l);
+        return HashNumber(JSID_BITS(l));
     }
     static bool match(const jsid &id, const Lookup &l) {
         JS_ASSERT(l == js_CheckForStringIndex(l));
