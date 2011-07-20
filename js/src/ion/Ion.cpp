@@ -142,18 +142,30 @@ IonCompartment::IonCompartment()
 bool
 IonCompartment::initialize(JSContext *cx)
 {
-    execAlloc_ = new JSC::ExecutableAllocator();
-    enterJIT_ = generateEnterJIT(cx);
-
-    if (!enterJIT_)
+    execAlloc_ = js::OffTheBooks::new_<JSC::ExecutableAllocator>();
+    if (!execAlloc_)
         return false;
 
     return true;
 }
 
+void
+IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
+{
+    if (compartment->active && enterJIT_)
+        MarkIonCode(trc, enterJIT_, "enterJIT");
+}
+
+void
+IonCompartment::sweep(JSContext *cx)
+{
+    if (enterJIT_ && IsAboutToBeFinalized(cx, enterJIT_))
+        enterJIT_ = NULL;
+}
+
 IonCompartment::~IonCompartment()
 {
-    delete execAlloc_;
+    Foreground::delete_(execAlloc_);
 }
 
 IonCode *
