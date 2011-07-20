@@ -159,11 +159,23 @@ const DO_NOT_FINISH_TEST = 1;
  *     // Checker object interface:
  *     //
  *     // var checker = {
- *     //   type getter: function() {}, // DOM or a11y event type
- *     //   target getter: function() {}, // DOM node or accessible
- *     //   phase getter: function() {}, // DOM event phase (false - bubbling)
+ *     //   * DOM or a11y event type. *
+ *     //   type getter: function() {},
+ *     //
+ *     //   * DOM node or accessible. *
+ *     //   target getter: function() {},
+ *     //
+ *     //   * DOM event phase (false - bubbling). *
+ *     //   phase getter: function() {},
+ *     //
+ *     //   * Callback, called when event is handled
  *     //   check: function(aEvent) {},
- *     //   getID: function() {}
+ *     //
+ *     //   * Checker ID *
+ *     //   getID: function() {},
+ *     //
+ *     //   * Event that don't have predefined order relative other events. *
+ *     //   async getter: function() {}
  *     // };
  *     eventSeq getter() {},
  *
@@ -327,10 +339,11 @@ function eventQueue(aEventType)
     if ("debugCheck" in invoker)
       invoker.debugCheck(aEvent);
 
-    // Search through handled expected events if one of them was handled again.
+    // Search through handled expected events to report error if one of them is
+    // handled for a second time.
     var idx = 0;
     for (; idx < this.mEventSeq.length; idx++) {
-      if (!this.isEventUnexpected(idx) && (invoker.wasCaught[idx] == true) &&
+      if (this.isEventExpected(idx) && (invoker.wasCaught[idx] == true) &&
           this.isAlreadyCaught(idx, aEvent)) {
 
         var msg = "Doubled event { event type: " +
@@ -341,52 +354,85 @@ function eventQueue(aEventType)
       }
     }
 
-    // Search through unexpected events to ensure no one of them was handled.
+    // Search through unexpected events, any matches result in error report
+    // after this invoker processing.
     for (idx = 0; idx < this.mEventSeq.length; idx++) {
       if (this.isEventUnexpected(idx) && this.compareEvents(idx, aEvent))
         invoker.wasCaught[idx] = true;
     }
 
-    // We've handled all expected events, next invoker processing is pending.
-    if (this.mEventSeqIdx == this.mEventSeq.length)
+    // Nothing left, proceed next invoker in timeout. Otherwise check if
+    // handled event is matched.
+    var idxObj = {};
+    if (!this.prepareForExpectedEvent(invoker, idxObj))
       return;
 
-    // Compute next expected event index.
-    for (idx = this.mEventSeqIdx + 1;
-         idx < this.mEventSeq.length && this.mEventSeq[idx].unexpected;
-         idx++);
-
-    // No expected events were registered, proceed to next invoker to ensure
-    // unexpected events for current invoker won't be handled.
-    if (idx == this.mEventSeq.length) {
-      this.mEventSeqIdx = idx;
-      this.processNextInvokerInTimeout();
-      return;
+    // Check if handled event matches expected sync event.
+    var matched = false;
+    idx = idxObj.value;
+    if (idx < this.mEventSeq.length) {
+      matched = this.compareEvents(idx, aEvent);
+      if (matched)
+        this.mEventSeqIdx = idx;
     }
 
-    // Check if handled event matches expected event.
-    var matched = this.compareEvents(idx, aEvent);
+    // Check if handled event matches any expected async events.
+    if (!matched) {
+      for (idx = 0; idx < this.mEventSeq.length; idx++) {
+        if (this.mEventSeq[idx].async) {
+          matched = this.compareEvents(idx, aEvent);
+          if (matched)
+            break;
+        }
+      }
+    }
     this.dumpEventToDOM(aEvent, idx, matched);
 
     if (matched) {
       this.checkEvent(idx, aEvent);
       invoker.wasCaught[idx] = true;
-      this.mEventSeqIdx = idx;
 
-      // Get next expected event index.
-      while (++idx < this.mEventSeq.length && this.mEventSeq[idx].unexpected);
-
-      // If the last expected event was processed, proceed next invoker in
-      // timeout to ensure unexpected events for current invoker won't be
-      // handled.
-      if (idx == this.mEventSeq.length) {
-        this.mEventSeqIdx = idx;
-        this.processNextInvokerInTimeout();
-      }
+      this.prepareForExpectedEvent(invoker);
     }
   }
 
   // Helpers
+  this.prepareForExpectedEvent =
+    function eventQueue_prepareForExpectedEvent(aInvoker, aIdxObj)
+  {
+    // Nothing left, wait for next invoker.
+    if (this.mEventSeqFinished)
+      return false;
+
+    // Compute next expected sync event index.
+    for (var idx = this.mEventSeqIdx + 1;
+         idx < this.mEventSeq.length &&
+         (this.mEventSeq[idx].unexpected || this.mEventSeq[idx].async);
+         idx++);
+
+    // If no expected events were left, proceed to next invoker in timeout
+    // to make sure unexpected events for current invoker aren't be handled.
+    if (idx == this.mEventSeq.length) {
+      var allHandled = true;
+      for (var jdx = 0; jdx < this.mEventSeq.length; jdx++) {
+        if (this.isEventExpected(jdx) && !aInvoker.wasCaught[jdx])
+          allHandled = false;
+      }
+
+      if (allHandled) {
+        this.mEventSeqIdx = this.mEventSeq.length;
+        this.mEventFinished = true;
+        this.processNextInvokerInTimeout();
+        return false;
+      }
+    }
+
+    if (aIdxObj)
+      aIdxObj.value = idx;
+
+    return true;
+  }
+
   this.getInvoker = function eventQueue_getInvoker()
   {
     return this.mInvokers[this.mIndex];
@@ -405,18 +451,24 @@ function eventQueue(aEventType)
       aInvoker.eventSeq :
       [ new invokerChecker(this.mDefEventType, aInvoker.DOMNode) ];
 
-    for (var idx = 0; idx < this.mEventSeq.length; idx++)
+    for (var idx = 0; idx < this.mEventSeq.length; idx++) {
       this.mEventSeq[idx].unexpected = false;
+      if (!("async" in this.mEventSeq[idx]))
+        this.mEventSeq[idx].async = false;
+    }
 
     var unexpectedSeq = aInvoker.unexpectedEventSeq;
     if (unexpectedSeq) {
-      for (var idx = 0; idx < unexpectedSeq.length; idx++)
+      for (var idx = 0; idx < unexpectedSeq.length; idx++) {
         unexpectedSeq[idx].unexpected = true;
+        unexpectedSeq[idx].async = false;
+      }
 
       this.mEventSeq = this.mEventSeq.concat(unexpectedSeq);
     }
 
     this.mEventSeqIdx = -1;
+    this.mEventSeqFinished = false;
 
     // Register event listeners
     if (this.mEventSeq) {
@@ -517,6 +569,10 @@ function eventQueue(aEventType)
   {
     return this.mEventSeq[aIdx].unexpected;
   }
+  this.isEventExpected = function eventQueue_isEventExpected(aIdx)
+  {
+    return !this.mEventSeq[aIdx].unexpected;
+  }
 
   this.compareEvents = function eventQueue_compareEvents(aIdx, aEvent)
   {
@@ -598,20 +654,17 @@ function eventQueue(aEventType)
       gLogger.logToDOM(info);
     }
 
-    var currType = this.getEventTypeAsString(aExpectedEventIdx);
-    var currTarget = this.getEventTarget(aExpectedEventIdx);
+    if (!aMatch)
+      return;
 
     var msg = "EQ: ";
-    var emphText = "";
-    if (aMatch) {
-      emphText = "matched ";
+    var emphText = "matched ";
 
-      var consoleMsg = "*****\nEQ matched: " + currType + "\n*****";
-      gLogger.logToConsole(consoleMsg);
+    var currType = this.getEventTypeAsString(aExpectedEventIdx);
+    var currTarget = this.getEventTarget(aExpectedEventIdx);
+    var consoleMsg = "*****\nEQ matched: " + currType + "\n*****";
+    gLogger.logToConsole(consoleMsg);
 
-    } else {
-      msg += "expected";
-    }
     msg += " event, type: " + currType + ", target: " + prettyName(currTarget);
 
     gLogger.logToDOM(msg, true, emphText);
@@ -624,6 +677,7 @@ function eventQueue(aEventType)
 
   this.mEventSeq = null;
   this.mEventSeqIdx = -1;
+  this.mEventSeqFinished = false;
 }
 
 
@@ -896,9 +950,10 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq, aEventType)
 /**
  * Common invoker checker (see eventSeq of eventQueue).
  */
-function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
+function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg, aIsAsync)
 {
   this.type = aEventType;
+  this.async = aIsAsync;
 
   this.__defineGetter__("target", invokerChecker_targetGetter);
   this.__defineSetter__("target", invokerChecker_targetSetter);
@@ -930,6 +985,15 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
 
   this.mTarget = aTargetOrFunc;
   this.mTargetFuncArg = aTargetFuncArg;
+}
+
+/**
+ * Common invoker checker for async events.
+ */
+function asyncInvokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
+{
+  this.__proto__ = new invokerChecker(aEventType, aTargetOrFunc,
+                                      aTargetFuncArg, true);
 }
 
 /**

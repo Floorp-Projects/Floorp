@@ -1017,8 +1017,8 @@ nsWebSocket::ParseURL(const nsString& aURL)
   rv = parsedURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsXPIDLCString origin;
-  rv = mPrincipal->GetOrigin(getter_Copies(origin));
+  nsCString origin;
+  rv = nsContentUtils::GetASCIIOrigin(mPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
   if (scheme.LowerCaseEqualsLiteral("ws")) {
@@ -1352,15 +1352,16 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't allow https:// to open ws://
-  nsCOMPtr<nsIURI> originURI;
-  PRBool originHTTPS;
   if (!mSecure && 
       !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
-                            PR_FALSE) &&
-      NS_SUCCEEDED(NS_NewURI(getter_AddRefs(originURI), mUTF16Origin)) &&
-      NS_SUCCEEDED(originURI->SchemeIs("https", &originHTTPS)) &&
-      originHTTPS) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+                            PR_FALSE)) {
+    // Confirmed we are opening plain ws:// and want to prevent this from a
+    // secure context (e.g. https). Check the security context of the document
+    // associated with this script, which is the same as associated with mOwner.
+    nsCOMPtr<nsIDocument> originDoc =
+      nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+    if (originDoc && originDoc->GetSecurityInfo())
+      return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   // sets the protocol

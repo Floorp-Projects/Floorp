@@ -50,7 +50,6 @@ function SpecialPowers(window) {
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
   addMessageListener("SPPingService", this._messageListener);
-  this._consoleListeners = [];
 }
 
 function bindDOMWindowUtils(sp, window) {
@@ -191,32 +190,6 @@ SpecialPowers.prototype = {
     removeEventListener(type, listener, capture);
   },
 
-  addErrorConsoleListener: function(listener) {
-    var consoleListener = {
-      userListener: listener,
-      observe: function(consoleMessage) {
-        this.userListener(consoleMessage.message);
-      }
-    };
-
-    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
-                                       .registerListener(consoleListener);
-
-    this._consoleListeners.push(consoleListener);
-  },
-
-  removeErrorConsoleListener: function(listener) {
-    for (var index in this._consoleListeners) {
-      var consoleListener = this._consoleListeners[index];
-      if (consoleListener.userListener == listener) {
-        Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
-                                           .unregisterListener(consoleListener);
-        this._consoleListeners = this._consoleListeners.splice(index, 1);
-        break;
-      }
-    }
-  },
-
   getFullZoom: function(window) {
     return this._getMUDV(window).fullZoom;
   },
@@ -330,15 +303,27 @@ SpecialPowers.prototype = {
   },
 
   addSystemEventListener: function(target, type, listener, useCapture) {
-    Components.classes["@mozilla.org/eventlistenerservice;1"].
-      getService(Components.interfaces.nsIEventListenerService).
+    Cc["@mozilla.org/eventlistenerservice;1"].
+      getService(Ci.nsIEventListenerService).
       addSystemEventListener(target, type, listener, useCapture);
   },
   removeSystemEventListener: function(target, type, listener, useCapture) {
-    Components.classes["@mozilla.org/eventlistenerservice;1"].
-      getService(Components.interfaces.nsIEventListenerService).
+    Cc["@mozilla.org/eventlistenerservice;1"].
+      getService(Ci.nsIEventListenerService).
       removeSystemEventListener(target, type, listener, useCapture);
-  }
+  },
+
+  setLogFile: function(path) {
+    this._mfl = new MozillaFileLogger(path);
+  },
+
+  log: function(data) {
+    this._mfl.log(data);
+  },
+
+  closeLogFile: function() {
+    this._mfl.close();
+  },
 };
 
 // Expose everything but internal APIs (starting with underscores) to

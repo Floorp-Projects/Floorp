@@ -48,7 +48,7 @@
 /*
  * Workers for the JS shell.
  *
- * Note: The real implementation of DOM Workers is in dom/workers.
+ * Note: The real implementation of DOM Workers is in dom/src/threads.
  */
 namespace js {
     namespace workers {
