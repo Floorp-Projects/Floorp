@@ -100,3 +100,22 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 == auto-hyphenation-7.html auto-hyphenation-7-ref.html
 == auto-hyphenation-sv-1.html auto-hyphenation-sv-1-ref.html # test swedish patterns
 != auto-hyphenation-sv-1.html auto-hyphenation-sv-1-notref.html # verify swedish != english
+== auto-hyphenation-af-1.html auto-hyphenation-af-1-ref.html
+== auto-hyphenation-bg-1.html auto-hyphenation-bg-1-ref.html
+== auto-hyphenation-ca-1.html auto-hyphenation-ca-1-ref.html
+== auto-hyphenation-cy-1.html auto-hyphenation-cy-1-ref.html
+== auto-hyphenation-da-1.html auto-hyphenation-da-1-ref.html
+== auto-hyphenation-eo-1.html auto-hyphenation-eo-1-ref.html
+== auto-hyphenation-es-1.html auto-hyphenation-es-1-ref.html
+== auto-hyphenation-et-1.html auto-hyphenation-et-1-ref.html
+== auto-hyphenation-gl-1.html auto-hyphenation-gl-1-ref.html
+== auto-hyphenation-hr-1.html auto-hyphenation-hr-1-ref.html
+== auto-hyphenation-hsb-1.html auto-hyphenation-hsb-1-ref.html
+== auto-hyphenation-ia-1.html auto-hyphenation-ia-1-ref.html
+== auto-hyphenation-is-1.html auto-hyphenation-is-1-ref.html
+== auto-hyphenation-kmr-1.html auto-hyphenation-kmr-1-ref.html
+== auto-hyphenation-la-1.html auto-hyphenation-la-1-ref.html
+== auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
+== auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
+== auto-hyphenation-sl-1.html auto-hyphenation-sl-1-ref.html
+== auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
