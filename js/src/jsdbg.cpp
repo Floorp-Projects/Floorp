@@ -2978,7 +2978,7 @@ CheckArgCompartment(JSContext *cx, JSObject *obj, const Value &v,
     return true;
 }
 
-// Convert Debugger.Objects in decs to debuggee values.
+// Convert Debugger.Objects in desc to debuggee values.
 // Reject non-callable getters and setters.
 static bool
 UnwrapPropDesc(JSContext *cx, Debugger *dbg, JSObject *obj, PropDesc *desc)
