@@ -60,6 +60,9 @@ class IonCompartment {
     IonCompartment();
     ~IonCompartment();
 
+    void mark(JSTracer *trc, JSCompartment *compartment);
+    void sweep(JSContext *cx);
+
     JSC::ExecutableAllocator *execAlloc() {
         return execAlloc_;
     }

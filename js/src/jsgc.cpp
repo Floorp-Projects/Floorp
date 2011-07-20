@@ -1842,7 +1842,7 @@ MarkContext(JSTracer *trc, JSContext *acx)
     }
 
 JS_REQUIRES_STACK void
-MarkRuntime(JSTracer *trc)
+MarkRuntime(JSTracer *trc, JSCompartment *comp)
 {
     JSRuntime *rt = trc->context->runtime;
 
@@ -1868,6 +1868,13 @@ MarkRuntime(JSTracer *trc)
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
+
+    if (comp) {
+        comp->mark(trc);
+    } else {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            (*c)->mark(trc);
+    }
 
     /*
      * We mark extra roots at the last thing so it can use use additional
@@ -2306,7 +2313,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
             (*c)->markCrossCompartmentWrappers(&gcmarker);
     }
 
-    MarkRuntime(&gcmarker);
+    MarkRuntime(&gcmarker, comp);
 
     gcmarker.drainMarkStack();
 
@@ -2823,7 +2830,7 @@ TraceRuntime(JSTracer *trc)
 
             AutoCopyFreeListToArenas copy(rt);
             RecordNativeStackTopForGC(trc->context);
-            MarkRuntime(trc);
+            MarkRuntime(trc, NULL);
             return;
         }
     }
@@ -2836,7 +2843,7 @@ TraceRuntime(JSTracer *trc)
      * Calls from inside a normal GC or a recursive calls are OK and do not
      * require session setup.
      */
-    MarkRuntime(trc);
+    MarkRuntime(trc, NULL);
 }
 
 void
