@@ -350,13 +350,6 @@ class MDefinition : public MNode
         return usedTypes_;
     }
 
-    // Asks a typed instruction to specialize itself to a specific type. If
-    // this is not possible, or not desireable, then the caller must insert an
-    // unbox operation.
-    virtual bool specializeTo(MIRType type) {
-        return false;
-    }
-
     // Operations are classified not by if they can be hoisted but if there is a profit
     // that we get from hoisting them.  Instructions that are POTENTIAL_WIN will be hoisted
     // only if they allow another instruction that is a BIG_WIN to be hoisted as well
