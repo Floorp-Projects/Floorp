@@ -583,7 +583,7 @@ class JSExternalString : public JSFixedString
     intN externalType() const {
         JS_ASSERT(isExternal());
         JS_ASSERT(d.s.u2.externalType < TYPE_LIMIT);
-        return d.s.u2.externalType;
+        return intN(d.s.u2.externalType);
     }
 
     void *externalClosure() const {

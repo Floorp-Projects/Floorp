@@ -64,23 +64,10 @@ if __name__ == '__main__':
   from optparse import OptionParser
   automation = Automation()
 
-  parser = OptionParser(usage='OBJDIR=path/to/objdir python %prog [NUM_RUNS]')
+  parser = OptionParser()
   addCommonOptions(parser)
 
   options, args = parser.parse_args()
-
-  if not os.getenv('OBJDIR'):
-      parser.error('Please specify the OBJDIR environment variable.')
-
-  if not args:
-      num_runs = 1
-  else:
-      try:
-          num_runs = int(args[0])
-      except:
-          parser.error('NUM_RUNS argument must be an integer.')
-      if num_runs < 1:
-          parser.error('NUM_RUNS must be greater than zero.')
 
   debuggerInfo = getDebuggerInfo(".", options.debugger, options.debuggerArgs,
           options.debuggerInteractive)
@@ -91,21 +78,16 @@ if __name__ == '__main__':
   t.start()
   
   automation.setServerInfo("localhost", PORT)
+  automation.initializeProfile(PROFILE_DIRECTORY)
   browserEnv = automation.environment()
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
   browserEnv["MOZ_JAR_LOG_DIR"] = MOZ_JAR_LOG_DIR
 
   url = "http://localhost:%d/index.html" % PORT
   appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)
-
-  for i in range(0, num_runs):
-      if num_runs != 1:
-          print "Starting profiling run %d of %d" % (i + 1, num_runs)
-      automation.initializeProfile(PROFILE_DIRECTORY)
-      status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY, {},
-                                 debuggerInfo=debuggerInfo,
-                                 # the profiling HTML doesn't output anything,
-                                 # so let's just run this without a timeout
-                                 timeout = None)
-      if status != 0:
-          sys.exit(status)
+  status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY, {},
+                             debuggerInfo=debuggerInfo,
+                             # the profiling HTML doesn't output anything,
+                             # so let's just run this without a timeout
+                             timeout = None)
+  sys.exit(status)

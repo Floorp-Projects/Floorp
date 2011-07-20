@@ -44,14 +44,10 @@ relativesrcdir = toolkit/content/tests/browser/common
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# If you add files here, add them to "_loadAll.js" too.
 _COMMON_FILES = \
-  _loadAll.js \
   mockFilePicker.js \
   mockObjects.js \
-  mockTransferForContinuing.js \
-  testRunner.js \
-  toolkitFunctions.js \
+  mockTransfer.js \
   $(NULL)
 
 libs:: $(_COMMON_FILES)
