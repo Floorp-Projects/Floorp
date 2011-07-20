@@ -173,8 +173,8 @@ class GlobalObject : public ::JSObject {
 
     typedef js::Vector<js::Debugger *, 0, js::SystemAllocPolicy> DebuggerVector;
 
-    // The collection of Debug objects debugging this global. If this global is
-    // not a debuggee, this returns either NULL or an empty vector.
+    // The collection of Debugger objects debugging this global. If this global
+    // is not a debuggee, this returns either NULL or an empty vector.
     DebuggerVector *getDebuggers();
 
     // The same, but create the empty vector if one does not already

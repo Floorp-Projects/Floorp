@@ -3401,8 +3401,8 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
     }
 
     if (attrs & JSPROP_NATIVE_ACCESSORS) {
-        JS_ASSERT(!(flags & (JSPROP_GETTER | JSPROP_SETTER)));
-        flags &= ~JSPROP_NATIVE_ACCESSORS;
+        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+        attrs &= ~JSPROP_NATIVE_ACCESSORS;
         if (getter) {
             JSObject *getobj = JS_NewFunction(cx, (JSNative) getter, 0, 0, obj->getGlobal(), NULL);
             if (!getobj)

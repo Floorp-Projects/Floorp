@@ -1045,7 +1045,7 @@ struct JSObject : js::gc::Cell {
     inline void setProxyPrivate(const js::Value &priv);
     inline const js::Value &getProxyExtra() const;
     inline void setProxyExtra(const js::Value &extra);
-    JSWrapper *getWrapperHandler() const;
+    inline JSWrapper *getWrapperHandler() const;
 
     /*
      * With object-specific getters and setters.
@@ -1498,6 +1498,7 @@ extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
 namespace js {
+
 JSObject *
 DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
                               JSObject *protoProto, Class *clasp,
@@ -1511,6 +1512,7 @@ IsStandardClassResolved(JSObject *obj, js::Class *clasp);
 
 void
 MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
+
 }
 
 extern JSObject *
