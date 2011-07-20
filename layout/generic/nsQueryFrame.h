@@ -136,7 +136,6 @@ public:
     nsImageControlFrame_id,
     nsImageFrame_id,
     nsInlineFrame_id,
-    nsIsIndexFrame_id,
     nsLeafBoxFrame_id,
     nsLeafFrame_id,
     nsLegendFrame_id,
