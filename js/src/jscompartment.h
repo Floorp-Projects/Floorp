@@ -402,17 +402,6 @@ struct JS_FRIEND_API(JSCompartment) {
     bool                         hold;
     bool                         isSystemCompartment;
 
-#ifdef JS_ION
-  private:
-    js::ion::IonCompartment *ionCompartment_;
-
-  public:
-    bool ensureIonCompartmentExists(JSContext *cx);
-    js::ion::IonCompartment *ionCompartment() {
-        return ionCompartment_;
-    }
-#endif
-
 #ifdef JS_TRACER
   private:
     /*
@@ -573,6 +562,18 @@ struct JS_FRIEND_API(JSCompartment) {
 
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
+
+#ifdef JS_ION
+  private:
+    js::ion::IonCompartment *ionCompartment_;
+
+  public:
+    bool ensureIonCompartmentExists(JSContext *cx);
+    js::ion::IonCompartment *ionCompartment() {
+        return ionCompartment_;
+    }
+#endif
+
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
