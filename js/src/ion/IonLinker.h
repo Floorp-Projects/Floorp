@@ -68,6 +68,8 @@ class LinkerT
     }
 
     IonCode *newCode(JSContext *cx, IonCompartment *comp) {
+        if (masm.oom())
+            return fail(cx);
         JSC::ExecutablePool *pool;
         void *result = comp->execAlloc()->alloc(masm.size(), &pool);
         if (!result)

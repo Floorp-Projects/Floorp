@@ -39,83 +39,103 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_coderef_h__
-#define jsion_coderef_h__
+#ifndef jsion_mirgen_h__
+#define jsion_mirgen_h__
 
-#include "jscell.h"
+// This file declares the data structures used to build a control-flow graph
+// containing MIR.
 
-namespace JSC {
-    class ExecutablePool;
-}
+#include "IonAllocPolicy.h"
 
 namespace js {
 namespace ion {
 
-class IonCode : public gc::Cell
-{
-    uint8 *code_;
-    uint32 size_;
-    JSC::ExecutablePool *pool_;
-    uint32 padding_;
+class MBasicBlock;
+class MIRGraph;
+class MStart;
 
-    IonCode()
-      : code_(NULL),
-        pool_(NULL)
-    { }
-    IonCode(uint8 *code, uint32 size, JSC::ExecutablePool *pool)
-      : code_(code),
-        size_(size),
-        pool_(pool)
-    { }
+class MIRGenerator
+{
+  public:
+    MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph);
+
+    TempAllocator &temp() {
+        return temp_;
+    }
+    JSFunction *fun() const {
+        return fun_;
+    }
+    uint32 nslots() const {
+        return nslots_;
+    }
+    uint32 nargs() const {
+        return fun()->nargs;
+    }
+    uint32 nlocals() const {
+        return script->nfixed;
+    }
+    uint32 calleeSlot() const {
+        JS_ASSERT(fun());
+        return 0;
+    }
+    uint32 thisSlot() const {
+        JS_ASSERT(fun());
+        return 1;
+    }
+    uint32 firstArgSlot() const {
+        JS_ASSERT(fun());
+        return 2;
+    }
+    uint32 argSlot(uint32 i) const {
+        return firstArgSlot() + i;
+    }
+    uint32 firstLocalSlot() const {
+        return (fun() ? fun()->nargs + 2 : 0);
+    }
+    uint32 localSlot(uint32 i) const {
+        return firstLocalSlot() + i;
+    }
+    uint32 firstStackSlot() const {
+        return firstLocalSlot() + nlocals();
+    }
+    uint32 stackSlot(uint32 i) const {
+        return firstStackSlot() + i;
+    }
+    MIRGraph &graph() {
+        return graph_;
+    }
+    bool ensureBallast() {
+        return temp().ensureBallast();
+    }
+
+    template <typename T>
+    T * allocate(size_t count = 1)
+    {
+        return reinterpret_cast<T *>(temp().allocate(sizeof(T) * count));
+    }
+
+    // Set an error state and prints a message. Returns false so errors can be
+    // propagated up.
+    bool abort(const char *message, ...);
+
+    bool errored() const {
+        return error_;
+    }
 
   public:
-    uint8 *raw() const {
-        return code_;
-    }
-    uint32 size() const {
-        return size_;
-    }
-    void finalize(JSContext *cx);
+    JSScript *script;
 
-    template <typename T> T as() const {
-        return JS_DATA_TO_FUNC_PTR(T, raw());
-    }
-
-    // Allocates a new IonCode object which will be managed by the GC. If no
-    // object can be allocated, NULL is returned. On failure, |pool| is
-    // automatically released, so the code may be freed.
-    static IonCode *New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool);
+  protected:
+    jsbytecode *pc;
+    TempAllocator &temp_;
+    JSFunction *fun_;
+    uint32 nslots_;
+    MIRGraph &graph_;
+    bool error_;
 };
 
-#define ION_DISABLED_SCRIPT ((IonScript *)0x1)
+} // namespace ion
+} // namespace js
 
-// An IonScript attaches Ion-generated information to a JSScript.
-struct IonScript
-{
-    IonCode *method_;
-
-  private:
-    void trace(JSTracer *trc, JSScript *script);
-
-  public:
-    // Do not call directly, use IonScript::New. This is public for cx->new_.
-    IonScript();
-
-    static IonScript *New(JSContext *cx);
-    static void Trace(JSTracer *trc, JSScript *script);
-    static void Destroy(JSContext *cx, JSScript *script);
-
-  public:
-    IonCode *method() const {
-        return method_;
-    }
-    void setMethod(IonCode *code) {
-        method_ = code;
-    }
-};
-
-}
-}
-
-#endif // jsion_coderef_h__
+#endif // jsion_mirgen_h__
 

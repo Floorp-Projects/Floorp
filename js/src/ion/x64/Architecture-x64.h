@@ -50,11 +50,16 @@ namespace ion {
 static const ptrdiff_t STACK_SLOT_SIZE       = 8;
 static const uint32 MAX_STACK_SLOTS          = 256;
 
-// In bytes. +1 stack slot for pushing the return address.
-static const uint32 ION_FRAME_PREFIX_SIZE    = 8;
+// In bytes: slots in between arguments and the locals.
+//   +4 for number of arguments.
+//   +4 for return address.
+static const uint32 ION_FRAME_PREFIX_SIZE    = 16;
 
-// In bytes. +2 slots needed for potential memory->memory move spills.
-static const uint32 ION_FRAME_SLACK_SIZE     = 16;
+// In bytes: slots needed for potential memory->memory move spills.
+//   +8 for cycles
+//   +8 for gpr spills
+//   +8 for double spills
+static const uint32 ION_FRAME_SLACK_SIZE     = 24;
 
 class Registers {
   public:

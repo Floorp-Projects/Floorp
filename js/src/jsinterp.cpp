@@ -605,7 +605,7 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     if (ion::IsEnabled()) {
         ion::MethodStatus status = ion::Compile(cx, script, fp);
         if (status == ion::Method_Compiled)
-            return ion::FireMahLaser(cx);
+            return ion::Cannon(cx, fp);
     }
 #endif
 
@@ -4113,7 +4113,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     if (ion::IsEnabled()) {
         ion::MethodStatus status = ion::Compile(cx, script, regs.fp());
         if (status == ion::Method_Compiled) {
-            interpReturnOK = ion::FireMahLaser(cx);
+            interpReturnOK = ion::Cannon(cx, regs.fp());
             CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }
