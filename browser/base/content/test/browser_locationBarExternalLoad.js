@@ -46,6 +46,10 @@ function testURL(url, loadFunc, endFunc) {
     loadFunc(url);
 
     addPageShowListener(function () {
+      let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+      is(fm.focusedElement, null, "should be no focused element");
+      is(fm.focusedWindow, gBrowser.contentWindow, "content window should be focused");
+
       ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
          "load of " + url + " by " + loadFunc.name + " should produce a page with a different principal");
       endFunc();
