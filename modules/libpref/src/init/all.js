@@ -3204,10 +3204,10 @@ pref("image.mem.decodeondraw", false);
 pref("image.mem.min_discard_timeout_ms", 10000);
 
 // Chunk size for calls to the image decoders
-pref("image.mem.decode_bytes_at_a_time", 200000);
+pref("image.mem.decode_bytes_at_a_time", 4096);
 
 // The longest time we can spend in an iteration of an async decode
-pref("image.mem.max_ms_before_yield", 400);
+pref("image.mem.max_ms_before_yield", 5);
 
 // The maximum source data size for which we auto sync decode
 pref("image.mem.max_bytes_for_sync_decode", 150000);
