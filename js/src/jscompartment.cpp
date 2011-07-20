@@ -493,6 +493,13 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 }
 
 void
+JSCompartment::mark(JSTracer *trc)
+{
+    if (ionCompartment_)
+        ionCompartment_->mark(trc, this);
+}
+
+void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
     chunk = NULL;
@@ -526,6 +533,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         initialRegExpShape = NULL;
     if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
         initialStringShape = NULL;
+
+    if (ionCompartment_)
+        ionCompartment_->sweep(cx);
 
 #ifdef JS_TRACER
     if (hasTraceMonitor())
