@@ -40,30 +40,11 @@ reflectLimitedEnumerated({
   invalidValues: [ "", "default", "foo", "tulip" ],
 });
 
-// .autofocus
-reflectBoolean({
-  element: document.createElement("input"),
-  attribute: "autofocus",
-});
-
-// .defaultChecked
-reflectBoolean({
-  element: document.createElement("input"),
-  attribute: { idl: "defaultChecked", content: "checked" },
-});
-
-// .checked doesn't reflect a content attribute.
-
-// .dirName
-todo("dirName" in document.createElement("input"),
-     "dirName isn't implemented yet");
-
-// .disabled
-reflectBoolean({
-  element: document.createElement("input"),
-  attribute: "disabled",
-});
-
+// TODO: autofocus (boolean)
+// TODO: defaultChecked (boolean)
+// TODO: checked (boolean)
+// TODO: dirName (not implemented)
+// TODO: disabled (boolean)
 // TODO: form (HTMLFormElement)
 // TODO: files (FileList)
 // TODO: formAction (URL)
@@ -87,11 +68,7 @@ reflectLimitedEnumerated({
   defaultValue: "get"
 });
 
-// .formNoValidate
-reflectBoolean({
-  element: document.createElement("input"),
-  attribute: "formNoValidate",
-});
+// TODO: formNoValidate (boolean)
 
 // .formTarget
 reflectString({
@@ -101,24 +78,12 @@ reflectString({
 });
 
 // TODO: height (non-negative integer)
-
-// .indeterminate doesn't reflect a content attribute.
-
+// TODO: indeterminate (boolean)
 // TODO: list (HTMLElement)
-
-// .max
-todo("max" in document.createElement("input"), "max isn't implemented yet");
-
+// TODO: max (not implemented)
 // TODO: maxLength (long)
-
-// .min
-todo("min" in document.createElement("input"), "min isn't implemented yet");
-
-// .multiple
-reflectBoolean({
-  element: document.createElement("input"),
-  attribute: "multiple",
-});
+// TODO: min (not implemented)
+// TODO: multiple (boolean)
 
 // .name
 reflectString({
@@ -141,17 +106,8 @@ reflectString({
   otherValues: [ "foo\nbar", "foo\rbar", "foo\r\nbar" ],
 });
 
-// .readOnly
-reflectBoolean({
-  element: document.createElement("input"),
-  attribute: "readOnly",
-});
-
-// .required
-reflectBoolean({
-  element: document.createElement("input"),
-  attribute: "required",
-});
+// TODO: readOnly (boolean)
+// TODO: required (boolean)
 
 // .size
 reflectUnsignedInt({
@@ -162,9 +118,7 @@ reflectUnsignedInt({
 });
 
 // TODO: src (URL)
-
-// .step
-todo("step" in document.createElement("input"), "step isn't implemented yet");
+// TODO: step (not implemented)
 
 // .type
 reflectLimitedEnumerated({
@@ -187,21 +141,10 @@ reflectString({
 });
 
 // .value doesn't reflect a content attribute.
-
-// .valueAsDate
-todo("valueAsDate" in document.createElement("input"),
-     "valueAsDate isn't implemented yet");
-
-// .valueAsNumber
-todo("valueAsNumber" in document.createElement("input"),
-     "valueAsNumber isn't implemented yet");
-
-// .selectedOption
-todo("selectedOption" in document.createElement("input"),
-     "selectedOption isn't implemented yet");
-
+// TODO: valueAsDate (not implemented)
+// TODO: valueAsNumber (not implemented)
+// TODO: selectedOption (not implemented)
 // TODO: width (non-negative integer)
-
 // .willValidate doesn't reflect a content attribute.
 // .validity doesn't reflect a content attribute.
 // .validationMessage doesn't reflect a content attribute.

@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsLocation.h"
+#include "nsGlobalWindow.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDocShell.h"
@@ -72,7 +72,6 @@
 #include "nsITextToSubURI.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
-#include "jsdbgapi.h"
 
 static nsresult
 GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
