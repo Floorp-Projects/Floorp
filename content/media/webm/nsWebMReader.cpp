@@ -750,31 +750,19 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   return PR_TRUE;
 }
 
-PRBool nsWebMReader::CanDecodeToTarget(PRInt64 aTarget,
-                                       PRInt64 aCurrentTime)
-{
-  return aTarget >= aCurrentTime &&
-         aTarget - aCurrentTime < SEEK_DECODE_MARGIN;
-}
-
 nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime,
                             PRInt64 aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
-  if (CanDecodeToTarget(aTarget, aCurrentTime)) {
-    LOG(PR_LOG_DEBUG, ("%p Seek target (%lld) is close to current time (%lld), "
-                       "will just decode to it", mDecoder, aCurrentTime, aTarget));
-  } else {
-    if (NS_FAILED(ResetDecode())) {
-      return NS_ERROR_FAILURE;
-    }
-    PRUint32 trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
-    int r = nestegg_track_seek(mContext, trackToSeek, aTarget * NS_PER_USEC);
-    if (r != 0) {
-      return NS_ERROR_FAILURE;
-    }
+  if (NS_FAILED(ResetDecode())) {
+    return NS_ERROR_FAILURE;
+  }
+  PRUint32 trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
+  int r = nestegg_track_seek(mContext, trackToSeek, aTarget * NS_PER_USEC);
+  if (r != 0) {
+    return NS_ERROR_FAILURE;
   }
   return DecodeToTarget(aTarget);
 }

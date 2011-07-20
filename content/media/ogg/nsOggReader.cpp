@@ -939,7 +939,7 @@ nsresult nsOggReader::SeekInBufferedRange(PRInt64 aTarget,
                                           const nsTArray<SeekRange>& aRanges,
                                           const SeekRange& aRange)
 {
-  LOG(PR_LOG_DEBUG, ("%p Seeking in buffered data to %lldms using bisection search", mDecoder, aTarget));
+  LOG(PR_LOG_DEBUG, ("%p Seeking in buffered data to %lld using bisection search", mDecoder, aTarget));
 
   // We know the exact byte range in which the target must lie. It must
   // be buffered in the media cache. Seek there.
@@ -983,23 +983,12 @@ nsresult nsOggReader::SeekInBufferedRange(PRInt64 aTarget,
   return res;
 }
 
-PRBool nsOggReader::CanDecodeToTarget(PRInt64 aTarget,
-                                      PRInt64 aCurrentTime)
-{
-  // We can decode to the target if the target is no further than the
-  // maximum keyframe offset ahead of the current playback position, if
-  // we have video, or SEEK_DECODE_MARGIN if we don't have video.
-  PRInt64 margin = HasVideo() ? mTheoraState->MaxKeyframeOffset() : SEEK_DECODE_MARGIN;
-  return aTarget >= aCurrentTime &&
-         aTarget - aCurrentTime < margin;
-}
-
 nsresult nsOggReader::SeekInUnbuffered(PRInt64 aTarget,
                                        PRInt64 aStartTime,
                                        PRInt64 aEndTime,
                                        const nsTArray<SeekRange>& aRanges)
 {
-  LOG(PR_LOG_DEBUG, ("%p Seeking in unbuffered data to %lldms using bisection search", mDecoder, aTarget));
+  LOG(PR_LOG_DEBUG, ("%p Seeking in unbuffered data to %lld using bisection search", mDecoder, aTarget));
   
   // If we've got an active Theora bitstream, determine the maximum possible
   // time in usecs which a keyframe could be before a given interframe. We
@@ -1030,7 +1019,7 @@ nsresult nsOggReader::Seek(PRInt64 aTarget,
                            PRInt64 aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
+  LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
   nsresult res;
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream != nsnull, NS_ERROR_FAILURE);
@@ -1050,9 +1039,6 @@ nsresult nsOggReader::Seek(PRInt64 aTarget,
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       mDecoder->UpdatePlaybackPosition(aStartTime);
     }
-  } else if (CanDecodeToTarget(aTarget, aCurrentTime)) {
-    LOG(PR_LOG_DEBUG, ("%p Seek target (%lld) is close to current time (%lld), "
-        "will just decode to it", mDecoder, aCurrentTime, aTarget));
   } else {
     IndexedSeekResult sres = SeekToKeyframeUsingIndex(aTarget);
     NS_ENSURE_TRUE(sres != SEEK_FATAL_ERROR, NS_ERROR_FAILURE);
@@ -1381,7 +1367,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
       break;
     }
 
-    SEEK_LOG(PR_LOG_DEBUG, ("Time at offset %lld is %lldms", guess, granuleTime));
+    SEEK_LOG(PR_LOG_DEBUG, ("Time at offset %lld is %lld", guess, granuleTime));
     if (granuleTime < seekTarget && granuleTime > seekLowerBound) {
       // We're within the fuzzy region in which we want to terminate the search.
       res = stream->Seek(nsISeekableStream::NS_SEEK_SET, pageOffset);
@@ -1401,7 +1387,8 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
       endTime = granuleTime;
     } else if (granuleTime < seekTarget) {
       // Landed before seek target.
-      NS_ASSERTION(pageOffset > startOffset, "offset_start must increase");
+      NS_ASSERTION(pageOffset >= startOffset + startLength,
+        "Bisection point should be at or after end of first page in interval");
       startOffset = pageOffset;
       startLength = pageLength;
       startTime = granuleTime;

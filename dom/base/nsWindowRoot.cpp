@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsWindowRoot.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsEventListenerManager.h"
@@ -48,10 +47,8 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsString.h"
 #include "nsEventDispatcher.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsGUIEvent.h"
 #include "nsGlobalWindow.h"
 #include "nsFocusManager.h"
@@ -244,7 +241,7 @@ nsWindowRoot::GetControllers(nsIControllers** aResult)
       return focusedWindow->GetControllers(aResult);
   }
   else {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(focusedWindow);
+    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(focusedWindow);
     if (domWindow)
       return domWindow->GetControllers(aResult);
   }
@@ -274,7 +271,7 @@ nsWindowRoot::GetControllerForCommand(const char * aCommand,
   nsCOMPtr<nsPIDOMWindow> focusedWindow;
   nsFocusManager::GetFocusedDescendant(mWindow, PR_TRUE, getter_AddRefs(focusedWindow));
   while (focusedWindow) {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(focusedWindow));
+    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(focusedWindow));
 
     nsCOMPtr<nsIControllers> controllers2;
     domWindow->GetControllers(getter_AddRefs(controllers2));
@@ -291,7 +288,7 @@ nsWindowRoot::GetControllerForCommand(const char * aCommand,
     nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(focusedWindow); 
     nsGlobalWindow *win =
       static_cast<nsGlobalWindow *>
-                 (static_cast<nsIDOMWindowInternal *>(piWindow));
+                 (static_cast<nsIDOMWindow*>(piWindow));
     focusedWindow = win->GetPrivateParent();
   }
   

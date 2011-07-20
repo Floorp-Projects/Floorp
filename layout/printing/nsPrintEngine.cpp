@@ -1829,13 +1829,11 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale)
 
   // Check to see if the subdocument's element has been hidden by the parent document
   if (aPO->mParent && aPO->mParent->mPresShell) {
-    nsIFrame * frame = aPO->mContent->GetPrimaryFrame();
-    if (frame) {
-      if (!frame->GetStyleVisibility()->IsVisible()) {
-        aPO->mDontPrint = PR_TRUE;
-        aPO->mInvisible = PR_TRUE;
-        return NS_OK;
-      }
+    nsIFrame* frame = aPO->mContent ? aPO->mContent->GetPrimaryFrame() : nsnull;
+    if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
+      aPO->mDontPrint = PR_TRUE;
+      aPO->mInvisible = PR_TRUE;
+      return NS_OK;
     }
   }
 
@@ -1885,7 +1883,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   nsIView* parentView = nsnull;
 
   if (aPO->mParent && aPO->mParent->IsPrintable()) {
-    nsIFrame* frame = aPO->mContent->GetPrimaryFrame();
+    nsIFrame* frame = aPO->mContent ? aPO->mContent->GetPrimaryFrame() : nsnull;
     // Without a frame, this document can't be displayed; therefore, there is no
     // point to reflowing it
     if (!frame) {
@@ -1912,20 +1910,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   } else {
     nscoord pageWidth, pageHeight;
     mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    // If we're in landscape mode on Linux, the device surface will have 
-    // been rotated, so for the purposes of reflowing content, we'll 
-    // treat device's height as our width and its width as our height, 
-    PRInt32 orientation;
-    mPrt->mPrintSettings->GetOrientation(&orientation);
-    if (nsIPrintSettings::kLandscapeOrientation == orientation) {
-      adjSize = nsSize(pageHeight, pageWidth);
-    } else {
-      adjSize = nsSize(pageWidth, pageHeight);
-    }
-#else
     adjSize = nsSize(pageWidth, pageHeight);
-#endif // XP_UNIX && !XP_MACOSX
     documentIsTopLevel = PR_TRUE;
 
     if (mIsCreatingPrintPreview) {

@@ -61,7 +61,6 @@
 #include "nsTArray.h"
 #include "nsIObserverService.h"
 #include "nsIRequestObserver.h"
-#include "nsITimelineService.h"
 #include "nsCRT.h"
 #include "prmem.h"
 #include "mozilla/ModuleUtils.h"
@@ -419,7 +418,6 @@ NS_IMPL_ISUPPORTS1(nsCharsetMenuObserver, nsIObserver)
 
 NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu:Observe");
   nsresult rv = NS_OK;
  
   //XUL event handler
@@ -466,8 +464,6 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
     }
   }
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu:Observe");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu:Observe");
   return rv;
 }
 
@@ -519,7 +515,6 @@ nsCharsetMenu::nsCharsetMenu()
   mAutoDetectInitialized(PR_FALSE),
   mOthersInitialized(PR_FALSE)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::nsCharsetMenu");
   nsresult res = NS_OK;
 
   //get charset manager
@@ -556,8 +551,6 @@ nsCharsetMenu::nsCharsetMenu()
   }
 
   NS_ASSERTION(NS_SUCCEEDED(res), "Failed to initialize nsCharsetMenu");
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::nsCharsetMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::nsCharsetMenu");
 }
 
 nsCharsetMenu::~nsCharsetMenu() 
@@ -885,8 +878,6 @@ nsresult nsCharsetMenu::FreeResources()
 
 nsresult nsCharsetMenu::InitBrowserMenu() 
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitBrowserMenu");
-
   nsresult res = NS_OK;
 
   if (!mBrowserMenuInitialized)  {
@@ -929,16 +920,11 @@ nsresult nsCharsetMenu::InitBrowserMenu()
 
   mBrowserMenuInitialized = NS_SUCCEEDED(res);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitBrowserMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitBrowserMenu");
-
   return res;
 }
 
 nsresult nsCharsetMenu::InitMaileditMenu() 
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitMaileditMenu");
-
   nsresult res = NS_OK;
 
   if (!mMaileditMenuInitialized)  {
@@ -969,16 +955,11 @@ nsresult nsCharsetMenu::InitMaileditMenu()
 
   mMaileditMenuInitialized = NS_SUCCEEDED(res);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitMaileditMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitMaileditMenu");
-
   return res;
 }
 
 nsresult nsCharsetMenu::InitMailviewMenu() 
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitMailviewMenu");
-  
   nsresult res = NS_OK;
 
   if (!mMailviewMenuInitialized)  {
@@ -1010,16 +991,11 @@ nsresult nsCharsetMenu::InitMailviewMenu()
 
   mMailviewMenuInitialized = NS_SUCCEEDED(res);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitMailviewMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitMailviewMenu");
-
   return res;
 }
 
 nsresult nsCharsetMenu::InitComposerMenu() 
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitComposerMenu");
- 
   nsresult res = NS_OK;
 
   if (!mComposerMenuInitialized)  {
@@ -1052,16 +1028,11 @@ nsresult nsCharsetMenu::InitComposerMenu()
 
   mComposerMenuInitialized = NS_SUCCEEDED(res);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitComposerMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitComposerMenu");
-  
   return res;
 }
 
 nsresult nsCharsetMenu::InitOthers() 
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitOthers");
-
   nsresult res = NS_OK;
 
   if (!mOthersInitialized) {
@@ -1081,9 +1052,6 @@ nsresult nsCharsetMenu::InitOthers()
 
   mOthersInitialized = NS_SUCCEEDED(res);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitOthers");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitOthers");
-
   return res;
 }
 
@@ -1094,8 +1062,6 @@ nsresult nsCharsetMenu::InitOthers()
  */
 nsresult nsCharsetMenu::InitSecondaryTiers()
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitSecondaryTiers");
-
   nsresult res = NS_OK;
 
   if (!mSecondaryTiersInitialized)  {
@@ -1110,9 +1076,6 @@ nsresult nsCharsetMenu::InitSecondaryTiers()
 
   mSecondaryTiersInitialized = NS_SUCCEEDED(res);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitSecondaryTiers");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitSecondaryTiers");
-
   return res;
 }
 
@@ -1121,8 +1084,6 @@ nsresult nsCharsetMenu::InitStaticMenu(nsTArray<nsCString>& aDecs,
                                        const char * aKey,
                                        nsTArray<nsMenuEntry*> * aArray)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitStaticMenu");
-
   nsresult res = NS_OK;
   nsCOMPtr<nsIRDFContainer> container;
 
@@ -1136,9 +1097,6 @@ nsresult nsCharsetMenu::InitStaticMenu(nsTArray<nsCString>& aDecs,
   res = AddFromPrefsToMenu(aArray, container, aKey, aDecs, "charset.");
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing static charset menu from prefs");
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitStaticMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitStaticMenu");
-
   return res;
 }
 
@@ -1148,8 +1106,6 @@ nsresult nsCharsetMenu::InitCacheMenu(
                         const char * aKey,
                         nsTArray<nsMenuEntry*> * aArray)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitCacheMenu");
-
   nsresult res = NS_OK;
   nsCOMPtr<nsIRDFContainer> container;
 
@@ -1159,16 +1115,11 @@ nsresult nsCharsetMenu::InitCacheMenu(
   res = AddFromNolocPrefsToMenu(aArray, container, aKey, aDecs, "charset.");
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing cache charset menu from prefs");
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitCacheMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitCacheMenu");
-
   return res;
 }
 
 nsresult nsCharsetMenu::InitAutodetMenu()
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitAutodetMenu");
-
   nsresult res = NS_OK;
 
   if (!mAutoDetectInitialized) {
@@ -1204,9 +1155,6 @@ nsresult nsCharsetMenu::InitAutodetMenu()
 
   mAutoDetectInitialized = NS_SUCCEEDED(res);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitAutodetMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitAutodetMenu");
-
   return res;
 }
 
@@ -1214,8 +1162,6 @@ nsresult nsCharsetMenu::InitMoreMenu(nsTArray<nsCString>& aDecs,
                                      nsIRDFResource * aResource, 
                                      const char * aFlag)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitMoreMenu");
-
   nsresult res = NS_OK;
   nsCOMPtr<nsIRDFContainer> container;
   nsTArray<nsMenuEntry*> moreMenu;
@@ -1241,17 +1187,12 @@ done:
   // free the elements in the VoidArray
   FreeMenuItemArray(&moreMenu);
 
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitMoreMenu");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitMoreMenu");
-
   return res;
 }
 
 // XXX please make this method more general; the cut&pasted code is laughable
 nsresult nsCharsetMenu::InitMoreSubmenus(nsTArray<nsCString>& aDecs)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu::InitMoreSubmenus");
-
   nsresult res = NS_OK;
 
   nsCOMPtr<nsIRDFContainer> container1;
@@ -1296,9 +1237,6 @@ nsresult nsCharsetMenu::InitMoreSubmenus(nsTArray<nsCString>& aDecs)
     getter_AddRefs(containerU));
   if (NS_FAILED(res)) return res;
   AddFromNolocPrefsToMenu(NULL, containerU, keyU, aDecs, NULL);
-
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitMoreSubmenus");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitMoreSubmenus");
 
   return res;
 }
@@ -1838,7 +1776,6 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
 
 NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu:SetCurrentCharset");
   nsresult res = NS_OK;
 
   if (mBrowserMenuInitialized) {
@@ -1854,7 +1791,6 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
                             mBrowserCacheStart, mBrowserCacheSize,
                             mBrowserMenuRDFPosition);
     if (NS_FAILED(res)) {
-        NS_TIMELINE_LEAVE("nsCharsetMenu:SetCurrentCharset");
         return res;
     }
 
@@ -1864,14 +1800,11 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
     res = UpdateCachePrefs(kBrowserCachePrefKey, kBrowserCacheSizePrefKey, 
                            kBrowserStaticPrefKey, aCharset);
   }
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu:SetCurrentCharset");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu:SetCurrentCharset");
   return res;
 }
 
 NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu:SetCurrentMailCharset");
   nsresult res = NS_OK;
 
   if (mMailviewMenuInitialized) {
@@ -1887,14 +1820,11 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
     res = UpdateCachePrefs(kMailviewCachePrefKey, kMailviewCacheSizePrefKey, 
                            kMailviewStaticPrefKey, aCharset);
   }
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu:SetCurrentMailCharset");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu:SetCurrentMailCharset");
   return res;
 }
 
 NS_IMETHODIMP nsCharsetMenu::SetCurrentComposerCharset(const PRUnichar * aCharset)
 {
-  NS_TIMELINE_START_TIMER("nsCharsetMenu:SetCurrentComposerCharset");
   nsresult res = NS_OK;
 
   if (mComposerMenuInitialized) {
@@ -1911,8 +1841,6 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentComposerCharset(const PRUnichar * aCharse
     res = UpdateCachePrefs(kComposerCachePrefKey, kComposerCacheSizePrefKey, 
                            kComposerStaticPrefKey, aCharset);
   }
-  NS_TIMELINE_STOP_TIMER("nsCharsetMenu:SetCurrentComposerCharset");
-  NS_TIMELINE_MARK_TIMER("nsCharsetMenu:SetCurrentComposerCharset");
   return res;
 }
 

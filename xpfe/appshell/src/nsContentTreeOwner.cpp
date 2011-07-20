@@ -50,7 +50,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDOMXULElement.h"
@@ -919,7 +919,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     }
   }
 
-  nsCOMPtr<nsIDOMWindowInternal> domWin;
+  nsCOMPtr<nsIDOMWindow> domWin;
   mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWin));
   nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(domWin);
   if (!chromeWin) {
@@ -1071,7 +1071,7 @@ nsSiteWindow2::SetFocus(void)
   if (window) {
     nsCOMPtr<nsIDocShell> docshell;
     window->GetDocShell(getter_AddRefs(docshell));
-    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(docshell));
+    nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docshell));
     if (domWindow)
       domWindow->Focus();
   }
@@ -1131,7 +1131,7 @@ nsSiteWindow2::Blur(void)
   if (xulWindow) {
     nsCOMPtr<nsIDocShell> docshell;
     xulWindow->GetDocShell(getter_AddRefs(docshell));
-    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(docshell));
+    nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docshell));
     if (domWindow)
       domWindow->Focus();
   }

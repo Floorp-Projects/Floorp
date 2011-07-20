@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsIURI;
 interface nsIVariant;
 
@@ -49,7 +49,7 @@ interface nsIVariant;
 [scriptable, uuid(8710e692-3989-4dc7-b607-40d57610ae75)]
 interface amIWebInstallInfo : nsISupports
 {
-  readonly attribute nsIDOMWindowInternal originatingWindow;
+  readonly attribute nsIDOMWindow originatingWindow;
   readonly attribute nsIURI originatingURI;
   readonly attribute nsIVariant installs;
 
@@ -80,7 +80,7 @@ interface amIWebInstallListener : nsISupports
    * @param  aCount
    *         The number of AddonInstalls
    */
-  void onWebInstallDisabled(in nsIDOMWindowInternal aWindow, in nsIURI aUri,
+  void onWebInstallDisabled(in nsIDOMWindow aWindow, in nsIURI aUri,
                             [array, size_is(aCount)] in nsIVariant aInstalls,
                             [optional] in PRUint32 aCount);
 
@@ -98,7 +98,7 @@ interface amIWebInstallListener : nsISupports
    *         The number of AddonInstalls
    * @return true if the caller should start the installs
    */
-  boolean onWebInstallBlocked(in nsIDOMWindowInternal aWindow, in nsIURI aUri,
+  boolean onWebInstallBlocked(in nsIDOMWindow aWindow, in nsIURI aUri,
                               [array, size_is(aCount)] in nsIVariant aInstalls,
                               [optional] in PRUint32 aCount);
 
@@ -115,7 +115,7 @@ interface amIWebInstallListener : nsISupports
    *         The number of AddonInstalls
    * @return true if the caller should start the installs
    */
-  boolean onWebInstallRequested(in nsIDOMWindowInternal aWindow, in nsIURI aUri,
+  boolean onWebInstallRequested(in nsIDOMWindow aWindow, in nsIURI aUri,
                                 [array, size_is(aCount)] in nsIVariant aInstalls,
                                 [optional] in PRUint32 aCount);
 };
@@ -140,7 +140,7 @@ interface amIWebInstallPrompt : nsISupports
    * @param  aCount
    *         The number of AddonInstalls
    */
-  void confirm(in nsIDOMWindowInternal aWindow, in nsIURI aUri,
+  void confirm(in nsIDOMWindow aWindow, in nsIURI aUri,
                [array, size_is(aCount)] in nsIVariant aInstalls,
                [optional] in PRUint32 aCount);
 };

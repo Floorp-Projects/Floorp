@@ -3,11 +3,6 @@ function windowUtils() {
                .getInterface(Components.interfaces.nsIDOMWindowUtils);
 }
 
-function windowUtils20() {
-    return windowUtils()
-               .QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
-}
-
 function recvSetViewport(w, h) {
 
     dump("setting viewport to "+ w +"x"+ h +"\n");
@@ -19,7 +14,7 @@ function recvSetDisplayPort(x, y, w, h) {
 
     dump("setting displayPort to <"+ x +", "+ y +", "+ w +", "+ h +">\n");
 
-    windowUtils20().setDisplayPortForElement(x, y, w, h, content.document.documentElement);
+    windowUtils().setDisplayPortForElement(x, y, w, h, content.document.documentElement);
 }
 
 function recvSetResolution(xres, yres) {

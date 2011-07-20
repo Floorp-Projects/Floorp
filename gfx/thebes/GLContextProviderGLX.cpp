@@ -234,9 +234,12 @@ GLXLibrary::EnsureInitialized()
     }
 
     if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
-        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap))
+        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
+                                         (LibrarySymbolLoader::PlatformLookupFunction)xGetProcAddress))
     {
         mHasTextureFromPixmap = PR_TRUE;
+    } else {
+        NS_WARNING("Texture from pixmap disabled");
     }
 
     gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
@@ -249,14 +252,24 @@ GLXLibrary::EnsureInitialized()
     return PR_TRUE;
 }
 
+PRBool
+GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
+{
+    if (!EnsureInitialized()) {
+        return PR_FALSE;
+    }
+    
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
 GLXPixmap 
 GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 {
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
-        return 0;
-    }
-
-    if (!EnsureInitialized()) {
+    if (!SupportsTextureFromPixmap(aSurface)) {
         return 0;
     }
 

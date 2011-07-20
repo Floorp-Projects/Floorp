@@ -317,6 +317,12 @@ case "$target" in
     if test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/  -lstlport_static"
+    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a  -lstlport_static"
+    elif test "$target" != "arm-android-eabi"; then
+       dnl fail if we're not building with NDKr4
+       AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
     fi
 
     CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
@@ -4811,7 +4817,6 @@ MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG_DLISTS=
-MOZ_TIMELINE=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -7464,12 +7469,20 @@ else
       WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$MOZ_CRT_CPU_ARCH"
       MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
     else
-      MOZ_MEMORY_LDFLAGS='-MANIFEST:NO -LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
       if test -z "$MOZ_DEBUG"; then
         WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
       else
         WIN32_CRT_LIBS="msvcrtd.lib msvcprtd.lib"
       fi
+      dnl Look for a broken crtdll.obj
+      WIN32_CRTDLL_FULLPATH=`lib -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
+      lib -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
+      if grep -q '__imp__\{0,1\}free' crtdll.obj; then
+        MOZ_MEMORY_LDFLAGS='-MANIFEST:NO -LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      else
+        MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
+      fi
+      rm crtdll.obj
     fi
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
@@ -7733,19 +7746,6 @@ dnl = Profiling and Instrumenting
 dnl = 
 dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
-
-dnl ========================================================
-dnl = Enable timeline service, which provides lightweight
-dnl = instrumentation of mozilla for performance measurement.
-dnl = Timeline is off by default.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(timeline,
-[  --enable-timeline       Enable timeline services ],
-    MOZ_TIMELINE=1,
-    MOZ_TIMELINE= )
-if test -n "$MOZ_TIMELINE"; then
-    AC_DEFINE(MOZ_TIMELINE)
-fi
 
 dnl ========================================================
 dnl = Enable NS_FUNCTION_TIMER, which provides Function 
@@ -8965,7 +8965,6 @@ AC_SUBST(MOZ_OS2_TOOLS)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
-AC_SUBST(MOZ_TIMELINE)
 
 # The following variables are available to branding and application
 # configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):
@@ -9007,6 +9006,10 @@ AC_SUBST(MOZ_UA_BUILDID)
 AC_SUBST(MOZ_PKG_SPECIAL)
 
 AC_SUBST(MOZILLA_OFFICIAL)
+
+if test "$MOZ_TELEMETRY_REPORTING"; then
+    AC_DEFINE(MOZ_TELEMETRY_REPORTING)
+fi
 
 dnl win32 options
 AC_SUBST(MOZ_MAPINFO)
