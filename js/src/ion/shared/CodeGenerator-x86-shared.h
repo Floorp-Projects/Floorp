@@ -43,7 +43,6 @@
 #define jsion_codegen_x86_shared_h__
 
 #include "ion/shared/CodeGenerator-shared.h"
-#include "ion/IonLinker.h"
 
 namespace js {
 namespace ion {
@@ -57,8 +56,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     }
 
   protected:
-    Assembler masm;
-    
     // The initial size of the frame in bytes. These are bytes beyond the
     // constant header present for every Ion frame, used for pre-determined
     // spills.
