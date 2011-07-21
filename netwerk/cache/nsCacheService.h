@@ -124,6 +124,7 @@ public:
 
     static nsresult  ValidateEntry(nsCacheEntry * entry);
 
+    static PRInt32   CacheCompressionLevel();
 
     /**
      * Methods called by any cache classes
@@ -174,6 +175,8 @@ public:
     static void      SetOfflineCacheCapacity(PRInt32  capacity);
 
     static void      SetMemoryCache();
+
+    static void      SetCacheCompressionLevel(PRInt32  level);
 
     static void      OnEnterExitPrivateBrowsing();
 
