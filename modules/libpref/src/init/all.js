@@ -1113,6 +1113,27 @@ pref("intl.hyphenation-alias.en", "en-us");
 // and for other subtags of en-*, if no specific patterns are available
 pref("intl.hyphenation-alias.en-*", "en-us");
 
+pref("intl.hyphenation-alias.af-*", "af");
+pref("intl.hyphenation-alias.bg-*", "bg");
+pref("intl.hyphenation-alias.ca-*", "ca");
+pref("intl.hyphenation-alias.cy-*", "cy");
+pref("intl.hyphenation-alias.da-*", "da");
+pref("intl.hyphenation-alias.eo-*", "eo");
+pref("intl.hyphenation-alias.es-*", "es");
+pref("intl.hyphenation-alias.et-*", "et");
+pref("intl.hyphenation-alias.gl-*", "gl");
+pref("intl.hyphenation-alias.hr-*", "hr");
+pref("intl.hyphenation-alias.hsb-*", "hsb");
+pref("intl.hyphenation-alias.ia-*", "ia");
+pref("intl.hyphenation-alias.is-*", "is");
+pref("intl.hyphenation-alias.kmr-*", "kmr");
+pref("intl.hyphenation-alias.la-*", "la");
+pref("intl.hyphenation-alias.nl-*", "nl");
+pref("intl.hyphenation-alias.pt-*", "pt");
+pref("intl.hyphenation-alias.sl-*", "sl");
+pref("intl.hyphenation-alias.sv-*", "sv");
+pref("intl.hyphenation-alias.uk-*", "uk");
+
 pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
