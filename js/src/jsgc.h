@@ -98,6 +98,7 @@ enum FinalizeKind {
     FINALIZE_FUNCTION,
     FINALIZE_FUNCTION_AND_OBJECT_LAST = FINALIZE_FUNCTION,
     FINALIZE_SHAPE,
+    FINALIZE_TYPE_OBJECT,
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
 #endif
@@ -607,12 +608,13 @@ Cell::compartment() const
     return arenaHeader()->compartment;
 }
 
-#define JSTRACE_XML         3
+#define JSTRACE_TYPE_OBJECT 3
+#define JSTRACE_XML         4
 
 /*
  * One past the maximum trace kind.
  */
-#define JSTRACE_LIMIT       4
+#define JSTRACE_LIMIT       5
 
 /*
  * Lower limit after which we limit the heap growth
@@ -650,6 +652,7 @@ GetFinalizableTraceKind(size_t thingKind)
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT16_BACKGROUND */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
         JSTRACE_SHAPE,      /* FINALIZE_SHAPE */
+        JSTRACE_TYPE_OBJECT,/* FINALIZE_TYPE_OBJECT */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
         JSTRACE_XML,
 #endif
@@ -1349,6 +1352,11 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback);
 
+/* Invoke cellCallback on every in-use object of the specified thing kind. */
+void
+IterateCells(JSContext *cx, JSCompartment *compartment, gc::FinalizeKind thingKind,
+             void *data, IterateCellCallback cellCallback);
+
 } /* namespace js */
 
 extern void
@@ -1369,7 +1377,7 @@ js_MarkTraps(JSTracer *trc);
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_SHAPE)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_TYPE_OBJECT)
 #endif
 
 namespace js {

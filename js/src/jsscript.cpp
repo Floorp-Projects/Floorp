@@ -1442,7 +1442,6 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         js_MarkScriptFilename(script->filename);
 
     script->bindings.trace(trc);
-    script->types.trace(trc);
 
 #ifdef JS_METHODJIT
     if (script->jitNormal)
@@ -1469,8 +1468,7 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
      * Clear the object's type/proto, to avoid entraining stuff. Once we no longer use the parent
      * for security checks, then we can clear the parent, too.
      */
-    if (!obj->clearType(cx))
-        return JS_FALSE;
+    obj->clearType();
 
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = NULL;

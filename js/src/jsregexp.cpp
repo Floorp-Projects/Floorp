@@ -426,8 +426,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         if (!obj)
             return false;
         obj->clearParent();
-        if (!obj->clearType(xdr->cx))
-            return false;
+        obj->clearType();
 
         /*
          * initRegExp can GC before storing re in the private field of the

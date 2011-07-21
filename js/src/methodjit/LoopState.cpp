@@ -898,7 +898,7 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
     TypeSet *propertyTypes = object->getProperty(cx, id, false);
     if (!propertyTypes)
         return NULL;
-    if (!propertyTypes->isDefiniteProperty() || propertyTypes->isOwnProperty(cx, true))
+    if (!propertyTypes->isDefiniteProperty() || propertyTypes->isOwnProperty(cx, object, true))
         return NULL;
     objTypes->addFreeze(cx);
 

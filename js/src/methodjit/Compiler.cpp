@@ -169,6 +169,7 @@ mjit::Compiler::compile()
     } else if (status != Compile_Retry) {
         *checkAddr = JS_UNJITTABLE_SCRIPT;
         if (outerScript->fun) {
+            outerScript->uninlineable = true;
             types::MarkTypeObjectFlags(cx, outerScript->fun,
                                        types::OBJECT_FLAG_UNINLINEABLE);
         }
@@ -2782,7 +2783,7 @@ mjit::Compiler::jsop_getglobal(uint32 index)
     }
 
     if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
-        !globalObj->type()->unknownProperties()) {
+        !globalObj->getType(cx)->unknownProperties()) {
         Value *value = &globalObj->getSlotRef(slot);
         if (!value->isUndefined()) {
             watchGlobalReallocation();
@@ -3326,8 +3327,20 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
      * possible that one of the arguments is directly copying the 'this'
      * entry (something like 'new x.f(x)')?
      */
-    if (callingNew)
+    if (callingNew) {
         frame.discardFe(origThis);
+
+        /*
+         * If inference is enabled, the 'this' value of the pushed frame always
+         * needs to be coherent. If a GC gets triggered before the callee can
+         * fill in the slot (i.e. the GC happens on constructing the 'new'
+         * object or the call object for a heavyweight callee), it needs to be
+         * able to read the 'this' value to tell whether newScript constraints
+         * will need to be regenerated afterwards.
+         */
+        if (cx->typeInferenceEnabled())
+            masm.storeValue(NullValue(), frame.addressOf(origThis));
+    }
 
     if (!cx->typeInferenceEnabled()) {
         CompileStatus status = callArrayBuiltin(callImmArgc, callingNew);
@@ -3851,6 +3864,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             popActiveFrame();
             if (status == Compile_Abort) {
                 /* The callee is uncompileable, mark it as uninlineable and retry. */
+                script->uninlineable = true;
                 types::MarkTypeObjectFlags(cx, script->fun,
                                            types::OBJECT_FLAG_UNINLINEABLE);
                 return Compile_Retry;
@@ -4240,7 +4254,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
         if (!propertyTypes)
             return false;
-        if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
+        if (propertyTypes->isDefiniteProperty() &&
+            !propertyTypes->isOwnProperty(cx, object, true)) {
             types->addFreeze(cx);
             uint32 slot = propertyTypes->definiteSlot();
             bool isObject = top->isTypeKnown();
@@ -4778,7 +4793,7 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
         if (object->unknownProperties() || !object->proto)
             return false;
         types::TypeSet *ownTypes = object->getProperty(cx, id, false);
-        if (ownTypes->isOwnProperty(cx, false))
+        if (ownTypes->isOwnProperty(cx, object, false))
             return false;
 
         if (!testSingletonProperty(object->proto, id))
@@ -4956,7 +4971,8 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
         types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
         if (!propertyTypes)
             return false;
-        if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
+        if (propertyTypes->isDefiniteProperty() &&
+            !propertyTypes->isOwnProperty(cx, object, true)) {
             types->addFreeze(cx);
             uint32 slot = propertyTypes->definiteSlot();
             bool isObject = lhs->isTypeKnown();
@@ -5679,8 +5695,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
     jsid id = ATOM_TO_JSID(atom);
     JSValueType type = knownPushedType(0);
     if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
-        !globalObj->type()->unknownProperties()) {
-        types::TypeSet *propertyTypes = globalObj->type()->getProperty(cx, id, false);
+        !globalObj->getType(cx)->unknownProperties()) {
+        types::TypeSet *propertyTypes = globalObj->getType(cx)->getProperty(cx, id, false);
         if (!propertyTypes)
             return;
 
@@ -5692,7 +5708,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
         const js::Shape *shape = globalObj->nativeLookup(ATOM_TO_JSID(atom));
         if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
             Value *value = &globalObj->getSlotRef(shape->slot);
-            if (!value->isUndefined() && !propertyTypes->isOwnProperty(cx, true)) {
+            if (!value->isUndefined() &&
+                !propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
                 watchGlobalReallocation();
                 RegisterID reg = frame.allocReg();
                 masm.move(ImmPtr(value), reg);
@@ -5887,19 +5904,20 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
 
     jsid id = ATOM_TO_JSID(atom);
     if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
-        !globalObj->type()->unknownProperties()) {
+        !globalObj->getType(cx)->unknownProperties()) {
         /*
          * Note: object branding is disabled when inference is enabled. With
          * branding there is no way to ensure that a non-function property
          * can't get a function later and cause the global object to become
          * branded, requiring a shape change if it changes again.
          */
-        types::TypeSet *types = globalObj->type()->getProperty(cx, id, false);
+        types::TypeSet *types = globalObj->getType(cx)->getProperty(cx, id, false);
         if (!types)
             return;
         const js::Shape *shape = globalObj->nativeLookup(ATOM_TO_JSID(atom));
         if (shape && !shape->isMethod() && shape->hasDefaultSetter() &&
-            shape->writable() && shape->hasSlot() && !types->isOwnProperty(cx, true)) {
+            shape->writable() && shape->hasSlot() &&
+            !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
             watchGlobalReallocation();
             Value *value = &globalObj->getSlotRef(shape->slot);
             RegisterID reg = frame.allocReg();

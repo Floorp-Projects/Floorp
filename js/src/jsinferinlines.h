@@ -328,15 +328,21 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 inline bool
 TrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 {
-    return cx->typeInferenceEnabled()
-        && !obj->hasLazyType()
-        && !obj->type()->unknownProperties();
+    if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
+        return false;
+
+    if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(cx, id))
+        return false;
+
+    return true;
 }
 
 /* Add a possible type for a property of obj. */
 inline void
 AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, Type type)
 {
+    if (cx->typeInferenceEnabled())
+        id = MakeTypeId(cx, id);
     if (TrackPropertyTypes(cx, obj, id))
         obj->type()->addPropertyType(cx, id, type);
 }
@@ -344,6 +350,8 @@ AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, Type type)
 inline void
 AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, const Value &value)
 {
+    if (cx->typeInferenceEnabled())
+        id = MakeTypeId(cx, id);
     if (TrackPropertyTypes(cx, obj, id))
         obj->type()->addPropertyType(cx, id, value);
 }
@@ -362,34 +370,13 @@ AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, const Value &v
         obj->addPropertyType(cx, name, value);
 }
 
-/* Get the default type object to use for objects with no prototype. */
-inline TypeObject *
-GetTypeEmpty(JSContext *cx)
-{
-    return &cx->compartment->types.typeEmpty;
-}
-
-/* Alias two properties in the type information for obj. */
-inline void
-AliasTypeProperties(JSContext *cx, JSObject *obj, jsid first, jsid second)
-{
-    if (TrackPropertyTypes(cx, obj, first) || TrackPropertyTypes(cx, obj, second))
-        obj->type()->aliasProperties(cx, first, second);
-}
-
 /* Set one or more dynamic flags on a type object. */
 inline void
 MarkTypeObjectFlags(JSContext *cx, JSObject *obj, TypeObjectFlags flags)
 {
-    /*
-     * Instantiate a lazy type now if we are setting flags on it which cannot
-     * be recovered later.
-     */
-    if (TrackPropertyTypes(cx, obj, JSID_EMPTY) ||
-        (cx->typeInferenceEnabled() && !(flags & OBJECT_FLAG_DETERMINED_MASK))) {
-        TypeObject *type = obj->getType(cx);
-        if (!type->hasAllFlags(flags))
-            type->setFlags(cx, flags);
+    if (TrackPropertyTypes(cx, obj, JSID_EMPTY)) {
+        if (!obj->type()->hasAllFlags(flags))
+            obj->type()->setFlags(cx, flags);
     }
 }
 
@@ -406,7 +393,7 @@ MarkTypeObjectUnknownProperties(JSContext *cx, TypeObject *obj,
     if (cx->typeInferenceEnabled()) {
         if (!obj->unknownProperties())
             obj->markUnknown(cx);
-        if (markSetsUnknown && !obj->setsMarkedUnknown)
+        if (markSetsUnknown && !(obj->flags & OBJECT_FLAG_SETS_MARKED_UNKNOWN))
             cx->compartment->types.markSetsUnknown(cx, obj);
     }
 }
@@ -418,11 +405,10 @@ MarkTypeObjectUnknownProperties(JSContext *cx, TypeObject *obj,
 inline void
 MarkTypePropertyConfigured(JSContext *cx, JSObject *obj, jsid id)
 {
-    if (cx->typeInferenceEnabled() &&
-        !obj->hasLazyType() &&
-        !obj->type()->unknownProperties()) {
+    if (cx->typeInferenceEnabled())
+        id = MakeTypeId(cx, id);
+    if (TrackPropertyTypes(cx, obj, id))
         obj->type()->markPropertyConfigured(cx, id);
-    }
 }
 
 /* Mark a global object as having had its slots reallocated. */
@@ -576,29 +562,50 @@ TypeScript::standardType(JSContext *cx, JSProtoKey key)
     return proto->getNewType(cx);
 }
 
-inline TypeObject *
-TypeScript::initObject(JSContext *cx, const jsbytecode *pc, JSProtoKey key)
-{
-    if (!cx->typeInferenceEnabled() || !script()->hasGlobal())
-        return GetTypeNewObject(cx, key);
+struct AllocationSiteKey {
+    JSScript *script;
+    uint32 offset : 23;
+    JSProtoKey kind : 8;
+    bool uncached : 1;
 
-    uint32 offset = pc - script()->code;
-    TypeObject *prev = NULL, *obj = typeObjects;
-    while (obj) {
-        if (obj->initializerKey == key && obj->initializerOffset == offset) {
-            /* Move this to the head of the objects list, maintain LRU order. */
-            if (prev) {
-                prev->next = obj->next;
-                obj->next = typeObjects;
-                typeObjects = obj;
-            }
-            return obj;
-        }
-        prev = obj;
-        obj = obj->next;
+    static const uint32 OFFSET_LIMIT = (1 << 23);
+
+    AllocationSiteKey() { PodZero(this); }
+
+    typedef AllocationSiteKey Lookup;
+
+    static inline uint32 hash(AllocationSiteKey key) {
+        return (uint32) (key.script->code + key.offset) ^ key.kind;
     }
 
-    return cx->compartment->types.newInitializerTypeObject(cx, script(), offset, key);
+    static inline bool match(const AllocationSiteKey &a, const AllocationSiteKey &b) {
+        return a.script == b.script && a.offset == b.offset && a.kind == b.kind;
+    }
+};
+
+inline TypeObject *
+TypeScript::initObject(JSContext *cx, const jsbytecode *pc, JSProtoKey kind)
+{
+    /* :XXX: Limit script->length so we don't need to check the offset up front? */
+    uint32 offset = pc - script()->code;
+
+    if (!cx->typeInferenceEnabled() || !script()->hasGlobal() || offset >= AllocationSiteKey::OFFSET_LIMIT)
+        return GetTypeNewObject(cx, kind);
+
+    AllocationSiteKey key;
+    key.script = script();
+    key.offset = offset;
+    key.uncached = script()->isUncachedEval;
+    key.kind = kind;
+
+    if (!cx->compartment->types.allocationSiteTable)
+        return cx->compartment->types.newAllocationSiteTypeObject(cx, key);
+
+    AllocationSiteTable::Ptr p = cx->compartment->types.allocationSiteTable->lookup(key);
+
+    if (p)
+        return p->value;
+    return cx->compartment->types.newAllocationSiteTypeObject(cx, key);
 }
 
 inline void
@@ -677,28 +684,6 @@ TypeScript::setThis(JSContext *cx, const js::Value &value)
 }
 
 inline void
-TypeScript::setNewCalled(JSContext *cx)
-{
-    if (!cx->typeInferenceEnabled() || script()->calledWithNew)
-        return;
-    script()->calledWithNew = true;
-
-    /*
-     * Determining the 'this' type used when the script is invoked with 'new'
-     * happens during the script's prologue, so we don't try to pick it up from
-     * dynamic calls. Instead, generate constraints modeling the construction
-     * of 'this' when the script is analyzed or reanalyzed after an invoke with
-     * 'new', and if 'new' is first invoked after the script has already been
-     * analyzed.
-     */
-    AutoEnterTypeInference enter(cx);
-    analyze::ScriptAnalysis *analysis = script()->analysis(cx);
-    if (!analysis || !analysis->ranInference())
-        return;
-    analysis->analyzeTypesNew(cx);
-}
-
-inline void
 TypeScript::setLocal(JSContext *cx, unsigned local, Type type)
 {
     if (!cx->typeInferenceEnabled() || !ensureTypeArray(cx))
@@ -762,6 +747,12 @@ TypeScript::setUpvar(JSContext *cx, unsigned upvar, const js::Value &value)
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
+
+inline JSCompartment *
+TypeCompartment::compartment()
+{
+    return (JSCompartment *)((char *)this - offsetof(JSCompartment, types));
+}
 
 inline void
 TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, Type type)
@@ -985,6 +976,12 @@ HashSetLookup(U **values, unsigned count, T key)
     return NULL;
 }
 
+inline uint32
+TypeSet::baseObjectCount() const
+{
+    return (flags & TYPE_FLAG_OBJECT_COUNT_MASK) >> TYPE_FLAG_OBJECT_COUNT_SHIFT;
+}
+
 inline bool
 TypeSet::hasType(Type type)
 {
@@ -994,22 +991,30 @@ TypeSet::hasType(Type type)
     if (type.isUnknown()) {
         return false;
     } else if (type.isPrimitive()) {
-        return !!(typeFlags & PrimitiveTypeFlag(type.primitive()));
+        return !!(flags & PrimitiveTypeFlag(type.primitive()));
     } else if (type.isAnyObject()) {
-        return !!(typeFlags & TYPE_FLAG_ANYOBJECT);
+        return !!(flags & TYPE_FLAG_ANYOBJECT);
     } else {
-        return !!(typeFlags & TYPE_FLAG_ANYOBJECT) ||
+        return !!(flags & TYPE_FLAG_ANYOBJECT) ||
             HashSetLookup<TypeObjectKey*,TypeObjectKey,TypeObjectKey>
-                (objectSet, objectCount, type.objectKey()) != NULL;
+            (objectSet, baseObjectCount(), type.objectKey()) != NULL;
     }
+}
+
+inline void
+TypeSet::setBaseObjectCount(uint32 count)
+{
+    JS_ASSERT(count <= TYPE_FLAG_OBJECT_COUNT_LIMIT);
+    flags = (flags & ~TYPE_FLAG_OBJECT_COUNT_MASK)
+          | (count << TYPE_FLAG_OBJECT_COUNT_SHIFT);
 }
 
 inline void
 TypeSet::clearObjects()
 {
-    if (objectCount >= 2 && !intermediate())
+    if (baseObjectCount() >= 2 && !intermediate())
         Foreground::free_(objectSet);
-    objectCount = 0;
+    setBaseObjectCount(0);
     objectSet = NULL;
 }
 
@@ -1022,29 +1027,35 @@ TypeSet::addType(JSContext *cx, Type type)
         return;
 
     if (type.isUnknown()) {
-        typeFlags = TYPE_FLAG_UNKNOWN | (typeFlags & ~baseFlags());
+        flags = TYPE_FLAG_UNKNOWN | (flags & ~baseFlags());
         clearObjects();
     } else if (type.isPrimitive()) {
         TypeFlags flag = PrimitiveTypeFlag(type.primitive());
-        if (typeFlags & flag)
+        if (flags & flag)
             return;
 
         /* If we add float to a type set it is also considered to contain int. */
         if (flag == TYPE_FLAG_DOUBLE)
             flag |= TYPE_FLAG_INT32;
 
-        typeFlags |= flag;
+        flags |= flag;
     } else {
-        if (typeFlags & TYPE_FLAG_ANYOBJECT)
+        if (flags & TYPE_FLAG_ANYOBJECT)
             return;
         if (type.isAnyObject())
             goto unknownObject;
+        uint32 objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
                                      (cx, objectSet, objectCount, object, intermediate());
         if (!pentry || *pentry)
             return;
         *pentry = object;
+
+        if (objectCount > TYPE_FLAG_OBJECT_COUNT_LIMIT)
+            goto unknownObject;
+
+        setBaseObjectCount(objectCount);
 
         if (type.isTypeObject()) {
             TypeObject *nobject = type.typeObject();
@@ -1065,7 +1076,7 @@ TypeSet::addType(JSContext *cx, Type type)
     if (false) {
     unknownObject:
         type = Type::AnyObjectType();
-        typeFlags |= TYPE_FLAG_ANYOBJECT;
+        flags |= TYPE_FLAG_ANYOBJECT;
         clearObjects();
     }
 
@@ -1088,10 +1099,10 @@ TypeSet::setOwnProperty(JSContext *cx, bool configured)
 {
     TypeFlags nflags = TYPE_FLAG_OWN_PROPERTY | (configured ? TYPE_FLAG_CONFIGURED_PROPERTY : 0);
 
-    if ((typeFlags & nflags) == nflags)
+    if ((flags & nflags) == nflags)
         return;
 
-    typeFlags |= nflags;
+    flags |= nflags;
 
     /* Propagate the change to all constraints. */
     TypeConstraint *constraint = constraintList;
@@ -1105,16 +1116,17 @@ inline unsigned
 TypeSet::getObjectCount()
 {
     JS_ASSERT(!unknownObject());
-    if (objectCount > SET_ARRAY_SIZE)
-        return HashSetCapacity(objectCount);
-    return objectCount;
+    uint32 count = baseObjectCount();
+    if (count > SET_ARRAY_SIZE)
+        return HashSetCapacity(count);
+    return count;
 }
 
 inline TypeObjectKey *
 TypeSet::getObject(unsigned i)
 {
     JS_ASSERT(i < getObjectCount());
-    if (objectCount == 1) {
+    if (baseObjectCount() == 1) {
         JS_ASSERT(i == 0);
         return (TypeObjectKey *) objectSet;
     }
@@ -1163,18 +1175,35 @@ TypeObject::name()
 #endif
 }
 
-inline TypeObject::TypeObject(jsid name, JSObject *proto, bool isFunction)
+inline TypeObject::TypeObject(jsid name, JSObject *proto, bool function, bool unknown)
 {
     PodZero(this);
 
     this->proto = proto;
-    this->isFunction = isFunction;
+    if (function)
+        flags |= OBJECT_FLAG_FUNCTION;
+    if (unknown)
+        flags |= OBJECT_FLAG_UNKNOWN_MASK;
 
 #ifdef DEBUG
     this->name_ = name;
 #endif
 
     InferSpew(ISpewOps, "newObject: %s", this->name());
+}
+
+inline uint32
+TypeObject::basePropertyCount() const
+{
+    return (flags & OBJECT_FLAG_PROPERTY_COUNT_MASK) >> OBJECT_FLAG_PROPERTY_COUNT_SHIFT;
+}
+
+inline void
+TypeObject::setBasePropertyCount(uint32 count)
+{
+    JS_ASSERT(count <= OBJECT_FLAG_PROPERTY_COUNT_LIMIT);
+    flags = (flags & ~OBJECT_FLAG_PROPERTY_COUNT_MASK)
+          | (count << OBJECT_FLAG_PROPERTY_COUNT_SHIFT);
 }
 
 inline TypeSet *
@@ -1185,41 +1214,59 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == MakeTypeId(cx, id));
     JS_ASSERT(!unknownProperties());
 
+    uint32 propertyCount = basePropertyCount();
     Property **pprop = HashSetInsert<jsid,Property,Property>
-                           (cx, propertySet, propertyCount, id, false);
-    if (!pprop || (!*pprop && !addProperty(cx, id, pprop)))
+                           (cx, propertySet, propertyCount, id, singleton != NULL);
+    if (!pprop)
         return NULL;
 
-    if (assign)
-        (*pprop)->types.setOwnProperty(cx, false);
+    if (!*pprop) {
+        if (propertyCount > OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
+            markUnknown(cx);
+            TypeSet *types = TypeSet::make(cx, "propertyOverflow");
+            types->addType(cx, Type::UnknownType());
+            return types;
+        }
+        setBasePropertyCount(propertyCount);
+        if (!addProperty(cx, id, pprop))
+            return NULL;
+    }
 
-    return &(*pprop)->types;
+    TypeSet *types = &(*pprop)->types;
+
+    if (assign)
+        types->setOwnProperty(cx, false);
+
+    return types;
 }
 
-inline bool
-TypeObject::hasProperty(JSContext *cx, jsid id)
+inline TypeSet *
+TypeObject::maybeGetProperty(JSContext *cx, jsid id)
 {
-    JS_ASSERT(cx->compartment->activeInference);
-    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_STRING(id));
-    JS_ASSERT(id == MakeTypeId(cx, id));
+    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
+    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == MakeTypeId(cx, id));
     JS_ASSERT(!unknownProperties());
 
-    return HashSetLookup<jsid,Property,Property>
-        (propertySet, propertyCount, id) != NULL;
+    Property *prop = HashSetLookup<jsid,Property,Property>
+        (propertySet, basePropertyCount(), id);
+
+    return prop ? &prop->types : NULL;
 }
 
 inline unsigned
 TypeObject::getPropertyCount()
 {
-    if (propertyCount > SET_ARRAY_SIZE)
-        return HashSetCapacity(propertyCount);
-    return propertyCount;
+    uint32 count = basePropertyCount();
+    if (count > SET_ARRAY_SIZE)
+        return HashSetCapacity(count);
+    return count;
 }
 
 inline Property *
 TypeObject::getProperty(unsigned i)
 {
-    if (propertyCount == 1) {
+    JS_ASSERT(i < getPropertyCount());
+    if (basePropertyCount() == 1) {
         JS_ASSERT(i == 0);
         return (Property *) propertySet;
     }
@@ -1233,7 +1280,7 @@ TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
 
     switch (key) {
       case JSProto_Function:
-        JS_ASSERT(isFunction);
+        JS_ASSERT(isFunction());
         /* FALLTHROUGH */
 
       case JSProto_Object:

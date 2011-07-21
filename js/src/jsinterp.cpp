@@ -553,7 +553,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
         if (!obj)
             return false;
 
-        obj->init(cx, &js_NoSuchMethodClass, GetTypeEmpty(cx), NULL, NULL, false);
+        obj->init(cx, &js_NoSuchMethodClass, &emptyTypeObject, NULL, NULL, false);
         obj->setSharedNonNativeMap();
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
@@ -4030,7 +4030,7 @@ BEGIN_CASE(JSOP_GETELEM)
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
-        MarkTypeObjectFlags(cx, script->fun, types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        MarkArgumentsCreated(cx, script);
         JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
     }
 
@@ -4654,7 +4654,7 @@ BEGIN_CASE(JSOP_ARGUMENTS)
     if (cx->typeInferenceEnabled() && !script->strictModeCode) {
         if (!script->ensureRanInference(cx))
             goto error;
-        if (script->fun->type()->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
+        if (script->createdArgs) {
             if (!js_GetArgsValue(cx, regs.fp(), &rval))
                 goto error;
         } else {

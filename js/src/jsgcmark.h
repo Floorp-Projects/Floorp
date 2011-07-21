@@ -154,6 +154,9 @@ void
 MarkRoot(JSTracer *trc, const Shape *thing, const char *name);
 
 void
+MarkRoot(JSTracer *trc, types::TypeObject *thing, const char *name);
+
+void
 MarkRoot(JSTracer *trc, JSXML *thing, const char *name);
 
 void

@@ -281,15 +281,23 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
         AutoEnterTypeInference enter(cx);
 
         /*
-         * We don't track types for properties inherited from prototypes which haven't
-         * yet been accessed during analysis of the inheriting object. Don't do the
-         * property instantiation now.
+         * We don't track types for properties inherited from prototypes which
+         * haven't yet been accessed during analysis of the inheriting object.
+         * Don't do the property instantiation now.
          */
-        if (!obj->hasProperty(cx, id))
+        TypeSet *types = obj->maybeGetProperty(cx, id);
+        if (!types)
             return true;
 
-        TypeSet *types = obj->getProperty(cx, id, false);
-        if (types && !types->hasType(type)) {
+        /*
+         * If the types inherited from prototypes are not being propagated into
+         * this set (because we haven't analyzed code which accesses the
+         * property), skip.
+         */
+        if (!types->hasPropagatedProperty())
+            return true;
+
+        if (!types->hasType(type)) {
             TypeFailure(cx, "Missing type in object %s %s: %s",
                         obj->name(), TypeIdString(id), TypeString(type));
         }
@@ -317,7 +325,7 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
      * this dumps the current type state of all scripts and type objects 
      * to stdout.
      */
-    cx->compartment->types.print(cx, cx->compartment);
+    cx->compartment->types.print(cx);
 
     /* Always active, even in release builds */
     JS_Assert(msgbuf, __FILE__, __LINE__);
@@ -358,7 +366,6 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     }
 
     JS_ASSERT(cx->compartment->activeInference);
-    JS_ASSERT_IF(intermediate(), !constraint->persistentObject());
 
     InferSpew(ISpewOps, "addConstraint: %sT%p%s %sC%p%s %s",
               InferSpewColor(this), this, InferSpewColorReset(),
@@ -369,26 +376,23 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     constraint->next = constraintList;
     constraintList = constraint;
 
-    if (constraint->persistentObject())
-        typeFlags |= TYPE_FLAG_HAS_PERSISTENT_CONSTRAINTS;
-
     if (!callExisting)
         return;
 
-    if (typeFlags & TYPE_FLAG_UNKNOWN) {
+    if (flags & TYPE_FLAG_UNKNOWN) {
         cx->compartment->types.addPending(cx, constraint, this, Type::UnknownType());
         cx->compartment->types.resolvePending(cx);
         return;
     }
 
     for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
-        if (typeFlags & flag) {
+        if (flags & flag) {
             Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
             cx->compartment->types.addPending(cx, constraint, this, type);
         }
     }
 
-    if (typeFlags & TYPE_FLAG_ANYOBJECT) {
+    if (flags & TYPE_FLAG_ANYOBJECT) {
         cx->compartment->types.addPending(cx, constraint, this, Type::AnyObjectType());
         cx->compartment->types.resolvePending(cx);
         return;
@@ -407,39 +411,40 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 void
 TypeSet::print(JSContext *cx)
 {
-    if (typeFlags & TYPE_FLAG_OWN_PROPERTY)
+    if (flags & TYPE_FLAG_OWN_PROPERTY)
         printf(" [own]");
-    if (typeFlags & TYPE_FLAG_CONFIGURED_PROPERTY)
+    if (flags & TYPE_FLAG_CONFIGURED_PROPERTY)
         printf(" [configured]");
 
     if (isDefiniteProperty())
         printf(" [definite:%d]", definiteSlot());
 
-    if (baseFlags() == 0 && !objectCount) {
+    if (baseFlags() == 0 && !baseObjectCount()) {
         printf(" missing");
         return;
     }
 
-    if (typeFlags & TYPE_FLAG_UNKNOWN)
+    if (flags & TYPE_FLAG_UNKNOWN)
         printf(" unknown");
-    if (typeFlags & TYPE_FLAG_ANYOBJECT)
+    if (flags & TYPE_FLAG_ANYOBJECT)
         printf(" object");
 
-    if (typeFlags & TYPE_FLAG_UNDEFINED)
+    if (flags & TYPE_FLAG_UNDEFINED)
         printf(" void");
-    if (typeFlags & TYPE_FLAG_NULL)
+    if (flags & TYPE_FLAG_NULL)
         printf(" null");
-    if (typeFlags & TYPE_FLAG_BOOLEAN)
+    if (flags & TYPE_FLAG_BOOLEAN)
         printf(" bool");
-    if (typeFlags & TYPE_FLAG_INT32)
+    if (flags & TYPE_FLAG_INT32)
         printf(" int");
-    if (typeFlags & TYPE_FLAG_DOUBLE)
+    if (flags & TYPE_FLAG_DOUBLE)
         printf(" float");
-    if (typeFlags & TYPE_FLAG_STRING)
+    if (flags & TYPE_FLAG_STRING)
         printf(" string");
-    if (typeFlags & TYPE_FLAG_LAZYARGS)
+    if (flags & TYPE_FLAG_LAZYARGS)
         printf(" lazyargs");
 
+    uint32 objectCount = baseObjectCount();
     if (objectCount) {
         printf(" object[%u]", objectCount);
 
@@ -479,33 +484,6 @@ void
 TypeSet::addSubset(JSContext *cx, TypeSet *target)
 {
     add(cx, ArenaNew<TypeConstraintSubset>(cx->compartment->pool, target));
-}
-
-/* Subset constraint not associated with a script's analysis. */
-class TypeConstraintBaseSubset : public TypeConstraint
-{
-public:
-    TypeObject *object;
-    TypeSet *target;
-
-    TypeConstraintBaseSubset(TypeObject *object, TypeSet *target)
-        : TypeConstraint("baseSubset"), object(object), target(target)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
-        target->addType(cx, type);
-    }
-
-    TypeObject * persistentObject() { return object; }
-
-    size_t allocatedSize() { return sizeof(TypeConstraintBaseSubset); }
-};
-
-void
-TypeSet::addBaseSubset(JSContext *cx, TypeObject *obj, TypeSet *target)
-{
-    add(cx, cx->new_<TypeConstraintBaseSubset>(obj, target));
 }
 
 /* Constraints for reads/writes on object properties. */
@@ -589,26 +567,6 @@ TypeSet::addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid i
         return;
 
     add(cx, ArenaNew<TypeConstraintCallProp>(cx->compartment->pool, script, callpc, id));
-}
-
-/* Constraints for determining the 'this' object at sites invoked using 'new'. */
-class TypeConstraintNewObject : public TypeConstraint
-{
-    TypeObject *fun;
-    TypeSet *target;
-
-  public:
-    TypeConstraintNewObject(TypeObject *fun, TypeSet *target)
-        : TypeConstraint("newObject"), fun(fun), target(target)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, Type type);
-};
-
-void
-TypeSet::addNewObject(JSContext *cx, TypeObject *fun, TypeSet *target)
-{
-    add(cx, ArenaNew<TypeConstraintNewObject>(cx->compartment->pool, fun, target));
 }
 
 /*
@@ -976,21 +934,6 @@ static inline void
 PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *object,
                bool assign, TypeSet *target, jsid id)
 {
-    /* Monitor assigns on the 'prototype' property. */
-    if (assign && id == id_prototype(cx)) {
-        cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
-        return;
-    }
-
-    /* Monitor accesses on other properties with special behavior we don't keep track of. */
-    if (id == id___proto__(cx) || id == id_constructor(cx) || id == id_caller(cx)) {
-        if (assign)
-            cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
-        else
-            target->addType(cx, Type::UnknownType());
-        return;
-    }
-
     /* Reads from objects with unknown properties are unknown, writes to such objects are ignored. */
     if (object->unknownProperties()) {
         if (!assign)
@@ -1002,12 +945,16 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     TypeSet *types = object->getProperty(cx, id, assign);
     if (!types)
         return;
-    if (assign)
+    if (assign) {
         target->addSubset(cx, types);
-    else if (UsePropertyTypeBarrier(pc))
-        types->addSubsetBarrier(cx, script, pc, target);
-    else
-        types->addSubset(cx, target);
+    } else {
+        if (!types->hasPropagatedProperty())
+            object->getFromPrototypes(cx, id, types);
+        if (UsePropertyTypeBarrier(pc))
+            types->addSubsetBarrier(cx, script, pc, target);
+        else
+            types->addSubset(cx, target);
+    }
 }
 
 /* Whether the JSObject/TypeObject referent of an access on type cannot be determined. */
@@ -1078,48 +1025,12 @@ TypeConstraintCallProp::newType(JSContext *cx, TypeSet *source, Type type)
             TypeSet *types = object->getProperty(cx, id, false);
             if (!types)
                 return;
+            if (!types->hasPropagatedProperty())
+                object->getFromPrototypes(cx, id, types);
             /* Bypass addPropagateThis, we already have the callpc. */
             types->add(cx, ArenaNew<TypeConstraintPropagateThis>(cx->compartment->pool,
                                                                  script, callpc, type));
         }
-    }
-}
-
-void
-TypeConstraintNewObject::newType(JSContext *cx, TypeSet *source, Type type)
-{
-    if (type.isUnknown() || type.isAnyObject()) {
-        target->addType(cx, Type::UnknownType());
-        return;
-    }
-
-    if (type.isObject()) {
-        TypeObject *object = type.isTypeObject()
-            ? type.typeObject()
-            : type.singleObject()->getType(cx);
-        if (object->unknownProperties()) {
-            target->addType(cx, Type::UnknownType());
-        } else {
-            TypeSet *newTypes = object->getProperty(cx, JSID_EMPTY, false);
-            if (!newTypes)
-                return;
-            newTypes->addSubset(cx, target);
-        }
-    } else if (!fun->functionScript) {
-        /*
-         * This constraint should only be used for scripted functions and for
-         * native constructors with immutable non-primitive prototypes.
-         * Disregard primitives here.
-         */
-    } else if (!fun->functionScript->hasGlobal()) {
-        target->addType(cx, Type::UnknownType());
-    } else {
-        TypeObject *object = fun->functionScript->types.standardType(cx, JSProto_Object);
-        if (!object) {
-            cx->compartment->types.setPendingNukeTypes(cx);
-            return;
-        }
-        target->addType(cx, Type::ObjectType(object));
     }
 }
 
@@ -1211,12 +1122,11 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
     }
 
     if (callsite->isNew) {
-        /* Mark the callee as having been invoked with 'new'. */
-        callee->types.setNewCalled(cx);
-
         /*
-         * If the script does not return a value then the pushed value is the new
-         * object (typical case).
+         * If the script does not return a value then the pushed value is the
+         * new object (typical case). Note that we don't model construction of
+         * the new value, which is done dynamically; we don't keep track of the
+         * possible 'new' types for a given prototype type object.
          */
         callee->types.thisTypes()->addSubset(cx, callsite->returnTypes);
         callee->types.returnTypes()->addFilterPrimitives(cx, callsite->returnTypes, false);
@@ -1257,7 +1167,7 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
         callee = object->getFunctionPrivate()->script();
     } else if (type.isTypeObject()) {
         TypeObject *object = type.typeObject();
-        if (!object->isFunction || !object->functionScript)
+        if (!object->isFunction() || !object->functionScript)
             return;
         callee = object->functionScript;
     } else {
@@ -1461,7 +1371,7 @@ TypeSet::getKnownTypeTag(JSContext *cx)
     TypeFlags flags = baseFlags();
     JSValueType type;
 
-    if (objectCount)
+    if (baseObjectCount())
         type = flags ? JSVAL_TYPE_UNKNOWN : JSVAL_TYPE_OBJECT;
     else
         type = GetValueTypeFromTypeFlags(flags);
@@ -1473,7 +1383,7 @@ TypeSet::getKnownTypeTag(JSContext *cx)
      * that the exact tag is unknown, as it will stay unknown as more types are
      * added to the set.
      */
-    bool empty = flags == 0 && objectCount == 0;
+    bool empty = flags == 0 && baseObjectCount() == 0;
     JS_ASSERT_IF(empty, type == JSVAL_TYPE_UNKNOWN);
 
     if (cx->compartment->types.compiledScript && (empty || type != JSVAL_TYPE_UNKNOWN)) {
@@ -1551,13 +1461,13 @@ public:
                 : type.typeObject();
             if (!object->hasAnyFlags(flags)) {
                 /*
-                 * Add a constraint on the element type of the object to pick up
-                 * changes in the object's properties.
+                 * Add a constraint on the the object to pick up changes in the
+                 * object's properties.
                  */
-                TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
-                if (!elementTypes)
+                TypeSet *types = object->getProperty(cx, JSID_EMPTY, false);
+                if (!types)
                     return;
-                elementTypes->add(cx,
+                types->add(cx,
                     ArenaNew<TypeConstraintFreezeObjectFlags>(cx->compartment->pool,
                                                               script, flags, &marked), false);
                 return;
@@ -1581,7 +1491,7 @@ TypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
      * Treat type sets containing no objects as having all object flags,
      * to spare callers from having to check this.
      */
-    if (objectCount == 0)
+    if (baseObjectCount() == 0)
         return true;
 
     unsigned count = getObjectCount();
@@ -1612,18 +1522,31 @@ TypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags
     if (object->hasAnyFlags(flags))
         return true;
 
-    TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
-    if (!elementTypes)
+    TypeSet *types = object->getProperty(cx, JSID_EMPTY, false);
+    if (!types)
         return true;
-    elementTypes->add(cx,
+    types->add(cx,
         ArenaNew<TypeConstraintFreezeObjectFlags>(cx->compartment->pool,
                                                   cx->compartment->types.compiledScript, flags), false);
     return false;
 }
 
 void
-FixLazyArguments(JSContext *cx, JSScript *script)
+types::MarkArgumentsCreated(JSContext *cx, JSScript *script)
 {
+    JS_ASSERT(!script->createdArgs);
+
+    script->createdArgs = true;
+    script->uninlineable = true;
+
+    MarkTypeObjectFlags(cx, script->fun,
+                        OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
+
+    if (!script->usedLazyArgs)
+        return;
+
+    AutoEnterTypeInference enter(cx);
+
 #ifdef JS_METHODJIT
     mjit::ExpandInlineFrames(cx->compartment, true);
 #endif
@@ -1658,36 +1581,27 @@ ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown, bool f
     if (object->unknownProperties())
         return;
 
-    /* All constraints listening to state changes are on the element types. */
-    TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
-    if (!elementTypes)
-        return;
-    if (markingUnknown) {
-        bool fixArgs = false;
-        if (!(object->flags & OBJECT_FLAG_CREATED_ARGUMENTS) && object->isFunction) {
-            if (object->functionScript && object->functionScript->usedLazyArgs)
-                fixArgs = true;
+    /* All constraints listening to state changes are on the empty id. */
+    TypeSet *types = object->maybeGetProperty(cx, JSID_EMPTY);
+
+    /* Mark as unknown after getting the types, to avoid assertion. */
+    if (markingUnknown)
+        object->flags |= OBJECT_FLAG_DYNAMIC_MASK | OBJECT_FLAG_UNKNOWN_PROPERTIES;
+
+    if (types) {
+        TypeConstraint *constraint = types->constraintList;
+        while (constraint) {
+            constraint->newObjectState(cx, object, force);
+            constraint = constraint->next;
         }
-
-        /* Mark as unknown after getting the element types, to avoid assertion. */
-        object->flags = OBJECT_FLAG_UNKNOWN_MASK;
-
-        if (fixArgs)
-            FixLazyArguments(cx, object->functionScript);
-    }
-
-    TypeConstraint *constraint = elementTypes->constraintList;
-    while (constraint) {
-        constraint->newObjectState(cx, object, force);
-        constraint = constraint->next;
     }
 }
 
 void
 TypeSet::WatchObjectReallocation(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isGlobal() && !obj->type()->unknownProperties());
-    TypeSet *types = obj->type()->getProperty(cx, JSID_VOID, false);
+    JS_ASSERT(obj->isGlobal() && !obj->getType(cx)->unknownProperties());
+    TypeSet *types = obj->getType(cx)->getProperty(cx, JSID_EMPTY, false);
     if (!types)
         return;
 
@@ -1720,23 +1634,35 @@ public:
     {
         if (updated)
             return;
-        if (source->hasAnyFlag(configurable
-                               ? TYPE_FLAG_CONFIGURED_PROPERTY
-                               : TYPE_FLAG_OWN_PROPERTY)) {
+        if (source->isOwnProperty(configurable)) {
             updated = true;
             cx->compartment->types.addPendingRecompile(cx, script);
         }
     }
 };
 
+static void
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script);
+
 bool
-TypeSet::isOwnProperty(JSContext *cx, bool configurable)
+TypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
 {
-    if (hasAnyFlag(configurable
-                   ? TYPE_FLAG_CONFIGURED_PROPERTY
-                   : TYPE_FLAG_OWN_PROPERTY)) {
-        return true;
+    /*
+     * Everywhere compiled code depends on definite properties associated with
+     * a type object's newScript, we need to make sure there are constraints
+     * in place which will mark those properties as configured should the
+     * definite properties be invalidated.
+     */
+    if (object->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
+        if (!object->newScript) {
+            JS_ASSERT(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED);
+            object->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
+        }
+        CheckNewScriptProperties(cx, object, object->newScript->script);
     }
+
+    if (isOwnProperty(configurable))
+        return true;
 
     add(cx, ArenaNew<TypeConstraintFreezeOwnProperty>(cx->compartment->pool,
                                                       cx->compartment->types.compiledScript,
@@ -1747,7 +1673,7 @@ TypeSet::isOwnProperty(JSContext *cx, bool configurable)
 bool
 TypeSet::knownNonEmpty(JSContext *cx)
 {
-    if (baseFlags() != 0 || objectCount != 0)
+    if (baseFlags() != 0 || baseObjectCount() != 0)
         return true;
 
     add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->pool,
@@ -1802,7 +1728,7 @@ TypeSet::getTypedArrayType(JSContext *cx)
 JSObject *
 TypeSet::getSingleton(JSContext *cx, bool freeze)
 {
-    if (baseFlags() != 0 || objectCount != 1)
+    if (baseFlags() != 0 || baseObjectCount() != 1)
         return NULL;
 
     JSObject *obj = getSingleObject(0);
@@ -1821,21 +1747,12 @@ TypeSet::getSingleton(JSContext *cx, bool freeze)
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
 
+TypeObject types::emptyTypeObject(JSID_VOID, NULL, false, true);
+
 void
 TypeCompartment::init(JSContext *cx)
 {
     PodZero(this);
-
-    /*
-     * Initialize the empty type object. This is not threaded onto the objects list,
-     * will never be collected during GC, and does not have a proto or any properties
-     * that need to be marked. It *can* have empty shapes, which are weak references.
-     */
-#ifdef DEBUG
-    typeEmpty.name_ = JSID_VOID;
-#endif
-    typeEmpty.flags = OBJECT_FLAG_UNKNOWN_MASK;
-    typeEmpty.setsMarkedUnknown = true;
 
 #ifndef JS_CPU_ARM
     if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE)
@@ -1846,7 +1763,7 @@ TypeCompartment::init(JSContext *cx)
 TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
                                const char *name, const char *postfix,
-                               JSProtoKey key, JSObject *proto)
+                               JSProtoKey key, JSObject *proto, bool unknown)
 {
 #ifdef DEBUG
     if (*postfix) {
@@ -1871,16 +1788,13 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
     jsid id = JSID_VOID;
 #endif
 
-    TypeObject *object = cx->new_<TypeObject>(id, proto, key == JSProto_Function);
+    TypeObject *object = NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
         return NULL;
-
-    TypeObject *&objects = script ? script->types.typeObjects : this->objects;
-    object->next = objects;
-    objects = object;
+    new(object) TypeObject(id, proto, key == JSProto_Function, unknown);
 
     if (!cx->typeInferenceEnabled())
-        object->flags = OBJECT_FLAG_UNKNOWN_MASK;
+        object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
     else
         object->setFlagsFromKey(cx, key);
 
@@ -1888,48 +1802,65 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
         /* Thread onto the prototype's list of instance type objects. */
         TypeObject *prototype = proto->getType(cx);
         if (prototype->unknownProperties())
-            object->flags = OBJECT_FLAG_UNKNOWN_MASK;
-        object->instanceNext = prototype->instanceList;
-        prototype->instanceList = object;
+            object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
     }
 
     return object;
 }
 
 TypeObject *
-TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
-                                          uint32 offset, JSProtoKey key)
+TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSiteKey &key)
 {
+    AutoEnterTypeInference enter(cx);
+
+    if (!allocationSiteTable) {
+        allocationSiteTable = cx->new_<AllocationSiteTable>();
+        if (!allocationSiteTable || !allocationSiteTable->init()) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return NULL;
+        }
+    }
+
     char *name = NULL;
 #ifdef DEBUG
     name = (char *) alloca(40);
-    JS_snprintf(name, 40, "#%lu:%lu", script->id(), offset);
+    JS_snprintf(name, 40, "#%lu:%lu", key.script->id(), key.offset);
 #endif
 
+    AllocationSiteTable::AddPtr p = allocationSiteTable->lookupForAdd(key);
+    JS_ASSERT(!p);
+
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, script->global(), key, &proto, NULL))
+    if (!js_GetClassPrototype(cx, key.script->global(), key.kind, &proto, NULL))
         return NULL;
 
-    TypeObject *res = newTypeObject(cx, script, name, "", key, proto);
-    if (!res)
+    TypeObject *res = newTypeObject(cx, key.script, name, "", key.kind, proto);
+    if (!res) {
+        cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
+    }
 
-    res->initializerKey = key;
-    res->initializerOffset = offset;
+    jsbytecode *pc = key.script->code + key.offset;
+    UntrapOpcode untrap(cx, key.script, pc);
 
-    jsbytecode *pc = script->code + offset;
-    UntrapOpcode untrap(cx, script, pc);
-
-    if (JSOp(*pc) == JSOP_NEWOBJECT) {
+    if (JSOp(*pc) == JSOP_NEWOBJECT && !key.uncached) {
         /*
          * This object is always constructed the same way and will not be
          * observed by other code before all properties have been added. Mark
          * all the properties as definite properties of the object.
+         * :XXX: skipping for objects from uncached eval scripts, as entries
+         * in the allocation site table may be stale and we could potentially
+         * get a spurious hit. Fix this hack.
          */
-        JSObject *baseobj = script->getObject(GET_SLOTNO(pc));
+        JSObject *baseobj = key.script->getObject(GET_SLOTNO(pc));
 
         if (!res->addDefiniteProperties(cx, baseobj))
             return NULL;
+    }
+
+    if (!allocationSiteTable->add(p, key, res)) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return NULL;
     }
 
     return res;
@@ -2177,17 +2108,37 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
         ObjectStateChange(cx, script->fun->type(), false, true);
 }
 
-static void
-MarkTypeObjectListSetsUnknown(JSContext *cx, TypeObject *objects, TypeObject *target)
+/*
+ * State for keeping track of which property type sets contain an object we are
+ * scrubbing from all properties in the compartment. We make a list of
+ * properties to update and fix them afterwards, as adding types can't be done
+ * with the GC locked (as is done in IterateCells), and can potentially make
+ * new type objects as well.
+ */
+struct MarkSetsUnknownState
 {
-    while (objects) {
-        unsigned count = objects->getPropertyCount();
-        for (unsigned i = 0; i < count; i++) {
-            Property *prop = objects->getProperty(i);
-            if (prop && prop->types.hasType(Type::ObjectType(target)))
-                prop->types.addType(cx, Type::AnyObjectType());
+    TypeObject *target;
+    Vector<TypeSet *> pending;
+
+    MarkSetsUnknownState(JSContext *cx, TypeObject *target)
+        : target(target), pending(cx)
+    {}
+};
+
+static void
+MarkObjectSetsUnknownCallback(JSContext *cx, void *data, void *thing,
+                              size_t traceKind, size_t thingSize)
+{
+    MarkSetsUnknownState *state = (MarkSetsUnknownState *) data;
+    TypeObject *object = (TypeObject *) thing;
+
+    unsigned count = object->getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        Property *prop = object->getProperty(i);
+        if (prop && prop->types.hasType(Type::ObjectType(state->target))) {
+            if (!state->pending.append(&prop->types))
+                cx->compartment->types.setPendingNukeTypes(cx);
         }
-        objects = objects->next;
     }
 }
 
@@ -2195,10 +2146,10 @@ void
 TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
 {
     JS_ASSERT(this == &cx->compartment->types);
-    JS_ASSERT(!target->setsMarkedUnknown);
+    JS_ASSERT(!(target->flags & OBJECT_FLAG_SETS_MARKED_UNKNOWN));
     JS_ASSERT(!target->singleton);
     JS_ASSERT(target->unknownProperties());
-    target->setsMarkedUnknown = true;
+    target->flags |= OBJECT_FLAG_SETS_MARKED_UNKNOWN;
 
     AutoEnterTypeInference enter(cx);
 
@@ -2209,7 +2160,13 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
      * static information (like initializer objects at various offsets).
      */
 
-    MarkTypeObjectListSetsUnknown(cx, objects, target);
+    MarkSetsUnknownState state(cx, target);
+
+    IterateCells(cx, cx->compartment, gc::FINALIZE_TYPE_OBJECT,
+                 (void *) &state, MarkObjectSetsUnknownCallback);
+
+    for (unsigned i = 0; i < state.pending.length(); i++)
+        state.pending[i]->addType(cx, Type::AnyObjectType());
 
     for (JSCList *cursor = cx->compartment->scripts.next;
          cursor != &cx->compartment->scripts;
@@ -2222,7 +2179,6 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
                     script->types.typeArray[i].addType(cx, Type::AnyObjectType());
             }
         }
-        MarkTypeObjectListSetsUnknown(cx, script->types.typeObjects, target);
         if (script->hasAnalysis() && script->analysis(cx)->ranInference()) {
             for (unsigned i = 0; i < script->length; i++) {
                 if (!script->analysis(cx)->maybeCode(i))
@@ -2289,10 +2245,18 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
     code.typeBarriers = barrier;
 }
 
-void
-TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
+static void
+PrintObjectCallback(JSContext *cx, void *data, void *thing,
+                    size_t traceKind, size_t thingSize)
 {
-    JS_ASSERT(this == &compartment->types);
+    TypeObject *object = (TypeObject *) thing;
+    object->print(cx);
+}
+
+void
+TypeCompartment::print(JSContext *cx)
+{
+    JSCompartment *compartment = this->compartment();
 
     if (!InferSpewActive(ISpewResult) || JS_CLIST_IS_EMPTY(&compartment->scripts))
         return;
@@ -2302,19 +2266,10 @@ TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
          script = (JSScript *)script->links.next) {
         if (script->hasAnalysis() && script->analysis(cx)->ranInference())
             script->analysis(cx)->printTypes(cx);
-        TypeObject *object = script->types.typeObjects;
-        while (object) {
-            object->print(cx);
-            object = object->next;
-        }
     }
 
 #ifdef DEBUG
-    TypeObject *object = objects;
-    while (object) {
-        object->print(cx);
-        object = object->next;
-    }
+    IterateCells(cx, compartment, gc::FINALIZE_TYPE_OBJECT, NULL, PrintObjectCallback);
 #endif
 
     printf("Counts: ");
@@ -2585,7 +2540,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
             ids[shape->slot] = shape->propid;
             types[shape->slot] = GetValueType(cx, obj->getSlot(shape->slot));
             if (!objType->unknownProperties())
-                objType->addPropertyType(cx, shape->propid, types[shape->slot]);
+                objType->addPropertyType(cx, MakeTypeId(cx, shape->propid), types[shape->slot]);
             shape = shape->previous();
         }
 
@@ -2630,42 +2585,78 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 /////////////////////////////////////////////////////////////////////
 
 void
-TypeObject::storeToInstances(JSContext *cx, Property *base)
+TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force)
 {
-    TypeObject *object = instanceList;
-    while (object) {
-        Property *p =
-            HashSetLookup<jsid,Property,Property>(object->propertySet, object->propertyCount, base->id);
-        if (p)
-            base->types.addBaseSubset(cx, object, &p->types);
-        if (object->instanceList)
-            object->storeToInstances(cx, base);
-        object = object->instanceNext;
+    if (!force && types->hasPropagatedProperty())
+        return;
+
+    types->setPropagatedProperty();
+
+    if (!proto)
+        return;
+
+    if (proto->getType(cx)->unknownProperties()) {
+        types->addType(cx, Type::UnknownType());
+        return;
     }
+
+    TypeSet *protoTypes = proto->type()->getProperty(cx, id, false);
+    if (!protoTypes)
+        return;
+
+    protoTypes->addSubset(cx, types);
+
+    proto->type()->getFromPrototypes(cx, id, protoTypes);
 }
 
-void
-TypeObject::getFromPrototypes(JSContext *cx, Property *base)
+static inline void
+UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *shape)
 {
-     JSObject *obj = proto;
-     while (obj) {
-         TypeObject *object = obj->type();
-         Property *p =
-             HashSetLookup<jsid,Property,Property>(object->propertySet, object->propertyCount, base->id);
-         if (p)
-             p->types.addBaseSubset(cx, this, &base->types);
-         obj = obj->getProto();
-     }
+    if (shape->hasGetterValue() || shape->hasSetterValue()) {
+        types->addType(cx, Type::UnknownType());
+    } else if (shape->slot != SHAPE_INVALID_SLOT &&
+               (shape->hasDefaultGetter() || shape->isMethod())) {
+        Type type = GetValueType(cx, obj->nativeGetSlot(shape->slot));
+        types->addType(cx, type);
+    }
 }
 
 bool
 TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 {
     JS_ASSERT(!*pprop);
-    Property *base = cx->new_<Property>(id);
+    Property *base = singleton
+        ? ArenaNew<Property>(cx->compartment->pool, id)
+        : cx->new_<Property>(id);
     if (!base) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return false;
+    }
+
+    if (singleton) {
+        base->types.setIntermediate();
+
+        /*
+         * Fill the property in with any type the object already has in an
+         * own property. We are only interested in plain native properties
+         * which don't go through a barrier when read by the VM or jitcode.
+         * We don't need to handle arrays or other JIT'ed non-natives as
+         * these are not (yet) singletons.
+         */
+
+        if (JSID_IS_VOID(id)) {
+            /* Go through all shapes on the object to get integer-valued properties. */
+            const Shape *shape = singleton->lastProperty();
+            while (!JSID_IS_EMPTY(shape->propid)) {
+                if (JSID_IS_VOID(MakeTypeId(cx, shape->propid)))
+                    UpdatePropertyType(cx, &base->types, singleton, shape);
+                shape = shape->previous();
+            }
+        } else {
+            const Shape *shape = singleton->nativeLookup(id);
+            if (shape)
+                UpdatePropertyType(cx, &base->types, singleton, shape);
+        }
     }
 
     *pprop = base;
@@ -2673,15 +2664,6 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
     InferSpew(ISpewOps, "typeSet: %sT%p%s property %s %s",
               InferSpewColor(&base->types), &base->types, InferSpewColorReset(),
               name(), TypeIdString(id));
-
-    if (!JSID_IS_EMPTY(id)) {
-        /* Check all transitive instances for this property. */
-        if (instanceList)
-            storeToInstances(cx, base);
-
-        /* Pull in this property from all prototypes up the chain. */
-        getFromPrototypes(cx, base);
-    }
 
     return true;
 }
@@ -2692,11 +2674,7 @@ TypeObject::addDefiniteProperties(JSContext *cx, JSObject *obj)
     if (unknownProperties())
         return true;
 
-    /*
-     * Mark all properties of obj as definite properties of this type. Return
-     * false if there is a setter/getter for any of the properties in the
-     * type's prototype.
-     */
+    /* Mark all properties of obj as definite properties of this type. */
     AutoEnterTypeInference enter(cx);
 
     const Shape *shape = obj->lastProperty();
@@ -2715,11 +2693,38 @@ TypeObject::addDefiniteProperties(JSContext *cx, JSObject *obj)
     return true;
 }
 
+bool
+TypeObject::matchDefiniteProperties(JSObject *obj)
+{
+    unsigned count = getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        Property *prop = getProperty(i);
+        if (!prop)
+            continue;
+        if (prop->types.isDefiniteProperty()) {
+            unsigned slot = prop->types.definiteSlot();
+
+            bool found = false;
+            const Shape *shape = obj->lastProperty();
+            while (!JSID_IS_EMPTY(shape->propid)) {
+                if (shape->slot == slot && shape->propid == prop->id) {
+                    found = true;
+                    break;
+                }
+                shape = shape->previous();
+            }
+            if (!found)
+                return false;
+        }
+    }
+
+    return true;
+}
+
 inline void
 InlineAddTypeProperty(JSContext *cx, TypeObject *obj, jsid id, Type type)
 {
-    /* Convert string index properties into the common index property. */
-    id = MakeTypeId(cx, id);
+    JS_ASSERT(id == MakeTypeId(cx, id));
 
     AutoEnterTypeInference enter(cx);
 
@@ -2767,23 +2772,6 @@ TypeObject::addPropertyType(JSContext *cx, const char *name, const Value &value)
 }
 
 void
-TypeObject::aliasProperties(JSContext *cx, jsid first, jsid second)
-{
-    AutoEnterTypeInference enter(cx);
-
-    first = MakeTypeId(cx, first);
-    second = MakeTypeId(cx, second);
-
-    TypeSet *firstTypes = getProperty(cx, first, true);
-    TypeSet *secondTypes = getProperty(cx, second, true);
-    if (!firstTypes || !secondTypes)
-        return;
-
-    firstTypes->addBaseSubset(cx, this, secondTypes);
-    secondTypes->addBaseSubset(cx, this, firstTypes);
-}
-
-void
 TypeObject::markPropertyConfigured(JSContext *cx, jsid id)
 {
     AutoEnterTypeInference enter(cx);
@@ -2803,7 +2791,7 @@ TypeObject::markSlotReallocation(JSContext *cx)
      * newObjectState is invoked with 'force' set to true.
      */
     AutoEnterTypeInference enter(cx);
-    TypeSet *types = getProperty(cx, JSID_VOID, false);
+    TypeSet *types = maybeGetProperty(cx, JSID_EMPTY);
     if (types) {
         TypeConstraint *constraint = types->constraintList;
         while (constraint) {
@@ -2821,16 +2809,11 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 
     AutoEnterTypeInference enter(cx);
 
-    bool fixArgs = false;
-    if ((flags & ~this->flags & OBJECT_FLAG_CREATED_ARGUMENTS) &&
-        functionScript && functionScript->usedLazyArgs) {
-        fixArgs = true;
-    }
+    /* Sets of CREATED_ARGUMENTS should go through MarkArgumentsCreated. */
+    JS_ASSERT_IF(flags & OBJECT_FLAG_CREATED_ARGUMENTS,
+                 (flags & OBJECT_FLAG_UNINLINEABLE) && functionScript->createdArgs);
 
     this->flags |= flags;
-
-    if (fixArgs)
-        FixLazyArguments(cx, functionScript);
 
     InferSpew(ISpewOps, "%s: setFlags %u", name(), flags);
 
@@ -2848,15 +2831,6 @@ TypeObject::markUnknown(JSContext *cx)
     InferSpew(ISpewOps, "UnknownProperties: %s", name());
 
     ObjectStateChange(cx, this, true, true);
-
-    /* Mark existing instances as unknown. */
-
-    TypeObject *instance = instanceList;
-    while (instance) {
-        if (!instance->unknownProperties())
-            instance->markUnknown(cx);
-        instance = instance->instanceNext;
-    }
 
     /*
      * Existing constraints may have already been added to this object, which we need
@@ -2880,8 +2854,8 @@ TypeObject::markUnknown(JSContext *cx)
 void
 TypeObject::clearNewScript(JSContext *cx)
 {
-    JS_ASSERT(!newScriptCleared);
-    newScriptCleared = true;
+    JS_ASSERT(!(flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED));
+    flags |= OBJECT_FLAG_NEW_SCRIPT_CLEARED;
 
     /*
      * It is possible for the object to not have a new script yet but to have
@@ -3011,14 +2985,15 @@ TypeObject::print(JSContext *cx)
             printf(" iterated");
     }
 
-    if (propertyCount == 0) {
+    unsigned count = getPropertyCount();
+
+    if (count == 0) {
         printf(" {}\n");
         return;
     }
 
     printf(" {");
 
-    unsigned count = getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
         Property *prop = getProperty(i);
         if (prop) {
@@ -3102,8 +3077,10 @@ ScriptAnalysis::setForTypes(JSContext *cx, jsbytecode *pc, TypeSet *types)
 /* Analyze type information for a single bytecode. */
 bool
 ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
-                                              TypeInferenceState &state)
+                                     TypeInferenceState &state)
 {
+    JS_ASSERT(!script->isUncachedEval);
+
     jsbytecode *pc = script->code + offset;
     JSOp op = (JSOp)*pc;
 
@@ -3349,7 +3326,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             seen->addType(cx, Type::DoubleType());
 
         /* Handle as a property access. */
-        PropertyAccess(cx, script, pc, script->global()->type(), false, seen, id);
+        PropertyAccess(cx, script, pc, script->global()->getType(cx), false, seen, id);
 
         if (op == JSOP_CALLGLOBAL || op == JSOP_CALLGNAME) {
             pushed[1].addType(cx, Type::UnknownType());
@@ -3383,7 +3360,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_SETGNAME: {
         jsid id = GetAtomId(cx, script, pc, 0);
-        PropertyAccess(cx, script, pc, script->global()->type(),
+        PropertyAccess(cx, script, pc, script->global()->getType(cx),
                        true, poppedTypes(pc, 0), id);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
@@ -3486,10 +3463,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             pushed[0].addType(cx, Type::UnknownType());
             break;
         }
-        TypeSet *prop = funType->getProperty(cx, JSID_VOID, false);
-        if (!prop)
+        TypeSet *types = funType->getProperty(cx, JSID_EMPTY, false);
+        if (!types)
             break;
-        prop->addLazyArguments(cx, &pushed[0]);
+        types->addLazyArguments(cx, &pushed[0]);
         pushed[0].addType(cx, Type::LazyArgsType());
         break;
       }
@@ -3768,7 +3745,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_FORGNAME: {
         jsid id = GetAtomId(cx, script, pc, 0);
-        TypeObject *global = script->global()->type();
+        TypeObject *global = script->global()->getType(cx);
         if (!global->unknownProperties()) {
             TypeSet *types = global->getProperty(cx, id, true);
             if (!types)
@@ -3953,9 +3930,6 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
      */
     ranInference_ = true;
 
-    if (script->calledWithNew)
-        analyzeTypesNew(cx);
-
     /* Make sure the initial type set of all local vars includes void. */
     for (unsigned i = 0; i < script->nfixed; i++)
         script->types.localTypes(i)->addType(cx, Type::UndefinedType());
@@ -3986,13 +3960,13 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
     }
 
     /*
-     * Replay any intermediate type information which has been generated for
-     * the script either because we ran the interpreter some before analyzing
-     * or because we are reanalyzing after a GC.
+     * Replay any dynamic type results which have been generated for the script
+     * either because we ran the interpreter some before analyzing or because
+     * we are reanalyzing after a GC.
      */
-    TypeIntermediate *result = script->types.intermediateList;
+    TypeResult *result = script->types.dynamicList;
     while (result) {
-        result->replay(cx, script);
+        pushedTypes(result->offset)->addType(cx, result->type);
         result = result->next;
     }
 
@@ -4018,7 +3992,7 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
      * themselves.
      */
     if (script->fun->isHeavyweight() || cx->compartment->debugMode) {
-        script->fun->type()->setFlags(cx, OBJECT_FLAG_CREATED_ARGUMENTS);
+        MarkArgumentsCreated(cx, script);
         return;
     }
 
@@ -4030,7 +4004,7 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         if (code && JSOp(*pc) == JSOP_ARGUMENTS) {
             Vector<SSAValue> seen(cx);
             if (!followEscapingArguments(cx, SSAValue::PushedValue(offset, 0), &seen)) {
-                script->fun->type()->setFlags(cx, OBJECT_FLAG_CREATED_ARGUMENTS);
+                MarkArgumentsCreated(cx, script);
                 return;
             }
         }
@@ -4120,30 +4094,6 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<
     return false;
 }
 
-void
-ScriptAnalysis::analyzeTypesNew(JSContext *cx)
-{
-    JS_ASSERT(script->calledWithNew && script->fun);
-
-    /*
-     * Compute the 'this' type when called with 'new'. We do not distinguish regular
-     * from 'new' calls to the function.
-     */
-
-    if (script->fun->getType(cx)->unknownProperties() ||
-        script->fun->isFunctionPrototype() ||
-        !script->hasGlobal()) {
-        script->types.thisTypes()->addType(cx, Type::UnknownType());
-        return;
-    }
-
-    TypeObject *funType = script->fun->getType(cx);
-    TypeSet *prototypeTypes = funType->getProperty(cx, id_prototype(cx), false);
-    if (!prototypeTypes)
-        return;
-    prototypeTypes->addNewObject(cx, funType, script->types.thisTypes());
-}
-
 /*
  * Persistent constraint clearing out newScript and definite properties from
  * an object should a property on another object get a setter.
@@ -4154,7 +4104,7 @@ public:
     TypeObject *object;
 
     TypeConstraintClearDefiniteSetter(TypeObject *object)
-        : TypeConstraint("baseClearDefinite"), object(object)
+        : TypeConstraint("clearDefiniteSetter"), object(object)
     {}
 
     void newType(JSContext *cx, TypeSet *source, Type type) {
@@ -4165,11 +4115,9 @@ public:
          * an object if the source type set could be a setter (its type set
          * becomes unknown).
          */
-        if (!object->newScriptCleared && type.isUnknown())
+        if (!(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED) && type.isUnknown())
             object->clearNewScript(cx);
     }
-
-    TypeObject * persistentObject() { return object; }
 };
 
 /*
@@ -4182,45 +4130,16 @@ public:
     TypeObject *object;
 
     TypeConstraintClearDefiniteSingle(TypeObject *object)
-        : TypeConstraint("baseClearDefinite"), object(object)
+        : TypeConstraint("clearDefiniteSingle"), object(object)
     {}
 
     void newType(JSContext *cx, TypeSet *source, Type type) {
-        if (object->newScriptCleared)
+        if (object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED)
             return;
 
         if (source->baseFlags() || source->getObjectCount() > 1)
             object->clearNewScript(cx);
     }
-};
-
-/*
- * Mark an intermediate type set such that changes will clear the definite
- * properties on a type object.
- */
-class TypeIntermediateClearDefinite : public TypeIntermediate
-{
-    uint32 offset;
-    uint32 which;
-    TypeObject *object;
-
-  public:
-    TypeIntermediateClearDefinite(uint32 offset, uint32 which, TypeObject *object)
-        : offset(offset), which(which), object(object)
-    {}
-
-    void replay(JSContext *cx, JSScript *script)
-    {
-        TypeSet *pushed = script->analysis(cx)->pushedTypes(offset, which);
-        pushed->add(cx, ArenaNew<TypeConstraintClearDefiniteSingle>(cx->compartment->pool, object));
-    }
-
-    bool sweep(JSContext *cx, JSCompartment *compartment)
-    {
-        return object->marked;
-    }
-
-    size_t allocatedSize() { return sizeof(TypeIntermediateClearDefinite); }
 };
 
 static bool
@@ -4378,10 +4297,15 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
              * the direct prototype (and thus its transitive prototypes), the
              * definite properties get cleared from the shape.
              */
-            TypeSet *parentTypes = type->proto->getType(cx)->getProperty(cx, id, false);
+            TypeObject *parentObject = type->proto->getType(cx);
+            if (parentObject->unknownProperties())
+                return false;
+            TypeSet *parentTypes = parentObject->getProperty(cx, id, false);
             if (!parentTypes || parentTypes->unknown())
                 return false;
-            parentTypes->add(cx, cx->new_<TypeConstraintClearDefiniteSetter>(type));
+            parentObject->getFromPrototypes(cx, id, parentTypes);
+            parentTypes->add(cx,
+                ArenaNew<TypeConstraintClearDefiniteSetter>(cx->compartment->pool, type));
         } else if (op == JSOP_FUNCALL && uses->u.which == GET_ARGC(pc) - 1) {
             /*
              * Passed as the first parameter to Function.call. Follow control
@@ -4428,19 +4352,10 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
              * Generate constraints to clear definite properties from the type
              * should the Function.call or callee itself change in the future.
              */
-            TypeIntermediateClearDefinite *funcallTrap =
-                cx->new_<TypeIntermediateClearDefinite>(calleev.pushedOffset(), 0, type);
-            TypeIntermediateClearDefinite *calleeTrap =
-                cx->new_<TypeIntermediateClearDefinite>(calleev.pushedOffset(), 1, type);
-            if (!funcallTrap || !calleeTrap) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                *pbaseobj = NULL;
-                return false;
-            }
-            script->types.addIntermediate(funcallTrap);
-            script->types.addIntermediate(calleeTrap);
-            funcallTrap->replay(cx, script);
-            calleeTrap->replay(cx, script);
+            analysis->pushedTypes(calleev.pushedOffset(), 0)->add(cx,
+                ArenaNew<TypeConstraintClearDefiniteSingle>(cx->compartment->pool, type));
+            analysis->pushedTypes(calleev.pushedOffset(), 1)->add(cx,
+                ArenaNew<TypeConstraintClearDefiniteSingle>(cx->compartment->pool, type));
 
             TypeNewScript::Initializer pushframe(TypeNewScript::Initializer::FRAME_PUSH, uses->offset);
             if (!initializerList->append(pushframe)) {
@@ -4475,21 +4390,43 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
     return true;
 }
 
-void
-types::CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
+/*
+ * Either make the newScript information for type when it is constructed
+ * by the specified script, or regenerate the constraints for an existing
+ * newScript on the type after they were cleared by a GC.
+ */
+static void
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
 {
     if (type->unknownProperties())
         return;
 
     /* Strawman object to add properties to and watch for duplicates. */
     JSObject *baseobj = NewBuiltinClassInstance(cx, &js_ObjectClass, gc::FINALIZE_OBJECT16);
-    if (!baseobj)
+    if (!baseobj) {
+        if (type->newScript)
+            type->clearNewScript(cx);
         return;
+    }
 
     Vector<TypeNewScript::Initializer> initializerList(cx);
     AnalyzeNewScriptProperties(cx, type, script, &baseobj, &initializerList);
-    if (!baseobj || (baseobj->slotSpan() == 0 && type->newScriptCleared))
+    if (!baseobj || baseobj->slotSpan() == 0 || !!(type->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED)) {
+        if (type->newScript)
+            type->clearNewScript(cx);
         return;
+    }
+
+    /*
+     * If the type already has a new script, we are just regenerating the type
+     * constraints and don't need to make another TypeNewScript. Make sure that
+     * the properties added to baseobj match the type's definite properties.
+     */
+    if (type->newScript) {
+        if (!type->matchDefiniteProperties(baseobj))
+            type->clearNewScript(cx);
+        return;
+    }
 
     gc::FinalizeKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
 
@@ -4712,9 +4649,7 @@ TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
     if (!script->types.ensureTypeArray(cx))
         return;
 
-    if (constructing) {
-        script->types.setNewCalled(cx);
-    } else {
+    if (!constructing) {
         Type type = GetValueType(cx, args.thisv());
         script->types.setThis(cx, type);
     }
@@ -4736,47 +4671,9 @@ TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
 static inline bool
 IsAboutToBeFinalized(JSContext *cx, TypeObjectKey *key)
 {
-    Type type = Type::ObjectType(key);
-    if (type.isSingleObject())
-        return IsAboutToBeFinalized(cx, type.singleObject());
-    return !type.typeObject()->marked;
+    /* Mask out the low bit indicating whether this is a type or JS object. */
+    return !reinterpret_cast<const gc::Cell *>((jsuword) key & ~1)->isMarked();
 }
-
-/* Intermediate type information for a dynamic type pushed in a script. */
-class TypeIntermediatePushed : public TypeIntermediate
-{
-    uint32 offset;
-    Type type;
-
-  public:
-    TypeIntermediatePushed(uint32 offset, Type type)
-        : offset(offset), type(type)
-    {}
-
-    void replay(JSContext *cx, JSScript *script)
-    {
-        TypeSet *pushed = script->analysis(cx)->pushedTypes(offset);
-        pushed->addType(cx, type);
-    }
-
-    bool hasDynamicResult(uint32 offset, Type type) {
-        return this->offset == offset && this->type == type;
-    }
-
-    bool sweep(JSContext *cx, JSCompartment *compartment)
-    {
-        if (type.isUnknown() || type.isAnyObject() || !type.isObject())
-            return true;
-
-        TypeObjectKey *object = type.objectKey();
-        if (!IsAboutToBeFinalized(cx, object))
-            return true;
-
-        return false;
-    }
-
-    size_t allocatedSize() { return sizeof(TypeIntermediatePushed); }
-};
 
 void
 TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
@@ -4844,10 +4741,10 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
             return;
     } else {
         /* Scan all intermediate types on the script to check for a dupe. */
-        TypeIntermediate *result, **pstart = &script->types.intermediateList, **presult = pstart;
+        TypeResult *result, **pstart = &script->types.dynamicList, **presult = pstart;
         while (*presult) {
             result = *presult;
-            if (result->hasDynamicResult(pc - script->code, type)) {
+            if (result->offset == unsigned(pc - script->code) && result->type == type) {
                 if (presult != pstart) {
                     /* Move to the head of the list, maintain LRU order. */
                     *presult = result->next;
@@ -4863,12 +4760,13 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
     InferSpew(ISpewOps, "externalType: monitorResult #%u:%05u: %s",
               script->id(), pc - script->code, TypeString(type));
 
-    TypeIntermediatePushed *result = cx->new_<TypeIntermediatePushed>(pc - script->code, type);
+    TypeResult *result = cx->new_<TypeResult>(pc - script->code, type);
     if (!result) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
-    script->types.addIntermediate(result);
+    result->next = script->types.dynamicList;
+    script->types.dynamicList = result;
 
     if (script->hasAnalysis() && script->analysis(cx)->ranInference()) {
         TypeSet *pushed = script->analysis(cx)->pushedTypes(pc, 0);
@@ -5142,34 +5040,21 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto)
      * in which case inference will be disabled for the compartment.
      */
     getType(cx);
-    if (proto)
+    if (proto) {
         proto->getType(cx);
+        if (!proto->getNewType(cx))
+            return false;
+    }
 
     if (!cx->typeInferenceEnabled()) {
-        TypeObject *type = proto ? proto->getNewType(cx) : GetTypeEmpty(cx);
+        TypeObject *type = proto ? proto->getNewType(cx) : &emptyTypeObject;
         if (!type)
             return false;
         type_ = type;
         return true;
     }
 
-    if (type()->proto) {
-        /* Unlink from existing proto. */
-        TypeObject **plist = &type()->proto->type()->instanceList;
-        while (*plist != type())
-            plist = &(*plist)->instanceNext;
-        *plist = type()->instanceNext;
-    }
-
     type()->proto = proto;
-
-    if (proto) {
-        /* Link with the new proto. */
-        type()->instanceNext = proto->type()->instanceList;
-        proto->type()->instanceList = type();
-    } else {
-        type()->instanceNext = NULL;
-    }
 
     AutoEnterTypeInference enter(cx);
 
@@ -5178,12 +5063,14 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto)
         return true;
     }
 
-    /* Update properties on this type with any shared with the prototype. */
-    unsigned count = type()->getPropertyCount();
-    for (unsigned i = 0; i < count; i++) {
-        Property *prop = type()->getProperty(i);
-        if (prop && !JSID_IS_EMPTY(prop->id))
-            type()->getFromPrototypes(cx, prop);
+    if (!type()->unknownProperties()) {
+        /* Update properties on this type with any shared with the prototype. */
+        unsigned count = type()->getPropertyCount();
+        for (unsigned i = 0; i < count; i++) {
+            Property *prop = type()->getProperty(i);
+            if (prop && prop->types.hasPropagatedProperty())
+                type()->getFromPrototypes(cx, prop->id, &prop->types, true);
+        }
     }
 
     return true;
@@ -5212,8 +5099,13 @@ JSObject::makeLazyType(JSContext *cx)
 
     type->singleton = this;
 
-    if (isFunction() && getFunctionPrivate() && getFunctionPrivate()->isInterpreted())
+    if (isFunction() && getFunctionPrivate() && getFunctionPrivate()->isInterpreted()) {
         type->functionScript = getFunctionPrivate()->script();
+        if (type->functionScript->uninlineable)
+            type->flags |= OBJECT_FLAG_UNINLINEABLE;
+        if (type->functionScript->createdArgs)
+            type->flags |= OBJECT_FLAG_CREATED_ARGUMENTS;
+    }
 
 #if JS_HAS_XML_SUPPORT
     /*
@@ -5226,7 +5118,7 @@ JSObject::makeLazyType(JSContext *cx)
 
     if (type->unknownProperties()) {
         type_ = type;
-        flags ^= LAZY_TYPE;
+        flags &= ~LAZY_TYPE;
         return;
     }
 
@@ -5238,42 +5130,22 @@ JSObject::makeLazyType(JSContext *cx)
     if (hasSpecialEquality())
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
-    const Shape *shape = lastProperty();
-    while (!shape->isEmptyShape()) {
-        TypeSet *types = type->getProperty(cx, MakeTypeId(cx, shape->propid), true);
-        if (!types)
-            return;
-
-        if (shape->hasGetterValue() || shape->hasSetterValue()) {
-            types->addType(cx, Type::UnknownType());
-        } else if (shape->slot != SHAPE_INVALID_SLOT &&
-                   (shape->hasDefaultGetter() || shape->isMethod())) {
-            types->addType(cx, GetValueType(cx, nativeGetSlot(shape->slot)));
-        } else {
-            /*
-             * Other shapes go through a barrier when read by the VM, but we
-             * can still bake in knowledge about these into JIT code.
-             */
-        }
-
-        shape = shape->previous();
-    }
-
     type_ = type;
-    flags ^= LAZY_TYPE;
+    flags &= ~LAZY_TYPE;
 }
 
 void
-JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool markUnknown)
+JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool unknown)
 {
     JS_ASSERT(!newType);
 
-    /* Force construction of the type for this object, if necessary. */
-    getType(cx);
+    const char *name = NULL;
+#ifdef DEBUG
+    name = TypeString(Type::ObjectType(this));
+#endif
 
-    const char *name = this->type()->name();
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "new",
-                                                            JSProto_Object, this);
+                                                            JSProto_Object, this, unknown);
     if (!type)
         return;
 
@@ -5284,13 +5156,6 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool markUnknown)
     }
 
     AutoEnterTypeInference enter(cx);
-
-    if (!this->type()->unknownProperties()) {
-        /* Update the possible 'new' types for all prototype objects sharing the same type object. */
-        TypeSet *types = this->type()->getProperty(cx, JSID_EMPTY, true);
-        if (types)
-            types->addType(cx, Type::ObjectType(type));
-    }
 
     /*
      * Set the special equality flag for types whose prototype also has the
@@ -5306,11 +5171,8 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool markUnknown)
 #if JS_HAS_XML_SUPPORT
     /* Special case for XML object equality, see makeLazyType(). */
     if (isXML() && !type->unknownProperties())
-        type->markUnknown(cx);
+        type->flags |= OBJECT_FLAG_UNKNOWN_MASK;
 #endif
-
-    if (markUnknown && !type->unknownProperties())
-        type->markUnknown(cx);
 
     /*
      * The new type is not present in any type sets, so mark the object as
@@ -5321,7 +5183,7 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool markUnknown)
      * accommodate this behavior).
      */
     if (type->unknownProperties())
-        type->setsMarkedUnknown = true;
+        type->flags |= OBJECT_FLAG_SETS_MARKED_UNKNOWN;
 
     newType = type;
     setDelegate();
@@ -5331,10 +5193,11 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool markUnknown)
 // Tracing
 /////////////////////////////////////////////////////////////////////
 
-bool
-TypeSet::sweep(JSContext *cx)
+void
+TypeSet::sweep(JSContext *cx, JSCompartment *compartment)
 {
     JS_ASSERT(!intermediate());
+    uint32 objectCount = baseObjectCount();
 
     if (objectCount >= 2) {
         bool removed = false;
@@ -5357,11 +5220,13 @@ TypeSet::sweep(JSContext *cx)
                     TypeObjectKey **pentry =
                         HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
                             (cx, objectSet, objectCount, object, false);
-                    if (!pentry)
-                        return false;
-                    *pentry = object;
+                    if (pentry)
+                        *pentry = object;
+                    else
+                        compartment->types.setPendingNukeTypes(cx);
                 }
             }
+            setBaseObjectCount(objectCount);
             cx->free_(oldArray);
         }
     } else if (objectCount == 1) {
@@ -5372,95 +5237,142 @@ TypeSet::sweep(JSContext *cx)
         }
     }
 
-    if (typeFlags & TYPE_FLAG_HAS_PERSISTENT_CONSTRAINTS) {
-        TypeConstraint *constraint = constraintList;
-        constraintList = NULL;
-
-        while (constraint) {
-            TypeConstraint *next = constraint->next;
-
-            TypeObject *object = constraint->persistentObject();
-            if (object) {
-                /*
-                 * Constraint propagating data between objects. If the target
-                 * is not being collected (these are weak references) then
-                 * keep the constraint.
-                 */
-                if (object->marked) {
-                    constraint->next = constraintList;
-                    constraintList = constraint;
-                } else {
-                    Foreground::delete_(constraint);
-                }
-            }
-
-            constraint = next;
-        }
-
-        if (!constraintList) {
-            /* All persistent constraints were removed, clear the flag. */
-            typeFlags ^= TYPE_FLAG_HAS_PERSISTENT_CONSTRAINTS;
-        }
-    } else {
-        /* All constraints in this set are transient. */
-        constraintList = NULL;
-    }
-
-    return true;
+    /* All constraints are allocated from the pool wiped out on each GC. */
+    constraintList = NULL;
 }
 
-/* Remove to-be-destroyed objects from the list of instances of a type object. */
+inline void
+JSObject::revertLazyType()
+{
+    JS_ASSERT(hasSingletonType() && !hasLazyType());
+    JS_ASSERT_IF(type_->proto, type_->proto->newType);
+    flags |= LAZY_TYPE;
+    type_ = (type_->proto) ? type_->proto->newType : &emptyTypeObject;
+}
+
+inline void
+TypeObject::clearProperties()
+{
+    JS_ASSERT(singleton);
+    setBasePropertyCount(0);
+    propertySet = NULL;
+}
+
+/*
+ * Before sweeping the arenas themselves, scan all type objects in a
+ * compartment to fixup weak references: property type sets referencing dead
+ * JS and type objects, and singleton JS objects whose type is not referenced
+ * elsewhere. This also releases memory associated with dead type objects,
+ * so that type objects do not need later finalization.
+ */
 static inline void
-PruneInstanceObjects(TypeObject *object)
+SweepTypeObject(JSContext *cx, TypeObject *object)
 {
-    TypeObject **pinstance = &object->instanceList;
-    while (*pinstance) {
-        if ((*pinstance)->marked)
-            pinstance = &(*pinstance)->instanceNext;
-        else
-            *pinstance = (*pinstance)->instanceNext;
-    }
-}
+    /*
+     * We may be regenerating existing type sets containing this object,
+     * so reset contributions on each GC to avoid tripping the limit.
+     */
+    object->contribution = 0;
 
-static bool
-SweepTypeObjectList(JSContext *cx, TypeObject *objects)
-{
-    TypeObject *object = objects;
-    while (object) {
-        if (!object->marked) {
+    if (object->singleton) {
+        JS_ASSERT(!object->emptyShapes);
+        JS_ASSERT(!object->newScript);
+
+        /*
+         * All properties on the object are allocated from the analysis pool,
+         * and can be discarded. We will regenerate them as needed as code gets
+         * reanalyzed.
+         */
+        object->clearProperties();
+
+        if (!object->isMarked()) {
             /*
-             * Leave all constraints and references to to-be-destroyed objects in.
-             * We will release all memory when finalizing the object.
+             * Singleton objects do not hold strong references on their types.
+             * When removing the type, however, we need to fixup the singleton
+             * so that it has a lazy type again. The generic 'new' type for the
+             * proto must be live, since the type's prototype and its 'new'
+             * type are both strong references.
              */
-            object = object->next;
-            continue;
+            JS_ASSERT_IF(object->singleton->isMarked() && object->proto,
+                         object->proto->isMarked() && object->proto->newType->isMarked());
+            object->singleton->revertLazyType();
         }
 
-        PruneInstanceObjects(object);
+        return;
+    }
 
-        /* Sweep type sets for all properties of the object. */
+    if (!object->isMarked()) {
+        if (object->emptyShapes)
+            Foreground::free_(object->emptyShapes);
+
         unsigned count = object->getPropertyCount();
         for (unsigned i = 0; i < count; i++) {
             Property *prop = object->getProperty(i);
             if (prop) {
-                if (!prop->types.sweep(cx))
-                    return false;
+                prop->types.clearObjects();
+                Foreground::delete_(prop);
             }
         }
+        if (count >= 2)
+            Foreground::free_(object->propertySet);
 
-        object = object->next;
+        if (object->newScript)
+            Foreground::free_(object->newScript);
+
+        return;
     }
 
-    return true;
+    /* Sweep type sets for all properties of the object. */
+    unsigned count = object->getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        Property *prop = object->getProperty(i);
+        if (prop)
+            prop->types.sweep(cx, object->compartment());
+    }
+
+    /*
+     * The GC will clear out the constraints ensuring the correctness of the
+     * newScript information, these constraints will need to be regenerated
+     * the next time we compile code which depends on this info.
+     */
+    if (object->newScript)
+        object->flags |= OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
+}
+
+void
+SweepTypeObjects(JSContext *cx, JSCompartment *compartment)
+{
+    JS_ASSERT(!emptyTypeObject.emptyShapes);
+    JS_ASSERT(!emptyTypeObject.newScript);
+
+    gc::ArenaHeader *aheader = compartment->arenas[gc::FINALIZE_TYPE_OBJECT].getHead();
+    size_t thingSize = sizeof(TypeObject);
+
+    for (; aheader; aheader = aheader->next) {
+        gc::Arena *arena = aheader->getArena();
+        gc::FreeSpan firstSpan(aheader->getFirstFreeSpan());
+        gc::FreeSpan *span = &firstSpan;
+
+        for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
+            JS_ASSERT(thing <= arena->thingsEnd());
+            if (thing == span->start) {
+                if (!span->hasNext())
+                    break;
+                thing = span->end;
+                span = span->nextSpan();
+            } else {
+                SweepTypeObject(cx, reinterpret_cast<TypeObject *>(thing));
+            }
+        }
+    }
 }
 
 void
 TypeCompartment::sweep(JSContext *cx)
 {
-    PruneInstanceObjects(&typeEmpty);
+    JSCompartment *compartment = this->compartment();
 
-    if (!SweepTypeObjectList(cx, objects))
-        return;
+    SweepTypeObjects(cx, compartment);
 
     /*
      * Iterate through the array/object type tables and remove all entries
@@ -5475,9 +5387,9 @@ TypeCompartment::sweep(JSContext *cx)
             JS_ASSERT(!key.type.isSingleObject());
 
             bool remove = false;
-            if (key.type.isTypeObject() && !key.type.typeObject()->marked)
+            if (key.type.isTypeObject() && !key.type.typeObject()->isMarked())
                 remove = true;
-            if (!obj->marked)
+            if (!obj->isMarked())
                 remove = true;
 
             if (remove)
@@ -5492,7 +5404,7 @@ TypeCompartment::sweep(JSContext *cx)
             JS_ASSERT(entry.object->proto == key.proto);
 
             bool remove = false;
-            if (!entry.object->marked || !entry.newShape->isMarked())
+            if (!entry.object->isMarked() || !entry.newShape->isMarked())
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nslots; i++) {
                 if (JSID_IS_STRING(key.ids[i])) {
@@ -5501,7 +5413,7 @@ TypeCompartment::sweep(JSContext *cx)
                         remove = true;
                 }
                 JS_ASSERT(!entry.types[i].isSingleObject());
-                if (entry.types[i].isTypeObject() && !entry.types[i].typeObject()->marked)
+                if (entry.types[i].isTypeObject() && !entry.types[i].typeObject()->isMarked())
                     remove = true;
             }
 
@@ -5512,73 +5424,16 @@ TypeCompartment::sweep(JSContext *cx)
             }
         }
     }
-}
 
-inline void
-TypeSet::destroy()
-{
-    JS_ASSERT(!intermediate());
-    clearObjects();
-    if (typeFlags & TYPE_FLAG_HAS_PERSISTENT_CONSTRAINTS) {
-        while (constraintList) {
-            TypeConstraint *next = constraintList->next;
-            if (constraintList->persistentObject())
-                Foreground::free_(constraintList);
-            constraintList = next;
+    if (allocationSiteTable) {
+        for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
+            const AllocationSiteKey &key = e.front().key;
+            TypeObject *object = e.front().value;
+
+            if (key.uncached || key.script->isAboutToBeFinalized(cx) || !object->isMarked())
+                e.removeFront();
         }
     }
-}
-
-static void
-DestroyProperty(Property *prop)
-{
-    prop->types.destroy();
-    Foreground::delete_(prop);
-}
-
-static void
-FinalizeTypeObjectList(TypeObject *&objects)
-{
-    TypeObject **pobject = &objects;
-    while (*pobject) {
-        TypeObject *object = *pobject;
-        if (object->marked) {
-            object->marked = false;
-            object->contribution = 0;
-            pobject = &object->next;
-        } else {
-            if (object->emptyShapes)
-                Foreground::free_(object->emptyShapes);
-            *pobject = object->next;
-
-            unsigned count = object->getPropertyCount();
-            for (unsigned i = 0; i < count; i++) {
-                Property *prop = object->getProperty(i);
-                if (prop)
-                    DestroyProperty(prop);
-            }
-            if (count >= 2)
-                Foreground::free_(object->propertySet);
-
-            if (object->newScript)
-                Foreground::free_(object->newScript);
-
-            Foreground::delete_(object);
-        }
-    }
-}
-
-void
-TypeCompartment::finalizeObjects()
-{
-    if (typeEmpty.marked) {
-        typeEmpty.marked = false;
-    } else if (typeEmpty.emptyShapes) {
-        Foreground::free_(typeEmpty.emptyShapes);
-        typeEmpty.emptyShapes = NULL;
-    }
-
-    FinalizeTypeObjectList(objects);
 }
 
 TypeCompartment::~TypeCompartment()
@@ -5591,6 +5446,9 @@ TypeCompartment::~TypeCompartment()
 
     if (objectTypeTable)
         Foreground::delete_(objectTypeTable);
+
+    if (allocationSiteTable)
+        Foreground::delete_(allocationSiteTable);
 }
 
 void
@@ -5599,35 +5457,33 @@ TypeScript::sweep(JSContext *cx)
     JSCompartment *compartment = script()->compartment;
     JS_ASSERT(compartment->types.inferenceEnabled);
 
-    if (!SweepTypeObjectList(cx, typeObjects))
-        return;
-
     if (typeArray) {
         unsigned num = numTypeSets();
 
         if (script()->isAboutToBeFinalized(cx)) {
             /* Release all memory associated with the persistent type sets. */
             for (unsigned i = 0; i < num; i++)
-                typeArray[i].destroy();
+                typeArray[i].clearObjects();
             cx->free_(typeArray);
             typeArray = NULL;
         } else {
             /* Condense all constraints in the persistent type sets. */
-            for (unsigned i = 0; i < num; i++) {
-                if (!typeArray[i].sweep(cx))
-                    return;
-            }
+            for (unsigned i = 0; i < num; i++)
+                typeArray[i].sweep(cx, compartment);
         }
     }
 
-    TypeIntermediate **presult = &intermediateList;
+    TypeResult **presult = &dynamicList;
     while (*presult) {
-        TypeIntermediate *result = *presult;
-        if (result->sweep(cx, compartment)) {
-            presult = &result->next;
-        } else {
+        TypeResult *result = *presult;
+        Type type = result->type;
+
+        if (!type.isUnknown() && !type.isAnyObject() && type.isObject() &&
+            IsAboutToBeFinalized(cx, type.objectKey())) {
             *presult = result->next;
             cx->delete_(result);
+        } else {
+            presult = &result->next;
         }
     }
 
@@ -5644,49 +5500,12 @@ TypeScript::sweep(JSContext *cx)
 }
 
 void
-TypeScript::trace(JSTracer *trc)
-{
-    /*
-     * Trace all type objects associated with the script, these can be freely
-     * referenced from JIT code without needing to be pinned against GC.
-     */
-    types::TypeObject *obj = typeObjects;
-    while (obj) {
-        if (!obj->marked)
-            obj->trace(trc);
-        obj = obj->next;
-    }
-}
-
-void
-TypeScript::finalizeObjects()
-{
-    FinalizeTypeObjectList(typeObjects);
-
-    if (!script()->compartment->activeAnalysis) {
-        /*
-         * The analysis and everything in it is allocated using the analysis
-         * pool in the compartment (to be cleared shortly).
-         */
-        script()->clearAnalysis();
-    }
-}
-
-void
 TypeScript::destroy()
 {
-    /* Migrate any type objects associated with this script to the compartment. */
-    while (typeObjects) {
-        types::TypeObject *next = typeObjects->next;
-        typeObjects->next = script()->compartment->types.objects;
-        script()->compartment->types.objects = typeObjects;
-        typeObjects = next;
-    }
-
-    while (intermediateList) {
-        TypeIntermediate *next = intermediateList->next;
-        Foreground::delete_(intermediateList);
-        intermediateList = next;
+    while (dynamicList) {
+        TypeResult *next = dynamicList->next;
+        Foreground::delete_(dynamicList);
+        dynamicList = next;
     }
 
     Foreground::free_(typeArray);
@@ -5695,48 +5514,15 @@ TypeScript::destroy()
 size_t
 TypeSet::dynamicSize()
 {
-    size_t res = 0;
-
-    if (objectCount >= 2)
-        res += HashSetCapacity(objectCount) * sizeof(TypeObject *);
-
-    /* Get the total size of any heap-allocated constraints on this set. */
-    TypeConstraint *constraint = constraintList;
-    while (constraint) {
-        res += constraint->allocatedSize();
-        constraint = constraint->next;
-    }
-
-    return res;
-}
-
-static void
-GetObjectListMemoryStats(TypeObject *object, JSCompartment::TypeInferenceMemoryStats *stats)
-{
-    while (object) {
-        stats->objectMain += sizeof(TypeObject);
-
-        if (object->propertyCount >= 2)
-            stats->objectMain += HashSetCapacity(object->propertyCount) * sizeof(Property *);
-
-        unsigned count = object->getPropertyCount();
-        for (unsigned i = 0; i < count; i++) {
-            Property *prop = object->getProperty(i);
-            if (prop) {
-                stats->objectMain += sizeof(Property);
-                stats->objectSets += prop->types.dynamicSize();
-            }
-        }
-
-        object = object->next;
-    }
+    uint32 count = baseObjectCount();
+    if (count >= 2)
+        return HashSetCapacity(count) * sizeof(TypeObject *);
+    return 0;
 }
 
 static void
 GetScriptMemoryStats(JSScript *script, JSCompartment::TypeInferenceMemoryStats *stats)
 {
-    GetObjectListMemoryStats(script->types.typeObjects, stats);
-
     if (!script->types.typeArray)
         return;
 
@@ -5745,22 +5531,46 @@ GetScriptMemoryStats(JSScript *script, JSCompartment::TypeInferenceMemoryStats *
     for (unsigned i = 0; i < count; i++)
         stats->scriptSets += script->types.typeArray[i].dynamicSize();
 
-    TypeIntermediate *intermediate = script->types.intermediateList;
-    while (intermediate) {
-        stats->scriptMain += intermediate->allocatedSize();
-        intermediate = intermediate->next;
+    TypeResult *result = script->types.dynamicList;
+    while (result) {
+        stats->scriptMain += sizeof(TypeResult);
+        result = result->next;
     }
 }
 
 void
-JSCompartment::getTypeInferenceMemoryStats(TypeInferenceMemoryStats *stats)
+JSCompartment::getTypeInferenceMemoryStats(JSContext *cx, TypeInferenceMemoryStats *stats)
 {
-    GetObjectListMemoryStats(types.objects, stats);
-
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
         GetScriptMemoryStats(script, stats);
     }
 
     stats->poolMain += ArenaAllocatedSize(pool);
+}
+
+void
+JSCompartment::getTypeInferenceObjectStats(TypeObject *object, TypeInferenceMemoryStats *stats)
+{
+    stats->objectMain += sizeof(TypeObject);
+
+    if (object->singleton) {
+        /*
+         * Properties and TypeSet data for singletons are allocated in the
+         * compartment's analysis pool.
+         */
+        return;
+    }
+
+    uint32 count = object->getPropertyCount();
+    if (count >= 2)
+        stats->objectMain += count * sizeof(Property *);
+
+    for (unsigned i = 0; i < count; i++) {
+        Property *prop = object->getProperty(i);
+        if (prop) {
+            stats->objectMain += sizeof(Property);
+            stats->objectSets += prop->types.dynamicSize();
+        }
+    }
 }

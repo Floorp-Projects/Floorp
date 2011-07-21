@@ -377,8 +377,9 @@ struct JSObject : js::gc::Cell {
         HAS_EQUALITY              =  0x200,
         VAROBJ                    =  0x400,
         PACKED_ARRAY              =  0x800,
-        SINGLETON_TYPE            = 0x1000,
-        LAZY_TYPE                 = 0x2000,
+        ITERATED                  = 0x1000,
+        SINGLETON_TYPE            = 0x2000,
+        LAZY_TYPE                 = 0x4000,
         METHOD_THRASH_COUNT_MASK  = 0x30000,
         METHOD_THRASH_COUNT_SHIFT =      16,
         METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
@@ -786,6 +787,9 @@ struct JSObject : js::gc::Cell {
      */
     inline bool setSingletonType(JSContext *cx);
 
+    /* Called from GC, reverts a singleton object to having a lazy type. */
+    inline void revertLazyType();
+
     inline js::types::TypeObject *getType(JSContext *cx);
 
     js::types::TypeObject *type() const {
@@ -800,7 +804,7 @@ struct JSObject : js::gc::Cell {
 
     static inline size_t offsetOfType() { return offsetof(JSObject, type_); }
 
-    inline bool clearType(JSContext *cx);
+    inline void clearType();
     inline void setType(js::types::TypeObject *newType);
     inline bool setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType);
     inline void setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape);
@@ -1185,7 +1189,6 @@ struct JSObject : js::gc::Cell {
         this->capacity = capacity;
 
         /* Stops obj from being scanned until initializated. */
-        type_ = NULL;
         lastProp = NULL;
     }
 

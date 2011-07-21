@@ -237,6 +237,15 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
     Mark(trc, shape);
 }
 
+void
+MarkTypeObject(JSTracer *trc, types::TypeObject *object, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(object);
+    JS_SET_TRACING_NAME(trc, name);
+    object->trace(trc, false);
+}
+
 #if JS_HAS_XML_SUPPORT
 void
 MarkXML(JSTracer *trc, JSXML *xml, const char *name)
@@ -516,6 +525,12 @@ MarkRoot(JSTracer *trc, const Shape *thing, const char *name)
 }
 
 void
+MarkRoot(JSTracer *trc, types::TypeObject *thing, const char *name)
+{
+    MarkTypeObject(trc, thing, name);
+}
+
+void
 MarkRoot(JSTracer *trc, JSXML *thing, const char *name)
 {
     MarkXML(trc, thing, name);
@@ -654,21 +669,16 @@ static const uintN LARGE_OBJECT_CHUNK_SIZE = 2048;
 static void
 ScanObject(GCMarker *gcmarker, JSObject *obj)
 {
-    /*
-     * If obj either has no map or no type, it must be a newborn. The type is
-     * set first, and must be marked in case constructing the map triggered GC.
-     * :FIXME: need autorooters for type objects, remove this hack.
-     */
-    types::TypeObject *type = obj->gctype();
-    if (type && !type->marked)
-        type->trace(gcmarker);
-
     if (obj->isNewborn())
         return;
 
+    types::TypeObject *type = obj->gctype();
+    if (type != &types::emptyTypeObject && !type->isMarked())
+        type->trace(gcmarker, /* weak = */ true);
+
     if (JSObject *parent = obj->getParent())
         PushMarkStack(gcmarker, parent);
-    if (!obj->isDenseArray() && obj->newType && !obj->newType->marked)
+    if (!obj->isDenseArray() && obj->newType && !obj->newType->isMarked())
         obj->newType->trace(gcmarker);
 
     Class *clasp = obj->getClass();
@@ -738,17 +748,16 @@ ScanLargeObject(GCMarker *gcmarker, LargeMarkItem &item)
 void
 MarkChildren(JSTracer *trc, JSObject *obj)
 {
-    /* :FIXME: see ScanObject. */
-    types::TypeObject *type = obj->gctype();
-    if (type && !type->marked)
-        type->trace(trc);
-
     /* If obj has no map, it must be a newborn. */
     if (obj->isNewborn())
         return;
 
+    types::TypeObject *type = obj->gctype();
+    if (type != &types::emptyTypeObject && !type->isMarked())
+        type->trace(trc, /* weak = */ true);
+
     /* Trace universal (ops-independent) members. */
-    if (!obj->isDenseArray() && obj->newType && !obj->newType->marked)
+    if (!obj->isDenseArray() && obj->newType && !obj->newType->isMarked())
         obj->newType->trace(trc);
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
@@ -888,16 +897,16 @@ JSObject::scanSlots(GCMarker *gcmarker)
 }
 
 void
-js::types::TypeObject::trace(JSTracer *trc)
+js::types::TypeObject::trace(JSTracer *trc, bool weak)
 {
-    JS_ASSERT(!marked);
-
     /*
-     * Only mark types if the Mark/Sweep GC is running; the bit won't be cleared
-     * by the cycle collector.
+     * Only mark types if the Mark/Sweep GC is running; the bit won't be
+     * cleared by the cycle collector. Also, don't mark for weak references
+     * from singleton JS objects, as if there are no outstanding refs we will
+     * destroy the type object and revert the JS object to a lazy type.
      */
-    if (IS_GC_MARKING_TRACER(trc))
-        marked = true;
+    if (IS_GC_MARKING_TRACER(trc) && (!weak || !singleton))
+        markIfUnmarked(static_cast<GCMarker *>(trc)->getMarkColor());
 
 #ifdef DEBUG
     InlineMarkId(trc, name_, "type_name");
