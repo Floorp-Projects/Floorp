@@ -378,7 +378,7 @@ class MDefinition : public MNode
 
     inline MInstruction *toInstruction();
     bool isInstruction() const {
-        return isPhi();
+        return !isPhi();
     }
 
     void setResultType(MIRType type) {
