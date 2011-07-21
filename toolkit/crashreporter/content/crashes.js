@@ -77,8 +77,11 @@ function submitError(dumpid) {
 function submitPendingReport(event) {
   var link = event.target;
   var id = link.firstChild.textContent;
-  if (CrashSubmit.submit(id, submitSuccess, submitError, true))
-    link.className = "submitting";
+  if (CrashSubmit.submit(id, { submitSuccess: submitSuccess,
+                               submitError: submitError,
+                               noThrottle: true })) {
+    link.className = "submitting";    
+  }
   event.preventDefault();
   return false;
 }
