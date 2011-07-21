@@ -96,6 +96,8 @@ class DeviceManagerADB(DeviceManager):
     # contains symbolic links, the links are pushed, rather than the linked
     # files; we push file-by-file to get around this limitation
     try:
+      if (not self.dirExists(remoteDir)):
+        self.mkDirs(remoteDir+"/x")
       for root, dirs, files in os.walk(localDir):
         relRoot = os.path.relpath(root, localDir)
         for file in files:

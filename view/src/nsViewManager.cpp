@@ -634,7 +634,7 @@ ShouldIgnoreInvalidation(nsViewManager* aVM)
 {
   while (aVM) {
     nsIViewObserver* vo = aVM->GetViewObserver();
-    if (vo && vo->ShouldIgnoreInvalidation()) {
+    if (!vo || vo->ShouldIgnoreInvalidation()) {
       return PR_TRUE;
     }
     nsView* view = aVM->GetRootViewImpl()->GetParent();

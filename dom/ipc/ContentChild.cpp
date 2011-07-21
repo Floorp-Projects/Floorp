@@ -104,6 +104,10 @@
 #define getpid _getpid
 #endif
 
+#ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
+#endif
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -732,6 +736,18 @@ ContentChild::RecvFlushMemory(const nsString& reason)
     if (os)
         os->NotifyObservers(nsnull, "memory-pressure", reason.get());
   return true;
+}
+
+bool
+ContentChild::RecvActivateA11y()
+{
+#ifdef ACCESSIBILITY
+    // Start accessibility in content process if it's running in chrome
+    // process.
+    nsCOMPtr<nsIAccessibilityService> accService =
+        do_GetService("@mozilla.org/accessibilityService;1");
+#endif
+    return true;
 }
 
 nsString&

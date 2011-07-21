@@ -59,6 +59,8 @@
 #include "nsEventStateManager.h"
 #include "nsIAtom.h"
 #include "nsIRange.h"
+#include "mozilla/dom/Element.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
