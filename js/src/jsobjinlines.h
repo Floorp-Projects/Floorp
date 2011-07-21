@@ -288,6 +288,7 @@ JSObject::getReservedSlot(uintN index) const
 inline void
 JSObject::setReservedSlot(uintN index, const js::Value &v)
 {
+    JS_ASSERT(index < JSSLOT_FREE(getClass()));
     setSlot(index, v);
 }
 
@@ -1382,7 +1383,9 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
     return true;
 }
 
-bool PropDesc::checkGetter(JSContext *cx) {
+bool
+PropDesc::checkGetter(JSContext *cx)
+{
     if (hasGet && !js_IsCallable(get) && !get.isUndefined()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                              js_getter_str);
@@ -1391,7 +1394,9 @@ bool PropDesc::checkGetter(JSContext *cx) {
     return true;
 }
 
-bool PropDesc::checkSetter(JSContext *cx) {
+bool
+PropDesc::checkSetter(JSContext *cx)
+{
     if (hasSet && !js_IsCallable(set) && !set.isUndefined()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                              js_setter_str);

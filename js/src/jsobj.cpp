@@ -2479,7 +2479,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &des
     return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
 }
 
-}
+} /* namespace js */
 
 JSBool
 js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, const Value &descriptor, JSBool *bp)
