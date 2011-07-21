@@ -452,11 +452,8 @@ RasterImage::GetType()
 }
 
 imgFrame*
-RasterImage::GetImgFrame(PRUint32 framenum)
+RasterImage::GetImgFrameNoDecode(PRUint32 framenum)
 {
-  nsresult rv = WantDecodedFrames();
-  CONTAINER_ENSURE_TRUE(NS_SUCCEEDED(rv), nsnull);
-
   if (!mAnim) {
     NS_ASSERTION(framenum == 0, "Don't ask for a frame > 0 if we're not animated!");
     return mFrames.SafeElementAt(0, nsnull);
@@ -464,6 +461,14 @@ RasterImage::GetImgFrame(PRUint32 framenum)
   if (mAnim->lastCompositedFrameIndex == PRInt32(framenum))
     return mAnim->compositingFrame;
   return mFrames.SafeElementAt(framenum, nsnull);
+}
+
+imgFrame*
+RasterImage::GetImgFrame(PRUint32 framenum)
+{
+  nsresult rv = WantDecodedFrames();
+  CONTAINER_ENSURE_TRUE(NS_SUCCEEDED(rv), nsnull);
+  return GetImgFrameNoDecode(framenum);
 }
 
 imgFrame*
@@ -979,7 +984,7 @@ RasterImage::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
 {
   NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
 
   frame->ImageUpdated(aUpdatedRect);
