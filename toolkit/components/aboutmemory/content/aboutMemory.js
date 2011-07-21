@@ -48,11 +48,12 @@ var gVerbose = (location.href.split(/[\?,]/).indexOf("verbose") !== -1);
 
 var gAddedObserver = false;
 
-const KIND_NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
-const KIND_HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
-const KIND_OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
-const UNITS_BYTES  = Ci.nsIMemoryReporter.UNITS_BYTES;
-const UNITS_COUNT  = Ci.nsIMemoryReporter.UNITS_COUNT;
+const KIND_NONHEAP     = Ci.nsIMemoryReporter.KIND_NONHEAP;
+const KIND_HEAP        = Ci.nsIMemoryReporter.KIND_HEAP;
+const KIND_OTHER       = Ci.nsIMemoryReporter.KIND_OTHER;
+const UNITS_BYTES      = Ci.nsIMemoryReporter.UNITS_BYTES;
+const UNITS_COUNT      = Ci.nsIMemoryReporter.UNITS_COUNT;
+const UNITS_PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
 const kUnknown = -1;    // used for _amount if a memory reporter failed
 
@@ -258,22 +259,20 @@ function update()
   content.appendChild(div);
 }
 
-// Compare two memory reporter nodes.  The primary sort is on the _units
-// property.  The secondary sort is on the _path property if the _units is
-// UNIT_COUNT, otherwise it is on the _amount property.
-function cmpAmount(a, b)
+// Compare two 'explicit' memory reporter nodes.
+function cmpExplicitReporters(a, b)
 {
-  if (a._units != b._units) {
-    return a._units - b._units;   // use the enum order from nsIMemoryReporter
-  }
-  if (a._units == UNITS_COUNT) {
-    if (a._path < b._path)
-      return -1;
-    if (a._path > b._path)
-      return 1;
-    return 0;
-  }
+  assert(a._units === undefined && b._units === undefined,
+         "'explicit' tree nodes must not have _units defined");
   return b._amount - a._amount;
+};
+
+// Compare two memory reporter nodes from the 'other measurements' list.
+function cmpOtherReporters(a, b)
+{
+  return a._path < b._path ? -1 :
+         a._path > b._path ?  1 :
+         0;
 };
 
 /**
@@ -302,6 +301,8 @@ function genProcessText(aProcess, aReporters)
    *           _hasProblem:  boolean;   (only defined if 'true')
    *           _nMerged:     number;    (only defined if >= 2)
    *         }
+   * _units isn't needed because it's always UNITS_BYTES for 'explicit'
+   * reporters.
    */
   function buildTree()
   {
@@ -319,9 +320,9 @@ function genProcessText(aProcess, aReporters)
     }
 
     // We want to process all reporters that begin with 'treeName'.  First we
-    // build the tree but only filling in '_name', '_kind', '_units', '_kids',
-    // maybe '_hasReporter' and maybe '_nMerged'.  This is done top-down from
-    // the reporters.
+    // build the tree but only fill in '_name', '_kind', '_kids', maybe
+    // '_hasReporter' and maybe '_nMerged'.  This is done top-down from the
+    // reporters.
     var t = {
       _name: "falseRoot",
       _kind: KIND_OTHER,
@@ -330,6 +331,9 @@ function genProcessText(aProcess, aReporters)
     for (var path in aReporters) {
       var r = aReporters[path];
       if (r._path.slice(0, treeName.length) === treeName) {
+        assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
+               "reporters in the tree must have KIND_HEAP or KIND_NONHEAP");
+        assert(r._units === UNITS_BYTES);
         var names = r._path.split('/');
         var u = t;
         for (var i = 0; i < names.length; i++) {
@@ -471,7 +475,7 @@ function genProcessText(aProcess, aReporters)
      */
     function filterTree(aT)
     {
-      aT._kids.sort(cmpAmount);
+      aT._kids.sort(cmpExplicitReporters);
 
       for (var i = 0; i < aT._kids.length; i++) {
         if (shouldOmit(aT._kids[i]._amount)) {
@@ -499,7 +503,7 @@ function genProcessText(aProcess, aReporters)
           // sum of the omitted sub-trees may be larger than some of the
           // shown sub-trees.
           aT._kids[i0] = rSub;
-          aT._kids.sort(cmpAmount);
+          aT._kids.sort(cmpExplicitReporters);
           break;
         }
         filterTree(aT._kids[i]);
@@ -530,9 +534,10 @@ function genProcessText(aProcess, aReporters)
 function formatReporterAmount(aReporter)
 {
   switch(aReporter._units) {
-    case UNITS_BYTES: return formatBytes(aReporter._amount);
-    case UNITS_COUNT: return formatInt(aReporter._amount);
-    default:          return "(???)"
+    case UNITS_BYTES:      return formatBytes(aReporter._amount);
+    case UNITS_COUNT:      return formatInt(aReporter._amount);
+    case UNITS_PERCENTAGE: return formatPercentage(aReporter._amount);
+    default:               return "(???)"
   }
 }
 
@@ -590,6 +595,18 @@ function formatBytes(aBytes)
     s = formatInt(a[0]) + "." + a[1] + " " + unit;
   }
   return s;
+}
+
+/**
+ * Converts a percentage to an appropriate string representation.
+ *
+ * @param aPerc100x
+ *        The percentage, multiplied by 100 (see nsIMemoryReporter)
+ * @return The string representation
+ */
+function formatPercentage(aPerc100x)
+{
+  return (aPerc100x / 100).toFixed(2) + "%";
 }
 
 /**
@@ -879,12 +896,14 @@ function genOtherText(aReporters)
       }
     }
   }
-  rArray.sort(cmpAmount);
+  rArray.sort(cmpOtherReporters);
 
   // Generate text for the not-yet-printed values.
   var text = "";
   for (var i = 0; i < rArray.length; i++) {
     var elem = rArray[i];
+    assert(elem._kind === KIND_OTHER,
+           "elem._kind is not KIND_OTHER for " + elem._path);
     text += genMrValueText(
               pad(formatReporterAmount(elem), maxAmountLength, ' ')) + " ";
     text += genMrNameText(elem._kind, elem._description, elem._path,
@@ -896,6 +915,13 @@ function genOtherText(aReporters)
                "the requested memory measurements above."
   return "<h2 class='hasDesc' title='" + desc + "'>Other Measurements</h2>\n" +
          "<pre>" + text + "</pre>\n";
+}
+
+function assert(aCond, aMsg)
+{
+  if (!aCond) {
+    throw("assertion failed: " + aMsg);
+  }
 }
 
 function debug(x)

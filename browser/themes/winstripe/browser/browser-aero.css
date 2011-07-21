@@ -138,6 +138,13 @@
     border-right-style: none !important;
   }
 
+  #toolbar-menubar :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #TabsToolbar[tabsontop=true] :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > #nav-bar :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme) {
+    list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
+  }
+
   /* Vertical toolbar border */
   #main-window[sizemode=normal] #navigator-toolbox::after,
   #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > toolbar:not(#toolbar-menubar):not(#TabsToolbar),
