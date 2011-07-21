@@ -766,6 +766,8 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
  *
  ******************************************************************************/
 
+PRBool TextInputHandler::sLastModifierState = PR_FALSE;
+
 // static
 CFArrayRef
 TextInputHandler::CreateAllKeyboardLayoutList()
@@ -949,6 +951,132 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   return mCurrentKeyEvent.KeyDownOrPressHandled();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+}
+
+void
+TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mIgnoreNextKeyUpEvent) {
+    mIgnoreNextKeyUpEvent = PR_FALSE;
+    return;
+  }
+
+  if (Destroyed()) {
+    return;
+  }
+
+  // if we don't have any characters we can't generate a keyUp event
+  if ([[aNativeEvent characters] length] == 0 || IsIMEComposing()) {
+    return;
+  }
+
+  nsKeyEvent keyupEvent(PR_TRUE, NS_KEY_UP, mWidget);
+  InitKeyEvent(aNativeEvent, keyupEvent);
+
+  DispatchEvent(keyupEvent);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (Destroyed()) {
+    return;
+  }
+
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
+
+  // CapsLock state and other modifier states are different:
+  // CapsLock state does not revert when the CapsLock key goes up, as the
+  // modifier state does for other modifier keys on key up.
+  if ([aNativeEvent keyCode] == kCapsLockKeyCode) {
+    // Fire key down event for caps lock.
+    DispatchKeyEventForFlagsChanged(aNativeEvent, PR_TRUE);
+    if (Destroyed()) {
+      return;
+    }
+    // XXX should we fire keyup event too? The keyup event for CapsLock key
+    // is never dispatched on Gecko.
+  } else if ([aNativeEvent type] == NSFlagsChanged) {
+    // Fire key up/down events for the modifier keys (shift, alt, ctrl, command)
+    NSUInteger modifiers =
+      [aNativeEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+    const NSUInteger kModifierMaskTable[] =
+      { NSShiftKeyMask, NSControlKeyMask,
+        NSAlternateKeyMask, NSCommandKeyMask };
+    const PRUint32 kModifierCount = NS_ARRAY_LENGTH(kModifierMaskTable);
+
+    for (PRUint32 i = 0; i < kModifierCount; i++) {
+      NSUInteger modifierBit = kModifierMaskTable[i];
+      if ((modifiers & modifierBit) != (sLastModifierState & modifierBit)) {
+        PRBool isKeyDown = ((modifiers & modifierBit) != 0);
+        DispatchKeyEventForFlagsChanged(aNativeEvent, isKeyDown);
+        if (Destroyed()) {
+          return;
+        }
+
+        // Stop if focus has changed.
+        // Check to see if mView is still the first responder.
+        if (![mView isFirstResponder]) {
+          break;
+        }
+      }
+    }
+
+    sLastModifierState = modifiers;
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
+                                                  PRBool aDispatchKeyDown)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (Destroyed()) {
+    return;
+  }
+
+  if ([aNativeEvent type] != NSFlagsChanged || IsIMEComposing()) {
+    return;
+  }
+
+  PRUint32 message = aDispatchKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
+
+#ifndef NP_NO_CARBON
+  EventRecord carbonEvent;
+#endif // ifndef NP_NO_CARBON
+  NPCocoaEvent cocoaEvent;
+
+  // Fire a key event.
+  nsKeyEvent keyEvent(PR_TRUE, message, mWidget);
+  InitKeyEvent(aNativeEvent, keyEvent);
+
+  // create event for use by plugins
+  if ([mView isPluginView]) {
+#ifndef NP_NO_CARBON
+    if ([mView pluginEventModel] == NPEventModelCarbon) {
+      ConvertCocoaKeyEventToCarbonEvent(aNativeEvent, carbonEvent,
+                                        aDispatchKeyDown);
+      keyEvent.pluginEvent = &carbonEvent;
+    }
+#endif // ifndef NP_NO_CARBON
+    if ([mView pluginEventModel] == NPEventModelCocoa) {
+      ConvertCocoaKeyEventToNPCocoaEvent(aNativeEvent, cocoaEvent);
+      keyEvent.pluginEvent = &cocoaEvent;
+    }
+  }
+
+  DispatchEvent(keyEvent);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
@@ -2739,6 +2867,11 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
 void
 PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
 {
+  if (mIgnoreNextKeyUpEvent) {
+    mIgnoreNextKeyUpEvent = PR_FALSE;
+    return;
+  }
+
   if (Destroyed()) {
     return;
   }
