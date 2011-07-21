@@ -198,7 +198,7 @@ JSObject::finalize(JSContext *cx)
 inline void
 JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
-    init(cx, &js_CallClass, js::types::GetTypeEmpty(cx), parent, NULL, false);
+    init(cx, &js_CallClass, &js::types::emptyTypeObject, parent, NULL, false);
     lastProp = bindings.lastShape();
 
     /*
@@ -840,15 +840,11 @@ JSObject::getNewType(JSContext *cx, JSScript *script, bool markUnknown)
     return newType;
 }
 
-inline bool
-JSObject::clearType(JSContext *cx)
+inline void
+JSObject::clearType()
 {
     JS_ASSERT(!hasSingletonType());
-    js::types::TypeObject *newType = js::types::GetTypeEmpty(cx);
-    if (!newType)
-        return false;
-    type_ = newType;
-    return true;
+    type_ = &js::types::emptyTypeObject;
 }
 
 inline void
@@ -1232,7 +1228,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
     if (freeslot > obj->numSlots() && !obj->allocSlots(cx, freeslot))
         goto bad;
 
-    if (type && type->canProvideEmptyShape(clasp))
+    if (type->canProvideEmptyShape(clasp))
         empty = type->getEmptyShape(cx, clasp, kind);
     else
         empty = js::EmptyShape::create(cx, clasp);
@@ -1441,7 +1437,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
           return NULL;
     }
 
-    types::TypeObject *type = proto ? proto->getNewType(cx) : js::types::GetTypeEmpty(cx);
+    types::TypeObject *type = proto ? proto->getNewType(cx) : &js::types::emptyTypeObject;
     if (!type)
         return NULL;
 

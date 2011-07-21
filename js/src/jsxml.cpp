@@ -7206,8 +7206,7 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
          * names, its prefix and uri references are copied to the QName.
          * The parent remains set and links back to global.
          */
-        if (!obj->clearType(cx))
-            return false;
+        obj->clearType();
 
         v.setObject(*obj);
     }

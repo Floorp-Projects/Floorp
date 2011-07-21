@@ -453,8 +453,7 @@ stubs::GetElem(VMFrame &f)
             f.script()->types.monitor(cx, f.pc(), regs.sp[-2]);
             return;
         }
-        MarkTypeObjectFlags(cx, f.script()->fun,
-                            OBJECT_FLAG_CREATED_ARGUMENTS);
+        MarkArgumentsCreated(cx, f.script());
         JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
     }
 
@@ -1299,8 +1298,8 @@ stubs::This(VMFrame &f)
      * from a primitive; the frame we are computing 'this' for does not exist yet.
      */
     if (f.regs.inlined()) {
-        JSFunction *fun = f.jit()->inlineFrames()[f.regs.inlined()->inlineIndex].fun;
-        MarkTypeObjectFlags(f.cx, fun, OBJECT_FLAG_UNINLINEABLE);
+        f.script()->uninlineable = true;
+        MarkTypeObjectFlags(f.cx, f.script()->fun, OBJECT_FLAG_UNINLINEABLE);
     }
 
     if (!ComputeThis(f.cx, f.fp()))

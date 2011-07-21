@@ -492,8 +492,9 @@ struct JSScript {
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            isUncachedEval:1; /* script came from EvaluateScript */
-    bool            calledWithNew:1;  /* script has been called using 'new' */
     bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
+    bool            createdArgs:1;    /* script has had arguments objects created */
+    bool            uninlineable:1;   /* script is considered uninlineable by analysis */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */

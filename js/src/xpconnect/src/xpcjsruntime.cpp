@@ -1434,13 +1434,6 @@ private:
              : 0;
     }
 
-    static void
-    GetCompartmentTypeInferenceMemorySize(JSCompartment *c,
-                                          JSCompartment::TypeInferenceMemoryStats *stats)
-    {
-        c->getTypeInferenceMemoryStats(stats);
-    }
-
     #endif  // JS_TRACER
 
     static void
@@ -1464,7 +1457,7 @@ private:
         curr->tjitDataAllocatorsMain = GetCompartmentTjitDataAllocatorsMainSize(compartment);
         curr->tjitDataAllocatorsReserve = GetCompartmentTjitDataAllocatorsReserveSize(compartment);
 #endif
-        GetCompartmentTypeInferenceMemorySize(compartment, &curr->typeInferenceMemory);
+        compartment->getTypeInferenceMemoryStats(cx, &curr->typeInferenceMemory);
     }
 
     static void
@@ -1499,6 +1492,9 @@ private:
             curr->stringChars += str->charsHeapSize();
         } else if (traceKind == JSTRACE_SHAPE) {
             curr->gcHeapShapes += thingSize;
+        } else if (traceKind == JSTRACE_TYPE_OBJECT) {
+            js::types::TypeObject *obj = static_cast<js::types::TypeObject *>(thing);
+            obj->compartment()->getTypeInferenceObjectStats(obj, &curr->typeInferenceMemory);
         } else {
             JS_ASSERT(traceKind == JSTRACE_XML);
             curr->gcHeapXml += thingSize;

@@ -70,6 +70,8 @@ inline js::EmptyShape *
 js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
                                      /* gc::FinalizeKind */ unsigned kind)
 {
+    JS_ASSERT(!singleton);
+
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     int i = kind - js::gc::FINALIZE_OBJECT0;
 
@@ -105,7 +107,7 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
 inline bool
 js::types::TypeObject::canProvideEmptyShape(js::Class *aclasp)
 {
-    return !emptyShapes || emptyShapes[0]->getClass() == aclasp;
+    return proto && !singleton && (!emptyShapes || emptyShapes[0]->getClass() == aclasp);
 }
 
 inline void
