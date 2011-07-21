@@ -46,7 +46,7 @@ native PRNetAddr(union PRNetAddr);
  * like an enumerator, allowing the caller to easily step through the
  * list of IP addresses.
  */
-[scriptable, uuid(31c9c52e-1100-457d-abac-d2729e43f506)]
+[scriptable, uuid(ead9e9d8-7eef-4dae-a7f0-a1edcfb20478)]
 interface nsIDNSRecord : nsISupports
 {
     /**
@@ -88,4 +88,14 @@ interface nsIDNSRecord : nsISupports
      * address in the record.
      */
     void rewind();
+
+    /**
+     * This function indicates that the last address obtained via getNextAddr*()
+     * was not usuable and should be skipped in future uses of this
+     * record if other addresses are available.
+     *
+     * @param aPort is the port number associated with the failure, if any.
+     *        It may be zero if not applicable.
+     */
+    void reportUnusable(in PRUint16 aPort);
 };
