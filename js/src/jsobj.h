@@ -143,10 +143,27 @@ struct PropDesc {
 
     PropDesc();
 
-    /* 8.10.5 ToPropertyDescriptor(Obj) */
+    /*
+     * 8.10.5 ToPropertyDescriptor(Obj)
+     *
+     * If checkAccessors is false, skip steps 7.b and 8.b, which throw a
+     * TypeError if .get or .set is neither a callable object nor undefined.
+     *
+     * (DebuggerObject_defineProperty uses this: the .get and .set properties
+     * are expected to be Debugger.Object wrappers of functions, which are not
+     * themselves callable.)
+     */
     bool initialize(JSContext* cx, const js::Value &v, bool checkAccessors=true);
 
-    /* 8.10.4 FromPropertyDescriptor(Desc) */
+    /*
+     * 8.10.4 FromPropertyDescriptor(Desc)
+     *
+     * initFromPropertyDescriptor sets pd to undefined and populates all the
+     * other fields of this PropDesc from desc.
+     *
+     * makeObject populates pd based on the other fields of *this, creating a
+     * new property descriptor JSObject and defining properties on it.
+     */
     void initFromPropertyDescriptor(const PropertyDescriptor &desc);
     bool makeObject(JSContext *cx);
 
@@ -198,6 +215,11 @@ struct PropDesc {
         return js::CastAsStrictPropertyOp(setterObject());
     }
 
+    /*
+     * Throw a TypeError if a getter/setter is present and is neither callable
+     * nor undefined. These methods do exactly the type checks that are skipped
+     * by passing false as the checkAccessors parameter of initialize.
+     */
     inline bool checkGetter(JSContext *cx);
     inline bool checkSetter(JSContext *cx);
 };
@@ -1653,8 +1675,12 @@ LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
 
 /*
- * Define a property as specified by the ES5 [[DefineOwnProperty]] algorithms,
- * sections 8.12.9 and (for arrays) 15.4.5.1.
+ * Call the [[DefineOwnProperty]] internal method of obj.
+ *
+ * If obj is an array, this follows ES5 15.4.5.1.
+ * If obj is any other native object, this follows ES5 8.12.9.
+ * If obj is a proxy, this calls the proxy handler's defineProperty method.
+ * Otherwise, this reports an error and returns false.
  */
 extern bool
 DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc, bool throwError,
@@ -1766,7 +1792,7 @@ GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 bool
 NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value *vp);
 
-}
+} /* namespace js */
 
 extern JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, js::Value *vp);
