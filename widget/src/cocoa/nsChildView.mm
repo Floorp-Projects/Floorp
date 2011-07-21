@@ -98,7 +98,6 @@ using namespace mozilla::gl;
 using namespace mozilla::widget;
 using namespace mozilla;
 
-#undef DEBUG_IME
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
 
@@ -231,24 +230,11 @@ FlipCocoaScreenCoordinate(NSPoint &inPoint)
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
 
-#if defined(DEBUG) && defined(PR_LOGGING)
-
-static void DebugPrintAllKeyboardLayouts()
-{
-  TextInputHandler::DebugPrintAllKeyboardLayouts(sCocoaLog);
-  IMEInputHandler::DebugPrintAllIMEModes(sCocoaLog);
-}
-
-#endif // defined(DEBUG) && defined(PR_LOGGING)
-
 void EnsureLogInitialized()
 {
 #ifdef PR_LOGGING
   if (!sCocoaLog) {
     sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
-#ifdef DEBUG
-    DebugPrintAllKeyboardLayouts();
-#endif // DEBUG
   }
 #endif // PR_LOGGING
 }
@@ -1656,10 +1642,6 @@ PRBool nsChildView::HasPendingInputEvent()
 // get called on the same ChildView that input is going through.
 NS_IMETHODIMP nsChildView::ResetInputState()
 {
-#ifdef DEBUG_IME
-  NSLog(@"**** ResetInputState");
-#endif
-
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mTextInputHandler->CommitIMEComposition();
   return NS_OK;
@@ -1668,10 +1650,6 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 // 'open' means that it can take non-ASCII chars
 NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
 {
-#ifdef DEBUG_IME
-  NSLog(@"**** SetIMEOpenState aState = %d", aState);
-#endif
-
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mTextInputHandler->SetIMEOpenState(aState);
   return NS_OK;
@@ -1680,10 +1658,6 @@ NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
 // 'open' means that it can take non-ASCII chars
 NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
 {
-#ifdef DEBUG_IME
-  NSLog(@"**** GetIMEOpenState");
-#endif
-
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   *aState = mTextInputHandler->IsIMEOpened();
   return NS_OK;
@@ -1691,10 +1665,6 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
 
 NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
 {
-#ifdef DEBUG_IME
-  NSLog(@"**** SetInputMode mStatus = %d", aContext.mStatus);
-#endif
-
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mIMEContext = aContext;
   switch (aContext.mStatus) {
@@ -1719,10 +1689,6 @@ NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
 
 NS_IMETHODIMP nsChildView::GetInputMode(IMEContext& aContext)
 {
-#ifdef DEBUG_IME
-  NSLog(@"**** GetInputMode");
-#endif
-
   aContext = mIMEContext;
   return NS_OK;
 }
@@ -1730,10 +1696,6 @@ NS_IMETHODIMP nsChildView::GetInputMode(IMEContext& aContext)
 // Destruct and don't commit the IME composition string.
 NS_IMETHODIMP nsChildView::CancelIMEComposition()
 {
-#ifdef DEBUG_IME
-  NSLog(@"**** CancelIMEComposition");
-#endif
-
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mTextInputHandler->CancelIMEComposition();
   return NS_OK;
@@ -1744,9 +1706,6 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-#ifdef DEBUG_IME
-  NSLog(@"**** GetToggledKeyState");
-#endif
   NS_ENSURE_ARG_POINTER(aLEDState);
   PRUint32 key;
   switch (aKeyCode) {
@@ -3837,10 +3796,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-#if DEBUG_IME
-  NSLog(@"****in insertText: '%@'", insertString);
-#endif
-
   NS_ENSURE_TRUE(mGeckoChild, );
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -3867,13 +3822,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  PRBool ignore = mGeckoChild && mTextInputHandler->KeyPressWasHandled();
+  if (!mGeckoChild || !mTextInputHandler) {
+    return;
+  }
 
-#if DEBUG_IME 
-  NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, ignore);
-#endif
-
-  if (!ignore) {
+  const char* sel = reinterpret_cast<const char*>(aSelector);
+  if (!mTextInputHandler->DoCommandBySelector(sel)) {
     [super doCommandBySelector:aSelector];
   }
 
@@ -3969,49 +3923,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 #pragma mark -
 
-#ifdef PR_LOGGING
-static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
-{
-  for (PRUint32 i = 0; i < [aString length]; ++i) {
-    unichar ch = [aString characterAtIndex:i];
-    if (ch >= 32 && ch < 128) {
-      aBuf.Append(char(ch));
-    } else {
-      aBuf += nsPrintfCString("\\u%04x", ch);
-    }
-  }
-  return aBuf.get();
-}
-#endif
-
-// Returns PR_TRUE if Gecko claims to have handled the event, PR_FALSE otherwise.
-// We only send Carbon plugin events with NS_KEY_DOWN gecko events, and only send
-// Cocoa plugin events with NS_KEY_PRESS gecko events. This is because we want to
-// send repeat key down events to Cocoa plugins but not Carbon plugins.
-- (PRBool)processKeyDownEvent:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  if (!mGeckoChild || !mTextInputHandler)
-    return NO;
-
-#ifdef PR_LOGGING
-  nsCAutoString str1;
-  nsCAutoString str2;
-#endif
-  PR_LOG(sCocoaLog, PR_LOG_ALWAYS,
-         ("ChildView processKeyDownEvent: keycode=%d,modifiers=%x,chars=%s,charsIgnoringModifiers=%s\n",
-          [theEvent keyCode],
-          [theEvent modifierFlags],
-          ToEscapedString([theEvent characters], str1),
-          ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  return mTextInputHandler->HandleKeyDownEvent(theEvent);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
-}
-
 #ifdef NP_NO_CARBON
 - (NSTextInputContext *)inputContext
 {
@@ -4035,13 +3946,17 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mGeckoChild && mIsPluginView) {
+  if (mGeckoChild && mTextInputHandler && mIsPluginView) {
     mTextInputHandler->HandleKeyDownEventForPlugin(theEvent);
     return;
   }
 
-  PRBool handled = [self processKeyDownEvent:theEvent];
-  
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+  PRBool handled = PR_FALSE;
+  if (mGeckoChild && mTextInputHandler) {
+    handled = mTextInputHandler->HandleKeyDownEvent(theEvent);
+  }
+
   // We always allow keyboard events to propagate to keyDown: but if they are not
   // handled we give special Application menu items a chance to act.
   if (!handled && sApplicationMenu) {
@@ -4054,17 +3969,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 - (void)keyUp:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-#ifdef PR_LOGGING
-  nsCAutoString str1;
-  nsCAutoString str2;
-#endif
-  PR_LOG(sCocoaLog, PR_LOG_ALWAYS,
-         ("ChildView keyUp: keycode=%d,modifiers=%x,chars=%s,charsIgnoringModifiers=%s\n",
-          [theEvent keyCode],
-          [theEvent modifierFlags],
-          ToEscapedString([theEvent characters], str1),
-          ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
 
   NS_ENSURE_TRUE(mGeckoChild, );
 
