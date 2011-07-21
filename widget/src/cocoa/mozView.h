@@ -87,6 +87,9 @@ class TextInputHandler;
   // Call when you dispatch an event which may cause to open context menu.
 - (void)maybeInitContextMenuTracking;
 
+  // Checks whether the view is for plugin or not
+- (BOOL)isPluginView;
+
 @end
 
 // An informal protocol implemented by the NSWindow of the host application.

@@ -628,9 +628,6 @@ public:
    */
   void HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent);
 
-  PRBool DoesIgnoreNextKeyUpEvent() { return mIgnoreNextKeyUpEvent; }
-  void ResetIgnoreNextKeyUpEvent() { mIgnoreNextKeyUpEvent = PR_FALSE; }
-
   /**
    * ConvertCocoaKeyEventToNPCocoaEvent() converts aCocoaEvent to NPCocoaEvent.
    *
@@ -665,26 +662,15 @@ public:
     mPluginTSMInComposition = aInComposition;
   }
 
-  /**
-   * Create a TSM document for use with plugins, so that we can support IME in
-   * them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
-   * the Flash plugin running in Camino) don't create their own TSM document --
-   * without which IME can't work.  Others (e.g. the Flash plugin running in
-   * Firefox) create a TSM document that (somehow) makes the input window behave
-   * badly when it contains more than one kind of input (say Hiragana and
-   * Romaji).  (We can't just use the per-NSView TSM documents that Cocoa
-   * provides (those created and managed by the NSTSMInputContext class) -- for
-   * some reason TSMProcessRawKeyEvent() doesn't work with them.)
-   */
-  void ActivatePluginTSMDocument();
+#endif // #ifndef NP_NO_CARBON
 
-  /**
-   * HandleCarbonPluginKeyEvent() handles the aKeyEvent.  This is called by
-   * PluginKeyEventsHandler().
-   *
-   * @param aKeyEvent             A native Carbon event.
-   */
-  void HandleCarbonPluginKeyEvent(EventRef aKeyEvent);
+protected:
+  PRPackedBool mIgnoreNextKeyUpEvent;
+
+  PluginTextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
+  ~PluginTextInputHandler();
+
+#ifndef NP_NO_CARBON
 
   /**
    * ConvertCocoaKeyEventToCarbonEvent() converts aCocoaKeyEvent to
@@ -705,12 +691,6 @@ public:
                 PRBool aMakeKeyDownEventIfNSFlagsChanged = PR_FALSE);
 
 #endif // #ifndef NP_NO_CARBON
-
-protected:
-  PRPackedBool mIgnoreNextKeyUpEvent;
-
-  PluginTextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
-  ~PluginTextInputHandler();
 
 private:
 
@@ -742,6 +722,27 @@ private:
   PRBool IsInPluginComposition();
 
 #ifndef NP_NO_CARBON
+
+  /**
+   * Create a TSM document for use with plugins, so that we can support IME in
+   * them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
+   * the Flash plugin running in Camino) don't create their own TSM document --
+   * without which IME can't work.  Others (e.g. the Flash plugin running in
+   * Firefox) create a TSM document that (somehow) makes the input window behave
+   * badly when it contains more than one kind of input (say Hiragana and
+   * Romaji).  (We can't just use the per-NSView TSM documents that Cocoa
+   * provides (those created and managed by the NSTSMInputContext class) -- for
+   * some reason TSMProcessRawKeyEvent() doesn't work with them.)
+   */
+  void ActivatePluginTSMDocument();
+
+  /**
+   * HandleCarbonPluginKeyEvent() handles the aKeyEvent.  This is called by
+   * PluginKeyEventsHandler().
+   *
+   * @param aKeyEvent             A native Carbon event.
+   */
+  void HandleCarbonPluginKeyEvent(EventRef aKeyEvent);
 
   /**
    * ConvertUnicodeToCharCode() converts aUnichar to native encoded string.
@@ -1066,6 +1067,8 @@ private:
 class TextInputHandler : public IMEInputHandler
 {
 public:
+  static PRBool sLastModifierState;
+
   static CFArrayRef CreateAllKeyboardLayoutList();
   static void DebugPrintAllKeyboardLayouts(PRLogModuleInfo* aLogModuleInfo);
 
@@ -1075,12 +1078,25 @@ public:
   /**
    * KeyDown event handler.
    *
-   * @param aNativeEvent          A native keydown event which you want to
-   *                              handle.
+   * @param aNativeEvent          A native NSKeyDown event.
    * @return                      TRUE if the event is consumed by web contents
    *                              or chrome contents.  Otherwise, FALSE.
    */
   PRBool HandleKeyDownEvent(NSEvent* aNativeEvent);
+
+  /**
+   * KeyUp event handler.
+   *
+   * @param aNativeEvent          A native NSKeyUp event.
+   */
+  void HandleKeyUpEvent(NSEvent* aNativeEvent);
+
+  /**
+   * FlagsChanged event handler.
+   *
+   * @param aNativeEvent          A native NSFlagsChanged event.
+   */
+  void HandleFlagsChanged(NSEvent* aNativeEvent);
 
   /**
    * Insert the string to content.  I.e., this is a text input event handler.
@@ -1104,6 +1120,20 @@ public:
   {
     return mCurrentKeyEvent.mKeyPressHandled;
   }
+
+protected:
+  /**
+   * DispatchKeyEventForFlagsChanged() dispatches keydown event or keyup event
+   * for the aNativeEvent.
+   *
+   * @param aNativeEvent          A native flagschanged event which you want to
+   *                              dispatch our key event for.
+   * @param aDispatchKeyDown      TRUE if you want to dispatch a keydown event.
+   *                              Otherwise, i.e., to dispatch keyup event,
+   *                              FALSE.
+   */
+  void DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
+                                       PRBool aDispatchKeyDown);
 };
 
 } // namespace widget
