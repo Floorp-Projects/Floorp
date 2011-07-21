@@ -3,6 +3,7 @@
 
 let originalTab;
 let newTabOne;
+let groupItemTwoId;
 
 function test() {
   waitForExplicitFinish();
@@ -11,10 +12,20 @@ function test() {
   // add a tab to the existing group.
   newTabOne = gBrowser.addTab();
 
-  let onTabviewShown = function() {
-    window.removeEventListener("tabviewshown", onTabviewShown, false);
+  registerCleanupFunction(function() {
+    while (gBrowser.tabs[1])
+      gBrowser.removeTab(gBrowser.tabs[1]);
+    hideTabView(function() {});
+  });
 
-    let contentWindow = document.getElementById("tab-view").contentWindow;
+  showTabView(function() {
+    let contentWindow = TabView.getContentWindow();
+
+    registerCleanupFunction(function() {
+      let groupItem = contentWindow.GroupItems.groupItem(groupItemTwoId);
+      if (groupItem)
+        closeGroupItem(groupItem, function() {});
+    });
 
     is(contentWindow.GroupItems.groupItems.length, 1, 
        "There is one group item on startup");
@@ -25,22 +36,13 @@ function test() {
        "The currently selected tab should be the first tab in the groupItemOne");
 
     // create another group with a tab.
-    let groupItemTwo = createEmptyGroupItem(contentWindow, 300, 300, 200);
-
-    let onTabViewHidden = function() {
-      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+    let groupItemTwo = createGroupItemWithBlankTabs(window, 300, 300, 200, 1);
+    groupItemTwoId = groupItemTwoId;
+    hideTabView(function() {
       // start the test
       testGroupSwitch(contentWindow, groupItemOne, groupItemTwo);
-    };
-    window.addEventListener("tabviewhidden", onTabViewHidden, false);
-
-    // click on the + button
-    let newTabButton = groupItemTwo.container.getElementsByClassName("newTabButton");
-    ok(newTabButton[0], "New tab button exists");
-    EventUtils.sendMouseEvent({ type: "click" }, newTabButton[0], contentWindow);
-  };
-  window.addEventListener("tabviewshown", onTabviewShown, false);
-  TabView.toggle();
+    });
+  });
 }
 
 function testGroupSwitch(contentWindow, groupItemOne, groupItemTwo) {

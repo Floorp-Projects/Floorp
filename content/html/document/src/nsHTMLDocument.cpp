@@ -2946,7 +2946,7 @@ nsHTMLDocument::EditingStateChanged()
 
   if (updateState) {
     nsAutoScriptBlocker scriptBlocker;
-    NotifyEditableStateChange(this, this, !designMode);
+    NotifyEditableStateChange(this, this, designMode);
   }
 
   // Resync the editor's spellcheck state.
