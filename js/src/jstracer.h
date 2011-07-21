@@ -539,6 +539,8 @@ struct LinkableFragment : public VMFragment
     SlotList*               globalSlots;
 };
 
+struct PICTable;
+
 /*
  * argc is cx->fp->argc at the trace loop header, i.e., the number of arguments
  * pushed for the innermost JS frame. This is required as part of the fragment
@@ -564,6 +566,7 @@ struct TreeFragment : public LinkableFragment
         sideExits(alloc),
         gcthings(alloc),
         shapes(alloc),
+        picTables(alloc),
         visiting(false)
     { }
 
@@ -590,6 +593,7 @@ struct TreeFragment : public LinkableFragment
     /* All embedded GC things are registered here so the GC can scan them. */
     Queue<Value>            gcthings;
     Queue<const js::Shape*> shapes;
+    Queue<PICTable*>        picTables;
     unsigned                maxNativeStackSlots;
     /* Gives the number of times we have entered this trace. */
     uintN                   execs;
