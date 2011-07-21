@@ -1588,7 +1588,7 @@ namespace nanojit
                 else
                     BEQ(AT, ZERO, btarg);
                 patch = _nIns;
-                SLT(AT, rb, ra);
+                SLTU(AT, rb, ra);
                 break;
             case LIR_geui:
                 if (branchOnFalse)
