@@ -1662,7 +1662,6 @@ TreeFragment::initialize(JSContext* cx, SlotList *globalSlots, bool speculate)
     this->shapes.clear();
     this->unstableExits = NULL;
     this->sideExits.clear();
-    this->picTables.clear();
 
     /* Determine the native frame layout at the entry point. */
     this->nativeStackBase = (nStackTypes - (cx->regs().sp - cx->fp()->base())) *
@@ -2891,60 +2890,22 @@ HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
      */
     if (IsAboutToBeFinalized(cx, f->globalObj))
         return true;
-    Value* vs = f->gcthings.data();
-    for (unsigned i = 0; i < f->gcthings.length(); ++i) {
-        Value &v = vs[i];
+    Value* vp = f->gcthings.data();
+    for (unsigned len = f->gcthings.length(); len; --len) {
+        Value &v = *vp++;
         JS_ASSERT(v.isMarkable());
         if (IsAboutToBeFinalized(cx, v.toGCThing()))
             return true;
     }
-    const Shape** shapes = f->shapes.data();
-    for (unsigned i = 0; i < f->shapes.length(); ++i) {
-        if (IsAboutToBeFinalized(cx, shapes[i]))
+    const Shape** shapep = f->shapes.data();
+    for (unsigned len = f->shapes.length(); len; --len) {
+        const Shape* shape = *shapep++;
+        if (IsAboutToBeFinalized(cx, shape))
             return true;
     }
 
     return false;
 }
-
-static const size_t PIC_TABLE_ENTRY_COUNT = 32;
-
-struct PICTableEntry
-{
-    jsid    id;
-    uint32  shape;
-    uint32  slot;
-};
-
-struct PICTable
-{
-    PICTable() : entryCount(0) {}
-
-    PICTableEntry   entries[PIC_TABLE_ENTRY_COUNT];
-    uint32          entryCount;
-
-    bool scan(uint32 shape, jsid id, uint32 *slotOut) {
-        for (size_t i = 0; i < entryCount; ++i) {
-            PICTableEntry &entry = entries[i];
-            if (entry.shape == shape && entry.id == id) {
-                *slotOut = entry.slot;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void update(uint32 shape, jsid id, uint32 slot) {
-        if (entryCount >= PIC_TABLE_ENTRY_COUNT)
-            return;
-        PICTableEntry &newEntry = entries[entryCount++];
-        newEntry.shape = shape;
-        newEntry.id = id;
-        newEntry.slot = slot;
-    }
-
-    void clear() { entryCount = 0; }
-};
 
 static bool
 ContainsUnrechableGCThingImpl(JSContext *cx, TreeFragment *f)
@@ -3014,7 +2975,7 @@ void
 TraceMonitor::sweep(JSContext *cx)
 {
     JS_ASSERT(!ontrace());
-    debug_only_print0(LC_TMTracer, "Purging fragments with dead things\n");
+    debug_only_print0(LC_TMTracer, "Purging fragments with dead things");
 
     bool shouldAbortRecording = false;
     TreeFragment *recorderTree = NULL;
@@ -3022,7 +2983,7 @@ TraceMonitor::sweep(JSContext *cx)
         recorderTree = recorder->getTree();
         shouldAbortRecording = HasUnreachableGCThings(cx, recorderTree);
     }
-
+        
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &vmfragments[i];
         while (TreeFragment* frag = *fragp) {
@@ -3036,9 +2997,9 @@ TraceMonitor::sweep(JSContext *cx)
                 fragp = &frag->next;
                 continue;
             }
-
+            
             debug_only_printf(LC_TMTracer,
-                              "TreeFragment peer %p has dead gc thing. "
+                              "TreeFragment peer %p has dead gc thing."
                               "Disconnecting tree %p with ip %p\n",
                               (void *) peer, (void *) frag, frag->ip);
             JS_ASSERT(frag->root == frag);
@@ -3053,21 +3014,17 @@ TraceMonitor::sweep(JSContext *cx)
         }
     }
 
-    /* These tables contain GC things, so they must be cleared on GC. */
+#ifdef DEBUG
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (TreeFragment* frag = vmfragments[i]; frag; frag = frag->next) {
             TreeFragment* peer = frag;
             do {
                 JS_ASSERT(!peer->visiting);
-
-                PICTable** tables = peer->picTables.data();
-                for (unsigned j = 0; j < peer->picTables.length(); ++j)
-                    tables[j]->clear();
-
                 peer = peer->peer;
             } while (peer);
         }
     }
+#endif
 
     if (shouldAbortRecording)
         recorder->finishAbort("dead GC things");
@@ -12605,6 +12562,43 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
     return true;
 }
 
+static const size_t PIC_TABLE_ENTRY_COUNT = 32;
+
+struct PICTableEntry
+{
+    jsid    id;
+    uint32  shape;
+    uint32  slot;
+};
+
+struct PICTable
+{
+    PICTable() : entryCount(0) {}
+
+    PICTableEntry   entries[PIC_TABLE_ENTRY_COUNT];
+    uint32          entryCount;
+
+    bool scan(uint32 shape, jsid id, uint32 *slotOut) {
+        for (size_t i = 0; i < entryCount; ++i) {
+            PICTableEntry &entry = entries[i];
+            if (entry.shape == shape && entry.id == id) {
+                *slotOut = entry.slot;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void update(uint32 shape, jsid id, uint32 slot) {
+        if (entryCount >= PIC_TABLE_ENTRY_COUNT)
+            return;
+        PICTableEntry &newEntry = entries[entryCount++];
+        newEntry.shape = shape;
+        newEntry.id = id;
+        newEntry.slot = slot;
+    }
+};
+
 static JSBool FASTCALL
 GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PICTable *picTable)
 {
@@ -12697,7 +12691,6 @@ TraceRecorder::getPropertyByName(LIns* obj_ins, Value* idvalp, Value* outp)
     LIns* vp_ins = w.name(w.allocp(sizeof(Value)), "vp");
     LIns* idvalp_ins = w.name(addr(idvalp), "idvalp");
     PICTable *picTable = new (traceAlloc()) PICTable();
-    tree->picTables.add(picTable);
     LIns* pic_ins = w.nameImmpNonGC(picTable);
     LIns* args[] = {pic_ins, vp_ins, idvalp_ins, obj_ins, cx_ins};
     LIns* ok_ins = w.call(&GetPropertyByName_ci, args);
