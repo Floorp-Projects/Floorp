@@ -992,7 +992,6 @@ xpicleanup@BIN_SUFFIX@
   modules/services-sync/type_records/prefs.js
   modules/services-sync/type_records/tabs.js
   modules/services-sync/util.js
-  modules/SpatialNavigation.js
   modules/stylePanel.jsm
   modules/tabview/AllTabs.jsm
   modules/tabview/groups.jsm

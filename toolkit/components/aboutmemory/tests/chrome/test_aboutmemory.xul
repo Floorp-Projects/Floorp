@@ -51,8 +51,9 @@
   const HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
   const OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
 
-  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
-  const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT; 
+  const BYTES      = Ci.nsIMemoryReporter.UNITS_BYTES;
+  const COUNT      = Ci.nsIMemoryReporter.UNITS_COUNT; 
+  const PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE; 
 
   function f2(aProcess, aPath, aKind, aUnits, aAmount) {
     return {
@@ -100,8 +101,10 @@
      { collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
           f("explicit/g",       HEAP,    BYTES,  14 * MB); // internal
-          f("other2",           OTHER,   BYTES, 222 * MB);
           f("other3",           OTHER,   COUNT, 777);
+          f("other2",           OTHER,   BYTES, 222 * MB);
+          f("perc2",            OTHER,   PERCENTAGE, 10000);
+          f("perc1",            OTHER,   PERCENTAGE, 4567);
        }
      }
   ];
@@ -192,11 +195,13 @@ Explicit Allocations\n\
 \n\
 Other Measurements\n\
 500.00 MB -- heap-allocated\n\
-222.00 MB -- other2\n\
-111.00 MB -- other1\n\
 100.00 MB -- heap-unallocated\n\
+111.00 MB -- other1\n\
+222.00 MB -- other2\n\
       777 -- other3\n\
       888 -- other4\n\
+   45.67% -- perc1\n\
+  100.00% -- perc2\n\
     (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
@@ -211,10 +216,10 @@ Explicit Allocations\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-1,000.00 MB -- heap-allocated\n\
   666.00 MB -- danger<script>window.alert(1)</script>\n\
-  111.00 MB -- other1\n\
+1,000.00 MB -- heap-allocated\n\
   100.00 MB -- heap-unallocated\n\
+  111.00 MB -- other1\n\
 \n\
 3rd Process\n\
 \n\
@@ -263,11 +268,13 @@ Explicit Allocations\n\
 \n\
 Other Measurements\n\
 524,288,000 B -- heap-allocated\n\
-232,783,872 B -- other2\n\
-116,391,936 B -- other1\n\
 104,857,600 B -- heap-unallocated\n\
+116,391,936 B -- other1\n\
+232,783,872 B -- other2\n\
           777 -- other3\n\
           888 -- other4\n\
+       45.67% -- perc1\n\
+      100.00% -- perc2\n\
         (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
@@ -282,10 +289,10 @@ Explicit Allocations\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-1,048,576,000 B -- heap-allocated\n\
   698,351,616 B -- danger<script>window.alert(1)</script>\n\
-  116,391,936 B -- other1\n\
+1,048,576,000 B -- heap-allocated\n\
   104,857,600 B -- heap-unallocated\n\
+  116,391,936 B -- other1\n\
 \n\
 3rd Process\n\
 \n\

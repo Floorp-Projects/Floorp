@@ -11,4 +11,4 @@ assertEq(evalcx('this.f = parent.f;\n' +
                 '  s += f();\n' +
                 's',
                 sb),
-	 "innerinnerinnerinnerinnerinnerinnerinnerinnerinner");
+	 "outerouterouterouterouterouterouterouterouterouter");

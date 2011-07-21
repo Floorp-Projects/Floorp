@@ -71,6 +71,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsIObjectLoadingContent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 // for event firing in context menus
 #include "nsPresContext.h"

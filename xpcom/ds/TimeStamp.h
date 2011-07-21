@@ -78,6 +78,9 @@ public:
   double ToMilliseconds() const {
     return ToSeconds() * 1000.0;
   }
+  double ToMicroseconds() const {
+    return ToMilliseconds() * 1000.0;
+  }
 
   // Using a double here is safe enough; with 53 bits we can represent
   // durations up to over 280,000 years exactly.  If the units of

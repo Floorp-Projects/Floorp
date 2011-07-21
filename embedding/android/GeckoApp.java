@@ -270,8 +270,10 @@ abstract public class GeckoApp
                     return name.endsWith(".so");
                 }
             });
-            for (int i = 0; i < libs.length; i++) {
-                libs[i].delete();
+            if (libs != null) {
+                for (int i = 0; i < libs.length; i++) {
+                    libs[i].delete();
+                }
             }
         } else {
             surfaceView.mSplashStatusMsg =

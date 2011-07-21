@@ -1433,7 +1433,7 @@ case $os in
 		os=-dicos
 		;;
         -android*)
-	        os=android
+	        os=-android
                 ;;
 	-none)
 		;;

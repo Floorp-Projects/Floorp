@@ -113,6 +113,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #endif // IBMBIDI
 
 #include "nsDOMError.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
