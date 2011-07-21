@@ -710,7 +710,7 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
   // If item index is out of range, insert to last.
   // (since beforeElement becomes null, it is inserted to last)
   nsCOMPtr<nsIDOMNode> beforeNode;
-  if NS_SUCCEEDED(Item(index, getter_AddRefs(beforeNode))) {
+  if (NS_SUCCEEDED(Item(index, getter_AddRefs(beforeNode)))) {
     beforeElement = do_QueryInterface(beforeNode);
   }
 
