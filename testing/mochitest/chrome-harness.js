@@ -221,7 +221,7 @@ function getFileListing(basePath, testPath, dir, srvScope)
         var singlePath = basePath + '/' + testPath;
         var links = {};
         links[singlePath] = true;
-        return [links, singlePath];
+        return [links, null];
 
       // We were passed a file that's not a test...
       return [];

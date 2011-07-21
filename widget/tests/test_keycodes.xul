@@ -279,8 +279,10 @@ function runKeyEventTests()
 
   if (IS_MAC) {
     // On Mac, you can produce event records for any desired keyboard input
-    // by running with NSPR_LOG_MODULES=nsCocoaWidgets:5 and typing into the browser.
-    // We will dump the key event fields to the console. Use the International system
+    // by running with NSPR_LOG_MODULES=TextInputHandlerWidgets:5 and typing
+    // into the browser.  We will dump the key event fields to the console
+    // (Find TextInputHandler::HandleKeyDownEvent or
+    // TextInputHandler::HandleKeyUpEvent in the log). Use the International system
     // preferences widget to enable other keyboard layouts and select them from the
     // input menu to see what keyboard events they generate.
     // Note that it's possible to send bogus key events here, e.g.

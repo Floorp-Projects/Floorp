@@ -327,6 +327,11 @@
             gBrowser.loadURIWithFlags(url, flags, null, null, postData);
           }
 
+          // Focus the content area before triggering loads, since if the load
+          // occurs in a new tab, we want focus to be restored to the content
+          // area when the current tab is re-selected.
+          gBrowser.selectedBrowser.focus();
+
           if (aTriggeringEvent instanceof MouseEvent) {
             // We have a mouse event (from the go button), so use the standard
             // UI link behaviors
@@ -335,18 +340,12 @@
               loadCurrent();
             } else {
               this.handleRevert();
-              content.focus();
               openUILinkIn(url, where,
                            { allowThirdPartyFixup: true, postData: postData });
             }
-            return;
-          }
-
-          if (aTriggeringEvent &&
-              aTriggeringEvent.altKey &&
-              !isTabEmpty(gBrowser.selectedTab)) {
+          } else if (aTriggeringEvent && aTriggeringEvent.altKey &&
+                     !isTabEmpty(gBrowser.selectedTab)) {
             this.handleRevert();
-            content.focus();
             gBrowser.loadOneTab(url, {
                                 postData: postData,
                                 inBackground: false,
@@ -356,8 +355,6 @@
           } else {
             loadCurrent();
           }
-
-          gBrowser.selectedBrowser.focus();
         ]]></body>
       </method>
 

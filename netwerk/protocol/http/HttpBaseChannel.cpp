@@ -53,7 +53,6 @@
 #include "nsIResumableChannel.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsEscape.h"
-#include "nsPrintfCString.h"
 
 #include "prnetdb.h"
 

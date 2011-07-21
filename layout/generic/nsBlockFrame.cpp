@@ -111,7 +111,6 @@ using namespace mozilla;
 using namespace mozilla::css;
 
 #ifdef DEBUG
-#include "nsPrintfCString.h"
 #include "nsBlockDebugFlags.h"
 
 PRBool nsBlockFrame::gLamePaintMetrics;

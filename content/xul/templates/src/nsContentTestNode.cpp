@@ -41,7 +41,6 @@
 #include "nsIAtom.h"
 #include "nsIDOMElement.h"
 #include "nsXULContentUtils.h"
-#include "nsPrintfCString.h"
 #include "nsIXULTemplateResult.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsXULTemplateQueryProcessorRDF.h"

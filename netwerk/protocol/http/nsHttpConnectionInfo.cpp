@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHttpConnectionInfo.h"
-#include "nsPrintfCString.h"
 #include "nsIProtocolProxyService.h"
 
 void

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prtypes.h"
-#include "nsPrintfCString.h"
+#include "nsString.h"
 
 #ifndef __mozilla_widget_GfxDriverInfo_h__
 #define __mozilla_widget_GfxDriverInfo_h__
