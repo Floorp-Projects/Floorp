@@ -55,7 +55,6 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsMimeTypes.h"
-#include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "prnetdb.h"
