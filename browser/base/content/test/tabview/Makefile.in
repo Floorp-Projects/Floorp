@@ -150,6 +150,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug663421.js \
                  browser_tabview_bug665502.js \
                  browser_tabview_bug669694.js \
+                 browser_tabview_click_group.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_expander.js \
@@ -167,7 +168,6 @@ _BROWSER_FILES = \
                  head.js \
                  search1.html \
                  search2.html \
-                 test_bug599626.html \
                  test_bug600645.html \
                  test_bug644097.html \
                  $(NULL)

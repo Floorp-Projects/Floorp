@@ -47,7 +47,6 @@
 #include "yuv_convert.h"
 #include "nsIServiceManager.h" 
 #include "nsIConsoleService.h" 
-#include "nsPrintfCString.h" 
 #include "Nv3DVUtils.h"
 
 namespace mozilla {

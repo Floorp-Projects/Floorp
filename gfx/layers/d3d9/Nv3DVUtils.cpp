@@ -37,7 +37,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
-#include "nsPrintfCString.h"
 #include <initguid.h>
 #include "Nv3DVUtils.h"
 

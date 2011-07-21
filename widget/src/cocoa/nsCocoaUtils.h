@@ -46,6 +46,8 @@
 #include "nsRect.h"
 #include "nsObjCExceptions.h"
 #include "imgIContainer.h"
+#include "nsEvent.h"
+#include "npapi.h"
 
 class nsIWidget;
 
@@ -176,6 +178,39 @@ class nsCocoaUtils
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */  
   static nsresult CreateNSImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, NSImage **aResult);
+
+  /**
+   * Returns nsAString for aSrc.
+   */
+  static void GetStringForNSString(const NSString *aSrc, nsAString& aDist);
+
+  /**
+   * Makes NSString instance for aString.
+   */
+  static NSString* ToNSString(const nsAString& aString);
+
+  /**
+   * Returns NSRect for aGeckoRect.
+   */
+  static void GeckoRectToNSRect(const nsIntRect& aGeckoRect,
+                                       NSRect& aOutCocoaRect);
+
+  /**
+   * Makes NSEvent instance for aEventTytpe and aEvent.
+   */
+  static NSEvent* MakeNewCocoaEventWithType(NSEventType aEventType,
+                                            NSEvent *aEvent);
+
+  /**
+   * Initializes aNPCocoaEvent.
+   */
+  static void InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent);
+
+  /**
+   * Initializes aPluginEvent for aCocoaEvent.
+   */
+  static void InitPluginEvent(nsPluginEvent &aPluginEvent,
+                              NPCocoaEvent &aCocoaEvent);
 };
 
 #endif // nsCocoaUtils_h_
