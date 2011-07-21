@@ -145,8 +145,6 @@ nsIRollupListener * gRollupListener = nsnull;
 nsIMenuRollup     * gMenuRollup = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
-PRUint32 gLastModifierState = 0;
-
 PRBool gUserCancelledDrag = PR_FALSE;
 
 PRUint32 nsChildView::sLastInputEventCount = 0;
@@ -166,7 +164,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (NSMenu*)contextMenu;
 
 - (void)setIsPluginView:(BOOL)aIsPlugin;
-- (BOOL)isPluginView;
 - (void)setPluginEventModel:(NPEventModel)eventModel;
 - (void)setPluginDrawingModel:(NPDrawingModel)drawingModel;
 - (NPDrawingModel)pluginDrawingModel;
@@ -190,8 +187,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 #ifdef ACCESSIBILITY
 - (id<mozAccessible>)accessible;
 #endif
-
-- (void)fireKeyEventForFlagsChanged:(NSEvent*)theEvent keyDown:(BOOL)isKeyDown;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
 
@@ -4094,13 +4089,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
           ToEscapedString([theEvent characters], str1),
           ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
 
-  if (!mGeckoChild || !mTextInputHandler)
-    return;
-
-  if (mTextInputHandler->DoesIgnoreNextKeyUpEvent()) {
-    mTextInputHandler->ResetIgnoreNextKeyUpEvent();
-    return;
-  }
+  NS_ENSURE_TRUE(mGeckoChild, );
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -4109,16 +4098,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     return;
   }
 
-  // if we don't have any characters we can't generate a keyUp event
-  if ([[theEvent characters] length] == 0 ||
-      mTextInputHandler->IsIMEComposing()) {
-    return;
-  }
-
-  nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
-  mTextInputHandler->InitKeyEvent(theEvent, geckoEvent);
-
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
+  mTextInputHandler->HandleKeyUpEvent(theEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4127,48 +4107,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!mGeckoChild)
-    return;
+  NS_ENSURE_TRUE(mGeckoChild, );
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-
-  // CapsLock state and other modifier states are different:
-  // CapsLock state does not revert when the CapsLock key goes up, as the
-  // modifier state does for other modifier keys on key up.
-  if ([theEvent keyCode] == kCapsLockKeyCode) {
-    // Fire key down event for caps lock.
-    [self fireKeyEventForFlagsChanged:theEvent keyDown:YES];
-    if (!mGeckoChild)
-      return;
-    // XXX should we fire keyup event too? The keyup event for CapsLock key
-    // is never sent to gecko.
-  } else if ([theEvent type] == NSFlagsChanged) {
-    // Fire key up/down events for the modifier keys (shift, alt, ctrl, command).
-    unsigned int modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-    const PRUint32 kModifierMaskTable[] =
-      { NSShiftKeyMask, NSControlKeyMask, NSAlternateKeyMask, NSCommandKeyMask };
-    const PRUint32 kModifierCount = sizeof(kModifierMaskTable) /
-                                    sizeof(kModifierMaskTable[0]);
-
-    for (PRUint32 i = 0; i < kModifierCount; i++) {
-      PRUint32 modifierBit = kModifierMaskTable[i];
-      if ((modifiers & modifierBit) != (gLastModifierState & modifierBit)) {
-        BOOL isKeyDown = (modifiers & modifierBit) != 0 ? YES : NO;
-
-        [self fireKeyEventForFlagsChanged:theEvent keyDown:isKeyDown];
-
-        if (!mGeckoChild)
-          return;
-
-        // Stop if focus has changed.
-        // Check to see if we are still the first responder.
-        if (![self isFirstResponder])
-          break;
-      }
-    }
-
-    gLastModifierState = modifiers;
-  }
+  mTextInputHandler->HandleFlagsChanged(theEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4191,50 +4133,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   nsCOMPtr<nsIDragSession> dragSession;
   mDragService->GetCurrentSession(getter_AddRefs(dragSession));
   return dragSession != nsnull;
-}
-
-- (void)fireKeyEventForFlagsChanged:(NSEvent*)theEvent keyDown:(BOOL)isKeyDown
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild || !mTextInputHandler || [theEvent type] != NSFlagsChanged ||
-      mTextInputHandler->IsIMEComposing()) {
-    return;
-  }
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-
-  PRUint32 message = isKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
-
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
-  NPCocoaEvent cocoaEvent;
-	
-  // Fire a key event.
-  nsKeyEvent geckoEvent(PR_TRUE, message, mGeckoChild);
-  mTextInputHandler->InitKeyEvent(theEvent, geckoEvent);
-
-  // create event for use by plugins
-  if (mIsPluginView) {
-#ifndef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCarbon) {
-      TextInputHandler::ConvertCocoaKeyEventToCarbonEvent(theEvent,
-                                                          carbonEvent,
-                                                          isKeyDown);
-      geckoEvent.pluginEvent = &carbonEvent;
-    }
-#endif
-    if (mPluginEventModel == NPEventModelCocoa) {
-      TextInputHandler::ConvertCocoaKeyEventToNPCocoaEvent(theEvent,
-                                                           cocoaEvent);
-      geckoEvent.pluginEvent = &cocoaEvent;
-    }
-  }
-
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent
