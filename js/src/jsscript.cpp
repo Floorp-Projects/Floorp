@@ -1233,7 +1233,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     js_CallNewScriptHook(cx, script, fun);
     if (!cg->parent) {
         Debugger::onNewScript(cx, script,
-                              fun ? fun : script->u.object ? script->u.object : cg->scopeChain(),
+                              fun ? fun : (script->u.object ? script->u.object : cg->scopeChain()),
                               (fun || script->u.object)
                               ? Debugger::NewHeldScript
                               : Debugger::NewNonHeldScript);
