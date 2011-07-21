@@ -288,35 +288,34 @@ GlobalObject::DebuggerVector *
 GlobalObject::getOrCreateDebuggers(JSContext *cx)
 {
     assertSameCompartment(cx, this);
-    DebuggerVector *vec = getDebuggers();
-    if (vec)
-        return vec;
+    DebuggerVector *debuggers = getDebuggers();
+    if (debuggers)
+        return debuggers;
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &GlobalDebuggees_class, NULL, NULL);
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &GlobalDebuggees_class, NULL, this);
     if (!obj)
         return NULL;
-    vec = cx->new_<DebuggerVector>();
-    if (!vec)
+    debuggers = cx->new_<DebuggerVector>();
+    if (!debuggers)
         return NULL;
-    obj->setPrivate(vec);
-    if (!js_SetReservedSlot(cx, this, DEBUGGERS, ObjectValue(*obj)))
-        return NULL;
-    return vec;
+    obj->setPrivate(debuggers);
+    setReservedSlot(DEBUGGERS, ObjectValue(*obj));
+    return debuggers;
 }
 
 bool
 GlobalObject::addDebugger(JSContext *cx, Debugger *dbg)
 {
-    DebuggerVector *vec = getOrCreateDebuggers(cx);
-    if (!vec)
+    DebuggerVector *debuggers = getOrCreateDebuggers(cx);
+    if (!debuggers)
         return false;
 #ifdef DEBUG
-    for (Debugger **p = vec->begin(); p != vec->end(); p++)
+    for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++)
         JS_ASSERT(*p != dbg);
 #endif
-    if (vec->empty() && !compartment()->addDebuggee(cx, this))
+    if (debuggers->empty() && !compartment()->addDebuggee(cx, this))
         return false;
-    if (!vec->append(dbg)) {
+    if (!debuggers->append(dbg)) {
         compartment()->removeDebuggee(cx, this);
         return false;
     }
