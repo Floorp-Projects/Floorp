@@ -40,6 +40,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+EXTENSIONS_DIR = $(call core_abspath,$(DIST))/bin/extensions
+
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
@@ -49,16 +51,17 @@ EXTENSIONS = \
   feedback@mobile.mozilla.org \
   $(NULL)
 
-ABS_DIST = $(call core_abspath,$(DIST))
-
-define _PACKAGE_EXTENSIONS
-rm -f $(ABS_DIST)/bin/extensions/$(dir).xpi
-mkdir -p $(ABS_DIST)/bin/extensions
-cd $(srcdir)/$(dir)/; $(ZIP) -r9 $(ABS_DIST)/bin/extensions/$(dir).xpi *
+define _INSTALL_EXTENSION
+$(NSINSTALL) -D $(dir) && \
+  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/$(dir)/install.rdf.in > $(dir)/install.rdf && \
+  cd $(dir) && \
+  $(ZIP) -r9XD $(EXTENSIONS_DIR)/$(dir).xpi install.rdf && \
+  cd $(srcdir)/$(dir) && \
+  $(ZIP) -r9XD $(EXTENSIONS_DIR)/$(dir).xpi * -x install.rdf.in
 
 endef # do not remove the blank line!
 
 libs::
-	$(foreach dir,$(EXTENSIONS),$(_PACKAGE_EXTENSIONS))
-
+	$(NSINSTALL) -D $(EXTENSIONS_DIR)
+	$(foreach dir,$(EXTENSIONS),$(_INSTALL_EXTENSION))
 endif
