@@ -409,13 +409,6 @@ WeaveSvc.prototype = {
     if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED)
       Svc.Obs.notify("weave:engine:start-tracking");
 
-    // Applications can specify this preference if they want autoconnect
-    // to happen after a fixed delay.
-    let delay = Svc.Prefs.get("autoconnectDelay");
-    if (delay) {
-      this.delayedAutoConnect(delay);
-    }
-
     // Send an event now that Weave service is ready.  We don't do this
     // synchronously so that observers can import this module before
     // registering an observer.
@@ -1041,31 +1034,6 @@ WeaveSvc.prototype = {
     Services.logins.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Services.logins.removeLogin(login);
     });
-  },
-
- /**
-  * Automatically start syncing after the given delay (in seconds).
-  *
-  * Applications can define the `services.sync.autoconnectDelay` preference
-  * to have this called automatically during start-up with the pref value as
-  * the argument. Alternatively, they can call it themselves to control when
-  * Sync should first start to sync.
-  */
-  delayedAutoConnect: function delayedAutoConnect(delay) {
-    if (this._checkSetup() == STATUS_OK) {
-      Utils.namedTimer(this._autoConnect, delay * 1000, this, "_autoTimer");
-    }
-  },
-
-  _autoConnect: function _autoConnect() {
-    if (this._checkSetup() == STATUS_OK && !this._checkSync()) {
-      Utils.nextTick(this.sync, this);
-    }
-
-    // Once _autoConnect is called we no longer need _autoTimer.
-    if (this._autoTimer) {
-      this._autoTimer.clear();
-    }
   },
 
   persistLogin: function persistLogin() {
