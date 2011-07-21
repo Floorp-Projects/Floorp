@@ -80,7 +80,7 @@ function submitPendingReport(event) {
   if (CrashSubmit.submit(id, { submitSuccess: submitSuccess,
                                submitError: submitError,
                                noThrottle: true })) {
-    link.className = "submitting";    
+    link.className = "submitting";
   }
   event.preventDefault();
   return false;
