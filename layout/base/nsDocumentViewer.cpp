@@ -110,7 +110,6 @@
 #include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
 #endif
-#include "nsPrintfCString.h"
 
 #include "nsIClipboardHelper.h"
 

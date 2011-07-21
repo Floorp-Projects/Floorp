@@ -47,7 +47,6 @@
 #include "prenv.h" /* for PR_GetEnv */
 #include "prtime.h"
 
-#include "nsPrintfCString.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
 #include "nsStringFwd.h"

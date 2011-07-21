@@ -23,75 +23,49 @@ function test() {
 }
 
 function testOne() {
-  whenSearchEnabledAndDisabled(testTwo);
+  hideSearchWhenSearchEnabled(testTwo);
   // press cmd/ctrl F
   EventUtils.synthesizeKey("f", {accelKey: true}, cw);
 }
 
 function testTwo() {
-  whenSearchEnabledAndDisabled(testThree);
+  hideSearchWhenSearchEnabled(testThree);
   // press /
   EventUtils.synthesizeKey("VK_SLASH", {}, cw);
 }
 
 function testThree() {
-  let onTabViewShown = function () {
-    is(cw.UI.getActiveTab(), groupItem.getChild(0), 
-       "The active tab is newly created tab item");
+  ok(win.TabView.isVisible(), "Tab View is visible");
+  // create another group with a tab.
+  let groupItem = createGroupItemWithBlankTabs(win, 300, 300, 200, 1);
+  is(cw.UI.getActiveTab(), groupItem.getChild(0), 
+     "The active tab is newly created tab item");
 
-    let onSearchEnabled = function () {
-      let doc = cw.document;
-      let searchBox = cw.iQ("#searchbox");
-      let hasFocus = doc.hasFocus() && doc.activeElement == searchBox[0];
-      ok(hasFocus, "The search box has focus");
+  whenSearchIsEnabled(function () {
+    let doc = cw.document;
+    let searchBox = cw.iQ("#searchbox");
+    let hasFocus = doc.hasFocus() && doc.activeElement == searchBox[0];
+    ok(hasFocus, "The search box has focus");
 
-      let tab = win.gBrowser.tabs[1];
-      searchBox.val(tab._tabViewTabItem.$tabTitle[0].innerHTML);
+    let tab = win.gBrowser.tabs[1];
+    searchBox.val(tab._tabViewTabItem.$tabTitle[0].innerHTML);
 
-      cw.performSearch();
+    cw.performSearch();
 
-      whenTabViewIsHidden(function () {
-        is(tab, win.gBrowser.selectedTab, "The search result tab is shown");
-        waitForFocus(finish);
-      }, win);
+    whenTabViewIsHidden(function () {
+      is(tab, win.gBrowser.selectedTab, "The search result tab is shown");
+      finish()
+    }, win);
 
-      // use the tabview menu (the same as pressing cmd/ctrl + e)
-      win.document.getElementById("menu_tabview").doCommand();
-    };
-
-    whenSearchEnabled(onSearchEnabled);
-    EventUtils.synthesizeKey("VK_SLASH", {}, cw);
-  };
-
-  whenTabViewIsHidden(function () {
-    showTabView(onTabViewShown, win);
+    // use the tabview menu (the same as pressing cmd/ctrl + e)
+    win.document.getElementById("menu_tabview").doCommand();
   }, win);
-
-  // click on the + button
-  let groupItem = createEmptyGroupItem(cw, 300, 300, 200);
-  let newTabButton = groupItem.container.getElementsByClassName("newTabButton");
-  ok(newTabButton[0], "New tab button exists");
-
-  EventUtils.sendMouseEvent({type: "click"}, newTabButton[0], cw);
+  EventUtils.synthesizeKey("VK_SLASH", {}, cw);
 }
 
-function whenSearchEnabledAndDisabled(callback) {
-  whenSearchEnabled(function () {
-    whenSearchDisabled(callback);
-    cw.hideSearch();
-  });
+function hideSearchWhenSearchEnabled(callback) {
+  whenSearchIsEnabled(function() {
+    hideSearch(callback, win);
+  }, win);
 }
 
-function whenSearchEnabled(callback) {
-  cw.addEventListener("tabviewsearchenabled", function onSearchEnabled() {
-    cw.removeEventListener("tabviewsearchenabled", onSearchEnabled, false);
-    callback();
-  }, false);
-}
-
-function whenSearchDisabled(callback) {
-  cw.addEventListener("tabviewsearchdisabled", function onSearchDisabled() {
-    cw.removeEventListener("tabviewsearchdisabled", onSearchDisabled, false);
-    callback();
-  }, false);
-}

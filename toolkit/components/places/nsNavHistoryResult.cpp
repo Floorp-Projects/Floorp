@@ -50,7 +50,6 @@
 
 #include "nsDebug.h"
 #include "nsNetUtil.h"
-#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
