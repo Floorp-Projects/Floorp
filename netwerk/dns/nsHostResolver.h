@@ -46,6 +46,8 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 class nsHostResolver;
 class nsHostRecord;
@@ -111,7 +113,7 @@ public:
      * the other threads just read it.  therefore the resolver worker
      * thread doesn't need to lock when reading |addr_info|.
      */
-    Mutex       *addr_info_lock;
+    Mutex        addr_info_lock;
     int          addr_info_gencnt; /* generation count of |addr_info| */
     PRAddrInfo  *addr_info;
     PRNetAddr   *addr;
@@ -124,6 +126,11 @@ public:
 
     PRBool HasResult() const { return addr_info || addr || negative; }
 
+    // hold addr_info_lock when calling the blacklist functions
+    PRBool Blacklisted(PRNetAddr *query);
+    void   ResetBlacklist();
+    void   ReportUnusable(PRNetAddr *addr);
+
 private:
     friend class nsHostResolver;
 
@@ -135,8 +142,13 @@ private:
     
     PRBool  onQueue;  /* true if pending and on the queue (not yet given to getaddrinfo())*/
     PRBool  usingAnyThread; /* true if off queue and contributing to mActiveAnyThreadCount */
-    
 
+    // a list of addresses associated with this record that have been reported
+    // as unusable. the list is kept as a set of strings to make it independent
+    // of gencnt.
+    nsTArray<nsCString> mBlacklistedItems;
+
+    nsHostRecord(const nsHostKey *key);           /* use Create() instead */
    ~nsHostRecord();
 };
 
