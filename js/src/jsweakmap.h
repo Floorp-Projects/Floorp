@@ -282,39 +282,14 @@ class DefaultMarkPolicy<JSObject *, JSObject *> {
     }
 };
 
-// A MarkPolicy for WeakMaps whose Keys and values may be objects in arbitrary
+// A MarkPolicy for WeakMaps whose keys and values may be objects in arbitrary
 // compartments within a runtime.
-class CrossCompartmentMarkPolicy {
-  private:
-    JSTracer *tracer;
-    JSCompartment *comp;
-
-    // During per-compartment GC, if a key or value object is outside the gc
-    // compartment, consider it marked.
-    bool isMarked(JSObject *obj) {
-        return (comp && obj->compartment() != comp) || !IsAboutToBeFinalized(tracer->context, obj);
-    }
-
-  public:
-    CrossCompartmentMarkPolicy(JSTracer *t)
-        : tracer(t), comp(t->context->runtime->gcCurrentCompartment) {}
-    bool keyMarked(JSObject *k) { return isMarked(k); }
-    bool valueMarked(JSObject *v) { return isMarked(v); }
-
-    bool markEntryIfLive(JSObject *k, JSObject *v) {
-        if (keyMarked(k) && !valueMarked(v)) {
-            js::gc::MarkObject(tracer, *v, "WeakMap entry value");
-            return true;
-        }
-        return false;
-    }
-    void markEntry(JSObject *k, JSObject *v) {
-        if (!comp || k->compartment() == comp)
-            js::gc::MarkObject(tracer, *k, "WeakMap entry key");
-        if (!comp || v->compartment() == comp)
-            js::gc::MarkObject(tracer, *v, "WeakMap entry value");
-    }
-};
+//
+// With the current GC, the implementation turns out to be identical to the
+// default mark policy. We give it a distinct name anyway, in case this ever
+// changes.
+//
+typedef DefaultMarkPolicy<JSObject *, JSObject *> CrossCompartmentMarkPolicy;
 
 // The class of JavaScript WeakMap objects.
 extern Class WeakMapClass;
