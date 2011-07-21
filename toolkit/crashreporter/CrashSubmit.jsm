@@ -329,29 +329,42 @@ let CrashSubmit = {
    *
    * @param id
    *        Filename (minus .dmp extension) of the minidump to submit.
-   * @param submitSuccess
-   *        A function that will be called if the report is submitted
-   *        successfully with two parameters: the id that was passed
-   *        to this function, and an object containing the key/value
-   *        data returned from the server in its properties.
-   * @param submitError
-   *        A function that will be called with one parameter if the
-   *        report fails to submit: the id that was passed to this
-   *        function.
-   * @param noThrottle
-   *        If true, this crash report should be submitted with
-   *        an extra parameter of "Throttleable=0" indicating that
-   *        it should be processed right away. This should be set
-   *        when the report is being submitted and the user expects
-   *        to see the results immediately.
+   * @param params
+   *        An object containing any of the following optional parameters:
+   *        - submitSuccess
+   *          A function that will be called if the report is submitted
+   *          successfully with two parameters: the id that was passed
+   *          to this function, and an object containing the key/value
+   *          data returned from the server in its properties.
+   *        - submitError
+   *          A function that will be called with one parameter if the
+   *          report fails to submit: the id that was passed to this
+   *          function.
+   *        - noThrottle
+   *          If true, this crash report should be submitted with
+   *          an extra parameter of "Throttleable=0" indicating that
+   *          it should be processed right away. This should be set
+   *          when the report is being submitted and the user expects
+   *          to see the results immediately. Defaults to false.
    *
    * @return true if the submission began successfully, or false if
    *         it failed for some reason. (If the dump file does not
    *         exist, for example.)
    */
-  submit: function CrashSubmit_submit(id, submitSuccess, submitError,
-                                      noThrottle)
+  submit: function CrashSubmit_submit(id, params)
   {
+    params = params || {};
+    let submitSuccess = null;
+    let submitError = null;
+    let noThrottle = false;
+
+    if ('submitSuccess' in params)
+      submitSuccess = params.submitSuccess;
+    if ('submitError' in params)
+      submitError = params.submitError;
+    if ('noThrottle' in params)
+      noThrottle = params.noThrottle;
+
     let submitter = new Submitter(id,
                                   submitSuccess,
                                   submitError,
