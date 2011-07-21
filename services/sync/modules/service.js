@@ -1365,6 +1365,7 @@ WeaveSvc.prototype = {
 
   sync: function sync() {
     let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
+    this._log.debug("User-Agent: " + SyncStorageRequest.prototype.userAgent);
     this._log.info("Starting sync at " + dateStr);
     this._catch(function () {
       // Make sure we're logged in.
