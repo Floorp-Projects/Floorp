@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   John Bandhauer <jband@netscape.com> (original author)
+ *   Nicholas Nethercote <nnethercote@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1552,12 +1553,17 @@ public:
         NS_NAMED_LITERAL_CSTRING(p, "");
 
         PRInt64 gcHeapChunkTotal = gXPCJSChunkAllocator.GetGCChunkBytesInUse();
-        // This is initialized to gcHeapChunkUnused, and then we subtract used
+        // This is initialized to gcHeapChunkTotal, and then we subtract used
         // space from it each time around the loop.
         PRInt64 gcHeapChunkUnused = gcHeapChunkTotal;
+        PRInt64 gcHeapArenaUnused = 0;
 
-        #define DO(path, kind, amount, desc) \
+        #define BYTES(path, kind, amount, desc) \
             callback->Callback(p, path, kind, nsIMemoryReporter::UNITS_BYTES, \
+                               amount, NS_LITERAL_CSTRING(desc), closure);
+
+        #define PERCENTAGE(path, kind, amount, desc) \
+            callback->Callback(p, path, kind, nsIMemoryReporter::UNITS_PERCENTAGE, \
                                amount, NS_LITERAL_CSTRING(desc), closure);
 
         // This is the second step (see above).
@@ -1573,85 +1579,95 @@ public:
                 stats->gcHeapObjects + stats->gcHeapStrings +
                 stats->gcHeapShapes + stats->gcHeapXml;
 
-            DO(mkPath(name, "gc-heap/arena-headers"),
+            gcHeapArenaUnused += stats->gcHeapArenaUnused;
+
+            BYTES(mkPath(name, "gc-heap/arena-headers"),
                JS_GC_HEAP_KIND, stats->gcHeapArenaHeaders,
-    "Memory on the garbage-collected JavaScript heap, within arenas, that is "
-    "used to hold internal book-keeping information.");
+    "Memory on the compartment's garbage-collected JavaScript heap, within "
+    "arenas, that is used to hold internal book-keeping information.");
 
-            DO(mkPath(name, "gc-heap/arena-padding"),
+            BYTES(mkPath(name, "gc-heap/arena-padding"),
                JS_GC_HEAP_KIND, stats->gcHeapArenaPadding,
-    "Memory on the garbage-collected JavaScript heap, within arenas, that is "
-    "unused and present only so that other data is aligned.");
+    "Memory on the compartment's garbage-collected JavaScript heap, within "
+    "arenas, that is unused and present only so that other data is aligned. "
+    "This constitutes internal fragmentation.");
 
-            DO(mkPath(name, "gc-heap/arena-unused"),
+            BYTES(mkPath(name, "gc-heap/arena-unused"),
                JS_GC_HEAP_KIND, stats->gcHeapArenaUnused,
-    "Memory on the garbage-collected JavaScript heap, within arenas, that "
-    "could be holding useful data but currently isn't.");
+    "Memory on the compartment's garbage-collected JavaScript heap, within "
+    "arenas, that could be holding useful data but currently isn't.");
 
-            DO(mkPath(name, "gc-heap/objects"),
+            BYTES(mkPath(name, "gc-heap/objects"),
                JS_GC_HEAP_KIND, stats->gcHeapObjects,
-    "Memory on the garbage-collected JavaScript heap that holds objects.");
-
-            DO(mkPath(name, "gc-heap/strings"),
-               JS_GC_HEAP_KIND, stats->gcHeapStrings,
-    "Memory on the garbage-collected JavaScript heap that holds string "
-    "headers.");
-
-            DO(mkPath(name, "gc-heap/shapes"),
-               JS_GC_HEAP_KIND, stats->gcHeapShapes,
-    "Memory on the garbage-collected JavaScript heap that holds shapes. "
-    "A shape is an internal data structure that makes property accesses "
-    "fast.");
-
-            DO(mkPath(name, "gc-heap/xml"),
-               JS_GC_HEAP_KIND, stats->gcHeapXml,
-    "Memory on the garbage-collected JavaScript heap that holds E4X XML "
+    "Memory on the compartment's garbage-collected JavaScript heap that holds "
     "objects.");
 
-            DO(mkPath(name, "object-slots"),
+            BYTES(mkPath(name, "gc-heap/strings"),
+               JS_GC_HEAP_KIND, stats->gcHeapStrings,
+    "Memory on the compartment's garbage-collected JavaScript heap that holds "
+    "string headers.  String headers contain various pieces of information "
+    "about a string, but do not contain (except in the case of very short "
+    "strings) the string characters;  characters in longer strings are counted "
+    "under 'gc-heap/string-chars' instead.");
+
+            BYTES(mkPath(name, "gc-heap/shapes"),
+               JS_GC_HEAP_KIND, stats->gcHeapShapes,
+    "Memory on the compartment's garbage-collected JavaScript heap that holds "
+    "shapes. A shape is an internal data structure that makes JavaScript "
+    "property accesses fast.");
+
+            BYTES(mkPath(name, "gc-heap/xml"),
+               JS_GC_HEAP_KIND, stats->gcHeapXml,
+    "Memory on the compartment's garbage-collected JavaScript heap that holds "
+    "E4X XML objects.");
+
+            BYTES(mkPath(name, "object-slots"),
                nsIMemoryReporter::KIND_HEAP, stats->objectSlots,
-    "Memory allocated for non-fixed object slot arrays, which are used "
-    "to represent object properties.  Some objects also contain a fixed "
-    "number of slots which are stored on the JavaScript heap;  those slots "
-    "are not counted here, but in 'gc-heap/objects'.");
+    "Memory allocated for the compartment's non-fixed object slot arrays, "
+    "which are used to represent object properties.  Some objects also "
+    "contain a fixed number of slots which are stored on the compartment's "
+    "JavaScript heap; those slots are not counted here, but in "
+    "'gc-heap/objects' instead.");
 
-            DO(mkPath(name, "string-chars"),
+            BYTES(mkPath(name, "string-chars"),
                nsIMemoryReporter::KIND_HEAP, stats->stringChars,
-    "Memory allocated to hold string characters.  Not all of this allocated "
-    "memory is necessarily used to hold characters.  Each string also "
-    "includes a header which is stored on the JavaScript heap;  that header "
-    "is not counted here, but in 'gc-heap/strings'.");
+    "Memory allocated to hold the compartment's string characters.  Sometimes "
+    "more memory is allocated than necessary, to simplify string "
+    "concatenation.  Each string also includes a header which is stored on the "
+    "compartment's JavaScript heap;  that header is not counted here, but in "
+    "'gc-heap/strings' instead.");
 
-            DO(mkPath(name, "scripts"),
+            BYTES(mkPath(name, "scripts"),
                nsIMemoryReporter::KIND_HEAP, stats->scripts,
-    "Memory allocated for JSScripts.  A JSScript is created for each "
-    "user-defined function in a script.  One is also created for "
+    "Memory allocated for the compartment's JSScripts.  A JSScript is created "
+    "for each user-defined function in a script.  One is also created for "
     "the top-level code in a script.  Each JSScript includes byte-code and "
     "various other things.");
 
 #ifdef JS_METHODJIT
-            DO(mkPath(name, "mjit-code"),
+            BYTES(mkPath(name, "mjit-code"),
                nsIMemoryReporter::KIND_NONHEAP, stats->mjitCode,
-    "Memory used by the method JIT to hold generated code.");
+    "Memory used by the method JIT to hold the compartment's generated code.");
 
-            DO(mkPath(name, "mjit-data"),
+            BYTES(mkPath(name, "mjit-data"),
                nsIMemoryReporter::KIND_HEAP, stats->mjitData,
-    "Memory used by the method JIT for the following data: "
+    "Memory used by the method JIT for the compartment's compilation data: "
     "JITScripts, native maps, and inline cache structs.");
 #endif
 #ifdef JS_TRACER
-            DO(mkPath(name, "tjit-code"),
+            BYTES(mkPath(name, "tjit-code"),
                nsIMemoryReporter::KIND_NONHEAP, stats->tjitCode,
-    "Memory used by the trace JIT to hold generated code.");
+    "Memory used by the trace JIT to hold the compartment's generated code.");
 
-            DO(mkPath(name, "tjit-data/allocators-main"),
+            BYTES(mkPath(name, "tjit-data/allocators-main"),
                nsIMemoryReporter::KIND_HEAP, stats->tjitDataAllocatorsMain,
-    "Memory used by the trace JIT's VMAllocators.");
+    "Memory used by the trace JIT to store the compartment's trace-related "
+    "data.  This data is allocated via the compartment's VMAllocators.");
 
-            DO(mkPath(name, "tjit-data/allocators-reserve"),
+            BYTES(mkPath(name, "tjit-data/allocators-reserve"),
                nsIMemoryReporter::KIND_HEAP, stats->tjitDataAllocatorsReserve,
-    "Memory used by the trace JIT and held in reserve for VMAllocators "
-    "in case of OOM.");
+    "Memory used by the trace JIT and held in reserve for the compartment's "
+    "VMAllocators in case of OOM.");
 #endif
         }
 
@@ -1662,15 +1678,39 @@ public:
         PRInt64 gcHeapChunkAdmin = numChunks * perChunkAdmin;
         gcHeapChunkUnused -= gcHeapChunkAdmin;
 
-        DO(NS_LITERAL_CSTRING("explicit/js/gc-heap-chunk-unused"),
+        // Why 10000x?  100x because it's a percentage, and another 100x
+        // because nsIMemoryReporter requires that for percentage amounts so
+        // they can be fractional.
+        PRInt64 gcHeapUnusedPercentage =
+            (gcHeapChunkUnused + gcHeapArenaUnused) * 10000 /
+            gXPCJSChunkAllocator.GetGCChunkBytesInUse();
+
+        BYTES(NS_LITERAL_CSTRING("explicit/js/gc-heap-chunk-unused"),
            JS_GC_HEAP_KIND, gcHeapChunkUnused,
     "Memory on the garbage-collected JavaScript heap, within chunks, that "
     "could be holding useful data but currently isn't.");
 
-        DO(NS_LITERAL_CSTRING("explicit/js/gc-heap-chunk-admin"),
+        BYTES(NS_LITERAL_CSTRING("js-gc-heap-chunk-unused"),
+           nsIMemoryReporter::KIND_OTHER, gcHeapChunkUnused,
+    "The same as 'explicit/js/gc-heap-chunk-unused'.  Shown here for "
+    "easy comparison with 'js-gc-heap' and 'js-gc-heap-arena-unused'.");
+
+        BYTES(NS_LITERAL_CSTRING("explicit/js/gc-heap-chunk-admin"),
            JS_GC_HEAP_KIND, gcHeapChunkAdmin,
     "Memory on the garbage-collected JavaScript heap, within chunks, that is "
     "used to hold internal book-keeping information.");
+
+        BYTES(NS_LITERAL_CSTRING("js-gc-heap-arena-unused"),
+           nsIMemoryReporter::KIND_OTHER, gcHeapArenaUnused,
+    "Memory on the garbage-collected JavaScript heap, within arenas, that "
+    "could be holding useful data but currently isn't.  This is the sum of "
+    "all compartments' 'gc-heap/arena-unused' numbers.");
+
+        PERCENTAGE(NS_LITERAL_CSTRING("js-gc-heap-unused-fraction"),
+           nsIMemoryReporter::KIND_OTHER, gcHeapUnusedPercentage,
+    "Fraction of the garbage-collected JavaScript heap that is unused. "
+    "Computed as ('js-gc-heap-chunk-unused' + 'js-gc-heap-arena-unused') / "
+    "'js-gc-heap'.");
 
         return NS_OK;
     }
