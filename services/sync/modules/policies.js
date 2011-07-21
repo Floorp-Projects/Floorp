@@ -94,7 +94,13 @@ let SyncScheduler = {
     Svc.Obs.add("weave:service:backoff:interval", this);
     Svc.Obs.add("weave:service:ready", this);
     Svc.Obs.add("weave:engine:sync:applied", this);
-    Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+    Svc.Obs.add("weave:service:setup-complete", this);
+    Svc.Obs.add("weave:service:start-over", this);
+				
+    if (Status.checkSetup() == STATUS_OK) {
+      Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+    }
+
   },
 
   observe: function observe(subject, topic, data) {
@@ -154,6 +160,9 @@ let SyncScheduler = {
         this.checkSyncStatus();
         break; 
       case "weave:service:sync:error":
+        // There may be multiple clients but if the sync fails, client mode
+        // should still be updated so that the next sync has a correct interval.
+        this.updateClientMode();
         this.adjustSyncInterval();
         this.handleSyncError();
         break;
@@ -176,6 +185,13 @@ let SyncScheduler = {
         if (numItems) 
           this.hasIncomingItems = true;
         break;
+      case "weave:service:setup-complete":
+         Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+         break;
+      case "weave:service:start-over":
+         Svc.Idle.removeIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+         SyncScheduler.setDefaults();
+         break;
       case "idle":
         this._log.trace("We're idle.");
         this.idle = true;
@@ -304,7 +320,7 @@ let SyncScheduler = {
     if (interval == null || interval == undefined) {
       // Check if we had a pending sync from last time
       if (this.nextSync != 0)
-        interval = this.nextSync - Date.now();
+        interval = Math.min(this.syncInterval, (this.nextSync - Date.now()));
       // Use the bigger of default sync interval and backoff
       else
         interval = Math.max(this.syncInterval, Status.backoffInterval);
