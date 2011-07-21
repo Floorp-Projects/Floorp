@@ -41,6 +41,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
 
+#define SNIFFING_BUFFER_SIZE 512 // specified in draft-abarth-mime-sniff-06
 
 NS_IMETHODIMP
 nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver)
@@ -49,7 +50,7 @@ nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver)
 
   mObserver = aObserver;
 
-  if (!mRawData.SetCapacity(512))
+  if (!mRawData.SetCapacity(SNIFFING_BUFFER_SIZE))
     return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
@@ -153,20 +154,21 @@ nsUnicharStreamLoader::OnDataAvailable(nsIRequest *aRequest,
     PRUint32 dummy;
     aInputStream->ReadSegments(WriteSegmentFun, this, aCount, &dummy);
   } else {
-    // no decoder yet.  Read up to 512 octets into mRawData (this is
-    // the cutoff specified in draft-abarth-mime-sniff-06).  If we can
-    // get that much, then go ahead and fire charset detection and
-    // read the rest.  Otherwise wait for more data.
+    // no decoder yet.  Read up to SNIFFING_BUFFER_SIZE octets into
+    // mRawData (this is the cutoff specified in
+    // draft-abarth-mime-sniff-06).  If we can get that much, then go
+    // ahead and fire charset detection and read the rest.  Otherwise
+    // wait for more data.
 
     PRUint32 haveRead = mRawData.Length();
-    PRUint32 toRead = 512 - haveRead;
+    PRUint32 toRead = NS_MIN(SNIFFING_BUFFER_SIZE - haveRead, aCount);
     PRUint32 n;
     char *here = mRawData.BeginWriting() + haveRead;
 
     rv = aInputStream->Read(here, toRead, &n);
     if (NS_SUCCEEDED(rv)) {
       mRawData.SetLength(haveRead + n);
-      if (mRawData.Length() == 512) {
+      if (mRawData.Length() == SNIFFING_BUFFER_SIZE) {
         rv = DetermineCharset();
         if (NS_SUCCEEDED(rv)) {
           // process what's left
