@@ -137,6 +137,12 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
     attribute nsISupports securityInfo;
     
     /**
+     * Get the size of the cache entry data, as stored. This may differ
+     * from the entry's dataSize, if the entry is compressed.
+     */
+    readonly attribute unsigned long storageDataSize;
+
+    /**
      * Doom the cache entry this descriptor references in order to slate it for 
      * removal.  Once doomed a cache entry cannot be undoomed.
      *
