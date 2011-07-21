@@ -1134,6 +1134,13 @@ pref("intl.hyphenation-alias.sl-*", "sl");
 pref("intl.hyphenation-alias.sv-*", "sv");
 pref("intl.hyphenation-alias.uk-*", "uk");
 
+// use reformed (1996) German patterns by default unless specifically tagged as de-1901
+// (these prefs may soon be obsoleted by better BCP47-based tag matching, but for now...)
+pref("intl.hyphenation-alias.de", "de-1996");
+pref("intl.hyphenation-alias.de-*", "de-1996");
+pref("intl.hyphenation-alias.de-DE-1901", "de-1901");
+pref("intl.hyphenation-alias.de-CH-*", "de-CH");
+
 pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
