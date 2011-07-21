@@ -135,7 +135,11 @@ SpecialPowers.prototype = {
     } else {
       msg = {'op':'get', 'prefName': aPrefName,'prefType': aPrefType};
     }
-    return(sendSyncMessage('SPPrefService', msg)[0]);
+    var val = sendSyncMessage('SPPrefService', msg);
+
+    if (val == null || val[0] == null)
+      throw "Error getting pref";
+    return val[0];
   },
   _setPref: function(aPrefName, aPrefType, aValue, aIid) {
     var msg = {};
