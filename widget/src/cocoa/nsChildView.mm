@@ -206,15 +206,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
  */
 
 static inline void
-GeckoRectToNSRect(const nsIntRect & inGeckoRect, NSRect & outCocoaRect)
-{
-  outCocoaRect.origin.x = inGeckoRect.x;
-  outCocoaRect.origin.y = inGeckoRect.y;
-  outCocoaRect.size.width = inGeckoRect.width;
-  outCocoaRect.size.height = inGeckoRect.height;
-}
-
-static inline void
 NSRectToGeckoRect(const NSRect & inCocoaRect, nsIntRect & outGeckoRect)
 {
   outGeckoRect.x = NSToIntRound(inCocoaRect.origin.x);
@@ -232,26 +223,12 @@ ConvertGeckoRectToMacRect(const nsIntRect& aRect, Rect& outMacRect)
   outMacRect.bottom = aRect.y + aRect.height;
 }
 
-static inline void
-InitPluginEvent(nsPluginEvent &aEvent, NPCocoaEvent &aCocoaEvent)
-{
-  aEvent.time = PR_IntervalNow();
-  aEvent.pluginEvent = (void*)&aCocoaEvent;
-  aEvent.retargetToFocusedDocument = PR_FALSE;
-}
-
 // Flips a screen coordinate from a point in the cocoa coordinate system (bottom-left rect) to a point
 // that is a "flipped" cocoa coordinate system (starts in the top-left).
 static inline void
 FlipCocoaScreenCoordinate(NSPoint &inPoint)
 {  
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
-}
-
-static void
-InitNPCocoaEvent(NPCocoaEvent* event)
-{
-  memset(event, 0, sizeof(NPCocoaEvent));
 }
 
 #if defined(DEBUG) && defined(PR_LOGGING)
@@ -382,7 +359,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
   // create our parallel NSView and hook it up to our parent. Recall
   // that NS_NATIVE_WIDGET is the NSView.
   NSRect r;
-  GeckoRectToNSRect(mBounds, r);
+  nsCocoaUtils::GeckoRectToNSRect(mBounds, r);
   mView = [CreateCocoaView(r) retain];
   if (!mView) return NS_ERROR_FAILURE;
 
@@ -894,7 +871,7 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
   mBounds.y = aY;
 
   NSRect r;
-  GeckoRectToNSRect(mBounds, r);
+  nsCocoaUtils::GeckoRectToNSRect(mBounds, r);
   [mView setFrame:r];
 
   if (mVisible)
@@ -918,7 +895,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
   mBounds.height = aHeight;
 
   NSRect r;
-  GeckoRectToNSRect(mBounds, r);
+  nsCocoaUtils::GeckoRectToNSRect(mBounds, r);
   [mView setFrame:r];
 
   if (mVisible && aRepaint)
@@ -950,7 +927,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   }
 
   NSRect r;
-  GeckoRectToNSRect(mBounds, r);
+  nsCocoaUtils::GeckoRectToNSRect(mBounds, r);
   [mView setFrame:r];
 
   if (mVisible && aRepaint)
@@ -1416,7 +1393,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchron
     return NS_OK;
 
   NSRect r;
-  GeckoRectToNSRect(aRect, r);
+  nsCocoaUtils::GeckoRectToNSRect(aRect, r);
   
   if (aIsSynchronous) {
     [mView displayRect:r];
@@ -2173,10 +2150,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
   NPCocoaEvent cocoaEvent;
-  InitNPCocoaEvent(&cocoaEvent);
+  nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
   cocoaEvent.type = NPCocoaEventWindowFocusChanged;
   cocoaEvent.data.focus.hasFocus = hasMain;
-  InitPluginEvent(pluginEvent, cocoaEvent);
+  nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaEvent);
   mGeckoChild->DispatchWindowEvent(pluginEvent);
 }
 
@@ -3137,7 +3114,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
   NPCocoaEvent cocoaEvent;
   if (mPluginEventModel == NPEventModelCocoa) {
-    InitNPCocoaEvent(&cocoaEvent);
+    nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
     NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
     cocoaEvent.type = NPCocoaEventMouseDown;
     cocoaEvent.data.mouse.modifierFlags = modifierFlags;
@@ -3195,7 +3172,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
-      InitNPCocoaEvent(&cocoaEvent);
+      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
       cocoaEvent.type = NPCocoaEventMouseUp;
       cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
@@ -3226,7 +3203,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
         [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoExitEvent];
 
         NPCocoaEvent cocoaEvent;
-        InitNPCocoaEvent(&cocoaEvent);
+        nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
         NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
         cocoaEvent.type = NPCocoaEventMouseExited;
         cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
@@ -3280,7 +3257,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
-      InitNPCocoaEvent(&cocoaEvent);
+      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       cocoaEvent.type = ((msg == NS_MOUSE_ENTER) ? NPCocoaEventMouseEntered : NPCocoaEventMouseExited);
       cocoaEvent.data.mouse.modifierFlags = [aEvent modifierFlags];
       cocoaEvent.data.mouse.pluginX = 5;
@@ -3333,7 +3310,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
-      InitNPCocoaEvent(&cocoaEvent);
+      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
       cocoaEvent.type = NPCocoaEventMouseMoved;
       cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
@@ -3382,7 +3359,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
-      InitNPCocoaEvent(&cocoaEvent);
+      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
       cocoaEvent.type = NPCocoaEventMouseDragged;
       cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
@@ -3438,7 +3415,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
   NPCocoaEvent cocoaEvent;
   if (mPluginEventModel == NPEventModelCocoa) {
-    InitNPCocoaEvent(&cocoaEvent);
+    nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
     NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
     cocoaEvent.type = NPCocoaEventMouseDown;
     cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
@@ -3492,7 +3469,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
-      InitNPCocoaEvent(&cocoaEvent);
+      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
       cocoaEvent.type = NPCocoaEventMouseUp;
       cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
@@ -3649,7 +3626,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
     NPCocoaEvent cocoaEvent;
     if (mPluginEventModel == NPEventModelCocoa) {
-      InitNPCocoaEvent(&cocoaEvent);
+      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
       cocoaEvent.type = NPCocoaEventScrollWheel;
       cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
@@ -4207,10 +4184,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if (mPluginEventModel == NPEventModelCocoa) {
     nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
     NPCocoaEvent cocoaEvent;
-    InitNPCocoaEvent(&cocoaEvent);
+    nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
     cocoaEvent.type = NPCocoaEventFocusChanged;
     cocoaEvent.data.focus.hasFocus = getFocus;
-    InitPluginEvent(pluginEvent, cocoaEvent);
+    nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaEvent);
     mGeckoChild->DispatchWindowEvent(pluginEvent);
 
     if (getFocus)
