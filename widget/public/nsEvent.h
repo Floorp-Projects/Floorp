@@ -73,16 +73,22 @@ enum nsSizeMode {
   nsSizeMode_Fullscreen
 };
 
-class nsEvent;
+struct nsAlternativeCharCode;
+struct nsTextRangeStyle;
+struct nsTextRange;
 
+class nsEvent;
 class nsGUIEvent;
+class nsScriptErrorEvent;
 class nsSizeEvent;
 class nsSizeModeEvent;
 class nsZLevelEvent;
 class nsPaintEvent;
 class nsScrollbarEvent;
 class nsScrollPortEvent;
+class nsScrollAreaEvent;
 class nsInputEvent;
+class nsMouseEvent_base;
 class nsMouseEvent;
 class nsDragEvent;
 #ifdef ACCESSIBILITY
@@ -92,10 +98,19 @@ class nsKeyEvent;
 class nsTextEvent;
 class nsCompositionEvent;
 class nsMouseScrollEvent;
-class nsReconversionEvent;
-class nsTooltipEvent;
-class nsSimpleGestureEvent;
-class nsMozTouchEvent;
+class nsGestureNotifyEvent;
+class nsQueryContentEvent;
+class nsFocusEvent;
+class nsSelectionEvent;
 class nsContentCommandEvent;
+class nsMozTouchEvent;
+class nsFormEvent;
+class nsCommandEvent;
+class nsUIEvent;
+class nsSimpleGestureEvent;
+class nsTransitionEvent;
+class nsAnimationEvent;
+class nsUIStateChangeEvent;
+class nsPluginEvent;
 
 #endif // nsEvent_h__
