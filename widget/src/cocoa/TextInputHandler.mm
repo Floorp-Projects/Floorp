@@ -43,6 +43,7 @@
 #include "nsObjCExceptions.h"
 #include "nsBidiUtils.h"
 #include "nsToolkit.h"
+#include "nsCocoaUtils.h"
 
 #ifdef __LP64__
 #include "ComplexTextInputPanel.h"
@@ -63,60 +64,6 @@ using namespace mozilla::widget;
 #undef DEBUG_TEXT_INPUT_HANDLER
 //#define DEBUG_IME_HANDLER 1
 //#define DEBUG_TEXT_INPUT_HANDLER 1
-
-// TODO: static methods should be moved to nsCocoaUtils
-
-static void
-GetStringForNSString(const NSString *aSrc, nsAString& aDist)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!aSrc) {
-    aDist.Truncate();
-    return;
-  }
-
-  aDist.SetLength([aSrc length]);
-  [aSrc getCharacters: aDist.BeginWriting()];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-static NSString* ToNSString(const nsAString& aString)
-{
-  return [NSString stringWithCharacters:aString.BeginReading()
-                                 length:aString.Length()];
-}
-
-static inline void
-GeckoRectToNSRect(const nsIntRect& inGeckoRect, NSRect& outCocoaRect)
-{
-  outCocoaRect.origin.x = inGeckoRect.x;
-  outCocoaRect.origin.y = inGeckoRect.y;
-  outCocoaRect.size.width = inGeckoRect.width;
-  outCocoaRect.size.height = inGeckoRect.height;
-}
-
-static NSEvent*
-MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent *aEvent)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  NSEvent* newEvent =
-    [NSEvent     keyEventWithType:aEventType
-                         location:[aEvent locationInWindow] 
-                    modifierFlags:[aEvent modifierFlags]
-                        timestamp:[aEvent timestamp]
-                     windowNumber:[aEvent windowNumber]
-                          context:[aEvent context]
-                       characters:[aEvent characters]
-      charactersIgnoringModifiers:[aEvent charactersIgnoringModifiers]
-                        isARepeat:[aEvent isARepeat]
-                          keyCode:[aEvent keyCode]];
-  return newEvent;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
 
 #ifdef DEBUG_IME_HANDLER
 
@@ -205,20 +152,6 @@ static void
 FinalizeCurrentKeyboardLayout()
 {
   gCurrentKeyboardLayout.Clear();
-}
-
-static void
-InitNPCocoaEvent(NPCocoaEvent* event)
-{
-  memset(event, 0, sizeof(NPCocoaEvent));
-}
-
-static inline void
-InitPluginEvent(nsPluginEvent &aEvent, NPCocoaEvent &aCocoaEvent)
-{
-  aEvent.time = PR_IntervalNow();
-  aEvent.pluginEvent = (void*)&aCocoaEvent;
-  aEvent.retargetToFocusedDocument = PR_FALSE;
 }
 
 
@@ -448,7 +381,7 @@ TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
 {
   CFStringRef str;
   GetStringProperty(aKey, str);
-  GetStringForNSString((const NSString*)str, aStr);
+  nsCocoaUtils::GetStringForNSString((const NSString*)str, aStr);
   return !aStr.IsEmpty();
 }
 
@@ -501,7 +434,8 @@ TISInputSourceWrapper::GetPrimaryLanguage(nsAString &aPrimaryLanguage)
   NS_ENSURE_TRUE(mInputSource, PR_FALSE);
   CFStringRef primaryLanguage;
   NS_ENSURE_TRUE(GetPrimaryLanguage(primaryLanguage), PR_FALSE);
-  GetStringForNSString((const NSString*)primaryLanguage, aPrimaryLanguage);
+  nsCocoaUtils::GetStringForNSString((const NSString*)primaryLanguage,
+                                     aPrimaryLanguage);
   return !aPrimaryLanguage.IsEmpty();
 }
 
@@ -1093,7 +1027,7 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
   }
 
   nsString str;
-  GetStringForNSString([aAttrString string], str);
+  nsCocoaUtils::GetStringForNSString([aAttrString string], str);
   if (!IsIMEComposing() && str.IsEmpty()) {
     return; // nothing to do
   }
@@ -1693,7 +1627,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsString str;
-  GetStringForNSString([aAttrString string], str);
+  nsCocoaUtils::GetStringForNSString([aAttrString string], str);
 
   if (!IsIMEComposing()) {
     // XXXmnakano Probably, we shouldn't emulate composition in this case.
@@ -1755,7 +1689,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsString str;
-  GetStringForNSString([aAttrString string], str);
+  nsCocoaUtils::GetStringForNSString([aAttrString string], str);
 
   mMarkedRange.length = str.Length();
 
@@ -1845,7 +1779,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
     return nil;
   }
 
-  NSString* nsstr = ToNSString(textContent.mReply.mString);
+  NSString* nsstr = nsCocoaUtils::ToNSString(textContent.mReply.mString);
   NSAttributedString* result =
     [[[NSAttributedString alloc] initWithString:nsstr
                                      attributes:nil] autorelease];
@@ -1939,7 +1873,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
   if (!rootWindow || !rootView) {
     return rect;
   }
-  GeckoRectToNSRect(r, rect);
+  nsCocoaUtils::GeckoRectToNSRect(r, rect);
   rect = [rootView convertRect:rect toView:nil];
   rect.origin = [rootWindow convertBaseToScreen:rect.origin];
 #if DEBUG_IME_HANDLER
@@ -2403,7 +2337,7 @@ PluginTextInputHandler::ConvertCocoaKeyEventToNPCocoaEvent(
                           NSEvent* aCocoaEvent,
                           NPCocoaEvent& aPluginEvent)
 {
-  InitNPCocoaEvent(&aPluginEvent);
+  nsCocoaUtils::InitNPCocoaEvent(&aPluginEvent);
   NSEventType nativeType = [aCocoaEvent type];
   switch (nativeType) {
     case NSKeyDown:
@@ -2645,12 +2579,12 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
     }
 
     NPCocoaEvent cocoaTextEvent;
-    InitNPCocoaEvent(&cocoaTextEvent);
+    nsCocoaUtils::InitNPCocoaEvent(&cocoaTextEvent);
     cocoaTextEvent.type = NPCocoaEventTextInput;
     cocoaTextEvent.data.text.text = (NPNSString*)text;
 
     nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
-    InitPluginEvent(pluginEvent, cocoaTextEvent);
+    nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaTextEvent);
     DispatchEvent(pluginEvent);
 
     ::CFRelease(text);
@@ -2784,7 +2718,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
   nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
   NPCocoaEvent cocoaEvent;
   ConvertCocoaKeyEventToNPCocoaEvent(aNativeKeyEvent, cocoaEvent);
-  InitPluginEvent(pluginEvent, cocoaEvent);
+  nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaEvent);
   DispatchEvent(pluginEvent);
   if (Destroyed()) {
     return;
@@ -2819,7 +2753,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
       nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
       NPCocoaEvent cocoaEvent;
       ConvertCocoaKeyEventToNPCocoaEvent(aNativeKeyEvent, cocoaEvent);
-      InitPluginEvent(pluginEvent, cocoaEvent);
+      nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaEvent);
       DispatchEvent(pluginEvent);
       if (Destroyed()) {
         return;
@@ -2949,12 +2883,12 @@ PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   NPCocoaEvent cocoaTextEvent;
-  InitNPCocoaEvent(&cocoaTextEvent);
+  nsCocoaUtils::InitNPCocoaEvent(&cocoaTextEvent);
   cocoaTextEvent.type = NPCocoaEventTextInput;
   cocoaTextEvent.data.text.text = (NPNSString*)aString;
 
   nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
-  InitPluginEvent(pluginEvent, cocoaTextEvent);
+  nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaTextEvent);
   return DispatchEvent(pluginEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
@@ -3167,13 +3101,13 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
                         timestamp:0
                      windowNumber:windowNumber
                           context:[NSGraphicsContext currentContext]
-                       characters:ToNSString(aCharacters)
-      charactersIgnoringModifiers:ToNSString(aUnmodifiedCharacters)
+                       characters:nsCocoaUtils::ToNSString(aCharacters)
+      charactersIgnoringModifiers:nsCocoaUtils::ToNSString(aUnmodifiedCharacters)
                         isARepeat:NO
                           keyCode:aNativeKeyCode];
 
-  NSEvent* upEvent =
-    sendFlagsChangedEvent ? nil : MakeNewCocoaEventWithType(NSKeyUp, downEvent);
+  NSEvent* upEvent = sendFlagsChangedEvent ?
+    nil : nsCocoaUtils::MakeNewCocoaEventWithType(NSKeyUp, downEvent);
 
   if (downEvent && (sendFlagsChangedEvent || upEvent)) {
     KeyboardLayoutOverride currentLayout = mKeyboardOverride;
