@@ -421,7 +421,9 @@ struct JS_FRIEND_API(JSCompartment) {
         int64 poolMain;
     };
 
-    void getTypeInferenceMemoryStats(TypeInferenceMemoryStats *stats);
+    void getTypeInferenceMemoryStats(JSContext *cx, TypeInferenceMemoryStats *stats);
+    void getTypeInferenceObjectStats(js::types::TypeObject *object,
+                                     JSCompartment::TypeInferenceMemoryStats *stats);
 
 #ifdef JS_TRACER
   private:

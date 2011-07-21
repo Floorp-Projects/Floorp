@@ -107,16 +107,17 @@ using namespace js::gc;
 /*
  * Check that JSTRACE_XML follows JSTRACE_OBJECT and JSTRACE_STRING.
  */
-JS_STATIC_ASSERT(JSTRACE_OBJECT == 0);
-JS_STATIC_ASSERT(JSTRACE_STRING == 1);
-JS_STATIC_ASSERT(JSTRACE_SHAPE  == 2);
-JS_STATIC_ASSERT(JSTRACE_XML    == 3);
+JS_STATIC_ASSERT(JSTRACE_OBJECT      == 0);
+JS_STATIC_ASSERT(JSTRACE_STRING      == 1);
+JS_STATIC_ASSERT(JSTRACE_SHAPE       == 2);
+JS_STATIC_ASSERT(JSTRACE_TYPE_OBJECT == 3);
+JS_STATIC_ASSERT(JSTRACE_XML         == 4);
 
 /*
- * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_SHAPE is the last non-xml
+ * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_TYPE_OBJECT is the last non-xml
  * trace kind when JS_HAS_XML_SUPPORT is false.
  */
-JS_STATIC_ASSERT(JSTRACE_SHAPE + 1 == JSTRACE_XML);
+JS_STATIC_ASSERT(JSTRACE_TYPE_OBJECT + 1 == JSTRACE_XML);
 
 namespace js {
 namespace gc {
@@ -147,6 +148,7 @@ const uint8 GCThingSizeMap[] = {
     sizeof(JSObject_Slots16),   /* FINALIZE_OBJECT16_BACKGROUND */
     sizeof(JSFunction),         /* FINALIZE_FUNCTION            */
     sizeof(Shape),              /* FINALIZE_SHAPE               */
+    sizeof(types::TypeObject),  /* FINALIZE_TYPE_OBJECT         */
 #if JS_HAS_XML_SUPPORT
     sizeof(JSXML),              /* FINALIZE_XML                 */
 #endif
@@ -801,6 +803,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
         break;
       case FINALIZE_SHAPE:
         test = MarkArenaPtrConservatively<Shape>(trc, aheader, addr);
+        break;
+      case FINALIZE_TYPE_OBJECT:
+        test = MarkArenaPtrConservatively<types::TypeObject>(trc, aheader, addr);
         break;
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
@@ -1468,6 +1473,8 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         return RefillTypedFreeList<JSFunction>(cx, thingKind);
       case FINALIZE_SHAPE:
         return RefillTypedFreeList<Shape>(cx, thingKind);
+      case FINALIZE_TYPE_OBJECT:
+        return RefillTypedFreeList<types::TypeObject>(cx, thingKind);
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
         return RefillTypedFreeList<JSXML>(cx, thingKind);
@@ -1800,7 +1807,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case TYPE: {
         types::TypeObject *type = static_cast<types::AutoTypeRooter *>(this)->type;
-        if (!type->marked)
+        if (!type->isMarked())
             type->trace(trc);
         return;
       }
@@ -2040,6 +2047,7 @@ JSCompartment::finalizeStringArenaLists(JSContext *cx)
 void
 JSCompartment::finalizeShapeArenaLists(JSContext *cx)
 {
+    arenas[FINALIZE_TYPE_OBJECT].finalizeNow<types::TypeObject>(cx);
     arenas[FINALIZE_SHAPE].finalizeNow<Shape>(cx);
 }
 
@@ -2843,7 +2851,6 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
                                IterateCellCallback cellCallback)
 {
     CHECK_REQUEST(cx);
-
     LeaveTrace(cx);
 
     JSRuntime *rt = cx->runtime;
@@ -2884,6 +2891,51 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
                                         thingSize);
                     }
                 }
+            }
+        }
+    }
+}
+
+void
+IterateCells(JSContext *cx, JSCompartment *compartment, FinalizeKind thingKind,
+             void *data, IterateCellCallback cellCallback)
+{
+    /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
+    CHECK_REQUEST(cx);
+
+    LeaveTrace(cx);
+
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(!rt->gcRunning);
+
+    AutoLockGC lock(rt);
+    AutoGCSession gcsession(cx);
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepEnd(rt, false);
+#endif
+    AutoUnlockGC unlock(rt);
+
+    AutoCopyFreeListToArenas copy(rt);
+
+    size_t traceKind = GetFinalizableTraceKind(thingKind);
+    size_t thingSize = GCThingSizeMap[thingKind];
+    ArenaHeader *aheader = compartment->arenas[thingKind].getHead();
+
+    for (; aheader; aheader = aheader->next) {
+        Arena *arena = aheader->getArena();
+        FreeSpan firstSpan(aheader->getFirstFreeSpan());
+        FreeSpan *span = &firstSpan;
+
+        for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
+            JS_ASSERT(thing <= arena->thingsEnd());
+            if (thing == span->start) {
+                if (!span->hasNext())
+                    break;
+                thing = span->end;
+                span = span->nextSpan();
+            } else {
+                (*cellCallback)(cx, data, reinterpret_cast<void *>(thing), traceKind,
+                                thingSize);
             }
         }
     }

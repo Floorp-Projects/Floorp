@@ -3525,10 +3525,10 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    JSAtom *nameAtom = js_Atomize(cx, name, strlen(name));
-    if (!nameAtom)
+    JSAtom *atom = js_Atomize(cx, name, strlen(name));
+    if (!atom)
         return JS_FALSE;
-    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(nameAtom), JSRESOLVE_QUALIFIED, &obj2, &prop))
+    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         js_ReportIsNotDefined(cx, name);
@@ -3540,15 +3540,20 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
                              alias, name, obj2->getClass()->name);
         return JS_FALSE;
     }
-    JSAtom *aliasAtom = js_Atomize(cx, alias, strlen(alias));
-    if (!aliasAtom) {
+    atom = js_Atomize(cx, alias, strlen(alias));
+    if (!atom) {
         ok = JS_FALSE;
     } else {
-        /* Alias the properties within the type information for the object. */
-        AliasTypeProperties(cx, obj, ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom));
-
         shape = (Shape *)prop;
-        ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(aliasAtom),
+
+        /*
+         * Type inference doesn't account for aliased properties, so with
+         * inference enabled only properties that always go through a read
+         * barrier when being accessed can alias one another.
+         */
+        JS_ASSERT_IF(cx->typeInferenceEnabled(), !shape->hasDefaultGetterOrIsMethod());
+
+        ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
                                    shape->getter(), shape->setter(), shape->slot,
                                    shape->attributes(), shape->getFlags() | Shape::ALIAS,
                                    shape->shortid)

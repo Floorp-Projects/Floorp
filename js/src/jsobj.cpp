@@ -2931,16 +2931,23 @@ CreateThisForFunctionWithType(JSContext *cx, types::TypeObject *type, JSObject *
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
+    JSScript *calleeScript = callee->getFunctionPrivate()->script();
+    JSObject *res;
+
     if (proto) {
-        JSScript *calleeScript = callee->getFunctionPrivate()->script();
         types::TypeObject *type = proto->getNewType(cx, calleeScript);
         if (!type)
             return NULL;
-        return CreateThisForFunctionWithType(cx, type, callee->getParent());
+        res = CreateThisForFunctionWithType(cx, type, callee->getParent());
+    } else {
+        gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+        res = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
     }
 
-    gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
+    if (res && cx->typeInferenceEnabled())
+        calleeScript->types.setThis(cx, types::Type::ObjectType(res));
+
+    return res;
 }
 
 JSObject *
@@ -3308,7 +3315,7 @@ js_NewBlockObject(JSContext *cx)
     EmptyShape *emptyBlockShape = EmptyShape::getEmptyBlockShape(cx);
     if (!emptyBlockShape)
         return NULL;
-    blockObj->init(cx, &js_BlockClass, GetTypeEmpty(cx), NULL, NULL, false);
+    blockObj->init(cx, &js_BlockClass, &emptyTypeObject, NULL, NULL, false);
     blockObj->setMap(emptyBlockShape);
 
     return blockObj;
@@ -4508,7 +4515,7 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
 
     TypeObject *type = proto
         ? proto->getNewType(cx, NULL, /* markUnknown = */ true)
-        : GetTypeEmpty(cx);
+        : &emptyTypeObject;
     if (!type)
         return false;
 
