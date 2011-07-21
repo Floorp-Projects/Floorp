@@ -42,13 +42,14 @@
 #define GlobalObject_h___
 
 #include "jsfun.h"
-#include "jsprvtd.h"
 #include "jsvector.h"
 
 extern JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj);
 
 namespace js {
+
+class Debugger;
 
 /*
  * Global object slots are reserved as follows:
@@ -173,12 +174,16 @@ class GlobalObject : public ::JSObject {
 
     typedef js::Vector<js::Debugger *, 0, js::SystemAllocPolicy> DebuggerVector;
 
-    // The collection of Debugger objects debugging this global. If this global
-    // is not a debuggee, this returns either NULL or an empty vector.
+    /*
+     * The collection of Debugger objects debugging this global. If this global
+     * is not a debuggee, this returns either NULL or an empty vector.
+     */
     DebuggerVector *getDebuggers();
 
-    // The same, but create the empty vector if one does not already
-    // exist. Returns NULL only on OOM.
+    /*
+     * The same, but create the empty vector if one does not already
+     * exist. Returns NULL only on OOM.
+     */
     DebuggerVector *getOrCreateDebuggers(JSContext *cx);
 
     bool addDebugger(JSContext *cx, Debugger *dbg);
