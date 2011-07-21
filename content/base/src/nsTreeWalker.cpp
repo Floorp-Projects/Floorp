@@ -47,6 +47,8 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsDOMError.h"
+#include "nsINode.h"
+#include "nsIContent.h"
 
 #include "nsContentUtils.h"
 

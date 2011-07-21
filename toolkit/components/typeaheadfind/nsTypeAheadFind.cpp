@@ -88,6 +88,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
+#include "mozilla/dom/Element.h"
 
 #include "nsTypeAheadFind.h"
 

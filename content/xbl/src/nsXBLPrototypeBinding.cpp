@@ -74,6 +74,7 @@
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsXBLResourceLoader.h"
+#include "mozilla/dom/Element.h"
 
 // Helper Classes =====================================================================
 

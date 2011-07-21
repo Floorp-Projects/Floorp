@@ -140,9 +140,17 @@ interface nsIMemoryReporter : nsISupports
    *    has occurred since the application started up.  For instance, a
    *    reporter reporting the number of page faults since startup should have
    *    units UNITS_COUNT.
+   *
+   *  - PERCENTAGE: The amount contains a fraction that should be expressed as
+   *    a percentage.  NOTE!  The |amount| field should be given a value 100x
+   *    the actual percentage;  this number will be divided by 100 when shown.
+   *    This allows a fractional percentage to be shown even though |amount| is
+   *    an integer.  E.g. if the actual percentage is 12.34%, |amount| should
+   *    be 1234.
    */
   const PRInt32 UNITS_BYTES = 0;
   const PRInt32 UNITS_COUNT = 1;
+  const PRInt32 UNITS_PERCENTAGE = 2;
 
   /*
    * The units on the reporter's amount.  See UNITS_* above.

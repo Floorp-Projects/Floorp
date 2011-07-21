@@ -53,8 +53,8 @@
 #include "nsAutoPtr.h"
 #include "nsFrameMessageManager.h"
 #include "Layers.h"
+#include "nsIContent.h"
 
-class nsIContent;
 class nsIURI;
 class nsSubDocumentFrame;
 class nsIView;

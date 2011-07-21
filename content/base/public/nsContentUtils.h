@@ -79,13 +79,13 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "mozilla/AutoRestore.h"
 #include "nsINode.h"
 #include "nsHashtable.h"
+#include "nsIDOMNode.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
 class nsIContent;
-class nsIDOMNode;
 class nsIDOMKeyEvent;
 class nsIDocument;
 class nsIDocumentObserver;
@@ -122,7 +122,6 @@ struct JSRuntime;
 class nsIUGenCategory;
 class nsIWidget;
 class nsIDragSession;
-class nsPIDOMWindow;
 class nsIPresShell;
 class nsIXPConnectJSObjectHolder;
 #ifdef MOZ_XTF

@@ -146,6 +146,8 @@ public:
 
     virtual bool RecvFlushMemory(const nsString& reason);
 
+    virtual bool RecvActivateA11y();
+
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif

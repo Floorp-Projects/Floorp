@@ -57,6 +57,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 

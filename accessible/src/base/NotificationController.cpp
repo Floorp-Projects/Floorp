@@ -45,6 +45,7 @@
 #include "nsEventShell.h"
 #include "nsTextAccessible.h"
 #include "TextUpdater.h"
+#include "mozilla/dom/Element.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

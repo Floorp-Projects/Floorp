@@ -612,6 +612,11 @@ protected:
     return mSelectionHasChanged;
   }
 
+  /**
+   * Insert aElement before the node given by aBefore
+   */
+  nsresult Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore = nsnull);
+
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */
