@@ -522,7 +522,7 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
 
     uint32 objSlot;
     int32 objConstant;
-    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return false;
 
     JaegerSpew(JSpew_Analysis, "Trying to hoist bounds check on %s\n",
@@ -733,7 +733,7 @@ LoopState::invariantArraySlots(const CrossSSAValue &obj)
 
     uint32 objSlot;
     int32 objConstant;
-    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0) {
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0) {
         JS_NOT_REACHED("Bad value");
         return NULL;
     }
@@ -786,7 +786,7 @@ LoopState::invariantLength(const CrossSSAValue &obj)
 
     uint32 objSlot;
     int32 objConstant;
-    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return NULL;
     TypeSet *objTypes = ssa->getValueTypes(obj);
 
@@ -873,7 +873,7 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
 
     uint32 objSlot;
     int32 objConstant;
-    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return NULL;
 
     for (unsigned i = 0; i < invariantEntries.length(); i++) {
@@ -1646,7 +1646,7 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
     uint32 objSlot;
     int32 objConstant;
     CrossSSAValue objv(CrossScriptSSA::OUTER_FRAME, obj);
-    if (!getEntryValue(objv, &objSlot, &objConstant) || objConstant != 0)
+    if (!getEntryValue(objv, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return false;
     if (!loopInvariantEntry(objSlot))
         return false;
