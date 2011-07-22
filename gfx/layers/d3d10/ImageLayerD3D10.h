@@ -114,9 +114,12 @@ public:
 
   PRBool HasData() { return mHasData; }
 
+  PRUint32 GetDataSize() { return mBuffer ? mBufferSize : 0; }
+
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
   nsAutoArrayPtr<PRUint8> mBuffer;
+  PRUint32 mBufferSize;
   nsRefPtr<ID3D10Device1> mDevice;
   Data mData;
   gfxIntSize mSize;

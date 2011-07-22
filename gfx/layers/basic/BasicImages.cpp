@@ -129,6 +129,8 @@ public:
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
 
+  PRUint32 GetDataSize() { return mBuffer ? mDelayedConversion ? mBufferSize : mSize.height * mStride : 0; }
+
 protected:
   nsAutoArrayPtr<PRUint8>              mBuffer;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
