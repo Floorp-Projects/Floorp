@@ -1869,15 +1869,13 @@ mjit::Compiler::jsop_getelem_typed(int atype)
     //    can't load into an FP-register for other arrays).
     // 2) The result is definitely a double (the result type set can include
     //    other types after reading out-of-bound values).
-    // 3) There's no type barrier (we need separate type and data regs for
-    //    type barriers).
     AnyRegisterID dataReg;
     MaybeRegisterID typeReg, tempReg;
     JSValueType type = knownPushedType(0);
     bool maybeReadFloat = (atype == TypedArray::TYPE_FLOAT32 ||
                            atype == TypedArray::TYPE_FLOAT64 ||
                            atype == TypedArray::TYPE_UINT32);
-    if (maybeReadFloat && type == JSVAL_TYPE_DOUBLE && !hasTypeBarriers(PC)) {
+    if (maybeReadFloat && type == JSVAL_TYPE_DOUBLE) {
         dataReg = frame.allocFPReg();
         // Need an extra reg to convert uint32 to double.
         if (atype == TypedArray::TYPE_UINT32)
@@ -1888,7 +1886,7 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         // float arrays. Also allocate a type register if the result may not
         // be int32 (due to reading out-of-bound values) or if there's a
         // type barrier.
-        if (maybeReadFloat || type != JSVAL_TYPE_INT32 || hasTypeBarriers(PC))
+        if (maybeReadFloat || type != JSVAL_TYPE_INT32)
             typeReg = frame.allocReg();
     }
 
@@ -1969,7 +1967,8 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
-            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
+            pushedTypeSet(0)->baseFlags() != 0) {
             // Inline typed array path.
             int atype = types->getTypedArrayType(cx);
             if (atype != TypedArray::TYPE_MAX) {

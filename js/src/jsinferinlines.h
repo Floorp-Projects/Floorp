@@ -575,7 +575,7 @@ struct AllocationSiteKey {
     typedef AllocationSiteKey Lookup;
 
     static inline uint32 hash(AllocationSiteKey key) {
-        return (uint32) (key.script->code + key.offset) ^ key.kind;
+        return (uint32) size_t(key.script->code + key.offset) ^ key.kind;
     }
 
     static inline bool match(const AllocationSiteKey &a, const AllocationSiteKey &b) {
