@@ -1423,7 +1423,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
-    dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
+    /* If we have a complex transform, just grab the entire overflow rect instead. */
+    if (!nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0), &dirtyRect)) {
+      dirtyRect = GetVisualOverflowRectRelativeToSelf();
+    }
     inTransform = PR_TRUE;
   }
 
@@ -4515,7 +4518,7 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
   InvalidateInternalAfterResize(aDamageRect, aX, aY, aFlags);
 }
 
-gfxMatrix
+gfx3DMatrix
 nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
@@ -4537,13 +4540,14 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
-    gfxMatrix result =
+    gfx3DMatrix result =
       nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0),
                                                       scaleFactor);
     /* Combine the raw transform with a translation to our parent. */
-    result *= gfxMatrix().Translate
-      (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
-                NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
+    result = result * gfx3DMatrix::Translation
+      (NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+       NSAppUnitsToFloatPixels(delta.y, scaleFactor),
+       0.0f);
     return result;
   }
   
@@ -4556,7 +4560,7 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
    * the identity matrix.
    */
   if (!*aOutAncestor)
-    return gfxMatrix();
+    return gfx3DMatrix();
   
   /* Keep iterating while the frame can't possibly be transformed. */
   while (!(*aOutAncestor)->IsTransformed()) {
@@ -4575,9 +4579,10 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
    */
   nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
   PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
-  return gfxMatrix().Translate
-    (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
-              NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
+  return gfx3DMatrix().Translation
+    (NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+     NSAppUnitsToFloatPixels(delta.y, scaleFactor),
+     0.0f);
 }
 
 void
