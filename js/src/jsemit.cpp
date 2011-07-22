@@ -3144,8 +3144,13 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 static bool
 EmitElemIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
-    if (!EmitElemOp(cx, pn, op, cg))
-        return false;
+    if (pn) {
+        if (!EmitElemOp(cx, pn, op, cg))
+            return false;
+    } else {
+        if (!EmitElemOpBase(cx, cg, op))
+            return false;
+    }
     if (js_Emit1(cx, cg, JSOP_NOP) < 0)
         return false;
 
@@ -6583,18 +6588,17 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
             if (js_Emit1(cx, cg, op) < 0)
                 return JS_FALSE;
-            if (js_CodeSpec[op].format & JOF_DECOMPOSE) {
-                /*
-                 * This is dead code for the decompiler, don't generate
-                 * a decomposed version of the opcode. We do need to balance
-                 * the stacks in the decomposed version.
-                 */
-                JS_ASSERT(js_CodeSpec[op].format & JOF_ELEM);
-                if (js_Emit1(cx, cg, (JSOp)1) < 0)
-                    return JS_FALSE;
-                if (js_Emit1(cx, cg, JSOP_POP) < 0)
-                    return JS_FALSE;
-            }
+            /*
+             * This is dead code for the decompiler, don't generate
+             * a decomposed version of the opcode. We do need to balance
+             * the stacks in the decomposed version.
+             */
+            JS_ASSERT(js_CodeSpec[op].format & JOF_DECOMPOSE);
+            JS_ASSERT(js_CodeSpec[op].format & JOF_ELEM);
+            if (js_Emit1(cx, cg, (JSOp)1) < 0)
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, JSOP_POP) < 0)
+                return JS_FALSE;
             break;
 #if JS_HAS_XML_SUPPORT
           case TOK_UNARYOP:
@@ -6603,7 +6607,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             if (js_Emit1(cx, cg, JSOP_BINDXMLNAME) < 0)
                 return JS_FALSE;
-            if (js_Emit1(cx, cg, op) < 0)
+            if (!EmitElemIncDec(cx, NULL, op, cg))
                 return JS_FALSE;
             break;
 #endif
