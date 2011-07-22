@@ -143,6 +143,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMFileBase)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFile)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
+  NS_INTERFACE_MAP_ENTRY(nsIMutable)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, mIsFile)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFile)
 NS_INTERFACE_MAP_END
@@ -313,6 +314,35 @@ nsDOMFileBase::GetSendInfo(nsIInputStream** aBody,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMFileBase::GetMutable(PRBool* aMutable)
+{
+  *aMutable = !mImmutable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFileBase::SetMutable(PRBool aMutable)
+{
+  nsresult rv = NS_OK;
+
+  NS_ENSURE_ARG(!mImmutable || !aMutable);
+
+  if (!mImmutable && !aMutable) {
+    // Force the content type and size to be cached
+    nsString dummyString;
+    rv = this->GetType(dummyString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint64 dummyInt;
+    rv = this->GetSize(&dummyInt);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mImmutable = !aMutable;
+  return rv;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // nsDOMFileFile implementation
 
@@ -412,6 +442,9 @@ nsDOMFileFile::Initialize(nsISupports* aOwner,
                           jsval* aArgv)
 {
   nsresult rv;
+
+  NS_ASSERTION(!mImmutable, "Something went wrong ...");
+  NS_ENSURE_TRUE(!mImmutable, NS_ERROR_UNEXPECTED);
 
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR; // Real short trip

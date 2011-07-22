@@ -86,7 +86,11 @@ def main(args=sys.argv[1:]):
     parser.add_option('--report-first', dest='report_first',
                       default=False, action='store_true',
                       help="report the first error only (all tests will still run)")
+    parser.add_option('-q', '--quiet', dest='quiet',
+                      default=False, action='store_true',
+                      help="minimize output")
     options, args = parser.parse_args(args)
+    quiet = options.__dict__.pop('quiet')
 
     # run the tests
     results = run_tests(**options.__dict__)
@@ -99,6 +103,12 @@ def main(args=sys.argv[1:]):
             break
     if failed:
         sys.exit(1) # error
+    if not quiet:
+        # print results
+        print "manifestparser.py: All tests pass!"
+        for test in sorted(results.keys()):
+            result = results[test]
+            print "%s: failed=%s, attempted=%s" % (test, result[0], result[1])
                
 if __name__ == '__main__':
     main()
