@@ -183,19 +183,31 @@ nsStyleTransformMatrix::ProcessInterpolateMatrix(const nsCSSValue::Array* aData,
   NS_PRECONDITION(aData->Count() == 5, "Invalid array!");
 
   double coeff1 = aData->Item(1).GetPercentValue();
-  gfxMatrix matrix1 = ReadTransforms(aData->Item(2).GetListValue(),
-                                     aContext, aPresContext,
-                                     aCanStoreInRuleTree,
-                                     aBounds, aAppUnitsPerMatrixUnit);
+  gfx3DMatrix matrix1 = ReadTransforms(aData->Item(2).GetListValue(),
+                                       aContext, aPresContext,
+                                       aCanStoreInRuleTree,
+                                       aBounds, aAppUnitsPerMatrixUnit);
   double coeff2 = aData->Item(3).GetPercentValue();
-  gfxMatrix matrix2 = ReadTransforms(aData->Item(4).GetListValue(),
-                                     aContext, aPresContext,
-                                     aCanStoreInRuleTree,
-                                     aBounds, aAppUnitsPerMatrixUnit);
+  gfx3DMatrix matrix2 = ReadTransforms(aData->Item(4).GetListValue(),
+                                       aContext, aPresContext,
+                                       aCanStoreInRuleTree,
+                                       aBounds, aAppUnitsPerMatrixUnit);
+
+  gfxMatrix matrix2d1, matrix2d2;
+#ifdef DEBUG
+  PRBool is2d =
+#endif
+  matrix1.Is2D(&matrix2d1);
+  NS_ABORT_IF_FALSE(is2d, "Can't do animations with 3d transforms!");
+#ifdef DEBUG
+  is2d =
+#endif
+  matrix2.Is2D(&matrix2d2);
+  NS_ABORT_IF_FALSE(is2d, "Can't do animations with 3d transforms!");
 
   return gfx3DMatrix::From2D(
-    nsStyleAnimation::InterpolateTransformMatrix(matrix1, coeff1, 
-                                                 matrix2, coeff2));
+    nsStyleAnimation::InterpolateTransformMatrix(matrix2d1, coeff1, 
+                                                 matrix2d2, coeff2));
 }
 
 /* Helper function to process a translatex function. */
@@ -484,7 +496,7 @@ nsStyleTransformMatrix::MatrixForTransformFunction(const nsCSSValue::Array * aDa
   return gfx3DMatrix();
 }
 
-/* static */ gfxMatrix
+/* static */ gfx3DMatrix
 nsStyleTransformMatrix::ReadTransforms(const nsCSSValueList* aList,
                                        nsStyleContext* aContext,
                                        nsPresContext* aPresContext,
@@ -507,10 +519,6 @@ nsStyleTransformMatrix::ReadTransforms(const nsCSSValueList* aList,
                                         aBounds, aAppUnitsPerMatrixUnit) * result;
   }
   
-  gfxMatrix matrix2d;
-  if (!result.Is2D(&matrix2d)) {
-    NS_ERROR("Only 2D transforms are supported!");
-  }
-  return matrix2d;
+  return result;
 }
 
