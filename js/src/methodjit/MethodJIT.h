@@ -329,15 +329,20 @@ struct RecompilationMonitor
     unsigned recompilations;
     unsigned frameExpansions;
 
+    /* If a GC occurs it may discard jit code on the stack. */
+    unsigned gcNumber;
+
     RecompilationMonitor(JSContext *cx)
         : cx(cx),
           recompilations(cx->compartment->types.recompilations),
-          frameExpansions(cx->compartment->types.frameExpansions)
+          frameExpansions(cx->compartment->types.frameExpansions),
+          gcNumber(cx->runtime->gcNumber)
     {}
 
     bool recompiled() {
         return cx->compartment->types.recompilations != recompilations
-            || cx->compartment->types.frameExpansions != frameExpansions;
+            || cx->compartment->types.frameExpansions != frameExpansions
+            || cx->runtime->gcNumber != gcNumber;
     }
 };
 
