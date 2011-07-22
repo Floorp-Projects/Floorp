@@ -2140,7 +2140,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
           return NS_OK_NO_RELATION_TARGET;
 
         return nsRelUtils::AddTarget(aRelationType, aRelation,
-                                     groupInfo->GetConceptualParent());
+                                     groupInfo->ConceptualParent());
       }
 
       // If accessible is in its own Window, or is the root of a document,

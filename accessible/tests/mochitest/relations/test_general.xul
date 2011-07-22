@@ -69,6 +69,10 @@
       testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
 
+      // no relation node_child_of for accessible contained in an unexpected
+      // parent
+      testRelation("treeitem6", RELATION_NODE_CHILD_OF, null);
+
       // 'node child of' relation for the document having window, returns
       // direct accessible parent (fixed in bug 419770).
       var iframeElmObj = {};
@@ -146,6 +150,11 @@
          title="mochitests for accessible relations">
         Mozilla Bug 475298
       </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=673389"
+         title="node_child_of on an item not in a proper container">
+        Mozilla Bug 67389
+      </a><br/>
 
       <p id="display"></p>
       <div id="content" style="display: none">
@@ -191,6 +200,8 @@
       <description role="treeitem" id="treeitem4" aria-level="1">Green</description>
       <description role="treeitem" id="treeitem5" aria-level="2">Light green</description>
     </vbox>
+
+    <description role="treeitem" id="treeitem6">Dark green</description>
 
     <iframe id="iframe"/>
 
