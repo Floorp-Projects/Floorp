@@ -751,6 +751,11 @@ JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbyte
 {
     JS_ASSERT(script->code <= pc);
     JS_ASSERT(pc < script->code + script->length);
+    JS_ASSERT_IF(scriptObject, scriptObject->isScript() || scriptObject->isFunction());
+    JS_ASSERT_IF(scriptObject && scriptObject->isFunction(),
+                 scriptObject->getFunctionPrivate()->script() == script);
+    JS_ASSERT_IF(scriptObject && scriptObject->isScript(), scriptObject->getScript() == script);
+
     BreakpointSiteMap::AddPtr p = breakpointSites.lookupForAdd(pc);
     if (!p) {
         BreakpointSite *site = cx->runtime->new_<BreakpointSite>(script, pc);
@@ -761,10 +766,6 @@ JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbyte
     }
 
     BreakpointSite *site = p->value;
-    JS_ASSERT_IF(scriptObject, scriptObject->isScript() || scriptObject->isFunction());
-    JS_ASSERT_IF(scriptObject && scriptObject->isFunction(),
-                 scriptObject->getFunctionPrivate()->script() == script);
-    JS_ASSERT_IF(scriptObject && scriptObject->isScript(), scriptObject->getScript() == script);
     if (site->scriptObject)
         JS_ASSERT_IF(scriptObject, site->scriptObject == scriptObject);
     else
@@ -782,9 +783,9 @@ JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *sc
     for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
         BreakpointSite *site = e.front().value;
         if (!script || site->script == script) {
-            Breakpoint *next;
-            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = next) {
-                next = bp->nextInSite();
+            Breakpoint *nextbp;
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+                nextbp = bp->nextInSite();
                 if ((!dbg || bp->debugger == dbg) && (!handler || bp->getHandler() == handler))
                     bp->destroy(cx, &e);
             }
@@ -821,7 +822,7 @@ JSCompartment::markBreakpointsIteratively(JSTracer *trc)
         // collected, then the breakpoint is collected along with it. So do not
         // mark the handler in that case.
         //
-        // If scriptObject is nonnull, examine it to see if the script will be
+        // If scriptObject is non-null, examine it to see if the script will be
         // collected. If scriptObject is null, then site->script is an eval
         // script on the stack, so it is definitely live.
         //
@@ -846,13 +847,20 @@ JSCompartment::sweepBreakpoints(JSContext *cx)
     for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
         BreakpointSite *site = e.front().value;
         if (site->scriptObject) {
+            // clearTrap and nextbp are necessary here to avoid possibly
+            // reading *site or *bp after destroying it.
             bool scriptGone = IsAboutToBeFinalized(cx, site->scriptObject);
+            bool clearTrap = scriptGone && site->hasTrap();
+
             Breakpoint *nextbp;
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
                 if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
                     bp->destroy(cx, &e);
             }
+
+            if (clearTrap)
+                site->clearTrap(cx, &e);
         }
     }
 }

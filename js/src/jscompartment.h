@@ -488,7 +488,9 @@ struct JS_FRIEND_API(JSCompartment) {
 
   private:
     enum { DebugFromC = 1, DebugFromJS = 2 };
+
     uintN                        debugModeBits;  // see debugMode() below
+
   public:
     JSCList                      scripts;        // scripts in this compartment
 
@@ -579,7 +581,7 @@ struct JS_FRIEND_API(JSCompartment) {
      * JS_SetDebugModeForCompartment. It is automatically enabled and disabled
      * by Debugger objects. Therefore debugModeBits has the DebugFromC bit set
      * if the C API wants debug mode and the DebugFromJS bit set if debuggees
-     * is nonempty.
+     * is non-empty.
      */
     bool debugMode() const { return !!debugModeBits; }
 
