@@ -1727,22 +1727,22 @@ public:
     "VMAllocators in case of OOM.");
 #endif
 
-            DO(mkPath(name, "type-inference/script-main"),
+            BYTES(mkPath(name, "type-inference/script-main"),
                nsIMemoryReporter::KIND_HEAP, stats->typeInferenceMemory.scriptMain,
     "Memory used during type inference to store type sets of variables "
     "and dynamically observed types.");
 
-            DO(mkPath(name, "type-inference/script-typesets"),
+            BYTES(mkPath(name, "type-inference/script-typesets"),
                nsIMemoryReporter::KIND_HEAP, stats->typeInferenceMemory.scriptSets,
     "Memory used during type inference to hold the contents of type "
     "sets associated with scripts.");
 
-            DO(mkPath(name, "type-inference/object-main"),
+            BYTES(mkPath(name, "type-inference/object-main"),
                nsIMemoryReporter::KIND_HEAP, stats->typeInferenceMemory.objectMain,
     "Memory used during type inference to store types and possible "
     "property types of JS objects.");
 
-            DO(mkPath(name, "type-inference/object-typesets"),
+            BYTES(mkPath(name, "type-inference/object-typesets"),
                nsIMemoryReporter::KIND_HEAP, stats->typeInferenceMemory.objectSets,
     "Memory used during type inference to hold the contents of type "
     "sets associated with objects.");
@@ -1751,7 +1751,7 @@ public:
              * This is in a different category from the rest of type inference
              * data as this can be large but is volatile and cleared on GC.
              */
-            DO(mkPath(name, "type-inference-pools"),
+            BYTES(mkPath(name, "type-inference-pools"),
                nsIMemoryReporter::KIND_HEAP, stats->typeInferenceMemory.poolMain,
     "Memory used during type inference to hold transient analysis information.");
         }
