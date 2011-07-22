@@ -340,7 +340,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     // Data Size
     s.Truncate();
     PRUint32 dataSize;
-    descriptor->GetStorageDataSize(&dataSize);
+    descriptor->GetDataSize(&dataSize);
     s.AppendInt((PRInt32)dataSize);     // XXX nsICacheEntryInfo interfaces should be fixed.
     APPEND_ROW("Data size", s);
 
@@ -404,8 +404,11 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
                                  "<pre>");
             PRUint32 hexDumpState = 0;
             char chunk[4096];
-            while(NS_SUCCEEDED(stream->Read(chunk, sizeof(chunk), &n)) && 
-                  n > 0) {
+            while (dataSize) {
+                PRUint32 count = NS_MIN<PRUint32>(dataSize, sizeof(chunk));
+                if (NS_FAILED(stream->Read(chunk, count, &n)) || n == 0)
+                    break;
+                dataSize -= n;
                 HexDump(&hexDumpState, chunk, n, buffer);
                 outputStream->Write(buffer.get(), buffer.Length(), &n);
                 buffer.Truncate();
