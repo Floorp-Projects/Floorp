@@ -89,7 +89,6 @@
 #include "prio.h"
 #include "mozilla/FunctionTimer.h"
 #include "ManifestParser.h"
-#include "mozilla/Services.h"
 
 #include "nsManifestLineReader.h"
 #include "mozilla/GenericFactory.h"
@@ -407,7 +406,7 @@ nsresult nsComponentManagerImpl::Init()
         nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
         rv = reader->Open(l.location);
         if (NS_SUCCEEDED(rv))
-            RegisterJarManifest(l.type, reader, "chrome.manifest", false);
+            RegisterJarManifest(reader, "chrome.manifest", false);
     }
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
@@ -543,7 +542,7 @@ LoadEntry(nsIZipReader* aReader, const char* aName)
 }
 
 void
-nsComponentManagerImpl::RegisterJarManifest(NSLocationType aType, nsIZipReader* aReader,
+nsComponentManagerImpl::RegisterJarManifest(nsIZipReader* aReader,
                                             const char* aPath, bool aChromeOnly)
 {
     nsCOMPtr<nsIInputStream> is = LoadEntry(aReader, aPath);
@@ -577,7 +576,7 @@ nsComponentManagerImpl::RegisterJarManifest(NSLocationType aType, nsIZipReader* 
 
     whole[flen] = '\0';
 
-    ParseManifest(aType, aReader, aPath,
+    ParseManifest(NS_COMPONENT_LOCATION, aReader, aPath,
                   whole, aChromeOnly);
 }
 
@@ -675,7 +674,7 @@ nsComponentManagerImpl::ManifestManifest(ManifestProcessingContext& cx, int line
         nsCAutoString manifest(cx.mPath);
         AppendFileToManifestPath(manifest, file);
 
-        RegisterJarManifest(cx.mType, cx.mReader, manifest.get(), cx.mChromeOnly);
+        RegisterJarManifest(cx.mReader, manifest.get(), cx.mChromeOnly);
     }
     else {
 #ifdef TRANSLATE_SLASHES
@@ -912,7 +911,7 @@ nsComponentManagerImpl::RereadChromeManifests()
         if (NS_SUCCEEDED(rv))
             rv = reader->Open(l.location);
         if (NS_SUCCEEDED(rv))
-            RegisterJarManifest(l.type, reader, "chrome.manifest", true);
+            RegisterJarManifest(reader, "chrome.manifest", true);
     }
 }
 
@@ -2037,61 +2036,6 @@ XRE_AddStaticComponent(const mozilla::Module* aComponent)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsComponentManagerImpl::AddBootstrappedManifestLocation(nsILocalFile* aLocation)
-{
-  nsString path;
-  nsresult rv = aLocation->GetPath(path);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_STRING(".xpi"))) {
-    return XRE_AddJarManifestLocation(NS_BOOTSTRAPPED_LOCATION, aLocation);
-  }
-  else {
-    nsCOMPtr<nsILocalFile> manifest =
-      CloneAndAppend(aLocation, NS_LITERAL_CSTRING("chrome.manifest"));
-    return XRE_AddManifestLocation(NS_BOOTSTRAPPED_LOCATION, manifest);
-  }
-}
-
-NS_IMETHODIMP
-nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsILocalFile* aLocation)
-{
-  nsCOMPtr<nsIChromeRegistry> cr = mozilla::services::GetChromeRegistryService();
-
-  if (!cr)
-    return NS_ERROR_FAILURE;
-
-  PRBool isJar = PR_FALSE;
-  nsCOMPtr<nsILocalFile> manifest;
-  nsString path;
-  nsresult rv = aLocation->GetPath(path);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_STRING(".xpi"))) {
-    isJar = PR_TRUE;
-    manifest = aLocation;
-  } else {
-    manifest = CloneAndAppend(aLocation, NS_LITERAL_CSTRING("chrome.manifest"));
-  }
-
-  nsComponentManagerImpl::ComponentLocation elem = {
-    NS_BOOTSTRAPPED_LOCATION,
-    manifest,
-    isJar
-  };
-
-  //remove reference
-  nsComponentManagerImpl::sModuleLocations->RemoveElement(elem, ComponentLocationComparator());
-
-  rv = cr->CheckForNewChrome();
-  return rv;
-}
-
 EXPORT_XPCOM_API(nsresult)
 XRE_AddManifestLocation(NSLocationType aType, nsILocalFile* aLocation)
 {
@@ -2129,7 +2073,7 @@ XRE_AddJarManifestLocation(NSLocationType aType, nsILocalFile* aLocation)
 
     rv = reader->Open(c->location);
     if (NS_SUCCEEDED(rv))
-        nsComponentManagerImpl::gComponentManager->RegisterJarManifest(aType, reader, "chrome.manifest", false);
+        nsComponentManagerImpl::gComponentManager->RegisterJarManifest(reader, "chrome.manifest", false);
 
     return NS_OK;
 }
