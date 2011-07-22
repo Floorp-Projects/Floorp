@@ -181,18 +181,3 @@ nsWinUtils::IsWindowEmulationFor(LPCWSTR kModuleHandle)
     ::GetModuleHandleW(kWEModuleHandle)  ||
     ::GetModuleHandleW(kDolphinModuleHandle);
 }
-
-bool
-nsWinUtils::IsTabDocument(nsIDocument* aDocumentNode)
-{
-  nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
-
-  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetParent(getter_AddRefs(parentTreeItem));
-
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
-
-  return parentTreeItem == rootTreeItem;
-}
