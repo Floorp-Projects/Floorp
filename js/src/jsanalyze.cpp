@@ -864,26 +864,26 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             loop->lastBlock = offset;
 
         if (code->exceptionEntry) {
-            unsigned tryOffset = 0;
+            bool found = false;
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
                 unsigned startOffset = script->main - script->code + tn->start;
                 if (startOffset + tn->length == offset) {
-                    tryOffset = startOffset - 1;
+                    /*
+                     * Extend all live variables at exception entry to the start of
+                     * the try block.
+                     */
+                    for (unsigned i = 0; i < numSlots; i++) {
+                        if (lifetimes[i].lifetime)
+                            ensureVariable(lifetimes[i], startOffset - 1);
+                    }
+
+                    found = true;
                     break;
                 }
-                JS_NOT_REACHED("Start of try block not found");
             }
-
-            /*
-             * Extend all live variables at exception entry to the start of
-             * the try block.
-             */
-            for (unsigned i = 0; i < numSlots; i++) {
-                if (lifetimes[i].lifetime)
-                    ensureVariable(lifetimes[i], tryOffset);
-            }
+            JS_ASSERT(found);
         }
 
         switch (op) {
