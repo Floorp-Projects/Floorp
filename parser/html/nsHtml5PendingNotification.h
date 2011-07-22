@@ -47,7 +47,7 @@ class nsHtml5PendingNotification {
 
     nsHtml5PendingNotification(nsIContent* aParent)
      : mParent(aParent),
-       mChildCount(aParent->GetChildCount())
+       mChildCount(aParent->GetChildCount() - 1)
     {
       MOZ_COUNT_CTOR(nsHtml5PendingNotification);
     }

@@ -52,6 +52,8 @@
 #include "nsIDOMElement.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/Element.h"
+
 
 //
 // NS_NewXULButtonFrame

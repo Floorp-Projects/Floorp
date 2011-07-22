@@ -1226,24 +1226,20 @@ nsGenericElement::UpdateEditableState(PRBool aNotify)
 {
   nsIContent *parent = GetParent();
 
-  PRBool oldEditable = IsEditable();
   SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
-  PRBool newEditable = IsEditable();
-  if (oldEditable != newEditable) {
-    if (aNotify) {
-      UpdateState(aNotify);
+  if (aNotify) {
+    UpdateState(aNotify);
+  } else {
+    // Avoid calling UpdateState in this very common case, because
+    // this gets called for pretty much every single element on
+    // insertion into the document and UpdateState can be slow for
+    // some kinds of elements even when not notifying.
+    if (IsEditable()) {
+      RemoveStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
+      AddStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
     } else {
-      // Avoid calling UpdateState in this very common case, because
-      // this gets called for pretty much every single element on
-      // insertion into the document and UpdateState can be slow for
-      // some kinds of elements even when not notifying.
-      if (oldEditable) {
-        RemoveStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
-        AddStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
-      } else {
-        RemoveStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
-        AddStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
-      }
+      RemoveStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
+      AddStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
     }
   }
 }

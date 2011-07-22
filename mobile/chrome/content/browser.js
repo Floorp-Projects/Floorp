@@ -2527,7 +2527,7 @@ var ContentCrashObserver = {
         } catch (x) {
           dump (x);
         }
-        self.CrashSubmit.submit(dumpID, Elements.stack, null, null);
+        self.CrashSubmit.submit(dumpID);
       }
     }, 0, this);
   }

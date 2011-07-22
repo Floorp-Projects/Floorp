@@ -47,10 +47,7 @@ DEFINES += -DAB_CD=$(AB_CD)
 
 include $(topsrcdir)/config/rules.mk
 
-PATTERN_FILES = $(strip $(wildcard $(LOCALE_SRCDIR)/hyphenation/*.dic))
-ifneq ($(AB_CD),en-US)
-PATTERN_FILES += $(strip $(wildcard $(srcdir)/en-US/hyphenation/*.dic))
-endif
+PATTERN_FILES = $(strip $(wildcard $(srcdir)/*/hyphenation/*.dic))
 
 ifneq (,$(PATTERN_FILES))
 libs::
