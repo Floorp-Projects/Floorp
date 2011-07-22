@@ -104,10 +104,10 @@ ReportMoreArgsNeeded(JSContext *cx, const char *name, uintN required)
     return false;
 }
 
-#define REQUIRE_ARGC(name, n) \
-    JS_BEGIN_MACRO \
-        if (argc < (n)) \
-            return ReportMoreArgsNeeded(cx, name, n); \
+#define REQUIRE_ARGC(name, n)                                                 \
+    JS_BEGIN_MACRO                                                            \
+        if (argc < (n))                                                       \
+            return ReportMoreArgsNeeded(cx, name, n);                         \
     JS_END_MACRO
 
 bool
@@ -155,8 +155,8 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 /*** Breakpoints *********************************************************************************/
 
 BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
-    : script(script), pc(pc), realOpcode(JSOp(*pc)), scriptObject(NULL), enabledCount(0),
-      trapHandler(NULL), trapClosure(UndefinedValue())
+  : script(script), pc(pc), realOpcode(JSOp(*pc)), scriptObject(NULL), enabledCount(0),
+    trapHandler(NULL), trapClosure(UndefinedValue())
 {
     JS_ASSERT(realOpcode != JSOP_TRAP);
     JS_INIT_CLIST(&breakpoints);

@@ -506,9 +506,7 @@ struct JSRuntime {
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        globalDebugHooks;
 
-    /*
-     * Right now, we only support runtime-wide debugging.
-     */
+    /* If true, new compartments are initially in debug mode. */
     bool                debugMode;
 
 #ifdef JS_TRACER
@@ -551,10 +549,9 @@ struct JSRuntime {
     PRCondVar           *stateChange;
 
     /*
-     * Lock serializing watchPointList accesses, and count of all
-     * mutations to watchPointList made by debugger threads.  To
-     * keep the code simple, we define debuggerMutations for the thread-unsafe
-     * case too.
+     * Lock serializing watchPointList accesses, and count of all mutations to
+     * watchPointList made by debugger threads.  To keep the code simple, we
+     * define debuggerMutations for the thread-unsafe case too.
      */
     PRLock              *debuggerLock;
 

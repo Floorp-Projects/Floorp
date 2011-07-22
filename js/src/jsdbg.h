@@ -376,6 +376,7 @@ class BreakpointSite {
     BreakpointSite(JSScript *script, jsbytecode *pc);
     Breakpoint *firstBreakpoint() const;
     bool hasBreakpoint(Breakpoint *bp);
+    bool hasTrap() const { return !!trapHandler; }
 
     bool inc(JSContext *cx);
     void dec(JSContext *cx);
