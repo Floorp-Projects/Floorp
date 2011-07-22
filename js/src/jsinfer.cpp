@@ -5204,8 +5204,12 @@ TypeSet::sweep(JSContext *cx, JSCompartment *compartment)
         }
     }
 
-    /* All constraints are allocated from the pool wiped out on each GC. */
+    /*
+     * All constraints are wiped out on each GC, including those propagating
+     * into this type set from prototype properties.
+     */
     constraintList = NULL;
+    flags &= ~TYPE_FLAG_PROPAGATED_PROPERTY;
 }
 
 inline void
