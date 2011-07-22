@@ -163,6 +163,13 @@ MKDIR ?= mkdir
 SLEEP ?= sleep
 TOUCH ?= touch
 
+ifndef .PYMAKE
+PYTHONPATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py
+else
+PYCOMMANDPATH += $(topsrcdir)/config
+PYTHONPATH = %pythonpath main
+endif
+
 # determine debug-related options
 _DEBUG_CFLAGS :=
 _DEBUG_LDFLAGS :=
