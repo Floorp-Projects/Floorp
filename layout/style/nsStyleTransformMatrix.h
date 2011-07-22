@@ -90,12 +90,12 @@ class nsStyleTransformMatrix
    * The same as MatrixForTransformFunction, but for a list of transform
    * functions.
    */
-  static gfxMatrix ReadTransforms(const nsCSSValueList* aList,
-                                  nsStyleContext* aContext,
-                                  nsPresContext* aPresContext,
-                                  PRBool &aCanStoreInRuleTree,
-                                  nsRect& aBounds,
-                                  float aAppUnitsPerMatrixUnit);
+  static gfx3DMatrix ReadTransforms(const nsCSSValueList* aList,
+                                    nsStyleContext* aContext,
+                                    nsPresContext* aPresContext,
+                                    PRBool &aCanStoreInRuleTree,
+                                    nsRect& aBounds,
+                                    float aAppUnitsPerMatrixUnit);
 
  private:
   static gfx3DMatrix ProcessMatrix(const nsCSSValue::Array *aData,

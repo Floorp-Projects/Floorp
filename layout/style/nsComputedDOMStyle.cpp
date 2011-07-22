@@ -965,8 +965,6 @@ nsComputedDOMStyle::DoGetMozTransform()
   /* Otherwise, we need to compute the current value of the transform matrix,
    * store it in a string, and hand it back to the caller.
    */
-  nsAutoString resultString(NS_LITERAL_STRING("matrix("));
-
 
   /* Use the inner frame for width and height.  If we fail, assume zero.
    * TODO: There is no good way for us to represent the case where there's no
@@ -982,7 +980,7 @@ nsComputedDOMStyle::DoGetMozTransform()
      nsRect(0, 0, 0, 0));
 
    PRBool dummy;
-   gfxMatrix matrix =
+   gfx3DMatrix matrix =
      nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform,
                                             mStyleContextHolder,
                                             mStyleContextHolder->PresContext(),
@@ -990,17 +988,26 @@ nsComputedDOMStyle::DoGetMozTransform()
                                             bounds,
                                             float(nsDeviceContext::AppUnitsPerCSSPixel()));
 
-  resultString.AppendFloat(matrix.xx);
+  if (!matrix.Is2D()) {
+    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+    /* Set it to "none." */
+    val->SetIdent(eCSSKeyword_none);
+    return val;
+  }
+
+  nsAutoString resultString(NS_LITERAL_STRING("matrix("));
+  resultString.AppendFloat(matrix._11);
   resultString.Append(NS_LITERAL_STRING(", "));
-  resultString.AppendFloat(matrix.yx);
+  resultString.AppendFloat(matrix._12);
   resultString.Append(NS_LITERAL_STRING(", "));
-  resultString.AppendFloat(matrix.xy);
+  resultString.AppendFloat(matrix._21);
   resultString.Append(NS_LITERAL_STRING(", "));
-  resultString.AppendFloat(matrix.yy);
+  resultString.AppendFloat(matrix._22);
   resultString.Append(NS_LITERAL_STRING(", "));
-  resultString.AppendFloat(matrix.x0);
+  resultString.AppendFloat(matrix._41);
   resultString.Append(NS_LITERAL_STRING("px, "));
-  resultString.AppendFloat(matrix.y0);
+  resultString.AppendFloat(matrix._42);
   resultString.Append(NS_LITERAL_STRING("px)"));
 
   /* Create a value to hold our result. */
