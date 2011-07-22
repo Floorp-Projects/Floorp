@@ -287,7 +287,7 @@ enum {
 
     /* If the property is definite, mask and shift storing the slot. */
     TYPE_FLAG_DEFINITE_MASK       = 0x0f000000,
-    TYPE_FLAG_DEFINITE_SHIFT      = 24,
+    TYPE_FLAG_DEFINITE_SHIFT      = 24
 };
 typedef uint32 TypeFlags;
 
