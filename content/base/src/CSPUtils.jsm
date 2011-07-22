@@ -126,7 +126,7 @@ function CSPPolicyURIListener(policyURI, docRequest, csp) {
   this._policy = "";              // contents fetched from policyURI
   this._wrapper = null;           // nsIScriptableInputStream
   this._docURI = docRequest.QueryInterface(Components.interfaces.nsIChannel)
-                 .originalURI;    // parent document URI (to be used as 'self')
+                 .URI;    // parent document URI (to be used as 'self')
 }
 
 CSPPolicyURIListener.prototype = {
