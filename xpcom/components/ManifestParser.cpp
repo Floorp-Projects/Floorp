@@ -76,8 +76,6 @@ struct ManifestDirective
 
   bool ischrome;
 
-  bool allowbootstrap;
-
   // The platform/contentaccessible flags only apply to content directives.
   bool contentflags;
 
@@ -94,31 +92,31 @@ struct ManifestDirective
   bool isContract;
 };
 static const ManifestDirective kParsingTable[] = {
-  { "manifest",         1, false, true, true, false,
+  { "manifest", 1, false, true, false,
     &nsComponentManagerImpl::ManifestManifest, NULL },
-  { "binary-component", 1, true, false, false, false,
+  { "binary-component", 1, true, false, false,
     &nsComponentManagerImpl::ManifestBinaryComponent, NULL },
-  { "interfaces",       1, true, false, false, false,
+  { "interfaces",       1, true, false, false,
     &nsComponentManagerImpl::ManifestXPT, NULL },
-  { "component",        2, true, false, false, false,
+  { "component",        2, true, false, false,
     &nsComponentManagerImpl::ManifestComponent, NULL },
-  { "contract",         2, true, false, false, false,
+  { "contract",         2, true, false, false,
     &nsComponentManagerImpl::ManifestContract, NULL, true},
-  { "category",         3, true, false, false, false,
+  { "category",         3, true, false, false,
     &nsComponentManagerImpl::ManifestCategory, NULL },
-  { "content",          2, true, true, true,  true,
+  { "content",          2, true, true,  true,
     NULL, &nsChromeRegistry::ManifestContent },
-  { "locale",           3, true, true, true,  false,
+  { "locale",           3, true, true,  false,
     NULL, &nsChromeRegistry::ManifestLocale },
-  { "skin",             3, false, true, true,  false,
+  { "skin",             3, false, true,  false,
     NULL, &nsChromeRegistry::ManifestSkin },
-  { "overlay",          2, true, true, false,  false,
+  { "overlay",          2, true, true,  false,
     NULL, &nsChromeRegistry::ManifestOverlay },
-  { "style",            2, false, true, false,  false,
+  { "style",            2, false, true,  false,
     NULL, &nsChromeRegistry::ManifestStyle },
-  { "override",         2, true, true, true,  false,
+  { "override",         2, true, true,  false,
     NULL, &nsChromeRegistry::ManifestOverride },
-  { "resource",         2, true, true, false,  false,
+  { "resource",         2, true, true,  false,
     NULL, &nsChromeRegistry::ManifestResource }
 };
 
@@ -452,7 +450,7 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
     rv = xapp->GetVersion(s);
     if (NS_SUCCEEDED(rv))
       CopyUTF8toUTF16(s, appVersion);
-
+    
     nsCOMPtr<nsIXULRuntime> xruntime (do_QueryInterface(xapp));
     if (xruntime) {
       rv = xruntime->GetOS(s);
@@ -540,22 +538,13 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
 	break;
       }
     }
-
     if (!directive) {
       LogMessageWithContext(aFile, aPath, line,
                             "Ignoring unrecognized chrome manifest directive '%s'.",
                             token);
       continue;
     }
-
-    if (!directive->allowbootstrap && NS_BOOTSTRAPPED_LOCATION == aType) {
-      LogMessageWithContext(aFile, aPath, line,
-                            "Bootstrapped manifest not allowed to use '%s' directive.",
-                            token);
-      continue;
-    }
-
-    if (directive->componentonly && NS_SKIN_LOCATION == aType) {
+    if (directive->componentonly && NS_COMPONENT_LOCATION != aType) {
       LogMessageWithContext(aFile, aPath, line,
                             "Skin manifest not allowed to use '%s' directive.",
                             token);
