@@ -559,7 +559,10 @@ struct LifetimeVariable
     Lifetime *saved;
 
     /* Jump preceding the basic block which killed this variable. */
-    uint32 savedEnd;
+    uint32 savedEnd : 31;
+
+    /* If the variable needs to be kept alive until lifetime->start. */
+    bool ensured : 1;
 
     /* Whether this variable is live at offset. */
     Lifetime * live(uint32 offset) const {
@@ -1168,6 +1171,7 @@ class ScriptAnalysis
     inline void killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
                              LifetimeVariable **&saved, unsigned &savedCount);
     inline void extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
+    inline void ensureVariable(LifetimeVariable &var, unsigned until);
 
     /* SSA helpers */
     bool makePhi(JSContext *cx, uint32 slot, uint32 offset, SSAValue *pv);

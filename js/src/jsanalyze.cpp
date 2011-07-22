@@ -863,6 +863,29 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
         if (loop && code->jumpTarget && offset != loop->entry && offset > loop->lastBlock)
             loop->lastBlock = offset;
 
+        if (code->exceptionEntry) {
+            unsigned tryOffset;
+            JSTryNote *tn = script->trynotes()->vector;
+            JSTryNote *tnlimit = tn + script->trynotes()->length;
+            for (; tn < tnlimit; tn++) {
+                unsigned startOffset = script->main - script->code + tn->start;
+                if (startOffset + tn->length == offset) {
+                    tryOffset = startOffset - 1;
+                    break;
+                }
+                JS_NOT_REACHED("Start of try block not found");
+            }
+
+            /*
+             * Extend all live variables at exception entry to the start of
+             * the try block.
+             */
+            for (unsigned i = 0; i < numSlots; i++) {
+                if (lifetimes[i].lifetime)
+                    ensureVariable(lifetimes[i], tryOffset);
+            }
+        }
+
         switch (op) {
           case JSOP_GETARG:
           case JSOP_CALLARG:
@@ -906,7 +929,6 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           case JSOP_LOOKUPSWITCHX:
           case JSOP_TABLESWITCH:
           case JSOP_TABLESWITCHX:
-          case JSOP_TRY:
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
                 LifetimeVariable &var = *saved[i];
@@ -920,6 +942,17 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 saved[i--] = saved[--savedCount];
             }
             savedCount = 0;
+            break;
+
+          case JSOP_TRY:
+            for (unsigned i = 0; i < numSlots; i++) {
+                LifetimeVariable &var = lifetimes[i];
+                if (var.ensured) {
+                    JS_ASSERT(var.lifetime);
+                    if (var.lifetime->start == offset)
+                        var.ensured = false;
+                }
+            }
             break;
 
           case JSOP_NEW:
@@ -1063,6 +1096,9 @@ ScriptAnalysis::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offse
                             LifetimeVariable **&saved, unsigned &savedCount)
 {
     if (var.lifetime) {
+        if (var.ensured)
+            return;
+
         JS_ASSERT(offset < var.lifetime->start);
         var.lifetime->start = offset;
     } else {
@@ -1102,6 +1138,10 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
         var.savedEnd = 0;
         return;
     }
+
+    if (var.ensured)
+        return;
+
     JS_ASSERT(offset < var.lifetime->start);
 
     /*
@@ -1124,6 +1164,16 @@ ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
                                unsigned start, unsigned end)
 {
     JS_ASSERT(var.lifetime);
+    if (var.ensured) {
+        /*
+         * If we are still ensured to be live, the try block must scope over
+         * the loop, in which case the variable is already guaranteed to be
+         * live for the entire loop.
+         */
+        JS_ASSERT(var.lifetime->start < start);
+        return;
+    }
+
     var.lifetime->start = start;
 
     /*
@@ -1191,6 +1241,15 @@ ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
             segment = segment->next;
         }
     }
+}
+
+inline void
+ScriptAnalysis::ensureVariable(LifetimeVariable &var, unsigned until)
+{
+    JS_ASSERT(var.lifetime);
+    JS_ASSERT(until < var.lifetime->start);
+    var.lifetime->start = until;
+    var.ensured = true;
 }
 
 void
