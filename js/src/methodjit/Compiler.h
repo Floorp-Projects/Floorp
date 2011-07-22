@@ -576,7 +576,7 @@ class Compiler : public BaseCompiler
     bool constantFoldBranch(jsbytecode *target, bool taken);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     bool iter(uintN flags);
-    void iterNext();
+    void iterNext(ptrdiff_t offset);
     bool iterMore(jsbytecode *target);
     void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID *fpReg, bool *allocated);
@@ -653,9 +653,6 @@ class Compiler : public BaseCompiler
     void emitEval(uint32 argc);
     void jsop_arguments(RejoinState rejoin);
     bool jsop_tableswitch(jsbytecode *pc);
-    void jsop_forprop(JSAtom *atom);
-    void jsop_forname(JSAtom *atom);
-    void jsop_forgname(JSAtom *atom);
 
     /* Fast arithmetic. */
     bool jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::TypeSet *typeSet);

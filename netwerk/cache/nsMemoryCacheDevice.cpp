@@ -307,6 +307,11 @@ nsMemoryCacheDevice::EntryIsTooBig(PRInt64 entrySize)
         return (entrySize > mSoftLimit || entrySize > mMaxEntrySize);
 }
 
+size_t
+nsMemoryCacheDevice::TotalSize()
+{
+    return mTotalSize;
+}
 
 nsresult
 nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)

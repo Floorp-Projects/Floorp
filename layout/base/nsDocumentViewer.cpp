@@ -110,7 +110,6 @@
 #include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
 #endif
-#include "nsPrintfCString.h"
 
 #include "nsIClipboardHelper.h"
 
@@ -122,7 +121,6 @@
 
 #include "nsIScrollableFrame.h"
 #include "nsIHTMLDocument.h"
-#include "nsITimelineService.h"
 #include "nsGfxCIID.h"
 #include "nsStyleSheetService.h"
 #include "nsURILoader.h"
@@ -195,6 +193,8 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 //switch to page layout
 #include "nsGfxCIID.h"
+
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
@@ -1068,22 +1068,6 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
       if (timing) {
         timing->NotifyLoadEventEnd();
       }
-#ifdef MOZ_TIMELINE
-      // if navigator.xul's load is complete, the main nav window is visible
-      // mark that point.
-
-      nsIURI *uri = mDocument ? mDocument->GetDocumentURI() : nsnull;
-
-      if (uri) {
-        //printf("DEBUG: getting spec for uri (%p)\n", uri.get());
-        nsCAutoString spec;
-        uri->GetSpec(spec);
-        if (spec.EqualsLiteral("chrome://navigator/content/navigator.xul") ||
-            spec.EqualsLiteral("chrome://browser/content/browser.xul")) {
-          NS_TIMELINE_MARK("Navigator Window visible now");
-        }
-      }
-#endif /* MOZ_TIMELINE */
     }
   } else {
     // XXX: Should fire error event to the document...

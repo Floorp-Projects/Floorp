@@ -627,6 +627,9 @@
           <richlistitem class="context-command" id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage();">
             <label value="&contextSaveImage.label;"/>
           </richlistitem>
+          <richlistitem class="context-command" id="context-copy-link" type="link" onclick="ContextCommands.copyLink();">
+            <label value="&contextCopyLink.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-share-link" type="link-shareable" onclick="ContextCommands.shareLink();">
             <label value="&contextShareLink.label;"/>
           </richlistitem>

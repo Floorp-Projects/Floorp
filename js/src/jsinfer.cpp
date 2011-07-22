@@ -1798,13 +1798,6 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
     else
         object->setFlagsFromKey(cx, key);
 
-    if (proto) {
-        /* Thread onto the prototype's list of instance type objects. */
-        TypeObject *prototype = proto->getType(cx);
-        if (prototype->unknownProperties())
-            object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
-    }
-
     return object;
 }
 
@@ -3054,31 +3047,6 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
     return script->types.initObject(cx, pc, isArray ? JSProto_Array : JSProto_Object);
 }
 
-inline void
-ScriptAnalysis::setForTypes(JSContext *cx, jsbytecode *pc, TypeSet *types)
-{
-    /* Find the initial ITER opcode which constructed the active iterator. */
-    const SSAValue &iterv = poppedValue(pc, 0);
-    jsbytecode *iterpc = script->code + iterv.pushedOffset();
-    JS_ASSERT(JSOp(*iterpc) == JSOP_ITER || JSOp(*iterpc) == JSOP_TRAP);
-
-    uintN flags = iterpc[1];
-    if (flags & JSITER_FOREACH) {
-        types->addType(cx, Type::UnknownType());
-        return;
-    }
-
-    /*
-     * This is a plain 'for in' loop. The value bound is a string, unless the
-     * iterated object is a generator or has an __iterator__ hook, which we'll
-     * detect dynamically.
-     */
-    types->addType(cx, Type::StringType());
-
-    pushedTypes(iterpc, 0)->add(cx,
-        ArenaNew<TypeConstraintGenerator>(cx->compartment->pool, types));
-}
-
 /* Analyze type information for a single bytecode. */
 bool
 ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
@@ -3733,14 +3701,44 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
          */
         break;
 
-      case JSOP_ITER:
+      case JSOP_ITER: {
         /*
-         * The actual pushed value is an iterator object, which we don't care about.
-         * Propagate the target of the iteration itself so that we'll be able to detect
-         * when an object of Iterator class flows to the JSOP_FOR* opcode, which could
-         * be a generator that produces arbitrary values with 'for in' syntax.
+         * Use a per-script type set to unify the possible target types of all
+         * 'for in' or 'for each' loops in the script. We need to mark the
+         * value pushed by the ITERNEXT appropriately, but don't track the SSA
+         * information to connect that ITERNEXT with the appropriate ITER.
+         * This loses some precision when a script mixes 'for in' and
+         * 'for each' loops together, oh well.
          */
-        poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
+        if (!state.forTypes) {
+          state.forTypes = TypeSet::make(cx, "forTypes");
+          if (!state.forTypes)
+              return false;
+        }
+        poppedTypes(pc, 0)->addSubset(cx, state.forTypes);
+
+        if (pc[1] & JSITER_FOREACH)
+            state.forTypes->addType(cx, Type::UnknownType());
+
+        /*
+         * Feed any types from the pushed type set into the forTypes. If a
+         * custom __iterator__ hook is added it will appear as an unknown
+         * value pushed by this opcode.
+         */
+        pushed[0].addSubset(cx, state.forTypes);
+
+        break;
+      }
+
+      case JSOP_ITERNEXT:
+        /*
+         * The value bound is a string, unless this is a 'for each' loop or the
+         * iterated object is a generator or has an __iterator__ hook, which
+         * we'll detect dynamically.
+         */
+        pushed[0].addType(cx, Type::StringType());
+        state.forTypes->add(cx,
+            ArenaNew<TypeConstraintGenerator>(cx->compartment->pool, &pushed[0]));
         break;
 
       case JSOP_MOREITER:
@@ -3748,40 +3746,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         pushed[1].addType(cx, Type::BooleanType());
         break;
 
-      case JSOP_FORGNAME: {
-        jsid id = GetAtomId(cx, script, pc, 0);
-        TypeObject *global = script->global()->getType(cx);
-        if (!global->unknownProperties()) {
-            TypeSet *types = global->getProperty(cx, id, true);
-            if (!types)
-                return false;
-            setForTypes(cx, pc, types);
-        }
-        break;
-      }
-
-      case JSOP_FORNAME:
-        cx->compartment->types.monitorBytecode(cx, script, offset);
-        break;
-
-      case JSOP_FORARG:
-      case JSOP_FORLOCAL: {
-        uint32 slot = GetBytecodeSlot(script, pc);
-        if (trackSlot(slot)) {
-            setForTypes(cx, pc, &pushed[1]);
-        } else {
-            if (slot < TotalSlots(script))
-                setForTypes(cx, pc, script->types.slotTypes(slot));
-        }
-        break;
-      }
-
-      case JSOP_FORELEM:
-        poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
-        pushed[1].addType(cx, Type::UnknownType());
-        break;
-
-      case JSOP_FORPROP:
       case JSOP_ENUMELEM:
       case JSOP_ENUMCONSTELEM:
       case JSOP_ARRAYPUSH:
@@ -4855,13 +4819,8 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
         return true;
 
       /* We don't keep track of the iteration state for 'for in' or 'for each in' loops. */
-      case JSOP_FORNAME:
-      case JSOP_FORGNAME:
-      case JSOP_FORLOCAL:
-      case JSOP_FORARG:
-      case JSOP_FORPROP:
-      case JSOP_FORELEM:
       case JSOP_ITER:
+      case JSOP_ITERNEXT:
       case JSOP_MOREITER:
       case JSOP_ENDITER:
         return true;
@@ -5121,6 +5080,9 @@ JSObject::makeLazyType(JSContext *cx)
         type->markUnknown(cx);
 #endif
 
+    if (clasp->ext.equality)
+        type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
+
     if (type->unknownProperties()) {
         type_ = type;
         flags &= ~LAZY_TYPE;
@@ -5131,9 +5093,6 @@ JSObject::makeLazyType(JSContext *cx)
     type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY
                 |  OBJECT_FLAG_NON_PACKED_ARRAY
                 |  OBJECT_FLAG_NON_TYPED_ARRAY;
-
-    if (hasSpecialEquality())
-        type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
     type_ = type;
     flags &= ~LAZY_TYPE;
@@ -5178,6 +5137,9 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool unknown)
     if (isXML() && !type->unknownProperties())
         type->flags |= OBJECT_FLAG_UNKNOWN_MASK;
 #endif
+
+    if (clasp->ext.equality)
+        type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
     /*
      * The new type is not present in any type sets, so mark the object as

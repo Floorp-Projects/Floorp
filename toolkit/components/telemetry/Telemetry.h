@@ -40,6 +40,7 @@
 #define Telemetry_h__
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/AutoRestore.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -64,9 +65,10 @@ void Accumulate(ID id, PRUint32 sample);
 template<ID id>
 class AutoTimer {
 public:
-  AutoTimer():
-    start(TimeStamp::Now())
+  AutoTimer(MOZILLA_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+    : start(TimeStamp::Now())
   {
+    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
   ~AutoTimer() {
@@ -75,6 +77,7 @@ public:
 
 private:
   const TimeStamp start;
+  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 } // namespace Telemetry
 } // namespace mozilla

@@ -88,7 +88,11 @@ include $(topsrcdir)/config/rules.mk
 
 GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+ifndef MOZ_BUILD_DATE
 APP_BUILDID = $(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid)
+else
+APP_BUILDID = $(MOZ_BUILD_DATE)
+endif
 APP_ICON = mobile
 APP_SPLASH = splash
 
@@ -150,9 +154,9 @@ endif
 
 libs repackage:: application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%APP_BINARY%/$(APP_BINARY)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)

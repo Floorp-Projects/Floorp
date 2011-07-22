@@ -1645,25 +1645,9 @@ mjit::Compiler::generateMethod()
             }
           END_CASE(JSOP_ARGUMENTS)
 
-          BEGIN_CASE(JSOP_FORARG)
-          {
-            uint32 arg = GET_SLOTNO(PC);
-            iterNext();
-            frame.storeArg(arg, true);
-            frame.pop();
-            updateVarType();
-          }
-          END_CASE(JSOP_FORARG)
-
-          BEGIN_CASE(JSOP_FORLOCAL)
-          {
-            uint32 slot = GET_SLOTNO(PC);
-            iterNext();
-            frame.storeLocal(slot, true);
-            frame.pop();
-            updateVarType();
-          }
-          END_CASE(JSOP_FORLOCAL)
+          BEGIN_CASE(JSOP_ITERNEXT)
+            iterNext(GET_INT8(PC));
+          END_CASE(JSOP_ITERNEXT)
 
           BEGIN_CASE(JSOP_DUP)
             frame.dup();
@@ -2291,24 +2275,6 @@ mjit::Compiler::generateMethod()
             if (!jsop_localinc(op, GET_SLOTNO(PC)))
                 return Compile_Retry;
           END_CASE(JSOP_LOCALDEC)
-
-          BEGIN_CASE(JSOP_FORNAME)
-            jsop_forname(script->getAtom(fullAtomIndex(PC)));
-          END_CASE(JSOP_FORNAME)
-
-          BEGIN_CASE(JSOP_FORGNAME)
-            jsop_forgname(script->getAtom(fullAtomIndex(PC)));
-          END_CASE(JSOP_FORGNAME)
-
-          BEGIN_CASE(JSOP_FORPROP)
-            jsop_forprop(script->getAtom(fullAtomIndex(PC)));
-          END_CASE(JSOP_FORPROP)
-
-          BEGIN_CASE(JSOP_FORELEM)
-            // This opcode is for the decompiler; it is succeeded by an
-            // ENUMELEM, which performs the actual array store.
-            iterNext();
-          END_CASE(JSOP_FORELEM)
 
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(script->getAtom(fullAtomIndex(PC)), true);
@@ -4799,7 +4765,9 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
         if (!testSingletonProperty(object->proto, id))
             return false;
 
-        types::TypeSet *protoTypes = object->proto->getType(cx)->getProperty(cx, id, false);
+        if (object->proto->getType(cx)->unknownProperties())
+            return false;
+        types::TypeSet *protoTypes = object->proto->type()->getProperty(cx, id, false);
         if (!protoTypes)
             return false;
         JSObject *singleton = protoTypes->getSingleton(cx);
@@ -5496,13 +5464,13 @@ mjit::Compiler::iter(uintN flags)
 }
 
 /*
- * This big nasty function emits a fast-path for native iterators, producing
- * a temporary value on the stack for FORLOCAL,ARG,GLOBAL,etc ops to use.
+ * This big nasty function implements JSOP_ITERNEXT, which is used in the head
+ * of a for-in loop to put the next value on the stack.
  */
 void
-mjit::Compiler::iterNext()
+mjit::Compiler::iterNext(ptrdiff_t offset)
 {
-    FrameEntry *fe = frame.peek(-1);
+    FrameEntry *fe = frame.peek(-offset);
     RegisterID reg = frame.tempRegForData(fe);
 
     /* Is it worth trying to pin this longer? Prolly not. */
@@ -5546,6 +5514,7 @@ mjit::Compiler::iterNext()
     frame.freeReg(T2);
 
     stubcc.leave();
+    stubcc.masm.move(Imm32(offset), Registers::ArgReg1);
     OOL_STUBCALL(stubs::IterNext, REJOIN_NONE);
 
     frame.pushUntypedPayload(JSVAL_TYPE_STRING, T3);
@@ -6680,67 +6649,6 @@ mjit::Compiler::jsop_callelem_slow()
 }
 
 void
-mjit::Compiler::jsop_forprop(JSAtom *atom)
-{
-    // Before: ITER OBJ
-    // After:  ITER OBJ ITER
-    frame.dupAt(-2);
-
-    // Before: ITER OBJ ITER 
-    // After:  ITER OBJ ITER VALUE
-    iterNext();
-
-    // Before: ITER OBJ ITER VALUE
-    // After:  ITER OBJ VALUE
-    frame.shimmy(1);
-
-    // Before: ITER OBJ VALUE
-    // After:  ITER VALUE
-    jsop_setprop(atom, false, true);
-
-    // Before: ITER VALUE
-    // After:  ITER
-    frame.pop();
-}
-
-void
-mjit::Compiler::jsop_forname(JSAtom *atom)
-{
-    // Before: ITER
-    // After:  ITER SCOPEOBJ
-    jsop_bindname(atom, false);
-    jsop_forprop(atom);
-}
-
-void
-mjit::Compiler::jsop_forgname(JSAtom *atom)
-{
-    // Before: ITER
-    // After:  ITER GLOBAL
-    jsop_bindgname();
-
-    // Before: ITER GLOBAL
-    // After:  ITER GLOBAL ITER
-    frame.dupAt(-2);
-
-    // Before: ITER GLOBAL ITER 
-    // After:  ITER GLOBAL ITER VALUE
-    iterNext();
-
-    // Before: ITER GLOBAL ITER VALUE
-    // After:  ITER GLOBAL VALUE
-    frame.shimmy(1);
-
-    // Before: ITER GLOBAL VALUE
-    // After:  ITER VALUE
-    jsop_setgname(atom, false, true);
-
-    // Before: ITER VALUE
-    // After:  ITER
-    frame.pop();
-}
-
-void
 mjit::Compiler::jsop_toid()
 {
     /*
@@ -6858,31 +6766,7 @@ mjit::Compiler::updateVarType()
      * (see prepareInferenceTypes).
      */
 
-    types::TypeSet *types = NULL;
-    switch (JSOp(*PC)) {
-      case JSOP_SETARG:
-      case JSOP_SETLOCAL:
-      case JSOP_SETLOCALPOP:
-      case JSOP_DEFLOCALFUN:
-      case JSOP_DEFLOCALFUN_FC:
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC:
-        types = pushedTypeSet(0);
-        break;
-      case JSOP_FORARG:
-      case JSOP_FORLOCAL:
-        types = pushedTypeSet(1);
-        break;
-      default:
-        JS_NOT_REACHED("Bad op");
-    }
-
+    types::TypeSet *types = pushedTypeSet(0);
     uint32 slot = GetBytecodeSlot(script, PC);
 
     if (analysis->trackSlot(slot)) {

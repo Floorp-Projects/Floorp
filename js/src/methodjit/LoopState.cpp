@@ -1816,17 +1816,8 @@ LoopState::analyzeLoopBody(unsigned frame)
             break;
           }
 
-          case JSOP_INCELEM:
-          case JSOP_DECELEM:
-          case JSOP_ELEMINC:
-          case JSOP_ELEMDEC:
           case JSOP_ENUMELEM:
           case JSOP_ENUMCONSTELEM:
-          case JSOP_INCPROP:
-          case JSOP_DECPROP:
-          case JSOP_PROPINC:
-          case JSOP_PROPDEC:
-          case JSOP_FORPROP:
             unknownModset = true;
             break;
 

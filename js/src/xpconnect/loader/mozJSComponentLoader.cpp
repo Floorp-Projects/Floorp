@@ -96,6 +96,8 @@
 
 #include "mozilla/FunctionTimer.h"
 
+using namespace mozilla::scache;
+
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
@@ -855,7 +857,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     StartupCache* cache = StartupCache::GetSingleton();
 
     nsCAutoString cachePath(kJSCachePrefix);
-    rv = NS_PathifyURI(aURI, cachePath);
+    rv = PathifyURI(aURI, cachePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (cache) {

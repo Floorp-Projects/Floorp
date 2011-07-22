@@ -288,7 +288,6 @@ ExtendedDef(jsbytecode *pc)
       case JSOP_DECARG:
       case JSOP_ARGINC:
       case JSOP_ARGDEC:
-      case JSOP_FORARG:
       case JSOP_SETLOCAL:
       case JSOP_SETLOCALPOP:
       case JSOP_DEFLOCALFUN:
@@ -297,7 +296,6 @@ ExtendedDef(jsbytecode *pc)
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC:
-      case JSOP_FORLOCAL:
         return true;
       default:
         return false;
@@ -432,7 +430,6 @@ static inline uint32 GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_DECARG:
       case JSOP_ARGINC:
       case JSOP_ARGDEC:
-      case JSOP_FORARG:
         return ArgSlot(GET_SLOTNO(pc));
 
       case JSOP_GETLOCAL:
@@ -445,7 +442,6 @@ static inline uint32 GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC:
-      case JSOP_FORLOCAL:
         return LocalSlot(script, GET_SLOTNO(pc));
 
       case JSOP_THIS:
@@ -1040,17 +1036,11 @@ class ScriptAnalysis
             } else {
                 /*
                  * Results of intermediate assignments have the same type as
-                 * the first type pushed by the assignment op, except FOR* ops
-                 * which push the iterator first. Note that this may not be the
-                 * exact same value as was pushed, due to post-inc/dec ops.
+                 * the first type pushed by the assignment op. Note that this
+                 * may not be the exact same value as was pushed, due to
+                 * post-inc/dec ops.
                  */
-                switch (script->code[v.varOffset()]) {
-                  case JSOP_FORARG:
-                  case JSOP_FORLOCAL:
-                    return pushedTypes(v.varOffset(), 1);
-                  default:
-                    return pushedTypes(v.varOffset(), 0);
-                }
+                return pushedTypes(v.varOffset(), 0);
             }
           case SSAValue::PHI:
             return &v.phiNode()->types;
@@ -1196,8 +1186,9 @@ class ScriptAnalysis
         Vector<SSAPhiNode *> phiNodes;
         bool hasGetSet;
         bool hasHole;
+        types::TypeSet *forTypes;
         TypeInferenceState(JSContext *cx)
-            : phiNodes(cx), hasGetSet(false), hasHole(false)
+            : phiNodes(cx), hasGetSet(false), hasHole(false), forTypes(NULL)
         {}
     };
 
@@ -1205,7 +1196,6 @@ class ScriptAnalysis
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
     bool followEscapingArguments(JSContext *cx, const SSAValue &v, Vector<SSAValue> *seen);
     bool followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen);
-    inline void setForTypes(JSContext *cx, jsbytecode *pc, types::TypeSet *types);
 };
 
 /* Protect analysis structures from GC while they are being used. */
