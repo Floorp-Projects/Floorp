@@ -659,6 +659,7 @@ struct nsCSSValueList {
   ~nsCSSValueList();
 
   nsCSSValueList* Clone() const;  // makes a deep copy
+  void CloneInto(nsCSSValueList* aList) const; // makes a deep copy into aList
   void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
 
   bool operator==(nsCSSValueList const& aOther) const;
