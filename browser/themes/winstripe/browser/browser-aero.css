@@ -13,9 +13,9 @@
 
   #appmenu-button {
     border-width: 2px;
-    -moz-border-left-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
-    -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
-    -moz-border-right-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
+    -moz-border-left-colors: @appMenuButtonBorderColor@;
+    -moz-border-bottom-colors: @appMenuButtonBorderColor@;
+    -moz-border-right-colors: @appMenuButtonBorderColor@;
     margin-bottom: 1px; /* compensate white outer border */
     box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
                 0 0 2px 1px rgba(255,255,255,.25) inset;
@@ -136,6 +136,13 @@
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
     border-left-style: none !important;
     border-right-style: none !important;
+  }
+
+  #toolbar-menubar :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #TabsToolbar[tabsontop=true] :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > #nav-bar :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon:not(:-moz-lwtheme) {
+    list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
   }
 
   /* Vertical toolbar border */
