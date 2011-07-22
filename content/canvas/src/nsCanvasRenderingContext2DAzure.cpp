@@ -3741,39 +3741,17 @@ nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (sw == 0.0 || sh == 0.0) {
-    // zero-sized source -- failure !?
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
   if (dw == 0.0 || dh == 0.0) {
     // not really failure, but nothing to do --
     // and noone likes a divide-by-zero
     return NS_OK;
   }
 
-  // Handle negative sw, sh, dw and dh by flipping the rectangle over in the
-  // relevant direction.
-  if (sw < 0.0) {
-    sx += sw;
-    sw = -sw;
-  }
-  if (sh < 0.0) {
-    sy += sh;
-    sh = -sh;
-  }
-  if (dw < 0.0) {
-    dx += dw;
-    dw = -dw;
-  }
-  if (dh < 0.0) {
-    dy += dh;
-    dh = -dh;
-  }
-
-  // Checking source image boundaries.
-  if (sx < 0 || sx + sw > (double) imgSize.width || 
-      sy < 0 || sy + sh > (double) imgSize.height) {
+  if (sx < 0.0 || sy < 0.0 ||
+      sw < 0.0 || sw > (double) imgSize.width ||
+      sh < 0.0 || sh > (double) imgSize.height ||
+      dw < 0.0 || dh < 0.0) {
+    // XXX - Unresolved spec issues here, for now return error.
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
