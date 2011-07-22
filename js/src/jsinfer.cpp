@@ -5200,7 +5200,7 @@ TypeSet::sweep(JSContext *cx, JSCompartment *compartment)
         TypeObjectKey *object = (TypeObjectKey *) objectSet;
         if (IsAboutToBeFinalized(cx, object)) {
             objectSet = NULL;
-            objectCount = 0;
+            setBaseObjectCount(0);
         }
     }
 
