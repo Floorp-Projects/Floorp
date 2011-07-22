@@ -220,7 +220,9 @@ class XPCShellTests(object):
     """
     # - NOTE: if you rename/add any of the constants set here, update
     #   do_load_child_test_harness() in head.js
-    self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-r', self.httpdManifest, '-j', '-s'] + \
+    if not self.appPath:
+        self.appPath = self.xrePath
+    self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-a', self.appPath, '-r', self.httpdManifest, '-j', '-s'] + \
         ['-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
          '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
          '-f', os.path.join(self.testharnessdir, 'head.js')]
@@ -379,7 +381,7 @@ class XPCShellTests(object):
              '-e', 'const _HEAD_FILES = [%s];' % cmdH,
              '-e', 'const _TAIL_FILES = [%s];' % cmdT]
 
-  def runTests(self, xpcshell, xrePath=None, symbolsPath=None,
+  def runTests(self, xpcshell, xrePath=None, appPath=None, symbolsPath=None,
                manifest=None, testdirs=[], testPath=None,
                interactive=False, verbose=False, keepGoing=False, logfiles=True,
                thisChunk=1, totalChunks=1, debugger=None,
@@ -389,6 +391,7 @@ class XPCShellTests(object):
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
     |xrePath|, if provided, is the path to the XRE to use.
+    |appPath|, if provided, is the path to an application directory.
     |symbolsPath|, if provided is the path to a directory containing
       breakpad symbols for processing crashes in tests.
     |manifest|, if provided, is a file containing a list of
@@ -413,6 +416,7 @@ class XPCShellTests(object):
 
     self.xpcshell = xpcshell
     self.xrePath = xrePath
+    self.appPath = appPath
     self.symbolsPath = symbolsPath
     self.manifest = manifest
     self.testdirs = testdirs
@@ -577,6 +581,9 @@ class XPCShellOptions(OptionParser):
     OptionParser.__init__(self)
 
     addCommonOptions(self)
+    self.add_option("--app-path",
+                    type="string", dest="appPath", default=None,
+                    help="application directory (as opposed to XRE directory)")
     self.add_option("--interactive",
                     action="store_true", dest="interactive", default=False,
                     help="don't automatically run tests, drop to an xpcshell prompt")

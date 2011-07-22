@@ -76,6 +76,10 @@ typedef gfxPattern::GraphicsFilter GraphicsFilterType;
 typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
 typedef LayerManager::LayersBackend LayersBackend;
 
+// This is a cross-platform approximation to HANDLE, which we expect
+// to be typedef'd to void* or thereabouts.
+typedef uintptr_t WindowsHandle;
+
 // XXX there are out of place and might be generally useful.  Could
 // move to nscore.h or something.
 struct void_t {
