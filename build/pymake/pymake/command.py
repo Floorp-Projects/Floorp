@@ -105,9 +105,13 @@ class _MakeContext(object):
                                           makeflags=self.makeflags,
                                           makeoverrides=self.overrides,
                                           workdir=self.workdir,
-                                          context=self.context, env=self.env, makelevel=self.makelevel,
-                                          targets=self.targets, keepgoing=self.options.keepgoing,
-                                          silent=self.options.silent)
+                                          context=self.context,
+                                          env=self.env,
+                                          makelevel=self.makelevel,
+                                          targets=self.targets,
+                                          keepgoing=self.options.keepgoing,
+                                          silent=self.options.silent,
+                                          justprint=self.options.justprint)
 
             self.restarts += 1
 
@@ -189,6 +193,9 @@ def main(args, env, cwd, cb):
                       dest="printdir", default=True)
         op.add_option('-s', '--silent', action="store_true",
                       dest="silent", default=False)
+        op.add_option('-n', '--just-print', '--dry-run', '--recon',
+                      action="store_true",
+                      dest="justprint", default=False)
 
         options, arguments1 = op.parse_args(parsemakeflags(env))
         options, arguments2 = op.parse_args(args, values=options)
@@ -214,6 +221,9 @@ def main(args, env, cwd, cb):
         if options.silent:
             shortflags.append('s')
             options.printdir = False
+
+        if options.justprint:
+            shortflags.append('n')
 
         loglevel = logging.WARNING
         if options.verbose:

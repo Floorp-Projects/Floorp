@@ -1,4 +1,4 @@
-#T returncode: 1
+#T returncode: 2
 all:
 	mkdir newdir/subdir
 	test ! -d newdir/subdir
