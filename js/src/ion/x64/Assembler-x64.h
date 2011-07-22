@@ -47,7 +47,20 @@
 namespace js {
 namespace ion {
 
+static const Register rax = { JSC::X86Registers::eax };
 static const Register rcx = { JSC::X86Registers::ecx };
+static const Register rdx = { JSC::X86Registers::edx };
+static const Register r8  = { JSC::X86Registers::r8  };
+static const Register r9  = { JSC::X86Registers::r9  };
+static const Register r10 = { JSC::X86Registers::r10 };
+static const Register r11 = { JSC::X86Registers::r11 };
+static const Register r12 = { JSC::X86Registers::r12 };
+static const Register r13 = { JSC::X86Registers::r13 };
+static const Register r14 = { JSC::X86Registers::r14 };
+static const Register r15 = { JSC::X86Registers::r15 };
+static const Register rdi = { JSC::X86Registers::edi };
+static const Register rsi = { JSC::X86Registers::esi };
+static const Register rbx = { JSC::X86Registers::ebx };
 static const Register rbp = { JSC::X86Registers::ebp };
 static const Register rsp = { JSC::X86Registers::esp };
 
@@ -56,6 +69,19 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
 static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
+
+// Different argument registers for WIN64
+#if defined(_WIN64)
+static const Register ArgReg1 = rcx;
+static const Register ArgReg2 = rdx;
+static const Register ArgReg3 = r8;
+static const Register ArgReg4 = r9;
+#else
+static const Register ArgReg1 = rdi;
+static const Register ArgReg2 = rsi;
+static const Register ArgReg3 = rdx;
+static const Register ArgReg4 = rcx;
+#endif
 
 class Operand
 {
@@ -117,67 +143,74 @@ namespace ion {
 class Assembler : public AssemblerX86Shared
 {
   public:
-      void movq(ImmWord word, const Register &dest) {
-          masm.movq_i64r(word.value, dest.code());
-      }
-      void movq(ImmGCPtr ptr, const Register &dest) {
-          masm.movq_i64r(ptr.value, dest.code());
-      }
-      void movq(const Operand &src, const Register &dest) {
-          switch (src.kind()) {
-            case Operand::REG:
-              masm.movq_rr(src.reg(), dest.code());
+    void movq(ImmWord word, const Register &dest) {
+        masm.movq_i64r(word.value, dest.code());
+    }
+    void movq(ImmGCPtr ptr, const Register &dest) {
+        masm.movq_i64r(ptr.value, dest.code());
+    }
+    void movq(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.movq_rr(src.reg(), dest.code());
               break;
             case Operand::REG_DISP:
               masm.movq_mr(src.disp(), src.base(), dest.code());
               break;
-            default:
-              JS_NOT_REACHED("unexpected operand kind");
-          }
-      }
-      void movq(const Register &src, const Operand &dest) {
-          switch (dest.kind()) {
-            case Operand::REG:
-              masm.movq_rr(src.code(), dest.reg());
-              break;
-            case Operand::REG_DISP:
-              masm.movq_rm(src.code(), dest.disp(), dest.base());
-              break;
-            default:
-              JS_NOT_REACHED("unexpected operand kind");
-          }
-      }
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void movq(const Register &src, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.movq_rr(src.code(), dest.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.movq_rm(src.code(), dest.disp(), dest.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
 
-      void addq(Imm32 imm, const Operand &dest) {
-          switch (dest.kind()) {
-            case Operand::REG:
-              masm.addq_ir(imm.value, dest.reg());
-              break;
-            case Operand::REG_DISP:
-              masm.addq_im(imm.value, dest.disp(), dest.base());
-              break;
-            default:
-              JS_NOT_REACHED("unexpected operand kind");
-          }
-      }
-      void subq(Imm32 imm, const Register &dest) {
-          masm.subq_ir(imm.value, dest.code());
-      }
-      void shlq(Imm32 imm, const Register &dest) {
-          masm.shlq_i8r(imm.value, dest.code());
-      }
-      void orq(const Operand &src, const Register &dest) {
-          switch (src.kind()) {
-            case Operand::REG:
-              masm.orq_rr(src.reg(), dest.code());
-              break;
-            case Operand::REG_DISP:
-              masm.orq_mr(src.disp(), src.base(), dest.code());
-              break;
-            default:
-              JS_NOT_REACHED("unexpected operand kind");
-          }
-      }
+    void addq(Imm32 imm, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.addq_ir(imm.value, dest.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.addq_im(imm.value, dest.disp(), dest.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void addq(const Register &src, const Register &dest) {
+        masm.addq_rr(src.code(), dest.code());
+    }
+
+    void subq(Imm32 imm, const Register &dest) {
+        masm.subq_ir(imm.value, dest.code());
+    }
+    void subq(const Register &src, const Register &dest) {
+        masm.subq_rr(src.code(), dest.code());
+    }
+    void shlq(Imm32 imm, const Register &dest) {
+        masm.shlq_i8r(imm.value, dest.code());
+    }
+    void orq(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.orq_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.orq_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
 
     void mov(const Imm32 &imm32, const Register &dest) {
         movq(ImmWord(imm32.value), dest);
@@ -188,6 +221,9 @@ class Assembler : public AssemblerX86Shared
     void mov(const Register &src, const Operand &dest) {
         movq(src, dest);
     }
+    void mov(const Register &src, const Register &dest) {
+        masm.movq_rr(src.code(), dest.code());
+    }
     void reserveStack(int32 amount) {
         if (amount)
             subq(Imm32(amount), rsp);
@@ -195,6 +231,36 @@ class Assembler : public AssemblerX86Shared
     void freeStack(int32 amount) {
         if (amount)
             addq(Imm32(amount), Operand(rsp));
+    }
+    // The below cmpq methods switch the lhs and rhs when it invokes the
+    // macroassembler to conform with intel standard.  When calling this
+    // function put the left operand on the left as you would expect.
+    void cmpq(const Operand &lhs, const Register &rhs) {
+        switch (lhs.kind()) {
+          case Operand::REG:
+            masm.cmpq_rr(rhs.code(), lhs.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.cmpq_rm(rhs.code(), lhs.disp(), lhs.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void cmpq(const Register &lhs, const Operand &rhs) {
+        switch (rhs.kind()) {
+          case Operand::REG:
+            masm.cmpq_rr(rhs.reg(), lhs.code());
+            break;
+          case Operand::REG_DISP:
+            masm.cmpq_mr(rhs.disp(), rhs.base(), lhs.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void cmpq(const Register &lhs, const Register &rhs) {
+        masm.cmpq_rr(rhs.code(), lhs.code());
     }
 };
 
