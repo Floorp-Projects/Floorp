@@ -184,7 +184,7 @@ GetCharacters(const NSString* aString)
 static const char*
 GetCharacters(const CFStringRef aString)
 {
-  NSString* str = reinterpret_cast<const NSString*>(aString);
+  const NSString* str = reinterpret_cast<const NSString*>(aString);
   return GetCharacters(str);
 }
 
