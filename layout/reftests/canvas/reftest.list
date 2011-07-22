@@ -65,4 +65,4 @@ random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is androi
 fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033
 == ctm-1.html ctm-1-ref.html
 
-== 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html
+fails-if(cocoaWidget) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
