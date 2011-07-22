@@ -13,9 +13,9 @@
 
   #appmenu-button {
     border-width: 2px;
-    -moz-border-left-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
-    -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
-    -moz-border-right-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
+    -moz-border-left-colors: @appMenuButtonBorderColor@;
+    -moz-border-bottom-colors: @appMenuButtonBorderColor@;
+    -moz-border-right-colors: @appMenuButtonBorderColor@;
     margin-bottom: 1px; /* compensate white outer border */
     box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
                 0 0 2px 1px rgba(255,255,255,.25) inset;
