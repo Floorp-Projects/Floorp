@@ -1757,12 +1757,6 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
-    AddTypePropertyId(cx, proto, JSID_VOID,                                    \
-                      types::Type::Int32Type());                               \
-    if (_typedArray::ArrayElementTypeMayBeDouble()) {                          \
-        AddTypePropertyId(cx, proto, JSID_VOID,                                \
-                          types::Type::DoubleType());                          \
-    }                                                                          \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \

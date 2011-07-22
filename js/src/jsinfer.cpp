@@ -2245,6 +2245,7 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
     code.typeBarriers = barrier;
 }
 
+#ifdef DEBUG
 static void
 PrintObjectCallback(JSContext *cx, void *data, void *thing,
                     size_t traceKind, size_t thingSize)
@@ -2252,6 +2253,7 @@ PrintObjectCallback(JSContext *cx, void *data, void *thing,
     TypeObject *object = (TypeObject *) thing;
     object->print(cx);
 }
+#endif
 
 void
 TypeCompartment::print(JSContext *cx)
@@ -2269,7 +2271,10 @@ TypeCompartment::print(JSContext *cx)
     }
 
 #ifdef DEBUG
-    IterateCells(cx, compartment, gc::FINALIZE_TYPE_OBJECT, NULL, PrintObjectCallback);
+    {
+        AutoUnlockGC unlock(cx->runtime);
+        IterateCells(cx, compartment, gc::FINALIZE_TYPE_OBJECT, NULL, PrintObjectCallback);
+    }
 #endif
 
     printf("Counts: ");
