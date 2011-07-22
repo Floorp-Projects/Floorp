@@ -494,7 +494,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:
-          case JSOP_FORNAME:
           case JSOP_QNAMEPART:
           case JSOP_QNAMECONST:
             checkAliasedName(cx, pc);
@@ -651,8 +650,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
           }
 
-          case JSOP_SETLOCAL:
-          case JSOP_FORLOCAL: {
+          case JSOP_SETLOCAL: {
             uint32 local = GET_SLOTNO(pc);
 
             /*
@@ -682,7 +680,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
           }
 
-          case JSOP_FORARG:
           case JSOP_SETARG:
           case JSOP_INCARG:
           case JSOP_DECARG:
@@ -882,9 +879,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           case JSOP_SETLOCAL:
           case JSOP_SETLOCALPOP:
           case JSOP_DEFLOCALFUN:
-          case JSOP_DEFLOCALFUN_FC:
-          case JSOP_FORARG:
-          case JSOP_FORLOCAL: {
+          case JSOP_DEFLOCALFUN_FC: {
             uint32 slot = GetBytecodeSlot(script, pc);
             if (!slotEscapes(slot))
                 killVariable(cx, lifetimes[slot], offset, saved, savedCount);
@@ -1456,8 +1451,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           case JSOP_SETLOCALPOP:
           case JSOP_DEFLOCALFUN:
           case JSOP_DEFLOCALFUN_FC:
-          case JSOP_FORARG:
-          case JSOP_FORLOCAL:
           case JSOP_INCARG:
           case JSOP_DECARG:
           case JSOP_ARGINC:
@@ -1471,8 +1464,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 mergeBranchTarget(cx, values[slot], slot, branchTargets);
                 values[slot].initWritten(slot, offset);
             }
-            if (op == JSOP_FORARG || op == JSOP_FORLOCAL)
-                stack[stackDepth - 1] = code->poppedValues[0];
             break;
           }
 
@@ -1500,16 +1491,9 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           /* Short circuit ops which push back one of their operands. */
 
           case JSOP_MOREITER:
-          case JSOP_FORELEM:
             stack[stackDepth - 2] = code->poppedValues[0];
             break;
 
-          case JSOP_FORNAME:
-          case JSOP_FORGNAME:
-            stack[stackDepth - 1] = code->poppedValues[0];
-            break;
-
-          case JSOP_FORPROP:
           case JSOP_INITPROP:
           case JSOP_INITMETHOD:
             stack[stackDepth - 1] = code->poppedValues[1];

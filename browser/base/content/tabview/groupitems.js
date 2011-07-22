@@ -86,6 +86,8 @@ function GroupItem(listOfEls, options) {
   this.keepProportional = false;
   this._frozenItemSizeData = {};
 
+  this._onChildClose = this._onChildClose.bind(this);
+
   // Variable: _activeTab
   // The <TabItem> for the groupItem's active tab.
   this._activeTab = null;
@@ -121,15 +123,6 @@ function GroupItem(listOfEls, options) {
   $container
     .css({zIndex: -100})
     .appendTo("body");
-
-  // ___ New Tab Button
-  this.$ntb = iQ("<div>")
-    .addClass('newTabButton')
-    .click(function() {
-      self.newTab();
-    })
-    .attr('title', tabviewString('groupItem.newTabButton'))
-    .appendTo($container);
 
   // ___ Resizer
   this.$resizer = iQ("<div>")
@@ -818,7 +811,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let shouldRemoveTabItems = [];
     let toClose = this._children.concat();
     toClose.forEach(function(child) {
-      child.removeSubscriber(self, "close");
+      child.removeSubscriber("close", self._onChildClose);
 
       let removed = child.close(true);
       if (removed) {
@@ -826,7 +819,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       } else {
         // child.removeSubscriber() must be called before child.close(), 
         // therefore we call child.addSubscriber() if the tab is not removed.
-        child.addSubscriber(self, "close", self._onChildClose.bind(self));
+        child.addSubscriber("close", self._onChildClose);
       }
     });
 
@@ -1009,7 +1002,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.droppable(false);
         item.groupItemData = {};
 
-        item.addSubscriber(this, "close", this._onChildClose.bind(this));
+        item.addSubscriber("close", this._onChildClose);
         item.setParent(this);
 
         if (typeof item.setResizable == 'function')
@@ -1110,7 +1103,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.setBounds(item.getBounds(), true, {force: true});
 
       item.droppable(true);
-      item.removeSubscriber(this, "close");
+      item.removeSubscriber("close", this._onChildClose);
 
       if (typeof item.setResizable == 'function')
         item.setResizable(true, options.immediately);
@@ -1658,9 +1651,45 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Helper routine for the constructor; adds various event handlers to the container.
   _addHandlers: function GroupItem__addHandlers(container) {
     let self = this;
+    let lastMouseDownTarget;
 
-    var dropIndex = false;
-    var dropSpaceTimer = null;
+    container.mousedown(function(e) {
+      let target = e.target;
+      // only set the last mouse down target if it is a left click, not on the
+      // close button, not on the new tab button, not on the title bar and its
+      // element
+      if (Utils.isLeftClick(e) &&
+          self.$closeButton[0] != target &&
+          self.$titlebar[0] != target &&
+          !self.$titlebar.contains(target) &&
+          !self.$appTabTray.contains(target)) {
+        lastMouseDownTarget = target;
+      } else {
+        lastMouseDownTarget = null;
+      }
+    });
+    container.mouseup(function(e) {
+      let same = (e.target == lastMouseDownTarget);
+      lastMouseDownTarget = null;
+
+      if (same && !self.isDragging) {
+        if (gBrowser.selectedTab.pinned &&
+            UI.getActiveTab() != self.getActiveTab() &&
+            self.getChildren().length > 0) {
+          UI.setActive(self, { dontSetActiveTabInGroup: true });
+          UI.goToTab(gBrowser.selectedTab);
+        } else {
+          let tabItem = self.getTopChild();
+          if (tabItem)
+            tabItem.zoomIn();
+          else
+            self.newTab();
+        }
+      }
+    });
+
+    let dropIndex = false;
+    let dropSpaceTimer = null;
 
     // When the _dropSpaceActive flag is turned on on a group, and a tab is
     // dragged on top, a space will open up.

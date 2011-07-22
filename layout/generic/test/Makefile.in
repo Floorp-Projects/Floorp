@@ -139,6 +139,7 @@ _CHROME_FILES = \
   window_selection_scrolling.html \
   test_bug670058.html \
   test_bug670508.html \
+  test_bug671319.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)

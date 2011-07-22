@@ -181,10 +181,13 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   PRUint32 &count = *_count;
   count = 0;
   SECCertificateUsage usages = 0;
-  SECStatus verifyResult;
-
+  int err = 0;
+  
 if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-  verifyResult =
+  // CERT_VerifyCertificateNow returns SECFailure unless the certificate is
+  // valid for all the given usages. Hoewver, we are only looking for the list
+  // of usages for which the cert *is* valid.
+  (void)
   CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE,
 			    certificateUsageSSLClient |
 			    certificateUsageSSLServer |
@@ -195,6 +198,7 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
 			    certificateUsageSSLCA |
 			    certificateUsageStatusResponder,
 			    NULL, &usages);
+  err = PR_GetError();
 }
 else {
   nsresult nsrv;
@@ -215,19 +219,12 @@ else {
   cvout[0].value.scalar.usages = 0;
   cvout[1].type = cert_po_end;
   
-  verifyResult =
   CERT_PKIXVerifyCert(mCert, certificateUsageCheckAllUsages,
                       survivingParams->GetRawPointerForNSS(),
                       cvout, NULL);
-
+  err = PR_GetError();
   usages = cvout[0].value.scalar.usages;
 }
-
-  if (verifyResult != SECSuccess) {
-    int err = PR_GetError();
-    verifyFailed(_verified, err);
-    return NS_OK;
-  }
 
   // The following list of checks must be < max_returned_out_array_size
   
@@ -254,6 +251,10 @@ else {
     nssComponent->SkipOcspOff();
   }
 
-  *_verified = nsNSSCertificate::VERIFIED_OK;
+  if (count == 0) {
+    verifyFailed(_verified, err);
+  } else {
+    *_verified = nsNSSCertificate::VERIFIED_OK;
+  }
   return NS_OK;
 }

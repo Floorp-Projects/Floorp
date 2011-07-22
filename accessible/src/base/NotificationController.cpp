@@ -45,6 +45,7 @@
 #include "nsEventShell.h"
 #include "nsTextAccessible.h"
 #include "TextUpdater.h"
+#include "mozilla/dom/Element.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,17 +259,9 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     if (ownerContent) {
       nsAccessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
-        if (mDocument->AppendChildDocument(childDoc)) {
-          // Fire reorder event to notify new accessible document has been
-          // attached to the tree.
-          nsRefPtr<AccEvent> reorderEvent =
-              new AccEvent(nsIAccessibleEvent::EVENT_REORDER, outerDocAcc,
-                           eAutoDetect, AccEvent::eCoalesceFromSameSubtree);
-          if (reorderEvent)
-            QueueEvent(reorderEvent);
-
+        if (mDocument->AppendChildDocument(childDoc))
           continue;
-        }
+
         outerDocAcc->RemoveChild(childDoc);
       }
 

@@ -405,10 +405,8 @@ Subscribable.prototype = {
   // ----------
   // Function: addSubscriber
   // The given callback will be called when the Subscribable fires the given event.
-  // The refObject is used to facilitate removal if necessary.
-  addSubscriber: function Subscribable_addSubscriber(refObject, eventName, callback) {
+  addSubscriber: function Subscribable_addSubscriber(eventName, callback) {
     try {
-      Utils.assertThrow(refObject, "refObject");
       Utils.assertThrow(typeof callback == "function", "callback must be a function");
       Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
@@ -423,28 +421,17 @@ Subscribable.prototype = {
     if (!this.subscribers[eventName])
       this.subscribers[eventName] = [];
 
-    var subs = this.subscribers[eventName];
-    var existing = subs.filter(function(element) {
-      return element.refObject == refObject;
-    });
-
-    if (existing.length) {
-      Utils.assert(existing.length == 1, 'should only ever be one');
-      existing[0].callback = callback;
-    } else {
-      subs.push({
-        refObject: refObject,
-        callback: callback
-      });
-    }
+    let subscribers = this.subscribers[eventName];
+    if (subscribers.indexOf(callback) == -1)
+      subscribers.push(callback);
   },
 
   // ----------
   // Function: removeSubscriber
-  // Removes the callback associated with refObject for the given event.
-  removeSubscriber: function Subscribable_removeSubscriber(refObject, eventName) {
+  // Removes the subscriber associated with the event for the given callback.
+  removeSubscriber: function Subscribable_removeSubscriber(eventName, callback) {
     try {
-      Utils.assertThrow(refObject, "refObject");
+      Utils.assertThrow(typeof callback == "function", "callback must be a function");
       Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
     } catch(e) {
@@ -455,9 +442,11 @@ Subscribable.prototype = {
     if (!this.subscribers || !this.subscribers[eventName])
       return;
 
-    this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
-      return element.refObject != refObject;
-    });
+    let subscribers = this.subscribers[eventName];
+    let index = subscribers.indexOf(callback);
+
+    if (index > -1)
+      subscribers.splice(index, 1);
   },
 
   // ----------
@@ -475,10 +464,10 @@ Subscribable.prototype = {
     if (!this.subscribers || !this.subscribers[eventName])
       return;
 
-    var subsCopy = this.subscribers[eventName].concat();
-    subsCopy.forEach(function(object) {
+    let subsCopy = this.subscribers[eventName].concat();
+    subsCopy.forEach(function (callback) {
       try {
-        object.callback(this, eventInfo);
+        callback(this, eventInfo);
       } catch(e) {
         Utils.log(e);
       }

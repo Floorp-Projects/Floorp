@@ -105,6 +105,7 @@
 
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
@@ -329,55 +330,6 @@ nsAccessible::Description(nsString& aDescription)
     aDescription.CompressWhitespace();
 }
 
-// mask values for ui.key.chromeAccess and ui.key.contentAccess
-#define NS_MODIFIER_SHIFT    1
-#define NS_MODIFIER_CONTROL  2
-#define NS_MODIFIER_ALT      4
-#define NS_MODIFIER_META     8
-
-// returns the accesskey modifier mask used in the given node's context
-// (i.e. chrome or content), or 0 if an error occurs
-static PRInt32
-GetAccessModifierMask(nsIContent* aContent)
-{
-  // use ui.key.generalAccessKey (unless it is -1)
-  switch (Preferences::GetInt("ui.key.generalAccessKey", -1)) {
-    case -1:                             break;
-    case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
-    case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
-    case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
-    case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
-    default:                             return 0;
-  }
-
-  // get the docShell to this DOMNode, return 0 on failure
-  nsCOMPtr<nsIDocument> document = aContent->GetCurrentDoc();
-  if (!document)
-    return 0;
-  nsCOMPtr<nsISupports> container = document->GetContainer();
-  if (!container)
-    return 0;
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
-  if (!treeItem)
-    return 0;
-
-  // determine the access modifier used in this context
-  nsresult rv = NS_ERROR_FAILURE;
-  PRInt32 itemType, accessModifierMask = 0;
-  treeItem->GetItemType(&itemType);
-  switch (itemType) {
-    case nsIDocShellTreeItem::typeChrome:
-      rv = Preferences::GetInt("ui.key.chromeAccess", &accessModifierMask);
-      break;
-
-    case nsIDocShellTreeItem::typeContent:
-      rv = Preferences::GetInt("ui.key.contentAccess", &accessModifierMask);
-      break;
-  }
-
-  return NS_SUCCEEDED(rv) ? accessModifierMask : 0;
-}
-
 NS_IMETHODIMP
 nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 {
@@ -386,6 +338,13 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  AccessKey().ToString(aAccessKey);
+  return NS_OK;
+}
+
+KeyBinding
+nsAccessible::AccessKey() const
+{
   PRUint32 key = nsCoreUtils::GetAccessKeyFor(mContent);
   if (!key && mContent->IsElement()) {
     nsAccessible* label = nsnull;
@@ -408,32 +367,54 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
   }
 
   if (!key)
-    return NS_OK;
+    return KeyBinding();
 
-  nsAutoString accesskey(key);
-
-  // Append the modifiers in reverse order, result: Control+Alt+Shift+Meta+<key>
-  nsAutoString propertyKey;
-  PRInt32 modifierMask = GetAccessModifierMask(mContent);
-  if (modifierMask & NS_MODIFIER_META) {
-    propertyKey.AssignLiteral("VK_META");
-    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-  }
-  if (modifierMask & NS_MODIFIER_SHIFT) {
-    propertyKey.AssignLiteral("VK_SHIFT");
-    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-  }
-  if (modifierMask & NS_MODIFIER_ALT) {
-    propertyKey.AssignLiteral("VK_ALT");
-    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-  }
-  if (modifierMask & NS_MODIFIER_CONTROL) {
-    propertyKey.AssignLiteral("VK_CONTROL");
-    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  // Get modifier mask. Use ui.key.generalAccessKey (unless it is -1).
+  switch (Preferences::GetInt("ui.key.generalAccessKey", -1)) {
+  case -1:
+    break;
+  case nsIDOMKeyEvent::DOM_VK_SHIFT:
+    return KeyBinding(key, KeyBinding::kShift);
+  case nsIDOMKeyEvent::DOM_VK_CONTROL:
+    return KeyBinding(key, KeyBinding::kControl);
+  case nsIDOMKeyEvent::DOM_VK_ALT:
+    return KeyBinding(key, KeyBinding::kAlt);
+  case nsIDOMKeyEvent::DOM_VK_META:
+    return KeyBinding(key, KeyBinding::kMeta);
+  default:
+    return KeyBinding();
   }
 
-  aAccessKey = accesskey;
-  return NS_OK;
+  // Determine the access modifier used in this context.
+  nsIDocument* document = mContent->GetCurrentDoc();
+  if (!document)
+    return KeyBinding();
+  nsCOMPtr<nsISupports> container = document->GetContainer();
+  if (!container)
+    return KeyBinding();
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+  if (!treeItem)
+    return KeyBinding();
+
+  nsresult rv = NS_ERROR_FAILURE;
+  PRInt32 itemType = 0, modifierMask = 0;
+  treeItem->GetItemType(&itemType);
+  switch (itemType) {
+    case nsIDocShellTreeItem::typeChrome:
+      rv = Preferences::GetInt("ui.key.chromeAccess", &modifierMask);
+      break;
+    case nsIDocShellTreeItem::typeContent:
+      rv = Preferences::GetInt("ui.key.contentAccess", &modifierMask);
+      break;
+  }
+
+  return NS_SUCCEEDED(rv) ? KeyBinding(key, modifierMask) : KeyBinding();
+}
+
+KeyBinding
+nsAccessible::KeyboardShortcut() const
+{
+  return KeyBinding();
 }
 
 NS_IMETHODIMP
@@ -601,22 +582,6 @@ nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aSt
     return NS_ERROR_FAILURE;
 
   aStringOut.Assign(xsValue);
-  return NS_OK;
-}
-
-nsresult nsAccessible::GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut)
-{
-  nsXPIDLString modifierName, separator;
-
-  if (!gKeyStringBundle ||
-      NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(aModifierName).get(), 
-                                                    getter_Copies(modifierName))) ||
-      NS_FAILED(gKeyStringBundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), 
-                                                    getter_Copies(separator)))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aStringOut = modifierName + separator + aKeyName; 
   return NS_OK;
 }
 
@@ -1788,6 +1753,10 @@ NS_IMETHODIMP
 nsAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 {
   aKeyBinding.Truncate();
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  KeyboardShortcut().ToString(aKeyBinding);
   return NS_OK;
 }
 
@@ -3358,4 +3327,80 @@ nsAccessible::GetLevelInternal()
   }
 
   return level;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// KeyBinding class
+
+void
+KeyBinding::ToPlatformFormat(nsAString& aValue) const
+{
+  nsCOMPtr<nsIStringBundle> keyStringBundle;
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+      mozilla::services::GetStringBundleService();
+  if (stringBundleService)
+    stringBundleService->CreateBundle(PLATFORM_KEYS_BUNDLE_URL,
+                                      getter_AddRefs(keyStringBundle));
+
+  if (!keyStringBundle)
+    return;
+
+  nsAutoString separator;
+  keyStringBundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(),
+                                     getter_Copies(separator));
+
+  nsAutoString modifierName;
+  if (mModifierMask & kControl) {
+    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_CONTROL").get(),
+                                       getter_Copies(modifierName));
+
+    aValue.Append(modifierName);
+    aValue.Append(separator);
+  }
+
+  if (mModifierMask & kAlt) {
+    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_ALT").get(),
+                                       getter_Copies(modifierName));
+
+    aValue.Append(modifierName);
+    aValue.Append(separator);
+  }
+
+  if (mModifierMask & kShift) {
+    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_SHIFT").get(),
+                                       getter_Copies(modifierName));
+
+    aValue.Append(modifierName);
+    aValue.Append(separator);
+  }
+
+  if (mModifierMask & kMeta) {
+    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_META").get(),
+                                       getter_Copies(modifierName));
+
+    aValue.Append(modifierName);
+    aValue.Append(separator);
+  }
+
+  aValue.Append(mKey);
+}
+
+void
+KeyBinding::ToAtkFormat(nsAString& aValue) const
+{
+  nsAutoString modifierName;
+  if (mModifierMask & kControl)
+    aValue.Append(NS_LITERAL_STRING("<Control>"));
+
+  if (mModifierMask & kAlt)
+    aValue.Append(NS_LITERAL_STRING("<Alt>"));
+
+  if (mModifierMask & kShift)
+    aValue.Append(NS_LITERAL_STRING("<Shift>"));
+
+  if (mModifierMask & kMeta)
+      aValue.Append(NS_LITERAL_STRING("<Meta>"));
+
+  aValue.Append(mKey);
 }

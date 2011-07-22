@@ -305,7 +305,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 #endif
   mInCGPaintLevel = 0;
   mSentInitialTopLevelWindowEvent = PR_FALSE;
-  mIOSurface = nsnull;
   mColorProfile = nsnull;
   mPluginPortChanged = PR_FALSE;
 #endif
@@ -1472,7 +1471,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
   if (!mIOSurface || 
       (mIOSurface->GetWidth() != (size_t)aWidth || 
        mIOSurface->GetHeight() != (size_t)aHeight)) {
-    delete mIOSurface;
+    mIOSurface = nsnull;
 
     // If the renderer is backed by an IOSurface, resize it as required.
     mIOSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
@@ -1483,9 +1482,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
         mCARenderer.AttachIOSurface(attachSurface);
       } else {
         NS_ERROR("IOSurface attachment failed");
-        delete attachSurface;
-        delete mIOSurface;
-        mIOSurface = NULL;
+        mIOSurface = nsnull;
       }
     }
   }
@@ -2499,7 +2496,6 @@ nsPluginInstanceOwner::Destroy()
 #endif
 #ifdef XP_MACOSX
   RemoveFromCARefreshTimer(this);
-  delete mIOSurface;
   if (mColorProfile)
     ::CGColorSpaceRelease(mColorProfile);  
 #endif

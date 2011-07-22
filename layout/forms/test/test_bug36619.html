@@ -26,6 +26,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=36619
 SimpleTest.waitForExplicitFinish();
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+var Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function MockFilePicker()

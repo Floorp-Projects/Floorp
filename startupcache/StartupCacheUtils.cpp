@@ -53,8 +53,8 @@ namespace mozilla {
 namespace scache {
 
 NS_EXPORT nsresult
-NS_NewObjectInputStreamFromBuffer(char* buffer, PRUint32 len, 
-                                  nsIObjectInputStream** stream)
+NewObjectInputStreamFromBuffer(char* buffer, PRUint32 len, 
+                               nsIObjectInputStream** stream)
 {
   nsCOMPtr<nsIStringInputStream> stringStream
     = do_CreateInstance("@mozilla.org/io/string-input-stream;1");
@@ -69,9 +69,9 @@ NS_NewObjectInputStreamFromBuffer(char* buffer, PRUint32 len,
 }
 
 NS_EXPORT nsresult
-NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
-                                       nsIStorageStream** stream,
-                                       PRBool wantDebugStream)
+NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
+                                    nsIStorageStream** stream,
+                                    PRBool wantDebugStream)
 {
   nsCOMPtr<nsIStorageStream> storageStream;
 
@@ -106,8 +106,8 @@ NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 }
 
 NS_EXPORT nsresult
-NS_NewBufferFromStorageStream(nsIStorageStream *storageStream, 
-                              char** buffer, PRUint32* len) 
+NewBufferFromStorageStream(nsIStorageStream *storageStream, 
+                           char** buffer, PRUint32* len) 
 {
   nsresult rv;
   nsCOMPtr<nsIInputStream> inputStream;
@@ -180,7 +180,7 @@ canonicalizeBase(nsCAutoString &spec,
  *     jsloader/$PROFILE_DIR/extensions/some.xpi/components/component.js
  */
 NS_EXPORT nsresult
-NS_PathifyURI(nsIURI *in, nsACString &out)
+PathifyURI(nsIURI *in, nsACString &out)
 {
     PRBool equals;
     nsresult rv;
@@ -240,7 +240,7 @@ NS_PathifyURI(nsIURI *in, nsACString &out)
             rv = jarURI->GetJARFile(getter_AddRefs(jarFileURI));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            rv = NS_PathifyURI(jarFileURI, out);
+            rv = PathifyURI(jarFileURI, out);
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCAutoString path;

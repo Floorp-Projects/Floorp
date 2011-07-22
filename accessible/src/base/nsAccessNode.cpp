@@ -76,7 +76,6 @@
  */
 
 nsIStringBundle *nsAccessNode::gStringBundle = 0;
-nsIStringBundle *nsAccessNode::gKeyStringBundle = 0;
 nsINode *nsAccessNode::gLastFocusedNode = nsnull;
 
 PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
@@ -210,8 +209,6 @@ void nsAccessNode::InitXPAccessibility()
     // Static variables are released in ShutdownAllXPAccessibility();
     stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, 
                                       &gStringBundle);
-    stringBundleService->CreateBundle(PLATFORM_KEYS_BUNDLE_URL, 
-                                      &gKeyStringBundle);
   }
 
   nsAccessibilityAtoms::AddRefAtoms();
@@ -246,7 +243,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   // at exit of program
 
   NS_IF_RELEASE(gStringBundle);
-  NS_IF_RELEASE(gKeyStringBundle);
   NS_IF_RELEASE(gLastFocusedNode);
 
   // Release gApplicationAccessible after everything else is shutdown
