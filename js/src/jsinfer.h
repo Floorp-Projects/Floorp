@@ -169,27 +169,13 @@ inline Type GetValueType(JSContext *cx, const Value &val);
  *
  * Inference constructs a global web of constraints relating the contents of
  * type sets particular to various scripts and type objects within a
- * compartment. These constraints can consume a significant amount of memory,
- * and to avoid this building up we clear out (almost, see 1.) all the
- * constraints and most other type inference data on (almost, see 2.) every GC.
- * JIT code which depends on this type information and is sensitive to
- * subsequent changes is cleared at the same time.
- *
- * Type constraints may be either transient --- destroyed along with the type
- * constraints --- or persistent. Persistent constraints describe properties
- * of type objects, locals, args, and observed types in scripts, and may or
- * may not survive GCs.
- *
- * Notes:
- *
- * 1. Some type constraints are persistent, and relate type objects to each
- * other. These survive GCs as long as some target type object is live.
- *
- * 2. If a GC happens while we are in the middle of or working with analysis
- * information (both type information and other transient information stored in
- * ScriptAnalysis), we do not destroy analysis information or collect
- * TypeObjects or JSScripts. This is controlled with AutoEnterAnalysis and
- * AutoEnterTypeInference.
+ * compartment. This data can consume a significant amount of memory, and to
+ * avoid this building up we try to clear it with some regularity. On each GC
+ * which occurs while we are not actively working with inference or other
+ * analysis information, we clear out all generated constraints, all type sets
+ * describing stack types within scripts, and (normally) all data describing
+ * type objects describing particular JS objects (see the lazy type objects
+ * overview below). JIT code depends on this data and is cleared as well.
  */
 
 /*
@@ -672,15 +658,20 @@ struct TypeNewScript
  * copies of standard natives) and many scripts, with comparatively few
  * non-singleton types.
  *
- * We can recover the type information for the object from examining it
- * (with exceptions for certain object flags, see OBJECT_FLAG_DETERMINED_MASK),
- * so don't need to track type information when updating the object. The type
- * object is only constructed when we need to put constraints on any of its
- * properties, in which case we fully instantiate the type's properties.
+ * We can recover the type information for the object from examining it,
+ * so don't normally track the possible types of its properties as it is
+ * updated. Property type sets for the object are only constructed when an
+ * analyzed script attaches constraints to it: the script is querying that
+ * property off the object or another which delegates to it, and the analysis
+ * information is sensitive to changes in the property's type. Future changes
+ * to the property (whether those uncovered by analysis or those occurring
+ * in the VM) will treat these properties like those of any other type object.
  *
- * If all outgoing constraints on the type are removed constraints by a GC,
- * the type object and its properties are destroyed and the JS object reverts
- * to having a lazy type.
+ * When a GC occurs, we wipe out all analysis information for all the
+ * compartment's scripts, so can destroy all properties on singleton type
+ * objects at the same time. If there is no reference on the stack to the
+ * type object itself, the type object is also destroyed, and the JS object
+ * reverts to having a lazy type.
  */
 
 /* Type information about an object accessed by a script. */
@@ -742,11 +733,11 @@ struct TypeObject : gc::Cell
      * - If the type has unknownProperties(), the possible properties and value
      *   types for associated JSObjects are unknown.
      *
-     * - Otherwise, for any JSObject obj with TypeObject type, and any jsid id,
-     *   after obj->getProperty(id) the property in type for id must reflect
-     *   the result of the getProperty. The result is additionally allowed to
-     *   be undefined for ids which are not in obj or its prototypes, and for
-     *   properties of global objects defined with 'var' but not yet written.
+     * - Otherwise, for any JSObject obj with TypeObject type, and any jsid id
+     *   which is a property in obj, after obj->getProperty(id) the property in
+     *   type for id must reflect the result of the getProperty. The result is
+     *   additionally allowed to be undefined for properties of global objects
+     *   defined with 'var' but not yet written.
      *
      * - Additionally, if id is a normal owned native property within obj, then
      *   after the setProperty or defineProperty which wrote its value, the
