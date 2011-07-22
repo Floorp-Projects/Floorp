@@ -523,6 +523,7 @@ public:
                                      nsInputEvent* aSourceEvent,
                                      nsIContent* aTarget,
                                      PRBool aFullDispatch,
+                                     PRUint32 aFlags,
                                      nsEventStatus* aStatus);
 
   /**

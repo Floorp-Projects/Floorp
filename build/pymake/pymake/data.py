@@ -1212,13 +1212,13 @@ def getcommandsforrule(rule, target, makefile, prerequisites, stem):
         cstring = c.resolvestr(makefile, v)
         for cline in splitcommand(cstring):
             cline, isHidden, isRecursive, ignoreErrors, isNative = findmodifiers(cline)
-            if isHidden or makefile.silent:
+            if (isHidden or makefile.silent) and not makefile.justprint:
                 echo = None
             else:
                 echo = "%s$ %s" % (c.loc, cline)
             if not isNative:
                 yield _CommandWrapper(cline, ignoreErrors=ignoreErrors, env=env, cwd=makefile.workdir, loc=c.loc, context=makefile.context,
-                                      echo=echo)
+                                      echo=echo, justprint=makefile.justprint)
             else:
                 f, s, e = v.get("PYCOMMANDPATH", True)
                 if e:
@@ -1226,7 +1226,8 @@ def getcommandsforrule(rule, target, makefile, prerequisites, stem):
                 yield _NativeWrapper(cline, ignoreErrors=ignoreErrors,
                                      env=env, cwd=makefile.workdir,
                                      loc=c.loc, context=makefile.context,
-                                     echo=echo, pycommandpath=e)
+                                     echo=echo, justprint=makefile.justprint,
+                                     pycommandpath=e)
 
 class Rule(object):
     """
@@ -1372,7 +1373,7 @@ class Makefile(object):
     def __init__(self, workdir=None, env=None, restarts=0, make=None,
                  makeflags='', makeoverrides='',
                  makelevel=0, context=None, targets=(), keepgoing=False,
-                 silent=False):
+                 silent=False, justprint=False):
         self.defaulttarget = None
 
         if env is None:
@@ -1387,6 +1388,7 @@ class Makefile(object):
         self._targets = {}
         self.keepgoing = keepgoing
         self.silent = silent
+        self.justprint = justprint
         self._patternvariables = [] # of (pattern, variables)
         self.implicitrules = []
         self.parsingfinished = False
