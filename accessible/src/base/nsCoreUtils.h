@@ -234,6 +234,11 @@ public:
   static PRBool IsContentDocument(nsIDocument *aDocument);
 
   /**
+   * Return true if the given document node is for tab document accessible.
+   */
+  static bool IsTabDocument(nsIDocument* aDocumentNode);
+
+  /**
    * Return true if the given document is an error page.
    */
   static PRBool IsErrorPage(nsIDocument *aDocument);
