@@ -161,7 +161,8 @@ private:
 
   PRBool   IsPersistentFramePtr();
   nsresult ProcessInput(PRUint8 *buffer, PRUint32 count);
-  PRUint32 UpdateReadBuffer(PRUint8 *buffer, PRUint32 count);
+  PRUint32 UpdateReadBuffer(PRUint8 *buffer, PRUint32 count,
+                            PRUint32 accumulatedFragments);
 
   class OutboundMessage
   {
