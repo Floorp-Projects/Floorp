@@ -48,11 +48,12 @@ var gVerbose = (location.href.split(/[\?,]/).indexOf("verbose") !== -1);
 
 var gAddedObserver = false;
 
-const KIND_MAPPED = Ci.nsIMemoryReporter.KIND_MAPPED;
-const KIND_HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
-const KIND_OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
-const UNITS_BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
-const UNITS_COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
+const KIND_NONHEAP     = Ci.nsIMemoryReporter.KIND_NONHEAP;
+const KIND_HEAP        = Ci.nsIMemoryReporter.KIND_HEAP;
+const KIND_OTHER       = Ci.nsIMemoryReporter.KIND_OTHER;
+const UNITS_BYTES      = Ci.nsIMemoryReporter.UNITS_BYTES;
+const UNITS_COUNT      = Ci.nsIMemoryReporter.UNITS_COUNT;
+const UNITS_PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
 const kUnknown = -1;    // used for _amount if a memory reporter failed
 
@@ -157,6 +158,7 @@ function update()
   //       _units:       number;
   //       _amount:      number;
   //       _description: string;
+  //       _nMerged:     number;  (only defined if >= 2)
   //     }
   //
   //   After this point we never use the original memory reporter again.
@@ -182,10 +184,19 @@ function update()
       reportersByProcess[process] = {};
     }
     var reporters = reportersByProcess[process];
-    if (reporters[r._path]) {
+    var reporter = reporters[r._path];
+    if (reporter) {
       // Already an entry;  must be a duplicated reporter.  This can
-      // happen legitimately.  Sum the values.
-      reporters[r._path]._amount += r._amount;
+      // happen legitimately.  Sum the values (accounting for possible kUnknown
+      // amounts), and mark the reporter as a dup.  We mark dups because it's
+      // useful to know when a reporter is duplicated;  it might be worth
+      // investigating and splitting up to have non-duplicated names.
+      if (reporter._amount !== kUnknown && r._amount !== kUnknown) {
+        reporter._amount += r._amount;
+      } else if (reporter._amount === kUnknown && r._amount !== kUnknown) {
+        reporter._amount = r._amount;
+      }
+      reporter._nMerged = reporter._nMerged ? reporter._nMerged + 1 : 2;
     } else {
       reporters[r._path] = r;
     }
@@ -248,22 +259,20 @@ function update()
   content.appendChild(div);
 }
 
-// Compare two memory reporter nodes.  The primary sort is on the _units
-// property.  The secondary sort is on the _path property if the _units is
-// UNIT_COUNT, otherwise it is on the _amount property.
-function cmpAmount(a, b)
+// Compare two 'explicit' memory reporter nodes.
+function cmpExplicitReporters(a, b)
 {
-  if (a._units != b._units) {
-    return a._units - b._units;   // use the enum order from nsIMemoryReporter
-  }
-  if (a._units == UNITS_COUNT) {
-    if (a._path < b._path)
-      return -1;
-    if (a._path > b._path)
-      return 1;
-    return 0;
-  }
+  assert(a._units === undefined && b._units === undefined,
+         "'explicit' tree nodes must not have _units defined");
   return b._amount - a._amount;
+};
+
+// Compare two memory reporter nodes from the 'other measurements' list.
+function cmpOtherReporters(a, b)
+{
+  return a._path < b._path ? -1 :
+         a._path > b._path ?  1 :
+         0;
 };
 
 /**
@@ -283,14 +292,17 @@ function genProcessText(aProcess, aReporters)
    *
    * @return The built tree.  The tree nodes have this structure:
    *         interface Node {
-   *           _name: string;
+   *           _name:        string;
    *           _kind:        number;
    *           _amount:      number;    (non-negative or 'kUnknown')
    *           _description: string;
    *           _kids:        [Node];
    *           _hasReporter: boolean;   (only defined if 'true')
    *           _hasProblem:  boolean;   (only defined if 'true')
+   *           _nMerged:     number;    (only defined if >= 2)
    *         }
+   * _units isn't needed because it's always UNITS_BYTES for 'explicit'
+   * reporters.
    */
   function buildTree()
   {
@@ -307,9 +319,10 @@ function genProcessText(aProcess, aReporters)
       return undefined;
     }
 
-    // We want to process all reporters that begin with 'treeName'.
-    // First we build the tree but only filling in '_name', '_kind', '_kids'
-    // and maybe '._hasReporter'.  This is done top-down from the reporters.
+    // We want to process all reporters that begin with 'treeName'.  First we
+    // build the tree but only fill in '_name', '_kind', '_kids', maybe
+    // '_hasReporter' and maybe '_nMerged'.  This is done top-down from the
+    // reporters.
     var t = {
       _name: "falseRoot",
       _kind: KIND_OTHER,
@@ -318,6 +331,9 @@ function genProcessText(aProcess, aReporters)
     for (var path in aReporters) {
       var r = aReporters[path];
       if (r._path.slice(0, treeName.length) === treeName) {
+        assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
+               "reporters in the tree must have KIND_HEAP or KIND_NONHEAP");
+        assert(r._units === UNITS_BYTES);
         var names = r._path.split('/');
         var u = t;
         for (var i = 0; i < names.length; i++) {
@@ -337,6 +353,9 @@ function genProcessText(aProcess, aReporters)
         }
         u._kind = r._kind;
         u._hasReporter = true;
+        if (r._nMerged) {
+          u._nMerged = r._nMerged;
+        }
       }
     }
     // Using falseRoot makes the above code simpler.  Now discard it, leaving
@@ -456,7 +475,7 @@ function genProcessText(aProcess, aReporters)
      */
     function filterTree(aT)
     {
-      aT._kids.sort(cmpAmount);
+      aT._kids.sort(cmpExplicitReporters);
 
       for (var i = 0; i < aT._kids.length; i++) {
         if (shouldOmit(aT._kids[i]._amount)) {
@@ -484,7 +503,7 @@ function genProcessText(aProcess, aReporters)
           // sum of the omitted sub-trees may be larger than some of the
           // shown sub-trees.
           aT._kids[i0] = rSub;
-          aT._kids.sort(cmpAmount);
+          aT._kids.sort(cmpExplicitReporters);
           break;
         }
         filterTree(aT._kids[i]);
@@ -515,9 +534,10 @@ function genProcessText(aProcess, aReporters)
 function formatReporterAmount(aReporter)
 {
   switch(aReporter._units) {
-    case UNITS_BYTES: return formatBytes(aReporter._amount);
-    case UNITS_COUNT: return formatInt(aReporter._amount);
-    default:          return "(???)"
+    case UNITS_BYTES:      return formatBytes(aReporter._amount);
+    case UNITS_COUNT:      return formatInt(aReporter._amount);
+    case UNITS_PERCENTAGE: return formatPercentage(aReporter._amount);
+    default:               return "(???)"
   }
 }
 
@@ -575,6 +595,18 @@ function formatBytes(aBytes)
     s = formatInt(a[0]) + "." + a[1] + " " + unit;
   }
   return s;
+}
+
+/**
+ * Converts a percentage to an appropriate string representation.
+ *
+ * @param aPerc100x
+ *        The percentage, multiplied by 100 (see nsIMemoryReporter)
+ * @return The string representation
+ */
+function formatPercentage(aPerc100x)
+{
+  return (aPerc100x / 100).toFixed(2) + "%";
 }
 
 /**
@@ -649,10 +681,10 @@ function genMrValueText(aValue)
 function kindToString(aKind)
 {
   switch (aKind) {
-   case KIND_MAPPED: return "(Mapped) ";
-   case KIND_HEAP:   return "(Heap) ";
-   case KIND_OTHER:  return "";
-   default:          return "(???) ";
+   case KIND_NONHEAP: return "(Non-heap) ";
+   case KIND_HEAP:    return "(Heap) ";
+   case KIND_OTHER:   return "";
+   default:           return "(???) ";
   }
 }
 
@@ -695,19 +727,25 @@ function prepDesc(aStr)
   return escapeQuotes(flipBackslashes(aStr));
 }
 
-function genMrNameText(aKind, aDesc, aName, aHasProblem)
+function genMrNameText(aKind, aDesc, aName, aHasProblem, aNMerged)
 {
-  const problemDesc =
-    "Warning: this memory reporter was unable to compute a useful value. " +
-    "The reported value is the sum of all entries below '" + aName + "', " +
-    "which is probably less than the true value.";
   var text = "-- <span class='mrName hasDesc' title='" +
              kindToString(aKind) + prepDesc(aDesc) +
              "'>" + prepName(aName) + "</span>";
-  text += aHasProblem
-        ? " <span class='mrStar' title=\"" + problemDesc + "\">[*]</span>\n"
-        : "\n";
-  return text;
+  if (aHasProblem) {
+    const problemDesc =
+      "Warning: this memory reporter was unable to compute a useful value. " +
+      "The reported value is the sum of all entries below '" + aName + "', " +
+      "which is probably less than the true value.";
+    text += " <span class='mrStar' title=\"" + problemDesc + "\">[*]</span>";
+  }
+  if (aNMerged) {
+    const dupDesc = "This value is the sum of " + aNMerged +
+                    " memory reporters that all have the same path.";
+    text += " <span class='mrStar' title=\"" + dupDesc + "\">[" + 
+            aNMerged + "]</span>";
+  }
+  return text + '\n';
 }
 
 /**
@@ -791,7 +829,7 @@ function genTreeText(aT)
 
     var text = indent + genMrValueText(tMemoryUsedStr) + " " + perc +
                genMrNameText(aT._kind, aT._description, aT._name,
-                             aT._hasProblem);
+                             aT._hasProblem, aT._nMerged);
 
     for (var i = 0; i < aT._kids.length; i++) {
       // 3 is the standard depth, the callee adjusts it if necessary.
@@ -848,7 +886,8 @@ function genOtherText(aReporters)
         _units:       r._units,
         _amount:      hasProblem ? 0 : r._amount,
         _description: r._description,
-        _hasProblem:  hasProblem
+        _hasProblem:  hasProblem,
+        _nMerged:     r._nMerged
       };
       rArray.push(elem);
       var thisAmountLength = formatReporterAmount(elem).length;
@@ -857,16 +896,18 @@ function genOtherText(aReporters)
       }
     }
   }
-  rArray.sort(cmpAmount);
+  rArray.sort(cmpOtherReporters);
 
   // Generate text for the not-yet-printed values.
   var text = "";
   for (var i = 0; i < rArray.length; i++) {
     var elem = rArray[i];
+    assert(elem._kind === KIND_OTHER,
+           "elem._kind is not KIND_OTHER for " + elem._path);
     text += genMrValueText(
               pad(formatReporterAmount(elem), maxAmountLength, ' ')) + " ";
     text += genMrNameText(elem._kind, elem._description, elem._path,
-                          elem._hasProblem);
+                          elem._hasProblem, elem._nMerged);
   }
 
   // Nb: the newlines give nice spacing if we cut+paste into a text buffer.
@@ -874,6 +915,13 @@ function genOtherText(aReporters)
                "the requested memory measurements above."
   return "<h2 class='hasDesc' title='" + desc + "'>Other Measurements</h2>\n" +
          "<pre>" + text + "</pre>\n";
+}
+
+function assert(aCond, aMsg)
+{
+  if (!aCond) {
+    throw("assertion failed: " + aMsg);
+  }
 }
 
 function debug(x)
