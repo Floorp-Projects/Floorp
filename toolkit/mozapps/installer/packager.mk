@@ -397,6 +397,7 @@ GENERATE_CACHE = \
   rm startupCache.zip && \
   $(ZIP) -r9m omni.jar jsloader
 endif
+endif
 
 GENERATE_CACHE ?= true
 
