@@ -54,7 +54,7 @@ HISTOGRAM(MEMORY_JS_GC_HEAP, 1024, 512 * 1024, 10, EXPONENTIAL, "Memory used by 
 HISTOGRAM(MEMORY_RESIDENT, 32 * 1024, 1024 * 1024, 10, EXPONENTIAL, "Resident memory size (KB)")
 HISTOGRAM(MEMORY_LAYOUT_ALL, 1024, 64 * 1024, 10, EXPONENTIAL, "Memory used by layout (KB)")
 HISTOGRAM(MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED, 1024, 1024 * 1024, 10, EXPONENTIAL, "Memory used for uncompressed, in-use content images (KB)")
-HISTOGRAM(MEMORY_HEAP_USED, 1024, 1024 * 1024, 10, EXPONENTIAL, "Heap memory used (KB)")
+HISTOGRAM(MEMORY_HEAP_ALLOCATED, 1024, 1024 * 1024, 10, EXPONENTIAL, "Heap memory allocated (KB)")
 HISTOGRAM(MEMORY_EXPLICIT, 1024, 1024 * 1024, 10, EXPONENTIAL, "Explicit memory allocations (KB)")
 #if defined(XP_WIN)
 HISTOGRAM(EARLY_GLUESTARTUP_READ_OPS, 1, 100, 12, LINEAR, "ProcessIoCounters.ReadOperationCount before glue startup")
@@ -66,8 +66,9 @@ HISTOGRAM(EARLY_GLUESTARTUP_HARD_FAULTS, 1, 100, 12, LINEAR, "Hard faults count 
 HISTOGRAM(GLUESTARTUP_HARD_FAULTS, 1, 500, 12, EXPONENTIAL, "Hard faults count after glue startup")
 HISTOGRAM(PAGE_FAULTS_HARD, 8, 64 * 1024, 13, EXPONENTIAL, "Hard page faults (since last telemetry ping)")
 #endif
-HISTOGRAM(ZIPARCHIVE_CRC, 0, 1, 2, BOOLEAN, "Zip item CRC check pass")
 HISTOGRAM(SHUTDOWN_OK, 0, 1, 2, BOOLEAN, "Did the browser start after a successful shutdown")
+
+HISTOGRAM(IMAGE_DECODE_LATENCY, 50, 5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")
 
 /**
  * Networking telemetry
@@ -103,3 +104,4 @@ HTTP_HISTOGRAMS(SUB, "subitem: ")
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
 HISTOGRAM(STARTUP_MEASUREMENT_ERRORS, 1, 3, 4, LINEAR, "Flags errors in startup calculation()")
+HISTOGRAM(NETWORK_DISK_CACHE_OPEN, 1, 10000, 10, EXPONENTIAL, "Time spent opening disk cache (ms)")

@@ -81,8 +81,8 @@ if (params.closeWhenDone) {
 
 // logFile to write our results
 if (params.logFile) {
-  MozillaFileLogger.init(params.logFile);
-  TestRunner.logger.addListener("mozLogger", fileLevel + "", MozillaFileLogger.getLogCallback());
+  var spl = new SpecialPowersLogger(params.logFile);
+  TestRunner.logger.addListener("mozLogger", fileLevel + "", spl.getLogCallback());
 }
 
 // if we get a quiet param, don't log to the console

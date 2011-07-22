@@ -1300,15 +1300,18 @@ pref("layout.word_select.stop_at_punctuation", true);
 pref("layout.selection.caret_style", 0);
 
 // Prefs for auto scrolling by mouse drag.  When the mouse cursor is on edge of
-// inner scrollable frame than the selection root, the frame will be scrolled.
-// |.edge_width| defines the edge width by CSS pixels.
-// |.amout| defines the scrolling speed by CSS pixels.  The auto scroll method
-// uses scroll to a point function.  When the mouse cursor is on the edge, it
-// tries to scroll the frame to the point which is away from the edge.  The
-// value means how far the point is from edge in CSS pixels.
+// scrollable frame which is a selection root or its descendant, the frame will
+// be scrolled.
+// |.edge_width| defines the edge width by device pixels.
+// |.edge_scroll_amount| defines the scrolling speed by device pixels.
+// The auto scroll implementation uses this value for scrolling-to computation.
+// When the mouse cursor is on the edge, it tries to scroll the frame to
+// this pixels away from the edge.
 // I.e., larger value makes faster scroll.
-pref("layout.selection.drag.autoscroll.inner_frame.edge_width", 32);
-pref("layout.selection.drag.autoscroll.inner_frame.amount", 8);
+// And also this value is used for the minimum scrolling speed when mouse cursor
+// is outside of the selection root element.
+pref("layout.selection.drag.autoscroll.edge_width", 32);
+pref("layout.selection.drag.autoscroll.edge_scroll_amount", 8);
 
 // pref to control whether or not to replace backslashes with Yen signs
 // in documents encoded in one of Japanese legacy encodings (EUC-JP, 
@@ -3202,10 +3205,10 @@ pref("image.mem.decodeondraw", false);
 pref("image.mem.min_discard_timeout_ms", 10000);
 
 // Chunk size for calls to the image decoders
-pref("image.mem.decode_bytes_at_a_time", 200000);
+pref("image.mem.decode_bytes_at_a_time", 4096);
 
 // The longest time we can spend in an iteration of an async decode
-pref("image.mem.max_ms_before_yield", 400);
+pref("image.mem.max_ms_before_yield", 5);
 
 // The maximum source data size for which we auto sync decode
 pref("image.mem.max_bytes_for_sync_decode", 150000);

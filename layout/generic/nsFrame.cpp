@@ -2186,6 +2186,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
                      nsEventStatus*  aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
+  NS_ASSERTION(aPresContext == PresContext(),
+               "HandlePress called with different presContext");
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
@@ -2563,6 +2565,9 @@ nsFrame::HandleDrag(nsPresContext* aPresContext,
     return NS_OK; // not selecting now
   }
 
+  NS_ASSERTION(target->PresContext()->PresShell() == fs->GetShell(),
+               "A different presShell received mouse move event during drag");
+
   // Stop auto scrolling, first.
   fs->StopAutoScrollTimer();
 
@@ -2570,6 +2575,11 @@ nsFrame::HandleDrag(nsPresContext* aPresContext,
                                             static_cast<nsMouseEvent*>(aEvent),
                                             aEventStatus);
 }
+
+static const char kPrefName_EdgeWidth[] =
+  "layout.selection.drag.autoscroll.edge_width";
+static const char kPrefName_EdgeScrollAmount[] =
+  "layout.selection.drag.autoscroll.edge_scroll_amount";
 
 nsresult
 nsFrame::ExpandSelectionByMouseMove(nsFrameSelection* aFrameSelection,
@@ -2580,8 +2590,11 @@ nsFrame::ExpandSelectionByMouseMove(nsFrameSelection* aFrameSelection,
 #ifdef DEBUG
   nsFrameSelection* draggingFrameSelection =
     nsFrameSelection::GetMouseDownFrameSelection();
-  NS_ASSERTION(draggingFrameSelection &&
-               draggingFrameSelection == GetConstFrameSelection(),
+  nsFrameSelection* selectionFrameForSelectingByMouse =
+    GetFrameSelectionForSelectingByMouse();
+  NS_ASSERTION(draggingFrameSelection,
+               "dragging FrameSelection must not be NULL");
+  NS_ASSERTION(draggingFrameSelection == selectionFrameForSelectingByMouse,
                "aFrameSelection must be handling current drag for selection");
 #endif
 
@@ -2631,14 +2644,6 @@ nsFrame::ExpandSelectionByMouseMove(nsFrameSelection* aFrameSelection,
       FindNearestScrollableFrameForSelection(selectionRoot->GetPrimaryFrame(),
                                              selectionRoot);
     while (scrollableFrame) {
-      // We don't need to scroll the selection root frame when the mouse cursor
-      // is on its edge because selection root frame will be scrolled when the
-      // mouse cursor is outside of the frame.  And user may want slower scroll
-      // than the "on edge" scroll speed.
-      if (selectionRootScrollableFrame == scrollableFrame) {
-        break;
-      }
-
       nsPoint scrollTo;
       if (IsOnScrollableFrameEdge(scrollableFrame, aEvent, scrollTo)) {
         aFrameSelection->StartAutoScrollTimer(
@@ -2663,6 +2668,33 @@ nsFrame::ExpandSelectionByMouseMove(nsFrameSelection* aFrameSelection,
                "The found scrollable frame doesn't have scrolled frame");
   nsPoint scrollTo =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, scrolledFrame);
+
+  // We should set minimum scroll speed same as the on-edge scrolling speed.
+  // E.g., while mouse cursor is on the edge, scrolling speed is always same.
+  nsPoint currentScrollPos = scrollableFrame->GetScrollPosition();
+  nsRect visibleRectOfScrolledFrame = scrollableFrame->GetScrollPortRect();
+  visibleRectOfScrolledFrame.MoveTo(currentScrollPos);
+  if (visibleRectOfScrolledFrame.Contains(scrollTo)) {
+    return NS_OK; // scroll wouldn't happen actually
+  }
+  PRInt32 minAmountPixel =
+    NS_MAX(Preferences::GetInt(kPrefName_EdgeScrollAmount), 1);
+  nscoord minAmountApp = PresContext()->DevPixelsToAppUnits(minAmountPixel);
+  if (visibleRectOfScrolledFrame.x > scrollTo.x) {
+    scrollTo.x =
+      NS_MIN(visibleRectOfScrolledFrame.x - minAmountApp, scrollTo.x);
+  } else if (visibleRectOfScrolledFrame.XMost() < scrollTo.x) {
+    scrollTo.x =
+      NS_MAX(visibleRectOfScrolledFrame.XMost() + minAmountApp, scrollTo.x);
+  }
+  if (visibleRectOfScrolledFrame.y > scrollTo.y) {
+    scrollTo.y =
+      NS_MIN(visibleRectOfScrolledFrame.y - minAmountApp, scrollTo.y);
+  } else if (visibleRectOfScrolledFrame.YMost() < scrollTo.y) {
+    scrollTo.y =
+      NS_MAX(visibleRectOfScrolledFrame.YMost() + minAmountApp, scrollTo.y);
+  }
+
   aFrameSelection->StartAutoScrollTimer(scrolledFrame, scrollTo,
                                         kAutoScrollTimerDelay);
 
@@ -2733,6 +2765,11 @@ nsFrame::IsOnScrollableFrameEdge(nsIScrollableFrame* aScrollableFrame,
   nsIFrame* scrollableFrame = do_QueryFrame(aScrollableFrame);
   nsPoint ptInScrollableFrame =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, scrollableFrame);
+  nsRect scrollableFrameRect(scrollableFrame->GetRect());
+  scrollableFrameRect.MoveTo(0, 0);
+  if (!scrollableFrameRect.Contains(ptInScrollableFrame)) {
+    return PR_FALSE; // cursor is outside of the frame.
+  }
   nsPoint scrollPosition = aScrollableFrame->GetScrollPosition();
   nsRect scrollRange = aScrollableFrame->GetScrollRange();
   nsRect scrollPort = aScrollableFrame->GetScrollPortRect();
@@ -2746,8 +2783,6 @@ nsFrame::IsOnScrollableFrameEdge(nsIScrollableFrame* aScrollableFrame,
   // The edge width (or height) is defined by pref, however, if the value
   // is too thick for the frame, we should use 1/4 width (or height) of
   // the frame.
-  static const char kPrefName_EdgeWidth[] =
-    "layout.selection.drag.autoscroll.inner_frame.edge_width";
   nsPresContext* pc = PresContext();
   PRInt32 edgePixel = Preferences::GetInt(kPrefName_EdgeWidth);
   nscoord edgeApp = pc->DevPixelsToAppUnits(edgePixel);
@@ -2759,10 +2794,8 @@ nsFrame::IsOnScrollableFrameEdge(nsIScrollableFrame* aScrollableFrame,
   // The scrolling mouse is defined by pref, however, if the amount is
   // too big for the frame, we should use 1/2 width (or height) of the
   // frame.
-  static const char kPrefName_ScrollAmount[] =
-    "layout.selection.drag.autoscroll.inner_frame.amount";
   PRInt32 scrollAmountPixel =
-    NS_MAX(Preferences::GetInt(kPrefName_ScrollAmount), 1);
+    NS_MAX(Preferences::GetInt(kPrefName_EdgeScrollAmount), 1);
   nscoord scrollAmountApp = pc->DevPixelsToAppUnits(scrollAmountPixel);
 
   nscoord scrollAmountH =

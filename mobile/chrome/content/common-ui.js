@@ -1253,7 +1253,7 @@ var SelectionHelper = {
     return this._end = document.getElementById("selectionhandle-end");
   },
 
-  showPopup: function ch_showPopup(aMessage) {
+  showPopup: function sh_showPopup(aMessage) {
     if (!this.enabled || aMessage.json.types.indexOf("content-text") == -1)
       return false;
 
@@ -1283,7 +1283,6 @@ var SelectionHelper = {
     messageManager.addMessageListener("Browser:SelectionRange", this);
     messageManager.addMessageListener("Browser:SelectionCopied", this);
 
-    Services.prefs.setBoolPref("accessibility.browsewithcaret", true);
     this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionStart", { x: this.popupState.x, y: this.popupState.y });
 
     BrowserUI.pushPopup(this, [this._start, this._end]);
@@ -1302,13 +1301,17 @@ var SelectionHelper = {
     return true;
   },
 
-  hide: function ch_hide() {
+  hide: function sh_hide() {
     if (this._start.hidden)
       return;
 
-    this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionEnd", {});
+    try {
+      this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionEnd", {});
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
     this.popupState = null;
-    Services.prefs.setBoolPref("accessibility.browsewithcaret", false);
 
     this._start.hidden = true;
     this._end.hidden = true;
@@ -1663,7 +1666,8 @@ var CharsetMenu = {
 var WebappsUI = {
   _dialog: null,
   _manifest: null,
-
+  _perms: [],
+  
   checkBox: function(aEvent) {
     let elem = aEvent.originalTarget;
     let perm = elem.getAttribute("perm");
@@ -1692,7 +1696,8 @@ var WebappsUI = {
       aManifest = {
         uri: browser.currentURI.spec,
         name: browser.contentTitle,
-        icon: icon
+        icon: icon,
+        capabilities: [],
       };
     }
 
@@ -1706,10 +1711,12 @@ var WebappsUI = {
 
     let uri = Services.io.newURI(aManifest.uri, null, null);
 
-    let perms = [["offline", "offline-app"], ["geoloc", "geo"], ["notifications", "desktop-notifications"]];
+    let perms = [["offline", "offline-app"], ["geoloc", "geo"], ["notifications", "desktop-notification"]];
+    let self = this;
     perms.forEach(function(tuple) {
       let elem = document.getElementById("webapps-" + tuple[0] + "-checkbox");
       let currentPerm = Services.perms.testExactPermission(uri, tuple[1]);
+      self._perms[tuple[1]] = (currentPerm == Ci.nsIPermissionManager.ALLOW_ACTION);
       if ((aManifest.capabilities && (aManifest.capabilities.indexOf(tuple[1]) != -1)) || (currentPerm == Ci.nsIPermissionManager.ALLOW_ACTION))
         elem.checked = true;
       else
@@ -1733,7 +1740,9 @@ var WebappsUI = {
   _updatePermission: function updatePermission(aId, aPerm) {
     try {
       let uri = Services.io.newURI(this._manifest.uri, null, null);
-      Services.perms.add(uri, aPerm, document.getElementById(aId).checked ? Ci.nsIPermissionManager.ALLOW_ACTION : Ci.nsIPermissionManager.DENY_ACTION);
+      let currentState = document.getElementById(aId).checked;
+      if (currentState != this._perms[aPerm])
+        Services.perms.add(uri, aPerm, currentState ? Ci.nsIPermissionManager.ALLOW_ACTION : Ci.nsIPermissionManager.DENY_ACTION);
     } catch(e) {
       Cu.reportError(e);
     }

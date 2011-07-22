@@ -93,7 +93,6 @@
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsITimelineService.h"
 #include "nsDOMScriptObjectHolder.h"
 #include "prmem.h"
 #include "WrapperFactory.h"
@@ -2107,8 +2106,6 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     NS_TIME_FUNCTION_MIN(1.0);
-
-    NS_TIMELINE_MARK_FUNCTION("js script deserialize");
 
     PRUint32 size;
     rv = aStream->Read32(&size);

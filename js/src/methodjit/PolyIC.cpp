@@ -1360,35 +1360,11 @@ class ScopeNameCompiler : public PICStubCompiler
         masm.loadObjProp(obj, pic.objReg, getprop.shape, pic.shapeReg, pic.objReg);
 
         /*
-         * For CALLNAME we have to store the this-value. Guard that the callee's parent is
-         * the global object, so that we can just store undefined.
+         * For CALLNAME we must store undefined as the this-value. A non-strict
+         * mode callee function replaces undefined with its global on demand in
+         * code generated for JSOP_THIS.
          */
-        MaybeJump calleeNotObject;
-        MaybeJump calleeNotFunction;
-        MaybeJump calleeParent;
         if (pic.kind == ic::PICInfo::CALLNAME) {
-            /* Need compile-and-go to bake in the global. */
-            if (!f.fp()->script()->compileAndGo)
-                return disable("callname global stub without compile-and-go");
-
-            /* Only handle functions here. */
-            Value funval = getprop.holder->nativeGetSlot(getprop.shape->slot);
-            if (!funval.isObject() || !funval.toObject().isFunction())
-                return disable("unsupported value");
-
-            /* Don't handle functions with parent other than the global object. */
-            JSObject *funobj = &funval.toObject();
-            if (funobj->getParent() != getprop.holder)
-                return disable("not scoped to global object");
-
-            /* Guard that the callee is a function. */
-            calleeNotObject = masm.testObject(Assembler::NotEqual, pic.shapeReg);
-            calleeNotFunction = masm.testFunction(Assembler::NotEqual, pic.objReg);
-
-            /* Guard that the callee's parent is the global object. */
-            Address parent(pic.objReg, offsetof(JSObject, parent));
-            calleeParent = masm.branchPtr(Assembler::NotEqual, parent, ImmPtr(getprop.holder));
-
             /* Store undefined this-value. */
             Value *thisVp = &cx->regs().sp[1];
             Address thisSlot(JSFrameReg, StackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
@@ -1403,12 +1379,6 @@ class ScopeNameCompiler : public PICStubCompiler
         if (finalNull.isSet())
             finalNull.get().linkTo(masm.label(), &masm);
         finalShape.linkTo(masm.label(), &masm);
-        if (calleeNotObject.isSet())
-            calleeNotObject.get().linkTo(masm.label(), &masm);
-        if (calleeNotFunction.isSet())
-            calleeNotFunction.get().linkTo(masm.label(), &masm);
-        if (calleeParent.isSet())
-            calleeParent.get().linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
 

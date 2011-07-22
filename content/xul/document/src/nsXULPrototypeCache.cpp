@@ -457,7 +457,7 @@ nsresult
 nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream) 
 {
     nsCAutoString spec(kXULCachePrefix);
-    nsresult rv = NS_PathifyURI(uri, spec);
+    nsresult rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv)) 
         return NS_ERROR_NOT_AVAILABLE;
     
@@ -471,7 +471,7 @@ nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
     if (NS_FAILED(rv)) 
         return NS_ERROR_NOT_AVAILABLE;
 
-    rv = NS_NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
+    rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
     NS_ENSURE_SUCCESS(rv, rv);
     buf.forget();
 
@@ -501,9 +501,9 @@ nsXULPrototypeCache::GetOutputStream(nsIURI* uri, nsIObjectOutputStream** stream
             = do_QueryInterface(storageStream);
         objectOutput->SetOutputStream(outputStream);
     } else {
-        rv = NS_NewObjectOutputWrappedStorageStream(getter_AddRefs(objectOutput), 
-                                                    getter_AddRefs(storageStream),
-                                                    false);
+        rv = NewObjectOutputWrappedStorageStream(getter_AddRefs(objectOutput), 
+                                                 getter_AddRefs(storageStream),
+                                                 false);
         NS_ENSURE_SUCCESS(rv, rv);
         mOutputStreamTable.Put(uri, storageStream);
     }
@@ -528,12 +528,12 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
     
     nsAutoArrayPtr<char> buf;
     PRUint32 len;
-    rv = NS_NewBufferFromStorageStream(storageStream, getter_Transfers(buf), 
-                                       &len);
+    rv = NewBufferFromStorageStream(storageStream, getter_Transfers(buf), 
+                                    &len);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString spec(kXULCachePrefix);
-    rv = NS_PathifyURI(uri, spec);
+    rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
     rv = gStartupCache->PutBuffer(spec.get(), buf, len);
@@ -553,7 +553,7 @@ nsXULPrototypeCache::HasData(nsIURI* uri, PRBool* exists)
         return NS_OK;
     }
     nsCAutoString spec(kXULCachePrefix);
-    nsresult rv = NS_PathifyURI(uri, spec);
+    nsresult rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv)) {
         *exists = PR_FALSE;
         return NS_OK;
@@ -668,7 +668,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     rv = startupCache->GetBuffer(kXULCacheInfoKey, getter_Transfers(buf), 
                                  &len);
     if (NS_SUCCEEDED(rv))
-        rv = NS_NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(objectInput));
+        rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(objectInput));
     
     if (NS_SUCCEEDED(rv)) {
         buf.forget();
@@ -692,9 +692,9 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
         nsCOMPtr<nsIObjectOutputStream> objectOutput;
         nsCOMPtr<nsIInputStream> inputStream;
         nsCOMPtr<nsIStorageStream> storageStream;
-        rv = NS_NewObjectOutputWrappedStorageStream(getter_AddRefs(objectOutput),
-                                                    getter_AddRefs(storageStream),
-                                                    false);
+        rv = NewObjectOutputWrappedStorageStream(getter_AddRefs(objectOutput),
+                                                 getter_AddRefs(storageStream),
+                                                 false);
         if (NS_SUCCEEDED(rv)) {
             rv = objectOutput->WriteStringZ(locale.get());
             rv |= objectOutput->WriteStringZ(chromePath.get());

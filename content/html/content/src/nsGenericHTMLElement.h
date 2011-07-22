@@ -946,6 +946,9 @@ protected:
   static PRBool FormIdUpdated(Element* aOldElement, Element* aNewElement,
                               void* aData);
 
+  // Returns true if the event should not be handled from PreHandleEvent
+  virtual PRBool IsElementDisabledForEvents(PRUint32 aMessage, nsIFrame* aFrame);
+
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
   // window, eActiveWindow means it's in an active window.
