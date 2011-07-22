@@ -864,7 +864,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             loop->lastBlock = offset;
 
         if (code->exceptionEntry) {
-            unsigned tryOffset;
+            unsigned tryOffset = 0;
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
