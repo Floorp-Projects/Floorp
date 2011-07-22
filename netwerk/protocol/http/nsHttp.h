@@ -126,6 +126,11 @@ typedef PRUint8 nsHttpVersion;
 // a transaction with this caps flag keeps timing information
 #define NS_HTTP_TIMING_ENABLED       (1<<5)
 
+// a transaction with this caps flag will not only not use an existing
+// persistent connection but it will close outstanding ones to the same
+// host. Used by a forced reload to reset the connection states.
+#define NS_HTTP_CLEAR_KEEPALIVES     (1<<6)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------
