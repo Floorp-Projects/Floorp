@@ -66,6 +66,7 @@
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "mozilla/dom/Element.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 

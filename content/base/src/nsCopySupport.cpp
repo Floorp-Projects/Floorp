@@ -79,6 +79,8 @@
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
 
+#include "mozilla/dom/Element.h"
+
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
