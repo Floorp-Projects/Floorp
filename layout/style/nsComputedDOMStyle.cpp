@@ -948,8 +948,6 @@ nsComputedDOMStyle::DoGetMozTransformOrigin()
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetMozTransform()
 {
-  static const PRInt32 NUM_FLOATS = 4;
-
   /* First, get the display data.  We'll need it. */
   const nsStyleDisplay* display = GetStyleDisplay();
 
@@ -969,14 +967,6 @@ nsComputedDOMStyle::DoGetMozTransform()
    */
   nsAutoString resultString(NS_LITERAL_STRING("matrix("));
 
-  /* Now, we need to convert the matrix into a string.  We'll start by taking
-   * the first four entries and converting them directly to floating-point
-   * values.
-   */
-  for (PRInt32 index = 0; index < NUM_FLOATS; ++index) {
-    resultString.AppendFloat(display->mTransform.GetMainMatrixEntry(index));
-    resultString.Append(NS_LITERAL_STRING(", "));
-  }
 
   /* Use the inner frame for width and height.  If we fail, assume zero.
    * TODO: There is no good way for us to represent the case where there's no
@@ -991,20 +981,26 @@ nsComputedDOMStyle::DoGetMozTransform()
     (mInnerFrame ? nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame) :
      nsRect(0, 0, 0, 0));
 
-  /* Now, compute the dX and dY components by adding the stored coord value
-   * (in CSS pixels) to the translate values.
-   */
+   PRBool dummy;
+   gfxMatrix matrix =
+     nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform,
+                                            mStyleContextHolder,
+                                            mStyleContextHolder->PresContext(),
+                                            dummy,
+                                            bounds,
+                                            float(nsDeviceContext::AppUnitsPerCSSPixel()));
 
-  float deltaX = nsPresContext::AppUnitsToFloatCSSPixels
-    (display->mTransform.GetXTranslation(bounds));
-  float deltaY = nsPresContext::AppUnitsToFloatCSSPixels
-    (display->mTransform.GetYTranslation(bounds));
-
-
-  /* Append these values! */
-  resultString.AppendFloat(deltaX);
+  resultString.AppendFloat(matrix.xx);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix.yx);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix.xy);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix.yy);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix.x0);
   resultString.Append(NS_LITERAL_STRING("px, "));
-  resultString.AppendFloat(deltaY);
+  resultString.AppendFloat(matrix.y0);
   resultString.Append(NS_LITERAL_STRING("px)"));
 
   /* Create a value to hold our result. */

@@ -2378,18 +2378,34 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
                    nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
 
   /* Get the matrix, then change its basis to factor in the origin. */
+  PRBool dummy;
   return nsLayoutUtils::ChangeMatrixBasis
-    (newOrigin + toMozOrigin, disp->mTransform.GetThebesMatrix(bounds, aFactor));
+    (newOrigin + toMozOrigin, 
+     nsStyleTransformMatrix::ReadTransforms(disp->mSpecifiedTransform,
+                                            aFrame->GetStyleContext(),
+                                            aFrame->PresContext(),
+                                            dummy, bounds, aFactor));
+}
+
+const gfxMatrix&
+nsDisplayTransform::GetTransform(float aFactor)
+{
+  if (mTransform.IsIdentity() || mCachedFactor != aFactor) {
+    mTransform =
+      GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
+                                  aFactor,
+                                  nsnull);
+    mCachedFactor = aFactor;
+  }
+  return mTransform;
 }
 
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
                                                        LayerManager *aManager,
                                                        const ContainerParameters& aContainerParameters)
 {
-  gfxMatrix newTransformMatrix =
-    GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
-                                 mFrame->PresContext()->AppUnitsPerDevPixel(),
-                                nsnull);
+  const gfxMatrix& newTransformMatrix = 
+    GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel());
   if (newTransformMatrix.IsSingular())
     return nsnull;
 
@@ -2447,9 +2463,8 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
    * 4. Pass that rect down through to the list's version of HitTest.
    */
   float factor = nsPresContext::AppUnitsPerCSSPixel();
-  gfxMatrix matrix =
-    GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
-                                factor, nsnull);
+  gfxMatrix matrix = GetTransform(factor);
+
   if (matrix.IsSingular())
     return;
 
@@ -2531,12 +2546,13 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   if (aForceTransparentSurface) {
     *aForceTransparentSurface = PR_FALSE;
   }
-  const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
   nsRect untransformedVisible =
     UntransformRect(mVisibleRect, mFrame, ToReferenceFrame());
+
+  const gfxMatrix& matrix = GetTransform(nsPresContext::AppUnitsPerCSSPixel());
+                
   nsRegion result;
-  if (disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
-      disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
+  if (matrix.PreservesAxisAlignedRectangles() &&
       mStoredList.GetOpaqueRegion(aBuilder).Contains(untransformedVisible)) {
     result = mVisibleRect;
   }
@@ -2549,13 +2565,13 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
  */
 PRBool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor)
 {
-  const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
   nsRect untransformedVisible =
     UntransformRect(mVisibleRect, mFrame, ToReferenceFrame());
-  return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
-    disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
-    mStoredList.GetVisibleRect().Contains(untransformedVisible) &&
-    mStoredList.IsUniform(aBuilder, aColor);
+  const gfxMatrix& matrix = GetTransform(nsPresContext::AppUnitsPerCSSPixel());
+
+  return matrix.PreservesAxisAlignedRectangles() &&
+         mStoredList.GetVisibleRect().Contains(untransformedVisible) &&
+         mStoredList.IsUniform(aBuilder, aColor);
 }
 
 /* If UNIFIED_CONTINUATIONS is defined, we can merge two display lists that

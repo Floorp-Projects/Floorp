@@ -2114,6 +2114,8 @@ public:
                                    const nsRect& aAllowVisibleRegionExpansion);
   virtual PRBool TryMerge(nsDisplayListBuilder *aBuilder, nsDisplayItem *aItem);
 
+  const gfxMatrix& GetTransform(float aFactor);
+
   /**
    * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
    * space) and returns the smallest rectangle (in aFrame's coordinate space)
@@ -2185,6 +2187,8 @@ public:
 
 private:
   nsDisplayWrapList mStoredList;
+  gfxMatrix mTransform;
+  float mCachedFactor;
 };
 
 /**
