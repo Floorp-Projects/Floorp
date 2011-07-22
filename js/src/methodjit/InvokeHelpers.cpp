@@ -584,16 +584,49 @@ js_InternalThrow(VMFrame &f)
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
 
-    if (!fp->jit()) {
+    if (cx->typeInferenceEnabled()) {
         /*
-         * This frame had JIT code at one point, but it has since been
-         * discarded due to a recompilation. Recompile it now. This can only
-         * fail due to OOM, in which case that OOM will propagate above the
-         * JaegerShot activation.
+         * Fall back to EnterMethodJIT and finish the frame in the interpreter.
+         * With type inference enabled, we may wipe out all JIT code on the
+         * stack without patching ncode values to jump to the interpreter, and
+         * thus can only enter JIT code via EnterMethodJIT (which overwrites
+         * its entry frame's ncode). See ClearAllFrames.
          */
-        CompileStatus status = TryCompile(cx, fp);
-        if (status != Compile_Okay)
+        cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
+
+        analyze::AutoEnterAnalysis enter(cx);
+        analyze::ScriptAnalysis *analysis = script->analysis(cx);
+        if (analysis && !analysis->ranBytecode())
+            analysis->analyzeBytecode(cx);
+        if (!analysis || analysis->OOM()) {
+            js_ReportOutOfMemory(cx);
             return NULL;
+        }
+
+        cx->regs().pc = pc;
+        cx->regs().sp = fp->base() + analysis->getCode(pc).stackDepth;
+
+        /*
+         * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
+         * back into the interpreter with a pending exception. This will cause
+         * it to immediately rethrow.
+         */
+        if (cx->isExceptionPending()) {
+            JS_ASSERT(js_GetOpcode(cx, script, pc) == JSOP_ENTERBLOCK);
+            JSObject *obj = script->getObject(GET_SLOTNO(pc));
+            Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
+            SetValueRangeToUndefined(cx->regs().sp, vp);
+            cx->regs().sp = vp;
+            JS_ASSERT(js_GetOpcode(cx, script, pc + JSOP_ENTERBLOCK_LENGTH) == JSOP_EXCEPTION);
+            cx->regs().sp[0] = cx->getPendingException();
+            cx->clearPendingException();
+            cx->regs().sp++;
+            cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
+        }
+
+        *f.oldregs = f.regs;
+
+        return NULL;
     }
 
     return script->nativeCodeForPC(fp->isConstructing(), pc);
