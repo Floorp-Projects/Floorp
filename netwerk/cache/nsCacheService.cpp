@@ -105,9 +105,6 @@ using namespace mozilla;
 #define MEMORY_CACHE_CAPACITY_PREF  "browser.cache.memory.capacity"
 #define MEMORY_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.memory.max_entry_size"
 
-#define CACHE_COMPRESSION_LEVEL_PREF "browser.cache.compression_level"
-#define CACHE_COMPRESSION_LEVEL     1
-
 static const char * observerList[] = { 
     "profile-before-change",
     "profile-do-change",
@@ -129,8 +126,7 @@ static const char * prefList[] = {
 #endif
     MEMORY_CACHE_ENABLE_PREF,
     MEMORY_CACHE_CAPACITY_PREF,
-    MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
-    CACHE_COMPRESSION_LEVEL_PREF
+    MEMORY_CACHE_MAX_ENTRY_SIZE_PREF
 };
 
 // Cache sizes, in KB
@@ -157,7 +153,6 @@ public:
         , mMemoryCacheCapacity(-1)
         , mMemoryCacheMaxEntrySize(-1) // -1 means "no limit"
         , mInPrivateBrowsing(PR_FALSE)
-        , mCacheCompressionLevel(1)
     {
     }
 
@@ -181,8 +176,6 @@ public:
     PRInt32         MemoryCacheCapacity();
     PRInt32         MemoryCacheMaxEntrySize()     { return mMemoryCacheMaxEntrySize; }
 
-    PRInt32         CacheCompressionLevel();
-
     static PRUint32 GetSmartCacheSize(const nsAString& cachePath);
 
 private:
@@ -203,8 +196,6 @@ private:
     PRInt32                 mMemoryCacheMaxEntrySize; // in kilobytes
 
     PRBool                  mInPrivateBrowsing;
-
-    PRInt32                 mCacheCompressionLevel;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
@@ -541,12 +532,6 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             
             mMemoryCacheMaxEntrySize = NS_MAX(-1, newMaxSize);
             nsCacheService::SetMemoryCacheMaxEntrySize(mMemoryCacheMaxEntrySize);
-        } else if (!strcmp(CACHE_COMPRESSION_LEVEL_PREF, data.get())) {
-            mCacheCompressionLevel = CACHE_COMPRESSION_LEVEL;
-            (void)branch->GetIntPref(CACHE_COMPRESSION_LEVEL_PREF,
-                                     &mCacheCompressionLevel);
-            mCacheCompressionLevel = NS_MAX(0, mCacheCompressionLevel);
-            mCacheCompressionLevel = NS_MIN(9, mCacheCompressionLevel);
         }
     } else if (!strcmp(NS_PRIVATE_BROWSING_SWITCH_TOPIC, topic)) {
         if (!strcmp(NS_PRIVATE_BROWSING_ENTER, data.get())) {
@@ -842,14 +827,6 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     (void) branch->GetIntPref(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
                               &mMemoryCacheMaxEntrySize);
     mMemoryCacheMaxEntrySize = NS_MAX(-1, mMemoryCacheMaxEntrySize);
-
-    // read cache compression level pref
-    mCacheCompressionLevel = CACHE_COMPRESSION_LEVEL;
-    (void)branch->GetIntPref(CACHE_COMPRESSION_LEVEL_PREF,
-                             &mCacheCompressionLevel);
-    mCacheCompressionLevel = NS_MAX(0, mCacheCompressionLevel);
-    mCacheCompressionLevel = NS_MIN(9, mCacheCompressionLevel);
-
     return rv;
 }
 
@@ -983,11 +960,6 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
     return capacity;
 }
 
-PRInt32
-nsCacheProfilePrefObserver::CacheCompressionLevel()
-{
-    return mCacheCompressionLevel;
-}
 
 /******************************************************************************
  * nsProcessRequestEvent
@@ -2346,14 +2318,6 @@ nsCacheService::ValidateEntry(nsCacheEntry * entry)
     // XXX what else should be done?
 
     return rv;
-}
-
-
-PRInt32
-nsCacheService::CacheCompressionLevel()
-{
-    PRInt32 level = gService->mObserver->CacheCompressionLevel();
-    return level;
 }
 
 
