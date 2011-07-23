@@ -46,8 +46,6 @@ const IS_WIN = navigator.platform.indexOf("Win") == 0;
 function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
                              aSystemUnmodifiedChars, aWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   if (!aWindow)
     aWindow = window;
 

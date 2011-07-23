@@ -14,21 +14,82 @@
 
 /** Test for HTMLTextAreaElement attributes reflection **/
 
-var textarea = document.createElement("textarea");
+// .autofocus
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "autofocus",
+});
 
+//.cols
 reflectUnsignedInt({
-  element: textarea,
+  element: document.createElement("textarea"),
+  attribute: "cols",
+  nonZero: true,
+  defaultValue: 20,
+});
+
+todo("dirName" in document.createElement("textarea"),
+     "dirName isn't implemented yet");
+
+// .disabled
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "disabled",
+});
+
+// TODO: form (HTMLFormElement)
+// TODO: maxLength (long)
+
+// .name
+reflectString({
+  element: document.createElement("textarea"),
+  attribute: "name",
+  otherValues: [ "isindex", "_charset_" ],
+});
+
+// .placeholder
+reflectString({
+  element: document.createElement("textarea"),
+  attribute: "placeholder",
+  otherValues: [ "foo\nbar", "foo\rbar", "foo\r\nbar" ],
+});
+
+// .readOnly
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "readOnly",
+});
+
+// .required
+reflectBoolean({
+  element: document.createElement("textarea"),
+  attribute: "required",
+});
+
+// .rows
+reflectUnsignedInt({
+  element: document.createElement("textarea"),
   attribute: "rows",
   nonZero: true,
   defaultValue: 2,
 });
 
-reflectUnsignedInt({
-  element: textarea,
-  attribute: "cols",
-  nonZero: true,
-  defaultValue: 20,
+// .wrap
+// TODO: make it an enumerated attributes limited to only known values, bug 670869.
+reflectString({
+  element: document.createElement("textarea"),
+  attribute: "wrap",
+  otherValues: [ "soft", "hard" ],
 });
+
+// .type doesn't reflect a content attribute.
+// .defaultValue doesn't reflect a content attribute.
+// .value doesn't reflect a content attribute.
+// .textLength doesn't reflect a content attribute.
+// .willValidate doesn't reflect a content attribute.
+// .validity doesn't reflect a content attribute.
+// .validationMessage doesn't reflect a content attribute.
+// .labels doesn't reflect a content attribute.
 
 </script>
 </pre>

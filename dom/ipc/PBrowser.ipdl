@@ -62,6 +62,7 @@ using nsMouseEvent;
 using nsMouseScrollEvent;
 using nsKeyEvent;
 using RemoteDOMEvent;
+using mozilla::WindowsHandle;
 
 namespace mozilla {
 namespace dom {
@@ -182,6 +183,11 @@ parent:
      * Gets the DPI of the screen corresponding to this browser.
      */
     sync GetDPI() returns (float value);
+
+    /**
+     * Return native data of root widget
+     */
+    sync GetWidgetNativeData() returns (WindowsHandle value);
 
     SetCursor(PRUint32 value);
 

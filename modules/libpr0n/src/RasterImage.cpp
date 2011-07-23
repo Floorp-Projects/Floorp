@@ -452,11 +452,8 @@ RasterImage::GetType()
 }
 
 imgFrame*
-RasterImage::GetImgFrame(PRUint32 framenum)
+RasterImage::GetImgFrameNoDecode(PRUint32 framenum)
 {
-  nsresult rv = WantDecodedFrames();
-  CONTAINER_ENSURE_TRUE(NS_SUCCEEDED(rv), nsnull);
-
   if (!mAnim) {
     NS_ASSERTION(framenum == 0, "Don't ask for a frame > 0 if we're not animated!");
     return mFrames.SafeElementAt(0, nsnull);
@@ -464,6 +461,14 @@ RasterImage::GetImgFrame(PRUint32 framenum)
   if (mAnim->lastCompositedFrameIndex == PRInt32(framenum))
     return mAnim->compositingFrame;
   return mFrames.SafeElementAt(framenum, nsnull);
+}
+
+imgFrame*
+RasterImage::GetImgFrame(PRUint32 framenum)
+{
+  nsresult rv = WantDecodedFrames();
+  CONTAINER_ENSURE_TRUE(NS_SUCCEEDED(rv), nsnull);
+  return GetImgFrameNoDecode(framenum);
 }
 
 imgFrame*
@@ -979,7 +984,7 @@ RasterImage::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
 {
   NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
 
-  imgFrame *frame = GetImgFrame(aFrameNum);
+  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
 
   frame->ImageUpdated(aUpdatedRect);
@@ -2103,9 +2108,8 @@ RasterImage::CanDiscard() {
 
 PRBool
 RasterImage::CanForciblyDiscard() {
-  return (mDiscardable &&        // ...Enabled at creation time...
-          mHasSourceData &&      // ...have the source data...
-          mDecoded);             // ...and have something to discard.
+  return mDiscardable &&         // ...Enabled at creation time...
+         mHasSourceData;         // ...have the source data...
 }
 
 // Helper method to tell us whether the clock is currently running for
@@ -2218,6 +2222,7 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
 
   // Kill off the worker
   mWorker = nsnull;
+  mWorkerPending = PR_FALSE;
 
   // We just shut down the decoder. If we didn't get what we want, but expected
   // to, flag an error
@@ -2539,7 +2544,22 @@ RasterImage::UnlockImage()
   // Decrement our lock count
   mLockCount--;
 
-  // We now _might_ have one of the qualifications for discarding. Re-evaluate.
+  // If we've decoded this image once before, we're currently decoding again,
+  // and our lock count is now zero (so nothing is forcing us to keep the
+  // decoded data around), try to cancel the decode and throw away whatever
+  // we've decoded.
+  if (mHasBeenDecoded && mDecoder &&
+      mLockCount == 0 && CanForciblyDiscard()) {
+    PR_LOG(gCompressedImageAccountingLog, PR_LOG_DEBUG,
+           ("RasterImage[0x%p] canceling decode because image "
+            "is now unlocked.", this));
+    ShutdownDecoder(eShutdownIntent_Interrupted);
+    ForceDiscard();
+    return NS_OK;
+  }
+
+  // Otherwise, we might still be a candidate for discarding in the future.  If
+  // we are, add ourselves to the discard tracker.
   if (CanDiscard()) {
     nsresult rv = DiscardTracker::Reset(&mDiscardTrackerNode);
     CONTAINER_ENSURE_SUCCESS(rv);
