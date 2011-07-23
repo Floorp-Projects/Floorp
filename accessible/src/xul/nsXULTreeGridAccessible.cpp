@@ -1016,7 +1016,10 @@ nsXULTreeGridCellAccessible::GetTable(nsIAccessibleTable **aTable)
   if (IsDefunct())
     return NS_OK;
 
-  CallQueryInterface(mParent->GetParent(), aTable);
+  nsAccessible* grandParent = mParent->Parent();
+  if (grandParent)
+    CallQueryInterface(grandParent, aTable);
+
   return NS_OK;
 }
 
@@ -1171,9 +1174,12 @@ nsXULTreeGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAtt
     return NS_ERROR_FAILURE;
 
   // "table-cell-index" attribute
-  nsCOMPtr<nsIAccessible> accessible;
-  mParent->GetParent(getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleTable> tableAccessible = do_QueryInterface(accessible);
+  nsAccessible* grandParent = mParent->Parent();
+  if (!grandParent)
+    return NS_OK;
+
+  nsCOMPtr<nsIAccessibleTable> tableAccessible =
+    do_QueryInterface(static_cast<nsIAccessible*>(grandParent));
 
   // XXX - temp fix for crash bug 516047
   if (!tableAccessible)
@@ -1308,7 +1314,7 @@ nsXULTreeGridCellAccessible::GetSiblingAtOffset(PRInt32 aOffset,
   if (!columnAtOffset)
     return nsnull;
 
-  nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc = do_QueryObject(GetParent());
+  nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc = do_QueryObject(Parent());
   return rowAcc->GetCellAccessible(columnAtOffset);
 }
 

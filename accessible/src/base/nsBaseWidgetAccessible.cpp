@@ -234,8 +234,8 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
   // on non accessible node in parent chain but this node is skipped when tree
   // is traversed.
   nsAccessible* walkUpAcc = this;
-  while ((walkUpAcc = walkUpAcc->GetParent()) && !walkUpAcc->IsDoc()) {
-    if (walkUpAcc && walkUpAcc->Role() == nsIAccessibleRole::ROLE_LINK &&
+  while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
+    if (walkUpAcc->Role() == nsIAccessibleRole::ROLE_LINK &&
         walkUpAcc->State() & states::LINKED) {
       mIsLink = PR_TRUE;
       mActionAcc = walkUpAcc;
