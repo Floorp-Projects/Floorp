@@ -1586,7 +1586,7 @@ RENDER_AGAIN:
     bool vertical = IsVerticalProgress(stateFrame);
 
     if (indeterminate || nsUXThemeData::sIsVistaOrLater) {
-      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 60)) {
+      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
         NS_WARNING("unable to animate progress widget!");
       }
 
