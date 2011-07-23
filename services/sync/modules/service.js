@@ -58,6 +58,9 @@ const KEYS_WBO = "keys";
 
 const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
 
+const LOG_PREFIX_SUCCESS = "success-";
+const LOG_PREFIX_ERROR   = "error-";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
@@ -479,12 +482,12 @@ WeaveSvc.prototype = {
     root.addAppender(fapp);
   },
 
-  _resetFileLog: function resetFileLog(flushToFile) {
+  _resetFileLog: function _resetFileLog(flushToFile, filenamePrefix) {
     let inStream = this._logAppender.getInputStream();
     this._logAppender.reset();
     if (flushToFile && inStream) {
       try {
-        let filename = Date.now() + ".log";
+        let filename = filenamePrefix + Date.now() + ".txt";
         let file = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
         let outStream = FileUtils.openFileOutputStream(file);
         NetUtil.asyncCopy(inStream, outStream, function () {
@@ -531,7 +534,8 @@ WeaveSvc.prototype = {
             !Services.io.offline) {
           this._ignorableErrorCount += 1;
         } else {
-          this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
+          this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                             LOG_PREFIX_ERROR);
         }
         break;
       case "weave:service:sync:error":
@@ -545,12 +549,14 @@ WeaveSvc.prototype = {
             this.logout();
             break;
           default:
-            this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
+            this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                               LOG_PREFIX_ERROR);
             break;
         }
         break;
       case "weave:service:sync:finish":
-        this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"));
+        this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"),
+                           LOG_PREFIX_SUCCESS);
         this._ignorableErrorCount = 0;
         break;
       case "weave:engine:sync:applied":
