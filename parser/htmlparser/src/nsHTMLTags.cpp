@@ -173,8 +173,6 @@ static const PRUnichar sHTMLTagUnicodeName_input[] =
   {'i', 'n', 'p', 'u', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_ins[] =
   {'i', 'n', 's', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_isindex[] =
-  {'i', 's', 'i', 'n', 'd', 'e', 'x', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_kbd[] =
   {'k', 'b', 'd', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_keygen[] =

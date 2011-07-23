@@ -46,6 +46,7 @@
 #include "nsIDOMFileError.h"
 #include "nsIInputStream.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsIMutable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/AutoRestore.h"
@@ -66,21 +67,22 @@ class nsIBlobBuilder;
 nsresult NS_NewBlobBuilder(nsISupports* *aSupports);
 
 class nsDOMFileBase : public nsIDOMFile,
-                      public nsIXHRSendable
+                      public nsIXHRSendable,
+                      public nsIMutable
 {
 public:
 
   nsDOMFileBase(const nsAString& aName, const nsAString& aContentType,
                 PRUint64 aLength)
-    : mIsFile(true), mContentType(aContentType), mName(aName),
-      mStart(0), mLength(aLength)
+    : mIsFile(true), mImmutable(false), mContentType(aContentType),
+      mName(aName), mStart(0), mLength(aLength)
   {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(PR_FALSE);
   }
 
   nsDOMFileBase(const nsAString& aContentType, PRUint64 aLength)
-    : mIsFile(false), mContentType(aContentType),
+    : mIsFile(false), mImmutable(false), mContentType(aContentType),
       mStart(0), mLength(aLength)
   {
     // Ensure non-null mContentType by default
@@ -89,7 +91,7 @@ public:
 
   nsDOMFileBase(const nsAString& aContentType,
                 PRUint64 aStart, PRUint64 aLength)
-    : mIsFile(false), mContentType(aContentType),
+    : mIsFile(false), mImmutable(false), mContentType(aContentType),
       mStart(aStart), mLength(aLength)
   {
     NS_ASSERTION(aLength != PR_UINT64_MAX,
@@ -108,6 +110,7 @@ public:
   NS_DECL_NSIDOMBLOB
   NS_DECL_NSIDOMFILE
   NS_DECL_NSIXHRSENDABLE
+  NS_DECL_NSIMUTABLE
 
 protected:
   bool IsSizeUnknown()
@@ -116,6 +119,7 @@ protected:
   }
 
   bool mIsFile;
+  bool mImmutable;
   nsString mContentType;
   nsString mName;
 
@@ -186,6 +190,7 @@ protected:
       mCacheToken(aOther->mCacheToken)
   {
     NS_ASSERTION(mFile, "must have file");
+    mImmutable = aOther->mImmutable;
   }
   virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(PRUint64 aStart, PRUint64 aLength,
@@ -230,6 +235,7 @@ protected:
       mDataOwner(aOther->mDataOwner)
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
+    mImmutable = aOther->mImmutable;
   }
   virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(PRUint64 aStart, PRUint64 aLength,

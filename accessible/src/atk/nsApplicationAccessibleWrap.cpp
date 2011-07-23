@@ -117,7 +117,6 @@ static gint sListener_idx = 1;
 
 static GHashTable* sKey_listener_list = NULL;
 static guint sKey_snooper_id = 0;
-static GQuark sQuark_gecko_acc_obj = g_quark_from_static_string("GeckoAccObj");
 static bool sToplevel_event_hook_added = false;
 static gulong sToplevel_show_hook = 0;
 static gulong sToplevel_hide_hook = 0;
@@ -570,6 +569,11 @@ toplevel_event_watcher(GSignalInvocationHint* ihint,
                        const GValue*          param_values,
                        gpointer               data)
 {
+  static GQuark sQuark_gecko_acc_obj = 0;
+
+  if (!sQuark_gecko_acc_obj)
+    sQuark_gecko_acc_obj = g_quark_from_static_string("GeckoAccObj");
+
   if (nsAccessibilityService::IsShutdown())
     return TRUE;
 
