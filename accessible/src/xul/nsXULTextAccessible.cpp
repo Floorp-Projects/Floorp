@@ -98,7 +98,7 @@ nsXULTextAccessible::GetRelationByType(PRUint32 aRelationType,
     // Caption is the label for groupbox
     nsIContent *parent = mContent->GetParent();
     if (parent && parent->Tag() == nsAccessibilityAtoms::caption) {
-      nsAccessible* parent = GetParent();
+      nsAccessible* parent = Parent();
       if (parent && parent->Role() == nsIAccessibleRole::ROLE_GROUPING)
         return nsRelUtils::AddTarget(aRelationType, aRelation, parent);
     }
