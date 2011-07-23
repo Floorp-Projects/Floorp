@@ -594,6 +594,14 @@ js_InternalThrow(VMFrame &f)
          */
         cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
 
+        /*
+         * Expanding inline frames will ensure that prevpc values are filled in
+         * for all frames on this VMFrame, without needing to walk the entire
+         * stack: downFramesExpanded() on a StackFrame also means the prevpc()
+         * values are also filled in.
+         */
+        ExpandInlineFrames(cx->compartment, true);
+
         analyze::AutoEnterAnalysis enter(cx);
         analyze::ScriptAnalysis *analysis = script->analysis(cx);
         if (analysis && !analysis->ranBytecode())
