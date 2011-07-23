@@ -176,10 +176,13 @@ nsWinUtils::HideNativeWindow(HWND aWnd)
 bool
 nsWinUtils::IsWindowEmulationFor(LPCWSTR kModuleHandle)
 {
+#ifdef MOZ_E10S_COMPAT
   // Window emulation is always enabled in multiprocess Firefox.
+  return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) : true;
+#else
   return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) :
-    XRE_GetProcessType() == GeckoProcessType_Content ||
     ::GetModuleHandleW(kJAWSModuleHandle) ||
     ::GetModuleHandleW(kWEModuleHandle)  ||
     ::GetModuleHandleW(kDolphinModuleHandle);
+#endif
 }
