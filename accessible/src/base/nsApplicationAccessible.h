@@ -76,7 +76,6 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRUint32 aScrollType);
   NS_SCRIPTABLE NS_IMETHOD ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD GetOwnerWindow(void **aOwnerWindow);
   NS_SCRIPTABLE NS_IMETHOD GetComputedStyleValue(const nsAString& aPseudoElt,
                                                  const nsAString& aPropertyName,
                                                  nsAString& aValue NS_OUTPARAM);

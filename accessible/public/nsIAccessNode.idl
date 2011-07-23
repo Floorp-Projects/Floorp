@@ -54,7 +54,7 @@ interface nsIDOMCSSPrimitiveValue;
  * If the DOM node for this access node is "accessible",
  * then a QueryInterface to nsIAccessible will succeed.
  */
-[scriptable, uuid(ef16ff42-0256-4b48-ae87-b18a95b7f7d6)]
+[scriptable, uuid(bbbd5a68-bad2-48c1-ab09-beb6c34f03d9)]
 interface nsIAccessNode : nsISupports
 {
   /**
@@ -99,12 +99,6 @@ interface nsIAccessNode : nsISupports
   */
   void scrollToPoint(in unsigned long aCoordinateType, in long aX, in long aY);
 
-  /**
-   * The OS window handle for the window this node
-   * is being displayed in.
-   */
-  [noscript] readonly attribute voidPtr ownerWindow;
-  
   /**
    * A unique ID calculated for this DOM node, for the 
    * purposes of caching and referencing this object.
