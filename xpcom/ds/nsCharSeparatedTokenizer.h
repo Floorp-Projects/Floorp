@@ -73,7 +73,9 @@ public:
     nsCharSeparatedTokenizerTemplate(const nsSubstring& aSource,
                                      PRUnichar aSeparatorChar,
                                      PRUint32  aFlags = 0)
-        : mLastTokenEndedWithSeparator(PR_FALSE),
+        : mFirstTokenBeganWithWhitespace(PR_FALSE),
+          mLastTokenEndedWithWhitespace(PR_FALSE),
+          mLastTokenEndedWithSeparator(PR_FALSE),
           mSeparatorChar(aSeparatorChar),
           mFlags(aFlags)
     {
@@ -82,6 +84,7 @@ public:
 
         // Skip initial whitespace
         while (mIter != mEnd && IsWhitespace(*mIter)) {
+            mFirstTokenBeganWithWhitespace = PR_TRUE;
             ++mIter;
         }
     }
@@ -97,9 +100,19 @@ public:
         return mIter != mEnd;
     }
 
-    PRBool lastTokenEndedWithSeparator()
+    PRBool firstTokenBeganWithWhitespace() const
+    {
+        return mFirstTokenBeganWithWhitespace;
+    }
+
+    PRBool lastTokenEndedWithSeparator() const
     {
         return mLastTokenEndedWithSeparator;
+    }
+
+    PRBool lastTokenEndedWithWhitespace() const
+    {
+        return mLastTokenEndedWithWhitespace;
     }
 
     /**
@@ -123,7 +136,9 @@ public:
           end = mIter;
 
           // Skip whitespace after current word.
+          mLastTokenEndedWithWhitespace = PR_FALSE;
           while (mIter != mEnd && IsWhitespace(*mIter)) {
+              mLastTokenEndedWithWhitespace = PR_TRUE;
               ++mIter;
           }
           if (mFlags & SEPARATOR_OPTIONAL) {
@@ -155,6 +170,8 @@ public:
 
 private:
     nsSubstring::const_char_iterator mIter, mEnd;
+    PRPackedBool mFirstTokenBeganWithWhitespace;
+    PRPackedBool mLastTokenEndedWithWhitespace;
     PRPackedBool mLastTokenEndedWithSeparator;
     PRUnichar mSeparatorChar;
     PRUint32  mFlags;
