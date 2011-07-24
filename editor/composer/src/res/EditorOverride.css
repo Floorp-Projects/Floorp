@@ -59,7 +59,7 @@
 
 img, img[usemap], area,
 object, object[usemap], 
-applet, hr, button, input, isindex, textarea, select,
+applet, hr, button, input, textarea, select,
 a:link img, a:visited img, a:active img,
 a[name]:-moz-only-whitespace {
   cursor: default;
@@ -93,13 +93,6 @@ input, button, textarea {
 /* XXX Still need a better way of blocking other events to these widgets */
 select, input[disabled], input[type="checkbox"], input[type="radio"], input[type="file"] {
   -moz-user-select: all !important;
-  -moz-user-input: none !important;
-  -moz-user-focus: none !important;
-}
-
-isindex[prompt]
-{
-  -moz-user-select: none !important;
   -moz-user-input: none !important;
   -moz-user-focus: none !important;
 }
