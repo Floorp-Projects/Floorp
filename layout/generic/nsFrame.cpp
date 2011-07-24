@@ -2839,12 +2839,12 @@ nsFrame::HandleRelease(nsPresContext* aPresContext,
                        nsGUIEvent* aEvent,
                        nsEventStatus* aEventStatus)
 {
-  nsCOMPtr<nsIContent> captureContent = nsIPresShell::GetCapturingContent();
-
-  // We can unconditionally stop capturing because
-  // we should never be capturing when the mouse button is up
-  nsIPresShell::SetCapturingContent(nsnull, 0);
-
+  // NOTE: You don't need to release mouse capture here. It'll be done
+  // in PresShell automatically.  If you need to do it here, you must
+  // do it after nsFrame::EndSelectionChangeByMouse() because we need
+  // to call nsFrameSelection::SetMouseDownState(PR_FALSE) first.
+  // If we release mouse event capture first, it doesn't cause
+  // MOUSEUP_REASON selection change event.
   nsFrame* targetFrame;
   nsRefPtr<nsFrameSelection> fs =
     FindDraggingFrameSelection(aPresContext->PresShell(), &targetFrame);
