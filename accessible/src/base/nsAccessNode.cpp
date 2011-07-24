@@ -161,19 +161,6 @@ nsAccessNode::GetUniqueID(void **aUniqueID)
   return NS_OK;
 }
 
-// nsIAccessNode
-NS_IMETHODIMP
-nsAccessNode::GetOwnerWindow(void **aWindow)
-{
-  NS_ENSURE_ARG_POINTER(aWindow);
-  *aWindow = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  return GetDocAccessible()->GetWindowHandle(aWindow);
-}
-
 nsApplicationAccessible*
 nsAccessNode::GetApplicationAccessible()
 {

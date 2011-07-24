@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLIsIndexElement.h"
+
 #include "nsIDOMHTMLParamElement.h"
 #include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLDirectoryElement.h"
@@ -56,7 +56,6 @@
 extern nsAttrValue::EnumTable kListTypeTable[];
 
 class nsHTMLSharedElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLIsIndexElement,
                             public nsIDOMHTMLParamElement,
                             public nsIDOMHTMLBaseElement,
                             public nsIDOMHTMLDirectoryElement,
@@ -80,9 +79,6 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
-
-  // nsIDOMHTMLIsIndexElement
-  NS_DECL_NSIDOMHTMLISINDEXELEMENT
 
   // nsIDOMHTMLParamElement
   NS_DECL_NSIDOMHTMLPARAMELEMENT
@@ -143,22 +139,6 @@ public:
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
-/**
- * When creating a isindex element, we should create a nsHTMLElement if the html5
- * parser is enabled. Otherwise, a nsHTMLSharedElement should be created.
- */
-nsGenericHTMLElement*
-NS_NewHTMLIsIndexElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                         mozilla::dom::FromParser aFromParser)
-{
-  if (nsHtml5Module::sEnabled) {
-    return NS_NewHTMLElement(aNodeInfo, aFromParser);
-  } else {
-    return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);
-  }
-}
-
-
 
 nsHTMLSharedElement::nsHTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
@@ -175,7 +155,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSharedElement, nsGenericElement)
 
 
 DOMCI_DATA(HTMLParamElement, nsHTMLSharedElement)
-DOMCI_DATA(HTMLIsIndexElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLBaseElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLDirectoryElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLMenuElement, nsHTMLSharedElement)
@@ -188,9 +167,6 @@ nsHTMLSharedElement::GetClassInfoInternal()
 {
   if (mNodeInfo->Equals(nsGkAtoms::param)) {
     return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLParamElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::isindex)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLIsIndexElement_id);
   }
   if (mNodeInfo->Equals(nsGkAtoms::base)) {
     return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLBaseElement_id);
@@ -225,7 +201,6 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLSharedElement)
                                                          nsGenericHTMLElement,
                                                          nsIDOMHTMLParamElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLParamElement, param)
-  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLIsIndexElement, isindex)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLBaseElement, base)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLDirectoryElement, dir)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLMenuElement, menu)
@@ -245,16 +220,6 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Value, value)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, ValueType, valuetype)
-
-// nsIDOMHTMLIsIndexElement
-NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Prompt, prompt)
-NS_IMETHODIMP
-nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  NS_IF_ADDREF(*aForm = FindAncestorForm());
-
-  return NS_OK;
-}
 
 // nsIDOMHTMLDirectoryElement
 NS_IMPL_BOOL_ATTR(nsHTMLSharedElement, Compact, compact)
