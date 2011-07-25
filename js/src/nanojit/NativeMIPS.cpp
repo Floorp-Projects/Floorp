@@ -119,11 +119,11 @@ namespace nanojit
     }
 
     static inline Register mswregpair(Register r) {
-        return Register(r + (isLittleEndian() ? 1 : 0));
+        return isLittleEndian() ? r+1 : r;
     }
 
     static inline Register lswregpair(Register r) {
-        return Register(r + (isLittleEndian() ? 0 : 1));
+        return isLittleEndian() ? r : r+1;
     }
 
 // These variables affect the code generator
@@ -278,7 +278,7 @@ namespace nanojit
     {
 #if !PEDANTIC
         if (isS16(dr)) {
-            LDST(op, rt, dr, rbase);
+            LDSTGPR(op, rt, dr, rbase);
             return;
         }
 #endif
@@ -286,7 +286,7 @@ namespace nanojit
         // lui AT,hi(d)
         // addu AT,rbase
         // ldst rt,lo(d)(AT)
-        LDST(op, rt, lo(dr), AT);
+        LDSTGPR(op, rt, lo(dr), AT);
         ADDU(AT, AT, rbase);
         LUI(AT, hi(dr));
     }
@@ -296,21 +296,21 @@ namespace nanojit
 #if !PEDANTIC
         if (isS16(dr) && isS16(dr+4)) {
             if (IsGpReg(r)) {
-                LDST(store ? OP_SW : OP_LW, r+1, dr+4, rbase);
-                LDST(store ? OP_SW : OP_LW, r,   dr, rbase);
+                LDSTGPR(store ? OP_SW : OP_LW, r+1, dr+4, rbase);
+                LDSTGPR(store ? OP_SW : OP_LW, r,   dr,   rbase);
             }
             else {
                 NanoAssert(cpu_has_fpu);
                 // NanoAssert((dr & 7) == 0);
                 if (cpu_has_lsdc1 && ((dr & 7) == 0)) {
                     // lsdc1 $fr,dr($rbase)
-                    LDST(store ? OP_SDC1 : OP_LDC1, r, dr, rbase);
+                    LDSTFPR(store ? OP_SDC1 : OP_LDC1, r, dr, rbase);
                 }
                 else {
                     // lswc1 $fr,  dr+LSWOFF($rbase)
                     // lswc1 $fr+1,dr+MSWOFF($rbase)
-                    LDST(store ? OP_SWC1 : OP_LWC1, r+1, dr+mswoff(), rbase);
-                    LDST(store ? OP_SWC1 : OP_LWC1, r,   dr+lswoff(), rbase);
+                    LDSTFPR(store ? OP_SWC1 : OP_LWC1, r+1, dr+mswoff(), rbase);
+                    LDSTFPR(store ? OP_SWC1 : OP_LWC1, r,   dr+lswoff(), rbase);
                 }
                 return;
             }
@@ -322,8 +322,8 @@ namespace nanojit
             // addu  $at,$rbase
             // ldsw  $r,  %lo(d)($at)
             // ldst  $r+1,%lo(d+4)($at)
-            LDST(store ? OP_SW : OP_LW, r+1, lo(dr+4), AT);
-            LDST(store ? OP_SW : OP_LW, r,   lo(dr), AT);
+            LDSTGPR(store ? OP_SW : OP_LW, r+1, lo(dr+4), AT);
+            LDSTGPR(store ? OP_SW : OP_LW, r,   lo(dr), AT);
             ADDU(AT, AT, rbase);
             LUI(AT, hi(dr));
         }
@@ -342,7 +342,7 @@ namespace nanojit
                 // lui    $at,%hi(dr)
                 // addu   $at,$rbase
                 // lsdc1  $r,%lo(dr)($at)
-                LDST(store ? OP_SDC1 : OP_LDC1, r, lo(dr), AT);
+                LDSTFPR(store ? OP_SDC1 : OP_LDC1, r, lo(dr), AT);
                 ADDU(AT, AT, rbase);
                 LUI(AT, hi(dr));
             }
@@ -351,8 +351,8 @@ namespace nanojit
                 // addu  $at,$rbase
                 // lswc1 $r,  %lo(d+LSWOFF)($at)
                 // lswc1 $r+1,%lo(d+MSWOFF)($at)
-                LDST(store ? OP_SWC1 : OP_LWC1, r+1, lo(dr+mswoff()), AT);
-                LDST(store ? OP_SWC1 : OP_LWC1, r,   lo(dr+lswoff()), AT);
+                LDSTFPR(store ? OP_SWC1 : OP_LWC1, r+1, lo(dr+mswoff()), AT);
+                LDSTFPR(store ? OP_SWC1 : OP_LWC1, r,   lo(dr+lswoff()), AT);
                 ADDU(AT, AT, rbase);
                 LUI(AT, hi(dr));
             }
@@ -481,8 +481,8 @@ namespace nanojit
         // where we are
         if (stkd & 4) {
             if (stkd < 16) {
-                r = Register(r + 1);
-                fr = Register(fr + 1);
+                r = r + 1;
+                fr = fr + 1;
             }
             stkd += 4;
         }
@@ -496,11 +496,11 @@ namespace nanojit
                 // Move it to the integer pair
                 Register fpupair = arg->getReg();
                 Register intpair = fr;
-                MFC1(mswregpair(intpair), Register(fpupair + 1));  // Odd fpu register contains sign,expt,manthi
-                MFC1(lswregpair(intpair), fpupair);                // Even fpu register contains mantlo
+                MFC1(mswregpair(intpair), fpupair+1); // Odd fpu register contains sign,expt,manthi
+                MFC1(lswregpair(intpair), fpupair);   // Even fpu register contains mantlo
             }
-            r = Register(r + 2);
-            fr = Register(fr + 2);
+            r = r + 2;
+            fr = fr + 2;
         }
         else
             asm_stkarg(arg, stkd);
@@ -1697,8 +1697,8 @@ namespace nanojit
             NanoAssert(ty == ARGTYPE_I || ty == ARGTYPE_UI);
             if (stkd < 16) {
                 asm_regarg(ty, arg, r);
-                fr = Register(fr + 1);
-                r = Register(r + 1);
+                fr = fr + 1;
+                r = r + 1;
             }
             else
                 asm_stkarg(arg, stkd);
@@ -1775,7 +1775,6 @@ namespace nanojit
     Register
     Assembler::nRegisterAllocFromSet(RegisterMask set)
     {
-        Register i;
         int n;
 
         // note, deliberate truncation of 64->32 bits
@@ -1783,18 +1782,19 @@ namespace nanojit
             // gp reg
             n = ffs(int(set));
             NanoAssert(n != 0);
-            i = Register(n - 1);
+            n = n - 1;
         }
         else {
             // fp reg
             NanoAssert(cpu_has_fpu);
             n = ffs(int(set >> 32));
             NanoAssert(n != 0);
-            i = Register(32 + n - 1);
+            n = 32 + n - 1;
         }
-        _allocator.free &= ~rmask(i);
-        TAG("nRegisterAllocFromSet(set=%016llx) => %s", set, gpn(i));
-        return i;
+        Register r = { n };
+        _allocator.free &= ~rmask(r);
+        TAG("nRegisterAllocFromSet(set=%016llx) => %s", set, gpn(r));
+        return r;
     }
 
     void
@@ -1836,9 +1836,9 @@ namespace nanojit
                     // ori $at,target & 0xffff
                     // jr $at
                     //  nop
-                    branch[1] = U_FORMAT(OP_LUI,0,AT,hi(uint32_t(target)));
-                    tramp[0] = U_FORMAT(OP_ADDIU,AT,AT,lo(uint32_t(target)));
-                    tramp[1] = R_FORMAT(OP_SPECIAL,AT,0,0,0,SPECIAL_JR);
+                    branch[1] = U_FORMAT(OP_LUI, 0, GPR(AT), hi(uint32_t(target)));
+                    tramp[0] = U_FORMAT(OP_ADDIU, GPR(AT), GPR(AT), lo(uint32_t(target)));
+                    tramp[1] = R_FORMAT(OP_SPECIAL, GPR(AT), 0, 0, 0, SPECIAL_JR);
                 }
             }
         }

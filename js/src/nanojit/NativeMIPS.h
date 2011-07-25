@@ -40,6 +40,8 @@
 #ifndef __nanojit_NativeMIPS__
 #define __nanojit_NativeMIPS__
 
+#include "NativeCommon.h"
+
 #include "../vprof/vprof.h"
 #ifdef PERFM
 #define DOPROF
@@ -66,9 +68,9 @@ namespace nanojit
 
     typedef uint32_t NIns;                // REQ: Instruction count
     typedef uint64_t RegisterMask;        // REQ: Large enough to hold LastRegNum-FirstRegNum bits
-#define _rmask_(r)        (1LL<<(r))
+#define _rmask_(r)      (1LL<<(r))
+#define REGMASK(r)      _rmask_(REGNUM(r))
 
-    typedef uint32_t Register;            // REQ: Register identifiers
     // Register numbers for Native code generator
     static const Register
         ZERO = { 0 },
@@ -163,12 +165,9 @@ namespace nanojit
 
         deprecated_UnknownReg = { 127 };    // XXX: remove eventually, see bug 538924
 
-    static const uint32_t FirstRegNum = ZERO;
-    static const uint32_t LastRegNum = F31;
+    static const uint32_t FirstRegNum = 0; // R0
+    static const uint32_t LastRegNum = 63; // F31
 }
-
-#define NJ_USE_UINT32_REGISTER 1
-#include "NativeCommon.h"
 
 namespace nanojit {
     // REQ: register names
@@ -190,47 +189,65 @@ namespace nanojit {
     // REQ: Callee saved registers
     const RegisterMask SavedRegs =
 #ifdef FPCALLEESAVED
-                    _rmask_(FS0) | _rmask_(FS1) | _rmask_(FS2) |
-                    _rmask_(FS3) | _rmask_(FS4) | _rmask_(FS5) |
+        REGMASK(FS0) | REGMASK(FS1) | REGMASK(FS2) |
+        REGMASK(FS3) | REGMASK(FS4) | REGMASK(FS5) |
 #endif
-                    _rmask_(S0) | _rmask_(S1) | _rmask_(S2) | _rmask_(S3) |
-                    _rmask_(S4) | _rmask_(S5) | _rmask_(S6) | _rmask_(S7);
+        REGMASK(S0) | REGMASK(S1) | REGMASK(S2) | REGMASK(S3) |
+        REGMASK(S4) | REGMASK(S5) | REGMASK(S6) | REGMASK(S7);
 
     // REQ: General purpose registers
     static const RegisterMask GpRegs =
-                    _rmask_(V0) | _rmask_(V1) |
-                    _rmask_(A0) | _rmask_(A1) | _rmask_(A2) | _rmask_(A3) |
-                    _rmask_(S0) | _rmask_(S1) | _rmask_(S2) | _rmask_(S3) |
-                    _rmask_(S4) | _rmask_(S5) | _rmask_(S6) | _rmask_(S7) |
-                    _rmask_(T0) | _rmask_(T1) | _rmask_(T2) | _rmask_(T3) |
-                    _rmask_(T4) | _rmask_(T5) | _rmask_(T6) | _rmask_(T7) |
-                    _rmask_(T8) | _rmask_(T9);
+        REGMASK(V0) | REGMASK(V1) |
+        REGMASK(A0) | REGMASK(A1) | REGMASK(A2) | REGMASK(A3) |
+        REGMASK(S0) | REGMASK(S1) | REGMASK(S2) | REGMASK(S3) |
+        REGMASK(S4) | REGMASK(S5) | REGMASK(S6) | REGMASK(S7) |
+        REGMASK(T0) | REGMASK(T1) | REGMASK(T2) | REGMASK(T3) |
+        REGMASK(T4) | REGMASK(T5) | REGMASK(T6) | REGMASK(T7) |
+        REGMASK(T8) | REGMASK(T9);
 
     // REQ: Floating point registers
     static const RegisterMask FpRegs =
 #ifdef FPCALLEESAVED
-                    _rmask_(FS0) | _rmask_(FS1) | _rmask_(FS2) |
-                    _rmask_(FS3) | _rmask_(FS4) | _rmask_(FS5) |
+        REGMASK(FS0) | REGMASK(FS1) | REGMASK(FS2) |
+        REGMASK(FS3) | REGMASK(FS4) | REGMASK(FS5) |
 #endif
-                    _rmask_(FV0) | _rmask_(FV1) |
-                    _rmask_(FA0) | _rmask_(FA1) |
-                    _rmask_(FT0) | _rmask_(FT1) | _rmask_(FT2) |
-                    _rmask_(FT3) | _rmask_(FT4) | _rmask_(FT5);
-
-    static const RegisterMask AllowableFlagRegs = GpRegs;        // REQ: Registers that can hold flag results FIXME
-
-    static inline bool IsFpReg(Register r)
-    {
-        return (_rmask_(r) & FpRegs) != 0;
-    }
+        REGMASK(FV0) | REGMASK(FV1) |
+        REGMASK(FA0) | REGMASK(FA1) |
+        REGMASK(FT0) | REGMASK(FT1) | REGMASK(FT2) |
+        REGMASK(FT3) | REGMASK(FT4) | REGMASK(FT5);
 
     static inline bool IsGpReg(Register r)
     {
-        return (_rmask_(r) & GpRegs) != 0;
+        return (REGMASK(r) & GpRegs) != 0;
     }
 
-#define GPR(r) ((r)&31)
-#define FPR(r) ((r)&31)
+    static inline bool IsFpReg(Register r)
+    {
+        return (REGMASK(r) & FpRegs) != 0;
+    }
+
+    static inline bool IsGPR(Register r)
+    {
+        return (r >= ZERO && r <= RA);
+    }
+
+    static inline bool IsFPR(Register r)
+    {
+        return (r >= F0 && r <= F31);
+
+    }
+
+    static inline uint32_t GPR(Register r)
+    {
+        NanoAssertMsg(IsGPR(r), "Not GPR");
+        return REGNUM(r)&31;
+    }
+
+    static inline uint32_t FPR(Register r)
+    {
+        NanoAssertMsg(IsFPR(r), "Not FPR");
+        return REGNUM(r)&31;
+    }
 
 // REQ: Platform specific declarations to include in Stats structure
 #define DECLARE_PLATFORM_STATS()
@@ -412,19 +429,22 @@ namespace nanojit {
 // Parameters are in instruction order
 
 #define R_FORMAT(op, rs, rt, rd, re, func)                              \
-    (((op)<<26)|(GPR(rs)<<21)|(GPR(rt)<<16)|(GPR(rd)<<11)|((re)<<6)|(func))
+    (((op)<<26)|((rs)<<21)|((rt)<<16)|((rd)<<11)|((re)<<6)|(func))
 
 #define I_FORMAT(op, rs, rt, simm)                              \
-    (((op)<<26)|(GPR(rs)<<21)|(GPR(rt)<<16)|((simm)&0xffff))
+    (((op)<<26)|((rs)<<21)|((rt)<<16)|((simm)&0xffff))
 
 #define J_FORMAT(op, index)                     \
     (((op)<<26)|(index))
 
 #define U_FORMAT(op, rs, rt, uimm)                              \
-    (((op)<<26)|(GPR(rs)<<21)|(GPR(rt)<<16)|((uimm)&0xffff))
+    (((op)<<26)|((rs)<<21)|((rt)<<16)|((uimm)&0xffff))
 
 #define F_FORMAT(op, ffmt, ft, fs, fd, func)                            \
-    (((op)<<26)|((ffmt)<<21)|(FPR(ft)<<16)|(FPR(fs)<<11)|(FPR(fd)<<6)|(func))
+    (((op)<<26)|((ffmt)<<21)|((ft)<<16)|((fs)<<11)|((fd)<<6)|(func))
+
+#define X_FORMAT(op, base, index, fs, fd, func)                            \
+    (((op)<<26)|((base)<<21)|((index)<<16)|((fs)<<11)|((fd)<<6)|(func))
 
 #define oname(op) Assembler::oname[op]
 #define cname(cond) Assembler::cname[cond]
@@ -433,34 +453,34 @@ namespace nanojit {
 
 #define BOFFSET(targ)    (uint32_t(targ - (_nIns+1)))
 
-#define LDST(op, rt, offset, base)                                      \
-    do { count_misc(); EMIT(I_FORMAT(op, base, rt, offset),             \
+#define LDSTGPR(op, rt, offset, base)                                      \
+    do { count_misc(); EMIT(I_FORMAT(op, GPR(base), GPR(rt), offset),   \
                             "%s %s, %d(%s)", oname[op], gpn(rt), offset, gpn(base)); } while (0)
 
-#define BX(op, rs, rt, targ)                                            \
-    do { count_br(); EMIT(I_FORMAT(op, rs, rt, BOFFSET(targ)),          \
-                          "%s %s, %s, %p", oname[op], gpn(rt), gpn(rs), targ); } while (0)
+#define LDSTFPR(op, ft, offset, base)                                      \
+    do { count_misc(); EMIT(I_FORMAT(op, GPR(base), FPR(ft), offset),   \
+                            "%s %s, %d(%s)", oname[op], fpn(ft), offset, gpn(base)); } while (0)
 
 // MIPS instructions
 // Parameters are in "assembler" order
 #define ADDIU(rt, rs, simm)                                             \
-    do { count_alu(); EMIT(I_FORMAT(OP_ADDIU, rs, rt, simm),            \
+    do { count_alu(); EMIT(I_FORMAT(OP_ADDIU, GPR(rs), GPR(rt), simm),  \
                            "addiu %s, %s, %d", gpn(rt), gpn(rs), simm); } while (0)
 
 #define trampADDIU(rt, rs, simm)                                        \
-    do { count_alu(); TRAMP(I_FORMAT(OP_ADDIU, rs, rt, simm),           \
+    do { count_alu(); TRAMP(I_FORMAT(OP_ADDIU, GPR(rs), GPR(rt), simm), \
                             "addiu %s, %s, %d", gpn(rt), gpn(rs), simm); } while (0)
 
 #define ADDU(rd, rs, rt)                                                \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_ADDU), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_ADDU), \
                            "addu %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define AND(rd, rs, rt)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_AND), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_AND), \
                            "and %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define ANDI(rt, rs, uimm)                                              \
-    do { count_alu(); EMIT(U_FORMAT(OP_ANDI, rs, rt, uimm),             \
+    do { count_alu(); EMIT(U_FORMAT(OP_ANDI, GPR(rs), GPR(rt), uimm),   \
                            "andi %s, %s, 0x%x", gpn(rt), gpn(rs), ((uimm)&0xffff)); } while (0)
 
 #define BC1F(targ)                                                      \
@@ -471,13 +491,33 @@ namespace nanojit {
     do { count_br(); EMIT(I_FORMAT(OP_COP1, COP1_BC, 1, BOFFSET(targ)), \
                           "bc1t %p", targ); } while (0)
 
-#define B(targ)                 BX(OP_BEQ, ZERO, ZERO, targ)
-#define BEQ(rs, rt, targ)       BX(OP_BEQ, rs, rt, targ)
-#define BNE(rs, rt, targ)       BX(OP_BNE, rs, rt, targ)
-#define BLEZ(rs, targ)          BX(OP_BLEZ, rs, ZERO, targ)
-#define BGTZ(rs, targ)          BX(OP_BGTZ, rs, ZERO, targ)
-#define BGEZ(rs, targ)          BX(OP_REGIMM, rs, REGIMM_BGEZ, targ)
-#define BLTZ(rs, targ)          BX(OP_REGIMM, rs, REGIMM_BLTZ, targ)
+#define B(targ)                                                         \
+        do { count_br(); EMIT(I_FORMAT(OP_BEQ, GPR(ZERO), GPR(ZERO), BOFFSET(targ)), \
+                          "b %p", targ); } while (0)
+
+#define BEQ(rs, rt, targ)                                               \
+    do { count_br(); EMIT(I_FORMAT(OP_BEQ, GPR(rs), GPR(rt), BOFFSET(targ)), \
+                          "%s %s, %s, %p", oname[OP_BEQ], gpn(rs), gpn(rt), targ); } while (0)
+
+#define BNE(rs, rt, targ)                                               \
+    do { count_br(); EMIT(I_FORMAT(OP_BNE, GPR(rs), GPR(rt), BOFFSET(targ)), \
+                          "%s %s, %s, %p", oname[OP_BNE], gpn(rs), gpn(rt), targ); } while (0)
+
+#define BLEZ(rs, targ)                                                  \
+    do { count_br(); EMIT(I_FORMAT(OP_BLEZ, GPR(rs), 0, BOFFSET(targ)), \
+                          "%s %s, %p", oname[OP_BLEZ], gpn(rs), targ); } while (0)
+
+#define BGTZ(rs, targ)                                                  \
+    do { count_br(); EMIT(I_FORMAT(OP_BGTZ, GPR(rs), 0, BOFFSET(targ)), \
+                          "%s %s, %p", oname[OP_BGTZ], gpn(rs), targ); } while (0)
+
+#define BGEZ(rs, targ)                                                  \
+    do { count_br(); EMIT(I_FORMAT(OP_REGIMM, GPR(rs), REGIMM_BGEZ, BOFFSET(targ)), \
+                          "bgez %s, %p", gpn(rs), targ); } while (0)
+
+#define BLTZ(rs, targ)                                                  \
+    do { count_br(); EMIT(I_FORMAT(OP_REGIMM, GPR(rs), REGIMM_BLTZ, BOFFSET(targ)), \
+                          "bltz %s, %p", gpn(rs), targ); } while (0)
 
 #define JINDEX(dest) ((uint32_t(dest)>>2)&0x03ffffff)
 
@@ -494,130 +534,130 @@ namespace nanojit {
                            "jal %p", dest); } while (0)
 
 #define JALR(rs)                                                        \
-    do { count_jmp(); EMIT(R_FORMAT(OP_SPECIAL, rs, 0, RA, 0, SPECIAL_JALR), \
+    do { count_jmp(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), 0, GPR(RA), 0, SPECIAL_JALR), \
                            "jalr %s", gpn(rs)); } while (0)
 
 #define JR(rs)                                                            \
-    do { count_jmp(); EMIT(R_FORMAT(OP_SPECIAL, rs, 0, 0, 0, SPECIAL_JR), \
+    do { count_jmp(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), 0, 0, 0, SPECIAL_JR), \
                            "jr %s", gpn(rs)); } while (0)
 #define trampJR(rs)                                                     \
-    do { count_jmp(); TRAMP(R_FORMAT(OP_SPECIAL, rs, 0, 0, 0, SPECIAL_JR), \
+    do { count_jmp(); TRAMP(R_FORMAT(OP_SPECIAL, GPR(rs), 0, 0, 0, SPECIAL_JR), \
                             "jr %s", gpn(rs)); } while (0)
 
 #define LB(rt, offset, base)                    \
-    LDST(OP_LB, rt, offset, base)
+    LDSTGPR(OP_LB, rt, offset, base)
 
 #define LH(rt, offset, base)                    \
-    LDST(OP_LH, rt, offset, base)
+    LDSTGPR(OP_LH, rt, offset, base)
 
 #define LUI(rt, uimm)                                                   \
-    do { count_alu(); EMIT(U_FORMAT(OP_LUI, 0, rt, uimm),               \
+    do { count_alu(); EMIT(U_FORMAT(OP_LUI, 0, GPR(rt), uimm),          \
                            "lui %s, 0x%x", gpn(rt), ((uimm)&0xffff)); } while (0)
 
 #define LW(rt, offset, base)                    \
-    LDST(OP_LW, rt, offset, base)
+    LDSTGPR(OP_LW, rt, offset, base)
 
 #define MFHI(rd)                                                        \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, 0, rd, 0, SPECIAL_MFHI), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, 0, GPR(rd), 0, SPECIAL_MFHI), \
                            "mfhi %s", gpn(rd)); } while (0)
 
 #define MFLO(rd)                                                        \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, 0, rd, 0, SPECIAL_MFLO), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, 0, GPR(rd), 0, SPECIAL_MFLO), \
                            "mflo %s", gpn(rd)); } while (0)
 
 #define MUL(rd, rs, rt)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL2, rs, rt, rd, 0, SPECIAL2_MUL), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL2, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL2_MUL), \
                            "mul %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define MULT(rs, rt)                                                    \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, 0, 0, SPECIAL_MULT), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), 0, 0, SPECIAL_MULT), \
                            "mult %s, %s", gpn(rs), gpn(rt)); } while (0)
 
 #define MOVE(rd, rs)                                                    \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, ZERO, rd, 0, SPECIAL_ADDU), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(ZERO), GPR(rd), 0, SPECIAL_ADDU), \
                            "move %s, %s", gpn(rd), gpn(rs)); } while (0)
 
 #define MOVN(rd, rs, rt)                                                \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_MOVN), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_MOVN), \
                            "movn %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define NEGU(rd, rt)                                                    \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, ZERO, rt, rd, 0, SPECIAL_SUBU), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(ZERO), GPR(rt), GPR(rd), 0, SPECIAL_SUBU), \
                            "negu %s, %s", gpn(rd), gpn(rt)); } while (0)
 
 #define NOP()                                                           \
-    do { count_misc(); EMIT(R_FORMAT(OP_SPECIAL, 0, 0, 0, 0, SPECIAL_SLL), \
+    do { count_misc(); EMIT(R_FORMAT(OP_SPECIAL, GPR(ZERO), GPR(ZERO), GPR(ZERO), 0, SPECIAL_SLL), \
                             "nop"); } while (0)
 
 #define trampNOP()                                                      \
-    do { count_misc(); TRAMP(R_FORMAT(OP_SPECIAL, 0, 0, 0, 0, SPECIAL_SLL), \
+    do { count_misc(); TRAMP(R_FORMAT(OP_SPECIAL, GPR(ZERO), GPR(ZERO), GPR(ZERO), 0, SPECIAL_SLL), \
                              "nop"); } while (0)
 
 #define NOR(rd, rs, rt)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_NOR), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_NOR), \
                            "nor %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define NOT(rd, rs)                                                     \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, ZERO, rd, 0, SPECIAL_NOR), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(ZERO), GPR(rd), 0, SPECIAL_NOR), \
                            "not %s, %s", gpn(rd), gpn(rs)); } while (0)
 
 #define OR(rd, rs, rt)                                                  \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_OR), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_OR), \
                            "or %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define ORI(rt, rs, uimm)                                               \
-    do { count_alu(); EMIT(U_FORMAT(OP_ORI, rs, rt, uimm),              \
+    do { count_alu(); EMIT(U_FORMAT(OP_ORI, GPR(rs), GPR(rt), uimm),    \
                            "ori %s, %s, 0x%x", gpn(rt), gpn(rs), ((uimm)&0xffff)); } while (0)
 
 #define SLTIU(rt, rs, simm)                                             \
-    do { count_alu(); EMIT(I_FORMAT(OP_SLTIU, rs, rt, simm),            \
+    do { count_alu(); EMIT(I_FORMAT(OP_SLTIU, GPR(rs), GPR(rt), simm),  \
                            "sltiu %s, %s, %d", gpn(rt), gpn(rs), simm); } while (0)
 
 #define SLT(rd, rs, rt)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_SLT), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_SLT), \
                            "slt %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define SLTU(rd, rs, rt)                                                \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_SLTU), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_SLTU), \
                            "sltu %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define SLL(rd, rt, sa)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, rt, rd, sa, SPECIAL_SLL), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, GPR(rt), GPR(rd), sa, SPECIAL_SLL), \
                            "sll %s, %s, %d", gpn(rd), gpn(rt), sa); } while (0)
 
 #define SLLV(rd, rt, rs)                                                \
-    do { count_misc(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_SLLV), \
+    do { count_misc(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_SLLV), \
                             "sllv %s, %s, %s", gpn(rd), gpn(rt), gpn(rs)); } while (0)
 
 #define SRA(rd, rt, sa)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, rt, rd, sa, SPECIAL_SRA), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, GPR(rt), GPR(rd), sa, SPECIAL_SRA), \
                            "sra %s, %s, %d", gpn(rd), gpn(rt), sa); } while (0)
 
 #define SRAV(rd, rt, rs)                                                \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_SRAV), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_SRAV), \
                            "srav %s, %s, %s", gpn(rd), gpn(rt), gpn(rs)); } while (0)
 
 #define SRL(rd, rt, sa)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, rt, rd, sa, SPECIAL_SRL), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, 0, GPR(rt), GPR(rd), sa, SPECIAL_SRL), \
                            "srl %s, %s, %d", gpn(rd), gpn(rt), sa); } while (0)
 
 #define SRLV(rd, rt, rs)                                                \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_SRLV), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_SRLV), \
                            "srlv %s, %s, %s", gpn(rd), gpn(rt), gpn(rs)); } while (0)
 
 #define SUBU(rd, rs, rt)                                                \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_SUBU), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_SUBU), \
                            "subu %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define SW(rt, offset, base)                    \
-    LDST(OP_SW, rt, offset, base)
+    LDSTGPR(OP_SW, rt, offset, base)
 
 #define XOR(rd, rs, rt)                                                 \
-    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, rs, rt, rd, 0, SPECIAL_XOR), \
+    do { count_alu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), GPR(rt), GPR(rd), 0, SPECIAL_XOR), \
                            "xor %s, %s, %s", gpn(rd), gpn(rs), gpn(rt)); } while (0)
 
 #define XORI(rt, rs, uimm)                                              \
-    do { count_alu(); EMIT(U_FORMAT(OP_XORI, rs, rt, uimm),             \
+    do { count_alu(); EMIT(U_FORMAT(OP_XORI, GPR(rs), GPR(rt), uimm),   \
                            "xori %s, %s, 0x%x", gpn(rt), gpn(rs), ((uimm)&0xffff)); } while (0)
 
 
@@ -657,47 +697,47 @@ namespace nanojit {
 #endif
 
 #define FOP_FMT2(ffmt, fd, fs, func, name)                              \
-    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, ffmt, 0, fs, fd, func),    \
+    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, ffmt, FPR(F0), FPR(fs), FPR(fd), func), \
                            "%s.%s %s, %s", name, fname[ffmt], fpn(fd), fpn(fs)); } while (0)
 
 #define FOP_FMT3(ffmt, fd, fs, ft, func, name)                          \
-    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, ffmt, ft, fs, fd, func),   \
+    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, ffmt, FPR(ft), FPR(fs), FPR(fd), func), \
                            "%s.%s %s, %s, %s", name, fname[ffmt], fpn(fd), fpn(fs), fpn(ft)); } while (0)
 
 #define C_COND_FMT(cond, ffmt, fs, ft)                                  \
-    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, ffmt, ft, fs, 0, 0x30|(cond)), \
+    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, ffmt, FPR(ft), FPR(fs), FPR(F0), 0x30|(cond)), \
                            "c.%s.%s %s, %s", cname[cond], fname[ffmt], fpn(fs), fpn(ft)); } while (0)
 
 #define MFC1(rt, fs)                                                    \
-    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, 0, rt, fs, 0, 0),          \
+    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, 0, GPR(rt), FPR(fs), FPR(F0), 0), \
                            "mfc1 %s, %s", gpn(rt), fpn(fs)); } while (0)
 
 #define MTC1(rt, fs)                                                    \
-    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, 4, rt, fs, 0, 0),          \
+    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, 4, GPR(rt), FPR(fs), FPR(F0), 0), \
                            "mtc1 %s, %s", gpn(rt), fpn(fs)); } while (0)
 
 #define MOVF(rd, rs, cc)                                                \
-    do { count_fpu(); EMIT(R_FORMAT(OP_SPECIAL, rs, (cc)<<2, rd, 0, SPECIAL_MOVCI), \
+    do { count_fpu(); EMIT(R_FORMAT(OP_SPECIAL, GPR(rs), (cc)<<2, GPR(rd), 0, SPECIAL_MOVCI), \
                            "movf %s, %s, $fcc%d", gpn(rd), gpn(rs), cc); } while (0)
 
 #define CVT_D_W(fd, fs)                                                 \
-    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, FMT_W, 0, fs, fd, COP1_CVTD), \
+    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, FMT_W, FPR(F0), FPR(fs), FPR(fd), COP1_CVTD), \
                            "cvt.d.w %s, %s", fpn(fd), fpn(fs)); } while (0)
 
 #define TRUNC_W_D(fd, fs)                                               \
-    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, FMT_D, 0, fs, fd, COP1_TRUNCW), \
+    do { count_fpu(); EMIT(F_FORMAT(OP_COP1, FMT_D, FPR(F0), FPR(fs), FPR(fd), COP1_TRUNCW), \
                            "trunc.w.d %s, %s", fpn(fd), fpn(fs)); } while (0)
 
 
-#define LWC1(ft, offset, base)  LDST(OP_LWC1, ft, offset, base)
-#define SWC1(ft, offset, base)  LDST(OP_SWC1, ft, offset, base)
-#define LDC1(ft, offset, base)  LDST(OP_LDC1, ft, offset, base)
-#define SDC1(ft, offset, base)  LDST(OP_SDC1, ft, offset, base)
+#define LWC1(ft, offset, base)  LDSTFPR(OP_LWC1, FPR(ft), offset, GPR(base))
+#define SWC1(ft, offset, base)  LDSTFPR(OP_SWC1, FPR(ft), offset, GPR(base))
+#define LDC1(ft, offset, base)  LDSTFPR(OP_LDC1, FPR(ft), offset, GPR(base))
+#define SDC1(ft, offset, base)  LDSTFPR(OP_SDC1, FPR(ft), offset, GPR(base))
 #define LDXC1(fd, index, base)                                          \
-    do { count_fpu(); EMIT(R_FORMAT(OP_COP1X, base, index, 0, fd, COP1X_LDXC1), \
+    do { count_fpu(); EMIT(X_FORMAT(OP_COP1X, GPR(base), GPR(index), FPR(F0), FPR(fd), COP1X_LDXC1), \
                            "ldxc1 %s, %s(%s)", fpn(fd), gpn(index), gpn(base)); } while (0)
 #define SDXC1(fs, index, base)                                          \
-    do { count_fpu(); EMIT(R_FORMAT(OP_COP1X, base, index, fs, 0, COP1X_SDXC1), \
+    do { count_fpu(); EMIT(X_FORMAT(OP_COP1X, GPR(base), GPR(index), FPR(fs), FPR(F0), COP1X_SDXC1), \
                            "sdxc1 %s, %s(%s)", fpn(fs), gpn(index), gpn(base)); } while (0)
 
 #define C_EQ_D(fs, ft)          C_COND_FMT(COND_EQ, FMT_D, fs, ft)
