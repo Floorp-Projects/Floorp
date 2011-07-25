@@ -594,7 +594,7 @@ struct JSObject : js::gc::Cell {
 
     /* gc::FinalizeKind */ unsigned finalizeKind() const;
 
-    uint32 numSlots() const { return capacity; }
+    uint32 numSlots() const { return uint32(capacity); }
 
     size_t slotsAndStructSize(uint32 nslots) const;
     size_t slotsAndStructSize() const { return slotsAndStructSize(numSlots()); }
@@ -1710,11 +1710,6 @@ js_NativeSet(JSContext *cx, JSObject *obj, const js::Shape *shape, bool added,
 
 extern JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, js::Value *vp);
-
-extern bool
-js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
-                              uint32 getHow, js::Value *vp,
-                              const js::Shape **shapeOut, JSObject **holderOut);
 
 extern JSBool
 js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);

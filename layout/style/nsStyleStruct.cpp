@@ -2094,8 +2094,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
 
   /* Copy over the transformation information. */
   mSpecifiedTransform = aSource.mSpecifiedTransform;
-  if (mSpecifiedTransform)
-    mTransform = aSource.mTransform;
   
   /* Copy over transform origin. */
   mTransformOrigin[0] = aSource.mTransformOrigin[0];
@@ -2150,7 +2148,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
      * the overflow rect (which probably changed if the transform changed)
      * and to redraw within the bounds of that new overflow rect.
      */
-    if (mTransform != aOther.mTransform)
+    if (!mSpecifiedTransform != !aOther.mSpecifiedTransform ||
+        (mSpecifiedTransform && *mSpecifiedTransform != *aOther.mSpecifiedTransform))
       NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
                                          nsChangeHint_UpdateTransformLayer));
     

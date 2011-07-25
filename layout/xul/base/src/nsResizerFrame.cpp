@@ -60,6 +60,8 @@
 #include "nsContentUtils.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIScreenManager.h"
+#include "mozilla/dom/Element.h"
+
 
 //
 // NS_NewResizerFrame

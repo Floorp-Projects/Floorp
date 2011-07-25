@@ -1750,10 +1750,6 @@ FindObjectPrincipals(JSContext *cx, JSObject *obj)
     return gJSPrincipals;
 }
 
-// defined in nsScriptSecurityManager.cpp
-NS_IMPORT JSPrincipals *
-NS_DefaultObjectPrincipalFinder(JSContext *cx, JSObject *obj);
-
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1839,6 +1835,21 @@ main(int argc, char **argv, char **envp)
     }
 
     {
+        if (argc > 1 && !strcmp(argv[1], "--greomni")) {
+            nsCOMPtr<nsILocalFile> greOmni;
+            nsCOMPtr<nsILocalFile> appOmni;
+            XRE_GetFileFromPath(argv[2], getter_AddRefs(greOmni));
+            if (argc > 3 && !strcmp(argv[3], "--appomni")) {
+                XRE_GetFileFromPath(argv[4], getter_AddRefs(appOmni));
+                argc-=2;
+                argv+=2;
+            } 
+            
+            XRE_InitOmnijar(greOmni, appOmni);
+            argc-=2;
+            argv+=2;
+        }
+
         nsCOMPtr<nsIServiceManager> servMan;
         rv = NS_InitXPCOM2(getter_AddRefs(servMan), appDir, &dirprovider);
         if (NS_FAILED(rv)) {
@@ -1907,7 +1918,7 @@ main(int argc, char **argv, char **envp)
 
         JSSecurityCallbacks *cb = JS_GetRuntimeSecurityCallbacks(rt);
         NS_ASSERTION(cb, "We are assuming that nsScriptSecurityManager::Init() has been run");
-        NS_ASSERTION(cb->findObjectPrincipals == NS_DefaultObjectPrincipalFinder, "Your pigeon is in my hole!");
+        NS_ASSERTION(!cb->findObjectPrincipals, "Your pigeon is in my hole!");
         cb->findObjectPrincipals = FindObjectPrincipals;
 
 #ifdef TEST_TranslateThis

@@ -2114,6 +2114,8 @@ public:
                                    const nsRect& aAllowVisibleRegionExpansion);
   virtual PRBool TryMerge(nsDisplayListBuilder *aBuilder, nsDisplayItem *aItem);
 
+  const gfx3DMatrix& GetTransform(float aFactor);
+
   /**
    * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
    * space) and returns the smallest rectangle (in aFrame's coordinate space)
@@ -2145,9 +2147,10 @@ public:
   /* UntransformRect is like TransformRect, except that it inverts the
    * transform.
    */
-  static nsRect UntransformRect(const nsRect &aUntransformedBounds, 
+  static PRBool UntransformRect(const nsRect &aUntransformedBounds, 
                                 const nsIFrame* aFrame,
-                                const nsPoint &aOrigin);
+                                const nsPoint &aOrigin,
+                                nsRect* aOutRect);
 
   /**
    * Returns the bounds of a frame as defined for resolving percentage
@@ -2178,13 +2181,15 @@ public:
    *        value of aBoundsOverride.  This is mostly for internal use and in
    *        most cases you will not need to specify a value.
    */
-  static gfxMatrix GetResultingTransformMatrix(const nsIFrame* aFrame,
-                                               const nsPoint& aOrigin,
-                                               float aFactor,
-                                               const nsRect* aBoundsOverride = nsnull);
+  static gfx3DMatrix GetResultingTransformMatrix(const nsIFrame* aFrame,
+                                                 const nsPoint& aOrigin,
+                                                 float aFactor,
+                                                 const nsRect* aBoundsOverride = nsnull);
 
 private:
   nsDisplayWrapList mStoredList;
+  gfx3DMatrix mTransform;
+  float mCachedFactor;
 };
 
 /**

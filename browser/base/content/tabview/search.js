@@ -585,8 +585,7 @@ function ensureSearchShown(activatedByKeypress) {
 
     // NOTE: when this function is called by keydown handler, next keypress
     // event or composition events of IME will be fired on the focused editor.
-
-    function dispatchTabViewSearchEnabledEvent() {
+    let dispatchTabViewSearchEnabledEvent = function dispatchTabViewSearchEnabledEvent() {
       let newEvent = document.createEvent("Events");
       newEvent.initEvent("tabviewsearchenabled", false, false);
       dispatchEvent(newEvent);
@@ -595,7 +594,7 @@ function ensureSearchShown(activatedByKeypress) {
     if (activatedByKeypress) {
       // set the focus so key strokes are entered into the textbox.
       $searchbox[0].focus();
-      dispatchTabViewSearchEnabledEvent(); 
+      dispatchTabViewSearchEnabledEvent();
     } else {
       // marshal the focusing, otherwise it ends up with searchbox[0].focus gets
       // called before the search button gets the focus after being pressed.

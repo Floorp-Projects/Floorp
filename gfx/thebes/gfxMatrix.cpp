@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "gfxMatrix.h"
-#include "gfx3DMatrix.h"
 #include "cairo.h"
 
 #define CAIRO_MATRIX(x) reinterpret_cast<cairo_matrix_t*>((x))
@@ -156,25 +155,6 @@ gfxMatrix::TransformBounds(const gfxRect& rect) const
     return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
-PRBool
-gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
-{
-  if (_13 != 0.0f || _14 != 0.0f ||
-      _23 != 0.0f || _24 != 0.0f ||
-      _31 != 0.0f || _32 != 0.0f || _33 != 1.0f || _34 != 0.0f ||
-      _43 != 0.0f || _44 != 1.0f) {
-    return PR_FALSE;
-  }
-  if (aMatrix) {
-    aMatrix->xx = _11;
-    aMatrix->yx = _12;
-    aMatrix->xy = _21;
-    aMatrix->yy = _22;
-    aMatrix->x0 = _41;
-    aMatrix->y0 = _42;
-  }
-  return PR_TRUE;
-}
 
 static void NudgeToInteger(double *aVal)
 {
