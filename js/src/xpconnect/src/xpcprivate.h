@@ -1034,7 +1034,6 @@ public:
     inline XPCPerThreadData*            GetThreadData() const ;
     inline XPCContext*                  GetXPCContext() const ;
     inline JSContext*                   GetJSContext() const ;
-    inline JSContext*                   GetSafeJSContext() const ;
     inline JSBool                       GetContextPopRequired() const ;
     inline XPCContext::LangType         GetCallerLanguage() const ;
     inline XPCContext::LangType         GetPrevCallerLanguage() const ;
