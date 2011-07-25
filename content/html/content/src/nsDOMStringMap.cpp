@@ -50,9 +50,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStringMap)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStringMap)
-  // Call back to element to null out weak reference to this object.
-  tmp->mElement->ClearDataset();
-  tmp->mElement = nsnull;
+  // Check that mElement exists in case the unlink code is run more than once.
+  if (tmp->mElement) {
+    // Call back to element to null out weak reference to this object.
+    tmp->mElement->ClearDataset();
+    tmp->mElement = nsnull;
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStringMap)
