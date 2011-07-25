@@ -613,6 +613,12 @@ struct Chunk {
         return (addr & GC_CHUNK_MASK) >> ArenaShift;
     }
 
+    uintptr_t address() const {
+        uintptr_t addr = reinterpret_cast<uintptr_t>(this);
+        JS_ASSERT(!(addr & GC_CHUNK_MASK));
+        return addr;
+    }
+
     void init(JSRuntime *rt);
     bool unused();
     bool hasAvailableArenas();
@@ -750,13 +756,12 @@ Cell::compartment() const
 /*
  * Lower limit after which we limit the heap growth
  */
-const size_t GC_ARENA_ALLOCATION_TRIGGER = 30 * js::GC_CHUNK_SIZE;
+const size_t GC_ALLOCATION_THRESHOLD = 30 * 1024 * 1024;
 
 /*
- * A GC is triggered once the number of newly allocated arenas
- * is GC_HEAP_GROWTH_FACTOR times the number of live arenas after
- * the last GC starting after the lower limit of
- * GC_ARENA_ALLOCATION_TRIGGER.
+ * A GC is triggered once the number of newly allocated arenas is
+ * GC_HEAP_GROWTH_FACTOR times the number of live arenas after the last GC
+ * starting after the lower limit of GC_ALLOCATION_THRESHOLD.
  */
 const float GC_HEAP_GROWTH_FACTOR = 3.0f;
 
@@ -998,9 +1003,17 @@ struct FreeLists {
 extern void *
 RefillFinalizableFreeList(JSContext *cx, unsigned thingKind);
 
-} /* namespace gc */
+/*
+ * Initial allocation size for data structures holding chunks is set to hold
+ * chunks with total capacity of 16MB to avoid buffer resizes during browser
+ * startup.
+ */
+const size_t INITIAL_CHUNK_CAPACITY = 16 * 1024 * 1024 / GC_CHUNK_SIZE;
 
-typedef Vector<gc::Chunk *, 32, SystemAllocPolicy> GCChunks;
+/* The number of GC cycles an empty chunk can survive before been released. */
+const size_t MAX_EMPTY_CHUNK_AGE = 4;
+
+} /* namespace gc */
 
 struct GCPtrHasher
 {
