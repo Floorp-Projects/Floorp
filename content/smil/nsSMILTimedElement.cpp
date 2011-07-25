@@ -1547,17 +1547,17 @@ namespace
   {
   public:
     RemoveBelowThreshold(PRUint32 aThreshold,
-                         const nsSMILInstanceTime* aCurrentIntervalBegin)
+                         nsTArray<const nsSMILInstanceTime *>& aTimesToKeep)
       : mThreshold(aThreshold),
-        mCurrentIntervalBegin(aCurrentIntervalBegin) { }
+        mTimesToKeep(aTimesToKeep) { }
     PRBool operator()(nsSMILInstanceTime* aInstanceTime, PRUint32 aIndex)
     {
-      return aInstanceTime != mCurrentIntervalBegin && aIndex < mThreshold;
+      return aIndex < mThreshold && !mTimesToKeep.Contains(aInstanceTime);
     }
 
   private:
     PRUint32 mThreshold;
-    const nsSMILInstanceTime* mCurrentIntervalBegin;
+    nsTArray<const nsSMILInstanceTime *>& mTimesToKeep;
   };
 }
 
@@ -1577,10 +1577,18 @@ nsSMILTimedElement::FilterInstanceTimes(InstanceTimeList& aList)
   // a hard cutoff at which point we just drop the oldest instance times.
   if (aList.Length() > sMaxNumInstanceTimes) {
     PRUint32 threshold = aList.Length() - sMaxNumInstanceTimes;
-    // We should still preserve the current interval begin time however
-    const nsSMILInstanceTime* currentIntervalBegin = mCurrentInterval ?
-      mCurrentInterval->Begin() : nsnull;
-    RemoveBelowThreshold removeBelowThreshold(threshold, currentIntervalBegin);
+    // There are a few instance times we should keep though, notably:
+    // - the current interval begin time,
+    // - the previous interval end time (see note in RemoveInstanceTimes)
+    nsTArray<const nsSMILInstanceTime *> timesToKeep;
+    if (mCurrentInterval) {
+      timesToKeep.AppendElement(mCurrentInterval->Begin());
+    }
+    const nsSMILInterval* prevInterval = GetPreviousInterval();
+    if (prevInterval) {
+      timesToKeep.AppendElement(prevInterval->End());
+    }
+    RemoveBelowThreshold removeBelowThreshold(threshold, timesToKeep);
     RemoveInstanceTimes(aList, removeBelowThreshold);
   }
 }
