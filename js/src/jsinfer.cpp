@@ -2479,8 +2479,10 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
                         while (!JSID_IS_EMPTY(shape->propid)) {
                             if (shape->slot == i) {
                                 Type type = Type::DoubleType();
-                                if (!p->value.object->unknownProperties())
-                                    p->value.object->addPropertyType(cx, shape->propid, type);
+                                if (!p->value.object->unknownProperties()) {
+                                    jsid id = MakeTypeId(cx, shape->propid);
+                                    p->value.object->addPropertyType(cx, id, type);
+                                }
                                 break;
                             }
                             shape = shape->previous();
@@ -2537,8 +2539,10 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         while (!JSID_IS_EMPTY(shape->propid)) {
             ids[shape->slot] = shape->propid;
             types[shape->slot] = GetValueType(cx, obj->getSlot(shape->slot));
-            if (!objType->unknownProperties())
-                objType->addPropertyType(cx, MakeTypeId(cx, shape->propid), types[shape->slot]);
+            if (!objType->unknownProperties()) {
+                jsid id = MakeTypeId(cx, shape->propid);
+                objType->addPropertyType(cx, id, types[shape->slot]);
+            }
             shape = shape->previous();
         }
 
