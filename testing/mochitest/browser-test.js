@@ -212,9 +212,16 @@ Tester.prototype = {
     // is invoked to start the tests.
     this.waitForWindowsState((function () {
       if (this.done) {
-        // Schedule GC before finishing in order to be able to report an accurate
-        // DOM window count at the end of this test suite.
-        Cu.schedulePreciseGC(this.finish.bind(this));
+        // Schedule GC and CC runs before finishing in order to detect
+        // DOM windows leaked by our tests or the tested code.
+        Cu.schedulePreciseGC((function () {
+          let winutils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindowUtils);
+          winutils.garbageCollect();
+          winutils.garbageCollect();
+          winutils.garbageCollect();
+          this.finish();
+        }).bind(this));
         return;
       }
 

@@ -92,7 +92,7 @@ public:
   /**
    * Foreign objects can return a transform matrix.
    */
-  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
+  virtual gfx3DMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
 
   /**
    * Get the "type" of the frame
