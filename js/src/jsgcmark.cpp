@@ -237,15 +237,6 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
     Mark(trc, shape);
 }
 
-void
-MarkTypeObject(JSTracer *trc, types::TypeObject *object, const char *name)
-{
-    JS_ASSERT(trc);
-    JS_ASSERT(object);
-    JS_SET_TRACING_NAME(trc, name);
-    object->trace(trc, false);
-}
-
 #if JS_HAS_XML_SUPPORT
 void
 MarkXML(JSTracer *trc, JSXML *xml, const char *name)
@@ -527,7 +518,12 @@ MarkRoot(JSTracer *trc, const Shape *thing, const char *name)
 void
 MarkRoot(JSTracer *trc, types::TypeObject *thing, const char *name)
 {
-    MarkTypeObject(trc, thing, name);
+    JS_ASSERT(trc);
+    JS_ASSERT(thing);
+    JS_SET_TRACING_NAME(trc, name);
+    JSRuntime *rt = trc->context->runtime;
+    if (!rt->gcCurrentCompartment || thing->compartment() == rt->gcCurrentCompartment)
+        thing->trace(trc, false);
 }
 
 void
