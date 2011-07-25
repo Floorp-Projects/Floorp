@@ -1654,11 +1654,12 @@ TypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
      * definite properties be invalidated.
      */
     if (object->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
-        if (!object->newScript) {
+        if (object->newScript) {
+            CheckNewScriptProperties(cx, object, object->newScript->script);
+        } else {
             JS_ASSERT(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED);
             object->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
         }
-        CheckNewScriptProperties(cx, object, object->newScript->script);
     }
 
     if (isOwnProperty(configurable))
