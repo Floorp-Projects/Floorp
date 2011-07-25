@@ -5070,6 +5070,9 @@ JSObject::makeLazyType(JSContext *cx)
             type->flags |= OBJECT_FLAG_CREATED_ARGUMENTS;
     }
 
+    if (flags & ITERATED)
+        type->flags |= OBJECT_FLAG_ITERATED;
+
 #if JS_HAS_XML_SUPPORT
     /*
      * XML objects do not have equality hooks but are treated special by EQ/NE

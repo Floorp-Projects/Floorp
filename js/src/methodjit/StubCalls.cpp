@@ -638,7 +638,7 @@ stubs::ToId(VMFrame &f)
     if (!FetchElementId(f, obj, idval, id, &idval))
         THROW();
 
-    if (!JSID_IS_INT(id))
+    if (!idval.isInt32())
         f.script()->types.monitorUnknown(f.cx, f.pc());
 }
 
