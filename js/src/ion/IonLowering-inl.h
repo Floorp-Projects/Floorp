@@ -170,14 +170,15 @@ LIRGenerator::temp(LDefinition::Type type)
 template <typename T> bool
 LIRGenerator::annotate(T *ins)
 {
-    if (ins->numDefs()) {
-        ins->setId(ins->getDef(0)->virtualRegister());
-    } else {
-        ins->setId(getVirtualRegister());
-        if (ins->id() >= MAX_VIRTUAL_REGISTERS)
-            return false;
+    for (size_t i = 0; i < ins->numDefs(); i++) {
+        if (ins->getDef(i)->policy() != LDefinition::REDEFINED) {
+            ins->setId(ins->getDef(i)->virtualRegister());
+            return true;
+        }
     }
-    return true;
+
+    ins->setId(getVirtualRegister());
+    return ins->id() < MAX_VIRTUAL_REGISTERS;
 }
 
 template <typename T> bool
