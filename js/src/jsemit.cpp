@@ -4674,16 +4674,14 @@ EmitAssignment(JSContext *cx, JSCodeGenerator *cg, JSParseNode *lhs, JSOp op, JS
           case TOK_DOT:
             if (js_Emit1(cx, cg, JSOP_DUP) < 0)
                 return false;
-            if (lhs->pn_atom == cx->runtime->atomState.lengthAtom) {
-                if (js_Emit1(cx, cg, JSOP_LENGTH) < 0)
-                    return false;
-            } else if (lhs->pn_atom == cx->runtime->atomState.protoAtom) {
+            if (lhs->pn_atom == cx->runtime->atomState.protoAtom) {
                 if (!EmitIndexOp(cx, JSOP_QNAMEPART, atomIndex, cg))
                     return false;
                 if (!EmitElemOpBase(cx, cg, JSOP_GETELEM))
                     return false;
             } else {
-                EMIT_INDEX_OP(JSOP_GETPROP, atomIndex);
+                bool isLength = (lhs->pn_atom == cx->runtime->atomState.lengthAtom);
+                EMIT_INDEX_OP(isLength ? JSOP_LENGTH : JSOP_GETPROP, atomIndex);
             }
             break;
           case TOK_LB:
