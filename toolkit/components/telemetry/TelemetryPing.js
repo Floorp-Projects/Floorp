@@ -238,8 +238,11 @@ TelemetryPing.prototype = {
         val = Math.floor(mr.amount / 1024);
       }
       else if (mr.units == Ci.nsIMemoryReporter.UNITS_COUNT) {
-        // If the reporter gives us a count, we'll report the difference in its
-        // value between now and our previous ping.
+        val = mr.amount;
+      }
+      else if (mr.units == Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE) {
+        // If the reporter gives us a cumulative count, we'll report the
+        // difference in its value between now and our previous ping.
 
         // Read mr.amount just once so our arithmetic is consistent.
         let curVal = mr.amount;

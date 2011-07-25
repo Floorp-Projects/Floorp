@@ -2055,6 +2055,7 @@ void nsHTMLMediaElement::SeekCompleted()
 
 void nsHTMLMediaElement::DownloadSuspended()
 {
+  DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   if (mBegun) {
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
     AddRemoveSelfReference();
