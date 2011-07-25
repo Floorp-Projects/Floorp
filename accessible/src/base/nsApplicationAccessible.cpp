@@ -484,14 +484,6 @@ nsApplicationAccessible::ScrollToPoint(PRUint32 aCoordinateType,
 }
 
 NS_IMETHODIMP
-nsApplicationAccessible::GetOwnerWindow(void **aOwnerWindow)
-{
-  NS_ENSURE_ARG_POINTER(aOwnerWindow);
-  *aOwnerWindow = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsApplicationAccessible::GetComputedStyleValue(const nsAString &aPseudoElt,
                                                const nsAString &aPropertyName,
                                                nsAString &aValue)

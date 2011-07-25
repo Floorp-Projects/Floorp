@@ -107,7 +107,8 @@ ReportError(JSContext *cx, const char *msg)
 nsresult
 mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_obj,
                                  jschar *charset, const char *uriStr,
-                                 nsIIOService *serv, JSObject **scriptObjp)
+                                 nsIIOService *serv, nsIPrincipal *principal,
+                                 JSObject **scriptObjp)
 {
     nsCOMPtr<nsIChannel>     chan;
     nsCOMPtr<nsIInputStream> instream;
@@ -143,7 +144,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
     /* we can't hold onto jsPrincipals as a module var because the
      * JSPRINCIPALS_DROP macro takes a JSContext, which we won't have in the
      * destructor */
-    rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
+    rv = principal->GetJSPrincipals(cx, &jsPrincipals);
     if (NS_FAILED(rv) || !jsPrincipals) {
         return ReportError(cx, LOAD_ERROR_NOPRINCIPALS);
     }
@@ -302,13 +303,26 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 
     // Remember an object out of the calling compartment so that we
     // can properly wrap the result later.
+    nsCOMPtr<nsIPrincipal> principal = mSystemPrincipal;
     JSObject *result_obj = target_obj;
     target_obj = JS_FindCompilationScope(cx, target_obj);
-    if (!target_obj) return NS_ERROR_FAILURE;
-#ifdef DEBUG_rginda
+    if (!target_obj)
+        return NS_ERROR_FAILURE;
+
     if (target_obj != result_obj)
+    {
+        nsCOMPtr<nsIScriptSecurityManager> secman =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+        if (!secman)
+            return NS_ERROR_FAILURE;
+
+        rv = secman->GetObjectPrincipal(cx, target_obj, getter_AddRefs(principal));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG_rginda
         fprintf (stderr, "Final global: %p\n", target_obj);
 #endif
+    }
 
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, target_obj))
@@ -339,7 +353,10 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         return NS_ERROR_FAILURE;
     }
 
-    StartupCache* cache = StartupCache::GetSingleton();
+    // Suppress caching if we're compiling as content.
+    StartupCache* cache = (principal == mSystemPrincipal)
+                          ? StartupCache::GetSingleton()
+                          : nsnull;
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv) {
         return ReportError(cx, LOAD_ERROR_NOSERVICE);
@@ -390,7 +407,8 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     if (cache)
         rv = ReadCachedScript(cache, cachePath, cx, &scriptObj);
     if (!scriptObj) {
-        rv = ReadScript(uri, cx, target_obj, charset, (char *)uriStr.get(), serv, &scriptObj);
+        rv = ReadScript(uri, cx, target_obj, charset, (char *)uriStr.get(), serv,
+                        principal, &scriptObj);
         writeScript = true;
     }
 

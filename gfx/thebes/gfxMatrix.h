@@ -103,6 +103,12 @@ public:
      */
     const gfxMatrix& Reset();
 
+    PRBool IsIdentity() const {
+       return xx == 1.0 && yx == 0.0 &&
+              xy == 0.0 && yy == 1.0 &&
+              x0 == 0.0 && y0 == 0.0;
+    }
+
     /**
      * Inverts this matrix, if possible. Otherwise, the matrix is left
      * unchanged.

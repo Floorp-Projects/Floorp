@@ -85,14 +85,17 @@ void LaunchChildMac(int aArgc, char** aArgv, PRUint32 aRestartType)
   }
 
   cpu_type_t *wanted_type = pref_cpu_types;
+  size_t attr_count = NS_ARRAY_LENGTH(pref_cpu_types);
 
-  if (aRestartType & nsIAppStartup::eRestarti386)
+  if (aRestartType & nsIAppStartup::eRestarti386) {
     wanted_type = cpu_i386_types;
-  else if (aRestartType & nsIAppStartup::eRestartx86_64)
+    attr_count = NS_ARRAY_LENGTH(cpu_i386_types);
+  } else if (aRestartType & nsIAppStartup::eRestartx86_64) {
     wanted_type = cpu_x64_86_types;
+    attr_count = NS_ARRAY_LENGTH(cpu_x64_86_types);
+  }
 
   // Set spawn attributes.
-  size_t attr_count = NS_ARRAY_LENGTH(wanted_type);
   size_t attr_ocount = 0;
   if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, wanted_type, &attr_ocount) != 0 ||
       attr_ocount != attr_count) {

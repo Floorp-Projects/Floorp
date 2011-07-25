@@ -9,8 +9,8 @@ function test() {
 
   // open a new window and setup the window state.
   newWin = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
-  newWin.addEventListener("load", function(event) {
-    this.removeEventListener("load", arguments.callee, false);
+  newWin.addEventListener("load", function onLoad(event) {
+    this.removeEventListener("load", onLoad, false);
 
     let newState = {
       windows: [{

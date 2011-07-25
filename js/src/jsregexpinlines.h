@@ -341,11 +341,12 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inputstr,
      */
     for (int *it = buf; it != buf + matchItemCount; ++it)
         *it = -1;
-
+    
     JSLinearString *input = inputstr->ensureLinear(cx);
     if (!input)
         return false;
 
+    JS::Anchor<JSString *> anchor(input);
     size_t len = input->length();
     const jschar *chars = input->chars();
 

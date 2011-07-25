@@ -25,7 +25,6 @@ var testObserver = {
   observe: function(subject, topic, data) {
     observerFired = true;
     ok(true, "Observer fired");
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     is(topic, "plugin-crashed", "Checking correct topic");
     is(data,  null, "Checking null data");
     ok((subject instanceof Components.interfaces.nsIPropertyBag2), "got Propbag");
@@ -53,7 +52,6 @@ var testObserver = {
   },
 
   QueryInterface: function(iid) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (iid.equals(Components.interfaces.nsIObserver) ||
         iid.equals(Components.interfaces.nsISupportsWeakReference) ||
         iid.equals(Components.interfaces.nsISupports))
@@ -71,8 +69,6 @@ function onPluginCrashed(aEvent) {
   var pluginElement = document.getElementById("plugin1");
   is (pluginElement, aEvent.target, "Plugin crashed event target is plugin element");
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  
   ok(aEvent instanceof Components.interfaces.nsIDOMDataContainerEvent,
      "plugin crashed event has the right interface");
   var pluginName = aEvent.getData("pluginName");

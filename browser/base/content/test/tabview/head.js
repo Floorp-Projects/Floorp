@@ -168,8 +168,8 @@ function whenTabViewIsHidden(callback, win) {
     return;
   }
 
-  win.addEventListener('tabviewhidden', function () {
-    win.removeEventListener('tabviewhidden', arguments.callee, false);
+  win.addEventListener('tabviewhidden', function onHidden() {
+    win.removeEventListener('tabviewhidden', onHidden, false);
     callback();
   }, false);
 }
@@ -183,8 +183,8 @@ function whenTabViewIsShown(callback, win) {
     return;
   }
 
-  win.addEventListener('tabviewshown', function () {
-    win.removeEventListener('tabviewshown', arguments.callee, false);
+  win.addEventListener('tabviewshown', function onShown() {
+    win.removeEventListener('tabviewshown', onShown, false);
     callback();
   }, false);
 }
