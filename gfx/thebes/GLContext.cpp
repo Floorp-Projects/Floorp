@@ -1700,9 +1700,10 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
             shader = ShaderProgramType(0);
     }
 
-    PRInt32 stride = imageSurface->Stride();
-
 #ifndef USE_GLES2
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 
+                 imageSurface->Stride() / pixelSize);
+
     internalformat = LOCAL_GL_RGBA;
 #else
     internalformat = format;
@@ -1721,168 +1722,69 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
         unsigned char *rectData = 
             data + DataOffset(imageSurface, iterRect->TopLeft() - topLeft);
 
-        NS_ASSERTION(textureInited || (iterRect->x == 0 && iterRect->y == 0), 
-                     "Must be uploading to the origin when we don't have an existing texture");
+#ifdef USE_GLES2
+        if (imageSurface->Stride() != iterRect->width * pixelSize) {
+            // Not using the whole row of texture data and GLES doesn't 
+            // support GL_UNPACK_ROW_LENGTH. We need to upload each row
+            // separately.
+            if (!textureInited) {
+                fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                            0,
+                            internalformat,
+                            iterRect->width,
+                            iterRect->height,
+                            0,
+                            format,
+                            type,
+                            NULL);
+            }
+
+            for (int h = 0; h < iterRect->height; h++) {
+                fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                               0,
+                               iterRect->x,
+                               iterRect->y+h,
+                               iterRect->width,
+                               1,
+                               format,
+                               type,
+                               rectData);
+                rectData += imageSurface->Stride();
+            }
+
+            continue;
+        }
+#endif
 
         if (textureInited) {
-            TexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                          0,
-                          iterRect->x,
-                          iterRect->y,
-                          iterRect->width,
-                          iterRect->height,
-                          stride,
-                          pixelSize,
-                          format,
-                          type,
-                          rectData);
+            fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                           0,
+                           iterRect->x,
+                           iterRect->y,
+                           iterRect->width,
+                           iterRect->height,
+                           format,
+                           type,
+                           rectData);
         } else {
-            TexImage2D(LOCAL_GL_TEXTURE_2D,
-                       0,
-                       internalformat,
-                       iterRect->width,
-                       iterRect->height,
-                       stride,
-                       pixelSize,
-                       0,
-                       format,
-                       type,
-                       rectData);
+            fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                        0,
+                        internalformat,
+                        iterRect->width,
+                        iterRect->height,
+                        0,
+                        format,
+                        type,
+                        rectData);
         }
 
     }
+
+#ifndef USE_GLES2
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+#endif
 
     return shader;
-}
-
-static GLint GetAddressAlignment(ptrdiff_t aAddress)
-{
-    if (!(aAddress & 0x7)) {
-       return 8;
-    } else if (!(aAddress & 0x3)) {
-        return 4;
-    } else if (!(aAddress & 0x1)) {
-        return 2;
-    } else {
-        return 1;
-    }
-}
-
-void
-GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat, 
-                      GLsizei width, GLsizei height, GLsizei stride,
-                      GLint pixelsize, GLint border, GLenum format, 
-                      GLenum type, const GLvoid *pixels)
-{
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
-                        GetAddressAlignment((ptrdiff_t)stride)));
-
-#ifndef USE_GLES2
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, stride/pixelsize);
-#else
-    if (stride != width * pixelSize) {
-        // Not using the whole row of texture data and GLES doesn't 
-        // support GL_UNPACK_ROW_LENGTH. We need to upload each row
-        // separately.
-        fTexImage2D(target,
-                    border,
-                    internalformat,
-                    width,
-                    height,
-                    border,
-                    format,
-                    type,
-                    NULL);
-
-        unsigned char *row = pixels; 
-        for (int h = 0; h < height; h++) {
-            fTexSubImage2D(target,
-                           level,
-                           0,
-                           h,
-                           width,
-                           1,
-                           format,
-                           type,
-                           row);
-
-            row += stride;
-        }
-
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-        return;
-    }
-#endif
-
-    fTexImage2D(target,
-                level,
-                internalformat,
-                width,
-                height,
-                border,
-                format,
-                type,
-                pixels);
-
-#ifndef USE_GLES2
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-#endif
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-}
-
-void
-GLContext::TexSubImage2D(GLenum target, GLint level, 
-                         GLint xoffset, GLint yoffset, 
-                         GLsizei width, GLsizei height, GLsizei stride,
-                         GLint pixelsize, GLenum format, 
-                         GLenum type, const GLvoid* pixels)
-{
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
-                        GetAddressAlignment((ptrdiff_t)stride)));
-
-#ifndef USE_GLES2
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, stride/pixelsize);
-#else
-    if (stride != width * pixelSize) {
-        // Not using the whole row of texture data and GLES doesn't 
-        // support GL_UNPACK_ROW_LENGTH. We need to upload each row
-        // separately.
-        unsigned char *row = pixels; 
-        for (int h = 0; h < height; h++) {
-            fTexSubImage2D(target,
-                           level,
-                           xoffset,
-                           yoffset+h,
-                           width,
-                           1,
-                           format,
-                           type,
-                           row);
-
-            row += stride;
-        }
-
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-        return;
-    }
-#endif
-
-    fTexSubImage2D(target,
-                   level,
-                   xoffset,
-                   yoffset,
-                   width,
-                   height,
-                   format,
-                   type,
-                   pixels);
-
-#ifndef USE_GLES2
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-#endif
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
 void
