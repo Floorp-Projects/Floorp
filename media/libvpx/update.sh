@@ -329,3 +329,6 @@ patch -p3 < bug646815.patch
 
 # Patch to fix alignment problems with using ARM asm in Thumb mode.
 patch -p3 < bug666931.patch
+
+# Patch to make chroma planes 16-byte aligned.
+patch -p3 < bug671818.patch
