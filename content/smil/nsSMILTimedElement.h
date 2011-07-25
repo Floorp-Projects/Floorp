@@ -409,7 +409,7 @@ protected:
   void              ClearSpecs(TimeValueSpecList& aSpecs,
                                InstanceTimeList& aInstances,
                                RemovalTestFunction aRemove);
-  void              ClearIntervalProgress();
+  void              ClearIntervals();
   void              DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly);
 
   /**

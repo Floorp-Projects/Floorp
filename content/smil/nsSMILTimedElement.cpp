@@ -275,13 +275,7 @@ nsSMILTimedElement::~nsSMILTimedElement()
   // Notify anyone listening to our intervals that they're gone
   // (We shouldn't get any callbacks from this because all our instance times
   // are now disassociated with any intervals)
-  mElementState = STATE_POSTACTIVE;
-  ResetCurrentInterval();
-
-  for (PRInt32 i = mOldIntervals.Length() - 1; i >= 0; --i) {
-    mOldIntervals[i]->Unlink();
-  }
-  mOldIntervals.Clear();
+  ClearIntervals();
 
   // The following assertions are important in their own right (for checking
   // correct behavior) but also because AutoIntervalUpdateBatcher holds pointers
@@ -768,7 +762,10 @@ nsSMILTimedElement::Rewind()
                     mSeekState == SEEK_BACKWARD_FROM_ACTIVE,
                     "Rewind in the middle of a forwards seek?");
 
-  ClearIntervalProgress();
+  ClearIntervals();
+  // ClearIntervals puts us in to the POSTACTIVE state but we're doing a full
+  // rewind so go back to the startup state
+  mElementState = STATE_STARTUP;
 
   UnsetBeginSpec(RemoveNonDynamic);
   UnsetEndSpec(RemoveNonDynamic);
@@ -1244,6 +1241,7 @@ nsSMILTimedElement::Unlink()
 {
   AutoIntervalUpdateBatcher updateBatcher(*this);
 
+  // Remove dependencies on other elements
   PRUint32 count = mBeginSpecs.Length();
   for (PRUint32 i = 0; i < count; ++i) {
     nsSMILTimeValueSpec* beginSpec = mBeginSpecs[i];
@@ -1258,6 +1256,11 @@ nsSMILTimedElement::Unlink()
     NS_ABORT_IF_FALSE(endSpec, "null nsSMILTimeValueSpec in list of end specs");
     endSpec->Unlink();
   }
+
+  ClearIntervals();
+
+  // Make sure we don't notify other elements of new intervals
+  mTimeDependents.Clear();
 }
 
 //----------------------------------------------------------------------
@@ -1331,9 +1334,9 @@ nsSMILTimedElement::ClearSpecs(TimeValueSpecList& aSpecs,
 }
 
 void
-nsSMILTimedElement::ClearIntervalProgress()
+nsSMILTimedElement::ClearIntervals()
 {
-  mElementState = STATE_STARTUP;
+  mElementState = STATE_POSTACTIVE;
   mCurrentRepeatIteration = 0;
   ResetCurrentInterval();
 
