@@ -67,7 +67,7 @@
 #include "pldhash.h"
 #include "prprf.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
 
 nsGenericDOMDataNode::nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsIContent(aNodeInfo)
@@ -1065,3 +1065,13 @@ nsGenericDOMDataNode::GetClassAttributeName() const
 {
   return nsnull;
 }
+
+PRInt64
+nsGenericDOMDataNode::SizeOf() const
+{
+  PRInt64 size = dom::MemoryReporter::GetBasicSize<nsGenericDOMDataNode,
+                                                   nsIContent>(this);
+  size += mText.SizeOf() - sizeof(mText);
+  return size;
+}
+

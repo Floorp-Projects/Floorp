@@ -43,12 +43,11 @@
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
 #include "nsSVGFilters.h"
-#include "nsISVGChildFrame.h"
-#include "nsSVGString.h"
+#include "nsSVGNumber2.h"
+#include "nsSVGNumberPair.h"
 
 #include "gfxImageSurface.h"
 
-class nsSVGLength2;
 class nsSVGElement;
 class nsSVGFilterElement;
 class nsSVGFilterPaintCallback;
@@ -64,7 +63,6 @@ struct gfxRect;
 class NS_STACK_CLASS nsSVGFilterInstance
 {
 public:
-  float GetPrimitiveLength(nsSVGLength2 *aLength) const;
   void ConvertLocation(float aValues[3]) const;
 
   nsSVGFilterInstance(nsIFrame *aTargetFrame,
@@ -108,6 +106,15 @@ public:
   nsresult ComputeSourceNeededRect(nsIntRect* aDirty);
   nsresult ComputeOutputBBox(nsIntRect* aBBox);
 
+  float GetPrimitiveNumber(PRUint8 aCtxType, const nsSVGNumber2 *aNumber) const
+  {
+    return GetPrimitiveNumber(aCtxType, aNumber->GetAnimValue());
+  }
+  float GetPrimitiveNumber(PRUint8 aCtxType, const nsSVGNumberPair *aNumberPair,
+                           nsSVGNumberPair::PairIndex aIndex) const
+  {
+    return GetPrimitiveNumber(aCtxType, aNumberPair->GetAnimValue(aIndex));
+  }
   gfxMatrix GetUserSpaceToFilterSpaceTransform() const;
   gfxMatrix GetFilterSpaceToDeviceSpaceTransform() const {
     return mFilterSpaceToDeviceSpaceTransform;
@@ -173,6 +180,12 @@ private:
   void ComputeFilterPrimitiveSubregion(PrimitiveInfo* aInfo);
   void EnsureColorModel(PrimitiveInfo* aPrimitive,
                         ColorModel aColorModel);
+
+  /**
+   * Scales a numeric filter primitive length in the X, Y or "XY" directions
+   * into a length in filter space (no offset is applied).
+   */
+  float GetPrimitiveNumber(PRUint8 aCtxType, float aValue) const;
 
   gfxRect UserSpaceToFilterSpace(const gfxRect& aUserSpace) const;
   void ClipToFilterSpace(nsIntRect* aRect) const

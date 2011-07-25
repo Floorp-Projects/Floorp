@@ -128,6 +128,8 @@ const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+// debug.js adds NS_ASSERT. cf. bug 669196
+Cu.import("resource://gre/modules/debug.js");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -1669,10 +1671,31 @@ SessionStoreService.prototype = {
       tabData.index = history.index + 1;
     }
     else if (history && history.count > 0) {
-      for (var j = 0; j < history.count; j++) {
-        let entry = this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
-                                                aFullData, aTab.pinned);
-        tabData.entries.push(entry);
+      try {
+        for (var j = 0; j < history.count; j++) {
+          let entry = this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
+                                                  aFullData, aTab.pinned);
+          tabData.entries.push(entry);
+        }
+        // If we make it through the for loop, then we're ok and we should clear
+        // any indicator of brokenness.
+        delete aTab.__SS_broken_history;
+      }
+      catch (ex) {
+        // In some cases, getEntryAtIndex will throw. This seems to be due to
+        // history.count being higher than it should be. By doing this in a
+        // try-catch, we'll update history to where it breaks, assert for
+        // non-release builds, and still save sessionstore.js. We'll track if
+        // we've shown the assert for this tab so we only show it once.
+        // cf. bug 669196.
+        if (!aTab.__SS_broken_history) {
+          // First Focus the window & tab we're having trouble with.
+          aTab.ownerDocument.defaultView.focus();
+          aTab.ownerDocument.defaultView.gBrowser.selectedTab = aTab;
+          NS_ASSERT(false, "SessionStore failed gathering complete history " +
+                           "for the focused window/tab. See bug 669196.");
+          aTab.__SS_broken_history = true;
+        }
       }
       tabData.index = history.index + 1;
 
