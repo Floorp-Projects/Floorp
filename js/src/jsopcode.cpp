@@ -3749,6 +3749,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               do_inclval:
                 todo = Sprint(&ss->sprinter, ss_format,
                               js_incop_strs[!(cs->format & JOF_INC)], lval);
+                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+                    len += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
                 break;
 
               case JSOP_INCPROP:
@@ -3765,6 +3767,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = Sprint(&ss->sprinter, fmt,
                               js_incop_strs[!(cs->format & JOF_INC)],
                               lval, rval);
+                len += GetDecomposeLength(pc, JSOP_INCPROP_LENGTH);
                 break;
 
               case JSOP_INCELEM:
@@ -3784,6 +3787,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = Sprint(&ss->sprinter, ss_format,
                                   js_incop_strs[!(cs->format & JOF_INC)], lval);
                 }
+                len += GetDecomposeLength(pc, JSOP_INCELEM_LENGTH);
                 break;
 
               case JSOP_ARGINC:
@@ -3805,6 +3809,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               do_lvalinc:
                 todo = Sprint(&ss->sprinter, ss_format,
                               lval, js_incop_strs[!(cs->format & JOF_INC)]);
+                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+                    len += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
                 break;
 
               case JSOP_PROPINC:
@@ -3820,6 +3826,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt, lval, rval,
                               js_incop_strs[!(cs->format & JOF_INC)]);
+                len += GetDecomposeLength(pc, JSOP_PROPINC_LENGTH);
                 break;
 
               case JSOP_ELEMINC:
@@ -3839,6 +3846,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = Sprint(&ss->sprinter, ss_format,
                                   lval, js_incop_strs[!(cs->format & JOF_INC)]);
                 }
+                len += GetDecomposeLength(pc, JSOP_ELEMINC_LENGTH);
                 break;
 
               case JSOP_GETPROP2:
@@ -4764,9 +4772,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
             if (todo < 0 || !PushOff(ss, todo, saveop))
                 return NULL;
         }
-
-        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-            pc += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
 
         pc += len;
     }
