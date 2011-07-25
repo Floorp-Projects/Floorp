@@ -186,6 +186,18 @@ nsSMILTimedElement::RemoveInstanceTimes(InstanceTimeList& aArray,
   for (PRUint32 i = 0; i < aArray.Length(); ++i) {
     nsSMILInstanceTime* item = aArray[i].get();
     if (aTest(item, i)) {
+      // As per bugs 665334 and 669225 we should be careful not to remove the
+      // instance time that corresponds to the previous interval's end time.
+      //
+      // Most functors supplied here fulfil this condition by checking if the
+      // instance time is marked as "ShouldPreserve" and if so, not deleting it.
+      //
+      // However, when filtering instance times, we sometimes need to drop even
+      // instance times marked as "ShouldPreserve". In that case we take special
+      // care not to delete the end instance time of the previous interval.
+      NS_ABORT_IF_FALSE(!GetPreviousInterval() ||
+        item != GetPreviousInterval()->End(),
+        "Removing end instance time of previous interval");
       item->Unlink();
     } else {
       newArray.AppendElement(item);
