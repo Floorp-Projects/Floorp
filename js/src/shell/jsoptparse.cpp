@@ -463,6 +463,8 @@ OptionParser::~OptionParser()
 {
     for (Option **it = options.begin(), **end = options.end(); it != end; ++it)
         Foreground::delete_<Option>(*it);
+    for (Option **it = arguments.begin(), **end = arguments.end(); it != end; ++it)
+        Foreground::delete_<Option>(*it);
 }
 
 Option *

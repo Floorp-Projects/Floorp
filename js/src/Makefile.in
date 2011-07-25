@@ -524,11 +524,20 @@ CPPSRCS += \
     Library.cpp \
     $(NULL)
 
-LOCAL_INCLUDES = \
-    -Ictypes/libffi/include \
+ifdef MOZ_NATIVE_FFI
+LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
+else
+LOCAL_INCLUDES = -Ictypes/libffi/include
+endif
+
+LOCAL_INCLUDES += \
     -I. \
     $(NULL)
 
+
+ifdef MOZ_NATIVE_FFI
+EXTRA_DSO_LDOPTS += $(MOZ_FFI_LIBS)
+else
 ifeq ($(OS_ARCH),OS2)
 SHARED_LIBRARY_LIBS += \
     ctypes/libffi/.libs/ffi.a \
@@ -537,6 +546,7 @@ else
 SHARED_LIBRARY_LIBS += \
     ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
+endif
 endif
 
 endif # JS_HAS_CTYPES
@@ -626,6 +636,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES
+ifndef MOZ_NATIVE_FFI
 # Build libffi proper as part of the 'exports' target, so things get built
 # in the right order.
 export::
@@ -633,6 +644,7 @@ export::
 
 distclean clean::
 		$(call SUBMAKE,$@,ctypes/libffi)
+endif
 endif
 
 # Because the SpiderMonkey can be distributed and built independently
