@@ -3939,19 +3939,13 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         result = result->next;
     }
 
-    if (!script->usesArguments)
+    if (!script->usesArguments || script->createdArgs)
         return;
 
     /*
      * Do additional analysis to determine whether the arguments object in the
      * script can escape.
      */
-
-    if (script->fun->hasLazyType())
-        return;
-
-    if (script->fun->type()->hasAnyFlags(OBJECT_FLAG_CREATED_ARGUMENTS))
-        return;
 
     /*
      * Note: don't check for strict mode code here, even though arguments
