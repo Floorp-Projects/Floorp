@@ -6655,11 +6655,7 @@ mjit::Compiler::jsop_callelem_slow()
 void
 mjit::Compiler::jsop_toid()
 {
-    /*
-     * Leave integers alone, stub everything else. This doesn't quite match the
-     * interpreter's semantics as integers that do not fit in a jsid will be
-     * left alone, but this difference does not break downstream assumptions.
-     */
+    /* Leave integers alone, stub everything else. */
     FrameEntry *top = frame.peek(-1);
 
     if (top->isType(JSVAL_TYPE_INT32))

@@ -3324,7 +3324,7 @@ BEGIN_CASE(JSOP_TOID)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
 
-    if (!JSID_IS_INT(id))
+    if (!regs.sp[-1].isInt32())
         script->types.monitorUnknown(cx, regs.pc);
 }
 END_CASE(JSOP_TOID)
