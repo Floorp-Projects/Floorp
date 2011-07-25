@@ -374,10 +374,8 @@ AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, const Value &v
 inline void
 MarkTypeObjectFlags(JSContext *cx, JSObject *obj, TypeObjectFlags flags)
 {
-    if (TrackPropertyTypes(cx, obj, JSID_EMPTY)) {
-        if (!obj->type()->hasAllFlags(flags))
-            obj->type()->setFlags(cx, flags);
-    }
+    if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->hasAllFlags(flags))
+        obj->type()->setFlags(cx, flags);
 }
 
 /*
