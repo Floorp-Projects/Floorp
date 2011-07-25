@@ -739,7 +739,7 @@ namespace
     NS_ABORT_IF_FALSE(!aInstanceTime->IsDynamic() ||
          !aInstanceTime->GetCreator(),
         "Dynamic instance time should be unlinked from its creator");
-    return !aInstanceTime->IsDynamic();
+    return !aInstanceTime->IsDynamic() && !aInstanceTime->ShouldPreserve();
   }
 }
 
@@ -798,7 +798,7 @@ namespace
   PRBool
   RemoveNonDOM(nsSMILInstanceTime* aInstanceTime)
   {
-    return !aInstanceTime->FromDOM();
+    return !aInstanceTime->FromDOM() && !aInstanceTime->ShouldPreserve();
   }
 }
 
