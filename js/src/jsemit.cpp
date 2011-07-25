@@ -6554,8 +6554,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 EMIT_UINT16_IMM_OP(op, atomIndex);
             } else {
                 JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-                if (!EmitNameIncDec(cx, pn2, op, cg))
-                    return JS_FALSE;
+                if (js_CodeSpec[op].format & (JOF_INC | JOF_DEC)) {
+                    if (!EmitNameIncDec(cx, pn2, op, cg))
+                        return JS_FALSE;
+                } else {
+                    if (!EmitAtomOp(cx, pn2, op, cg))
+                        return JS_FALSE;
+                }
                 break;
             }
             if (pn2->isConst()) {
