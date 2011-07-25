@@ -269,6 +269,12 @@ MOZ_ARG_WITH_STRING(android-platform,
                            location of platform dir, default NDK/build/platforms/android-5/arch-arm],
     android_platform=$withval)
 
+MOZ_ARG_ENABLE_BOOL(android-libstdcxx,
+[  --enable-android-libstdcxx
+                          use GNU libstdc++ instead of STLPort for NDK >= 5],
+    MOZ_ANDROID_LIBSTDCXX=1,
+    MOZ_ANDROID_LIBSTDCXX= )
+
 case "$target" in
 arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
@@ -314,12 +320,21 @@ case "$target" in
     RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
-    if test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+    if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
+       if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a/libstdc++.a" ; then
+          AC_MSG_ERROR([Cannot find path to libstdc++ (NDK version >= 5?)])
+       fi
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
+       STLPORT_LIBS="-lstdc++"
+    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/  -lstlport_static"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/"
+       STLPORT_LIBS="-lstlport_static"
     elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a  -lstlport_static"
+       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a"
+       STLPORT_LIBS="-lstlport_static"
     elif test "$target" != "arm-android-eabi"; then
        dnl fail if we're not building with NDKr4
        AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
@@ -328,13 +343,13 @@ case "$target" in
     CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
-    LIBS="$LIBS $STLPORT_LDFLAGS"
+    LIBS="$LIBS $STLPORT_LIBS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
     dnl undefined symbol (present on the hardware, just not in the
     dnl NDK.)
-    LDFLAGS="-mandroid -L$android_platform/usr/lib -L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
+    LDFLAGS="-mandroid $STLPORT_LDFLAGS -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
     if test -z "$HOST_CPPFLAGS" ; then
@@ -1552,10 +1567,8 @@ if test "$GNU_CC"; then
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
     DSO_LDOPTS='-shared'
     if test "$GCC_USE_GNU_LD"; then
-        # Don't allow undefined symbols in libraries, and remove dead symbols
-        DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs -Wl,--gc-sections"
-        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
+        # Don't allow undefined symbols in libraries
+        DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
     fi
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
@@ -1829,7 +1842,9 @@ if test -n "$MOZ_VALGRIND"; then
         AC_MSG_ERROR(
             [--enable-valgrind specified but Valgrind is not installed]))
     AC_DEFINE(MOZ_VALGRIND)
+    MOZ_VALGRIND=1
 fi
+AC_SUBST(MOZ_VALGRIND)
 
 dnl ========================================================
 dnl jprof
@@ -6139,7 +6154,7 @@ if test -n "$MOZ_ANGLE"; then
   fi
 
   if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
-    AC_MSG_WARN([Found the February 2010 DirectX SDK. This is too old. We now require the June 2010 DirectX SDK, or newer.])
+    AC_MSG_ERROR([Found the February 2010 DirectX SDK. This is too old. We now require the June 2010 DirectX SDK, or newer.  Upgrade your SDK or to explicitly build without ANGLE, reconfigure with --disable-angle.])
   else
     MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/'`
   fi
@@ -6154,8 +6169,7 @@ if test -n "$MOZ_ANGLE"; then
   fi
 
   if test -z "$MOZ_ANGLE" ; then
-    AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (June 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
-    AC_MSG_WARN([This will become an error in the future.])
+    AC_MSG_ERROR([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (June 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
   fi
 
   if test -n "$MOZ_ANGLE" ; then
@@ -6163,9 +6177,7 @@ if test -n "$MOZ_ANGLE"; then
     MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
 
     if test -z "$MOZ_D3DX9_VERSION" ; then
-      MOZ_ANGLE=
-      AC_MSG_WARN([Couldn't determine the D3DX9 version! Disabling ANGLE.])
-      AC_MSG_WARN([This will become an error in the future.])
+      AC_MSG_ERROR([Couldn't determine the D3DX9 version, needed for ANGLE. To explicitly build without ANGLE, reconfigure with --disable-angle.])
     fi
 
     if test -n "$MOZ_ANGLE" ; then
@@ -7299,6 +7311,38 @@ MOZ_ARG_ENABLE_STRING(debug-symbols,
 if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
     AC_DEFINE(MOZ_DEBUG_SYMBOLS)
     export MOZ_DEBUG_SYMBOLS
+fi
+
+dnl ========================================================
+dnl = Automatically remove dead symbols
+dnl ========================================================
+
+if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
+   dnl See bug 670659
+   AC_CACHE_CHECK([whether removing dead symbols breaks debugging],
+       GC_SECTIONS_BREAKS_DEBUG_RANGES,
+       [echo 'int foo() {return 42;}' \
+             'int bar() {return 1;}' \
+             'int main() {return foo();}' > conftest.${ac_ext}
+        if AC_TRY_COMMAND([${CC-cc} -o conftest.${ac_objext} $CFLAGS $MOZ_DEBUG_FLAGS -ffunction-sections -c conftest.${ac_ext} 1>&2]) &&
+           AC_TRY_COMMAND([${CC-cc} -o conftest${ac_exeext} $LDFLAGS $MOZ_DEBUG_FLAGS -Wl,--gc-sections conftest.${ac_objext} $LIBS 1>&2]) &&
+           test -s conftest${ac_exeext} -a -s conftest.${ac_objext}; then
+            if test "`$PYTHON "$_topsrcdir"/build/unix/check_debug_ranges.py conftest.${ac_objext} conftest.${ac_ext}`" = \
+                    "`$PYTHON "$_topsrcdir"/build/unix/check_debug_ranges.py conftest${ac_exeext} conftest.${ac_ext}`"; then
+                GC_SECTIONS_BREAKS_DEBUG_RANGES=no
+            else
+                GC_SECTIONS_BREAKS_DEBUG_RANGES=yes
+            fi
+        else
+             dnl We really don't expect to get here, but just in case
+             AC_ERROR([couldn't compile a simple C file])
+        fi
+        rm -rf conftest*])
+    if test "$GC_SECTIONS_BREAKS_DEBUG_RANGES" = no; then
+        DSO_LDOPTS="$DSO_LDOPTS -Wl,--gc-sections"
+        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
+        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
+    fi
 fi
 
 dnl ========================================================

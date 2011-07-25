@@ -52,13 +52,33 @@ interface nsIScriptGlobalObject;
 /**
  * Encode and decode JSON text.
  */
-[scriptable, uuid(98f12947-5eac-4512-8325-7c9e6a9d8509)]
+[scriptable, uuid(a4d68b4e-0c0b-4c7c-b540-ef2f9834171f)]
 interface nsIJSON : nsISupports
 {
-  void encodeToStream(in nsIOutputStream stream,
-                      in string charset,
-                      in boolean writeBOM
-                      /* in JSObject value */);
+  /**
+   * New users should use JSON.stringify!
+   * The encode() method is only present for backward compatibility.
+   * encode() is not a conforming JSON stringify implementation!
+   */
+  [deprecated] AString encode(/* in JSObject value */);
+
+  /**
+   * New users should use JSON.stringify.
+   * You may also want to have a look at nsIConverterOutputStream.
+   *
+   * The encodeToStream() method is only present for backward compatibility.
+   * encodeToStream() is not a conforming JSON stringify implementation!
+   */
+  [deprecated] void encodeToStream(in nsIOutputStream stream,
+                                   in string charset,
+                                   in boolean writeBOM
+                                   /* in JSObject value */);
+
+  /**
+   * New users should use JSON.parse!
+   * The decode() method is only present for backward compatibility.
+   */
+  [deprecated] void /* JSObject */ decode(in AString str);
 
   void /* JSObject */ decodeFromStream(in nsIInputStream stream,
                                        in long contentLength);

@@ -74,7 +74,6 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLIFrameElement.idl		\
 	nsIDOMHTMLImageElement.idl		\
 	nsIDOMHTMLInputElement.idl		\
-	nsIDOMHTMLIsIndexElement.idl		\
 	nsIDOMHTMLLIElement.idl			\
 	nsIDOMHTMLLabelElement.idl		\
 	nsIDOMHTMLLegendElement.idl		\

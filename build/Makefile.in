@@ -102,6 +102,7 @@ GARBAGE += leaktest.py
 libs:: $(_LEAKTEST_FILES)
 	$(INSTALL) $^ $(_LEAKTEST_DIR)
 
+ifdef MOZ_VALGRIND
 _VALGRIND_DIR = $(DEPTH)/_valgrind
 GARBAGE_DIRS += $(_VALGRIND_DIR)
 
@@ -112,6 +113,7 @@ _VALGRIND_FILES = \
 
 libs:: $(_VALGRIND_FILES)
 	$(INSTALL) $^ $(_VALGRIND_DIR)
+endif
 
 ifdef ENABLE_TESTS
 libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py

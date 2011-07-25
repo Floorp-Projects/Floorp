@@ -84,6 +84,12 @@ class gfxXlibSurface;
 #include "gfxQtNativeRenderer.h"
 #endif
 
+#ifdef XP_OS2
+#define INCL_PM
+#define INCL_GPI
+#include <os2.h>
+#endif
+
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo,
                               public nsIDOMMouseListener,

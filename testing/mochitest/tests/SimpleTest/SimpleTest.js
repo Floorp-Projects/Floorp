@@ -36,32 +36,25 @@ if (parentRunner) {
  * Check for OOP test plugin
 **/
 SimpleTest.testPluginIsOOP = function () {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var prefservice = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefBranch);
-
     var testPluginIsOOP = false;
     if (navigator.platform.indexOf("Mac") == 0) {
-        var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                                   .getService(Components.interfaces.nsIXULAppInfo)
-                                   .QueryInterface(Components.interfaces.nsIXULRuntime);
-        if (xulRuntime.XPCOMABI.match(/x86-/)) {
+        if (SpecialPowers.XPCOMABI.match(/x86-/)) {
             try {
-                testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.i386.test.plugin");
+                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.i386.test.plugin");
             } catch (e) {
-                testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.i386");
+                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.i386");
             }
         }
-        else if (xulRuntime.XPCOMABI.match(/x86_64-/)) {
+        else if (SpecialPowers.XPCOMABI.match(/x86_64-/)) {
             try {
-                testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.x86_64.test.plugin");
+                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.x86_64.test.plugin");
             } catch (e) {
-                testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.x86_64");
+                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.x86_64");
             }
         }
     }
     else {
-        testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled");
+        testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled");
     }
 
     return testPluginIsOOP;

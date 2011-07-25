@@ -2591,10 +2591,10 @@ function importDialog(aParent, aSrc, aArguments) {
 
   let dialog  = null;
 
-  // we need to insert before menulist-container if we want it to show correctly
-  // for prompt.select for instance
-  let menulistContainer = document.getElementById("menulist-container");
-  let parentNode = menulistContainer.parentNode;
+  // we need to insert before context-container if we want allow pasting (using
+  //  the context menu) into dialogs
+  let contentMenuContainer = document.getElementById("context-container");
+  let parentNode = contentMenuContainer.parentNode;
 
   // emit DOMWillOpenModalDialog event
   let event = document.createEvent("Events");
@@ -2606,7 +2606,7 @@ function importDialog(aParent, aSrc, aArguments) {
   let back = document.createElement("box");
   back.setAttribute("class", "modal-block");
   dialog = back.appendChild(document.importNode(doc, true));
-  parentNode.insertBefore(back, menulistContainer);
+  parentNode.insertBefore(back, contentMenuContainer);
 
   dialog.arguments = aArguments;
   dialog.parent = aParent;
