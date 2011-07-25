@@ -1956,6 +1956,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // else, and not unlink an awful lot here.
 
   tmp->mIdentifierMap.Clear();
+
+#ifdef MOZ_SMIL
+  if (tmp->mAnimationController) {
+    tmp->mAnimationController->Unlink();
+  }
+#endif // MOZ_SMIL
   
   tmp->mInUnlinkOrDeletion = PR_FALSE;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
