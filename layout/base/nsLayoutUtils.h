@@ -461,7 +461,7 @@ public:
    * @return A matrix equivalent to aMatrix, but operating in the coordinate system with
    *         origin aOrigin.
    */
-  static gfxMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfxMatrix &aMatrix);
+  static gfx3DMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfx3DMatrix &aMatrix);
 
   /**
    * Find IDs corresponding to a scrollable content element in the child process.
@@ -519,8 +519,8 @@ public:
    * matrix accumulating stops at root.
    * @return The CTM at the specified frame.
    */
-  static gfxMatrix GetTransformToAncestor(nsIFrame *aFrame,
-                                          nsIFrame* aStopAtAncestor = nsnull);
+  static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame,
+                                            nsIFrame* aStopAtAncestor = nsnull);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -545,7 +545,7 @@ public:
    * @return The smallest rect that contains the image of aBounds.
    */
   static nsRect MatrixTransformRect(const nsRect &aBounds,
-                                    const gfxMatrix &aMatrix, float aFactor);
+                                    const gfx3DMatrix &aMatrix, float aFactor);
 
   /**
    * Helper function that, given a rectangle and a matrix, returns the smallest
@@ -558,7 +558,7 @@ public:
    * @return The smallest rect that contains the image of aBounds.
    */
   static nsRect MatrixTransformRectOut(const nsRect &aBounds,
-                                    const gfxMatrix &aMatrix, float aFactor);
+                                    const gfx3DMatrix &aMatrix, float aFactor);
   /**
    * Helper function that, given a point and a matrix, returns the image
    * of that point under the matrix transform.
@@ -569,7 +569,7 @@ public:
    * @return The image of the point under the transform.
    */
   static nsPoint MatrixTransformPoint(const nsPoint &aPoint,
-                                      const gfxMatrix &aMatrix, float aFactor);
+                                      const gfx3DMatrix &aMatrix, float aFactor);
 
   /**
    * Given a graphics rectangle in graphics space, return a rectangle in

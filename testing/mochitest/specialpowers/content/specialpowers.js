@@ -68,7 +68,11 @@ function bindDOMWindowUtils(sp, window) {
   function rebind(desc, prop) {
     if (prop in desc && typeof(desc[prop]) == "function") {
       var oldval = desc[prop];
-      desc[prop] = function() { return oldval.apply(util, arguments); };
+      try {
+        desc[prop] = function() { return oldval.apply(util, arguments); };
+      } catch (ex) {
+        dump("WARNING: Special Powers failed to rebind function: " + desc + "::" + prop + "\n");
+      }
     }
   }
   for (var i in proto) {
@@ -131,7 +135,11 @@ SpecialPowers.prototype = {
     } else {
       msg = {'op':'get', 'prefName': aPrefName,'prefType': aPrefType};
     }
-    return(sendSyncMessage('SPPrefService', msg)[0]);
+    var val = sendSyncMessage('SPPrefService', msg);
+
+    if (val == null || val[0] == null)
+      throw "Error getting pref";
+    return val[0];
   },
   _setPref: function(aPrefName, aPrefType, aValue, aIid) {
     var msg = {};
@@ -214,6 +222,20 @@ SpecialPowers.prototype = {
     webNav.loadURI(uri, referrer, charset, x, y);
   },
 
+  snapshotWindow: function (win, withCaret) {
+    var el = this.window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    el.width = win.innerWidth;
+    el.height = win.innerHeight;
+    var ctx = el.getContext("2d");
+    var flags = 0;
+
+    ctx.drawWindow(win, win.scrollX, win.scrollY,
+                   win.innerWidth, win.innerHeight,
+                   "rgb(255,255,255)",
+                   withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
+    return el;
+  },
+
   gc: function() {
     this.DOMWindowUtils.garbageCollect();
   },
@@ -229,6 +251,20 @@ SpecialPowers.prototype = {
     } catch (e) {
       return true;
     }
+  },
+
+  _xpcomabi: null,
+
+  get XPCOMABI() {
+    if (this._xpcomabi != null)
+      return this._xpcomabi;
+
+    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]
+                        .getService(Components.interfaces.nsIXULAppInfo)
+                        .QueryInterface(Components.interfaces.nsIXULRuntime);
+
+    this._xpcomabi = xulRuntime.XPCOMABI;
+    return this._xpcomabi;
   },
 
   registerProcessCrashObservers: function() {

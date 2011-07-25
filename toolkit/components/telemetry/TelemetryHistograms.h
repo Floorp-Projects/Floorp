@@ -66,8 +66,9 @@ HISTOGRAM(EARLY_GLUESTARTUP_HARD_FAULTS, 1, 100, 12, LINEAR, "Hard faults count 
 HISTOGRAM(GLUESTARTUP_HARD_FAULTS, 1, 500, 12, EXPONENTIAL, "Hard faults count after glue startup")
 HISTOGRAM(PAGE_FAULTS_HARD, 8, 64 * 1024, 13, EXPONENTIAL, "Hard page faults (since last telemetry ping)")
 #endif
-HISTOGRAM(ZIPARCHIVE_CRC, 0, 1, 2, BOOLEAN, "Zip item CRC check pass")
 HISTOGRAM(SHUTDOWN_OK, 0, 1, 2, BOOLEAN, "Did the browser start after a successful shutdown")
+
+HISTOGRAM(IMAGE_DECODE_LATENCY, 50, 5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")
 
 /**
  * Networking telemetry
@@ -102,4 +103,21 @@ HTTP_HISTOGRAMS(SUB, "subitem: ")
 #undef HTTP_HISTOGRAMS
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
+HISTOGRAM(MOZ_SQLITE_OPEN, 1, 3000, 10, EXPONENTIAL, "Time spent on sqlite open() (ms)")
+HISTOGRAM(MOZ_SQLITE_READ_MS, 1, 3000, 10, EXPONENTIAL, "Time spent on sqlite read() (ms)")
+HISTOGRAM(MOZ_SQLITE_OTHER_READ_B, 1, 32768, 3, LINEAR, "Sqlite read() (bytes)")
+HISTOGRAM(MOZ_SQLITE_PLACES_READ_B, 1, 32768, 3, LINEAR, "Sqlite read() (bytes)")
+HISTOGRAM(MOZ_SQLITE_COOKIES_READ_B, 1, 32768, 3, LINEAR, "Sqlite read() (bytes)")
+HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_READ_B, 1, 32768, 3, LINEAR, "Sqlite read() (bytes)")
+HISTOGRAM(MOZ_SQLITE_WRITE_MS, 1, 3000, 10, EXPONENTIAL, "Time spent on sqlite write() (ms)")
+HISTOGRAM(MOZ_SQLITE_PLACES_WRITE_B, 1, 32768, 3, LINEAR, "Sqlite write (bytes)")
+HISTOGRAM(MOZ_SQLITE_COOKIES_WRITE_B, 1, 32768, 3, LINEAR, "Sqlite write (bytes)")
+HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_WRITE_B, 1, 32768, 3, LINEAR, "Sqlite write (bytes)")
+HISTOGRAM(MOZ_SQLITE_OTHER_WRITE_B, 1, 32768, 3, LINEAR, "Sqlite write (bytes)")
+HISTOGRAM(MOZ_SQLITE_TRUNCATE, 1, 3000, 10, EXPONENTIAL, "Time spent on sqlite truncate() (ms)")
+HISTOGRAM(MOZ_SQLITE_PLACES_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on sqlite fsync() (ms)")
+HISTOGRAM(MOZ_SQLITE_COOKIES_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on sqlite fsync() (ms)")
+HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on sqlite fsync() (ms)")
+HISTOGRAM(MOZ_SQLITE_OTHER_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on sqlite fsync() (ms)")
 HISTOGRAM(STARTUP_MEASUREMENT_ERRORS, 1, 3, 4, LINEAR, "Flags errors in startup calculation()")
+HISTOGRAM(NETWORK_DISK_CACHE_OPEN, 1, 10000, 10, EXPONENTIAL, "Time spent opening disk cache (ms)")

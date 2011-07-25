@@ -9,7 +9,7 @@ if (typeof newGlobal == 'function') {
 
     gsame.eval("function f() { return this; }");
     f = gsame.f;
-    assertEq(f(), this);
+    assertEq(f(), gsame);
 
     gsame.eval("function g() { 'use strict'; return this; }");
     g = gsame.g;
@@ -19,7 +19,7 @@ if (typeof newGlobal == 'function') {
 
     gnew.eval("function f() { return this; }");
     f = gnew.f;
-    assertEq(f(), this);
+    assertEq(f(), gnew);
 
     gnew.eval("function g() { 'use strict'; return this; }");
     g = gnew.g;

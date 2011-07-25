@@ -2421,6 +2421,9 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
 #endif
+
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        js::CheckCompartmentScripts(*c);
 }
 
 #ifdef JS_THREADSAFE
@@ -2878,7 +2881,8 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = cx->new_<JSCompartment>(rt);
     if (compartment && compartment->init()) {
-        // The trusted compartment is a system compartment.
+        // Any compartment with the trusted principals -- and there can be
+        // multiple -- is a system compartment.
         compartment->isSystemCompartment = principals && rt->trustedPrincipals() == principals;
         if (principals) {
             compartment->principals = principals;

@@ -59,7 +59,7 @@ textarea:-moz-read-write > .anonymous-div:-moz-read-only {
 img:-moz-read-write, img:-moz-read-write[usemap], area:-moz-read-write,
 object:-moz-read-write, object:-moz-read-write[usemap], 
 applet:-moz-read-write, hr:-moz-read-write, button:-moz-read-write,
-isindex:-moz-read-write, select:-moz-read-write,
+select:-moz-read-write,
 a:-moz-read-write:link img, a:-moz-read-write:visited img,
 a:-moz-read-write:active img, a:-moz-read-write:-moz-only-whitespace[name] {
   cursor: default;
@@ -104,13 +104,6 @@ input[contenteditable="true"][type="checkbox"],
 input[contenteditable="true"][type="radio"],
 input[contenteditable="true"][type="file"] {
   -moz-user-select: all !important;
-  -moz-user-input: none !important;
-  -moz-user-focus: none !important;
-}
-
-isindex:-moz-read-write[prompt]
-{
-  -moz-user-select: none !important;
   -moz-user-input: none !important;
   -moz-user-focus: none !important;
 }

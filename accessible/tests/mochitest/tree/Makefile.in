@@ -63,6 +63,7 @@ _TEST_FILES =\
 		test_groupbox.xul \
 		test_iframe.html \
 		test_img.html \
+		test_invalidationlist.html \
 		test_list.html \
 		test_media.html \
 		test_select.html \
