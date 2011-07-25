@@ -383,14 +383,18 @@ ClearAllFrames(JSCompartment *compartment)
          f != NULL;
          f = f->previous) {
 
-        // We don't need to scan the frames internal to this VMFrame, or update
-        // their ncode values. Patching the VMFrame's return address will cause
-        // all its frames to finish in the interpreter, unless the interpreter
-        // enters one of the intermediate frames at a loop boundary. In such a
-        // case, the interpreter will enter through EnterMethodJIT, which
-        // overwrites the entry frame's ncode value.
-
         Recompiler::patchFrame(compartment, f, f->fp()->script());
+
+        // Clear ncode values from all frames associated with the VMFrame.
+        // Patching the VMFrame's return address will cause all its frames to
+        // finish in the interpreter, unless the interpreter enters one of the
+        // intermediate frames at a loop boundary (where EnterMethodJIT will
+        // overwrite ncode). However, leaving stale values for ncode in stack
+        // frames can confuse the recompiler, which may see the VMFrame before
+        // it has resumed execution.
+
+        for (StackFrame *fp = f->fp(); fp != f->entryfp; fp = fp->prev())
+            fp->setNativeReturnAddress(NULL);
     }
 }
 
