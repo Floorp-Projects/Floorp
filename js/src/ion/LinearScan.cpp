@@ -290,15 +290,16 @@ LinearScanAllocator::createDataStructures()
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         LBlock *block = graph.getBlock(i);
         for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            if (ins->numDefs()) {
-                for (size_t j = 0; j < ins->numDefs(); j++) {
-                    if (ins->getDef(j)->policy() != LDefinition::REDEFINED) {
-                        uint32 reg = ins->getDef(j)->virtualRegister();
-                        if (!vregs[reg].init(reg, block, *ins, ins->getDef(j)))
-                            return false;
-                    }
+            bool foundRealDef = false;
+            for (size_t j = 0; j < ins->numDefs(); j++) {
+                if (ins->getDef(j)->policy() != LDefinition::REDEFINED) {
+                    foundRealDef = true;
+                    uint32 reg = ins->getDef(j)->virtualRegister();
+                    if (!vregs[reg].init(reg, block, *ins, ins->getDef(j)))
+                        return false;
                 }
-            } else {
+            }
+            if (!foundRealDef) {
                 if (!vregs[*ins].init(ins->id(), block, *ins, NULL))
                     return false;
             }
