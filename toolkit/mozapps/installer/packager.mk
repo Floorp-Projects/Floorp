@@ -397,9 +397,9 @@ GENERATE_CACHE = \
   rm startupCache.zip && \
   $(ZIP) -r9m omni.jar jsloader
 endif
-else
-GENERATE_CACHE = true
 endif
+
+GENERATE_CACHE ?= true
 
 OMNIJAR_FILES	= \
   chrome \

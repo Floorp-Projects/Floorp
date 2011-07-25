@@ -45,6 +45,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsCSSProps.h"
+#include "mozilla/dom/Element.h"
 
 // Callback function, for freeing string buffers stored in property table
 static void

@@ -210,8 +210,10 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
 
   if (NS_LIKELY(executorDoc == parentDoc)) {
     // the usual case. the parent is in the parser's doc
-    aBuilder->PostPendingAppendNotification(aParent, aNode);
     rv = aParent->AppendChildTo(aNode, PR_FALSE);
+    if (NS_SUCCEEDED(rv)) {
+      aBuilder->PostPendingAppendNotification(aParent, aNode);
+    }
     return rv;
   }
 
@@ -220,8 +222,9 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
 
   PRUint32 childCount = aParent->GetChildCount();
   rv = aParent->AppendChildTo(aNode, PR_FALSE);
-  nsNodeUtils::ContentAppended(aParent, aNode, childCount);
-
+  if (NS_SUCCEEDED(rv)) {
+    nsNodeUtils::ContentAppended(aParent, aNode, childCount);
+  }
   parentDoc->EndUpdate(UPDATE_CONTENT_MODEL);
   return rv;
 }

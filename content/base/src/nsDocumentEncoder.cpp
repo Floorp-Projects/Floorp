@@ -82,6 +82,7 @@
 #include "nsTArray.h"
 #include "nsIFrame.h"
 #include "nsStringBuffer.h"
+#include "mozilla/dom/Element.h"
 
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 

@@ -1,7 +1,5 @@
 url-prefix ../../jsreftest.html?test=js1_2/regexp/
 script RegExp_dollar_number.js
-script RegExp_input.js
-script RegExp_input_as_array.js
 skip script RegExp_lastIndex.js # obsolete test
 script RegExp_lastMatch.js
 script RegExp_lastMatch_as_array.js

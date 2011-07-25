@@ -105,6 +105,7 @@
 
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
@@ -3109,16 +3110,7 @@ nsAccessible::EnsureChildren()
   // State is embedded children until text leaf accessible is appended.
   SetChildrenFlag(eEmbeddedChildren); // Prevent reentry
 
-  // Notify the document about caching status.
-  nsDocAccessible* document = GetDocAccessible();
-  if (document)
-    document->NotifyOfCachingStart(this);
-
   CacheChildren();
-
-  if (document)
-    document->NotifyOfCachingEnd(this);
-
   return false;
 }
 

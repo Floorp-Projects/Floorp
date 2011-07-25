@@ -940,6 +940,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
         return NULL;
 
     PodZero(script);
+    script->cookie1 = script->cookie2 = JS_SCRIPT_COOKIE;
     script->length = length;
     script->version = version;
     new (&script->bindings) Bindings(cx, emptyCallShape);
@@ -1082,6 +1083,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 #endif
 
     JS_APPEND_LINK(&script->links, &cx->compartment->scripts);
+
     JS_ASSERT(script->getVersion() == version);
     return script;
 }
@@ -1275,8 +1277,45 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 }
 
 static void
+volatile_memcpy(volatile char *dst, void *src, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+        dst[i] = ((char *)src)[i];
+}
+
+static void
+CheckScript(JSScript *script, JSScript *prev)
+{
+    volatile char dbg1[sizeof(JSScript)], dbg2[sizeof(JSScript)];
+    if (script->cookie1 != JS_SCRIPT_COOKIE || script->cookie2 != JS_SCRIPT_COOKIE) {
+        volatile_memcpy(dbg1, script, sizeof(JSScript));
+        if (prev)
+            volatile_memcpy(dbg2, prev, sizeof(JSScript));
+        *(int*)0 = 0;
+    }
+}
+
+namespace js {
+
+void
+CheckCompartmentScripts(JSCompartment *comp)
+{
+    JSScript *prev = NULL;
+    for (JSScript *script = (JSScript *)comp->scripts.next;
+         &script->links != &comp->scripts;
+         prev = script, script = (JSScript *)script->links.next)
+    {
+        CheckScript(script, prev);
+    }
+}
+
+} /* namespace js */
+
+static void
 DestroyScript(JSContext *cx, JSScript *script)
 {
+    CheckScript(script, NULL);
+
     if (script->principals)
         JSPRINCIPALS_DROP(cx, script->principals);
 
@@ -1332,6 +1371,7 @@ DestroyScript(JSContext *cx, JSScript *script)
 
     script->pcCounters.destroy(cx);
 
+    memset(script, JS_FREE_PATTERN, script->totalSize());
     cx->free_(script);
 }
 
@@ -1361,6 +1401,12 @@ js_DestroyCachedScript(JSContext *cx, JSScript *script)
 void
 js_TraceScript(JSTracer *trc, JSScript *script)
 {
+    CheckScript(script, NULL);
+
+    JSRuntime *rt = trc->context->runtime;
+    if (rt->gcCheckCompartment && script->compartment != rt->gcCheckCompartment)
+        JS_Assert("compartment mismatch in GC", __FILE__, __LINE__);
+
     JSAtomMap *map = &script->atomMap;
     MarkAtomRange(trc, map->length, map->vector, "atomMap");
 

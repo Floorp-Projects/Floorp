@@ -104,8 +104,7 @@ nsDocAccessible::
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
                   nsIWeakReference *aShell) :
   nsHyperTextAccessibleWrap(aRootContent, aShell),
-  mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE),
-  mCacheRoot(nsnull), mIsPostCacheProcessing(PR_FALSE)
+  mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE)
 {
   mFlags |= eDocAccessible;
 
@@ -1425,43 +1424,30 @@ nsDocAccessible::RecreateAccessible(nsIContent* aContent)
 }
 
 void
-nsDocAccessible::NotifyOfCachingStart(nsAccessible* aAccessible)
+nsDocAccessible::ProcessInvalidationList()
 {
-  if (!mCacheRoot)
-    mCacheRoot = aAccessible;
-}
-
-void
-nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
-{
-  if (mCacheRoot == aAccessible && !mIsPostCacheProcessing) {
-    // Allow invalidation list insertions while container children are recached.
-    mIsPostCacheProcessing = PR_TRUE;
-
-    // Invalidate children of container accessible for each element in
-    // invalidation list.
-    for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
-      nsIContent* content = mInvalidationList[idx];
-      nsAccessible* accessible = GetAccessible(content);
-      if (!accessible) {
-        nsAccessible* container = GetContainerAccessible(content);
-        NS_ASSERTION(container,
-                     "Got a referenced element that is not in document!");
-        if (container) {
-          container->UpdateChildren();
-          accessible = GetAccessible(content);
-        }
+  // Invalidate children of container accessible for each element in
+  // invalidation list. Allow invalidation list insertions while container
+  // children are recached.
+  for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
+    nsIContent* content = mInvalidationList[idx];
+    nsAccessible* accessible = GetAccessible(content);
+    if (!accessible) {
+      nsAccessible* container = GetContainerAccessible(content);
+      NS_ASSERTION(container,
+                   "Got a referenced element that is not in document!");
+      if (container) {
+        container->UpdateChildren();
+        accessible = GetAccessible(content);
       }
-
-      // Make sure the subtree is created.
-      if (accessible)
-        CacheChildrenInSubtree(accessible);
     }
-    mInvalidationList.Clear();
 
-    mCacheRoot = nsnull;
-    mIsPostCacheProcessing = PR_FALSE;
+    // Make sure the subtree is created.
+    if (accessible)
+      CacheChildrenInSubtree(accessible);
   }
+
+  mInvalidationList.Clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

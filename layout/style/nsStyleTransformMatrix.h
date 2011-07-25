@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Keith Schwarz <kschwarz@mozilla.com> (original author)
+ *   Matt Woodrow <mwoodrow@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,6 +44,7 @@
 
 #include "nsCSSValue.h"
 #include "gfxMatrix.h"
+#include "gfx3DMatrix.h"
 #include "nsRect.h"
 
 struct nsCSSValueList;
@@ -50,63 +52,11 @@ class nsStyleContext;
 class nsPresContext;
 
 /**
- * A class representing a style transformation matrix.  The class actually
- * wraps three different matrices, a constant matrix and two matrices
- * whose values are scaled by the width and the height of the bounding
- * rectangle for the object to transform.  Thus, given a frame rectangle
- * of dimensions (width, height) and a point (x, y) to transform, the matrix
- * corresponds to the transform operation
- *
- * | a c e |   |0 0 dX1|           |0 0 dY1|           | x |
- *(| b d f | + |0 0 dX2| (width) + |0 0 dY2| (height)) | y |
- * | 0 0 1 |   |0 0   0|           |0 0   0|           | 1 |
- *
- * Note that unlike the Thebes gfxMatrix, vectors are column vectors and
- * consequently the multiplication of a matrix A and a vector x is Ax, not xA.
+ * A helper class to generate gfxMatrixes from css transform functions.
  */
 class nsStyleTransformMatrix
 {
  public:
-  /**
-   * Constructor sets the matrix to the identity.
-   */
-  nsStyleTransformMatrix();
-
-  /**
-   * Given a frame's bounding rectangle, returns a gfxMatrix
-   * corresponding to the transformation represented by this
-   * matrix.  The transformation takes points in the frame's
-   * local space and converts them to points in the frame's
-   * transformed space.
-   *
-   * @param aBounds The frame's bounding rectangle.
-   * @param aFactor The number of app units per device pixel.
-   * @return A Thebes matrix corresponding to the transform.
-   */
-  gfxMatrix GetThebesMatrix(const nsRect& aBounds, float aFactor) const;
-
-  /**
-   * Multiplies this matrix by another matrix, in that order.  If A'
-   * is the value of A after A *= B, then for any vector x, the
-   * equivalence A'(x) == A(B(x)) holds.
-   *
-   * @param aOther The matrix to multiply this matrix by.
-   * @return A reference to this matrix.
-   */
-  nsStyleTransformMatrix& operator *= (const nsStyleTransformMatrix &aOther);
-
-  /**
-   * Returns a new nsStyleTransformMatrix that is equal to one matrix
-   * multiplied by another matrix, in that order.  If C is the result of
-   * A * B, then for any vector x, the equivalence C(x) = A(B(x)).
-   *
-   * @param aOther The matrix to multiply this matrix by.
-   * @return A new nsStyleTransformMatrix equal to this matrix multiplied
-   *         by the other matrix.
-   */
-  const nsStyleTransformMatrix
-    operator * (const nsStyleTransformMatrix &aOther) const;
-
   /**
    * Return the transform function, as an nsCSSKeyword, for the given
    * nsCSSValue::Array from a transform list.
@@ -115,102 +65,75 @@ class nsStyleTransformMatrix
 
   /**
    * Given an nsCSSValue::Array* containing a -moz-transform function,
-   * updates this matrix to hold the value of that function.
+   * returns a matrix containing the value of that function.
    *
    * @param aData The nsCSSValue::Array* containing the transform function.
    * @param aContext The style context, used for unit conversion.
    * @param aPresContext The presentation context, used for unit conversion.
    * @param aCanStoreInRuleTree Set to false if the result cannot be cached
    *                            in the rule tree, otherwise untouched.
+   * @param aBounds The frame's bounding rectangle.
+   * @param aAppUnitsPerMatrixUnit The number of app units per device pixel.
    *
    * aContext and aPresContext may be null if all of the (non-percent)
    * length values in aData are already known to have been converted to
    * eCSSUnit_Pixel (as they are in an nsStyleAnimation::Value)
    */
-  void SetToTransformFunction(const nsCSSValue::Array* aData,
-                              nsStyleContext* aContext,
-                              nsPresContext* aPresContext,
-                              PRBool& aCanStoreInRuleTree);
+  static gfx3DMatrix MatrixForTransformFunction(const nsCSSValue::Array* aData,
+                                                nsStyleContext* aContext,
+                                                nsPresContext* aPresContext,
+                                                PRBool& aCanStoreInRuleTree,
+                                                nsRect& aBounds, 
+                                                float aAppUnitsPerMatrixUnit);
 
   /**
-   * The same as SetToTransformFunction, but for a list of transform
+   * The same as MatrixForTransformFunction, but for a list of transform
    * functions.
    */
-  static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
-                                               nsStyleContext* aContext,
-                                               nsPresContext* aPresContext,
-                                               PRBool &aCanStoreInRuleTree);
-  /**
-   * Sets this matrix to be the identity matrix.
-   */
-  void SetToIdentity();
-
-  /**
-   * Returns the value of the entry at the 2x2 submatrix of the
-   * transform matrix that defines the non-affine linear transform.
-   * The order is given as
-   * |elem[0]  elem[2]|
-   * |elem[1]  elem[3]|
-   *
-   * @param aIndex The element index.
-   * @return The value of the element at that index.
-   */
-  float GetMainMatrixEntry(PRInt32 aIndex) const
-  {
-    NS_PRECONDITION(aIndex >= 0 && aIndex < 4, "Index out of bounds!");
-    return mMain[aIndex];
-  }
-
-  /**
-   * Returns the value of the X or Y translation component of the matrix,
-   * given the specified bounds.
-   *
-   * @param aBounds The bounds of the element.
-   * @return The value of the X or Ytranslation component.
-   */
-  nscoord GetXTranslation(const nsRect& aBounds) const;
-  nscoord GetYTranslation(const nsRect& aBounds) const;
-
-  /**
-   * Get the raw components used for GetXTranslation and GetYTranslation.
-   */
-  nscoord GetCoordXTranslation() const { return mDelta[0]; }
-  nscoord GetCoordYTranslation() const { return mDelta[1]; }
-  float GetWidthRelativeXTranslation() const { return mX[0]; }
-  float GetWidthRelativeYTranslation() const { return mX[1]; }
-  float GetHeightRelativeXTranslation() const { return mY[0]; }
-  float GetHeightRelativeYTranslation() const { return mY[1]; }
-
-  /**
-   * Returns whether the two matrices are equal or not.
-   *
-   * @param aOther The matrix to compare to.
-   * @return Whether the two matrices are equal.
-   */
-  PRBool operator== (const nsStyleTransformMatrix& aOther) const;
-  PRBool operator!= (const nsStyleTransformMatrix& aOther) const
-  {
-    return !(*this == aOther);
-  }
+  static gfx3DMatrix ReadTransforms(const nsCSSValueList* aList,
+                                    nsStyleContext* aContext,
+                                    nsPresContext* aPresContext,
+                                    PRBool &aCanStoreInRuleTree,
+                                    nsRect& aBounds,
+                                    float aAppUnitsPerMatrixUnit);
 
  private:
-  /* The three matrices look like this:
-   * |mMain[0] mMain[2] mDelta[0]|
-   * |mMain[1] mMain[3] mDelta[1]| <-- Constant matrix
-   * |       0        0         1|
-   *
-   * |       0        0     mX[0]|
-   * |       0        0     mX[1]| <-- Scaled by width of element
-   * |       0        0         0|
-   *
-   * |       0        0     mY[0]|
-   * |       0        0     mY[1]| <-- Scaled by height of element
-   * |       0        0         0|
-   */
-  float mMain[4];
-  nscoord mDelta[2];
-  float mX[2];
-  float mY[2];
+  static gfx3DMatrix ProcessMatrix(const nsCSSValue::Array *aData,
+                                   nsStyleContext *aContext,
+                                   nsPresContext *aPresContext,
+                                   PRBool &aCanStoreInRuleTree,
+                                   nsRect& aBounds, float aAppUnitsPerMatrixUnit,
+                                   PRBool *aPercentX = nsnull, 
+                                   PRBool *aPercentY = nsnull);
+  static gfx3DMatrix ProcessInterpolateMatrix(const nsCSSValue::Array *aData,
+                                              nsStyleContext *aContext,
+                                              nsPresContext *aPresContext,
+                                              PRBool &aCanStoreInRuleTree,
+                                              nsRect& aBounds, float aAppUnitsPerMatrixUnit);
+  static gfx3DMatrix ProcessTranslateX(const nsCSSValue::Array *aData,
+                                       nsStyleContext *aContext,
+                                       nsPresContext *aPresContext,
+                                       PRBool &aCanStoreInRuleTree,
+                                       nsRect& aBounds, float aAppUnitsPerMatrixUnit);
+  static gfx3DMatrix ProcessTranslateY(const nsCSSValue::Array *aData,
+                                       nsStyleContext *aContext,
+                                       nsPresContext *aPresContext,
+                                       PRBool &aCanStoreInRuleTree,
+                                       nsRect& aBounds, float aAppUnitsPerMatrixUnit);
+  static gfx3DMatrix ProcessTranslate(const nsCSSValue::Array *aData,
+                                      nsStyleContext *aContext,
+                                      nsPresContext *aPresContext,
+                                      PRBool &aCanStoreInRuleTree,
+                                      nsRect& aBounds, float aAppUnitsPerMatrixUnit);
+  static gfx3DMatrix ProcessScaleHelper(float aXScale, float aYScale, float aZScale);
+  static gfx3DMatrix ProcessScaleX(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessScaleY(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessScale(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessSkewHelper(double aXAngle, double aYAngle);
+  static gfx3DMatrix ProcessSkewX(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessSkewY(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessSkew(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessRotateZ(const nsCSSValue::Array *aData);
 };
 
 #endif

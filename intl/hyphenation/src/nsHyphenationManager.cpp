@@ -214,7 +214,7 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
         locale.Replace(i, 1, '-');
       }
     }
-#ifdef DEBUG
+#ifdef DEBUG_hyph
     printf("adding hyphenation patterns for %s: %s\n", locale.get(),
            NS_ConvertUTF16toUTF8(dictName).get());
 #endif

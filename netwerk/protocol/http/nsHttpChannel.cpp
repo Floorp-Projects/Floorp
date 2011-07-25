@@ -55,7 +55,6 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsMimeTypes.h"
-#include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "prnetdb.h"
@@ -3638,6 +3637,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         (BYPASS_LOCAL_CACHE(mLoadFlags)))
         mCaps |= NS_HTTP_REFRESH_DNS;
 
+    // Force-Reload should reset the persistent connection pool for this host
+    if (mLoadFlags & LOAD_FRESH_CONNECTION)
+        mCaps |= NS_HTTP_CLEAR_KEEPALIVES;
+    
     mIsPending = PR_TRUE;
     mWasOpened = PR_TRUE;
 

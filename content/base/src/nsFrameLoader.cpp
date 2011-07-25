@@ -1628,8 +1628,6 @@ nsFrameLoader::GetWindowDimensions(nsRect& aRect)
 
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsWebNav));
 
-  NS_ASSERTION(mIsTopLevelContent, "Outer dimensions must be taken only from TopLevel content");
-
   nsCOMPtr<nsIDocShellTreeOwner> parentOwner;
   if (NS_FAILED(parentAsItem->GetTreeOwner(getter_AddRefs(parentOwner))) ||
       !parentOwner) {

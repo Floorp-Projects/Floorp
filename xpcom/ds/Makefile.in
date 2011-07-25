@@ -77,6 +77,8 @@ CPPSRCS		= \
 
 ifdef HAVE_CLOCK_MONOTONIC
 CPPSRCS += TimeStamp_posix.cpp
+else ifeq ($(OS_ARCH),Darwin)
+CPPSRCS += TimeStamp_darwin.cpp
 else
 CPPSRCS += TimeStamp.cpp
 endif
@@ -106,7 +108,6 @@ EXPORTS		= \
 		nsStaticAtom.h \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
-		nsTime.h \
 		nsVariant.h \
 		nsStringEnumerator.h \
 		nsHashPropertyBag.h \

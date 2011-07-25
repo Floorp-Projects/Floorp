@@ -110,7 +110,6 @@
 #include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
 #endif
-#include "nsPrintfCString.h"
 
 #include "nsIClipboardHelper.h"
 
@@ -194,6 +193,8 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 //switch to page layout
 #include "nsGfxCIID.h"
+
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 

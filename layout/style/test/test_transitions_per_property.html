@@ -1293,16 +1293,20 @@ function test_transform_transition(prop) {
     // per the prerequisites in property_database.js
     { start: 'translate(20%)', end: 'none',
       expected_uncomputed: 'translate(15%)',
-      expected: 'matrix(1, 0, 0, 1, 45px, 0px)' },
+      expected: 'matrix(1, 0, 0, 1, 45px, 0px)',
+      round_error_ok: true },
     { start: 'translate(20%, 12%)', end: 'none',
       expected_uncomputed: 'translate(15%, 9%)',
-      expected: 'matrix(1, 0, 0, 1, 45px, 4.5px)' },
+      expected: 'matrix(1, 0, 0, 1, 45px, 4.5px)',
+      round_error_ok: true },
     { start: 'translateX(-20%)', end: 'none',
       expected_uncomputed: 'translateX(-15%)',
-      expected: 'matrix(1, 0, 0, 1, -45px, 0px)' },
+      expected: 'matrix(1, 0, 0, 1, -45px, 0px)',
+      round_error_ok: true },
     { start: 'translateY(-40%)', end: 'none',
       expected_uncomputed: 'translateY(-30%)',
-      expected: 'matrix(1, 0, 0, 1, 0px, -15px)' },
+      expected: 'matrix(1, 0, 0, 1, 0px, -15px)',
+      round_error_ok: true },
     { start: 'none', end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
       expected_uncomputed: 'rotate(22.5deg) translate(5%, 5%) rotate(-22.5deg)',
       round_error_ok: true },
@@ -1312,10 +1316,12 @@ function test_transform_transition(prop) {
     // test percent translation using matrix decomposition
     { start: 'rotate(45deg) rotate(-45deg)',
       end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
-      expected: 'matrix(1, 0, 0, 1, -2.5px, 15px)' },
+      expected: 'matrix(1, 0, 0, 1, -2.5px, 15px)',
+      round_error_ok: true },
     { start: 'rotate(45deg) rotate(-45deg)',
       end: 'rotate(-90deg) translate(20%, 20%) rotate(90deg)',
-      expected: 'matrix(1, 0, 0, 1, 2.5px, -15px)' },
+      expected: 'matrix(1, 0, 0, 1, 2.5px, -15px)',
+      round_error_ok: true },
     // test calc() in translate
     // Note that font-size: is 20px, and that percentages are relative
     // to 300px (width) and 50px (height) per the prerequisites in
@@ -1334,7 +1340,8 @@ function test_transform_transition(prop) {
       expected: 'matrix(1.75, 0, 0, 1.75, 0px, 0px)' },
     { start: 'none', end: 'scale(0.4)',
       expected_uncomputed: 'scale(0.85)',
-      expected: 'matrix(0.85, 0, 0, 0.85, 0px, 0px)' },
+      expected: 'matrix(0.85, 0, 0, 0.85, 0px, 0px)',
+      round_error_ok: true },
     { start: 'scale(2)', end: 'scale(-2)',
       expected_uncomputed: 'scale(1)',
       expected: 'matrix(1, 0, 0, 1, 0px, 0px)' },
@@ -1343,7 +1350,8 @@ function test_transform_transition(prop) {
       expected: 'matrix(0, 0, 0, 0, 0px, 0px)' },
     { start: 'scale(2, 0.4)', end: 'none',
       expected_uncomputed: 'scale(1.75, 0.55)',
-      expected: 'matrix(1.75, 0, 0, 0.55, 0px, 0px)' },
+      expected: 'matrix(1.75, 0, 0, 0.55, 0px, 0px)',
+      round_error_ok: true },
     { start: 'scaleX(3)', end: 'none',
       expected_uncomputed: 'scaleX(2.5)',
       expected: 'matrix(2.5, 0, 0, 1, 0px, 0px)' },
@@ -1369,19 +1377,21 @@ function test_transform_transition(prop) {
 
     // matrix : skewX
     { start: 'matrix(1, 0, 3, 1, 0px, 0px)', end: 'none',
-      force_compute: true,
-      expected_uncomputed: 'matrix(1, 0, ' + Math.tan(Math.atan(3) * 0.75) + ', 1, 0px, 0px)' },
+      expected: 'matrix(1, 0, ' + Math.tan(Math.atan(3) * 0.75) + ', 1, 0px, 0px)',
+      round_error_ok: true },
     { start: 'skewX(0)', end: 'skewX(-45deg) translate(0)',
-      expected_uncomputed: 'skewX(-11.25deg)' },
+      expected: 'matrix(1, 0, -0.198912367, 1, 0px, 0px)',
+      round_error_ok: true },
     // matrix : rotate
     { start: 'rotate(-30deg)', end: 'matrix(0, 1, -1, 0, 0px, 0px)',
-      expected_uncomputed: 'matrix(1, 0, 0, 1, 0px, 0px)' },
+      expected: 'matrix(1, 0, 0, 1, 0px, 0px)' },
     { start: 'rotate(-30deg) translateX(0)',
       end: 'translateX(0) rotate(-90deg)',
       expected: c('rotate(-45deg)') },
     // matrix decomposition of skewY
     { start: 'skewY(60deg)', end: 'skewY(-60deg) translateX(0)',
-      expected: c('rotate(30deg) skewX(30deg) scale(2, 0.5)') },
+      expected: c('rotate(30deg) skewX(30deg) scale(2, 0.5)'),
+      round_error_ok: true },
 
     // matrix decomposition
 
@@ -1403,7 +1413,6 @@ function test_transform_transition(prop) {
     // http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
     { start: 'matrix(-1, 0, 0, 1, 0pt, 0pt)', /* scaleX(-1) */
       end: 'matrix(1, 0, 0, 1, 0, 0)',
-      expected_uncomputed: 'matrix(-0.5, 0, 0, 1, 0, 0)',
       expected: c('scaleX(-0.5)') },
 
     { start: 'matrix(1, 0, 0, -1, 0pt, 0pt)', /* rotate(-180deg) scaleX(-1) */
@@ -1435,25 +1444,30 @@ function test_transform_transition(prop) {
     // ... start with four with positive determinants
     { start: 'none',
       end: 'matrix(1, 0, 1.5, 1, 0pt, 0pt)',
-              /* skewX(atan(1.5)) */
-      expected_uncomputed: 'matrix(1, 0, ' + Math.tan(Math.atan(1.5) * 0.25).toFixed(6) + ', 1, 0px, 0px)' },
+      /* skewX(atan(1.5)) */
+      expected: 'matrix(1, 0, ' + Math.tan(Math.atan(1.5) * 0.25).toFixed(6) + ', 1, 0px, 0px)',
+      round_error_ok: true },       
     { start: 'none',
       end: 'matrix(-1, 0, 2, -1, 0pt, 0pt)',
               /* rotate(180deg) skewX(atan(-2)) */
-      expected: c('rotate(45deg) matrix(1, 0, ' + Math.tan(Math.atan(-2) * 0.25) + ', 1, 0px, 0px)') },
+      expected: c('rotate(45deg) matrix(1, 0, ' + Math.tan(Math.atan(-2) * 0.25) + ', 1, 0px, 0px)'),
+      round_error_ok: true },
     { start: 'none',
       end: 'matrix(0, -1, 1, -3, 0pt, 0pt)',
               /* rotate(-90deg) skewX(atan(3)) */
-      expected: c('rotate(-22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(3) * 0.25) + ', 1, 0px, 0px)') },
+      expected: c('rotate(-22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(3) * 0.25) + ', 1, 0px, 0px)'),
+      round_error_ok: true },
     { start: 'none',
       end: 'matrix(0, 1, -1, 4, 0pt, 0pt)',
               /* rotate(90deg) skewX(atan(4)) */
-      expected: c('rotate(22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(4) * 0.25) + ', 1, 0px, 0px)') },
+      expected: c('rotate(22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(4) * 0.25) + ', 1, 0px, 0px)'),
+      round_error_ok: true },
     // and then four with negative determinants
     { start: 'none',
       end: 'matrix(1, 0, 1, -1, 0pt, 0pt)',
               /* rotate(-180deg) skewX(atan(-1)) scaleX(-1) */
-      expected: c('rotate(-45deg) matrix(1, 0, ' + Math.tan(Math.atan(-1) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)') },
+      expected: c('rotate(-45deg) matrix(1, 0, ' + Math.tan(Math.atan(-1) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)'),
+      round_error_ok: true },
     { start: 'none',
       end: 'matrix(-1, 0, -1, 1, 0pt, 0pt)',
               /* skewX(atan(-1)) scaleX(-1) */
@@ -1461,11 +1475,13 @@ function test_transform_transition(prop) {
     { start: 'none',
       end: 'matrix(0, 1, 1, -2, 0pt, 0pt)',
               /* rotate(-90deg) skewX(atan(2)) scaleX(-1) */
-      expected: c('rotate(-22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(2) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)') },
+      expected: c('rotate(-22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(2) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)'),
+      round_error_ok: true },
     { start: 'none',
       end: 'matrix(0, -1, -1, 0.5, 0pt, 0pt)',
               /* rotate(90deg) skewX(atan(0.5)) scaleX(-1) */
-      expected: c('rotate(22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(0.5) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)') },
+      expected: c('rotate(22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(0.5) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)'),
+      round_error_ok: true },
 
     // lists vs. matrix decomposition
     { start: 'translate(10px) skewY(45deg)',
@@ -1476,7 +1492,8 @@ function test_transform_transition(prop) {
       expected_uncomputed: 'skewY(22.5deg) rotate(90deg)' },
     { start: 'skewY(45deg) rotate(90deg) translate(0)',
       end: 'skewY(-45deg) rotate(90deg)',
-      expected: c('rotate(90deg) skewX(-22.5deg)') },
+      expected: c('rotate(90deg) skewX(-22.5deg)'),
+      round_error_ok: true },
     { start: 'skewX(45deg) rotate(90deg)',
       end: 'skewX(-45deg) rotate(90deg)',
       expected_uncomputed: 'skewX(22.5deg) rotate(90deg)' },
@@ -1530,9 +1547,6 @@ function test_transform_transition(prop) {
       ok(pass,
          "interpolation of transitions: " + test.start + " to " + test.end +
          ": " + actual + " should approximately equal " + test.expected);
-    }
-    if ("expected_uncomputed" in test) {
-      check_distance(prop, test.start, test.expected_uncomputed, test.end);
     }
   }
 
