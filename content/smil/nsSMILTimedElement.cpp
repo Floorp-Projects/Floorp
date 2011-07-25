@@ -327,9 +327,7 @@ nsSMILTimedElement::BeginElementAt(double aOffsetSeconds)
     return NS_ERROR_FAILURE;
 
   nsSMILTime currentTime = container->GetCurrentTime();
-  AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_TRUE);
-
-  return NS_OK;
+  return AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_TRUE);
 }
 
 nsresult
@@ -340,9 +338,7 @@ nsSMILTimedElement::EndElementAt(double aOffsetSeconds)
     return NS_ERROR_FAILURE;
 
   nsSMILTime currentTime = container->GetCurrentTime();
-  AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_FALSE);
-
-  return NS_OK;
+  return AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_FALSE);
 }
 
 //----------------------------------------------------------------------
@@ -2053,19 +2049,24 @@ nsSMILTimedElement::SampleFillValue()
   }
 }
 
-void
+nsresult
 nsSMILTimedElement::AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
     double aOffsetSeconds, PRBool aIsBegin)
 {
   double offset = aOffsetSeconds * PR_MSEC_PER_SEC;
-  nsSMILTime timeWithOffset = aCurrentTime + PRInt64(NS_round(offset));
 
-  nsSMILTimeValue timeVal(timeWithOffset);
+  // Check we won't overflow the range of nsSMILTime
+  if (aCurrentTime + NS_round(offset) > LL_MAXINT)
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  nsSMILTimeValue timeVal(aCurrentTime + PRInt64(NS_round(offset)));
 
   nsRefPtr<nsSMILInstanceTime> instanceTime =
     new nsSMILInstanceTime(timeVal, nsSMILInstanceTime::SOURCE_DOM);
 
   AddInstanceTime(instanceTime, aIsBegin);
+
+  return NS_OK;
 }
 
 void
