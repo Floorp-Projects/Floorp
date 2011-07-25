@@ -933,4 +933,7 @@ js::types::TypeObject::trace(JSTracer *trc, bool weak)
         js_TraceScript(trc, newScript->script);
         InlineMark(trc, newScript->shape, "new_shape");
     }
+
+    if (functionScript)
+        js_TraceScript(trc, functionScript);
 }
