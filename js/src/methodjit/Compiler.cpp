@@ -4622,10 +4622,14 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
      * properties to be explicitly marked with undefined.
      */
 
-    if (!obj->isNative())
-        return false;
-    if (obj->getClass()->ops.lookupProperty)
-        return false;
+    JSObject *nobj = obj;
+    while (nobj) {
+        if (!nobj->isNative())
+            return false;
+        if (nobj->getClass()->ops.lookupProperty)
+            return false;
+        nobj = nobj->getProto();
+    }
 
     JSObject *holder;
     JSProperty *prop = NULL;
