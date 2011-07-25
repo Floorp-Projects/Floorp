@@ -124,16 +124,6 @@ XPCCallContext::GetJSContext() const
     return mJSContext;
 }
 
-inline JSContext*
-XPCCallContext::GetSafeJSContext() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    JSContext* cx;
-    if(NS_SUCCEEDED(mThreadData->GetJSContextStack()->GetSafeJSContext(&cx)))
-        return cx;
-    return nsnull;
-}
-
 inline JSBool
 XPCCallContext::GetContextPopRequired() const
 {
