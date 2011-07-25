@@ -96,7 +96,6 @@ using namespace QtMobility;
 #include "nsToolkit.h"
 #include "nsIdleService.h"
 #include "nsRenderingContext.h"
-#include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsWidgetsCID.h"
