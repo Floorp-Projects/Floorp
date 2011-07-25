@@ -49,6 +49,15 @@ function starttest(){
   SpecialPowers.setCharPref("extensions.foobaz", "hi there");
   is(SpecialPowers.getCharPref("extensions.foobaz"), "hi there", "Check string pref");
 
+  // Test an invalid pref
+  var retVal = null;
+  try {
+    retVal = SpecialPowers.getBoolPref('extensions.checkCompat0123456789');
+  } catch (ex) {
+    retVal = ex;
+  }
+  is(retVal, 'Error getting pref', "received an exception trying to get an unset preference value");
+
   SpecialPowers.addChromeEventListener("TestEvent", testEventListener, true, true);
   SpecialPowers.addChromeEventListener("TestEvent", testEventListener2, true, false);
   dispatchTestEvent();

@@ -2910,7 +2910,8 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = cx->new_<JSCompartment>(rt);
     if (compartment && compartment->init()) {
-        // The trusted compartment is a system compartment.
+        // Any compartment with the trusted principals -- and there can be
+        // multiple -- is a system compartment.
         compartment->isSystemCompartment = principals && rt->trustedPrincipals() == principals;
         if (principals) {
             compartment->principals = principals;

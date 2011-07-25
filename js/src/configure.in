@@ -4411,6 +4411,25 @@ if test -n "$MOZ_NATIVE_NSPR"; then
 fi
 
 dnl ========================================================
+dnl system libffi Support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(system-ffi,
+[  --enable-system-ffi       Use system libffi (located with pkgconfig)],
+    MOZ_NATIVE_FFI=1 )
+
+if test -n "$MOZ_NATIVE_FFI"; then
+    # Vanilla libffi 3.0.9 needs a few patches from upcoming version 3.0.10
+    # for non-GCC compilers.
+    if test -z "$GNU_CC"; then
+        PKG_CHECK_MODULES(MOZ_FFI, libffi > 3.0.9)
+    else
+        PKG_CHECK_MODULES(MOZ_FFI, libffi >= 3.0.9)
+    fi
+fi
+
+AC_SUBST(MOZ_NATIVE_FFI)
+
+dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -4992,7 +5011,9 @@ if test -n "$MOZ_VALGRIND"; then
         AC_MSG_ERROR(
             [--enable-valgrind specified but Valgrind is not installed]))
     AC_DEFINE(MOZ_VALGRIND)
+    MOZ_VALGRIND=1
 fi
+AC_SUBST(MOZ_VALGRIND)
 
 dnl ========================================================
 dnl jprof
@@ -5998,7 +6019,7 @@ AC_MSG_RESULT(invoking make to create js-config script)
 $GMAKE js-config
 
 # Build jsctypes if it's enabled.
-if test "$JS_HAS_CTYPES"; then
+if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
   # Run the libffi 'configure' script.
   ac_configure_args="--disable-shared --enable-static --disable-raw-api"
   if test "$MOZ_DEBUG"; then
