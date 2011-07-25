@@ -16,18 +16,19 @@ function onContentLoaded()
   let msg = "The unknown CSS property warning is displayed only once";
   let node = outputNode.firstChild;
 
-  is (node.childNodes[2].textContent, "Unknown property '-moz-opacity'.  Declaration dropped.", "correct node")
-  is(node.childNodes[3].getAttribute("value"), 2, msg);
+  is(node.childNodes[2].textContent, "Unknown property '-moz-opacity'.  Declaration dropped.", "correct node")
+  is(node.childNodes[3].firstChild.getAttribute("value"), 2, msg);
 
   jsterm.clearOutput();
 
-  jsterm.setInputValue("for (let i = 0; i < 10; ++i) console.log('hi');");
+  jsterm.setInputValue("for (let i = 0; i < 10; ++i) console.log('this is a line of reasonably long text that I will use to verify that the repeated text node is of an appropriate size.');");
   jsterm.execute();
 
-  msg = "The console output is repeated 10 times";
+  let msg = "The console output is repeated 10 times";
   let node = outputNode.querySelector(".webconsole-msg-console");
-  is(node.childNodes[3].getAttribute("value"), 10, msg);
+  is(node.childNodes[3].firstChild.getAttribute("value"), 10, msg);
 
+  jsterm.clearOutput();
   finishTest();
 }
 
