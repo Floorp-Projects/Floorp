@@ -572,7 +572,16 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
 {
     Value *firstUnused = space().firstUnused();
 
-    if (onTop() && extend && (!cx->hasfp() || !cx->regs().inlined())) {
+#ifdef JS_METHODJIT
+    /*
+     * The only calls made by inlined methodjit frames can be to other JIT
+     * frames associated with the same VMFrame.
+     */
+    if (cx->hasfp() && cx->regs().inlined())
+        mjit::ExpandInlineFrames(cx->compartment, false);
+#endif
+
+    if (onTop() && extend) {
         if (!space().ensureSpace(cx, report, firstUnused, nvars))
             return NULL;
         return firstUnused;

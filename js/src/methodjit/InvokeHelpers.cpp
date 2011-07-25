@@ -359,7 +359,18 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
         }
     }
 
-    /* Otherwise, run newscript in the interpreter. */
+    /*
+     * Otherwise, run newscript in the interpreter. Expand any inlined frame we
+     * are calling from, as the new frame is not associated with the VMFrame
+     * and will not have its prevpc info updated if frame expansion is
+     * triggered while interpreting.
+     */
+    if (f.regs.inlined()) {
+        ExpandInlineFrames(cx->compartment, false);
+        JS_ASSERT(!f.regs.inlined());
+        regs.fp()->resetInlinePrev(f.fp(), f.regs.pc);
+    }
+
     bool ok = !!Interpret(cx, cx->fp());
     f.cx->stack.popInlineFrame(regs);
 
