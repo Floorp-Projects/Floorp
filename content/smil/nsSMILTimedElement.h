@@ -505,7 +505,7 @@ protected:
   void              UpdateCurrentInterval(PRBool aForceChangeNotice = PR_FALSE);
   void              SampleSimpleTime(nsSMILTime aActiveTime);
   void              SampleFillValue();
-  void              AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
+  nsresult          AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
                         double aOffsetSeconds, PRBool aIsBegin);
   void              RegisterMilestone();
   PRBool            GetNextMilestone(nsSMILMilestone& aNextMilestone) const;
