@@ -540,6 +540,8 @@ class StackFrame
      *
      * - Inlined frames have the same scope chain as the outer frame.
      * - Inlined frames have the same strictness as the outer frame.
+     * - Inlined frames can only make calls to other JIT frames associated with
+     *   the same VMFrame. Other calls force expansion of the inlined frames.
      */
 
     /*
