@@ -282,6 +282,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       return;
   }
 
+  // Process invalidation list of the document after all accessible tree
+  // modification are done.
+  mDocument->ProcessInvalidationList();
+
   // If a generic notification occurs after this point then we may be allowed to
   // process it synchronously.
   mObservingState = eRefreshObserving;

@@ -142,6 +142,7 @@ EXPORTS	+= \
 endif
 
 CPPSRCS	= \
+	gfx3DMatrix.cpp \
 	gfxASurface.cpp \
 	gfxAlphaRecovery.cpp \
 	gfxBlur.cpp \

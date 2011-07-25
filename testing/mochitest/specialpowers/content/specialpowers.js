@@ -253,6 +253,20 @@ SpecialPowers.prototype = {
     }
   },
 
+  _xpcomabi: null,
+
+  get XPCOMABI() {
+    if (this._xpcomabi != null)
+      return this._xpcomabi;
+
+    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]
+                        .getService(Components.interfaces.nsIXULAppInfo)
+                        .QueryInterface(Components.interfaces.nsIXULRuntime);
+
+    this._xpcomabi = xulRuntime.XPCOMABI;
+    return this._xpcomabi;
+  },
+
   registerProcessCrashObservers: function() {
     addMessageListener("SPProcessCrashService", this._messageListener);
     sendSyncMessage("SPProcessCrashService", { op: "register-observer" });

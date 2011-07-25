@@ -1514,7 +1514,6 @@ struct nsStyleDisplay {
   // initial are replaced by an actual list of transform functions, or
   // null, as appropriate.) (owned by the style rule)
   const nsCSSValueList *mSpecifiedTransform; // [reset]
-  nsStyleTransformMatrix mTransform; // [reset] The stored transform matrix
   nsStyleCoord mTransformOrigin[2]; // [reset] percent, coord, calc
 
   nsAutoTArray<nsTransition, 1> mTransitions; // [reset]

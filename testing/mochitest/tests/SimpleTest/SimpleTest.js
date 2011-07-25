@@ -36,20 +36,16 @@ if (parentRunner) {
  * Check for OOP test plugin
 **/
 SimpleTest.testPluginIsOOP = function () {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var testPluginIsOOP = false;
     if (navigator.platform.indexOf("Mac") == 0) {
-        var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                                   .getService(Components.interfaces.nsIXULAppInfo)
-                                   .QueryInterface(Components.interfaces.nsIXULRuntime);
-        if (xulRuntime.XPCOMABI.match(/x86-/)) {
+        if (SpecialPowers.XPCOMABI.match(/x86-/)) {
             try {
                 testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.i386.test.plugin");
             } catch (e) {
                 testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.i386");
             }
         }
-        else if (xulRuntime.XPCOMABI.match(/x86_64-/)) {
+        else if (SpecialPowers.XPCOMABI.match(/x86_64-/)) {
             try {
                 testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.x86_64.test.plugin");
             } catch (e) {
