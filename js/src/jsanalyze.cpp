@@ -1247,7 +1247,7 @@ inline void
 ScriptAnalysis::ensureVariable(LifetimeVariable &var, unsigned until)
 {
     JS_ASSERT(var.lifetime);
-    JS_ASSERT(until < var.lifetime->start);
+    JS_ASSERT(until <= var.lifetime->start);
     var.lifetime->start = until;
     var.ensured = true;
 }
