@@ -288,6 +288,8 @@ enum {
 typedef JSObject*
 (*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
+extern bool
+DefineStaticJSVals(JSContext *cx);
 void
 Register(nsDOMClassInfoData *aData);
 extern bool

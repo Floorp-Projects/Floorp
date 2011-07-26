@@ -42,9 +42,6 @@
 #include "xpcquickstubs.h"
 #include "XPCWrapper.h"
 #include "WrapperFactory.h"
-
-#include "nsIDOMNode.h"
-
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
 #include "jsiter.h"
@@ -54,6 +51,40 @@ using namespace js;
 
 namespace xpc {
 namespace dom {
+
+
+static jsid s_constructor_id = JSID_VOID;
+static jsid s_prototype_id = JSID_VOID;
+
+static jsid s_length_id = JSID_VOID;
+static jsid s_item_id = JSID_VOID;
+static jsid s_namedItem_id = JSID_VOID;
+
+bool
+DefineStaticJSVal(JSContext *cx, jsid &id, const char *string)
+{
+    if (JSString *str = ::JS_InternString(cx, string)) {
+        id = INTERNED_STRING_TO_JSID(cx, str);
+        return true;
+    }
+    return false;
+}
+
+#define SET_JSID_TO_STRING(_cx, _string)                                      \
+    DefineStaticJSVal(_cx, s_##_string##_id, #_string)
+
+bool
+DefineStaticJSVals(JSContext *cx)
+{
+    JSAutoRequest ar(cx);
+
+    return SET_JSID_TO_STRING(cx, constructor) &&
+           SET_JSID_TO_STRING(cx, prototype) &&
+           SET_JSID_TO_STRING(cx, length) &&
+           SET_JSID_TO_STRING(cx, item) &&
+           SET_JSID_TO_STRING(cx, namedItem);
+}
+
 
 int HandlerFamily;
 
@@ -176,7 +207,7 @@ Class NodeList<nsINodeList>::sInterfaceClass = {
 
 template<>
 NodeList<nsINodeList>::Methods NodeList<nsINodeList>::sProtoMethods[] = {
-    { nsDOMClassInfo::sItem_id, &item, 1 }
+    { s_item_id, &item, 1 }
 };
 
 template<>
@@ -205,8 +236,8 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp);
 
 template<>
 NodeList<nsIHTMLCollection>::Methods NodeList<nsIHTMLCollection>::sProtoMethods[] = {
-    { nsDOMClassInfo::sItem_id, &item, 1 },
-    { nsDOMClassInfo::sNamedItem_id, &namedItem, 1 }
+    { s_item_id, &item, 1 },
+    { s_namedItem_id, &namedItem, 1 }
 };
 
 void
@@ -406,7 +437,7 @@ interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool 
 {
     if (vp->isObject()) {
         jsval prototype;
-        if (!JS_GetPropertyById(cx, obj, nsDOMClassInfo::sPrototype_id, &prototype) ||
+        if (!JS_GetPropertyById(cx, obj, s_prototype_id, &prototype) ||
             JSVAL_IS_PRIMITIVE(prototype)) {
             JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                          JSMSG_THROW_TYPE_ERROR);
@@ -475,7 +506,7 @@ NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *ena
     if (!interfacePrototype)
         return NULL;
 
-    if (!JS_DefinePropertyById(cx, interfacePrototype, nsDOMClassInfo::sLength_id,
+    if (!JS_DefinePropertyById(cx, interfacePrototype, s_length_id,
                                JSVAL_VOID, length_getter, NULL,
                                JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED))
         return NULL;
@@ -494,12 +525,12 @@ NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *ena
 
     JSObject *interface = JS_NewObject(cx, Jsvalify(&sInterfaceClass), NULL, global);
     if (!interface ||
-        !JS_DefinePropertyById(cx, interface, nsDOMClassInfo::sPrototype_id,
+        !JS_DefinePropertyById(cx, interface, s_prototype_id,
                                OBJECT_TO_JSVAL(interfacePrototype), nsnull, nsnull,
                                JSPROP_PERMANENT | JSPROP_READONLY))
         return NULL;
 
-    if (!JS_DefinePropertyById(cx, interfacePrototype, nsDOMClassInfo::sConstructor_id,
+    if (!JS_DefinePropertyById(cx, interfacePrototype, s_constructor_id,
                                OBJECT_TO_JSVAL(interface), nsnull, nsnull, 0))
         return NULL;
 
@@ -782,7 +813,7 @@ bool
 NodeList<T>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
 {
     JSPropertyDescriptor desc;
-    if (!JS_GetPropertyDescriptorById(cx, proto, nsDOMClassInfo::sLength_id, JSRESOLVE_QUALIFIED, &desc))
+    if (!JS_GetPropertyDescriptorById(cx, proto, s_length_id, JSRESOLVE_QUALIFIED, &desc))
         return false;
     if (desc.obj != proto || desc.getter != length_getter)
         return true; // don't cache
@@ -825,7 +856,7 @@ NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Property
 {
     JS_ASSERT(WrapperFactory::IsXrayWrapper(proxy));
 
-    if (id == nsDOMClassInfo::sLength_id) {
+    if (id == s_length_id) {
         desc->attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED;
         desc->obj = proxy;
         desc->setter = nsnull;
@@ -890,7 +921,7 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
     if (!checkForCacheHit(cx, proxy, receiver, proto, id, vp, &hit))
         return false;
     if (hit) {
-        if (id == nsDOMClassInfo::sLength_id) {
+        if (id == s_length_id) {
             PRUint32 length;
             getNodeList(proxy)->GetLength(&length);
             JS_ASSERT(int32(length) >= 0);
