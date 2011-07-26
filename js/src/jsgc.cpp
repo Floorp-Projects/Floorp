@@ -337,27 +337,49 @@ Chunk::init(JSRuntime *rt)
 
     for (size_t i = 0; i != JS_ARRAY_LENGTH(markingDelay); ++i)
         markingDelay[i].init();
+
+    /*
+     * The rest of info fields is initailzied in PickChunk. We do not clear
+     * the mark bitmap as that is done at the start of the next GC.
+     */
 }
 
-bool
-Chunk::unused()
+inline Chunk **
+GetAvailableChunkList(JSCompartment *comp)
 {
-    return info.numFree == ArenasPerChunk;
+    JSRuntime *rt = comp->rt;
+    return comp->isSystemCompartment
+           ? &rt->gcSystemAvailableChunkListHead
+           : &rt->gcUserAvailableChunkListHead;
 }
 
-bool
-Chunk::hasAvailableArenas()
+inline void
+Chunk::addToAvailableList(JSCompartment *comp)
 {
-    return info.numFree > 0;
+    Chunk **listHeadp = GetAvailableChunkList(comp);
+    JS_ASSERT(!info.prevp);
+    JS_ASSERT(!info.next);
+    info.prevp = listHeadp;
+    Chunk *head = *listHeadp;
+    if (head) {
+        JS_ASSERT(head->info.prevp == listHeadp);
+        head->info.prevp = &info.next;
+    }
+    info.next = head;
+    *listHeadp = this;
 }
 
-bool
-Chunk::withinArenasRange(Cell *cell)
+inline void
+Chunk::removeFromAvailableList()
 {
-    uintptr_t addr = uintptr_t(cell);
-    if (addr >= uintptr_t(&arenas[0]) && addr < uintptr_t(&arenas[ArenasPerChunk]))
-        return true;
-    return false;
+    JS_ASSERT(info.prevp);
+    *info.prevp = info.next;
+    if (info.next) {
+        JS_ASSERT(info.next->info.prevp == &info.next);
+        info.next->info.prevp = info.prevp;
+    }
+    info.prevp = NULL;
+    info.next = NULL;
 }
 
 template <size_t thingSize>
@@ -370,6 +392,9 @@ Chunk::allocateArena(JSContext *cx, unsigned thingKind)
     info.emptyArenaListHead = aheader->next;
     aheader->init(comp, thingKind, thingSize);
     --info.numFree;
+
+    if (!hasAvailableArenas())
+        removeFromAvailableList();
 
     JSRuntime *rt = info.runtime;
     Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes + ArenaSize);
@@ -409,9 +434,15 @@ Chunk::releaseArena(ArenaHeader *aheader)
     aheader->next = info.emptyArenaListHead;
     info.emptyArenaListHead = aheader;
     ++info.numFree;
-    if (unused()) {
-        rt->gcUserChunkSet.remove(this);
-        rt->gcSystemChunkSet.remove(this);
+    if (info.numFree == 1) {
+        JS_ASSERT(!info.prevp);
+        JS_ASSERT(!info.next);
+        addToAvailableList(aheader->compartment);
+    } else if (!unused()) {
+        JS_ASSERT(info.prevp);
+    } else {
+        rt->gcChunkSet.remove(this);
+        removeFromAvailableList();
 
         /*
          * We keep empty chunks until we are done with finalization to allow
@@ -420,7 +451,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
          * GC_SHRINK.
          */
         info.age = 0;
-        info.link = rt->gcEmptyChunkListHead;
+        info.next = rt->gcEmptyChunkListHead;
         rt->gcEmptyChunkListHead = this;
         rt->gcEmptyChunkCount++;
     }
@@ -450,34 +481,23 @@ ReleaseGCChunk(JSRuntime *rt, Chunk *p)
 inline Chunk *
 PickChunk(JSContext *cx)
 {
-    Chunk *chunk = cx->compartment->chunk;
-    if (chunk && chunk->hasAvailableArenas())
+    JSCompartment *comp = cx->compartment;
+    JSRuntime *rt = comp->rt;
+    Chunk **listHeadp = GetAvailableChunkList(comp);
+    Chunk *chunk = *listHeadp;
+    if (chunk)
         return chunk;
 
-    JSRuntime *rt = cx->runtime;
-    bool isSystemCompartment = cx->compartment->isSystemCompartment;
-
     /*
-     * The chunk used for the last allocation is full, search all chunks for
-     * free arenas.
+     * We do not have available chunks, either get one from the empty set or
+     * allocate one.
      */
-    GCChunkSet *chunkSet = isSystemCompartment ? &rt->gcSystemChunkSet : &rt->gcUserChunkSet;
-    for (GCChunkSet::Range r(chunkSet->all()); !r.empty(); r.popFront()) {
-        chunk = r.front();
-        if (chunk->hasAvailableArenas()) {
-            cx->compartment->chunk = chunk;
-            return chunk;
-        }
-    }
-
-    /* Use an empty chunk when available or allocate a new one. */
     chunk = rt->gcEmptyChunkListHead;
     if (chunk) {
         JS_ASSERT(chunk->unused());
-        JS_ASSERT(!rt->gcUserChunkSet.has(chunk));
-        JS_ASSERT(!rt->gcSystemChunkSet.has(chunk));
+        JS_ASSERT(!rt->gcChunkSet.has(chunk));
         JS_ASSERT(rt->gcEmptyChunkCount >= 1);
-        rt->gcEmptyChunkListHead = chunk->info.link;
+        rt->gcEmptyChunkListHead = chunk->info.next;
         rt->gcEmptyChunkCount--;
     } else {
         chunk = AllocateGCChunk(rt);
@@ -492,27 +512,18 @@ PickChunk(JSContext *cx)
      * FIXME bug 583732 - chunk is newly allocated and cannot be present in
      * the table so using ordinary lookupForAdd is suboptimal here.
      */
-    GCChunkSet::AddPtr p = chunkSet->lookupForAdd(chunk);
+    GCChunkSet::AddPtr p = rt->gcChunkSet.lookupForAdd(chunk);
     JS_ASSERT(!p);
-    if (!chunkSet->add(p, chunk)) {
+    if (!rt->gcChunkSet.add(p, chunk)) {
         ReleaseGCChunk(rt, chunk);
         return NULL;
     }
 
-    cx->compartment->chunk = chunk;
-    return chunk;
-}
+    chunk->info.prevp = NULL;
+    chunk->info.next = NULL;
+    chunk->addToAvailableList(comp);
 
-static void
-ReleaseEmptyGCChunks(JSRuntime *rt)
-{
-    for (Chunk *chunk = rt->gcEmptyChunkListHead; chunk; ) {
-        Chunk *next = chunk->info.link;
-        ReleaseGCChunk(rt, chunk);
-        chunk = next;
-    }
-    rt->gcEmptyChunkListHead = NULL;
-    rt->gcEmptyChunkCount = 0;
+    return chunk;
 }
 
 static void
@@ -520,23 +531,21 @@ ExpireGCChunks(JSRuntime *rt, JSGCInvocationKind gckind)
 {
     AutoLockGC lock(rt);
 
-    if (gckind == GC_SHRINK) {
-        ReleaseEmptyGCChunks(rt);
-    } else {
-        /* Return old empty chunks to the system. */
-        for (Chunk **chunkp = &rt->gcEmptyChunkListHead; *chunkp; ) {
-            JS_ASSERT(rt->gcEmptyChunkCount);
-            Chunk *chunk = *chunkp;
-            JS_ASSERT(chunk->info.age <= MAX_EMPTY_CHUNK_AGE);
-            if (chunk->info.age == MAX_EMPTY_CHUNK_AGE) {
-                *chunkp = chunk->info.link;
-                --rt->gcEmptyChunkCount;
-                ReleaseGCChunk(rt, chunk);
-            } else {
-                /* Keep the chunk but increase its age. */
-                ++chunk->info.age;
-                chunkp = &chunk->info.link;
-            }
+    /* Return old empty chunks to the system. */
+    for (Chunk **chunkp = &rt->gcEmptyChunkListHead; *chunkp; ) {
+        JS_ASSERT(rt->gcEmptyChunkCount);
+        Chunk *chunk = *chunkp;
+        JS_ASSERT(chunk->unused());
+        JS_ASSERT(!rt->gcChunkSet.has(chunk));
+        JS_ASSERT(chunk->info.age <= MAX_EMPTY_CHUNK_AGE);
+        if (gckind == GC_SHRINK || chunk->info.age == MAX_EMPTY_CHUNK_AGE) {
+            *chunkp = chunk->info.next;
+            --rt->gcEmptyChunkCount;
+            ReleaseGCChunk(rt, chunk);
+        } else {
+            /* Keep the chunk but increase its age. */
+            ++chunk->info.age;
+            chunkp = &chunk->info.next;
         }
     }
 }
@@ -576,14 +585,7 @@ static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 120 * 1000 * 1000;
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
-    /*
-     * Make room for at least 16 chunks so the table would not grow before
-     * the browser starts up.
-     */
-    if (!rt->gcUserChunkSet.init(INITIAL_CHUNK_CAPACITY))
-        return false;
-
-    if (!rt->gcSystemChunkSet.init(INITIAL_CHUNK_CAPACITY))
+    if (!rt->gcChunkSet.init(INITIAL_CHUNK_CAPACITY))
         return false;
 
     if (!rt->gcRootsHash.init(256))
@@ -725,8 +727,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 
     Chunk *chunk = Chunk::fromAddress(addr);
 
-    if (!trc->context->runtime->gcUserChunkSet.has(chunk) &&
-        !trc->context->runtime->gcSystemChunkSet.has(chunk))
+    if (!trc->context->runtime->gcChunkSet.has(chunk))
         return CGCT_NOTCHUNK;
 
     /*
@@ -933,13 +934,18 @@ js_FinishGC(JSRuntime *rt)
     rt->compartments.clear();
     rt->atomsCompartment = NULL;
 
-    for (GCChunkSet::Range r(rt->gcUserChunkSet.all()); !r.empty(); r.popFront())
+    rt->gcSystemAvailableChunkListHead = NULL;
+    rt->gcUserAvailableChunkListHead = NULL;
+    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         ReleaseGCChunk(rt, r.front());
-    for (GCChunkSet::Range r(rt->gcSystemChunkSet.all()); !r.empty(); r.popFront())
-        ReleaseGCChunk(rt, r.front());
-    rt->gcUserChunkSet.clear();
-    rt->gcSystemChunkSet.clear();
-    ReleaseEmptyGCChunks(rt);
+    rt->gcChunkSet.clear();
+    for (Chunk *chunk = rt->gcEmptyChunkListHead; chunk; ) {
+        Chunk *next = chunk->info.next;
+        ReleaseGCChunk(rt, chunk);
+        chunk = next;
+    }
+    rt->gcEmptyChunkListHead = NULL;
+    rt->gcEmptyChunkCount = 0;
 
 #ifdef JS_THREADSAFE
     rt->gcHelperThread.finish(rt);
@@ -2265,10 +2271,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     JS_ASSERT(gcmarker.getMarkColor() == BLACK);
     rt->gcMarkingTracer = &gcmarker;
 
-    for (GCChunkSet::Range r(rt->gcUserChunkSet.all()); !r.empty(); r.popFront())
-        r.front()->bitmap.clear();
-
-    for (GCChunkSet::Range r(rt->gcSystemChunkSet.all()); !r.empty(); r.popFront())
+    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
 
     if (comp) {
