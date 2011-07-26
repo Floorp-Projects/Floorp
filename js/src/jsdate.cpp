@@ -1242,7 +1242,7 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, Value *vp = NULL)
 
     size_t slotCap = JS_MIN(obj->numSlots(), JSObject::DATE_CLASS_RESERVED_SLOTS);
     for (size_t ind = JSObject::JSSLOT_DATE_COMPONENTS_START; ind < slotCap; ind++)
-        obj->setSlot(ind, UndefinedValue());
+        obj->getSlotRef(ind).setUndefined();
 
     obj->setDateUTCTime(DoubleValue(t));
     if (vp)

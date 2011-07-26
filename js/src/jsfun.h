@@ -190,7 +190,11 @@ struct JSFunction : public JSObject_Slots2
     };
 
   public:
-    inline void setJoinable();
+    void setJoinable() {
+        JS_ASSERT(FUN_INTERPRETED(this));
+        getSlotRef(METHOD_ATOM_SLOT).setNull();
+        flags |= JSFUN_JOINABLE;
+    }
 
     /*
      * Method name imputed from property uniquely assigned to or initialized,
@@ -203,7 +207,10 @@ struct JSFunction : public JSObject_Slots2
                : NULL;
     }
 
-    inline void setMethodAtom(JSAtom *atom);
+    void setMethodAtom(JSAtom *atom) {
+        JS_ASSERT(joinable());
+        getSlotRef(METHOD_ATOM_SLOT).setString(atom);
+    }
 
     JSScript *script() const {
         JS_ASSERT(isInterpreted());

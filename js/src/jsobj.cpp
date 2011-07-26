@@ -2930,7 +2930,7 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
 
     JSObject *parent = ctor->getParent();
     JSObject *proto;
-    const Value &protov = ctor->getSlot(protoSlot);
+    const Value &protov = ctor->getSlotRef(protoSlot);
     if (protov.isObject()) {
         proto = &protov.toObject();
     } else {
@@ -3257,7 +3257,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     if (normalUnwind) {
         uintN slot = JSSLOT_BLOCK_FIRST_FREE_SLOT;
         depth += fp->numFixed();
-        obj->copySlots(slot, fp->slots() + depth, count);
+        memcpy(obj->getSlots() + slot, fp->slots() + depth, count * sizeof(Value));
     }
 
     /* We must clear the private slot even with errors. */
@@ -3385,16 +3385,16 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
     size_t n = 0;
     if (to->isWrapper() &&
         (JSWrapper::wrapperHandler(to)->flags() & JSWrapper::CROSS_COMPARTMENT)) {
-        to->setSlot(0, from->getSlot(0));
-        to->setSlot(1, from->getSlot(1));
+        to->slots[0] = from->slots[0];
+        to->slots[1] = from->slots[1];
         n = 2;
     }
 
     for (; n < nslots; ++n) {
-        Value v = from->getSlot(n);
+        Value v = from->slots[n];
         if (!cx->compartment->wrap(cx, &v))
             return false;
-        to->setSlot(n, v);
+        to->slots[n] = v;
     }
     return true;
 }
@@ -3471,9 +3471,9 @@ TradeGuts(JSObject *a, JSObject *b)
 
         /* Fixup pointers for inline slots on the objects. */
         if (aInline)
-            b->setSlotsPtr(b->fixedSlots());
+            b->slots = b->fixedSlots();
         if (bInline)
-            a->setSlotsPtr(a->fixedSlots());
+            a->slots = a->fixedSlots();
     } else {
         /*
          * If the objects are of differing sizes, then we only copy over the
@@ -3787,7 +3787,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
      * semantics for null-protoProto, and use createBlankPrototype.)
      */
     JSObject *proto = NewObject<WithProto::Class>(cx, clasp, protoProto, obj);
-    if (!proto || !proto->getEmptyShape(cx, proto->getClass(), gc::FINALIZE_OBJECT0))
+    if (!proto || !proto->getEmptyShape(cx, proto->clasp, gc::FINALIZE_OBJECT0))
         return NULL;
 
     proto->syncSpecialEquality();
@@ -4065,7 +4065,7 @@ JSObject::ensureInstanceReservedSlots(JSContext *cx, size_t nreserved)
     JS_ASSERT_IF(isNative(),
                  isBlock() || isCall() || (isFunction() && isBoundFunction()));
 
-    uintN nslots = JSSLOT_FREE(getClass()) + nreserved;
+    uintN nslots = JSSLOT_FREE(clasp) + nreserved;
     return nslots <= numSlots() || allocSlots(cx, nslots);
 }
 
@@ -4319,15 +4319,14 @@ bool
 JSObject::allocSlot(JSContext *cx, uint32 *slotp)
 {
     uint32 slot = slotSpan();
-    JS_ASSERT(slot >= JSSLOT_FREE(getClass()));
+    JS_ASSERT(slot >= JSSLOT_FREE(clasp));
 
     /*
      * If this object is in dictionary mode and it has a property table, try to
      * pull a free slot from the property table's slot-number freelist.
      */
     if (inDictionaryMode() && lastProp->hasTable()) {
-        PropertyTable *table = lastProp->getTable();
-        uint32 last = table->freelist;
+        uint32 &last = lastProp->getTable()->freelist;
         if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
             JS_ASSERT(last < slot);
@@ -4337,9 +4336,9 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
 
             *slotp = last;
 
-            const Value &vref = getSlot(last);
-            table->freelist = vref.toPrivateUint32();
-            setSlot(last, UndefinedValue());
+            Value &vref = getSlotRef(last);
+            last = vref.toPrivateUint32();
+            vref.setUndefined();
             return true;
         }
     }
@@ -4359,6 +4358,7 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
     uint32 limit = slotSpan();
     JS_ASSERT(slot < limit);
 
+    Value &vref = getSlotRef(slot);
     if (inDictionaryMode() && lastProp->hasTable()) {
         uint32 &last = lastProp->getTable()->freelist;
 
@@ -4371,14 +4371,14 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
          * the dictionary property table's freelist. We want to let the last
          * slot be freed by shrinking the dslots vector; see js_TraceObject.
          */
-        if (JSSLOT_FREE(getClass()) <= slot && slot + 1 < limit) {
+        if (JSSLOT_FREE(clasp) <= slot && slot + 1 < limit) {
             JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
-            setSlot(slot, PrivateUint32Value(last));
+            vref.setPrivateUint32(last);
             last = slot;
             return true;
         }
     }
-    setSlot(slot, UndefinedValue());
+    vref.setUndefined();
     return false;
 }
 
