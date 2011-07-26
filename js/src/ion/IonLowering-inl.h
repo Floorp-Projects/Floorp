@@ -100,7 +100,7 @@ LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefini
 bool
 LIRGenerator::ensureDefined(MDefinition *mir)
 {
-    if (mir->emitAtUses()) {
+    if (mir->isEmittedAtUses()) {
         if (!mir->toInstruction()->accept(this))
             return false;
         JS_ASSERT(mir->id());

@@ -163,7 +163,7 @@ Loop::optimize()
             for (MUseDefIterator iter(ins->toDefinition()); iter; iter++) {
                 MDefinition *consumer = iter.def();
 
-                if (consumer->inWorklist())
+                if (consumer->isInWorklist())
                     continue;
 
                 // if the consumer of this invariant instruction is in the

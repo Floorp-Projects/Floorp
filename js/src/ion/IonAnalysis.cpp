@@ -91,7 +91,7 @@ class TypeAnalyzer
         return ins;
     }
     bool push(MDefinition *def) {
-        if (def->inWorklist() || !def->typePolicy())
+        if (def->isInWorklist() || !def->typePolicy())
             return true;
         JS_ASSERT(!def->isPhi());
         def->setInWorklist();
