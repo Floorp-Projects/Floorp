@@ -5706,7 +5706,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     clause.Condition("AUTOCOMPLETE_MATCH(").Param(":search_string")
           .Str(", h.url, page_title, tags, ")
           .Str(nsPrintfCString(17, "0, 0, 0, 0, %d, 0)",
-                               mozIPlacesAutoComplete::MATCH_ANYWHERE).get());
+                               mozIPlacesAutoComplete::MATCH_ANYWHERE_UNMODIFIED).get());
   }
 
   // min and max visit count
