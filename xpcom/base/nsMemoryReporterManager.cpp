@@ -208,7 +208,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(Vsize,
 NS_MEMORY_REPORTER_IMPLEMENT(PageFaultsSoft,
     "page-faults-soft",
     KIND_OTHER,
-    UNITS_COUNT,
+    UNITS_COUNT_CUMULATIVE,
     GetSoftPageFaults,
     "The number of soft page faults (also known as \"minor page faults\") that "
     "have occurred since the process started.  A soft page fault occurs when the "
@@ -223,7 +223,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(PageFaultsSoft,
 NS_MEMORY_REPORTER_IMPLEMENT(PageFaultsHard,
     "page-faults-hard",
     KIND_OTHER,
-    UNITS_COUNT,
+    UNITS_COUNT_CUMULATIVE,
     GetHardPageFaults,
     "The number of hard page faults (also known as \"major page faults\") that "
     "have occurred since the process started.  A hard page fault occurs when a "

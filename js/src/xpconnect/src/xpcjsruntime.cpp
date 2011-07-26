@@ -46,6 +46,7 @@
 #include "dom_quickstubs.h"
 
 #include "jsgcchunk.h"
+#include "jsscope.h"
 #include "nsIMemoryReporter.h"
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
@@ -1404,6 +1405,7 @@ private:
 
         PRInt64 objectSlots;
         PRInt64 stringChars;
+        PRInt64 propertyTables;
 
         PRInt64 scripts;
 #ifdef JS_METHODJIT
@@ -1543,17 +1545,21 @@ private:
         IterateData *data = static_cast<IterateData *>(vdata);
         CompartmentStats *curr = data->currCompartmentStats;
         if (traceKind == JSTRACE_OBJECT) {
-            JSObject *obj = static_cast<JSObject *>(thing);
             curr->gcHeapObjects += thingSize;
+            JSObject *obj = static_cast<JSObject *>(thing);
             if (obj->hasSlotsArray()) {
                 curr->objectSlots += obj->numSlots() * sizeof(js::Value);
             }
         } else if (traceKind == JSTRACE_STRING) {
-            JSString *str = static_cast<JSString *>(thing);
             curr->gcHeapStrings += thingSize;
+            JSString *str = static_cast<JSString *>(thing);
             curr->stringChars += str->charsHeapSize();
         } else if (traceKind == JSTRACE_SHAPE) {
             curr->gcHeapShapes += thingSize;
+            js::Shape *shape = static_cast<js::Shape *>(thing);
+            if (shape->hasTable()) {
+                curr->propertyTables += shape->getTable()->sizeOf();
+            }
         } else {
             JS_ASSERT(traceKind == JSTRACE_XML);
             curr->gcHeapXml += thingSize;
@@ -1695,6 +1701,12 @@ public:
     "concatenation.  Each string also includes a header which is stored on the "
     "compartment's JavaScript heap;  that header is not counted here, but in "
     "'gc-heap/strings' instead.");
+
+            BYTES0(mkPath(name, "property-tables"),
+               nsIMemoryReporter::KIND_HEAP, stats->propertyTables,
+    "Memory allocated for the compartment's property tables.  A property "
+    "table is an internal data structure that makes JavaScript property "
+    "accesses fast.");
 
             BYTES0(mkPath(name, "scripts"),
                nsIMemoryReporter::KIND_HEAP, stats->scripts,

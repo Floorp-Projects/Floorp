@@ -1956,6 +1956,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // else, and not unlink an awful lot here.
 
   tmp->mIdentifierMap.Clear();
+
+#ifdef MOZ_SMIL
+  if (tmp->mAnimationController) {
+    tmp->mAnimationController->Unlink();
+  }
+#endif // MOZ_SMIL
   
   tmp->mInUnlinkOrDeletion = PR_FALSE;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -8380,6 +8386,14 @@ nsIDocument::SizeOf() const
     size += node->SizeOf();
   }
 
+  return size;
+}
+
+PRInt64
+nsDocument::SizeOf() const
+{
+  PRInt64 size = MemoryReporter::GetBasicSize<nsDocument, nsIDocument>(this);
+  size += mAttrStyleSheet ? mAttrStyleSheet->SizeOf() : 0;
   return size;
 }
 

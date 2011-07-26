@@ -4446,8 +4446,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
   case eCSSUnit_Inherit:
     display->mSpecifiedTransform = parentDisplay->mSpecifiedTransform;
-    if (parentDisplay->mSpecifiedTransform)
-      display->mTransform = parentDisplay->mTransform;
     canStoreInRuleTree = PR_FALSE;
     break;
 
@@ -4460,8 +4458,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       display->mSpecifiedTransform = nsnull;
     } else {
       display->mSpecifiedTransform = head; // weak pointer, owned by rule
-      display->mTransform = nsStyleTransformMatrix::ReadTransforms(head,
-                              aContext, mPresContext, canStoreInRuleTree);
     }
     break;
   }
