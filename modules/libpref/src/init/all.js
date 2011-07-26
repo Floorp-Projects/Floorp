@@ -1152,6 +1152,13 @@ pref("intl.hyphenation-alias.sh-*", "sh");
 pref("intl.hyphenation-alias.sr-*", "sh");
 pref("intl.hyphenation-alias.bs-*", "sh");
 
+// Norwegian has two forms, Bokmål and Nynorsk, with "no" as a macrolanguage encompassing both.
+// For "no", we'll alias to "nb" (Bokmål) as that is the more widely used written form.
+pref("intl.hyphenation-alias.no", "nb");
+pref("intl.hyphenation-alias.no-*", "nb");
+pref("intl.hyphenation-alias.nb-*", "nb");
+pref("intl.hyphenation-alias.nn-*", "nn");
+
 pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
