@@ -203,8 +203,8 @@ pref("gfx.downloadable_fonts.sanitize", true);
 
 // see gfx/thebes/gfxUnicodeProperties.h for definitions of script bits
 #ifdef XP_MACOSX
-// use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04)
-pref("gfx.font_rendering.harfbuzz.scripts", 7);
+// use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04) + thai (0x40)
+pref("gfx.font_rendering.harfbuzz.scripts", 71);
 #else
 // use harfbuzz for default (0x01) + arabic (0x02)
 pref("gfx.font_rendering.harfbuzz.scripts", 3);
