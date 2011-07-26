@@ -570,8 +570,8 @@ INFO | Failed: %d
 INFO | Todo: %d""" % (self.passCount, self.failCount, self.todoCount))
 
     if gotSIGINT and not keepGoing:
-      log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
-            "(Use --keep-going to keep running tests after killing one with SIGINT)")
+      self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
+                     "(Use --keep-going to keep running tests after killing one with SIGINT)")
       return False
     return self.failCount == 0
 
