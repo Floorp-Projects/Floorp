@@ -759,13 +759,12 @@ LinearScanAllocator::reifyAllocations()
                 interval->end());
 
         // Set free registers on all moves up to this point
-        for (uint32 i = last; i <= interval->start().ins(); i++) {
-            if (vregs[i].inputMoves())
-                vregs[i].inputMoves()->setFreeRegisters(freeRegs);
-            if (vregs[i].outputMoves())
-                vregs[i].outputMoves()->setFreeRegisters(freeRegs);
+        for (; last < interval->start().ins(); last++) {
+            if (vregs[last].inputMoves())
+                vregs[last].inputMoves()->setFreeRegisters(freeRegs);
+            if (vregs[last].outputMoves())
+                vregs[last].outputMoves()->setFreeRegisters(freeRegs);
         }
-        last = interval->start().ins() + 1;
 
         // Bookkeeping for active intervals
         for (IntervalIterator i(active.begin()); i != active.end(); ) {
@@ -785,9 +784,7 @@ LinearScanAllocator::reifyAllocations()
         }
         for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
             if (i->end() < interval->start()) {
-                i = active.removeAt(i);
-                if (i->getAllocation()->isRegister())
-                    freeRegs.add(i->getAllocation()->toRegister());
+                i = inactive.removeAt(i);
             } else if (i->covers(interval->start())) {
                 if (i->getAllocation()->isRegister())
                     freeRegs.take(i->getAllocation()->toRegister());
@@ -986,9 +983,7 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
             stackAssignment.freeSlot(alloc->toStackSlot()->slot());
     }
 
-#ifdef DEBUG
     handled.insert(interval);
-#endif
 }
 
 /*

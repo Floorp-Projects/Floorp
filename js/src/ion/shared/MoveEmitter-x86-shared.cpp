@@ -102,14 +102,20 @@ MoveEmitterX86::doubleSpillSlot() const
 Operand
 MoveEmitterX86::toOperand(const MoveOperand &operand) const
 {
-    JS_ASSERT(operand.isMemory());
-    if (operand.base() != StackPointer)
-        return Operand(operand.base(), operand.disp());
+    if (operand.isMemory()) {
+        if (operand.base() != StackPointer)
+            return Operand(operand.base(), operand.disp());
 
-    JS_ASSERT(operand.disp() >= 0);
+        JS_ASSERT(operand.disp() >= 0);
 
-    // Otherwise, the stack offset may need to be adjusted.
-    return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
+        // Otherwise, the stack offset may need to be adjusted.
+        return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
+    }
+    if (operand.isGeneralReg())
+        return Operand(operand.reg());
+
+    JS_ASSERT(operand.isFloatReg());
+    return Operand(operand.floatReg());
 }
 
 Register
@@ -304,9 +310,9 @@ MoveEmitterX86::emit(const Move &move)
     }
     
     if (move.kind() == Move::DOUBLE)
-        emitMove(from, to);
-    else
         emitDoubleMove(from, to);
+    else
+        emitMove(from, to);
 }
 
 void
