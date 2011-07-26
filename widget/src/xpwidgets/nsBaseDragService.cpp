@@ -43,7 +43,6 @@
 #include "nsITransferable.h"
 #include "nsISupportsArray.h"
 #include "nsSize.h"
-#include "nsIRegion.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
@@ -520,11 +519,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // otherwise, just draw the node
   nsIntRegion clipRegion;
   if (aRegion) {
-    nsCOMPtr<nsIRegion> clipIRegion;
-    aRegion->GetRegion(getter_AddRefs(clipIRegion));
-    if (clipIRegion) {
-      clipRegion = clipIRegion->GetUnderlyingRegion();
-    }
+    aRegion->GetRegion(&clipRegion);
   }
 
   nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);

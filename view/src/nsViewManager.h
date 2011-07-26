@@ -45,7 +45,6 @@
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsThreadUtils.h"
-#include "nsIRegion.h"
 #include "nsView.h"
 #include "nsIViewObserver.h"
 #include "nsDeviceContext.h"
@@ -248,8 +247,6 @@ public: // NOT in nsIViewManager, so private to the view module
 
   nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent);
 
-  nsresult CreateRegion(nsIRegion* *result);
-
   PRBool IsRefreshEnabled() { return RootViewManager()->mUpdateBatchCnt == 0; }
 
   // Call this when you need to let the viewmanager know that it now has
@@ -269,7 +266,6 @@ private:
   // visible again.
   nsSize            mDelayedResize;
 
-  nsCOMPtr<nsIFactory> mRegionFactory;
   nsView            *mRootView;
   // mRootViewManager is a strong ref unless it equals |this|.  It's
   // never null (if we have no ancestors, it will be |this|).
