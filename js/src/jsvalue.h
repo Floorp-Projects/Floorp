@@ -1016,9 +1016,15 @@ struct ClassExtension {
     JSObjectOp          innerObject;
     JSIteratorOp        iteratorObject;
     void               *unused;
+
+    /*
+     * isWrappedNative is true only if the class is an XPCWrappedNative.
+     * WeakMaps use this to override the wrapper disposal optimization.
+     */
+    bool                isWrappedNative;
 };
 
-#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL}
+#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL,false}
 
 struct ObjectOps {
     js::LookupPropOp        lookupProperty;

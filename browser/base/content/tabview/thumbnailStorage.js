@@ -105,8 +105,8 @@ let ThumbnailStorage = {
       };
       if (browser.contentDocument.readyState != "complete" ||
           browser.webProgress.isLoadingDocument) {
-        browser.addEventListener("load", function() {
-          browser.removeEventListener("load", arguments.callee, true);
+        browser.addEventListener("load", function onLoad() {
+          browser.removeEventListener("load", onLoad, true);
           checkAndAddToList(browser);
         }, true);
       } else {

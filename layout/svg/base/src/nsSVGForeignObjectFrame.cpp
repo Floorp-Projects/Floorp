@@ -268,7 +268,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   return rv;
 }
 
-gfxMatrix
+gfx3DMatrix
 nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "We need an ancestor to write to!");
@@ -278,7 +278,7 @@ nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
   NS_ASSERTION(*aOutAncestor, "How did we end up without an outer frame?");
 
   /* Return the matrix back to the root, factoring in the x and y offsets. */
-  return GetCanvasTMForChildren();
+  return gfx3DMatrix::From2D(GetCanvasTMForChildren());
 }
  
 NS_IMETHODIMP_(nsIFrame*)

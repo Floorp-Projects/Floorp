@@ -882,6 +882,7 @@ var InspectorUI = {
   {
     this.attachPageListeners();
     this.inspecting = true;
+    this.highlighter.veilTransparentBox.removeAttribute("locked");
   },
 
   /**
@@ -901,6 +902,7 @@ var InspectorUI = {
     } else {
       this.select(null, true, true);
     }
+    this.highlighter.veilTransparentBox.setAttribute("locked", true);
   },
 
   /**
