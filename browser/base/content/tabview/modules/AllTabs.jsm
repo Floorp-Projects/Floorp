@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -164,8 +166,8 @@ function tabEventListener(event) {
 function observer(subject, topic, data) {
   switch (topic) {
     case "domwindowopened":
-      subject.addEventListener("load", function() {
-        subject.removeEventListener("load", arguments.callee, false);
+      subject.addEventListener("load", function onLoad() {
+        subject.removeEventListener("load", onLoad, false);
 
         // Now that the window has loaded, only register on browser windows
         let doc = subject.document.documentElement;

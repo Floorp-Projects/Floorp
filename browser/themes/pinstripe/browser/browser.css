@@ -2533,3 +2533,8 @@ panel[dimmed="true"] {
   outline: 1px dashed rgba(255,255,255,0.5);
   outline-offset: -1px;
 }
+
+#highlighter-veil-transparentbox[locked] {
+  box-shadow: 0 0 0 1px black;
+  outline-color: white;
+}

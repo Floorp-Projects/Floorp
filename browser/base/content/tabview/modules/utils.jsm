@@ -45,6 +45,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 // **********
 // Title: utils.js
 
@@ -369,10 +371,11 @@ Range.prototype = {
       // little graph. It goes from near 0 at x=0 to near 1 at x=1
       // smoothly and beautifully.
       // http://www.wolframalpha.com/input/?i=.5+%2B+.5+*+tanh%28%284+*+x%29+-+2%29
-      function tanh(x) {
+      let tanh = function tanh(x) {
         var e = Math.exp(x);
         return (e - 1/e) / (e + 1/e);
-      }
+      };
+
       return .5 - .5 * tanh(2 - 4 * proportion);
     }
 
