@@ -642,8 +642,8 @@ gfxAndroidPlatform::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
 
     if (data.mBestMatch) {
         nsRefPtr<gfxFT2Font> font =
-            gfxFT2Font::GetOrMakeFont(static_cast<FontEntry*>(data.mBestMatch.get()), 
-                                      aFont->GetStyle()); 
+            gfxFT2Font::GetOrMakeFont(static_cast<FontEntry*>(data.mBestMatch.get()),
+                                      aFont->GetStyle());
         gfxFont* ret = font.forget().get();
         return already_AddRefed<gfxFont>(ret);
     }
