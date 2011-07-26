@@ -254,7 +254,6 @@ public:
   static jsid sScrollbars_id;
   static jsid sLocation_id;
   static jsid sConstructor_id;
-  static jsid sPrototype_id;
   static jsid s_content_id;
   static jsid sContent_id;
   static jsid sMenubar_id;

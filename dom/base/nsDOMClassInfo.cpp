@@ -1573,7 +1573,6 @@ jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
 jsid nsDOMClassInfo::sScrollbars_id      = JSID_VOID;
 jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
 jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
-jsid nsDOMClassInfo::sPrototype_id       = JSID_VOID;
 jsid nsDOMClassInfo::s_content_id        = JSID_VOID;
 jsid nsDOMClassInfo::sContent_id         = JSID_VOID;
 jsid nsDOMClassInfo::sMenubar_id         = JSID_VOID;
@@ -1837,7 +1836,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sScrollbars_id,      cx, "scrollbars");
   SET_JSID_TO_STRING(sLocation_id,        cx, "location");
   SET_JSID_TO_STRING(sConstructor_id,     cx, "constructor");
-  SET_JSID_TO_STRING(sPrototype_id,       cx, "prototype");
   SET_JSID_TO_STRING(s_content_id,        cx, "_content");
   SET_JSID_TO_STRING(sContent_id,         cx, "content");
   SET_JSID_TO_STRING(sMenubar_id,         cx, "menubar");
@@ -4820,7 +4818,6 @@ nsDOMClassInfo::ShutDown()
   sScrollbars_id      = JSID_VOID;
   sLocation_id        = JSID_VOID;
   sConstructor_id     = JSID_VOID;
-  sPrototype_id       = JSID_VOID;
   s_content_id        = JSID_VOID;
   sContent_id         = JSID_VOID;
   sMenubar_id         = JSID_VOID;
