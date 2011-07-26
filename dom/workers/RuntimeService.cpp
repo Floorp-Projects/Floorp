@@ -46,6 +46,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupportsPriority.h"
+#include "nsITimer.h"
 #include "nsPIDOMWindow.h"
 
 #include "mozilla/Preferences.h"
@@ -80,6 +81,12 @@ using mozilla::Preferences;
 
 // The default number of seconds that close handlers will be allowed to run.
 #define MAX_SCRIPT_RUN_TIME_SEC 10
+
+// The number of seconds that idle threads can hang around before being killed.
+#define IDLE_THREAD_TIMEOUT_SEC 30
+
+// The maximum number of threads that can be idle at one time.
+#define MAX_IDLE_THREADS 20
 
 #define PREF_WORKERS_ENABLED "dom.workers.enabled"
 #define PREF_WORKERS_MAX_PER_DOMAIN "dom.workers.maxPerDomain"
@@ -465,7 +472,7 @@ PRUint8 RuntimeService::sDefaultGCZeal = 0;
 #endif
 
 RuntimeService::RuntimeService()
-: mDomainMapMutex("RuntimeService::mDomainMapMutex"), mObserved(false),
+: mMutex("RuntimeService::mMutex"), mObserved(false),
   mShuttingDown(false), mNavigatorStringsLoaded(false)
 {
   AssertIsOnMainThread();
@@ -531,7 +538,7 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     const nsCString& domain = aWorkerPrivate->Domain();
 
-    MutexAutoLock lock(mDomainMapMutex);
+    MutexAutoLock lock(mMutex);
 
     if (!mDomainMap.Get(domain, &domainInfo)) {
       NS_ASSERTION(!parent, "Shouldn't have a parent here!");
@@ -630,7 +637,7 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     const nsCString& domain = aWorkerPrivate->Domain();
 
-    MutexAutoLock lock(mDomainMapMutex);
+    MutexAutoLock lock(mMutex);
 
     WorkerDomainInfo* domainInfo;
     if (!mDomainMap.Get(domain, &domainInfo)) {
@@ -708,16 +715,27 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   }
 
   nsCOMPtr<nsIThread> thread;
-  if (NS_FAILED(NS_NewThread(getter_AddRefs(thread), nsnull))) {
-    UnregisterWorker(aCx, aWorkerPrivate);
-    JS_ReportError(aCx, "Could not create new thread!");
-    return false;
+  {
+    MutexAutoLock lock(mMutex);
+    if (!mIdleThreadArray.IsEmpty()) {
+      PRUint32 index = mIdleThreadArray.Length() - 1;
+      mIdleThreadArray[index].mThread.swap(thread);
+      mIdleThreadArray.RemoveElementAt(index);
+    }
   }
 
-  nsCOMPtr<nsISupportsPriority> priority = do_QueryInterface(thread);
-  if (!priority ||
-      NS_FAILED(priority->SetPriority(nsISupportsPriority::PRIORITY_LOWEST))) {
-    NS_WARNING("Could not lower the new thread's priority!");
+  if (!thread) {
+    if (NS_FAILED(NS_NewThread(getter_AddRefs(thread), nsnull))) {
+      UnregisterWorker(aCx, aWorkerPrivate);
+      JS_ReportError(aCx, "Could not create new thread!");
+      return false;
+    }
+
+    nsCOMPtr<nsISupportsPriority> priority = do_QueryInterface(thread);
+    if (!priority ||
+        NS_FAILED(priority->SetPriority(nsISupportsPriority::PRIORITY_LOW))) {
+      NS_WARNING("Could not lower the new thread's priority!");
+    }
   }
 
 #ifdef DEBUG
@@ -727,17 +745,80 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   nsCOMPtr<nsIRunnable> runnable = new WorkerThreadRunnable(aWorkerPrivate);
   if (NS_FAILED(thread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
     UnregisterWorker(aCx, aWorkerPrivate);
-    JS_ReportError(aCx, "Could not dispatch to new thread!");
+    JS_ReportError(aCx, "Could not dispatch to thread!");
     return false;
   }
 
   return true;
 }
 
+// static
+void
+RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
+{
+  AssertIsOnMainThread();
+
+  RuntimeService* runtime = RuntimeService::GetService();
+  NS_ASSERTION(runtime, "This should never be null!");
+
+  NS_ASSERTION(aTimer == runtime->mIdleThreadTimer, "Wrong timer!");
+
+  // Cheat a little and grab all threads that expire within one second of now.
+  TimeStamp now = TimeStamp::Now() + TimeDuration::FromSeconds(1);
+
+  TimeStamp nextExpiration;
+
+  nsAutoTArray<nsCOMPtr<nsIThread>, 20> expiredThreads;
+  {
+    MutexAutoLock lock(runtime->mMutex);
+
+    for (PRUint32 index = 0; index < runtime->mIdleThreadArray.Length();
+         index++) {
+      IdleThreadInfo& info = runtime->mIdleThreadArray[index];
+      if (info.mExpirationTime > now) {
+        nextExpiration = info.mExpirationTime;
+        break;
+      }
+
+      nsCOMPtr<nsIThread>* thread = expiredThreads.AppendElement();
+      thread->swap(info.mThread);
+    }
+
+    if (!expiredThreads.IsEmpty()) {
+      runtime->mIdleThreadArray.RemoveElementsAt(0, expiredThreads.Length());
+    }
+  }
+
+  NS_ASSERTION(nextExpiration.IsNull() || !expiredThreads.IsEmpty(),
+               "Should have a new time or there should be some threads to shut "
+               "down");
+
+  for (PRUint32 index = 0; index < expiredThreads.Length(); index++) {
+    if (NS_FAILED(expiredThreads[index]->Shutdown())) {
+      NS_WARNING("Failed to shutdown thread!");
+    }
+  }
+
+  if (!nextExpiration.IsNull()) {
+    TimeDuration delta = nextExpiration - TimeStamp::Now();
+    PRUint32 delay(delta > TimeDuration(0) ? delta.ToMilliseconds() : 0);
+
+    // Reschedule the timer.
+    if (NS_FAILED(aTimer->InitWithFuncCallback(ShutdownIdleThreads, nsnull,
+                                               delay,
+                                               nsITimer::TYPE_ONE_SHOT))) {
+      NS_ERROR("Can't schedule timer!");
+    }
+  }
+}
+
 nsresult
 RuntimeService::Init()
 {
   AssertIsOnMainThread();
+
+  mIdleThreadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  NS_ENSURE_STATE(mIdleThreadTimer);
 
   PRBool ok = mDomainMap.Init();
   NS_ENSURE_STATE(ok);
@@ -788,8 +869,15 @@ RuntimeService::Cleanup()
 
   mShuttingDown = true;
 
+  if (mIdleThreadTimer) {
+    if (NS_FAILED(mIdleThreadTimer->Cancel())) {
+      NS_WARNING("Failed to cancel idle timer!");
+    }
+    mIdleThreadTimer = nsnull;
+  }
+
   if (mDomainMap.IsInitialized()) {
-    MutexAutoLock lock(mDomainMapMutex);
+    MutexAutoLock lock(mMutex);
 
     nsAutoTArray<WorkerPrivate*, 100> workers;
     mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
@@ -799,7 +887,7 @@ RuntimeService::Cleanup()
 
       // Cancel all top-level workers.
       {
-        MutexAutoUnlock unlock(mDomainMapMutex);
+        MutexAutoUnlock unlock(mMutex);
 
         currentThread = NS_GetCurrentThread();
         NS_ASSERTION(currentThread, "This should never be null!");
@@ -813,10 +901,33 @@ RuntimeService::Cleanup()
         }
       }
 
+      // Shut down any idle threads.
+      if (!mIdleThreadArray.IsEmpty()) {
+        nsAutoTArray<nsCOMPtr<nsIThread>, 20> idleThreads;
+
+        PRUint32 idleThreadCount = mIdleThreadArray.Length();
+        idleThreads.SetLength(idleThreadCount);
+
+        for (PRUint32 index = 0; index < idleThreadCount; index++) {
+          NS_ASSERTION(mIdleThreadArray[index].mThread, "Null thread!");
+          idleThreads[index].swap(mIdleThreadArray[index].mThread);
+        }
+
+        mIdleThreadArray.Clear();
+
+        MutexAutoUnlock unlock(mMutex);
+
+        for (PRUint32 index = 0; index < idleThreadCount; index++) {
+          if (NS_FAILED(idleThreads[index]->Shutdown())) {
+            NS_WARNING("Failed to shutdown thread!");
+          }
+        }
+      }
+
       // And make sure all their final messages have run and all their threads
       // have joined.
       while (mDomainMap.Count()) {
-        MutexAutoUnlock unlock(mDomainMapMutex);
+        MutexAutoUnlock unlock(mMutex);
 
         if (NS_FAILED(NS_ProcessNextEvent(currentThread))) {
           NS_WARNING("Something bad happened!");
@@ -950,13 +1061,59 @@ RuntimeService::ResumeWorkersForWindow(JSContext* aCx,
 }
 
 void
+RuntimeService::NoteIdleThread(nsIThread* aThread)
+{
+  AssertIsOnMainThread();
+  NS_ASSERTION(aThread, "Null pointer!");
+
+  static TimeDuration timeout =
+    TimeDuration::FromSeconds(IDLE_THREAD_TIMEOUT_SEC);
+
+  TimeStamp expirationTime = TimeStamp::Now() + timeout;
+
+  bool shutdown;
+  if (mShuttingDown) {
+    shutdown = true;
+  }
+  else {
+    MutexAutoLock lock(mMutex);
+
+    if (mIdleThreadArray.Length() < MAX_IDLE_THREADS) {
+      IdleThreadInfo* info = mIdleThreadArray.AppendElement();
+      info->mThread = aThread;
+      info->mExpirationTime = expirationTime;
+      shutdown = false;
+    }
+    else {
+      shutdown = true;
+    }
+  }
+
+  // Too many idle threads, just shut this one down.
+  if (shutdown) {
+    if (NS_FAILED(aThread->Shutdown())) {
+      NS_WARNING("Failed to shutdown thread!");
+    }
+    return;
+  }
+
+  // Schedule timer.
+  if (NS_FAILED(mIdleThreadTimer->
+                  InitWithFuncCallback(ShutdownIdleThreads, nsnull,
+                                       IDLE_THREAD_TIMEOUT_SEC * 1000,
+                                       nsITimer::TYPE_ONE_SHOT))) {
+    NS_ERROR("Can't schedule timer!");
+  }
+}
+
+void
 RuntimeService::UpdateAllWorkerJSContextOptions()
 {
   AssertIsOnMainThread();
 
   nsAutoTArray<WorkerPrivate*, 100> workers;
   {
-    MutexAutoLock lock(mDomainMapMutex);
+    MutexAutoLock lock(mMutex);
 
     mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
   }
@@ -977,7 +1134,7 @@ RuntimeService::UpdateAllWorkerGCZeal()
 
   nsAutoTArray<WorkerPrivate*, 100> workers;
   {
-    MutexAutoLock lock(mDomainMapMutex);
+    MutexAutoLock lock(mMutex);
 
     mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
   }
