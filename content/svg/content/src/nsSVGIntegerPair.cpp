@@ -36,8 +36,8 @@
 
 #include "nsSVGIntegerPair.h"
 #include "nsSVGUtils.h"
-#include "nsTextFormatter.h"
-#include "prdtoa.h"
+#include "nsCharSeparatedTokenizer.h"
+#include "nsDOMError.h"
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SVGIntegerPairSMILType.h"
@@ -64,38 +64,37 @@ static nsresult
 ParseIntegerOptionalInteger(const nsAString& aValue,
                             PRInt32 aValues[2])
 {
-  NS_ConvertUTF16toUTF8 value(aValue);
-  const char *str = value.get();
-
-  if (IsSVGWhitespace(*str))
-    return NS_ERROR_FAILURE;
-
-  char* rest;
-  PRInt32 x = strtol(str, &rest, 10);
-  PRInt32 y = x;
-
-  if (str == rest) {
-    // first value was illformed
-    return NS_ERROR_FAILURE;
-  }
-  
-  if (*rest != '\0') {
-    while (IsSVGWhitespace(*rest)) {
-      ++rest;
-    }
-    if (*rest == ',') {
-      ++rest;
-    }
-
-    y = strtol(rest, &rest, 10);
-    if (*rest != '\0') {
-      // second value was illformed or there was trailing content
-      return NS_ERROR_FAILURE;
-    }
+  nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
+    tokenizer(aValue, ',',
+              nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  if (tokenizer.firstTokenBeganWithWhitespace()) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  aValues[0] = x;
-  aValues[1] = y;
+  PRUint32 i;
+  for (i = 0; i < 2 && tokenizer.hasMoreTokens(); ++i) {
+    NS_ConvertUTF16toUTF8 utf8Token(tokenizer.nextToken());
+    const char *token = utf8Token.get();
+    if (*token == '\0') {
+      return NS_ERROR_DOM_SYNTAX_ERR; // empty string (e.g. two commas in a row)
+    }
+
+    char *end;
+    aValues[i] = strtol(token, &end, 10);
+    if (*end != '\0' || !NS_FloatIsFinite(aValues[i])) {
+      return NS_ERROR_DOM_SYNTAX_ERR; // parse error
+    }
+  }
+  if (i == 1) {
+    aValues[1] = aValues[0];
+  }
+
+  if (i == 0                    ||                // Too few values.
+      tokenizer.hasMoreTokens() ||                // Too many values.
+      tokenizer.lastTokenEndedWithWhitespace() || // Trailing whitespace.
+      tokenizer.lastTokenEndedWithSeparator()) {  // Trailing comma.
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
 
   return NS_OK;
 }

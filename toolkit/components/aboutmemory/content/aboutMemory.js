@@ -48,11 +48,12 @@ var gVerbose = (location.href.split(/[\?,]/).indexOf("verbose") !== -1);
 
 var gAddedObserver = false;
 
-const KIND_NONHEAP     = Ci.nsIMemoryReporter.KIND_NONHEAP;
-const KIND_HEAP        = Ci.nsIMemoryReporter.KIND_HEAP;
-const KIND_OTHER       = Ci.nsIMemoryReporter.KIND_OTHER;
-const UNITS_BYTES      = Ci.nsIMemoryReporter.UNITS_BYTES;
-const UNITS_COUNT      = Ci.nsIMemoryReporter.UNITS_COUNT;
+const KIND_NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
+const KIND_HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
+const KIND_OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
+const UNITS_BYTES  = Ci.nsIMemoryReporter.UNITS_BYTES;
+const UNITS_COUNT  = Ci.nsIMemoryReporter.UNITS_COUNT;
+const UNITS_COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
 const UNITS_PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
 const kUnknown = -1;    // used for _amount if a memory reporter failed
@@ -534,10 +535,14 @@ function genProcessText(aProcess, aReporters)
 function formatReporterAmount(aReporter)
 {
   switch(aReporter._units) {
-    case UNITS_BYTES:      return formatBytes(aReporter._amount);
-    case UNITS_COUNT:      return formatInt(aReporter._amount);
-    case UNITS_PERCENTAGE: return formatPercentage(aReporter._amount);
-    default:               return "(???)"
+    case UNITS_BYTES:
+      return formatBytes(aReporter._amount);
+    case UNITS_COUNT:
+    case UNITS_COUNT_CUMULATIVE:
+      return formatInt(aReporter._amount);
+    case UNITS_PERCENTAGE:
+      return formatPercentage(aReporter._amount);
+    default: return "(???)"
   }
 }
 

@@ -20,7 +20,7 @@
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
-  var e = mgr.enumerateReporters(); 
+  var e = mgr.enumerateReporters();
   var realReporters = [];
   var dummy = 0;
   while (e.hasMoreElements()) {
@@ -31,7 +31,7 @@
     mgr.unregisterReporter(r);
     realReporters.push(r);
   }
-  e = mgr.enumerateMultiReporters(); 
+  e = mgr.enumerateMultiReporters();
   var realMultiReporters = [];
   var dummy = 0;
   while (e.hasMoreElements()) {
@@ -51,9 +51,10 @@
   const HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
   const OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
 
-  const BYTES      = Ci.nsIMemoryReporter.UNITS_BYTES;
-  const COUNT      = Ci.nsIMemoryReporter.UNITS_COUNT; 
-  const PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE; 
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+  const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
+  const COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
+  const PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
   function f2(aProcess, aPath, aKind, aUnits, aAmount) {
     return {
@@ -84,7 +85,7 @@
     f("", "explicit/g/a",       HEAP,      6 * MB),
     f("", "explicit/g/b",       HEAP,      5 * MB),
     f("", "other1",             OTHER,   111 * MB),
-    f2("", "other4",            OTHER,   COUNT, 888),
+    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888),
     f2("", "unknown-unit",      OTHER,   /*bogus unit*/999, 999)
   ];
   var fakeMultiReporters = [

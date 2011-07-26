@@ -1438,7 +1438,29 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         }
     }
 
-    // Failing that, check the execute bit.
+    // On OS X, then query Launch Services.
+#ifdef XP_MACOSX
+    // Certain Mac applications, such as Classic applications, which
+    // run under Rosetta, might not have the +x mode bit but are still
+    // considered to be executable by Launch Services (bug 646748).
+    CFURLRef url;
+    if (NS_FAILED(GetCFURL(&url))) {
+        return NS_ERROR_FAILURE;
+    }
+
+    LSRequestedInfo theInfoRequest = kLSRequestAllInfo;
+    LSItemInfoRecord theInfo;
+    OSStatus result = ::LSCopyItemInfoForURL(url, theInfoRequest, &theInfo);
+    ::CFRelease(url);
+    if (result == noErr) {
+        if ((theInfo.flags & kLSItemInfoIsApplication) != 0) {
+            *_retval = PR_TRUE;
+            return NS_OK;
+        }
+    }
+#endif
+
+    // Then check the execute bit.
     *_retval = (access(mPath.get(), X_OK) == 0);
 #ifdef SOLARIS
     // On Solaris, access will always return 0 for root user, however

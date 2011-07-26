@@ -227,6 +227,18 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     maybeStrSpecial[unsigned(LINE_SEPARATOR & 0xff)] = true;
     maybeStrSpecial[unsigned(PARA_SEPARATOR & 0xff)] = true;
     maybeStrSpecial[unsigned(EOF & 0xff)] = true;
+
+    /*
+     * Set |ln| as the beginning line number of the ungot "current token", so
+     * that js::Parser::statements (and potentially other such methods, in the
+     * future) can create parse nodes with good source coordinates before they
+     * explicitly get any tokens.
+     *
+     * Switching the parser/lexer so we always get the next token ahead of the
+     * parser needing it (the so-called "pump-priming" model) might be a better
+     * way to address the dependency from statements on the current token.
+     */
+    tokens[0].pos.begin.lineno = tokens[0].pos.end.lineno = ln;
     return true;
 }
 
