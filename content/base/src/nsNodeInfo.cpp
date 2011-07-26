@@ -99,11 +99,11 @@ nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 nsNodeInfo::~nsNodeInfo()
 {
   mOwnerManager->RemoveNodeInfo(this);
-  NS_RELEASE(mOwnerManager);
 
   NS_RELEASE(mInner.mName);
   NS_IF_RELEASE(mInner.mPrefix);
   NS_IF_RELEASE(mInner.mExtraName);
+  NS_RELEASE(mOwnerManager);
 }
 
 

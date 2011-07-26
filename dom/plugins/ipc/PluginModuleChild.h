@@ -294,6 +294,10 @@ public:
         // Win: QuickTime steals focus on SetWindow calls even if it's hidden.
         // Avoid calling SetWindow in that case.
         QUIRK_QUICKTIME_AVOID_SETWINDOW                 = 1 << 7,
+        // Win: Check to make sure the parent window has focus before calling
+        // set focus on the child. Addresses a full screen dialog prompt
+        // problem in Silverlight.
+        QUIRK_SILVERLIGHT_FOCUS_CHECK_PARENT            = 1 << 8,
     };
 
     int GetQuirks() { return mQuirks; }

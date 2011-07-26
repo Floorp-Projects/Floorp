@@ -244,9 +244,8 @@ TabChild::SetStatusWithContext(PRUint32 aStatusType,
                                     const nsAString& aStatusText,
                                     nsISupports* aStatusContext)
 {
-  NS_NOTREACHED("TabChild::SetStatusWithContext not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // FIXME/bug 617804: should the platform support this?
+  return NS_OK;
 }
 
 NS_IMETHODIMP

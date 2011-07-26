@@ -58,7 +58,6 @@ using mozilla::plugins::PluginInstanceParent;
 
 #include "nsWindowGfx.h"
 #include <windows.h>
-#include "nsIRegion.h"
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"

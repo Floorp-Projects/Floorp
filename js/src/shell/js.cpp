@@ -5866,6 +5866,21 @@ JSPrincipals shellTrustedPrincipals = {
     ShellPrincipalsSubsume
 };
 
+JSBool
+CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+                  jsval *vp)
+{
+    LeaveTrace(cx);
+    return true;
+}
+
+JSSecurityCallbacks securityCallbacks = {
+    CheckObjectAccess,
+    NULL,
+    NULL,
+    NULL
+};
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -6003,6 +6018,7 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
+    JS_SetRuntimeSecurityCallbacks(rt, &securityCallbacks);
 
     if (!InitWatchdog(rt))
         return 1;

@@ -71,7 +71,8 @@ public:
         SHAPING_HEBREW    = 0x0004,
         SHAPING_HANGUL    = 0x0008,
         SHAPING_MONGOLIAN = 0x0010,
-        SHAPING_INDIC     = 0x0020
+        SHAPING_INDIC     = 0x0020,
+        SHAPING_THAI      = 0x0040
     };
 
     static PRInt32 ScriptShapingType(PRInt32 aScriptCode);

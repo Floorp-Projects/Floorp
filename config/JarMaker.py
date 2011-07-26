@@ -383,7 +383,7 @@ class JarMaker(object):
         src = src[1:]
       else:
         # use srcdirs and the objdir (current working dir) for relative paths
-        src_base = sourcedirs + ['.']
+        src_base = sourcedirs + [os.getcwd()]
       # check if the source file exists
       realsrc = None
       for _srcdir in src_base:
