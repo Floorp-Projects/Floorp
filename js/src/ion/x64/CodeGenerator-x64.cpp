@@ -40,6 +40,8 @@
  * ***** END LICENSE BLOCK ***** */
 #include "CodeGenerator-x64.h"
 #include "ion/shared/CodeGenerator-shared-inl.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 using namespace js;
 using namespace js::ion;
@@ -135,8 +137,9 @@ CodeGenerator::visitReturn(LReturn *ret)
     LAllocation *result = ret->getOperand(0);
     JS_ASSERT(ToRegister(result) == JSReturnReg);
 #endif
-    masm.freeStack(frameStaticSize_);
-    masm.ret();
+    // Don't emit a jump to the return label if this is the last block.
+    if (current->mir()->id() + 1 != graph.numBlocks())
+        masm.jmp(returnLabel_);
     return true;
 }
 

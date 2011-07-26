@@ -49,6 +49,18 @@ namespace ion {
 
 class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
+  public:
+    void reserveStack(uint32 amount) {
+        if (amount)
+            subl(Imm32(amount), esp);
+        framePushed_ += amount;
+    }
+    void freeStack(uint32 amount) {
+        JS_ASSERT(amount <= framePushed_);
+        if (amount)
+            addl(Imm32(amount), esp);
+        framePushed_ -= amount;
+    }
 };
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;

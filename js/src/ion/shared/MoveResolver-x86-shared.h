@@ -53,6 +53,7 @@ class MoveResolverX86
 {
     bool inCycle_;
     CodeGenerator *codegen;
+    MacroAssembler *masm;
 
     RegisterSet freeRegs_;
 

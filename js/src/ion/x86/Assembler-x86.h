@@ -139,14 +139,6 @@ class Assembler : public AssemblerX86Shared
     void mov(const Register &src, const Operand &dest) {
         movl(src, dest);
     }
-    void reserveStack(int32 amount) {
-        if (amount)
-            subl(Imm32(amount), Operand(esp));
-    }
-    void freeStack(int32 amount) {
-        if (amount)
-            addl(Imm32(amount), Operand(esp));
-    }
 };
 
 } // namespace ion
