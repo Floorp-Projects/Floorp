@@ -1973,7 +1973,7 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
                           argv,
                           0);
     if (NPERR_NO_ERROR != *rv) {
-        return false;
+        return true;
     }
 
 #if defined(XP_MACOSX) && defined(__i386__)

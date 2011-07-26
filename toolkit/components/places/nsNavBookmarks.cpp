@@ -750,7 +750,7 @@ nsNavBookmarks::CreateRoot(const nsCString& name,
 PRBool
 nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
 {
-  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBIsRealBookmark);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT_RET(stmt, mDBIsRealBookmark, PR_FALSE);
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlaceId);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Binding failed");
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"), TYPE_BOOKMARK);
