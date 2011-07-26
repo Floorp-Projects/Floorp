@@ -179,10 +179,14 @@ private:
    *
    * @param aURISpec
    *        The spec of the URI to prepare for searching.
+   * @param aMatchBehavior
+   *        The matching behavior to use defined by one of the
+   *        mozIPlacesAutoComplete::MATCH_* values.
    * @param _fixedSpec
    *        An out parameter that is the fixed up string.
    */
-  static void fixupURISpec(const nsCString &aURISpec, nsCString &_fixedSpec);
+  static void fixupURISpec(const nsCString &aURISpec, PRInt32 aMatchBehavior,
+                           nsCString &_fixedSpec);
 };
 
 
