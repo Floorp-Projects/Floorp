@@ -41,7 +41,7 @@
 #define nsWebSocket_h__
 
 #include "nsISupportsUtils.h"
-#include "nsIWebSocket.h"
+#include "nsIMozWebSocket.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIJSNativeInitializer.h"
@@ -66,7 +66,7 @@ class nsWebSocketEstablishedConnection;
 class nsWSCloseEvent;
 
 class nsWebSocket: public nsDOMEventTargetWrapperCache,
-                   public nsIWebSocket,
+                   public nsIMozWebSocket,
                    public nsIJSNativeInitializer
 {
 friend class nsWSNetAddressComparator;
@@ -79,7 +79,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsWebSocket,
                                            nsDOMEventTargetWrapperCache)
-  NS_DECL_NSIWEBSOCKET
+  NS_DECL_NSIMOZWEBSOCKET
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,

@@ -43,10 +43,12 @@
  * 21. see bug 572975 - same as test 17, but delete strong event listeners when
  *     receiving the message event;
  * 22. server takes too long to establish the ws connection;
+ * 23. see bug 664692 - feature detection should detect MozWebSocket but not
+ *     WebSocket on window object;
  */
 
 var first_test = 1;
-var last_test = 22;
+var last_test = 23;
 
 var current_test = first_test;
 
@@ -97,9 +99,9 @@ function CreateTestWS(ws_location, ws_protocol)
 
   try {
     if (ws_protocol == undefined) {
-      ws = new WebSocket(ws_location);
+      ws = new MozWebSocket(ws_location);
     } else {
-      ws = new WebSocket(ws_location, ws_protocol);
+      ws = new MozWebSocket(ws_location, ws_protocol);
     }
 
 
@@ -473,7 +475,7 @@ var status_test17 = "not started";
 
 window._test17 = function()
 {
-  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-17");
+  var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-17");
   local_ws._testNumber = "local17";
   local_ws._testNumber = current_test++;
 
@@ -546,7 +548,7 @@ function test19()
 
 window._test20 = function()
 {
-  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-20");
+  var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-20");
   local_ws._testNumber = "local20";
   local_ws._testNumber = current_test++;
 
@@ -575,7 +577,7 @@ var timeoutTest21;
 
 window._test21 = function()
 {
-  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-21");
+  var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-21");
   local_ws._testNumber = current_test++;
 
   local_ws.onopen = function(e)
@@ -629,6 +631,13 @@ function test22()
     shouldCloseNotCleanly(e);
     doTest(23);
   };
+}
+
+function test23()
+{
+  is(false, "WebSocket" in window, "WebSocket shouldn't be available on window object");
+  is(true, "MozWebSocket" in window, "MozWebSocket should be available on window object");
+  doTest(24);
 }
 
 function finishWSTest()

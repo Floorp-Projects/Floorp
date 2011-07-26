@@ -45,14 +45,14 @@ interface nsIScriptContext;
 interface nsPIDOMWindow;
 
 /**
- * The nsIWebSocket interface enables Web applications to maintain
+ * The nsIMozWebSocket interface enables Web applications to maintain
  * bidirectional communications with server-side processes as described in:
  *
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(431aea4c-568a-470e-b876-c57a29ff0fc6)]
-interface nsIWebSocket : nsISupports
+[scriptable, uuid(eae76132-e4a4-4765-8494-5e136521c846)]
+interface nsIMozWebSocket : nsISupports
 {
   readonly attribute DOMString url;
   readonly attribute DOMString protocol;
