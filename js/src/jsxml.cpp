@@ -545,10 +545,10 @@ IsXMLName(const jschar *cp, size_t n)
     jschar c;
 
     rv = JS_FALSE;
-    if (n != 0 && JS_ISXMLNSSTART(*cp)) {
+    if (n != 0 && unicode::IsXMLNamespaceStart(*cp)) {
         while (--n != 0) {
             c = *++cp;
-            if (!JS_ISXMLNS(c))
+            if (!unicode::IsXMLNamespacePart(c))
                 return rv;
         }
         rv = JS_TRUE;
@@ -1134,14 +1134,20 @@ static JSPropertySpec xml_static_props[] = {
 #define IS_XMLNS(str)                                                         \
     (str->length() == 5 && IS_XMLNS_CHARS(str->chars()))
 
-#define IS_XML_CHARS(chars)                                                   \
-    (JS_TOLOWER((chars)[0]) == 'x' &&                                         \
-     JS_TOLOWER((chars)[1]) == 'm' &&                                         \
-     JS_TOLOWER((chars)[2]) == 'l')
+static inline bool
+IS_XML_CHARS(const jschar *chars)
+{
+    return (chars[0] == 'x' || chars[0] == 'X') &&
+           (chars[1] == 'm' || chars[1] == 'M') &&
+           (chars[2] == 'l' || chars[2] == 'L');
+}
 
-#define HAS_NS_AFTER_XML(chars)                                               \
-    (JS_TOLOWER((chars)[3]) == 'n' &&                                         \
-     JS_TOLOWER((chars)[4]) == 's')
+static inline bool
+HAS_NS_AFTER_XML(const jschar *chars)
+{
+    return (chars[3] == 'n' || chars[3] == 'N') &&
+           (chars[4] == 's' || chars[4] == 'S');
+}
 
 #define IS_XMLNS_CHARS(chars)                                                 \
     (IS_XML_CHARS(chars) && HAS_NS_AFTER_XML(chars))
@@ -1263,12 +1269,12 @@ ChompXMLWhitespace(JSContext *cx, JSString *str)
 
     for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
-        if (!JS_ISXMLSPACE(c))
+        if (!unicode::IsXMLSpace(c))
             break;
     }
     while (end > cp) {
         c = end[-1];
-        if (!JS_ISXMLSPACE(c))
+        if (!unicode::IsXMLSpace(c))
             break;
         --end;
     }
