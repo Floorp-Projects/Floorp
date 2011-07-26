@@ -328,7 +328,10 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
             willSubmit = PR_TRUE;
           }
         }
-        context.mActionHint.Assign(willSubmit ? NS_LITERAL_STRING("go") : NS_LITERAL_STRING("next"));
+        context.mActionHint.Assign(willSubmit ? control->GetType() == NS_FORM_INPUT_SEARCH
+                                                  ? NS_LITERAL_STRING("search")
+                                                  : NS_LITERAL_STRING("go")
+                                              : NS_LITERAL_STRING("next"));
       }
     }
 
