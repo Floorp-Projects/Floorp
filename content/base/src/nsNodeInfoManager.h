@@ -158,6 +158,7 @@ private:
 
   PLHashTable *mNodeInfoHash;
   nsIDocument *mDocument; // WEAK
+  PRUint32 mNonDocumentNodeInfos;
   nsIPrincipal *mPrincipal; // STRONG, but not nsCOMPtr to avoid include hell
                             // while inlining DocumentPrincipal().  Never null
                             // after Init() succeeds.

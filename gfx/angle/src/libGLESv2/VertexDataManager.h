@@ -67,7 +67,6 @@ class ArrayVertexBuffer : public VertexBuffer
     virtual void *map(const VertexAttribute &attribute, UINT requiredSpace, UINT *streamOffset) = 0;
     virtual void reserveRequiredSpace() = 0;
     void addRequiredSpace(UINT requiredSpace);
-    void addRequiredSpaceFor(ArrayVertexBuffer *buffer);
 
   protected:
     UINT mBufferSize;
