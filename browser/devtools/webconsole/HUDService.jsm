@@ -1730,7 +1730,7 @@ HUD_SERVICE.prototype =
     hud.consoleWindowUnregisterOnHide = false;
 
     // Remove the HUDBox and the consolePanel if the Web Console is inside a
-    // floating xul:panel.
+    // floating panel.
     hud.HUDBox.parentNode.removeChild(hud.HUDBox);
     if (hud.consolePanel) {
       hud.consolePanel.parentNode.removeChild(hud.consolePanel);
@@ -2505,20 +2505,20 @@ HUD_SERVICE.prototype =
     let outputNode = this.hudReferences[hudId].outputNode;
 
     let chromeDocument = outputNode.ownerDocument;
-    let msgNode = chromeDocument.createElementNS(XUL_NS, "xul:hbox");
+    let msgNode = chromeDocument.createElementNS(XUL_NS, "hbox");
 
-    let methodNode = chromeDocument.createElementNS(XUL_NS, "xul:label");
+    let methodNode = chromeDocument.createElementNS(XUL_NS, "label");
     methodNode.setAttribute("value", aActivityObject.method);
     methodNode.classList.add("webconsole-msg-body-piece");
     msgNode.appendChild(methodNode);
 
-    let linkNode = chromeDocument.createElementNS(XUL_NS, "xul:hbox");
+    let linkNode = chromeDocument.createElementNS(XUL_NS, "hbox");
     linkNode.setAttribute("flex", "1");
     linkNode.classList.add("webconsole-msg-body-piece");
     linkNode.classList.add("webconsole-msg-link");
     msgNode.appendChild(linkNode);
 
-    let urlNode = chromeDocument.createElementNS(XUL_NS, "xul:label");
+    let urlNode = chromeDocument.createElementNS(XUL_NS, "label");
     urlNode.setAttribute("crop", "center");
     urlNode.setAttribute("flex", "1");
     urlNode.setAttribute("title", aActivityObject.url);
@@ -2528,7 +2528,7 @@ HUD_SERVICE.prototype =
     urlNode.classList.add("webconsole-msg-url");
     linkNode.appendChild(urlNode);
 
-    let statusNode = chromeDocument.createElementNS(XUL_NS, "xul:label");
+    let statusNode = chromeDocument.createElementNS(XUL_NS, "label");
     statusNode.setAttribute("value", "");
     statusNode.classList.add("hud-clickable");
     statusNode.classList.add("webconsole-msg-body-piece");
@@ -3040,7 +3040,7 @@ HeadsUpDisplay.prototype = {
    */
   get tab()
   {
-    // TODO: we should only keep a reference to the xul:tab object and use
+    // TODO: we should only keep a reference to the tab object and use
     // getters to determine the rest of objects we need - the chrome window,
     // document, etc. We should simplify the entire code to use only a single
     // tab object ref. See bug 656231.
@@ -3584,7 +3584,7 @@ HeadsUpDisplay.prototype = {
    * Creates the UI for re-positioning the console
    *
    * @return nsIDOMNode
-   *         The xul:toolbarbutton which holds the menu that allows the user to
+   *         The toolbarbutton which holds the menu that allows the user to
    *         change the console position.
    */
   createPositionUI: function HUD_createPositionUI()
@@ -5396,22 +5396,22 @@ ConsoleUtils = {
     // Make the icon container, which is a vertical box. Its purpose is to
     // ensure that the icon stays anchored at the top of the message even for
     // long multi-line messages.
-    let iconContainer = aDocument.createElementNS(XUL_NS, "xul:vbox");
+    let iconContainer = aDocument.createElementNS(XUL_NS, "vbox");
     iconContainer.classList.add("webconsole-msg-icon-container");
 
     // Make the icon node. It's sprited and the actual region of the image is
     // determined by CSS rules.
-    let iconNode = aDocument.createElementNS(XUL_NS, "xul:image");
+    let iconNode = aDocument.createElementNS(XUL_NS, "image");
     iconNode.classList.add("webconsole-msg-icon");
     iconContainer.appendChild(iconNode);
 
     // Make the spacer that positions the icon.
-    let spacer = aDocument.createElementNS(XUL_NS, "xul:spacer");
+    let spacer = aDocument.createElementNS(XUL_NS, "spacer");
     spacer.setAttribute("flex", "1");
     iconContainer.appendChild(spacer);
 
     // Create the message body, which contains the actual text of the message.
-    let bodyNode = aDocument.createElementNS(XUL_NS, "xul:description");
+    let bodyNode = aDocument.createElementNS(XUL_NS, "description");
     bodyNode.setAttribute("flex", "1");
     bodyNode.classList.add("webconsole-msg-body");
 
@@ -5425,15 +5425,15 @@ ConsoleUtils = {
 
     bodyNode.appendChild(aBody);
 
-    let repeatContainer = aDocument.createElementNS(XUL_NS, "xul:hbox");
+    let repeatContainer = aDocument.createElementNS(XUL_NS, "hbox");
     repeatContainer.setAttribute("align", "start");
-    let repeatNode = aDocument.createElementNS(XUL_NS, "xul:label");
+    let repeatNode = aDocument.createElementNS(XUL_NS, "label");
     repeatNode.setAttribute("value", "1");
     repeatNode.classList.add("webconsole-msg-repeat");
     repeatContainer.appendChild(repeatNode);
 
     // Create the timestamp.
-    let timestampNode = aDocument.createElementNS(XUL_NS, "xul:label");
+    let timestampNode = aDocument.createElementNS(XUL_NS, "label");
     timestampNode.classList.add("webconsole-timestamp");
     let timestamp = ConsoleUtils.timestamp();
     let timestampString = ConsoleUtils.timestampString(timestamp);
@@ -5448,7 +5448,7 @@ ConsoleUtils = {
     }
 
     // Create the containing node and append all its elements to it.
-    let node = aDocument.createElementNS(XUL_NS, "xul:richlistitem");
+    let node = aDocument.createElementNS(XUL_NS, "richlistitem");
     node.clipboardText = aClipboardText;
     node.classList.add("hud-msg-node");
 
@@ -5523,7 +5523,7 @@ ConsoleUtils = {
   createLocationNode:
   function ConsoleUtils_createLocationNode(aDocument, aSourceURL,
                                            aSourceLine) {
-    let locationNode = aDocument.createElementNS(XUL_NS, "xul:label");
+    let locationNode = aDocument.createElementNS(XUL_NS, "label");
 
     // Create the text, which consists of an abbreviated version of the URL
     // plus an optional line number.
@@ -5662,7 +5662,7 @@ ConsoleUtils = {
   function ConsoleUtils_filterRepeatedConsole(aNode, aOutput) {
     let lastMessage = aOutput.lastChild;
 
-    // childNodes[2] is the xul:description element
+    // childNodes[2] is the description element
     if (lastMessage &&
         aNode.childNodes[2].textContent ==
         lastMessage.childNodes[2].textContent) {
