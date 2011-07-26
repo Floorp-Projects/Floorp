@@ -42,7 +42,7 @@
 #ifndef jsion_move_resolver_x86_shared_h__
 #define jsion_move_resolver_x86_shared_h__
 
-#include "ion/MoveGroupResolver.h"
+#include "ion/MoveResolver.h"
 #include "ion/IonMacroAssembler.h"
 
 namespace js {
@@ -50,10 +50,10 @@ namespace ion {
 
 class CodeGenerator;
 
-class MoveResolverX86
+class MoveEmitterX86
 {
-    typedef MoveGroupResolver::Move Move;
-    typedef MoveGroupResolver::MoveOperand MoveOperand;
+    typedef MoveResolver::Move Move;
+    typedef MoveResolver::MoveOperand MoveOperand;
 
     bool inCycle_;
     MacroAssembler &masm;
@@ -96,11 +96,13 @@ class MoveResolverX86
     void emit(const Move &move);
 
   public:
-    MoveResolverX86(MacroAssembler &masm);
-    ~MoveResolverX86();
-    void emit(const MoveGroupResolver &moves, const RegisterSet &freeRegs);
+    MoveEmitterX86(MacroAssembler &masm);
+    ~MoveEmitterX86();
+    void emit(const MoveResolver &moves, const RegisterSet &freeRegs);
     void finish();
 };
+
+typedef MoveEmitterX86 MoveEmitter;
 
 } // ion
 } // js

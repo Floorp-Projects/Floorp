@@ -380,14 +380,14 @@ CPPSRCS +=	MIR.cpp \
 		LICM.cpp \
 		ValueNumbering.cpp \
 		LinearScan.cpp \
-		MoveGroupResolver.cpp \
+		MoveResolver.cpp \
 		CodeGenerator-shared.cpp \
 		TypePolicy.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 CPPSRCS +=	CodeGenerator-x86-shared.cpp
-CPPSRCS +=	MoveResolver-x86-shared.cpp
+CPPSRCS +=	MoveEmitter-x86-shared.cpp
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm

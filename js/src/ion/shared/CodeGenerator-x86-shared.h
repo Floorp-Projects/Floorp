@@ -77,7 +77,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveGroupResolver::MoveOperand toMoveOperand(const LAllocation *a);
+    MoveResolver::MoveOperand toMoveOperand(const LAllocation *a);
 
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
