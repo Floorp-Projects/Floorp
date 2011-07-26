@@ -317,7 +317,15 @@ class WorkerFinishedRunnable : public WorkerControlRunnable
     Run()
     {
       mDoomed.Clear();
-      return mThread ? mThread->Shutdown() : NS_OK;
+
+      if (mThread) {
+        RuntimeService* runtime = RuntimeService::GetService();
+        NS_ASSERTION(runtime, "This should never be null!");
+
+        runtime->NoteIdleThread(mThread);
+      }
+
+      return NS_OK;
     }
   };
 
@@ -394,11 +402,13 @@ public:
 
     runtime->UnregisterWorker(cx, mFinishedWorker);
 
-    nsresult rv = mThread ? mThread->Shutdown() : NS_OK;
+    if (mThread) {
+      runtime->NoteIdleThread(mThread);
+    }
 
     delete mFinishedWorker;
 
-    return rv;
+    return NS_OK;
   }
 };
 

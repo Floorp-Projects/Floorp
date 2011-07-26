@@ -45,6 +45,7 @@
 
 #include "jsapi.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
@@ -53,6 +54,7 @@
 #include "nsTArray.h"
 
 class nsIThread;
+class nsITimer;
 class nsPIDOMWindow;
 
 BEGIN_WORKERS_NAMESPACE
@@ -77,10 +79,25 @@ class RuntimeService : public nsIObserver
     }
   };
 
-  mozilla::Mutex mDomainMapMutex;
+  struct IdleThreadInfo
+  {
+    nsCOMPtr<nsIThread> mThread;
+    mozilla::TimeStamp mExpirationTime;
+  };
+
+  mozilla::Mutex mMutex;
+
+  // Protected by mMutex.
   nsClassHashtable<nsCStringHashKey, WorkerDomainInfo> mDomainMap;
 
+  // Protected by mMutex.
+  nsTArray<IdleThreadInfo> mIdleThreadArray;
+
+  // *Not* protected by mMutex.
   nsClassHashtable<nsVoidPtrHashKey, nsTArray<WorkerPrivate*> > mWindowMap;
+
+  // Only used on the main thread.
+  nsCOMPtr<nsITimer> mIdleThreadTimer;
 
   static PRUint32 sDefaultJSContextOptions;
   static PRInt32 sCloseHandlerTimeoutSeconds;
@@ -136,6 +153,9 @@ public:
   {
     return mNavigatorStrings;
   }
+
+  void
+  NoteIdleThread(nsIThread* aThread);
 
   static PRUint32
   GetDefaultJSContextOptions()
@@ -217,6 +237,9 @@ private:
 
   bool
   ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
+
+  static void
+  ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
 };
 
 END_WORKERS_NAMESPACE
