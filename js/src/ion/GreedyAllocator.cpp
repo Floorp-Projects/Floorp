@@ -912,7 +912,7 @@ GreedyAllocator::allocate()
     findDefinitions();
     if (!allocateRegisters())
         return false;
-    graph.setStackHeight(stackSlots.stackHeight());
+    graph.setLocalSlotCount(stackSlots.stackHeight());
 
     return true;
 }

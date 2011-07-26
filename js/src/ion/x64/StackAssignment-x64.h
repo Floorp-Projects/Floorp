@@ -71,8 +71,8 @@ class StackAssignment
             *index = slots.popCopy();
             return true;
         }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
+        *index = ++height_;
+        return true;
     }
 
     uint32 stackHeight() const {

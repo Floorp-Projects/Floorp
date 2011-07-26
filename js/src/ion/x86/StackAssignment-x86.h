@@ -65,15 +65,15 @@ class StackAssignment
     bool allocateDoubleSlot(uint32 *index) {
         if (!doubleSlots.empty()) {
             *index = doubleSlots.popCopy();
-            return false;
+            return true;
         }
         if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT)) {
             normalSlots.append(height_++);
             JS_ASSERT(!ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT));
         }
-        *index = height_;
         height_ += 2;
-        return height_ < MAX_STACK_SLOTS;
+        *index = height_;
+        return true;
     }
 
     bool allocateSlot(uint32 *index) {
@@ -85,8 +85,8 @@ class StackAssignment
             *index = doubleSlots.popCopy();
             return normalSlots.append(*index + 1);
         }
-        *index = height_++;
-        return height_ < MAX_STACK_SLOTS;
+        *index = ++height_;
+        return true;
     }
 
     uint32 stackHeight() const {

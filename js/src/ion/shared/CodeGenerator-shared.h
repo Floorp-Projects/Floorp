@@ -62,6 +62,29 @@ class CodeGeneratorShared : public LInstructionVisitor
         return a->toConstant()->toInt32();
     }
 
+  protected:
+    // The initial size of the frame in bytes. These are bytes beyond the
+    // constant header present for every Ion frame, used for pre-determined
+    // spills.
+    int32 frameDepth_;
+
+    // Extra bytes currently pushed onto the frame beyond frameDepth_. This is
+    // needed to compute offsets to stack slots while temporary space has been
+    // reserved for unexpected spills or C++ function calls.
+    int32 framePushed_;
+
+    inline int32 ArgToStackOffset(int32 slot) {
+        JS_ASSERT(slot >= 0);
+        return framePushed_ + frameDepth_ + ION_FRAME_PREFIX_SIZE + slot;
+    }
+
+    inline int32 SlotToStackOffset(int32 slot) {
+        JS_ASSERT(slot >= 0 && slot <= int32(graph.localSlotCount()));
+        int32 offset = framePushed_ + frameDepth_ - slot * STACK_SLOT_SIZE;
+        JS_ASSERT(offset >= 0);
+        return offset;
+    }
+
   private:
     virtual bool generatePrologue() = 0;
     bool generateBody();
