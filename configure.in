@@ -4776,6 +4776,24 @@ fi
 AC_SUBST(SYSTEM_HUNSPELL)
 
 dnl ========================================================
+dnl system libffi Support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(system-ffi,
+[  --enable-system-ffi       Use system libffi (located with pkgconfig)],
+    MOZ_NATIVE_FFI=1 )
+
+if test -n "$MOZ_NATIVE_FFI"; then
+    # Vanilla libffi 3.0.9 needs a few patches from upcoming version 3.0.10
+    # for non-GCC compilers.
+    if test -z "$GNU_CC"; then
+        PKG_CHECK_MODULES(MOZ_FFI, libffi > 3.0.9)
+    else
+        PKG_CHECK_MODULES(MOZ_FFI, libffi >= 3.0.9)
+    fi
+    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_FFI_LIBS"
+fi
+
+dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
 
@@ -8314,9 +8332,9 @@ MOZ_ARG_ENABLE_BOOL(shared-js,
 
 if test -n "$ENABLE_SHARED_JS"; then
   JS_SHARED_LIBRARY=1
-  MOZ_JS_LIBS=$MOZ_JS_SHARED_LIBS
+  MOZ_JS_LIBS="$MOZ_JS_SHARED_LIBS"
 else
-  MOZ_JS_LIBS=$MOZ_JS_STATIC_LIBS
+  MOZ_JS_LIBS="$MOZ_JS_STATIC_LIBS"
   AC_DEFINE(MOZ_STATIC_JS)
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
