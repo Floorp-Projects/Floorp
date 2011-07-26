@@ -754,13 +754,7 @@ GreedyAllocator::mergePhiState(LBlock *block)
         LAllocation *a = phi->getOperand(pos);
 
         // Handle constant inputs.
-        if (a->isConstant()) {
-            if (def->hasRegister() && !info->phis.move(*a, def->reg()))
-                return false;
-            if (def->hasStackSlot() && !info->phis.move(*a, def->backingStack()))
-                return false;
-            continue;
-        }
+        JS_ASSERT(!a->isConstant());
 
         VirtualRegister *use = getVirtualRegister(a->toUse());
 

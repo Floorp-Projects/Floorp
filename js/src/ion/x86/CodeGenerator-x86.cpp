@@ -47,24 +47,8 @@ using namespace js;
 using namespace js::ion;
 
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
-  : CodeGeneratorX86Shared(gen, graph),
-    moveHelper(thisFromCtor())
+  : CodeGeneratorX86Shared(gen, graph)
 {
-}
-
-bool
-CodeGenerator::visitMoveGroup(LMoveGroup *group)
-{
-    if (!moveGroupResolver.resolve(group))
-        return false;
-
-    moveHelper.setup(group);
-
-    for (size_t i = 0; i < moveGroupResolver.numMoves(); i++)
-        moveHelper.emit(moveGroupResolver.getMove(i));
-
-    moveHelper.finish();
-    return true;
 }
 
 bool
