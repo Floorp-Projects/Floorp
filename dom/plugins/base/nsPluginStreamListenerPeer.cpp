@@ -891,8 +891,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
 PRBool
 nsPluginStreamListenerPeer::UseExistingPluginCacheFile(nsPluginStreamListenerPeer* psi)
 {
-  
-  NS_ENSURE_ARG_POINTER(psi);
+  NS_ENSURE_TRUE(psi, PR_FALSE);
   
   if (psi->mLength == mLength &&
       psi->mModified == mModified &&

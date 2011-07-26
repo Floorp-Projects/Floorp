@@ -599,7 +599,7 @@ WebGLContext::InitAndValidateGL()
     }
 
     // Check the shader validator pref
-    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), PR_FALSE);
 
     mShaderValidation =
         Preferences::GetBool("webgl.shader_validator", mShaderValidation);
