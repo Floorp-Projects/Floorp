@@ -2649,9 +2649,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // Actually process the new index and let the selection code
   // do the scrolling for us
   if (newIndex != kNothingSelected) {
-    // If you hold control, no key will actually do anything except space.
+    // If you hold control, but not shift, no key will actually do anything
+    // except space.
     PRBool wasChanged = PR_FALSE;
-    if (isControl && charcode != ' ') {
+    if (isControl && !isShift && charcode != ' ') {
       mStartSelectionIndex = newIndex;
       mEndSelectionIndex = newIndex;
       InvalidateFocus();
