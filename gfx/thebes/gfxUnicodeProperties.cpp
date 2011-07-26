@@ -187,6 +187,10 @@ gfxUnicodeProperties::ScriptShapingType(PRInt32 aScriptCode)
     case HB_SCRIPT_MONGOLIAN: // to be supported by the Arabic shaper?
         return SHAPING_MONGOLIAN;
 
+    case HB_SCRIPT_THAI: // no complex OT features, but MS engines like to do
+                         // sequence checking
+        return SHAPING_THAI;
+
     case HB_SCRIPT_BENGALI:
     case HB_SCRIPT_DEVANAGARI:
     case HB_SCRIPT_GUJARATI:
@@ -198,7 +202,6 @@ gfxUnicodeProperties::ScriptShapingType(PRInt32 aScriptCode)
     case HB_SCRIPT_TAMIL:
     case HB_SCRIPT_TELUGU:
     case HB_SCRIPT_KHMER:
-    case HB_SCRIPT_THAI:
     case HB_SCRIPT_LAO:
     case HB_SCRIPT_TIBETAN:
     case HB_SCRIPT_NEW_TAI_LUE:
