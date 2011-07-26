@@ -267,6 +267,7 @@ class VirtualRegister : public TempObject
     Vector<LOperand, 0, IonAllocPolicy> uses_;
     LMoveGroup *inputMoves_;
     LMoveGroup *outputMoves_;
+    LAllocation *canonicalSpill_;
 
   public:
     VirtualRegister()
@@ -275,7 +276,8 @@ class VirtualRegister : public TempObject
         ins_(NULL),
         intervals_(),
         inputMoves_(NULL),
-        outputMoves_(NULL)
+        outputMoves_(NULL),
+        canonicalSpill_(NULL)
     { }
 
     bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
@@ -342,6 +344,12 @@ class VirtualRegister : public TempObject
     }
     LMoveGroup *outputMoves() {
         return outputMoves_;
+    }
+    void setCanonicalSpill(LAllocation *alloc) {
+        canonicalSpill_ = alloc;
+    }
+    LAllocation *canonicalSpill() {
+        return canonicalSpill_;
     }
 
     LiveInterval *intervalFor(CodePosition pos);
