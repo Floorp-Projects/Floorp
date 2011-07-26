@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: text-overflow:ellipsis on table-cell
+-->
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>Test text-overflow:ellipsis on table-cell</title>
+        <style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+            .table {
+                color: black;
+                display: table;
+                table-layout: fixed;
+                height: 5em;
+                width: 5em;
+            }
+            .row {
+                display: table-row;
+            }
+            .cell {
+                display: table-cell;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="table">
+            <div class="row">
+                <div class="cell">||||||||||||||</div>
+            </div>
+            <div class="row">
+                <div class="cell"><span>||||||||||||||</span></div>
+            </div>
+        </div>
+</body></html>
