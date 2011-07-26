@@ -119,7 +119,9 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 == auto-hyphenation-kmr-1.html auto-hyphenation-kmr-1-ref.html
 == auto-hyphenation-la-1.html auto-hyphenation-la-1-ref.html
 == auto-hyphenation-mn-1.html auto-hyphenation-mn-1-ref.html
+== auto-hyphenation-nb-1.html auto-hyphenation-nb-1-ref.html
 == auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
+== auto-hyphenation-nn-1.html auto-hyphenation-nn-1-ref.html
 == auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
 == auto-hyphenation-ru-1.html auto-hyphenation-ru-1-ref.html
 == auto-hyphenation-sh-1.html auto-hyphenation-sh-1-ref.html
