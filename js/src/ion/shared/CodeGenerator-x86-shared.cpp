@@ -43,7 +43,7 @@
 #include "ion/MIRGraph.h"
 #include "CodeGenerator-shared-inl.h"
 #include "ion/IonFrames.h"
-#include "MoveResolver-x86-shared.h"
+#include "ion/MoveEmitter.h"
 
 using namespace js;
 using namespace js::ion;
@@ -172,7 +172,7 @@ CodeGeneratorX86Shared::visitBitOp(LBitOp *ins)
     return true;
 }
 
-typedef MoveGroupResolver::MoveOperand MoveOperand;
+typedef MoveResolver::MoveOperand MoveOperand;
 
 MoveOperand
 CodeGeneratorX86Shared::toMoveOperand(const LAllocation *a)
@@ -190,7 +190,7 @@ CodeGeneratorX86Shared::toMoveOperand(const LAllocation *a)
 bool
 CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
 {
-    MoveGroupResolver &resolver = masm.moveResolver();
+    MoveResolver &resolver = masm.moveResolver();
 
     for (size_t i = 0; i < group->numMoves(); i++) {
         const LMove &move = group->getMove(i);
@@ -203,9 +203,9 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
         JS_ASSERT(!from->isConstant());
         JS_ASSERT(from->isDouble() == to->isDouble());
 
-        MoveGroupResolver::Move::Kind kind = from->isDouble()
-                                             ? MoveGroupResolver::Move::GENERAL
-                                             : MoveGroupResolver::Move::DOUBLE;
+        MoveResolver::Move::Kind kind = from->isDouble()
+                                        ? MoveResolver::Move::GENERAL
+                                        : MoveResolver::Move::DOUBLE;
 
         if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
             return false;
@@ -214,7 +214,7 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
     if (!resolver.resolve())
         return false;
 
-    MoveResolverX86 emitter(masm);
+    MoveEmitter emitter(masm);
     emitter.emit(resolver, group->freeRegs());
     emitter.finish();
 
