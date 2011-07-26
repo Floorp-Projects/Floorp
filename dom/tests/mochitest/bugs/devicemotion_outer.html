@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<script>
+var total = 50;
+var loaded = 0;
+for (var i = 0; i < total; i++) {
+  var f = document.createElement("iframe");
+  document.body.appendChild(f);
+  f.onload = function() {
+                    loaded++;
+                    if (loaded == total - 1)
+                      document.location.replace("about:blank");
+	     }
+  f.setAttribute('src', 'devicemotion_inner.html');
+}
+</script>
+</body>
+</html>
