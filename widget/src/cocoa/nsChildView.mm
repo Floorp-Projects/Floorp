@@ -57,7 +57,6 @@
 #include "nsCRT.h"
 
 #include "nsFontMetrics.h"
-#include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIViewManager.h"
 #include "nsIInterfaceRequestor.h"

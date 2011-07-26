@@ -4776,6 +4776,24 @@ fi
 AC_SUBST(SYSTEM_HUNSPELL)
 
 dnl ========================================================
+dnl system libffi Support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(system-ffi,
+[  --enable-system-ffi       Use system libffi (located with pkgconfig)],
+    MOZ_NATIVE_FFI=1 )
+
+if test -n "$MOZ_NATIVE_FFI"; then
+    # Vanilla libffi 3.0.9 needs a few patches from upcoming version 3.0.10
+    # for non-GCC compilers.
+    if test -z "$GNU_CC"; then
+        PKG_CHECK_MODULES(MOZ_FFI, libffi > 3.0.9)
+    else
+        PKG_CHECK_MODULES(MOZ_FFI, libffi >= 3.0.9)
+    fi
+    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_FFI_LIBS"
+fi
+
+dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
 
@@ -7913,7 +7931,11 @@ dnl done during packaging with omnijar.
 if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     MOZ_OMNIJAR=1
     AC_DEFINE(MOZ_OMNIJAR)
-    MOZ_CHROME_FILE_FORMAT=flat
+    if test "$OS_ARCH" = "WINNT"; then
+        MOZ_CHROME_FILE_FORMAT=flat
+    else
+        MOZ_CHROME_FILE_FORMAT=symlink
+    fi
 elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
     AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
@@ -8310,9 +8332,9 @@ MOZ_ARG_ENABLE_BOOL(shared-js,
 
 if test -n "$ENABLE_SHARED_JS"; then
   JS_SHARED_LIBRARY=1
-  MOZ_JS_LIBS=$MOZ_JS_SHARED_LIBS
+  MOZ_JS_LIBS="$MOZ_JS_SHARED_LIBS"
 else
-  MOZ_JS_LIBS=$MOZ_JS_STATIC_LIBS
+  MOZ_JS_LIBS="$MOZ_JS_STATIC_LIBS"
   AC_DEFINE(MOZ_STATIC_JS)
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
@@ -9384,8 +9406,12 @@ if test -n "$_NON_GLOBAL_ACDEFINES"; then
     done
 fi
 _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
- 
+
   sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
+
+  if test "$?" != 0; then
+    AC_MSG_ERROR([Error outputting config definitions])
+  fi
 
   cat >> $_CONFIG_TMP <<\EOF
 
@@ -9408,6 +9434,9 @@ dnl Probably shouldn't call this manually but we always want the output of DEFS
 rm -f confdefs.h.save
 mv confdefs.h confdefs.h.save
 egrep -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
+if test "$?" != 0; then
+  AC_MSG_ERROR([Error outputting confdefs.h])
+fi
 AC_OUTPUT_MAKE_DEFS()
 MOZ_DEFINES=$DEFS
 AC_SUBST(MOZ_DEFINES)

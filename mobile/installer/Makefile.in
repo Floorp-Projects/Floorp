@@ -82,8 +82,7 @@ ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 endif
 
-libs::
-	find $(DIST)/bin/chrome -type f -name *.properties -exec sed -i '/^#/d' {} \;
+MOZ_POST_STAGING_CMD = find chrome -type f -name *.properties -exec sed -i '/^\#/d' {} \;
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 

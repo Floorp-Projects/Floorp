@@ -148,7 +148,7 @@ nsSelectionState::IsCollapsed()
 PRBool
 nsSelectionState::IsEqual(nsSelectionState *aSelState)
 {
-  NS_ENSURE_TRUE(aSelState, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aSelState, PR_FALSE);
   PRUint32 i, myCount = mArray.Length(), itsCount = aSelState->mArray.Length();
   if (myCount != itsCount) return PR_FALSE;
   if (myCount < 1) return PR_FALSE;
