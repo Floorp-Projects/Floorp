@@ -81,6 +81,11 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     }
 }
 
+#define MIR_FLAG_LIST(_)                                                    \
+    _(InWorklist)                                                           \
+    _(EmittedAtUses)                                                        \
+    _(LoopInvariant)
+
 class MDefinition;
 class MInstruction;
 class MBasicBlock;
@@ -211,9 +216,12 @@ class MDefinition : public MNode
     uint32 flags_;          // Bit flags.
 
   private:
-    static const uint32 IN_WORKLIST    = 0x01;
-    static const uint32 EMIT_AT_USES   = 0x02;
-    static const uint32 LOOP_INVARIANT = 0x04;
+    enum Flag {
+        None = 0,
+#   define DEFINE_FLAG(flag) flag,
+        MIR_FLAG_LIST(DEFINE_FLAG)
+#   undef DEFINE_FLAG
+    };
 
     void setBlock(MBasicBlock *block) {
         block_ = block;
@@ -266,31 +274,24 @@ class MDefinition : public MNode
     void setValueNumber(uint32 vn) {
         valueNumber_ = vn;
     }
+#define FLAG_ACCESSOR(flag) \
+    bool is##flag() const {\
+        return hasFlags(1 << flag);\
+    }\
+    void set##flag() {\
+        JS_ASSERT(!hasFlags(1 << flag));\
+        setFlags(1 << flag);\
+    }\
+    void setNot##flag() {\
+        JS_ASSERT(hasFlags(1 << flag));\
+        removeFlags(1 << flag);\
+    }\
+    void set##flag##Unchecked() {\
+        setFlags(1 << flag);\
+    }
 
-    bool inWorklist() const {
-        return hasFlags(IN_WORKLIST);
-    }
-    void setInWorklist() {
-        JS_ASSERT(!inWorklist());
-        setFlags(IN_WORKLIST);
-    }
-    void setInWorklistUnchecked() {
-        setFlags(IN_WORKLIST);
-    }
-    void setNotInWorklist() {
-        JS_ASSERT(inWorklist());
-        removeFlags(IN_WORKLIST);
-    }
-
-    void setLoopInvariant() {
-        setFlags(LOOP_INVARIANT);
-    }
-    void setNotLoopInvariant() {
-        removeFlags(LOOP_INVARIANT);
-    }
-    bool isLoopInvariant() {
-        return hasFlags(LOOP_INVARIANT);
-    }
+    MIR_FLAG_LIST(FLAG_ACCESSOR)
+#undef FLAG_ACCESSOR
 
     MIRType type() const {
         return resultType_;
@@ -314,13 +315,6 @@ class MDefinition : public MNode
 
     virtual bool isControlInstruction() {
         return false;
-    }
-
-    bool emitAtUses() const {
-        return hasFlags(EMIT_AT_USES);
-    }
-    void setEmitAtUses() {
-        setFlags(EMIT_AT_USES);
     }
 
     void addUse(MNode *node, size_t index) {

@@ -53,7 +53,7 @@ bool
 LIRGeneratorX86::visitConstant(MConstant *ins)
 {
     // On x86, moving a double is non-trivial so only do it once.
-    if (!ins->emitAtUses() && !ins->value().isDouble())
+    if (!ins->isEmittedAtUses() && !ins->value().isDouble())
         return emitAtUses(ins);
 
     return LIRGenerator::visitConstant(ins);
@@ -62,7 +62,7 @@ LIRGeneratorX86::visitConstant(MConstant *ins)
 bool
 LIRGeneratorX86::visitBox(MBox *box)
 {
-    if (!box->emitAtUses())
+    if (!box->isEmittedAtUses())
         return emitAtUses(box);
 
     MDefinition *inner = box->getOperand(0);
@@ -152,7 +152,7 @@ LIRGeneratorX86::preparePhi(MPhi *phi)
 bool
 LIRGeneratorX86::lowerPhi(MPhi *ins)
 {
-    JS_ASSERT(ins->inWorklist() && ins->id());
+    JS_ASSERT(ins->isInWorklist() && ins->id());
 
     // Typed phis can be handled much simpler.
     if (ins->type() != MIRType_Value)
@@ -171,7 +171,7 @@ LIRGeneratorX86::lowerPhi(MPhi *ins)
         MDefinition *opd = ins->getOperand(i);
         JS_ASSERT(opd->type() == MIRType_Value);
         JS_ASSERT(opd->id());
-        JS_ASSERT(opd->inWorklist());
+        JS_ASSERT(opd->isInWorklist());
 
         type->setOperand(i, LUse(opd->id() + VREG_TYPE_OFFSET, LUse::ANY));
         payload->setOperand(i, LUse(VirtualRegisterOfPayload(opd), LUse::ANY));

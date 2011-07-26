@@ -52,7 +52,7 @@ using namespace ion;
 bool
 LIRGenerator::emitAtUses(MInstruction *mir)
 {
-    mir->setEmitAtUses();
+    mir->setEmittedAtUses();
     mir->setId(0);
     return true;
 }
@@ -368,7 +368,7 @@ LIRGenerator::visitBlock(MBasicBlock *block)
         for (size_t i = 0; i < successor->numPhis(); i++) {
             MPhi *phi = successor->getPhi(i);
             MDefinition *opd = phi->getOperand(position);
-            if (opd->emitAtUses() && !opd->id()) {
+            if (opd->isEmittedAtUses() && !opd->id()) {
                 if (!ensureDefined(opd))
                     return false;
             }
