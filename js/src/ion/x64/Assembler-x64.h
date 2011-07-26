@@ -174,6 +174,9 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
+    void addq(Imm32 imm, const Register &dest) {
+        masm.addq_ir(imm.value, dest.code());
+    }
     void addq(Imm32 imm, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::REG:
@@ -223,14 +226,6 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(const Register &src, const Register &dest) {
         masm.movq_rr(src.code(), dest.code());
-    }
-    void reserveStack(int32 amount) {
-        if (amount)
-            subq(Imm32(amount), rsp);
-    }
-    void freeStack(int32 amount) {
-        if (amount)
-            addq(Imm32(amount), Operand(rsp));
     }
     // The below cmpq methods switch the lhs and rhs when it invokes the
     // macroassembler to conform with intel standard.  When calling this

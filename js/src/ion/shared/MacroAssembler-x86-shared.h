@@ -53,6 +53,27 @@ namespace ion {
 
 class MacroAssemblerX86Shared : public Assembler
 {
+  protected:
+    // Extra bytes currently pushed onto the frame beyond frameDepth_. This is
+    // needed to compute offsets to stack slots while temporary space has been
+    // reserved for unexpected spills or C++ function calls. It is maintained
+    // by functions which track stack alignment, which for clear distinction
+    // use StudlyCaps (for example, Push, Pop).
+    uint32 framePushed_;
+
+  public:
+    MacroAssemblerX86Shared()
+      : framePushed_(0)
+    { }
+
+    void Push(const Register &reg) {
+        push(reg);
+        framePushed_ += STACK_SLOT_SIZE;
+    }
+
+    uint32 framePushed() const {
+        return framePushed_;
+    }
 };
 
 } // namespace ion
