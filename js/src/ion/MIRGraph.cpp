@@ -415,7 +415,7 @@ MBasicBlock::addPhi(MPhi *phi)
 bool
 MBasicBlock::addPredecessor(MBasicBlock *pred)
 {
-    if (!hasHeader())
+    if (predecessors_.length() == 0)
         return inherit(pred);
 
     // Predecessors must be finished, and at the correct stack depth.
