@@ -1094,6 +1094,7 @@ class EvalScriptGuard
     void setNewScript(JSScript *script) {
         /* NewScriptFromCG has already called js_CallNewScriptHook. */
         JS_ASSERT(!script_ && script);
+        script->setOwnerObject(JS_CACHED_SCRIPT);
         script_ = script;
     }
 
