@@ -1516,7 +1516,19 @@ _setexception(NPObject* aNPObj,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     ENSURE_PLUGIN_THREAD_VOID();
-    NS_WARNING("Not yet implemented!");
+
+    PluginModuleChild* self = PluginModuleChild::current();
+    PluginScriptableObjectChild* actor = NULL;
+    if (aNPObj) {
+        actor = self->GetActorForNPObject(aNPObj);
+        if (!actor) {
+            NS_ERROR("Failed to get actor!");
+            return;
+        }
+    }
+
+    self->SendNPN_SetException(static_cast<PPluginScriptableObjectChild*>(actor),
+                               NullableString(aMessage));
 }
 
 void NP_CALLBACK
