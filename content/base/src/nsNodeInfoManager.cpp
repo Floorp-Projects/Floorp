@@ -112,6 +112,7 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 
 nsNodeInfoManager::nsNodeInfoManager()
   : mDocument(nsnull),
+    mNonDocumentNodeInfos(0),
     mPrincipal(nsnull),
     mTextNodeInfo(nsnull),
     mCommentNodeInfo(nsnull),
@@ -160,6 +161,9 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfoManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsNodeInfoManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsNodeInfoManager)
+  if (tmp->mNonDocumentNodeInfos) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDocument)
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mBindingManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -209,8 +213,10 @@ nsNodeInfoManager::DropDocumentReference()
     mBindingManager->DropDocumentReference();
   }
 
+  // This is probably not needed anymore.
   PL_HashTableEnumerateEntries(mNodeInfoHash, DropNodeInfoDocument, nsnull);
 
+  NS_ASSERTION(!mNonDocumentNodeInfos, "Shouldn't have non-document nodeinfos!");
   mDocument = nsnull;
 }
 
@@ -246,6 +252,11 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 
   // Have to do the swap thing, because already_AddRefed<nsNodeInfo>
   // doesn't cast to already_AddRefed<nsINodeInfo>
+  ++mNonDocumentNodeInfos;
+  if (mNonDocumentNodeInfos == 1) {
+    NS_IF_ADDREF(mDocument);
+  }
+
   nsNodeInfo *nodeInfo = nsnull;
   newNodeInfo.swap(nodeInfo);
 
@@ -289,6 +300,11 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
   PLHashEntry *he;
   he = PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);
   NS_ENSURE_TRUE(he, NS_ERROR_FAILURE);
+
+  ++mNonDocumentNodeInfos;
+  if (mNonDocumentNodeInfos == 1) {
+    NS_IF_ADDREF(mDocument);
+  }
 
   newNodeInfo.forget(aNodeInfo);
 
@@ -347,9 +363,14 @@ already_AddRefed<nsINodeInfo>
 nsNodeInfoManager::GetDocumentNodeInfo()
 {
   if (!mDocumentNodeInfo) {
+    NS_ASSERTION(mDocument, "Should have mDocument!");
     mDocumentNodeInfo = GetNodeInfo(nsGkAtoms::documentNodeName, nsnull,
                                     kNameSpaceID_None,
                                     nsIDOMNode::DOCUMENT_NODE, nsnull).get();
+    --mNonDocumentNodeInfos;
+    if (!mNonDocumentNodeInfos) {
+      mDocument->Release(); // Don't set mDocument to null!
+    }
   }
   else {
     NS_ADDREF(mDocumentNodeInfo);
@@ -376,15 +397,24 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
 {
   NS_PRECONDITION(aNodeInfo, "Trying to remove null nodeinfo from manager!");
 
-  // Drop weak reference if needed
-  if (aNodeInfo == mTextNodeInfo) {
-    mTextNodeInfo = nsnull;
-  }
-  else if (aNodeInfo == mCommentNodeInfo) {
-    mCommentNodeInfo = nsnull;
-  }
-  else if (aNodeInfo == mDocumentNodeInfo) {
+  if (aNodeInfo == mDocumentNodeInfo) {
     mDocumentNodeInfo = nsnull;
+    mDocument = nsnull;
+  } else {
+    if (--mNonDocumentNodeInfos == 0) {
+      if (mDocument) {
+        // Note, whoever calls this method should keep NodeInfoManager alive,
+        // even if mDocument gets deleted.
+        mDocument->Release();
+      }
+    }
+    // Drop weak reference if needed
+    if (aNodeInfo == mTextNodeInfo) {
+      mTextNodeInfo = nsnull;
+    }
+    else if (aNodeInfo == mCommentNodeInfo) {
+      mCommentNodeInfo = nsnull;
+    }
   }
 
 #ifdef DEBUG
