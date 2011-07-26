@@ -49,27 +49,13 @@ MoveGroupResolver::MoveGroupResolver()
 }
 
 bool
-MoveGroupResolver::buildWorklist(LMoveGroup *group)
+MoveGroupResolver::addMove(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
-    // Add the moves to an initial worklist.
-    for (size_t i = 0; i < group->numMoves(); i++) {
-        const LMove &move = group->getMove(i);
-
-        // No bogus moves.
-        JS_ASSERT(*move.from() != *move.to());
-
-        // Ignore constants, they're always unblocked.
-        if (move.from()->isConstant()) {
-            if (!unorderedMoves_.append(Move(&move)))
-                return false;
-            continue;
-        }
-
-        PendingMove *pm = movePool_.allocate();
-        new (pm) PendingMove(&move);
-        pending_.insert(pm);
-    }
-
+    PendingMove *pm = movePool_.allocate();
+    if (!pm)
+        return false;
+    new (pm) PendingMove(from, to, kind);
+    pending_.insert(pm);
     return true;
 }
 
@@ -81,7 +67,7 @@ MoveGroupResolver::findBlockingMove(const PendingMove *last)
     for (PendingMoveIterator iter = pending_.begin(); iter != pending_.end(); iter++) {
         PendingMove *other = *iter;
 
-        if (*other->move->from() == *last->move->to()) {
+        if (other->from() == last->to()) {
             // We now have pairs in the form (A -> X) (X -> y). The second pair
             // blocks the move in the first pair, so return it.
             return other;
@@ -93,12 +79,10 @@ MoveGroupResolver::findBlockingMove(const PendingMove *last)
 }
 
 bool
-MoveGroupResolver::resolve(LMoveGroup *group)
+MoveGroupResolver::resolve()
 {
-    if (!buildWorklist(group))
-        return false;
+    JS_ASSERT(!pending_.empty());
 
-    unorderedMoves_.clear();
     orderedMoves_.clear();
 
     InlineList<PendingMove> stack;
@@ -150,15 +134,15 @@ MoveGroupResolver::resolve(LMoveGroup *group)
             PendingMove *blocking = findBlockingMove(stack.peekBack());
 
             if (blocking) {
-                if (*blocking->move->to() == *pm->move->from()) {
+                if (blocking->to() == pm->from()) {
                     // We annotate cycles at each move in the cycle, and
                     // assert that we do not find two cycles in one move chain
                     // traversal (which would indicate two moves to the same
                     // destination).
-                    JS_ASSERT(!pm->cycle);
-                    if (!orderedMoves_.append(Move(blocking->move, true)))
+                    pm->setInCycle();
+                    blocking->setInCycle();
+                    if (!orderedMoves_.append(*blocking))
                         return false;
-                    pm->cycle = true;
                     hasCycles_ = true;
                     pending_.remove(blocking);
                     movePool_.free(blocking);
@@ -173,7 +157,7 @@ MoveGroupResolver::resolve(LMoveGroup *group)
                 // complete and not participating in a cycle. The resulting
                 // move can safely be added to the ordered move list.
                 PendingMove *done = stack.pop();
-                if (!orderedMoves_.append(Move(done->move, done->cycle)))
+                if (!orderedMoves_.append(*done))
                     return false;
                 movePool_.free(done);
             }

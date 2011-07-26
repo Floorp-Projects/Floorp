@@ -42,7 +42,8 @@
 #ifndef jsion_move_resolver_x86_shared_h__
 #define jsion_move_resolver_x86_shared_h__
 
-#include "ion/shared/CodeGenerator-shared.h"
+#include "ion/MoveGroupResolver.h"
+#include "ion/IonMacroAssembler.h"
 
 namespace js {
 namespace ion {
@@ -51,11 +52,16 @@ class CodeGenerator;
 
 class MoveResolverX86
 {
+    typedef MoveGroupResolver::Move Move;
+    typedef MoveGroupResolver::MoveOperand MoveOperand;
+
     bool inCycle_;
-    CodeGenerator *codegen;
-    MacroAssembler *masm;
+    MacroAssembler &masm;
 
     RegisterSet freeRegs_;
+
+    // Original stack push value.
+    uint32 pushedAtStart_;
 
     // These store stack offsets to spill locations, snapshotting
     // codegen->framePushed_ at the time they were allocated. They are -1 if no
@@ -75,24 +81,24 @@ class MoveResolverX86
     FloatRegister cycleFloatReg_;
 
     void assertDone();
-    void assertValidMove(const LAllocation *from, const LAllocation *to);
+    void assertValidMove(const MoveOperand &from, const MoveOperand &to);
     Register tempReg();
     FloatRegister tempFloatReg();
     Operand cycleSlot() const;
     Operand spillSlot() const;
     Operand doubleSpillSlot() const;
+    Operand toOperand(const MoveOperand &operand) const;
 
-    void emitMove(const LAllocation *from, const LAllocation *to);
-    void emitDoubleMove(const LAllocation *from, const LAllocation *to);
-    void breakCycle(const LAllocation *from, const LAllocation *to);
-    void completeCycle(const LAllocation *from, const LAllocation *to);
+    void emitMove(const MoveOperand &from, const MoveOperand &to);
+    void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
+    void breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
+    void completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
+    void emit(const Move &move);
 
   public:
-    MoveResolverX86(CodeGenerator *codegen);
+    MoveResolverX86(MacroAssembler &masm);
     ~MoveResolverX86();
-    FloatRegister reserveDouble();
-    void setup(LMoveGroup *group);
-    void emit(const MoveGroupResolver::Move &move);
+    void emit(const MoveGroupResolver &moves, const RegisterSet &freeRegs);
     void finish();
 };
 
