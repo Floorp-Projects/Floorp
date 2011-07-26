@@ -1075,7 +1075,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           // style not set, but if it is a default then it will appear if 
           // content is inserted, so we should report it as set (analogous to TypeInState).
           PRInt32 index;
-          if (TypeInState::FindPropInList(aProperty, *aAttribute, outValue, mDefaultStyles, index))
+          if (aAttribute &&
+              TypeInState::FindPropInList(aProperty, *aAttribute, outValue, mDefaultStyles, index))
           {
             *aFirst = *aAny = *aAll = PR_TRUE;
             if (outValue)
