@@ -39,12 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "MoveResolver-x86-shared.h"
+#include "MoveEmitter-x86-shared.h"
 
 using namespace js;
 using namespace js::ion;
 
-MoveResolverX86::MoveResolverX86(MacroAssembler &masm)
+MoveEmitterX86::MoveEmitterX86(MacroAssembler &masm)
   : inCycle_(false),
     masm(masm),
     pushedAtCycle_(-1),
@@ -57,7 +57,7 @@ MoveResolverX86::MoveResolverX86(MacroAssembler &masm)
 }
 
 void
-MoveResolverX86::emit(const MoveGroupResolver &moves, const RegisterSet &freeRegs)
+MoveEmitterX86::emit(const MoveResolver &moves, const RegisterSet &freeRegs)
 {
     freeRegs_ = freeRegs;
 
@@ -76,31 +76,31 @@ MoveResolverX86::emit(const MoveGroupResolver &moves, const RegisterSet &freeReg
         emit(moves.getMove(i));
 }
 
-MoveResolverX86::~MoveResolverX86()
+MoveEmitterX86::~MoveEmitterX86()
 {
     assertDone();
 }
 
 Operand
-MoveResolverX86::cycleSlot() const
+MoveEmitterX86::cycleSlot() const
 {
     return Operand(StackPointer, masm.framePushed() - pushedAtCycle_);
 }
 
 Operand
-MoveResolverX86::spillSlot() const
+MoveEmitterX86::spillSlot() const
 {
     return Operand(StackPointer, masm.framePushed() - pushedAtSpill_);
 }
 
 Operand
-MoveResolverX86::doubleSpillSlot() const
+MoveEmitterX86::doubleSpillSlot() const
 {
     return Operand(StackPointer, masm.framePushed() - pushedAtDoubleSpill_);
 }
 
 Operand
-MoveResolverX86::toOperand(const MoveOperand &operand) const
+MoveEmitterX86::toOperand(const MoveOperand &operand) const
 {
     JS_ASSERT(operand.isMemory());
     if (operand.base() != StackPointer)
@@ -113,7 +113,7 @@ MoveResolverX86::toOperand(const MoveOperand &operand) const
 }
 
 Register
-MoveResolverX86::tempReg()
+MoveEmitterX86::tempReg()
 {
     if (spilledReg_ != InvalidReg)
         return spilledReg_;
@@ -137,7 +137,7 @@ MoveResolverX86::tempReg()
 }
 
 FloatRegister
-MoveResolverX86::tempFloatReg()
+MoveEmitterX86::tempFloatReg()
 {
     if (spilledFloatReg_ != InvalidFloatReg)
         return spilledFloatReg_;
@@ -160,7 +160,7 @@ MoveResolverX86::tempFloatReg()
 }
 
 void
-MoveResolverX86::breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
+MoveEmitterX86::breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -192,7 +192,7 @@ MoveResolverX86::breakCycle(const MoveOperand &from, const MoveOperand &to, Move
 }
 
 void
-MoveResolverX86::completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
+MoveEmitterX86::completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -224,7 +224,7 @@ MoveResolverX86::completeCycle(const MoveOperand &from, const MoveOperand &to, M
 }
 
 void
-MoveResolverX86::emitMove(const MoveOperand &from, const MoveOperand &to)
+MoveEmitterX86::emitMove(const MoveOperand &from, const MoveOperand &to)
 {
     if (from.isGeneralReg()) {
         if (from.reg() == spilledReg_) {
@@ -250,7 +250,7 @@ MoveResolverX86::emitMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveResolverX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
+MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 {
     if (from.isFloatReg()) {
         if (from.floatReg() == spilledFloatReg_) {
@@ -276,7 +276,7 @@ MoveResolverX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveResolverX86::assertValidMove(const MoveOperand &from, const MoveOperand &to)
+MoveEmitterX86::assertValidMove(const MoveOperand &from, const MoveOperand &to)
 {
     JS_ASSERT_IF(from.isGeneralReg(), !freeRegs_.has(from.reg()));
     JS_ASSERT_IF(to.isGeneralReg(), !freeRegs_.has(to.reg()));
@@ -285,7 +285,7 @@ MoveResolverX86::assertValidMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveResolverX86::emit(const Move &move)
+MoveEmitterX86::emit(const Move &move)
 {
     const MoveOperand &from = move.from();
     const MoveOperand &to = move.to();
@@ -310,13 +310,13 @@ MoveResolverX86::emit(const Move &move)
 }
 
 void
-MoveResolverX86::assertDone()
+MoveEmitterX86::assertDone()
 {
     JS_ASSERT(!inCycle_);
 }
 
 void
-MoveResolverX86::finish()
+MoveEmitterX86::finish()
 {
     assertDone();
 

@@ -47,7 +47,7 @@
 namespace js {
 namespace ion {
 
-class MoveGroupResolver
+class MoveResolver
 {
   public:
     // This is similar to Operand, but carries more information. We're also not
@@ -185,7 +185,7 @@ class MoveGroupResolver
 
     };
 
-    typedef InlineList<MoveGroupResolver::PendingMove>::iterator PendingMoveIterator;
+    typedef InlineList<MoveResolver::PendingMove>::iterator PendingMoveIterator;
 
   private:
     // Moves that are definitely unblocked (constants to registers). These are
@@ -197,11 +197,10 @@ class MoveGroupResolver
 
     InlineList<PendingMove> pending_;
 
-    bool buildWorklist(LMoveGroup *group);
     PendingMove *findBlockingMove(const PendingMove *last);
 
   public:
-    MoveGroupResolver();
+    MoveResolver();
 
     // Resolves a move group into two lists of ordered moves. These moves must
     // be executed in the order provided. Some moves may indicate that they

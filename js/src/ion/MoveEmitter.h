@@ -39,31 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_macro_assembler_h__
-#define jsion_macro_assembler_h__
+#ifndef jsion_move_emitter_h__
+#define jsion_move_emitter_h__
 
-#ifdef JS_CPU_X86
-# include "ion/x86/MacroAssembler-x86.h"
-#elif JS_CPU_X64
-# include "ion/x64/MacroAssembler-x64.h"
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+# include "ion/shared/MoveEmitter-x86-shared.h"
 #endif
-#include "MoveResolver.h"
 
-namespace js {
-namespace ion {
-
-class MacroAssembler : public MacroAssemblerSpecific
-{
-    MoveResolver moveResolver_;
-
-  public:
-    MoveResolver &moveResolver() {
-        return moveResolver_;
-    }
-};
-
-} // namespace ion
-} // namespace js
-
-#endif // jsion_macro_assembler_h__
+#endif // jsion_move_emitter_h__
 
