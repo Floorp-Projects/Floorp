@@ -2720,7 +2720,7 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_UNUSED_CHUNKS:
         return uint32(rt->gcEmptyChunkCount);
       case JSGC_TOTAL_CHUNKS:
-        return uint32(rt->gcUserChunkSet.count() + rt->gcSystemChunkSet.count() + rt->gcEmptyChunkCount);
+        return uint32(rt->gcChunkSet.count() + rt->gcEmptyChunkCount);
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;

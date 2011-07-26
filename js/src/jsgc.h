@@ -514,8 +514,9 @@ struct MarkingDelay {
 
 /* The chunk header (located at the end of the chunk to preserve arena alignment). */
 struct ChunkInfo {
-    Chunk           *link;
     JSRuntime       *runtime;
+    Chunk           *next;
+    Chunk           **prevp;
     ArenaHeader     *emptyArenaListHead;
     size_t          age;
     size_t          numFree;
@@ -620,9 +621,17 @@ struct Chunk {
     }
 
     void init(JSRuntime *rt);
-    bool unused();
-    bool hasAvailableArenas();
-    bool withinArenasRange(Cell *cell);
+
+    bool unused() const {
+        return info.numFree == ArenasPerChunk;
+    }
+
+    bool hasAvailableArenas() const {
+        return info.numFree > 0;
+    }
+
+    inline void addToAvailableList(JSCompartment *compartment);
+    inline void removeFromAvailableList();
 
     template <size_t thingSize>
     ArenaHeader *allocateArena(JSContext *cx, unsigned thingKind);
