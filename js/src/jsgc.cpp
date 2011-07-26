@@ -1671,7 +1671,7 @@ js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
         return;
     if (fp->hasArgsObj())
         MarkObject(trc, fp->argsObj(), "arguments");
-    js_TraceScript(trc, fp->script());
+    js_TraceScript(trc, fp->script(), NULL);
     fp->script()->compartment->active = true;
     MarkValue(trc, fp->returnValue(), "rval");
 }
@@ -1707,7 +1707,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case SCRIPT:
         if (JSScript *script = static_cast<AutoScriptRooter *>(this)->script)
-            js_TraceScript(trc, script);
+            js_TraceScript(trc, script, NULL);
         return;
 
       case ENUMERATOR:
