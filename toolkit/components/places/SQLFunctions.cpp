@@ -231,6 +231,7 @@ namespace places {
   /* static */
   void
   MatchAutoCompleteFunction::fixupURISpec(const nsCString &aURISpec,
+                                          PRInt32 aMatchBehavior,
                                           nsCString &_fixedSpec)
   {
     nsCString unescapedSpec;
@@ -245,6 +246,9 @@ namespace places {
       _fixedSpec.Assign(unescapedSpec);
     else
       _fixedSpec.Assign(aURISpec);
+
+    if (aMatchBehavior == mozIPlacesAutoComplete::MATCH_ANYWHERE_UNMODIFIED)
+      return;
 
     if (StringBeginsWith(_fixedSpec, NS_LITERAL_CSTRING("http://")))
       _fixedSpec.Cut(0, 7);
@@ -319,6 +323,7 @@ namespace places {
   {
     switch (aBehavior) {
       case mozIPlacesAutoComplete::MATCH_ANYWHERE:
+      case mozIPlacesAutoComplete::MATCH_ANYWHERE_UNMODIFIED:
         return findAnywhere;
       case mozIPlacesAutoComplete::MATCH_BEGINNING:
         return findBeginning;
@@ -351,9 +356,12 @@ namespace places {
     nsCString url;
     (void)aArguments->GetUTF8String(kArgIndexURL, url);
 
+    PRInt32 matchBehavior = aArguments->AsInt32(kArgIndexMatchBehavior);
+
     // We only want to filter javascript: URLs if we are not supposed to search
     // for them, and the search does not start with "javascript:".
-    if (!HAS_BEHAVIOR(JAVASCRIPT) &&
+    if (matchBehavior != mozIPlacesAutoComplete::MATCH_ANYWHERE_UNMODIFIED &&
+        !HAS_BEHAVIOR(JAVASCRIPT) &&
         !StringBeginsWith(searchString, NS_LITERAL_CSTRING("javascript:")) &&
         StringBeginsWith(url, NS_LITERAL_CSTRING("javascript:"))) {
       NS_ADDREF(*_result = new IntegerVariant(0));
@@ -381,13 +389,12 @@ namespace places {
       return NS_OK;
     }
 
+    // Obtain our search function.
+    searchFunctionPtr searchFunction = getSearchFunction(matchBehavior);
+
     // Clean up our URI spec and prepare it for searching.
     nsCString fixedURI;
-    fixupURISpec(url, fixedURI);
-
-    // Obtain our search function.
-    PRInt32 matchBehavior = aArguments->AsInt32(kArgIndexMatchBehavior);
-    searchFunctionPtr searchFunction = getSearchFunction(matchBehavior);
+    fixupURISpec(url, matchBehavior, fixedURI);
 
     nsCAutoString title;
     (void)aArguments->GetUTF8String(kArgIndexTitle, title);
