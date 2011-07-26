@@ -43,6 +43,7 @@
  * JS debugging API.
  */
 #include <string.h>
+#include <stdarg.h>
 #include "jsprvtd.h"
 #include "jstypes.h"
 #include "jsstdint.h"
@@ -82,6 +83,10 @@
 
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
+
+#ifdef __APPLE__
+#include "sharkctl.h"
+#endif
 
 using namespace js;
 using namespace js::gc;
@@ -1213,32 +1218,251 @@ JS_ClearContextDebugHooks(JSContext *cx)
     return JS_SetContextDebugHooks(cx, &js_NullDebugHooks);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_StartProfiling()
+/************************************************************************/
+
+/* Profiling-related API */
+
+/* Thread-unsafe error management */
+
+static char gLastError[2000];
+
+static void
+#ifdef _GNU_SOURCE
+__attribute__((unused,format(printf,1,2)))
+#endif
+UnsafeError(const char *format, ...)
 {
-    return Probes::startProfiling();
+    va_list args;
+    va_start(args, format);
+    (void) vsnprintf(gLastError, sizeof(gLastError), format, args);
+    va_end(args);
+
+    gLastError[sizeof(gLastError) - 1] = '\0';
 }
 
-JS_PUBLIC_API(void)
-JS_StopProfiling()
+JS_PUBLIC_API(const char *)
+JS_UnsafeGetLastProfilingError()
 {
-    Probes::stopProfiling();
+    return gLastError;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_StartProfiling(const char *profileName)
+{
+    JSBool ok = JS_TRUE;
+#if defined(MOZ_SHARK) && defined(__APPLE__)
+    if (!Shark::Start()) {
+        UnsafeError("Failed to start Shark for %s", profileName);
+        ok = JS_FALSE;
+    }
+#endif
+#ifdef MOZ_VTUNE
+    if (!js_StartVtune(profileName))
+        ok = JS_FALSE;
+#endif
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_StopProfiling(const char *profileName)
+{
+    JSBool ok = JS_TRUE;
+#if defined(MOZ_SHARK) && defined(__APPLE__)
+    Shark::Stop();
+#endif
+#ifdef MOZ_VTUNE
+    if (!js_StopVtune())
+        ok = JS_FALSE;
+#endif
+    return ok;
+}
+
+/*
+ * Start or stop whatever platform- and configuration-specific profiling
+ * backends are available.
+ */
+static JSBool
+ControlProfilers(bool toState)
+{
+    JSBool ok = JS_TRUE;
+
+    if (! Probes::ProfilingActive && toState) {
+#if defined(MOZ_SHARK) && defined(__APPLE__)
+        if (!Shark::Start()) {
+            UnsafeError("Failed to start Shark");
+            ok = JS_FALSE;
+        }
+#endif
+#ifdef MOZ_CALLGRIND
+        if (! js_StartCallgrind()) {
+            UnsafeError("Failed to start Callgrind");
+            ok = JS_FALSE;
+        }
+#endif
+#ifdef MOZ_VTUNE
+        if (! js_ResumeVtune())
+            ok = JS_FALSE;
+#endif
+    } else if (Probes::ProfilingActive && ! toState) {
+#if defined(MOZ_SHARK) && defined(__APPLE__)
+        Shark::Stop();
+#endif
+#ifdef MOZ_CALLGRIND
+        if (! js_StopCallgrind()) {
+            UnsafeError("failed to stop Callgrind");
+            ok = JS_FALSE;
+        }
+#endif
+#ifdef MOZ_VTUNE
+        if (! js_PauseVtune())
+            ok = JS_FALSE;
+#endif
+    }
+
+    Probes::ProfilingActive = toState;
+
+    return ok;
+}
+
+/*
+ * Pause/resume whatever profiling mechanism is currently compiled
+ * in, if applicable. This will not affect things like dtrace.
+ *
+ * Do not mix calls to these APIs with calls to the individual
+ * profilers' pause/resume functions, because only overall state is
+ * tracked, not the state of each profiler.
+ */
+JS_PUBLIC_API(JSBool)
+JS_PauseProfilers(const char *profileName)
+{
+    return ControlProfilers(false);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ResumeProfilers(const char *profileName)
+{
+    return ControlProfilers(true);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_DumpProfile(const char *outfile, const char *profileName)
+{
+    JSBool ok = JS_TRUE;
+#ifdef MOZ_CALLGRIND
+    js_DumpCallgrind(outfile);
+#endif
+    return ok;
 }
 
 #ifdef MOZ_PROFILING
 
+struct RequiredStringArg {
+    JSContext *mCx;
+    char *mBytes;
+    RequiredStringArg(JSContext *cx, uintN argc, jsval *vp, size_t argi, const char *caller)
+        : mCx(cx), mBytes(NULL)
+    {
+        if (argc <= argi) {
+            JS_ReportError(cx, "%s: not enough arguments", caller);
+        } else if (!JSVAL_IS_STRING(JS_ARGV(cx, vp)[argi])) {
+            JS_ReportError(cx, "%s: invalid arguments (string expected)", caller);
+        } else {
+            mBytes = JS_EncodeString(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[argi]));
+        }
+    }
+    operator void*() {
+        return (void*) mBytes;
+    }
+    ~RequiredStringArg() {
+        if (mBytes)
+            mCx->free_(mBytes);
+    }
+};
+
 static JSBool
 StartProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StartProfiling()));
-    return true;
+    if (argc == 0) {
+        JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StartProfiling(NULL)));
+        return JS_TRUE;
+    }
+
+    RequiredStringArg profileName(cx, argc, vp, 0, "startProfiling");
+    if (!profileName)
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StartProfiling(profileName.mBytes)));
+    return JS_TRUE;
 }
 
 static JSBool
 StopProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_StopProfiling();
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    if (argc == 0) {
+        JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StopProfiling(NULL)));
+        return JS_TRUE;
+    }
+
+    RequiredStringArg profileName(cx, argc, vp, 0, "stopProfiling");
+    if (!profileName)
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StopProfiling(profileName.mBytes)));
+    return JS_TRUE;
+}
+
+static JSBool
+PauseProfilers(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc == 0) {
+        JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_PauseProfilers(NULL)));
+        return JS_TRUE;
+    }
+
+    RequiredStringArg profileName(cx, argc, vp, 0, "pauseProfiling");
+    if (!profileName)
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_PauseProfilers(profileName.mBytes)));
+    return JS_TRUE;
+}
+
+static JSBool
+ResumeProfilers(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc == 0) {
+        JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_ResumeProfilers(NULL)));
+        return JS_TRUE;
+    }
+
+    RequiredStringArg profileName(cx, argc, vp, 0, "resumeProfiling");
+    if (!profileName)
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_ResumeProfilers(profileName.mBytes)));
+    return JS_TRUE;
+}
+
+/* Usage: DumpProfile([filename[, profileName]]) */
+static JSBool
+DumpProfile(JSContext *cx, uintN argc, jsval *vp)
+{
+    bool ret;
+    if (argc == 0) {
+        ret = JS_DumpProfile(NULL, NULL);
+    } else {
+        RequiredStringArg filename(cx, argc, vp, 0, "dumpProfile");
+        if (!filename)
+            return JS_FALSE;
+
+        if (argc == 1) {
+            ret = JS_DumpProfile(filename.mBytes, NULL);
+        } else {
+            RequiredStringArg profileName(cx, argc, vp, 1, "dumpProfile");
+            if (!profileName)
+                return JS_FALSE;
+
+            ret = JS_DumpProfile(filename.mBytes, profileName.mBytes);
+        }
+    }
+
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(ret));
     return true;
 }
 
@@ -1253,15 +1477,94 @@ IgnoreAndReturnTrue(JSContext *cx, uintN argc, jsval *vp)
 
 #endif
 
+#ifdef MOZ_CALLGRIND
+static JSBool
+StartCallgrind(JSContext *cx, uintN argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_StartCallgrind()));
+    return JS_TRUE;
+}
+
+static JSBool
+StopCallgrind(JSContext *cx, uintN argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_StopCallgrind()));
+    return JS_TRUE;
+}
+
+static JSBool
+DumpCallgrind(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc == 0) {
+        JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_DumpCallgrind(NULL)));
+        return JS_TRUE;
+    }
+
+    RequiredStringArg outFile(cx, argc, vp, 0, "dumpCallgrind");
+    if (!outFile)
+        return JS_FALSE;
+
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_DumpCallgrind(outFile.mBytes)));
+    return JS_TRUE;
+}    
+#endif
+
+#ifdef MOZ_VTUNE
+static JSBool
+StartVtune(JSContext *cx, uintN argc, jsval *vp)
+{
+    RequiredStringArg profileName(cx, argc, vp, 0, "startVtune");
+    if (!profileName)
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_StartVtune(profileName.mBytes)));
+    return JS_TRUE;
+}
+
+static JSBool
+StopVtune(JSContext *cx, uintN argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_StopVtune()));
+    return JS_TRUE;
+}
+
+static JSBool
+PauseVtune(JSContext *cx, uintN argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_PauseVtune()));
+    return JS_TRUE;
+}
+
+static JSBool
+ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_ResumeVtune()));
+    return JS_TRUE;
+}
+#endif
+
 static JSFunctionSpec profiling_functions[] = {
-    JS_FN("startProfiling",  StartProfiling,      0,0),
-    JS_FN("stopProfiling",   StopProfiling,       0,0),
+    JS_FN("startProfiling",  StartProfiling,      1,0),
+    JS_FN("stopProfiling",   StopProfiling,       1,0),
+    JS_FN("pauseProfilers",  PauseProfilers,      1,0),
+    JS_FN("resumeProfilers", ResumeProfilers,     1,0),
+    JS_FN("dumpProfile",     DumpProfile,         2,0),
 #ifdef MOZ_SHARK
     /* Keep users of the old shark API happy. */
     JS_FN("connectShark",    IgnoreAndReturnTrue, 0,0),
     JS_FN("disconnectShark", IgnoreAndReturnTrue, 0,0),
     JS_FN("startShark",      StartProfiling,      0,0),
     JS_FN("stopShark",       StopProfiling,       0,0),
+#endif
+#ifdef MOZ_CALLGRIND
+    JS_FN("startCallgrind", StartCallgrind,       0,0),
+    JS_FN("stopCallgrind",  StopCallgrind,        0,0),
+    JS_FN("dumpCallgrind",  DumpCallgrind,        1,0),
+#endif
+#ifdef MOZ_VTUNE
+    JS_FN("startVtune",     js_StartVtune,        1,0),
+    JS_FN("stopVtune",      js_StopVtune,         0,0),
+    JS_FN("pauseVtune",     js_PauseVtune,        0,0),
+    JS_FN("resumeVtune",    js_ResumeVtune,       0,0),
 #endif
     JS_FS_END
 };
@@ -1284,40 +1587,30 @@ JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj)
 #include <valgrind/callgrind.h>
 
 JS_FRIEND_API(JSBool)
-js_StartCallgrind(JSContext *cx, uintN argc, jsval *vp)
+js_StartCallgrind()
 {
     CALLGRIND_START_INSTRUMENTATION;
     CALLGRIND_ZERO_STATS;
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 JS_FRIEND_API(JSBool)
-js_StopCallgrind(JSContext *cx, uintN argc, jsval *vp)
+js_StopCallgrind()
 {
     CALLGRIND_STOP_INSTRUMENTATION;
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 JS_FRIEND_API(JSBool)
-js_DumpCallgrind(JSContext *cx, uintN argc, jsval *vp)
+js_DumpCallgrind(const char *outfile)
 {
-    JSString *str;
-
-    jsval *argv = JS_ARGV(cx, vp);
-    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
-        str = JSVAL_TO_STRING(argv[0]);
-        JSAutoByteString bytes(cx, str);
-        if (!!bytes) {
-            CALLGRIND_DUMP_STATS_AT(bytes.ptr());
-            return JS_TRUE;
-        }
+    if (outfile) {
+        CALLGRIND_DUMP_STATS_AT(outfile);
+    } else {
+        CALLGRIND_DUMP_STATS;
     }
-    CALLGRIND_DUMP_STATS;
 
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 #endif /* MOZ_CALLGRIND */
@@ -1352,8 +1645,8 @@ static const char *vtuneErrorMessages[] = {
 
 };
 
-JS_FRIEND_API(JSBool)
-js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
+bool
+js_StartVtune(const char *profileName)
 {
     VTUNE_EVENT events[] = {
         { 1000000, 0, 0, 0, "CPU_CLK_UNHALTED.CORE" },
@@ -1380,62 +1673,54 @@ js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
         default_filename,
     };
 
-    jsval *argv = JS_ARGV(cx, vp);
-    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
-        str = JSVAL_TO_STRING(argv[0]);
-        params.tb5Filename = DeflateString(cx, str->chars(), str->length());
+    if (profileName) {
+        char filename[strlen(profileName) + strlen("-vtune.tb5") + 1];
+        snprintf(filename, sizeof(filename), "%s-vtune.tb5", profileName);
+        params.tb5Filename = filename;
     }
 
     status = VTStartSampling(&params);
 
     if (params.tb5Filename != default_filename)
-        cx->free_(params.tb5Filename);
+        Foreground::free_(params.tb5Filename);
 
     if (status != 0) {
         if (status == VTAPI_MULTIPLE_RUNS)
             VTStopSampling(0);
         if (status < sizeof(vtuneErrorMessages))
-            JS_ReportError(cx, "Vtune setup error: %s",
-                           vtuneErrorMessages[status]);
+            UnsafeError("Vtune setup error: %s", vtuneErrorMessages[status]);
         else
-            JS_ReportError(cx, "Vtune setup error: %d",
-                           status);
+            UnsafeError("Vtune setup error: %d", status);
         return false;
     }
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
-JS_FRIEND_API(JSBool)
-js_StopVtune(JSContext *cx, uintN argc, jsval *vp)
+bool
+js_StopVtune()
 {
     U32 status = VTStopSampling(1);
     if (status) {
         if (status < sizeof(vtuneErrorMessages))
-            JS_ReportError(cx, "Vtune shutdown error: %s",
-                           vtuneErrorMessages[status]);
+            UnsafeError("Vtune shutdown error: %s", vtuneErrorMessages[status]);
         else
-            JS_ReportError(cx, "Vtune shutdown error: %d",
-                           status);
+            UnsafeError("Vtune shutdown error: %d", status);
         return false;
     }
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
-JS_FRIEND_API(JSBool)
-js_PauseVtune(JSContext *cx, uintN argc, jsval *vp)
+bool
+js_PauseVtune()
 {
     VTPause();
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
-JS_FRIEND_API(JSBool)
-js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
+bool
+js_ResumeVtune()
 {
     VTResume();
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -1906,32 +2191,29 @@ JS_GetFunctionCallback(JSContext *cx)
 #endif /* MOZ_TRACE_JSCALLS */
 
 JS_PUBLIC_API(void)
-JS_DumpProfile(JSContext *cx, JSScript *script)
+JS_DumpBytecode(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(!cx->runtime->gcRunning);
 
 #if defined(DEBUG)
-    if (script->pcCounters) {
-        // Display hit counts for every JS code line
-        AutoArenaAllocator mark(&cx->tempPool);
-        Sprinter sprinter;
-        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    AutoArenaAllocator mark(&cx->tempPool);
+    Sprinter sprinter;
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
 
-        fprintf(stdout, "--- PC COUNTS %s:%d ---\n", script->filename, script->lineno);
-        js_Disassemble(cx, script, true, &sprinter);
-        fprintf(stdout, "%s\n", sprinter.base);
-        fprintf(stdout, "--- END PC COUNTS %s:%d ---\n", script->filename, script->lineno);
-    }
+    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename, script->lineno);
+    js_Disassemble(cx, script, true, &sprinter);
+    fprintf(stdout, "%s\n", sprinter.base);
+    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename, script->lineno);
 #endif
 }
 
 JS_PUBLIC_API(void)
-JS_DumpAllProfiles(JSContext *cx)
+JS_DumpCompartmentBytecode(JSContext *cx)
 {
     for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
          script != (JSScript *) &cx->compartment->scripts;
          script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
     {
-        JS_DumpProfile(cx, script);
+        JS_DumpBytecode(cx, script);
     }
 }
