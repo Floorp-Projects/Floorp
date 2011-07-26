@@ -53,7 +53,7 @@ def get_range_for(compilation_unit, debug_info):
             search_cu = True
         elif 'DW_TAG_' in nfo or not nfo.strip():
             if name == compilation_unit:
-                return int(ranges, 0)
+                return int(ranges, 16)
             name = ranges = ''
             search_cu = False
         if search_cu:
@@ -69,7 +69,7 @@ def get_range_length(range, debug_ranges):
     length = 0
     for line in debug_ranges.splitlines():
         m = re.match('\s*([0-9a-fA-F]+)\s+([0-9a-fA-F]+)\s+([0-9a-fA-F]+)', line)
-        if m and int(m.group(1), 0) == range:
+        if m and int(m.group(1), 16) == range:
             length += 1
     return length
 
