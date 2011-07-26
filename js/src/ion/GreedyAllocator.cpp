@@ -483,7 +483,7 @@ bool
 GreedyAllocator::allocateTemporaries(LInstruction *ins)
 {
     for (size_t i = 0; i < ins->numTemps(); i++) {
-        LDefinition *def = ins->getTemp(0);
+        LDefinition *def = ins->getTemp(i);
         if (def->policy() == LDefinition::PRESET)
             continue;
 
