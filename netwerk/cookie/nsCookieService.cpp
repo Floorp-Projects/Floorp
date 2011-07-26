@@ -263,7 +263,8 @@ LogCookie(nsCookie *aCookie)
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("%s: %s\n", aCookie->IsDomain() ? "domain" : "host", aCookie->Host().get()));
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("path: %s\n", aCookie->Path().get()));
 
-    PR_ExplodeTime(aCookie->Expiry() * PR_USEC_PER_SEC, PR_GMTParameters, &explodedTime);
+    PR_ExplodeTime(aCookie->Expiry() * PRInt64(PR_USEC_PER_SEC),
+                   PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
     PR_LOG(sCookieLog, PR_LOG_DEBUG,
       ("expires: %s%s", timeString, aCookie->IsSession() ? " (at end of session)" : ""));
@@ -1543,7 +1544,7 @@ nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
   PRStatus result = PR_ParseTimeString(aServerTime.get(), PR_TRUE,
                                        &tempServerTime);
   if (result == PR_SUCCESS) {
-    serverTime = tempServerTime / PR_USEC_PER_SEC;
+    serverTime = tempServerTime / PRInt64(PR_USEC_PER_SEC);
   } else {
     serverTime = PR_Now() / PR_USEC_PER_SEC;
   }
@@ -3273,7 +3274,7 @@ nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
       return PR_TRUE;
     }
 
-    delta = expires / PR_USEC_PER_SEC - aServerTime;
+    delta = expires / PRInt64(PR_USEC_PER_SEC) - aServerTime;
 
   // default to session cookie if no attributes found
   } else {
