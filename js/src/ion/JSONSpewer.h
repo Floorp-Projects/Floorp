@@ -69,8 +69,10 @@ class JSONSpewer
 
   public:
     JSONSpewer()
-      : first_(true)
+      : first_(true),
+        fp_(NULL)
     { }
+    ~JSONSpewer();
 
     bool init(const char *path);
     void beginFunction(JSScript *script);
