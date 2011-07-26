@@ -1153,7 +1153,7 @@ public:
         , mSurface(nsnull)
         , mConfig(nsnull)
         , mImageKHR(nsnull)
-        , mCreated(PR_FALSE)
+        , mTextureState(Created)
         , mBound(PR_FALSE)
         , mIsLocked(PR_FALSE)
     {
@@ -1214,7 +1214,7 @@ public:
         NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
         // determine the region the client will need to repaint
-        if (!mCreated) {
+        if (mTextureState != Valid) {
             // if the texture hasn't been initialized yet, force the
             // client to paint everything
             mUpdateRect = nsIntRect(nsIntPoint(0, 0), mSize);
@@ -1267,7 +1267,7 @@ public:
 
         if (mIsLocked) {
             UnlockSurface();
-            mCreated = PR_TRUE;
+            mTextureState = Valid;
             mUpdateSurface = nsnull;
             return;
         }
@@ -1280,7 +1280,7 @@ public:
 #endif
 
             mBackingSurface->SetDeviceOffset(gfxPoint(0, 0));
-            mCreated = PR_TRUE;
+            mTextureState = Valid;
             mUpdateSurface = nsnull;
             return;
         }
@@ -1312,7 +1312,7 @@ public:
         mGLContext->MakeCurrent();
         mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 
-        if (!mCreated) {
+        if (mTextureState != Valid) {
             NS_ASSERTION(mUpdateRect.x == 0 && mUpdateRect.y == 0 &&
                          mUpdateRect.Size() == mSize,
                          "Bad initial update on non-created texture!");
@@ -1326,7 +1326,6 @@ public:
                                     GLFormatForImage(uploadImage->Format()),
                                     GLTypeForImage(uploadImage->Format()),
                                     uploadImage->Data());
-            mCreated = PR_TRUE;
         } else {
             mGLContext->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
                                        0,
@@ -1340,6 +1339,7 @@ public:
         }
 
         mUpdateSurface = nsnull;
+        mTextureState = Valid;
         return;         // mTexture is bound
     }
 
@@ -1348,7 +1348,7 @@ public:
         nsIntRect bounds = aRegion.GetBounds();
 
         nsIntRegion region;
-        if (!mCreated) {
+        if (mTextureState != Valid) {
             bounds = nsIntRect(0, 0, mSize.width, mSize.height);
             region = nsIntRegion(bounds);
         } else {
@@ -1371,12 +1371,12 @@ public:
               mGLContext->UploadSurfaceToTexture(aSurf,
                                                  region,
                                                  mTexture,
-                                                 !mCreated,
+                                                 mTextureState == Created,
                                                  bounds.TopLeft() + aFrom,
                                                  PR_FALSE);
         }
 
-        mCreated = PR_TRUE;
+        mTextureState = Valid;
         return true;
     }
 
@@ -1397,7 +1397,7 @@ public:
     {
         NS_ASSERTION(!mUpdateSurface, "Resize() while in update?");
 
-        if (mSize == aSize && mCreated)
+        if (mSize == aSize && mTextureState != Created)
             return;
 
         mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
@@ -1419,9 +1419,9 @@ public:
                                     GLFormatForImage(mUpdateFormat),
                                     GLTypeForImage(mUpdateFormat),
                                     NULL);
-            mCreated = PR_TRUE;
         }
 
+        mTextureState = Allocated;
         mSize = aSize;
     }
 
@@ -1629,8 +1629,8 @@ protected:
     EGLConfig mConfig;
     GLuint mTexture;
     EGLImageKHR mImageKHR;
+    TextureState mTextureState;
 
-    PRPackedBool mCreated;
     PRPackedBool mBound;
     PRPackedBool mIsLocked;
 };
