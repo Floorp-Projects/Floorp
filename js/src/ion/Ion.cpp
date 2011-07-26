@@ -49,6 +49,7 @@
 #include "ValueNumbering.h"
 #include "LinearScan.h"
 #include "jscompartment.h"
+#include "IonCompartment.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"

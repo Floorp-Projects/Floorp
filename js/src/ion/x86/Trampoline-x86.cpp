@@ -44,7 +44,6 @@
 #include "ion/IonLinker.h"
 
 using namespace js::ion;
-using namespace JSC;
 
 /* This method generates a trampoline on x86 for a c++ function with
  * the following signature:
@@ -54,26 +53,21 @@ using namespace JSC;
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
-    typedef MacroAssembler::Label Label;
-    typedef MacroAssembler::Jump Jump;
-    typedef MacroAssembler::Address Address;
-    typedef MacroAssembler::Imm32 Imm32;
-
     MacroAssembler masm;
 
     // Save old stack frame pointer, set new stack fram pointer.
-    masm.push(X86Registers::ebp);
-    masm.move(X86Registers::esp, X86Registers::ebp);
+    masm.push(ebp);
+    masm.movl(Operand(esp), ebp);
 
     // Save non-volatile registers
-    masm.push(X86Registers::ebx);
-    masm.push(X86Registers::esi);
-    masm.push(X86Registers::edi);
+    masm.push(ebx);
+    masm.push(esi);
+    masm.push(edi);
 
     // eax <- 8*argc, eax is now the offset betwen argv and the last
     // parameter    --argc is in ebp + 12
-    masm.load32(Address(X86Registers::ebp, 12), X86Registers::eax);
-    masm.lshift32(Imm32(3), X86Registers::eax);
+    masm.movl(Operand(ebp, 12), eax);
+    masm.shll(Imm32(3), eax);
 
     // We need to ensure that the stack is aligned on a 12-byte boundary, so
     // inside the JIT function the stack is 16-byte aligned. Our stack right
@@ -82,60 +76,63 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     //   +argc * 8 for arguments
     //   +4 for pushing alignment
     //   +4 for pushing the return address
-    masm.move(X86Registers::esp, X86Registers::ecx);
-    masm.subPtr(X86Registers::eax, X86Registers::ecx);
-    masm.sub32(Imm32(8), X86Registers::ecx);
+    masm.movl(esp, ecx);
+    masm.subl(eax, ecx);
+    masm.subl(Imm32(8), ecx);
 
     // ecx = ecx & 15, holds alignment.
-    masm.andPtr(Imm32(15), X86Registers::ecx);
-    masm.subPtr(X86Registers::ecx, X86Registers::esp);
+    masm.andl(Imm32(15), ecx);
+    masm.subl(ecx, esp);
 
     /***************************************************************
     Loop over argv vector, push arguments onto stack in reverse order
     ***************************************************************/
 
     // eax -= sizeof(Value)
-    masm.sub32(Imm32(8), X86Registers::eax);
+    masm.subl(Imm32(8), eax);
 
     // ebx = argv   --argv pointer is in ebp + 16
-    masm.loadPtr(Address(X86Registers::ebp, 16), X86Registers::ebx);
+    masm.movl(Operand(ebp, 16), ebx);
 
     // eax = argv[8(argc-1)]  --eax now points to the last argument
-    masm.add32(X86Registers::ebx, X86Registers::eax);
+    masm.addl(ebx, eax);
 
     // while (eax >= ebx)  --while still looping through arguments
-    Label loopHeader = masm.label();
-    Jump loopCondition = masm.branch32(MacroAssembler::LessThan, X86Registers::eax, X86Registers::ebx);
+    Label header, done;
+    masm.bind(&header);
+
+    masm.cmpl(eax, ebx);
+    masm.j(Assembler::LessThan, &done);
 
     // Push what eax points to on stack, a Value is 2 words
-    masm.push(Address(X86Registers::eax, 4)); // Push data
-    masm.push(Address(X86Registers::eax, 0)); // Push type
+    masm.push(Operand(eax, 4));
+    masm.push(Operand(eax, 0));
 
     // eax -= 8  --move to previous argument
-    masm.sub32(Imm32(8), X86Registers::eax);
+    masm.subl(Imm32(8), eax);
 
     // end while
-    masm.jump(loopHeader);
-    loopCondition.linkTo(masm.label(), &masm);
+    masm.jmp(&header);
+    masm.bind(&done);
 
     // Save the stack size so we can remove arguments and alignment after the
     // call.
-    masm.load32(Address(X86Registers::ebp, 12), X86Registers::eax);
-    masm.lshift32(Imm32(3), X86Registers::eax);
-    masm.add32(X86Registers::eax, X86Registers::ecx);
-    masm.push(X86Registers::ecx);
+    masm.movl(Operand(ebp, 12), eax);
+    masm.shll(Imm32(3), eax);
+    masm.addl(eax, ecx);
+    masm.push(ecx);
 
     /***************************************************************
         Call passed-in code, get return value and fill in the
         passed in return value pointer
     ***************************************************************/
     // Call code  --code pointer is in ebp + 8
-    masm.call(Address(X86Registers::ebp, 8));
+    masm.call(Operand(ebp, 8));
 
     // Pop arguments off the stack.
     // eax <- 8*argc (size of all arugments we pushed on the stack)
-    masm.pop(X86Registers::eax);
-    masm.add32(X86Registers::eax, X86Registers::esp);
+    masm.pop(eax);
+    masm.addl(eax, esp);
 
     // |ebp| could have been clobbered by the inner function. For now, re-grab
     // |vp| directly off the stack:
@@ -149,24 +146,24 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     //  +8  ebx
     //  +4  esi
     //  +0  edi
-    masm.loadPtr(Address(X86Registers::esp, 32), X86Registers::eax);
-    masm.store32(X86Registers::ecx, Address(X86Registers::eax, 4)); // Store type
-    masm.store32(X86Registers::edx, Address(X86Registers::eax, 0)); // Store data
+    masm.movl(Operand(esp, 32), eax);
+    masm.movl(JSReturnReg_Type, Operand(eax, 4));
+    masm.movl(JSReturnReg_Data, Operand(eax, 0));
 
     /**************************************************************
         Return stack and registers to correct state
     **************************************************************/
 
     // Restore non-volatile registers
-    masm.pop(X86Registers::edi);
-    masm.pop(X86Registers::esi);
-    masm.pop(X86Registers::ebx);
+    masm.pop(edi);
+    masm.pop(esi);
+    masm.pop(ebx);
 
     // Restore old stack frame pointer
-    masm.pop(X86Registers::ebp);
+    masm.pop(ebp);
     masm.ret();
 
-    LinkerT<MacroAssembler> linker(masm);
+    Linker linker(masm);
     return linker.newCode(cx);
 }
 
