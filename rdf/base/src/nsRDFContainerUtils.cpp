@@ -462,14 +462,17 @@ RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResour
 PRBool
 RDFContainerUtilsImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType)
 {
-    if (!aDataSource || !aResource || !aType)
-        return NS_ERROR_NULL_POINTER;
+    if (!aDataSource || !aResource || !aType) {
+        NS_WARNING("Unexpected null argument");
+        return PR_FALSE;
+    }
 
     nsresult rv;
 
     PRBool result;
     rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, aType, PR_TRUE, &result);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv))
+      return PR_FALSE;
 
     return result;
 }
