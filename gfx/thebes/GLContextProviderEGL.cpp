@@ -1171,7 +1171,6 @@ public:
             } else {
                 mShaderType = RGBALayerProgramType;
             }
-            CreateBackingSurface(gfxIntSize(aSize.width, aSize.height));
         } else {
             // Convert RGB24 to either ARGB32 on mobile.  We can't
             // generate GL_RGB data, so we'll always have an alpha byte
@@ -1186,6 +1185,9 @@ public:
             // We currently always use BGRA type textures
             mShaderType = BGRALayerProgramType;
         }
+
+	// We resize here so we should have a valid buffer after creation
+        Resize(aSize);
     }
 
     virtual ~TextureImageEGL()
@@ -1399,9 +1401,15 @@ public:
             return;
 
         mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-        if (mBackingSurface) {
+	
+        // Try to generate a backin surface first if we have the ability
+        if (gUseBackingSurface) {
             CreateBackingSurface(gfxIntSize(aSize.width, aSize.height));
-        } else {
+        }
+
+        if (!mBackingSurface) {
+            // If we don't have a backing surface or failed to obtain one,
+            // use the GL Texture failsafe
             mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                                     0,
                                     GLFormatForImage(mUpdateFormat),
