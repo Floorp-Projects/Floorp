@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,62 +38,23 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "CodeGenerator-shared.h"
-#include "ion/MIRGenerator.h"
-#include "ion/IonFrames.h"
-#include "ion/IonLinker.h"
 
-using namespace js;
-using namespace js::ion;
+#ifndef jsion_macro_assembler_x86_h__
+#define jsion_macro_assembler_x86_h__
 
-CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
-  : gen(gen),
-    graph(graph),
-    frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE)),
-    framePushed_(0)
+#include "ion/shared/MacroAssembler-x86-shared.h"
+
+namespace js {
+namespace ion {
+
+class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
-    frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
-    frameStaticSize_ = frameClass_.frameSize();
-}
+};
 
-bool
-CodeGeneratorShared::generateBody()
-{
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        current = graph.getBlock(i);
-        for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
-            iter->accept(this);
-        }
-    }
-    return true;
-}
+typedef MacroAssemblerX86 MacroAssemblerSpecific;
 
-bool
-CodeGeneratorShared::generate()
-{
-    if (!generatePrologue())
-        return NULL;
-    if (!generateBody())
-        return NULL;
+} // namespace ion
+} // namespace js
 
-    Linker linker(masm);
-    IonCode *code = linker.newCode(GetIonContext()->cx);
-    if (!code)
-        return false;
-
-    if (!gen->script->ion) {
-        gen->script->ion= IonScript::New(GetIonContext()->cx);
-        if (!gen->script->ion)
-            return false;
-    }
-
-    gen->script->ion->setMethod(code);
-    return true;
-}
-
-bool
-CodeGeneratorShared::visitParameter(LParameter *param)
-{
-    return true;
-}
+#endif // jsion_macro_assembler_x86_h__
 

@@ -54,7 +54,7 @@ using namespace JSC;
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
-    Assembler masm;
+    MacroAssembler masm;
 
     // Save old stack frame pointer, set new stack frame pointer.
     masm.push(rbp);
@@ -81,8 +81,8 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     // is pushed. We push all args, then the number of bytes we pushed,
     // so if argc+1 is odd, then we need a word of padding
     masm.mov(ArgReg2, r12); // rsi has argc
-    masm.andl(Imm32(1), Operand(r12)); //r12 has parity of argc
-    masm.xorl(Imm32(1), Operand(r12)); //now r12 has inverse parity of argc (1 if argc is even)
+    masm.andl(Imm32(1), r12); //r12 has parity of argc
+    masm.xorl(Imm32(1), r12); //now r12 has inverse parity of argc (1 if argc is even)
     masm.shll(Imm32(3), r12); // final padding amount (either 8 or 0)
 
     masm.subq(r12, rsp); // put padding on the stack
@@ -117,7 +117,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.addq(ArgReg2, r12); // r12 = sizeof(padding) + sizeof(Value)*argc
     masm.push(r12); // Push on stack
 
-    masm.call(Operand(ArgReg1)); // Call function
+    masm.call(ArgReg1); // Call function
 
     masm.pop(r12); // Get the size of all args + padding we pushed on the stack
     masm.addq(r12, rsp); // Pop all those args and padding off of the stack
@@ -143,6 +143,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.pop(rbp);
     masm.ret();
 
-    LinkerT<Assembler> linker(masm);
+    Linker linker(masm);
     return linker.newCode(cx);
 }
+
