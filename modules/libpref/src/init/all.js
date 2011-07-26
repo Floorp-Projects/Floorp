@@ -1120,6 +1120,7 @@ pref("intl.hyphenation-alias.da-*", "da");
 pref("intl.hyphenation-alias.eo-*", "eo");
 pref("intl.hyphenation-alias.es-*", "es");
 pref("intl.hyphenation-alias.et-*", "et");
+pref("intl.hyphenation-alias.fr-*", "fr");
 pref("intl.hyphenation-alias.gl-*", "gl");
 pref("intl.hyphenation-alias.hr-*", "hr");
 pref("intl.hyphenation-alias.hsb-*", "hsb");
