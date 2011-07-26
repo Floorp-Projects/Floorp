@@ -60,7 +60,8 @@ C1Spewer::C1Spewer(MIRGraph &graph, JSScript *script)
 
 C1Spewer::~C1Spewer()
 {
-    fclose(spewout_);
+    if (spewout_)
+        fclose(spewout_);
 }
 
 void

@@ -47,6 +47,12 @@
 using namespace js;
 using namespace js::ion;
 
+JSONSpewer::~JSONSpewer()
+{
+    if (fp_)
+        fclose(fp_);
+}
+
 void
 JSONSpewer::property(const char *name)
 {

@@ -58,9 +58,12 @@ static const char *ChannelNames[] =
 bool
 IonSpewer::init()
 {
+#ifdef DEBUG
     c1Spewer.enable("/tmp/ion.cfg");
     if (!jsonSpewer.init("/tmp/ion.json"))
         return false;
+#endif
+
     jsonSpewer.beginFunction(function);
     return true;
 }
