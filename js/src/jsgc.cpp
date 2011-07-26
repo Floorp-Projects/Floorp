@@ -2202,7 +2202,6 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
             (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT))
         {
             compartment->freeLists.checkEmpty();
-            Probes::GCEndSweepPhase(compartment);
             if (callback)
                 JS_ALWAYS_TRUE(callback(cx, compartment, JSCOMPARTMENT_DESTROY));
             if (compartment->principals)
@@ -2338,6 +2337,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * unreachable compartments.
      */
     if (comp) {
+        Probes::GCStartSweepPhase(comp);
         comp->sweep(cx, 0);
         comp->finalizeObjectArenaLists(cx);
         GCTIMESTAMP(sweepObjectEnd);
@@ -2345,6 +2345,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         GCTIMESTAMP(sweepStringEnd);
         comp->finalizeShapeArenaLists(cx);
         GCTIMESTAMP(sweepShapeEnd);
+        Probes::GCEndSweepPhase(comp);
     } else {
         /*
          * Some sweeping is not compartment-specific. Start a NULL-compartment
