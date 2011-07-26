@@ -49,7 +49,7 @@ using namespace js::ion;
 
 LIRGraph::LIRGraph()
   : numVirtualRegisters_(0),
-    stackHeight_(0)
+    localSlotCount_(0)
 {
 }
 

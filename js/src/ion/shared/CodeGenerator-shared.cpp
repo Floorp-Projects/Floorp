@@ -46,7 +46,9 @@ using namespace js::ion;
 
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
   : gen(gen),
-    graph(graph)
+    graph(graph),
+    frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE)),
+    framePushed_(0)
 {
 }
 

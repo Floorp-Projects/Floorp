@@ -221,6 +221,7 @@ class MDefinition : public MNode
 #   define DEFINE_FLAG(flag) flag,
         MIR_FLAG_LIST(DEFINE_FLAG)
 #   undef DEFINE_FLAG
+        Total
     };
 
     void setBlock(MBasicBlock *block) {

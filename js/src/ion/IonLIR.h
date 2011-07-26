@@ -610,7 +610,7 @@ class LInstruction : public TempObject,
 class LInstructionVisitor
 {
   public:
-#define VISIT_INS(op) virtual bool visit##op(L##op *) { JS_NOT_REACHED("implement " #op); return false; }
+#define VISIT_INS(op) virtual bool visit##op(L##op *) { return true; JS_NOT_REACHED("implement " #op); return false; }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };
@@ -806,7 +806,9 @@ class LIRGraph
 {
     Vector<LBlock *, 16, IonAllocPolicy> blocks_;
     uint32 numVirtualRegisters_;
-    uint32 stackHeight_;
+
+    // Number of stack slots needed for local spills.
+    uint32 localSlotCount_;
 
   public:
     LIRGraph();
@@ -829,12 +831,11 @@ class LIRGraph
         // convenience for 0-based arrays.
         return numVirtualRegisters_ + 1;
     } 
-    void setStackHeight(uint32 stackHeight) {
-        // Note that the stack height is counted in slots.
-        stackHeight_ = stackHeight;
+    void setLocalSlotCount(uint32 localSlotCount) {
+        localSlotCount_ = localSlotCount;
     }
-    uint32 stackHeight() const {
-        return stackHeight_;
+    uint32 localSlotCount() const {
+        return localSlotCount_;
     }
 };
 
