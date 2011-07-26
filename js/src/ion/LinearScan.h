@@ -428,9 +428,7 @@ class LinearScanAllocator
     UnhandledQueue unhandled;
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
-#ifdef DEBUG
     InlineList<LiveInterval> handled;
-#endif
     RegisterSet freeRegs;
     CodePosition *freeUntilPos;
     CodePosition *nextUsePos;
