@@ -51,6 +51,7 @@ using namespace js::ion;
 MoveResolverX86::MoveResolverX86(CodeGenerator *codegen)
   : inCycle_(false),
     codegen(codegen),
+    masm(&codegen->masm),
     pushedAtCycle_(-1),
     pushedAtSpill_(-1),
     pushedAtDoubleSpill_(-1),
@@ -75,9 +76,8 @@ MoveResolverX86::setup(LMoveGroup *group)
 
         // No free registers to resolve a potential cycle, so reserve stack.
         if (cycleReg_ == InvalidReg || cycleFloatReg_ == InvalidFloatReg) {
-            codegen->masm.reserveStack(sizeof(double));
-            codegen->framePushed_ += sizeof(double);
-            pushedAtCycle_ = codegen->framePushed_;
+            masm->reserveStack(sizeof(double));
+            pushedAtCycle_ = masm->framePushed();
         }
     }
 
@@ -90,19 +90,19 @@ MoveResolverX86::setup(LMoveGroup *group)
 Operand
 MoveResolverX86::cycleSlot() const
 {
-    return Operand(StackPointer, codegen->framePushed_ - pushedAtCycle_);
+    return Operand(StackPointer, masm->framePushed() - pushedAtCycle_);
 }
 
 Operand
 MoveResolverX86::spillSlot() const
 {
-    return Operand(StackPointer, codegen->framePushed_ - pushedAtSpill_);
+    return Operand(StackPointer, masm->framePushed() - pushedAtSpill_);
 }
 
 Operand
 MoveResolverX86::doubleSpillSlot() const
 {
-    return Operand(StackPointer, codegen->framePushed_ - pushedAtDoubleSpill_);
+    return Operand(StackPointer, masm->framePushed() - pushedAtDoubleSpill_);
 }
 
 Register
@@ -121,9 +121,8 @@ MoveResolverX86::tempReg()
     // use actual heuristics later.
     spilledReg_ = Register::FromCode(2);
     if (pushedAtSpill_ == -1) {
-        codegen->masm.push(Operand(spilledReg_));
-        codegen->framePushed_ += STACK_SLOT_SIZE;
-        pushedAtSpill_ = codegen->framePushed_;
+        masm->Push(spilledReg_);
+        pushedAtSpill_ = masm->framePushed();
     } else {
         codegen->masm.mov(spilledReg_, spillSlot());
     }
@@ -146,9 +145,8 @@ MoveResolverX86::tempFloatReg()
     // use actual heuristics later.
     spilledFloatReg_ = FloatRegister::FromCode(7);
     if (pushedAtDoubleSpill_ == -1) {
-        codegen->masm.reserveStack(sizeof(double));
-        codegen->framePushed_ += sizeof(double);
-        pushedAtDoubleSpill_ = codegen->framePushed_;
+        masm->reserveStack(sizeof(double));
+        pushedAtDoubleSpill_ = masm->framePushed();
     }
     codegen->masm.movsd(spilledFloatReg_, doubleSpillSlot());
     return spilledFloatReg_;
@@ -329,7 +327,6 @@ MoveResolverX86::finish()
     if (pushedAtCycle_ != -1)
         decrement += sizeof(double);
 
-    codegen->masm.freeStack(decrement);
-    codegen->framePushed_ -= decrement;
+    masm->freeStack(decrement);
 }
 

@@ -56,6 +56,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     }
 
   protected:
+    Label *returnLabel_;
+
     inline Operand ToOperand(const LAllocation &a) {
         if (a.isGeneralReg())
             return Operand(a.toGeneralReg()->reg());
@@ -79,6 +81,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
 
     bool generatePrologue();
+    bool generateEpilogue();
 
   public:
     virtual bool visitLabel(LLabel *label);
