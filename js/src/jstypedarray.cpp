@@ -158,7 +158,7 @@ AllocateSlots(JSContext *cx, JSObject *obj, uint32 size)
         Value *tmpslots = (Value *)cx->calloc_(bytes);
         if (!tmpslots)
             return false;
-        obj->setSlotsPtr(tmpslots);
+        obj->slots = tmpslots;
         /*
          * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
          * |capacity * sizeof(Value)| may underestimate the size by up to
@@ -166,9 +166,9 @@ AllocateSlots(JSContext *cx, JSObject *obj, uint32 size)
          */
         obj->capacity = bytes / sizeof(Value);
     } else {
-        memset(obj->getSlotsPtr(), 0, bytes);
+        memset(obj->slots, 0, bytes);
     }
-    *((uint32*)obj->getSlotsPtr()) = size;
+    *((uint32*)obj->slots) = size;
     return true;
 }
 
@@ -1322,7 +1322,7 @@ class TypedArrayTemplate
         if (ar->isDenseArray() && ar->getDenseArrayCapacity() >= len) {
             JS_ASSERT(ar->getArrayLength() == len);
 
-            const Value *src = ar->getDenseArrayElements();
+            Value *src = ar->getDenseArrayElements();
 
             for (uintN i = 0; i < len; ++i)
                 *dest++ = nativeFromValue(cx, *src++);
@@ -1842,13 +1842,14 @@ js_IsArrayBuffer(JSObject *obj)
 JSUint32
 JS_GetArrayBufferByteLength(JSObject *obj)
 {
-    return ArrayBuffer::getByteLength(obj);
+    return *((JSUint32*) obj->slots);
 }
 
 uint8 *
 JS_GetArrayBufferData(JSObject *obj)
 {
-    return ArrayBuffer::getDataOffset(obj);
+    uint64 *base = ((uint64*)obj->slots) + 1;
+    return (uint8*) base;
 }
 
 JS_FRIEND_API(JSBool)

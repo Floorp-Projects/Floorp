@@ -1037,7 +1037,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
                                           NULL, NULL);
         if (!proto)
             return NULL;
-        JS_ASSERT(proto->getPrivate() == NULL);
+        JS_ASSERT(proto->privateData == NULL);
 
         if (i == JSEXN_ERR)
             error_proto = proto;

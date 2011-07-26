@@ -444,7 +444,7 @@ stubs::GetElem(VMFrame &f)
 
             if (idx < obj->getArrayLength() &&
                 idx < obj->getDenseArrayCapacity()) {
-                copyFrom = &obj->getDenseArrayElement(idx);
+                copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
             }
@@ -453,7 +453,7 @@ stubs::GetElem(VMFrame &f)
             ArgumentsObject *argsobj = obj->asArguments();
 
             if (arg < argsobj->initialLength()) {
-                copyFrom = &argsobj->element(arg);
+                copyFrom = argsobj->addressOfElement(arg);
                 if (!copyFrom->isMagic()) {
                     if (StackFrame *afp = (StackFrame *) argsobj->getPrivate())
                         copyFrom = &afp->canonicalActualArg(arg);
@@ -1546,13 +1546,13 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
     if (!atom) {
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            const Value &rval = obj->nativeGetSlot(slot);
+            Value &rref = obj->nativeGetSlotRef(slot);
             int32_t tmp;
-            if (JS_LIKELY(rval.isInt32() && CanIncDecWithoutOverflow(tmp = rval.toInt32()))) {
+            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
                 int32_t inc = tmp + N;
                 if (!POST)
                     tmp = inc;
-                obj->nativeSetSlot(slot, Int32Value(inc));
+                rref.getInt32Ref() = inc;
                 f.regs.sp[0].setInt32(tmp);
                 return true;
             }
