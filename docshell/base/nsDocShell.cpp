@@ -1335,9 +1335,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     PRUint32 selfBusy = BUSY_FLAGS_NONE;
                     parentDS->GetBusyFlags(&parentBusy);                    
                     GetBusyFlags(&selfBusy);
-                    if (((parentBusy & BUSY_FLAGS_BUSY) ||
-                         (selfBusy & BUSY_FLAGS_BUSY)) &&
-                        shEntry) {
+                    if (parentBusy & BUSY_FLAGS_BUSY ||
+                        selfBusy & BUSY_FLAGS_BUSY) {
                         loadType = LOAD_NORMAL_REPLACE;
                         shEntry = nsnull; 
                     }
