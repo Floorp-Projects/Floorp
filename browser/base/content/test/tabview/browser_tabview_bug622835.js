@@ -11,12 +11,10 @@ function onTabViewShown(win) {
   let contentWindow = win.TabView.getContentWindow();
 
   let finishTest = function () {
-    win.addEventListener('tabviewhidden', function () {
-      win.removeEventListener('tabviewhidden', arguments.callee, false);
+    hideTabView(function () {
       win.close();
       finish();
-    }, false);
-    win.TabView.hide();
+    }, win);
   }
 
   // do not let the group arrange itself

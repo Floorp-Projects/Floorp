@@ -71,12 +71,12 @@ function part2(win) {
     // switch the selected tab to new tab
     win.gBrowser.selectedTab = newTab;
 
-    win.addEventListener("tabviewhidden", function () {
-      win.removeEventListener("tabviewhidden", arguments.callee, false);
+    whenTabViewIsHidden(function () {
       is(win.gBrowser.selectedTab, newTab, "The seleted tab should be the same as before (new tab)");
        win.close();
        finish();
-    }, false);
+    });
+
     // show tabview
     EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, win);
     // hide tabview

@@ -8,16 +8,14 @@ function test() {
   let windowOne = openDialog(location, "", "chrome,all,dialog=no", "data:text/html,");
   let windowTwo;
 
-  windowOne.addEventListener("load", function() {
-    windowOne.removeEventListener("load", arguments.callee, false);
-    windowOne.gBrowser.selectedBrowser.addEventListener("load", function() {
-      windowOne.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+  whenWindowLoaded(windowOne, function () {
+    windowOne.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
+      windowOne.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
 
       windowTwo = openDialog(location, "", "chrome,all,dialog=no", "http://mochi.test:8888/");
-      windowTwo.addEventListener("load", function() {
-        windowTwo.removeEventListener("load", arguments.callee, false);
-        windowTwo.gBrowser.selectedBrowser.addEventListener("load", function() {
-          windowTwo.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+      whenWindowLoaded(windowTwo, function () {
+        windowTwo.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
+          windowTwo.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
 
           newWindows = [ windowOne, windowTwo ];
 
@@ -26,9 +24,9 @@ function test() {
           ok(!TabView.isVisible(), "Tab View is hidden");
           TabView.toggle();
         }, true);
-      }, false);
+      });
     }, true);
-  }, false);
+  });
 }
 
 function onTabViewWindowLoaded() {
