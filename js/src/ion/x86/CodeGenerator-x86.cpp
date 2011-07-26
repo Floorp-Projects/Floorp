@@ -137,7 +137,7 @@ CodeGenerator::visitReturn(LReturn *ret)
     JS_ASSERT(ToRegister(type) == JSReturnReg_Type);
     JS_ASSERT(ToRegister(payload) == JSReturnReg_Data);
 #endif
-    masm.freeStack(frameDepth_);
+    masm.freeStack(frameStaticSize_);
     masm.ret();
     return true;
 }
