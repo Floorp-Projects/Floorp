@@ -135,7 +135,7 @@ CodeGenerator::visitReturn(LReturn *ret)
     LAllocation *result = ret->getOperand(0);
     JS_ASSERT(ToRegister(result) == JSReturnReg);
 #endif
-    masm.freeStack(frameDepth_);
+    masm.freeStack(frameStaticSize_);
     masm.ret();
     return true;
 }
