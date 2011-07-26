@@ -2276,7 +2276,9 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
 
         NS_LossyConvertUTF16toASCII gf(genericFamily);
         if (generic) {
-            fc(family, gf, PR_FALSE, closure);
+            ForEachFontInternal(family, groupAtom, PR_FALSE,
+                                aResolveFontName, PR_FALSE,
+                                fc, closure);
         } else if (!family.IsEmpty()) {
             if (aResolveFontName) {
                 ResolveData data(fc, gf, aUseFontSet, closure);
