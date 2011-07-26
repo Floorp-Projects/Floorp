@@ -77,6 +77,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
+    MoveGroupResolver::MoveOperand toMoveOperand(const LAllocation *a);
+
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
 
@@ -88,6 +90,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitBitOp(LBitOp *ins);
+    virtual bool visitMoveGroup(LMoveGroup *group);
 };
 
 } // ion

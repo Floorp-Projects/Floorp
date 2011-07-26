@@ -38,71 +38,78 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if defined(JS_CPU_X86)
-# include "ion/x86/CodeGenerator-x86.h"
-#else
-# include "ion/x64/CodeGenerator-x64.h"
-#endif
-#include "CodeGenerator-shared-inl.h"
+
+#include "MoveResolver-x86-shared.h"
 
 using namespace js;
 using namespace js::ion;
 
-MoveResolverX86::MoveResolverX86(CodeGenerator *codegen)
+MoveResolverX86::MoveResolverX86(MacroAssembler &masm)
   : inCycle_(false),
-    codegen(codegen),
-    masm(&codegen->masm),
+    masm(masm),
     pushedAtCycle_(-1),
     pushedAtSpill_(-1),
     pushedAtDoubleSpill_(-1),
     spilledReg_(InvalidReg),
     spilledFloatReg_(InvalidFloatReg)
 {
-}
-
-MoveResolverX86::~MoveResolverX86()
-{
+    pushedAtStart_ = masm.framePushed();
 }
 
 void
-MoveResolverX86::setup(LMoveGroup *group)
+MoveResolverX86::emit(const MoveGroupResolver &moves, const RegisterSet &freeRegs)
 {
-    pushedAtCycle_ = -1;
-    freeRegs_ = group->freeRegs();
+    freeRegs_ = freeRegs;
 
-    if (codegen->moveGroupResolver.hasCycles()) {
+    if (moves.hasCycles()) {
         cycleReg_ = freeRegs_.empty(false) ? InvalidReg : freeRegs_.takeGeneral();
         cycleFloatReg_ = freeRegs_.empty(true) ? InvalidFloatReg : freeRegs_.takeFloat();
 
         // No free registers to resolve a potential cycle, so reserve stack.
         if (cycleReg_ == InvalidReg || cycleFloatReg_ == InvalidFloatReg) {
-            masm->reserveStack(sizeof(double));
-            pushedAtCycle_ = masm->framePushed();
+            masm.reserveStack(sizeof(double));
+            pushedAtCycle_ = masm.framePushed();
         }
     }
 
-    spilledReg_ = InvalidReg;
-    spilledFloatReg_ = InvalidFloatReg;
-    pushedAtSpill_ = -1;
-    pushedAtDoubleSpill_ = -1;
+    for (size_t i = 0; i < moves.numMoves(); i++)
+        emit(moves.getMove(i));
+}
+
+MoveResolverX86::~MoveResolverX86()
+{
+    assertDone();
 }
 
 Operand
 MoveResolverX86::cycleSlot() const
 {
-    return Operand(StackPointer, masm->framePushed() - pushedAtCycle_);
+    return Operand(StackPointer, masm.framePushed() - pushedAtCycle_);
 }
 
 Operand
 MoveResolverX86::spillSlot() const
 {
-    return Operand(StackPointer, masm->framePushed() - pushedAtSpill_);
+    return Operand(StackPointer, masm.framePushed() - pushedAtSpill_);
 }
 
 Operand
 MoveResolverX86::doubleSpillSlot() const
 {
-    return Operand(StackPointer, masm->framePushed() - pushedAtDoubleSpill_);
+    return Operand(StackPointer, masm.framePushed() - pushedAtDoubleSpill_);
+}
+
+Operand
+MoveResolverX86::toOperand(const MoveOperand &operand) const
+{
+    JS_ASSERT(operand.isMemory());
+    if (operand.base() != StackPointer)
+        return Operand(operand.base(), operand.disp());
+
+    JS_ASSERT(operand.disp() >= 0);
+
+    // Otherwise, the stack offset may need to be adjusted.
+    return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
 }
 
 Register
@@ -121,10 +128,10 @@ MoveResolverX86::tempReg()
     // use actual heuristics later.
     spilledReg_ = Register::FromCode(2);
     if (pushedAtSpill_ == -1) {
-        masm->Push(spilledReg_);
-        pushedAtSpill_ = masm->framePushed();
+        masm.Push(spilledReg_);
+        pushedAtSpill_ = masm.framePushed();
     } else {
-        codegen->masm.mov(spilledReg_, spillSlot());
+        masm.mov(spilledReg_, spillSlot());
     }
     return spilledReg_;
 }
@@ -145,15 +152,15 @@ MoveResolverX86::tempFloatReg()
     // use actual heuristics later.
     spilledFloatReg_ = FloatRegister::FromCode(7);
     if (pushedAtDoubleSpill_ == -1) {
-        masm->reserveStack(sizeof(double));
-        pushedAtDoubleSpill_ = masm->framePushed();
+        masm.reserveStack(sizeof(double));
+        pushedAtDoubleSpill_ = masm.framePushed();
     }
-    codegen->masm.movsd(spilledFloatReg_, doubleSpillSlot());
+    masm.movsd(spilledFloatReg_, doubleSpillSlot());
     return spilledFloatReg_;
 }
 
 void
-MoveResolverX86::breakCycle(const LAllocation *from, const LAllocation *to)
+MoveResolverX86::breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -161,31 +168,31 @@ MoveResolverX86::breakCycle(const LAllocation *from, const LAllocation *to)
     //
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
-    if (to->isDouble()) {
+    if (to.isDouble()) {
         if (cycleFloatReg_ != InvalidFloatReg) {
-            codegen->masm.movsd(codegen->ToOperand(to), cycleFloatReg_);
-        } else if (to->isMemory()) {
+            masm.movsd(toOperand(to), cycleFloatReg_);
+        } else if (to.isMemory()) {
             FloatRegister temp = tempFloatReg();
-            codegen->masm.movsd(codegen->ToOperand(to), temp);
-            codegen->masm.movsd(temp, cycleSlot());
+            masm.movsd(toOperand(to), temp);
+            masm.movsd(temp, cycleSlot());
         } else {
-            codegen->masm.movsd(ToFloatRegister(to), cycleSlot());
+            masm.movsd(to.floatReg(), cycleSlot());
         }
     } else {
         if (cycleReg_ != InvalidReg) {
-            codegen->masm.mov(codegen->ToOperand(to), cycleReg_);
-        } else if (to->isMemory()) {
+            masm.mov(toOperand(to), cycleReg_);
+        } else if (to.isMemory()) {
             Register temp = tempReg();
-            codegen->masm.mov(codegen->ToOperand(to), temp);
-            codegen->masm.mov(temp, cycleSlot());
+            masm.mov(toOperand(to), temp);
+            masm.mov(temp, cycleSlot());
         } else {
-            codegen->masm.mov(ToRegister(to), cycleSlot());
+            masm.mov(to.reg(), cycleSlot());
         }
     }
 }
 
 void
-MoveResolverX86::completeCycle(const LAllocation *from, const LAllocation *to)
+MoveResolverX86::completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -193,109 +200,110 @@ MoveResolverX86::completeCycle(const LAllocation *from, const LAllocation *to)
     //
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
-    if (from->isDouble()) {
+    if (kind == Move::DOUBLE) {
         if (cycleFloatReg_ != InvalidFloatReg) {
-            codegen->masm.movsd(cycleFloatReg_, codegen->ToOperand(to));
-        } else if (to->isMemory()) {
+            masm.movsd(cycleFloatReg_, toOperand(to));
+        } else if (to.isMemory()) {
             FloatRegister temp = tempFloatReg();
-            codegen->masm.movsd(cycleSlot(), temp);
-            codegen->masm.movsd(temp, codegen->ToOperand(to));
+            masm.movsd(cycleSlot(), temp);
+            masm.movsd(temp, toOperand(to));
         } else {
-            codegen->masm.movsd(cycleSlot(), ToFloatRegister(to));
+            masm.movsd(cycleSlot(), to.floatReg());
         }
     } else {
         if (cycleReg_ != InvalidReg) {
-            codegen->masm.mov(cycleReg_, codegen->ToOperand(to));
-        } else if (to->isMemory()) {
+            masm.mov(cycleReg_, toOperand(to));
+        } else if (to.isMemory()) {
             Register temp = tempReg();
-            codegen->masm.mov(cycleSlot(), temp);
-            codegen->masm.mov(temp, codegen->ToOperand(to));
+            masm.mov(cycleSlot(), temp);
+            masm.mov(temp, toOperand(to));
         } else {
-            codegen->masm.mov(cycleSlot(), ToRegister(to));
+            masm.mov(cycleSlot(), to.reg());
         }
     }
 }
 
 void
-MoveResolverX86::emitMove(const LAllocation *from, const LAllocation *to)
+MoveResolverX86::emitMove(const MoveOperand &from, const MoveOperand &to)
 {
-    if (from->isGeneralReg()) {
-        if (ToRegister(from) == spilledReg_) {
+    if (from.isGeneralReg()) {
+        if (from.reg() == spilledReg_) {
             // If the source is a register that has been spilled, make sure
             // to load the source back into that register.
-            codegen->masm.mov(spillSlot(), spilledReg_);
+            masm.mov(spillSlot(), spilledReg_);
             spilledReg_ = InvalidReg;
         }
-        codegen->masm.mov(ToRegister(from), codegen->ToOperand(to));
-    } else if (to->isGeneralReg()) {
-        if (ToRegister(to) == spilledReg_) {
+        masm.mov(from.reg(), toOperand(to));
+    } else if (to.isGeneralReg()) {
+        if (to.reg() == spilledReg_) {
             // If the destination is the spilled register, make sure we
             // don't re-clobber its value.
             spilledReg_ = InvalidReg;
         }
-        codegen->masm.mov(codegen->ToOperand(from), ToRegister(to));
+        masm.mov(toOperand(from), to.reg());
     } else {
         // Memory to memory gpr move.
         Register reg = tempReg();
-        codegen->masm.mov(codegen->ToOperand(from), reg);
-        codegen->masm.mov(reg, codegen->ToOperand(to));
+        masm.mov(toOperand(from), reg);
+        masm.mov(reg, toOperand(to));
     }
 }
 
 void
-MoveResolverX86::emitDoubleMove(const LAllocation *from, const LAllocation *to)
+MoveResolverX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 {
-    if (from->isFloatReg()) {
-        if (ToFloatRegister(from) == spilledFloatReg_) {
+    if (from.isFloatReg()) {
+        if (from.floatReg() == spilledFloatReg_) {
             // If the source is a register that has been spilled, make
             // sure to load the source back into that register.
-            codegen->masm.movsd(doubleSpillSlot(), spilledFloatReg_);
+            masm.movsd(doubleSpillSlot(), spilledFloatReg_);
             spilledFloatReg_ = InvalidFloatReg;
         }
-        codegen->masm.movsd(ToFloatRegister(from), codegen->ToOperand(to));
-    } else if (to->isFloatReg()) {
-        if (ToFloatRegister(to) == spilledFloatReg_) {
+        masm.movsd(from.floatReg(), toOperand(to));
+    } else if (to.isFloatReg()) {
+        if (to.floatReg() == spilledFloatReg_) {
             // If the destination is the spilled register, make sure we
             // don't re-clobber its value.
             spilledFloatReg_ = InvalidFloatReg;
         }
-        codegen->masm.movsd(codegen->ToOperand(from), ToFloatRegister(to));
+        masm.movsd(toOperand(from), to.floatReg());
     } else {
         // Memory to memory float move.
         FloatRegister reg = tempFloatReg();
-        codegen->masm.movsd(codegen->ToOperand(from), reg);
-        codegen->masm.movsd(reg, codegen->ToOperand(to));
+        masm.movsd(toOperand(from), reg);
+        masm.movsd(reg, toOperand(to));
     }
 }
 
 void
-MoveResolverX86::assertValidMove(const LAllocation *from, const LAllocation *to)
+MoveResolverX86::assertValidMove(const MoveOperand &from, const MoveOperand &to)
 {
-    JS_ASSERT(from->isDouble() == to->isDouble());
-    JS_ASSERT_IF(from->isGeneralReg(), !freeRegs_.has(ToRegister(from)));
-    JS_ASSERT_IF(to->isGeneralReg(), !freeRegs_.has(ToRegister(to)));
-    JS_ASSERT_IF(from->isFloatReg(), !freeRegs_.has(ToFloatRegister(from)));
-    JS_ASSERT_IF(to->isFloatReg(), !freeRegs_.has(ToFloatRegister(to)));
+    JS_ASSERT_IF(from.isGeneralReg(), !freeRegs_.has(from.reg()));
+    JS_ASSERT_IF(to.isGeneralReg(), !freeRegs_.has(to.reg()));
+    JS_ASSERT_IF(from.isFloatReg(), !freeRegs_.has(from.floatReg()));
+    JS_ASSERT_IF(to.isFloatReg(), !freeRegs_.has(to.floatReg()));
 }
 
 void
-MoveResolverX86::emit(const MoveGroupResolver::Move &move)
+MoveResolverX86::emit(const Move &move)
 {
-    const LAllocation *from = move.from();
-    const LAllocation *to = move.to();
+    const MoveOperand &from = move.from();
+    const MoveOperand &to = move.to();
+
+    assertValidMove(from, to);
     
     if (move.inCycle()) {
         if (inCycle_) {
-            completeCycle(from, to);
+            completeCycle(from, to, move.kind());
             inCycle_ = false;
             return;
         }
 
         inCycle_ = true;
-        completeCycle(from, to);
+        completeCycle(from, to, move.kind());
     }
     
-    if (!from->isDouble())
+    if (move.kind() == Move::DOUBLE)
         emitMove(from, to);
     else
         emitDoubleMove(from, to);
@@ -312,21 +320,11 @@ MoveResolverX86::finish()
 {
     assertDone();
 
-    int32 decrement = 0;
+    if (pushedAtDoubleSpill_ != -1 && spilledFloatReg_ != InvalidFloatReg)
+        masm.movsd(doubleSpillSlot(), spilledFloatReg_);
+    if (pushedAtSpill_ != -1 && spilledReg_ != InvalidReg)
+        masm.mov(spillSlot(), spilledReg_);
 
-    if (pushedAtDoubleSpill_ != -1) {
-        if (spilledFloatReg_ != InvalidFloatReg)
-            codegen->masm.movsd(doubleSpillSlot(), spilledFloatReg_);
-        decrement += sizeof(double);
-    }
-    if (pushedAtSpill_ != -1) {
-        if (spilledReg_ != InvalidReg)
-            codegen->masm.mov(spillSlot(), spilledReg_);
-        decrement += STACK_SLOT_SIZE;
-    }
-    if (pushedAtCycle_ != -1)
-        decrement += sizeof(double);
-
-    masm->freeStack(decrement);
+    masm.freeStack(masm.framePushed() - pushedAtStart_);
 }
 
