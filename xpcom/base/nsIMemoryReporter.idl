@@ -136,10 +136,9 @@ interface nsIMemoryReporter : nsISupports
    *
    *  - BYTES: The amount contains a number of bytes.
    *
-   *  - COUNT: The amount contains the cumulative number of times some event
-   *    has occurred since the application started up.  For instance, a
-   *    reporter reporting the number of page faults since startup should have
-   *    units UNITS_COUNT.
+   *  - COUNT: The amount is an instantaneous count of things currently in
+   *    existence.  For instance, the number of tabs currently open would have
+   *    units COUNT.
    *
    *  - COUNT_CUMULATIVE: The amount contains the number of times some event
    *    has occurred since the application started up.  For instance, the
