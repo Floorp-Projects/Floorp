@@ -44,7 +44,7 @@
 
 #include "ion/IonLIR.h"
 #include "ion/MoveGroupResolver.h"
-#include "ion/IonLinker.h"
+#include "ion/IonMacroAssembler.h"
 #include "ion/IonFrames.h"
 
 namespace js {
@@ -53,7 +53,7 @@ namespace ion {
 class CodeGeneratorShared : public LInstructionVisitor
 {
   protected:
-    Assembler masm;
+    MacroAssembler masm;
     MIRGenerator *gen;
     LIRGraph &graph;
     LBlock *current;
