@@ -2162,18 +2162,24 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     if(JSID_IS_VOID(mStrIDs[0]))
     {
         JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
-        JSAutoRequest ar(cx);
-        for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
         {
-            JSString* str = JS_InternString(cx, mStrings[i]);
-            if(!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i]))
+            // Scope the JSAutoRequest so it goes out of scope before calling
+            // xpc::dom::DefineStaticJSVals.
+            JSAutoRequest ar(cx);
+            for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
             {
-                mStrIDs[0] = JSID_VOID;
-                ok = JS_FALSE;
-                break;
+                JSString* str = JS_InternString(cx, mStrings[i]);
+                if(!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i]))
+                {
+                    mStrIDs[0] = JSID_VOID;
+                    ok = JS_FALSE;
+                    break;
+                }
+                mStrJSVals[i] = STRING_TO_JSVAL(str);
             }
-            mStrJSVals[i] = STRING_TO_JSVAL(str);
         }
+
+        ok = xpc::dom::DefineStaticJSVals(cx);
     }
     if (!ok)
         return JS_FALSE;
