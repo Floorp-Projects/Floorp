@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,61 +38,53 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "CodeGenerator-shared.h"
-#include "ion/MIRGenerator.h"
-#include "ion/IonFrames.h"
 
-using namespace js;
-using namespace js::ion;
+#ifndef jsion_frames_h__
+#define jsion_frames_h__
 
-CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
-  : gen(gen),
-    graph(graph),
-    frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE)),
-    framePushed_(0)
+namespace js {
+namespace ion {
+
+
+// Ion frames have a few important numbers associated with them:
+//      Local depth:    The number of bytes required to spill local variables.
+//      Argument depth: The number of bytes required to push arguments and make
+//                      a function call.
+//      Slack:          A frame may temporarily use extra stack to resolve cycles.
+//
+// The (local + argument) depth determines the "fixed frame size". The fixed
+// frame size is the distance between the stack pointer and the frame header.
+// Thus, fixed >= (local + argument).
+//
+// In order to compress guards, we create shared jump tables that recover the
+// script from the stack and recover a snapshot pointer based on which jump was
+// taken. Thus, we create a jump table for each fixed frame size.
+//
+// Jump tables are big. To control the amount of jump tables we generate, each
+// platform chooses how to segregate stack size classes based on its
+// architecture.
+class FrameSizeClass
 {
-    frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
-    frameStaticSize_ = frameClass_.frameSize();
-}
+    uint32 class_;
 
-bool
-CodeGeneratorShared::generateBody()
-{
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        current = graph.getBlock(i);
-        for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
-            iter->accept(this);
-        }
+    explicit FrameSizeClass(uint32 class_) : class_(class_)
+    { }
+  
+  public:
+    FrameSizeClass()
+    { }
+
+    static FrameSizeClass FromDepth(uint32 frameDepth);
+
+    uint32 frameSize() const;
+
+    uint32 classId() const {
+        return class_;
     }
-    return true;
+};
+
+}
 }
 
-bool
-CodeGeneratorShared::generate()
-{
-    if (!generatePrologue())
-        return NULL;
-    if (!generateBody())
-        return NULL;
-
-    Linker linker(masm);
-    IonCode *code = linker.newCode(GetIonContext()->cx);
-    if (!code)
-        return false;
-
-    if (!gen->script->ion) {
-        gen->script->ion= IonScript::New(GetIonContext()->cx);
-        if (!gen->script->ion)
-            return false;
-    }
-
-    gen->script->ion->setMethod(code);
-    return true;
-}
-
-bool
-CodeGeneratorShared::visitParameter(LParameter *param)
-{
-    return true;
-}
+#endif // jsion_frames_h__
 
