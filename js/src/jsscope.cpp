@@ -587,7 +587,7 @@ JSObject::checkShapeConsistency()
         if (shape->hasTable()) {
             PropertyTable *table = shape->getTable();
             for (uint32 fslot = table->freelist; fslot != SHAPE_INVALID_SLOT;
-                 fslot = getSlot(fslot).toPrivateUint32()) {
+                 fslot = getSlotRef(fslot).toPrivateUint32()) {
                 JS_ASSERT(fslot < shape->slotSpan);
             }
 
@@ -906,7 +906,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
         if (oldSlot < shape->slotSpan)
             freeSlot(cx, oldSlot);
         else
-            setSlot(oldSlot, UndefinedValue());
+            getSlotRef(oldSlot).setUndefined();
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 
@@ -1102,7 +1102,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
                      * freeSlot and it is not a reserved slot.
                      */
                     if (hadSlot && !addedToFreelist && JSSLOT_FREE(clasp) <= shape->slot) {
-                        setSlot(shape->slot, PrivateUint32Value(table->freelist));
+                        getSlotRef(shape->slot).setPrivateUint32(table->freelist);
                         table->freelist = shape->slot;
                     }
                 }

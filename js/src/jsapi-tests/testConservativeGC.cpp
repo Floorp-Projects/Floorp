@@ -52,7 +52,7 @@ bool checkObjectFields(JSObject *savedCopy, JSObject *obj)
      * doing memcmp.
      */
     savedCopy->objShape = obj->objShape;
-    savedCopy->setSlotsPtr(obj->getSlotsPtr());
+    savedCopy->slots = obj->slots;
     CHECK(!memcmp(savedCopy, obj, sizeof(*obj)));
     return true;
 }

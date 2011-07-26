@@ -3274,13 +3274,13 @@ BEGIN_CASE(JSOP_GNAMEDEC)
         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            const Value &rref = obj->nativeGetSlot(slot);
+            Value &rref = obj->nativeGetSlotRef(slot);
             int32_t tmp;
             if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
                 int32_t inc = tmp + ((js_CodeSpec[op].format & JOF_INC) ? 1 : -1);
                 if (!(js_CodeSpec[op].format & JOF_POST))
                     tmp = inc;
-                obj->nativeSetSlot(slot, Int32Value(inc));
+                rref.getInt32Ref() = inc;
                 PUSH_INT32(tmp);
                 len = JSOP_INCNAME_LENGTH;
                 DO_NEXT_OP(len);
@@ -3853,7 +3853,7 @@ BEGIN_CASE(JSOP_GETELEM)
             jsuint idx = jsuint(i);
 
             if (idx < obj->getDenseArrayCapacity()) {
-                copyFrom = &obj->getDenseArrayElement(idx);
+                copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
             }
@@ -3862,7 +3862,7 @@ BEGIN_CASE(JSOP_GETELEM)
             ArgumentsObject *argsobj = obj->asArguments();
 
             if (arg < argsobj->initialLength()) {
-                copyFrom = &argsobj->element(arg);
+                copyFrom = argsobj->addressOfElement(arg);
                 if (!copyFrom->isMagic(JS_ARGS_HOLE)) {
                     if (StackFrame *afp = reinterpret_cast<StackFrame *>(argsobj->getPrivate()))
                         copyFrom = &afp->canonicalActualArg(arg);

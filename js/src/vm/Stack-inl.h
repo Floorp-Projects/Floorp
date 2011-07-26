@@ -600,10 +600,9 @@ ArgumentsObject::getElements(uint32 start, uint32 count, Value *vp)
 
     /* If there's no stack frame for this, argument values are in elements(). */
     if (!fp) {
-        const Value *srcbeg = elements() + start;
-        const Value *srcend = srcbeg + count;
-        const Value *src = srcbeg;
-        for (Value *dst = vp; src < srcend; ++dst, ++src) {
+        Value *srcbeg = elements() + start;
+        Value *srcend = srcbeg + count;
+        for (Value *dst = vp, *src = srcbeg; src < srcend; ++dst, ++src) {
             if (src->isMagic(JS_ARGS_HOLE))
                 return false;
             *dst = *src;

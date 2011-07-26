@@ -196,8 +196,8 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
          * If there are callbacks, make sure that the CSP callback is installed
          * and that it permits runtime code generation, then cache the result.
          */
-        v = BooleanValue((!callbacks || !callbacks->contentSecurityPolicyAllows) ||
-                         callbacks->contentSecurityPolicyAllows(cx));
+        v.setBoolean((!callbacks || !callbacks->contentSecurityPolicyAllows) ||
+                     callbacks->contentSecurityPolicyAllows(cx));
     }
     return !v.isFalse();
 }

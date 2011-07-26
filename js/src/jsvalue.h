@@ -852,14 +852,6 @@ PrivateValue(void *ptr)
     return v;
 }
 
-static JS_ALWAYS_INLINE Value
-PrivateUint32Value(uint32 ui)
-{
-    Value v;
-    v.setPrivateUint32(ui);
-    return v;
-}
-
 static JS_ALWAYS_INLINE void
 ClearValueRange(Value *vec, uintN len, bool useHoles)
 {
