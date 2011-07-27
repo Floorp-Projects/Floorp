@@ -125,6 +125,10 @@ Mark(JSTracer *trc, T *thing)
     if (rt->gcCheckCompartment && thing->compartment() != rt->gcCheckCompartment &&
         thing->compartment() != rt->atomsCompartment)
     {
+        volatile unsigned char dbg[sizeof(T) + 2];
+        dbg[0] = 0xab;
+        dbg[1] = 0xcd;
+        volatile_memcpy(dbg + 2, thing, sizeof(T));
         JS_Assert("compartment mismatch in GC", __FILE__, __LINE__);
     }
 
