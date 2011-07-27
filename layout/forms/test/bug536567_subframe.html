@@ -9,6 +9,9 @@
 <script type="text/javascript">
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function MockFilePicker() { };

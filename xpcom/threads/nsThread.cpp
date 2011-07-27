@@ -312,6 +312,20 @@ nsThread::nsThread()
   , mPriority(PRIORITY_NORMAL)
   , mThread(nsnull)
   , mRunningEvent(0)
+  , mStackSize(0)
+  , mShutdownContext(nsnull)
+  , mShutdownRequired(PR_FALSE)
+  , mEventsAreDoomed(PR_FALSE)
+{
+}
+
+nsThread::nsThread(PRUint32 aStackSize)
+  : mLock("nsThread.mLock")
+  , mEvents(&mEventsRoot)
+  , mPriority(PRIORITY_NORMAL)
+  , mThread(nsnull)
+  , mRunningEvent(0)
+  , mStackSize(aStackSize)
   , mShutdownContext(nsnull)
   , mShutdownRequired(PR_FALSE)
   , mEventsAreDoomed(PR_FALSE)
@@ -336,7 +350,7 @@ nsThread::Init()
   // ThreadFunc is responsible for setting mThread
   PRThread *thr = PR_CreateThread(PR_USER_THREAD, ThreadFunc, this,
                                   PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                                  PR_JOINABLE_THREAD, 0);
+                                  PR_JOINABLE_THREAD, mStackSize);
   if (!thr) {
     NS_RELEASE_THIS();
     return NS_ERROR_OUT_OF_MEMORY;

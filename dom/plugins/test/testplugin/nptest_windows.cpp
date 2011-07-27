@@ -508,7 +508,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
   if (!pInstance)
     return 0;
 
-  NPEvent event = { uMsg, wParam, lParam };
+  NPEvent event = { static_cast<uint16_t>(uMsg), wParam, lParam };
 
   LRESULT result = 0;
   if (handleEventInternal(pInstance, &event, &result))

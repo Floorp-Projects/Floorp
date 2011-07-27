@@ -46,7 +46,7 @@
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsURIHashKey.h"
-#include "nsTArray.h"
+#include "nsTObserverArray.h"
 #include "nsDeque.h"
 #include "nsIObserver.h"
 #include "mozIStorageConnection.h"
@@ -167,7 +167,7 @@ private:
   // Ensures new tasks aren't started on destruction.
   bool mShuttingDown;
 
-  typedef nsTArray<mozilla::dom::Link* > ObserverArray;
+  typedef nsTObserverArray<mozilla::dom::Link* > ObserverArray;
 
   class KeyClass : public nsURIHashKey
   {

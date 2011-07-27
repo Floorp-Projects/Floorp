@@ -19,13 +19,13 @@ function test0() {
     assertEq(script1.call(null, 1), 1);
     assertEq(script1.call(null, 1,2), 2);
     assertEq(native1.call("aabc", /b/), 2);
-    assertEq(native1.call("abc"), -1);
+    assertEq(native1.call("abc"), 0);
     assertEq(tricky1.call(null, 9), 9);
     assertEq(script1.apply(null), 0);
     assertEq(script1.apply(null, [1]), 1);
     assertEq(script1.apply(null, [1,2]), 2);
     assertEq(native1.apply("aabc", [/b/]), 2);
-    assertEq(native1.apply("abc"), -1);
+    assertEq(native1.apply("abc"), 0);
     assertEq(tricky1.apply(null, 1), 1);
 }
 test0();

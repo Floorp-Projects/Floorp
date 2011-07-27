@@ -8992,7 +8992,7 @@ EvalCmp(JSContext *cx, LOpcode op, JSString* l, JSString* r, JSBool *ret)
 {
     if (op == LIR_eqd)
         return EqualStrings(cx, l, r, ret);
-    JSBool cmp;
+    int32 cmp;
     if (!CompareStrings(cx, l, r, &cmp))
         return false;
     *ret = EvalCmp(op, cmp, 0);
@@ -12562,93 +12562,22 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
     return true;
 }
 
-static const size_t PIC_TABLE_ENTRY_COUNT = 32;
-
-struct PICTableEntry
-{
-    jsid    id;
-    uint32  shape;
-    uint32  slot;
-};
-
-struct PICTable
-{
-    PICTable() : entryCount(0) {}
-
-    PICTableEntry   entries[PIC_TABLE_ENTRY_COUNT];
-    uint32          entryCount;
-
-    bool scan(uint32 shape, jsid id, uint32 *slotOut) {
-        for (size_t i = 0; i < entryCount; ++i) {
-            PICTableEntry &entry = entries[i];
-            if (entry.shape == shape && entry.id == id) {
-                *slotOut = entry.slot;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void update(uint32 shape, jsid id, uint32 slot) {
-        if (entryCount >= PIC_TABLE_ENTRY_COUNT)
-            return;
-        PICTableEntry &newEntry = entries[entryCount++];
-        newEntry.shape = shape;
-        newEntry.id = id;
-        newEntry.slot = slot;
-    }
-};
-
 static JSBool FASTCALL
-GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PICTable *picTable)
+GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp)
 {
     TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id)) {
+    if (!RootedStringToId(cx, namep, &id) || !obj->getProperty(cx, id, vp)) {
         SetBuiltinError(tm);
         return false;
-    }
-    
-    /* Delegate to the op, if present. */
-    PropertyIdOp op = obj->getOps()->getProperty;
-    if (op) {
-        bool result = op(cx, obj, obj, id, vp);
-        if (!result)
-            SetBuiltinError(tm);
-        return WasBuiltinSuccessful(tm);
-    }
-
-    /* Try to hit in the cache. */
-    uint32 slot;
-    if (picTable->scan(obj->shape(), id, &slot)) {
-        *vp = obj->getSlot(slot);
-        return WasBuiltinSuccessful(tm);
-    }
-
-    const Shape *shape;
-    JSObject *holder;
-    if (!js_GetPropertyHelperWithShape(cx, obj, obj, id, JSGET_METHOD_BARRIER, vp, &shape,
-                                       &holder)) {
-        SetBuiltinError(tm);
-        return false;
-    }
-
-    /* Only update the table when the object is the holder of the property. */
-    if (obj == holder && shape->hasSlot() && shape->hasDefaultGetter()) {
-        /*
-         * Note: we insert the non-normalized id into the table so you don't need to
-         * normalize it before hitting in the table (faster lookup).
-         */
-        picTable->update(obj->shape(), id, shape->slot);
     }
     
     return WasBuiltinSuccessful(tm);
 }
-JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
-                     PICTABLE,
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
                      0, ACCSET_STORE_ANY)
 
 // Convert the value in a slot to a string and store the resulting string back
@@ -12690,9 +12619,7 @@ TraceRecorder::getPropertyByName(LIns* obj_ins, Value* idvalp, Value* outp)
     // interpreter stack, but the slot at vp is not a root.
     LIns* vp_ins = w.name(w.allocp(sizeof(Value)), "vp");
     LIns* idvalp_ins = w.name(addr(idvalp), "idvalp");
-    PICTable *picTable = new (traceAlloc()) PICTable();
-    LIns* pic_ins = w.nameImmpNonGC(picTable);
-    LIns* args[] = {pic_ins, vp_ins, idvalp_ins, obj_ins, cx_ins};
+    LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
     LIns* ok_ins = w.call(&GetPropertyByName_ci, args);
 
     // GetPropertyByName can assign to *idvalp, so the tracker has an incorrect
@@ -14854,10 +14781,10 @@ TraceRecorder::record_JSOP_MOREITER()
     LIns* cond_ins;
 
     /*
-     * JSOP_FOR* already guards on this, but in certain rare cases we might
+     * JSOP_ITERNEXT already guards on this, but in certain rare cases we might
      * record misformed loop traces. Note that it's not necessary to guard on
-     * ni->flags (nor do we in unboxNextValue), because the different
-     * iteration type will guarantee a different entry typemap.
+     * ni->flags (nor do we in unboxNextValue), because the different iteration
+     * type will guarantee a different entry typemap.
      */
     if (iterobj->hasClass(&js_IteratorClass)) {
         guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
@@ -14891,6 +14818,16 @@ TraceRecorder::record_JSOP_MOREITER()
     // See the comment in DeepBail about "clobbering deep bails".
     stack(-1, iterobj_ins);
 
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_ITERNEXT()
+{
+    LIns* v_ins;
+    Value &iterobj_val = stackval(-GET_INT8(cx->regs().pc));
+    CHECK_STATUS_A(unboxNextValue(iterobj_val, v_ins));
+    stack(0, v_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -14943,9 +14880,8 @@ TraceRecorder::storeMagic(JSWhyMagic why, Address addr)
 #endif
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::unboxNextValue(LIns* &v_ins)
+TraceRecorder::unboxNextValue(Value &iterobj_val, LIns* &v_ins)
 {
-    Value &iterobj_val = stackval(-1);
     JSObject *iterobj = &iterobj_val.toObject();
     LIns* iterobj_ins = get(&iterobj_val);
 
@@ -15001,60 +14937,6 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
     v_ins = unbox_value(cx->iterValue, iterValueAddr, snapshot(BRANCH_EXIT));
     storeMagic(JS_NO_ITER_VALUE, iterValueAddr);
 
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORNAME()
-{
-    Value* vp;
-    LIns* x_ins;
-    NameResult nr;
-    CHECK_STATUS_A(name(vp, x_ins, nr));
-    if (!nr.tracked)
-        RETURN_STOP_A("forname on non-tracked value not supported");
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    set(vp, v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORGNAME()
-{
-    return record_JSOP_FORNAME();
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORPROP()
-{
-    return ARECORD_STOP;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORELEM()
-{
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    stack(0, v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORARG()
-{
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    arg(GET_ARGNO(cx->regs().pc), v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_FORLOCAL()
-{
-    LIns* v_ins;
-    CHECK_STATUS_A(unboxNextValue(v_ins));
-    var(GET_SLOTNO(cx->regs().pc), v_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -15176,13 +15058,25 @@ TraceRecorder::record_JSOP_BINDNAME()
     if (!fp->isFunctionFrame()) {
         obj = &fp->scopeChain();
 
+#ifdef DEBUG
+        StackFrame *fp2 = fp;
+#endif
+
         /*
          * In global code, fp->scopeChain can only contain blocks whose values
          * are still on the stack.  We never use BINDNAME to refer to these.
          */
         while (obj->isBlock()) {
             // The block's values are still on the stack.
-            JS_ASSERT(obj->getPrivate() == fp);
+#ifdef DEBUG
+            // NB: fp2 can't be a generator frame, because !fp->hasFunction.
+            while (obj->getPrivate() != fp2) {
+                JS_ASSERT(fp2->isEvalFrame());
+                fp2 = fp2->prev();
+                if (!fp2)
+                    JS_NOT_REACHED("bad stack frame");
+            }
+#endif
             obj = obj->getParent();
             // Blocks always have parents.
             JS_ASSERT(obj);

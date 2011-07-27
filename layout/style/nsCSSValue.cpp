@@ -1066,6 +1066,14 @@ nsCSSValueList::Clone() const
 }
 
 void
+nsCSSValueList::CloneInto(nsCSSValueList* aList) const
+{
+    NS_ASSERTION(!aList->mNext, "Must be an empty list!");
+    aList->mValue = mValue;
+    aList->mNext = mNext ? mNext->Clone() : nsnull;
+}
+
+void
 nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 {
   const nsCSSValueList* val = this;

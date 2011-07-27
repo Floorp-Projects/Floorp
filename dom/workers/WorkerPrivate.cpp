@@ -40,6 +40,7 @@
 
 #include "nsIClassInfo.h"
 #include "nsIConsoleService.h"
+#include "nsIDocument.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptError.h"
@@ -316,7 +317,15 @@ class WorkerFinishedRunnable : public WorkerControlRunnable
     Run()
     {
       mDoomed.Clear();
-      return mThread ? mThread->Shutdown() : NS_OK;
+
+      if (mThread) {
+        RuntimeService* runtime = RuntimeService::GetService();
+        NS_ASSERTION(runtime, "This should never be null!");
+
+        runtime->NoteIdleThread(mThread);
+      }
+
+      return NS_OK;
     }
   };
 
@@ -393,11 +402,13 @@ public:
 
     runtime->UnregisterWorker(cx, mFinishedWorker);
 
-    nsresult rv = mThread ? mThread->Shutdown() : NS_OK;
+    if (mThread) {
+      runtime->NoteIdleThread(mThread);
+    }
 
     delete mFinishedWorker;
 
-    return rv;
+    return NS_OK;
   }
 };
 
@@ -1414,7 +1425,7 @@ WorkerPrivateParent<Derived>::Notify(JSContext* aCx, Status aStatus)
     }
 #endif
     // Worker never got a chance to run, go ahead and delete it.
-    self->ScheduleDeletion();
+    self->ScheduleDeletion(true);
     return true;
   }
 
@@ -2068,6 +2079,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
       // If we're supposed to die then we should exit the loop.
       if (currentStatus == Killing) {
+        StopAcceptingEvents();
         return;
       }
     }
@@ -2129,35 +2141,22 @@ WorkerPrivate::OperationCallback(JSContext* aCx)
 }
 
 void
-WorkerPrivate::ScheduleDeletion()
+WorkerPrivate::ScheduleDeletion(bool aWasPending)
 {
   AssertIsOnWorkerThread();
   NS_ASSERTION(mChildWorkers.IsEmpty(), "Live child workers!");
+  NS_ASSERTION(mSyncQueues.IsEmpty(), "Should have no sync queues here!");
 
-  bool running;
-  {
-    MutexAutoLock lock(mMutex);
-
-    NS_ASSERTION(mStatus == Pending || mStatus == Killing, "Bad logic!");
-    running = mStatus == Killing;
-    mStatus = Dead;
-
-    mJSContext = nsnull;
-
-    NS_ASSERTION(mSyncQueues.IsEmpty(), "Should have no sync queues here!");
-
-    ClearQueue(&mQueue);
-    ClearQueue(&mControlQueue);
-  }
+  StopAcceptingEvents();
 
   nsIThread* currentThread;
-  if (running) {
-    currentThread = NS_GetCurrentThread();
-    NS_ASSERTION(currentThread, "This should never be null!");
-  }
-  else {
+  if (aWasPending) {
     // Don't want to close down this thread since we never got to run!
     currentThread = nsnull;
+  }
+  else {
+    currentThread = NS_GetCurrentThread();
+    NS_ASSERTION(currentThread, "This should never be null!");
   }
 
   WorkerPrivate* parent = GetParent();

@@ -7,7 +7,6 @@ chrome.jar:
   content/config.xul                   (content/config.xul)
   content/config.js                    (content/config.js)
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
-  content/aboutCertError.css           (content/aboutCertError.css)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
   content/localePicker.xul             (content/localePicker.xul)
   content/localePicker.js              (content/localePicker.js)
@@ -72,5 +71,7 @@ chrome.jar:
   content/LoginManagerChild.js         (content/LoginManagerChild.js)
   content/fullscreen-video.js          (content/fullscreen-video.js)
   content/fullscreen-video.xhtml       (content/fullscreen-video.xhtml)
+  content/netError.xhtml               (content/netError.xhtml)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
+% override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

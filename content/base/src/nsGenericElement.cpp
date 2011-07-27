@@ -1226,24 +1226,20 @@ nsGenericElement::UpdateEditableState(PRBool aNotify)
 {
   nsIContent *parent = GetParent();
 
-  PRBool oldEditable = IsEditable();
   SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
-  PRBool newEditable = IsEditable();
-  if (oldEditable != newEditable) {
-    if (aNotify) {
-      UpdateState(aNotify);
+  if (aNotify) {
+    UpdateState(aNotify);
+  } else {
+    // Avoid calling UpdateState in this very common case, because
+    // this gets called for pretty much every single element on
+    // insertion into the document and UpdateState can be slow for
+    // some kinds of elements even when not notifying.
+    if (IsEditable()) {
+      RemoveStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
+      AddStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
     } else {
-      // Avoid calling UpdateState in this very common case, because
-      // this gets called for pretty much every single element on
-      // insertion into the document and UpdateState can be slow for
-      // some kinds of elements even when not notifying.
-      if (oldEditable) {
-        RemoveStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
-        AddStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
-      } else {
-        RemoveStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
-        AddStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
-      }
+      RemoveStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
+      AddStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
     }
   }
 }
@@ -2204,6 +2200,9 @@ nsGenericElement::~nsGenericElement()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
+  if (GetParent()) {
+    NS_RELEASE(mParent);
+  }
 }
 
 NS_IMETHODIMP
@@ -2826,6 +2825,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Now set the parent and set the "Force attach xbl" flag if needed.
   if (aParent) {
+    if (!GetParent()) {
+      NS_ADDREF(aParent);
+    }
     mParent = aParent;
 
     if (aParent->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
@@ -2934,7 +2936,11 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     HasFlag(NODE_FORCE_XBL_BINDINGS) ? GetOwnerDoc() : GetCurrentDoc();
 
   if (aNullParent) {
-    mParent = nsnull;
+    if (GetParent()) {
+      NS_RELEASE(mParent);
+    } else {
+      mParent = nsnull;
+    }
     SetParentIsContent(false);
   }
   ClearInDocument();
@@ -3592,6 +3598,7 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
                                      nsInputEvent* aSourceEvent,
                                      nsIContent* aTarget,
                                      PRBool aFullDispatch,
+                                     PRUint32 aFlags,
                                      nsEventStatus* aStatus)
 {
   NS_PRECONDITION(aTarget, "Must have target");
@@ -3618,6 +3625,7 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
   event.isControl = aSourceEvent->isControl;
   event.isAlt = aSourceEvent->isAlt;
   event.isMeta = aSourceEvent->isMeta;
+  event.flags |= aFlags; // Be careful not to overwrite existing flags!
 
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
 }
@@ -3997,7 +4005,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
 
     PRBool appending =
       !IsNodeOfType(eDOCUMENT) && PRUint32(insPos) == GetChildCount();
-    PRBool firstInsPos = insPos;
+    PRInt32 firstInsPos = insPos;
     nsIContent* firstInsertedContent = fragChildren[0];
 
     // Iterate through the fragment's children, and insert them in the new
@@ -4237,7 +4245,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
       cb.NoteXPCOMChild(
         static_cast<nsIDOMNodeList*>(slots->mChildrenList.get()));
     }
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(GetParent())
   }
+  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
@@ -5038,7 +5048,7 @@ nsGenericElement::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVis
        (aVisitor.mEvent->message != NS_KEY_PRESS) &&
        (aVisitor.mEvent->message != NS_UI_ACTIVATE)) ||
       !aVisitor.mPresContext ||
-      (aVisitor.mEvent->flags & NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS)) {
+      (aVisitor.mEvent->flags & NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS)) {
     return PR_FALSE;
   }
 
@@ -5084,7 +5094,7 @@ nsGenericElement::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
                                   PR_FALSE, PR_TRUE, PR_TRUE);
       // Make sure any ancestor links don't also TriggerLink
-      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS;
+      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
     }
     break;
 
@@ -5094,7 +5104,7 @@ nsGenericElement::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
   case NS_BLUR_CONTENT:
     rv = LeaveLink(aVisitor.mPresContext);
     if (NS_SUCCEEDED(rv)) {
-      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS;
+      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
     }
     break;
 
@@ -5142,7 +5152,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         if (handler && document) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS;
+            aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
             nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
             fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOUSE |
                                nsIFocusManager::FLAG_NOSCROLL);
@@ -5198,7 +5208,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         if (keyEvent->keyCode == NS_VK_RETURN) {
           nsEventStatus status = nsEventStatus_eIgnore;
           rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
-                                  PR_FALSE, &status);
+                                  PR_FALSE, 0, &status);
           if (NS_SUCCEEDED(rv)) {
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }

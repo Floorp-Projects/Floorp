@@ -14,7 +14,6 @@
 <script type="application/javascript; version=1.8">
 
 var [gStyleSheetService, gIOService] = (function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     return [
             Components.classes["@mozilla.org/content/style-sheet-service;1"]
                 .getService(Components.interfaces.nsIStyleSheetService),
@@ -24,13 +23,11 @@ var [gStyleSheetService, gIOService] = (function() {
 })();
 function set_user_sheet(sheeturi)
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var uri = gIOService.newURI(sheeturi, null, null);
     gStyleSheetService.loadAndRegisterSheet(uri, gStyleSheetService.USER_SHEET);
 }
 function remove_user_sheet(sheeturi)
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var uri = gIOService.newURI(sheeturi, null, null);
     gStyleSheetService.unregisterSheet(uri, gStyleSheetService.USER_SHEET);
 }

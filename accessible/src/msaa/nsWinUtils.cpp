@@ -176,23 +176,13 @@ nsWinUtils::HideNativeWindow(HWND aWnd)
 bool
 nsWinUtils::IsWindowEmulationFor(LPCWSTR kModuleHandle)
 {
+#ifdef MOZ_E10S_COMPAT
+  // Window emulation is always enabled in multiprocess Firefox.
+  return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) : true;
+#else
   return kModuleHandle ? ::GetModuleHandleW(kModuleHandle) :
     ::GetModuleHandleW(kJAWSModuleHandle) ||
     ::GetModuleHandleW(kWEModuleHandle)  ||
     ::GetModuleHandleW(kDolphinModuleHandle);
-}
-
-bool
-nsWinUtils::IsTabDocument(nsIDocument* aDocumentNode)
-{
-  nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
-
-  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetParent(getter_AddRefs(parentTreeItem));
-
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
-
-  return parentTreeItem == rootTreeItem;
+#endif
 }

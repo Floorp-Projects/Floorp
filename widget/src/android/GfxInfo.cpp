@@ -35,7 +35,6 @@
 
 #include "GfxInfo.h"
 #include "nsUnicharUtils.h"
-#include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
 #include "prenv.h"
 #include "prprf.h"

@@ -638,7 +638,7 @@ public:
   UpdateJSContextOptionsInternal(JSContext* aCx, PRUint32 aOptions);
 
   void
-  ScheduleDeletion();
+  ScheduleDeletion(bool aWasPending);
 
 #ifdef JS_GC_ZEAL
   void
@@ -713,6 +713,20 @@ private:
 
   bool
   ScheduleKillCloseEventRunnable(JSContext* aCx);
+
+  void
+  StopAcceptingEvents()
+  {
+    AssertIsOnWorkerThread();
+
+    mozilla::MutexAutoLock lock(mMutex);
+
+    mStatus = Dead;
+    mJSContext = nsnull;
+
+    ClearQueue(&mQueue);
+    ClearQueue(&mControlQueue);
+  }
 };
 
 WorkerPrivate*

@@ -264,6 +264,16 @@ public:
     exception_restoration_ = restore;
   }
 
+#if defined(OS_WIN)
+  void set_os_modal_loop(bool os_modal_loop) {
+    os_modal_loop_ = os_modal_loop;
+  }
+
+  bool & os_modal_loop() {
+    return os_modal_loop_;
+  }
+#endif  // OS_WIN
+
   //----------------------------------------------------------------------------
  protected:
   struct RunState {
@@ -423,6 +433,12 @@ public:
   Lock incoming_queue_lock_;
 
   RunState* state_;
+
+#if defined(OS_WIN)
+  // Should be set to true before calling Windows APIs like TrackPopupMenu, etc
+  // which enter a modal message loop.
+  bool os_modal_loop_;
+#endif
 
   // The next sequence number to use for delayed tasks.
   int next_sequence_num_;

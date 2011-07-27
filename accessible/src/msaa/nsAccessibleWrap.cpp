@@ -204,7 +204,7 @@ __try {
     // accessibles.
     if (!doc->ParentDocument() ||
         nsWinUtils::IsWindowEmulationStarted() &&
-        nsWinUtils::IsTabDocument(doc->GetDocumentNode())) {
+        nsCoreUtils::IsTabDocument(doc->GetDocumentNode())) {
       HWND hwnd = static_cast<HWND>(doc->GetNativeWindow());
       if (hwnd && SUCCEEDED(AccessibleObjectFromWindow(hwnd, OBJID_WINDOW,
                                                        IID_IAccessible,
@@ -486,16 +486,18 @@ STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
 __try {
   if (!pszKeyboardShortcut)
     return E_INVALIDARG;
-
   *pszKeyboardShortcut = NULL;
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible || xpAccessible->IsDefunct())
+
+  nsAccessible* acc = GetXPAccessibleFor(varChild);
+  if (!acc || acc->IsDefunct())
     return E_FAIL;
 
+  KeyBinding keyBinding = acc->AccessKey();
+  if (keyBinding.IsEmpty())
+    keyBinding = acc->KeyboardShortcut();
+
   nsAutoString shortcut;
-  nsresult rv = xpAccessible->GetKeyboardShortcut(shortcut);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  keyBinding.ToString(shortcut);
 
   *pszKeyboardShortcut = ::SysAllocStringLen(shortcut.get(),
                                              shortcut.Length());

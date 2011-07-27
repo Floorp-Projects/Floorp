@@ -767,7 +767,7 @@ JSObject::principals(JSContext *cx)
     JSSecurityCallbacks *cb = JS_GetSecurityCallbacks(cx);
     if (JSObjectPrincipalsFinder finder = cb ? cb->findObjectPrincipals : NULL)
         return finder(cx, this);
-    return NULL;
+    return cx->compartment ? cx->compartment->principals : NULL;
 }
 
 inline uint32
@@ -1363,10 +1363,9 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj)
 }
 
 inline bool
-DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
+DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
                               JSProtoKey key, JSFunction *ctor, JSObject *proto)
 {
-    JS_ASSERT(global->isGlobal());
     JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
     JS_ASSERT(ctor);
     JS_ASSERT(proto);
