@@ -177,6 +177,7 @@ CodeGeneratorX86Shared::visitInteger(LInteger *ins)
 {
     const LDefinition *def = ins->getDef(0);
     masm.movl(Imm32(ins->getValue()), ToRegister(def));
+    return true;
 }
 
 typedef MoveResolver::MoveOperand MoveOperand;
