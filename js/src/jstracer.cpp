@@ -8992,7 +8992,7 @@ EvalCmp(JSContext *cx, LOpcode op, JSString* l, JSString* r, JSBool *ret)
 {
     if (op == LIR_eqd)
         return EqualStrings(cx, l, r, ret);
-    JSBool cmp;
+    int32 cmp;
     if (!CompareStrings(cx, l, r, &cmp))
         return false;
     *ret = EvalCmp(op, cmp, 0);

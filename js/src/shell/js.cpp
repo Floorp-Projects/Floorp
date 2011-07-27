@@ -5150,7 +5150,7 @@ its_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     if (its_noisy)
         fprintf(gOutFile, "converting it to %s type\n", JS_GetTypeName(cx, type));
-    return JS_TRUE;
+    return JS_ConvertStub(cx, obj, type, vp);
 }
 
 static void
