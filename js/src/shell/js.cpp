@@ -1892,8 +1892,9 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             Sprint(sp, " function %u (%s)", index, !!bytes ? bytes.ptr() : "N/A");
             break;
           }
-          case SRC_SWITCH:
-            if (js_GetOpcode(cx, script, script->code + offset) == JSOP_GOTO)
+          case SRC_SWITCH: {
+            JSOp op = js_GetOpcode(cx, script, script->code + offset);
+            if (op == JSOP_GOTO || op == JSOP_GOTOX)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
@@ -1902,6 +1903,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             UpdateSwitchTableBounds(cx, script, offset,
                                     &switchTableStart, &switchTableEnd);
             break;
+          }
           case SRC_CATCH:
             delta = (uintN) js_GetSrcNoteOffset(sn, 0);
             if (delta) {
