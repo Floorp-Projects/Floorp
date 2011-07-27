@@ -189,33 +189,6 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj);
 extern JS_PUBLIC_API(JSBool)
 JS_ClearAllWatchPoints(JSContext *cx);
 
-#ifdef JS_HAS_OBJ_WATCHPOINT
-/*
- * Hide these non-API function prototypes by testing whether the internal
- * header file "jsversion.h" has been included.
- */
-extern JSBool
-js_TraceWatchPoints(JSTracer *trc);
-
-extern void
-js_SweepWatchPoints(JSContext *cx);
-
-#ifdef __cplusplus
-
-extern JSBool
-js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
-
-namespace js {
-
-bool
-IsWatchedProperty(JSContext *cx, const Shape *shape);
-
-}
-
-#endif
-
-#endif /* JS_HAS_OBJ_WATCHPOINT */
-
 /************************************************************************/
 
 extern JS_PUBLIC_API(uintN)
