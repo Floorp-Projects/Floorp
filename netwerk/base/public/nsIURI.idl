@@ -101,7 +101,7 @@
  * we will need to add additional checks there for all intermediate IIDs, until
  * nsPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
  */
-[scriptable, uuid(d6d04c36-0fa4-4db3-be05-4a18397103e2)]
+[scriptable, uuid(12120b20-0929-40e9-88cf-6e08766e8b23)]
 interface nsIURI : nsISupports
 {
     /************************************************************************
@@ -184,14 +184,6 @@ interface nsIURI : nsISupports
      */
     attribute AUTF8String path;
 
-    /**
-     * Returns the reference portion (the part after the "#") of the URI.
-     * If there isn't one, an empty string is returned.
-     *
-     * Some characters may be escaped.
-     */
-    attribute AUTF8String ref;
-
 
     /************************************************************************
      * An URI supports the following methods:
@@ -205,15 +197,6 @@ interface nsIURI : nsISupports
     boolean equals(in nsIURI other);
 
     /**
-     * URI equivalence test (not a strict string comparison), ignoring
-     * the value of the .ref member.
-     *
-     * eg. http://foo.com/# == http://foo.com/
-     *     http://foo.com/#aaa == http://foo.com/#bbb
-     */
-    boolean equalsExceptRef(in nsIURI other);
-
-    /**
      * An optimization to do scheme checks without requiring the users of nsIURI
      * to GetScheme, thereby saving extra allocating and freeing. Returns true if
      * the schemes match (case ignored).
@@ -224,11 +207,6 @@ interface nsIURI : nsISupports
      * Clones the current URI.
      */
     nsIURI clone();
-
-    /**
-     * Clones the current URI, clearing the 'ref' attribute in the clone.
-     */
-    nsIURI cloneIgnoringRef();
 
     /**
      * This method resolves a relative string into an absolute URI string,
@@ -267,4 +245,31 @@ interface nsIURI : nsISupports
      * characters.
      */
     readonly attribute ACString originCharset;
+
+    /************************************************************************
+     * Additional attribute & methods added for .ref support:
+     */
+
+    /**
+     * Returns the reference portion (the part after the "#") of the URI.
+     * If there isn't one, an empty string is returned.
+     *
+     * Some characters may be escaped.
+     */
+    attribute AUTF8String ref;
+
+    /**
+     * URI equivalence test (not a strict string comparison), ignoring
+     * the value of the .ref member.
+     *
+     * eg. http://foo.com/# == http://foo.com/
+     *     http://foo.com/#aaa == http://foo.com/#bbb
+     */
+    boolean equalsExceptRef(in nsIURI other);
+
+    /**
+     * Clones the current URI, clearing the 'ref' attribute in the clone.
+     */
+    nsIURI cloneIgnoringRef();
+
 };

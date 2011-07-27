@@ -57,6 +57,15 @@ wizardpage {
   box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
+.wizard-buttons button:-moz-focusring {
+  border-color: @toolbarbuttonFocusedBorderColorAqua@;
+  box-shadow: @focusRingShadow@;
+}
+
+.wizard-buttons button:-moz-system-metric(mac-graphite-theme):-moz-focusring {
+  border-color: @toolbarbuttonFocusedBorderColorGraphite@;
+}
+
 .wizard-buttons button:-moz-window-inactive {
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;

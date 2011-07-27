@@ -73,6 +73,12 @@ interface mozIPlacesAutoComplete : nsISupports
    */
   const long MATCH_BEGINNING = 3;
 
+  /**
+   * Match anywhere in each searchable term without doing any transformation
+   * or stripping on the underlying data.
+   */
+  const long MATCH_ANYWHERE_UNMODIFIED = 4;
+
   //////////////////////////////////////////////////////////////////////////////
   //// Search Behavior Constants
 

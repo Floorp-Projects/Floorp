@@ -106,7 +106,7 @@ toHexString(const unsigned char * str, unsigned len, nsACString & out)
 {
   static const char digits[] = "0123456789ABCDEF";
   if (!out.SetCapacity(2 * len))
-    return NS_ERROR_OUT_OF_MEMORY;
+    return PR_FALSE;
   out.SetLength(0);
   for (unsigned i = 0; i < len; ++i) {
     out.Append(digits[str[i] >> 4]);

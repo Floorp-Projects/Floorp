@@ -127,7 +127,6 @@
 #include "nsIFile.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
-#include "nsIRegion.h"
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsIMM32Handler.h"

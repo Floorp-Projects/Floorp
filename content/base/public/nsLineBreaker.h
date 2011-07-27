@@ -229,7 +229,7 @@ private:
   void FindHyphenationPoints(nsHyphenator *aHyphenator,
                              const PRUnichar *aTextStart,
                              const PRUnichar *aTextLimit,
-                             PRPackedBool *aBreakState);
+                             PRUint8 *aBreakState);
 
   nsAutoTArray<PRUnichar,100> mCurrentWord;
   // All the items that contribute to mCurrentWord

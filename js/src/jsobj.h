@@ -355,20 +355,22 @@ struct JSObject : js::gc::Cell {
     inline bool nativeContains(const js::Shape &shape);
 
     enum {
-        DELEGATE                  =   0x01,
-        SYSTEM                    =   0x02,
-        NOT_EXTENSIBLE            =   0x04,
-        BRANDED                   =   0x08,
-        GENERIC                   =   0x10,
-        METHOD_BARRIER            =   0x20,
-        INDEXED                   =   0x40,
-        OWN_SHAPE                 =   0x80,
-        BOUND_FUNCTION            =  0x100,
-        HAS_EQUALITY              =  0x200,
-        VAROBJ                    =  0x400,
-        METHOD_THRASH_COUNT_MASK  = 0x3000,
-        METHOD_THRASH_COUNT_SHIFT =     12,
-        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT
+        DELEGATE                  =       0x01,
+        SYSTEM                    =       0x02,
+        NOT_EXTENSIBLE            =       0x04,
+        BRANDED                   =       0x08,
+        GENERIC                   =       0x10,
+        METHOD_BARRIER            =       0x20,
+        INDEXED                   =       0x40,
+        OWN_SHAPE                 =       0x80,
+        METHOD_THRASH_COUNT_MASK  =      0x300,
+        METHOD_THRASH_COUNT_SHIFT =          8,
+        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
+        BOUND_FUNCTION            =      0x400,
+        HAS_EQUALITY              =      0x800,
+        VAROBJ                    =     0x1000,
+
+        UNUSED_FLAG_BITS          = 0xFFFFE000
     };
 
     /*
@@ -1185,7 +1187,9 @@ struct JSObject : js::gc::Cell {
 
     bool defaultValue(JSContext *cx, JSType hint, js::Value *vp) {
         js::ConvertOp op = getClass()->convert;
-        return (op == js::ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+        bool ok = (op == js::ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+        JS_ASSERT_IF(ok, vp->isPrimitive());
+        return ok;
     }
 
     JSType typeOf(JSContext *cx) {
