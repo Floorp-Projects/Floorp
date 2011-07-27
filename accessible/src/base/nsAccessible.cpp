@@ -108,6 +108,7 @@
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
+using namespace mozilla::a11y;
 
 
 ////////////////////////////////////////////////////////////////////////////////
