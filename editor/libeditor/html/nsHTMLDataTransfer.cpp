@@ -649,7 +649,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
             {
               bDidInsert = PR_TRUE;
               insertedContextParent = parent;
-              lastInsertNode = parent;
+              lastInsertNode = GetChildAt(parentNode, offsetOfNewNode);
             }
           }
           curNode = parent;

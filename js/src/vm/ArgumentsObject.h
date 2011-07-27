@@ -62,6 +62,7 @@ struct VMFrame;
 namespace mjit {
 namespace ic {
 struct PICInfo;
+struct GetElementIC;
 
 /* Aargh, Windows. */
 #ifdef GetProp
@@ -181,6 +182,7 @@ class ArgumentsObject : public ::JSObject
 #endif
 #ifdef JS_POLYIC
     friend class ::GetPropCompiler;
+    friend class mjit::ic::GetElementIC;
 #endif
 
     void setInitialLength(uint32 length);

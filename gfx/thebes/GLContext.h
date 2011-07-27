@@ -66,7 +66,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 
-#if defined(MOZ_PLATFORM_MAEMO) || defined(ANDROID)
+#if defined(MOZ_PLATFORM_MAEMO) || defined(ANDROID) || defined(MOZ_EGL_XRENDER_COMPOSITE)
 #define USE_GLES2 1
 #endif
 
@@ -736,6 +736,15 @@ public:
     GLuint GetOffscreenTexture() {
         return mOffscreenTexture;
     }
+
+#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+    virtual gfxASurface* GetOffscreenPixmapSurface()
+    {
+      return 0;
+    };
+    
+    virtual PRBool WaitNative() { return PR_FALSE; }
+#endif
 
     virtual PRBool TextureImageSupportsGetBackingSurface() {
         return PR_FALSE;

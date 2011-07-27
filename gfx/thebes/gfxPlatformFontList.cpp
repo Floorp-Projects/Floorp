@@ -77,6 +77,7 @@
 #include "gfxUnicodeProperties.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 
@@ -199,6 +200,7 @@ gfxPlatformFontList::InitOtherFamilyNames()
 {
     mOtherFamilyNamesInitialized = PR_TRUE;
 
+    Telemetry::AutoTimer<Telemetry::FONTLIST_INITOTHERFAMILYNAMES> timer;
     // iterate over all font families and read in other family names
     mFontFamilies.Enumerate(gfxPlatformFontList::InitOtherFamilyNamesProc, this);
 }
@@ -219,6 +221,7 @@ gfxPlatformFontList::InitFaceNameLists()
     mFaceNamesInitialized = PR_TRUE;
 
     // iterate over all font families and read in other family names
+    Telemetry::AutoTimer<Telemetry::FONTLIST_INITFACENAMELISTS> timer;
     mFontFamilies.Enumerate(gfxPlatformFontList::InitFaceNameListsProc, this);
 }
 

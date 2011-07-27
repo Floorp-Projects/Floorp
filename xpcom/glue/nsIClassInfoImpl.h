@@ -41,6 +41,74 @@
 
 #include NEW_H
 
+/**
+ * This header file provides macros which help you make your class implement
+ * nsIClassInfo.  Implementing nsIClassInfo is particularly helpful if you have
+ * a C++ class which implements multiple interfaces and which you access from
+ * JavaScript.  If that class implements nsIClassInfo, the JavaScript code
+ * won't have to call QueryInterface on instances of the class; all methods
+ * from all interfaces returned by GetInterfaces() will be available
+ * automagically.
+ *
+ * Here's all you need to do.  Given a class
+ *
+ *   class nsFooBar : public nsIFoo, public nsIBar { };
+ *
+ * you should already have the following nsISupports implementation in its cpp
+ * file:
+ *
+ *   NS_IMPL_ISUPPORTS2(nsFooBar, nsIFoo, nsIBar).
+ *
+ * Change this to
+ *
+ *   NS_IMPL_CLASSINFO(nsFooBar, NULL, 0, NS_FOOBAR_CID)
+ *   NS_IMPL_ISUPPORTS2_CI(nsFooBar, nsIFoo, nsIBar)
+ *
+ * If nsFooBar is threadsafe, change the 0 above to nsIClassInfo::THREADSAFE.
+ * If it's a singleton, use nsIClassInfo::SINGLETON.  The full list of flags is
+ * in nsIClassInfo.idl.
+ *
+ * The NULL parameter is there so you can pass a function for converting from
+ * an XPCOM object to a scriptable helper.  Unless you're doing specialized JS
+ * work, you can probably leave this as NULL.
+ *
+ * This file also defines the NS_IMPL_QUERY_INTERFACE2_CI macro, which you can
+ * use to replace NS_IMPL_QUERY_INTERFACE2, if you use that instead of
+ * NS_IMPL_ISUPPORTS2.
+ *
+ * That's it!  The rest is gory details.
+ *
+ *
+ * Notice that nsFooBar didn't need to inherit from nsIClassInfo in order to
+ * "implement" it.  However, after adding these macros to nsFooBar, you you can
+ * QueryInterface an instance of nsFooBar to nsIClassInfo.  How can this be?
+ *
+ * The answer lies in the NS_IMPL_ISUPPORTS2_CI macro.  It modifies nsFooBar's
+ * QueryInterface implementation such that, if we ask to QI to nsIClassInfo, it
+ * returns a singleton object associated with the class.  (That singleton is
+ * defined by NS_IMPL_CLASSINFO.)  So all nsFooBar instances will return the
+ * same object when QI'ed to nsIClassInfo.  (You can see this in
+ * NS_IMPL_QUERY_CLASSINFO below.)
+ *
+ * This hack breaks XPCOM's rules, since if you take an instance of nsFooBar,
+ * QI it to nsIClassInfo, and then try to QI to nsIFoo, that will fail.  On the
+ * upside, implementing nsIClassInfo doesn't add a vtable pointer to instances
+ * of your class.
+ *
+ * In principal, you can also implement nsIClassInfo by inheriting from the
+ * interface.  But some code expects that when it QI's an object to
+ * nsIClassInfo, it gets back a singleton which isn't attached to any
+ * particular object.  If a class were to implement nsIClassInfo through
+ * inheritance, that code might QI to nsIClassInfo and keep the resulting
+ * object alive, thinking it was only keeping alive the classinfo singleton,
+ * but in fact keeping a whole instance of the class alive.  See, e.g., bug
+ * 658632.
+ *
+ * Unless you specifically need to have a different nsIClassInfo instance for
+ * each instance of your class, you should probably just implement nsIClassInfo
+ * as a singleton.
+ */
+
 class NS_COM_GLUE GenericClassInfo : public nsIClassInfo
 {
 public:

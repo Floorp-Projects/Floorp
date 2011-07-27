@@ -763,7 +763,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   }  
   if ( aProperty == nsEditProperty::font &&    // or node is big or small and we are setting font size
        (nsHTMLEditUtils::IsBig(aNode) || nsHTMLEditUtils::IsSmall(aNode)) &&
-       aAttribute->LowerCaseEqualsLiteral("size"))       
+       aAttribute && aAttribute->LowerCaseEqualsLiteral("size"))       
   {
     res = RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
   }
@@ -1075,7 +1075,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           // style not set, but if it is a default then it will appear if 
           // content is inserted, so we should report it as set (analogous to TypeInState).
           PRInt32 index;
-          if (TypeInState::FindPropInList(aProperty, *aAttribute, outValue, mDefaultStyles, index))
+          if (aAttribute &&
+              TypeInState::FindPropInList(aProperty, *aAttribute, outValue, mDefaultStyles, index))
           {
             *aFirst = *aAny = *aAll = PR_TRUE;
             if (outValue)
