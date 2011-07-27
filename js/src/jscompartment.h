@@ -293,6 +293,9 @@ class JaegerCompartment;
 }
 }
 
+/* Defined in jsapi.cpp */
+extern JSClass js_dummy_class;
+
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
 #ifndef JS_EVAL_CACHE_SHIFT
 # define JS_EVAL_CACHE_SHIFT        6

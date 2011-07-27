@@ -52,6 +52,9 @@ JS_BEGIN_EXTERN_C
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target);
 
+extern JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -59,6 +62,7 @@ namespace JS {
 
 class JS_PUBLIC_API(AutoEnterScriptCompartment)
 {
+  protected:
     JSCrossCompartmentCall *call;
 
   public:
@@ -72,6 +76,12 @@ class JS_PUBLIC_API(AutoEnterScriptCompartment)
         if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
             JS_LeaveCrossCompartmentCall(call);
     }
+};
+
+class JS_PUBLIC_API(AutoEnterFrameCompartment) : public AutoEnterScriptCompartment
+{
+  public:
+    bool enter(JSContext *cx, JSStackFrame *target);
 };
 
 } /* namespace JS */

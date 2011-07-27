@@ -288,7 +288,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (vp->isObject()) {
             JSObject *obj = &vp->toObject();
             JS_ASSERT(IsCrossCompartmentWrapper(obj));
-            if (obj->getParent() != global) {
+            if (global->getJSClass() != &js_dummy_class && obj->getParent() != global) {
                 do {
                     obj->setParent(global);
                     obj = obj->getProto();
