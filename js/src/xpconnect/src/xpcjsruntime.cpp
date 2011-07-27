@@ -1057,6 +1057,18 @@ void XPCJSRuntime::SystemIsBeingShutDown(JSContext* cx)
             Enumerate(DetachedWrappedNativeProtoShutdownMarker, cx);
 }
 
+JSContext *
+XPCJSRuntime::GetJSCycleCollectionContext()
+{
+    if(!mJSCycleCollectionContext) {
+        mJSCycleCollectionContext = JS_NewContext(mJSRuntime, 0);
+        if(!mJSCycleCollectionContext)
+            return nsnull;
+        JS_ClearContextThread(mJSCycleCollectionContext);
+    }
+    return mJSCycleCollectionContext;
+}
+
 XPCJSRuntime::~XPCJSRuntime()
 {
     if (mWatchdogWakeup)
@@ -1075,6 +1087,12 @@ XPCJSRuntime::~XPCJSRuntime()
         }
         PR_DestroyCondVar(mWatchdogWakeup);
         mWatchdogWakeup = nsnull;
+    }
+
+    if(mJSCycleCollectionContext)
+    {
+        JS_SetContextThread(mJSCycleCollectionContext);
+        JS_DestroyContextNoGC(mJSCycleCollectionContext);
     }
 
 #ifdef XPC_DUMP_AT_SHUTDOWN
@@ -1905,6 +1923,7 @@ DiagnosticMemoryCallback(void *ptr, size_t size)
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
+   mJSCycleCollectionContext(nsnull),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
    mIID2NativeInterfaceMap(IID2NativeInterfaceMap::newMap(XPC_NATIVE_INTERFACE_MAP_SIZE)),
