@@ -1608,6 +1608,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = FUN_OBJECT(fun);
+        fun->u.i.script->setOwnerObject(fun);
 #ifdef CHECK_SCRIPT_OWNER
         fun->script()->owner = NULL;
 #endif
@@ -1679,12 +1680,8 @@ fun_trace(JSTracer *trc, JSObject *obj)
     if (fun->atom)
         MarkString(trc, fun->atom, "atom");
 
-    if (fun->isInterpreted() && fun->script()) {
-        if (fun->script()->compartment != obj->compartment())
-            JS_Assert("compartment mismatch", __FILE__, __LINE__);
-
-        js_TraceScript(trc, fun->script());
-    }
+    if (fun->isInterpreted() && fun->script())
+        js_TraceScript(trc, fun->script(), obj);
 }
 
 static void
@@ -1706,7 +1703,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
      * Null-check fun->script() because the parser sets interpreted very early.
      */
     if (fun->isInterpreted() && fun->script())
-        js_DestroyScriptFromGC(cx, fun->script());
+        js_DestroyScriptFromGC(cx, fun->script(), obj);
 }
 
 /*
@@ -2386,6 +2383,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
+    script->setOwnerObject(fun);
     js_CallNewScriptHook(cx, script, fun);
 
     if (obj->isGlobal()) {
@@ -2488,10 +2486,12 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script);
             JS_ASSERT(script->compartment == fun->compartment());
             JS_ASSERT(script->compartment != cx->compartment);
+            JS_OPT_ASSERT(script->ownerObject == fun);
 
             cfun->u.i.script = js_CloneScript(cx, script);
             if (!cfun->script())
                 return NULL;
+            cfun->script()->setOwnerObject(cfun);
 #ifdef CHECK_SCRIPT_OWNER
             cfun->script()->owner = NULL;
 #endif

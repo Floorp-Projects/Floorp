@@ -247,7 +247,7 @@ nsIURIFixup *nsDocShell::sURIFixup = 0;
 // True means we validate window targets to prevent frameset
 // spoofing. Initialize this to a non-bolean value so we know to check
 // the pref on the creation of the first docshell.
-static PRBool gValidateOrigin = (PRBool)0xffffffff;
+static PRUint32 gValidateOrigin = 0xffffffff;
 
 // Hint for native dispatch of events on how long to delay after 
 // all documents have loaded in milliseconds before favoring normal
@@ -4504,7 +4504,7 @@ nsDocShell::Create()
     mAllowSubframes =
         Preferences::GetBool("browser.frames.enabled", mAllowSubframes);
 
-    if (gValidateOrigin == (PRBool)0xffffffff) {
+    if (gValidateOrigin == 0xffffffff) {
         // Check pref to see if we should prevent frameset spoofing
         gValidateOrigin =
             Preferences::GetBool("browser.frame.validate_origin", PR_TRUE);

@@ -113,8 +113,8 @@ Mark(JSTracer *trc, T *thing)
     JS_ASSERT(thing->isAligned());
 
     JSRuntime *rt = trc->context->runtime;
-    JS_ASSERT(thing->arenaHeader()->compartment);
-    JS_ASSERT(thing->arenaHeader()->compartment->rt == rt);
+    JS_ASSERT(thing->compartment());
+    JS_ASSERT(thing->compartment()->rt == rt);
 
     if (rt->gcCheckCompartment && thing->compartment() != rt->gcCheckCompartment &&
         thing->compartment() != rt->atomsCompartment)

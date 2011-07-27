@@ -58,6 +58,7 @@ _TEST_FILES = \
  		test_bug449243.html \
 		test_bug455992.html \
 		test_bug456244.html \
+		test_bug460740.html \
 		test_bug478725.html \
 		test_bug480972.html \
 		test_bug484181.html \
@@ -79,6 +80,7 @@ _TEST_FILES = \
 		test_bug622371.html \
 		test_bug629845.html \
 		test_bug640321.html \
+		test_bug668599.html \
 		test_CF_HTML_clipboard.html \
 		test_contenteditable_focus.html \
 		test_htmleditor_keyevent_handling.html \
@@ -96,6 +98,7 @@ _DATA_FILES = \
 
 _CHROME_TEST_FILES = \
 		test_contenteditable_text_input_handling.html \
+		test_bug489202.xul \
 		test_bug490879.xul \
 		test_bug607584.xul \
 		test_bug616590.xul \

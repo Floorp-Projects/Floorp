@@ -2200,6 +2200,9 @@ nsGenericElement::~nsGenericElement()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
+  if (GetParent()) {
+    NS_RELEASE(mParent);
+  }
 }
 
 NS_IMETHODIMP
@@ -2822,6 +2825,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Now set the parent and set the "Force attach xbl" flag if needed.
   if (aParent) {
+    if (!GetParent()) {
+      NS_ADDREF(aParent);
+    }
     mParent = aParent;
 
     if (aParent->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
@@ -2930,7 +2936,11 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     HasFlag(NODE_FORCE_XBL_BINDINGS) ? GetOwnerDoc() : GetCurrentDoc();
 
   if (aNullParent) {
-    mParent = nsnull;
+    if (GetParent()) {
+      NS_RELEASE(mParent);
+    } else {
+      mParent = nsnull;
+    }
     SetParentIsContent(false);
   }
   ClearInDocument();
@@ -3995,7 +4005,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
 
     PRBool appending =
       !IsNodeOfType(eDOCUMENT) && PRUint32(insPos) == GetChildCount();
-    PRBool firstInsPos = insPos;
+    PRInt32 firstInsPos = insPos;
     nsIContent* firstInsertedContent = fragChildren[0];
 
     // Iterate through the fragment's children, and insert them in the new
@@ -4235,7 +4245,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
       cb.NoteXPCOMChild(
         static_cast<nsIDOMNodeList*>(slots->mChildrenList.get()));
     }
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(GetParent())
   }
+  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
