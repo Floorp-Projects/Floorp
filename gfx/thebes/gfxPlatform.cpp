@@ -913,9 +913,9 @@ gfxPlatform::GetCMSMode()
             gCMSMode = static_cast<eCMSMode>(mode);
         }
 
-        PRBool forceV4;
-        rv = Preferences::GetBool("gfx.color_management.force_v4", &forceV4);
-        if (NS_SUCCEEDED(rv) && forceV4) {
+        PRBool enableV4;
+        rv = Preferences::GetBool("gfx.color_management.enablev4", &enableV4);
+        if (NS_SUCCEEDED(rv) && enableV4) {
             qcms_enable_iccv4();
         }
     }
