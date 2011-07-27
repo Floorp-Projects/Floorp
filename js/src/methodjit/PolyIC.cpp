@@ -490,6 +490,8 @@ class SetPropCompiler : public PICStubCompiler
             return disable("dense array");
         if (!obj->isNative())
             return disable("non-native");
+        if (obj->watched())
+            return disable("watchpoint");
 
         Class *clasp = obj->getClass();
 

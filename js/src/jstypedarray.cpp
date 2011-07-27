@@ -326,7 +326,7 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, J
     if (!delegate)
         return false;
 
-    return js_SetProperty(cx, delegate, id, vp, strict);
+    return js_SetPropertyHelper(cx, delegate, id, 0, vp, strict);
 }
 
 JSBool
@@ -748,7 +748,7 @@ class TypedArrayTemplate
         }
 
         jsuint index;
-        // We can't just chain to js_SetProperty, because we're not a normal object.
+        // We can't just chain to js_SetPropertyHelper, because we're not a normal object.
         if (!tarray->isArrayIndex(cx, id, &index)) {
 #if 0
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
