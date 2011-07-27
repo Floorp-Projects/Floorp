@@ -550,7 +550,7 @@ struct JSRuntime {
 
     /*
      * Lock serializing watchPointList accesses, and count of all mutations to
-     * watchPointList made by debugger threads.  To keep the code simple, we
+     * watchPointList made by debugger threads. To keep the code simple, we
      * define debuggerMutations for the thread-unsafe case too.
      */
     PRLock              *debuggerLock;

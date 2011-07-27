@@ -519,7 +519,7 @@ JS_StopProfiling();
 extern JS_PUBLIC_API(JSBool)
 JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj);
 
-/* Defined in jsdbg.cpp. */
+/* Defined in vm/Debugger.cpp. */
 extern JS_PUBLIC_API(JSBool)
 JS_DefineDebuggerObject(JSContext *cx, JSObject *obj);
 

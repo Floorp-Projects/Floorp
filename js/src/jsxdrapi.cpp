@@ -49,12 +49,12 @@
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsdbg.h"
 #include "jsnum.h"
 #include "jsobj.h"              /* js_XDRObject */
 #include "jsscript.h"           /* js_XDRScript */
 #include "jsstr.h"
 #include "jsxdrapi.h"
+#include "vm/Debugger.h"
 
 #include "jsobjinlines.h"
 

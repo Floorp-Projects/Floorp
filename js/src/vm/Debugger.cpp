@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsdbg.h"
+#include "vm/Debugger.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsemit.h"

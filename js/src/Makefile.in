@@ -140,7 +140,6 @@ CPPSRCS		= \
 		jscompartment.cpp \
 		jsdate.cpp \
 		jsdbgapi.cpp \
-		jsdbg.cpp \
 		jsdhash.cpp \
 		jsdtoa.cpp \
 		jsemit.cpp \
@@ -185,6 +184,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		Debugger.cpp \
 		GlobalObject.cpp \
 		Stack.cpp \
 		String.cpp \
@@ -273,7 +273,8 @@ EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
 		ArgumentsObject.h \
-		GlobalObject.h	 \
+		Debugger.h \
+		GlobalObject.h \
 		Stack.h \
 		String.h \
 		StringObject.h \

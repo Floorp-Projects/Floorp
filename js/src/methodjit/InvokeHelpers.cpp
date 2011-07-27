@@ -58,7 +58,7 @@
 #include "jsanalyze.h"
 #include "methodjit/BaseCompiler.h"
 #include "methodjit/ICRepatcher.h"
-#include "jsdbg.h"
+#include "vm/Debugger.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycacheinlines.h"

@@ -39,8 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsdbg_h__
-#define jsdbg_h__
+#ifndef Debugger_h__
+#define Debugger_h__
 
 #include "jsapi.h"
 #include "jsclist.h"
@@ -103,8 +103,8 @@ class Debugger {
         ObjectWeakMap;
     ObjectWeakMap objects;
 
-    /* An ephemeral map from script-holding objects to Debugger.Script */
     /*
+     * An ephemeral map from script-holding objects to Debugger.Script
      * instances.
      */
     typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CrossCompartmentMarkPolicy>
@@ -270,7 +270,7 @@ class Debugger {
     static inline void onDestroyScript(JSScript *script);
     static JSTrapStatus onTrap(JSContext *cx, Value *vp);
 
-    /**************************************** Functions for use by jsdbg.cpp. */
+    /************************************* Functions for use by Debugger.cpp. */
 
     inline bool observesEnterFrame() const;
     inline bool observesNewScript() const;
@@ -513,4 +513,4 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
 
 }
 
-#endif /* jsdbg_h__ */
+#endif /* Debugger_h__ */
