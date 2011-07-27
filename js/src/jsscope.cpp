@@ -63,6 +63,7 @@
 #include "jstracer.h"
 
 #include "jsdbgapiinlines.h"
+#include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
@@ -186,24 +187,10 @@ Shape::hashify(JSRuntime *rt)
     return true;
 }
 
-JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
-JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
-
-#if JS_BYTES_PER_WORD == 4
-# define HASH_ID(id) ((JSHashNumber)(JSID_BITS(id)))
-#elif JS_BYTES_PER_WORD == 8
-# define HASH_ID(id) ((JSHashNumber)(JSID_BITS(id)) ^ (JSHashNumber)((JSID_BITS(id)) >> 32))
-#else
-# error "Unsupported configuration"
-#endif
-
 /*
  * Double hashing needs the second hash code to be relatively prime to table
- * size, so we simply make hash2 odd.  The inputs to multiplicative hash are
- * the golden ratio, expressed as a fixed-point 32 bit fraction, and the id
- * itself.
+ * size, so we simply make hash2 odd.
  */
-#define HASH0(id)               (HASH_ID(id) * JS_GOLDEN_RATIO)
 #define HASH1(hash0,shift)      ((hash0) >> (shift))
 #define HASH2(hash0,log2,shift) ((((hash0) << (log2)) >> (shift)) | 1)
 
@@ -219,7 +206,7 @@ PropertyTable::search(jsid id, bool adding)
     JS_ASSERT(!JSID_IS_VOID(id));
 
     /* Compute the primary hash address. */
-    hash0 = HASH0(id);
+    hash0 = HashId(id);
     hash1 = HASH1(hash0, hashShift);
     spp = entries + hash1;
 

@@ -12344,7 +12344,7 @@ TraceRecorder::setProperty(JSObject* obj, LIns* obj_ins, const Value &v, LIns* v
     *deferredp = false;
 
     JSAtom *atom = atoms[GET_INDEX(cx->regs().pc)];
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = js_CheckForStringIndex(ATOM_TO_JSID(atom));
 
     if (obj->getOps()->setProperty)
         RETURN_STOP("non-native object");  // FIXME: bug 625900
