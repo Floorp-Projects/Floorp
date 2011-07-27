@@ -88,32 +88,30 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     Loop over argv vector, push arguments onto stack in reverse order
     ***************************************************************/
 
-    // eax -= sizeof(Value)
-    masm.subl(Imm32(8), eax);
-
     // ebx = argv   --argv pointer is in ebp + 16
     masm.movl(Operand(ebp, 16), ebx);
 
-    // eax = argv[8(argc-1)]  --eax now points to the last argument
+    // eax = argv[8(argc)]  --eax now points one value past the last argument
     masm.addl(ebx, eax);
 
-    // while (eax >= ebx)  --while still looping through arguments
-    Label header, done;
-    masm.bind(&header);
+    // while (eax > ebx)  --while still looping through arguments
+    {
+        Label header, footer;
+        masm.bind(&header);
 
-    masm.cmpl(eax, ebx);
-    masm.j(Assembler::LessThan, &done);
+        masm.cmpl(eax, ebx);
+        masm.j(Assembler::BelowOrEqual, &footer);
 
-    // Push what eax points to on stack, a Value is 2 words
-    masm.push(Operand(eax, 4));
-    masm.push(Operand(eax, 0));
+        // eax -= 8  --move to previous argument
+        masm.subl(Imm32(8), eax);
 
-    // eax -= 8  --move to previous argument
-    masm.subl(Imm32(8), eax);
+        // Push what eax points to on stack, a Value is 2 words
+        masm.push(Operand(eax, 4));
+        masm.push(Operand(eax, 0));
 
-    // end while
-    masm.jmp(&header);
-    masm.bind(&done);
+        masm.jmp(&header);
+        masm.bind(&footer);
+    }
 
     // Save the stack size so we can remove arguments and alignment after the
     // call.
