@@ -1201,30 +1201,39 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
     return reinterpret_cast<JSCrossCompartmentCall *>(call);
 }
 
+// Declared in jscompartment.h
+JSClass js_dummy_class = {
+    "jdummy",
+    JSCLASS_GLOBAL_FLAGS,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub,   NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
-    static JSClass dummy_class = {
-        "jdummy",
-        JSCLASS_GLOBAL_FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,
-        JS_PropertyStub,  JS_StrictPropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,
-        JS_ConvertStub,   NULL,
-        JSCLASS_NO_OPTIONAL_MEMBERS
-    };
-
     CHECK_REQUEST(cx);
 
-    JS_ASSERT(target);
     JSObject *scriptObject = target->u.object;
     if (!scriptObject) {
         SwitchToCompartment sc(cx, target->compartment);
-        scriptObject = JS_NewGlobalObject(cx, &dummy_class);
+        scriptObject = JS_NewGlobalObject(cx, &js_dummy_class);
         if (!scriptObject)
             return NULL;
     }
     return JS_EnterCrossCompartmentCall(cx, scriptObject);
+}
+
+JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
+{
+    CHECK_REQUEST(cx);
+
+    StackFrame *frame = Valueify(target);
+    return JS_EnterCrossCompartmentCall(cx, frame->scopeChain().getGlobal());
 }
 
 JS_PUBLIC_API(void)
@@ -1265,6 +1274,19 @@ AutoEnterScriptCompartment::enter(JSContext *cx, JSScript *target)
         return true;
     }
     call = JS_EnterCrossCompartmentCallScript(cx, target);
+    return call != NULL;
+}
+
+bool
+AutoEnterFrameCompartment::enter(JSContext *cx, JSStackFrame *target)
+{
+    JS_ASSERT(!call);
+    js::StackFrame *fp = Valueify(target);
+    if (cx->compartment == fp->scopeChain().compartment()) {
+        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
+        return true;
+    }
+    call = JS_EnterCrossCompartmentCallStackFrame(cx, target);
     return call != NULL;
 }
 
