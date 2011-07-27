@@ -3383,8 +3383,8 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
         return false;
 
     size_t n = 0;
-    if (to->isWrapper() &&
-        (JSWrapper::wrapperHandler(to)->flags() & JSWrapper::CROSS_COMPARTMENT)) {
+    if (from->isWrapper() &&
+        (JSWrapper::wrapperHandler(from)->flags() & JSWrapper::CROSS_COMPARTMENT)) {
         to->setSlot(0, from->getSlot(0));
         to->setSlot(1, from->getSlot(1));
         n = 2;
@@ -3397,6 +3397,24 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
         to->setSlot(n, v);
     }
     return true;
+}
+
+static void
+CheckProxy(JSObject *obj)
+{
+    if (!obj->isProxy())
+        return;
+
+    JSProxyHandler *handler = obj->getProxyHandler();
+    if (handler->isCrossCompartment())
+        return;
+
+    Value priv = obj->getProxyPrivate();
+    if (!priv.isObject())
+        return;
+
+    if (priv.toObject().compartment() != obj->compartment())
+        JS_Assert("compartment mismatch in proxy object", __FILE__, __LINE__);
 }
 
 JSObject *
