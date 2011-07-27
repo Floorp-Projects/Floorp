@@ -142,3 +142,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "cookies",
 XPCOMUtils.defineLazyServiceGetter(Services, "logins",
                                    "@mozilla.org/login-manager;1",
                                    "nsILoginManager");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "telemetry",
+                                   "@mozilla.org/base/telemetry;1",
+                                   "nsITelemetry");
