@@ -62,6 +62,7 @@ using nsMouseEvent;
 using nsMouseScrollEvent;
 using nsKeyEvent;
 using RemoteDOMEvent;
+using mozilla::WindowsHandle;
 
 namespace mozilla {
 namespace dom {
@@ -183,6 +184,11 @@ parent:
      */
     sync GetDPI() returns (float value);
 
+    /**
+     * Return native data of root widget
+     */
+    sync GetWidgetNativeData() returns (WindowsHandle value);
+
     SetCursor(PRUint32 value);
 
     PContentPermissionRequest(nsCString aType, URI uri);
@@ -239,7 +245,7 @@ child:
 
     LoadURL(nsCString uri);
 
-    Move(nsIntSize size);
+    UpdateDimensions(nsRect rect, nsIntSize size);
 
     /**
      * Sending an activate message moves focus to the child.

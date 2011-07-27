@@ -85,8 +85,19 @@ nsHyphenator::Hyphenate(const nsAString& aString,
 
   PRBool inWord = PR_FALSE;
   PRUint32 wordStart = 0, wordLimit = 0;
-  for (PRUint32 i = 0; i < aString.Length(); i++) {
-    PRUnichar ch = aString[i];
+  PRUint32 chLen;
+  for (PRUint32 i = 0; i < aString.Length(); i += chLen) {
+    PRUint32 ch = aString[i];
+    chLen = 1;
+
+    if (NS_IS_HIGH_SURROGATE(ch)) {
+      if (i + 1 < aString.Length() && NS_IS_LOW_SURROGATE(aString[i+1])) {
+        ch = SURROGATE_TO_UCS4(ch, aString[i+1]);
+        chLen = 2;
+      } else {
+        NS_WARNING("unpaired surrogate found during hyphenation");
+      }
+    }
 
     nsIUGenCategory::nsUGenCategory cat = mCategories->Get(ch);
     if (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kMark) {
@@ -94,14 +105,15 @@ nsHyphenator::Hyphenate(const nsAString& aString,
         inWord = PR_TRUE;
         wordStart = i;
       }
-      wordLimit = i + 1;
-      if (i < aString.Length() - 1) {
+      wordLimit = i + chLen;
+      if (i + chLen < aString.Length()) {
         continue;
       }
     }
 
     if (inWord) {
-      NS_ConvertUTF16toUTF8 utf8(aString.BeginReading() + wordStart,
+      const PRUnichar *begin = aString.BeginReading();
+      NS_ConvertUTF16toUTF8 utf8(begin + wordStart,
                                  wordLimit - wordStart);
       nsAutoTArray<char,200> utf8hyphens;
       utf8hyphens.SetLength(utf8.Length() + 5);
@@ -113,29 +125,24 @@ nsHyphenator::Hyphenate(const nsAString& aString,
                                       utf8hyphens.Elements(), nsnull,
                                       &rep, &pos, &cut);
       if (!err) {
-        PRUint32 utf16offset = wordStart;
-        const char *cp = utf8.BeginReading();
-        while (cp < utf8.EndReading()) {
-          if (UTF8traits::isASCII(*cp)) { // single-byte utf8 char
-            cp++;
-            utf16offset++;
-          } else if (UTF8traits::is2byte(*cp)) { // 2-byte sequence
-            cp += 2;
-            utf16offset++;
-          } else if (UTF8traits::is3byte(*cp)) { // 3-byte sequence
-            cp += 3;
-            utf16offset++;
-          } else { // must be a 4-byte sequence (no need to check validity,
-                   // as this was just created with NS_ConvertUTF16toUTF8)
-            NS_ASSERTION(UTF8traits::is4byte(*cp), "unexpected utf8 byte");
-            cp += 4;
-            utf16offset += 2;
+        // Surprisingly, hnj_hyphen_hyphenate2 converts the 'hyphens' buffer
+        // from utf8 code unit indexing (which would match the utf8 input
+        // string directly) to Unicode character indexing.
+        // We then need to convert this to utf16 code unit offsets for Gecko.
+        const char *hyphPtr = utf8hyphens.Elements();
+        const PRUnichar *cur = begin + wordStart;
+        const PRUnichar *end = begin + wordLimit;
+        while (cur < end) {
+          if (*hyphPtr & 0x01) {
+            aHyphens[cur - begin] = PR_TRUE;
           }
-          NS_ASSERTION(cp <= utf8.EndReading(), "incomplete utf8 string?");
-          NS_ASSERTION(utf16offset <= aString.Length(), "length mismatch?");
-          if (utf8hyphens[cp - utf8.BeginReading() - 1] & 0x01) {
-            aHyphens[utf16offset - 1] = PR_TRUE;
+          cur++;
+          if (cur < end && NS_IS_LOW_SURROGATE(*cur) &&
+              NS_IS_HIGH_SURROGATE(*(cur-1)))
+          {
+            cur++;
           }
+          hyphPtr++;
         }
       }
     }

@@ -107,7 +107,7 @@ public:
   PRBool IsRunning();
 
   nsCOMPtr<nsITimer> mRepeatTimer;
-  PRBool mDelta;
+  PRInt32 mDelta;
   nsListBoxBodyFrame* mOuter;
 }; 
 
@@ -1267,13 +1267,14 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
 
 PRBool
 nsListBoxBodyFrame::ContinueReflow(nscoord height) 
-{ 
-  nsPresContext* presContext = PresContext();
-  if (presContext->PresShell()->IsAccessibilityActive()) {
+{
+#ifdef ACCESSIBILITY
+  if (nsIPresShell::IsAccessibilityActive()) {
     // Create all the frames at once so screen readers and
     // onscreen keyboards can see the full list right away
     return PR_TRUE;
   }
+#endif
 
   if (height <= 0) {
     nsIFrame* lastChild = GetLastFrame();

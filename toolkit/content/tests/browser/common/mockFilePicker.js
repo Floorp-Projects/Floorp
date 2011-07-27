@@ -34,7 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockObjects.js",
+                 this);
 
 var mockFilePickerSettings = {
   /**
@@ -71,9 +74,9 @@ var mockFilePickerResults = {
 function MockFilePicker() { };
 MockFilePicker.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
-  init: function(aParent, aTitle, aMode) { },
-  appendFilters: function(aFilterMask) { },
-  appendFilter: function(aTitle, aFilter) { },
+  init: function () {},
+  appendFilters: function () {},
+  appendFilter: function () {},
   defaultString: "",
   defaultExtension: "",
   filterIndex: 0,

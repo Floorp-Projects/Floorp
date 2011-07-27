@@ -113,6 +113,10 @@ public:
     // connections.
     nsresult PruneDeadConnections();
 
+    // Close all idle persistent connections and prevent any active connections
+    // from being reused.
+    nsresult ClosePersistentConnections();
+
     // called to get a reference to the socket transport service.  the socket
     // transport service is not available when the connection manager is down.
     nsresult GetSocketThreadTarget(nsIEventTarget **);
@@ -263,6 +267,7 @@ private:
     static PRIntn PruneDeadConnectionsCB(nsHashKey *, void *, void *);
     static PRIntn ShutdownPassCB(nsHashKey *, void *, void *);
     static PRIntn PurgeExcessIdleConnectionsCB(nsHashKey *, void *, void *);
+    static PRIntn ClosePersistentConnectionsCB(nsHashKey *, void *, void *);
     PRBool   ProcessPendingQForEntry(nsConnectionEntry *);
     PRBool   AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
     void     GetConnection(nsConnectionEntry *, nsHttpTransaction *,
@@ -272,6 +277,7 @@ private:
     PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
     nsresult EnsureSocketThreadTargetIfOnline();
+    void     ClosePersistentConnections(nsConnectionEntry *ent);
     nsresult CreateTransport(nsConnectionEntry *, nsHttpTransaction *);
     void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
     void     StartedConnect();
@@ -333,6 +339,7 @@ private:
     void OnMsgPruneDeadConnections (PRInt32, void *);
     void OnMsgReclaimConnection    (PRInt32, void *);
     void OnMsgUpdateParam          (PRInt32, void *);
+    void OnMsgClosePersistentConnections (PRInt32, void *);
 
     // Total number of active connections in all of the ConnectionEntry objects
     // that are accessed from mCT connection table.

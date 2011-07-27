@@ -23,12 +23,13 @@ add_test(function test_user_agent_desktop() {
                    Services.appinfo.appBuildID + ".desktop";
 
   let request = new SyncStorageRequest("http://localhost:8080/resource");
-  request.get(function (error) {
+  request.onComplete = function onComplete(error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
     do_check_eq(handler.request.getHeader("User-Agent"), expectedUA);
     server.stop(run_next_test);
-  });
+  };
+  do_check_eq(request.get(), request);
 });
 
 add_test(function test_user_agent_mobile() {
@@ -86,6 +87,7 @@ add_test(function test_weave_timestamp() {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
     do_check_eq(SyncStorageRequest.serverTime, TIMESTAMP);
+    delete SyncStorageRequest.serverTime;
     server.stop(run_next_test);
   });
 });
@@ -162,6 +164,50 @@ add_test(function test_weave_quota_error() {
     do_check_eq(this.response.status, 400);
     do_check_eq(quotaValue, undefined);
     Svc.Obs.remove("weave:service:quota:remaining", onQuota);
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_abort() {
+  function handler(request, response) {
+    response.setHeader("X-Weave-Timestamp", "" + TIMESTAMP, false);
+    response.setHeader("X-Weave-Quota-Remaining", '1048576', false);
+    response.setHeader("X-Weave-Backoff", '600', false);
+    response.setStatusLine(request.httpVersion, 200, "OK");
+  }
+  let server = httpd_setup({"/resource": handler});
+
+  let request = new SyncStorageRequest("http://localhost:8080/resource");
+
+  // Aborting a request that hasn't been sent yet is pointless and will throw.
+  do_check_throws(function () {
+    request.abort();
+  });
+
+  function throwy() {
+    do_throw("Shouldn't have gotten here!");
+  }
+
+  Svc.Obs.add("weave:service:backoff:interval", throwy);
+  Svc.Obs.add("weave:service:quota:remaining", throwy);
+  request.onProgress = request.onComplete = throwy;
+
+  request.get();
+  request.abort();
+  do_check_eq(request.status, request.ABORTED);
+
+  // Aborting an already aborted request is pointless and will throw.
+  do_check_throws(function () {
+    request.abort();
+  });
+
+  Utils.nextTick(function () {
+    // Verify that we didn't try to process any of the values.
+    do_check_eq(SyncStorageRequest.serverTime, undefined);
+
+    Svc.Obs.remove("weave:service:backoff:interval", throwy);
+    Svc.Obs.remove("weave:service:quota:remaining", throwy);
+
     server.stop(run_next_test);
   });
 });

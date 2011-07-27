@@ -142,7 +142,7 @@ nsSVGViewBox::SetBaseValue(float aX, float aY, float aWidth, float aHeight,
 static nsresult
 ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
 {
-  nsCharSeparatedTokenizer
+  nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
     tokenizer(aStr, ',',
               nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
   float vals[NUM_VIEWBOX_COMPONENTS];
@@ -165,12 +165,12 @@ ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
       tokenizer.hasMoreTokens() ||                // Too many values.
       tokenizer.lastTokenEndedWithSeparator()) {  // Trailing comma.
     return NS_ERROR_DOM_SYNTAX_ERR;
-  } else {
-    aViewBox->x = vals[0];
-    aViewBox->y = vals[1];
-    aViewBox->width = vals[2];
-    aViewBox->height = vals[3];
   }
+
+  aViewBox->x = vals[0];
+  aViewBox->y = vals[1];
+  aViewBox->width = vals[2];
+  aViewBox->height = vals[3];
 
   return NS_OK;
 }

@@ -75,9 +75,6 @@ extern PRThread *gSocketThread;
 
 static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
 
-// mLineBuf is limited to this number of bytes.
-#define MAX_LINEBUF_LENGTH (1024 * 10)
-
 // Place a limit on how much non-compliant HTTP can be skipped while
 // looking for a response header
 #define MAX_INVALID_RESPONSE_BODY_SIZE (1024 * 128)
@@ -828,10 +825,6 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
     }
 
     // append segment to mLineBuf...
-    if (mLineBuf.Length() + len > MAX_LINEBUF_LENGTH) {
-        LOG(("excessively long header received, canceling transaction [trans=%x]", this));
-        return NS_ERROR_ABORT;
-    }
     mLineBuf.Append(segment, len);
     
     // a line buf with only a new line char signifies the end of headers.

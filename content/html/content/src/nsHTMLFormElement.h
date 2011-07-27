@@ -94,7 +94,7 @@ class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLFormElement,
                           public nsIWebProgressListener,
                           public nsIForm,
-                          public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH
+                          public nsIRadioGroupContainer
 {
 public:
   nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);

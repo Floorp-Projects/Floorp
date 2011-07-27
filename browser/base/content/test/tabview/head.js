@@ -32,6 +32,9 @@ function createGroupItemWithTabs(win, width, height, padding, urls, animate) {
     ok(newItem.container, "Created element "+t+":"+newItem.container);
     ++t;
   });
+  // to set one of tabItem to be active since we load tabs into a group 
+  // in a non-standard flow.
+  contentWindow.UI.setActive(groupItem);
   return groupItem;
 }
 
@@ -133,11 +136,13 @@ function showTabView(callback, win) {
   win = win || window;
 
   if (win.TabView.isVisible()) {
-    callback();
+    waitForFocus(callback, win);
     return;
   }
 
-  whenTabViewIsShown(callback, win);
+  whenTabViewIsShown(function() {
+    waitForFocus(callback, win);
+  }, win);
   win.TabView.show();
 }
 
@@ -163,8 +168,8 @@ function whenTabViewIsHidden(callback, win) {
     return;
   }
 
-  win.addEventListener('tabviewhidden', function () {
-    win.removeEventListener('tabviewhidden', arguments.callee, false);
+  win.addEventListener('tabviewhidden', function onHidden() {
+    win.removeEventListener('tabviewhidden', onHidden, false);
     callback();
   }, false);
 }
@@ -178,8 +183,8 @@ function whenTabViewIsShown(callback, win) {
     return;
   }
 
-  win.addEventListener('tabviewshown', function () {
-    win.removeEventListener('tabviewshown', arguments.callee, false);
+  win.addEventListener('tabviewshown', function onShown() {
+    win.removeEventListener('tabviewshown', onShown, false);
     callback();
   }, false);
 }

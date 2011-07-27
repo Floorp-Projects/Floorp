@@ -92,6 +92,9 @@ MessageLoop::MessageLoop(Type type)
       nestable_tasks_allowed_(true),
       exception_restoration_(false),
       state_(NULL),
+#ifdef OS_WIN
+      os_modal_loop_(false),
+#endif  // OS_WIN
       next_sequence_num_(0) {
   DCHECK(!current()) << "should only have one message loop per thread";
   lazy_tls_ptr.Pointer()->Set(this);

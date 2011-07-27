@@ -60,8 +60,6 @@
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
 
-static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
-
 PRTime gFirstPaintTimestamp = 0; // Timestamp of the first paint event
 /**
    XXX TODO XXX
@@ -164,28 +162,6 @@ nsViewManager::~nsViewManager()
 }
 
 NS_IMPL_ISUPPORTS1(nsViewManager, nsIViewManager)
-
-nsresult
-nsViewManager::CreateRegion(nsIRegion* *result)
-{
-  nsresult rv;
-
-  if (!mRegionFactory) {
-    mRegionFactory = do_GetClassObject(kRegionCID, &rv);
-    if (NS_FAILED(rv)) {
-      *result = nsnull;
-      return rv;
-    }
-  }
-
-  nsIRegion* region = nsnull;
-  rv = CallCreateInstance(mRegionFactory.get(), &region);
-  if (NS_SUCCEEDED(rv)) {
-    rv = region->Init();
-    *result = region;
-  }
-  return rv;
-}
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
@@ -634,7 +610,7 @@ ShouldIgnoreInvalidation(nsViewManager* aVM)
 {
   while (aVM) {
     nsIViewObserver* vo = aVM->GetViewObserver();
-    if (vo && vo->ShouldIgnoreInvalidation()) {
+    if (!vo || vo->ShouldIgnoreInvalidation()) {
       return PR_TRUE;
     }
     nsView* view = aVM->GetRootViewImpl()->GetParent();

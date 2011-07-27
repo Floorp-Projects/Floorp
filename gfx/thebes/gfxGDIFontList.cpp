@@ -60,7 +60,11 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIWindowsRegKey.h"
 
+#include "mozilla/Telemetry.h"
+
 #include <usp10.h>
+
+using namespace mozilla;
 
 #define ROUND(x) floor((x) + 0.5)
 
@@ -648,6 +652,7 @@ gfxGDIFontList::GetFontSubstitutes()
 nsresult
 gfxGDIFontList::InitFontList()
 {
+    Telemetry::AutoTimer<Telemetry::GDI_INITFONTLIST_TOTAL> timer;
     gfxFontCache *fc = gfxFontCache::GetCache();
     if (fc)
         fc->AgeAllGenerations();

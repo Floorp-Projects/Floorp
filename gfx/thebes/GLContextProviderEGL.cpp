@@ -192,6 +192,12 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config);
 EGLConfig
 CreateConfig();
 #ifdef MOZ_X11
+
+#ifdef MOZ_EGL_XRENDER_COMPOSITE
+static EGLSurface
+CreateBasicEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig);
+#endif
+
 static EGLConfig
 CreateEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig = nsnull, EGLenum aDepth = 0);
 #endif
@@ -391,7 +397,11 @@ public:
             return PR_FALSE;
         }
 
+#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+        mEGLDisplay = fGetDisplay((EGLNativeDisplayType) gdk_x11_get_default_xdisplay());
+#else
         mEGLDisplay = fGetDisplay(EGL_DEFAULT_DISPLAY);
+#endif
         if (!fInitialize(mEGLDisplay, NULL, NULL))
             return PR_FALSE;
 
@@ -720,6 +730,17 @@ public:
         mIsDoubleBuffered = aIsDB;
     }
 
+#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+    gfxASurface* GetOffscreenPixmapSurface()
+    {
+      return mThebesSurface;
+    }
+    
+    virtual PRBool WaitNative() {
+      return sEGLLibrary.fWaitNative(LOCAL_EGL_CORE_NATIVE_ENGINE);
+    }
+#endif
+
     PRBool BindTexImage()
     {
         if (!mSurface)
@@ -856,6 +877,14 @@ public:
     CreateEGLPixmapOffscreenContext(const gfxIntSize& aSize,
                                     const ContextFormat& aFormat,
                                     PRBool aShare);
+
+#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+    static already_AddRefed<GLContextEGL>
+    CreateBasicEGLPixmapOffscreenContext(const gfxIntSize& aSize,
+                                         const ContextFormat& aFormat);
+
+    PRBool ResizeOffscreenPixmapSurface(const gfxIntSize& aNewSize);
+#endif
 
     static already_AddRefed<GLContextEGL>
     CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
@@ -1058,6 +1087,10 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
         return PR_TRUE;
     }
+#endif
+
+#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+    return ResizeOffscreenPixmapSurface(aNewSize);
 #endif
 
     return ResizeOffscreenFBO(aNewSize);
@@ -2139,6 +2172,8 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
 
 #if defined(ANDROID) || defined(XP_WIN)
     return GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, aFormat);
+#elif defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+  return GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, aFormat);
 #elif defined(MOZ_X11)
     nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateEGLPixmapOffscreenContext(aSize, aFormat, PR_TRUE);
@@ -2240,6 +2275,181 @@ GLContextProviderEGL::Shutdown()
 {
     gGlobalContext = nsnull;
 }
+
+//------------------------------------------------------------------------------
+// The following methods exist to support an accelerated WebGL XRender composite
+// path for BasicLayers. This is a potentially temporary change that can be
+// removed when performance of GL layers is superior on mobile linux platforms.
+//------------------------------------------------------------------------------
+#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+
+EGLSurface
+CreateBasicEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig)
+{
+  gfxXlibSurface* xsurface = static_cast<gfxXlibSurface*>(aSurface);
+
+  PRBool opaque =
+    aSurface->GetContentType() == gfxASurface::CONTENT_COLOR;
+
+  EGLSurface surface = nsnull;
+  if (aConfig && *aConfig) {
+    surface = sEGLLibrary.fCreatePixmapSurface(EGL_DISPLAY(), *aConfig,
+                                               xsurface->XDrawable(),
+                                               0);
+
+    if (surface != EGL_NO_SURFACE)
+      return surface;
+  }
+
+  EGLConfig configs[32];
+  int numConfigs = 32;
+
+  static EGLint pixmap_config[] = {
+      LOCAL_EGL_SURFACE_TYPE,         LOCAL_EGL_PIXMAP_BIT,
+      LOCAL_EGL_RENDERABLE_TYPE,      LOCAL_EGL_OPENGL_ES2_BIT,
+      0x30E2, 0x30E3,
+      LOCAL_EGL_DEPTH_SIZE,           16,
+      LOCAL_EGL_NONE
+  };
+
+  if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(),
+                                 pixmap_config,
+                                 configs, numConfigs, &numConfigs))
+      return nsnull;
+
+  if (numConfigs == 0)
+      return nsnull;
+
+  int i = 0;
+  for (i = 0; i < numConfigs; ++i) {
+    surface = sEGLLibrary.fCreatePixmapSurface(EGL_DISPLAY(), configs[i],
+                                               xsurface->XDrawable(),
+                                               0);
+
+    if (surface != EGL_NO_SURFACE)
+      break;
+  }
+
+  if (!surface) {
+    return nsnull;
+  }
+
+  if (aConfig)
+  {
+    *aConfig = configs[i];
+  }
+
+  return surface;
+}
+
+already_AddRefed<GLContextEGL>
+GLContextEGL::CreateBasicEGLPixmapOffscreenContext(const gfxIntSize& aSize,
+                                              const ContextFormat& aFormat)
+{
+  gfxASurface *thebesSurface = nsnull;
+  EGLNativePixmapType pixmap = 0;
+
+  XRenderPictFormat* format = gfxXlibSurface::FindRenderFormat(DefaultXDisplay(), gfxASurface::ImageFormatARGB32);
+
+  nsRefPtr<gfxXlibSurface> xsurface =
+    gfxXlibSurface::Create(DefaultScreenOfDisplay(DefaultXDisplay()), format, aSize);
+
+  // XSync required after gfxXlibSurface::Create, otherwise EGL will fail with BadDrawable error
+  XSync(DefaultXDisplay(), False);
+  if (xsurface->CairoStatus() != 0)
+  {
+    return nsnull;
+  }
+
+  thebesSurface = xsurface;
+
+  pixmap = xsurface->XDrawable();
+
+  if (!pixmap) {
+    return nsnull;
+  }
+
+  EGLSurface surface = 0;
+  EGLConfig config = 0;
+
+  surface = CreateBasicEGLSurfaceForXSurface(xsurface, &config);
+
+  if (!config) {
+    return nsnull;
+  }
+
+  EGLint cxattribs[] = {
+    LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
+    LOCAL_EGL_NONE
+  };
+
+  EGLContext context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
+                                                  config,
+                                                  EGL_NO_CONTEXT,
+                                                  cxattribs);
+  if (!context) {
+    sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);
+    return nsnull;
+  }
+
+  nsRefPtr<GLContextEGL> glContext = new GLContextEGL(aFormat, nsnull,
+                                                      config, surface, context,
+                                                      PR_TRUE);
+
+  if (!glContext->Init())
+  {
+    return nsnull;
+  }
+
+  glContext->HoldSurface(thebesSurface);
+
+  return glContext.forget();
+}
+
+PRBool GLContextEGL::ResizeOffscreenPixmapSurface(const gfxIntSize& aNewSize)
+{
+  gfxASurface *thebesSurface = nsnull;
+  EGLNativePixmapType pixmap = 0;
+
+  XRenderPictFormat* format = gfxXlibSurface::FindRenderFormat(DefaultXDisplay(), gfxASurface::ImageFormatARGB32);
+
+  nsRefPtr<gfxXlibSurface> xsurface =
+    gfxXlibSurface::Create(DefaultScreenOfDisplay(DefaultXDisplay()),
+                           format,
+                           aNewSize);
+
+  // XSync required after gfxXlibSurface::Create, otherwise EGL will fail with BadDrawable error
+  XSync(DefaultXDisplay(), False);
+  if (xsurface->CairoStatus() != 0)
+    return nsnull;
+
+  thebesSurface = xsurface;
+
+  pixmap = xsurface->XDrawable();
+
+  if (!pixmap) {
+    return nsnull;
+  }
+
+  EGLSurface surface = 0;
+  EGLConfig config = 0;
+  surface = CreateBasicEGLSurfaceForXSurface(xsurface, &config);
+  if (!surface) {
+    NS_WARNING("Failed to resize pbuffer");
+    return nsnull;
+  }
+
+  sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+
+  mSurface = surface;
+  HoldSurface(thebesSurface);
+  SetOffscreenSize(aNewSize, aNewSize);
+  MakeCurrent(PR_TRUE);
+
+  return PR_TRUE;
+}
+
+#endif
 
 } /* namespace gl */
 } /* namespace mozilla */

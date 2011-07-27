@@ -233,7 +233,7 @@ JSHistogram_Snapshot(JSContext *cx, uintN argc, jsval *vp)
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
   JSObject *snapshot = JS_NewObject(cx, NULL, NULL, NULL);
   if (!snapshot)
-    return NS_ERROR_FAILURE;
+    return JS_FALSE;
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(snapshot));
   return ReflectHistogramSnapshot(cx, snapshot, h);
 }

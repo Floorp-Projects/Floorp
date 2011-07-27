@@ -2875,6 +2875,20 @@ nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
   return PR_TRUE;
 }
 
+PRBool 
+nsGenericHTMLFormElement::IsElementDisabledForEvents(PRUint32 aMessage, 
+                                                    nsIFrame* aFrame)
+{
+  PRBool disabled = IsDisabled();
+  if (!disabled && aFrame) {
+    const nsStyleUserInterface* uiStyle = aFrame->GetStyleUserInterface();
+    disabled = uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+      uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
+
+  }
+  return disabled && aMessage != NS_MOUSE_MOVE;
+}
+
 void
 nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
                                           Element* aFormIdElement)
@@ -3212,6 +3226,16 @@ nsGenericHTMLFrameElement::CopyInnerTo(nsGenericElement* aDest) const
   }
 
   return rv;
+}
+
+PRInt64
+nsGenericHTMLFrameElement::SizeOf() const
+{
+  PRInt64 size = MemoryReporter::GetBasicSize<nsGenericHTMLFrameElement,
+                                              nsGenericHTMLElement>(this);
+  // TODO: need to implement SizeOf() in nsFrameLoader, bug 672539.
+  size += mFrameLoader ? sizeof(*mFrameLoader.get()) : 0;
+  return size;
 }
 
 //----------------------------------------------------------------------

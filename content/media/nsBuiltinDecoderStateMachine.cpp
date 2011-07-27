@@ -226,7 +226,9 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (gStateMachineCount == 0) {
     NS_ASSERTION(!gStateMachineThread, "Should have null state machine thread!");
-    nsresult res = NS_NewThread(&gStateMachineThread);
+    nsresult res = NS_NewThread(&gStateMachineThread,
+                                nsnull,
+                                MEDIA_THREAD_STACK_SIZE);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(res), "Can't create media state machine thread");
   }
   gStateMachineCount++;
@@ -1052,7 +1054,9 @@ nsBuiltinDecoderStateMachine::StartDecodeThread()
     return NS_OK;
 
   if (!mDecodeThread) {
-    nsresult rv = NS_NewThread(getter_AddRefs(mDecodeThread));
+    nsresult rv = NS_NewThread(getter_AddRefs(mDecodeThread),
+                               nsnull,
+                               MEDIA_THREAD_STACK_SIZE);
     if (NS_FAILED(rv)) {
       mState = DECODER_STATE_SHUTDOWN;
       return rv;
@@ -1073,7 +1077,9 @@ nsBuiltinDecoderStateMachine::StartAudioThread()
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   mStopAudioThread = PR_FALSE;
   if (HasAudio() && !mAudioThread) {
-    nsresult rv = NS_NewThread(getter_AddRefs(mAudioThread));
+    nsresult rv = NS_NewThread(getter_AddRefs(mAudioThread),
+                               nsnull,
+                               MEDIA_THREAD_STACK_SIZE);
     if (NS_FAILED(rv)) {
       mState = DECODER_STATE_SHUTDOWN;
       return rv;
