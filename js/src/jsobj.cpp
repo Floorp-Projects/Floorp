@@ -80,6 +80,7 @@
 #include "jstracer.h"
 #include "jsdbgapi.h"
 #include "json.h"
+#include "jswatchpoint.h"
 #include "jswrapper.h"
 
 #include "jsinterpinlines.h"
@@ -3333,6 +3334,18 @@ JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index)
     return shape;
 }
 
+JSBool
+JSObject::nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict)
+{
+    if (JS_UNLIKELY(watched())) {
+        id = js_CheckForStringIndex(id);
+        WatchpointMap *wpmap = cx->compartment->watchpointMap;
+        if (wpmap && !wpmap->triggerWatchpoint(cx, this, id, vp))
+            return false;
+    }
+    return getOps()->setProperty(cx, this, id, vp, strict);
+}
+
 static size_t
 GetObjectSize(JSObject *obj)
 {
@@ -5398,6 +5411,16 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
+    if (JS_UNLIKELY(obj->watched())) {
+        /* Fire watchpoints, if any. */
+        WatchpointMap *wpmap = cx->compartment->watchpointMap;
+        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
+            return false;
+
+        /* A watchpoint handler may set *vp to a non-function value. */
+        defineHow &= ~DNP_SET_METHOD;
+    }
+
     if (!LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop))
         return false;
     if (prop) {
@@ -5617,12 +5640,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
   error: // TRACE_1 jumps here in case of error.
     return JS_FALSE;
 #endif
-}
-
-JSBool
-js_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
-{
-    return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
 }
 
 JSBool
@@ -6492,8 +6509,6 @@ DumpProperty(JSObject *obj, const Shape &shape)
 
     if (shape.hasSetterValue())
         fprintf(stderr, "setterValue=%p ", (void *) shape.setterObject());
-    else if (shape.setterOp() == js_watch_set)
-        fprintf(stderr, "setterOp=js_watch_set ");
     else if (!shape.hasDefaultSetter())
         fprintf(stderr, "setterOp=%p ", JS_FUNC_TO_DATA_PTR(void *, shape.setterOp()));
 

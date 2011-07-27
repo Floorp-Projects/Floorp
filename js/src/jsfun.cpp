@@ -529,7 +529,6 @@ StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-
 StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     if (!obj->isStrictArguments())
@@ -555,7 +554,7 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
      */
     AutoValueRooter tvr(cx);
     return js_DeleteProperty(cx, argsobj, id, tvr.addr(), strict) &&
-           js_SetProperty(cx, argsobj, id, vp, strict);
+           js_SetPropertyHelper(cx, argsobj, id, 0, vp, strict);
 }
 
 static JSBool
@@ -1296,12 +1295,6 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
 static JSBool
 fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    /*
-     * Note how that clobbering is what simulates JSPROP_READONLY for all of
-     * the non-standard properties when the directly addressed object (obj)
-     * is a function object (i.e., when this loop does not iterate).
-     */
-
     while (!obj->isFunction()) {
         obj = obj->getProto();
         if (!obj)

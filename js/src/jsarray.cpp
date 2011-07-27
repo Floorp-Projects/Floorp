@@ -761,7 +761,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
         return array_length_setter(cx, obj, id, strict, vp);
 
     if (!obj->isDenseArray())
-        return js_SetProperty(cx, obj, id, vp, strict);
+        return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
 
     do {
         if (!js_IdIsIndex(id, &i))
@@ -785,7 +785,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
 
     if (!obj->makeDenseArraySlow(cx))
         return false;
-    return js_SetProperty(cx, obj, id, vp, strict);
+    return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
 }
 
 JSBool

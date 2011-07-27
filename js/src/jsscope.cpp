@@ -62,7 +62,6 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
-#include "jsdbgapiinlines.h"
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -533,7 +532,7 @@ NormalizeGetterAndSetter(JSContext *cx, JSObject *obj,
     if (flags & Shape::METHOD) {
         /* Here, getter is the method, a function object reference. */
         JS_ASSERT(getter);
-        JS_ASSERT(!setter || setter == js_watch_set);
+        JS_ASSERT(!setter);
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     } else {
         if (getter == PropertyStub) {
@@ -642,13 +641,7 @@ JSObject::addProperty(JSContext *cx, jsid id,
     /* Search for id with adding = true in order to claim its entry. */
     Shape **spp = nativeSearch(id, true);
     JS_ASSERT(!SHAPE_FETCH(spp));
-    const Shape *shape = addPropertyInternal(cx, id, getter, setter, slot, attrs, 
-                                             flags, shortid, spp);
-    if (!shape)
-        return NULL;
-
-    /* Update any watchpoints referring to this property. */
-    return js_UpdateWatchpointsForShape(cx, this, shape);
+    return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
 }
 
 const Shape *
@@ -765,11 +758,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
             return NULL;
         }
 
-        const Shape *newShape =
-            addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
-        if (!newShape)
-            return NULL;
-        return js_UpdateWatchpointsForShape(cx, this, newShape);
+        return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
     }
 
     /* Property exists: search must have returned a valid *spp. */
@@ -899,7 +888,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     CHECK_SHAPE_CONSISTENCY(this);
 
-    return js_UpdateWatchpointsForShape(cx, this, shape);
+    return shape;
 }
 
 const Shape *
@@ -965,10 +954,6 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
         lastProp->shapeid = js_GenerateShape(cx);
         clearOwnShape();
 
-        shape = js_UpdateWatchpointsForShape(cx, this, shape);
-        if (!shape)
-            return NULL;
-        JS_ASSERT(shape == mutableShape);
         newShape = mutableShape;
     } else if (shape == lastProp) {
         Shape child(shape->propid, getter, setter, shape->slot, attrs, shape->flags,
@@ -1214,7 +1199,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
         JS_ASSERT(shape.methodObject() == prev.toObject());
         JS_ASSERT(canHaveMethodBarrier());
         JS_ASSERT(hasMethodBarrier());
-        JS_ASSERT(!shape.rawSetter || shape.rawSetter == js_watch_set);
+        JS_ASSERT(!shape.rawSetter);
 #endif
 
         /*
