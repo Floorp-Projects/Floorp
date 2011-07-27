@@ -45,20 +45,28 @@ interface nsIThread;
 /**
  * An interface for creating and locating nsIThread instances.
  */
-[scriptable, uuid(487c10bf-0a22-4148-89fa-790d819dd559)]
+[scriptable, uuid(2bbbc38c-cf96-4099-ba6b-f6a44d8b014c)]
 interface nsIThreadManager : nsISupports
 {
+  /**
+   * Default number of bytes reserved for a thread's stack, if no stack size
+   * is specified in newThread(). 0 means use platform default.
+   */
+  const unsigned long DEFAULT_STACK_SIZE = 0;
+
   /**
    * Create a new thread (a global, user PRThread).
    *
    * @param creationFlags
    *   Reserved for future use.  Pass 0.
+   * @param stackSize
+   *   Number of bytes to reserve for the thread's stack.
    *
    * @returns
    *   The newly created nsIThread object.
    */
-  nsIThread newThread(in unsigned long creationFlags);
-   
+  nsIThread newThread(in unsigned long creationFlags, [optional] in unsigned long stackSize);
+
   /**
    * Get the nsIThread object (if any) corresponding to the given PRThread.
    * This method returns null if there is no corresponding nsIThread.

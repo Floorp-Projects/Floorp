@@ -143,6 +143,9 @@ _TEST_FILES	= \
 		test_window_bar.html \
 		file_window_bar.html \
 		test_resize_move_windows.html \
+		test_devicemotion_multiple_listeners.html \
+		devicemotion_outer.html \
+		devicemotion_inner.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

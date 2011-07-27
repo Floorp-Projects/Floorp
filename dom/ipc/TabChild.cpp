@@ -1078,6 +1078,20 @@ TabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TabChildGlobal::Btoa(const nsAString& aBinaryData,
+                     nsAString& aAsciiBase64String)
+{
+  return nsContentUtils::Btoa(aBinaryData, aAsciiBase64String);
+}
+
+NS_IMETHODIMP
+TabChildGlobal::Atob(const nsAString& aAsciiString,
+                     nsAString& aBinaryData)
+{
+  return nsContentUtils::Atob(aAsciiString, aBinaryData);
+}
+
 JSContext*
 TabChildGlobal::GetJSContextForEventHandlers()
 {
