@@ -325,6 +325,20 @@ class StringSegmentRange
     }
 };
 
+/*
+ * Return s advanced past any Unicode white space characters.
+ */
+static inline const jschar *
+SkipSpace(const jschar *s, const jschar *end)
+{
+    JS_ASSERT(s <= end);
+
+    while (s < end && unicode::IsSpace(*s))
+        s++;
+
+    return s;
+}
+
 }  /* namespace js */
 
 #endif /* jsstrinlines_h___ */
