@@ -6,6 +6,7 @@
 
 #include <math.h>
 
+#include "base/message_loop.h"
 #include "base/histogram.h"
 #include "base/win_util.h"
 
@@ -380,10 +381,17 @@ bool MessagePumpForUI::ProcessPumpReplacementMessage() {
   // that the re-post of kMsgHaveWork may be asynchronous to this thread!!
 
   MSG msg;
-  bool have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
-
-  if (have_message && msg.message == WM_NULL)
+  bool have_message = false;
+  if (MessageLoop::current()->os_modal_loop()) {
+    // We only peek out WM_PAINT and WM_TIMER here for reasons mentioned above.
+    have_message = PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE) ||
+                   PeekMessage(&msg, NULL, WM_TIMER, WM_TIMER, PM_REMOVE);
+  } else {
     have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
+
+    if (have_message && msg.message == WM_NULL)
+      have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
+  }
 
   DCHECK(!have_message || kMsgHaveWork != msg.message ||
          msg.hwnd != message_hwnd_);

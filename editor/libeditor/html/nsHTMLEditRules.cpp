@@ -5084,7 +5084,7 @@ nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsCOMArray<nsIDOMNode> &outA
 // ExpandSelectionForDeletion: this promotes our selection to include blocks
 // that have all their children selected.
 //                  
-PRBool
+nsresult
 nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);

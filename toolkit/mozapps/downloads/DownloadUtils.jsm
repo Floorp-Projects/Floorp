@@ -53,6 +53,9 @@ var EXPORTED_SYMBOLS = [ "DownloadUtils" ];
  * [string timeLeft, double newLast]
  * getTimeLeft(double aSeconds, [optional] double aLastSec)
  *
+ * [string dateCompact, string dateComplete]
+ * getReadableDates(Date aDate, [optional] Date aNow)
+ *
  * [string displayHost, string fullHost]
  * getURIHost(string aURIString)
  *
@@ -93,6 +96,8 @@ let kStrings = {
   timeLeftDouble: "timeLeftDouble",
   timeFewSeconds: "timeFewSeconds",
   timeUnknown: "timeUnknown",
+  monthDate: "monthDate",
+  yesterday: "yesterday",
   doneScheme: "doneScheme",
   doneFileScheme: "doneFileScheme",
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
@@ -318,6 +323,71 @@ let DownloadUtils = {
     }
 
     return [timeLeft, aSeconds];
+  },
+
+  /**
+   * Converts a Date object to two readable formats, one compact, one complete.
+   * The compact format is relative to the current date, and is not an accurate
+   * representation. For example, only the time is displayed for today. The
+   * complete format always includes both the date and the time, excluding the
+   * seconds, and is often shown when hovering the cursor over the compact
+   * representation.
+   *
+   * @param aDate
+   *        Date object representing the date and time to format. It is assumed
+   *        that this value represents a past date.
+   * @param [optional] aNow
+   *        Date object representing the current date and time. The real date
+   *        and time of invocation is used if this parameter is omitted.
+   * @return A pair: [compact text, complete text]
+   */
+  getReadableDates: function DU_getReadableDates(aDate, aNow)
+  {
+    if (!aNow) {
+      aNow = new Date();
+    }
+
+    let dts = Cc["@mozilla.org/intl/scriptabledateformat;1"]
+              .getService(Ci.nsIScriptableDateFormat);
+
+    // Figure out when today begins
+    let today = new Date(aNow.getFullYear(), aNow.getMonth(), aNow.getDate());
+
+    // Figure out if the time is from today, yesterday, this week, etc.
+    let dateTimeCompact;
+    if (aDate >= today) {
+      // After today started, show the time
+      dateTimeCompact = dts.FormatTime("",
+                                       dts.timeFormatNoSeconds,
+                                       aDate.getHours(),
+                                       aDate.getMinutes(),
+                                       0);
+    } else if (today - aDate < (24 * 60 * 60 * 1000)) {
+      // After yesterday started, show yesterday
+      dateTimeCompact = gStr.yesterday;
+    } else if (today - aDate < (6 * 24 * 60 * 60 * 1000)) {
+      // After last week started, show day of week
+      dateTimeCompact = aDate.toLocaleFormat("%A");
+    } else {
+      // Show month/day
+      let month = aDate.toLocaleFormat("%B");
+      // Remove leading 0 by converting the date string to a number
+      let date = Number(aDate.toLocaleFormat("%d"));
+      dateTimeCompact = replaceInsert(gStr.monthDate, 1, month);
+      dateTimeCompact = replaceInsert(dateTimeCompact, 2, date);
+    }
+
+    let dateTimeFull = dts.FormatDateTime("",
+                                          dts.dateFormatLong,
+                                          dts.timeFormatNoSeconds,
+                                          aDate.getFullYear(),
+                                          aDate.getMonth() + 1,
+                                          aDate.getDate(),
+                                          aDate.getHours(),
+                                          aDate.getMinutes(),
+                                          0);
+
+    return [dateTimeCompact, dateTimeFull];
   },
 
   /**
