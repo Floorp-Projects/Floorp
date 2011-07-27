@@ -67,6 +67,8 @@
 #include "nsMaiInterfaceDocument.h"
 #include "nsMaiInterfaceImage.h"
 
+using namespace mozilla::a11y;
+
 nsAccessibleWrap::EAvailableAtkSignals nsAccessibleWrap::gAvailableAtkSignals =
   eUnknown;
 
