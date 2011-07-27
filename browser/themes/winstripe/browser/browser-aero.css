@@ -22,7 +22,7 @@
                 0 0 2px 1px rgba(255,255,255,.25) inset;
   }
 
-  #main-window[privatebrowsingmode=temporary] #tabbrowser-tabs > hbox > .tab-drag-panel > .tab-drag-preview::before,
+  #main-window[privatebrowsingmode=temporary] .tab-drag-preview::before,
   #main-window[privatebrowsingmode=temporary] #appmenu-button {
     -moz-border-left-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
     -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
