@@ -710,7 +710,7 @@ protected:
   nsresult NotifyOnStateChange(PRUint16 aOldState);
 
   nsCOMPtr<mozIStoragePendingStatement> mAsyncPendingStmt;
-  PRBool mAsyncCanceledState;
+  AsyncCanceledState mAsyncCanceledState;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryContainerResultNode,
