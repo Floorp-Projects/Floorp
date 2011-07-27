@@ -125,7 +125,7 @@ CodeGeneratorX86Shared::visitGoto(LGoto *jump)
     masm.jmp(header->label());
     return true;
 }
-    
+
 bool
 CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 {
@@ -170,6 +170,13 @@ CodeGeneratorX86Shared::visitBitOp(LBitOp *ins)
     }
 
     return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitInteger(LInteger *ins)
+{
+    const LDefinition *def = ins->getDef(0);
+    masm.movl(Imm32(ins->getValue()), ToRegister(def));
 }
 
 typedef MoveResolver::MoveOperand MoveOperand;

@@ -125,6 +125,10 @@ class LInteger : public LInstructionHelper<1, 0, 0>
 
     LInteger(int32 i32) : i32_(i32)
     { }
+
+    int32 getValue() const {
+        return i32_;
+    }
 };
 
 // Constant 64-bit pointer.
