@@ -393,7 +393,9 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsMailCite");
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
-  NS_ENSURE_TRUE(elem, PR_FALSE);
+  if (!elem) {
+    return PR_FALSE;
+  }
   nsAutoString attrName (NS_LITERAL_STRING("type")); 
   
   // don't ask me why, but our html mailcites are id'd by "type=cite"...
@@ -475,7 +477,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 // body, head, html
 #define GROUP_TOPLEVEL         (1 << 1)  
 
-// base, isindex, link, meta, script, style, title
+// base, link, meta, script, style, title
 #define GROUP_HEAD_CONTENT     (1 << 2)
 
 // b, big, i, s, small, strike, tt, u
@@ -494,7 +496,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 
 // address, applet, article, aside, blockquote, button, center, del, dir, div,
 // dl, fieldset, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup,
-// hr, iframe, ins, isindex, map, menu, nav, noframes, noscript, object, ol, p,
+// hr, iframe, ins, map, menu, nav, noframes, noscript, object, ol, p,
 // pre, table, section, ul
 #define GROUP_BLOCK            (1 << 7)
 
@@ -650,8 +652,6 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(img, PR_FALSE, PR_FALSE, GROUP_SPECIAL, GROUP_NONE),
   ELEM(input, PR_FALSE, PR_FALSE, GROUP_FORMCONTROL, GROUP_NONE),
   ELEM(ins, PR_TRUE, PR_TRUE, GROUP_PHRASE | GROUP_BLOCK, GROUP_FLOW_ELEMENT),
-  ELEM(isindex, PR_FALSE, PR_FALSE, GROUP_BLOCK | GROUP_HEAD_CONTENT,
-       GROUP_NONE),
   ELEM(kbd, PR_TRUE, PR_TRUE, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(keygen, PR_FALSE, PR_FALSE, GROUP_FORMCONTROL, GROUP_NONE),
   ELEM(label, PR_TRUE, PR_FALSE, GROUP_FORMCONTROL, GROUP_INLINE_ELEMENT),
@@ -764,7 +764,6 @@ nsHTMLEditUtils::CanContain(PRInt32 aParent, PRInt32 aChild)
       eHTMLTag_form,
       eHTMLTag_iframe,
       eHTMLTag_input,
-      eHTMLTag_isindex,
       eHTMLTag_select,
       eHTMLTag_textarea
     };

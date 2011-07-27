@@ -282,23 +282,15 @@ nsHTMLButtonElement::ParseAttribute(PRInt32 aNamespaceID,
 nsresult
 nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  // Do not process any DOM events if the element is disabled
-  aVisitor.mCanHandle = PR_FALSE;
-  if (IsDisabled()) {
-    return NS_OK;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  nsIFrame* formFrame = NULL;
+  if (formControlFrame) {
+    formFrame = do_QueryFrame(formControlFrame);
   }
 
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-
-  if (formControlFrame) {
-    nsIFrame* formFrame = do_QueryFrame(formControlFrame);
-    if (formFrame) {
-      const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
-
-      if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-          uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
-        return NS_OK;
-    }
+  aVisitor.mCanHandle = PR_FALSE;
+  if (IsElementDisabledForEvents(aVisitor.mEvent->message, formFrame)) {
+    return NS_OK;
   }
 
   // Track whether we're in the outermost Dispatch invocation that will
@@ -400,7 +392,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               if (fm)
                 fm->SetFocus(this, nsIFocusManager::FLAG_BYMOUSE |
                                    nsIFocusManager::FLAG_NOSCROLL);
-              aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS;
+              aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_MULTIPLE_ACTIONS;
             } else if (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                          nsMouseEvent::eMiddleButton ||
                        static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==

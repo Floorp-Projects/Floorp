@@ -109,6 +109,7 @@ public:
     virtual bool RecvSetIMEOpenState(const PRBool& aValue);
     virtual bool RecvSetCursor(const PRUint32& aValue);
     virtual bool RecvGetDPI(float* aValue);
+    virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,
@@ -126,7 +127,7 @@ public:
     // message-sending functions under a layer of indirection and
     // eating the return values
     void Show(const nsIntSize& size);
-    void Move(const nsIntSize& size);
+    void UpdateDimensions(const nsRect& rect, const nsIntSize& size);
     void Activate();
     void Deactivate();
     void SendMouseEvent(const nsAString& aType, float aX, float aY,

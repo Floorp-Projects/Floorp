@@ -1654,8 +1654,8 @@ intel_aes_decrypt_cbc_256:
 	.byte 0x66,0x41,0x0f,0x38,0xdf,0xc8	/* aesdeclast %xmm8, %xmm1 */
 	movdqu	112(%rdi), %xmm8
 	pxor	%xmm0, %xmm1
-	movdqu	%xmm1, (%rsi, %rax)
-	movdqu	(%r8, %rax), %xmm0
+	movdqu	(%r8, %rax), %xmm0  /* fetch the IV before we store the block */
+	movdqu	%xmm1, (%rsi, %rax) /* in case input buf = output buf */
 	addq	$16, %rax
 	cmpq	%rax, %r9
 	jne	4b

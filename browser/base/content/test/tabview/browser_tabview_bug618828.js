@@ -55,8 +55,8 @@ function onTabViewWindowLoaded(win, tab) {
     contentWindow.performSearch();
 
     // prepare to finish when the main window gets focus back
-    window.addEventListener('focus', function () {
-      window.removeEventListener('focus', arguments.callee, true);
+    window.addEventListener('focus', function onFocus() {
+      window.removeEventListener('focus', onFocus, true);
       assertSearchIsDisabled();
 
       // check that the right tab is active

@@ -468,12 +468,13 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
     }
 
     // Fire reorder event to notify new accessible document has been attached to
-    // the tree.
+    // the tree. The reorder event is delivered after the document tree is
+    // constructed because event processing and tree construction are done by
+    // the same document.
     nsRefPtr<AccEvent> reorderEvent =
       new AccEvent(nsIAccessibleEvent::EVENT_REORDER, appAcc, eAutoDetect,
                    AccEvent::eCoalesceFromSameSubtree);
-    if (reorderEvent)
-      docAcc->FireDelayedAccessibleEvent(reorderEvent);
+    docAcc->FireDelayedAccessibleEvent(reorderEvent);
 
   } else {
     parentDocAcc->BindChildDocument(docAcc);

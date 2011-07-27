@@ -178,42 +178,93 @@ private:
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
 #define RES_KEY_FLAGS(_f) ((_f) & nsHostResolver::RES_CANON_NAME)
 
+nsHostRecord::nsHostRecord(const nsHostKey *key)
+    : _refc(1)
+    , addr_info_lock("nsHostRecord.addr_info_lock")
+    , addr_info_gencnt(0)
+    , addr_info(nsnull)
+    , addr(nsnull)
+    , negative(PR_FALSE)
+    , resolving(PR_FALSE)
+    , onQueue(PR_FALSE)
+    , usingAnyThread(PR_FALSE)
+{
+    host = ((char *) this) + sizeof(nsHostRecord);
+    memcpy((char *) host, key->host, strlen(key->host) + 1);
+    flags = key->flags;
+    af = key->af;
+
+    NS_LOG_ADDREF(this, 1, "nsHostRecord", sizeof(nsHostRecord));
+    expiration = NowInMinutes();
+
+    PR_INIT_CLIST(this);
+    PR_INIT_CLIST(&callbacks);
+}
+
 nsresult
 nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 {
     size_t hostLen = strlen(key->host) + 1;
     size_t size = hostLen + sizeof(nsHostRecord);
 
-    nsHostRecord *rec = (nsHostRecord*) ::operator new(size);
-
-    rec->host = ((char *) rec) + sizeof(nsHostRecord);
-    rec->flags = key->flags;
-    rec->af = key->af;
-
-    rec->_refc = 1; // addref
-    NS_LOG_ADDREF(rec, 1, "nsHostRecord", sizeof(nsHostRecord));
-    rec->addr_info_lock = new Mutex("nsHostRecord.addr_info_lock");
-    rec->addr_info = nsnull;
-    rec->addr_info_gencnt = 0;
-    rec->addr = nsnull;
-    rec->expiration = NowInMinutes();
-    rec->resolving = PR_FALSE;
-    rec->onQueue = PR_FALSE;
-    rec->usingAnyThread = PR_FALSE;
-    PR_INIT_CLIST(rec);
-    PR_INIT_CLIST(&rec->callbacks);
-    rec->negative = PR_FALSE;
-    memcpy((char *) rec->host, key->host, hostLen);
-
-    *result = rec;
+    // Use placement new to create the object with room for the hostname
+    // allocated after it.
+    void *place = ::operator new(size);
+    *result = new(place) nsHostRecord(key);
     return NS_OK;
 }
 
 nsHostRecord::~nsHostRecord()
 {
-    delete addr_info_lock;
     if (addr)
         free(addr);
+}
+
+PRBool
+nsHostRecord::Blacklisted(PRNetAddr *aQuery)
+{
+    // must call locked
+    LOG(("nsHostRecord::Blacklisted() %p %s\n", this, host));
+
+    // skip the string conversion for the common case of no blacklist
+    if (!mBlacklistedItems.Length())
+        return PR_FALSE;
+    
+    char buf[64];
+    if (PR_NetAddrToString(aQuery, buf, sizeof(buf)) != PR_SUCCESS)
+        return PR_FALSE;
+
+    nsDependentCString strQuery(buf);
+    LOG(("nsHostRecord::Blacklisted() query %s\n", buf));
+    
+    for (PRUint32 i = 0; i < mBlacklistedItems.Length(); i++)
+        if (mBlacklistedItems.ElementAt(i).Equals(strQuery)) {
+            LOG(("nsHostRecord::Blacklisted() %s blacklist confirmed\n", buf));
+            return PR_TRUE;
+        }
+
+    return PR_FALSE;
+}
+
+void
+nsHostRecord::ReportUnusable(PRNetAddr *aAddress)
+{
+    // must call locked
+    LOG(("nsHostRecord::ReportUnusable() %p %s\n", this, host));
+
+    char buf[64];
+    if (PR_NetAddrToString(aAddress, buf, sizeof(buf)) == PR_SUCCESS) {
+        LOG(("nsHostrecord::ReportUnusable addr %s\n",buf));
+        mBlacklistedItems.AppendElement(nsCString(buf));
+    }
+}
+
+void
+nsHostRecord::ResetBlacklist()
+{
+    // must call locked
+    LOG(("nsHostRecord::ResetBlacklist() %p %s\n", this, host));
+    mBlacklistedItems.Clear();
 }
 
 //----------------------------------------------------------------------------
@@ -787,7 +838,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         // previous lookup result expired and we're reresolving it..
         PRAddrInfo  *old_addr_info;
         {
-            MutexAutoLock lock(*rec->addr_info_lock);
+            MutexAutoLock lock(rec->addr_info_lock);
             old_addr_info = rec->addr_info;
             rec->addr_info = result;
             rec->addr_info_gencnt++;

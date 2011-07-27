@@ -1008,7 +1008,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                                     gfxIntSize(mBounds.width, mBounds.height),
                                     mBounds.width * 2,
                                     gfxASurface::ImageFormatRGB16_565);
-            DrawTo(targetSurface);
+            if (targetSurface->CairoStatus()) {
+                ALOG("### Failed to create a valid surface from the bitmap");
+            } else {
+                DrawTo(targetSurface);
+            }
 
             AndroidBridge::Bridge()->UnlockBitmap(bitmap);
             sview.Draw2D(bitmap, mBounds.width, mBounds.height);
@@ -1031,7 +1035,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                                     gfxIntSize(mBounds.width, mBounds.height),
                                     mBounds.width * 2,
                                     gfxASurface::ImageFormatRGB16_565);
-            DrawTo(targetSurface);
+            if (targetSurface->CairoStatus()) {
+                ALOG("### Failed to create a valid surface");
+            } else {
+                DrawTo(targetSurface);
+            }
 
             sview.Draw2D(bytebuf, mBounds.width * 2);
         }

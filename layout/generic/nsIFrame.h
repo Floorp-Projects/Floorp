@@ -1894,7 +1894,7 @@ public:
    * @return A gfxMatrix that converts points in this frame's coordinate space into
    *         points in aOutAncestor's coordinate space.
    */
-  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
+  virtual gfx3DMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
 
   /**
    * Bit-flags to pass to IsFrameOfType()

@@ -44,7 +44,7 @@
         onload="TestStart();"
         title="Browser chrome tests"
         width="1024">
-  <script src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/quit.js"/>
   <script src="chrome://mochikit/content/chrome-harness.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
@@ -106,8 +106,7 @@
         let logger = null;
         if (gConfig.logFile) {
           try {
-            MozillaFileLogger.init(gConfig.logFile);
-            logger = MozillaFileLogger;
+            logger = new MozillaFileLogger(gConfig.logFile)
           } catch (ex) {
             dump("TEST-UNEXPECTED-FAIL | (browser-harness.xul) | " +
                  "Error trying to log to " + gConfig.logFile + ": " + ex + "\n");

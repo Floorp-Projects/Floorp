@@ -79,6 +79,7 @@
 #include "nsSVGEffects.h"
 
 #include "mozAutoDocUpdate.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef DEBUG_chb
 static void PrintReqURL(imgIRequest* req) {

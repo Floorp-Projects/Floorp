@@ -68,7 +68,6 @@ function ContentSecurityPolicy() {
   this._policy._allowInlineScripts = true;
   this._policy._allowEval = true;
 
-  this._requestHeaders = []; 
   this._request = "";
   this._docRequest = null;
   CSPdebug("CSP POLICY INITED TO 'default-src *'");
@@ -211,13 +210,6 @@ ContentSecurityPolicy.prototype = {
       var reqVersion = internalChannel.getRequestVersion(reqMaj, reqMin);
       this._request += " HTTP/" + reqMaj.value + "." + reqMin.value;
     }
-
-    // grab the request headers
-    var self = this;
-    aChannel.visitRequestHeaders({
-      visitHeader: function(aHeader, aValue) {
-        self._requestHeaders.push(aHeader + ": " + aValue);
-      }});
   },
 
 /* ........ Methods .............. */
@@ -270,21 +262,13 @@ ContentSecurityPolicy.prototype = {
       // {
       //   csp-report: {
       //     request: "GET /index.html HTTP/1.1",
-      //     request-headers: "Host: example.com
-      //                       User-Agent: ...
-      //                       ...",
       //     blocked-uri: "...",
       //     violated-directive: "..."
       //   }
       // }
-      var strHeaders = "";
-      for (let i in this._requestHeaders) {
-        strHeaders += this._requestHeaders[i] + "\n";
-      }
       var report = {
         'csp-report': {
           'request': this._request,
-          'request-headers': strHeaders,
           'blocked-uri': (blockedUri instanceof Ci.nsIURI ?
                           blockedUri.asciiSpec : blockedUri),
           'violated-directive': violatedDirective

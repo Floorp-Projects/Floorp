@@ -383,6 +383,22 @@ MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
 ifdef MOZ_OMNIJAR
+
+ifdef GENERATE_CACHE
+ifneq (1_,$(if $(CROSS_COMPILE),1,0)_$(UNIVERSAL_BINARY))
+ifdef RUN_TEST_PROGRAM
+_ABS_RUN_TEST_PROGRAM = $(call core_abspath,$(RUN_TEST_PROGRAM))
+endif
+
+GENERATE_CACHE = \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$$PWD" -a "$$PWD" -f $(topsrcdir)/toolkit/mozapps/installer/precompile_cache.js -e 'populate_startupcache("omni.jar", "startupCache.zip");' && \
+  rm -rf jsloader && \
+  $(UNZIP) startupCache.zip && \
+  rm startupCache.zip && \
+  $(ZIP) -r9m omni.jar jsloader
+endif
+endif
+
 GENERATE_CACHE ?= true
 
 OMNIJAR_FILES	= \
@@ -691,6 +707,9 @@ endif
 ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
+ifdef MOZ_POST_STAGING_CMD
+	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(MOZ_POST_STAGING_CMD)
+endif # MOZ_POST_STAGING_CMD
 ifndef LIBXUL_SDK
 # Package JavaScript Shell
 	@echo "Packaging JavaScript Shell..."

@@ -910,7 +910,7 @@ NS_IMETHODIMP nsPrintSettings::SetPlexName(const PRUnichar * aPlexName)
 NS_IMETHODIMP nsPrintSettings::GetHowToEnableFrameUI(PRInt16 *aHowToEnableFrameUI)
 {
   NS_ENSURE_ARG_POINTER(aHowToEnableFrameUI);
-  *aHowToEnableFrameUI = (PRInt32)mHowToEnableFrameUI;
+  *aHowToEnableFrameUI = mHowToEnableFrameUI;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettings::SetHowToEnableFrameUI(PRInt16 aHowToEnableFrameUI)

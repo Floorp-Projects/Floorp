@@ -68,6 +68,7 @@
 #include "nsIPromptFactory.h"
 #include "nsIContent.h"
 #include "nsIWidget.h"
+#include "nsIViewManager.h"
 #include "mozilla/unused.h"
 #include "nsDebug.h"
 
@@ -209,9 +210,9 @@ TabParent::Show(const nsIntSize& size)
 }
 
 void
-TabParent::Move(const nsIntSize& size)
+TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
 {
-    unused << SendMove(size);
+    unused << SendUpdateDimensions(rect, size);
 }
 
 void
@@ -610,6 +611,29 @@ TabParent::RecvGetDPI(float* aValue)
                     "Must not ask for DPI before OwnerElement is received!");
   *aValue = mDPI;
   return true;
+}
+
+bool
+TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  if (content) {
+    nsIDocument* document = content->GetOwnerDoc();
+    if (document) {
+      nsIPresShell* shell = document->GetShell();
+      if (shell) {
+        nsIViewManager* vm = shell->GetViewManager();
+        nsCOMPtr<nsIWidget> widget;
+        vm->GetRootWidget(getter_AddRefs(widget));
+        if (widget) {
+          *aValue = reinterpret_cast<WindowsHandle>(
+            widget->GetNativeData(NS_NATIVE_WINDOW));
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 bool

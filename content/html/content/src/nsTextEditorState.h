@@ -255,6 +255,7 @@ private:
     PRBool mGuardSet;
   };
   friend class InitializationGuard;
+  friend class PrepareEditorEvent;
 
   nsITextControlElement* const mTextCtrlElement;
   nsRefPtr<nsTextInputSelectionImpl> mSelCon;
@@ -270,6 +271,7 @@ private:
   mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
   PRPackedBool mEditorInitialized;
   PRPackedBool mInitializing; // Whether we're in the process of initialization
+  PRPackedBool mValueTransferInProgress; // Whether a value is being transferred to the frame
 };
 
 #endif

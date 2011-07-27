@@ -66,7 +66,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 
-#if defined(MOZ_PLATFORM_MAEMO) || defined(ANDROID)
+#if defined(MOZ_PLATFORM_MAEMO) || defined(ANDROID) || defined(MOZ_EGL_XRENDER_COMPOSITE)
 #define USE_GLES2 1
 #endif
 
@@ -737,6 +737,15 @@ public:
         return mOffscreenTexture;
     }
 
+#if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
+    virtual gfxASurface* GetOffscreenPixmapSurface()
+    {
+      return 0;
+    };
+    
+    virtual PRBool WaitNative() { return PR_FALSE; }
+#endif
+
     virtual PRBool TextureImageSupportsGetBackingSurface() {
         return PR_FALSE;
     }
@@ -861,6 +870,19 @@ public:
                                              bool aOverwrite = false,
                                              const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
                                              bool aPixelBuffer = PR_FALSE);
+
+    
+    void TexImage2D(GLenum target, GLint level, GLint internalformat, 
+                    GLsizei width, GLsizei height, GLsizei stride,
+                    GLint pixelsize, GLint border, GLenum format, 
+                    GLenum type, const GLvoid *pixels);
+
+
+    void TexSubImage2D(GLenum target, GLint level, 
+                       GLint xoffset, GLint yoffset, 
+                       GLsizei width, GLsizei height, GLsizei stride,
+                       GLint pixelsize, GLenum format, 
+                       GLenum type, const GLvoid* pixels);
 
     /** Helper for DecomposeIntoNoRepeatTriangles
      */
