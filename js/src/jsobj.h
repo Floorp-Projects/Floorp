@@ -1187,7 +1187,9 @@ struct JSObject : js::gc::Cell {
 
     bool defaultValue(JSContext *cx, JSType hint, js::Value *vp) {
         js::ConvertOp op = getClass()->convert;
-        return (op == js::ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+        bool ok = (op == js::ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+        JS_ASSERT_IF(ok, vp->isPrimitive());
+        return ok;
     }
 
     JSType typeOf(JSContext *cx) {
