@@ -3060,7 +3060,7 @@
                 data._maxWidth = draggedTab.style.maxWidth;
                 draggedTab.style.maxWidth = "";
               }
-              delete draggedTab._dropIndex;
+              delete data._dropIndex;
               let label = dragPanel.firstChild;
               let preview = dragPanel.lastChild;
               label.value = draggedTab.label;
