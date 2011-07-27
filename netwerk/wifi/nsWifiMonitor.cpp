@@ -46,8 +46,8 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWifiMonitor.h"
+#include "nsWifiAccessPoint.h"
 
-#include "nsIProxyObjectManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/Services.h"
@@ -146,6 +146,35 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
   return NS_OK;
 }
 
+class nsPassErrorToWifiListeners : public nsIRunnable
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  nsPassErrorToWifiListeners(nsAutoPtr<nsCOMArray<nsIWifiListener> > aListeners,
+                             nsresult aResult)
+  : mListeners(aListeners),
+    mResult(aResult)
+  {}
+
+ private:
+  nsAutoPtr<nsCOMArray<nsIWifiListener> > mListeners;
+  nsresult mResult;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPassErrorToWifiListeners,
+                              nsIRunnable)
+
+NS_IMETHODIMP nsPassErrorToWifiListeners::Run()
+{
+  LOG(("About to send error to the wifi listeners\n"));
+  for (PRInt32 i = 0; i < mListeners->Count(); i++) {
+    nsresult rv = (*mListeners)[i]->OnError(mResult);
+    LOG( ("... sent %d\n", rv));
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsWifiMonitor::Run()
 {
@@ -154,26 +183,101 @@ NS_IMETHODIMP nsWifiMonitor::Run()
   nsresult rv = DoScan();
 
   if (mKeepGoing && NS_FAILED(rv)) {
+    nsAutoPtr<nsCOMArray<nsIWifiListener> > currentListeners(
+                           new nsCOMArray<nsIWifiListener>(mListeners.Length()));
+    if (!currentListeners)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
+    for (PRUint32 i = 0; i < mListeners.Length(); i++)
+      currentListeners->AppendObject(mListeners[i].mListener);
 
-    // send error
-    for (PRUint32 i = 0; i < mListeners.Length(); i++) {
-      LOG(("About to send error to a listener\n"));
+    nsCOMPtr<nsIThread> thread = do_GetMainThread();
+    if (!thread)
+      return NS_ERROR_UNEXPECTED;
 
-      nsCOMPtr<nsIWifiListener> proxy;
-      proxyObjMgr->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                                     NS_GET_IID(nsIWifiListener),
-                                     mListeners[i].mListener,
-                                     NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                                     getter_AddRefs(proxy));
+    nsCOMPtr<nsIRunnable> runnable(new nsPassErrorToWifiListeners(currentListeners, rv));
+    if (!runnable)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-      if (proxy) {
-        proxy->OnError(rv);
-        LOG( ("... sent %d\n", rv));
-      }
-    }
+    thread->Dispatch(runnable, NS_DISPATCH_SYNC);
   }
 
   return NS_OK;
+}
+
+class nsCallWifiListeners : public nsIRunnable
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  nsCallWifiListeners(nsAutoPtr<nsCOMArray<nsIWifiListener> > aListeners,
+                      nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > aAccessPoints)
+  : mListeners(aListeners),
+    mAccessPoints(aAccessPoints)
+  {}
+
+ private:
+  nsAutoPtr<nsCOMArray<nsIWifiListener> > mListeners;
+  nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > mAccessPoints;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCallWifiListeners,
+                              nsIRunnable)
+
+NS_IMETHODIMP nsCallWifiListeners::Run()
+{
+  LOG(("About to send data to the wifi listeners\n"));
+  for (PRInt32 i = 0; i < mListeners->Count(); i++) {
+    nsresult rv = (*mListeners)[i]->OnChange(mAccessPoints->Elements(),
+                                             mAccessPoints->Length());
+    LOG( ("... sent %d\n", rv));
+  }
+  return NS_OK;
+}
+
+nsresult
+nsWifiMonitor::CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoints,
+                                 PRBool aAccessPointsChanged)
+{
+    nsAutoPtr<nsCOMArray<nsIWifiListener> > currentListeners(
+                           new nsCOMArray<nsIWifiListener>(mListeners.Length()));
+    if (!currentListeners)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    {
+      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+      for (PRUint32 i = 0; i < mListeners.Length(); i++) {
+        if (!mListeners[i].mHasSentData || aAccessPointsChanged) {
+          mListeners[i].mHasSentData = PR_TRUE;
+          currentListeners->AppendObject(mListeners[i].mListener);
+        }
+      }
+    }
+
+    if (currentListeners->Count() > 0)
+    {
+      PRUint32 resultCount = aAccessPoints.Count();
+      nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > accessPoints(
+                               new nsTArray<nsIWifiAccessPoint *>(resultCount));
+      if (!accessPoints)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      for (PRUint32 i = 0; i < resultCount; i++)
+        accessPoints->AppendElement(aAccessPoints[i]);
+
+      nsCOMPtr<nsIThread> thread = do_GetMainThread();
+      if (!thread)
+        return NS_ERROR_UNEXPECTED;
+
+      nsCOMPtr<nsIRunnable> runnable(
+                      new nsCallWifiListeners(currentListeners, accessPoints));
+      if (!runnable)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      thread->Dispatch(runnable, NS_DISPATCH_SYNC);
+    }
+
+    return NS_OK;
 }
