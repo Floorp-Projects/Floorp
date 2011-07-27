@@ -2297,6 +2297,154 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
     return Lookup_Cacheable;
 }
 
+LookupStatus
+GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+{
+    if (!v.isInt32())
+        return disable(cx, "arguments object with non-integer key");
+
+    if (op == JSOP_CALLELEM)
+        return disable(cx, "arguments object with call");
+
+    JS_ASSERT(hasInlineTypeGuard() || idRemat.knownType() == JSVAL_TYPE_INT32);
+
+    Assembler masm;
+
+    Jump claspGuard = masm.testObjClass(Assembler::NotEqual, objReg, obj->getClass());
+
+    masm.move(objReg, typeReg);
+    masm.load32(Address(objReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 
+                objReg);
+    Jump overridden = masm.branchTest32(Assembler::NonZero, objReg,
+                                        Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT));
+    masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), objReg);
+
+    Jump outOfBounds;
+    if (idRemat.isConstant()) {
+        outOfBounds = masm.branch32(Assembler::BelowOrEqual, objReg, Imm32(v.toInt32()));
+    } else {
+        outOfBounds = masm.branch32(Assembler::BelowOrEqual, objReg, idRemat.dataReg());
+    }
+
+    masm.loadPayload(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);
+    if (idRemat.isConstant()) {
+        Address slot(objReg, offsetof(ArgumentsData, slots) + v.toInt32() * sizeof(Value));
+        masm.loadTypeTag(slot, objReg);
+    } else {
+        BaseIndex slot(objReg, idRemat.dataReg(), Assembler::JSVAL_SCALE, 
+                       offsetof(ArgumentsData, slots));
+        masm.loadTypeTag(slot, objReg);
+    }    
+    Jump holeCheck = masm.branchPtr(Assembler::Equal, objReg, ImmType(JSVAL_TYPE_MAGIC));
+
+    Address privateData(typeReg, offsetof(JSObject, privateData));
+    Jump liveArguments = masm.branchPtr(Assembler::NotEqual, privateData, ImmPtr(0));
+   
+    masm.loadPrivate(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);
+
+    if (idRemat.isConstant()) {
+        Address slot(objReg, offsetof(ArgumentsData, slots) + v.toInt32() * sizeof(Value));
+        masm.loadValueAsComponents(slot, typeReg, objReg);           
+    } else {
+        BaseIndex slot(objReg, idRemat.dataReg(), Assembler::JSVAL_SCALE, 
+                       offsetof(ArgumentsData, slots));
+        masm.loadValueAsComponents(slot, typeReg, objReg);
+    }
+
+    Jump done = masm.jump();
+
+    liveArguments.linkTo(masm.label(), &masm);
+
+    masm.loadPtr(privateData, typeReg);
+
+    Address fun(typeReg, StackFrame::offsetOfExec());
+    masm.loadPtr(fun, objReg);
+
+    Address nargs(objReg, offsetof(JSFunction, nargs));
+    masm.load16(nargs, objReg);
+
+    Jump notFormalArg;
+    if (idRemat.isConstant())
+        notFormalArg = masm.branch32(Assembler::BelowOrEqual, objReg, Imm32(v.toInt32()));
+    else
+        notFormalArg = masm.branch32(Assembler::BelowOrEqual, objReg, idRemat.dataReg());
+
+    masm.lshift32(Imm32(3), objReg); /* nargs << 3 == nargs * sizeof(Value) */
+    masm.subPtr(objReg, typeReg); /* fp - numFormalArgs => start of formal args */
+
+    Label loadFromStack = masm.label();
+    masm.move(typeReg, objReg);
+
+    if (idRemat.isConstant()) {
+        Address frameEntry(objReg, v.toInt32() * sizeof(Value));
+        masm.loadValueAsComponents(frameEntry, typeReg, objReg);
+    } else {
+        BaseIndex frameEntry(objReg, idRemat.dataReg(), Assembler::JSVAL_SCALE);
+        masm.loadValueAsComponents(frameEntry, typeReg, objReg);
+    }    
+    Jump done2 = masm.jump();
+
+    notFormalArg.linkTo(masm.label(), &masm);
+
+    masm.push(typeReg);
+
+    Address argsObject(typeReg, StackFrame::offsetOfArgs());
+    masm.loadPtr(argsObject, typeReg);
+
+    masm.load32(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 
+                typeReg); 
+    masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), typeReg); 
+
+    /* This bascially does fp - (numFormalArgs + numActualArgs + 2) */
+
+    masm.addPtr(typeReg, objReg);
+    masm.addPtr(Imm32(2), objReg);
+    masm.lshiftPtr(Imm32(3), objReg);
+
+    masm.pop(typeReg);
+    masm.subPtr(objReg, typeReg);
+
+    masm.jump(loadFromStack);
+
+    PICLinker buffer(masm, *this);
+
+    if (!buffer.init(cx))
+        return error(cx);
+
+    if (!buffer.verifyRange(cx->fp()->jit()))
+        return disable(cx, "code memory is out of range");
+
+    buffer.link(claspGuard, slowPathStart);
+    buffer.link(overridden, slowPathStart);
+    buffer.link(outOfBounds, slowPathStart);
+    buffer.link(holeCheck, slowPathStart);
+    buffer.link(done, fastPathRejoin);    
+    buffer.link(done2, fastPathRejoin);
+    
+    CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+
+    JaegerSpew(JSpew_PICs, "generated getelem arguments stub at %p\n", cs.executableAddress());
+
+    Repatcher repatcher(cx->fp()->jit());
+    repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), cs);
+
+    JS_ASSERT(!shouldPatchUnconditionalClaspGuard());
+    JS_ASSERT(!inlineClaspGuardPatched);
+
+    inlineClaspGuardPatched = true;
+    stubsGenerated++;
+
+    if (stubsGenerated == MAX_GETELEM_IC_STUBS)
+        disable(cx, "max stubs reached");
+
+    disable(cx, "generated arguments stub");
+
+    if (!obj->getProperty(cx, id, vp))
+        return Lookup_Error;
+
+    return Lookup_Cacheable;
+}
+
 #if defined JS_POLYIC_TYPED_ARRAY
 LookupStatus
 GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)

@@ -296,6 +296,8 @@ struct GetElementIC : public BasePolyIC {
     LookupStatus update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
     LookupStatus attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                Value *vp);
+    LookupStatus attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid id,
+                               Value *vp);
     LookupStatus attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                   Value *vp);
     LookupStatus disable(JSContext *cx, const char *reason);
