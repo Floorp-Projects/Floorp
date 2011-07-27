@@ -40,7 +40,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsdbg.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
 #include "jsiter.h"
@@ -54,6 +53,7 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
+#include "vm/Debugger.h"
 
 #include "jsgcinlines.h"
 #include "jsscopeinlines.h"
@@ -818,7 +818,7 @@ JSCompartment::markBreakpointsIteratively(JSTracer *trc)
             MarkValue(trc, site->trapClosure, "trap closure");
         }
 
-        // Mark jsdbg breakpoints. If either the debugger or the script is
+        // Mark js::Debugger breakpoints. If either the debugger or the script is
         // collected, then the breakpoint is collected along with it. So do not
         // mark the handler in that case.
         //

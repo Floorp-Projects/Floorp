@@ -56,7 +56,6 @@
 #include "jscntxt.h"
 #include "jsdate.h"
 #include "jsversion.h"
-#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -81,6 +80,8 @@
 #include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
 #endif
+#include "vm/Debugger.h"
+
 #include "jsatominlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -89,7 +90,6 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsopcodeinlines.h"
-
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 

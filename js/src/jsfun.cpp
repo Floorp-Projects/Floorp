@@ -52,7 +52,6 @@
 #include "jsbool.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
-#include "jsdbg.h"
 #include "jsversion.h"
 #include "jsemit.h"
 #include "jsfun.h"
@@ -73,6 +72,7 @@
 #include "jsexn.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
+#include "vm/Debugger.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"

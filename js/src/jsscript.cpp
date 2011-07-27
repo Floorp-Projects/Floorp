@@ -50,7 +50,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
@@ -68,6 +67,7 @@
 #include "jsxdrapi.h"
 #endif
 #include "methodjit/MethodJIT.h"
+#include "vm/Debugger.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
