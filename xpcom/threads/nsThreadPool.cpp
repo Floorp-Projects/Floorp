@@ -110,7 +110,9 @@ nsThreadPool::PutEvent(nsIRunnable *event)
     return NS_OK;
 
   nsCOMPtr<nsIThread> thread;
-  nsThreadManager::get()->NewThread(0, getter_AddRefs(thread));
+  nsThreadManager::get()->NewThread(0,
+                                    nsIThreadManager::DEFAULT_STACK_SIZE,
+                                    getter_AddRefs(thread));
   NS_ENSURE_STATE(thread);
 
   PRBool killThread = PR_FALSE;

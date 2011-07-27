@@ -1549,7 +1549,7 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
-  
+
   // split any mailcites in the way.
   // should we abort this if we encounter table cell boundaries?
   if (IsMailEditor())
@@ -1562,25 +1562,36 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   // smart splitting rules
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
-  
+
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-    
+
+  // do nothing if the node is read-only
+  if (!mHTMLEditor->IsModifiableNode(node))
+  {
+    *aCancel = PR_TRUE;
+    return NS_OK;
+  }
+
   // identify the block
   nsCOMPtr<nsIDOMNode> blockParent;
-  
   if (IsBlockNode(node)) 
     blockParent = node;
   else 
     blockParent = mHTMLEditor->GetBlockNodeParent(node);
-    
   NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
-  
-  // do nothing if the node is read-only
-  if (!mHTMLEditor->IsModifiableNode(blockParent))
+
+  // if the active editing host is an inline element,
+  // or if the active editing host is the block parent itself,
+  // just append a br.
+  nsCOMPtr<nsIContent> hostContent = mHTMLEditor->GetActiveEditingHost();
+  nsCOMPtr<nsIDOMNode> hostNode = do_QueryInterface(hostContent);
+  if (!nsEditorUtils::IsDescendantOf(blockParent, hostNode)) 
   {
-    *aCancel = PR_TRUE;
+    res = StandardBreakImpl(node, offset, aSelection);
+    NS_ENSURE_SUCCESS(res, res);
+    *aHandled = PR_TRUE;
     return NS_OK;
   }
 

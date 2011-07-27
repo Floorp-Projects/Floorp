@@ -210,6 +210,10 @@ protected:
     NS_OVERRIDE virtual bool
     RecvGetNativeCursorsSupported(bool* supported);
 
+    NS_OVERRIDE virtual bool
+    RecvNPN_SetException(PPluginScriptableObjectParent* aActor,
+                         const nsCString& aMessage);
+
     static PluginInstanceParent* InstCast(NPP instance);
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
