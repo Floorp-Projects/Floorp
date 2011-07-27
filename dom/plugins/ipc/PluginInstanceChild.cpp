@@ -2003,7 +2003,9 @@ PluginInstanceChild::AnswerSetPluginFocus()
     // when a button click brings up a full screen window. Since we send
     // this in response to a WM_SETFOCUS event on our parent, the parent
     // should have focus when we receive this. If not, ignore the call.
-    if (::GetFocus() == mPluginWindowHWND || ::GetFocus() != mPluginParentHWND)
+    if (::GetFocus() == mPluginWindowHWND ||
+        ((GetQuirks() & PluginModuleChild::QUIRK_SILVERLIGHT_FOCUS_CHECK_PARENT) &&
+         (::GetFocus() != mPluginParentHWND)))
         return true;
     ::SetFocus(mPluginWindowHWND);
     return true;
