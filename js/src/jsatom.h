@@ -88,7 +88,28 @@ JSID_TO_ATOM(jsid id)
     return (JSAtom *)JSID_TO_STRING(id);
 }
 
+extern jsid
+js_CheckForStringIndex(jsid id);
+
+JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
+JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
+
 namespace js {
+
+static JS_ALWAYS_INLINE JSHashNumber
+HashId(jsid id)
+{
+    JS_ASSERT(js_CheckForStringIndex(id) == id);
+    JSHashNumber n =
+#if JS_BYTES_PER_WORD == 4
+        JSHashNumber(JSID_BITS(id));
+#elif JS_BYTES_PER_WORD == 8
+        JSHashNumber(JSID_BITS(id)) ^ JSHashNumber(JSID_BITS(id) >> 32);
+#else
+# error "Unsupported configuration"
+#endif
+    return n * JS_GOLDEN_RATIO;
+}
 
 static JS_ALWAYS_INLINE Value
 IdToValue(jsid id)
