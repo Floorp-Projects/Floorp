@@ -42,6 +42,7 @@
 #include "mozilla/ReentrantMonitor.h"
 
 #include "nsRect.h"
+#include "nsIThreadManager.h"
 
 // This file contains stuff we'd rather put elsewhere, but which is
 // dependent on other changes which we don't want to wait for. We plan to
@@ -156,5 +157,13 @@ PRBool UsecsToSamples(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutSamples);
 // Note that aDisplay must be validated by nsVideoInfo::ValidateVideoRegion()
 // before being used!
 void ScaleDisplayByAspectRatio(nsIntSize& aDisplay, float aAspectRatio);
+
+// The amount of virtual memory reserved for thread stacks.
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)
+#define MEDIA_THREAD_STACK_SIZE (128 * 1024)
+#else
+// All other platforms use their system defaults.
+#define MEDIA_THREAD_STACK_SIZE nsIThreadManager::DEFAULT_STACK_SIZE
+#endif
 
 #endif
