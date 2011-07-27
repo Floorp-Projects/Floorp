@@ -64,7 +64,6 @@
 #include "jscrashformat.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -90,6 +89,7 @@
 
 #include "methodjit/MethodJIT.h"
 #include "vm/String.h"
+#include "vm/Debugger.h"
 
 #include "jsobjinlines.h"
 

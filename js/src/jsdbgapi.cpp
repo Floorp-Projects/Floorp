@@ -51,7 +51,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
@@ -67,6 +66,7 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jswrapper.h"
+#include "vm/Debugger.h"
 
 #include "jsatominlines.h"
 #include "jsdbgapiinlines.h"
