@@ -600,6 +600,13 @@ LinearScanAllocator::allocateRegisters()
         else
             firstUsePos = CodePosition::MAX;
 
+        // If we really don't need this in a register, don't allocate one
+        if (!mustHaveRegister && !firstUse && current->reg()->canonicalSpill()) {
+            if (!spill())
+                return false;
+            continue;
+        }
+
         // Try to allocate a free register
         IonSpew(IonSpew_LSRA, " Attempting free register allocation");
 
