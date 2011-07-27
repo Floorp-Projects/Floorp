@@ -101,7 +101,7 @@
  * we will need to add additional checks there for all intermediate IIDs, until
  * nsPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
  */
-[scriptable, uuid(d6d04c36-0fa4-4db3-be05-4a18397103e2)]
+[scriptable, uuid(12120b20-0929-40e9-88cf-6e08766e8b23)]
 interface nsIURI : nsISupports
 {
     /************************************************************************
