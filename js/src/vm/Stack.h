@@ -1037,6 +1037,10 @@ class StackFrame
         return offsetof(StackFrame, exec);
     }
 
+    static size_t offsetOfArgs() {
+        return offsetof(StackFrame, args);
+    }    
+
     void *addressOfArgs() {
         return &args;
     }
