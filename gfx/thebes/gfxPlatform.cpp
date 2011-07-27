@@ -927,7 +927,7 @@ unacceptable performance overhead, so we go with perceptual. */
 #define INTENT_MIN 0
 #define INTENT_MAX 3
 
-PRBool
+int
 gfxPlatform::GetRenderingIntent()
 {
     if (gCMSIntent == -2) {
