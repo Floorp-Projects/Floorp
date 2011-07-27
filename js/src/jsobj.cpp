@@ -3435,6 +3435,9 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
         if (!CopySlots(cx, this, clone))
             return NULL;
     }
+
+    CheckProxy(clone);
+
     return clone;
 }
 
@@ -3546,6 +3549,11 @@ JSObject::swap(JSContext *cx, JSObject *other)
     }
     TradeGuts(this, otherClone);
     TradeGuts(other, thisClone);
+
+    CheckProxy(this);
+    CheckProxy(other);
+    CheckProxy(thisClone);
+    CheckProxy(otherClone);
 
     return true;
 }
