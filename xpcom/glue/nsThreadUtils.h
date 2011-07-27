@@ -75,12 +75,16 @@
  *   The resulting nsIThread object.
  * @param initialEvent
  *   The initial event to run on this thread.  This parameter may be null.
+ * @param stackSize
+ *   The size in bytes to reserve for the thread's stack.
  *
  * @returns NS_ERROR_INVALID_ARG
  *   Indicates that the given name is not unique.
  */
 extern NS_COM_GLUE NS_METHOD
-NS_NewThread(nsIThread **result, nsIRunnable *initialEvent = nsnull);
+NS_NewThread(nsIThread **result,
+             nsIRunnable *initialEvent = nsnull,
+             PRUint32 stackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
 
 /**
  * Get a reference to the current thread.
