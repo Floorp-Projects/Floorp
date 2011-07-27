@@ -178,9 +178,10 @@ nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
     // save cookie lifetime in seconds instead of days
     mCookiesLifetimeSec = val * 24 * 60 * 60;
 
+  PRBool bval;
   if (PREF_CHANGED(kCookiesAlwaysAcceptSession) &&
-      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesAlwaysAcceptSession, &val)))
-    mCookiesAlwaysAcceptSession = val;
+      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookiesAlwaysAcceptSession, &bval)))
+    mCookiesAlwaysAcceptSession = bval;
 }
 
 NS_IMETHODIMP
