@@ -248,7 +248,7 @@
 %endif
 %endif
 
-#main-window[privatebrowsingmode=temporary] #tabbrowser-tabs > hbox > .tab-drag-panel > .tab-drag-preview::before,
+#main-window[privatebrowsingmode=temporary] .tab-drag-preview::before,
 #main-window[privatebrowsingmode=temporary] #appmenu-button {
   background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
   border-color: rgba(43,8,65,.9);
