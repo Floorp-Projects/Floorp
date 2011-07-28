@@ -1,3 +1,4 @@
+/* vim: set ts=8 sw=8 noexpandtab: */
 //  qcms
 //  Copyright (C) 2009 Mozilla Foundation
 //  Copyright (C) 1998-2007 Marti Maria
@@ -23,8 +24,12 @@
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> //memset
 #include "qcmsint.h"
+
+/* It might be worth having a unified limit on content controlled
+ * allocation per profile. This would remove the need for many
+ * of the arbitrary limits that we used */
 
 typedef uint32_t be32;
 typedef uint16_t be16;
@@ -120,12 +125,15 @@ static s15Fixed16Number read_s15Fixed16Number(struct mem_source *mem, size_t off
 	return read_u32(mem, offset);
 }
 
-#if 0
+static uInt8Number read_uInt8Number(struct mem_source *mem, size_t offset)
+{
+	return read_u8(mem, offset);
+}
+
 static uInt16Number read_uInt16Number(struct mem_source *mem, size_t offset)
 {
 	return read_u16(mem, offset);
 }
-#endif
 
 #define BAD_VALUE_PROFILE NULL
 #define INVALID_PROFILE NULL
@@ -144,16 +152,21 @@ static void check_CMM_type_signature(struct mem_source *src)
 
 static void check_profile_version(struct mem_source *src)
 {
+
+	/*
 	uint8_t major_revision = read_u8(src, 8 + 0);
 	uint8_t minor_revision = read_u8(src, 8 + 1);
+	*/
 	uint8_t reserved1      = read_u8(src, 8 + 2);
 	uint8_t reserved2      = read_u8(src, 8 + 3);
+	/* Checking the version doesn't buy us anything
 	if (major_revision != 0x4) {
 		if (major_revision > 0x2)
 			invalid_source(src, "Unsupported major revision");
 		if (minor_revision > 0x40)
 			invalid_source(src, "Unsupported minor revision");
 	}
+	*/
 	if (reserved1 != 0 || reserved2 != 0)
 		invalid_source(src, "Invalid reserved bytes");
 }
@@ -172,8 +185,9 @@ static void read_class_signature(qcms_profile *profile, struct mem_source *mem)
 	switch (profile->class) {
 		case DISPLAY_DEVICE_PROFILE:
 		case INPUT_DEVICE_PROFILE:
-			break;
 		case OUTPUT_DEVICE_PROFILE:
+		case COLOR_SPACE_PROFILE:
+			break;
 		default:
 			invalid_source(mem, "Invalid  Profile/Device Class signature");
 	}
@@ -188,6 +202,18 @@ static void read_color_space(qcms_profile *profile, struct mem_source *mem)
 			break;
 		default:
 			invalid_source(mem, "Unsupported colorspace");
+	}
+}
+
+static void read_pcs(qcms_profile *profile, struct mem_source *mem)
+{
+	profile->pcs = read_u32(mem, 20);
+	switch (profile->pcs) {
+		case XYZ_SIGNATURE:
+		case LAB_SIGNATURE:
+			break;
+		default:
+			invalid_source(mem, "Unsupported pcs");
 	}
 }
 
@@ -239,6 +265,9 @@ qcms_bool qcms_profile_is_bogus(qcms_profile *profile)
        // We currently only check the bogosity of RGB profiles
        if (profile->color_space != RGB_SIGNATURE)
 	       return false;
+
+       if (profile->A2B0 || profile->B2A0)
+               return false;
 
        rX = s15Fixed16Number_to_float(profile->redColorant.X);
        rY = s15Fixed16Number_to_float(profile->redColorant.Y);
@@ -300,6 +329,8 @@ qcms_bool qcms_profile_is_bogus(qcms_profile *profile)
 #define TAG_gTRC 0x67545243
 #define TAG_kTRC 0x6b545243
 #define TAG_A2B0 0x41324230
+#define TAG_B2A0 0x42324130
+#define TAG_CHAD 0x63686164
 
 static struct tag *find_tag(struct tag_index index, uint32_t tag_id)
 {
@@ -313,10 +344,39 @@ static struct tag *find_tag(struct tag_index index, uint32_t tag_id)
 	return tag;
 }
 
-#define XYZ_TYPE   0x58595a20 // 'XYZ '
-#define CURVE_TYPE 0x63757276 // 'curv'
-#define LUT16_TYPE 0x6d667432 // 'mft2'
-#define LUT8_TYPE  0x6d667431 // 'mft1'
+#define XYZ_TYPE		0x58595a20 // 'XYZ '
+#define CURVE_TYPE		0x63757276 // 'curv'
+#define PARAMETRIC_CURVE_TYPE	0x70617261 // 'para'
+#define LUT16_TYPE		0x6d667432 // 'mft2'
+#define LUT8_TYPE		0x6d667431 // 'mft1'
+#define LUT_MAB_TYPE		0x6d414220 // 'mAB '
+#define LUT_MBA_TYPE		0x6d424120 // 'mBA '
+#define CHROMATIC_TYPE		0x73663332 // 'sf32'
+
+static struct matrix read_tag_s15Fixed16ArrayType(struct mem_source *src, struct tag_index index, uint32_t tag_id)
+{
+	struct tag *tag = find_tag(index, tag_id);
+	struct matrix matrix;
+	if (tag) {
+		uint8_t i;
+		uint32_t offset = tag->offset;
+		uint32_t type = read_u32(src, offset);
+
+		// Check mandatory type signature for s16Fixed16ArrayType
+		if (type != CHROMATIC_TYPE) {
+			invalid_source(src, "unexpected type, expected 'sf32'");
+		}
+
+		for (i = 0; i < 9; i++) {
+			matrix.m[i/3][i%3] = s15Fixed16Number_to_float(read_s15Fixed16Number(src, offset+8+i*4));
+		}
+		matrix.invalid = false;
+	} else {
+		matrix.invalid = true;
+		invalid_source(src, "missing sf32tag");
+	}
+	return matrix;
+}
 
 static struct XYZNumber read_tag_XYZType(struct mem_source *src, struct tag_index index, uint32_t tag_id)
 {
@@ -337,20 +397,24 @@ static struct XYZNumber read_tag_XYZType(struct mem_source *src, struct tag_inde
 	return num;
 }
 
-static struct curveType *read_tag_curveType(struct mem_source *src, struct tag_index index, uint32_t tag_id)
+// Read the tag at a given offset rather then the tag_index. 
+// This method is used when reading mAB tags where nested curveType are
+// present that are not part of the tag_index.
+static struct curveType *read_curveType(struct mem_source *src, uint32_t offset, uint32_t *len)
 {
-	struct tag *tag = find_tag(index, tag_id);
+	static const size_t COUNT_TO_LENGTH[5] = {1, 3, 4, 5, 7};
 	struct curveType *curve = NULL;
-	if (tag) {
-		uint32_t offset = tag->offset;
-		uint32_t type = read_u32(src, offset);
-		uint32_t count = read_u32(src, offset+8);
-		unsigned int i;
+	uint32_t type = read_u32(src, offset);
+	uint32_t count;
+	int i;
 
-		if (type != CURVE_TYPE) {
-			invalid_source(src, "unexpected type, expected CURV");
-			return NULL;
-		}
+	if (type != CURVE_TYPE && type != PARAMETRIC_CURVE_TYPE) {
+		invalid_source(src, "unexpected type, expected CURV or PARA");
+		return NULL;
+	}
+
+	if (type == CURVE_TYPE) {
+		count = read_u32(src, offset+8);
 
 #define MAX_CURVE_ENTRIES 40000 //arbitrary
 		if (count > MAX_CURVE_ENTRIES) {
@@ -362,9 +426,50 @@ static struct curveType *read_tag_curveType(struct mem_source *src, struct tag_i
 			return NULL;
 
 		curve->count = count;
+		curve->type = type;
+
 		for (i=0; i<count; i++) {
-			curve->data[i] = read_u16(src, offset + 12 + i *2);
+			curve->data[i] = read_u16(src, offset + 12 + i*2);
 		}
+		*len = 12 + count * 2;
+	} else { //PARAMETRIC_CURVE_TYPE
+		count = read_u16(src, offset+8);
+
+		if (count > 4) {
+			invalid_source(src, "parametric function type not supported.");
+			return NULL;
+		}
+
+		curve = malloc(sizeof(struct curveType));
+		if (!curve)
+			return NULL;
+
+		curve->count = count;
+		curve->type = type;
+
+		for (i=0; i < COUNT_TO_LENGTH[count]; i++) {
+			curve->parameter[i] = s15Fixed16Number_to_float(read_s15Fixed16Number(src, offset + 12 + i*4));	
+		}
+		*len = 12 + COUNT_TO_LENGTH[count] * 4;
+
+		if ((count == 1 || count == 2)) {
+			/* we have a type 1 or type 2 function that has a division by 'a' */
+			float a = curve->parameter[1];
+			if (a == 0.f)
+				invalid_source(src, "parametricCurve definition causes division by zero.");
+		}
+	}
+
+	return curve;
+}
+
+static struct curveType *read_tag_curveType(struct mem_source *src, struct tag_index index, uint32_t tag_id)
+{
+	struct tag *tag = find_tag(index, tag_id);
+	struct curveType *curve = NULL;
+	if (tag) {
+		uint32_t len;
+		return read_curveType(src, tag->offset, &len);
 	} else {
 		invalid_source(src, "missing curvetag");
 	}
@@ -372,7 +477,178 @@ static struct curveType *read_tag_curveType(struct mem_source *src, struct tag_i
 	return curve;
 }
 
-/* This function's not done yet */
+#define MAX_CLUT_SIZE 500000 // arbitrary
+#define MAX_CHANNELS 10 // arbitrary
+static void read_nested_curveType(struct mem_source *src, struct curveType *(*curveArray)[MAX_CHANNELS], uint8_t num_channels, uint32_t curve_offset)
+{
+	uint32_t channel_offset = 0;
+	int i;
+	for (i = 0; i < num_channels; i++) {
+		uint32_t tag_len;
+
+		(*curveArray)[i] = read_curveType(src, curve_offset + channel_offset, &tag_len);
+		if (!(*curveArray)[i]) {
+			invalid_source(src, "invalid nested curveType curve");
+		}
+
+		channel_offset += tag_len;
+		// 4 byte aligned
+		if ((tag_len % 4) != 0)
+			channel_offset += 4 - (tag_len % 4);
+	}
+
+}
+
+static void mAB_release(struct lutmABType *lut)
+{
+	uint8_t i;
+
+	for (i = 0; i < lut->num_in_channels; i++){
+		free(lut->a_curves[i]);
+	}
+	for (i = 0; i < lut->num_out_channels; i++){
+		free(lut->b_curves[i]);
+		free(lut->m_curves[i]);
+	}
+	free(lut);
+}
+
+/* See section 10.10 for specs */
+static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag_index index, uint32_t tag_id)
+{
+	struct tag *tag = find_tag(index, tag_id);
+	uint32_t offset = tag->offset;
+	uint32_t a_curve_offset, b_curve_offset, m_curve_offset;
+	uint32_t matrix_offset;
+	uint32_t clut_offset;
+	uint32_t clut_size = 1;
+	uint8_t clut_precision;
+	uint32_t type = read_u32(src, offset);
+	uint8_t num_in_channels, num_out_channels;
+	struct lutmABType *lut;
+	int i;
+
+	if (type != LUT_MAB_TYPE && type != LUT_MBA_TYPE) {
+		return NULL;
+	}
+
+	num_in_channels = read_u8(src, offset + 8);
+	num_out_channels = read_u8(src, offset + 8);
+	if (num_in_channels > MAX_CHANNELS || num_out_channels > MAX_CHANNELS)
+		return NULL;
+
+	// We require 3in/out channels since we only support RGB->XYZ (or RGB->LAB)
+	// XXX: If we remove this restriction make sure that the number of channels
+	//      is less or equal to the maximum number of mAB curves in qcmsint.h
+	//      also check for clut_size overflow.
+	if (num_in_channels != 3 || num_out_channels != 3)
+		return NULL;
+
+	// some of this data is optional and is denoted by a zero offset
+	// we also use this to track their existance
+	a_curve_offset = read_u32(src, offset + 28);
+	clut_offset = read_u32(src, offset + 24);
+	m_curve_offset = read_u32(src, offset + 20);
+	matrix_offset = read_u32(src, offset + 16);
+	b_curve_offset = read_u32(src, offset + 12);
+
+	// Convert offsets relative to the tag to relative to the profile
+	// preserve zero for optional fields
+	if (a_curve_offset)
+		a_curve_offset += offset;
+	if (clut_offset)
+		clut_offset += offset;
+	if (m_curve_offset)
+		m_curve_offset += offset;
+	if (matrix_offset)
+		matrix_offset += offset;
+	if (b_curve_offset)
+		b_curve_offset += offset;
+
+	if (clut_offset) {
+		assert (num_in_channels == 3);
+		// clut_size can not overflow since lg(256^num_in_channels) = 24 bits.
+		for (i = 0; i < num_in_channels; i++) {
+			clut_size *= read_u8(src, clut_offset + i);
+		}
+	} else {
+		clut_size = 0;
+	}
+
+	// 24bits * 3 won't overflow either
+	clut_size = clut_size * num_out_channels;
+
+	if (clut_size > MAX_CLUT_SIZE)
+		return NULL;
+
+	lut = malloc(sizeof(struct lutmABType) + (clut_size) * sizeof(float));
+	if (!lut)
+		return NULL;
+	// we'll fill in the rest below
+	memset(lut, 0, sizeof(struct lutmABType));
+	lut->clut_table   = &lut->clut_table_data[0];
+
+	for (i = 0; i < num_in_channels; i++) {
+		lut->num_grid_points[i] = read_u8(src, clut_offset + i);
+	}
+
+	// Reverse the processing of transformation elements for mBA type.
+	lut->reversed = (type == LUT_MBA_TYPE);
+
+	lut->num_in_channels = num_in_channels;
+	lut->num_out_channels = num_out_channels;
+
+	if (matrix_offset) {
+		// read the matrix if we have it
+		lut->e00 = read_s15Fixed16Number(src, matrix_offset+4*0);
+		lut->e01 = read_s15Fixed16Number(src, matrix_offset+4*1);
+		lut->e02 = read_s15Fixed16Number(src, matrix_offset+4*2);
+		lut->e10 = read_s15Fixed16Number(src, matrix_offset+4*3);
+		lut->e11 = read_s15Fixed16Number(src, matrix_offset+4*4);
+		lut->e12 = read_s15Fixed16Number(src, matrix_offset+4*5);
+		lut->e20 = read_s15Fixed16Number(src, matrix_offset+4*6);
+		lut->e21 = read_s15Fixed16Number(src, matrix_offset+4*7);
+		lut->e22 = read_s15Fixed16Number(src, matrix_offset+4*8);
+		lut->e03 = read_s15Fixed16Number(src, matrix_offset+4*9);
+		lut->e13 = read_s15Fixed16Number(src, matrix_offset+4*10);
+		lut->e23 = read_s15Fixed16Number(src, matrix_offset+4*11);
+	}
+
+	if (a_curve_offset) {
+		read_nested_curveType(src, &lut->a_curves, num_in_channels, a_curve_offset);
+	}
+	if (m_curve_offset) {
+		read_nested_curveType(src, &lut->m_curves, num_out_channels, m_curve_offset);
+	}
+	if (b_curve_offset) {
+		read_nested_curveType(src, &lut->b_curves, num_out_channels, b_curve_offset);
+	} else {
+		invalid_source(src, "B curves required");
+	}
+
+	if (clut_offset) {
+		clut_precision = read_u8(src, clut_offset + 16);
+		if (clut_precision == 1) {
+			for (i = 0; i < clut_size; i++) {
+				lut->clut_table[i] = uInt8Number_to_float(read_uInt8Number(src, clut_offset + 20 + i*1));
+			}
+		} else if (clut_precision == 2) {
+			for (i = 0; i < clut_size; i++) {
+				lut->clut_table[i] = uInt16Number_to_float(read_uInt16Number(src, clut_offset + 20 + i*2));
+			}
+		} else {
+			invalid_source(src, "Invalid clut precision");
+		}
+	}
+
+	if (!src->valid) {
+		mAB_release(lut);
+		return NULL;
+	}
+
+	return lut;
+}
+
 static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index index, uint32_t tag_id)
 {
 	struct tag *tag = find_tag(index, tag_id);
@@ -381,32 +657,53 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 	uint16_t num_input_table_entries;
 	uint16_t num_output_table_entries;
 	uint8_t in_chan, grid_points, out_chan;
+	uint32_t clut_offset, output_offset;
 	uint32_t clut_size;
+	size_t entry_size;
 	struct lutType *lut;
 	int i;
 
-	num_input_table_entries  = read_u16(src, offset + 48);
-	num_output_table_entries = read_u16(src, offset + 50);
+	/* I'm not sure why the spec specifies a fixed number of entries for LUT8 tables even though
+	 * they have room for the num_entries fields */
+	if (type == LUT8_TYPE) {
+		num_input_table_entries = 256;
+		num_output_table_entries = 256;
+		entry_size = 1;
+	} else if (type == LUT16_TYPE) {
+		num_input_table_entries  = read_u16(src, offset + 48);
+		num_output_table_entries = read_u16(src, offset + 50);
+		entry_size = 2;
+	} else {
+		assert(0); // the caller checks that this doesn't happen
+		invalid_source(src, "Unexpected lut type");
+		return NULL;
+	}
 
 	in_chan     = read_u8(src, offset + 8);
 	out_chan    = read_u8(src, offset + 9);
 	grid_points = read_u8(src, offset + 10);
 
-	if (!src->valid)
-		return NULL;
-
-	clut_size = in_chan * grid_points * out_chan;
-#define MAX_CLUT_SIZE 10000 // arbitrary
+	clut_size = pow(grid_points, in_chan);
 	if (clut_size > MAX_CLUT_SIZE) {
 		return NULL;
 	}
 
-	if (type != LUT16_TYPE && type != LUT8_TYPE)
+	if (in_chan != 3 || out_chan != 3) {
 		return NULL;
+	}
 
-	lut = malloc(sizeof(struct lutType) + (clut_size + num_input_table_entries + num_output_table_entries)*sizeof(uint8_t));
-	if (!lut)
+	lut = malloc(sizeof(struct lutType) + (num_input_table_entries * in_chan + clut_size*out_chan + num_output_table_entries * out_chan)*sizeof(float));
+	if (!lut) {
 		return NULL;
+	}
+
+	/* compute the offsets of tables */
+	lut->input_table  = &lut->table_data[0];
+	lut->clut_table   = &lut->table_data[in_chan*num_input_table_entries];
+	lut->output_table = &lut->table_data[in_chan*num_input_table_entries + clut_size*out_chan];
+
+	lut->num_input_table_entries  = num_input_table_entries;
+	lut->num_output_table_entries = num_output_table_entries;
 	lut->num_input_channels   = read_u8(src, offset + 8);
 	lut->num_output_channels  = read_u8(src, offset + 9);
 	lut->num_clut_grid_points = read_u8(src, offset + 10);
@@ -420,7 +717,36 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 	lut->e21 = read_s15Fixed16Number(src, offset+40);
 	lut->e22 = read_s15Fixed16Number(src, offset+44);
 
-	//TODO: finish up
+	for (i = 0; i < lut->num_input_table_entries * in_chan; i++) {
+		if (type == LUT8_TYPE) {
+			lut->input_table[i] = uInt8Number_to_float(read_uInt8Number(src, offset + 52 + i * entry_size));
+		} else {
+			lut->input_table[i] = uInt16Number_to_float(read_uInt16Number(src, offset + 52 + i * entry_size));
+		}
+	}
+
+	clut_offset = offset + 52 + lut->num_input_table_entries * in_chan * entry_size;
+	for (i = 0; i < clut_size * out_chan; i+=3) {
+		if (type == LUT8_TYPE) {
+			lut->clut_table[i+0] = uInt8Number_to_float(read_uInt8Number(src, clut_offset + i*entry_size + 0));
+			lut->clut_table[i+1] = uInt8Number_to_float(read_uInt8Number(src, clut_offset + i*entry_size + 1));
+			lut->clut_table[i+2] = uInt8Number_to_float(read_uInt8Number(src, clut_offset + i*entry_size + 2));
+		} else {
+			lut->clut_table[i+0] = uInt16Number_to_float(read_uInt16Number(src, clut_offset + i*entry_size + 0));
+			lut->clut_table[i+1] = uInt16Number_to_float(read_uInt16Number(src, clut_offset + i*entry_size + 2));
+			lut->clut_table[i+2] = uInt16Number_to_float(read_uInt16Number(src, clut_offset + i*entry_size + 4));
+		}
+	}
+
+	output_offset = clut_offset + clut_size * out_chan * entry_size;
+	for (i = 0; i < lut->num_output_table_entries * out_chan; i++) {
+		if (type == LUT8_TYPE) {
+			lut->output_table[i] = uInt8Number_to_float(read_uInt8Number(src, output_offset + i*entry_size));
+		} else {
+			lut->output_table[i] = uInt16Number_to_float(read_uInt16Number(src, output_offset + i*entry_size));
+		}
+	}
+
 	return lut;
 }
 
@@ -442,6 +768,8 @@ qcms_profile *qcms_profile_create(void)
 {
 	return calloc(sizeof(qcms_profile), 1);
 }
+
+
 
 /* build sRGB gamma table */
 /* based on cmsBuildParametricGamma() */
@@ -493,6 +821,7 @@ static struct curveType *curve_from_table(uint16_t *table, int num_entries)
 	curve = malloc(sizeof(struct curveType) + sizeof(uInt16Number)*num_entries);
 	if (!curve)
 		return NULL;
+	curve->type = CURVE_TYPE;
 	curve->count = num_entries;
 	for (i = 0; i < num_entries; i++) {
 		curve->data[i] = table[i];
@@ -502,12 +831,12 @@ static struct curveType *curve_from_table(uint16_t *table, int num_entries)
 
 static uint16_t float_to_u8Fixed8Number(float a)
 {
-	if (a > (255. + 255./256))
+	if (a > (255.f + 255.f/256))
 		return 0xffff;
-	else if (a < 0.)
+	else if (a < 0.f)
 		return 0;
 	else
-		return floor(a*256. + .5);
+		return floor(a*256.f + .5f);
 }
 
 static struct curveType *curve_from_gamma(float gamma)
@@ -522,14 +851,6 @@ static struct curveType *curve_from_gamma(float gamma)
 	return curve;
 }
 
-static void qcms_profile_fini(qcms_profile *profile)
-{
-	free(profile->redTRC);
-	free(profile->blueTRC);
-	free(profile->greenTRC);
-	free(profile->grayTRC);
-	free(profile);
-}
 
 //XXX: it would be nice if we had a way of ensuring
 // everything in a profile was initialized regardless of how it was created
@@ -547,7 +868,7 @@ qcms_profile* qcms_profile_create_rgb_with_gamma(
 
 	//XXX: should store the whitepoint
 	if (!set_rgb_colorants(profile, white_point, primaries)) {
-		qcms_profile_fini(profile);
+		qcms_profile_release(profile);
 		return INVALID_PROFILE;
 	}
 
@@ -556,7 +877,7 @@ qcms_profile* qcms_profile_create_rgb_with_gamma(
 	profile->greenTRC = curve_from_gamma(gamma);
 
 	if (!profile->redTRC || !profile->blueTRC || !profile->greenTRC) {
-		qcms_profile_fini(profile);
+		qcms_profile_release(profile);
 		return NO_MEM_PROFILE;
 	}
 	profile->class = DISPLAY_DEVICE_PROFILE;
@@ -576,7 +897,7 @@ qcms_profile* qcms_profile_create_rgb_with_table(
 
 	//XXX: should store the whitepoint
 	if (!set_rgb_colorants(profile, white_point, primaries)) {
-		qcms_profile_fini(profile);
+		qcms_profile_release(profile);
 		return INVALID_PROFILE;
 	}
 
@@ -585,7 +906,7 @@ qcms_profile* qcms_profile_create_rgb_with_table(
 	profile->greenTRC = curve_from_table(table, num_entries);
 
 	if (!profile->redTRC || !profile->blueTRC || !profile->greenTRC) {
-		qcms_profile_fini(profile);
+		qcms_profile_release(profile);
 		return NO_MEM_PROFILE;
 	}
 	profile->class = DISPLAY_DEVICE_PROFILE;
@@ -697,6 +1018,7 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size)
 	read_class_signature(profile, src);
 	read_rendering_intent(profile, src);
 	read_color_space(profile, src);
+	read_pcs(profile, src);
 	//TODO read rest of profile stuff
 
 	if (!src->valid)
@@ -706,23 +1028,48 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size)
 	if (!src->valid || !index.tags)
 		goto invalid_tag_table;
 
-	if (profile->class == DISPLAY_DEVICE_PROFILE || profile->class == INPUT_DEVICE_PROFILE) {
-		if (profile->color_space == RGB_SIGNATURE) {
+	if (find_tag(index, TAG_CHAD)) {
+		profile->chromaticAdaption = read_tag_s15Fixed16ArrayType(src, index, TAG_CHAD);
+	} else {
+		profile->chromaticAdaption.invalid = true; //Signal the data is not present
+	}
 
-			profile->redColorant = read_tag_XYZType(src, index, TAG_rXYZ);
-			profile->blueColorant = read_tag_XYZType(src, index, TAG_bXYZ);
-			profile->greenColorant = read_tag_XYZType(src, index, TAG_gXYZ);
+	if (profile->class == DISPLAY_DEVICE_PROFILE || profile->class == INPUT_DEVICE_PROFILE ||
+            profile->class == OUTPUT_DEVICE_PROFILE  || profile->class == COLOR_SPACE_PROFILE) {
+		if (profile->color_space == RGB_SIGNATURE) {
+			if (find_tag(index, TAG_A2B0)) {
+				if (read_u32(src, find_tag(index, TAG_A2B0)->offset) == LUT8_TYPE ||
+				    read_u32(src, find_tag(index, TAG_A2B0)->offset) == LUT16_TYPE) {
+					profile->A2B0 = read_tag_lutType(src, index, TAG_A2B0);
+				} else if (read_u32(src, find_tag(index, TAG_A2B0)->offset) == LUT_MAB_TYPE) {
+					profile->mAB = read_tag_lutmABType(src, index, TAG_A2B0);
+				}
+			}
+			if (find_tag(index, TAG_B2A0)) {
+				if (read_u32(src, find_tag(index, TAG_B2A0)->offset) == LUT8_TYPE ||
+				    read_u32(src, find_tag(index, TAG_B2A0)->offset) == LUT16_TYPE) {
+					profile->B2A0 = read_tag_lutType(src, index, TAG_B2A0);
+				} else if (read_u32(src, find_tag(index, TAG_B2A0)->offset) == LUT_MBA_TYPE) {
+					profile->mBA = read_tag_lutmABType(src, index, TAG_B2A0);
+				}
+			}
+			if (find_tag(index, TAG_rXYZ) || !qcms_supports_iccv4) {
+				profile->redColorant = read_tag_XYZType(src, index, TAG_rXYZ);
+				profile->greenColorant = read_tag_XYZType(src, index, TAG_gXYZ);
+				profile->blueColorant = read_tag_XYZType(src, index, TAG_bXYZ);
+			}
 
 			if (!src->valid)
 				goto invalid_tag_table;
 
-			profile->redTRC = read_tag_curveType(src, index, TAG_rTRC);
-			profile->blueTRC = read_tag_curveType(src, index, TAG_bTRC);
-			profile->greenTRC = read_tag_curveType(src, index, TAG_gTRC);
+			if (find_tag(index, TAG_rTRC) || !qcms_supports_iccv4) {
+				profile->redTRC = read_tag_curveType(src, index, TAG_rTRC);
+				profile->greenTRC = read_tag_curveType(src, index, TAG_gTRC);
+				profile->blueTRC = read_tag_curveType(src, index, TAG_bTRC);
 
-			if (!profile->redTRC || !profile->blueTRC || !profile->greenTRC)
-				goto invalid_tag_table;
-
+				if (!profile->redTRC || !profile->blueTRC || !profile->greenTRC)
+					goto invalid_tag_table;
+			}
 		} else if (profile->color_space == GRAY_SIGNATURE) {
 
 			profile->grayTRC = read_tag_curveType(src, index, TAG_kTRC);
@@ -730,10 +1077,9 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size)
 				goto invalid_tag_table;
 
 		} else {
+			assert(0 && "read_color_space protects against entering here");
 			goto invalid_tag_table;
 		}
-	} else if (0 && profile->class == OUTPUT_DEVICE_PROFILE) {
-		profile->A2B0 = read_tag_lutType(src, index, TAG_A2B0);
 	} else {
 		goto invalid_tag_table;
 	}
@@ -748,7 +1094,7 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size)
 invalid_tag_table:
 	free(index.tags);
 invalid_profile:
-	qcms_profile_fini(profile);
+	qcms_profile_release(profile);
 	return INVALID_PROFILE;
 }
 
@@ -763,6 +1109,11 @@ qcms_profile_get_color_space(qcms_profile *profile)
 	return profile->color_space;
 }
 
+static void lut_release(struct lutType *lut)
+{
+	free(lut);
+}
+
 void qcms_profile_release(qcms_profile *profile)
 {
 	if (profile->output_table_r)
@@ -772,8 +1123,23 @@ void qcms_profile_release(qcms_profile *profile)
 	if (profile->output_table_b)
 		precache_release(profile->output_table_b);
 
-	qcms_profile_fini(profile);
+	if (profile->A2B0)
+		lut_release(profile->A2B0);
+	if (profile->B2A0)
+		lut_release(profile->B2A0);
+
+	if (profile->mAB)
+		mAB_release(profile->mAB);
+	if (profile->mBA)
+		mAB_release(profile->mBA);
+
+	free(profile->redTRC);
+	free(profile->blueTRC);
+	free(profile->greenTRC);
+	free(profile->grayTRC);
+	free(profile);
 }
+
 
 #include <stdio.h>
 qcms_profile* qcms_profile_from_file(FILE *file)

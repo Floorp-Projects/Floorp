@@ -388,7 +388,7 @@ class TiledTextureImage
 {
 public:
     TiledTextureImage(GLContext* aGL, nsIntSize aSize,
-        TextureImage::ContentType aContentType, PRBool aUseNearestFilter = PR_FALSE);
+        TextureImage::ContentType, PRBool aUseNearestFilter = PR_FALSE);
     ~TiledTextureImage();
     void DumpDiv();
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);

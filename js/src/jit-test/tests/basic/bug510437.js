@@ -1,5 +1,6 @@
 // Don't crash or assert.
 
+var d;
 this.watch("d", eval);
 (function () {
     (eval("\

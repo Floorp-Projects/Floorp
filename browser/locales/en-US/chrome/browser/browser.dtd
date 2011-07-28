@@ -111,6 +111,8 @@ can reach it easily. -->
 <!ENTITY forwardCmd.label             "Forward">
 <!ENTITY forwardCmd.accesskey         "F">
 <!ENTITY forwardButton.tooltip        "Go forward one page">
+<!ENTITY backForwardButtonMenu.tooltip "Right-click or pull down to show history">
+<!ENTITY backForwardButtonMenuMac.tooltip "Pull down to show history">
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadButton.tooltip         "Reload current page">

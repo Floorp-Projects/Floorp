@@ -158,7 +158,7 @@ AllocateSlots(JSContext *cx, JSObject *obj, uint32 size)
         Value *tmpslots = (Value *)cx->calloc_(bytes);
         if (!tmpslots)
             return false;
-        obj->slots = tmpslots;
+        obj->setSlotsPtr(tmpslots);
         /*
          * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
          * |capacity * sizeof(Value)| may underestimate the size by up to
@@ -166,9 +166,9 @@ AllocateSlots(JSContext *cx, JSObject *obj, uint32 size)
          */
         obj->capacity = bytes / sizeof(Value);
     } else {
-        memset(obj->slots, 0, bytes);
+        memset(obj->getSlotsPtr(), 0, bytes);
     }
-    *((uint32*)obj->slots) = size;
+    *((uint32*)obj->getSlotsPtr()) = size;
     return true;
 }
 
@@ -326,7 +326,7 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, J
     if (!delegate)
         return false;
 
-    return js_SetProperty(cx, delegate, id, vp, strict);
+    return js_SetPropertyHelper(cx, delegate, id, 0, vp, strict);
 }
 
 JSBool
@@ -748,7 +748,7 @@ class TypedArrayTemplate
         }
 
         jsuint index;
-        // We can't just chain to js_SetProperty, because we're not a normal object.
+        // We can't just chain to js_SetPropertyHelper, because we're not a normal object.
         if (!tarray->isArrayIndex(cx, id, &index)) {
 #if 0
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1322,7 +1322,7 @@ class TypedArrayTemplate
         if (ar->isDenseArray() && ar->getDenseArrayCapacity() >= len) {
             JS_ASSERT(ar->getArrayLength() == len);
 
-            Value *src = ar->getDenseArrayElements();
+            const Value *src = ar->getDenseArrayElements();
 
             for (uintN i = 0; i < len; ++i)
                 *dest++ = nativeFromValue(cx, *src++);
@@ -1842,14 +1842,13 @@ js_IsArrayBuffer(JSObject *obj)
 JSUint32
 JS_GetArrayBufferByteLength(JSObject *obj)
 {
-    return *((JSUint32*) obj->slots);
+    return ArrayBuffer::getByteLength(obj);
 }
 
 uint8 *
 JS_GetArrayBufferData(JSObject *obj)
 {
-    uint64 *base = ((uint64*)obj->slots) + 1;
-    return (uint8*) base;
+    return ArrayBuffer::getDataOffset(obj);
 }
 
 JS_FRIEND_API(JSBool)

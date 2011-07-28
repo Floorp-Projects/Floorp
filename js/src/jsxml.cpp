@@ -4158,7 +4158,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
         if (!nameqn)
             goto bad;
         if (!JSID_IS_VOID(funid)) {
-            ok = js_SetProperty(cx, obj, funid, Valueify(vp), false);
+            ok = js_SetPropertyHelper(cx, obj, funid, 0, Valueify(vp), false);
             goto out;
         }
         nameobj = nameqn;
