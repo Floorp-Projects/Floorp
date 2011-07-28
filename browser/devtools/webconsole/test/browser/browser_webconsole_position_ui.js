@@ -51,11 +51,11 @@ function onLoad() {
   is(Services.prefs.getCharPref(POSITION_PREF), "below", "pref is below");
 
   // listen for the panel popupshown event.
-  document.addEventListener("popupshown", function() {
-    document.removeEventListener("popupshown", arguments.callee, false);
+  document.addEventListener("popupshown", function popupShown() {
+    document.removeEventListener("popupshown", popupShown, false);
 
-    document.addEventListener("popuphidden", function() {
-      document.removeEventListener("popuphidden", arguments.callee, false);
+    document.addEventListener("popuphidden", function popupHidden() {
+      document.removeEventListener("popuphidden", popupHidden, false);
 
       id = hudBox.parentNode.childNodes[2].getAttribute("id");
       is(id, hudId, "below position is correct after reopen");
@@ -64,9 +64,11 @@ function onLoad() {
       ok(diffHeight < 3, "hudBox height is still correct");
 
       is(Services.prefs.getCharPref(POSITION_PREF), "below", "pref is below");
-      is(Services.prefs.getIntPref(WIDTH_PREF), panelWidth, "width pref updated");
-      isnot(Services.prefs.getIntPref(TOP_PREF), 50, "top location pref updated");
-      isnot(Services.prefs.getIntPref(LEFT_PREF), 51, "left location pref updated");
+
+      // following three disabled due to bug 674562
+      // is(Services.prefs.getIntPref(WIDTH_PREF), panelWidth, "width pref updated - bug 674562");
+      // isnot(Services.prefs.getIntPref(TOP_PREF), 50, "top location pref updated - bug 674562");
+      // isnot(Services.prefs.getIntPref(LEFT_PREF), 51, "left location pref updated - bug 674562");
 
       // Close the window console via the toolbar button
       let btn = hudBox.querySelector(".webconsole-close-button");
