@@ -178,6 +178,7 @@ CPPSRCS		= \
 		jsstr.cpp \
 		jstypedarray.cpp \
 		jsutil.cpp \
+		jswatchpoint.cpp \
 		jsweakmap.cpp \
 		jswrapper.cpp \
 		jsxdrapi.cpp \

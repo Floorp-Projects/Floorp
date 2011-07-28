@@ -530,7 +530,6 @@ StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-
 StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     if (!obj->isStrictArguments())
@@ -556,7 +555,7 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
      */
     AutoValueRooter tvr(cx);
     return js_DeleteProperty(cx, argsobj, id, tvr.addr(), strict) &&
-           js_SetProperty(cx, argsobj, id, vp, strict);
+           js_SetPropertyHelper(cx, argsobj, id, 0, vp, strict);
 }
 
 static JSBool
@@ -871,9 +870,8 @@ inline static void
 CopyValuesToCallObject(JSObject &callobj, uintN nargs, Value *argv, uintN nvars, Value *slots)
 {
     JS_ASSERT(callobj.numSlots() >= JSObject::CALL_RESERVED_SLOTS + nargs + nvars);
-    Value *base = callobj.getSlots() + JSObject::CALL_RESERVED_SLOTS;
-    memcpy(base, argv, nargs * sizeof(Value));
-    memcpy(base + nargs, slots, nvars * sizeof(Value));
+    callobj.copySlots(JSObject::CALL_RESERVED_SLOTS, argv, nargs);
+    callobj.copySlots(JSObject::CALL_RESERVED_SLOTS + nargs, slots, nvars);
 }
 
 void
@@ -1015,14 +1013,11 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
 
-    Value *argp;
     if (StackFrame *fp = obj->maybeCallObjStackFrame())
-        argp = &fp->formalArg(i);
+        fp->formalArg(i) = *vp;
     else
-        argp = &obj->callObjArg(i);
+        obj->setCallObjArg(i, *vp);
 
-    GCPoke(cx, *argp);
-    *argp = *vp;
     return true;
 }
 
@@ -1042,10 +1037,7 @@ SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
 
-    Value *up = &obj->getCallObjCallee()->getFlatClosureUpvar(i);
-
-    GCPoke(cx, *up);
-    *up = *vp;
+    obj->getCallObjCallee()->setFlatClosureUpvar(i, *vp);
     return true;
 }
 
@@ -1085,14 +1077,11 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     }
 #endif
 
-    Value *varp;
     if (StackFrame *fp = obj->maybeCallObjStackFrame())
-        varp = &fp->varSlot(i);
+        fp->varSlot(i) = *vp;
     else
-        varp = &obj->callObjVar(i);
+        obj->setCallObjVar(i, *vp);
 
-    GCPoke(cx, *varp);
-    *varp = *vp;
     return true;
 }
 
@@ -1175,7 +1164,7 @@ call_trace(JSTracer *trc, JSObject *obj)
         uintN count = fp->script()->bindings.countArgsAndVars();
 
         JS_ASSERT(obj->numSlots() >= first + count);
-        SetValueRangeToUndefined(obj->getSlots() + first, count);
+        obj->setSlotsUndefined(first, count);
     }
 
     MaybeMarkGenerator(trc, obj);
@@ -1307,12 +1296,6 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
 static JSBool
 fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    /*
-     * Note how that clobbering is what simulates JSPROP_READONLY for all of
-     * the non-standard properties when the directly addressed object (obj)
-     * is a function object (i.e., when this loop does not iterate).
-     */
-
     while (!obj->isFunction()) {
         obj = obj->getProto();
         if (!obj)
@@ -1924,11 +1907,11 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
     JS_ASSERT(isFunction());
 
     flags |= JSObject::BOUND_FUNCTION;
-    getSlotRef(JSSLOT_BOUND_FUNCTION_THIS) = thisArg;
-    getSlotRef(JSSLOT_BOUND_FUNCTION_ARGS_COUNT).setPrivateUint32(argslen);
+    setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
+    setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
     if (argslen != 0) {
         /* FIXME? Burn memory on an empty scope whose shape covers the args slots. */
-        EmptyShape *empty = EmptyShape::create(cx, clasp);
+        EmptyShape *empty = EmptyShape::create(cx, getClass());
         if (!empty)
             return false;
 
@@ -1939,7 +1922,7 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
             return false;
 
         JS_ASSERT(numSlots() >= argslen + FUN_CLASS_RESERVED_SLOTS);
-        memcpy(getSlots() + FUN_CLASS_RESERVED_SLOTS, args, argslen * sizeof(Value));
+        copySlots(FUN_CLASS_RESERVED_SLOTS, args, argslen);
     }
     return true;
 }

@@ -201,10 +201,10 @@ typedef Vector<UpvarCookie, 8> UpvarCookies;
 
 class Breakpoint;
 class BreakpointSite;
-class Debugger;
-
 typedef HashMap<jsbytecode *, BreakpointSite *, DefaultHasher<jsbytecode *>, RuntimeAllocPolicy>
     BreakpointSiteMap;
+class Debugger;
+class WatchpointMap;
 
 } /* namespace js */
 

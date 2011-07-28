@@ -147,7 +147,7 @@ void qcms_transform_release(qcms_transform *);
 
 void qcms_transform_data(qcms_transform *transform, void *src, void *dest, size_t length);
 
-
+void qcms_enable_iccv4();
 
 #ifdef  __cplusplus
 }

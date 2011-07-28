@@ -40,12 +40,12 @@
 #ifndef jscompartment_h___
 #define jscompartment_h___
 
-#include "jscntxt.h"
-#include "jsgc.h"
-#include "jsobj.h"
-#include "jsfun.h"
-#include "jsgcstats.h"
 #include "jsclist.h"
+#include "jscntxt.h"
+#include "jsfun.h"
+#include "jsgc.h"
+#include "jsgcstats.h"
+#include "jsobj.h"
 #include "vm/GlobalObject.h"
 
 #ifdef _MSC_VER
@@ -293,6 +293,9 @@ namespace mjit {
 class JaegerCompartment;
 }
 }
+
+/* Defined in jsapi.cpp */
+extern JSClass js_dummy_class;
 
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
 #ifndef JS_EVAL_CACHE_SHIFT
@@ -611,6 +614,9 @@ struct JS_FRIEND_API(JSCompartment) {
     bool markBreakpointsIteratively(JSTracer *trc);
   private:
     void sweepBreakpoints(JSContext *cx);
+
+  public:
+    js::WatchpointMap *watchpointMap;
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
