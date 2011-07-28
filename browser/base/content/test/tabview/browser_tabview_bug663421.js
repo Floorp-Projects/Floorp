@@ -67,7 +67,7 @@ function test() {
       EventUtils.synthesizeMouse(target, 600, 5, {type: "mouseup"}, cw);
 
       checkNumberOfGroupItems(2);
-      next();
+      closeGroupItem(cw.GroupItems.groupItems[1], next);
     }, win);
   }
 
