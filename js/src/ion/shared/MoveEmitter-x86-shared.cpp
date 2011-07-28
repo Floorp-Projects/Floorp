@@ -57,19 +57,12 @@ MoveEmitterX86::MoveEmitterX86(MacroAssembler &masm)
 }
 
 void
-MoveEmitterX86::emit(const MoveResolver &moves, const RegisterSet &freeRegs)
+MoveEmitterX86::emit(const MoveResolver &moves)
 {
-    freeRegs_ = freeRegs;
-
     if (moves.hasCycles()) {
-        cycleReg_ = freeRegs_.empty(false) ? InvalidReg : freeRegs_.takeGeneral();
-        cycleFloatReg_ = freeRegs_.empty(true) ? InvalidFloatReg : freeRegs_.takeFloat();
-
-        // No free registers to resolve a potential cycle, so reserve stack.
-        if (cycleReg_ == InvalidReg || cycleFloatReg_ == InvalidFloatReg) {
-            masm.reserveStack(sizeof(double));
-            pushedAtCycle_ = masm.framePushed();
-        }
+        // Reserve stack for cycle resolution
+        masm.reserveStack(sizeof(double));
+        pushedAtCycle_ = masm.framePushed();
     }
 
     for (size_t i = 0; i < moves.numMoves(); i++)
@@ -124,14 +117,8 @@ MoveEmitterX86::tempReg()
     if (spilledReg_ != InvalidReg)
         return spilledReg_;
 
-    if (!freeRegs_.empty(false)) {
-        spilledReg_ = freeRegs_.takeGeneral();
-        return spilledReg_;
-    }
-
-    // No registers are free. For now, just pick ecx/rcx as the eviction
-    // point. This is totally random, and if it ends up being bad, we can
-    // use actual heuristics later.
+    // For now, just pick ecx/rcx as the eviction point. This is totally
+    // random, and if it ends up being bad, we can use actual heuristics later.
     spilledReg_ = Register::FromCode(2);
     if (pushedAtSpill_ == -1) {
         masm.Push(spilledReg_);
@@ -148,14 +135,8 @@ MoveEmitterX86::tempFloatReg()
     if (spilledFloatReg_ != InvalidFloatReg)
         return spilledFloatReg_;
 
-    if (!freeRegs_.empty(true)) {
-        spilledFloatReg_ = freeRegs_.takeFloat();
-        return spilledFloatReg_;
-    }
-
-    // No registers are free. For now, just pick xmm7 as the eviction
-    // point. This is totally random, and if it ends up being bad, we can
-    // use actual heuristics later.
+    // For now, just pick xmm7 as the eviction point. This is totally random,
+    // and if it ends up being bad, we can use actual heuristics later.
     spilledFloatReg_ = FloatRegister::FromCode(7);
     if (pushedAtDoubleSpill_ == -1) {
         masm.reserveStack(sizeof(double));
@@ -175,9 +156,7 @@ MoveEmitterX86::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
     if (to.isDouble()) {
-        if (cycleFloatReg_ != InvalidFloatReg) {
-            masm.movsd(toOperand(to), cycleFloatReg_);
-        } else if (to.isMemory()) {
+        if (to.isMemory()) {
             FloatRegister temp = tempFloatReg();
             masm.movsd(toOperand(to), temp);
             masm.movsd(temp, cycleSlot());
@@ -185,9 +164,7 @@ MoveEmitterX86::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
             masm.movsd(to.floatReg(), cycleSlot());
         }
     } else {
-        if (cycleReg_ != InvalidReg) {
-            masm.mov(toOperand(to), cycleReg_);
-        } else if (to.isMemory()) {
+        if (to.isMemory()) {
             Register temp = tempReg();
             masm.mov(toOperand(to), temp);
             masm.mov(temp, cycleSlot());
@@ -207,9 +184,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
     if (kind == Move::DOUBLE) {
-        if (cycleFloatReg_ != InvalidFloatReg) {
-            masm.movsd(cycleFloatReg_, toOperand(to));
-        } else if (to.isMemory()) {
+        if (to.isMemory()) {
             FloatRegister temp = tempFloatReg();
             masm.movsd(cycleSlot(), temp);
             masm.movsd(temp, toOperand(to));
@@ -217,9 +192,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
             masm.movsd(cycleSlot(), to.floatReg());
         }
     } else {
-        if (cycleReg_ != InvalidReg) {
-            masm.mov(cycleReg_, toOperand(to));
-        } else if (to.isMemory()) {
+        if (to.isMemory()) {
             Register temp = tempReg();
             masm.mov(cycleSlot(), temp);
             masm.mov(temp, toOperand(to));
@@ -282,22 +255,11 @@ MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveEmitterX86::assertValidMove(const MoveOperand &from, const MoveOperand &to)
-{
-    JS_ASSERT_IF(from.isGeneralReg(), !freeRegs_.has(from.reg()));
-    JS_ASSERT_IF(to.isGeneralReg(), !freeRegs_.has(to.reg()));
-    JS_ASSERT_IF(from.isFloatReg(), !freeRegs_.has(from.floatReg()));
-    JS_ASSERT_IF(to.isFloatReg(), !freeRegs_.has(to.floatReg()));
-}
-
-void
 MoveEmitterX86::emit(const Move &move)
 {
     const MoveOperand &from = move.from();
     const MoveOperand &to = move.to();
 
-    assertValidMove(from, to);
-    
     if (move.inCycle()) {
         if (inCycle_) {
             completeCycle(from, to, move.kind());

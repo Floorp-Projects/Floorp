@@ -226,7 +226,7 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
         return false;
 
     MoveEmitter emitter(masm);
-    emitter.emit(resolver, group->freeRegs());
+    emitter.emit(resolver);
     emitter.finish();
 
     return true;
