@@ -527,7 +527,7 @@ nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
   }
 
   if (mState != LIST_UP_TO_DATE)
-    PopulateSelf(aIndex+1);
+    PopulateSelf(NS_MIN(aIndex, PR_UINT32_MAX - 1) + 1);
 
   ASSERT_IN_SYNC;
   NS_ASSERTION(!mRootNode || mState != LIST_DIRTY,

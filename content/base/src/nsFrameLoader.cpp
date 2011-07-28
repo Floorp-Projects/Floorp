@@ -119,6 +119,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::layout;
 typedef FrameMetrics::ViewID ViewID;
 
 #include "jsapi.h"
@@ -170,7 +171,7 @@ nsContentView::Update(const ViewConfig& aConfig)
 
   // View changed.  Try to locate our subdoc frame and invalidate
   // it if found.
-  if (!mOwnerContent) {
+  if (!mFrameLoader) {
     if (IsRoot()) {
       // Oops, don't have a frame right now.  That's OK; the view
       // config persists and will apply to the next frame we get, if we
@@ -182,10 +183,13 @@ nsContentView::Update(const ViewConfig& aConfig)
     }
   }
 
-  nsIFrame* frame = mOwnerContent->GetPrimaryFrame();
+  if (RenderFrameParent* rfp = mFrameLoader->GetCurrentRemoteFrame()) {
+    rfp->ContentViewScaleChanged(this);
+  }
 
   // XXX could be clever here and compute a smaller invalidation
   // rect
+  nsIFrame* frame = mFrameLoader->GetPrimaryFrameOfOwningContent();
   InvalidateFrame(frame);
   return NS_OK;
 }
@@ -327,6 +331,7 @@ nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
   , mRenderMode(RENDER_MODE_DEFAULT)
+  , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
 {
 }
 
@@ -537,6 +542,7 @@ NS_IMETHODIMP
 nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 {
   *aDocShell = nsnull;
+  nsresult rv = NS_OK;
 
   // If we have an owner, make sure we have a docshell and return
   // that. If not, we're most likely in the middle of being torn down,
@@ -547,7 +553,7 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
       return rv;
     if (mRemoteFrame) {
       NS_WARNING("No docshells for remote frames!");
-      return NS_ERROR_NOT_AVAILABLE;
+      return rv;
     }
     NS_ASSERTION(mDocShell,
                  "MaybeCreateDocShell succeeded, but null mDocShell");
@@ -556,7 +562,7 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   *aDocShell = mDocShell;
   NS_IF_ADDREF(*aDocShell);
 
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -912,7 +918,9 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
 
     EnsureMessageManager();
   } else {
-    mRemoteBrowser->Move(size);
+    nsRect dimensions;
+    NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), false);
+    mRemoteBrowser->UpdateDimensions(dimensions, size);
   }
 
   return true;
@@ -1340,36 +1348,19 @@ nsFrameLoader::SetOwnerContent(nsIContent* aContent)
 bool
 nsFrameLoader::ShouldUseRemoteProcess()
 {
-  // Check for *disabled* multi-process first: environment, prefs, attribute
-  // Then check for *enabled* multi-process pref: attribute, prefs
+  // Check for *disabled* multi-process first: environment, pref
+  // Then check for *enabled* multi-process attribute
   // Default is not-remote.
 
-  if (PR_GetEnv("MOZ_DISABLE_OOP_TABS")) {
+  if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
+      Preferences::GetBool("dom.ipc.tabs.disabled", PR_FALSE)) {
     return false;
   }
 
-  PRBool remoteDisabled =
-    Preferences::GetBool("dom.ipc.tabs.disabled", PR_FALSE);
-  if (remoteDisabled) {
-    return false;
-  }
-
-  static nsIAtom* const *const remoteValues[] = {
-    &nsGkAtoms::_false,
-    &nsGkAtoms::_true,
-    nsnull
-  };
-
-  switch (mOwnerContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::Remote,
-                                         remoteValues, eCaseMatters)) {
-  case 0:
-    return false;
-  case 1:
-    return true;
-  }
-
-  PRBool remoteEnabled = Preferences::GetBool("dom.ipc.tabs.enabled", PR_FALSE);
-  return (bool) remoteEnabled;
+  return (bool) mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::Remote,
+                                           nsGkAtoms::_true,
+                                           eCaseMatters);
 }
 
 nsresult
@@ -1615,13 +1606,49 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   return NS_OK;
 }
 
+nsresult
+nsFrameLoader::GetWindowDimensions(nsRect& aRect)
+{
+  // Need to get outer window position here
+  nsIDocument* doc = mOwnerContent->GetDocument();
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (doc->GetDisplayDocument()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIWebNavigation> parentAsWebNav =
+    do_GetInterface(doc->GetScriptGlobalObject());
+
+  if (!parentAsWebNav) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsWebNav));
+
+  nsCOMPtr<nsIDocShellTreeOwner> parentOwner;
+  if (NS_FAILED(parentAsItem->GetTreeOwner(getter_AddRefs(parentOwner))) ||
+      !parentOwner) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_GetInterface(parentOwner));
+  treeOwnerAsWin->GetPosition(&aRect.x, &aRect.y);
+  treeOwnerAsWin->GetSize(&aRect.width, &aRect.height);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
 {
   if (mRemoteFrame) {
     if (mRemoteBrowser) {
       nsIntSize size = GetSubDocumentSize(aIFrame);
-      mRemoteBrowser->Move(size);
+      nsRect dimensions;
+      NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
     return NS_OK;
   }
@@ -1673,6 +1700,20 @@ nsFrameLoader::SetRenderMode(PRUint32 aRenderMode)
 
   mRenderMode = aRenderMode;
   InvalidateFrame(GetPrimaryFrameOfOwningContent());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetEventMode(PRUint32* aEventMode)
+{
+  *aEventMode = mEventMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetEventMode(PRUint32 aEventMode)
+{
+  mEventMode = aEventMode;
   return NS_OK;
 }
 
@@ -1782,6 +1823,15 @@ NS_IMETHODIMP
 nsFrameLoader::ActivateRemoteFrame() {
   if (mRemoteBrowser) {
     mRemoteBrowser->Activate();
+    return NS_OK;
+  }
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::DeactivateRemoteFrame() {
+  if (mRemoteBrowser) {
+    mRemoteBrowser->Deactivate();
     return NS_OK;
   }
   return NS_ERROR_UNEXPECTED;

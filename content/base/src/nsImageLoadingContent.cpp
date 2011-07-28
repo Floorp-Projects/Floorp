@@ -79,6 +79,7 @@
 #include "nsSVGEffects.h"
 
 #include "mozAutoDocUpdate.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef DEBUG_chb
 static void PrintReqURL(imgIRequest* req) {
@@ -719,13 +720,21 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     return NS_OK;
   }
 
+  nsLoadFlags loadFlags = aLoadFlags;
+  PRInt32 corsmode = GetCORSMode();
+  if (corsmode == nsImageLoadingContent::CORS_ANONYMOUS) {
+    loadFlags |= imgILoader::LOAD_CORS_ANONYMOUS;
+  } else if (corsmode == nsImageLoadingContent::CORS_USE_CREDENTIALS) {
+    loadFlags |= imgILoader::LOAD_CORS_USE_CREDENTIALS;
+  }
+
   // Not blocked. Do the load.
   nsCOMPtr<imgIRequest>& req = PrepareNextRequest();
   nsresult rv;
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
                                  aDocument->NodePrincipal(),
                                  aDocument->GetDocumentURI(),
-                                 this, aLoadFlags,
+                                 this, loadFlags,
                                  getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
@@ -1086,3 +1095,8 @@ nsImageLoadingContent::CreateStaticImageClone(nsImageLoadingContent* aDest) cons
   aDest->mSuppressed = mSuppressed;
 }
 
+nsImageLoadingContent::CORSMode
+nsImageLoadingContent::GetCORSMode()
+{
+  return CORS_NONE;
+}

@@ -399,6 +399,24 @@
     </panel>
 
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
+
+    <tooltip id="back-button-tooltip">
+      <label value="&backButton.tooltip;"/>
+#ifdef XP_MACOSX
+      <label value="&backForwardButtonMenuMac.tooltip;"/>
+#else
+      <label value="&backForwardButtonMenu.tooltip;"/>
+#endif
+    </tooltip>
+  
+    <tooltip id="forward-button-tooltip">
+      <label value="&forwardButton.tooltip;"/>
+#ifdef XP_MACOSX
+      <label value="&backForwardButtonMenuMac.tooltip;"/>
+#else
+      <label value="&backForwardButtonMenu.tooltip;"/>
+#endif
+    </tooltip>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
@@ -468,12 +486,12 @@
                        label="&backCmd.label;"
                        command="Browser:BackOrBackDuplicate"
                        onclick="checkForMiddleClick(this, event);"
-                       tooltiptext="&backButton.tooltip;"/>
+                       tooltip="back-button-tooltip"/>
         <toolbarbutton id="forward-button" class="toolbarbutton-1"
                        label="&forwardCmd.label;"
                        command="Browser:ForwardOrForwardDuplicate"
                        onclick="checkForMiddleClick(this, event);"
-                       tooltiptext="&forwardButton.tooltip;"/>
+                       tooltip="forward-button-tooltip"/>
       </toolbaritem>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
@@ -1024,12 +1042,6 @@
 #endif
 
 </vbox>
-# <iframe id="highlighter-frame"
-#   transparent="true"
-#   type="content"
-#   src="chrome://content/base/highlighter.html"/> is dynamically appended as
-#     the last child of #tab-view-deck, only when it is needed, for minimal
-#     performance impact.
 # <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
 #     Introducing the iframe dynamically, as needed, was found to be better than
 #     starting with an empty iframe here in browser.xul from a Ts standpoint.

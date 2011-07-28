@@ -42,12 +42,11 @@
 
 #ifdef JS_TRACER
 
+// nanojit.h includes windows.h, so undo the obnoxious #defines, if needed
 #include "nanojit/nanojit.h"
-#include "jsvalue.h"
+#include "jswin.h"
 
-#ifdef THIS
-#undef THIS
-#endif
+#include "jsvalue.h"
 
 enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_NEITHER };
 enum { 
@@ -232,7 +231,6 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CHARPTR           _JS_CTYPE(char *,                 _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CVIPTR            _JS_CTYPE(const ClosureVarInfo *, _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_FRAMEINFO         _JS_CTYPE(FrameInfo *,            _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_PICTABLE          _JS_CTYPE(PICTable *,             _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_UINTN             _JS_CTYPE(uintN,                  _JS_PTR, --, --, INFALLIBLE)
  
 /*

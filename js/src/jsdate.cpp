@@ -550,9 +550,8 @@ date_regionMatches(const char* s1, int s1off, const jschar* s2, int s2off,
 
     while (count > 0 && s1[s1off] && s2[s2off]) {
         if (ignoreCase) {
-            if (JS_TOLOWER((jschar)s1[s1off]) != JS_TOLOWER(s2[s2off])) {
+            if (unicode::ToLowerCase(s1[s1off]) != unicode::ToLowerCase(s2[s2off]))
                 break;
-            }
         } else {
             if ((jschar)s1[s1off] != s2[s2off]) {
                 break;
@@ -598,7 +597,7 @@ date_msecFromArgs(JSContext *cx, uintN argc, Value *argv, jsdouble *rval)
     for (loop = 0; loop < MAXARGS; loop++) {
         if (loop < argc) {
             jsdouble d;
-            if (!ValueToNumber(cx, argv[loop], &d))
+            if (!ToNumber(cx, argv[loop], &d))
                 return JS_FALSE;
             /* return NaN if any arg is not finite */
             if (!JSDOUBLE_IS_FINITE(d)) {
@@ -1242,7 +1241,7 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, Value *vp = NULL)
 
     size_t slotCap = JS_MIN(obj->numSlots(), JSObject::DATE_CLASS_RESERVED_SLOTS);
     for (size_t ind = JSObject::JSSLOT_DATE_COMPONENTS_START; ind < slotCap; ind++)
-        obj->getSlotRef(ind).setUndefined();
+        obj->setSlot(ind, UndefinedValue());
 
     obj->setDateUTCTime(DoubleValue(t));
     if (vp)
@@ -1710,7 +1709,7 @@ date_setTime(JSContext *cx, uintN argc, Value *vp)
     }
 
     jsdouble result;
-    if (!ValueToNumber(cx, vp[2], &result))
+    if (!ToNumber(cx, vp[2], &result))
         return false;
 
     return SetUTCTime(cx, obj, TIMECLIP(result), vp);
@@ -1760,7 +1759,7 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        if (!ValueToNumber(cx, argv[i], &args[i]))
+        if (!ToNumber(cx, argv[i], &args[i]))
             return false;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             SetDateToNaN(cx, obj, vp);
@@ -1885,7 +1884,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        if (!ValueToNumber(cx, argv[i], &args[i]))
+        if (!ToNumber(cx, argv[i], &args[i]))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             SetDateToNaN(cx, obj, vp);
@@ -1986,7 +1985,7 @@ date_setYear(JSContext *cx, uintN argc, Value *vp)
     }
 
     jsdouble year;
-    if (!ValueToNumber(cx, vp[2], &year))
+    if (!ToNumber(cx, vp[2], &year))
         return false;
     if (!JSDOUBLE_IS_FINITE(year)) {
         SetDateToNaN(cx, obj, vp);
@@ -2563,7 +2562,7 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
     } else if (argc == 1) {
         if (!argv[0].isString()) {
             /* the argument is a millisecond number */
-            if (!ValueToNumber(cx, argv[0], &d))
+            if (!ToNumber(cx, argv[0], &d))
                 return false;
             d = TIMECLIP(d);
         } else {

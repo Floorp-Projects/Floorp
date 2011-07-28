@@ -6,12 +6,10 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/log4moz.js");
 
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+const LOG_PREFIX_SUCCESS = "success-";
+const LOG_PREFIX_ERROR   = "error-";
 
 function run_test() {
-  if (DISABLE_TESTS_BUG_664090) {
-    return;
-  }
-
   run_next_test();
 }
 
@@ -75,7 +73,9 @@ add_test(function test_logOnSuccess_true() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_eq(logfile.leafName.slice(-4), ".log");
+    do_check_eq(logfile.leafName.slice(-4), ".txt");
+    do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_SUCCESS.length),
+                LOG_PREFIX_SUCCESS);
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
@@ -133,7 +133,9 @@ add_test(function test_logOnError_true() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_eq(logfile.leafName.slice(-4), ".log");
+    do_check_eq(logfile.leafName.slice(-4), ".txt");
+    do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_ERROR.length),
+                LOG_PREFIX_ERROR);
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.

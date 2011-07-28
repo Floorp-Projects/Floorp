@@ -246,22 +246,25 @@ public:
    * aStops GradientStops object for this gradient, this should match the
    *        backend type of the draw target this pattern will be used with.
    */
-  RadialGradientPattern(const Point &aCenter,
-                        const Point &aOrigin,
-                        Float aRadius,
+  RadialGradientPattern(const Point &aCenter1,
+                        const Point &aCenter2,
+                        Float aRadius1,
+                        Float aRadius2,
                         GradientStops *aStops)
-    : mCenter(aCenter)
-    , mOrigin(aOrigin)
-    , mRadius(aRadius)
+    : mCenter1(aCenter1)
+    , mCenter2(aCenter2)
+    , mRadius1(aRadius1)
+    , mRadius2(aRadius2)
     , mStops(aStops)
   {
   }
 
   virtual PatternType GetType() const { return PATTERN_RADIAL_GRADIENT; }
 
-  Point mCenter;
-  Point mOrigin;
-  Float mRadius;
+  Point mCenter1;
+  Point mCenter2;
+  Float mRadius1;
+  Float mRadius2;
   RefPtr<GradientStops> mStops;
 };
 
@@ -377,6 +380,20 @@ public:
    */
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const = 0;
 
+  /* This functions gets the bounds of this path. These bounds are not
+   * guaranteed to be tight. A transform may be specified that gives the bounds
+   * after application of the transform.
+   */
+  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const = 0;
+
+  /* This function gets the bounds of the stroke of this path using the
+   * specified strokeoptions. These bounds are not guaranteed to be tight.
+   * A transform may be specified that gives the bounds after application of
+   * the transform.
+   */
+  virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
+                                const Matrix &aTransform = Matrix()) const = 0;
+
   /* This gets the fillrule this path's builder was created with. This is not
    * mutable.
    */
@@ -475,7 +492,9 @@ public:
 
   /*
    * Blend a surface to the draw target with a shadow. The shadow is drawn as a
-   * gaussian blur using a specified sigma.
+   * gaussian blur using a specified sigma. The shadow is clipped to the size
+   * of the input surface, so the input surface should contain a transparent
+   * border the size of the approximate coverage of the blur (3 * aSigma).
    * NOTE: This function works in device space!
    *
    * aSurface Source surface to draw.
@@ -626,6 +645,10 @@ public:
 
   /*
    * Create a path builder with the specified fillmode.
+   *
+   * We need the fill mode up front because of Direct2D.
+   * ID2D1SimplifiedGeometrySink requires the fill mode
+   * to be set before calling BeginFigure().
    */
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const = 0;
 

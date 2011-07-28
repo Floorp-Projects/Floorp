@@ -153,6 +153,61 @@ struct ParamTraits<nsMouseScrollEvent>
   }
 };
 
+
+template<>
+struct ParamTraits<nsMouseEvent>
+{
+  typedef nsMouseEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
+    WriteParam(aMsg, aParam.ignoreRootScrollFrame);
+    WriteParam(aMsg, (PRUint8) aParam.reason);
+    WriteParam(aMsg, (PRUint8) aParam.context);
+    WriteParam(aMsg, (PRUint8) aParam.exit);
+    WriteParam(aMsg, aParam.clickCount);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    bool rv;
+    PRUint8 reason, context, exit;
+    rv = ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
+         ReadParam(aMsg, aIter, &aResult->ignoreRootScrollFrame) &&
+         ReadParam(aMsg, aIter, &reason) &&
+         ReadParam(aMsg, aIter, &context) &&
+         ReadParam(aMsg, aIter, &exit) &&
+         ReadParam(aMsg, aIter, &aResult->clickCount);
+    aResult->reason = static_cast<nsMouseEvent::reasonType>(reason);
+    aResult->context = static_cast<nsMouseEvent::contextType>(context);
+    aResult->exit = static_cast<nsMouseEvent::exitType>(exit);
+    return rv;
+  }
+};
+
+template<>
+struct ParamTraits<nsKeyEvent>
+{
+  typedef nsKeyEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, aParam.keyCode);
+    WriteParam(aMsg, aParam.charCode);
+    WriteParam(aMsg, aParam.isChar);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->keyCode) &&
+           ReadParam(aMsg, aIter, &aResult->charCode) &&
+           ReadParam(aMsg, aIter, &aResult->isChar);
+  }
+};
+
 template<>
 struct ParamTraits<nsTextRangeStyle>
 {
@@ -290,6 +345,7 @@ struct ParamTraits<nsQueryContentEvent>
     WriteParam(aMsg, aParam.mReply.mPageHeight);
     WriteParam(aMsg, aParam.mReply.mPageWidth);
     WriteParam(aMsg, aParam.mReply.mComputedScrollAmount);
+    WriteParam(aMsg, aParam.mReply.mComputedScrollAction);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -309,7 +365,8 @@ struct ParamTraits<nsQueryContentEvent>
            ReadParam(aMsg, aIter, &aResult->mReply.mLineHeight) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mPageHeight) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mPageWidth) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mComputedScrollAmount);
+           ReadParam(aMsg, aIter, &aResult->mReply.mComputedScrollAmount) &&
+           ReadParam(aMsg, aIter, &aResult->mReply.mComputedScrollAction);
   }
 };
 

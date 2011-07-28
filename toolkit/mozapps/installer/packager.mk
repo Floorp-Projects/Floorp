@@ -383,6 +383,22 @@ MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
 ifdef MOZ_OMNIJAR
+
+ifdef GENERATE_CACHE
+ifneq (1_,$(if $(CROSS_COMPILE),1,0)_$(UNIVERSAL_BINARY))
+ifdef RUN_TEST_PROGRAM
+_ABS_RUN_TEST_PROGRAM = $(call core_abspath,$(RUN_TEST_PROGRAM))
+endif
+
+GENERATE_CACHE = \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$$PWD" -a "$$PWD" -f $(topsrcdir)/toolkit/mozapps/installer/precompile_cache.js -e 'populate_startupcache("omni.jar", "startupCache.zip");' && \
+  rm -rf jsloader && \
+  $(UNZIP) startupCache.zip && \
+  rm startupCache.zip && \
+  $(ZIP) -r9m omni.jar jsloader
+endif
+endif
+
 GENERATE_CACHE ?= true
 
 OMNIJAR_FILES	= \
@@ -408,19 +424,23 @@ NON_OMNIJAR_FILES += \
 PACK_OMNIJAR	= \
   rm -f omni.jar components/binary.manifest && \
   grep -h '^binary-component' components/*.manifest > binary.manifest ; \
-  sed -e 's/^binary-component/\#binary-component/' components/components.manifest > components.manifest && \
-  mv components.manifest components && \
-  zip -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
+  for m in components/*.manifest; do \
+    sed -e 's/^binary-component/\#binary-component/' $$m > tmp.manifest && \
+    mv tmp.manifest $$m; \
+  done; \
+  $(ZIP) -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
   $(GENERATE_CACHE) && \
   $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
 UNPACK_OMNIJAR	= \
   $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR_AB_CD) ./ ./ && \
-  unzip -o omni.jar && \
+  $(UNZIP) -o omni.jar && \
   rm -f components/binary.manifest && \
-  sed -e 's/^\#binary-component/binary-component/' components/components.manifest > components.manifest && \
-  mv components.manifest components
+  for m in components/*.manifest; do \
+    sed -e 's/^\#binary-component/binary-component/' $$m > tmp.manifest && \
+    mv tmp.manifest $$m; \
+  done
 
 MAKE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)) && \
 	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(CREATE_PRECOMPLETE_CMD)) && $(INNER_MAKE_PACKAGE)
@@ -687,6 +707,9 @@ endif
 ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
+ifdef MOZ_POST_STAGING_CMD
+	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(MOZ_POST_STAGING_CMD)
+endif # MOZ_POST_STAGING_CMD
 ifndef LIBXUL_SDK
 # Package JavaScript Shell
 	@echo "Packaging JavaScript Shell..."

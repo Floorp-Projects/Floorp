@@ -341,11 +341,12 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inputstr,
      */
     for (int *it = buf; it != buf + matchItemCount; ++it)
         *it = -1;
-
+    
     JSLinearString *input = inputstr->ensureLinear(cx);
     if (!input)
         return false;
 
+    JS::Anchor<JSString *> anchor(input);
     size_t len = input->length();
     const jschar *chars = input->chars();
 
@@ -491,7 +492,9 @@ RegExp::compileHelper(JSContext *cx, JSLinearString &pattern, TokenStream *ts)
     }
 #endif
 
+#if ENABLE_YARR_JIT
     codeBlock.setFallBack(true);
+#endif
     byteCode = JSC::Yarr::byteCompile(yarrPattern, cx->compartment->regExpAllocator).get();
 
     return true;

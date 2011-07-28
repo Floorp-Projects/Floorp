@@ -50,7 +50,7 @@ interface nsISimpleEnumerator;
  * be accessed without triggering this computation.  (Compare and contrast
  * this with nsIMemoryMultiReporter.)  
  */
-[scriptable, uuid(37d18434-9819-4ce1-922f-15d8b63da066)]
+[scriptable, uuid(b2c39f65-1799-4b92-a806-ab3cf6af3cfa)]
 interface nsIMemoryReporter : nsISupports
 {
   /*
@@ -60,7 +60,7 @@ interface nsIMemoryReporter : nsISupports
    * from a child process is copied into the main process, the copy has its
    * 'process' field set appropriately.
    */
-  readonly attribute string process;
+  readonly attribute ACString process;
 
   /*
    * The path that this memory usage should be reported under.  Paths are
@@ -94,27 +94,36 @@ interface nsIMemoryReporter : nsISupports
    * - All other paths represent cross-cutting values and may overlap with any
    *   other reporter.
    */
-  readonly attribute string path;
+  readonly attribute AUTF8String path;
 
   /*
    * There are three categories of memory reporters:
-   *
-   *  - MAPPED: memory allocated directly by the OS, e.g. by calling mmap,
-   *    VirtualAlloc, or vm_allocate.  Reporters in this category must have
-   *    units UNITS_BYTES and must have a path starting with "explicit".
    *
    *  - HEAP: memory allocated by the heap allocator, e.g. by calling malloc,
    *    calloc, realloc, memalign, operator new, or operator new[].  Reporters
    *    in this category must have units UNITS_BYTES and must have a path
    *    starting with "explicit".
+
+   *  - NONHEAP: memory which the program explicitly allocated, but does not
+   *    live on the heap.  Such memory is commonly allocated by calling one of
+   *    the OS's memory-mapping functions (e.g. mmap, VirtualAlloc, or
+   *    vm_allocate).  Reporters in this category must have units UNITS_BYTES
+   *    and must have a path starting with "explicit".
    *
    *  - OTHER: reporters which don't fit into either of these categories. Such
    *    reporters must have a path that does not start with "explicit" and may
    *    have any units.
    */
-  const PRInt32 KIND_MAPPED = 0;
-  const PRInt32 KIND_HEAP   = 1;
-  const PRInt32 KIND_OTHER  = 2;
+  const PRInt32 KIND_NONHEAP = 0;
+  const PRInt32 KIND_HEAP    = 1;
+  const PRInt32 KIND_OTHER   = 2;
+
+  /*
+   * KIND_MAPPED is a deprecated synonym for KIND_NONHEAP.  We keep it around
+   * to as not to break extensions which might use this interface, but we will
+   * remove it eventually.
+   */
+  const PRInt32 KIND_MAPPED  = 0;
 
   /*
    * The reporter kind.  See KIND_* above.
@@ -122,18 +131,34 @@ interface nsIMemoryReporter : nsISupports
   readonly attribute PRInt32 kind;
 
   /*
-   * The amount reported by a memory reporter may have one of the following
+   * The amount reported by a memory reporter must have one of the following
    * units, but you may of course add new units as necessary:
    *
    *  - BYTES: The amount contains a number of bytes.
    *
-   *  - COUNT: The amount contains the cumulative number of times some event
-   *    has occurred since the application started up.  For instance, a
-   *    reporter reporting the number of page faults since startup should have
-   *    units UNITS_COUNT.
+   *  - COUNT: The amount is an instantaneous count of things currently in
+   *    existence.  For instance, the number of tabs currently open would have
+   *    units COUNT.
+   *
+   *  - COUNT_CUMULATIVE: The amount contains the number of times some event
+   *    has occurred since the application started up.  For instance, the
+   *    number of times the user has opened a new tab would have units
+   *    COUNT_CUMULATIVE.
+   *
+   *    The amount returned by a reporter with units COUNT_CUMULATIVE must
+   *    never decrease over the lifetime of the application.
+   *
+   *  - PERCENTAGE: The amount contains a fraction that should be expressed as
+   *    a percentage.  NOTE!  The |amount| field should be given a value 100x
+   *    the actual percentage;  this number will be divided by 100 when shown.
+   *    This allows a fractional percentage to be shown even though |amount| is
+   *    an integer.  E.g. if the actual percentage is 12.34%, |amount| should
+   *    be 1234.
    */
   const PRInt32 UNITS_BYTES = 0;
   const PRInt32 UNITS_COUNT = 1;
+  const PRInt32 UNITS_COUNT_CUMULATIVE = 2;
+  const PRInt32 UNITS_PERCENTAGE = 3;
 
   /*
    * The units on the reporter's amount.  See UNITS_* above.
@@ -141,14 +166,15 @@ interface nsIMemoryReporter : nsISupports
   readonly attribute PRInt32 units;
 
   /*
-   * The numeric value reported by this memory reporter.
+   * The numeric value reported by this memory reporter.  -1 means "unknown",
+   * ie. something went wrong when getting the amount.
    */
   readonly attribute PRInt64 amount;
 
   /*
    * A human-readable description of this memory usage report.
    */
-  readonly attribute string description;
+  readonly attribute AUTF8String description;
 };
 
 [scriptable, function, uuid(5b15f3fa-ba15-443c-8337-7770f5f0ce5d)]
@@ -178,7 +204,7 @@ interface nsIMemoryMultiReporter : nsISupports
                       in nsISupports closure);
 };
 
-[scriptable, uuid(80a93b4c-6fff-4acd-8598-3891074a30ab)]
+[scriptable, uuid(84ba9c85-3372-4423-b7ab-74708b9269a6)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -221,6 +247,24 @@ interface nsIMemoryReporterManager : nsISupports
    * Initialize.
    */
   void init ();
+
+  /*
+   * Get the resident size (aka. RSS, physical memory used).  This reporter
+   * is special-cased because it's interesting, is available on all
+   * platforms, and returns a meaningful result on all common platforms.
+   * -1 means unknown.
+   */
+  readonly attribute PRInt64 resident;
+
+  /*
+   * Get the total size of explicit memory allocations, both at the OS-level
+   * (eg. via mmap, VirtualAlloc) and at the heap level (eg. via malloc,
+   * calloc, operator new).  (Nb: it covers all heap allocations, but will
+   * miss any OS-level ones not covered by memory reporters.)  This reporter
+   * is special-cased because it's interesting, and is moderately difficult
+   * to compute in JS.  -1 means unknown.
+   */
+  readonly attribute PRInt64 explicit;
 };
 
 %{C++
@@ -228,18 +272,23 @@ interface nsIMemoryReporterManager : nsISupports
 /*
  * Note that this defaults 'process' to "", which is usually what's desired.
  */
-#define NS_MEMORY_REPORTER_IMPLEMENT(_classname, _path, _kind, _units, _usageFunction, _desc) \
+#define NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
     class MemoryReporter_##_classname : public nsIMemoryReporter {                            \
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
-      NS_IMETHOD GetProcess(char **process) { *process = strdup(""); return NS_OK; }          \
-      NS_IMETHOD GetPath(char **memoryPath) { *memoryPath = strdup(_path); return NS_OK; }    \
+      NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; } \
+      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.Assign(_path); return NS_OK; } \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
       NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
-      NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _usageFunction(); return NS_OK; }     \
-      NS_IMETHOD GetDescription(char **desc) { *desc = strdup(_desc); return NS_OK; }         \
+      NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _amountFunction(); return NS_OK; }     \
+      NS_IMETHOD GetDescription(nsACString &desc) { desc.Assign(_desc); return NS_OK; } \
     };                                                                                        \
-    NS_IMPL_ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
+    NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
+
+#define NS_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
+        NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _)
+#define NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
+        NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _THREADSAFE_)
 
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
 

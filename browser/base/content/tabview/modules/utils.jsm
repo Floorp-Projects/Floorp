@@ -45,6 +45,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 // **********
 // Title: utils.js
 
@@ -369,10 +371,11 @@ Range.prototype = {
       // little graph. It goes from near 0 at x=0 to near 1 at x=1
       // smoothly and beautifully.
       // http://www.wolframalpha.com/input/?i=.5+%2B+.5+*+tanh%28%284+*+x%29+-+2%29
-      function tanh(x) {
+      let tanh = function tanh(x) {
         var e = Math.exp(x);
         return (e - 1/e) / (e + 1/e);
-      }
+      };
+
       return .5 - .5 * tanh(2 - 4 * proportion);
     }
 
@@ -405,10 +408,8 @@ Subscribable.prototype = {
   // ----------
   // Function: addSubscriber
   // The given callback will be called when the Subscribable fires the given event.
-  // The refObject is used to facilitate removal if necessary.
-  addSubscriber: function Subscribable_addSubscriber(refObject, eventName, callback) {
+  addSubscriber: function Subscribable_addSubscriber(eventName, callback) {
     try {
-      Utils.assertThrow(refObject, "refObject");
       Utils.assertThrow(typeof callback == "function", "callback must be a function");
       Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
@@ -423,28 +424,17 @@ Subscribable.prototype = {
     if (!this.subscribers[eventName])
       this.subscribers[eventName] = [];
 
-    var subs = this.subscribers[eventName];
-    var existing = subs.filter(function(element) {
-      return element.refObject == refObject;
-    });
-
-    if (existing.length) {
-      Utils.assert(existing.length == 1, 'should only ever be one');
-      existing[0].callback = callback;
-    } else {
-      subs.push({
-        refObject: refObject,
-        callback: callback
-      });
-    }
+    let subscribers = this.subscribers[eventName];
+    if (subscribers.indexOf(callback) == -1)
+      subscribers.push(callback);
   },
 
   // ----------
   // Function: removeSubscriber
-  // Removes the callback associated with refObject for the given event.
-  removeSubscriber: function Subscribable_removeSubscriber(refObject, eventName) {
+  // Removes the subscriber associated with the event for the given callback.
+  removeSubscriber: function Subscribable_removeSubscriber(eventName, callback) {
     try {
-      Utils.assertThrow(refObject, "refObject");
+      Utils.assertThrow(typeof callback == "function", "callback must be a function");
       Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
     } catch(e) {
@@ -455,9 +445,11 @@ Subscribable.prototype = {
     if (!this.subscribers || !this.subscribers[eventName])
       return;
 
-    this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
-      return element.refObject != refObject;
-    });
+    let subscribers = this.subscribers[eventName];
+    let index = subscribers.indexOf(callback);
+
+    if (index > -1)
+      subscribers.splice(index, 1);
   },
 
   // ----------
@@ -475,10 +467,10 @@ Subscribable.prototype = {
     if (!this.subscribers || !this.subscribers[eventName])
       return;
 
-    var subsCopy = this.subscribers[eventName].concat();
-    subsCopy.forEach(function(object) {
+    let subsCopy = this.subscribers[eventName].concat();
+    subsCopy.forEach(function (callback) {
       try {
-        object.callback(this, eventInfo);
+        callback(this, eventInfo);
       } catch(e) {
         Utils.log(e);
       }
@@ -534,12 +526,15 @@ let Utils = {
   // Pass as many arguments as you want, it'll print them all.
   trace: function Utils_trace() {
     var text = this.expandArgumentsForLog(arguments);
-    // cut off the first two lines of the stack trace, because they're just this function.
-    let stack = Error().stack.replace(/^.*?\n.*?\n/, "");
+
+    // cut off the first line of the stack trace, because that's just this function.
+    let stack = Error().stack.split("\n").slice(1);
+
     // if the caller was assert, cut out the line for the assert function as well.
-    if (this.trace.caller.name == 'Utils_assert')
-      stack = stack.replace(/^.*?\n/, "");
-    this.log('trace: ' + text + '\n' + stack);
+    if (stack[0].indexOf("Utils_assert(") == 0)
+      stack.splice(0, 1);
+
+    this.log('trace: ' + text + '\n' + stack.join("\n"));
   },
 
   // ----------
@@ -568,10 +563,10 @@ let Utils = {
       else
         text = "tabview assert: " + label;
 
-      // cut off the first two lines of the stack trace, because they're just this function.
-      text += Error().stack.replace(/^.*?\n.*?\n/, "");
+      // cut off the first line of the stack trace, because that's just this function.
+      let stack = Error().stack.split("\n").slice(1);
 
-      throw text;
+      throw text + "\n" + stack.join("\n");
     }
   },
 

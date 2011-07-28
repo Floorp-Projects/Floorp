@@ -73,6 +73,8 @@ const PREFS_WHITELIST = [
   "layout.css.dpi",
   "network.",
   "places.",
+  "plugin.",
+  "plugins.",
   "print.",
   "privacy.",
   "security.",

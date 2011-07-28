@@ -116,7 +116,7 @@ const CAPABILITIES = [
 // These keys are for internal use only - they shouldn't be part of the JSON
 // that gets saved to disk nor part of the strings returned by the API.
 const INTERNAL_KEYS = ["_tabStillLoading", "_hosts", "_formDataSaved",
-                       "_shouldRestore"];
+                       "_shouldRestore", "_host", "_scheme"];
 
 // These are tab events that we listen to.
 const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
@@ -128,6 +128,8 @@ const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+// debug.js adds NS_ASSERT. cf. bug 669196
+Cu.import("resource://gre/modules/debug.js");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -304,33 +306,31 @@ SessionStoreService.prototype = {
     this._sessionFileBackup.append("sessionstore.bak");
 
     // get string containing session state
-    var iniString;
     var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
              getService(Ci.nsISessionStartup);
     try {
       if (ss.doRestore() ||
           ss.sessionType == Ci.nsISessionStartup.DEFER_SESSION)
-        iniString = ss.state;
+        this._initialState = ss.state;
     }
     catch(ex) { dump(ex + "\n"); } // no state to restore, which is ok
 
-    if (iniString) {
+    if (this._initialState) {
       try {
         // If we're doing a DEFERRED session, then we want to pull pinned tabs
         // out so they can be restored.
         if (ss.sessionType == Ci.nsISessionStartup.DEFER_SESSION) {
-          let [iniState, remainingState] = this._prepDataForDeferredRestore(iniString);
+          let [iniState, remainingState] = this._prepDataForDeferredRestore(this._initialState);
           // If we have a iniState with windows, that means that we have windows
           // with app tabs to restore.
           if (iniState.windows.length)
             this._initialState = iniState;
+          else
+            this._initialState = null;
           if (remainingState.windows.length)
             this._lastSessionState = remainingState;
         }
         else {
-          // parse the session state into JS objects
-          this._initialState = JSON.parse(iniString);
-
           let lastSessionCrashed =
             this._initialState.session && this._initialState.session.state &&
             this._initialState.session.state == STATE_RUNNING_STR;
@@ -342,7 +342,7 @@ SessionStoreService.prototype = {
               // replace the crashed session with a restore-page-only session
               let pageData = {
                 url: "about:sessionrestore",
-                formdata: { "#sessionData": iniString }
+                formdata: { "#sessionData": JSON.stringify(this._initialState) }
               };
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
             }
@@ -811,7 +811,7 @@ SessionStoreService.prototype = {
           // We'll cheat a little bit and reuse _prepDataForDeferredRestore
           // even though it wasn't built exactly for this.
           let [appTabsState, normalTabsState] =
-            this._prepDataForDeferredRestore(JSON.stringify({ windows: [closedWindowState] }));
+            this._prepDataForDeferredRestore({ windows: [closedWindowState] });
 
           // These are our pinned tabs, which we should restore
           if (appTabsState.windows.length) {
@@ -1671,10 +1671,31 @@ SessionStoreService.prototype = {
       tabData.index = history.index + 1;
     }
     else if (history && history.count > 0) {
-      for (var j = 0; j < history.count; j++) {
-        let entry = this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
-                                                aFullData, aTab.pinned);
-        tabData.entries.push(entry);
+      try {
+        for (var j = 0; j < history.count; j++) {
+          let entry = this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
+                                                  aFullData, aTab.pinned);
+          tabData.entries.push(entry);
+        }
+        // If we make it through the for loop, then we're ok and we should clear
+        // any indicator of brokenness.
+        delete aTab.__SS_broken_history;
+      }
+      catch (ex) {
+        // In some cases, getEntryAtIndex will throw. This seems to be due to
+        // history.count being higher than it should be. By doing this in a
+        // try-catch, we'll update history to where it breaks, assert for
+        // non-release builds, and still save sessionstore.js. We'll track if
+        // we've shown the assert for this tab so we only show it once.
+        // cf. bug 669196.
+        if (!aTab.__SS_broken_history) {
+          // First Focus the window & tab we're having trouble with.
+          aTab.ownerDocument.defaultView.focus();
+          aTab.ownerDocument.defaultView.gBrowser.selectedTab = aTab;
+          NS_ASSERT(false, "SessionStore failed gathering complete history " +
+                           "for the focused window/tab. See bug 669196.");
+          aTab.__SS_broken_history = true;
+        }
       }
       tabData.index = history.index + 1;
 
@@ -1749,7 +1770,15 @@ SessionStoreService.prototype = {
   _serializeHistoryEntry:
     function sss_serializeHistoryEntry(aEntry, aFullData, aIsPinned) {
     var entry = { url: aEntry.URI.spec };
-    
+
+    try {
+      entry._host = aEntry.URI.host;
+      entry._scheme = aEntry.URI.scheme;
+    }
+    catch (ex) {
+      // We just won't attempt to get cookies for this entry.
+    }
+
     if (aEntry.title && aEntry.title != entry.url) {
       entry.title = aEntry.title;
     }
@@ -2157,21 +2186,20 @@ SessionStoreService.prototype = {
    */
   _extractHostsForCookies:
     function sss__extractHostsForCookies(aEntry, aHosts, aCheckPrivacy, aIsPinned) {
-    let match;
 
-    if ((match = /^https?:\/\/(?:[^@\/\s]+@)?([\w.-]+)/.exec(aEntry.url)) != null) {
-      if (!aHosts[match[1]] &&
-          (!aCheckPrivacy ||
-           this._checkPrivacyLevel(this._getURIFromString(aEntry.url).schemeIs("https"),
-                                   aIsPinned))) {
-        // By setting this to true or false, we can determine when looking at
-        // the host in _updateCookies if we should check for privacy.
-        aHosts[match[1]] = aIsPinned;
-      }
+    // _host and _scheme may not be set (for about: urls for example), in which
+    // case testing _scheme will be sufficient.
+    if (/https?/.test(aEntry._scheme) && !aHosts[aEntry._host] &&
+        (!aCheckPrivacy ||
+         this._checkPrivacyLevel(aEntry._scheme == "https", aIsPinned))) {
+      // By setting this to true or false, we can determine when looking at
+      // the host in _updateCookies if we should check for privacy.
+      aHosts[aEntry._host] = aIsPinned;
     }
-    else if ((match = /^file:\/\/([^\/]*)/.exec(aEntry.url)) != null) {
-      aHosts[match[1]] = true;
+    else if (aEntry._scheme == "file") {
+      aHosts[aEntry._host] = true;
     }
+
     if (aEntry.children) {
       aEntry.children.forEach(function(entry) {
         this._extractHostsForCookies(entry, aHosts, aCheckPrivacy, aIsPinned);
@@ -2222,8 +2250,14 @@ SessionStoreService.prototype = {
       if (!aWindow._hosts)
         return;
       for (var [host, isPinned] in Iterator(aWindow._hosts)) {
-        var list = CookieSvc.getCookiesFromHost(host);
-        while (list.hasMoreElements()) {
+        let list;
+        try {
+          list = CookieSvc.getCookiesFromHost(host);
+        }
+        catch (ex) {
+          debug("getCookiesFromHost failed. Host: " + host);
+        }
+        while (list && list.hasMoreElements()) {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
           // aWindow._hosts will only have hosts with the right privacy rules,
           // so there is no need to do anything special with this call to
@@ -2952,8 +2986,11 @@ SessionStoreService.prototype = {
         // so we can just set the URL to null.
         browser.__SS_restore_data = { url: null };
         browser.__SS_restore_tab = aTab;
+        if (didStartLoad)
+          browser.stop();
         didStartLoad = true;
-        browser.loadURI(tabData.userTypedValue, null, null, true);
+        browser.loadURIWithFlags(tabData.userTypedValue,
+                                 Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
       }
     }
 
@@ -3785,12 +3822,11 @@ SessionStoreService.prototype = {
    * this._lastSessionState and will be kept in case the user explicitly wants
    * to restore the previous session (publicly exposed as restoreLastSession).
    *
-   * @param stateString
-   *        The state string, presumably from nsISessionStartup.state
+   * @param state
+   *        The state, presumably from nsISessionStartup.state
    * @returns [defaultState, state]
    */
-  _prepDataForDeferredRestore: function sss__prepDataForDeferredRestore(stateString) {
-    let state = JSON.parse(stateString);
+  _prepDataForDeferredRestore: function sss__prepDataForDeferredRestore(state) {
     let defaultState = { windows: [], selectedWindow: 1 };
 
     state.selectedWindow = state.selectedWindow || 1;

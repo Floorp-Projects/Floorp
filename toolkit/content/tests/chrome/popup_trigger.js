@@ -3,6 +3,22 @@ var gTrigger = null;
 var gIsMenu = false;
 var gScreenX = -1, gScreenY = -1;
 var gCachedEvent = null;
+var gCachedEvent2 = null;
+
+function cacheEvent(modifiers)
+{
+  var cachedEvent = null;
+
+  var mouseFn = function(event) {
+    cachedEvent = event;
+  }
+
+  window.addEventListener("mousedown", mouseFn, false);
+  synthesizeMouse(document.documentElement, 0, 0, modifiers);
+  window.removeEventListener("mousedown", mouseFn, false);
+
+  return cachedEvent;
+}
 
 function runTests()
 {
@@ -15,17 +31,13 @@ function runTests()
 
   gIsMenu = gTrigger.boxObject instanceof Components.interfaces.nsIMenuBoxObject;
 
-  var mouseFn = function(event) {
-    gScreenX = event.screenX;
-    gScreenY = event.screenY;
-    // cache the event so that we can use it in calls to openPopup
-    gCachedEvent = event;
-  }
+  // a hacky way to get the screen position of the document. Cache the event
+  // so that we can use it in calls to openPopup.
+  gCachedEvent = cacheEvent({ shiftKey: true });
+  gScreenX = gCachedEvent.screenX;
+  gScreenY = gCachedEvent.screenY;
+  gCachedEvent2 = cacheEvent({ altKey: true, ctrlKey: true, shiftKey: true, metaKey: true });
 
-  // a hacky way to get the screen position of the document
-  window.addEventListener("mousedown", mouseFn, false);
-  synthesizeMouse(document.documentElement, 0, 0, { });
-  window.removeEventListener("mousedown", mouseFn, false);
   startPopupTests(popupTests);
 }
 
@@ -254,7 +266,7 @@ var popupTests = [
   // can be used to override the popup's position. This test also passes an
   // event to openPopup to check the trigger node.
   testname: "open popup anchored with override",
-  events: [ "popupshowing thepopup", "popupshown thepopup" ],
+  events: [ "popupshowing thepopup 0010", "popupshown thepopup" ],
   test: function(testname, step) {
     // attribute overrides the position passed in
     gMenuPopup.setAttribute("position", "end_after");
@@ -403,7 +415,7 @@ var popupTests = [
 },
 {
   testname: "open context popup at screen",
-  events: [ "popupshowing thepopup", "popupshown thepopup" ],
+  events: [ "popupshowing thepopup 0010", "popupshown thepopup" ],
   test: function(testname, step) {
     gExpectedTriggerNode = gCachedEvent.target;
     gMenuPopup.openPopupAtScreen(gScreenX + 8, gScreenY + 16, true, gCachedEvent);
@@ -556,6 +568,14 @@ var popupTests = [
   result: function(testname) {
     checkClosed("trigger", testname);
     checkActive(gMenuPopup, "", testname);
+  }
+},
+{
+  testname: "open context popup at screen with all modifiers set",
+  events: [ "popupshowing thepopup 1111", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test: function(testname, step) {
+    gMenuPopup.openPopupAtScreen(gScreenX + 8, gScreenY + 16, true, gCachedEvent2);
   }
 },
 {

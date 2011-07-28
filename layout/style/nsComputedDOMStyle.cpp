@@ -49,7 +49,6 @@
 
 #include "nsDOMError.h"
 #include "nsDOMString.h"
-#include "nsPrintfCString.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -949,8 +948,6 @@ nsComputedDOMStyle::DoGetMozTransformOrigin()
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetMozTransform()
 {
-  static const PRInt32 NUM_FLOATS = 4;
-
   /* First, get the display data.  We'll need it. */
   const nsStyleDisplay* display = GetStyleDisplay();
 
@@ -968,16 +965,6 @@ nsComputedDOMStyle::DoGetMozTransform()
   /* Otherwise, we need to compute the current value of the transform matrix,
    * store it in a string, and hand it back to the caller.
    */
-  nsAutoString resultString(NS_LITERAL_STRING("matrix("));
-
-  /* Now, we need to convert the matrix into a string.  We'll start by taking
-   * the first four entries and converting them directly to floating-point
-   * values.
-   */
-  for (PRInt32 index = 0; index < NUM_FLOATS; ++index) {
-    resultString.AppendFloat(display->mTransform.GetMainMatrixEntry(index));
-    resultString.Append(NS_LITERAL_STRING(", "));
-  }
 
   /* Use the inner frame for width and height.  If we fail, assume zero.
    * TODO: There is no good way for us to represent the case where there's no
@@ -992,20 +979,35 @@ nsComputedDOMStyle::DoGetMozTransform()
     (mInnerFrame ? nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame) :
      nsRect(0, 0, 0, 0));
 
-  /* Now, compute the dX and dY components by adding the stored coord value
-   * (in CSS pixels) to the translate values.
-   */
+   PRBool dummy;
+   gfx3DMatrix matrix =
+     nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform,
+                                            mStyleContextHolder,
+                                            mStyleContextHolder->PresContext(),
+                                            dummy,
+                                            bounds,
+                                            float(nsDeviceContext::AppUnitsPerCSSPixel()));
 
-  float deltaX = nsPresContext::AppUnitsToFloatCSSPixels
-    (display->mTransform.GetXTranslation(bounds));
-  float deltaY = nsPresContext::AppUnitsToFloatCSSPixels
-    (display->mTransform.GetYTranslation(bounds));
+  if (!matrix.Is2D()) {
+    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
+    /* Set it to "none." */
+    val->SetIdent(eCSSKeyword_none);
+    return val;
+  }
 
-  /* Append these values! */
-  resultString.AppendFloat(deltaX);
+  nsAutoString resultString(NS_LITERAL_STRING("matrix("));
+  resultString.AppendFloat(matrix._11);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix._12);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix._21);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix._22);
+  resultString.Append(NS_LITERAL_STRING(", "));
+  resultString.AppendFloat(matrix._41);
   resultString.Append(NS_LITERAL_STRING("px, "));
-  resultString.AppendFloat(deltaY);
+  resultString.AppendFloat(matrix._42);
   resultString.Append(NS_LITERAL_STRING("px)"));
 
   /* Create a value to hold our result. */
@@ -3979,17 +3981,21 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
   nsROCSSPrimitiveValue* timingFunction = GetROCSSPrimitiveValue();
   aValueList->AppendCSSValue(timingFunction);
 
+  nsAutoString tmp;
+
   if (aTimingFunction.mType == nsTimingFunction::Function) {
     // set the value from the cubic-bezier control points
     // (We could try to regenerate the keywords if we want.)
-    timingFunction->SetString(
-      nsPrintfCString(64, "cubic-bezier(%f, %f, %f, %f)",
-                          aTimingFunction.mFunc.mX1,
-                          aTimingFunction.mFunc.mY1,
-                          aTimingFunction.mFunc.mX2,
-                          aTimingFunction.mFunc.mY2));
+    tmp.AppendLiteral("cubic-bezier(");
+    tmp.AppendFloat(aTimingFunction.mFunc.mX1);
+    tmp.AppendLiteral(", ");
+    tmp.AppendFloat(aTimingFunction.mFunc.mY1);
+    tmp.AppendLiteral(", ");
+    tmp.AppendFloat(aTimingFunction.mFunc.mX2);
+    tmp.AppendLiteral(", ");
+    tmp.AppendFloat(aTimingFunction.mFunc.mY2);
+    tmp.AppendLiteral(")");
   } else {
-    nsString tmp;
     tmp.AppendLiteral("steps(");
     tmp.AppendInt(aTimingFunction.mSteps);
     if (aTimingFunction.mType == nsTimingFunction::StepStart) {
@@ -3997,8 +4003,8 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
     } else {
       tmp.AppendLiteral(", end)");
     }
-    timingFunction->SetString(tmp);
   }
+  timingFunction->SetString(tmp);
 }
 
 nsIDOMCSSValue*

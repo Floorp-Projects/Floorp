@@ -53,6 +53,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsXULElement.h"
 #include "nsIDOMSVGStylable.h"
+#include "nsContentUtils.h"
 
 namespace css = mozilla::css;
 

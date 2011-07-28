@@ -22,8 +22,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=610212
 /** Test for Bug 610212 **/
 
 var canvas = document.createElement('canvas');
-reflectUnsignedInt(canvas, "width", false, 300);
-reflectUnsignedInt(canvas, "height", false, 150);
+
+reflectUnsignedInt({
+  element: canvas,
+  attribute: "width",
+  nonZero: false,
+  defaultValue: 300,
+});
+
+reflectUnsignedInt({
+  element: canvas,
+  attribute: "height",
+  nonZero: false,
+  defaultValue: 150,
+});
 
 </script>
 </pre>

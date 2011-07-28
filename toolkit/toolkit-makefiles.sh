@@ -69,7 +69,6 @@ MAKEFILES_dom="
   dom/interfaces/storage/Makefile
   dom/interfaces/stylesheets/Makefile
   dom/interfaces/svg/Makefile
-  dom/interfaces/threads/Makefile
   dom/interfaces/traversal/Makefile
   dom/interfaces/xbl/Makefile
   dom/interfaces/xpath/Makefile
@@ -82,7 +81,6 @@ MAKEFILES_dom="
   dom/src/json/Makefile
   dom/src/offline/Makefile
   dom/src/storage/Makefile
-  dom/src/threads/Makefile
   dom/locales/Makefile
   dom/plugins/base/Makefile
   dom/plugins/ipc/Makefile
@@ -635,7 +633,6 @@ MAKEFILES_xulapp="
   toolkit/components/printing/Makefile
   toolkit/components/satchel/Makefile
   toolkit/components/search/Makefile
-  toolkit/spatial-navigation/Makefile
   toolkit/components/startup/Makefile
   toolkit/components/startup/public/Makefile
   toolkit/components/statusfilter/Makefile
@@ -810,7 +807,6 @@ if [ "$ENABLE_TESTS" ]; then
     docshell/test/navigation/Makefile
     dom/src/json/test/Makefile
     dom/src/jsurl/test/Makefile
-    dom/src/threads/test/Makefile
     dom/tests/Makefile
     dom/tests/mochitest/Makefile
     dom/tests/mochitest/ajax/Makefile
@@ -862,7 +858,6 @@ if [ "$ENABLE_TESTS" ]; then
     embedding/test/Makefile
     extensions/cookie/test/Makefile
     extensions/pref/Makefile
-    intl/locale/tests_multilocale/Makefile
     js/src/xpconnect/tests/mochitest/Makefile
     layout/forms/test/Makefile
     layout/generic/test/Makefile
@@ -928,7 +923,6 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/mozapps/extensions/test/Makefile
     toolkit/mozapps/plugins/tests/Makefile
     toolkit/mozapps/update/test/Makefile
-    toolkit/spatial-navigation/tests/Makefile
     toolkit/xre/test/Makefile
     uriloader/exthandler/tests/mochitest/Makefile
     widget/tests/Makefile

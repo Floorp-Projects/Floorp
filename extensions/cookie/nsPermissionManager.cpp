@@ -790,8 +790,6 @@ AddPermissionsToList(nsHostEntry *entry, void *arg)
 
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
-  ENSURE_NOT_CHILD_PROCESS;
-
   // roll an nsCOMArray of all our permissions, then hand out an enumerator
   nsCOMArray<nsIPermission> array;
   nsGetEnumeratorData data(&array, &mTypeArray);

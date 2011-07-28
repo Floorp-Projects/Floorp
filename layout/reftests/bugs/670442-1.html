@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <div>
+      <canvas id="c1" width="400" height="400"></canvas>
+      <canvas id="c2" width="400" height="400"></canvas>
+    </div>
+    <script type="text/javascript">
+      var canv1 = document.getElementById('c1');
+      var canv2 = document.getElementById('c2');
+      var ctx1 = canv1.getContext('2d');
+      var ctx2 = canv2.getContext('2d');
+    
+      ctx1.strokeStyle = '#FF0000';
+      ctx1.moveTo(10, 10);
+      ctx1.lineTo(390, 390);
+      ctx1.stroke();
+    
+      function doTest()
+      {
+        // Save img data
+        var imgData = ctx1.getImageData(0, 0, canv1.width, canv1.height);
+        
+        // Resize canvas - seems to cause the bug
+        canv1.width  = 0;
+        canv1.height = 0;
+        canv1.width  = 400;
+        canv1.height = 400;
+        
+        // Put image data from ctx1 to ctx2
+        ctx2.putImageData(imgData, 0, 0);
+        
+        // Draw canvas2 on canvas1
+        ctx1.drawImage(canv2, 0, 0);
+      };
+
+      doTest();
+      doTest();
+    </script>
+  </body>
+</html>

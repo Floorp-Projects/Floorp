@@ -29,8 +29,8 @@ browser.jar:
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
+*       content/browser/content.js                    (content/content.js)
 *       content/browser/fullscreen-video.xhtml        (content/fullscreen-video.xhtml)
-        content/browser/highlighter.xhtml             (content/highlighter.xhtml)
 *       content/browser/inspector.html                (content/inspector.html)
 *       content/browser/scratchpad.xul                (content/scratchpad.xul)
 *       content/browser/scratchpad.js                 (content/scratchpad.js)
@@ -93,5 +93,3 @@ browser.jar:
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html
-# XXXkhuey This really should live in browser/, but it's too late in the release cycle to move
-+       content/browser/NetworkPanel.xhtml            (/toolkit/components/console/hudservice/NetworkPanel.xhtml)

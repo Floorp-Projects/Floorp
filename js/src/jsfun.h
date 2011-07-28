@@ -146,7 +146,6 @@ struct JSFunction : public JSObject_Slots2
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
     bool optimizedClosure()  const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
-    bool needsWrapper()      const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
     bool isInterpreted()     const { return FUN_INTERPRETED(this); }
     bool isNative()          const { return !FUN_INTERPRETED(this); }
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
@@ -191,11 +190,7 @@ struct JSFunction : public JSObject_Slots2
     };
 
   public:
-    void setJoinable() {
-        JS_ASSERT(FUN_INTERPRETED(this));
-        getSlotRef(METHOD_ATOM_SLOT).setNull();
-        flags |= JSFUN_JOINABLE;
-    }
+    inline void setJoinable();
 
     /*
      * Method name imputed from property uniquely assigned to or initialized,
@@ -208,10 +203,7 @@ struct JSFunction : public JSObject_Slots2
                : NULL;
     }
 
-    void setMethodAtom(JSAtom *atom) {
-        JS_ASSERT(joinable());
-        getSlotRef(METHOD_ATOM_SLOT).setString(atom);
-    }
+    inline void setMethodAtom(JSAtom *atom);
 
     JSScript *script() const {
         JS_ASSERT(isInterpreted());
@@ -481,9 +473,6 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 extern JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen);
 
-extern JS_REQUIRES_STACK JSObject *
-js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);
-
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, js::Native native,
                   uintN nargs, uintN flags);
@@ -530,13 +519,6 @@ GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 extern JSBool
 GetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
-/*
- * Slower version of js_GetCallVar used when call_resolve detects an attempt to
- * leak an optimized closure via indirect or debugger eval.
- */
-extern JSBool
-GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
-
 extern JSBool
 GetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
@@ -575,25 +557,6 @@ js_PutArgsObject(js::StackFrame *fp);
 
 inline bool
 js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->atom; }
-
-/*
- * Maximum supported value of arguments.length. It bounds the maximum number of
- * arguments that can be supplied via the second (so-called |argArray|) param
- * to Function.prototype.apply. This value also bounds the number of elements
- * parsed in an array initialiser.
- *
- * The thread's stack is the limiting factor for this number. It is currently
- * 2MB, which fits a little less than 2^19 arguments (once the stack frame,
- * callstack, etc. are included). Pick a max args length that is a little less.
- */
-const uint32 JS_ARGS_LENGTH_MAX = JS_BIT(19) - 1024;
-
-/*
- * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as an Int32
- * Value.  Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must be less than JSVAL_INT_MAX.
- */
-JS_STATIC_ASSERT(JS_ARGS_LENGTH_MAX <= JS_BIT(30));
-JS_STATIC_ASSERT(((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
 
 extern JSBool
 js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);

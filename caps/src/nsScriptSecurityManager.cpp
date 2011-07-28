@@ -91,7 +91,6 @@
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIChromeRegistry.h"
-#include "nsPrintfCString.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
@@ -2640,7 +2639,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         // the JS engine via JS_EvaluateScript or similar APIs.
         if (JS_IsGlobalFrame(cx, fp))
             break;
-    } while ((fp = JS_FrameIterator(cx, &fp)) != nsnull);
+    } while (fp != target && (fp = JS_FrameIterator(cx, &fp)) != nsnull);
 
     if (!previousPrincipal)
     {
@@ -2712,7 +2711,7 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
         nsIScriptContext *scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIDOMWindowInternal> domWin =
+            nsCOMPtr<nsIDOMWindow> domWin =
                 do_QueryInterface(scriptContext->GetGlobalObject());
             if (domWin)
                 domWin->GetPrompter(getter_AddRefs(prompter));
@@ -3379,7 +3378,8 @@ nsresult nsScriptSecurityManager::Init()
     nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
     NS_ENSURE_TRUE(system, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = system->Init();
+    JSPrincipals *jsprin;
+    rv = system->Init(&jsprin);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mSystemPrincipal = system;
@@ -3406,6 +3406,8 @@ nsresult nsScriptSecurityManager::Init()
     JS_SetRuntimeSecurityCallbacks(sRuntime, &securityCallbacks);
     NS_ASSERTION(!oldcallbacks, "Someone else set security callbacks!");
 
+    JS_SetTrustedPrincipals(sRuntime, jsprin);
+
     return NS_OK;
 }
 
@@ -3429,6 +3431,7 @@ nsScriptSecurityManager::Shutdown()
 {
     if (sRuntime) {
         JS_SetRuntimeSecurityCallbacks(sRuntime, NULL);
+        JS_SetTrustedPrincipals(sRuntime, NULL);
         sRuntime = nsnull;
     }
     sEnabledID = JSID_VOID;

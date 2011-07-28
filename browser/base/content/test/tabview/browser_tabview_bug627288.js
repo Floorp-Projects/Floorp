@@ -19,11 +19,11 @@ function test() {
       afterAllTabsLoaded(function () {
         tabItem = tab._tabViewTabItem;
 
-        tabItem.addSubscriber(tabItem, "savedCachedImageData", function () {
-          tabItem.removeSubscriber(tabItem, "savedCachedImageData");
+        tabItem.addSubscriber("savedCachedImageData", function onSaved() {
+          tabItem.removeSubscriber("savedCachedImageData", onSaved);
 
-          tabItem.addSubscriber(tabItem, "loadedCachedImageData", function () {
-            tabItem.removeSubscriber(tabItem, "loadedCachedImageData");
+          tabItem.addSubscriber("loadedCachedImageData", function onLoaded() {
+            tabItem.removeSubscriber("loadedCachedImageData", onLoaded);
 
             ok(tabItem.isShowingCachedData(), 'tabItem shows cached data');
             testChangeUrlAfterReconnect();

@@ -325,17 +325,6 @@ public:
    */
   void RecreateAccessible(nsIContent* aContent);
 
-  /**
-   * Used to notify the document that the accessible caching is started or
-   * finished.
-   *
-   * While children are cached we may encounter the case there's no accessible
-   * for referred content by related accessible. Keep the caching root and
-   * these related nodes to invalidate their containers after root caching.
-   */
-  void NotifyOfCachingStart(nsAccessible* aAccessible);
-  void NotifyOfCachingEnd(nsAccessible* aAccessible);
-
 protected:
 
   // nsAccessible
@@ -440,6 +429,15 @@ protected:
                               const nsTArray<nsCOMPtr<nsIContent> >* aInsertedContent);
 
   /**
+   * Used to notify the document to make it process the invalidation list.
+   *
+   * While children are cached we may encounter the case there's no accessible
+   * for referred content by related accessible. Store these related nodes to
+   * invalidate their containers later.
+   */
+  void ProcessInvalidationList();
+
+  /**
    * Update the accessible tree for content insertion or removal.
    */
   void UpdateTree(nsAccessible* aContainer, nsIContent* aChildNode,
@@ -532,15 +530,12 @@ protected:
   friend class RelatedAccIterator;
 
   /**
-   * Used for our caching algorithm. We store the root of the tree that needs
-   * caching, the list of nodes that should be invalidated, and whether we are
-   * processing the invalidation list.
+   * Used for our caching algorithm. We store the list of nodes that should be
+   * invalidated.
    *
-   * @see NotifyOfCachingStart/NotifyOfCachingEnd
+   * @see ProcessInvalidationList
    */
-  nsAccessible* mCacheRoot;
   nsTArray<nsIContent*> mInvalidationList;
-  PRBool mIsPostCacheProcessing;
 
   /**
    * Used to process notification from core and accessible events.

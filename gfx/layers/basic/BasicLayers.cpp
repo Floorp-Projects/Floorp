@@ -1082,6 +1082,22 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
       return;
     }
 
+    // We need to read from the GLContext
+    mGLContext->MakeCurrent();
+
+#if defined (MOZ_X11) && defined (MOZ_EGL_XRENDER_COMPOSITE)
+    mGLContext->fFinish();
+    gfxASurface* offscreenSurface = mGLContext->GetOffscreenPixmapSurface();
+
+    // XRender can only blend premuliplied alpha, so only allow xrender
+    // path if we have premultiplied alpha or opaque content.
+    if (offscreenSurface && (mGLBufferIsPremultiplied || (GetContentFlags() & CONTENT_OPAQUE))) {  
+        mSurface = offscreenSurface;
+        mNeedsYFlip = false;
+    }
+    else
+#endif
+    {
     nsRefPtr<gfxImageSurface> isurf = aDestSurface ?
         static_cast<gfxImageSurface*>(aDestSurface) :
         new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
@@ -1094,9 +1110,6 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
     }
 
     NS_ASSERTION(isurf->Stride() == mBounds.width * 4, "gfxImageSurface stride isn't what we expect!");
-
-    // We need to read from the GLContext
-    mGLContext->MakeCurrent();
 
     // We have to flush to ensure that any buffered GL operations are
     // in the framebuffer before we read.
@@ -1132,6 +1145,7 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
     }
   }
 }
+}
 
 void
 BasicCanvasLayer::Paint(gfxContext* aContext)
@@ -1162,12 +1176,34 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
     aContext->Scale(1.0, -1.0);
   }
 
+  // If content opaque, then save off current operator and set to source.
+  // This ensures that alpha is not applied even if the source surface
+  // has an alpha channel
+  gfxContext::GraphicsOperator savedOp;
+  if (GetContentFlags() & CONTENT_OPAQUE) {
+    savedOp = aContext->CurrentOperator();
+    aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+  }
+
   AutoSetOperator setOperator(aContext, GetOperator());
   aContext->NewPath();
   // No need to snap here; our transform is already set up to snap our rect
   aContext->Rectangle(gfxRect(0, 0, mBounds.width, mBounds.height));
   aContext->SetPattern(pat);
   aContext->FillWithOpacity(aOpacity);
+
+#if defined (MOZ_X11) && defined (MOZ_EGL_XRENDER_COMPOSITE)
+  if (mGLContext) {
+    // Wait for X to complete all operations before continuing
+    // Otherwise gl context could get cleared before X is done.
+    mGLContext->WaitNative();
+  }
+#endif
+
+  // Restore surface operator
+  if (GetContentFlags() & CONTENT_OPAQUE) {
+    aContext->SetOperator(savedOp);
+  }  
 
   if (mNeedsYFlip) {
     aContext->SetMatrix(m);

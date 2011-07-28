@@ -67,7 +67,7 @@
 #include "pldhash.h"
 #include "prprf.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
 
 nsGenericDOMDataNode::nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsIContent(aNodeInfo)
@@ -85,6 +85,9 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
+  if (GetParent()) {
+    NS_RELEASE(mParent);
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
@@ -113,6 +116,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(GetParent())
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
@@ -498,6 +502,9 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Set parent
   if (aParent) {
+    if (!GetParent()) {
+      NS_ADDREF(aParent);
+    }
     mParent = aParent;
   }
   else {
@@ -546,7 +553,11 @@ nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   }
 
   if (aNullParent) {
-    mParent = nsnull;
+    if (GetParent()) {
+      NS_RELEASE(mParent);
+    } else {
+      mParent = nsnull;
+    }
     SetParentIsContent(false);
   }
   ClearInDocument();
@@ -1065,3 +1076,13 @@ nsGenericDOMDataNode::GetClassAttributeName() const
 {
   return nsnull;
 }
+
+PRInt64
+nsGenericDOMDataNode::SizeOf() const
+{
+  PRInt64 size = dom::MemoryReporter::GetBasicSize<nsGenericDOMDataNode,
+                                                   nsIContent>(this);
+  size += mText.SizeOf() - sizeof(mText);
+  return size;
+}
+

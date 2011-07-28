@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsHistory.h"
+
 #include "nsCOMPtr.h"
 #include "nscore.h"
-#include "nsHistory.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"

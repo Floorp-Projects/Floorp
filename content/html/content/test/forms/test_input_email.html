@@ -2,20 +2,17 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=555559
+https://bugzilla.mozilla.org/show_bug.cgi?id=668817
 -->
 <head>
-  <title>Test for Bug 555559</title>
+  <title>Test for &lt;input type='email'&gt; validity</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <style>
-    input { background-color: rgb(0,0,0) !important; }
-    input:valid   { background-color: rgb(0,255,0) !important; }
-    input:invalid { background-color: rgb(255,0,0) !important; }
-  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=555559">Mozilla Bug 555559</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=668817">Mozilla Bug 668817</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <form>
@@ -25,9 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=555559
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 555559 **/
-
-// More checks are done in test_bug551670.html.
+/** Test for <input type='email'> validity **/
 
 var gInvalid = false;
 
@@ -47,8 +42,7 @@ function checkValidEmailAddress(element)
   ok(!gInvalid, "The invalid event should not have been thrown");
   is(element.validationMessage, '',
      "Validation message should be the empty string");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.mozMatchesSelector(":valid"), ":valid pseudo-class should apply");
 }
 
 function checkInvalidEmailAddress(element)
@@ -61,179 +55,132 @@ function checkInvalidEmailAddress(element)
   ok(gInvalid, "The invalid event should have been thrown");
   is(element.validationMessage, "Please enter an email address.",
      "Validation message is not valid");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-     "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+  ok(element.mozMatchesSelector(":invalid"), ":invalid pseudo-class should apply");
+}
+
+function testEmailAddress(aElement, aValue, aMultiple, aValidity)
+{
+  aElement.multiple = aMultiple;
+  aElement.value = aValue;
+
+  if (aValidity) {
+    checkValidEmailAddress(aElement);
+  } else {
+    checkInvalidEmailAddress(aElement);
+  }
 }
 
 var email = document.forms[0].elements[0];
-is(email.type, 'email', "email state should be recognized");
 
-// This is not really a valid email address
-// but it should not be considered as invalid.
-email.value = '';
-checkValidEmailAddress(email);
+// Simple values, checking the e-mail syntax validity.
+var values = [
+  [ '', true ], // The empty string shouldn't be considered as invalid.
+  [ 'foo@bar.com', true ],
+  [ ' foo@bar.com', false ],
+  [ 'foo@bar.com ', false ],
+  [ 'tulip', false ],
+  // Some checks on the user part of the address.
+  [ '@bar.com', false ],
+  [ 'f\noo@bar.com', true ],
+  [ 'f\roo@bar.com', true ],
+  [ 'f\r\noo@bar.com', true ],
+  // Some checks for the domain part.
+  [ 'foo@bar', true ],
+  [ 'foo@b', true ],
+  [ 'foo@', false ],
+  [ 'foo@bar.', false ],
+  [ 'foo@foo.bar', true ],
+  [ 'foo@foo..bar', false ],
+  [ 'foo@.bar', false ],
+  [ 'foo@tulip.foo.bar', true ],
+  [ 'foo@tulip.foo-bar', true ],
+  [ 'foo@1.2', true ],
+  [ 'foo@127.0.0.1', true ],
+  [ 'foo@1.2.3', true ],
+  [ 'foo@b\nar.com', true ],
+  [ 'foo@b\rar.com', true ],
+  [ 'foo@b\r\nar.com', true ],
+  [ 'foo@.', false ],
+];
 
-email.value = 'foo@bar.com';
-checkValidEmailAddress(email);
+// Multiple values, we don't check e-mail validity, only multiple stuff.
+var multipleValues = [
+  [ 'foo@bar.com, foo@bar.com', true ],
+  [ 'foo@bar.com,foo@bar.com', true ],
+  [ 'foo@bar.com,foo@bar.com,foo@bar.com', true ],
+  [ '     foo@bar.com     ,     foo@bar.com    ', true ],
+  [ '\tfoo@bar.com\t,\tfoo@bar.com\t', true ],
+  [ '\rfoo@bar.com\r,\rfoo@bar.com\r', true ],
+  [ '\nfoo@bar.com\n,\nfoo@bar.com\n', true ],
+  [ '\ffoo@bar.com\f,\ffoo@bar.com\f', true ],
+  [ '\t foo@bar.com\r,\nfoo@bar.com\f', true ],
+  [ 'foo@b,ar.com,foo@bar.com', false ],
+  [ 'foo@bar.com,foo@bar.com,', false ],
+  [ '   foo@bar.com   ,   foo@bar.com   ,   ', false ],
+  [ ',foo@bar.com,foo@bar.com', false ],
+  [ ',foo@bar.com,foo@bar.com', false ],
+  [ 'foo@bar.com,,,foo@bar.com', false ],
+  [ 'foo@bar.com;foo@bar.com', false ],
+  [ '<foo@bar.com>, <foo@bar.com>', false ],
+  [ 'foo@bar, foo@bar.com', true ],
+  [ 'foo@bar.com, foo', false ],
+  [ 'foo, foo@bar.com', false ],
+];
 
-email.value = ' foo@bar.com';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@bar.com ';
-checkInvalidEmailAddress(email);
-
-email.value = 'tulip';
-checkInvalidEmailAddress(email);
-
-// Some checks on the user part of the address.
-email.value = '@bar.com';
-checkInvalidEmailAddress(email);
+/* Additional username checks. */
 
 var legalCharacters = "abcdefghijklmnopqrstuvwxyz";
 legalCharacters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 legalCharacters += "0123456789";
 legalCharacters += "!#$%&'*+-/=?^_`{|}~.";
 
-for each (c in legalCharacters)
-{
-  email.value = c + '@bar.com';
-  checkValidEmailAddress(email);
+// Add all username legal characters individually to the list.
+for each (c in legalCharacters) {
+  values.push([c + "@bar.com", true]);
+}
+// Add the concatenation of all legal characters too.
+values.push([legalCharacters + "@bar.com", true]);
+
+// Add username illegal characters, the same way.
+var illegalCharacters = "()<>[]:;@\\, \t";
+for each (c in illegalCharacters) {
+  values.push([illegalCharacters + "@bar.com", false]);
 }
 
-email.value = legalCharacters + '@bar.com';
-checkValidEmailAddress(email);
+/* Additional domain checks. */
 
-// Checking stripped characters.
-email.value = 'f\noo@bar.com';
-checkValidEmailAddress(email);
+legalCharacters = "abcdefghijklmnopqrstuvwxyz";
+legalCharacters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+legalCharacters += "0123456789";
+legalCharacters += "-";
 
-email.value = 'f\roo@bar.com';
-checkValidEmailAddress(email);
+// Add domain legal characters (except '.' because it's special).
+for each (c in legalCharacters) {
+  values.push(["foo@foo.bar" + c, true]);
+}
+// Add the concatenation of all legal characters too.
+values.push(["foo@bar.com" + legalCharacters, true]);
 
-// Testing some illegal characters.
-var illegalCharacters = "()<>[]:;@\, \t";
-
-for each (c in illegalCharacters)
-{
-  email.value = c + '@bar.com';
-  checkInvalidEmailAddress(email);
+// Add domain illegal characters.
+illegalCharacters = "()<>[]:;@\\,!#$%&'*+/=?^_`{|}~ \t";
+for each (c in illegalCharacters) {
+  values.push(['foo@foo.bar' + c, false]);
 }
 
-// Some checks on the domain part of the address.
-email.value = 'foo@bar';
-checkValidEmailAddress(email);
+values.forEach(function([value, valid]) {
+  testEmailAddress(email, value, false, valid);
+});
 
-email.value = 'foo@b';
-checkValidEmailAddress(email);
+multipleValues.forEach(function([value, valid]) {
+  testEmailAddress(email, value, true, valid);
+});
 
-email.value = 'foo@';
+// Make sure setting multiple changes the value.
+email.multiple = false;
+email.value = "foo@bar.com, foo@bar.com";
 checkInvalidEmailAddress(email);
-
-email.value = 'foo@bar.';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@foo.bar';
-checkValidEmailAddress(email);
-
-email.value = 'foo@foo..bar';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@.bar';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@tulip.foo.bar';
-checkValidEmailAddress(email);
-
-email.value = 'foo@tulip.foo-bar';
-checkValidEmailAddress(email);
-
-email.value = 'foo@1.2';
-checkValidEmailAddress(email);
-
-email.value = 'foo@127.0.0.1';
-checkValidEmailAddress(email);
-
-email.value = 'foo@1.2.3.';
-checkInvalidEmailAddress(email);
-
-// Checking stripped characters.
-email.value = 'foo@b\nar.com';
-checkValidEmailAddress(email);
-
-email.value = 'foo@b\rar.com';
-checkValidEmailAddress(email);
-
-// Testing some illegal characters.
-illegalCharacters = "()<>[]:;@\,!#$%&'*+/=?^_`{|}~ \t";
-
-for each (c in illegalCharacters)
-{
-  email.value = 'foo@foo.bar' + c;
-  checkInvalidEmailAddress(email);
-}
-
-// Testing multiple: we are not going to re-test email validity, just multiple.
 email.multiple = true;
-
-email.value = 'foo@bar.com, foo@bar.com';
 checkValidEmailAddress(email);
-
-email.value = 'foo@bar.com,foo@bar.com';
-checkValidEmailAddress(email);
-
-email.value = 'foo@bar.com,foo@bar.com,foo@bar.com';
-checkValidEmailAddress(email);
-
-email.value = '     foo@bar.com     ,     foo@bar.com    ';
-checkValidEmailAddress(email);
-
-email.value = '\tfoo@bar.com\t,\tfoo@bar.com\t';
-checkValidEmailAddress(email);
-
-email.value = '\rfoo@bar.com\r,\rfoo@bar.com\r';
-checkValidEmailAddress(email);
-
-email.value = '\nfoo@bar.com\n,\nfoo@bar.com\n';
-checkValidEmailAddress(email);
-
-email.value = '\ffoo@bar.com\f,\ffoo@bar.com\f';
-checkValidEmailAddress(email);
-
-email.value = '\t foo@bar.com\r,\nfoo@bar.com\f';
-checkValidEmailAddress(email);
-
-email.value = 'foo@b,ar.com,foo@bar.com';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@bar.com,foo@bar.com,';
-checkInvalidEmailAddress(email);
-
-email.value = '   foo@bar.com   ,   foo@bar.com   ,   ';
-checkInvalidEmailAddress(email);
-
-email.value = ',foo@bar.com,foo@bar.com';
-checkInvalidEmailAddress(email);
-
-email.value = ',foo@bar.com,foo@bar.com';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@bar.com,,,foo@bar.com';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@bar.com;foo@bar.com';
-checkInvalidEmailAddress(email);
-
-email.value = '<foo@bar.com>, <foo@bar.com>';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo@bar, foo@bar.com';
-checkValidEmailAddress(email);
-
-email.value = 'foo@bar.com, foo';
-checkInvalidEmailAddress(email);
-
-email.value = 'foo, foo@bar.com';
-checkInvalidEmailAddress(email);
 
 </script>
 </pre>

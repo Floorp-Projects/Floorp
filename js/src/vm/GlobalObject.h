@@ -111,12 +111,29 @@ class GlobalObject : public ::JSObject {
   public:
     static GlobalObject *create(JSContext *cx, Class *clasp);
 
+    /*
+     * Create a constructor function with the specified name and length using
+     * ctor, a method which creates objects with the given class.
+     */
+    JSFunction *
+    createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name, uintN length);
+
+    /*
+     * Create an object to serve as [[Prototype]] for instances of the given
+     * class, using |Object.prototype| as its [[Prototype]].  Users creating
+     * prototype objects with particular internal structure (e.g. reserved
+     * slots guaranteed to contain values of particular types) must immediately
+     * complete the minimal initialization to make the returned object safe to
+     * touch.
+     */
+    JSObject *createBlankPrototype(JSContext *cx, js::Class *clasp);
+
     void setThrowTypeError(JSFunction *fun) {
-        Value &v = getSlotRef(THROWTYPEERROR);
         // Our bootstrapping code is currently too convoluted to correctly and
         // confidently assert this.
         // JS_ASSERT(v.isUndefined());
-        v.setObject(*fun);
+        // JS_ASSERT(getSlot(THROWTYPEERROR).isUndefined());
+        setSlot(THROWTYPEERROR, ObjectValue(*fun));
     }
 
     JSObject *getThrowTypeError() const {
@@ -140,17 +157,32 @@ class GlobalObject : public ::JSObject {
     }
 
     void setOriginalEval(JSObject *evalobj) {
-        Value &v = getSlotRef(EVAL);
         // Our bootstrapping code is currently too convoluted to correctly and
         // confidently assert this.
         // JS_ASSERT(v.isUndefined());
-        v.setObject(*evalobj);
+        // JS_ASSERT(getSlot(EVAL).isUndefined());
+        setSlot(EVAL, ObjectValue(*evalobj));
     }
 
     bool getFunctionNamespace(JSContext *cx, Value *vp);
 
     bool initStandardClasses(JSContext *cx);
 };
+
+/*
+ * Define ctor.prototype = proto as non-enumerable, non-configurable, and
+ * non-writable; define proto.constructor = ctor as non-enumerable but
+ * configurable and writable.
+ */
+extern bool
+LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
+
+/*
+ * Define properties, then functions, on the object, then brand for tracing
+ * benefits.
+ */
+extern bool
+DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFunctionSpec *fs);
 
 } // namespace js
 

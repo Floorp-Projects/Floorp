@@ -44,8 +44,8 @@
 #include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
 #include "nsServiceManagerUtils.h"
-#include "nsITimelineService.h"
 #include "nsPlatformCharset.h"
+#include "nsEncoderDecoderUtils.h"
 
 static const char* kWinCharsets[][3] = {
 #include "wincharset.properties.h"
@@ -55,14 +55,9 @@ NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {
-  NS_TIMELINE_START_TIMER("nsPlatformCharset()");
-
   nsAutoString acpKey(NS_LITERAL_STRING("acp."));
   acpKey.AppendInt(PRInt32(::GetACP() & 0x00FFFF), 10);
   MapToCharset(acpKey, mCharset);
-
-  NS_TIMELINE_STOP_TIMER("nsPlatformCharset()");
-  NS_TIMELINE_MARK_TIMER("nsPlatformCharset()");
 }
 
 nsPlatformCharset::~nsPlatformCharset()
@@ -79,6 +74,7 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
       NS_ARRAY_LENGTH(kWinCharsets), key, outCharset);
   if (NS_FAILED(rv)) {
     outCharset.AssignLiteral("windows-1252");
+    return NS_SUCCESS_USING_FALLBACK_LOCALE;
   }
   return rv;
 }

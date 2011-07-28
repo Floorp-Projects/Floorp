@@ -106,12 +106,6 @@ static PRBool gCMSInitialized = PR_FALSE;
 static eCMSMode gCMSMode = eCMSMode_Off;
 static int gCMSIntent = -2;
 
-static const char *CMPrefName = "gfx.color_management.mode";
-static const char *CMPrefNameOld = "gfx.color_management.enabled";
-static const char *CMIntentPrefName = "gfx.color_management.rendering_intent";
-static const char *CMProfilePrefName = "gfx.color_management.display_profile";
-static const char *CMForceSRGBPrefName = "gfx.color_management.force_srgb";
-
 static void ShutdownCMS();
 static void MigratePrefs();
 
@@ -322,7 +316,7 @@ gfxPlatform::Init()
 
     /* Create and register our CMS Override observer. */
     gPlatform->mSRGBOverrideObserver = new SRGBOverrideObserver();
-    Preferences::AddWeakObserver(gPlatform->mSRGBOverrideObserver, CMForceSRGBPrefName);
+    Preferences::AddWeakObserver(gPlatform->mSRGBOverrideObserver, "gfx.color_management.force_srgb");
 
     gPlatform->mFontPrefsObserver = new FontPrefsObserver();
     Preferences::AddStrongObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
@@ -354,7 +348,7 @@ gfxPlatform::Shutdown()
     if (gPlatform) {
         /* Unregister our CMS Override callback. */
         NS_ASSERTION(gPlatform->mSRGBOverrideObserver, "mSRGBOverrideObserver has alreay gone");
-        Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver, CMForceSRGBPrefName);
+        Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver, "gfx.color_management.force_srgb");
         gPlatform->mSRGBOverrideObserver = nsnull;
 
         NS_ASSERTION(gPlatform->mFontPrefsObserver, "mFontPrefsObserver has alreay gone");
@@ -911,10 +905,18 @@ gfxPlatform::GetCMSMode()
 {
     if (gCMSInitialized == PR_FALSE) {
         gCMSInitialized = PR_TRUE;
+        nsresult rv;
+
         PRInt32 mode;
-        nsresult rv = Preferences::GetInt(CMPrefName, &mode);
+        rv = Preferences::GetInt("gfx.color_management.mode", &mode);
         if (NS_SUCCEEDED(rv) && (mode >= 0) && (mode < eCMSMode_AllCount)) {
             gCMSMode = static_cast<eCMSMode>(mode);
+        }
+
+        PRBool enableV4;
+        rv = Preferences::GetBool("gfx.color_management.enablev4", &enableV4);
+        if (NS_SUCCEEDED(rv) && enableV4) {
+            qcms_enable_iccv4();
         }
     }
     return gCMSMode;
@@ -927,14 +929,14 @@ unacceptable performance overhead, so we go with perceptual. */
 #define INTENT_MIN 0
 #define INTENT_MAX 3
 
-PRBool
+int
 gfxPlatform::GetRenderingIntent()
 {
     if (gCMSIntent == -2) {
 
         /* Try to query the pref system for a rendering intent. */
         PRInt32 pIntent;
-        if (NS_SUCCEEDED(Preferences::GetInt(CMIntentPrefName, &pIntent))) {
+        if (NS_SUCCEEDED(Preferences::GetInt("gfx.color_management.rendering_intent", &pIntent))) {
             /* If the pref is within range, use it as an override. */
             if ((pIntent >= INTENT_MIN) && (pIntent <= INTENT_MAX)) {
                 gCMSIntent = pIntent;
@@ -1001,12 +1003,12 @@ gfxPlatform::GetCMSOutputProfile()
            default value of this preference, which means nsIPrefBranch::GetBoolPref
            will typically throw (and leave its out-param untouched).
          */
-        if (Preferences::GetBool(CMForceSRGBPrefName, PR_FALSE)) {
+        if (Preferences::GetBool("gfx.color_management.force_srgb", PR_FALSE)) {
             gCMSOutputProfile = GetCMSsRGBProfile();
         }
 
         if (!gCMSOutputProfile) {
-            nsAdoptingCString fname = Preferences::GetCString(CMProfilePrefName);
+            nsAdoptingCString fname = Preferences::GetCString("gfx.color_management.display_profile");
             if (!fname.IsEmpty()) {
                 gCMSOutputProfile = qcms_profile_from_path(fname);
             }
@@ -1144,11 +1146,11 @@ static void MigratePrefs()
 {
     /* Migrate from the boolean color_management.enabled pref - we now use
        color_management.mode. */
-    if (Preferences::HasUserValue(CMPrefNameOld)) {
-        if (Preferences::GetBool(CMPrefNameOld, PR_FALSE)) {
-            Preferences::SetInt(CMPrefName, static_cast<PRInt32>(eCMSMode_All));
+    if (Preferences::HasUserValue("gfx.color_management.enabled")) {
+        if (Preferences::GetBool("gfx.color_management.enabled", PR_FALSE)) {
+            Preferences::SetInt("gfx.color_management.mode", static_cast<PRInt32>(eCMSMode_All));
         }
-        Preferences::ClearUser(CMPrefNameOld);
+        Preferences::ClearUser("gfx.color_management.enabled");
     }
 }
 

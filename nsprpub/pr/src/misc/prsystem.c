@@ -77,6 +77,12 @@
 #include <sys/utsname.h>
 #endif
 
+#if defined(LINUX)
+#include <string.h>
+#include <ctype.h>
+#define MAX_LINE 512
+#endif
+
 #if defined(AIX)
 #include <cf.h>
 #include <sys/cfgodm.h>
@@ -255,8 +261,41 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
     numCpus = sysconf( _SC_NPROC_ONLN );
 #elif defined(RISCOS) || defined(SYMBIAN)
     numCpus = 1;
+#elif defined(LINUX)
+    /* for the benefit of devices with advanced power-saving, that
+       actually hotplug their cpus in heavy load, try to figure out
+       the real number of CPUs */
+    char buf[MAX_LINE];
+    FILE *fin;
+    const char *cpu_present = "/sys/devices/system/cpu/present";
+    size_t strsize;
+    numCpus = 0;
+    fin = fopen(cpu_present, "r");
+    if (fin != NULL) {
+        if (fgets(buf, MAX_LINE, fin) != NULL) {
+            /* check that the format is what we expect */
+            if (buf[0] == '0') {
+                strsize = strlen(buf);
+                if (strsize == 1) {
+                    /* single core */
+                    numCpus = 1;
+                } else if (strsize >= 3 && strsize <= 5) {
+                    /* should be of the form 0-999 */
+                    /* parse the part after the 0-, note count is 0-based */
+                    if (buf[1] == '-' && isdigit(buf[2])) {
+                        numCpus = 1 + atoi(buf + 2);
+                    }
+                }
+            }
+        }
+        fclose(fin);
+    }
+    /* if that fails, fall back to more standard methods */
+    if (!numCpus) {
+        numCpus = sysconf( _SC_NPROCESSORS_CONF );
+    }
 #elif defined(XP_UNIX)
-    numCpus = sysconf( _SC_NPROCESSORS_ONLN );
+    numCpus = sysconf( _SC_NPROCESSORS_CONF );
 #else
 #error "An implementation is required"
 #endif

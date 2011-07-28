@@ -57,5 +57,5 @@ function toggleTabViewTest(contentWindow) {
   }
   contentWindow.addEventListener("tabviewhidden", onTabViewHidden, false);
   // Use keyboard shortcut to toggle back to browser view
-  EventUtils.synthesizeKey("E", { accelKey: true, shiftKey: true });
+  EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true });
 }

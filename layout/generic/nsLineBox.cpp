@@ -656,11 +656,9 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
     return NS_OK;
   }
 
-  nsBidiPresUtils* bidiUtils = line->mFirstChild->PresContext()->GetBidiUtils();
-
   nsIFrame* leftmostFrame;
   nsIFrame* rightmostFrame;
-  *aIsReordered = bidiUtils->CheckLineOrder(line->mFirstChild, line->GetChildCount(), &leftmostFrame, &rightmostFrame);
+  *aIsReordered = nsBidiPresUtils::CheckLineOrder(line->mFirstChild, line->GetChildCount(), &leftmostFrame, &rightmostFrame);
 
   // map leftmost/rightmost to first/last according to paragraph direction
   *aFirstVisual = mRightToLeft ? rightmostFrame : leftmostFrame;

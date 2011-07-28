@@ -56,7 +56,7 @@ members = [
     #   - nsIDOMLocation.reload
     #   - nsIDOMNSHistory.go
     #   - nsIDOMJSPluginArray.refresh
-    #   - nsIDOMWindowInternal.postMessage
+    #   - nsIDOMWindow.postMessage
     #   - nsIDOMJSWindow.{prompt,setTimeout,setInterval,open,openDialog}
     #
     # (And nsIDOMModalContentWindow.returnValue is an attribute of type
@@ -72,6 +72,9 @@ members = [
     'nsIDOMWindow.getSelection',
     'nsIDOMWindow.scrollByLines',
     'nsIDOMWindow.getComputedStyle',
+    'nsIDOMWindow.sessionStorage',
+    'nsIDOMWindow.localStorage',
+    'nsIDOMWindow.globalStorage',
     'nsIDOMJSWindow.dump',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
@@ -255,6 +258,7 @@ members = [
     'nsIDOMHTMLInputElement.textLength',
     'nsIDOMHTMLInputElement.selectionStart',
     'nsIDOMHTMLInputElement.selectionEnd',
+    'nsIDOMHTMLInputElement.selectionDirection',
     'nsIDOMHTMLInputElement.setSelectionRange',
     'nsIDOMHTMLLinkElement.disabled',
     'nsIDOMHTMLOptionElement.index',
@@ -314,6 +318,7 @@ members = [
     'nsIDOMHTMLTextAreaElement.setSelectionRange',
     'nsIDOMHTMLTextAreaElement.selectionStart',
     'nsIDOMHTMLTextAreaElement.selectionEnd',
+    'nsIDOMHTMLTextAreaElement.selectionDirection',
     'nsIDOMHTMLTextAreaElement.textLength',
     'nsIDOMHTMLTextAreaElement.wrap',
     'nsIDOMHTMLTitleElement.text',
@@ -357,7 +362,6 @@ members = [
     'nsIDOMStorage.removeItem',
     'nsIDOMStorage.clear',
     'nsIDOMStorageItem.value',
-    'nsIDOMStorageWindow.*',
 
     # dom/interfaces/stylesheets - None.
 
@@ -419,7 +423,7 @@ members = [
     '-nsIXMLHttpRequest.upload',
 
     # WebSocket
-    'nsIWebSocket.*',
+    'nsIMozWebSocket.*',
 
     # webgl
     'nsIDOMWebGLRenderingContext.*',
@@ -876,7 +880,7 @@ customMethodCalls = {
         'thisType': 'nsGenericElement'
         },
     'nsIDOMElement_GetTagName': {
-        'thisType': 'nsINode',
+        'thisType': 'nsGenericElement',
         'code': 'nsString result = self->NodeName();',
         'canFail': False
         },

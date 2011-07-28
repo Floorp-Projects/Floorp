@@ -136,7 +136,7 @@ class RemoteOptions(MochitestOptions):
             return None
 
         if (options.remoteLogFile == None):
-            options.remoteLogFile = options.remoteTestRoot + '/mochitest.log'
+            options.remoteLogFile = options.remoteTestRoot + '/logs/mochitest.log'
 
         if (options.remoteLogFile.count('/') < 1):
             options.remoteLogFile = options.remoteTestRoot + '/' + options.remoteLogFile
@@ -315,7 +315,7 @@ def main():
         if (options.deviceIP):
             dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
         else:
-            dm = dm_auto
+            dm = dm_none
     else:
          dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
     auto.setDeviceManager(dm)
@@ -336,6 +336,8 @@ def main():
     if (options == None):
         sys.exit(1)
     
+    logParent = os.path.dirname(options.remoteLogFile)
+    dm.mkDir(logParent);
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
 

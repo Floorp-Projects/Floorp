@@ -81,6 +81,10 @@ function onDebugKeyPress(aEvent) {
   if (!aEvent.ctrlKey)
     return;
 
+  // prevent the keypress from being triggered twice when page is local - bug 655501
+  if (aEvent.originalTarget.nodeName == "html")
+    return;
+
   function doSwipe(aDirection) {
     let evt = document.createEvent("SimpleGestureEvent");
     evt.initSimpleGestureEvent("MozSwipeGesture", true, true, window, null,
@@ -374,13 +378,14 @@ var Browser = {
     messageManager.addMessageListener("Browser:CertException", this);
     messageManager.addMessageListener("Browser:BlockedSite", this);
 
-    // broadcast a UIReady message so add-ons know we are finished with startup
+    // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    // if we have an opener this was not the first window opened and will not
+    // If we have an opener this was not the first window opened and will not
     // receive an initial resize event. instead we fire the resize handler manually
+    // Bug 610834
     if (window.opener)
       resizeHandler({ target: window });
   },
@@ -937,7 +942,7 @@ var Browser = {
     function visibility(aSidebarRect, aVisibleRect) {
       let width = aSidebarRect.width;
       aSidebarRect.restrictTo(aVisibleRect);
-      return (aSidebarRect.width ? aSidebarRect.width / width : 0);
+      return (width ? aSidebarRect.width / width : 0);
     }
 
     if (!dx) dx = 0;
@@ -1488,6 +1493,7 @@ Browser.WebProgress.prototype = {
           tab.hostChanged = true;
           tab.browser.lastLocation = location;
           tab.browser.userTypedValue = "";
+          tab.browser.appIcon = { href: null, size:-1 };
 
 #ifdef MOZ_CRASH_REPORTER
           if (CrashReporter.enabled)
@@ -1572,6 +1578,8 @@ Browser.WebProgress.prototype = {
 };
 
 
+const OPEN_APPTAB = 100; // Hack until we get a real API
+
 function nsBrowserAccess() { }
 
 nsBrowserAccess.prototype = {
@@ -1614,13 +1622,31 @@ nsBrowserAccess.prototype = {
         tab.closeOnExit = true;
       browser = tab.browser;
       BrowserUI.hidePanel();
+    } else if (aWhere == OPEN_APPTAB) {
+      Browser.tabs.forEach(function(aTab) {
+        if ("appURI" in aTab.browser && aTab.browser.appURI.spec == aURI.spec) {
+          Browser.selectedTab = aTab;
+          browser = aTab.browser;
+        }
+      });
+
+      if (!browser) {
+        // Make a new tab to hold the app
+        let tab = Browser.addTab("about:blank", true, null, { getAttention: true });
+        browser = tab.browser;
+        browser.appURI = aURI;
+      } else {
+        // Just use the existing browser, but return null to keep the system from trying to load the URI again
+        browser = null;
+      }
+      BrowserUI.hidePanel();
     } else { // OPEN_CURRENTWINDOW and illegal values
       browser = Browser.selectedBrowser;
     }
 
     try {
       let referrer;
-      if (aURI) {
+      if (aURI && browser) {
         if (aOpener) {
           location = aOpener.location;
           referrer = Services.io.newURI(location, null, null);
@@ -1836,13 +1862,8 @@ const ContentTouchHandler = {
   },
 
   tapDown: function tapDown(aX, aY) {
-    // Ensure that the content process has gets an activate event
     let browser = getBrowser();
-    let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     browser.focus();
-    try {
-      fl.activateRemoteFrame();
-    } catch (e) {}
 
     // if the page might capture touch events, we give it the option
     this.updateCanCancel(aX, aY);
@@ -2506,7 +2527,7 @@ var ContentCrashObserver = {
         } catch (x) {
           dump (x);
         }
-        self.CrashSubmit.submit(dumpID, Elements.stack, null, null);
+        self.CrashSubmit.submit(dumpID);
       }
     }, 0, this);
   }
@@ -2514,8 +2535,16 @@ var ContentCrashObserver = {
 
 var MemoryObserver = {
   observe: function mo_observe(aSubject, aTopic, aData) {
+    function gc() {
+      window.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
+      Cu.forceGC();
+    };
+
     if (aData == "heap-minimize") {
-      // do non-destructive stuff here.
+      // The JS engine would normally GC on this notification, but since we
+      // disabled that in favor of this method (bug 669346), we should gc here.
+      gc();
       return;
     }
 
@@ -2526,9 +2555,9 @@ var MemoryObserver = {
       tab.resurrect();
     }
 
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
-    Cu.forceGC();
+    // gc *after* throwing out the tabs so we can reclaim that memory.
+    gc();
+
     // Bug 637582 - The low memory condition throws out some stuff that we still
     // need, re-selecting the active tab gets us back to where we need to be.
     let sTab = Browser.selectedTab;
@@ -2562,10 +2591,10 @@ function importDialog(aParent, aSrc, aArguments) {
 
   let dialog  = null;
 
-  // we need to insert before menulist-container if we want it to show correctly
-  // for prompt.select for instance
-  let menulistContainer = document.getElementById("menulist-container");
-  let parentNode = menulistContainer.parentNode;
+  // we need to insert before context-container if we want allow pasting (using
+  //  the context menu) into dialogs
+  let contentMenuContainer = document.getElementById("context-container");
+  let parentNode = contentMenuContainer.parentNode;
 
   // emit DOMWillOpenModalDialog event
   let event = document.createEvent("Events");
@@ -2577,7 +2606,7 @@ function importDialog(aParent, aSrc, aArguments) {
   let back = document.createElement("box");
   back.setAttribute("class", "modal-block");
   dialog = back.appendChild(document.importNode(doc, true));
-  parentNode.insertBefore(back, menulistContainer);
+  parentNode.insertBefore(back, contentMenuContainer);
 
   dialog.arguments = aArguments;
   dialog.parent = aParent;
@@ -2816,6 +2845,7 @@ Tab.prototype = {
 
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     fl.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+    fl.eventMode = Ci.nsIFrameLoader.EVENT_MODE_DONT_FORWARD_TO_CHILD;
 
     return browser;
   },
@@ -2964,12 +2994,7 @@ Tab.prototype = {
       Elements.browsers.selectedPanel = notification;
       browser.active = true;
       document.getElementById("tabs").selectedTab = this._chromeTab;
-
-      // Ensure that the content process has gets an activate event
-      try {
-        let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-        fl.activateRemoteFrame();
-      } catch (e) {}
+      browser.focus();
     } else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");
@@ -3103,6 +3128,7 @@ var ViewableAreaObserver = {
       return;
 
     // Guess if the window has been resize to handle a virtual keyboard
+    let isDueToKeyboard = (newHeight != oldHeight && newWidth == oldWidth);
     this.isKeyboardOpened = (newHeight < oldHeight && newWidth == oldWidth);
 
     Browser.styles["viewable-height"].height = newHeight + "px";
@@ -3112,19 +3138,21 @@ var ViewableAreaObserver = {
     Browser.styles["viewable-width"].maxWidth = newWidth + "px";
 
     let startup = !oldHeight && !oldWidth;
-    for (let i = Browser.tabs.length - 1; i >= 0; i--) {
-      let tab = Browser.tabs[i];
-      let oldContentWindowWidth = tab.browser.contentWindowWidth;
-      tab.updateViewportSize(); // contentWindowWidth may change here.
-
-      // Don't bother updating the zoom level on startup
-      if (!startup) {
-        // If the viewport width is still the same, the page layout has not
-        // changed, so we can keep keep the same content on-screen.
-        if (tab.browser.contentWindowWidth == oldContentWindowWidth)
-          tab.restoreViewportPosition(oldWidth, newWidth);
-
-        tab.updateDefaultZoomLevel();
+    if (!isDueToKeyboard) {
+      for (let i = Browser.tabs.length - 1; i >= 0; i--) {
+        let tab = Browser.tabs[i];
+        let oldContentWindowWidth = tab.browser.contentWindowWidth;
+        tab.updateViewportSize(); // contentWindowWidth may change here.
+  
+        // Don't bother updating the zoom level on startup
+        if (!startup) {
+          // If the viewport width is still the same, the page layout has not
+          // changed, so we can keep keep the same content on-screen.
+          if (tab.browser.contentWindowWidth == oldContentWindowWidth)
+            tab.restoreViewportPosition(oldWidth, newWidth);
+  
+          tab.updateDefaultZoomLevel();
+        }
       }
     }
 

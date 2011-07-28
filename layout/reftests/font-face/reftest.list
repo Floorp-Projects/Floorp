@@ -95,6 +95,12 @@ HTTP(..) load 486974-1.html
 # compare fonts with and without bad head checksum
 HTTP(..) == load-badchecksum.html load-badchecksum-ref.html
 
+# @font-face names take precedence over names of platform fonts (bug 494360)
+HTTP(..) == name-collision.html name-collision-ref.html
+HTTP(..) == name-collision-bad-url.html name-collision-bad-url-ref.html
+
+HTTP(..) == name-collision-with-prefs-font.html name-collision-with-prefs-font-ref.html # bug 668758
+
 # t2embed lib on windows is picky about fullname
 HTTP(..) == load-badfullname.html load-badfullname-ref.html
 
@@ -126,3 +132,9 @@ HTTP(..) == bug533251.html bug533251-ref.html
 fails-if(Android) HTTP(..) == ivs-1.html ivs-1-ref.html
 
 HTTP(..) == missing-names.html missing-names-ref.html
+
+# Tests for bug 670900 - handling of 404 (not found) error in @font-face URL
+# (using Chunkfive font data returned from a .sjs file)
+HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
+HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load
+HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ

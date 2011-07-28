@@ -278,15 +278,20 @@ Service::getSynchronousPref()
 }
 
 Service::Service()
-: mMutex("Service::mMutex")
+: mMutex("Service::mMutex"),
+  mSqliteVFS(nsnull)
 {
 }
 
 Service::~Service()
 {
+  int rc = sqlite3_vfs_unregister(mSqliteVFS);
+  if (rc != SQLITE_OK)
+    NS_WARNING("Failed to unregister sqlite vfs wrapper.");
+
   // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
   // there is nothing actionable we can do in that case.
-  int rc = ::sqlite3_quota_shutdown();
+  rc = ::sqlite3_quota_shutdown();
   if (rc != SQLITE_OK)
     NS_WARNING("sqlite3 did not shutdown cleanly.");
 
@@ -298,6 +303,8 @@ Service::~Service()
   NS_ASSERTION(shutdownObserved, "Shutdown was not observed!");
 
   gService = nsnull;
+  delete mSqliteVFS;
+  mSqliteVFS = nsnull;
 }
 
 void
@@ -306,6 +313,8 @@ Service::shutdown()
   NS_IF_RELEASE(sXPConnect);
 }
 
+sqlite3_vfs* ConstructTelemetryVFS();
+ 
 nsresult
 Service::initialize()
 {
@@ -320,7 +329,15 @@ Service::initialize()
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
-  rc = ::sqlite3_quota_initialize(NULL, 0);
+  mSqliteVFS = ConstructTelemetryVFS();
+  if (mSqliteVFS) {
+    rc = sqlite3_vfs_register(mSqliteVFS, 1);
+    if (rc != SQLITE_OK)
+      return convertResultCode(rc);
+  } else {
+    NS_WARNING("Failed to register telemetry VFS");
+  }
+  rc = ::sqlite3_quota_initialize("telemetry-vfs", 0);
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
@@ -477,6 +494,8 @@ NS_IMETHODIMP
 Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
                               mozIStorageConnection **_connection)
 {
+  NS_ENSURE_ARG(aDatabaseFile);
+
 #ifdef NS_FUNCTION_TIMER
   nsCString leafname;
   (void)aDatabaseFile->GetNativeLeafName(leafname);

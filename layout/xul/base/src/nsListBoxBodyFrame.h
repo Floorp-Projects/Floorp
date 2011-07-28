@@ -60,7 +60,7 @@ class nsListBoxBodyFrame : public nsBoxFrame,
                            public nsIReflowCallback
 {
   nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                     nsIBoxLayout* aLayoutManager);
+                     nsBoxLayout* aLayoutManager);
   virtual ~nsListBoxBodyFrame();
 
 public:
@@ -90,8 +90,8 @@ public:
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType);
 
   // nsIScrollbarMediator
-  NS_IMETHOD PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
-  NS_IMETHOD ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
+  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD VisibilityChanged(PRBool aVisible);
 
   // nsIReflowCallback

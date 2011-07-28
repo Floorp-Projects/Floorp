@@ -242,22 +242,35 @@ nsSVGFilterElement::GetStringInfo()
                               NS_ARRAY_LENGTH(sStringInfo));
 }
 
-void
-nsSVGFilterElement::DidAnimateLength(PRUint8 aAttrEnum)
+inline static void DidAnimateAttr(nsSVGFilterElement *aFilterElement)
 {
-  // nsSVGFilterFrame does not implement a useful AttributeChanged
-  nsIFrame* frame = GetPrimaryFrame();
+  // nsSVGFilterFrame doesn't implement a useful AttributeChanged
+  nsIFrame* frame = aFilterElement->GetPrimaryFrame();
   if (frame) {
     nsSVGEffects::InvalidateRenderingObservers(frame);
   }
 }
 
 void
+nsSVGFilterElement::DidAnimateLength(PRUint8 aAttrEnum)
+{
+  DidAnimateAttr(this);
+}
+
+void
+nsSVGFilterElement::DidAnimateIntegerPair(PRUint8 aAttrEnum)
+{
+  DidAnimateAttr(this);
+}
+
+void
 nsSVGFilterElement::DidAnimateEnum(PRUint8 aAttrEnum)
 {
-  // nsSVGFilterFrame does not implement a useful AttributeChanged
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame) {
-    nsSVGEffects::InvalidateRenderingObservers(frame);
-  }
+  DidAnimateAttr(this);
+}
+
+void
+nsSVGFilterElement::DidAnimateString(PRUint8 aAttrEnum)
+{
+  DidAnimateAttr(this);
 }

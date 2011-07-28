@@ -67,6 +67,8 @@
 #include "nsSerializationHelper.h"
 #include "nsIPromptFactory.h"
 #include "nsIContent.h"
+#include "nsIWidget.h"
+#include "nsIViewManager.h"
 #include "mozilla/unused.h"
 #include "nsDebug.h"
 
@@ -208,15 +210,21 @@ TabParent::Show(const nsIntSize& size)
 }
 
 void
-TabParent::Move(const nsIntSize& size)
+TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
 {
-    unused << SendMove(size);
+    unused << SendUpdateDimensions(rect, size);
 }
 
 void
 TabParent::Activate()
 {
     unused << SendActivate();
+}
+
+void
+TabParent::Deactivate()
+{
+  unused << SendDeactivate();
 }
 
 NS_IMETHODIMP
@@ -293,6 +301,21 @@ TabParent::SendKeyEvent(const nsAString& aType,
                                          aModifiers, aPreventDefault);
 }
 
+bool TabParent::SendRealMouseEvent(nsMouseEvent& event)
+{
+  return PBrowserParent::SendRealMouseEvent(event);
+}
+
+bool TabParent::SendMouseScrollEvent(nsMouseScrollEvent& event)
+{
+  return PBrowserParent::SendMouseScrollEvent(event);
+}
+
+bool TabParent::SendRealKeyEvent(nsKeyEvent& event)
+{
+  return PBrowserParent::SendRealKeyEvent(event);
+}
+
 bool
 TabParent::RecvSyncMessage(const nsString& aMessage,
                            const nsString& aJSON,
@@ -306,6 +329,16 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const nsString& aJSON)
 {
   return ReceiveMessage(aMessage, PR_FALSE, aJSON, nsnull);
+}
+
+bool
+TabParent::RecvSetCursor(const PRUint32& aCursor)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->SetCursor((nsCursor) aCursor);
+  }
+  return true;
 }
 
 bool
@@ -578,6 +611,29 @@ TabParent::RecvGetDPI(float* aValue)
                     "Must not ask for DPI before OwnerElement is received!");
   *aValue = mDPI;
   return true;
+}
+
+bool
+TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  if (content) {
+    nsIDocument* document = content->GetOwnerDoc();
+    if (document) {
+      nsIPresShell* shell = document->GetShell();
+      if (shell) {
+        nsIViewManager* vm = shell->GetViewManager();
+        nsCOMPtr<nsIWidget> widget;
+        vm->GetRootWidget(getter_AddRefs(widget));
+        if (widget) {
+          *aValue = reinterpret_cast<WindowsHandle>(
+            widget->GetNativeData(NS_NATIVE_WINDOW));
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 bool

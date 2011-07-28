@@ -243,7 +243,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     {
         // trigger will own the item now
         trigger->Add(item.forget());
-        nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+        nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(globalObject);
         nsCOMPtr<nsIXPIInstallInfo> installInfo =
                               new nsXPIInstallInfo(win, checkuri, trigger, 0);
         if (installInfo)

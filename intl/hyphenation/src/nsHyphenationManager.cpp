@@ -44,8 +44,9 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsUnicharUtils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define INTL_HYPHENATIONALIAS_PREFIX "intl.hyphenation-alias."
 
@@ -213,7 +214,7 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
         locale.Replace(i, 1, '-');
       }
     }
-#ifdef DEBUG
+#ifdef DEBUG_hyph
     printf("adding hyphenation patterns for %s: %s\n", locale.get(),
            NS_ConvertUTF16toUTF8(dictName).get());
 #endif
@@ -225,30 +226,25 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
 void
 nsHyphenationManager::LoadAliases()
 {
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
+  nsIPrefBranch* prefRootBranch = Preferences::GetRootBranch();
+  if (!prefRootBranch) {
     return;
   }
   PRUint32 prefCount;
   char **prefNames;
-  rv = prefBranch->GetChildList(INTL_HYPHENATIONALIAS_PREFIX,
-                                &prefCount, &prefNames);
+  nsresult rv = prefRootBranch->GetChildList(INTL_HYPHENATIONALIAS_PREFIX,
+                                             &prefCount, &prefNames);
   if (NS_SUCCEEDED(rv) && prefCount > 0) {
     for (PRUint32 i = 0; i < prefCount; ++i) {
-      char *prefValue;
-      rv = prefBranch->GetCharPref(prefNames[i], &prefValue);
-      if (NS_SUCCEEDED(rv)) {
+      nsAdoptingCString value = Preferences::GetCString(prefNames[i]);
+      if (value) {
         nsCAutoString alias(prefNames[i]);
         alias.Cut(0, strlen(INTL_HYPHENATIONALIAS_PREFIX));
         ToLowerCase(alias);
-        nsCAutoString value(prefValue);
         ToLowerCase(value);
         nsCOMPtr<nsIAtom> aliasAtom = do_GetAtom(alias);
         nsCOMPtr<nsIAtom> valueAtom = do_GetAtom(value);
         mHyphAliases.Put(aliasAtom, valueAtom);
-        NS_Free(prefValue);
       }
     }
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);

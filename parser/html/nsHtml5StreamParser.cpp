@@ -687,6 +687,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
       // This is the old Gecko behavior but the HTML5 spec disagrees.
       // Don't reparse on POST.
       mReparseForbidden = PR_TRUE;
+      mFeedChardet = PR_FALSE; // can't restart anyway
     }
   }
 
@@ -904,6 +905,7 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   }
   if (eq) {
     mCharsetSource = kCharsetFromMetaTag; // become confident
+    mFeedChardet = PR_FALSE; // don't feed chardet when confident
     return PR_FALSE;
   }
   
@@ -929,12 +931,17 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
     return PR_FALSE;
   }
 
+  // Avoid having the chardet ask for another restart after this restart
+  // request.
+  mFeedChardet = PR_FALSE;
   mTreeBuilder->NeedsCharsetSwitchTo(preferred, kCharsetFromMetaTag);
   FlushTreeOpsAndDisarmTimer();
   Interrupt();
   // the tree op executor will cause the stream parser to terminate
   // if the charset switch request is accepted or it'll uninterrupt 
-  // if the request failed.
+  // if the request failed. Note that if the restart request fails,
+  // we don't bother trying to make chardet resume. Might as well
+  // assume that chardet-requested restarts would fail, too.
   return PR_TRUE;
 }
 
