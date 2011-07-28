@@ -198,6 +198,19 @@ JSAtom::unitStatic(jschar c)
 }
 
 inline bool
+JSAtom::hasUintStatic(uint32 u)
+{
+    return u < INT_STATIC_LIMIT;
+}
+
+inline JSStaticAtom &
+JSAtom::uintStatic(uint32 u)
+{
+    JS_ASSERT(hasUintStatic(u));
+    return *reinterpret_cast<JSStaticAtom *>(const_cast<JSString::Data *>(intStaticTable[u]));
+}
+
+inline bool
 JSAtom::hasIntStatic(int32 i)
 {
     return uint32(i) < INT_STATIC_LIMIT;
@@ -207,7 +220,7 @@ inline JSStaticAtom &
 JSAtom::intStatic(jsint i)
 {
     JS_ASSERT(hasIntStatic(i));
-    return (JSStaticAtom &)*intStaticTable[i];
+    return uintStatic(uint32(i));
 }
 
 inline JSLinearString *
