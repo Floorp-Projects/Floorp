@@ -90,7 +90,7 @@ Assembler::TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &r
 {
     RelocationIterator iter(reader);
     while (iter.read()) {
-        IonCode *code = CodeFromJump(code->raw() + iter.offset());
+        IonCode *child = CodeFromJump(code->raw() + iter.offset());
         MarkIonCode(trc, code, "rel32");
     }
 }
