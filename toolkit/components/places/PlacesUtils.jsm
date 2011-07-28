@@ -2263,7 +2263,9 @@ BaseTransaction.prototype = {
 
 function PlacesAggregatedTransaction(aName, aTransactions)
 {
-  this._transactions = aTransactions;
+  // Copy the transactions array to decouple it from its prototype, which
+  // otherwise keeps alive its associated global object.
+  this._transactions = Array.slice(aTransactions);
   this._name = aName;
   this.container = -1;
 

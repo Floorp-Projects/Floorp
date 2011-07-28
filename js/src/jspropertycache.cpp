@@ -187,6 +187,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
                     break;
                 }
             }
+        } else if ((cs->format & (JOF_SET | JOF_FOR | JOF_INCDEC)) && obj->watched()) {
+            return JS_NO_PROP_CACHE_FILL;
         }
 
         /*

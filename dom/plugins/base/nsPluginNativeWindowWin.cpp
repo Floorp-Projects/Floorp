@@ -493,12 +493,6 @@ SetWindowLongWHook(HWND hWnd,
 static void
 HookSetWindowLongPtr()
 {
-#ifdef _WIN64
-  // XXX WindowsDllInterceptor doesn't support hooks
-  // in 64-bit builds, disabling this code for now.
-  return;
-#endif
-
   sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
   sUser32Intercept.AddHook("SetWindowLongPtrA", reinterpret_cast<intptr_t>(SetWindowLongPtrAHook),

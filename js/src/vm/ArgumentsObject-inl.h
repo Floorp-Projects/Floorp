@@ -65,7 +65,8 @@ ArgumentsObject::initialLength() const
 inline void
 ArgumentsObject::markLengthOverridden()
 {
-    getSlotRef(INITIAL_LENGTH_SLOT).getInt32Ref() |= LENGTH_OVERRIDDEN_BIT;
+    uint32 v = getSlot(INITIAL_LENGTH_SLOT).toInt32() | LENGTH_OVERRIDDEN_BIT;
+    setSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
 }
 
 inline bool
@@ -96,17 +97,10 @@ ArgumentsObject::element(uint32 i) const
     return data()->slots[i];
 }
 
-inline js::Value *
+inline const js::Value *
 ArgumentsObject::elements() const
 {
     return data()->slots;
-}
-
-inline Value *
-ArgumentsObject::addressOfElement(uint32 i)
-{
-    JS_ASSERT(i < initialLength());
-    return &data()->slots[i];
 }
 
 inline void

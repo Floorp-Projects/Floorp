@@ -2829,6 +2829,16 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
             aLastChildReflowed = prevKidFrame;
             break;
           }
+          else { // we can't push so lets make clear how much space we need
+            PlaceChild(aReflowState, kidFrame, desiredSize, oldKidRect,
+                                     oldKidVisualOverflow);
+            aLastChildReflowed = kidFrame;
+            if (allowRepeatedFooter) {
+              PlaceRepeatedFooter(aReflowState, tfoot, footerHeight);
+              aLastChildReflowed = tfoot;
+            }
+            break;
+          }
         }
       }
 

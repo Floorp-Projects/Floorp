@@ -332,10 +332,16 @@ mjit::Compiler::generatePrologue()
         Jump stackCheck = masm.branchPtr(Assembler::AboveOrEqual, Registers::ReturnReg,
                                          FrameAddress(offsetof(VMFrame, stackLimit)));
 
-        /* If the stack check fails... */
+        /*
+         * If the stack check fails then we need to either commit more of the
+         * reserved stack space or throw an error. Specify that the number of
+         * local slots is 0 (instead of the default script->nfixed) since the
+         * range [fp->slots(), fp->base()) may not be commited. (The calling
+         * contract requires only that the caller has reserved space for fp.)
+         */
         {
             stubcc.linkExitDirect(stackCheck, stubcc.masm.label());
-            OOL_STUBCALL(stubs::HitStackQuota);
+            OOL_STUBCALL_LOCAL_SLOTS(stubs::HitStackQuota, 0);
             stubcc.crossJump(stubcc.masm.jump(), masm.label());
         }
 
@@ -4833,7 +4839,7 @@ mjit::Compiler::enterBlock(JSObject *obj)
     uintN count = OBJ_BLOCK_COUNT(cx, obj);
     uintN limit = base + count;
     for (uintN slot = base, i = 0; slot < limit; slot++, i++) {
-        const Value &v = obj->getSlotRef(slot);
+        const Value &v = obj->getSlot(slot);
         if (v.isBoolean() && v.toBoolean())
             frame.setClosedVar(oldFrameDepth + i);
     }

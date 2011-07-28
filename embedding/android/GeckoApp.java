@@ -83,6 +83,7 @@ abstract public class GeckoApp
     enum LaunchState {PreLaunch, Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.PreLaunch;
+    private static boolean sTryCatchAttached = false;
 
 
     static boolean checkLaunchState(LaunchState checkState) {
@@ -188,18 +189,23 @@ abstract public class GeckoApp
         mAppContext = this;
         mMainHandler = new Handler();
 
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                try {
-                    Looper.loop();
-                } catch (Exception e) {
-                    Log.e("GeckoApp", "top level exception", e);
-                    StringWriter sw = new StringWriter();
-                    e.printStackTrace(new PrintWriter(sw));
-                    GeckoAppShell.reportJavaCrash(sw.toString());
+        if (!sTryCatchAttached) {
+            sTryCatchAttached = true;
+            mMainHandler.post(new Runnable() {
+                public void run() {
+                    try {
+                        Looper.loop();
+                    } catch (Exception e) {
+                        Log.e("GeckoApp", "top level exception", e);
+                        StringWriter sw = new StringWriter();
+                        e.printStackTrace(new PrintWriter(sw));
+                        GeckoAppShell.reportJavaCrash(sw.toString());
+                    }
+                    // resetting this is kinda pointless, but oh well
+                    sTryCatchAttached = false;
                 }
-            }
-        });
+            });
+        }
 
         SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
         String localeCode = settings.getString(getPackageName() + ".locale", "");
