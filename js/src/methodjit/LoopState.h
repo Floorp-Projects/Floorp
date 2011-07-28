@@ -87,6 +87,8 @@ namespace mjit {
 
 struct TemporaryCopy;
 
+enum InvariantArrayKind { DENSE_ARRAY, TYPED_ARRAY };
+
 class LoopState : public MacroAssemblerTypedefs
 {
     JSContext *cx;
@@ -159,12 +161,13 @@ class LoopState : public MacroAssemblerTypedefs
      * on each other and we need to emit code restoring them in order.
      */
     struct InvariantEntry {
-        enum {
+        enum EntryKind {
             /*
              * initializedLength(array) > value1 + value2 + constant.
              * Unsigned comparison, so will fail if value + constant < 0
              */
-            BOUNDS_CHECK,
+            DENSE_ARRAY_BOUNDS_CHECK,
+            TYPED_ARRAY_BOUNDS_CHECK,
 
             /* value1 + constant >= 0 */
             NEGATIVE_CHECK,
@@ -173,8 +176,12 @@ class LoopState : public MacroAssemblerTypedefs
             RANGE_CHECK,
 
             /* For dense arrays */
-            INVARIANT_SLOTS,
-            INVARIANT_LENGTH,
+            DENSE_ARRAY_SLOTS,
+            DENSE_ARRAY_LENGTH,
+
+            /* For typed arrays */
+            TYPED_ARRAY_SLOTS,
+            TYPED_ARRAY_LENGTH,
 
             /* For lazy arguments */
             INVARIANT_ARGS_BASE,
@@ -202,8 +209,11 @@ class LoopState : public MacroAssemblerTypedefs
             } property;
         } u;
         InvariantEntry() { PodZero(this); }
+        bool isBoundsCheck() const {
+            return kind == DENSE_ARRAY_BOUNDS_CHECK || kind == TYPED_ARRAY_BOUNDS_CHECK;
+        }
         bool isCheck() const {
-            return kind == BOUNDS_CHECK || kind == NEGATIVE_CHECK || kind == RANGE_CHECK;
+            return isBoundsCheck() || kind == NEGATIVE_CHECK || kind == RANGE_CHECK;
         }
     };
     Vector<InvariantEntry, 4, CompilerAllocPolicy> invariantEntries;
@@ -212,7 +222,7 @@ class LoopState : public MacroAssemblerTypedefs
     bool checkRedundantEntry(const InvariantEntry &entry);
 
     bool loopInvariantEntry(uint32 slot);
-    bool addHoistedCheck(uint32 arraySlot,
+    bool addHoistedCheck(InvariantArrayKind arrayKind, uint32 arraySlot,
                          uint32 valueSlot1, uint32 valueSlot2, int32 constant);
     void addNegativeCheck(uint32 valueSlot, int32 constant);
     void addRangeCheck(uint32 valueSlot1, uint32 valueSlot2, int32 constant);
@@ -280,7 +290,8 @@ class LoopState : public MacroAssemblerTypedefs
      * These should only be used for entries which are known to be dense arrays
      * (if they are objects at all).
      */
-    bool hoistArrayLengthCheck(const analyze::CrossSSAValue &obj,
+    bool hoistArrayLengthCheck(InvariantArrayKind arrayKind,
+                               const analyze::CrossSSAValue &obj,
                                const analyze::CrossSSAValue &index);
     FrameEntry *invariantArraySlots(const analyze::CrossSSAValue &obj);
 
