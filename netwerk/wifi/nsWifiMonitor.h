@@ -57,6 +57,8 @@ extern PRLogModuleInfo *gWifiMonitorLog;
 #endif
 #define LOG(args)     PR_LOG(gWifiMonitorLog, PR_LOG_DEBUG, args)
 
+class nsWifiAccessPoint;
+
 class nsWifiListener
 {
  public:
@@ -91,6 +93,9 @@ class nsWifiMonitor : nsIRunnable, nsIWifiMonitor, nsIObserver
   nsresult DoScanWithCoreWLAN();
   nsresult DoScanOld();
 #endif
+
+  nsresult CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoints,
+                             PRBool aAccessPointsChanged);
 
   PRBool mKeepGoing;
   nsCOMPtr<nsIThread> mThread;

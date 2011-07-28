@@ -82,6 +82,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
+#include "jswatchpoint.h"
 #include "jsweakmap.h"
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -2276,7 +2277,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * Mark weak roots.
      */
     while (true) {
-        if (!js_TraceWatchPoints(&gcmarker) && !WeakMapBase::markAllIteratively(&gcmarker))
+        if (!WatchpointMap::markAllIteratively(&gcmarker) && !WeakMapBase::markAllIteratively(&gcmarker))
             break;
         gcmarker.drainMarkStack();
     }
@@ -2315,11 +2316,11 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
     js_SweepAtomState(cx);
 
-    /* Finalize watch points associated with unreachable objects. */
-    js_SweepWatchPoints(cx);
+    /* Collect watch points associated with unreachable objects. */
+    WatchpointMap::sweepAll(rt);
 
     /*
-     * We finalize objects before other GC things to ensure that object's finalizer
+     * We finalize objects before other GC things to ensure that object's finalizer 
      * can access them even if they will be freed. Sweep the runtime's property trees
      * after finalizing objects, in case any had watchpoints referencing tree nodes.
      * Do this before sweeping compartments, so that we sweep all shapes in

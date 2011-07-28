@@ -48,7 +48,6 @@
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"
 
-#include "nsIProxyObjectManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
@@ -74,55 +73,10 @@ nsWifiMonitor::DoScanWithCoreWLAN()
       return rv;
 
     PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
-    nsCOMArray<nsIWifiListener> currentListeners;
-
-    {
-      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-      for (PRUint32 i = 0; i < mListeners.Length(); i++) {
-        if (!mListeners[i].mHasSentData || accessPointsChanged) {
-          mListeners[i].mHasSentData = PR_TRUE;
-          currentListeners.AppendObject(mListeners[i].mListener);
-        }
-      }
-    }
-
     ReplaceArray(lastAccessPoints, accessPoints);
 
-    if (currentListeners.Count() > 0)
-    {
-      PRUint32 resultCount = lastAccessPoints.Count();
-      nsIWifiAccessPoint** result = static_cast<nsIWifiAccessPoint**> (nsMemory::Alloc(sizeof(nsIWifiAccessPoint*) * resultCount));
-      if (!result) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      for (PRUint32 i = 0; i < resultCount; i++)
-        result[i] = lastAccessPoints[i];
-
-      for (PRInt32 i = 0; i < currentListeners.Count(); i++) {
-
-        LOG(("About to send data to the wifi listeners\n"));
-
-        nsCOMPtr<nsIWifiListener> proxy;
-        nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
-        proxyObjMgr->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                                       NS_GET_IID(nsIWifiListener),
-                                       currentListeners[i],
-                                       NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                                       getter_AddRefs(proxy));
-        if (!proxy) {
-          LOG(("There is no proxy available.  this should never happen\n"));
-        }
-        else
-        {
-          nsresult rv = proxy->OnChange(result, resultCount);
-          LOG( ("... sent %d\n", rv));
-        }
-      }
-
-      nsMemory::Free(result);
-    }
+    rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // wait for some reasonable amount of time.  pref?
     LOG(("waiting on monitor\n"));
@@ -209,55 +163,12 @@ nsWifiMonitor::DoScanOld()
     }
 
     PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
-    nsCOMArray<nsIWifiListener> currentListeners;
-
-    {
-      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-      for (PRUint32 i = 0; i < mListeners.Length(); i++) {
-        if (!mListeners[i].mHasSentData || accessPointsChanged) {
-          mListeners[i].mHasSentData = PR_TRUE;
-          currentListeners.AppendObject(mListeners[i].mListener);
-        }
-      }
-    }
-
     ReplaceArray(lastAccessPoints, accessPoints);
 
-    if (currentListeners.Count() > 0)
-    {
-      PRUint32 resultCount = lastAccessPoints.Count();
-      nsIWifiAccessPoint** result = static_cast<nsIWifiAccessPoint**> (nsMemory::Alloc(sizeof(nsIWifiAccessPoint*) * resultCount));
-      if (!result) {
+    nsresult rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
+    if (NS_FAILED(rv)) {
         dlclose(apple_80211_library);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      for (PRUint32 i = 0; i < resultCount; i++)
-        result[i] = lastAccessPoints[i];
-
-      for (PRInt32 i = 0; i < currentListeners.Count(); i++) {
-
-        LOG(("About to send data to the wifi listeners\n"));
-
-        nsCOMPtr<nsIWifiListener> proxy;
-        nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
-        proxyObjMgr->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                                       NS_GET_IID(nsIWifiListener),
-                                       currentListeners[i],
-                                       NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                                       getter_AddRefs(proxy));
-        if (!proxy) {
-          LOG(("There is no proxy available.  this should never happen\n"));
-        }
-        else
-        {
-          nsresult rv = proxy->OnChange(result, resultCount);
-          LOG( ("... sent %d\n", rv));
-        }
-      }
-
-      nsMemory::Free(result);
+        return rv;
     }
 
     // wait for some reasonable amount of time.  pref?
