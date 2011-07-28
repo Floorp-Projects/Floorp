@@ -177,7 +177,7 @@ nsWifiMonitor::DoScan()
 
     LOG(("waiting on monitor\n"));
 
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mon.Wait(PR_SecondsToInterval(60));
   }
 
