@@ -39,68 +39,59 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_macro_assembler_h__
-#define jsion_macro_assembler_h__
+#include "Assembler-x86.h"
+#include "jsgcmark.h"
 
-#ifdef JS_CPU_X86
-# include "ion/x86/MacroAssembler-x86.h"
-#elif JS_CPU_X64
-# include "ion/x64/MacroAssembler-x64.h"
-#endif
-#include "MoveResolver.h"
+using namespace js;
+using namespace js::ion;
 
-namespace js {
-namespace ion {
-
-class MacroAssembler : public MacroAssemblerSpecific
+void
+Assembler::executableCopy(uint8 *buffer)
 {
-  private:
-    MacroAssembler *thisFromCtor() {
-        return this;
+    AssemblerX86Shared::executableCopy(buffer);
+
+    for (size_t i = 0; i < jumps_.length(); i++) {
+        RelativePatch &rp = jumps_[i];
+        JSC::X86Assembler::setRel32(buffer + rp.offset, rp.target);
     }
+}
+
+class RelocationIterator
+{
+    CompactBufferReader reader_;
+    uint32 offset_;
 
   public:
-    class AutoRooter : public AutoGCRooter
-    {
-        MacroAssembler *masm_;
+    RelocationIterator(CompactBufferReader &reader)
+      : reader_(reader)
+    { }
 
-      public:
-        AutoRooter(JSContext *cx, MacroAssembler *masm)
-          : AutoGCRooter(cx, IONMASM),
-            masm_(masm)
-        {
-        }
-
-        MacroAssembler *masm() const {
-            return masm_;
-        }
-    };
-
-    AutoRooter autoRooter_;
-    MoveResolver moveResolver_;
-
-  public:
-    MacroAssembler()
-      : autoRooter_(GetIonContext()->cx, thisFromCtor())
-    {
+    bool read() {
+        if (!reader_.more())
+            return false;
+        offset_ = reader_.readUnsigned();
+        return true;
     }
 
-    MacroAssembler(JSContext *cx)
-      : autoRooter_(cx, thisFromCtor())
-    {
-    }
-
-    MoveResolver &moveResolver() {
-        return moveResolver_;
-    }
-
-    size_t instructionsSize() const {
-        return size();
+    uint32 offset() const {
+        return offset_;
     }
 };
 
-} // namespace ion
-} // namespace js
+static inline IonCode *
+CodeFromJump(uint8 *jump)
+{
+    uint8 *target = (uint8 *)JSC::X86Assembler::getRel32Target(jump);
+    return IonCode::FromExecutable(target);
+}
 
-#endif // jsion_macro_assembler_h__
+void
+Assembler::TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+{
+    RelocationIterator iter(reader);
+    while (iter.read()) {
+        IonCode *code = CodeFromJump(code->raw() + iter.offset());
+        MarkIonCode(trc, code, "rel32");
+    }
+}
 

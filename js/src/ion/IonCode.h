@@ -51,40 +51,57 @@ namespace JSC {
 namespace js {
 namespace ion {
 
+class MacroAssembler;
+
 class IonCode : public gc::Cell
 {
     uint8 *code_;
-    uint32 size_;
     JSC::ExecutablePool *pool_;
-    uint32 padding_;
+    uint32 bufferSize_;             // Total buffer size.
+    uint32 insnSize_;               // Instruction stream size.
+    uint32 relocTableOffset_;       // Table of instructions which point to IonCode.
+                                    // This is an offset from code.
+    uint32 relocTableSize_;         // Size of the relocation table.
 
     IonCode()
       : code_(NULL),
         pool_(NULL)
     { }
-    IonCode(uint8 *code, uint32 size, JSC::ExecutablePool *pool)
+    IonCode(uint8 *code, uint32 bufferSize, JSC::ExecutablePool *pool)
       : code_(code),
-        size_(size),
-        pool_(pool)
+        pool_(pool),
+        bufferSize_(bufferSize),
+        insnSize_(0),
+        relocTableOffset_(0),
+        relocTableSize_(0)
     { }
 
   public:
     uint8 *raw() const {
         return code_;
     }
-    uint32 size() const {
-        return size_;
+    size_t instructionsSize() const {
+        return insnSize_;
     }
+    void trace(JSTracer *trc);
     void finalize(JSContext *cx);
 
     template <typename T> T as() const {
         return JS_DATA_TO_FUNC_PTR(T, raw());
     }
 
+    void copyFrom(MacroAssembler &masm);
+
+    static IonCode *FromExecutable(uint8 *buffer) {
+        IonCode *code = *(IonCode **)(buffer - sizeof(IonCode *));
+        JS_ASSERT(code->raw() == buffer);
+        return code;
+    }
+
     // Allocates a new IonCode object which will be managed by the GC. If no
     // object can be allocated, NULL is returned. On failure, |pool| is
     // automatically released, so the code may be freed.
-    static IonCode *New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool);
+    static IonCode *New(JSContext *cx, uint8 *code, uint32 bufferSize, JSC::ExecutablePool *pool);
 };
 
 #define ION_DISABLED_SCRIPT ((IonScript *)0x1)

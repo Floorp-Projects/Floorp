@@ -41,10 +41,16 @@
 #ifndef jsion_assembler_shared_h__
 #define jsion_assembler_shared_h__
 
+#include <limits.h>
 #include "ion/IonRegisters.h"
 
 namespace js {
 namespace ion {
+
+// The maximum size of any buffer associated with an assembler or code object.
+// This is chosen to not overflow a signed integer, leaving room for an extra
+// bit on offsets.
+static const uint32 MAX_BUFFER_SIZE = INT_MAX / 2;
 
 // Used for 32-bit immediates which do not require relocation.
 struct Imm32
@@ -72,6 +78,19 @@ struct ImmGCPtr
     { }
     ImmGCPtr(void *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
     { }
+};
+
+class Relocation {
+  public:
+    enum Kind {
+        // The target will never move, so patching is only needed if the source
+        // buffer is moved.
+        EXTERNAL,
+
+        // The target could move, so patching may be needed. The actual
+        // reference in source is relative.
+        CODE
+    };
 };
 
 // A label represents a position in an assembly buffer that may or may not have

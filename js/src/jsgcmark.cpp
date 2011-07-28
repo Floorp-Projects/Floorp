@@ -810,6 +810,7 @@ restart:
 void
 MarkChildren(JSTracer *trc, ion::IonCode *code)
 {
+    code->trace(trc);
 }
 
 #ifdef JS_HAS_XML_SUPPORT

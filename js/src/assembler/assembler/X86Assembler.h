@@ -1842,6 +1842,18 @@ public:
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_JMPN, base, index, scale, offset);
     }
 
+#if WTF_CPU_X86_64
+    void jmp_rip(int ripOffset) {
+        // rip-relative addressing.
+        m_formatter.oneByteRipOp(OP_GROUP5_Ev, GROUP5_OP_JMPN, ripOffset);
+    }
+
+    void immediate64(int64_t imm)
+    {
+        m_formatter.immediate64(imm);
+    }
+#endif
+
     JmpSrc jne()
     {
         return jCC(ConditionNE);
@@ -2375,6 +2387,11 @@ public:
     }
     void setNextJump(const JmpSrc& from, const JmpSrc &to)
     {
+        // Sanity check - if the assembler has OOM'd, it will start overwriting
+        // its internal buffer and thus our links could be garbage.
+        if (oom())
+            return;
+
         char* code = reinterpret_cast<char*>(m_formatter.data());
         setInt32(code + from.m_offset, to.m_offset);
     }
@@ -2383,6 +2400,11 @@ public:
     {
         ASSERT(from.m_offset != -1);
         ASSERT(to.m_offset != -1);
+
+        // Sanity check - if the assembler has OOM'd, it will start overwriting
+        // its internal buffer and thus our links could be garbage.
+        if (oom())
+            return;
 
         js::JaegerSpew(js::JSpew_Insns,
                        IPFX "##link     ((%d)) jumps to ((%d))\n", MAYBE_PAD,
@@ -2527,6 +2549,31 @@ public:
         memcpy(buffer, m_formatter.buffer(), size());
     }
 
+    static void setRel32(void* from, void* to)
+    {
+        intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
+        ASSERT(offset == static_cast<int32_t>(offset));
+#define JS_CRASH(x) *(int *)x = 0
+        if (offset != static_cast<int32_t>(offset))
+            JS_CRASH(0xC0DE);
+#undef JS_CRASH
+
+        js::JaegerSpew(js::JSpew_Insns,
+                       ISPFX "##setRel32 ((from=%p)) ((to=%p))\n", from, to);
+        setInt32(from, offset);
+    }
+
+    static void *getRel32Target(void* where)
+    {
+        int32_t rel = getInt32(where);
+        return (char *)where + rel;
+    }
+
+    static void *getPointer(void* where)
+    {
+        return reinterpret_cast<void **>(where)[-1];
+    }
+
 private:
 
     static void setPointer(void* where, void* value)
@@ -2543,20 +2590,6 @@ private:
     static void setInt32(void* where, int32_t value)
     {
         reinterpret_cast<int32_t*>(where)[-1] = value;
-    }
-
-    static void setRel32(void* from, void* to)
-    {
-        intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
-        ASSERT(offset == static_cast<int32_t>(offset));
-#define JS_CRASH(x) *(int *)x = 0
-        if (offset != static_cast<int32_t>(offset))
-            JS_CRASH(0xC0DE);
-#undef JS_CRASH
-
-        js::JaegerSpew(js::JSpew_Insns,
-                       ISPFX "##setRel32 ((from=%p)) ((to=%p))\n", from, to);
-        setInt32(from, offset);
     }
 
     class X86InstructionFormatter {
@@ -2639,6 +2672,14 @@ private:
             m_buffer.ensureSpace(maxInstructionSize);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM(reg, address);
+        }
+#else
+        void oneByteRipOp(OneByteOpcodeID opcode, int reg, int ripOffset)
+        {
+            m_buffer.ensureSpace(maxInstructionSize);
+            m_buffer.putByteUnchecked(opcode);
+            putModRm(ModRmMemoryNoDisp, reg, noBase);
+            m_buffer.putIntUnchecked(ripOffset);
         }
 #endif
 

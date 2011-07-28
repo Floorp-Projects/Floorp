@@ -62,14 +62,25 @@ class Linker
     }
 
     IonCode *newCode(JSContext *cx, IonCompartment *comp) {
+        masm.flush();
         if (masm.oom())
             return fail(cx);
+
         JSC::ExecutablePool *pool;
-        void *result = comp->execAlloc()->alloc(masm.size(), &pool);
+        size_t bytesNeeded = masm.bytesNeeded() + sizeof(IonCode *);
+        if (bytesNeeded >= MAX_BUFFER_SIZE)
+            return fail(cx);
+
+        uint8 *result = (uint8 *)comp->execAlloc()->alloc(bytesNeeded, &pool);
         if (!result)
             return fail(cx);
-        masm.executableCopy(result);
-        return IonCode::New(cx, (uint8 *)result, masm.size(), pool);
+
+        IonCode *code = IonCode::New(cx, result + sizeof(IonCode *),
+                                     bytesNeeded - sizeof(IonCode *), pool);
+        if (!code)
+            return NULL;
+        code->copyFrom(masm);
+        return code;
     }
 
   public:
