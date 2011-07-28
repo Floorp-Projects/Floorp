@@ -137,6 +137,10 @@ PR_IMPLEMENT(PRBool) PR_VersionCheck(const char *importedVersion)
     return PR_TRUE;
 }  /* PR_VersionCheck */
 
+PR_IMPLEMENT(const char*) PR_GetVersion(void)
+{
+    return PR_VERSION;
+}
 
 PR_IMPLEMENT(PRBool) PR_Initialized(void)
 {
