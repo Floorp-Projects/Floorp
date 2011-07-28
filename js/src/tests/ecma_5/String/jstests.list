@@ -7,3 +7,5 @@ script split-01.js
 script split-undefined-separator.js
 script split-xregexp.js
 script string-object-length.js
+script string-space-trim.js
+script string-upper-lower-mapping.js
