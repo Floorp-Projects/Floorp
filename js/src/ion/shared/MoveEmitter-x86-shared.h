@@ -58,8 +58,6 @@ class MoveEmitterX86
     bool inCycle_;
     MacroAssembler &masm;
 
-    RegisterSet freeRegs_;
-
     // Original stack push value.
     uint32 pushedAtStart_;
 
@@ -76,12 +74,7 @@ class MoveEmitterX86
     Register spilledReg_;
     FloatRegister spilledFloatReg_;
 
-    // These registers are available for resolving cycles.
-    Register cycleReg_;
-    FloatRegister cycleFloatReg_;
-
     void assertDone();
-    void assertValidMove(const MoveOperand &from, const MoveOperand &to);
     Register tempReg();
     FloatRegister tempFloatReg();
     Operand cycleSlot() const;
@@ -98,7 +91,7 @@ class MoveEmitterX86
   public:
     MoveEmitterX86(MacroAssembler &masm);
     ~MoveEmitterX86();
-    void emit(const MoveResolver &moves, const RegisterSet &freeRegs);
+    void emit(const MoveResolver &moves);
     void finish();
 };
 

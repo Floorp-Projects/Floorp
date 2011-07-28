@@ -170,7 +170,6 @@ class GreedyAllocator
         AllocationState in;
         Mover restores;
         Mover phis;
-        RegisterSet freeOnExit;
     };
 
   private:

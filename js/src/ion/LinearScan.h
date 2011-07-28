@@ -438,7 +438,6 @@ class LinearScanAllocator
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
     InlineList<LiveInterval> handled;
-    RegisterSet freeRegs;
     CodePosition *freeUntilPos;
     CodePosition *nextUsePos;
     LiveInterval *current;
