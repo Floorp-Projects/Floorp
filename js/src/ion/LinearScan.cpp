@@ -175,20 +175,31 @@ bool
 LiveInterval::splitFrom(CodePosition pos, LiveInterval *after)
 {
     JS_ASSERT(pos >= start() && pos <= end());
+    JS_ASSERT(after->ranges_.empty());
 
-    for (Range *i = ranges_.begin(); i != ranges_.end(); ranges_.erase(i)) {
+    // Move all intervals over to the target
+    size_t bufferLength = ranges_.length();
+    Range *buffer = ranges_.extractRawBuffer();
+    if (!buffer)
+        return false;
+    after->ranges_.replaceRawBuffer(buffer, bufferLength);
+
+    // Move intervals back as required
+    for (Range *i = &after->ranges_.back(); i >= after->ranges_.begin(); i--) {
+        if (pos > i->to)
+            continue;
+
         if (pos > i->from) {
-            if (pos <= i->to) {
-                // Split the range
-                Range split(pos, i->to);
-                i->to = pos.previous();
-                if (!after->ranges_.append(split))
-                    return false;
-            }
-            return true;
-        } else if (!after->ranges_.append(*i)) {
-            return false;
+            // Split the range
+            Range split(i->from, pos.previous());
+            i->from = pos;
+            if (!ranges_.append(split))
+                return false;
         }
+        if (!ranges_.append(i + 1, after->ranges_.end()))
+            return false;
+        after->ranges_.shrinkBy(after->ranges_.end() - i - 1);
+        return true;
     }
 
     JS_NOT_REACHED("Emptied an interval");
