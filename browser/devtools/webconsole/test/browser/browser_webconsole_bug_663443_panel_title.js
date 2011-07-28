@@ -5,18 +5,21 @@
 const TEST_URI = "data:text/html,<p>test for bug 663443. test1";
 
 const POSITION_PREF = "devtools.webconsole.position";
+const POSITION_ABOVE = "above"; // default
+const POSITION_WINDOW = "window";
 
 function tabLoad(aEvent) {
   browser.removeEventListener(aEvent.type, arguments.callee, true);
 
-  Services.prefs.setCharPref(POSITION_PREF, "window");
+  Services.prefs.setCharPref(POSITION_PREF, POSITION_WINDOW);
 
   openConsole();
 
-  document.addEventListener("popupshown", function() {
-    document.removeEventListener("popupshown", arguments.callee, false);
+  document.addEventListener("popupshown", function popupShown() {
+    document.removeEventListener("popupshown", popupShown, false);
 
     let hudId = HUDService.getHudIdByWindow(content);
+
     ok(hudId, "Web Console is open");
 
     let HUD = HUDService.hudReferences[hudId];
@@ -30,9 +33,11 @@ function tabLoad(aEvent) {
       isnot(HUD.consolePanel.label.indexOf("test2"), -1,
             "panel title is correct after page navigation");
 
-      Services.prefs.clearUserPref(POSITION_PREF);
+      HUD.positionConsole(POSITION_ABOVE);
 
-      executeSoon(finish);
+      closeConsole();
+
+      executeSoon(finishTest);
     }, true);
 
     content.location = "data:text/html,<p>test2 for bug 663443";

@@ -3136,12 +3136,15 @@ HeadsUpDisplay.prototype = {
 
     panel.addEventListener("popupshown", onPopupShown,false);
 
-    let onPopupHiding = (function HUD_onPopupHiding(aEvent) {
+    let onPopupHidden = (function HUD_onPopupHidden(aEvent) {
       if (aEvent.target != panel) {
         return;
       }
 
-      panel.removeEventListener("popuphiding", onPopupHiding, false);
+      panel.removeEventListener("popuphidden", onPopupHidden, false);
+      if (panel.parentNode) {
+        panel.parentNode.removeChild(panel);
+      }
 
       let width = 0;
       try {
@@ -3149,12 +3152,15 @@ HeadsUpDisplay.prototype = {
       }
       catch (ex) { }
 
-      if (width > -1) {
+      if (width > 0) {
         Services.prefs.setIntPref("devtools.webconsole.width", panel.clientWidth);
       }
 
-      Services.prefs.setIntPref("devtools.webconsole.top", panel.popupBoxObject.y);
-      Services.prefs.setIntPref("devtools.webconsole.left", panel.popupBoxObject.x);
+      /*
+       * Removed because of bug 674562
+       * Services.prefs.setIntPref("devtools.webconsole.top", panel.panelBox.y);
+       * Services.prefs.setIntPref("devtools.webconsole.left", panel.panelBox.x);
+       */
 
       // Make sure we are not going to close again, drop the hudId reference of
       // the panel.
@@ -3168,19 +3174,6 @@ HeadsUpDisplay.prototype = {
       }
 
       this.consolePanel = null;
-    }).bind(this);
-
-    panel.addEventListener("popuphiding", onPopupHiding, false);
-
-    let onPopupHidden = (function HUD_onPopupHidden(aEvent) {
-      if (aEvent.target != panel) {
-        return;
-      }
-
-      panel.removeEventListener("popuphidden", onPopupHidden, false);
-      if (panel.parentNode) {
-        panel.parentNode.removeChild(panel);
-      }
     }).bind(this);
 
     panel.addEventListener("popuphidden", onPopupHidden, false);
@@ -3249,10 +3242,14 @@ HeadsUpDisplay.prototype = {
   positionConsole: function HUD_positionConsole(aPosition)
   {
     if (!(aPosition in this.positions)) {
-      throw new Error("Incorrect argument: " + aPosition  + ". Cannot position Web Console");
+      throw new Error("Incorrect argument: " + aPosition +
+        ". Cannot position Web Console");
     }
 
     if (aPosition == "window") {
+      let closeButton = this.consoleFilterToolbar.
+        querySelector(".webconsole-close-button");
+      closeButton.setAttribute("hidden", "true");
       this.createOwnWindowPanel();
       this.positionMenuitems.window.setAttribute("checked", true);
       if (this.positionMenuitems.last) {
@@ -3307,6 +3304,10 @@ HeadsUpDisplay.prototype = {
     if (lastIndex > -1 && lastIndex < this.outputNode.getRowCount()) {
       this.outputNode.ensureIndexIsVisible(lastIndex);
     }
+
+    let closeButton = this.consoleFilterToolbar.
+      getElementsByClassName("webconsole-close-button")[0];
+    closeButton.removeAttribute("hidden");
 
     this.uiInOwnWindow = false;
     if (this.consolePanel) {
