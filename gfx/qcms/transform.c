@@ -1,3 +1,4 @@
+/* vim: set ts=8 sw=8 noexpandtab: */
 //  qcms
 //  Copyright (C) 2009 Mozilla Corporation
 //  Copyright (C) 1998-2007 Marti Maria
@@ -23,381 +24,16 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <string.h> //memcpy
 #include "qcmsint.h"
+#include "chain.h"
+#include "matrix.h"
+#include "transform_util.h"
 
 /* for MSVC, GCC, Intel, and Sun compilers */
 #if defined(_M_IX86) || defined(__i386__) || defined(__i386) || defined(_M_AMD64) || defined(__x86_64__) || defined(__x86_64)
 #define X86
 #endif /* _M_IX86 || __i386__ || __i386 || _M_AMD64 || __x86_64__ || __x86_64 */
-
-//XXX: could use a bettername
-typedef uint16_t uint16_fract_t;
-
-/* value must be a value between 0 and 1 */
-//XXX: is the above a good restriction to have?
-float lut_interp_linear(double value, uint16_t *table, int length)
-{
-	int upper, lower;
-	value = value * (length - 1); // scale to length of the array
-	upper = ceil(value);
-	lower = floor(value);
-	//XXX: can we be more performant here?
-	value = table[upper]*(1. - (upper - value)) + table[lower]*(upper - value);
-	/* scale the value */
-	return value * (1./65535.);
-}
-
-/* same as above but takes and returns a uint16_t value representing a range from 0..1 */
-uint16_t lut_interp_linear16(uint16_t input_value, uint16_t *table, int length)
-{
-	/* Start scaling input_value to the length of the array: 65535*(length-1).
-	 * We'll divide out the 65535 next */
-	uint32_t value = (input_value * (length - 1));
-	uint32_t upper = (value + 65534) / 65535; /* equivalent to ceil(value/65535) */
-	uint32_t lower = value / 65535;           /* equivalent to floor(value/65535) */
-	/* interp is the distance from upper to value scaled to 0..65535 */
-	uint32_t interp = value % 65535;
-
-	value = (table[upper]*(interp) + table[lower]*(65535 - interp))/65535; // 0..65535*65535
-
-	return value;
-}
-
-/* same as above but takes an input_value from 0..PRECACHE_OUTPUT_MAX
- * and returns a uint8_t value representing a range from 0..1 */
-static
-uint8_t lut_interp_linear_precache_output(uint32_t input_value, uint16_t *table, int length)
-{
-	/* Start scaling input_value to the length of the array: PRECACHE_OUTPUT_MAX*(length-1).
-	 * We'll divide out the PRECACHE_OUTPUT_MAX next */
-	uint32_t value = (input_value * (length - 1));
-
-	/* equivalent to ceil(value/PRECACHE_OUTPUT_MAX) */
-	uint32_t upper = (value + PRECACHE_OUTPUT_MAX-1) / PRECACHE_OUTPUT_MAX;
-	/* equivalent to floor(value/PRECACHE_OUTPUT_MAX) */
-	uint32_t lower = value / PRECACHE_OUTPUT_MAX;
-	/* interp is the distance from upper to value scaled to 0..PRECACHE_OUTPUT_MAX */
-	uint32_t interp = value % PRECACHE_OUTPUT_MAX;
-
-	/* the table values range from 0..65535 */
-	value = (table[upper]*(interp) + table[lower]*(PRECACHE_OUTPUT_MAX - interp)); // 0..(65535*PRECACHE_OUTPUT_MAX)
-
-	/* round and scale */
-	value += (PRECACHE_OUTPUT_MAX*65535/255)/2;
-        value /= (PRECACHE_OUTPUT_MAX*65535/255); // scale to 0..255
-	return value;
-}
-
-#if 0
-/* if we use a different representation i.e. one that goes from 0 to 0x1000 we can be more efficient
- * because we can avoid the divisions and use a shifting instead */
-/* same as above but takes and returns a uint16_t value representing a range from 0..1 */
-uint16_t lut_interp_linear16(uint16_t input_value, uint16_t *table, int length)
-{
-	uint32_t value = (input_value * (length - 1));
-	uint32_t upper = (value + 4095) / 4096; /* equivalent to ceil(value/4096) */
-	uint32_t lower = value / 4096;           /* equivalent to floor(value/4096) */
-	uint32_t interp = value % 4096;
-
-	value = (table[upper]*(interp) + table[lower]*(4096 - interp))/4096; // 0..4096*4096
-
-	return value;
-}
-#endif
-
-void compute_curve_gamma_table_type1(float gamma_table[256], double gamma)
-{
-	unsigned int i;
-	for (i = 0; i < 256; i++) {
-		gamma_table[i] = pow(i/255., gamma);
-	}
-}
-
-void compute_curve_gamma_table_type2(float gamma_table[256], uint16_t *table, int length)
-{
-	unsigned int i;
-	for (i = 0; i < 256; i++) {
-		gamma_table[i] = lut_interp_linear(i/255., table, length);
-	}
-}
-
-void compute_curve_gamma_table_type0(float gamma_table[256])
-{
-	unsigned int i;
-	for (i = 0; i < 256; i++) {
-		gamma_table[i] = i/255.;
-	}
-}
-
-unsigned char clamp_u8(float v)
-{
-	if (v > 255.)
-		return 255;
-	else if (v < 0)
-		return 0;
-	else
-		return floor(v+.5);
-}
-
-struct vector {
-	float v[3];
-};
-
-struct matrix {
-	float m[3][3];
-	bool invalid;
-};
-
-struct vector matrix_eval(struct matrix mat, struct vector v)
-{
-	struct vector result;
-	result.v[0] = mat.m[0][0]*v.v[0] + mat.m[0][1]*v.v[1] + mat.m[0][2]*v.v[2];
-	result.v[1] = mat.m[1][0]*v.v[0] + mat.m[1][1]*v.v[1] + mat.m[1][2]*v.v[2];
-	result.v[2] = mat.m[2][0]*v.v[0] + mat.m[2][1]*v.v[1] + mat.m[2][2]*v.v[2];
-	return result;
-}
-
-//XXX: should probably pass by reference and we could
-//probably reuse this computation in matrix_invert
-float matrix_det(struct matrix mat)
-{
-	float det;
-	det = mat.m[0][0]*mat.m[1][1]*mat.m[2][2] +
-		mat.m[0][1]*mat.m[1][2]*mat.m[2][0] +
-		mat.m[0][2]*mat.m[1][0]*mat.m[2][1] -
-		mat.m[0][0]*mat.m[1][2]*mat.m[2][1] -
-		mat.m[0][1]*mat.m[1][0]*mat.m[2][2] -
-		mat.m[0][2]*mat.m[1][1]*mat.m[2][0];
-	return det;
-}
-
-/* from pixman and cairo and Mathematics for Game Programmers */
-/* lcms uses gauss-jordan elimination with partial pivoting which is
- * less efficient and not as numerically stable. See Mathematics for
- * Game Programmers. */
-struct matrix matrix_invert(struct matrix mat)
-{
-	struct matrix dest_mat;
-	int i,j;
-	static int a[3] = { 2, 2, 1 };
-	static int b[3] = { 1, 0, 0 };
-
-	/* inv  (A) = 1/det (A) * adj (A) */
-	float det = matrix_det(mat);
-
-	if (det == 0) {
-		dest_mat.invalid = true;
-	} else {
-		dest_mat.invalid = false;
-	}
-
-	det = 1/det;
-
-	for (j = 0; j < 3; j++) {
-		for (i = 0; i < 3; i++) {
-			double p;
-			int ai = a[i];
-			int aj = a[j];
-			int bi = b[i];
-			int bj = b[j];
-
-			p = mat.m[ai][aj] * mat.m[bi][bj] -
-				mat.m[ai][bj] * mat.m[bi][aj];
-			if (((i + j) & 1) != 0)
-				p = -p;
-
-			dest_mat.m[j][i] = det * p;
-		}
-	}
-	return dest_mat;
-}
-
-struct matrix matrix_identity(void)
-{
-	struct matrix i;
-	i.m[0][0] = 1;
-	i.m[0][1] = 0;
-	i.m[0][2] = 0;
-	i.m[1][0] = 0;
-	i.m[1][1] = 1;
-	i.m[1][2] = 0;
-	i.m[2][0] = 0;
-	i.m[2][1] = 0;
-	i.m[2][2] = 1;
-	i.invalid = false;
-	return i;
-}
-
-static struct matrix matrix_invalid(void)
-{
-	struct matrix inv = matrix_identity();
-	inv.invalid = true;
-	return inv;
-}
-
-
-/* from pixman */
-/* MAT3per... */
-struct matrix matrix_multiply(struct matrix a, struct matrix b)
-{
-	struct matrix result;
-	int dx, dy;
-	int o;
-	for (dy = 0; dy < 3; dy++) {
-		for (dx = 0; dx < 3; dx++) {
-			double v = 0;
-			for (o = 0; o < 3; o++) {
-				v += a.m[dy][o] * b.m[o][dx];
-			}
-			result.m[dy][dx] = v;
-		}
-	}
-	result.invalid = a.invalid || b.invalid;
-	return result;
-}
-
-float u8Fixed8Number_to_float(uint16_t x)
-{
-	// 0x0000 = 0.
-	// 0x0100 = 1.
-	// 0xffff = 255  + 255/256
-	return x/256.;
-}
-
-float *build_input_gamma_table(struct curveType *TRC)
-{
-	float *gamma_table = malloc(sizeof(float)*256);
-	if (gamma_table) {
-		if (TRC->count == 0) {
-			compute_curve_gamma_table_type0(gamma_table);
-		} else if (TRC->count == 1) {
-			compute_curve_gamma_table_type1(gamma_table, u8Fixed8Number_to_float(TRC->data[0]));
-		} else {
-			compute_curve_gamma_table_type2(gamma_table, TRC->data, TRC->count);
-		}
-	}
-	return gamma_table;
-}
-
-struct matrix build_colorant_matrix(qcms_profile *p)
-{
-	struct matrix result;
-	result.m[0][0] = s15Fixed16Number_to_float(p->redColorant.X);
-	result.m[0][1] = s15Fixed16Number_to_float(p->greenColorant.X);
-	result.m[0][2] = s15Fixed16Number_to_float(p->blueColorant.X);
-	result.m[1][0] = s15Fixed16Number_to_float(p->redColorant.Y);
-	result.m[1][1] = s15Fixed16Number_to_float(p->greenColorant.Y);
-	result.m[1][2] = s15Fixed16Number_to_float(p->blueColorant.Y);
-	result.m[2][0] = s15Fixed16Number_to_float(p->redColorant.Z);
-	result.m[2][1] = s15Fixed16Number_to_float(p->greenColorant.Z);
-	result.m[2][2] = s15Fixed16Number_to_float(p->blueColorant.Z);
-	result.invalid = false;
-	return result;
-}
-
-/* The following code is copied nearly directly from lcms.
- * I think it could be much better. For example, Argyll seems to have better code in
- * icmTable_lookup_bwd and icmTable_setup_bwd. However, for now this is a quick way
- * to a working solution and allows for easy comparing with lcms. */
-uint16_fract_t lut_inverse_interp16(uint16_t Value, uint16_t LutTable[], int length)
-{
-        int l = 1;
-        int r = 0x10000;
-        int x = 0, res;       // 'int' Give spacing for negative values
-        int NumZeroes, NumPoles;
-        int cell0, cell1;
-        double val2;
-        double y0, y1, x0, x1;
-        double a, b, f;
-
-        // July/27 2001 - Expanded to handle degenerated curves with an arbitrary
-        // number of elements containing 0 at the begining of the table (Zeroes)
-        // and another arbitrary number of poles (FFFFh) at the end.
-        // First the zero and pole extents are computed, then value is compared.
-
-        NumZeroes = 0;
-        while (LutTable[NumZeroes] == 0 && NumZeroes < length-1)
-                        NumZeroes++;
-
-        // There are no zeros at the beginning and we are trying to find a zero, so
-        // return anything. It seems zero would be the less destructive choice
-	/* I'm not sure that this makes sense, but oh well... */
-        if (NumZeroes == 0 && Value == 0)
-            return 0;
-
-        NumPoles = 0;
-        while (LutTable[length-1- NumPoles] == 0xFFFF && NumPoles < length-1)
-                        NumPoles++;
-
-        // Does the curve belong to this case?
-        if (NumZeroes > 1 || NumPoles > 1)
-        {               
-                int a, b;
-
-                // Identify if value fall downto 0 or FFFF zone             
-                if (Value == 0) return 0;
-               // if (Value == 0xFFFF) return 0xFFFF;
-
-                // else restrict to valid zone
-
-                a = ((NumZeroes-1) * 0xFFFF) / (length-1);               
-                b = ((length-1 - NumPoles) * 0xFFFF) / (length-1);
-                                                                
-                l = a - 1;
-                r = b + 1;
-        }
-
-
-        // Seems not a degenerated case... apply binary search
-
-        while (r > l) {
-
-                x = (l + r) / 2;
-
-		res = (int) lut_interp_linear16((uint16_fract_t) (x-1), LutTable, length);
-
-                if (res == Value) {
-
-                    // Found exact match. 
-                    
-                    return (uint16_fract_t) (x - 1);
-                }
-
-                if (res > Value) r = x - 1;
-                else l = x + 1;
-        }
-
-        // Not found, should we interpolate?
-
-                
-        // Get surrounding nodes
-        
-        val2 = (length-1) * ((double) (x - 1) / 65535.0);
-
-        cell0 = (int) floor(val2);
-        cell1 = (int) ceil(val2);
-           
-        if (cell0 == cell1) return (uint16_fract_t) x;
-
-        y0 = LutTable[cell0] ;
-        x0 = (65535.0 * cell0) / (length-1); 
-
-        y1 = LutTable[cell1] ;
-        x1 = (65535.0 * cell1) / (length-1);
-
-        a = (y1 - y0) / (x1 - x0);
-        b = y0 - a * x0;
-
-        if (fabs(a) < 0.01) return (uint16_fract_t) x;
-
-        f = ((Value - b) / a);
-
-        if (f < 0.0) return (uint16_fract_t) 0;
-        if (f >= 65535.0) return (uint16_fract_t) 0xFFFF;
-
-        return (uint16_fract_t) floor(f + 0.5);                        
-        
-}
 
 // Build a White point, primary chromas transfer matrix from RGB to CIE XYZ
 // This is just an approximation, I am not handling all the non-linear
@@ -593,79 +229,6 @@ qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcm
 	return true;
 }
 
-/*
- The number of entries needed to invert a lookup table should not
- necessarily be the same as the original number of entries.  This is
- especially true of lookup tables that have a small number of entries.
-
- For example:
- Using a table like:
-    {0, 3104, 14263, 34802, 65535}
- invert_lut will produce an inverse of:
-    {3, 34459, 47529, 56801, 65535}
- which has an maximum error of about 9855 (pixel difference of ~38.346)
-
- For now, we punt the decision of output size to the caller. */
-static uint16_t *invert_lut(uint16_t *table, int length, int out_length)
-{
-	int i;
-	/* for now we invert the lut by creating a lut of size out_length
-	 * and attempting to lookup a value for each entry using lut_inverse_interp16 */
-	uint16_t *output = malloc(sizeof(uint16_t)*out_length);
-	if (!output)
-		return NULL;
-
-	for (i = 0; i < out_length; i++) {
-		double x = ((double) i * 65535.) / (double) (out_length - 1);
-		uint16_fract_t input = floor(x + .5);
-		output[i] = lut_inverse_interp16(input, table, length);
-	}
-	return output;
-}
-
-static uint16_t *build_linear_table(int length)
-{
-	int i;
-	uint16_t *output = malloc(sizeof(uint16_t)*length);
-	if (!output)
-		return NULL;
-
-	for (i = 0; i < length; i++) {
-		double x = ((double) i * 65535.) / (double) (length - 1);
-		uint16_fract_t input = floor(x + .5);
-		output[i] = input;
-	}
-	return output;
-}
-
-static uint16_t *build_pow_table(float gamma, int length)
-{
-	int i;
-	uint16_t *output = malloc(sizeof(uint16_t)*length);
-	if (!output)
-		return NULL;
-
-	for (i = 0; i < length; i++) {
-		uint16_fract_t result;
-		double x = ((double) i) / (double) (length - 1);
-		x = pow(x, gamma);
-                //XXX turn this conversion into a function
-		result = floor(x*65535. + .5);
-		output[i] = result;
-	}
-	return output;
-}
-
-static float clamp_float(float a)
-{
-	if (a > 1.f)
-		return 1.f;
-	else if (a < 0.f)
-		return 0.f;
-	else
-		return a;
-}
-
 #if 0
 static void qcms_transform_data_rgb_out_pow(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
@@ -848,6 +411,292 @@ static void qcms_transform_data_rgba_out_lut_precache(qcms_transform *transform,
 	}
 }
 
+// Not used
+/* 
+static void qcms_transform_data_clut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length) {
+	unsigned int i;
+	int xy_len = 1;
+	int x_len = transform->grid_size;
+	int len = x_len * x_len;
+	float* r_table = transform->r_clut;
+	float* g_table = transform->g_clut;
+	float* b_table = transform->b_clut;
+  
+	for (i = 0; i < length; i++) {
+		unsigned char in_r = *src++;
+		unsigned char in_g = *src++;
+		unsigned char in_b = *src++;
+		float linear_r = in_r/255.0f, linear_g=in_g/255.0f, linear_b = in_b/255.0f;
+
+		int x = floor(linear_r * (transform->grid_size-1));
+		int y = floor(linear_g * (transform->grid_size-1));
+		int z = floor(linear_b * (transform->grid_size-1));
+		int x_n = ceil(linear_r * (transform->grid_size-1));
+		int y_n = ceil(linear_g * (transform->grid_size-1));
+		int z_n = ceil(linear_b * (transform->grid_size-1));
+		float x_d = linear_r * (transform->grid_size-1) - x; 
+		float y_d = linear_g * (transform->grid_size-1) - y;
+		float z_d = linear_b * (transform->grid_size-1) - z; 
+
+		float r_x1 = lerp(CLU(r_table,x,y,z), CLU(r_table,x_n,y,z), x_d);
+		float r_x2 = lerp(CLU(r_table,x,y_n,z), CLU(r_table,x_n,y_n,z), x_d);
+		float r_y1 = lerp(r_x1, r_x2, y_d);
+		float r_x3 = lerp(CLU(r_table,x,y,z_n), CLU(r_table,x_n,y,z_n), x_d);
+		float r_x4 = lerp(CLU(r_table,x,y_n,z_n), CLU(r_table,x_n,y_n,z_n), x_d);
+		float r_y2 = lerp(r_x3, r_x4, y_d);
+		float clut_r = lerp(r_y1, r_y2, z_d);
+
+		float g_x1 = lerp(CLU(g_table,x,y,z), CLU(g_table,x_n,y,z), x_d);
+		float g_x2 = lerp(CLU(g_table,x,y_n,z), CLU(g_table,x_n,y_n,z), x_d);
+		float g_y1 = lerp(g_x1, g_x2, y_d);
+		float g_x3 = lerp(CLU(g_table,x,y,z_n), CLU(g_table,x_n,y,z_n), x_d);
+		float g_x4 = lerp(CLU(g_table,x,y_n,z_n), CLU(g_table,x_n,y_n,z_n), x_d);
+		float g_y2 = lerp(g_x3, g_x4, y_d);
+		float clut_g = lerp(g_y1, g_y2, z_d);
+
+		float b_x1 = lerp(CLU(b_table,x,y,z), CLU(b_table,x_n,y,z), x_d);
+		float b_x2 = lerp(CLU(b_table,x,y_n,z), CLU(b_table,x_n,y_n,z), x_d);
+		float b_y1 = lerp(b_x1, b_x2, y_d);
+		float b_x3 = lerp(CLU(b_table,x,y,z_n), CLU(b_table,x_n,y,z_n), x_d);
+		float b_x4 = lerp(CLU(b_table,x,y_n,z_n), CLU(b_table,x_n,y_n,z_n), x_d);
+		float b_y2 = lerp(b_x3, b_x4, y_d);
+		float clut_b = lerp(b_y1, b_y2, z_d);
+
+		*dest++ = clamp_u8(clut_r*255.0f);
+		*dest++ = clamp_u8(clut_g*255.0f);
+		*dest++ = clamp_u8(clut_b*255.0f);
+	}	
+}
+*/
+
+// Using lcms' tetra interpolation algorithm.
+static void qcms_transform_data_tetra_clut_rgba(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length) {
+	unsigned int i;
+	int xy_len = 1;
+	int x_len = transform->grid_size;
+	int len = x_len * x_len;
+	float* r_table = transform->r_clut;
+	float* g_table = transform->g_clut;
+	float* b_table = transform->b_clut;
+	float c0_r, c1_r, c2_r, c3_r;
+	float c0_g, c1_g, c2_g, c3_g;
+	float c0_b, c1_b, c2_b, c3_b;
+	float clut_r, clut_g, clut_b;
+	for (i = 0; i < length; i++) {
+		unsigned char in_r = *src++;
+		unsigned char in_g = *src++;
+		unsigned char in_b = *src++;
+		unsigned char in_a = *src++;
+		float linear_r = in_r/255.0f, linear_g=in_g/255.0f, linear_b = in_b/255.0f;
+
+		int x = floor(linear_r * (transform->grid_size-1));
+		int y = floor(linear_g * (transform->grid_size-1));
+		int z = floor(linear_b * (transform->grid_size-1));
+		int x_n = ceil(linear_r * (transform->grid_size-1));
+		int y_n = ceil(linear_g * (transform->grid_size-1));
+		int z_n = ceil(linear_b * (transform->grid_size-1));
+		float rx = linear_r * (transform->grid_size-1) - x; 
+		float ry = linear_g * (transform->grid_size-1) - y;
+		float rz = linear_b * (transform->grid_size-1) - z; 
+
+		c0_r = CLU(r_table, x, y, z);
+		c0_g = CLU(g_table, x, y, z);
+		c0_b = CLU(b_table, x, y, z);
+
+		if( rx >= ry ) {
+			if (ry >= rz) { //rx >= ry && ry >= rz
+				c1_r = CLU(r_table, x_n, y, z) - c0_r;
+				c2_r = CLU(r_table, x_n, y_n, z) - CLU(r_table, x_n, y, z);
+				c3_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y_n, z);
+				c1_g = CLU(g_table, x_n, y, z) - c0_g;
+				c2_g = CLU(g_table, x_n, y_n, z) - CLU(g_table, x_n, y, z);
+				c3_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y_n, z);
+				c1_b = CLU(b_table, x_n, y, z) - c0_b;
+				c2_b = CLU(b_table, x_n, y_n, z) - CLU(b_table, x_n, y, z);
+				c3_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y_n, z);
+			} else { 
+				if (rx >= rz) { //rx >= rz && rz >= ry
+					c1_r = CLU(r_table, x_n, y, z) - c0_r;
+					c2_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y, z_n);
+					c3_r = CLU(r_table, x_n, y, z_n) - CLU(r_table, x_n, y, z);
+					c1_g = CLU(g_table, x_n, y, z) - c0_g;
+					c2_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y, z_n);
+					c3_g = CLU(g_table, x_n, y, z_n) - CLU(g_table, x_n, y, z);
+					c1_b = CLU(b_table, x_n, y, z) - c0_b;
+					c2_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y, z_n);
+					c3_b = CLU(b_table, x_n, y, z_n) - CLU(b_table, x_n, y, z);
+				} else { //rz > rx && rx >= ry
+					c1_r = CLU(r_table, x_n, y, z_n) - CLU(r_table, x, y, z_n);
+					c2_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y, z_n);
+					c3_r = CLU(r_table, x, y, z_n) - c0_r;
+					c1_g = CLU(g_table, x_n, y, z_n) - CLU(g_table, x, y, z_n);
+					c2_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y, z_n);
+					c3_g = CLU(g_table, x, y, z_n) - c0_g;
+					c1_b = CLU(b_table, x_n, y, z_n) - CLU(b_table, x, y, z_n);
+					c2_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y, z_n);
+					c3_b = CLU(b_table, x, y, z_n) - c0_b;
+				}
+			}
+		} else {
+			if (rx >= rz) { //ry > rx && rx >= rz
+				c1_r = CLU(r_table, x_n, y_n, z) - CLU(r_table, x, y_n, z);
+				c2_r = CLU(r_table, x, y_n, z) - c0_r;
+				c3_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y_n, z);
+				c1_g = CLU(g_table, x_n, y_n, z) - CLU(g_table, x, y_n, z);
+				c2_g = CLU(g_table, x, y_n, z) - c0_g;
+				c3_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y_n, z);
+				c1_b = CLU(b_table, x_n, y_n, z) - CLU(b_table, x, y_n, z);
+				c2_b = CLU(b_table, x, y_n, z) - c0_b;
+				c3_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y_n, z);
+			} else {
+				if (ry >= rz) { //ry >= rz && rz > rx 
+					c1_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x, y_n, z_n);
+					c2_r = CLU(r_table, x, y_n, z) - c0_r;
+					c3_r = CLU(r_table, x, y_n, z_n) - CLU(r_table, x, y_n, z);
+					c1_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x, y_n, z_n);
+					c2_g = CLU(g_table, x, y_n, z) - c0_g;
+					c3_g = CLU(g_table, x, y_n, z_n) - CLU(g_table, x, y_n, z);
+					c1_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x, y_n, z_n);
+					c2_b = CLU(b_table, x, y_n, z) - c0_b;
+					c3_b = CLU(b_table, x, y_n, z_n) - CLU(b_table, x, y_n, z);
+				} else { //rz > ry && ry > rx
+					c1_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x, y_n, z_n);
+					c2_r = CLU(r_table, x, y_n, z_n) - CLU(r_table, x, y, z_n);
+					c3_r = CLU(r_table, x, y, z_n) - c0_r;
+					c1_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x, y_n, z_n);
+					c2_g = CLU(g_table, x, y_n, z_n) - CLU(g_table, x, y, z_n);
+					c3_g = CLU(g_table, x, y, z_n) - c0_g;
+					c1_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x, y_n, z_n);
+					c2_b = CLU(b_table, x, y_n, z_n) - CLU(b_table, x, y, z_n);
+					c3_b = CLU(b_table, x, y, z_n) - c0_b;
+				}
+			}
+		}
+				
+		clut_r = c0_r + c1_r*rx + c2_r*ry + c3_r*rz;
+		clut_g = c0_g + c1_g*rx + c2_g*ry + c3_g*rz;
+		clut_b = c0_b + c1_b*rx + c2_b*ry + c3_b*rz;
+
+		*dest++ = clamp_u8(clut_r*255.0f);
+		*dest++ = clamp_u8(clut_g*255.0f);
+		*dest++ = clamp_u8(clut_b*255.0f);
+		*dest++ = in_a;
+	}	
+}
+
+// Using lcms' tetra interpolation code.
+static void qcms_transform_data_tetra_clut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length) {
+	unsigned int i;
+	int xy_len = 1;
+	int x_len = transform->grid_size;
+	int len = x_len * x_len;
+	float* r_table = transform->r_clut;
+	float* g_table = transform->g_clut;
+	float* b_table = transform->b_clut;
+	float c0_r, c1_r, c2_r, c3_r;
+	float c0_g, c1_g, c2_g, c3_g;
+	float c0_b, c1_b, c2_b, c3_b;
+	float clut_r, clut_g, clut_b;
+	for (i = 0; i < length; i++) {
+		unsigned char in_r = *src++;
+		unsigned char in_g = *src++;
+		unsigned char in_b = *src++;
+		float linear_r = in_r/255.0f, linear_g=in_g/255.0f, linear_b = in_b/255.0f;
+
+		int x = floor(linear_r * (transform->grid_size-1));
+		int y = floor(linear_g * (transform->grid_size-1));
+		int z = floor(linear_b * (transform->grid_size-1));
+		int x_n = ceil(linear_r * (transform->grid_size-1));
+		int y_n = ceil(linear_g * (transform->grid_size-1));
+		int z_n = ceil(linear_b * (transform->grid_size-1));
+		float rx = linear_r * (transform->grid_size-1) - x; 
+		float ry = linear_g * (transform->grid_size-1) - y;
+		float rz = linear_b * (transform->grid_size-1) - z; 
+
+		c0_r = CLU(r_table, x, y, z);
+		c0_g = CLU(g_table, x, y, z);
+		c0_b = CLU(b_table, x, y, z);
+
+		if( rx >= ry ) {
+			if (ry >= rz) { //rx >= ry && ry >= rz
+				c1_r = CLU(r_table, x_n, y, z) - c0_r;
+				c2_r = CLU(r_table, x_n, y_n, z) - CLU(r_table, x_n, y, z);
+				c3_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y_n, z);
+				c1_g = CLU(g_table, x_n, y, z) - c0_g;
+				c2_g = CLU(g_table, x_n, y_n, z) - CLU(g_table, x_n, y, z);
+				c3_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y_n, z);
+				c1_b = CLU(b_table, x_n, y, z) - c0_b;
+				c2_b = CLU(b_table, x_n, y_n, z) - CLU(b_table, x_n, y, z);
+				c3_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y_n, z);
+			} else { 
+				if (rx >= rz) { //rx >= rz && rz >= ry
+					c1_r = CLU(r_table, x_n, y, z) - c0_r;
+					c2_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y, z_n);
+					c3_r = CLU(r_table, x_n, y, z_n) - CLU(r_table, x_n, y, z);
+					c1_g = CLU(g_table, x_n, y, z) - c0_g;
+					c2_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y, z_n);
+					c3_g = CLU(g_table, x_n, y, z_n) - CLU(g_table, x_n, y, z);
+					c1_b = CLU(b_table, x_n, y, z) - c0_b;
+					c2_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y, z_n);
+					c3_b = CLU(b_table, x_n, y, z_n) - CLU(b_table, x_n, y, z);
+				} else { //rz > rx && rx >= ry
+					c1_r = CLU(r_table, x_n, y, z_n) - CLU(r_table, x, y, z_n);
+					c2_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y, z_n);
+					c3_r = CLU(r_table, x, y, z_n) - c0_r;
+					c1_g = CLU(g_table, x_n, y, z_n) - CLU(g_table, x, y, z_n);
+					c2_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y, z_n);
+					c3_g = CLU(g_table, x, y, z_n) - c0_g;
+					c1_b = CLU(b_table, x_n, y, z_n) - CLU(b_table, x, y, z_n);
+					c2_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y, z_n);
+					c3_b = CLU(b_table, x, y, z_n) - c0_b;
+				}
+			}
+		} else {
+			if (rx >= rz) { //ry > rx && rx >= rz
+				c1_r = CLU(r_table, x_n, y_n, z) - CLU(r_table, x, y_n, z);
+				c2_r = CLU(r_table, x, y_n, z) - c0_r;
+				c3_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y_n, z);
+				c1_g = CLU(g_table, x_n, y_n, z) - CLU(g_table, x, y_n, z);
+				c2_g = CLU(g_table, x, y_n, z) - c0_g;
+				c3_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y_n, z);
+				c1_b = CLU(b_table, x_n, y_n, z) - CLU(b_table, x, y_n, z);
+				c2_b = CLU(b_table, x, y_n, z) - c0_b;
+				c3_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y_n, z);
+			} else {
+				if (ry >= rz) { //ry >= rz && rz > rx 
+					c1_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x, y_n, z_n);
+					c2_r = CLU(r_table, x, y_n, z) - c0_r;
+					c3_r = CLU(r_table, x, y_n, z_n) - CLU(r_table, x, y_n, z);
+					c1_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x, y_n, z_n);
+					c2_g = CLU(g_table, x, y_n, z) - c0_g;
+					c3_g = CLU(g_table, x, y_n, z_n) - CLU(g_table, x, y_n, z);
+					c1_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x, y_n, z_n);
+					c2_b = CLU(b_table, x, y_n, z) - c0_b;
+					c3_b = CLU(b_table, x, y_n, z_n) - CLU(b_table, x, y_n, z);
+				} else { //rz > ry && ry > rx
+					c1_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x, y_n, z_n);
+					c2_r = CLU(r_table, x, y_n, z_n) - CLU(r_table, x, y, z_n);
+					c3_r = CLU(r_table, x, y, z_n) - c0_r;
+					c1_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x, y_n, z_n);
+					c2_g = CLU(g_table, x, y_n, z_n) - CLU(g_table, x, y, z_n);
+					c3_g = CLU(g_table, x, y, z_n) - c0_g;
+					c1_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x, y_n, z_n);
+					c2_b = CLU(b_table, x, y_n, z_n) - CLU(b_table, x, y, z_n);
+					c3_b = CLU(b_table, x, y, z_n) - c0_b;
+				}
+			}
+		}
+				
+		clut_r = c0_r + c1_r*rx + c2_r*ry + c3_r*rz;
+		clut_g = c0_g + c1_g*rx + c2_g*ry + c3_g*rz;
+		clut_b = c0_b + c1_b*rx + c2_b*ry + c3_b*rz;
+
+		*dest++ = clamp_u8(clut_r*255.0f);
+		*dest++ = clamp_u8(clut_g*255.0f);
+		*dest++ = clamp_u8(clut_b*255.0f);
+	}	
+}
+
 static void qcms_transform_data_rgb_out_lut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
 	unsigned int i;
@@ -870,9 +719,12 @@ static void qcms_transform_data_rgb_out_lut(qcms_transform *transform, unsigned 
 		out_linear_g = clamp_float(out_linear_g);
 		out_linear_b = clamp_float(out_linear_b);
 
-		out_device_r = lut_interp_linear(out_linear_r, transform->output_gamma_lut_r, transform->output_gamma_lut_r_length);
-		out_device_g = lut_interp_linear(out_linear_g, transform->output_gamma_lut_g, transform->output_gamma_lut_g_length);
-		out_device_b = lut_interp_linear(out_linear_b, transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
+		out_device_r = lut_interp_linear(out_linear_r, 
+				transform->output_gamma_lut_r, transform->output_gamma_lut_r_length);
+		out_device_g = lut_interp_linear(out_linear_g, 
+				transform->output_gamma_lut_g, transform->output_gamma_lut_g_length);
+		out_device_b = lut_interp_linear(out_linear_b, 
+				transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
 
 		*dest++ = clamp_u8(out_device_r*255);
 		*dest++ = clamp_u8(out_device_g*255);
@@ -903,9 +755,12 @@ static void qcms_transform_data_rgba_out_lut(qcms_transform *transform, unsigned
 		out_linear_g = clamp_float(out_linear_g);
 		out_linear_b = clamp_float(out_linear_b);
 
-		out_device_r = lut_interp_linear(out_linear_r, transform->output_gamma_lut_r, transform->output_gamma_lut_r_length);
-		out_device_g = lut_interp_linear(out_linear_g, transform->output_gamma_lut_g, transform->output_gamma_lut_g_length);
-		out_device_b = lut_interp_linear(out_linear_b, transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
+		out_device_r = lut_interp_linear(out_linear_r, 
+				transform->output_gamma_lut_r, transform->output_gamma_lut_r_length);
+		out_device_g = lut_interp_linear(out_linear_g, 
+				transform->output_gamma_lut_g, transform->output_gamma_lut_g_length);
+		out_device_b = lut_interp_linear(out_linear_b, 
+				transform->output_gamma_lut_b, transform->output_gamma_lut_b_length);
 
 		*dest++ = clamp_u8(out_device_r*255);
 		*dest++ = clamp_u8(out_device_g*255);
@@ -1030,55 +885,6 @@ void qcms_transform_release(qcms_transform *t)
 	transform_free(t);
 }
 
-static void compute_precache_pow(uint8_t *output, float gamma)
-{
-	uint32_t v = 0;
-	for (v = 0; v < PRECACHE_OUTPUT_SIZE; v++) {
-		//XXX: don't do integer/float conversion... and round?
-		output[v] = 255. * pow(v/(double)PRECACHE_OUTPUT_MAX, gamma);
-	}
-}
-
-void compute_precache_lut(uint8_t *output, uint16_t *table, int length)
-{
-	uint32_t v = 0;
-	for (v = 0; v < PRECACHE_OUTPUT_SIZE; v++) {
-		output[v] = lut_interp_linear_precache_output(v, table, length);
-	}
-}
-
-void compute_precache_linear(uint8_t *output)
-{
-	uint32_t v = 0;
-	for (v = 0; v < PRECACHE_OUTPUT_SIZE; v++) {
-		//XXX: round?
-		output[v] = v / (PRECACHE_OUTPUT_SIZE/256);
-	}
-}
-
-qcms_bool compute_precache(struct curveType *trc, uint8_t *output)
-{
-	if (trc->count == 0) {
-		compute_precache_linear(output);
-	} else if (trc->count == 1) {
-		compute_precache_pow(output, 1./u8Fixed8Number_to_float(trc->data[0]));
-	} else {
-		uint16_t *inverted;
-		int inverted_size = trc->count;
-		//XXX: the choice of a minimum of 256 here is not backed by any theory, measurement or data, however it is what lcms uses.
-		// the maximum number we would need is 65535 because that's the accuracy used for computing the precache table
-		if (inverted_size < 256)
-			inverted_size = 256;
-
-		inverted = invert_lut(trc->data, trc->count, inverted_size);
-		if (!inverted)
-			return false;
-		compute_precache_lut(output, inverted, inverted_size);
-		free(inverted);
-	}
-	return true;
-}
-
 #ifdef X86
 // Determine if we can build with SSE2 (this was partly copied from jmorecfg.h in
 // mozilla/jpeg)
@@ -1160,31 +966,44 @@ static int sse_version_available(void)
 }
 #endif
 
-void build_output_lut(struct curveType *trc,
-		uint16_t **output_gamma_lut, size_t *output_gamma_lut_length)
-{
-	if (trc->count == 0) {
-		*output_gamma_lut = build_linear_table(4096);
-		*output_gamma_lut_length = 4096;
-	} else if (trc->count == 1) {
-		float gamma = 1./u8Fixed8Number_to_float(trc->data[0]);
-		*output_gamma_lut = build_pow_table(gamma, 4096);
-		*output_gamma_lut_length = 4096;
-	} else {
-		//XXX: the choice of a minimum of 256 here is not backed by any theory, measurement or data, however it is what lcms uses.
-		*output_gamma_lut_length = trc->count;
-		if (*output_gamma_lut_length < 256)
-			*output_gamma_lut_length = 256;
+static const struct matrix bradford_matrix = {{	{ 0.8951f, 0.2664f,-0.1614f},
+						{-0.7502f, 1.7135f, 0.0367f},
+						{ 0.0389f,-0.0685f, 1.0296f}}, 
+						false};
 
-		*output_gamma_lut = invert_lut(trc->data, trc->count, *output_gamma_lut_length);
-	}
+static const struct matrix bradford_matrix_inv = {{ { 0.9869929f,-0.1470543f, 0.1599627f},
+						    { 0.4323053f, 0.5183603f, 0.0492912f},
+						    {-0.0085287f, 0.0400428f, 0.9684867f}}, 
+						    false};
 
+// See ICCv4 E.3
+struct matrix compute_whitepoint_adaption(float X, float Y, float Z) {
+	float p = (0.96422f*bradford_matrix.m[0][0] + 1.000f*bradford_matrix.m[1][0] + 0.82521f*bradford_matrix.m[2][0]) /
+		  (X*bradford_matrix.m[0][0]      + Y*bradford_matrix.m[1][0]      + Z*bradford_matrix.m[2][0]     );
+	float y = (0.96422f*bradford_matrix.m[0][1] + 1.000f*bradford_matrix.m[1][1] + 0.82521f*bradford_matrix.m[2][1]) /
+		  (X*bradford_matrix.m[0][1]      + Y*bradford_matrix.m[1][1]      + Z*bradford_matrix.m[2][1]     );
+	float b = (0.96422f*bradford_matrix.m[0][2] + 1.000f*bradford_matrix.m[1][2] + 0.82521f*bradford_matrix.m[2][2]) /
+		  (X*bradford_matrix.m[0][2]      + Y*bradford_matrix.m[1][2]      + Z*bradford_matrix.m[2][2]     );
+	struct matrix white_adaption = {{ {p,0,0}, {0,y,0}, {0,0,b}}, false};
+	return matrix_multiply( bradford_matrix_inv, matrix_multiply(white_adaption, bradford_matrix) );
 }
 
 void qcms_profile_precache_output_transform(qcms_profile *profile)
 {
 	/* we only support precaching on rgb profiles */
 	if (profile->color_space != RGB_SIGNATURE)
+		return;
+
+	/* don't precache since we will use the B2A LUT */
+	if (profile->B2A0)
+		return;
+
+	/* don't precache since we will use the mBA LUT */
+	if (profile->mBA)
+		return;
+
+	/* don't precache if we do not have the TRC curves */
+	if (!profile->redTRC || !profile->greenTRC || !profile->blueTRC)
 		return;
 
 	if (!profile->output_table_r) {
@@ -1213,11 +1032,67 @@ void qcms_profile_precache_output_transform(qcms_profile *profile)
 	}
 }
 
+/* Replace the current transformation with a LUT transformation using a given number of sample points */
+qcms_transform* qcms_transform_precacheLUT_float(qcms_transform *transform, qcms_profile *in, qcms_profile *out, 
+                                                 int samples, qcms_data_type in_type)
+{
+	/* The range between which 2 consecutive sample points can be used to interpolate */
+	uint16_t x,y,z;
+	uint32_t l;
+	uint32_t lutSize = 3 * samples * samples * samples;
+	float* src = NULL;
+	float* dest = NULL;
+	float* lut = NULL;
+
+	src = malloc(lutSize*sizeof(float));
+	dest = malloc(lutSize*sizeof(float));
+
+	if (src && dest) {
+		/* Prepare a list of points we want to sample */
+		l = 0;
+		for (x = 0; x < samples; x++) {
+			for (y = 0; y < samples; y++) {
+				for (z = 0; z < samples; z++) {
+					src[l++] = x / (float)(samples-1);
+					src[l++] = y / (float)(samples-1);
+					src[l++] = z / (float)(samples-1);
+				}
+			}
+		}
+
+		lut = qcms_chain_transform(in, out, src, dest, lutSize);
+		if (lut) {
+			transform->r_clut = &lut[0];
+			transform->g_clut = &lut[1];
+			transform->b_clut = &lut[2];
+			transform->grid_size = samples;
+			if (in_type == QCMS_DATA_RGBA_8) {
+				transform->transform_fn = qcms_transform_data_tetra_clut_rgba;
+			} else {
+				transform->transform_fn = qcms_transform_data_tetra_clut;
+			}
+		}
+	}
+
+
+	//XXX: qcms_modular_transform_data may return either the src or dest buffer. If so it must not be free-ed
+	if (src && lut != src) {
+		free(src);
+	} else if (dest && lut != src) {
+		free(dest);
+	}
+
+	if (lut == NULL) {
+		return NULL;
+	}
+	return transform;
+}
+
 #define NO_MEM_TRANSFORM NULL
 
 qcms_transform* qcms_transform_create(
 		qcms_profile *in, qcms_data_type in_type,
-		qcms_profile* out, qcms_data_type out_type,
+		qcms_profile *out, qcms_data_type out_type,
 		qcms_intent intent)
 {
 	bool precache = false;
@@ -1239,11 +1114,30 @@ qcms_transform* qcms_transform_create(
 		precache = true;
 	}
 
+	if (qcms_supports_iccv4 && (in->A2B0 || out->B2A0 || in->mAB || out->mAB)) {
+		// Precache the transformation to a CLUT 33x33x33 in size.
+		// 33 is used by many profiles and works well in pratice. 
+		// This evenly divides 256 into blocks of 8x8x8.
+		// TODO For transforming small data sets of about 200x200 or less
+		// precaching should be avoided.
+		qcms_transform *result = qcms_transform_precacheLUT_float(transform, in, out, 33, in_type);
+		if (!result) {
+            		assert(0 && "precacheLUT failed");
+			transform_free(transform);
+			return NULL;
+		}
+		return result;
+	}
+
 	if (precache) {
 		transform->output_table_r = precache_reference(out->output_table_r);
 		transform->output_table_g = precache_reference(out->output_table_g);
 		transform->output_table_b = precache_reference(out->output_table_b);
 	} else {
+		if (!out->redTRC || !out->greenTRC || !out->blueTRC) {
+			qcms_transform_release(transform);
+			return NO_MEM_TRANSFORM;
+		}
 		build_output_lut(out->redTRC, &transform->output_gamma_lut_r, &transform->output_gamma_lut_r_length);
 		build_output_lut(out->greenTRC, &transform->output_gamma_lut_g, &transform->output_gamma_lut_g_length);
 		build_output_lut(out->blueTRC, &transform->output_gamma_lut_b, &transform->output_gamma_lut_b_length);
@@ -1254,15 +1148,15 @@ qcms_transform* qcms_transform_create(
 	}
 
         if (in->color_space == RGB_SIGNATURE) {
-            struct matrix in_matrix, out_matrix, result;
+		struct matrix in_matrix, out_matrix, result;
 
-            if (in_type != QCMS_DATA_RGB_8 &&
+		if (in_type != QCMS_DATA_RGB_8 &&
                     in_type != QCMS_DATA_RGBA_8){
-                assert(0 && "input type");
-                transform_free(transform);
-                return NULL;
-            }
-	    if (precache) {
+                	assert(0 && "input type");
+			transform_free(transform);
+                	return NULL;
+            	}
+		if (precache) {
 #ifdef X86
 		    if (sse_version_available() >= 2) {
 			    if (in_type == QCMS_DATA_RGB_8)
@@ -1282,82 +1176,82 @@ qcms_transform* qcms_transform_create(
 #endif
 		    } else
 #endif
-		    {
-			    if (in_type == QCMS_DATA_RGB_8)
-				    transform->transform_fn = qcms_transform_data_rgb_out_lut_precache;
-			    else
-				    transform->transform_fn = qcms_transform_data_rgba_out_lut_precache;
-		    }
-	    } else {
-		    if (in_type == QCMS_DATA_RGB_8)
-			    transform->transform_fn = qcms_transform_data_rgb_out_lut;
-		    else
-			    transform->transform_fn = qcms_transform_data_rgba_out_lut;
-	    }
+			{
+				if (in_type == QCMS_DATA_RGB_8)
+					transform->transform_fn = qcms_transform_data_rgb_out_lut_precache;
+				else
+					transform->transform_fn = qcms_transform_data_rgba_out_lut_precache;
+			}
+		} else {
+			if (in_type == QCMS_DATA_RGB_8)
+				transform->transform_fn = qcms_transform_data_rgb_out_lut;
+			else
+				transform->transform_fn = qcms_transform_data_rgba_out_lut;
+		}
 
-            //XXX: avoid duplicating tables if we can
-            transform->input_gamma_table_r = build_input_gamma_table(in->redTRC);
-            transform->input_gamma_table_g = build_input_gamma_table(in->greenTRC);
-            transform->input_gamma_table_b = build_input_gamma_table(in->blueTRC);
+		//XXX: avoid duplicating tables if we can
+		transform->input_gamma_table_r = build_input_gamma_table(in->redTRC);
+		transform->input_gamma_table_g = build_input_gamma_table(in->greenTRC);
+		transform->input_gamma_table_b = build_input_gamma_table(in->blueTRC);
+		if (!transform->input_gamma_table_r || !transform->input_gamma_table_g || !transform->input_gamma_table_b) {
+			qcms_transform_release(transform);
+			return NO_MEM_TRANSFORM;
+		}
 
-	    if (!transform->input_gamma_table_r || !transform->input_gamma_table_g || !transform->input_gamma_table_b) {
-		    qcms_transform_release(transform);
-		    return NO_MEM_TRANSFORM;
-	    }
 
-            /* build combined colorant matrix */
-            in_matrix = build_colorant_matrix(in);
-            out_matrix = build_colorant_matrix(out);
-            out_matrix = matrix_invert(out_matrix);
-            if (out_matrix.invalid) {
-                qcms_transform_release(transform);
-                return NULL;
-            }
-            result = matrix_multiply(out_matrix, in_matrix);
+		/* build combined colorant matrix */
+		in_matrix = build_colorant_matrix(in);
+		out_matrix = build_colorant_matrix(out);
+		out_matrix = matrix_invert(out_matrix);
+		if (out_matrix.invalid) {
+			qcms_transform_release(transform);
+			return NULL;
+		}
+		result = matrix_multiply(out_matrix, in_matrix);
 
-            /* store the results in column major mode
-             * this makes doing the multiplication with sse easier */
-            transform->matrix[0][0] = result.m[0][0];
-            transform->matrix[1][0] = result.m[0][1];
-            transform->matrix[2][0] = result.m[0][2];
-            transform->matrix[0][1] = result.m[1][0];
-            transform->matrix[1][1] = result.m[1][1];
-            transform->matrix[2][1] = result.m[1][2];
-            transform->matrix[0][2] = result.m[2][0];
-            transform->matrix[1][2] = result.m[2][1];
-            transform->matrix[2][2] = result.m[2][2];
+		/* store the results in column major mode
+		 * this makes doing the multiplication with sse easier */
+		transform->matrix[0][0] = result.m[0][0];
+		transform->matrix[1][0] = result.m[0][1];
+		transform->matrix[2][0] = result.m[0][2];
+		transform->matrix[0][1] = result.m[1][0];
+		transform->matrix[1][1] = result.m[1][1];
+		transform->matrix[2][1] = result.m[1][2];
+		transform->matrix[0][2] = result.m[2][0];
+		transform->matrix[1][2] = result.m[2][1];
+		transform->matrix[2][2] = result.m[2][2];
 
-        } else if (in->color_space == GRAY_SIGNATURE) {
-            if (in_type != QCMS_DATA_GRAY_8 &&
-                    in_type != QCMS_DATA_GRAYA_8){
-                assert(0 && "input type");
-                transform_free(transform);
-                return NULL;
-            }
+	} else if (in->color_space == GRAY_SIGNATURE) {
+		if (in_type != QCMS_DATA_GRAY_8 &&
+				in_type != QCMS_DATA_GRAYA_8){
+			assert(0 && "input type");
+			transform_free(transform);
+			return NULL;
+		}
 
-            transform->input_gamma_table_gray = build_input_gamma_table(in->grayTRC);
-	    if (!transform->input_gamma_table_gray) {
-		    qcms_transform_release(transform);
-		    return NO_MEM_TRANSFORM;
-	    }
+		transform->input_gamma_table_gray = build_input_gamma_table(in->grayTRC);
+		if (!transform->input_gamma_table_gray) {
+			qcms_transform_release(transform);
+			return NO_MEM_TRANSFORM;
+		}
 
-	    if (precache) {
-		    if (in_type == QCMS_DATA_GRAY_8) {
-			    transform->transform_fn = qcms_transform_data_gray_out_precache;
-		    } else {
-			    transform->transform_fn = qcms_transform_data_graya_out_precache;
-		    }
-	    } else {
-		    if (in_type == QCMS_DATA_GRAY_8) {
-			    transform->transform_fn = qcms_transform_data_gray_out_lut;
-		    } else {
-			    transform->transform_fn = qcms_transform_data_graya_out_lut;
-		    }
-	    }
+		if (precache) {
+			if (in_type == QCMS_DATA_GRAY_8) {
+				transform->transform_fn = qcms_transform_data_gray_out_precache;
+			} else {
+				transform->transform_fn = qcms_transform_data_graya_out_precache;
+			}
+		} else {
+			if (in_type == QCMS_DATA_GRAY_8) {
+				transform->transform_fn = qcms_transform_data_gray_out_lut;
+			} else {
+				transform->transform_fn = qcms_transform_data_graya_out_lut;
+			}
+		}
 	} else {
 		assert(0 && "unexpected colorspace");
-		qcms_transform_release(transform);
-		return NO_MEM_TRANSFORM;
+		transform_free(transform);
+		return NULL;
 	}
 	return transform;
 }
@@ -1369,4 +1263,10 @@ __attribute__((__force_align_arg_pointer__))
 void qcms_transform_data(qcms_transform *transform, void *src, void *dest, size_t length)
 {
 	transform->transform_fn(transform, src, dest, length);
+}
+
+qcms_bool qcms_supports_iccv4;
+void qcms_enable_iccv4()
+{
+	qcms_supports_iccv4 = true;
 }

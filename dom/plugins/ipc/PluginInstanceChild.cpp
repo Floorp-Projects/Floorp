@@ -1478,12 +1478,6 @@ PluginInstanceChild::SetWindowLongWHook(HWND hWnd,
 void
 PluginInstanceChild::HookSetWindowLongPtr()
 {
-#ifdef _WIN64
-    // XXX WindowsDllInterceptor doesn't support hooks
-    // in 64-bit builds, disabling this code for now.
-    return;
-#endif
-
     if (!(GetQuirks() & PluginModuleChild::QUIRK_FLASH_HOOK_SETLONGPTR))
         return;
 

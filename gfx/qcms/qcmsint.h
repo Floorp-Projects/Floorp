@@ -1,3 +1,4 @@
+/* vim: set ts=8 sw=8 noexpandtab: */
 #include "qcms.h"
 #include "qcmstypes.h"
 
@@ -29,6 +30,19 @@ struct _qcms_transform {
 	float *input_gamma_table_g;
 	float *input_gamma_table_b;
 
+	float *input_clut_table_r;
+	float *input_clut_table_g;
+	float *input_clut_table_b;
+	uint16_t input_clut_table_length;
+	float *r_clut;
+	float *g_clut;
+	float *b_clut;
+	uint16_t grid_size;
+	float *output_clut_table_r;
+	float *output_clut_table_g;
+	float *output_clut_table_b;
+	uint16_t output_clut_table_length;
+ 
 	float *input_gamma_table_gray;
 
 	float out_gamma_r;
@@ -56,8 +70,42 @@ struct _qcms_transform {
 	void (*transform_fn)(struct _qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length);
 };
 
+struct matrix {
+	float m[3][3];
+	bool invalid;
+};
+struct qcms_modular_transform {
+	struct matrix matrix;
+	float tx, ty, tz;
+
+	float *input_clut_table_r;
+	float *input_clut_table_g;
+	float *input_clut_table_b;
+	uint16_t input_clut_table_length;
+	float *r_clut;
+	float *g_clut;
+	float *b_clut;
+	uint16_t grid_size;
+	float *output_clut_table_r;
+	float *output_clut_table_g;
+	float *output_clut_table_b;
+	uint16_t output_clut_table_length;
+ 
+	uint16_t *output_gamma_lut_r;
+	uint16_t *output_gamma_lut_g;
+	uint16_t *output_gamma_lut_b;
+
+	size_t output_gamma_lut_r_length;
+	size_t output_gamma_lut_g_length;
+	size_t output_gamma_lut_b_length;
+
+	void (*transform_module_fn)(struct qcms_modular_transform *transform, float *src, float *dest, size_t length);	
+	struct qcms_modular_transform *next_transform;
+};
+
 typedef int32_t s15Fixed16Number;
 typedef uint16_t uInt16Number;
+typedef uint8_t uInt8Number;
 
 struct XYZNumber {
 	s15Fixed16Number X;
@@ -66,11 +114,43 @@ struct XYZNumber {
 };
 
 struct curveType {
+	uint32_t type;
 	uint32_t count;
+	float parameter[7];
 	uInt16Number data[];
 };
 
-struct lutType {
+struct lutmABType {
+	uint8_t num_in_channels;
+	uint8_t num_out_channels;
+	// 16 is the upperbound, actual is 0..num_in_channels.
+	uint8_t num_grid_points[16];
+
+	s15Fixed16Number e00;
+	s15Fixed16Number e01;
+	s15Fixed16Number e02;
+	s15Fixed16Number e03;
+	s15Fixed16Number e10;
+	s15Fixed16Number e11;
+	s15Fixed16Number e12;
+	s15Fixed16Number e13;
+	s15Fixed16Number e20;
+	s15Fixed16Number e21;
+	s15Fixed16Number e22;
+	s15Fixed16Number e23;
+
+	// reversed elements (for mBA)
+	bool reversed;
+
+	float *clut_table;
+	struct curveType *a_curves[10];
+	struct curveType *b_curves[10];
+	struct curveType *m_curves[10];
+	float clut_table_data[];
+};
+
+/* should lut8Type and lut16Type be different types? */
+struct lutType { // used by lut8Type/lut16Type (mft2) only
 	uint8_t num_input_channels;
 	uint8_t num_output_channels;
 	uint8_t num_clut_grid_points;
@@ -88,9 +168,11 @@ struct lutType {
 	uint16_t num_input_table_entries;
 	uint16_t num_output_table_entries;
 
-	uint16_t *input_table;
-	uint16_t *clut_table;
-	uint16_t *output_table;
+	float *input_table;
+	float *clut_table;
+	float *output_table;
+
+	float table_data[];
 };
 #if 0
 /* this is from an intial idea of having the struct correspond to the data in
@@ -113,10 +195,13 @@ struct tag_value {
 
 #define RGB_SIGNATURE  0x52474220
 #define GRAY_SIGNATURE 0x47524159
+#define XYZ_SIGNATURE  0x58595A20
+#define LAB_SIGNATURE  0x4C616220
 
 struct _qcms_profile {
 	uint32_t class;
 	uint32_t color_space;
+	uint32_t pcs;
 	qcms_intent rendering_intent;
 	struct XYZNumber redColorant;
 	struct XYZNumber blueColorant;
@@ -126,6 +211,10 @@ struct _qcms_profile {
 	struct curveType *greenTRC;
 	struct curveType *grayTRC;
 	struct lutType *A2B0;
+	struct lutType *B2A0;
+	struct lutmABType *mAB;
+	struct lutmABType *mBA;
+	struct matrix chromaticAdaption;
 
 	struct precache_output *output_table_r;
 	struct precache_output *output_table_g;
@@ -136,6 +225,8 @@ struct _qcms_profile {
 #define inline _inline
 #endif
 
+/* produces the nearest float to 'a' with a maximum error
+ * of 1/1024 which happens for large values like 0x40000040 */
 static inline float s15Fixed16Number_to_float(s15Fixed16Number a)
 {
 	return ((int32_t)a)/65536.f;
@@ -145,6 +236,17 @@ static inline s15Fixed16Number double_to_s15Fixed16Number(double v)
 {
 	return (int32_t)(v*65536);
 }
+
+static inline float uInt8Number_to_float(uInt8Number a)
+{
+	return ((int32_t)a)/255.f;
+}
+
+static inline float uInt16Number_to_float(uInt16Number a)
+{
+	return ((int32_t)a)/65535.f;
+}
+
 
 void precache_release(struct precache_output *p);
 qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
@@ -165,3 +267,5 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
                                           unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
+
+extern qcms_bool qcms_supports_iccv4;
