@@ -2838,8 +2838,9 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
         if (!obj)
             return JS_FALSE;
         TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Object);
-        if (!type || !obj->setTypeAndEmptyShape(cx, type))
+        if (!type)
             return JS_FALSE;
+        obj->setType(type);
     }
     vp->setObject(*obj);
     return JS_TRUE;
@@ -4269,7 +4270,8 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
         unsigned newScriptSlots = gc::GetGCKindSlots(kind);
         if (newScriptSlots == numFixedSlots() && gc::CanBumpFinalizeKind(kind)) {
             kind = gc::BumpFinalizeKind(kind);
-            JSObject *obj = NewReshapedObject(cx, type(), getParent(), kind, type()->newScript->shape);
+            JSObject *obj = NewReshapedObject(cx, type(), getParent(), kind,
+                                              type()->newScript->shape);
             if (!obj)
                 return false;
 

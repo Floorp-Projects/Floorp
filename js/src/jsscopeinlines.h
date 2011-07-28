@@ -72,6 +72,13 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
 {
     JS_ASSERT(!singleton);
 
+    /*
+     * Empty shapes can only be on the default 'new' type for a prototype.
+     * Objects with a common prototype use the same shape lineage, even if
+     * their prototypes differ.
+     */
+    JS_ASSERT(this == proto->newType);
+
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     int i = kind - js::gc::FINALIZE_OBJECT0;
 

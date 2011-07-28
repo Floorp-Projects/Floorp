@@ -798,10 +798,6 @@ JSObject::setSingletonType(JSContext *cx)
 
     flags |= SINGLETON_TYPE | LAZY_TYPE;
 
-    js::Shape *shape = js::EmptyShape::create(cx, getClass());
-    if (!shape)
-        return false;
-    setMap(shape);
     return true;
 }
 
@@ -858,27 +854,6 @@ JSObject::setType(js::types::TypeObject *newType)
     JS_ASSERT_IF(hasSpecialEquality(), newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     JS_ASSERT(!hasSingletonType());
     type_ = newType;
-}
-
-inline bool
-JSObject::setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType)
-{
-    JS_ASSERT(nativeEmpty() && newType->canProvideEmptyShape(getClass()));
-    setType(newType);
-
-    js::Shape *shape = type()->getEmptyShape(cx, getClass(), finalizeKind());
-    if (!shape)
-        return false;
-    setMap(shape);
-    return true;
-}
-
-inline void
-JSObject::setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape)
-{
-    JS_ASSERT(newShape->slot == lastProperty()->slot);
-    setType(newType);
-    setLastProperty(newShape);
 }
 
 inline void
@@ -1219,7 +1194,6 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
                    gc::FinalizeKind kind)
 {
     JS_ASSERT(clasp->isNative());
-    JS_ASSERT(type == obj->type());
 
     /* Share proto's emptyShape only if obj is similar to proto. */
     js::EmptyShape *empty = NULL;
@@ -1540,6 +1514,8 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 static JS_ALWAYS_INLINE JSObject *
 NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::FinalizeKind kind)
 {
+    JS_ASSERT(type == type->proto->newType);
+
     JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
         goto out;
@@ -1563,7 +1539,7 @@ out:
 }
 
 extern JSObject *
-NewReshapedObject(JSContext *cx, types::TypeObject *type, JSObject *parent,
+NewReshapedObject(JSContext *cx, js::types::TypeObject *type, JSObject *parent,
                   gc::FinalizeKind kind, const Shape *shape);
 
 /*

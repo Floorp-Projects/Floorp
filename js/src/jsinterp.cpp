@@ -5202,12 +5202,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, (JSProtoKey) i);
     if (!type)
         goto error;
-    if (i == JSProto_Array) {
-        obj->setType(type);
-    } else {
-        if (!obj->setTypeAndEmptyShape(cx, type))
-            goto error;
-    }
+    obj->setType(type);
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
