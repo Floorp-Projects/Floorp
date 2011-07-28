@@ -9,6 +9,7 @@ In this order:
   angle-renaming.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
   angle-amap-arev-fix.patch - plain bug fix, this is ANGLE r699
+  angle-r702.patch - this is ANGLE r702
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

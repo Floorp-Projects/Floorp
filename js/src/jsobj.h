@@ -235,7 +235,8 @@ GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, const Value &def, Valu
 } /* namespace js */
 
 extern JSBool
-js_SetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp, JSBool strict);
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
+                     js::Value *vp, JSBool strict);
 
 extern JSBool
 js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
@@ -355,20 +356,23 @@ struct JSObject : js::gc::Cell {
     inline bool nativeContains(const js::Shape &shape);
 
     enum {
-        DELEGATE                  =   0x01,
-        SYSTEM                    =   0x02,
-        NOT_EXTENSIBLE            =   0x04,
-        BRANDED                   =   0x08,
-        GENERIC                   =   0x10,
-        METHOD_BARRIER            =   0x20,
-        INDEXED                   =   0x40,
-        OWN_SHAPE                 =   0x80,
-        BOUND_FUNCTION            =  0x100,
-        HAS_EQUALITY              =  0x200,
-        VAROBJ                    =  0x400,
-        METHOD_THRASH_COUNT_MASK  = 0x3000,
-        METHOD_THRASH_COUNT_SHIFT =     12,
-        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT
+        DELEGATE                  =       0x01,
+        SYSTEM                    =       0x02,
+        NOT_EXTENSIBLE            =       0x04,
+        BRANDED                   =       0x08,
+        GENERIC                   =       0x10,
+        METHOD_BARRIER            =       0x20,
+        INDEXED                   =       0x40,
+        OWN_SHAPE                 =       0x80,
+        METHOD_THRASH_COUNT_MASK  =      0x300,
+        METHOD_THRASH_COUNT_SHIFT =          8,
+        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
+        BOUND_FUNCTION            =      0x400,
+        HAS_EQUALITY              =      0x800,
+        VAROBJ                    =     0x1000,
+        WATCHED                   =     0x2000,
+
+        UNUSED_FLAG_BITS          = 0xFFFFC000
     };
 
     /*
@@ -391,8 +395,13 @@ struct JSObject : js::gc::Cell {
     void        *privateData;               /* private data */
     jsuword     capacity;                   /* number of slots; for ArrayBuffer the number 
                                                may be be non-integral, so this may underestimate */
+  private:
     js::Value   *slots;                     /* dynamically allocated slots,
                                                or pointer to fixedSlots() */
+  public:
+    static size_t offsetOfSlots() {
+        return offsetof(JSObject, slots);
+    }
 
     /*
      * Return an immutable, shareable, empty shape with the same clasp as this
@@ -473,10 +482,18 @@ struct JSObject : js::gc::Cell {
     /* Sets an object's HAS_EQUALITY flag based on its clasp. */
     inline void syncSpecialEquality();
 
-    /* See StackFrame::varObj. */
-    inline bool isVarObj() const { return flags & VAROBJ; }
-    inline void makeVarObj() { flags |= VAROBJ; }
+    bool watched() const { return !!(flags & WATCHED); }
 
+    void setWatched(JSContext *cx) {
+        if (!watched()) {
+            flags |= WATCHED;
+            generateOwnShape(cx);
+        }
+    }
+
+   /* See StackFrame::varObj. */
+   inline bool isVarObj() const { return flags & VAROBJ; }
+   inline void makeVarObj() { flags |= VAROBJ; }
   private:
     void generateOwnShape(JSContext *cx);
 
@@ -503,7 +520,6 @@ struct JSObject : js::gc::Cell {
     void protoShapeChange(JSContext *cx);
     void shadowingShapeChange(JSContext *cx, const js::Shape &shape);
     bool globalObjectOwnShapeChange(JSContext *cx);
-    void watchpointOwnShapeChange(JSContext *cx) { generateOwnShape(cx); }
 
     void extensibleShapeChange(JSContext *cx) {
         /* This will do for now. */
@@ -640,8 +656,19 @@ struct JSObject : js::gc::Cell {
      * Get a direct pointer to the object's slots.
      * This can be reallocated if the object is modified, watch out!
      */
-    js::Value *getSlots() const {
-        return slots;
+    const js::Value *getSlots() const { return slots; }
+
+    js::Value *getSlotsPtr() { return slots; }
+    void setSlotsPtr(js::Value *vp) { slots = vp; }
+
+    void copySlots(uint32 dstStart, const js::Value *src, uint32 count) {
+        JS_ASSERT(dstStart + count <= capacity);
+        memcpy(slots + dstStart, src, count * sizeof(js::Value));
+    }
+
+    void setSlotsUndefined(uint32 start, uint32 count) {
+        JS_ASSERT(start + count <= capacity);
+        js::SetValueRangeToUndefined(slots + start, count);
     }
 
     /*
@@ -783,10 +810,11 @@ struct JSObject : js::gc::Cell {
     inline void setArrayLength(uint32 length);
 
     inline uint32 getDenseArrayCapacity();
-    inline js::Value* getDenseArrayElements();
+    inline const js::Value* getDenseArrayElements();
     inline const js::Value &getDenseArrayElement(uintN idx);
-    inline js::Value* addressOfDenseArrayElement(uintN idx);
     inline void setDenseArrayElement(uintN idx, const js::Value &val);
+    inline void copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count);
+    inline void moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
 
     /*
@@ -850,11 +878,11 @@ struct JSObject : js::gc::Cell {
 
     /* Returns the formal argument at the given index. */
     inline const js::Value &callObjArg(uintN i) const;
-    inline js::Value &callObjArg(uintN i);
+    inline void setCallObjArg(uintN i, const js::Value &v);
 
     /* Returns the variable at the given index. */
     inline const js::Value &callObjVar(uintN i) const;
-    inline js::Value &callObjVar(uintN i);
+    inline void setCallObjVar(uintN i, const js::Value &v);
 
     /*
      * Date-specific getters and setters.
@@ -915,7 +943,8 @@ struct JSObject : js::gc::Cell {
 
     inline js::Value *getFlatClosureUpvars() const;
     inline js::Value getFlatClosureUpvar(uint32 i) const;
-    inline js::Value &getFlatClosureUpvar(uint32 i);
+    inline const js::Value &getFlatClosureUpvar(uint32 i);
+    inline void setFlatClosureUpvar(uint32 i, const js::Value &v);
     inline void setFlatClosureUpvars(js::Value *upvars);
 
     inline bool hasMethodObj(const JSObject& obj) const;
@@ -1159,9 +1188,12 @@ struct JSObject : js::gc::Cell {
     }
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
-        js::StrictPropertyIdOp op = getOps()->setProperty;
-        return (op ? op : js_SetProperty)(cx, this, id, vp, strict);
+        if (getOps()->setProperty)
+            return nonNativeSetProperty(cx, id, vp, strict);
+        return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
     }
+
+    JSBool nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
 
     JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
         js::AttributesOp op = getOps()->getAttributes;
@@ -1185,7 +1217,9 @@ struct JSObject : js::gc::Cell {
 
     bool defaultValue(JSContext *cx, JSType hint, js::Value *vp) {
         js::ConvertOp op = getClass()->convert;
-        return (op == js::ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+        bool ok = (op == js::ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+        JS_ASSERT_IF(ok, vp->isPrimitive());
+        return ok;
     }
 
     JSType typeOf(JSContext *cx) {
@@ -1725,10 +1759,6 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, js::Value *vp)
  */
 extern JS_FRIEND_API(bool)
 js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
-
-extern JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
-                     js::Value *vp, JSBool strict);
 
 /*
  * Change attributes for the given native property. The caller must ensure

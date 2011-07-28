@@ -343,7 +343,7 @@ add_test(function test_autoconnect() {
   let server = sync_httpd_setup();
   setUp();
 
-  Service.delayedAutoConnect(0);
+  SyncScheduler.delayedAutoConnect(0);
 });
 
 add_test(function test_autoconnect_mp_locked() {
@@ -376,7 +376,7 @@ add_test(function test_autoconnect_mp_locked() {
     });
   });
 
-  Service.delayedAutoConnect(0);
+  SyncScheduler.delayedAutoConnect(0);
 });
 
 let timer;
@@ -395,7 +395,7 @@ add_test(function test_no_autoconnect_during_wizard() {
 
   // First wait >100ms (nsITimers can take up to that much time to fire, so
   // we can account for the timer in delayedAutoconnect) and then two event
-  // loop ticks (to account for the Utils.nextTick() in _autoConnect).
+  // loop ticks (to account for the Utils.nextTick() in autoConnect).
   let ticks = 2;
   function wait() {
     if (ticks) {
@@ -410,7 +410,59 @@ add_test(function test_no_autoconnect_during_wizard() {
   }
   timer = Utils.namedTimer(wait, 150, {}, "timer");
 
-  Service.delayedAutoConnect(0);
+  SyncScheduler.delayedAutoConnect(0);
+});
+
+add_test(function test_no_autoconnect_status_not_ok() {
+  let server = sync_httpd_setup();
+
+  // Ensure we don't actually try to sync (or log in for that matter).
+  function onLoginStart() {
+    do_throw("Should not get here!");
+  }
+  Svc.Obs.add("weave:service:login:start", onLoginStart);
+
+  // First wait >100ms (nsITimers can take up to that much time to fire, so
+  // we can account for the timer in delayedAutoconnect) and then two event
+  // loop ticks (to account for the Utils.nextTick() in autoConnect).
+  let ticks = 2;
+  function wait() {
+    if (ticks) {
+      ticks -= 1;
+      Utils.nextTick(wait);
+      return;
+    }
+    Svc.Obs.remove("weave:service:login:start", onLoginStart);
+
+    do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
+    do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
+    
+    Service.startOver();
+    server.stop(run_next_test); 
+  }
+  timer = Utils.namedTimer(wait, 150, {}, "timer");
+
+  SyncScheduler.delayedAutoConnect(0);
+});
+
+add_test(function test_autoconnectDelay_pref() {
+  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
+    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  Svc.Prefs.set("autoconnectDelay", 1);
+
+  let server = sync_httpd_setup();
+  setUp();
+
+  Svc.Obs.notify("weave:service:ready");
+
+  // autoconnectDelay pref is multiplied by 1000.
+  do_check_eq(SyncScheduler._autoTimer.delay, 1000);
+  do_check_eq(Status.service, STATUS_OK);
 });
 
 add_test(function test_idle_adjustSyncInterval() {

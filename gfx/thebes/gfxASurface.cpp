@@ -145,12 +145,16 @@ gfxASurface::SurfaceDestroyFunc(void *data) {
 gfxASurface*
 gfxASurface::GetSurfaceWrapper(cairo_surface_t *csurf)
 {
+    if (!csurf)
+        return NULL;
     return (gfxASurface*) cairo_surface_get_user_data(csurf, &gfxasurface_pointer_key);
 }
 
 void
 gfxASurface::SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf)
 {
+    if (!csurf)
+        return;
     cairo_surface_set_user_data(csurf, &gfxasurface_pointer_key, asurf, SurfaceDestroyFunc);
 }
 
@@ -265,6 +269,8 @@ gfxASurface::GetContentType() const
 void
 gfxASurface::SetDeviceOffset(const gfxPoint& offset)
 {
+    if (!mSurfaceValid)
+        return;
     cairo_surface_set_device_offset(mSurface,
                                     offset.x, offset.y);
 }
@@ -272,6 +278,8 @@ gfxASurface::SetDeviceOffset(const gfxPoint& offset)
 gfxPoint
 gfxASurface::GetDeviceOffset() const
 {
+    if (!mSurfaceValid)
+        return gfxPoint(0.0, 0.0);
     gfxPoint pt;
     cairo_surface_get_device_offset(mSurface, &pt.x, &pt.y);
     return pt;
@@ -280,18 +288,24 @@ gfxASurface::GetDeviceOffset() const
 void
 gfxASurface::Flush() const
 {
+    if (!mSurfaceValid)
+        return;
     cairo_surface_flush(mSurface);
 }
 
 void
 gfxASurface::MarkDirty()
 {
+    if (!mSurfaceValid)
+        return;
     cairo_surface_mark_dirty(mSurface);
 }
 
 void
 gfxASurface::MarkDirty(const gfxRect& r)
 {
+    if (!mSurfaceValid)
+        return;
     cairo_surface_mark_dirty_rectangle(mSurface,
                                        (int) r.X(), (int) r.Y(),
                                        (int) r.Width(), (int) r.Height());
@@ -302,18 +316,23 @@ gfxASurface::SetData(const cairo_user_data_key_t *key,
                      void *user_data,
                      thebes_destroy_func_t destroy)
 {
+    if (!mSurfaceValid)
+        return;
     cairo_surface_set_user_data(mSurface, key, user_data, destroy);
 }
 
 void *
 gfxASurface::GetData(const cairo_user_data_key_t *key)
 {
+    if (!mSurfaceValid)
+        return NULL;
     return cairo_surface_get_user_data(mSurface, key);
 }
 
 void
 gfxASurface::Finish()
 {
+    // null surfaces are allowed here
     cairo_surface_finish(mSurface);
 }
 

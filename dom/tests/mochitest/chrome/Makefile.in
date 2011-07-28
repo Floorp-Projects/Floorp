@@ -66,6 +66,7 @@ _TEST_FILES = \
 		DOMWindowCreated_chrome.xul \
 		DOMWindowCreated_content.html \
 		test_sandbox_image.xul \
+		test_cyclecollector.xul \
 		test_resize_move_windows.xul \
 		test_popup_blocker_chrome.xul \
 		$(NULL)

@@ -63,6 +63,12 @@ JS_BEGIN_EXTERN_C
 
 #define JS_FREE_PATTERN 0xDA
 
+#define JS_OPT_ASSERT(expr)                                                   \
+    ((expr) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
+
+#define JS_OPT_ASSERT_IF(cond, expr)                                          \
+    ((!(cond) || (expr)) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
+
 #ifdef DEBUG
 
 #define JS_ASSERT(expr)                                                       \
