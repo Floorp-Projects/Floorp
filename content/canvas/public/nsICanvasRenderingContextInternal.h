@@ -122,6 +122,11 @@ public:
                                                        CanvasLayer *aOldLayer,
                                                        LayerManager *aManager) = 0;
 
+  // Return true if the canvas should be forced to be "inactive" to ensure
+  // it can be drawn to the screen even if it's too large to be blitted by
+  // an accelerated CanvasLayer.
+  virtual PRBool ShouldForceInactiveLayer(LayerManager *aManager) { return PR_FALSE; }
+
   virtual void MarkContextClean() = 0;
 
   // Redraw the dirty rectangle of this canvas.

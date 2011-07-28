@@ -112,6 +112,7 @@
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -288,14 +289,7 @@ nsEditor::PostCreate()
     mDidPostCreate = PR_TRUE;
 
     // Set up listeners
-    rv = CreateEventListeners();
-    if (NS_FAILED(rv))
-    {
-      RemoveEventListeners();
-
-      return rv;
-    }
-
+    CreateEventListeners();
     rv = InstallEventListeners();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -327,14 +321,14 @@ nsEditor::PostCreate()
   return NS_OK;
 }
 
-nsresult
+/* virtual */
+void
 nsEditor::CreateEventListeners()
 {
   // Don't create the handler twice
   if (!mEventListener) {
     mEventListener = new nsEditorEventListener();
   }
-  return NS_OK;
 }
 
 nsresult
@@ -3799,7 +3793,20 @@ nsEditor::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
 
   return resultNode;
 }
-  
+
+///////////////////////////////////////////////////////////////////////////
+// GetNodeAtRangeOffsetPoint: returns the node at this position in a range,
+// assuming that aParentOrNode is the node itself if it's a text node, or
+// the node's parent otherwise.
+//
+nsCOMPtr<nsIDOMNode>
+nsEditor::GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, PRInt32 aOffset)
+{
+  if (IsTextNode(aParentOrNode)) {
+    return aParentOrNode;
+  }
+  return GetChildAt(aParentOrNode, aOffset);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////

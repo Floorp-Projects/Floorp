@@ -234,9 +234,12 @@ GLXLibrary::EnsureInitialized()
     }
 
     if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
-        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap))
+        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
+                                         (LibrarySymbolLoader::PlatformLookupFunction)xGetProcAddress))
     {
         mHasTextureFromPixmap = PR_TRUE;
+    } else {
+        NS_WARNING("Texture from pixmap disabled");
     }
 
     gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
@@ -249,14 +252,24 @@ GLXLibrary::EnsureInitialized()
     return PR_TRUE;
 }
 
+PRBool
+GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
+{
+    if (!EnsureInitialized()) {
+        return PR_FALSE;
+    }
+    
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
 GLXPixmap 
 GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 {
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
-        return 0;
-    }
-
-    if (!EnsureInitialized()) {
+    if (!SupportsTextureFromPixmap(aSurface)) {
         return 0;
     }
 
@@ -552,11 +565,12 @@ public:
         mInUpdate = PR_FALSE;
     }
 
-    virtual bool DirectUpdate(gfxASurface* aSurface, const nsIntRegion& aRegion)
+
+    virtual bool DirectUpdate(gfxASurface* aSurface, const nsIntRegion& aRegion, const nsIntPoint& aFrom)
     {
         nsRefPtr<gfxContext> ctx = new gfxContext(mUpdateSurface);
         gfxUtils::ClipToRegion(ctx, aRegion);
-        ctx->SetSource(aSurface);
+        ctx->SetSource(aSurface, aFrom);
         ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
         ctx->Paint();
         return true;
@@ -565,7 +579,7 @@ public:
     virtual void BindTexture(GLenum aTextureUnit)
     {
         mGLContext->fActiveTexture(aTextureUnit);
-        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, Texture());
+        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
         sGLXLibrary.BindTexImage(mPixmap);
         mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
     }
@@ -583,6 +597,10 @@ public:
 
     virtual PRBool InUpdate() const { return mInUpdate; }
 
+    virtual GLuint GetTextureID() {
+        return mTexture;
+    };
+
 private:
    TextureImageGLX(GLuint aTexture,
                    const nsIntSize& aSize,
@@ -591,11 +609,12 @@ private:
                    GLContext* aContext,
                    gfxASurface* aSurface,
                    GLXPixmap aPixmap)
-        : TextureImage(aTexture, aSize, aWrapMode, aContentType)
+        : TextureImage(aSize, aWrapMode, aContentType)
         , mGLContext(aContext)
         , mUpdateSurface(aSurface)
         , mPixmap(aPixmap)
         , mInUpdate(PR_FALSE)
+        , mTexture(aTexture)
     {
         if (aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
             mShaderType = gl::RGBALayerProgramType;
@@ -608,6 +627,7 @@ private:
     nsRefPtr<gfxASurface> mUpdateSurface;
     GLXPixmap mPixmap;
     PRPackedBool mInUpdate;
+    GLuint mTexture;
 };
 
 already_AddRefed<TextureImage>

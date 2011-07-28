@@ -3,7 +3,7 @@
     <!-- This harness does not work locally in Safari -->
     <script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
     <script type="text/javascript" src="SimpleTest/TestRunner.js"></script>
-    <script type="text/javascript" src="SimpleTest/MozillaFileLogger.js"></script>
+    <script type="text/javascript" src="SimpleTest/MozillaLogger.js"></script>
     <script type="text/javascript" src="SimpleTest/quit.js"></script>
     <!--<link rel="stylesheet" type="text/css" href="/static/main.css" />-->
 </head>
@@ -29,8 +29,8 @@ if (params.closeWhenDone) {
 
 // logFile to write our results
 if (params.logFile) {
-  MozillaFileLogger.init(params.logFile);
-  TestRunner.logger.addListener("mozLogger", fileLevel + "", MozillaFileLogger.getLogCallback());
+  var spl = SpecialPowersLogger(params.logFile);
+  TestRunner.logger.addListener("mozLogger", fileLevel + "", spl.getLogCallback());
 }
 
 // if we get a quiet param, don't log to the console

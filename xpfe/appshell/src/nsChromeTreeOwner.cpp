@@ -56,7 +56,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULBrowserWindow.h"
 

@@ -93,7 +93,6 @@
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsITimelineService.h"
 #include "nsDOMScriptObjectHolder.h"
 #include "prmem.h"
 #include "WrapperFactory.h"
@@ -185,7 +184,10 @@ static PRTime sMaxChromeScriptRunTime;
 static nsIScriptSecurityManager *sSecurityManager;
 
 // nsMemoryPressureObserver observes the memory-pressure notifications
-// and forces a garbage collection and cycle collection when it happens.
+// and forces a garbage collection and cycle collection when it happens, if
+// the appropriate pref is set.
+
+static PRBool sGCOnMemoryPressure;
 
 class nsMemoryPressureObserver : public nsIObserver
 {
@@ -200,8 +202,10 @@ NS_IMETHODIMP
 nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
-  nsJSContext::GarbageCollectNow();
-  nsJSContext::CycleCollectNow();
+  if (sGCOnMemoryPressure) {
+    nsJSContext::GarbageCollectNow();
+    nsJSContext::CycleCollectNow();
+  }
   return NS_OK;
 }
 
@@ -904,7 +908,9 @@ static const char js_strict_debug_option_str[] = JS_OPTIONS_DOT_STR "strict.debu
 static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
 static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
 #ifdef JS_GC_ZEAL
-static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
+static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
+static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
+static const char js_zeal_compartment_str[]   = JS_OPTIONS_DOT_STR "gczeal.compartment_gc";
 #endif
 static const char js_tracejit_content_str[]   = JS_OPTIONS_DOT_STR "tracejit.content";
 static const char js_tracejit_chrome_str[]    = JS_OPTIONS_DOT_STR "tracejit.chrome";
@@ -1008,8 +1014,10 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
 #ifdef JS_GC_ZEAL
   PRInt32 zeal = Preferences::GetInt(js_zeal_option_str, -1);
+  PRInt32 frequency = Preferences::GetInt(js_zeal_frequency_str, JS_DEFAULT_ZEAL_FREQ);
+  PRBool compartment = Preferences::GetBool(js_zeal_compartment_str, JS_FALSE);
   if (zeal >= 0)
-    ::JS_SetGCZeal(context->mContext, (PRUint8)zeal, JS_DEFAULT_ZEAL_FREQ, JS_FALSE);
+    ::JS_SetGCZeal(context->mContext, (PRUint8)zeal, frequency, compartment);
 #endif
 
   return 0;
@@ -1828,7 +1836,9 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 #ifdef NS_FUNCTION_TIMER
   {
     JSObject *obj = static_cast<JSObject *>(aHandler);
-    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
+    if (obj->isFunctionProxy())
+      obj = obj->unwrap(NULL);
+    JSString *id = JS_GetFunctionId(GET_FUNCTION_PRIVATE(mContext, obj));
     JSAutoByteString bytes;
     const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
     NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
@@ -2092,8 +2102,6 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     NS_TIME_FUNCTION_MIN(1.0);
-
-    NS_TIMELINE_MARK_FUNCTION("js script deserialize");
 
     PRUint32 size;
     rv = aStream->Read32(&size);
@@ -3686,32 +3694,32 @@ ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
   return jsPrincipals;
 }
 
-static JSObject*
-DOMReadStructuredClone(JSContext* cx,
-                       JSStructuredCloneReader* reader,
-                       uint32 tag,
-                       uint32 data,
-                       void* closure)
+JSObject*
+NS_DOMReadStructuredClone(JSContext* cx,
+                          JSStructuredCloneReader* reader,
+                          uint32 tag,
+                          uint32 data,
+                          void* closure)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return nsnull;
 }
 
-static JSBool
-DOMWriteStructuredClone(JSContext* cx,
-                        JSStructuredCloneWriter* writer,
-                        JSObject* obj,
-                        void *closure)
+JSBool
+NS_DOMWriteStructuredClone(JSContext* cx,
+                           JSStructuredCloneWriter* writer,
+                           JSObject* obj,
+                           void *closure)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return JS_FALSE;
 }
 
-static void
-DOMStructuredCloneError(JSContext* cx,
-                        uint32 errorid)
+void
+NS_DOMStructuredCloneError(JSContext* cx,
+                           uint32 errorid)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
@@ -3755,9 +3763,9 @@ nsJSRuntime::Init()
 
   // Set up the structured clone callbacks.
   static JSStructuredCloneCallbacks cloneCallbacks = {
-    DOMReadStructuredClone,
-    DOMWriteStructuredClone,
-    DOMStructuredCloneError
+    NS_DOMReadStructuredClone,
+    NS_DOMWriteStructuredClone,
+    NS_DOMStructuredCloneError
   };
   JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
 
@@ -3794,6 +3802,10 @@ nsJSRuntime::Init()
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
     return NS_ERROR_FAILURE;
+
+  Preferences::AddBoolVarCache(&sGCOnMemoryPressure,
+                               "javascript.options.gc_on_memory_pressure",
+                               PR_TRUE);
 
   nsIObserver* memPressureObserver = new nsMemoryPressureObserver();
   NS_ENSURE_TRUE(memPressureObserver, NS_ERROR_OUT_OF_MEMORY);

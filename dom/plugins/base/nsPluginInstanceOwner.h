@@ -84,6 +84,12 @@ class gfxXlibSurface;
 #include "gfxQtNativeRenderer.h"
 #endif
 
+#ifdef XP_OS2
+#define INCL_PM
+#define INCL_GPI
+#include <os2.h>
+#endif
+
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo,
                               public nsIDOMMouseListener,
@@ -324,7 +330,7 @@ private:
   NP_Port                                   mQDPluginPortCopy;
 #endif
   PRInt32                                   mInCGPaintLevel;
-  nsIOSurface                              *mIOSurface;
+  nsRefPtr<nsIOSurface>                     mIOSurface;
   nsCARenderer                              mCARenderer;
   CGColorSpaceRef                           mColorProfile;
   static nsCOMPtr<nsITimer>                *sCATimer;

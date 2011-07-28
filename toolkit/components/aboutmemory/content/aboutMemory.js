@@ -48,11 +48,13 @@ var gVerbose = (location.href.split(/[\?,]/).indexOf("verbose") !== -1);
 
 var gAddedObserver = false;
 
-const KIND_MAPPED = Ci.nsIMemoryReporter.KIND_MAPPED;
-const KIND_HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
-const KIND_OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
-const UNITS_BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
-const UNITS_COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
+const KIND_NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
+const KIND_HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
+const KIND_OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
+const UNITS_BYTES  = Ci.nsIMemoryReporter.UNITS_BYTES;
+const UNITS_COUNT  = Ci.nsIMemoryReporter.UNITS_COUNT;
+const UNITS_COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
+const UNITS_PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
 const kUnknown = -1;    // used for _amount if a memory reporter failed
 
@@ -133,17 +135,8 @@ function sendHeapMinNotifications()
   sendHeapMinNotificationsInner();
 }
 
-/**
- * Top-level function that does the work of generating the page.
- */
-function update()
+function getReportersByProcess()
 {
-  // First, clear the page contents.  Necessary because update() might be
-  // called more than once due to ChildMemoryListener.
-  var content = $("content");
-  content.parentNode.replaceChild(content.cloneNode(false), content);
-  content = $("content");
-
   var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
       getService(Ci.nsIMemoryReporterManager);
 
@@ -157,6 +150,7 @@ function update()
   //       _units:       number;
   //       _amount:      number;
   //       _description: string;
+  //       _nMerged:     number;  (only defined if >= 2)
   //     }
   //
   //   After this point we never use the original memory reporter again.
@@ -182,10 +176,19 @@ function update()
       reportersByProcess[process] = {};
     }
     var reporters = reportersByProcess[process];
-    if (reporters[r._path]) {
+    var reporter = reporters[r._path];
+    if (reporter) {
       // Already an entry;  must be a duplicated reporter.  This can
-      // happen legitimately.  Sum the values.
-      reporters[r._path]._amount += r._amount;
+      // happen legitimately.  Sum the values (accounting for possible kUnknown
+      // amounts), and mark the reporter as a dup.  We mark dups because it's
+      // useful to know when a reporter is duplicated;  it might be worth
+      // investigating and splitting up to have non-duplicated names.
+      if (reporter._amount !== kUnknown && r._amount !== kUnknown) {
+        reporter._amount += r._amount;
+      } else if (reporter._amount === kUnknown && r._amount !== kUnknown) {
+        reporter._amount = r._amount;
+      }
+      reporter._nMerged = reporter._nMerged ? reporter._nMerged + 1 : 2;
     } else {
       reporters[r._path] = r;
     }
@@ -204,8 +207,23 @@ function update()
     r.collectReports(addReporter, null);
   }
 
+  return reportersByProcess;
+}
+
+/**
+ * Top-level function that does the work of generating the page.
+ */
+function update()
+{
+  // First, clear the page contents.  Necessary because update() might be
+  // called more than once due to ChildMemoryListener.
+  var content = $("content");
+  content.parentNode.replaceChild(content.cloneNode(false), content);
+  content = $("content");
+
   // Generate output for one process at a time.  Always start with the
   // Main process.
+  var reportersByProcess = getReportersByProcess();
   var text = genProcessText("Main", reportersByProcess["Main"]);
   for (var process in reportersByProcess) {
     if (process !== "Main") {
@@ -248,16 +266,253 @@ function update()
   content.appendChild(div);
 }
 
-// Compare two memory reporter nodes.  We want to group together measurements
-// with the same units, so sort first by the nodes' _units field, then sort by
-// the amount if the units are equal.
-function cmpAmount(a, b)
+// Compare two 'explicit' memory reporter nodes.
+function cmpExplicitReporters(a, b)
 {
-  if (a._units != b._units)
-    return a._units - b._units;   // use the enum order from nsIMemoryReporter
-  else
-    return b._amount - a._amount;
+  assert(a._units === undefined && b._units === undefined,
+         "'explicit' tree nodes must not have _units defined");
+  return b._amount - a._amount;
 };
+
+// Compare two memory reporter nodes from the 'other measurements' list.
+function cmpOtherReporters(a, b)
+{
+  return a._path < b._path ? -1 :
+         a._path > b._path ?  1 :
+         0;
+};
+
+function findKid(aName, aKids)
+{
+  for (var i = 0; i < aKids.length; i++) {
+    if (aKids[i]._name === aName) {
+      return aKids[i];
+    }
+  }
+  return undefined;
+}
+
+/**
+ * From a list of memory reporters, builds a tree that mirrors the tree
+ * structure that will be shown as output.
+ *
+ * @param aReporters
+ *        The list of memory reporters.
+ * @return The built tree.  The tree nodes have this structure:
+ *         interface Node {
+ *           _name:        string;
+ *           _kind:        number;
+ *           _amount:      number;    (non-negative or 'kUnknown')
+ *           _description: string;
+ *           _kids:        [Node];
+ *           _hasReporter: boolean;   (only defined if 'true')
+ *           _hasProblem:  boolean;   (only defined if 'true')
+ *           _nMerged:     number;    (only defined if >= 2)
+ *         }
+ * _units isn't needed because it's always UNITS_BYTES for 'explicit'
+ * reporters.
+ */
+function buildTree(aReporters)
+{
+  const treeName = "explicit";
+
+  // We want to process all reporters that begin with 'treeName'.  First we
+  // build the tree but only fill in '_name', '_kind', '_kids', maybe
+  // '_hasReporter' and maybe '_nMerged'.  This is done top-down from the
+  // reporters.
+  var t = {
+    _name: "falseRoot",
+    _kind: KIND_OTHER,
+    _kids: []
+  };
+  for (var path in aReporters) {
+    var r = aReporters[path];
+    if (r._path.slice(0, treeName.length) === treeName) {
+      assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
+             "reporters in the tree must have KIND_HEAP or KIND_NONHEAP");
+      assert(r._units === UNITS_BYTES);
+      var names = r._path.split('/');
+      var u = t;
+      for (var i = 0; i < names.length; i++) {
+        var name = names[i];
+        var uMatch = findKid(name, u._kids);
+        if (uMatch) {
+          u = uMatch;
+        } else {
+          var v = {
+            _name: name,
+            _kind: KIND_OTHER,
+            _kids: []
+          };
+          u._kids.push(v);
+          u = v;
+        }
+      }
+      u._kind = r._kind;
+      u._hasReporter = true;
+      if (r._nMerged) {
+        u._nMerged = r._nMerged;
+      }
+    }
+  }
+  // Using falseRoot makes the above code simpler.  Now discard it, leaving
+  // treeName at the root.
+  t = t._kids[0];
+
+  // Next, fill in '_description' and '_amount', and maybe '_hasProblem'
+  // for each node.  This is done bottom-up because for most non-leaf nodes
+  // '_amount' and '_description' are determined from the child nodes.
+  function fillInTree(aT, aPrepath)
+  {
+    var path = aPrepath ? aPrepath + '/' + aT._name : aT._name;
+    if (aT._kids.length === 0) {
+      // Leaf node.  Must have a reporter.
+      aT._description = getDescription(aReporters, path);
+      var amount = getBytes(aReporters, path);
+      if (amount !== kUnknown) {
+        aT._amount = amount;
+      } else {
+        aT._amount = 0;
+        aT._hasProblem = true;
+      }
+    } else {
+      // Non-leaf node.  Get the size of the children.
+      var childrenBytes = 0;
+      for (var i = 0; i < aT._kids.length; i++) {
+        // Allow for kUnknown, treat it like 0.
+        var b = fillInTree(aT._kids[i], path);
+        childrenBytes += (b === kUnknown ? 0 : b);
+      }
+      if (aT._hasReporter === true) {
+        aT._description = getDescription(aReporters, path);
+        var amount = getBytes(aReporters, path);
+        if (amount !== kUnknown) {
+          // Non-leaf node with its own reporter.  Use the reporter and add
+          // an "other" child node.
+          aT._amount = amount;
+          var other = {
+            _name: "other",
+            _kind: KIND_OTHER,
+            _description: "All unclassified " + aT._name + " memory.",
+            _amount: aT._amount - childrenBytes,
+            _kids: []
+          };
+          aT._kids.push(other);
+        } else {
+          // Non-leaf node with a reporter that returns kUnknown.
+          // Use the sum of the children and mark it as problematic.
+          aT._amount = childrenBytes;
+          aT._hasProblem = true;
+        }
+      } else {
+        // Non-leaf node without its own reporter.  Derive its size and
+        // description entirely from its children.
+        aT._amount = childrenBytes;
+        aT._description = "The sum of all entries below '" + aT._name + "'.";
+      }
+    }
+    return aT._amount;
+  }
+  fillInTree(t, "");
+
+  // Determine how many bytes are reported by heap reporters.  Be careful
+  // with non-leaf reporters;  if we count a non-leaf reporter we don't want
+  // to count any of its child reporters.
+  var s = "";
+  function getKnownHeapUsedBytes(aT)
+  {
+    if (aT._kind === KIND_HEAP) {
+      return aT._amount;
+    } else {
+      var n = 0;
+      for (var i = 0; i < aT._kids.length; i++) {
+        n += getKnownHeapUsedBytes(aT._kids[i]);
+      }
+      return n;
+    }
+  }
+
+  // A special case:  compute the derived "heap-unclassified" value.  Don't
+  // mark "heap-allocated" when we get its size because we want it to appear
+  // in the "Other Measurements" list.
+  var heapUsedBytes = getBytes(aReporters, "heap-allocated", true);
+  var unknownHeapUsedBytes = 0;
+  var hasProblem = true;
+  if (heapUsedBytes !== kUnknown) {
+    unknownHeapUsedBytes = heapUsedBytes - getKnownHeapUsedBytes(t);
+    hasProblem = false;
+  }
+  var heapUnclassified = {
+    _name: "heap-unclassified",
+    _kind: KIND_HEAP,
+    _description:
+      "Memory not classified by a more specific reporter. This includes " +
+      "waste due to internal fragmentation in the heap allocator (caused " +
+      "when the allocator rounds up request sizes).",
+    _amount: unknownHeapUsedBytes,
+    _hasProblem: hasProblem,
+    _kids: []
+  }
+  t._kids.push(heapUnclassified);
+  t._amount += unknownHeapUsedBytes;
+
+  return t;
+}
+
+/**
+ * Sort all kid nodes from largest to smallest and aggregate
+ * insignificant nodes.
+ *
+ * @param aTotalBytes
+ *        The size of the tree's root node
+ * @param aT
+ *        The tree
+ */
+function filterTree(aTotalBytes, aT)
+{
+  const omitThresholdPerc = 0.5; /* percent */
+
+  function shouldOmit(aBytes)
+  {
+    return !gVerbose &&
+           aTotalBytes !== kUnknown &&
+           (100 * aBytes / aTotalBytes) < omitThresholdPerc;
+  }
+
+  aT._kids.sort(cmpExplicitReporters);
+
+  for (var i = 0; i < aT._kids.length; i++) {
+    if (shouldOmit(aT._kids[i]._amount)) {
+      // This sub-tree is below the significance threshold
+      // Remove it and all remaining (smaller) sub-trees, and
+      // replace them with a single aggregate node.
+      var i0 = i;
+      var aggBytes = 0;
+      for ( ; i < aT._kids.length; i++) {
+        aggBytes += aT._kids[i]._amount;
+      }
+      aT._kids.splice(i0);
+      var n = i - i0;
+      var rSub = {
+        _name: "(" + n + " omitted)",
+        _kind: KIND_OTHER,
+        _amount: aggBytes,
+        _description: n + " sub-trees that were below the " + 
+                      omitThresholdPerc + "% significance threshold.  " +
+                      "Click 'More verbose' at the bottom of this page " +
+                      "to see them.",
+        _kids: []
+      };
+      // Add the "omitted" sub-tree at the end and then resort, because the
+      // sum of the omitted sub-trees may be larger than some of the
+      // shown sub-trees.
+      aT._kids[i0] = rSub;
+      aT._kids.sort(cmpExplicitReporters);
+      break;
+    }
+    filterTree(aTotalBytes, aT._kids[i]);
+  }
+}
 
 /**
  * Generates the text for a single process.
@@ -270,229 +525,13 @@ function cmpAmount(a, b)
  */
 function genProcessText(aProcess, aReporters)
 {
-  /**
-   * From a list of memory reporters, builds a tree that mirrors the tree
-   * structure that will be shown as output.
-   *
-   * @return The built tree.  The tree nodes have this structure:
-   *         interface Node {
-   *           _name: string;
-   *           _kind:        number;
-   *           _amount:      number;    (non-negative or 'kUnknown')
-   *           _description: string;
-   *           _kids:        [Node];
-   *           _hasReporter: boolean;   (only defined if 'true')
-   *           _hasProblem:  boolean;   (only defined if 'true')
-   *         }
-   */
-  function buildTree()
-  {
-    const treeName = "explicit";
-    const omitThresholdPerc = 0.5; /* percent */
-
-    function findKid(aName, aKids)
-    {
-      for (var i = 0; i < aKids.length; i++) {
-        if (aKids[i]._name === aName) {
-          return aKids[i];
-        }
-      }
-      return undefined;
-    }
-
-    // We want to process all reporters that begin with 'treeName'.
-    // First we build the tree but only filling in '_name', '_kind', '_kids'
-    // and maybe '._hasReporter'.  This is done top-down from the reporters.
-    var t = {
-      _name: "falseRoot",
-      _kind: KIND_OTHER,
-      _kids: []
-    };
-    for (var path in aReporters) {
-      var r = aReporters[path];
-      if (r._path.slice(0, treeName.length) === treeName) {
-        var names = r._path.split('/');
-        var u = t;
-        for (var i = 0; i < names.length; i++) {
-          var name = names[i];
-          var uMatch = findKid(name, u._kids);
-          if (uMatch) {
-            u = uMatch;
-          } else {
-            var v = {
-              _name: name,
-              _kind: KIND_OTHER,
-              _kids: []
-            };
-            u._kids.push(v);
-            u = v;
-          }
-        }
-        u._kind = r._kind;
-        u._hasReporter = true;
-      }
-    }
-    // Using falseRoot makes the above code simpler.  Now discard it, leaving
-    // treeName at the root.
-    t = t._kids[0];
-
-    // Next, fill in '_description' and '_amount', and maybe '_hasProblem'
-    // for each node.  This is done bottom-up because for most non-leaf nodes
-    // '_amount' and '_description' are determined from the child nodes.
-    function fillInTree(aT, aPrepath)
-    {
-      var path = aPrepath ? aPrepath + '/' + aT._name : aT._name;
-      if (aT._kids.length === 0) {
-        // Leaf node.  Must have a reporter.
-        aT._description = getDescription(aReporters, path);
-        var amount = getBytes(aReporters, path);
-        if (amount !== kUnknown) {
-          aT._amount = amount;
-        } else {
-          aT._amount = 0;
-          aT._hasProblem = true;
-        }
-      } else {
-        // Non-leaf node.  Get the size of the children.
-        var childrenBytes = 0;
-        for (var i = 0; i < aT._kids.length; i++) {
-          // Allow for kUnknown, treat it like 0.
-          var b = fillInTree(aT._kids[i], path);
-          childrenBytes += (b === kUnknown ? 0 : b);
-        }
-        if (aT._hasReporter === true) {
-          aT._description = getDescription(aReporters, path);
-          var amount = getBytes(aReporters, path);
-          if (amount !== kUnknown) {
-            // Non-leaf node with its own reporter.  Use the reporter and add
-            // an "other" child node.
-            aT._amount = amount;
-            var other = {
-              _name: "other",
-              _kind: KIND_OTHER,
-              _description: "All unclassified " + aT._name + " memory.",
-              _amount: aT._amount - childrenBytes,
-              _kids: []
-            };
-            aT._kids.push(other);
-          } else {
-            // Non-leaf node with a reporter that returns kUnknown.
-            // Use the sum of the children and mark it as problematic.
-            aT._amount = childrenBytes;
-            aT._hasProblem = true;
-          }
-        } else {
-          // Non-leaf node without its own reporter.  Derive its size and
-          // description entirely from its children.
-          aT._amount = childrenBytes;
-          aT._description = "The sum of all entries below '" + aT._name + "'.";
-        }
-      }
-      return aT._amount;
-    }
-    fillInTree(t, "");
-
-    // Determine how many bytes are reported by heap reporters.  Be careful
-    // with non-leaf reporters;  if we count a non-leaf reporter we don't want
-    // to count any of its child reporters.
-    var s = "";
-    function getKnownHeapUsedBytes(aT)
-    {
-      if (aT._kind === KIND_HEAP) {
-        return aT._amount;
-      } else {
-        var n = 0;
-        for (var i = 0; i < aT._kids.length; i++) {
-          n += getKnownHeapUsedBytes(aT._kids[i]);
-        }
-        return n;
-      }
-    }
-
-    // A special case:  compute the derived "heap-unclassified" value.  Don't
-    // mark "heap-used" when we get its size because we want it to appear in
-    // the "Other Measurements" list.
-    var heapUsedBytes = getBytes(aReporters, "heap-used", true);
-    var unknownHeapUsedBytes = 0;
-    var hasProblem = true;
-    if (heapUsedBytes !== kUnknown) {
-      unknownHeapUsedBytes = heapUsedBytes - getKnownHeapUsedBytes(t);
-      hasProblem = false;
-    }
-    var heapUnclassified = {
-      _name: "heap-unclassified",
-      _kind: KIND_HEAP,
-      _description:
-        "Memory not classified by a more specific reporter. This includes " +
-        "memory allocated by the heap allocator in excess of that requested " +
-        "by the application; this can happen when the heap allocator rounds " +
-        "up request sizes.",
-      _amount: unknownHeapUsedBytes,
-      _hasProblem: hasProblem,
-      _kids: []
-    }
-    t._kids.push(heapUnclassified);
-    t._amount += unknownHeapUsedBytes;
-
-    function shouldOmit(aBytes)
-    {
-      return !gVerbose &&
-             t._amount !== kUnknown &&
-             (100 * aBytes / t._amount) < omitThresholdPerc;
-    }
-
-    /**
-     * Sort all kid nodes from largest to smallest and aggregate
-     * insignificant nodes.
-     *
-     * @param aT
-     *        The tree
-     */
-    function filterTree(aT)
-    {
-      aT._kids.sort(cmpAmount);
-
-      for (var i = 0; i < aT._kids.length; i++) {
-        if (shouldOmit(aT._kids[i]._amount)) {
-          // This sub-tree is below the significance threshold
-          // Remove it and all remaining (smaller) sub-trees, and
-          // replace them with a single aggregate node.
-          var i0 = i;
-          var aggBytes = 0;
-          for ( ; i < aT._kids.length; i++) {
-            aggBytes += aT._kids[i]._amount;
-          }
-          aT._kids.splice(i0);
-          var n = i - i0;
-          var rSub = {
-            _name: "(" + n + " omitted)",
-            _kind: KIND_OTHER,
-            _amount: aggBytes,
-            _description: n + " sub-trees that were below the " + 
-                          omitThresholdPerc + "% significance threshold.  " +
-                          "Click 'More verbose' at the bottom of this page " +
-                          "to see them.",
-            _kids: []
-          };
-          // Add the "omitted" sub-tree at the end and then resort, because the
-          // sum of the omitted sub-trees may be larger than some of the
-          // shown sub-trees.
-          aT._kids[i0] = rSub;
-          aT._kids.sort(cmpAmount);
-          break;
-        }
-        filterTree(aT._kids[i]);
-      }
-    }
-    filterTree(t);
-
-    return t;
-  }
+  var tree = buildTree(aReporters);
+  filterTree(tree._amount, tree);
 
   // Nb: the newlines give nice spacing if we cut+paste into a text buffer.
   var text = "";
   text += "<h1>" + aProcess + " Process</h1>\n\n";
-  text += genTreeText(buildTree());
+  text += genTreeText(tree);
   text += genOtherText(aReporters);
   text += "<hr></hr>";
   return text;
@@ -509,9 +548,14 @@ function genProcessText(aProcess, aReporters)
 function formatReporterAmount(aReporter)
 {
   switch(aReporter._units) {
-    case UNITS_BYTES: return formatBytes(aReporter._amount);
-    case UNITS_COUNT: return formatInt(aReporter._amount);
-    default:          return "(???)"
+    case UNITS_BYTES:
+      return formatBytes(aReporter._amount);
+    case UNITS_COUNT:
+    case UNITS_COUNT_CUMULATIVE:
+      return formatInt(aReporter._amount);
+    case UNITS_PERCENTAGE:
+      return formatPercentage(aReporter._amount);
+    default: return "(???)"
   }
 }
 
@@ -569,6 +613,18 @@ function formatBytes(aBytes)
     s = formatInt(a[0]) + "." + a[1] + " " + unit;
   }
   return s;
+}
+
+/**
+ * Converts a percentage to an appropriate string representation.
+ *
+ * @param aPerc100x
+ *        The percentage, multiplied by 100 (see nsIMemoryReporter)
+ * @return The string representation
+ */
+function formatPercentage(aPerc100x)
+{
+  return (aPerc100x / 100).toFixed(2) + "%";
 }
 
 /**
@@ -643,10 +699,10 @@ function genMrValueText(aValue)
 function kindToString(aKind)
 {
   switch (aKind) {
-   case KIND_MAPPED: return "(Mapped) ";
-   case KIND_HEAP:   return "(Heap) ";
-   case KIND_OTHER:  return "";
-   default:          return "(???) ";
+   case KIND_NONHEAP: return "(Non-heap) ";
+   case KIND_HEAP:    return "(Heap) ";
+   case KIND_OTHER:   return "";
+   default:           return "(???) ";
   }
 }
 
@@ -689,19 +745,25 @@ function prepDesc(aStr)
   return escapeQuotes(flipBackslashes(aStr));
 }
 
-function genMrNameText(aKind, aDesc, aName, aHasProblem)
+function genMrNameText(aKind, aDesc, aName, aHasProblem, aNMerged)
 {
-  const problemDesc =
-    "Warning: this memory reporter was unable to compute a useful value. " +
-    "The reported value is the sum of all entries below '" + aName + "', " +
-    "which is probably less than the true value.";
   var text = "-- <span class='mrName hasDesc' title='" +
              kindToString(aKind) + prepDesc(aDesc) +
              "'>" + prepName(aName) + "</span>";
-  text += aHasProblem
-        ? " <span class='mrStar' title=\"" + problemDesc + "\">[*]</span>\n"
-        : "\n";
-  return text;
+  if (aHasProblem) {
+    const problemDesc =
+      "Warning: this memory reporter was unable to compute a useful value. " +
+      "The reported value is the sum of all entries below '" + aName + "', " +
+      "which is probably less than the true value.";
+    text += " <span class='mrStar' title=\"" + problemDesc + "\">[*]</span>";
+  }
+  if (aNMerged) {
+    const dupDesc = "This value is the sum of " + aNMerged +
+                    " memory reporters that all have the same path.";
+    text += " <span class='mrStar' title=\"" + dupDesc + "\">[" + 
+            aNMerged + "]</span>";
+  }
+  return text + '\n';
 }
 
 /**
@@ -785,7 +847,7 @@ function genTreeText(aT)
 
     var text = indent + genMrValueText(tMemoryUsedStr) + " " + perc +
                genMrNameText(aT._kind, aT._description, aT._name,
-                             aT._hasProblem);
+                             aT._hasProblem, aT._nMerged);
 
     for (var i = 0; i < aT._kids.length; i++) {
       // 3 is the standard depth, the callee adjusts it if necessary.
@@ -842,7 +904,8 @@ function genOtherText(aReporters)
         _units:       r._units,
         _amount:      hasProblem ? 0 : r._amount,
         _description: r._description,
-        _hasProblem:  hasProblem
+        _hasProblem:  hasProblem,
+        _nMerged:     r._nMerged
       };
       rArray.push(elem);
       var thisAmountLength = formatReporterAmount(elem).length;
@@ -851,16 +914,18 @@ function genOtherText(aReporters)
       }
     }
   }
-  rArray.sort(cmpAmount);
+  rArray.sort(cmpOtherReporters);
 
   // Generate text for the not-yet-printed values.
   var text = "";
   for (var i = 0; i < rArray.length; i++) {
     var elem = rArray[i];
+    assert(elem._kind === KIND_OTHER,
+           "elem._kind is not KIND_OTHER for " + elem._path);
     text += genMrValueText(
               pad(formatReporterAmount(elem), maxAmountLength, ' ')) + " ";
     text += genMrNameText(elem._kind, elem._description, elem._path,
-                          elem._hasProblem);
+                          elem._hasProblem, elem._nMerged);
   }
 
   // Nb: the newlines give nice spacing if we cut+paste into a text buffer.
@@ -868,6 +933,13 @@ function genOtherText(aReporters)
                "the requested memory measurements above."
   return "<h2 class='hasDesc' title='" + desc + "'>Other Measurements</h2>\n" +
          "<pre>" + text + "</pre>\n";
+}
+
+function assert(aCond, aMsg)
+{
+  if (!aCond) {
+    throw("assertion failed: " + aMsg);
+  }
 }
 
 function debug(x)

@@ -91,7 +91,6 @@ public:
   nsresult IsRemoteDrawingCoreAnimation(PRBool* aDrawing);
   nsresult GetJSObject(JSContext *cx, JSObject** outObject);
   nsresult DefineJavaProperties();
-  nsresult ShouldCache(PRBool* shouldCache);
   nsresult IsWindowless(PRBool* isWindowless);
   nsresult AsyncSetWindow(NPWindow* window);
   nsresult GetImage(ImageContainer* aContainer, Image** aImage);
@@ -162,12 +161,6 @@ public:
     return mRunning == RUNNING || mRunning == DESTROYING;
   }
 
-  // return is only valid when the plugin is not running
-  mozilla::TimeStamp LastStopTime();
-
-  // cache this NPAPI plugin
-  nsresult SetCached(PRBool aCache);
-
   already_AddRefed<nsPIDOMWindow> GetDOMWindow();
 
   nsresult PrivateModeStateChanged();
@@ -223,7 +216,6 @@ protected:
   PRPackedBool mWindowless;
   PRPackedBool mWindowlessLocal;
   PRPackedBool mTransparent;
-  PRPackedBool mCached;
   PRPackedBool mUsesDOMForCursor;
 
 public:
@@ -251,10 +243,6 @@ private:
 
   // non-null during a HandleEvent call
   void* mCurrentPluginEvent;
-
-  // Timestamp for the last time this plugin was stopped.
-  // This is only valid when the plugin is actually stopped!
-  mozilla::TimeStamp mStopTime;
 
   nsCOMPtr<nsIURI> mURI;
 

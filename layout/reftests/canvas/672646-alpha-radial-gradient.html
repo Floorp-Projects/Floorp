@@ -1,0 +1,24 @@
+<!doctype html>
+<head>
+  <style>
+  body {
+    background-color: blue;
+  }
+  </style>
+
+<body>
+  <canvas id="mycanvas" width="200" height="200"></canvas>
+
+  <script type="text/javascript">
+  var cx = document.getElementById('mycanvas').getContext('2d');
+  var g = cx.createRadialGradient(100, 100, 50, 100, 100, 75);
+  g.addColorStop(0, 'rgba(100%, 100%, 0%, 0.5)');
+  g.addColorStop(1, 'rgba(100%, 100%, 0%, 0)');
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, 200, 200);
+  cx.beginPath();
+  cx.arc(100, 100, 80, 0, Math.PI*2, true); 
+  cx.closePath();
+  cx.fillStyle = "white";
+  cx.fill();
+  </script>

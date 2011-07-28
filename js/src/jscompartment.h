@@ -40,12 +40,12 @@
 #ifndef jscompartment_h___
 #define jscompartment_h___
 
-#include "jscntxt.h"
-#include "jsgc.h"
-#include "jsobj.h"
-#include "jsfun.h"
-#include "jsgcstats.h"
 #include "jsclist.h"
+#include "jscntxt.h"
+#include "jsfun.h"
+#include "jsgc.h"
+#include "jsgcstats.h"
+#include "jsobj.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -293,6 +293,9 @@ class JaegerCompartment;
 }
 }
 
+/* Defined in jsapi.cpp */
+extern JSClass js_dummy_class;
+
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
 #ifndef JS_EVAL_CACHE_SHIFT
 # define JS_EVAL_CACHE_SHIFT        6
@@ -363,6 +366,25 @@ class DtoaCache {
 
 };
 
+struct ScriptFilenameEntry
+{
+    bool marked;
+    char filename[1];
+};
+
+struct ScriptFilenameHasher
+{
+    typedef const char *Lookup;
+    static HashNumber hash(const char *l) { return JS_HashString(l); }
+    static bool match(const ScriptFilenameEntry *e, const char *l) {
+        return strcmp(e->filename, l) == 0;
+    }
+};
+
+typedef HashSet<ScriptFilenameEntry *,
+                ScriptFilenameHasher,
+                SystemAllocPolicy> ScriptFilenameTable;
+
 } /* namespace js */
 
 struct JS_FRIEND_API(JSCompartment) {
@@ -378,7 +400,7 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t                       gcLastBytes;
 
     bool                         hold;
-    bool                         systemGCChunks;
+    bool                         isSystemCompartment;
 
 #ifdef JS_TRACER
   private:
@@ -473,6 +495,8 @@ struct JS_FRIEND_API(JSCompartment) {
     typedef js::Maybe<js::ToSourceCache> LazyToSourceCache;
     LazyToSourceCache            toSourceCache;
 
+    js::ScriptFilenameTable      scriptFilenameTable;
+
     JSCompartment(JSRuntime *rt);
     ~JSCompartment();
 
@@ -536,6 +560,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
+
+    js::WatchpointMap *watchpointMap;
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)

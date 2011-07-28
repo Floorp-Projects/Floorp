@@ -145,8 +145,12 @@ public:
   NS_IMETHOD    CheckFireOnChange();
   NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
-  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
-  NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
+  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart,
+                                  PRInt32 aSelectionEnd,
+                                  SelectionDirection aDirection = eNone);
+  NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart,
+                                  PRInt32* aSelectionEnd,
+                                  SelectionDirection* aDirection = nsnull);
   NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon);
   virtual nsFrameSelection* GetOwnedFrameSelection();
 
@@ -295,12 +299,18 @@ protected:
 
     NS_IMETHOD Run() {
       if (mFrame) {
+        // need to block script to avoid bug 669767
+        nsAutoScriptBlocker scriptBlocker;
+
         nsCOMPtr<nsIPresShell> shell =
           mFrame->PresContext()->GetPresShell();
         PRBool observes = shell->ObservesNativeAnonMutationsForPrint();
         shell->ObserveNativeAnonMutationsForPrint(PR_TRUE);
+        // This can cause the frame to be destroyed (and call Revoke()
         mFrame->EnsureEditorInitialized();
         shell->ObserveNativeAnonMutationsForPrint(observes);
+
+        NS_ASSERTION(mFrame,"Frame destroyed even though we had a scriptblocker");
         mFrame->FinishedInitializer();
       }
       return NS_OK;
@@ -384,9 +394,11 @@ protected:
 private:
   //helper methods
   nsresult SetSelectionInternal(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
-                                nsIDOMNode *aEndNode, PRInt32 aEndOffset);
+                                nsIDOMNode *aEndNode, PRInt32 aEndOffset,
+                                SelectionDirection aDirection = eNone);
   nsresult SelectAllOrCollapseToEndOfText(PRBool aSelect);
-  nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
+  nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd,
+                                 SelectionDirection aDirection = eNone);
 
   // accessors for the notify on input flag
   PRBool GetNotifyOnInput() const { return mNotifyOnInput; }

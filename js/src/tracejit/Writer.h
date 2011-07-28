@@ -529,7 +529,7 @@ class Writer
     }
 
     nj::LIns *ldpObjSlots(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldp, obj, offsetof(JSObject, slots), ACCSET_OBJ_SLOTS),
+        return name(lir->insLoad(nj::LIR_ldp, obj, JSObject::offsetOfSlots(), ACCSET_OBJ_SLOTS),
                     "slots");
     }
 

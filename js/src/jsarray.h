@@ -179,7 +179,7 @@ NewDenseUnallocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
 
 /* Create a dense array with a copy of vp. */
 extern JSObject *
-NewDenseCopiedArray(JSContext *cx, uint length, Value *vp, JSObject *proto=NULL);
+NewDenseCopiedArray(JSContext *cx, uint length, const Value *vp, JSObject *proto=NULL);
 
 /* Create a sparse array. */
 extern JSObject *

@@ -76,7 +76,6 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRUint32 aScrollType);
   NS_SCRIPTABLE NS_IMETHOD ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD GetOwnerWindow(void **aOwnerWindow);
   NS_SCRIPTABLE NS_IMETHOD GetComputedStyleValue(const nsAString& aPseudoElt,
                                                  const nsAString& aPropertyName,
                                                  nsAString& aValue NS_OUTPARAM);
@@ -91,7 +90,6 @@ public:
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
   NS_IMETHOD GetName(nsAString &aName);
   NS_IMETHOD GetValue(nsAString &aValue);
-  NS_IMETHOD GetKeyboardShortcut(nsAString &aKeyboardShortcut);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
@@ -129,6 +127,9 @@ public:
                                      EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
+
+  // ActionAccessible
+  virtual KeyBinding AccessKey() const;
 
 protected:
 

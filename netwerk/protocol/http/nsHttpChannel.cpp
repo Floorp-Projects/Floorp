@@ -55,7 +55,6 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsMimeTypes.h"
-#include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "prnetdb.h"
@@ -649,8 +648,12 @@ nsHttpChannel::CallOnStartRequest()
     mTracingEnabled = PR_FALSE;
 
     if (mResponseHead && mResponseHead->ContentType().IsEmpty()) {
+        NS_ASSERTION(mConnectionInfo, "Should have connection info here");
         if (!mContentTypeHint.IsEmpty())
             mResponseHead->SetContentType(mContentTypeHint);
+        else if (mResponseHead->Version() == NS_HTTP_VERSION_0_9 &&
+                 mConnectionInfo->Port() != mConnectionInfo->DefaultPort())
+            mResponseHead->SetContentType(NS_LITERAL_CSTRING(TEXT_PLAIN));
         else {
             // Uh-oh.  We had better find out what type we are!
 
@@ -3634,6 +3637,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         (BYPASS_LOCAL_CACHE(mLoadFlags)))
         mCaps |= NS_HTTP_REFRESH_DNS;
 
+    // Force-Reload should reset the persistent connection pool for this host
+    if (mLoadFlags & LOAD_FRESH_CONNECTION)
+        mCaps |= NS_HTTP_CLEAR_KEEPALIVES;
+    
     mIsPending = PR_TRUE;
     mWasOpened = PR_TRUE;
 

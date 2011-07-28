@@ -55,7 +55,7 @@
 
 typedef GType (* AtkGetTypeType) (void);
 GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
-static PRBool sATKChecked = PR_FALSE;
+static bool sATKChecked = false;
 static PRLibrary *sATKLib = nsnull;
 static const char sATKLibName[] = "libatk-1.0.so.0";
 static const char sATKHyperlinkImplGetTypeSymbol[] =
@@ -100,8 +100,8 @@ static void insert_hf(gpointer key, gpointer value, gpointer data);
 static gint mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event,
                             gpointer func_data);
 
-static GHashTable *listener_list = NULL;
-static gint listener_idx = 1;
+static GHashTable* sListener_list = NULL;
+static gint sListener_idx = 1;
 
 #define MAI_TYPE_UTIL              (mai_util_get_type ())
 #define MAI_UTIL(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
@@ -115,8 +115,11 @@ static gint listener_idx = 1;
 #define MAI_UTIL_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), \
                                     MAI_TYPE_UTIL, MaiUtilClass))
 
-static GHashTable *key_listener_list = NULL;
-static guint key_snooper_id = 0;
+static GHashTable* sKey_listener_list = NULL;
+static guint sKey_snooper_id = 0;
+static bool sToplevel_event_hook_added = false;
+static gulong sToplevel_show_hook = 0;
+static gulong sToplevel_hide_hook = 0;
 
 G_BEGIN_DECLS
 typedef void (*GnomeAccessibilityInit) (void);
@@ -223,7 +226,10 @@ window_added (AtkObject *atk_obj,
               guint     index,
               AtkObject *child)
 {
-  guint id =  g_signal_lookup ("create", MAI_TYPE_ATK_OBJECT);
+  if (!IS_MAI_OBJECT(child))
+      return;
+
+  static guint id =  g_signal_lookup ("create", MAI_TYPE_ATK_OBJECT);
   g_signal_emit (child, id, 0);
 }
 
@@ -232,7 +238,10 @@ window_removed (AtkObject *atk_obj,
                 guint     index,
                 AtkObject *child)
 {
-  guint id =  g_signal_lookup ("destroy", MAI_TYPE_ATK_OBJECT);
+  if (!IS_MAI_OBJECT(child))
+      return;
+
+  static guint id =  g_signal_lookup ("destroy", MAI_TYPE_ATK_OBJECT);
   g_signal_emit (child, id, 0);
 }
 
@@ -264,8 +273,8 @@ mai_util_class_init(MaiUtilClass *klass)
     atk_class->get_toolkit_name = mai_util_get_toolkit_name;
     atk_class->get_toolkit_version = mai_util_get_toolkit_version;
 
-    listener_list = g_hash_table_new_full(g_int_hash, g_int_equal, NULL,
-                                          _listener_info_destroy);
+    sListener_list = g_hash_table_new_full(g_int_hash, g_int_equal, NULL,
+                                           _listener_info_destroy);
     // Keep track of added/removed windows.
     AtkObject *root = atk_get_root ();
     g_signal_connect (root, "children-changed::add", (GCallback) window_added, NULL);
@@ -289,7 +298,7 @@ mai_util_add_global_event_listener(GSignalEmissionHook listener,
                 gail_listenerid =
                     gail_add_global_event_listener(listener, event_type);
             }
-            
+
             rc = add_listener (listener, "MaiAtkObject", split_string[1],
                                event_type, gail_listenerid);
         }
@@ -310,14 +319,14 @@ mai_util_remove_global_event_listener(guint remove_listener)
         gint tmp_idx = remove_listener;
 
         listener_info = (MaiUtilListenerInfo *)
-            g_hash_table_lookup(listener_list, &tmp_idx);
+            g_hash_table_lookup(sListener_list, &tmp_idx);
 
         if (listener_info != NULL) {
             if (gail_remove_global_event_listener &&
                 listener_info->gail_listenerid) {
               gail_remove_global_event_listener(listener_info->gail_listenerid);
             }
-            
+
             /* Hook id of 0 and signal id of 0 are invalid */
             if (listener_info->hook_id != 0 && listener_info->signal_id != 0) {
                 /* Remove the emission hook */
@@ -325,7 +334,7 @@ mai_util_remove_global_event_listener(guint remove_listener)
                                               listener_info->hook_id);
 
                 /* Remove the element from the hash */
-                g_hash_table_remove(listener_list, &tmp_idx);
+                g_hash_table_remove(sListener_list, &tmp_idx);
             }
             else {
                 g_warning("Invalid listener hook_id %ld or signal_id %d\n",
@@ -366,14 +375,14 @@ atk_key_event_from_gdk_event_key (GdkEventKey *key)
     event->state = key->state;
     event->keyval = key->keyval;
     event->length = key->length;
-    if (key->string && key->string [0] && 
+    if (key->string && key->string [0] &&
         (key->state & GDK_CONTROL_MASK ||
          g_unichar_isgraph (g_utf8_get_char (key->string)))) {
         event->string = key->string;
     }
     else if (key->type == GDK_KEY_PRESS ||
              key->type == GDK_KEY_RELEASE) {
-        event->string = gdk_keyval_name (key->keyval);	    
+        event->string = gdk_keyval_name (key->keyval);
     }
     event->keycode = key->hardware_keycode;
     event->timestamp = key->time;
@@ -409,9 +418,9 @@ mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event, gpointer func_data)
 
     MaiKeyEventInfo *info = g_new0(MaiKeyEventInfo, 1);
     gint consumed = 0;
-    if (key_listener_list) {
+    if (sKey_listener_list) {
         GHashTable *new_hash = g_hash_table_new(NULL, NULL);
-        g_hash_table_foreach (key_listener_list, insert_hf, new_hash);
+        g_hash_table_foreach (sKey_listener_list, insert_hf, new_hash);
         info->key_event = atk_key_event_from_gdk_event_key (event);
         info->func_data = func_data;
         consumed = g_hash_table_foreach_steal (new_hash, notify_hf, info);
@@ -430,13 +439,13 @@ mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
 
     static guint key=0;
 
-    if (!key_listener_list) {
-        key_listener_list = g_hash_table_new(NULL, NULL);
-        key_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
+    if (!sKey_listener_list) {
+        sKey_listener_list = g_hash_table_new(NULL, NULL);
+        sKey_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
     }
     AtkKeySnoopFuncPointer atkKeySnoop;
     atkKeySnoop.func_ptr = listener;
-    g_hash_table_insert(key_listener_list, GUINT_TO_POINTER (key++),
+    g_hash_table_insert(sKey_listener_list, GUINT_TO_POINTER (key++),
                         atkKeySnoop.data);
     return key;
 }
@@ -444,15 +453,15 @@ mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
 static void
 mai_util_remove_key_event_listener (guint remove_listener)
 {
-    if (!key_listener_list) {
+    if (!sKey_listener_list) {
         // atk-bridge is initialized with gail (e.g. yelp)
         // try gail_remove_key_event_listener
         return gail_remove_key_event_listener(remove_listener);
     }
 
-    g_hash_table_remove(key_listener_list, GUINT_TO_POINTER (remove_listener));
-    if (g_hash_table_size(key_listener_list) == 0) {
-        gtk_key_snooper_remove(key_snooper_id);
+    g_hash_table_remove(sKey_listener_list, GUINT_TO_POINTER (remove_listener));
+    if (g_hash_table_size(sKey_listener_list) == 0) {
+        gtk_key_snooper_remove(sKey_snooper_id);
     }
 }
 
@@ -512,11 +521,11 @@ add_listener (GSignalEmissionHook listener,
         if (signal_id > 0) {
             MaiUtilListenerInfo *listener_info;
 
-            rc = listener_idx;
+            rc = sListener_idx;
 
             listener_info =  (MaiUtilListenerInfo *)
                 g_malloc(sizeof(MaiUtilListenerInfo));
-            listener_info->key = listener_idx;
+            listener_info->key = sListener_idx;
             listener_info->hook_id =
                 g_signal_add_emission_hook(signal_id, 0, listener,
                                            g_strdup(hook_data),
@@ -524,9 +533,9 @@ add_listener (GSignalEmissionHook listener,
             listener_info->signal_id = signal_id;
             listener_info->gail_listenerid = gail_listenerid;
 
-            g_hash_table_insert(listener_list, &(listener_info->key),
+            g_hash_table_insert(sListener_list, &(listener_info->key),
                                 listener_info);
-            listener_idx++;
+            sListener_idx++;
         }
         else {
             g_warning("Invalid signal type %s\n", signal);
@@ -552,6 +561,54 @@ nsApplicationAccessibleWrap::~nsApplicationAccessibleWrap()
 {
     MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
     nsAccessibleWrap::ShutdownAtkObject();
+}
+
+static gboolean
+toplevel_event_watcher(GSignalInvocationHint* ihint,
+                       guint                  n_param_values,
+                       const GValue*          param_values,
+                       gpointer               data)
+{
+  static GQuark sQuark_gecko_acc_obj = 0;
+
+  if (!sQuark_gecko_acc_obj)
+    sQuark_gecko_acc_obj = g_quark_from_static_string("GeckoAccObj");
+
+  if (nsAccessibilityService::IsShutdown())
+    return TRUE;
+
+  GObject* object = reinterpret_cast<GObject*>(g_value_get_object(param_values));
+  if (!GTK_IS_WINDOW(object))
+    return TRUE;
+
+  AtkObject* child = gtk_widget_get_accessible(GTK_WIDGET(object));
+
+  // GTK native dialog
+  if (!IS_MAI_OBJECT(child) &&
+      (atk_object_get_role(child) == ATK_ROLE_DIALOG)) {
+
+    if (data == reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW)) {
+
+      // Attach the dialog accessible to app accessible tree
+      nsAccessible* windowAcc = GetAccService()->AddNativeRootAccessible(child);
+      g_object_set_qdata(G_OBJECT(child), sQuark_gecko_acc_obj,
+                         reinterpret_cast<gpointer>(windowAcc));
+
+    } else {
+
+      // Deattach the dialog accessible
+      nsAccessible* windowAcc =
+        reinterpret_cast<nsAccessible*>
+                        (g_object_get_qdata(G_OBJECT(child), sQuark_gecko_acc_obj));
+      if (windowAcc) {
+        GetAccService()->RemoveNativeRootAccessible(windowAcc);
+        g_object_set_qdata(G_OBJECT(child), sQuark_gecko_acc_obj, NULL);
+      }
+
+    }
+  }
+
+  return TRUE;
 }
 
 PRBool
@@ -602,6 +659,18 @@ nsApplicationAccessibleWrap::Init()
         }
         else
             MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
+
+        if (!sToplevel_event_hook_added) {
+          sToplevel_event_hook_added = true;
+          sToplevel_show_hook =
+            g_signal_add_emission_hook(g_signal_lookup("show", GTK_TYPE_WINDOW),
+              0, toplevel_event_watcher,
+              reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW), NULL);
+          sToplevel_hide_hook =
+            g_signal_add_emission_hook(g_signal_lookup("hide", GTK_TYPE_WINDOW),
+              0, toplevel_event_watcher,
+              reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_HIDE), NULL);
+        }
     }
 
     return nsApplicationAccessible::Init();
@@ -610,6 +679,14 @@ nsApplicationAccessibleWrap::Init()
 void
 nsApplicationAccessibleWrap::Unload()
 {
+    if (sToplevel_event_hook_added) {
+      sToplevel_event_hook_added = false;
+      g_signal_remove_emission_hook(g_signal_lookup("show", GTK_TYPE_WINDOW),
+                                    sToplevel_show_hook);
+      g_signal_remove_emission_hook(g_signal_lookup("hide", GTK_TYPE_WINDOW),
+                                    sToplevel_hide_hook);
+    }
+
     if (sAtkBridge.lib) {
         // Do not shutdown/unload atk-bridge,
         // an exit function registered will take care of it
@@ -671,7 +748,7 @@ gboolean fireRootAccessibleAddedCB(gpointer data)
     g_object_unref(eventData->app_accessible);
     g_object_unref(eventData->root_accessible);
     free(data);
-    
+
     return FALSE;
 }
 
@@ -741,7 +818,7 @@ nsApplicationAccessibleWrap::PreCreate()
               AtkSocketAccessible::g_atk_socket_embed;
             }
         }
-        sATKChecked = PR_TRUE;
+        sATKChecked = true;
     }
 }
 

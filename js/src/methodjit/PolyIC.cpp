@@ -237,7 +237,7 @@ class SetPropCompiler : public PICStubCompiler
             // below.
             //
             int32 diff = int32(JSObject::getFixedSlotOffset(0)) -
-                         int32(offsetof(JSObject, slots));
+                         int32(JSObject::offsetOfSlots());
             JS_ASSERT(diff != 0);
             offset  = (int32(shape->slot) * sizeof(Value)) + diff;
         } else {
@@ -353,7 +353,7 @@ class SetPropCompiler : public PICStubCompiler
                 if (!slowExits.append(overCapacity))
                     return error();
 
-                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.shapeReg);
+                masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.shapeReg);
                 Address address(pic.shapeReg, shape->slot * sizeof(Value));
                 masm.storeValue(pic.u.vr, address);
             }
@@ -377,7 +377,7 @@ class SetPropCompiler : public PICStubCompiler
         } else if (shape->hasDefaultSetter()) {
             Address address(pic.objReg, JSObject::getFixedSlotOffset(shape->slot));
             if (!inlineSlot) {
-                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
+                masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.objReg);
                 address = Address(pic.objReg, shape->slot * sizeof(Value));
             }
 
@@ -422,7 +422,7 @@ class SetPropCompiler : public PICStubCompiler
             {
                 if (shape->setterOp() == SetCallVar)
                     slot += fun->nargs;
-                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
+                masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.objReg);
 
                 Address dslot(pic.objReg, (slot + JSObject::CALL_RESERVED_SLOTS) * sizeof(Value));
                 masm.storeValue(pic.u.vr, dslot);
@@ -490,6 +490,8 @@ class SetPropCompiler : public PICStubCompiler
             return disable("dense array");
         if (!obj->isNative())
             return disable("non-native");
+        if (obj->watched())
+            return disable("watchpoint");
 
         Class *clasp = obj->getClass();
 
@@ -1297,35 +1299,11 @@ class ScopeNameCompiler : public PICStubCompiler
         masm.loadObjProp(obj, pic.objReg, getprop.shape, pic.shapeReg, pic.objReg);
 
         /*
-         * For CALLNAME we have to store the this-value. Guard that the callee's parent is
-         * the global object, so that we can just store undefined.
+         * For CALLNAME we must store undefined as the this-value. A non-strict
+         * mode callee function replaces undefined with its global on demand in
+         * code generated for JSOP_THIS.
          */
-        MaybeJump calleeNotObject;
-        MaybeJump calleeNotFunction;
-        MaybeJump calleeParent;
         if (pic.kind == ic::PICInfo::CALLNAME) {
-            /* Need compile-and-go to bake in the global. */
-            if (!f.fp()->script()->compileAndGo)
-                return disable("callname global stub without compile-and-go");
-
-            /* Only handle functions here. */
-            Value funval = getprop.holder->nativeGetSlot(getprop.shape->slot);
-            if (!funval.isObject() || !funval.toObject().isFunction())
-                return disable("unsupported value");
-
-            /* Don't handle functions with parent other than the global object. */
-            JSObject *funobj = &funval.toObject();
-            if (funobj->getParent() != getprop.holder)
-                return disable("not scoped to global object");
-
-            /* Guard that the callee is a function. */
-            calleeNotObject = masm.testObject(Assembler::NotEqual, pic.shapeReg);
-            calleeNotFunction = masm.testFunction(Assembler::NotEqual, pic.objReg);
-
-            /* Guard that the callee's parent is the global object. */
-            Address parent(pic.objReg, offsetof(JSObject, parent));
-            calleeParent = masm.branchPtr(Assembler::NotEqual, parent, ImmPtr(getprop.holder));
-
             /* Store undefined this-value. */
             Value *thisVp = &cx->regs().sp[1];
             Address thisSlot(JSFrameReg, StackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
@@ -1340,12 +1318,6 @@ class ScopeNameCompiler : public PICStubCompiler
         if (finalNull.isSet())
             finalNull.get().linkTo(masm.label(), &masm);
         finalShape.linkTo(masm.label(), &masm);
-        if (calleeNotObject.isSet())
-            calleeNotObject.get().linkTo(masm.label(), &masm);
-        if (calleeNotFunction.isSet())
-            calleeNotFunction.get().linkTo(masm.label(), &masm);
-        if (calleeParent.isSet())
-            calleeParent.get().linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
 
@@ -1448,7 +1420,7 @@ class ScopeNameCompiler : public PICStubCompiler
         escapedFrame.linkTo(masm.label(), &masm);
 
         {
-            masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
+            masm.loadPtr(Address(pic.objReg, JSObject::offsetOfSlots()), pic.objReg);
 
             if (kind == VAR)
                 slot += fun->nargs;
@@ -2327,6 +2299,154 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
     return Lookup_Cacheable;
 }
 
+LookupStatus
+GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+{
+    if (!v.isInt32())
+        return disable(cx, "arguments object with non-integer key");
+
+    if (op == JSOP_CALLELEM)
+        return disable(cx, "arguments object with call");
+
+    JS_ASSERT(hasInlineTypeGuard() || idRemat.knownType() == JSVAL_TYPE_INT32);
+
+    Assembler masm;
+
+    Jump claspGuard = masm.testObjClass(Assembler::NotEqual, objReg, obj->getClass());
+
+    masm.move(objReg, typeReg);
+    masm.load32(Address(objReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 
+                objReg);
+    Jump overridden = masm.branchTest32(Assembler::NonZero, objReg,
+                                        Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT));
+    masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), objReg);
+
+    Jump outOfBounds;
+    if (idRemat.isConstant()) {
+        outOfBounds = masm.branch32(Assembler::BelowOrEqual, objReg, Imm32(v.toInt32()));
+    } else {
+        outOfBounds = masm.branch32(Assembler::BelowOrEqual, objReg, idRemat.dataReg());
+    }
+
+    masm.loadPayload(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);
+    if (idRemat.isConstant()) {
+        Address slot(objReg, offsetof(ArgumentsData, slots) + v.toInt32() * sizeof(Value));
+        masm.loadTypeTag(slot, objReg);
+    } else {
+        BaseIndex slot(objReg, idRemat.dataReg(), Assembler::JSVAL_SCALE, 
+                       offsetof(ArgumentsData, slots));
+        masm.loadTypeTag(slot, objReg);
+    }    
+    Jump holeCheck = masm.branchPtr(Assembler::Equal, objReg, ImmType(JSVAL_TYPE_MAGIC));
+
+    Address privateData(typeReg, offsetof(JSObject, privateData));
+    Jump liveArguments = masm.branchPtr(Assembler::NotEqual, privateData, ImmPtr(0));
+   
+    masm.loadPrivate(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);
+
+    if (idRemat.isConstant()) {
+        Address slot(objReg, offsetof(ArgumentsData, slots) + v.toInt32() * sizeof(Value));
+        masm.loadValueAsComponents(slot, typeReg, objReg);           
+    } else {
+        BaseIndex slot(objReg, idRemat.dataReg(), Assembler::JSVAL_SCALE, 
+                       offsetof(ArgumentsData, slots));
+        masm.loadValueAsComponents(slot, typeReg, objReg);
+    }
+
+    Jump done = masm.jump();
+
+    liveArguments.linkTo(masm.label(), &masm);
+
+    masm.loadPtr(privateData, typeReg);
+
+    Address fun(typeReg, StackFrame::offsetOfExec());
+    masm.loadPtr(fun, objReg);
+
+    Address nargs(objReg, offsetof(JSFunction, nargs));
+    masm.load16(nargs, objReg);
+
+    Jump notFormalArg;
+    if (idRemat.isConstant())
+        notFormalArg = masm.branch32(Assembler::BelowOrEqual, objReg, Imm32(v.toInt32()));
+    else
+        notFormalArg = masm.branch32(Assembler::BelowOrEqual, objReg, idRemat.dataReg());
+
+    masm.lshift32(Imm32(3), objReg); /* nargs << 3 == nargs * sizeof(Value) */
+    masm.subPtr(objReg, typeReg); /* fp - numFormalArgs => start of formal args */
+
+    Label loadFromStack = masm.label();
+    masm.move(typeReg, objReg);
+
+    if (idRemat.isConstant()) {
+        Address frameEntry(objReg, v.toInt32() * sizeof(Value));
+        masm.loadValueAsComponents(frameEntry, typeReg, objReg);
+    } else {
+        BaseIndex frameEntry(objReg, idRemat.dataReg(), Assembler::JSVAL_SCALE);
+        masm.loadValueAsComponents(frameEntry, typeReg, objReg);
+    }    
+    Jump done2 = masm.jump();
+
+    notFormalArg.linkTo(masm.label(), &masm);
+
+    masm.push(typeReg);
+
+    Address argsObject(typeReg, StackFrame::offsetOfArgs());
+    masm.loadPtr(argsObject, typeReg);
+
+    masm.load32(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 
+                typeReg); 
+    masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), typeReg); 
+
+    /* This bascially does fp - (numFormalArgs + numActualArgs + 2) */
+
+    masm.addPtr(typeReg, objReg);
+    masm.addPtr(Imm32(2), objReg);
+    masm.lshiftPtr(Imm32(3), objReg);
+
+    masm.pop(typeReg);
+    masm.subPtr(objReg, typeReg);
+
+    masm.jump(loadFromStack);
+
+    PICLinker buffer(masm, *this);
+
+    if (!buffer.init(cx))
+        return error(cx);
+
+    if (!buffer.verifyRange(cx->fp()->jit()))
+        return disable(cx, "code memory is out of range");
+
+    buffer.link(claspGuard, slowPathStart);
+    buffer.link(overridden, slowPathStart);
+    buffer.link(outOfBounds, slowPathStart);
+    buffer.link(holeCheck, slowPathStart);
+    buffer.link(done, fastPathRejoin);    
+    buffer.link(done2, fastPathRejoin);
+    
+    CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+
+    JaegerSpew(JSpew_PICs, "generated getelem arguments stub at %p\n", cs.executableAddress());
+
+    Repatcher repatcher(cx->fp()->jit());
+    repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), cs);
+
+    JS_ASSERT(!shouldPatchUnconditionalClaspGuard());
+    JS_ASSERT(!inlineClaspGuardPatched);
+
+    inlineClaspGuardPatched = true;
+    stubsGenerated++;
+
+    if (stubsGenerated == MAX_GETELEM_IC_STUBS)
+        disable(cx, "max stubs reached");
+
+    disable(cx, "generated arguments stub");
+
+    if (!obj->getProperty(cx, id, vp))
+        return Lookup_Error;
+
+    return Lookup_Cacheable;
+}
+
 #if defined JS_POLYIC_TYPED_ARRAY
 LookupStatus
 GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
@@ -2637,7 +2757,7 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
     skipUpdate.linkTo(masm.label(), &masm);
 
     // Store the value back.
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
     if (hasConstantKey) {
         Address slot(objReg, keyValue * sizeof(Value));
         masm.storeValue(vr, slot);

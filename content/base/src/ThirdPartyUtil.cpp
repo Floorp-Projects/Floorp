@@ -286,23 +286,29 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
   ourWin->GetParent(getter_AddRefs(parentWin));
   NS_ENSURE_TRUE(parentWin, NS_ERROR_INVALID_ARG);
 
-  if (SameCOMIdentity(ourWin, parentWin)) {
-    // Check whether this is the document channel for this window (representing
-    // a load of a new page). This covers the case of a freshly kicked-off load
-    // (e.g. the user typing something in the location bar, or clicking on a
-    // bookmark), where the window's URI hasn't yet been set, and will be bogus.
-    // This is a bit of a nasty hack, but we will hopefully flag these channels
-    // better later.
-    nsLoadFlags flags;
-    rv = aChannel->GetLoadFlags(&flags);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Check whether this is the document channel for this window (representing a
+  // load of a new page). In that situation we want to avoid comparing
+  // channelURI to ourWin, since what's in ourWin right now will be replaced as
+  // the channel loads.  This covers the case of a freshly kicked-off load
+  // (e.g. the user typing something in the location bar, or clicking on a
+  // bookmark), where the window's URI hasn't yet been set, and will be bogus.
+  // It also covers situations where a subframe is navigated to someting that
+  // is same-origin with all its ancestors.  This is a bit of a nasty hack, but
+  // we will hopefully flag these channels better later.
+  nsLoadFlags flags;
+  rv = aChannel->GetLoadFlags(&flags);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (flags & nsIChannel::LOAD_DOCUMENT_URI) {
+  if (flags & nsIChannel::LOAD_DOCUMENT_URI) {
+    if (SameCOMIdentity(ourWin, parentWin)) {
       // We only need to compare aURI to the channel URI -- the window's will be
       // bogus. We already know the answer.
       *aResult = false;
       return NS_OK;
     }
+
+    // Make sure to still compare to ourWin's ancestors
+    ourWin = parentWin;
   }
 
   // Check the window hierarchy. This covers most cases for an ordinary page

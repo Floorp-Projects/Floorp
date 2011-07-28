@@ -20,7 +20,7 @@
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
-  var e = mgr.enumerateReporters(); 
+  var e = mgr.enumerateReporters();
   var realReporters = [];
   var dummy = 0;
   while (e.hasMoreElements()) {
@@ -31,7 +31,7 @@
     mgr.unregisterReporter(r);
     realReporters.push(r);
   }
-  e = mgr.enumerateMultiReporters(); 
+  e = mgr.enumerateMultiReporters();
   var realMultiReporters = [];
   var dummy = 0;
   while (e.hasMoreElements()) {
@@ -47,12 +47,14 @@
   const KB = 1024;
   const MB = KB * KB;
   const kUnknown = -1;
-  const MAPPED = Ci.nsIMemoryReporter.KIND_MAPPED;
-  const HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
-  const OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
+  const NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
+  const HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
 
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
-  const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT; 
+  const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
+  const COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
+  const PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
   function f2(aProcess, aPath, aKind, aUnits, aAmount) {
     return {
@@ -70,34 +72,40 @@
   }
 
   var fakeReporters = [
-    f("", "heap-used",          OTHER,  500 * MB),
-    f("", "heap-unused",        OTHER,  100 * MB),
-    f("", "explicit/a",         HEAP,   222 * MB),
-    f("", "explicit/b/a",       HEAP,    85 * MB),
-    f("", "explicit/b/b",       HEAP,    75 * MB),
-    f("", "explicit/b/c/a",     HEAP,    70 * MB),
-    f("", "explicit/b/c/b",     HEAP,     2 * MB), // omitted
-    f("", "explicit/g",         HEAP,     1 * MB), // internal, dup: merge
-    f("", "explicit/g/a",       HEAP,     6 * MB),
-    f("", "explicit/g/b",       HEAP,     5 * MB),
-    f("", "other1",             OTHER,  111 * MB),
-    f2("", "other4",            OTHER,  COUNT, 888),
-    f2("", "unknown-unit",      OTHER,  /*bogus unit*/999, 999)
+    f("", "heap-allocated",     OTHER,   500 * MB),
+    f("", "heap-unallocated",   OTHER,   100 * MB),
+    f("", "explicit/a",         HEAP,    222 * MB),
+    f("", "explicit/b/a",       HEAP,     85 * MB),
+    f("", "explicit/b/b",       HEAP,     75 * MB),
+    f("", "explicit/b/c/a",     HEAP,     70 * MB),
+    f("", "explicit/b/c/b",     HEAP,      2 * MB), // omitted
+    f("", "explicit/c",         NONHEAP, 100 * MB),
+    f("", "explicit/c/d",       NONHEAP,  13 * MB), // subsumed by parent
+    f("", "explicit/g",         HEAP,      1 * MB), // internal, dup: merge
+    f("", "explicit/g/a",       HEAP,      6 * MB),
+    f("", "explicit/g/b",       HEAP,      5 * MB),
+    f("", "other1",             OTHER,   111 * MB),
+    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888),
+    f2("", "unknown-unit",      OTHER,   /*bogus unit*/999, 999)
   ];
   var fakeMultiReporters = [
      { collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
-          f("explicit/c",       MAPPED, BYTES, 123 * MB);
-          f("explicit/d",       MAPPED, BYTES, 499 * KB); // omitted
-          f("explicit/e",       MAPPED, BYTES, 100 * KB); // omitted
-          f("explicit/f/g/h/i", HEAP,   BYTES,  20 * MB);
+          f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup, subsumed by parent
+          f("explicit/cc",      NONHEAP, BYTES,  13 * MB);
+          f("explicit/cc",      NONHEAP, BYTES,  10 * MB); // dup
+          f("explicit/d",       NONHEAP, BYTES, 499 * KB); // omitted
+          f("explicit/e",       NONHEAP, BYTES, 100 * KB); // omitted
+          f("explicit/f/g/h/i", HEAP,    BYTES,  20 * MB);
        }
      },
      { collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
-          f("explicit/g",       HEAP,   BYTES,  14 * MB); // internal
-          f("other2",           OTHER,  BYTES, 222 * MB);
-          f("other3",           OTHER,  COUNT, 777);
+          f("explicit/g",       HEAP,    BYTES,  14 * MB); // internal
+          f("other3",           OTHER,   COUNT, 777);
+          f("other2",           OTHER,   BYTES, 222 * MB);
+          f("perc2",            OTHER,   PERCENTAGE, 10000);
+          f("perc1",            OTHER,   PERCENTAGE, 4567);
        }
      }
   ];
@@ -108,29 +116,43 @@
     mgr.registerMultiReporter(fakeMultiReporters[i]);
   }
 
+  // mgr.explicit sums "heap-allocated" and all the appropriate NONHEAP ones:
+  // - "explicit/c", "explicit/cc" x 2, "explicit/d", "explicit/e"
+  // - but *not* "explicit/c/d" x 2
+  // Check explicit now before we add the fake reporters for the fake 2nd
+  // and subsequent processes.
+  is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");
+ 
+  // Access mgr.resident just to make sure it doesn't crash.  We can't check
+  // its actual value because it's non-deterministic.
+  dummy = mgr.resident;
+
   var fakeReporters2 = [
-    f("2nd", "heap-used",       OTHER, 1000 * MB),
-    f("2nd", "heap-unused",     OTHER,  100 * MB),
-    f("2nd", "explicit/a/b/c",  HEAP,   498 * MB),
-    f("2nd", "explicit/a/b/c",  HEAP,     1 * MB), // dup: merge
+    f("2nd", "heap-allocated",  OTHER,  1000 * MB),
+    f("2nd", "heap-unallocated",OTHER,   100 * MB),
+    f("2nd", "explicit/a/b/c",  HEAP,    497 * MB),
+    f("2nd", "explicit/a/b/c",  HEAP,      1 * MB), // dup: merge
+    f("2nd", "explicit/a/b/c",  HEAP,      1 * MB), // dup: merge
     f("2nd", "explicit/flip\\the\\backslashes",
-                                HEAP,   200 * MB),
+                                HEAP,    200 * MB),
     f("2nd", "explicit/compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)",
-                                HEAP,   200 * MB),
+                                HEAP,    200 * MB),
     // The escaping of compartment names must prevent this script from running.
     f("2nd", "danger<script>window.alert(1)</script>",
-                                OTHER,  666 * MB),
-    f("2nd", "other1",          OTHER,  111 * MB),
+                                OTHER,   666 * MB),
+    f("2nd", "other1",          OTHER,   111 * MB),
 
-    // kUnknown should be handled gracefully for "heap-used", non-leaf
-    // reporters, leaf-reporters, and "other" reporters.
-    f("3rd", "heap-used",       OTHER, kUnknown),
-    f("3rd", "explicit/a",      HEAP,  kUnknown),
-    f("3rd", "explicit/a/b",    HEAP,  333 * MB),
-    f("3rd", "explicit/a/c",    HEAP,  444 * MB),
-    f("3rd", "explicit/a/d",    HEAP,  kUnknown),
-    f("3rd", "explicit/b",      MAPPED,kUnknown),
-    f("3rd", "other1",          OTHER, kUnknown)
+    // kUnknown should be handled gracefully for "heap-allocated", non-leaf
+    // reporters, leaf-reporters, "other" reporters, and duplicated reporters.
+    f("3rd", "heap-allocated",  OTHER,   kUnknown),
+    f("3rd", "explicit/a",      HEAP,    kUnknown),
+    f("3rd", "explicit/a/b",    HEAP,    333 * MB),
+    f("3rd", "explicit/a/c",    HEAP,    444 * MB),
+    f("3rd", "explicit/a/c",    HEAP,    kUnknown), // dup: merge
+    f("3rd", "explicit/a/d",    HEAP,    kUnknown),
+    f("3rd", "explicit/a/d",    HEAP,    kUnknown), // dup: merge
+    f("3rd", "explicit/b",      NONHEAP, kUnknown),
+    f("3rd", "other1",          OTHER,   kUnknown)
   ];
   for (var i = 0; i < fakeReporters2.length; i++) {
     mgr.registerReporter(fakeReporters2[i]);
@@ -157,12 +179,15 @@ Explicit Allocations\n\
 │      ├──70.00 MB (11.23%) -- a\n\
 │      └───2.00 MB (00.32%) -- (1 omitted)\n\
 ├──222.00 MB (35.60%) -- a\n\
-├──123.00 MB (19.72%) -- c\n\
+├──100.00 MB (16.04%) -- c\n\
+│  ├───77.00 MB (12.35%) -- other\n\
+│  └───23.00 MB (03.69%) -- d [2]\n\
+├───23.00 MB (03.69%) -- cc [2]\n\
 ├───20.00 MB (03.21%) -- f\n\
 │   └──20.00 MB (03.21%) -- g\n\
 │      └──20.00 MB (03.21%) -- h\n\
 │         └──20.00 MB (03.21%) -- i\n\
-├───15.00 MB (02.41%) -- g\n\
+├───15.00 MB (02.41%) -- g [2]\n\
 │   ├───6.00 MB (00.96%) -- a\n\
 │   ├───5.00 MB (00.80%) -- b\n\
 │   └───4.00 MB (00.64%) -- other\n\
@@ -170,12 +195,14 @@ Explicit Allocations\n\
 └────0.58 MB (00.09%) -- (2 omitted)\n\
 \n\
 Other Measurements\n\
-500.00 MB -- heap-used\n\
-222.00 MB -- other2\n\
+500.00 MB -- heap-allocated\n\
+100.00 MB -- heap-unallocated\n\
 111.00 MB -- other1\n\
-100.00 MB -- heap-unused\n\
-      888 -- other4\n\
+222.00 MB -- other2\n\
       777 -- other3\n\
+      888 -- other4\n\
+   45.67% -- perc1\n\
+  100.00% -- perc2\n\
     (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
@@ -184,29 +211,29 @@ Explicit Allocations\n\
 1,000.00 MB (100.0%) -- explicit\n\
 ├────499.00 MB (49.90%) -- a\n\
 │    └──499.00 MB (49.90%) -- b\n\
-│       └──499.00 MB (49.90%) -- c\n\
+│       └──499.00 MB (49.90%) -- c [3]\n\
 ├────200.00 MB (20.00%) -- flip/the/backslashes\n\
 ├────200.00 MB (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mo...)\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-1,000.00 MB -- heap-used\n\
   666.00 MB -- danger<script>window.alert(1)</script>\n\
+1,000.00 MB -- heap-allocated\n\
+  100.00 MB -- heap-unallocated\n\
   111.00 MB -- other1\n\
-  100.00 MB -- heap-unused\n\
 \n\
 3rd Process\n\
 \n\
 Explicit Allocations\n\
 777.00 MB (100.0%) -- explicit\n\
 ├──777.00 MB (100.0%) -- a [*]\n\
-│  ├──444.00 MB (57.14%) -- c\n\
+│  ├──444.00 MB (57.14%) -- c [2]\n\
 │  ├──333.00 MB (42.86%) -- b\n\
 │  └────0.00 MB (00.00%) -- (1 omitted)\n\
 └────0.00 MB (00.00%) -- (2 omitted)\n\
 \n\
 Other Measurements\n\
-0.00 MB -- heap-used [*]\n\
+0.00 MB -- heap-allocated [*]\n\
 0.00 MB -- other1 [*]\n\
 \n\
 ";
@@ -224,12 +251,15 @@ Explicit Allocations\n\
 │      ├──73,400,320 B (11.23%) -- a\n\
 │      └───2,097,152 B (00.32%) -- b\n\
 ├──232,783,872 B (35.60%) -- a\n\
-├──128,974,848 B (19.72%) -- c\n\
+├──104,857,600 B (16.04%) -- c\n\
+│  ├───80,740,352 B (12.35%) -- other\n\
+│  └───24,117,248 B (03.69%) -- d [2]\n\
+├───24,117,248 B (03.69%) -- cc [2]\n\
 ├───20,971,520 B (03.21%) -- f\n\
 │   └──20,971,520 B (03.21%) -- g\n\
 │      └──20,971,520 B (03.21%) -- h\n\
 │         └──20,971,520 B (03.21%) -- i\n\
-├───15,728,640 B (02.41%) -- g\n\
+├───15,728,640 B (02.41%) -- g [2]\n\
 │   ├───6,291,456 B (00.96%) -- a\n\
 │   ├───5,242,880 B (00.80%) -- b\n\
 │   └───4,194,304 B (00.64%) -- other\n\
@@ -238,12 +268,14 @@ Explicit Allocations\n\
 └──────102,400 B (00.02%) -- e\n\
 \n\
 Other Measurements\n\
-524,288,000 B -- heap-used\n\
-232,783,872 B -- other2\n\
+524,288,000 B -- heap-allocated\n\
+104,857,600 B -- heap-unallocated\n\
 116,391,936 B -- other1\n\
-104,857,600 B -- heap-unused\n\
-          888 -- other4\n\
+232,783,872 B -- other2\n\
           777 -- other3\n\
+          888 -- other4\n\
+       45.67% -- perc1\n\
+      100.00% -- perc2\n\
         (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
@@ -252,30 +284,30 @@ Explicit Allocations\n\
 1,048,576,000 B (100.0%) -- explicit\n\
 ├────523,239,424 B (49.90%) -- a\n\
 │    └──523,239,424 B (49.90%) -- b\n\
-│       └──523,239,424 B (49.90%) -- c\n\
+│       └──523,239,424 B (49.90%) -- c [3]\n\
 ├────209,715,200 B (20.00%) -- flip/the/backslashes\n\
 ├────209,715,200 B (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-1,048,576,000 B -- heap-used\n\
   698,351,616 B -- danger<script>window.alert(1)</script>\n\
+1,048,576,000 B -- heap-allocated\n\
+  104,857,600 B -- heap-unallocated\n\
   116,391,936 B -- other1\n\
-  104,857,600 B -- heap-unused\n\
 \n\
 3rd Process\n\
 \n\
 Explicit Allocations\n\
 814,743,552 B (100.0%) -- explicit\n\
 ├──814,743,552 B (100.0%) -- a [*]\n\
-│  ├──465,567,744 B (57.14%) -- c\n\
+│  ├──465,567,744 B (57.14%) -- c [2]\n\
 │  ├──349,175,808 B (42.86%) -- b\n\
-│  └────────────0 B (00.00%) -- d [*]\n\
+│  └────────────0 B (00.00%) -- d [*] [2]\n\
 ├────────────0 B (00.00%) -- b [*]\n\
 └────────────0 B (00.00%) -- heap-unclassified [*]\n\
 \n\
 Other Measurements\n\
-0 B -- heap-used [*]\n\
+0 B -- heap-allocated [*]\n\
 0 B -- other1 [*]\n\
 \n\
 "

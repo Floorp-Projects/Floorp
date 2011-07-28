@@ -124,6 +124,8 @@ LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
+		-I$(topsrcdir)/layout/generic \
+		-I$(topsrcdir)/layout/xul/base/src \
 		-I$(topsrcdir)/toolkit/xre \
 		-I$(topsrcdir)/xpcom/base \
 		$(NULL)

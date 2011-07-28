@@ -444,7 +444,7 @@ stubs::GetElem(VMFrame &f)
 
             if (idx < obj->getArrayLength() &&
                 idx < obj->getDenseArrayCapacity()) {
-                copyFrom = obj->addressOfDenseArrayElement(idx);
+                copyFrom = &obj->getDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
             }
@@ -453,7 +453,7 @@ stubs::GetElem(VMFrame &f)
             ArgumentsObject *argsobj = obj->asArguments();
 
             if (arg < argsobj->initialLength()) {
-                copyFrom = argsobj->addressOfElement(arg);
+                copyFrom = &argsobj->element(arg);
                 if (!copyFrom->isMagic()) {
                     if (StackFrame *afp = (StackFrame *) argsobj->getPrivate())
                         copyFrom = &afp->canonicalActualArg(arg);
@@ -816,16 +816,14 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
             THROWV(JS_FALSE);                                                 \
         if (lval.isString() && rval.isString()) {                             \
             JSString *l = lval.toString(), *r = rval.toString();              \
-            JSBool cmp;                                                       \
+            int32 cmp;                                                        \
             if (!CompareStrings(cx, l, r, &cmp))                              \
                 THROWV(JS_FALSE);                                             \
             cond = cmp OP 0;                                                  \
         } else {                                                              \
             double l, r;                                                      \
-            if (!ValueToNumber(cx, lval, &l) ||                               \
-                !ValueToNumber(cx, rval, &r)) {                               \
+            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))           \
                 THROWV(JS_FALSE);                                             \
-            }                                                                 \
             cond = JSDOUBLE_COMPARE(l, OP, r, false);                         \
         }                                                                     \
         regs.sp[-2].setBoolean(cond);                                         \
@@ -947,10 +945,8 @@ StubEqualityOp(VMFrame &f)
                 cond = equal == EQ;
             } else {
                 double l, r;
-                if (!ValueToNumber(cx, lval, &l) ||
-                    !ValueToNumber(cx, rval, &r)) {
+                if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
                     return false;
-                }
 
                 if (EQ)
                     cond = JSDOUBLE_COMPARE(l, ==, r, false);
@@ -1034,7 +1030,7 @@ stubs::Add(VMFrame &f)
 
         } else {
             double l, r;
-            if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
+            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
                 THROW();
             l += r;
             regs.sp[-2].setNumber(l);
@@ -1058,10 +1054,8 @@ stubs::Sub(VMFrame &f)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
     double d1, d2;
-    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+    if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
         THROW();
-    }
     double d = d1 - d2;
     regs.sp[-2].setNumber(d);
 }
@@ -1072,10 +1066,8 @@ stubs::Mul(VMFrame &f)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
     double d1, d2;
-    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+    if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
         THROW();
-    }
     double d = d1 * d2;
     regs.sp[-2].setNumber(d);
 }
@@ -1088,10 +1080,8 @@ stubs::Div(VMFrame &f)
     FrameRegs &regs = f.regs;
 
     double d1, d2;
-    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-        !ValueToNumber(cx, regs.sp[-1], &d2)) {
+    if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
         THROW();
-    }
     if (d2 == 0) {
         const Value *vp;
 #ifdef XP_WIN
@@ -1128,10 +1118,8 @@ stubs::Mod(VMFrame &f)
         regs.sp[-2].setInt32(mod);
     } else {
         double d1, d2;
-        if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
-            !ValueToNumber(cx, regs.sp[-1], &d2)) {
+        if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
             THROW();
-        }
         if (d2 == 0) {
             regs.sp[-2].setDouble(js_NaN);
         } else {
@@ -1234,7 +1222,7 @@ void JS_FASTCALL
 stubs::Neg(VMFrame &f)
 {
     double d;
-    if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
+    if (!ToNumber(f.cx, f.regs.sp[-1], &d))
         THROW();
     d = -d;
     f.regs.sp[-1].setNumber(d);
@@ -1299,7 +1287,7 @@ stubs::InitElem(VMFrame &f, uint32 last)
     if (rref.isMagic(JS_ARRAY_HOLE)) {
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(jsuint(JSID_TO_INT(id)) < JS_ARGS_LENGTH_MAX);
+        JS_ASSERT(jsuint(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
         if (last && !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
@@ -1523,7 +1511,7 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
     } else {
         Value v;
         double d;
-        if (!ValueToNumber(cx, ref, &d))
+        if (!ToNumber(cx, ref, &d))
             return false;
         if (POST) {
             ref.setDouble(d);
@@ -1558,13 +1546,13 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
     if (!atom) {
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            Value &rref = obj->nativeGetSlotRef(slot);
+            const Value &rval = obj->nativeGetSlot(slot);
             int32_t tmp;
-            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
+            if (JS_LIKELY(rval.isInt32() && CanIncDecWithoutOverflow(tmp = rval.toInt32()))) {
                 int32_t inc = tmp + N;
                 if (!POST)
                     tmp = inc;
-                rref.getInt32Ref() = inc;
+                obj->nativeSetSlot(slot, Int32Value(inc));
                 f.regs.sp[0].setInt32(tmp);
                 return true;
             }
@@ -2110,12 +2098,12 @@ stubs::InitMethod(VMFrame &f, JSAtom *atom)
 }
 
 void JS_FASTCALL
-stubs::IterNext(VMFrame &f)
+stubs::IterNext(VMFrame &f, int32 offset)
 {
-    JS_ASSERT(f.regs.sp - 1 >= f.fp()->base());
-    JS_ASSERT(f.regs.sp[-1].isObject());
+    JS_ASSERT(f.regs.sp - offset >= f.fp()->base());
+    JS_ASSERT(f.regs.sp[-offset].isObject());
 
-    JSObject *iterobj = &f.regs.sp[-1].toObject();
+    JSObject *iterobj = &f.regs.sp[-offset].toObject();
     f.regs.sp[0].setNull();
     f.regs.sp++;
     if (!js_IteratorNext(f.cx, iterobj, &f.regs.sp[-1]))
@@ -2459,7 +2447,7 @@ stubs::Unbrand(VMFrame &f)
 void JS_FASTCALL
 stubs::Pos(VMFrame &f)
 {
-    if (!ValueToNumber(f.cx, &f.regs.sp[-1]))
+    if (!ToNumber(f.cx, &f.regs.sp[-1]))
         THROW();
 }
 

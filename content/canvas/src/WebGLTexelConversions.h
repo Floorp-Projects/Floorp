@@ -33,11 +33,15 @@
 //  * added BGR8 path, we need it in Mozilla to load textures from DOMElements
 //  * enclosing in a namespace WebGLTexelConversions to make it clear it is, in profilers and in symbol table dumps
 //  * added __restrict keywords. Although non-standard, this is very well supported across all compilers
-//    that I know of (GCC/LLVM/MSC/ICC/Sun/XLC...)
+//    that I know of (GCC/LLVM/MSC/ICC/XLC...)
 //  * optimized scaleFactor computation in Unmultiply functions (1 div instead of 2)
 
 #ifndef WEBGLTEXELCONVERSIONS_H_
 #define WEBGLTEXELCONVERSIONS_H_
+
+#ifdef __SUNPRO_CC
+#define __restrict
+#endif
 
 #include "WebGLContext.h"
 

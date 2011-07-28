@@ -105,13 +105,14 @@ function LoadCerts()
   document.getElementById('orphan-tree')
    .treeBoxObject.view = orphanTreeView;
 
+  enableBackupAllButton();
+}
+
+function enableBackupAllButton()
+{
   var rowCnt = userTreeView.rowCount;
-  var enableBackupAllButton=document.getElementById('mine_backupAllButton');
-  if(rowCnt < 1) {
-    enableBackupAllButton.setAttribute("disabled",true);
-  } else  {
-    enableBackupAllButton.setAttribute("enabled",true);
-  }
+  var backupAllButton=document.getElementById('mine_backupAllButton');
+  backupAllButton.disabled = (rowCnt < 1);
 }
 
 function getSelectedCerts()
@@ -428,6 +429,7 @@ function restoreCerts()
     userTreeView.selection.clearSelection();
     caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
     caTreeView.selection.clearSelection();
+    enableBackupAllButton();
   }
 }
 
@@ -528,6 +530,9 @@ function deleteCerts()
     selected_tree_items = [];
     selected_index = [];
     treeView.selection.clearSelection();
+    if (selTabID == 'mine_tab') {
+      enableBackupAllButton();
+    }
   }
 }
 

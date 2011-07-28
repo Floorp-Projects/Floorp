@@ -76,7 +76,6 @@ CPPSRCS = \
   nsScreenGtk.cpp \
   nsScreenManagerGtk.cpp \
   nsImageToPixbuf.cpp \
-  nsAccessibilityHelper.cpp \
   nsGtkIMModule.cpp \
   WidgetTraceEvent.cpp \
   $(NULL)
@@ -137,6 +136,8 @@ DEFINES		+= -DCAIRO_GFX
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir)/../shared \
+		-I$(topsrcdir)/layout/generic \
+		-I$(topsrcdir)/layout/xul/base/src \
 		-I$(topsrcdir)/other-licenses/atk-1.0 \
 		$(NULL)
 ifdef MOZ_X11

@@ -309,6 +309,12 @@ nsHttpConnectionMgr::PruneDeadConnections()
 }
 
 nsresult
+nsHttpConnectionMgr::ClosePersistentConnections()
+{
+    return PostEvent(&nsHttpConnectionMgr::OnMsgClosePersistentConnections);
+}
+
+nsresult
 nsHttpConnectionMgr::GetSocketThreadTarget(nsIEventTarget **target)
 {
     // This object doesn't get reinitialized if the offline state changes, so our
@@ -684,6 +690,34 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
 }
 
 void
+nsHttpConnectionMgr::ClosePersistentConnections(nsConnectionEntry *ent)
+{
+    LOG(("nsHttpConnectionMgr::ClosePersistentConnections [ci=%s]\n",
+         ent->mConnInfo->HashKey().get()));
+    while (ent->mIdleConns.Length()) {
+        nsHttpConnection *conn = ent->mIdleConns[0];
+        ent->mIdleConns.RemoveElementAt(0);
+        mNumIdleConns--;
+        conn->Close(NS_ERROR_ABORT);
+        NS_RELEASE(conn);
+    }
+    
+    PRInt32 activeCount = ent->mActiveConns.Length();
+    for (PRInt32 i=0; i < activeCount; i++)
+        ent->mActiveConns[i]->DontReuse();
+}
+
+PRIntn
+nsHttpConnectionMgr::ClosePersistentConnectionsCB(nsHashKey *key,
+                                                  void *data, void *closure)
+{
+    nsHttpConnectionMgr *self = static_cast<nsHttpConnectionMgr *>(closure);
+    nsConnectionEntry *ent = static_cast<nsConnectionEntry *>(data);
+    self->ClosePersistentConnections(ent);
+    return kHashEnumerateNext;
+}
+
+void
 nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
                                    nsHttpTransaction *trans,
                                    PRBool onlyReusedConnection,
@@ -925,6 +959,11 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         mCT.Put(&key, ent);
     }
 
+    // If we are doing a force reload then close out any existing conns
+    // to this host so that changes in DNS, LBs, etc.. are reflected
+    if (caps & NS_HTTP_CLEAR_KEEPALIVES)
+        ClosePersistentConnections(ent);
+
     // Check if the transaction already has a sticky reference to a connection.
     // If so, then we can just use it directly by transferring its reference
     // to the new connection var instead of calling GetConnection() to search
@@ -1067,6 +1106,14 @@ nsHttpConnectionMgr::OnMsgPruneDeadConnections(PRInt32, void *)
     mTimeOfNextWakeUp = LL_MAXUINT;
     if (mNumIdleConns > 0) 
         mCT.Enumerate(PruneDeadConnectionsCB, this);
+}
+
+void
+nsHttpConnectionMgr::OnMsgClosePersistentConnections(PRInt32, void *)
+{
+    LOG(("nsHttpConnectionMgr::OnMsgClosePersistentConnections\n"));
+
+    mCT.Enumerate(ClosePersistentConnectionsCB, this);
 }
 
 void

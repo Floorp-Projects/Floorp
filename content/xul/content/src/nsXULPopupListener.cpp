@@ -57,7 +57,7 @@
 #include "nsXULPopupManager.h"
 #include "nsEventStateManager.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSUIEvent.h"
@@ -71,6 +71,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsIObjectLoadingContent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 // for event firing in context menus
 #include "nsPresContext.h"
@@ -79,7 +80,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIViewManager.h"
 #include "nsDOMError.h"
-#include "nsIMenuFrame.h"
 
 using namespace mozilla;
 

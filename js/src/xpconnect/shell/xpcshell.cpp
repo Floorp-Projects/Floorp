@@ -548,14 +548,6 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     rt = cx->runtime;
     preBytes = rt->gcBytes;
     JS_GC(cx);
-    fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
-           (unsigned long)preBytes, (unsigned long)rt->gcBytes,
-#if defined(XP_UNIX) && !defined(__SYMBIAN32__)
-           (unsigned long)sbrk(0)
-#else
-           0
-#endif
-           );
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
@@ -1843,6 +1835,21 @@ main(int argc, char **argv, char **envp)
     }
 
     {
+        if (argc > 1 && !strcmp(argv[1], "--greomni")) {
+            nsCOMPtr<nsILocalFile> greOmni;
+            nsCOMPtr<nsILocalFile> appOmni;
+            XRE_GetFileFromPath(argv[2], getter_AddRefs(greOmni));
+            if (argc > 3 && !strcmp(argv[3], "--appomni")) {
+                XRE_GetFileFromPath(argv[4], getter_AddRefs(appOmni));
+                argc-=2;
+                argv+=2;
+            } 
+            
+            XRE_InitOmnijar(greOmni, appOmni);
+            argc-=2;
+            argv+=2;
+        }
+
         nsCOMPtr<nsIServiceManager> servMan;
         rv = NS_InitXPCOM2(getter_AddRefs(servMan), appDir, &dirprovider);
         if (NS_FAILED(rv)) {
@@ -2080,7 +2087,15 @@ XPCShellDirProvider::GetFile(const char *prop, PRBool *persistent,
 {
     if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {
         *persistent = PR_TRUE;
-        NS_ADDREF(*result = mGREDir);
+        return mGREDir->Clone(result);
+    } else if (mGREDir && !strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR)) {
+        nsCOMPtr<nsIFile> file;
+        *persistent = PR_TRUE;
+        if (NS_FAILED(mGREDir->Clone(getter_AddRefs(file))) ||
+            NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("defaults"))) ||
+            NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("pref"))))
+            return NS_ERROR_FAILURE;
+        NS_ADDREF(*result = file);
         return NS_OK;
     }
 
@@ -2103,6 +2118,18 @@ XPCShellDirProvider::GetFiles(const char *prop, nsISimpleEnumerator* *result)
         if (NS_SUCCEEDED(rv))
             dirs.AppendObject(file);
 
+        return NS_NewArrayEnumerator(result, dirs);
+    } else if (!strcmp(prop, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
+        nsCOMArray<nsIFile> dirs;
+
+        nsCOMPtr<nsIFile> file;
+        if (NS_FAILED(NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                             getter_AddRefs(file))) ||
+            NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("defaults"))) ||
+            NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("preferences"))))
+            return NS_ERROR_FAILURE;
+
+        dirs.AppendObject(file);
         return NS_NewArrayEnumerator(result, dirs);
     }
     return NS_ERROR_FAILURE;

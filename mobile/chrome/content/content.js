@@ -1331,6 +1331,8 @@ TouchEventHandler.init();
 
 var SelectionHandler = {
   cache: {},
+  selectedText: "",
+  contentWindow: null,
   
   init: function() {
     addMessageListener("Browser:SelectionStart", this);
@@ -1345,13 +1347,36 @@ var SelectionHandler = {
 
     switch (aMessage.name) {
       case "Browser:SelectionStart": {
+        this.selectedText = "";
+
+        // if this is an iframe, dig down to find the document that was clicked
+        let x = json.x;
+        let y = json.y;
+        let offsetX = 0;
+        let offsetY = 0;
+        let elem = utils.elementFromPoint(x, y, true, false);
+        while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
+          // adjust client coordinates' origin to be top left of iframe viewport
+          let rect = elem.getBoundingClientRect();
+          scrollOffset = ContentScroll.getScrollOffset(elem.ownerDocument.defaultView);
+          offsetX += rect.left;
+          x -= rect.left;
+
+          offsetY += rect.top + scrollOffset.y;
+          y -= rect.top + scrollOffset.y;
+          utils = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+          elem = utils.elementFromPoint(x, y, true, false);
+        }
+        let contentWindow = elem.ownerDocument.defaultView;
+        let currentDocShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
+
         // Position the caret using a fake mouse click
-        utils.sendMouseEventToWindow("mousedown", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
-        utils.sendMouseEventToWindow("mouseup", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
+        utils.sendMouseEventToWindow("mousedown", x - scrollOffset.x, y - scrollOffset.y, 0, 1, 0, true);
+        utils.sendMouseEventToWindow("mouseup", x - scrollOffset.x, y - scrollOffset.y, 0, 1, 0, true);
 
         // Select the word nearest the caret
         try {
-          let selcon = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).QueryInterface(Ci.nsISelectionController);
+          let selcon = currentDocShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).QueryInterface(Ci.nsISelectionController);
           selcon.wordMove(false, false);
           selcon.wordMove(true, true);
         } catch(e) {
@@ -1360,33 +1385,50 @@ var SelectionHandler = {
         }
 
         // Find the selected text rect and send it back so the handles can position correctly
-        let selection = content.getSelection();
+        let selection = contentWindow.getSelection();
         if (selection.rangeCount == 0)
           return;
 
         let range = selection.getRangeAt(0).QueryInterface(Ci.nsIDOMNSRange);
+        if (!range)
+          return;
+
+        // Cache the selected text since the selection might be gone by the time we get the "end" message
+        this.selectedText = selection.toString().trim();
+
+        // If the range didn't have any text, let's bail
+        if (!this.selectedText.length) {
+          selection.collapseToStart();
+          return;
+        }
+
         this.cache = { start: {}, end: {} };
         let rects = range.getClientRects();
         for (let i=0; i<rects.length; i++) {
           if (i == 0) {
-            this.cache.start.x = rects[i].left + scrollOffset.x;
-            this.cache.start.y = rects[i].bottom + scrollOffset.y;
+            this.cache.start.x = rects[i].left + offsetX;
+            this.cache.start.y = rects[i].bottom + offsetY;
           }
-          this.cache.end.x = rects[i].right + scrollOffset.x;
-          this.cache.end.y = rects[i].bottom + scrollOffset.y;
+          this.cache.end.x = rects[i].right + offsetX;
+          this.cache.end.y = rects[i].bottom + offsetY;
         }
 
+        this.contentWindow = contentWindow;
         sendAsyncMessage("Browser:SelectionRange", this.cache);
         break;
       }
 
       case "Browser:SelectionEnd": {
-        let selection = content.getSelection();
-        let str = selection.toString();
-        selection.collapseToStart();
-        if (str.length) {
+        try {
+          // The selection might already be gone
+          if (this.contentWindow)
+            this.contentWindow.getSelection().collapseToStart();
+          this.contentWindow = null;
+        } catch(e) {}
+
+        if (this.selectedText.length) {
           let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-          clipboard.copyString(str);
+          clipboard.copyString(this.selectedText);
           sendAsyncMessage("Browser:SelectionCopied", { succeeded: true });
         } else {
           sendAsyncMessage("Browser:SelectionCopied", { succeeded: false });
@@ -1395,6 +1437,13 @@ var SelectionHandler = {
       }
 
       case "Browser:SelectionMove":
+        if (!this.contentWindow)
+          return;
+        // Hack to avoid setting focus in a textbox [Bugs 654352 & 667243]
+        let elemUnder = elementFromPoint(json.x - scrollOffset.x, json.y - scrollOffset.y);
+        if (elemUnder && elemUnder instanceof Ci.nsIDOMHTMLInputElement || elemUnder instanceof Ci.nsIDOMHTMLTextAreaElement)
+          return;
+
         if (json.type == "end") {
           this.cache.end.x = json.x - scrollOffset.x;
           this.cache.end.y = json.y - scrollOffset.y;
@@ -1409,6 +1458,9 @@ var SelectionHandler = {
           utils.sendMouseEventToWindow("mousedown", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
           utils.sendMouseEventToWindow("mouseup", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
         }
+
+        // Cache the selected text since the selection might be gone by the time we get the "end" message
+        this.selectedText = this.contentWindow.getSelection().toString().trim();
         break;
     }
   }

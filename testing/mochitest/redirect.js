@@ -40,15 +40,6 @@
 
 function redirect(aURL)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-
-  // Can't just set window.location because of security restrictions
-  // that don't care about our UniversalXPConnectness
-  var webNav = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation);
-  webNav.loadURI(aURL + location.search,
+  SpecialPowers.loadURI(window, aURL + location.search,
                  null, null, null, null);
 }

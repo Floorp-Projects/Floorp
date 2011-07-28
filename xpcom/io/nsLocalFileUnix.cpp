@@ -88,7 +88,6 @@
 #include "prproces.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsISimpleEnumerator.h"
-#include "nsITimelineService.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include "nsIGIOService.h"
@@ -1439,7 +1438,29 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         }
     }
 
-    // Failing that, check the execute bit.
+    // On OS X, then query Launch Services.
+#ifdef XP_MACOSX
+    // Certain Mac applications, such as Classic applications, which
+    // run under Rosetta, might not have the +x mode bit but are still
+    // considered to be executable by Launch Services (bug 646748).
+    CFURLRef url;
+    if (NS_FAILED(GetCFURL(&url))) {
+        return NS_ERROR_FAILURE;
+    }
+
+    LSRequestedInfo theInfoRequest = kLSRequestAllInfo;
+    LSItemInfoRecord theInfo;
+    OSStatus result = ::LSCopyItemInfoForURL(url, theInfoRequest, &theInfo);
+    ::CFRelease(url);
+    if (result == noErr) {
+        if ((theInfo.flags & kLSItemInfoIsApplication) != 0) {
+            *_retval = PR_TRUE;
+            return NS_OK;
+        }
+    }
+#endif
+
+    // Then check the execute bit.
     *_retval = (access(mPath.get(), X_OK) == 0);
 #ifdef SOLARIS
     // On Solaris, access will always return 0 for root user, however
@@ -1689,8 +1710,6 @@ nsLocalFile::Load(PRLibrary **_retval)
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(_retval);
 
-    NS_TIMELINE_START_TIMER("PR_LoadLibrary");
-
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
 #endif
@@ -1700,9 +1719,6 @@ nsLocalFile::Load(PRLibrary **_retval)
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
 #endif
-
-    NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
-    NS_TIMELINE_MARK_TIMER1("PR_LoadLibrary", mPath.get());
 
     if (!*_retval)
         return NS_ERROR_FAILURE;

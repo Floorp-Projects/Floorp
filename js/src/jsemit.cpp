@@ -2022,7 +2022,6 @@ TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
           case JSOP_NAMEINC:  *op = JSOP_GNAMEINC; break;
           case JSOP_DECNAME:  *op = JSOP_DECGNAME; break;
           case JSOP_NAMEDEC:  *op = JSOP_GNAMEDEC; break;
-          case JSOP_FORNAME:  *op = JSOP_FORGNAME; break;
           case JSOP_SETCONST:
           case JSOP_DELNAME:
             /* Not supported. */
@@ -2315,8 +2314,19 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             size_t lexdepCount = cg->roLexdeps->count();
 
             JS_ASSERT_IF(!upvarMap.empty(), lexdepCount == upvarMap.length());
-            if (upvarMap.empty() && !upvarMap.appendN(UpvarCookie(), lexdepCount))
-                return JS_FALSE;
+            if (upvarMap.empty()) {
+                /* Lazily initialize the upvar map with exactly the necessary capacity. */
+                if (lexdepCount <= upvarMap.sMaxInlineStorage) {
+                    JS_ALWAYS_TRUE(upvarMap.growByUninitialized(lexdepCount));
+                } else {
+                    void *buf = upvarMap.allocPolicy().malloc_(lexdepCount * sizeof(UpvarCookie));
+                    if (!buf)
+                        return JS_FALSE;
+                    upvarMap.replaceRawBuffer(static_cast<UpvarCookie *>(buf), lexdepCount);
+                }
+                for (size_t i = 0; i < lexdepCount; ++i)
+                    upvarMap[i] = UpvarCookie();
+            }
 
             uintN slot = cookie.slot();
             if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != JSDefinition::ARG) {
@@ -2356,7 +2366,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_NAMEINC:  op = JSOP_LOCALINC; break;
           case JSOP_DECNAME:  op = JSOP_DECLOCAL; break;
           case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
-          case JSOP_FORNAME:  op = JSOP_FORLOCAL; break;
           default: JS_NOT_REACHED("let");
         }
         break;
@@ -2369,7 +2378,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_NAMEINC:  op = JSOP_ARGINC; break;
           case JSOP_DECNAME:  op = JSOP_DECARG; break;
           case JSOP_NAMEDEC:  op = JSOP_ARGDEC; break;
-          case JSOP_FORNAME:  op = JSOP_FORARG; break;
           default: JS_NOT_REACHED("arg");
         }
         JS_ASSERT(!pn->isConst());
@@ -2428,7 +2436,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_NAMEINC:  op = JSOP_LOCALINC; break;
           case JSOP_DECNAME:  op = JSOP_DECLOCAL; break;
           case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
-          case JSOP_FORNAME:  op = JSOP_FORLOCAL; break;
           default: JS_NOT_REACHED("local");
         }
         JS_ASSERT_IF(dn_kind == JSDefinition::CONST, pn->pn_dflags & PND_CONST);
@@ -3083,6 +3090,58 @@ AllocateSwitchConstant(JSContext *cx)
     return pv;
 }
 
+/*
+ * Sometimes, let-slots are pushed to the JS stack before we logically enter
+ * the let scope. For example,
+ *     for (let x = EXPR;;) BODY
+ * compiles to roughly {enterblock; EXPR; setlocal x; BODY; leaveblock} even
+ * though EXPR is evaluated in the enclosing scope; it does not see x.
+ *
+ * In those cases we use TempPopScope around the code to emit EXPR. It
+ * temporarily removes the let-scope from the JSCodeGenerator's scope stack and
+ * emits extra bytecode to ensure that js::GetBlockChain also finds the correct
+ * scope at run time.
+ */
+class TempPopScope {
+    JSStmtInfo *savedStmt;
+    JSStmtInfo *savedScopeStmt;
+    JSObjectBox *savedBlockBox;
+
+  public:
+#ifdef DEBUG
+    TempPopScope() : savedStmt(NULL) {}
+#endif
+
+    bool popBlock(JSContext *cx, JSCodeGenerator *cg) {
+        savedStmt = cg->topStmt;
+        savedScopeStmt = cg->topScopeStmt;
+        savedBlockBox = cg->blockChainBox;
+
+        if (cg->topStmt->type == STMT_FOR_LOOP || cg->topStmt->type == STMT_FOR_IN_LOOP)
+            js_PopStatement(cg);
+        JS_ASSERT(STMT_LINKS_SCOPE(cg->topStmt));
+        JS_ASSERT(cg->topStmt->flags & SIF_SCOPE);
+        js_PopStatement(cg);
+
+        /*
+         * Since we have changed the block chain, emit an instruction marking
+         * the change for the benefit of dynamic GetScopeChain callers such as
+         * the debugger.
+         *
+         * FIXME bug 671360 - The JSOP_NOP instruction should not be necessary.
+         */
+        return js_Emit1(cx, cg, JSOP_NOP) >= 0 && EmitBlockChain(cx, cg);
+    }
+
+    bool repushBlock(JSContext *cx, JSCodeGenerator *cg) {
+        JS_ASSERT(savedStmt);
+        cg->topStmt = savedStmt;
+        cg->topScopeStmt = savedScopeStmt;
+        cg->blockChainBox = savedBlockBox;
+        return js_Emit1(cx, cg, JSOP_NOP) >= 0 && EmitBlockChain(cx, cg);
+    }
+};
+
 static JSBool
 EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
            JSStmtInfo *stmtInfo)
@@ -3115,13 +3174,13 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
      */
     pn2 = pn->pn_right;
 #if JS_HAS_BLOCK_SCOPE
+    TempPopScope tps;
     if (pn2->pn_type == TOK_LEXICALSCOPE) {
         /*
-         * Push the body's block scope before discriminant code-gen for proper
-         * static block scope linkage in case the discriminant contains a let
-         * expression.  The block's locals must lie under the discriminant on
-         * the stack so that case-dispatch bytecodes can find the discriminant
-         * on top of stack.
+         * Push the body's block scope before discriminant code-gen to reflect
+         * the order of slots on the stack. The block's locals must lie under
+         * the discriminant on the stack so that case-dispatch bytecodes can
+         * find the discriminant on top of stack.
          */
         box = pn2->pn_objbox;
         js_PushBlockScope(cg, stmtInfo, box, -1);
@@ -3132,13 +3191,11 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             return JS_FALSE;
 
         /*
-         * Pop the switch's statement info around discriminant code-gen.  Note
-         * how this leaves cg->blockChain referencing the switch's
-         * block scope object, which is necessary for correct block parenting
-         * in the case where the discriminant contains a let expression.
+         * Pop the switch's statement info around discriminant code-gen, which
+         * belongs in the enclosing scope.
          */
-        cg->topStmt = stmtInfo->down;
-        cg->topScopeStmt = stmtInfo->downScope;
+        if (!tps.popBlock(cx, cg))
+            return JS_FALSE;
     }
 #ifdef __GNUC__
     else {
@@ -3163,11 +3220,14 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         js_PushStatement(cg, stmtInfo, STMT_SWITCH, top);
     } else {
         /* Re-push the switch's statement info record. */
-        cg->topStmt = cg->topScopeStmt = stmtInfo;
-        cg->blockChainBox = stmtInfo->blockBox;
+        if (!tps.repushBlock(cx, cg))
+            return JS_FALSE;
 
-        /* Set the statement info record's idea of top. */
-        stmtInfo->update = top;
+        /*
+         * Set the statement info record's idea of top. Reset top too, since
+         * repushBlock emits code.
+         */
+        stmtInfo->update = top = CG_OFFSET(cg);
 
         /* Advance pn2 to refer to the switch case list. */
         pn2 = pn2->expr();
@@ -4101,10 +4161,6 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
               JSBool inLetHead, ptrdiff_t *headNoteIndex)
 {
     bool let, forInVar, first;
-#if JS_HAS_BLOCK_SCOPE
-    bool popScope;
-    JSStmtInfo *stmt, *scopeStmt;
-#endif
     ptrdiff_t off, noteIndex, tmp;
     JSParseNode *pn2, *pn3, *next;
     JSOp op;
@@ -4129,15 +4185,8 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     let = (pn->pn_op == JSOP_NOP);
     forInVar = (pn->pn_xflags & PNX_FORINVAR) != 0;
 #if JS_HAS_BLOCK_SCOPE
-    popScope = (inLetHead || (let && (cg->flags & TCF_IN_FOR_INIT)));
-    if (popScope) {
-        stmt = cg->topStmt;
-        scopeStmt = cg->topScopeStmt;
-    }
-# ifdef __GNUC__
-    else stmt = scopeStmt = NULL;   /* quell GCC overwarning */
-# endif
-    JS_ASSERT(!popScope || let);
+    bool popScope = (inLetHead || (let && (cg->flags & TCF_IN_FOR_INIT)));
+    JS_ASSERT_IF(popScope, let);
 #endif
 
     off = noteIndex = -1;
@@ -4273,10 +4322,9 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
 #if JS_HAS_BLOCK_SCOPE
                 /* Evaluate expr in the outer lexical scope if requested. */
-                if (popScope) {
-                    cg->topStmt = stmt->down;
-                    cg->topScopeStmt = scopeStmt->downScope;
-                }
+                TempPopScope tps;
+                if (popScope && !tps.popBlock(cx, cg))
+                    return JS_FALSE;
 #endif
 
                 oldflags = cg->flags;
@@ -4286,11 +4334,8 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 cg->flags |= oldflags & TCF_IN_FOR_INIT;
 
 #if JS_HAS_BLOCK_SCOPE
-                if (popScope) {
-                    cg->topStmt = stmt;
-                    cg->topScopeStmt = scopeStmt;
-                    JS_ASSERT(cg->blockChainBox == scopeStmt->blockBox);
-                }
+                if (popScope && !tps.repushBlock(cx, cg))
+                    return JS_FALSE;
 #endif
             }
         }
@@ -4355,6 +4400,206 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     }
 
     return !(pn->pn_xflags & PNX_POPVAR) || js_Emit1(cx, cg, JSOP_POP) >= 0;
+}
+
+static bool
+EmitAssignment(JSContext *cx, JSCodeGenerator *cg, JSParseNode *lhs, JSOp op, JSParseNode *rhs)
+{
+    ptrdiff_t top = CG_OFFSET(cg);
+
+    /*
+     * Check left operand type and generate specialized code for it.
+     * Specialize to avoid ECMA "reference type" values on the operand
+     * stack, which impose pervasive runtime "GetValue" costs.
+     */
+    jsatomid atomIndex = (jsatomid) -1;              /* quell GCC overwarning */
+    jsbytecode offset = 1;
+
+    switch (PN_TYPE(lhs)) {
+      case TOK_NAME:
+        if (!BindNameToSlot(cx, cg, lhs))
+            return false;
+        if (!lhs->pn_cookie.isFree()) {
+            atomIndex = lhs->pn_cookie.asInteger();
+        } else {
+            if (!cg->makeAtomIndex(lhs->pn_atom, &atomIndex))
+                return false;
+            if (!lhs->isConst()) {
+                JSOp op = PN_OP(lhs) == JSOP_SETGNAME ? JSOP_BINDGNAME : JSOP_BINDNAME;
+                EMIT_INDEX_OP(op, atomIndex);
+                offset++;
+            }
+        }
+        break;
+      case TOK_DOT:
+        if (!js_EmitTree(cx, cg, lhs->expr()))
+            return false;
+        offset++;
+        if (!cg->makeAtomIndex(lhs->pn_atom, &atomIndex))
+            return false;
+        break;
+      case TOK_LB:
+        JS_ASSERT(lhs->pn_arity == PN_BINARY);
+        if (!js_EmitTree(cx, cg, lhs->pn_left))
+            return false;
+        if (!js_EmitTree(cx, cg, lhs->pn_right))
+            return false;
+        offset += 2;
+        break;
+#if JS_HAS_DESTRUCTURING
+      case TOK_RB:
+      case TOK_RC:
+        break;
+#endif
+      case TOK_LP:
+        if (!js_EmitTree(cx, cg, lhs))
+            return false;
+        offset++;
+        break;
+#if JS_HAS_XML_SUPPORT
+      case TOK_UNARYOP:
+        JS_ASSERT(lhs->pn_op == JSOP_SETXMLNAME);
+        if (!js_EmitTree(cx, cg, lhs->pn_kid))
+            return false;
+        if (js_Emit1(cx, cg, JSOP_BINDXMLNAME) < 0)
+            return false;
+        offset++;
+        break;
+#endif
+      default:
+        JS_ASSERT(0);
+    }
+
+    if (op != JSOP_NOP) {
+        JS_ASSERT(rhs);
+        switch (lhs->pn_type) {
+          case TOK_NAME:
+            if (lhs->isConst()) {
+                if (PN_OP(lhs) == JSOP_CALLEE) {
+                    if (js_Emit1(cx, cg, JSOP_CALLEE) < 0)
+                        return false;
+                } else {
+                    EMIT_INDEX_OP(PN_OP(lhs), atomIndex);
+                }
+            } else if (PN_OP(lhs) == JSOP_SETNAME) {
+                if (js_Emit1(cx, cg, JSOP_DUP) < 0)
+                    return false;
+                EMIT_INDEX_OP(JSOP_GETXPROP, atomIndex);
+            } else if (PN_OP(lhs) == JSOP_SETGNAME) {
+                if (!BindGlobal(cx, cg, lhs, lhs->pn_atom))
+                    return false;
+                if (lhs->pn_cookie.isFree())
+                    EmitAtomOp(cx, lhs, JSOP_GETGNAME, cg);
+                else
+                    EMIT_UINT16_IMM_OP(JSOP_GETGLOBAL, lhs->pn_cookie.asInteger());
+            } else {
+                EMIT_UINT16_IMM_OP((PN_OP(lhs) == JSOP_SETARG)
+                                   ? JSOP_GETARG
+                                   : JSOP_GETLOCAL,
+                                   atomIndex);
+            }
+            break;
+          case TOK_DOT:
+            if (js_Emit1(cx, cg, JSOP_DUP) < 0)
+                return false;
+            if (lhs->pn_atom == cx->runtime->atomState.lengthAtom) {
+                if (js_Emit1(cx, cg, JSOP_LENGTH) < 0)
+                    return false;
+            } else if (lhs->pn_atom == cx->runtime->atomState.protoAtom) {
+                if (!EmitIndexOp(cx, JSOP_QNAMEPART, atomIndex, cg))
+                    return false;
+                if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
+                    return false;
+            } else {
+                EMIT_INDEX_OP(JSOP_GETPROP, atomIndex);
+            }
+            break;
+          case TOK_LB:
+          case TOK_LP:
+#if JS_HAS_XML_SUPPORT
+          case TOK_UNARYOP:
+#endif
+            if (js_Emit1(cx, cg, JSOP_DUP2) < 0)
+                return false;
+            if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
+                return false;
+            break;
+          default:;
+        }
+    }
+
+    /* Now emit the right operand (it may affect the namespace). */
+    if (rhs) {
+        if (!js_EmitTree(cx, cg, rhs))
+            return false;
+    } else {
+        /* The value to assign is the next enumeration value in a for-in loop. */
+        if (js_Emit2(cx, cg, JSOP_ITERNEXT, offset) < 0)
+            return false;
+    }
+
+    /* If += etc., emit the binary operator with a decompiler note. */
+    if (op != JSOP_NOP) {
+        /*
+         * Take care to avoid SRC_ASSIGNOP if the left-hand side is a const
+         * declared in the current compilation unit, as in this case (just
+         * a bit further below) we will avoid emitting the assignment op.
+         */
+        if (lhs->pn_type != TOK_NAME || !lhs->isConst()) {
+            if (js_NewSrcNote(cx, cg, SRC_ASSIGNOP) < 0)
+                return false;
+        }
+        if (js_Emit1(cx, cg, op) < 0)
+            return false;
+    }
+
+    /* Left parts such as a.b.c and a[b].c need a decompiler note. */
+    if (lhs->pn_type != TOK_NAME &&
+#if JS_HAS_DESTRUCTURING
+        lhs->pn_type != TOK_RB &&
+        lhs->pn_type != TOK_RC &&
+#endif
+        js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0) {
+        return false;
+    }
+
+    /* Finally, emit the specialized assignment bytecode. */
+    switch (lhs->pn_type) {
+      case TOK_NAME:
+        if (lhs->isConst()) {
+            if (!rhs) {
+                ReportCompileErrorNumber(cx, CG_TS(cg), lhs, JSREPORT_ERROR,
+                                         JSMSG_BAD_FOR_LEFTSIDE);
+                return false;
+            }
+            break;
+        }
+        /* FALL THROUGH */
+      case TOK_DOT:
+        EMIT_INDEX_OP(PN_OP(lhs), atomIndex);
+        break;
+      case TOK_LB:
+      case TOK_LP:
+        if (js_Emit1(cx, cg, JSOP_SETELEM) < 0)
+            return false;
+        break;
+#if JS_HAS_DESTRUCTURING
+      case TOK_RB:
+      case TOK_RC:
+        if (!EmitDestructuringOps(cx, cg, JSOP_SETNAME, lhs))
+            return false;
+        break;
+#endif
+#if JS_HAS_XML_SUPPORT
+      case TOK_UNARYOP:
+        if (js_Emit1(cx, cg, JSOP_SETXMLNAME) < 0)
+            return false;
+        break;
+#endif
+      default:
+        JS_ASSERT(0);
+    }
+    return true;
 }
 
 #if defined DEBUG_brendan || defined DEBUG_mrbkap
@@ -4893,9 +5138,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /* Set loop and enclosing label update offsets, for continue. */
+        off = CG_OFFSET(cg);
         stmt = &stmtInfo;
         do {
-            stmt->update = CG_OFFSET(cg);
+            stmt->update = off;
         } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
 
         /* Compile the loop condition, now that continues know where to go. */
@@ -4916,7 +5162,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (!js_SetSrcNoteOffset(cx, cg, noteIndex2, 0, beq - top))
             return JS_FALSE;
-        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, 1 + (beq - top)))
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, 1 + (off - top)))
             return JS_FALSE;
         ok = js_PopStatementCG(cx, cg);
         break;
@@ -4933,39 +5179,31 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             /*
              * If the left part is 'var x', emit code to define x if necessary
-             * using a prolog opcode, but do not emit a pop.  If the left part
-             * is 'var x = i', emit prolog code to define x if necessary; then
-             * emit code to evaluate i, assign the result to x, and pop the
-             * result off the stack.
-             *
-             * All the logic to do this is implemented in the outer switch's
-             * TOK_VAR case, conditioned on pn_xflags flags set by the parser.
-             *
-             * In the 'for (var x = i in o) ...' case, the js_EmitTree(...pn3)
-             * called here will generate the proper note for the assignment
-             * op that sets x = i, hoisting the initialized var declaration
-             * out of the loop: 'var x = i; for (x in o) ...'.
-             *
-             * In the 'for (var x in o) ...' case, nothing but the prolog op
-             * (if needed) should be generated here, we must emit the note
-             * just before the JSOP_FOR* opcode in the switch on pn3->pn_type
-             * a bit below, so nothing is hoisted: 'for (var x in o) ...'.
-             *
-             * A 'for (let x = i in o)' loop must not be hoisted, since in
-             * this form the let variable is scoped by the loop body (but not
-             * the head).  The initializer expression i must be evaluated for
-             * any side effects.  So we hoist only i in the let case.
+             * using a prolog opcode, but do not emit a pop. If the left part
+             * was originally 'var x = i', the parser will have rewritten it;
+             * see Parser::forStatement. 'for (let x = i in o)' is mercifully
+             * banned.
              */
-            pn3 = pn2->pn_left;
-            type = PN_TYPE(pn3);
-            cg->flags |= TCF_IN_FOR_INIT;
-            if (TokenKindIsDecl(type) && !js_EmitTree(cx, cg, pn3))
-                return JS_FALSE;
-            cg->flags &= ~TCF_IN_FOR_INIT;
+            bool forLet = false;
+            if (JSParseNode *decl = pn2->pn_kid1) {
+                JS_ASSERT(TokenKindIsDecl(PN_TYPE(decl)));
+                forLet = PN_TYPE(decl) == TOK_LET;
+                cg->flags |= TCF_IN_FOR_INIT;
+                if (!js_EmitTree(cx, cg, decl))
+                    return JS_FALSE;
+                cg->flags &= ~TCF_IN_FOR_INIT;
+            }
 
             /* Compile the object expression to the right of 'in'. */
-            if (!js_EmitTree(cx, cg, pn2->pn_right))
-                return JS_FALSE;
+            {
+                TempPopScope tps;
+                if (forLet && !tps.popBlock(cx, cg))
+                    return JS_FALSE;
+                if (!js_EmitTree(cx, cg, pn2->pn_kid3))
+                    return JS_FALSE;
+                if (forLet && !tps.repushBlock(cx, cg))
+                    return JS_FALSE;
+            }
 
             /*
              * Emit a bytecode to convert top of stack value to the iterator
@@ -5003,155 +5241,25 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 
             /*
-             * Compile a JSOP_FOR* bytecode based on the left hand side.
-             *
-             * Initialize op to JSOP_SETNAME in case of |for ([a, b] in o)...|
-             * or similar, to signify assignment, rather than declaration, to
-             * the decompiler.  EmitDestructuringOps takes a prolog bytecode
-             * parameter and emits the appropriate source note, defaulting to
-             * assignment, so JSOP_SETNAME is not critical here; many similar
-             * ops could be used -- just not JSOP_NOP (which means 'let').
+             * Emit code to get the next enumeration value and assign it to the
+             * left hand side. The JSOP_POP after this assignment is annotated
+             * so that the decompiler can distinguish 'for (x in y)' from
+             * 'for (var x in y)'.
              */
-            op = JSOP_SETNAME;
-            switch (type) {
-#if JS_HAS_BLOCK_SCOPE
-              case TOK_LET:
-#endif
-              case TOK_VAR:
-                JS_ASSERT(pn3->pn_arity == PN_LIST && pn3->pn_count == 1);
-                pn3 = pn3->pn_head;
-#if JS_HAS_DESTRUCTURING
-                if (pn3->pn_type == TOK_ASSIGN) {
-                    pn3 = pn3->pn_left;
-                    JS_ASSERT(pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC);
-                }
-                if (pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC) {
-                    op = PN_OP(pn2->pn_left);
-                    goto destructuring_for;
-                }
-#else
-                JS_ASSERT(pn3->pn_type == TOK_NAME);
-#endif
-                /* FALL THROUGH */
-
-              case TOK_NAME:
-              {
-                /*
-                 * Always annotate JSOP_FORLOCAL if given input of the form
-                 * 'for (let x in * o)' -- the decompiler must not hoist the
-                 * 'let x' out of the loop head, or x will be bound in the
-                 * wrong scope.  Likewise, but in this case only for the sake
-                 * of higher decompilation fidelity only, do not hoist 'var x'
-                 * when given 'for (var x in o)'.
-                 */
-                if ((
-#if JS_HAS_BLOCK_SCOPE
-                     type == TOK_LET ||
-#endif
-                     (type == TOK_VAR && !pn3->maybeExpr())) &&
-                    js_NewSrcNote2(cx, cg, SRC_DECL,
-                                   (type == TOK_VAR)
-                                   ? SRC_DECL_VAR
-                                   : SRC_DECL_LET) < 0) {
-                    return JS_FALSE;
-                }
-                UpvarCookie cookie = pn3->pn_cookie;
-                if (!cookie.isFree()) {
-                    op = PN_OP(pn3);
-                    switch (op) {
-                      case JSOP_GETARG:
-                      case JSOP_SETARG:
-                        op = JSOP_FORARG;
-                        break;
-                      case JSOP_GETLOCAL:
-                      case JSOP_SETLOCAL:
-                        op = JSOP_FORLOCAL;
-                        break;
-                      case JSOP_GETGLOBAL:
-                        op = JSOP_FORGNAME;
-                        cookie.makeFree();
-                        break;
-                      default:
-                        JS_NOT_REACHED("unexpected opcode");
-                    }
-                } else {
-                    pn3->pn_op = JSOP_FORNAME;
-                    if (!BindNameToSlot(cx, cg, pn3))
-                        return JS_FALSE;
-                    op = PN_OP(pn3);
-                    cookie = pn3->pn_cookie;
-                }
-                if (pn3->isConst()) {
-                    ReportCompileErrorNumber(cx, CG_TS(cg), pn3, JSREPORT_ERROR,
-                                             JSMSG_BAD_FOR_LEFTSIDE);
-                    return JS_FALSE;
-                }
-                if (!cookie.isFree()) {
-                    atomIndex = cookie.asInteger();
-                    EMIT_UINT16_IMM_OP(op, atomIndex);
-                } else {
-                    if (!EmitAtomOp(cx, pn3, op, cg))
-                        return JS_FALSE;
-                }
-                break;
-              }
-
-              case TOK_DOT:
-                /*
-                 * 'for (o.p in q)' can use JSOP_FORPROP only if evaluating 'o'
-                 * has no side effects.
-                 */
-                useful = JS_FALSE;
-                if (!CheckSideEffects(cx, cg, pn3->expr(), &useful))
-                    return JS_FALSE;
-                if (!useful) {
-                    if (!EmitPropOp(cx, pn3, JSOP_FORPROP, cg, JS_FALSE))
-                        return JS_FALSE;
-                    break;
-                }
-                /* FALL THROUGH */
-
-#if JS_HAS_DESTRUCTURING
-              destructuring_for:
-#endif
-              default:
-                if (js_Emit1(cx, cg, JSOP_FORELEM) < 0)
-                    return JS_FALSE;
-                JS_ASSERT(cg->stackDepth >= 2);
-
-#if JS_HAS_DESTRUCTURING
-                if (pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC) {
-                    if (!EmitDestructuringOps(cx, cg, op, pn3))
-                        return JS_FALSE;
-                    if (js_Emit1(cx, cg, JSOP_POP) < 0)
-                        return JS_FALSE;
-                } else
-#endif
-                if (pn3->pn_type == TOK_LP) {
-                    JS_ASSERT(pn3->pn_xflags & PNX_SETCALL);
-                    if (!js_EmitTree(cx, cg, pn3))
-                        return JS_FALSE;
-                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
-                        return JS_FALSE;
-                } else
-#if JS_HAS_XML_SUPPORT
-                if (pn3->pn_type == TOK_UNARYOP) {
-                    JS_ASSERT(pn3->pn_op == JSOP_BINDXMLNAME);
-                    if (!js_EmitTree(cx, cg, pn3))
-                        return JS_FALSE;
-                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
-                        return JS_FALSE;
-                } else
-#endif
-                if (!EmitElemOp(cx, pn3, JSOP_ENUMELEM, cg))
-                    return JS_FALSE;
-                break;
-            }
-
-            /* The stack should be balanced around the JSOP_FOR* opcode sequence. */
-            JS_ASSERT(cg->stackDepth == loopDepth);
-
+            if (!EmitAssignment(cx, cg, pn2->pn_kid2, JSOP_NOP, NULL))
+                return false;
             tmp2 = CG_OFFSET(cg);
+            if (pn2->pn_kid1 && !js_NewSrcNote2(cx, cg, SRC_DECL,
+                                                (pn2->pn_kid1->pn_op == JSOP_DEFVAR)
+                                                ? SRC_DECL_VAR
+                                                : SRC_DECL_LET) < 0) {
+                return false;
+            }
+            if (js_Emit1(cx, cg, JSOP_POP) < 0)
+                return false;
+
+            /* The stack should be balanced around the assignment opcode sequence. */
+            JS_ASSERT(cg->stackDepth == loopDepth);
 
             /* Emit code for the loop body. */
             if (!js_EmitTree(cx, cg, pn->pn_right))
@@ -5359,7 +5467,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             labelIndex = INVALID_ATOMID;
             while (!STMT_IS_LOOP(stmt) && stmt->type != STMT_SWITCH)
                 stmt = stmt->down;
-            noteType = (stmt->type == STMT_SWITCH) ? SRC_NULL : SRC_BREAK;
+            noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
         }
 
         if (EmitGoto(cx, cg, stmt, &stmt->breaks, labelIndex, noteType) < 0)
@@ -6050,180 +6158,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_ASSIGN:
-        /*
-         * Check left operand type and generate specialized code for it.
-         * Specialize to avoid ECMA "reference type" values on the operand
-         * stack, which impose pervasive runtime "GetValue" costs.
-         */
-        pn2 = pn->pn_left;
-        atomIndex = (jsatomid) -1;              /* quell GCC overwarning */
-        switch (PN_TYPE(pn2)) {
-          case TOK_NAME:
-            if (!BindNameToSlot(cx, cg, pn2))
-                return JS_FALSE;
-            if (!pn2->pn_cookie.isFree()) {
-                atomIndex = pn2->pn_cookie.asInteger();
-            } else {
-                if (!cg->makeAtomIndex(pn2->pn_atom, &atomIndex))
-                    return JS_FALSE;
-                if (!pn2->isConst()) {
-                    JSOp op = PN_OP(pn2) == JSOP_SETGNAME ? JSOP_BINDGNAME : JSOP_BINDNAME;
-                    EMIT_INDEX_OP(op, atomIndex);
-                }
-            }
-            break;
-          case TOK_DOT:
-            if (!js_EmitTree(cx, cg, pn2->expr()))
-                return JS_FALSE;
-            if (!cg->makeAtomIndex(pn2->pn_atom, &atomIndex))
-                return JS_FALSE;
-            break;
-          case TOK_LB:
-            JS_ASSERT(pn2->pn_arity == PN_BINARY);
-            if (!js_EmitTree(cx, cg, pn2->pn_left))
-                return JS_FALSE;
-            if (!js_EmitTree(cx, cg, pn2->pn_right))
-                return JS_FALSE;
-            break;
-#if JS_HAS_DESTRUCTURING
-          case TOK_RB:
-          case TOK_RC:
-            break;
-#endif
-          case TOK_LP:
-            if (!js_EmitTree(cx, cg, pn2))
-                return JS_FALSE;
-            break;
-#if JS_HAS_XML_SUPPORT
-          case TOK_UNARYOP:
-            JS_ASSERT(pn2->pn_op == JSOP_SETXMLNAME);
-            if (!js_EmitTree(cx, cg, pn2->pn_kid))
-                return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_BINDXMLNAME) < 0)
-                return JS_FALSE;
-            break;
-#endif
-          default:
-            JS_ASSERT(0);
-        }
-
-        op = PN_OP(pn);
-        if (op != JSOP_NOP) {
-            switch (pn2->pn_type) {
-              case TOK_NAME:
-                if (pn2->isConst()) {
-                    if (PN_OP(pn2) == JSOP_CALLEE) {
-                        if (js_Emit1(cx, cg, JSOP_CALLEE) < 0)
-                            return JS_FALSE;
-                    } else {
-                        EMIT_INDEX_OP(PN_OP(pn2), atomIndex);
-                    }
-                } else if (PN_OP(pn2) == JSOP_SETNAME) {
-                    if (js_Emit1(cx, cg, JSOP_DUP) < 0)
-                        return JS_FALSE;
-                    EMIT_INDEX_OP(JSOP_GETXPROP, atomIndex);
-                } else if (PN_OP(pn2) == JSOP_SETGNAME) {
-                    if (!BindGlobal(cx, cg, pn2, pn2->pn_atom))
-                        return JS_FALSE;
-                    if (pn2->pn_cookie.isFree())
-                        EmitAtomOp(cx, pn2, JSOP_GETGNAME, cg);
-                    else
-                        EMIT_UINT16_IMM_OP(JSOP_GETGLOBAL, pn2->pn_cookie.asInteger());
-                } else {
-                    EMIT_UINT16_IMM_OP((PN_OP(pn2) == JSOP_SETARG)
-                                       ? JSOP_GETARG
-                                       : JSOP_GETLOCAL,
-                                       atomIndex);
-                }
-                break;
-              case TOK_DOT:
-                if (js_Emit1(cx, cg, JSOP_DUP) < 0)
-                    return JS_FALSE;
-                if (pn2->pn_atom == cx->runtime->atomState.lengthAtom) {
-                    if (js_Emit1(cx, cg, JSOP_LENGTH) < 0)
-                        return JS_FALSE;
-                } else if (pn2->pn_atom == cx->runtime->atomState.protoAtom) {
-                    if (!EmitIndexOp(cx, JSOP_QNAMEPART, atomIndex, cg))
-                        return JS_FALSE;
-                    if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
-                        return JS_FALSE;
-                } else {
-                    EMIT_INDEX_OP(JSOP_GETPROP, atomIndex);
-                }
-                break;
-              case TOK_LB:
-              case TOK_LP:
-#if JS_HAS_XML_SUPPORT
-              case TOK_UNARYOP:
-#endif
-                if (js_Emit1(cx, cg, JSOP_DUP2) < 0)
-                    return JS_FALSE;
-                if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
-                    return JS_FALSE;
-                break;
-              default:;
-            }
-        }
-
-        /* Now emit the right operand (it may affect the namespace). */
-        if (!js_EmitTree(cx, cg, pn->pn_right))
-            return JS_FALSE;
-
-        /* If += etc., emit the binary operator with a decompiler note. */
-        if (op != JSOP_NOP) {
-            /*
-             * Take care to avoid SRC_ASSIGNOP if the left-hand side is a const
-             * declared in the current compilation unit, as in this case (just
-             * a bit further below) we will avoid emitting the assignment op.
-             */
-            if (pn2->pn_type != TOK_NAME || !pn2->isConst()) {
-                if (js_NewSrcNote(cx, cg, SRC_ASSIGNOP) < 0)
-                    return JS_FALSE;
-            }
-            if (js_Emit1(cx, cg, op) < 0)
-                return JS_FALSE;
-        }
-
-        /* Left parts such as a.b.c and a[b].c need a decompiler note. */
-        if (pn2->pn_type != TOK_NAME &&
-#if JS_HAS_DESTRUCTURING
-            pn2->pn_type != TOK_RB &&
-            pn2->pn_type != TOK_RC &&
-#endif
-            js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0) {
-            return JS_FALSE;
-        }
-
-        /* Finally, emit the specialized assignment bytecode. */
-        switch (pn2->pn_type) {
-          case TOK_NAME:
-            if (pn2->isConst())
-                break;
-            /* FALL THROUGH */
-          case TOK_DOT:
-            EMIT_INDEX_OP(PN_OP(pn2), atomIndex);
-            break;
-          case TOK_LB:
-          case TOK_LP:
-            if (js_Emit1(cx, cg, JSOP_SETELEM) < 0)
-                return JS_FALSE;
-            break;
-#if JS_HAS_DESTRUCTURING
-          case TOK_RB:
-          case TOK_RC:
-            if (!EmitDestructuringOps(cx, cg, JSOP_SETNAME, pn2))
-                return JS_FALSE;
-            break;
-#endif
-#if JS_HAS_XML_SUPPORT
-          case TOK_UNARYOP:
-            if (js_Emit1(cx, cg, JSOP_SETXMLNAME) < 0)
-                return JS_FALSE;
-            break;
-#endif
-          default:
-            JS_ASSERT(0);
-        }
+        if (!EmitAssignment(cx, cg, pn->pn_left, PN_OP(pn), pn->pn_right))
+            return false;
         break;
 
       case TOK_HOOK:

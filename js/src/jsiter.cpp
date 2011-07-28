@@ -230,7 +230,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 
     if (pobj->getArrayLength() > 0) {
         size_t capacity = pobj->getDenseArrayCapacity();
-        Value *vp = pobj->getDenseArrayElements();
+        const Value *vp = pobj->getDenseArrayElements();
         for (size_t i = 0; i < capacity; ++i, ++vp) {
             if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */

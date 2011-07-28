@@ -55,7 +55,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserFocus.h"
@@ -76,7 +75,6 @@
 #include "gfxContext.h"
 
 // for painting the background window
-#include "nsIRegion.h"
 #include "nsILookAndFeel.h"
 
 // Printing Includes
@@ -1770,7 +1768,7 @@ nsEventStatus nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMWindow)
+NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindow** aDOMWindow)
 {
   *aDOMWindow = 0;
 
@@ -1783,8 +1781,7 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMW
   docShell = do_QueryInterface(item);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   
-  nsCOMPtr<nsIDOMWindowInternal> domWindow;
-  domWindow = do_GetInterface(docShell);
+  nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(docShell);
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
   *aDOMWindow = domWindow;

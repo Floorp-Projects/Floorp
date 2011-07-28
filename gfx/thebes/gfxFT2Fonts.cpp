@@ -111,7 +111,7 @@ FontEntry::~FontEntry()
 
 gfxFont*
 FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold) {
-    already_AddRefed<gfxFT2Font> font = gfxFT2Font::GetOrMakeFont(this, aFontStyle);
+    already_AddRefed<gfxFT2Font> font = gfxFT2Font::GetOrMakeFont(this, aFontStyle, aNeedsBold);
     return font.get();
 }
 
@@ -339,8 +339,9 @@ FontFamily::FindStyleVariations()
 
 PRBool
 gfxFT2FontGroup::FontCallback(const nsAString& fontName,
-                             const nsACString& genericName,
-                             void *closure)
+                              const nsACString& genericName,
+                              PRBool aUseFontSet,
+                              void *closure)
 {
     nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(closure);
 
@@ -449,6 +450,7 @@ PRUint32 getUTF8CharAndNext(const PRUint8 *aString, PRUint8 *aLength)
 static PRBool
 AddFontNameToArray(const nsAString& aName,
                    const nsACString& aGenericName,
+                   PRBool aUseFontSet,
                    void *aClosure)
 {
     if (!aName.IsEmpty()) {
@@ -695,6 +697,7 @@ gfxFT2Font::InitTextRun(gfxContext *aContext,
     }
 
     if (!ok) {
+        aTextRun->AdjustAdvancesForSyntheticBold(aRunStart, aRunLength);
         AddRange(aTextRun, aString, aRunStart, aRunLength);
     }
 
@@ -801,11 +804,14 @@ gfxFT2Font::AddRange(gfxTextRun *aTextRun, const PRUnichar *str, PRUint32 offset
 
 gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
                        FontEntry *aFontEntry,
-                       const gfxFontStyle *aFontStyle)
+                       const gfxFontStyle *aFontStyle,
+                       PRBool aNeedsBold)
     : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
 {
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
-
+    if (aNeedsBold) {
+        mSyntheticBoldOffset = 1.0;
+    }
     mCharGlyphCache.Init(64);
 }
 
@@ -816,10 +822,6 @@ gfxFT2Font::~gfxFT2Font()
 cairo_font_face_t *
 gfxFT2Font::CairoFontFace()
 {
-    // XXX we need to handle fake bold here (or by having a sepaerate font entry)
-    if (mStyle.weight >= 600 && mFontEntry->mWeight < 600) {
-        //printf("** We want fake weight\n");
-    }
     return GetFontEntry()->CairoFontFace();
 }
 
@@ -875,7 +877,7 @@ CreateScaledFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
  * except for OOM in which case we do nothing and return null.
  */
 already_AddRefed<gfxFT2Font>
-gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
+gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {
     FontEntry *fe = static_cast<FontEntry*>
         (gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle));
@@ -884,17 +886,17 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
         return nsnull;
     }
 
-    nsRefPtr<gfxFT2Font> font = GetOrMakeFont(fe, aStyle);
+    nsRefPtr<gfxFT2Font> font = GetOrMakeFont(fe, aStyle, aNeedsBold);
     return font.forget();
 }
 
 already_AddRefed<gfxFT2Font>
-gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
+gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
     if (!font) {
         cairo_scaled_font_t *scaledFont = CreateScaledFont(aFontEntry, aStyle);
-        font = new gfxFT2Font(scaledFont, aFontEntry, aStyle);
+        font = new gfxFT2Font(scaledFont, aFontEntry, aStyle, aNeedsBold);
         cairo_scaled_font_destroy(scaledFont);
         if (!font)
             return nsnull;
