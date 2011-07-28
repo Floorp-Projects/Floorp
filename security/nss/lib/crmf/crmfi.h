@@ -46,10 +46,38 @@
 #include "secasn1.h"
 #include "crmfit.h"
 #include "secerr.h"
+#include "blapit.h"
 
 #define CRMF_DEFAULT_ARENA_SIZE   1024
-#define MAX_WRAPPED_KEY_LEN       2048
 
+/*
+ * Explanation for the definition of MAX_WRAPPED_KEY_LEN:
+ * 
+ * It's used for internal buffers to transport a wrapped private key.
+ * The value is in BYTES.
+ * We want to define a reasonable upper bound for this value.
+ * Ideally this could be calculated, but in order to simplify the code
+ * we want to estimate the maximum requires size.
+ * See also bug 655850 for the full explanation.
+ * 
+ * We know the largest wrapped keys are RSA keys.
+ * We'll estimate the maximum size needed for wrapped RSA keys,
+ * and assume it's sufficient for wrapped keys of any type we support.
+ * 
+ * The maximum size of RSA keys in bits is defined elsewhere as
+ *   RSA_MAX_MODULUS_BITS
+ * 
+ * The idea is to define MAX_WRAPPED_KEY_LEN based on the above.
+ * 
+ * A wrapped RSA key requires about
+ *   ( ( RSA_MAX_MODULUS_BITS / 8 ) * 5.5) + 65
+ * bytes.
+ * 
+ * Therefore, a safe upper bound is:
+ *   ( ( RSA_MAX_MODULUS_BITS / 8 ) *8 ) = RSA_MAX_MODULUS_BITS
+ * 
+ */
+#define MAX_WRAPPED_KEY_LEN       RSA_MAX_MODULUS_BITS
 
 #define CRMF_BITS_TO_BYTES(bits) (((bits)+7)/8)
 #define CRMF_BYTES_TO_BITS(bytes) ((bytes)*8)

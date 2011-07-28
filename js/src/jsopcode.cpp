@@ -779,8 +779,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
     for (const jschar *t = s; t < z; s = ++t) {
         /* Move t forward from s past un-quote-worthy characters. */
         jschar c = *t;
-        while (JS_ISPRINT(c) && c != qc && c != '\\' && c != '\t' &&
-               !(c >> 8)) {
+        while (c < 127 && isprint(c) && c != qc && c != '\\' && c != '\t') {
             c = *++t;
             if (t == z)
                 break;

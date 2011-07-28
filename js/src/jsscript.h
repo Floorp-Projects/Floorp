@@ -423,6 +423,9 @@ class JSPCCounters {
 
 static const uint32 JS_SCRIPT_COOKIE = 0xc00cee;
 
+static JSObject * const JS_NEW_SCRIPT = (JSObject *)0x12345678;
+static JSObject * const JS_CACHED_SCRIPT = (JSObject *)0x12341234;
+
 struct JSScript {
     /*
      * Two successively less primitive ways to make a new JSScript.  The first
@@ -503,6 +506,11 @@ struct JSScript {
     js::Bindings    bindings;   /* names of top-level variables in this script
                                    (and arguments if this is a function script) */
     JSPrincipals    *principals;/* principals for this script */
+
+    JSObject        *ownerObject;
+
+    void setOwnerObject(JSObject *owner);
+
     union {
         /*
          * A script object of class js_ScriptClass, to ensure the script is GC'd.
@@ -732,7 +740,7 @@ extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
 
 extern void
-js_DestroyScriptFromGC(JSContext *cx, JSScript *script);
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner);
 
 /*
  * Script objects may be cached and reused, in which case their JSD-visible
@@ -757,7 +765,7 @@ CheckCompartmentScripts(JSCompartment *comp);
 } /* namespace js */
 
 extern void
-js_TraceScript(JSTracer *trc, JSScript *script);
+js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner);
 
 extern JSObject *
 js_NewScriptObject(JSContext *cx, JSScript *script);

@@ -49,6 +49,8 @@
 #include "jsvalue.h"
 #include "jscell.h"
 
+#include "vm/Unicode.h"
+
 namespace js {
 
 /* Implemented in jsstrinlines.h */
@@ -87,160 +89,6 @@ struct JSSubString {
 
 extern jschar      js_empty_ucstr[];
 extern JSSubString js_EmptySubString;
-
-/* Unicode character attribute lookup tables. */
-extern const uint8 js_X[];
-extern const uint8 js_Y[];
-extern const uint32 js_A[];
-
-/* Enumerated Unicode general category types. */
-typedef enum JSCharType {
-    JSCT_UNASSIGNED             = 0,
-    JSCT_UPPERCASE_LETTER       = 1,
-    JSCT_LOWERCASE_LETTER       = 2,
-    JSCT_TITLECASE_LETTER       = 3,
-    JSCT_MODIFIER_LETTER        = 4,
-    JSCT_OTHER_LETTER           = 5,
-    JSCT_NON_SPACING_MARK       = 6,
-    JSCT_ENCLOSING_MARK         = 7,
-    JSCT_COMBINING_SPACING_MARK = 8,
-    JSCT_DECIMAL_DIGIT_NUMBER   = 9,
-    JSCT_LETTER_NUMBER          = 10,
-    JSCT_OTHER_NUMBER           = 11,
-    JSCT_SPACE_SEPARATOR        = 12,
-    JSCT_LINE_SEPARATOR         = 13,
-    JSCT_PARAGRAPH_SEPARATOR    = 14,
-    JSCT_CONTROL                = 15,
-    JSCT_FORMAT                 = 16,
-    JSCT_PRIVATE_USE            = 18,
-    JSCT_SURROGATE              = 19,
-    JSCT_DASH_PUNCTUATION       = 20,
-    JSCT_START_PUNCTUATION      = 21,
-    JSCT_END_PUNCTUATION        = 22,
-    JSCT_CONNECTOR_PUNCTUATION  = 23,
-    JSCT_OTHER_PUNCTUATION      = 24,
-    JSCT_MATH_SYMBOL            = 25,
-    JSCT_CURRENCY_SYMBOL        = 26,
-    JSCT_MODIFIER_SYMBOL        = 27,
-    JSCT_OTHER_SYMBOL           = 28
-} JSCharType;
-
-/* Character classifying and mapping macros, based on java.lang.Character. */
-#define JS_CCODE(c)     (js_A[js_Y[(js_X[(uint16)(c)>>6]<<6)|((c)&0x3F)]])
-#define JS_CTYPE(c)     (JS_CCODE(c) & 0x1F)
-
-#define JS_ISALPHA(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                     \
-                           (1 << JSCT_LOWERCASE_LETTER) |                     \
-                           (1 << JSCT_TITLECASE_LETTER) |                     \
-                           (1 << JSCT_MODIFIER_LETTER) |                      \
-                           (1 << JSCT_OTHER_LETTER))                          \
-                          >> JS_CTYPE(c)) & 1)
-
-#define JS_ISALNUM(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                     \
-                           (1 << JSCT_LOWERCASE_LETTER) |                     \
-                           (1 << JSCT_TITLECASE_LETTER) |                     \
-                           (1 << JSCT_MODIFIER_LETTER) |                      \
-                           (1 << JSCT_OTHER_LETTER) |                         \
-                           (1 << JSCT_DECIMAL_DIGIT_NUMBER))                  \
-                          >> JS_CTYPE(c)) & 1)
-
-/* A unicode letter, suitable for use in an identifier. */
-#define JS_ISLETTER(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                    \
-                            (1 << JSCT_LOWERCASE_LETTER) |                    \
-                            (1 << JSCT_TITLECASE_LETTER) |                    \
-                            (1 << JSCT_MODIFIER_LETTER) |                     \
-                            (1 << JSCT_OTHER_LETTER) |                        \
-                            (1 << JSCT_LETTER_NUMBER))                        \
-                           >> JS_CTYPE(c)) & 1)
-
-/*
- * 'IdentifierPart' from ECMA grammar, is Unicode letter or combining mark or
- * digit or connector punctuation.
- */
-#define JS_ISIDPART(c)  ((((1 << JSCT_UPPERCASE_LETTER) |                     \
-                           (1 << JSCT_LOWERCASE_LETTER) |                     \
-                           (1 << JSCT_TITLECASE_LETTER) |                     \
-                           (1 << JSCT_MODIFIER_LETTER) |                      \
-                           (1 << JSCT_OTHER_LETTER) |                         \
-                           (1 << JSCT_LETTER_NUMBER) |                        \
-                           (1 << JSCT_NON_SPACING_MARK) |                     \
-                           (1 << JSCT_COMBINING_SPACING_MARK) |               \
-                           (1 << JSCT_DECIMAL_DIGIT_NUMBER) |                 \
-                           (1 << JSCT_CONNECTOR_PUNCTUATION))                 \
-                          >> JS_CTYPE(c)) & 1)
-
-/* Unicode control-format characters, ignored in input */
-#define JS_ISFORMAT(c) (((1 << JSCT_FORMAT) >> JS_CTYPE(c)) & 1)
-
-extern const bool js_isidstart[];
-extern const bool js_isident[];
-
-static inline bool
-JS_ISIDSTART(int c)
-{
-    unsigned w = c;
-
-    return (w < 128) ? js_isidstart[w] : JS_ISLETTER(c);
-}
-
-static inline bool
-JS_ISIDENT(int c)
-{
-    unsigned w = c;
-
-    return (w < 128) ? js_isident[w] : JS_ISIDPART(c);
-}
-
-#define JS_ISXMLSPACE(c)        ((c) == ' ' || (c) == '\t' || (c) == '\r' ||  \
-                                 (c) == '\n')
-#define JS_ISXMLNSSTART(c)      ((JS_CCODE(c) & 0x00000100) || (c) == '_')
-#define JS_ISXMLNS(c)           ((JS_CCODE(c) & 0x00000080) || (c) == '.' ||  \
-                                 (c) == '-' || (c) == '_')
-#define JS_ISXMLNAMESTART(c)    (JS_ISXMLNSSTART(c) || (c) == ':')
-#define JS_ISXMLNAME(c)         (JS_ISXMLNS(c) || (c) == ':')
-
-#define JS_ISDIGIT(c)   (JS_CTYPE(c) == JSCT_DECIMAL_DIGIT_NUMBER)
-
-const jschar BYTE_ORDER_MARK = 0xFEFF;
-const jschar BYTE_ORDER_MARK2 = 0xFFFE;
-const jschar NO_BREAK_SPACE  = 0x00A0;
-
-extern const bool js_isspace[];
-
-static inline bool
-JS_ISSPACE(int c)
-{
-    unsigned w = c;
-
-    return (w < 128)
-           ? js_isspace[w]
-           : w == NO_BREAK_SPACE || w == BYTE_ORDER_MARK ||
-             (JS_CCODE(w) & 0x00070000) == 0x00040000;
-}
-
-static inline bool
-JS_ISSPACE_OR_BOM(int c)
-{
-    unsigned w = c;
-
-    /* Treat little- and big-endian BOMs as whitespace for compatibility. */
-    return (w < 128)
-           ? js_isspace[w]
-           : w == NO_BREAK_SPACE || w == BYTE_ORDER_MARK || w == BYTE_ORDER_MARK2 ||
-             (JS_CCODE(w) & 0x00070000) == 0x00040000;
-}
-
-#define JS_ISPRINT(c)   ((c) < 128 && isprint(c))
-
-#define JS_ISUPPER(c)   (JS_CTYPE(c) == JSCT_UPPERCASE_LETTER)
-#define JS_ISLOWER(c)   (JS_CTYPE(c) == JSCT_LOWERCASE_LETTER)
-
-#define JS_TOUPPER(c)   ((jschar) ((JS_CCODE(c) & 0x00100000)                 \
-                                   ? (c) - ((int32)JS_CCODE(c) >> 22)         \
-                                   : (c)))
-#define JS_TOLOWER(c)   ((jschar) ((JS_CCODE(c) & 0x00200000)                 \
-                                   ? (c) + ((int32)JS_CCODE(c) >> 22)         \
-                                   : (c)))
 
 /*
  * Shorthands for ASCII (7-bit) decimal and hex conversion.
@@ -390,18 +238,6 @@ extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 
 #define js_strncpy(t, s, n)     memcpy((t), (s), (n) * sizeof(jschar))
-
-/*
- * Return s advanced past any Unicode white space characters.
- */
-static inline const jschar *
-js_SkipWhiteSpace(const jschar *s, const jschar *end)
-{
-    JS_ASSERT(s <= end);
-    while (s != end && JS_ISSPACE(*s))
-        s++;
-    return s;
-}
 
 namespace js {
 

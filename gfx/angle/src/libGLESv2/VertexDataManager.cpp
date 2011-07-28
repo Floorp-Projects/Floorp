@@ -139,8 +139,22 @@ GLenum VertexDataManager::prepareVertexData(GLint start, GLsizei count, Translat
                 else if (staticBuffer->lookupAttribute(attribs[i]) == -1)
                 {
                     // This static buffer doesn't have matching attributes, so fall back to using the streaming buffer
-                    mStreamingBuffer->addRequiredSpaceFor(staticBuffer);
                     buffer->invalidateStaticData();
+
+                    // Add the space of all previous attributes belonging to the invalidated static buffer to the streaming buffer
+                    for (int previous = 0; previous < i; previous++)
+                    {
+                        if (translated[previous].active && attribs[previous].mArrayEnabled)
+                        {
+                            Buffer *previousBuffer = attribs[previous].mBoundBuffer.get();
+                            StaticVertexBuffer *previousStaticBuffer = previousBuffer ? previousBuffer->getStaticVertexBuffer() : NULL;
+
+                            if (staticBuffer == previousStaticBuffer)
+                            {
+                                mStreamingBuffer->addRequiredSpace(spaceRequired(attribs[previous], count));
+                            }
+                        }
+                    }
 
                     mStreamingBuffer->addRequiredSpace(spaceRequired(attribs[i], count));
                 }    
@@ -581,11 +595,6 @@ ArrayVertexBuffer::~ArrayVertexBuffer()
 void ArrayVertexBuffer::addRequiredSpace(UINT requiredSpace)
 {
     mRequiredSpace += requiredSpace;
-}
-
-void ArrayVertexBuffer::addRequiredSpaceFor(ArrayVertexBuffer *buffer)
-{
-    mRequiredSpace += buffer->mRequiredSpace;
 }
 
 StreamingVertexBuffer::StreamingVertexBuffer(IDirect3DDevice9 *device, std::size_t initialSize) : ArrayVertexBuffer(device, initialSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY)

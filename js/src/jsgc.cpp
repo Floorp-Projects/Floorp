@@ -82,6 +82,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
+#include "jswatchpoint.h"
 #include "jsweakmap.h"
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -168,7 +169,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * Do not allow to access the free list when its real head is still stored
      * in FreeLists and is not synchronized with this one.
      */
-    JS_ASSERT(compartment);
+    JS_ASSERT(allocated());
 
     /*
      * We can be called from the background finalization thread when the free
@@ -198,7 +199,7 @@ template<typename T>
 inline bool
 Arena::finalize(JSContext *cx)
 {
-    JS_ASSERT(aheader.compartment);
+    JS_ASSERT(aheader.allocated());
     JS_ASSERT(!aheader.getMarkingDelay()->link);
 
     uintptr_t thing = thingsStart(sizeof(T));
@@ -323,18 +324,21 @@ Chunk::init(JSRuntime *rt)
 {
     info.runtime = rt;
     info.age = 0;
-    info.emptyArenaListHead = &arenas[0].aheader;
-    ArenaHeader *aheader = &arenas[0].aheader;
-    ArenaHeader *last = &arenas[JS_ARRAY_LENGTH(arenas) - 1].aheader;
-    while (aheader < last) {
-        ArenaHeader *following = reinterpret_cast<ArenaHeader *>(aheader->address() + ArenaSize);
-        aheader->next = following;
-        aheader->compartment = NULL;
-        aheader = following;
-    }
-    last->next = NULL;
-    last->compartment = NULL;
     info.numFree = ArenasPerChunk;
+
+    /* Assemble all arenas into a linked list and mark them as not allocated. */
+    ArenaHeader **prevp = &info.emptyArenaListHead;
+    Arena *end = &arenas[JS_ARRAY_LENGTH(arenas)];
+    for (Arena *a = &arenas[0]; a != end; ++a) {
+#ifdef DEBUG
+        memset(a, ArenaSize, JS_FREE_PATTERN);
+#endif
+        *prevp = &a->aheader;
+        a->aheader.setAsNotAllocated();
+        prevp = &a->aheader.next;
+    }
+    *prevp = NULL;
+
     for (size_t i = 0; i != JS_ARRAY_LENGTH(markingDelay); ++i)
         markingDelay[i].init();
 }
@@ -384,6 +388,7 @@ Chunk::allocateArena(JSContext *cx, unsigned thingKind)
 void
 Chunk::releaseArena(ArenaHeader *aheader)
 {
+    JS_ASSERT(aheader->allocated());
     JSRuntime *rt = info.runtime;
 #ifdef JS_THREADSAFE
     Maybe<AutoLockGC> maybeLock;
@@ -403,40 +408,13 @@ Chunk::releaseArena(ArenaHeader *aheader)
 #endif
     JS_ATOMIC_ADD(&rt->gcBytes, -int32(ArenaSize));
     JS_ATOMIC_ADD(&comp->gcBytes, -int32(ArenaSize));
+
+    aheader->setAsNotAllocated();
     aheader->next = info.emptyArenaListHead;
     info.emptyArenaListHead = aheader;
-    aheader->compartment = NULL;
     ++info.numFree;
     if (unused())
         info.age = 0;
-}
-
-JSRuntime *
-Chunk::getRuntime()
-{
-    return info.runtime;
-}
-
-inline jsuword
-GetGCChunk(JSRuntime *rt)
-{
-    void *p = rt->gcChunkAllocator->alloc();
-#ifdef MOZ_GCTIMER
-    if (p)
-        JS_ATOMIC_INCREMENT(&newChunkCount);
-#endif
-    return reinterpret_cast<jsuword>(p);
-}
-
-inline void
-ReleaseGCChunk(JSRuntime *rt, jsuword chunk)
-{
-    void *p = reinterpret_cast<void *>(chunk);
-    JS_ASSERT(p);
-#ifdef MOZ_GCTIMER
-    JS_ATOMIC_INCREMENT(&destroyChunkCount);
-#endif
-    rt->gcChunkAllocator->free_(p);
 }
 
 inline Chunk *
@@ -679,7 +657,7 @@ template <typename T>
 inline ConservativeGCTest
 MarkArenaPtrConservatively(JSTracer *trc, ArenaHeader *aheader, uintptr_t addr)
 {
-    JS_ASSERT(aheader->compartment);
+    JS_ASSERT(aheader->allocated());
     JS_ASSERT(sizeof(T) == aheader->getThingSize());
 
     uintptr_t offset = addr & ArenaMask;
@@ -745,7 +723,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 
     Chunk *chunk = Chunk::fromAddress(addr);
 
-    if (!trc->context->runtime->gcUserChunkSet.has(chunk) && 
+    if (!trc->context->runtime->gcUserChunkSet.has(chunk) &&
         !trc->context->runtime->gcSystemChunkSet.has(chunk))
         return CGCT_NOTCHUNK;
 
@@ -759,7 +737,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 
     ArenaHeader *aheader = &chunk->arenas[Chunk::arenaIndex(addr)].aheader;
 
-    if (!aheader->compartment)
+    if (!aheader->allocated())
         return CGCT_FREEARENA;
 
     ConservativeGCTest test;
@@ -1680,7 +1658,7 @@ js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
         return;
     if (fp->hasArgsObj())
         MarkObject(trc, fp->argsObj(), "arguments");
-    js_TraceScript(trc, fp->script());
+    js_TraceScript(trc, fp->script(), NULL);
     fp->script()->compartment->active = true;
     MarkValue(trc, fp->returnValue(), "rval");
 }
@@ -1716,7 +1694,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case SCRIPT:
         if (JSScript *script = static_cast<AutoScriptRooter *>(this)->script)
-            js_TraceScript(trc, script);
+            js_TraceScript(trc, script, NULL);
         return;
 
       case ENUMERATOR:
@@ -2321,7 +2299,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * Mark weak roots.
      */
     while (true) {
-        if (!js_TraceWatchPoints(&gcmarker) && !WeakMapBase::markAllIteratively(&gcmarker))
+        if (!WatchpointMap::markAllIteratively(&gcmarker) && !WeakMapBase::markAllIteratively(&gcmarker))
             break;
         gcmarker.drainMarkStack();
     }
@@ -2360,11 +2338,11 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
     js_SweepAtomState(cx);
 
-    /* Finalize watch points associated with unreachable objects. */
-    js_SweepWatchPoints(cx);
+    /* Collect watch points associated with unreachable objects. */
+    WatchpointMap::sweepAll(rt);
 
     /*
-     * We finalize objects before other GC things to ensure that object's finalizer
+     * We finalize objects before other GC things to ensure that object's finalizer 
      * can access them even if they will be freed. Sweep the runtime's property trees
      * after finalizing objects, in case any had watchpoints referencing tree nodes.
      * Do this before sweeping compartments, so that we sweep all shapes in
@@ -2851,7 +2829,7 @@ TraceRuntime(JSTracer *trc)
 
 void
 IterateCompartmentsArenasCells(JSContext *cx, void *data,
-                               IterateCompartmentCallback compartmentCallback, 
+                               IterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback)
 {

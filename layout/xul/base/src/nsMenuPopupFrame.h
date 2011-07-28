@@ -435,6 +435,8 @@ protected:
   // popup alignment relative to the anchor node
   PRInt8 mPopupAlignment;
   PRInt8 mPopupAnchor;
+  // One of nsIPopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
+  PRInt8 mConsumeRollupEvent;
   PRPackedBool mFlipBoth; // flip in both directions
 
   PRPackedBool mIsOpenChanged; // true if the open state changed since the last layout
@@ -445,7 +447,6 @@ protected:
 
   PRPackedBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
   PRPackedBool mShouldAutoPosition; // Should SetPopupPosition be allowed to auto position popup?
-  PRPackedBool mConsumeRollupEvent; // Should the rollup event be consumed?
   PRPackedBool mInContentShell; // True if the popup is in a content shell
   PRPackedBool mIsMenuLocked; // Should events inside this menu be ignored?
 

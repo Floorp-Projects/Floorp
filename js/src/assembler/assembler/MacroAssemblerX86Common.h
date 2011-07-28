@@ -1319,7 +1319,7 @@ private:
              : "%eax", "%ecx", "%edx"
              );
 #endif
-#elif WTF_COMPILER_SUNPRO
+#elif WTF_COMPILER_SUNCC
 #if WTF_CPU_X86_64
         asm (
              "movl $0x1, %%eax;"
