@@ -528,7 +528,7 @@ let Utils = {
     var text = this.expandArgumentsForLog(arguments);
 
     // cut off the first line of the stack trace, because that's just this function.
-    let stack = Error().stack.split("\n").splice(1);
+    let stack = Error().stack.split("\n").slice(1);
 
     // if the caller was assert, cut out the line for the assert function as well.
     if (stack[0].indexOf("Utils_assert(") == 0)
@@ -564,7 +564,7 @@ let Utils = {
         text = "tabview assert: " + label;
 
       // cut off the first line of the stack trace, because that's just this function.
-      let stack = Error().stack.split("\n").splice(1);
+      let stack = Error().stack.split("\n").slice(1);
 
       throw text + "\n" + stack.join("\n");
     }
