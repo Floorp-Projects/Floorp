@@ -30,5 +30,4 @@ skip-if(Android) == poster-10.html poster-ref-blue250x200.html
 skip-if(Android) == poster-11.html poster-ref-blue250x200.html
 skip-if(Android) == poster-12.html poster-ref-blue250x200.html
 skip-if(Android) == poster-13.html poster-ref-blue400x300.html
-skip-if(Android) == poster-14.html poster-ref-blue250x200.html
 skip-if(Android) == poster-15.html poster-ref-green70x30.html

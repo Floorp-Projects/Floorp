@@ -40,13 +40,13 @@
 #include "nsISupports.idl"
 
 %{C++
-class nsIRegion;
+class nsIntRegion;
 %}
 
-[ptr] native nsIRegion(nsIRegion);
+native nsIntRegion(nsIntRegion);
 
 
-[scriptable, uuid(4d179656-a5bd-42a6-a937-c81f820dcf2f)]
+[scriptable, uuid(f390b97c-a0cf-4cb4-b9e8-bfc15df76ab5)]
 interface nsIScriptableRegion : nsISupports
 {
   void init ( ) ;
@@ -204,7 +204,7 @@ interface nsIScriptableRegion : nsISupports
 
   boolean containsRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
   
-  [noscript] readonly attribute nsIRegion region;
+  [noscript] readonly attribute nsIntRegion region;
   
 };
 

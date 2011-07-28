@@ -4489,14 +4489,14 @@ dnl = ARM toolchain tweaks
 dnl ========================================================
 
 dnl Defaults
-case "${target}" in
-arm-android*|arm-linuxandroid*)
+case "${CPU_ARCH}-${OS_TARGET}" in
+arm-Android)
     MOZ_THUMB=yes
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
     ;;
-arm*-*)
+arm-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then
         MOZ_THUMB=no
         MOZ_ARCH=armv7-a
@@ -5936,7 +5936,16 @@ _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
  
   sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
 
+  if test "$?" != 0; then
+    AC_MSG_ERROR([Error outputting config definitions])
+  fi
+
   cat >> $_CONFIG_TMP <<\EOF
+
+/* The c99 defining the limit macros (UINT32_MAX for example), says:
+ * C++ implementations should define these macros only when __STDC_LIMIT_MACROS
+ * is defined before <stdint.h> is included. */
+#define __STDC_LIMIT_MACROS
 
 #endif /* _JS_CONFDEFS_H_ */
 
@@ -5957,6 +5966,9 @@ dnl Probably shouldn't call this manually but we always want the output of DEFS
 rm -f confdefs.h.save
 mv confdefs.h confdefs.h.save
 egrep -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
+if test "$?" != 0; then
+  AC_MSG_ERROR([Error outputting confdefs.h])
+fi
 AC_OUTPUT_MAKE_DEFS()
 MOZ_DEFINES=$DEFS
 AC_SUBST(MOZ_DEFINES)

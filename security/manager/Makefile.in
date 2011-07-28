@@ -334,7 +334,12 @@ endif
 ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DIST)/bin
 endif
+ifeq ($(OS_ARCH), SunOS)
+# has to use copy mode on Solaris, see #665509
+	$(NSINSTALL) -t -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
+else
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
+endif
 ifndef NSS_DISABLE_DBM
 ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(NSSDBM3_CHK) $(DIST)/bin
