@@ -1827,7 +1827,7 @@ mjit::Compiler::jsop_getelem_args()
         actualsReg = frame.tempRegForData(actualsFe);
     } else {
         actualsReg = dataReg;
-        masm.loadFrameActuals(outerScript->fun, actualsReg);
+        masm.loadFrameActuals(outerScript->function(), actualsReg);
     }
 
     if (key.isConstant()) {
@@ -1982,7 +1982,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
     // we can generate code directly without using an inline cache.
     if (cx->typeInferenceEnabled() && id->mightBeType(JSVAL_TYPE_INT32) && !isCall) {
         types::TypeSet *types = analysis->poppedTypes(PC, 1);
-        if (types->isLazyArguments(cx) && !outerScript->analysis(cx)->modifiesArguments()) {
+        if (types->isLazyArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
             // Inline arguments path.
             jsop_getelem_args();
             return true;

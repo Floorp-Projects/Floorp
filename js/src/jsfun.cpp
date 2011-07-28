@@ -431,7 +431,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
                 JSScript *script = fp->functionScript();
                 if (script->usesArguments) {
                     if (arg < fp->numFormalArgs())
-                        script->types.setArgument(cx, arg, *vp);
+                        TypeScript::SetArgument(cx, script, arg, *vp);
                     fp->canonicalActualArg(arg) = *vp;
                 }
                 return true;
@@ -1035,7 +1035,7 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         argp = &obj->callObjArg(i);
 
     JSScript *script = obj->getCallObjCalleeFunction()->script();
-    script->types.setArgument(cx, i, *vp);
+    TypeScript::SetArgument(cx, script, i, *vp);
 
     GCPoke(cx, *argp);
     *argp = *vp;
@@ -1108,7 +1108,7 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         varp = &obj->callObjVar(i);
 
     JSScript *script = obj->getCallObjCalleeFunction()->script();
-    script->types.setLocal(cx, i, *vp);
+    TypeScript::SetLocal(cx, script, i, *vp);
 
     GCPoke(cx, *varp);
     *varp = *vp;
@@ -2450,7 +2450,8 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
-    script->fun = fun;
+    script->hasFunction = true;
+    script->where.fun = fun;
     js_CallNewScriptHook(cx, script, fun);
 
     if (obj->isGlobal()) {
@@ -2646,7 +2647,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
 
     for (uint32 i = 0, n = uva->length; i < n; i++) {
         upvars[i] = GetUpvar(cx, level, uva->vector[i]);
-        fun->script()->types.setUpvar(cx, i, upvars[i]);
+        TypeScript::SetUpvar(cx, fun->script(), i, upvars[i]);
     }
 
     return closure;

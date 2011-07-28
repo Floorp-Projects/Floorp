@@ -534,7 +534,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
     AutoValueRooter tvr(cx);
     if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
         return false;
-    cx->fp()->script()->types.monitorUnknown(cx, cx->regs().pc);
+    TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
 
     if (tvr.value().isPrimitive()) {
         vp[0] = tvr.value();
@@ -756,9 +756,9 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
          * along with the types of any missing arguments. These will be the
          * same across all calls.
          */
-        script_->types.setThis(cx, thisv);
+        TypeScript::SetThis(cx, script_, thisv);
         for (unsigned i = argc; i < fun->nargs; i++)
-            script_->types.setArgument(cx, i, types::Type::UndefinedType());
+            TypeScript::SetArgument(cx, script_, i, types::Type::UndefinedType());
 
         StackFrame *fp = ifg_.fp();
 #ifdef JS_METHODJIT
@@ -930,7 +930,7 @@ Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &this
 
     Probes::startExecution(cx, script);
 
-    script->types.setThis(cx, fp->thisValue());
+    TypeScript::SetThis(cx, script, fp->thisValue());
 
     AutoPreserveEnumerators preserve(cx);
     JSBool ok = RunScript(cx, script, fp);
@@ -1707,7 +1707,7 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
     if (cx->typeInferenceEnabled() &&
         *regs.pc != JSOP_TRAP &&
         n == analyze::GetBytecodeLength(regs.pc)) {
-        script->types.checkBytecode(cx, regs.pc, regs.sp);
+        TypeScript::CheckBytecode(cx, script, regs.pc, regs.sp);
     }
 #endif
 }
@@ -2083,10 +2083,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         atoms = rt->atomState.commonAtomsStart();
 #endif
 
-    /* Any script we interpret needs to have its type sets filled in. */
-    if (cx->typeInferenceEnabled() && !script->types.ensureTypeArray(cx))
-        goto error;
-
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
@@ -2433,7 +2429,7 @@ BEGIN_CASE(JSOP_STOP)
             JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                       == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
-            script->types.monitor(cx, regs.pc, regs.sp[-1]);
+            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
             op = JSOp(*regs.pc);
             len = JSOP_CALL_LENGTH;
@@ -3040,7 +3036,7 @@ BEGIN_CASE(JSOP_URSH)
 
     regs.sp--;
     if (!regs.sp[-1].setNumber(uint32(u)))
-        script->types.monitorOverflow(cx, regs.pc);
+        TypeScript::MonitorOverflow(cx, script, regs.pc);
 }
 END_CASE(JSOP_URSH)
 
@@ -3054,7 +3050,7 @@ BEGIN_CASE(JSOP_ADD)
         int32_t sum = l + r;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
             regs.sp[-2].setDouble(double(l) + double(r));
-            script->types.monitorOverflow(cx, regs.pc);
+            TypeScript::MonitorOverflow(cx, script, regs.pc);
         } else {
             regs.sp[-2].setInt32(sum);
         }
@@ -3066,7 +3062,7 @@ BEGIN_CASE(JSOP_ADD)
             goto error;
         regs.sp[-2] = rval;
         regs.sp--;
-        script->types.monitorUnknown(cx, regs.pc);
+        TypeScript::MonitorUnknown(cx, script, regs.pc);
     } else
 #endif
     {
@@ -3103,7 +3099,7 @@ BEGIN_CASE(JSOP_ADD)
             if (!str)
                 goto error;
             if (lIsObject || rIsObject)
-                script->types.monitorString(cx, regs.pc);
+                TypeScript::MonitorString(cx, script, regs.pc);
             regs.sp[-2].setString(str);
             regs.sp--;
         } else {
@@ -3113,7 +3109,7 @@ BEGIN_CASE(JSOP_ADD)
             l += r;
             if (!regs.sp[-2].setNumber(l) &&
                 (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
-                script->types.monitorOverflow(cx, regs.pc);
+                TypeScript::MonitorOverflow(cx, script, regs.pc);
             }
             regs.sp--;
         }
@@ -3132,7 +3128,7 @@ END_CASE(JSOP_ADD)
         regs.sp--;                                                            \
         if (!regs.sp[-1].setNumber(d) &&                                      \
             !(lval.isDouble() || rval.isDouble())) {                          \
-            script->types.monitorOverflow(cx, regs.pc);                         \
+            TypeScript::MonitorOverflow(cx, script, regs.pc);                 \
         }                                                                     \
     JS_END_MACRO
 
@@ -3169,12 +3165,12 @@ BEGIN_CASE(JSOP_DIV)
         else
             vp = &rt->positiveInfinityValue;
         regs.sp[-1] = *vp;
-        script->types.monitorOverflow(cx, regs.pc);
+        TypeScript::MonitorOverflow(cx, script, regs.pc);
     } else {
         d1 /= d2;
         if (!regs.sp[-1].setNumber(d1) &&
             !(lval.isDouble() || rval.isDouble())) {
-            script->types.monitorOverflow(cx, regs.pc);
+            TypeScript::MonitorOverflow(cx, script, regs.pc);
         }
     }
 }
@@ -3201,7 +3197,7 @@ BEGIN_CASE(JSOP_MOD)
             d1 = js_fmod(d1, d2);
             regs.sp[-1].setDouble(d1);
         }
-        script->types.monitorOverflow(cx, regs.pc);
+        TypeScript::MonitorOverflow(cx, script, regs.pc);
     }
 }
 END_CASE(JSOP_MOD)
@@ -3243,7 +3239,7 @@ BEGIN_CASE(JSOP_NEG)
             goto error;
         d = -d;
         if (!regs.sp[-1].setNumber(d) && !ref.isDouble())
-            script->types.monitorOverflow(cx, regs.pc);
+            TypeScript::MonitorOverflow(cx, script, regs.pc);
     }
 }
 END_CASE(JSOP_NEG)
@@ -3252,7 +3248,7 @@ BEGIN_CASE(JSOP_POS)
     if (!ToNumber(cx, &regs.sp[-1]))
         goto error;
     if (!regs.sp[-1].isInt32())
-        script->types.monitorOverflow(cx, regs.pc);
+        TypeScript::MonitorOverflow(cx, script, regs.pc);
 END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
@@ -3325,7 +3321,7 @@ BEGIN_CASE(JSOP_TOID)
     FETCH_ELEMENT_ID(obj, -1, id);
 
     if (!regs.sp[-1].isInt32())
-        script->types.monitorUnknown(cx, regs.pc);
+        TypeScript::MonitorUnknown(cx, script, regs.pc);
 }
 END_CASE(JSOP_TOID)
 
@@ -3562,7 +3558,7 @@ BEGIN_CASE(JSOP_LOCALINC)
         PUSH_COPY(*vp);
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
             goto error;
-        script->types.monitorOverflow(cx, regs.pc);
+        TypeScript::MonitorOverflow(cx, script, regs.pc);
     }
     len = JSOP_INCARG_LENGTH;
     JS_ASSERT(len == js_CodeSpec[op].length);
@@ -3675,7 +3671,7 @@ BEGIN_CASE(JSOP_LENGTH)
         }
     } while (0);
 
-    script->types.monitor(cx, regs.pc, rval);
+    TypeScript::Monitor(cx, script, regs.pc, rval);
 
     regs.sp[-1] = rval;
     assertSameCompartment(cx, regs.sp[-1]);
@@ -3770,7 +3766,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 #endif
-    script->types.monitor(cx, regs.pc, rval);
+    TypeScript::Monitor(cx, script, regs.pc, rval);
 }
 END_CASE(JSOP_CALLPROP)
 
@@ -3948,7 +3944,7 @@ BEGIN_CASE(JSOP_GETELEM)
                 goto error;
             regs.sp--;
             regs.sp[-1].setString(str);
-            script->types.monitor(cx, regs.pc, regs.sp[-1]);
+            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -3958,7 +3954,7 @@ BEGIN_CASE(JSOP_GETELEM)
         if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
             regs.sp--;
             regs.sp[-1] = regs.fp()->canonicalActualArg(rref.toInt32());
-            script->types.monitor(cx, regs.pc, regs.sp[-1]);
+            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -4014,13 +4010,13 @@ BEGIN_CASE(JSOP_GETELEM)
     copyFrom = &rval;
 
     if (!JSID_IS_INT(id))
-        script->types.monitorUnknown(cx, regs.pc);
+        TypeScript::MonitorUnknown(cx, script, regs.pc);
 
   end_getelem:
     regs.sp--;
     regs.sp[-1] = *copyFrom;
     assertSameCompartment(cx, regs.sp[-1]);
-    script->types.monitor(cx, regs.pc, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_GETELEM)
 
@@ -4054,8 +4050,8 @@ BEGIN_CASE(JSOP_CALLELEM)
     }
 
     if (!JSID_IS_INT(id))
-        script->types.monitorUnknown(cx, regs.pc);
-    script->types.monitor(cx, regs.pc, regs.sp[-2]);
+        TypeScript::MonitorUnknown(cx, script, regs.pc);
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
 }
 END_CASE(JSOP_CALLELEM)
 
@@ -4067,7 +4063,7 @@ BEGIN_CASE(JSOP_SETHOLE)
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value rval;
-    script->types.monitorAssign(cx, regs.pc, obj, id, regs.sp[-1]);
+    TypeScript::MonitorAssign(cx, script, regs.pc, obj, id, regs.sp[-1]);
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayInitializedLength();
@@ -4120,7 +4116,7 @@ BEGIN_CASE(JSOP_EVAL)
     }
     CHECK_INTERRUPT_HANDLER();
     regs.sp = args.spAfterCall();
-    script->types.monitor(cx, regs.pc, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_EVAL)
 
@@ -4147,7 +4143,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
                 goto error;
         }
         regs.sp = args.spAfterCall();
-        script->types.monitor(cx, regs.pc, regs.sp[-1]);
+        TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
         CHECK_INTERRUPT_HANDLER();
         TRACE_0(NativeCallComplete);
         len = JSOP_CALL_LENGTH;
@@ -4248,7 +4244,7 @@ BEGIN_CASE(JSOP_CALLNAME)
             PUSH_COPY(rval);
         }
 
-        script->types.monitor(cx, regs.pc, regs.sp[-1]);
+        TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
         JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
         if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
@@ -4266,7 +4262,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         JSOp op2 = js_GetOpcode(cx, script, regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
             PUSH_UNDEFINED();
-            script->types.monitor(cx, regs.pc, regs.sp[-1]);
+            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
             len = JSOP_NAME_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -4287,7 +4283,7 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     PUSH_COPY(rval);
-    script->types.monitor(cx, regs.pc, rval);
+    TypeScript::Monitor(cx, script, regs.pc, rval);
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
@@ -4697,7 +4693,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
     JSObject *obj = regs.fp()->scopeChain().getGlobal();
     JS_ASSERT(obj->containsSlot(slot));
     PUSH_COPY(obj->getSlot(slot));
-    script->types.monitor(cx, regs.pc, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
     if (op == JSOP_CALLGLOBAL)
         PUSH_UNDEFINED();
 }
@@ -5203,7 +5199,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     if (!obj)
         goto error;
 
-    TypeObject *type = script->types.initObject(cx, regs.pc, (JSProtoKey) i);
+    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, (JSProtoKey) i);
     if (!type)
         goto error;
     if (i == JSProto_Array) {
@@ -5225,7 +5221,7 @@ BEGIN_CASE(JSOP_NEWARRAY)
     if (!obj)
         goto error;
 
-    TypeObject *type = script->types.initObject(cx, regs.pc, JSProto_Array);
+    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Array);
     if (!type)
         goto error;
     obj->setType(type);
@@ -5240,7 +5236,7 @@ BEGIN_CASE(JSOP_NEWOBJECT)
     JSObject *baseobj;
     LOAD_OBJECT(0, baseobj);
 
-    TypeObject *type = script->types.initObject(cx, regs.pc, JSProto_Object);
+    TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Object);
     if (!type)
         goto error;
 

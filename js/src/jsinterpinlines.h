@@ -132,7 +132,7 @@ InvokeSessionGuard::invoke(JSContext *cx)
      * types were handled when the invoke session was created.
      */
     for (unsigned i = 0; i < Min(argc(), nformals_); i++)
-        script_->types.setArgument(cx, i, (*this)[i]);
+        types::TypeScript::SetArgument(cx, script_, i, (*this)[i]);
 
 #ifdef JS_METHODJIT
     mjit::JITScript *jit = script_->getJIT(false /* !constructing */);

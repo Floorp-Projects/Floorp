@@ -127,7 +127,7 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     closedArgs(parser->context),
     closedVars(parser->context),
     traceIndex(0),
-    typesetIndex(0)
+    typesetCount(0)
 {
     flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
@@ -1416,21 +1416,15 @@ EmitTraceOp(JSContext *cx, JSCodeGenerator *cg)
 
 /*
  * If op is JOF_TYPESET (see the type barriers comment in jsinfer.h), reserve
- * a type set to store its result and append that info to the already-emitted
- * opcode.
+ * a type set to store its result.
  */
-static inline bool
-MaybeEmitTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
+static inline void
+CheckTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 {
     if (js_CodeSpec[op].format & JOF_TYPESET) {
-        uint32 index = (cg->typesetIndex < UINT16_MAX) ? cg->typesetIndex++ : cg->typesetIndex - 1;
-        if (EmitCheck(cx, cg, JSOP_NOP, 2) < 0)
-            return false;
-        *CG_NEXT(cg)++ = UINT16_HI(index);
-        *CG_NEXT(cg)++ = UINT16_LO(index);
-        return true;
+        if (cg->typesetCount < UINT16_MAX)
+            cg->typesetCount++;
     }
-    return true;
 }
 
 /*
@@ -1443,8 +1437,7 @@ MaybeEmitTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
     JS_BEGIN_MACRO                                                            \
         if (js_Emit3(cx, cg, op, UINT16_HI(i), UINT16_LO(i)) < 0)             \
             return JS_FALSE;                                                  \
-        if (!MaybeEmitTypeSet(cx, cg, op))                                    \
-            return JS_FALSE;                                                  \
+        CheckTypeSet(cx, cg, op);                                             \
     JS_END_MACRO
 
 #define EMIT_UINT16PAIR_IMM_OP(op, i, j)                                      \
@@ -2790,8 +2783,7 @@ EmitElemOpBase(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 {
     if (js_Emit1(cx, cg, op) < 0)
         return false;
-    if (!MaybeEmitTypeSet(cx, cg, op))
-        return false;
+    CheckTypeSet(cx, cg, op);
     return true;
 }
 
@@ -6798,8 +6790,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         argc = pn->pn_count - 1;
         if (js_Emit3(cx, cg, PN_OP(pn), ARGC_HI(argc), ARGC_LO(argc)) < 0)
             return JS_FALSE;
-        if (!MaybeEmitTypeSet(cx, cg, PN_OP(pn)))
-            return JS_FALSE;
+        CheckTypeSet(cx, cg, PN_OP(pn));
         if (PN_OP(pn) == JSOP_EVAL) {
             EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
             if (EmitBlockChain(cx, cg) < 0)

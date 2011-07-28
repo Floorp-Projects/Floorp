@@ -45,13 +45,6 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-void
-JSScript::makeAnalysis(JSContext *cx)
-{
-    JS_ASSERT(!analysis_);
-    analysis_ = js::ArenaNew<js::analyze::ScriptAnalysis>(cx->compartment->pool, this);
-}
-
 namespace js {
 namespace analyze {
 
@@ -288,7 +281,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     JSArenaPool &pool = cx->compartment->pool;
 
     unsigned length = script->length;
-    unsigned nargs = script->fun ? script->fun->nargs : 0;
+    unsigned nargs = script->hasFunction ? script->function()->nargs : 0;
 
     numSlots = TotalSlots(script);
 
@@ -353,13 +346,13 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     isInlineable = true;
     if (script->nClosedArgs || script->nClosedVars || script->nfixed >= LOCAL_LIMIT ||
-        (script->fun && script->fun->isHeavyweight()) ||
+        (script->hasFunction && script->function()->isHeavyweight()) ||
         script->usesEval || script->usesArguments || cx->compartment->debugMode) {
         isInlineable = false;
     }
 
     modifiesArguments_ = false;
-    if (script->nClosedArgs || (script->fun && script->fun->isHeavyweight()))
+    if (script->nClosedArgs || (script->hasFunction && script->function()->isHeavyweight()))
         modifiesArguments_ = true;
 
     canTrackVars = true;
@@ -386,6 +379,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     startcode->stackDepth = 0;
     codeArray[0] = startcode;
+
+    /* Number of JOF_TYPESET opcodes we have encountered. */
+    unsigned nTypeSets = 0;
+    types::TypeSet *typeArray = script->types->typeArray();
 
     unsigned offset, nextOffset = 0;
     while (nextOffset < length) {
@@ -474,6 +471,22 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             JS_ASSERT(stackDepth >= nuses);
             stackDepth -= nuses;
             stackDepth += ndefs;
+        }
+
+        /*
+         * Assign an observed type set to each reachable JOF_TYPESET opcode.
+         * This may be less than the number of type sets in the script if some
+         * are unreachable, and may be greater in case the number of type sets
+         * overflows a uint16. In the latter case a single type set will be
+         * used for the observed types of all ops after the overflow.
+         */
+        if ((js_CodeSpec[op].format & JOF_TYPESET) && cx->typeInferenceEnabled()) {
+            if (nTypeSets < script->nTypeSets) {
+                code->observedTypes = &typeArray[nTypeSets++];
+            } else {
+                JS_ASSERT(nTypeSets == UINT16_MAX);
+                code->observedTypes = &typeArray[nTypeSets - 1];
+            }
         }
 
         switch (op) {
@@ -841,7 +854,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
         JSOp op = (JSOp) *pc;
 
-        if (code->loop) {
+        if ((op == JSOP_TRACE || op == JSOP_NOTRACE) && code->loop) {
             /*
              * This is the head of a loop, we need to go and make sure that any
              * variables live at the head are live at the backedge and points prior.
@@ -1331,6 +1344,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
     while (offset < script->length) {
         jsbytecode *pc = script->code + offset;
         UntrapOpcode untrap(cx, script, pc);
+        JSOp op = (JSOp)*pc;
 
         uint32 successorOffset = offset + GetBytecodeLength(pc);
 
@@ -1344,7 +1358,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             PodZero(stack + stackDepth, code->stackDepth - stackDepth);
         stackDepth = code->stackDepth;
 
-        if (code->loop) {
+        if ((op == JSOP_TRACE || op == JSOP_NOTRACE) && code->loop) {
             /*
              * Make sure there is a pending value array for phi nodes at the
              * loop head. We won't be able to clear these until we reach the
@@ -1439,8 +1453,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             }
             freezeNewValues(cx, offset);
         }
-
-        JSOp op = (JSOp)*pc;
 
         if (js_CodeSpec[op].format & JOF_DECOMPOSE) {
             offset = successorOffset;
@@ -1901,7 +1913,7 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
     ScriptAnalysis *parentAnalysis = NULL;
     if (frame.parent != INVALID_FRAME) {
         parentScript = getFrame(frame.parent).script;
-        parentAnalysis = parentScript->analysis(cx);
+        parentAnalysis = parentScript->analysis();
     }
 
     if (v.kind() == SSAValue::VAR && v.varInitial() && parentScript) {
@@ -1941,8 +1953,8 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
                     calleeFrame = iterFrame(i).index;
                 }
             }
-            if (callee && callee->analysis(cx)->numReturnSites() == 1) {
-                ScriptAnalysis *analysis = callee->analysis(cx);
+            if (callee && callee->analysis()->numReturnSites() == 1) {
+                ScriptAnalysis *analysis = callee->analysis();
                 uint32 offset = 0;
                 while (offset < callee->length) {
                     jsbytecode *pc = callee->code + offset;
@@ -1964,7 +1976,7 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
              * exception, and not actually end up in the pushed set.
              */
             if (v.pushedIndex() == 1) {
-                ScriptAnalysis *analysis = frame.script->analysis(cx);
+                ScriptAnalysis *analysis = frame.script->analysis();
                 return foldValue(CrossSSAValue(cv.frame, analysis->poppedValue(pc, 0)));
             }
             break;

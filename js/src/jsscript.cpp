@@ -1126,7 +1126,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                        upvarIndexCount, cg->regexpList.length,
                        cg->ntrynotes, cg->constList.length(),
                        cg->globalUses.length(), nClosedArgs, nClosedVars,
-                       cg->typesetIndex, cg->version());
+                       cg->typesetCount, cg->version());
     if (!script)
         return NULL;
 
@@ -1198,9 +1198,9 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (script->compileAndGo) {
         GlobalScope *globalScope = cg->compiler()->globalScope;
         if (globalScope->globalObj && globalScope->globalObj->isGlobal())
-            script->global_ = globalScope->globalObj->asGlobal();
+            script->where.global = globalScope->globalObj->asGlobal();
         else if (cx->globalObject->isGlobal())
-            script->global_ = cx->globalObject->asGlobal();
+            script->where.global = cx->globalObject->asGlobal();
     }
 
     if (cg->globalUses.length()) {
@@ -1395,9 +1395,10 @@ DestroyScript(JSContext *cx, JSScript *script)
         PurgeScriptFragments(script->compartment->traceMonitor(), script);
 #endif
 
-    JS_ASSERT(!script->hasAnalysis());
-
-    script->types.destroy();
+    if (script->types) {
+        script->types->destroy();
+        Foreground::free_(script->types);
+    }
 
 #ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, script, true);
@@ -1481,8 +1482,8 @@ js_TraceScript(JSTracer *trc, JSScript *script)
      */
     if (!script->isCachedEval && !script->isUncachedEval && script->u.object)
         MarkObject(trc, *script->u.object, "object");
-    if (script->fun)
-        MarkObject(trc, *script->fun, "script_fun");
+    if (script->hasFunction)
+        MarkObject(trc, *script->function(), "script_fun");
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
