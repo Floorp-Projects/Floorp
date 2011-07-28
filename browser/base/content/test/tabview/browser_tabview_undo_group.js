@@ -25,7 +25,7 @@ function onTabViewWindowLoaded() {
 
   // create a group item
   let groupItem = createGroupItemWithBlankTabs(window, 300, 300, 400, 1);
-  groupItemId = groupItem.id;
+  let groupItemId = groupItem.id;
   is(groupItem.getChildren().length, 1, "The new group has a tab item");
   // start the tests
   waitForFocus(function() {
