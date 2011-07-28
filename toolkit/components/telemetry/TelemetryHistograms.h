@@ -136,5 +136,7 @@ HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent 
 HISTOGRAM(MOZ_SQLITE_OTHER_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on SQLite fsync() (ms)")
 HISTOGRAM(STARTUP_MEASUREMENT_ERRORS, 1, 3, 4, LINEAR, "Flags errors in startup calculation()")
 HISTOGRAM(NETWORK_DISK_CACHE_OPEN, 1, 10000, 10, EXPONENTIAL, "Time spent opening disk cache (ms)")
+HISTOGRAM(NETWORK_DISK_CACHE_TRASHRENAME, 1, 10000, 10, EXPONENTIAL, "Time spent renaming bad Cache to Cache.Trash (ms)")
+HISTOGRAM(NETWORK_DISK_CACHE_DELETEDIR, 1, 10000, 10, EXPONENTIAL, "Time spent deleting disk cache (ms)")
 HISTOGRAM(MOZ_SQLITE_MAIN_THREAD_WAIT_MS, 1, 3000, 10, EXPONENTIAL, "Time spent waiting on SQLite IO on main thread (ms)")
 HISTOGRAM(MOZ_SQLITE_OTHER_THREAD_WAIT_MS, 1, 3000, 10, EXPONENTIAL, "Time spent waiting on SQLite IO off main thread (ms)")

@@ -47,6 +47,7 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 #include "jstracer.h"
+#include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -93,9 +94,10 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     emptyWithShape(NULL),
     initialRegExpShape(NULL),
     initialStringShape(NULL),
-    debugModeBits(rt->debugMode * DebugFromC),
+    debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
-    breakpointSites(rt)
+    breakpointSites(rt),
+    watchpointMap(NULL)
 {
     JS_INIT_CLIST(&scripts);
 
@@ -117,6 +119,7 @@ JSCompartment::~JSCompartment()
 #endif
 
     Foreground::delete_(mathCache);
+    Foreground::delete_(watchpointMap);
 
 #ifdef DEBUG
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
@@ -291,7 +294,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (vp->isObject()) {
             JSObject *obj = &vp->toObject();
             JS_ASSERT(IsCrossCompartmentWrapper(obj));
-            if (obj->getParent() != global) {
+            if (global->getJSClass() != &js_dummy_class && obj->getParent() != global) {
                 do {
                     obj->setParent(global);
                     obj = obj->getProto();

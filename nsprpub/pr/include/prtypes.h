@@ -228,6 +228,13 @@
 #define PR_MAX(x,y)     ((x)>(y)?(x):(y))
 #define PR_ABS(x)       ((x)<0?-(x):(x))
 
+/***********************************************************************
+** MACROS:      PR_ARRAY_SIZE
+** DESCRIPTION:
+**  The number of elements in an array.
+***********************************************************************/
+#define PR_ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+
 PR_BEGIN_EXTERN_C
 
 /************************************************************************
