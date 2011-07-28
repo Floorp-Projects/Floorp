@@ -498,6 +498,7 @@ SessionStoreService.prototype = {
       // quit-application notification so the browser is about to exit.
       if (this._loadState == STATE_QUITTING)
         return;
+      this._lastSessionState = null;
       let openWindows = {};
       this._forEachBrowserWindow(function(aWindow) {
         Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
