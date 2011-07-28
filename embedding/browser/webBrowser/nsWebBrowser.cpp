@@ -75,7 +75,6 @@
 #include "gfxContext.h"
 
 // for painting the background window
-#include "nsIRegion.h"
 #include "nsILookAndFeel.h"
 
 // Printing Includes

@@ -95,6 +95,15 @@
   box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
+#placesToolbar > toolbarbutton:-moz-focusring {
+  border-color: @toolbarbuttonFocusedBorderColorAqua@;
+  box-shadow: @focusRingShadow@;
+}
+
+#placesToolbar > toolbarbutton:-moz-system-metric(mac-graphite-theme):-moz-focusring {
+  border-color: @toolbarbuttonFocusedBorderColorGraphite@;
+}
+
 #placesToolbar > toolbarbutton:-moz-window-inactive {
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;

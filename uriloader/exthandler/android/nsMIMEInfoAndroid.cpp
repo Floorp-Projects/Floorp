@@ -112,6 +112,10 @@ nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt,
     mozilla::AndroidBridge::Bridge()->
       GetMimeTypeFromExtensions(aFileExt, mimeType);
   
+  // "*/*" means that the bridge didn't know.
+  if (mimeType.Equals(nsDependentCString("*/*"), nsCaseInsensitiveCStringComparator()))
+    return false;
+
   PRBool found = GetMimeInfoForMimeType(mimeType, aMimeInfo);
   (*aMimeInfo)->SetPrimaryExtension(aFileExt);
   return found;
@@ -384,8 +388,8 @@ nsMIMEInfoAndroid::GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers)
 NS_IMETHODIMP
 nsMIMEInfoAndroid::LaunchWithFile(nsIFile *aFile)
 {
-  nsIURI* uri;
-  NS_NewFileURI(&uri, aFile);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewFileURI(getter_AddRefs(uri), aFile);
   LoadUriInternal(uri);
   return NS_OK;
 }

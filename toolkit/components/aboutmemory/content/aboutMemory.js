@@ -135,17 +135,8 @@ function sendHeapMinNotifications()
   sendHeapMinNotificationsInner();
 }
 
-/**
- * Top-level function that does the work of generating the page.
- */
-function update()
+function getReportersByProcess()
 {
-  // First, clear the page contents.  Necessary because update() might be
-  // called more than once due to ChildMemoryListener.
-  var content = $("content");
-  content.parentNode.replaceChild(content.cloneNode(false), content);
-  content = $("content");
-
   var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
       getService(Ci.nsIMemoryReporterManager);
 
@@ -216,8 +207,23 @@ function update()
     r.collectReports(addReporter, null);
   }
 
+  return reportersByProcess;
+}
+
+/**
+ * Top-level function that does the work of generating the page.
+ */
+function update()
+{
+  // First, clear the page contents.  Necessary because update() might be
+  // called more than once due to ChildMemoryListener.
+  var content = $("content");
+  content.parentNode.replaceChild(content.cloneNode(false), content);
+  content = $("content");
+
   // Generate output for one process at a time.  Always start with the
   // Main process.
+  var reportersByProcess = getReportersByProcess();
   var text = genProcessText("Main", reportersByProcess["Main"]);
   for (var process in reportersByProcess) {
     if (process !== "Main") {
@@ -276,6 +282,238 @@ function cmpOtherReporters(a, b)
          0;
 };
 
+function findKid(aName, aKids)
+{
+  for (var i = 0; i < aKids.length; i++) {
+    if (aKids[i]._name === aName) {
+      return aKids[i];
+    }
+  }
+  return undefined;
+}
+
+/**
+ * From a list of memory reporters, builds a tree that mirrors the tree
+ * structure that will be shown as output.
+ *
+ * @param aReporters
+ *        The list of memory reporters.
+ * @return The built tree.  The tree nodes have this structure:
+ *         interface Node {
+ *           _name:        string;
+ *           _kind:        number;
+ *           _amount:      number;    (non-negative or 'kUnknown')
+ *           _description: string;
+ *           _kids:        [Node];
+ *           _hasReporter: boolean;   (only defined if 'true')
+ *           _hasProblem:  boolean;   (only defined if 'true')
+ *           _nMerged:     number;    (only defined if >= 2)
+ *         }
+ * _units isn't needed because it's always UNITS_BYTES for 'explicit'
+ * reporters.
+ */
+function buildTree(aReporters)
+{
+  const treeName = "explicit";
+
+  // We want to process all reporters that begin with 'treeName'.  First we
+  // build the tree but only fill in '_name', '_kind', '_kids', maybe
+  // '_hasReporter' and maybe '_nMerged'.  This is done top-down from the
+  // reporters.
+  var t = {
+    _name: "falseRoot",
+    _kind: KIND_OTHER,
+    _kids: []
+  };
+  for (var path in aReporters) {
+    var r = aReporters[path];
+    if (r._path.slice(0, treeName.length) === treeName) {
+      assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
+             "reporters in the tree must have KIND_HEAP or KIND_NONHEAP");
+      assert(r._units === UNITS_BYTES);
+      var names = r._path.split('/');
+      var u = t;
+      for (var i = 0; i < names.length; i++) {
+        var name = names[i];
+        var uMatch = findKid(name, u._kids);
+        if (uMatch) {
+          u = uMatch;
+        } else {
+          var v = {
+            _name: name,
+            _kind: KIND_OTHER,
+            _kids: []
+          };
+          u._kids.push(v);
+          u = v;
+        }
+      }
+      u._kind = r._kind;
+      u._hasReporter = true;
+      if (r._nMerged) {
+        u._nMerged = r._nMerged;
+      }
+    }
+  }
+  // Using falseRoot makes the above code simpler.  Now discard it, leaving
+  // treeName at the root.
+  t = t._kids[0];
+
+  // Next, fill in '_description' and '_amount', and maybe '_hasProblem'
+  // for each node.  This is done bottom-up because for most non-leaf nodes
+  // '_amount' and '_description' are determined from the child nodes.
+  function fillInTree(aT, aPrepath)
+  {
+    var path = aPrepath ? aPrepath + '/' + aT._name : aT._name;
+    if (aT._kids.length === 0) {
+      // Leaf node.  Must have a reporter.
+      aT._description = getDescription(aReporters, path);
+      var amount = getBytes(aReporters, path);
+      if (amount !== kUnknown) {
+        aT._amount = amount;
+      } else {
+        aT._amount = 0;
+        aT._hasProblem = true;
+      }
+    } else {
+      // Non-leaf node.  Get the size of the children.
+      var childrenBytes = 0;
+      for (var i = 0; i < aT._kids.length; i++) {
+        // Allow for kUnknown, treat it like 0.
+        var b = fillInTree(aT._kids[i], path);
+        childrenBytes += (b === kUnknown ? 0 : b);
+      }
+      if (aT._hasReporter === true) {
+        aT._description = getDescription(aReporters, path);
+        var amount = getBytes(aReporters, path);
+        if (amount !== kUnknown) {
+          // Non-leaf node with its own reporter.  Use the reporter and add
+          // an "other" child node.
+          aT._amount = amount;
+          var other = {
+            _name: "other",
+            _kind: KIND_OTHER,
+            _description: "All unclassified " + aT._name + " memory.",
+            _amount: aT._amount - childrenBytes,
+            _kids: []
+          };
+          aT._kids.push(other);
+        } else {
+          // Non-leaf node with a reporter that returns kUnknown.
+          // Use the sum of the children and mark it as problematic.
+          aT._amount = childrenBytes;
+          aT._hasProblem = true;
+        }
+      } else {
+        // Non-leaf node without its own reporter.  Derive its size and
+        // description entirely from its children.
+        aT._amount = childrenBytes;
+        aT._description = "The sum of all entries below '" + aT._name + "'.";
+      }
+    }
+    return aT._amount;
+  }
+  fillInTree(t, "");
+
+  // Determine how many bytes are reported by heap reporters.  Be careful
+  // with non-leaf reporters;  if we count a non-leaf reporter we don't want
+  // to count any of its child reporters.
+  var s = "";
+  function getKnownHeapUsedBytes(aT)
+  {
+    if (aT._kind === KIND_HEAP) {
+      return aT._amount;
+    } else {
+      var n = 0;
+      for (var i = 0; i < aT._kids.length; i++) {
+        n += getKnownHeapUsedBytes(aT._kids[i]);
+      }
+      return n;
+    }
+  }
+
+  // A special case:  compute the derived "heap-unclassified" value.  Don't
+  // mark "heap-allocated" when we get its size because we want it to appear
+  // in the "Other Measurements" list.
+  var heapUsedBytes = getBytes(aReporters, "heap-allocated", true);
+  var unknownHeapUsedBytes = 0;
+  var hasProblem = true;
+  if (heapUsedBytes !== kUnknown) {
+    unknownHeapUsedBytes = heapUsedBytes - getKnownHeapUsedBytes(t);
+    hasProblem = false;
+  }
+  var heapUnclassified = {
+    _name: "heap-unclassified",
+    _kind: KIND_HEAP,
+    _description:
+      "Memory not classified by a more specific reporter. This includes " +
+      "waste due to internal fragmentation in the heap allocator (caused " +
+      "when the allocator rounds up request sizes).",
+    _amount: unknownHeapUsedBytes,
+    _hasProblem: hasProblem,
+    _kids: []
+  }
+  t._kids.push(heapUnclassified);
+  t._amount += unknownHeapUsedBytes;
+
+  return t;
+}
+
+/**
+ * Sort all kid nodes from largest to smallest and aggregate
+ * insignificant nodes.
+ *
+ * @param aTotalBytes
+ *        The size of the tree's root node
+ * @param aT
+ *        The tree
+ */
+function filterTree(aTotalBytes, aT)
+{
+  const omitThresholdPerc = 0.5; /* percent */
+
+  function shouldOmit(aBytes)
+  {
+    return !gVerbose &&
+           aTotalBytes !== kUnknown &&
+           (100 * aBytes / aTotalBytes) < omitThresholdPerc;
+  }
+
+  aT._kids.sort(cmpExplicitReporters);
+
+  for (var i = 0; i < aT._kids.length; i++) {
+    if (shouldOmit(aT._kids[i]._amount)) {
+      // This sub-tree is below the significance threshold
+      // Remove it and all remaining (smaller) sub-trees, and
+      // replace them with a single aggregate node.
+      var i0 = i;
+      var aggBytes = 0;
+      for ( ; i < aT._kids.length; i++) {
+        aggBytes += aT._kids[i]._amount;
+      }
+      aT._kids.splice(i0);
+      var n = i - i0;
+      var rSub = {
+        _name: "(" + n + " omitted)",
+        _kind: KIND_OTHER,
+        _amount: aggBytes,
+        _description: n + " sub-trees that were below the " + 
+                      omitThresholdPerc + "% significance threshold.  " +
+                      "Click 'More verbose' at the bottom of this page " +
+                      "to see them.",
+        _kids: []
+      };
+      // Add the "omitted" sub-tree at the end and then resort, because the
+      // sum of the omitted sub-trees may be larger than some of the
+      // shown sub-trees.
+      aT._kids[i0] = rSub;
+      aT._kids.sort(cmpExplicitReporters);
+      break;
+    }
+    filterTree(aTotalBytes, aT._kids[i]);
+  }
+}
+
 /**
  * Generates the text for a single process.
  *
@@ -287,238 +525,13 @@ function cmpOtherReporters(a, b)
  */
 function genProcessText(aProcess, aReporters)
 {
-  /**
-   * From a list of memory reporters, builds a tree that mirrors the tree
-   * structure that will be shown as output.
-   *
-   * @return The built tree.  The tree nodes have this structure:
-   *         interface Node {
-   *           _name:        string;
-   *           _kind:        number;
-   *           _amount:      number;    (non-negative or 'kUnknown')
-   *           _description: string;
-   *           _kids:        [Node];
-   *           _hasReporter: boolean;   (only defined if 'true')
-   *           _hasProblem:  boolean;   (only defined if 'true')
-   *           _nMerged:     number;    (only defined if >= 2)
-   *         }
-   * _units isn't needed because it's always UNITS_BYTES for 'explicit'
-   * reporters.
-   */
-  function buildTree()
-  {
-    const treeName = "explicit";
-    const omitThresholdPerc = 0.5; /* percent */
-
-    function findKid(aName, aKids)
-    {
-      for (var i = 0; i < aKids.length; i++) {
-        if (aKids[i]._name === aName) {
-          return aKids[i];
-        }
-      }
-      return undefined;
-    }
-
-    // We want to process all reporters that begin with 'treeName'.  First we
-    // build the tree but only fill in '_name', '_kind', '_kids', maybe
-    // '_hasReporter' and maybe '_nMerged'.  This is done top-down from the
-    // reporters.
-    var t = {
-      _name: "falseRoot",
-      _kind: KIND_OTHER,
-      _kids: []
-    };
-    for (var path in aReporters) {
-      var r = aReporters[path];
-      if (r._path.slice(0, treeName.length) === treeName) {
-        assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
-               "reporters in the tree must have KIND_HEAP or KIND_NONHEAP");
-        assert(r._units === UNITS_BYTES);
-        var names = r._path.split('/');
-        var u = t;
-        for (var i = 0; i < names.length; i++) {
-          var name = names[i];
-          var uMatch = findKid(name, u._kids);
-          if (uMatch) {
-            u = uMatch;
-          } else {
-            var v = {
-              _name: name,
-              _kind: KIND_OTHER,
-              _kids: []
-            };
-            u._kids.push(v);
-            u = v;
-          }
-        }
-        u._kind = r._kind;
-        u._hasReporter = true;
-        if (r._nMerged) {
-          u._nMerged = r._nMerged;
-        }
-      }
-    }
-    // Using falseRoot makes the above code simpler.  Now discard it, leaving
-    // treeName at the root.
-    t = t._kids[0];
-
-    // Next, fill in '_description' and '_amount', and maybe '_hasProblem'
-    // for each node.  This is done bottom-up because for most non-leaf nodes
-    // '_amount' and '_description' are determined from the child nodes.
-    function fillInTree(aT, aPrepath)
-    {
-      var path = aPrepath ? aPrepath + '/' + aT._name : aT._name;
-      if (aT._kids.length === 0) {
-        // Leaf node.  Must have a reporter.
-        aT._description = getDescription(aReporters, path);
-        var amount = getBytes(aReporters, path);
-        if (amount !== kUnknown) {
-          aT._amount = amount;
-        } else {
-          aT._amount = 0;
-          aT._hasProblem = true;
-        }
-      } else {
-        // Non-leaf node.  Get the size of the children.
-        var childrenBytes = 0;
-        for (var i = 0; i < aT._kids.length; i++) {
-          // Allow for kUnknown, treat it like 0.
-          var b = fillInTree(aT._kids[i], path);
-          childrenBytes += (b === kUnknown ? 0 : b);
-        }
-        if (aT._hasReporter === true) {
-          aT._description = getDescription(aReporters, path);
-          var amount = getBytes(aReporters, path);
-          if (amount !== kUnknown) {
-            // Non-leaf node with its own reporter.  Use the reporter and add
-            // an "other" child node.
-            aT._amount = amount;
-            var other = {
-              _name: "other",
-              _kind: KIND_OTHER,
-              _description: "All unclassified " + aT._name + " memory.",
-              _amount: aT._amount - childrenBytes,
-              _kids: []
-            };
-            aT._kids.push(other);
-          } else {
-            // Non-leaf node with a reporter that returns kUnknown.
-            // Use the sum of the children and mark it as problematic.
-            aT._amount = childrenBytes;
-            aT._hasProblem = true;
-          }
-        } else {
-          // Non-leaf node without its own reporter.  Derive its size and
-          // description entirely from its children.
-          aT._amount = childrenBytes;
-          aT._description = "The sum of all entries below '" + aT._name + "'.";
-        }
-      }
-      return aT._amount;
-    }
-    fillInTree(t, "");
-
-    // Determine how many bytes are reported by heap reporters.  Be careful
-    // with non-leaf reporters;  if we count a non-leaf reporter we don't want
-    // to count any of its child reporters.
-    var s = "";
-    function getKnownHeapUsedBytes(aT)
-    {
-      if (aT._kind === KIND_HEAP) {
-        return aT._amount;
-      } else {
-        var n = 0;
-        for (var i = 0; i < aT._kids.length; i++) {
-          n += getKnownHeapUsedBytes(aT._kids[i]);
-        }
-        return n;
-      }
-    }
-
-    // A special case:  compute the derived "heap-unclassified" value.  Don't
-    // mark "heap-allocated" when we get its size because we want it to appear
-    // in the "Other Measurements" list.
-    var heapUsedBytes = getBytes(aReporters, "heap-allocated", true);
-    var unknownHeapUsedBytes = 0;
-    var hasProblem = true;
-    if (heapUsedBytes !== kUnknown) {
-      unknownHeapUsedBytes = heapUsedBytes - getKnownHeapUsedBytes(t);
-      hasProblem = false;
-    }
-    var heapUnclassified = {
-      _name: "heap-unclassified",
-      _kind: KIND_HEAP,
-      _description:
-        "Memory not classified by a more specific reporter. This includes " +
-        "waste due to internal fragmentation in the heap allocator (caused when " +
-        "the allocator rounds up request sizes).",
-      _amount: unknownHeapUsedBytes,
-      _hasProblem: hasProblem,
-      _kids: []
-    }
-    t._kids.push(heapUnclassified);
-    t._amount += unknownHeapUsedBytes;
-
-    function shouldOmit(aBytes)
-    {
-      return !gVerbose &&
-             t._amount !== kUnknown &&
-             (100 * aBytes / t._amount) < omitThresholdPerc;
-    }
-
-    /**
-     * Sort all kid nodes from largest to smallest and aggregate
-     * insignificant nodes.
-     *
-     * @param aT
-     *        The tree
-     */
-    function filterTree(aT)
-    {
-      aT._kids.sort(cmpExplicitReporters);
-
-      for (var i = 0; i < aT._kids.length; i++) {
-        if (shouldOmit(aT._kids[i]._amount)) {
-          // This sub-tree is below the significance threshold
-          // Remove it and all remaining (smaller) sub-trees, and
-          // replace them with a single aggregate node.
-          var i0 = i;
-          var aggBytes = 0;
-          for ( ; i < aT._kids.length; i++) {
-            aggBytes += aT._kids[i]._amount;
-          }
-          aT._kids.splice(i0);
-          var n = i - i0;
-          var rSub = {
-            _name: "(" + n + " omitted)",
-            _kind: KIND_OTHER,
-            _amount: aggBytes,
-            _description: n + " sub-trees that were below the " + 
-                          omitThresholdPerc + "% significance threshold.  " +
-                          "Click 'More verbose' at the bottom of this page " +
-                          "to see them.",
-            _kids: []
-          };
-          // Add the "omitted" sub-tree at the end and then resort, because the
-          // sum of the omitted sub-trees may be larger than some of the
-          // shown sub-trees.
-          aT._kids[i0] = rSub;
-          aT._kids.sort(cmpExplicitReporters);
-          break;
-        }
-        filterTree(aT._kids[i]);
-      }
-    }
-    filterTree(t);
-
-    return t;
-  }
+  var tree = buildTree(aReporters);
+  filterTree(tree._amount, tree);
 
   // Nb: the newlines give nice spacing if we cut+paste into a text buffer.
   var text = "";
   text += "<h1>" + aProcess + " Process</h1>\n\n";
-  text += genTreeText(buildTree());
+  text += genTreeText(tree);
   text += genOtherText(aReporters);
   text += "<hr></hr>";
   return text;

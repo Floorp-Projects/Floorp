@@ -56,11 +56,11 @@ PR_BEGIN_EXTERN_C
 /************************* TYPES AND CONSTANTS ************************/
 /**********************************************************************/
 
-#define PR_MSEC_PER_SEC		1000UL
-#define PR_USEC_PER_SEC		1000000UL
-#define PR_NSEC_PER_SEC		1000000000UL
-#define PR_USEC_PER_MSEC	1000UL
-#define PR_NSEC_PER_MSEC	1000000UL
+#define PR_MSEC_PER_SEC		1000L
+#define PR_USEC_PER_SEC		1000000L
+#define PR_NSEC_PER_SEC		1000000000L
+#define PR_USEC_PER_MSEC	1000L
+#define PR_NSEC_PER_MSEC	1000000L
 
 /*
  * PRTime --

@@ -3980,15 +3980,13 @@ SECU_DerSignDataCRL(PRArenaPool *arena, CERTSignedData *sd,
     if (rv) goto loser;
 
     /* Fill out SignedData object */
-    PORT_Memset(sd, 0, sizeof(sd));
+    PORT_Memset(sd, 0, sizeof(*sd));
     sd->data.data = buf;
     sd->data.len = len;
     sd->signature.data = it.data;
     sd->signature.len = it.len << 3;		/* convert to bit string */
-    if (!sd->signatureAlgorithm.parameters.data) {
-        rv = SECOID_SetAlgorithmID(arena, &sd->signatureAlgorithm, algID, 0);
-        if (rv) goto loser;
-    }
+    rv = SECOID_SetAlgorithmID(arena, &sd->signatureAlgorithm, algID, 0);
+    if (rv) goto loser;
 
     return rv;
 
