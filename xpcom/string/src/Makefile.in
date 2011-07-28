@@ -80,6 +80,10 @@ CPPSRCS += nsUTF8UtilsSSE2.cpp
 ifdef GNU_CC
 nsUTF8UtilsSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 endif
+
+ifdef SOLARIS_SUNPRO_CXX
+nsUTF8UtilsSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-xarch=sse2 -xO4
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
