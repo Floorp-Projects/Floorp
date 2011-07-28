@@ -1439,7 +1439,8 @@ class AutoGCRooter {
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
         BINDINGS =    -16, /* js::Bindings */
-        SHAPEVECTOR = -17  /* js::AutoShapeVector */
+        SHAPEVECTOR = -17, /* js::AutoShapeVector */
+        IONMASM =     -18  /* js::ion::MacroAssembler */
     };
 
     private:

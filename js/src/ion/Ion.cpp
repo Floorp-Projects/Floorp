@@ -171,7 +171,7 @@ IonCompartment::~IonCompartment()
 }
 
 IonCode *
-IonCode::New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool)
+IonCode::New(JSContext *cx, uint8 *code, uint32 bufferSize, JSC::ExecutablePool *pool)
 {
     IonCode *codeObj = NewGCThing<IonCode>(cx, gc::FINALIZE_IONCODE, sizeof(IonCode));
     if (!codeObj) {
@@ -179,8 +179,33 @@ IonCode::New(JSContext *cx, uint8 *code, uint32 size, JSC::ExecutablePool *pool)
         return NULL;
     }
 
-    new (codeObj) IonCode(code, size, pool);
+    new (codeObj) IonCode(code, bufferSize, pool);
     return codeObj;
+}
+
+void
+IonCode::copyFrom(MacroAssembler &masm)
+{
+    // Store the IonCode pointer right before the code buffer, so we can
+    // recover the gcthing from relocation tables.
+    *(IonCode **)(code_ - sizeof(IonCode *)) = this;
+
+    insnSize_ = masm.instructionsSize();
+    masm.executableCopy(code_);
+
+    relocTableSize_ = masm.relocationTableSize();
+    relocTableOffset_ = insnSize_;
+    masm.copyRelocationTable(code_ + relocTableOffset_);
+}
+
+void
+IonCode::trace(JSTracer *trc)
+{
+    if (relocTableSize_) {
+        uint8 *start = code_ + relocTableOffset_;
+        CompactBufferReader reader(start, start + relocTableSize_);
+        MacroAssembler::TraceRelocations(trc, this, reader);
+    }
 }
 
 void

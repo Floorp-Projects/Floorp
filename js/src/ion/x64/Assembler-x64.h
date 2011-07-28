@@ -43,6 +43,8 @@
 #define jsion_cpu_x64_assembler_h__
 
 #include "ion/shared/Assembler-shared.h"
+#include "ion/CompactBuffer.h"
+#include "ion/IonCode.h"
 
 namespace js {
 namespace ion {
@@ -142,7 +144,61 @@ namespace ion {
 
 class Assembler : public AssemblerX86Shared
 {
+    // x64 jumps may need extra bits of relocation, because a jump may extend
+    // beyond the signed 32-bit range. To account for this we add an extended
+    // jump table at the bottom of the instruction stream, and if a jump
+    // overflows its range, it will redirect here.
+    //
+    // In our relocation table, we store two offsets instead of one: the offset
+    // to the original jump, and an offset to the extended jump if we will need
+    // to use it instead. The offsets are stored as:
+    //    [unsigned] Unsigned offset to short jump, from the start of the code.
+    //    [unsigned] Unsigned offset to the extended jump, from the start of
+    //               the jump table, in units of SizeOfJumpTableEntry.
+    //
+    // The start of the relocation table contains the offset from the code
+    // buffer to the start of the extended jump table.
+    //
+    // Each entry in this table is a jmp [rip], where the next eight bytes
+    // contain an immediate address. This comes out to 14 bytes, which we pad
+    // to 16.
+    //    +1 byte for opcode
+    //    +1 byte for mod r/m
+    //    +4 bytes for rip-relative offset (0)
+    //    +8 bytes for 64-bit address
+    //
+    static const uint32 SizeOfExtendedJump = 1 + 1 + 4 + 8;
+    static const uint32 SizeOfJumpTableEntry = 16;
+
+    uint32 extendedJumpTable_;
+
+    static IonCode *CodeFromJump(IonCode *code, uint8 *jump);
+
+  private:
+    void writeRelocation(JmpSrc src);
+    void addPendingJump(JmpSrc src, void *target, Relocation::Kind reloc);
+
   public:
+    using AssemblerX86Shared::j;
+    using AssemblerX86Shared::jmp;
+
+    Assembler()
+      : extendedJumpTable_(0)
+    {
+    }
+
+    static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+
+    // The buffer is about to be linked, make sure any constant pools or excess
+    // bookkeeping has been flushed to the instruction stream.
+    void flush();
+
+    // Copy the assembly code to the given buffer, and perform any pending
+    // relocations relying on the target address.
+    void executableCopy(uint8 *buffer);
+
+    // Actual assembly emitting functions.
+
     void movq(ImmWord word, const Register &dest) {
         masm.movq_i64r(word.value, dest.code());
     }
@@ -256,6 +312,15 @@ class Assembler : public AssemblerX86Shared
     }
     void cmpq(const Register &lhs, const Register &rhs) {
         masm.cmpq_rr(rhs.code(), lhs.code());
+    }
+
+    void jmp(void *target, Relocation::Kind reloc) {
+        JmpSrc src = masm.jmp();
+        addPendingJump(src, target, reloc);
+    }
+    void j(Condition cond, void *target, Relocation::Kind reloc) {
+        JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
+        addPendingJump(src, target, reloc);
     }
 };
 
