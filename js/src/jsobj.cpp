@@ -2942,7 +2942,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
     }
 
     if (res && cx->typeInferenceEnabled())
-        calleeScript->types.setThis(cx, types::Type::ObjectType(res));
+        TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(res));
 
     return res;
 }
@@ -2973,7 +2973,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
             return NULL;
 
         JSScript *calleeScript = callee->getFunctionPrivate()->script();
-        calleeScript->types.setThis(cx, types::Type::ObjectType(obj));
+        TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(obj));
     }
 
     return obj;

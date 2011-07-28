@@ -493,6 +493,7 @@ struct JSScript {
                                                    undefined properties in this
                                                    script */
     bool            hasSingletons:1;  /* script has singleton objects */
+    bool            hasFunction:1;    /* function is active in 'where' union */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            isUncachedEval:1; /* script came from EvaluateScript */
@@ -551,8 +552,18 @@ struct JSScript {
 
   public:
 
-    /* Function this script is the body for, if there is one. */
-    JSFunction *fun;
+    union {
+        /* Function this script is the body for, if there is one. */
+        JSFunction *fun;
+
+        /* Global object for this script, if compileAndGo. */
+        js::GlobalObject *global;
+    } where;
+
+    inline JSFunction *function() const {
+        JS_ASSERT(hasFunction);
+        return where.fun;
+    }
 
     /*
      * Associates this script with a specific function, constructing a new type
@@ -560,8 +571,6 @@ struct JSScript {
      */
     bool typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton = false);
 
-    /* Global object for this script, if compileAndGo. */
-    js::GlobalObject *global_;
     inline bool hasGlobal() const;
     inline js::GlobalObject *global() const;
 
@@ -578,31 +587,24 @@ struct JSScript {
     unsigned id() { return 0; }
 #endif
 
-    /*
-     * Bytecode analysis and type inference results for this script. Destroyed
-     * on every GC.
-     */
-  private:
-    js::analyze::ScriptAnalysis *analysis_;
-    void makeAnalysis(JSContext *cx);
-  public:
+    /* Persistent type information retained across GCs. */
+    js::types::TypeScript *types;
 
-    bool hasAnalysis() { return analysis_ != NULL; }
-    void clearAnalysis() { analysis_ = NULL; }
-
-    js::analyze::ScriptAnalysis *analysis(JSContext *cx) {
-        if (!analysis_)
-            makeAnalysis(cx);
-        return analysis_;
-    }
-
-    /* Ensure the script has current type inference results. */
+    /* Ensure the script has types, bytecode and/or type inference results. */
+    inline bool ensureHasTypes(JSContext *cx);
+    inline bool ensureRanBytecode(JSContext *cx);
     inline bool ensureRanInference(JSContext *cx);
 
-    /* Persistent type information retained across GCs. */
-    js::types::TypeScript types;
+    /* Filled in by one of the above. */
+    inline bool hasAnalysis();
+    inline js::analyze::ScriptAnalysis *analysis();
 
     inline bool isAboutToBeFinalized(JSContext *cx);
+
+  private:
+    bool makeTypes(JSContext *cx);
+    bool makeAnalysis(JSContext *cx);
+  public:
 
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to

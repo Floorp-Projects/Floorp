@@ -1023,7 +1023,7 @@ class FrameState
     }
 
     bool isArg(const FrameEntry *fe) const {
-        return a->script->fun && fe >= a->args && fe - a->args < a->script->fun->nargs;
+        return a->script->hasFunction && fe >= a->args && fe - a->args < a->script->function()->nargs;
     }
 
     bool isLocal(const FrameEntry *fe) const {

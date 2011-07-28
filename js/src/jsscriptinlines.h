@@ -170,20 +170,26 @@ JSScript::hasGlobal() const
      * which have had their scopes cleared. compileAndGo code should not run
      * anymore against such globals.
      */
-    return global_ && !global_->isCleared();
+    if (!compileAndGo)
+        return false;
+    js::GlobalObject *obj = hasFunction ? function()->getGlobal() : where.global;
+    return obj && !obj->isCleared();
 }
 
 inline js::GlobalObject *
 JSScript::global() const
 {
     JS_ASSERT(hasGlobal());
-    return global_;
+    return hasFunction ? function()->getGlobal() : where.global;
 }
 
 inline bool
 JSScript::hasClearedGlobal() const
 {
-    return global_ && global_->isCleared();
+    if (!compileAndGo)
+        return false;
+    js::GlobalObject *obj = hasFunction ? function()->getGlobal() : where.global;
+    return obj && obj->isCleared();
 }
 
 #endif /* jsscriptinlines_h___ */
