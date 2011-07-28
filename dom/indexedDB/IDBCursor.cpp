@@ -475,7 +475,7 @@ IDBCursor::GetValue(JSContext* aCx,
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
 
-    mCloneBuffer.clear();
+    mCloneBuffer.clear(aCx);
     mHaveCachedValue = true;
   }
 
@@ -720,7 +720,7 @@ ContinueHelper::GetSuccessResult(JSContext* aCx,
     mCursor->mContinueToKey = Key::UNSETKEY;
 
     mCursor->mCloneBuffer.swap(mCloneBuffer);
-    mCloneBuffer.clear();
+    mCloneBuffer.clear(aCx);
 
     nsresult rv = WrapNative(aCx, mCursor, aVal);
     NS_ENSURE_SUCCESS(rv, rv);

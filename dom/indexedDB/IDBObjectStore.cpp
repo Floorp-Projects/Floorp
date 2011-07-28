@@ -839,9 +839,19 @@ IDBObjectStore::GetStructuredCloneDataFromStatement(
   nsresult rv = aStatement->GetSharedBlob(aIndex, &dataLength, &data);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  return aBuffer.copy(reinterpret_cast<const uint64 *>(data), dataLength) ?
-         NS_OK :
-         NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  JSContext* cx;
+  rv = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  JSAutoRequest ar(cx);
+
+  uint64* newData = static_cast<uint64*>(JS_malloc(cx, dataLength));
+  NS_ENSURE_TRUE(newData, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  memcpy(newData, data, dataLength);
+  aBuffer.adopt(cx, newData, dataLength);
+
+  return NS_OK;
 }
 
 // static
@@ -849,7 +859,18 @@ void
 IDBObjectStore::ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
 {
   if (aBuffer.data()) {
-    aBuffer.clear();
+    JSContext* cx;
+    if (NS_SUCCEEDED(nsContentUtils::ThreadJSContextStack()->
+                     GetSafeJSContext(&cx))) {
+      JSAutoRequest ar(cx);
+      aBuffer.clear(cx);
+    }
+    else {
+      NS_WARNING("Couldn't get safe JSContext! Leaking data!");
+      uint64* data;
+      size_t length;
+      aBuffer.steal(&data, &length);
+    }
   }
 }
 
@@ -872,7 +893,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
 
   JSAutoRequest ar(aCx);
 
-  return aBuffer.read(aCx, aValue, aCallbacks, aClosure);
+  return aBuffer.read(aValue, aCx, aCallbacks, aClosure);
 }
 
 // static
@@ -1879,7 +1900,7 @@ AddHelper::GetSuccessResult(JSContext* aCx,
 {
   NS_ASSERTION(!mKey.IsUnset(), "Badness!");
 
-  mCloneBuffer.clear();
+  mCloneBuffer.clear(aCx);
 
   return IDBObjectStore::GetJSValFromKey(mKey, aCx, aVal);
 }
@@ -1934,7 +1955,7 @@ GetHelper::GetSuccessResult(JSContext* aCx,
 {
   bool result = IDBObjectStore::DeserializeValue(aCx, mCloneBuffer, aVal);
 
-  mCloneBuffer.clear();
+  mCloneBuffer.clear(aCx);
 
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   return NS_OK;
@@ -2509,7 +2530,7 @@ GetAllHelper::GetSuccessResult(JSContext* aCx,
   nsresult rv = ConvertCloneBuffersToArray(aCx, mCloneBuffers, aVal);
 
   for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-    mCloneBuffers[index].clear();
+    mCloneBuffers[index].clear(aCx);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);

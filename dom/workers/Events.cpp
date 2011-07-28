@@ -565,13 +565,13 @@ private:
     // Deserialize and save the data value if we can.
     if (slot == SLOT_data && event->mData) {
       JSAutoStructuredCloneBuffer buffer;
-      buffer.adopt(event->mData, event->mDataByteCount);
+      buffer.adopt(aCx, event->mData, event->mDataByteCount);
 
       event->mData = NULL;
       event->mDataByteCount = 0;
 
       jsval data;
-      if (!buffer.read(aCx, &data) ||
+      if (!buffer.read(&data) ||
           !JS_SetReservedSlot(aCx, aObj, slot, data)) {
         return false;
       }
