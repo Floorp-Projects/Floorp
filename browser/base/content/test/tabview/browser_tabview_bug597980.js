@@ -10,7 +10,7 @@ function test() {
 function part1(win) {
   registerCleanupFunction(function() win.close());
 
-  let contentWindow = win.document.getElementById("tab-view").contentWindow;
+  let contentWindow = win.TabView.getContentWindow();
   is(contentWindow.GroupItems.groupItems.length, 1, "Has only one group");
 
   let originalTab = win.gBrowser.selectedTab;
@@ -71,15 +71,12 @@ function part2(win) {
     // switch the selected tab to new tab
     win.gBrowser.selectedTab = newTab;
 
-    whenTabViewIsHidden(function () {
-      is(win.gBrowser.selectedTab, newTab, "The seleted tab should be the same as before (new tab)");
-       win.close();
-       finish();
-    });
-
-    // show tabview
-    EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, win);
-    // hide tabview
-    EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, win);
-  })
+    showTabView(function () {
+      hideTabView(function () {
+        is(win.gBrowser.selectedTab, newTab,
+           "The selected tab should be the same as before (new tab)");
+        waitForFocus(finish);
+      }, win);
+    }, win);
+  }, win);
 }

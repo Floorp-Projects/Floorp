@@ -21,9 +21,7 @@ function onTabViewShown() {
 
 function testStayOnPage(contentWindow, groupItemOne, groupItemTwo) {
   whenDialogOpened(function (dialog) {
-    groupItemTwo.addSubscriber("groupShown", function onShown() {
-      groupItemTwo.removeSubscriber("groupShown", onShown);
-
+    executeSoon(function () {
       is(gBrowser.tabs.length, 2, 
          "The total number of tab is 2 when staying on the page");
       is(contentWindow.TabItems.getItems().length, 2, 
