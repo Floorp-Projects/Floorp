@@ -415,7 +415,12 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       default:
+#ifdef DEBUG
+        return abort("Unsupported opcode: %s (line %d)", js_CodeName[op],
+                     js_PCToLineNumber(cx, script, pc));
+#else
         return abort("Unsupported opcode: %d (line %d)", op, js_PCToLineNumber(cx, script, pc));
+#endif
     }
 }
 
