@@ -178,6 +178,7 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_STRING            ((uint8)0x05)
 #define JSVAL_TYPE_NULL              ((uint8)0x06)
 #define JSVAL_TYPE_OBJECT            ((uint8)0x07)
+#define JSVAL_TYPE_UNKNOWN           ((uint8)0x20)
 #define JSVAL_TYPE_NONFUNOBJ         ((uint8)0x57)
 #define JSVAL_TYPE_FUNOBJ            ((uint8)0x67)
 #define JSVAL_TYPE_STRORNULL         ((uint8)0x97)

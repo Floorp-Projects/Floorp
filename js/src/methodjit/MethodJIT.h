@@ -798,7 +798,7 @@ extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);
 extern "C" void JaegerThrowpoline();
 #endif
 
-#if defined(_WIN64)
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
 extern "C" void JaegerInterpolinePatched();
 #endif
 
