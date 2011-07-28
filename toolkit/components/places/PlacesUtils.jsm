@@ -2224,7 +2224,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "focusManager",
 function updateCommandsOnActiveWindow()
 {
   let win = focusManager.activeWindow;
-  if (win && win instanceof Ci.nsIDOMWindowInternal) {
+  if (win && win instanceof Ci.nsIDOMWindow) {
     // Updating "undo" will cause a group update including "redo".
     win.updateCommands("undo");
   }
@@ -2263,7 +2263,9 @@ BaseTransaction.prototype = {
 
 function PlacesAggregatedTransaction(aName, aTransactions)
 {
-  this._transactions = aTransactions;
+  // Copy the transactions array to decouple it from its prototype, which
+  // otherwise keeps alive its associated global object.
+  this._transactions = Array.slice(aTransactions);
   this._name = aName;
   this.container = -1;
 

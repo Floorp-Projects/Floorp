@@ -92,16 +92,25 @@
 #define JSDOUBLE_SIGNBIT (((uint64) 1) << 63)
 #define JSDOUBLE_EXPMASK (((uint64) 0x7ff) << 52)
 #define JSDOUBLE_MANTMASK ((((uint64) 1) << 52) - 1)
+#define JSDOUBLE_HI32_SIGNBIT   0x80000000
 
 static JS_ALWAYS_INLINE JSBool
 JSDOUBLE_IS_NEGZERO(jsdouble d)
 {
+    if (d != 0)
+        return false;
     union {
+        struct {
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
+            uint32 lo, hi;
+#else
+            uint32 hi, lo;
+#endif
+        } s;
         jsdouble d;
-        uint64 bits;
     } x;
     x.d = d;
-    return x.bits == JSDOUBLE_SIGNBIT;
+    return (x.s.hi & JSDOUBLE_HI32_SIGNBIT) != 0;
 }
 
 static inline bool
@@ -843,6 +852,14 @@ PrivateValue(void *ptr)
     return v;
 }
 
+static JS_ALWAYS_INLINE Value
+PrivateUint32Value(uint32 ui)
+{
+    Value v;
+    v.setPrivateUint32(ui);
+    return v;
+}
+
 static JS_ALWAYS_INLINE void
 ClearValueRange(Value *vec, uintN len, bool useHoles)
 {
@@ -1007,9 +1024,15 @@ struct ClassExtension {
     JSObjectOp          innerObject;
     JSIteratorOp        iteratorObject;
     void               *unused;
+
+    /*
+     * isWrappedNative is true only if the class is an XPCWrappedNative.
+     * WeakMaps use this to override the wrapper disposal optimization.
+     */
+    bool                isWrappedNative;
 };
 
-#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL}
+#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL,false}
 
 struct ObjectOps {
     js::LookupPropOp        lookupProperty;

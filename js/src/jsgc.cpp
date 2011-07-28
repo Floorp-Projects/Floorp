@@ -60,6 +60,8 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscompartment.h"
+#include "jscrashreport.h"
+#include "jscrashformat.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
@@ -80,6 +82,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
+#include "jswatchpoint.h"
 #include "jsweakmap.h"
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -163,7 +166,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * Do not allow to access the free list when its real head is still stored
      * in FreeLists and is not synchronized with this one.
      */
-    JS_ASSERT(compartment);
+    JS_ASSERT(allocated());
 
     /*
      * We can be called from the background finalization thread when the free
@@ -193,7 +196,7 @@ template<typename T>
 inline bool
 Arena::finalize(JSContext *cx)
 {
-    JS_ASSERT(aheader.compartment);
+    JS_ASSERT(aheader.allocated());
     JS_ASSERT(!aheader.getMarkingDelay()->link);
 
     uintptr_t thing = thingsStart(sizeof(T));
@@ -239,9 +242,7 @@ Arena::finalize(JSContext *cx)
                 if (!newFreeSpanStart)
                     newFreeSpanStart = thing;
                 t->finalize(cx);
-#ifdef DEBUG
                 memset(t, JS_FREE_PATTERN, sizeof(T));
-#endif
             }
         }
     }
@@ -320,18 +321,21 @@ Chunk::init(JSRuntime *rt)
 {
     info.runtime = rt;
     info.age = 0;
-    info.emptyArenaListHead = &arenas[0].aheader;
-    ArenaHeader *aheader = &arenas[0].aheader;
-    ArenaHeader *last = &arenas[JS_ARRAY_LENGTH(arenas) - 1].aheader;
-    while (aheader < last) {
-        ArenaHeader *following = reinterpret_cast<ArenaHeader *>(aheader->address() + ArenaSize);
-        aheader->next = following;
-        aheader->compartment = NULL;
-        aheader = following;
-    }
-    last->next = NULL;
-    last->compartment = NULL;
     info.numFree = ArenasPerChunk;
+
+    /* Assemble all arenas into a linked list and mark them as not allocated. */
+    ArenaHeader **prevp = &info.emptyArenaListHead;
+    Arena *end = &arenas[JS_ARRAY_LENGTH(arenas)];
+    for (Arena *a = &arenas[0]; a != end; ++a) {
+#ifdef DEBUG
+        memset(a, ArenaSize, JS_FREE_PATTERN);
+#endif
+        *prevp = &a->aheader;
+        a->aheader.setAsNotAllocated();
+        prevp = &a->aheader.next;
+    }
+    *prevp = NULL;
+
     for (size_t i = 0; i != JS_ARRAY_LENGTH(markingDelay); ++i)
         markingDelay[i].init();
 }
@@ -369,6 +373,7 @@ Chunk::allocateArena(JSContext *cx, unsigned thingKind)
     --info.numFree;
 
     JSRuntime *rt = info.runtime;
+    Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes + ArenaSize);
     JS_ATOMIC_ADD(&rt->gcBytes, ArenaSize);
     JS_ATOMIC_ADD(&comp->gcBytes, ArenaSize);
     if (comp->gcBytes >= comp->gcTriggerBytes)
@@ -380,6 +385,7 @@ Chunk::allocateArena(JSContext *cx, unsigned thingKind)
 void
 Chunk::releaseArena(ArenaHeader *aheader)
 {
+    JS_ASSERT(aheader->allocated());
     JSRuntime *rt = info.runtime;
 #ifdef JS_THREADSAFE
     Maybe<AutoLockGC> maybeLock;
@@ -388,6 +394,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
 #endif
     JSCompartment *comp = aheader->compartment;
 
+    Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes - ArenaSize);
     JS_ASSERT(size_t(rt->gcBytes) >= ArenaSize);
     JS_ASSERT(size_t(comp->gcBytes) >= ArenaSize);
 #ifdef JS_THREADSAFE
@@ -398,40 +405,13 @@ Chunk::releaseArena(ArenaHeader *aheader)
 #endif
     JS_ATOMIC_ADD(&rt->gcBytes, -int32(ArenaSize));
     JS_ATOMIC_ADD(&comp->gcBytes, -int32(ArenaSize));
+
+    aheader->setAsNotAllocated();
     aheader->next = info.emptyArenaListHead;
     info.emptyArenaListHead = aheader;
-    aheader->compartment = NULL;
     ++info.numFree;
     if (unused())
         info.age = 0;
-}
-
-JSRuntime *
-Chunk::getRuntime()
-{
-    return info.runtime;
-}
-
-inline jsuword
-GetGCChunk(JSRuntime *rt)
-{
-    void *p = rt->gcChunkAllocator->alloc();
-#ifdef MOZ_GCTIMER
-    if (p)
-        JS_ATOMIC_INCREMENT(&newChunkCount);
-#endif
-    return reinterpret_cast<jsuword>(p);
-}
-
-inline void
-ReleaseGCChunk(JSRuntime *rt, jsuword chunk)
-{
-    void *p = reinterpret_cast<void *>(chunk);
-    JS_ASSERT(p);
-#ifdef MOZ_GCTIMER
-    JS_ATOMIC_INCREMENT(&destroyChunkCount);
-#endif
-    rt->gcChunkAllocator->free_(p);
 }
 
 inline Chunk *
@@ -463,13 +443,14 @@ PickChunk(JSContext *cx)
         return chunk;
 
     JSRuntime *rt = cx->runtime;
-    bool systemGCChunks = cx->compartment->systemGCChunks;
+    bool isSystemCompartment = cx->compartment->isSystemCompartment;
 
     /*
      * The chunk used for the last allocation is full, search all chunks for
      * free arenas.
      */
-    GCChunkSet::Range r(systemGCChunks ? rt->gcSystemChunkSet.all() : rt->gcChunkSet.all());
+    GCChunkSet::Range
+        r(isSystemCompartment ? rt->gcSystemChunkSet.all() : rt->gcUserChunkSet.all());
     for (; !r.empty(); r.popFront()) {
         chunk = r.front();
         if (chunk->hasAvailableArenas()) {
@@ -481,7 +462,7 @@ PickChunk(JSContext *cx)
     chunk = AllocateGCChunk(rt);
     if (!chunk) {
         /* Our last chance is to find an empty chunk in the other chunk set. */
-        GCChunkSet::Enum e(systemGCChunks ? rt->gcChunkSet : rt->gcSystemChunkSet);
+        GCChunkSet::Enum e(isSystemCompartment ? rt->gcUserChunkSet : rt->gcSystemChunkSet);
         for (; !e.empty(); e.popFront()) {
             if (e.front()->info.numFree == ArenasPerChunk) {
                 chunk = e.front();
@@ -498,17 +479,17 @@ PickChunk(JSContext *cx)
      * FIXME bug 583732 - chunk is newly allocated and cannot be present in
      * the table so using ordinary lookupForAdd is suboptimal here.
      */
-    GCChunkSet::AddPtr p = systemGCChunks ?
+    GCChunkSet::AddPtr p = isSystemCompartment ?
                            rt->gcSystemChunkSet.lookupForAdd(chunk) :
-                           rt->gcChunkSet.lookupForAdd(chunk);
+                           rt->gcUserChunkSet.lookupForAdd(chunk);
     JS_ASSERT(!p);
-    if (systemGCChunks) {
+    if (isSystemCompartment) {
         if (!rt->gcSystemChunkSet.add(p, chunk)) {
             ReleaseGCChunk(rt, chunk);
             return NULL;
         }
     } else {
-        if (!rt->gcChunkSet.add(p, chunk)) {
+        if (!rt->gcUserChunkSet.add(p, chunk)) {
             ReleaseGCChunk(rt, chunk);
             return NULL;
         }
@@ -529,7 +510,7 @@ ExpireGCChunks(JSRuntime *rt, JSGCInvocationKind gckind)
     AutoLockGC lock(rt);
 
     rt->gcChunksWaitingToExpire = 0;
-    for (GCChunkSet::Enum e(rt->gcChunkSet); !e.empty(); e.popFront()) {
+    for (GCChunkSet::Enum e(rt->gcUserChunkSet); !e.empty(); e.popFront()) {
         Chunk *chunk = e.front();
         JS_ASSERT(chunk->info.runtime == rt);
         if (chunk->unused()) {
@@ -594,7 +575,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * Make room for at least 16 chunks so the table would not grow before
      * the browser starts up.
      */
-    if (!rt->gcChunkSet.init(16))
+    if (!rt->gcUserChunkSet.init(16))
         return false;
 
     if (!rt->gcSystemChunkSet.init(16))
@@ -673,7 +654,7 @@ template <typename T>
 inline ConservativeGCTest
 MarkArenaPtrConservatively(JSTracer *trc, ArenaHeader *aheader, uintptr_t addr)
 {
-    JS_ASSERT(aheader->compartment);
+    JS_ASSERT(aheader->allocated());
     JS_ASSERT(sizeof(T) == aheader->getThingSize());
 
     uintptr_t offset = addr & ArenaMask;
@@ -739,7 +720,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 
     Chunk *chunk = Chunk::fromAddress(addr);
 
-    if (!trc->context->runtime->gcChunkSet.has(chunk) && 
+    if (!trc->context->runtime->gcUserChunkSet.has(chunk) &&
         !trc->context->runtime->gcSystemChunkSet.has(chunk))
         return CGCT_NOTCHUNK;
 
@@ -753,7 +734,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 
     ArenaHeader *aheader = &chunk->arenas[Chunk::arenaIndex(addr)].aheader;
 
-    if (!aheader->compartment)
+    if (!aheader->allocated())
         return CGCT_FREEARENA;
 
     ConservativeGCTest test;
@@ -947,11 +928,11 @@ js_FinishGC(JSRuntime *rt)
     rt->compartments.clear();
     rt->atomsCompartment = NULL;
 
-    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
+    for (GCChunkSet::Range r(rt->gcUserChunkSet.all()); !r.empty(); r.popFront())
         ReleaseGCChunk(rt, r.front());
     for (GCChunkSet::Range r(rt->gcSystemChunkSet.all()); !r.empty(); r.popFront())
         ReleaseGCChunk(rt, r.front());
-    rt->gcChunkSet.clear();
+    rt->gcUserChunkSet.clear();
     rt->gcSystemChunkSet.clear();
 
 #ifdef JS_THREADSAFE
@@ -1668,7 +1649,7 @@ js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
         return;
     if (fp->hasArgsObj())
         MarkObject(trc, fp->argsObj(), "arguments");
-    js_TraceScript(trc, fp->script());
+    js_TraceScript(trc, fp->script(), NULL);
     fp->script()->compartment->active = true;
     MarkValue(trc, fp->returnValue(), "rval");
 }
@@ -1704,7 +1685,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case SCRIPT:
         if (JSScript *script = static_cast<AutoScriptRooter *>(this)->script)
-            js_TraceScript(trc, script);
+            js_TraceScript(trc, script, NULL);
         return;
 
       case ENUMERATOR:
@@ -1818,6 +1799,17 @@ MarkContext(JSTracer *trc, JSContext *acx)
     MarkValue(trc, acx->iterValue, "iterValue");
 }
 
+#define PER_COMPARTMENT_OP(rt, op)                                      \
+    if ((rt)->gcCurrentCompartment) {                                   \
+        JSCompartment *c = (rt)->gcCurrentCompartment;                  \
+        op;                                                             \
+    } else {                                                            \
+        for (JSCompartment **i = rt->compartments.begin(); i != rt->compartments.end(); ++i) { \
+            JSCompartment *c = *i;                                      \
+            op;                                                         \
+        }                                                               \
+    }
+
 JS_REQUIRES_STACK void
 MarkRuntime(JSTracer *trc)
 {
@@ -1840,9 +1832,7 @@ MarkRuntime(JSTracer *trc)
         MarkContext(trc, acx);
 
 #ifdef JS_TRACER
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        if ((*c)->hasTraceMonitor())
-            (*c)->traceMonitor()->mark(trc);
+    PER_COMPARTMENT_OP(rt, if (c->hasTraceMonitor()) c->traceMonitor()->mark(trc));
 #endif
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
@@ -2199,6 +2189,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
             (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT))
         {
             compartment->freeLists.checkEmpty();
+            Probes::GCEndSweepPhase(compartment);
             if (callback)
                 JS_ALWAYS_TRUE(callback(cx, compartment, JSCOMPARTMENT_DESTROY));
             if (compartment->principals)
@@ -2247,12 +2238,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         rt->protoHazardShape = 0;
     }
 
-    if (rt->gcCurrentCompartment) {
-        rt->gcCurrentCompartment->purge(cx);
-    } else {
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-            (*c)->purge(cx);
-    }
+    PER_COMPARTMENT_OP(rt, c->purge(cx));
 
     js_PurgeThreads(cx);
     {
@@ -2272,7 +2258,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     JS_ASSERT(gcmarker.getMarkColor() == BLACK);
     rt->gcMarkingTracer = &gcmarker;
 
-    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
+    for (GCChunkSet::Range r(rt->gcUserChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
 
     for (GCChunkSet::Range r(rt->gcSystemChunkSet.all()); !r.empty(); r.popFront())
@@ -2281,8 +2267,6 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     if (comp) {
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
             (*c)->markCrossCompartmentWrappers(&gcmarker);
-    } else {
-        js_MarkScriptFilenames(rt);
     }
 
     MarkRuntime(&gcmarker);
@@ -2293,7 +2277,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * Mark weak roots.
      */
     while (true) {
-        if (!js_TraceWatchPoints(&gcmarker) && !WeakMapBase::markAllIteratively(&gcmarker))
+        if (!WatchpointMap::markAllIteratively(&gcmarker) && !WeakMapBase::markAllIteratively(&gcmarker))
             break;
         gcmarker.drainMarkStack();
     }
@@ -2332,11 +2316,11 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
     js_SweepAtomState(cx);
 
-    /* Finalize watch points associated with unreachable objects. */
-    js_SweepWatchPoints(cx);
+    /* Collect watch points associated with unreachable objects. */
+    WatchpointMap::sweepAll(rt);
 
     /*
-     * We finalize objects before other GC things to ensure that object's finalizer
+     * We finalize objects before other GC things to ensure that object's finalizer 
      * can access them even if they will be freed. Sweep the runtime's property trees
      * after finalizing objects, in case any had watchpoints referencing tree nodes.
      * Do this before sweeping compartments, so that we sweep all shapes in
@@ -2351,9 +2335,17 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         comp->finalizeShapeArenaLists(cx);
         GCTIMESTAMP(sweepShapeEnd);
     } else {
+        /*
+         * Some sweeping is not compartment-specific. Start a NULL-compartment
+         * phase to demarcate all of that. (The compartment sweeps will nest
+         * within.)
+         */
+        Probes::GCStartSweepPhase(NULL);
         SweepCrossCompartmentWrappers(cx);
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
+            Probes::GCStartSweepPhase(*c);
             (*c)->finalizeObjectArenaLists(cx);
+        }
 
         GCTIMESTAMP(sweepObjectEnd);
 
@@ -2362,8 +2354,10 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
         GCTIMESTAMP(sweepStringEnd);
 
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
             (*c)->finalizeShapeArenaLists(cx);
+            Probes::GCEndSweepPhase(*c);
+        }
 
         GCTIMESTAMP(sweepShapeEnd);
     }
@@ -2372,16 +2366,19 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      PropertyTree::dumpShapes(cx);
 #endif
 
+    /*
+     * Sweep script filenames after sweeping functions in the generic loop
+     * above. In this way when a scripted function's finalizer destroys the
+     * script and calls rt->destroyScriptHook, the hook can still access the
+     * script's filename. See bug 323267.
+     */
+    PER_COMPARTMENT_OP(rt, js_SweepScriptFilenames(c));
+
     if (!comp) {
         SweepCompartments(cx, gckind);
 
-        /*
-         * Sweep script filenames after sweeping functions in the generic loop
-         * above. In this way when a scripted function's finalizer destroys the
-         * script and calls rt->destroyScriptHook, the hook can still access the
-         * script's filename. See bug 323267.
-         */
-        js_SweepScriptFilenames(rt);
+        /* non-compartmental sweep pieces */
+        Probes::GCEndSweepPhase(NULL);
     }
 
 #ifndef JS_THREADSAFE
@@ -2402,6 +2399,9 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
 #endif
+
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        js::CheckCompartmentScripts(*c);
 }
 
 #ifdef JS_THREADSAFE
@@ -2662,6 +2662,12 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
         (*c)->setGCLastBytes((*c)->gcBytes, gckind);
 }
 
+struct GCCrashData
+{
+    int isRegen;
+    int isCompartment;
+};
+
 void
 js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 {
@@ -2683,7 +2689,22 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
     RecordNativeStackTopForGC(cx);
 
+    GCCrashData crashData;
+    crashData.isRegen = rt->shapeGen & SHAPE_OVERFLOW_BIT;
+    crashData.isCompartment = !!comp;
+    js_SaveCrashData(crash::JS_CRASH_TAG_GC, &crashData, sizeof(crashData));
+
     GCTIMER_BEGIN(rt, comp);
+
+    struct AutoGCProbe {
+        JSCompartment *comp;
+        AutoGCProbe(JSCompartment *comp) : comp(comp) {
+            Probes::GCStart(comp);
+        }
+        ~AutoGCProbe() {
+            Probes::GCEnd(comp); /* background thread may still be sweeping */
+        }
+    } autoGCProbe(comp);
 
     do {
         /*
@@ -2721,6 +2742,8 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
     rt->gcChunkAllocationSinceLastGC = false;
     GCTIMER_END(gckind == GC_LAST_CONTEXT);
+
+    js_SnapshotGCStack();
 }
 
 namespace js {
@@ -2777,7 +2800,7 @@ TraceRuntime(JSTracer *trc)
 
 void
 IterateCompartmentsArenasCells(JSContext *cx, void *data,
-                               IterateCompartmentCallback compartmentCallback, 
+                               IterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback)
 {
@@ -2836,7 +2859,9 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = cx->new_<JSCompartment>(rt);
     if (compartment && compartment->init()) {
-        compartment->systemGCChunks = principals && !strcmp(principals->codebase, "[System Principal]");
+        // Any compartment with the trusted principals -- and there can be
+        // multiple -- is a system compartment.
+        compartment->isSystemCompartment = principals && rt->trustedPrincipals() == principals;
         if (principals) {
             compartment->principals = principals;
             JSPRINCIPALS_HOLD(cx, principals);

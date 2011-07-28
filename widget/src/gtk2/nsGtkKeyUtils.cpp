@@ -178,14 +178,11 @@ struct nsKeyConverter nsKeycodes[] = {
     { NS_VK_EQUALS, GDK_plus }
 };
 
-#ifdef SOLARIS
 // map Sun Keyboard special keysyms on to NS_VK keys
 struct nsKeyConverter nsSunKeycodes[] = {
-    {NS_VK_F1, GDK_Help }, //Mapping Help key to F1
     {NS_VK_F11, 0x1005ff10 }, //Sun F11 key generates SunF36(0x1005ff10) keysym
     {NS_VK_F12, 0x1005ff11 }  //Sun F12 key generates SunF37(0x1005ff11) keysym
 };
-#endif
 
 int
 GdkKeyCodeToDOMKeyCode(int aKeysym)
@@ -211,13 +208,11 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
     if (aKeysym >= GDK_KP_0 && aKeysym <= GDK_KP_9)
         return aKeysym - GDK_KP_0 + NS_VK_NUMPAD0;
 
-#ifdef SOLARIS
     // map Sun Keyboard special keysyms
     for (i = 0; i < NS_ARRAY_LENGTH(nsSunKeycodes); i++) {
         if (nsSunKeycodes[i].keysym == aKeysym)
             return(nsSunKeycodes[i].vkCode);
     }
-#endif /* SOLARIS */
 
     // misc other things
     for (i = 0; i < NS_ARRAY_LENGTH(nsKeycodes); i++) {

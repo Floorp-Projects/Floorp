@@ -72,7 +72,6 @@ _TEST_FILES = \
 		test_bug3348.html \
 		test_bug6296.html \
 		test_bug24958.html \
-		test_bug41464.html \
 		bug100533_load.html \
 		bug100533_iframe.html \
 		test_bug100533.html \
@@ -91,6 +90,7 @@ _TEST_FILES = \
 		bug277890_iframe.html \
 		bug277890_load.html \
 		test_bug277890.html \
+		test_bug274626.html \
 		test_bug287465.html \
 		test_bug209275.xhtml \
 		file_bug209275_1.html \
@@ -178,7 +178,6 @@ _TEST_FILES = \
 		test_bug529859.html \
 		test_bug535043.html \
 		test_bug547850.html \
-		test_bug457800.html \
 		test_bug536891.html \
 		test_bug536895.html \
 		test_bug458037.xhtml \
@@ -241,7 +240,6 @@ _TEST_FILES = \
 		test_bug297761.html \
 		file_bug297761.html \
 		test_bug607145.html \
-		test_bug601061.html \
 		test_bug596511.html \
 		reflect.js \
 		test_bug611189.html \
@@ -262,7 +260,6 @@ _TEST_FILES = \
 		test_bug622558.html \
 		test_bug622597.html \
 		test_bug636336.html \
-		test_bug630889.html \
 		test_bug610212.html \
 		test_bug633058.html \
 		test_bug641219.html \
@@ -270,11 +267,17 @@ _TEST_FILES = \
 		test_bug583514.html \
 		test_bug514437.html \
 		test_bug560112.html \
+		test_bug586786.html \
+		test_bug646157.html \
 		test_bug649134.html \
 		test_bug658746.html \
 		test_bug659596.html \
 		test_bug659743.xml \
 		test_bug660663.html \
+		test_bug664299.html \
+		test_bug666200.html \
+		test_bug666666.html \
+		test_bug674558.html \
 		test_restore_from_parser_fragment.html \
 		$(NULL)
 

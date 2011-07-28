@@ -1545,7 +1545,7 @@ random-if(!winWidget) == 574907-2.html 574907-2-ref.html
 random-if(!winWidget) fails-if(winWidget&&!d2d) random-if(winWidget&&d2d) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(/Mac\x20OS\x20X\x2010\.5/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP and bug 627560 for OSX 10.5
+== 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
 fails-if(Android) == 579808-1.html 579808-1-ref.html
@@ -1564,7 +1564,7 @@ asserts(0-1) == 582146-1.html about:blank
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
-fails-if(Android) == 586683-1.html 586683-1-ref.html
+fails-if(Android) fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1622,7 +1622,7 @@ fails-if(Android) == 625409-1.html 625409-1-ref.html
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
 fails-if(Android) == 632423-1.html 632423-1-ref.html
-skip-if(Android) fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
+skip-if(Android) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 == 633344-1.html 633344-1-ref.html
 fails-if(Android) == 634232-1.html 634232-1-ref.html
@@ -1639,6 +1639,8 @@ HTTP(..) == 635639-2.html 635639-2-ref.html
 == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
+== 652301-1a.html 652301-1-ref.html
+== 652301-1b.html 652301-1-ref.html
 == 645768-1.html 645768-1-ref.html
 fails-if(layersGPUAccelerated&&cocoaWidget) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 653930-1.html 653930-1-ref.html
@@ -1651,3 +1653,4 @@ fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html #
 == 660682-1.html 660682-1-ref.html
 != 669015-1.xul 669015-1-notref.xul
 == 668319-1.xul about:blank
+== 670442-1.html 670442-1-ref.html

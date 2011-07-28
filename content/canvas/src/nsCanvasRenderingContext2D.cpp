@@ -103,6 +103,7 @@
 
 #include "nsFrameManager.h"
 #include "nsFrameLoader.h"
+#include "nsBidi.h"
 #include "nsBidiPresUtils.h"
 #include "Layers.h"
 #include "CanvasUtils.h"
@@ -349,10 +350,11 @@ public:
 
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
     NS_IMETHOD Reset();
-    already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                                 CanvasLayer *aOldLayer,
-                                                 LayerManager *aManager);
-    void MarkContextClean();
+    virtual already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                                         CanvasLayer *aOldLayer,
+                                                         LayerManager *aManager);
+    virtual PRBool ShouldForceInactiveLayer(LayerManager *aManager);
+    virtual void MarkContextClean();
     NS_IMETHOD SetIsIPC(PRBool isIPC);
     // this rect is in canvas device space
     NS_IMETHOD Redraw(const gfxRect &r);
@@ -1067,13 +1069,13 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
             mZero = PR_TRUE;
             height = 1;
             width = 1;
+        } else {
+            mZero = PR_FALSE;
         }
 
         gfxASurface::gfxImageFormat format = GetImageFormat();
 
-        if (PR_GetEnv("MOZ_CANVAS_IMAGE_SURFACE")) {
-            surface = new gfxImageSurface(gfxIntSize(width, height), format);
-        } else {
+        if (!PR_GetEnv("MOZ_CANVAS_IMAGE_SURFACE")) {
             nsCOMPtr<nsIContent> content =
                 do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
             nsIDocument* ownerDoc = nsnull;
@@ -1093,8 +1095,15 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
             }
         }
 
-        if (surface && surface->CairoStatus() != 0)
-            surface = NULL;
+        if (!surface || surface->CairoStatus()) {
+            // If we couldn't create a surface of the type we want, fall back
+            // to an image surface. This lets us handle surface sizes that
+            // the underlying cairo backend might not handle.
+            surface = new gfxImageSurface(gfxIntSize(width, height), format);
+            if (!surface || surface->CairoStatus()) {
+                surface = nsnull;
+            }
+        }
     }
     if (surface) {
         if (gCanvasMemoryReporter == nsnull) {
@@ -2730,10 +2739,6 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     nsIDocument* document = presShell->GetDocument();
 
-    nsBidiPresUtils* bidiUtils = presShell->GetPresContext()->GetBidiUtils();
-    if (!bidiUtils)
-        return NS_ERROR_FAILURE;
-
     // replace all the whitespace characters with U+0020 SPACE
     nsAutoString textToDraw(aRawText);
     TextReplaceWhitespaceCharacters(textToDraw);
@@ -2779,15 +2784,17 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     // calls bidi algo twice since it needs the full text width and the
     // bounding boxes before rendering anything
-    rv = bidiUtils->ProcessText(textToDraw.get(),
-                                textToDraw.Length(),
-                                isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                presShell->GetPresContext(),
-                                processor,
-                                nsBidiPresUtils::MODE_MEASURE,
-                                nsnull,
-                                0,
-                                &totalWidthCoord);
+    nsBidi bidiEngine;
+    rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                      textToDraw.Length(),
+                                      isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                      presShell->GetPresContext(),
+                                      processor,
+                                      nsBidiPresUtils::MODE_MEASURE,
+                                      nsnull,
+                                      0,
+                                      &totalWidthCoord,
+                                      &bidiEngine);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2886,15 +2893,16 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
             ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
             processor.mThebes = ctx;
 
-            rv = bidiUtils->ProcessText(textToDraw.get(),
-                                        textToDraw.Length(),
-                                        isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                        presShell->GetPresContext(),
-                                        processor,
-                                        nsBidiPresUtils::MODE_DRAW,
-                                        nsnull,
-                                        0,
-                                        nsnull);
+            rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                              textToDraw.Length(),
+                                              isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                              presShell->GetPresContext(),
+                                              processor,
+                                              nsBidiPresUtils::MODE_DRAW,
+                                              nsnull,
+                                              0,
+                                              nsnull,
+                                              &bidiEngine);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -2923,15 +2931,16 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         ApplyStyle(STYLE_FILL);
     }
 
-    rv = bidiUtils->ProcessText(textToDraw.get(),
-                                textToDraw.Length(),
-                                isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                presShell->GetPresContext(),
-                                processor,
-                                nsBidiPresUtils::MODE_DRAW,
-                                nsnull,
-                                0,
-                                nsnull);
+    rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                      textToDraw.Length(),
+                                      isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                      presShell->GetPresContext(),
+                                      processor,
+                                      nsBidiPresUtils::MODE_DRAW,
+                                      nsnull,
+                                      0,
+                                      nsnull,
+                                      &bidiEngine);
 
     // this needs to be restored before function can return
     if (doUseIntermediateSurface) {
@@ -3288,47 +3297,24 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         return NS_ERROR_INVALID_ARG;
     }
 
-    if (sw == 0.0 || sh == 0.0) {
-        // zero-sized source -- failure !?
-        return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
-
     if (dw == 0.0 || dh == 0.0) {
         // not really failure, but nothing to do --
         // and noone likes a divide-by-zero
         return NS_OK;
     }
 
-    // The following check might do the validation of the float arguments:
-    //   (!FloatValidate(sx, sy, sw, sh) || !FloatValidate(dx, dy, dw, dh))
-    // but we would also need to validate some sums for overflow (e.g. sx + sw).
-    if (!FloatValidate(sx + sw, sy + sh, dx + dw, dy + dh)) {
+    if (!FloatValidate(sx, sy, sw, sh) || !FloatValidate(dx, dy, dw, dh)) {
         return NS_OK;
     }
 
-    // Handle negative sw, sh, dw and dh by flipping the rectangle over in the
-    // relevant direction.
-    if (sw < 0.0) {
-      sx += sw;
-      sw = -sw;
-    }
-    if (sh < 0.0) {
-      sy += sh;
-      sh = -sh;
-    }
-    if (dw < 0.0) {
-      dx += dw;
-      dw = -dw;
-    }
-    if (dh < 0.0) {
-      dy += dh;
-      dh = -dh;
-    }
-
-    // Checking source image boundaries.
-    if (sx < 0 || sx + sw > (double) imgSize.width || 
-        sy < 0 || sy + sh > (double) imgSize.height) {
-      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    // check args
+    if (sx < 0.0 || sy < 0.0 ||
+        sw < 0.0 || sw > (double) imgSize.width ||
+        sh < 0.0 || sh > (double) imgSize.height ||
+        dw < 0.0 || dh < 0.0)
+    {
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
     matrix.Translate(gfxPoint(sx, sy));
@@ -4015,6 +4001,12 @@ nsCanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     mResetLayer = PR_FALSE;
 
     return canvasLayer.forget();
+}
+
+PRBool
+nsCanvasRenderingContext2D::ShouldForceInactiveLayer(LayerManager *aManager)
+{
+    return !aManager->CanUseCanvasLayerForSize(gfxIntSize(mWidth, mHeight));
 }
 
 void

@@ -180,7 +180,7 @@ var Harness = {
 
   onOpenWindow: function(window) {
     var domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIDOMWindowInternal);
+                          .getInterface(Components.interfaces.nsIDOMWindow);
     var self = this;
     domwindow.addEventListener("load", function() {
       self.windowLoad(domwindow);

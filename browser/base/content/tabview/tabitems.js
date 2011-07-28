@@ -265,8 +265,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let tabData = null;
     let self = this;
     let imageDataCb = function(imageData) {
+      // we could have been unlinked while waiting for the thumbnail to load
+      if (!self.tab)
+        return;
+
       Utils.assertThrow(tabData, "tabData");
-      
       tabData.imageData = imageData;
 
       let currentUrl = self.tab.linkedBrowser.currentURI.spec;
@@ -479,6 +482,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // closing tab doesn't belong to a group and no empty group, create a new 
     // one for the new tab.
     if (!groupClose && gBrowser.tabs.length == 1) {
+      let group;
       if (this.tab._tabViewTabItem.parent) {
         group = this.tab._tabViewTabItem.parent;
       } else {

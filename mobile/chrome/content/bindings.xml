@@ -1309,7 +1309,12 @@
           let lastTitle = null;
           let msPerDay = 86400000;
           let msPerWeek = msPerDay * 7;
-          let today = new Date(Date.now() - (Date.now() % msPerDay));
+
+          let today = new Date();
+          today.setHours(0);
+          today.setMinutes(0);
+          today.setSeconds(0);
+
           for (let i = 0; i < childCount; i++) {
             let node = rootNode.getChild(i);
             let time = new Date(node.time / 1000); // node.time is microseconds

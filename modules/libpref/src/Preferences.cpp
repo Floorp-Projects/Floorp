@@ -68,8 +68,6 @@
 #include "prefapi_private_data.h"
 #include "PrefTuple.h"
 
-#include "nsITimelineService.h"
-
 #include "mozilla/Omnijar.h"
 #include "nsZipArchive.h"
 
@@ -811,14 +809,6 @@ static nsresult openPrefFile(nsIFile* aFile)
 {
   nsCOMPtr<nsIInputStream> inStr;
 
-#if MOZ_TIMELINE
-  {
-    nsCAutoString str;
-    aFile->GetNativePath(str);
-    NS_TIMELINE_MARK_FUNCTION1("load pref file", str.get());
-  }
-#endif
-
   nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
   if (NS_FAILED(rv)) 
     return rv;        
@@ -1019,11 +1009,12 @@ static nsresult pref_InitInitialObjects()
   // In non omni.jar case, we load:
   // - $gre/greprefs.js
   //
-  // When $app == $gre, we additionally load, in all cases:
+  // In both cases, we also load:
   // - $gre/defaults/pref/*.js
-  // This is kept for bug 591866 (channel-prefs.js should not be in omni.jar).
-  // We load all files instead of channel-prefs.js only to have the same
-  // behaviour as $app != $gre.
+  // This is kept for bug 591866 (channel-prefs.js should not be in omni.jar)
+  // on $app == $gre case ; we load all files instead of channel-prefs.js only
+  // to have the same behaviour as $app != $gre, where this is required as
+  // a supported location for GRE preferences.
   //
   // When $app != $gre, we additionally load, in omni.jar case:
   // - jar:$app/omni.jar!/defaults/preferences/*.js
@@ -1072,37 +1063,35 @@ static nsresult pref_InitInitialObjects()
       NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
   }
 
-  if (!mozilla::Omnijar::HasOmnijar(mozilla::Omnijar::APP)) {
-    // Load $gre/defaults/pref/*.js
-    nsCOMPtr<nsIFile> defaultPrefDir;
+  // Load $gre/defaults/pref/*.js
+  nsCOMPtr<nsIFile> defaultPrefDir;
 
-    rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
-    static const char* specialFiles[] = {
+  /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
+  static const char* specialFiles[] = {
 #if defined(XP_MACOSX)
-      "macprefs.js"
+    "macprefs.js"
 #elif defined(XP_WIN)
-      "winpref.js"
+    "winpref.js"
 #elif defined(XP_UNIX)
-      "unix.js"
+    "unix.js"
 #if defined(VMS)
-      , "openvms.js"
+    , "openvms.js"
 #elif defined(_AIX)
-      , "aix.js"
+    , "aix.js"
 #endif
 #elif defined(XP_OS2)
-      "os2pref.js"
+    "os2pref.js"
 #elif defined(XP_BEOS)
-      "beos.js"
+    "beos.js"
 #endif
-    };
+  };
 
-    rv = pref_LoadPrefsInDir(defaultPrefDir, specialFiles, NS_ARRAY_LENGTH(specialFiles));
-    if (NS_FAILED(rv))
-      NS_WARNING("Error parsing application default preferences.");
-  }
+  rv = pref_LoadPrefsInDir(defaultPrefDir, specialFiles, NS_ARRAY_LENGTH(specialFiles));
+  if (NS_FAILED(rv))
+    NS_WARNING("Error parsing application default preferences.");
 
   // Load jar:$app/omni.jar!/defaults/preferences/*.js
   nsZipArchive *appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);

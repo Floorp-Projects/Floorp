@@ -70,6 +70,10 @@ nsresult SetRestartArgs(int argc, char** argv);
 nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
                         const nsACString& aBuildID);
 
+// Registers an additional memory region to be included in the minidump
+nsresult RegisterAppMemory(void* ptr, size_t length);
+nsresult UnregisterAppMemory(void* ptr);
+
 // Functions for working with minidumps and .extras
 typedef nsDataHashtable<nsCStringHashKey, nsCString> AnnotationTable;
 

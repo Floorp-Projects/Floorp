@@ -409,7 +409,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
                                            getter_AddRefs(checkuri));
         if (NS_SUCCEEDED(rv))
         {
-            nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+            nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(globalObject);
             nsCOMPtr<nsIXPIInstallInfo> installInfo =
                 new nsXPIInstallInfo(win, checkuri, trigger, 0);
             if (installInfo)
@@ -531,7 +531,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
             {
                 // trigger will free item when complete
                 trigger->Add(item.forget());
-                nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+                nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(globalObject);
                 nsCOMPtr<nsIXPIInstallInfo> installInfo =
                     new nsXPIInstallInfo(win, checkuri, trigger, chromeType);
                 if (installInfo)
@@ -637,7 +637,7 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
         {
             // trigger will free item when complete
             trigger->Add(item.forget());
-            nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+            nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(globalObject);
             nsCOMPtr<nsIXPIInstallInfo> installInfo =
                                 new nsXPIInstallInfo(win, checkuri, trigger, 0);
             if (installInfo)

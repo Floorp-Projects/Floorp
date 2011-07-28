@@ -189,7 +189,7 @@ PRBool CapturePickerAcceptCallback(const nsAString& aAccept, void* aClosure)
                        NS_LITERAL_STRING("image/"))) {
     rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_STILL,
                                              &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, PR_TRUE);
     if (captureEnabled) {
       *closure->mode = nsICapturePicker::MODE_STILL;
       return PR_FALSE;
@@ -198,7 +198,7 @@ PRBool CapturePickerAcceptCallback(const nsAString& aAccept, void* aClosure)
                               NS_LITERAL_STRING("audio/"))) {
     rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_AUDIO_CLIP,
                                              &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, PR_TRUE);
     if (captureEnabled) {
       *closure->mode = nsICapturePicker::MODE_AUDIO_CLIP;
       return PR_FALSE;
@@ -207,17 +207,17 @@ PRBool CapturePickerAcceptCallback(const nsAString& aAccept, void* aClosure)
                               NS_LITERAL_STRING("video/"))) {
     rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_CLIP,
                                              &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, PR_TRUE);
     if (captureEnabled) {
       *closure->mode = nsICapturePicker::MODE_VIDEO_CLIP;
       return PR_FALSE;
     }
     rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP,
                                              &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, PR_TRUE);
     if (captureEnabled) {
       *closure->mode = nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP;
-      return PR_FALSE;;
+      return PR_FALSE;
     }
   }
   return PR_TRUE;
@@ -422,7 +422,7 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   if (!ShouldProcessMouseClick(aMouseEvent))
     return NS_OK;
 
-  // Get parent nsIDOMWindowInternal object.
+  // Get parent nsPIDOMWindow object.
   nsIContent* content = mFrame->GetContent();
   if (!content)
     return NS_ERROR_FAILURE;

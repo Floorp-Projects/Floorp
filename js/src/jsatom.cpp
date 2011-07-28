@@ -344,7 +344,7 @@ js_FinishAtomState(JSRuntime *rt)
     }
 
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront())
-        r.front().toAtom()->finalize(rt);
+        r.front().asPtr()->finalize(rt);
 
 #ifdef JS_THREADSAFE
     js_FinishLock(&state->lock);
@@ -388,16 +388,16 @@ js_TraceAtomState(JSTracer *trc)
     if (rt->gcKeepAtoms) {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
             JS_SET_TRACING_INDEX(trc, "locked_atom", number++);
-            MarkString(trc, r.front().toAtom());
+            MarkString(trc, r.front().asPtr());
         }
     } else {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
             AtomStateEntry entry = r.front();
-            if (!entry.isInterned())
+            if (!entry.isTagged())
                 continue;
 
             JS_SET_TRACING_INDEX(trc, "interned_atom", number++);
-            MarkString(trc, entry.toAtom());
+            MarkString(trc, entry.asPtr());
         }
     }
 }
@@ -410,13 +410,13 @@ js_SweepAtomState(JSContext *cx)
     for (AtomSet::Enum e(state->atoms); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
 
-        if (entry.isInterned()) {
+        if (entry.isTagged()) {
             /* Pinned or interned key cannot be finalized. */
-            JS_ASSERT(!IsAboutToBeFinalized(cx, entry.toAtom()));
+            JS_ASSERT(!IsAboutToBeFinalized(cx, entry.asPtr()));
             continue;
         }
         
-        if (IsAboutToBeFinalized(cx, entry.toAtom()))
+        if (IsAboutToBeFinalized(cx, entry.asPtr()))
             e.removeFront();
     }
 }
@@ -432,24 +432,7 @@ AtomIsInterned(JSContext *cx, JSAtom *atom)
     if (!p)
         return false;
 
-    return p->isInterned();
-}
-
-/*
- * This call takes ownership of 'chars' if ATOM_NOCOPY is set.
- * Non-branching code sequence to put the intern flag on |entryRef| if
- * |intern| is true.
- *
- * Conceptually, we have compressed a HashMap<JSAtom *, uint> into a
- * HashMap<size_t>. Here, we promise that we are only changing the "value" of
- * the HashMap entry, so the const_cast is safe.
- */
-static void
-MakeInterned(const AutoLockAtomsCompartment &, const AtomStateEntry &entryRef, InternBehavior ib)
-{
-    AtomStateEntry *entry = const_cast<AtomStateEntry *>(&entryRef);
-    AtomStateEntry::makeInterned(entry, ib);
-    JS_ASSERT(InternBehavior(entryRef.isInterned()) >= ib);
+    return p->isTagged();
 }
 
 enum OwnCharsBehavior
@@ -479,8 +462,8 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
     AtomSet::AddPtr p = atoms.lookupForAdd(AtomHasher::Lookup(chars, length));
 
     if (p) {
-        JSAtom *atom = p->toAtom();
-        MakeInterned(lock, *p, ib);
+        JSAtom *atom = p->asPtr();
+        p->setTagged(bool(ib));
         return atom;
     }
 
@@ -509,7 +492,7 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
      * collision!
      */
     AtomHasher::Lookup lookup(chars, length);
-    if (!atoms.relookupOrAdd(p, lookup, AtomStateEntry(key, ib))) {
+    if (!atoms.relookupOrAdd(p, lookup, AtomStateEntry((JSAtom *) key, bool(ib)))) {
         JS_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report */
         return NULL;
     }
@@ -539,9 +522,9 @@ js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
         AtomSet &atoms = cx->runtime->atomState.atoms;
         AtomSet::Ptr p = atoms.lookup(AtomHasher::Lookup(&atom));
         JS_ASSERT(p); /* Non-static atom must exist in atom state set. */
-        JS_ASSERT(p->toAtom() == &atom);
+        JS_ASSERT(p->asPtr() == &atom);
         JS_ASSERT(ib == InternAtom);
-        MakeInterned(lock, *p, ib);
+        p->setTagged(bool(ib));
         return &atom;
     }
 
@@ -617,7 +600,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
         return atom;
     AutoLockAtomsCompartment lock(cx);
     AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(AtomHasher::Lookup(chars, length));
-    return p ? p->toAtom() : NULL;
+    return p ? p->asPtr() : NULL;
 }
 
 #ifdef DEBUG
@@ -631,9 +614,9 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
         AtomStateEntry entry = r.front();
         fprintf(fp, "%3u ", number++);
-        JSAtom *key = entry.toAtom();
+        JSAtom *key = entry.asPtr();
         FileEscapedString(fp, key, '"');
-        if (entry.isInterned())
+        if (entry.isTagged())
             fputs(" interned", fp);
         putc('\n', fp);
     }
@@ -678,6 +661,77 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, AtomIndexMap *indices)
             map->vector[it->value] = atom;
         }
     }
+}
+
+
+/* JSBOXEDWORD_INT_MAX as a string */
+#define JSBOXEDWORD_INT_MAX_STRING "1073741823"
+
+/*
+ * Convert string indexes that convert to int jsvals as ints to save memory.
+ * Care must be taken to use this macro every time a property name is used, or
+ * else double-sets, incorrect property cache misses, or other mistakes could
+ * occur.
+ */
+jsid
+js_CheckForStringIndex(jsid id)
+{
+    if (!JSID_IS_ATOM(id))
+        return id;
+
+    JSAtom *atom = JSID_TO_ATOM(id);
+    const jschar *s = atom->chars();
+    jschar ch = *s;
+
+    JSBool negative = (ch == '-');
+    if (negative)
+        ch = *++s;
+
+    if (!JS7_ISDEC(ch))
+        return id;
+
+    size_t n = atom->length() - negative;
+    if (n > sizeof(JSBOXEDWORD_INT_MAX_STRING) - 1)
+        return id;
+
+    const jschar *cp = s;
+    const jschar *end = s + n;
+
+    jsuint index = JS7_UNDEC(*cp++);
+    jsuint oldIndex = 0;
+    jsuint c = 0;
+
+    if (index != 0) {
+        while (JS7_ISDEC(*cp)) {
+            oldIndex = index;
+            c = JS7_UNDEC(*cp);
+            index = 10 * index + c;
+            cp++;
+        }
+    }
+
+    /*
+     * Non-integer indexes can't be represented as integers.  Also, distinguish
+     * index "-0" from "0", because JSBOXEDWORD_INT cannot.
+     */
+    if (cp != end || (negative && index == 0))
+        return id;
+
+    if (negative) {
+        if (oldIndex < -(JSID_INT_MIN / 10) ||
+            (oldIndex == -(JSID_INT_MIN / 10) && c <= (-JSID_INT_MIN % 10)))
+        {
+            id = INT_TO_JSID(-jsint(index));
+        }
+    } else {
+        if (oldIndex < JSID_INT_MAX / 10 ||
+            (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10)))
+        {
+            id = INT_TO_JSID(jsint(index));
+        }
+    }
+
+    return id;
 }
 
 #if JS_HAS_XML_SUPPORT

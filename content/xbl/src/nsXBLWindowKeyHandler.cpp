@@ -54,7 +54,6 @@
 #include "nsINativeKeyBindings.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsFocusManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsIURI.h"
@@ -70,6 +69,7 @@
 #include "nsISelectionController.h"
 #include "nsGUIEvent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 

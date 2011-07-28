@@ -1,4 +1,5 @@
 == default-size.html default-size-ref.html
+== size-1.html size-1-ref.html
 
 == image-rendering-test.html image-rendering-ref.html
 == image-shadow.html image-shadow-ref.html
@@ -63,3 +64,5 @@ random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is androi
 == ctm-sanity.html data:text/html,<body>Pass
 fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033
 == ctm-1.html ctm-1-ref.html
+
+fails-if(cocoaWidget) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333

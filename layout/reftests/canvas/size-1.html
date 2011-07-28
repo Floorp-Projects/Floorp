@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<canvas style="display:block" id="c" width="100" height="30000"></canvas>
+<script>
+var ctx = document.getElementById("c").getContext("2d");
+ctx.fillStyle = "lime";
+ctx.fillRect(0, 0, 100, 30000);
+window.scrollTo(0, 100000);
+</script>
+</body>
+</html>

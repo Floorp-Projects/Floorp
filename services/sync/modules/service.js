@@ -21,6 +21,7 @@
  *  Dan Mills <thunder@mozilla.com>
  *  Myk Melez <myk@mozilla.org>
  *  Anant Narayanan <anant@kix.in>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *  Richard Newman <rnewman@mozilla.com>
  *  Marina Samuel <msamuel@mozilla.com>
  *
@@ -57,6 +58,9 @@ const KEYS_WBO = "keys";
 
 const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
 
+const LOG_PREFIX_SUCCESS = "success-";
+const LOG_PREFIX_ERROR   = "error-";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
@@ -66,10 +70,16 @@ Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/main.js");
+
+const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
+                            INFO_COLLECTION_USAGE,
+                            INFO_COLLECTION_COUNTS,
+                            INFO_QUOTA];
 
 /*
  * Service singleton
@@ -402,13 +412,6 @@ WeaveSvc.prototype = {
     if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED)
       Svc.Obs.notify("weave:engine:start-tracking");
 
-    // Applications can specify this preference if they want autoconnect
-    // to happen after a fixed delay.
-    let delay = Svc.Prefs.get("autoconnectDelay");
-    if (delay) {
-      this.delayedAutoConnect(delay);
-    }
-
     // Send an event now that Weave service is ready.  We don't do this
     // synchronously so that observers can import this module before
     // registering an observer.
@@ -479,12 +482,12 @@ WeaveSvc.prototype = {
     root.addAppender(fapp);
   },
 
-  _resetFileLog: function resetFileLog(flushToFile) {
+  _resetFileLog: function _resetFileLog(flushToFile, filenamePrefix) {
     let inStream = this._logAppender.getInputStream();
     this._logAppender.reset();
     if (flushToFile && inStream) {
       try {
-        let filename = Date.now() + ".log";
+        let filename = filenamePrefix + Date.now() + ".txt";
         let file = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
         let outStream = FileUtils.openFileOutputStream(file);
         NetUtil.asyncCopy(inStream, outStream, function () {
@@ -531,7 +534,8 @@ WeaveSvc.prototype = {
             !Services.io.offline) {
           this._ignorableErrorCount += 1;
         } else {
-          this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
+          this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                             LOG_PREFIX_ERROR);
         }
         break;
       case "weave:service:sync:error":
@@ -545,12 +549,14 @@ WeaveSvc.prototype = {
             this.logout();
             break;
           default:
-            this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
+            this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                               LOG_PREFIX_ERROR);
             break;
         }
         break;
       case "weave:service:sync:finish":
-        this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"));
+        this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"),
+                           LOG_PREFIX_SUCCESS);
         this._ignorableErrorCount = 0;
         break;
       case "weave:engine:sync:applied":
@@ -1025,7 +1031,6 @@ WeaveSvc.prototype = {
     this._ignorePrefObserver = true;
     Svc.Prefs.resetBranch("");
     this._ignorePrefObserver = false;
-    SyncScheduler.setDefaults();
 
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
@@ -1034,51 +1039,6 @@ WeaveSvc.prototype = {
     Services.logins.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Services.logins.removeLogin(login);
     });
-  },
-
- /**
-  * Automatically start syncing after the given delay (in seconds).
-  *
-  * Applications can define the `services.sync.autoconnectDelay` preference
-  * to have this called automatically during start-up with the pref value as
-  * the argument. Alternatively, they can call it themselves to control when
-  * Sync should first start to sync.
-  */
-  delayedAutoConnect: function delayedAutoConnect(delay) {
-    if (this._checkSetup() == STATUS_OK) {
-      Utils.namedTimer(this._autoConnect, delay * 1000, this, "_autoTimer");
-    }
-  },
-
-  _autoConnect: function _autoConnect() {
-    let isLocked = Utils.mpLocked();
-    if (isLocked) {
-      // There's no reason to back off if we're locked: we'll just try to login
-      // during sync. Clear our timer, see if we should go ahead and sync, then
-      // just return.
-      this._log.trace("Autoconnect skipped: master password still locked.");
-
-      if (this._autoTimer)
-        this._autoTimer.clear();
-
-      SyncScheduler.checkSyncStatus();
-
-      return;
-    }
-
-    let reason = this._checkSync([kSyncNotLoggedIn, kFirstSyncChoiceNotMade]);
-
-    // Can't autoconnect if we're missing these values.
-    if (!reason) {
-      if (!this.username || !this.password || !this.passphrase)
-        return;
-
-      Utils.nextTick(this.sync, this);
-    }
-
-    // Once _autoConnect is called we no longer need _autoTimer.
-    if (this._autoTimer)
-      this._autoTimer.clear();
   },
 
   persistLogin: function persistLogin() {
@@ -1392,8 +1352,6 @@ WeaveSvc.prototype = {
     else if ((Status.login == MASTER_PASSWORD_LOCKED) &&
              Utils.mpLocked())
       reason = kSyncMasterPasswordLocked;
-    else if (!this._loggedIn)
-      reason = kSyncNotLoggedIn;
     else if (Svc.Prefs.get("firstSync") == "notReady")
       reason = kFirstSyncChoiceNotMade;
 
@@ -1413,6 +1371,7 @@ WeaveSvc.prototype = {
 
   sync: function sync() {
     let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
+    this._log.debug("User-Agent: " + SyncStorageRequest.prototype.userAgent);
     this._log.info("Starting sync at " + dateStr);
     this._catch(function () {
       // Make sure we're logged in.
@@ -2000,19 +1959,53 @@ WeaveSvc.prototype = {
     Clients.sendCommand(command, args);
   },
 
-  _getInfo: function _getInfo(what)
-    this._catch(this._notify(what, "", function() {
-      let url = this.userBaseURL + "info/" + what;
-      let response = new Resource(url).get();
-      if (response.status != 200)
-        return null;
-      return response.obj;
-    }))(),
+  /**
+   * Fetch storage info from the server.
+   * 
+   * @param type
+   *        String specifying what info to fetch from the server. Must be one
+   *        of the INFO_* values. See Sync Storage Server API spec for details.
+   * @param callback
+   *        Callback function with signature (error, data) where `data' is
+   *        the return value from the server already parsed as JSON.
+   * 
+   * @return RESTRequest instance representing the request, allowing callers
+   *         to cancel the request.
+   */
+  getStorageInfo: function getStorageInfo(type, callback) {
+    if (STORAGE_INFO_TYPES.indexOf(type) == -1) {
+      throw "Invalid value for 'type': " + type;
+    }
 
-  getCollectionUsage: function getCollectionUsage()
-    this._getInfo("collection_usage"),
+    let info_type = "info/" + type;
+    this._log.trace("Retrieving '" + info_type + "'...");
+    let url = this.userBaseURL + info_type;
+    return new SyncStorageRequest(url).get(function onComplete(error) {
+      // Note: 'this' is the request.
+      if (error) {
+        this._log.debug("Failed to retrieve '" + info_type + "': " +
+                        Utils.exceptionStr(error));
+        return callback(error);
+      }
+      if (this.response.status != 200) {
+        this._log.debug("Failed to retrieve '" + info_type +
+                        "': server responded with HTTP" +
+                        this.response.status);
+        return callback(this.response);
+      }
 
-  getQuota: function getQuota() this._getInfo("quota")
+      let result;
+      try {
+        result = JSON.parse(this.response.body);
+      } catch (ex) {
+        this._log.debug("Server returned invalid JSON for '" + info_type +
+                        "': " + this.response.body);
+        return callback(ex);
+      }
+      this._log.trace("Successfully retrieved '" + info_type + "'.");
+      return callback(null, result);
+    });
+  }
 
 };
 

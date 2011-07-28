@@ -101,7 +101,20 @@ interface nsICrashReporter : nsISupports
    *                             The only invalid character is '\0'.
    */
   void appendAppNotesToCrashReport(in ACString data);
-  
+
+  /**
+   * Register a given memory range to be included in the crash report.
+   *
+   * @param ptr
+   *        The starting address for the bytes.
+   * @param size
+   *        The number of bytes to include.
+   *
+   * @throw NS_ERROR_NOT_INITIALIZED if crash reporting not initialized
+   * @throw NS_ERROR_NOT_IMPLEMENTED if unavailable on the current OS
+   */
+  void registerAppMemory(in unsigned long long ptr, in unsigned long long size);
+
   /**
    * Write a minidump immediately, with the user-supplied exception
    * information. This is implemented on Windows only, because

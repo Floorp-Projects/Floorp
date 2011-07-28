@@ -393,7 +393,7 @@ def main():
         if (options.deviceIP):
             dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
         else:
-            dm = dm_auto
+            dm = dm_none
     else:
          dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
     automation.setDeviceManager(dm)
@@ -407,12 +407,13 @@ def main():
         print "ERROR: Invalid options specified, use --help for a list of valid options"
         sys.exit(1)
 
-    parts = dm.getInfo('screen')['screen'][0].split()
-    width = int(parts[0].split(':')[1])
-    height = int(parts[1].split(':')[1])
-    if (width < 1050 or height < 1050):
-        print "ERROR: Invalid screen resolution %sx%s, please adjust to 1366x1050 or higher" % (width, height)
-        sys.exit(1)
+    if not options.ignoreWindowSize:
+        parts = dm.getInfo('screen')['screen'][0].split()
+        width = int(parts[0].split(':')[1])
+        height = int(parts[1].split(':')[1])
+        if (width < 1050 or height < 1050):
+            print "ERROR: Invalid screen resolution %sx%s, please adjust to 1366x1050 or higher" % (width, height)
+            sys.exit(1)
 
     automation.setAppName(options.app)
     automation.setRemoteProfile(options.remoteProfile)

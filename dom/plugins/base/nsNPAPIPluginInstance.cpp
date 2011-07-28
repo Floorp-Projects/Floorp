@@ -59,6 +59,7 @@
 #include "nsPluginStreamListenerPeer.h"
 #include "nsSize.h"
 #include "nsNetCID.h"
+#include "nsIContent.h"
 
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
@@ -81,14 +82,13 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mWindowless(PR_FALSE),
     mWindowlessLocal(PR_FALSE),
     mTransparent(PR_FALSE),
-    mCached(PR_FALSE),
     mUsesDOMForCursor(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
     mPlugin(plugin),
     mMIMEType(nsnull),
     mOwner(nsnull),
     mCurrentPluginEvent(nsnull),
-#if defined(MOZ_X11) || defined(XP_WIN)
+#if defined(MOZ_X11) || defined(XP_WIN) || defined(XP_MACOSX)
     mUsePluginLayersPref(PR_TRUE)
 #else
     mUsePluginLayersPref(PR_FALSE)
@@ -127,12 +127,6 @@ nsNPAPIPluginInstance::Destroy()
 {
   Stop();
   mPlugin = nsnull;
-}
-
-TimeStamp
-nsNPAPIPluginInstance::LastStopTime()
-{
-  return mStopTime;
 }
 
 nsresult nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, const char* aMIMEType)
@@ -193,7 +187,6 @@ nsresult nsNPAPIPluginInstance::Stop()
   {
     AsyncCallbackAutoLock lock;
     mRunning = DESTROYING;
-    mStopTime = TimeStamp::Now();
   }
 
   OnPluginDestroy(&mNPP);
@@ -807,20 +800,6 @@ nsNPAPIPluginInstance::DefineJavaProperties()
   if (!ok)
     return NS_ERROR_FAILURE;
 
-  return NS_OK;
-}
-
-nsresult
-nsNPAPIPluginInstance::SetCached(PRBool aCache)
-{
-  mCached = aCache;
-  return NS_OK;
-}
-
-nsresult
-nsNPAPIPluginInstance::ShouldCache(PRBool* shouldCache)
-{
-  *shouldCache = mCached;
   return NS_OK;
 }
 

@@ -490,7 +490,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
                    public nsIScriptObjectPrincipal,
-                   public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
+                   public nsIRadioGroupContainer,
                    public nsIApplicationCacheContainer,
                    public nsStubMutationObserver,
                    public nsIDOMDocumentTouch
@@ -499,6 +499,7 @@ public:
   typedef mozilla::dom::Element Element;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
 
   using nsINode::GetScriptTypeID;
 

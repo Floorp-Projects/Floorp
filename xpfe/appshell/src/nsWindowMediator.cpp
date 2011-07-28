@@ -44,7 +44,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -65,7 +64,7 @@
 using namespace mozilla;
 
 static nsresult GetDOMWindow(nsIXULWindow* inWindow,
-                             nsCOMPtr< nsIDOMWindowInternal>& outDOMWindow);
+                             nsCOMPtr< nsIDOMWindow>& outDOMWindow);
 
 static PRBool notifyOpenWindow(nsISupports *aElement, void* aData);
 static PRBool notifyCloseWindow(nsISupports *aElement, void* aData);
@@ -78,7 +77,7 @@ struct WindowTitleData {
 };
 
 nsresult
-GetDOMWindow(nsIXULWindow* inWindow, nsCOMPtr<nsIDOMWindowInternal>& outDOMWindow)
+GetDOMWindow(nsIXULWindow* inWindow, nsCOMPtr<nsIDOMWindow>& outDOMWindow)
 {
   nsCOMPtr<nsIDocShell> docShell;
 
@@ -308,7 +307,7 @@ nsWindowMediator::RemoveEnumerator(nsAppShellWindowEnumerator * inEnumerator)
 // Returns the window of type inType ( if null return any window type ) which has the most recent
 // time stamp
 NS_IMETHODIMP
-nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindowInternal** outWindow)
+nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindow** outWindow)
 {
   NS_ENSURE_ARG_POINTER(outWindow);
   *outWindow = nsnull;
@@ -322,7 +321,7 @@ nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindowInter
   nsWindowInfo *info = MostRecentWindowInfo(inType);
 
   if (info && info->mWindow) {
-    nsCOMPtr<nsIDOMWindowInternal> DOMWindow;
+    nsCOMPtr<nsIDOMWindow> DOMWindow;
     if (NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {  
       *outWindow = DOMWindow;
       NS_ADDREF(*outWindow);

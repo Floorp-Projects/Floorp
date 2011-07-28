@@ -387,7 +387,7 @@ class StackFrame
     void resetCallFrame(JSScript *script);
 
     /* Called by jit stubs and serve as a specification for jit-code. */
-    void initJitFrameCallerHalf(JSContext *cx, StackFrame::Flags flags, void *ncode);
+    void initJitFrameCallerHalf(StackFrame *prev, StackFrame::Flags flags, void *ncode);
     void initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual);
     bool initJitFrameLatePrologue(JSContext *cx, Value **limit);
 
@@ -1037,6 +1037,10 @@ class StackFrame
         return offsetof(StackFrame, exec);
     }
 
+    static size_t offsetOfArgs() {
+        return offsetof(StackFrame, args);
+    }    
+
     void *addressOfArgs() {
         return &args;
     }
@@ -1286,29 +1290,49 @@ JS_STATIC_ASSERT(sizeof(StackSegment) % sizeof(Value) == 0);
 
 class StackSpace
 {
-    Value         *base_;
-    mutable Value *commitEnd_;
-    Value         *end_;
     StackSegment  *seg_;
+    Value         *base_;
+    mutable Value *conservativeEnd_;
+#ifdef XP_WIN
+    mutable Value *commitEnd_;
+#endif
+    Value         *defaultEnd_;
+    Value         *trustedEnd_;
 
+    void assertInvariants() const {
+        JS_ASSERT(base_ <= conservativeEnd_);
+#ifdef XP_WIN
+        JS_ASSERT(conservativeEnd_ <= commitEnd_);
+        JS_ASSERT(commitEnd_ <= trustedEnd_);
+#endif
+        JS_ASSERT(conservativeEnd_ <= defaultEnd_);
+        JS_ASSERT(defaultEnd_ <= trustedEnd_);
+    }
+
+    /* The total number of values/bytes reserved for the stack. */
     static const size_t CAPACITY_VALS  = 512 * 1024;
     static const size_t CAPACITY_BYTES = CAPACITY_VALS * sizeof(Value);
+
+    /* How much of the stack is initially committed. */
     static const size_t COMMIT_VALS    = 16 * 1024;
     static const size_t COMMIT_BYTES   = COMMIT_VALS * sizeof(Value);
+
+    /* How much space is reserved at the top of the stack for trusted JS. */
+    static const size_t BUFFER_VALS    = 16 * 1024;
+    static const size_t BUFFER_BYTES   = BUFFER_VALS * sizeof(Value);
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(CAPACITY_VALS % COMMIT_VALS == 0);
     }
 
-#ifdef XP_WIN
-    JS_FRIEND_API(bool) bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
-#endif
-
     friend class AllFramesIter;
     friend class ContextStack;
     friend class StackFrame;
-    friend class OOMCheck;
-    inline bool ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
+
+    inline bool ensureSpace(JSContext *cx, MaybeReportError report,
+                            Value *from, ptrdiff_t nvals) const;
+    JS_FRIEND_API(bool) ensureSpaceSlow(JSContext *cx, MaybeReportError report,
+                                        Value *from, ptrdiff_t nvals) const;
     StackSegment &findContainingSegment(const StackFrame *target) const;
 
   public:
@@ -1316,9 +1340,21 @@ class StackSpace
     bool init();
     ~StackSpace();
 
+    /*
+     * Maximum supported value of arguments.length. This bounds the maximum
+     * number of arguments that can be supplied to Function.prototype.apply.
+     * This value also bounds the number of elements parsed in an array
+     * initialiser.
+     *
+     * Since arguments are copied onto the stack, the stack size is the
+     * limiting factor for this constant. Use the max stack size (available to
+     * untrusted code) with an extra buffer so that, after such an apply, the
+     * callee can do a little work without OOMing.
+     */
+    static const uintN ARGS_LENGTH_MAX = CAPACITY_VALS - (2 * BUFFER_VALS);
+
     /* See stack layout comment above. */
     Value *firstUnused() const { return seg_ ? seg_->end() : base_; }
-    Value *endOfSpace() const { return end_; }
 
 #ifdef JS_TRACER
     /*
@@ -1326,8 +1362,11 @@ class StackSpace
      * good way to handle an OOM for these allocations, so this function checks
      * that OOM cannot occur using the size of the TraceNativeStorage as a
      * conservative upper bound.
+     *
+     * Despite taking a 'cx', this function does not report an error if it
+     * returns 'false'.
      */
-    inline bool ensureEnoughSpaceToEnterTrace();
+    inline bool ensureEnoughSpaceToEnterTrace(JSContext *cx);
 #endif
 
     /*
@@ -1344,44 +1383,14 @@ class StackSpace
      * does indeed have this required space and reports an error and returns
      * NULL if this reserve space cannot be allocated.
      */
-    inline Value *getStackLimit(JSContext *cx);
-    bool tryBumpLimit(JSContext *maybecx, Value *from, uintN nvals, Value **limit);
+    inline Value *getStackLimit(JSContext *cx, MaybeReportError report);
+    bool tryBumpLimit(JSContext *cx, Value *from, uintN nvals, Value **limit);
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
 
     /* We only report the committed size;  uncommitted size is uninteresting. */
     JS_FRIEND_API(size_t) committedSize();
-};
-
-/*****************************************************************************/
-
-/*
- * For pushInlineFrame, there are three different ways the caller may want to
- * check for stack overflow:
- *  - NoCheck: the caller has already ensured there is enough space
- *  - OOMCheck: perform normal checking against the end of the stack
- *  - LimitCheck: check against the given stack limit (see getStackLimit)
- */
-
-class NoCheck
-{
-  public:
-    bool operator()(JSContext *, StackSpace &, Value *, uintN) { return true; }
-};
-
-class OOMCheck
-{
-  public:
-    bool operator()(JSContext *cx, StackSpace &space, Value *from, uintN nvals);
-};
-
-class LimitCheck
-{
-    Value **limit;
-  public:
-    LimitCheck(Value **limit) : limit(limit) {}
-    bool operator()(JSContext *cx, StackSpace &space, Value *from, uintN nvals);
 };
 
 /*****************************************************************************/
@@ -1411,13 +1420,12 @@ class ContextStack
     /* Implementation details of push* public interface. */
     StackSegment *pushSegment(JSContext *cx);
     enum MaybeExtend { CAN_EXTEND = true, CANT_EXTEND = false };
-    Value *ensureOnTop(JSContext *cx, uintN nvars, MaybeExtend extend, bool *pushedSeg);
+    Value *ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
+                       MaybeExtend extend, bool *pushedSeg);
 
-    /* Check = { OOMCheck, LimitCheck } */
-    template <class Check>
     inline StackFrame *
-    getCallFrame(JSContext *cx, const CallArgs &args, JSFunction *fun, JSScript *script,
-                 StackFrame::Flags *pflags, Check check) const;
+    getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
+                 JSFunction *fun, JSScript *script, StackFrame::Flags *pflags) const;
 
     /* Make pop* functions private since only called by guard classes. */
     void popSegment();
@@ -1495,17 +1503,20 @@ class ContextStack
     bool pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrameGuard *gfg);
 
     /* Pushes a "dummy" frame; should be removed one day. */
-    bool pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg);
+    bool pushDummyFrame(JSContext *cx, MaybeReportError report, JSObject &scopeChain,
+                        DummyFrameGuard *dfg);
 
     /*
      * An "inline frame" may only be pushed from within the top, active
      * segment. This is the case for calls made inside mjit code and Interpret.
-     * For the Check parameter, see OOMCheck et al above.
+     * The 'stackLimit' overload updates 'stackLimit' if it changes.
      */
-    template <class Check>
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                          JSObject &callee, JSFunction *fun, JSScript *script,
-                         MaybeConstruct construct, Check check);
+                         MaybeConstruct construct);
+    bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
+                         JSObject &callee, JSFunction *fun, JSScript *script,
+                         MaybeConstruct construct, Value **stackLimit);
     void popInlineFrame(FrameRegs &regs);
 
     /* Pop a partially-pushed frame after hitting the limit before throwing. */
@@ -1519,9 +1530,9 @@ class ContextStack
      *   getFixupFrame = pushInlineFrame -
      *                   (fp->initJitFrameLatePrologue + regs->prepareToRun)
      */
-    StackFrame *getFixupFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                              JSFunction *fun, JSScript *script, void *ncode,
-                              MaybeConstruct construct, LimitCheck check);
+    StackFrame *getFixupFrame(JSContext *cx, MaybeReportError report,
+                              const CallArgs &args, JSFunction *fun, JSScript *script,
+                              void *ncode, MaybeConstruct construct, Value **stackLimit);
 
     bool saveFrameChain();
     void restoreFrameChain();

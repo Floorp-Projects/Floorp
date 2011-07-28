@@ -1496,6 +1496,7 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
   if (!canNavigate) {
     // If the listener asked us not to proceed with 
     // the operation, simply return.    
+    mRequestedIndex = -1;
     return NS_OK;  // XXX Maybe I can return some other error code?
   }
 

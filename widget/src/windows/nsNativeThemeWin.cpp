@@ -55,7 +55,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIMenuFrame.h"
+#include "nsMenuFrame.h"
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
 #include "nsWindow.h"
@@ -148,7 +148,7 @@ nsNativeThemeWin::~nsNativeThemeWin() {
 static PRBool IsTopLevelMenu(nsIFrame *aFrame)
 {
   PRBool isTopLevel(PR_FALSE);
-  nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+  nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
   if (menuFrame) {
     isTopLevel = menuFrame->IsOnMenuBar();
   }
@@ -357,10 +357,14 @@ static const PRInt32 kProgressHorizontalXPOverlaySize = 55;
 static const PRInt32 kProgressVerticalOverlaySize = 45;
 // The height of the overlay used for the vertical indeterminate progress bar (Vista and later).
 static const PRInt32 kProgressVerticalIndeterminateOverlaySize = 60;
+// The width of the overlay used to animate the indeterminate progress bar (Windows Classic).
+static const PRInt32 kProgressClassicOverlaySize = 40;
 // Speed (px per ms) of the animation for determined Vista and later progress bars.
 static const double kProgressDeterminedVistaSpeed = 0.225;
 // Speed (px per ms) of the animation for indeterminate progress bars.
 static const double kProgressIndeterminateSpeed = 0.175;
+// Speed (px per ms) of the animation for indeterminate progress bars (Windows Classic).
+static const double kProgressClassicIndeterminateSpeed = 0.0875;
 // Delay (in ms) between two indeterminate progress bar cycles.
 static const PRInt32 kProgressIndeterminateDelay = 500;
 // Delay (in ms) between two determinate progress bar animation on Vista/7.
@@ -1062,7 +1066,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isHover = PR_FALSE;
-      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
       nsEventStates eventState = GetContentState(aFrame, aWidgetType);
 
       isTopLevel = IsTopLevelMenu(aFrame);
@@ -1582,7 +1586,7 @@ RENDER_AGAIN:
     bool vertical = IsVerticalProgress(stateFrame);
 
     if (indeterminate || nsUXThemeData::sIsVistaOrLater) {
-      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 60)) {
+      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
         NS_WARNING("unable to animate progress widget!");
       }
 
@@ -2759,7 +2763,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isContainer = PR_FALSE;
-      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
       nsEventStates eventState = GetContentState(aFrame, aWidgetType);
 
       // We indicate top-level-ness using aPart. 0 is a normal menu item,
@@ -3363,11 +3367,85 @@ RENDER_AGAIN:
  
       break;
     }
-    case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
-
       break;
+
+    case NS_THEME_PROGRESSBAR_CHUNK: {
+      nsIFrame* stateFrame = aFrame->GetParent();
+      nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
+      const bool indeterminate = IsIndeterminateProgress(stateFrame, eventStates);
+
+      if (!indeterminate) {
+        ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
+        break;
+      }
+
+      /**
+       * The indeterminate rendering is animated: the bar goes from one side to
+       * another.
+       */
+      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
+        NS_WARNING("unable to animate progress widget!");
+      }
+
+      const bool vertical = IsVerticalProgress(stateFrame);
+      const PRInt32 overlaySize = kProgressClassicOverlaySize;
+      const double pixelsPerMillisecond = kProgressClassicIndeterminateSpeed;
+      const PRInt32 frameSize = vertical ? widgetRect.bottom - widgetRect.top
+                                         : widgetRect.right - widgetRect.left;
+      const double interval = frameSize / pixelsPerMillisecond;
+      // We have to pass a double* to modf and we can't pass NULL.
+      double tempValue;
+      double ratio = modf(PR_IntervalToMilliseconds(PR_IntervalNow())/interval,
+                          &tempValue);
+      PRInt32 dx = 0;
+
+      // If the frame direction is RTL, we want to have the animation going RTL.
+      // ratio is in [0.0; 1.0[ range, inverting it reverse the animation.
+      if (!vertical && IsFrameRTL(aFrame)) {
+        ratio = 1.0 - ratio;
+        dx -= overlaySize;
+      }
+      dx += static_cast<PRInt32>(frameSize * ratio);
+
+      RECT overlayRect = widgetRect;
+      if (vertical) {
+        overlayRect.bottom -= dx;
+        overlayRect.top = overlayRect.bottom - overlaySize;
+      } else {
+        overlayRect.left += dx;
+        overlayRect.right = overlayRect.left + overlaySize;
+      }
+
+      // Compute the leftover part.
+      RECT leftoverRect = widgetRect;
+      if (vertical) {
+        if (overlayRect.top < widgetRect.top) {
+          leftoverRect.bottom = widgetRect.bottom;
+          leftoverRect.top = leftoverRect.bottom + overlayRect.top - widgetRect.top;
+        }
+      } else if (IsFrameRTL(aFrame)) {
+        if (overlayRect.left < widgetRect.left) {
+          leftoverRect.right = widgetRect.right;
+          leftoverRect.left = leftoverRect.right + overlayRect.left - widgetRect.left;
+        }
+      } else if (overlayRect.right > widgetRect.right) {
+        leftoverRect.left = widgetRect.left;
+        leftoverRect.right = leftoverRect.left + overlayRect.right - widgetRect.right;
+      }
+
+      // Only show the leftover if the rect has been modified.
+      if (leftoverRect.top != widgetRect.top ||
+          leftoverRect.left != widgetRect.left ||
+          leftoverRect.right != widgetRect.right) {
+        ::FillRect(hdc, &leftoverRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
+      }
+
+      ::FillRect(hdc, &overlayRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
+      break;
+    }
+
     // Draw Tab
     case NS_THEME_TAB: {
       DrawTab(hdc, widgetRect,

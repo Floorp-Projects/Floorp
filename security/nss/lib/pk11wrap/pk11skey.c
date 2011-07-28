@@ -1457,7 +1457,9 @@ PK11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
     CK_ULONG        valueLen	= 0;
     CK_MECHANISM    mechanism; 
     CK_RV           crv;
-    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
+#define MAX_ADD_ATTRS 4
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS + MAX_ADD_ATTRS];
+#undef MAX_ADD_ATTRS
     CK_ATTRIBUTE *  attrs	= keyTemplate;
     CK_SESSION_HANDLE session;
     unsigned int    templateCount;
@@ -1466,6 +1468,7 @@ PK11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
     	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
+
     /* first copy caller attributes in. */
     for (templateCount = 0; templateCount < numAttrs; ++templateCount) {
     	*attrs++ = *userAttr++;
@@ -1495,7 +1498,7 @@ PK11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
     }
 
     templateCount = attrs - keyTemplate;
-    PR_ASSERT(templateCount <= MAX_TEMPL_ATTRS);
+    PR_ASSERT(templateCount <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
 
     /* move the key to a slot that can do the function */
     if (!PK11_DoesMechanism(slot,derive)) {
@@ -2024,7 +2027,9 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     CK_SESSION_HANDLE rwsession;
     CK_RV           crv;
     CK_MECHANISM_INFO mechanism_info;
-    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
+#define MAX_ADD_ATTRS 4
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS + MAX_ADD_ATTRS];
+#undef MAX_ADD_ATTRS
     CK_ATTRIBUTE *  attrs	= keyTemplate;
     unsigned int    templateCount;
 
@@ -2032,6 +2037,7 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
+
     /* first copy caller attributes in. */
     for (templateCount = 0; templateCount < numAttrs; ++templateCount) {
     	*attrs++ = *userAttr++;

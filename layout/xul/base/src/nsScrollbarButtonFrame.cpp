@@ -49,7 +49,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsSliderFrame.h"
-#include "nsIScrollbarFrame.h"
+#include "nsScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsRepeatService.h"
 #include "nsGUIEvent.h"
@@ -82,11 +82,10 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // XXX hack until handle release is actually called in nsframe.
-  if (aEvent->message == NS_MOUSE_EXIT_SYNTH ||
-      aEvent->message == NS_MOUSE_BUTTON_UP)
-     HandleRelease(aPresContext, aEvent, aEventStatus);
-  
+  if (aEvent->message == NS_MOUSE_EXIT_SYNTH) {
+    Deactivate();
+  }
+
   // if we didn't handle the press ourselves, pass it on to the superclass
   if (!HandleButtonPress(aPresContext, aEvent, aEventStatus))
     return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -191,10 +190,15 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus*  aEventStatus)
 {
-  // we're not active anymore
+  Deactivate();
+  return nsButtonBoxFrame::HandleRelease(aPresContext, aEvent, aEventStatus);
+}
+
+void
+nsScrollbarButtonFrame::Deactivate()
+{
   mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
   StopRepeat();
-  return NS_OK;
 }
 
 void nsScrollbarButtonFrame::Notify()
@@ -241,7 +245,7 @@ nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll)
   else if (curpos > maxpos)
     curpos = maxpos;
 
-  nsIScrollbarFrame* sb = do_QueryFrame(scrollbar);
+  nsScrollbarFrame* sb = do_QueryFrame(scrollbar);
   if (sb) {
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     if (m) {

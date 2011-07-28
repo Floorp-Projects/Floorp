@@ -16,3 +16,5 @@ HTTP(..) == selection.html selection-ref.html
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
 skip-if(Android) == clipped-elements.html clipped-elements-ref.html
+== theme-overflow.html theme-overflow-ref.html
+HTTP(..) == table-cell.html table-cell-ref.html

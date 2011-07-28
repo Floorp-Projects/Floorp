@@ -133,13 +133,6 @@ nsApplicationAccessible::Description(nsString &aDescription)
   aDescription.Truncate();
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetKeyboardShortcut(nsAString &aKeyboardShortcut)
-{
-  aKeyboardShortcut.Truncate();
-  return NS_OK;
-}
-
 PRUint64
 nsApplicationAccessible::State()
 {
@@ -384,6 +377,12 @@ nsApplicationAccessible::InvalidateChildren()
   // and RemoveChild() method calls.
 }
 
+KeyBinding
+nsApplicationAccessible::AccessKey() const
+{
+  return KeyBinding();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible protected methods
 
@@ -481,14 +480,6 @@ NS_IMETHODIMP
 nsApplicationAccessible::ScrollToPoint(PRUint32 aCoordinateType,
                                        PRInt32 aX, PRInt32 aY)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetOwnerWindow(void **aOwnerWindow)
-{
-  NS_ENSURE_ARG_POINTER(aOwnerWindow);
-  *aOwnerWindow = nsnull;
   return NS_OK;
 }
 

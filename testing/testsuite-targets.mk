@@ -61,6 +61,13 @@ RUN_MOCHITEST = \
 	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
+RUN_MOCHITEST_REMOTE = \
+	rm -f ./$@.log && \
+	$(PYTHON) _tests/testing/mochitest/runtestsremote.py --autorun --close-when-done \
+	  --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
+	  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
   @errors=`grep "TEST-UNEXPECTED-" $@.log` ;\
@@ -73,6 +80,14 @@ define CHECK_TEST_ERROR
   fi
 endef
 endif
+
+mochitest-remote: DM_TRANS?=adb
+mochitest-remote:
+	if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "usb" -o "$(DM_TRANS)" = "adb" ]; \
+          then $(RUN_MOCHITEST_REMOTE); \
+        else \
+          @echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
+        fi
 
 mochitest-plain:
 	$(RUN_MOCHITEST)
@@ -112,6 +127,11 @@ endif
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
+REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
+  --dm_trans=$(DM_TRANS) --ignore-window-size \
+  --app=$(ANDROID_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
+
 ifeq ($(OS_ARCH),WINNT) #{
 # GPU-rendered shadow layers are unsupported here
 OOP_CONTENT = --setpref=browser.tabs.remote=true --setpref=layers.acceleration.disabled=true
@@ -125,6 +145,15 @@ reftest: TEST_PATH?=layout/reftests/reftest.list
 reftest:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
 	$(CHECK_TEST_ERROR)
+
+reftest-remote: TEST_PATH?=layout/reftests/reftest.list
+reftest-remote: DM_TRANS?=adb
+reftest-remote:
+	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "" -o "$(DM_TRANS)" = "adb" ]; \
+	  then ln -s $(abspath $(topsrcdir)) _tests/reftest/tests;$(call REMOTE_REFTEST,tests/$(TEST_PATH)); $(CHECK_TEST_ERROR); \
+        else \
+          echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
+        fi
 
 reftest-ipc: TEST_PATH?=layout/reftests/reftest.list
 reftest-ipc:

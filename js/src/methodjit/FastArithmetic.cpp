@@ -106,8 +106,8 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
         JS_ALWAYS_TRUE(ValueToECMAInt32(cx, L, &nL));
         JS_ALWAYS_TRUE(ValueToECMAInt32(cx, R, &nR));
     } else {
-        JS_ALWAYS_TRUE(ValueToNumber(cx, L, &dL));
-        JS_ALWAYS_TRUE(ValueToNumber(cx, R, &dR));
+        JS_ALWAYS_TRUE(ToNumber(cx, L, &dL));
+        JS_ALWAYS_TRUE(ToNumber(cx, R, &dR));
     }
 
     switch (op) {
@@ -247,12 +247,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
      */
     if ((op == JSOP_MOD) ||
         (lhs->isTypeKnown() && (lhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) ||
-        (rhs->isTypeKnown() && (rhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) 
-#if defined(JS_CPU_ARM)
-        /* ARM cannot detect integer overflow with multiplication. */
-        || op == JSOP_MUL
-#endif /* JS_CPU_ARM */
-    ) {
+        (rhs->isTypeKnown() && (rhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)))
+    {
         bool isStringResult = (op == JSOP_ADD) &&
                               (lhs->isType(JSVAL_TYPE_STRING) ||
                                rhs->isType(JSVAL_TYPE_STRING));
@@ -445,11 +441,9 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
         overflow = masm.branchSub32(Assembler::Overflow, regs.result, regs.result);
         break;
 
-#if !defined(JS_CPU_ARM)
       case JSOP_MUL:
         overflow = masm.branchMul32(Assembler::Overflow, regs.result, regs.result);
         break;
-#endif
 
       default:
         JS_NOT_REACHED("unrecognized op");
@@ -629,7 +623,6 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
             overflow = masm.branchSub32(Assembler::Overflow, Imm32(value), regs.result);
         break;
 
-#if !defined(JS_CPU_ARM)
       case JSOP_MUL:
       {
         JS_ASSERT(reg.isSet());
@@ -682,7 +675,6 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
         }
         break;
       }
-#endif
 
       default:
         JS_NOT_REACHED("unrecognized op");

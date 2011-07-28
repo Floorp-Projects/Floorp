@@ -72,6 +72,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/Element.h"
 
 class nsSplitterInfo {
 public:
@@ -375,22 +376,6 @@ nsSplitterFrame::HandleMultiplePress(nsPresContext* aPresContext,
                                      nsGUIEvent *    aEvent,
                                      nsEventStatus*  aEventStatus,
                                      PRBool aControlHeld)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSplitterFrame::HandleDrag(nsPresContext* aPresContext,
-                        nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
-                           nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }

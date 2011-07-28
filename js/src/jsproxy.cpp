@@ -980,11 +980,11 @@ static void
 proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
     obj->getProxyHandler()->trace(trc, obj);
-    MarkValue(trc, obj->getProxyPrivate(), "private");
-    MarkValue(trc, obj->getProxyExtra(), "extra");
+    MarkCrossCompartmentValue(trc, obj->getProxyPrivate(), "private");
+    MarkCrossCompartmentValue(trc, obj->getProxyExtra(), "extra");
     if (obj->isFunctionProxy()) {
-        MarkValue(trc, GetCall(obj), "call");
-        MarkValue(trc, GetConstruct(obj), "construct");
+        MarkCrossCompartmentValue(trc, GetCall(obj), "call");
+        MarkCrossCompartmentValue(trc, GetConstruct(obj), "construct");
     }
 }
 
@@ -992,8 +992,8 @@ static void
 proxy_TraceFunction(JSTracer *trc, JSObject *obj)
 {
     proxy_TraceObject(trc, obj);
-    MarkValue(trc, GetCall(obj), "call");
-    MarkValue(trc, GetConstruct(obj), "construct");
+    MarkCrossCompartmentValue(trc, GetCall(obj), "call");
+    MarkCrossCompartmentValue(trc, GetConstruct(obj), "construct");
 }
 
 static JSBool
@@ -1175,12 +1175,19 @@ JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObject *proto,
                JSObject *parent, JSObject *call, JSObject *construct)
 {
+    JS_ASSERT_IF(proto, cx->compartment == proto->compartment());
+    JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
     bool fun = call || construct;
     Class *clasp;
     if (fun)
         clasp = &FunctionProxyClass;
     else
         clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
+
+    if (!handler->isCrossCompartment() && priv.isObject()) {
+        if (priv.toObject().compartment() != cx->compartment)
+            JS_Assert("compartment mismatch in proxy object", __FILE__, __LINE__);
+    }
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (!obj || !obj->ensureInstanceReservedSlots(cx, 0))

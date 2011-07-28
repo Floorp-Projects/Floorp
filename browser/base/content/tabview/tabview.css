@@ -144,11 +144,6 @@ body {
 /* Other
 ----------------------------------*/
 
-.newTabButton {
-  position: absolute !important;
-  z-index: 99999;
-}
-
 .titlebar {
   position: absolute;
 }
@@ -176,6 +171,20 @@ body {
   width: 100%;
   height: 100%;
   position: absolute;
+}
+
+.banner {
+  left: 0;
+  bottom: 0;
+  right: 0;
+  padding: 10px 0;
+  position: absolute;
+  z-index: 1000060;
+  background: #000;
+  color: #fff;
+  opacity: 0;
+  text-align: center;
+  font-weight: 700;
 }
 
 /* Resizable

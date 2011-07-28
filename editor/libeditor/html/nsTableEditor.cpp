@@ -2677,7 +2677,7 @@ nsHTMLEditor::GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **table
 }
 
 //Return actual number of cells (a cell with colspan > 1 counts as just 1)
-PRBool nsHTMLEditor::GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex)
+PRInt32 nsHTMLEditor::GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex)
 {
   PRInt32 cellCount = 0;
   nsCOMPtr<nsIDOMElement> cell;
@@ -2689,7 +2689,7 @@ PRBool nsHTMLEditor::GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowInd
     res = GetCellDataAt(aTable, rowIndex, colIndex, getter_AddRefs(cell),
                         &startRowIndex, &startColIndex, &rowSpan, &colSpan, 
                         &actualRowSpan, &actualColSpan, &isSelected);
-    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_SUCCESS(res, 0);
     if (cell)
     {
       // Only count cells that start in row we are working with
@@ -2950,7 +2950,9 @@ nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
 
   nsCOMPtr<nsIDOMNode> childNode = GetChildAt(startParent, startOffset);
   // This means selection is probably at a text node (or end of doc?)
-  NS_ENSURE_TRUE(childNode, NS_ERROR_FAILURE);
+  if (!childNode) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMNode> endParent;
   res = aRange->GetEndContainer(getter_AddRefs(endParent));
@@ -3000,9 +3002,13 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)
   res = GetCellFromRange(range, aCell);
   // Failure here probably means selection is in a text node,
   //  so there's no selected cell
-  NS_ENSURE_SUCCESS(res, NS_EDITOR_ELEMENT_NOT_FOUND);
+  if (NS_FAILED(res)) {
+    return NS_EDITOR_ELEMENT_NOT_FOUND;
+  }
   // No cell means range was collapsed (cell was deleted)
-  NS_ENSURE_TRUE(*aCell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  if (!*aCell) {
+    return NS_EDITOR_ELEMENT_NOT_FOUND;
+  }
 
   if (aRange)
   {

@@ -56,9 +56,10 @@
           <body>
           <![CDATA[
               var timeString;
-              var hours = Math.floor(time / 3600000);
-              var mins  = Math.floor(time % 3600000 / 60000);
-              var secs  = Math.floor(time % 60000 / 1000);
+              time = Math.round(time / 1000);
+              var hours = Math.floor(time / 3600);
+              var mins  = Math.floor((time % 3600) / 60);
+              var secs  = Math.floor(time % 60);
               if (secs < 10)
                   secs = "0" + secs;
               if (hours || this.showHours) {
@@ -544,9 +545,10 @@
                 
                 formatTime : function(aTime) {
                     // Format the duration as "h:mm:ss" or "m:ss"
-                    let hours = Math.floor(aTime / 3600000);
-                    let mins  = Math.floor(aTime % 3600000 / 60000);
-                    let secs  = Math.floor(aTime % 60000 / 1000);
+                    aTime = Math.round(aTime / 1000);
+                    let hours = Math.floor(aTime / 3600);
+                    let mins  = Math.floor((aTime % 3600) / 60);
+                    let secs  = Math.floor(aTime % 60);
                     let timeString;
                     if (secs < 10)
                         secs = "0" + secs;
