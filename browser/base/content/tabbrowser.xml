@@ -3887,7 +3887,6 @@
           return;
 
         this._tabDropIndicator.collapsed = true;
-        this._continueScroll(event);
         event.stopPropagation();
       ]]></handler>
     </handlers>
