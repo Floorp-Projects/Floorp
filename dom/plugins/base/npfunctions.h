@@ -217,7 +217,7 @@ typedef struct _NPNetscapeFuncs {
  * These can be called to retreive MIME information from the plugin dynamically
  *
  * Note: For compatibility with Quicktime, BPSupportedMIMEtypes is another way
- *       to get mime info from the plugin only on OSX and may not be supported 
+ *       to get mime info from the plugin only on OSX and may not be supported
  *       in furture version -- use NP_GetMIMEDescription instead
  */
 enum
@@ -273,17 +273,17 @@ typedef struct _NPPluginData {   /* Alternate OS2 Plugin interface */
   unsigned long dwProductVersionMS;
   unsigned long dwProductVersionLS;
 } NPPluginData;
-typedef NPError (*NP_GetPluginDataFunc)(NPPluginData*);
-NPError OSCALL  NP_GetPluginData(NPPluginData * pPluginData);
+typedef NPError     (*NP_GetPluginDataFunc)(NPPluginData*);
+NPError OSCALL      NP_GetPluginData(NPPluginData * pPluginData);
 #endif
-typedef NPError (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
-NPError OSCALL  NP_GetEntryPoints(NPPluginFuncs* pFuncs);
-typedef NPError (*NP_InitializeFunc)(NPNetscapeFuncs*);
-NPError OSCALL  NP_Initialize(NPNetscapeFuncs* bFuncs);
-typedef NPError (*NP_ShutdownFunc)(void);
-NPError OSCALL  NP_Shutdown(void);
-typedef char*   (*NP_GetMIMEDescriptionFunc)(void);
-char*           NP_GetMIMEDescription(void);
+typedef NPError     (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
+NPError OSCALL      NP_GetEntryPoints(NPPluginFuncs* pFuncs);
+typedef NPError     (*NP_InitializeFunc)(NPNetscapeFuncs*);
+NPError OSCALL      NP_Initialize(NPNetscapeFuncs* bFuncs);
+typedef NPError     (*NP_ShutdownFunc)(void);
+NPError OSCALL      NP_Shutdown(void);
+typedef const char* (*NP_GetMIMEDescriptionFunc)(void);
+const char*         NP_GetMIMEDescription(void);
 #ifdef __cplusplus
 }
 #endif
@@ -297,23 +297,23 @@ char*           NP_GetMIMEDescription(void);
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef char*      (*NP_GetPluginVersionFunc)(void);
-NP_EXPORT(char*)   NP_GetPluginVersion(void);
-typedef char*      (*NP_GetMIMEDescriptionFunc)(void);
-NP_EXPORT(char*)   NP_GetMIMEDescription(void);
+typedef char*          (*NP_GetPluginVersionFunc)(void);
+NP_EXPORT(char*)       NP_GetPluginVersion(void);
+typedef const char*    (*NP_GetMIMEDescriptionFunc)(void);
+NP_EXPORT(const char*) NP_GetMIMEDescription(void);
 #ifdef XP_MACOSX
-typedef NPError    (*NP_InitializeFunc)(NPNetscapeFuncs*);
-NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs);
-typedef NPError    (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
-NP_EXPORT(NPError) NP_GetEntryPoints(NPPluginFuncs* pFuncs);
+typedef NPError        (*NP_InitializeFunc)(NPNetscapeFuncs*);
+NP_EXPORT(NPError)     NP_Initialize(NPNetscapeFuncs* bFuncs);
+typedef NPError        (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
+NP_EXPORT(NPError)     NP_GetEntryPoints(NPPluginFuncs* pFuncs);
 #else
-typedef NPError    (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*);
-NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs);
+typedef NPError        (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*);
+NP_EXPORT(NPError)     NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs);
 #endif
-typedef NPError    (*NP_ShutdownFunc)(void);
-NP_EXPORT(NPError) NP_Shutdown(void);
-typedef NPError    (*NP_GetValueFunc)(void *, NPPVariable, void *);
-NP_EXPORT(NPError) NP_GetValue(void *future, NPPVariable aVariable, void *aValue);
+typedef NPError        (*NP_ShutdownFunc)(void);
+NP_EXPORT(NPError)     NP_Shutdown(void);
+typedef NPError        (*NP_GetValueFunc)(void *, NPPVariable, void *);
+NP_EXPORT(NPError)     NP_GetValue(void *future, NPPVariable aVariable, void *aValue);
 #ifdef __cplusplus
 }
 #endif
