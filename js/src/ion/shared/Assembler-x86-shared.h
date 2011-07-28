@@ -50,6 +50,24 @@ namespace ion {
 class AssemblerX86Shared
 {
   protected:
+    struct RelativePatch {
+        int32 offset;
+        void *target;
+        Relocation::Kind kind;
+
+        RelativePatch(int32 offset, void *target, Relocation::Kind kind)
+          : offset(offset),
+            target(target),
+            kind(kind)
+        { }
+    };
+
+    js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
+    CompactBufferWriter relocations_;
+
+    bool enoughMemory_;
+
+  protected:
     JSC::X86Assembler masm;
 
     typedef JSC::X86Assembler::JmpSrc JmpSrc;
@@ -73,14 +91,36 @@ class AssemblerX86Shared
         NonZero = JSC::X86Assembler::ConditionNE
     };
 
-    bool oom() const {
-        return masm.oom();
+    AssemblerX86Shared()
+      : enoughMemory_(true)
+    {
     }
+
+    static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+
+    // MacroAssemblers hold onto gcthings, so they are traced by the GC.
+    void trace(JSTracer *trc);
+
+    bool oom() const {
+        return masm.oom() ||
+               !enoughMemory_ ||
+               relocations_.outOfMemory();
+    }
+
     size_t size() const {
         return masm.size();
     }
     void executableCopy(void *buffer) {
         masm.executableCopy(buffer);
+    }
+
+    void copyRelocationTable(uint8 *buffer);
+
+    size_t relocationTableSize() const {
+        return relocations_.length();
+    }
+    size_t bytesNeeded() const {
+        return size() + relocationTableSize();
     }
 
   public:

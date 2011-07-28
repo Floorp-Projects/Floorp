@@ -44,6 +44,8 @@
 
 #include "ion/shared/Assembler-shared.h"
 #include "assembler/assembler/X86Assembler.h"
+#include "ion/CompactBuffer.h"
+#include "ion/IonCode.h"
 
 namespace js {
 namespace ion {
@@ -123,8 +125,31 @@ namespace ion {
 
 class Assembler : public AssemblerX86Shared
 {
+    void writeRelocation(JmpSrc src) {
+        relocations_.writeUnsigned(src.offset());
+    }
+    void addPendingJump(JmpSrc src, void *target, Relocation::Kind kind) {
+        enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target, kind));
+        if (kind == Relocation::CODE)
+            writeRelocation(src);
+    }
+
   public:
     using AssemblerX86Shared::movl;
+    using AssemblerX86Shared::j;
+    using AssemblerX86Shared::jmp;
+
+    static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+
+    // The buffer is about to be linked, make sure any constant pools or excess
+    // bookkeeping has been flushed to the instruction stream.
+    void flush() { }
+
+    // Copy the assembly code to the given buffer, and perform any pending
+    // relocations relying on the target address.
+    void executableCopy(uint8 *buffer);
+
+    // Actual assembly emitting functions.
 
     void movl(const ImmGCPtr &ptr, const Register &dest) {
         masm.movl_i32r(ptr.value, dest.code());
@@ -138,6 +163,15 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(const Register &src, const Operand &dest) {
         movl(src, dest);
+    }
+
+    void jmp(void *target, Relocation::Kind reloc) {
+        JmpSrc src = masm.jmp();
+        addPendingJump(src, target, reloc);
+    }
+    void j(Condition cond, void *target, Relocation::Kind reloc) {
+        JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
+        addPendingJump(src, target, reloc);
     }
 };
 

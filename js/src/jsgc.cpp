@@ -95,6 +95,7 @@
 
 #include "vm/String-inl.h"
 #include "ion/IonCode.h"
+#include "ion/IonMacroAssembler.h"
 
 #ifdef MOZ_VALGRIND
 # define JS_VALGRIND
@@ -1779,6 +1780,13 @@ AutoGCRooter::trace(JSTracer *trc)
       case BINDINGS: {
         static_cast<js::AutoBindingsRooter *>(this)->bindings.trace(trc);
         return;
+      }
+
+      case IONMASM: {
+#ifdef JS_ION
+        static_cast<js::ion::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);
+#endif
+        break;
       }
     }
 

@@ -59,7 +59,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     const Register reg_argv = ArgReg3;
     const Register reg_vp   = ArgReg4;
 
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // Save old stack frame pointer, set new stack frame pointer.
     masm.push(rbp);
