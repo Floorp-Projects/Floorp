@@ -2938,16 +2938,12 @@ DebuggerObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
 
             for (size_t i = 0; i < fun->nargs; i++) {
                 JSAtom *name = names[i];
-                Value *elt = result->addressOfDenseArrayElement(i);
-                if (name)
-                    elt->setString(name);
-                else
-                    elt->setUndefined();
+                result->setDenseArrayElement(i, name ? StringValue(name) : UndefinedValue());
             }
         }
     } else {
         for (size_t i = 0; i < fun->nargs; i++)
-            result->addressOfDenseArrayElement(i)->setUndefined();
+            result->setDenseArrayElement(i, UndefinedValue());
     }
 
     vp->setObject(*result);

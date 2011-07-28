@@ -517,9 +517,6 @@ struct JSRuntime {
     }
 #endif
 
-    /* More debugging state, see jsdbgapi.c. */
-    JSCList             watchPointList;
-
     /*
      * Linked list of all js::Debugger objects. This may be accessed by the GC
      * thread, if any, or a thread that is in a request and holds gcLock.
@@ -547,13 +544,6 @@ struct JSRuntime {
 
     /* Used to synchronize down/up state change; protected by gcLock. */
     PRCondVar           *stateChange;
-
-    /*
-     * Lock serializing watchPointList accesses, and count of all mutations to
-     * watchPointList made by debugger threads. To keep the code simple, we
-     * define debuggerMutations for the thread-unsafe case too.
-     */
-    PRLock              *debuggerLock;
 
     JSThread::Map       threads;
 #endif /* JS_THREADSAFE */
