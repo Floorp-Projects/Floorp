@@ -49,6 +49,7 @@ class nsIFrame;
 class nsIPresShell;
 struct nsTextRangeStyle;
 struct nsPoint;
+#include "nsIFrame.h"
 %}
 
 [ptr] native nsFrameSelection(nsFrameSelection);
@@ -56,6 +57,7 @@ struct nsPoint;
 [ptr] native nsIPresShell(nsIPresShell);
 [ref] native constTextRangeStyleRef(const nsTextRangeStyle);
 [ref] native nsPointRef(nsPoint);
+native nsDirection(nsDirection);
 
 [scriptable, uuid(98552206-ad7a-4d2d-8ce3-b6fa2389298b)]
 interface nsISelectionPrivate : nsISupports
@@ -128,5 +130,11 @@ interface nsISelectionPrivate : nsISupports
      */
     [noscript] void setTextRangeStyle(in nsIDOMRange range,
                       in constTextRangeStyleRef textRangeStyle);
+
+    /**
+     * Get the direction of the selection.
+     */
+    [noscript, notxpcom] nsDirection getSelectionDirection();
+    [noscript, notxpcom] void setSelectionDirection(in nsDirection aDirection);
 };
 

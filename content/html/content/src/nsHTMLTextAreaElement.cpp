@@ -829,20 +829,17 @@ nsHTMLTextAreaElement::GetSelectionStart(PRInt32 *aSelectionStart)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetSelectionStart(PRInt32 aSelectionStart)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-  if (formControlFrame){
-    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame) {
-      rv = textControlFrame->SetSelectionStart(aSelectionStart);
-      if (NS_SUCCEEDED(rv)) {
-        rv = textControlFrame->ScrollSelectionIntoView();
-      }
-    }
+  nsAutoString direction;
+  nsresult rv = GetSelectionDirection(direction);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 start, end;
+  rv = GetSelectionRange(&start, &end);
+  NS_ENSURE_SUCCESS(rv, rv);
+  start = aSelectionStart;
+  if (end < start) {
+    end = start;
   }
-
-  return rv;
+  return SetSelectionRange(start, end, direction);
 }
 
 NS_IMETHODIMP
@@ -857,20 +854,17 @@ nsHTMLTextAreaElement::GetSelectionEnd(PRInt32 *aSelectionEnd)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-  if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame) {
-      rv = textControlFrame->SetSelectionEnd(aSelectionEnd);
-      if (NS_SUCCEEDED(rv)) {
-        rv = textControlFrame->ScrollSelectionIntoView();
-      }
-    }
+  nsAutoString direction;
+  nsresult rv = GetSelectionDirection(direction);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 start, end;
+  rv = GetSelectionRange(&start, &end);
+  NS_ENSURE_SUCCESS(rv, rv);
+  end = aSelectionEnd;
+  if (start > end) {
+    start = end;
   }
-
-  return rv;
+  return SetSelectionRange(start, end, direction);
 }
 
 nsresult
@@ -889,8 +883,49 @@ nsHTMLTextAreaElement::GetSelectionRange(PRInt32* aSelectionStart,
   return rv;
 }
 
+nsresult
+nsHTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+
+  if (formControlFrame) {
+    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
+    if (textControlFrame) {
+      nsITextControlFrame::SelectionDirection dir;
+      rv = textControlFrame->GetSelectionRange(nsnull, nsnull, &dir);
+      if (NS_SUCCEEDED(rv)) {
+        if (dir == nsITextControlFrame::eNone) {
+          aDirection.AssignLiteral("none");
+        } else if (dir == nsITextControlFrame::eForward) {
+          aDirection.AssignLiteral("forward");
+        } else if (dir == nsITextControlFrame::eBackward) {
+          aDirection.AssignLiteral("backward");
+        } else {
+          NS_NOTREACHED("Invalid SelectionDirection value");
+        }
+      }
+    }
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd)
+nsHTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection) {
+  PRInt32 start, end;
+  nsresult rv = GetSelectionRange(&start, &end);
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetSelectionRange(start, end, aDirection);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetSelectionRange(PRInt32 aSelectionStart,
+                                         PRInt32 aSelectionEnd,
+                                         const nsAString& aDirection)
 { 
   nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
@@ -898,7 +933,15 @@ nsHTMLTextAreaElement::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelec
   if (formControlFrame) {
     nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
     if (textControlFrame) {
-      rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
+      // Default to forward, even if not specified.
+      // Note that we don't currently support directionless selections, so
+      // "none" is treated like "forward".
+      nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
+      if (aDirection.EqualsLiteral("backward")) {
+        dir = nsITextControlFrame::eBackward;
+      }
+
+      rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
       if (NS_SUCCEEDED(rv)) {
         rv = textControlFrame->ScrollSelectionIntoView();
       }
