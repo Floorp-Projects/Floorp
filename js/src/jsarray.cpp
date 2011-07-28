@@ -1029,7 +1029,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     /* Create a native scope. */
     js::gc::FinalizeKind kind = js::gc::FinalizeKind(arenaHeader()->getThingKind());
-    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, getType(cx), kind))
+    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, getProto()->getNewType(cx), kind))
         return false;
 
     backfillDenseArrayHoles(cx);
