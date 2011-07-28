@@ -322,7 +322,7 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
      * initlen(array) - c1 <= c0
      * NSLOTS_LIMIT <= c0 + c1
      */
-    if (e0.kind == InvariantEntry::RANGE_CHECK && e1.kind == InvariantEntry::BOUNDS_CHECK &&
+    if (e0.kind == InvariantEntry::RANGE_CHECK && e1.isBoundsCheck() &&
         value01 == value11 && value02 == value12) {
         int32 constant;
         if (c1 >= 0)
@@ -334,7 +334,7 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
 
     /* Look for matching tests that differ only in their constants. */
     if (e0.kind == e1.kind && array0 == array1 && value01 == value11 && value02 == value12) {
-        if (e0.kind == InvariantEntry::BOUNDS_CHECK) {
+        if (e0.isBoundsCheck()) {
             /* If e0 is X >= Y + c0 and e1 is X >= Y + c1, e0 is redundant if c0 <= c1 */
             return (c0 <= c1);
         } else {
@@ -383,23 +383,27 @@ LoopState::checkRedundantEntry(const InvariantEntry &entry)
 }
 
 bool
-LoopState::addHoistedCheck(uint32 arraySlot, uint32 valueSlot1, uint32 valueSlot2, int32 constant)
+LoopState::addHoistedCheck(InvariantArrayKind arrayKind, uint32 arraySlot,
+                           uint32 valueSlot1, uint32 valueSlot2, int32 constant)
 {
 #ifdef DEBUG
     JS_ASSERT_IF(valueSlot1 == UNASSIGNED, valueSlot2 == UNASSIGNED);
+    const char *field = (arrayKind == DENSE_ARRAY) ? "initlen" : "length";
     if (valueSlot1 == UNASSIGNED) {
-        JaegerSpew(JSpew_Analysis, "Hoist initlen > %d\n", constant);
+        JaegerSpew(JSpew_Analysis, "Hoist %s > %d\n", field, constant);
     } else if (valueSlot2 == UNASSIGNED) {
-        JaegerSpew(JSpew_Analysis, "Hoisted as initlen > %s + %d\n",
+        JaegerSpew(JSpew_Analysis, "Hoisted as %s > %s + %d\n", field,
                    frame.entryName(valueSlot1), constant);
     } else {
-        JaegerSpew(JSpew_Analysis, "Hoisted as initlen > %s + %s + %d\n",
+        JaegerSpew(JSpew_Analysis, "Hoisted as %s > %s + %s + %d\n", field,
                    frame.entryName(valueSlot1), frame.entryName(valueSlot2), constant);
     }
 #endif
 
     InvariantEntry entry;
-    entry.kind = InvariantEntry::BOUNDS_CHECK;
+    entry.kind = (arrayKind == DENSE_ARRAY)
+                 ? InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK
+                 : InvariantEntry::TYPED_ARRAY_BOUNDS_CHECK;
     entry.u.check.arraySlot = arraySlot;
     entry.u.check.valueSlot1 = valueSlot1;
     entry.u.check.valueSlot2 = valueSlot2;
@@ -415,12 +419,13 @@ LoopState::addHoistedCheck(uint32 arraySlot, uint32 valueSlot1, uint32 valueSlot
      * bounds check, so this makes invariantSlots infallible.
      */
     bool hasInvariantSlots = false;
+    InvariantEntry::EntryKind slotsKind = (arrayKind == DENSE_ARRAY)
+                                          ? InvariantEntry::DENSE_ARRAY_SLOTS
+                                          : InvariantEntry::TYPED_ARRAY_SLOTS;
     for (unsigned i = 0; !hasInvariantSlots && i < invariantEntries.length(); i++) {
         InvariantEntry &entry = invariantEntries[i];
-        if (entry.kind == InvariantEntry::INVARIANT_SLOTS &&
-            entry.u.array.arraySlot == arraySlot) {
+        if (entry.kind == slotsKind && entry.u.array.arraySlot == arraySlot)
             hasInvariantSlots = true;
-        }
     }
     if (!hasInvariantSlots) {
         uint32 which = frame.allocTemporary();
@@ -432,7 +437,7 @@ LoopState::addHoistedCheck(uint32 arraySlot, uint32 valueSlot1, uint32 valueSlot
                    frame.entryName(fe), frame.entryName(arraySlot));
 
         InvariantEntry slotsEntry;
-        slotsEntry.kind = InvariantEntry::INVARIANT_SLOTS;
+        slotsEntry.kind = slotsKind;
         slotsEntry.u.array.arraySlot = arraySlot;
         slotsEntry.u.array.temporary = which;
         invariantEntries.append(slotsEntry);
@@ -511,11 +516,12 @@ LoopState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
 }
 
 bool
-LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &index)
+LoopState::hoistArrayLengthCheck(InvariantArrayKind arrayKind, const CrossSSAValue &obj,
+                                 const CrossSSAValue &index)
 {
     /*
      * Note: this method requires that the index is definitely an integer, and
-     * that obj is either a dense array or not an object.
+     * that obj is either a dense array, a typed array or not an object.
      */
     if (skipAnalysis)
         return false;
@@ -540,7 +546,7 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
      * bounds check fails.
      */
     TypeSet *objTypes = ssa->getValueTypes(obj);
-    if (!growArrays.empty()) {
+    if (arrayKind == DENSE_ARRAY && !growArrays.empty()) {
         unsigned count = objTypes->getObjectCount();
         for (unsigned i = 0; i < count; i++) {
             if (objTypes->getSingleObject(i) != NULL) {
@@ -568,12 +574,12 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
 
     if (indexSlot == UNASSIGNED) {
         /* Hoist checks on x[n] accesses for constant n. */
-        return addHoistedCheck(objSlot, UNASSIGNED, UNASSIGNED, indexConstant);
+        return addHoistedCheck(arrayKind, objSlot, UNASSIGNED, UNASSIGNED, indexConstant);
     }
 
     if (loopInvariantEntry(indexSlot)) {
         /* Hoist checks on x[y] accesses when y is loop invariant. */
-        return addHoistedCheck(objSlot, indexSlot, UNASSIGNED, indexConstant);
+        return addHoistedCheck(arrayKind, objSlot, indexSlot, UNASSIGNED, indexConstant);
     }
 
     /*
@@ -609,7 +615,7 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
          */
         addNegativeCheck(indexSlot, indexConstant);
 
-        return addHoistedCheck(objSlot, testRHS, UNASSIGNED, constant);
+        return addHoistedCheck(arrayKind, objSlot, testRHS, UNASSIGNED, constant);
     }
 
     /*
@@ -629,7 +635,7 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
             return false;
 
         addNegativeCheck(indexSlot, indexConstant);
-        return addHoistedCheck(objSlot, indexSlot, testLHS, constant);
+        return addHoistedCheck(arrayKind, objSlot, indexSlot, testLHS, constant);
     }
 
     JaegerSpew(JSpew_Analysis, "No match found\n");
@@ -738,9 +744,15 @@ LoopState::invariantArraySlots(const CrossSSAValue &obj)
         return NULL;
     }
 
+    /*
+     * Note: we don't have to check arrayKind (dense array or typed array) here,
+     * because an array cannot have entries for both dense array slots and typed
+     * array slots.
+     */
     for (unsigned i = 0; i < invariantEntries.length(); i++) {
         InvariantEntry &entry = invariantEntries[i];
-        if (entry.kind == InvariantEntry::INVARIANT_SLOTS &&
+        if ((entry.kind == InvariantEntry::DENSE_ARRAY_SLOTS ||
+             entry.kind == InvariantEntry::TYPED_ARRAY_SLOTS) &&
             entry.u.array.arraySlot == objSlot) {
             return frame.getTemporary(entry.u.array.temporary);
         }
@@ -815,9 +827,15 @@ LoopState::invariantLength(const CrossSSAValue &obj)
         return fe;
     }
 
+    /*
+     * Note: we don't have to check arrayKind (dense array or typed array) here,
+     * because an array cannot have entries for both dense array length and typed
+     * array length.
+     */
     for (unsigned i = 0; i < invariantEntries.length(); i++) {
         InvariantEntry &entry = invariantEntries[i];
-        if (entry.kind == InvariantEntry::INVARIANT_LENGTH &&
+        if ((entry.kind == InvariantEntry::DENSE_ARRAY_LENGTH ||
+             entry.kind == InvariantEntry::TYPED_ARRAY_LENGTH) &&
             entry.u.array.arraySlot == objSlot) {
             return frame.getTemporary(entry.u.array.temporary);
         }
@@ -825,6 +843,28 @@ LoopState::invariantLength(const CrossSSAValue &obj)
 
     if (!loopInvariantEntry(objSlot))
         return NULL;
+
+    /* Hoist 'length' access on typed arrays. */
+    if (!objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_TYPED_ARRAY)) {
+        /* Recompile if object type changes. */
+        objTypes->addFreeze(cx);
+
+        uint32 which = frame.allocTemporary();
+        if (which == uint32(-1))
+            return NULL;
+        FrameEntry *fe = frame.getTemporary(which);
+
+        JaegerSpew(JSpew_Analysis, "Using %s for loop invariant typed array length of %s\n",
+                   frame.entryName(fe), frame.entryName(objSlot));
+
+        InvariantEntry entry;
+        entry.kind = InvariantEntry::TYPED_ARRAY_LENGTH;
+        entry.u.array.arraySlot = objSlot;
+        entry.u.array.temporary = which;
+        invariantEntries.append(entry);
+
+        return fe;
+    }
 
     if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
         return NULL;
@@ -850,11 +890,11 @@ LoopState::invariantLength(const CrossSSAValue &obj)
         return NULL;
     FrameEntry *fe = frame.getTemporary(which);
 
-    JaegerSpew(JSpew_Analysis, "Using %s for loop invariant length of %s\n",
+    JaegerSpew(JSpew_Analysis, "Using %s for loop invariant dense array length of %s\n",
                frame.entryName(fe), frame.entryName(objSlot));
 
     InvariantEntry entry;
-    entry.kind = InvariantEntry::INVARIANT_LENGTH;
+    entry.kind = InvariantEntry::DENSE_ARRAY_LENGTH;
     entry.u.array.arraySlot = objSlot;
     entry.u.array.temporary = which;
     invariantEntries.append(entry);
@@ -1267,13 +1307,19 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
         const InvariantEntry &entry = invariantEntries[i];
         switch (entry.kind) {
 
-          case InvariantEntry::BOUNDS_CHECK: {
+          case InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK:
+          case InvariantEntry::TYPED_ARRAY_BOUNDS_CHECK: {
             /*
              * Hoisted bounds checks always have preceding invariant slots
              * in the invariant list, so don't recheck this is an object.
              */
             masm.loadPayload(frame.addressOf(entry.u.check.arraySlot), T0);
-            masm.load32(Address(T0, offsetof(JSObject, initializedLength)), T0);
+            if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK) {
+                masm.load32(Address(T0, offsetof(JSObject, initializedLength)), T0);
+            } else {
+                masm.loadPtr(Address(T0, offsetof(JSObject, privateData)), T0);
+                masm.load32(Address(T0, TypedArray::lengthOffset()), T0);
+            }
 
             int32 constant = entry.u.check.constant;
 
@@ -1333,24 +1379,46 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
             break;
           }
 
-          case InvariantEntry::INVARIANT_SLOTS:
-          case InvariantEntry::INVARIANT_LENGTH: {
+          case InvariantEntry::DENSE_ARRAY_SLOTS:
+          case InvariantEntry::DENSE_ARRAY_LENGTH: {
             uint32 array = entry.u.array.arraySlot;
             Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
             jumps->append(notObject);
             masm.loadPayload(frame.addressOf(array), T0);
 
-            uint32 offset = (entry.kind == InvariantEntry::INVARIANT_SLOTS)
+            uint32 offset = (entry.kind == InvariantEntry::DENSE_ARRAY_SLOTS)
                 ? JSObject::offsetOfSlots()
                 : offsetof(JSObject, privateData);
 
             Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
 
             masm.loadPtr(Address(T0, offset), T0);
-            if (entry.kind == InvariantEntry::INVARIANT_LENGTH)
+            if (entry.kind == InvariantEntry::DENSE_ARRAY_LENGTH)
                 masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
             else
                 masm.storePtr(T0, address);
+            break;
+          }
+
+          case InvariantEntry::TYPED_ARRAY_SLOTS:
+          case InvariantEntry::TYPED_ARRAY_LENGTH: {
+            uint32 array = entry.u.array.arraySlot;
+            Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
+            jumps->append(notObject);
+            masm.loadPayload(frame.addressOf(array), T0);
+
+            Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
+
+            /* Load the internal typed array. */
+            masm.loadPtr(Address(T0, offsetof(JSObject, privateData)), T0);
+
+            if (entry.kind == InvariantEntry::TYPED_ARRAY_LENGTH) {
+                masm.load32(Address(T0, TypedArray::lengthOffset()), T0);
+                masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
+            } else {
+                masm.loadPtr(Address(T0, js::TypedArray::dataOffset()), T0);
+                masm.storePtr(T0, address);
+            }
             break;
           }
 
