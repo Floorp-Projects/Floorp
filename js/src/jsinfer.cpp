@@ -71,6 +71,10 @@
 #include "jsxml.h"
 #endif
 
+#ifdef __SUNPRO_CC
+#include <alloca.h>
+#endif
+
 using namespace js;
 using namespace js::types;
 using namespace js::analyze;
