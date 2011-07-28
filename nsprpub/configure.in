@@ -676,7 +676,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
    PROFILE_GEN_LDFLAGS="-fprofile-generate"
-   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
+   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch"
    PROFILE_USE_LDFLAGS="-fprofile-use"
 fi
 
@@ -1309,7 +1309,6 @@ case "$target" in
         i*86*)
             if test -n "$USE_64"; then
                 CPU_ARCH=x86_64
-                CC="$CC -arch x86_64"
             else        
                 CPU_ARCH=i386
             fi
@@ -1318,6 +1317,9 @@ case "$target" in
             CPU_ARCH=ppc
             ;;
     esac
+    if test "`echo $CC | grep -c '\-arch '`" = "0"; then
+        CC="$CC -arch $CPU_ARCH"
+    fi
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@ -headerpad_max_install_names'
     _OPTIMIZE_FLAGS=-O2
