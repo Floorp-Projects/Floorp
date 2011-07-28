@@ -749,11 +749,11 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         return;
 
     types::TypeObject *type = obj->gctype();
-    if (type != &types::emptyTypeObject && !type->isMarked())
+    if (type != &types::emptyTypeObject)
         type->trace(trc, /* weak = */ true);
 
     /* Trace universal (ops-independent) members. */
-    if (!obj->isDenseArray() && obj->newType && !obj->newType->isMarked())
+    if (!obj->isDenseArray() && obj->newType)
         obj->newType->trace(trc);
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
