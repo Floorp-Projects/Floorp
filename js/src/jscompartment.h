@@ -578,6 +578,7 @@ struct JS_FRIEND_API(JSCompartment) {
         return ionCompartment_;
     }
 #endif
+
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)

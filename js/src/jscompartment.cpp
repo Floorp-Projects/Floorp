@@ -57,7 +57,6 @@
 
 #include "jsgcinlines.h"
 #include "jsscopeinlines.h"
-
 #include "ion/IonCompartment.h"
 
 #if ENABLE_YARR_JIT
