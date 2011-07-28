@@ -151,10 +151,15 @@ class Bytecode
     uint32 defineCount;
     uint32 *defineArray;
 
-    /* --------- Lifetime analysis --------- */
+    union {
+        /* If this is a JOF_TYPESET opcode, index into the observed types for the op. */
+        types::TypeSet *observedTypes;
 
-    /* If this is a loop head, information about the loop. */
-    LoopAnalysis *loop;
+        /* If this is a loop head (TRACE or NOTRACE), information about the loop. */
+        LoopAnalysis *loop;
+    };
+
+    /* --------- Lifetime analysis --------- */
 
     /* Any allocation computed downstream for this bytecode. */
     mjit::RegisterAllocation *allocation;
@@ -409,7 +414,7 @@ static inline uint32 ArgSlot(uint32 arg) {
     return 2 + arg;
 }
 static inline uint32 LocalSlot(JSScript *script, uint32 local) {
-    return 2 + (script->fun ? script->fun->nargs : 0) + local;
+    return 2 + (script->hasFunction ? script->function()->nargs : 0) + local;
 }
 static inline uint32 TotalSlots(JSScript *script) {
     return LocalSlot(script, 0) + script->nfixed;
@@ -919,7 +924,7 @@ class ScriptAnalysis
 
     bool OOM() { return outOfMemory; }
     bool failed() { return hadFailure; }
-    bool inlineable(uint32 argc) { return isInlineable && argc == script->fun->nargs; }
+    bool inlineable(uint32 argc) { return isInlineable && argc == script->function()->nargs; }
 
     /* Whether there are POPV/SETRVAL bytecodes which can write to the frame's rval. */
     bool usesReturnValue() const { return usesRval; }
@@ -968,6 +973,11 @@ class ScriptAnalysis
     bool incrementInitialValueObserved(jsbytecode *pc) {
         const JSCodeSpec *cs = &js_CodeSpec[*pc];
         return (cs->format & JOF_POST) && !popGuaranteed(pc);
+    }
+
+    types::TypeSet *bytecodeTypes(const jsbytecode *pc) {
+        JS_ASSERT(JSOp(*pc) == JSOP_TRAP || (js_CodeSpec[*pc].format & JOF_TYPESET));
+        return getCode(pc).observedTypes;
     }
 
     const SSAValue &poppedValue(uint32 offset, uint32 which) {
@@ -1035,7 +1045,7 @@ class ScriptAnalysis
           case SSAValue::VAR:
             JS_ASSERT(!slotEscapes(v.varSlot()));
             if (v.varInitial()) {
-                return script->types.slotTypes(v.varSlot());
+                return types::TypeScript::SlotTypes(script, v.varSlot());
             } else {
                 /*
                  * Results of intermediate assignments have the same type as
@@ -1277,7 +1287,7 @@ class CrossScriptSSA
     JSScript *outerScript() { return outerFrame.script; }
 
     types::TypeSet *getValueTypes(const CrossSSAValue &cv) {
-        return getFrame(cv.frame).script->analysis(cx)->getValueTypes(cv.v);
+        return getFrame(cv.frame).script->analysis()->getValueTypes(cv.v);
     }
 
     bool addInlineFrame(JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc)

@@ -168,9 +168,9 @@ mjit::Compiler::compile()
                      : (*jit)->invokeEntry;
     } else if (status != Compile_Retry) {
         *checkAddr = JS_UNJITTABLE_SCRIPT;
-        if (outerScript->fun) {
+        if (outerScript->hasFunction) {
             outerScript->uninlineable = true;
-            types::MarkTypeObjectFlags(cx, outerScript->fun,
+            types::MarkTypeObjectFlags(cx, outerScript->function(),
                                        types::OBJECT_FLAG_UNINLINEABLE);
         }
     }
@@ -181,14 +181,12 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(JSScript *script)
 {
-    ScriptAnalysis *analysis = script->analysis(cx);
-    if (analysis && !analysis->ranBytecode())
-        analysis->analyzeBytecode(cx);
-
+    if (!script->ensureRanBytecode(cx))
+        return Compile_Error;
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
         return Compile_Error;
-    if (!analysis || analysis->OOM())
-        return Compile_Error;
+
+    ScriptAnalysis *analysis = script->analysis();
     if (analysis->failed()) {
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
@@ -227,13 +225,13 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
         return Compile_Okay;
 
     JSScript *script = ssa.getFrame(index).script;
-    ScriptAnalysis *analysis = script->analysis(cx);
+    ScriptAnalysis *analysis = script->analysis();
 
     /* Don't inline from functions which could have a non-global scope object. */
     if (!script->hasGlobal() ||
         script->global() != globalObj ||
-        (script->fun && script->fun->getParent() != globalObj) ||
-        (script->fun && script->fun->isHeavyweight()) ||
+        (script->hasFunction && script->function()->getParent() != globalObj) ||
+        (script->hasFunction && script->function()->isHeavyweight()) ||
         script->isActiveEval) {
         return Compile_Okay;
     }
@@ -337,7 +335,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
             if (status != Compile_Okay)
                 return status;
 
-            if (!script->analysis(cx)->inlineable(argc)) {
+            if (!script->analysis()->inlineable(argc)) {
                 okay = false;
                 break;
             }
@@ -354,8 +352,8 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
              * inlining we do not want to modify frame entries belonging to the
              * caller.
              */
-            if (script->analysis(cx)->usesThisValue() &&
-                script->types.thisTypes()->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
+            if (script->analysis()->usesThisValue() &&
+                types::TypeScript::ThisTypes(script)->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
                 okay = false;
                 break;
             }
@@ -407,11 +405,11 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
     }
     JS_ASSERT(ssa.getFrame(newa->inlineIndex).script == script);
 
-    ScriptAnalysis *newAnalysis = script->analysis(cx);
+    ScriptAnalysis *newAnalysis = script->analysis();
 
 #ifdef JS_METHODJIT_SPEW
     if (cx->typeInferenceEnabled() && IsJaegerSpewChannelActive(JSpew_Regalloc)) {
-        unsigned nargs = script->fun ? script->fun->nargs : 0;
+        unsigned nargs = script->hasFunction ? script->function()->nargs : 0;
         for (unsigned i = 0; i < nargs; i++) {
             uint32 slot = ArgSlot(i);
             if (!newAnalysis->slotEscapes(slot)) {
@@ -465,7 +463,7 @@ mjit::Compiler::popActiveFrame()
     this->PC = a->parentPC;
     this->a = a->parent;
     this->script = a->script;
-    this->analysis = this->script->analysis(cx);
+    this->analysis = this->script->analysis();
 
     frame.popActiveFrame();
 }
@@ -590,7 +588,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 
     for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
         VarType &vt = a->varTypes[slot];
-        vt.types = script->types.slotTypes(slot);
+        vt.types = types::TypeScript::SlotTypes(script, slot);
         vt.type = vt.types->getKnownTypeTag(cx);
     }
 
@@ -653,7 +651,7 @@ mjit::Compiler::generatePrologue()
      * If there is no function, then this can only be called via JaegerShot(),
      * which expects an existing frame to be initialized like the interpreter.
      */
-    if (script->fun) {
+    if (script->hasFunction) {
         Jump j = masm.jump();
 
         /*
@@ -665,7 +663,7 @@ mjit::Compiler::generatePrologue()
         Label fastPath = masm.label();
 
         /* Store this early on so slow paths can access it. */
-        masm.storePtr(ImmPtr(script->fun), Address(JSFrameReg, StackFrame::offsetOfExec()));
+        masm.storePtr(ImmPtr(script->function()), Address(JSFrameReg, StackFrame::offsetOfExec()));
 
         {
             /*
@@ -677,13 +675,13 @@ mjit::Compiler::generatePrologue()
             arityLabel = stubcc.masm.label();
 
             Jump argMatch = stubcc.masm.branch32(Assembler::Equal, JSParamReg_Argc,
-                                                 Imm32(script->fun->nargs));
+                                                 Imm32(script->function()->nargs));
 
             if (JSParamReg_Argc != Registers::ArgReg1)
                 stubcc.masm.move(JSParamReg_Argc, Registers::ArgReg1);
 
             /* Slow path - call the arity check function. Returns new fp. */
-            stubcc.masm.storePtr(ImmPtr(script->fun),
+            stubcc.masm.storePtr(ImmPtr(script->function()),
                                  Address(JSFrameReg, StackFrame::offsetOfExec()));
             OOL_STUBCALL(stubs::FixupArity, REJOIN_NONE);
             stubcc.masm.move(Registers::ReturnReg, JSFrameReg);
@@ -698,7 +696,7 @@ mjit::Compiler::generatePrologue()
                 this->argsCheckStub = stubcc.masm.label();
                 this->argsCheckJump.linkTo(this->argsCheckStub, &stubcc.masm);
 #endif
-                stubcc.masm.storePtr(ImmPtr(script->fun), Address(JSFrameReg, StackFrame::offsetOfExec()));
+                stubcc.masm.storePtr(ImmPtr(script->function()), Address(JSFrameReg, StackFrame::offsetOfExec()));
                 OOL_STUBCALL(stubs::CheckArgumentTypes, REJOIN_CHECK_ARGUMENTS);
 #ifdef JS_MONOIC
                 this->argsCheckFallthrough = stubcc.masm.label();
@@ -738,14 +736,14 @@ mjit::Compiler::generatePrologue()
         }
 
         /* Create the call object. */
-        if (script->fun->isHeavyweight()) {
+        if (script->function()->isHeavyweight()) {
             prepareStubCall(Uses(0));
             INLINE_STUBCALL(stubs::CreateFunCallObject, REJOIN_CREATE_CALL_OBJECT);
         }
 
         j.linkTo(masm.label(), &masm);
 
-        if (analysis->usesScopeChain() && !script->fun->isHeavyweight()) {
+        if (analysis->usesScopeChain() && !script->function()->isHeavyweight()) {
             /*
              * Load the scope chain into the frame if necessary.  The scope chain
              * is always set for global and eval frames, and will have been set by
@@ -754,13 +752,13 @@ mjit::Compiler::generatePrologue()
             RegisterID t0 = Registers::ReturnReg;
             Jump hasScope = masm.branchTest32(Assembler::NonZero,
                                               FrameFlagsAddress(), Imm32(StackFrame::HAS_SCOPECHAIN));
-            masm.loadPayload(Address(JSFrameReg, StackFrame::offsetOfCallee(script->fun)), t0);
+            masm.loadPayload(Address(JSFrameReg, StackFrame::offsetOfCallee(script->function())), t0);
             masm.loadPtr(Address(t0, offsetof(JSObject, parent)), t0);
             masm.storePtr(t0, Address(JSFrameReg, StackFrame::offsetOfScopeChain()));
             hasScope.linkTo(masm.label(), &masm);
         }
 
-        if (outerScript->usesArguments && !script->fun->isHeavyweight()) {
+        if (outerScript->usesArguments && !script->function()->isHeavyweight()) {
             /*
              * Make sure that fp->args.nactual is always coherent. This may be
              * inspected directly by JIT code, and is not guaranteed to be
@@ -771,7 +769,7 @@ mjit::Compiler::generatePrologue()
                                                    StackFrame::UNDERFLOW_ARGS |
                                                    StackFrame::OVERFLOW_ARGS |
                                                    StackFrame::HAS_ARGS_OBJ));
-            masm.storePtr(ImmPtr((void *) script->fun->nargs),
+            masm.storePtr(ImmPtr((void *) script->function()->nargs),
                           Address(JSFrameReg, StackFrame::offsetOfArgs()));
             hasArgs.linkTo(masm.label(), &masm);
         }
@@ -787,7 +785,7 @@ mjit::Compiler::generatePrologue()
 
     if (cx->typeInferenceEnabled()) {
 #ifdef DEBUG
-        if (script->fun)
+        if (script->hasFunction)
             INLINE_STUBCALL(stubs::AssertArgumentTypes, REJOIN_NONE);
 #endif
         ensureDoubleArguments();
@@ -802,7 +800,7 @@ void
 mjit::Compiler::ensureDoubleArguments()
 {
     /* Convert integer arguments which were inferred as (int|double) to doubles. */
-    for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
+    for (uint32 i = 0; script->hasFunction && i < script->function()->nargs; i++) {
         uint32 slot = ArgSlot(i);
         if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
             frame.ensureDouble(frame.getArg(i));
@@ -904,7 +902,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
     jit->invokeEntry = result;
     jit->singleStepMode = script->singleStepMode;
-    if (script->fun) {
+    if (script->hasFunction) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
         jit->argsCheckEntry = stubCode.locationOf(argsCheckLabel).executableAddress();
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
@@ -965,7 +963,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         else
             to.parent = NULL;
         to.parentpc = from->parentPC;
-        to.fun = from->script->fun;
+        to.fun = from->script->function();
         to.depth = ssa.getFrame(from->inlineIndex).depth;
     }
 
@@ -1007,7 +1005,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #if defined JS_MONOIC
     JS_INIT_CLIST(&jit->callers);
 
-    if (script->fun && cx->typeInferenceEnabled()) {
+    if (script->hasFunction && cx->typeInferenceEnabled()) {
         jit->argsCheckStub = stubCode.locationOf(argsCheckStub);
         jit->argsCheckFallthrough = stubCode.locationOf(argsCheckFallthrough);
         jit->argsCheckJump = stubCode.locationOf(argsCheckJump);
@@ -1637,7 +1635,7 @@ mjit::Compiler::generateMethod()
                 applyTricks = LazyArgsObj;
                 pushSyncedEntry(0);
             } else if (cx->typeInferenceEnabled() && !script->strictModeCode &&
-                       !script->fun->getType(cx)->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
+                       !script->function()->getType(cx)->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
                 frame.push(MagicValue(JS_LAZY_ARGUMENTS));
             } else {
                 jsop_arguments(REJOIN_FALLTHROUGH);
@@ -1864,7 +1862,7 @@ mjit::Compiler::generateMethod()
                 /* Watch for overflow in constant propagation. */
                 types::TypeSet *pushed = pushedTypeSet(0);
                 if (!v.isInt32() && pushed && !pushed->hasType(types::Type::DoubleType())) {
-                    script->types.monitorOverflow(cx, PC);
+                    types::TypeScript::MonitorOverflow(cx, script, PC);
                     return Compile_Retry;
                 }
 
@@ -2843,7 +2841,7 @@ mjit::Compiler::fixPrimitiveReturn(Assembler *masm, FrameEntry *fe)
     JS_ASSERT(isConstructing);
 
     bool ool = (masm != &this->masm);
-    Address thisv(JSFrameReg, StackFrame::offsetOfThis(script->fun));
+    Address thisv(JSFrameReg, StackFrame::offsetOfThis(script->function()));
 
     // We can just load |thisv| if either of the following is true:
     //  (1) There is no explicit return value, AND fp->rval is not used.
@@ -2952,7 +2950,7 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
 void
 mjit::Compiler::emitReturn(FrameEntry *fe)
 {
-    JS_ASSERT_IF(!script->fun, JSOp(*PC) == JSOP_STOP);
+    JS_ASSERT_IF(!script->hasFunction, JSOp(*PC) == JSOP_STOP);
 
     /* Only the top of the stack can be returned. */
     JS_ASSERT_IF(fe, fe == frame.peek(-1));
@@ -3008,7 +3006,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
      * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
      * out the entry frame's activation objects.
      */
-    if (script->fun && script->fun->isHeavyweight()) {
+    if (script->hasFunction && script->function()->isHeavyweight()) {
         /* There will always be a call object. */
         prepareStubCall(Uses(fe ? 1 : 0));
         INLINE_STUBCALL(stubs::PutActivationObjects, REJOIN_NONE);
@@ -3728,7 +3726,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         if (ssa.iterFrame(i).parent == a->inlineIndex && ssa.iterFrame(i).parentpc == PC) {
             JSScript *script = ssa.iterFrame(i).script;
             inlineCallees.append(script);
-            if (script->analysis(cx)->numReturnSites() > 1)
+            if (script->analysis()->numReturnSites() > 1)
                 calleeMultipleReturns = true;
         }
     }
@@ -3807,7 +3805,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         if (i + 1 != inlineCallees.length()) {
             /* Guard on the callee, except when this object must be the callee. */
             JS_ASSERT(calleeReg.isSet());
-            calleePrevious = masm.branchPtr(Assembler::NotEqual, calleeReg.reg(), ImmPtr(script->fun));
+            calleePrevious = masm.branchPtr(Assembler::NotEqual, calleeReg.reg(), ImmPtr(script->function()));
         }
 
         a->returnJumps = &returnJumps;
@@ -3831,7 +3829,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             if (status == Compile_Abort) {
                 /* The callee is uncompileable, mark it as uninlineable and retry. */
                 script->uninlineable = true;
-                types::MarkTypeObjectFlags(cx, script->fun,
+                types::MarkTypeObjectFlags(cx, script->function(),
                                            types::OBJECT_FLAG_UNINLINEABLE);
                 return Compile_Retry;
             }
@@ -5325,7 +5323,7 @@ mjit::Compiler::jsop_this()
      * In direct-call eval code, we wrapped 'this' before entering the eval.
      * In global code, 'this' is always an object.
      */
-    if (script->fun && !script->strictModeCode) {
+    if (script->hasFunction && !script->strictModeCode) {
         FrameEntry *thisFe = frame.peek(-1);
 
         /*
@@ -5336,7 +5334,7 @@ mjit::Compiler::jsop_this()
 
         if (!thisFe->isType(JSVAL_TYPE_OBJECT)) {
             JSValueType type = cx->typeInferenceEnabled()
-                ? script->types.thisTypes()->getKnownTypeTag(cx)
+                ? types::TypeScript::ThisTypes(script)->getKnownTypeTag(cx)
                 : JSVAL_TYPE_UNKNOWN;
             if (type != JSVAL_TYPE_OBJECT) {
                 Jump notObj = frame.testObject(Assembler::NotEqual, thisFe);
@@ -6146,7 +6144,8 @@ mjit::Compiler::jsop_newinit()
     /* Don't bake in types for non-compileAndGo scripts. */
     types::TypeObject *type = NULL;
     if (globalObj) {
-        type = script->types.initObject(cx, PC, isArray ? JSProto_Array : JSProto_Object);
+        type = types::TypeScript::InitObject(cx, script, PC,
+                                             isArray ? JSProto_Array : JSProto_Object);
         if (!type)
             return false;
     }
@@ -7072,7 +7071,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
     if (!cx->typeInferenceEnabled() || !(js_CodeSpec[*PC].format & JOF_TYPESET))
         return state;
 
-    types::TypeSet *types = script->types.bytecodeTypes(PC);
+    types::TypeSet *types = analysis->bytecodeTypes(PC);
     if (types->unknown()) {
         /*
          * If the result of this opcode is already unknown, there is no way for

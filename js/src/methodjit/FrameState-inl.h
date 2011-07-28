@@ -997,11 +997,11 @@ FrameState::frameOffset(const FrameEntry *fe, ActiveFrame *a) const
     if (fe >= a->locals)
         return StackFrame::offsetOfFixed(uint32(fe - a->locals));
     if (fe >= a->args)
-        return StackFrame::offsetOfFormalArg(a->script->fun, uint32(fe - a->args));
+        return StackFrame::offsetOfFormalArg(a->script->function(), uint32(fe - a->args));
     if (fe == a->this_)
-        return StackFrame::offsetOfThis(a->script->fun);
+        return StackFrame::offsetOfThis(a->script->hasFunction ? a->script->function() : NULL);
     if (fe == a->callee_)
-        return StackFrame::offsetOfCallee(a->script->fun);
+        return StackFrame::offsetOfCallee(a->script->function());
     JS_NOT_REACHED("Bad fe");
     return 0;
 }
@@ -1161,7 +1161,7 @@ FrameState::getLocal(uint32 slot)
 inline FrameEntry *
 FrameState::getArg(uint32 slot)
 {
-    JS_ASSERT(a->script->fun && slot < a->script->fun->nargs);
+    JS_ASSERT(slot < a->script->function()->nargs);
     return getOrTrack(uint32(a->args + slot - entries));
 }
 
@@ -1182,7 +1182,7 @@ inline FrameEntry *
 FrameState::getCallee()
 {
     // Callee can only be used in function code, and it's always an object.
-    JS_ASSERT(a->script->fun);
+    JS_ASSERT(a->script->hasFunction);
     FrameEntry *fe = a->callee_;
     if (!fe->isTracked()) {
         addToTracker(fe);

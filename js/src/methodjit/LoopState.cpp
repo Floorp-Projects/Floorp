@@ -82,7 +82,7 @@ SafeMul(int32 one, int32 two, int32 *res)
 LoopState::LoopState(JSContext *cx, analyze::CrossScriptSSA *ssa,
                      mjit::Compiler *cc, FrameState *frame)
     : cx(cx), ssa(ssa),
-      outerScript(ssa->outerScript()), outerAnalysis(outerScript->analysis(cx)),
+      outerScript(ssa->outerScript()), outerAnalysis(outerScript->analysis()),
       cc(*cc), frame(*frame),
       lifetime(NULL), alloc(NULL), reachedEntryPoint(false), loopRegs(0), skipAnalysis(false),
       loopJoins(CompilerAllocPolicy(cx, *cc)),
@@ -166,8 +166,8 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
      * Don't hoist bounds checks or loop invariant code in scripts that have
      * had indirect modification of their arguments.
      */
-    if (outerScript->fun) {
-        if (TypeSet::HasObjectFlags(cx, outerScript->fun->getType(cx), OBJECT_FLAG_UNINLINEABLE))
+    if (outerScript->hasFunction) {
+        if (TypeSet::HasObjectFlags(cx, outerScript->function()->getType(cx), OBJECT_FLAG_UNINLINEABLE))
             this->skipAnalysis = true;
     }
 
@@ -980,7 +980,7 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
      */
     JS_ASSERT(pushed.v.kind() == SSAValue::PUSHED);
     jsbytecode *PC = ssa->getFrame(pushed.frame).script->code + pushed.v.pushedOffset();
-    ScriptAnalysis *analysis = ssa->getFrame(pushed.frame).script->analysis(cx);
+    ScriptAnalysis *analysis = ssa->getFrame(pushed.frame).script->analysis();
 
     uint32 baseSlot = UNASSIGNED;
     int32 baseConstant = 0;
@@ -1424,7 +1424,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
 
           case InvariantEntry::INVARIANT_ARGS_BASE: {
             Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
-            masm.loadFrameActuals(outerScript->fun, T0);
+            masm.loadFrameActuals(outerScript->function(), T0);
             masm.storePtr(T0, address);
             break;
           }
@@ -1758,7 +1758,7 @@ LoopState::analyzeLoopBody(unsigned frame)
     }
 
     JSScript *script = ssa->getFrame(frame).script;
-    analyze::ScriptAnalysis *analysis = script->analysis(cx);
+    analyze::ScriptAnalysis *analysis = script->analysis();
     JS_ASSERT(analysis && !analysis->failed() && analysis->ranInference());
 
     /*
@@ -2089,7 +2089,7 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32 *pslot, int32 *pconstan
     CrossSSAValue cv = ssa->foldValue(iv);
 
     JSScript *script = ssa->getFrame(cv.frame).script;
-    ScriptAnalysis *analysis = script->analysis(cx);
+    ScriptAnalysis *analysis = script->analysis();
     const SSAValue &v = cv.v;
 
     /*
@@ -2199,7 +2199,7 @@ bool
 LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
 {
     JSScript *script = ssa->getFrame(cv.frame).script;
-    ScriptAnalysis *analysis = script->analysis(cx);
+    ScriptAnalysis *analysis = script->analysis();
     const SSAValue &v = cv.v;
 
     if (v.kind() == SSAValue::VAR && !v.varInitial()) {

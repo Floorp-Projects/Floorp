@@ -203,7 +203,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
              * itself. Note that monitorOverflow will propagate the type as
              * necessary if a *INC operation overflowed.
              */
-            script->types.monitorOverflow(cx, PC);
+            types::TypeScript::MonitorOverflow(cx, script, PC);
             return false;
         }
         frame.popn(2);
@@ -947,7 +947,7 @@ mjit::Compiler::jsop_mod()
     if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, &v)) {
         types::TypeSet *pushed = pushedTypeSet(0);
         if (!v.isInt32() && pushed && !pushed->hasType(types::Type::DoubleType())) {
-            script->types.monitorOverflow(cx, PC);
+            types::TypeScript::MonitorOverflow(cx, script, PC);
             return false;
         }
         frame.popn(2);

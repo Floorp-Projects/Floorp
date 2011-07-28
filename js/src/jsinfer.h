@@ -51,6 +51,9 @@
 
 namespace js {
     class CallArgs;
+    namespace analyze {
+        class ScriptAnalysis;
+    }
 }
 
 namespace js {
@@ -880,53 +883,44 @@ struct TypeCallsite
 /* Persistent type information for a script, retained across GCs. */
 struct TypeScript
 {
-    inline JSScript *script();
+    /* Analysis information for the script, cleared on each GC. */
+    analyze::ScriptAnalysis *analysis;
 
-    /* Lazily constructed types of variables and JOF_TYPESET ops in this script. */
-    TypeSet *typeArray;
-    inline unsigned numTypeSets();
+    /* Array of type type sets for variables and JOF_TYPESET ops. */
+    TypeSet *typeArray() { return (TypeSet *) (jsuword(this) + sizeof(TypeScript)); }
 
-    /* Any type objects associated with this script, including initializer objects. */
-    TypeObject *typeObjects;
+    static inline unsigned NumTypeSets(JSScript *script);
 
     /* Dynamic types generated at points within this script. */
     TypeResult *dynamicList;
 
-    /* Make sure there the type array has been constructed. */
-    inline bool ensureTypeArray(JSContext *cx);
-
-    inline TypeSet *bytecodeTypes(const jsbytecode *pc);
-    inline TypeSet *returnTypes();
-    inline TypeSet *thisTypes();
-    inline TypeSet *argTypes(unsigned i);
-    inline TypeSet *localTypes(unsigned i);
-    inline TypeSet *upvarTypes(unsigned i);
+    static inline TypeSet *ReturnTypes(JSScript *script);
+    static inline TypeSet *ThisTypes(JSScript *script);
+    static inline TypeSet *ArgTypes(JSScript *script, unsigned i);
+    static inline TypeSet *LocalTypes(JSScript *script, unsigned i);
+    static inline TypeSet *UpvarTypes(JSScript *script, unsigned i);
 
     /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
-    inline TypeSet *slotTypes(unsigned slot);
-
-  private:
-    bool makeTypeArray(JSContext *cx);
-  public:
+    static inline TypeSet *SlotTypes(JSScript *script, unsigned slot);
 
 #ifdef DEBUG
     /* Check that correct types were inferred for the values pushed by this bytecode. */
-    void checkBytecode(JSContext *cx, jsbytecode *pc, const js::Value *sp);
+    static void CheckBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value *sp);
 #endif
 
     /* Get the default 'new' object for a given standard class, per the script's global. */
-    inline TypeObject *standardType(JSContext *cx, JSProtoKey kind);
+    static inline TypeObject *StandardType(JSContext *cx, JSScript *script, JSProtoKey kind);
 
     /* Get a type object for an allocation site in this script. */
-    inline TypeObject *initObject(JSContext *cx, const jsbytecode *pc, JSProtoKey kind);
+    static inline TypeObject *InitObject(JSContext *cx, JSScript *script, const jsbytecode *pc, JSProtoKey kind);
 
     /*
      * Monitor a bytecode pushing a value which is not accounted for by the
      * inference type constraints, such as integer overflow.
      */
-    inline void monitorOverflow(JSContext *cx, jsbytecode *pc);
-    inline void monitorString(JSContext *cx, jsbytecode *pc);
-    inline void monitorUnknown(JSContext *cx, jsbytecode *pc);
+    static inline void MonitorOverflow(JSContext *cx, JSScript *script, jsbytecode *pc);
+    static inline void MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc);
+    static inline void MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc);
 
     /*
      * Monitor a bytecode pushing any value. This must be called for any opcode
@@ -935,22 +929,23 @@ struct TypeScript
      * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
      * and only look at barriers when generating JIT code for the script.
      */
-    inline void monitor(JSContext *cx, jsbytecode *pc, const js::Value &val);
+    static inline void Monitor(JSContext *cx, JSScript *script, jsbytecode *pc,
+                               const js::Value &val);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */
-    inline void monitorAssign(JSContext *cx, jsbytecode *pc,
-                              JSObject *obj, jsid id, const js::Value &val);
+    static inline void MonitorAssign(JSContext *cx, JSScript *script, jsbytecode *pc,
+                                     JSObject *obj, jsid id, const js::Value &val);
 
-    /* Add a type for a variable in this script. */
-    inline void setThis(JSContext *cx, Type type);
-    inline void setThis(JSContext *cx, const js::Value &value);
-    inline void setLocal(JSContext *cx, unsigned local, Type type);
-    inline void setLocal(JSContext *cx, unsigned local, const js::Value &value);
-    inline void setArgument(JSContext *cx, unsigned arg, Type type);
-    inline void setArgument(JSContext *cx, unsigned arg, const js::Value &value);
-    inline void setUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
+    /* Add a type for a variable in a script. */
+    static inline void SetThis(JSContext *cx, JSScript *script, Type type);
+    static inline void SetThis(JSContext *cx, JSScript *script, const js::Value &value);
+    static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, Type type);
+    static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, const js::Value &value);
+    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type);
+    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value);
+    static inline void SetUpvar(JSContext *cx, JSScript *script, unsigned upvar, const js::Value &value);
 
-    void sweep(JSContext *cx);
+    static void Sweep(JSContext *cx, JSScript *script);
     void destroy();
 };
 

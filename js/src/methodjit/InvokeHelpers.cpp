@@ -187,7 +187,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
     if (!Invoke(f.cx, args))
         THROW();
 
-    f.script()->types.monitor(f.cx, f.pc(), args.rval());
+    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
 }
 
 void JS_FASTCALL
@@ -197,7 +197,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
     if (!InvokeConstructor(f.cx, args))
         THROW();
 
-    f.script()->types.monitor(f.cx, f.pc(), args.rval());
+    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
 }
 
 static inline bool
@@ -375,7 +375,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     f.cx->stack.popInlineFrame(regs);
 
     if (ok)
-        f.script()->types.monitor(cx, f.pc(), args.rval());
+        types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
 
     *pret = NULL;
     return ok;
@@ -404,7 +404,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     } else {
         if (!InvokeConstructor(cx, args))
             THROW();
-        f.script()->types.monitor(cx, f.pc(), args.rval());
+        types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
     }
 }
 
@@ -433,7 +433,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
         if (!Invoke(f.cx, args))
             THROW();
 
-        f.script()->types.monitor(f.cx, f.pc(), args.rval());
+        types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
         return;
     }
 
@@ -441,7 +441,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
     if (!DirectEval(f.cx, args))
         THROW();
 
-    f.script()->types.monitor(f.cx, f.pc(), args.rval());
+    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
 }
 
 void
@@ -466,7 +466,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallRes
         if (ucr->fun->isNative()) {
             if (!CallJSNative(cx, ucr->fun->u.n.native, args))
                 THROW();
-            f.script()->types.monitor(cx, f.pc(), args.rval());
+            types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
             return;
         }
     }
@@ -474,7 +474,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallRes
     if (!Invoke(f.cx, args))
         THROW();
 
-    f.script()->types.monitor(cx, f.pc(), args.rval());
+    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
     return;
 }
 
@@ -613,17 +613,15 @@ js_InternalThrow(VMFrame &f)
          */
         ExpandInlineFrames(cx->compartment, true);
 
-        analyze::AutoEnterAnalysis enter(cx);
-        analyze::ScriptAnalysis *analysis = script->analysis(cx);
-        if (analysis && !analysis->ranBytecode())
-            analysis->analyzeBytecode(cx);
-        if (!analysis || analysis->OOM()) {
+        if (!script->ensureRanBytecode(cx)) {
             js_ReportOutOfMemory(cx);
             return NULL;
         }
 
+        analyze::AutoEnterAnalysis enter(cx);
+
         cx->regs().pc = pc;
-        cx->regs().sp = fp->base() + analysis->getCode(pc).stackDepth;
+        cx->regs().sp = fp->base() + script->analysis()->getCode(pc).stackDepth;
 
         /*
          * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
@@ -1215,7 +1213,7 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
         double d = ov.toNumber();
         double N = (cs->format & JOF_INC) ? 1 : -1;
         if (!nv.setNumber(d + N))
-            f.script()->types.monitorOverflow(cx, f.pc());
+            types::TypeScript::MonitorOverflow(cx, f.script(), f.pc());
     }
 
     *var = nv;
@@ -1247,15 +1245,13 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     JSOp op = JSOp(*pc);
     const JSCodeSpec *cs = &js_CodeSpec[op];
 
-    analyze::AutoEnterAnalysis enter(cx);
-
-    analyze::ScriptAnalysis *analysis = script->analysis(cx);
-    if (analysis && !analysis->ranBytecode())
-        analysis->analyzeBytecode(cx);
-    if (!analysis || analysis->OOM()) {
+    if (!script->ensureRanBytecode(cx)) {
         js_ReportOutOfMemory(cx);
         return js_InternalThrow(f);
     }
+
+    analyze::AutoEnterAnalysis enter(cx);
+    analyze::ScriptAnalysis *analysis = script->analysis();
 
     /*
      * f.regs.sp is not normally maintained by stubs (except for call prologues
@@ -1319,7 +1315,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
          * When making a scripted call at monitored sites, it is the caller's
          * responsibility to update the pushed type set.
          */
-        script->types.monitor(cx, pc, nextsp[-1]);
+        types::TypeScript::Monitor(cx, script, pc, nextsp[-1]);
         f.regs.pc = nextpc;
         break;
       }
