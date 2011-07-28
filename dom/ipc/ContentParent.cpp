@@ -565,8 +565,11 @@ bool
 ContentParent::RecvGetSystemColors(const PRUint32& colorsCount, InfallibleTArray<PRUint32>* colors)
 {
 #ifdef ANDROID
-    if (!AndroidBridge::Bridge())
-        return false;
+    NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
+    if (AndroidBridge::Bridge() == nsnull) {
+        // Do not fail - the colors won't be right, but it's not critical
+        return true;
+    }
 
     colors->AppendElements(colorsCount);
 
@@ -581,8 +584,11 @@ bool
 ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32& aIconSize, InfallibleTArray<PRUint8>* bits)
 {
 #ifdef ANDROID
-    if (!AndroidBridge::Bridge())
-        return false;
+    NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
+    if (AndroidBridge::Bridge() == nsnull) {
+        // Do not fail - just no icon will be shown
+        return true;
+    }
 
     bits->AppendElements(aIconSize * aIconSize * 4);
 
