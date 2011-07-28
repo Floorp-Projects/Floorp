@@ -506,7 +506,7 @@ AsyncConnectionHelper::ConvertCloneBuffersToArray(
   nsresult rv = ConvertCloneBuffersToArrayInternal(aCx, aBuffers, aResult);
 
   for (PRUint32 index = 0; index < aBuffers.Length(); index++) {
-    aBuffers[index].clear();
+    aBuffers[index].clear(aCx);
   }
   aBuffers.Clear();
 
