@@ -3,32 +3,49 @@
 
 function test() {
   waitForExplicitFinish();
-  showTabView(onTabViewShown);
+
+  window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
+  TabView.toggle();
 }
 
-function onTabViewShown() {
+function onTabViewWindowLoaded() {
+  window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
+
   ok(TabView.isVisible(), "Tab View is visible");
 
-  let contentWindow = TabView.getContentWindow();
+  let contentWindow = document.getElementById("tab-view").contentWindow;
   let [originalTab] = gBrowser.visibleTabs;
 
-  let createGroupItem = function (left, top, width, height) {
-    let box = new contentWindow.Rect(left, top, width, height);
-    let groupItem = new contentWindow.GroupItem([], {bounds: box, immediately: true});
-
-    contentWindow.UI.setActive(groupItem);
-    gBrowser.loadOneTab("about:blank", {inBackground: true});
-
-    return groupItem;
-  };
-
   // create group one and two
-  let groupOne = createGroupItem(20, 20, 300, 300);
-  let groupTwo = createGroupItem(20, 400, 300, 300);
+  let boxOne = new contentWindow.Rect(20, 20, 300, 300);
+  let groupOne = new contentWindow.GroupItem([], { bounds: boxOne });
+  ok(groupOne.isEmpty(), "This group is empty");
 
-  waitForFocus(function () {
-    addTest(contentWindow, groupOne.id, groupTwo.id, originalTab);
+  let boxTwo = new contentWindow.Rect(20, 400, 300, 300);
+  let groupTwo = new contentWindow.GroupItem([], { bounds: boxTwo });
+
+  groupOne.addSubscriber("childAdded", function onChildAdded() {
+    groupOne.removeSubscriber("childAdded", onChildAdded);
+    groupTwo.newTab();
   });
+
+  let count = 0;
+  let onTabViewShown = function() {
+    if (count == 2) {
+      window.removeEventListener("tabviewshown", onTabViewShown, false);
+      addTest(contentWindow, groupOne.id, groupTwo.id, originalTab);
+    }
+  };
+  let onTabViewHidden = function() {
+    TabView.toggle();
+    if (++count == 2)
+      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+  };
+  window.addEventListener("tabviewshown", onTabViewShown, false);
+  window.addEventListener("tabviewhidden", onTabViewHidden, false);
+
+  // open tab in group
+  groupOne.newTab();
 }
 
 function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
@@ -57,13 +74,24 @@ function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
        "The number of children in group one is decreased by 1");
     is(groupTwo.getChildren().length, ++groupTwoTabItemCount,
        "The number of children in group two is increased by 1");
-
-    closeGroupItem(groupOne, function () {
-      closeGroupItem(groupTwo, function () hideTabView(finish));
+  
+    let onTabViewHidden = function() {
+      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+      groupTwo.closeAll();
+      // close undo group
+      let closeButton = groupTwo.$undoContainer.find(".close");
+      EventUtils.sendMouseEvent(
+        { type: "click" }, closeButton[0], contentWindow);
+    };
+    groupTwo.addSubscriber("close", function onClose() {
+      groupTwo.removeSubscriber("close", onClose);
+      finish(); 
     });
+    window.addEventListener("tabviewhidden", onTabViewHidden, false);
+    gBrowser.selectedTab = originalTab;
   }
-
   groupTwo.addSubscriber("childAdded", endGame);
+  
   simulateDragDrop(tabItem.container, offsetX, offsetY, contentWindow);
 }
 
