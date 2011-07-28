@@ -128,8 +128,8 @@ static void Scale(gfx3DMatrix& aTransform, double aXScale, double aYScale)
 
 static void ReverseTranslate(gfx3DMatrix& aTransform, ViewTransform& aViewTransform)
 {
-  aTransform._41 -= aViewTransform.mTranslation.x / aViewTransform.mXScale;
-  aTransform._42 -= aViewTransform.mTranslation.y / aViewTransform.mYScale;
+  aTransform._41 -= aViewTransform.mTranslation.x * aViewTransform.mXScale;
+  aTransform._42 -= aViewTransform.mTranslation.y * aViewTransform.mYScale;
 }
 
 
@@ -321,6 +321,8 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
       nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
       shadowTransform = shadowTransform *
           gfx3DMatrix::Translation(float(rootFrameOffset.x), float(rootFrameOffset.y), 0.0);
+      layerTransform.mXScale *= GetXScale(currentTransform);
+      layerTransform.mYScale *= GetYScale(currentTransform);
     }
   } else {
     shadowTransform = aLayer->GetTransform();
@@ -338,9 +340,6 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
   }
 
   shadow->SetShadowTransform(shadowTransform);
-  layerTransform.mXScale *= GetXScale(shadowTransform);
-  layerTransform.mYScale *= GetYScale(shadowTransform);
-
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
     TransformShadowTree(aBuilder, aFrameLoader, aFrame, child, layerTransform);
