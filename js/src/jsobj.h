@@ -806,12 +806,12 @@ struct JSObject : js::gc::Cell {
 
     inline void clearType();
     inline void setType(js::types::TypeObject *newType);
-    inline bool setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType);
-    inline void setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape);
 
     inline js::types::TypeObject *getNewType(JSContext *cx, JSScript *script = NULL,
                                              bool markUnknown = false);
+  private:
     void makeNewType(JSContext *cx, JSScript *script, bool markUnknown);
+  public:
 
     /* Set a new prototype for an object with a singleton type. */
     bool splicePrototype(JSContext *cx, JSObject *proto);

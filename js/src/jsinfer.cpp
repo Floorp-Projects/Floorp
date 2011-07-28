@@ -2439,7 +2439,6 @@ struct types::ObjectTableKey
 struct types::ObjectTableEntry
 {
     TypeObject *object;
-    Shape *newShape;
     Type *types;
 };
 
@@ -2499,21 +2498,9 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
             }
         }
 
-        obj->setTypeAndShape(p->value.object, p->value.newShape);
+        obj->setType(p->value.object);
     } else {
-        /*
-         * Make a new type to use, and regenerate a new shape to go with it.
-         * Shapes are rooted at the empty shape for the object's type, so we
-         * can't change the type without changing the shape.
-         */
-        JSObject *xobj = NewBuiltinClassInstance(cx, &js_ObjectClass,
-                                                 (gc::FinalizeKind) obj->finalizeKind());
-        if (!xobj) {
-            cx->compartment->types.setPendingNukeTypes(cx);
-            return;
-        }
-        AutoObjectRooter xvr(cx, xobj);
-
+        /* Make a new type to use for the object and similar future ones. */
         char *name = NULL;
 #ifdef DEBUG
         static unsigned count = 0;
@@ -2522,11 +2509,10 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 #endif
 
         TypeObject *objType = newTypeObject(cx, NULL, name, "", JSProto_Object, obj->getProto());
-        if (!objType) {
+        if (!objType || !objType->addDefiniteProperties(cx, obj)) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
         }
-        xobj->setType(objType);
 
         jsid *ids = (jsid *) cx->calloc_(obj->slotSpan() * sizeof(jsid));
         if (!ids) {
@@ -2551,20 +2537,6 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
             shape = shape->previous();
         }
 
-        /* Construct the new shape. */
-        for (unsigned i = 0; i < obj->slotSpan(); i++) {
-            if (!DefineNativeProperty(cx, xobj, ids[i], UndefinedValue(), NULL, NULL,
-                                      JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE)) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                return;
-            }
-        }
-        JS_ASSERT(!xobj->inDictionaryMode());
-        const Shape *newShape = xobj->lastProperty();
-
-        if (!objType->addDefiniteProperties(cx, xobj))
-            return;
-
         ObjectTableKey key;
         key.ids = ids;
         key.nslots = obj->slotSpan();
@@ -2574,7 +2546,6 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 
         ObjectTableEntry entry;
         entry.object = objType;
-        entry.newShape = (Shape *) newShape;
         entry.types = types;
 
         p = objectTypeTable->lookupForAdd(obj);
@@ -2583,7 +2554,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
             return;
         }
 
-        obj->setTypeAndShape(objType, newShape);
+        obj->setType(objType);
     }
 }
 
@@ -4409,9 +4380,9 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
     TypeNewScript::Initializer done(TypeNewScript::Initializer::DONE, 0);
 
     /*
-     * The base object was created with a different type and
-     * finalize kind than we will use for subsequent new objects.
-     * Generate an object with the appropriate final shape.
+     * The base object may have been created with a different finalize kind
+     * than we will use for subsequent new objects. Generate an object with the
+     * appropriate final shape.
      */
     baseobj = NewReshapedObject(cx, type, baseobj->getParent(), kind,
                                 baseobj->lastProperty());
@@ -4962,13 +4933,7 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton)
             return false;
         AutoTypeRooter root(cx, type);
 
-        js::Shape *shape = js::EmptyShape::create(cx, fun->getClass());
-        if (!shape)
-            return false;
-
         fun->setType(type);
-        fun->setMap(shape);
-
         type->functionScript = this;
     }
 
@@ -5159,11 +5124,11 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool unknown)
     if (!type)
         return;
 
-    if (!cx->typeInferenceEnabled()) {
-        newType = type;
-        setDelegate();
+    newType = type;
+    setDelegate();
+
+    if (!cx->typeInferenceEnabled())
         return;
-    }
 
     AutoEnterTypeInference enter(cx);
 
@@ -5197,9 +5162,6 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool unknown)
      */
     if (type->unknownProperties())
         type->flags |= OBJECT_FLAG_SETS_MARKED_UNKNOWN;
-
-    newType = type;
-    setDelegate();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -5421,7 +5383,7 @@ TypeCompartment::sweep(JSContext *cx)
             JS_ASSERT(entry.object->proto == key.proto);
 
             bool remove = false;
-            if (!entry.object->isMarked() || !entry.newShape->isMarked())
+            if (!entry.object->isMarked())
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nslots; i++) {
                 if (JSID_IS_STRING(key.ids[i])) {

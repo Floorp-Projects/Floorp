@@ -305,6 +305,24 @@ class SetPropCompiler : public PICStubCompiler
 
         pic.setPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
 
+        if (pic.typeMonitored) {
+            /*
+             * Inference does not know the type of the object being updated,
+             * and we need to make sure that the updateMonitoredTypes() call
+             * covers this stub, i.e. we will be writing to an object with the
+             * same type. Add a type guard in addition to the shape guard.
+             * Note: it is possible that this test gets a spurious hit if the
+             * object has a lazy type, but in such cases no analyzed scripts
+             * depend on the object and we will reconstruct its type from the
+             * value being written here.
+             */
+            Jump typeGuard = masm.branchPtr(Assembler::NotEqual,
+                                            Address(pic.objReg, JSObject::offsetOfType()),
+                                            ImmPtr(obj->getType(cx)));
+            if (!otherGuards.append(typeGuard))
+                return error();
+        }
+
         JS_ASSERT_IF(!shape->hasDefaultSetter(), obj->getClass() == &js_CallClass);
 
         MaybeJump skipOver;
@@ -686,6 +704,7 @@ class SetPropCompiler : public PICStubCompiler
         if (!pic.inlinePathPatched &&
             !obj->brandedOrHasMethodBarrier() &&
             shape->hasDefaultSetter() &&
+            !pic.typeMonitored &&
             !obj->isDenseArray()) {
             return patchInline(shape);
         }
