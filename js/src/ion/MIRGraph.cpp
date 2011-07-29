@@ -369,6 +369,24 @@ MBasicBlock::removeAt(MInstructionIterator &iter)
     return instructions_.removeAt(iter);
 }
 
+MDefinitionIterator
+MBasicBlock::removeDefAt(MDefinitionIterator &old)
+{
+    MDefinitionIterator iter(old);
+    MDefinition *def = *iter;
+    uint32 phiIndex = iter.phiIndex_;
+    iter++;
+
+    if (phiIndex < numPhis()) {
+        JS_ASSERT(def->isPhi());
+        phis_.erase(phis_.begin() + phiIndex);
+    } else {
+        remove(def->toInstruction());
+    }
+
+    return iter;
+}
+
 void
 MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
 {
