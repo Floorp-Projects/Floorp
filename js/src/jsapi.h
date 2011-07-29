@@ -1831,7 +1831,10 @@ typedef enum JSGCParamKey {
     JSGC_MODE = 6,
 
     /* Number of GC chunks waiting to expire. */
-    JSGC_UNUSED_CHUNKS = 7
+    JSGC_UNUSED_CHUNKS = 7,
+
+    /* Total number of allocated GC chunks. */
+    JSGC_TOTAL_CHUNKS = 8
 } JSGCParamKey;
 
 typedef enum JSGCMode {
