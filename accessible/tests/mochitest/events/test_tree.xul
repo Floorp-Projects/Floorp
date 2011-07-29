@@ -103,13 +103,15 @@
     {
       this.type = EVENT_NAME_CHANGE;
 
-      this.target getter = function()
+      function targetGetter()
       {
         var acc = getAccessible(gTree);
 
         var tableAcc = getAccessible(acc, [nsIAccessibleTable]);
         return tableAcc.getCellAt(aRow, aCol);
       }
+      Object.defineProperty(this, "target", { get: targetGetter });
+
       this.getID = function getID()
       {
         return aMsg + "name changed";
