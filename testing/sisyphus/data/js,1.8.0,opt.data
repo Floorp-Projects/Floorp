@@ -1,4 +1,0 @@
-product=${product:-js}
-branch=${branch:-1.8.0}
-buildtype=${buildtype:-opt}
-jsshellsourcepath=${jsshellsourcepath:-/work/mozilla/builds/1.8.0/mozilla/js/src}

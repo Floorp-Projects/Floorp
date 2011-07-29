@@ -5986,7 +5986,7 @@ PostMessageEvent::Run()
 
   // Ensure that the buffer is freed even if we fail to post the message
   JSAutoStructuredCloneBuffer buffer;
-  buffer.adopt(cx, mMessage, mMessageLen);
+  buffer.adopt(mMessage, mMessageLen);
   mMessage = nsnull;
   mMessageLen = 0;
 
@@ -6040,7 +6040,7 @@ PostMessageEvent::Run()
   {
     JSAutoRequest ar(cx);
 
-    if (!buffer.read(&messageData, cx, nsnull))
+    if (!buffer.read(cx, &messageData, nsnull))
       return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
