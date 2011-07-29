@@ -285,11 +285,9 @@ TypeAnalyzer::adjustOutput(MDefinition *def)
         block->insertAfter(def->toInstruction(), unbox);
     }
 
-    JS_ASSERT(def->uses()->node() == unbox);
+    JS_ASSERT(def->usesBegin()->node() == unbox);
 
-    MUse *prev = def->uses();
-    MUse *use = def->uses()->next();
-    while (use) {
+    for (MUseIterator use(def->usesBegin()); use != def->usesEnd(); ) {
         bool replace = true;
 
         if (use->node()->isSnapshot()) {
@@ -306,15 +304,10 @@ TypeAnalyzer::adjustOutput(MDefinition *def)
                 replace = policy->useSpecializedInput(def->toInstruction(), use->index(), unbox);
         }
 
-        if (!replace) {
-            prev = use;
-            use = use->next();
-            continue;
-        }
-
-        MUse *next = use->next();
-        use->node()->replaceOperand(prev, use, unbox);
-        use = next;
+        if (replace)
+            use = use->node()->replaceOperand(use, unbox);
+        else
+            use++;
     }
 
     return true;

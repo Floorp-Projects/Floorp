@@ -360,8 +360,7 @@ MBasicBlock::peek(int32 depth)
 void
 MBasicBlock::remove(MInstruction *ins)
 {
-    MInstructionIterator iter(ins);
-    removeAt(iter);
+    instructions_.remove(ins);
 }
 
 MInstructionIterator
@@ -392,7 +391,7 @@ MBasicBlock::add(MInstruction *ins)
     JS_ASSERT(!lastIns_);
     ins->setBlock(this);
     gen()->graph().allocDefinitionId(ins);
-    instructions_.insert(ins);
+    instructions_.pushBack(ins);
 }
 
 void
@@ -468,13 +467,12 @@ MBasicBlock::addImmediatelyDominatedBlock(MBasicBlock *child)
 }
 
 void
-MBasicBlock::assertUsesAreNotWithin(MUse *use)
+MBasicBlock::assertUsesAreNotWithin(MUseIterator use, MUseIterator end)
 {
 #ifdef DEBUG
-    for (; use; use = use->next()) {
-        if (!use->node()->isDefinition())
-            continue;
-        JS_ASSERT(use->node()->toDefinition()->block()->id() < id());
+    for (; use != end; use++) {
+        JS_ASSERT_IF(use->node()->isDefinition(),
+                     use->node()->toDefinition()->block()->id() < id());
     }
 #endif
 }
@@ -510,25 +508,21 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         if (!addPhi(phi))
             return false;
 
-        MUse *use = entryDef->uses();
-        MUse *prev = NULL;
-        while (use) {
+        for (MUseIterator use(entryDef->usesBegin()); use != entryDef->usesEnd(); ) {
             JS_ASSERT(use->node()->getOperand(use->index()) == entryDef);
 
             // Uses are initially sorted, with the head of the list being the
             // most recently inserted. This ordering is maintained while
             // placing phis.
             if (use->node()->block()->id() < id()) {
-                assertUsesAreNotWithin(use);
+                assertUsesAreNotWithin(use, entryDef->usesEnd());
                 break;
             }
 
             // Replace the instruction's use with the phi. Note that |prev|
             // does not change, and is really NULL since we always remove
             // from the head of the list,
-            MUse *next = use->next();
-            use->node()->replaceOperand(prev, use, phi);
-            use = next;
+            use = use->node()->replaceOperand(use, phi);
         }
 
 #ifdef DEBUG

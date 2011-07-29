@@ -118,16 +118,16 @@ public:
 template <typename T>
 class TempObjectPool
 {
-    InlineList<T> freed_;
+    InlineForwardList<T> freed_;
 
   public:
     T *allocate() {
         if (freed_.empty())
             return new T();
-        return freed_.pop();
+        return freed_.popFront();
     }
     void free(T *obj) {
-        freed_.insert(obj);
+        freed_.pushFront(obj);
     }
 };
 

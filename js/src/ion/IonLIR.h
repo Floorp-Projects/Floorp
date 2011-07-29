@@ -634,7 +634,7 @@ class LBlock : public TempObject
         return new LBlock(from);
     }
     void add(LInstruction *ins) {
-        instructions_.insert(ins);
+        instructions_.pushBack(ins);
     }
     bool addPhi(LPhi *phi) {
         return phis_.append(phi);

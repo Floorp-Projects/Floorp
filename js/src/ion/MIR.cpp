@@ -126,52 +126,41 @@ MDefinition::printOpcode(FILE *fp)
 size_t
 MDefinition::useCount() const
 {
-    MUse *use = uses();
     size_t count = 0;
-    while (use) {
+    for (MUseIterator i(uses_.begin()); i != uses_.end(); i++)
         count++;
-        use = use->next();
-    }
     return count;
 }
 
-MUse *
-MDefinition::removeUse(MUse *prev, MUse *use)
+MUseIterator
+MDefinition::removeUse(MUseIterator use)
 {
-    if (!prev) {
-        JS_ASSERT(uses_ = use);
-        uses_ = use->next();
-        return uses_;
-    }
-    JS_ASSERT(prev->next() == use);
-    prev->next_ = use->next();
-    return prev->next_;
+    return uses_.removeAt(use);
 }
 
-void
-MNode::replaceOperand(MUse *prev, MUse *use, MDefinition *ins)
+MUseIterator
+MNode::replaceOperand(MUseIterator use, MDefinition *ins)
 {
     MDefinition *used = getOperand(use->index());
     if (used == ins)
-        return;
+        return use;
 
-    used->removeUse(prev, use);
-    setOperand(use->index(), ins);
-    ins->linkUse(use);
+    MUse *save = *use;
+    MUseIterator result(used->removeUse(use));
+    setOperand(save->index(), ins);
+    ins->linkUse(save);
+    return result;
 }
 
 void
 MNode::replaceOperand(size_t index, MDefinition *def)
 {
-    MUse *prev = NULL;
-    MUse *current = getOperand(index)->uses();
-    while (current) {
-        if (current->index() == index && current->node() == this) {
-            replaceOperand(prev, current, def);
+    MDefinition *d = getOperand(index);
+    for (MUseIterator i(d->usesBegin()); i != d->usesEnd(); i++) {
+        if (i->index() == index && i->node() == this) {
+            replaceOperand(i, def);
             return;
         }
-        prev = current;
-        current = current->next();
     }
 
     JS_NOT_REACHED("could not find use");
@@ -180,9 +169,9 @@ MNode::replaceOperand(size_t index, MDefinition *def)
 void
 MDefinition::replaceAllUsesWith(MDefinition *dom)
 {
-    while (uses_) {
-        MUse *use = uses_;
-        uses_ = uses_->next();
+    for (MUseIterator i(uses_.begin()); i != uses_.end(); ) {
+        MUse *use = *i;
+        i = uses_.removeAt(i);
         use->node()->setOperand(use->index(), dom);
         dom->linkUse(use);
     }
