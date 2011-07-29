@@ -773,17 +773,9 @@ bool
 LinearScanAllocator::reifyAllocations()
 {
     // Enqueue all handled intervals for reification
-    JS_ASSERT(inactive.empty());
-    for (IntervalIterator i(active.begin()); i != active.end(); ) {
-        LiveInterval *interval = *i;
-        i = active.removeAt(i);
-        unhandled.enqueue(interval);
-    }
-    for (IntervalIterator i(handled.begin()); i != handled.end(); ) {
-        LiveInterval *interval = *i;
-        i = handled.removeAt(i);
-        unhandled.enqueue(interval);
-    }
+    unhandled.enqueue(inactive);
+    unhandled.enqueue(active);
+    unhandled.enqueue(handled);
 
     // Handle each interval in sequence
     LiveInterval *interval;
