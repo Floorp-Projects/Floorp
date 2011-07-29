@@ -112,7 +112,6 @@ ValueNumberer::computeValueNumbers()
     }
 
     bool changed = true;
-
     while (changed) {
         changed = false;
         for (size_t i = 0; i < graph_.numBlocks(); i++) {
@@ -127,6 +126,8 @@ ValueNumberer::computeValueNumbers()
                     return false; // Hashtable insertion failed
 
                 if (ins->valueNumber() != value) {
+                    IonSpew(IonSpew_GVN, "Broke congruence for instruction %d (%p) with VN %d (now using %d)",
+                            ins->id(), ins, ins->valueNumber(), value);
                     ins->setValueNumber(value);
                     changed = true;
                 }

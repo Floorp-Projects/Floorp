@@ -713,6 +713,9 @@ class MCopy : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(Copy);
     static MCopy *New(MDefinition *ins);
+
+    HashNumber valueHash() const;
+    bool congruentTo(MDefinition * const &ins) const;
 };
 
 // Takes a typed value and returns an untyped value.
@@ -936,6 +939,8 @@ class MPhi : public MDefinition
         setResultType(type);
     }
     bool addInput(MDefinition *ins);
+
+    bool congruentTo(MDefinition * const &ins) const;
 };
 
 // A snapshot contains the information needed to reconstruct the interpreter
