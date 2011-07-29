@@ -40,7 +40,7 @@
 #define _nsAccessible_H_
 
 #include "nsAccessNodeWrap.h"
-#include "mozilla/a11y/States.h"
+#include "States.h"
 
 #include "nsIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
@@ -453,7 +453,7 @@ public:
     // Perhaps we can get information about invalid links from the cache
     // In the mean time authors can use role="link" aria-invalid="true"
     // to force it for links they internally know to be invalid
-    return (0 == (State() & mozilla::a11y::states::INVALID));
+    return (0 == (State() & states::INVALID));
   }
 
   /**

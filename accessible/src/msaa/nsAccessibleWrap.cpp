@@ -67,8 +67,6 @@
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 
-using namespace mozilla::a11y;
-
 /* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
