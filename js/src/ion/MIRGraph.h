@@ -416,7 +416,6 @@ class MDefinitionIterator
         MDefinitionIterator old(this);
         if (more())
             next();
-
         return old;
     }
 
