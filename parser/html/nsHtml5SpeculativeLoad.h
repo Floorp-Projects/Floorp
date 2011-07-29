@@ -65,13 +65,11 @@ class nsHtml5SpeculativeLoad {
       mUrl.Assign(aUrl);
     }
 
-    inline void InitImage(const nsAString& aUrl,
-                          const nsAString& aCrossOrigin) {
+    inline void InitImage(const nsAString& aUrl) {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadImage;
       mUrl.Assign(aUrl);
-      mCharsetOrCrossOrigin.Assign(aCrossOrigin);
     }
 
     inline void InitScript(const nsAString& aUrl,
@@ -81,7 +79,7 @@ class nsHtml5SpeculativeLoad {
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadScript;
       mUrl.Assign(aUrl);
-      mCharsetOrCrossOrigin.Assign(aCharset);
+      mCharset.Assign(aCharset);
       mType.Assign(aType);
     }
     
@@ -90,7 +88,7 @@ class nsHtml5SpeculativeLoad {
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadStyle;
       mUrl.Assign(aUrl);
-      mCharsetOrCrossOrigin.Assign(aCharset);
+      mCharset.Assign(aCharset);
     }
 
     /**
@@ -116,11 +114,7 @@ class nsHtml5SpeculativeLoad {
   private:
     eHtml5SpeculativeLoad mOpCode;
     nsString mUrl;
-    // If mOpCode is eSpeculativeLoadImage, this is the value of the
-    // "crossorigin" attribute.  If mOpCode is eSpeculativeLoadStyle
-    // or eSpeculativeLoadScript then this is the value of the
-    // "charset" attribute.  Otherwise it's empty.
-    nsString mCharsetOrCrossOrigin;
+    nsString mCharset;
     nsString mType;
 };
 
