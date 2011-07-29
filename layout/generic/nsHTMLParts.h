@@ -235,12 +235,4 @@ NS_NewHTMLFragmentContentSink(nsIFragmentContentSink** aInstancePtrResult);
 nsresult
 NS_NewHTMLFragmentContentSink2(nsIFragmentContentSink** aInstancePtrResult);
 
-// This strips all but a whitelist of elements and attributes defined
-// in nsContentSink.h
-nsresult
-NS_NewHTMLParanoidFragmentSink(nsIFragmentContentSink** aInstancePtrResult);
-nsresult
-NS_NewHTMLParanoidFragmentSink2(nsIFragmentContentSink** aInstancePtrResult);
-void
-NS_HTMLParanoidFragmentSinkShutdown();
 #endif /* nsHTMLParts_h___ */
