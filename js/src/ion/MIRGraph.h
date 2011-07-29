@@ -55,6 +55,8 @@ class MBasicBlock;
 class MIRGraph;
 class MStart;
 
+class MDefinitionIterator;
+
 class MIRGraph
 {
     Vector<MBasicBlock *, 8, IonAllocPolicy> blocks_;
@@ -216,6 +218,7 @@ class MBasicBlock : public TempObject
     void remove(MInstruction *ins);
     MInstructionIterator removeAt(MInstructionIterator &iter);
 
+    MDefinitionIterator removeDefAt(MDefinitionIterator &iter);
     ///////////////////////////////////////////////////////
     /////////// END GRAPH BUILDING INSTRUCTIONS ///////////
     ///////////////////////////////////////////////////////
@@ -375,6 +378,9 @@ class MBasicBlock : public TempObject
 
 class MDefinitionIterator
 {
+
+  friend class MBasicBlock;
+
   private:
     MBasicBlock *block_;
     size_t phiIndex_;
