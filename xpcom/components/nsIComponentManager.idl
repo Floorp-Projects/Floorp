@@ -41,9 +41,10 @@
 
 #include "nsISupports.idl"
 
+interface nsILocalFile;
 interface nsIFactory;
 
-[scriptable, uuid(a88e5a60-205a-4bb1-94e1-2628daf51eae)]
+[scriptable, uuid(1d940426-5fe5-42c3-84ae-a300f2d9ebd5)]
 interface nsIComponentManager : nsISupports
 {    
     /**
@@ -99,6 +100,27 @@ interface nsIComponentManager : nsISupports
                                     in nsISupports aDelegate,
                                     in nsIIDRef aIID, 
                                     [iid_is(aIID),retval] out nsQIResult result);
+
+    /**
+     * addBootstrappedManifestLocation
+     *
+     * Adds a bootstrapped manifest location on runtime.
+     *
+     * @param aLocation : A directory where chrome.manifest resides,
+     *                    or an XPI with it on the root.
+     */
+    void addBootstrappedManifestLocation(in nsILocalFile aLocation);
+
+    /**
+     * removeBootstrappedManifestLocation
+     *
+     * Removes a bootstrapped manifest location on runtime.
+     *
+     * @param aLocation : A directory where chrome.manifest resides,
+     *                    or an XPI with it on the root.
+     */
+    void removeBootstrappedManifestLocation(in nsILocalFile aLocation);
+
 };
 
 
