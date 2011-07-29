@@ -891,13 +891,14 @@ nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
 }
 
 void
-nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL)
+nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL,
+                                    const nsAString& aCrossOrigin)
 {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
-  mDocument->MaybePreLoadImage(uri);
+  mDocument->MaybePreLoadImage(uri, aCrossOrigin);
 }
 
 void
