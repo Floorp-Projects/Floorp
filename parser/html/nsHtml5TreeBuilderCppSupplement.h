@@ -105,13 +105,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
         if (nsHtml5Atoms::img == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_SRC);
           if (url) {
-            nsString* crossOrigin =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-            if (crossOrigin) {
-              mSpeculativeLoadQueue.AppendElement()->InitImage(*url, *crossOrigin);
-            } else {
-              mSpeculativeLoadQueue.AppendElement()->InitImage(*url, EmptyString());
-            }
+            mSpeculativeLoadQueue.AppendElement()->InitImage(*url);
           }
         } else if (nsHtml5Atoms::script == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -144,7 +138,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
         } else if (nsHtml5Atoms::video == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_POSTER);
           if (url) {
-            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, EmptyString());
+            mSpeculativeLoadQueue.AppendElement()->InitImage(*url);
           }
         } else if (nsHtml5Atoms::style == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -169,7 +163,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
         if (nsHtml5Atoms::image == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           if (url) {
-            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, EmptyString());
+            mSpeculativeLoadQueue.AppendElement()->InitImage(*url);
           }
         } else if (nsHtml5Atoms::script == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
