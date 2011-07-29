@@ -217,7 +217,7 @@ ValueNumberer::eliminateRedundancies()
                 return false;
         }
         MInstructionIterator i = block->begin();
-        while (i != block->lastIns()) {
+        while (*i != block->lastIns()) {
             MInstruction *ins = *i;
             MDefinition *dom = findDominatingDef(defs, ins, index);
 

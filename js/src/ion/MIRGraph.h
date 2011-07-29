@@ -135,7 +135,7 @@ class MBasicBlock : public TempObject
     bool init();
     void copySlots(MBasicBlock *from);
     bool inherit(MBasicBlock *pred);
-    void assertUsesAreNotWithin(MUse *use);
+    void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
     // Sets a slot, taking care to rewrite copies.
     void setSlot(uint32 slot, MDefinition *ins);
@@ -402,7 +402,7 @@ class MDefinitionIterator
     }
 
     bool more() const {
-        return phiIndex_ < block_->numPhis() || iter_ != block_->lastIns();
+        return phiIndex_ < block_->numPhis() || (*iter_) != block_->lastIns();
     }
 
   public:
