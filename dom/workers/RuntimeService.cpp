@@ -338,14 +338,7 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    for (CompartmentStats *stats = data.compartmentStatsVector.begin();
-         stats != data.compartmentStatsVector.end();
-         ++stats)
-    {
-      ReportCompartmentStats(*stats, mPathPrefix, aCallback, aClosure);
-    }
-
-    ReportJSStackSizeForRuntime(mRuntime, mPathPrefix, aCallback, aClosure);
+    ReportJSRuntimeStats(data, mPathPrefix, aCallback, aClosure);
 
     return NS_OK;
   }
