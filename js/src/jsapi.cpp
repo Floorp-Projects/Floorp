@@ -642,7 +642,6 @@ JSRuntime::JSRuntime()
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
     JS_INIT_CLIST(&trapList);
-    JS_INIT_CLIST(&watchPointList);
 }
 
 bool
@@ -1201,30 +1200,39 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
     return reinterpret_cast<JSCrossCompartmentCall *>(call);
 }
 
+// Declared in jscompartment.h
+JSClass js_dummy_class = {
+    "jdummy",
+    JSCLASS_GLOBAL_FLAGS,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub,   NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
-    static JSClass dummy_class = {
-        "jdummy",
-        JSCLASS_GLOBAL_FLAGS,
-        JS_PropertyStub,  JS_PropertyStub,
-        JS_PropertyStub,  JS_StrictPropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,
-        JS_ConvertStub,   NULL,
-        JSCLASS_NO_OPTIONAL_MEMBERS
-    };
-
     CHECK_REQUEST(cx);
 
-    JS_ASSERT(target);
     JSObject *scriptObject = target->u.object;
     if (!scriptObject) {
         SwitchToCompartment sc(cx, target->compartment);
-        scriptObject = JS_NewGlobalObject(cx, &dummy_class);
+        scriptObject = JS_NewGlobalObject(cx, &js_dummy_class);
         if (!scriptObject)
             return NULL;
     }
     return JS_EnterCrossCompartmentCall(cx, scriptObject);
+}
+
+JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
+{
+    CHECK_REQUEST(cx);
+
+    StackFrame *frame = Valueify(target);
+    return JS_EnterCrossCompartmentCall(cx, frame->scopeChain().getGlobal());
 }
 
 JS_PUBLIC_API(void)
@@ -1265,6 +1273,19 @@ AutoEnterScriptCompartment::enter(JSContext *cx, JSScript *target)
         return true;
     }
     call = JS_EnterCrossCompartmentCallScript(cx, target);
+    return call != NULL;
+}
+
+bool
+AutoEnterFrameCompartment::enter(JSContext *cx, JSStackFrame *target)
+{
+    JS_ASSERT(!call);
+    js::StackFrame *fp = Valueify(target);
+    if (cx->compartment == fp->scopeChain().compartment()) {
+        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
+        return true;
+    }
+    call = JS_EnterCrossCompartmentCallStackFrame(cx, target);
     return call != NULL;
 }
 
@@ -4005,7 +4026,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     /* iterobj cannot escape to other threads here. */
     iterobj->setPrivate(const_cast<void *>(pdata));
-    iterobj->getSlotRef(JSSLOT_ITER_INDEX).setInt32(index);
+    iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Value(index));
     return iterobj;
 }
 
@@ -5577,7 +5598,98 @@ JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
         cx->runtime->structuredCloneCallbacks;
     JSAutoStructuredCloneBuffer buf;
     return buf.write(cx, v, callbacks, closure) &&
-           buf.read(vp, cx, callbacks, closure);
+           buf.read(cx, vp, callbacks, closure);
+}
+
+void
+JSAutoStructuredCloneBuffer::clear()
+{
+    if (data_) {
+        Foreground::free_(data_);
+        data_ = NULL;
+        nbytes_ = 0;
+        version_ = 0;
+    }
+}
+
+void
+JSAutoStructuredCloneBuffer::adopt(JSUint64 *data, size_t nbytes, JSUint32 version)
+{
+    clear();
+    data_ = data;
+    nbytes_ = nbytes;
+    version_ = version;
+}
+
+bool
+JSAutoStructuredCloneBuffer::copy(const JSUint64 *srcData, size_t nbytes, JSUint32 version)
+{
+    JSUint64 *newData = static_cast<JSUint64 *>(OffTheBooks::malloc_(nbytes));
+    if (!newData)
+        return false;
+
+    memcpy(newData, srcData, nbytes);
+
+    clear();
+    data_ = newData;
+    nbytes_ = nbytes;
+    version_ = version;
+    return true;
+}
+void
+JSAutoStructuredCloneBuffer::steal(JSUint64 **datap, size_t *nbytesp, JSUint32 *versionp)
+{
+    *datap = data_;
+    *nbytesp = nbytes_;
+    if (versionp)
+        *versionp = version_;
+
+    data_ = NULL;
+    nbytes_ = 0;
+    version_ = 0;
+}
+
+bool
+JSAutoStructuredCloneBuffer::read(JSContext *cx, jsval *vp,
+                                  const JSStructuredCloneCallbacks *optionalCallbacks,
+                                  void *closure) const
+{
+    JS_ASSERT(cx);
+    JS_ASSERT(data_);
+    return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp,
+                                    optionalCallbacks, closure);
+}
+
+bool
+JSAutoStructuredCloneBuffer::write(JSContext *cx, jsval v,
+                                   const JSStructuredCloneCallbacks *optionalCallbacks,
+                                   void *closure)
+{
+    clear();
+    bool ok = !!JS_WriteStructuredClone(cx, v, &data_, &nbytes_,
+                                        optionalCallbacks, closure);
+    if (!ok) {
+        data_ = NULL;
+        nbytes_ = 0;
+        version_ = JS_STRUCTURED_CLONE_VERSION;
+    }
+    return ok;
+}
+
+void
+JSAutoStructuredCloneBuffer::swap(JSAutoStructuredCloneBuffer &other)
+{
+    JSUint64 *data = other.data_;
+    size_t nbytes = other.nbytes_;
+    JSUint32 version = other.version_;
+
+    other.data_ = this->data_;
+    other.nbytes_ = this->nbytes_;
+    other.version_ = this->version_;
+
+    this->data_ = data;
+    this->nbytes_ = nbytes;
+    this->version_ = version;
 }
 
 JS_PUBLIC_API(void)

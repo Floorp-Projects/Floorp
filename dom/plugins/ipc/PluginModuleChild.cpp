@@ -1516,7 +1516,19 @@ _setexception(NPObject* aNPObj,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     ENSURE_PLUGIN_THREAD_VOID();
-    NS_WARNING("Not yet implemented!");
+
+    PluginModuleChild* self = PluginModuleChild::current();
+    PluginScriptableObjectChild* actor = NULL;
+    if (aNPObj) {
+        actor = self->GetActorForNPObject(aNPObj);
+        if (!actor) {
+            NS_ERROR("Failed to get actor!");
+            return;
+        }
+    }
+
+    self->SendNPN_SetException(static_cast<PPluginScriptableObjectChild*>(actor),
+                               NullableString(aMessage));
 }
 
 void NP_CALLBACK
@@ -2277,12 +2289,13 @@ PluginModuleChild::NestedInputEventHook(int nCode, WPARAM wParam, LPARAM lParam)
     PluginModuleChild* self = current();
     PRUint32 len = self->mIncallPumpingStack.Length();
     if (nCode >= 0 && len && !self->mIncallPumpingStack[len - 1]._spinning) {
+        MessageLoop* loop = MessageLoop::current();
         self->SendProcessNativeEventsInRPCCall();
         IncallFrame& f = self->mIncallPumpingStack[len - 1];
         f._spinning = true;
-        MessageLoop* loop = MessageLoop::current();
         f._savedNestableTasksAllowed = loop->NestableTasksAllowed();
         loop->SetNestableTasksAllowed(true);
+        loop->set_os_modal_loop(true);
     }
 
     return CallNextHookEx(NULL, nCode, wParam, lParam);

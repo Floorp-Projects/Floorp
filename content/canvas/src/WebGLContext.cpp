@@ -97,7 +97,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferMemoryUsed,
                              "Memory used by WebGL buffers. The OpenGL implementation is free to store these buffers in either video memory or main memory. This measurement is only a lower bound, actual memory usage may be higher for example if the storage is strided.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferCacheMemoryUsed,
-                             "webgl-buffer-cache-memory",
+                             "explicit/webgl/buffer-cache-memory",
                              KIND_HEAP,
                              UNITS_BYTES,
                              WebGLMemoryReporter::GetBufferCacheMemoryUsed,
@@ -125,14 +125,14 @@ NS_MEMORY_REPORTER_IMPLEMENT(WebGLRenderbufferCount,
                              "Number of WebGL renderbuffers.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderSourcesSize,
-                             "webgl-shader-sources-size",
+                             "explicit/webgl/shader-sources-size",
                              KIND_HEAP,
                              UNITS_BYTES,
                              WebGLMemoryReporter::GetShaderSourcesSize,
                              "Combined size of WebGL shader ASCII sources, cached on the heap. This should always be at most a few kilobytes, or dozen kilobytes for very shader-intensive WebGL demos.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderTranslationLogsSize,
-                             "webgl-shader-translationlogs-size",
+                             "explicit/webgl/shader-translationlogs-size",
                              KIND_HEAP,
                              UNITS_BYTES,
                              WebGLMemoryReporter::GetShaderTranslationLogsSize,

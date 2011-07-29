@@ -73,6 +73,7 @@
 #include "nsXBLWindowKeyHandler.h"
 #include "txMozillaXSLTProcessor.h"
 #include "nsDOMStorage.h"
+#include "nsTreeSanitizer.h"
 #include "nsCellMap.h"
 #include "nsTextFrameTextRunCache.h"
 #include "nsCCUncollectableMarker.h"
@@ -346,6 +347,8 @@ nsLayoutStatics::Shutdown()
   nsCORSListenerProxy::Shutdown();
   
   nsIPresShell::ReleaseStatics();
+
+  nsTreeSanitizer::ReleaseStatics();
 
   nsHtml5Module::ReleaseStatics();
 

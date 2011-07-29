@@ -532,7 +532,7 @@ public:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     JSAutoStructuredCloneBuffer buffer;
-    buffer.adopt(aCx, mData, mDataByteCount);
+    buffer.adopt(mData, mDataByteCount);
 
     mData = nsnull;
     mDataByteCount = 0;

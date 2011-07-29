@@ -24,7 +24,7 @@ function test()
 
   try
   {
-    eval("var a\\u0346 = 3;");
+    eval("var a\\0021 = 3;");
   }
   catch(ex)
   {

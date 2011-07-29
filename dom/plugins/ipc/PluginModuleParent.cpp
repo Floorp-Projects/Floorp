@@ -1209,3 +1209,21 @@ PluginModuleParent::RemoveFromRefreshTimer(PluginInstanceParent *aInstance) {
     }
 }
 #endif
+
+bool
+PluginModuleParent::RecvNPN_SetException(PPluginScriptableObjectParent* aActor,
+                                         const nsCString& aMessage)
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+
+    NPObject* aNPObj = NULL;
+    if (aActor) {
+        aNPObj = static_cast<PluginScriptableObjectParent*>(aActor)->GetObject(true);
+        if (!aNPObj) {
+            NS_ERROR("Failed to get object!");
+            return false;
+        }
+    }
+    mozilla::plugins::parent::_setexception(aNPObj, NullableStringGet(aMessage));
+    return true;
+}

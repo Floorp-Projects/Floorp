@@ -97,6 +97,11 @@ typedef PRBool (*PRVersionCheck)(const char*);
 
 NSPR_API(PRBool) PR_VersionCheck(const char *importedVersion);
 
+/*
+ * Returns a const string of the NSPR library version.
+ */
+NSPR_API(const char*) PR_GetVersion(void);
+
 
 /************************************************************************/
 /*******************************INITIALIZATION***************************/

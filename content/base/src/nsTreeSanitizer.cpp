@@ -1,0 +1,1498 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=80: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Robert Sayre <sayrer@gmail.com>
+ *   Henri Sivonen <hsivonen@iki.fi>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsTreeSanitizer.h"
+#include "nsCSSParser.h"
+#include "nsCSSProperty.h"
+#include "mozilla/css/Declaration.h"
+#include "mozilla/css/StyleRule.h"
+#include "mozilla/css/Rule.h"
+#include "nsUnicharInputStream.h"
+#include "nsCSSStyleSheet.h"
+#include "nsIDOMCSSRule.h"
+#include "nsAttrName.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsNetUtil.h"
+#include "nsComponentManagerUtils.h"
+#include "nsNullPrincipal.h"
+
+//
+// Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
+//
+nsIAtom** const kElementsHTML[] = {
+  &nsGkAtoms::a,
+  &nsGkAtoms::abbr,
+  &nsGkAtoms::acronym,
+  &nsGkAtoms::address,
+  &nsGkAtoms::area,
+  &nsGkAtoms::article,
+  &nsGkAtoms::aside,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::audio,
+#endif
+  &nsGkAtoms::b,
+  &nsGkAtoms::bdo,
+  &nsGkAtoms::big,
+  &nsGkAtoms::blockquote,
+  &nsGkAtoms::br,
+  &nsGkAtoms::button,
+  &nsGkAtoms::canvas,
+  &nsGkAtoms::caption,
+  &nsGkAtoms::center,
+  &nsGkAtoms::cite,
+  &nsGkAtoms::code,
+  &nsGkAtoms::col,
+  &nsGkAtoms::colgroup,
+  &nsGkAtoms::command,
+  &nsGkAtoms::datalist,
+  &nsGkAtoms::dd,
+  &nsGkAtoms::del,
+  &nsGkAtoms::details,
+  &nsGkAtoms::dfn,
+  &nsGkAtoms::dir,
+  &nsGkAtoms::div,
+  &nsGkAtoms::dl,
+  &nsGkAtoms::dt,
+  &nsGkAtoms::em,
+  &nsGkAtoms::fieldset,
+  &nsGkAtoms::figcaption,
+  &nsGkAtoms::figure,
+  &nsGkAtoms::font,
+  &nsGkAtoms::footer,
+  &nsGkAtoms::form,
+  &nsGkAtoms::h1,
+  &nsGkAtoms::h2,
+  &nsGkAtoms::h3,
+  &nsGkAtoms::h4,
+  &nsGkAtoms::h5,
+  &nsGkAtoms::h6,
+  &nsGkAtoms::header,
+  &nsGkAtoms::hgroup,
+  &nsGkAtoms::hr,
+  &nsGkAtoms::i,
+  &nsGkAtoms::img,
+  &nsGkAtoms::input,
+  &nsGkAtoms::ins,
+  &nsGkAtoms::kbd,
+  &nsGkAtoms::label,
+  &nsGkAtoms::legend,
+  &nsGkAtoms::li,
+  &nsGkAtoms::link,
+  &nsGkAtoms::listing,
+  &nsGkAtoms::map,
+  &nsGkAtoms::mark,
+  &nsGkAtoms::menu,
+  &nsGkAtoms::meta,
+  &nsGkAtoms::meter,
+  &nsGkAtoms::nav,
+  &nsGkAtoms::nobr,
+  &nsGkAtoms::noscript,
+  &nsGkAtoms::ol,
+  &nsGkAtoms::optgroup,
+  &nsGkAtoms::option,
+  &nsGkAtoms::output,
+  &nsGkAtoms::p,
+  &nsGkAtoms::pre,
+  &nsGkAtoms::progress,
+  &nsGkAtoms::q,
+  &nsGkAtoms::rp,
+  &nsGkAtoms::rt,
+  &nsGkAtoms::ruby,
+  &nsGkAtoms::s,
+  &nsGkAtoms::samp,
+  &nsGkAtoms::section,
+  &nsGkAtoms::select,
+  &nsGkAtoms::small,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::source,
+#endif
+  &nsGkAtoms::span,
+  &nsGkAtoms::strike,
+  &nsGkAtoms::strong,
+  &nsGkAtoms::sub,
+  &nsGkAtoms::summary,
+  &nsGkAtoms::sup,
+  &nsGkAtoms::table,
+  &nsGkAtoms::tbody,
+  &nsGkAtoms::td,
+  &nsGkAtoms::textarea,
+  &nsGkAtoms::tfoot,
+  &nsGkAtoms::th,
+  &nsGkAtoms::thead,
+  &nsGkAtoms::time,
+  &nsGkAtoms::tr,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::track,
+#endif
+  &nsGkAtoms::tt,
+  &nsGkAtoms::u,
+  &nsGkAtoms::ul,
+  &nsGkAtoms::var,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::video,
+#endif
+  &nsGkAtoms::wbr,
+  nsnull
+};
+
+nsIAtom** const kAttributesHTML[] = {
+  &nsGkAtoms::abbr,
+  &nsGkAtoms::accept,
+  &nsGkAtoms::acceptcharset,
+  &nsGkAtoms::accesskey,
+  &nsGkAtoms::action,
+  &nsGkAtoms::align,
+  &nsGkAtoms::alt,
+  &nsGkAtoms::autocomplete,
+  &nsGkAtoms::autofocus,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::autoplay,
+#endif
+  &nsGkAtoms::axis,
+  &nsGkAtoms::background,
+  &nsGkAtoms::bgcolor,
+  &nsGkAtoms::border,
+  &nsGkAtoms::cellpadding,
+  &nsGkAtoms::cellspacing,
+  &nsGkAtoms::_char,
+  &nsGkAtoms::charoff,
+  &nsGkAtoms::charset,
+  &nsGkAtoms::checked,
+  &nsGkAtoms::cite,
+  &nsGkAtoms::_class,
+  &nsGkAtoms::clear,
+  &nsGkAtoms::cols,
+  &nsGkAtoms::colspan,
+  &nsGkAtoms::color,
+  &nsGkAtoms::contenteditable,
+  &nsGkAtoms::contextmenu,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::controls,
+#endif
+  &nsGkAtoms::compact,
+  &nsGkAtoms::coords,
+  &nsGkAtoms::datetime,
+  &nsGkAtoms::dir,
+  &nsGkAtoms::disabled,
+  &nsGkAtoms::draggable,
+  &nsGkAtoms::enctype,
+  &nsGkAtoms::face,
+  &nsGkAtoms::_for,
+  &nsGkAtoms::frame,
+  &nsGkAtoms::headers,
+  &nsGkAtoms::height,
+  &nsGkAtoms::hidden,
+  &nsGkAtoms::high,
+  &nsGkAtoms::href,
+  &nsGkAtoms::hreflang,
+  &nsGkAtoms::hspace,
+  &nsGkAtoms::icon,
+  &nsGkAtoms::id,
+  &nsGkAtoms::ismap,
+  &nsGkAtoms::itemid,
+  &nsGkAtoms::itemprop,
+  &nsGkAtoms::itemref,
+  &nsGkAtoms::itemscope,
+  &nsGkAtoms::itemtype,
+  &nsGkAtoms::kind,
+  &nsGkAtoms::label,
+  &nsGkAtoms::lang,
+  &nsGkAtoms::list,
+  &nsGkAtoms::longdesc,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::loop,
+  &nsGkAtoms::loopend,
+  &nsGkAtoms::loopstart,
+#endif
+  &nsGkAtoms::low,
+  &nsGkAtoms::max,
+  &nsGkAtoms::maxlength,
+  &nsGkAtoms::media,
+  &nsGkAtoms::method,
+  &nsGkAtoms::min,
+  &nsGkAtoms::mozdonotsend,
+  &nsGkAtoms::multiple,
+  &nsGkAtoms::name,
+  &nsGkAtoms::nohref,
+  &nsGkAtoms::noshade,
+  &nsGkAtoms::novalidate,
+  &nsGkAtoms::nowrap,
+  &nsGkAtoms::open,
+  &nsGkAtoms::optimum,
+  &nsGkAtoms::pattern,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::pixelratio,
+#endif
+  &nsGkAtoms::placeholder,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::playbackrate,
+  &nsGkAtoms::playcount,
+#endif
+  &nsGkAtoms::pointSize,
+#ifdef MOZ_MEDIA
+  &nsGkAtoms::poster,
+  &nsGkAtoms::preload,
+#endif
+  &nsGkAtoms::prompt,
+  &nsGkAtoms::pubdate,
+  &nsGkAtoms::radiogroup,
+  &nsGkAtoms::readonly,
+  &nsGkAtoms::rel,
+  &nsGkAtoms::required,
+  &nsGkAtoms::rev,
+  &nsGkAtoms::reversed,
+  &nsGkAtoms::role,
+  &nsGkAtoms::rows,
+  &nsGkAtoms::rowspan,
+  &nsGkAtoms::rules,
+  &nsGkAtoms::scoped,
+  &nsGkAtoms::scope,
+  &nsGkAtoms::selected,
+  &nsGkAtoms::shape,
+  &nsGkAtoms::size,
+  &nsGkAtoms::span,
+  &nsGkAtoms::spellcheck,
+  &nsGkAtoms::src,
+  &nsGkAtoms::srclang,
+  &nsGkAtoms::start,
+  &nsGkAtoms::summary,
+  &nsGkAtoms::tabindex,
+  &nsGkAtoms::target,
+  &nsGkAtoms::title,
+  &nsGkAtoms::type,
+  &nsGkAtoms::usemap,
+  &nsGkAtoms::valign,
+  &nsGkAtoms::value,
+  &nsGkAtoms::vspace,
+  &nsGkAtoms::width,
+  &nsGkAtoms::wrap,
+  nsnull
+};
+
+nsIAtom** const kURLAttributesHTML[] = {
+  &nsGkAtoms::action,
+  &nsGkAtoms::href,
+  &nsGkAtoms::src,
+  &nsGkAtoms::longdesc,
+  &nsGkAtoms::cite,
+  &nsGkAtoms::background,
+  nsnull
+};
+
+nsIAtom** const kElementsSVG[] = {
+#ifdef MOZ_SVG
+  &nsGkAtoms::a, // a
+  &nsGkAtoms::altGlyph, // altGlyph
+  &nsGkAtoms::altGlyphDef, // altGlyphDef
+  &nsGkAtoms::altGlyphItem, // altGlyphItem
+  &nsGkAtoms::animate, // animate
+  &nsGkAtoms::animateColor, // animateColor
+  &nsGkAtoms::animateMotion, // animateMotion
+  &nsGkAtoms::animateTransform, // animateTransform
+  &nsGkAtoms::circle, // circle
+  &nsGkAtoms::clipPath, // clipPath
+  &nsGkAtoms::colorProfile, // color-profile
+  &nsGkAtoms::cursor, // cursor
+  &nsGkAtoms::defs, // defs
+  &nsGkAtoms::desc, // desc
+  &nsGkAtoms::ellipse, // ellipse
+  &nsGkAtoms::elevation, // elevation
+  &nsGkAtoms::erode, // erode
+  &nsGkAtoms::ex, // ex
+  &nsGkAtoms::exact, // exact
+  &nsGkAtoms::exponent, // exponent
+  &nsGkAtoms::feBlend, // feBlend
+  &nsGkAtoms::feColorMatrix, // feColorMatrix
+  &nsGkAtoms::feComponentTransfer, // feComponentTransfer
+  &nsGkAtoms::feComposite, // feComposite
+  &nsGkAtoms::feConvolveMatrix, // feConvolveMatrix
+  &nsGkAtoms::feDiffuseLighting, // feDiffuseLighting
+  &nsGkAtoms::feDisplacementMap, // feDisplacementMap
+  &nsGkAtoms::feDistantLight, // feDistantLight
+  &nsGkAtoms::feFlood, // feFlood
+  &nsGkAtoms::feFuncA, // feFuncA
+  &nsGkAtoms::feFuncB, // feFuncB
+  &nsGkAtoms::feFuncG, // feFuncG
+  &nsGkAtoms::feFuncR, // feFuncR
+  &nsGkAtoms::feGaussianBlur, // feGaussianBlur
+  &nsGkAtoms::feImage, // feImage
+  &nsGkAtoms::feMerge, // feMerge
+  &nsGkAtoms::feMergeNode, // feMergeNode
+  &nsGkAtoms::feMorphology, // feMorphology
+  &nsGkAtoms::feOffset, // feOffset
+  &nsGkAtoms::fePointLight, // fePointLight
+  &nsGkAtoms::feSpecularLighting, // feSpecularLighting
+  &nsGkAtoms::feSpotLight, // feSpotLight
+  &nsGkAtoms::feTile, // feTile
+  &nsGkAtoms::feTurbulence, // feTurbulence
+  &nsGkAtoms::filter, // filter
+  &nsGkAtoms::font, // font
+  &nsGkAtoms::font_face, // font-face
+  &nsGkAtoms::font_face_format, // font-face-format
+  &nsGkAtoms::font_face_name, // font-face-name
+  &nsGkAtoms::font_face_src, // font-face-src
+  &nsGkAtoms::font_face_uri, // font-face-uri
+  &nsGkAtoms::foreignObject, // foreignObject
+  &nsGkAtoms::g, // g
+  &nsGkAtoms::glyph, // glyph
+  &nsGkAtoms::glyphRef, // glyphRef
+  &nsGkAtoms::hkern, // hkern
+  &nsGkAtoms::image, // image
+  &nsGkAtoms::line, // line
+  &nsGkAtoms::linearGradient, // linearGradient
+  &nsGkAtoms::marker, // marker
+  &nsGkAtoms::mask, // mask
+  &nsGkAtoms::metadata, // metadata
+  &nsGkAtoms::missingGlyph, // missingGlyph
+  &nsGkAtoms::mpath, // mpath
+  &nsGkAtoms::path, // path
+  &nsGkAtoms::pattern, // pattern
+  &nsGkAtoms::polygon, // polygon
+  &nsGkAtoms::polyline, // polyline
+  &nsGkAtoms::radialGradient, // radialGradient
+  &nsGkAtoms::rect, // rect
+  &nsGkAtoms::set, // set
+  &nsGkAtoms::stop, // stop
+  &nsGkAtoms::svg, // svg
+  &nsGkAtoms::svgSwitch, // switch
+  &nsGkAtoms::symbol, // symbol
+  &nsGkAtoms::text, // text
+  &nsGkAtoms::textPath, // textPath
+  &nsGkAtoms::title, // title
+  &nsGkAtoms::tref, // tref
+  &nsGkAtoms::tspan, // tspan
+  &nsGkAtoms::use, // use
+  &nsGkAtoms::view, // view
+  &nsGkAtoms::vkern, // vkern
+#endif
+  nsnull
+};
+
+nsIAtom** const kAttributesSVG[] = {
+#ifdef MOZ_SVG
+  // accent-height
+#ifdef MOZ_SMIL
+  &nsGkAtoms::accumulate, // accumulate
+  &nsGkAtoms::additive, // additive
+#endif
+  &nsGkAtoms::alignment_baseline, // alignment-baseline
+  // alphabetic
+  &nsGkAtoms::amplitude, // amplitude
+  // arabic-form
+  // ascent
+#ifdef MOZ_SMIL
+  &nsGkAtoms::attributeName, // attributeName
+  &nsGkAtoms::attributeType, // attributeType
+#endif
+  &nsGkAtoms::azimuth, // azimuth
+  &nsGkAtoms::baseFrequency, // baseFrequency
+  &nsGkAtoms::baseline_shift, // baseline-shift
+  // baseProfile
+  // bbox
+#ifdef MOZ_SMIL
+  &nsGkAtoms::begin, // begin
+#endif
+  &nsGkAtoms::bias, // bias
+#ifdef MOZ_SMIL
+  &nsGkAtoms::by, // by
+  &nsGkAtoms::calcMode, // calcMode
+#endif
+  // cap-height
+  &nsGkAtoms::_class, // class
+  &nsGkAtoms::clip_path, // clip-path
+  &nsGkAtoms::clip_rule, // clip-rule
+  &nsGkAtoms::clipPathUnits, // clipPathUnits
+  &nsGkAtoms::color, // color
+  &nsGkAtoms::colorInterpolation, // color-interpolation
+  &nsGkAtoms::colorInterpolationFilters, // color-interpolation-filters
+  // contentScriptType
+  // contentStyleType
+  &nsGkAtoms::cursor, // cursor
+  &nsGkAtoms::cx, // cx
+  &nsGkAtoms::cy, // cy
+  &nsGkAtoms::d, // d
+  // descent
+  &nsGkAtoms::diffuseConstant, // diffuseConstant
+  &nsGkAtoms::direction, // direction
+  &nsGkAtoms::display, // display
+  &nsGkAtoms::divisor, // divisor
+  &nsGkAtoms::dominant_baseline, // dominant-baseline
+#ifdef MOZ_SMIL
+  &nsGkAtoms::dur, // dur
+#endif
+  &nsGkAtoms::dx, // dx
+  &nsGkAtoms::dy, // dy
+  &nsGkAtoms::edgeMode, // edgeMode
+  &nsGkAtoms::elevation, // elevation
+  // enable-background
+#ifdef MOZ_SMIL
+  &nsGkAtoms::end, // end
+#endif
+  &nsGkAtoms::fill, // fill
+  &nsGkAtoms::fill_opacity, // fill-opacity
+  &nsGkAtoms::fill_rule, // fill-rule
+  &nsGkAtoms::filter, // filter
+  &nsGkAtoms::filterRes, // filterRes
+  &nsGkAtoms::filterUnits, // filterUnits
+  &nsGkAtoms::flood_color, // flood-color
+  &nsGkAtoms::flood_opacity, // flood-opacity
+  // XXX focusable
+  &nsGkAtoms::font, // font
+  &nsGkAtoms::font_family, // font-family
+  &nsGkAtoms::font_size, // font-size
+  &nsGkAtoms::font_size_adjust, // font-size-adjust
+  &nsGkAtoms::font_stretch, // font-stretch
+  &nsGkAtoms::font_style, // font-style
+  &nsGkAtoms::font_variant, // font-variant
+  &nsGkAtoms::fontWeight, // font-weight
+  &nsGkAtoms::format, // format
+  &nsGkAtoms::from, // from
+  &nsGkAtoms::fx, // fx
+  &nsGkAtoms::fy, // fy
+  // g1
+  // g2
+  // glyph-name
+  // glyphRef
+  &nsGkAtoms::glyph_orientation_horizontal, // glyph-orientation-horizontal
+  &nsGkAtoms::glyph_orientation_vertical, // glyph-orientation-vertical
+  &nsGkAtoms::gradientTransform, // gradientTransform
+  &nsGkAtoms::gradientUnits, // gradientUnits
+  &nsGkAtoms::height, // height
+  // horiz-adv-x
+  // horiz-origin-x
+  // horiz-origin-y
+  &nsGkAtoms::id, // id
+  // ideographic
+  &nsGkAtoms::image_rendering, // image-rendering
+  &nsGkAtoms::in, // in
+  &nsGkAtoms::in2, // in2
+  &nsGkAtoms::intercept, // intercept
+  // k
+  &nsGkAtoms::k1, // k1
+  &nsGkAtoms::k2, // k2
+  &nsGkAtoms::k3, // k3
+  &nsGkAtoms::k4, // k4
+  &nsGkAtoms::kerning, // kerning
+  &nsGkAtoms::kernelMatrix, // kernelMatrix
+  &nsGkAtoms::kernelUnitLength, // kernelUnitLength
+#ifdef MOZ_SMIL
+  &nsGkAtoms::keyPoints, // keyPoints
+  &nsGkAtoms::keySplines, // keySplines
+  &nsGkAtoms::keyTimes, // keyTimes
+#endif
+  &nsGkAtoms::lang, // lang
+  // lengthAdjust
+  &nsGkAtoms::letter_spacing, // letter-spacing
+  &nsGkAtoms::lighting_color, // lighting-color
+  &nsGkAtoms::limitingConeAngle, // limitingConeAngle
+  // local
+  &nsGkAtoms::marker, // marker
+  &nsGkAtoms::marker_end, // marker-end
+  &nsGkAtoms::marker_mid, // marker-mid
+  &nsGkAtoms::marker_start, // marker-start
+  &nsGkAtoms::markerHeight, // markerHeight
+  &nsGkAtoms::markerUnits, // markerUnits
+  &nsGkAtoms::markerWidth, // markerWidth
+  &nsGkAtoms::mask, // mask
+  &nsGkAtoms::maskContentUnits, // maskContentUnits
+  &nsGkAtoms::maskUnits, // maskUnits
+  // mathematical
+  &nsGkAtoms::max, // max
+  &nsGkAtoms::media, // media
+  &nsGkAtoms::method, // method
+  &nsGkAtoms::min, // min
+  &nsGkAtoms::mode, // mode
+  &nsGkAtoms::name, // name
+  &nsGkAtoms::numOctaves, // numOctaves
+  &nsGkAtoms::offset, // offset
+  &nsGkAtoms::opacity, // opacity
+  &nsGkAtoms::_operator, // operator
+  &nsGkAtoms::order, // order
+  &nsGkAtoms::orient, // orient
+  &nsGkAtoms::orientation, // orientation
+  // origin
+  // overline-position
+  // overline-thickness
+  &nsGkAtoms::overflow, // overflow
+  // panose-1
+  &nsGkAtoms::path, // path
+  &nsGkAtoms::pathLength, // pathLength
+  &nsGkAtoms::patternContentUnits, // patternContentUnits
+  &nsGkAtoms::patternTransform, // patternTransform
+  &nsGkAtoms::patternUnits, // patternUnits
+  &nsGkAtoms::pointer_events, // pointer-events XXX is this safe?
+  &nsGkAtoms::points, // points
+  &nsGkAtoms::pointsAtX, // pointsAtX
+  &nsGkAtoms::pointsAtY, // pointsAtY
+  &nsGkAtoms::pointsAtZ, // pointsAtZ
+  &nsGkAtoms::preserveAlpha, // preserveAlpha
+  &nsGkAtoms::preserveAspectRatio, // preserveAspectRatio
+  &nsGkAtoms::primitiveUnits, // primitiveUnits
+  &nsGkAtoms::r, // r
+  &nsGkAtoms::radius, // radius
+  &nsGkAtoms::refX, // refX
+  &nsGkAtoms::refY, // refY
+#ifdef MOZ_SMIL
+  &nsGkAtoms::repeatCount, // repeatCount
+  &nsGkAtoms::repeatDur, // repeatDur
+#endif
+  &nsGkAtoms::requiredExtensions, // requiredExtensions
+  &nsGkAtoms::requiredFeatures, // requiredFeatures
+#ifdef MOZ_SMIL
+  &nsGkAtoms::restart, // restart
+#endif
+  &nsGkAtoms::result, // result
+  &nsGkAtoms::rotate, // rotate
+  &nsGkAtoms::rx, // rx
+  &nsGkAtoms::ry, // ry
+  &nsGkAtoms::scale, // scale
+  &nsGkAtoms::seed, // seed
+  &nsGkAtoms::shape_rendering, // shape-rendering
+  &nsGkAtoms::slope, // slope
+  &nsGkAtoms::spacing, // spacing
+  &nsGkAtoms::specularConstant, // specularConstant
+  &nsGkAtoms::specularExponent, // specularExponent
+  &nsGkAtoms::spreadMethod, // spreadMethod
+  &nsGkAtoms::startOffset, // startOffset
+  &nsGkAtoms::stdDeviation, // stdDeviation
+  // stemh
+  // stemv
+  &nsGkAtoms::stitchTiles, // stitchTiles
+  &nsGkAtoms::stop_color, // stop-color
+  &nsGkAtoms::stop_opacity, // stop-opacity
+  // strikethrough-position
+  // strikethrough-thickness
+  &nsGkAtoms::string, // string
+  &nsGkAtoms::stroke, // stroke
+  &nsGkAtoms::stroke_dasharray, // stroke-dasharray
+  &nsGkAtoms::stroke_dashoffset, // stroke-dashoffset
+  &nsGkAtoms::stroke_linecap, // stroke-linecap
+  &nsGkAtoms::stroke_linejoin, // stroke-linejoin
+  &nsGkAtoms::stroke_miterlimit, // stroke-miterlimit
+  &nsGkAtoms::stroke_opacity, // stroke-opacity
+  &nsGkAtoms::stroke_width, // stroke-width
+  &nsGkAtoms::surfaceScale, // surfaceScale
+  &nsGkAtoms::systemLanguage, // systemLanguage
+  &nsGkAtoms::tableValues, // tableValues
+  &nsGkAtoms::target, // target
+  &nsGkAtoms::targetX, // targetX
+  &nsGkAtoms::targetY, // targetY
+  &nsGkAtoms::text_anchor, // text-anchor
+  &nsGkAtoms::text_decoration, // text-decoration
+  // textLength
+  &nsGkAtoms::text_rendering, // text-rendering
+  &nsGkAtoms::title, // title
+#ifdef MOZ_SMIL
+  &nsGkAtoms::to, // to
+#endif
+  &nsGkAtoms::transform, // transform
+  &nsGkAtoms::type, // type
+  // u1
+  // u2
+  // underline-position
+  // underline-thickness
+  // unicode
+  &nsGkAtoms::unicode_bidi, // unicode-bidi
+  // unicode-range
+  // units-per-em
+  // v-alphabetic
+  // v-hanging
+  // v-ideographic
+  // v-mathematical
+  &nsGkAtoms::values, // values
+  // vert-adv-y
+  // vert-origin-x
+  // vert-origin-y
+  &nsGkAtoms::viewBox, // viewBox
+  &nsGkAtoms::visibility, // visibility
+  // viewTarget
+  &nsGkAtoms::width, // width
+  // widths
+  &nsGkAtoms::word_spacing, // word-spacing
+  // writing-mode
+  &nsGkAtoms::x, // x
+  // x-height
+  &nsGkAtoms::x1, // x1
+  &nsGkAtoms::x2, // x2
+  &nsGkAtoms::xChannelSelector, // xChannelSelector
+  &nsGkAtoms::y, // y
+  &nsGkAtoms::y1, // y1
+  &nsGkAtoms::y2, // y2
+  &nsGkAtoms::yChannelSelector, // yChannelSelector
+  &nsGkAtoms::z, // z
+  &nsGkAtoms::zoomAndPan, // zoomAndPan
+#endif
+  nsnull
+};
+
+nsIAtom** const kURLAttributesSVG[] = {
+  nsnull
+};
+
+nsIAtom** const kElementsMathML[] = {
+   &nsGkAtoms::abs_, // abs
+   &nsGkAtoms::_and, // and
+   &nsGkAtoms::annotation_, // annotation
+   &nsGkAtoms::annotation_xml_, // annotation-xml
+   &nsGkAtoms::apply_, // apply
+   &nsGkAtoms::approx_, // approx
+   &nsGkAtoms::arccos_, // arccos
+   &nsGkAtoms::arccosh_, // arccosh
+   &nsGkAtoms::arccot_, // arccot
+   &nsGkAtoms::arccoth_, // arccoth
+   &nsGkAtoms::arccsc_, // arccsc
+   &nsGkAtoms::arccsch_, // arccsch
+   &nsGkAtoms::arcsec_, // arcsec
+   &nsGkAtoms::arcsech_, // arcsech
+   &nsGkAtoms::arcsin_, // arcsin
+   &nsGkAtoms::arcsinh_, // arcsinh
+   &nsGkAtoms::arctan_, // arctan
+   &nsGkAtoms::arctanh_, // arctanh
+   &nsGkAtoms::arg_, // arg
+   &nsGkAtoms::bind_, // bind
+   &nsGkAtoms::bvar_, // bvar
+   &nsGkAtoms::card_, // card
+   &nsGkAtoms::cartesianproduct_, // cartesianproduct
+   &nsGkAtoms::cbytes_, // cbytes
+   &nsGkAtoms::ceiling, // ceiling
+   &nsGkAtoms::cerror_, // cerror
+   &nsGkAtoms::ci_, // ci
+   &nsGkAtoms::cn_, // cn
+   &nsGkAtoms::codomain_, // codomain
+   &nsGkAtoms::complexes_, // complexes
+   &nsGkAtoms::compose_, // compose
+   &nsGkAtoms::condition_, // condition
+   &nsGkAtoms::conjugate_, // conjugate
+   &nsGkAtoms::cos_, // cos
+   &nsGkAtoms::cosh_, // cosh
+   &nsGkAtoms::cot_, // cot
+   &nsGkAtoms::coth_, // coth
+   &nsGkAtoms::cs_, // cs
+   &nsGkAtoms::csc_, // csc
+   &nsGkAtoms::csch_, // csch
+   &nsGkAtoms::csymbol_, // csymbol
+   &nsGkAtoms::curl_, // curl
+   &nsGkAtoms::declare, // declare
+   &nsGkAtoms::degree_, // degree
+   &nsGkAtoms::determinant_, // determinant
+   &nsGkAtoms::diff_, // diff
+   &nsGkAtoms::divergence_, // divergence
+   &nsGkAtoms::divide_, // divide
+   &nsGkAtoms::domain_, // domain
+   &nsGkAtoms::domainofapplication_, // domainofapplication
+   &nsGkAtoms::el_, // el
+   &nsGkAtoms::emptyset_, // emptyset
+   &nsGkAtoms::eq_, // eq
+   &nsGkAtoms::equivalent_, // equivalent
+   &nsGkAtoms::eulergamma_, // eulergamma
+   &nsGkAtoms::exists_, // exists
+   &nsGkAtoms::exp_, // exp
+   &nsGkAtoms::exponentiale_, // exponentiale
+   &nsGkAtoms::factorial_, // factorial
+   &nsGkAtoms::factorof_, // factorof
+   &nsGkAtoms::_false, // false
+   &nsGkAtoms::floor, // floor
+   &nsGkAtoms::fn_, // fn
+   &nsGkAtoms::forall_, // forall
+   &nsGkAtoms::gcd_, // gcd
+   &nsGkAtoms::geq_, // geq
+   &nsGkAtoms::grad, // grad
+   &nsGkAtoms::gt_, // gt
+   &nsGkAtoms::ident_, // ident
+   &nsGkAtoms::image, // image
+   &nsGkAtoms::imaginary_, // imaginary
+   &nsGkAtoms::imaginaryi_, // imaginaryi
+   &nsGkAtoms::implies_, // implies
+   &nsGkAtoms::in, // in
+   &nsGkAtoms::infinity, // infinity
+   &nsGkAtoms::int_, // int
+   &nsGkAtoms::integers_, // integers
+   &nsGkAtoms::intersect_, // intersect
+   &nsGkAtoms::interval_, // interval
+   &nsGkAtoms::inverse_, // inverse
+   &nsGkAtoms::lambda_, // lambda
+   &nsGkAtoms::laplacian_, // laplacian
+   &nsGkAtoms::lcm_, // lcm
+   &nsGkAtoms::leq_, // leq
+   &nsGkAtoms::limit_, // limit
+   &nsGkAtoms::list_, // list
+   &nsGkAtoms::ln_, // ln
+   &nsGkAtoms::log_, // log
+   &nsGkAtoms::logbase_, // logbase
+   &nsGkAtoms::lowlimit_, // lowlimit
+   &nsGkAtoms::lt_, // lt
+   &nsGkAtoms::maction_, // maction
+   &nsGkAtoms::malign_, // malign
+   &nsGkAtoms::maligngroup_, // maligngroup
+   &nsGkAtoms::malignmark_, // malignmark
+   &nsGkAtoms::malignscope_, // malignscope
+   &nsGkAtoms::math, // math
+   &nsGkAtoms::matrix, // matrix
+   &nsGkAtoms::matrixrow_, // matrixrow
+   &nsGkAtoms::max, // max
+   &nsGkAtoms::mean_, // mean
+   &nsGkAtoms::median_, // median
+   &nsGkAtoms::menclose_, // menclose
+   &nsGkAtoms::merror_, // merror
+   &nsGkAtoms::mfenced_, // mfenced
+   &nsGkAtoms::mfrac_, // mfrac
+   &nsGkAtoms::mfraction_, // mfraction
+   &nsGkAtoms::mglyph_, // mglyph
+   &nsGkAtoms::mi_, // mi
+   &nsGkAtoms::min, // min
+   &nsGkAtoms::minus_, // minus
+   &nsGkAtoms::mlabeledtr_, // mlabeledtr
+   &nsGkAtoms::mlongdiv_, // mlongdiv
+   &nsGkAtoms::mmultiscripts_, // mmultiscripts
+   &nsGkAtoms::mn_, // mn
+   &nsGkAtoms::mo_, // mo
+   &nsGkAtoms::mode, // mode
+   &nsGkAtoms::moment_, // moment
+   &nsGkAtoms::momentabout_, // momentabout
+   &nsGkAtoms::mover_, // mover
+   &nsGkAtoms::mpadded_, // mpadded
+   &nsGkAtoms::mphantom_, // mphantom
+   &nsGkAtoms::mprescripts_, // mprescripts
+   &nsGkAtoms::mroot_, // mroot
+   &nsGkAtoms::mrow_, // mrow
+   &nsGkAtoms::ms_, // ms
+   &nsGkAtoms::mscarries_, // mscarries
+   &nsGkAtoms::mscarry_, // mscarry
+   &nsGkAtoms::msgroup_, // msgroup
+   &nsGkAtoms::msline_, // msline
+   &nsGkAtoms::mspace_, // mspace
+   &nsGkAtoms::msqrt_, // msqrt
+   &nsGkAtoms::msrow_, // msrow
+   &nsGkAtoms::mstack_, // mstack
+   &nsGkAtoms::mstyle_, // mstyle
+   &nsGkAtoms::msub_, // msub
+   &nsGkAtoms::msubsup_, // msubsup
+   &nsGkAtoms::msup_, // msup
+   &nsGkAtoms::mtable_, // mtable
+   &nsGkAtoms::mtd_, // mtd
+   &nsGkAtoms::mtext_, // mtext
+   &nsGkAtoms::mtr_, // mtr
+   &nsGkAtoms::munder_, // munder
+   &nsGkAtoms::munderover_, // munderover
+   &nsGkAtoms::naturalnumbers_, // naturalnumbers
+   &nsGkAtoms::neq_, // neq
+   &nsGkAtoms::none, // none
+   &nsGkAtoms::_not, // not
+   &nsGkAtoms::notanumber_, // notanumber
+   &nsGkAtoms::note_, // note
+   &nsGkAtoms::notin_, // notin
+   &nsGkAtoms::notprsubset_, // notprsubset
+   &nsGkAtoms::notsubset_, // notsubset
+   &nsGkAtoms::_or, // or
+   &nsGkAtoms::otherwise, // otherwise
+   &nsGkAtoms::outerproduct_, // outerproduct
+   &nsGkAtoms::partialdiff_, // partialdiff
+   &nsGkAtoms::pi_, // pi
+   &nsGkAtoms::piece_, // piece
+   &nsGkAtoms::piecewise_, // piecewise
+   &nsGkAtoms::plus_, // plus
+   &nsGkAtoms::power_, // power
+   &nsGkAtoms::primes_, // primes
+   &nsGkAtoms::product_, // product
+   &nsGkAtoms::prsubset_, // prsubset
+   &nsGkAtoms::quotient_, // quotient
+   &nsGkAtoms::rationals_, // rationals
+   &nsGkAtoms::real_, // real
+   &nsGkAtoms::reals_, // reals
+   &nsGkAtoms::reln_, // reln
+   &nsGkAtoms::rem, // rem
+   &nsGkAtoms::root_, // root
+   &nsGkAtoms::scalarproduct_, // scalarproduct
+   &nsGkAtoms::sdev_, // sdev
+   &nsGkAtoms::sec_, // sec
+   &nsGkAtoms::sech_, // sech
+   &nsGkAtoms::selector_, // selector
+   &nsGkAtoms::semantics_, // semantics
+   &nsGkAtoms::sep_, // sep
+   &nsGkAtoms::set_, // set
+   &nsGkAtoms::setdiff_, // setdiff
+   &nsGkAtoms::share_, // share
+   &nsGkAtoms::sin_, // sin
+   &nsGkAtoms::sinh_, // sinh
+   &nsGkAtoms::subset_, // subset
+   &nsGkAtoms::sum, // sum
+   &nsGkAtoms::tan_, // tan
+   &nsGkAtoms::tanh_, // tanh
+   &nsGkAtoms::tendsto_, // tendsto
+   &nsGkAtoms::times_, // times
+   &nsGkAtoms::transpose_, // transpose
+   &nsGkAtoms::_true, // true
+   &nsGkAtoms::union_, // union
+   &nsGkAtoms::uplimit_, // uplimit
+   &nsGkAtoms::variance_, // variance
+   &nsGkAtoms::vector_, // vector
+   &nsGkAtoms::vectorproduct_, // vectorproduct
+   &nsGkAtoms::xor_, // xor
+  nsnull
+};
+
+nsIAtom** const kAttributesMathML[] = {
+   &nsGkAtoms::accent_, // accent
+   &nsGkAtoms::accentunder_, // accentunder
+   &nsGkAtoms::actiontype_, // actiontype
+   &nsGkAtoms::align, // align
+   &nsGkAtoms::alignmentscope_, // alignmentscope
+   &nsGkAtoms::alt, // alt
+   &nsGkAtoms::altimg_, // altimg
+   &nsGkAtoms::altimg_height_, // altimg-height
+   &nsGkAtoms::altimg_valign_, // altimg-valign
+   &nsGkAtoms::altimg_width_, // altimg-width
+   &nsGkAtoms::background, // background
+   &nsGkAtoms::base, // base
+   &nsGkAtoms::bevelled_, // bevelled
+   &nsGkAtoms::cd_, // cd
+   &nsGkAtoms::cdgroup_, // cdgroup
+   &nsGkAtoms::charalign_, // charalign
+   &nsGkAtoms::close, // close
+   &nsGkAtoms::closure_, // closure
+   &nsGkAtoms::color, // color
+   &nsGkAtoms::columnalign_, // columnalign
+   &nsGkAtoms::columnalignment_, // columnalignment
+   &nsGkAtoms::columnlines_, // columnlines
+   &nsGkAtoms::columnspacing_, // columnspacing
+   &nsGkAtoms::columnspan_, // columnspan
+   &nsGkAtoms::columnwidth_, // columnwidth
+   &nsGkAtoms::crossout_, // crossout
+   &nsGkAtoms::decimalpoint_, // decimalpoint
+   &nsGkAtoms::definitionURL_, // definitionURL
+   &nsGkAtoms::denomalign_, // denomalign
+   &nsGkAtoms::depth_, // depth
+   &nsGkAtoms::dir, // dir
+   &nsGkAtoms::display, // display
+   &nsGkAtoms::displaystyle_, // displaystyle
+   &nsGkAtoms::edge_, // edge
+   &nsGkAtoms::encoding, // encoding
+   &nsGkAtoms::equalcolumns_, // equalcolumns
+   &nsGkAtoms::equalrows_, // equalrows
+   &nsGkAtoms::fence_, // fence
+   &nsGkAtoms::fontfamily_, // fontfamily
+   &nsGkAtoms::fontsize_, // fontsize
+   &nsGkAtoms::fontstyle_, // fontstyle
+   &nsGkAtoms::fontweight_, // fontweight
+   &nsGkAtoms::form, // form
+   &nsGkAtoms::frame, // frame
+   &nsGkAtoms::framespacing_, // framespacing
+   &nsGkAtoms::groupalign_, // groupalign
+   &nsGkAtoms::height, // height
+   &nsGkAtoms::href, // href
+   &nsGkAtoms::id, // id
+   &nsGkAtoms::indentalign_, // indentalign
+   &nsGkAtoms::indentalignfirst_, // indentalignfirst
+   &nsGkAtoms::indentalignlast_, // indentalignlast
+   &nsGkAtoms::indentshift_, // indentshift
+   &nsGkAtoms::indentshiftfirst_, // indentshiftfirst
+   &nsGkAtoms::indenttarget_, // indenttarget
+   &nsGkAtoms::index, // index
+   &nsGkAtoms::integer, // integer
+   &nsGkAtoms::largeop_, // largeop
+   &nsGkAtoms::length, // length
+   &nsGkAtoms::linebreak_, // linebreak
+   &nsGkAtoms::linebreakmultchar_, // linebreakmultchar
+   &nsGkAtoms::linebreakstyle_, // linebreakstyle
+   &nsGkAtoms::linethickness_, // linethickness
+   &nsGkAtoms::location_, // location
+   &nsGkAtoms::longdivstyle_, // longdivstyle
+   &nsGkAtoms::lquote_, // lquote
+   &nsGkAtoms::lspace_, // lspace
+   &nsGkAtoms::ltr, // ltr
+   &nsGkAtoms::mathbackground_, // mathbackground
+   &nsGkAtoms::mathcolor_, // mathcolor
+   &nsGkAtoms::mathsize_, // mathsize
+   &nsGkAtoms::mathvariant_, // mathvariant
+   &nsGkAtoms::maxsize_, // maxsize
+   &nsGkAtoms::mediummathspace_, // mediummathspace
+   &nsGkAtoms::minlabelspacing_, // minlabelspacing
+   &nsGkAtoms::minsize_, // minsize
+   &nsGkAtoms::monospaced_, // monospaced
+   &nsGkAtoms::movablelimits_, // movablelimits
+   &nsGkAtoms::msgroup_, // msgroup
+   &nsGkAtoms::name, // name
+   &nsGkAtoms::negativemediummathspace_, // negativemediummathspace
+   &nsGkAtoms::negativethickmathspace_, // negativethickmathspace
+   &nsGkAtoms::negativethinmathspace_, // negativethinmathspace
+   &nsGkAtoms::negativeverythickmathspace_, // negativeverythickmathspace
+   &nsGkAtoms::negativeverythinmathspace_, // negativeverythinmathspace
+   &nsGkAtoms::negativeveryverythickmathspace_, // negativeveryverythickmathspace
+   &nsGkAtoms::negativeveryverythinmathspace_, // negativeveryverythinmathspace
+   &nsGkAtoms::newline, // newline
+   &nsGkAtoms::notation_, // notation
+   &nsGkAtoms::numalign_, // numalign
+   &nsGkAtoms::number, // number
+   &nsGkAtoms::open, // open
+   &nsGkAtoms::order, // order
+   &nsGkAtoms::other_, // other
+   &nsGkAtoms::overflow, // overflow
+   &nsGkAtoms::position, // position
+   &nsGkAtoms::role, // role
+   &nsGkAtoms::rowalign_, // rowalign
+   &nsGkAtoms::rowlines_, // rowlines
+   &nsGkAtoms::rowspacing_, // rowspacing
+   &nsGkAtoms::rowspan, // rowspan
+   &nsGkAtoms::rquote_, // rquote
+   &nsGkAtoms::rspace_, // rspace
+   &nsGkAtoms::schemaLocation_, // schemaLocation
+   &nsGkAtoms::scriptlevel_, // scriptlevel
+   &nsGkAtoms::scriptminsize_, // scriptminsize
+   &nsGkAtoms::scriptsize_, // scriptsize
+   &nsGkAtoms::scriptsizemultiplier_, // scriptsizemultiplier
+   &nsGkAtoms::selection_, // selection
+   &nsGkAtoms::separator_, // separator
+   &nsGkAtoms::separators_, // separators
+   &nsGkAtoms::shift_, // shift
+   &nsGkAtoms::side_, // side
+   &nsGkAtoms::src, // src
+   &nsGkAtoms::stackalign_, // stackalign
+   &nsGkAtoms::stretchy_, // stretchy
+   &nsGkAtoms::subscriptshift_, // subscriptshift
+   &nsGkAtoms::superscriptshift_, // superscriptshift
+   &nsGkAtoms::symmetric_, // symmetric
+   &nsGkAtoms::thickmathspace_, // thickmathspace
+   &nsGkAtoms::thinmathspace_, // thinmathspace
+   &nsGkAtoms::type, // type
+   &nsGkAtoms::verythickmathspace_, // verythickmathspace
+   &nsGkAtoms::verythinmathspace_, // verythinmathspace
+   &nsGkAtoms::veryverythickmathspace_, // veryverythickmathspace
+   &nsGkAtoms::veryverythinmathspace_, // veryverythinmathspace
+   &nsGkAtoms::voffset_, // voffset
+   &nsGkAtoms::width, // width
+   &nsGkAtoms::xref_, // xref
+  nsnull
+};
+
+nsIAtom** const kURLAttributesMathML[] = {
+  &nsGkAtoms::href,
+  &nsGkAtoms::src,
+  &nsGkAtoms::definitionURL_,
+  nsnull
+};
+
+nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sElementsHTML = nsnull;
+nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sAttributesHTML = nsnull;
+nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sElementsSVG = nsnull;
+nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sAttributesSVG = nsnull;
+nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sElementsMathML = nsnull;
+nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sAttributesMathML = nsnull;
+nsIPrincipal* nsTreeSanitizer::sNullPrincipal = nsnull;
+
+nsTreeSanitizer::nsTreeSanitizer(PRBool aAllowStyles, PRBool aAllowComments)
+ : mAllowStyles(aAllowStyles)
+ , mAllowComments(aAllowComments)
+{
+  if (!sElementsHTML) {
+    // Initialize lazily to avoid having to initialize at all if the user
+    // doesn't paste HTML or load feeds.
+    InitializeStatics();
+  }
+}
+
+PRBool
+nsTreeSanitizer::MustFlatten(PRInt32 aNamespace, nsIAtom* aLocal)
+{
+  if (aNamespace == kNameSpaceID_XHTML) {
+    return !sElementsHTML->GetEntry(aLocal);
+  }
+  if (aNamespace == kNameSpaceID_SVG) {
+    return !sElementsSVG->GetEntry(aLocal);
+  }
+  if (aNamespace == kNameSpaceID_MathML) {
+    return !sElementsMathML->GetEntry(aLocal);
+  }
+  return PR_TRUE;
+}
+
+PRBool
+nsTreeSanitizer::IsURL(nsIAtom*** aURLs, nsIAtom* aLocalName)
+{
+  nsIAtom** atomPtrPtr;
+  while ((atomPtrPtr = *aURLs)) {
+    if (*atomPtrPtr == aLocalName) {
+      return PR_TRUE;
+    }
+    ++aURLs;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsTreeSanitizer::MustPrune(PRInt32 aNamespace,
+                           nsIAtom* aLocal,
+                           mozilla::dom::Element* aElement)
+{
+  // To avoid attacks where a MathML script becomes something that gets
+  // serialized in a way that it parses back as an HTML script, let's just
+  // drop elements with the local name 'script' regardless of namespace.
+  if (nsGkAtoms::script == aLocal) {
+    return PR_TRUE;
+  }
+  if (aNamespace == kNameSpaceID_XHTML) {
+    if (nsGkAtoms::title == aLocal) {
+      // emulate the quirks of the old parser
+      return PR_TRUE;
+    }
+    if ((nsGkAtoms::meta == aLocal || nsGkAtoms::link == aLocal) &&
+        !(aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::itemprop) ||
+          aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::itemscope))) {
+      // emulate old behavior for non-Microdata <meta> and <link> presumably
+      // in <head>. <meta> and <link> are whitelisted in order to avoid
+      // corrupting Microdata when they appear in <body>. Note that
+      // SanitizeAttributes() will remove the rel attribute from <link> and
+      // the name attribute from <meta>.
+      return PR_TRUE;
+    }
+  }
+  if (mAllowStyles) {
+    if (nsGkAtoms::style == aLocal && !(aNamespace == kNameSpaceID_XHTML
+        || aNamespace == kNameSpaceID_SVG)) {
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+  if (nsGkAtoms::style == aLocal) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsTreeSanitizer::SanitizeStyleRule(mozilla::css::StyleRule *aRule,
+                                   nsAutoString &aRuleText)
+{
+  PRBool didSanitize = PR_FALSE;
+  aRuleText.Truncate();
+  mozilla::css::Declaration* style = aRule->GetDeclaration();
+  if (style) {
+    didSanitize = style->HasProperty(eCSSProperty_binding);
+    style->RemoveProperty(eCSSProperty_binding);
+    style->ToString(aRuleText);
+  }
+  return didSanitize;
+}
+
+PRBool
+nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
+                                    nsAString& aSanitized,
+                                    nsIDocument* aDocument,
+                                    nsIURI* aBaseURI)
+{
+  nsresult rv;
+  aSanitized.Truncate();
+  // aSanitized will hold the permitted CSS text.
+  // -moz-binding is blacklisted.
+  PRBool didSanitize = PR_FALSE;
+  // Create a sheet to hold the parsed CSS
+  nsRefPtr<nsCSSStyleSheet> sheet;
+  rv = NS_NewCSSStyleSheet(getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  sheet->SetURIs(aDocument->GetDocumentURI(), nsnull, aBaseURI);
+  sheet->SetPrincipal(aDocument->NodePrincipal());
+  // Create the CSS parser, and parse the CSS text.
+  nsCSSParser parser(nsnull, sheet);
+  rv = parser.ParseSheet(aOriginal, aDocument->GetDocumentURI(), aBaseURI,
+                         aDocument->NodePrincipal(), 0, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  // Mark the sheet as complete.
+  NS_ABORT_IF_FALSE(!sheet->IsModified(),
+      "should not get marked modified during parsing");
+  sheet->SetComplete();
+  // Loop through all the rules found in the CSS text
+  PRInt32 ruleCount = sheet->StyleRuleCount();
+  for (PRInt32 i = 0; i < ruleCount; ++i) {
+    nsRefPtr<mozilla::css::Rule> rule;
+    rv = sheet->GetStyleRuleAt(i, *getter_AddRefs(rule));
+    if (NS_FAILED(rv))
+      continue; NS_ASSERTION(rule, "We should have a rule by now");
+    switch (rule->GetType()) {
+      default:
+        didSanitize = PR_TRUE;
+        // Ignore these rule types.
+        break;
+      case mozilla::css::Rule::NAMESPACE_RULE:
+      case mozilla::css::Rule::FONT_FACE_RULE: {
+        // Append @namespace and @font-face rules verbatim.
+        nsAutoString cssText;
+        nsCOMPtr<nsIDOMCSSRule> styleRule = do_QueryInterface(rule);
+        if (styleRule) {
+          rv = styleRule->GetCssText(cssText);
+          if (NS_SUCCEEDED(rv)) {
+            aSanitized.Append(cssText);
+          }
+        }
+        break;
+      }
+      case mozilla::css::Rule::STYLE_RULE: {
+        // For style rules, we will just look for and remove the
+        // -moz-binding properties.
+        nsRefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(rule);
+        NS_ASSERTION(styleRule, "Must be a style rule");
+        nsAutoString decl;
+        PRBool sanitized = SanitizeStyleRule(styleRule, decl);
+        didSanitize = sanitized || didSanitize;
+        if (!sanitized) {
+          styleRule->GetCssText(decl);
+        }
+        aSanitized.Append(decl);
+      }
+    }
+  }
+  return didSanitize;
+}
+
+void
+nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
+                                    nsTHashtable<nsISupportsHashKey>* aAllowed,
+                                    nsIAtom*** aURLs,
+                                    PRBool aAllowXLink,
+                                    PRBool aAllowStyle,
+                                    PRBool aAllowDangerousSrc)
+{
+  PRUint32 ac = aElement->GetAttrCount();
+
+  nsresult rv;
+
+  for (PRInt32 i = ac - 1; i >= 0; --i) {
+    rv = NS_OK;
+    const nsAttrName* attrName = aElement->GetAttrNameAt(i);
+    PRInt32 attrNs = attrName->NamespaceID();
+    nsIAtom* attrLocal = attrName->Atom();
+
+    if (kNameSpaceID_None == attrNs) {
+      if (aAllowStyle && nsGkAtoms::style == attrLocal) {
+        nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
+        nsIDocument* document = aElement->GetOwnerDoc();
+        // Pass the CSS Loader object to the parser, to allow parser error
+        // reports to include the outer window ID.
+        nsCSSParser parser(document->CSSLoader());
+        nsRefPtr<mozilla::css::StyleRule> rule;
+        nsAutoString value;
+        aElement->GetAttr(attrNs, attrLocal, value);
+        rv = parser.ParseStyleAttribute(value,
+                                        document->GetDocumentURI(),
+                                        baseURI,
+                                        document->NodePrincipal(),
+                                        getter_AddRefs(rule));
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString cleanValue;
+          if (SanitizeStyleRule(rule, cleanValue)) {
+            aElement->SetAttr(kNameSpaceID_None,
+                              nsGkAtoms::style,
+                              cleanValue,
+                              PR_FALSE);
+          }
+        }
+        continue;
+      }
+      if (aAllowDangerousSrc && nsGkAtoms::src == attrLocal) {
+        continue;
+      }
+      if (IsURL(aURLs, attrLocal)) {
+        SanitizeURL(aElement, attrNs, attrLocal);
+        continue;
+      }
+      if (aAllowed->GetEntry(attrLocal) &&
+          !(attrLocal == nsGkAtoms::rel &&
+            aElement->IsHTML(nsGkAtoms::link)) &&
+          !(attrLocal == nsGkAtoms::name &&
+            aElement->IsHTML(nsGkAtoms::meta))) {
+        // name="" and rel="" are whitelisted, but treat them as blacklisted
+        // for <meta name> and <link rel> to avoid document-wide metadata
+        // or styling overrides with non-conforming <meta name itemprop> or
+        // <link rel itemprop>
+        continue;
+      }
+      const PRUnichar* localStr = attrLocal->GetUTF16String();
+      // Allow underscore to cater to the MCE editor library.
+      // Allow data-* on SVG and MathML, too, as a forward-compat measure.
+      if (*localStr == '_' || (attrLocal->GetLength() > 5 && localStr[0] == 'd'
+          && localStr[1] == 'a' && localStr[2] == 't' && localStr[3] == 'a'
+          && localStr[4] == '-')) {
+        continue;
+      }
+      // else not allowed
+    } else if (kNameSpaceID_XML == attrNs) {
+      if (nsGkAtoms::base == attrLocal) {
+        SanitizeURL(aElement, attrNs, attrLocal);
+        continue;
+      }
+      if (nsGkAtoms::lang == attrLocal || nsGkAtoms::space == attrLocal) {
+        continue;
+      }
+      // else not allowed
+    } else if (aAllowXLink && kNameSpaceID_XLink == attrNs) {
+      if (nsGkAtoms::href == attrLocal) {
+        SanitizeURL(aElement, attrNs, attrLocal);
+        continue;
+      }
+      if (nsGkAtoms::type == attrLocal || nsGkAtoms::title == attrLocal
+          || nsGkAtoms::show == attrLocal || nsGkAtoms::actuate == attrLocal) {
+        continue;
+      }
+      // else not allowed
+    }
+    aElement->UnsetAttr(kNameSpaceID_None, attrLocal, PR_FALSE);
+    // in case the attribute removal shuffled the attribute order, start the
+    // loop again.
+    --ac;
+    i = ac; // i will be decremented immediately thanks to the for loop
+  }
+
+  // If we've got HTML audio or video, add the controls attribute, because
+  // otherwise the content is unplayable with scripts removed.
+  if (aElement->IsHTML(nsGkAtoms::video) ||
+      aElement->IsHTML(nsGkAtoms::audio)) {
+    aElement->SetAttr(kNameSpaceID_None,
+                      nsGkAtoms::controls,
+                      EmptyString(),
+                      PR_FALSE);
+  }
+}
+
+void
+nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
+                             PRInt32 aNamespace,
+                             nsIAtom* aLocalName)
+{
+  nsAutoString value;
+  aElement->GetAttr(aNamespace, aLocalName, value);
+
+  // Get value and remove mandatory quotes
+  static const char* kWhitespace = "\n\r\t\b";
+  const nsAString& v =
+    nsContentUtils::TrimCharsInSet(kWhitespace, value);
+
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  PRUint32 flags = nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL;
+
+  nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
+  nsCOMPtr<nsIURI> attrURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(attrURI), v, nsnull, baseURI);
+  if (NS_SUCCEEDED(rv)) {
+    rv = secMan->CheckLoadURIWithPrincipal(sNullPrincipal, attrURI, flags);
+  }
+  if (NS_FAILED(rv)) {
+    aElement->UnsetAttr(aNamespace, aLocalName, PR_FALSE);
+  }
+}
+
+void
+nsTreeSanitizer::Sanitize(nsIContent* aFragment) {
+  // If you want to relax these preconditions, be sure to check the code in
+  // here that notifies / does not notify or that fires mutation events if
+  // in tree.
+  NS_PRECONDITION(aFragment->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
+      "Argument was not DOM fragment.");
+  NS_PRECONDITION(!aFragment->IsInDoc(), "The fragment is in doc?");
+
+  nsIContent* node = aFragment->GetFirstChild();
+  while (node) {
+    if (node->IsElement()) {
+      mozilla::dom::Element* elt = node->AsElement();
+      nsINodeInfo* nodeInfo = node->NodeInfo();
+      nsIAtom* localName = nodeInfo->NameAtom();
+      PRInt32 ns = nodeInfo->NamespaceID();
+
+      if (MustPrune(ns, localName, elt)) {
+        nsIContent* next = node->GetNextNonChildNode(aFragment);
+        node->GetParent()->RemoveChild(node);
+        node = next;
+        continue;
+      }
+      if (nsGkAtoms::style == localName) {
+        // If styles aren't allowed, style elements got pruned above. Even
+        // if styles are allowed, non-HTML, non-SVG style elements got pruned
+        // above.
+        NS_ASSERTION(ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG,
+            "Should have only HTML or SVG here!");
+        nsAutoString styleText;
+        nsContentUtils::GetNodeTextContent(node, PR_FALSE, styleText);
+        nsAutoString sanitizedStyle;
+        nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
+        if (SanitizeStyleSheet(styleText,
+                               sanitizedStyle,
+                               aFragment->GetOwnerDoc(),
+                               baseURI)) {
+          nsContentUtils::SetNodeTextContent(node, sanitizedStyle, PR_TRUE);
+        } else {
+          // If the node had non-text child nodes, this operation zaps those.
+          nsContentUtils::SetNodeTextContent(node, styleText, PR_TRUE);
+        }
+        if (ns == kNameSpaceID_XHTML) {
+          SanitizeAttributes(elt,
+                             sAttributesHTML,
+                             (nsIAtom***)kURLAttributesHTML,
+                             PR_FALSE,
+                             mAllowStyles,
+                             PR_FALSE);
+        } else {
+          SanitizeAttributes(elt,
+                             sAttributesSVG,
+                             (nsIAtom***)kURLAttributesSVG,
+                             PR_TRUE,
+                             mAllowStyles,
+                             PR_FALSE);
+        }
+        node = node->GetNextNonChildNode(aFragment);
+        continue;
+      }
+      if (MustFlatten(ns, localName)) {
+        nsIContent* next = node->GetNextNode(aFragment);
+        nsIContent* parent = node->GetParent();
+        nsCOMPtr<nsIContent> child; // Must keep the child alive during move
+        nsresult rv;
+        while ((child = node->GetFirstChild())) {
+          parent->InsertBefore(child, node, &rv);
+          if (NS_FAILED(rv)) {
+            break;
+          }
+        }
+        parent->RemoveChild(node);
+        node = next;
+        continue;
+      }
+      NS_ASSERTION(ns == kNameSpaceID_XHTML ||
+                   ns == kNameSpaceID_SVG ||
+                   ns == kNameSpaceID_MathML,
+          "Should have only HTML, MathML or SVG here!");
+      if (ns == kNameSpaceID_XHTML) {
+        SanitizeAttributes(elt,
+                           sAttributesHTML,
+                           (nsIAtom***)kURLAttributesHTML,
+                           PR_FALSE, mAllowStyles,
+                           (nsGkAtoms::img == localName));
+      } else if (ns == kNameSpaceID_SVG) {
+        SanitizeAttributes(elt,
+                           sAttributesSVG,
+                           (nsIAtom***)kURLAttributesSVG,
+                           PR_TRUE,
+                           mAllowStyles,
+                           PR_FALSE);
+      } else {
+        SanitizeAttributes(elt,
+                           sAttributesMathML,
+                           (nsIAtom***)kURLAttributesMathML,
+                           PR_TRUE,
+                           PR_FALSE,
+                           PR_FALSE);
+      }
+      node = node->GetNextNode(aFragment);
+      continue;
+    }
+    NS_ASSERTION(!node->GetFirstChild(), "How come non-element node had kids?");
+    nsIContent* next = node->GetNextNonChildNode(aFragment);
+    if (!mAllowComments && node->IsNodeOfType(nsINode::eCOMMENT)) {
+      node->GetParent()->RemoveChild(node);
+    }
+    node = next;
+  }
+}
+
+void
+nsTreeSanitizer::InitializeStatics()
+{
+  NS_PRECONDITION(!sElementsHTML, "Initializing a second time.");
+
+  sElementsHTML = new nsTHashtable<nsISupportsHashKey> ();
+  sElementsHTML->Init(NS_ARRAY_LENGTH(kElementsHTML));
+  for (PRUint32 i = 0; kElementsHTML[i]; i++) {
+    sElementsHTML->PutEntry(*kElementsHTML[i]);
+  }
+
+  sAttributesHTML = new nsTHashtable<nsISupportsHashKey> ();
+  sAttributesHTML->Init(NS_ARRAY_LENGTH(kAttributesHTML));
+  for (PRUint32 i = 0; kAttributesHTML[i]; i++) {
+    sAttributesHTML->PutEntry(*kAttributesHTML[i]);
+  }
+
+  sElementsSVG = new nsTHashtable<nsISupportsHashKey> ();
+  sElementsSVG->Init(NS_ARRAY_LENGTH(kElementsSVG));
+  for (PRUint32 i = 0; kElementsSVG[i]; i++) {
+    sElementsSVG->PutEntry(*kElementsSVG[i]);
+  }
+
+  sAttributesSVG = new nsTHashtable<nsISupportsHashKey> ();
+  sAttributesSVG->Init(NS_ARRAY_LENGTH(kAttributesSVG));
+  for (PRUint32 i = 0; kAttributesSVG[i]; i++) {
+    sAttributesSVG->PutEntry(*kAttributesSVG[i]);
+  }
+
+  sElementsMathML = new nsTHashtable<nsISupportsHashKey> ();
+  sElementsMathML->Init(NS_ARRAY_LENGTH(kElementsMathML));
+  for (PRUint32 i = 0; kElementsMathML[i]; i++) {
+    sElementsMathML->PutEntry(*kElementsMathML[i]);
+  }
+
+  sAttributesMathML = new nsTHashtable<nsISupportsHashKey> ();
+  sAttributesMathML->Init(NS_ARRAY_LENGTH(kAttributesMathML));
+  for (PRUint32 i = 0; kAttributesMathML[i]; i++) {
+    sAttributesMathML->PutEntry(*kAttributesMathML[i]);
+  }
+
+  nsCOMPtr<nsIPrincipal> principal =
+      do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
+  principal.forget(&sNullPrincipal);
+}
+
+void
+nsTreeSanitizer::ReleaseStatics()
+{
+  delete sElementsHTML;
+  sElementsHTML = nsnull;
+
+  delete sAttributesHTML;
+  sAttributesHTML = nsnull;
+
+  delete sElementsSVG;
+  sElementsSVG = nsnull;
+
+  delete sAttributesSVG;
+  sAttributesSVG = nsnull;
+
+  delete sElementsMathML;
+  sElementsMathML = nsnull;
+
+  delete sAttributesMathML;
+  sAttributesMathML = nsnull;
+
+  NS_IF_RELEASE(sNullPrincipal);
+}
