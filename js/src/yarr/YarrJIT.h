@@ -37,7 +37,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "YarrPattern.h"
 
-#if WTF_CPU_X86 && !WTF_COMPILER_MSVC
+#if WTF_CPU_X86 && !WTF_COMPILER_MSVC && !WTF_COMPILER_SUNCC
 #define YARR_CALL __attribute__ ((regparm (3)))
 #else
 #define YARR_CALL

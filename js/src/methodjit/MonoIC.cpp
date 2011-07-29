@@ -271,9 +271,10 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
     if (shape->isMethod() ||
         !shape->hasDefaultSetter() ||
         !shape->writable() ||
-        !shape->hasSlot())
+        !shape->hasSlot() ||
+        obj->watched())
     {
-        /* Disable the IC for weird shape attributes. */
+        /* Disable the IC for weird shape attributes and watchpoints. */
         PatchSetFallback(f, ic);
         return Lookup_Uncacheable;
     }

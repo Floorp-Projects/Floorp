@@ -58,16 +58,21 @@ let gSyncQuota = {
   },
 
   loadData: function loadData() {
-    window.setTimeout(function() {
-      let usage = Weave.Service.getCollectionUsage();
+    this._usage_req = Weave.Service.getStorageInfo(Weave.INFO_COLLECTION_USAGE,
+                                                   function (error, usage) {
+      delete gSyncQuota._usage_req;
+      // displayUsageData handles null values, so no need to check 'error'.
       gUsageTreeView.displayUsageData(usage);
-    }, 0);
+    });
 
     let usageLabel = document.getElementById("usageLabel");
     let bundle = this.bundle;
-    window.setTimeout(function() {
-      let quota = Weave.Service.getQuota();
-      if (!quota) {
+
+    this._quota_req = Weave.Service.getStorageInfo(Weave.INFO_QUOTA,
+                                                   function (error, quota) {
+      delete gSyncQuota._quota_req;
+
+      if (error) {
         usageLabel.value = bundle.getString("quota.usageError.label");
         return;
       }
@@ -82,7 +87,17 @@ let gSyncQuota = {
       let total = gSyncQuota.convertKB(quota[1]);
       usageLabel.value = bundle.getFormattedString(
         "quota.usagePercentage.label", [percent].concat(used).concat(total));
-    }, 0);
+    });
+  },
+
+  onCancel: function onCancel() {
+    if (this._usage_req) {
+      this._usage_req.abort();
+    }
+    if (this._quota_req) {
+      this._quota_req.abort();
+    }
+    return true;
   },
 
   onAccept: function onAccept() {
@@ -95,7 +110,7 @@ let gSyncQuota = {
       let Service = Weave.Service;
       Weave.Utils.nextTick(function() { Service.sync(); });
     }
-    return true;
+    return this.onCancel();
   },
 
   convertKB: function convertKB(value) {

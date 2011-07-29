@@ -1839,6 +1839,9 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
     if (!GetGLName<WebGLProgram>("getAttribLocation: program", pobj, &progname))
         return NS_OK;
 
+    if (!ValidateGLSLIdentifier(name, "getAttribLocation"))
+        return NS_OK; 
+
     MakeContextCurrent();
     *retval = gl->fGetAttribLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
     return NS_OK;
@@ -2660,6 +2663,9 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
     WebGLProgram *prog;
     if (!GetConcreteObjectAndGLName("getUniformLocation: program", pobj, &prog, &progname))
         return NS_OK;
+
+    if (!ValidateGLSLIdentifier(name, "getUniformLocation"))
+        return NS_OK; 
 
     MakeContextCurrent();
 
@@ -4548,6 +4554,10 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
     if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.mWidth, imageInfo.mHeight))
         return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
+    
+    // Require the format and type in texSubImage2D to match that of the existing texture as created by texImage2D
+    if (imageInfo.mFormat != format || imageInfo.mType != type)
+        return ErrorInvalidOperation("texSubImage2D: format or type doesn't match the existing texture");
 
     MakeContextCurrent();
 

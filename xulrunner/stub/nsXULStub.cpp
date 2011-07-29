@@ -314,6 +314,15 @@ main(int argc, char **argv)
 
   greFound = FolderExists(greDir);
 
+#ifdef XP_UNIX
+  if (greFound) {
+    char resolved_greDir[MAXPATHLEN] = "";
+    if (realpath(greDir, resolved_greDir) && *resolved_greDir) {
+      strncpy(greDir, resolved_greDir, MAXPATHLEN);
+    }
+  }
+#endif
+
   strncpy(lastSlash, "application.ini", sizeof(iniPath) - (lastSlash - iniPath));
 
 #endif

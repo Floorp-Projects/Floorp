@@ -1447,6 +1447,8 @@ nsHttpHandler::Observe(nsISupports *subject,
             mInPrivateBrowsingMode = PRIVATE_BROWSING_ON;
         else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(data))
             mInPrivateBrowsingMode = PRIVATE_BROWSING_OFF;
+        if (mConnMgr)
+            mConnMgr->ClosePersistentConnections();
     }
     else if (strcmp(topic, "net:prune-dead-connections") == 0) {
         if (mConnMgr) {

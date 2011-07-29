@@ -96,6 +96,47 @@ function testURI(aURI, aDisp, aHost)
   do_check_eq(host, aHost);
 }
 
+
+function testGetReadableDates(aDate, aCompactValue)
+{
+  const now = new Date(2000, 11, 31, 11, 59, 59);
+
+  let [dateCompact] = DownloadUtils.getReadableDates(aDate, now);
+  do_check_eq(dateCompact, aCompactValue);
+}
+
+function testAllGetReadableDates()
+{
+  // This test cannot depend on the current date and time, or the date format.
+  // It depends on being run with the English localization, however.
+  const today_11_30     = new Date(2000, 11, 31, 11, 30, 15);
+  const today_12_30     = new Date(2000, 11, 31, 12, 30, 15);
+  const yesterday_11_30 = new Date(2000, 11, 30, 11, 30, 15);
+  const yesterday_12_30 = new Date(2000, 11, 30, 12, 30, 15);
+  const twodaysago      = new Date(2000, 11, 29, 11, 30, 15);
+  const sixdaysago      = new Date(2000, 11, 25, 11, 30, 15);
+  const sevendaysago    = new Date(2000, 11, 24, 11, 30, 15);
+
+  let dts = Components.classes["@mozilla.org/intl/scriptabledateformat;1"].
+            getService(Components.interfaces.nsIScriptableDateFormat);
+
+  testGetReadableDates(today_11_30, dts.FormatTime("", dts.timeFormatNoSeconds,
+                                                   11, 30, 0));
+  testGetReadableDates(today_12_30, dts.FormatTime("", dts.timeFormatNoSeconds,
+                                                   12, 30, 0));
+  testGetReadableDates(yesterday_11_30, "Yesterday");
+  testGetReadableDates(yesterday_12_30, "Yesterday");
+  testGetReadableDates(twodaysago, twodaysago.toLocaleFormat("%A"));
+  testGetReadableDates(sixdaysago, sixdaysago.toLocaleFormat("%A"));
+  testGetReadableDates(sevendaysago, sevendaysago.toLocaleFormat("%B") + " " +
+                                     sevendaysago.toLocaleFormat("%d"));
+
+  let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);
+  do_check_eq(dateTimeFull, dts.FormatDateTime("", dts.dateFormatLong,
+                                                   dts.timeFormatNoSeconds,
+                                                   2000, 12, 31, 11, 30, 0));
+}
+
 function run_test()
 {
   testConvertByteUnits(-1, "-1", "bytes");
@@ -163,4 +204,6 @@ function run_test()
   testURI("file:///C:/Cool/Stuff/", "local file", "local file");
   testURI("moz-icon:file:///test.extension", "moz-icon resource", "moz-icon resource");
   testURI("about:config", "about resource", "about resource");
+
+  testAllGetReadableDates();
 }

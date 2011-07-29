@@ -599,12 +599,7 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
     if (!obj)
         return false;
     if (!obj->isRegExp()) {
-        JSFunction *fun = vp[0].toObject().getFunctionPrivate();
-        JSAutoByteString funNameBytes;
-        if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                                 "RegExp", funName, obj->getClass()->name);
-        }
+        ReportIncompatibleMethod(cx, vp, &js_RegExpClass);
         return false;
     }
 
@@ -620,29 +615,10 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
     RegExpStatics *res = cx->regExpStatics();
 
     /* Step 2. */
-    JSString *input;
-    if (argc > 0) {
-        input = js_ValueToString(cx, vp[2]);
-        if (!input)
-            return false;
-        vp[2] = StringValue(input);
-    } else {
-        /* NON-STANDARD: Grab input from statics. */
-        input = res->getPendingInput();
-        if (!input) {
-            JSAutoByteString sourceBytes(cx, re->getSource());
-            if (!!sourceBytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_INPUT,
-                                     sourceBytes.ptr(),
-                                     re->global() ? "g" : "",
-                                     re->ignoreCase() ? "i" : "",
-                                     re->multiline() ? "m" : "",
-                                     re->sticky() ? "y" : "");
-            }
-            return false;
-        }
-    }
-
+    JSString *input = js_ValueToString(cx, argc > 0 ?  vp[2] : UndefinedValue());    
+    if (!input)
+        return false;
+    
     /* Step 3. */
     size_t length = input->length();
 

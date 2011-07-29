@@ -168,7 +168,7 @@ JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
 inline void
 JSObject::syncSpecialEquality()
 {
-    if (clasp->ext.equality) {
+    if (getClass()->ext.equality) {
         flags |= JSObject::HAS_EQUALITY;
         JS_ASSERT_IF(!hasLazyType(), type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     }
@@ -258,7 +258,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(shape.methodObject() == vp->toObject());
     JS_ASSERT(shape.writable());
     JS_ASSERT(shape.slot != SHAPE_INVALID_SLOT);
-    JS_ASSERT(shape.hasDefaultSetter() || shape.setterOp() == js_watch_set);
+    JS_ASSERT(shape.hasDefaultSetter());
     JS_ASSERT(!isGlobal());  /* i.e. we are not changing the global shape */
 
     JSObject *funobj = &vp->toObject();
@@ -319,15 +319,15 @@ JSObject::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
     return true;
 }
 
-inline js::Value *
+inline const js::Value *
 JSObject::getRawSlots()
 {
     JS_ASSERT(isGlobal());
     return slots;
 }
 
-inline js::Value *
-JSObject::getRawSlot(size_t slot, js::Value *slots)
+inline const js::Value *
+JSObject::getRawSlot(size_t slot, const js::Value *slots)
 {
     JS_ASSERT(isGlobal());
     size_t fixed = numFixedSlots();
@@ -476,7 +476,7 @@ JSObject::getDenseArrayCapacity()
     return numSlots();
 }
 
-inline js::Value*
+inline const js::Value *
 JSObject::getDenseArrayElements()
 {
     JS_ASSERT(isDenseArray());
@@ -488,13 +488,6 @@ JSObject::getDenseArrayElement(uintN idx)
 {
     JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
     return slots[idx];
-}
-
-inline js::Value *
-JSObject::addressOfDenseArrayElement(uintN idx)
-{
-    JS_ASSERT(isDenseArray() && idx < capacity);
-    return &slots[idx];
 }
 
 inline void
@@ -509,6 +502,22 @@ JSObject::setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value
 {
     js::types::AddTypePropertyId(cx, this, JSID_VOID, val);
     setDenseArrayElement(idx, val);
+}
+
+inline void
+JSObject::copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
+{
+    JS_ASSERT(isDenseArray());
+    copySlotRange(dstStart, src, count);
+}
+
+inline void
+JSObject::moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(dstStart + count <= capacity);
+    JS_ASSERT(srcStart + count <= capacity);
+    memmove(slots + dstStart, slots + srcStart, count * sizeof(js::Value));
 }
 
 inline void
@@ -547,7 +556,7 @@ JSObject::setCallObjCallee(JSObject *callee)
 {
     JS_ASSERT(isCall());
     JS_ASSERT_IF(callee, callee->isFunction());
-    return getFixedSlotRef(JSSLOT_CALL_CALLEE).setObjectOrNull(callee);
+    setFixedSlot(JSSLOT_CALL_CALLEE, js::ObjectOrNullValue(callee));
 }
 
 inline JSObject *
@@ -588,12 +597,12 @@ JSObject::callObjArg(uintN i) const
     return getSlot(JSObject::CALL_RESERVED_SLOTS + i);
 }
 
-inline js::Value &
-JSObject::callObjArg(uintN i)
+inline void
+JSObject::setCallObjArg(uintN i, const js::Value &v)
 {
     JS_ASSERT(isCall());
     JS_ASSERT(i < getCallObjCalleeFunction()->nargs);
-    return getSlotRef(JSObject::CALL_RESERVED_SLOTS + i);
+    setSlot(JSObject::CALL_RESERVED_SLOTS + i, v);
 }
 
 inline const js::Value &
@@ -605,13 +614,13 @@ JSObject::callObjVar(uintN i) const
     return getSlot(JSObject::CALL_RESERVED_SLOTS + fun->nargs + i);
 }
 
-inline js::Value &
-JSObject::callObjVar(uintN i)
+inline void
+JSObject::setCallObjVar(uintN i, const js::Value &v)
 {
     JSFunction *fun = getCallObjCalleeFunction();
     JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
     JS_ASSERT(i < fun->script()->bindings.countVars());
-    return getSlotRef(JSObject::CALL_RESERVED_SLOTS + fun->nargs + i);
+    setSlot(JSObject::CALL_RESERVED_SLOTS + fun->nargs + i, v);
 }
 
 inline const js::Value &
@@ -646,7 +655,7 @@ JSObject::getFlatClosureUpvar(uint32 i) const
     return getFlatClosureUpvars()[i];
 }
 
-inline js::Value &
+inline const js::Value &
 JSObject::getFlatClosureUpvar(uint32 i)
 {
     JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
@@ -654,11 +663,18 @@ JSObject::getFlatClosureUpvar(uint32 i)
 }
 
 inline void
+JSObject::setFlatClosureUpvar(uint32 i, const js::Value &v)
+{
+    JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
+    getFlatClosureUpvars()[i] = v;
+}
+
+inline void
 JSObject::setFlatClosureUpvars(js::Value *upvars)
 {
     JS_ASSERT(isFunction());
     JS_ASSERT(FUN_FLAT_CLOSURE(getFunctionPrivate()));
-    getFixedSlotRef(JSSLOT_FLAT_CLOSURE_UPVARS).setPrivate(upvars);
+    setFixedSlot(JSSLOT_FLAT_CLOSURE_UPVARS, PrivateValue(upvars));
 }
 
 inline bool
@@ -672,7 +688,7 @@ JSObject::hasMethodObj(const JSObject& obj) const
 inline void
 JSObject::setMethodObj(JSObject& obj)
 {
-    getFixedSlotRef(JSSLOT_FUN_METHOD_OBJ).setObject(obj);
+    setFixedSlot(JSSLOT_FUN_METHOD_OBJ, js::ObjectValue(obj));
 }
 
 inline js::NativeIterator *
@@ -948,7 +964,7 @@ JSObject::principals(JSContext *cx)
     JSSecurityCallbacks *cb = JS_GetSecurityCallbacks(cx);
     if (JSObjectPrincipalsFinder finder = cb ? cb->findObjectPrincipals : NULL)
         return finder(cx, this);
-    return NULL;
+    return cx->compartment ? cx->compartment->principals : NULL;
 }
 
 inline uint32

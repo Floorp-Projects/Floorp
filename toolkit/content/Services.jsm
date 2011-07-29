@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Gavin Sharp <gavin@gavinsharp.com> (original author)
+ *   Justin Dolske <dolske@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,84 +62,33 @@ XPCOMUtils.defineLazyGetter(Services, "dirsvc", function () {
            .QueryInterface(Ci.nsIProperties);
 });
 
-XPCOMUtils.defineLazyServiceGetter(Services, "contentPrefs",
-                                   "@mozilla.org/content-pref/service;1",
-                                   "nsIContentPrefService");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "wm",
-                                   "@mozilla.org/appshell/window-mediator;1",
-                                   "nsIWindowMediator");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "obs",
-                                   "@mozilla.org/observer-service;1",
-                                   "nsIObserverService");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "perms",
-                                   "@mozilla.org/permissionmanager;1",
-                                   "nsIPermissionManager");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "io",
-                                   "@mozilla.org/network/io-service;1",
-                                   "nsIIOService2");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "prompt",
-                                   "@mozilla.org/embedcomp/prompt-service;1",
-                                   "nsIPromptService");
-
+let initTable = [
+  ["console", "@mozilla.org/consoleservice;1", "nsIConsoleService"],
+  ["contentPrefs", "@mozilla.org/content-pref/service;1", "nsIContentPrefService"],
+  ["cookies", "@mozilla.org/cookiemanager;1", "nsICookieManager2"],
+  ["droppedLinkHandler", "@mozilla.org/content/dropped-link-handler;1", "nsIDroppedLinkHandler"],
+  ["eTLD", "@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService"],
+  ["io", "@mozilla.org/network/io-service;1", "nsIIOService2"],
+  ["locale", "@mozilla.org/intl/nslocaleservice;1", "nsILocaleService"],
+  ["logins", "@mozilla.org/login-manager;1", "nsILoginManager"],
+  ["obs", "@mozilla.org/observer-service;1", "nsIObserverService"],
+  ["perms", "@mozilla.org/permissionmanager;1", "nsIPermissionManager"],
+  ["prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
+  ["scriptloader", "@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
 #ifdef MOZ_TOOLKIT_SEARCH
-XPCOMUtils.defineLazyServiceGetter(Services, "search",
-                                   "@mozilla.org/browser/search-service;1",
-                                   "nsIBrowserSearchService");
+  ["search", "@mozilla.org/browser/search-service;1", "nsIBrowserSearchService"],
 #endif
+  ["storage", "@mozilla.org/storage/service;1", "mozIStorageService"],
+  ["strings", "@mozilla.org/intl/stringbundle;1", "nsIStringBundleService"],
+  ["telemetry", "@mozilla.org/base/telemetry;1", "nsITelemetry"],
+  ["tm", "@mozilla.org/thread-manager;1", "nsIThreadManager"],
+  ["urlFormatter", "@mozilla.org/toolkit/URLFormatterService;1", "nsIURLFormatter"],
+  ["vc", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
+  ["wm", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
+  ["ww", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
+];
 
-XPCOMUtils.defineLazyServiceGetter(Services, "storage",
-                                   "@mozilla.org/storage/service;1",
-                                   "mozIStorageService");
+initTable.forEach(function ([name, contract, intf])
+  XPCOMUtils.defineLazyServiceGetter(Services, name, contract, intf));
 
-XPCOMUtils.defineLazyServiceGetter(Services, "vc",
-                                   "@mozilla.org/xpcom/version-comparator;1",
-                                   "nsIVersionComparator");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "locale",
-                                   "@mozilla.org/intl/nslocaleservice;1",
-                                   "nsILocaleService");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "scriptloader",
-                                   "@mozilla.org/moz/jssubscript-loader;1",
-                                   "mozIJSSubScriptLoader");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "ww",
-                                   "@mozilla.org/embedcomp/window-watcher;1",
-                                   "nsIWindowWatcher");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "tm",
-                                   "@mozilla.org/thread-manager;1",
-                                   "nsIThreadManager");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "droppedLinkHandler",
-                                   "@mozilla.org/content/dropped-link-handler;1",
-                                   "nsIDroppedLinkHandler");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "console",
-                                   "@mozilla.org/consoleservice;1",
-                                   "nsIConsoleService");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "strings",
-                                   "@mozilla.org/intl/stringbundle;1",
-                                   "nsIStringBundleService");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "urlFormatter",
-                                   "@mozilla.org/toolkit/URLFormatterService;1",
-                                   "nsIURLFormatter");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "eTLD",
-                                   "@mozilla.org/network/effective-tld-service;1",
-                                   "nsIEffectiveTLDService");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "cookies",
-                                   "@mozilla.org/cookiemanager;1",
-                                   "nsICookieManager2");
-
-XPCOMUtils.defineLazyServiceGetter(Services, "logins",
-                                   "@mozilla.org/login-manager;1",
-                                   "nsILoginManager");
+initTable = undefined;

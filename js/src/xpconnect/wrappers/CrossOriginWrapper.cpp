@@ -115,6 +115,10 @@ NoWaiverWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bo
     if (!ssm) {
         return true;
     }
+
+    // Note: By the time enter is called here, JSCrossCompartmentWrapper has
+    // already pushed the fake stack frame onto cx. Because of this, the frame
+    // that we're clamping is the one that we want (the one in our compartment).
     JSStackFrame *fp = NULL;
     nsIPrincipal *principal = GetCompartmentPrincipal(wrappedObject(wrapper)->compartment());
     nsresult rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp), principal);

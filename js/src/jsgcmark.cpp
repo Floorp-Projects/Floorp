@@ -100,6 +100,13 @@ PushMarkStack(GCMarker *gcmarker, JSShortString *thing);
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *thing);
 
+static void
+volatile_memcpy(volatile unsigned char *dst, const void *src, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+        dst[i] = ((char *)src)[i];
+}
+
 template<typename T>
 static inline void
 CheckMarkedThing(JSTracer *trc, T *thing)
@@ -112,8 +119,8 @@ CheckMarkedThing(JSTracer *trc, T *thing)
     JS_ASSERT(!JSAtom::isStatic(thing));
     JS_ASSERT(thing->isAligned());
 
-    JS_ASSERT(thing->arenaHeader()->compartment);
-    JS_ASSERT(thing->arenaHeader()->compartment->rt == trc->context->runtime);
+    JS_ASSERT(thing->compartment());
+    JS_ASSERT(thing->compartment()->rt == trc->context->runtime);
 }
 
 template<typename T>
@@ -127,6 +134,10 @@ Mark(JSTracer *trc, T *thing)
     if (rt->gcCheckCompartment && thing->compartment() != rt->gcCheckCompartment &&
         thing->compartment() != rt->atomsCompartment)
     {
+        volatile unsigned char dbg[sizeof(T) + 2];
+        dbg[0] = 0xab;
+        dbg[1] = 0xcd;
+        volatile_memcpy(dbg + 2, thing, sizeof(T));
         JS_Assert("compartment mismatch in GC", __FILE__, __LINE__);
     }
 
@@ -428,16 +439,16 @@ MarkCrossCompartmentValue(JSTracer *trc, const js::Value &v, const char *name)
 }
 
 void
-MarkValueRange(JSTracer *trc, Value *beg, Value *end, const char *name)
+MarkValueRange(JSTracer *trc, const Value *beg, const Value *end, const char *name)
 {
-    for (Value *vp = beg; vp < end; ++vp) {
+    for (const Value *vp = beg; vp < end; ++vp) {
         JS_SET_TRACING_INDEX(trc, name, vp - beg);
         MarkValueRaw(trc, *vp);
     }
 }
 
 void
-MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
+MarkValueRange(JSTracer *trc, size_t len, const Value *vec, const char *name)
 {
     MarkValueRange(trc, vec, vec + len, name);
 }
@@ -930,10 +941,10 @@ js::types::TypeObject::trace(JSTracer *trc, bool weak)
         InlineMark(trc, singleton, "type_singleton");
 
     if (newScript) {
-        js_TraceScript(trc, newScript->script);
+        js_TraceScript(trc, newScript->script, NULL);
         InlineMark(trc, newScript->shape, "new_shape");
     }
 
     if (functionScript)
-        js_TraceScript(trc, functionScript);
+        js_TraceScript(trc, functionScript, NULL);
 }

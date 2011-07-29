@@ -104,11 +104,6 @@ public:
    * Return true if window emulation is enabled.
    */
   static bool IsWindowEmulationFor(LPCWSTR kModuleHandle);
-
-  /**
-   * Return true if the given document node is for tab document accessible.
-   */
-  static bool IsTabDocument(nsIDocument* aDocumentNode);
 };
 
 #endif

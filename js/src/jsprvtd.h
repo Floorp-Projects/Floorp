@@ -198,6 +198,8 @@ typedef InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
 typedef InlineMap<JSAtom *, DefnOrHeader, 24> AtomDOHMap;
 typedef Vector<UpvarCookie, 8> UpvarCookies;
 
+class WatchpointMap;
+
 } /* namespace js */
 
 } /* export "C++" */

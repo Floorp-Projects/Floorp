@@ -131,15 +131,22 @@ interface nsIMemoryReporter : nsISupports
   readonly attribute PRInt32 kind;
 
   /*
-   * The amount reported by a memory reporter may have one of the following
+   * The amount reported by a memory reporter must have one of the following
    * units, but you may of course add new units as necessary:
    *
    *  - BYTES: The amount contains a number of bytes.
    *
-   *  - COUNT: The amount contains the cumulative number of times some event
-   *    has occurred since the application started up.  For instance, a
-   *    reporter reporting the number of page faults since startup should have
-   *    units UNITS_COUNT.
+   *  - COUNT: The amount is an instantaneous count of things currently in
+   *    existence.  For instance, the number of tabs currently open would have
+   *    units COUNT.
+   *
+   *  - COUNT_CUMULATIVE: The amount contains the number of times some event
+   *    has occurred since the application started up.  For instance, the
+   *    number of times the user has opened a new tab would have units
+   *    COUNT_CUMULATIVE.
+   *
+   *    The amount returned by a reporter with units COUNT_CUMULATIVE must
+   *    never decrease over the lifetime of the application.
    *
    *  - PERCENTAGE: The amount contains a fraction that should be expressed as
    *    a percentage.  NOTE!  The |amount| field should be given a value 100x
@@ -150,7 +157,8 @@ interface nsIMemoryReporter : nsISupports
    */
   const PRInt32 UNITS_BYTES = 0;
   const PRInt32 UNITS_COUNT = 1;
-  const PRInt32 UNITS_PERCENTAGE = 2;
+  const PRInt32 UNITS_COUNT_CUMULATIVE = 2;
+  const PRInt32 UNITS_PERCENTAGE = 3;
 
   /*
    * The units on the reporter's amount.  See UNITS_* above.
