@@ -78,7 +78,6 @@
 #endif
 
 namespace dom = mozilla::dom;
-using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Static member initialization
