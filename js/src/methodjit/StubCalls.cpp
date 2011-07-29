@@ -1473,8 +1473,9 @@ JSObject * JS_FASTCALL
 stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
+    jsbytecode *nextpc = (jsbytecode *) f.scratch;
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(f.pc())));
+        fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(nextpc)));
         return obj;
     }
     return Lambda(f, fun);
@@ -1484,10 +1485,11 @@ JSObject * JS_FASTCALL
 stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
+    jsbytecode *nextpc = (jsbytecode *) f.scratch;
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
         const Value &lref = f.regs.sp[-1];
         if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-            fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(f.pc())));
+            fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(nextpc)));
             return obj;
         }
     }
@@ -1498,6 +1500,7 @@ JSObject * JS_FASTCALL
 stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
+    jsbytecode *nextpc = (jsbytecode *) f.scratch;
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
         /*
          * Array.prototype.sort and String.prototype.replace are
@@ -1506,7 +1509,7 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
          * we don't need to clone that compiler- created function
          * object for identity/mutation reasons.
          */
-        int iargc = GET_ARGC(f.pc());
+        int iargc = GET_ARGC(nextpc);
 
         /*
          * Note that we have not yet pushed obj as the final argument,
@@ -1535,8 +1538,9 @@ JSObject * JS_FASTCALL
 stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
+    jsbytecode *nextpc = (jsbytecode *) f.scratch;
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        jsbytecode *pc2 = f.pc() + JSOP_NULL_LENGTH;
+        jsbytecode *pc2 = nextpc + JSOP_NULL_LENGTH;
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)

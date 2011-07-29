@@ -5500,6 +5500,11 @@ GetScriptMemoryStats(JSScript *script, JSCompartment::TypeInferenceMemoryStats *
     if (!script->types)
         return;
 
+    if (!script->compartment->types.inferenceEnabled) {
+        stats->scriptMain += sizeof(TypeScript);
+        return;
+    }
+
     unsigned count = TypeScript::NumTypeSets(script);
     stats->scriptMain += sizeof(TypeScript) + count * sizeof(TypeSet);
 
