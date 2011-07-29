@@ -238,6 +238,13 @@ struct ArenaHeader {
     uint16_t        firstFreeSpanStart;
     uint16_t        firstFreeSpanEnd;
 
+    /*
+     * One of FinalizeKind constants or FINALIZE_LIMIT when the arena does not
+     * contain any GC things and is on the list of empty arenas in the GC
+     * chunk. The later allows to quickly check if the arena is allocated
+     * during the conservative GC scanning without searching the arena in the
+     * list.
+     */
     unsigned        thingKind;
 
     friend struct FreeLists;
@@ -246,6 +253,14 @@ struct ArenaHeader {
     inline uintptr_t address() const;
     inline Chunk *chunk() const;
 
+    void setAsNotAllocated() {
+        thingKind = FINALIZE_LIMIT;
+    }
+
+    bool allocated() const {
+        return thingKind < FINALIZE_LIMIT;
+    }
+
     inline void init(JSCompartment *comp, unsigned thingKind, size_t thingSize);
 
     Arena *getArena() {
@@ -253,6 +268,7 @@ struct ArenaHeader {
     }
 
     unsigned getThingKind() const {
+        JS_ASSERT(allocated());
         return thingKind;
     }
 
@@ -487,9 +503,8 @@ struct Chunk {
     ArenaHeader *allocateArena(JSContext *cx, unsigned thingKind);
 
     void releaseArena(ArenaHeader *aheader);
-
-    JSRuntime *getRuntime();
 };
+
 JS_STATIC_ASSERT(sizeof(Chunk) <= GC_CHUNK_SIZE);
 JS_STATIC_ASSERT(sizeof(Chunk) + BytesPerArena > GC_CHUNK_SIZE);
 
@@ -530,7 +545,7 @@ Cell::isAligned() const
 inline void
 ArenaHeader::init(JSCompartment *comp, unsigned kind, size_t thingSize)
 {
-    JS_ASSERT(!compartment);
+    JS_ASSERT(!allocated());
     JS_ASSERT(!getMarkingDelay()->link);
     compartment = comp;
     thingKind = kind;
@@ -1345,7 +1360,7 @@ typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing, size
  */
 extern JS_FRIEND_API(void)
 IterateCompartmentsArenasCells(JSContext *cx, void *data,
-                               IterateCompartmentCallback compartmentCallback, 
+                               IterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback);
 

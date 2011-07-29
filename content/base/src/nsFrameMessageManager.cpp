@@ -323,6 +323,20 @@ nsFrameMessageManager::GetDocShell(nsIDocShell** aDocShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameMessageManager::Btoa(const nsAString& aBinaryData,
+                            nsAString& aAsciiBase64String)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::Atob(const nsAString& aAsciiString,
+                            nsAString& aBinaryData)
+{
+  return NS_OK;
+}
+
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const nsAString& aMessage,
@@ -408,7 +422,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         jsval thisValue = JSVAL_VOID;
 
         jsval funval = JSVAL_VOID;
-        if (JS_ObjectIsFunction(ctx, object)) {
+        if (JS_ObjectIsCallable(ctx, object)) {
           // If the listener is a JS function:
           funval = OBJECT_TO_JSVAL(object);
 
@@ -431,7 +445,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                           JSVAL_IS_OBJECT(funval) &&
                           !JSVAL_IS_NULL(funval));
           JSObject* funobject = JSVAL_TO_OBJECT(funval);
-          NS_ENSURE_STATE(JS_ObjectIsFunction(ctx, funobject));
+          NS_ENSURE_STATE(JS_ObjectIsCallable(ctx, funobject));
           thisValue = OBJECT_TO_JSVAL(object);
         }
 

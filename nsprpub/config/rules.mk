@@ -378,6 +378,14 @@ endif	# MOZ_PROFILE_USE
 
 ################################################################################
 
+ifdef MOZ_PROFILE_GENERATE
+# Clean up profiling data during PROFILE_GENERATE phase
+export::
+	-$(RM) *.pgd *.gcda
+endif
+
+################################################################################
+
 ifeq ($(OS_ARCH),WINNT)
 $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)

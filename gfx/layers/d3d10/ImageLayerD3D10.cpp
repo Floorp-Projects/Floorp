@@ -371,6 +371,7 @@ ImageLayerD3D10::RenderLayer()
 
 PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice)
   : PlanarYCbCrImage(static_cast<ImageD3D10*>(this))
+  , mBufferSize(0)
   , mDevice(aDevice)
   , mHasData(PR_FALSE)
 {
@@ -379,8 +380,7 @@ PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice)
 void
 PlanarYCbCrImageD3D10::SetData(const PlanarYCbCrImage::Data &aData)
 {
-  PRUint32 dummy;
-  mBuffer = CopyData(mData, mSize, dummy, aData);
+  mBuffer = CopyData(mData, mSize, mBufferSize, aData);
 
   AllocateTextures();
 

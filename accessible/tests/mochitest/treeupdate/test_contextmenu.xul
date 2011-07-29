@@ -235,7 +235,7 @@
       };
 
       if (LINUX || SOLARIS)
-        tree.children[2].children[0].\(subsubmenuTree);
+        tree.children[2].children[0].children.push(subsubmenuTree);
       else
         tree.children[2].children[0].children[0].children[0].children.push(subsubmenuTree);
 

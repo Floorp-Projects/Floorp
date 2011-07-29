@@ -65,10 +65,11 @@
 #include "nsIScriptableUnescapeHTML.h"
 #include "nsScriptableUnescapeHTML.h"
 #include "nsAutoPtr.h"
+#include "nsTreeSanitizer.h"
+#include "nsAHtml5FragmentParser.h"
+#include "nsHtml5Module.h"
 
 #define XHTML_DIV_TAG "div xmlns=\"http://www.w3.org/1999/xhtml\""
-#define HTML_BODY_TAG "BODY"
-#define HTML_BASE_TAG "BASE"
 
 NS_IMPL_ISUPPORTS1(nsScriptableUnescapeHTML, nsIScriptableUnescapeHTML)
 
@@ -165,43 +166,61 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
     }  else {
       tagStack.AppendElement(NS_LITERAL_STRING(XHTML_DIV_TAG));
     }
-  } else {
-    // HTML
-    tagStack.AppendElement(NS_LITERAL_STRING(HTML_BODY_TAG));
-    if (aBaseURI) {
-      base.Append(NS_LITERAL_CSTRING((HTML_BASE_TAG)));
-      base.Append(NS_LITERAL_CSTRING(" href=\""));
-      aBaseURI->GetSpec(spec);
-      base = base + spec;
-      base.Append(NS_LITERAL_CSTRING("\""));
-      tagStack.AppendElement(NS_ConvertUTF8toUTF16(base));
-    }
   }
 
   if (NS_SUCCEEDED(rv)) {
-    nsCAutoString contentType;
-    nsDTDMode mode;
-    nsCOMPtr<nsIFragmentContentSink> sink;
+    nsCOMPtr<nsIContent> fragment;
     if (aIsXML) {
-      mode = eDTDMode_full_standards;
+      nsCAutoString contentType;
+      nsCOMPtr<nsIFragmentContentSink> sink;
       contentType = NS_LITERAL_CSTRING("application/xhtml+xml");
-      sink = do_CreateInstance(NS_XHTMLPARANOIDFRAGMENTSINK_CONTRACTID);
+      sink = do_CreateInstance(NS_XMLFRAGMENTSINK_CONTRACTID);
+      if (sink) {
+        sink->SetTargetDocument(document);
+        nsCOMPtr<nsIContentSink> contentsink(do_QueryInterface(sink));
+        parser->SetContentSink(contentsink);
+        rv = parser->ParseFragment(aFragment, nsnull, tagStack,
+                                   aIsXML, contentType,
+                                   eDTDMode_full_standards);
+        if (NS_SUCCEEDED(rv)) {
+          rv = sink->GetFragment(PR_TRUE, aReturn);
+          fragment = do_QueryInterface(*aReturn);
+        }
+      } else {
+        rv = NS_ERROR_FAILURE;
+      }
     } else {
-      mode = eDTDMode_fragment;
-      contentType = NS_LITERAL_CSTRING("text/html");
-      sink = do_CreateInstance(NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID);
+      nsCOMPtr<nsIParser> parser = nsHtml5Module::NewHtml5Parser();
+      nsAHtml5FragmentParser* asFragmentParser =
+          static_cast<nsAHtml5FragmentParser*> (parser.get());
+      NS_NewDocumentFragment(aReturn,
+                             document->NodeInfoManager());
+      fragment = do_QueryInterface(*aReturn);
+      asFragmentParser->ParseHtml5Fragment(aFragment,
+                                          fragment,
+                                          nsGkAtoms::body,
+                                          kNameSpaceID_XHTML,
+                                          PR_FALSE,
+                                          PR_TRUE);
+      // Now, set the base URI on all subtree roots.
+      aBaseURI->GetSpec(spec);
+      nsAutoString spec16;
+      CopyUTF8toUTF16(spec, spec16);
+      nsIContent* node = fragment->GetFirstChild();
+      while (node) {
+        if (node->IsElement()) {
+          node->SetAttr(kNameSpaceID_XML,
+                        nsGkAtoms::base,
+                        nsGkAtoms::xml,
+                        spec16,
+                        PR_FALSE);
+        }
+        node = node->GetNextSibling();
+      }
     }
-    if (sink) {
-      sink->SetTargetDocument(document);
-      nsCOMPtr<nsIContentSink> contentsink(do_QueryInterface(sink));
-      parser->SetContentSink(contentsink);
-      rv = parser->ParseFragment(aFragment, nsnull, tagStack,
-                                 aIsXML, contentType, mode);
-      if (NS_SUCCEEDED(rv))
-        rv = sink->GetFragment(PR_TRUE, aReturn);
-
-    } else {
-      rv = NS_ERROR_FAILURE;
+    if (fragment) {
+      nsTreeSanitizer sanitizer(PR_FALSE, PR_FALSE);
+      sanitizer.Sanitize(fragment);
     }
   }
 

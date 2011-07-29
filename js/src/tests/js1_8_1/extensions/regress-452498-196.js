@@ -55,6 +55,7 @@ function test()
 
 // Assertion failure: localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST, at ../jsfun.cpp:916
 
+  this.x = undefined;
   this.watch("x", Function);
   NaN = uneval({ get \u3056 (){ return undefined } });
   x+=NaN;

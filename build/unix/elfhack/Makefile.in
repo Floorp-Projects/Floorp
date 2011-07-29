@@ -90,6 +90,8 @@ test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
 	# Fail if the new library doesn't contain less relocations
 	[ $$(objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
 
+.PRECIOUS: test$(DLL_SUFFIX)
+
 dummy: dummy.$(OBJ_SUFFIX) test$(DLL_SUFFIX)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
