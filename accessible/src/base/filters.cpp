@@ -41,8 +41,6 @@
 #include "nsAccUtils.h"
 #include "States.h"
 
-using namespace mozilla::a11y;
-
 bool
 filters::GetSelected(nsAccessible* aAccessible)
 {
