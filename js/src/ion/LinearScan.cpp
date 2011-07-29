@@ -520,7 +520,7 @@ LinearScanAllocator::allocateRegisters()
                 finishInterval(it);
             } else if (!it->covers(position)) {
                 i = active.removeAt(i);
-                inactive.insert(it);
+                inactive.pushBack(it);
             } else {
                 i++;
             }
@@ -536,7 +536,7 @@ LinearScanAllocator::allocateRegisters()
                 finishInterval(it);
             } else if (it->covers(position)) {
                 i = inactive.removeAt(i);
-                active.insert(it);
+                active.pushBack(it);
             } else {
                 i++;
             }
@@ -957,7 +957,7 @@ LinearScanAllocator::assign(LAllocation allocation)
             current->reg()->setCanonicalSpill(current->getAllocation());
     }
 
-    active.insert(current);
+    active.pushBack(current);
 
     return true;
 }
@@ -996,7 +996,7 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
             stackAssignment.freeSlot(alloc->toStackSlot()->slot());
     }
 
-    handled.insert(interval);
+    handled.pushBack(interval);
 }
 
 /*

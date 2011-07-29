@@ -44,219 +44,312 @@
 
 namespace js {
 
-template <typename T> class InlineList;
+template <typename T> class InlineForwardList;
 
 template <typename T>
-class InlineListNode
+class InlineForwardListNode
 {
-    friend class InlineList<T>;
+    friend class InlineForwardList<T>;
+
   public:
-    InlineListNode() : next(NULL), prev(NULL)
+    InlineForwardListNode() : next(NULL)
     { }
-    InlineListNode(InlineListNode *n, InlineListNode *p) : next(n), prev(p)
+    InlineForwardListNode(InlineForwardListNode *n) : next(n)
     { }
 
   protected:
-    InlineListNode *next;
-    InlineListNode *prev;
+    InlineForwardListNode *next;
 };
 
 template <typename T>
-class InlineList
+class InlineForwardList : protected InlineForwardListNode<T>
 {
-    typedef InlineListNode<T> Node;
+    typedef InlineForwardListNode<T> Node;
 
-    Node head;
+#ifdef DEBUG
+    uintptr_t modifyCount_;
 
   public:
-    InlineList() : head(&head, &head)
+    InlineForwardList() : modifyCount_(0)
     { }
+#endif
 
   public:
-    class iterator
-    {
-        friend class InlineList;
-        Node *iter;
-      public:
-        iterator(Node *iter) : iter(iter) { }
-
-        iterator & operator ++() {
-            iter = iter->next;
-            return *iter;
-        }
-        iterator operator ++(int) {
-            iterator old(*this);
-            iter = iter->next;
-            return old;
-        }
-        iterator operator --(int) {
-            iterator old(*this);
-            iter = iter->prev;
-            return old;
-        }
-        T * operator *() {
-            return static_cast<T *>(iter);
-        }
-        T * operator ->() {
-            return static_cast<T *>(iter);
-        }
-        bool operator != (const iterator &where) const {
-            return iter != where.iter;
-        }
-        bool operator == (const iterator &where) const {
-            return iter == where.iter;
-        }
-        iterator prev() {
-            iterator p(iter->prev);
-            return p;
-        }
-    };
-
-    class reverse_iterator
-    {
-        friend class InlineList;
-        Node *iter;
-      public:
-        reverse_iterator(Node *iter) : iter(iter) { }
-
-        reverse_iterator & operator ++() {
-            iter = iter->prev;
-            return *iter;
-        }
-        reverse_iterator operator ++(int) {
-            reverse_iterator old(*this);
-            iter = iter->prev;
-            return old;
-        }
-        T * operator *() {
-            return static_cast<T *>(iter);
-        }
-        T * operator ->() {
-            return static_cast<T *>(iter);
-        }
-        bool operator != (const reverse_iterator &where) const {
-            return iter != where.iter;
-        }
-        bool operator == (const reverse_iterator &where) const {
-            return iter == where.iter;
-        }
-    };
-
-    class const_iterator
-    {
-        friend class InlineList;
-        const Node *iter;
-      public:
-        const_iterator(const Node *iter) : iter(iter) { }
-
-        const_iterator & operator ++() {
-            iter = iter->next;
-            return *iter;
-        }
-        const_iterator operator ++(int) {
-            const_iterator old(*this);
-            iter = iter->next;
-            return old;
-        }
-        T * operator *() const {
-            return const_cast<T *>(static_cast<const T *>(iter));
-        }
-        T * operator ->() {
-            return const_cast<T *>(static_cast<const T *>(iter));
-        }
-        bool operator != (const const_iterator &where) const {
-            return iter != where.iter;
-        }
-        bool operator == (const const_iterator &where) const {
-            return iter == where.iter;
-        }
-    };
+    class iterator;
 
   public:
-    iterator begin() {
-        return iterator(head.next);
+    iterator begin() const {
+        return iterator(this);
     }
-    iterator end() {
-        return iterator(&head);
+    iterator end() const {
+        return iterator(NULL);
     }
-    reverse_iterator rbegin() {
-        return reverse_iterator(head.prev);
-    }
-    reverse_iterator rend() {
-        return reverse_iterator(&head);
-    }
-    const_iterator begin() const {
-        return const_iterator(head.next);
-    }
-    const_iterator rbegin() const {
-        return const_iterator(head.prev);
-    }
-    const_iterator end() const {
-        return const_iterator(&head);
-    }
-
     iterator removeAt(iterator &where) {
-        Node *node = where.iter;
         iterator iter(where);
         iter++;
-
-        remove(node);
+        iter.prev = where.prev;
+#ifdef DEBUG
+        iter.modifyCount++;
+#endif
 
         // Once the element 'where' points at has been removed, it is no longer
         // safe to do any operations that would touch 'iter', as the element
         // may be added to another list, etc. This NULL ensures that any
         // improper uses of this function will fail quickly and loudly.
+        removeAfter(where.prev, where.iter);
+        where.prev = where.iter = NULL;
+
+        return iter;
+    }
+    void pushFront(Node *t) {
+        insertAfter(this, t);
+    }
+    T *popFront() {
+        JS_ASSERT(!empty());
+        T* result = static_cast<T *>(this->next);
+        removeAfter(this, result);
+        return result;
+    }
+    void insertAfter(Node *at, Node *item) {
+#ifdef DEBUG
+        modifyCount_++;
+#endif
+        item->next = at->next;
+        at->next = item;
+    }
+    void removeAfter(Node *at, Node *item) {
+#ifdef DEBUG
+        modifyCount_++;
+#endif
+        JS_ASSERT(at->next == item);
+        at->next = item->next;
+    }
+    bool empty() const {
+        return begin() == end();
+    }
+};
+
+template <typename T>
+class InlineForwardList<T>::iterator
+{
+    friend class InlineForwardList;
+    Node *prev;
+    Node *iter;
+#ifdef DEBUG
+    const InlineForwardList<T> *owner;
+    uintptr_t modifyCount;
+#endif
+
+    iterator(const InlineForwardList<T> *owner)
+      : prev(const_cast<Node *>(static_cast<const Node *>(owner))),
+        iter(owner ? owner->next : NULL)
+#ifdef DEBUG
+      , owner(owner),
+        modifyCount(owner ? owner->modifyCount_ : 0)
+#endif
+    { }
+
+public:
+    iterator & operator ++() {
+        JS_ASSERT(modifyCount == owner->modifyCount_);
+        prev = iter;
+        iter = iter->next;
+        return *this;
+    }
+    iterator operator ++(int) {
+        JS_ASSERT(modifyCount == owner->modifyCount_);
+        iterator old(*this);
+        prev = iter;
+        iter = iter->next;
+        return old;
+    }
+    T * operator *() const {
+        JS_ASSERT(modifyCount == owner->modifyCount_);
+        return static_cast<T *>(iter);
+    }
+    T * operator ->() const {
+        JS_ASSERT(modifyCount == owner->modifyCount_);
+        return static_cast<T *>(iter);
+    }
+    bool operator !=(const iterator &where) const {
+        return iter != where.iter;
+    }
+    bool operator ==(const iterator &where) const {
+        return iter == where.iter;
+    }
+};
+
+template <typename T> class InlineList;
+
+template <typename T>
+class InlineListNode : public InlineForwardListNode<T>
+{
+    friend class InlineList<T>;
+  public:
+    InlineListNode() : InlineForwardListNode<T>(NULL), prev(NULL)
+    { }
+    InlineListNode(InlineListNode *n, InlineListNode *p) : InlineForwardListNode<T>(n), prev(p)
+    { }
+
+  protected:
+    InlineListNode *prev;
+};
+
+template <typename T>
+class InlineList : protected InlineListNode<T>
+{
+    typedef InlineListNode<T> Node;
+
+  public:
+    InlineList() : InlineListNode<T>(this, this)
+    { }
+
+  public:
+    class iterator;
+    class reverse_iterator;
+
+  public:
+    iterator begin() const {
+        return iterator(static_cast<Node *>(this->next));
+    }
+    iterator end() const {
+        return iterator(this);
+    }
+    reverse_iterator rbegin() {
+        return reverse_iterator(this->prev);
+    }
+    reverse_iterator rend() {
+        return reverse_iterator(this);
+    }
+    iterator removeAt(iterator &where) {
+        iterator iter(where);
+        iter++;
+
+        // Once the element 'where' points at has been removed, it is no longer
+        // safe to do any operations that would touch 'iter', as the element
+        // may be added to another list, etc. This NULL ensures that any
+        // improper uses of this function will fail quickly and loudly.
+        remove(where.iter);
         where.iter = NULL;
 
         return iter;
     }
-
+    void pushFront(Node *t) {
+        insertAfter(this, t);
+    }
+    void pushBack(Node *t) {
+        insertBefore(this, t);
+    }
+    T *popFront() {
+        JS_ASSERT(!empty());
+        T *t = static_cast<T *>(this->next);
+        remove(t);
+        return t;
+    }
+    T *popBack() {
+        JS_ASSERT(!empty());
+        T *t = static_cast<T *>(this->prev);
+        remove(t);
+        return t;
+    }
+    T *peekBack() const {
+        iterator iter = end();
+        iter--;
+        return *iter;
+    }
     void insertBefore(Node *at, Node *item) {
         item->next = at;
         item->prev = at->prev;
         at->prev->next = item;
         at->prev = item;
     }
-
     void insertAfter(Node *at, Node *item) {
         item->next = at->next;
         item->prev = at;
-        at->next->prev = item;
+        static_cast<Node *>(at->next)->prev = item;
         at->next = item;
     }
-
-    void insert(Node *t) {
-        t->prev = head.prev;
-        t->next = &head;
-        head.prev->next = t;
-        head.prev = t;
-    }
-
     void remove(Node *t) {
         t->prev->next = t->next;
-        t->next->prev = t->prev;
+        static_cast<Node *>(t->next)->prev = t->prev;
         t->next = t->prev = NULL;
     }
-
     bool empty() const {
         return begin() == end();
     }
+};
 
-    T *pop() {
-        iterator iter = end();
-        iter--;
-        T *t = *iter;
-        remove(*iter);
-        return t;
-    }
-    T *peekBack() {
-        iterator iter = end();
-        iter--;
+template <typename T>
+class InlineList<T>::iterator
+{
+    friend class InlineList;
+    Node *iter;
+
+    iterator(const Node *iter) : iter(const_cast<Node *>(iter))
+    { }
+
+  public:
+    iterator & operator ++() {
+        iter = iter->next;
         return *iter;
+    }
+    iterator operator ++(int) {
+        iterator old(*this);
+        iter = static_cast<Node *>(iter->next);
+        return old;
+    }
+    iterator operator --(int) {
+        iterator old(*this);
+        iter = iter->prev;
+        return old;
+    }
+    T * operator *() const {
+        return static_cast<T *>(iter);
+    }
+    T * operator ->() const {
+        return static_cast<T *>(iter);
+    }
+    bool operator !=(const iterator &where) const {
+        return iter != where.iter;
+    }
+    bool operator ==(const iterator &where) const {
+        return iter == where.iter;
+    }
+};
+
+template <typename T>
+class InlineList<T>::reverse_iterator
+{
+    friend class InlineList;
+    Node *iter;
+
+    reverse_iterator(const Node *iter) : iter(const_cast<Node *>(iter))
+    { }
+
+  public:
+    reverse_iterator & operator ++() {
+        iter = iter->prev;
+        return *iter;
+    }
+    reverse_iterator operator ++(int) {
+        reverse_iterator old(*this);
+        iter = iter->prev;
+        return old;
+    }
+    T * operator *() {
+        return static_cast<T *>(iter);
+    }
+    T * operator ->() {
+        return static_cast<T *>(iter);
+    }
+    bool operator !=(const reverse_iterator &where) const {
+        return iter != where.iter;
+    }
+    bool operator ==(const reverse_iterator &where) const {
+        return iter == where.iter;
     }
 };
 
 } // namespace js
 
 #endif // js_inline_list_h__
-
