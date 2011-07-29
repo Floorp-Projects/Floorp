@@ -42,8 +42,6 @@
 
 #include <prtypes.h>
 
-namespace mozilla {
-namespace a11y {
 namespace states {
 
   /**
@@ -305,9 +303,7 @@ namespace states {
    * @see EXPANDED and COLLAPSED states.
    */
   const PRUint64 EXPANDABLE = ((PRUint64) 0x1) << 46;
-} // namespace states
-} // namespace a11y
-} // namespace mozilla
+}
 
 #endif
 	
