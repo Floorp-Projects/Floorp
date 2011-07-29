@@ -1087,9 +1087,6 @@ nsContentUtils::Shutdown()
 {
   sInitialized = PR_FALSE;
 
-  NS_HTMLParanoidFragmentSinkShutdown();
-  NS_XHTMLParanoidFragmentSinkShutdown();
-
   NS_IF_RELEASE(sContentPolicyService);
   sTriedToGetContentPolicy = PR_FALSE;
   PRUint32 i;
