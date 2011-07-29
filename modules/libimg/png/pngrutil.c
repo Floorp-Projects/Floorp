@@ -2460,7 +2460,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     png_debug(1, "in png_handle_fcTL");
 
     png_ensure_sequence_number(png_ptr, length);
-   
+
     if (!(png_ptr->mode & PNG_HAVE_IHDR))
     {
         png_error(png_ptr, "Missing IHDR before fcTL");
@@ -2483,7 +2483,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     else if (length != 26)
     {
         png_warning(png_ptr, "fcTL with invalid length skipped");
-        png_crc_finish(png_ptr, length);
+        png_crc_finish(png_ptr, length-4);
         return;
     }
 
@@ -2500,28 +2500,30 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     blend_op = data[21];
 
     if (png_ptr->num_frames_read == 0 && (x_offset != 0 || y_offset != 0))
-        png_error(png_ptr, "fcTL for the first frame must have zero offset");
-    if (png_ptr->num_frames_read == 0 &&
-        (width != info_ptr->width || height != info_ptr->height))
-        png_error(png_ptr, "size in first frame's fcTL must match "
-                           "the size in IHDR");
+    {
+        png_warning(png_ptr, "fcTL for the first frame must have zero offset");
+        return;
+    }
 
     if (info_ptr != NULL)
     {
         if (png_ptr->num_frames_read == 0 &&
             (width != info_ptr->width || height != info_ptr->height))
-            png_error(png_ptr, "size in first frame's fcTL must match "
+        {
+            png_warning(png_ptr, "size in first frame's fcTL must match "
                                "the size in IHDR");
-        
-        /* the set function will do more error checking */
+            return;
+        }
+
+        /* The set function will do more error checking */
         png_set_next_frame_fcTL(png_ptr, info_ptr, width, height,
                                 x_offset, y_offset, delay_num, delay_den,
                                 dispose_op, blend_op);
-        
-        png_read_reinit(png_ptr, info_ptr);
-    }
 
-    png_ptr->mode |= PNG_HAVE_fcTL;
+        png_read_reinit(png_ptr, info_ptr);
+
+        png_ptr->mode |= PNG_HAVE_fcTL;
+    }
 }
 
 void /* PRIVATE */
