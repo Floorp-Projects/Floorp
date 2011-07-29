@@ -987,7 +987,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_TRACE);
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
-    MBasicBlock *header = newLoopHeader(current, pc);
+    MBasicBlock *header = newPendingLoopHeader(current, pc);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(header));
@@ -1025,7 +1025,7 @@ IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_TRACE);
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
-    MBasicBlock *header = newLoopHeader(current, pc);
+    MBasicBlock *header = newPendingLoopHeader(current, pc);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(header));
@@ -1080,7 +1080,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(ifne + GetJumpOffset(ifne) == bodyStart);
     bodyStart = GetNextPc(bodyStart);
 
-    MBasicBlock *header = newLoopHeader(current, pc);
+    MBasicBlock *header = newPendingLoopHeader(current, pc);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(header));
@@ -1301,9 +1301,9 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 }
 
 MBasicBlock *
-IonBuilder::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
+IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
-    MBasicBlock *block = MBasicBlock::NewLoopHeader(this, predecessor, pc);
+    MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(this, predecessor, pc);
     if (!graph().addBlock(block))
         return NULL;
     return block;
