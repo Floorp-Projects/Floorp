@@ -401,7 +401,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void PreloadStyle(const nsAString& aURL, const nsAString& aCharset);
 
-    void PreloadImage(const nsAString& aURL, const nsAString& aCrossOrigin);
+    void PreloadImage(const nsAString& aURL);
 
     void SetSpeculationBase(const nsAString& aURL);
 
