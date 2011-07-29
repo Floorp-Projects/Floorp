@@ -66,8 +66,6 @@
 #include "nsTextFragment.h"
 #include "gfxSkipChars.h"
 
-using namespace mozilla::a11y;
-
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
