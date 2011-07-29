@@ -125,13 +125,13 @@ TypeAnalyzer::buildWorklist()
     // removal.
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
-        MInstructionIterator iter = block->begin();
-        while (iter != block->end()) {
+        MDefinitionIterator iter(block);
+        while (iter) {
             if (iter->isCopy()) {
                 // Remove copies here.
                 MCopy *copy = iter->toCopy();
                 copy->replaceAllUsesWith(copy->getOperand(0));
-                iter = block->removeAt(iter);
+                iter = block->removeDefAt(iter);
                 continue;
             }
             if (!push(*iter))
