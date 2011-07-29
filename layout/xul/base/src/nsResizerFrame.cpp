@@ -283,10 +283,9 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           }
 
           if (weakFrame.IsAlive() &&
-              (oldRect.x != rect.x || oldRect.y != rect.y)) {
-            // XXX This might go very wrong, since menu popups may add
-            // offsets (e.g. from margins) to this position, so the popup's
-            // widget won't end up at the desired position.
+              (oldRect.x != rect.x || oldRect.y != rect.y) &&
+              (!menuPopupFrame->IsAnchored() ||
+               menuPopupFrame->PopupLevel() != ePopupLevelParent)) {
             menuPopupFrame->MoveTo(rect.x, rect.y, PR_TRUE);
           }
         }
