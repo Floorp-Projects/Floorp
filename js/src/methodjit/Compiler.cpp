@@ -2445,14 +2445,10 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(uses));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
 
-            if (stub == stubs::Lambda) {
-                INLINE_STUBCALL(stub, REJOIN_PUSH_OBJECT);
-            } else {
-                jsbytecode *savedPC = PC;
-                PC = pc2;
-                INLINE_STUBCALL(stub, REJOIN_PUSH_OBJECT);
-                PC = savedPC;
-            }
+            if (stub != stubs::Lambda)
+                masm.storePtr(ImmPtr(pc2), FrameAddress(offsetof(VMFrame, scratch)));
+
+            INLINE_STUBCALL(stub, REJOIN_PUSH_OBJECT);
 
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
