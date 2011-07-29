@@ -5,10 +5,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391728
 -->
 <head>
   <title>Test for Bug 391728</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/PluginUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/PluginUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=391728">Mozilla Bug 391728</a>
@@ -42,7 +42,6 @@ function unknown_plugin_detected(event) {
 }
 
 function init_test() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   // Make sure the blocklist is off for the duration of this test
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
@@ -120,7 +119,6 @@ function test_list(list) {
 }
 
 function test_normal(plugin) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   is(gUnknown.length, 0, "Should not have been any unknown plugins");
   is(gDisabled.length, 0, "Should not have been any disabled plugins");
   is(gBlocked.length, 0, "Should not have been any blocked plugins");
@@ -130,7 +128,6 @@ function test_normal(plugin) {
 }
 
 function test_disabled(plugin) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   is(gUnknown.length, 0, "Should not have been any unknown plugins");
   is(gDisabled.length, PLUGIN_COUNT, "Should have been disabled plugins");
   test_list(gDisabled);
@@ -143,7 +140,6 @@ function test_disabled(plugin) {
 }
 
 function test_blocked(plugin) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   is(gUnknown.length, 0, "Should not have been any unknown plugins");
   is(gDisabled.length, 0, "Should not have been any disabled plugins");
   is(gBlocked.length, PLUGIN_COUNT, "Should have been blocked plugins");
@@ -154,7 +150,6 @@ function test_blocked(plugin) {
 }
 
 function test_unknown(plugin) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   is(gUnknown.length, PLUGIN_COUNT, "Should have been unknown plugins");
   test_list(gUnknown);
   is(gDisabled.length, 0, "Should not have been any disabled plugins");
