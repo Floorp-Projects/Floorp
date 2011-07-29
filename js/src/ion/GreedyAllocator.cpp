@@ -780,7 +780,7 @@ GreedyAllocator::mergePhiState(LBlock *block)
             if (use->hasRegister()) {
                 if (!info->phis.move(use->reg(), def->backingStack()))
                     return false;
-            } else {
+            } else if (use->backingStack() != def->backingStack()) {
                 if (!info->phis.move(use->backingStack(), def->backingStack()))
                     return false;
             }

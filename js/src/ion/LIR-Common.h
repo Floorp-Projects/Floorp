@@ -98,6 +98,7 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
 
     void printOperands(FILE *fp);
     bool add(LAllocation *from, LAllocation *to) {
+        JS_ASSERT(*from != *to);
         return moves_.append(LMove(from, to));
     }
     size_t numMoves() const {
