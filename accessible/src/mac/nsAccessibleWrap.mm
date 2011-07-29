@@ -285,7 +285,7 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aC
 already_AddRefed<nsIAccessible>
 nsAccessibleWrap::GetUnignoredParent()
 {
-  nsAccessibleWrap *parentWrap = static_cast<nsAccessibleWrap*>(GetParent());
+  nsAccessibleWrap* parentWrap = static_cast<nsAccessibleWrap*>(Parent());
   if (!parentWrap)
     return nsnull;
     
@@ -313,12 +313,12 @@ nsAccessibleWrap::AncestorIsFlat()
   // look the same on all platforms, we still let the C++ objects be created
   // though.
 
-  nsAccessible* parent(GetParent());
+  nsAccessible* parent = Parent();
   while (parent) {
     if (nsAccUtils::MustPrune(parent))
       return PR_TRUE;
 
-    parent = parent->GetParent();
+    parent = parent->Parent();
   }
   // no parent was flat
   return PR_FALSE;

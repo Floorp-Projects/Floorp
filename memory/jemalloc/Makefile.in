@@ -211,37 +211,35 @@ ifndef WIN32_OLD_STYLE_JEMALLOC
 #
 ###############################################################################
 
-libs:: $(DIST)/lib/mozcrt.lib
-
-$(DIST)/lib/mozcrt.lib:: mozcrt.lib
+libs:: mozcrt.lib
 	$(INSTALL) $(IFLAGS2) mozcrt.lib $(DIST)/lib
 
 # And finally combine that with the jemalloc import library to get an import
 # library that has our malloc/free/etc and the CRT's everything else
-mozcrt.lib:: $(IMPORT_LIBRARY) msvc_modified.lib
+mozcrt.lib: $(IMPORT_LIBRARY) msvc_modified.lib
 	lib -OUT:$@ $^
 
 # Put the fixed object file back in
-msvc_modified.lib:: msvc_removed.lib crtdll_fixed.obj
+msvc_modified.lib: msvc_removed.lib crtdll_fixed.obj
 	lib -OUT:$@ $^
 
 # Fix the object file
-crtdll_fixed.obj:: crtdll.obj
+crtdll_fixed.obj: crtdll.obj
 	$(PYTHON) $(srcdir)/fixcrt.py
 
 # Find the path of crtdll.obj
 CRTDLL_FULLPATH=$(subst \,\\,$(shell lib -list msvc_combined.lib | grep crtdll\\.obj))
 
 # Remove the broken object file, only after we have extracted it
-msvc_removed.lib:: msvc_combined.lib crtdll.obj
+msvc_removed.lib: msvc_combined.lib crtdll.obj
 	lib -OUT:$@ msvc_combined.lib -REMOVE:$(CRTDLL_FULLPATH)
 
 # Extract the broken object file out of the combined library
-crtdll.obj:: msvc_combined.lib
+crtdll.obj: msvc_combined.lib
 	lib -OUT:$@ $^ -EXTRACT:$(CRTDLL_FULLPATH)
 
 # Grab both CRT libraries and combine them into one library to simplify things
-msvc_combined.lib::
+msvc_combined.lib:
 	lib -OUT:$@ $(WIN32_CRT_LIBS)
 
 endif

@@ -226,7 +226,7 @@ protected:
                               PRBool *aHandled);
   nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere, 
                                nsCOMPtr<nsIDOMNode> *outBRNode, PRInt32 aOffset=0);
-  PRBool ExpandSelectionForDeletion(nsISelection *aSelection);
+  nsresult ExpandSelectionForDeletion(nsISelection *aSelection);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
 #ifdef XXX_DEAD_CODE

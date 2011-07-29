@@ -3128,6 +3128,7 @@ var ViewableAreaObserver = {
       return;
 
     // Guess if the window has been resize to handle a virtual keyboard
+    let isDueToKeyboard = (newHeight != oldHeight && newWidth == oldWidth);
     this.isKeyboardOpened = (newHeight < oldHeight && newWidth == oldWidth);
 
     Browser.styles["viewable-height"].height = newHeight + "px";
@@ -3137,19 +3138,21 @@ var ViewableAreaObserver = {
     Browser.styles["viewable-width"].maxWidth = newWidth + "px";
 
     let startup = !oldHeight && !oldWidth;
-    for (let i = Browser.tabs.length - 1; i >= 0; i--) {
-      let tab = Browser.tabs[i];
-      let oldContentWindowWidth = tab.browser.contentWindowWidth;
-      tab.updateViewportSize(); // contentWindowWidth may change here.
-
-      // Don't bother updating the zoom level on startup
-      if (!startup) {
-        // If the viewport width is still the same, the page layout has not
-        // changed, so we can keep keep the same content on-screen.
-        if (tab.browser.contentWindowWidth == oldContentWindowWidth)
-          tab.restoreViewportPosition(oldWidth, newWidth);
-
-        tab.updateDefaultZoomLevel();
+    if (!isDueToKeyboard) {
+      for (let i = Browser.tabs.length - 1; i >= 0; i--) {
+        let tab = Browser.tabs[i];
+        let oldContentWindowWidth = tab.browser.contentWindowWidth;
+        tab.updateViewportSize(); // contentWindowWidth may change here.
+  
+        // Don't bother updating the zoom level on startup
+        if (!startup) {
+          // If the viewport width is still the same, the page layout has not
+          // changed, so we can keep keep the same content on-screen.
+          if (tab.browser.contentWindowWidth == oldContentWindowWidth)
+            tab.restoreViewportPosition(oldWidth, newWidth);
+  
+          tab.updateDefaultZoomLevel();
+        }
       }
     }
 

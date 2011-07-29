@@ -130,6 +130,15 @@ richlistitem[type="download"] button {
   box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
+#clearListButton:-moz-focusring {
+  border-color: @toolbarbuttonFocusedBorderColorAqua@;
+  box-shadow: @focusRingShadow@;
+}
+
+#clearListButton:-moz-system-metric(mac-graphite-theme):-moz-focusring {
+  border-color: @toolbarbuttonFocusedBorderColorGraphite@;
+}
+
 #clearListButton:-moz-window-inactive {
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;

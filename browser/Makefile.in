@@ -45,6 +45,7 @@ include $(topsrcdir)/config/config.mk
 PARALLEL_DIRS = \
   base \
   components \
+  devtools \
   fuel \
   locales \
   themes \

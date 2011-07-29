@@ -108,7 +108,7 @@ nsAccUtils::GetDefaultLevel(nsAccessible *aAccessible)
     return 1;
 
   if (role == nsIAccessibleRole::ROLE_ROW) {
-    nsAccessible *parent = aAccessible->GetParent();
+    nsAccessible* parent = aAccessible->Parent();
     if (parent && parent->Role() == nsIAccessibleRole::ROLE_TREE_TABLE) {
       // It is a row inside flatten treegrid. Group level is always 1 until it
       // is overriden by aria-level attribute.
@@ -338,7 +338,7 @@ nsAccUtils::GetAncestorWithRole(nsAccessible *aDescendant, PRUint32 aRole)
 {
   nsAccessible *document = aDescendant->GetDocAccessible();
   nsAccessible *parent = aDescendant;
-  while ((parent = parent->GetParent())) {
+  while ((parent = parent->Parent())) {
     PRUint32 testRole = parent->Role();
     if (testRole == aRole)
       return parent;
@@ -359,7 +359,7 @@ nsAccUtils::GetSelectableContainer(nsAccessible* aAccessible, PRUint64 aState)
     return nsnull;
 
   nsAccessible* parent = aAccessible;
-  while ((parent = parent->GetParent()) && !parent->IsSelect()) {
+  while ((parent = parent->Parent()) && !parent->IsSelect()) {
     if (Role(parent) == nsIAccessibleRole::ROLE_PANE)
       return nsnull;
   }
@@ -420,7 +420,7 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
     if (textAcc)
       return textAcc;
 
-  } while (accessible = accessible->GetParent());
+  } while (accessible = accessible->Parent());
 
   NS_NOTREACHED("We must reach document accessible implementing nsIAccessibleText!");
   return nsnull;

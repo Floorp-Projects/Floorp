@@ -1,0 +1,16 @@
+# Locally defined URLs
+content  test1       test/
+locale   test1 en-US test/
+skin     test1 test  test/
+
+# Test Override
+content testOverride  test/
+override chrome://testOverride/content file:///test1/override
+
+
+# Load external manifest
+manifest loaded.manifest
+
+# Failure Cases
+overlay   chrome://test1/content/overlay.xul   chrome://test1/content/test1.xul
+style     chrome://test1/content/style.xul     chrome://test1/content/test1.css

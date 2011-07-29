@@ -139,6 +139,7 @@ CPPSRCS		= \
 		nsTextFragment.cpp \
 		nsTextNode.cpp \
 		nsTraversal.cpp \
+		nsTreeSanitizer.cpp \
 		nsTreeWalker.cpp \
 		nsWebSocket.cpp \
 		nsXHTMLContentSerializer.cpp \
@@ -165,6 +166,9 @@ ifdef GNU_CC
 nsTextFragmentSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 endif
 
+ifdef SOLARIS_SUNPRO_CXX
+nsTextFragmentSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-xarch=sse2 -xO4
+endif
 endif
 
 GQI_SRCS = contentbase.gqi
