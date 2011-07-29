@@ -216,9 +216,10 @@ ValueNumberer::eliminateRedundancies()
             if (!nodes.append(block->getImmediatelyDominatedBlock(i)))
                 return false;
         }
-        MInstructionIterator i = block->begin();
-        while (*i != block->lastIns()) {
-            MInstruction *ins = *i;
+        MDefinitionIterator i = MDefinitionIterator(block);
+        while (i) {
+            MDefinition *ins = *i;
+
             MDefinition *dom = findDominatingDef(defs, ins, index);
 
             if (!dom)
@@ -236,7 +237,7 @@ ValueNumberer::eliminateRedundancies()
 
             JS_ASSERT(ins->useCount() == 0);
             JS_ASSERT(ins->block() == block);
-            i = ins->block()->removeAt(i);
+            i = ins->block()->removeDefAt(i);
         }
         index++;
     }
