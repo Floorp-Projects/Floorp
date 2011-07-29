@@ -224,7 +224,23 @@ struct CompartmentStats
 struct IterateData
 {
     IterateData()
-    : compartmentStatsVector(), currCompartmentStats(NULL) { }
+      : stackSize(0),
+        gcHeapChunkTotal(0),
+        gcHeapChunkCleanUnused(0),
+        gcHeapChunkDirtyUnused(0),
+        gcHeapArenaUnused(0),
+        gcHeapChunkAdmin(0),
+        gcHeapUnusedPercentage(0),
+        compartmentStatsVector(),
+        currCompartmentStats(NULL) { }
+
+    PRInt64 stackSize;
+    PRInt64 gcHeapChunkTotal;
+    PRInt64 gcHeapChunkCleanUnused;
+    PRInt64 gcHeapChunkDirtyUnused;
+    PRInt64 gcHeapArenaUnused;
+    PRInt64 gcHeapChunkAdmin;
+    PRInt64 gcHeapUnusedPercentage;
 
     js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
     CompartmentStats *currCompartmentStats;
@@ -234,15 +250,9 @@ JSBool
 CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data);
 
 void
-ReportCompartmentStats(const CompartmentStats &stats,
-                       const nsACString &pathPrefix,
-                       nsIMemoryMultiReporterCallback *callback,
-                       nsISupports *closure);
-
-void
-ReportJSStackSizeForRuntime(JSRuntime *rt, const nsACString &pathPrefix,
-                            nsIMemoryMultiReporterCallback *callback,
-                            nsISupports *closure);
+ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
+                     nsIMemoryMultiReporterCallback *callback,
+                     nsISupports *closure);
 
 } // namespace memory
 } // namespace xpconnect
