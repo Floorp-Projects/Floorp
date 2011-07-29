@@ -74,18 +74,10 @@ static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static nsINativeKeyBindings *sNativeInputBindings = nsnull;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
 
-struct SelectionState {
-  PRInt32 mStart;
-  PRInt32 mEnd;
-};
-
 class RestoreSelectionState : public nsRunnable {
 public:
-  RestoreSelectionState(nsTextEditorState *aState, nsTextControlFrame *aFrame,
-                        PRInt32 aStart, PRInt32 aEnd)
+  RestoreSelectionState(nsTextEditorState *aState, nsTextControlFrame *aFrame)
     : mFrame(aFrame),
-      mStart(aStart),
-      mEnd(aEnd),
       mTextEditorState(aState)
   {
   }
@@ -95,8 +87,15 @@ public:
       // SetSelectionRange leads to Selection::AddRange which flushes Layout -
       // need to block script to avoid nested PrepareEditor calls (bug 642800).
       nsAutoScriptBlocker scriptBlocker;
-      mFrame->SetSelectionRange(mStart, mEnd);
-      mTextEditorState->HideSelectionIfBlurred();
+       nsTextEditorState::SelectionProperties& properties =
+         mTextEditorState->GetSelectionProperties();
+       mFrame->SetSelectionRange(properties.mStart,
+                                 properties.mEnd,
+                                 properties.mDirection);
+      if (!mTextEditorState->mSelectionRestoreEagerInit) {
+        mTextEditorState->HideSelectionIfBlurred();
+      }
+      mTextEditorState->mSelectionRestoreEagerInit = PR_FALSE;
     }
     mTextEditorState->FinishedRestoringSelection();
     return NS_OK;
@@ -109,8 +108,6 @@ public:
 
 private:
   nsTextControlFrame* mFrame;
-  PRInt32 mStart;
-  PRInt32 mEnd;
   nsTextEditorState* mTextEditorState;
 };
 
@@ -933,9 +930,12 @@ nsTextEditorState::nsTextEditorState(nsITextControlElement* aOwningElement)
     mRestoringSelection(nsnull),
     mBoundFrame(nsnull),
     mTextListener(nsnull),
+    mEverInited(PR_FALSE),
     mEditorInitialized(PR_FALSE),
     mInitializing(PR_FALSE),
-    mValueTransferInProgress(PR_FALSE)
+    mValueTransferInProgress(PR_FALSE),
+    mSelectionCached(PR_TRUE),
+    mSelectionRestoreEagerInit(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsTextEditorState);
 }
@@ -1349,6 +1349,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   if (!mEditorInitialized) {
     newEditor->PostCreate();
+    mEverInited = PR_TRUE;
     mEditorInitialized = PR_TRUE;
   }
 
@@ -1356,15 +1357,17 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     newEditor->AddEditorObserver(mTextListener);
 
   // Restore our selection after being bound to a new frame
-  if (mSelState) {
+  if (mSelectionCached) {
     if (mRestoringSelection) // paranoia
       mRestoringSelection->Revoke();
-    mRestoringSelection = new RestoreSelectionState(this, mBoundFrame, mSelState->mStart, mSelState->mEnd);
+    mRestoringSelection = new RestoreSelectionState(this, mBoundFrame);
     if (mRestoringSelection) {
       nsContentUtils::AddScriptRunner(mRestoringSelection);
-      mSelState = nsnull;
     }
   }
+
+  // The selection cache is no longer going to be valid
+  mSelectionCached = PR_FALSE;
 
   return rv;
 }
@@ -1408,11 +1411,10 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // GetSelectionRange before calling DestroyEditor, and only if
   // mEditorInitialized indicates that we actually have an editor available.
   if (mEditorInitialized) {
-    mSelState = new SelectionState();
-    nsresult rv = mBoundFrame->GetSelectionRange(&mSelState->mStart, &mSelState->mEnd);
-    if (NS_FAILED(rv)) {
-      mSelState = nsnull;
-    }
+    mBoundFrame->GetSelectionRange(&mSelectionProperties.mStart,
+                                   &mSelectionProperties.mEnd,
+                                   &mSelectionProperties.mDirection);
+    mSelectionCached = PR_TRUE;
   }
 
   // Destroy our editor

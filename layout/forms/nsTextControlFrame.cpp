@@ -435,6 +435,13 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // textareas are eagerly initialized
   PRBool initEagerly = !IsSingleLineTextControl();
   if (!initEagerly) {
+    // Also, input elements which have a cached selection should get eager
+    // editor initialization.
+    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+    NS_ASSERTION(txtCtrl, "Content not a text control element");
+    initEagerly = txtCtrl->HasCachedSelection();
+  }
+  if (!initEagerly) {
     nsCOMPtr<nsIDOMNSHTMLElement> element = do_QueryInterface(txtCtrl);
     if (element) {
       // so are input text controls with spellcheck=true
