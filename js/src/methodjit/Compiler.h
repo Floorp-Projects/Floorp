@@ -377,7 +377,7 @@ class Compiler : public BaseCompiler
     analyze::CrossScriptSSA ssa;
 
     GlobalObject *globalObj;
-    Value *globalSlots;  /* Original slots pointer. */
+    const Value *globalSlots;  /* Original slots pointer. */
 
     Assembler masm;
     FrameState frame;

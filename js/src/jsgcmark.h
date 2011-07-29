@@ -117,10 +117,10 @@ void
 MarkCrossCompartmentValue(JSTracer *trc, const js::Value &v, const char *name);
 
 void
-MarkValueRange(JSTracer *trc, Value *beg, Value *end, const char *name);
+MarkValueRange(JSTracer *trc, const Value *beg, const Value *end, const char *name);
 
 void
-MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name);
+MarkValueRange(JSTracer *trc, size_t len, const Value *vec, const char *name);
 
 void
 MarkShapeRange(JSTracer *trc, const Shape **beg, const Shape **end, const char *name);

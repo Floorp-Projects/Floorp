@@ -1127,12 +1127,12 @@ class StackFrame
         return offsetof(StackFrame, exec);
     }
 
-    void *addressOfArgs() {
-        return &args;
-    }
-
     static size_t offsetOfArgs() {
         return offsetof(StackFrame, args);
+    }    
+
+    void *addressOfArgs() {
+        return &args;
     }
 
     static size_t offsetOfScopeChain() {

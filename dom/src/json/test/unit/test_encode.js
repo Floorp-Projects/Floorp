@@ -17,6 +17,67 @@ if (!outputDir.exists()) {
   do_throw(outputName + " is not a directory?")
 }
 
+function testStringEncode()
+{
+  var obj1 = {a:1};
+  var obj2 = {foo:"bar"};
+  do_check_eq(nativeJSON.encode(obj1), '{"a":1}');
+  do_check_eq(nativeJSON.encode(obj2), '{"foo":"bar"}');
+
+  do_check_eq(nativeJSON.encode(), null);
+
+  // useless roots are dropped
+  do_check_eq(nativeJSON.encode(null), null);
+  do_check_eq(nativeJSON.encode(""), null);
+  do_check_eq(nativeJSON.encode(undefined), null);
+  do_check_eq(nativeJSON.encode(5), null);
+  do_check_eq(nativeJSON.encode(function(){}), null);
+  do_check_eq(nativeJSON.encode(dump), null);
+
+  // All other testing should occur in js/src/tests/ecma_5/JSON/ using
+  // the otherwise-exactly-identical JSON.stringify.
+}
+
+function testToJSON() {
+  var obj1 = {a:1};
+  var obj2 = {foo:"bar"};
+  do_check_eq(nativeJSON.encode({toJSON: function() obj1}), '{"a":1}');
+  do_check_eq(nativeJSON.encode({toJSON: function() obj2}), '{"foo":"bar"}');
+  
+  do_check_eq(nativeJSON.encode({toJSON: function() null}), null);
+  do_check_eq(nativeJSON.encode({toJSON: function() ""}), null);
+  do_check_eq(nativeJSON.encode({toJSON: function() undefined }), null);
+  do_check_eq(nativeJSON.encode({toJSON: function() 5}), null);
+  do_check_eq(nativeJSON.encode({toJSON: function() function(){}}), null);
+  do_check_eq(nativeJSON.encode({toJSON: function() dump}), null);
+}
+
+function testThrowingToJSON() {
+  var obj1 = {
+    "b": 1,
+    "c": 2,
+    toJSON: function() { throw("uh oh"); }
+  };
+  try {
+    var y = nativeJSON.encode(obj1);
+    throw "didn't throw";
+  } catch (ex) {
+    do_check_eq(ex, "uh oh");
+  }
+
+  var obj2 = {
+    "b": 1,
+    "c": 2,
+    get toJSON() { throw("crash and burn"); }
+  };
+  try {
+    var y = nativeJSON.encode(obj2);
+    throw "didn't throw";
+  } catch (ex) {
+    do_check_eq(ex, "crash and burn");
+  }
+}
+
 function testOutputStreams() {
   function writeToFile(obj, charset, writeBOM) {
     var jsonFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
@@ -73,6 +134,10 @@ function testOutputStreams() {
 
 function run_test()
 {
+  testStringEncode();
+  testToJSON();
+  testThrowingToJSON();
+  
   testOutputStreams();
   
 }

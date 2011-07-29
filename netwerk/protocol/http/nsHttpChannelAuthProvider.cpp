@@ -1118,7 +1118,8 @@ nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
 
     PRUint32 loadFlags;
     nsresult rv = mAuthChannel->GetLoadFlags(&loadFlags);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return PR_TRUE;
 
     if (mSuppressDefensiveAuth ||
         !(loadFlags & nsIChannel::LOAD_INITIAL_DOCUMENT_URI))
@@ -1164,11 +1165,13 @@ nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
 
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     rv = mAuthChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return PR_TRUE;
 
     nsCOMPtr<nsILoadGroup> loadGroup;
     rv = mAuthChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return PR_TRUE;
 
     nsCOMPtr<nsIPrompt> prompt;
     NS_QueryNotificationCallbacks(callbacks, loadGroup, NS_GET_IID(nsIPrompt),

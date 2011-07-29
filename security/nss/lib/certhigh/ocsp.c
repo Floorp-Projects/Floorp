@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.65 2010/06/07 19:03:27 kaie%kuix.de Exp $
+ * $Id: ocsp.c,v 1.65.2.1 2011/07/13 11:13:55 kaie%kuix.de Exp $
  */
 
 #include "prerror.h"
@@ -612,10 +612,14 @@ ocsp_CheckCacheSize(OCSPCacheData *cache)
 {
     OCSP_TRACE(("OCSP ocsp_CheckCacheSize\n"));
     PR_EnterMonitor(OCSP_Global.monitor);
-    if (OCSP_Global.maxCacheEntries <= 0) /* disabled or unlimited */
-        return;
-    while (cache->numberOfEntries > OCSP_Global.maxCacheEntries) {
-        ocsp_RemoveCacheItem(cache, cache->LRUitem);
+    if (OCSP_Global.maxCacheEntries > 0) {
+        /* Cache is not disabled. Number of cache entries is limited.
+         * The monitor ensures that maxCacheEntries remains positive.
+         */
+        while (cache->numberOfEntries > 
+                     (PRUint32)OCSP_Global.maxCacheEntries) {
+            ocsp_RemoveCacheItem(cache, cache->LRUitem);
+        }
     }
     PR_ExitMonitor(OCSP_Global.monitor);
 }

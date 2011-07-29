@@ -474,3 +474,7 @@ EXPORTS ;-
 		PR_AssertCurrentThreadOwnsLock;
 		PR_AssertCurrentThreadInMonitor;
 ;+} NSPR_4.7;
+;+NSPR_4.8.9 {
+;+      global:
+                PR_GetVersion;
+;+} NSPR_4.8;

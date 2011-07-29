@@ -716,7 +716,13 @@ mjit::Compiler::generatePrologue()
         Jump stackCheck = masm.branchPtr(Assembler::AboveOrEqual, Registers::ReturnReg,
                                          FrameAddress(offsetof(VMFrame, stackLimit)));
 
-        /* If the stack check fails... */
+        /*
+         * If the stack check fails then we need to either commit more of the
+         * reserved stack space or throw an error. Specify that the number of
+         * local slots is 0 (instead of the default script->nfixed) since the
+         * range [fp->slots(), fp->base()) may not be commited. (The calling
+         * contract requires only that the caller has reserved space for fp.)
+         */
         {
             stubcc.linkExitDirect(stackCheck, stubcc.masm.label());
             OOL_STUBCALL(stubs::HitStackQuota, REJOIN_NONE);

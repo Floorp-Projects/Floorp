@@ -1088,6 +1088,8 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     mjit::ExpandInlineFrames(cx->compartment, true);
 #endif
 
+    LeaveTrace(cx);
+
     if (StackSegment *seg = cx->stack.seg_) {
         startOnSegment(seg);
         settleOnNewState();

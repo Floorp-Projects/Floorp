@@ -312,7 +312,7 @@ void
 nsLineBreaker::FindHyphenationPoints(nsHyphenator *aHyphenator,
                                      const PRUnichar *aTextStart,
                                      const PRUnichar *aTextLimit,
-                                     PRPackedBool *aBreakState)
+                                     PRUint8 *aBreakState)
 {
   nsDependentSubstring string(aTextStart, aTextLimit);
   nsAutoTArray<PRPackedBool,200> hyphens;
@@ -414,7 +414,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
         if (aSink && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
-          PRPackedBool currentStart = breakState[wordStart];
+          PRUint8 currentStart = breakState[wordStart];
           nsContentUtils::LineBreaker()->
             GetJISx4051Breaks(aText + wordStart, offset - wordStart,
                               breakState.Elements() + wordStart);
