@@ -3813,6 +3813,21 @@
         if (!tab || !tab._fullyOpen || tab.closing)
           return;
 
+#ifdef XP_MACOSX
+        if (event.altKey) {
+#else
+        if (event.ctrlKey) {
+#endif
+          let dt = event.dataTransfer;
+          let uri = this.tabbrowser.getBrowserForTab(tab).currentURI;
+          let spec = uri ? uri.spec : "about:blank";
+          dt.setData("text/x-moz-url", spec);
+
+          let favicon = document.getAnonymousElementByAttribute(tab, "class", "tab-icon-image");
+          dt.setDragImage(favicon, 16, 16);
+          return;
+        }
+
         this.setAttribute("drag", "move");
         this.draggedTab = tab;
         tab.setAttribute("dragged", "true");
