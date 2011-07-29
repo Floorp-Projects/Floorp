@@ -473,7 +473,6 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_CELLPADDING;
     static nsHtml5AttributeName* ATTR_CELLSPACING;
     static nsHtml5AttributeName* ATTR_COLUMNWIDTH;
-    static nsHtml5AttributeName* ATTR_CROSSORIGIN;
     static nsHtml5AttributeName* ATTR_COLUMNALIGN;
     static nsHtml5AttributeName* ATTR_COLUMNLINES;
     static nsHtml5AttributeName* ATTR_CONTEXTMENU;
