@@ -7668,7 +7668,7 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
 }
 
 void
-nsDocument::MaybePreLoadImage(nsIURI* uri)
+nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
 {
   // Early exit if the img is already present in the img-cache
   // which indicates that the "real" load has already started and
@@ -7680,6 +7680,17 @@ nsDocument::MaybePreLoadImage(nsIURI* uri)
     return;
   }
 
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+  PRInt32 corsmode = GetCORSMode();
+  if (aCrossOriginAttr.LowercaseEqualsLiteral("anonymous")) {
+    loadFlags |= imgILoader::LOAD_CORS_ANONYMOUS;
+  } else if (aCrossOriginAttr.LowercaseEqualsLiteral("use-credentials")) {
+    loadFlags |= imgILoader::LOAD_CORS_USE_CREDENTIALS;
+  }
+  // else should we err on the side of not doing the preload if
+  // aCrossOriginAttr is nonempty?  Let's err on the side of doing the
+  // preload as CORS_NONE.
+
   // Image not in cache - trigger preload
   nsCOMPtr<imgIRequest> request;
   nsresult rv =
@@ -7688,7 +7699,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri)
                               NodePrincipal(),
                               mDocumentURI, // uri of document used as referrer
                               nsnull,       // no observer
-                              nsIRequest::LOAD_NORMAL,
+                              loadFlags,
                               getter_AddRefs(request));
 
   // Pin image-reference to avoid evicting it from the img-cache before

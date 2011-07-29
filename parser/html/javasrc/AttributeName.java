@@ -1094,6 +1094,7 @@ public final class AttributeName
     public static final AttributeName CELLPADDING = new AttributeName(ALL_NO_NS, SAME_LOCAL("cellpadding"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName CELLSPACING = new AttributeName(ALL_NO_NS, SAME_LOCAL("cellspacing"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName COLUMNWIDTH = new AttributeName(ALL_NO_NS, SAME_LOCAL("columnwidth"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
+    public static final AttributeName CROSSORIGIN = new AttributeName(ALL_NO_NS, SAME_LOCAL("crossorigin"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName COLUMNALIGN = new AttributeName(ALL_NO_NS, SAME_LOCAL("columnalign"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName COLUMNLINES = new AttributeName(ALL_NO_NS, SAME_LOCAL("columnlines"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName CONTEXTMENU = new AttributeName(ALL_NO_NS, SAME_LOCAL("contextmenu"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1676,6 +1677,7 @@ public final class AttributeName
     CELLPADDING,
     CELLSPACING,
     COLUMNWIDTH,
+    CROSSORIGIN,
     COLUMNALIGN,
     COLUMNLINES,
     CONTEXTMENU,
@@ -2259,6 +2261,7 @@ public final class AttributeName
     371448425,
     371448430,
     371545055,
+    371593469,
     371596922,
     371758751,
     371964792,
