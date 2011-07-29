@@ -362,7 +362,7 @@ nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::Prefetc
         doc->ScriptLoader()->PreloadURI(uri, pe.charset, pe.elementType);
         break;
       case nsSpeculativeScriptThread::IMAGE:
-        doc->MaybePreLoadImage(uri);
+        doc->MaybePreLoadImage(uri, EmptyString());
         break;
       case nsSpeculativeScriptThread::STYLESHEET:
         doc->PreloadStyle(uri, pe.charset);
