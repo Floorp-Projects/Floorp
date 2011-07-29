@@ -126,8 +126,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID \
-{ 0xe4bc7342, 0x6528, 0x4979, \
- { 0x9e, 0xb5, 0x12, 0xef, 0x4a, 0x97, 0xe1, 0xea } }
+{ 0x18e4d4bd, 0x006b, 0x4008, \
+  { 0x90, 0x05, 0x27, 0x57, 0x35, 0xf0, 0xd4, 0x85 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1386,8 +1386,7 @@ public:
    * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
    * parser-module is linked with gklayout-module.
    */
-  virtual void MaybePreLoadImage(nsIURI* uri,
-                                 const nsAString& aCrossOriginAttr) = 0;
+  virtual void MaybePreLoadImage(nsIURI* uri) = 0;
 
   /**
    * Called by nsParser to preload style sheets.  Can also be merged into
