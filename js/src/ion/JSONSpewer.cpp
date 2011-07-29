@@ -186,6 +186,31 @@ JSONSpewer::beginPass(const char *pass)
 }
 
 void
+JSONSpewer::spewMDef(MDefinition *def)
+{
+    beginObject();
+
+    integerProperty("id", def->id());
+
+    property("opcode");
+    fprintf(fp_, "\"");
+    def->printOpcode(fp_);
+    fprintf(fp_, "\"");
+
+    beginListProperty("inputs");
+    for (size_t i = 0; i < def->numOperands(); i++)
+        integerValue(def->getOperand(i)->id());
+    endList();
+
+    beginListProperty("uses");
+    for (MUseDefIterator use(def); use; use++)
+        integerValue(use.def()->id());
+    endList();
+
+    endObject();
+}
+
+void
 JSONSpewer::spewMIR(MIRGraph *mir)
 {
     if (!fp_)
@@ -210,31 +235,10 @@ JSONSpewer::spewMIR(MIRGraph *mir)
         endList();
 
         beginListProperty("instructions");
-        for (MInstructionIterator ins(block->begin());
-             ins != block->end();
-             ins++)
-        {
-            beginObject();
-
-            integerProperty("id", ins->id());
-
-            property("opcode");
-            fprintf(fp_, "\"");
-            ins->printOpcode(fp_);
-            fprintf(fp_, "\"");
-
-            beginListProperty("inputs");
-            for (size_t i = 0; i < ins->numOperands(); i++)
-                integerValue(ins->getOperand(i)->id());
-            endList();
-
-            beginListProperty("uses");
-            for (MUseDefIterator use(*ins); use; use++)
-                integerValue(use.def()->id());
-            endList();
-
-            endObject();
-        }
+        for (size_t i = 0; i < block->numPhis(); i++)
+            spewMDef(block->getPhi(i));
+        for (MInstructionIterator i = block->begin(); i != block->end(); i++)
+            spewMDef(*i);
         endList();
 
         endObject();
