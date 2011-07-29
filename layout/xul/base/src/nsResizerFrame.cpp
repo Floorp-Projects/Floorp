@@ -330,8 +330,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
   if (doDefault && weakFrame.IsAlive())
     return nsTitleBarFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-  else
-    return NS_OK;
+
+  return NS_OK;
 }
 
 nsIContent*
@@ -427,14 +427,14 @@ nsResizerFrame::GetDirection()
     {&nsGkAtoms::topleft,    &nsGkAtoms::top,    &nsGkAtoms::topright,
      &nsGkAtoms::left,                           &nsGkAtoms::right,
      &nsGkAtoms::bottomleft, &nsGkAtoms::bottom, &nsGkAtoms::bottomright,
-                                                 &nsGkAtoms::bottomend,
+     &nsGkAtoms::bottomstart,                    &nsGkAtoms::bottomend,
      nsnull};
 
   static const Direction directions[] =
     {{-1, -1}, {0, -1}, {1, -1},
      {-1,  0},          {1,  0},
      {-1,  1}, {0,  1}, {1,  1},
-                        {1,  1}
+     {-1,  1},          {1,  1}
     };
 
   if (!GetContent())
