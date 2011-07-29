@@ -417,6 +417,13 @@ class LinearScanAllocator
     {
       public:
         void enqueue(LiveInterval *interval);
+        void enqueue(InlineList<LiveInterval> &list) {
+            for (IntervalIterator i(list.begin()); i != list.end(); ) {
+                LiveInterval *save = *i;
+                i = list.removeAt(i);
+                enqueue(save);
+            }
+        }
 
         LiveInterval *dequeue();
     };
