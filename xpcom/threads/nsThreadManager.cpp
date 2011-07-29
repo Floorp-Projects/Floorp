@@ -232,12 +232,14 @@ nsThreadManager::GetCurrentThread()
 }
 
 NS_IMETHODIMP
-nsThreadManager::NewThread(PRUint32 creationFlags, nsIThread **result)
+nsThreadManager::NewThread(PRUint32 creationFlags,
+                           PRUint32 stackSize,
+                           nsIThread **result)
 {
   // No new threads during Shutdown
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
-  nsThread *thr = new nsThread();
+  nsThread *thr = new nsThread(stackSize);
   if (!thr)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(thr);

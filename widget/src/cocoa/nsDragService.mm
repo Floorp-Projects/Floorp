@@ -62,7 +62,6 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIView.h"
-#include "nsIRegion.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
 

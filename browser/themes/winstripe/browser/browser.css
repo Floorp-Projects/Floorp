@@ -59,6 +59,16 @@
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define navbarLargeIcons #navigator-toolbox[iconsize=large][mode=icons] > #nav-bar
 
+%ifdef MOZ_OFFICIAL_BRANDING
+%define appMenuButtonBorderColor rgba(255,255,255,.5) rgba(83,42,6,.9)
+%else
+%if MOZ_UPDATE_CHANNEL == aurora
+%define appMenuButtonBorderColor hsla(0,0%,100%,.5) hsla(214,89%,21%,.9)
+%else
+%define appMenuButtonBorderColor hsla(0,0%,100%,.5) hsla(210,59%,13%,.9)
+%endif
+%endif
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
@@ -134,13 +144,10 @@
 
 #appmenu-button {
   -moz-appearance: none;
-  background: -moz-linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
   background-clip: padding-box;
   border-radius: 0 0 4px 4px;
-  border: 1px solid rgba(83,42,6,.9);
+  border: 1px solid;
   border-top: none;
-  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
-              0 0 0 1px rgba(255,255,255,.25) inset;
   color: white;
   text-shadow: 0 0 1px rgba(0,0,0,.7),
                0 1px 1.5px rgba(0,0,0,.5);
@@ -163,19 +170,88 @@
 }
 %endif
 
-#main-window[privatebrowsingmode=temporary] #appmenu-button {
-  background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
-  border-color: rgba(43,8,65,.9);
+#appmenu-button:hover:active,
+#appmenu-button[open] {
+  border-radius: 0;
 }
 
+%ifdef MOZ_OFFICIAL_BRANDING
+.tab-drag-preview::before,
+#appmenu-button {
+  background-image: -moz-linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
+  border-color: rgba(83,42,6,.9);
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
+              0 0 0 1px rgba(255,255,255,.25) inset;
+}
 #appmenu-button:hover:not(:active):not([open]) {
   background-image: -moz-radial-gradient(center bottom, farthest-side, rgba(252,240,89,.5) 10%, rgba(252,240,89,0) 70%),
                     -moz-radial-gradient(center bottom, farthest-side, rgb(236,133,0), rgba(255,229,172,0)),
                     -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
   border-color: rgba(83,42,6,.9);
   box-shadow: 0 1px 0 rgba(255,255,255,.1) inset,
-              0 0 1.5px 1px rgba(250,234,169,.7) inset,
+              0 0 2px 1px rgba(250,234,169,.7) inset,
               0 -1px 0 rgba(250,234,169,.5) inset;
+}
+#appmenu-button:hover:active,
+#appmenu-button[open] {
+  background-image: -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
+  box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
+              0 1px 1px rgba(0,0,0,.2) inset;
+}
+%else
+%if MOZ_UPDATE_CHANNEL == aurora
+.tab-drag-preview::before,
+#appmenu-button {
+  background-image: -moz-linear-gradient(hsl(208,99%,37%), hsl(214,90%,23%) 95%);
+  border-color: hsla(214,89%,21%,.9);
+  box-shadow: 0 1px 0 hsla(205,100%,72%,.2) inset,
+              0 0 2px 1px hsla(205,100%,72%,.25) inset;
+}
+#appmenu-button:hover:not(:active):not([open]) {
+  background-image: -moz-radial-gradient(center bottom, farthest-side, hsla(202,100%,85%,.5) 10%, hsla(202,100%,85%,0) 70%),
+                    -moz-radial-gradient(center bottom, farthest-side, hsla(205,100%,72%,.7), hsla(205,100%,72%,0)),
+                    -moz-linear-gradient(hsl(208,98%,34%), hsl(213,87%,20%) 95%);
+  border-color: hsla(214,89%,21%,.9);
+  box-shadow: 0 1px 0 hsla(205,100%,72%,.15) inset,
+              0 0 2px 1px hsla(205,100%,72%,.5) inset,
+              0 -1px 0 hsla(205,100%,72%,.2) inset;
+}
+#appmenu-button:hover:active,
+#appmenu-button[open] {
+  background-image: -moz-linear-gradient(hsl(208,95%,30%), hsl(214,85%,17%) 95%);
+  box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
+              0 1px 1px rgba(0,0,0,.2) inset;
+}
+%else
+.tab-drag-preview::before,
+#appmenu-button {
+  background-image: -moz-linear-gradient(hsl(211,33%,32%), hsl(209,53%,10%) 95%);
+  border-color: hsla(210,59%,13%,.9);
+  box-shadow: 0 1px 0 hsla(210,48%,90%,.15) inset,
+              0 0 2px 1px hsla(211,65%,85%,.15) inset;
+}
+#appmenu-button:hover:not(:active):not([open]) {
+  background-image: -moz-radial-gradient(center bottom, farthest-side, hsla(210,48%,90%,.5) 10%, hsla(210,48%,90%,0) 70%),
+                    -moz-radial-gradient(center bottom, farthest-side, hsla(211,70%,83%,.5), hsla(211,70%,83%,0)),
+                    -moz-linear-gradient(hsl(211,33%,32%), hsl(209,53%,10%) 95%);
+  border-color: hsla(210,59%,13%,.9);
+  box-shadow: 0 1px 0 hsla(210,48%,90%,.15) inset,
+              0 0 2px 1px hsla(210,48%,90%,.4) inset,
+              0 -1px 0 hsla(210,48%,90%,.2) inset;
+}
+#appmenu-button:hover:active,
+#appmenu-button[open] {
+  background-image: -moz-linear-gradient(hsl(211,33%,26%), hsl(209,53%,6%) 95%);
+  box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
+              0 1px 1px rgba(0,0,0,.2) inset;
+}
+%endif
+%endif
+
+#main-window[privatebrowsingmode=temporary] .tab-drag-preview::before,
+#main-window[privatebrowsingmode=temporary] #appmenu-button {
+  background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
+  border-color: rgba(43,8,65,.9);
 }
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button:hover:not(:active):not([open]) {
@@ -186,14 +262,6 @@
   box-shadow: 0 1px 0 rgba(255,255,255,.1) inset,
               0 0 2px 1px rgba(240,193,255,.7) inset,
               0 -1px 0 rgba(240,193,255,.5) inset;
-}
-
-#appmenu-button:hover:active,
-#appmenu-button[open] {
-  background-image: -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
-  border-radius: 0;
-  box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
-              0 1px 1px rgba(0,0,0,.2) inset;
 }
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button:hover:active,
@@ -1742,7 +1810,25 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   outline: 1px dotted;
 }
 
-/* Tab DnD indicator */
+/* Tab drag and drop */
+.tab-drag-panel {
+  border: 0 !important;
+}
+
+.tab-drag-label {
+  margin: 0 !important;
+  padding: 5px;
+  border: 1px solid DimGray;
+}
+
+.tab-drag-panel:not([target]) > .tab-drag-label {
+  display: none;
+}
+
+.tab-drag-preview {
+  border: 1px solid rgba(0,0,0,.5);
+}
+
 .tab-drop-indicator {
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
   margin-bottom: -11px;
@@ -2455,4 +2541,9 @@ panel[dimmed="true"] {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
   outline: 1px dashed rgba(255,255,255,0.5);
   outline-offset: -1px;
+}
+
+#highlighter-veil-transparentbox[locked] {
+  box-shadow: 0 0 0 1px black;
+  outline-color: white;
 }

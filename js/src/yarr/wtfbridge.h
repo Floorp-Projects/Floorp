@@ -63,10 +63,12 @@ namespace JSC { namespace Yarr {
 typedef jschar UChar;
 typedef JSLinearString UString;
 
+using namespace js::unicode;
+
 class Unicode {
   public:
-    static UChar toUpper(UChar c) { return JS_TOUPPER(c); }
-    static UChar toLower(UChar c) { return JS_TOLOWER(c); }
+    static UChar toUpper(UChar c) { return ToUpperCase(c); }
+    static UChar toLower(UChar c) { return ToLowerCase(c); }
 };
 
 /*

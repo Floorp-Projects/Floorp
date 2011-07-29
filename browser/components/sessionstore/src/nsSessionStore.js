@@ -116,7 +116,7 @@ const CAPABILITIES = [
 // These keys are for internal use only - they shouldn't be part of the JSON
 // that gets saved to disk nor part of the strings returned by the API.
 const INTERNAL_KEYS = ["_tabStillLoading", "_hosts", "_formDataSaved",
-                       "_shouldRestore"];
+                       "_shouldRestore", "_host", "_scheme"];
 
 // These are tab events that we listen to.
 const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
@@ -128,6 +128,8 @@ const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+// debug.js adds NS_ASSERT. cf. bug 669196
+Cu.import("resource://gre/modules/debug.js");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -1669,10 +1671,31 @@ SessionStoreService.prototype = {
       tabData.index = history.index + 1;
     }
     else if (history && history.count > 0) {
-      for (var j = 0; j < history.count; j++) {
-        let entry = this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
-                                                aFullData, aTab.pinned);
-        tabData.entries.push(entry);
+      try {
+        for (var j = 0; j < history.count; j++) {
+          let entry = this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
+                                                  aFullData, aTab.pinned);
+          tabData.entries.push(entry);
+        }
+        // If we make it through the for loop, then we're ok and we should clear
+        // any indicator of brokenness.
+        delete aTab.__SS_broken_history;
+      }
+      catch (ex) {
+        // In some cases, getEntryAtIndex will throw. This seems to be due to
+        // history.count being higher than it should be. By doing this in a
+        // try-catch, we'll update history to where it breaks, assert for
+        // non-release builds, and still save sessionstore.js. We'll track if
+        // we've shown the assert for this tab so we only show it once.
+        // cf. bug 669196.
+        if (!aTab.__SS_broken_history) {
+          // First Focus the window & tab we're having trouble with.
+          aTab.ownerDocument.defaultView.focus();
+          aTab.ownerDocument.defaultView.gBrowser.selectedTab = aTab;
+          NS_ASSERT(false, "SessionStore failed gathering complete history " +
+                           "for the focused window/tab. See bug 669196.");
+          aTab.__SS_broken_history = true;
+        }
       }
       tabData.index = history.index + 1;
 
@@ -1747,7 +1770,15 @@ SessionStoreService.prototype = {
   _serializeHistoryEntry:
     function sss_serializeHistoryEntry(aEntry, aFullData, aIsPinned) {
     var entry = { url: aEntry.URI.spec };
-    
+
+    try {
+      entry._host = aEntry.URI.host;
+      entry._scheme = aEntry.URI.scheme;
+    }
+    catch (ex) {
+      // We just won't attempt to get cookies for this entry.
+    }
+
     if (aEntry.title && aEntry.title != entry.url) {
       entry.title = aEntry.title;
     }
@@ -2155,21 +2186,20 @@ SessionStoreService.prototype = {
    */
   _extractHostsForCookies:
     function sss__extractHostsForCookies(aEntry, aHosts, aCheckPrivacy, aIsPinned) {
-    let match;
 
-    if ((match = /^https?:\/\/(?:[^@\/\s]+@)?([\w.-]+)/.exec(aEntry.url)) != null) {
-      if (!aHosts[match[1]] &&
-          (!aCheckPrivacy ||
-           this._checkPrivacyLevel(this._getURIFromString(aEntry.url).schemeIs("https"),
-                                   aIsPinned))) {
-        // By setting this to true or false, we can determine when looking at
-        // the host in _updateCookies if we should check for privacy.
-        aHosts[match[1]] = aIsPinned;
-      }
+    // _host and _scheme may not be set (for about: urls for example), in which
+    // case testing _scheme will be sufficient.
+    if (/https?/.test(aEntry._scheme) && !aHosts[aEntry._host] &&
+        (!aCheckPrivacy ||
+         this._checkPrivacyLevel(aEntry._scheme == "https", aIsPinned))) {
+      // By setting this to true or false, we can determine when looking at
+      // the host in _updateCookies if we should check for privacy.
+      aHosts[aEntry._host] = aIsPinned;
     }
-    else if ((match = /^file:\/\/([^\/]*)/.exec(aEntry.url)) != null) {
-      aHosts[match[1]] = true;
+    else if (aEntry._scheme == "file") {
+      aHosts[aEntry._host] = true;
     }
+
     if (aEntry.children) {
       aEntry.children.forEach(function(entry) {
         this._extractHostsForCookies(entry, aHosts, aCheckPrivacy, aIsPinned);

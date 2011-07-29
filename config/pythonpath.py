@@ -2,41 +2,51 @@
 Run a python script, adding extra directories to the python path.
 """
 
-import sys, os
 
-def usage():
-    print >>sys.stderr, "pythonpath.py -I directory script.py [args...]"
-    sys.exit(150)
+def main(args):
+    def usage():
+        print >>sys.stderr, "pythonpath.py -I directory script.py [args...]"
+        sys.exit(150)
 
-paths = []
+    paths = []
 
-while True:
-    try:
-        arg = sys.argv[1]
-    except IndexError:
-        usage()
-
-    if arg == '-I':
-        del sys.argv[1]
+    while True:
         try:
-            path = sys.argv.pop(1)
+            arg = args[0]
         except IndexError:
             usage()
 
-        paths.append(path)
-        continue
+        if arg == '-I':
+            args.pop(0)
+            try:
+                path = args.pop(0)
+            except IndexError:
+                usage()
 
-    if arg.startswith('-I'):
-        path = sys.argv.pop(1)[2:]
-        paths.append(path)
-        continue
+            paths.append(path)
+            continue
 
-    break
+        if arg.startswith('-I'):
+            paths.append(args.pop(0)[2:])
+            continue
 
-sys.argv.pop(0)
-script = sys.argv[0]
+        break
 
-sys.path[0:0] = [os.path.dirname(script)] + paths
-__name__ = '__main__'
-__file__ = script
-execfile(script)
+    script = args[0]
+
+    sys.path[0:0] = [os.path.dirname(script)] + paths
+    sys.argv = args
+    sys.argc = len(args)
+
+    frozenglobals['__name__'] = '__main__'
+    frozenglobals['__file__'] = script
+
+    execfile(script, frozenglobals)
+
+# Freeze scope here ... why this makes things work I have no idea ...
+frozenglobals = globals()
+
+import sys, os
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

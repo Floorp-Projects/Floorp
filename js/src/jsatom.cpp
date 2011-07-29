@@ -663,6 +663,77 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, AtomIndexMap *indices)
     }
 }
 
+
+/* JSBOXEDWORD_INT_MAX as a string */
+#define JSBOXEDWORD_INT_MAX_STRING "1073741823"
+
+/*
+ * Convert string indexes that convert to int jsvals as ints to save memory.
+ * Care must be taken to use this macro every time a property name is used, or
+ * else double-sets, incorrect property cache misses, or other mistakes could
+ * occur.
+ */
+jsid
+js_CheckForStringIndex(jsid id)
+{
+    if (!JSID_IS_ATOM(id))
+        return id;
+
+    JSAtom *atom = JSID_TO_ATOM(id);
+    const jschar *s = atom->chars();
+    jschar ch = *s;
+
+    JSBool negative = (ch == '-');
+    if (negative)
+        ch = *++s;
+
+    if (!JS7_ISDEC(ch))
+        return id;
+
+    size_t n = atom->length() - negative;
+    if (n > sizeof(JSBOXEDWORD_INT_MAX_STRING) - 1)
+        return id;
+
+    const jschar *cp = s;
+    const jschar *end = s + n;
+
+    jsuint index = JS7_UNDEC(*cp++);
+    jsuint oldIndex = 0;
+    jsuint c = 0;
+
+    if (index != 0) {
+        while (JS7_ISDEC(*cp)) {
+            oldIndex = index;
+            c = JS7_UNDEC(*cp);
+            index = 10 * index + c;
+            cp++;
+        }
+    }
+
+    /*
+     * Non-integer indexes can't be represented as integers.  Also, distinguish
+     * index "-0" from "0", because JSBOXEDWORD_INT cannot.
+     */
+    if (cp != end || (negative && index == 0))
+        return id;
+
+    if (negative) {
+        if (oldIndex < -(JSID_INT_MIN / 10) ||
+            (oldIndex == -(JSID_INT_MIN / 10) && c <= (-JSID_INT_MIN % 10)))
+        {
+            id = INT_TO_JSID(-jsint(index));
+        }
+    } else {
+        if (oldIndex < JSID_INT_MAX / 10 ||
+            (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10)))
+        {
+            id = INT_TO_JSID(jsint(index));
+        }
+    }
+
+    return id;
+}
+
 #if JS_HAS_XML_SUPPORT
 bool
 js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,

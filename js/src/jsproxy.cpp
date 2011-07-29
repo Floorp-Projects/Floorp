@@ -1176,6 +1176,8 @@ JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObject *proto,
                JSObject *parent, JSObject *call, JSObject *construct)
 {
+    JS_ASSERT_IF(proto, cx->compartment == proto->compartment());
+    JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
     bool fun = call || construct;
     Class *clasp;
     if (fun)

@@ -470,7 +470,7 @@ stubs::GetElem(VMFrame &f)
             jsuint idx = jsuint(i);
 
             if (idx < obj->getDenseArrayInitializedLength()) {
-                copyFrom = obj->addressOfDenseArrayElement(idx);
+                copyFrom = &obj->getDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
             }
@@ -479,7 +479,7 @@ stubs::GetElem(VMFrame &f)
             ArgumentsObject *argsobj = obj->asArguments();
 
             if (arg < argsobj->initialLength()) {
-                copyFrom = argsobj->addressOfElement(arg);
+                copyFrom = &argsobj->element(arg);
                 if (!copyFrom->isMagic()) {
                     if (StackFrame *afp = (StackFrame *) argsobj->getPrivate())
                         copyFrom = &afp->canonicalActualArg(arg);
@@ -879,7 +879,7 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
             THROWV(JS_FALSE);                                                 \
         if (lval.isString() && rval.isString()) {                             \
             JSString *l = lval.toString(), *r = rval.toString();              \
-            JSBool cmp;                                                       \
+            int32 cmp;                                                        \
             if (!CompareStrings(cx, l, r, &cmp))                              \
                 THROWV(JS_FALSE);                                             \
             cond = cmp OP 0;                                                  \

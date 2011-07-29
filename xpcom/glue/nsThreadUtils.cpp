@@ -66,19 +66,19 @@ nsRunnable::Run()
 //-----------------------------------------------------------------------------
 
 NS_METHOD
-NS_NewThread(nsIThread **result, nsIRunnable *event)
+NS_NewThread(nsIThread **result, nsIRunnable *event, PRUint32 stackSize)
 {
   nsCOMPtr<nsIThread> thread;
 #ifdef MOZILLA_INTERNAL_API
   nsresult rv = nsThreadManager::get()->
-      nsThreadManager::NewThread(0, getter_AddRefs(thread));
+      nsThreadManager::NewThread(0, stackSize, getter_AddRefs(thread));
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
       do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mgr->NewThread(0, getter_AddRefs(thread));
+  rv = mgr->NewThread(0, stackSize, getter_AddRefs(thread));
 #endif
   NS_ENSURE_SUCCESS(rv, rv);
 

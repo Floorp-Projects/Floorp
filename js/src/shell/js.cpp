@@ -1906,8 +1906,9 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             Sprint(sp, " function %u (%s)", index, !!bytes ? bytes.ptr() : "N/A");
             break;
           }
-          case SRC_SWITCH:
-            if (js_GetOpcode(cx, script, script->code + offset) == JSOP_GOTO)
+          case SRC_SWITCH: {
+            JSOp op = js_GetOpcode(cx, script, script->code + offset);
+            if (op == JSOP_GOTO || op == JSOP_GOTOX)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
@@ -1916,6 +1917,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             UpdateSwitchTableBounds(cx, script, offset,
                                     &switchTableStart, &switchTableEnd);
             break;
+          }
           case SRC_CATCH:
             delta = (uintN) js_GetSrcNoteOffset(sn, 0);
             if (delta) {
@@ -5179,7 +5181,7 @@ its_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     if (its_noisy)
         fprintf(gOutFile, "converting it to %s type\n", JS_GetTypeName(cx, type));
-    return JS_TRUE;
+    return JS_ConvertStub(cx, obj, type, vp);
 }
 
 static void
@@ -5908,6 +5910,21 @@ JSPrincipals shellTrustedPrincipals = {
     ShellPrincipalsSubsume
 };
 
+JSBool
+CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+                  jsval *vp)
+{
+    LeaveTrace(cx);
+    return true;
+}
+
+JSSecurityCallbacks securityCallbacks = {
+    CheckObjectAccess,
+    NULL,
+    NULL,
+    NULL
+};
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -6046,6 +6063,7 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
+    JS_SetRuntimeSecurityCallbacks(rt, &securityCallbacks);
 
     if (!InitWatchdog(rt))
         return 1;

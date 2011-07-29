@@ -16,13 +16,9 @@
 
     SimpleTest.expectChildProcessCrash();
 
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var prefs = Components.classes['@mozilla.org/preferences-service;1']
-        .getService(Components.interfaces.nsIPrefBranch);
-
     // the default timeout is annoying high for mochitest runs
     var timeoutPref = "dom.ipc.plugins.timeoutSecs";
-    prefs.setIntPref(timeoutPref, 5);
+    SpecialPowers.setIntPref(timeoutPref, 5);
 
     var iframe = document.getElementById('iframe1');
     var p = iframe.contentDocument.getElementById('plugin1');
@@ -56,11 +52,7 @@
       }
 
       try {
-        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-        var prefs = Components.classes['@mozilla.org/preferences-service;1']
-          .getService(Components.interfaces.nsIPrefBranch);
-
-        prefs.clearUserPref(timeoutPref);
+        SpecialPowers.clearUserPref(timeoutPref);
       }
       catch(e) {
         ok(false, "Couldn't reset timeout pref");

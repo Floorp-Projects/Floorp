@@ -393,7 +393,7 @@ DeepBail(JSContext *cx);
 static JS_INLINE void
 LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
 {
-    if (!obj->parent)
+    if (!obj->getParent())
         LeaveTrace(cx);
 }
 

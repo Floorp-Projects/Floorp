@@ -47,6 +47,7 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 #include "jstracer.h"
+#include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -92,7 +93,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     initialRegExpShape(NULL),
     initialStringShape(NULL),
     debugMode(rt->debugMode),
-    mathCache(NULL)
+    mathCache(NULL),
+    watchpointMap(NULL)
 {
     JS_INIT_CLIST(&scripts);
 
@@ -114,6 +116,7 @@ JSCompartment::~JSCompartment()
 #endif
 
     Foreground::delete_(mathCache);
+    Foreground::delete_(watchpointMap);
 
 #ifdef DEBUG
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
@@ -294,7 +297,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (vp->isObject()) {
             JSObject *obj = &vp->toObject();
             JS_ASSERT(IsCrossCompartmentWrapper(obj));
-            if (obj->getParent() != global) {
+            if (global->getJSClass() != &js_dummy_class && obj->getParent() != global) {
                 do {
                     obj->setParent(global);
                     obj = obj->getProto();
@@ -486,7 +489,7 @@ JSCompartment::markTypes(JSTracer *trc)
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        js_TraceScript(trc, script);
+        js_TraceScript(trc, script, NULL);
     }
 
     gc::ArenaHeader *aheader = arenas[gc::FINALIZE_TYPE_OBJECT].getHead();

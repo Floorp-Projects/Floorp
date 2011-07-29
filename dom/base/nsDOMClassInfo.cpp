@@ -279,7 +279,6 @@
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLIsIndexElement.h"
 #include "nsIDOMHTMLLIElement.h"
 #include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLLegendElement.h"
@@ -460,7 +459,7 @@
 #include "nsIDOMGeoPositionError.h"
 
 // Workers
-#include "nsDOMWorker.h"
+#include "mozilla/dom/workers/Workers.h"
 
 #include "nsDOMFile.h"
 #include "nsDOMFileReader.h"
@@ -598,9 +597,6 @@ DOMCI_DATA(ContentFrameMessageManager, void)
 
 DOMCI_DATA(DOMPrototype, void)
 DOMCI_DATA(DOMConstructor, void)
-
-DOMCI_DATA(Worker, void)
-DOMCI_DATA(ChromeWorker, void)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
@@ -827,8 +823,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLImageElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLInputElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLIsIndexElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLLIElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -1431,11 +1425,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(MathMLElement, Element, nsElementSH,
                                      ELEMENT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(Worker, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeWorker, nsDOMGenericSH,
-                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderingContext, nsWebGLViewportHandlerSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLBuffer, nsDOMGenericSH,
@@ -1485,7 +1474,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DesktopNotificationCenter, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(WebSocket, nsEventTargetSH,
+  NS_DEFINE_CLASSINFO_DATA(MozWebSocket, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CloseEvent, nsDOMGenericSH,
@@ -1554,7 +1543,7 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(FormData, NS_FORMDATA_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XMLSerializer, NS_XMLSERIALIZER_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XMLHttpRequest, NS_XMLHTTPREQUEST_CONTRACTID)
-  NS_DEFINE_CONSTRUCTOR_DATA(WebSocket, NS_WEBSOCKET_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(MozWebSocket, NS_WEBSOCKET_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XSLTProcessor,
                              "@mozilla.org/document-transformer;1?type=xslt")
@@ -1572,8 +1561,6 @@ struct nsConstructorFuncMapData
 
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ChromeWorker, nsDOMWorker::NewChromeWorker)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
 };
@@ -2812,11 +2799,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLInputElement, nsIDOMHTMLInputElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLIsIndexElement, nsIDOMHTMLIsIndexElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLIsIndexElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -4144,18 +4126,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Worker, nsIWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(ChromeWorker, nsIWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderingContext, nsIDOMWebGLRenderingContext)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWebGLRenderingContext)
   DOM_CLASSINFO_MAP_END
@@ -4242,8 +4212,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDesktopNotificationCenter)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(WebSocket, nsIWebSocket)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWebSocket)
+  DOM_CLASSINFO_MAP_BEGIN(MozWebSocket, nsIMozWebSocket)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMozWebSocket)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
@@ -6062,8 +6032,30 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
   const nsGlobalNameStruct *name_struct;
   rv = GetNameStruct(NS_ConvertASCIItoUTF16(dom_class->name), &name_struct);
-  if (!name_struct) {
+  if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  if (!name_struct) {
+    // This isn't a normal DOM object, see if this constructor lives on its
+    // prototype chain.
+    jsval val;
+    if (!JS_GetProperty(cx, obj, "prototype", &val)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(val));
+    JSObject *dot_prototype = JSVAL_TO_OBJECT(val);
+
+    JSObject *proto = JS_GetPrototype(cx, dom_obj);
+    for ( ; proto; proto = JS_GetPrototype(cx, proto)) {
+      if (proto == dot_prototype) {
+        *bp = PR_TRUE;
+        break;
+      }
+    }
+
+    return NS_OK;
   }
 
   if (name_struct->mType != nsGlobalNameStruct::eTypeClassConstructor &&
@@ -6506,7 +6498,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     }
 
     // For now don't expose web sockets unless user has explicitly enabled them
-    if (name_struct->mDOMClassInfoID == eDOMClassInfo_WebSocket_id) {
+    if (name_struct->mDOMClassInfoID == eDOMClassInfo_MozWebSocket_id) {
       if (!nsWebSocket::PrefEnabled()) {
         return NS_OK;
       }
@@ -6697,6 +6689,10 @@ ContentWindowGetter(JSContext *cx, uintN argc, jsval *vp)
 
   return ::JS_GetProperty(cx, obj, "content", vp);
 }
+
+static JSNewResolveOp sOtherResolveFuncs[] = {
+  mozilla::dom::workers::ResolveWorkerClasses
+};
 
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -6923,6 +6919,16 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // with there.
   if (!(flags & JSRESOLVE_ASSIGNING)) {
     JSAutoRequest ar(cx);
+
+    // Resolve special classes.
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sOtherResolveFuncs); i++) {
+      if (!sOtherResolveFuncs[i](cx, obj, id, flags, objp)) {
+        return NS_ERROR_FAILURE;
+      }
+      if (*objp) {
+        return NS_OK;
+      }
+    }
 
     // Call GlobalResolve() after we call FindChildWithName() so
     // that named child frames will override external properties
