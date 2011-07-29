@@ -101,12 +101,18 @@ class NodeList : public NodeListBase {
 
     static js::Class sInterfaceClass;
 
+    struct Properties {
+        jsid &id;
+        JSPropertyOp getter;
+        JSStrictPropertyOp setter;
+    };
     struct Methods {
         jsid &id;
         JSNative native;
         uintN nargs;
     };
 
+    static Properties sProtoProperties[];
     static Methods sProtoMethods[];
 
     static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *callee);
@@ -119,7 +125,7 @@ class NodeList : public NodeListBase {
     static uint32 getProtoShape(JSObject *obj);
     static void setProtoShape(JSObject *obj, uint32 shape);
 
-    static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+    static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
     static JSBool item(JSContext *cx, uintN argc, jsval *vp);
     static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
