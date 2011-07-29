@@ -100,9 +100,9 @@ MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc, Kind
 }
 
 MBasicBlock *
-MBasicBlock::NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
+MBasicBlock::NewPendingLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 {
-    return MBasicBlock::New(gen, pred, entryPc, LOOP_HEADER);
+    return MBasicBlock::New(gen, pred, entryPc, PENDING_LOOP_HEADER);
 }
 
 MBasicBlock *
@@ -504,6 +504,9 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
     JS_ASSERT(pred->stackPosition_ == stackPosition_);
     JS_ASSERT(entrySnapshot()->stackDepth() == stackPosition_);
 
+    // We must be a pending loop header
+    JS_ASSERT(kind_ == PENDING_LOOP_HEADER);
+
     // Place minimal phi nodes by comparing the set of defintions at loop entry
     // with the loop exit. For each mismatching slot, we create a phi node, and
     // rewrite all uses of the entry definition to use the phi node instead.
@@ -579,6 +582,9 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             JS_ASSERT(successor->entrySnapshot()->getOperand(i) == phi);
         }
     }
+
+    // We are now a loop header proper
+    kind_ = LOOP_HEADER;
 
     return predecessors_.append(pred);
 }
