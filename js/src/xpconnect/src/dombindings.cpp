@@ -206,6 +206,11 @@ Class NodeList<nsINodeList>::sInterfaceClass = {
 };
 
 template<>
+NodeList<nsINodeList>::Properties NodeList<nsINodeList>::sProtoProperties[] = {
+    { s_length_id, length_getter, NULL }
+};
+
+template<>
 NodeList<nsINodeList>::Methods NodeList<nsINodeList>::sProtoMethods[] = {
     { s_item_id, &item, 1 }
 };
@@ -233,6 +238,11 @@ Class NodeList<nsIHTMLCollection>::sInterfaceClass = {
 template<>
 JSBool
 NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp);
+
+template<>
+NodeList<nsIHTMLCollection>::Properties NodeList<nsIHTMLCollection>::sProtoProperties[] = {
+    { s_length_id, length_getter, NULL }
+};
 
 template<>
 NodeList<nsIHTMLCollection>::Methods NodeList<nsIHTMLCollection>::sProtoMethods[] = {
@@ -322,14 +332,14 @@ WrapObject(JSContext *cx, JSObject *scope, nsISupports *result,
 
 template<class T>
 JSBool
-NodeList<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+NodeList<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (!instanceIsNodeListObject(cx, obj, NULL))
         return false;
     PRUint32 length;
     getNodeList(obj)->GetLength(&length);
     JS_ASSERT(int32(length) >= 0);
-    vp->setInt32(length);
+    *vp = UINT_TO_JSVAL(length);
     return true;
 }
 
@@ -506,10 +516,15 @@ NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *ena
     if (!interfacePrototype)
         return NULL;
 
-    if (!JS_DefinePropertyById(cx, interfacePrototype, s_length_id,
-                               JSVAL_VOID, length_getter, NULL,
-                               JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED))
-        return NULL;
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
+        jsid id = sProtoProperties[n].id;
+        uintN attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+        if (!sProtoProperties[n].setter)
+            attrs |= JSPROP_READONLY;
+        if (!JS_DefinePropertyById(cx, interfacePrototype, id, JSVAL_VOID,
+                                   sProtoProperties[n].getter, sProtoProperties[n].setter, attrs))
+            return NULL;
+    }
 
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
         jsid id = sProtoMethods[n].id;
@@ -525,9 +540,8 @@ NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *ena
 
     JSObject *interface = JS_NewObject(cx, Jsvalify(&sInterfaceClass), NULL, global);
     if (!interface ||
-        !JS_DefinePropertyById(cx, interface, s_prototype_id,
-                               OBJECT_TO_JSVAL(interfacePrototype), nsnull, nsnull,
-                               JSPROP_PERMANENT | JSPROP_READONLY))
+        !JS_DefinePropertyById(cx, interface, s_prototype_id, OBJECT_TO_JSVAL(interfacePrototype),
+                               nsnull, nsnull, JSPROP_PERMANENT | JSPROP_READONLY))
         return NULL;
 
     if (!JS_DefinePropertyById(cx, interfacePrototype, s_constructor_id,
@@ -813,10 +827,14 @@ bool
 NodeList<T>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
 {
     JSPropertyDescriptor desc;
-    if (!JS_GetPropertyDescriptorById(cx, proto, s_length_id, JSRESOLVE_QUALIFIED, &desc))
-        return false;
-    if (desc.obj != proto || desc.getter != length_getter)
-        return true; // don't cache
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
+        jsid id = sProtoProperties[n].id;
+        if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
+            return false;
+        if (desc.obj != proto || desc.getter != sProtoProperties[n].getter ||
+            desc.setter != sProtoProperties[n].setter)
+            return true; // don't cache
+    }
 
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
         jsid id = sProtoMethods[n].id;
@@ -856,12 +874,16 @@ NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Property
 {
     JS_ASSERT(WrapperFactory::IsXrayWrapper(proxy));
 
-    if (id == s_length_id) {
-        desc->attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED;
-        desc->obj = proxy;
-        desc->setter = nsnull;
-        desc->getter = length_getter;
-        return true;
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
+        if (id == sProtoProperties[n].id) {
+            desc->attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+            if (!sProtoProperties[n].setter)
+                desc->attrs |= JSPROP_READONLY;
+            desc->obj = proxy;
+            desc->setter = sProtoProperties[n].setter;
+            desc->getter = sProtoProperties[n].getter;
+            return true;
+        }
     }
 
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
