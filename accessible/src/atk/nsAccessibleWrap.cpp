@@ -826,21 +826,20 @@ getAttributesCB(AtkObject *aAtkObj)
 AtkObject *
 getParentCB(AtkObject *aAtkObj)
 {
-    if (!aAtkObj->accessible_parent) {
-        nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-        if (!accWrap) {
-            return nsnull;
-        }
+  if (!aAtkObj->accessible_parent) {
+    nsAccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+    if (!accWrap)
+      return nsnull;
 
-        nsAccessible* accParent = accWrap->GetParent();
-        if (!accParent)
-            return nsnull;
+    nsAccessible* accParent = accWrap->Parent();
+    if (!accParent)
+      return nsnull;
 
-        AtkObject *parent = nsAccessibleWrap::GetAtkObject(accParent);
-        if (parent)
-            atk_object_set_parent(aAtkObj, parent);
-    }
-    return aAtkObj->accessible_parent;
+    AtkObject* parent = nsAccessibleWrap::GetAtkObject(accParent);
+    if (parent)
+      atk_object_set_parent(aAtkObj, parent);
+  }
+  return aAtkObj->accessible_parent;
 }
 
 gint
@@ -893,10 +892,9 @@ getIndexInParentCB(AtkObject *aAtkObj)
         return -1;
     }
 
-    nsAccessible *parent = accWrap->GetParent();
-    if (!parent) {
+    nsAccessible* parent = accWrap->Parent();
+    if (!parent)
         return -1; // No parent
-    }
 
     return parent->GetIndexOfEmbeddedChild(accWrap);
 }

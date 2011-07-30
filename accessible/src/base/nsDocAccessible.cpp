@@ -581,7 +581,7 @@ nsDocAccessible::GetAccessible(nsINode* aNode) const
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  nsAccessible* parent(accessible->GetParent());
+  nsAccessible* parent = accessible->Parent();
   if (parent)
     parent->TestChildCache(accessible);
 #endif
@@ -1487,8 +1487,8 @@ nsDocAccessible::NotifyOfInitialUpdate()
   // a problem then consider to keep event processing per tab document.
   if (!IsRoot()) {
     nsRefPtr<AccEvent> reorderEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, GetParent(),
-                   eAutoDetect, AccEvent::eCoalesceFromSameSubtree);
+      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, Parent(), eAutoDetect,
+                   AccEvent::eCoalesceFromSameSubtree);
     ParentDocument()->FireDelayedAccessibleEvent(reorderEvent);
   }
 }
@@ -1817,7 +1817,7 @@ nsDocAccessible::UpdateTree(nsAccessible* aContainer, nsIContent* aChildNode,
       if (ancestor == this)
         break;
 
-      ancestor = ancestor->GetParent();
+      ancestor = ancestor->Parent();
     }
   }
 
@@ -1902,7 +1902,7 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aChild, bool aIsInsert)
     // The accessible parent may differ from container accessible if
     // the parent doesn't have own DOM node like list accessible for HTML
     // selects.
-    nsAccessible* parent = aChild->GetParent();
+    nsAccessible* parent = aChild->Parent();
     NS_ASSERTION(parent, "No accessible parent?!");
     if (parent)
       parent->RemoveChild(aChild);
