@@ -85,6 +85,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(InWorklist)                                                           \
     _(EmittedAtUses)                                                        \
     _(LoopInvariant)                                                        \
+    _(Commutative)                                                          \
     _(Idempotent) /* The instruction has no side-effects. */                \
     _(NeverHoisted) /* Don't hoist, even if loop invariant */
 
@@ -162,7 +163,6 @@ class MNode : public TempObject
         return kind() == Snapshot;
     }
     MBasicBlock *block() const {
-        JS_ASSERT(block_);
         return block_;
     }
 
@@ -249,6 +249,7 @@ class MDefinition : public MNode
 
     virtual HashNumber valueHash() const;
     virtual bool congruentTo(MDefinition* const &ins) const;
+    virtual MDefinition *foldsTo(bool useValueNumbers);
 
     MNode::Kind kind() const {
         return MNode::Definition;
@@ -313,6 +314,10 @@ class MDefinition : public MNode
 
     // Number of uses of this instruction.
     size_t useCount() const;
+
+    bool hasUses() const {
+        return !uses_.empty();
+    }
 
     virtual bool isControlInstruction() {
         return false;
@@ -765,6 +770,41 @@ class MBinaryInstruction : public MAryInstruction<2>
         initOperand(0, left);
         initOperand(1, right);
     }
+
+    HashNumber valueHash() const
+    {
+        MDefinition *lhs = getOperand(0);
+        MDefinition *rhs = getOperand(1);
+
+        return op() ^ lhs->valueNumber() ^ rhs->valueNumber();
+    }
+
+    bool congruentTo(MDefinition *const &ins) const
+    {
+        if (op() != ins->op())
+            return false;
+
+        MDefinition *left = getOperand(0);
+        MDefinition *right = getOperand(1);
+        MDefinition *tmp;
+
+        if (isCommutative() && left->valueNumber() > right->valueNumber()) {
+            tmp = right;
+            right = left;
+            left = tmp;
+        }
+
+        MDefinition *insLeft = ins->getOperand(0);
+        MDefinition *insRight = ins->getOperand(1);
+        if (isCommutative() && insLeft->valueNumber() > insRight->valueNumber()) {
+            tmp = insRight;
+            insRight = insLeft;
+            insLeft = tmp;
+        }
+
+        return (left->valueNumber() == insLeft->valueNumber()) &&
+               (right->valueNumber() == insRight->valueNumber());
+    }
 };
 
 // Wraps an SSA name in a new SSA name. This is used for correctness while
@@ -912,6 +952,7 @@ class MBitAnd : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitAnd);
     static MBitAnd *New(MDefinition *left, MDefinition *right);
+    MDefinition *foldsTo(bool useValueNumbers);
 };
 
 class MBitOr : public MBinaryBitwiseInstruction
@@ -923,6 +964,7 @@ class MBitOr : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitOr);
     static MBitOr *New(MDefinition *left, MDefinition *right);
+    MDefinition *foldsTo(bool useValueNumbers);
 };
 
 class MBitXor : public MBinaryBitwiseInstruction
@@ -934,6 +976,7 @@ class MBitXor : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitXor);
     static MBitXor *New(MDefinition *left, MDefinition *right);
+    MDefinition *foldsTo(bool useValueNumbers);
 };
 
 class MBinaryArithInstruction
@@ -967,6 +1010,7 @@ class MAdd : public MBinaryArithInstruction
     static MAdd *New(MDefinition *left, MDefinition *right) {
         return new MAdd(left, right);
     }
+    MDefinition *foldsTo(bool useValueNumbers);
 };
 
 class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
@@ -1008,6 +1052,8 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
         setResultType(type);
     }
     bool addInput(MDefinition *ins);
+
+    MDefinition *foldsTo(bool useValueNumbers);
 
     bool congruentTo(MDefinition * const &ins) const;
 };
