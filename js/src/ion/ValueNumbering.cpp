@@ -66,6 +66,38 @@ ValueNumberer::lookupValue(ValueMap &values, MDefinition *ins)
     return p->value;
 }
 
+MDefinition *
+ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
+{
+    if (!def->isIdempotent())
+        return def;
+
+    MDefinition *ins = def->foldsTo(useValueNumbers);
+
+    if (ins == def)
+        return def;
+
+    if (!ins->block()) {
+        // In this case, we made a new def by constant folding, for
+        // example, we replaced add(#3,#4) with a new const(#7) node.
+
+        // We will only fold a phi into one of its operands.
+        JS_ASSERT(!def->isPhi());
+
+        def->block()->insertAfter(def->toInstruction(), ins->toInstruction());
+    }
+
+    JS_ASSERT(ins->id() != 0);
+
+    def->replaceAllUsesWith(ins);
+
+    IonSpew(IonSpew_GVN, "Folding %d to be %d", def->id(), ins->id());
+    return ins;
+}
+
+
+
+
 bool
 ValueNumberer::computeValueNumbers()
 {
@@ -114,8 +146,13 @@ ValueNumberer::computeValueNumbers()
         changed = false;
 
         for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-            for (MDefinitionIterator iter(*block); iter; iter++) {
-                MDefinition *ins = *iter;
+            for (MDefinitionIterator iter(*block); iter; ) {
+                MDefinition *ins = simplify(*iter, false);
+
+                if (ins != *iter || !ins->hasUses()) {
+                    iter = block->removeDefAt(iter);
+                    continue;
+                }
 
                 uint32 value = lookupValue(values, ins);
 
@@ -123,11 +160,14 @@ ValueNumberer::computeValueNumbers()
                     return false; // Hashtable insertion failed
 
                 if (ins->valueNumber() != value) {
-                    IonSpew(IonSpew_GVN, "Broke congruence for instruction %d (%p) with VN %d (now using %d)",
+                    IonSpew(IonSpew_GVN,
+                            "Broke congruence for instruction %d (%p) with VN %d (now using %d)",
                             ins->id(), ins, ins->valueNumber(), value);
                     ins->setValueNumber(value);
                     changed = true;
                 }
+
+                iter++;
             }
         }
         values.clear();
@@ -213,9 +253,18 @@ ValueNumberer::eliminateRedundancies()
             if (!nodes.append(block->getImmediatelyDominatedBlock(i)))
                 return false;
         }
-        MDefinitionIterator i(block);
-        while (i) {
-            MDefinition *ins = *i;
+        for (MDefinitionIterator iter(block); iter; ) {
+            MDefinition *ins = simplify(*iter, true);
+
+            if (ins != *iter || !ins->hasUses()) {
+                iter = block->removeDefAt(iter);
+                continue;
+            }
+
+            if (!ins->isIdempotent()) {
+                iter++;
+                continue;
+            }
 
             MDefinition *dom = findDominatingDef(defs, ins, index);
 
@@ -223,7 +272,7 @@ ValueNumberer::eliminateRedundancies()
                 return false; // Insertion failed
 
             if (dom == ins) {
-                i++;
+                iter++;
                 continue;
             }
 
@@ -232,9 +281,9 @@ ValueNumberer::eliminateRedundancies()
 
             ins->replaceAllUsesWith(dom);
 
-            JS_ASSERT(ins->useCount() == 0);
+            JS_ASSERT(!ins->hasUses());
             JS_ASSERT(ins->block() == block);
-            i = ins->block()->removeDefAt(i);
+            iter = ins->block()->removeDefAt(iter);
         }
         index++;
     }

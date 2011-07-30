@@ -85,6 +85,8 @@ class ValueNumberer
 
     uint32 lookupValue(ValueMap &values, MDefinition *ins);
     MDefinition *findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index);
+
+    MDefinition *simplify(MDefinition *def, bool useValueNumbers);
     bool eliminateRedundancies();
 
     bool computeValueNumbers();
