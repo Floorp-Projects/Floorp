@@ -61,6 +61,15 @@ PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
         fprintf(fp, "%c", tolower(name[i]));
 }
 
+static inline bool
+EqualValues(bool useGVN, MDefinition *left, MDefinition *right)
+{
+    if (useGVN)
+        return left->valueNumber() == right->valueNumber();
+
+    return left->id() == right->id();
+}
+
 void
 MDefinition::printName(FILE *fp)
 {
@@ -98,6 +107,14 @@ MDefinition::congruentTo(MDefinition * const &ins) const
 
     return true;
 }
+
+MDefinition *
+MDefinition::foldsTo(bool useValueNumbers)
+{
+    // In the default case, there are no constants to fold.
+    return this;
+}
+
 static const char *MirTypeNames[] =
 {
     "",
@@ -340,6 +357,22 @@ MPhi::New(uint32 slot)
     return new MPhi(slot);
 }
 
+MDefinition *
+MPhi::foldsTo(bool useValueNumbers)
+{
+    JS_ASSERT(inputs_.length() != 0);
+
+    MDefinition *first = getOperand(0);
+
+    for (size_t i = 1; i < inputs_.length(); i++) {
+        if (!EqualValues(useValueNumbers, getOperand(i), first))
+            return this;
+    }
+
+    return first;
+}
+
+
 bool
 MPhi::congruentTo(MDefinition *const &ins) const
 {
@@ -375,6 +408,7 @@ MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
     else {
         specialization_ = MIRType_Int32;
         setIdempotent();
+        setCommutative();
     }
 }
 
@@ -384,10 +418,12 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
     if (b.lhs == MIRType_Int32 && b.rhs == MIRType_Int32) {
         specialization_ = MIRType_Int32;
         setIdempotent();
+        setCommutative();
         setResultType(specialization_);
     } else if (b.lhs == MIRType_Double && b.rhs == MIRType_Double) {
         specialization_ = MIRType_Double;
         setIdempotent();
+        setCommutative();
         setResultType(specialization_);
     } else if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
         specialization_ = MIRType_Any;
@@ -406,16 +442,139 @@ MBitAnd::New(MDefinition *left, MDefinition *right)
     return new MBitAnd(left, right);
 }
 
+static inline int32
+ToInt32(MDefinition *def)
+{
+    JS_ASSERT(def->isConstant());
+    return def->toConstant()->value().toInt32();
+}
+
+static inline double
+ToDouble(MDefinition *def)
+{
+    JS_ASSERT(def->isConstant());
+    return def->toConstant()->value().toDouble();
+}
+
+MDefinition *
+MBitAnd::foldsTo(bool useValueNumbers)
+{
+    if (specialization_ != MIRType_Int32)
+        return this;
+
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+
+    if (lhs->isConstant() && rhs->isConstant()) {
+        js::Value v = Int32Value(ToInt32(lhs) & ToInt32(rhs));
+        return MConstant::New(v);
+    }
+
+    if (lhs->isConstant() && lhs->toConstant()->value() == Int32Value(0))
+        return lhs; // 0 & x => 0
+
+    if (rhs->isConstant() && rhs->toConstant()->value() == Int32Value(0))
+        return rhs; // x & 0 => 0
+
+    if (EqualValues(useValueNumbers, lhs, rhs))
+        return lhs;
+    return this;
+}
+
+
 MBitOr *
 MBitOr::New(MDefinition *left, MDefinition *right)
 {
     return new MBitOr(left, right);
 }
 
+MDefinition *
+MBitOr::foldsTo(bool useValueNumbers)
+{
+    if (specialization_ != MIRType_Int32)
+        return this;
+
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+
+    if (lhs->isConstant() && rhs->isConstant()) {
+        js::Value v = Int32Value(ToInt32(lhs) | ToInt32(rhs));
+        return MConstant::New(v);
+    }
+
+    if (lhs->isConstant() && lhs->toConstant()->value() == Int32Value(0))
+        return rhs; // 0 | x => x
+
+    if (rhs->isConstant() && rhs->toConstant()->value() == Int32Value(0))
+        return lhs; // x | 0 => x
+
+    if (EqualValues(useValueNumbers, lhs, rhs))
+        return lhs; // x | x => x
+
+    return this;
+}
+
 MBitXor *
 MBitXor::New(MDefinition *left, MDefinition *right)
 {
     return new MBitXor(left, right);
+}
+
+MDefinition *
+MBitXor::foldsTo(bool useValueNumbers)
+{
+    if (specialization_ != MIRType_Int32)
+        return this;
+
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+
+    if (lhs->isConstant() && rhs->isConstant()) {
+        js::Value v = Int32Value(ToInt32(lhs) ^ ToInt32(rhs));
+        return MConstant::New(v);
+    }
+
+    if (lhs->isConstant() && lhs->toConstant()->value() == Int32Value(0))
+        return rhs; // 0 ^ x => x
+
+    if (rhs->isConstant() && rhs->toConstant()->value() == Int32Value(0))
+        return lhs; // x ^ 0 => x
+
+    if (EqualValues(useValueNumbers, lhs, rhs))
+        return MConstant::New(Int32Value(0)); // x ^ x => x
+
+    return this;
+}
+
+
+MDefinition *
+MAdd::foldsTo(bool useValueNumbers)
+{
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+    js::Value val;
+    if (specialization_ == MIRType_Int32) {
+        if (lhs->isConstant() && rhs->isConstant()) {
+            val = Int32Value(ToInt32(lhs) + ToInt32(rhs));
+            return MConstant::New(val);
+        }
+        val = Int32Value(0);
+    } else if (specialization_ == MIRType_Double) {
+        if (lhs->isConstant() && rhs->isConstant()) {
+            val = DoubleValue (ToDouble(lhs) + ToDouble(rhs));
+            return MConstant::New(val);
+        }
+        val = DoubleValue(0.0);
+    } else {
+        return this; // No specialization
+    }
+
+    if (lhs->isConstant() && lhs->toConstant()->value() == val)
+        return rhs; // 0 + x => x
+    if (rhs->isConstant() && rhs->toConstant()->value() == val)
+        return lhs; // x + 0 => x
+
+    return this;
 }
 
 MSnapshot *
