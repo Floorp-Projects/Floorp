@@ -547,6 +547,7 @@ LinearScanAllocator::allocateRegisters()
 
         // Check the allocation policy if this is a definition or a use
         bool mustHaveRegister = false;
+        bool canSpillOthers = true;
         if (position == current->reg()->getFirstInterval()->start()) {
             JS_ASSERT(position.subpos() == CodePosition::OUTPUT);
 
@@ -571,10 +572,16 @@ LinearScanAllocator::allocateRegisters()
                     return false;
                 continue;
             }
-            if (policy == LDefinition::DEFAULT)
-                mustHaveRegister = !current->reg()->ins()->isPhi();
-            else
+            if (policy == LDefinition::DEFAULT) {
+                if (current->reg()->ins()->isPhi()) {
+                    mustHaveRegister = false;
+                    canSpillOthers = false;
+                } else {
+                    mustHaveRegister = true;
+                }
+            } else {
                 JS_ASSERT(policy == LDefinition::REDEFINED);
+            }
         } else if (position.subpos() == CodePosition::INPUT) {
             // Scan uses for any at the current instruction
             LOperand *fixedOp = NULL;
@@ -638,8 +645,16 @@ LinearScanAllocator::allocateRegisters()
             continue;
         }
 
-        // We need to allocate a blocked register
         IonSpew(IonSpew_LSRA, "  Unable to allocate free register");
+
+        // We may need to allocate a blocked register
+        if (!canSpillOthers) {
+            IonSpew(IonSpew_LSRA, " Can't spill any other intervals, spilling this one");
+            if (!spill())
+                return false;
+            continue;
+        }
+
         IonSpew(IonSpew_LSRA, " Attempting blocked register allocation");
 
         // Find the best register
@@ -1137,6 +1152,7 @@ LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
 {
     VirtualRegister *vreg = &vregs[pos];
     JS_ASSERT(vreg->ins());
+    JS_ASSERT(!vreg->ins()->isPhi());
 
     LMoveGroup *moves;
     switch (pos.subpos()) {
