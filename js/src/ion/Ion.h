@@ -76,7 +76,7 @@ struct IonOptions
     // Toggles whether Linear Scan Register Allocation is used. If LSRA is not
     // used, then Greedy Register Allocation is used instead.
     //
-    // Default: false
+    // Default: true
     bool lsra;
 
     IonOptions()
@@ -84,7 +84,7 @@ struct IonOptions
         gvn(true),
         gvnIsOptimistic(true),
         licm(true),
-        lsra(false)
+        lsra(true)
     { }
 };
 
