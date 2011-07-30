@@ -239,7 +239,7 @@ public:
         mHave_EGL_KHR_image_pixmap = PR_FALSE;
         mHave_EGL_KHR_gl_texture_2D_image = PR_FALSE;
         mHave_EGL_KHR_lock_surface = PR_FALSE;
-        mHave_EGL_ANGLE_surface_d3d_share_handle = PR_FALSE;
+        mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle = PR_FALSE;
     }
 
     typedef EGLDisplay (GLAPIENTRY * pfnGetDisplay)(void *display_id);
@@ -482,7 +482,7 @@ public:
             mHave_EGL_KHR_gl_texture_2D_image = PR_FALSE;
         }
 
-        if (strstr(extensions, "EGL_ANGLE_surface_d3d_share_handle")) {
+        if (strstr(extensions, "EGL_ANGLE_surface_d3d_texture_2d_share_handle")) {
             LibrarySymbolLoader::SymLoadStruct d3dSymbols[] = {
                 { (PRFuncPtr*) &fQuerySurfacePointerANGLE, { "eglQuerySurfacePointerANGLE", NULL } },
                 { NULL, { NULL } }
@@ -491,7 +491,7 @@ public:
             LibrarySymbolLoader::LoadSymbols(mEGLLibrary, &d3dSymbols[0],
                                              (LibrarySymbolLoader::PlatformLookupFunction)fGetProcAddress);
             if (fQuerySurfacePointerANGLE) {
-                mHave_EGL_ANGLE_surface_d3d_share_handle = PR_TRUE;
+                mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle = PR_TRUE;
             }
         }
 
@@ -524,8 +524,8 @@ public:
         return mHave_EGL_KHR_lock_surface;
     }
 
-    PRBool HasANGLESurfaceD3DShareHandle() {
-        return mHave_EGL_ANGLE_surface_d3d_share_handle;
+    PRBool HasANGLESurfaceD3DTexture2DShareHandle() {
+        return mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle;
     }
 
     void
@@ -607,7 +607,7 @@ private:
     PRPackedBool mHave_EGL_KHR_image_pixmap;
     PRPackedBool mHave_EGL_KHR_gl_texture_2D_image;
     PRPackedBool mHave_EGL_KHR_lock_surface;
-    PRPackedBool mHave_EGL_ANGLE_surface_d3d_share_handle;
+    PRPackedBool mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle;
 } sEGLLibrary;
 
 class GLContextEGL : public GLContext
@@ -898,7 +898,7 @@ public:
     }
 
     void *GetD3DShareHandle() {
-        if (!sEGLLibrary.HasANGLESurfaceD3DShareHandle()) {
+        if (!sEGLLibrary.HasANGLESurfaceD3DTexture2DShareHandle()) {
             return nsnull;
         }
 

@@ -52,6 +52,7 @@
 #include "nsDOMError.h"
 #include "nsDisplayList.h"
 #include "nsSVGEffects.h"
+#include "VideoUtils.h"
 
 using namespace mozilla;
 
@@ -81,11 +82,13 @@ nsMediaDecoder::nsMediaDecoder() :
   mShuttingDown(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsMediaDecoder);
+  MediaMemoryReporter::AddMediaDecoder(this);
 }
 
 nsMediaDecoder::~nsMediaDecoder()
 {
   MOZ_COUNT_DTOR(nsMediaDecoder);
+  MediaMemoryReporter::RemoveMediaDecoder(this);
 }
 
 PRBool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
@@ -305,3 +308,37 @@ PRBool nsMediaDecoder::CanPlayThrough()
   return stats.mTotalBytes == stats.mDownloadPosition ||
          stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }
+
+namespace mozilla {
+
+MediaMemoryReporter* MediaMemoryReporter::sUniqueInstance;
+
+NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedVideoMemory,
+                             "explicit/media/decoded-video",
+                             KIND_HEAP,
+                             UNITS_BYTES,
+                             MediaMemoryReporter::GetDecodedVideoMemory,
+                             "Memory used by decoded video frames.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedAudioMemory,
+                             "explicit/media/decoded-audio",
+                             KIND_HEAP,
+                             UNITS_BYTES,
+                             MediaMemoryReporter::GetDecodedAudioMemory,
+                             "Memory used by decoded audio chunks.")
+
+MediaMemoryReporter::MediaMemoryReporter()
+  : mMediaDecodedVideoMemory(new NS_MEMORY_REPORTER_NAME(MediaDecodedVideoMemory))
+  , mMediaDecodedAudioMemory(new NS_MEMORY_REPORTER_NAME(MediaDecodedAudioMemory))
+{
+  NS_RegisterMemoryReporter(mMediaDecodedVideoMemory);
+  NS_RegisterMemoryReporter(mMediaDecodedAudioMemory);
+}
+
+MediaMemoryReporter::~MediaMemoryReporter()
+{
+  NS_UnregisterMemoryReporter(mMediaDecodedVideoMemory);
+  NS_UnregisterMemoryReporter(mMediaDecodedAudioMemory);
+}
+
+} // namespace mozilla

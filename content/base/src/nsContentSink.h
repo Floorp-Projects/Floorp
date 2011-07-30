@@ -407,9 +407,4 @@ protected:
   static PRBool sCanInterruptParser;
 };
 
-// sanitizing content sink whitelists
-extern PRBool IsAttrURI(nsIAtom *aName);
-extern nsIAtom** const kDefaultAllowedTags [];
-extern nsIAtom** const kDefaultAllowedAttributes [];
-
 #endif // _nsContentSink_h_

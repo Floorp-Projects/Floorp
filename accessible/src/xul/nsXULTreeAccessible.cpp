@@ -1225,7 +1225,7 @@ nsXULTreeColumnsAccessible::GetSiblingAtOffset(PRInt32 aOffset,
       PRInt32 rowCount = 0;
       treeView->GetRowCount(&rowCount);
       if (rowCount > 0 && aOffset <= rowCount) {
-        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(GetParent());
+        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(Parent());
 
         if (treeAcc)
           return treeAcc->GetTreeItemAccessible(aOffset - 1);

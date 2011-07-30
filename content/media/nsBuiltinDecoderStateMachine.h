@@ -228,6 +228,20 @@ public:
 
   nsresult GetBuffered(nsTimeRanges* aBuffered);
 
+  PRInt64 VideoQueueMemoryInUse() {
+    if (mReader) {
+      return mReader->VideoQueueMemoryInUse();
+    }
+    return 0;
+  }
+
+  PRInt64 AudioQueueMemoryInUse() {
+    if (mReader) {
+      return mReader->AudioQueueMemoryInUse();
+    }
+    return 0;
+  }
+
   void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     mReader->NotifyDataArrived(aBuffer, aLength, aOffset);

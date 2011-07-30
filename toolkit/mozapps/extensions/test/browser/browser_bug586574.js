@@ -10,6 +10,7 @@ var gManagerWindow;
 var gProvider;
 
 var gUtilsBtn;
+var gUtilsMenu;
 var gDropdownMenu;
 var gSetDefault;
 var gResetToAutomatic;

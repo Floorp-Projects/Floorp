@@ -180,7 +180,7 @@ float4 SampleRadialGradientPS( VS_RADIAL_OUTPUT In) : SV_Target
 
     float4 output = tex.Sample(sSampler, float2(upper_t, 0.5));
     // Premultiply
-    output *= output.a;
+    output.rgb *= output.a;
     // Multiply the output color by the input mask for the operation.
     output *= mask.Sample(sMaskSampler, In.MaskTexCoord).a;
     return output;
@@ -207,7 +207,7 @@ float4 SampleRadialGradientA0PS( VS_RADIAL_OUTPUT In) : SV_Target
 
     float4 output = tex.Sample(sSampler, float2(t, 0.5));
     // Premultiply
-    output *= output.a;
+    output.rgb *= output.a;
     // Multiply the output color by the input mask for the operation.
     output *= mask.Sample(sMaskSampler, In.MaskTexCoord).a;
     return output;
