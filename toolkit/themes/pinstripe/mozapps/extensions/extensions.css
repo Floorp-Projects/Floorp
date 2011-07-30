@@ -1098,6 +1098,10 @@ setting[type="color"] colorpicker[type="button"] {
   text-shadow: @loweredShadow@;
 }
 
+setting[type="radio"] > radiogroup {
+  -moz-box-orient: horizontal;
+}
+
 .addon-control[disabled="true"] {
   display: none;
 }

@@ -42,6 +42,13 @@ function test() {
     optionsURL: CHROMEROOT + "options.xul",
     optionsType: AddonManager.OPTIONS_TYPE_INLINE
   },{
+    id: "inlinesettings3@tests.mozilla.org",
+    name: "Inline Settings (More Options)",
+    description: "Tests for option types introduced after Mozilla 7.0",
+    version: "1",
+    optionsURL: CHROMEROOT + "more_options.xul",
+    optionsType: AddonManager.OPTIONS_TYPE_INLINE
+  },{
     id: "noninlinesettings@tests.mozilla.org",
     name: "Non-Inline Settings",
     version: "1",
@@ -70,6 +77,9 @@ function end_test() {
   Services.prefs.clearUserPref("extensions.inlinesettings1.color");
   Services.prefs.clearUserPref("extensions.inlinesettings1.file");
   Services.prefs.clearUserPref("extensions.inlinesettings1.directory");
+  Services.prefs.clearUserPref("extensions.inlinesettings3.radioBool");
+  Services.prefs.clearUserPref("extensions.inlinesettings3.radioInt");
+  Services.prefs.clearUserPref("extensions.inlinesettings3.radioString");
 
   close_manager(gManagerWindow, function() {
     AddonManager.getAddonByID("inlinesettings1@tests.mozilla.org", function(aAddon) {
@@ -252,6 +262,63 @@ add_test(function() {
 
       gCategoryUtilities.openType("extension", run_next_test);
     }
+  });
+});
+
+// Tests for the setting.xml bindings introduced after Mozilla 7
+add_test(function() {
+  var addon = get_addon_element(gManagerWindow, "inlinesettings3@tests.mozilla.org");
+  addon.parentNode.ensureElementIsVisible(addon);
+
+  var button = gManagerWindow.document.getAnonymousElementByAttribute(addon, "anonid", "preferences-btn");
+  EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+
+  wait_for_view_load(gManagerWindow, function() {
+    is(observer.lastData, "inlinesettings3@tests.mozilla.org", "Observer notification should have fired");
+
+    var grid = gManagerWindow.document.getElementById("detail-grid");
+    var settings = grid.querySelectorAll("rows > setting");
+    is(settings.length, 3, "Grid should have settings children");
+
+    // Force bindings to apply
+    settings[0].clientTop;
+
+    ok(settings[0].hasAttribute("first-row"), "First visible row should have first-row attribute");
+    Services.prefs.setBoolPref("extensions.inlinesettings3.radioBool", false);
+    var radios = settings[0].getElementsByTagName("radio");
+    isnot(radios[0].selected, true, "Correct radio button should be selected");
+    is(radios[1].selected, true, "Correct radio button should be selected");
+    EventUtils.synthesizeMouseAtCenter(radios[0], { clickCount: 1 }, gManagerWindow);
+    is(Services.prefs.getBoolPref("extensions.inlinesettings3.radioBool"), true, "Radio pref should have been updated");
+    EventUtils.synthesizeMouseAtCenter(radios[1], { clickCount: 1 }, gManagerWindow);
+    is(Services.prefs.getBoolPref("extensions.inlinesettings3.radioBool"), false, "Radio pref should have been updated");
+
+    ok(!settings[1].hasAttribute("first-row"), "Not the first row");
+    Services.prefs.setIntPref("extensions.inlinesettings3.radioInt", 5);
+    var radios = settings[1].getElementsByTagName("radio");
+    isnot(radios[0].selected, true, "Correct radio button should be selected");
+    is(radios[1].selected, true, "Correct radio button should be selected");
+    isnot(radios[2].selected, true, "Correct radio button should be selected");
+    EventUtils.synthesizeMouseAtCenter(radios[0], { clickCount: 1 }, gManagerWindow);
+    is(Services.prefs.getIntPref("extensions.inlinesettings3.radioInt"), 4, "Radio pref should have been updated");
+    EventUtils.synthesizeMouseAtCenter(radios[2], { clickCount: 1 }, gManagerWindow);
+    is(Services.prefs.getIntPref("extensions.inlinesettings3.radioInt"), 6, "Radio pref should have been updated");
+
+    ok(!settings[2].hasAttribute("first-row"), "Not the first row");
+    Services.prefs.setCharPref("extensions.inlinesettings3.radioString", "juliet");
+    var radios = settings[2].getElementsByTagName("radio");
+    isnot(radios[0].selected, true, "Correct radio button should be selected");
+    is(radios[1].selected, true, "Correct radio button should be selected");
+    isnot(radios[2].selected, true, "Correct radio button should be selected");
+    EventUtils.synthesizeMouseAtCenter(radios[0], { clickCount: 1 }, gManagerWindow);
+    is(Services.prefs.getCharPref("extensions.inlinesettings3.radioString"), "india", "Radio pref should have been updated");
+    EventUtils.synthesizeMouseAtCenter(radios[2], { clickCount: 1 }, gManagerWindow);
+    is(Services.prefs.getCharPref("extensions.inlinesettings3.radioString"), "kilo", "Radio pref should have been updated");
+
+    button = gManagerWindow.document.getElementById("detail-prefs-btn");
+    is_element_hidden(button, "Preferences button should not be visible");
+
+    gCategoryUtilities.openType("extension", run_next_test);
   });
 });
 

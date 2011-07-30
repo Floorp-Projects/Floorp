@@ -1120,6 +1120,10 @@ setting:not([type="integer"]) button > .button-box {
   padding: 1px;
 }
 
+setting[type="radio"] > radiogroup {
+  -moz-box-orient: horizontal;
+}
+
 .addon-control[disabled="true"] {
   display: none;
 }
