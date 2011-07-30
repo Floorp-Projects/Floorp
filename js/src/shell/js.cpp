@@ -6026,8 +6026,8 @@ main(int argc, char **argv, char **envp)
                                "Loop invariant code motion (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
-                               "  greedy: Greedy register allocation (default)\n"
-                               "  lsra: Linear Scan register allocation")
+                               "  greedy: Greedy register allocation\n"
+                               "  lsra: Linear Scan register allocation (default)")
 #endif
     )
     {
