@@ -214,7 +214,7 @@ __try {
     }
   }
 
-  nsAccessible* xpParentAcc = GetParent();
+  nsAccessible* xpParentAcc = Parent();
   if (!xpParentAcc) {
     if (IsApplication())
       return S_OK;
@@ -374,7 +374,7 @@ __try {
   // a ROLE_OUTLINEITEM for consistency and compatibility.
   // We need this because ARIA has a role of "row" for both grid and treegrid
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    nsAccessible* xpParent = GetParent();
+    nsAccessible* xpParent = Parent();
     if (xpParent && xpParent->Role() == nsIAccessibleRole::ROLE_TREE_TABLE)
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
   }
@@ -1160,7 +1160,7 @@ __try {
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    nsAccessible* xpParent = GetParent();
+    nsAccessible* xpParent = Parent();
     if (xpParent && xpParent->Role() == nsIAccessibleRole::ROLE_TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
@@ -1768,12 +1768,12 @@ nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 
       // Check whether the accessible for the given ID is a child of ARIA
       // document.
-      nsAccessible* parent = child ? child->GetParent() : nsnull;
+      nsAccessible* parent = child ? child->Parent() : nsnull;
       while (parent && parent != document) {
         if (parent == this)
           return child;
 
-        parent = parent->GetParent();
+        parent = parent->Parent();
       }
     }
 

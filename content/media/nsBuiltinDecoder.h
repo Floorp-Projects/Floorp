@@ -327,6 +327,9 @@ public:
 
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
 
+  virtual PRInt64 VideoQueueMemoryInUse() = 0;
+  virtual PRInt64 AudioQueueMemoryInUse() = 0;
+
   virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
 
   // Causes the state machine to switch to buffering state, and to
@@ -469,6 +472,20 @@ class nsBuiltinDecoder : public nsMediaDecoder
       return mDecoderStateMachine->GetBuffered(aBuffered);
     }
     return NS_ERROR_FAILURE;
+  }
+
+  virtual PRInt64 VideoQueueMemoryInUse() {
+    if (mDecoderStateMachine) {
+      return mDecoderStateMachine->VideoQueueMemoryInUse();
+    }
+    return 0;
+  }
+
+  virtual PRInt64 AudioQueueMemoryInUse() {
+    if (mDecoderStateMachine) {
+      return mDecoderStateMachine->AudioQueueMemoryInUse();
+    }
+    return 0;
   }
 
   virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {

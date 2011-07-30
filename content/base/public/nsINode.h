@@ -1103,6 +1103,26 @@ public:
    */
   nsIContent* GetNextNode(const nsINode* aRoot = nsnull) const
   {
+    return GetNextNodeImpl(aRoot, PR_FALSE);
+  }
+
+  /**
+   * Get the next node in the pre-order tree traversal of the DOM but ignoring
+   * the children of this node.  If aRoot is non-null, then it must be an
+   * ancestor of |this| (possibly equal to |this|) and only nodes that are
+   * descendants of aRoot, not including aRoot itself, will be returned.
+   * Returns null if there are no more nodes to traverse.
+   */
+  nsIContent* GetNextNonChildNode(const nsINode* aRoot = nsnull) const
+  {
+    return GetNextNodeImpl(aRoot, PR_TRUE);
+  }
+
+private:
+
+  nsIContent* GetNextNodeImpl(const nsINode* aRoot,
+                              const PRBool aSkipChildren) const
+  {
     // Can't use nsContentUtils::ContentIsDescendantOf here, since we
     // can't include it here.
 #ifdef DEBUG
@@ -1113,9 +1133,11 @@ public:
       NS_ASSERTION(cur, "aRoot not an ancestor of |this|?");
     }
 #endif
-    nsIContent* kid = GetFirstChild();
-    if (kid) {
-      return kid;
+    if (!aSkipChildren) {
+      nsIContent* kid = GetFirstChild();
+      if (kid) {
+        return kid;
+      }
     }
     if (this == aRoot) {
       return nsnull;
@@ -1134,6 +1156,8 @@ public:
     }
     NS_NOTREACHED("How did we get here?");
   }
+
+public:
 
   /**
    * Get the previous nsIContent in the pre-order tree traversal of the DOM.  If

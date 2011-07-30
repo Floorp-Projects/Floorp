@@ -421,8 +421,10 @@ NS_IMETHODIMP
 nsAccessible::GetParent(nsIAccessible **aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aParent = GetParent());
+  NS_IF_ADDREF(*aParent = Parent());
   return *aParent ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -729,7 +731,7 @@ nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
   }
   else if (gLastFocusedNode) {
     focusedChild = GetAccService()->GetAccessible(gLastFocusedNode);
-    if (focusedChild && focusedChild->GetParent() != this)
+    if (focusedChild && focusedChild->Parent() != this)
       focusedChild = nsnull;
   }
 
@@ -819,7 +821,7 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
   // ensure obtained accessible is a child of this accessible.
   nsAccessible* child = accessible;
   while (true) {
-    nsAccessible* parent = child->GetParent();
+    nsAccessible* parent = child->Parent();
     if (!parent) {
       // Reached the top of the hierarchy. These bounds were inside an
       // accessible that is not a descendant of this one.
@@ -2140,9 +2142,8 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
         nsIView *view = frame->GetViewExternal();
         if (view) {
           nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
-          if (scrollFrame || view->GetWidget() || !frame->GetParent()) {
-            return nsRelUtils::AddTarget(aRelationType, aRelation, GetParent());
-          }
+          if (scrollFrame || view->GetWidget() || !frame->GetParent())
+            return nsRelUtils::AddTarget(aRelationType, aRelation, Parent());
         }
       }
 
@@ -2615,7 +2616,7 @@ nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
 
   if (frame->GetType() == nsAccessibilityAtoms::brFrame) {
     aText += kForcedNewLineChar;
-  } else if (nsAccUtils::MustPrune(GetParent())) {
+  } else if (nsAccUtils::MustPrune(Parent())) {
     // Expose the embedded object accessible as imaginary embedded object
     // character if its parent hypertext accessible doesn't expose children to
     // AT.
@@ -3257,16 +3258,18 @@ nsAccessible::GetLevelInternal()
 {
   PRInt32 level = nsAccUtils::GetDefaultLevel(this);
 
-  PRUint32 role = Role();
-  nsAccessible* parent = GetParent();
+  if (!IsBoundToParent())
+    return level;
 
+  PRUint32 role = Role();
   if (role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
     // Always expose 'level' attribute for 'outlineitem' accessible. The number
     // of nested 'grouping' accessibles containing 'outlineitem' accessible is
     // its level.
     level = 1;
 
-    while (parent) {
+    nsAccessible* parent = this;
+    while ((parent = parent->Parent())) {
       PRUint32 parentRole = parent->Role();
 
       if (parentRole == nsIAccessibleRole::ROLE_OUTLINE)
@@ -3274,7 +3277,6 @@ nsAccessible::GetLevelInternal()
       if (parentRole == nsIAccessibleRole::ROLE_GROUPING)
         ++ level;
 
-      parent = parent->GetParent();
     }
 
   } else if (role == nsIAccessibleRole::ROLE_LISTITEM) {
@@ -3285,8 +3287,8 @@ nsAccessible::GetLevelInternal()
 
     // Calculate 'level' attribute based on number of parent listitems.
     level = 0;
-
-    while (parent) {
+    nsAccessible* parent = this;
+    while ((parent = parent->Parent())) {
       PRUint32 parentRole = parent->Role();
 
       if (parentRole == nsIAccessibleRole::ROLE_LISTITEM)
@@ -3294,23 +3296,20 @@ nsAccessible::GetLevelInternal()
       else if (parentRole != nsIAccessibleRole::ROLE_LIST)
         break;
 
-      parent = parent->GetParent();
     }
 
     if (level == 0) {
       // If this listitem is on top of nested lists then expose 'level'
       // attribute.
-      nsAccessible* parent(GetParent());
+      parent = Parent();
       PRInt32 siblingCount = parent->GetChildCount();
       for (PRInt32 siblingIdx = 0; siblingIdx < siblingCount; siblingIdx++) {
         nsAccessible* sibling = parent->GetChildAt(siblingIdx);
 
-        nsCOMPtr<nsIAccessible> siblingChild;
-        sibling->GetLastChild(getter_AddRefs(siblingChild));
-        if (nsAccUtils::Role(siblingChild) == nsIAccessibleRole::ROLE_LIST) {
-          level = 1;
-          break;
-        }
+        nsAccessible* siblingChild = sibling->LastChild();
+        if (siblingChild &&
+            siblingChild->Role() == nsIAccessibleRole::ROLE_LIST)
+          return 1;
       }
     } else {
       ++ level; // level is 1-index based
