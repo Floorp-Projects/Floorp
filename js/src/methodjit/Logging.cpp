@@ -128,6 +128,18 @@ js::JMCheckLogging()
         LoggingBits |= 0xFFFFFFFF ^ (1 << JSpew_PCProf);
 }
 
+js::ConditionalLog::ConditionalLog(bool logging)
+    : oldBits(LoggingBits), logging(logging)
+{
+    if (logging)
+        LoggingBits = 0xFFFFFFFF ^ (1 << JSpew_PCProf);
+}
+
+js::ConditionalLog::~ConditionalLog() {
+    if (logging)
+        LoggingBits = oldBits;
+}
+
 bool
 js::IsJaegerSpewChannelActive(JaegerSpewChannel channel)
 {
