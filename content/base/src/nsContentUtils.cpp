@@ -256,6 +256,12 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
 PRBool nsContentUtils::sAllowXULXBL_for_file = PR_FALSE;
 
+nsString* nsContentUtils::sShiftText = nsnull;
+nsString* nsContentUtils::sControlText = nsnull;
+nsString* nsContentUtils::sMetaText = nsnull;
+nsString* nsContentUtils::sAltText = nsnull;
+nsString* nsContentUtils::sModifierSeparator = nsnull;
+
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
 static PLDHashTable sEventListenerManagersHash;
@@ -380,6 +386,81 @@ nsContentUtils::Init()
   sInitialized = PR_TRUE;
 
   return NS_OK;
+}
+
+void
+nsContentUtils::GetShiftText(nsAString& text)
+{
+  if (!sShiftText)
+    InitializeModifierStrings();
+  text.Assign(*sShiftText);
+}
+
+void
+nsContentUtils::GetControlText(nsAString& text)
+{
+  if (!sControlText)
+    InitializeModifierStrings();
+  text.Assign(*sControlText);
+}
+
+void
+nsContentUtils::GetMetaText(nsAString& text)
+{
+  if (!sMetaText)
+    InitializeModifierStrings();
+  text.Assign(*sMetaText);
+}
+
+void
+nsContentUtils::GetAltText(nsAString& text)
+{
+  if (!sAltText)
+    InitializeModifierStrings();
+  text.Assign(*sAltText);
+}
+
+void
+nsContentUtils::GetModifierSeparatorText(nsAString& text)
+{
+  if (!sModifierSeparator)
+    InitializeModifierStrings();
+  text.Assign(*sModifierSeparator);
+}
+
+void
+nsContentUtils::InitializeModifierStrings()
+{
+  //load the display strings for the keyboard accelerators
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    mozilla::services::GetStringBundleService();
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = NS_OK;
+  if (bundleService) {
+    rv = bundleService->CreateBundle( "chrome://global-platform/locale/platformKeys.properties",
+                                      getter_AddRefs(bundle));
+  }
+  
+  NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/platformKeys.properties could not be loaded");
+  nsXPIDLString shiftModifier;
+  nsXPIDLString metaModifier;
+  nsXPIDLString altModifier;
+  nsXPIDLString controlModifier;
+  nsXPIDLString modifierSeparator;
+  if (bundle) {
+    //macs use symbols for each modifier key, so fetch each from the bundle, which also covers i18n
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_SHIFT").get(), getter_Copies(shiftModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_META").get(), getter_Copies(metaModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_ALT").get(), getter_Copies(altModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_CONTROL").get(), getter_Copies(controlModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), getter_Copies(modifierSeparator));
+  }
+  //if any of these don't exist, we get  an empty string
+  sShiftText = new nsString(shiftModifier);
+  sMetaText = new nsString(metaModifier);
+  sAltText = new nsString(altModifier);
+  sControlText = new nsString(controlModifier);
+  sModifierSeparator = new nsString(modifierSeparator);  
 }
 
 bool nsContentUtils::sImgLoaderInitialized;
@@ -1145,6 +1226,17 @@ nsContentUtils::Shutdown()
                "How'd this happen?");
   delete sBlockedScriptRunners;
   sBlockedScriptRunners = nsnull;
+
+  delete sShiftText;
+  sShiftText = nsnull;
+  delete sControlText;  
+  sControlText = nsnull;
+  delete sMetaText;  
+  sMetaText = nsnull;
+  delete sAltText;  
+  sAltText = nsnull;
+  delete sModifierSeparator;
+  sModifierSeparator = nsnull;
 
   NS_IF_RELEASE(sSameOriginChecker);
   
