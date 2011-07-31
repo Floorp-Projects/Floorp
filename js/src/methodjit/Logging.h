@@ -78,6 +78,13 @@ enum JaegerSpewChannel {
 
 void JMCheckLogging();
 
+struct ConditionalLog {
+    uint32 oldBits;
+    bool logging;
+    ConditionalLog(bool logging);
+    ~ConditionalLog();
+};
+
 bool IsJaegerSpewChannelActive(JaegerSpewChannel channel);
 void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...);
 
