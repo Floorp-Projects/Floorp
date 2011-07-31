@@ -1063,7 +1063,7 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransf
   }
 
   gfxFloat y = (textPath || yCount <= 1) ? aPosition->y : yList[yCount - 1];
-  aPosition->MoveTo(x, y - GetBaselineOffset(metricsScale));
+  aPosition->MoveTo(x, y);
 
   gfxFloat pathScale = 1.0;
   if (textPath)
