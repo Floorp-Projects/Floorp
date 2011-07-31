@@ -463,6 +463,21 @@ nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
 
 NS_IMPL_STRING_ATTR(nsGenericHTMLElement, AccessKey, accesskey)
 
+NS_IMETHODIMP
+nsGenericHTMLElement::GetAccessKeyLabel(nsAString& aLabel)
+{
+  nsPresContext *presContext = GetPresContext();
+
+  if (presContext &&
+    presContext->EventStateManager()->GetAccessKeyLabelPrefix(aLabel)) {
+      nsAutoString suffix;
+      GetAccessKey(suffix);
+      aLabel.Append(suffix);
+  }
+
+  return NS_OK;
+}
+
 static PRBool
 IsBody(nsIContent *aContent)
 {
