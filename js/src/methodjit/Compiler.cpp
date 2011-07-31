@@ -5519,7 +5519,7 @@ mjit::Compiler::iterNext(ptrdiff_t offset)
 
     stubcc.leave();
     stubcc.masm.move(Imm32(offset), Registers::ArgReg1);
-    OOL_STUBCALL(stubs::IterNext, REJOIN_NONE);
+    OOL_STUBCALL(stubs::IterNext, REJOIN_FALLTHROUGH);
 
     frame.pushUntypedPayload(JSVAL_TYPE_STRING, T3);
 
