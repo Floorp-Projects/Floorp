@@ -61,6 +61,7 @@ class JSONSpewer
     void beginObject();
     void beginObjectProperty(const char *name);
     void beginListProperty(const char *name);
+    void stringValue(const char *format, ...);
     void stringProperty(const char *name, const char *format, ...);
     void integerValue(int value);
     void integerProperty(const char *name, int value);
