@@ -1009,10 +1009,10 @@ TypeSet::addType(JSContext *cx, Type type)
             return;
         *pentry = object;
 
-        if (objectCount > TYPE_FLAG_OBJECT_COUNT_LIMIT)
-            goto unknownObject;
-
         setBaseObjectCount(objectCount);
+
+        if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT)
+            goto unknownObject;
 
         if (type.isTypeObject()) {
             TypeObject *nobject = type.typeObject();
@@ -1178,15 +1178,15 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
         return NULL;
 
     if (!*pprop) {
-        if (propertyCount > OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
+        setBasePropertyCount(propertyCount);
+        if (!addProperty(cx, id, pprop))
+            return NULL;
+        if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
             markUnknown(cx);
             TypeSet *types = TypeSet::make(cx, "propertyOverflow");
             types->addType(cx, Type::UnknownType());
             return types;
         }
-        setBasePropertyCount(propertyCount);
-        if (!addProperty(cx, id, pprop))
-            return NULL;
     }
 
     TypeSet *types = &(*pprop)->types;
