@@ -1664,6 +1664,12 @@ public:
    */
   static PRBool IsFocusedContent(const nsIContent *aContent);
 
+  static void GetShiftText(nsAString& text);
+  static void GetControlText(nsAString& text);
+  static void GetMetaText(nsAString& text);
+  static void GetAltText(nsAString& text);
+  static void GetModifierSeparatorText(nsAString& text);
+
   /**
    * Returns if aContent has a tabbable subdocument.
    * A sub document isn't tabbable when it's a zombie document.
@@ -1750,6 +1756,8 @@ private:
                              nsIXPConnectJSObjectHolder** aHolder,
                              PRBool aAllowWrapping);
 
+  static void InitializeModifierStrings();
+
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
   static nsIXPConnect *sXPConnect;
@@ -1812,6 +1820,12 @@ private:
 
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
+
+  static nsString* sShiftText;
+  static nsString* sControlText;
+  static nsString* sMetaText;
+  static nsString* sAltText;
+  static nsString* sModifierSeparator;
 };
 
 #define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \
