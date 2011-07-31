@@ -65,7 +65,7 @@ CPPSRCS = \
   testExternalStrings.cpp \
   testFuncCallback.cpp \
   testFunctionProperties.cpp \
-  testGCChunkAlloc.cpp \
+  testGCOutOfMemory.cpp \
   testGetPropertyDefault.cpp \
   testIndexToString.cpp \
   testIntString.cpp \
