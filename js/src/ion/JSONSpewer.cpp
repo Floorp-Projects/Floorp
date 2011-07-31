@@ -117,6 +117,25 @@ JSONSpewer::stringProperty(const char *name, const char *format, ...)
 }
 
 void
+JSONSpewer::stringValue(const char *format, ...)
+{
+    if (!fp_)
+        return;
+
+    va_list ap;
+    va_start(ap, format);
+
+    if (!first_)
+        fprintf(fp_, ",");
+    fprintf(fp_, "\"");
+    vfprintf(fp_, format, ap);
+    fprintf(fp_, "\"");
+
+    va_end(ap);
+    first_ = false;
+}
+
+void
 JSONSpewer::integerProperty(const char *name, int value)
 {
     if (!fp_)
@@ -222,7 +241,15 @@ JSONSpewer::spewMIR(MIRGraph *mir)
     for (size_t bno = 0; bno < mir->numBlocks(); bno++) {
         MBasicBlock *block = mir->getBlock(bno);
         beginObject();
+
         integerProperty("number", bno);
+
+        beginListProperty("attributes");
+        if (block->isLoopBackedge())
+            stringValue("backedge");
+        if (block->isLoopHeader())
+            stringValue("loopheader");
+        endList();
 
         beginListProperty("predecessors");
         for (size_t i = 0; i < block->numPredecessors(); i++)
