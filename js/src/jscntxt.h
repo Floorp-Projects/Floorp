@@ -512,14 +512,6 @@ struct JSRuntime {
     volatile ptrdiff_t  gcMallocBytes;
 
   public:
-    js::GCChunkAllocator    *gcChunkAllocator;
-
-    void setCustomGCChunkAllocator(js::GCChunkAllocator *allocator) {
-        JS_ASSERT(allocator);
-        JS_ASSERT(state == JSRTS_DOWN);
-        gcChunkAllocator = allocator;
-    }
-
     /*
      * The trace operation and its data argument to trace embedding-specific
      * GC roots.
