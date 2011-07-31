@@ -874,6 +874,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
 // append aFontName to aClosure string array, if not already present
 PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
+                                     PRBool aUseFontSet,
                                      void *aClosure)
 {
     nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(aClosure);
