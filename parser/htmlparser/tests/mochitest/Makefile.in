@@ -72,6 +72,7 @@ _TEST_FILES =	parser_datreader.js \
 		invalidchar.xml \
 		file_bug534293.sjs \
 		file_bug534293-slow.sjs \
+		test_bug563322.xhtml \
 		test_bug594730.html \
 		file_bug594730-1.html \
 		file_bug594730-2.html \
