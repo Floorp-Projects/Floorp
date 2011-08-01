@@ -80,6 +80,8 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsINode.h"
 #include "nsHashtable.h"
 #include "nsIDOMNode.h"
+#include "nsAHtml5FragmentParser.h"
+#include "nsIFragmentContentSink.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -1037,14 +1039,43 @@ public:
    *
    * @param aContextNode the node which is used to resolve namespaces
    * @param aFragment the string which is parsed to a DocumentFragment
-   * @param aWillOwnFragment is PR_TRUE if ownership of the fragment should be
-   *                         transferred to the caller.
-   * @param aReturn [out] the created DocumentFragment
+   * @param aReturn the resulting fragment
    */
   static nsresult CreateContextualFragment(nsINode* aContextNode,
                                            const nsAString& aFragment,
-                                           PRBool aWillOwnFragment,
                                            nsIDOMDocumentFragment** aReturn);
+
+  /**
+   * Invoke the fragment parsing algorithm (innerHTML) using the HTML parser.
+   *
+   * @param aSourceBuffer the string being set as innerHTML
+   * @param aTargetNode the target container
+   * @param aContextLocalName local name of context node
+   * @param aContextNamespace namespace of context node
+   * @param aQuirks true to make <table> not close <p>
+   * @param aPreventScriptExecution true to prevent scripts from executing;
+   *        don't set to false when parsing into a target node that has been
+   *        bound to tree.
+   */
+  static void ParseFragmentHTML(const nsAString& aSourceBuffer,
+                                nsIContent* aTargetNode,
+                                nsIAtom* aContextLocalName,
+                                PRInt32 aContextNamespace,
+                                PRBool aQuirks,
+                                PRBool aPreventScriptExecution);
+
+  /**
+   * Invoke the fragment parsing algorithm (innerHTML) using the XML parser.
+   *
+   * @param aSourceBuffer the string being set as innerHTML
+   * @param aTargetNode the target container
+   * @param aTagStack the namespace mapping context
+   * @param aReturn the result fragment
+   */
+  static nsresult ParseFragmentXML(const nsAString& aSourceBuffer,
+                                   nsIDocument* aDocument,
+                                   nsTArray<nsString>& aTagStack,
+                                   nsIDOMDocumentFragment** aReturn);
 
   /**
    * Creates a new XML document, which is marked to be loaded as data.
@@ -1694,6 +1725,11 @@ public:
    */
   static bool AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal);
 
+  /**
+   * Perform cleanup that's appropriate for XPCOM shutdown.
+   */
+  static void XPCOMShutdown();
+
   enum ContentViewerType
   {
       TYPE_UNSUPPORTED,
@@ -1758,6 +1794,8 @@ private:
 
   static void InitializeModifierStrings();
 
+  static void DropFragmentParsers();
+
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
   static nsIXPConnect *sXPConnect;
@@ -1820,6 +1858,10 @@ private:
 
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
+
+  static nsAHtml5FragmentParser* sHTMLFragmentParser;
+  static nsIParser* sXMLFragmentParser;
+  static nsIFragmentContentSink* sXMLFragmentSink;
 
   static nsString* sShiftText;
   static nsString* sControlText;

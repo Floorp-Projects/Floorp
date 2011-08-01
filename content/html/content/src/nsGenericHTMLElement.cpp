@@ -751,27 +751,15 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   PRBool scripts_enabled = loader->GetEnabled();
   loader->SetEnabled(PR_FALSE);
 
-  if (doc->IsHTML() && nsHtml5Module::sEnabled) {
-    nsCOMPtr<nsIParser> parser = doc->GetFragmentParser();
-    if (parser) {
-      parser->Reset();
-    } else {
-      parser = nsHtml5Module::NewHtml5Parser();
-      NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
-    }
-
+  if (doc->IsHTML()) {
     PRInt32 oldChildCount = GetChildCount();
-    nsAHtml5FragmentParser* asFragmentParser =
-        static_cast<nsAHtml5FragmentParser*> (parser.get());
-    asFragmentParser->ParseHtml5Fragment(aInnerHTML,
-                                         this,
-                                         Tag(),
-                                         GetNameSpaceID(),
-                                         doc->GetCompatibilityMode() ==
-                                             eCompatibility_NavQuirks,
-                                         PR_TRUE);
-    doc->SetFragmentParser(parser);
-
+    nsContentUtils::ParseFragmentHTML(aInnerHTML,
+                                      this,
+                                      Tag(),
+                                      GetNameSpaceID(),
+                                      doc->GetCompatibilityMode() ==
+                                          eCompatibility_NavQuirks,
+                                      PR_TRUE);
     // HTML5 parser has notified, but not fired mutation events.
     // Fire mutation events. Optimize for the case when there are no listeners
     PRInt32 newChildCount = GetChildCount();
@@ -787,7 +775,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
       nsGenericElement::FireNodeInserted(doc, this, childNodes);
     }
   } else {
-    rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML, PR_FALSE,
+    rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
                                                   getter_AddRefs(df));
     nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
     if (NS_SUCCEEDED(rv)) {
