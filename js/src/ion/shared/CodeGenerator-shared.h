@@ -42,6 +42,8 @@
 #ifndef jsion_codegen_h__
 #define jsion_codegen_h__
 
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 #include "ion/IonLIR.h"
 #include "ion/IonMacroAssembler.h"
 #include "ion/IonFrames.h"
@@ -83,6 +85,10 @@ class CodeGeneratorShared : public LInstructionVisitor
         int32 offset = masm.framePushed() - slot * STACK_SLOT_SIZE;
         JS_ASSERT(offset >= 0);
         return offset;
+    }
+
+    inline bool isNextBlock(LBlock *block) {
+        return (current->mir()->id() + 1 == block->mir()->id());
     }
 
   private:
