@@ -37,6 +37,7 @@
 #include "SVGLengthListSMILType.h"
 #include "nsSMILValue.h"
 #include "SVGLengthList.h"
+#include "nsMathUtils.h"
 #include <math.h>
 
 namespace mozilla {
@@ -252,7 +253,7 @@ SVGLengthListSMILType::ComputeDistance(const nsSMILValue& aFrom,
   }
 
   float distance = sqrt(total);
-  if (!NS_FloatIsFinite(distance)) {
+  if (!NS_finite(distance)) {
     return NS_ERROR_FAILURE;
   }
   aDistance = distance;

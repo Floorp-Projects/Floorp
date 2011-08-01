@@ -40,7 +40,7 @@
 #include "nsIDOMSVGLength.h"
 #include "nsIContent.h"
 #include "nsAString.h"
-#include "nsContentUtils.h"
+#include "nsMathUtils.h"
 
 class nsSVGElement;
 
@@ -152,7 +152,7 @@ public:
                               PRUint8 aAxis) {
     float uuPerUnit = GetUserUnitsPerUnit(aElement, aAxis);
     float value = aUserUnitValue / uuPerUnit;
-    if (uuPerUnit > 0 && NS_FloatIsFinite(value)) {
+    if (uuPerUnit > 0 && NS_finite(value)) {
       mValue = value;
       NS_ASSERTION(IsValid(), "Set invalid SVGLength");
       return PR_TRUE;
@@ -179,7 +179,7 @@ public:
    */
   PRBool ConvertToUnit(PRUint32 aUnit, nsSVGElement *aElement, PRUint8 aAxis) {
     float val = GetValueInSpecifiedUnit(aUnit, aElement, aAxis);
-    if (NS_FloatIsFinite(val)) {
+    if (NS_finite(val)) {
       mValue = val;
       mUnit = aUnit;
       NS_ASSERTION(IsValid(), "Set invalid SVGLength");
@@ -201,7 +201,7 @@ private:
 
 #ifdef DEBUG
   PRBool IsValid() const {
-    return NS_FloatIsFinite(mValue) && IsValidUnitType(mUnit);
+    return NS_finite(mValue) && IsValidUnitType(mUnit);
   }
 #endif
 
