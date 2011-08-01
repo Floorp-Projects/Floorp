@@ -124,8 +124,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     PRBool                        mCallContinueInterruptedParsingIfEnabled;
 
-    PRBool                        mPreventScriptExecution;
-
   public:
   
     nsHtml5TreeOpExecutor();
@@ -369,9 +367,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mOwnedElements.AppendObject(aContent);
     }
 
-    void DropHeldElements() {
-      mOwnedElements.Clear();
-    }
+    void DropHeldElements();
 
     /**
      * Flush the operations from the tree operations from the argument
@@ -401,7 +397,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void PreloadStyle(const nsAString& aURL, const nsAString& aCharset);
 
-    void PreloadImage(const nsAString& aURL);
+    void PreloadImage(const nsAString& aURL, const nsAString& aCrossOrigin);
 
     void SetSpeculationBase(const nsAString& aURL);
 

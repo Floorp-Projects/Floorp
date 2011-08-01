@@ -23,6 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Nick Fitzgerald <nfitzgerald@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -179,6 +180,7 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     userbuf.init(base, length);
     linebase = base;
     prevLinebase = NULL;
+    sourceMap = NULL;
 
     JSSourceHandler listener = cx->debugHooks->sourceHandler;
     void *listenerData = cx->debugHooks->sourceHandlerData;
@@ -247,6 +249,8 @@ TokenStream::~TokenStream()
 {
     if (flags & TSF_OWNFILENAME)
         cx->free_((void *) filename);
+    if (sourceMap)
+        cx->free_(sourceMap);
 }
 
 /* Use the fastest available getc. */
@@ -1132,6 +1136,19 @@ TokenStream::matchUnicodeEscapeIdent(int32 *cp)
     return false;
 }
 
+/*
+ * Helper function which returns true if the first length(q) characters in p are
+ * the same as the characters in q.
+ */
+static bool
+CharsMatch(const jschar *p, const char *q) {
+    while (*q) {
+        if (*p++ != *q++)
+            return false;
+    }
+    return true;
+}
+
 bool
 TokenStream::getAtLine()
 {
@@ -1145,12 +1162,7 @@ TokenStream::getAtLine()
      * "//@line 123\n" sets the number of the *next* line after the
      * comment to 123.  If we reach here, we've already seen "//".
      */
-    if (peekChars(5, cp) &&
-        cp[0] == '@' &&
-        cp[1] == 'l' &&
-        cp[2] == 'i' &&
-        cp[3] == 'n' &&
-        cp[4] == 'e') {
+    if (peekChars(5, cp) && CharsMatch(cp, "@line")) {
         skipChars(5);
         while ((c = getChar()) != '\n' && c != EOF && IsSpaceOrBOM2(c))
             continue;
@@ -1196,6 +1208,42 @@ TokenStream::getAtLine()
             }
         }
         ungetChar(c);
+    }
+    return true;
+}
+
+bool
+TokenStream::getAtSourceMappingURL()
+{
+    jschar peeked[18];
+
+    /* Match comments of the form @sourceMappingURL=<url> */
+    if (peekChars(18, peeked) && CharsMatch(peeked, "@sourceMappingURL=")) {
+        skipChars(18);
+        tokenbuf.clear();
+
+        jschar c;
+        while (!IsSpaceOrBOM2((c = getChar())) &&
+               ((char) c) != '\0' &&
+               ((char) c) != EOF)
+            tokenbuf.append(c);
+
+        if (tokenbuf.empty())
+            /* The source map's URL was missing, but not quite an exception that
+             * we should stop and drop everything for, though. */
+            return true;
+
+        int len = tokenbuf.length();
+
+        if (sourceMap)
+            cx->free_(sourceMap);
+        sourceMap = (jschar *) cx->malloc_(sizeof(jschar) * (len + 1));
+        if (!sourceMap)
+            return false;
+
+        for (int i = 0; i < len; i++)
+            sourceMap[i] = tokenbuf[i];
+        sourceMap[len] = '\0';
     }
     return true;
 }
@@ -1254,7 +1302,7 @@ bool
 TokenStream::putIdentInTokenbuf(const jschar *identStart)
 {
     int32 c, qc;
-    const jschar *tmp = userbuf.addressOfNextRawChar(); 
+    const jschar *tmp = userbuf.addressOfNextRawChar();
     userbuf.setAddressOfNextRawChar(identStart);
 
     tokenbuf.clear();
@@ -1483,7 +1531,7 @@ TokenStream::getTokenInternal()
             }
         }
 
-        /* 
+        /*
          * Identifiers containing no Unicode escapes can be atomized directly
          * from userbuf.  The rest must have the escapes converted via
          * tokenbuf before atomizing.
@@ -1681,7 +1729,7 @@ TokenStream::getTokenInternal()
             goto error;
         }
 
-        /* 
+        /*
          * Unlike identifiers and strings, numbers cannot contain escaped
          * chars, so we don't need to use tokenbuf.  Instead we can just
          * convert the jschars in userbuf directly to the numeric value.
@@ -1897,6 +1945,9 @@ TokenStream::getTokenInternal()
          */
         if (matchChar('/')) {
             if (cx->hasAtLineOption() && !getAtLine())
+                goto error;
+
+            if (!getAtSourceMappingURL())
                 goto error;
 
   skipline:

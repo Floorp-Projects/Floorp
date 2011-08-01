@@ -70,8 +70,6 @@ protected:
                                PRBool aIsHiddenWindow, nsIAppShell* aAppShell,
                                nsWebShellWindow **aResult);
   PRUint32 CalculateWindowZLevel(nsIXULWindow *aParent, PRUint32 aChromeMask);
-  nsresult SetXPConnectSafeContext();
-  nsresult ClearXPConnectSafeContext();
 
   nsRefPtr<nsWebShellWindow>  mHiddenWindow;
   PRPackedBool                mXPCOMWillShutDown;

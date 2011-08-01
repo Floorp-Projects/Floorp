@@ -107,20 +107,17 @@ public:
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                  const nsAString& type,
                                  PRInt32 aFlags);
-  nsresult AddScriptEventListener(nsISupports *aObject,
-                                  nsIAtom *aName,
+  nsresult AddScriptEventListener(nsIAtom *aName,
                                   const nsAString& aFunc,
                                   PRUint32 aLanguage,
                                   PRBool aDeferCompilation,
                                   PRBool aPermitUntrustedEvents);
   nsresult RegisterScriptEventListener(nsIScriptContext *aContext,
                                        void *aScopeObject,
-                                       nsISupports *aObject,
                                        nsIAtom* aName);
   void RemoveScriptEventListener(nsIAtom *aName);
   nsresult CompileScriptEventListener(nsIScriptContext *aContext,
                                       void *aScopeObject,
-                                      nsISupports *aObject,
                                       nsIAtom* aName, PRBool *aDidCompile);
 
   void HandleEvent(nsPresContext* aPresContext,
@@ -216,7 +213,6 @@ protected:
   nsListenerStruct* FindJSEventListener(PRUint32 aEventType, nsIAtom* aTypeAtom);
   nsresult SetJSEventListener(nsIScriptContext *aContext,
                               void *aScopeGlobal,
-                              nsISupports *aObject,
                               nsIAtom* aName, PRBool aIsString,
                               PRBool aPermitUntrustedEvents);
   nsresult AddEventListener(nsIDOMEventListener *aListener, 

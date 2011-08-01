@@ -126,8 +126,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID \
-{ 0x18e4d4bd, 0x006b, 0x4008, \
-  { 0x90, 0x05, 0x27, 0x57, 0x35, 0xf0, 0xd4, 0x85 } }
+{ 0xfac563fb, 0x2b6a, 0x4ac8, \
+ { 0x85, 0xf7, 0xd5, 0x14, 0x4b, 0x3e, 0xce, 0x78 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1147,16 +1147,6 @@ public:
     mMayStartLayout = aMayStartLayout;
   }
 
-  // This method should return an addrefed nsIParser* or nsnull. Implementations
-  // should transfer ownership of the parser to the caller.
-  virtual already_AddRefed<nsIParser> GetFragmentParser() {
-    return nsnull;
-  }
-
-  virtual void SetFragmentParser(nsIParser* aParser) {
-    // Do nothing.
-  }
-
   already_AddRefed<nsIDocumentEncoder> GetCachedEncoder()
   {
     return mCachedEncoder.forget();
@@ -1386,7 +1376,8 @@ public:
    * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
    * parser-module is linked with gklayout-module.
    */
-  virtual void MaybePreLoadImage(nsIURI* uri) = 0;
+  virtual void MaybePreLoadImage(nsIURI* uri,
+                                 const nsAString& aCrossOriginAttr) = 0;
 
   /**
    * Called by nsParser to preload style sheets.  Can also be merged into

@@ -344,17 +344,30 @@ void MozQWidget::sendPressReleaseKeyEvent(int key,
                                           bool autorep,
                                           ushort count)
 {
-     Qt::KeyboardModifiers modifiers  = Qt::NoModifier;
-     if (letter && letter->isUpper()) {
-         modifiers = Qt::ShiftModifier;
-     }
+    Qt::KeyboardModifiers modifiers  = Qt::NoModifier;
+    if (letter && letter->isUpper()) {
+        modifiers = Qt::ShiftModifier;
+    }
 
-     QString text = letter ? QString(*letter) : QString();
+    if (letter) {
+        // Handle as TextEvent
+        nsCompositionEvent start(PR_TRUE, NS_COMPOSITION_START, mReceiver);
+        mReceiver->DispatchEvent(&start);
 
-     QKeyEvent press(QEvent::KeyPress, key, modifiers, text, autorep, count);
-     mReceiver->OnKeyPressEvent(&press);
-     QKeyEvent release(QEvent::KeyRelease, key, modifiers, text, autorep, count);
-     mReceiver->OnKeyReleaseEvent(&release);
+        nsTextEvent text(PR_TRUE, NS_TEXT_TEXT, mReceiver);
+        QString commitString = QString(*letter);
+        text.theText.Assign(commitString.utf16());
+        mReceiver->DispatchEvent(&text);
+
+        nsCompositionEvent end(PR_TRUE, NS_COMPOSITION_END, mReceiver);
+        mReceiver->DispatchEvent(&end);
+        return;
+    }
+
+    QKeyEvent press(QEvent::KeyPress, key, modifiers, QString(), autorep, count);
+    mReceiver->OnKeyPressEvent(&press);
+    QKeyEvent release(QEvent::KeyRelease, key, modifiers, QString(), autorep, count);
+    mReceiver->OnKeyReleaseEvent(&release);
 }
 
 void MozQWidget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* aEvent)
@@ -405,16 +418,6 @@ bool MozQWidget::event ( QEvent * event )
         mReceiver->OnGestureEvent(static_cast<QGestureEvent*>(event),handled);
         return handled;
     }
-#if (MOZ_PLATFORM_MAEMO != 6)
-    // This does not work for maemo6, due to partially implemented IM framework
-    case QEvent::InputMethod:
-    {
-        PRBool handled = PR_FALSE;
-        mReceiver->imComposeEvent(static_cast<QInputMethodEvent*>(event),handled);
-        return handled;
-    }
-#endif
-
     default:
         break;
     }
@@ -520,15 +523,42 @@ void MozQWidget::setModal(bool modal)
 
 QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
 {
-    // The following query uses enums for the values, which are defined in
-    // MeegoTouch headers, because this should also work in the pure Qt case
-    // we use the values directly here. The original values are in the comments.
-    if (static_cast<Qt::InputMethodQuery>(/*M::ImModeQuery*/ 10004 ) == aQuery)
-    {
-        return QVariant(/*M::InputMethodModeNormal*/ 0 );
+    // Additional MeeGo Touch queries, which do not depend on actually
+    // having a focused input field.
+    switch ((int) aQuery) {
+    case 10001: // VisualizationPriorityQuery.
+        // Tells if input method widget wants to have high priority
+        // for visualization. Input methods should honor this and stay
+        // out of widgets space.
+        // Return false, eg. the input method can overlap QGraphicsWKView.
+        return QVariant(false);
+    case 10003: // ImCorrectionEnabledQuery.
+        // Explicit correction enabling for text entries.
+        return QVariant(false);
+    case 10004: // ImModeQuery.
+        // Retrieval mode: normal (0), direct [minics hardware keyboard] (1) or proxy (2)
+        return QVariant::fromValue(0);
+    case 10006: // InputMethodToolbarQuery.
+        // Custom toolbar file name for text entry.
+        return QVariant();
     }
 
-    return QGraphicsWidget::inputMethodQuery(aQuery);
+    // Standard Qt queries dependent on having a focused web text input.
+    switch (aQuery) {
+    case Qt::ImFont:
+        return QVariant(QFont());
+    case Qt::ImMaximumTextLength:
+        return QVariant(); // Means no limit.
+    }
+
+    // Additional MeeGo Touch queries dependent on having a focused web text input
+    switch ((int) aQuery) {
+    case 10002: // PreeditRectangleQuery.
+        // Retrieve bounding rectangle for current preedit text.
+        return QVariant(QRect());
+    }
+
+    return QVariant();
 }
 
 /**

@@ -2731,8 +2731,8 @@ Tab.prototype = {
 
     // Make sure the viewport height is not shorter than the window when
     // the page is zoomed out to show its full width.
-    if (viewportH * this.clampZoomLevel(this.getPageZoomLevel()) < screenH)
-      viewportH = Math.max(viewportH, screenH * (browser.contentDocumentWidth / screenW));
+    let minScale = this.clampZoomLevel(this.getPageZoomLevel());
+    viewportH = Math.max(viewportH, screenH / minScale);
 
     if (browser.contentWindowWidth != viewportW || browser.contentWindowHeight != viewportH)
       browser.setWindowSize(viewportW, viewportH);
@@ -2865,10 +2865,13 @@ Tab.prototype = {
   },
 
   clampZoomLevel: function clampZoomLevel(aScale) {
+    let md = this.metadata;
+    if (!this.allowZoom)
+      return (md && md.defaultZoom) ? md.defaultZoom : this.getPageZoomLevel();
+
     let browser = this._browser;
     let bounded = Util.clamp(aScale, ZoomManager.MIN, ZoomManager.MAX);
 
-    let md = this.metadata;
     if (md && md.minZoom)
       bounded = Math.max(bounded, md.minZoom);
     if (md && md.maxZoom)

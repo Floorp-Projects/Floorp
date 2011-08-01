@@ -83,10 +83,10 @@ endif
 
 mochitest-remote: DM_TRANS?=adb
 mochitest-remote:
-	if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "usb" -o "$(DM_TRANS)" = "adb" ]; \
+	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "usb" -o "$(DM_TRANS)" = "adb" ]; \
           then $(RUN_MOCHITEST_REMOTE); \
         else \
-          @echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
+          echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
         fi
 
 mochitest-plain:

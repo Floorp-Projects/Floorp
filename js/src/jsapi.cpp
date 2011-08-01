@@ -5189,9 +5189,15 @@ JS_IsRunning(JSContext *cx)
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
+#ifdef JS_THREADSAFE
+    if (!cx->thread())
+        return false;
+#endif
+
 #ifdef JS_TRACER
     JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->hasfp());
 #endif
+
     StackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
         fp = fp->prev();
