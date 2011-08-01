@@ -126,6 +126,12 @@ CommonAnimationManager::MediumFeaturesChanged(nsPresContext* aPresContext)
   return PR_FALSE;
 }
 
+/* virtual */ PRInt64
+CommonAnimationManager::SizeOf() const
+{
+  return sizeof(*this);
+}
+
 /* static */ PRBool
 CommonAnimationManager::ExtractComputedValueForTransition(
                           nsCSSProperty aProperty,
