@@ -39,6 +39,8 @@
 
 #include "States.h"
 
+using namespace mozilla::a11y;
+
 AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
   mPosInSet(0), mSetSize(0), mParent(nsnull)
 {

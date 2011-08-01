@@ -885,7 +885,8 @@ public:
 
   void MaybeEndOutermostXBLUpdate();
 
-  virtual void MaybePreLoadImage(nsIURI* uri);
+  virtual void MaybePreLoadImage(nsIURI* uri,
+                                 const nsAString &aCrossOriginAttr);
 
   virtual void PreloadStyle(nsIURI* uri, const nsAString& charset);
 

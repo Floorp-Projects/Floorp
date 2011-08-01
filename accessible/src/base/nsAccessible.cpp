@@ -108,6 +108,7 @@
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
+using namespace mozilla::a11y;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,20 +724,31 @@ nsAccessible::NativeState()
 
   /* readonly attribute boolean focusedChild; */
 NS_IMETHODIMP
-nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild) 
-{ 
-  nsAccessible *focusedChild = nsnull;
-  if (gLastFocusedNode == mContent) {
-    focusedChild = this;
-  }
-  else if (gLastFocusedNode) {
-    focusedChild = GetAccService()->GetAccessible(gLastFocusedNode);
-    if (focusedChild && focusedChild->Parent() != this)
-      focusedChild = nsnull;
-  }
+nsAccessible::GetFocusedChild(nsIAccessible** aChild)
+{
+  NS_ENSURE_ARG_POINTER(aChild);
+  *aChild = nsnull;
 
-  NS_IF_ADDREF(*aFocusedChild = focusedChild);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  NS_IF_ADDREF(*aChild = FocusedChild());
   return NS_OK;
+}
+
+nsAccessible*
+nsAccessible::FocusedChild()
+{
+  if (!gLastFocusedNode)
+    return nsnull;
+  if (gLastFocusedNode == mContent)
+    return this;
+
+  nsAccessible* focusedChild = GetDocAccessible()->GetAccessible(gLastFocusedNode);
+  if (!focusedChild || focusedChild->Parent() != this)
+    return nsnull;
+
+  return focusedChild;
 }
 
 // nsAccessible::ChildAtPoint()

@@ -1,7 +1,7 @@
 
 /* pngerror.c - stub functions for i/o and memory allocation
  *
- * Last changed in libpng 1.4.6 [March 8, 2011]
+ * Last changed in libpng 1.4.8 [July 7, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -87,12 +87,17 @@ png_error(png_structp png_ptr, png_const_charp error_message)
 void PNGAPI
 png_err(png_structp png_ptr)
 {
+   /* Prior to 1.4.8 the error_fn received a NULL pointer, expressed
+    * erroneously as '\0', instead of the empty string "".  This was
+    * apparently an error, introduced in libpng-1.2.20, and png_default_error
+    * will crash in this case.
+    */
    if (png_ptr != NULL && png_ptr->error_fn != NULL)
-      (*(png_ptr->error_fn))(png_ptr, '\0');
+      (*(png_ptr->error_fn))(png_ptr, "");
 
    /* If the custom handler doesn't exist, or if it returns,
       use the default handler, which will not return. */
-   png_default_error(png_ptr, '\0');
+   png_default_error(png_ptr, "");
 }
 #endif /* PNG_ERROR_TEXT_SUPPORTED */
 
@@ -181,8 +186,13 @@ png_format_buffer(png_structp png_ptr, png_charp buffer, png_const_charp
    {
       buffer[iout++] = ':';
       buffer[iout++] = ' ';
-      png_memcpy(buffer + iout, error_message, PNG_MAX_ERROR_TEXT);
-      buffer[iout + PNG_MAX_ERROR_TEXT - 1] = '\0';
+
+      iin = 0;
+      while (iin < PNG_MAX_ERROR_TEXT-1 && error_message[iin] != '\0')
+         buffer[iout++] = error_message[iin++];
+
+      /* iin < PNG_MAX_ERROR_TEXT, so the following is safe: */
+      buffer[iout] = '\0';
    }
 }
 

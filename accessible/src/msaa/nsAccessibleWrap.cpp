@@ -67,6 +67,8 @@
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 
+using namespace mozilla::a11y;
+
 /* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
@@ -522,8 +524,7 @@ __try {
   VariantInit(pvarChild);
 
   // Return the current IAccessible child that has focus
-  nsCOMPtr<nsIAccessible> focusedAccessible;
-  GetFocusedChild(getter_AddRefs(focusedAccessible));
+  nsAccessible* focusedAccessible = FocusedChild();
   if (focusedAccessible == this) {
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF;
