@@ -68,14 +68,13 @@ struct TypedArray;
 #undef NO_ERROR
 %}
 
-[ptr] native WebGLArrayPtr (js::TypedArray);
 [ptr] native WebGLJSObjectPtr (JSObject);
 
 //
 // OpenGL object wrappers
 //
 
-[scriptable, uuid(3b43762a-8305-11de-98ab-000c29206271)]
+[scriptable, uuid(0df9f4ed-f5ff-4e51-a6ff-2bd9785a7639)]
 interface nsIWebGLTexture : nsISupports
 {
   [noscript] attribute WebGLuint name;
@@ -588,12 +587,12 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void bufferData([optional] in long dummy);
   [noscript] void bufferData_size(in WebGLenum target, in WebGLsizei size, in WebGLenum usage);
   [noscript] void bufferData_buf(in WebGLenum target, in WebGLJSObjectPtr data, in WebGLenum usage);
-  [noscript] void bufferData_array(in WebGLenum target, in WebGLArrayPtr data, in WebGLenum usage);
+  [noscript] void bufferData_array(in WebGLenum target, in WebGLJSObjectPtr data, in WebGLenum usage);
   [noscript] void bufferData_null();
 
   void bufferSubData([optional] in long dummy);
   [noscript] void bufferSubData_buf(in WebGLenum target, in long offset, in WebGLJSObjectPtr data);
-  [noscript] void bufferSubData_array(in WebGLenum target, in long offset, in WebGLArrayPtr data);
+  [noscript] void bufferSubData_array(in WebGLenum target, in long offset, in WebGLJSObjectPtr data);
   [noscript] void bufferSubData_null();
 
   WebGLenum checkFramebufferStatus(in WebGLenum target);
@@ -714,7 +713,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
 
   void readPixels([optional] in long dummy);
   [noscript] void readPixels_array(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
-                                   in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+                                   in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void readPixels_buf(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
                                  in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
 
@@ -740,10 +739,10 @@ interface nsIDOMWebGLRenderingContext : nsISupports
                                  in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                    in WebGLsizei width, in WebGLsizei height,
-                                   in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+                                   in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texImage2D_imageData(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                    in WebGLsizei width, in WebGLsizei height,
-                                   in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+                                   in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
 
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
@@ -755,10 +754,10 @@ interface nsIDOMWebGLRenderingContext : nsISupports
                                     in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
                                       in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
-                                      in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+                                      in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texSubImage2D_imageData(in WebGLenum target, in WebGLint level,
                                       in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
-                                      in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+                                      in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texSubImage2D_dom(in WebGLenum target, in WebGLint level,
                                     in WebGLint xoffset, in WebGLint yoffset, in WebGLenum format, in WebGLenum type,
@@ -788,23 +787,23 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void uniform4fv([optional] in long dummy);
   void uniform4iv([optional] in long dummy);
 
-  [noscript] void uniform1fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
-  [noscript] void uniform1iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
-  [noscript] void uniform2fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
-  [noscript] void uniform2iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
-  [noscript] void uniform3fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
-  [noscript] void uniform3iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
-  [noscript] void uniform4fv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
-  [noscript] void uniform4iv_array (in nsIWebGLUniformLocation location, in WebGLArrayPtr v);
+  [noscript] void uniform1fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
+  [noscript] void uniform1iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
+  [noscript] void uniform2fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
+  [noscript] void uniform2iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
+  [noscript] void uniform3fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
+  [noscript] void uniform3iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
+  [noscript] void uniform4fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
+  [noscript] void uniform4iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
 
-  // Modified. These are modified by replacing 'count' and 'value' with a WebGLArrayPtr
+  // Modified. These are modified by replacing 'count' and 'value' with a WebGLJSObjectPtr
   void uniformMatrix2fv([optional] in long dummy);
   void uniformMatrix3fv([optional] in long dummy);
   void uniformMatrix4fv([optional] in long dummy);
 
-  [noscript] void uniformMatrix2fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
-  [noscript] void uniformMatrix3fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
-  [noscript] void uniformMatrix4fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix2fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLJSObjectPtr value);
+  [noscript] void uniformMatrix3fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLJSObjectPtr value);
+  [noscript] void uniformMatrix4fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLJSObjectPtr value);
 
   // Added API using top entry from the passed nsIWebGLMatrixStack
   //ZZ void glUniformMatrix(in WebGLint location, in WebGLboolean transpose, in nsIWebGLMatrixStack value);
@@ -812,7 +811,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void useProgram(in nsIWebGLProgram program);
   void validateProgram(in nsIWebGLProgram program);
 
-  // Modified: All the glVertexAttrib*v forms below are modified by replacing 'values' with a WebGLArrayPtr
+  // Modified: All the glVertexAttrib*v forms below are modified by replacing 'values' with a WebGLJSObjectPtr
   void vertexAttrib1f(in WebGLuint indx, in WebGLfloat x);
   void vertexAttrib2f(in WebGLuint indx, in WebGLfloat x, in WebGLfloat y);
   void vertexAttrib3f(in WebGLuint indx, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z);
@@ -823,10 +822,10 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void vertexAttrib3fv([optional] in long dummy);
   void vertexAttrib4fv([optional] in long dummy);
 
-  [noscript] void vertexAttrib1fv_array(in WebGLuint indx, in WebGLArrayPtr values);
-  [noscript] void vertexAttrib2fv_array(in WebGLuint indx, in WebGLArrayPtr values);
-  [noscript] void vertexAttrib3fv_array(in WebGLuint indx, in WebGLArrayPtr values);
-  [noscript] void vertexAttrib4fv_array(in WebGLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib1fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
+  [noscript] void vertexAttrib2fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
+  [noscript] void vertexAttrib3fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
+  [noscript] void vertexAttrib4fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
 
   // size is number of elements per attrib; offset, stride are in bytes
   void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLsizei stride, in WebGLsizeiptr offset);
