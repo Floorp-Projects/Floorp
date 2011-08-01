@@ -597,14 +597,6 @@ interface nsIXPConnect : nsISupports
                                      in string aSourceText);
 
     /**
-    * Set fallback JSContext to use when xpconnect can't find an appropriate
-    * context to use to execute JavaScript.
-    *
-    * @deprecated Use nsIThreadJSContextStack::safeJSContext instead.
-    */
-    [deprecated] void setSafeJSContextForCurrentThread(in JSContextPtr cx);
-
-    /**
     * wrapJSAggregatedToNative is just like wrapJS except it is used in cases
     * where the JSObject is also aggregated to some native xpcom Object.
     * At present XBL is the only system that might want to do this.

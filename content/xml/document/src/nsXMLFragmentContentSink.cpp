@@ -63,6 +63,9 @@
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDocShell.h"
+#include "nsScriptLoader.h"
+#include "mozilla/css/Loader.h"
 
 using namespace mozilla::dom;
 
@@ -70,7 +73,7 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
                                  public nsIFragmentContentSink
 {
 public:
-  nsXMLFragmentContentSink(PRBool aAllContent = PR_FALSE);
+  nsXMLFragmentContentSink();
   virtual ~nsXMLFragmentContentSink();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -106,12 +109,12 @@ public:
   // nsIXMLContentSink
 
   // nsIFragmentContentSink
-  NS_IMETHOD GetFragment(PRBool aWillOwnFragment,
-                         nsIDOMDocumentFragment** aFragment);
+  NS_IMETHOD FinishFragmentParsing(nsIDOMDocumentFragment** aFragment);
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
   NS_IMETHOD WillBuildContent();
   NS_IMETHOD DidBuildContent();
   NS_IMETHOD IgnoreFirstContainer();
+  NS_IMETHOD SetPreventScriptExecution(PRBool aPreventScriptExecution);
 
 protected:
   virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
@@ -139,15 +142,12 @@ protected:
   // the fragment
   nsCOMPtr<nsIContent>  mRoot;
   PRPackedBool          mParseError;
-
-  // if FALSE, take content inside endnote tag
-  PRPackedBool          mAllContent;
 };
 
 static nsresult
-NewXMLFragmentContentSinkHelper(PRBool aAllContent, nsIFragmentContentSink** aResult)
+NewXMLFragmentContentSinkHelper(nsIFragmentContentSink** aResult)
 {
-  nsXMLFragmentContentSink* it = new nsXMLFragmentContentSink(aAllContent);
+  nsXMLFragmentContentSink* it = new nsXMLFragmentContentSink();
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -158,20 +158,15 @@ NewXMLFragmentContentSinkHelper(PRBool aAllContent, nsIFragmentContentSink** aRe
 }
 
 nsresult
-NS_NewXMLFragmentContentSink2(nsIFragmentContentSink** aResult)
-{
-  return NewXMLFragmentContentSinkHelper(PR_TRUE, aResult);
-}
-
-nsresult
 NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aResult)
 {
-  return NewXMLFragmentContentSinkHelper(PR_FALSE, aResult);
+  return NewXMLFragmentContentSinkHelper(aResult);
 }
 
-nsXMLFragmentContentSink::nsXMLFragmentContentSink(PRBool aAllContent)
- : mParseError(PR_FALSE), mAllContent(aAllContent)
+nsXMLFragmentContentSink::nsXMLFragmentContentSink()
+ : mParseError(PR_FALSE)
 {
+  mFragmentMode = PR_TRUE;
 }
 
 nsXMLFragmentContentSink::~nsXMLFragmentContentSink()
@@ -210,21 +205,12 @@ nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
 
   mRoot = do_QueryInterface(frag);
   
-  if (mAllContent) {
-    // Preload content stack because we know all content goes in the fragment
-    PushContent(mRoot);
-  }
-
   return rv;
 }
 
 NS_IMETHODIMP 
 nsXMLFragmentContentSink::DidBuildModel(PRBool aTerminated)
 {
-  if (mAllContent) {
-    PopContent();  // remove mRoot pushed above
-  }
-
   nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
 
   // Drop our reference to the parser to get rid of a circular
@@ -274,7 +260,7 @@ nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsC
   // When we aren't grabbing all of the content we, never open a doc
   // element, we run into trouble on the first element, so we don't append,
   // and simply push this onto the content stack.
-  if (!mAllContent && mContentStack.Length() == 0) {
+  if (mContentStack.Length() == 0) {
     *aAppendContent = PR_FALSE;
   }
 
@@ -285,6 +271,13 @@ nsresult
 nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 {
   // don't do fancy stuff in nsXMLContentSink
+  if (mPreventScriptExecution && aContent->Tag() == nsGkAtoms::script &&
+      (aContent->GetNameSpaceID() == kNameSpaceID_XHTML ||
+       aContent->GetNameSpaceID() == kNameSpaceID_SVG)) {
+    nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
+    NS_ASSERTION(sele, "script did QI correctly!");
+    sele->PreventExecution();
+  }
   return NS_OK;
 }
 
@@ -410,18 +403,24 @@ nsXMLFragmentContentSink::StartLayout()
 ////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP 
-nsXMLFragmentContentSink::GetFragment(PRBool aWillOwnFragment,
-                                      nsIDOMDocumentFragment** aFragment)
+nsXMLFragmentContentSink::FinishFragmentParsing(nsIDOMDocumentFragment** aFragment)
 {
   *aFragment = nsnull;
+  mTargetDocument = nsnull;
+  mNodeInfoManager = nsnull;
+  mScriptLoader = nsnull;
+  mCSSLoader = nsnull;
+  mContentStack.Clear();
+  mDocumentURI = nsnull;
+  mDocShell = nsnull;
   if (mParseError) {
     //XXX PARSE_ERR from DOM3 Load and Save would be more appropriate
+    mRoot = nsnull;
+    mParseError = PR_FALSE;
     return NS_ERROR_DOM_SYNTAX_ERR;
   } else if (mRoot) {
     nsresult rv = CallQueryInterface(mRoot, aFragment);
-    if (NS_SUCCEEDED(rv) && aWillOwnFragment) {
-      mRoot = nsnull;
-    }
+    mRoot = nsnull;
     return rv;
   } else {
     return NS_OK;
@@ -442,11 +441,7 @@ nsXMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
 NS_IMETHODIMP
 nsXMLFragmentContentSink::WillBuildContent()
 {
-  // If we're taking all of the content, then we've already pushed mRoot
-  // onto the content stack, otherwise, start here.
-  if (!mAllContent) {
-    PushContent(mRoot);
-  }
+  PushContent(mRoot);
 
   return NS_OK;
 }
@@ -454,15 +449,12 @@ nsXMLFragmentContentSink::WillBuildContent()
 NS_IMETHODIMP
 nsXMLFragmentContentSink::DidBuildContent()
 {
-  // If we're taking all of the content, then this is handled in DidBuildModel
-  if (!mAllContent) {
-    // Note: we need to FlushText() here because if we don't, we might not get
-    // an end element to do it for us, so make sure.
-    if (!mParseError) {
-      FlushText();
-    }
-    PopContent();
+  // Note: we need to FlushText() here because if we don't, we might not get
+  // an end element to do it for us, so make sure.
+  if (!mParseError) {
+    FlushText();
   }
+  PopContent();
 
   return NS_OK;
 }
@@ -478,4 +470,11 @@ nsXMLFragmentContentSink::IgnoreFirstContainer()
 {
   NS_NOTREACHED("XML isn't as broken as HTML");
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXMLFragmentContentSink::SetPreventScriptExecution(PRBool aPrevent)
+{
+  mPreventScriptExecution = aPrevent;
+  return NS_OK;
 }

@@ -10,11 +10,7 @@
   #pragma warning( disable: 4514 )
 #endif
 
-#ifdef HAVE_CPP_NUMERIC_LIMITS
-#include <limits>
-#else
 #include <limits.h>
-#endif
 
 
 template <class T>
@@ -38,11 +34,6 @@ class nsCppSharedAllocator
 
 
       nsCppSharedAllocator() { }
-
-#ifdef HAVE_CPP_MEMBER_TEMPLATES
-      template <class U>
-      nsCppSharedAllocator( const nsCppSharedAllocator<U>& ) { }
-#endif
 
      ~nsCppSharedAllocator() { }
 
@@ -86,20 +77,9 @@ class nsCppSharedAllocator
       size_type
       max_size() const
         {
-#ifdef HAVE_CPP_NUMERIC_LIMITS
-          return numeric_limits<size_type>::max() / sizeof(T);
-#else
           return ULONG_MAX / sizeof(T);
-#endif
         }
 
-#ifdef HAVE_CPP_MEMBER_TEMPLATES
-      template <class U>
-      struct rebind
-        {
-          typedef nsCppSharedAllocator<U> other;
-        };
-#endif
   };
 
 

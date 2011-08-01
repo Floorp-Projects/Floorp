@@ -1,7 +1,7 @@
 
 /* pngpriv.h - private declarations for use inside libpng
  *
- * libpng version 1.4.7 - April 10, 2011
+ * libpng version 1.4.8 - July 7, 2011
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -25,6 +25,15 @@
 #define PNGPRIV_H
 
 #ifndef PNG_VERSION_INFO_ONLY
+
+#if defined(_AIX) && defined(_ALL_SOURCE)
+   /* On AIX if _ALL_SOURCE is defined standard header files (including
+    * stdlib.h) define identifiers that are not permitted by the ANSI and
+    * POSIX standards.  In particular 'jmpbuf' is #defined and this will
+    * prevent compilation of libpng.  The following prevents this:
+    */
+#  undef _ALL_SOURCE
+#endif
 
 #include <stdlib.h>
 

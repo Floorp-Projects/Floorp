@@ -194,13 +194,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, nsDocument)
 
-  virtual already_AddRefed<nsIParser> GetFragmentParser() {
-    return mFragmentParser.forget();
-  }
-  virtual void SetFragmentParser(nsIParser* aParser) {
-    mFragmentParser = aParser;
-  }
-
   virtual nsresult SetEditingState(EditingState aState);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -342,9 +335,6 @@ protected:
 
   // When false, the .cookies property is completely disabled
   PRBool mDisableCookieAccess;
-
-  // Parser used for constructing document fragments.
-  nsCOMPtr<nsIParser> mFragmentParser;
 };
 
 #define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                        \

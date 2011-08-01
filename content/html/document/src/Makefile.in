@@ -49,7 +49,6 @@ LIBXUL_LIBRARY	= 1
 
 CPPSRCS		= \
 		nsHTMLContentSink.cpp \
-		nsHTMLFragmentContentSink.cpp \
 		nsHTMLDocument.cpp \
 		ImageDocument.cpp \
 		MediaDocument.cpp \
