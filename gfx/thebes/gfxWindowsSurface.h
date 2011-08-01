@@ -98,10 +98,6 @@ public:
         FastMovePixels(aSourceRect, aDestTopLeft);
     }
 
-    // The memory used by this surface lives in this process's address space,
-    // but not in the heap.
-    virtual gfxASurface::MemoryLocation GetMemoryLocation() const;
-
 private:
     PRPackedBool mOwnsDC;
     PRPackedBool mForPrinting;
