@@ -300,24 +300,42 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, J
         return true;
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
-        if (!vp->isObjectOrNull())
-            return JS_TRUE;
-
-        JSObject *pobj = vp->toObjectOrNull();
-
+        // setting __proto__ = null
+        // effectively removes the prototype chain.
+        // any attempt to set __proto__ on native
+        // objects after setting them to null makes
+        // __proto__ just a plain property.
+        // the following code simulates this behaviour on arrays.
+        //
+        // we first attempt to set the prototype on
+        // the delegate which is a native object
+        // so that existing code handles the case
+        // of treating it as special or plain.
+        // if the delegate's prototype has now changed
+        // then we change our prototype too.
+        //
+        // otherwise __proto__ was a plain property
+        // and we don't modify our prototype chain
+        // since obj_getProperty will fetch it as a plain
+        // property from the delegate.
         JSObject *delegate = DelegateObject(cx, obj);
         if (!delegate)
             return false;
 
-        // save the old prototype
         JSObject *oldDelegateProto = delegate->getProto();
-        if (!SetProto(cx, delegate, pobj, true))
+
+        if (!js_SetProperty(cx, delegate, id, vp, strict))
             return false;
 
-        if (!SetProto(cx, obj, pobj, true)) {
-            // restore proto on delegate
-            JS_ALWAYS_TRUE(SetProto(cx, delegate, oldDelegateProto, true));
-            return false;
+        if (delegate->getProto() != oldDelegateProto) {
+            // actual __proto__ was set and not a plain property called
+            // __proto__
+            if (!SetProto(cx, obj, vp->toObjectOrNull(), true)) {
+                // this can be caused for example by setting x.__proto__ = x
+                // restore delegate prototype chain
+                delegate->setProto(oldDelegateProto);
+                return false;
+            }
         }
         return true;
     }
