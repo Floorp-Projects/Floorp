@@ -5072,7 +5072,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     if (!cx->hasfp() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 
-    fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP);
+    fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
     script = fp->script();
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs().pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);

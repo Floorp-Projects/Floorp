@@ -674,9 +674,9 @@ TryCompile(JSContext *cx, StackFrame *fp);
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal);
 
-// Expand either the topmost stack frame or all stack frames inlined by the JIT.
+// Expand all stack frames inlined by the JIT within a compartment.
 void
-ExpandInlineFrames(JSCompartment *compartment, bool all);
+ExpandInlineFrames(JSCompartment *compartment);
 
 // Return all VMFrames in a compartment to the interpreter. This must be
 // followed by destroying all JIT code in the compartment.

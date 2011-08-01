@@ -436,6 +436,10 @@ AutoCompartment::enter()
     if (origin != destination) {
         LeaveTrace(context);
 
+#ifdef JS_METHODJIT
+        mjit::ExpandInlineFrames(context->compartment);
+#endif
+
         JSObject *scopeChain = target->getGlobal();
         JS_ASSERT(scopeChain->isNative());
 

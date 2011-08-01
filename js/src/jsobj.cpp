@@ -5763,7 +5763,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
 JS_FRIEND_API(bool)
 js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
-    StackFrame *const fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP);
+    StackFrame *const fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
     if (!fp)
         return true;
 

@@ -329,17 +329,10 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
 }
 
 void
-ExpandInlineFrames(JSCompartment *compartment, bool all)
+ExpandInlineFrames(JSCompartment *compartment)
 {
     if (!compartment || !compartment->hasJaegerCompartment())
         return;
-
-    if (!all) {
-        VMFrame *f = compartment->jaegerCompartment()->activeFrame();
-        if (f && f->regs.inlined())
-            mjit::Recompiler::expandInlineFrames(compartment, f->fp(), f->regs.inlined(), NULL, f);
-        return;
-    }
 
     for (VMFrame *f = compartment->jaegerCompartment()->activeFrame();
          f != NULL;
@@ -377,7 +370,7 @@ ClearAllFrames(JSCompartment *compartment)
     if (!compartment || !compartment->hasJaegerCompartment())
         return;
 
-    ExpandInlineFrames(compartment, true);
+    ExpandInlineFrames(compartment);
 
     for (VMFrame *f = compartment->jaegerCompartment()->activeFrame();
          f != NULL;
