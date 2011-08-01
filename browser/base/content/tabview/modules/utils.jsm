@@ -526,12 +526,15 @@ let Utils = {
   // Pass as many arguments as you want, it'll print them all.
   trace: function Utils_trace() {
     var text = this.expandArgumentsForLog(arguments);
-    // cut off the first two lines of the stack trace, because they're just this function.
-    let stack = Error().stack.replace(/^.*?\n.*?\n/, "");
+
+    // cut off the first line of the stack trace, because that's just this function.
+    let stack = Error().stack.split("\n").slice(1);
+
     // if the caller was assert, cut out the line for the assert function as well.
-    if (this.trace.caller.name == 'Utils_assert')
-      stack = stack.replace(/^.*?\n/, "");
-    this.log('trace: ' + text + '\n' + stack);
+    if (stack[0].indexOf("Utils_assert(") == 0)
+      stack.splice(0, 1);
+
+    this.log('trace: ' + text + '\n' + stack.join("\n"));
   },
 
   // ----------
@@ -560,10 +563,10 @@ let Utils = {
       else
         text = "tabview assert: " + label;
 
-      // cut off the first two lines of the stack trace, because they're just this function.
-      text += Error().stack.replace(/^.*?\n.*?\n/, "");
+      // cut off the first line of the stack trace, because that's just this function.
+      let stack = Error().stack.split("\n").slice(1);
 
-      throw text;
+      throw text + "\n" + stack.join("\n");
     }
   },
 

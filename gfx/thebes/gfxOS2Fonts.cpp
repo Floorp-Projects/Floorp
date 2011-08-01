@@ -711,7 +711,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     gfxOS2Platform *platform = gfxOS2Platform::GetPlatform();
 
-    aTextRun->AddGlyphRun(font0, 0);
+    aTextRun->AddGlyphRun(font0, gfxTextRange::kFontGroup, 0, PR_FALSE);
     // a textRun likely has the same font for most of the characters, so we can
     // lock it before the loop for efficiency
     FT_Face face0 = cairo_ft_scaled_font_lock_face(font0->CairoScaledFont());
@@ -772,7 +772,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 }
 
                 // select the current font into the text run
-                aTextRun->AddGlyphRun(font, utf16Offset);
+                aTextRun->AddGlyphRun(font, gfxTextRange::kFontGroup, utf16Offset, PR_FALSE);
 
                 PRInt32 advance = 0;
                 if (gid == font->GetSpaceGlyph()) {
@@ -874,6 +874,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
 // append aFontName to aClosure string array, if not already present
 PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
+                                     PRBool aUseFontSet,
                                      void *aClosure)
 {
     nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(aClosure);

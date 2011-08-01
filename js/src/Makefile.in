@@ -677,7 +677,7 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 58 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 59 \
 		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 31 \
@@ -758,12 +758,6 @@ DEFINES		+= -DEXPORT_JS_API
 # we need to declare "exported" mfbt symbols on its behalf when we use
 # its headers.
 DEFINES		+= -DIMPL_MFBT
-
-# Some platforms that have stdint.h include it in system headers.  So
-# to reliably get limit macros defined, we'd always have to define the
-# one below before including any header, but that's obscure and
-# fragile, so we do it here.
-DEFINES		+= -D__STDC_LIMIT_MACROS
 
 INCLUDES	+= -I$(srcdir)
 

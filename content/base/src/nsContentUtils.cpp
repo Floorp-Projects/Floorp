@@ -202,6 +202,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsHTMLMediaElement.h"
 #endif
 #include "nsDOMTouchEvent.h"
+#include "nsIScriptElement.h"
 
 #include "mozilla/Preferences.h"
 
@@ -256,7 +257,17 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
 PRBool nsContentUtils::sAllowXULXBL_for_file = PR_FALSE;
 
+nsString* nsContentUtils::sShiftText = nsnull;
+nsString* nsContentUtils::sControlText = nsnull;
+nsString* nsContentUtils::sMetaText = nsnull;
+nsString* nsContentUtils::sAltText = nsnull;
+nsString* nsContentUtils::sModifierSeparator = nsnull;
+
 PRBool nsContentUtils::sInitialized = PR_FALSE;
+
+nsAHtml5FragmentParser* nsContentUtils::sHTMLFragmentParser = nsnull;
+nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
+nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nsnull;
 
 static PLDHashTable sEventListenerManagersHash;
 
@@ -380,6 +391,81 @@ nsContentUtils::Init()
   sInitialized = PR_TRUE;
 
   return NS_OK;
+}
+
+void
+nsContentUtils::GetShiftText(nsAString& text)
+{
+  if (!sShiftText)
+    InitializeModifierStrings();
+  text.Assign(*sShiftText);
+}
+
+void
+nsContentUtils::GetControlText(nsAString& text)
+{
+  if (!sControlText)
+    InitializeModifierStrings();
+  text.Assign(*sControlText);
+}
+
+void
+nsContentUtils::GetMetaText(nsAString& text)
+{
+  if (!sMetaText)
+    InitializeModifierStrings();
+  text.Assign(*sMetaText);
+}
+
+void
+nsContentUtils::GetAltText(nsAString& text)
+{
+  if (!sAltText)
+    InitializeModifierStrings();
+  text.Assign(*sAltText);
+}
+
+void
+nsContentUtils::GetModifierSeparatorText(nsAString& text)
+{
+  if (!sModifierSeparator)
+    InitializeModifierStrings();
+  text.Assign(*sModifierSeparator);
+}
+
+void
+nsContentUtils::InitializeModifierStrings()
+{
+  //load the display strings for the keyboard accelerators
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    mozilla::services::GetStringBundleService();
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = NS_OK;
+  if (bundleService) {
+    rv = bundleService->CreateBundle( "chrome://global-platform/locale/platformKeys.properties",
+                                      getter_AddRefs(bundle));
+  }
+  
+  NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/platformKeys.properties could not be loaded");
+  nsXPIDLString shiftModifier;
+  nsXPIDLString metaModifier;
+  nsXPIDLString altModifier;
+  nsXPIDLString controlModifier;
+  nsXPIDLString modifierSeparator;
+  if (bundle) {
+    //macs use symbols for each modifier key, so fetch each from the bundle, which also covers i18n
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_SHIFT").get(), getter_Copies(shiftModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_META").get(), getter_Copies(metaModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_ALT").get(), getter_Copies(altModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("VK_CONTROL").get(), getter_Copies(controlModifier));
+    bundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), getter_Copies(modifierSeparator));
+  }
+  //if any of these don't exist, we get  an empty string
+  sShiftText = new nsString(shiftModifier);
+  sMetaText = new nsString(metaModifier);
+  sAltText = new nsString(altModifier);
+  sControlText = new nsString(controlModifier);
+  sModifierSeparator = new nsString(modifierSeparator);  
 }
 
 bool nsContentUtils::sImgLoaderInitialized;
@@ -1087,9 +1173,6 @@ nsContentUtils::Shutdown()
 {
   sInitialized = PR_FALSE;
 
-  NS_HTMLParanoidFragmentSinkShutdown();
-  NS_XHTMLParanoidFragmentSinkShutdown();
-
   NS_IF_RELEASE(sContentPolicyService);
   sTriedToGetContentPolicy = PR_FALSE;
   PRUint32 i;
@@ -1148,6 +1231,17 @@ nsContentUtils::Shutdown()
                "How'd this happen?");
   delete sBlockedScriptRunners;
   sBlockedScriptRunners = nsnull;
+
+  delete sShiftText;
+  sShiftText = nsnull;
+  delete sControlText;  
+  sControlText = nsnull;
+  delete sMetaText;  
+  sMetaText = nsnull;
+  delete sAltText;  
+  sAltText = nsnull;
+  delete sModifierSeparator;
+  sModifierSeparator = nsnull;
 
   NS_IF_RELEASE(sSameOriginChecker);
   
@@ -3517,13 +3611,11 @@ nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
 nsresult
 nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                                          const nsAString& aFragment,
-                                         PRBool aWillOwnFragment,
+                                         PRBool aPreventScriptExecution,
                                          nsIDOMDocumentFragment** aReturn)
 {
   *aReturn = nsnull;
   NS_ENSURE_ARG(aContextNode);
-
-  nsresult rv;
 
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
@@ -3536,24 +3628,9 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
   NS_ASSERTION(!isHTML || htmlDoc, "Should have HTMLDocument here!");
 #endif
 
-  if (isHTML && nsHtml5Module::sEnabled) {
-    // See if the document has a cached fragment parser. nsHTMLDocument is the
-    // only one that should really have one at the moment.
-    nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
-    if (parser) {
-      // Get the parser ready to use.
-      parser->Reset();
-    }
-    else {
-      // Create a new parser for this operation.
-      parser = nsHtml5Module::NewHtml5Parser();
-      if (!parser) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+  if (isHTML) {
     nsCOMPtr<nsIDOMDocumentFragment> frag;
-    rv = NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
     
     nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
     if (contextAsContent && !contextAsContent->IsElement()) {
@@ -3564,31 +3641,26 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       }
     }
     
-    nsAHtml5FragmentParser* asFragmentParser =
-        static_cast<nsAHtml5FragmentParser*> (parser.get());
     nsCOMPtr<nsIContent> fragment = do_QueryInterface(frag);
-    if (contextAsContent &&
-        !(nsGkAtoms::html == contextAsContent->Tag() &&
-          contextAsContent->IsHTML())) {
-      asFragmentParser->ParseHtml5Fragment(aFragment,
-                                           fragment,
-                                           contextAsContent->Tag(),
-                                           contextAsContent->GetNameSpaceID(),
-                                           (document->GetCompatibilityMode() ==
-                                               eCompatibility_NavQuirks),
-                                           PR_FALSE);
+    if (contextAsContent && !contextAsContent->IsHTML(nsGkAtoms::html)) {
+      ParseFragmentHTML(aFragment,
+                        fragment,
+                        contextAsContent->Tag(),
+                        contextAsContent->GetNameSpaceID(),
+                        (document->GetCompatibilityMode() ==
+                            eCompatibility_NavQuirks),
+                        aPreventScriptExecution);
     } else {
-      asFragmentParser->ParseHtml5Fragment(aFragment,
-                                           fragment,
-                                           nsGkAtoms::body,
-                                           kNameSpaceID_XHTML,
-                                           (document->GetCompatibilityMode() ==
-                                               eCompatibility_NavQuirks),
-                                           PR_FALSE);
+      ParseFragmentHTML(aFragment,
+                        fragment,
+                        nsGkAtoms::body,
+                        kNameSpaceID_XHTML,
+                        (document->GetCompatibilityMode() ==
+                            eCompatibility_NavQuirks),
+                        aPreventScriptExecution);
     }
-  
-    frag.swap(*aReturn);
-    document->SetFragmentParser(parser);
+
+    frag.forget(aReturn);
     return NS_OK;
   }
 
@@ -3647,83 +3719,93 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     content = content->GetParent();
   }
 
-  nsCAutoString contentType;
-  nsAutoString buf;
-  document->GetContentType(buf);
-  LossyCopyUTF16toASCII(buf, contentType);
+  return ParseFragmentXML(aFragment,
+                          document,
+                          tagStack,
+                          aPreventScriptExecution,
+                          aReturn);
+}
 
-  // See if the document has a cached fragment parser. nsHTMLDocument is the
-  // only one that should really have one at the moment.
-  nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
-  if (parser) {
-    // Get the parser ready to use.
-    parser->Reset();
+/* static */
+void
+nsContentUtils::DropFragmentParsers()
+{
+  NS_IF_RELEASE(sHTMLFragmentParser);
+  NS_IF_RELEASE(sXMLFragmentParser);
+  NS_IF_RELEASE(sXMLFragmentSink);
+}
+
+/* static */
+void
+nsContentUtils::XPCOMShutdown()
+{
+  nsContentUtils::DropFragmentParsers();
+}
+
+/* static */
+void
+nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
+                                  nsIContent* aTargetNode,
+                                  nsIAtom* aContextLocalName,
+                                  PRInt32 aContextNamespace,
+                                  PRBool aQuirks,
+                                  PRBool aPreventScriptExecution)
+{
+  if (!sHTMLFragmentParser) {
+    sHTMLFragmentParser =
+      static_cast<nsAHtml5FragmentParser*>(nsHtml5Module::NewHtml5Parser().get());
+    // Now sHTMLFragmentParser owns the object
   }
-  else {
-    // Create a new parser for this operation.
-    parser = do_CreateInstance(kCParserCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  sHTMLFragmentParser->ParseHtml5Fragment(aSourceBuffer,
+                                          aTargetNode,
+                                          aContextLocalName,
+                                          aContextNamespace,
+                                          aQuirks,
+                                          aPreventScriptExecution);
+  sHTMLFragmentParser->Reset();
+}
+
+/* static */
+nsresult
+nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
+                                 nsIDocument* aDocument,
+                                 nsTArray<nsString>& aTagStack,
+                                 PRBool aPreventScriptExecution,
+                                 nsIDOMDocumentFragment** aReturn)
+{
+  if (!sXMLFragmentParser) {
+    nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID);
+    parser.forget(&sXMLFragmentParser);
+    // sXMLFragmentParser now owns the parser
+  }
+  if (!sXMLFragmentSink) {
+    NS_NewXMLFragmentContentSink(&sXMLFragmentSink);
+    // sXMLFragmentSink now owns the sink
+  }
+  nsCOMPtr<nsIContentSink> contentsink = do_QueryInterface(sXMLFragmentSink);
+  NS_ABORT_IF_FALSE(contentsink, "Sink doesn't QI to nsIContentSink!");
+  sXMLFragmentParser->SetContentSink(contentsink);
+
+  sXMLFragmentSink->SetTargetDocument(aDocument);
+  sXMLFragmentSink->SetPreventScriptExecution(aPreventScriptExecution);
+
+  nsresult rv =
+    sXMLFragmentParser->ParseFragment(aSourceBuffer,
+                                      aTagStack);
+  if (NS_FAILED(rv)) {
+    // Drop the fragment parser and sink that might be in an inconsistent state
+    NS_IF_RELEASE(sXMLFragmentParser);
+    NS_IF_RELEASE(sXMLFragmentSink);
+    return rv;
   }
 
-  // See if the parser already has a content sink that we can reuse.
-  nsCOMPtr<nsIFragmentContentSink> sink;
-  nsCOMPtr<nsIContentSink> contentsink = parser->GetContentSink();
-  if (contentsink) {
-    // Make sure it's the correct type.
-    if (isHTML) {
-      nsCOMPtr<nsIHTMLContentSink> htmlsink = do_QueryInterface(contentsink);
-      sink = do_QueryInterface(htmlsink);
-    }
-    else {
-      nsCOMPtr<nsIXMLContentSink> xmlsink = do_QueryInterface(contentsink);
-      sink = do_QueryInterface(xmlsink);
-    }
-  }
+  rv = sXMLFragmentSink->FinishFragmentParsing(aReturn);
 
-  if (!sink) {
-    // Either there was no cached content sink or it was the wrong type. Make a
-    // new one.
-    if (isHTML) {
-      rv = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
-    } else {
-      rv = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    contentsink = do_QueryInterface(sink);
-    NS_ASSERTION(contentsink, "Sink doesn't QI to nsIContentSink!");
-
-    parser->SetContentSink(contentsink);
-  }
-
-  sink->SetTargetDocument(document);
-
-  nsDTDMode mode = eDTDMode_autodetect;
-  switch (document->GetCompatibilityMode()) {
-    case eCompatibility_NavQuirks:
-      mode = eDTDMode_quirks;
-      break;
-    case eCompatibility_AlmostStandards:
-      mode = eDTDMode_almost_standards;
-      break;
-    case eCompatibility_FullStandards:
-      mode = eDTDMode_full_standards;
-      break;
-    default:
-      NS_NOTREACHED("unknown mode");
-      break;
-  }
-
-  rv = parser->ParseFragment(aFragment, nsnull, tagStack,
-                             !isHTML, contentType, mode);
-  if (NS_SUCCEEDED(rv)) {
-    rv = sink->GetFragment(aWillOwnFragment, aReturn);
-  }
-
-  document->SetFragmentParser(parser);
+  sXMLFragmentParser->Reset();
 
   return rv;
 }
+
 
 /* static */
 nsresult

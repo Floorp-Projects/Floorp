@@ -505,6 +505,7 @@ struct JSScript {
     js::Bindings    bindings;   /* names of top-level variables in this script
                                    (and arguments if this is a function script) */
     JSPrincipals    *principals;/* principals for this script */
+    jschar          *sourceMap; /* source map file or null */
 
     JSObject        *ownerObject;
 

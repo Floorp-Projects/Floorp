@@ -103,6 +103,7 @@
 #include "nsHTMLDNSPrefetch.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/Preferences.h"
+#include "nsParserConstants.h"
 
 using namespace mozilla;
 
@@ -335,6 +336,7 @@ nsContentSink::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus)
 {
+  NS_ASSERTION(!mFragmentMode, "How come a fragment parser observed sheets?");
   if (!aWasAlternate) {
     NS_ASSERTION(mPendingSheetCount > 0, "How'd that happen?");
     --mPendingSheetCount;
@@ -641,7 +643,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
     while (*end != kNullCh && *end != kSemicolon && *end != kComma) {
       PRUnichar ch = *end;
 
-      if (ch == kApostrophe || ch == kQuote || ch == kLessThan) {
+      if (ch == kQuote || ch == kLessThan) {
         // quoted string
 
         PRUnichar quote = ch;
@@ -723,8 +725,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
             value++;
           }
 
-          if (((*value == kApostrophe) || (*value == kQuote)) &&
-              (*value == *last)) {
+          if ((*value == kQuote) && (*value == *last)) {
             *last = kNullCh;
             value++;
           }
@@ -874,12 +875,13 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK;
   }
 
+  // If this is a fragment parser, we don't want to observe.
   PRBool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
-                                 this, &isAlternate);
+                                 mFragmentMode ? nsnull : this, &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (!isAlternate) {
+  if (!isAlternate && !mFragmentMode) {
     ++mPendingSheetCount;
     mScriptLoader->AddExecuteBlocker();
   }
@@ -1727,266 +1729,3 @@ nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc)
                       EmptyString().get());
   }
 }
-
-// URIs: action, href, src, longdesc, usemap, cite
-PRBool 
-IsAttrURI(nsIAtom *aName)
-{
-  return (aName == nsGkAtoms::action ||
-          aName == nsGkAtoms::href ||
-          aName == nsGkAtoms::src ||
-          aName == nsGkAtoms::longdesc ||
-          aName == nsGkAtoms::usemap ||
-          aName == nsGkAtoms::cite ||
-          aName == nsGkAtoms::background);
-}
-
-//
-// these two lists are used by the sanitizing fragment serializers
-// Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
-//
-nsIAtom** const kDefaultAllowedTags [] = {
-  &nsGkAtoms::a,
-  &nsGkAtoms::abbr,
-  &nsGkAtoms::acronym,
-  &nsGkAtoms::address,
-  &nsGkAtoms::area,
-  &nsGkAtoms::article,
-  &nsGkAtoms::aside,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::audio,
-#endif
-  &nsGkAtoms::b,
-  &nsGkAtoms::bdo,
-  &nsGkAtoms::big,
-  &nsGkAtoms::blockquote,
-  &nsGkAtoms::br,
-  &nsGkAtoms::button,
-  &nsGkAtoms::canvas,
-  &nsGkAtoms::caption,
-  &nsGkAtoms::center,
-  &nsGkAtoms::cite,
-  &nsGkAtoms::code,
-  &nsGkAtoms::col,
-  &nsGkAtoms::colgroup,
-  &nsGkAtoms::command,
-  &nsGkAtoms::datalist,
-  &nsGkAtoms::dd,
-  &nsGkAtoms::del,
-  &nsGkAtoms::details,
-  &nsGkAtoms::dfn,
-  &nsGkAtoms::dir,
-  &nsGkAtoms::div,
-  &nsGkAtoms::dl,
-  &nsGkAtoms::dt,
-  &nsGkAtoms::em,
-  &nsGkAtoms::fieldset,
-  &nsGkAtoms::figcaption,
-  &nsGkAtoms::figure,
-  &nsGkAtoms::font,
-  &nsGkAtoms::footer,
-  &nsGkAtoms::form,
-  &nsGkAtoms::h1,
-  &nsGkAtoms::h2,
-  &nsGkAtoms::h3,
-  &nsGkAtoms::h4,
-  &nsGkAtoms::h5,
-  &nsGkAtoms::h6,
-  &nsGkAtoms::header,
-  &nsGkAtoms::hgroup,
-  &nsGkAtoms::hr,
-  &nsGkAtoms::i,
-  &nsGkAtoms::img,
-  &nsGkAtoms::input,
-  &nsGkAtoms::ins,
-  &nsGkAtoms::kbd,
-  &nsGkAtoms::label,
-  &nsGkAtoms::legend,
-  &nsGkAtoms::li,
-  &nsGkAtoms::listing,
-  &nsGkAtoms::map,
-  &nsGkAtoms::mark,
-  &nsGkAtoms::menu,
-  &nsGkAtoms::meter,
-  &nsGkAtoms::nav,
-  &nsGkAtoms::nobr,
-  &nsGkAtoms::noscript,
-  &nsGkAtoms::ol,
-  &nsGkAtoms::optgroup,
-  &nsGkAtoms::option,
-  &nsGkAtoms::output,
-  &nsGkAtoms::p,
-  &nsGkAtoms::pre,
-  &nsGkAtoms::progress,
-  &nsGkAtoms::q,
-  &nsGkAtoms::rp,
-  &nsGkAtoms::rt,
-  &nsGkAtoms::ruby,
-  &nsGkAtoms::s,
-  &nsGkAtoms::samp,
-  &nsGkAtoms::section,
-  &nsGkAtoms::select,
-  &nsGkAtoms::small,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::source,
-#endif
-  &nsGkAtoms::span,
-  &nsGkAtoms::strike,
-  &nsGkAtoms::strong,
-  &nsGkAtoms::sub,
-  &nsGkAtoms::summary,
-  &nsGkAtoms::sup,
-  &nsGkAtoms::table,
-  &nsGkAtoms::tbody,
-  &nsGkAtoms::td,
-  &nsGkAtoms::textarea,
-  &nsGkAtoms::tfoot,
-  &nsGkAtoms::th,
-  &nsGkAtoms::thead,
-  &nsGkAtoms::time,
-  &nsGkAtoms::tr,
-  &nsGkAtoms::track,
-  &nsGkAtoms::tt,
-  &nsGkAtoms::u,
-  &nsGkAtoms::ul,
-  &nsGkAtoms::var,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::video,
-#endif
-  &nsGkAtoms::wbr,
-  nsnull
-};
-
-nsIAtom** const kDefaultAllowedAttributes [] = {
-  &nsGkAtoms::abbr,
-  &nsGkAtoms::accept,
-  &nsGkAtoms::acceptcharset,
-  &nsGkAtoms::accesskey,
-  &nsGkAtoms::action,
-  &nsGkAtoms::align,
-  &nsGkAtoms::alt,
-  &nsGkAtoms::autocomplete,
-  &nsGkAtoms::autofocus,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::autoplay,
-#endif
-  &nsGkAtoms::axis,
-  &nsGkAtoms::background,
-  &nsGkAtoms::bgcolor,
-  &nsGkAtoms::border,
-  &nsGkAtoms::cellpadding,
-  &nsGkAtoms::cellspacing,
-  &nsGkAtoms::_char,
-  &nsGkAtoms::charoff,
-  &nsGkAtoms::charset,
-  &nsGkAtoms::checked,
-  &nsGkAtoms::cite,
-  &nsGkAtoms::_class,
-  &nsGkAtoms::clear,
-  &nsGkAtoms::cols,
-  &nsGkAtoms::colspan,
-  &nsGkAtoms::color,
-  &nsGkAtoms::contenteditable,
-  &nsGkAtoms::contextmenu,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::controls,
-#endif
-  &nsGkAtoms::compact,
-  &nsGkAtoms::coords,
-  &nsGkAtoms::datetime,
-  &nsGkAtoms::dir,
-  &nsGkAtoms::disabled,
-  &nsGkAtoms::draggable,
-  &nsGkAtoms::enctype,
-  &nsGkAtoms::face,
-  &nsGkAtoms::_for,
-  &nsGkAtoms::frame,
-  &nsGkAtoms::headers,
-  &nsGkAtoms::height,
-  &nsGkAtoms::hidden,
-  &nsGkAtoms::high,
-  &nsGkAtoms::href,
-  &nsGkAtoms::hreflang,
-  &nsGkAtoms::hspace,
-  &nsGkAtoms::icon,
-  &nsGkAtoms::id,
-  &nsGkAtoms::ismap,
-  &nsGkAtoms::itemid,
-  &nsGkAtoms::itemprop,
-  &nsGkAtoms::itemref,
-  &nsGkAtoms::itemscope,
-  &nsGkAtoms::itemtype,
-  &nsGkAtoms::kind,
-  &nsGkAtoms::label,
-  &nsGkAtoms::lang,
-  &nsGkAtoms::list,
-  &nsGkAtoms::longdesc,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::loop,
-  &nsGkAtoms::loopend,
-  &nsGkAtoms::loopstart,
-#endif
-  &nsGkAtoms::low,
-  &nsGkAtoms::max,
-  &nsGkAtoms::maxlength,
-  &nsGkAtoms::media,
-  &nsGkAtoms::method,
-  &nsGkAtoms::min,
-  &nsGkAtoms::mozdonotsend,
-  &nsGkAtoms::multiple,
-  &nsGkAtoms::name,
-  &nsGkAtoms::nohref,
-  &nsGkAtoms::noshade,
-  &nsGkAtoms::novalidate,
-  &nsGkAtoms::nowrap,
-  &nsGkAtoms::open,
-  &nsGkAtoms::optimum,
-  &nsGkAtoms::pattern,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::pixelratio,
-#endif
-  &nsGkAtoms::placeholder,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::playbackrate,
-  &nsGkAtoms::playcount,
-#endif
-  &nsGkAtoms::pointSize,
-#ifdef MOZ_MEDIA
-  &nsGkAtoms::poster,
-  &nsGkAtoms::preload,
-#endif
-  &nsGkAtoms::prompt,
-  &nsGkAtoms::pubdate,
-  &nsGkAtoms::radiogroup,
-  &nsGkAtoms::readonly,
-  &nsGkAtoms::rel,
-  &nsGkAtoms::required,
-  &nsGkAtoms::rev,
-  &nsGkAtoms::reversed,
-  &nsGkAtoms::role,
-  &nsGkAtoms::rows,
-  &nsGkAtoms::rowspan,
-  &nsGkAtoms::rules,
-  &nsGkAtoms::scoped,
-  &nsGkAtoms::scope,
-  &nsGkAtoms::selected,
-  &nsGkAtoms::shape,
-  &nsGkAtoms::size,
-  &nsGkAtoms::span,
-  &nsGkAtoms::spellcheck,
-  &nsGkAtoms::src,
-  &nsGkAtoms::srclang,
-  &nsGkAtoms::start,
-  &nsGkAtoms::summary,
-  &nsGkAtoms::tabindex,
-  &nsGkAtoms::target,
-  &nsGkAtoms::title,
-  &nsGkAtoms::type,
-  &nsGkAtoms::usemap,
-  &nsGkAtoms::valign,
-  &nsGkAtoms::value,
-  &nsGkAtoms::vspace,
-  &nsGkAtoms::width,
-  &nsGkAtoms::wrap,
-  nsnull
-};

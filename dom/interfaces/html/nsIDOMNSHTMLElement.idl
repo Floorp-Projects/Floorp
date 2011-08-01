@@ -40,7 +40,7 @@
 
 interface nsIDOMDOMStringMap;
 
-[scriptable, uuid(cf76761d-2d93-4e88-aaf1-b637878bad65)]
+[scriptable, uuid(4012e9a9-f6fb-48b3-9a80-b096c1dcb5ba)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -64,6 +64,10 @@ interface nsIDOMNSHTMLElement : nsISupports
 
            // for WHAT-WG drag and drop
            attribute boolean          draggable;
+
+  void insertAdjacentHTML(in DOMString position,
+                          in DOMString text)
+                          raises(DOMException);
 
   [optional_argc] void scrollIntoView([optional] in boolean top);
 

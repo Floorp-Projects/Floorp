@@ -202,7 +202,7 @@ NS_IMETHODIMP nsDeviceMotion::AddWindowListener(nsIDOMWindow *aWindow)
     mStarted = PR_TRUE;
     Startup();
   }
-  if (mWindowListeners.IndexOf(aWindow) != NoIndex)
+  if (mWindowListeners.IndexOf(aWindow) == NoIndex)
     mWindowListeners.AppendElement(aWindow);
   return NS_OK;
 }
