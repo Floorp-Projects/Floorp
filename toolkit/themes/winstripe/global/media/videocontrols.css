@@ -181,6 +181,10 @@
   background: url(chrome://global/skin/media/throbber.png) no-repeat center;
 }
 
+.statusIcon[type="throbber"][stalled] {
+  background: url(chrome://global/skin/media/stalled.png) no-repeat center;
+}
+
 .statusIcon[type="error"] {
   background: url(chrome://global/skin/media/error.png) no-repeat center;
 }

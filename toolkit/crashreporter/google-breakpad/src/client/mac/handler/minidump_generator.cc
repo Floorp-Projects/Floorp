@@ -33,7 +33,6 @@
 #include <mach/host_info.h>
 #include <mach/i386/thread_status.h>
 #include <mach/mach_vm.h>
-#include <mach/ppc/thread_status.h>
 #include <mach/vm_statistics.h>
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
@@ -43,6 +42,11 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "client/mac/handler/minidump_generator.h"
+
+#ifdef HAS_PPC_SUPPORT
+#include <mach/ppc/thread_status.h>
+#endif
+
 #include "client/minidump_file_writer-inl.h"
 #include "common/mac/file_id.h"
 #include "common/mac/string_utilities.h"
@@ -336,10 +340,12 @@ bool MinidumpGenerator::WriteStackFromStartAddress(
 bool MinidumpGenerator::WriteStack(breakpad_thread_state_data_t state,
                                    MDMemoryDescriptor *stack_location) {
   switch (cpu_type_) {
+#ifdef HAS_PPC_SUUPORT
     case CPU_TYPE_POWERPC:
       return WriteStackPPC(state, stack_location);
     case CPU_TYPE_POWERPC64:
       return WriteStackPPC64(state, stack_location);
+#endif
     case CPU_TYPE_I386:
       return WriteStackX86(state, stack_location);
     case CPU_TYPE_X86_64:
@@ -352,10 +358,12 @@ bool MinidumpGenerator::WriteStack(breakpad_thread_state_data_t state,
 bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
                                      MDLocationDescriptor *register_location) {
   switch (cpu_type_) {
+#ifdef HAS_PPC_SUPPORT
     case CPU_TYPE_POWERPC:
       return WriteContextPPC(state, register_location);
     case CPU_TYPE_POWERPC64:
       return WriteContextPPC64(state, register_location);
+#endif
     case CPU_TYPE_I386:
       return WriteContextX86(state, register_location);
     case CPU_TYPE_X86_64:
@@ -368,10 +376,12 @@ bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
 u_int64_t MinidumpGenerator::CurrentPCForStack(
     breakpad_thread_state_data_t state) {
   switch (cpu_type_) {
+#ifdef HAS_PPC_SUPPORT
     case CPU_TYPE_POWERPC:
       return CurrentPCForStackPPC(state);
     case CPU_TYPE_POWERPC64:
       return CurrentPCForStackPPC64(state);
+#endif
     case CPU_TYPE_I386:
       return CurrentPCForStackX86(state);
     case CPU_TYPE_X86_64:
@@ -382,6 +392,7 @@ u_int64_t MinidumpGenerator::CurrentPCForStack(
   }
 }
 
+#ifdef HAS_PCC_SUPPORT
 bool MinidumpGenerator::WriteStackPPC(breakpad_thread_state_data_t state,
                                       MDMemoryDescriptor *stack_location) {
   ppc_thread_state_t *machine_state =
@@ -539,6 +550,8 @@ bool MinidumpGenerator::WriteContextPPC64(
   return true;
 }
 
+#endif
+
 bool MinidumpGenerator::WriteStackX86(breakpad_thread_state_data_t state,
                                    MDMemoryDescriptor *stack_location) {
   i386_thread_state_t *machine_state =
@@ -663,12 +676,14 @@ bool MinidumpGenerator::GetThreadState(thread_act_t target_thread,
                                        mach_msg_type_number_t *count) {
   thread_state_flavor_t flavor;
   switch (cpu_type_) {
+#ifdef HAS_PPC_SUPPORT
     case CPU_TYPE_POWERPC:
       flavor = PPC_THREAD_STATE;
       break;
     case CPU_TYPE_POWERPC64:
       flavor = PPC_THREAD_STATE64;
       break;
+#endif
     case CPU_TYPE_I386:
       flavor = i386_THREAD_STATE;
       break;

@@ -463,6 +463,21 @@ nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
 
 NS_IMPL_STRING_ATTR(nsGenericHTMLElement, AccessKey, accesskey)
 
+NS_IMETHODIMP
+nsGenericHTMLElement::GetAccessKeyLabel(nsAString& aLabel)
+{
+  nsPresContext *presContext = GetPresContext();
+
+  if (presContext &&
+    presContext->EventStateManager()->GetAccessKeyLabelPrefix(aLabel)) {
+      nsAutoString suffix;
+      GetAccessKey(suffix);
+      aLabel.Append(suffix);
+  }
+
+  return NS_OK;
+}
+
 static PRBool
 IsBody(nsIContent *aContent)
 {
@@ -706,6 +721,26 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
   return rv;
 }
 
+void
+nsGenericHTMLElement::FireMutationEventsForDirectParsing(nsIDocument* aDoc,
+                                                         nsIContent* aDest,
+                                                         PRInt32 aOldChildCount)
+{
+  // Fire mutation events. Optimize for the case when there are no listeners
+  PRInt32 newChildCount = aDest->GetChildCount();
+  if (newChildCount && nsContentUtils::
+        HasMutationListeners(aDoc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+    nsAutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
+    NS_ASSERTION(newChildCount - aOldChildCount >= 0,
+                 "What, some unexpected dom mutation has happened?");
+    childNodes.SetCapacity(newChildCount - aOldChildCount);
+    for (nsINode::ChildIterator iter(aDest); !iter.IsDone(); iter.Next()) {
+      childNodes.AppendElement(iter);
+    }
+    nsGenericElement::FireNodeInserted(aDoc, aDest, childNodes);
+  }
+}
+
 nsresult
 nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
@@ -719,8 +754,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   FireNodeRemovedForChildren();
 
-  // This BeginUpdate/EndUpdate pair is important to make us reenable the
-  // scriptloader before the last EndUpdate call.
+  // Needed when innerHTML is used in combination with contenteditable
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
 
   // Remove childnodes.
@@ -731,48 +765,20 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
-  // Strong ref since appendChild can fire events
-  nsRefPtr<nsScriptLoader> loader = doc->ScriptLoader();
-  PRBool scripts_enabled = loader->GetEnabled();
-  loader->SetEnabled(PR_FALSE);
-
-  if (doc->IsHTML() && nsHtml5Module::sEnabled) {
-    nsCOMPtr<nsIParser> parser = doc->GetFragmentParser();
-    if (parser) {
-      parser->Reset();
-    } else {
-      parser = nsHtml5Module::NewHtml5Parser();
-      NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
-    }
-
+  if (doc->IsHTML()) {
     PRInt32 oldChildCount = GetChildCount();
-    nsAHtml5FragmentParser* asFragmentParser =
-        static_cast<nsAHtml5FragmentParser*> (parser.get());
-    asFragmentParser->ParseHtml5Fragment(aInnerHTML,
-                                         this,
-                                         Tag(),
-                                         GetNameSpaceID(),
-                                         doc->GetCompatibilityMode() ==
-                                             eCompatibility_NavQuirks,
-                                         PR_TRUE);
-    doc->SetFragmentParser(parser);
-
+    nsContentUtils::ParseFragmentHTML(aInnerHTML,
+                                      this,
+                                      Tag(),
+                                      GetNameSpaceID(),
+                                      doc->GetCompatibilityMode() ==
+                                          eCompatibility_NavQuirks,
+                                      PR_TRUE);
     // HTML5 parser has notified, but not fired mutation events.
-    // Fire mutation events. Optimize for the case when there are no listeners
-    PRInt32 newChildCount = GetChildCount();
-    if (newChildCount && nsContentUtils::
-          HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsAutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
-      NS_ASSERTION(newChildCount - oldChildCount >= 0,
-                   "What, some unexpected dom mutation has happened?");
-      childNodes.SetCapacity(newChildCount - oldChildCount);
-      for (nsINode::ChildIterator iter(this); !iter.IsDone(); iter.Next()) {
-        childNodes.AppendElement(iter);
-      }
-      nsGenericElement::FireNodeInserted(doc, this, childNodes);
-    }
+    FireMutationEventsForDirectParsing(doc, this, oldChildCount);
   } else {
-    rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML, PR_FALSE,
+    rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
+                                                  PR_TRUE,
                                                   getter_AddRefs(df));
     nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
     if (NS_SUCCEEDED(rv)) {
@@ -780,13 +786,104 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     }
   }
 
-  if (scripts_enabled) {
-    // If we disabled scripts, re-enable them now that we're
-    // done. Don't fire JS timeouts when enabling the context here.
+  return rv;
+}
 
-    loader->SetEnabled(PR_TRUE);
+enum nsAdjacentPosition {
+  eBeforeBegin,
+  eAfterBegin,
+  eBeforeEnd,
+  eAfterEnd
+};
+
+nsresult
+nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
+                                         const nsAString& aText)
+{
+  nsAdjacentPosition position;
+  if (aPosition.LowerCaseEqualsLiteral("beforebegin")) {
+    position = eBeforeBegin;
+  } else if (aPosition.LowerCaseEqualsLiteral("afterbegin")) {
+    position = eAfterBegin;
+  } else if (aPosition.LowerCaseEqualsLiteral("beforeend")) {
+    position = eBeforeEnd;
+  } else if (aPosition.LowerCaseEqualsLiteral("afterend")) {
+    position = eAfterEnd;
+  } else {
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
+  nsCOMPtr<nsIContent> destination;
+  if (position == eBeforeBegin || position == eAfterEnd) {
+    destination = GetParent();
+    if (!destination) {
+      return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    }
+  } else {
+    destination = this;
+  }
+
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ENSURE_STATE(doc);
+
+  // Needed when insertAdjacentHTML is used in combination with contenteditable
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(doc, nsnull);
+
+  // Parse directly into destination if possible
+  if (doc->IsHTML() &&
+      (position == eBeforeEnd ||
+       (position == eAfterEnd && !GetNextSibling()) ||
+       (position == eAfterBegin && !GetFirstChild()))) {
+    PRInt32 oldChildCount = destination->GetChildCount();
+    PRInt32 contextNs = destination->GetNameSpaceID();
+    nsIAtom* contextLocal = destination->Tag();
+    if (contextLocal == nsGkAtoms::html && contextNs == kNameSpaceID_XHTML) {
+      // For compat with IE6 through IE9. Willful violation of HTML5 as of
+      // 2011-04-06. CreateContextualFragment does the same already.
+      // Spec bug: http://www.w3.org/Bugs/Public/show_bug.cgi?id=12434
+      contextLocal = nsGkAtoms::body;
+    }
+    nsContentUtils::ParseFragmentHTML(aText,
+                                      destination,
+                                      contextLocal,
+                                      contextNs,
+                                      doc->GetCompatibilityMode() ==
+                                          eCompatibility_NavQuirks,
+                                      PR_TRUE);
+    // HTML5 parser has notified, but not fired mutation events.
+    FireMutationEventsForDirectParsing(doc, destination, oldChildCount);
+    return NS_OK;
+  }
+
+  // couldn't parse directly
+  nsCOMPtr<nsIDOMDocumentFragment> df;
+  nsresult rv = nsContentUtils::CreateContextualFragment(destination,
+                                                         aText,
+                                                         PR_TRUE,
+                                                         getter_AddRefs(df));
+  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (position) {
+    case eBeforeBegin:
+      destination->InsertBefore(fragment, this, &rv);
+      break;
+    case eAfterBegin:
+      static_cast<nsINode*>(this)->InsertBefore(fragment, GetFirstChild(), &rv);
+      break;
+    case eBeforeEnd:
+      static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
+      break;
+    case eAfterEnd:
+      destination->InsertBefore(fragment, GetNextSibling(), &rv);
+      break;
+    default:
+      NS_NOTREACHED("Bad position.");
+      break;
+  }
   return rv;
 }
 
@@ -1123,10 +1220,8 @@ nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                                 aValue, aNotify);
 }
 
-nsresult
-nsGenericHTMLElement::GetEventListenerManagerForAttr(nsEventListenerManager** aManager,
-                                                     nsISupports** aTarget,
-                                                     PRBool* aDefer)
+nsEventListenerManager*
+nsGenericHTMLElement::GetEventListenerManagerForAttr(PRBool* aDefer)
 {
   // Attributes on the body and frameset tags get set on the global object
   if (mNodeInfo->Equals(nsGkAtoms::body) ||
@@ -1139,36 +1234,23 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsEventListenerManager** aM
     // XXXbz sXBL/XBL2 issue: should we instead use GetCurrentDoc() here,
     // override BindToTree for those classes and munge event listeners there?
     nsIDocument *document = GetOwnerDoc();
-    nsresult rv = NS_OK;
 
     // FIXME (https://bugzilla.mozilla.org/show_bug.cgi?id=431767)
     // nsDocument::GetInnerWindow can return an outer window in some cases,
     // we don't want to stick an event listener on an outer window, so
     // bail if it does.
+    *aDefer = PR_FALSE;
     if (document &&
         (win = document->GetInnerWindow()) && win->IsInnerWindow()) {
       nsCOMPtr<nsIDOMEventTarget> piTarget(do_QueryInterface(win));
-      NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
-      *aManager = piTarget->GetListenerManager(PR_TRUE);
-
-      if (*aManager) {
-        NS_ADDREF(*aTarget = win);
-        NS_ADDREF(*aManager);
-      }
-      *aDefer = PR_FALSE;
-    } else {
-      *aManager = nsnull;
-      *aTarget = nsnull;
-      *aDefer = PR_FALSE;
+      return piTarget->GetListenerManager(PR_TRUE);
     }
 
-    return rv;
+    return nsnull;
   }
 
-  return nsGenericHTMLElementBase::GetEventListenerManagerForAttr(aManager,
-                                                                  aTarget,
-                                                                  aDefer);
+  return nsGenericHTMLElementBase::GetEventListenerManagerForAttr(aDefer);
 }
 
 nsresult

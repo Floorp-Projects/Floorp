@@ -57,6 +57,7 @@
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5StreamParser.h"
+#include "mozilla/css/Loader.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHtml5TreeOpExecutor)
 
@@ -307,8 +308,10 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
 
   PRBool willNotify;
   PRBool isAlternate;
-  nsresult rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
-  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+  nsresult rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
+                                       &willNotify,
+                                       &isAlternate);
+  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mFragmentMode) {
     ++mPendingSheetCount;
     mScriptLoader->AddExecuteBlocker();
   }
@@ -805,14 +808,26 @@ nsHtml5TreeOpExecutor::GetTokenizer()
 }
 
 void
-nsHtml5TreeOpExecutor::Reset() {
+nsHtml5TreeOpExecutor::Reset()
+{
   DropHeldElements();
   mReadingFromStage = PR_FALSE;
   mOpQueue.Clear();
   mStarted = PR_FALSE;
   mFlushState = eNotFlushing;
   mRunFlushLoopOnStack = PR_FALSE;
-  mFragmentMode = PR_FALSE;
+}
+
+void
+nsHtml5TreeOpExecutor::DropHeldElements()
+{
+  mScriptLoader = nsnull;
+  mDocument = nsnull;
+  mNodeInfoManager = nsnull;
+  mCSSLoader = nsnull;
+  mDocumentURI = nsnull;
+  mDocShell = nsnull;
+  mOwnedElements.Clear();
 }
 
 void
@@ -891,13 +906,14 @@ nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
 }
 
 void
-nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL)
+nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL,
+                                    const nsAString& aCrossOrigin)
 {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
-  mDocument->MaybePreLoadImage(uri);
+  mDocument->MaybePreLoadImage(uri, aCrossOrigin);
 }
 
 void
