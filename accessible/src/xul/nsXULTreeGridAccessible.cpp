@@ -47,6 +47,8 @@
 
 #include "nsITreeSelection.h"
 
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -848,13 +850,10 @@ NS_IMPL_RELEASE_INHERITED(nsXULTreeGridCellAccessible, nsLeafAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridCellAccessible: nsIAccessible implementation
 
-NS_IMETHODIMP
-nsXULTreeGridCellAccessible::GetFocusedChild(nsIAccessible **aFocusedChild) 
+nsAccessible*
+nsXULTreeGridCellAccessible::FocusedChild()
 {
-  NS_ENSURE_ARG_POINTER(aFocusedChild);
-  *aFocusedChild = nsnull;
-
-  return IsDefunct() ? NS_ERROR_FAILURE : NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP

@@ -208,6 +208,9 @@ NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb);
 extern JSFixedString *
 NumberToString(JSContext *cx, jsdouble d);
 
+extern JSFixedString *
+IndexToString(JSContext *cx, uint32 index);
+
 /*
  * Usually a small amount of static storage is enough, but sometimes we need
  * to dynamically allocate much more.  This struct encapsulates that.
