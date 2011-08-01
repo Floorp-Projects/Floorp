@@ -52,6 +52,7 @@
 #include "nsXPCOMStrings.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
+#include "nsIScriptError.h"
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
 #include "nsIScriptSecurityManager.h"
@@ -76,11 +77,29 @@ nsJSON::~nsJSON()
 {
 }
 
+enum DeprecationWarning { EncodeWarning, DecodeWarning };
+
+static nsresult
+WarnDeprecatedMethod(DeprecationWarning warning)
+{
+  return nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                         warning == EncodeWarning
+                                         ? "nsIJSONEncodeDeprecatedWarning"
+                                         : "nsIJSONDecodeDeprecatedWarning",
+                                         nsnull, 0,
+                                         nsnull,
+                                         EmptyString(), 0, 0,
+                                         nsIScriptError::warningFlag,
+                                         "DOM Core");
+}
+
 NS_IMETHODIMP
 nsJSON::Encode(nsAString &aJSON)
 {
   // This function should only be called from JS.
-  nsresult rv;
+  nsresult rv = WarnDeprecatedMethod(EncodeWarning);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsJSONWriter writer;
   rv = EncodeInternal(&writer);
@@ -424,13 +443,17 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
 NS_IMETHODIMP
 nsJSON::Decode(const nsAString& json)
 {
+  nsresult rv = WarnDeprecatedMethod(DecodeWarning);
+  if (NS_FAILED(rv))
+    return rv;
+
   const PRUnichar *data;
   PRUint32 len = NS_StringGetData(json, &data);
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      (const char*) data,
-                                      len * sizeof(PRUnichar),
-                                      NS_ASSIGNMENT_DEPEND);
+  rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                             reinterpret_cast<const char*>(data),
+                             len * sizeof(PRUnichar),
+                             NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
   return DecodeInternal(stream, len, PR_FALSE);
 }
