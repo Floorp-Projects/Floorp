@@ -88,6 +88,7 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsopcodeinlines.h"
+#include "jstypedarrayinlines.h"
 
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
@@ -3560,8 +3561,8 @@ BEGIN_CASE(JSOP_LENGTH)
             }
 
             if (js_IsTypedArray(obj)) {
-                TypedArray *tarray = TypedArray::fromJSObject(obj);
-                regs.sp[-1].setNumber(tarray->length);
+                JSObject *tarray = TypedArray::getTypedArray(obj);
+                regs.sp[-1].setInt32(TypedArray::getLength(tarray));
                 len = JSOP_LENGTH_LENGTH;
                 DO_NEXT_OP(len);
             }
