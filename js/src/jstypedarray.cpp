@@ -1956,3 +1956,39 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vals), vals);
     return TypedArrayConstruct(cx, atype, argc, &vals[0]);
 }
+
+JSUint32
+JS_GetTypedArrayLength(JSObject *obj)
+{
+    return obj->getSlot(TypedArray::FIELD_LENGTH).toInt32();
+}
+
+JSUint32
+JS_GetTypedArrayByteOffset(JSObject *obj)
+{
+    return obj->getSlot(TypedArray::FIELD_BYTEOFFSET).toInt32();
+}
+
+JSUint32
+JS_GetTypedArrayByteLength(JSObject *obj)
+{
+    return obj->getSlot(TypedArray::FIELD_BYTELENGTH).toInt32();
+}
+
+JSUint32
+JS_GetTypedArrayType(JSObject *obj)
+{
+    return obj->getSlot(TypedArray::FIELD_TYPE).toInt32();
+}
+
+JSObject *
+JS_GetTypedArrayBuffer(JSObject *obj)
+{
+    return (JSObject *) obj->getSlot(TypedArray::FIELD_BUFFER).toPrivate();
+}
+
+void *
+JS_GetTypedArrayData(JSObject *obj)
+{
+    return TypedArray::getDataOffset(obj);
+}
