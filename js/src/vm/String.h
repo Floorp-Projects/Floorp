@@ -660,6 +660,9 @@ class JSAtom : public JSFixedString
      */
     static inline bool isStatic(const void *ptr);
 
+    static inline bool hasUintStatic(uint32 u);
+    static inline JSStaticAtom &uintStatic(uint32 u);
+
     static inline bool hasIntStatic(int32 i);
     static inline JSStaticAtom &intStatic(jsint i);
 

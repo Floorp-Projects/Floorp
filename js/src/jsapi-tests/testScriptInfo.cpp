@@ -16,7 +16,18 @@ try {              \n\
 catch (e)          \n\
 {                  \n\
 	 xx += 1;  \n\
-}";
+}\n\
+//@sourceMappingURL=http://example.com/path/to/source-map.json";
+
+
+static bool
+CharsMatch(const jschar *p, const char *q) {
+    while (*q) {
+        if (*p++ != *q++)
+            return false;
+    }
+    return true;
+}
 
 // Bug 670958 - fix JS_GetScriptLineExtent, among others
 BEGIN_TEST(testScriptInfo)
@@ -34,7 +45,8 @@ BEGIN_TEST(testScriptInfo)
     CHECK_EQUAL(JS_PCToLineNumber(cx, script, start), startLine);
     CHECK_EQUAL(JS_GetScriptLineExtent(cx, script), 10);
     CHECK(strcmp(JS_GetScriptFilename(cx, script), __FILE__) == 0);
-    
+    CHECK(CharsMatch(JS_GetScriptSourceMap(cx, script), "http://example.com/path/to/source-map.json"));
+
     return true;
 }
 END_TEST(testScriptInfo)

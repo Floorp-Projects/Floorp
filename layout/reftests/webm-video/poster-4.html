@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;">
+<!-- Test if we show video frame after removing valid poster. -->
+<video src="black140x100.webm"
+       preload="auto"
+       id="v"
+       onload="document.getElementById('v').poster = ''; setTimeout(function(){document.documentElement.className = '';}, 0);"
+       poster="blue250x200.png"></video>
+</body>
+</html>

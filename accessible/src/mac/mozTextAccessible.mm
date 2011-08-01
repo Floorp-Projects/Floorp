@@ -3,6 +3,8 @@
 
 #import "mozTextAccessible.h"
 
+using namespace mozilla::a11y;
+
 extern const NSString *kInstanceDescriptionAttribute; // NSAccessibilityDescriptionAttribute
 extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevelUIElementAttribute
 

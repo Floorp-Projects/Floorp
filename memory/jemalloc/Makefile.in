@@ -126,7 +126,6 @@ NO_INSTALL_IMPORT_LIBRARY = 1
 endif
 else # Not Windows
 
-MODULE_OPTIMIZE_FLAGS = -O2
 ifeq ($(OS_ARCH),SunOS)
 ifndef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -xO5

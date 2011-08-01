@@ -2791,9 +2791,40 @@ version 1.4.6 [April 8, 2011]
 version 1.4.7rc01 [April 9, 2011]
   Relocated misplaced new declarations in pngwutil.c.
 
-version 1.4.7 [April 10, 2011]
+version 1.4.7 [April 9, 2011]
   Disabled PNG_PEDANTIC_WARNINGS for all MSC versions as in libpng-1.4.5.
 
+version 1.4.8beta01 [June 4, 2011]
+  Undef "_ALL_SOURCE" for AIX, to prevent "jmpbuf" from being redefined.
+  Copied png_debug macros from pngpriv.h into pngtest.c and removed
+    "#include pngpriv.h" from pngtest.c, to avoid setting a bad example.
+  Pass "" instead of '\0' to png_default_error() in png_err().  This mistake
+    was introduced in libpng-1.2.20beta01.
+  Check for up->location !PNG_AFTER_IDAT when writing unknown chunks
+    before IDAT.
+  Ported bugfix in pngrtran.c from 1.5.3: when expanding a paletted image,
+    always expand to RGBA if transparency is present.
+
+version 1.4.8beta02 [June 5, 2011]
+  Ported bugfix in pngrtran.c from 1.5.3: Ensure coefficients are OK for
+    png_rgb_to_gray_fixed().
+
+version 1.4.8beta03 [June 6, 2011]
+  Check for integer overflow in png_set_rgb_to_gray().
+
+version 1.4.8beta04 [June 7, 2011]
+  Fixed uninitialized memory read in png_format_buffer() (Bug report by
+    Frank Busse, related to CVE-2004-0421).
+
+version 1.4.8beta05 [June 19, 2011]
+  Fixed error in "ACCURATE" 16-to-8 scaling (John Bowler).
+  Check for sCAL chunk too short.
+
+version 1.4.8rc01 [June 30, 2011]
+  No changes.
+
+version 1.4.8 [July 7, 2011]
+  No changes.
 
 Send comments/corrections/commendations to glennrp at users.sourceforge.net
 or to png-mng-implement at lists.sf.net (subscription required; visit

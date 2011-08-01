@@ -148,6 +148,7 @@ toolkit.jar:
   skin/classic/global/media/scrubberThumbWide.png                    (media/scrubberThumbWide.png)
   skin/classic/global/media/error.png                                (media/error.png)
   skin/classic/global/media/throbber.png                             (media/throbber.png)
+  skin/classic/global/media/stalled.png                              (media/stalled.png)
   skin/classic/global/media/volumeThumb.png                          (media/volumeThumb.png)
   skin/classic/global/menu/menu-arrow.png                            (menu/menu-arrow.png)
   skin/classic/global/menu/menu-check.png                            (menu/menu-check.png)
