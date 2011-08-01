@@ -1040,9 +1040,11 @@ public:
    * @param aContextNode the node which is used to resolve namespaces
    * @param aFragment the string which is parsed to a DocumentFragment
    * @param aReturn the resulting fragment
+   * @param aPreventScriptExecution whether to mark scripts as already started
    */
   static nsresult CreateContextualFragment(nsINode* aContextNode,
                                            const nsAString& aFragment,
+                                           PRBool aPreventScriptExecution,
                                            nsIDOMDocumentFragment** aReturn);
 
   /**
@@ -1070,11 +1072,13 @@ public:
    * @param aSourceBuffer the string being set as innerHTML
    * @param aTargetNode the target container
    * @param aTagStack the namespace mapping context
+   * @param aPreventExecution whether to mark scripts as already started
    * @param aReturn the result fragment
    */
   static nsresult ParseFragmentXML(const nsAString& aSourceBuffer,
                                    nsIDocument* aDocument,
                                    nsTArray<nsString>& aTagStack,
+                                   PRBool aPreventScriptExecution,
                                    nsIDOMDocumentFragment** aReturn);
 
   /**

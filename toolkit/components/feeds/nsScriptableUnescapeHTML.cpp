@@ -174,6 +174,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
       rv = nsContentUtils::ParseFragmentXML(aFragment,
                                             document,
                                             tagStack,
+                                            PR_TRUE,
                                             aReturn);
       fragment = do_QueryInterface(*aReturn);
     } else {
