@@ -58,17 +58,6 @@ gfxQuartzImageSurface::~gfxQuartzImageSurface()
 {
 }
 
-PRInt32
-gfxQuartzImageSurface::KnownMemoryUsed()
-{
-  // This surface doesn't own any memory itself, but we want to report here the
-  // amount of memory that the surface it wraps uses.
-  nsRefPtr<gfxImageSurface> imgSurface = GetAsImageSurface();
-  if (imgSurface)
-    return imgSurface->KnownMemoryUsed();
-  return 0;
-}
-
 already_AddRefed<gfxImageSurface>
 gfxQuartzImageSurface::GetAsImageSurface()
 {

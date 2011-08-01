@@ -778,7 +778,7 @@ void imgFrame::SetCompositingFailed(PRBool val)
   mCompositingFailed = val;
 }
 
-PRUint32 imgFrame::EstimateHeapMemoryUsed() const
+PRUint32 imgFrame::EstimateMemoryUsed() const
 {
   PRUint32 size = 0;
 
@@ -791,8 +791,7 @@ PRUint32 imgFrame::EstimateHeapMemoryUsed() const
   }
 
 #ifdef USE_WIN_SURFACE
-  if (mWinSurface && mWinSurface->GetMemoryLocation() ==
-                     gfxASurface::MEMORY_IN_PROCESS_HEAP) {
+  if (mWinSurface) {
     size += mWinSurface->KnownMemoryUsed();
   } else
 #endif
@@ -801,37 +800,17 @@ PRUint32 imgFrame::EstimateHeapMemoryUsed() const
     size += mSize.width * mSize.height * 4;
   } else
 #endif
-  if (mImageSurface && mImageSurface->GetMemoryLocation() ==
-                       gfxASurface::MEMORY_IN_PROCESS_HEAP) {
+  if (mImageSurface) {
     size += mImageSurface->KnownMemoryUsed();
   }
 
-  if (mOptSurface && mOptSurface->GetMemoryLocation() ==
-                     gfxASurface::MEMORY_IN_PROCESS_HEAP) {
+  if (mOptSurface) {
     size += mOptSurface->KnownMemoryUsed();
   }
 
-  return size;
-}
-
-PRUint32 imgFrame::EstimateNonheapMemoryUsed() const
-{
-  PRUint32 size = 0;
-
-#ifdef USE_WIN_SURFACE
-  if (mWinSurface && mWinSurface->GetMemoryLocation() ==
-                     gfxASurface::MEMORY_IN_PROCESS_NONHEAP) {
-    size += mWinSurface->KnownMemoryUsed();
-  } else
-#endif
-  if (mImageSurface && mImageSurface->GetMemoryLocation() ==
-                       gfxASurface::MEMORY_IN_PROCESS_NONHEAP) {
-    size += mImageSurface->KnownMemoryUsed();
-  }
-
-  if (mOptSurface && mOptSurface->GetMemoryLocation() ==
-                     gfxASurface::MEMORY_IN_PROCESS_NONHEAP) {
-    size += mOptSurface->KnownMemoryUsed();
+  // fall back to pessimistic/approximate size
+  if (size == 0) {
+    size = mSize.width * mSize.height * 4;
   }
 
   return size;
