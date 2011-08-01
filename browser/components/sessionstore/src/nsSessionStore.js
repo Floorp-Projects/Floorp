@@ -1912,7 +1912,15 @@ SessionStoreService.prototype = {
     let hasContent = false;
 
     for (let i = 0; i < aHistory.count; i++) {
-      let uri = aHistory.getEntryAtIndex(i, false).URI;
+      let uri;
+      try {
+        uri = aHistory.getEntryAtIndex(i, false).URI;
+      }
+      catch (ex) {
+        // Chances are that this is getEntryAtIndex throwing, as seen in bug 669196.
+        // We've already asserted in _collectTabData, so we won't show that again.
+        continue;
+      }
       // sessionStorage is saved per origin (cf. nsDocShell::GetSessionStorageForURI)
       let domain = uri.spec;
       try {
