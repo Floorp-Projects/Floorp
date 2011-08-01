@@ -45,6 +45,8 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsIContent.h"
 
+using namespace mozilla::a11y;
+
 /**
  *  This list of WAI-defined roles are currently hardcoded.
  *  Eventually we will most likely be loading an RDF resource that contains this information

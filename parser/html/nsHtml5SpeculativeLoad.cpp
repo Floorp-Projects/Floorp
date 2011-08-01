@@ -61,13 +61,13 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
         aExecutor->SetSpeculationBase(mUrl);
       break;
     case eSpeculativeLoadImage:
-        aExecutor->PreloadImage(mUrl);
+        aExecutor->PreloadImage(mUrl, mCharsetOrCrossOrigin);
       break;
     case eSpeculativeLoadScript:
-        aExecutor->PreloadScript(mUrl, mCharset, mType);
+        aExecutor->PreloadScript(mUrl, mCharsetOrCrossOrigin, mType);
       break;
     case eSpeculativeLoadStyle:
-        aExecutor->PreloadStyle(mUrl, mCharset);
+        aExecutor->PreloadStyle(mUrl, mCharsetOrCrossOrigin);
       break;
     case eSpeculativeLoadManifest:  
         aExecutor->ProcessOfflineManifest(mUrl);

@@ -590,6 +590,8 @@ ContextStack::popSegment()
 bool
 ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
 {
+    JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
+
     uintN nvars = 2 + argc;
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &iag->pushedSeg_);
     if (!firstUnused)
