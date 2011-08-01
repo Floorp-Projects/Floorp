@@ -640,15 +640,16 @@ SessionStoreService.prototype = {
         let quitting = aSubject.data;
         if (quitting) {
           // save the backed up state with session set to stopped,
-          // otherwise resuming next time would look like a crash
+          // otherwise resuming next time would look like a crash.
+          // Whether we restore the session upon resume will be determined by the
+          // usual startup prefs, so we will have the same behavior regardless of
+          // whether the browser was closed while in normal or private browsing mode.
           if ("_stateBackup" in this) {
             var oState = this._stateBackup;
             oState.session = { state: STATE_STOPPED_STR };
 
             this._saveStateObject(oState);
           }
-          // make sure to restore the non-private session upon resuming
-          this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
         }
         else
           this._inPrivateBrowsing = false;
