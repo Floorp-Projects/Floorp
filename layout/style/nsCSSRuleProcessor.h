@@ -136,6 +136,8 @@ public:
 
   virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
 
+  virtual PRInt64 SizeOf() const;
+
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
   PRBool AppendFontFaceRules(nsPresContext* aPresContext,
