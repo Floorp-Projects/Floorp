@@ -4,6 +4,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const INT_MAX = 0x7FFFFFFF;
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 Cu.import("resource://gre/modules/Services.jsm");
@@ -106,7 +107,7 @@ function run_test()
 {
   let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR]
   for each (let histogram_type in kinds) {
-    let [min, max, bucket_count] = [1, 10000, 10]
+    let [min, max, bucket_count] = [1, INT_MAX - 1, 10]
     test_histogram(histogram_type, "test::"+histogram_type, min, max, bucket_count);
     
     const nh = Telemetry.newHistogram;
