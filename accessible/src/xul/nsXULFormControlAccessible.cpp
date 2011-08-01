@@ -62,6 +62,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsITextControlFrame.h"
 
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,8 +575,9 @@ nsXULToolbarButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
   PRInt32 setSize = 0;
   PRInt32 posInSet = 0;
 
-  nsAccessible* parent(GetParent());
-  NS_ENSURE_TRUE(parent,);
+  nsAccessible* parent = Parent();
+  if (!parent)
+    return;
 
   PRInt32 childCount = parent->GetChildCount();
   for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {

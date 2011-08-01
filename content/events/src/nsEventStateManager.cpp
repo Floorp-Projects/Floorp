@@ -1508,6 +1508,35 @@ nsEventStateManager::ExecuteAccessKey(nsTArray<PRUint32>& aAccessCharCodes,
   return PR_FALSE;
 }
 
+PRBool
+nsEventStateManager::GetAccessKeyLabelPrefix(nsAString& aPrefix)
+{
+  aPrefix.Truncate();
+  nsAutoString separator, modifierText;
+  nsContentUtils::GetModifierSeparatorText(separator);
+
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  PRInt32 modifier = GetAccessModifierMask(container);
+
+  if (modifier & NS_MODIFIER_CONTROL) {
+    nsContentUtils::GetControlText(modifierText);
+    aPrefix.Append(modifierText + separator);
+  }
+  if (modifier & NS_MODIFIER_META) {
+    nsContentUtils::GetMetaText(modifierText);
+    aPrefix.Append(modifierText + separator);
+  }
+  if (modifier & NS_MODIFIER_ALT) {
+    nsContentUtils::GetAltText(modifierText);
+    aPrefix.Append(modifierText + separator);
+  }
+  if (modifier & NS_MODIFIER_SHIFT) {
+    nsContentUtils::GetShiftText(modifierText);
+    aPrefix.Append(modifierText + separator);
+  }
+  return !aPrefix.IsEmpty();
+}
+
 void
 nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                      nsKeyEvent *aEvent,

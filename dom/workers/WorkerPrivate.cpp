@@ -532,7 +532,7 @@ public:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     JSAutoStructuredCloneBuffer buffer;
-    buffer.adopt(aCx, mData, mDataByteCount);
+    buffer.adopt(mData, mDataByteCount);
 
     mData = nsnull;
     mDataByteCount = 0;
@@ -1206,15 +1206,17 @@ NS_IMETHODIMP
 WorkerRunnable::Run()
 {
   JSContext* cx;
-
+  JSObject* targetCompartmentObject;
   nsIThreadJSContextStack* contextStack = nsnull;
 
   if (mTarget == WorkerThread) {
     mWorkerPrivate->AssertIsOnWorkerThread();
     cx = mWorkerPrivate->GetJSContext();
+    targetCompartmentObject = JS_GetGlobalObject(cx);
   } else {
     mWorkerPrivate->AssertIsOnParentThread();
     cx = mWorkerPrivate->ParentJSContext();
+    targetCompartmentObject = mWorkerPrivate->GetJSObject();
 
     if (!mWorkerPrivate->GetParent()) {
       AssertIsOnMainThread();
@@ -1233,10 +1235,8 @@ WorkerRunnable::Run()
 
   JSAutoRequest ar(cx);
 
-  JSObject* global = JS_GetGlobalObject(cx);
-
   JSAutoEnterCompartment ac;
-  if (global && !ac.enter(cx, global)) {
+  if (targetCompartmentObject && !ac.enter(cx, targetCompartmentObject)) {
     return false;
   }
 

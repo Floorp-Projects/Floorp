@@ -349,6 +349,8 @@ protected:
   PRUint8 mIsDocumentObserver : 1;
   // True if this is a fragment parser
   PRUint8 mFragmentMode : 1;
+  // True to call prevent script execution in the fragment mode.
+  PRUint8 mPreventScriptExecution : 1;
   
   //
   // -- Can interrupt parsing members --
@@ -406,10 +408,5 @@ protected:
   static PRInt32 sEnablePerfMode;
   static PRBool sCanInterruptParser;
 };
-
-// sanitizing content sink whitelists
-extern PRBool IsAttrURI(nsIAtom *aName);
-extern nsIAtom** const kDefaultAllowedTags [];
-extern nsIAtom** const kDefaultAllowedAttributes [];
 
 #endif // _nsContentSink_h_

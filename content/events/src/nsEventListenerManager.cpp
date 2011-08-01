@@ -588,7 +588,6 @@ nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
 nsresult
 nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
                                            void *aScopeObject,
-                                           nsISupports *aObject,
                                            nsIAtom* aName,
                                            PRBool aIsString,
                                            PRBool aPermitUntrustedEvents)
@@ -601,7 +600,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
     // If we didn't find a script listener or no listeners existed
     // create and add a new one.
     nsCOMPtr<nsIDOMEventListener> scriptListener;
-    rv = NS_NewJSEventListener(aContext, aScopeObject, aObject, aName,
+    rv = NS_NewJSEventListener(aContext, aScopeObject, mTarget, aName,
                                getter_AddRefs(scriptListener));
     if (NS_SUCCEEDED(rv)) {
       AddEventListener(scriptListener, eventType, aName, nsnull,
@@ -624,8 +623,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
 }
 
 nsresult
-nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
-                                               nsIAtom *aName,
+nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
                                                const nsAString& aBody,
                                                PRUint32 aLanguage,
                                                PRBool aDeferCompilation,
@@ -646,11 +644,10 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsINode> node(do_QueryInterface(aObject));
+  nsCOMPtr<nsINode> node(do_QueryInterface(mTarget));
 
   nsCOMPtr<nsIDocument> doc;
 
-  nsISupports *objiSupp = aObject;
   nsCOMPtr<nsIScriptGlobalObject> global;
 
   if (node) {
@@ -661,7 +658,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     if (doc)
       global = doc->GetScriptGlobalObject();
   } else {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aObject));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mTarget));
     if (win) {
       NS_ASSERTION(win->IsInnerWindow(),
                    "Event listener added to outer window!");
@@ -671,7 +668,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       doc = do_QueryInterface(domdoc);
       global = do_QueryInterface(win);
     } else {
-      global = do_QueryInterface(aObject);
+      global = do_QueryInterface(mTarget);
     }
   }
 
@@ -702,7 +699,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
           uri->GetAsciiSpec(asciiSpec);
         nsAutoString scriptSample, attr, tagName(NS_LITERAL_STRING("UNKNOWN"));
         aName->ToString(attr);
-        nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aObject));
+        nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTarget));
         if (domNode)
           domNode->GetNodeName(tagName);
         // build a "script sample" based on what we know about this element
@@ -733,7 +730,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
 
   if (!aDeferCompilation) {
     nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner =
-      do_QueryInterface(aObject);
+      do_QueryInterface(mTarget);
 
     nsScriptObjectHolder handler(context);
     PRBool done = PR_FALSE;
@@ -741,7 +738,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     if (handlerOwner) {
       rv = handlerOwner->GetCompiledEventHandler(aName, handler);
       if (NS_SUCCEEDED(rv) && handler) {
-        rv = context->BindCompiledEventHandler(aObject, scope, aName, handler);
+        rv = context->BindCompiledEventHandler(mTarget, scope, aName, handler);
         if (NS_FAILED(rv))
           return rv;
         done = PR_TRUE;
@@ -762,7 +759,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       if (handlerOwner) {
         // Always let the handler owner compile the event handler, as
         // it may want to use a special context or scope object.
-        rv = handlerOwner->CompileEventHandler(context, aObject, aName,
+        rv = handlerOwner->CompileEventHandler(context, mTarget, aName,
                                                aBody, url.get(), lineNo, handler);
       }
       else {
@@ -797,14 +794,14 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
         }
         NS_ENSURE_SUCCESS(rv, rv);
         // And bind it.
-        rv = context->BindCompiledEventHandler(aObject, scope,
+        rv = context->BindCompiledEventHandler(mTarget, scope,
                                                aName, handler);
       }
       if (NS_FAILED(rv)) return rv;
     }
   }
 
-  return SetJSEventListener(context, scope, objiSupp, aName, aDeferCompilation,
+  return SetJSEventListener(context, scope, aName, aDeferCompilation,
                             aPermitUntrustedEvents);
 }
 
@@ -827,7 +824,6 @@ nsEventListenerManager::sAddListenerID = JSID_VOID;
 nsresult
 nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
                                                     void *aScope,
-                                                    nsISupports *aObject, 
                                                     nsIAtom *aName)
 {
   // Check that we have access to set an event listener. Prevents
@@ -835,7 +831,7 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
   // for instance.
   // You'd think it'd work just to get the JSContext from aContext,
   // but that's actually the JSContext whose private object parents
-  // the object in aObject.
+  // the object in mTarget.
   nsresult rv;
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
@@ -855,7 +851,7 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
     if (aContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         jsval v;
-        rv = nsContentUtils::WrapNative(cx, (JSObject *)aScope, aObject, &v,
+        rv = nsContentUtils::WrapNative(cx, (JSObject *)aScope, mTarget, &v,
                                         getter_AddRefs(holder));
         NS_ENSURE_SUCCESS(rv, rv);
       
@@ -876,14 +872,13 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
-  return SetJSEventListener(aContext, aScope, aObject, aName,
-                            PR_FALSE, !nsContentUtils::IsCallerChrome());
+  return SetJSEventListener(aContext, aScope, aName, PR_FALSE,
+                            !nsContentUtils::IsCallerChrome());
 }
 
 nsresult
 nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext, 
                                                    void *aScope,
-                                                   nsISupports *aObject, 
                                                    nsIAtom *aName,
                                                    PRBool *aDidCompile)
 {
@@ -898,7 +893,7 @@ nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext,
   }
 
   if (ls->mHandlerIsString) {
-    rv = CompileEventHandlerInternal(aContext, aScope, aObject, aName,
+    rv = CompileEventHandlerInternal(aContext, aScope, mTarget, aName,
                                      ls, /*XXX fixme*/nsnull, PR_TRUE);
   }
 

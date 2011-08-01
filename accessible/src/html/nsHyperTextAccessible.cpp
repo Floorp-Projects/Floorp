@@ -66,6 +66,8 @@
 #include "nsTextFragment.h"
 #include "gfxSkipChars.h"
 
+using namespace mozilla::a11y;
+
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -621,9 +623,9 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsINode *aNode,
   }
 
   // From the descendant, go up and get the immediate child of this hypertext
-  nsAccessible *childAccAtOffset = nsnull;
+  nsAccessible* childAccAtOffset = nsnull;
   while (descendantAcc) {
-    nsAccessible *parentAcc = descendantAcc->GetParent();
+    nsAccessible* parentAcc = descendantAcc->Parent();
     if (parentAcc == this) {
       childAccAtOffset = descendantAcc;
       break;

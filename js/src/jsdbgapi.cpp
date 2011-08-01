@@ -23,6 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Nick Fitzgerald <nfitzgerald@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -770,6 +771,12 @@ JS_GetScriptFilename(JSContext *cx, JSScript *script)
     return script->filename;
 }
 
+JS_PUBLIC_API(const jschar *)
+JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
+{
+    return script->sourceMap;
+}
+
 JS_PUBLIC_API(uintN)
 JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script)
 {
@@ -839,7 +846,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     jschar *chars;
     JSBool ok;
     size_t len = length;
-    
+
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 

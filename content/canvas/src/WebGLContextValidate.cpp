@@ -328,6 +328,17 @@ PRBool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
     }
 }
 
+bool WebGLContext::ValidateGLSLIdentifier(const nsAString& name, const char *info)
+{
+    const PRUint32 maxSize = 4095;
+    if (name.Length() > maxSize) {
+        ErrorInvalidValue("%s: identifier is %d characters long, exceeds the maximum allowed length of %d characters",
+                          info, name.Length(), maxSize);
+        return false;
+    }
+    return true;
+}
+
 PRUint32 WebGLContext::GetTexelSize(WebGLenum format, WebGLenum type)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {

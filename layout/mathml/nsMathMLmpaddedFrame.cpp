@@ -341,7 +341,6 @@ nsMathMLmpaddedFrame::UpdateValue(PRInt32                  aSign,
     else
       amount = CalcLength(PresContext(), mStyleContext, aCSSValue);
 
-    nscoord oldValue = aValueToUpdate;
     if (NS_MATHML_SIGN_PLUS == aSign)
       aValueToUpdate += amount;
     else if (NS_MATHML_SIGN_MINUS == aSign)
