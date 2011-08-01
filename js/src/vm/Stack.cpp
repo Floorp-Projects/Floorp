@@ -575,10 +575,27 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
 #ifdef JS_METHODJIT
     /*
      * The only calls made by inlined methodjit frames can be to other JIT
-     * frames associated with the same VMFrame.
+     * frames associated with the same VMFrame. If we try to Invoke(),
+     * Execute() or so forth, any topmost inline frame will need to be
+     * expanded (along with other inline frames in the compartment).
+     * To avoid pathological behavior here, make sure to mark any topmost
+     * function as uninlineable, which will expand inline frames if there are
+     * any and prevent the function from being inlined in the future.
      */
-    if (cx->hasfp() && cx->regs().inlined())
-        mjit::ExpandInlineFrames(cx->compartment, false);
+    if (cx->hasfp() && cx->fp()->isFunctionFrame() && cx->fp()->fun()->isInterpreted()) {
+        if (report) {
+            /*
+             * N.B. if we can't report errors then cx->compartment may not be
+             * consistent with the function's compartment (cross-compartment
+             * call or SaveFrameChain). In such cases the caller must have
+             * already expanded inline frames.
+             */
+            cx->fp()->fun()->script()->uninlineable = true;
+            types::MarkTypeObjectFlags(cx, cx->fp()->fun(),
+                                       types::OBJECT_FLAG_UNINLINEABLE);
+        }
+        JS_ASSERT(!cx->regs().inlined());
+    }
 #endif
 
     if (onTop() && extend) {
@@ -817,6 +834,10 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 bool
 ContextStack::saveFrameChain()
 {
+#ifdef JS_METHODJIT
+    mjit::ExpandInlineFrames(cx_->compartment);
+#endif
+
     /*
      * The StackSpace uses the context's current compartment to determine
      * whether to allow access to the privileged end-of-stack buffer.
@@ -1085,7 +1106,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     savedOption_(savedOption)
 {
 #ifdef JS_METHODJIT
-    mjit::ExpandInlineFrames(cx->compartment, true);
+    mjit::ExpandInlineFrames(cx->compartment);
 #endif
 
     LeaveTrace(cx);

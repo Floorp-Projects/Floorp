@@ -1753,13 +1753,6 @@ class GeneratorFrameGuard : public FrameGuard
 
 /*****************************************************************************/
 
-/* How much expansion of inlined frames to do when inspecting the stack. */
-enum FrameExpandKind {
-    FRAME_EXPAND_NONE,
-    FRAME_EXPAND_TOP,
-    FRAME_EXPAND_ALL
-};
-
 /*
  * Iterate through the callstack of the given context. Each element of said
  * callstack can either be the execution of a script (scripted function call,
