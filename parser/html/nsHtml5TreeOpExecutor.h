@@ -124,8 +124,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     PRBool                        mCallContinueInterruptedParsingIfEnabled;
 
-    PRBool                        mPreventScriptExecution;
-
   public:
   
     nsHtml5TreeOpExecutor();

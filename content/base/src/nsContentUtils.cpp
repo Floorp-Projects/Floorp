@@ -202,6 +202,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsHTMLMediaElement.h"
 #endif
 #include "nsDOMTouchEvent.h"
+#include "nsIScriptElement.h"
 
 #include "mozilla/Preferences.h"
 
@@ -3610,6 +3611,7 @@ nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
 nsresult
 nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                                          const nsAString& aFragment,
+                                         PRBool aPreventScriptExecution,
                                          nsIDOMDocumentFragment** aReturn)
 {
   *aReturn = nsnull;
@@ -3647,7 +3649,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                         contextAsContent->GetNameSpaceID(),
                         (document->GetCompatibilityMode() ==
                             eCompatibility_NavQuirks),
-                        PR_FALSE);
+                        aPreventScriptExecution);
     } else {
       ParseFragmentHTML(aFragment,
                         fragment,
@@ -3655,7 +3657,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                         kNameSpaceID_XHTML,
                         (document->GetCompatibilityMode() ==
                             eCompatibility_NavQuirks),
-                        PR_FALSE);
+                        aPreventScriptExecution);
     }
 
     frag.forget(aReturn);
@@ -3717,7 +3719,11 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     content = content->GetParent();
   }
 
-  return ParseFragmentXML(aFragment, document, tagStack, aReturn);
+  return ParseFragmentXML(aFragment,
+                          document,
+                          tagStack,
+                          aPreventScriptExecution,
+                          aReturn);
 }
 
 /* static */
@@ -3764,6 +3770,7 @@ nsresult
 nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
                                  nsIDocument* aDocument,
                                  nsTArray<nsString>& aTagStack,
+                                 PRBool aPreventScriptExecution,
                                  nsIDOMDocumentFragment** aReturn)
 {
   if (!sXMLFragmentParser) {
@@ -3780,6 +3787,7 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   sXMLFragmentParser->SetContentSink(contentsink);
 
   sXMLFragmentSink->SetTargetDocument(aDocument);
+  sXMLFragmentSink->SetPreventScriptExecution(aPreventScriptExecution);
 
   nsresult rv =
     sXMLFragmentParser->ParseFragment(aSourceBuffer,

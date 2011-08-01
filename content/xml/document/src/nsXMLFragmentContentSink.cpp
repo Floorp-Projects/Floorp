@@ -114,6 +114,7 @@ public:
   NS_IMETHOD WillBuildContent();
   NS_IMETHOD DidBuildContent();
   NS_IMETHOD IgnoreFirstContainer();
+  NS_IMETHOD SetPreventScriptExecution(PRBool aPreventScriptExecution);
 
 protected:
   virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
@@ -462,4 +463,11 @@ nsXMLFragmentContentSink::IgnoreFirstContainer()
 {
   NS_NOTREACHED("XML isn't as broken as HTML");
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXMLFragmentContentSink::SetPreventScriptExecution(PRBool aPrevent)
+{
+  mPreventScriptExecution = aPrevent;
+  return NS_OK;
 }
