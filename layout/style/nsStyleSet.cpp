@@ -98,6 +98,12 @@ nsStyleSet::nsStyleSet()
 {
 }
 
+size_t
+nsStyleSet::SizeOf() const
+{
+  return sizeof(*this);
+}
+
 nsresult
 nsStyleSet::Init(nsPresContext *aPresContext)
 {
