@@ -260,4 +260,22 @@ JS_GetArrayBufferByteLength(JSObject *obj);
 JS_FRIEND_API(uint8 *)
 JS_GetArrayBufferData(JSObject *obj);
 
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayLength(JSObject *obj);
+
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayByteOffset(JSObject *obj);
+
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayByteLength(JSObject *obj);
+
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayType(JSObject *obj);
+
+JS_FRIEND_API(JSObject *)
+JS_GetTypedArrayBuffer(JSObject *obj);
+
+JS_FRIEND_API(void *)
+JS_GetTypedArrayData(JSObject *obj);
+
 #endif /* jstypedarray_h */
