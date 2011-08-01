@@ -49,9 +49,9 @@
 
 
 #include "nsSVGDataParser.h"
-#include "nsContentUtils.h"
 #include "prdtoa.h"
 #include "nsSVGUtils.h"
+#include "nsMathUtils.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -145,7 +145,7 @@ nsresult nsSVGDataParser::MatchNonNegativeNumber(float* aX)
 
   char* end;
   *aX = float(PR_strtod(pos, &end));
-  if (pos != end && NS_FloatIsFinite(*aX)) {
+  if (pos != end && NS_finite(*aX)) {
     return NS_OK;
   }
   
@@ -181,7 +181,7 @@ nsresult nsSVGDataParser::MatchNumber(float* aX)
    * nsCSSScanner::ParseNumber() instead of PR_strtod. See bug 516396 for some
    * additional info. */
   *aX = float(PR_strtod(pos, &end));
-  if (pos != end && NS_FloatIsFinite(*aX)) {
+  if (pos != end && NS_finite(*aX)) {
     return NS_OK;
   }
   

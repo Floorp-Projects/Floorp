@@ -145,6 +145,10 @@ inline NS_HIDDEN_(double) NS_hypot(double x, double y)
 #endif
 }
 
+/**
+ * Check whether a floating point number is finite (not +/-infinity and not a
+ * NaN value).
+ */
 inline NS_HIDDEN_(bool) NS_finite(double d)
 {
 #ifdef WIN32
