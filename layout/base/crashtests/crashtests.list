@@ -342,4 +342,4 @@ load 663662-2.html
 load 665837.html
 load 668941.xhtml
 load 670226.html
-load 675246-1.xhtml
+asserts(2) load 675246-1.xhtml # Bug 675713
