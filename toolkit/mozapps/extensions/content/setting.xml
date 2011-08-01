@@ -473,7 +473,7 @@
     </implementation>
   </binding>
 
-  <binding id="setting-radio" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
+  <binding id="setting-multi" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
         <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
@@ -482,7 +482,7 @@
         </xul:label>
       </xul:vbox>
       <xul:hbox class="setting-input">
-        <children include="radiogroup" />
+        <children include="radiogroup,menulist" />
       </xul:hbox>
     </content>
 
@@ -490,7 +490,7 @@
       <constructor>
         <![CDATA[
           let self = this;
-          this.radioGroup.addEventListener("command", function() {
+          this.control.addEventListener("command", function() {
             self.valueToPreference();
           }, false);
         ]]>
@@ -514,9 +514,9 @@
               return;
           }
 
-          for (let i = 0; i < this.radioGroup.itemCount; i++) {
-            if (this.radioGroup.getItemAtIndex(i).value == val) {
-              this.radioGroup.selectedIndex = i;
+          for (let i = 0; i < this.control.itemCount; i++) {
+            if (this.control.getItemAtIndex(i).value == val) {
+              this.control.selectedIndex = i;
               break;
             }
           }
@@ -528,7 +528,7 @@
         <body>
         <![CDATA[
           // We might not have a pref already set, so we guess the type from the value attribute
-          let val = this.radioGroup.selectedItem.value;
+          let val = this.control.selectedItem.value;
           if (val == "true" || val == "false")
             Services.prefs.setBoolPref(this.pref, val == "true");
           else if (/^-?\d+$/.test(val))
@@ -539,7 +539,7 @@
         </body>
       </method>
 
-      <field name="radioGroup">this.getElementsByTagName("radiogroup")[0];</field>
+      <field name="control">this.getElementsByTagName(this.getAttribute("type") == "radio" ? "radiogroup" : "menulist")[0];</field>
     </implementation>
   </binding>
 </bindings>
