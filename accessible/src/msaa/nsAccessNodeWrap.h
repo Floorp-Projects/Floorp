@@ -61,9 +61,6 @@
 #include "OLEIDL.H"
 #include "OLEACC.H"
 #include <winuser.h>
-#ifndef WINABLEAPI
-#include <winable.h>
-#endif
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #endif

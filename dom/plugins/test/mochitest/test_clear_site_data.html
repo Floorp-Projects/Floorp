@@ -1,15 +1,14 @@
 <html>
 <head>
   <title>NPAPI ClearSiteData/GetSitesWithData Functionality</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/PluginUtils.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/PluginUtils.js"></script>
 </head>
 <body>
   <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
 
   <script class="testbody" type="application/javascript">
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     SimpleTest.waitForExplicitFinish();
 
     const pluginHostIface = Components.interfaces.nsIPluginHost;
@@ -49,8 +48,6 @@
     }
 
     function runTest(pluginTag) {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
       this.pluginTag = pluginTag;
 
       p.setSitesWithData(

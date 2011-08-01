@@ -7762,13 +7762,13 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   JSObject *scope = ::JS_GetGlobalForObject(cx, obj);
 
   if (compile) {
-    nsresult rv = manager->CompileScriptEventListener(script_cx, scope, target,
+    nsresult rv = manager->CompileScriptEventListener(script_cx, scope,
                                                       atom, did_define);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (remove) {
     manager->RemoveScriptEventListener(atom);
   } else {
-    manager->RegisterScriptEventListener(script_cx, scope, target, atom);
+    manager->RegisterScriptEventListener(script_cx, scope, atom);
   }
 
   return NS_SUCCESS_I_DID_SOMETHING;

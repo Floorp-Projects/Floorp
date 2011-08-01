@@ -50,8 +50,6 @@ using namespace mozilla;
 using mozilla::layers::ImageContainer;
 using mozilla::layers::PlanarYCbCrImage;
 
-using mozilla::layers::PlanarYCbCrImage;
-
 // Verify these values are sane. Once we've checked the frame sizes, we then
 // can do less integer overflow checking.
 PR_STATIC_ASSERT(MAX_VIDEO_WIDTH < PlanarYCbCrImage::MAX_DIMENSION);
@@ -337,12 +335,23 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
         audio = nsnull;
         continue;
       }
+      if (startSample > targetSample) {
+        // The seek target doesn't lie in the audio block just after the last
+        // audio samples we've seen which were before the seek target. This
+        // could have been the first audio data we've seen after seek, i.e. the
+        // seek terminated after the seek target in the audio stream. Just
+        // abort the audio decode-to-target, the state machine will play
+        // silence to cover the gap. Typically this happens in poorly muxed
+        // files.
+        NS_WARNING("Audio not synced after seek, maybe a poorly muxed file?");
+        break;
+      }
 
       // The seek target lies somewhere in this SoundData's samples, strip off
       // any samples which lie before the seek target, so we'll begin playback
       // exactly at the seek target.
       NS_ASSERTION(targetSample >= startSample, "Target must at or be after data start.");
-      NS_ASSERTION(startSample + audio->mSamples > targetSample, "Data must end after target.");
+      NS_ASSERTION(targetSample < startSample + audio->mSamples, "Data must end after target.");
 
       PRInt64 samplesToPrune = targetSample - startSample;
       if (samplesToPrune > audio->mSamples) {
