@@ -52,6 +52,7 @@
 #include "LOpcodes.h"
 #include "TypeOracle.h"
 #include "IonRegisters.h"
+#include "shared/Assembler-shared.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/StackAssignment-x86.h"
@@ -677,6 +678,7 @@ class LBlock : public TempObject
     }
     uint32 firstId();
     uint32 lastId();
+    inline Label *label();
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>
