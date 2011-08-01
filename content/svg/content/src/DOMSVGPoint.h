@@ -43,6 +43,7 @@
 #include "gfxPoint.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
+#include "nsMathUtils.h"
 
 class nsSVGElement;
 
@@ -128,7 +129,7 @@ public:
   {
     mPt.mX = float(aPt.x);
     mPt.mY = float(aPt.y);
-    NS_ASSERTION(NS_FloatIsFinite(mPt.mX) && NS_FloatIsFinite(mPt.mX),
+    NS_ASSERTION(NS_finite(mPt.mX) && NS_finite(mPt.mX),
                  "DOMSVGPoint coords are not finite");
   }
 

@@ -50,6 +50,7 @@
 #include "nsISVGValue.h"
 #include "prdtoa.h"
 #include "prlog.h"
+#include "nsMathUtils.h"
 
 nsresult
 nsSVGTransformSMILAttr::ValueFromString(const nsAString& aStr,
@@ -235,7 +236,7 @@ nsSVGTransformSMILAttr::ParseParameterList(const nsAString& aSpec,
     char const *arg = start.get();
     char *argend;
     float f = float(PR_strtod(arg, &argend));
-    if (arg == argend || argend > end.get() || !NS_FloatIsFinite(f))
+    if (arg == argend || argend > end.get() || !NS_finite(f))
       return -1;
 
     if (numArgsFound < aNVars) {
