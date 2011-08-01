@@ -1051,7 +1051,7 @@ JSObject*
 CreateGenericEvent(JSContext* aCx, JSString* aType, bool aBubbles,
                    bool aCancelable, bool aMainRuntime)
 {
-  JSObject* global = JS_GetGlobalObject(aCx);
+  JSObject* global = JS_GetGlobalForScopeChain(aCx);
   return Event::Create(aCx, global, aType, aBubbles, aCancelable, aMainRuntime);
 }
 
@@ -1059,7 +1059,7 @@ JSObject*
 CreateMessageEvent(JSContext* aCx, JSAutoStructuredCloneBuffer& aData,
                    bool aMainRuntime)
 {
-  JSObject* global = JS_GetGlobalObject(aCx);
+  JSObject* global = JS_GetGlobalForScopeChain(aCx);
   return MessageEvent::Create(aCx, global, aData, aMainRuntime);
 }
 
@@ -1067,7 +1067,7 @@ JSObject*
 CreateErrorEvent(JSContext* aCx, JSString* aMessage, JSString* aFilename,
                  uint32 aLineNumber, bool aMainRuntime)
 {
-  JSObject* global = JS_GetGlobalObject(aCx);
+  JSObject* global = JS_GetGlobalForScopeChain(aCx);
   return ErrorEvent::Create(aCx, global, aMessage, aFilename, aLineNumber,
                             aMainRuntime);
 }
@@ -1076,7 +1076,7 @@ JSObject*
 CreateProgressEvent(JSContext* aCx, JSString* aType, bool aLengthComputable,
                     jsdouble aLoaded, jsdouble aTotal)
 {
-  JSObject* global = JS_GetGlobalObject(aCx);
+  JSObject* global = JS_GetGlobalForScopeChain(aCx);
   return ProgressEvent::Create(aCx, global, aType, aLengthComputable, aLoaded,
                                aTotal);
 }

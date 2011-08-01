@@ -53,6 +53,8 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
 
+using namespace mozilla::a11y;
+
 nsApplicationAccessible::nsApplicationAccessible() :
   nsAccessibleWrap(nsnull, nsnull)
 {
