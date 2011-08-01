@@ -1086,6 +1086,7 @@ menulist { /* Fixes some styling inconsistencies */
 .addon-control,
 setting:not([type="integer"]) button,
 setting[type="control"] menulist,
+setting[type="menulist"] menulist,
 setting[type="color"] colorpicker[type="button"] {
   -moz-appearance: none;
   color: black;
@@ -1109,6 +1110,7 @@ setting[type="color"] colorpicker[type="button"] {
 .addon-control:active:hover,
 setting:not([type="integer"]) button:active:hover,
 setting[type="control"] menulist:active:hover,
+setting[type="menulist"] menulist:active:hover,
 setting[type="color"] colorpicker[type="button"]:active:hover {
   background-color: rgba(61, 76, 92, 0.2);
   border-color: rgba(39, 53, 68, 0.5);
