@@ -2314,29 +2314,32 @@ CanLeaveTrace(JSContext *cx);
 
 #ifdef JS_METHODJIT
 namespace mjit {
-    void ExpandInlineFrames(JSCompartment *compartment, bool all);
+    void ExpandInlineFrames(JSCompartment *compartment);
 }
 #endif
 
 } /* namespace js */
+
+/* How much expansion of inlined frames to do when inspecting the stack. */
+enum FrameExpandKind {
+    FRAME_EXPAND_NONE = 0,
+    FRAME_EXPAND_ALL = 1
+};
 
 /*
  * Get the current frame, first lazily instantiating stack frames if needed.
  * (Do not access cx->fp() directly except in JS_REQUIRES_STACK code.)
  *
  * LeaveTrace is defined in jstracer.cpp if JS_TRACER is defined.
- *
- * If the stack contains frames inlined by the method JIT, kind specifies
- * which ones to expand.
  */
 static JS_FORCES_STACK JS_INLINE js::StackFrame *
-js_GetTopStackFrame(JSContext *cx, js::FrameExpandKind expand)
+js_GetTopStackFrame(JSContext *cx, FrameExpandKind expand)
 {
     js::LeaveTrace(cx);
 
 #ifdef JS_METHODJIT
-    if (expand != js::FRAME_EXPAND_NONE)
-        js::mjit::ExpandInlineFrames(cx->compartment, expand == js::FRAME_EXPAND_ALL);
+    if (expand)
+        js::mjit::ExpandInlineFrames(cx->compartment);
 #endif
 
     return cx->maybefp();

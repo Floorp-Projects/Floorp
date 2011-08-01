@@ -366,7 +366,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
      * triggered while interpreting.
      */
     if (f.regs.inlined()) {
-        ExpandInlineFrames(cx->compartment, false);
+        ExpandInlineFrames(cx->compartment);
         JS_ASSERT(!f.regs.inlined());
         regs.fp()->resetInlinePrev(f.fp(), f.regs.pc);
     }
@@ -611,7 +611,7 @@ js_InternalThrow(VMFrame &f)
          * stack: downFramesExpanded() on a StackFrame also means the prevpc()
          * values are also filled in.
          */
-        ExpandInlineFrames(cx->compartment, true);
+        ExpandInlineFrames(cx->compartment);
 
         if (!script->ensureRanBytecode(cx)) {
             js_ReportOutOfMemory(cx);

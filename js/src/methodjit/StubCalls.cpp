@@ -1240,7 +1240,7 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
-    ExpandInlineFrames(f.cx->compartment, true);
+    ExpandInlineFrames(f.cx->compartment);
     Recompiler recompiler(f.cx, f.script());
     recompiler.recompile(/* resetUses */ false);
 }
@@ -2495,7 +2495,7 @@ stubs::InvariantFailure(VMFrame &f, void *rval)
     JS_ASSERT(!script->failedBoundsCheck);
     script->failedBoundsCheck = true;
 
-    ExpandInlineFrames(f.cx->compartment, true);
+    ExpandInlineFrames(f.cx->compartment);
 
     Recompiler recompiler(f.cx, script);
     recompiler.recompile();
