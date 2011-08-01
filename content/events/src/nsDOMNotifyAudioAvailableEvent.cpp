@@ -118,8 +118,8 @@ nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, jsval* aResult)
     return NS_ERROR_FAILURE;
   }
 
-  js::TypedArray *tdest = js::TypedArray::fromJSObject(mCachedArray);
-  memcpy(tdest->data, mFrameBuffer.get(), mFrameBufferLength * sizeof(float));
+  JSObject *tdest = js::TypedArray::getTypedArray(mCachedArray);
+  memcpy(JS_GetTypedArrayData(tdest), mFrameBuffer.get(), mFrameBufferLength * sizeof(float));
 
   *aResult = OBJECT_TO_JSVAL(mCachedArray);
   return NS_OK;
