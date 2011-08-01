@@ -249,25 +249,11 @@ class nsIParser : public nsISupports {
      * been given a fragment content sink.
      *
      * @param aSourceBuffer The XML or HTML that hasn't been parsed yet.
-     * @param aKey The key used by the parser.
      * @param aTagStack The context of the source buffer.
-     * @param aXMLMode Whether this is XML or HTML
-     * @param aContentType The content-type of this document.
-     * @param aMode The DTDMode that the parser should parse this fragment in.
      * @return Success or failure.
      */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                             void* aKey,
-                             nsTArray<nsString>& aTagStack,
-                             PRBool aXMLMode,
-                             const nsACString& aContentType,
-                             nsDTDMode aMode = eDTDMode_autodetect) = 0;
-
-    NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                             nsIContent* aTargetNode,
-                             nsIAtom* aContextLocalName,
-                             PRInt32 aContextNamespace,
-                             PRBool aQuirks) = 0;
+                             nsTArray<nsString>& aTagStack) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
@@ -368,36 +354,6 @@ const PRUint32  kBadStringLiteral = NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERA
 const PRUint32  kHierarchyTooDeep = NS_ERROR_HTMLPARSER_HIERARCHYTOODEEP;
 const PRUint32  kFakeEndTag       = NS_ERROR_HTMLPARSER_FAKE_ENDTAG;
 const PRUint32  kNotAComment      = NS_ERROR_HTMLPARSER_INVALID_COMMENT;
-
-const PRUnichar  kNewLine          = '\n';
-const PRUnichar  kCR               = '\r';
-const PRUnichar  kLF               = '\n';
-const PRUnichar  kTab              = '\t';
-const PRUnichar  kSpace            = ' ';
-const PRUnichar  kQuote            = '"';
-const PRUnichar  kApostrophe       = '\'';
-const PRUnichar  kLessThan         = '<';
-const PRUnichar  kGreaterThan      = '>';
-const PRUnichar  kAmpersand        = '&';
-const PRUnichar  kForwardSlash     = '/';
-const PRUnichar  kBackSlash        = '\\';
-const PRUnichar  kEqual            = '=';
-const PRUnichar  kMinus            = '-';
-const PRUnichar  kPlus             = '+';
-const PRUnichar  kExclamation      = '!';
-const PRUnichar  kSemicolon        = ';';
-const PRUnichar  kHashsign         = '#';
-const PRUnichar  kAsterisk         = '*';
-const PRUnichar  kUnderbar         = '_';
-const PRUnichar  kComma            = ',';
-const PRUnichar  kLeftParen        = '(';
-const PRUnichar  kRightParen       = ')';
-const PRUnichar  kLeftBrace        = '{';
-const PRUnichar  kRightBrace       = '}';
-const PRUnichar  kQuestionMark     = '?';
-const PRUnichar  kLeftSquareBracket  = '[';
-const PRUnichar  kRightSquareBracket = ']';
-const PRUnichar kNullCh           = '\0';
 
 #define NS_IPARSER_FLAG_UNKNOWN_MODE         0x00000000
 #define NS_IPARSER_FLAG_QUIRKS_MODE          0x00000002

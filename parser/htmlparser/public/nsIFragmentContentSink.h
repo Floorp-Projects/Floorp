@@ -43,8 +43,8 @@ class nsIDOMDocumentFragment;
 class nsIDocument;
 
 #define NS_I_FRAGMENT_CONTENT_SINK_IID \
-  { 0x1ecdb30d, 0x1f10, 0x45d2, \
-    { 0xa4, 0xf4, 0xec, 0xbc, 0x03, 0x52, 0x9a, 0x7e } }
+  { 0x7c78cbad, 0xdaf5, 0x487e, \
+    { 0x96, 0x98, 0xab, 0xcc, 0x21, 0x5a, 0x8d, 0x39 } }
 
 /**
  * The fragment sink allows a client to parse a fragment of sink, possibly
@@ -57,14 +57,11 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_I_FRAGMENT_CONTENT_SINK_IID)
   /**
    * This method is used to obtain the fragment created by
-   * a fragment content sink. The value returned will be null
-   * if the content sink hasn't yet received parser notifications.
+   * a fragment content sink and to release resources held by the parser.
    *
-   * If aWillOwnFragment is PR_TRUE then the sink should drop its
-   * ownership of the fragment.
+   * The sink drops its reference to the fragment.
    */
-  NS_IMETHOD GetFragment(PRBool aWillOwnFragment,
-                         nsIDOMDocumentFragment** aFragment) = 0;
+  NS_IMETHOD FinishFragmentParsing(nsIDOMDocumentFragment** aFragment) = 0;
 
   /**
    * This method is used to set the target document for this fragment
@@ -120,22 +117,7 @@ public:
   virtual void AllowComments() = 0;
 };
 
-/**
- * Base version takes string nested in context, content surrounded by
- * WillBuildContent()/DidBuildContent() calls. The 2nd version just loads
- * the whole string.
- */
-
-#define NS_HTMLFRAGMENTSINK_CONTRACTID "@mozilla.org/layout/htmlfragmentsink;1"
-#define NS_HTMLFRAGMENTSINK2_CONTRACTID "@mozilla.org/layout/htmlfragmentsink;2"
-
-#define NS_XMLFRAGMENTSINK_CONTRACTID "@mozilla.org/layout/xmlfragmentsink;1"
-#define NS_XMLFRAGMENTSINK2_CONTRACTID "@mozilla.org/layout/xmlfragmentsink;2"
-
-// the HTML versions are in nsHTMLParts.h
 nsresult
 NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aInstancePtrResult);
-nsresult
-NS_NewXMLFragmentContentSink2(nsIFragmentContentSink** aInstancePtrResult);
 
 #endif

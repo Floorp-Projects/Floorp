@@ -103,6 +103,7 @@
 #include "nsHTMLDNSPrefetch.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/Preferences.h"
+#include "nsParserConstants.h"
 
 using namespace mozilla;
 
@@ -335,6 +336,7 @@ nsContentSink::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus)
 {
+  NS_ASSERTION(!mFragmentMode, "How come a fragment parser observed sheets?");
   if (!aWasAlternate) {
     NS_ASSERTION(mPendingSheetCount > 0, "How'd that happen?");
     --mPendingSheetCount;
@@ -873,12 +875,13 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK;
   }
 
+  // If this is a fragment parser, we don't want to observe.
   PRBool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
-                                 this, &isAlternate);
+                                 mFragmentMode ? nsnull : this, &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (!isAlternate) {
+  if (!isAlternate && !mFragmentMode) {
     ++mPendingSheetCount;
     mScriptLoader->AddExecuteBlocker();
   }

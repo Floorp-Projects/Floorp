@@ -126,8 +126,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID \
-{ 0xe4bc7342, 0x6528, 0x4979, \
- { 0x9e, 0xb5, 0x12, 0xef, 0x4a, 0x97, 0xe1, 0xea } }
+{ 0xfac563fb, 0x2b6a, 0x4ac8, \
+ { 0x85, 0xf7, 0xd5, 0x14, 0x4b, 0x3e, 0xce, 0x78 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1145,16 +1145,6 @@ public:
   void SetMayStartLayout(PRBool aMayStartLayout)
   {
     mMayStartLayout = aMayStartLayout;
-  }
-
-  // This method should return an addrefed nsIParser* or nsnull. Implementations
-  // should transfer ownership of the parser to the caller.
-  virtual already_AddRefed<nsIParser> GetFragmentParser() {
-    return nsnull;
-  }
-
-  virtual void SetFragmentParser(nsIParser* aParser) {
-    // Do nothing.
   }
 
   already_AddRefed<nsIDocumentEncoder> GetCachedEncoder()

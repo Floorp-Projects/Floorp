@@ -631,8 +631,10 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       ssle->SetEnableUpdates(PR_TRUE);
       PRBool willNotify;
       PRBool isAlternate;
-      rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
-      if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+      rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
+                                  &willNotify,
+                                  &isAlternate);
+      if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mFragmentMode) {
         ++mPendingSheetCount;
         mScriptLoader->AddExecuteBlocker();
       }
@@ -1307,12 +1309,14 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     ssle->SetEnableUpdates(PR_TRUE);
     PRBool willNotify;
     PRBool isAlternate;
-    rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+    rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
+                                &willNotify,
+                                &isAlternate);
     NS_ENSURE_SUCCESS(rv, rv);
     
     if (willNotify) {
       // Successfully started a stylesheet load
-      if (!isAlternate) {
+      if (!isAlternate && !mFragmentMode) {
         ++mPendingSheetCount;
         mScriptLoader->AddExecuteBlocker();
       }

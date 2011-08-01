@@ -171,37 +171,21 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIContent> fragment;
     if (aIsXML) {
-      nsCAutoString contentType;
-      nsCOMPtr<nsIFragmentContentSink> sink;
-      contentType = NS_LITERAL_CSTRING("application/xhtml+xml");
-      sink = do_CreateInstance(NS_XMLFRAGMENTSINK_CONTRACTID);
-      if (sink) {
-        sink->SetTargetDocument(document);
-        nsCOMPtr<nsIContentSink> contentsink(do_QueryInterface(sink));
-        parser->SetContentSink(contentsink);
-        rv = parser->ParseFragment(aFragment, nsnull, tagStack,
-                                   aIsXML, contentType,
-                                   eDTDMode_full_standards);
-        if (NS_SUCCEEDED(rv)) {
-          rv = sink->GetFragment(PR_TRUE, aReturn);
-          fragment = do_QueryInterface(*aReturn);
-        }
-      } else {
-        rv = NS_ERROR_FAILURE;
-      }
+      rv = nsContentUtils::ParseFragmentXML(aFragment,
+                                            document,
+                                            tagStack,
+                                            aReturn);
+      fragment = do_QueryInterface(*aReturn);
     } else {
-      nsCOMPtr<nsIParser> parser = nsHtml5Module::NewHtml5Parser();
-      nsAHtml5FragmentParser* asFragmentParser =
-          static_cast<nsAHtml5FragmentParser*> (parser.get());
       NS_NewDocumentFragment(aReturn,
                              document->NodeInfoManager());
       fragment = do_QueryInterface(*aReturn);
-      asFragmentParser->ParseHtml5Fragment(aFragment,
-                                          fragment,
-                                          nsGkAtoms::body,
-                                          kNameSpaceID_XHTML,
-                                          PR_FALSE,
-                                          PR_TRUE);
+      nsContentUtils::ParseFragmentHTML(aFragment,
+                                        fragment,
+                                        nsGkAtoms::body,
+                                        kNameSpaceID_XHTML,
+                                        PR_FALSE,
+                                        PR_TRUE);
       // Now, set the base URI on all subtree roots.
       aBaseURI->GetSpec(spec);
       nsAutoString spec16;
