@@ -83,10 +83,25 @@ void nsBuiltinDecoder::SetVolume(double aVolume)
 double nsBuiltinDecoder::GetDuration()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  if (mInfiniteStream) {
+    return std::numeric_limits<double>::infinity();
+  }
   if (mDuration >= 0) {
      return static_cast<double>(mDuration) / static_cast<double>(USECS_PER_S);
   }
   return std::numeric_limits<double>::quiet_NaN();
+}
+
+void nsBuiltinDecoder::SetInfinite(PRBool aInfinite)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  mInfiniteStream = aInfinite;
+}
+
+PRBool nsBuiltinDecoder::IsInfinite()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  return mInfiniteStream;
 }
 
 nsBuiltinDecoder::nsBuiltinDecoder() :
@@ -101,7 +116,8 @@ nsBuiltinDecoder::nsBuiltinDecoder() :
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
   mResourceLoaded(PR_FALSE),
-  mIgnoreProgressData(PR_FALSE)
+  mIgnoreProgressData(PR_FALSE),
+  mInfiniteStream(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoder);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -342,6 +358,10 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
     notifyElement = mNextState != PLAY_STATE_SEEKING;
   }
 
+  if (mDuration == -1) {
+    SetInfinite(PR_TRUE);
+  }
+
   if (mElement && notifyElement) {
     // Make sure the element and the frame (if any) are told about
     // our new size.
@@ -460,6 +480,12 @@ void nsBuiltinDecoder::PlaybackEnded()
   if (mElement)  {
     UpdateReadyStateForData();
     mElement->PlaybackEnded();
+  }
+
+  // This must be called after |mElement->PlaybackEnded()| call above, in order
+  // to fire the required durationchange.
+  if (IsInfinite()) {
+    SetInfinite(PR_FALSE);
   }
 }
 
@@ -791,7 +817,7 @@ void nsBuiltinDecoder::DurationChanged()
   // Duration has changed so we should recompute playback rate
   UpdatePlaybackRate();
 
-  if (mElement && oldDuration != mDuration) {
+  if (mElement && oldDuration != mDuration && !IsInfinite()) {
     LOG(PR_LOG_DEBUG, ("%p duration changed to %lld", this, mDuration));
     mElement->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
