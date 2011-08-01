@@ -246,7 +246,7 @@ class AssemblerX86Shared
     void cmpl(const Register &lhs, const Register &rhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
     }
-    void cmpl(Imm32 imm, const Operand &op) {
+    void cmpl(const Operand &op, Imm32 imm) {
         switch (op.kind()) {
           case Operand::REG:
             masm.cmpl_ir(imm.value, op.reg());
@@ -257,6 +257,9 @@ class AssemblerX86Shared
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
+    }
+    void testl(const Register &lhs, const Register &rhs) {
+        masm.testl_rr(rhs.code(), lhs.code());
     }
     void addl(Imm32 imm, const Register &dest) {
         masm.addl_ir(imm.value, dest.code());
