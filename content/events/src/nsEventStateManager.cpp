@@ -2671,14 +2671,15 @@ nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
       // Do not scroll pixels when zooming
       action = -1;
     }
-  } else if (aMouseEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) {
-    if (aUseSystemSettings ||
-        action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE ||
-        (aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
-      // Don't scroll lines when a pixel scroll event will follow.
-      // Also, don't do history scrolling or zooming for momentum scrolls.
-      action = -1;
-    }
+  } else if (((aMouseEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) &&
+              (aUseSystemSettings ||
+               action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE)) ||
+             ((aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum) &&
+              (action == MOUSE_SCROLL_HISTORY || action == MOUSE_SCROLL_ZOOM))) {
+    // Don't scroll lines or page when a pixel scroll event will follow.
+    // Also, don't do history scrolling or zooming for momentum scrolls,
+    // no matter what's going on with pixel scrolling.
+    action = -1;
   }
 
   return action;
