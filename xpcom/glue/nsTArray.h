@@ -430,12 +430,6 @@ public:
     return *this;
   }
 
-  // @return The amount of memory taken used by this nsTArray, not including
-  // sizeof(this)
-  size_t SizeOf() const {
-    return Capacity() * sizeof(elem_type) + sizeof(mHdr);
-  }
-
   //
   // Accessor methods
   //
