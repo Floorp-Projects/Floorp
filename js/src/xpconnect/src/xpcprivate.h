@@ -3552,9 +3552,6 @@ public:
 private:
     nsAutoTArray<XPCJSContextInfo, 16> mStack;
     JSContext*  mSafeJSContext;
-
-    // If non-null, we own it; same as mSafeJSContext if SetSafeJSContext
-    // not called.
     JSContext*  mOwnSafeJSContext;
 };
 

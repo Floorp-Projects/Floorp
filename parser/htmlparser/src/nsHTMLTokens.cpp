@@ -51,7 +51,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsScanner.h"
-
+#include "nsParserConstants.h"
 
 static const PRUnichar sUserdefined[] = {'u', 's', 'e', 'r', 'd', 'e', 'f',
                                          'i', 'n', 'e', 'd', 0};

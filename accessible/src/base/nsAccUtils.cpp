@@ -57,6 +57,8 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsComponentManagerUtils.h"
 
+using namespace mozilla::a11y;
+
 void
 nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes,
                        nsIAtom *aAttrName, nsAString& aAttrValue)
