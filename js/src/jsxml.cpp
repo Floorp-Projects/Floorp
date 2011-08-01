@@ -359,7 +359,6 @@ JS_FRIEND_DATA(Class) js_QNameClass = {
  */
 JS_FRIEND_DATA(Class) js_AttributeNameClass = {
     js_AttributeName_str,
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
@@ -374,7 +373,6 @@ JS_FRIEND_DATA(Class) js_AttributeNameClass = {
 
 JS_FRIEND_DATA(Class) js_AnyNameClass = {
     js_AnyName_str,
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
