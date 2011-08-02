@@ -1019,5 +1019,9 @@ NodeList<T>::finalize(JSContext *cx, JSObject *proxy)
     NS_RELEASE(nodeList);
 }
 
+template
+nsIHTMLCollection*
+NodeList<nsIHTMLCollection>::getNodeList(JSObject *obj);
+
 }
 }
