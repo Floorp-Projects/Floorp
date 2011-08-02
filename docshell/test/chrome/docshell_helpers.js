@@ -317,10 +317,7 @@ function finish() {
   // If the test changed the value of max_total_viewers via a call to
   // enableBFCache(), then restore it now.
   if (typeof(gOrigMaxTotalViewers) != "undefined") {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch);
-    prefs.setIntPref("browser.sessionhistory.max_total_viewers",
+    SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers",
       gOrigMaxTotalViewers);
   }
 
@@ -387,26 +384,21 @@ function waitForTrue(fn, onWaitComplete, timeout) {
  *           to 0 (disabled), if a number, set it to that specific number
  */
 function enableBFCache(enable) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-              .getService(Components.interfaces.nsIPrefBranch);
-  
   // If this is the first time the test called enableBFCache(),
   // store the original value of max_total_viewers, so it can
   // be restored at the end of the test.
   if (typeof(gOrigMaxTotalViewers) == "undefined") {
-    gOrigMaxTotalViewers =
-      prefs.getIntPref("browser.sessionhistory.max_total_viewers");
+    gOrigMaxTotalViewers = SpecialPowers.getIntPref("browser.sessionhistory.max_total_viewers");
   }
   
   if (typeof(enable) == "boolean") {
     if (enable)
-      prefs.setIntPref("browser.sessionhistory.max_total_viewers", -1);
+      SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers", -1);
     else
-      prefs.setIntPref("browser.sessionhistory.max_total_viewers", 0);    
+      SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers", 0);    
   }
   else if (typeof(enable) == "number") {
-    prefs.setIntPref("browser.sessionhistory.max_total_viewers", enable);    
+    SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers", enable);    
   }
 }
 
