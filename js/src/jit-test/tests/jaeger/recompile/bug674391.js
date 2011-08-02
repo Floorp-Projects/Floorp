@@ -6,5 +6,6 @@ function foo(x) {
   for (var i in x) {
   }
 }
-schedulegc(100);
+if (typeof schedulegc != "undefined")
+  schedulegc(100);
 foo(a);
