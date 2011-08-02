@@ -67,6 +67,7 @@ EXPORTS = \
 		nsScannerString.h           \
 		nsParserCIID.h              \
 		nsToken.h                   \
+		nsParserConstants.h         \
 		$(NULL)
 
 ifdef MOZ_DEBUG

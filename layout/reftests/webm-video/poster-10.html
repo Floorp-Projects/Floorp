@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!-- Test: Create video, add poster, load. Should display poster. -->
+<script>
+function runTest() {
+  var v = document.createElement('video');
+  v.addEventListener('loadeddata', function(){setTimeout(function(){document.documentElement.className = '';}, 0);}, false);
+  v.id = 'v';
+  v.src = "black140x100.webm";
+  v.poster = "blue250x200.png";
+  v.preload = "auto";
+  document.body.appendChild(v);
+}
+
+</script>
+<body style="background:white;" onload="runTest();">
+</body>
+</html>

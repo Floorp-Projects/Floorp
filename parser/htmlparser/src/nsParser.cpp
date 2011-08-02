@@ -74,6 +74,7 @@
 #include "nsViewSourceHTML.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
+#include "nsParserConstants.h"
 
 using namespace mozilla;
 
@@ -362,7 +363,7 @@ nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::Prefetc
         doc->ScriptLoader()->PreloadURI(uri, pe.charset, pe.elementType);
         break;
       case nsSpeculativeScriptThread::IMAGE:
-        doc->MaybePreLoadImage(uri);
+        doc->MaybePreLoadImage(uri, EmptyString());
         break;
       case nsSpeculativeScriptThread::STYLESHEET:
         doc->PreloadStyle(uri, pe.charset);
@@ -2024,21 +2025,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
 NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
-                        nsIContent* aTargetNode,
-                        nsIAtom* aContextLocalName,
-                        PRInt32 aContextNamespace,
-                        PRBool aQuirks)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsParser::ParseFragment(const nsAString& aSourceBuffer,
-                        void* aKey,
-                        nsTArray<nsString>& aTagStack,
-                        PRBool aXMLMode,
-                        const nsACString& aMimeType,
-                        nsDTDMode aMode)
+                        nsTArray<nsString>& aTagStack)
 {
   nsresult result = NS_OK;
   nsAutoString  theContext;
@@ -2064,7 +2051,11 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
   // First, parse the context to build up the DTD's tag stack. Note that we
   // pass PR_FALSE for the aLastCall parameter.
-  result = Parse(theContext, (void*)&theContext, aMimeType, PR_FALSE, aMode);
+  result = Parse(theContext,
+                 (void*)&theContext,
+                 NS_LITERAL_CSTRING("application/xml"),
+                 PR_FALSE,
+                 eDTDMode_full_standards);
   if (NS_FAILED(result)) {
     mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
     return result;
@@ -2072,64 +2063,32 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
   if (!mSink) {
     // Parse must have failed in the XML case and so the sink was killed.
-    NS_ASSERTION(aXMLMode, "Unexpected!");
     return NS_ERROR_HTMLPARSER_STOPPARSING;
   }
 
   nsCOMPtr<nsIFragmentContentSink> fragSink = do_QueryInterface(mSink);
   NS_ASSERTION(fragSink, "ParseFragment requires a fragment content sink");
 
-  if (!aXMLMode && theCount) {
-    // First, we have to flush any tags that don't belong in the head if there
-    // was no <body> in the context.
-    // XXX This is extremely ugly. Maybe CNavDTD should have FlushMisplaced()?
-    NS_ASSERTION(mParserContext, "Parsing didn't create a parser context?");
-
-    CNavDTD* dtd = static_cast<CNavDTD*>
-                              (static_cast<nsIDTD*>(mDTD));
-    NS_ASSERTION(dtd, "How did we parse anything without a dtd?");
-
-    CStartToken bodyToken(NS_LITERAL_STRING("BODY"), eHTMLTag_body);
-    nsCParserNode bodyNode(&bodyToken, 0);
-
-    dtd->OpenContainer(&bodyNode, eHTMLTag_body);
-
-    // Now parse the flushed out tags.
-    result = BuildModel();
-    if (NS_FAILED(result)) {
-      mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
-      return result;
-    }
-
-    // Now that we've flushed all of the tags out of the body, we have to make
-    // sure that there aren't any context tags left in the scanner.
-    NS_ASSERTION(mParserContext->mScanner, "Where'd the scanner go?");
-
-    PRUnichar next;
-    if (NS_SUCCEEDED(mParserContext->mScanner->Peek(next))) {
-      // Uh, oh. This must mean that the context stack has a special tag on
-      // it, such as <textarea> or <title> that requires its end tag before it
-      // will be consumed. Tell the content sink that it will be coming.
-      // Note: For now, we can assume that there is only one such tag.
-      NS_ASSERTION(next == '<', "The tokenizer failed to consume a token");
-      fragSink->IgnoreFirstContainer();
-    }
-  }
-
   fragSink->WillBuildContent();
   // Now, parse the actual content. Note that this is the last call
   // for HTML content, but for XML, we will want to build and parse
   // the end tags.  However, if tagStack is empty, it's the last call
   // for XML as well.
-  if (!aXMLMode || (theCount == 0)) {
-    result = Parse(aSourceBuffer, &theContext, aMimeType,
-                   PR_TRUE, aMode);
+  if (theCount == 0) {
+    result = Parse(aSourceBuffer,
+                   &theContext,
+                   NS_LITERAL_CSTRING("application/xml"),
+                   PR_TRUE,
+                   eDTDMode_full_standards);
     fragSink->DidBuildContent();
   } else {
     // Add an end tag chunk, so expat will read the whole source buffer,
     // and not worry about ']]' etc.
     result = Parse(aSourceBuffer + NS_LITERAL_STRING("</"),
-                   &theContext, aMimeType, PR_FALSE, aMode);
+                   &theContext,
+                   NS_LITERAL_CSTRING("application/xml"),
+                   PR_FALSE,
+                   eDTDMode_full_standards);
     fragSink->DidBuildContent();
 
     if (NS_SUCCEEDED(result)) {
@@ -2152,8 +2111,11 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
         endContext.AppendLiteral(">");
       }
 
-      result = Parse(endContext, &theContext, aMimeType,
-                     PR_TRUE, aMode);
+      result = Parse(endContext,
+                     &theContext,
+                     NS_LITERAL_CSTRING("application/xml"),
+                     PR_TRUE,
+                     eDTDMode_full_standards);
     }
   }
 

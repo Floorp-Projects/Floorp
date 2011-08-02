@@ -40,12 +40,12 @@
  */
 
 #include "nsParserUtils.h"
-#include "nsIParser.h" // for kQuote et. al.
 #include "jsapi.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsIParserService.h"
+#include "nsParserConstants.h"
 
 #define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
   while ((iter) != (end_iter) && nsCRT::IsAsciiSpace(*(iter))) { \

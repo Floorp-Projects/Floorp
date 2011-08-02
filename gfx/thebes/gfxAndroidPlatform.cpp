@@ -442,7 +442,7 @@ gfxAndroidPlatform::FindFontsInDirectory(const nsCString& aFontsDir,
             strcasecmp(ent->d_name + namelen - 4, ".ttf") == 0)
         {
             bool isStdFont = false;
-            for (int i = 0; i < NS_ARRAY_LENGTH(sStandardFonts) && !isStdFont; i++) {
+            for (unsigned int i = 0; i < NS_ARRAY_LENGTH(sStandardFonts) && !isStdFont; i++) {
                 isStdFont = strcmp(sStandardFonts[i], ent->d_name) == 0;
             }
             if (!isStdFont) {
@@ -454,7 +454,7 @@ gfxAndroidPlatform::FindFontsInDirectory(const nsCString& aFontsDir,
         }
     }
     closedir(d);
-    for (int i = 0; i < NS_ARRAY_LENGTH(sStandardFonts); i++) {
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(sStandardFonts); i++) {
         nsCString s(aFontsDir);
         s.Append(nsDependentCString(sStandardFonts[i]));
 

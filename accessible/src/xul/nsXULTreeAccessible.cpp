@@ -52,6 +52,8 @@
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
 
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,17 +202,11 @@ nsXULTreeAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsIAccessible implementation
 
-NS_IMETHODIMP
-nsXULTreeAccessible::GetFocusedChild(nsIAccessible **aFocusedChild) 
+nsAccessible*
+nsXULTreeAccessible::FocusedChild()
 {
-  NS_ENSURE_ARG_POINTER(aFocusedChild);
-  *aFocusedChild = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   if (gLastFocusedNode != mContent)
-    return NS_OK;
+    return nsnull;
 
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
     do_QueryInterface(mContent);
@@ -218,10 +214,10 @@ nsXULTreeAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
     PRInt32 row = -1;
     multiSelect->GetCurrentIndex(&row);
     if (row >= 0)
-      NS_IF_ADDREF(*aFocusedChild = GetTreeItemAccessible(row));
+      return GetTreeItemAccessible(row);
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -661,17 +657,11 @@ NS_IMPL_RELEASE_INHERITED(nsXULTreeItemAccessibleBase, nsAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: nsIAccessible implementation
 
-NS_IMETHODIMP
-nsXULTreeItemAccessibleBase::GetFocusedChild(nsIAccessible **aFocusedChild) 
+nsAccessible*
+nsXULTreeItemAccessibleBase::FocusedChild()
 {
-  NS_ENSURE_ARG_POINTER(aFocusedChild);
-  *aFocusedChild = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   if (gLastFocusedNode != mContent)
-    return NS_OK;
+    return nsnull;
 
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
     do_QueryInterface(mContent);
@@ -680,10 +670,10 @@ nsXULTreeItemAccessibleBase::GetFocusedChild(nsIAccessible **aFocusedChild)
     PRInt32 row = -1;
     multiSelect->GetCurrentIndex(&row);
     if (row == mRow)
-      NS_ADDREF(*aFocusedChild = this);
+      return this;
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -1225,7 +1215,7 @@ nsXULTreeColumnsAccessible::GetSiblingAtOffset(PRInt32 aOffset,
       PRInt32 rowCount = 0;
       treeView->GetRowCount(&rowCount);
       if (rowCount > 0 && aOffset <= rowCount) {
-        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(GetParent());
+        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(Parent());
 
         if (treeAcc)
           return treeAcc->GetTreeItemAccessible(aOffset - 1);

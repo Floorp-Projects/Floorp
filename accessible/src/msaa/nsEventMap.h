@@ -39,9 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <winuser.h>
-#ifndef WINABLEAPI
-#include <winable.h>
-#endif
 #include "AccessibleEventId.h"
 
 const PRUint32 kEVENT_WIN_UNKNOWN = 0x00000000;

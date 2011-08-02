@@ -1939,16 +1939,6 @@ nsXPConnect::GetFunctionThisTranslator(const nsIID & aIID,
     return NS_OK;
 }
 
-/* void setSafeJSContextForCurrentThread (in JSContextPtr cx); */
-NS_IMETHODIMP 
-nsXPConnect::SetSafeJSContextForCurrentThread(JSContext * cx)
-{
-    XPCCallContext ccx(NATIVE_CALLER);
-    if(!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-    return ccx.GetThreadData()->GetJSContextStack()->SetSafeJSContext(cx);
-}
-
 /* void clearAllWrappedNativeSecurityPolicies (); */
 NS_IMETHODIMP
 nsXPConnect::ClearAllWrappedNativeSecurityPolicies()
@@ -2658,18 +2648,6 @@ nsXPConnect::GetSafeJSContext(JSContext * *aSafeJSContext)
     }
 
     return data->GetJSContextStack()->GetSafeJSContext(aSafeJSContext);
-}
-
-/* attribute JSContext SafeJSContext; */
-NS_IMETHODIMP
-nsXPConnect::SetSafeJSContext(JSContext * aSafeJSContext)
-{
-    XPCPerThreadData* data = XPCPerThreadData::GetData(aSafeJSContext);
-
-    if(!data)
-        return NS_ERROR_FAILURE;
-
-    return data->GetJSContextStack()->SetSafeJSContext(aSafeJSContext);
 }
 
 nsIPrincipal*

@@ -92,12 +92,6 @@ static PRInt32 gEatMouseMove = PR_FALSE;
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-nsrefcnt nsMenuFrame::gRefCnt = 0;
-nsString *nsMenuFrame::gShiftText = nsnull;
-nsString *nsMenuFrame::gControlText = nsnull;
-nsString *nsMenuFrame::gMetaText = nsnull;
-nsString *nsMenuFrame::gAltText = nsnull;
-nsString *nsMenuFrame::gModifierSeparator = nsnull;
 const PRInt32 kBlinkDelay = 67; // milliseconds
 
 // this class is used for dispatching menu activation events asynchronously.
@@ -300,62 +294,11 @@ nsMenuFrame::Init(nsIContent*      aContent,
 
   InitMenuParent(aParent);
 
-  //load the display strings for the keyboard accelerators, but only once
-  if (gRefCnt++ == 0) {
-    nsCOMPtr<nsIStringBundleService> bundleService =
-      mozilla::services::GetStringBundleService();
-    nsCOMPtr<nsIStringBundle> bundle;
-    if (bundleService) {
-      rv = bundleService->CreateBundle( "chrome://global-platform/locale/platformKeys.properties",
-                                        getter_AddRefs(bundle));
-    }
-    
-    NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/platformKeys.properties could not be loaded");
-    nsXPIDLString shiftModifier;
-    nsXPIDLString metaModifier;
-    nsXPIDLString altModifier;
-    nsXPIDLString controlModifier;
-    nsXPIDLString modifierSeparator;
-    if (NS_SUCCEEDED(rv) && bundle) {
-      //macs use symbols for each modifier key, so fetch each from the bundle, which also covers i18n
-      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_SHIFT").get(), getter_Copies(shiftModifier));
-      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_META").get(), getter_Copies(metaModifier));
-      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_ALT").get(), getter_Copies(altModifier));
-      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_CONTROL").get(), getter_Copies(controlModifier));
-      rv = bundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), getter_Copies(modifierSeparator));
-    } else {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
-    //if any of these don't exist, we get  an empty string
-    gShiftText = new nsString(shiftModifier);
-    gMetaText = new nsString(metaModifier);
-    gAltText = new nsString(altModifier);
-    gControlText = new nsString(controlModifier);
-    gModifierSeparator = new nsString(modifierSeparator);    
-  }
-
   BuildAcceleratorText(PR_FALSE);
   nsIReflowCallback* cb = new nsASyncMenuInitialization(this);
   NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
   PresContext()->PresShell()->PostReflowCallback(cb);
   return rv;
-}
-
-nsMenuFrame::~nsMenuFrame()
-{
-  // Clean up shared statics
-  if (--gRefCnt == 0) {
-    delete gShiftText;
-    gShiftText = nsnull;
-    delete gControlText;  
-    gControlText = nsnull;
-    delete gMetaText;  
-    gMetaText = nsnull;
-    delete gAltText;  
-    gAltText = nsnull;
-    delete gModifierSeparator;
-    gModifierSeparator = nsnull;
-  }
 }
 
 // The following methods are all overridden to ensure that the menupopup frame
@@ -1143,35 +1086,48 @@ nsMenuFrame::BuildAcceleratorText(PRBool aNotify)
   char* str = ToNewCString(modifiers);
   char* newStr;
   char* token = nsCRT::strtok(str, ", \t", &newStr);
+
+  nsAutoString shiftText;
+  nsAutoString altText;
+  nsAutoString metaText;
+  nsAutoString controlText;
+  nsAutoString modifierSeparator;
+
+  nsContentUtils::GetShiftText(shiftText);
+  nsContentUtils::GetAltText(altText);
+  nsContentUtils::GetMetaText(metaText);
+  nsContentUtils::GetControlText(controlText);
+  nsContentUtils::GetModifierSeparatorText(modifierSeparator);
+
   while (token) {
       
     if (PL_strcmp(token, "shift") == 0)
-      accelText += *gShiftText;
+      accelText += shiftText;
     else if (PL_strcmp(token, "alt") == 0) 
-      accelText += *gAltText; 
+      accelText += altText; 
     else if (PL_strcmp(token, "meta") == 0) 
-      accelText += *gMetaText; 
+      accelText += metaText; 
     else if (PL_strcmp(token, "control") == 0) 
-      accelText += *gControlText; 
+      accelText += controlText; 
     else if (PL_strcmp(token, "accel") == 0) {
       switch (accelKey)
       {
         case nsIDOMKeyEvent::DOM_VK_META:
-          accelText += *gMetaText;
+          accelText += metaText;
           break;
 
         case nsIDOMKeyEvent::DOM_VK_ALT:
-          accelText += *gAltText;
+          accelText += altText;
           break;
 
         case nsIDOMKeyEvent::DOM_VK_CONTROL:
         default:
-          accelText += *gControlText;
+          accelText += controlText;
           break;
       }
     }
     
-    accelText += *gModifierSeparator;
+    accelText += modifierSeparator;
 
     token = nsCRT::strtok(newStr, ", \t", &newStr);
   }

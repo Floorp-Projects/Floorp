@@ -1,8 +1,8 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.4.1 [February 25, 2010]
- * Copyright (c) 1998-2010 Glenn Randers-Pehrson
+ * Last changed in libpng 1.4.8 [July 7, 2011]
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -695,7 +695,7 @@ png_write_IDAT(png_structp png_ptr, png_bytep data, png_size_t length)
 
             /* Compute the maximum possible length of the datastream */
 
-            /* Number of pixels, plus for each row a filter byte and possible
+            /* Number of pixels, plus for each row a filter byte
              * and possibly a padding byte, so increase the maximum
              * size to account for these.
              */
