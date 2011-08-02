@@ -51,7 +51,7 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadScript,
   eSpeculativeLoadStyle,
   eSpeculativeLoadManifest,
-  eSpeculativeLoadSetDocumentCharset,
+  eSpeculativeLoadSetDocumentCharset
 };
 
 class nsHtml5SpeculativeLoad {
