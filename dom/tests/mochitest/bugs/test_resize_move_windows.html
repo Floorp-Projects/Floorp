@@ -82,8 +82,8 @@ function hitEventLoop(condition, test, times, next) {
 function checkChangeIsDisabled(aWindow, aNext)
 {
   // We want to check that nothing has changed. Having a high value would take
-  // too much time.
-  var hits = 10;
+  // too much time. Worse thing that could happen is random green.
+  var hits = 5;
 
   var originalWidth = aWindow.innerWidth;
   var originalHeight = aWindow.innerHeight;
@@ -94,74 +94,63 @@ function checkChangeIsDisabled(aWindow, aNext)
   var oWidth = aWindow.outerWidth;
   var oHeight = aWindow.outerHeight;
 
-  function sizeChangeCondition() {
-    return aWindow.innerWidth != originalWidth || aWindow.innerHeight != originalHeight;
+  function changeCondition() {
+    return aWindow.innerWidth != originalWidth ||
+           aWindow.innerHeight != originalHeight ||
+           aWindow.screenX != originalX || aWindow.screenY != originalY ||
+           aWindow.outerWidth != oWidth || aWindow.outerHeight != oHeight;
   }
 
-  function sizeChangeTest() {
+  function changeTest() {
     is(aWindow.innerWidth, originalWidth, "Window width shouldn't have changed");
     is(aWindow.innerHeight, originalHeight, "Window height shouldn't have changed");
-  }
-
-  function posChangeCondition() {
-    return aWindow.screenX != originalX || aWindow.screenY != originalY;
-  }
-
-  function posChangeTest() {
     is(aWindow.screenX, originalX, "Window x position shouldn't have changed");
     is(aWindow.screenY, originalY, "Window y position shouldn't have changed");
-  }
-
-  function outerChangeCondition() {
-    return aWindow.outerWidth != oWidth || aWindow.outerHeight != oHeight;
-  }
-
-  function outerChangeTest() {
     is(aWindow.outerWidth, oWidth, "Window outerWidth shouldn't have changed");
     is(aWindow.outerHeight, oHeight, "Window outerHeight shouldn't have changed");
   }
 
   /**
-   * Size checks.
+   * Size changes.
    */
-  aWindow.innerWidth = getNewWidth(aWindow);
-  aWindow.innerHeight = getNewHeight(aWindow);
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
-    aWindow.resizeTo(getNewWidth(aWindow), getNewHeight(aWindow));
+  var newWidth = getNewWidth(aWindow);
+  var newHeight = getNewHeight(aWindow);
 
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
-    aWindow.resizeBy(getNewWidth(aWindow) - aWindow.innerWidth,
-                     getNewHeight(aWindow) - aWindow.innerHeight);
+  aWindow.innerWidth = newWidth;
+  aWindow.innerHeight = newHeight;
 
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
-    aWindow.sizeToContent();
+  aWindow.resizeTo(newWidth, newHeight);
 
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
+  aWindow.resizeBy(newWidth - aWindow.innerWidth,
+                   newHeight - aWindow.innerHeight);
+
+  aWindow.sizeToContent();
+
   /**
    * Position checks.
    */
-    aWindow.screenX = getNewX(aWindow);
-    aWindow.screenY = getNewY(aWindow);
-  hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
-    aWindow.moveTo(getNewX(aWindow), getNewY(aWindow));
-  hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
-    aWindow.moveBy(getNewX(aWindow) - aWindow.screenX,
-                   getNewY(aWindow) - aWindow.screenY);
-  hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
+  var newX = getNewX(aWindow);
+  var newY = getNewY(aWindow);
+
+  aWindow.screenX = newX;
+  aWindow.screenY = newY;
+
+  aWindow.moveTo(newX, newY);
+
+  aWindow.moveBy(newX - aWindow.screenX,
+                 newY - aWindow.screenY);
+
   /**
    * Outer width/height checks.
    */
-    aWindow.outerWidth *= 2;
-    aWindow.outerHeight *= 2;
+  aWindow.outerWidth *= 2;
+  aWindow.outerHeight *= 2;
 
-  hitEventLoop(outerChangeCondition, outerChangeTest, hits, aNext);
-  });
-  });
-  });
-  });
-  });
-  });
-  });
+  // We did a lot of changes. Now, we are going to wait and see if something
+  // happens.
+  // NOTE: if this happens to fail, you will have to check manually which
+  // operation has been accepted.
+  hitEventLoop(changeCondition, changeTest, hits, aNext);
 }
 
 function checkChangeIsEnabled(aWindow, aNext)
