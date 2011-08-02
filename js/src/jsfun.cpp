@@ -2431,6 +2431,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
+    fun->getType(cx)->functionScript = script;
     script->hasFunction = true;
     script->where.fun = fun;
     script->setOwnerObject(fun);
