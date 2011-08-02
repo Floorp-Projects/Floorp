@@ -1321,7 +1321,7 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     curr->tjitDataAllocatorsMain = GetCompartmentTjitDataAllocatorsMainSize(compartment);
     curr->tjitDataAllocatorsReserve = GetCompartmentTjitDataAllocatorsReserveSize(compartment);
 #endif
-    compartment->getTypeInferenceMemoryStats(cx, &curr->typeInferenceMemory);
+    JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory);
 }
 
 void
@@ -1369,7 +1369,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, size_t traceKind,
     else if(traceKind == JSTRACE_TYPE_OBJECT)
     {
         js::types::TypeObject *obj = static_cast<js::types::TypeObject *>(thing);
-        obj->compartment()->getTypeInferenceObjectStats(obj, &curr->typeInferenceMemory);
+        JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory);
     }
     else
     {
@@ -1747,30 +1747,34 @@ ReportCompartmentStats(const CompartmentStats &stats,
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "type-inference/script-main"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats->typeInferenceMemory.scriptMain,
+                       stats.typeInferenceMemory.scriptMain,
     "Memory used during type inference to store type sets of variables "
-    "and dynamically observed types.");
+    "and dynamically observed types.",
+                       callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "type-inference/script-typesets"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats->typeInferenceMemory.scriptSets,
+                       stats.typeInferenceMemory.scriptSets,
     "Memory used during type inference to hold the contents of type "
-    "sets associated with scripts.");
+    "sets associated with scripts.",
+                       callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "type-inference/object-main"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats->typeInferenceMemory.objectMain,
+                       stats.typeInferenceMemory.objectMain,
     "Memory used during type inference to store types and possible "
-    "property types of JS objects.");
+    "property types of JS objects.",
+                       callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "type-inference/object-typesets"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats->typeInferenceMemory.objectSets,
+                       stats.typeInferenceMemory.objectSets,
     "Memory used during type inference to hold the contents of type "
-    "sets associated with objects.");
+    "sets associated with objects.",
+                       callback, closure);
 
     /*
      * This is in a different category from the rest of type inference
@@ -1779,8 +1783,9 @@ ReportCompartmentStats(const CompartmentStats &stats,
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "type-inference-pools"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats->typeInferenceMemory.poolMain,
-    "Memory used during type inference to hold transient analysis information.");
+                       stats.typeInferenceMemory.poolMain,
+    "Memory used during type inference to hold transient analysis information.",
+                       callback, closure);
 }
 
 void
