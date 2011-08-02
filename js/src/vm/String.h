@@ -55,8 +55,11 @@ class JSAtom;
 /*
  * JavaScript strings
  *
- * Conceptually, a JS string is just an array of chars and a length. To improve
- * performance of common string operations, the following optimizations are
+ * Conceptually, a JS string is just an array of chars and a length. This array
+ * of chars may or may not be null-terminated and, if it is, the null character
+ * is not included in the length.
+ *
+ * To improve performance of common operations, the following optimizations are
  * made which affect the engine's representation of strings:
  *
  *  - The plain vanilla representation is a "flat" string which consists of a
@@ -110,7 +113,7 @@ class JSAtom;
  *  | \
  *  | JSDependentString         base / -
  *  |
- * JSFlatString (abstract)      chars / not null-terminated
+ * JSFlatString (abstract)      chars / null-terminated
  *  | \
  *  | JSExtensibleString        capacity / no external pointers into char array
  *  |

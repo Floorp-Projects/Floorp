@@ -50,6 +50,7 @@
 #include "nsIObserver.h"
 #include "ImageLayers.h"
 #include "nsAudioStream.h"
+#include "nsTimeRanges.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -623,6 +624,12 @@ protected:
   // PR_TRUE if MozAudioAvailable events can be safely dispatched, based on
   // a media and element same-origin check.
   PRBool mAllowAudioData;
+
+  // Range of time played.
+  nsTimeRanges mPlayed;
+
+  // Temporary variable for storing a time, when the stream starts to play
+  double mCurrentPlayRangeStart;
 
   // If true then we have begun downloading the media content.
   // Set to false when completed, or not yet started.
