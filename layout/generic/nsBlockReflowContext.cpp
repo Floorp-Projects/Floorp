@@ -119,7 +119,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
     // OK because our traversal is idempotent.
     for (nsBlockFrame* block = static_cast<nsBlockFrame*>(frame);
          block; block = static_cast<nsBlockFrame*>(block->GetNextInFlow())) {
-      for (PRBool overflowLines = PR_FALSE; overflowLines <= PR_TRUE; ++overflowLines) {
+      for (PRIntn overflowLines = PR_FALSE; overflowLines <= PR_TRUE; ++overflowLines) {
         nsBlockFrame::line_iterator line;
         nsBlockFrame::line_iterator line_end;
         PRBool anyLines = PR_TRUE;

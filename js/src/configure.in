@@ -5041,10 +5041,11 @@ dnl ========================================================
 dnl callgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind      Enable callgrind profiling],
+[  --enable-callgrind      Enable callgrind profiling. Implies --enable-profiling.],
     MOZ_CALLGRIND=1,
     MOZ_CALLGRIND= )
 if test -n "$MOZ_CALLGRIND"; then
+    MOZ_PROFILING=1
     AC_DEFINE(MOZ_CALLGRIND)
 fi
 

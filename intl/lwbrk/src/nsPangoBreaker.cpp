@@ -45,11 +45,11 @@
 
 void
 NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
-                        PRPackedBool* aBreakBefore)
+                        PRUint8* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
 
-  memset(aBreakBefore, PR_FALSE, aLength * sizeof(PRPackedBool));
+  memset(aBreakBefore, PR_FALSE, aLength * sizeof(PRUint8));
 
   nsAutoTArray<PangoLogAttr, 2000> attrBuffer;
   if (!attrBuffer.AppendElements(aLength + 1))

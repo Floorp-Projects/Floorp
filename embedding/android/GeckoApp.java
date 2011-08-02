@@ -393,14 +393,17 @@ abstract public class GeckoApp
         // etc., and generally mark the profile as 'clean', and then
         // dirty it again if we get an onResume.
 
+
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
         super.onStop();
+        GeckoAppShell.putChildInBackground();
     }
 
     @Override
     public void onRestart()
     {
         Log.i("GeckoApp", "restart");
+        GeckoAppShell.putChildInForeground();
         super.onRestart();
     }
 
@@ -668,7 +671,7 @@ abstract public class GeckoApp
         intent.setType(aMimeType);
         GeckoApp.this.
             startActivityForResult(
-                Intent.createChooser(intent,"choose a file"),
+                Intent.createChooser(intent, getString(R.string.choose_file)),
                 FILE_PICKER_REQUEST);
         String filePickerResult = "";
         try {
