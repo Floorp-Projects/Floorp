@@ -89,23 +89,6 @@ ChildProcess()
 }
 
 
-/**
- * @returns The parent process object, or if we are not in the parent
- *          process, nsnull.
- */
-static ContentParent*
-ParentProcess()
-{
-  if (!IsChildProcess()) {
-    ContentParent* cpc = ContentParent::GetSingleton();
-    if (!cpc)
-      NS_RUNTIMEABORT("Content Process is NULL!");
-    return cpc;
-  }
-
-  return nsnull;
-}
-
 #define ENSURE_NOT_CHILD_PROCESS_(onError) \
   PR_BEGIN_MACRO \
   if (IsChildProcess()) { \
@@ -170,7 +153,6 @@ NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISu
 
 nsPermissionManager::nsPermissionManager()
  : mLargestID(0)
- , mUpdateChildProcess(PR_FALSE)
 {
 }
 
@@ -467,12 +449,16 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
                                  DBOperationType       aDBOperation)
 {
   if (!IsChildProcess()) {
-    // In the parent, send the update now, if the child is ready
-    if (mUpdateChildProcess) {
-      IPC::Permission permission((aHost),
-                                 (aType),
-                                 aPermission, aExpireType, aExpireTime);
-      unused << ParentProcess()->SendAddPermission(permission);
+    IPC::Permission permission((aHost),
+                               (aType),
+                               aPermission, aExpireType, aExpireTime);
+
+    nsTArray<ContentParent*> cplist;
+    ContentParent::GetAll(cplist);
+    for (PRUint32 i = 0; i < cplist.Length(); ++i) {
+      ContentParent* cp = cplist[i];
+      if (cp->NeedsPermissionsUpdate())
+        unused << cp->SendAddPermission(permission);
     }
   }
 
