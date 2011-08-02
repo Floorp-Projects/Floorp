@@ -203,12 +203,12 @@ static PRLogModuleInfo* gLogModule;
 
 static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
 
-static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
+static PRUint32 gStyleVerifyTreeEnable = 0x55;
 
 PRBool
 nsFrame::GetVerifyStyleTreeEnable()
 {
-  if (gStyleVerifyTreeEnable == PRBool(0x55)) {
+  if (gStyleVerifyTreeEnable == 0x55) {
     if (nsnull == gStyleVerifyTreeLogModuleInfo) {
       gStyleVerifyTreeLogModuleInfo = PR_NewLogModule("styleverifytree");
       gStyleVerifyTreeEnable = 0 != gStyleVerifyTreeLogModuleInfo->level;

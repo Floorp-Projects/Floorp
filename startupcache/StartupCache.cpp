@@ -510,7 +510,7 @@ StartupCacheDebugOutputStream::CheckReferences(nsISupports* aObject)
   
   PRUint32 flags;
   rv = classInfo->GetFlags(&flags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
   if (flags & nsIClassInfo::SINGLETON)
     return PR_TRUE;
   
