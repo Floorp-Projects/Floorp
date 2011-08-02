@@ -65,9 +65,9 @@ public:
   // aLength is the length of the aText array and also the length of the aBreakBefore
   // output array.
   virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore) = 0;
+                                 PRUint8* aBreakBefore) = 0;
   virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore) = 0;
+                                 PRUint8* aBreakBefore) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILineBreaker, NS_ILINEBREAKER_IID)

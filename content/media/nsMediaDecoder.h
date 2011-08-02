@@ -112,6 +112,19 @@ public:
   // Return the duration of the video in seconds.
   virtual double GetDuration() = 0;
 
+  // A media stream is assumed to be infinite if the metadata doesn't
+  // contain the duration, and range requests are not supported, and
+  // no headers give a hint of a possible duration (Content-Length,
+  // Content-Duration, and variants), and we cannot seek in the media
+  // stream to determine the duration.
+  //
+  // When the media stream ends, we can know the duration, thus the stream is
+  // no longer considered to be infinite.
+  virtual void SetInfinite(PRBool aInfinite) = 0;
+
+  // Return true if the stream is infinite (see SetInfinite).
+  virtual PRBool IsInfinite() = 0;
+
   // Pause video playback.
   virtual void Pause() = 0;
 
