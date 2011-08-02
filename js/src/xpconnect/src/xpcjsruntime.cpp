@@ -1350,8 +1350,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, size_t traceKind,
     {
         curr->gcHeapObjects += thingSize;
         JSObject *obj = static_cast<JSObject *>(thing);
-        if(obj->hasSlotsArray())
-            curr->objectSlots += obj->numSlots() * sizeof(js::Value);
+        curr->objectSlots += JS_ObjectCountDynamicSlots(obj) * sizeof(js::Value);
     }
     else if(traceKind == JSTRACE_STRING)
     {
