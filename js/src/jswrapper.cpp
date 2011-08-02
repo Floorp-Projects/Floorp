@@ -676,10 +676,6 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 bool
 JSCrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
-    /* Notify type inference of custom iterators, see GetCustomIterator. */
-    if (!(flags & JSITER_OWNONLY))
-        types::MarkIteratorUnknown(cx);
-
     PIERCE(cx, wrapper, GET,
            NOTHING,
            JSWrapper::iterate(cx, wrapper, flags, vp),
