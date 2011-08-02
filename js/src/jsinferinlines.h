@@ -289,7 +289,7 @@ GetTypeCallerInitObject(JSContext *cx, JSProtoKey key)
     if (cx->typeInferenceEnabled()) {
         jsbytecode *pc;
         JSScript *script = cx->stack.currentScript(&pc);
-        if (script && script->compartment == cx->compartment)
+        if (script)
             return TypeScript::InitObject(cx, script, pc, key);
     }
     return GetTypeNewObject(cx, key);
@@ -598,12 +598,14 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 TypeScript::MonitorAssign(JSContext *cx, JSScript *script, jsbytecode *pc,
                           JSObject *obj, jsid id, const js::Value &rval)
 {
-    if (cx->typeInferenceEnabled() && !obj->hasLazyType()) {
+    if (cx->typeInferenceEnabled() && !obj->hasSingletonType()) {
         /*
          * Mark as unknown any object which has had dynamic assignments to
          * non-integer properties at SETELEM opcodes. This avoids making large
-         * numbers of type properties for hashmap-style objects. :FIXME: this
-         * is too aggressive for things like prototype library initialization.
+         * numbers of type properties for hashmap-style objects. We don't need
+         * to do this for objects with singleton type, because type properties
+         * are only constructed for them when analyzed scripts depend on those
+         * specific properties.
          */
         uint32 i;
         if (js_IdIsIndex(id, &i))

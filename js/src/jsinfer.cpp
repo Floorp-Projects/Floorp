@@ -574,6 +574,40 @@ TypeSet::addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid i
 }
 
 /*
+ * Constraints for generating 'set' property constraints on a SETELEM only if
+ * the element type may be a number. For SETELEM we only account for integer
+ * indexes, and if the element cannot be an integer (e.g. it must be a string)
+ * then we lose precision by treating it like one.
+ */
+class TypeConstraintSetElement : public TypeConstraint
+{
+public:
+    JSScript *script;
+    jsbytecode *pc;
+
+    TypeSet *objectTypes;
+    TypeSet *valueTypes;
+
+    TypeConstraintSetElement(JSScript *script, jsbytecode *pc,
+                             TypeSet *objectTypes, TypeSet *valueTypes)
+        : TypeConstraint("setelement"), script(script), pc(pc),
+          objectTypes(objectTypes), valueTypes(valueTypes)
+    {
+        JS_ASSERT(script && pc);
+    }
+
+    void newType(JSContext *cx, TypeSet *source, Type type);
+};
+
+void
+TypeSet::addSetElement(JSContext *cx, JSScript *script, jsbytecode *pc,
+                       TypeSet *objectTypes, TypeSet *valueTypes)
+{
+    add(cx, ArenaNew<TypeConstraintSetElement>(cx->compartment->pool, script, pc,
+                                               objectTypes, valueTypes));
+}
+
+/*
  * Constraints for watching call edges as they are discovered and invoking native
  * function handlers, adding constraints for arguments, receiver objects and the
  * return value, and updating script foundOffsets.
@@ -826,45 +860,6 @@ TypeSet::addLazyArguments(JSContext *cx, TypeSet *target)
     add(cx, ArenaNew<TypeConstraintLazyArguments>(cx->compartment->pool, target));
 }
 
-/*
- * Type constraint which marks the result of 'for in' loops as unknown if the
- * iterated value could be a generator.
- */
-class TypeConstraintGenerator : public TypeConstraint
-{
-public:
-    TypeSet *target;
-
-    TypeConstraintGenerator(TypeSet *target)
-        : TypeConstraint("generator"), target(target)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
-        if (type.isUnknown() || type.isAnyObject()) {
-            target->addType(cx, Type::UnknownType());
-            return;
-        }
-
-        if (type.isPrimitive())
-            return;
-
-        /*
-         * Watch for 'for in' on Iterator and Generator objects, which can
-         * produce values other than strings.
-         */
-        JSObject *proto = type.isTypeObject()
-            ? type.typeObject()->proto
-            : type.singleObject()->getProto();
-
-        if (proto) {
-            Class *clasp = proto->getClass();
-            if (clasp == &js_IteratorClass || clasp == &js_GeneratorClass)
-                target->addType(cx, Type::UnknownType());
-        }
-    }
-};
-
 /////////////////////////////////////////////////////////////////////
 // TypeConstraint
 /////////////////////////////////////////////////////////////////////
@@ -1035,6 +1030,16 @@ TypeConstraintCallProp::newType(JSContext *cx, TypeSet *source, Type type)
             types->add(cx, ArenaNew<TypeConstraintPropagateThis>(cx->compartment->pool,
                                                                  script, callpc, type));
         }
+    }
+}
+
+void
+TypeConstraintSetElement::newType(JSContext *cx, TypeSet *source, Type type)
+{
+    if (type.isUnknown() ||
+        type.isPrimitive(JSVAL_TYPE_INT32) ||
+        type.isPrimitive(JSVAL_TYPE_DOUBLE)) {
+        objectTypes->addSetProperty(cx, script, pc, valueTypes, JSID_VOID);
     }
 }
 
@@ -3475,7 +3480,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_SETELEM:
       case JSOP_SETHOLE:
-        poppedTypes(pc, 2)->addSetProperty(cx, script, pc, poppedTypes(pc, 0), JSID_VOID);
+        poppedTypes(pc, 1)->addSetElement(cx, script, pc, poppedTypes(pc, 2), poppedTypes(pc, 0));
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
 
@@ -3697,34 +3702,19 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
           if (!state.forTypes)
               return false;
         }
-        poppedTypes(pc, 0)->addSubset(cx, state.forTypes);
 
         if (pc[1] & JSITER_FOREACH)
             state.forTypes->addType(cx, Type::UnknownType());
-
-        /*
-         * Feed any types from the pushed type set into the forTypes. If a
-         * custom __iterator__ hook is added it will appear as an unknown
-         * value pushed by this opcode.
-         */
-        pushed[0].addSubset(cx, state.forTypes);
-
+        else
+            state.forTypes->addType(cx, Type::StringType());
         break;
       }
 
       case JSOP_ITERNEXT:
-        /*
-         * The value bound is a string, unless this is a 'for each' loop or the
-         * iterated object is a generator or has an __iterator__ hook, which
-         * we'll detect dynamically.
-         */
-        pushed[0].addType(cx, Type::StringType());
-        state.forTypes->add(cx,
-            ArenaNew<TypeConstraintGenerator>(cx->compartment->pool, &pushed[0]));
+        state.forTypes->addSubset(cx, &pushed[0]);
         break;
 
       case JSOP_MOREITER:
-        poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         pushed[1].addType(cx, Type::BooleanType());
         break;
 
@@ -3920,7 +3910,12 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
      */
     TypeResult *result = script->types->dynamicList;
     while (result) {
-        pushedTypes(result->offset)->addType(cx, result->type);
+        if (result->offset != uint32(-1)) {
+            pushedTypes(result->offset)->addType(cx, result->type);
+        } else {
+            /* Custom for-in loop iteration has happened in this script. */
+            state.forTypes->addType(cx, Type::UnknownType());
+        }
         result = result->next;
     }
 
@@ -4574,17 +4569,57 @@ MarkIteratorUnknownSlow(JSContext *cx)
     if (!script || !pc)
         return;
 
-    /*
-     * Watch out if the caller is in a different compartment from this one.
-     * This must have gone through a cross-compartment wrapper.
-     */
-    if (script->compartment != cx->compartment)
+    UntrapOpcode untrap(cx, script, pc);
+
+    if (JSOp(*pc) != JSOP_ITER)
         return;
 
-    js::analyze::UntrapOpcode untrap(cx, script, pc);
+    AutoEnterTypeInference enter(cx);
 
-    if (JSOp(*pc) == JSOP_ITER)
-        TypeDynamicResult(cx, script, pc, Type::UnknownType());
+    /*
+     * This script is iterating over an actual Iterator or Generator object, or
+     * an object with a custom __iterator__ hook. In such cases 'for in' loops
+     * can produce values other than strings, and the types of the ITER opcodes
+     * in the script need to be updated. During analysis this is done with the
+     * forTypes in the analysis state, but we don't keep a pointer to this type
+     * set and need to scan the script to fix affected opcodes.
+     */
+
+    TypeResult *result = script->types->dynamicList;
+    while (result) {
+        if (result->offset == uint32(-1)) {
+            /* Already know about custom iterators used in this script. */
+            JS_ASSERT(result->type.isUnknown());
+            return;
+        }
+    }
+
+    InferSpew(ISpewOps, "externalType: customIterator #%u", script->id());
+
+    result = cx->new_<TypeResult>(uint32(-1), Type::UnknownType());
+    if (!result) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+    result->next = script->types->dynamicList;
+    script->types->dynamicList = result;
+
+    if (!script->hasAnalysis() || !script->analysis()->ranInference())
+        return;
+
+    ScriptAnalysis *analysis = script->analysis();
+
+    for (unsigned i = 0; i < script->length; i++) {
+        jsbytecode *pc = script->code + i;
+        if (!analysis->maybeCode(pc))
+            continue;
+        if (js_GetOpcode(cx, script, pc) == JSOP_ITERNEXT)
+            analysis->pushedTypes(pc, 0)->addType(cx, Type::UnknownType());
+    }
+
+    /* Trigger recompilation of any inline callers. */
+    if (script->hasFunction && !script->function()->hasLazyType())
+        ObjectStateChange(cx, script->function()->type(), false, true);
 }
 
 void

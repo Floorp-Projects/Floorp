@@ -434,6 +434,8 @@ class TypeSet
     void addSetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
                         TypeSet *target, jsid id);
     void addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid id);
+    void addSetElement(JSContext *cx, JSScript *script, jsbytecode *pc,
+                       TypeSet *objectTypes, TypeSet *valueTypes);
     void addCall(JSContext *cx, TypeCallsite *site);
     void addArith(JSContext *cx, TypeSet *target, TypeSet *other = NULL);
     void addTransformThis(JSContext *cx, JSScript *script, TypeSet *target);
@@ -505,7 +507,7 @@ class TypeSet
  * Handler which persists information about dynamic types pushed within a
  * script which can affect its behavior and are not covered by JOF_TYPESET ops,
  * such as integer operations which overflow to a double. These persist across
- * GCs and are regenerated when the script is reanalyzed.
+ * GCs, and are used to re-seed script types when they are reanalyzed.
  */
 struct TypeResult
 {

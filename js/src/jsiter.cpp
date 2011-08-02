@@ -354,15 +354,6 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         return true;
     }
 
-    /*
-     * Notify type inference of the custom iterator.  This only needs to be done
-     * if this is coming from a 'for in' loop, not a call to Iterator itself.
-     * If an Iterator object is used in a for loop then the values fetched in
-     * that loop are unknown, whether there is a custom __iterator__ or not.
-     */
-    if (!(flags & JSITER_OWNONLY))
-        types::MarkIteratorUnknown(cx);
-
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
     Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
@@ -579,6 +570,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             if (!iterobj)
                 return false;
             vp->setObject(*iterobj);
+            types::MarkIteratorUnknown(cx);
             return true;
         }
 
@@ -646,12 +638,16 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         }
 
       miss:
-        if (obj->isProxy())
+        if (obj->isProxy()) {
+            types::MarkIteratorUnknown(cx);
             return JSProxy::iterate(cx, obj, flags, vp);
+        }
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
-        if (!vp->isUndefined())
+        if (!vp->isUndefined()) {
+            types::MarkIteratorUnknown(cx);
             return true;
+        }
     }
 
     /* NB: for (var p in null) succeeds by iterating over no properties. */
