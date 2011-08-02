@@ -60,6 +60,8 @@
 #include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLCheckboxAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,8 +409,9 @@ nsHTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
     // This means we're part of another control, so use parent accessible for name.
     // This ensures that a textbox inside of a XUL widget gets
     // an accessible name.
-    nsAccessible* parent = GetParent();
-    parent->GetName(aName);
+    nsAccessible* parent = Parent();
+    if (parent)
+      parent->GetName(aName);
   }
 
   if (!aName.IsEmpty())
@@ -452,7 +455,7 @@ nsHTMLTextFieldAccessible::NativeState()
     state |= states::PROTECTED;
   }
   else {
-    nsAccessible* parent = GetParent();
+    nsAccessible* parent = Parent();
     if (parent && parent->Role() == nsIAccessibleRole::ROLE_AUTOCOMPLETE)
       state |= states::HASPOPUP;
   }
@@ -650,7 +653,7 @@ nsHTMLLegendAccessible::GetRelationByType(PRUint32 aRelationType,
 
   if (aRelationType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
     // Look for groupbox parent
-    nsAccessible* groupbox = GetParent();
+    nsAccessible* groupbox = Parent();
 
     if (groupbox && groupbox->Role() == nsIAccessibleRole::ROLE_GROUPING) {
       // XXX: if group box exposes more than one relation of the given type

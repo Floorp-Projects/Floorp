@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;">
+<!-- Test if poster hides after playing with play() call. -->
+<video src="black140x100.webm"
+       poster="blue250x200.png"
+       id="v"
+       preload="auto"
+       onloadeddata="document.getElementById('v').play();"
+       onplaying="setTimeout(function(){document.documentElement.className = '';}, 0);"></video>
+</body>
+</html>

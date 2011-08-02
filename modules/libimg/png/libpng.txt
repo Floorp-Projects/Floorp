@@ -1,9 +1,9 @@
 libpng.txt - A description on how to use and modify libpng
 
- libpng version 1.4.3 - June 26, 2010
+ libpng version 1.4.8 - July 7, 2011
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2009 Glenn Randers-Pehrson
+ Copyright (c) 1998-2010 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
  For conditions of distribution and use, see the disclaimer
@@ -11,9 +11,9 @@ libpng.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.4.3 - June 26, 2010
+ libpng versions 0.97, January 1998, through 1.4.8 - July 7, 2011
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2009 Glenn Randers-Pehrson
+ Copyright (c) 1998-2010 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6  version 0.96 May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -278,7 +278,7 @@ Setting up callback code
 You can set up a callback function to handle any unknown chunks in the
 input stream. You must supply the function
 
-    read_chunk_callback(png_ptr ptr,
+    read_chunk_callback(png_structp png_ptr,
          png_unknown_chunkp chunk);
     {
        /* The unknown chunk structure contains your
@@ -324,8 +324,8 @@ called after each row has been read, which you can use to control
 a progress meter or the like.  It's demonstrated in pngtest.c.
 You must supply a function
 
-    void read_row_callback(png_ptr ptr, png_uint_32 row,
-       int pass);
+    void read_row_callback(png_structp png_ptr,
+       png_uint_32 row, int pass);
     {
       /* put your code here */
     }
@@ -576,15 +576,17 @@ in until png_read_end() has read the chunk data following the image.
                      PNG_COLOR_MASK_COLOR
                      PNG_COLOR_MASK_ALPHA
 
+    interlace_type - (PNG_INTERLACE_NONE or
+                     PNG_INTERLACE_ADAM7)
+
+    compression_type - (must be PNG_COMPRESSION_TYPE_BASE
+                     for PNG 1.0)
+
     filter_method  - (must be PNG_FILTER_TYPE_BASE
                      for PNG 1.0, and can also be
                      PNG_INTRAPIXEL_DIFFERENCING if
                      the PNG datastream is embedded in
                      a MNG-1.0 datastream)
-    compression_type - (must be PNG_COMPRESSION_TYPE_BASE
-                     for PNG 1.0)
-    interlace_type - (PNG_INTERLACE_NONE or
-                     PNG_INTERLACE_ADAM7)
 
     Any or all of interlace_type, compression_type, or
     filter_method can be NULL if you are
@@ -605,11 +607,11 @@ in until png_read_end() has read the chunk data following the image.
                          info_ptr);
     color_type       = png_get_color_type(png_ptr,
                          info_ptr);
-    filter_method    = png_get_filter_type(png_ptr,
+    interlace_type   = png_get_interlace_type(png_ptr,
                          info_ptr);
     compression_type = png_get_compression_type(png_ptr,
                          info_ptr);
-    interlace_type   = png_get_interlace_type(png_ptr,
+    filter_method    = png_get_filter_type(png_ptr,
                          info_ptr);
 
     channels = png_get_channels(png_ptr, info_ptr);
@@ -658,14 +660,14 @@ pointer into the info_ptr is returned for any complex types.
 
     png_get_iCCP(png_ptr, info_ptr, &name,
        &compression_type, &profile, &proflen);
-    name            - The profile name.
-    compression     - The compression type; always
-                      PNG_COMPRESSION_TYPE_BASE for PNG 1.0.
-                      You may give NULL to this argument to
-                      ignore it.
-    profile         - International Color Consortium color
-                      profile data. May contain NULs.
-    proflen         - length of profile data in bytes.
+    name             - The profile name.
+    compression_type - The compression type; always
+                       PNG_COMPRESSION_TYPE_BASE for PNG 1.0.
+                       You may give NULL to this argument to
+                       ignore it.
+    profile          - International Color Consortium color
+                       profile data. May contain NULs.
+    proflen          - length of profile data in bytes.
 
     png_get_sBIT(png_ptr, info_ptr, &sig_bit);
     sig_bit        - the number of significant bits for
@@ -678,11 +680,11 @@ pointer into the info_ptr is returned for any complex types.
                      &num_trans, &trans_color);
     trans_alpha    - array of alpha (transparency)
                      entries for palette (PNG_INFO_tRNS)
+    num_trans      - number of transparent entries
+                     (PNG_INFO_tRNS)
     trans_color    - graylevel or color sample values of
                      the single transparent color for
                      non-paletted images (PNG_INFO_tRNS)
-    num_trans      - number of transparent entries
-                     (PNG_INFO_tRNS)
 
     png_get_hIST(png_ptr, info_ptr, &hist);
                      (PNG_INFO_hIST)
@@ -903,7 +905,7 @@ things.
 As of libpng version 1.2.9, png_set_expand_gray_1_2_4_to_8() was
 added.  It expands the sample depth without changing tRNS to alpha.
 
-As of libpng version 1.4.3, not all possible expansions are supported.
+As of libpng version 1.4.8, not all possible expansions are supported.
 
 In the following table, the 01 means grayscale with depth<8, 31 means
 indexed with depth<8, other numerals represent the color type, "T" means
@@ -1233,8 +1235,8 @@ with
 
 You must supply the function
 
-    void read_transform_fn(png_ptr ptr, row_info_ptr
-       row_info, png_bytep data)
+    void read_transform_fn(png_structp png_ptr, png_row_infop
+        row_info, png_bytep data)
 
 See pngtest.c for a working example.  Your function will be called
 after all of the other transformations have been processed.
@@ -1757,7 +1759,7 @@ called after each row has been written, which you can use to control
 a progress meter or the like.  It's demonstrated in pngtest.c.
 You must supply a function
 
-    void write_row_callback(png_ptr, png_uint_32 row,
+    void write_row_callback(png_structp png_ptr, png_uint_32 row,
        int pass);
     {
       /* put your code here */
@@ -1932,14 +1934,14 @@ width, height, bit_depth, and color_type must be the same in each call.
 
     png_set_iCCP(png_ptr, info_ptr, name, compression_type,
                       profile, proflen);
-    name            - The profile name.
-    compression     - The compression type; always
-                      PNG_COMPRESSION_TYPE_BASE for PNG 1.0.
-                      You may give NULL to this argument to
-                      ignore it.
-    profile         - International Color Consortium color
-                      profile data. May contain NULs.
-    proflen         - length of profile data in bytes.
+    name             - The profile name.
+    compression_type - The compression type; always
+                       PNG_COMPRESSION_TYPE_BASE for PNG 1.0.
+                       You may give NULL to this argument to
+                       ignore it.
+    profile          - International Color Consortium color
+                       profile data. May contain NULs.
+    proflen          - length of profile data in bytes.
 
     png_set_sBIT(png_ptr, info_ptr, sig_bit);
     sig_bit        - the number of significant bits for
@@ -2314,7 +2316,7 @@ with
 
 You must supply the function
 
-    void write_transform_fn(png_ptr ptr, row_info_ptr
+    void write_transform_fn(png_structp png_ptr, png_row_infop
        row_info, png_bytep data)
 
 See pngtest.c for a working example.  Your function will be called
@@ -3122,6 +3124,12 @@ deprecated since libpng-1.0.18 and 1.2.9, when it was replaced with
 png_set_expand_gray_1_2_4_to_8() because the former function also
 expanded palette images.
 
+Macros for png_get_uint_16, png_get_uint_32, and png_get_int_32
+were added and are used by default instead of the corresponding
+functions. Unfortunately,
+from libpng-1.4.0 until 1.4.4, the png_get_uint_16 macro (but not the  
+function) incorrectly returned a value of type png_uint_32.
+
 We changed the prototype for png_malloc() from
     png_malloc(png_structp png_ptr, png_uint_32 size)
 to
@@ -3149,7 +3157,8 @@ The png_zalloc() function no longer zeroes out the memory that it
 allocates.
 
 Support for dithering was disabled by default in libpng-1.4.0, because
-been well tested and doesn't actually "dither".  The code was not
+it has not been well tested and doesn't actually "dither".
+The code was not
 removed, however, and could be enabled by building libpng with
 PNG_READ_DITHER_SUPPORTED defined.  In libpng-1.4.2, this support
 was reenabled, but the function was renamed png_set_quantize() to
@@ -3272,9 +3281,10 @@ above the comment that says
 
   /* Maintainer: Put new private prototypes here ^ and in libpngpf.3 */
 
-The names of all exported functions and variables begin
-with  "png_", and all publicly visible C preprocessor
-macros begin with "PNG_".
+To avoid polluting the global namespace, the names of all exported
+functions and variables begin with  "png_", and all publicly visible C
+preprocessor macros begin with "PNG_".  We request that applications that
+use libpng *not* begin any of their own symbols with either of these strings.
 
 We put a space after each comma and after each semicolon
 in "for" statments, and we put spaces before and after each
@@ -3297,13 +3307,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIII. Y2K Compliance in libpng
 
-June 26, 2010
+July 7, 2011
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.4.3 are Y2K compliant.  It is my belief that earlier
+upward through 1.4.8 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that

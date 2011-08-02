@@ -50,6 +50,8 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMNSRGBAColor.h"
 
+using namespace mozilla::a11y;
+
 enum {
   IA2AlphaShift = 24,
   IA2RedShift = 16,

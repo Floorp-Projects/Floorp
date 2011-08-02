@@ -1,7 +1,7 @@
 
 /* pngrtran.c - transforms the data in a row for PNG readers
  *
- * Last changed in libpng 1.4.6 [%RDATE%]
+ * Last changed in libpng 1.4.8 [July 7, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -660,10 +660,21 @@ void PNGAPI
 png_set_rgb_to_gray(png_structp png_ptr, int error_action, double red,
    double green)
 {
-   int red_fixed = (int)((float)red*100000.0 + 0.5);
-   int green_fixed = (int)((float)green*100000.0 + 0.5);
+   int red_fixed, green_fixed;
    if (png_ptr == NULL)
       return;
+   if (red > 21474.83647 || red < -21474.83648 ||
+       green > 21474.83647 || green < -21474.83648)
+   {
+      png_warning(png_ptr, "ignoring out of range rgb_to_gray coefficients");
+      red_fixed = -1;
+      green_fixed = -1;
+   }
+   else
+   {
+      red_fixed = (int)((float)red*100000.0 + 0.5);
+      green_fixed = (int)((float)green*100000.0 + 0.5);
+   }
    png_set_rgb_to_gray_fixed(png_ptr, error_action, red_fixed, green_fixed);
 }
 #endif
@@ -703,27 +714,38 @@ png_set_rgb_to_gray_fixed(png_structp png_ptr, int error_action,
    }
 #endif
    {
-      png_uint_16 red_int, green_int;
-      if (red < 0 || green < 0)
+      if (red >= 0 && green >= 0 && red + green <= 100000L)
       {
-         red_int   =  6968; /* .212671 * 32768 + .5 */
-         green_int = 23434; /* .715160 * 32768 + .5 */
-      }
-      else if (red + green < 100000L)
-      {
+         png_uint_16 red_int, green_int;
+
          red_int = (png_uint_16)(((png_uint_32)red*32768L)/100000L);
          green_int = (png_uint_16)(((png_uint_32)green*32768L)/100000L);
+
+         png_ptr->rgb_to_gray_red_coeff   = red_int;
+         png_ptr->rgb_to_gray_green_coeff = green_int;
+         png_ptr->rgb_to_gray_blue_coeff  =
+          (png_uint_16)(32768 - red_int - green_int);
       }
+
       else
       {
-         png_warning(png_ptr, "ignoring out of range rgb_to_gray coefficients");
-         red_int   =  6968;
-         green_int = 23434;
+         if (red >= 0 && green >= 0)
+            png_warning(png_ptr,
+               "ignoring out of range rgb_to_gray coefficients");
+
+         /* Use the defaults, from the cHRM chunk if set, else the built in Rec
+          * 709 values (which correspond to sRGB, so we don't have to worry
+          * about the sRGB chunk!)
+          */
+         if (png_ptr->rgb_to_gray_red_coeff == 0 &&
+            png_ptr->rgb_to_gray_green_coeff == 0 &&
+            png_ptr->rgb_to_gray_blue_coeff == 0)
+         {
+            png_ptr->rgb_to_gray_red_coeff   = 6968;  /* .212671 * 32768 + .5 */
+            png_ptr->rgb_to_gray_green_coeff = 23434; /* .715160 * 32768 + .5 */
+            png_ptr->rgb_to_gray_blue_coeff  = 2366;
+         }
       }
-      png_ptr->rgb_to_gray_red_coeff   = red_int;
-      png_ptr->rgb_to_gray_green_coeff = green_int;
-      png_ptr->rgb_to_gray_blue_coeff  =
-         (png_uint_16)(32768 - red_int - green_int);
    }
 }
 #endif
@@ -1181,8 +1203,7 @@ png_read_transform_info(png_structp png_ptr, png_infop info_ptr)
    {
       if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
       {
-         if (png_ptr->num_trans &&
-              (png_ptr->transformations & PNG_EXPAND_tRNS))
+         if (png_ptr->num_trans)
             info_ptr->color_type = PNG_COLOR_TYPE_RGB_ALPHA;
          else
             info_ptr->color_type = PNG_COLOR_TYPE_RGB;
@@ -1778,32 +1799,18 @@ png_do_chop(png_row_infop row_info, png_bytep row)
       for (i = 0; i<istop; i++, sp += 2, dp++)
       {
 #ifdef PNG_READ_16_TO_8_ACCURATE_SCALE_SUPPORTED
-      /* This does a more accurate scaling of the 16-bit color
-       * value, rather than a simple low-byte truncation.
-       *
-       * What the ideal calculation should be:
-       *   *dp = (((((png_uint_32)(*sp) << 8) |
-       *          (png_uint_32)(*(sp + 1))) * 255 + 127)
-       *          / (png_uint_32)65535L;
-       *
-       * GRR: no, I think this is what it really should be:
-       *   *dp = (((((png_uint_32)(*sp) << 8) |
-       *           (png_uint_32)(*(sp + 1))) + 128L)
-       *           / (png_uint_32)257L;
-       *
-       * GRR: here's the exact calculation with shifts:
-       *   temp = (((png_uint_32)(*sp) << 8) |
-       *           (png_uint_32)(*(sp + 1))) + 128L;
-       *   *dp = (temp - (temp >> 8)) >> 8;
-       *
-       * Approximate calculation with shift/add instead of multiply/divide:
-       *   *dp = ((((png_uint_32)(*sp) << 8) |
-       *          (png_uint_32)((int)(*(sp + 1)) - *sp)) + 128) >> 8;
-       *
-       * What we actually do to avoid extra shifting and conversion:
-       */
-
-         *dp = *sp + ((((int)(*(sp + 1)) - *sp) > 128) ? 1 : 0);
+         /* This does a more accurate scaling of the 16-bit color
+          * value, rather than a simple low-byte truncation.
+          *
+          * Prior to libpng-1.4.8 and 1.5.4, the calculation here was
+          * incorrect, so if you used ACCURATE_SCALE you will now see
+          * a slightly different result.  In libpng-1.5.4 and
+          * later you will need to use the new png_set_scale_16_to_8()
+          * API to obtain accurate 16-to-8 scaling.
+          */
+         png_int_32 tmp = *sp; /* must be signed! */
+         tmp += (((int)sp[1] - tmp + 128) * 65535) >> 24;
+         *dp = (png_byte)tmp;
 #else
        /* Simply discard the low order byte */
          *dp = *sp;

@@ -1334,13 +1334,13 @@ var SelectionHandler = {
   selectedText: "",
   contentWindow: null,
   
-  init: function() {
+  init: function sh_init() {
     addMessageListener("Browser:SelectionStart", this);
     addMessageListener("Browser:SelectionEnd", this);
     addMessageListener("Browser:SelectionMove", this);
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage: function sh_receiveMessage(aMessage) {
     let scrollOffset = ContentScroll.getScrollOffset(content);
     let utils = Util.getWindowUtils(content);
     let json = aMessage.json;
@@ -1352,17 +1352,16 @@ var SelectionHandler = {
         // if this is an iframe, dig down to find the document that was clicked
         let x = json.x;
         let y = json.y;
-        let offsetX = 0;
-        let offsetY = 0;
+        let offset = scrollOffset;
         let elem = utils.elementFromPoint(x, y, true, false);
         while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
           // adjust client coordinates' origin to be top left of iframe viewport
           let rect = elem.getBoundingClientRect();
           scrollOffset = ContentScroll.getScrollOffset(elem.ownerDocument.defaultView);
-          offsetX += rect.left;
+          offset.x += rect.left;
           x -= rect.left;
 
-          offsetY += rect.top + scrollOffset.y;
+          offset.y += rect.top + scrollOffset.y;
           y -= rect.top + scrollOffset.y;
           utils = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
           elem = utils.elementFromPoint(x, y, true, false);
@@ -1402,23 +1401,25 @@ var SelectionHandler = {
           return;
         }
 
-        this.cache = { start: {}, end: {} };
-        let rects = range.getClientRects();
-        for (let i=0; i<rects.length; i++) {
-          if (i == 0) {
-            this.cache.start.x = rects[i].left + offsetX;
-            this.cache.start.y = rects[i].bottom + offsetY;
-          }
-          this.cache.end.x = rects[i].right + offsetX;
-          this.cache.end.y = rects[i].bottom + offsetY;
+        this.cache = this._extractFromRange(range, offset);
+
+        let tap = { x: json.x - this.cache.offset.x, y: json.y - this.cache.offset.y };
+        pointInSelection = (tap.x > this.cache.rect.left && tap.x < this.cache.rect.right) && (tap.y > this.cache.rect.top && tap.y < this.cache.rect.bottom);
+        if (!pointInSelection) {
+          selection.collapseToStart();
+          return;
         }
 
         this.contentWindow = contentWindow;
+
         sendAsyncMessage("Browser:SelectionRange", this.cache);
         break;
       }
 
       case "Browser:SelectionEnd": {
+        let tap = { x: json.x - this.cache.offset.x, y: json.y - this.cache.offset.y };
+        pointInSelection = (tap.x > this.cache.rect.left && tap.x < this.cache.rect.right) && (tap.y > this.cache.rect.top && tap.y < this.cache.rect.bottom);
+
         try {
           // The selection might already be gone
           if (this.contentWindow)
@@ -1426,7 +1427,7 @@ var SelectionHandler = {
           this.contentWindow = null;
         } catch(e) {}
 
-        if (this.selectedText.length) {
+        if (pointInSelection && this.selectedText.length) {
           let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
           clipboard.copyString(this.selectedText);
           sendAsyncMessage("Browser:SelectionCopied", { succeeded: true });
@@ -1439,9 +1440,14 @@ var SelectionHandler = {
       case "Browser:SelectionMove":
         if (!this.contentWindow)
           return;
+
         // Hack to avoid setting focus in a textbox [Bugs 654352 & 667243]
         let elemUnder = elementFromPoint(json.x - scrollOffset.x, json.y - scrollOffset.y);
         if (elemUnder && elemUnder instanceof Ci.nsIDOMHTMLInputElement || elemUnder instanceof Ci.nsIDOMHTMLTextAreaElement)
+          return;
+
+        // Limit the selection to the initial content window (don't leave or enter iframes)
+        if (elemUnder && elemUnder.ownerDocument.defaultView != this.contentWindow)
           return;
 
         if (json.type == "end") {
@@ -1460,9 +1466,35 @@ var SelectionHandler = {
         }
 
         // Cache the selected text since the selection might be gone by the time we get the "end" message
-        this.selectedText = this.contentWindow.getSelection().toString().trim();
+        let selection = this.contentWindow.getSelection()
+        this.selectedText = selection.toString().trim();
+
+        // Update the rect we use to test when finishing the clipboard operation
+        let range = selection.getRangeAt(0).QueryInterface(Ci.nsIDOMNSRange);
+        this.cache.rect = this._extractFromRange(range, this.cache.offset).rect;
         break;
     }
+  },
+
+  _extractFromRange: function sh_extractFromRange(aRange, aOffset) {
+    let cache = { start: {}, end: {}, rect: { left: Number.MAX_VALUE, top: Number.MAX_VALUE, right: 0, bottom: 0 } };
+    let rects = aRange.getClientRects();
+    for (let i=0; i<rects.length; i++) {
+      if (i == 0) {
+        cache.start.x = rects[i].left + aOffset.x;
+        cache.start.y = rects[i].bottom + aOffset.y;
+      }
+      cache.end.x = rects[i].right + aOffset.x;
+      cache.end.y = rects[i].bottom + aOffset.y;
+    }
+    cache.rect = aRange.getBoundingClientRect();
+    cache.rect.left += aOffset.x;
+    cache.rect.top += aOffset.y;
+    cache.rect.right += aOffset.x;
+    cache.rect.bottom += aOffset.y;
+    cache.offset = aOffset;
+
+    return cache;
   }
 };
 

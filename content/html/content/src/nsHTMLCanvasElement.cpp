@@ -512,7 +512,6 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 
     rv = UpdateContext(contextProps);
     if (NS_FAILED(rv)) {
-      mCurrentContext = nsnull;
       if (!forceThebes) {
         // Try again with a Thebes context
         forceThebes = PR_TRUE;
@@ -558,10 +557,7 @@ nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
     mCurrentContext->SetIsIPC(PR_TRUE);
 
     rv = UpdateContext();
-    if (NS_FAILED(rv)) {
-      mCurrentContext = nsnull;
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentContextId.Assign(aContextId);
   } else if (!mCurrentContextId.Equals(aContextId)) {
