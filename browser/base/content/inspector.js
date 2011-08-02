@@ -897,8 +897,10 @@ var InspectorUI = {
   /**
    * Stop inspecting webpage, detach page listeners, disable highlighter
    * event listeners.
+   * @param aPreventScroll
+   *        Prevent scroll in the HTML tree?
    */
-  stopInspecting: function IUI_stopInspecting()
+  stopInspecting: function IUI_stopInspecting(aPreventScroll)
   {
     if (!this.inspecting) {
       return;
@@ -908,7 +910,7 @@ var InspectorUI = {
     this.detachPageListeners();
     this.inspecting = false;
     if (this.highlighter.node) {
-      this.select(this.highlighter.node, true, true);
+      this.select(this.highlighter.node, true, true, !aPreventScroll);
     } else {
       this.select(null, true, true);
     }
@@ -1048,9 +1050,16 @@ var InspectorUI = {
     }
 
     if (node) {
-      if (hitTwisty)
+      if (hitTwisty) {
         this.ioBox.toggleObject(node);
-      this.select(node, false, false);
+      } else {
+        if (this.inspecting) {
+          this.stopInspecting(true);
+        } else {
+          this.select(node, true, false);
+          this.highlighter.highlightNode(node);
+        }
+      }
     }
   },
 
