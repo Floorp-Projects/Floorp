@@ -1106,6 +1106,7 @@ DataProviderReleaseCallback (void *info, const void *data, size_t size)
 {
     quartz_source_image_t *source_img = info;
     _cairo_surface_release_source_image (source_img->surface, source_img->image_out, source_img->image_extra);
+    cairo_surface_destroy (source_img->surface);
     free (source_img);
 }
 
@@ -1145,10 +1146,11 @@ _cairo_surface_to_cgimage (cairo_surface_t *source,
     if (source_img == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    source_img->surface = source;
+    source_img->surface = cairo_surface_reference(source);
 
     status = _cairo_surface_acquire_source_image (source_img->surface, &source_img->image_out, &source_img->image_extra);
     if (status) {
+	cairo_surface_destroy (source_img->surface);
 	free (source_img);
 	return status;
     }
