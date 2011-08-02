@@ -43,6 +43,7 @@
 #include "jsbool.h"
 #include "jsdate.h"
 #include "jsexn.h"
+#include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
 #include "jsinfer.h"
@@ -4592,6 +4593,7 @@ MarkIteratorUnknownSlow(JSContext *cx)
             JS_ASSERT(result->type.isUnknown());
             return;
         }
+        result = result->next;
     }
 
     InferSpew(ISpewOps, "externalType: customIterator #%u", script->id());
@@ -5534,7 +5536,7 @@ TypeSet::dynamicSize()
 }
 
 static void
-GetScriptMemoryStats(JSScript *script, JSCompartment::TypeInferenceMemoryStats *stats)
+GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats)
 {
     if (!script->types)
         return;
@@ -5558,20 +5560,24 @@ GetScriptMemoryStats(JSScript *script, JSCompartment::TypeInferenceMemoryStats *
     }
 }
 
-void
-JSCompartment::getTypeInferenceMemoryStats(JSContext *cx, TypeInferenceMemoryStats *stats)
+JS_FRIEND_API(void)
+JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
+                               TypeInferenceMemoryStats *stats)
 {
-    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+    for (JSCList *cursor = compartment->scripts.next;
+         cursor != &compartment->scripts;
+         cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
         GetScriptMemoryStats(script, stats);
     }
 
-    stats->poolMain += ArenaAllocatedSize(pool);
+    stats->poolMain += ArenaAllocatedSize(compartment->pool);
 }
 
-void
-JSCompartment::getTypeInferenceObjectStats(TypeObject *object, TypeInferenceMemoryStats *stats)
+JS_FRIEND_API(void)
+JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats)
 {
+    TypeObject *object = (TypeObject *) object;
     stats->objectMain += sizeof(TypeObject);
 
     if (object->singleton) {

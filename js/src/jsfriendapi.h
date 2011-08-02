@@ -66,6 +66,24 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 extern JS_FRIEND_API(uint32)
 JS_ObjectCountDynamicSlots(JSObject *obj);
 
+/* Data for tracking analysis/inference memory usage. */
+typedef struct TypeInferenceMemoryStats
+{
+    int64 scriptMain;
+    int64 scriptSets;
+    int64 objectMain;
+    int64 objectSets;
+    int64 poolMain;
+} TypeInferenceMemoryStats;
+
+extern JS_FRIEND_API(void)
+JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
+                               TypeInferenceMemoryStats *stats);
+
+extern JS_FRIEND_API(void)
+JS_GetTypeInferenceObjectStats(/*TypeObject*/ void *object,
+                               TypeInferenceMemoryStats *stats);
+
 JS_END_EXTERN_C
 
 #endif /* jsfriendapi_h___ */
