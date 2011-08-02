@@ -70,9 +70,6 @@ child:
   OnAcknowledge(PRUint32 aSize);
   OnServerClose();
 
-  // Only sent in the event that AsyncOpen fails
-  AsyncOpenFailed();
-
   __delete__();
 
 };

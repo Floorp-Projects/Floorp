@@ -91,7 +91,6 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
 
   ChannelEventQueue mEventQ;
   bool mIPCOpen;
-  bool mCancelled;
 
   friend class StartEvent;
   friend class StopEvent;
