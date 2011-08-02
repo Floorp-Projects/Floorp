@@ -52,7 +52,7 @@ function runInspectorTests()
   Services.obs.addObserver(finishInspectorTests,
     INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
-  is(InspectorUI.toolbar.getAttribute("collapsed"), "false", "toolbar is visible");
+  ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
   let iframe = document.getElementById("inspector-tree-iframe");
   is(InspectorUI.treeIFrame, iframe, "Inspector IFrame matches");
   ok(InspectorUI.inspecting, "Inspector is inspecting");
@@ -72,7 +72,7 @@ function finishInspectorTests()
   ok(!InspectorUI.highlighter, "Highlighter is gone");
   ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not inspecting");
-  is(InspectorUI.toolbar.getAttribute("collapsed"), "true", "toolbar is collapsed");
+  ok(InspectorUI.toolbar.hidden, "toolbar is hidden");
 
   gBrowser.removeCurrentTab();
   finish();
