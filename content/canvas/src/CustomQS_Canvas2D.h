@@ -187,13 +187,13 @@ CreateImageData(JSContext* cx,
     }
 
     if (self) {
-        JSObject *tdest = js::TypedArray::getTypedArray(darray);
+        js::TypedArray* tdest = js::TypedArray::fromJSObject(darray);
 
         // make the call
         nsresult rv =
             self->GetImageData_explicit(x, y, w, h,
-                                        static_cast<PRUint8*>(JS_GetTypedArrayData(tdest)),
-                                        JS_GetTypedArrayByteLength(tdest));
+                                        static_cast<PRUint8*>(tdest->data),
+                                        tdest->byteLength);
         if (NS_FAILED(rv)) {
             return xpc_qsThrowMethodFailed(cx, rv, vp);
         }
@@ -416,11 +416,11 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
 
     js::AutoValueRooter tsrc_tvr(cx);
 
-    JSObject *tsrc = NULL;
+    js::TypedArray *tsrc = NULL;
     if (darray->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_UINT8] ||
         darray->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_UINT8_CLAMPED])
     {
-        tsrc = js::TypedArray::getTypedArray(darray);
+        tsrc = js::TypedArray::fromJSObject(darray);
     } else if (JS_IsArrayObject(cx, darray) || js_IsTypedArray(darray)) {
         // ugh, this isn't a uint8 typed array, someone made their own object; convert it to a typed array
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_UINT8, darray);
@@ -428,14 +428,14 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
             return JS_FALSE;
 
         *tsrc_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        tsrc = js::TypedArray::getTypedArray(nobj);
+        tsrc = js::TypedArray::fromJSObject(nobj);
     } else {
         // yeah, no.
         return xpc_qsThrow(cx, NS_ERROR_DOM_TYPE_MISMATCH_ERR);
     }
 
     // make the call
-    rv = self->PutImageData_explicit(x, y, w, h, (PRUint8*) JS_GetTypedArrayData(tsrc), JS_GetTypedArrayByteLength(tsrc), hasDirtyRect, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
+    rv = self->PutImageData_explicit(x, y, w, h, (PRUint8*) tsrc->data, tsrc->byteLength, hasDirtyRect, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
     if (NS_FAILED(rv))
         return xpc_qsThrowMethodFailed(cx, rv, vp);
 
