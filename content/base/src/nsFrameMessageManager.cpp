@@ -822,6 +822,7 @@ bool SendAsyncMessageToChildProcess(void* aCallbackData,
                                     const nsAString& aMessage,
                                     const nsAString& aJSON)
 {
+#if 0 // Need code for multiple content processes
   mozilla::dom::ContentParent* cp =
     mozilla::dom::ContentParent::GetSingleton(PR_FALSE);
   NS_WARN_IF_FALSE(cp, "No child process!");
@@ -829,6 +830,9 @@ bool SendAsyncMessageToChildProcess(void* aCallbackData,
     return cp->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
   }
   return true;
+#else
+  return false;
+#endif
 }
 
 bool SendSyncMessageToParentProcess(void* aCallbackData,
