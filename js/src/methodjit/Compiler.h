@@ -358,6 +358,7 @@ class Compiler : public BaseCompiler
     js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
     js::Vector<JumpTable, 16> jumpTables;
     js::Vector<uint32, 16> jumpTableOffsets;
+    js::Vector<JSObject *, 0, CompilerAllocPolicy> rootedObjects;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;

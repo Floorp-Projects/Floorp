@@ -1472,6 +1472,10 @@ js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner)
         js_MarkScriptFilename(script->filename);
 
     script->bindings.trace(trc);
+
+#ifdef JS_METHODJIT
+    mjit::TraceScript(trc, script);
+#endif
 }
 
 JSObject *
