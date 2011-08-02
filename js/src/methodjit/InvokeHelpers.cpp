@@ -1263,7 +1263,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     jsbytecode *nextpc = pc + analyze::GetBytecodeLength(pc);
     Value *nextsp = NULL;
-    if (nextpc != script->code + script->length)
+    if (nextpc != script->code + script->length && analysis->maybeCode(nextpc))
         nextsp = fp->base() + analysis->getCode(nextpc).stackDepth;
 
     JS_ASSERT(&cx->regs() == &f.regs);
