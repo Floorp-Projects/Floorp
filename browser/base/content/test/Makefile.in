@@ -187,15 +187,6 @@ _BROWSER_FILES = \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
                  browser_hide_removing.js \
-                 browser_scratchpad_initialization.js \
-                 browser_scratchpad_contexts.js \
-                 browser_scratchpad_tab_switch.js \
-                 browser_scratchpad_execute_print.js \
-                 browser_scratchpad_inspect.js \
-                 browser_scratchpad_files.js \
-                 browser_scratchpad_ui.js \
-                 browser_scratchpad_bug_646070_chrome_context_pref.js \
-                 browser_scratchpad_bug_660560_tab.js \
                  browser_overflowScroll.js \
                  browser_locationBarExternalLoad.js \
                  browser_pageInfo.js \
