@@ -109,10 +109,10 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_NONFUNOBJ           = 0x57,
     JSVAL_TYPE_FUNOBJ              = 0x67,
 
-    JSVAL_TYPE_STRORNULL           = 0x97,
-    JSVAL_TYPE_OBJORNULL           = 0x98,
+    JSVAL_TYPE_STRORNULL           = 0x77,
+    JSVAL_TYPE_OBJORNULL           = 0x78,
 
-    JSVAL_TYPE_BOXED               = 0x99
+    JSVAL_TYPE_BOXED               = 0x79
 } JS_ENUM_FOOTER(JSValueType);
 
 JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -122,7 +122,7 @@ JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
 /* Remember to propagate changes to the C defines below. */
 JS_ENUM_HEADER(JSValueTag, uint32)
 {
-    JSVAL_TAG_CLEAR                = 0xFFFF0000,
+    JSVAL_TAG_CLEAR                = 0xFFFFFF80,
     JSVAL_TAG_INT32                = JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32,
     JSVAL_TAG_UNDEFINED            = JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED,
     JSVAL_TAG_STRING               = JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING,
@@ -181,15 +181,15 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_UNKNOWN           ((uint8)0x20)
 #define JSVAL_TYPE_NONFUNOBJ         ((uint8)0x57)
 #define JSVAL_TYPE_FUNOBJ            ((uint8)0x67)
-#define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
-#define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
-#define JSVAL_TYPE_BOXED             ((uint8)0x99)
-#define JSVAL_TYPE_UNINITIALIZED     ((uint8)0xcd)
+#define JSVAL_TYPE_STRORNULL         ((uint8)0x77)
+#define JSVAL_TYPE_OBJORNULL         ((uint8)0x78)
+#define JSVAL_TYPE_BOXED             ((uint8)0x79)
+#define JSVAL_TYPE_UNINITIALIZED     ((uint8)0x7d)
 
 #if JS_BITS_PER_WORD == 32
 
 typedef uint32 JSValueTag;
-#define JSVAL_TAG_CLEAR              ((uint32)(0xFFFF0000))
+#define JSVAL_TAG_CLEAR              ((uint32)(0xFFFFFF80))
 #define JSVAL_TAG_INT32              ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32))
 #define JSVAL_TAG_UNDEFINED          ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED))
 #define JSVAL_TAG_STRING             ((uint32)(JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING))

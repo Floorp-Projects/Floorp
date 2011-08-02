@@ -39,9 +39,9 @@
 #include "nsSVGSVGElement.h"
 #include "nsString.h"
 #include "nsSVGUtils.h"
-#include "nsContentUtils.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
+#include "nsMathUtils.h"
 #include <limits>
 
 namespace mozilla {
@@ -78,7 +78,7 @@ SVGLength::SetValueFromString(const nsAString &aValue)
   }
   char *unit;
   tmpValue = float(PR_strtod(str, &unit));
-  if (unit != str && NS_FloatIsFinite(tmpValue)) {
+  if (unit != str && NS_finite(tmpValue)) {
     char *theRest = unit;
     if (*unit != '\0' && !IsSVGWhitespace(*unit)) {
       while (*theRest != '\0' && !IsSVGWhitespace(*theRest)) {
@@ -172,17 +172,17 @@ SVGLength::GetValueInSpecifiedUnit(PRUint8 aUnit,
     SVGLength(0.0f, aUnit).GetUserUnitsPerUnit(aElement, aAxis);
 
   NS_ASSERTION(userUnitsPerCurrentUnit >= 0 ||
-               !NS_FloatIsFinite(userUnitsPerCurrentUnit),
+               !NS_finite(userUnitsPerCurrentUnit),
                "bad userUnitsPerCurrentUnit");
   NS_ASSERTION(userUnitsPerNewUnit >= 0 ||
-               !NS_FloatIsFinite(userUnitsPerNewUnit),
+               !NS_finite(userUnitsPerNewUnit),
                "bad userUnitsPerNewUnit");
 
   float value = mValue * userUnitsPerCurrentUnit / userUnitsPerNewUnit;
 
   // userUnitsPerCurrentUnit could be infinity, or userUnitsPerNewUnit could
   // be zero.
-  if (NS_FloatIsFinite(value)) {
+  if (NS_finite(value)) {
     return value;
   }
   return std::numeric_limits<float>::quiet_NaN();

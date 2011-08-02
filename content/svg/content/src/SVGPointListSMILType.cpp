@@ -170,7 +170,7 @@ SVGPointListSMILType::ComputeDistance(const nsSMILValue& aFrom,
     total += dx * dx + dy * dy;
   }
   double distance = sqrt(total);
-  if (!NS_FloatIsFinite(distance)) {
+  if (!NS_finite(distance)) {
     return NS_ERROR_FAILURE;
   }
   aDistance = distance;

@@ -49,6 +49,7 @@
 #include "ImageLayers.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
+#include "nsIMemoryReporter.h"
 
 class nsHTMLMediaElement;
 class nsMediaStream;
@@ -110,6 +111,19 @@ public:
 
   // Return the duration of the video in seconds.
   virtual double GetDuration() = 0;
+
+  // A media stream is assumed to be infinite if the metadata doesn't
+  // contain the duration, and range requests are not supported, and
+  // no headers give a hint of a possible duration (Content-Length,
+  // Content-Duration, and variants), and we cannot seek in the media
+  // stream to determine the duration.
+  //
+  // When the media stream ends, we can know the duration, thus the stream is
+  // no longer considered to be infinite.
+  virtual void SetInfinite(PRBool aInfinite) = 0;
+
+  // Return true if the stream is infinite (see SetInfinite).
+  virtual PRBool IsInfinite() = 0;
 
   // Pause video playback.
   virtual void Pause() = 0;
@@ -369,6 +383,11 @@ public:
   // to buffer, given the current download and playback rates.
   PRBool CanPlayThrough();
 
+  // Returns the size, in bytes, of the heap memory used by the currently
+  // queued decoded video and audio data.
+  virtual PRInt64 VideoQueueMemoryInUse() = 0;
+  virtual PRInt64 AudioQueueMemoryInUse() = 0;
+
 protected:
 
   // Start timer to update download progress information.
@@ -458,4 +477,62 @@ protected:
   PRPackedBool mShuttingDown;
 };
 
+namespace mozilla {
+class MediaMemoryReporter
+{
+  MediaMemoryReporter();
+  ~MediaMemoryReporter();
+  static MediaMemoryReporter* sUniqueInstance;
+
+  static MediaMemoryReporter* UniqueInstance() {
+    if (!sUniqueInstance) {
+      sUniqueInstance = new MediaMemoryReporter;
+    }
+    return sUniqueInstance;
+  }
+
+  typedef nsTArray<nsMediaDecoder*> DecodersArray;
+  static DecodersArray& Decoders() {
+    return UniqueInstance()->mDecoders;
+  }
+
+  DecodersArray mDecoders;
+
+  nsCOMPtr<nsIMemoryReporter> mMediaDecodedVideoMemory;
+  nsCOMPtr<nsIMemoryReporter> mMediaDecodedAudioMemory;
+
+public:
+  static void AddMediaDecoder(nsMediaDecoder* aDecoder) {
+    Decoders().AppendElement(aDecoder);
+  }
+
+  static void RemoveMediaDecoder(nsMediaDecoder* aDecoder) {
+    DecodersArray& decoders = Decoders();
+    decoders.RemoveElement(aDecoder);
+    if (decoders.IsEmpty()) {
+      delete sUniqueInstance;
+      sUniqueInstance = nsnull;
+    }
+  }
+
+  static PRInt64 GetDecodedVideoMemory() {
+    DecodersArray& decoders = Decoders();
+    PRInt64 result = 0;
+    for (size_t i = 0; i < decoders.Length(); ++i) {
+      result += decoders[i]->VideoQueueMemoryInUse();
+    }
+    return result;
+  }
+
+  static PRInt64 GetDecodedAudioMemory() {
+    DecodersArray& decoders = Decoders();
+    PRInt64 result = 0;
+    for (size_t i = 0; i < decoders.Length(); ++i) {
+      result += decoders[i]->AudioQueueMemoryInUse();
+    }
+    return result;
+  }
+};
+
+} //namespace mozilla
 #endif

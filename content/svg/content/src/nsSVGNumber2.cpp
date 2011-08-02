@@ -38,6 +38,7 @@
 #include "nsSVGUtils.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
+#include "nsMathUtils.h"
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "nsSMILFloatType.h"
@@ -99,7 +100,7 @@ GetValueFromString(const nsAString &aValueAsString,
   
   char *rest;
   *aValue = float(PR_strtod(str, &rest));
-  if (rest == str || !NS_FloatIsFinite(*aValue)) {
+  if (rest == str || !NS_finite(*aValue)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
   if (*rest == '%' && aPercentagesAllowed) {

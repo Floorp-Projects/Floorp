@@ -2454,6 +2454,14 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
   return (old != mRuleCascades);
 }
 
+/* virtual */ PRInt64
+nsCSSRuleProcessor::SizeOf() const
+{
+  size_t n = sizeof(*this);
+
+  return n;
+}
+
 // Append all the currently-active font face rules to aArray.  Return
 // true for success and false for failure.
 PRBool

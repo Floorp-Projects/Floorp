@@ -1631,6 +1631,8 @@ nsJSContext::ExecuteScript(void *aScriptObject,
     // If all went well, convert val to a string (XXXbe unless undefined?).
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   } else {
+    ReportPendingException();
+
     if (aIsUndefined) {
       *aIsUndefined = PR_TRUE;
     }

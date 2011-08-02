@@ -45,6 +45,8 @@
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
 
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsARIAGridAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -830,7 +832,7 @@ nsARIAGridAccessible::SetARIASelected(nsAccessible *aAccessible,
   if (role == nsIAccessibleRole::ROLE_GRID_CELL ||
       role == nsIAccessibleRole::ROLE_ROWHEADER ||
       role == nsIAccessibleRole::ROLE_COLUMNHEADER) {
-    nsAccessible *row = aAccessible->GetParent();
+    nsAccessible* row = aAccessible->Parent();
 
     if (row && row->Role() == nsIAccessibleRole::ROLE_ROW &&
         nsAccUtils::IsARIASelected(row)) {
@@ -949,11 +951,11 @@ nsARIAGridCellAccessible::GetTable(nsIAccessibleTable **aTable)
   NS_ENSURE_ARG_POINTER(aTable);
   *aTable = nsnull;
 
-  nsAccessible* thisRow = GetParent();
+  nsAccessible* thisRow = Parent();
   if (!thisRow || thisRow->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
-  nsAccessible* table = thisRow->GetParent();
+  nsAccessible* table = thisRow->Parent();
   if (!table)
     return NS_OK;
 
@@ -975,7 +977,7 @@ nsARIAGridCellAccessible::GetColumnIndex(PRInt32 *aColumnIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = GetParent();
+  nsAccessible* row = Parent();
   if (!row)
     return NS_OK;
 
@@ -1003,11 +1005,11 @@ nsARIAGridCellAccessible::GetRowIndex(PRInt32 *aRowIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = GetParent();
+  nsAccessible* row = Parent();
   if (!row)
     return NS_OK;
 
-  nsAccessible* table = row->GetParent();
+  nsAccessible* table = row->Parent();
   if (!table)
     return NS_OK;
 
@@ -1096,7 +1098,7 @@ nsARIAGridCellAccessible::IsSelected(PRBool *aIsSelected)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible *row = GetParent();
+  nsAccessible* row = Parent();
   if (!row || row->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
@@ -1120,7 +1122,7 @@ nsARIAGridCellAccessible::ApplyARIAState(PRUint64* aState)
     return;
 
   // Check aria-selected="true" on the row.
-  nsAccessible* row = GetParent();
+  nsAccessible* row = Parent();
   if (!row || row->Role() != nsIAccessibleRole::ROLE_ROW)
     return;
 
@@ -1144,7 +1146,7 @@ nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttrib
 
   // Expose "table-cell-index" attribute.
 
-  nsAccessible* thisRow = GetParent();
+  nsAccessible* thisRow = Parent();
   if (!thisRow || thisRow->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
@@ -1162,7 +1164,7 @@ nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttrib
       colCount++;
   }
 
-  nsAccessible* table = thisRow->GetParent();
+  nsAccessible* table = thisRow->Parent();
   if (!table)
     return NS_OK;
 

@@ -628,7 +628,7 @@ protected:
                                         PRInt32 *outStartOffset,
                                         PRInt32 *outEndOffset,
                                         PRBool aTrustedInput);
-  nsresult   ParseFragment(const nsAString & aStr, nsTArray<nsString> &aTagStack,
+  nsresult   ParseFragment(const nsAString & aStr, nsIAtom* aContextLocalName,
                            nsIDocument* aTargetDoc,
                            nsCOMPtr<nsIDOMNode> *outNode,
                            PRBool aTrustedInput);

@@ -99,7 +99,6 @@ _MOCHITEST_FILES = \
   test_npruntime_construct.html \
   307-xo-redirect.sjs \
   test_redirect_handling.html \
-  test_clear_site_data.html \
   test_zero_opacity.html \
   test_NPPVpluginWantsAllNetworkStreams.html \
   test_npruntime_npnsetexception.html \
@@ -118,6 +117,7 @@ endif
 
 _MOCHICHROME_FILES = \
   utils.js \
+  test_clear_site_data.html \
   test_npruntime.xul   \
   test_privatemode.xul \
   test_wmode.xul \

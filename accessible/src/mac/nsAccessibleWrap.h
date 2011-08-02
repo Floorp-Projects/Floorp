@@ -86,7 +86,7 @@ class nsAccessibleWrap : public nsAccessible
     PRInt32 GetUnignoredChildCount(PRBool aDeepCount);
     
     PRBool HasPopup () {
-      return (NativeState() & states::HASPOPUP);
+      return (NativeState() & mozilla::a11y::states::HASPOPUP);
     }
     
     // return this accessible's all children, adhering to "flat" accessibles by not returning their children.

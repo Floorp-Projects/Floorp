@@ -51,6 +51,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mozilla/RangedPtr.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -82,6 +85,7 @@
 
 using namespace js;
 using namespace js::types;
+using namespace mozilla;
 
 #ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
 
@@ -1265,6 +1269,41 @@ NumberToString(JSContext *cx, jsdouble d)
     if (JSString *str = js_NumberToStringWithBase(cx, d, 10))
         return &str->asFixed();
     return NULL;
+}
+
+JSFixedString *
+IndexToString(JSContext *cx, uint32 u)
+{
+    if (JSAtom::hasUintStatic(u))
+        return &JSAtom::uintStatic(u);
+
+    JSCompartment *c = cx->compartment;
+    if (JSFixedString *str = c->dtoaCache.lookup(10, u))
+        return str;
+
+    JSShortString *str = js_NewGCShortString(cx);
+    if (!str)
+        return NULL;
+
+    /* +1, since MAX_LENGTH does not count the null char. */
+    JS_STATIC_ASSERT(JSShortString::MAX_LENGTH + 1 >= sizeof("4294967295"));
+
+    jschar *storage = str->inlineStorageBeforeInit();
+    size_t length = JSShortString::MAX_SHORT_LENGTH;
+    const RangedPtr<jschar> end(storage + length, storage, length + 1);
+    RangedPtr<jschar> cp = end;
+    *cp = '\0';
+
+    do {
+        jsuint newu = u / 10, digit = u % 10;
+        *--cp = '0' + digit;
+        u = newu;
+    } while (u > 0);
+
+    str->initAtOffsetInBuffer(cp.get(), end - cp);
+
+    c->dtoaCache.cache(10, u, str);
+    return str;
 }
 
 bool JS_FASTCALL
