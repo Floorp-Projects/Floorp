@@ -4757,7 +4757,7 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
             return false;
         types::TypeObject *object = objTypes->getTypeObject(i);
         if (!object) {
-            results.append(NULL);
+            results.append((JSObject *) NULL);
             continue;
         }
         if (object->unknownProperties() || !object->proto)

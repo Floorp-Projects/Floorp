@@ -125,7 +125,9 @@ protected:
     void CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUTF8,
                            PRUint32 aUTF8Length);
     static PRBool FontCallback(const nsAString& aFontName,
-                               const nsACString& aGenericName, void *aClosure);
+                               const nsACString& aGenericName,
+                               PRBool aUseFontSet,
+                               void *aClosure);
 
 private:
     PRBool mEnableKerning;

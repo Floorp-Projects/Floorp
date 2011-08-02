@@ -78,6 +78,7 @@
 #endif
 
 namespace dom = mozilla::dom;
+using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Static member initialization
@@ -349,18 +350,15 @@ nsDocAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
+nsAccessible*
+nsDocAccessible::FocusedChild()
 {
   // XXXndeakin P3 accessibility shouldn't be caching the focus
-  if (!gLastFocusedNode) {
-    *aFocusedChild = nsnull;
-    return NS_OK;
-  }
 
   // Return an accessible for the current global focus, which does not have to
   // be contained within the current document.
-  NS_IF_ADDREF(*aFocusedChild = GetAccService()->GetAccessible(gLastFocusedNode));
-  return NS_OK;
+  return gLastFocusedNode ? GetAccService()->GetAccessible(gLastFocusedNode) :
+    nsnull;
 }
 
 NS_IMETHODIMP nsDocAccessible::TakeFocus()
@@ -581,7 +579,7 @@ nsDocAccessible::GetAccessible(nsINode* aNode) const
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  nsAccessible* parent(accessible->GetParent());
+  nsAccessible* parent = accessible->Parent();
   if (parent)
     parent->TestChildCache(accessible);
 #endif
@@ -1487,8 +1485,8 @@ nsDocAccessible::NotifyOfInitialUpdate()
   // a problem then consider to keep event processing per tab document.
   if (!IsRoot()) {
     nsRefPtr<AccEvent> reorderEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, GetParent(),
-                   eAutoDetect, AccEvent::eCoalesceFromSameSubtree);
+      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, Parent(), eAutoDetect,
+                   AccEvent::eCoalesceFromSameSubtree);
     ParentDocument()->FireDelayedAccessibleEvent(reorderEvent);
   }
 }
@@ -1817,7 +1815,7 @@ nsDocAccessible::UpdateTree(nsAccessible* aContainer, nsIContent* aChildNode,
       if (ancestor == this)
         break;
 
-      ancestor = ancestor->GetParent();
+      ancestor = ancestor->Parent();
     }
   }
 
@@ -1902,7 +1900,7 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aChild, bool aIsInsert)
     // The accessible parent may differ from container accessible if
     // the parent doesn't have own DOM node like list accessible for HTML
     // selects.
-    nsAccessible* parent = aChild->GetParent();
+    nsAccessible* parent = aChild->Parent();
     NS_ASSERTION(parent, "No accessible parent?!");
     if (parent)
       parent->RemoveChild(aChild);

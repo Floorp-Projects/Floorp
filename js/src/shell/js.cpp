@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS shell.
  */
@@ -4814,7 +4812,7 @@ Help(JSContext *cx, uintN argc, jsval *vp)
     fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
     if (argc == 0) {
         fputs(shell_help_header, gOutFile);
-        for (i = 0; shell_functions[i].name; i++)
+        for (i = 0; i < JS_ARRAY_LENGTH(shell_help_messages); ++i)
             fprintf(gOutFile, "%s\n", shell_help_messages[i]);
     } else {
         did_header = 0;
@@ -4831,11 +4829,16 @@ Help(JSContext *cx, uintN argc, jsval *vp)
                 str = NULL;
             }
             if (str) {
-                JSFlatString *flatStr = JS_FlattenString(cx, str);
-                if (!flatStr)
+                JSAutoByteString funcName(cx, str);
+                if (!funcName)
                     return JS_FALSE;
-                for (j = 0; shell_functions[j].name; j++) {
-                    if (JS_FlatStringEqualsAscii(flatStr, shell_functions[j].name)) {
+                for (j = 0; j < JS_ARRAY_LENGTH(shell_help_messages); ++j) {
+                    /* Help messages are required to be formatted "functionName(..." */
+                    const char *msg = shell_help_messages[j];
+                    const char *p = strchr(msg, '(');
+                    JS_ASSERT(p);
+
+                    if (strncmp(funcName.ptr(), msg, p - msg) == 0) {
                         if (!did_header) {
                             did_header = 1;
                             fputs(shell_help_header, gOutFile);

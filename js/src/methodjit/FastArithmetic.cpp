@@ -217,12 +217,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
      */
     if ((lhs->isConstant() && rhs->isConstant()) ||
         (lhs->isTypeKnown() && (lhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) ||
-        (rhs->isTypeKnown() && (rhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) 
-#if defined(JS_CPU_ARM)
-        /* ARM cannot detect integer overflow with multiplication. */
-        || op == JSOP_MUL
-#endif /* JS_CPU_ARM */
-    ) {
+        (rhs->isTypeKnown() && (rhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)))
+    {
         bool isStringResult = (op == JSOP_ADD) &&
                               (lhs->isType(JSVAL_TYPE_STRING) ||
                                rhs->isType(JSVAL_TYPE_STRING));
@@ -482,11 +478,9 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub, 
         overflow = masm.branchSub32(Assembler::Overflow, regs.result, regs.result);
         break;
 
-#if !defined(JS_CPU_ARM)
       case JSOP_MUL:
         overflow = masm.branchMul32(Assembler::Overflow, regs.result, regs.result);
         break;
-#endif
 
       default:
         JS_NOT_REACHED("unrecognized op");
@@ -666,7 +660,6 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         }
         break;
 
-#if !defined(JS_CPU_ARM)
       case JSOP_MUL:
       {
         JS_ASSERT(reg.isSet());
@@ -721,7 +714,6 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         }
         break;
       }
-#endif
 
       default:
         JS_NOT_REACHED("unrecognized op");

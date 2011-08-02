@@ -64,6 +64,7 @@ CPPSRCS = \
   testFunctionProperties.cpp \
   testGCChunkAlloc.cpp \
   testGetPropertyDefault.cpp \
+  testIndexToString.cpp \
   testIntString.cpp \
   testIntern.cpp \
   testLookup.cpp \
@@ -99,12 +100,6 @@ CPPSRCS = \
 #  $(NULL)
 
 DEFINES         += -DEXPORT_JS_API
-
-# Some platforms that have stdint.h include it in system headers.  So
-# to reliably get limit macros defined, we'd always have to define the
-# one below before including any header, but that's obscure and
-# fragile, so we do it here.
-DEFINES         += -D__STDC_LIMIT_MACROS
 
 LIBS      = $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS)
 

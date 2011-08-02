@@ -24,4 +24,6 @@
 
   <string name="launcher_shortcuts_title">&launcher_shortcuts_title;</string>
   <string name="launcher_shortcuts_empty">&launcher_shortcuts_empty;</string>
+  
+  <string name="choose_file">&choose_file;</string>
 </resources>

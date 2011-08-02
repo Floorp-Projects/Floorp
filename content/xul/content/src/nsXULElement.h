@@ -657,10 +657,8 @@ protected:
                                   const nsAString& aValue,
                                   nsAttrValue& aResult);
 
-    virtual nsresult
-      GetEventListenerManagerForAttr(nsEventListenerManager** aManager,
-                                     nsISupports** aTarget,
-                                     PRBool* aDefer);
+    virtual nsEventListenerManager*
+      GetEventListenerManagerForAttr(PRBool* aDefer);
   
     /**
      * Return our prototype's attribute, if one exists.

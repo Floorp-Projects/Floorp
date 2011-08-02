@@ -571,24 +571,130 @@ Prompt.prototype = {
       PromptUtils.setAuthInfo(aAuthInfo, username.value, password.value);
     }
 
-    let ok;
-    if (aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD)
+    let canAutologin = false;
+    if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY &&
+        !(aAuthInfo.flags & Ci.nsIAuthInformation.PREVIOUS_FAILED) &&
+        Services.prefs.getBoolPref("signon.autologin.proxy"))
+      canAutologin = true;
+
+    let ok = canAutologin;
+    if (!ok && aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD)
       ok = this.nsIPrompt_promptPassword(null, message, password, checkMsg, check);
-    else
+    else if (!ok)
       ok = this.nsIPrompt_promptUsernameAndPassword(null, message, username, password, checkMsg, check);
 
     PromptUtils.setAuthInfo(aAuthInfo, username.value, password.value);
 
-    if (ok && canSave && check.value) {
+    if (ok && canSave && check.value)
       PromptUtils.savePassword(foundLogins, username, password, hostname, httpRealm);
-    }
 
     return ok;
   },
 
+  _asyncPrompts: {},
+  _asyncPromptInProgress: false,
+
+  _doAsyncPrompt : function() {
+    if (this._asyncPromptInProgress)
+      return;
+
+    // Find the first prompt key we have in the queue
+    let hashKey = null;
+    for (hashKey in this._asyncPrompts)
+      break;
+
+    if (!hashKey)
+      return;
+
+    // If login manger has logins for this host, defer prompting if we're
+    // already waiting on a master password entry.
+    let prompt = this._asyncPrompts[hashKey];
+    let prompter = prompt.prompter;
+    let [hostname, httpRealm] = PromptUtils.getAuthTarget(prompt.channel, prompt.authInfo);
+    let foundLogins = PromptUtils.pwmgr.findLogins({}, hostname, null, httpRealm);
+    if (foundLogins.length > 0 && PromptUtils.pwmgr.uiBusy)
+      return;
+
+    this._asyncPromptInProgress = true;
+    prompt.inProgress = true;
+
+    let self = this;
+
+    let runnable = {
+      run: function() {
+        let ok = false;
+        try {
+          ok = prompter.promptAuth(prompt.channel, prompt.level, prompt.authInfo);
+        } catch (e) {
+          Cu.reportError("_doAsyncPrompt:run: " + e + "\n");
+        }
+
+        delete self._asyncPrompts[hashKey];
+        prompt.inProgress = false;
+        self._asyncPromptInProgress = false;
+
+        for each (let consumer in prompt.consumers) {
+          if (!consumer.callback)
+            // Not having a callback means that consumer didn't provide it
+            // or canceled the notification
+            continue;
+
+          try {
+            if (ok)
+              consumer.callback.onAuthAvailable(consumer.context, prompt.authInfo);
+            else
+              consumer.callback.onAuthCancelled(consumer.context, true);
+          } catch (e) { /* Throw away exceptions caused by callback */ }
+        }
+        self._doAsyncPrompt();
+      }
+    }
+
+    Services.tm.mainThread.dispatch(runnable, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
   asyncPromptAuth: function asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo) {
-    // bug 514196
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    let cancelable = null;
+    try {
+      // If the user submits a login but it fails, we need to remove the
+      // notification bar that was displayed. Conveniently, the user will
+      // be prompted for authentication again, which brings us here.
+      //this._removeLoginNotifications();
+
+      cancelable = {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        callback: aCallback,
+        context: aContext,
+        cancel: function() {
+          this.callback.onAuthCancelled(this.context, false);
+          this.callback = null;
+          this.context = null;
+        }
+      };
+      let [hostname, httpRealm] = PromptUtils.getAuthTarget(aChannel, aAuthInfo);
+      let hashKey = aLevel + "|" + hostname + "|" + httpRealm;
+      let asyncPrompt = this._asyncPrompts[hashKey];
+      if (asyncPrompt) {
+        asyncPrompt.consumers.push(cancelable);
+        return cancelable;
+      }
+
+      asyncPrompt = {
+        consumers: [cancelable],
+        channel: aChannel,
+        authInfo: aAuthInfo,
+        level: aLevel,
+        inProgress : false,
+        prompter: this
+      }
+
+      this._asyncPrompts[hashKey] = asyncPrompt;
+      this._doAsyncPrompt();
+    } catch (e) {
+      Cu.reportError("PromptService: " + e + "\n");
+      throw e;
+    }
+    return cancelable;
   }
 };
 

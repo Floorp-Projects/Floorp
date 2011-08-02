@@ -211,6 +211,8 @@ public:
     return mRecycleBin->GetBuffer(aSize);
   }
 
+  PRUint32 GetDataSize() { return mBuffer ? mBufferSize : 0; }
+
   nsAutoArrayPtr<PRUint8> mBuffer;
   PRUint32 mBufferSize;
   nsRefPtr<RecycleBin> mRecycleBin;

@@ -532,7 +532,7 @@ public:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     JSAutoStructuredCloneBuffer buffer;
-    buffer.adopt(aCx, mData, mDataByteCount);
+    buffer.adopt(mData, mDataByteCount);
 
     mData = nsnull;
     mDataByteCount = 0;
@@ -1206,15 +1206,17 @@ NS_IMETHODIMP
 WorkerRunnable::Run()
 {
   JSContext* cx;
-
+  JSObject* targetCompartmentObject;
   nsIThreadJSContextStack* contextStack = nsnull;
 
   if (mTarget == WorkerThread) {
     mWorkerPrivate->AssertIsOnWorkerThread();
     cx = mWorkerPrivate->GetJSContext();
+    targetCompartmentObject = JS_GetGlobalObject(cx);
   } else {
     mWorkerPrivate->AssertIsOnParentThread();
     cx = mWorkerPrivate->ParentJSContext();
+    targetCompartmentObject = mWorkerPrivate->GetJSObject();
 
     if (!mWorkerPrivate->GetParent()) {
       AssertIsOnMainThread();
@@ -1233,10 +1235,8 @@ WorkerRunnable::Run()
 
   JSAutoRequest ar(cx);
 
-  JSObject* global = JS_GetGlobalObject(cx);
-
   JSAutoEnterCompartment ac;
-  if (global && !ac.enter(cx, global)) {
+  if (targetCompartmentObject && !ac.enter(cx, targetCompartmentObject)) {
     return false;
   }
 
@@ -2042,6 +2042,8 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       {
         MutexAutoUnlock unlock(mMutex);
 
+        JSAutoRequest ar(aCx);
+
 #ifdef EXTRA_GC
         // Find GC bugs...
         JS_GC(aCx);
@@ -2053,6 +2055,8 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
       currentStatus = mStatus;
     }
+
+    JSAutoRequest ar(aCx);
 
 #ifdef EXTRA_GC
     // Find GC bugs...
@@ -2093,6 +2097,8 @@ WorkerPrivate::OperationCallback(JSContext* aCx)
 {
   AssertIsOnWorkerThread();
 
+  JS_YieldRequest(aCx);
+
   bool mayContinue = true;
 
   for (;;) {
@@ -2126,6 +2132,8 @@ WorkerPrivate::OperationCallback(JSContext* aCx)
       if (!mControlQueue.IsEmpty()) {
         break;
       }
+
+      JSAutoSuspendRequest asr(aCx);
       mCondVar.Wait(PR_MillisecondsToInterval(RemainingRunTimeMS()));
     }
   }
@@ -2480,6 +2488,7 @@ WorkerPrivate::RunSyncLoop(JSContext* aCx, PRUint32 aSyncLoopKey)
       MutexAutoLock lock(mMutex);
 
       while (!mControlQueue.Pop(event) && !syncQueue->mQueue.Pop(event)) {
+        JSAutoSuspendRequest asr(aCx);
         mCondVar.Wait();
       }
     }
