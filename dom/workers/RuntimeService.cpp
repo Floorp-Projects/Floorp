@@ -44,11 +44,13 @@
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsIJSContextStack.h"
+#include "nsIMemoryReporter.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupportsPriority.h"
 #include "nsITimer.h"
 #include "nsPIDOMWindow.h"
 
+#include "jsprf.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
@@ -58,6 +60,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
+#include "xpcpublic.h"
 
 #include "Events.h"
 #include "EventTarget.h"
@@ -69,6 +72,7 @@ USING_WORKERS_NAMESPACE
 using mozilla::MutexAutoLock;
 using mozilla::MutexAutoUnlock;
 using mozilla::Preferences;
+using namespace mozilla::xpconnect::memory;
 
 // The size of the worker runtime heaps in bytes.
 #define WORKER_RUNTIME_HEAPSIZE 32 * 1024 * 1024
@@ -285,6 +289,70 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
   return workerCx;
 }
 
+class WorkerMemoryReporter : public nsIMemoryMultiReporter
+{
+  JSRuntime* mRuntime;
+  nsCString mPathPrefix;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  WorkerMemoryReporter(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
+  : mRuntime(aRuntime)
+  {
+    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+    nsCString escapedDomain(aWorkerPrivate->Domain());
+    escapedDomain.ReplaceChar('/', '\\');
+
+    NS_ConvertUTF16toUTF8 escapedURL(aWorkerPrivate->ScriptURL());
+    escapedURL.ReplaceChar('/', '\\');
+
+    // 64bit address plus '0x' plus null terminator.
+    char address[21];
+    JSUint32 addressSize =
+      JS_snprintf(address, sizeof(address), "0x%llx", aWorkerPrivate);
+    if (addressSize == JSUint32(-1)) {
+      NS_WARNING("JS_snprintf failed!");
+      address[0] = '\0';
+      addressSize = 0;
+    }
+
+    mPathPrefix = NS_LITERAL_CSTRING("explicit/dom/workers(") +
+                  escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
+                  escapedURL + NS_LITERAL_CSTRING(", ") +
+                  nsDependentCString(address, addressSize) +
+                  NS_LITERAL_CSTRING(")/");
+  }
+
+  NS_IMETHOD
+  CollectReports(nsIMemoryMultiReporterCallback* aCallback,
+                 nsISupports* aClosure)
+  {
+    AssertIsOnMainThread();
+
+    JS_TriggerAllOperationCallbacks(mRuntime);
+
+    IterateData data;
+    if (!CollectCompartmentStatsForRuntime(mRuntime, &data)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    for (CompartmentStats *stats = data.compartmentStatsVector.begin();
+         stats != data.compartmentStatsVector.end();
+         ++stats)
+    {
+      ReportCompartmentStats(*stats, mPathPrefix, aCallback, aClosure);
+    }
+
+    ReportJSStackSizeForRuntime(mRuntime, mPathPrefix, aCallback, aClosure);
+
+    return NS_OK;
+  }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerMemoryReporter, nsIMemoryMultiReporter)
+
 class WorkerThreadRunnable : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
@@ -311,12 +379,23 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    {
-      JSAutoRequest ar(cx);
-      workerPrivate->DoRunLoop(cx);
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    nsRefPtr<WorkerMemoryReporter> reporter =
+      new WorkerMemoryReporter(workerPrivate, rt);
+    if (NS_FAILED(NS_RegisterMemoryMultiReporter(reporter))) {
+      NS_WARNING("Failed to register memory reporter!");
+      reporter = nsnull;
     }
 
-    JSRuntime* rt = JS_GetRuntime(cx);
+    workerPrivate->DoRunLoop(cx);
+
+    if (reporter) {
+      if (NS_FAILED(NS_UnregisterMemoryMultiReporter(reporter))) {
+        NS_WARNING("Failed to unregister memory reporter!");
+      }
+      reporter = nsnull;
+    }
 
     // XXX Bug 666963 - CTypes can create another JSContext for use with
     // closures, and then it holds that context in a reserved slot on the CType
