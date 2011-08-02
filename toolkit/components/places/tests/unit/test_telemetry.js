@@ -67,6 +67,10 @@ function run_test() {
   // Test generic database probes.
   PlacesDBUtils._telemetry();
 
+  waitForAsyncUpdates(continue_test);
+}
+
+function continue_test() {
   // Test expiration probes.
   for (let i = 0; i < 2; i++) {
     PlacesUtils.history.addVisit(NetUtil.newURI("http://" +  i + ".moz.org/"),
