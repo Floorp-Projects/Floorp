@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.4.6 [March 8, 2011]
+ * Last changed in libpng 1.4.8 [July 7, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -1866,6 +1866,14 @@ png_handle_sCAL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
       return;
    }
 
+   /* Need unit type, width, \0, height: minimum 4 bytes */
+   else if (length < 4)
+   {
+      png_warning(png_ptr, "sCAL chunk too short");
+      png_crc_finish(png_ptr, length);
+      return;
+   }
+
    png_debug1(2, "Allocating and reading sCAL chunk data (%lu bytes)",
       (unsigned long)(length + 1));
    png_ptr->chunkdata = (png_charp)png_malloc_warn(png_ptr, length + 1);
@@ -2460,7 +2468,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     png_debug(1, "in png_handle_fcTL");
 
     png_ensure_sequence_number(png_ptr, length);
-   
+
     if (!(png_ptr->mode & PNG_HAVE_IHDR))
     {
         png_error(png_ptr, "Missing IHDR before fcTL");
@@ -2483,7 +2491,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     else if (length != 26)
     {
         png_warning(png_ptr, "fcTL with invalid length skipped");
-        png_crc_finish(png_ptr, length);
+        png_crc_finish(png_ptr, length-4);
         return;
     }
 
@@ -2500,28 +2508,30 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     blend_op = data[21];
 
     if (png_ptr->num_frames_read == 0 && (x_offset != 0 || y_offset != 0))
-        png_error(png_ptr, "fcTL for the first frame must have zero offset");
-    if (png_ptr->num_frames_read == 0 &&
-        (width != info_ptr->width || height != info_ptr->height))
-        png_error(png_ptr, "size in first frame's fcTL must match "
-                           "the size in IHDR");
+    {
+        png_warning(png_ptr, "fcTL for the first frame must have zero offset");
+        return;
+    }
 
     if (info_ptr != NULL)
     {
         if (png_ptr->num_frames_read == 0 &&
             (width != info_ptr->width || height != info_ptr->height))
-            png_error(png_ptr, "size in first frame's fcTL must match "
+        {
+            png_warning(png_ptr, "size in first frame's fcTL must match "
                                "the size in IHDR");
-        
-        /* the set function will do more error checking */
+            return;
+        }
+
+        /* The set function will do more error checking */
         png_set_next_frame_fcTL(png_ptr, info_ptr, width, height,
                                 x_offset, y_offset, delay_num, delay_den,
                                 dispose_op, blend_op);
-        
-        png_read_reinit(png_ptr, info_ptr);
-    }
 
-    png_ptr->mode |= PNG_HAVE_fcTL;
+        png_read_reinit(png_ptr, info_ptr);
+
+        png_ptr->mode |= PNG_HAVE_fcTL;
+    }
 }
 
 void /* PRIVATE */

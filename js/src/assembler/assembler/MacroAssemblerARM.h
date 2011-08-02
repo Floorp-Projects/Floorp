@@ -491,8 +491,30 @@ public:
         if (right.m_isPointer) {
             m_assembler.ldr_un_imm(ARMRegisters::S0, right.m_value);
             m_assembler.cmp_r(left, ARMRegisters::S0);
-        } else
-            m_assembler.cmp_r(left, m_assembler.getImm(right.m_value, ARMRegisters::S0));
+        } else {
+            // This is a rather cute (if not confusing) pattern.
+            // unfortunately, it is not quite conducive to switching from
+            // cmp to cmn, so I'm doing so manually.
+            // m_assembler.cmp_r(left, m_assembler.getImm(right.m_value, ARMRegisters::S0));
+
+            // try to shoehorn the immediate into the compare instruction
+            ARMWord arg = m_assembler.getOp2(right.m_value);
+            if (arg != m_assembler.INVALID_IMM) {
+                m_assembler.cmp_r(left, arg);
+            } else {
+                // if it does not fit, try to shoehorn a negative in, and use a negated compare
+                // p.s. why couldn't arm just include the sign bit in the imm, rather than the inst.
+                arg = m_assembler.getOp2(-right.m_value);
+                if (arg != m_assembler.INVALID_IMM) {
+                    m_assembler.cmn_r(left, arg);
+                } else {
+                    // If we get here, we *need* to use a temp register and any way of loading a value
+                    // will enable us to load a negative easily, so there is no reason to switch from
+                    // cmp to cmn.
+                    m_assembler.cmp_r(left, m_assembler.getImm(right.m_value, ARMRegisters::S0));
+                }
+            }
+        }
         return Jump(m_assembler.jmp(ARMCondition(cond), useConstantPool));
     }
 

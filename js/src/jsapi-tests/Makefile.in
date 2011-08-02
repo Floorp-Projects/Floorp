@@ -64,6 +64,7 @@ CPPSRCS = \
   testFunctionProperties.cpp \
   testGCChunkAlloc.cpp \
   testGetPropertyDefault.cpp \
+  testIndexToString.cpp \
   testIntString.cpp \
   testIntern.cpp \
   testLookup.cpp \

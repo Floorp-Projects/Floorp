@@ -162,6 +162,22 @@ public:
         bool jar;
     };
 
+    class ComponentLocationComparator
+    {
+    public:
+      PRBool Equals(const ComponentLocation& a, const ComponentLocation& b) const
+      {
+        if (a.type == b.type && a.jar == b.jar) {
+          PRBool res;
+          nsresult rv = a.location->Equals(b.location, &res);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "Error comparing locations");
+          return res;
+        }
+
+        return PR_FALSE;
+      }
+    };
+
     static nsTArray<const mozilla::Module*>* sStaticModules;
     static nsTArray<ComponentLocation>* sModuleLocations;
     static nsTArray<ComponentLocation>* sJarModuleLocations;
@@ -240,7 +256,7 @@ public:
                           KnownModule* aModule);
     void RegisterContractID(const mozilla::Module::ContractIDEntry* aEntry);
 
-    void RegisterJarManifest(nsIZipReader* aReader,
+    void RegisterJarManifest(NSLocationType aType, nsIZipReader* aReader,
                              const char* aPath, bool aChromeOnly);
 
     void RegisterManifestFile(NSLocationType aType, nsILocalFile* aFile,
