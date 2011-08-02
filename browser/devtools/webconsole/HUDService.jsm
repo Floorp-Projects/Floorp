@@ -4223,6 +4223,25 @@ function JSTermHelper(aJSTerm)
   };
 
   /**
+   * Returns the currently selected object in the highlighter.
+   *
+   * @returns nsIDOMNode or null
+   */
+  Object.defineProperty(aJSTerm.sandbox, "$0", {
+    get: function() {
+      let mw = HUDService.currentContext();
+      try {
+        return mw.InspectorUI.selection;
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+    },
+    enumerable: true,
+    configurable: false
+  });
+
+  /**
    * Clears the output of the JSTerm.
    */
   aJSTerm.sandbox.clear = function JSTH_clear()
