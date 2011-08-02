@@ -46,17 +46,29 @@
 #
 topsrcdir=$1
 
-for _config in "$MOZCONFIG" \
-               "$MOZ_MYCONFIG"
-do
-  if [ -n "$_config" ] && ! [ -f "$_config" ]; then
-    echo "Specified MOZCONFIG \"$_config\" does not exist!"
+absolute_path() {
+  if uname -s | grep -q MINGW; then
+    regex='^\([A-Za-z]:\|\\\\\|\/\)'
+  else
+    regex='^\/'
+  fi
+
+  if echo $1 | grep -q $regex; then
+    echo $1
+  else
+    echo $topsrcdir/$1
+  fi
+}
+
+if [ -n "$MOZCONFIG" ]; then
+  MOZCONFIG=`absolute_path "$MOZCONFIG"`
+  if ! [ -f "$MOZCONFIG" ]; then
+    echo "Specified MOZCONFIG \"$MOZCONFIG\" does not exist!"
     exit 1
   fi
-done
+fi
 
 for _config in "$MOZCONFIG" \
-               "$MOZ_MYCONFIG" \
                "$topsrcdir/.mozconfig" \
                "$topsrcdir/mozconfig" \
                "$topsrcdir/mozconfig.sh" \
