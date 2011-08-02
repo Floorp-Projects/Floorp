@@ -84,6 +84,7 @@ public:
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
   virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
+  virtual PRInt64 SizeOf() const { return sizeof(*this); }
 
 private: 
   // These are not supported and are not implemented! 

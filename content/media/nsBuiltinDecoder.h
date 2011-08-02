@@ -327,6 +327,9 @@ public:
 
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
 
+  virtual PRInt64 VideoQueueMemoryInUse() = 0;
+  virtual PRInt64 AudioQueueMemoryInUse() = 0;
+
   virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
 
   // Causes the state machine to switch to buffering state, and to
@@ -391,6 +394,9 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual void Pause();
   virtual void SetVolume(double aVolume);
   virtual double GetDuration();
+
+  virtual void SetInfinite(PRBool aInfinite);
+  virtual PRBool IsInfinite();
 
   virtual nsMediaStream* GetCurrentStream();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
@@ -469,6 +475,20 @@ class nsBuiltinDecoder : public nsMediaDecoder
       return mDecoderStateMachine->GetBuffered(aBuffered);
     }
     return NS_ERROR_FAILURE;
+  }
+
+  virtual PRInt64 VideoQueueMemoryInUse() {
+    if (mDecoderStateMachine) {
+      return mDecoderStateMachine->VideoQueueMemoryInUse();
+    }
+    return 0;
+  }
+
+  virtual PRInt64 AudioQueueMemoryInUse() {
+    if (mDecoderStateMachine) {
+      return mDecoderStateMachine->AudioQueueMemoryInUse();
+    }
+    return 0;
   }
 
   virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
@@ -671,6 +691,9 @@ public:
   // from jumping around. Read/Write from any thread. Must have decode monitor
   // locked before accessing.
   PRPackedBool mIgnoreProgressData;
+
+  // PR_TRUE if the stream is infinite (e.g. a webradio).
+  PRPackedBool mInfiniteStream;
 };
 
 #endif

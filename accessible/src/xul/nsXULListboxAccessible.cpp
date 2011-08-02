@@ -48,6 +48,8 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULColumnsAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -998,11 +1000,11 @@ nsXULListCellAccessible::GetTable(nsIAccessibleTable **aTable)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* thisRow = GetParent();
+  nsAccessible* thisRow = Parent();
   if (!thisRow || thisRow->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
-  nsAccessible* table = thisRow->GetParent();
+  nsAccessible* table = thisRow->Parent();
   if (!table || table->Role() != nsIAccessibleRole::ROLE_TABLE)
     return NS_OK;
 
@@ -1019,7 +1021,7 @@ nsXULListCellAccessible::GetColumnIndex(PRInt32 *aColumnIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = GetParent();
+  nsAccessible* row = Parent();
   if (!row)
     return NS_OK;
 
@@ -1048,11 +1050,11 @@ nsXULListCellAccessible::GetRowIndex(PRInt32 *aRowIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = GetParent();
+  nsAccessible* row = Parent();
   if (!row)
     return NS_OK;
 
-  nsAccessible* table = row->GetParent();
+  nsAccessible* table = row->Parent();
   if (!table)
     return NS_OK;
 

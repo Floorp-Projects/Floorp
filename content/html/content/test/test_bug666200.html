@@ -22,18 +22,22 @@ var opt1 = new Option();
 var opt2 = new Option();
 var opt3 = new Option();
 var opt4 = new Option();
+var opt5 = new Option();
 opt1.value = 1;
 opt2.value = 2;
 opt3.value = 3;
 opt4.value = 4;
+opt5.value = 5;
 sel.add(opt1);
 sel.add(opt2, 0);
 sel.add(opt3, 1000);
 sel.options.add(opt4, opt3);
+sel.add(opt5, undefined);
 is(sel[0], opt2, "1st item should be 2");
 is(sel[1], opt1, "2nd item should be 1");
 is(sel[2], opt4, "3rd item should be 4");
 is(sel[3], opt3, "4th item should be 3");
+is(sel[4], opt5, "5th item should be 5");
 </script>
 </pre>
 </body>

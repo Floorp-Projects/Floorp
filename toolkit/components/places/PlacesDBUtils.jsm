@@ -114,6 +114,7 @@ let PlacesDBUtils = {
       this.checkIntegrity
     , this.checkCoherence
     , this._refreshUI
+    , this._telemetry
     ]);
     tasks.callback = aCallback;
     tasks.scope = aScope;
@@ -830,7 +831,150 @@ let PlacesDBUtils = {
     stmt.finalize();
 
     PlacesDBUtils._executeTasks(tasks);
-  }
+  },
+
+  /**
+   * Collects telemetry data.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   */
+  _telemetry: function PDBU__telemetry(aTasks)
+  {
+    let tasks = new Tasks(aTasks);
+
+    // Hash of telemetry probes.  Each one uses the historygram name as key,
+    // and may be either a database query or an helper function.
+    let probes = {
+      PLACES_PAGES_COUNT: "SELECT count(*) FROM moz_places",
+
+      PLACES_BOOKMARKS_COUNT: "SELECT count(*) FROM moz_bookmarks b "
+                            + "JOIN moz_bookmarks t ON t.id = b.parent "
+                            + "AND t.parent <> :tags_folder "
+                            + "WHERE b.type = :type_bookmark ",
+
+      PLACES_TAGS_COUNT: "SELECT count(*) FROM moz_bookmarks "
+                       + "WHERE parent = :tags_folder ",
+
+      PLACES_FOLDERS_COUNT: "SELECT count(*) FROM moz_bookmarks "
+                          + "WHERE TYPE = :type_folder "
+                          + "AND parent NOT IN (0, :places_root, :tags_folder) ",
+
+      PLACES_KEYWORDS_COUNT: "SELECT count(*) FROM moz_keywords ",
+
+      PLACES_SORTED_BOOKMARKS_PERC: "SELECT ROUND(( "
+                                  +   "SELECT count(*) FROM moz_bookmarks b "
+                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                                  +   "AND t.parent <> :tags_folder AND t.parent > :places_root "
+                                  +   "WHERE b.type  = :type_bookmark "
+                                  +   ") * 100 / ( "
+                                  +   "SELECT count(*) FROM moz_bookmarks b "
+                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                                  +   "AND t.parent <> :tags_folder "
+                                  +   "WHERE b.type = :type_bookmark "
+                                  + ")) ",
+
+      PLACES_TAGGED_BOOKMARKS_PERC: "SELECT ROUND(( "
+                                  +   "SELECT count(*) FROM moz_bookmarks b "
+                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                                  +   "AND t.parent = :tags_folder "
+                                  +   ") * 100 / ( "
+                                  +   "SELECT count(*) FROM moz_bookmarks b "
+                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                                  +   "AND t.parent <> :tags_folder "
+                                  +   "WHERE b.type = :type_bookmark "
+                                  + ")) ",
+
+      PLACES_DATABASE_FILESIZE_MB: function () {
+        let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+        DBFile.append("places.sqlite");
+        try {
+          return parseInt(DBFile.fileSize / 1024);
+        } catch (ex) {
+          return 0;
+        }
+      },
+
+      PLACES_DATABASE_JOURNALSIZE_MB: function () {
+        let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+        DBFile.append("places.sqlite-wal");
+        try {
+          return parseInt(DBFile.fileSize / 1024);
+        } catch (ex) {
+          return 0;
+        }
+      },
+
+      PLACES_DATABASE_PAGESIZE_B: "PRAGMA page_size",
+
+      PLACES_DATABASE_SIZE_PER_PAGE_B: function() {
+        // Cannot use the filesize here, due to chunked growth.
+        let stmt = DBConn.createStatement("PRAGMA page_size");
+        stmt.executeStep();
+        let pageSize = stmt.row.page_size;
+        stmt.finalize();
+        stmt = DBConn.createStatement("PRAGMA page_count");
+        stmt.executeStep();
+        let pageCount = stmt.row.page_count;
+        stmt.finalize();
+        stmt = DBConn.createStatement("SELECT count(*) AS c FROM moz_places");
+        stmt.executeStep();
+        let count = stmt.row.c;
+        stmt.finalize();
+        return Math.round((pageSize * pageCount) / count);
+      }
+    };
+
+    let params = {
+      tags_folder: PlacesUtils.tagsFolderId,
+      type_folder: PlacesUtils.bookmarks.TYPE_FOLDER,
+      type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      places_root: PlacesUtils.placesRootId
+    };
+
+    for (let probename in probes) {
+      let probe = probes[probename];
+      let histogram = Services.telemetry.getHistogramById(probename);
+      if (typeof probe == "string") {
+        // Run it as a query.
+        let stmt = DBConn.createAsyncStatement(probe);
+        for (param in params) {
+          if (probe.indexOf(":" + param) > 0) {
+            stmt.params[param] = params[param];
+          }
+        }
+
+        try {
+          stmt.executeAsync({
+            handleError: PlacesDBUtils._handleError,
+            handleResult: function (aResultSet) {
+              let row = aResultSet.getNextRow();
+              try {
+                histogram.add(row.getResultByIndex(0));
+              } catch (ex) {
+                Components.utils.reportError("Unable to report telemetry.");
+              }
+            },
+            handleCompletion: function () {}
+          });
+        }
+        finally{
+          stmt.finalize();
+        }
+      }
+      else {
+        // Execute it as a function.
+        try {
+          histogram.add(probe());
+        } catch (ex) {
+          Components.utils.reportError("Unable to report telemetry.");
+        }
+      }
+    }
+
+    PlacesDBUtils._executeTasks(tasks);
+  },
+
 };
 
 /**

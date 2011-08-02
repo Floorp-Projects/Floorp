@@ -215,7 +215,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
 
 #if defined JS_CPU_X86 
     static const int32 INLINE_SHAPE_JUMP = 12;
-    static const int32 INLINE_TYPE_JUMP = 12;
+    static const int32 INLINE_TYPE_JUMP = 9;
 #elif defined JS_CPU_X64
     static const int32 INLINE_SHAPE_JUMP = 6;
     static const int32 INLINE_TYPE_JUMP = 19;

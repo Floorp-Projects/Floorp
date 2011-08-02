@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1">
+<!-- use an empty g to force filters.svg to load before onload -->
+<use xlink:href="../filters.svg#empty" />
+<foreignObject filter="url(../filters.svg#ThresholdRGB)" x="0" y="0" height="100%" width="100%">
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<body>
+<canvas id="canvas" width="200" height="200"></canvas>
+<script>
+function draw() {
+  var video = document.getElementById("video");
+  var canvas = document.getElementById("canvas");
+  var ctx = canvas.getContext("2d");
+  try {
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+  } catch (e) {
+  }
+  document.documentElement.removeAttribute("class");
+}
+</script>
+<video id="video" src="black140x100.webm" onloadeddata="draw()" style="opacity:0"></video>
+</body>
+</html>
+</foreignObject>
+</svg>  

@@ -762,6 +762,12 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aEventType)
     synthesizeMouse(this.DOMNode, 1, 1, {});
   }
 
+  this.finalCheck = function synthClick_finalCheck()
+  {
+    // Scroll top window back.
+    window.top.scrollTo(0, 0);
+  }
+
   this.getID = function synthClick_getID()
   {
     return prettyName(aNodeOrID) + " click"; 
