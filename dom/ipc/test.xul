@@ -106,14 +106,37 @@
       if (!didThrow) {
         alert("One shouldn't be able to create content process message manager in chrome process!");
       }
+      var tppm = ppm.QueryInterface(Components.interfaces.nsITreeItemFrameMessageManager);
+      if (tppm.childCount != 1) {
+        alert("Should have one child process!");
+      }
+      var childprocessmm = tppm.getChildAt(0);
+      
+      childprocessmm.addMessageListener("ppm-sync",
+        function(m) {
+          if (m.target != childprocessmm) alert("Wrong target!");
+          document.getElementById("messageLog").value += "[SYNC1 PPM]"; 
+        }
+      );
+      
       ppm.addMessageListener("ppm-sync",
         function(m) {
-          document.getElementById("messageLog").value += "[SYNC PPM]"; 
+          // Check that global process message manager gets the per-process mm as target.
+          if (m.target != childprocessmm) alert("Wrong target!");
+          document.getElementById("messageLog").value += "[SYNC2 PPM]"; 
+        }
+      );
+      childprocessmm.addMessageListener("ppm-async",
+        function(m) {
+          if (m.target != childprocessmm) alert("Wrong target!");
+          document.getElementById("messageLog").value += "[ASYNC1 PPM]"; 
         }
       );
       ppm.addMessageListener("ppm-async",
         function(m) {
-          document.getElementById("messageLog").value += "[ASYNC PPM]"; 
+          // Check that global process message manager gets the per-process mm as target.
+          if (m.target != childprocessmm) alert("Wrong target!");
+          document.getElementById("messageLog").value += "[ASYNC2 PPM]"; 
         }
       );
       messageManager.loadFrameScript("chrome://global/content/remote-test-ipc.js", true);
