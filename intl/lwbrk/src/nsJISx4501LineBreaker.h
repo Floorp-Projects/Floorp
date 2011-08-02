@@ -53,9 +53,9 @@ public:
   PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
   virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore);
+                                 PRUint8* aBreakBefore);
   virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore);
+                                 PRUint8* aBreakBefore);
 
 private:
   PRInt32 WordMove(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
