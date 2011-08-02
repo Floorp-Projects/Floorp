@@ -1539,9 +1539,22 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
     nsIXPConnectWrappedNative* wrapper =
         XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aJSObj, nsnull,
                                                      &obj2);
+    if(wrapper)
+        return wrapper->Native();
 
-    return wrapper ? wrapper->Native() :
-                     (obj2 ? (nsISupports*)xpc_GetJSPrivate(obj2) : nsnull);
+    if(obj2)
+        return (nsISupports*)xpc_GetJSPrivate(obj2);
+
+    if(xpc::dom::instanceIsProxy(aJSObj)) {
+        // FIXME: Provide a fast non-refcounting way to get the canonical
+        //        nsISupports from the proxy.
+        nsISupports *supports =
+            static_cast<nsISupports*>(js::GetProxyPrivate(aJSObj).toPrivate());
+        nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
+        return canonical.get();
+    }
+
+    return nsnull;
 }
 
 /* JSObjectPtr getJSObjectOfWrapper (in JSContextPtr aJSContext, in JSObjectPtr aJSObj); */
@@ -1570,6 +1583,11 @@ nsXPConnect::GetJSObjectOfWrapper(JSContext * aJSContext,
     if(obj2)
     {
         *_retval = obj2;
+        return NS_OK;
+    }
+    if(xpc::dom::instanceIsProxy(aJSObj))
+    {
+        *_retval = aJSObj;
         return NS_OK;
     }
     // else...
