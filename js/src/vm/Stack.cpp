@@ -963,6 +963,12 @@ StackIter::settleOnNewState()
                 continue;
             }
 
+            /* Censor pushed-but-not-active frames from InvokeSessionGuard. */
+            if (containsCall && !calls_->active() && calls_->argv() == fp_->actualArgs()) {
+                popFrame();
+                continue;
+            }
+
             /*
              * As an optimization, there is no CallArgsList element pushed for
              * natives called directly by a script (compiled or interpreted).
