@@ -1125,7 +1125,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
 
     bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, Valueify(rval));
 
-    js_DestroyScript(cx, script);
+    js_DestroyScript(cx, script, 6);
     return ok;
 }
 
