@@ -38,8 +38,8 @@
 #define MOZILLA_SVGPOINT_H__
 
 #include "nsDebug.h"
-#include "nsContentUtils.h"
 #include "gfxPoint.h"
+#include "nsMathUtils.h"
 
 namespace mozilla {
 
@@ -93,7 +93,7 @@ public:
 
 #ifdef DEBUG
   PRBool IsValid() const {
-    return NS_FloatIsFinite(mX) && NS_FloatIsFinite(mY);
+    return NS_finite(mX) && NS_finite(mY);
   }
 #endif
 
