@@ -265,6 +265,9 @@ class MBasicBlock : public TempObject
         MBasicBlock *lastSuccessor = getSuccessor(numSuccessors() - 1);
         return lastSuccessor->isLoopHeader() && lastSuccessor->backedge() == this;
     }
+    bool isSplitEdge() const {
+        return kind_ == SPLIT_EDGE;
+    }
 
     MIRGenerator *gen() {
         return gen_;
