@@ -1544,7 +1544,7 @@ WebSocketChannel::SetupRequest()
   PR_Free(b64);
   mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
                                  secKeyString, PR_FALSE);
-  LOG(("WebSocketChannel::AsyncOpen(): client key %s\n", secKeyString.get()));
+  LOG(("WebSocketChannel::SetupRequest: client key %s\n", secKeyString.get()));
 
   // prepare the value we expect to see in
   // the sec-websocket-accept response header
@@ -1559,7 +1559,7 @@ WebSocketChannel::SetupRequest()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = hasher->Finish(PR_TRUE, mHashedSecret);
   NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("WebSocketChannel::AsyncOpen(): expected server key %s\n",
+  LOG(("WebSocketChannel::SetupRequest: expected server key %s\n",
        mHashedSecret.get()));
 
   return NS_OK;
@@ -1583,7 +1583,7 @@ WebSocketChannel::ApplyForAdmission()
   mAddress = hostName;
 
   // expect the callback in ::OnLookupComplete
-  LOG(("WebSocketChannel::AsyncOpen(): checking for concurrent open\n"));
+  LOG(("WebSocketChannel::ApplyForAdmission: checking for concurrent open\n"));
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   dns->AsyncResolve(hostName, 0, this, mainThread, getter_AddRefs(mDNSRequest));
@@ -1988,6 +1988,13 @@ WebSocketChannel::Close()
 {
   LOG(("WebSocketChannel::Close() %p\n", this));
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
+
+  if (!mTransport) {
+    LOG(("WebSocketChannel::Close() without transport - aborting."));
+    AbortSession(NS_ERROR_NOT_CONNECTED);
+    return NS_ERROR_NOT_CONNECTED;
+  }
+
   if (mRequestedClose) {
     LOG(("WebSocketChannel:: Double close error\n"));
     return NS_ERROR_UNEXPECTED;
