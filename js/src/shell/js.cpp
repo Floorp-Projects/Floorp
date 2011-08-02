@@ -74,7 +74,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstypedarray.h"
-#include "jstypedarrayinlines.h"
 #include "jsxml.h"
 #include "jsperf.h"
 
@@ -884,7 +883,7 @@ FileAsTypedArray(JSContext *cx, const char *pathname)
             obj = js_CreateTypedArray(cx, TypedArray::TYPE_UINT8, len);
             if (!obj)
                 return NULL;
-            char *buf = (char *) TypedArray::getDataOffset(TypedArray::getTypedArray(obj));
+            char *buf = (char *) TypedArray::fromJSObject(obj)->data;
             size_t cc = fread(buf, 1, len, file);
             if (cc != len) {
                 JS_ReportError(cx, "can't read %s: %s", pathname,
@@ -4330,9 +4329,9 @@ Serialize(JSContext *cx, uintN argc, jsval *vp)
         JS_free(cx, datap);
         return false;
     }
-    JSObject *array = TypedArray::getTypedArray(arrayobj);
-    JS_ASSERT((uintptr_t(TypedArray::getDataOffset(array)) & 7) == 0);
-    memcpy(TypedArray::getDataOffset(array), datap, nbytes);
+    TypedArray *array = TypedArray::fromJSObject(arrayobj);
+    JS_ASSERT((uintptr_t(array->data) & 7) == 0);
+    memcpy(array->data, datap, nbytes);
     JS_free(cx, datap);
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(arrayobj));
     return true;
@@ -4347,17 +4346,17 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
         return false;
     }
-    JSObject *array = TypedArray::getTypedArray(obj);
-    if ((TypedArray::getByteLength(array) & 7) != 0) {
+    TypedArray *array = TypedArray::fromJSObject(obj);
+    if ((array->byteLength & 7) != 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
         return false;
     }
-    if ((uintptr_t(TypedArray::getDataOffset(array)) & 7) != 0) {
+    if ((uintptr_t(array->data) & 7) != 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_BAD_ALIGNMENT);
         return false;
     }
 
-    if (!JS_ReadStructuredClone(cx, (uint64 *) TypedArray::getDataOffset(array), TypedArray::getByteLength(array),
+    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength,
                                 JS_STRUCTURED_CLONE_VERSION, &v, NULL, NULL)) {
         return false;
     }
