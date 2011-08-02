@@ -1673,13 +1673,9 @@ SessionStoreService.prototype = {
     }
     else if (history && history.count > 0) {
       try {
-        // bfCacheEntryMap maps a bfCacheEntry to a unique number.  It also
-        // contains a field 'max' which contains the maximum number in the map.
-        let bfCacheEntryMap = {'max': 0};
         for (var j = 0; j < history.count; j++) {
           let entry = this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
-                                                  aFullData, aTab.pinned,
-                                                  bfCacheEntryMap);
+                                                  aFullData, aTab.pinned);
           tabData.entries.push(entry);
         }
         // If we make it through the for loop, then we're ok and we should clear
@@ -1768,14 +1764,10 @@ SessionStoreService.prototype = {
    *        always return privacy sensitive data (use with care)
    * @param aIsPinned
    *        the tab is pinned and should be treated differently for privacy
-   * @param aBFCacheEntryMap
-   *        a dictionary mapping BFCacheEntries to integers.  This dictionary
-   *        must also map 'max' to the largest number in the dictionary.
    * @returns object
    */
   _serializeHistoryEntry:
-    function sss_serializeHistoryEntry(aEntry, aFullData,
-                                       aIsPinned, aBFCacheEntryMap) {
+    function sss_serializeHistoryEntry(aEntry, aFullData, aIsPinned) {
     var entry = { url: aEntry.URI.spec };
 
     try {
@@ -1866,14 +1858,8 @@ SessionStoreService.prototype = {
       catch (ex) { debug(ex); }
     }
 
-    if (aBFCacheEntryMap[aEntry.BFCacheEntry]) {
-      entry.docIdentifier = aBFCacheEntryMap[aEntry.BFCacheEntry];
-    }
-    else {
-      let id = aBFCacheEntryMap['max'] + 1;
-      entry.docIdentifier = id;
-      aBFCacheEntryMap['max'] = id;
-      aBFCacheEntryMap[aEntry.BFCacheEntry] = id;
+    if (aEntry.docIdentifier) {
+      entry.docIdentifier = aEntry.docIdentifier;
     }
 
     if (aEntry.stateData != null) {
@@ -1891,7 +1877,7 @@ SessionStoreService.prototype = {
         var child = aEntry.GetChildAt(i);
         if (child) {
           entry.children.push(this._serializeHistoryEntry(child, aFullData,
-                                                          aIsPinned, aBFCacheEntryMap));
+                                                          aIsPinned));
         }
         else { // to maintain the correct frame order, insert a dummy entry 
           entry.children.push({ url: "about:blank" });
@@ -2974,6 +2960,7 @@ SessionStoreService.prototype = {
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
       browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = aTab;
+      browser.__SS_restore_docIdentifier = curSHEntry.docIdentifier;
 
       didStartLoad = true;
       try {
@@ -3126,16 +3113,24 @@ SessionStoreService.prototype = {
     }
 
     if (aEntry.docIdentifier) {
-      // If we have a serialized document identifier, try to find an SHEntry
-      // which matches that doc identifier and adopt that SHEntry's
-      // BFCacheEntry.  If we don't find a match, insert shEntry as the match
-      // for the document identifier.
-      let matchingEntry = aDocIdentMap[aEntry.docIdentifier];
-      if (!matchingEntry) {
-        aDocIdentMap[aEntry.docIdentifier] = shEntry;
+      // Get a new document identifier for this entry to ensure that history
+      // entries after a session restore are considered to have different
+      // documents from the history entries before the session restore.
+      // Document identifiers are 64-bit ints, so JS will loose precision and
+      // start assigning all entries the same doc identifier if these ever get
+      // large enough.
+      //
+      // It's a potential security issue if document identifiers aren't
+      // globally unique, but shEntry.setUniqueDocIdentifier() below guarantees
+      // that we won't re-use a doc identifier within a given instance of the
+      // application.
+      let ident = aDocIdentMap[aEntry.docIdentifier];
+      if (!ident) {
+        shEntry.setUniqueDocIdentifier();
+        aDocIdentMap[aEntry.docIdentifier] = shEntry.docIdentifier;
       }
       else {
-        shEntry.adoptBFCacheEntry(matchingEntry);
+        shEntry.docIdentifier = ident;
       }
     }
 
@@ -3271,12 +3266,19 @@ SessionStoreService.prototype = {
       aBrowser.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
     }
 
+    if (aBrowser.__SS_restore_docIdentifier) {
+      let sh = aBrowser.webNavigation.sessionHistory;
+      sh.getEntryAtIndex(sh.index, false).QueryInterface(Ci.nsISHEntry).
+         docIdentifier = aBrowser.__SS_restore_docIdentifier;
+    }
+
     // notify the tabbrowser that this document has been completely restored
     this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
 
     delete aBrowser.__SS_restore_data;
     delete aBrowser.__SS_restore_pageStyle;
     delete aBrowser.__SS_restore_tab;
+    delete aBrowser.__SS_restore_docIdentifier;
   },
 
   /**
