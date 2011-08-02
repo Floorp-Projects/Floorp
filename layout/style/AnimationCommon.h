@@ -71,6 +71,7 @@ public:
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
   virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
+  virtual PRInt64 SizeOf() const;
 
   /**
    * Notify the manager that the pres context is going away.
