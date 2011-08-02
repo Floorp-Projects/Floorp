@@ -311,10 +311,6 @@ nsDiskCacheMap::GrowRecords()
     if (!newArray)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // clear the new uninitialized memory
-    memset(newArray + mHeader.mRecordCount, 0,
-           (newCount - mHeader.mRecordCount) * sizeof(nsDiskCacheRecord));
-
     // Space out the buckets
     PRUint32 oldRecordsPerBucket = GetRecordsPerBucket();
     PRUint32 newRecordsPerBucket = newCount / kBuckets;
@@ -326,6 +322,9 @@ nsDiskCacheMap::GrowRecords()
         memmove(newRecords,
                 newArray + bucketIndex * oldRecordsPerBucket,
                 count * sizeof(nsDiskCacheRecord));
+        // clear unused records
+        memset(newRecords + count, 0,
+               (newRecordsPerBucket - count) * sizeof(nsDiskCacheRecord));
     }
 
     // Set as the new record array
