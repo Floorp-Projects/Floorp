@@ -1,0 +1,23 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<script>
+function load() {
+  function next() {
+    if (count < 5)
+      iframe.src = 'data:text/html,iframe ' + (++count);
+  }
+
+  var count = 0;
+  var iframe = document.createElement('iframe');
+  iframe.onload = function () { setTimeout(next, 0) };
+  document.body.appendChild(iframe);
+
+  setTimeout(next, 0);
+}
+</script>
+</head>
+
+<body onload="load()">
+Testcase
+</body>
+</html>

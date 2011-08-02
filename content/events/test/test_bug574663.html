@@ -35,7 +35,11 @@ function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum) {
   };
   // first a line scroll
   synthesizeMouseScroll(scrollbox, 10, 10, event, win);
+  // Then a line scroll with hasPixels set to false
+  event.hasPixels = false;
+  synthesizeMouseScroll(scrollbox, 10, 10, event, win);
   // then 5 pixel scrolls
+  event.hasPixels = true;
   event.delta *= 3;
   event.type = "MozMousePixelScroll";
   event.hasPixels = false;

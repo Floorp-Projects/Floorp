@@ -39,6 +39,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "prdtoa.h"
 #include "nsDOMError.h"
+#include "nsMathUtils.h"
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SVGNumberPairSMILType.h"
@@ -82,7 +83,7 @@ ParseNumberOptionalNumber(const nsAString& aValue,
 
     char *end;
     aValues[i] = float(PR_strtod(token, &end));
-    if (*end != '\0' || !NS_FloatIsFinite(aValues[i])) {
+    if (*end != '\0' || !NS_finite(aValues[i])) {
       return NS_ERROR_DOM_SYNTAX_ERR; // parse error
     }
   }

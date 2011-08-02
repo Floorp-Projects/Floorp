@@ -11,3 +11,4 @@ script regress-613820-2.js
 script regress-613820-3.js
 silentfail skip-if(!xulRuntime.shell&&(Android||xulRuntime.OS=="WINNT")) script regress-617935.js
 script instance-property-storage-introspection.js
+script regexp-space-character-class.js

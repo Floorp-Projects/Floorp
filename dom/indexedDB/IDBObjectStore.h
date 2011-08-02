@@ -90,7 +90,7 @@ public:
   GetKeyPathValueFromStructuredData(const PRUint8* aData,
                                     PRUint32 aDataLength,
                                     const nsAString& aKeyPath,
-                                    JSContext** aCx,
+                                    JSContext* aCx,
                                     Key& aValue);
 
   static nsresult

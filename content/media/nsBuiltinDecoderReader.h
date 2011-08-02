@@ -476,6 +476,9 @@ public:
 
     virtual void* operator()(void* anObject) {
       const VideoData* v = static_cast<const VideoData*>(anObject);
+      if (!v->mImage) {
+        return nsnull;
+      }
       NS_ASSERTION(v->mImage->GetFormat() == mozilla::layers::Image::PLANAR_YCBCR,
                    "Wrong format?");
       mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
