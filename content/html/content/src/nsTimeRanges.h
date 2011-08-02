@@ -55,9 +55,6 @@ public:
 
   void Add(double aStart, double aEnd);
 
-  // See <http://www.whatwg.org/html/#normalized-timeranges-object>.
-  void Normalize();
-
 private:
 
   struct TimeRange {
@@ -66,21 +63,6 @@ private:
         mEnd(aEnd) {}
     double mStart;
     double mEnd;
-  };
-
-  struct CompareTimeRanges
-  {
-    PRBool Equals(const TimeRange& tr1, const TimeRange& tr2) const
-    {
-      return tr1.mStart == tr2.mStart && tr1.mEnd == tr2.mEnd;
-    }
-
-    // Here, we aim at time range normalization. That why we order only by start
-    // time, since the ranges can overlap.
-    PRBool LessThan(const TimeRange& tr1, const TimeRange& tr2) const
-    {
-      return tr1.mStart < tr2.mStart;
-    }
   };
 
   nsAutoTArray<TimeRange,4> mRanges;
