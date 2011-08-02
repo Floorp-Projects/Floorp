@@ -45,6 +45,7 @@
 
 #include "jsalloc.h"
 #include "jstl.h"
+#include "jsutil.h"
 
 namespace js {
 
@@ -77,7 +78,9 @@ class HashTableEntry {
 
   public:
     HashTableEntry() : keyHash(0), t() {}
+    HashTableEntry(MoveRef<HashTableEntry> rhs) : keyHash(rhs->keyHash), t(Move(rhs->t)) { }
     void operator=(const HashTableEntry &rhs) { keyHash = rhs.keyHash; t = rhs.t; }
+    void operator=(MoveRef<HashTableEntry> rhs) { keyHash = rhs->keyHash; t = Move(rhs->t); }
 
     NonConstT t;
 
@@ -552,7 +555,7 @@ class HashTable : private AllocPolicy
         for (Entry *src = oldTable, *end = src + oldCap; src != end; ++src) {
             if (src->isLive()) {
                 src->unsetCollision();
-                findFreeEntry(src->getKeyHash()) = *src;
+                findFreeEntry(src->getKeyHash()) = Move(*src);
             }
         }
 
@@ -881,6 +884,12 @@ class HashMapEntry
   public:
     HashMapEntry() : key(), value() {}
     HashMapEntry(const Key &k, const Value &v) : key(k), value(v) {}
+    HashMapEntry(MoveRef<HashMapEntry> rhs) 
+      : key(Move(rhs->key)), value(Move(rhs->value)) { }
+    void operator=(MoveRef<HashMapEntry> rhs) {
+        const_cast<Key &>(key) = Move(rhs->key);
+        value = Move(rhs->value);
+    }
 
     const Key key;
     Value value;
@@ -1011,6 +1020,15 @@ class HashMap
     }
 
     bool add(AddPtr &p, const Key &k, const Value &v) {
+        Entry *pentry;
+        if (!impl.add(p, &pentry))
+            return false;
+        const_cast<Key &>(pentry->key) = k;
+        pentry->value = v;
+        return true;
+    }
+
+    bool add(AddPtr &p, const Key &k, MoveRef<Value> v) {
         Entry *pentry;
         if (!impl.add(p, &pentry))
             return false;
