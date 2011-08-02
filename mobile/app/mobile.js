@@ -651,3 +651,13 @@ pref("browser.firstrun.show.localepicker", true);
 
 // initiated by a user
 pref("content.ime.strict_policy", true);
+
+// True if you always want dump() to work
+//
+// On Android, you also need to do the following for the output
+// to show up in logcat:
+//
+// $ adb shell stop
+// $ adb shell setprop log.redirect-stdio true
+// $ adb shell start
+pref("browser.dom.window.dump.enabled", false);
