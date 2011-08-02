@@ -250,17 +250,6 @@ private:
 
   // An array to store the strings identifying the different types.
   nsTArray<nsCString>          mTypeArray;
-
-  // Whether we should update the child process with every change to a
-  // permission. This is set to true once the child is ready to receive
-  // such updates.
-  PRBool                       mUpdateChildProcess;
-
-public:
-  void ChildRequestPermissions()
-  {
-    mUpdateChildProcess = PR_TRUE;
-  }
 };
 
 // {4F6B5E00-0C36-11d5-A535-0010A401EB10}
