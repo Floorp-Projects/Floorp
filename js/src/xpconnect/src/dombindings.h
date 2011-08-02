@@ -118,8 +118,6 @@ class NodeList : public NodeListBase {
     static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
-    static T *getNodeList(JSObject *obj);
-
     static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
 
     static uint32 getProtoShape(JSObject *obj);
@@ -178,6 +176,7 @@ class NodeList : public NodeListBase {
     {
         return js::GetObjectClass(prototype) == &sInterfaceClass;
     }
+    static T *getNodeList(JSObject *obj);
 };
 
 }

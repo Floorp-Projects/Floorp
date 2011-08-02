@@ -503,6 +503,7 @@
 #include "nsIDOMCustomEvent.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "dombindings.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -8425,14 +8426,20 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
 
   if (!JSVAL_IS_PRIMITIVE(collection)) {
     // We already have a node list in our reserved slot, use it.
-
-    nsISupports *native =
-      sXPConnect->GetNativeOfWrapper(cx, JSVAL_TO_OBJECT(collection));
-    if (native) {
-      NS_ADDREF(*nodeList = nsContentList::FromSupports(native));
+    JSObject *obj = JSVAL_TO_OBJECT(collection);
+    if (xpc::dom::NodeList<nsIHTMLCollection>::objIsNodeList(obj)) {
+      nsIHTMLCollection *native =
+        xpc::dom::NodeList<nsIHTMLCollection>::getNodeList(obj);
+      NS_ADDREF(*nodeList = static_cast<nsContentList*>(native));
     }
     else {
-      rv = NS_ERROR_FAILURE;
+      nsISupports *native = sXPConnect->GetNativeOfWrapper(cx, obj);
+      if (native) {
+        NS_ADDREF(*nodeList = nsContentList::FromSupports(native));
+      }
+      else {
+        rv = NS_ERROR_FAILURE;
+      }
     }
   } else {
     // No node list for this document.all yet, create one...
