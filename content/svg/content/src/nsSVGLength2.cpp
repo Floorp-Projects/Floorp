@@ -43,6 +43,7 @@
 #include "nsIFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGAttrTearoffTable.h"
+#include "nsMathUtils.h"
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "nsSMILFloatType.h"
@@ -175,7 +176,7 @@ GetValueFromString(const nsAString &aValueAsString,
   
   char *rest;
   *aValue = float(PR_strtod(str, &rest));
-  if (rest != str && NS_FloatIsFinite(*aValue)) {
+  if (rest != str && NS_finite(*aValue)) {
     *aUnitType = GetUnitTypeForString(rest);
     if (IsValidUnitType(*aUnitType)) {
       return NS_OK;

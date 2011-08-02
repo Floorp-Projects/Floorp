@@ -2352,9 +2352,12 @@ function PlacesCreateFolderTransaction(aName, aContainer, aIndex, aAnnotations,
   this._name = aName;
   this._container = aContainer;
   this._index = typeof(aIndex) == "number" ? aIndex : -1;
-  this._annotations = aAnnotations;
   this._id = null;
-  this.childTransactions = aChildItemsTransactions || [];
+  // Copy the array to decouple it from its prototype, which otherwise keeps
+  // alive its associated global object.
+  this._annotations = aAnnotations ? Array.slice(aAnnotations) : [];
+  this.childTransactions = aChildItemsTransactions ?
+                             Array.slice(aChildItemsTransactions) : [];
 }
 
 PlacesCreateFolderTransaction.prototype = {
@@ -2439,8 +2442,10 @@ function PlacesCreateBookmarkTransaction(aURI, aContainer, aIndex, aTitle,
   this._index = typeof(aIndex) == "number" ? aIndex : -1;
   this._title = aTitle;
   this._keyword = aKeyword;
-  this._annotations = aAnnotations;
-  this.childTransactions = aChildTransactions || [];
+  // Copy the array to decouple it from its prototype, which otherwise keeps
+  // alive its associated global object.
+  this._annotations = aAnnotations ? Array.slice(aAnnotations) : [];
+  this.childTransactions = aChildTransactions ? Array.slice(aChildTransactions) : [];
 }
 
 PlacesCreateBookmarkTransaction.prototype = {
@@ -2561,7 +2566,9 @@ function PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aName, aContainer,
   this._name = aName;
   this._container = aContainer;
   this._index = typeof(aIndex) == "number" ? aIndex : -1;
-  this._annotations = aAnnotations;
+  // Copy the array to decouple it from its prototype, which otherwise keeps
+  // alive its associated global object.
+  this._annotations = aAnnotations ? Array.slice(aAnnotations) : [];
 }
 
 PlacesCreateLivemarkTransaction.prototype = {
@@ -3310,8 +3317,10 @@ PlacesSortFolderByNameTransaction.prototype = {
 function PlacesTagURITransaction(aURI, aTags)
 {
   this._uri = aURI;
-  this._tags = aTags;
   this._unfiledItemId = -1;
+  // Copy the array to decouple it from its prototype, which otherwise keeps
+  // alive its associated global object.
+  this._tags = Array.slice(aTags);
 }
 
 PlacesTagURITransaction.prototype = {
@@ -3364,11 +3373,14 @@ function PlacesUntagURITransaction(aURI, aTags)
 {
   this._uri = aURI;
   if (aTags) {    
+    // Copy the array to decouple it from its prototype, which otherwise keeps
+    // alive its associated global object.
+    this._tags = Array.slice(aTags);
+
     // Within this transaction, we cannot rely on tags given by itemId
     // since the tag containers may be gone after we call untagURI.
     // Thus, we convert each tag given by its itemId to name.
-    this._tags = aTags;
-    for (let i = 0; i < aTags.length; ++i) {
+    for (let i = 0; i < this._tags.length; ++i) {
       if (typeof(this._tags[i]) == "number")
         this._tags[i] = PlacesUtils.bookmarks.getItemTitle(this._tags[i]);
     }
