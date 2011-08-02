@@ -1236,10 +1236,9 @@ NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(message, mOnMessageListener)
 NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(close, mOnCloseListener)
 
 NS_IMETHODIMP
-nsWebSocket::Send(const nsAString& aData, PRBool *aRet)
+nsWebSocket::Send(const nsAString& aData)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  *aRet = PR_FALSE;
 
   if (mReadyState == nsIMozWebSocket::CONNECTING) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1266,8 +1265,7 @@ nsWebSocket::Send(const nsAString& aData, PRBool *aRet)
     return NS_OK;
   }
 
-  nsresult rv = mConnection->PostMessage(PromiseFlatString(aData));
-  *aRet = NS_SUCCEEDED(rv);
+  mConnection->PostMessage(PromiseFlatString(aData));
 
   return NS_OK;
 }
