@@ -599,7 +599,6 @@ protected:
   /* Functions for -moz-transform-origin Parsing */
   PRBool ParseMozTransformOrigin();
 
-
   /* Find and return the namespace ID associated with aPrefix.
      If aPrefix has not been declared in an @namespace rule, returns
      kNameSpaceID_Unknown and sets mFoundUnresolvablePrefix to true. */
@@ -7506,7 +7505,8 @@ PRBool CSSParserImpl::ParseMozTransform()
 PRBool CSSParserImpl::ParseMozTransformOrigin()
 {
   nsCSSValuePair position;
-  if (!ParseBoxPositionValues(position, PR_TRUE) || !ExpectEndProperty())
+  nsCSSValue depth;
+  if (!ParseBoxPositionValues(position, PR_TRUE))
     return PR_FALSE;
 
   // Unlike many other uses of pairs, this position should always be stored
@@ -7518,9 +7518,14 @@ PRBool CSSParserImpl::ParseMozTransformOrigin()
                       "inherit/initial only half?");
     AppendValue(eCSSProperty__moz_transform_origin, position.mXValue);
   } else {
-    nsCSSValue pair;
-    pair.SetPairValue(&position);
-    AppendValue(eCSSProperty__moz_transform_origin, pair);
+    if (!ParseVariant(depth, VARIANT_LENGTH | VARIANT_CALC, nsnull) || 
+        !nsLayoutUtils::Are3DTransformsEnabled()) {
+      depth.Reset();
+    }
+
+    nsCSSValue triplet;
+    triplet.SetTripletValue(position.mXValue, position.mYValue, depth);
+    AppendValue(eCSSProperty__moz_transform_origin, triplet);
   }
   return PR_TRUE;
 }

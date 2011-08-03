@@ -938,6 +938,14 @@ nsComputedDOMStyle::DoGetMozTransformOrigin()
                   &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
   valueList->AppendCSSValue(height);
 
+  if (display->mTransformOrigin[2].GetUnit() != eStyleUnit_Coord ||
+      display->mTransformOrigin[2].GetCoordValue() != 0) {
+    nsROCSSPrimitiveValue* depth = GetROCSSPrimitiveValue();
+    SetValueToCoord(depth, display->mTransformOrigin[2], PR_FALSE,
+                    nsnull);
+    valueList->AppendCSSValue(depth);
+  }
+
   return valueList;
 }
 
