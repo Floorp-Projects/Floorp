@@ -77,8 +77,7 @@ WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 endif #LIBXUL_SDK
 
-# This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
-# shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
+# Make sure the standalone glue doesn't try to get libxpcom.so from mobile/app.
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/rules.mk
