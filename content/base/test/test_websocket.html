@@ -61,10 +61,13 @@
  * 35. test for sending custom close code and reason
  * 36. negative test for sending out of range close code
  * 37. negative test for too long of a close reason
+ * 38. reserved for extension test
+ * 39. a basic wss:// connectivity test
+ * 40. negative test for wss:// with no cert
  */
 
 var first_test = 1;
-var last_test = 37;
+var last_test = 40;
 
 var current_test = first_test;
 
@@ -1054,6 +1057,58 @@ function test37()
       }
     }
   }
+}
+
+function test38()
+{
+  ok(true, "test 38 reserved for extension test.");
+  current_test++;
+  doTest(39);
+}
+
+function test39()
+{
+  var prots=["test-39"];
+
+  var ws = CreateTestWS("wss://example.com/tests/content/base/test/file_websocket", prots);
+  status_test39 = "started";
+  ws.onopen = function(e)
+  {
+    status_test39 = "opened";
+    ok(true, "test 39 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 39 close");
+    ok(status_test39 == "opened", "test 39 did open"); 
+    doTest(40);
+  };
+}
+
+function test40()
+{
+  var prots=["test-40"];
+
+  var ws = CreateTestWS("wss://nocert.example.com/tests/content/base/test/file_websocket", prots);
+
+  status_test40 = "started";
+  ws.onerror = ignoreError;
+
+  ws.onopen = function(e)
+  {
+    status_test40 = "opened";
+    ok(false, "test 40 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 40 close");
+    ok(status_test40 == "started", "test 40 did not open"); 
+    doTest(41);
+  };
 }
 
 var ranAllTests = false;
