@@ -59,8 +59,15 @@ class nsIFile;
  *
  * If the sync flag is true, then the delete operation runs to completion
  * before this function returns.  Otherwise, deletion occurs asynchronously.
+ *
+ * If 'delay' is non-zero, the directory will not be deleted until the
+ * specified number of milliseconds have passed. (The directory is still
+ * renamed immediately if 'moveToTrash' is passed, so upon return it is safe
+ * to create a directory with the same name). This parameter is ignored if
+ * 'sync' is true.
  */
-NS_HIDDEN_(nsresult) DeleteDir(nsIFile *dir, PRBool moveToTrash, PRBool sync);
+NS_HIDDEN_(nsresult) DeleteDir(nsIFile *dir, PRBool moveToTrash, PRBool sync, 
+                               PRUint32 delay = 0);
 
 /**
  * This routine returns the trash directory corresponding to the given 

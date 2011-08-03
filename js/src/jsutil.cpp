@@ -70,19 +70,26 @@ JS_STATIC_ASSERT(sizeof(void *) == sizeof(void (*)()));
 static JS_NEVER_INLINE void
 CrashInJS()
 {
+    /*
+     * We write 123 here so that the machine code for this function is
+     * unique. Otherwise the linker, trying to be smart, might use the
+     * same code for CrashInJS and for some other function. That
+     * messes up the signature in minidumps.
+     */
+
 #if defined(WIN32)
     /*
      * We used to call DebugBreak() on Windows, but amazingly, it causes
      * the MSVS 2010 debugger not to be able to recover a call stack.
      */
-    *((int *) NULL) = 0;
+    *((int *) NULL) = 123;
     exit(3);
 #elif defined(__APPLE__)
     /*
      * On Mac OS X, Breakpad ignores signals. Only real Mach exceptions are
      * trapped.
      */
-    *((int *) NULL) = 0;  /* To continue from here in GDB: "return" then "continue". */
+    *((int *) NULL) = 123;  /* To continue from here in GDB: "return" then "continue". */
     raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */
 #else
     raise(SIGABRT);  /* To continue from here in GDB: "signal 0". */

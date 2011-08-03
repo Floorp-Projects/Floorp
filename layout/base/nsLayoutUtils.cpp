@@ -77,6 +77,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIWidget.h"
 #include "gfxMatrix.h"
+#include "gfxPoint3D.h"
 #include "gfxTypes.h"
 #include "gfxUserFontSet.h"
 #include "nsTArray.h"
@@ -106,6 +107,8 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -137,6 +140,22 @@ static ContentMap& GetContentMap() {
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not initialize map.");
   }
   return *sContentMap;
+}
+
+
+PRBool
+nsLayoutUtils::Are3DTransformsEnabled()
+{
+  static PRBool s3DTransformsEnabled;
+  static PRBool s3DTransformPrefCached = PR_FALSE;
+
+  if (!s3DTransformPrefCached) {
+    s3DTransformPrefCached = PR_TRUE;
+    mozilla::Preferences::AddBoolVarCache(&s3DTransformsEnabled, 
+                                          "layout.3d-transforms.enabled");
+  }
+
+  return s3DTransformsEnabled;
 }
 
 static void DestroyViewID(void* aObject, nsIAtom* aPropertyName,
@@ -983,16 +1002,14 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
 }
 
 gfx3DMatrix
-nsLayoutUtils::ChangeMatrixBasis(const gfxPoint &aOrigin,
+nsLayoutUtils::ChangeMatrixBasis(const gfxPoint3D &aOrigin,
                                  const gfx3DMatrix &aMatrix)
 {
   /* These are translation matrices from world-to-origin of relative frame and
-   * vice-versa.  Although I could use the gfxMatrix::Translate function to
-   * accomplish this, I'm hoping to reduce the overall number of matrix
-   * operations by hardcoding as many of the matrices as possible.
+   * vice-versa.
    */
-  gfx3DMatrix worldToOrigin = gfx3DMatrix::From2D(gfxMatrix(1.0, 0.0, 0.0, 1.0, -aOrigin.x, -aOrigin.y));
-  gfx3DMatrix originToWorld = gfx3DMatrix::From2D(gfxMatrix(1.0, 0.0, 0.0, 1.0,  aOrigin.x,  aOrigin.y));
+  gfx3DMatrix worldToOrigin = gfx3DMatrix::Translation(-aOrigin);
+  gfx3DMatrix originToWorld = gfx3DMatrix::Translation(aOrigin);
 
   /* Multiply all three to get the transform! */
   return worldToOrigin * aMatrix * originToWorld;
@@ -1093,43 +1110,81 @@ nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint,
                  NSFloatPixelsToAppUnits(float(image.y), aFactor));
 }
 
-gfx3DMatrix nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame,
-                                                  nsIFrame* aStopAtAncestor)
-{
-  gfx3DMatrix ctm;
-
-  /* Starting at the specified frame, we'll use the GetTransformMatrix
-   * function of the frame, which gives us a matrix from this frame up
-   * to some other ancestor frame. If aStopAtAncestor frame is not reached, 
-   * we stop at root. We get the CTM by simply accumulating all of these
-   * matrices together.
-   */
-  while (aFrame && aFrame != aStopAtAncestor) {
-    ctm *= aFrame->GetTransformMatrix(&aFrame);
-  }
-  NS_ASSERTION(aFrame == aStopAtAncestor, "How did we manage to miss the ancestor?");
-  return ctm;
-}
-
-nsPoint
-nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
-                                      const nsPoint &aPoint)
+static gfxPoint 
+InvertTransformsToAncestor(nsIFrame *aFrame,
+                           const gfxPoint &aPoint,
+                           nsIFrame *aStopAtAncestor = nsnull)
 {
   NS_PRECONDITION(aFrame, "Why are you inverting transforms when there is no frame?");
 
   /* To invert everything to the root, we'll get the CTM, invert it, and use it to transform
    * the point.
    */
-  gfx3DMatrix ctm = GetTransformToAncestor(aFrame);
+  nsIFrame *parent = nsnull;
+  gfx3DMatrix ctm = aFrame->GetTransformMatrix(&parent);
+  gfxPoint result = aPoint;
+  
+  if (parent && parent != aStopAtAncestor) {
+      result = InvertTransformsToAncestor(parent, aPoint, aStopAtAncestor);
+  }
 
-  /* If the ctm is singular, hand back (0, 0) as a sentinel. */
-  if (ctm.IsSingular())
-    return nsPoint(0, 0);
+  result = ctm.Inverse().ProjectPoint(result);
+  return result;
+}
 
-  /* TODO: Correctly handle 3d transforms when they start being used */
+static gfxRect
+InvertGfxRectToAncestor(nsIFrame *aFrame,
+                     const gfxRect &aRect,
+                     nsIFrame *aStopAtAncestor = nsnull)
+{
+  NS_PRECONDITION(aFrame, "Why are you inverting transforms when there is no frame?");
 
-  /* Otherwise, invert the CTM and use it to transform the point. */
-  return MatrixTransformPoint(aPoint, ctm.Invert(), aFrame->PresContext()->AppUnitsPerDevPixel());
+  /* To invert everything to the root, we'll get the CTM, invert it, and use it to transform
+   * the point.
+   */
+  nsIFrame *parent = nsnull;
+  gfx3DMatrix ctm = aFrame->GetTransformMatrix(&parent);
+  gfxRect result = aRect;
+  
+  if (parent && parent != aStopAtAncestor) {
+      result = InvertGfxRectToAncestor(parent, aRect, aStopAtAncestor);
+  }
+
+  result = ctm.Inverse().ProjectRectBounds(result);
+  return result;
+}
+
+nsPoint
+nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
+                                      const nsPoint &aPoint)
+{
+    float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
+    gfxPoint result(NSAppUnitsToFloatPixels(aPoint.x, factor),
+                    NSAppUnitsToFloatPixels(aPoint.y, factor));
+    
+    result = InvertTransformsToAncestor(aFrame, result);
+   
+    return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
+                   NSFloatPixelsToAppUnits(float(result.y), factor));
+}
+
+nsRect 
+nsLayoutUtils::TransformRectToBoundsInAncestor(nsIFrame* aFrame,
+                                               const nsRect &aRect,
+                                               nsIFrame* aStopAtAncestor)
+{
+    float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
+    gfxRect result(NSAppUnitsToFloatPixels(aRect.x, factor),
+                   NSAppUnitsToFloatPixels(aRect.y, factor),
+                   NSAppUnitsToFloatPixels(aRect.width, factor),
+                   NSAppUnitsToFloatPixels(aRect.height, factor));
+
+    result = InvertGfxRectToAncestor(aFrame, result, aStopAtAncestor);
+
+    return nsRect(NSFloatPixelsToAppUnits(float(result.x), factor),
+                  NSFloatPixelsToAppUnits(float(result.y), factor),
+                  NSFloatPixelsToAppUnits(float(result.width), factor),
+                  NSFloatPixelsToAppUnits(float(result.height), factor));
 }
 
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
@@ -3160,11 +3215,6 @@ GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
   GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  if (!mozilla::supports_neon()) {
-    defaultFilter = gfxPattern::FILTER_NEAREST;
-  }
-#endif
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
     nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;
 
