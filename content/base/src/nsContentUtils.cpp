@@ -3876,7 +3876,6 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
   if (aTryReuse && !aValue.IsEmpty()) {
     PRUint32 removeIndex = 0;
 
-    // i is unsigned, so i >= is always true
     for (PRUint32 i = 0; i < childCount; ++i) {
       nsIContent* child = aContent->GetChildAt(removeIndex);
       if (removeIndex == 0 && child && child->IsNodeOfType(nsINode::eTEXT)) {
@@ -3895,9 +3894,8 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     }
   }
   else {
-    // i is unsigned, so i >= is always true
-    for (PRUint32 i = childCount; i-- != 0; ) {
-      aContent->RemoveChildAt(i, PR_TRUE);
+    for (PRUint32 i = 0; i < childCount; ++i) {
+      aContent->RemoveChildAt(0, PR_TRUE);
     }
   }
 
