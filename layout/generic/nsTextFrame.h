@@ -439,10 +439,11 @@ protected:
   // return value, if that return value is not null.  Calling
   // DestroySelectionDetails() on a null value is still OK, just not necessary.
   SelectionDetails* GetSelectionDetails();
-  
-  void UnionTextDecorationOverflow(nsPresContext* aPresContext,
-                                   PropertyProvider& aProvider,
-                                   nsRect* aVisualOverflowRect);
+
+  void UnionAdditionalOverflow(nsPresContext* aPresContext,
+                               PropertyProvider& aProvider,
+                               nsRect* aVisualOverflowRect,
+                               bool aIncludeTextDecorations);
 
   void DrawText(gfxContext* aCtx,
                 const gfxPoint& aTextBaselinePt,
@@ -465,40 +466,60 @@ protected:
                       const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                       nscoord aLeftSideOffset);
 
-  struct TextDecorations {
-    PRUint8 mDecorations;
-    PRUint8 mOverStyle;
-    PRUint8 mUnderStyle;
-    PRUint8 mStrikeStyle;
-    nscolor mOverColor;
-    nscolor mUnderColor;
-    nscolor mStrikeColor;
+  struct LineDecoration {
+    nsIFrame* mFrame;
 
-    TextDecorations() :
-      mDecorations(0), mOverStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID),
-      mUnderStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID),
-      mStrikeStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID),
-      mOverColor(NS_RGB(0, 0, 0)), mUnderColor(NS_RGB(0, 0, 0)),
-      mStrikeColor(NS_RGB(0, 0, 0))
-    { }
+    // This is represents the offset from our baseline to mFrame's baseline;
+    // positive offsets are *above* the baseline and negative offsets below
+    nscoord mBaselineOffset;
 
-    PRBool HasDecorationlines() {
-      return HasUnderline() || HasOverline() || HasStrikeout();
-    }
-    PRBool HasUnderline() {
-      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) &&
-             mUnderStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
-    }
-    PRBool HasOverline() {
-      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) &&
-             mOverStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
-    }
-    PRBool HasStrikeout() {
-      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) &&
-             mStrikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+    nscolor mColor;
+    PRUint8 mStyle;
+
+    LineDecoration(nsIFrame *const aFrame,
+                   const nscoord aOff,
+                   const nscolor aColor,
+                   const PRUint8 aStyle)
+      : mFrame(aFrame),
+        mBaselineOffset(aOff),
+        mColor(aColor),
+        mStyle(aStyle)
+    {}
+
+    LineDecoration(const LineDecoration& aOther)
+      : mFrame(aOther.mFrame),
+        mBaselineOffset(aOther.mBaselineOffset),
+        mColor(aOther.mColor),
+        mStyle(aOther.mStyle)
+    {}
+
+    bool operator==(const LineDecoration& aOther) const {
+      return mFrame == aOther.mFrame &&
+             mStyle == aOther.mStyle &&
+             mColor == aOther.mColor &&
+             mBaselineOffset == aOther.mBaselineOffset;
     }
   };
-  TextDecorations GetTextDecorations(nsPresContext* aPresContext);
+  struct TextDecorations {
+    nsAutoTArray<LineDecoration, 1> mOverlines, mUnderlines, mStrikes;
+
+    TextDecorations() { }
+
+    PRBool HasDecorationLines() const {
+      return HasUnderline() || HasOverline() || HasStrikeout();
+    }
+    PRBool HasUnderline() const {
+      return !mUnderlines.IsEmpty();
+    }
+    PRBool HasOverline() const {
+      return !mOverlines.IsEmpty();
+    }
+    PRBool HasStrikeout() const {
+      return !mStrikes.IsEmpty();
+    }
+  };
+  void GetTextDecorations(nsPresContext* aPresContext,
+                          TextDecorations& aDecorations);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.
   // If the result rect is larger than the given rect, this returns PR_TRUE.

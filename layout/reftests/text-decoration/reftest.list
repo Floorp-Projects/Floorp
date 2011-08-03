@@ -89,3 +89,5 @@ fails == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html 
 == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks-ref.html
 fails == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
 == 641444-1.html 641444-1-ref.html
+== decoration-css21.html decoration-css21-ref.html # bug 403524
+== decoration-css21-block.html decoration-css21-block-ref.html # bug 403524
