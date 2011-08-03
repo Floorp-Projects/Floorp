@@ -1142,7 +1142,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
   late_error:
     if (script) {
-        js_DestroyScript(cx, script);
+        js_DestroyScript(cx, script, 7);
         script = NULL;
     }
     goto out;

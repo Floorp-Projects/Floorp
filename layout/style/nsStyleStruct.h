@@ -1514,7 +1514,10 @@ struct nsStyleDisplay {
   // initial are replaced by an actual list of transform functions, or
   // null, as appropriate.) (owned by the style rule)
   const nsCSSValueList *mSpecifiedTransform; // [reset]
-  nsStyleCoord mTransformOrigin[2]; // [reset] percent, coord, calc
+  nsStyleCoord mTransformOrigin[3]; // [reset] percent, coord, calc, 3rd param is coord, calc only
+  nsStyleCoord mChildPerspective; // [reset] coord
+  nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc
+  PRUint8 mBackfaceVisibility;
 
   nsAutoTArray<nsTransition, 1> mTransitions; // [reset]
   // The number of elements in mTransitions that are not from repeating

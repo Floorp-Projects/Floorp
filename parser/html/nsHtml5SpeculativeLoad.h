@@ -50,7 +50,8 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadImage,
   eSpeculativeLoadScript,
   eSpeculativeLoadStyle,
-  eSpeculativeLoadManifest  
+  eSpeculativeLoadManifest,
+  eSpeculativeLoadSetDocumentCharset
 };
 
 class nsHtml5SpeculativeLoad {
@@ -82,7 +83,7 @@ class nsHtml5SpeculativeLoad {
       mOpCode = eSpeculativeLoadScript;
       mUrl.Assign(aUrl);
       mCharsetOrCrossOrigin.Assign(aCharset);
-      mType.Assign(aType);
+      mTypeOrCharsetSource.Assign(aType);
     }
     
     inline void InitStyle(const nsAString& aUrl, const nsAString& aCharset) {
@@ -100,7 +101,7 @@ class nsHtml5SpeculativeLoad {
      * to document.write() never arises. The reason why a parser
      * thread-discovered manifest gets loaded via the speculative load queue
      * as opposed to tree operation queue is that the manifest must get
-     * processed before any actually speculative loads such as scripts. Thus,
+     * processed before any actual speculative loads such as scripts. Thus,
      * manifests seen by the parser thread have to maintain the queue order
      * relative to true speculative loads. See bug 541079.
      */
@@ -111,17 +112,46 @@ class nsHtml5SpeculativeLoad {
       mUrl.Assign(aUrl);
     }
 
+    /**
+     * "Speculative" charset setting isn't truly speculative. If the charset
+     * is set via this operation, we are committed to it unless chardet or
+     * a late meta cause a reload. The reason why a parser
+     * thread-discovered charset gets communicated via the speculative load
+     * queue as opposed to tree operation queue is that the charset change
+     * must get processed before any actual speculative loads such as style
+     * sheets. Thus, encoding decisions by the parser thread have to maintain
+     * the queue order relative to true speculative loads. See bug 675499.
+     */
+    inline void InitSetDocumentCharset(nsACString& aCharset,
+                                       PRInt32 aCharsetSource) {
+      NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
+                      "Trying to reinitialize a speculative load!");
+      mOpCode = eSpeculativeLoadSetDocumentCharset;
+      CopyUTF8toUTF16(aCharset, mCharsetOrCrossOrigin);
+      mTypeOrCharsetSource.Assign((PRUnichar)aCharsetSource);
+    }
+
     void Perform(nsHtml5TreeOpExecutor* aExecutor);
     
   private:
     eHtml5SpeculativeLoad mOpCode;
     nsString mUrl;
-    // If mOpCode is eSpeculativeLoadImage, this is the value of the
-    // "crossorigin" attribute.  If mOpCode is eSpeculativeLoadStyle
-    // or eSpeculativeLoadScript then this is the value of the
-    // "charset" attribute.  Otherwise it's empty.
+    /**
+     * If mOpCode is eSpeculativeLoadImage, this is the value of the
+     * "crossorigin" attribute.  If mOpCode is eSpeculativeLoadStyle
+     * or eSpeculativeLoadScript then this is the value of the
+     * "charset" attribute. For eSpeculativeLoadSetDocumentCharset it is
+     * the charset that the document's charset is being set to. Otherwise
+     * it's empty.
+     */
     nsString mCharsetOrCrossOrigin;
-    nsString mType;
+    /**
+     * If mOpCode is eSpeculativeLoadSetDocumentCharset, this is a
+     * one-character string whose single character's code point is to be
+     * interpreted as a charset source integer. Otherwise, it is empty or
+     * the value of the type attribute.
+     */
+    nsString mTypeOrCharsetSource;
 };
 
 #endif // nsHtml5SpeculativeLoad_h_

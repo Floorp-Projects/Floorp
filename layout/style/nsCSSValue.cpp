@@ -163,6 +163,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mPair = aCopy.mValue.mPair;
     mValue.mPair->AddRef();
   }
+  else if (eCSSUnit_Triplet == mUnit) {
+    mValue.mTriplet = aCopy.mValue.mTriplet;
+    mValue.mTriplet->AddRef();
+  }
   else if (eCSSUnit_Rect == mUnit) {
     mValue.mRect = aCopy.mValue.mRect;
     mValue.mRect->AddRef();
@@ -231,6 +235,9 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
+    }
+    else if (eCSSUnit_Triplet == mUnit) {
+      return *mValue.mTriplet == *aOther.mValue.mTriplet;
     }
     else if (eCSSUnit_Rect == mUnit) {
       return *mValue.mRect == *aOther.mValue.mRect;
@@ -312,6 +319,8 @@ void nsCSSValue::DoReset()
     mValue.mGradient->Release();
   } else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair->Release();
+  } else if (eCSSUnit_Triplet == mUnit) {
+    mValue.mTriplet->Release();
   } else if (eCSSUnit_Rect == mUnit) {
     mValue.mRect->Release();
   } else if (eCSSUnit_List == mUnit) {
@@ -439,6 +448,46 @@ void nsCSSValue::SetPairValue(const nsCSSValue& xValue,
   mUnit = eCSSUnit_Pair;
   mValue.mPair = new nsCSSValuePair_heap(xValue, yValue);
   mValue.mPair->AddRef();
+}
+
+void nsCSSValue::SetTripletValue(const nsCSSValueTriplet* aValue)
+{
+    // triplet should not be used for null/inherit/initial values
+    // Only allow Null for the z component
+    NS_ABORT_IF_FALSE(aValue &&
+                      aValue->mXValue.GetUnit() != eCSSUnit_Null &&
+                      aValue->mYValue.GetUnit() != eCSSUnit_Null &&
+                      aValue->mXValue.GetUnit() != eCSSUnit_Inherit &&
+                      aValue->mYValue.GetUnit() != eCSSUnit_Inherit &&
+                      aValue->mZValue.GetUnit() != eCSSUnit_Inherit &&
+                      aValue->mXValue.GetUnit() != eCSSUnit_Initial &&
+                      aValue->mYValue.GetUnit() != eCSSUnit_Initial &&
+                      aValue->mZValue.GetUnit() != eCSSUnit_Initial,
+                      "missing or inappropriate triplet value");
+    Reset();
+    mUnit = eCSSUnit_Triplet;
+    mValue.mTriplet = new nsCSSValueTriplet_heap(aValue->mXValue, aValue->mYValue, aValue->mZValue);
+    mValue.mTriplet->AddRef();
+}
+
+void nsCSSValue::SetTripletValue(const nsCSSValue& xValue,
+                                 const nsCSSValue& yValue,
+                                 const nsCSSValue& zValue)
+{
+    // Only allow Null for the z component
+    NS_ABORT_IF_FALSE(xValue.GetUnit() != eCSSUnit_Null &&
+                      yValue.GetUnit() != eCSSUnit_Null &&
+                      xValue.GetUnit() != eCSSUnit_Inherit &&
+                      yValue.GetUnit() != eCSSUnit_Inherit &&
+                      zValue.GetUnit() != eCSSUnit_Inherit &&
+                      xValue.GetUnit() != eCSSUnit_Initial &&
+                      yValue.GetUnit() != eCSSUnit_Initial &&
+                      zValue.GetUnit() != eCSSUnit_Initial,
+                      "inappropriate triplet value");
+    Reset();
+    mUnit = eCSSUnit_Triplet;
+    mValue.mTriplet = new nsCSSValueTriplet_heap(xValue, yValue, zValue);
+    mValue.mTriplet->AddRef();
 }
 
 nsCSSRect& nsCSSValue::SetRectValue()
@@ -960,6 +1009,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.AppendLiteral(")");
   } else if (eCSSUnit_Pair == unit) {
     GetPairValue().AppendToString(aProperty, aResult);
+  } else if (eCSSUnit_Triplet == unit) {
+    GetTripletValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_Rect == unit) {
     GetRectValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_List == unit || eCSSUnit_ListDep == unit) {
@@ -1011,6 +1062,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Number:       break;
     case eCSSUnit_Gradient:     break;
     case eCSSUnit_Pair:         break;
+    case eCSSUnit_Triplet:      break;
     case eCSSUnit_Rect:         break;
     case eCSSUnit_List:         break;
     case eCSSUnit_ListDep:      break;
@@ -1175,6 +1227,23 @@ nsCSSValuePair::AppendToString(nsCSSProperty aProperty,
     aResult.Append(PRUnichar(' '));
     mYValue.AppendToString(aProperty, aResult);
   }
+}
+
+// --- nsCSSValueTriple -----------------
+
+void
+nsCSSValueTriplet::AppendToString(nsCSSProperty aProperty,
+                               nsAString& aResult) const
+{
+    mXValue.AppendToString(aProperty, aResult);
+    if (mYValue.GetUnit() != eCSSUnit_Null) {
+        aResult.Append(PRUnichar(' '));
+        mYValue.AppendToString(aProperty, aResult);
+        if (mZValue.GetUnit() != eCSSUnit_Null) {
+            aResult.Append(PRUnichar(' '));
+            mZValue.AppendToString(aProperty, aResult);
+        }
+    }
 }
 
 // --- nsCSSValuePairList -----------------

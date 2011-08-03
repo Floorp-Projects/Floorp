@@ -375,7 +375,6 @@ nsWebSocketEstablishedConnection::Close()
   nsRefPtr<nsWebSocketEstablishedConnection> kungfuDeathGrip = this;
 
   if (mOwner->mReadyState == nsIMozWebSocket::CONNECTING) {
-    mOwner->SetReadyState(nsIMozWebSocket::CLOSING);
     mOwner->SetReadyState(nsIMozWebSocket::CLOSED);
     Disconnect();
     return NS_OK;
@@ -417,7 +416,7 @@ nsWebSocketEstablishedConnection::ConsoleError()
                           formatStrings, NS_ARRAY_LENGTH(formatStrings));
     }
   }
-  /// todo some sepcific errors - like for message too large
+  /// todo some specific errors - like for message too large
   return rv;
 }
 
@@ -765,9 +764,12 @@ nsWebSocket::EstablishConnection()
     new nsWebSocketEstablishedConnection();
 
   rv = conn->Init(this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mConnection = conn;
+  if (NS_FAILED(rv)) {
+    Close();
+    mConnection = nsnull;
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -1236,10 +1238,9 @@ NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(message, mOnMessageListener)
 NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(close, mOnCloseListener)
 
 NS_IMETHODIMP
-nsWebSocket::Send(const nsAString& aData, PRBool *aRet)
+nsWebSocket::Send(const nsAString& aData)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  *aRet = PR_FALSE;
 
   if (mReadyState == nsIMozWebSocket::CONNECTING) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1266,8 +1267,7 @@ nsWebSocket::Send(const nsAString& aData, PRBool *aRet)
     return NS_OK;
   }
 
-  nsresult rv = mConnection->PostMessage(PromiseFlatString(aData));
-  *aRet = NS_SUCCEEDED(rv);
+  mConnection->PostMessage(PromiseFlatString(aData));
 
   return NS_OK;
 }
