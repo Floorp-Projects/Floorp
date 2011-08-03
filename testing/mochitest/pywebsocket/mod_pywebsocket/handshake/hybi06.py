@@ -46,21 +46,16 @@ from mod_pywebsocket import common
 from mod_pywebsocket.stream import Stream
 from mod_pywebsocket.stream import StreamOptions
 from mod_pywebsocket import util
-from mod_pywebsocket.handshake._base import check_header_lines
+from mod_pywebsocket.handshake._base import check_request_line
 from mod_pywebsocket.handshake._base import Extension
 from mod_pywebsocket.handshake._base import format_extensions
 from mod_pywebsocket.handshake._base import format_header
 from mod_pywebsocket.handshake._base import get_mandatory_header
 from mod_pywebsocket.handshake._base import HandshakeError
 from mod_pywebsocket.handshake._base import parse_extensions
+from mod_pywebsocket.handshake._base import parse_token_list
 from mod_pywebsocket.handshake._base import validate_mandatory_header
 
-
-_MANDATORY_HEADERS = [
-    # key, expected value or None
-    [common.UPGRADE_HEADER, common.WEBSOCKET_UPGRADE_TYPE],
-    [common.CONNECTION_HEADER, common.UPGRADE_CONNECTION_TYPE],
-]
 
 _BASE64_REGEX = re.compile('^[+/0-9A-Za-z]*=*$')
 
@@ -96,7 +91,32 @@ class Handshaker(object):
         self._dispatcher = dispatcher
 
     def do_handshake(self):
-        check_header_lines(self._request, _MANDATORY_HEADERS)
+        check_request_line(self._request)
+
+        validate_mandatory_header(
+            self._request,
+            common.UPGRADE_HEADER,
+            common.WEBSOCKET_UPGRADE_TYPE)
+
+        connection = get_mandatory_header(
+            self._request, common.CONNECTION_HEADER)
+
+        try:
+            connection_tokens = parse_token_list(connection)
+        except HandshakeError, e:
+            raise HandshakeError(
+                'Failed to parse %s: %s' % (common.CONNECTION_HEADER, e))
+
+        connection_is_valid = False
+        for token in connection_tokens:
+            if token.lower() == common.UPGRADE_CONNECTION_TYPE.lower():
+                connection_is_valid = True
+                break
+        if not connection_is_valid:
+            raise HandshakeError(
+                '%s header doesn\'t contain "%s"' %
+                (common.CONNECTION_HEADER, common.UPGRADE_CONNECTION_TYPE))
+
         self._request.ws_resource = self._request.uri
 
         unused_host = get_mandatory_header(self._request, common.HOST_HEADER)
