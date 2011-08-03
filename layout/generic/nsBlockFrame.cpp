@@ -4824,7 +4824,9 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
   nsIPresShell *presShell = PresContext()->PresShell();
 
   // Attempt to find the line that contains the previous sibling
-  nsLineList::iterator prevSibLine = end_lines();
+  nsFrameList overflowFrames;
+  nsLineList* lineList = &mLines;
+  nsLineList::iterator prevSibLine = lineList->end();
   PRInt32 prevSiblingIndex = -1;
   if (aPrevSibling) {
     // XXX_perf This is technically O(N^2) in some cases, but by using
@@ -4832,15 +4834,31 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
     // which is appending content.
 
     // Find the line that contains the previous sibling
-    if (! nsLineBox::RFindLineContaining(aPrevSibling,
-                                         begin_lines(), prevSibLine,
-                                         mFrames.LastChild(),
-                                         &prevSiblingIndex)) {
-      // Note: defensive code! RFindLineContaining must not return
-      // false in this case, so if it does...
-      NS_NOTREACHED("prev sibling not in line list");
-      aPrevSibling = nsnull;
-      prevSibLine = end_lines();
+    if (!nsLineBox::RFindLineContaining(aPrevSibling, lineList->begin(),
+                                        prevSibLine, mFrames.LastChild(),
+                                        &prevSiblingIndex)) {
+      // Not in mLines - try overflow lines.
+      lineList = GetOverflowLines();
+      if (lineList) {
+        prevSibLine = lineList->end();
+        prevSiblingIndex = -1;
+        overflowFrames = nsFrameList(lineList->front()->mFirstChild,
+                                     lineList->back()->LastChild());
+        if (!nsLineBox::RFindLineContaining(aPrevSibling, lineList->begin(),
+                                            prevSibLine,
+                                            overflowFrames.LastChild(),
+                                            &prevSiblingIndex)) {
+          lineList = nsnull;
+        }
+      }
+      if (!lineList) {
+        // Note: defensive code! RFindLineContaining must not return
+        // false in this case, so if it does...
+        NS_NOTREACHED("prev sibling not in line list");
+        lineList = &mLines;
+        aPrevSibling = nsnull;
+        prevSibLine = lineList->end();
+      }
     }
   }
 
@@ -4856,7 +4874,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mLines.after_insert(prevSibLine, line);
+      lineList->after_insert(prevSibLine, line);
       prevSibLine->SetChildCount(prevSibLine->GetChildCount() - rem);
       // Mark prevSibLine dirty and as needing textrun invalidation, since
       // we may be breaking up text in the line. Its previous line may also
@@ -4868,12 +4886,13 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       line->SetInvalidateTextRuns(PR_TRUE);
     }
   }
-  else if (! mLines.empty()) {
-    mLines.front()->MarkDirty();
-    mLines.front()->SetInvalidateTextRuns(PR_TRUE);
+  else if (! lineList->empty()) {
+    lineList->front()->MarkDirty();
+    lineList->front()->SetInvalidateTextRuns(PR_TRUE);
   }
+  nsFrameList& frames = lineList == &mLines ? mFrames : overflowFrames;
   const nsFrameList::Slice& newFrames =
-    mFrames.InsertFrames(nsnull, aPrevSibling, aFrameList);
+    frames.InsertFrames(nsnull, aPrevSibling, aFrameList);
 
   // Walk through the new frames being added and update the line data
   // structures to fit.
@@ -4893,7 +4912,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
     // a new line, as an optimization, in the two cases we know we'll need it:
     // if the previous line ended with a <br>, or if it has significant whitespace
     // and ended in a newline.
-    if (isBlock || prevSibLine == end_lines() || prevSibLine->IsBlock() ||
+    if (isBlock || prevSibLine == lineList->end() || prevSibLine->IsBlock() ||
         (aPrevSibling && ShouldPutNextSiblingOnNewLine(aPrevSibling))) {
       // Create a new line for the frame and add its line to the line
       // list.
@@ -4901,15 +4920,15 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      if (prevSibLine != end_lines()) {
+      if (prevSibLine != lineList->end()) {
         // Append new line after prevSibLine
-        mLines.after_insert(prevSibLine, line);
+        lineList->after_insert(prevSibLine, line);
         ++prevSibLine;
       }
       else {
         // New line is going before the other lines
-        mLines.push_front(line);
-        prevSibLine = begin_lines();
+        lineList->push_front(line);
+        prevSibLine = lineList->begin();
       }
     }
     else {
