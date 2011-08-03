@@ -363,7 +363,35 @@ CPPSRCS += 	MethodJIT.cpp \
 		TrampolineCompiler.cpp \
 		$(NULL)
 
+# Ion
+ifdef ENABLE_ION
+VPATH +=	$(srcdir)/ion
+VPATH +=	$(srcdir)/ion/shared
+
+CPPSRCS +=	MIR.cpp \
+		IonBuilder.cpp \
+		MIRGraph.cpp \
+		IonAnalysis.cpp \
+		IonLowering.cpp \
+		Ion.cpp \
+		BitSet.cpp \
+		IonLIR.cpp \
+		GreedyAllocator.cpp \
+		C1Spewer.cpp \
+		JSONSpewer.cpp \
+		IonSpewer.cpp \
+		LICM.cpp \
+		ValueNumbering.cpp \
+		LinearScan.cpp \
+		MoveResolver.cpp \
+		CodeGenerator-shared.cpp \
+		TypePolicy.cpp \
+		$(NULL)
+endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
+CPPSRCS +=	CodeGenerator-x86-shared.cpp
+CPPSRCS +=	MoveEmitter-x86-shared.cpp
+CPPSRCS +=	Assembler-x86-shared.cpp
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
@@ -377,16 +405,32 @@ ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX64.s
 endif
 #CPPSRCS		+= only_on_x86_64.cpp
+VPATH +=	$(srcdir)/ion/x64
+CPPSRCS += 	Lowering-x64.cpp \
+		CodeGenerator-x64.cpp \
+		Trampoline-x64.cpp \
+		Assembler-x64.cpp \
+		$(NULL)
 else
 #CPPSRCS		+= only_on_x86.cpp
+VPATH +=	$(srcdir)/ion/x86
+CPPSRCS +=	Lowering-x86.cpp \
+		CodeGenerator-x86.cpp \
+		Trampoline-x86.cpp \
+		Assembler-x86.cpp \
+		$(NULL)
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
 endif
+ifdef ENABLE_ION
 ifeq (arm, $(TARGET_CPU))
 #CPPSRCS		+= only_on_arm.cpp
+VPATH +=	$(srcdir)/ion/arm
+CPPSRCS +=	Lowering-arm.cpp
 endif
+endif #ENABLE_ION
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
 ASFILES +=	TrampolineSparc.s
 endif
