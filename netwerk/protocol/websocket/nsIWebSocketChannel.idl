@@ -44,7 +44,7 @@ interface nsIWebSocketListener;
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(398a2460-a46d-11e0-8264-0800200c9a66)]
+[scriptable, uuid(783029cf-75b5-439e-8e47-86b390202b4c)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**
@@ -106,9 +106,22 @@ interface nsIWebSocketChannel : nsISupports
      * Close the websocket connection for writing - no more calls to sendMsg
      * or sendBinaryMsg should be made after calling this. The listener object
      * may receive more messages if a server close has not yet been received.
+     *
+     * @param aCode the websocket closing handshake close code. Set to 0 if
+     *        you are not providing a code.
+     * @param aReason the websocket closing handshake close reason
      */
-    void close();
+    void close(in unsigned short aCode, in AUTF8String aReason);
     
+    // section 7.4.1 defines these close codes
+    const unsigned short CLOSE_NORMAL         = 1000;
+    const unsigned short CLOSE_GOING_AWAY     = 1001;
+    const unsigned short CLOSE_PROTOCOL_ERROR = 1002;
+    const unsigned short CLOSE_UNSUPPORTED    = 1003;
+    const unsigned short CLOSE_TOO_LARGE      = 1004;
+    const unsigned short CLOSE_NO_STATUS      = 1005;
+    const unsigned short CLOSE_ABNORMAL       = 1006;
+
     /**
      * Use to send text message down the connection to WebSocket peer.
      *

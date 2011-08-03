@@ -105,11 +105,11 @@ fail:
 }
 
 bool
-WebSocketChannelParent::RecvClose()
+WebSocketChannelParent::RecvClose(const PRUint16& code, const nsCString& reason)
 {
   LOG(("WebSocketChannelParent::RecvClose() %p\n", this));
   if (mChannel) {
-    nsresult rv = mChannel->Close();
+    nsresult rv = mChannel->Close(code, reason);
     NS_ENSURE_SUCCESS(rv, true);
   }
   return true;
@@ -203,10 +203,11 @@ WebSocketChannelParent::OnAcknowledge(nsISupports *aContext, PRUint32 aSize)
 }
 
 NS_IMETHODIMP
-WebSocketChannelParent::OnServerClose(nsISupports *aContext)
+WebSocketChannelParent::OnServerClose(nsISupports *aContext,
+                                      PRUint16 code, const nsACString & reason)
 {
   LOG(("WebSocketChannelParent::OnServerClose() %p\n", this));
-  if (!mIPCOpen || !SendOnServerClose()) {
+  if (!mIPCOpen || !SendOnServerClose(code, nsCString(reason))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

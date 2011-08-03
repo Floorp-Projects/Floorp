@@ -58,7 +58,7 @@ class nsString;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(d50eb158-30a1-4692-8664-fdd479fa24b3)]
+[scriptable, uuid(8fa080c7-934a-4040-90cb-31055798b35d)]
 interface nsIMozWebSocket : nsISupports
 {
   readonly attribute DOMString url;
@@ -92,7 +92,8 @@ interface nsIMozWebSocket : nsISupports
    * Closes the Web Socket connection or connection attempt, if any.
    * If the connection is already closed, it does nothing.
    */
-  void close();
+  [optional_argc] void close([optional] in unsigned short code,
+                             [optional] in DOMString reason);
 
   /**
    * Initialize the object for use from C++ code with the principal, script

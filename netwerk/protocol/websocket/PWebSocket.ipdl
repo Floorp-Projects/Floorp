@@ -55,7 +55,7 @@ async protocol PWebSocket
 parent:
   // Forwarded methods corresponding to methods on nsIWebSocketChannel
   AsyncOpen(URI aURI, nsCString aOrigin, nsCString aProtocol, bool aSecure);
-  Close();
+  Close(PRUint16 code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);
 
@@ -68,7 +68,7 @@ child:
   OnMessageAvailable(nsCString aMsg);
   OnBinaryMessageAvailable(nsCString aMsg);
   OnAcknowledge(PRUint32 aSize);
-  OnServerClose();
+  OnServerClose(PRUint16 code, nsCString aReason);
 
   __delete__();
 
