@@ -44,6 +44,8 @@
  * confirmation when all the add-ons have been downloaded.
  */
 
+"use strict";
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;

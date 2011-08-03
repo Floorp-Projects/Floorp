@@ -599,53 +599,6 @@ protected:
                                       nsIContent **aParentContent, PRInt32 *aContentOffset, 
                                       PRInt32 *aTarget);
 
-  // Returns nsFrameSelection which is handling drag for selection.
-  // If it's not dragging for selection, this returns NULL.  Otherwise,
-  // this returns the handling nsFrameSelection and a frame which is ancestor
-  // and should handle mouse events for selection.
-  nsFrameSelection* FindDraggingFrameSelection(nsIPresShell* aPresShell,
-                                               nsFrame** aEventTarget);
-
-  // ExpandSelectionByMouseMove() will expand selection by aEvent.
-  // This should be called ONLY when the frame is mouse event target which is
-  // found by FindDraggingFrameSelection().  And aFrameSelection must be the
-  // drag handling nsFrameSelection.
-  nsresult ExpandSelectionByMouseMove(nsFrameSelection* aFrameSelection,
-                                      nsIPresShell* aPresShell,
-                                      nsMouseEvent* aEvent,
-                                      nsEventStatus* aEventStatus);
-
-  // EndSelectionChangeByMouse() will stop the drag for selection if during
-  // that.  And also cancel the selection if it's clicked on the selection
-  // range.
-  // This can be called on every frame.  However, if an nsFrameSelection is
-  // handling drag for selection, this is called on the mouse event target
-  // frame which is computed by FindDraggingFrameSelection().
-  // Otherwise, nearest ancestor selectable frame's should be called.
-  nsresult EndSelectionChangeByMouse(nsFrameSelection* aFrameSelection,
-                                     nsMouseEvent* aMouseEvent,
-                                     nsEventStatus* aEventStatus);
-
-  // IsOnScrollableFrameEdge() checks whether the aEvent is fired on the
-  // edge of aScrollableFrame and it can be scrolled to the direction of the
-  // edge.  If aEvent is fired on the edge and scrollable, this returns TRUE.
-  // Otherwise, FALSE.  When this returns TRUE, this computes aScrollIntoView.
-  PRBool IsOnScrollableFrameEdge(nsIScrollableFrame* aScrollableFrame,
-                                 nsGUIEvent* aEvent,
-                                 nsPoint &aScrollIntoView);
-
-  // FindSelectableAncestor() returns a frame which is the nearest selectable
-  // ancestor of aFrame.
-  static nsFrame* FindSelectableAncestor(nsIFrame* aFrame,
-                                         nsFrameSelection* aFrameSelection);
-
-  // Returns nsFrameSelection for selecting by mouse in the frame.
-  nsFrameSelection* GetFrameSelectionForSelectingByMouse();
-
-  // If selection is off, returns TRUE.  Otherwise, FALSE.
-  // This method always uses the frame's nsFrameSelection.
-  PRBool IsSelectionOff();
-
   // Fills aCursor with the appropriate information from ui
   static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
                                              nsIFrame::Cursor& aCursor);

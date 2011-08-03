@@ -1347,6 +1347,7 @@ var SelectionHandler = {
 
     switch (aMessage.name) {
       case "Browser:SelectionStart": {
+        // Clear out the text cache
         this.selectedText = "";
 
         // if this is an iframe, dig down to find the document that was clicked
@@ -1366,8 +1367,16 @@ var SelectionHandler = {
           utils = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
           elem = utils.elementFromPoint(x, y, true, false);
         }
+        if (!elem)
+          return;
+
         let contentWindow = elem.ownerDocument.defaultView;
         let currentDocShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
+
+        // Remove any previous selected or created ranges. Tapping anywhere on a
+        // page will create an empty range.
+        let selection = contentWindow.getSelection();
+        selection.removeAllRanges();
 
         // Position the caret using a fake mouse click
         utils.sendMouseEventToWindow("mousedown", x - scrollOffset.x, y - scrollOffset.y, 0, 1, 0, true);
@@ -1384,7 +1393,6 @@ var SelectionHandler = {
         }
 
         // Find the selected text rect and send it back so the handles can position correctly
-        let selection = contentWindow.getSelection();
         if (selection.rangeCount == 0)
           return;
 
@@ -1402,14 +1410,6 @@ var SelectionHandler = {
         }
 
         this.cache = this._extractFromRange(range, offset);
-
-        let tap = { x: json.x - this.cache.offset.x, y: json.y - this.cache.offset.y };
-        pointInSelection = (tap.x > this.cache.rect.left && tap.x < this.cache.rect.right) && (tap.y > this.cache.rect.top && tap.y < this.cache.rect.bottom);
-        if (!pointInSelection) {
-          selection.collapseToStart();
-          return;
-        }
-
         this.contentWindow = contentWindow;
 
         sendAsyncMessage("Browser:SelectionRange", this.cache);

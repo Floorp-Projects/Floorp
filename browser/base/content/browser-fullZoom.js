@@ -262,7 +262,9 @@ var FullZoom = {
       var self = this;
       Services.contentPrefs.getPref(aURI, this.name, function (aResult) {
         // Check that we're still where we expect to be in case this took a while.
-        if (aURI.equals(browser.currentURI)) {
+        // Null check currentURI, since the window may have been destroyed before
+        // we were called.
+        if (browser.currentURI && aURI.equals(browser.currentURI)) {
           self._applyPrefToSetting(aResult, browser);
         }
       });

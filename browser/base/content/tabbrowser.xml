@@ -3819,8 +3819,8 @@
         if (event.ctrlKey) {
 #endif
           let dt = event.dataTransfer;
-          let spec = this.tabbrowser.getBrowserForTab(tab).currentURI.spec;
-          dt.setData("text/x-moz-url", spec);
+          let browser = tab.linkedBrowser;
+          dt.setData("text/x-moz-url", browser.currentURI.spec + "\n" + browser.contentTitle);
           let favicon = document.getAnonymousElementByAttribute(tab, "class", "tab-icon-image");
           dt.setDragImage(favicon, 16, 16);
           return;
