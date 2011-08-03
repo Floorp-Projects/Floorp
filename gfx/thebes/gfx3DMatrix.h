@@ -153,6 +153,7 @@ public:
    * \param aZ Translation on Z-axis.
    */
   static gfx3DMatrix Translation(float aX, float aY, float aZ);
+  static gfx3DMatrix Translation(const gfxPoint3D& aPoint);
 
   /**
    * Create a scale matrix. Scales uniformly along all axes.

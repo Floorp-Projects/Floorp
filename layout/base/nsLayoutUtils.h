@@ -461,7 +461,7 @@ public:
    * @return A matrix equivalent to aMatrix, but operating in the coordinate system with
    *         origin aOrigin.
    */
-  static gfx3DMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfx3DMatrix &aMatrix);
+  static gfx3DMatrix ChangeMatrixBasis(const gfxPoint3D &aOrigin, const gfx3DMatrix &aMatrix);
 
   /**
    * Find IDs corresponding to a scrollable content element in the child process.
