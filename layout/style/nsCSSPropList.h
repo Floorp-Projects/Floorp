@@ -2258,6 +2258,15 @@ CSS_PROP_DISPLAY(
     kBackgroundPositionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
+CSS_PROP_DISPLAY(
+    -moz-perspective,
+    perspective,
+    CSS_PROP_DOMPROP_PREFIXED(Perspective),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_NONE | VARIANT_INHERIT | VARIANT_LENGTH,
+    nsnull,
+    offsetof(nsStyleDisplay, mChildPerspective),
+    eStyleAnimType_Coord)
 CSS_PROP_POSITION(
     top,
     top,

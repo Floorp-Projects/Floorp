@@ -967,6 +967,14 @@ var gCSSProperties = {
 						 "border", "center red", "right diagonal",
 						 "#00ffff bottom"]
 	},
+	"-moz-perspective": {
+		domProp: "MozPerspective",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none", "0" ],
+		other_values: [ "1000px", "500.2px", "-100px", "-27.2em" ],
+		invalid_values: [ "pants", "200" ]
+	},
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
 		inherited: true,

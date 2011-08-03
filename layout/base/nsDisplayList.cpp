@@ -2376,12 +2376,27 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
 
   /* Get the matrix, then change its basis to factor in the origin. */
   PRBool dummy;
+  gfx3DMatrix result =
+    nsStyleTransformMatrix::ReadTransforms(disp->mSpecifiedTransform,
+                                           aFrame->GetStyleContext(),
+                                           aFrame->PresContext(),
+                                           dummy, bounds, aFactor);
+
+  const nsStyleDisplay* parentDisp = nsnull;
+  if (aFrame->GetParent()) {
+    parentDisp = aFrame->GetParent()->GetStyleDisplay();
+  }
+  if (nsLayoutUtils::Are3DTransformsEnabled() &&
+      parentDisp && parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
+      parentDisp->mChildPerspective.GetCoordValue() > 0.0) {
+    gfx3DMatrix perspective;
+    perspective._34 =
+      -1.0 / NSAppUnitsToFloatPixels(parentDisp->mChildPerspective.GetCoordValue(),
+                                     aFactor);
+    result = result * perspective;
+  }
   return nsLayoutUtils::ChangeMatrixBasis
-    (newOrigin + toMozOrigin, 
-     nsStyleTransformMatrix::ReadTransforms(disp->mSpecifiedTransform,
-                                            aFrame->GetStyleContext(),
-                                            aFrame->PresContext(),
-                                            dummy, bounds, aFactor));
+    (newOrigin + toMozOrigin, result);
 }
 
 const gfx3DMatrix&
