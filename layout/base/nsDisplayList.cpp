@@ -2348,6 +2348,66 @@ gfxPoint3D GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
   return result;
 }
 
+/* Returns the delta specified by the -moz-perspective-origin property.
+ * This is a positive delta, meaning that it indicates the direction to move
+ * to get from (0, 0) of the frame to the perspective origin.
+ */
+static
+gfxPoint3D GetDeltaToMozPerspectiveOrigin(const nsIFrame* aFrame,
+                                          float aFactor,
+                                          const nsRect* aBoundsOverride)
+{
+  NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
+  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
+                  "Can't get a delta for an untransformed frame!");
+
+  /* For both of the coordinates, if the value of -moz-perspective-origin is a
+   * percentage, it's relative to the size of the frame.  Otherwise, if it's
+   * a distance, it's already computed for us!
+   */
+
+  //TODO: Should this be using our bounds or the parent's bounds?
+  // How do we handle aBoundsOverride in the latter case?
+  const nsStyleDisplay* display = aFrame->GetParent()->GetStyleDisplay();
+  nsRect boundingRect = (aBoundsOverride ? *aBoundsOverride :
+                         nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
+
+  /* Allows us to access named variables by index. */
+  gfxPoint3D result;
+  result.z = 0.0f;
+  gfxFloat* coords[2] = {&result.x, &result.y};
+  const nscoord* dimensions[2] =
+    {&boundingRect.width, &boundingRect.height};
+
+  for (PRUint8 index = 0; index < 2; ++index) {
+    /* If the -moz-transform-origin specifies a percentage, take the percentage
+     * of the size of the box.
+     */
+    const nsStyleCoord &coord = display->mPerspectiveOrigin[index];
+    if (coord.GetUnit() == eStyleUnit_Calc) {
+      const nsStyleCoord::Calc *calc = coord.GetCalcValue();
+      *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
+                         calc->mPercent +
+                       NSAppUnitsToFloatPixels(calc->mLength, aFactor);
+    } else if (coord.GetUnit() == eStyleUnit_Percent) {
+      *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
+        coord.GetPercentValue();
+    } else {
+      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      *coords[index] = NSAppUnitsToFloatPixels(coord.GetCoordValue(), aFactor);
+    }
+  }
+  
+  /**
+   * An offset of (0,0) results in the perspective-origin being at the centre of the element,
+   * so include a shift of the centre point to (0,0).
+   */
+  result.x -= NSAppUnitsToFloatPixels(boundingRect.width, aFactor)/2;
+  result.y -= NSAppUnitsToFloatPixels(boundingRect.height, aFactor)/2;
+
+  return result;
+}
+
 /* Wraps up the -moz-transform matrix in a change-of-basis matrix pair that
  * translates from local coordinate space to transform coordinate space, then
  * hands it back.
@@ -2366,6 +2426,7 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
    * coordinate space to the new origin.
    */
   gfxPoint3D toMozOrigin = GetDeltaToMozTransformOrigin(aFrame, aFactor, aBoundsOverride);
+  gfxPoint3D toPerspectiveOrigin = GetDeltaToMozPerspectiveOrigin(aFrame, aFactor, aBoundsOverride);
   gfxPoint3D newOrigin = gfxPoint3D(NSAppUnitsToFloatPixels(aOrigin.x, aFactor),
                                     NSAppUnitsToFloatPixels(aOrigin.y, aFactor),
                                     0.0f);
@@ -2396,7 +2457,7 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
     perspective._34 =
       -1.0 / NSAppUnitsToFloatPixels(parentDisp->mChildPerspective.GetCoordValue(),
                                      aFactor);
-    result = result * perspective;
+    result = result * nsLayoutUtils::ChangeMatrixBasis(toPerspectiveOrigin, perspective);
   }
   return nsLayoutUtils::ChangeMatrixBasis
     (newOrigin + toMozOrigin, result);
