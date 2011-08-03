@@ -582,6 +582,9 @@ IonBuilder::processIfElseFalseEnd(CFGState &state)
         if (!join->addPredecessor(other))
             return ControlStatus_Error;
     }
+
+    // Ignore unreachable remainder of false block if existent.
+    pc = state.branch.falseEnd;
   
     // Continue parsing at the join point.
     current = join;
