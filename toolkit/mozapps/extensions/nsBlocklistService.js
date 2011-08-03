@@ -40,6 +40,8 @@
 # ***** END LICENSE BLOCK *****
 */
 
+"use strict";
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -1036,20 +1038,21 @@ Blocklist.prototype = {
           restartApp();
 
         Services.obs.notifyObservers(self, "blocklist-updated", "");
-        Services.obs.removeObserver(arguments.callee, "addon-blocklist-closed");
+        Services.obs.removeObserver(applyBlocklistChanges, "addon-blocklist-closed");
       }
 
       Services.obs.addObserver(applyBlocklistChanges, "addon-blocklist-closed", false)
 
+      function blocklistUnloadHandler(event) {
+        if (event.target.location == URI_BLOCKLIST_DIALOG) {
+          applyBlocklistChanges();
+          blocklistWindow.removeEventListener("unload", blocklistUnloadHandler);
+        }
+      }
+
       let blocklistWindow = Services.ww.openWindow(null, URI_BLOCKLIST_DIALOG, "",
                               "chrome,centerscreen,dialog,titlebar", args);
-
-      blocklistWindow.addEventListener("unload", function(event) {
-        if(event.target.location == URI_BLOCKLIST_DIALOG) {
-          applyBlocklistChanges();
-          blocklistWindow.removeEventListener("unload", arguments.callee);
-        }
-      },false)
+      blocklistWindow.addEventListener("unload", blocklistUnloadHandler, false);
     });
   },
 

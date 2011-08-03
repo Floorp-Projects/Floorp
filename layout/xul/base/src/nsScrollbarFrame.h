@@ -79,6 +79,14 @@ public:
                                  nsEventStatus*  aEventStatus,
                                  PRBool aControlHeld);
 
+  NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
+                        nsGUIEvent *    aEvent,
+                        nsEventStatus*  aEventStatus);
+
+  NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
+                           nsGUIEvent *    aEvent,
+                           nsEventStatus*  aEventStatus);
+
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);

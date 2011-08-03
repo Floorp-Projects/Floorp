@@ -8403,7 +8403,7 @@ PRInt64
 nsDocument::SizeOf() const
 {
   PRInt64 size = MemoryReporter::GetBasicSize<nsDocument, nsIDocument>(this);
-  size += mAttrStyleSheet ? mAttrStyleSheet->SizeOf() : 0;
+  size += mAttrStyleSheet ? mAttrStyleSheet->DOMSizeOf() : 0;
   return size;
 }
 

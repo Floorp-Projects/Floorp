@@ -527,7 +527,21 @@ var gTests = [
     path:    "/b/c/y",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
-
+  // protocol-relative http://tools.ietf.org/html/rfc3986#section-4.2
+  { spec:    "http://www2.example.com/",
+    relativeURI: "//www3.example2.com/bar",
+    scheme:  "http",
+    prePath: "http://www3.example2.com",
+    path:    "/bar",
+    ref:     "",
+    nsIURL:  true, nsINestedURI: false },
+  { spec:    "https://www2.example.com/",
+    relativeURI: "//www3.example2.com/bar",
+    scheme:  "https",
+    prePath: "https://www3.example2.com",
+    path:    "/bar",
+    ref:     "",
+    nsIURL:  true, nsINestedURI: false },
 ];
 
 var gHashSuffixes = [

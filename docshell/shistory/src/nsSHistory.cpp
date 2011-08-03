@@ -1284,6 +1284,9 @@ nsSHistory::RemoveDuplicate(PRInt32 aIndex, PRBool aKeepNext)
     if (mIndex > aIndex) {
       mIndex = mIndex - 1;
     }
+    if (mRequestedIndex > aIndex) {
+      mRequestedIndex = mRequestedIndex - 1;
+    }
     --mLength;
     return PR_TRUE;
   }

@@ -89,6 +89,7 @@ public:
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
   virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
+  virtual PRInt64 SizeOf() const;
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
   void Reset(nsIURI* aURL);
@@ -101,8 +102,7 @@ public:
     UniqueMappedAttributes(nsMappedAttributes* aMapped);
   void DropMappedAttributes(nsMappedAttributes* aMapped);
 
-  PRInt64 SizeOf() const;
-
+  PRInt64 DOMSizeOf() const;
 private: 
   // These are not supported and are not implemented! 
   nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy); 
