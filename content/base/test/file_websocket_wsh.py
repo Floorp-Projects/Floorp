@@ -7,7 +7,10 @@ import sys
 
 def web_socket_do_extra_handshake(request):
   # must set request.ws_protocol to the selected version from ws_requested_protocols
-  request.ws_protocol = request.ws_requested_protocols[0]
+  for x in request.ws_requested_protocols:
+    if x != "test-does-not-exist":
+      request.ws_protocol = x
+      break
 
   if request.ws_protocol == "test-2.1":
     time.sleep(5)
