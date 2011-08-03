@@ -5968,6 +5968,13 @@ if test "$MOZ_GAMEPAD"; then
         fi
         MOZ_GAMEPAD_BACKEND=windows
         ;;
+    Linux)
+        MOZ_CHECK_HEADER([linux/joystick.h])
+        if test "$ac_cv_header_linux_joystick_h" != "yes"; then
+          AC_MSG_ERROR([Can't find header linux/joystick.h, needed for gamepad support. Please install Linux kernel headers or reconfigure with --disable-gamepad to disable gamepad support.])
+        fi
+        MOZ_GAMEPAD_BACKEND=linux
+        ;;
     *)
         ;;
    esac
