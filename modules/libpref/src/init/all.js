@@ -3339,3 +3339,6 @@ pref("network.buffer.cache.size",  32768);
 
 // Desktop Notification
 pref("notification.feature.enabled", false);
+
+//3D Transforms
+pref("layout.3d-transforms.enabled, false);

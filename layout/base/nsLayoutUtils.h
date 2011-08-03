@@ -1388,6 +1388,11 @@ public:
                                       PRBool aFollowContinuations,
                                       nsFontFaceList* aFontFaceList);
 
+  /**
+   * Checks if CSS 3D transforms are currently enabled.
+   */
+  static PRBool Are3DTransformsEnabled();
+
   static void Shutdown();
 
 #ifdef DEBUG

@@ -87,6 +87,7 @@
 #include "prlog.h"
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
+#include "nsLayoutUtils.h"
 
 namespace css = mozilla::css;
 
@@ -585,7 +586,7 @@ protected:
   }
 
   /* Functions for -moz-transform Parsing */
-  PRBool ParseSingleTransform(nsCSSValue& aValue);
+  PRBool ParseSingleTransform(nsCSSValue& aValue, PRBool& aIs3D);
   PRBool ParseFunction(const nsString &aFunction, const PRInt32 aAllowedTypes[],
                        PRUint16 aMinElems, PRUint16 aMaxElems,
                        nsCSSValue &aValue);
@@ -7263,37 +7264,53 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
 static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
                                           PRUint16 &aMinElems,
                                           PRUint16 &aMaxElems,
-                                          const PRInt32 *& aVariantMask)
+                                          const PRInt32 *& aVariantMask,
+                                          PRBool &aIs3D)
 {
 /* These types represent the common variant masks that will be used to
    * parse out the individual functions.  The order in the enumeration
    * must match the order in which the masks are declared.
    */
   enum { eLengthPercentCalc,
+         eLengthCalc,
          eTwoLengthPercentCalcs,
+         eTwoLengthPercentCalcsOneLengthCalc,
          eAngle,
          eTwoAngles,
          eNumber,
          eTwoNumbers,
+         eThreeNumbers,
+         eThreeNumbersOneAngle,
          eMatrix,
+         eMatrix3d,
          eNumVariantMasks };
-  static const PRInt32 kMaxElemsPerFunction = 6;
+  static const PRInt32 kMaxElemsPerFunction = 16;
   static const PRInt32 kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
     {VARIANT_TRANSFORM_LPCALC},
+    {VARIANT_LENGTH|VARIANT_CALC},
     {VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC},
+    {VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC, VARIANT_LENGTH|VARIANT_CALC},
     {VARIANT_ANGLE_OR_ZERO},
     {VARIANT_ANGLE_OR_ZERO, VARIANT_ANGLE_OR_ZERO},
     {VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER},
+    {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER},
+    {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_ANGLE_OR_ZERO},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC}};
+     VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC},
+    {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
+     VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
+     VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
+     VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER}};
 
 #ifdef DEBUG
   static const PRUint8 kVariantMaskLengths[eNumVariantMasks] =
-    {1, 2, 1, 2, 1, 2, 6};
+    {1, 1, 2, 3, 1, 2, 1, 2, 3, 4, 6, 16};
 #endif
 
   PRInt32 variantIndex = eNumVariantMasks;
+
+  aIs3D = PR_FALSE;
 
   switch (aToken) {
   case eCSSKeyword_translatex:
@@ -7303,23 +7320,51 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     aMinElems = 1U;
     aMaxElems = 1U;
     break;
-  case eCSSKeyword_scalex:
-    /* Exactly one scale factor. */
-    variantIndex = eNumber;
+  case eCSSKeyword_translatez:
+    /* Exactly one length */
+    variantIndex = eLengthCalc;
     aMinElems = 1U;
     aMaxElems = 1U;
+    aIs3D = PR_TRUE;
     break;
+  case eCSSKeyword_translate3d:
+    /* Exactly two lengthds or percents and a number */
+    variantIndex = eTwoLengthPercentCalcsOneLengthCalc;
+    aMinElems = 3U;
+    aMaxElems = 3U;
+    aIs3D = PR_TRUE;
+    break;
+  case eCSSKeyword_scalez:
+    aIs3D = PR_TRUE;
+  case eCSSKeyword_scalex:
   case eCSSKeyword_scaley:
     /* Exactly one scale factor. */
     variantIndex = eNumber;
     aMinElems = 1U;
     aMaxElems = 1U;
     break;
+  case eCSSKeyword_scale3d:
+    /* Exactly three scale factors. */
+    variantIndex = eThreeNumbers;
+    aMinElems = 3U;
+    aMaxElems = 3U;
+    aIs3D = PR_TRUE;
+    break;
+  case eCSSKeyword_rotatex:
+  case eCSSKeyword_rotatey:
+    aIs3D = PR_TRUE;
   case eCSSKeyword_rotate:
+  case eCSSKeyword_rotatez:
     /* Exactly one angle. */
     variantIndex = eAngle;
     aMinElems = 1U;
     aMaxElems = 1U;
+    break;
+  case eCSSKeyword_rotate3d:
+    variantIndex = eThreeNumbersOneAngle;
+    aMinElems = 4U;
+    aMaxElems = 4U;
+    aIs3D = PR_TRUE;
     break;
   case eCSSKeyword_translate:
     /* One or two lengths or percents. */
@@ -7356,7 +7401,14 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     variantIndex = eMatrix;
     aMinElems = 6U;
     aMaxElems = 6U;
-    break;    
+    break;
+  case eCSSKeyword_matrix3d:
+    /* 16 matrix values, all numbers */
+    variantIndex = eMatrix3d;
+    aMinElems = 16U;
+    aMaxElems = 16U;
+    aIs3D = PR_TRUE;
+    break;
   default:
     /* Oh dear, we didn't match.  Report an error. */
     return PR_FALSE;
@@ -7382,7 +7434,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
  * error if something goes wrong.
  */
 PRBool
-CSSParserImpl::ParseSingleTransform(nsCSSValue& aValue)
+CSSParserImpl::ParseSingleTransform(nsCSSValue& aValue, PRBool& aIs3D)
 {
   if (!GetToken(PR_TRUE))
     return PR_FALSE;
@@ -7394,8 +7446,10 @@ CSSParserImpl::ParseSingleTransform(nsCSSValue& aValue)
 
   const PRInt32* variantMask;
   PRUint16 minElems, maxElems;
-  if (!GetFunctionParseInformation(nsCSSKeywords::LookupKeyword(mToken.mIdent),
-                                   minElems, maxElems, variantMask))
+  nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+
+  if (!GetFunctionParseInformation(keyword,
+                                   minElems, maxElems, variantMask, aIs3D))
     return PR_FALSE;
 
   return ParseFunction(mToken.mIdent, variantMask, minElems, maxElems, aValue);
@@ -7415,7 +7469,11 @@ PRBool CSSParserImpl::ParseMozTransform()
   } else {
     nsCSSValueList* cur = value.SetListValue();
     for (;;) {
-      if (!ParseSingleTransform(cur->mValue)) {
+      PRBool is3D;
+      if (!ParseSingleTransform(cur->mValue, is3D)) {
+        return PR_FALSE;
+      }
+      if (is3D && !nsLayoutUtils::Are3DTransformsEnabled()) {
         return PR_FALSE;
       }
       if (CheckEndProperty()) {

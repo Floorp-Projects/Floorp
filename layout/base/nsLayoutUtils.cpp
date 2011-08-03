@@ -107,6 +107,8 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGOuterSVGFrame.h"
 
+#include "mozilla/Preferences.h"
+
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -137,6 +139,22 @@ static ContentMap& GetContentMap() {
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not initialize map.");
   }
   return *sContentMap;
+}
+
+
+PRBool
+nsLayoutUtils::Are3DTransformsEnabled()
+{
+  static PRBool s3DTransformsEnabled;
+  static PRBool s3DTransformPrefCached = PR_FALSE;
+
+  if (!s3DTransformPrefCached) {
+    s3DTransformPrefCached = PR_TRUE;
+    mozilla::Preferences::AddBoolVarCache(&s3DTransformsEnabled, 
+                                          "layout.3d-transforms.enabled");
+  }
+
+  return s3DTransformsEnabled;
 }
 
 static void DestroyViewID(void* aObject, nsIAtom* aPropertyName,
