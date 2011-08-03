@@ -43,10 +43,12 @@
 #include "jsapi.h"
 #include "jsobj.h"
 #include "jsgc.h"
+#include "jspubtd.h"
 
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
+#include "nsStringGlue.h"
 
 class nsIPrincipal;
 
@@ -182,5 +184,68 @@ nsWrapperCache::GetWrapper() const
   xpc_UnmarkGrayObject(obj);
   return obj;
 }
+
+class nsIMemoryMultiReporterCallback;
+
+namespace mozilla {
+namespace xpconnect {
+namespace memory {
+
+struct CompartmentStats
+{
+    CompartmentStats(JSContext *cx, JSCompartment *c);
+
+    nsCString name;
+    PRInt64 gcHeapArenaHeaders;
+    PRInt64 gcHeapArenaPadding;
+    PRInt64 gcHeapArenaUnused;
+
+    PRInt64 gcHeapObjects;
+    PRInt64 gcHeapStrings;
+    PRInt64 gcHeapShapes;
+    PRInt64 gcHeapXml;
+
+    PRInt64 objectSlots;
+    PRInt64 stringChars;
+    PRInt64 propertyTables;
+
+    PRInt64 scripts;
+#ifdef JS_METHODJIT
+    PRInt64 mjitCode;
+    PRInt64 mjitData;
+#endif
+#ifdef JS_TRACER
+    PRInt64 tjitCode;
+    PRInt64 tjitDataAllocatorsMain;
+    PRInt64 tjitDataAllocatorsReserve;
+#endif
+};
+
+struct IterateData
+{
+    IterateData()
+    : compartmentStatsVector(), currCompartmentStats(NULL) { }
+
+    js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
+    CompartmentStats *currCompartmentStats;
+};
+
+JSBool
+CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data);
+
+void
+ReportCompartmentStats(const CompartmentStats &stats,
+                       const nsACString &pathPrefix,
+                       nsIMemoryMultiReporterCallback *callback,
+                       nsISupports *closure);
+
+void
+ReportJSStackSizeForRuntime(JSRuntime *rt, const nsACString &pathPrefix,
+                            nsIMemoryMultiReporterCallback *callback,
+                            nsISupports *closure);
+
+} // namespace memory
+} // namespace xpconnect
+} // namespace mozilla
 
 #endif

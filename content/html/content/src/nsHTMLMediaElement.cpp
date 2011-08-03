@@ -2034,6 +2034,11 @@ void nsHTMLMediaElement::PlaybackEnded()
   // We changed the state of IsPlaybackEnded which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
 
+  if (mDecoder && mDecoder->IsInfinite()) {
+    LOG(PR_LOG_DEBUG, ("%p, got duration by reaching the end of the stream", this));
+    DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
+  }
+
   FireTimeUpdate(PR_FALSE);
   DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
 }

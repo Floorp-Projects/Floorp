@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
@@ -474,6 +475,7 @@ nsPlacesAutoComplete.prototype = {
       [this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(tokens), query];
 
     // Start executing our queries.
+    this._telemetryStartTime = Date.now();
     this._executeQueries(queries);
 
     // Set up our persistent state for the duration of the search.
@@ -726,6 +728,19 @@ nsPlacesAutoComplete.prototype = {
     result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
     result.setDefaultIndex(result.matchCount ? 0 : -1);
     this._listener.onSearchResult(this, result);
+    if (this._telemetryStartTime) {
+      let elapsed = Date.now() - this._telemetryStartTime;
+      if (elapsed > 50) {
+        try {
+          Services.telemetry
+                  .getHistogramById("PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS")
+                  .add(elapsed);
+        } catch (ex) {
+          Components.utils.reportError("Unable to report telemetry.");
+        }
+      }
+      this._telemetryStartTime = null;
+    }
   },
 
   /**
