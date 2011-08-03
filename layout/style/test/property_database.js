@@ -975,6 +975,14 @@ var gCSSProperties = {
 		other_values: [ "1000px", "500.2px", "-100px", "-27.2em" ],
 		invalid_values: [ "pants", "200" ]
 	},
+    "-moz-backface-visibility": {
+        domProp: "MozBackfaceVisibility",
+        inherited: false,
+        type: CSS_TYPE_LONGHAND,
+        initial_values: [ "visible" ],
+        other_values: [ "hidden" ],
+        invalid_values: [ "collapse" ]
+    },
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
 		inherited: true,

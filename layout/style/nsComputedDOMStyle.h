@@ -348,6 +348,7 @@ private:
   nsIDOMCSSValue* DoGetMozTransform();
   nsIDOMCSSValue* DoGetMozTransformOrigin();
   nsIDOMCSSValue* DoGetMozPerspective();
+  nsIDOMCSSValue* DoGetMozBackfaceVisibility();
   nsIDOMCSSValue* DoGetOrient();
 
   /* User interface properties */

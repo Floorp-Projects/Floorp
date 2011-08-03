@@ -1516,6 +1516,7 @@ struct nsStyleDisplay {
   const nsCSSValueList *mSpecifiedTransform; // [reset]
   nsStyleCoord mTransformOrigin[2]; // [reset] percent, coord, calc
   nsStyleCoord mChildPerspective; // [reset] coord
+  PRUint8 mBackfaceVisibility;
 
   nsAutoTArray<nsTransition, 1> mTransitions; // [reset]
   // The number of elements in mTransitions that are not from repeating
