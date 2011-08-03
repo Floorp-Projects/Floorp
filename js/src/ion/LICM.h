@@ -97,10 +97,6 @@ class Loop
     bool isInLoop(MDefinition *ins);
     bool isLoopInvariant(MInstruction *ins);
 
-    // Determines if an instruction should be hoisted based on it's win estimate and
-    // the win estimates of it's uses
-    bool shouldHoist(MInstruction *ins);
-
     // This method determines if this block hot within a loop.  That is, if it's
     // always or usually run when the loop executes
     bool checkHotness(MBasicBlock *block);
@@ -109,6 +105,11 @@ class Loop
     InstructionQueue worklist_;
     bool insertInWorklist(MInstruction *ins);
     MInstruction* popFromWorklist();
+
+    inline bool isHoistable(const MDefinition *ins) const {
+        return ins->isIdempotent() && !ins->isNeverHoisted();
+    }
+
 };
 
 } // namespace js

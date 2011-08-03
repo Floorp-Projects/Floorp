@@ -410,6 +410,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_INT8:
         return pushConstant(Int32Value(GET_INT8(pc)));
 
+      case JSOP_UINT16:
+        return pushConstant(Int32Value(GET_UINT16(pc)));
+
       case JSOP_TRACE:
         assertValidTraceOp(op);
         return true;
