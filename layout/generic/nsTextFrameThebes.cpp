@@ -4832,10 +4832,14 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
     return;
 
   nscolor shadowColor;
-  if (aShadowDetails->mHasColor)
+  const nscolor* decorationOverrideColor;
+  if (aShadowDetails->mHasColor) {
     shadowColor = aShadowDetails->mColor;
-  else
+    decorationOverrideColor = &shadowColor;
+  } else {
     shadowColor = aForegroundColor;
+    decorationOverrideColor = nsnull;
+  }
 
   aCtx->Save();
   aCtx->NewPath();
@@ -4848,7 +4852,7 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   DrawText(shadowContext, aFramePt + shadowOffset,
            aTextBaselinePt + shadowOffset, aOffset, aLength, *aProvider,
            nsTextPaintStyle(this), aClipEdges, advanceWidth,
-           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0, &shadowColor);
+           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0, decorationOverrideColor);
 
   contextBoxBlur.DoPaint();
   aCtx->Restore();
