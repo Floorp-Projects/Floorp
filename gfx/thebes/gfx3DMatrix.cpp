@@ -269,13 +269,24 @@ gfx3DMatrix::Invert()
 gfxPoint
 gfx3DMatrix::Transform(const gfxPoint& point) const
 {
-  gfxFloat x = point.x * _11 + point.y * _21 + _41;
-  gfxFloat y = point.x * _12 + point.y * _22 + _42;
-  gfxFloat w = point.x * _14 + point.y * _24 + _44;
+  gfxPoint3D vec3d(point.x, point.y, 0);
+  vec3d = Transform3D(vec3d);
+  return gfxPoint(vec3d.x, vec3d.y);
+}
+
+gfxPoint3D
+gfx3DMatrix::Transform3D(const gfxPoint3D& point) const
+{
+  gfxFloat x = point.x * _11 + point.y * _21 + point.z * _31 + _41;
+  gfxFloat y = point.x * _12 + point.y * _22 + point.z * _32 + _42;
+  gfxFloat z = point.x * _13 + point.y * _23 + point.z * _33 + _43;
+  gfxFloat w = point.x * _14 + point.y * _24 + point.z * _34 + _44;
+
   x /= w;
   y /= w;
-  /* Assume z is 0! */
-  return gfxPoint(x, y);
+  z /= w;
+
+  return gfxPoint3D(x, y, z);
 }
 
 gfxRect
@@ -323,5 +334,61 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
     aMatrix->y0 = _42;
   }
   return PR_TRUE;
+}
+
+gfxPoint gfx3DMatrix::ProjectPoint(const gfxPoint& aPoint) const
+{
+  // Define a ray of the form P + Ut where t is a real number
+  // w is assumed to always be 1 when transforming 3d points with our
+  // 4x4 matrix.
+  // p is our click point, q is another point on the same ray.
+  // 
+  // Note: since the transformation is a general projective transformation and is not
+  // necessarily affine, we can't just take a unit vector u, back-transform it, and use
+  // it as unit vector on the back-transformed ray. Instead, we really must take two points
+  // on the ray and back-transform them.
+  gfxPoint3D p(aPoint.x, aPoint.y, 0);
+  gfxPoint3D q(aPoint.x, aPoint.y, 1);
+
+  // Back transform the vectors (using w = 1) and normalize
+  // back into 3d vectors by dividing by the w component.
+  gfxPoint3D pback = Transform3D(p);
+  gfxPoint3D qback = Transform3D(q);
+  gfxPoint3D uback = qback - pback;
+
+  // Find the point where the back transformed line intersects z=0
+  // and find t.
+  
+  float t = -pback.z / uback.z;
+
+  gfxPoint result(pback.x + t*uback.x, pback.y + t*uback.y);
+
+  return result;
+}
+
+gfxRect gfx3DMatrix::ProjectRectBounds(const gfxRect& aRect) const
+{
+  gfxPoint points[4];
+
+  points[0] = ProjectPoint(aRect.TopLeft());
+  points[1] = ProjectPoint(gfxPoint(aRect.X() + aRect.Width(), aRect.Y()));
+  points[2] = ProjectPoint(gfxPoint(aRect.X(), aRect.Y() + aRect.Height()));
+  points[3] = ProjectPoint(gfxPoint(aRect.X() + aRect.Width(),
+                                    aRect.Y() + aRect.Height()));
+
+  gfxFloat min_x, max_x;
+  gfxFloat min_y, max_y;
+
+  min_x = max_x = points[0].x;
+  min_y = max_y = points[0].y;
+
+  for (int i=1; i<4; i++) {
+    min_x = min(points[i].x, min_x);
+    max_x = max(points[i].x, max_x);
+    min_y = min(points[i].y, min_y);
+    max_y = max(points[i].y, max_y);
+  }
+
+  return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 

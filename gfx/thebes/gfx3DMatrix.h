@@ -40,6 +40,7 @@
 #define GFX_3DMATRIX_H
 
 #include <gfxTypes.h>
+#include <gfxPoint3D.h>
 #include <gfxMatrix.h>
 
 /**
@@ -111,11 +112,27 @@ public:
    */
   gfxRect TransformBounds(const gfxRect& rect) const;
 
+  /** 
+   * Transforms a 3D vector according to this matrix.
+   */
+  gfxPoint3D Transform3D(const gfxPoint3D& point) const;
+
+  gfxPoint ProjectPoint(const gfxPoint& aPoint) const;
+  gfxRect ProjectRectBounds(const gfxRect& aRect) const;
+
+
   /**
    * Inverts this matrix, if possible. Otherwise, the matrix is left
    * unchanged.
    */
   gfx3DMatrix& Invert();
+
+  inline gfx3DMatrix Inverse() const
+  {
+    gfx3DMatrix temp = *this;
+    temp.Invert();
+    return temp;
+  }
 
   /**
    * Check if matrix is singular (no inverse exists).
