@@ -5577,7 +5577,7 @@ JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
 JS_FRIEND_API(void)
 JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats)
 {
-    TypeObject *object = (TypeObject *) object;
+    TypeObject *object = (TypeObject *) object_;
     stats->objectMain += sizeof(TypeObject);
 
     if (object->singleton) {
