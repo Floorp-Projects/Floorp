@@ -116,30 +116,31 @@ JSString::charsHeapSize()
     return length() * sizeof(jschar);
 }
 
-static JS_ALWAYS_INLINE size_t
-RopeCapacityFor(size_t length)
+static JS_ALWAYS_INLINE bool
+AllocChars(JSContext *maybecx, size_t length, jschar **chars, size_t *capacity)
 {
-    static const size_t ROPE_DOUBLING_MAX = 1024 * 1024;
+    /*
+     * String length doesn't include the null char, so include it here before
+     * doubling. Adding the null char after doubling would interact poorly with
+     * round-up malloc schemes.
+     */
+    size_t numChars = length + 1;
 
     /*
      * Grow by 12.5% if the buffer is very large. Otherwise, round up to the
      * next power of 2. This is similar to what we do with arrays; see
      * JSObject::ensureDenseArrayElements.
      */
-    if (length > ROPE_DOUBLING_MAX)
-        return length + (length / 8);
-    return RoundUpPow2(length);
-}
+    static const size_t DOUBLING_MAX = 1024 * 1024;
+    numChars = numChars > DOUBLING_MAX ? numChars + (numChars / 8) : RoundUpPow2(numChars);
 
-static JS_ALWAYS_INLINE jschar *
-AllocChars(JSContext *maybecx, size_t wholeCapacity)
-{
-    /* +1 for the null char at the end. */
+    /* Like length, capacity does not include the null char, so take it out. */
+    *capacity = numChars - 1;
+
     JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(jschar) < UINT32_MAX);
-    size_t bytes = (wholeCapacity + 1) * sizeof(jschar);
-    if (maybecx)
-        return (jschar *)maybecx->malloc_(bytes);
-    return (jschar *)OffTheBooks::malloc_(bytes);
+    size_t bytes = numChars * sizeof(jschar);
+    *chars = (jschar *)(maybecx ? maybecx->malloc_(bytes) : OffTheBooks::malloc_(bytes));
+    return *chars != NULL;
 }
 
 JSFlatString *
@@ -197,9 +198,7 @@ JSRope::flatten(JSContext *maybecx)
         }
     }
 
-    wholeCapacity = RopeCapacityFor(wholeLength);
-    wholeChars = AllocChars(maybecx, wholeCapacity);
-    if (!wholeChars)
+    if (!AllocChars(maybecx, wholeLength, &wholeChars, &wholeCapacity))
         return NULL;
 
     pos = wholeChars;

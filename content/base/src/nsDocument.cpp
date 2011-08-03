@@ -1580,6 +1580,8 @@ nsDocument::~nsDocument()
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIDocument*>(this));
 #endif
 
+  NS_ASSERTION(!mIsShowing, "Destroying a currently-showing document");
+
   mInDestructor = PR_TRUE;
   mInUnlinkOrDeletion = PR_TRUE;
 

@@ -461,7 +461,7 @@ public:
    * @return A matrix equivalent to aMatrix, but operating in the coordinate system with
    *         origin aOrigin.
    */
-  static gfx3DMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfx3DMatrix &aMatrix);
+  static gfx3DMatrix ChangeMatrixBasis(const gfxPoint3D &aOrigin, const gfx3DMatrix &aMatrix);
 
   /**
    * Find IDs corresponding to a scrollable content element in the child process.
@@ -510,17 +510,11 @@ public:
                                    PRBool aShouldIgnoreSuppression = PR_FALSE,
                                    PRBool aIgnoreRootScrollFrame = PR_FALSE);
 
-  /**
-   * Returns the CTM at the specified frame. This matrix can be used to map
-   * coordinates from aFrame's to aStopAtAncestor's coordinate system.
-   *
-   * @param aFrame The frame at which we should calculate the CTM.
-   * @param aStopAtAncestor is an ancestor frame to stop at. If it's nsnull,
-   * matrix accumulating stops at root.
-   * @return The CTM at the specified frame.
-   */
-  static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame,
-                                            nsIFrame* aStopAtAncestor = nsnull);
+  
+
+  static nsRect TransformRectToBoundsInAncestor(nsIFrame* aFrame,
+                                                const nsRect& aRect,
+                                                nsIFrame* aStopAtAncestor);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -533,7 +527,6 @@ public:
    */
   static nsPoint InvertTransformsToRoot(nsIFrame* aFrame,
                                         const nsPoint &aPt);
-
 
   /**
    * Helper function that, given a rectangle and a matrix, returns the smallest
@@ -1387,6 +1380,11 @@ public:
                                       PRInt32 aEndOffset,
                                       PRBool aFollowContinuations,
                                       nsFontFaceList* aFontFaceList);
+
+  /**
+   * Checks if CSS 3D transforms are currently enabled.
+   */
+  static PRBool Are3DTransformsEnabled();
 
   static void Shutdown();
 

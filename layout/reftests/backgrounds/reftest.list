@@ -99,7 +99,7 @@ fails-if(Android) == viewport-translucent-color-3.html viewport-translucent-colo
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails-if(!Android) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
+fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 # background-size affects images without intrinsic dimensions specially; we may
 # not support such image formats right now, but when we do, we want
