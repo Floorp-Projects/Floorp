@@ -312,7 +312,7 @@
         </xul:label>
       </xul:vbox>
       <xul:hbox anonid="input-container" class="setting-input">
-        <children includes="button|menulist"/>
+        <children includes="button"/>
       </xul:hbox>
     </content>
   </binding>
@@ -490,9 +490,7 @@
       <constructor>
         <![CDATA[
           let self = this;
-          this.control.addEventListener("command", function() {
-            self.valueToPreference();
-          }, false);
+          this.control.addEventListener("command", this.valueToPreference.bind(this), false);
         ]]>
       </constructor>
 
