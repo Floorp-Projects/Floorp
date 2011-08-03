@@ -4498,10 +4498,11 @@ nsTextFrame::PaintTextDecorations(
   nscoord x = NSToCoordRound(aFramePt.x);
   nscoord width = GetRect().width;
   aClipEdges.Intersect(&x, &width);
+
   gfxPoint pt(x / app, 0);
   gfxSize size(width / app, 0);
   const gfxFloat ascent = gfxFloat(mAscent) / app;
-  const nscoord baseline = aTextBaselinePt.y - mAscent;
+  const gfxFloat frameTop = aFramePt.y;
 
   nscolor lineColor;
   for (PRUint32 i = decorations.mUnderlines.Length(); i-- > 0; ) {
@@ -4510,7 +4511,7 @@ nsTextFrame::PaintTextDecorations(
     const gfxFont::Metrics metrics = GetFirstFontMetrics(fontGroup);
 
     size.height = metrics.underlineSize;
-    pt.y = (baseline - dec.mBaselineOffset) / app;
+    pt.y = (frameTop - dec.mBaselineOffset) / app;
 
     lineColor = aOverrideColor ? *aOverrideColor : dec.mColor;
     nsCSSRendering::PaintDecorationLine(aCtx, lineColor, pt, size, ascent,
@@ -4524,7 +4525,7 @@ nsTextFrame::PaintTextDecorations(
       GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
 
     size.height = metrics.underlineSize;
-    pt.y = (baseline - dec.mBaselineOffset) / app;
+    pt.y = (frameTop - dec.mBaselineOffset) / app;
 
     lineColor = aOverrideColor ? *aOverrideColor : dec.mColor;
     nsCSSRendering::PaintDecorationLine(aCtx, lineColor, pt, size, ascent,
@@ -4537,7 +4538,7 @@ nsTextFrame::PaintTextDecorations(
       GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
 
     size.height = metrics.strikeoutSize;
-    pt.y = (baseline - dec.mBaselineOffset) / app;
+    pt.y = (frameTop - dec.mBaselineOffset) / app;
 
     lineColor = aOverrideColor ? *aOverrideColor : dec.mColor;
     nsCSSRendering::PaintDecorationLine(aCtx, lineColor, pt, size, ascent,
