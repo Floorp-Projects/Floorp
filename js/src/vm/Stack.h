@@ -1541,7 +1541,9 @@ class ContextStack
      * As an optimization, the interpreter/mjit can operate on a local
      * FrameRegs instance repoint the ContextStack to this local instance.
      */
-    void repointRegs(FrameRegs *regs) { JS_ASSERT(hasfp()); seg_->repointRegs(regs); }
+    void repointRegs(FrameRegs *regs) {
+        seg_->repointRegs(regs);
+    }
 
     /*** For JSContext: ***/
 

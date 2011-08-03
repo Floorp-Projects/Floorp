@@ -291,6 +291,9 @@ struct TraceMonitor {
 namespace mjit {
 class JaegerCompartment;
 }
+namespace ion {
+class IonCompartment;
+}
 }
 
 /* Defined in jsapi.cpp */
@@ -514,12 +517,14 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
+    void mark(JSTracer *trc);
     void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
     void finalizeObjectArenaLists(JSContext *cx);
     void finalizeStringArenaLists(JSContext *cx);
     void finalizeShapeArenaLists(JSContext *cx);
+    void finalizeIonCodeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
@@ -562,6 +567,18 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t incBackEdgeCount(jsbytecode *pc);
 
     js::WatchpointMap *watchpointMap;
+	
+#ifdef JS_ION
+  private:
+    js::ion::IonCompartment *ionCompartment_;
+
+  public:
+    bool ensureIonCompartmentExists(JSContext *cx);
+    js::ion::IonCompartment *ionCompartment() {
+        return ionCompartment_;
+    }
+#endif
+
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)

@@ -45,6 +45,7 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
+#include "ion/IonCode.h"
 #include "vm/String-inl.h"
 
 /*
@@ -204,6 +205,15 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
     Mark(trc, shape);
 }
 
+void
+MarkIonCode(JSTracer *trc, ion::IonCode *code, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(code);
+    JS_SET_TRACING_NAME(trc, name);
+    Mark(trc, code);
+}
+
 #if JS_HAS_XML_SUPPORT
 void
 MarkXML(JSTracer *trc, JSXML *xml, const char *name)
@@ -252,6 +262,16 @@ PushMarkStack(GCMarker *gcmarker, JSShortString *thing)
                  thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
 
     (void) thing->markIfUnmarked(gcmarker->getMarkColor());
+}
+
+void
+PushMarkStack(GCMarker *gcmarker, ion::IonCode *thing)
+{
+    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+
+    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+        gcmarker->pushIonCode(thing);
 }
 
 static void
@@ -351,6 +371,9 @@ MarkKind(JSTracer *trc, void *thing, uint32 kind)
         case JSTRACE_SHAPE:
             Mark(trc, reinterpret_cast<Shape *>(thing));
             break;
+	case JSTRACE_IONCODE:
+	    Mark(trc, reinterpret_cast<ion::IonCode *>(thing));
+	    break;
 #if JS_HAS_XML_SUPPORT
         case JSTRACE_XML:
             Mark(trc, reinterpret_cast<JSXML *>(thing));
@@ -486,6 +509,12 @@ void
 MarkRoot(JSTracer *trc, JSXML *thing, const char *name)
 {
     MarkXML(trc, thing, name);
+}
+
+void
+MarkRoot(JSTracer *trc, ion::IonCode *code, const char *name)
+{
+    MarkIonCode(trc, code, name);
 }
 
 static void
@@ -778,6 +807,12 @@ restart:
         goto restart;
 }
 
+void
+MarkChildren(JSTracer *trc, ion::IonCode *code)
+{
+    code->trace(trc);
+}
+
 #ifdef JS_HAS_XML_SUPPORT
 void
 MarkChildren(JSTracer *trc, JSXML *xml)
@@ -803,6 +838,9 @@ GCMarker::drainMarkStack()
 
         while (!xmlStack.isEmpty())
             MarkChildren(this, xmlStack.pop());
+
+	while (!ionCodeStack.isEmpty())
+            MarkChildren(this, ionCodeStack.pop());
 
         if (!largeStack.isEmpty()) {
             LargeMarkItem &item = largeStack.peek();
@@ -838,6 +876,10 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 
       case JSTRACE_SHAPE:
 	MarkChildren(trc, (js::Shape *)thing);
+        break;
+
+      case JSTRACE_IONCODE:
+        MarkChildren(trc, (js::ion::IonCode *)thing);
         break;
 
 #if JS_HAS_XML_SUPPORT

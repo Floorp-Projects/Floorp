@@ -75,6 +75,10 @@ namespace js {
 class GCHelperThread;
 struct Shape;
 
+namespace ion {
+    class IonCode;
+}
+
 namespace gc {
 
 struct Arena;
@@ -104,6 +108,7 @@ enum FinalizeKind {
     FINALIZE_SHORT_STRING,
     FINALIZE_STRING,
     FINALIZE_EXTERNAL_STRING,
+    FINALIZE_IONCODE,
     FINALIZE_LIMIT
 };
 
@@ -622,12 +627,13 @@ Cell::compartment() const
     return arenaHeader()->compartment;
 }
 
-#define JSTRACE_XML         3
+#define JSTRACE_IONCODE     3
+#define JSTRACE_XML         4
 
 /*
  * One past the maximum trace kind.
  */
-#define JSTRACE_LIMIT       4
+#define JSTRACE_LIMIT       5
 
 /*
  * Lower limit after which we limit the heap growth
@@ -671,6 +677,7 @@ GetFinalizableTraceKind(size_t thingKind)
         JSTRACE_STRING,     /* FINALIZE_SHORT_STRING */
         JSTRACE_STRING,     /* FINALIZE_STRING */
         JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING */
+        JSTRACE_IONCODE,    /* FINALIZE_IONCODE */
     };
 
     JS_ASSERT(thingKind < FINALIZE_LIMIT);
@@ -1276,6 +1283,7 @@ static const size_t OBJECT_MARK_STACK_SIZE = 32768 * sizeof(JSObject *);
 static const size_t ROPES_MARK_STACK_SIZE = 1024 * sizeof(JSString *);
 static const size_t XML_MARK_STACK_SIZE = 1024 * sizeof(JSXML *);
 static const size_t LARGE_MARK_STACK_SIZE = 64 * sizeof(LargeMarkItem);
+static const size_t IONCODE_MARK_STACK_SIZE = 1024 * sizeof(ion::IonCode *);
 
 struct GCMarker : public JSTracer {
   private:
@@ -1300,6 +1308,7 @@ struct GCMarker : public JSTracer {
     MarkStack<JSRope *> ropeStack;
     MarkStack<JSXML *> xmlStack;
     MarkStack<LargeMarkItem> largeStack;
+    MarkStack<ion::IonCode *> ionCodeStack;
 
   public:
     explicit GCMarker(JSContext *cx);
@@ -1323,7 +1332,8 @@ struct GCMarker : public JSTracer {
         return objStack.isEmpty() &&
                ropeStack.isEmpty() &&
                xmlStack.isEmpty() &&
-               largeStack.isEmpty();
+               largeStack.isEmpty() &&
+	       ionCodeStack.isEmpty();
     }
 
     JS_FRIEND_API(void) drainMarkStack();
@@ -1341,6 +1351,11 @@ struct GCMarker : public JSTracer {
     void pushXML(JSXML *xml) {
         if (!xmlStack.push(xml))
             delayMarkingChildren(xml);
+    }
+
+    void pushIonCode(ion::IonCode *code) {
+	if (!ionCodeStack.push(code))
+            delayMarkingChildren(code);
     }
 };
 
@@ -1384,7 +1399,7 @@ js_MarkTraps(JSTracer *trc);
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_SHAPE)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_IONCODE)
 #endif
 
 namespace js {
