@@ -109,7 +109,8 @@ protected:
 
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData);
-  nsresult CreateAndDispatchCloseEvent(PRBool aWasClean);
+  nsresult CreateAndDispatchCloseEvent(PRBool aWasClean, PRUint16 aCode,
+                                       const nsString &aReason);
 
   // called from mConnection accordingly to the situation
   void SetReadyState(PRUint16 aNewReadyState);
@@ -135,6 +136,11 @@ protected:
   PRPackedBool mKeepingAlive;
   PRPackedBool mCheckMustKeepAlive;
   PRPackedBool mTriggeredCloseEvent;
+
+  nsCString mClientReason;
+  PRUint16  mClientReasonCode;
+  nsString  mServerReason;
+  PRUint16  mServerReasonCode;
 
   nsCString mAsciiHost;  // hostname
   PRUint32  mPort;

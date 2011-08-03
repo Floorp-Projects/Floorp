@@ -64,7 +64,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
                                      const nsACString &aOrigin,
                                      nsIWebSocketListener *aListener,
                                      nsISupports *aContext);
-  NS_SCRIPTABLE NS_IMETHOD Close();
+  NS_SCRIPTABLE NS_IMETHOD Close(PRUint16 code, const nsACString & reason);
   NS_SCRIPTABLE NS_IMETHOD SendMsg(const nsACString &aMsg);
   NS_SCRIPTABLE NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
   NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
@@ -78,7 +78,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   bool RecvOnMessageAvailable(const nsCString& aMsg);
   bool RecvOnBinaryMessageAvailable(const nsCString& aMsg);
   bool RecvOnAcknowledge(const PRUint32& aSize);
-  bool RecvOnServerClose();
+  bool RecvOnServerClose(const PRUint16& aCode, const nsCString &aReason);
   bool RecvAsyncOpenFailed();
 
   void OnStart(const nsCString& aProtocol);
@@ -86,7 +86,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void OnMessageAvailable(const nsCString& aMsg);
   void OnBinaryMessageAvailable(const nsCString& aMsg);
   void OnAcknowledge(const PRUint32& aSize);
-  void OnServerClose();
+  void OnServerClose(const PRUint16& aCode, const nsCString& aReason);
   void AsyncOpenFailed();  
 
   ChannelEventQueue mEventQ;
