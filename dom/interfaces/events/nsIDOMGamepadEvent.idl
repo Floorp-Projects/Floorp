@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface nsIDOMGamepad;
+
+[builtinclass, scriptable, uuid(93b048d6-2aef-46a9-b0f4-06d7f00d8ef2)]
+interface nsIDOMGamepadEvent : nsIDOMEvent
+{
+  /**
+   * The device that generated this event.
+   */
+  readonly attribute nsIDOMGamepad gamepad;
+
+  [noscript]
+  void initGamepadEvent(in DOMString typeArg,
+                        in boolean canBubbleArg,
+                        in boolean cancelableArg,
+                        in nsIDOMGamepad gamepad);
+};
+
+dictionary GamepadEventInit : EventInit
+{
+  nsIDOMGamepad gamepad;
+};

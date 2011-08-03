@@ -42,6 +42,10 @@ CPPSRCS = \
   HalWakeLock.cpp \
   $(NULL)
 
+ifeq (stub,$(MOZ_GAMEPAD_BACKEND))
+CPPSRCS += FallbackGamepad.cpp
+endif
+
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
   AndroidHal.cpp \

@@ -559,6 +559,16 @@ void StartForceQuitWatchdog(hal::ShutdownMode aMode, int32_t aTimeoutSecs);
  */
 void FactoryReset();
 
+/**
+ * Start monitoring the status of gamepads attached to the system.
+ */
+void StartMonitoringGamepadStatus();
+
+/**
+ * Stop monitoring the status of gamepads attached to the system.
+ */
+void StopMonitoringGamepadStatus();
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 

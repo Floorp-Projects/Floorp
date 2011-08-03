@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+
+/*
+ * This interface is intended only for use in tests.
+ */
+[scriptable, uuid(7edf77a2-6b3e-4bbb-9100-4452d425feaa)]
+interface nsIGamepadServiceTest : nsISupports
+{
+  unsigned long addGamepad(in string id, in unsigned long numButtons,
+			   in unsigned long numAxes);
+  void removeGamepad(in unsigned long index);
+  void newButtonEvent(in unsigned long index, in unsigned long button,
+		      in boolean pressed);
+  void newAxisMoveEvent(in unsigned long index, in unsigned long axis,
+			in double value);
+};
