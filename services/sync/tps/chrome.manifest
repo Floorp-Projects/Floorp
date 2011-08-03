@@ -1,0 +1,4 @@
+resource tps modules/
+component {4e5bd3f0-41d3-11df-9879-0800200c9a66} components/tps-cmdline.js
+contract @mozilla.org/commandlinehandler/general-startup;1?type=tps {4e5bd3f0-41d3-11df-9879-0800200c9a66}
+category command-line-handler m-tps @mozilla.org/commandlinehandler/general-startup;1?type=tps

@@ -139,8 +139,6 @@ GLenum VertexDataManager::prepareVertexData(GLint start, GLsizei count, Translat
                 else if (staticBuffer->lookupAttribute(attribs[i]) == -1)
                 {
                     // This static buffer doesn't have matching attributes, so fall back to using the streaming buffer
-                    buffer->invalidateStaticData();
-
                     // Add the space of all previous attributes belonging to the invalidated static buffer to the streaming buffer
                     for (int previous = 0; previous < i; previous++)
                     {
@@ -157,6 +155,8 @@ GLenum VertexDataManager::prepareVertexData(GLint start, GLsizei count, Translat
                     }
 
                     mStreamingBuffer->addRequiredSpace(spaceRequired(attribs[i], count));
+
+                    buffer->invalidateStaticData();
                 }    
             }
             else

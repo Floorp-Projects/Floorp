@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
  *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *  Gregory Szorc <gps@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,6 +78,7 @@ ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: ClientStore,
   _recordObj: ClientsRec,
+  _trackerObj: ClientsTracker,
 
   // Always sync client data as it controls other sync behavior
   get enabled() true,
@@ -208,7 +210,7 @@ ClientEngine.prototype = {
   // Override the default behavior to delete bad records from the server.
   handleHMACMismatch: function handleHMACMismatch(item, mayRetry) {
     this._log.debug("Handling HMAC mismatch for " + item.id);
-    
+
     let base = SyncEngine.prototype.handleHMACMismatch.call(this, item, mayRetry);
     if (base != SyncEngine.kRecoveryStrategy.error)
       return base;
@@ -266,4 +268,37 @@ ClientStore.prototype = {
   wipe: function wipe() {
     this._remoteClients = {};
   },
+};
+
+function ClientsTracker(name) {
+  Tracker.call(this, name);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
+}
+ClientsTracker.prototype = {
+  __proto__: Tracker.prototype,
+
+  _enabled: false,
+
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.Prefs.observe("client.name", this);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.Prefs.ignore("clients.name", this);
+          this._enabled = false;
+        }
+        break;
+      case "nsPref:changed":
+        this._log.debug("client.name preference changed");
+        this.addChangedID(Svc.Prefs.get("client.GUID"));
+        this.score += SCORE_INCREMENT_XLARGE;
+        break;
+    }
+  }
 };

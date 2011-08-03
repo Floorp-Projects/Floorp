@@ -38,6 +38,8 @@
 
 // This UI is only opened from the Extension Manager when the app is upgraded.
 
+"use strict";
+
 const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_XPINSTALL_ENABLED                    = "xpinstall.enabled";
 

@@ -391,6 +391,8 @@ public:
                          NodeMatchContext& aNodeMatchContext);
   PLArenaPool& Arena() { return mArena; }
 
+  PRInt64 SizeOf() const;
+
 protected:
   typedef nsTArray<RuleValue> RuleValueList;
   void AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
@@ -696,6 +698,45 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
   }
 }
 
+static PLDHashOperator
+RuleHashTableSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
+                              PRUint32 i, void* aClosure)
+{
+  PRInt64* n = static_cast<PRInt64*>(aClosure);
+  RuleHashTableEntry* entry = static_cast<RuleHashTableEntry*>(aHdr);
+
+  *n += entry->mRules.SizeOf();
+  // The size of the RuleHashTableEntry itself is accounted for already
+
+  return PL_DHASH_NEXT;
+}
+
+PRInt64
+RuleHash::SizeOf() const
+{
+  PRInt64 n = sizeof(*this);
+
+  n += PL_DHASH_TABLE_SIZE(&mIdTable) * sizeof(RuleHashTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mClassTable) * sizeof(RuleHashTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mTagTable) * sizeof(RuleHashTagTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mTagTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mNameSpaceTable) * sizeof(RuleHashTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mNameSpaceTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += mUniversalRules.SizeOf();
+
+  return n;
+}
+
 //--------------------------------
 
 // Attribute selectors hash table.
@@ -828,6 +869,9 @@ struct RuleCascadeData {
       delete mPseudoElementRuleHashes[i];
     }
   }
+
+  PRInt64 SizeOf() const;
+
   RuleHash                 mRuleHash;
   RuleHash*
     mPseudoElementRuleHashes[nsCSSPseudoElements::ePseudo_PseudoElementCount];
@@ -855,6 +899,74 @@ struct RuleCascadeData {
 
   const PRBool mQuirksMode;
 };
+
+static PLDHashOperator
+SelectorsSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
+                          PRUint32 i, void* aClosure)
+{
+  PRInt64* n = (PRInt64*) aClosure;
+  AtomSelectorEntry* entry = (AtomSelectorEntry*)aHdr;
+
+  *n += entry->mSelectors.SizeOf();
+
+  return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+AttrSelectorsSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
+                              PRUint32 i, void* aClosure)
+{
+  PRInt64* n = (PRInt64*) aClosure;
+  AttributeSelectorEntry* entry = (AttributeSelectorEntry*)aHdr;
+
+  if (entry->mSelectors)
+    *n += entry->mSelectors->SizeOf() + sizeof(*entry->mSelectors);
+
+  return PL_DHASH_NEXT;
+}
+
+PRInt64
+RuleCascadeData::SizeOf() const
+{
+  PRInt64 n = sizeof(*this);
+
+  n += mRuleHash.SizeOf();
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mPseudoElementRuleHashes); ++i) {
+    if (mPseudoElementRuleHashes[i])
+      n += mPseudoElementRuleHashes[i]->SizeOf();
+  }
+
+  n += mStateSelectors.SizeOf();
+
+  n += PL_DHASH_TABLE_SIZE(&mIdSelectors) * sizeof(AtomSelectorEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdSelectors),
+                         SelectorsSizeOfEnumerator, &n);
+  n += PL_DHASH_TABLE_SIZE(&mClassSelectors) * sizeof(AtomSelectorEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassSelectors),
+                         SelectorsSizeOfEnumerator, &n);
+
+  n += mPossiblyNegatedClassSelectors.SizeOf();
+  n += mPossiblyNegatedIDSelectors.SizeOf();
+
+  n += PL_DHASH_TABLE_SIZE(&mAttributeSelectors) * sizeof(AttributeSelectorEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAttributeSelectors),
+                         AttrSelectorsSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mAnonBoxRules) * sizeof(RuleHashTagTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+#ifdef MOZ_XUL
+  n += PL_DHASH_TABLE_SIZE(&mXULTreeRules) * sizeof(RuleHashTagTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
+                         RuleHashTableSizeOfEnumerator, &n);
+#endif
+
+  n += mFontFaceRules.SizeOf();
+  n += mKeyframesRules.SizeOf();
+
+  return n;
+}
 
 nsTArray<nsCSSSelector*>*
 RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
@@ -2452,6 +2564,20 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
     RefreshRuleCascade(aPresContext);
   }
   return (old != mRuleCascades);
+}
+
+/* virtual */ PRInt64
+nsCSSRuleProcessor::SizeOf() const
+{
+  PRInt64 n = sizeof(*this);
+
+  n += mSheets.SizeOf();
+  for (RuleCascadeData* cascade = mRuleCascades; cascade;
+       cascade = cascade->mNext) {
+    n += cascade->SizeOf();
+  }
+
+  return n;
 }
 
 // Append all the currently-active font face rules to aArray.  Return

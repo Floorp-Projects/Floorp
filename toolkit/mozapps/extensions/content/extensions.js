@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
@@ -225,13 +227,14 @@ var HTML5History = {
   },
 
   popState: function() {
-    window.addEventListener("popstate", function(event) {
-      window.removeEventListener("popstate", arguments.callee, true);
+    function onStatePopped(aEvent) {
+      window.removeEventListener("popstate", onStatePopped, true);
       // TODO To ensure we can't go forward again we put an additional entry
       // for the current state into the history. Ideally we would just strip
       // the history but there doesn't seem to be a way to do that. Bug 590661
-      window.history.pushState(event.state, document.title);
-    }, true);
+      window.history.pushState(aEvent.state, document.title);
+    }
+    window.addEventListener("popstate", onStatePopped, true);
     window.history.back();
     gViewController.updateCommand("cmd_back");
     gViewController.updateCommand("cmd_forward");
