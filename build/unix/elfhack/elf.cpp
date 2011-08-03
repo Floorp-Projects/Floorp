@@ -566,6 +566,7 @@ void ElfSegment::addSection(ElfSection *section)
         if ((*i)->getAddr() > section->getAddr())
             break;
     sections.insert(i, section);
+    section->addToSegment(this);
 }
 
 unsigned int ElfSegment::getFileSize()
@@ -636,8 +637,10 @@ ElfSegment *ElfSegment::splitBefore(ElfSection *section)
     phdr.p_memsz = (unsigned int)-1;
     ElfSegment *segment = new ElfSegment(&phdr);
 
-    for (rm = i; i != sections.end(); ++i)
+    for (rm = i; i != sections.end(); ++i) {
+        (*i)->removeFromSegment(this);
         segment->addSection(*i);
+    }
     sections.erase(rm, sections.end());
 
     return segment;
