@@ -1,6 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-let itemsSet;
+let itemsSet, HUD;
 
 function test() {
   addTab("data:text/html,Web Console test for bug 626484");
@@ -30,6 +30,7 @@ function nextTest() {
   if (itemsSet.length === 0) {
     outputNode.clearSelection();
     HUD.jsterm.clearOutput();
+    HUD = null;
     finish();
   }
   else {
