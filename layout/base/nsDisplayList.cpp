@@ -451,19 +451,16 @@ static nsRect GetDisplayPortBounds(nsDisplayListBuilder* aBuilder,
                                    PRBool aIgnoreTransform)
 {
   nsIFrame* frame = aItem->GetUnderlyingFrame();
-  nscoord auPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-  gfx3DMatrix transform;
+  const nsRect* displayport = aBuilder->GetDisplayPort();
 
-  if (!aIgnoreTransform) {
-    transform = nsLayoutUtils::GetTransformToAncestor(frame,
-                  aBuilder->ReferenceFrame());
-    transform.Invert();
+  if (aIgnoreTransform) {
+    return *displayport;
   }
 
-  const nsRect* displayport = aBuilder->GetDisplayPort();
-  return nsLayoutUtils::MatrixTransformRect(
+  return nsLayoutUtils::TransformRectToBoundsInAncestor(
+           frame,
            nsRect(0, 0, displayport->width, displayport->height),
-           transform, auPerDevPixel);
+           aBuilder->ReferenceFrame());
 }
 
 PRBool
@@ -2482,13 +2479,13 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
    * Thus we have to invert the matrix, which normally does
    * the reverse operation (e.g. regular->transformed)
    */
-  matrix.Invert();
 
   /* Now, apply the transform and pass it down the channel. */
   nsRect resultingRect;
   if (aRect.width == 1 && aRect.height == 1) {
-    gfxPoint point = matrix.Transform(gfxPoint(NSAppUnitsToFloatPixels(aRect.x, factor),
-                                               NSAppUnitsToFloatPixels(aRect.y, factor)));
+    gfxPoint point = matrix.Inverse().ProjectPoint(
+                       gfxPoint(NSAppUnitsToFloatPixels(aRect.x, factor),
+                                NSAppUnitsToFloatPixels(aRect.y, factor)));
 
     resultingRect = nsRect(NSFloatPixelsToAppUnits(float(point.x), factor),
                            NSFloatPixelsToAppUnits(float(point.y), factor),
@@ -2500,7 +2497,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
                          NSAppUnitsToFloatPixels(aRect.width, factor),
                          NSAppUnitsToFloatPixels(aRect.height, factor));
 
-    gfxRect rect = matrix.TransformBounds(originalRect);
+    gfxRect rect = matrix.Inverse().ProjectRectBounds(originalRect);;
 
     resultingRect = nsRect(NSFloatPixelsToAppUnits(float(rect.X()), factor),
                            NSFloatPixelsToAppUnits(float(rect.Y()), factor),
@@ -2693,14 +2690,21 @@ PRBool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
    */
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfx3DMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin, factor, nsnull);
-  if (matrix.IsSingular() || !matrix.Is2D())
+  if (matrix.IsSingular())
     return PR_FALSE;
 
-  /* We want to untransform the matrix, so invert the transformation first! */
-  matrix.Invert();
+  gfxRect result(NSAppUnitsToFloatPixels(aUntransformedBounds.x, factor),
+                 NSAppUnitsToFloatPixels(aUntransformedBounds.y, factor),
+                 NSAppUnitsToFloatPixels(aUntransformedBounds.width, factor),
+                 NSAppUnitsToFloatPixels(aUntransformedBounds.height, factor));
 
-  *aOutRect = nsLayoutUtils::MatrixTransformRect(aUntransformedBounds, matrix,
-                                                 factor);
+  /* We want to untransform the matrix, so invert the transformation first! */
+  result = matrix.Inverse().ProjectRectBounds(result);
+
+  *aOutRect = nsRect(NSFloatPixelsToAppUnits(float(result.x), factor),
+                     NSFloatPixelsToAppUnits(float(result.y), factor),
+                     NSFloatPixelsToAppUnits(float(result.width), factor),
+                     NSFloatPixelsToAppUnits(float(result.height), factor));
 
   return PR_TRUE;
 }
