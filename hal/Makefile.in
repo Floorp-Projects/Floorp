@@ -48,6 +48,9 @@ endif
 ifeq (cocoa,$(MOZ_GAMEPAD_BACKEND))
 CPPSRCS += CocoaGamepad.cpp
 endif
+ifeq (windows,$(MOZ_GAMEPAD_BACKEND))
+CPPSRCS += WindowsGamepad.cpp
+endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
