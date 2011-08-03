@@ -709,6 +709,9 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
     savedCallee_ = args_.calleev() = calleev;
     savedThis_ = args_.thisv() = thisv;
 
+    /* If anyone (through jsdbgapi) finds this frame, make it safe. */
+    MakeRangeGCSafe(args_.argv(), args_.argc());
+
     do {
         /* Hoist dynamic checks from scripted Invoke. */
         if (!calleev.isObject())

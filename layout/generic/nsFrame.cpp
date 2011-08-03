@@ -4214,7 +4214,7 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
       nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0),
                                                       scaleFactor);
     /* Combine the raw transform with a translation to our parent. */
-    result = result * gfx3DMatrix::Translation
+    result *= gfx3DMatrix::Translation
       (NSAppUnitsToFloatPixels(delta.x, scaleFactor),
        NSAppUnitsToFloatPixels(delta.y, scaleFactor),
        0.0f);

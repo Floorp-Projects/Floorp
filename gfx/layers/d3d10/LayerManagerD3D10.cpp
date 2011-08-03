@@ -490,7 +490,7 @@ LayerManagerD3D10::SetViewport(const nsIntSize &aViewport)
    */
   projection._11 = 2.0f / aViewport.width;
   projection._22 = -2.0f / aViewport.height;
-  projection._33 = 1.0f;
+  projection._33 = 0.0f;
   projection._41 = -1.0f;
   projection._42 = 1.0f;
   projection._44 = 1.0f;

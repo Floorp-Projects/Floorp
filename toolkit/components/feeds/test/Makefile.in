@@ -15,15 +15,15 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,56 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = toolkit/components/feeds/test
 
 include $(DEPTH)/config/autoconf.mk
-
-ifdef ENABLE_TESTS
-TOOL_DIRS += test
-endif
-
-MODULE = feeds
-LIBRARY_NAME = feed_s
-MOZILLA_INTERNAL_API = 1
-FORCE_STATIC_LIB = 1
-LIBXUL_LIBRARY = 1
-
-XPIDLSRCS = \
-  nsIFeed.idl \
-  nsIFeedContainer.idl \
-  nsIFeedElementBase.idl \
-  nsIFeedEntry.idl \
-  nsIFeedGenerator.idl \
-  nsIFeedListener.idl \
-  nsIFeedPerson.idl \
-  nsIFeedProcessor.idl \
-  nsIFeedResult.idl \
-  nsIFeedTextConstruct.idl \
-  nsIScriptableUnescapeHTML.idl \
-  $(NULL)
-
-CPPSRCS = \
-  nsScriptableUnescapeHTML.cpp \
-  $(NULL)
-
-EXTRA_COMPONENTS = FeedProcessor.js FeedProcessor.manifest
-
 include $(topsrcdir)/config/rules.mk
 
-ABS_SRCDIR := $(shell cd $(srcdir) && pwd)
-ifeq ($(OS_ARCH),WINNT)
+_TEST_FILES = \
+		test_bug675492.xul    \
+		$(NULL)
 
-ABS_DEPTH := $(shell cd $(DEPTH) && pwd)
-
-check::
-	cd $(srcdir)/test; $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) shell.js 
-
-else
-
-check::
-	$(RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) $(srcdir)/test/shell.js $(ABS_SRCDIR)/test
-
-endif # WINNT
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
