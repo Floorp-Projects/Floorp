@@ -13,21 +13,22 @@ def web_socket_do_extra_handshake(request):
       break
 
   if request.ws_protocol == "test-2.1":
-    time.sleep(5)
+    time.sleep(3)
     pass
   elif request.ws_protocol == "test-9":
-    time.sleep(5)
+    time.sleep(3)
     pass
   elif request.ws_protocol == "test-10":
-    time.sleep(5)
+    time.sleep(3)
     pass
   elif request.ws_protocol == "test-19":
     raise ValueError('Aborting (test-19)')
   elif request.ws_protocol == "test-20" or request.ws_protocol == "test-17":
-    time.sleep(10)
+    time.sleep(3)
     pass
   elif request.ws_protocol == "test-22":
-    time.sleep(60)
+    # The timeout is 5 seconds
+    time.sleep(13)
     pass
   else:
     pass
@@ -85,14 +86,13 @@ def web_socket_transfer_data(request):
     msgutil.close_connection(request, True)
     return
   elif request.ws_protocol == "test-17" or request.ws_protocol == "test-21":
-    time.sleep(5)
+    time.sleep(2)
     resp = "wrong message"
     if msgutil.receive_message(request) == "client data":
       resp = "server data"
     msgutil.send_message(request, resp.decode('utf-8'))
-    time.sleep(5)
+    time.sleep(2)
     msgutil.close_connection(request)
-    time.sleep(5)
   elif request.ws_protocol == "test-20":
     msgutil.send_message(request, "server data")
     msgutil.close_connection(request)
