@@ -150,6 +150,11 @@ class nsStyleTransformMatrix
   static gfx3DMatrix ProcessRotateY(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessRotateZ(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessRotate3D(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessPerspective(const nsCSSValue::Array *aData,
+                                        nsStyleContext *aContext,
+                                        nsPresContext *aPresContext,
+                                        PRBool &aCanStoreInRuleTree,
+                                        float aAppUnitsPerMatrixUnit);
 };
 
 #endif

@@ -4484,6 +4484,11 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
   }
 
+  SetCoord(*aRuleData->ValueForPerspective(), 
+           display->mChildPerspective, parentDisplay->mChildPerspective,
+           SETCOORD_LAH | SETCOORD_INITIAL_ZERO | SETCOORD_NONE,
+           aContext, mPresContext, canStoreInRuleTree);
+
   // orient: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForOrient(),
               display->mOrient, canStoreInRuleTree,
