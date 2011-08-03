@@ -1,0 +1,71 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test hidden frames</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+var index = GamepadService.addGamepad("test gamepad", // id
+                                      4, // buttons
+                                      2);// axes
+
+function pressButton() {
+  GamepadService.newButtonEvent(index, 0, true);
+  GamepadService.newButtonEvent(index, 0, false);
+}
+
+function setFrameVisible(f, visible) {
+  var Ci = SpecialPowers.wrap(Components.interfaces);
+  var docshell = SpecialPowers.wrap(f.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
+  docshell.isActive = visible;
+}
+
+var frames_loaded = 0;
+var f1, f2;
+function frame_loaded() {
+  frames_loaded++;
+ if (frames_loaded == 2) {
+    f1 = document.getElementById('f1');
+    f2 = document.getElementById('f2');
+    pressButton();
+  }
+}
+
+window.addEventListener("gamepadbuttondown", function() {
+  // Wait to ensure that all frames received the button press as well.
+ SpecialPowers.executeSoon(tests[testNum++]);
+});
+
+var testNum = 0;
+var tests = [
+  test1,
+  test2,
+];
+
+function test1() {
+  is(f1.contentWindow.buttonPresses, 1, "right number of button presses in frame 1");
+  is(f2.contentWindow.buttonPresses, 1, "right number of button presses in frame 2");
+
+  // Now hide the second frame and send another button press.
+  setFrameVisible(f2, false);
+  SpecialPowers.executeSoon(function() { pressButton(); });
+}
+
+function test2() {
+  is(f1.contentWindow.buttonPresses, 2, "right number of button presses in frame 1");
+  is(f2.contentWindow.buttonPresses, 1, "right number of button presses in frame 2");
+  GamepadService.removeGamepad(index);
+  SimpleTest.finish();
+}
+
+</script>
+<iframe id="f1" src="gamepad_frame.html" onload="frame_loaded()"></iframe>
+<iframe id="f2" src="gamepad_frame.html" onload="frame_loaded()"></iframe>
+</body>
+</html>

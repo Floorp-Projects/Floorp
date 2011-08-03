@@ -20,6 +20,10 @@ CPPSRCS     = \
   OSFileConstants.cpp \
   $(NULL)
 
+ifdef MOZ_GAMEPAD
+CPPSRCS += GamepadService.cpp
+endif
+
 # We fire the nsDOMDeviceAcceleration
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/events/src \
@@ -55,11 +59,16 @@ EXPORTS_mozilla = \
   OSFileConstants.h \
   $(NULL)
 
-# We fire the nsDOMDeviceAcceleration
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/events/src \
   -I$(topsrcdir)/js/xpconnect/loader \
   $(NULL)
+ifdef MOZ_GAMEPAD
+EXPORTS_NAMESPACES += mozilla/dom
+EXPORTS_mozilla/dom = \
+  GamepadService.h \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/config.mk
 
@@ -69,4 +78,3 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
-
