@@ -131,7 +131,7 @@ Loop::iterateLoopBlocks(MBasicBlock *current)
     for (MInstructionIterator i = current->begin(); i != current->end(); i ++) {
         MInstruction *ins = *i;
 
-        if (ins->hasHoistWin()) {
+        if (ins->isIdempotent()) {
             if (!insertInWorklist(ins))
                 return false;
         }
@@ -172,7 +172,7 @@ Loop::optimize()
 
                 // if the consumer of this invariant instruction is in the
                 // loop, and it is also worth hoisting, then process it.
-                if (isInLoop(consumer) && consumer->hasHoistWin()) {
+                if (isInLoop(consumer) && isHoistable(consumer)) {
                     if (insertInWorklist(consumer->toInstruction()))
                         return false;
                 }
@@ -194,7 +194,7 @@ Loop::hoistInstructions(InstructionQueue &toHoist)
     // Move all instructions to the preLoop_ block just before the control instruction.
     while (!toHoist.empty()) {
         MInstruction *ins = toHoist.popCopy();
-        if (shouldHoist(ins) && checkHotness(ins->block())) {
+        if (checkHotness(ins->block())) {
             ins->block()->remove(ins);
             preLoop_->insertBefore(preLoop_->lastIns(), ins);
             ins->setNotLoopInvariant();
@@ -227,26 +227,6 @@ Loop::isLoopInvariant(MInstruction *ins)
         }
     }
     return true;
-}
-
-bool
-Loop::shouldHoist(MInstruction *ins)
-{
-    JS_ASSERT(ins->hasHoistWin());
-
-    if (ins->estimateHoistWin() == MDefinition::BIG_WIN)
-        return true;
-
-    // If any consumers of this instruction are loop invariant and are worth
-    // hoisting, then we should hoist this instruction.
-    //
-    // Note that this instruction is already a loop invariant; we are just
-    // deciding whether to remove it from the loop.
-    for (MUseDefIterator use(ins->toDefinition()); use; use++) {
-        if (use.def()->isLoopInvariant() && use.def()->hasHoistWin())
-            return true;
-    }
-    return false;
 }
 
 bool
