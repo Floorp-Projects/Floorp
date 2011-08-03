@@ -896,6 +896,8 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(ScrollLayerCount, nsnull)
 
+  NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nsnull)
+
   /**
    * Return the distance between the border edge of the frame and the
    * margin edge of the frame.  Like GetRect(), returns the dimensions
