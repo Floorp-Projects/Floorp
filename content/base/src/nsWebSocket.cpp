@@ -531,7 +531,7 @@ nsWebSocketEstablishedConnection::OnStop(nsISupports *aContext,
 
   if (NS_FAILED(aStatusCode)) {
     ConsoleError();
-    if (mOwner && mOwner->mReadyState != nsIMozWebSocket::CONNECTING) {
+    if (mOwner) {
       nsresult rv =
         mOwner->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
       if (NS_FAILED(rv))
