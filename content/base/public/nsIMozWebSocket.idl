@@ -43,6 +43,13 @@ interface nsIDOMEventListener;
 interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsPIDOMWindow;
+interface nsIDOMDOMStringList;
+
+%{C++
+#include "nsTArray.h"
+class nsString;
+%}
+[ref] native nsStringTArrayRef(nsTArray<nsString>);
 
 /**
  * The nsIMozWebSocket interface enables Web applications to maintain
@@ -51,7 +58,7 @@ interface nsPIDOMWindow;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(662691db-2b99-4461-801b-fbb72d99a4b9)]
+[scriptable, uuid(d50eb158-30a1-4692-8664-fdd479fa24b3)]
 interface nsIMozWebSocket : nsISupports
 {
   readonly attribute DOMString url;
@@ -98,13 +105,16 @@ interface nsIMozWebSocket : nsISupports
    * @param ownerWindow The associated window for the request. May be null.
    * @param url The url for opening the socket. This must not be empty, and
    *            must have an absolute url, using either the ws or wss schemes.
-   * @param protocol  Specifies a sub-protocol that the server must support for
-   *                  the connection to be successful. If empty, no protocol is
-   *                  specified.
+   * @param protocol  Specifies array of sub-protocols acceptable to the client.
+   *                  If the length of the array is at least one, the server
+   *                  must select one of the listed sub-protocols for the
+   *                  connection to be successful. If empty, no sub-protocol is
+   *                  specified. The server selected sub-protocol can be read
+   *                  from the protocol attribute after connection.
    */
   [noscript] void init(in nsIPrincipal principal,
                        in nsIScriptContext scriptContext,
                        in nsPIDOMWindow ownerWindow,
                        in DOMString url,
-                       in DOMString protocol);
+                       in nsStringTArrayRef protocol);
 };

@@ -45,10 +45,21 @@
  * 22. server takes too long to establish the ws connection;
  * 23. see bug 664692 - feature detection should detect MozWebSocket but not
  *     WebSocket on window object;
+ * 24. server rejects sub-protocol string
+ * 25. ctor with valid empty sub-protocol array
+ * 26. ctor with invalid sub-protocol array containing 1 empty element
+ * 27. ctor with invalid sub-protocol array containing an empty element in list
+ * 28. ctor using valid 1 element sub-protocol array
+ * 29. ctor using all valid 5 element sub-protocol array
+ * 30. ctor using valid 1 element sub-protocol array with element server will
+ *     reject
+ * 31. ctor using valid 2 element sub-protocol array with 1 element server
+ *     will reject and one server will accept.
+ * 32. ctor using invalid sub-protocol array that contains duplicate items
  */
 
 var first_test = 1;
-var last_test = 23;
+var last_test = 32;
 
 var current_test = first_test;
 
@@ -309,6 +320,7 @@ function test8()
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-8");
   ws.onopen = function()
   {
+    ok(ws.protocol == "test-8", "test-8 subprotocol selection");
     ws.close();
   }
   ws.onclose = function(e)
@@ -635,9 +647,157 @@ function test22()
 
 function test23()
 {
+  current_test++;
   is(false, "WebSocket" in window, "WebSocket shouldn't be available on window object");
   is(true, "MozWebSocket" in window, "MozWebSocket should be available on window object");
   doTest(24);
+}
+
+function test24()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-does-not-exist");
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(25);
+  };
+  ws.onerror = function()
+  {
+  }
+}
+
+function test25()
+{
+  var prots=[];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 25 protocol array open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(ws.protocol == "", "test25 subprotocol selection");
+    ok(true, "test 25 protocol array close");
+    doTest(26);
+  };
+}
+
+function test26()
+{
+  var prots=[""];
+
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+    ok(false, "testing empty element sub protocol array");
+  }
+  catch (e) {
+    ok(true, "testing empty sub element protocol array");
+  }
+  doTest(27);
+}
+
+function test27()
+{
+  var prots=["test27", ""];
+
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+    ok(false, "testing empty element mixed sub protocol array");
+  }
+  catch (e) {
+    ok(true, "testing empty element mixed sub protocol array");
+  }
+  doTest(28);
+}
+
+function test28()
+{
+  var prots=["test28"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 28 protocol array open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(ws.protocol == "test28", "test28 subprotocol selection");
+    ok(true, "test 28 protocol array close");
+    doTest(29);
+  };
+}
+
+function test29()
+{
+  var prots=["test29a", "test29b"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 29 protocol array open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 29 protocol array close");
+    doTest(30);
+  };
+}
+
+function test30()
+{
+  var prots=["test-does-not-exist"];
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(31);
+  };
+  ws.onerror = function()
+  {
+  }
+}
+
+function test31()
+{
+  var prots=["test-does-not-exist", "test31"];
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+
+  ws.onopen = function(e)
+  {
+    ok(true, "test 31 protocol array open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(ws.protocol == "test31", "test31 subprotocol selection");
+    ok(true, "test 31 protocol array close");
+    doTest(32);
+  };
+}
+
+function test32()
+{
+  var prots=["test32","test32"];
+
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+    ok(false, "testing duplicated element sub protocol array");
+  }
+  catch (e) {
+    ok(true, "testing duplicated sub element protocol array");
+  }
+  doTest(33);
 }
 
 function finishWSTest()
