@@ -949,6 +949,35 @@ nsComputedDOMStyle::DoGetMozTransformOrigin()
   return valueList;
 }
 
+/* Convert the stored representation into a list of two values and then hand
+ * it back.
+ */
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozPerspectiveOrigin()
+{
+  /* We need to build up a list of two values.  We'll call them
+   * width and height.
+   */
+
+  /* Store things as a value list */
+  nsDOMCSSValueList* valueList = GetROCSSValueList(PR_FALSE);
+
+  /* Now, get the values. */
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsROCSSPrimitiveValue* width = GetROCSSPrimitiveValue();
+  SetValueToCoord(width, display->mPerspectiveOrigin[0], PR_FALSE,
+                  &nsComputedDOMStyle::GetFrameBoundsWidthForTransform);
+  valueList->AppendCSSValue(width);
+
+  nsROCSSPrimitiveValue* height = GetROCSSPrimitiveValue();
+  SetValueToCoord(height, display->mPerspectiveOrigin[1], PR_FALSE,
+                  &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
+  valueList->AppendCSSValue(height);
+
+  return valueList;
+}
+
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetMozPerspective()
 {
