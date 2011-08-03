@@ -2034,6 +2034,7 @@ nsStyleDisplay::nsStyleDisplay()
   mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
   mTransformOrigin[1].SetPercentValue(0.5f); 
   mChildPerspective.SetCoordValue(0);
+  mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
   mOrient = NS_STYLE_ORIENT_HORIZONTAL;
 
   mTransitions.AppendElement();
@@ -2100,6 +2101,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mTransformOrigin[0] = aSource.mTransformOrigin[0];
   mTransformOrigin[1] = aSource.mTransformOrigin[1];
   mChildPerspective = aSource.mChildPerspective;
+  mBackfaceVisibility = aSource.mBackfaceVisibility;
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
@@ -2165,6 +2167,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     if (mChildPerspective != aOther.mChildPerspective)
       NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
                                          nsChangeHint_RepaintFrame));
+
+    if (mBackfaceVisibility != aOther.mBackfaceVisibility)
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   }
 
   // Note:  Our current behavior for handling changes to the

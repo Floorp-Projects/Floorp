@@ -392,3 +392,17 @@ gfxRect gfx3DMatrix::ProjectRectBounds(const gfxRect& aRect) const
   return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
+gfxPoint3D gfx3DMatrix::GetNormalVector() const
+{
+    // Define a plane in transformed space as the transformations
+    // of 3 points on the z=0 screen plane.
+    gfxPoint3D a = Transform3D(gfxPoint3D(0, 0, 0));
+    gfxPoint3D b = Transform3D(gfxPoint3D(0, 1, 0));
+    gfxPoint3D c = Transform3D(gfxPoint3D(1, 0, 0));
+
+    // Convert to two vectors on the surface of the plane.
+    gfxPoint3D ab = b - a;
+    gfxPoint3D ac = c - a;
+
+    return ac.CrossProduct(ab);
+}

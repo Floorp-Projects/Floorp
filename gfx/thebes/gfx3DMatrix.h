@@ -135,6 +135,12 @@ public:
   }
 
   /**
+   * Returns a unit vector that is perpendicular to the plane formed
+   * by transform the screen plane (z=0) by this matrix.
+   */
+  gfxPoint3D GetNormalVector() const;
+
+  /**
    * Check if matrix is singular (no inverse exists).
    */
   PRBool IsSingular() const;

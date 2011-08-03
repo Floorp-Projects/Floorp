@@ -2267,6 +2267,15 @@ CSS_PROP_DISPLAY(
     nsnull,
     offsetof(nsStyleDisplay, mChildPerspective),
     eStyleAnimType_Coord)
+CSS_PROP_DISPLAY(
+    -moz-backface-visibility,
+    backface_visibility,
+    CSS_PROP_DOMPROP_PREFIXED(BackfaceVisibility),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kBackfaceVisibilityKTable,
+    offsetof(nsStyleDisplay, mBackfaceVisibility),
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     top,
     top,

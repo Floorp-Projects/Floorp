@@ -2418,8 +2418,12 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
 {
   const gfx3DMatrix& newTransformMatrix = 
     GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel());
-  if (newTransformMatrix.IsSingular())
+
+  if (newTransformMatrix.IsSingular() ||
+      (mFrame->GetStyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
+       newTransformMatrix.GetNormalVector().z <= 0.0)) {
     return nsnull;
+  }
 
   return aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList(),
@@ -2487,8 +2491,12 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfx3DMatrix matrix = GetTransform(factor);
 
-  if (matrix.IsSingular())
-    return;
+  /* If the matrix is singular, or a hidden backface is shown, we didn't hit anything. */
+  if (matrix.IsSingular() ||
+      (mFrame->GetStyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
+       matrix.GetNormalVector().z <= 0.0)) {
+          return;
+  }
 
   /* We want to go from transformed-space to regular space.
    * Thus we have to invert the matrix, which normally does

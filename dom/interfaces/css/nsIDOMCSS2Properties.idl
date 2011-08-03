@@ -51,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(1ca298f0-4eaf-4483-8aa2-587f392f84bb)]
+[scriptable, uuid(63a0afd0-b322-11e0-aff2-0800200c9a66)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -683,6 +683,9 @@ interface nsIDOMCSS2Properties : nsISupports
 
            attribute DOMString        MozPerspective;
                                         // raises(DOMException) on setting
+
+           attribute DOMString        MozBackfaceVisibility;
+                                        // raises(DOMException) on setting 
 
            attribute DOMString        MozWindowShadow;
                                         // raises(DOMException) on setting

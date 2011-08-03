@@ -954,6 +954,16 @@ nsComputedDOMStyle::DoGetMozPerspective()
     return val;
 }
 
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozBackfaceVisibility()
+{
+    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+    val->SetIdent(
+        nsCSSProps::ValueToKeywordEnum(GetStyleDisplay()->mBackfaceVisibility,
+                                       nsCSSProps::kBackfaceVisibilityKTable));
+    return val;
+}
+
 /* If the property is "none", hand back "none" wrapped in a value.
  * Otherwise, compute the aggregate transform matrix and hands it back in a
  * "matrix" wrapper.
@@ -4378,6 +4388,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(animation_play_state,          AnimationPlayState),
     COMPUTED_STYLE_MAP_ENTRY(animation_timing_function,     AnimationTimingFunction),
     COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
+    COMPUTED_STYLE_MAP_ENTRY(backface_visibility,           MozBackfaceVisibility),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_inline_policy, BackgroundInlinePolicy),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),

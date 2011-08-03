@@ -4489,6 +4489,11 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            SETCOORD_LAH | SETCOORD_INITIAL_ZERO | SETCOORD_NONE,
            aContext, mPresContext, canStoreInRuleTree);
 
+  SetDiscrete(*aRuleData->ValueForBackfaceVisibility(),
+              display->mBackfaceVisibility, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentDisplay->mBackfaceVisibility,
+              NS_STYLE_BACKFACE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
+
   // orient: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForOrient(),
               display->mOrient, canStoreInRuleTree,
