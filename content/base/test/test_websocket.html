@@ -56,10 +56,15 @@
  * 31. ctor using valid 2 element sub-protocol array with 1 element server
  *     will reject and one server will accept.
  * 32. ctor using invalid sub-protocol array that contains duplicate items
+ * 33. default close code test
+ * 34. test for receiving custom close code and reason
+ * 35. test for sending custom close code and reason
+ * 36. negative test for sending out of range close code
+ * 37. negative test for too long of a close reason
  */
 
 var first_test = 1;
-var last_test = 32;
+var last_test = 37;
 
 var current_test = first_test;
 
@@ -882,6 +887,173 @@ function test32()
     ok(true, "testing duplicated sub element protocol array");
   }
   doTest(33);
+}
+
+function test33()
+{
+  var prots=["test33"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 33 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 33 close");
+    ok(e.wasClean, "test 33 closed cleanly");
+    ok(e.code == 1000, "test 33 had normal 1000 error code");
+    doTest(34);
+  };
+}
+
+function test34()
+{
+  var prots=["test-34"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 34 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 34 close");
+    ok(e.wasClean, "test 34 closed cleanly");
+    ok(e.code == 1001, "test 34 custom server code");
+    ok(e.reason == "going away now", "test 34 custom server reason");
+    doTest(35);
+  };
+}
+
+function test35()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-35a");
+
+  ws.onopen = function(e)
+  {
+    ok(true, "test 35a open");
+    ws.close(3500, "my code");
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 35a close");
+    ok(e.wasClean, "test 35a closed cleanly");
+    current_test--; // CreateTestWS for 35a incremented this
+    var wsb = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-35b");
+
+  wsb.onopen = function(e)
+  {
+    ok(true, "test 35b open");
+    wsb.close();
+  };
+
+  wsb.onclose = function(e)
+  {
+    ok(true, "test 35b close");
+    ok(e.wasClean, "test 35b closed cleanly");
+    ok(e.code == 3501, "test 35 custom server code");
+    ok(e.reason == "my code", "test 35 custom server reason");
+    doTest(36);
+  };
+  }
+}
+
+function test36()
+{
+  var prots=["test-36"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 36 open");
+
+    try {
+      ws.close(13200);
+      ok(false, "testing custom close code out of range");
+     }
+     catch (e) {
+       ok(true, "testing custom close code out of range");
+       ws.close(3200);
+     }
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 36 close");
+    ok(e.wasClean, "test 36 closed cleanly");
+    doTest(37);
+  };
+}
+
+function test37()
+{
+  var prots=["test-37"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 37 open");
+
+    try {
+	ws.close(3100,"0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123");
+      ok(false, "testing custom close reason out of range");
+     }
+     catch (e) {
+       ok(true, "testing custom close reason out of range");
+       ws.close(3100,"012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012");
+     }
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 37 close");
+    ok(e.wasClean, "test 37 closed cleanly");
+
+    current_test--; // CreateTestWS for 37 incremented this
+    var wsb = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-37b");
+
+    wsb.onopen = function(e)
+    {
+      // now test that a rejected close code and reason dont persist
+      ok(true, "test 37b open");
+      try {
+        wsb.close(3101,"0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123");
+        ok(false, "testing custom close reason out of range 37b");
+      }
+      catch (e) {
+        ok(true, "testing custom close reason out of range 37b");
+        wsb.close();
+     }
+    }
+
+    wsb.onclose = function(e)
+    {
+      ok(true, "test 37b close");
+      ok(e.wasClean, "test 37b closed cleanly");
+
+      current_test--; // CreateTestWS for 37 incremented this
+      var wsc = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-37c");
+
+      wsc.onopen = function(e)
+      {
+        ok(true, "test 37c open");
+        wsc.close();
+      }
+
+      wsc.onclose = function(e)
+      {
+         ok(e.code != 3101, "test 37c custom server code not present");
+         ok(e.reason == "", "test 37c custom server reason not present");
+         doTest(38);  
+      }
+    }
+  }
 }
 
 var ranAllTests = false;

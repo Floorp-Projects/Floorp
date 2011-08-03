@@ -96,5 +96,25 @@ def web_socket_transfer_data(request):
   elif request.ws_protocol == "test-20":
     msgutil.send_message(request, "server data")
     msgutil.close_connection(request)
+  elif request.ws_protocol == "test-34":
+    request.ws_stream.close_connection(1001, "going away now")
+  elif request.ws_protocol == "test-35a":
+    while not request.client_terminated:
+      msgutil.receive_message(request)
+    global test35code
+    test35code = request.ws_close_code
+    global test35reason
+    test35reason = request.ws_close_reason
+  elif request.ws_protocol == "test-35b":
+    request.ws_stream.close_connection(test35code + 1, test35reason)
+  elif request.ws_protocol == "test-37b":
+    while not request.client_terminated:
+      msgutil.receive_message(request)
+    global test37code
+    test37code = request.ws_close_code
+    global test37reason
+    test37reason = request.ws_close_reason
+  elif request.ws_protocol == "test-37c":
+    request.ws_stream.close_connection(test37code, test37reason)
   while not request.client_terminated:
     msgutil.receive_message(request)

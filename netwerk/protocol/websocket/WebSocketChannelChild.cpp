@@ -291,36 +291,44 @@ WebSocketChannelChild::OnAcknowledge(const PRUint32& aSize)
 class ServerCloseEvent : public ChannelEvent
 {
  public:
-  ServerCloseEvent(WebSocketChannelChild* aChild)
+  ServerCloseEvent(WebSocketChannelChild* aChild,
+                   const PRUint16 aCode,
+                   const nsCString &aReason)
   : mChild(aChild)
+  , mCode(aCode)
+  , mReason(aReason)
   {}
 
   void Run()
   {
-    mChild->OnServerClose();
+    mChild->OnServerClose(mCode, mReason);
   }
  private:
   WebSocketChannelChild* mChild;
+  PRUint16               mCode;
+  nsCString              mReason;
 };
 
 bool
-WebSocketChannelChild::RecvOnServerClose()
+WebSocketChannelChild::RecvOnServerClose(const PRUint16& aCode,
+                                         const nsCString& aReason)
 {
   if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new ServerCloseEvent(this));
+    mEventQ.Enqueue(new ServerCloseEvent(this, aCode, aReason));
   } else {
-    OnServerClose();
+    OnServerClose(aCode, aReason);
   }
   return true;
 }
 
 void
-WebSocketChannelChild::OnServerClose()
+WebSocketChannelChild::OnServerClose(const PRUint16& aCode,
+                                     const nsCString& aReason)
 {
   LOG(("WebSocketChannelChild::RecvOnServerClose() %p\n", this));
   if (mListener) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);;
-    mListener->OnServerClose(mContext);
+    mListener->OnServerClose(mContext, aCode, aReason);
   }
 }
 
@@ -361,11 +369,11 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
-WebSocketChannelChild::Close()
+WebSocketChannelChild::Close(PRUint16 code, const nsACString & reason)
 {
   LOG(("WebSocketChannelChild::Close() %p\n", this));
 
-  if (!mIPCOpen || !SendClose())
+  if (!mIPCOpen || !SendClose(code, nsCString(reason)))
     return NS_ERROR_UNEXPECTED;
   return NS_OK;
 }
