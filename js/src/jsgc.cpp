@@ -94,6 +94,8 @@
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
+#include "ion/IonCode.h"
+#include "ion/IonMacroAssembler.h"
 
 #ifdef MOZ_VALGRIND
 # define JS_VALGRIND
@@ -111,13 +113,14 @@ using namespace js::gc;
 JS_STATIC_ASSERT(JSTRACE_OBJECT == 0);
 JS_STATIC_ASSERT(JSTRACE_STRING == 1);
 JS_STATIC_ASSERT(JSTRACE_SHAPE  == 2);
-JS_STATIC_ASSERT(JSTRACE_XML    == 3);
+JS_STATIC_ASSERT(JSTRACE_IONCODE == 3);
+JS_STATIC_ASSERT(JSTRACE_XML    == 4);
 
 /*
- * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_SHAPE is the last non-xml
+ * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_IONCODE is the last non-xml
  * trace kind when JS_HAS_XML_SUPPORT is false.
  */
-JS_STATIC_ASSERT(JSTRACE_SHAPE + 1 == JSTRACE_XML);
+JS_STATIC_ASSERT(JSTRACE_IONCODE + 1 == JSTRACE_XML);
 
 namespace js {
 namespace gc {
@@ -154,6 +157,7 @@ const uint8 GCThingSizeMap[] = {
     sizeof(JSShortString),      /* FINALIZE_SHORT_STRING        */
     sizeof(JSString),           /* FINALIZE_STRING              */
     sizeof(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
+    sizeof(ion::IonCode),       /* FINALIZE_IONCODE             */
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(GCThingSizeMap) == FINALIZE_LIMIT);
@@ -785,6 +789,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
         test = MarkArenaPtrConservatively<JSXML>(trc, aheader, addr);
         break;
 #endif
+      case FINALIZE_IONCODE:
+        test = MarkArenaPtrConservatively<ion::IonCode>(trc, aheader, addr);
+        break;
       default:
         test = CGCT_WRONGTAG;
         JS_NOT_REACHED("wrong tag");
@@ -1450,6 +1457,8 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
       case FINALIZE_XML:
         return RefillTypedFreeList<JSXML>(cx, thingKind);
 #endif
+      case FINALIZE_IONCODE:
+        return RefillTypedFreeList<ion::IonCode>(cx, thingKind);
       default:
         JS_NOT_REACHED("bad finalize kind");
         return NULL;
@@ -1518,7 +1527,8 @@ GCMarker::GCMarker(JSContext *cx)
     objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
     ropeStack(cx->runtime->gcMarkStackRopes, sizeof(cx->runtime->gcMarkStackRopes)),
     xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
-    largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
+    largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges)),
+    ionCodeStack(cx->runtime->gcMarkStackIonCode, sizeof(cx->runtime->gcMarkStackIonCode))
 {
     JS_TRACER_INIT(this, cx, NULL);
 #ifdef DEBUG
@@ -1771,6 +1781,13 @@ AutoGCRooter::trace(JSTracer *trc)
         static_cast<js::AutoBindingsRooter *>(this)->bindings.trace(trc);
         return;
       }
+
+      case IONMASM: {
+#ifdef JS_ION
+        static_cast<js::ion::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);
+#endif
+        break;
+      }
     }
 
     JS_ASSERT(tag >= 0);
@@ -1811,7 +1828,7 @@ MarkContext(JSTracer *trc, JSContext *acx)
     }
 
 JS_REQUIRES_STACK void
-MarkRuntime(JSTracer *trc)
+MarkRuntime(JSTracer *trc, JSCompartment *comp)
 {
     JSRuntime *rt = trc->context->runtime;
 
@@ -1837,6 +1854,13 @@ MarkRuntime(JSTracer *trc)
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
+
+    if (comp) {
+        comp->mark(trc);
+    } else {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            (*c)->mark(trc);
+    }
 
     /*
      * We mark extra roots at the last thing so it can use use additional
@@ -2000,6 +2024,12 @@ void
 JSCompartment::finalizeShapeArenaLists(JSContext *cx)
 {
     arenas[FINALIZE_SHAPE].finalizeNow<Shape>(cx);
+}
+
+void
+JSCompartment::finalizeIonCodeArenaLists(JSContext *cx)
+{
+    arenas[FINALIZE_IONCODE].finalizeNow<ion::IonCode>(cx);
 }
 
 #ifdef JS_THREADSAFE
@@ -2269,7 +2299,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
             (*c)->markCrossCompartmentWrappers(&gcmarker);
     }
 
-    MarkRuntime(&gcmarker);
+    MarkRuntime(&gcmarker, comp);
 
     gcmarker.drainMarkStack();
 
@@ -2332,6 +2362,8 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         GCTIMESTAMP(sweepObjectEnd);
         comp->finalizeStringArenaLists(cx);
         GCTIMESTAMP(sweepStringEnd);
+        comp->finalizeIonCodeArenaLists(cx);
+        GCTIMESTAMP(sweepIonCodeEnd);
         comp->finalizeShapeArenaLists(cx);
         GCTIMESTAMP(sweepShapeEnd);
     } else {
@@ -2353,6 +2385,11 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
             (*c)->finalizeStringArenaLists(cx);
 
         GCTIMESTAMP(sweepStringEnd);
+
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+            (*c)->finalizeIonCodeArenaLists(cx);
+
+        GCTIMESTAMP(sweepIonCodeEnd);
 
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
             (*c)->finalizeShapeArenaLists(cx);
@@ -2782,7 +2819,7 @@ TraceRuntime(JSTracer *trc)
 
             AutoCopyFreeListToArenas copy(rt);
             RecordNativeStackTopForGC(trc->context);
-            MarkRuntime(trc);
+            MarkRuntime(trc, NULL);
             return;
         }
     }
@@ -2795,7 +2832,7 @@ TraceRuntime(JSTracer *trc)
      * Calls from inside a normal GC or a recursive calls are OK and do not
      * require session setup.
      */
-    MarkRuntime(trc);
+    MarkRuntime(trc, NULL);
 }
 
 void

@@ -79,6 +79,7 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
+#include "ion/Ion.h"
 #endif
 #include "jsatominlines.h"
 #include "jsinterpinlines.h"
@@ -599,6 +600,14 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
             return false;
         }
     }
+
+#ifdef JS_ION
+    if (ion::IsEnabled()) {
+        ion::MethodStatus status = ion::Compile(cx, script, fp);
+        if (status == ion::Method_Compiled)
+            return ion::Cannon(cx, fp);
+    }
+#endif
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
@@ -4035,6 +4044,16 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     RESET_USE_METHODJIT();
     TRACE_0(EnterFrame);
 
+#ifdef JS_ION
+    if (ion::IsEnabled()) {
+        ion::MethodStatus status = ion::Compile(cx, script, regs.fp());
+        if (status == ion::Method_Compiled) {
+            interpReturnOK = ion::Cannon(cx, regs.fp());
+            CHECK_INTERRUPT_HANDLER();
+            goto jit_return;
+        }
+    }
+#endif
 #ifdef JS_METHODJIT
     {
         /* Try to ensure methods are method JIT'd.  */
