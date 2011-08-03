@@ -16,6 +16,8 @@ function getFileStream(filename)
   return fileStream;
 }
 
+var gTimer;
+
 function handleRequest(request, response)
 {
   response.processAsync();
@@ -26,8 +28,8 @@ function handleRequest(request, response)
   response.bodyOutputStream.writeFrom(firststream, firststream.available())
   firststream.close();
 
-  var timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(function()
+  gTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+  gTimer.initWithCallback(function()
   {
     var secondstream = getFileStream("threeframes-end.gif");
     response.bodyOutputStream.writeFrom(secondstream, secondstream.available())
