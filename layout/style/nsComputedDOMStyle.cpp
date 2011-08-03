@@ -941,6 +941,19 @@ nsComputedDOMStyle::DoGetMozTransformOrigin()
   return valueList;
 }
 
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozPerspective()
+{
+    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+    if (GetStyleDisplay()->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
+        GetStyleDisplay()->mChildPerspective.GetCoordValue() == 0.0) {
+        val->SetIdent(eCSSKeyword_none);
+    } else {
+        SetValueToCoord(val, GetStyleDisplay()->mChildPerspective, PR_FALSE);
+    }
+    return val;
+}
+
 /* If the property is "none", hand back "none" wrapped in a value.
  * Otherwise, compute the aggregate transform matrix and hands it back in a
  * "matrix" wrapper.
@@ -4397,6 +4410,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
+    COMPUTED_STYLE_MAP_ENTRY(perspective,                   MozPerspective),
     COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
     COMPUTED_STYLE_MAP_ENTRY(_moz_tab_size,                 MozTabSize),
     COMPUTED_STYLE_MAP_ENTRY(text_blink,                    MozTextBlink),

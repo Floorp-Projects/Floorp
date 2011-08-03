@@ -121,6 +121,7 @@ namespace css = mozilla::css;
 #define VARIANT_ZERO_ANGLE    0x02000000  // unitless zero for angles
 #define VARIANT_CALC          0x04000000  // eCSSUnit_Calc
 #define VARIANT_ELEMENT       0x08000000  // eCSSUnit_Element
+#define VARIANT_POSITIVE_LENGTH 0x10000000 // Only lengths greater than 0.0
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -4545,6 +4546,12 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       ((aVariantMask & (VARIANT_LENGTH | VARIANT_ZERO_ANGLE)) != 0 &&
        eCSSToken_Number == tk->mType &&
        tk->mNumber == 0.0f)) {
+    if ((aVariantMask & VARIANT_POSITIVE_LENGTH) != 0 && 
+        eCSSToken_Number == tk->mType &&
+        tk->mNumber <= 0.0) {
+        UngetToken();
+        return PR_FALSE;
+    }
     if (TranslateDimension(aValue, aVariantMask, tk->mNumber, tk->mIdent)) {
       return PR_TRUE;
     }
@@ -7278,6 +7285,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
          eAngle,
          eTwoAngles,
          eNumber,
+         ePositiveLength,
          eTwoNumbers,
          eThreeNumbers,
          eThreeNumbersOneAngle,
@@ -7293,6 +7301,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     {VARIANT_ANGLE_OR_ZERO},
     {VARIANT_ANGLE_OR_ZERO, VARIANT_ANGLE_OR_ZERO},
     {VARIANT_NUMBER},
+    {VARIANT_LENGTH|VARIANT_POSITIVE_LENGTH},
     {VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_ANGLE_OR_ZERO},
@@ -7305,7 +7314,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
 
 #ifdef DEBUG
   static const PRUint8 kVariantMaskLengths[eNumVariantMasks] =
-    {1, 1, 2, 3, 1, 2, 1, 2, 3, 4, 6, 16};
+    {1, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4, 6, 16};
 #endif
 
   PRInt32 variantIndex = eNumVariantMasks;
@@ -7407,6 +7416,13 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     variantIndex = eMatrix3d;
     aMinElems = 16U;
     aMaxElems = 16U;
+    aIs3D = PR_TRUE;
+    break;
+  case eCSSKeyword_perspective:
+    /* Exactly one scale number. */
+    variantIndex = ePositiveLength;
+    aMinElems = 1U;
+    aMaxElems = 1U;
     aIs3D = PR_TRUE;
     break;
   default:

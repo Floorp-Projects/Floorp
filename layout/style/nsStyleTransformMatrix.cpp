@@ -607,6 +607,34 @@ nsStyleTransformMatrix::ProcessRotate3D(const nsCSSValue::Array* aData)
   return temp;
 }
 
+/* static */ gfx3DMatrix
+nsStyleTransformMatrix::ProcessPerspective(const nsCSSValue::Array* aData,
+                                           nsStyleContext *aContext,
+                                           nsPresContext *aPresContext,
+                                           PRBool &aCanStoreInRuleTree,
+                                           float aAppUnitsPerMatrixUnit)
+{
+  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+
+  /* We want our matrix to look like this:
+   * | 1 0 0        0 |
+   * | 0 1 0        0 |
+   * | 0 0 1 -1/depth |
+   * | 0 0 0        1 |
+   */
+
+  gfx3DMatrix temp;
+
+  float depth;
+  ProcessTranslatePart(depth, aData->Item(1), aContext,
+                       aPresContext, aCanStoreInRuleTree,
+                       0, aAppUnitsPerMatrixUnit);
+  NS_ASSERTION(depth > 0.0, "Perspective must be positive!");
+  temp._34 = -1.0/depth;
+
+  return temp;
+}
+
 /**
  * Return the transform function, as an nsCSSKeyword, for the given
  * nsCSSValue::Array from a transform list.
@@ -687,6 +715,9 @@ nsStyleTransformMatrix::MatrixForTransformFunction(const nsCSSValue::Array * aDa
   case eCSSKeyword_interpolatematrix:
     return ProcessInterpolateMatrix(aData, aContext, aPresContext,
                                     aCanStoreInRuleTree, aBounds, aAppUnitsPerMatrixUnit);
+  case eCSSKeyword_perspective:
+    return ProcessPerspective(aData, aContext, aPresContext, 
+                              aCanStoreInRuleTree, aAppUnitsPerMatrixUnit);
   default:
     NS_NOTREACHED("Unknown transform function!");
   }
