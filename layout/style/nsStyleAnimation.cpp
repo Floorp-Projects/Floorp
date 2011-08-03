@@ -2414,6 +2414,22 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty_perspective_origin: {
+          const nsStyleDisplay *styleDisplay =
+            static_cast<const nsStyleDisplay*>(styleStruct);
+          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
+          if (!pair ||
+              !StyleCoordToCSSValue(styleDisplay->mPerspectiveOrigin[0],
+                                    pair->mXValue) ||
+              !StyleCoordToCSSValue(styleDisplay->mPerspectiveOrigin[1],
+                                    pair->mYValue)) {
+            return PR_FALSE;
+          }
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                      eUnit_CSSValuePair);
+          break;
+        }
+
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
           NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==

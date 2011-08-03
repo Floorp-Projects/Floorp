@@ -596,8 +596,8 @@ protected:
                                 PRUint16 aMaxElems,
                                 nsTArray<nsCSSValue>& aOutput);
 
-  /* Functions for -moz-transform-origin Parsing */
-  PRBool ParseMozTransformOrigin();
+  /* Functions for -moz-transform-origin/-moz-perspective-origin Parsing */
+  PRBool ParseMozTransformOrigin(PRBool aPerspective);
 
   /* Find and return the namespace ID associated with aPrefix.
      If aPrefix has not been declared in an @namespace rule, returns
@@ -5548,7 +5548,9 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty__moz_transform:
     return ParseMozTransform();
   case eCSSProperty__moz_transform_origin:
-    return ParseMozTransformOrigin();
+    return ParseMozTransformOrigin(PR_FALSE);
+  case eCSSProperty_perspective_origin:
+    return ParseMozTransformOrigin(PR_TRUE);
   case eCSSProperty_transition:
     return ParseTransition();
   case eCSSProperty_animation:
@@ -7502,12 +7504,19 @@ PRBool CSSParserImpl::ParseMozTransform()
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::ParseMozTransformOrigin()
+PRBool CSSParserImpl::ParseMozTransformOrigin(PRBool aPerspective)
 {
   nsCSSValuePair position;
-  nsCSSValue depth;
   if (!ParseBoxPositionValues(position, PR_TRUE))
     return PR_FALSE;
+
+  nsCSSProperty prop = eCSSProperty__moz_transform_origin;
+  if (aPerspective) {
+    if (!ExpectEndProperty()) {
+      return PR_FALSE;
+    }
+    prop = eCSSProperty_perspective_origin;
+  }
 
   // Unlike many other uses of pairs, this position should always be stored
   // as a pair, even if the values are the same, so it always serializes as
@@ -7516,16 +7525,21 @@ PRBool CSSParserImpl::ParseMozTransformOrigin()
       position.mXValue.GetUnit() == eCSSUnit_Initial) {
     NS_ABORT_IF_FALSE(position.mXValue == position.mYValue,
                       "inherit/initial only half?");
-    AppendValue(eCSSProperty__moz_transform_origin, position.mXValue);
+    AppendValue(prop, position.mXValue);
   } else {
-    if (!ParseVariant(depth, VARIANT_LENGTH | VARIANT_CALC, nsnull) || 
-        !nsLayoutUtils::Are3DTransformsEnabled()) {
-      depth.Reset();
+    nsCSSValue value;
+    if (aPerspective) {
+      value.SetPairValue(position.mXValue, position.mYValue);
+    } else {
+      nsCSSValue depth;
+      if (!ParseVariant(depth, VARIANT_LENGTH | VARIANT_CALC, nsnull) ||
+          !nsLayoutUtils::Are3DTransformsEnabled()) {
+        depth.Reset();
+      }
+      value.SetTripletValue(position.mXValue, position.mYValue, depth);
     }
 
-    nsCSSValue triplet;
-    triplet.SetTripletValue(position.mXValue, position.mYValue, depth);
-    AppendValue(eCSSProperty__moz_transform_origin, triplet);
+    AppendValue(prop, value);
   }
   return PR_TRUE;
 }

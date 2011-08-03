@@ -4511,6 +4511,21 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
      NS_ASSERTION(cX, "Malformed -moz-transform-origin parse!");
   }
 
+  const nsCSSValue* perspectiveOriginValue =
+    aRuleData->ValueForPerspectiveOrigin();
+  if (perspectiveOriginValue->GetUnit() != eCSSUnit_Null) {
+    mozilla::DebugOnly<PRBool> result =
+      SetPairCoords(*perspectiveOriginValue,
+                    display->mPerspectiveOrigin[0],
+                    display->mPerspectiveOrigin[1],
+                    parentDisplay->mPerspectiveOrigin[0],
+                    parentDisplay->mPerspectiveOrigin[1],
+                    SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                    SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC,
+                    aContext, mPresContext, canStoreInRuleTree);
+    NS_ASSERTION(result, "Malformed -moz-perspective-origin parse!");
+  }
+
   SetCoord(*aRuleData->ValueForPerspective(), 
            display->mChildPerspective, parentDisplay->mChildPerspective,
            SETCOORD_LAH | SETCOORD_INITIAL_ZERO | SETCOORD_NONE,
