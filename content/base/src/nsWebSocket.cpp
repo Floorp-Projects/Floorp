@@ -77,6 +77,7 @@
 #include "nsILoadGroup.h"
 #include "nsIRequest.h"
 #include "mozilla/Preferences.h"
+#include "nsDOMLists.h"
 
 using namespace mozilla;
 
@@ -295,9 +296,10 @@ nsWebSocketEstablishedConnection::Init(nsWebSocket *aOwner)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!mOwner->mProtocol.IsEmpty())
-    rv = mWebSocketChannel->SetProtocol(mOwner->mProtocol);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!mOwner->mRequestedProtocolList.IsEmpty()) {
+    rv = mWebSocketChannel->SetProtocol(mOwner->mRequestedProtocolList);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCString utf8Origin;
   CopyUTF16toUTF8(mOwner->mUTF16Origin, utf8Origin);
@@ -503,8 +505,8 @@ nsWebSocketEstablishedConnection::OnStart(nsISupports *aContext)
   if (!mOwner)
     return NS_OK;
 
-  if (!mOwner->mProtocol.IsEmpty())
-    mWebSocketChannel->GetProtocol(mOwner->mProtocol);
+  if (!mOwner->mRequestedProtocolList.IsEmpty())
+    mWebSocketChannel->GetProtocol(mOwner->mEstablishedProtocol);
 
   mStatus = CONN_CONNECTED_AND_READY;
   mOwner->SetReadyState(nsIMozWebSocket::OPEN);
@@ -676,8 +678,9 @@ NS_IMPL_RELEASE_INHERITED(nsWebSocket, nsDOMEventTargetWrapperCache)
 /**
  * This Initialize method is called from XPConnect via nsIJSNativeInitializer.
  * It is used for constructing our nsWebSocket from JavaScript. It expects a URL
- * string parameter and an optional protocol parameter. It also initializes the
- * principal, the script context and the window owner.
+ * string parameter and an optional protocol parameter which may be a string or
+ * an array of strings. It also initializes the principal, the script context and
+ * the window owner.
  */
 NS_IMETHODIMP
 nsWebSocket::Initialize(nsISupports* aOwner,
@@ -687,7 +690,7 @@ nsWebSocket::Initialize(nsISupports* aOwner,
                         jsval* aArgv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsAutoString urlParam, protocolParam;
+  nsAutoString urlParam;
 
   if (!PrefEnabled()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -714,24 +717,6 @@ nsWebSocket::Initialize(nsISupports* aOwner,
   urlParam.Assign(chars, length);
   deleteProtector.clear();
 
-  if (aArgc == 2) {
-    jsstr = JS_ValueToString(aContext, aArgv[1]);
-    if (!jsstr) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    deleteProtector.set(jsstr);
-    chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
-    if (!chars) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    protocolParam.Assign(chars, length);
-    if (protocolParam.IsEmpty()) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-  }
-
   nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aOwner);
   NS_ENSURE_STATE(ownerWindow);
 
@@ -745,7 +730,62 @@ nsWebSocket::Initialize(nsISupports* aOwner,
   nsCOMPtr<nsIPrincipal> principal = scriptPrincipal->GetPrincipal();
   NS_ENSURE_STATE(principal);
 
-  return Init(principal, scriptContext, ownerWindow, urlParam, protocolParam);
+  nsTArray<nsString> protocolArray;
+
+  if (aArgc == 2) {
+    JSObject *jsobj;
+
+    if (JSVAL_IS_OBJECT(aArgv[1]) &&
+        (jsobj = JSVAL_TO_OBJECT(aArgv[1])) &&
+        JS_IsArrayObject(aContext, jsobj)) {
+      jsuint len;
+      JS_GetArrayLength(aContext, jsobj, &len);
+      
+      for (PRUint32 index = 0; index < len; ++index) {
+        jsval value;
+
+        if (!JS_GetElement(aContext, jsobj, index, &value))
+          return NS_ERROR_DOM_SYNTAX_ERR;
+
+        jsstr = JS_ValueToString(aContext, value);
+        if (!jsstr)
+          return NS_ERROR_DOM_SYNTAX_ERR;
+
+        deleteProtector.set(jsstr);
+        chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
+        if (!chars)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        nsDependentString protocolElement(chars, length);
+        if (protocolElement.IsEmpty())
+          return NS_ERROR_DOM_SYNTAX_ERR;
+        if (protocolArray.Contains(protocolElement))
+          return NS_ERROR_DOM_SYNTAX_ERR;
+        if (protocolElement.FindChar(',') != -1)  /* interferes w/list */
+          return NS_ERROR_DOM_SYNTAX_ERR;
+        protocolArray.AppendElement(protocolElement);
+        deleteProtector.clear();
+      }
+    } else {
+      jsstr = JS_ValueToString(aContext, aArgv[1]);
+      if (!jsstr)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+      
+      deleteProtector.set(jsstr);
+      chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
+      if (!chars)
+        return NS_ERROR_OUT_OF_MEMORY;
+      
+      nsDependentString protocolElement(chars, length);
+      if (protocolElement.IsEmpty())
+        return NS_ERROR_DOM_SYNTAX_ERR;
+      if (protocolElement.FindChar(',') != -1)  /* interferes w/list */
+        return NS_ERROR_DOM_SYNTAX_ERR;
+      protocolArray.AppendElement(protocolElement);
+    }
+  }
+
+  return Init(principal, scriptContext, ownerWindow, urlParam, protocolArray);
 }
 
 //-----------------------------------------------------------------------------
@@ -1058,26 +1098,6 @@ nsWebSocket::ParseURL(const nsString& aURL)
   return NS_OK;
 }
 
-nsresult
-nsWebSocket::SetProtocol(const nsString& aProtocol)
-{
-  if (aProtocol.IsEmpty()) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  }
-
-  PRUint32 length = aProtocol.Length();
-  PRUint32 i;
-  for (i = 0; i < length; ++i) {
-    if (aProtocol[i] < static_cast<PRUnichar>(0x0021) ||
-        aProtocol[i] > static_cast<PRUnichar>(0x007E)) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-  }
-
-  CopyUTF16toUTF8(aProtocol, mProtocol);
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // Methods that keep alive the WebSocket object when:
 //   1. the object has registered event listeners that can be triggered
@@ -1196,7 +1216,7 @@ nsWebSocket::GetUrl(nsAString& aURL)
 NS_IMETHODIMP
 nsWebSocket::GetProtocol(nsAString& aProtocol)
 {
-  CopyUTF8toUTF16(mProtocol, aProtocol);
+  CopyUTF8toUTF16(mEstablishedProtocol, aProtocol);
   return NS_OK;
 }
 
@@ -1306,7 +1326,7 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
                   nsIScriptContext* aScriptContext,
                   nsPIDOMWindow* aOwnerWindow,
                   const nsAString& aURL,
-                  const nsAString& aProtocol)
+                  nsTArray<nsString> & protocolArray)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   nsresult rv;
@@ -1364,10 +1384,17 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
       return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  // sets the protocol
-  if (!aProtocol.IsEmpty()) {
-    rv = SetProtocol(PromiseFlatString(aProtocol));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Assign the sub protocol list and scan it for illegal values
+  for (PRUint32 index = 0; index < protocolArray.Length(); ++index) {
+    for (PRUint32 i = 0; i < protocolArray[index].Length(); ++i) {
+      if (protocolArray[index][i] < static_cast<PRUnichar>(0x0021) ||
+          protocolArray[index][i] > static_cast<PRUnichar>(0x007E))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    if (!mRequestedProtocolList.IsEmpty())
+      mRequestedProtocolList.Append(NS_LITERAL_CSTRING(", "));
+    AppendUTF16toUTF8(protocolArray[index], mRequestedProtocolList);
   }
 
   // the constructor should throw a SYNTAX_ERROR only if it fails to parse the
