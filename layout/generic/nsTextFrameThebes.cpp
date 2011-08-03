@@ -4264,15 +4264,7 @@ void
 nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
                                 nsTextFrame::TextDecorations& aDecorations)
 {
-  // Quirks mode text decoration are rendered by children; see bug 1777
-  // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
-  // does the painting of text decorations.
-  // FIXME Bug 403524: We'd like to unify standards-mode and quirks-mode
-  // text-decoration drawing, using what's currently the quirks mode
-  // codepath.  But for now this code is only used for quirks mode.
   const nsCompatibility compatMode = aPresContext->CompatibilityMode();
-  if (compatMode != eCompatibility_NavQuirks)
-    return;
 
   PRBool useOverride = PR_FALSE;
   nscolor overrideColor;
