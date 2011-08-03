@@ -402,7 +402,8 @@ nsresult
 nsLineLayout::BeginSpan(nsIFrame* aFrame,
                         const nsHTMLReflowState* aSpanReflowState,
                         nscoord aLeftEdge,
-                        nscoord aRightEdge)
+                        nscoord aRightEdge,
+                        nscoord* aBaseline)
 {
   NS_ASSERTION(aRightEdge != NS_UNCONSTRAINEDSIZE,
                "should no longer be using unconstrained sizes");
@@ -427,6 +428,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
     psd->mLeftEdge = aLeftEdge;
     psd->mX = aLeftEdge;
     psd->mRightEdge = aRightEdge;
+    psd->mBaseline = aBaseline;
 
     psd->mNoWrap =
       !aSpanReflowState->frame->GetStyleText()->WhiteSpaceCanWrap();
@@ -1763,7 +1765,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // This is the distance from the top edge of the parents visual
     // box to the baseline. The span already computed this for us,
     // so just use it.
-    baselineY = spanFramePFD->mAscent;
+    *psd->mBaseline = baselineY = spanFramePFD->mAscent;
 
 
 #ifdef NOISY_VERTICAL_ALIGN
@@ -2140,6 +2142,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       spanFramePFD->mAscent -= minY; // move the baseline up
       spanFramePFD->mBounds.height -= minY; // move the bottom up
       psd->mTopLeading += minY;
+      *psd->mBaseline -= minY;
 
       pfd = psd->mFirstFrame;
       while (nsnull != pfd) {
