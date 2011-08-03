@@ -249,7 +249,7 @@ PRUint32 nsContentUtils::sScriptBlockerCount = 0;
 #ifdef DEBUG
 PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 #endif
-nsCOMArray<nsIRunnable>* nsContentUtils::sBlockedScriptRunners = nsnull;
+nsTArray< nsCOMPtr<nsIRunnable> >* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 PRUint32 nsContentUtils::sScriptBlockerCountWhereRunnersPrevented = 0;
 nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
@@ -382,8 +382,7 @@ nsContentUtils::Init()
     }
   }
 
-  sBlockedScriptRunners = new nsCOMArray<nsIRunnable>;
-  NS_ENSURE_TRUE(sBlockedScriptRunners, NS_ERROR_OUT_OF_MEMORY);
+  sBlockedScriptRunners = new nsTArray< nsCOMPtr<nsIRunnable> >;
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
@@ -1227,7 +1226,7 @@ nsContentUtils::Shutdown()
   }
 
   NS_ASSERTION(!sBlockedScriptRunners ||
-               sBlockedScriptRunners->Count() == 0,
+               sBlockedScriptRunners->Length() == 0,
                "How'd this happen?");
   delete sBlockedScriptRunners;
   sBlockedScriptRunners = nsnull;
@@ -4496,7 +4495,7 @@ nsContentUtils::AddScriptBlocker()
   if (!sScriptBlockerCount) {
     NS_ASSERTION(sRunnersCountAtFirstBlocker == 0,
                  "Should not already have a count");
-    sRunnersCountAtFirstBlocker = sBlockedScriptRunners->Count();
+    sRunnersCountAtFirstBlocker = sBlockedScriptRunners->Length();
   }
   ++sScriptBlockerCount;
 }
@@ -4525,7 +4524,7 @@ nsContentUtils::RemoveScriptBlocker()
   }
 
   PRUint32 firstBlocker = sRunnersCountAtFirstBlocker;
-  PRUint32 lastBlocker = (PRUint32)sBlockedScriptRunners->Count();
+  PRUint32 lastBlocker = sBlockedScriptRunners->Length();
   PRUint32 originalFirstBlocker = firstBlocker;
   PRUint32 blockersCount = lastBlocker - firstBlocker;
   sRunnersCountAtFirstBlocker = 0;
@@ -4541,7 +4540,7 @@ nsContentUtils::RemoveScriptBlocker()
                  "Bad count");
     NS_ASSERTION(!sScriptBlockerCount, "This is really bad");
   }
-  sBlockedScriptRunners->RemoveObjectsAt(originalFirstBlocker, blockersCount);
+  sBlockedScriptRunners->RemoveElementsAt(originalFirstBlocker, blockersCount);
 }
 
 /* static */
@@ -4557,7 +4556,7 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
       NS_ERROR("Adding a script runner when that is prevented!");
       return PR_FALSE;
     }
-    return sBlockedScriptRunners->AppendObject(aRunnable);
+    return sBlockedScriptRunners->AppendElement(aRunnable) != nsnull;
   }
   
   nsCOMPtr<nsIRunnable> run = aRunnable;
