@@ -263,11 +263,10 @@ function GroupItem(listOfEls, options) {
   if (options.dontPush) {
     this.setZ(drag.zIndex);
     drag.zIndex++; 
-  } else
+  } else {
     // Calling snap will also trigger pushAway
     this.snap(immediately);
-  if ($container)
-    this.setBounds(rectToBe, immediately);
+  }
 
   if (!options.immediately && listOfEls.length > 0)
     $container.hide().fadeIn();
