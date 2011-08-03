@@ -1002,16 +1002,14 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
 }
 
 gfx3DMatrix
-nsLayoutUtils::ChangeMatrixBasis(const gfxPoint &aOrigin,
+nsLayoutUtils::ChangeMatrixBasis(const gfxPoint3D &aOrigin,
                                  const gfx3DMatrix &aMatrix)
 {
   /* These are translation matrices from world-to-origin of relative frame and
-   * vice-versa.  Although I could use the gfxMatrix::Translate function to
-   * accomplish this, I'm hoping to reduce the overall number of matrix
-   * operations by hardcoding as many of the matrices as possible.
+   * vice-versa.
    */
-  gfx3DMatrix worldToOrigin = gfx3DMatrix::From2D(gfxMatrix(1.0, 0.0, 0.0, 1.0, -aOrigin.x, -aOrigin.y));
-  gfx3DMatrix originToWorld = gfx3DMatrix::From2D(gfxMatrix(1.0, 0.0, 0.0, 1.0,  aOrigin.x,  aOrigin.y));
+  gfx3DMatrix worldToOrigin = gfx3DMatrix::Translation(-aOrigin);
+  gfx3DMatrix originToWorld = gfx3DMatrix::Translation(aOrigin);
 
   /* Multiply all three to get the transform! */
   return worldToOrigin * aMatrix * originToWorld;

@@ -148,6 +148,17 @@ gfx3DMatrix::Translation(float aX, float aY, float aZ)
 }
 
 gfx3DMatrix
+gfx3DMatrix::Translation(const gfxPoint3D& aPoint)
+{
+  gfx3DMatrix matrix;
+
+  matrix._41 = aPoint.x;
+  matrix._42 = aPoint.y;
+  matrix._43 = aPoint.z;
+  return matrix;
+}
+
+gfx3DMatrix
 gfx3DMatrix::Scale(float aFactor)
 {
   gfx3DMatrix matrix;
