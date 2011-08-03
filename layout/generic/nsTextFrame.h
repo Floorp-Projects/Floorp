@@ -299,14 +299,6 @@ public:
   // The private DrawText() is what applies the text to a graphics context
   void PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
                  const nsRect& aDirtyRect, const nsCharClipDisplayItem& aItem);
-  // helper: paint quirks-mode CSS text decorations
-  void PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
-                            const gfxPoint& aFramePt,
-                            const gfxPoint& aTextBaselinePt,
-                            nsTextPaintStyle& aTextStyle,
-                            PropertyProvider& aProvider,
-                            const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                            const nscolor* aOverrideColor = nsnull);
   // helper: paint text frame when we're impacted by at least one selection.
   // Return false if the text was not painted and we should continue with
   // the fast path.
@@ -333,7 +325,8 @@ public:
                                     PRUint32 aContentLength,
                                     nsTextPaintStyle& aTextPaintStyle,
                                     SelectionDetails* aDetails,
-                                    SelectionType* aAllTypes);
+                                    SelectionType* aAllTypes,
+                            const nsCharClipDisplayItem::ClipEdges& aClipEdges);
   // helper: paint text decorations for text selected by aSelectionType
   void PaintTextSelectionDecorations(gfxContext* aCtx,
                                      const gfxPoint& aFramePt,
@@ -445,15 +438,6 @@ protected:
                                nsRect* aVisualOverflowRect,
                                bool aIncludeTextDecorations);
 
-  void DrawText(gfxContext* aCtx,
-                const gfxPoint& aTextBaselinePt,
-                PRUint32 aOffset,
-                PRUint32 aLength,
-                const gfxRect* aDirtyRect,
-                PropertyProvider* aProvider,
-                gfxFloat& aAdvanceWidth,
-                PRBool aDrawSoftHyphen);
-
   void PaintOneShadow(PRUint32 aOffset,
                       PRUint32 aLength,
                       nsCSSShadowItem* aShadowDetails,
@@ -520,6 +504,39 @@ protected:
   };
   void GetTextDecorations(nsPresContext* aPresContext,
                           TextDecorations& aDecorations);
+
+  void DrawTextRun(gfxContext* const aCtx,
+                   const gfxPoint& aTextBaselinePt,
+                   PRUint32 aOffset,
+                   PRUint32 aLength,
+                   PropertyProvider& aProvider,
+                   gfxFloat& aAdvanceWidth,
+                   PRBool aDrawSoftHyphen);
+
+  void DrawTextRunAndDecorations(gfxContext* const aCtx,
+                                 const gfxPoint& aFramePt,
+                                 const gfxPoint& aTextBaselinePt,
+                                 PRUint32 aOffset,
+                                 PRUint32 aLength,
+                                 PropertyProvider& aProvider,
+                                 const nsTextPaintStyle& aTextStyle,
+                             const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                                 gfxFloat& aAdvanceWidth,
+                                 PRBool aDrawSoftHyphen,
+                                 const TextDecorations& aDecorations,
+                                 const nscolor* const aDecorationOverrideColor);
+
+  void DrawText(gfxContext* const aCtx,
+                const gfxPoint& aFramePt,
+                const gfxPoint& aTextBaselinePt,
+                PRUint32 aOffset,
+                PRUint32 aLength,
+                PropertyProvider& aProvider,
+                const nsTextPaintStyle& aTextStyle,
+                const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                gfxFloat& aAdvanceWidth,
+                PRBool aDrawSoftHyphen,
+                const nscolor* const aDecorationOverrideColor = nsnull);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.
   // If the result rect is larger than the given rect, this returns PR_TRUE.
