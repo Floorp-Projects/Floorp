@@ -5949,6 +5949,9 @@ MOZ_ARG_DISABLE_BOOL(gamepad,
 
 if test "$MOZ_GAMEPAD"; then
     case "$OS_TARGET" in
+    Darwin)
+        MOZ_GAMEPAD_BACKEND=cocoa
+        ;;
     *)
         ;;
    esac
