@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMGamepadEvent.idl"
+
+[builtinclass, scriptable, uuid(bd09eef8-8e07-4baf-8d39-4f92003dbca8)]
+interface nsIDOMGamepadAxisMoveEvent : nsIDOMGamepadEvent
+{
+  /**
+   * Index in gamepad.axes of the axis that was moved.
+   */
+  readonly attribute unsigned long axis;
+
+  /**
+   * Position of the axis in the range -1.0...1.0.
+   */
+  readonly attribute double value;
+
+  [noscript]
+  void initGamepadAxisMoveEvent(in DOMString typeArg,
+                                in boolean canBubbleArg,
+                                in boolean cancelableArg,
+                                in nsIDOMGamepad gamepad,
+                                in unsigned long axis,
+                                in double value);
+};
+
+dictionary GamepadAxisMoveEventInit : GamepadEventInit
+{
+  unsigned long axis;
+  double value;
+};

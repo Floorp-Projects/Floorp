@@ -29,6 +29,7 @@ interfaces = [
     'svg',
     'smil',
     'apps',
+    'gamepad',
 ]
 
 PARALLEL_DIRS += ['interfaces/' + i for i in interfaces]
