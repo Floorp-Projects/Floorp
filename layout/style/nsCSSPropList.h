@@ -2259,6 +2259,16 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
+    -moz-perspective-origin,
+    perspective_origin,
+    CSS_PROP_DOMPROP_PREFIXED(PerspectiveOrigin),
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
+    0,
+    kBackgroundPositionKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Custom)
+CSS_PROP_DISPLAY(
     -moz-perspective,
     perspective,
     CSS_PROP_DOMPROP_PREFIXED(Perspective),
