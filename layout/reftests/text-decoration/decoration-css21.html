@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<style>
+			.sup {vertical-align: super;}
+			.transparent {color: transparent;}
+			.alllines {text-decoration:line-through overline underline; color: purple;}
+			.highRel {position: relative; top: -4em;}
+			.lowRel {position: relative; top: 4em;}
+			.lowVert {vertical-align: -4em;}
+			.highVert {vertical-align: 4em;}
+		</style>
+	</head>
+	<body>
+		<p>
+			<span style="text-decoration: underline">Underlined <span class="sup transparent">still underlined</span></span>
+			<span style="text-decoration: underline">Underlined <span class="sup">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>
+		</p>
+		<p>
+			<span class="alllines">
+				Before<span class="highVert transparent">high</span><span class="lowVert transparent">low</span>After
+			</span>
+		</p>
+		<p>
+			<span class="alllines">
+				Before<span class="highRel">high</span><span class="lowRel">low</span>After</span>
+			</span>
+		</p>
+	</body>
+</html>

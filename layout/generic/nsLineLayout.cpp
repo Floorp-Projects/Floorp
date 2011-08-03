@@ -1480,6 +1480,26 @@ nsLineLayout::VerticalAlignLine()
   }
   PlaceTopBottomFrames(psd, -mTopEdge, lineHeight);
 
+  // If the frame being reflowed has text decorations, we simulate the
+  // propagation of those decorations to a line-level element by storing the
+  // offset in a frame property on any child frames that are vertically-aligned
+  // somewhere other than the baseline. This property is then used by
+  // nsTextFrame::GetTextDecorations when the same conditions are met.
+  if (rootPFD.mFrame->GetStyleContext()->HasTextDecorationLines()) {
+    for (const PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
+      const nsIFrame *const f = pfd->mFrame;
+      const nsStyleCoord& vAlign =
+          f->GetStyleContext()->GetStyleTextReset()->mVerticalAlign;
+
+      if (vAlign.GetUnit() != eStyleUnit_Enumerated ||
+          vAlign.GetIntValue() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
+        const nscoord offset = baselineY - (pfd->mBounds.y);
+        f->Properties().Set(nsIFrame::LineBaselineOffset(),
+                            NS_INT32_TO_PTR(offset));
+      }
+    }
+  }
+
   // Fill in returned line-box and max-element-width data
   mLineBox->mBounds.x = psd->mLeftEdge;
   mLineBox->mBounds.y = mTopEdge;
@@ -2599,7 +2619,12 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
     } else {
       r = pfd->mOverflowAreas;
       if (pfd->GetFlag(PFD_ISTEXTFRAME)) {
-        if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW)) {
+        // We need to recompute overflow areas in two cases:
+        // (1) When PFD_RECOMPUTEOVERFLOW is set due to trimming
+        // (2) When there are text decorations, since we can't recompute the
+        //     overflow area until Reflow and VerticalAlignLine have finished
+        if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW) ||
+            frame->GetStyleContext()->HasTextDecorationLines()) {
           nsTextFrame* f = static_cast<nsTextFrame*>(frame);
           r = f->RecomputeOverflow();
         }
