@@ -2032,7 +2032,8 @@ nsStyleDisplay::nsStyleDisplay()
   mOpacity = 1.0f;
   mSpecifiedTransform = nsnull;
   mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
-  mTransformOrigin[1].SetPercentValue(0.5f); 
+  mTransformOrigin[1].SetPercentValue(0.5f);
+  mTransformOrigin[2].SetCoordValue(0);
   mChildPerspective.SetCoordValue(0);
   mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
   mOrient = NS_STYLE_ORIENT_HORIZONTAL;
@@ -2100,6 +2101,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   /* Copy over transform origin. */
   mTransformOrigin[0] = aSource.mTransformOrigin[0];
   mTransformOrigin[1] = aSource.mTransformOrigin[1];
+  mTransformOrigin[2] = aSource.mTransformOrigin[2];
   mChildPerspective = aSource.mChildPerspective;
   mBackfaceVisibility = aSource.mBackfaceVisibility;
 }
@@ -2157,7 +2159,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
                                          nsChangeHint_UpdateTransformLayer));
     
-    for (PRUint8 index = 0; index < 2; ++index)
+    for (PRUint8 index = 0; index < 3; ++index)
       if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
         NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
                                            nsChangeHint_RepaintFrame));
