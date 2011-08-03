@@ -94,8 +94,8 @@ nsSMILAnimationController::Disconnect()
   NS_ABORT_IF_FALSE(mDocument, "disconnecting when we weren't connected...?");
   NS_ABORT_IF_FALSE(mRefCnt.get() == 1,
                     "Expecting to disconnect when doc is sole remaining owner");
-  NS_ABORT_IF_FALSE(mPauseState & nsSMILTimeContainer::PAUSE_PAGEHIDE,
-                    "Expecting to be paused for pagehide before disconnect");
+  NS_ASSERTION(mPauseState & nsSMILTimeContainer::PAUSE_PAGEHIDE,
+               "Expecting to be paused for pagehide before disconnect");
 
   StopSampling(GetRefreshDriver());
 

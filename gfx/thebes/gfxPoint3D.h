@@ -1,7 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
-
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Oracle Corporation code.
  *
- * The Initial Developer of the Original Code is
- *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is Oracle Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Josh Matthews <josh@joshmatthews.net>
+ *   Matt Woodrow <mwoodrow@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,41 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PNecko;
-include protocol PBrowser;
+#ifndef GFX_POINT3D_H
+#define GFX_POINT3D_H
 
-include "mozilla/net/NeckoMessageUtils.h";
+#include "mozilla/gfx/BasePoint3D.h"
+#include "gfxTypes.h"
 
-using IPC::URI;
+struct THEBES_API gfxPoint3D : public mozilla::gfx::BasePoint3D<gfxFloat, gfxPoint3D> {
+    typedef mozilla::gfx::BasePoint3D<gfxFloat, gfxPoint3D> Super;
 
-namespace mozilla {
-namespace net {
-
-async protocol PWebSocket
-{
-  manager PNecko;
-
-parent:
-  // Forwarded methods corresponding to methods on nsIWebSocketChannel
-  AsyncOpen(URI aURI, nsCString aOrigin, nsCString aProtocol, bool aSecure);
-  Close();
-  SendMsg(nsCString aMsg);
-  SendBinaryMsg(nsCString aMsg);
-
-  DeleteSelf();
-
-child:
-  // Forwarded notifications corresponding to the nsIWebSocketListener interface
-  OnStart(nsCString aProtocol);
-  OnStop(nsresult aStatusCode);
-  OnMessageAvailable(nsCString aMsg);
-  OnBinaryMessageAvailable(nsCString aMsg);
-  OnAcknowledge(PRUint32 aSize);
-  OnServerClose();
-
-  __delete__();
-
+    gfxPoint3D() : Super() {}
+    gfxPoint3D(gfxFloat aX, gfxFloat aY, gfxFloat aZ) : Super(aX, aY, aZ) {}
 };
 
-} //namespace net
-} //namespace mozilla
+#endif /* GFX_POINT3D_H */ 

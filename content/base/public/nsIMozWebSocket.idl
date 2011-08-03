@@ -51,7 +51,7 @@ interface nsPIDOMWindow;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(eae76132-e4a4-4765-8494-5e136521c846)]
+[scriptable, uuid(662691db-2b99-4461-801b-fbb72d99a4b9)]
 interface nsIMozWebSocket : nsISupports
 {
   readonly attribute DOMString url;
@@ -79,7 +79,7 @@ interface nsIMozWebSocket : nsISupports
    * @return if the connection is still established (and the data was queued or
    *         sent successfully).
    */
-  boolean send(in DOMString data);
+  void send(in DOMString data);
 
   /**
    * Closes the Web Socket connection or connection attempt, if any.
