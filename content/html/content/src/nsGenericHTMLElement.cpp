@@ -758,9 +758,9 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
 
   // Remove childnodes.
-  // i is unsigned, so i >= is always true
-  for (PRUint32 i = GetChildCount(); i-- != 0; ) {
-    RemoveChildAt(i, PR_TRUE);
+  PRUint32 childCount = GetChildCount();
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    RemoveChildAt(0, PR_TRUE);
   }
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
