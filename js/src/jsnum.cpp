@@ -1269,13 +1269,13 @@ NumberToString(JSContext *cx, jsdouble d)
 }
 
 JSFixedString *
-IndexToString(JSContext *cx, uint32 u)
+IndexToString(JSContext *cx, uint32 index)
 {
-    if (JSAtom::hasUintStatic(u))
-        return &JSAtom::uintStatic(u);
+    if (JSAtom::hasUintStatic(index))
+        return &JSAtom::uintStatic(index);
 
     JSCompartment *c = cx->compartment;
-    if (JSFixedString *str = c->dtoaCache.lookup(10, u))
+    if (JSFixedString *str = c->dtoaCache.lookup(10, index))
         return str;
 
     JSShortString *str = js_NewGCShortString(cx);
@@ -1291,15 +1291,16 @@ IndexToString(JSContext *cx, uint32 u)
     RangedPtr<jschar> cp = end;
     *cp = '\0';
 
+    uint32 u = index;
     do {
-        jsuint newu = u / 10, digit = u % 10;
+        uint32 newu = u / 10, digit = u % 10;
         *--cp = '0' + digit;
         u = newu;
     } while (u > 0);
 
     str->initAtOffsetInBuffer(cp.get(), end - cp);
 
-    c->dtoaCache.cache(10, u, str);
+    c->dtoaCache.cache(10, index, str);
     return str;
 }
 
