@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=675587
+-->
+<head>
+  <title>Test for Bug 675587</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=675587">Mozilla Bug 675587</a>
+<p id="display">
+  <iframe src="data:text/html,<script>location.hash='';</script>#hash"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 675587 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  is(window.frames[0].location.href,
+     "data:text/html,<script>location.hash='';</" + "script>#",
+     "Should have the right href");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

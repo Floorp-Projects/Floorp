@@ -43,7 +43,7 @@
 
 void
 NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
-                        PRPackedBool* aBreakBefore)
+                        PRUint8* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
 
