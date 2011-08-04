@@ -47,7 +47,7 @@ function run_test()
 {
   // First, we need to move our old database file into our test profile
   // directory.  This will trigger DATABASE_STATUS_UPGRADED (CREATE is not
-  // sufficient since there will be no entires to update frecencies for, which
+  // sufficient since there will be no entries to update frecencies for, which
   // causes us to get the bookmarks service in the first place).
   let dbFile = do_get_file("bug476292.sqlite");
   let profD = Cc["@mozilla.org/file/directory_service;1"].
