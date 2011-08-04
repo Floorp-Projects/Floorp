@@ -1448,12 +1448,10 @@ RasterImage::Notify(nsITimer *timer)
   // before they're filled in.
   NS_ABORT_IF_FALSE(mDecoder || nextFrameIndex <= mFrames.Length(),
                     "How did we get 2 indicies too far by incrementing?");
-  bool haveFullNextFrame = !mDecoder || nextFrameIndex < mDecoder->GetCompleteFrameCount();
 
-  // If we don't have the next full frame, it had better be in the pipe.
-  NS_ABORT_IF_FALSE(haveFullNextFrame ||
-                    (mDecoder && mFrames.Length() > mDecoder->GetCompleteFrameCount()),
-                    "What is the next frame supposed to be?");
+  // If we don't have a decoder, we know we've got everything we're going to get.
+  // If we do, we only display fully-downloaded frames; everything else gets delayed.
+  bool haveFullNextFrame = !mDecoder || nextFrameIndex < mDecoder->GetCompleteFrameCount();
 
   // If we're done decoding the next frame, go ahead and display it now and
   // reinit the timer with the next frame's delay time.

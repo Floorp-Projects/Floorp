@@ -739,35 +739,7 @@ RuleHash::SizeOf() const
 
 //--------------------------------
 
-// Attribute selectors hash table.
-struct AttributeSelectorEntry : public PLDHashEntryHdr {
-  nsIAtom *mAttribute;
-  nsTArray<nsCSSSelector*> *mSelectors;
-};
-
-static void
-AttributeSelectorClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
-{
-  AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>(hdr);
-  delete entry->mSelectors;
-  memset(entry, 0, table->entrySize);
-}
-
-static const PLDHashTableOps AttributeSelectorOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  PL_DHashVoidPtrKeyStub,
-  PL_DHashMatchEntryStub,
-  PL_DHashMoveEntryStub,
-  AttributeSelectorClearEntry,
-  PL_DHashFinalizeStub,
-  NULL
-};
-
-
-//--------------------------------
-
-// Class selectors hash table.
+// A hash table mapping atoms to lists of selectors
 struct AtomSelectorEntry : public PLDHashEntryHdr {
   nsIAtom *mAtom;
   nsTArray<nsCSSSelector*> mSelectors;
@@ -837,8 +809,10 @@ struct RuleCascadeData {
       mNext(nsnull),
       mQuirksMode(aQuirksMode)
   {
-    PL_DHashTableInit(&mAttributeSelectors, &AttributeSelectorOps, nsnull,
-                      sizeof(AttributeSelectorEntry), 16);
+    // mAttributeSelectors is matching on the attribute _name_, not the value,
+    // and we case-fold names at parse-time, so this is a case-sensitive match.
+    PL_DHashTableInit(&mAttributeSelectors, &AtomSelector_CSOps.ops, nsnull,
+                      sizeof(AtomSelectorEntry), 16);
     PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops, nsnull,
                       sizeof(RuleHashTagTableEntry), 16);
     PL_DHashTableInit(&mIdSelectors,
@@ -912,19 +886,6 @@ SelectorsSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-AttrSelectorsSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                              PRUint32 i, void* aClosure)
-{
-  PRInt64* n = (PRInt64*) aClosure;
-  AttributeSelectorEntry* entry = (AttributeSelectorEntry*)aHdr;
-
-  if (entry->mSelectors)
-    *n += entry->mSelectors->SizeOf() + sizeof(*entry->mSelectors);
-
-  return PL_DHASH_NEXT;
-}
-
 PRInt64
 RuleCascadeData::SizeOf() const
 {
@@ -948,9 +909,9 @@ RuleCascadeData::SizeOf() const
   n += mPossiblyNegatedClassSelectors.SizeOf();
   n += mPossiblyNegatedIDSelectors.SizeOf();
 
-  n += PL_DHASH_TABLE_SIZE(&mAttributeSelectors) * sizeof(AttributeSelectorEntry);
+  n += PL_DHASH_TABLE_SIZE(&mAttributeSelectors) * sizeof(AtomSelectorEntry);
   PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAttributeSelectors),
-                         AttrSelectorsSizeOfEnumerator, &n);
+                         SelectorsSizeOfEnumerator, &n);
 
   n += PL_DHASH_TABLE_SIZE(&mAnonBoxRules) * sizeof(RuleHashTagTableEntry);
   PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
@@ -971,18 +932,13 @@ RuleCascadeData::SizeOf() const
 nsTArray<nsCSSSelector*>*
 RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 {
-  AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
-                                             (PL_DHashTableOperate(&mAttributeSelectors, aAttribute, PL_DHASH_ADD));
+  AtomSelectorEntry *entry =
+    static_cast<AtomSelectorEntry*>
+               (PL_DHashTableOperate(&mAttributeSelectors, aAttribute,
+                                     PL_DHASH_ADD));
   if (!entry)
     return nsnull;
-  if (!entry->mSelectors) {
-    if (!(entry->mSelectors = new nsTArray<nsCSSSelector*>)) {
-      PL_DHashTableRawRemove(&mAttributeSelectors, entry);
-      return nsnull;
-    }
-    entry->mAttribute = aAttribute;
-  }
-  return entry->mSelectors;
+  return &entry->mSelectors;
 }
 
 class nsPrivateBrowsingObserver : nsIObserver,
@@ -2535,12 +2491,13 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       }
     }
 
-    AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
-                                               (PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
-                             PL_DHASH_LOOKUP));
+    AtomSelectorEntry *entry =
+      static_cast<AtomSelectorEntry*>
+                 (PL_DHashTableOperate(&cascade->mAttributeSelectors,
+                                       aData->mAttribute, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      nsCSSSelector **iter = entry->mSelectors->Elements(),
-                    **end = iter + entry->mSelectors->Length();
+      nsCSSSelector **iter = entry->mSelectors.Elements(),
+                    **end = iter + entry->mSelectors.Length();
       for(; iter != end; ++iter) {
         AttributeEnumFunc(*iter, &data);
       }
