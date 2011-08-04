@@ -114,7 +114,7 @@ interface nsILoginManager : nsISupports {
      *        The number of elements in the array. JS callers can simply use
      *        the array's .length property and omit this param.
      * @param logins
-     *        An array of nsILoginInfo objects. 
+     *        An array of nsILoginInfo objects.
      *
      * NOTE: This can be called from JS as:
      *       var logins = pwmgr.getAllLogins();
@@ -123,7 +123,7 @@ interface nsILoginManager : nsISupports {
     void getAllLogins([optional] out unsigned long count,
                       [retval, array, size_is(count)] out nsILoginInfo logins);
 
-    
+
     /**
      * Obtain a list of all hosts for which password saving is disabled.
      *
@@ -190,7 +190,7 @@ interface nsILoginManager : nsISupports {
      *        specify null.
      *        An empty string ("") will match any value (except null).
      * @param logins
-     *        An array of nsILoginInfo objects. 
+     *        An array of nsILoginInfo objects.
      *
      * NOTE: This can be called from JS as:
      *       var logins = pwmgr.findLogins({}, hostname, ...);
