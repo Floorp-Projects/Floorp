@@ -466,7 +466,7 @@ PRBool
 nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
                                        nsEventStates aEventStates)
 {
-  if (!aFrame)
+  if (!aFrame || !aFrame->GetContent())
     return PR_FALSE;
 
   if (aFrame->GetContent()->IsHTML(nsWidgetAtoms::progress)) {
