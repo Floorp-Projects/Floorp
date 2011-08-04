@@ -545,8 +545,15 @@ struct JSRuntime {
     /* Used to synchronize down/up state change; protected by gcLock. */
     PRCondVar           *stateChange;
 
+    /*
+     * Mapping from NSPR thread identifiers to JSThreads.
+     *
+     * This map can be accessed by the GC thread; or by the thread that holds
+     * gcLock, if GC is not running.
+     */
     JSThread::Map       threads;
 #endif /* JS_THREADSAFE */
+
     uint32              debuggerMutations;
 
     /*

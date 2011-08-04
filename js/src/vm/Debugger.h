@@ -142,8 +142,8 @@ class Debugger {
     /*
      * Cope with an error or exception in a debugger hook.
      *
-     * If callHook is true, then call the uncaughtExceptionHook, if any. If
-     * additionally vp is non-null, then parse the value returned by
+     * If callHook is true, then call the uncaughtExceptionHook, if any. If, in
+     * addition, vp is non-null, then parse the value returned by
      * uncaughtExceptionHook as a resumption value.
      *
      * If there is no uncaughtExceptionHook, or if it fails, report and clear
@@ -161,7 +161,7 @@ class Debugger {
     static void traceObject(JSTracer *trc, JSObject *obj);
     void trace(JSTracer *trc);
     static void finalize(JSContext *cx, JSObject *obj);
-    static void markKeysInCompartment(JSTracer *tracer, ObjectWeakMap &map);
+    static void markKeysInCompartment(JSTracer *tracer, const ObjectWeakMap &map);
 
     static Class jsclass;
 
@@ -251,9 +251,9 @@ class Debugger {
      *       - it has a breakpoint set on a live script
      *       - it has a watchpoint set on a live object.
      *
-     * The last case is handled by the mark() method. If it finds any Debugger
-     * objects that are definitely live but not yet marked, it marks them and
-     * returns true. If not, it returns false.
+     * Debugger::mark handles the last case. If it finds any Debugger objects
+     * that are definitely live but not yet marked, it marks them and returns
+     * true. If not, it returns false.
      */
     static void markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer);
     static bool mark(GCMarker *trc, JSGCInvocationKind gckind);
@@ -278,26 +278,42 @@ class Debugger {
     inline bool observesFrame(StackFrame *fp) const;
 
     /*
-     * Precondition: *vp is a value from a debuggee compartment and cx is in
-     * the debugger's compartment.
+     * Like cx->compartment->wrap(cx, vp), but for the debugger compartment.
      *
-     * Wrap *vp for the debugger compartment, wrap it in a Debugger.Object if it's
-     * an object, store the result in *vp, and return true.
+     * Preconditions: *vp is a value from a debuggee compartment; cx is in the
+     * debugger's compartment.
+     *
+     * If *vp is an object, this produces a (new or existing) Debugger.Object
+     * wrapper for it. Otherwise this is the same as JSCompartment::wrap.
      */
     bool wrapDebuggeeValue(JSContext *cx, Value *vp);
 
     /*
-     * NOT the inverse of wrapDebuggeeValue.
+     * Unwrap a Debug.Object, without rewrapping it for any particular debuggee
+     * compartment.
      *
-     * Precondition: cx is in the debugger compartment. *vp is a value in that
-     * compartment. (*vp is a "debuggee value", meaning it is the debugger's
-     * reflection of a value in the debuggee.)
+     * Preconditions: cx is in the debugger compartment. *vp is a value in that
+     * compartment. (*vp should be a "debuggee value", meaning it is the
+     * debugger's reflection of a value in the debuggee.)
      *
      * If *vp is a Debugger.Object, store the referent in *vp. Otherwise, if *vp
      * is an object, throw a TypeError, because it is not a debuggee
      * value. Otherwise *vp is a primitive, so leave it alone.
      *
-     * The value is not rewrapped for any debuggee compartment.
+     * When passing values from the debuggee to the debugger:
+     *     enter debugger compartment;
+     *     call wrapDebuggeeValue;  // compartment- and debugger-wrapping
+     *
+     * When passing values from the debugger to the debuggee:
+     *     call unwrapDebuggeeValue;  // debugger-unwrapping
+     *     enter debuggee compartment;
+     *     call cx->compartment->wrap;  // compartment-rewrapping
+     *
+     * (Extreme nerd sidebar: Unwrapping happens in two steps because there are
+     * two different kinds of symmetry at work: regardless of which direction
+     * we're going, we want any exceptions to be created and thrown in the
+     * debugger compartment--mirror symmetry. But compartment wrapping always
+     * happens in the target compartment--rotational symmetry.)
      */
     bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
 
@@ -309,8 +325,8 @@ class Debugger {
      * is true if the operation in the debuggee compartment succeeded, false on
      * error or exception.
      *
-     * Postcondition: we are in the debugger compartment (ac is not entered)
-     * whether creating the new completion value succeeded or not.
+     * Postcondition: we are in the debugger compartment, having called
+     * ac.leave() even if an error occurred.
      *
      * On success, a completion value is in vp and ac.context does not have a
      * pending exception. (This ordinarily returns true even if the ok argument
@@ -414,7 +430,6 @@ Debugger::fromLinks(JSCList *links)
     unsigned char *p = reinterpret_cast<unsigned char *>(links);
     return reinterpret_cast<Debugger *>(p - offsetof(Debugger, link));
 }
-
 
 Breakpoint *
 Debugger::firstBreakpoint() const

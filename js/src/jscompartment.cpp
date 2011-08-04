@@ -676,7 +676,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
         }
     }
 
-    debugModeBits = (debugModeBits & ~uintN(DebugFromC)) | (b * DebugFromC);
+    debugModeBits = (debugModeBits & ~uintN(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
     if (enabledBefore != enabledAfter && !onStack)
         updateForDebugMode(cx);
