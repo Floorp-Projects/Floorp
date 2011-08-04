@@ -95,13 +95,10 @@ nsXULColumnItemAccessible::NativeState()
   return states::READONLY;
 }
 
-NS_IMETHODIMP
-nsXULColumnItemAccessible::GetNumActions(PRUint8 *aNumActions)
+PRUint8
+nsXULColumnItemAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aNumActions);
-
-  *aNumActions = 1;
-  return NS_OK;
+  return 1;
 }
 
 NS_IMETHODIMP

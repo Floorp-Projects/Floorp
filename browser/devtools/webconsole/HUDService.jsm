@@ -158,6 +158,7 @@ const LEVELS = {
   info: SEVERITY_INFO,
   log: SEVERITY_LOG,
   trace: SEVERITY_LOG,
+  dir: SEVERITY_LOG
 };
 
 // The lowest HTTP response code (inclusive) that is considered an error.
@@ -1235,6 +1236,10 @@ function pruneConsoleOutputIfNecessary(aHUDId, aCategory)
       }
       delete hudRef.cssNodes[desc + location];
     }
+    else if (messageNodes[i].classList.contains("webconsole-msg-inspector")) {
+      hudRef.pruneConsoleDirNode(messageNodes[i]);
+      continue;
+    }
     messageNodes[i].parentNode.removeChild(messageNodes[i]);
   }
 
@@ -1969,6 +1974,13 @@ HUD_SERVICE.prototype =
         clipboardText = clipboardText.trimRight();
         break;
 
+      case "dir":
+        body = unwrap(args[0]);
+        clipboardText = body.toString();
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
+        break;
+
       default:
         Cu.reportError("Unknown Console API log level: " + level);
         return;
@@ -1980,7 +1992,8 @@ HUD_SERVICE.prototype =
                                               body,
                                               sourceURL,
                                               sourceLine,
-                                              clipboardText);
+                                              clipboardText,
+                                              level);
 
     // Make the node bring up the property panel, to allow the user to inspect
     // the stack trace.
@@ -2014,6 +2027,14 @@ HUD_SERVICE.prototype =
     }
 
     ConsoleUtils.outputMessageNode(node, aHUDId);
+
+    if (level == "dir") {
+      // Initialize the inspector message node, by setting the PropertyTreeView
+      // object on the tree view. This has to be done *after* the node is
+      // shown, because the tree binding must be attached first.
+      let tree = node.querySelector("tree");
+      tree.view = node.propertyTreeView;
+    }
   },
 
   /**
@@ -3787,6 +3808,24 @@ HeadsUpDisplay.prototype = {
   },
 
   /**
+   * Destroy the property inspector message node. This performs the necessary
+   * cleanup for the tree widget and removes it from the DOM.
+   *
+   * @param nsIDOMNode aMessageNode
+   *        The message node that contains the property inspector from a
+   *        console.dir call.
+   */
+  pruneConsoleDirNode: function HUD_pruneConsoleDirNode(aMessageNode)
+  {
+    aMessageNode.parentNode.removeChild(aMessageNode);
+    let tree = aMessageNode.querySelector("tree");
+    tree.parentNode.removeChild(tree);
+    aMessageNode.propertyTreeView = null;
+    tree.view = null;
+    tree = null;
+  },
+
+  /**
    * Create the Web Console UI.
    *
    * @return nsIDOMNode
@@ -4221,6 +4260,25 @@ function JSTermHelper(aJSTerm)
 
     return nodes;
   };
+
+  /**
+   * Returns the currently selected object in the highlighter.
+   *
+   * @returns nsIDOMNode or null
+   */
+  Object.defineProperty(aJSTerm.sandbox, "$0", {
+    get: function() {
+      let mw = HUDService.currentContext();
+      try {
+        return mw.InspectorUI.selection;
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+    },
+    enumerable: true,
+    configurable: false
+  });
 
   /**
    * Clears the output of the JSTerm.
@@ -4775,8 +4833,15 @@ JSTerm.prototype = {
     let hud = HUDService.getHudReferenceById(this.hudId);
     hud.cssNodes = {};
 
-    while (hud.outputNode.firstChild) {
-      hud.outputNode.removeChild(hud.outputNode.firstChild);
+    let node = hud.outputNode;
+    while (node.firstChild) {
+      if (node.firstChild.classList &&
+          node.firstChild.classList.contains("webconsole-msg-inspector")) {
+        hud.pruneConsoleDirNode(node.firstChild);
+      }
+      else {
+        hud.outputNode.removeChild(node.firstChild);
+      }
     }
 
     hud.HUDBox.lastTimestamp = 0;
@@ -5381,6 +5446,8 @@ ConsoleUtils = {
    *        The text that should be copied to the clipboard when this node is
    *        copied. If omitted, defaults to the body text. If `aBody` is not
    *        a string, then the clipboard text must be supplied.
+   * @param number aLevel [optional]
+   *        The level of the console API message.
    * @return nsIDOMNode
    *         The message node: a XUL richlistitem ready to be inserted into
    *         the Web Console output node.
@@ -5388,7 +5455,7 @@ ConsoleUtils = {
   createMessageNode:
   function ConsoleUtils_createMessageNode(aDocument, aCategory, aSeverity,
                                           aBody, aSourceURL, aSourceLine,
-                                          aClipboardText) {
+                                          aClipboardText, aLevel) {
     if (aBody instanceof Ci.nsIDOMNode && aClipboardText == null) {
       throw new Error("HUDService.createMessageNode(): DOM node supplied " +
                       "without any clipboard text");
@@ -5416,12 +5483,15 @@ ConsoleUtils = {
     bodyNode.setAttribute("flex", "1");
     bodyNode.classList.add("webconsole-msg-body");
 
+    // Store the body text, since it is needed later for the property tree
+    // case.
+    let body = aBody;
     // If a string was supplied for the body, turn it into a DOM node and an
     // associated clipboard string now.
     aClipboardText = aClipboardText ||
                      (aBody + (aSourceURL ? " @ " + aSourceURL : "") +
                               (aSourceLine ? ":" + aSourceLine : ""));
-    aBody = aBody instanceof Ci.nsIDOMNode ?
+    aBody = aBody instanceof Ci.nsIDOMNode && !(aLevel == "dir") ?
             aBody : aDocument.createTextNode(aBody);
 
     bodyNode.appendChild(aBody);
@@ -5456,12 +5526,47 @@ ConsoleUtils = {
     node.timestamp = timestamp;
     ConsoleUtils.setMessageType(node, aCategory, aSeverity);
 
-    node.appendChild(timestampNode);  // childNode[0]
-    node.appendChild(iconContainer);  // childNode[1]
-    node.appendChild(bodyNode);       // childNode[2]
-    node.appendChild(repeatContainer);  // childNode[3]
+    node.appendChild(timestampNode);
+    node.appendChild(iconContainer);
+    // Display the object tree after the message node.
+    if (aLevel == "dir") {
+      // Make the body container, which is a vertical box, for grouping the text
+      // and tree widgets.
+      let bodyContainer = aDocument.createElement("vbox");
+      bodyContainer.setAttribute("flex", "1");
+      bodyContainer.appendChild(bodyNode);
+      // Create the tree.
+      let tree = createElement(aDocument, "tree", {
+        flex: 1,
+        hidecolumnpicker: "true"
+      });
+
+      let treecols = aDocument.createElement("treecols");
+      let treecol = createElement(aDocument, "treecol", {
+        primary: "true",
+        flex: 1,
+        hideheader: "true",
+        ignoreincolumnpicker: "true"
+      });
+      treecols.appendChild(treecol);
+      tree.appendChild(treecols);
+
+      tree.appendChild(aDocument.createElement("treechildren"));
+
+      bodyContainer.appendChild(tree);
+      node.appendChild(bodyContainer);
+      node.classList.add("webconsole-msg-inspector");
+      // Create the treeView object.
+      let treeView = node.propertyTreeView = new PropertyTreeView();
+      treeView.data = body;
+      tree.setAttribute("rows", treeView.rowCount);
+    }
+    else {
+      node.appendChild(bodyNode);
+    }
+    node.appendChild(repeatContainer);
     if (locationNode) {
-      node.appendChild(locationNode); // childNode[4]
+      node.appendChild(locationNode);
     }
 
     node.setAttribute("id", "console-msg-" + HUDService.sequenceId());
@@ -5664,7 +5769,7 @@ ConsoleUtils = {
     let lastMessage = aOutput.lastChild;
 
     // childNodes[2] is the description element
-    if (lastMessage &&
+    if (lastMessage && !aNode.classList.contains("webconsole-msg-inspector") &&
         aNode.childNodes[2].textContent ==
         lastMessage.childNodes[2].textContent) {
       this.mergeFilteredMessageNode(lastMessage, aNode);
@@ -5698,7 +5803,7 @@ ConsoleUtils = {
         (aNode.classList.contains("webconsole-msg-console") ||
          aNode.classList.contains("webconsole-msg-exception") ||
          aNode.classList.contains("webconsole-msg-error"))) {
-      isRepeated = this.filterRepeatedConsole(aNode, outputNode, aHUDId);
+      isRepeated = this.filterRepeatedConsole(aNode, outputNode);
     }
 
     if (!isRepeated) {

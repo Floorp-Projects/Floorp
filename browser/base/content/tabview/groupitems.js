@@ -263,11 +263,10 @@ function GroupItem(listOfEls, options) {
   if (options.dontPush) {
     this.setZ(drag.zIndex);
     drag.zIndex++; 
-  } else
+  } else {
     // Calling snap will also trigger pushAway
     this.snap(immediately);
-  if ($container)
-    this.setBounds(rectToBe, immediately);
+  }
 
   if (!options.immediately && listOfEls.length > 0)
     $container.hide().fadeIn();
@@ -1656,11 +1655,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     container.mousedown(function(e) {
       let target = e.target;
       // only set the last mouse down target if it is a left click, not on the
-      // close button, not on the new tab button, not on the title bar and its
-      // element
+      // close button, not on the expand button, not on the title bar and its
+      // elements
       if (Utils.isLeftClick(e) &&
           self.$closeButton[0] != target &&
           self.$titlebar[0] != target &&
+          self.$expander[0] != target &&
           !self.$titlebar.contains(target) &&
           !self.$appTabTray.contains(target)) {
         lastMouseDownTarget = target;
