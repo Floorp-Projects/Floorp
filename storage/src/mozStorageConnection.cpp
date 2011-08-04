@@ -47,9 +47,9 @@
 #include "nsIMutableArray.h"
 #include "nsHashSets.h"
 #include "nsAutoPtr.h"
+#include "nsIFile.h"
 #include "nsIMemoryReporter.h"
 #include "nsThreadUtils.h"
-#include "nsILocalFile.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageCompletionCallback.h"
@@ -69,8 +69,6 @@
 
 #include "prlog.h"
 #include "prprf.h"
-
-#define BYTES_PER_MEBIBYTE 1048576
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gStorageLog = nsnull;
@@ -1247,16 +1245,6 @@ Connection::SetGrowthIncrement(PRInt32 aChunkSize, const nsACString &aDatabaseNa
   // so don't preallocate space. This is also not effective
   // on log structured file systems used by Android devices
 #if !defined(ANDROID) && !defined(MOZ_PLATFORM_MAEMO)
-  // Don't preallocate if less than 100MiB is available.
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mDatabaseFile);
-  NS_ENSURE_STATE(localFile);
-  PRInt64 bytesAvailable;
-  nsresult rv = localFile->GetDiskSpaceAvailable(&bytesAvailable);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (bytesAvailable < 100 * BYTES_PER_MEBIBYTE) {
-    return NS_ERROR_FILE_TOO_BIG;
-  }
-
   (void)::sqlite3_file_control(mDBConn,
                                aDatabaseName.Length() ? nsPromiseFlatCString(aDatabaseName).get() : NULL,
                                SQLITE_FCNTL_CHUNK_SIZE,
