@@ -235,6 +235,7 @@
 #define FORCE_PR_LOG 1
 #endif
 #include "prlog.h"
+#include "prenv.h"
 
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
@@ -932,9 +933,11 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   mSerial = ++gSerialCounter;
 
 #ifdef DEBUG
-  printf("++DOMWINDOW == %d (%p) [serial = %d] [outer = %p]\n", gRefCnt,
-         static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-         gSerialCounter, static_cast<void*>(aOuterWindow));
+  if (!PR_GetEnv("MOZ_QUIET")) {
+    printf("++DOMWINDOW == %d (%p) [serial = %d] [outer = %p]\n", gRefCnt,
+           static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
+           gSerialCounter, static_cast<void*>(aOuterWindow));
+  }
 #endif
 
 #ifdef PR_LOGGING
@@ -976,14 +979,16 @@ nsGlobalWindow::~nsGlobalWindow()
     NS_IF_RELEASE(gEntropyCollector);
   }
 #ifdef DEBUG
-  nsCAutoString url;
-  if (mLastOpenedURI) {
-    mLastOpenedURI->GetSpec(url);
-  }
+  if (!PR_GetEnv("MOZ_QUIET")) {
+    nsCAutoString url;
+    if (mLastOpenedURI) {
+      mLastOpenedURI->GetSpec(url);
+    }
 
-  printf("--DOMWINDOW == %d (%p) [serial = %d] [outer = %p] [url = %s]\n",
-         gRefCnt, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-         mSerial, static_cast<void*>(mOuterWindow.get()), url.get());
+    printf("--DOMWINDOW == %d (%p) [serial = %d] [outer = %p] [url = %s]\n",
+           gRefCnt, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
+           mSerial, static_cast<void*>(mOuterWindow.get()), url.get());
+  }
 #endif
 
 #ifdef PR_LOGGING
