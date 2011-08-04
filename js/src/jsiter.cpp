@@ -208,7 +208,6 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
         const Shape &shape = r.front();
 
         if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid) &&
-            !shape.isAlias() &&
             !Enumerate(cx, obj, pobj, shape.propid, shape.enumerable(), flags, ht, props))
         {
             return false;
