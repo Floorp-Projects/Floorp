@@ -1732,7 +1732,7 @@ JSPropertySpec TypedArray::jsprops[] = {
  */
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
-template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
+JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
     JS_FN("subarray", _typedArray::fun_subarray, 2, JSFUN_GENERIC_NATIVE),     \
     JS_FN("set", _typedArray::fun_set, 2, JSFUN_GENERIC_NATIVE),               \
     JS_FS_END                                                                  \
