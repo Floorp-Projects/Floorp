@@ -164,6 +164,9 @@ function observeConsoleTest() {
   expect("warn", "arg", "extra arg", 1);
   win.console.warn("arg", "extra arg", 1);
 
+  expect("dir", win.toString());
+  win.console.dir(win);
+
   expect("error", "arg");
   win.console.error("arg");
 }
@@ -178,6 +181,7 @@ function consoleAPISanityTest() {
   ok(win.console.warn, "console.warn is here");
   ok(win.console.error, "console.error is here");
   ok(win.console.trace, "console.trace is here");
+  ok(win.console.dir, "console.dir is here");
 }
 
 var ConsoleObserver = {
