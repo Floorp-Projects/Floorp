@@ -316,6 +316,9 @@ class InlineList : protected InlineListNode<T>
         static_cast<Node *>(t->next)->prev = t->prev;
         t->next = t->prev = NULL;
     }
+    void clear() {
+        this->next = this->prev = this;
+    }
     bool empty() const {
         return begin() == end();
     }

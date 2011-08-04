@@ -87,8 +87,8 @@ C1Spewer::spewCFG(const char *pass)
     fprintf(spewout_, "begin_cfg\n");
     fprintf(spewout_, "  name \"%s\"\n", pass);
 
-    for (size_t i = 0; i < graph.numBlocks(); i++)
-        spewCFG(spewout_, graph.getBlock(i));
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
+        spewCFG(spewout_, *block);
 
     fprintf(spewout_, "end_cfg\n");
     fflush(spewout_);
@@ -104,8 +104,8 @@ C1Spewer::spewIntervals(const char *pass, LinearScanAllocator *regalloc)
     fprintf(spewout_, " name \"%s\"\n", pass);
 
     size_t nextId = 0x4000;
-    for (size_t i = 0; i < graph.numBlocks(); i++)
-        spewIntervals(spewout_, graph.getBlock(i), regalloc, nextId);
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
+        spewIntervals(spewout_, *block, regalloc, nextId);
 
     fprintf(spewout_, "end_intervals\n");
     fflush(spewout_);

@@ -293,7 +293,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         spew.spewPass("LICM");
     }
 
-    LIRGraph lir;
+    LIRGraph lir(graph);
     LIRBuilder lirgen(&builder, graph, lir);
     if (!lirgen.generate())
         return false;
