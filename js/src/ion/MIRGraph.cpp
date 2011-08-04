@@ -72,18 +72,20 @@ MIRGenerator::abort(const char *message, ...)
     return false;
 }
 
-bool
+void
 MIRGraph::addBlock(MBasicBlock *block)
 {
-    block->setId(blocks_.length());
-    return blocks_.append(block);
+    block->setId(blockIdGen_++);
+    blocks_.pushBack(block);
+#ifdef DEBUG
+    numBlocks_++;
+#endif
 }
 
 void
 MIRGraph::unmarkBlocks() {
-    for (size_t i = 0; i < numBlocks(); i ++) {
-        getBlock(i)->unmark();
-    }
+    for (MBasicBlockIterator i(blocks_.begin()); i != blocks_.end(); i++)
+        i->unmark();
 }
 
 MBasicBlock *

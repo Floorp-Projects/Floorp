@@ -60,8 +60,8 @@ LICM::analyze()
 {
     IonSpew(IonSpew_LICM, "Beginning LICM pass ...");
     // In reverse post order, look for loops:
-    for (size_t i = 0; i < graph.numBlocks(); i ++) {
-        MBasicBlock *header = graph.getBlock(i);
+    for (ReversePostorderIterator i(graph.rpoBegin()); i != graph.rpoEnd(); i++) {
+        MBasicBlock *header = *i;
         // If we find a loop, make sure that it's actually a loop and not one with an empty body.
         // Loops with empty bodies aren't worth it, obviously.
         if (header->isLoopHeader() && header->numPredecessors() > 1) {

@@ -387,14 +387,13 @@ LIRGenerator::visitBlock(MBasicBlock *block)
 bool
 LIRGenerator::generate()
 {
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        if (!visitBlock(graph.getBlock(i)))
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        if (!visitBlock(*block))
             return false;
     }
 
     // Emit phis now that all their inputs have definitions.
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        MBasicBlock *block = graph.getBlock(i);
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         current = block->lir();
         for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
             if (!lowerPhi(*phi))
