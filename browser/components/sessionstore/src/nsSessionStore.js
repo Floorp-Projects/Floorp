@@ -235,7 +235,10 @@ SessionStoreService.prototype = {
   // whether to restore hidden tabs or not, pref controlled.
   _restoreHiddenTabs: null,
 
-  // The state from the previous session (after restoring pinned tabs)
+  // The state from the previous session (after restoring pinned tabs). This
+  // state is persisted and passed through to the next session during an app
+  // restart to make the third party add-on warning not trash the deferred
+  // session
   _lastSessionState: null,
 
   // Whether we've been initialized
@@ -331,6 +334,10 @@ SessionStoreService.prototype = {
             this._lastSessionState = remainingState;
         }
         else {
+          // Get the last deferred session in case the user still wants to
+          // restore it
+          this._lastSessionState = this._initialState.lastSessionState;
+
           let lastSessionCrashed =
             this._initialState.session && this._initialState.session.state &&
             this._initialState.session.state == STATE_RUNNING_STR;
@@ -488,6 +495,12 @@ SessionStoreService.prototype = {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once",
                                      this._resume_session_once_on_shutdown);
       }
+
+      if (aData != "restart") {
+        // Throw away the previous session on shutdown
+        this._lastSessionState = null;
+      }
+
       this._loadState = STATE_QUITTING; // just to be sure
       this._uninit();
       break;
@@ -3484,6 +3497,10 @@ SessionStoreService.prototype = {
     };
     if (this._recentCrashes)
       oState.session.recentCrashes = this._recentCrashes;
+
+    // Persist the last session if we deferred restoring it
+    if (this._lastSessionState)
+      oState.lastSessionState = this._lastSessionState;
 
     this._saveStateObject(oState);
   },
