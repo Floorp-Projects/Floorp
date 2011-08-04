@@ -90,7 +90,6 @@ else
 APP_BUILDID = $(MOZ_BUILD_DATE)
 endif
 APP_ICON = mobile
-APP_SPLASH = splash
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) \
            -DGRE_BUILDID=$(GRE_BUILDID) \
@@ -183,7 +182,6 @@ endif # SKIP_COPY_XULRUNNER
 
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
-	cp $(srcdir)/$(APP_SPLASH).bmp $(DIST)/bin/$(APP_SPLASH).bmp
 	$(REDIT_PATH)/redit$(HOST_BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
 endif
 

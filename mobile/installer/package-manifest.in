@@ -110,9 +110,6 @@
 @BINPATH@/mozilla-xremote-client
 #endif
 #endif
-#ifdef MOZ_SPLASHSCREEN
-@BINPATH@/splash.bmp
-#endif
 
 ; [Components]
 @BINPATH@/components/components.manifest
