@@ -1221,7 +1221,7 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
     nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(a1);
     nsRefPtr<nsCSSValue::Array> arr;
-    if (tfunc != eCSSKeyword_matrix) {
+    if (tfunc != eCSSKeyword_matrix && tfunc != eCSSKeyword_interpolatematrix) {
       arr = AppendTransformFunction(tfunc, resultTail);
     }
 
@@ -1327,10 +1327,8 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
         break;
       }
-      case eCSSKeyword_matrix: {
-        NS_ABORT_IF_FALSE(a1->Count() == 7, "unexpected count");
-        NS_ABORT_IF_FALSE(a2->Count() == 7, "unexpected count");
-
+      case eCSSKeyword_matrix:
+      case eCSSKeyword_interpolatematrix: {
         // FIXME: If the matrix contains only numbers then we could decompose
         // here. We can't do this for matrix3d though, so it's probably
         // best to stay consistent.
