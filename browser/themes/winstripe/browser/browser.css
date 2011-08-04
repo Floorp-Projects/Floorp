@@ -674,7 +674,7 @@ menuitem.bookmark-item {
   -moz-padding-end: 2px;
 }
 
-@navbarLargeIcons@ :-moz-any(@primaryToolbarButtons@):not(#alltabs-button):not(#tabview-button):not(#new-tab-button) > .toolbarbutton-icon {
+@navbarLargeIcons@ :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#new-tab-button,#sync-button[status])) > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/Toolbar.png") !important;
 }
 
