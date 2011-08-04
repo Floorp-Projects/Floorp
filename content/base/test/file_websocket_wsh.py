@@ -51,18 +51,7 @@ def web_socket_transfer_data(request):
     msgutil.send_message(request, resp.decode('utf-8'))
     msgutil.close_connection(request)
   elif request.ws_protocol == "test-7":
-    try:
-      while not request.client_terminated:
-        msgutil.receive_message(request)
-    except msgutil.ConnectionTerminatedException, e:
-      pass
-    msgutil.send_message(request, "server data")
-    msgutil.send_message(request, "server data")
-    msgutil.send_message(request, "server data")
-    msgutil.send_message(request, "server data")
-    msgutil.send_message(request, "server data")
-    time.sleep(30)
-    msgutil.close_connection(request, True)
+    msgutil.send_message(request, "test-7 data")
   elif request.ws_protocol == "test-10":
     msgutil.close_connection(request)
   elif request.ws_protocol == "test-11":
