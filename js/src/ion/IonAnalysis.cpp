@@ -496,7 +496,7 @@ ComputeImmediateDominators(MIRGraph &graph)
             MBasicBlock *newIdom = block->getPredecessor(0);
 
             for (size_t i = 1; i < block->numPredecessors(); i++) {
-                MBasicBlock *pred = graph.getBlock(i);
+                MBasicBlock *pred = block->getPredecessor(i);
                 if (pred->immediateDominator() != NULL)
                     newIdom = IntersectDominators(pred, newIdom);
             }
