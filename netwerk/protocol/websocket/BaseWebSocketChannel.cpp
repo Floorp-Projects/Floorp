@@ -125,6 +125,14 @@ BaseWebSocketChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
 }
 
 NS_IMETHODIMP
+BaseWebSocketChannel::GetExtensions(nsACString &aExtensions)
+{
+  LOG(("BaseWebSocketChannel::GetExtensions() %p\n", this));
+  aExtensions = mNegotiatedExtensions;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BaseWebSocketChannel::GetProtocol(nsACString &aProtocol)
 {
   LOG(("BaseWebSocketChannel::GetProtocol() %p\n", this));

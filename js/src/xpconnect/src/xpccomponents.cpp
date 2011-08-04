@@ -60,7 +60,7 @@
 /***************************************************************************/
 // stuff used by all
 
-static nsresult ThrowAndFail(uintN errNum, JSContext* cx, JSBool* retval)
+static nsresult ThrowAndFail(uintN errNum, JSContext* cx, PRBool* retval)
 {
     XPCThrower::Throw(errNum, cx);
     *retval = JS_FALSE;
