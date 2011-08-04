@@ -52,6 +52,8 @@
 #include "LOpcodes.h"
 #include "TypeOracle.h"
 #include "IonRegisters.h"
+#include "MIR.h"
+#include "MIRGraph.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/StackAssignment-x86.h"
@@ -810,14 +812,19 @@ class LIRGraph
     // Number of stack slots needed for local spills.
     uint32 localSlotCount_;
 
+    MIRGraph &mir_;
+
   public:
-    LIRGraph();
+    LIRGraph(MIRGraph &mir);
 
     size_t numBlocks() const {
         return blocks_.length();
     }
     LBlock *getBlock(size_t i) const {
         return blocks_[i];
+    }
+    uint32 maxBlockId() const {
+        return mir_.maxBlockId();
     }
     bool addBlock(LBlock *block) {
         return blocks_.append(block);

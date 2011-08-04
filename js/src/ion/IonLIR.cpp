@@ -47,9 +47,10 @@
 using namespace js;
 using namespace js::ion;
 
-LIRGraph::LIRGraph()
+LIRGraph::LIRGraph(MIRGraph &mir)
   : numVirtualRegisters_(0),
-    localSlotCount_(0)
+    localSlotCount_(0),
+    mir_(mir)
 {
 }
 

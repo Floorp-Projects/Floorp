@@ -57,49 +57,12 @@ class MStart;
 
 class MDefinitionIterator;
 
-class MIRGraph
-{
-    Vector<MBasicBlock *, 8, IonAllocPolicy> blocks_;
-    uint32 idGen_;
-
-  public:
-    MIRGraph()
-      : idGen_(0)
-    {  }
-
-    bool addBlock(MBasicBlock *block);
-    void unmarkBlocks();
-
-    void clearBlockList() {
-        blocks_.clear();
-    }
-    void resetInstructionNumber() {
-        idGen_ = 0;
-    }
-
-    size_t numBlocks() const {
-        return blocks_.length();
-    }
-    MBasicBlock *getBlock(size_t i) const {
-        return blocks_[i];
-    }
-    void allocDefinitionId(MDefinition *ins) {
-        // This intentionally starts above 0. The id 0 is in places used to
-        // indicate a failure to perform an operation on an instruction.
-        idGen_ += 2;
-        ins->setId(idGen_);
-    }
-    uint32 getMaxInstructionId() {
-        return idGen_;
-    }
-};
-
 typedef InlineList<MInstruction>::iterator MInstructionIterator;
 typedef InlineForwardList<MPhi>::iterator MPhiIterator;
 
 class LBlock;
 
-class MBasicBlock : public TempObject
+class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 {
     static const uint32 NotACopy = uint32(-1);
 
@@ -385,6 +348,74 @@ class MBasicBlock : public TempObject
     Vector<MBasicBlock *, 1, IonAllocPolicy> immediatelyDominated_;
     MBasicBlock *immediateDominator_;
     size_t numDominated_;
+};
+
+typedef InlineListIterator<MBasicBlock> MBasicBlockIterator;
+typedef InlineListIterator<MBasicBlock> ReversePostorderIterator;
+typedef InlineListReverseIterator<MBasicBlock> PostorderIterator;
+
+class MIRGraph
+{
+    InlineList<MBasicBlock> blocks_;
+    uint32 blockIdGen_;
+    uint32 idGen_;
+#ifdef DEBUG
+    size_t numBlocks_;
+#endif
+
+  public:
+    MIRGraph()
+      : blockIdGen_(0),
+        idGen_(0)
+    {  }
+
+    void addBlock(MBasicBlock *block);
+    void unmarkBlocks();
+
+    void clearBlockList() {
+        blocks_.clear();
+#ifdef DEBUG
+        numBlocks_ = 0;
+#endif
+    }
+    void resetInstructionNumber() {
+        idGen_ = 0;
+    }
+    MBasicBlockIterator begin() {
+        return blocks_.begin();
+    }
+    MBasicBlockIterator end() {
+        return blocks_.end();
+    }
+    PostorderIterator poBegin() {
+        return blocks_.rbegin();
+    }
+    PostorderIterator poEnd() {
+        return blocks_.rend();
+    }
+    ReversePostorderIterator rpoBegin() {
+        return blocks_.begin();
+    }
+    ReversePostorderIterator rpoEnd() {
+        return blocks_.end();
+    }
+#ifdef DEBUG
+    size_t numBlocks() const {
+        return numBlocks_;
+    }
+#endif
+    uint32 maxBlockId() const {
+        return blockIdGen_ - 1;
+    }
+    void allocDefinitionId(MDefinition *ins) {
+        // This intentionally starts above 0. The id 0 is in places used to
+        // indicate a failure to perform an operation on an instruction.
+        idGen_ += 2;
+        ins->setId(idGen_);
+    }
+    uint32 getMaxInstructionId() {
+        return idGen_;
+    }
 };
 
 class MDefinitionIterator

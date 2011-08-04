@@ -1301,8 +1301,7 @@ MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(this, predecessor, pc, MBasicBlock::NORMAL);
-    if (!graph().addBlock(block))
-        return NULL;
+    graph().addBlock(block);
     return block;
 }
 
@@ -1310,8 +1309,7 @@ MBasicBlock *
 IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(this, predecessor, pc);
-    if (!graph().addBlock(block))
-        return NULL;
+    graph().addBlock(block);
     return block;
 }
 
