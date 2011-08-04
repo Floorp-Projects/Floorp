@@ -368,3 +368,4 @@ load text-overflow-bug666751-2.html
 asserts(2) load text-overflow-bug670564.xhtml # asserts(2) for bug 436470
 load text-overflow-bug671796.xhtml
 load 667025.html
+asserts(14) load 673770.html # bug 569193 and bug 459597
