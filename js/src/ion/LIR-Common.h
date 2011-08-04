@@ -193,17 +193,24 @@ class LGoto : public LInstructionHelper<0, 0, 0>
 // Takes in either an integer or boolean input and tests it for truthiness.
 class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
 {
-    MBasicBlock *ifTrue;
-    MBasicBlock *ifFalse;
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
 
   public:
     LIR_HEADER(TestIAndBranch);
 
     LTestIAndBranch(const LAllocation &in, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue(ifTrue),
-        ifFalse(ifFalse)
+      : ifTrue_(ifTrue),
+        ifFalse_(ifFalse)
     {
         setOperand(0, in);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return ifTrue_;
+    }
+    MBasicBlock *ifFalse() const {
+        return ifFalse_;
     }
 };
 
@@ -337,6 +344,12 @@ class LPhi : public LInstruction
         printOperands(fp);
     }
 };
+
+Label *
+LBlock::label()
+{
+    return instructions_.begin()->toLabel()->label();
+}
 
 } // namespace ion
 } // namespace js
