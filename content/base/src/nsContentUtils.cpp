@@ -177,6 +177,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsTextEditorState.h"
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
+#include "nsAHtml5FragmentParser.h"
 #include "nsIViewManager.h"
 
 #ifdef IBMBIDI
@@ -264,7 +265,7 @@ nsString* nsContentUtils::sModifierSeparator = nsnull;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
-nsHtml5Parser* nsContentUtils::sHTMLFragmentParser = nsnull;
+nsAHtml5FragmentParser* nsContentUtils::sHTMLFragmentParser = nsnull;
 nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nsnull;
 
@@ -3751,7 +3752,7 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
 {
   if (!sHTMLFragmentParser) {
     sHTMLFragmentParser =
-      static_cast<nsHtml5Parser*>(nsHtml5Module::NewHtml5Parser().get());
+      static_cast<nsAHtml5FragmentParser*>(nsHtml5Module::NewHtml5Parser().get());
     // Now sHTMLFragmentParser owns the object
   }
   sHTMLFragmentParser->ParseHtml5Fragment(aSourceBuffer,

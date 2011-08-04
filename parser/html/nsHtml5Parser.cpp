@@ -469,7 +469,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
+NS_IMETHODIMP
 nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
                                   nsIContent* aTargetNode,
                                   nsIAtom* aContextLocalName,

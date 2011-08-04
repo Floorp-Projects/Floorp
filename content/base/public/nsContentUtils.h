@@ -80,7 +80,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsINode.h"
 #include "nsHashtable.h"
 #include "nsIDOMNode.h"
-#include "nsHtml5Parser.h"
+#include "nsAHtml5FragmentParser.h"
 #include "nsIFragmentContentSink.h"
 #include "nsMathUtils.h"
 
@@ -1865,7 +1865,7 @@ private:
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
 
-  static nsHtml5Parser* sHTMLFragmentParser;
+  static nsAHtml5FragmentParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
   static nsIFragmentContentSink* sXMLFragmentSink;
 
