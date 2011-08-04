@@ -2573,7 +2573,7 @@ jsdService::AsyncOn (jsdIActivationCallback *activationCallback)
 }
 
 NS_IMETHODIMP
-jsdService::RecompileForDebugMode (JSContext *cx, JSCompartment *comp, JSBool mode) {
+jsdService::RecompileForDebugMode (JSContext *cx, JSCompartment *comp, PRBool mode) {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   /* XPConnect now does this work itself, so this IDL entry point is no longer used. */
   return NS_ERROR_NOT_IMPLEMENTED;
