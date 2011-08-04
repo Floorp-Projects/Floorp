@@ -108,7 +108,7 @@ CodeGenerator::visitUnboxInteger(LUnboxInteger *unbox)
 
     masm.movq(ToOperand(value), ToRegister(result));
     masm.shlq(Imm32(JSVAL_TAG_SHIFT), ToRegister(result));
-    masm.cmpl(Imm32(JSVAL_TAG_INT32), ToOperand(result));
+    masm.cmpl(ToOperand(result), Imm32(JSVAL_TAG_INT32));
     masm.movl(ToOperand(value), ToRegister(result));
 
     return true;
