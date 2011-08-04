@@ -797,8 +797,8 @@ LinearScanAllocator::reifyAllocations()
     while ((interval = unhandled.dequeue()) != NULL) {
         VirtualRegister *reg = interval->reg();
 
-        IonSpew(IonSpew_LSRA, " Reifying interval %u = [%u,%u]", reg->reg(), interval->start(),
-                interval->end());
+        IonSpew(IonSpew_LSRA, " Reifying interval %u = [%u,%u]", reg->reg(),
+                interval->start().pos(), interval->end().pos());
 
         // Erase all uses of this interval
         for (size_t i = 0; i < reg->numUses(); i++) {
