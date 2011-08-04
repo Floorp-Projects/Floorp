@@ -60,7 +60,7 @@
  * 35. test for sending custom close code and reason
  * 36. negative test for sending out of range close code
  * 37. negative test for too long of a close reason
- * 38. reserved for extension test
+ * 38. ensure extensions attribute is defined
  * 39. a basic wss:// connectivity test
  * 40. negative test for wss:// with no cert
  */
@@ -1061,9 +1061,22 @@ function test37()
 
 function test38()
 {
-  ok(true, "test 38 reserved for extension test.");
-  current_test++;
-  doTest(39);
+  var prots=["test-38"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 38 open");
+    ok(ws.extensions != undefined, "extensions attribute defined");
+    ok(ws.extensions == "deflate-stream", "extensions attribute deflate-stream");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 38 close");
+    doTest(39);
+  };
 }
 
 function test39()

@@ -58,10 +58,11 @@ class nsString;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(8fa080c7-934a-4040-90cb-31055798b35d)]
+[scriptable, uuid(5b124f54-7d46-4bc0-8507-e58ed22c19b9)]
 interface nsIMozWebSocket : nsISupports
 {
   readonly attribute DOMString url;
+  readonly attribute DOMString extensions;
   readonly attribute DOMString protocol;
 
   //ready state
