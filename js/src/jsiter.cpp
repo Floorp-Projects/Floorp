@@ -339,8 +339,6 @@ GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 
 }
 
-size_t sCustomIteratorCount = 0;
-
 static inline bool
 GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
@@ -354,9 +352,6 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         vp->setUndefined();
         return true;
     }
-
-    if (!cx->runningWithTrustedPrincipals())
-        ++sCustomIteratorCount;
 
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);

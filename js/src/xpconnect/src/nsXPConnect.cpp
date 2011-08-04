@@ -48,7 +48,6 @@
 #include "nsHashKeys.h"
 #include "jsatom.h"
 #include "jsobj.h"
-#include "jsfriendapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsscript.h"
@@ -67,14 +66,13 @@
 
 #include "xpcquickstubs.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
                               nsIThreadObserver,
                               nsIJSRuntimeService,
                               nsIJSContextStack,
-                              nsIThreadJSContextStack,
-                              nsIJSEngineTelemetryStats)
+                              nsIThreadJSContextStack)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
@@ -2902,34 +2900,6 @@ nsXPConnect::SetDebugModeWhenPossible(PRBool mode)
     gDesiredDebugMode = mode;
     if (!mode)
         CheckForDebugMode(mRuntime->GetJSRuntime());
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
-{
-    JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
-    if (!obj)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    uintN attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-
-    size_t i = JS_GetE4XObjectsCreated(cx);
-    jsval v = DOUBLE_TO_JSVAL(i);
-    if (!JS_DefineProperty(cx, obj, "e4x", v, NULL, NULL, attrs))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    i = JS_SetProtoCalled(cx);
-    v = DOUBLE_TO_JSVAL(i);
-    if (!JS_DefineProperty(cx, obj, "setProto", v, NULL, NULL, attrs))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    i = JS_GetCustomIteratorCount(cx);
-    v = DOUBLE_TO_JSVAL(i);
-    if (!JS_DefineProperty(cx, obj, "customIter", v, NULL, NULL, attrs))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *rval = OBJECT_TO_JSVAL(obj);
     return NS_OK;
 }
 
