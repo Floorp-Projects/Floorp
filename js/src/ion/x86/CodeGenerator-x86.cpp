@@ -109,7 +109,7 @@ bool
 CodeGenerator::visitUnbox(LUnbox *unbox)
 {
     LAllocation *type = unbox->getOperand(TYPE_INDEX);
-    masm.cmpl(Imm32(MIRTypeToTag(unbox->type())), ToOperand(type));
+    masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(unbox->type())));
     return true;
 }
 
