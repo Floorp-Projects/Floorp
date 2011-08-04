@@ -44,7 +44,7 @@ interface nsIWebSocketListener;
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(783029cf-75b5-439e-8e47-86b390202b4c)]
+[scriptable, uuid(e8ae0371-c28f-4d61-b257-514e014a4686)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**
@@ -80,6 +80,11 @@ interface nsIWebSocketChannel : nsISupports
      * Sec-Websocket-Protocol value
      */
     attribute ACString protocol;
+
+    /**
+     * Sec-Websocket-Extensions response header value
+     */
+    readonly attribute ACString extensions;
 
     /**
      * Asynchronously open the websocket connection.  Received messages are fed

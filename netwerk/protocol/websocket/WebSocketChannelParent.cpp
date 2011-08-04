@@ -152,11 +152,12 @@ NS_IMETHODIMP
 WebSocketChannelParent::OnStart(nsISupports *aContext)
 {
   LOG(("WebSocketChannelParent::OnStart() %p\n", this));
-  nsCAutoString protocol;
+  nsCAutoString protocol, extensions;
   if (mChannel) {
     mChannel->GetProtocol(protocol);
+    mChannel->GetExtensions(extensions);
   }
-  if (!mIPCOpen || !SendOnStart(protocol)) {
+  if (!mIPCOpen || !SendOnStart(protocol, extensions)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

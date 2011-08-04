@@ -1516,6 +1516,7 @@ WebSocketChannel::HandleExtensions()
         AbortSession(NS_ERROR_UNEXPECTED);
         return NS_ERROR_UNEXPECTED;
       }
+      mNegotiatedExtensions = extensions;
     }
   }
 
