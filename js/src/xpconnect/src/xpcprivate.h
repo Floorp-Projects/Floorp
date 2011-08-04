@@ -786,7 +786,7 @@ public:
     void AddGCCallback(JSGCCallback cb);
     void RemoveGCCallback(JSGCCallback cb);
 
-    static void ActivityCallback(void *arg, PRBool active);
+    static void ActivityCallback(void *arg, JSBool active);
 
 private:
     XPCJSRuntime(); // no implementation
