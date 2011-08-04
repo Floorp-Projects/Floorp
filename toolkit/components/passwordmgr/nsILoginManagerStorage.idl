@@ -68,7 +68,7 @@ interface nsILoginManagerStorage : nsISupports {
      *        If non-null, file to output logins to.
      *
      */
-    void initWithFile(in nsIFile aInputFile, in nsIFile aOutputFile); 
+    void initWithFile(in nsIFile aInputFile, in nsIFile aOutputFile);
 
 
     /**
@@ -137,7 +137,7 @@ interface nsILoginManagerStorage : nsISupports {
      *        The number of elements in the array. JS callers can simply use
      *        the array's .length property and omit this param.
      * @param logins
-     *        An array of nsILoginInfo objects. 
+     *        An array of nsILoginInfo objects.
      *
      * NOTE: This can be called from JS as:
      *       var logins = pwmgr.getAllLogins();
@@ -156,7 +156,7 @@ interface nsILoginManagerStorage : nsISupports {
     *        The number of elements in the array. JS callers can simply use
     *        the array's .length property and omit this param.
     * @param logins
-    *        An array of nsILoginInfo objects. 
+    *        An array of nsILoginInfo objects.
     *
     * NOTE: This can be called from JS as:
     *       var logins = pwmgr.getAllEncryptedLogins();
@@ -251,7 +251,7 @@ interface nsILoginManagerStorage : nsISupports {
      *        WWW-Authenticate header. See RFC2617. For form logins,
      *        specify null.
      * @param logins
-     *        An array of nsILoginInfo objects. 
+     *        An array of nsILoginInfo objects.
      *
      * NOTE: This can be called from JS as:
      *       var logins = pwmgr.findLogins({}, hostname, ...);
