@@ -232,8 +232,8 @@ TypeAnalyzer::specializePhis()
 {
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
-        for (size_t i = 0; i < block->numPhis(); i++) {
-            if (!specializePhi(block->getPhi(i)))
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+            if (!specializePhi(*phi))
                 return false;
         }
     }
@@ -360,14 +360,13 @@ TypeAnalyzer::insertConversions()
     // inputs of uses) does not conflict with input adjustment.
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
-        for (size_t i = 0; i < block->numPhis(); i++) {
-            MPhi *phi = block->getPhi(i);
-            if (!adjustPhiInputs(phi))
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+            if (!adjustPhiInputs(*phi))
                 return false;
-            if (phi->type() == MIRType_Value && !adjustOutput(phi))
+            if (phi->type() == MIRType_Value && !adjustOutput(*phi))
                 return false;
         }
-        for (MInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
+        for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
             if (!adjustInputs(*iter))
                 return false;
             if (iter->type() == MIRType_Value && !adjustOutput(*iter))
@@ -562,7 +561,7 @@ ion::BuildPhiReverseMapping(MIRGraph &graph)
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
         if (block->numPredecessors() < 2) {
-            JS_ASSERT(block->numPhis() == 0);
+            JS_ASSERT(block->phisEmpty());
             continue;
         }
 
@@ -574,7 +573,7 @@ ion::BuildPhiReverseMapping(MIRGraph &graph)
             size_t numSuccessorsWithPhis = 0;
             for (size_t k = 0; k < pred->numSuccessors(); k++) {
                 MBasicBlock *successor = pred->getSuccessor(k);
-                if (successor->numPhis() > 0)
+                if (!successor->phisEmpty())
                     numSuccessorsWithPhis++;
             }
             JS_ASSERT(numSuccessorsWithPhis <= 1);

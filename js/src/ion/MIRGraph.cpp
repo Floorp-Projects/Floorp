@@ -373,16 +373,11 @@ MDefinitionIterator
 MBasicBlock::removeDefAt(MDefinitionIterator &old)
 {
     MDefinitionIterator iter(old);
-    MDefinition *def = *iter;
-    uint32 phiIndex = iter.phiIndex_;
-    iter++;
 
-    if (phiIndex < numPhis()) {
-        JS_ASSERT(def->isPhi());
-        phis_.erase(phis_.begin() + phiIndex);
-    } else {
-        remove(def->toInstruction());
-    }
+    if (iter.atPhi())
+        iter.phiIter_ = iter.block_->removePhiAt(iter.phiIter_);
+    else
+        iter.iter_ = iter.block_->removeAt(iter.iter_);
 
     return iter;
 }
@@ -419,14 +414,25 @@ MBasicBlock::end(MControlInstruction *ins)
     lastIns_ = ins;
 }
 
-bool
+void
 MBasicBlock::addPhi(MPhi *phi)
 {
-    if (!phis_.append(phi))
-        return false;
+    phis_.pushBack(phi);
     phi->setBlock(this);
     gen()->graph().allocDefinitionId(phi);
-    return true;
+}
+
+MPhiIterator
+MBasicBlock::removePhiAt(MPhiIterator &at)
+{
+    JS_ASSERT(!phis_.empty());
+
+    MPhiIterator result = phis_.removeAt(at);
+    if (phis_.empty()) {
+        for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
+            (*pred)->setSuccessorWithPhis(NULL, 0);
+    }
+    return result;
 }
 
 bool
@@ -455,8 +461,7 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
             } else {
                 // Otherwise, create a new phi node.
                 phi = MPhi::New(i);
-                if (!addPhi(phi))
-                    return false;
+                addPhi(phi);
 
                 // Prime the phi for each predecessor, so input(x) comes from
                 // predecessor(x).
@@ -526,8 +531,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         // Create a new phi. Do not add inputs yet, as we don't want to
         // accidentally rewrite the phi's operands.
         MPhi *phi = MPhi::New(i);
-        if (!addPhi(phi))
-            return false;
+        addPhi(phi);
 
         for (MUseIterator use(entryDef->usesBegin()); use != entryDef->usesEnd(); ) {
             JS_ASSERT(use->node()->getOperand(use->index()) == entryDef);

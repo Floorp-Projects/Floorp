@@ -205,9 +205,9 @@ C1Spewer::spewCFG(FILE *fp, MBasicBlock *block)
     fprintf(fp, "    end_states\n");
 
     fprintf(fp, "    begin_HIR\n");
-    for (size_t i = 0; i < block->numPhis(); i++)
-        DumpDefinition(fp, block->getPhi(i));
-    for (MInstructionIterator i = block->begin(); i != block->end(); i++)
+    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++)
+        DumpDefinition(fp, *phi);
+    for (MInstructionIterator i(block->begin()); i != block->end(); i++)
         DumpDefinition(fp, *i);
     fprintf(fp, "    end_HIR\n");
 
@@ -215,7 +215,7 @@ C1Spewer::spewCFG(FILE *fp, MBasicBlock *block)
         fprintf(fp, "    begin_LIR\n");
         for (size_t i = 0; i < block->lir()->numPhis(); i++)
             DumpLIR(fp, block->lir()->getPhi(i));
-        for (LInstructionIterator i = block->lir()->begin(); i != block->lir()->end(); i++)
+        for (LInstructionIterator i(block->lir()->begin()); i != block->lir()->end(); i++)
             DumpLIR(fp, *i);
         fprintf(fp, "    end_LIR\n");
     }

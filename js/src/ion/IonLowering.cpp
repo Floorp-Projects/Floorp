@@ -342,13 +342,13 @@ LIRGenerator::visitBlock(MBasicBlock *block)
 
     last_snapshot_ = block->entrySnapshot();
 
-    for (size_t i = 0; i < block->numPhis(); i++) {
+    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
         if (!gen->ensureBallast())
             return false;
-        if (!preparePhi(block->getPhi(i)))
+        if (!preparePhi(*phi))
             return false;
 #ifdef DEBUG
-        block->getPhi(i)->setInWorklist();
+        phi->setInWorklist();
 #endif
     }
 
@@ -365,8 +365,7 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (block->successorWithPhis()) {
         MBasicBlock *successor = block->successorWithPhis();
         uint32 position = block->positionInPhiSuccessor();
-        for (size_t i = 0; i < successor->numPhis(); i++) {
-            MPhi *phi = successor->getPhi(i);
+        for (MPhiIterator phi(successor->phisBegin()); phi != successor->phisEnd(); phi++) {
             MDefinition *opd = phi->getOperand(position);
             if (opd->isEmittedAtUses() && !opd->id()) {
                 if (!ensureDefined(opd))
@@ -397,8 +396,8 @@ LIRGenerator::generate()
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
         current = block->lir();
-        for (size_t j = 0; j < block->numPhis(); j++) {
-            if (!lowerPhi(block->getPhi(j)))
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+            if (!lowerPhi(*phi))
                 return false;
         }
     }

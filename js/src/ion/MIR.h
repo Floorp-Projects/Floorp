@@ -850,7 +850,7 @@ class MAdd : public MBinaryArithInstruction
     }
 };
 
-class MPhi : public MDefinition
+class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
     uint32 slot_;
