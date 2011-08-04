@@ -5233,10 +5233,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!EmitAssignment(cx, cg, pn2->pn_kid2, JSOP_NOP, NULL))
                 return false;
             tmp2 = CG_OFFSET(cg);
-            if (pn2->pn_kid1 && !js_NewSrcNote2(cx, cg, SRC_DECL,
-                                                (pn2->pn_kid1->pn_op == JSOP_DEFVAR)
-                                                ? SRC_DECL_VAR
-                                                : SRC_DECL_LET) < 0) {
+            if (pn2->pn_kid1 && js_NewSrcNote2(cx, cg, SRC_DECL,
+                                               (pn2->pn_kid1->pn_op == JSOP_DEFVAR)
+                                               ? SRC_DECL_VAR
+                                               : SRC_DECL_LET) < 0) {
                 return false;
             }
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
