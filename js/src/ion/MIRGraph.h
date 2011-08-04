@@ -399,6 +399,12 @@ class MIRGraph
     ReversePostorderIterator rpoEnd() {
         return blocks_.end();
     }
+    void removeBlock(MBasicBlock *block) {
+        blocks_.remove(block);
+#ifdef DEBUG
+        numBlocks_--;
+#endif
+    }
 #ifdef DEBUG
     size_t numBlocks() const {
         return numBlocks_;
