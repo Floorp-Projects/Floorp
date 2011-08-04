@@ -149,7 +149,7 @@ namespace imagelib {
 class imgDecodeWorker;
 class Decoder;
 
-class RasterImage : public mozilla::imagelib::Image
+class RasterImage : public Image
                   , public nsITimerCallback
                   , public nsIProperties
                   , public nsSupportsWeakReference
