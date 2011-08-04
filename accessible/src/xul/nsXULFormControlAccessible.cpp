@@ -686,6 +686,9 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXULTextFieldAccessible, nsAccessible, nsHyperText
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
 {
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   PRUint64 state = NativeState();
 
   if (state & states::PROTECTED)    // Don't return password text!
