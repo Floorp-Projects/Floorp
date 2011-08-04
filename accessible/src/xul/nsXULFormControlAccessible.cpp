@@ -82,13 +82,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULButtonAccessible, nsAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULButtonAccessible: nsIAccessible
 
-NS_IMETHODIMP
-nsXULButtonAccessible::GetNumActions(PRUint8 *aCount)
+PRUint8
+nsXULButtonAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-
-  *aCount = 1;
-  return NS_OK;
+  return 1;
 }
 
 NS_IMETHODIMP
@@ -249,10 +246,10 @@ nsXULDropmarkerAccessible::
 {
 }
 
-NS_IMETHODIMP nsXULDropmarkerAccessible::GetNumActions(PRUint8 *aResult)
+PRUint8
+nsXULDropmarkerAccessible::ActionCount()
 {
-  *aResult = 1;
-  return NS_OK;
+  return 1;
 }
 
 PRBool nsXULDropmarkerAccessible::DropmarkerOpen(PRBool aToggleOpen)
@@ -320,7 +317,6 @@ nsXULDropmarkerAccessible::NativeState()
   return DropmarkerOpen(PR_FALSE) ? states::PRESSED : 0;
 }
 
-                      
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULCheckboxAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,10 +333,10 @@ nsXULCheckboxAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_CHECKBUTTON;
 }
 
-NS_IMETHODIMP nsXULCheckboxAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsXULCheckboxAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;
+  return 1;
 }
 
 /**
@@ -686,6 +682,9 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXULTextFieldAccessible, nsAccessible, nsHyperText
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
 {
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   PRUint64 state = NativeState();
 
   if (state & states::PROTECTED)    // Don't return password text!
@@ -753,14 +752,13 @@ nsXULTextFieldAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_ENTRY;
 }
 
-
 /**
   * Only one actions available
   */
-NS_IMETHODIMP nsXULTextFieldAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsXULTextFieldAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;
+  return 1;
 }
 
 /**

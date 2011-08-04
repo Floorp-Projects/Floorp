@@ -3,20 +3,24 @@
 <script type="text/javascript">
 var url1 = "data:text/html;charset=utf-8,1st%20page";
 
+function soon(f) {
+  return function() { setTimeout(f, 0); };
+}
+
 function doe() {
   document.body.innerHTML = "<iframe src='about:blank'></iframe>";
   document.body.innerHTML += "<iframe src='about:blank'></iframe>";
-  window.frames[0].frameElement.onload = doe2;
+  window.frames[0].frameElement.onload = soon(doe2);
   window.frames[0].location.replace(url1);
 }
 
 function doe2() {
   window.frames[0].location = 'data:text/html;charset=utf-8,2nd%20page';
-  window.frames[0].frameElement.onload = doe3;
+  window.frames[0].frameElement.onload = soon(doe3);
 }
 
 function doe3() {
-  window.frames[0].frameElement.onload = doe4;
+  window.frames[0].frameElement.onload = soon(doe4);
   history.go(-1);
 }
 
