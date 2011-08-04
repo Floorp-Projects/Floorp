@@ -62,7 +62,7 @@ interface nsIJumpListBuilder : nsISupports
    * Users may remove items from jump lists after they are commited. The system
    * tracks removed items between commits. A list of these items is returned by
    * a call to initListBuild. nsIJumpListBuilder does not filter entries added that
-   * have been removed since the last commit. To prevent repeatedly adding entires
+   * have been removed since the last commit. To prevent repeatedly adding entries
    * users have removed, applications are encoraged to track removed items 
    * internally.
    *

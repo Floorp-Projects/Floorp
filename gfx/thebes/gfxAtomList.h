@@ -41,7 +41,7 @@
   It is designed to be used as inline input to gfxAtoms.cpp *only*
   through the magic of C preprocessing.
 
-  All entires must be enclosed in the macro GFX_ATOM which will have cruel
+  All entries must be enclosed in the macro GFX_ATOM which will have cruel
   and unusual things done to it
 
   It is recommended (but not strictly necessary) to keep all entries
