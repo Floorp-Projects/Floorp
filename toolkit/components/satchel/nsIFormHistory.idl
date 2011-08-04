@@ -57,7 +57,7 @@ interface nsIFormHistory2 : nsISupports
    * Returns true if the form history has any entries.
    */
   readonly attribute boolean hasEntries;
-  
+
   /**
    * Adds a name and value pair to the form history.
    */
@@ -72,7 +72,7 @@ interface nsIFormHistory2 : nsISupports
    * Removes all entries that are paired with a name.
    */
   void removeEntriesForName(in AString name);
-  
+
   /**
    * Removes all entries in the entire form history.
    */
