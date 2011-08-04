@@ -24,6 +24,7 @@
 
     const kRemoval = 0;
     const kInsertion = 1;
+    const kUnexpected = true;
 
     function changeText(aContainerID, aValue, aEventList)
     {
@@ -32,14 +33,22 @@
       this.textData = this.textNode.data;
 
       this.eventSeq = [ ];
+      this.unexpectedEventSeq = [ ];
+
       for (var i = 0; i < aEventList.length; i++) {
-        var isInserted = aEventList[i][0];
-        var str = aEventList[i][1];
-        var offset = aEventList[i][2];
+        var event = aEventList[i];
+
+        var isInserted = event[0];
+        var str = event[1];
+        var offset = event[2];
         var checker = new textChangeChecker(this.containerNode, offset,
                                             offset + str.length, str,
                                             isInserted);
-        this.eventSeq.push(checker);
+
+        if (eventItem[3] == kUnexpected)
+          this.unexpectedEventSeq.push(checker);
+        else
+          this.eventSeq.push(checker);
       }
 
       this.invoke = function changeText_invoke()
@@ -52,6 +61,13 @@
         return "change text '" + this.textData + "' -> " + this.textNode.data +
           "for " + prettyName(this.containerNode);
       }
+    }
+
+    function expStr(x, doublings)
+    {
+      for (var i = 0; i < doublings; ++i)
+        x = x + x;
+      return x;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -167,6 +183,34 @@
       ];
       gQueue.push(new changeText("p11", "levenshtein", events));
 
+      //////////////////////////////////////////////////////////////////////////
+      // long strings, remove/insert pair as the old string was replaced on
+      // new one
+
+      var longStr1 = expStr("x", 16);
+      var longStr2 = expStr("X", 16);
+
+      var newStr = "a" + longStr1 + "b", insStr = longStr1, rmStr = "";
+      events = [
+        [ kRemoval, rmStr, 1, kUnexpected ],
+        [ kInsertion, insStr, 1 ]
+      ];
+      gQueue.push(new changeText("p12", newStr, events));
+
+      newStr = "a" + longStr2 + "b", insStr = longStr2, rmStr = longStr1;
+      events = [
+        [ kRemoval, rmStr, 1 ],
+        [ kInsertion, insStr, 1]
+      ];
+      gQueue.push(new changeText("p12", newStr, events));
+
+      newStr = "ab", insStr = "", rmStr = longStr2;
+      events = [
+        [ kRemoval, rmStr, 1 ],
+        [ kInsertion, insStr, 1, kUnexpected ]
+      ];
+      gQueue.push(new changeText("p12", newStr, events));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -201,5 +245,6 @@
   <p id="p9">abcDEFabc</p>
   <p id="p10">!abcdef@</p>
   <p id="p11">meilenstein</p>
+  <p id="p12">ab</p>
 </body>
 </html>
