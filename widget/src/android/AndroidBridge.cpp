@@ -48,6 +48,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
+#include "nsThreadUtils.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -146,6 +147,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jScanMedia = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
     jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
     jGetIconForExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getIconForExtension", "(Ljava/lang/String;I)[B");
+    jFireAndWaitForTracerEvent = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "fireAndWaitForTracerEvent", "()V");   
     jCreateShortcut = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jGetShowPasswordSetting = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getShowPasswordSetting", "()Z");
     jPostToJavaThread = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "postToJavaThread", "(Z)V");
@@ -1010,6 +1012,77 @@ AndroidBridge::OpenGraphicsLibraries()
     }
 }
 
+void
+AndroidBridge::FireAndWaitForTracerEvent() {
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, 
+                                  jFireAndWaitForTracerEvent);
+}
+
+
+namespace mozilla {
+    class TracerRunnable : public nsRunnable{
+    public:
+        TracerRunnable() {
+            mTracerLock = new Mutex("TracerRunnable");
+            mTracerCondVar = new CondVar(*mTracerLock, "TracerRunnable");
+            mMainThread = do_GetMainThread();
+            
+        }
+        ~TracerRunnable() {
+            delete mTracerCondVar;
+            delete mTracerLock;
+            mTracerLock = nsnull;
+            mTracerCondVar = nsnull;
+        }
+
+        virtual nsresult Run() {
+            MutexAutoLock lock(*mTracerLock);
+            if (!AndroidBridge::Bridge())
+                return NS_OK;
+            
+            AndroidBridge::Bridge()->FireAndWaitForTracerEvent();
+            mHasRun = PR_TRUE;
+            mTracerCondVar->Notify();
+            return NS_OK;
+        }
+        
+        bool Fire() {
+            if (!mTracerLock || !mTracerCondVar)
+                return false;
+            MutexAutoLock lock(*mTracerLock);
+            mHasRun = PR_FALSE;
+            mMainThread->Dispatch(this, NS_DISPATCH_NORMAL);
+            while (!mHasRun)
+                mTracerCondVar->Wait();
+            return true;
+        }
+    private:
+        Mutex* mTracerLock;
+        CondVar* mTracerCondVar;
+        PRBool mHasRun;
+        nsCOMPtr<nsIThread> mMainThread;
+
+    };
+    nsCOMPtr<TracerRunnable> sTracerRunnable;
+
+    bool InitWidgetTracing() {
+        if (!sTracerRunnable)
+            sTracerRunnable = new TracerRunnable();
+        return true;
+    }
+
+    void CleanUpWidgetTracing() {
+        if (sTracerRunnable)
+            delete sTracerRunnable;
+        sTracerRunnable = nsnull;
+    }
+
+    bool FireAndWaitForTracerEvent() {
+        if (sTracerRunnable)
+            return sTracerRunnable->Fire();
+        return false;
+    }
+}
 bool
 AndroidBridge::HasNativeBitmapAccess()
 {
