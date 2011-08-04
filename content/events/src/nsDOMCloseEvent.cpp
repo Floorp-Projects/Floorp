@@ -57,15 +57,33 @@ nsDOMCloseEvent::GetWasClean(PRBool *aWasClean)
 }
 
 NS_IMETHODIMP
+nsDOMCloseEvent::GetCode(PRUint16 *aCode)
+{
+  *aCode = mReasonCode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMCloseEvent::GetReason(nsAString & aReason)
+{
+  aReason = mReason;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMCloseEvent::InitCloseEvent(const nsAString& aType,
                                 PRBool aCanBubble,
                                 PRBool aCancelable,
-                                PRBool aWasClean)
+                                PRBool aWasClean,
+                                PRUint16 aReasonCode,
+                                const nsAString &aReason)
 {
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mWasClean = aWasClean;
+  mReasonCode = aReasonCode;
+  mReason = aReason;
 
   return NS_OK;
 }
