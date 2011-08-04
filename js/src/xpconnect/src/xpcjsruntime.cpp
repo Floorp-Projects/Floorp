@@ -995,7 +995,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
 
 //static
 void
-XPCJSRuntime::ActivityCallback(void *arg, PRBool active)
+XPCJSRuntime::ActivityCallback(void *arg, JSBool active)
 {
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
     if (active) {
@@ -1057,6 +1057,18 @@ void XPCJSRuntime::SystemIsBeingShutDown(JSContext* cx)
             Enumerate(DetachedWrappedNativeProtoShutdownMarker, cx);
 }
 
+JSContext *
+XPCJSRuntime::GetJSCycleCollectionContext()
+{
+    if(!mJSCycleCollectionContext) {
+        mJSCycleCollectionContext = JS_NewContext(mJSRuntime, 0);
+        if(!mJSCycleCollectionContext)
+            return nsnull;
+        JS_ClearContextThread(mJSCycleCollectionContext);
+    }
+    return mJSCycleCollectionContext;
+}
+
 XPCJSRuntime::~XPCJSRuntime()
 {
     if (mWatchdogWakeup)
@@ -1075,6 +1087,12 @@ XPCJSRuntime::~XPCJSRuntime()
         }
         PR_DestroyCondVar(mWatchdogWakeup);
         mWatchdogWakeup = nsnull;
+    }
+
+    if(mJSCycleCollectionContext)
+    {
+        JS_SetContextThread(mJSCycleCollectionContext);
+        JS_DestroyContextNoGC(mJSCycleCollectionContext);
     }
 
 #ifdef XPC_DUMP_AT_SHUTDOWN
@@ -1434,9 +1452,6 @@ class XPConnectGCChunkAllocator
 public:
     XPConnectGCChunkAllocator() {}
 
-    PRInt64 GetGCChunkBytesInUse() {
-        return mNumGCChunksInUse * js::GC_CHUNK_SIZE;
-    }
 private:
     virtual void *doAlloc() {
         void *chunk;
@@ -1447,22 +1462,16 @@ private:
 #else
         chunk = js::AllocGCChunk();
 #endif
-        if (chunk)
-            mNumGCChunksInUse++;
         return chunk;
     }
 
     virtual void doFree(void *chunk) {
-        mNumGCChunksInUse--;
 #ifdef MOZ_MEMORY
         free(chunk);
 #else
         js::FreeGCChunk(chunk);
 #endif
     }
-
-protected:
-    PRUint32 mNumGCChunksInUse;
 };
 
 static XPConnectGCChunkAllocator gXPCJSChunkAllocator;
@@ -1476,11 +1485,19 @@ static XPConnectGCChunkAllocator gXPCJSChunkAllocator;
 // We have per-compartment GC heap totals, so we can't put the total GC heap
 // size in the explicit allocations tree.  But it's a useful figure, so put it
 // in the "others" list.
+
+static PRInt64
+GetGCChunkTotalBytes()
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    return PRInt64(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * js::GC_CHUNK_SIZE;
+}
+
 NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
     "js-gc-heap",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_BYTES,
-    gXPCJSChunkAllocator.GetGCChunkBytesInUse,
+    GetGCChunkTotalBytes,
     "Memory used by the garbage-collected JavaScript heap.")
 
 static PRInt64
@@ -1591,18 +1608,66 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
     }
 
     {
-      JSAutoRequest ar(cx);
+        JSAutoRequest ar(cx);
 
-      data->compartmentStatsVector.reserve(rt->compartments.length());
-      js::IterateCompartmentsArenasCells(cx, data, CompartmentCallback,
-                                         ArenaCallback, CellCallback);
+        if (!data->compartmentStatsVector.reserve(rt->compartments.length()))
+            return false;
+
+        data->gcHeapChunkCleanUnused =
+            PRInt64(JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS)) *
+            js::GC_CHUNK_SIZE;
+        data->gcHeapChunkTotal =
+            PRInt64(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
+            js::GC_CHUNK_SIZE;
+
+        js::IterateCompartmentsArenasCells(cx, data, CompartmentCallback,
+                                           ArenaCallback, CellCallback);
+
+        for(js::ThreadDataIter i(rt); !i.empty(); i.popFront())
+            data->stackSize += i.threadData()->stackSpace.committedSize();
     }
 
     JS_DestroyContextNoGC(cx);
+
+    // This is initialized to all bytes stored in used chunks, and then we
+    // subtract used space from it each time around the loop.
+    data->gcHeapChunkDirtyUnused = data->gcHeapChunkTotal -
+                                   data->gcHeapChunkCleanUnused;
+    data->gcHeapArenaUnused = 0;
+
+    for(CompartmentStats *stats = data->compartmentStatsVector.begin();
+        stats != data->compartmentStatsVector.end();
+        ++stats)
+    {
+        data->gcHeapChunkDirtyUnused -=
+            stats->gcHeapArenaHeaders + stats->gcHeapArenaPadding +
+            stats->gcHeapArenaUnused +
+            stats->gcHeapObjects + stats->gcHeapStrings +
+            stats->gcHeapShapes + stats->gcHeapXml;
+        
+        data->gcHeapArenaUnused += stats->gcHeapArenaUnused;
+    }
+
+    size_t numDirtyChunks = (data->gcHeapChunkTotal -
+                             data->gcHeapChunkCleanUnused) /
+                            js::GC_CHUNK_SIZE;
+    PRInt64 perChunkAdmin =
+        sizeof(js::gc::Chunk) - (sizeof(js::gc::Arena) * js::gc::ArenasPerChunk);
+    data->gcHeapChunkAdmin = numDirtyChunks * perChunkAdmin;
+    data->gcHeapChunkDirtyUnused -= data->gcHeapChunkAdmin;
+    
+    // Why 10000x?  100x because it's a percentage, and another 100x
+    // because nsIMemoryReporter requires that for percentage amounts so
+    // they can be fractional.
+    data->gcHeapUnusedPercentage = (data->gcHeapChunkCleanUnused +
+                                    data->gcHeapChunkDirtyUnused +
+                                    data->gcHeapArenaUnused) * 10000 /
+                                   data->gcHeapChunkTotal;
+
     return true;
 }
 
-void
+static void
 ReportCompartmentStats(const CompartmentStats &stats,
                        const nsACString &pathPrefix,
                        nsIMemoryMultiReporterCallback *callback,
@@ -1739,20 +1804,45 @@ ReportCompartmentStats(const CompartmentStats &stats,
 }
 
 void
-ReportJSStackSizeForRuntime(JSRuntime *rt, const nsACString &pathPrefix,
-                            nsIMemoryMultiReporterCallback *callback,
-                            nsISupports *closure)
+ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
+                     nsIMemoryMultiReporterCallback *callback,
+                     nsISupports *closure)
 {
-    PRInt64 stackSize = 0;
-    for(js::ThreadDataIter i(rt); !i.empty(); i.popFront())
-        stackSize += i.threadData()->stackSpace.committedSize();
+    for(const CompartmentStats *stats = data.compartmentStatsVector.begin();
+        stats != data.compartmentStatsVector.end();
+        ++stats)
+    {
+        ReportCompartmentStats(*stats, pathPrefix, callback, closure);
+    }
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("stack"),
-                      nsIMemoryReporter::KIND_NONHEAP, stackSize,
+                      nsIMemoryReporter::KIND_NONHEAP, data.stackSize,
     "Memory used for the JavaScript stack.  This is the committed portion "
     "of the stack; any uncommitted portion is not measured because it "
     "hardly costs anything.",
                       callback, closure);
+
+    ReportMemoryBytes(pathPrefix +
+                      NS_LITERAL_CSTRING("gc-heap-chunk-dirty-unused"),
+                      JS_GC_HEAP_KIND, data.gcHeapChunkDirtyUnused,
+    "Memory on the garbage-collected JavaScript heap, within chunks with at "
+    "least one allocated GC thing, that could be holding useful data but "
+    "currently isn't.",
+                      callback, closure);
+
+    ReportMemoryBytes(pathPrefix +
+                      NS_LITERAL_CSTRING("gc-heap-chunk-clean-unused"),
+                      JS_GC_HEAP_KIND, data.gcHeapChunkCleanUnused,
+    "Memory on the garbage-collected JavaScript heap taken by completely empty "
+     "chunks, that soon will be released unless claimed for new allocations.",
+                          callback, closure);
+
+    ReportMemoryBytes(pathPrefix +
+                      NS_LITERAL_CSTRING("gc-heap-chunk-admin"),
+                      JS_GC_HEAP_KIND, data.gcHeapChunkAdmin,
+    "Memory on the garbage-collected JavaScript heap, within chunks, that is "
+    "used to hold internal book-keeping information.",
+                          callback, closure);
 }
 
 } // namespace memory
@@ -1778,66 +1868,27 @@ public:
         if(!CollectCompartmentStatsForRuntime(rt, &data))
             return NS_ERROR_FAILURE;
 
-        PRInt64 gcHeapChunkTotal = gXPCJSChunkAllocator.GetGCChunkBytesInUse();
-        // This is initialized to gcHeapChunkTotal, and then we subtract used
-        // space from it each time around the loop.
-        PRInt64 gcHeapChunkUnused = gcHeapChunkTotal;
-        PRInt64 gcHeapArenaUnused = 0;
-
         NS_NAMED_LITERAL_CSTRING(pathPrefix, "explicit/js/");
 
         // This is the second step (see above).
-        for(CompartmentStats *stats = data.compartmentStatsVector.begin();
-            stats != data.compartmentStatsVector.end();
-            ++stats)
-        {
-            gcHeapChunkUnused -=
-                stats->gcHeapArenaHeaders + stats->gcHeapArenaPadding +
-                stats->gcHeapArenaUnused +
-                stats->gcHeapObjects + stats->gcHeapStrings +
-                stats->gcHeapShapes + stats->gcHeapXml;
+        ReportJSRuntimeStats(data, pathPrefix, callback, closure);
 
-            gcHeapArenaUnused += stats->gcHeapArenaUnused;
-
-            ReportCompartmentStats(*stats, pathPrefix, callback, closure);
-        }
-
-        JS_ASSERT(gcHeapChunkTotal % js::GC_CHUNK_SIZE == 0);
-        size_t numChunks = gcHeapChunkTotal / js::GC_CHUNK_SIZE;
-        PRInt64 perChunkAdmin =
-            sizeof(js::gc::Chunk) - (sizeof(js::gc::Arena) * js::gc::ArenasPerChunk);
-        PRInt64 gcHeapChunkAdmin = numChunks * perChunkAdmin;
-        gcHeapChunkUnused -= gcHeapChunkAdmin;
-
-        // Why 10000x?  100x because it's a percentage, and another 100x
-        // because nsIMemoryReporter requires that for percentage amounts so
-        // they can be fractional.
-        PRInt64 gcHeapUnusedPercentage =
-            (gcHeapChunkUnused + gcHeapArenaUnused) * 10000 /
-            gXPCJSChunkAllocator.GetGCChunkBytesInUse();
-
-        ReportMemoryBytes(pathPrefix +
-                          NS_LITERAL_CSTRING("gc-heap-chunk-unused"),
-                          JS_GC_HEAP_KIND, gcHeapChunkUnused,
-    "Memory on the garbage-collected JavaScript heap, within chunks, that "
-    "could be holding useful data but currently isn't.",
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-gc-heap-chunk-dirty-unused"),
+                          nsIMemoryReporter::KIND_OTHER,
+                          data.gcHeapChunkDirtyUnused,
+    "The same as 'explicit/js/gc-heap-chunk-dirty-unused'.  Shown here for "
+    "easy comparison with other 'js-gc' reporters.",
                           callback, closure);
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-gc-heap-chunk-unused"),
-                          nsIMemoryReporter::KIND_OTHER, gcHeapChunkUnused,
-    "The same as 'explicit/js/gc-heap-chunk-unused'.  Shown here for "
-    "easy comparison with 'js-gc-heap' and 'js-gc-heap-arena-unused'.",
-                          callback, closure);
-
-        ReportMemoryBytes(pathPrefix +
-                          NS_LITERAL_CSTRING("gc-heap-chunk-admin"),
-                          JS_GC_HEAP_KIND, gcHeapChunkAdmin,
-    "Memory on the garbage-collected JavaScript heap, within chunks, that is "
-    "used to hold internal book-keeping information.",
+        ReportMemoryBytes(NS_LITERAL_CSTRING("js-gc-heap-chunk-clean-unused"),
+                          nsIMemoryReporter::KIND_OTHER,
+                          data.gcHeapChunkCleanUnused,
+    "The same as 'explicit/js/gc-heap-chunk-clean-unused'.  Shown here for "
+    "easy comparison with other 'js-gc' reporters.",
                           callback, closure);
 
         ReportMemoryBytes(NS_LITERAL_CSTRING("js-gc-heap-arena-unused"),
-                          nsIMemoryReporter::KIND_OTHER, gcHeapArenaUnused,
+                          nsIMemoryReporter::KIND_OTHER, data.gcHeapArenaUnused,
     "Memory on the garbage-collected JavaScript heap, within arenas, that "
     "could be holding useful data but currently isn't.  This is the sum of "
     "all compartments' 'gc-heap/arena-unused' numbers.",
@@ -1845,13 +1896,12 @@ public:
 
         ReportMemoryPercentage(NS_LITERAL_CSTRING("js-gc-heap-unused-fraction"),
                                nsIMemoryReporter::KIND_OTHER,
-                               gcHeapUnusedPercentage,
+                               data.gcHeapUnusedPercentage,
     "Fraction of the garbage-collected JavaScript heap that is unused. "
-    "Computed as ('js-gc-heap-chunk-unused' + 'js-gc-heap-arena-unused') / "
+    "Computed as ('js-gc-heap-chunk-clean-unused' + "
+    "'js-gc-heap-chunk-dirty-unused' + 'js-gc-heap-arena-unused') / "
     "'js-gc-heap'.",
                                callback, closure);
-
-        ReportJSStackSizeForRuntime(rt, pathPrefix, callback, closure);
 
         return NS_OK;
     }
@@ -1873,6 +1923,7 @@ DiagnosticMemoryCallback(void *ptr, size_t size)
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
+   mJSCycleCollectionContext(nsnull),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
    mIID2NativeInterfaceMap(IID2NativeInterfaceMap::newMap(XPC_NATIVE_INTERFACE_MAP_SIZE)),
