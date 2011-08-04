@@ -118,3 +118,5 @@ function testUncompilable() {
 function testRecursive() {
   // See Bug 658583
   // require('gclitest/recurse');
+  // Also see the comments in the testRecursive() function
+}
