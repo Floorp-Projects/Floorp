@@ -63,7 +63,7 @@ parent:
 
 child:
   // Forwarded notifications corresponding to the nsIWebSocketListener interface
-  OnStart(nsCString aProtocol);
+  OnStart(nsCString aProtocol, nsCString aExtensions);
   OnStop(nsresult aStatusCode);
   OnMessageAvailable(nsCString aMsg);
   OnBinaryMessageAvailable(nsCString aMsg);

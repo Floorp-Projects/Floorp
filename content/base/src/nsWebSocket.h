@@ -150,6 +150,7 @@ protected:
   nsCOMPtr<nsIURI> mURI;
   nsCString mRequestedProtocolList;
   nsCString mEstablishedProtocol;
+  nsCString mEstablishedExtensions;
 
   PRUint16 mReadyState;
 

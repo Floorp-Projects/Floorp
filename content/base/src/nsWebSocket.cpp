@@ -513,6 +513,8 @@ nsWebSocketEstablishedConnection::OnStart(nsISupports *aContext)
   if (!mOwner->mRequestedProtocolList.IsEmpty())
     mWebSocketChannel->GetProtocol(mOwner->mEstablishedProtocol);
 
+  mWebSocketChannel->GetExtensions(mOwner->mEstablishedExtensions);
+
   mStatus = CONN_CONNECTED_AND_READY;
   mOwner->SetReadyState(nsIMozWebSocket::OPEN);
   return NS_OK;
@@ -1230,6 +1232,13 @@ NS_IMETHODIMP
 nsWebSocket::GetUrl(nsAString& aURL)
 {
   aURL = mOriginalURL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebSocket::GetExtensions(nsAString& aExtensions)
+{
+  CopyUTF8toUTF16(mEstablishedExtensions, aExtensions);
   return NS_OK;
 }
 

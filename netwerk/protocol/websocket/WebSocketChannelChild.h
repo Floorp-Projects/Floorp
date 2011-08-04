@@ -73,7 +73,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void ReleaseIPDLReference();
 
  private:
-  bool RecvOnStart(const nsCString& aProtocol);
+  bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions);
   bool RecvOnStop(const nsresult& aStatusCode);
   bool RecvOnMessageAvailable(const nsCString& aMsg);
   bool RecvOnBinaryMessageAvailable(const nsCString& aMsg);
@@ -81,7 +81,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   bool RecvOnServerClose(const PRUint16& aCode, const nsCString &aReason);
   bool RecvAsyncOpenFailed();
 
-  void OnStart(const nsCString& aProtocol);
+  void OnStart(const nsCString& aProtocol, const nsCString& aExtensions);
   void OnStop(const nsresult& aStatusCode);
   void OnMessageAvailable(const nsCString& aMsg);
   void OnBinaryMessageAvailable(const nsCString& aMsg);
