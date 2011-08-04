@@ -301,10 +301,14 @@ nsWebSocketEstablishedConnection::Init(nsWebSocket *aOwner)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCString utf8Origin;
-  CopyUTF16toUTF8(mOwner->mUTF16Origin, utf8Origin);
+  nsCString asciiOrigin;
+  rv = nsContentUtils::GetASCIIOrigin(mOwner->mPrincipal, asciiOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ToLowerCase(asciiOrigin);
+
   rv = mWebSocketChannel->AsyncOpen(mOwner->mURI,
-                                     utf8Origin, this, nsnull);
+                                    asciiOrigin, this, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1079,10 +1083,6 @@ nsWebSocket::ParseURL(const nsString& aURL)
   rv = parsedURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsCString origin;
-  rv = nsContentUtils::GetASCIIOrigin(mPrincipal, origin);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
-
   if (scheme.LowerCaseEqualsLiteral("ws")) {
      mSecure = PR_FALSE;
      mPort = (port == -1) ? DEFAULT_WS_SCHEME_PORT : port;
@@ -1093,9 +1093,9 @@ nsWebSocket::ParseURL(const nsString& aURL)
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  ToLowerCase(origin);
-  CopyUTF8toUTF16(origin, mUTF16Origin);
-    
+  rv = nsContentUtils::GetUTFOrigin(parsedURL, mUTF16Origin);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
+
   mAsciiHost = host;
   ToLowerCase(mAsciiHost);
 

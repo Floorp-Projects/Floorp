@@ -23,8 +23,7 @@
  *  4. client tries to connect using a relative url;
  *  5. client uses an invalid protocol value;
  *  6. counter and encoding check;
- *  7. client calls close() and the server keeps sending messages and it doesn't
- *     send the close frame;
+ *  7. onmessage event origin property check
  *  8. client calls close() and the server sends the close frame in
  *     acknowledgement;
  *  9. client closes the connection before the ws connection is established;
@@ -326,25 +325,26 @@ function test6()
 
 function test7()
 {
-// with pywebsockets for -06 ths test no longer does anything useful
-// as the server handles the receipt of the close event directly, not
-// as part of the wsh - so we cannot fake the non-clean close which is
-// what we're trying to do here.
+  var ws = CreateTestWS("ws://sub2.test2.example.org/tests/content/base/test/file_websocket", "test-7");
+  var gotmsg = false;
 
-  ok(true, "test disabled");
-  current_test++;
-  doTest(8);
-
-//  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-7");
-//  ws.onopen = function()
-//  {
-//    ws.close();
-//  }
-//  ws.onclose = function(e)
-//  {
-//    shouldCloseNotCleanly(e);
-//    doTest(8);
-//  };
+  ws.onopen = function()
+  {
+    ok(true, "test 7 open");
+  }
+  ws.onmessage = function(e)
+  {
+    ok(true, "test 7 message");
+    ok(e.origin == "ws://sub2.test2.example.org", "onmessage origin set to ws:// host");
+    gotmsg = true;
+    ws.close();
+  }
+  ws.onclose = function(e)
+  {
+    ok(gotmsg, "recvd message in test 7 before close");
+    shouldCloseCleanly(e);
+    doTest(8);
+  };
 }
 
 function test8()
