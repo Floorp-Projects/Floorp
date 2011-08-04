@@ -70,13 +70,22 @@ class InlineForwardList : protected InlineForwardListNode<T>
 
     typedef InlineForwardListNode<T> Node;
 
+    Node *tail_;
 #ifdef DEBUG
     uintptr_t modifyCount_;
+#endif
+
+    InlineForwardList<T> *thisFromConstructor() {
+        return this;
+    }
 
   public:
-    InlineForwardList() : modifyCount_(0)
-    { }
+    InlineForwardList()
+      : tail_(thisFromConstructor())
+#ifdef DEBUG
+      ,  modifyCount_(0)
 #endif
+    { }
 
   public:
     typedef InlineForwardListIterator<T> iterator;
@@ -108,6 +117,14 @@ class InlineForwardList : protected InlineForwardListNode<T>
     void pushFront(Node *t) {
         insertAfter(this, t);
     }
+    void pushBack(Node *t) {
+#ifdef DEBUG
+        modifyCount_++;
+#endif
+        tail_->next = t;
+        t->next = NULL;
+        tail_ = t;
+    }
     T *popFront() {
         JS_ASSERT(!empty());
         T* result = static_cast<T *>(this->next);
@@ -118,6 +135,8 @@ class InlineForwardList : protected InlineForwardListNode<T>
 #ifdef DEBUG
         modifyCount_++;
 #endif
+        if (at == tail_)
+            tail_ = item;
         item->next = at->next;
         at->next = item;
     }
@@ -125,11 +144,13 @@ class InlineForwardList : protected InlineForwardListNode<T>
 #ifdef DEBUG
         modifyCount_++;
 #endif
+        if (item == tail_)
+            tail_ = at;
         JS_ASSERT(at->next == item);
         at->next = item->next;
     }
     bool empty() const {
-        return begin() == end();
+        return tail_ == this;
     }
 };
 
