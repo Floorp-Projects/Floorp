@@ -2711,6 +2711,9 @@ imgDecodeWorker::Run()
   TimeDuration decodeLatency = TimeStamp::Now() - start;
   Telemetry::Accumulate(Telemetry::IMAGE_DECODE_LATENCY, PRInt32(decodeLatency.ToMicroseconds()));
 
+  // accumulate the total decode time
+  mDecodeTime += decodeLatency;
+
   // Flush invalidations _after_ we've written everything we're going to.
   // Furthermore, if this is a redecode, we don't want to do progressive
   // display at all. In that case, let Decoder::PostFrameStop() do the
@@ -2723,6 +2726,7 @@ imgDecodeWorker::Run()
 
   // If the decode finished, shutdown the decoder
   if (image->mDecoder && image->IsDecodeFinished()) {
+    Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME, PRInt32(mDecodeTime.ToMicroseconds()));
     rv = image->ShutdownDecoder(RasterImage::eShutdownIntent_Done);
     if (NS_FAILED(rv)) {
       image->DoError();

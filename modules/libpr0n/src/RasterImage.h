@@ -64,6 +64,7 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "DiscardTracker.h"
+#include "mozilla/TimeStamp.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -571,6 +572,7 @@ class imgDecodeWorker : public nsRunnable
 
   private:
     nsWeakPtr mContainer;
+    TimeDuration mDecodeTime; // the default constructor initializes to 0
 };
 
 // Asynchronous Decode Requestor
