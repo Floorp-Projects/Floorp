@@ -1671,7 +1671,7 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
  * that stores the reference.
  *
  * When printer callback is not null, the arg and index arguments are
- * available to the callback as debugPrinterArg and debugPrintIndex fields
+ * available to the callback as debugPrintArg and debugPrintIndex fields
  * of JSTracer.
  *
  * The storage for name or callback's arguments needs to live only until
