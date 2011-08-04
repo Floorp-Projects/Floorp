@@ -743,7 +743,11 @@ class Value
     }
 
     const jsuword *payloadWord() const {
+#if JS_BITS_PER_WORD == 32
         return &data.s.payload.word;
+#elif JS_BITS_PER_WORD == 64
+        return &data.asBits;
+#endif
     }
 
   private:
