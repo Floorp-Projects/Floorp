@@ -45,13 +45,17 @@
  * For more information on this interface, please see
  * http://dev.w3.org/html5/websockets/#closeevent
  */
-[scriptable, uuid(a94d4379-eba2-45f4-be3a-6cc2fa1453a8)]
+[scriptable, uuid(f83d9d6d-6c0c-418c-b12a-438e76d5866b)]
 interface nsIDOMCloseEvent : nsIDOMEvent
 {
   readonly attribute boolean wasClean;
-  
+  readonly attribute unsigned short code;
+  readonly attribute DOMString reason;
+
   void initCloseEvent(in DOMString aType,
-                        in boolean aCanBubble,
-                        in boolean aCancelable,
-                        in boolean aWasClean);
+                      in boolean aCanBubble,
+                      in boolean aCancelable,
+                      in boolean aWasClean,
+                      in unsigned short aReasonCode,
+                      in DOMString aReason);
 };

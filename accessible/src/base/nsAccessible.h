@@ -419,6 +419,11 @@ public:
   // ActionAccessible
 
   /**
+   * Return the number of actions that can be performed on this accessible.
+   */
+  virtual PRUint8 ActionCount();
+
+  /**
    * Return access key, such as Alt+D.
    */
   virtual KeyBinding AccessKey() const;
@@ -676,7 +681,7 @@ protected:
 
   /**
    * Return the action rule based on ARIA enum constants EActionRule
-   * (see nsARIAMap.h). Used by GetNumActions() and GetActionName().
+   * (see nsARIAMap.h). Used by ActionCount() and GetActionName().
    *
    * @param aStates  [in] states of the accessible
    */

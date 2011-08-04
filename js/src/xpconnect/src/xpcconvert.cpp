@@ -547,6 +547,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
     int32    ti;
     uint32   tu;
     jsdouble td;
+    JSBool   tb;
     JSBool isDOMString = JS_TRUE;
 
     if(pErr)
@@ -626,7 +627,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return JS_FALSE;
         break;
     case nsXPTType::T_BOOL   :
-        JS_ValueToBoolean(cx, s, (JSBool*)d);
+        JS_ValueToBoolean(cx, s, &tb);
+        *((PRBool*)d) = tb;
         break;
     case nsXPTType::T_CHAR   :
         {

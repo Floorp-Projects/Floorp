@@ -9396,6 +9396,20 @@ xpcom/xpcom-config.h
 xpcom/xpcom-private.h
 )
 
+# Hack around an Apple bug that effects the egrep that comes with OS X 10.7.
+# "arch -arch i386 egrep" always uses the 32-bit Intel part of the egrep fat
+# binary, even on 64-bit systems.  It should work on OS X 10.4.5 and up.  We
+# (apparently) only need this hack when egrep's "pattern" is particularly
+# long (as in the following code).  See bug 655339.
+case "$host" in
+x86_64-apple-darwin*)
+    FIXED_EGREP="arch -arch i386 egrep"
+    ;;
+*)
+    FIXED_EGREP="egrep"
+    ;;
+esac
+
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
   _CONFIG_TMP=confdefs-tmp.h
@@ -9419,7 +9433,7 @@ if test -n "$_NON_GLOBAL_ACDEFINES"; then
 fi
 _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
 
-  sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
+  sort confdefs.h | $FIXED_EGREP -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
 
   if test "$?" != 0; then
     AC_MSG_ERROR([Error outputting config definitions])
@@ -9450,7 +9464,7 @@ EOF
 dnl Probably shouldn't call this manually but we always want the output of DEFS
 rm -f confdefs.h.save
 mv confdefs.h confdefs.h.save
-egrep -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
+$FIXED_EGREP -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
 if test "$?" != 0; then
   AC_MSG_ERROR([Error outputting confdefs.h])
 fi

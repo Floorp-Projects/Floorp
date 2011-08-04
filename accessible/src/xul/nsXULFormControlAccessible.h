@@ -67,13 +67,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
 protected:
 
@@ -95,13 +97,15 @@ public:
   nsXULCheckboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 };
 
 /**
@@ -114,13 +118,15 @@ public:
   nsXULDropmarkerAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
 private:
   PRBool DropmarkerOpen(PRBool aToggleOpen);
@@ -240,7 +246,6 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetValue(nsAString& aValue);
-  NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
@@ -252,6 +257,9 @@ public:
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
   virtual PRBool GetAllowsAnonChildAccessibles();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
 protected:
   // nsAccessible

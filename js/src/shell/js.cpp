@@ -76,6 +76,7 @@
 #include "jstypedarray.h"
 #include "jsxml.h"
 #include "jsperf.h"
+#include "jshashtable.h"
 
 #include "prmjtime.h"
 
@@ -91,6 +92,7 @@
 
 #include "jsoptparse.h"
 #include "jsworkers.h"
+#include "jsheaptools.h"
 
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -4505,7 +4507,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("gcparam",        GCParameter,    2,0),
     JS_FN("countHeap",      CountHeap,      0,0),
     JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
-    JS_FN("finalizeCount",  FinalizeCount, 0,0),
+    JS_FN("finalizeCount",  FinalizeCount,  0,0),
 #ifdef JS_GC_ZEAL
     JS_FN("gczeal",         GCZeal,         2,0),
     JS_FN("schedulegc",     ScheduleGC,     1,0),
@@ -4530,6 +4532,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("dumpObject",     DumpObject,     1,0),
     JS_FN("notes",          Notes,          1,0),
     JS_FN("stats",          DumpStats,      1,0),
+    JS_FN("findReferences", FindReferences, 1,0),
 #endif
     JS_FN("dumpStack",      DumpStack,      1,0),
 #ifdef TEST_CVTARGS
@@ -4663,6 +4666,8 @@ static const char *const shell_help_messages[] = {
 "dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
+"findReferences(target)\n"
+"  Walk the heap and return an object describing all references to target",
 #endif
 "dumpStack()              Dump the stack as an array of callees (youngest first)",
 #ifdef TEST_CVTARGS
