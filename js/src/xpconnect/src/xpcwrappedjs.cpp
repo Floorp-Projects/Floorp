@@ -246,8 +246,8 @@ nsXPCWrappedJS::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
 {
     const nsXPCWrappedJS* self = static_cast<const nsXPCWrappedJS*>
                                             (trc->debugPrintArg);
-    JS_snprintf(buf, bufsize, "nsXPCWrappedJS[%s,0x%p].mJSObj",
-                self->GetClass()->GetInterfaceName(), self);
+    JS_snprintf(buf, bufsize, "nsXPCWrappedJS[%s,0x%p:0x%p].mJSObj",
+                self->GetClass()->GetInterfaceName(), self, self->mXPTCStub);
 }
 #endif
 
