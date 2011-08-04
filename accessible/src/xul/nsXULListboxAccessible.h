@@ -72,13 +72,15 @@ public:
   nsXULColumnItemAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
   enum { eAction_Click = 0 };
 };

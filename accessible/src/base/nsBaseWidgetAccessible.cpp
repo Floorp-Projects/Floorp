@@ -138,13 +138,10 @@ nsLinkableAccessible::GetValue(nsAString& aValue)
 }
 
 
-NS_IMETHODIMP
-nsLinkableAccessible::GetNumActions(PRUint8 *aNumActions)
+PRUint8
+nsLinkableAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aNumActions);
-
-  *aNumActions = (mIsOnclick || mIsLink) ? 1 : 0;
-  return NS_OK;
+  return (mIsOnclick || mIsLink) ? 1 : 0;
 }
 
 NS_IMETHODIMP
