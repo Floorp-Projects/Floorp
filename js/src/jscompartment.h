@@ -558,6 +558,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
   private:
     JSCompartment *thisForCtor() { return this; }
+
   public:
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
@@ -612,6 +613,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script, JSObject *handler);
     void clearTraps(JSContext *cx, JSScript *script);
     bool markBreakpointsIteratively(JSTracer *trc);
+
   private:
     void sweepBreakpoints(JSContext *cx);
 

@@ -521,12 +521,6 @@ struct JSScript {
          * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
          *   similar functions never have these objects; such scripts are
          *   explicitly destroyed by the code that created them.
-         * Debugging API functions (JSDebugHooks::newScriptHook;
-         * JS_GetFunctionScript) may reveal sans-script-object Function and
-         * temporary scripts to clients, but clients must never call
-         * JS_NewScriptObject on such scripts: doing so would double-free them,
-         * once from the explicit call to js_DestroyScript, and once when the
-         * script object is garbage collected.
          */
         JSObject    *object;
         JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
