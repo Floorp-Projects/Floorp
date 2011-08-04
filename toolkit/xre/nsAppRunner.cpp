@@ -155,10 +155,6 @@
 
 #include <stdlib.h>
 
-#if defined(MOZ_SPLASHSCREEN)
-#include "nsSplashScreen.h"
-#endif
-
 #ifdef XP_UNIX
 #include <sys/stat.h>
 #include <unistd.h>
@@ -2538,12 +2534,6 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
  */
 NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 
-#ifdef MOZ_SPLASHSCREEN
-#define MOZ_SPLASHSCREEN_UPDATE(_i)  do { if (splashScreen) splashScreen->Update(_i); } while(0)
-#else
-#define MOZ_SPLASHSCREEN_UPDATE(_i)  do { } while(0)
-#endif
-
 #ifdef CAIRO_HAS_DWRITE_FONT
 
 #include <dwrite.h>
@@ -2620,10 +2610,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   NS_TIME_FUNCTION;
 
   gXRE_mainTimestamp = PR_Now();
-
-#ifdef MOZ_SPLASHSCREEN
-  nsSplashScreen *splashScreen = nsnull;
-#endif
 
   nsresult rv;
   ArgResult ar;
@@ -2747,21 +2733,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     Output(PR_TRUE, "Error: App:BuildID not specified in application.ini\n");
     return 1;
   }
-
-#ifdef MOZ_SPLASHSCREEN
-  // check to see if we need to do a splash screen
-  PRBool wantsSplash = PR_TRUE;
-  PRBool isNoSplash = (CheckArg("nosplash", PR_FALSE, NULL, PR_FALSE) == ARG_FOUND);
-  isNoSplash |= (PR_GetEnv("NO_SPLASH") != 0);
-  PRBool isNoRemote = (CheckArg("no-remote", PR_FALSE, NULL, PR_FALSE) == ARG_FOUND);
-
-  if (wantsSplash && !isNoSplash)
-    splashScreen = nsSplashScreen::GetOrCreate();
-
-  if (splashScreen)
-    splashScreen->Open();
-#endif //MOZ_SPLASHSCREEN
-
 
   ScopedLogging log;
 
@@ -2975,8 +2946,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef NS_TRACE_MALLOC
   gArgc = argc = NS_TraceMallocStartupArgs(gArgc, gArgv);
 #endif
-
-  MOZ_SPLASHSCREEN_UPDATE(20);
 
   rv = XRE_InitCommandLine(gArgc, gArgv);
   NS_ENSURE_SUCCESS(rv, 1);
@@ -3320,8 +3289,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     PRBool appInitiatedRestart = PR_FALSE;
 
-    MOZ_SPLASHSCREEN_UPDATE(30);
-
     NS_TIME_FUNCTION_MARK("Next: ScopedXPCOMStartup");
 
     NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup");
@@ -3497,8 +3464,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           rv = appStartup->CreateHiddenWindow();
           NS_ENSURE_SUCCESS(rv, 1);
 
-          MOZ_SPLASHSCREEN_UPDATE(50);
-
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
           nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
           if (toolkit && !desktopStartupID.IsEmpty()) {
@@ -3525,8 +3490,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                              workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
           NS_ENSURE_SUCCESS(rv, 1);
 #endif
-
-          MOZ_SPLASHSCREEN_UPDATE(70);
 
           nsCOMPtr<nsIObserverService> obsService =
             mozilla::services::GetObserverService();
@@ -3572,7 +3535,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
         NS_TIME_FUNCTION_MARK("appStartup->Run");
 
-        MOZ_SPLASHSCREEN_UPDATE(90);
         {
           rv = appStartup->Run();
           if (NS_FAILED(rv)) {
@@ -3612,8 +3574,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     // Restart the app after XPCOM has been shut down cleanly. 
     if (appInitiatedRestart) {
-      MOZ_SPLASHSCREEN_UPDATE(90);
-
       RestoreStateForAppInitiatedRestart();
 
       // Ensure that these environment variables are set:
