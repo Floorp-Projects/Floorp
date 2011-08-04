@@ -216,7 +216,7 @@ ValueNumberer::eliminateRedundancies()
             if (!nodes.append(block->getImmediatelyDominatedBlock(i)))
                 return false;
         }
-        MDefinitionIterator i = MDefinitionIterator(block);
+        MDefinitionIterator i(block);
         while (i) {
             MDefinition *ins = *i;
 

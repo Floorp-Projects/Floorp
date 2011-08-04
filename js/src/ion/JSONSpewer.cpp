@@ -264,9 +264,9 @@ JSONSpewer::spewMIR(MIRGraph *mir)
         endList();
 
         beginListProperty("instructions");
-        for (size_t i = 0; i < block->numPhis(); i++)
-            spewMDef(block->getPhi(i));
-        for (MInstructionIterator i = block->begin(); i != block->end(); i++)
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++)
+            spewMDef(*phi);
+        for (MInstructionIterator i(block->begin()); i != block->end(); i++)
             spewMDef(*i);
         endList();
 
