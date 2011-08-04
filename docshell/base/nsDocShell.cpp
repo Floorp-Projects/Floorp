@@ -66,6 +66,7 @@
 #include "nsNetUtil.h"
 #include "nsRect.h"
 #include "prprf.h"
+#include "prenv.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -780,9 +781,9 @@ nsDocShell::nsDocShell():
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks
   ++gNumberOfDocShells;
-#endif
-#ifdef DEBUG
-  printf("++DOCSHELL %p == %ld\n", (void*) this, gNumberOfDocShells);
+  if (!PR_GetEnv("MOZ_QUIET")) {
+      printf("++DOCSHELL %p == %ld\n", (void*) this, gNumberOfDocShells);
+  }
 #endif
 }
 
@@ -808,9 +809,9 @@ nsDocShell::~nsDocShell()
 #ifdef DEBUG
     // We're counting the number of |nsDocShells| to help find leaks
     --gNumberOfDocShells;
-#endif
-#ifdef DEBUG
-    printf("--DOCSHELL %p == %ld\n", (void*) this, gNumberOfDocShells);
+    if (!PR_GetEnv("MOZ_QUIET")) {
+        printf("--DOCSHELL %p == %ld\n", (void*) this, gNumberOfDocShells);
+    }
 #endif
 }
 
