@@ -120,16 +120,10 @@ nsHTMLLinkAccessible::GetValue(nsAString& aValue)
   return presShell->GetLinkLocation(DOMNode, aValue);
 }
 
-NS_IMETHODIMP
-nsHTMLLinkAccessible::GetNumActions(PRUint8 *aNumActions)
+PRUint8
+nsHTMLLinkAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aNumActions);
-
-  if (!IsLinked())
-    return nsHyperTextAccessible::GetNumActions(aNumActions);
-
-  *aNumActions = 1;
-  return NS_OK;
+  return IsLinked() ? 1 : nsHyperTextAccessible::ActionCount();
 }
 
 NS_IMETHODIMP

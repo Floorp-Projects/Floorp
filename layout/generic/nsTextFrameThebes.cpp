@@ -326,7 +326,7 @@ public:
                                       float* aRelativeSize,
                                       PRUint8* aStyle);
 
-  nsPresContext* PresContext() { return mPresContext; }
+  nsPresContext* PresContext() const { return mPresContext; }
 
   enum {
     eIndexRawInput = 0,
@@ -4260,41 +4260,37 @@ FillClippedRect(gfxContext* aCtx, nsPresContext* aPresContext,
   aCtx->Fill();
 }
 
-nsTextFrame::TextDecorations
-nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
+void
+nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
+                                nsTextFrame::TextDecorations& aDecorations)
 {
-  TextDecorations decorations;
-
-  // Quirks mode text decoration are rendered by children; see bug 1777
-  // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
-  // does the painting of text decorations.
-  // FIXME Bug 403524: We'd like to unify standards-mode and quirks-mode
-  // text-decoration drawing, using what's currently the quirks mode
-  // codepath.  But for now this code is only used for quirks mode.
   const nsCompatibility compatMode = aPresContext->CompatibilityMode();
-  if (compatMode != eCompatibility_NavQuirks)
-    return decorations;
 
   PRBool useOverride = PR_FALSE;
   nscolor overrideColor;
 
-  // A mask of all possible decorations.
-  // FIXME: Per spec, we still need to draw all relevant decorations
-  // from ancestors, not just the nearest one from each.
-  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
+  // frameTopOffset represents the offset to f's top from our baseline in our
+  // coordinate space
+  // baselineOffset represents the offset from our baseline to f's baseline or
+  // the nearest block's baseline, in our coordinate space, whichever is closest
+  // during the particular iteration
+  nscoord frameTopOffset = mAscent,
+          baselineOffset = 0;
 
-  PRBool isChild; // ignored
-  for (nsIFrame* f = this; decorMask && f;
-       NS_SUCCEEDED(f->GetParentStyleContextFrame(aPresContext, &f, &isChild))
-         || (f = nsnull)) {
-    nsStyleContext* context = f->GetStyleContext();
+  bool nearestBlockFound = false;
+
+  for (nsIFrame* f = this, *fParent; f; f = fParent) {
+    nsStyleContext *const context = f->GetStyleContext();
     if (!context->HasTextDecorationLines()) {
       break;
     }
-    const nsStyleTextReset* styleText = context->GetStyleTextReset();
-    if (!useOverride && 
-        (NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL &
-           styleText->mTextDecorationLine)) {
+
+    const nsStyleTextReset *const styleText = context->GetStyleTextReset();
+    const PRUint8 textDecorations = styleText->mTextDecorationLine;
+
+    if (!useOverride &&
+        (NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL & textDecorations))
+    {
       // This handles the <a href="blah.html"><font color="green">La 
       // la la</font></a> case. The link underline should be green.
       useOverride = PR_TRUE;
@@ -4302,38 +4298,51 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
                                  eCSSProperty_text_decoration_color);
     }
 
-    // FIXME: see above (remove this check)
-    PRUint8 useDecorations = decorMask & styleText->mTextDecorationLine;
-    if (useDecorations) {// a decoration defined here
-      nscolor color = context->GetVisitedDependentColor(
-                                 eCSSProperty_text_decoration_color);
+    fParent = nsLayoutUtils::GetParentOrPlaceholderFor(
+                aPresContext->FrameManager(), f);
+    const bool firstBlock = !nearestBlockFound &&
+                            nsLayoutUtils::GetAsBlock(fParent);
 
-      // FIXME: We also need to record the thickness and position
-      // metrics appropriate to this element (at least in standards
-      // mode).  This will require adjusting the visual overflow region
-      // of this frame and maybe its ancestors.  The positions should
-      // probably be relative to the line's baseline (when text
-      // decorations are specified on inlines we should look for their
-      // containing line; otherwise use the element's font); when
-      // drawing it should always be relative to the line baseline.
-      // This way we move the decorations for relative positioning.
-      if (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE & useDecorations) {
-        decorations.mUnderColor = useOverride ? overrideColor : color;
-        decorations.mUnderStyle = styleText->GetDecorationStyle();
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+    // Not updating positions once we hit a parent block is equivalent to
+    // the CSS 2.1 spec that blocks should propagate decorations down to their
+    // children (albeit the style should be preserved)
+    // However, if we're vertically aligned within a block, then we need to
+    // recover the right baseline from the line by querying the FrameProperty
+    // that should be set (see nsLineLayout::VerticalAlignLine).
+    if (firstBlock &&
+        (styleText->mVerticalAlign.GetUnit() != eStyleUnit_Enumerated ||
+         styleText->mVerticalAlign.GetIntValue() !=
+           NS_STYLE_VERTICAL_ALIGN_BASELINE)) {
+      baselineOffset = frameTopOffset -
+        NS_PTR_TO_INT32(f->Properties().Get(nsIFrame::LineBaselineOffset()));
+    }
+    else if (!nearestBlockFound) {
+      baselineOffset = frameTopOffset - f->GetBaseline();
+    }
+
+    nearestBlockFound = nearestBlockFound || firstBlock;
+    frameTopOffset += f->GetRect().Y() - f->GetRelativeOffset().y;
+
+    const PRUint8 style = styleText->GetDecorationStyle();
+    // Accumulate only elements that have decorations with a genuine style
+    if (textDecorations && style != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
+      const nscolor color = useOverride ? overrideColor
+        : context->GetVisitedDependentColor(eCSSProperty_text_decoration_color);
+
+      if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
+        aDecorations.mUnderlines.AppendElement(
+          nsTextFrame::LineDecoration(f, baselineOffset, color,
+                                      style));
       }
-      if (NS_STYLE_TEXT_DECORATION_LINE_OVERLINE & useDecorations) {
-        decorations.mOverColor = useOverride ? overrideColor : color;
-        decorations.mOverStyle = styleText->GetDecorationStyle();
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+      if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
+        aDecorations.mOverlines.AppendElement(
+          nsTextFrame::LineDecoration(f, baselineOffset, color,
+                                      style));
       }
-      if (NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH & useDecorations) {
-        decorations.mStrikeColor = useOverride ? overrideColor : color;
-        decorations.mStrikeStyle = styleText->GetDecorationStyle();
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+      if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
+        aDecorations.mStrikes.AppendElement(
+          nsTextFrame::LineDecoration(f, baselineOffset, color,
+                                      style));
       }
     }
 
@@ -4358,14 +4367,13 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
       }
     }
   }
-
-  return decorations;
 }
 
 void
-nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
-                                         PropertyProvider& aProvider,
-                                         nsRect* aVisualOverflowRect)
+nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
+                                     PropertyProvider& aProvider,
+                                     nsRect* aVisualOverflowRect,
+                                     bool aIncludeTextDecorations)
 {
   // Text-shadow overflows
   nsRect shadowRect =
@@ -4381,73 +4389,79 @@ nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
     nsRect fontRect(0, mAscent - fontAscent, GetSize().width, fontHeight);
     aVisualOverflowRect->UnionRect(*aVisualOverflowRect, fontRect);
   }
+  if (aIncludeTextDecorations) {
+    // Since CSS 2.1 requires that text-decoration defined on ancestors maintain
+    // style and position, they can be drawn at virtually any y-offset, so
+    // maxima and minima are required to reliably generate the rectangle for
+    // them
+    TextDecorations textDecs;
+    GetTextDecorations(aPresContext, textDecs);
+    if (textDecs.HasDecorationLines()) {
+      const nscoord width = GetSize().width;
+      const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
+                     gfxWidth = width / appUnitsPerDevUnit,
+                     ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
+      nscoord top(nscoord_MAX), bottom(nscoord_MIN);
+      // Below we loop through all text decorations and compute the rectangle
+      // containing all of them, in this frame's coordinate space
+      for (PRUint32 i = 0; i < textDecs.mUnderlines.Length(); ++i) {
+        const LineDecoration& dec = textDecs.mUnderlines[i];
 
+        const gfxFont::Metrics metrics =
+          GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
+
+        const nsRect decorationRect =
+          nsCSSRendering::GetTextDecorationRect(aPresContext,
+            gfxSize(gfxWidth, metrics.underlineSize),
+            ascent, metrics.underlineOffset,
+            NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, dec.mStyle) +
+          nsPoint(0, -dec.mBaselineOffset);
+
+        top = NS_MIN(decorationRect.y, top);
+        bottom = NS_MAX(decorationRect.YMost(), bottom);
+      }
+      for (PRUint32 i = 0; i < textDecs.mOverlines.Length(); ++i) {
+        const LineDecoration& dec = textDecs.mOverlines[i];
+
+        const gfxFont::Metrics metrics =
+          GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
+
+        const nsRect decorationRect =
+          nsCSSRendering::GetTextDecorationRect(aPresContext,
+            gfxSize(gfxWidth, metrics.underlineSize),
+            ascent, metrics.maxAscent,
+            NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle) +
+          nsPoint(0, -dec.mBaselineOffset);
+
+        top = NS_MIN(decorationRect.y, top);
+        bottom = NS_MAX(decorationRect.YMost(), bottom);
+      }
+      for (PRUint32 i = 0; i < textDecs.mStrikes.Length(); ++i) {
+        const LineDecoration& dec = textDecs.mStrikes[i];
+
+        const gfxFont::Metrics metrics =
+          GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
+
+        const nsRect decorationRect =
+          nsCSSRendering::GetTextDecorationRect(aPresContext,
+            gfxSize(gfxWidth, metrics.strikeoutSize),
+            ascent, metrics.strikeoutOffset,
+            NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, dec.mStyle) +
+          nsPoint(0, -dec.mBaselineOffset);
+        top = NS_MIN(decorationRect.y, top);
+        bottom = NS_MAX(decorationRect.YMost(), bottom);
+      }
+
+      aVisualOverflowRect->UnionRect(*aVisualOverflowRect,
+                                     nsRect(0, top, width, bottom - top));
+    }
+  }
   // When this frame is not selected, the text-decoration area must be in
   // frame bounds.
-  nsRect decorationRect;
   if (!(GetStateBits() & NS_FRAME_SELECTED_CONTENT) ||
       !CombineSelectionUnderlineRect(aPresContext, *aVisualOverflowRect))
     return;
   AddStateBits(TEXT_SELECTION_UNDERLINE_OVERFLOWED);
-}
-
-void 
-nsTextFrame::PaintTextDecorations(
-               gfxContext* aCtx, const gfxRect& aDirtyRect,
-               const gfxPoint& aFramePt,
-               const gfxPoint& aTextBaselinePt,
-               nsTextPaintStyle& aTextPaintStyle,
-               PropertyProvider& aProvider,
-               const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-               const nscolor* aOverrideColor)
-{
-  TextDecorations decorations =
-    GetTextDecorations(aTextPaintStyle.PresContext());
-  if (!decorations.HasDecorationlines())
-    return;
-
-  // Hide text decorations if we're currently hiding @font-face fallback text
-  if (aProvider.GetFontGroup()->ShouldSkipDrawing())
-    return;
-
-  gfxFont* firstFont = aProvider.GetFontGroup()->GetFontAt(0);
-  if (!firstFont)
-    return; // OOM
-  const gfxFont::Metrics& fontMetrics = firstFont->GetMetrics();
-  gfxFloat app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
-
-  // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
-  nscoord x = NSToCoordRound(aFramePt.x);
-  nscoord width = GetRect().width;
-  aClipEdges.Intersect(&x, &width);
-  gfxPoint pt(x / app, (aTextBaselinePt.y - mAscent) / app);
-  gfxSize size(width / app, 0);
-  gfxFloat ascent = gfxFloat(mAscent) / app;
-
-  nscolor lineColor;
-  if (decorations.HasOverline()) {
-    lineColor = aOverrideColor ? *aOverrideColor : decorations.mOverColor;
-    size.height = fontMetrics.underlineSize;
-    nsCSSRendering::PaintDecorationLine(
-      aCtx, lineColor, pt, size, ascent, fontMetrics.maxAscent,
-      NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, decorations.mOverStyle);
-  }
-  if (decorations.HasUnderline()) {
-    lineColor = aOverrideColor ? *aOverrideColor : decorations.mUnderColor;
-    size.height = fontMetrics.underlineSize;
-    gfxFloat offset = aProvider.GetFontGroup()->GetUnderlineOffset();
-    nsCSSRendering::PaintDecorationLine(
-      aCtx, lineColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, decorations.mUnderStyle);
-  }
-  if (decorations.HasStrikeout()) {
-    lineColor = aOverrideColor ? *aOverrideColor : decorations.mStrikeColor;
-    size.height = fontMetrics.strikeoutSize;
-    gfxFloat offset = fontMetrics.strikeoutOffset;
-    nsCSSRendering::PaintDecorationLine(
-      aCtx, lineColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, decorations.mStrikeStyle);
-  }
 }
 
 static gfxFloat
@@ -4810,10 +4824,14 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
     return;
 
   nscolor shadowColor;
-  if (aShadowDetails->mHasColor)
+  const nscolor* decorationOverrideColor;
+  if (aShadowDetails->mHasColor) {
     shadowColor = aShadowDetails->mColor;
-  else
+    decorationOverrideColor = &shadowColor;
+  } else {
     shadowColor = aForegroundColor;
+    decorationOverrideColor = nsnull;
+  }
 
   aCtx->Save();
   aCtx->NewPath();
@@ -4822,20 +4840,11 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   // Draw the text onto our alpha-only surface to capture the alpha values.
   // Remember that the box blur context has a device offset on it, so we don't need to
   // translate any coordinates to fit on the surface.
-  gfxRect dirtyGfxRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   gfxFloat advanceWidth;
-  DrawText(shadowContext,
-           aTextBaselinePt + shadowOffset,
-           aOffset, aLength, &dirtyGfxRect, aProvider, advanceWidth,
-           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
-
-  // This will only have an effect in quirks mode. Standards mode text-decoration shadow painting
-  // is handled in nsHTMLContainerFrame.cpp, so you must remember to consider that if you change
-  // any code behaviour here.
-  nsTextPaintStyle textPaintStyle(this);
-  PaintTextDecorations(shadowContext, dirtyGfxRect, aFramePt + shadowOffset,
-                       aTextBaselinePt + shadowOffset,
-                       textPaintStyle, *aProvider, aClipEdges, &shadowColor);
+  DrawText(shadowContext, aFramePt + shadowOffset,
+           aTextBaselinePt + shadowOffset, aOffset, aLength, *aProvider,
+           nsTextPaintStyle(this), aClipEdges, advanceWidth,
+           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0, decorationOverrideColor);
 
   contextBoxBlur.DoPaint();
   aCtx->Restore();
@@ -4845,12 +4854,13 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
 // aAllTypes, the union of all selection types that are applying to this text.
 bool
 nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
-    const gfxPoint& aFramePt,
-    const gfxPoint& aTextBaselinePt, const gfxRect& aDirtyRect,
+    const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
+    const gfxRect& aDirtyRect,
     PropertyProvider& aProvider,
     PRUint32 aContentOffset, PRUint32 aContentLength,
     nsTextPaintStyle& aTextPaintStyle, SelectionDetails* aDetails,
-    SelectionType* aAllTypes)
+    SelectionType* aAllTypes,
+    const nsCharClipDisplayItem::ClipEdges& aClipEdges)
 {
   // Figure out which selections control the colors to use for each character.
   nsAutoTArray<SelectionDetails*,BIG_TEXT_NODE_SIZE> prevailingSelectionsBuffer;
@@ -4942,9 +4952,9 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     aCtx->SetColor(gfxRGBA(foreground));
     gfxFloat advance;
 
-    DrawText(aCtx, gfxPoint(aFramePt.x + xOffset, aTextBaselinePt.y),
-             offset, length, &aDirtyRect, &aProvider,
-             advance, hyphenWidth > 0);
+    DrawText(aCtx, aFramePt, gfxPoint(aFramePt.x + xOffset, aTextBaselinePt.y),
+             offset, length, aProvider, aTextPaintStyle, aClipEdges, advance,
+             hyphenWidth > 0);
     if (hyphenWidth) {
       advance += hyphenWidth;
     }
@@ -5025,7 +5035,8 @@ bool
 nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
     const gfxPoint& aFramePt,
     const gfxPoint& aTextBaselinePt, const gfxRect& aDirtyRect,
-    PropertyProvider& aProvider, PRUint32 aContentOffset, PRUint32 aContentLength,
+    PropertyProvider& aProvider,
+    PRUint32 aContentOffset, PRUint32 aContentLength,
     nsTextPaintStyle& aTextPaintStyle,
     const nsCharClipDisplayItem::ClipEdges& aClipEdges)
 {
@@ -5043,12 +5054,12 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
   SelectionType allTypes;
   if (!PaintTextWithSelectionColors(aCtx, aFramePt, aTextBaselinePt, aDirtyRect,
                                     aProvider, aContentOffset, aContentLength,
-                                    aTextPaintStyle, details, &allTypes)) {
+                                    aTextPaintStyle, details, &allTypes,
+                                    aClipEdges))
+  {
     DestroySelectionDetails(details);
     return false;
   }
-  PaintTextDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt,
-                       aTextPaintStyle, aProvider, aClipEdges);
   PRInt32 i;
   // Iterate through just the selection types that paint decorations and
   // paint decorations for any that actually occur in this frame. Paint
@@ -5292,21 +5303,21 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   ctx->SetColor(gfxRGBA(foregroundColor));
 
   gfxFloat advanceWidth;
-  DrawText(ctx, textBaselinePt, startOffset, maxLength, &dirtyRect, &provider,
-           advanceWidth, (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
-  PaintTextDecorations(ctx, dirtyRect, framePt, textBaselinePt,
-                       textPaintStyle, provider, clipEdges);
+  DrawText(ctx, framePt, textBaselinePt, startOffset, maxLength, provider,
+           textPaintStyle, clipEdges, advanceWidth,
+           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
 }
 
 void
-nsTextFrame::DrawText(gfxContext* aCtx, const gfxPoint& aTextBaselinePt,
-                      PRUint32 aOffset, PRUint32 aLength,
-                      const gfxRect* aDirtyRect, PropertyProvider* aProvider,
-                      gfxFloat& aAdvanceWidth, PRBool aDrawSoftHyphen)
+nsTextFrame::DrawTextRun(gfxContext* const aCtx,
+                         const gfxPoint& aTextBaselinePt,
+                         PRUint32 aOffset, PRUint32 aLength,
+                         PropertyProvider& aProvider,
+                         gfxFloat& aAdvanceWidth,
+                         PRBool aDrawSoftHyphen)
 {
-  // Paint the text and soft-hyphen (if any) onto the given graphics context
   mTextRun->Draw(aCtx, aTextBaselinePt, aOffset, aLength,
-                 aProvider, &aAdvanceWidth);
+                 &aProvider, &aAdvanceWidth);
 
   if (aDrawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
@@ -5320,6 +5331,112 @@ nsTextFrame::DrawText(gfxContext* aCtx, const gfxPoint& aTextBaselinePt,
       hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                           0, hyphenTextRun->GetLength(), nsnull, nsnull);
     }
+  }
+}
+
+void
+nsTextFrame::DrawTextRunAndDecorations(
+    gfxContext* const aCtx,
+    const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
+    PRUint32 aOffset, PRUint32 aLength,
+    PropertyProvider& aProvider,
+    const nsTextPaintStyle& aTextStyle,
+    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+    gfxFloat& aAdvanceWidth,
+    PRBool aDrawSoftHyphen,
+    const TextDecorations& aDecorations,
+    const nscolor* const aDecorationOverrideColor)
+{
+    const gfxFloat app = aTextStyle.PresContext()->AppUnitsPerDevPixel();
+
+    // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
+    nscoord x = NSToCoordRound(aFramePt.x);
+    nscoord width = GetRect().width;
+    aClipEdges.Intersect(&x, &width);
+
+    gfxPoint decPt(x / app, 0);
+    gfxSize decSize(width / app, 0);
+    const gfxFloat ascent = gfxFloat(mAscent) / app;
+    const gfxFloat frameTop = aFramePt.y;
+
+    // Underlines
+    for (PRUint32 i = aDecorations.mUnderlines.Length(); i-- > 0; ) {
+      const LineDecoration& dec = aDecorations.mUnderlines[i];
+
+      const gfxFont::Metrics metrics =
+        GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
+
+      decSize.height = metrics.underlineSize;
+      decPt.y = (frameTop - dec.mBaselineOffset) / app;
+
+      const nscolor lineColor = aDecorationOverrideColor ? *aDecorationOverrideColor : dec.mColor;
+      nsCSSRendering::PaintDecorationLine(aCtx, lineColor, decPt, decSize, ascent,
+        metrics.underlineOffset, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+        dec.mStyle);
+    }
+    // Overlines
+    for (PRUint32 i = aDecorations.mOverlines.Length(); i-- > 0; ) {
+      const LineDecoration& dec = aDecorations.mOverlines[i];
+
+      const gfxFont::Metrics metrics =
+        GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
+
+      decSize.height = metrics.underlineSize;
+      decPt.y = (frameTop - dec.mBaselineOffset) / app;
+
+      const nscolor lineColor = aDecorationOverrideColor ? *aDecorationOverrideColor : dec.mColor;
+      nsCSSRendering::PaintDecorationLine(aCtx, lineColor, decPt, decSize, ascent,
+        metrics.maxAscent, NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle);
+    }
+
+    // CSS 2.1 mandates that text be painted after over/underlines, and *then*
+    // line-throughs
+    DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider, aAdvanceWidth,
+                aDrawSoftHyphen);
+
+    // Line-throughs
+    for (PRUint32 i = aDecorations.mStrikes.Length(); i-- > 0; ) {
+      const LineDecoration& dec = aDecorations.mStrikes[i];
+
+      const gfxFont::Metrics metrics =
+        GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame));
+
+      decSize.height = metrics.strikeoutSize;
+      decPt.y = (frameTop - dec.mBaselineOffset) / app;
+
+      const nscolor lineColor = aDecorationOverrideColor ? *aDecorationOverrideColor : dec.mColor;
+      nsCSSRendering::PaintDecorationLine(aCtx, lineColor, decPt, decSize, ascent,
+        metrics.strikeoutOffset, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
+        dec.mStyle);
+    }
+}
+
+void
+nsTextFrame::DrawText(
+    gfxContext* const aCtx,
+    const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
+    PRUint32 aOffset, PRUint32 aLength,
+    PropertyProvider& aProvider,
+    const nsTextPaintStyle& aTextStyle,
+    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+    gfxFloat& aAdvanceWidth,
+    PRBool aDrawSoftHyphen,
+    const nscolor* const aDecorationOverrideColor)
+{
+  TextDecorations decorations;
+  GetTextDecorations(aTextStyle.PresContext(), decorations);
+
+  // Hide text decorations if we're currently hiding @font-face fallback text
+  const bool drawDecorations = !aProvider.GetFontGroup()->ShouldSkipDrawing() &&
+                               decorations.HasDecorationLines();
+  if (drawDecorations) {
+    DrawTextRunAndDecorations(aCtx, aFramePt, aTextBaselinePt, aOffset, aLength,
+                              aProvider, aTextStyle, aClipEdges, aAdvanceWidth,
+                              aDrawSoftHyphen, decorations,
+                              aDecorationOverrideColor);
+  } else {
+    DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider,
+                aAdvanceWidth, aDrawSoftHyphen);
   }
 }
 
@@ -7094,7 +7211,11 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   aMetrics.SetOverflowAreasToDesiredBounds();
   aMetrics.VisualOverflow().UnionRect(aMetrics.VisualOverflow(), boundingBox);
 
-  UnionTextDecorationOverflow(presContext, provider, &aMetrics.VisualOverflow());
+  // When we have text decorations, we don't need to compute their overflow now
+  // because we're guaranteed to do it later
+  // (see nsLineLayout::RelativePositionFrames)
+  UnionAdditionalOverflow(presContext, provider, &aMetrics.VisualOverflow(),
+                          false);
 
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
@@ -7348,15 +7469,11 @@ nsTextFrame::RecomputeOverflow()
                           ComputeTransformedLength(provider),
                           gfxFont::LOOSE_INK_EXTENTS, nsnull,
                           &provider);
-
   nsRect &vis = result.VisualOverflow();
   vis.UnionRect(vis, RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent));
-
-  UnionTextDecorationOverflow(PresContext(), provider, &vis);
-
+  UnionAdditionalOverflow(PresContext(), provider, &vis, true);
   return result;
 }
-
 static PRUnichar TransformChar(const nsStyleText* aStyle, gfxTextRun* aTextRun,
                                PRUint32 aSkippedOffset, PRUnichar aChar)
 {
