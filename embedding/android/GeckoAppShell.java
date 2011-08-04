@@ -1567,4 +1567,23 @@ public class GeckoAppShell
             sCameraBuffer = null;
         }
     }
+
+
+    static SynchronousQueue<Date> sTracerQueue = new SynchronousQueue<Date>();
+    public static void fireAndWaitForTracerEvent() {
+        getMainHandler().post(new Runnable() { 
+                public void run() {
+                    try {
+                        sTracerQueue.put(new Date());
+                    } catch(InterruptedException ie) {
+                        Log.w("GeckoAppShell", "exception firing tracer", ie);
+                    }
+                }
+        });
+        try {
+            sTracerQueue.take();
+        } catch(InterruptedException ie) {
+            Log.w("GeckoAppShell", "exception firing tracer", ie);
+        }
+    }
 }
