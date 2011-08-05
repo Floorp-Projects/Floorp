@@ -302,7 +302,7 @@ class GreedyAllocator
         return RegisterSet::Intersect(state.free, RegisterSet::Not(disallowed));
     }
     BlockInfo *blockInfo(LBlock *block) {
-        JS_ASSERT(block->mir()->id() < graph.numBlocks());
+        JS_ASSERT(block->mir()->id() < graph.numBlockIds());
         return &blocks[block->mir()->id()];
     }
 
