@@ -9824,12 +9824,7 @@ nsHTMLPluginObjElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   JSBool found = PR_FALSE;
 
   if (!ObjectIsNativeWrapper(cx, obj)) {
-    if (JSID_IS_STRING(id)) {
-      *_retval = ::JS_HasPropertyById(cx, pi_obj, id, &found);
-    } else {
-      *_retval = ::JS_HasElement(cx, pi_obj, JSID_TO_INT(id), &found);
-    }
-
+    *_retval = ::JS_HasPropertyById(cx, pi_obj, id, &found);
     if (!*_retval) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -9863,12 +9858,7 @@ nsHTMLPluginObjElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   JSBool found = PR_FALSE;
 
   if (!ObjectIsNativeWrapper(cx, obj)) {
-    if (JSID_IS_STRING(id)) {
-      *_retval = ::JS_HasPropertyById(cx, pi_obj, id, &found);
-    } else {
-      *_retval = ::JS_HasElement(cx, pi_obj, JSID_TO_INT(id), &found);
-    }
-
+    *_retval = ::JS_HasPropertyById(cx, pi_obj, id, &found);
     if (!*_retval) {
       return NS_ERROR_UNEXPECTED;
     }

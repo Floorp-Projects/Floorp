@@ -2493,7 +2493,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, uint32 index, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp);
+JS_HasElement(JSContext *cx, JSObject *obj, uint32 index, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp);
