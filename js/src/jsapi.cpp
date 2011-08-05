@@ -3798,9 +3798,13 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DeleteElement2(JSContext *cx, JSObject *obj, jsint index, jsval *rval)
+JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32 index, jsval *rval)
 {
-    return JS_DeletePropertyById2(cx, obj, INT_TO_JSID(index), rval);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_DeletePropertyById2(cx, obj, id, rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3825,7 +3829,7 @@ JS_DeletePropertyById(JSContext *cx, JSObject *obj, jsid id)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DeleteElement(JSContext *cx, JSObject *obj, jsint index)
+JS_DeleteElement(JSContext *cx, JSObject *obj, uint32 index)
 {
     jsval junk;
     return JS_DeleteElement2(cx, obj, index, &junk);
