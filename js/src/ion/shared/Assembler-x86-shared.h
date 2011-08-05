@@ -226,6 +226,15 @@ class AssemblerX86Shared
             masm.setNextJump(j, prev);
         }
     }
+    void jmp(const Operand &op){
+        switch (op.kind()) {
+          case Operand::SCALE:
+            masm.jmp_m(op.disp(), op.base(), op.index(), op.scale());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void bind(Label *label) {
         JSC::MacroAssembler::Label jsclabel;
         if (label->used()) {
