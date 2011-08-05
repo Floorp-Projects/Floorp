@@ -102,6 +102,7 @@
     <command id="cmd_openLocation" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- tabs -->
+    <command id="cmd_showTabs" label="&showTabs.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 #ifdef MOZ_SERVICES_SYNC
@@ -195,7 +196,7 @@
   </keyset>
 
   <stack flex="1" id="stack">
-    <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" flex="1">
+    <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" flex="1" observes="bcast_urlbarState">
       <vbox id="tabs-sidebar" class="sidebar" observes="bcast_uidiscovery">
         <spacer class="toolbar-height"/>
         <!-- Left toolbar -->
@@ -218,7 +219,9 @@
             <!-- Main Toolbar -->
             <box id="toolbar-container" class="panel-dark toolbar-height">
               <box id="toolbar-moveable-container" observes="bcast_uidiscovery">
-                <toolbar id="toolbar-main" class="panel-dark window-width">
+                <toolbar id="toolbar-main" class="panel-dark window-width" observes="bcast_urlbarState">
+                  <toolbarbutton id="tool-back2" class="tool-back button-actionbar" command="cmd_back"/>
+                  <toolbarbutton id="tool-forward2" class="tool-forward button-actionbar" command="cmd_forward"/>
 #ifdef MOZ_PLATFORM_MAEMO
 #if MOZ_PLATFORM_MAEMO != 6
                   <toolbarbutton id="tool-app-switch" oncommand="BrowserUI.switchTask();"/>
@@ -257,6 +260,8 @@
                       <toolbarbutton id="tool-search" command="cmd_opensearch"/>
                     </hbox>
                   </hbox>
+                  <toolbarbutton id="tool-star2" class="tool-star button-actionbar" command="cmd_star"/>
+                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
 #ifndef ANDROID
                   <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
 #endif
@@ -265,7 +270,7 @@
             </box>
 
             <!-- Content viewport -->
-            <vbox id="content-viewport" class="window-width window-height">
+            <vbox id="content-viewport" class="viewable-width viewable-height">
               <!-- Content viewport -->
               <stack>
                 <deck id="browsers" flex="1" observes="bcast_uidiscovery"/>
@@ -294,9 +299,9 @@
         <spacer class="toolbar-height" mousethrough="always"/>
 
         <vbox id="browser-controls" style="overflow: -moz-hidden-unscrollable;" class="panel-dark" flex="1">
-          <toolbarbutton id="tool-star" class="button-control" command="cmd_star"/>
-          <toolbarbutton id="tool-back" class="button-control" command="cmd_back"/>
-          <toolbarbutton id="tool-forward" class="button-control" command="cmd_forward"/>
+          <toolbarbutton id="tool-star" class="tool-star button-control" command="cmd_star"/>
+          <toolbarbutton id="tool-back" class="tool-back button-control" command="cmd_back"/>
+          <toolbarbutton id="tool-forward" class="tool-forward button-control" command="cmd_forward"/>
           <toolbarspring/>
           <toolbarbutton id="tool-panel-open" class="button-control" command="cmd_panel"/>
         </vbox>
