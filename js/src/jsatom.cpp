@@ -42,6 +42,9 @@
  */
 #include <stdlib.h>
 #include <string.h>
+
+#include "mozilla/RangedPtr.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -665,6 +668,27 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, AtomIndexMap *indices)
     }
 }
 
+namespace js {
+
+bool
+IndexToIdSlow(JSContext *cx, uint32 index, jsid *idp)
+{
+    JS_ASSERT(index > JSID_INT_MAX);
+
+    jschar buf[UINT32_CHAR_BUFFER_LENGTH];
+    RangedPtr<jschar> end(buf + JS_ARRAY_LENGTH(buf), buf, buf + JS_ARRAY_LENGTH(buf));
+    RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
+
+    JSAtom *atom = js_AtomizeChars(cx, start.get(), end - start);
+    if (!atom)
+        return false;
+
+    *idp = ATOM_TO_JSID(atom);
+    JS_ASSERT(js_CheckForStringIndex(*idp) == *idp);
+    return true;
+}
+
+} /* namespace js */
 
 /* JSBOXEDWORD_INT_MAX as a string */
 #define JSBOXEDWORD_INT_MAX_STRING "1073741823"
