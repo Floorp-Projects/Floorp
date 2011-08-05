@@ -190,6 +190,28 @@ struct AbsoluteLabel : public LabelBase
     }
 };
 
+// A code label contains an absolute reference to a point in the code
+// Thus, it cannot be patched untill after linking
+class CodeLabel : public TempObject
+{
+    // The destination position, where the absolute reference should get patched into
+    AbsoluteLabel dest_;
+    
+    // The source label (relative) in the code to where the 
+    // the destination should get patched to.
+    Label src_;
+
+  public:
+    CodeLabel()
+    { }
+    AbsoluteLabel *dest() {
+        return &dest_;
+    }
+    Label *src() {
+        return &src_;
+    }
+};
+
 // Deferred data is a chunk of data that cannot be computed until an assembly
 // buffer has been fully allocated, but should be attached to the final code
 // stream. At the time deferred data is emitted, the code buffer has been
