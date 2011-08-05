@@ -122,7 +122,7 @@ CodeGenerator::visitReturn(LReturn *ret)
     JS_ASSERT(ToRegister(result) == JSReturnReg);
 #endif
     // Don't emit a jump to the return label if this is the last block.
-    if (current->mir()->id() + 1 != graph.numBlocks())
+    if (current->mir() != *gen->graph().poBegin())
         masm.jmp(returnLabel_);
     return true;
 }
