@@ -3211,28 +3211,34 @@ mjit::Compiler::emitStubCall(void *ptr, DataLabelPtr *pinline)
 void
 mjit::Compiler::interruptCheckHelper()
 {
-    /*
-     * Bake in and test the address of the interrupt counter for the runtime.
-     * This is faster than doing two additional loads for the context's
-     * thread data, but will cause this thread to run slower if there are
-     * pending interrupts on some other thread.  For non-JS_THREADSAFE builds
-     * we can skip this, as there is only one flag to poll.
-     */
+    Jump jump;
+    if (cx->runtime->gcZeal() >= js::gc::ZealVerifierThreshold) {
+        /* For barrier verification, always take the interrupt so we can verify. */
+        jump = masm.jump();
+    } else {
+        /*
+         * Bake in and test the address of the interrupt counter for the runtime.
+         * This is faster than doing two additional loads for the context's
+         * thread data, but will cause this thread to run slower if there are
+         * pending interrupts on some other thread.  For non-JS_THREADSAFE builds
+         * we can skip this, as there is only one flag to poll.
+         */
 #ifdef JS_THREADSAFE
-    void *interrupt = (void*) &cx->runtime->interruptCounter;
+        void *interrupt = (void*) &cx->runtime->interruptCounter;
 #else
-    void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
+        void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
 #endif
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
-    Jump jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
+        jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
 #else
-    /* Handle processors that can't load from absolute addresses. */
-    RegisterID reg = frame.allocReg();
-    masm.move(ImmPtr(interrupt), reg);
-    Jump jump = masm.branchTest32(Assembler::NonZero, Address(reg, 0));
-    frame.freeReg(reg);
+        /* Handle processors that can't load from absolute addresses. */
+        RegisterID reg = frame.allocReg();
+        masm.move(ImmPtr(interrupt), reg);
+        jump = masm.branchTest32(Assembler::NonZero, Address(reg, 0));
+        frame.freeReg(reg);
 #endif
+    }
 
     stubcc.linkExitDirect(jump, stubcc.masm.label());
 

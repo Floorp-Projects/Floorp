@@ -167,7 +167,7 @@ GCPoke(JSContext *cx, Value oldval)
 
 #ifdef JS_GC_ZEAL
     /* Schedule a GC to happen "soon" after a GC poke. */
-    if (cx->runtime->gcZeal())
+    if (cx->runtime->gcZeal() >= js::gc::ZealPokeThreshold)
         cx->runtime->gcNextScheduled = 1;
 #endif
 }

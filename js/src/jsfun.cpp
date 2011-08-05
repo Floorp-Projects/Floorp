@@ -833,13 +833,21 @@ js_PutCallObject(StackFrame *fp)
                 uint32 nclosed = script->nClosedArgs;
                 for (uint32 i = 0; i < nclosed; i++) {
                     uint32 e = script->getClosedArg(i);
+#ifdef JS_GC_ZEAL
+                    callobj.setArg(e, fp->formalArg(e));
+#else
                     callobj.initArgUnchecked(e, fp->formalArg(e));
+#endif
                 }
 
                 nclosed = script->nClosedVars;
                 for (uint32 i = 0; i < nclosed; i++) {
                     uint32 e = script->getClosedVar(i);
+#ifdef JS_GC_ZEAL
+                    callobj.setVar(e, fp->slots()[e]);
+#else
                     callobj.initVarUnchecked(e, fp->slots()[e]);
+#endif
                 }
             }
 

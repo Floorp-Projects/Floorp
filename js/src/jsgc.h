@@ -1781,6 +1781,25 @@ NewCompartment(JSContext *cx, JSPrincipals *principals);
 void
 RunDebugGC(JSContext *cx);
 
+const int ZealPokeThreshold = 1;
+const int ZealAllocThreshold = 2;
+const int ZealVerifierThreshold = 4;
+
+#ifdef JS_GC_ZEAL
+
+/* Check that write barriers have been used correctly. See jsgc.cpp. */
+void
+VerifyBarriers(JSContext *cx, bool always = false);
+
+#else
+
+static inline void
+VerifyBarriers(JSContext *cx, bool always = false)
+{
+}
+
+#endif
+
 } /* namespace gc */
 
 static inline JSCompartment *
