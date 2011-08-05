@@ -329,7 +329,7 @@ LinearScanAllocator::createDataStructures()
             if (ins->numTemps()) {
                 for (size_t j = 0; j < ins->numTemps(); j++) {
                     LDefinition *def = ins->getTemp(j);
-                    if (!vregs[def].init(def->virtualRegister(), block, *ins, def))
+                    if (!vregs[def].init(def->virtualRegister(), block, *ins, def, true))
                         return false;
                 }
             }
@@ -418,7 +418,7 @@ LinearScanAllocator::buildLivenessInfo()
             }
 
             for (size_t i = 0; i < ins->numTemps(); i++)
-                vregs[ins->getTemp(i)].getInterval(0)->addRange(outputOf(*ins), outputOf(*ins));
+                vregs[ins->getTemp(i)].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
 
             for (LInstruction::InputIterator alloc(**ins);
                  alloc.more();
@@ -549,7 +549,7 @@ LinearScanAllocator::allocateRegisters()
         bool mustHaveRegister = false;
         bool canSpillOthers = true;
         if (position == current->reg()->getFirstInterval()->start()) {
-            JS_ASSERT(position.subpos() == CodePosition::OUTPUT);
+            JS_ASSERT(position.subpos() == CodePosition::OUTPUT || current->reg()->isTemporary());
 
             LDefinition *def = current->reg()->def();
             LDefinition::Policy policy = def->policy();

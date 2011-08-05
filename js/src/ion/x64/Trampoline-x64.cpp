@@ -48,7 +48,7 @@ using namespace JSC;
 
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
- *   void blah(void *code, int argc, Value *argv, Value *vp)
+ *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
  *   ...using standard x64 fastcall calling convention
  */
 IonCode *
@@ -148,6 +148,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 
     // Restore frame pointer and return.
     masm.pop(rbp);
+    masm.movq(ImmWord(1), rax);
     masm.ret();
 
     Linker linker(masm);
