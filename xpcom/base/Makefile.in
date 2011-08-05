@@ -72,6 +72,10 @@ CPPSRCS		= \
 		FunctionTimer.cpp \
 		$(NULL)
 
+ifeq ($(OS_ARCH),Linux)
+CPPSRCS += MapsMemoryReporter.cpp
+endif
+
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS		+= nsMacUtilsImpl.cpp
 endif
@@ -94,6 +98,7 @@ EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla = \
 	FunctionTimer.h \
+	MapsMemoryReporter.h \
 	$(NULL)
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
