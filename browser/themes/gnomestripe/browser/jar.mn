@@ -63,6 +63,7 @@ browser.jar:
   skin/classic/browser/places/tag.png                 (places/tag.png)
   skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)
   skin/classic/browser/places/unsortedBookmarks.png   (places/unsortedBookmarks.png)
+  skin/classic/browser/places/downloads.png           (places/downloads.png)
   skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/mail.png           (preferences/mail.png)
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
