@@ -9860,12 +9860,7 @@ nsHTMLPluginObjElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   }
 
   if (found) {
-    if (JSID_IS_STRING(id)) {
-      *_retval = ::JS_SetPropertyById(cx, pi_obj, id, vp);
-    } else {
-      *_retval = ::JS_SetElement(cx, pi_obj, JSID_TO_INT(id), vp);
-    }
-
+    *_retval = ::JS_SetPropertyById(cx, pi_obj, id, vp);
     return *_retval ? NS_SUCCESS_I_DID_SOMETHING : NS_ERROR_FAILURE;
   }
 

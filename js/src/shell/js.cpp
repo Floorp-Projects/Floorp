@@ -2471,7 +2471,7 @@ DumpStack(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(iter.nativeArgs().callee().getFunctionPrivate()->native() == DumpStack);
     ++iter;
 
-    jsint index = 0;
+    uint32 index = 0;
     for (; !iter.done(); ++index, ++iter) {
         Value v;
         if (iter.isScript()) {
@@ -2698,7 +2698,6 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok;
     JSPropertyDescArray pda;
     JSPropertyDesc *pd;
-    uint32 i;
     jsval v;
 
     if (!JS_ValueToObject(cx, argc == 0 ? JSVAL_VOID : vp[2], &vobj))
@@ -2717,7 +2716,7 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
     if (!ok)
         return JS_FALSE;
     pd = pda.array;
-    for (i = 0; i < pda.length; i++, pd++) {
+    for (uint32 i = 0; i < pda.length; i++, pd++) {
         pdobj = JS_NewObject(cx, NULL, NULL, NULL);
         if (!pdobj) {
             ok = JS_FALSE;
