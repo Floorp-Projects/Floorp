@@ -227,49 +227,7 @@
         </stack>
     </xbl:content>
 
-    <implementation implements="nsISecurityCheckedComponent">
-        <!-- nsISecurityCheckedComponent -->
-        <method name="canCreateWrapper">
-            <parameter name="aIID"/>
-            <body>
-                return "AllAccess";
-            </body>
-        </method> 
-
-        <method name="canCallMethod">
-            <parameter name="aIID"/>
-            <parameter name="aMethodName"/> 
-            <body>
-                return "AllAccess";
-            </body>
-        </method> 
-
-        <method name="canGetProperty">
-            <parameter name="aIID"/>
-            <parameter name="aPropertyName"/> 
-            <body>
-                return "AllAccess";
-            </body>
-        </method> 
-
-        <method name="canSetProperty">
-            <parameter name="aIID"/>
-            <parameter name="aPropertyName"/>
-            <body>
-                return "AllAccess";
-            </body>
-        </method> 
-
-        <method name="QueryInterface">
-            <parameter name="aIID"/>
-            <body>
-            <![CDATA[
-            if (!iid.equals(Components.interfaces.nsISecurityCheckedComponent))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-            ]]>
-            </body>
-        </method>
+    <implementation>
 
         <constructor>
             <![CDATA[

@@ -812,8 +812,10 @@ var PlacesUIUtils = {
     }
 
     var loadInBackground = where == "tabshifted" ? true : false;
-    var replaceCurrentTab = where == "tab" ? false : true;
-    browserWindow.gBrowser.loadTabs(urls, loadInBackground, replaceCurrentTab);
+    // For consistency, we want all the bookmarks to open in new tabs, instead
+    // of having one of them replace the currently focused tab.  Hence we call
+    // loadTabs with aReplace set to false.
+    browserWindow.gBrowser.loadTabs(urls, loadInBackground, false);
   },
 
   /**
