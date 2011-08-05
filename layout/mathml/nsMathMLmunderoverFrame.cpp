@@ -436,6 +436,7 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   nscoord ascentAnonymousBase =
     NS_MAX(mBoundingMetrics.ascent + overDelta2,
            overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
+  ascentAnonymousBase = NS_MAX(ascentAnonymousBase, baseSize.ascent);
 
   GetItalicCorrection(bmAnonymousBase, correction);
 
@@ -475,6 +476,9 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     NS_MAX(mBoundingMetrics.descent + underDelta2,
            bmAnonymousBase.descent + underDelta1 + bmUnder.ascent +
              underSize.height - underSize.ascent);
+  aDesiredSize.height = NS_MAX(aDesiredSize.height,
+                               aDesiredSize.ascent +
+                               baseSize.height - baseSize.ascent);
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
