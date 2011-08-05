@@ -3240,9 +3240,13 @@ JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
+JS_LookupElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
-    return JS_LookupPropertyById(cx, obj, INT_TO_JSID(index), vp);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_LookupPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(JSBool)
