@@ -3113,9 +3113,7 @@ mjit::Compiler::emitStubCall(void *ptr, DataLabelPtr *pinline)
 {
     JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
 
-    JS_STATIC_ASSERT(Registers::ReturnReg != Registers::ArgReg0);
-    JS_STATIC_ASSERT(Registers::ReturnReg != Registers::ArgReg1);
-    masm.bumpStubCounter(script, PC, Registers::ReturnReg);
+    masm.bumpStubCounter(script, PC, Registers::tempCallReg());
 
     Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                   ptr, outerPC(), pinline, frame.totalDepth());
