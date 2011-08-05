@@ -107,6 +107,41 @@ ClientEngine.prototype = {
     return stats;
   },
 
+  // Remove any commands for the local client and mark it for upload
+  clearCommands: function clearCommands() {
+    delete this.localCommands;
+    this._tracker.addChangedID(this.localID);
+  },
+
+  // Send a command+args pair to each remote client
+  sendCommand: function sendCommand(command, args) {
+    // Helper to determine if the client already has this command
+    let notDupe = function(other) other.command != command ||
+      JSON.stringify(other.args) != JSON.stringify(args);
+
+    // Package the command/args pair into an object
+    let action = {
+      command: command,
+      args: args,
+    };
+
+    // Send the command to each remote client
+    for (let [id, client] in Iterator(this._store._remoteClients)) {
+      // Set the action to be a new commands array if none exists
+      if (client.commands == null)
+        client.commands = [action];
+      // Add the new action if there are no duplicates
+      else if (client.commands.every(notDupe))
+        client.commands.push(action);
+      // Must have been a dupe.. skip!
+      else
+        continue;
+
+      this._log.trace("Client " + id + " got a new action: " + [command, args]);
+      this._tracker.addChangedID(id);
+    }
+  },
+
   get localID() {
     // Generate a random GUID id we don't have one
     let localID = Svc.Prefs.get("client.GUID", "");
@@ -186,147 +221,6 @@ ClientEngine.prototype = {
 
     // Neither try again nor error; we're going to delete it.
     return SyncEngine.kRecoveryStrategy.ignore;
-  },
-
-  /**
-   * A hash of valid commands that the client knows about. The key is a command
-   * and the value is a hash containing information about the command such as
-   * number of arguments and description.
-   */
-  _commands: {
-    resetAll:    { args: 0, desc: "Clear temporary local data for all engines" },
-    resetEngine: { args: 1, desc: "Clear temporary local data for engine" },
-    wipeAll:     { args: 0, desc: "Delete all client data for all engines" },
-    wipeEngine:  { args: 1, desc: "Delete all client data for engine" },
-    logout:      { args: 0, desc: "Log out client" }
-  },
-
-  /**
-   * Remove any commands for the local client and mark it for upload.
-   */
-  clearCommands: function clearCommands() {
-    delete this.localCommands;
-    this._tracker.addChangedID(this.localID);
-  },
-
-  /**
-   * Sends a command+args pair to a specific client.
-   *
-   * @param command Command string
-   * @param args Array of arguments/data for command
-   * @param clientId Client to send command to
-   */
-  _sendCommandToClient: function sendCommandToClient(command, args, clientId) {
-    this._log.trace("Sending " + command + " to " + clientId);
-
-    let client = this._store._remoteClients[clientId];
-    if (!client) {
-      throw new Error("Unknown remote client ID: '" + clientId + "'.");
-    }
-
-    // notDupe compares two commands and returns if they are not equal.
-    let notDupe = function(other) {
-      return other.command != command || !Utils.deepEquals(other.args, args);
-    };
-
-    let action = {
-      command: command,
-      args: args,
-    };
-
-    if (!client.commands) {
-      client.commands = [action];
-    }
-    // Add the new action if there are no duplicates.
-    else if (client.commands.every(notDupe)) {
-      client.commands.push(action);
-    }
-    // It must be a dupe. Skip.
-    else {
-      return;
-    }
-
-    this._log.trace("Client " + clientId + " got a new action: " + [command, args]);
-    this._tracker.addChangedID(clientId);
-  },
-
-  /**
-   * Check if the local client has any remote commands and perform them.
-   *
-   * @return false to abort sync
-   */
-  processIncomingCommands: function processIncomingCommands() {
-    this._notify("clients:process-commands", "", function() {
-      // Immediately clear out the commands as we've got them locally.
-      this.clearCommands();
-
-      // Process each command in order.
-      for each ({command: command, args: args} in this.localCommands) {
-        this._log.debug("Processing command: " + command + "(" + args + ")");
-
-        let engines = [args[0]];
-        switch (command) {
-          case "resetAll":
-            engines = null;
-            // Fallthrough
-          case "resetEngine":
-            Weave.Service.resetClient(engines);
-            break;
-          case "wipeAll":
-            engines = null;
-            // Fallthrough
-          case "wipeEngine":
-            Weave.Service.wipeClient(engines);
-            break;
-          case "logout":
-            Weave.Service.logout();
-            return false;
-          default:
-            this._log.debug("Received an unknown command: " + command);
-            break;
-        }
-      }
-
-      return true;
-    })();
-  },
-
-  /**
-   * Validates and sends a command to a client or all clients.
-   *
-   * Calling this does not actually sync the command data to the server. If the
-   * client already has the command/args pair, it won't receive a duplicate
-   * command.
-   *
-   * @param command
-   *        Command to invoke on remote clients
-   * @param args
-   *        Array of arguments to give to the command
-   * @param clientId
-   *        Client ID to send command to. If undefined, send to all remote
-   *        clients.
-   */
-  sendCommand: function sendCommand(command, args, clientId) {
-    let commandData = this._commands[command];
-    // Don't send commands that we don't know about.
-    if (!commandData) {
-      this._log.error("Unknown command to send: " + command);
-      return;
-    }
-    // Don't send a command with the wrong number of arguments.
-    else if (!args || args.length != commandData.args) {
-      this._log.error("Expected " + commandData.args + " args for '" +
-                      command + "', but got " + args);
-      return;
-    }
-
-    if (clientId) {
-      this._sendCommandToClient(command, args, clientId);
-    } else {
-      for (let id in this._store._remoteClients) {
-        this._sendCommandToClient(command, args, id);
-      }
-    }
   }
 };
 
