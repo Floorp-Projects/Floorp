@@ -3294,9 +3294,13 @@ JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
+JS_HasElement(JSContext *cx, JSObject *obj, uint32 index, JSBool *foundp)
 {
-    return JS_HasPropertyById(cx, obj, INT_TO_JSID(index), foundp);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_HasPropertyById(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
