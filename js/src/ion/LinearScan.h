@@ -268,6 +268,7 @@ class VirtualRegister : public TempObject
     LMoveGroup *inputMoves_;
     LMoveGroup *outputMoves_;
     LAllocation *canonicalSpill_;
+    bool isTemporary_;
 
   public:
     VirtualRegister()
@@ -280,11 +281,14 @@ class VirtualRegister : public TempObject
         canonicalSpill_(NULL)
     { }
 
-    bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
+    bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def,
+              bool temporary_ = false)
+    {
         reg_ = reg;
         block_ = block;
         ins_ = ins;
         def_ = def;
+        isTemporary_ = temporary_;
         LiveInterval *initial = new LiveInterval(this, 0);
         if (!initial)
             return false;
@@ -350,6 +354,9 @@ class VirtualRegister : public TempObject
     }
     LAllocation *canonicalSpill() {
         return canonicalSpill_;
+    }
+    bool isTemporary() {
+        return isTemporary_;
     }
 
     LiveInterval *intervalFor(CodePosition pos);

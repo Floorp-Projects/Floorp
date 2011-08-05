@@ -47,7 +47,7 @@ using namespace js::ion;
 
 /* This method generates a trampoline on x86 for a c++ function with
  * the following signature:
- *   void blah(void *code, int argc, Value *argv, Value *vp)
+ *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
  *   ...using standard cdecl calling convention
  */
 IonCode *
@@ -159,6 +159,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 
     // Restore old stack frame pointer
     masm.pop(ebp);
+    masm.movl(Imm32(1), eax);
     masm.ret();
 
     Linker linker(masm);
