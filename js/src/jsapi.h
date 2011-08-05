@@ -2505,10 +2505,10 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DeleteElement(JSContext *cx, JSObject *obj, jsint index);
+JS_DeleteElement(JSContext *cx, JSObject *obj, uint32 index);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DeleteElement2(JSContext *cx, JSObject *obj, jsint index, jsval *rval);
+JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32 index, jsval *rval);
 
 extern JS_PUBLIC_API(void)
 JS_ClearScope(JSContext *cx, JSObject *obj);
