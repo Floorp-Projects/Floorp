@@ -267,11 +267,12 @@ def run_tests(tests, test_dir, lib_dir, shell_args):
     if not OPTIONS.hide_progress and not OPTIONS.show_cmd:
         try:
             from progressbar import ProgressBar
-            pb = ProgressBar('', len(tests), 16)
+            pb = ProgressBar('', len(tests), 24)
         except ImportError:
             pass
 
     failures = []
+    timeouts = 0
     complete = False
     doing = 'before starting'
     try:
@@ -282,6 +283,8 @@ def run_tests(tests, test_dir, lib_dir, shell_args):
 
             if not ok:
                 failures.append([ test, out, err, code, timed_out ])
+            if timed_out:
+                timeouts += 1
 
             if OPTIONS.tinderbox:
                 if ok:
@@ -297,7 +300,7 @@ def run_tests(tests, test_dir, lib_dir, shell_args):
 
             n = i + 1
             if pb:
-                pb.label = '[%4d|%4d|%4d]'%(n - len(failures), len(failures), n)
+                pb.label = '[%4d|%4d|%4d|%4d]'%(n - len(failures), len(failures), timeouts, n)
                 pb.update(n)
         complete = True
     except KeyboardInterrupt:

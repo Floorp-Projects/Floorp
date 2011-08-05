@@ -1590,6 +1590,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
+    gc::VerifyBarriers(cx, true);
+
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
 #define ENABLE_PCCOUNT_INTERRUPTS()     JS_BEGIN_MACRO                        \
@@ -1636,6 +1638,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
                                 CHECK_PCCOUNT_INTERRUPTS();                   \
+                                js::gc::VerifyBarriers(cx);                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -1967,6 +1970,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
       do_op:
         CHECK_RECORDER();
         CHECK_PCCOUNT_INTERRUPTS();
+        js::gc::VerifyBarriers(cx);
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
@@ -6128,6 +6132,7 @@ END_CASE(JSOP_ARRAYPUSH)
   leave_on_safe_point:
 #endif
 
+    gc::VerifyBarriers(cx, true);
     return interpReturnOK;
 
   atom_not_defined:
