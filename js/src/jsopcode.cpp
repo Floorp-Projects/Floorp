@@ -445,12 +445,18 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     len = (ptrdiff_t) cs->length;
     Sprint(sp, "%05u:", loc);
     if (counts) {
-        ptrdiff_t start = Sprint(sp, "%d", counts.get(0, loc));
-        for (size_t i = 1; i < counts.numRunmodes(); ++i)
-            Sprint(sp, "/%d", counts.get(i, loc));
+        ptrdiff_t start = Sprint(sp, "%.0f", counts.get(0, loc));
+        for (size_t i = 1; i < JSPCCounters::COUNT; ++i)
+            Sprint(sp, "/%.0f", counts.get(i, loc));
         int l = Sprint(sp, "") - start;
         if (l < COUNTS_LEN)
             Sprint(sp, "%*s", COUNTS_LEN - l, "");
+        double mjitHits = counts.get(JSPCCounters::METHODJIT, loc);
+        if (mjitHits) {
+            Sprint(sp, "  %.0f/%.0f",
+                   counts.get(JSPCCounters::METHODJIT_CODE, loc) / mjitHits,
+                   counts.get(JSPCCounters::METHODJIT_PICS, loc) / mjitHits);
+        }
         Sprint(sp, " x ");
     }
     if (lines)

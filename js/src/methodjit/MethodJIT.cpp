@@ -1082,6 +1082,9 @@ mjit::JITScript::~JITScript()
 {
     code.release();
 
+    if (pcLengths)
+        Foreground::free_(pcLengths);
+
 #if defined JS_POLYIC
     ic::GetElementIC *getElems_ = getElems();
     ic::SetElementIC *setElems_ = setElems();
@@ -1295,3 +1298,5 @@ JITScript::trace(JSTracer *trc)
     for (unsigned i = 0; i < nInlineFrames; i++)
         MarkObject(trc, *inlineFrames_[i].fun, "jitscript_fun");
 }
+
+/* static */ const double mjit::Assembler::oneDouble = 1.0;

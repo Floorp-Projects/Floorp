@@ -103,8 +103,6 @@ js::JMCheckLogging()
     if (strstr(env, "profile"))
         LoggingBits |= (1 << uint32(JSpew_Prof));
 #ifdef DEBUG
-    if (strstr(env, "pcprofile"))
-        LoggingBits |= (1 << uint32(JSpew_PCProf));
     if (strstr(env, "jsops"))
         LoggingBits |= (1 << uint32(JSpew_JSOps));
 #endif
@@ -125,14 +123,14 @@ js::JMCheckLogging()
     if (strstr(env, "inlin"))
         LoggingBits |= (1 << uint32(JSpew_Inlining));
     if (strstr(env, "full"))
-        LoggingBits |= 0xFFFFFFFF ^ (1 << JSpew_PCProf);
+        LoggingBits |= 0xFFFFFFFF;
 }
 
 js::ConditionalLog::ConditionalLog(bool logging)
     : oldBits(LoggingBits), logging(logging)
 {
     if (logging)
-        LoggingBits = 0xFFFFFFFF ^ (1 << JSpew_PCProf);
+        LoggingBits = 0xFFFFFFFF;
 }
 
 js::ConditionalLog::~ConditionalLog() {

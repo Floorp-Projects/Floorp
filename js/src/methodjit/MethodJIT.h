@@ -545,6 +545,12 @@ struct NativeMapEntry {
     void            *ncode; /* pointer to native code */
 };
 
+/* Per-op counts of performance metrics. */
+struct PCLengthEntry {
+    double          codeLength; /* amount of inline code generated */
+    double          picsLength; /* amount of PIC stub code generated */
+};
+
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
@@ -555,6 +561,8 @@ struct JITScript {
     void            *fastEntry;         /* cached entry, fastest */
     void            *arityCheckEntry;   /* arity check address */
     void            *argsCheckEntry;    /* arguments check address */
+
+    PCLengthEntry   *pcLengths;         /* lengths for outer and inline frames */
 
     /*
      * This struct has several variable-length sections that are allocated on

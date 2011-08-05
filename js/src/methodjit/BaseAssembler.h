@@ -1210,6 +1210,26 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
         return true;
     }
+
+    /* Add the value stored in 'value' to the accumulator 'counter'. */
+    void addCounter(const double *value, double *counter, RegisterID scratch)
+    {
+        loadDouble(value, Registers::FPConversionTemp);
+        move(ImmPtr(counter), scratch);
+        addDouble(Address(scratch), Registers::FPConversionTemp);
+        storeDouble(Registers::FPConversionTemp, Address(scratch));
+    }
+
+    /* Bump the stub call count for script/pc if they are being counted. */
+    void bumpStubCounter(JSScript *script, jsbytecode *pc, RegisterID scratch)
+    {
+        if (script->pcCounters) {
+            double *counter = &script->pcCounters.get(JSPCCounters::METHODJIT_STUBS, pc - script->code);
+            addCounter(&oneDouble, counter, scratch);
+        }
+    }
+
+    static const double oneDouble;
 };
 
 /* Return f<true> if the script is strict mode code, f<false> otherwise. */

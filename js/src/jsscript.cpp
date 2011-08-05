@@ -773,11 +773,10 @@ bool
 JSPCCounters::init(JSContext *cx, size_t numBytecodes)
 {
     this->numBytecodes = numBytecodes;
-    size_t nbytes = sizeof(*counts) * numBytecodes * JSRUNMODE_COUNT;
-    counts = (int*) cx->malloc_(nbytes);
+    size_t nbytes = sizeof(*counts) * numBytecodes * COUNT;
+    counts = (double*) cx->calloc_(nbytes);
     if (!counts)
         return false;
-    memset(counts, 0, nbytes);
     return true;
 }
 
