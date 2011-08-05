@@ -2363,15 +2363,19 @@ BEGIN_CASE(JSOP_STOP)
         argv = regs.fp()->maybeFormalArgs();
         atoms = FrameAtomBase(cx, regs.fp());
 
+        JS_ASSERT(*regs.pc == JSOP_TRAP || *regs.pc == JSOP_NEW || *regs.pc == JSOP_CALL ||
+                  *regs.pc == JSOP_FUNCALL || *regs.pc == JSOP_FUNAPPLY);
+
         /* Resume execution in the calling frame. */
         RESET_USE_METHODJIT();
         if (JS_LIKELY(interpReturnOK)) {
-            JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
-                      == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
             len = JSOP_CALL_LENGTH;
             DO_NEXT_OP(len);
         }
+
+        /* Increment pc so that |sp - fp->slots == ReconstructStackDepth(pc)|. */
+        regs.pc += JSOP_CALL_LENGTH;
         goto error;
     } else {
         JS_ASSERT(regs.sp == regs.fp()->base());
