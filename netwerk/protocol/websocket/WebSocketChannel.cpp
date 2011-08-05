@@ -931,9 +931,9 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
         ::memmove(mFramePtr, payload + payloadLength, avail - payloadLength);
         payload = mFramePtr;
         avail -= payloadLength;
-        payloadLength = 0;
         if (mBuffered)
           mBuffered -= framingLength + payloadLength;
+        payloadLength = 0;
       }
     } else if (opcode == kBinary) {
       LOG(("WebSocketChannel:: binary frame received\n"));
