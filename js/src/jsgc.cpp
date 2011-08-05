@@ -111,6 +111,14 @@ using namespace js::gc;
 namespace js {
 namespace gc {
 
+#ifdef JS_GC_ZEAL
+static void
+StartVerifyBarriers(JSContext *cx);
+
+static void
+EndVerifyBarriers(JSContext *cx);
+#endif
+
 /* This array should be const, but that doesn't link right under GCC. */
 AllocKind slotsToThingKind[] = {
     /* 0 */  FINALIZE_OBJECT0,  FINALIZE_OBJECT2,  FINALIZE_OBJECT2,  FINALIZE_OBJECT4,
@@ -2969,6 +2977,17 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, gcstats::Re
         return;
     }
 
+#ifdef JS_GC_ZEAL
+    struct AutoVerifyBarriers {
+        JSContext *cx;
+        bool inVerify;
+        AutoVerifyBarriers(JSContext *cx) : cx(cx), inVerify(cx->runtime->gcVerifyData) {
+            if (inVerify) EndVerifyBarriers(cx);
+        }
+        ~AutoVerifyBarriers() { if (inVerify) StartVerifyBarriers(cx); }
+    } av(cx);
+#endif
+
     RecordNativeStackTopForGC(cx);
 
     gcstats::AutoGC agc(rt->gcStats, comp, reason);
@@ -3233,6 +3252,338 @@ RunDebugGC(JSContext *cx)
     }
 #endif
 }
+
+#ifdef JS_GC_ZEAL
+
+/*
+ * Write barrier verification
+ *
+ * The next few functions are for incremental write barrier verification. When
+ * StartVerifyBarriers is called, a snapshot is taken of all objects in the GC
+ * heap and saved in an explicit graph data structure. Later, EndVerifyBarriers
+ * traverses the heap again. Any pointer values that were in the snapshot and
+ * are no longer found must be marked; otherwise an assertion triggers. Note
+ * that we must not GC in between starting and finishing a verification phase.
+ *
+ * The VerifyBarriers function is a shorthand. It checks if a verification phase
+ * is currently running. If not, it starts one. Otherwise, it ends the current
+ * phase and starts a new one.
+ *
+ * The user can adjust the frequency of verifications, which causes
+ * VerifyBarriers to be a no-op all but one out of N calls. However, if the
+ * |always| parameter is true, it starts a new phase no matter what.
+ */
+
+struct EdgeValue
+{
+    void *thing;
+    JSGCTraceKind kind;
+    char *label;
+};
+
+struct VerifyNode
+{
+    void *thing;
+    JSGCTraceKind kind;
+    uint32 count;
+    EdgeValue edges[1];
+};
+
+typedef HashMap<void *, VerifyNode *> NodeMap;
+
+/*
+ * The verifier data structures are simple. The entire graph is stored in a
+ * single block of memory. At the beginning is a VerifyNode for the root
+ * node. It is followed by a sequence of EdgeValues--the exact number is given
+ * in the node. After the edges come more nodes and their edges.
+ *
+ * The edgeptr and term fields are used to allocate out of the block of memory
+ * for the graph. If we run out of memory (i.e., if edgeptr goes beyond term),
+ * we just abandon the verification.
+ *
+ * The nodemap field is a hashtable that maps from the address of the GC thing
+ * to the VerifyNode that represents it.
+ */
+struct VerifyTracer : JSTracer {
+    /* The gcNumber when the verification began. */
+    uint32 number;
+
+    /* This counts up to JS_VERIFIER_FREQ to decide whether to verify. */
+    uint32 count;
+
+    /* This graph represents the initial GC "snapshot". */
+    VerifyNode *curnode;
+    VerifyNode *root;
+    char *edgeptr;
+    char *term;
+    NodeMap nodemap;
+
+    /* A dummy marker used for the write barriers; stored in gcMarkingTracer. */
+    GCMarker gcmarker;
+
+    VerifyTracer(JSContext *cx) : nodemap(cx), gcmarker(cx) {}
+};
+
+/*
+ * This function builds up the heap snapshot by adding edges to the current
+ * node.
+ */
+static void
+AccumulateEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+{
+    VerifyTracer *trc = (VerifyTracer *)jstrc;
+
+    trc->edgeptr += sizeof(EdgeValue);
+    if (trc->edgeptr >= trc->term) {
+        trc->edgeptr = trc->term;
+        return;
+    }
+
+    VerifyNode *node = trc->curnode;
+    uint32 i = node->count;
+
+    node->edges[i].thing = thing;
+    node->edges[i].kind = kind;
+    node->edges[i].label = trc->debugPrinter ? NULL : (char *)trc->debugPrintArg;
+    node->count++;
+}
+
+static VerifyNode *
+MakeNode(VerifyTracer *trc, void *thing, JSGCTraceKind kind)
+{
+    NodeMap::AddPtr p = trc->nodemap.lookupForAdd(thing);
+    if (!p) {
+        VerifyNode *node = (VerifyNode *)trc->edgeptr;
+        trc->edgeptr += sizeof(VerifyNode) - sizeof(EdgeValue);
+        if (trc->edgeptr >= trc->term) {
+            trc->edgeptr = trc->term;
+            return NULL;
+        }
+
+        node->thing = thing;
+        node->count = 0;
+        node->kind = kind;
+        trc->nodemap.add(p, thing, node);
+        return node;
+    }
+    return NULL;
+}
+
+static
+VerifyNode *
+NextNode(VerifyNode *node)
+{
+    if (node->count == 0)
+        return (VerifyNode *)((char *)node + sizeof(VerifyNode) - sizeof(EdgeValue));
+    else
+        return (VerifyNode *)((char *)node + sizeof(VerifyNode) +
+			      sizeof(EdgeValue)*(node->count - 1));
+}
+
+static void
+StartVerifyBarriers(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+
+    if (rt->gcVerifyData)
+        return;
+
+    LeaveTrace(cx);
+
+    AutoLockGC lock(rt);
+    AutoGCSession gcsession(cx);
+
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
+#endif
+
+    AutoUnlockGC unlock(rt);
+
+    AutoCopyFreeListToArenas copy(rt);
+    RecordNativeStackTopForGC(cx);
+
+    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
+        r.front()->bitmap.clear();
+
+    /*
+     * Kick all frames on the stack into the interpreter, and release all JIT
+     * code in the compartment.
+     */
+#ifdef JS_METHODJIT
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        mjit::ClearAllFrames(*c);
+
+        for (CellIterUnderGC i(*c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            mjit::ReleaseScriptCode(cx, script);
+
+            /*
+             * Use counts for scripts are reset on GC. After discarding code we
+             * need to let it warm back up to get information like which opcodes
+             * are setting array holes or accessing getter properties.
+             */
+            script->resetUseCount();
+        }
+    }
+#endif
+
+    VerifyTracer *trc = new (js_malloc(sizeof(VerifyTracer))) VerifyTracer(cx);
+
+    rt->gcNumber++;
+    trc->number = rt->gcNumber;
+    trc->count = 0;
+
+    JS_TRACER_INIT(trc, cx, AccumulateEdge);
+
+    const size_t size = 64 * 1024 * 1024;
+    trc->root = (VerifyNode *)js_malloc(size);
+    JS_ASSERT(trc->root);
+    trc->edgeptr = (char *)trc->root;
+    trc->term = trc->edgeptr + size;
+
+    trc->nodemap.init();
+
+    /* Create the root node. */
+    trc->curnode = MakeNode(trc, NULL, JSGCTraceKind(0));
+
+    /* Make all the roots be edges emanating from the root node. */
+    MarkRuntime(trc);
+
+    VerifyNode *node = trc->curnode;
+    if (trc->edgeptr == trc->term)
+        goto oom;
+
+    /* For each edge, make a node for it if one doesn't already exist. */
+    while ((char *)node < trc->edgeptr) {
+        for (uint32 i = 0; i < node->count; i++) {
+            EdgeValue &e = node->edges[i];
+            VerifyNode *child = MakeNode(trc, e.thing, e.kind);
+            if (child) {
+                trc->curnode = child;
+                JS_TraceChildren(trc, e.thing, e.kind);
+            }
+            if (trc->edgeptr == trc->term)
+                goto oom;
+        }
+
+        node = NextNode(node);
+    }
+
+    rt->gcVerifyData = trc;
+    rt->gcIncrementalTracer = &trc->gcmarker;
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        (*c)->gcIncrementalTracer = &trc->gcmarker;
+        (*c)->needsBarrier_ = true;
+    }
+
+    return;
+
+oom:
+    js_free(trc->root);
+    trc->~VerifyTracer();
+    js_free(trc);
+}
+
+/*
+ * This function is called by EndVerifyBarriers for every heap edge. If the edge
+ * already existed in the original snapshot, we "cancel it out" by overwriting
+ * it with NULL. EndVerifyBarriers later asserts that the remaining non-NULL
+ * edges (i.e., the ones from the original snapshot that must have been
+ * modified) must point to marked objects.
+ */
+static void
+CheckEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+{
+    VerifyTracer *trc = (VerifyTracer *)jstrc;
+    VerifyNode *node = trc->curnode;
+
+    for (uint32 i = 0; i < node->count; i++) {
+        if (node->edges[i].thing == thing) {
+            JS_ASSERT(node->edges[i].kind == kind);
+            node->edges[i].thing = NULL;
+            return;
+        }
+    }
+}
+
+static void
+EndVerifyBarriers(JSContext *cx)
+{
+    LeaveTrace(cx);
+
+    JSRuntime *rt = cx->runtime;
+
+    AutoLockGC lock(rt);
+    AutoGCSession gcsession(cx);
+
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
+#endif
+
+    AutoUnlockGC unlock(rt);
+
+    AutoCopyFreeListToArenas copy(rt);
+    RecordNativeStackTopForGC(cx);
+
+    VerifyTracer *trc = (VerifyTracer *)rt->gcVerifyData;
+
+    if (!trc)
+        return;
+
+    JS_ASSERT(trc->number == rt->gcNumber);
+
+    rt->gcIncrementalTracer->markDelayedChildren();
+
+    rt->gcVerifyData = NULL;
+    rt->gcIncrementalTracer = NULL;
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        (*c)->gcIncrementalTracer = NULL;
+        (*c)->needsBarrier_ = false;
+    }
+
+    JS_TRACER_INIT(trc, cx, CheckEdge);
+
+    /* Start after the roots. */
+    VerifyNode *node = NextNode(trc->root);
+    int count = 0;
+
+    while ((char *)node < trc->edgeptr) {
+        trc->curnode = node;
+        JS_TraceChildren(trc, node->thing, node->kind);
+
+        for (uint32 i = 0; i < node->count; i++) {
+            void *thing = node->edges[i].thing;
+            JS_ASSERT_IF(thing, static_cast<Cell *>(thing)->isMarked());
+        }
+
+        count++;
+        node = NextNode(node);
+    }
+
+    js_free(trc->root);
+    trc->~VerifyTracer();
+    js_free(trc);
+}
+
+void
+VerifyBarriers(JSContext *cx, bool always)
+{
+    if (cx->runtime->gcZeal() < ZealVerifierThreshold)
+        return;
+
+    uint32 freq = cx->runtime->gcZealFrequency;
+
+    JSRuntime *rt = cx->runtime;
+    if (VerifyTracer *trc = (VerifyTracer *)rt->gcVerifyData) {
+        if (++trc->count < freq && !always)
+            return;
+
+        EndVerifyBarriers(cx);
+    }
+    StartVerifyBarriers(cx);
+}
+
+#endif /* JS_GC_ZEAL */
 
 } /* namespace gc */
 

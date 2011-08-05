@@ -659,6 +659,7 @@ JSRuntime::JSRuntime()
     gcEmptyArenaPoolLifespan(0),
     gcNumber(0),
     gcIncrementalTracer(NULL),
+    gcVerifyData(NULL),
     gcChunkAllocationSinceLastGC(false),
     gcNextFullGCTime(0),
     gcJitReleaseTime(0),
@@ -2746,6 +2747,7 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 
     LeaveTrace(cx);
 
+    js::gc::VerifyBarriers(cx, true);
     js_GC(cx, comp, GC_NORMAL, gcstats::PUBLIC_API);
 }
 
@@ -6364,9 +6366,10 @@ JS_ClearContextThread(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment)
 {
+    bool schedule = zeal >= js::gc::ZealAllocThreshold && zeal < js::gc::ZealVerifierThreshold;
     cx->runtime->gcZeal_ = zeal;
     cx->runtime->gcZealFrequency = frequency;
-    cx->runtime->gcNextScheduled = zeal >= 2 ? frequency : 0;
+    cx->runtime->gcNextScheduled = schedule ? frequency : 0;
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 

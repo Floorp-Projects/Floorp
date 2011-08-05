@@ -461,6 +461,7 @@ struct JSRuntime
     volatile uint32     gcNumFreeArenas;
     uint32              gcNumber;
     js::GCMarker        *gcIncrementalTracer;
+    void                *gcVerifyData;
     bool                gcChunkAllocationSinceLastGC;
     int64               gcNextFullGCTime;
     int64               gcJitReleaseTime;
@@ -523,6 +524,9 @@ struct JSRuntime
      * Additionally, if gzZeal_ == 1 then we perform GCs in select places
      * (during MaybeGC and whenever a GC poke happens). This option is mainly
      * useful to embedders.
+     *
+     * We use gcZeal_ == 4 to enable write barrier verification. See the comment
+     * in jsgc.cpp for more information about this.
      */
 #ifdef JS_GC_ZEAL
     int                 gcZeal_;
@@ -534,7 +538,7 @@ struct JSRuntime
 
     bool needZealousGC() {
         if (gcNextScheduled > 0 && --gcNextScheduled == 0) {
-            if (gcZeal() >= 2)
+            if (gcZeal() >= js::gc::ZealAllocThreshold && gcZeal() < js::gc::ZealVerifierThreshold)
                 gcNextScheduled = gcZealFrequency;
             return true;
         }
