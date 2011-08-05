@@ -87,8 +87,14 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
     return growSlots(cx, requiredCapacity) ? ED_OK : ED_FAILED;
 }
 
+namespace js {
+/* 2^32-2, inclusive */
+const uint32 MAX_ARRAY_INDEX = 4294967294u;
+    
 extern bool
-js_StringIsIndex(JSLinearString *str, jsuint *indexp);
+StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
+    
+}
 
 inline JSBool
 js_IdIsIndex(jsid id, jsuint *indexp)
@@ -105,7 +111,7 @@ js_IdIsIndex(jsid id, jsuint *indexp)
     if (JS_UNLIKELY(!JSID_IS_STRING(id)))
         return JS_FALSE;
 
-    return js_StringIsIndex(JSID_TO_ATOM(id), indexp);
+    return js::StringIsArrayIndex(JSID_TO_ATOM(id), indexp);
 }
 
 extern js::Class js_ArrayClass, js_SlowArrayClass;
