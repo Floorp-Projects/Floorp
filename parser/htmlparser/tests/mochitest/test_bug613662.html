@@ -104,7 +104,7 @@ function mutationEventListener(evt) {
   is(evt.type, expected[0], "Unexpected mutation type");
   is(evt.relatedNode, expected[1], "Unexpected related node");
 }
-
+/*
 document.addEventListener("DOMSubtreeModified", mutationEventListener, false);
 document.addEventListener("DOMNodeInserted", mutationEventListener, false);
 document.addEventListener("DOMNodeRemoved", mutationEventListener, false);
@@ -117,7 +117,7 @@ testPositions(content2); // without next sibling
 testPositions(content2); // test again when there's next sibling
 
 is(events.length, 0, "Not all expected events fired.");
-
+*/
 // HTML only
 document.body.insertAdjacentHTML("afterend", "<p>");
 document.head.insertAdjacentHTML("beforebegin", "<p>");
