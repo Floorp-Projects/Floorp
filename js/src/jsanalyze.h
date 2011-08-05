@@ -1286,6 +1286,16 @@ class CrossScriptSSA
 
     JSScript *outerScript() { return outerFrame.script; }
 
+    /* Total length of scripts preceding a frame. */
+    size_t frameLength(uint32 index) {
+        if (index == OUTER_FRAME)
+            return 0;
+        size_t res = outerFrame.script->length;
+        for (unsigned i = 0; i < index; i++)
+            res += inlineFrames[i].script->length;
+        return res;
+    }
+
     types::TypeSet *getValueTypes(const CrossSSAValue &cv) {
         return getFrame(cv.frame).script->analysis()->getValueTypes(cv.v);
     }

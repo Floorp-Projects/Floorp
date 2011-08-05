@@ -467,9 +467,7 @@ class Compiler : public BaseCompiler
     bool hasGlobalReallocation;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
-#ifdef DEBUG
-    int *pcProfile;
-#endif
+    PCLengthEntry *pcLengths;
 
     Compiler *thisFromCtor() { return this; }
 
@@ -531,6 +529,7 @@ class Compiler : public BaseCompiler
     CompileStatus finishThisUp(JITScript **jitp);
     CompileStatus pushActiveFrame(JSScript *script, uint32 argc);
     void popActiveFrame();
+    void updatePCCounters(jsbytecode *pc, Label *start, bool *updated);
 
     /* Analysis helpers. */
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);

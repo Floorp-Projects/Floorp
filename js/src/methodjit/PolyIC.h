@@ -108,6 +108,7 @@ struct BaseIC : public MacroAssemblerTypedefs {
     bool shouldUpdate(JSContext *cx);
     void spew(JSContext *cx, const char *event, const char *reason);
     LookupStatus disable(JSContext *cx, const char *reason, void *stub);
+    void updatePCCounters(JSContext *cx, Assembler &masm);
     bool isCallOp();
 };
 

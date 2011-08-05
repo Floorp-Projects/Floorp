@@ -88,15 +88,6 @@ extern JS_PUBLIC_DATA(jsval) JSVAL_VOID;
 
 #endif
 
-/*
- * Different "run modes" used for execution accounting (JSOPTION_PCCOUNT)
- */
-
-#define JSRUNMODE_INTERP    0
-#define JSRUNMODE_TRACEJIT  1
-#define JSRUNMODE_METHODJIT 2
-#define JSRUNMODE_COUNT     3
-
 /************************************************************************/
 
 static JS_ALWAYS_INLINE JSBool
