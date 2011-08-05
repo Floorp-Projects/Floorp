@@ -627,6 +627,7 @@ class LBlock : public TempObject
     MBasicBlock *block_;
     Vector<LPhi *, 4, IonAllocPolicy> phis_;
     InlineList<LInstruction> instructions_;
+    Label label_;
 
     LBlock(MBasicBlock *block)
       : block_(block)
@@ -680,7 +681,9 @@ class LBlock : public TempObject
     }
     uint32 firstId();
     uint32 lastId();
-    inline Label *label();
+    Label *label() {
+        return &label_;
+    }
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>
