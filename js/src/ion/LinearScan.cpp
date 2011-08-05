@@ -408,11 +408,19 @@ LinearScanAllocator::buildLivenessInfo()
             for (size_t i = 0; i < ins->numDefs(); i++) {
                 if (ins->getDef(i)->policy() != LDefinition::REDEFINED) {
                     LDefinition *def = ins->getDef(i);
+
+                    // The output register may be clobbered before inputs are
+                    // read unless the policy says otherwise, so we have to
+                    // make the intervals overlap.
+                    CodePosition from(inputOf(*ins));
+                    if (def->policy() == LDefinition::MUST_REUSE_INPUT)
+                        from = outputOf(*ins);
+
                     // Ensure that if there aren't any uses, there's at least
                     // some interval for the output to go into.
                     if (vregs[def].getInterval(0)->numRanges() == 0)
-                        vregs[def].getInterval(0)->addRange(outputOf(*ins), outputOf(*ins));
-                    vregs[def].getInterval(0)->setFrom(outputOf(*ins));
+                        vregs[def].getInterval(0)->addRange(from, outputOf(*ins));
+                    vregs[def].getInterval(0)->setFrom(from);
                     live->remove(def->virtualRegister());
                 }
             }
@@ -549,8 +557,6 @@ LinearScanAllocator::allocateRegisters()
         bool mustHaveRegister = false;
         bool canSpillOthers = true;
         if (position == current->reg()->getFirstInterval()->start()) {
-            JS_ASSERT(position.subpos() == CodePosition::OUTPUT || current->reg()->isTemporary());
-
             LDefinition *def = current->reg()->def();
             LDefinition::Policy policy = def->policy();
             if (policy == LDefinition::PRESET) {
