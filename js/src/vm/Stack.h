@@ -254,6 +254,13 @@ CallArgsFromSp(uintN argc, Value *sp)
 
 /*****************************************************************************/
 
+/*
+ * For calls to natives, the InvokeArgsGuard object provides a record of the
+ * call for the debugger's callstack. For this to work, the InvokeArgsGuard
+ * record needs to know when the call is actually active (because the
+ * InvokeArgsGuard can be pushed long before and popped long after the actual
+ * call, during which time many stack-observing things can happen).
+ */
 class CallArgsList : public CallArgs
 {
     friend class StackSegment;

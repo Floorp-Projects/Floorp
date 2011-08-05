@@ -192,14 +192,14 @@ InlineReturn(VMFrame &f)
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32 argc)
 {
-    if (!Invoke(f.cx, CallArgsFromSp(argc, f.regs.sp)))
+    if (!InvokeKernel(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
 }
 
 void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
-    if (!InvokeConstructor(f.cx, CallArgsFromSp(argc, f.regs.sp)))
+    if (!InvokeConstructorKernel(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
 }
 
@@ -379,7 +379,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         if (!UncachedInlineCall(f, CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
             THROW();
     } else {
-        if (!InvokeConstructor(cx, args))
+        if (!InvokeConstructorKernel(cx, args))
             THROW();
     }
 }
@@ -398,7 +398,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
     if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), args.calleev())) {
-        if (!Invoke(f.cx, args))
+        if (!InvokeKernel(f.cx, args))
             THROW();
         return;
     }
@@ -435,7 +435,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         }
     }
 
-    if (!Invoke(f.cx, args))
+    if (!InvokeKernel(f.cx, args))
         THROW();
 
     return;

@@ -4890,7 +4890,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptObj);
 
-    JSBool ok = ExternalExecute(cx, scriptObj->getScript(), *obj, Valueify(rval));
+    JSBool ok = Execute(cx, scriptObj->getScript(), *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4924,7 +4924,7 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
     }
     JS_ASSERT(script->getVersion() == compileVersion);
 
-    bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));
+    bool ok = Execute(cx, script, *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     js_DestroyScript(cx, script, 5);
     return ok;
@@ -5004,8 +5004,8 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fun, JSValueArray(argv, argc));
-    JSBool ok = ExternalInvoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), argc,
-                               Valueify(argv), Valueify(rval));
+    JSBool ok = Invoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), argc, Valueify(argv),
+                       Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5023,8 +5023,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc, 
     JSBool ok =
         atom &&
         js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, tvr.addr()) &&
-        ExternalInvoke(cx, ObjectOrNullValue(obj), tvr.value(), argc, Valueify(argv),
-                       Valueify(rval));
+        Invoke(cx, ObjectOrNullValue(obj), tvr.value(), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5037,8 +5036,8 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fval, JSValueArray(argv, argc));
-    JSBool ok = ExternalInvoke(cx, ObjectOrNullValue(obj), Valueify(fval), argc, Valueify(argv),
-                               Valueify(rval));
+    JSBool ok = Invoke(cx, ObjectOrNullValue(obj), Valueify(fval), argc, Valueify(argv),
+                       Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5052,7 +5051,7 @@ Call(JSContext *cx, jsval thisv, jsval fval, uintN argc, jsval *argv, jsval *rva
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, thisv, fval, JSValueArray(argv, argc));
-    ok = ExternalInvoke(cx, Valueify(thisv), Valueify(fval), argc, Valueify(argv), Valueify(rval));
+    ok = Invoke(cx, Valueify(thisv), Valueify(fval), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5068,7 +5067,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // This is not a simple variation of JS_CallFunctionValue because JSOP_NEW
     // is not a simple variation of JSOP_CALL. We have to determine what class
     // of object to create, create it, and clamp the return value to an object,
-    // among other details. js_InvokeConstructor does the hard work.
+    // among other details. InvokeConstructor does the hard work.
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return NULL;
