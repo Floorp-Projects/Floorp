@@ -57,7 +57,7 @@ VirtualRegisterOfPayload(MDefinition *mir)
 {
     if (mir->isBox()) {
         MDefinition *inner = mir->toBox()->getOperand(0);
-        if (!inner->isConstant())
+        if (!inner->isConstant() && inner->type() != MIRType_Double)
             return inner->id();
     }
     return mir->id() + VREG_DATA_OFFSET;

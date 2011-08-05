@@ -59,9 +59,13 @@ class CodeGenerator : public CodeGeneratorX86Shared
 
   public:
     bool visitBox(LBox *box);
+    bool visitBoxDouble(LBoxDouble *box);
     bool visitUnbox(LUnbox *unbox);
+    bool visitUnboxDouble(LUnboxDouble *ins);
+    bool visitUnboxDoubleSSE41(LUnboxDoubleSSE41 *ins);
     bool visitValue(LValue *value);
     bool visitReturn(LReturn *ret);
+    bool visitDouble(LDouble *ins);
 };
 
 } // ion

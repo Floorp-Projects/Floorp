@@ -42,6 +42,7 @@
 #include "ion/shared/CodeGenerator-shared-inl.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
+#include "jsnum.h"
 
 using namespace js;
 using namespace js::ion;
@@ -89,19 +90,30 @@ MIRTypeToTag(MIRType type)
 bool
 CodeGenerator::visitBox(LBox *box)
 {
-    LAllocation *a = box->getOperand(0);
-    LDefinition *type = box->getDef(TYPE_INDEX);
+    const LAllocation *a = box->getOperand(0);
+    const LDefinition *type = box->getDef(TYPE_INDEX);
 
     JS_ASSERT(!a->isConstant());
 
-    if (box->type() == MIRType_Double) {
-        JS_NOT_REACHED("NYI");
-    } else {
-        // On x86, the input operand and the output payload have the same
-        // virtual register. All that needs to be written is the type tag for
-        // the type definition.
-        masm.movl(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
-    }
+    // On x86, the input operand and the output payload have the same
+    // virtual register. All that needs to be written is the type tag for
+    // the type definition.
+    masm.movl(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
+    return true;
+}
+
+bool
+CodeGenerator::visitBoxDouble(LBoxDouble *box)
+{
+    const LDefinition *payload = box->getDef(PAYLOAD_INDEX);
+    const LDefinition *type = box->getDef(TYPE_INDEX);
+    const LDefinition *temp = box->getTemp(0);
+    const LAllocation *in = box->getOperand(0);
+
+    masm.movsd(ToFloatRegister(in), ToFloatRegister(temp));
+    masm.movd(ToFloatRegister(temp), ToRegister(payload));
+    masm.psrlq(Imm32(4), ToFloatRegister(temp));
+    masm.movd(ToFloatRegister(temp), ToRegister(type));
     return true;
 }
 
@@ -126,6 +138,71 @@ CodeGenerator::visitReturn(LReturn *ret)
     // Don't emit a jump to the return label if this is the last block.
     if (current->mir() != *gen->graph().poBegin())
         masm.jmp(returnLabel_);
+    return true;
+}
+
+class DeferredDouble : public DeferredData
+{
+    double d_;
+
+  public:
+    DeferredDouble(double d) : d_(d)
+    { }
+    
+    double d() const {
+        return d_;
+    }
+    void copy(uint8 *code, uint8 *buffer) const {
+        *(double *)buffer = d_;
+    }
+};
+
+bool
+CodeGenerator::visitDouble(LDouble *ins)
+{
+    const LDefinition *out = ins->getDef(0);
+
+    jsdpun dpun;
+    dpun.d = ins->getDouble();
+
+    if (dpun.u64 == 0) {
+        masm.xorpd(ToFloatRegister(out), ToFloatRegister(out));
+        return true;
+    }
+
+    DeferredDouble *d = new DeferredDouble(ins->getDouble());
+    if (!masm.addDeferredData(d, sizeof(double)))
+        return false;
+
+    masm.movsd(d->label(), ToFloatRegister(out));
+    return true;
+}
+
+bool
+CodeGenerator::visitUnboxDouble(LUnboxDouble *ins)
+{
+    const LAllocation *type = ins->getOperand(TYPE_INDEX);
+    const LAllocation *payload = ins->getOperand(PAYLOAD_INDEX);
+    const LDefinition *result = ins->getDef(0);
+    const LDefinition *temp = ins->getTemp(0);
+
+    masm.cmpl(ImmTag(JSVAL_TAG_CLEAR), ToRegister(type));
+    masm.movd(ToRegister(payload), ToFloatRegister(result));
+    masm.movd(ToRegister(type), ToFloatRegister(temp));
+    masm.unpcklps(ToFloatRegister(temp), ToFloatRegister(result));
+    return true;
+}
+
+bool
+CodeGenerator::visitUnboxDoubleSSE41(LUnboxDoubleSSE41 *ins)
+{
+    const LAllocation *type = ins->getOperand(TYPE_INDEX);
+    const LAllocation *payload = ins->getOperand(PAYLOAD_INDEX);
+    const LDefinition *result = ins->getDef(0);
+
+    masm.cmpl(ToOperand(type), ImmTag(JSVAL_TAG_CLEAR));
+    masm.movd(ToRegister(payload), ToFloatRegister(result));
+    masm.pinsrd(ToOperand(type), ToFloatRegister(result));
     return true;
 }
 

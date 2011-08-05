@@ -62,8 +62,10 @@ class AssemblerX86Shared
         { }
     };
 
+    js::Vector<DeferredData *, 0, SystemAllocPolicy> data_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     CompactBufferWriter relocations_;
+    size_t dataBytesNeeded_;
 
     bool enoughMemory_;
 
@@ -92,7 +94,8 @@ class AssemblerX86Shared
     };
 
     AssemblerX86Shared()
-      : enoughMemory_(true)
+      : dataBytesNeeded_(0),
+        enoughMemory_(true)
     {
     }
 
@@ -107,20 +110,32 @@ class AssemblerX86Shared
                relocations_.outOfMemory();
     }
 
+    void executableCopy(void *buffer);
+    void processDeferredData(uint8 *code, uint8 *data);
+    void copyRelocationTable(uint8 *buffer);
+
+    bool addDeferredData(DeferredData *data, size_t bytes) {
+        data->setOffset(dataBytesNeeded_);
+        dataBytesNeeded_ += bytes;
+        if (dataBytesNeeded_ >= MAX_BUFFER_SIZE)
+            return false;
+        return data_.append(data);
+    }
+
+    // Size of the instruction stream, in bytes.
     size_t size() const {
         return masm.size();
     }
-    void executableCopy(void *buffer) {
-        masm.executableCopy(buffer);
-    }
-
-    void copyRelocationTable(uint8 *buffer);
-
+    // Size of the relocation table, in bytes.
     size_t relocationTableSize() const {
         return relocations_.length();
     }
+    // Size of the data table, in bytes.
+    size_t dataSize() const {
+        return dataBytesNeeded_;
+    }
     size_t bytesNeeded() const {
-        return size() + relocationTableSize();
+        return size() + dataSize() + relocationTableSize();
     }
 
   public:
@@ -155,6 +170,9 @@ class AssemblerX86Shared
         }
     }
 
+    void movsd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.movsd_rr(src.code(), dest.code());
+    }
     void movsd(const Operand &src, const FloatRegister &dest) {
         switch (src.kind()) {
           case Operand::FPREG:
@@ -216,6 +234,18 @@ class AssemblerX86Shared
         }
         label->bind(masm.label().offset());
     }
+    void bind(AbsoluteLabel *label, uint8 *code, uint8 *address) {
+        if (label->used()) {
+            intptr_t src = label->offset();
+            do {
+                intptr_t next = reinterpret_cast<intptr_t>(JSC::X86Assembler::getPointer(code + src));
+                JSC::X86Assembler::setPointer(code + src, address);
+                src = next;
+            } while (src != AbsoluteLabel::INVALID_OFFSET);
+        }
+        JS_ASSERT((address - code) >= 0 && (address - code) < INT_MAX);
+        label->bind(address - code);
+    }
 
     void ret() {
         masm.ret();
@@ -240,11 +270,18 @@ class AssemblerX86Shared
         masm.int3();
     }
 
+    static bool HasSSE41() {
+        return JSC::MacroAssembler::getSSEState() >= JSC::MacroAssembler::HasSSE4_1;
+    }
+
     // The below cmpq methods switch the lhs and rhs when it invokes the
     // macroassembler to conform with intel standard.  When calling this
     // function put the left operand on the left as you would expect.
     void cmpl(const Register &lhs, const Register &rhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
+    }
+    void cmpl(Imm32 imm, const Register &reg) {
+        masm.cmpl_ir(imm.value, reg.code());
     }
     void cmpl(const Operand &op, Imm32 imm) {
         switch (op.kind()) {
@@ -439,6 +476,37 @@ class AssemblerX86Shared
     }
     void pop(const Register &src) {
         masm.pop_r(src.code());
+    }
+
+    void unpcklps(const FloatRegister &src, const FloatRegister &dest) {
+        masm.unpcklps_rr(src.code(), dest.code());
+    }
+    void pinsrd(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.pinsrd_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.pinsrd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void psrlq(Imm32 shift, const FloatRegister &dest) {
+        masm.psrldq_rr(dest.code(), shift.value);
+    }
+    void movd(const Register &src, const FloatRegister &dest) {
+        masm.movd_rr(src.code(), dest.code());
+    }
+    void movd(const FloatRegister &src, const Register &dest) {
+        masm.movd_rr(src.code(), dest.code());
+    }
+    void addsd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.addsd_rr(src.code(), dest.code());
+    }
+    void xorpd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.xorpd_rr(src.code(), dest.code());
     }
 };
 

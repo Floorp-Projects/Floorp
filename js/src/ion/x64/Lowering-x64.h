@@ -60,6 +60,7 @@ class LIRGeneratorX64 : public LIRGenerator
     bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
 
     bool lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
+    bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
 
   public:
     bool visitBox(MBox *box);

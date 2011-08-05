@@ -137,18 +137,6 @@ class LPointer : public LInstructionHelper<1, 0, 0>
     { }
 };
 
-// Constant double.
-class LDouble : public LInstructionHelper<1, 0, 0>
-{
-    double d_;
-
-  public:
-    LIR_HEADER(Double);
-
-    LDouble(double d) : d_(d)
-    { }
-};
-
 // A constant Value.
 class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
 {
@@ -282,6 +270,23 @@ class LAddI : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(AddI);
+};
+
+// Performs an add, sub, mul, or div on two double values.
+class LMathD : public LInstructionHelper<1, 2, 0>
+{
+    JSOp jsop_;
+
+  public:
+    LIR_HEADER(MathD);
+
+    LMathD(JSOp jsop)
+      : jsop_(jsop)
+    { }
+
+    JSOp jsop() const {
+        return jsop_;
+    }
 };
 
 class MPhi;

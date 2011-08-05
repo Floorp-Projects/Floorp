@@ -71,6 +71,7 @@ class LIRGeneratorX86 : public LIRGenerator
     bool preparePhi(MPhi *phi);
 
     bool lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
+    bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
 
   public:
     bool visitBox(MBox *box);

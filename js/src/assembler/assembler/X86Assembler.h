@@ -2306,6 +2306,17 @@ public:
         m_formatter.immediate8(0x01); // the $1
     }
 
+    void pinsrd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "pinsrd     $1, %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset),
+                       nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, (RegisterID)dst, base, offset);
+        m_formatter.immediate8(0x01); // the $1
+    }
+
     // Misc instructions:
 
     void int3()
@@ -2574,14 +2585,14 @@ public:
         return reinterpret_cast<void **>(where)[-1];
     }
 
-private:
-
     static void setPointer(void* where, void* value)
     {
         js::JaegerSpew(js::JSpew_Insns,
                        ISPFX "##setPtr     ((where=%p)) ((value=%p))\n", where, value);
         reinterpret_cast<void**>(where)[-1] = value;
     }
+
+private:
 
     static int32_t getInt32(void* where)
     {
@@ -2735,6 +2746,16 @@ private:
             m_buffer.putByteUnchecked(OP_3BYTE_ESCAPE);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(reg, rm);
+        }
+
+        void threeByteOp(ThreeByteOpcodeID opcode, int reg, RegisterID base, int offset)
+        {
+            m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIfNeeded(reg, 0, base);
+            m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
+            m_buffer.putByteUnchecked(OP_3BYTE_ESCAPE);
+            m_buffer.putByteUnchecked(opcode);
+            memoryModRM(reg, base, offset);
         }
 
 #if WTF_CPU_X86_64

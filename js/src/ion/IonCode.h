@@ -59,8 +59,7 @@ class IonCode : public gc::Cell
     JSC::ExecutablePool *pool_;
     uint32 bufferSize_;             // Total buffer size.
     uint32 insnSize_;               // Instruction stream size.
-    uint32 relocTableOffset_;       // Table of instructions which point to IonCode.
-                                    // This is an offset from code.
+    uint32 dataSize_;               // Size of the read-only data area.
     uint32 relocTableSize_;         // Size of the relocation table.
 
     IonCode()
@@ -72,9 +71,16 @@ class IonCode : public gc::Cell
         pool_(pool),
         bufferSize_(bufferSize),
         insnSize_(0),
-        relocTableOffset_(0),
+        dataSize_(0),
         relocTableSize_(0)
     { }
+
+    uint32 dataOffset() const {
+        return insnSize_;
+    }
+    uint32 relocTableOffset() const {
+        return dataOffset() + relocTableSize_;
+    }
 
   public:
     uint8 *raw() const {

@@ -107,7 +107,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
       }
       case MIRType_Double: {
         // Doubles don't need a temporary.
-        LUnboxDouble *ins = new LUnboxDouble(useRegister(box));
+        LUnboxDouble *ins = new LUnboxDouble(useRegister(box), temp(LDefinition::INTEGER));
         return define(ins, unbox) && assignSnapshot(ins);
       }
       default:
@@ -155,6 +155,14 @@ LIRGeneratorX64::lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MD
 {
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useOrConstant(rhs));
+    return defineReuseInput(ins, mir);
+}
+
+bool
+LIRGeneratorX64::lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
+{
+    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(1, useRegister(rhs));
     return defineReuseInput(ins, mir);
 }
 
