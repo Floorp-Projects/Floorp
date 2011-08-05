@@ -62,6 +62,8 @@ class CodeGenerator : public CodeGeneratorX86Shared
     bool visitReturn(LReturn *ret);
     bool visitBox(LBox *box);
     bool visitUnboxInteger(LUnboxInteger *unbox);
+    bool visitUnboxDouble(LUnboxDouble *unbox);
+    bool visitDouble(LDouble *ins);
 };
 
 } // ion

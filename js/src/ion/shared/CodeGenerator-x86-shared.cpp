@@ -251,3 +251,20 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
     return true;
 }
 
+bool
+CodeGeneratorX86Shared::visitMathD(LMathD *math)
+{
+    const LAllocation *input = math->getOperand(1);
+    const LDefinition *output = math->getDef(0);
+
+    switch (math->jsop()) {
+      case JSOP_ADD:
+        masm.addsd(ToFloatRegister(input), ToFloatRegister(output));
+        break;
+      default:
+        JS_NOT_REACHED("unexpected opcode");
+        return false;
+    }
+    return true;
+}
+

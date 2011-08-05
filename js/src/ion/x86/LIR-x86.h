@@ -65,6 +65,17 @@ class LBox : public LInstructionHelper<2, 1, 0>
     }
 };
 
+class LBoxDouble : public LInstructionHelper<2, 1, 1>
+{
+  public:
+    LIR_HEADER(BoxDouble);
+
+    LBoxDouble(const LAllocation &in) {
+        setOperand(0, in);
+        setTemp(0, LDefinition(LDefinition::DOUBLE));
+    }
+};
+
 class LUnbox : public LInstructionHelper<1, 2, 0>
 {
     MIRType type_;
@@ -81,10 +92,36 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LBoxToDouble : public LInstructionHelper<1, 2, 1>
+class LUnboxDouble : public LInstructionHelper<1, 2, 1>
 {
   public:
-    LIR_HEADER(BoxToDouble);
+    LIR_HEADER(UnboxDouble);
+
+    LUnboxDouble() {
+        setTemp(0, LDefinition(LDefinition::DOUBLE));
+    }
+};
+
+class LUnboxDoubleSSE41 : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(UnboxDoubleSSE41);
+};
+
+// Constant double.
+class LDouble : public LInstructionHelper<1, 0, 0>
+{
+    double d_;
+
+  public:
+    LIR_HEADER(Double);
+
+    LDouble(double d) : d_(d)
+    { }
+
+    double getDouble() const {
+        return d_;
+    }
 };
 
 } // namespace ion

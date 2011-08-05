@@ -62,3 +62,19 @@ AssemblerX86Shared::trace(JSTracer *trc)
     }
 }
 
+void
+AssemblerX86Shared::executableCopy(void *buffer)
+{
+    masm.executableCopy(buffer);
+}
+
+void
+AssemblerX86Shared::processDeferredData(uint8 *code, uint8 *data)
+{
+    for (size_t i = 0; i < data_.length(); i++) {
+        DeferredData *deferred = data_[i];
+        bind(deferred->label(), code, data + deferred->offset());
+        deferred->copy(code, data + deferred->offset());
+    }
+}
+

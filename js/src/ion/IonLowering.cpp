@@ -227,9 +227,16 @@ LIRGenerator::visitAdd(MAdd *ins)
     MDefinition *lhs = ins->getOperand(0);
     MDefinition *rhs = ins->getOperand(1);
 
-    if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+    JS_ASSERT(lhs->type() == rhs->type());
+
+    if (ins->specialization() == MIRType_Int32) {
+        JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
         return lowerForALU(new LAddI, ins, lhs, rhs);
+    }
+    if (ins->specialization() == MIRType_Double) {
+        JS_ASSERT(lhs->type() == MIRType_Double);
+        return lowerForFPU(new LMathD(JSOP_ADD), ins, lhs, rhs);
     }
 
     JS_NOT_REACHED("NYI");

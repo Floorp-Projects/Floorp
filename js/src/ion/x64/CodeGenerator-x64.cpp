@@ -42,6 +42,7 @@
 #include "ion/shared/CodeGenerator-shared-inl.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
+#include "jsnum.h"
 
 using namespace js;
 using namespace js::ion;
@@ -49,6 +50,25 @@ using namespace js::ion;
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
   : CodeGeneratorX86Shared(gen, graph)
 {
+}
+
+bool
+CodeGenerator::visitDouble(LDouble *ins)
+{
+    const LDefinition *temp = ins->getTemp(0);
+    const LDefinition *out = ins->getDef(0);
+
+    jsdpun dpun;
+    dpun.d = ins->getDouble();
+
+    if (dpun.u64 == 0) {
+        masm.xorpd(ToFloatRegister(out), ToFloatRegister(out));
+        return true;
+    }
+
+    masm.movq(ImmWord(dpun.u64), ToRegister(temp));
+    masm.movqsd(ToRegister(temp), ToFloatRegister(out));
+    return true;
 }
 
 bool
@@ -95,7 +115,7 @@ CodeGenerator::visitBox(LBox *box)
         masm.movq(ImmWord(tag), ToRegister(result));
         masm.orq(ToOperand(in), ToRegister(result));
     } else {
-        JS_NOT_REACHED("NYI");
+        masm.movqsd(ToFloatRegister(in), ToRegister(result));
     }
     return true;
 }
@@ -110,6 +130,20 @@ CodeGenerator::visitUnboxInteger(LUnboxInteger *unbox)
     masm.shlq(Imm32(JSVAL_TAG_SHIFT), ToRegister(result));
     masm.cmpl(ToOperand(result), Imm32(JSVAL_TAG_INT32));
     masm.movl(ToOperand(value), ToRegister(result));
+
+    return true;
+}
+
+bool
+CodeGenerator::visitUnboxDouble(LUnboxDouble *unbox)
+{
+    const LAllocation *value = unbox->getOperand(0);
+    const LDefinition *result = unbox->getDef(0);
+    const LDefinition *temp = unbox->getTemp(0);
+
+    masm.movq(ImmWord(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ToRegister(temp));
+    masm.cmpq(ToRegister(value), ToRegister(temp));
+    masm.movqsd(ToRegister(value), ToFloatRegister(result));
 
     return true;
 }
