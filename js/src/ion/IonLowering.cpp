@@ -359,9 +359,6 @@ LIRGenerator::visitBlock(MBasicBlock *block)
 #endif
     }
 
-    // Insert a label - this must be the first instruction in the block.
-    add(new LLabel());
-
     for (MInstructionIterator iter = block->begin(); *iter != block->lastIns(); iter++) {
         if (!visitInstruction(*iter))
             return false;

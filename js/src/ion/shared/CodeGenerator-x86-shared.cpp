@@ -104,23 +104,15 @@ CodeGeneratorX86Shared::generateEpilogue()
 }
 
 bool
-CodeGeneratorX86Shared::visitLabel(LLabel *label)
-{
-    masm.bind(label->label());
-    return true;
-}
-
-bool
 CodeGeneratorX86Shared::visitGoto(LGoto *jump)
 {
     LBlock *target = jump->target()->lir();
-    LLabel *header = target->begin()->toLabel();
 
     // Don't bother emitting a jump if we'll flow through to the next block.
     if (isNextBlock(target))
         return true;
 
-    masm.jmp(header->label());
+    masm.jmp(target->label());
     return true;
 }
 
@@ -135,12 +127,12 @@ CodeGeneratorX86Shared::visitTestIAndBranch(LTestIAndBranch *test)
     masm.testl(ToRegister(opd), ToRegister(opd));
 
     if (isNextBlock(ifFalse)) {
-        masm.j(AssemblerX86Shared::NonZero, ifTrue->begin()->toLabel()->label());
+        masm.j(AssemblerX86Shared::NonZero, ifTrue->label());
     } else if (isNextBlock(ifTrue)) {
-        masm.j(AssemblerX86Shared::Zero, ifFalse->begin()->toLabel()->label());
+        masm.j(AssemblerX86Shared::Zero, ifFalse->label());
     } else {
-        masm.j(AssemblerX86Shared::Zero, ifFalse->begin()->toLabel()->label());
-        masm.jmp(ifTrue->begin()->toLabel()->label());
+        masm.j(AssemblerX86Shared::Zero, ifFalse->label());
+        masm.jmp(ifTrue->label());
     }
     return true;
 }
