@@ -64,6 +64,11 @@ var popupTests = [
     if (window.opener)
       is(window.opener.document.popupNode, null, testname + " opener.document.popupNode");
 
+    // this will be used in some tests to ensure the size doesn't change
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    gPopupWidth = Math.round(popuprect.width);
+    gPopupHeight = Math.round(popuprect.height);
+
     checkActive(gMenuPopup, "", testname);
     checkOpen("trigger", testname);
     // if a menu, the popup should be opened underneath the menu in the
@@ -244,6 +249,67 @@ var popupTests = [
                     step == "start_after" || step == "end_after";
     compareEdge(gTrigger, gMenuPopup, step, rightmod ? 8 : -8, bottommod ? 8 : -8, testname);
     gMenuPopup.removeAttribute("style");
+  }
+},
+ {
+  testname: "open popup with large positive margin",
+  events: [ "popupshowing thepopup", "popupshown thepopup" ],
+  autohide: "thepopup",
+  steps: ["before_start", "before_end", "after_start", "after_end",
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
+  test: function(testname, step) {
+    gMenuPopup.setAttribute("style", "margin: 1000px;");
+    gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
+  },
+  result: function(testname, step) {
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    // as there is more room on the 'end' or 'after' side, popups will always
+    // appear on the right or bottom corners, depending on which side they are
+    // allowed to be flipped by.
+    var expectedleft = step == "before_end" || step == "after_end" ?
+                       0 : Math.round(window.innerWidth - gPopupWidth);
+    var expectedtop = step == "start_after" || step == "end_after" ?
+                      0 : Math.round(window.innerHeight - gPopupHeight);
+    is(Math.round(popuprect.left), expectedleft, testname + " x position " + step);
+    is(Math.round(popuprect.top), expectedtop, testname + " y position " + step);
+    gMenuPopup.removeAttribute("style");
+  }
+},
+{
+  testname: "open popup with large negative margin",
+  events: [ "popupshowing thepopup", "popupshown thepopup" ],
+  autohide: "thepopup",
+  steps: ["before_start", "before_end", "after_start", "after_end",
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
+  test: function(testname, step) {
+    gMenuPopup.setAttribute("style", "margin: -1000px;");
+    gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
+  },
+  result: function(testname, step) {
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    // using negative margins causes the reverse of positive margins, and
+    // popups will appear on the left or top corners.
+    var expectedleft = step == "before_end" || step == "after_end" ?
+                       Math.round(window.innerWidth - gPopupWidth) : 0;
+    var expectedtop = step == "start_after" || step == "end_after" ?
+                      Math.round(window.innerHeight - gPopupHeight) : 0;
+    is(Math.round(popuprect.left), expectedleft, testname + " x position " + step);
+    is(Math.round(popuprect.top), expectedtop, testname + " y position " + step);
+    gMenuPopup.removeAttribute("style");
+  }
+},
+{
+  testname: "popup with unknown step",
+  events: [ "popupshowing thepopup", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test: function() {
+    gMenuPopup.openPopup(gTrigger, "other", 0, 0, false, false);
+  },
+  result: function (testname) {
+    var triggerrect = gMenuPopup.getBoundingClientRect();
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    is(Math.round(popuprect.left), triggerrect.left, testname + " x position ");
+    is(Math.round(popuprect.top), triggerrect.top, testname + " y position ");
   }
 },
 {

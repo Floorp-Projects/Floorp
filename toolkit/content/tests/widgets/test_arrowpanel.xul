@@ -10,10 +10,10 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
 
 <stack flex="1">
-  <label id="topleft" value="Top Left" left="0" top="0"/>
-  <label id="topright" value="Top Right" right="0" top="0"/>
-  <label id="bottomleft" value="Bottom Left" left="0" bottom="0"/>
-  <label id="bottomright" value="Bottom Right" right="0" bottom="0"/>
+  <label id="topleft" value="Top Left" left="15" top="15"/>
+  <label id="topright" value="Top Right" right="15" top="15"/>
+  <label id="bottomleft" value="Bottom Left" left="15" bottom="15"/>
+  <label id="bottomright" value="Bottom Right" right="15" bottom="15"/>
   <!-- Our SimpleTest/TestRunner.js runs tests inside an iframe which sizes are W=500 H=300.
        'left' and 'top' values need to be set so that the panel (popup) has enough room to display on its 4 sides. -->
   <label id="middle" value="+/- Centered" left="225" top="135"/>
