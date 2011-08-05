@@ -374,13 +374,8 @@ GreedyAllocator::allocateSameAsInput(LDefinition *def, LAllocation *a, AnyRegist
     JS_ASSERT(disallowed.has(reg));
 
     if (vuse->hasRegister()) {
-        // Load the actual register into the desired input operand.
-        LAllocation from;
-        if (vuse->hasRegister())
-            from = LAllocation(vuse->reg());
-        else
-            from = vuse->backingStack();
-        if (!align(from, reg))
+        JS_ASSERT(vuse->reg() != reg);
+        if (!align(vuse->reg(), reg))
             return false;
     } else {
         // If the input has no register, we can just re-use the output register
@@ -559,6 +554,25 @@ GreedyAllocator::informSnapshot(LSnapshot *snapshot)
     return true;
 }
 
+void
+GreedyAllocator::assertValidRegisterState()
+{
+#ifdef DEBUG
+    // Assert that for each taken register in state.free, that it maps to a vr
+    // and that that vr has that register.
+    for (AnyRegisterIterator iter; iter.more(); iter++) {
+        AnyRegister reg = *iter;
+        VirtualRegister *vr = state[reg];
+        if (!reg.allocatable()) {
+            JS_ASSERT(!vr);
+            continue;
+        }
+        JS_ASSERT(!vr == state.free.has(reg));
+        JS_ASSERT_IF(vr, vr->reg() == reg);
+    }
+#endif
+}
+
 bool
 GreedyAllocator::allocateRegistersInBlock(LBlock *block)
 {
@@ -573,6 +587,7 @@ GreedyAllocator::allocateRegistersInBlock(LBlock *block)
 
         // Reset internal state used for evicting.
         reset();
+        assertValidRegisterState();
 
         // Step 1. Find all fixed writable registers, adding them to the
         // disallow set.
@@ -605,6 +620,8 @@ GreedyAllocator::allocateRegistersInBlock(LBlock *block)
             block->insertBefore(ins, aligns);
             ri++;
         }
+
+        assertValidRegisterState();
     }
     return true;
 }
@@ -813,17 +830,20 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
     LBlock *leftblock = mblock->getSuccessor(0)->lir();
     state = blockInfo(leftblock)->in;
 
+    // To complete inheriting our successor's state, make sure each taken
+    // register is applied to the def for which it was intended.
+    for (AnyRegisterIterator iter; iter.more(); iter++) {
+        AnyRegister reg = *iter;
+        if (VirtualRegister *vr = state[reg])
+            vr->setRegister(reg);
+    }
+
     // Merge state from each additional successor.
     for (size_t i = 1; i < mblock->numSuccessors(); i++) {
         LBlock *rightblock = mblock->getSuccessor(i)->lir();
 
-        for (size_t i = 0; i < Registers::Total; i++) {
-            AnyRegister reg = AnyRegister(Register::FromCode(i));
-            if (!mergeRegisterState(reg, leftblock, rightblock))
-                return false;
-        }
-        for (size_t i = 0; i < FloatRegisters::Total; i++) {
-            AnyRegister reg = AnyRegister(FloatRegister::FromCode(i));
+        for (AnyRegisterIterator iter; iter.more(); iter++) {
+            AnyRegister reg = *iter;
             if (!mergeRegisterState(reg, leftblock, rightblock))
                 return false;
         }
@@ -870,9 +890,20 @@ GreedyAllocator::allocateRegisters()
             kill(vr);
         }
 
-        // At the top of the block, copy our allocation state for our
-        // predecessors.
+        // We've reached the top of the block. Save the mapping of registers to
+        // definitions, as our predecessors will need this to merge state.
+        // Then, clear the register assignments to all defs. This is necessary
+        // otherwise block A's state could be left around for completely
+        // independent block B, which never actually allocated for that def.
         blockInfo(block)->in = state;
+        for (AnyRegisterIterator iter; iter.more(); iter++) {
+            AnyRegister reg = *iter;
+            VirtualRegister *vr = state[reg];
+            if (vr) {
+                JS_ASSERT(vr->reg() == reg);
+                vr->unsetRegister();
+            }
+        }
 
         // If this is a loop header, insert moves at the backedge from phi
         // inputs to phi outputs.
