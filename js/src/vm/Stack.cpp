@@ -581,21 +581,24 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
      * To avoid pathological behavior here, make sure to mark any topmost
      * function as uninlineable, which will expand inline frames if there are
      * any and prevent the function from being inlined in the future.
+     *
+     * We can only do this if we are allowed to report errors --- otherwise the
+     * function's compartment may not be consistent with cx->compartment
+     * (cross-compartment call or SaveFrameChain). In such cases the caller
+     * must have already expanded inline frames.
      */
-    if (cx->hasfp() && cx->fp()->isFunctionFrame() && cx->fp()->fun()->isInterpreted()) {
-        if (report) {
-            /*
-             * N.B. if we can't report errors then cx->compartment may not be
-             * consistent with the function's compartment (cross-compartment
-             * call or SaveFrameChain). In such cases the caller must have
-             * already expanded inline frames.
-             */
-            cx->fp()->fun()->script()->uninlineable = true;
-            types::MarkTypeObjectFlags(cx, cx->fp()->fun(),
-                                       types::OBJECT_FLAG_UNINLINEABLE);
+    if (cx->hasfp() && report) {
+        JSFunction *fun = NULL;
+        if (cx->regs().inlined())
+            fun = cx->fp()->jit()->inlineFrames()[cx->regs().inlined()->inlineIndex].fun;
+        else if (cx->fp()->isFunctionFrame() && cx->fp()->fun()->isInterpreted())
+            fun = cx->fp()->fun();
+        if (fun) {
+            fun->script()->uninlineable = true;
+            types::MarkTypeObjectFlags(cx, fun, types::OBJECT_FLAG_UNINLINEABLE);
         }
-        JS_ASSERT(!cx->regs().inlined());
     }
+    JS_ASSERT_IF(cx->hasfp(), !cx->regs().inlined());
 #endif
 
     if (onTop() && extend) {
