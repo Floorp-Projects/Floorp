@@ -257,7 +257,7 @@ ClientEngine.prototype = {
    * @return false to abort sync
    */
   processIncomingCommands: function processIncomingCommands() {
-    this._notify("clients:process-commands", "", function() {
+    return this._notify("clients:process-commands", "", function() {
       let commands = this.localCommands;
 
       // Immediately clear out the commands as we've got them locally.
