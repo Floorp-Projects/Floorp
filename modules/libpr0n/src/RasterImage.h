@@ -545,13 +545,13 @@ private: // data
 
   // Helpers
   void DoError();
-  PRBool CanDiscard();
-  PRBool CanForciblyDiscard();
-  PRBool DiscardingActive();
-  PRBool StoringSourceData();
+  bool CanDiscard();
+  bool CanForciblyDiscard();
+  bool DiscardingActive();
+  bool StoringSourceData();
 
 protected:
-  PRBool ShouldAnimate();
+  bool ShouldAnimate();
 };
 
 // XXXdholbert These helper classes should move to be inside the

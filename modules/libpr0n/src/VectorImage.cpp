@@ -301,7 +301,7 @@ VectorImage::StopAnimation()
   return NS_OK;
 }
 
-PRBool
+bool
 VectorImage::ShouldAnimate()
 {
   return Image::ShouldAnimate() && mIsFullyLoaded && mHaveAnimations;
