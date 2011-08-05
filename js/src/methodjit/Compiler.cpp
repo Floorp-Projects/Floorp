@@ -5299,7 +5299,7 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
         pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));
         stubcc.leave();
         passICAddress(&pic);
-        pic.slowPathCall = OOL_STUBCALL(ic::BindName, REJOIN_BINDNAME);
+        pic.slowPathCall = OOL_STUBCALL(ic::BindName, REJOIN_FALLTHROUGH);
         CHECK_OOL_SPACE();
     }
 
@@ -5370,10 +5370,10 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
     stubcc.linkExit(j, Uses(0));
     stubcc.leave();
     if (usePropCache) {
-        OOL_STUBCALL(stubs::BindName, REJOIN_BINDNAME);
+        OOL_STUBCALL(stubs::BindName, REJOIN_FALLTHROUGH);
     } else {
         stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
-        OOL_STUBCALL(stubs::BindNameNoCache, REJOIN_BINDNAME);
+        OOL_STUBCALL(stubs::BindNameNoCache, REJOIN_FALLTHROUGH);
     }
 
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);

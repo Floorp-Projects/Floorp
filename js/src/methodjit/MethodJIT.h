@@ -304,7 +304,6 @@ enum RejoinState {
     REJOIN_CALL_SPLAT,
 
     /* FALLTHROUGH ops which can be implemented as part of an IncOp. */
-    REJOIN_BINDNAME,
     REJOIN_GETTER,
     REJOIN_POS,
     REJOIN_BINARY,
