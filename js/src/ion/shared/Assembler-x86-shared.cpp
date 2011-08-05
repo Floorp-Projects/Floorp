@@ -78,3 +78,11 @@ AssemblerX86Shared::processDeferredData(uint8 *code, uint8 *data)
     }
 }
 
+void
+AssemblerX86Shared::processCodeLabels(uint8 *code)
+{
+    for (size_t i = 0; i < codeLabels_.length(); i++) {
+        CodeLabel *label = codeLabels_[i];
+        bind(label->dest(), code, code + label->src()->offset());
+    }
+}

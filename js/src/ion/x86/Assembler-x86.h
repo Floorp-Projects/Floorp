@@ -179,6 +179,13 @@ class Assembler : public AssemblerX86Shared
     void mov(const Register &src, const Operand &dest) {
         movl(src, dest);
     }
+    void mov(AbsoluteLabel *label, const Register &dest) {
+        JS_ASSERT(!label->bound());
+        // Thread the patch list through the unpatched address word in the
+        // instruction stream.
+        masm.movl_i32r(label->prev(), dest.code());
+        label->setPrev(masm.size());
+    }
 
     void jmp(void *target, Relocation::Kind reloc) {
         JmpSrc src = masm.jmp();

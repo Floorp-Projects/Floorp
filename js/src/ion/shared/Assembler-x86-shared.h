@@ -63,6 +63,7 @@ class AssemblerX86Shared
     };
 
     js::Vector<DeferredData *, 0, SystemAllocPolicy> data_;
+    js::Vector<CodeLabel *, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     CompactBufferWriter relocations_;
     size_t dataBytesNeeded_;
@@ -112,6 +113,7 @@ class AssemblerX86Shared
 
     void executableCopy(void *buffer);
     void processDeferredData(uint8 *code, uint8 *data);
+    void processCodeLabels(uint8 *code);
     void copyRelocationTable(uint8 *buffer);
 
     bool addDeferredData(DeferredData *data, size_t bytes) {
@@ -120,6 +122,10 @@ class AssemblerX86Shared
         if (dataBytesNeeded_ >= MAX_BUFFER_SIZE)
             return false;
         return data_.append(data);
+    }
+    
+    bool addCodeLabel(CodeLabel *label) {
+        return codeLabels_.append(label);
     }
 
     // Size of the instruction stream, in bytes.
