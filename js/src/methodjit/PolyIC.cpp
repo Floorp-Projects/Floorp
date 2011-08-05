@@ -2675,7 +2675,7 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
 
     Jump done = masm.jump();
 
-    updatePCCounters(masm);
+    updatePCCounters(cx, masm);
 
     PICLinker buffer(masm, *this);
     if (!buffer.init(cx))
