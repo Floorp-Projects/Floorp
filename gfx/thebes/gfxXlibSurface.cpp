@@ -56,7 +56,7 @@ using namespace mozilla;
 #define XLIB_IMAGE_SIDE_SIZE_LIMIT 0x7fff
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
+    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mGLXPixmap(None)
 {
     DoSizeQuery();
     cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mSize.width, mSize.height);
@@ -64,7 +64,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
 }
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size)
-    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
+    : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size), mGLXPixmap(None)
 {
     NS_ASSERTION(CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
                  "Bad size");
@@ -76,7 +76,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, 
 gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFormat *format,
                                const gfxIntSize& size)
     : mPixmapTaken(PR_FALSE), mDisplay(DisplayOfScreen(screen)),
-      mDrawable(drawable), mSize(size)
+      mDrawable(drawable), mSize(size), mGLXPixmap(None)
 {
     NS_ASSERTION(CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
                  "Bad Size");
@@ -91,7 +91,8 @@ gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFor
 gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
     : mPixmapTaken(PR_FALSE),
       mSize(cairo_xlib_surface_get_width(csurf),
-            cairo_xlib_surface_get_height(csurf))
+            cairo_xlib_surface_get_height(csurf)),
+      mGLXPixmap(None)
 {
     NS_PRECONDITION(cairo_surface_status(csurf) == 0,
                     "Not expecting an error surface");
@@ -104,6 +105,9 @@ gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
 
 gfxXlibSurface::~gfxXlibSurface()
 {
+    if (mGLXPixmap) {
+        gl::sGLXLibrary.DestroyPixmap(mGLXPixmap);
+    }
     // gfxASurface's destructor calls RecordMemoryFreed().
     if (mPixmapTaken) {
         XFreePixmap (mDisplay, mDrawable);
@@ -522,6 +526,16 @@ gfxXlibSurface::XRenderFormat()
 {
     return cairo_xlib_surface_get_xrender_format(CairoSurface());
 }
+
+GLXPixmap
+gfxXlibSurface::GetGLXPixmap()
+{
+    if (!mGLXPixmap) {
+        mGLXPixmap = gl::sGLXLibrary.CreatePixmap(this);
+    }
+    return mGLXPixmap;
+}
+
 
 gfxASurface::MemoryLocation
 gfxXlibSurface::GetMemoryLocation() const
