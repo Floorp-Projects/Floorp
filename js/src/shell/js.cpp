@@ -3358,7 +3358,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         sd.threads[i].fn = JSVAL_NULL;
 
         ok = JS_AddValueRoot(cx, &sd.threads[i].fn);
-        if (ok && !JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn)) {
+        if (ok && !JS_GetElement(cx, inArr, i, &sd.threads[i].fn)) {
             JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             ok = JS_FALSE;
         }
