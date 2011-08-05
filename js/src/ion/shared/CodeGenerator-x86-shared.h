@@ -86,7 +86,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool generateEpilogue();
 
   public:
-    virtual bool visitLabel(LLabel *label);
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitBitOp(LBitOp *ins);

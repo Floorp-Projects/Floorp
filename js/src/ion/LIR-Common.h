@@ -49,21 +49,6 @@
 namespace js {
 namespace ion {
 
-// Assembly label marker placed at the top of blocks.
-class LLabel : public LInstructionHelper<0, 0, 0>
-{
-    Label label_;
-
-  public:
-    LIR_HEADER(Label);
-
-    LLabel()
-    { }
-    Label *label() {
-        return &label_;
-    }
-};
-
 class LMove
 {
     LAllocation *from_;
@@ -349,12 +334,6 @@ class LPhi : public LInstruction
         printOperands(fp);
     }
 };
-
-Label *
-LBlock::label()
-{
-    return instructions_.begin()->toLabel()->label();
-}
 
 } // namespace ion
 } // namespace js
