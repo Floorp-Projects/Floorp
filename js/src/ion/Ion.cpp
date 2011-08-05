@@ -193,6 +193,8 @@ IonCode::copyFrom(MacroAssembler &masm)
     insnSize_ = masm.instructionsSize();
     masm.executableCopy(code_);
 
+    masm.processCodeLabels(code_);
+
     dataSize_ = masm.dataSize();
     masm.processDeferredData(code_, code_ + dataOffset());
 

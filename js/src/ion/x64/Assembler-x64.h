@@ -289,6 +289,14 @@ class Assembler : public AssemblerX86Shared
     void mov(const Register &src, const Register &dest) {
         masm.movq_rr(src.code(), dest.code());
     }
+    void mov(AbsoluteLabel *label, const Register &dest) {
+        JS_ASSERT(!label->bound());
+        // Thread the patch list through the unpatched address word in the
+        // instruction stream.
+        masm.movq_i64r(label->prev(), dest.code());
+        label->setPrev(masm.size());
+    }
+
     // The below cmpq methods switch the lhs and rhs when it invokes the
     // macroassembler to conform with intel standard.  When calling this
     // function put the left operand on the left as you would expect.
