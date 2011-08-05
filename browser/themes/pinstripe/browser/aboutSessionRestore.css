@@ -36,13 +36,39 @@
  * ***** END LICENSE BLOCK ***** */
 %endif
 
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  text-align: center;
+}
+
 #errorPageContainer {
   background-image: url("chrome://global/skin/icons/warning-64.png");
+  display: -moz-box;
+  width: -moz-available;
+  height: 70%;
+  -moz-box-orient: vertical;
+  text-align: start;
+}
+
+#errorShortDesc > p {
+  margin-top: 0.4em;
+  margin-bottom: 0;
+}
+
+#errorLongContent, #errorTrailerDesc {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
 }
 
 #tabList {
+  margin-top: 2.5em;
   width: 100%;
-  height: 12em;
+  min-height: 12em;
 }
 
 treechildren::-moz-tree-image(icon),
