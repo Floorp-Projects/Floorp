@@ -1607,7 +1607,7 @@ class ScopeNameCompiler : public PICStubCompiler
         return disable("scope object not handled yet");
     }
 
-    bool retrieve(Value *vp, Value *thisvp)
+    bool retrieve(Value *vp, Value *thisvp, PICInfo::Kind kind)
     {
         JSObject *obj = getprop.obj;
         JSObject *holder = getprop.holder;
@@ -1615,8 +1615,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         if (!prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
-            disable("property not found");
-            if (pic.kind == ic::PICInfo::NAME) {
+            if (kind == ic::PICInfo::NAME) {
                 JSOp op2 = js_GetOpcode(cx, f.script(), f.pc() + JSOP_NAME_LENGTH);
                 if (op2 == JSOP_TYPEOF) {
                     vp->setUndefined();
@@ -2091,7 +2090,7 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
         THROW();
 
     Value rval;
-    if (!cc.retrieve(&rval, NULL))
+    if (!cc.retrieve(&rval, NULL, PICInfo::XNAME))
         THROW();
     f.regs.sp[-1] = rval;
 
@@ -2110,7 +2109,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
 
     Value rval;
-    if (!cc.retrieve(&rval, NULL))
+    if (!cc.retrieve(&rval, NULL, PICInfo::NAME))
         THROW();
     f.regs.sp[0] = rval;
 
@@ -2135,7 +2134,7 @@ ic::CallName(VMFrame &f, ic::PICInfo *pic)
         THROW();
 
     Value rval, thisval;
-    if (!cc.retrieve(&rval, &thisval))
+    if (!cc.retrieve(&rval, &thisval, PICInfo::CALLNAME))
         THROW();
 
     f.regs.sp[0] = rval;
