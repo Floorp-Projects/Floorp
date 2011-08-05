@@ -916,6 +916,16 @@ public:
                     nsSize aIntrinsicRatio, nsSize aCBSize,
                     nsSize aMargin, nsSize aBorder, nsSize aPadding);
 
+  /*
+   * Calculate the used values for 'width' and 'height' when width
+   * and height are 'auto'. The tentWidth and tentHeight arguments should be
+   * the result of applying the rules for computing intrinsic sizes and ratios.
+   * as specified by CSS 2.1 sections 10.3.2 and 10.6.2
+   */
+  static nsSize ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord minHeight,
+                                                       nscoord maxWidth, nscoord maxHeight,
+                                                       nscoord tentWidth, nscoord tentHeight);
+
   // Implement nsIFrame::GetPrefWidth in terms of nsIFrame::AddInlinePrefWidth
   static nscoord PrefWidthFromInline(nsIFrame* aFrame,
                                      nsRenderingContext* aRenderingContext);
