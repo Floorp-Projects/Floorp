@@ -300,7 +300,7 @@ LinearScanAllocator::createDataStructures()
 {
     allowedRegs = RegisterSet::All();
 
-    liveIn = lir->mir()->allocate<BitSet*>(graph.maxBlockId() + 1);
+    liveIn = lir->mir()->allocate<BitSet*>(graph.numBlockIds());
     freeUntilPos = lir->mir()->allocate<CodePosition>(Registers::Total);
     nextUsePos = lir->mir()->allocate<CodePosition>(Registers::Total);
     if (!liveIn || !freeUntilPos || !nextUsePos)

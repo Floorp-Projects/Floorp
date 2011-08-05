@@ -892,8 +892,8 @@ GreedyAllocator::allocate()
         return false;
     memset(vars, 0, sizeof(VirtualRegister) * graph.numVirtualRegisters());
 
-    blocks = gen->allocate<BlockInfo>(graph.numBlocks());
-    for (size_t i = 0; i < graph.numBlocks(); i++)
+    blocks = gen->allocate<BlockInfo>(graph.numBlockIds());
+    for (size_t i = 0; i < graph.numBlockIds(); i++)
         new (&blocks[i]) BlockInfo();
 
     findDefinitions();

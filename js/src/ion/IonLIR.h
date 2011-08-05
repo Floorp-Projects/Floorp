@@ -825,8 +825,8 @@ class LIRGraph
     LBlock *getBlock(size_t i) const {
         return blocks_[i];
     }
-    uint32 maxBlockId() const {
-        return mir_.maxBlockId();
+    uint32 numBlockIds() const {
+        return mir_.numBlockIds();
     }
     bool addBlock(LBlock *block) {
         return blocks_.append(block);
