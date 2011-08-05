@@ -149,7 +149,7 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   const TelemetryHistogram &p = gHistograms[id];
   nsresult rv = HistogramGet(p.id, p.min, p.max, p.bucketCount, p.histogramType, &h);
   if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+    return rv;
 
   *ret = knownHistograms[id] = h;
   return NS_OK;
@@ -409,6 +409,14 @@ Accumulate(ID aHistogram, PRUint32 aSample)
   nsresult rv = GetHistogramByEnumId(aHistogram, &h);
   if (NS_SUCCEEDED(rv))
     h->Add(aSample);
+}
+
+base::Histogram*
+GetHistogramById(ID id)
+{
+  Histogram *h = NULL;
+  GetHistogramByEnumId(id, &h);
+  return h;
 }
 
 } // namespace Telemetry
