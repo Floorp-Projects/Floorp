@@ -150,79 +150,6 @@ CERT_VerifySignedData(CERTSignedData *sd, CERTCertificate *cert,
 }
 
 
-/* Software FORTEZZA installation hack. The software fortezza installer does
- * not have access to the krl and cert.db file. Accept FORTEZZA Certs without
- * KRL's in this case. 
- */
-static int dont_use_krl = 0;
-/* not a public exposed function... */
-void sec_SetCheckKRLState(int value) { dont_use_krl = value; }
-
-SECStatus
-SEC_CheckKRL(CERTCertDBHandle *handle,SECKEYPublicKey *key,
-	     CERTCertificate *rootCert, int64 t, void * wincx)
-{
-    CERTSignedCrl *crl = NULL;
-    SECStatus rv = SECFailure;
-    SECStatus rv2;
-    CERTCrlEntry **crlEntry;
-    SECCertTimeValidity validity;
-    CERTCertificate *issuerCert = NULL;
-
-    if (dont_use_krl) return SECSuccess;
-
-    /* first look up the KRL */
-    crl = SEC_FindCrlByName(handle,&rootCert->derSubject, SEC_KRL_TYPE);
-    if (crl == NULL) {
-	PORT_SetError(SEC_ERROR_NO_KRL);
-	goto done;
-    }
-
-    /* get the issuing certificate */
-    issuerCert = CERT_FindCertByName(handle, &crl->crl.derName);
-    if (issuerCert == NULL) {
-        PORT_SetError(SEC_ERROR_KRL_BAD_SIGNATURE);
-        goto done;
-    }
-
-
-    /* now verify the KRL signature */
-    rv2 = CERT_VerifySignedData(&crl->signatureWrap, issuerCert, t, wincx);
-    if (rv2 != SECSuccess) {
-	PORT_SetError(SEC_ERROR_KRL_BAD_SIGNATURE);
-    	goto done;
-    }
-
-    /* Verify the date validity of the KRL */
-    validity = SEC_CheckCrlTimes(&crl->crl, t);
-    if (validity == secCertTimeExpired) {
-	PORT_SetError(SEC_ERROR_KRL_EXPIRED);
-	goto done;
-    }
-
-    /* now make sure the key in this cert is still valid */
-    if (key->keyType != fortezzaKey) {
-	PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
-	goto done; /* This should be an assert? */
-    }
-
-    /* now make sure the key is not on the revocation list */
-    for (crlEntry = crl->crl.entries; crlEntry && *crlEntry; crlEntry++) {
-	if (PORT_Memcmp((*crlEntry)->serialNumber.data,
-				key->u.fortezza.KMID,
-				    (*crlEntry)->serialNumber.len) == 0) {
-	    PORT_SetError(SEC_ERROR_REVOKED_KEY);
-	    goto done;
-	}
-    }
-    rv = SECSuccess;
-
-done:
-    if (issuerCert) CERT_DestroyCertificate(issuerCert);
-    if (crl) SEC_DestroyCrl(crl);
-    return rv;
-}
-
 SECStatus
 SEC_CheckCRL(CERTCertDBHandle *handle,CERTCertificate *cert,
 	     CERTCertificate *caCert, int64 t, void * wincx)
@@ -405,85 +332,6 @@ cert_AddToVerifyLog(CERTVerifyLog *log, CERTCertificate *cert, unsigned long err
 	cert_AddToVerifyLog(log, cert, PORT_GetError(), depth, (void *)arg); \
     }
 
-
-typedef enum { cbd_None, cbd_User, cbd_CA } cbd_FortezzaType;
-
-static SECStatus
-cert_VerifyFortezzaV1Cert(CERTCertDBHandle *handle, CERTCertificate *cert,
-	cbd_FortezzaType *next_type, cbd_FortezzaType last_type,
-	int64 t, void *wincx)
-{
-    unsigned char priv = 0;
-    SECKEYPublicKey *key;
-    SECStatus rv;
-
-    *next_type = cbd_CA;
-
-    /* read the key */
-    key = CERT_ExtractPublicKey(cert);
-
-    /* Cant' get Key? fail. */
-    if (key == NULL) {
-    	PORT_SetError(SEC_ERROR_BAD_KEY);
-	return SECFailure;
-    }
-
-
-    /* if the issuer is not an old fortezza cert, we bail */
-    if (key->keyType != fortezzaKey) {
-    	SECKEY_DestroyPublicKey(key);
-	/* CA Cert not fortezza */
-    	PORT_SetError(SEC_ERROR_NOT_FORTEZZA_ISSUER);
-	return SECFailure;
-    }
-
-    /* get the privilege mask */
-    if (key->u.fortezza.DSSprivilege.len > 0) {
-	priv = key->u.fortezza.DSSprivilege.data[0];
-    }
-
-    /*
-     * make sure the CA's keys are OK
-     */
-            
-    rv = SEC_CheckKRL(handle, key, NULL, t, wincx);
-    SECKEY_DestroyPublicKey(key);
-    if (rv != SECSuccess) {
-	return rv;
-    }
-
-    switch (last_type) {
-      case cbd_User:
-	/* first check for subordination */
-	/*rv = FortezzaSubordinateCheck(cert,issuerCert);*/
-	rv = SECSuccess;
-
-	/* now check for issuer privilege */
-	if ((rv != SECSuccess) || ((priv & 0x10) == 0)) {
-	    /* bail */
-	    PORT_SetError (SEC_ERROR_CA_CERT_INVALID);
-	    return SECFailure;
-	}
-	break;
-      case cbd_CA:
-	if ((priv & 0x20) == 0) {
-	    /* bail */
-	    PORT_SetError (SEC_ERROR_CA_CERT_INVALID);
-	    return SECFailure;
-	}
-	break;
-      case cbd_None:
-	*next_type = (priv & 0x30) ? cbd_CA : cbd_User;
-	break;
-      default:
-	/* bail */ /* shouldn't ever happen */
-    	PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);
-	return SECFailure;
-    }
-    return SECSuccess;
-}
-
-
 static SECStatus
 cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 		     PRBool checkSig, PRBool* sigerror,
@@ -496,7 +344,6 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
     CERTCertificate *subjectCert = NULL;
     CERTCertificate *badCert = NULL;
     PRBool isca;
-    PRBool isFortezzaV1 = PR_FALSE;
     SECStatus rv;
     SECStatus rvFinal = SECSuccess;
     int count;
@@ -511,8 +358,6 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
     int certsListLen = 16;
     int namesCount = 0;
     PRBool subjectCertIsSelfIssued;
-
-    cbd_FortezzaType last_type = cbd_None;
 
     if (revoked) {
         *revoked = PR_FALSE;
@@ -560,21 +405,6 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
     subjectCert = CERT_DupCertificate(cert);
     if ( subjectCert == NULL ) {
 	goto loser;
-    }
-
-    /* determine if the cert is fortezza.
-     */
-    isFortezzaV1 = (PRBool)
-	(CERT_GetCertKeyType(&subjectCert->subjectPublicKeyInfo) 
-							== fortezzaKey);
-
-    if (isFortezzaV1) {
-	rv = cert_VerifyFortezzaV1Cert(handle, subjectCert, &last_type, 
-						cbd_None, t, wincx);
-	if (rv == SECFailure) {
-	    /**** PORT_SetError is already set by cert_VerifyFortezzaV1Cert **/
-	    LOG_ERROR_OR_EXIT(log,subjectCert,0,0);
-	}
     }
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -663,19 +493,6 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    }
 	}
 
-	/*
-	 * XXX - fortezza may need error logging stuff added
-	 */
-	if (isFortezzaV1) {
-	    rv = cert_VerifyFortezzaV1Cert(handle, issuerCert, &last_type, 
-					last_type, t, wincx);
-	    if (rv == SECFailure) {
-		/**** PORT_SetError is already set by *
-		 * cert_VerifyFortezzaV1Cert **/
-		LOG_ERROR_OR_EXIT(log,subjectCert,0,0);
-	    }
-	}
-
 	/* If the basicConstraint extension is included in an immediate CA
 	 * certificate, make sure that the isCA flag is on.  If the
 	 * pathLenConstraint component exists, it must be greater than the
@@ -683,12 +500,6 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 	 * is omitted, we will assume that this is a CA certificate with
 	 * an unlimited pathLenConstraint (since it already passes the
 	 * netscape-cert-type extension checking).
-	 *
-	 * In the fortezza (V1) case, we've already checked the CA bits
-	 * in the key, so we're presumed to be a CA; however we really don't
-	 * want to bypass Basic constraint or netscape extension parsing.
-         * 
-         * In Fortezza V2, basicConstraint will be set for every CA,PCA,PAA
 	 */
 
 	rv = CERT_FindBasicConstraintExten(issuerCert, &basicConstraint);
@@ -697,10 +508,8 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 		LOG_ERROR_OR_EXIT(log,issuerCert,count+1,0);
 	    } 
 	    pathLengthLimit = CERT_UNLIMITED_PATH_CONSTRAINT;
-	    /* no basic constraints found, if we're fortezza, CA bit is already
-	     * verified (isca = PR_TRUE). otherwise, we aren't (yet) a ca
-	     * isca = PR_FALSE */
-	    isca = isFortezzaV1;
+	    /* no basic constraints found, we aren't (yet) a CA. */
+	    isca = PR_FALSE;
 	} else  {
 	    if ( basicConstraint.isCA == PR_FALSE ) {
 		PORT_SetError (SEC_ERROR_CA_CERT_INVALID);
@@ -960,12 +769,6 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
      * is omitted, we will assume that this is a CA certificate with
      * an unlimited pathLenConstraint (since it already passes the
      * netscape-cert-type extension checking).
-     *
-     * In the fortezza (V1) case, we've already checked the CA bits
-     * in the key, so we're presumed to be a CA; however we really don't
-     * want to bypass Basic constraint or netscape extension parsing.
-     * 
-     * In Fortezza V2, basicConstraint will be set for every CA,PCA,PAA
      */
 
     rv = CERT_FindBasicConstraintExten(cert, &basicConstraint);
@@ -973,9 +776,7 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
 	if (PORT_GetError() != SEC_ERROR_EXTENSION_NOT_FOUND) {
 	    LOG_ERROR_OR_EXIT(log,cert,0,0);
 	} 
-	/* no basic constraints found, if we're fortezza, CA bit is already
-	 * verified (isca = PR_TRUE). otherwise, we aren't (yet) a ca
-	 * isca = PR_FALSE */
+	/* no basic constraints found, we aren't (yet) a CA. */
 	isca = PR_FALSE;
     } else  {
 	if ( basicConstraint.isCA == PR_FALSE ) {

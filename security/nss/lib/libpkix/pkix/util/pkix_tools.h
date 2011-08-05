@@ -349,6 +349,17 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 	} \
     } while (0)
 
+/* like PKIX_CHECK but without goto cleanup */
+#define PKIX_CHECK_NO_GOTO(func, descNum) \
+    do { \
+	pkixErrorResult = (func); \
+	if (pkixErrorResult) { \
+            TRACE_CHECK_FAILURE((func), PKIX_ErrorText[descNum]) \
+	    pkixErrorClass = pkixErrorResult->errClass; \
+	    pkixErrorCode = descNum; \
+	} \
+    } while (0)
+
 #define PKIX_CHECK_ONLY_FATAL(func, descNum) \
     do { \
 	pkixTempErrorReceived = PKIX_FALSE; \
