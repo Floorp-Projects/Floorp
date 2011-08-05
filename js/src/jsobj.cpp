@@ -1274,8 +1274,8 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         esg.setNewScript(compiled);
     }
 
-    return Execute(cx, esg.script(), scopeobj, thisv, ExecuteType(evalType),
-                   NULL /* evalInFrame */, &call.rval());
+    return ExecuteKernel(cx, esg.script(), scopeobj, thisv, ExecuteType(evalType),
+                         NULL /* evalInFrame */, &call.rval());
 }
 
 /*
@@ -1404,8 +1404,8 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
         return true;
 
     Value argv[] = { IdToValue(id), Valueify(old), Valueify(*nvp) };
-    return ExternalInvoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable),
-                          JS_ARRAY_LENGTH(argv), argv, Valueify(nvp));
+    return Invoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), JS_ARRAY_LENGTH(argv), argv,
+                  Valueify(nvp));
 }
 
 static JSBool
@@ -5448,7 +5448,7 @@ JSObject::callMethod(JSContext *cx, jsid id, uintN argc, Value *argv, Value *vp)
 {
     Value fval;
     return js_GetMethod(cx, this, id, JSGET_NO_METHOD_BARRIER, &fval) &&
-           ExternalInvoke(cx, ObjectValue(*this), fval, argc, argv, vp);
+           Invoke(cx, ObjectValue(*this), fval, argc, argv, vp);
 }
 
 JSBool
@@ -5853,7 +5853,7 @@ MaybeCallMethod(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         *vp = ObjectValue(*obj);
         return true;
     }
-    return ExternalInvoke(cx, ObjectValue(*obj), *vp, 0, NULL, vp);
+    return Invoke(cx, ObjectValue(*obj), *vp, 0, NULL, vp);
 }
 
 JSBool

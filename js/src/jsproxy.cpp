@@ -129,10 +129,8 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         *vp = desc.value;
         return true;
     }
-    if (desc.attrs & JSPROP_GETTER) {
-        return ExternalGetOrSet(cx, receiver, id, CastAsObjectJsval(desc.getter),
-                                JSACC_READ, 0, NULL, vp);
-    }
+    if (desc.attrs & JSPROP_GETTER)
+        return InvokeGetterOrSetter(cx, receiver, CastAsObjectJsval(desc.getter), 0, NULL, vp);
     if (!(desc.attrs & JSPROP_SHARED))
         *vp = desc.value;
     else
@@ -275,8 +273,7 @@ JSProxyHandler::call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoValueRooter rval(cx);
-    JSBool ok = ExternalInvoke(cx, vp[1], GetCall(proxy), argc, JS_ARGV(cx, vp),
-                               rval.addr());
+    JSBool ok = Invoke(cx, vp[1], GetCall(proxy), argc, JS_ARGV(cx, vp), rval.addr());
     if (ok)
         JS_SET_RVAL(cx, vp, rval.value());
     return ok;
@@ -289,8 +286,8 @@ JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
     JS_ASSERT(OperationInProgress(cx, proxy));
     Value fval = GetConstruct(proxy);
     if (fval.isUndefined())
-        return ExternalInvokeConstructor(cx, GetCall(proxy), argc, argv, rval);
-    return ExternalInvoke(cx, UndefinedValue(), fval, argc, argv, rval);
+        return InvokeConstructor(cx, GetCall(proxy), argc, argv, rval);
+    return Invoke(cx, UndefinedValue(), fval, argc, argv, rval);
 }
 
 bool
@@ -359,7 +356,7 @@ GetDerivedTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 static bool
 Trap(JSContext *cx, JSObject *handler, Value fval, uintN argc, Value* argv, Value *rval)
 {
-    return ExternalInvoke(cx, ObjectValue(*handler), fval, argc, argv, rval);
+    return Invoke(cx, ObjectValue(*handler), fval, argc, argv, rval);
 }
 
 static bool
@@ -1117,9 +1114,7 @@ proxy_Construct(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *proxy = &JS_CALLEE(cx, vp).toObject();
     JS_ASSERT(proxy->isProxy());
-    Value rval;
-    bool ok = JSProxy::construct(cx, proxy, argc, JS_ARGV(cx, vp), &rval);
-    *vp = rval;
+    bool ok = JSProxy::construct(cx, proxy, argc, JS_ARGV(cx, vp), vp);
     return ok;
 }
 
@@ -1315,9 +1310,7 @@ callable_Call(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(callable->getClass() == &CallableObjectClass);
     const Value &fval = callable->getSlot(JSSLOT_CALLABLE_CALL);
     const Value &thisval = vp[1];
-    Value rval;
-    bool ok = ExternalInvoke(cx, thisval, fval, argc, JS_ARGV(cx, vp), &rval);
-    *vp = rval;
+    bool ok = Invoke(cx, thisval, fval, argc, JS_ARGV(cx, vp), vp);
     return ok;
 }
 
@@ -1355,8 +1348,8 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
 
         /* If the call returns an object, return that, otherwise the original newobj. */
         Value rval;
-        if (!ExternalInvoke(cx, ObjectValue(*newobj), callable->getSlot(JSSLOT_CALLABLE_CALL),
-                            argc, vp + 2, &rval)) {
+        if (!Invoke(cx, ObjectValue(*newobj), callable->getSlot(JSSLOT_CALLABLE_CALL),
+                    argc, vp + 2, &rval)) {
             return false;
         }
         if (rval.isPrimitive())
@@ -1366,9 +1359,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    Value rval;
-    bool ok = ExternalInvoke(cx, ObjectValue(*thisobj), fval, argc, vp + 2, &rval);
-    *vp = rval;
+    bool ok = Invoke(cx, ObjectValue(*thisobj), fval, argc, vp + 2, vp);
     return ok;
 }
 
