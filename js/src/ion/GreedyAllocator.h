@@ -228,6 +228,8 @@ class GreedyAllocator
     }
 
   private:
+    void assertValidRegisterState();
+
     void findDefinitionsInLIR(LInstruction *ins);
     void findDefinitionsInBlock(LBlock *block);
     void findDefinitions();
@@ -300,6 +302,7 @@ class GreedyAllocator
         return RegisterSet::Intersect(state.free, RegisterSet::Not(disallowed));
     }
     BlockInfo *blockInfo(LBlock *block) {
+        JS_ASSERT(block->mir()->id() < graph.numBlocks());
         return &blocks[block->mir()->id()];
     }
 

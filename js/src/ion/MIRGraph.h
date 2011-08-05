@@ -374,6 +374,7 @@ class MIRGraph
 
     void clearBlockList() {
         blocks_.clear();
+        blockIdGen_ = 0;
 #ifdef DEBUG
         numBlocks_ = 0;
 #endif
