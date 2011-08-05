@@ -826,9 +826,6 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
   nsIDocument* doc = GetOwnerDoc();
   NS_ENSURE_STATE(doc);
 
-  // Needed when insertAdjacentHTML is used in combination with contenteditable
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
-
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nsnull);
 
@@ -837,6 +834,9 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
       (position == eBeforeEnd ||
        (position == eAfterEnd && !GetNextSibling()) ||
        (position == eAfterBegin && !GetFirstChild()))) {
+    // Needed when insertAdjacentHTML is used in combination with contenteditable
+    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
+
     PRInt32 oldChildCount = destination->GetChildCount();
     PRInt32 contextNs = destination->GetNameSpaceID();
     nsIAtom* contextLocal = destination->Tag();
