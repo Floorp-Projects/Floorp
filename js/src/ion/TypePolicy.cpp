@@ -85,7 +85,8 @@ BinaryArithPolicy::respecialize(MInstruction *ins)
     // Check if any input would coerce to a double.
     if (CoercesToDouble(lhs->type()) || CoercesToDouble(rhs->type())) {
         if (ins->type() != MIRType_Double) {
-            ins->setResultType(MIRType_Double);
+            specialization_ = MIRType_Double;
+            ins->setResultType(specialization_);
             return true;
         }
     }

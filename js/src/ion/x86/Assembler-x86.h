@@ -66,6 +66,20 @@ static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 static const Register StackPointer = esp;
 
+struct ImmTag : public Imm32
+{
+    ImmTag(JSValueTag mask)
+      : Imm32(int32(mask))
+    { }
+};
+
+struct ImmType : public ImmTag
+{
+    ImmType(JSValueType type)
+      : ImmTag(JSVAL_TYPE_TO_TAG(type))
+    { }
+};
+
 class Operand
 {
   public:
@@ -138,6 +152,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::movl;
     using AssemblerX86Shared::j;
     using AssemblerX86Shared::jmp;
+    using AssemblerX86Shared::movsd;
 
     static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
@@ -172,6 +187,14 @@ class Assembler : public AssemblerX86Shared
     void j(Condition cond, void *target, Relocation::Kind reloc) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
+    }
+
+    void movsd(AbsoluteLabel *label, const FloatRegister &dest) {
+        JS_ASSERT(!label->bound());
+        // Thread the patch list through the unpatched address word in the
+        // instruction stream.
+        masm.movsd_mr(reinterpret_cast<void *>(label->prev()), dest.code());
+        label->setPrev(masm.size());
     }
 };
 

@@ -42,6 +42,7 @@
 #define jsion_assembler_shared_h__
 
 #include <limits.h>
+#include "ion/IonAllocPolicy.h"
 #include "ion/IonRegisters.h"
 
 namespace js {
@@ -93,38 +94,26 @@ class Relocation {
     };
 };
 
-// A label represents a position in an assembly buffer that may or may not have
-// already been generated. Labels can either be "bound" or "unbound", the
-// former meaning that its position is known and the latter that its position
-// is not yet known.
-//
-// A jump to an unbound label adds that jump to the label's incoming queue. A
-// jump to a bound label automatically computes the jump distance. The process
-// of binding a label automatically corrects all incoming jumps.
-struct Label
+struct LabelBase
 {
-  private:
+  protected:
     // offset_ >= 0 means that the label is either bound or has incoming
-    // edges and needs to be bound.
+    // uses and needs to be bound.
     int32 offset_ : 31;
     bool bound_   : 1;
 
     // Disallow assignment.
-    void operator =(const Label &label);
+    void operator =(const LabelBase &label);
 
   public:
     static const int32 INVALID_OFFSET = -1;
 
-    Label() : offset_(INVALID_OFFSET), bound_(false)
+    LabelBase() : offset_(INVALID_OFFSET), bound_(false)
     { }
-    Label(const Label &label)
+    LabelBase(const LabelBase &label)
       : offset_(label.offset_),
         bound_(label.bound_)
     { }
-    ~Label()
-    {
-        JS_ASSERT(!used());
-    }
 
     // If the label is bound, all incoming edges have been patched and any
     // future incoming edges will be immediately patched.
@@ -157,6 +146,78 @@ struct Label
 
         return old;
     }
+};
+
+// A label represents a position in an assembly buffer that may or may not have
+// already been generated. Labels can either be "bound" or "unbound", the
+// former meaning that its position is known and the latter that its position
+// is not yet known.
+//
+// A jump to an unbound label adds that jump to the label's incoming queue. A
+// jump to a bound label automatically computes the jump distance. The process
+// of binding a label automatically corrects all incoming jumps.
+class Label : public LabelBase
+{
+  public:
+    Label()
+    { }
+    Label(const Label &label) : LabelBase(label)
+    { }
+    ~Label()
+    {
+        JS_ASSERT(!used());
+    }
+};
+
+// An absolute label is like a Label, except it represents an absolute
+// reference rather than a relative one. Thus, it cannot be patched until after
+// linking.
+struct AbsoluteLabel : public LabelBase
+{
+  public:
+    AbsoluteLabel()
+    { }
+    AbsoluteLabel(const AbsoluteLabel &label) : LabelBase(label)
+    { }
+    int32 prev() const {
+        JS_ASSERT(!bound());
+        if (!used())
+            return INVALID_OFFSET;
+        return offset();
+    }
+    void setPrev(int32 offset) {
+        use(offset);
+    }
+};
+
+// Deferred data is a chunk of data that cannot be computed until an assembly
+// buffer has been fully allocated, but should be attached to the final code
+// stream. At the time deferred data is emitted, the code buffer has been
+// completely allocated.
+class DeferredData : public TempObject
+{
+    // Label, which before linking is unbound.
+    AbsoluteLabel label_;
+
+    // Offset from the start of the data section.
+    int32 offset_;
+
+  public:
+    DeferredData() : offset_(-1)
+    { }
+    int32 offset() const {
+        JS_ASSERT(offset_ > -1);
+        return offset_;
+    }
+    void setOffset(int32 offset) {
+        offset_ = offset;
+    }
+    AbsoluteLabel *label() {
+        return &label_;
+    }
+
+    // Must copy pending data into the buffer.
+    virtual void copy(uint8 *code, uint8 *buffer) const = 0;
 };
 
 } // namespace ion

@@ -229,6 +229,12 @@ class Assembler : public AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void movqsd(const Register &src, const FloatRegister &dest) {
+        masm.movq_rr(src.code(), dest.code());
+    }
+    void movqsd(const FloatRegister &src, const Register &dest) {
+        masm.movq_rr(src.code(), dest.code());
+    }
 
     void addq(Imm32 imm, const Register &dest) {
         masm.addq_ir(imm.value, dest.code());

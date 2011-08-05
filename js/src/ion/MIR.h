@@ -827,6 +827,9 @@ class MBinaryArithInstruction
     TypePolicy *typePolicy() {
         return this;
     }
+    MIRType specialization() const {
+        return specialization_;
+    }
     void infer(const TypeOracle::Binary &b);
 };
 

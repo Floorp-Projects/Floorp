@@ -134,6 +134,8 @@ class LIRGenerator : public MInstructionVisitor
     typedef LInstructionHelper<1, 2, 0> LMathI;
     virtual bool lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs) = 0;
 
+    virtual bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs) = 0;
+
     uint32 getVirtualRegister() {
         return lirGraph_.getVirtualRegister();
     }
