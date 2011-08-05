@@ -2490,8 +2490,7 @@ JS_DefineElement(JSContext *cx, JSObject *obj, uint32 index, jsval value,
                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
-JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, jsint index,
-                        JSBool *foundp);
+JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, uint32 index, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp);
