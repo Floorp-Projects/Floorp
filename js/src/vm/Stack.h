@@ -44,6 +44,7 @@
 #include "jsfun.h"
 
 struct JSContext;
+struct JSCompartment;
 
 namespace js {
 
@@ -1454,10 +1455,23 @@ class StackSpace
     friend class ContextStack;
     friend class StackFrame;
 
+    /*
+     * Except when changing compartment (see pushDummyFrame), the 'dest'
+     * parameter of ensureSpace is cx->compartment. Ideally, we'd just pass
+     * this directly (and introduce a helper that supplies cx->compartment when
+     * no 'dest' is given). For some compilers, this really hurts performance,
+     * so, instead, a trivially sinkable magic constant is used to indicate
+     * that dest should be cx->compartment.
+     */
+    static const size_t CX_COMPARTMENT = 0xc;
+
     inline bool ensureSpace(JSContext *cx, MaybeReportError report,
-                            Value *from, ptrdiff_t nvals) const;
+                            Value *from, ptrdiff_t nvals,
+                            JSCompartment *dest = (JSCompartment *)CX_COMPARTMENT) const;
     JS_FRIEND_API(bool) ensureSpaceSlow(JSContext *cx, MaybeReportError report,
-                                        Value *from, ptrdiff_t nvals) const;
+                                        Value *from, ptrdiff_t nvals,
+                                        JSCompartment *dest) const;
+
     StackSegment &findContainingSegment(const StackFrame *target) const;
 
   public:
@@ -1558,7 +1572,8 @@ class ContextStack
     StackSegment *pushSegment(JSContext *cx);
     enum MaybeExtend { CAN_EXTEND = true, CANT_EXTEND = false };
     Value *ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
-                       MaybeExtend extend, bool *pushedSeg);
+                       MaybeExtend extend, bool *pushedSeg,
+                       JSCompartment *dest = (JSCompartment *)StackSpace::CX_COMPARTMENT);
 
     inline StackFrame *
     getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
@@ -1639,9 +1654,16 @@ class ContextStack
      */
     bool pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrameGuard *gfg);
 
-    /* Pushes a "dummy" frame; should be removed one day. */
-    bool pushDummyFrame(JSContext *cx, MaybeReportError report, JSObject &scopeChain,
-                        DummyFrameGuard *dfg);
+    /*
+     * When changing the compartment of a cx, it is necessary to immediately
+     * change the scope chain to a global in the right compartment since any
+     * amount of general VM code can run before the first scripted frame is
+     * pushed (if at all). This is currently and hackily accomplished by
+     * pushing a "dummy frame" with the correct scope chain. On success, this
+     * function will change the compartment to 'scopeChain.compartment()' and
+     * push a dummy frame for 'scopeChain'. On failure, nothing is changed.
+     */
+    bool pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scopeChain, DummyFrameGuard *dfg);
 
     /*
      * An "inline frame" may only be pushed from within the top, active
