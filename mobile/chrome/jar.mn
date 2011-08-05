@@ -30,6 +30,7 @@ chrome.jar:
   content/OfflineApps.js               (content/OfflineApps.js)
   content/SelectHelperUI.js            (content/SelectHelperUI.js)
   content/SharingUI.js                 (content/SharingUI.js)
+  content/TabsPopup.js                 (content/TabsPopup.js)
 * content/content.js                   (content/content.js)
   content/commandUtil.js               (content/commandUtil.js)
 * content/bindings.xml                 (content/bindings.xml)
