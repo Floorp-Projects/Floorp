@@ -63,6 +63,7 @@ GfxInfo::Init()
 {
     mMajorVersion = 0;
     mMinorVersion = 0;
+    mRevisionVersion = 0;
     mIsMesa = false;
     mIsNVIDIA = false;
     mIsFGLRX = false;
@@ -221,15 +222,19 @@ GfxInfo::GetData()
         if (token) {
             mMajorVersion = strtol(token, 0, 10);
             token = NS_strtok(".", &bufptr);
-            if (token)
+            if (token) {
                 mMinorVersion = strtol(token, 0, 10);
+                token = NS_strtok(".", &bufptr);
+                if (token)
+                    mRevisionVersion = strtol(token, 0, 10);
+            }
         }
     }
 }
 
-static inline PRUint64 version(PRUint32 major, PRUint32 minor)
+static inline PRUint64 version(PRUint32 major, PRUint32 minor, PRUint32 revision = 0)
 {
-    return (PRUint64(major) << 32) + PRUint64(minor);
+    return (PRUint64(major) << 32) + (PRUint64(minor) << 16) + PRUint64(revision);
 }
 
 nsresult
@@ -257,19 +262,19 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     }
 
     if (mIsMesa) {
-        if (version(mMajorVersion, mMinorVersion) < version(7,10)) {
+        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(7,10,3)) {
             *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-            aSuggestedDriverVersion.AssignLiteral("Mesa 7.10");
+            aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
         }
     } else if (mIsNVIDIA) {
-        if (version(mMajorVersion, mMinorVersion) < version(257,21)) {
+        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(257,21)) {
             *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
             aSuggestedDriverVersion.AssignLiteral("NVIDIA 257.21");
         }
     } else if (mIsFGLRX) {
         // FGLRX does not report a driver version number, so we have the OpenGL version instead.
         // by requiring OpenGL 3, we effectively require recent drivers.
-        if (version(mMajorVersion, mMinorVersion) < version(3, 0)) {
+        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(3, 0)) {
             *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
         }
     } else {
