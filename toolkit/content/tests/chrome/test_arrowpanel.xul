@@ -119,6 +119,9 @@ function nextTest()
   openPopup("rightcenter bottomleft", "middle", "left", "center bottom");
   yield;
 
+/*
+  XXXndeakin disable these parts of the test which often cause problems, see bug 626563
+
   openPopup("after_start", frames[0].document.getElementById("input"), "top", "left");
   yield;
 
@@ -131,6 +134,7 @@ function nextTest()
   yield;
 
   setScale(frames[0], 1);
+*/
 
   SimpleTest.finish();
   yield;
