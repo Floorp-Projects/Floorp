@@ -179,7 +179,7 @@ JSC::MacroAssembler::Call
 StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, int32 slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
-    masm.bumpStubCounter(cc.script, cc.PC, Registers::ReturnReg);
+    masm.bumpStubCounter(cc.script, cc.PC, Registers::tempCallReg());
     DataLabelPtr inlinePatch;
     Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                   ptr, cc.outerPC(), &inlinePatch, slots);

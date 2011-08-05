@@ -667,7 +667,7 @@ class CallCompiler : public BaseCompiler
                           FrameAddress(offsetof(VMFrame, stubRejoin)));
         }
 
-        masm.bumpStubCounter(f.script(), f.pc(), Registers::ReturnReg);
+        masm.bumpStubCounter(f.script(), f.pc(), Registers::tempCallReg());
 
         /* Try and compile. On success we get back the nmap pointer. */
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
@@ -886,7 +886,7 @@ class CallCompiler : public BaseCompiler
 
         /* N.B. After this call, the frame will have a dynamic frame size. */
         if (ic.frameSize.isDynamic()) {
-            masm.bumpStubCounter(f.script(), f.pc(), Registers::ReturnReg);
+            masm.bumpStubCounter(f.script(), f.pc(), Registers::tempCallReg());
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                 JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
                                 f.regs.pc, NULL, initialFrameDepth);
