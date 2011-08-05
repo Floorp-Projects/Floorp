@@ -854,6 +854,8 @@ class FrameState
     Address addressOf(const FrameEntry *fe) const;
     Address addressOf(uint32 slot) const { return addressOf(a->callee_ + slot); }
 
+    Address addressOfTop() const { return addressOf(a->sp); }
+
     // Returns an address, relative to the StackFrame, that represents where
     // this FrameEntry is backed in memory. This is not necessarily its
     // canonical address, but the address for which the payload has been synced

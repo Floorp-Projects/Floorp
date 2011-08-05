@@ -463,6 +463,8 @@ class SetPropCompiler : public PICStubCompiler
             pic.secondShapeGuard = 0;
         }
 
+        pic.updatePCCounters(cx, masm);
+
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
             return error();
@@ -878,6 +880,8 @@ class GetPropCompiler : public PICStubCompiler
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
 
+        pic.updatePCCounters(cx, masm);
+
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
             return error();
@@ -916,6 +920,8 @@ class GetPropCompiler : public PICStubCompiler
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
 
+        pic.updatePCCounters(cx, masm);
+
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
             return error();
@@ -951,6 +957,8 @@ class GetPropCompiler : public PICStubCompiler
         masm.urshift32(Imm32(JSString::LENGTH_SHIFT), pic.objReg);
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
+
+        pic.updatePCCounters(cx, masm);
 
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
@@ -1024,6 +1032,8 @@ class GetPropCompiler : public PICStubCompiler
 
         Jump done = masm.jump();
 
+        pic.updatePCCounters(cx, masm);
+
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
             return error();
@@ -1065,6 +1075,8 @@ class GetPropCompiler : public PICStubCompiler
         masm.urshift32(Imm32(JSString::LENGTH_SHIFT), pic.objReg);
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
+
+        pic.updatePCCounters(cx, masm);
 
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
@@ -1183,6 +1195,8 @@ class GetPropCompiler : public PICStubCompiler
         /* Load the value out of the object. */
         masm.loadObjProp(holder, holderReg, shape, pic.shapeReg, pic.objReg);
         Jump done = masm.jump();
+
+        pic.updatePCCounters(cx, masm);
 
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
@@ -1403,6 +1417,8 @@ class ScopeNameCompiler : public PICStubCompiler
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
 
+        pic.updatePCCounters(cx, masm);
+
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
             return error();
@@ -1523,6 +1539,8 @@ class ScopeNameCompiler : public PICStubCompiler
         finalShape.linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
+
+        pic.updatePCCounters(cx, masm);
 
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
@@ -1710,6 +1728,8 @@ class BindNameCompiler : public PICStubCompiler
         firstShape.linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
+
+        pic.updatePCCounters(cx, masm);
 
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
@@ -2170,13 +2190,46 @@ BaseIC::spew(JSContext *cx, const char *event, const char *message)
 #endif
 }
 
+/* Total length of scripts preceding a frame. */
+inline uint32 frameCountersOffset(JSContext *cx)
+{
+    uint32 offset = 0;
+    if (cx->regs().inlined()) {
+        offset += cx->fp()->script()->length;
+        uint32 index = cx->regs().inlined()->inlineIndex;
+        InlineFrame *frames = cx->fp()->jit()->inlineFrames();
+        for (unsigned i = 0; i < index; i++)
+            offset += frames[i].fun->script()->length;
+    }
+
+    jsbytecode *pc;
+    JSScript *script = cx->stack.currentScript(&pc);
+    offset += pc - script->code;
+
+    return offset;
+}
+
 LookupStatus
 BaseIC::disable(JSContext *cx, const char *reason, void *stub)
 {
+    if (cx->hasRunOption(JSOPTION_PCCOUNT)) {
+        uint32 offset = frameCountersOffset(cx);
+        cx->fp()->jit()->pcLengths[offset].picsLength = 0;
+    }
+
     spew(cx, "disabled", reason);
     Repatcher repatcher(cx->fp()->jit());
     repatcher.relink(slowPathCall, FunctionPtr(stub));
     return Lookup_Uncacheable;
+}
+
+void
+BaseIC::updatePCCounters(JSContext *cx, Assembler &masm)
+{
+    if (cx->hasRunOption(JSOPTION_PCCOUNT)) {
+        uint32 offset = frameCountersOffset(cx);
+        cx->fp()->jit()->pcLengths[offset].picsLength += masm.size();
+    }
 }
 
 bool
@@ -2328,6 +2381,8 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     masm.loadObjProp(holder, holderReg, shape, typeReg, objReg);
 
     Jump done = masm.jump();
+
+    updatePCCounters(cx, masm);
 
     PICLinker buffer(masm, *this);
     if (!buffer.init(cx))
@@ -2535,6 +2590,8 @@ GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid
 
     masm.jump(loadFromStack);
 
+    updatePCCounters(cx, masm);
+
     PICLinker buffer(masm, *this);
 
     if (!buffer.init(cx))
@@ -2618,6 +2675,8 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     masm.loadFromTypedArray(tarray->type, objReg, key, typeReg, objReg, tempReg);
 
     Jump done = masm.jump();
+
+    updatePCCounters(masm);
 
     PICLinker buffer(masm, *this);
     if (!buffer.init(cx))

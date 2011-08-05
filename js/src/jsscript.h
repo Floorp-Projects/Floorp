@@ -386,9 +386,20 @@ namespace js { namespace analyze { class ScriptAnalysis; } }
 
 class JSPCCounters {
     size_t numBytecodes;
-    int *counts;
+    double *counts;
 
  public:
+
+    enum {
+        INTERP          = 0,
+        TRACEJIT        = 1,
+        METHODJIT       = 2,
+        METHODJIT_STUBS = 3,
+        METHODJIT_CODE  = 4,
+        METHODJIT_PICS  = 5,
+        COUNT = 6,
+    };
+
     JSPCCounters() : numBytecodes(0), counts(NULL) {
     }
 
@@ -404,19 +415,15 @@ class JSPCCounters {
         return counts;
     }
 
-    int *get(int runmode) {
-        JS_ASSERT(runmode >= 0 && runmode < JSRUNMODE_COUNT);
+    double *get(int runmode) {
+        JS_ASSERT(runmode >= 0 && runmode < COUNT);
         return counts ? &counts[numBytecodes * runmode] : NULL;
     }
 
-    int& get(int runmode, size_t offset) {
+    double& get(int runmode, size_t offset) {
         JS_ASSERT(offset < numBytecodes);
         JS_ASSERT(counts);
         return get(runmode)[offset];
-    }
-
-    size_t numRunmodes() const {
-        return JSRUNMODE_COUNT;
     }
 };
 

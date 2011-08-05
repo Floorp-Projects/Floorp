@@ -1925,7 +1925,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         script = regs.fp()->script();                                         \
-        pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);                  \
+        pcCounts = script->pcCounters.get(JSPCCounters::INTERP);              \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
@@ -2026,7 +2026,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
     JSScript *script = regs.fp()->script();
-    int *pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
+    double *pcCounts = script->pcCounters.get(JSPCCounters::INTERP);
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
