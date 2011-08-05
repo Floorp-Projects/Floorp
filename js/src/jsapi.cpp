@@ -3387,10 +3387,14 @@ JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
+JS_DefineElement(JSContext *cx, JSObject *obj, uint32 index, jsval value,
                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
-    return DefinePropertyById(cx, obj, INT_TO_JSID(index), Valueify(value),
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return DefinePropertyById(cx, obj, id, Valueify(value),
                               Valueify(getter), Valueify(setter), attrs, 0, 0);
 }
 
