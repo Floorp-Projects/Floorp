@@ -80,6 +80,9 @@ struct Register {
     bool operator !=(const Register &other) const {
         return code_ != other.code_;
     }
+    bool allocatable() const {
+        return !!((1 << code()) & Registers::AllocatableMask);
+    }
 };
 
 struct FloatRegister {
@@ -105,6 +108,9 @@ struct FloatRegister {
     }
     bool operator !=(const FloatRegister &other) const {
         return code_ != other.code_;
+    }
+    bool allocatable() const {
+        return !!((1 << code()) & FloatRegisters::AllocatableMask);
     }
 };
 
@@ -145,6 +151,11 @@ struct AnyRegister {
         return isFloat()
                ? (!other.isFloat() || fpu_ != other.fpu_)
                : (other.isFloat() || gpr_ != other.gpr_);
+    }
+    bool allocatable() const {
+        return isFloat()
+               ? FloatRegister::FromCode(fpu_).allocatable()
+               : Register::FromCode(gpr_).allocatable();
     }
 };
 
@@ -288,6 +299,30 @@ class RegisterSet {
     void clear() {
         gpr_.clear();
         fpu_.clear();
+    }
+};
+
+class AnyRegisterIterator
+{
+    uint32 code_;
+
+  public:
+    AnyRegisterIterator() : code_(0)
+    { }
+    AnyRegisterIterator(const AnyRegisterIterator &other) : code_(other.code_)
+    { }
+    bool more() const {
+        return code_ < Registers::Total + FloatRegisters::Total;
+    }
+    AnyRegisterIterator operator ++(int) {
+        AnyRegisterIterator old(*this);
+        code_++;
+        return old;
+    }
+    AnyRegister operator *() const {
+        if (code_ < Registers::Total)
+            return AnyRegister(Register::FromCode(code_));
+        return AnyRegister(FloatRegister::FromCode(code_ - Registers::Total));
     }
 };
 
