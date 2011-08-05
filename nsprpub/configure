@@ -3120,14 +3120,14 @@ fi
 
 
 
-case "${target}" in
-arm-android-eabi)
+case "${CPU_ARCH}-${OS_TARGET}" in
+arm-Android)
     MOZ_THUMB=yes
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
     ;;
-arm*-*)
+arm-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then
         MOZ_THUMB=no
         MOZ_ARCH=armv7-a
