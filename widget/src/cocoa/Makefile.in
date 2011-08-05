@@ -57,6 +57,7 @@ EXPORTS = \
 		mozView.h \
 		nsChangeObserver.h \
 		nsCocoaUtils.h \
+		nsCocoaFeatures.h \
 		$(NULL)
 
 CMMSRCS = \
@@ -72,6 +73,7 @@ CMMSRCS = \
   nsDragService.mm \
   nsToolkit.mm \
   nsAppShell.mm \
+  nsCocoaFeatures.mm \
   nsCocoaUtils.mm \
   nsCocoaWindow.mm \
   nsChildView.mm \
