@@ -5,12 +5,12 @@
 
 var o = {}
 try {
-    eval('o.\\u1d17 = 42;');
+    eval('o.\\u82f1 = 42;');
 }
 catch (e) {
     assertEq('should not fail', true);
 }
-assertEq(o['\u1d17'], 42);
+assertEq(o['\u82f1'], 42);
 
 if (typeof reportCompare == 'function')
     reportCompare(true, true);
