@@ -80,18 +80,28 @@ struct ImmType : public ImmTag
     { }
 };
 
+enum Scale {
+    TimesOne,
+    TimesTwo,
+    TimesFour,
+    TimesEight
+};
+
 class Operand
 {
   public:
     enum Kind {
         REG,
         REG_DISP,
-        FPREG
+        FPREG,
+        SCALE
     };
 
     Kind kind_ : 2;
     int32 base_ : 5;
+    Scale scale_ : 2;
     int32 disp_;
+    int32 index_ : 5;
 
   public:
     explicit Operand(const Register &reg)
@@ -101,6 +111,13 @@ class Operand
     explicit Operand(const FloatRegister &reg)
       : kind_(FPREG),
         base_(reg.code())
+    { }
+    explicit Operand(const Register &base, const Register &index, Scale scale, int32 disp = 0)
+      : kind_(SCALE),
+        base_(base.code()),
+        scale_(scale),
+        disp_(disp),
+        index_(index.code())
     { }
     Operand(const Register &reg, int32 disp)
       : kind_(REG_DISP),
@@ -116,15 +133,23 @@ class Operand
         return (Registers::Code)base_;
     }
     Registers::Code base() const {
-        JS_ASSERT(kind() == REG_DISP);
+        JS_ASSERT(kind() == REG_DISP || kind() == SCALE);
         return (Registers::Code)base_;
+    }
+    Registers::Code index() const {
+        JS_ASSERT(kind() == SCALE);
+        return (Registers::Code)index_;
+    }
+    Scale scale() const {
+        JS_ASSERT(kind() == SCALE);
+        return scale_;
     }
     FloatRegisters::Code fpu() const {
         JS_ASSERT(kind() == FPREG);
         return (FloatRegisters::Code)base_;
     }
     int32 disp() const {
-        JS_ASSERT(kind() == REG_DISP);
+        JS_ASSERT(kind() == REG_DISP || kind() == SCALE);
         return disp_;
     }
 };
