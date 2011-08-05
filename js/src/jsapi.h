@@ -2499,7 +2499,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_LookupElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp);
+JS_GetElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp);
