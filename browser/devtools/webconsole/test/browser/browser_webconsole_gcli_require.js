@@ -107,11 +107,11 @@ function testUncompilable() {
   // modules, however at least it should go into a flat spin ...
   // GCLI mini_require reports an error as it should
   try {
-      let unrequireable = require('gclitest/unrequirable');
-      fail();
+    let unrequireable = require('gclitest/unrequirable');
+    fail();
   }
   catch (ex) {
-      console.log(ex);
+    // an exception is expected
   }
 }
 
