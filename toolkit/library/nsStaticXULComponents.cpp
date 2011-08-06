@@ -150,12 +150,6 @@
 #define FILEVIEW_MODULE
 #endif
 
-#ifdef MOZ_STORAGE
-#define STORAGE_MODULE MODULE(mozStorageModule)
-#else
-#define STORAGE_MODULE
-#endif
-
 #ifdef MOZ_ZIPWRITER
 #define ZIPWRITER_MODULE MODULE(ZipWriterModule)
 #else
@@ -259,7 +253,7 @@
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
     FILEVIEW_MODULE                          \
-    STORAGE_MODULE                           \
+    MODULE(mozStorageModule)                 \
     PLACES_MODULES                           \
     XULENABLED_MODULES                       \
     MODULE(nsToolkitCompsModule)             \
