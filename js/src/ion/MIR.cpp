@@ -322,6 +322,12 @@ MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
     return new MTest(ins, ifTrue, ifFalse);
 }
 
+MTableSwitch *
+MTableSwitch::New(MDefinition *ins, int32 low, int32 high)
+{
+    return new MTableSwitch(ins, low, high);
+}
+
 MGoto *
 MGoto::New(MBasicBlock *target)
 {

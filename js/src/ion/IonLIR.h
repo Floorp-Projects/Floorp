@@ -72,6 +72,7 @@ class LStackSlot;
 class LArgument;
 class LConstantIndex;
 class MBasicBlock;
+class MTableSwitch;
 class MIRGenerator;
 class MSnapshot;
 

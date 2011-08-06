@@ -49,6 +49,7 @@ namespace ion {
 #define MIR_OPCODE_LIST(_)                                                  \
     _(Constant)                                                             \
     _(Parameter)                                                            \
+    _(TableSwitch)                                                          \
     _(Goto)                                                                 \
     _(Test)                                                                 \
     _(Phi)                                                                  \

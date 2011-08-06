@@ -523,30 +523,108 @@ class MParameter : public MAryInstruction<0>
 
 class MControlInstruction : public MInstruction
 {
-  protected:
-    MBasicBlock *successors[2];
-
   public:
     MControlInstruction()
-      : successors()
     { }
 
-    uint32 numSuccessors() const {
-        if (successors[1])
-            return 2;
-        if (successors[0])
-            return 1;
-        return 0;
+    virtual size_t numSuccessors() const = 0;
+    virtual MBasicBlock *getSuccessor(size_t i) const = 0;
+    virtual void replaceSuccessor(size_t i, MBasicBlock *successor) = 0;
+};
+
+class MTableSwitch
+  : public MControlInstruction,
+    public TableSwitchPolicy
+{
+    Vector<MBasicBlock*, 0, IonAllocPolicy> successors_;
+    MDefinition *operand_;
+    int32 low_;
+    int32 high_;
+    uint32 defaultCase_;
+
+    MTableSwitch(MDefinition *ins, int32 low, int32 high)
+      : successors_(),
+        low_(low),
+        high_(high),
+        defaultCase_(-1)
+    {
+        initOperand(0, ins);
     }
 
-    MBasicBlock *getSuccessor(uint32 i) const {
+  protected:
+    void setOperand(size_t index, MDefinition *operand) {
+        JS_ASSERT(index == 0);
+        operand_ = operand;
+    }
+
+  public:
+    INSTRUCTION_HEADER(TableSwitch);
+    static MTableSwitch *New(MDefinition *ins, 
+                             int32 low, int32 high);
+
+    size_t numSuccessors() const {
+        return successors_.length();
+    }
+ 
+    MBasicBlock *getSuccessor(size_t i) const {
         JS_ASSERT(i < numSuccessors());
-        return successors[i];
+        return successors_[i];
+    }
+ 
+    int32 low() const {
+        return low_;
     }
 
-    void replaceSuccessor(size_t i, MBasicBlock *split) {
-        JS_ASSERT(successors[i]);
-        successors[i] = split;
+    int32 high() const {
+        return high_;
+    }
+
+    void replaceSuccessor(size_t i, MBasicBlock *successor) {
+        JS_ASSERT(i < numSuccessors());
+        successors_[i] = successor;
+    }
+
+    MBasicBlock *getDefault() const {
+        JS_ASSERT(defaultCase_ != (uint32)-1);
+        return getSuccessor(defaultCase_);
+    }
+
+    MBasicBlock *getCase(uint32 i) const {
+        JS_ASSERT(i < successors_.length());
+
+        if (i < defaultCase_)
+            return getSuccessor(i);
+
+        return getSuccessor(i + 1);
+    }
+
+    size_t numCases() const {
+        return high() - low() + 1;
+    }
+
+    void addDefault(MBasicBlock *block) {
+        JS_ASSERT(defaultCase_ == (uint32)-1);
+        defaultCase_ = successors_.length();
+        successors_.append(block);
+    }
+
+    void addCase(MBasicBlock *block) {
+        JS_ASSERT_IF(defaultCase_ == (uint32)-1, successors_.length() < (int32)(high_ - low_ + 1));
+        JS_ASSERT_IF(defaultCase_ != (uint32)-1, successors_.length() < (int32)(high_ - low_ + 2));
+        successors_.append(block);
+    }
+
+    MDefinition *getOperand(size_t index) const {
+        JS_ASSERT(index == 0);
+        return operand_;
+    }
+
+    size_t numOperands() const {
+        return 1;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
@@ -572,16 +650,31 @@ class MAryControlInstruction : public MControlInstruction
 // Jump to the start of another basic block.
 class MGoto : public MAryControlInstruction<0>
 {
-    MGoto(MBasicBlock *target) {
-        successors[0] = target;
+    FixedArityList<MBasicBlock *, 1> successors_;
+
+    MGoto(MBasicBlock *target)
+    {
+        successors_[0] = target;
     }
 
   public:
     INSTRUCTION_HEADER(Goto);
     static MGoto *New(MBasicBlock *target);
 
+    size_t numSuccessors() const {
+        return 1;
+    }
+
+    MBasicBlock *getSuccessor(size_t i) const {
+        return successors_[i];
+    }
+
+    void replaceSuccessor(size_t i, MBasicBlock *succ) {
+        successors_[i] = succ;
+    }
+
     MBasicBlock *target() {
-        return successors[0];
+        return successors_[0];
     }
 };
 
@@ -589,10 +682,12 @@ class MGoto : public MAryControlInstruction<0>
 // start of a corresponding basic block.
 class MTest : public MAryControlInstruction<1>
 {
+    FixedArityList<MBasicBlock *, 2> successors_;
+
     MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false)
     {
-        successors[0] = if_true;
-        successors[1] = if_false;
+        successors_[0] = if_true;
+        successors_[1] = if_false;
         initOperand(0, ins);
     }
 
@@ -600,6 +695,18 @@ class MTest : public MAryControlInstruction<1>
     INSTRUCTION_HEADER(Test);
     static MTest *New(MDefinition *ins,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse);
+
+    size_t numSuccessors() const {
+        return 2;
+    }
+
+    MBasicBlock *getSuccessor(size_t i) const {
+        return successors_[i];
+    }
+
+    void replaceSuccessor(size_t i, MBasicBlock *successor) {
+        successors_[i] = successor;
+    }
 
     MBasicBlock *ifTrue() const {
         return getSuccessor(0);
@@ -614,6 +721,8 @@ class MReturn
   : public MAryControlInstruction<1>,
     public BoxInputsPolicy
 {
+    FixedArityList<MBasicBlock *, 0> successors_;
+
     MReturn(MDefinition *ins)
     {
         initOperand(0, ins);
@@ -622,6 +731,18 @@ class MReturn
   public:
     INSTRUCTION_HEADER(Return);
     static MReturn *New(MDefinition *ins);
+
+    size_t numSuccessors() const {
+        return 0;
+    }
+
+    MBasicBlock *getSuccessor(size_t i) const {
+        return successors_[i];
+    }
+
+    void replaceSuccessor(size_t i, MBasicBlock *successor) {
+        JS_NOT_REACHED("There are no successors");
+    }
 
     TypePolicy *typePolicy() {
         return this;

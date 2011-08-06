@@ -93,6 +93,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitInteger(LInteger *ins);
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitMathD(LMathD *math);
+    virtual bool visitTableSwitch(LTableSwitch *ins);
 };
 
 } // ion
