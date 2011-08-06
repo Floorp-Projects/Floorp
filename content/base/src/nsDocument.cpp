@@ -6233,7 +6233,8 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Load events must not propagate to |window| object, see bug 335251.
   if (aVisitor.mEvent->message != NS_LOAD) {
-    aVisitor.mParentTarget = GetWindow();
+    nsGlobalWindow* window = static_cast<nsGlobalWindow*>(GetWindow());
+    aVisitor.mParentTarget = static_cast<nsIDOMEventTarget*>(window);
   }
   return NS_OK;
 }
