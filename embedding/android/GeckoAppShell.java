@@ -1167,7 +1167,7 @@ public class GeckoAppShell
 
     public static void putChildInBackground() {
         try {
-            File cgroupFile = new File("/proc" + android.os.Process.myPid() + "/cgroup");
+            File cgroupFile = new File("/proc/" + android.os.Process.myPid() + "/cgroup");
             BufferedReader br = new BufferedReader(new FileReader(cgroupFile));
             String[] cpuLine = br.readLine().split("/");
             br.close();

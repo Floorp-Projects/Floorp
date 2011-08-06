@@ -468,10 +468,22 @@ nsresult
 nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                   bool explainLiveExpectedGarbage)
 {
+    // It is important not to call GetSafeJSContext while on the
+    // cycle-collector thread since this context will be destroyed
+    // asynchronously and race with the main thread. In particular, we must
+    // ensure that a context is passed to the XPCCallContext constructor.
+    JSContext *cx = mRuntime->GetJSCycleCollectionContext();
+    if (!cx)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Clear after mCycleCollectionContext is destroyed
+    JS_SetContextThread(cx);
+
     NS_ASSERTION(!mCycleCollectionContext, "Didn't call FinishTraverse?");
-    mCycleCollectionContext = new XPCCallContext(NATIVE_CALLER);
+    mCycleCollectionContext = new XPCCallContext(NATIVE_CALLER, cx);
     if (!mCycleCollectionContext->IsValid()) {
         mCycleCollectionContext = nsnull;
+        JS_ClearContextThread(cx);
         return NS_ERROR_FAILURE;
     }
 
@@ -521,8 +533,11 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
 nsresult 
 nsXPConnect::FinishTraverse()
 {
-    if (mCycleCollectionContext)
+    if (mCycleCollectionContext) {
+        JSContext *cx = mCycleCollectionContext->GetJSContext();
         mCycleCollectionContext = nsnull;
+        JS_ClearContextThread(cx);
+    }
     return NS_OK;
 }
 

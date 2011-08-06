@@ -55,6 +55,7 @@ class nsStyleContext;
 class nsCSSValue;
 struct nsCSSValueList;
 struct nsCSSValuePair;
+struct nsCSSValueTriplet;
 struct nsCSSValuePairList;
 struct nsCSSRect;
 struct gfxMatrix;
@@ -249,6 +250,7 @@ public:
     eUnit_Calc, // nsCSSValue* (never null), always with a single
                 // calc() expression that's either length or length+percent
     eUnit_CSSValuePair, // nsCSSValuePair* (never null)
+    eUnit_CSSValueTriplet, // nsCSSValueTriplet* (never null)
     eUnit_CSSRect, // nsCSSRect* (never null)
     eUnit_Dasharray, // nsCSSValueList* (never null)
     eUnit_Shadow, // nsCSSValueList* (may be null)
@@ -267,6 +269,7 @@ public:
       nscolor mColor;
       nsCSSValue* mCSSValue;
       nsCSSValuePair* mCSSValuePair;
+      nsCSSValueTriplet* mCSSValueTriplet;
       nsCSSRect* mCSSRect;
       nsCSSValueList* mCSSValueList;
       nsCSSValuePairList* mCSSValuePairList;
@@ -311,6 +314,10 @@ public:
     nsCSSValuePair* GetCSSValuePairValue() const {
       NS_ASSERTION(IsCSSValuePairUnit(mUnit), "unit mismatch");
       return mValue.mCSSValuePair;
+    }
+    nsCSSValueTriplet* GetCSSValueTripletValue() const {
+      NS_ASSERTION(IsCSSValueTripletUnit(mUnit), "unit mismatch");
+      return mValue.mCSSValueTriplet;
     }
     nsCSSRect* GetCSSRectValue() const {
       NS_ASSERTION(IsCSSRectUnit(mUnit), "unit mismatch");
@@ -369,6 +376,7 @@ public:
     // "SetAndAdopt*".
     void SetAndAdoptCSSValueValue(nsCSSValue *aValue, Unit aUnit);
     void SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit);
+    void SetAndAdoptCSSValueTripletValue(nsCSSValueTriplet *aValue, Unit aUnit);
     void SetAndAdoptCSSRectValue(nsCSSRect *aValue, Unit aUnit);
     void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
     void SetAndAdoptCSSValuePairListValue(nsCSSValuePairList *aValue);
@@ -395,6 +403,9 @@ public:
     }
     static PRBool IsCSSValuePairUnit(Unit aUnit) {
       return aUnit == eUnit_CSSValuePair;
+    }
+    static PRBool IsCSSValueTripletUnit(Unit aUnit) {
+      return aUnit == eUnit_CSSValueTriplet;
     }
     static PRBool IsCSSRectUnit(Unit aUnit) {
       return aUnit == eUnit_CSSRect;

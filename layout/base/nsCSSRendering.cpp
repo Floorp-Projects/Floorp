@@ -3643,7 +3643,9 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 
   PRBool canLiftUnderline = aDescentLimit >= 0.0;
 
-  gfxRect r(NS_floor(aPt.x + 0.5), 0, NS_round(aLineSize.width), 0);
+  const gfxFloat left  = NS_floor(aPt.x + 0.5),
+                 right = NS_floor(aPt.x + aLineSize.width + 0.5);
+  gfxRect r(left, 0, right - left, 0);
 
   gfxFloat lineHeight = NS_round(aLineSize.height);
   lineHeight = NS_MAX(lineHeight, 1.0);

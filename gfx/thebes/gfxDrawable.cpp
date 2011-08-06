@@ -158,11 +158,6 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
         PreparePatternForUntiledDrawing(pattern, deviceSpaceToImageSpace,
                                         currentTarget, filter);
     }
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    if (!mozilla::supports_neon()) {
-        pattern->SetFilter(gfxPattern::FILTER_FAST);
-    }
-#endif
     pattern->SetMatrix(gfxMatrix(aTransform).Multiply(mTransform));
     aContext->NewPath();
     aContext->SetPattern(pattern);

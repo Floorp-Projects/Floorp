@@ -135,12 +135,6 @@ _CHROME_FILES = \
   test_backspace_delete.xul \
   test_bug514732-2.xul \
   file_bug514732_window.xul \
-  test_selection_scrolling.html \
-  window_selection_scrolling.html \
-  test_bug670058.html \
-  test_bug670508.html \
-  test_bug671319.html \
-  test_bug673315-1.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)

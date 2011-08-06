@@ -131,7 +131,7 @@ chrome.jar:
   skin/images/handle-end.png                (images/handle-end.png)
 
 chrome.jar:
-% skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4
+% skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4 osversion=2.3.5 osversion=2.3.6 osversion=2.3.7
 % skin browser gingerbread/1.0 %skin/gingerbread/
   skin/gingerbread/aboutPage.css                        (aboutPage.css)
   skin/gingerbread/about.css                            (about.css)

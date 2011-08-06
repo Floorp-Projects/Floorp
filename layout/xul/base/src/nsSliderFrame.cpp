@@ -587,19 +587,8 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 //  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
   //   HandleRelease(aPresContext, aEvent, aEventStatus);
 
-  if (aEvent->message == NS_MOUSE_EXIT_SYNTH && mChange) {
-    // XXX This is wrong behavior. We shouldn't stop handling dragging by
-    // mouseexit event.
-    // On Windows, can continue to change the value when mouse cursor is
-    // moved back to the slider button.
-    // On Linux (GTK), even if the mouse cursor existed from slider button,
-    // kept to change the value. (confirmed on Ubuntu 10.10)
-    // On Mac, like Windows, when mouse cursor is moved back to the button,
-    // restart to change the value.  However, Mac's slider can use the other
-    // direction button too.
-    HandleRelease(aPresContext, aEvent, aEventStatus);
-    nsIPresShell::SetCapturingContent(nsnull, 0);
-  }
+  if (aEvent->message == NS_MOUSE_EXIT_SYNTH && mChange)
+     HandleRelease(aPresContext, aEvent, aEventStatus);
 
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
@@ -1055,7 +1044,7 @@ nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
 {
   StopRepeat();
 
-  return nsBoxFrame::HandleRelease(aPresContext, aEvent, aEventStatus);
+  return NS_OK;
 }
 
 void

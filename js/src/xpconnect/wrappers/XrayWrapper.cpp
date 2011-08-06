@@ -207,7 +207,7 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, holder))
             return false;
-        JSBool retval = true;
+        PRBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv) || !retval) {
             if (retval)
@@ -233,7 +233,7 @@ holder_set(JSContext *cx, JSObject *wrapper, jsid id, JSBool strict, jsval *vp)
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, holder))
             return false;
-        JSBool retval = true;
+        PRBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv) || !retval) {
             if (retval)
@@ -487,7 +487,7 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
             return true;
         }
 
-        JSBool retval = true;
+        PRBool retval = true;
         JSObject *pobj = NULL;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
                                                                          flags, &pobj, &retval);

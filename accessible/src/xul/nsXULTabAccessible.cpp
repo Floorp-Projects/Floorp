@@ -65,10 +65,10 @@ nsXULTabAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTabAccessible: nsIAccessible
 
-NS_IMETHODIMP nsXULTabAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsXULTabAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;
+  return 1;
 }
 
 /** Return the name of our only action  */
@@ -191,13 +191,10 @@ nsXULTabsAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_PAGETABLIST;
 }
 
-NS_IMETHODIMP
-nsXULTabsAccessible::GetNumActions(PRUint8 *aCount)
+PRUint8
+nsXULTabsAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  return NS_OK;
+  return 0;
 }
 
 /** no value */

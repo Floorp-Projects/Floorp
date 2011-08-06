@@ -154,6 +154,22 @@ nsScrollbarFrame::HandleMultiplePress(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsScrollbarFrame::HandleDrag(nsPresContext* aPresContext, 
+                              nsGUIEvent*     aEvent,
+                              nsEventStatus*  aEventStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsScrollbarFrame::HandleRelease(nsPresContext* aPresContext, 
+                                 nsGUIEvent*     aEvent,
+                                 nsEventStatus*  aEventStatus)
+{
+  return NS_OK;
+}
+
 void
 nsScrollbarFrame::SetScrollbarMediatorContent(nsIContent* aMediator)
 {

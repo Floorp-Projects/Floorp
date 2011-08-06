@@ -1169,8 +1169,10 @@ DOMStorageImpl::GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey)
   // maybe we need to have a lazily populated key array here or
   // something?
 
-  if (UseDB())
+  if (UseDB()) {
+    mItemsCached = PR_FALSE;
     CacheKeysFromDB();
+  }
 
   IndexFinderData data(aCallerSecure, aIndex);
   mItems.EnumerateEntries(IndexFinder, &data);

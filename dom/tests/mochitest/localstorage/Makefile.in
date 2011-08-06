@@ -49,6 +49,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES	= \
     frameBug624047.html \
     frameChromeSlave.html \
+    frameKeySync.html \
     frameMasterEqual.html \
     frameMasterNotEqual.html \
     frameSlaveEqual.html \
@@ -67,6 +68,7 @@ _TEST_FILES	= \
     test_cookieSession-phase1.html \
     test_cookieSession-phase2.html \
     test_embededNulls.html \
+    test_keySync.html \
     test_localStorageBase.html \
     test_localStorageBasePrivateBrowsing.html \
     test_localStorageBaseSessionOnly.html \
