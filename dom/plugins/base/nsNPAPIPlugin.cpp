@@ -2201,7 +2201,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
-  case NPNVSupportsCompositingCoreAnimationPluginsBool: {
+  case NPNVsupportsCompositingCoreAnimationPluginsBool: {
     *(NPBool*)result = PR_TRUE;
 
     return NPERR_NO_ERROR;
