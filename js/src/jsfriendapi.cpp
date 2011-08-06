@@ -42,7 +42,6 @@
 #include "jsfriendapi.h"
 
 using namespace js;
-using namespace JS;
 
 JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt)
@@ -81,55 +80,6 @@ JS_GetFrameScopeChainRaw(JSStackFrame *fp)
 {
     return &Valueify(fp)->scopeChain();
 }
-
-JS_PUBLIC_API(JSPrincipals *)
-JS_GetCompartmentPrincipals(JSCompartment *compartment)
-{
-    return compartment->principals;
-}
-
-JS_PUBLIC_API(void)
-JS_ClearDebugModeForCompartment(JSCompartment *compartment)
-{
-    compartment->debugMode = false;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
-{
-    return cx->compartment->wrap(cx, desc);
-}
-
-AutoPreserveCompartment::AutoPreserveCompartment(JSContext *cx
-                                                 JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
-  : cx(cx), oldCompartment(cx->compartment)
-{
-}
-
-AutoPreserveCompartment::~AutoPreserveCompartment()
-{
-    cx->compartment = oldCompartment;
-}
-
-AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
-                                             JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
-  : cx(cx), oldCompartment(cx->compartment)
-{
-    cx->compartment = newCompartment;
-}
-
-AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSObject *target
-                                             JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
-  : cx(cx), oldCompartment(cx->compartment)
-{
-    cx->compartment = target->compartment();
-}
-
-AutoSwitchCompartment::~AutoSwitchCompartment()
-{
-    cx->compartment = oldCompartment;
-}
-
 
 /*
  * The below code is for temporary telemetry use. It can be removed when

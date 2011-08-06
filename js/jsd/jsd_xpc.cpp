@@ -60,6 +60,9 @@
 #include "nsIScriptContext.h"
 #include "nsIJSContextStack.h"
 
+/* XXX private JS headers. */
+#include "jscompartment.h"
+
 /*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
  * script hook.  This was a hack to avoid some js engine problems that should
