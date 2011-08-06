@@ -67,21 +67,21 @@
       <image class="button-image-icon"/>
       <vbox flex="1">
         <description class="prompt-checkbox-label" flex="1">&webapps.perm.geolocation;</description>
-        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-geoloc-app">&webapps.perm.requested;</description>
+        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-geoloc-app">&webapps.perm.requestedHint;</description>
       </vbox>
     </button>
     <button id="webapps-offline-checkbox" perm="offline-app" type="checkbox" class="button-checkbox webapps-perm" flex="1">
       <image class="button-image-icon"/>
       <vbox flex="1">
         <description class="prompt-checkbox-label" flex="1">&webapps.perm.offline;</description>
-        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-offline-app">&webapps.perm.requested;</description>
+        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-offline-app">&webapps.perm.requestedHint;</description>
       </vbox>
     </button>
     <button id="webapps-notifications-checkbox" perm="desktop-notification" type="checkbox" class="button-checkbox webapps-perm" flex="1">
       <image class="button-image-icon"/>
       <vbox flex="1">
         <description class="prompt-checkbox-label" flex="1">&webapps.perm.notifications;</description>
-        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-notifications-app">&webapps.perm.requested;</description>
+        <description class="prompt-checkbox-label webapps-perm-requested-hint" id="webapps-notifications-app">&webapps.perm.requestedHint;</description>
       </vbox>
     </button>
   </scrollbox>
