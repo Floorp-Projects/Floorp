@@ -417,9 +417,16 @@ function ShowPrefs()
   if (!document.getElementById("showWarningNextTime").checked)
     gPrefBranch.setBoolPref("general.warnOnAboutConfig", false);
 
+  // Process about:config?filter=<string>
   var textbox = document.getElementById("textbox");
+  var uri = document.documentURIObject;
+  var matches = /[?&]filter\=([^&]+)/i.exec(uri.path);
+  if (matches)
+    textbox.value = decodeURIComponent(matches[1]);
+
+  // Even if we did not set the filter string via the URL query,
+  // textbox might have been set via some other mechanism
   if (textbox.value)
-    // somebody seems to already have tried to apply a filter
     FilterPrefs();
   textbox.focus();
 }

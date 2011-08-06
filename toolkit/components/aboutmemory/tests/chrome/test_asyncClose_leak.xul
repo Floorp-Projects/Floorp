@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  // Nb: this test is all JS and so should be done with an xpcshell test,
+  // but bug 671753 is preventing the memory-reporter-manager from being
+  // accessed from xpcshell.
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const Cu = Components.utils;
+
+  // Make a fake DB file.
+  var file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get("ProfD", Ci.nsIFile);
+  file.append("asyncClose_leak-fake-DB-tmp.sqlite");
+
+  var storage = Cc["@mozilla.org/storage/service;1"].
+                getService(Ci.mozIStorageService);
+  var db = storage.openDatabase(file);
+
+  // A statement, the exact form doesn't matter, it just has to be
+  // asynchronous.
+  var stmt = db.createAsyncStatement("SELECT * FROM sqlite_master");
+  try {
+    stmt.executeAsync({
+      handleResult: function(aResults) {
+      },
+      handleError: function(aError) {
+        Cu.reportError("db error: " + aError);
+      },
+      handleCompletion: function(aReason) {
+      }
+    });
+  } catch (e) {
+  } finally {
+    stmt.finalize();
+  }
+  // Correct code would call db.asyncClose() here.  But the point of this
+  // test is to see what happens when we forget this call.
+  //db.asyncClose();
+
+  // We need db to be collected, otherwise this test will fail.  Schedule
+  // three GC+CC runs on the main thread followed by the final check.
+  stmt = null;
+  db = null;
+  function forceCollectionsThenCheck()
+  {
+    function runSoon(f)
+    {
+      var tm = Cc["@mozilla.org/thread-manager;1"]
+                .getService(Ci.nsIThreadManager);
+
+      tm.mainThread.dispatch({ run: f }, Ci.nsIThread.DISPATCH_NORMAL);
+    }
+
+    function doGCandCC()
+    {
+      window.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils)
+            .garbageCollect();
+
+      if (++j < 3)
+        runSoon(doGCandCC);
+      else
+        runSoon(doCheck);
+    }
+
+    var j = 0;
+    doGCandCC();
+  }
+
+  // Because we forgot to asyncClose the db, we end up with three "LEAKED"
+  // reporters.
+  function doCheck() {
+    var numLeaked = 0;
+    var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+              getService(Ci.nsIMemoryReporterManager);
+    var e = mgr.enumerateReporters(); 
+    while (e.hasMoreElements()) {
+      var r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+      if (r.path.search(/sqlite-LEAKED/) != -1) {
+        numLeaked++;
+        // Unregister the leaked reporter, so that if the test is run more
+        // than once, we don't end up with too many of them.
+        mgr.unregisterReporter(r);
+      }
+    }
+    is(numLeaked, 3, "Looking for sqlite-LEAKED reporters");
+    SimpleTest.finish();
+  }
+
+  forceCollectionsThenCheck();
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

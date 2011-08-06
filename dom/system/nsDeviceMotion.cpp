@@ -209,7 +209,7 @@ NS_IMETHODIMP nsDeviceMotion::AddWindowListener(nsIDOMWindow *aWindow)
 
 NS_IMETHODIMP nsDeviceMotion::RemoveWindowListener(nsIDOMWindow *aWindow)
 {
-  if (mWindowListeners.IndexOf(aWindow) != NoIndex)
+  if (mWindowListeners.IndexOf(aWindow) == NoIndex)
     return NS_OK;
 
   mWindowListeners.RemoveElement(aWindow);

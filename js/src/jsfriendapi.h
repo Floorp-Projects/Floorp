@@ -57,6 +57,15 @@ JS_UnwrapObject(JSObject *obj);
 extern JS_FRIEND_API(JSObject *)
 JS_GetFrameScopeChainRaw(JSStackFrame *fp);
 
+extern JS_FRIEND_API(size_t)
+JS_GetE4XObjectsCreated(JSContext *cx);
+
+extern JS_FRIEND_API(size_t)
+JS_SetProtoCalled(JSContext *cx);
+
+extern JS_FRIEND_API(size_t)
+JS_GetCustomIteratorCount(JSContext *cx);
+
 JS_END_EXTERN_C
 
 #endif /* jsfriendapi_h___ */

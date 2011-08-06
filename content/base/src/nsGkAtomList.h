@@ -44,7 +44,7 @@
   This file is designed to be used as inline input to nsGkAtoms.cpp and nsGkAtoms.h
   *only* through the magic of C preprocessing.
 
-  All entires must be enclosed in the macro GK_ATOM which will have cruel
+  All entries must be enclosed in the macro GK_ATOM which will have cruel
   and unusual things done to it
 
   The first argument to GK_ATOM is the C++ name of the atom

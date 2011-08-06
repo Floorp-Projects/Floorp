@@ -916,10 +916,15 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
       } else if (opcode == kPing) {
         LOG(("WebSocketChannel:: ping received\n"));
         GeneratePong(payload, payloadLength);
-      } else {
+      } else if (opcode == kPong) {
         // opcode kPong: the mere act of receiving the packet is all we need
         // to do for the pong to trigger the activity timers
         LOG(("WebSocketChannel:: pong received\n"));
+      } else {
+        /* unknown control frame opcode */
+        LOG(("WebSocketChannel:: unknown control op code %d\n", opcode));
+        AbortSession(NS_ERROR_ILLEGAL_VALUE);
+        return NS_ERROR_ILLEGAL_VALUE;
       }
 
       if (mFragmentAccumulator) {
@@ -931,9 +936,9 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
         ::memmove(mFramePtr, payload + payloadLength, avail - payloadLength);
         payload = mFramePtr;
         avail -= payloadLength;
-        payloadLength = 0;
         if (mBuffered)
           mBuffered -= framingLength + payloadLength;
+        payloadLength = 0;
       }
     } else if (opcode == kBinary) {
       LOG(("WebSocketChannel:: binary frame received\n"));

@@ -438,24 +438,24 @@ TagToArrayType(uint32_t tag)
 bool
 JSStructuredCloneWriter::writeTypedArray(JSObject *obj)
 {
-    TypedArray *arr = TypedArray::fromJSObject(obj);
-    if (!out.writePair(ArrayTypeToTag(arr->type), arr->length))
+    JSObject *arr = TypedArray::getTypedArray(obj);
+    if (!out.writePair(ArrayTypeToTag(TypedArray::getType(arr)), TypedArray::getLength(arr)))
         return false;
 
-    switch (arr->type) {
+    switch (TypedArray::getType(arr)) {
     case TypedArray::TYPE_INT8:
     case TypedArray::TYPE_UINT8:
     case TypedArray::TYPE_UINT8_CLAMPED:
-        return out.writeArray((const uint8_t *) arr->data, arr->length);
+        return out.writeArray((const uint8_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
     case TypedArray::TYPE_INT16:
     case TypedArray::TYPE_UINT16:
-        return out.writeArray((const uint16_t *) arr->data, arr->length);
+        return out.writeArray((const uint16_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
     case TypedArray::TYPE_INT32:
     case TypedArray::TYPE_UINT32:
     case TypedArray::TYPE_FLOAT32:
-        return out.writeArray((const uint32_t *) arr->data, arr->length);
+        return out.writeArray((const uint32_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
     case TypedArray::TYPE_FLOAT64:
-        return out.writeArray((const uint64_t *) arr->data, arr->length);
+        return out.writeArray((const uint64_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
     default:
         JS_NOT_REACHED("unknown TypedArray type");
         return false;
@@ -661,23 +661,23 @@ JSStructuredCloneReader::readTypedArray(uint32_t tag, uint32_t nelems, Value *vp
         return false;
     vp->setObject(*obj);
 
-    TypedArray *arr = TypedArray::fromJSObject(obj);
-    JS_ASSERT(arr->length == nelems);
-    JS_ASSERT(arr->type == atype);
+    JSObject *arr = TypedArray::getTypedArray(obj);
+    JS_ASSERT(TypedArray::getLength(arr) == nelems);
+    JS_ASSERT(TypedArray::getType(arr) == atype);
     switch (atype) {
       case TypedArray::TYPE_INT8:
       case TypedArray::TYPE_UINT8:
       case TypedArray::TYPE_UINT8_CLAMPED:
-        return in.readArray((uint8_t *) arr->data, nelems);
+        return in.readArray((uint8_t *) TypedArray::getDataOffset(arr), nelems);
       case TypedArray::TYPE_INT16:
       case TypedArray::TYPE_UINT16:
-        return in.readArray((uint16_t *) arr->data, nelems);
+        return in.readArray((uint16_t *) TypedArray::getDataOffset(arr), nelems);
       case TypedArray::TYPE_INT32:
       case TypedArray::TYPE_UINT32:
       case TypedArray::TYPE_FLOAT32:
-        return in.readArray((uint32_t *) arr->data, nelems);
+        return in.readArray((uint32_t *) TypedArray::getDataOffset(arr), nelems);
       case TypedArray::TYPE_FLOAT64:
-        return in.readArray((uint64_t *) arr->data, nelems);
+        return in.readArray((uint64_t *) TypedArray::getDataOffset(arr), nelems);
       default:
         JS_NOT_REACHED("unknown TypedArray type");
         return false;
