@@ -127,6 +127,14 @@ namespace JSC {
             d31
         } FPRegisterID;
 
+        inline FPRegisterID floatShadow(FPRegisterID s)
+        {
+            return (FPRegisterID)(s*2);
+        }
+        inline FPRegisterID doubleShadow(FPRegisterID d)
+        {
+            return (FPRegisterID)(d / 2);
+        }
     } // namespace ARMRegisters
 
     class ARMAssembler {
@@ -187,31 +195,19 @@ namespace JSC {
             MVN = (0xf << 21),
             MUL = 0x00000090,
             MULL = 0x00c00090,
-            FCPYD = 0x0eb00b40,
-            FADDD = 0x0e300b00,
-            FNEGD = 0x0eb10b40,
-            FDIVD = 0x0e800b00,
-            FSUBD = 0x0e300b40,
-            FMULD = 0x0e200b00,
-            FCMPD = 0x0eb40b40,
-            FSQRTD = 0x0eb10bc0,
             DTR = 0x05000000,
+#if WTF_ARM_ARCH_VERSION >= 5
             LDRH = 0x00100090,
             STRH = 0x00000090,
+            DTRH = 0x00000090,
+#endif
             STMDB = 0x09200000,
             LDMIA = 0x08b00000,
-            FDTR = 0x0d000b00,
             B = 0x0a000000,
             BL = 0x0b000000
 #if WTF_ARM_ARCH_VERSION >= 5 || defined(__ARM_ARCH_4T__)
            ,BX = 0x012fff10
 #endif
-           ,FMSR = 0x0e000a10,
-            FMRS = 0x0e100a10,
-            FSITOD = 0x0eb80bc0,
-            FTOSID = 0x0ebd0b40,
-            FTOSIZD = 0x0ebd0bc0,
-            FMSTAT = 0x0ef1fa10
 #if WTF_ARM_ARCH_VERSION >= 5
            ,CLZ = 0x016f0f10,
             BKPT = 0xe1200070,
@@ -234,7 +230,12 @@ namespace JSC {
             DT_WB = (1 << 21),
             // This flag is inlcuded in LDR and STR
             DT_PRE = (1 << 24),
+            // This flag makes switches the instruction between {ld,st}r{,s}h and {ld,st}rsb
             HDT_UH = (1 << 5),
+            // if this bit is on, we do a register offset, if it is off, we do an immediate offest.
+            HDT_IMM = (1 << 22), 
+            // Differentiates half word load/store between signed and unsigned (also enables signed byte loads.)
+            HDT_S = (1 << 6),
             DT_LOAD = (1 << 20)
         };
 
@@ -523,76 +524,7 @@ namespace JSC {
             m_buffer.putInt(static_cast<ARMWord>(cc) | MULL | RN(rdhi) | RD(rdlo) | RS(rn) | RM(rm));
         }
 
-        void fcpyd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmov.f64", nameFpRegD(dd), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FCPYD, dd, dd, dm);
-        }
-
-        void faddd_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vadd.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FADDD, dd, dn, dm);
-        }
-
-        void fnegd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
-            m_buffer.putInt(static_cast<ARMWord>(cc) | FNEGD | DD(dd) | DM(dm));
-        }
-
-        void fdivd_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vdiv.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FDIVD, dd, dn, dm);
-        }
-
-        void fsubd_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vsub.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
-        }
-
-        void fmuld_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmul.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FMULD, dd, dn, dm);
-        }
-
-        void fcmpd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vcmp.f64", nameFpRegD(dd), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FCMPD, dd, 0, dm);
-        }
-
-        void fsqrtd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vsqrt.f64", nameFpRegD(dd), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
-        }
-
+        // pc relative loads (useful for loading from pools).
         void ldr_imm(int rd, ARMWord imm, Condition cc = AL)
         {
             char mnemonic[16];
@@ -609,6 +541,87 @@ namespace JSC {
             js::JaegerSpew(js::JSpew_Insns,
                     IPFX    "%-15s %s, =0x%x @ (%d)\n", MAYBE_PAD, mnemonic, nameGpReg(rd), imm, static_cast<int32_t>(imm));
             m_buffer.putIntWithConstantInt(static_cast<ARMWord>(cc) | DTR | DT_LOAD | DT_UP | RN(ARMRegisters::pc) | RD(rd), imm);
+        }
+
+        void mem_imm_off(bool isLoad, bool isSigned, int size, bool posOffset,
+                         int rd, int rb, ARMWord offset, Condition cc = AL)
+        {
+            ASSERT(size == 8 || size == 16 || size == 32);
+            char const * mnemonic_act = (isLoad) ? ("ld") : ("st");
+            char const * mnemonic_sign = (isSigned) ? ("s") : ("");
+            
+            char const * mnemonic_size = NULL;
+            switch (size / 8) {
+            case 1:
+                mnemonic_size = "b";
+                break;
+            case 2:
+                mnemonic_size = "h";
+                break;
+            case 4:
+                mnemonic_size = "";
+                break;
+            }
+            char const * off_sign = (posOffset) ? ("+") : ("-");
+            js::JaegerSpew(js::JSpew_Insns, 
+                           IPFX "%sr%s%s, [%s, #%s%u]\n", 
+                           MAYBE_PAD, mnemonic_act, mnemonic_sign, mnemonic_size,
+                           nameGpReg(rd), nameGpReg(rb), off_sign, offset);
+            if (size == 32 || (size == 8 && !isSigned)) {
+                /* All (the one) 32 bit ops and the unsigned 8 bit ops use the original encoding.*/
+                emitInst(static_cast<ARMWord>(cc) | DTR |
+                         (isLoad ? DT_LOAD : 0) |
+                         (size == 8 ? DT_BYTE : 0) |
+                         (posOffset ? DT_UP : 0), rd, rb, offset);
+            } else {
+                /* All 16 bit ops and 8 bit unsigned use the newer encoding.*/
+                /*these instructions don't exist before ARMv4*/
+                ASSERT(WTF_ARM_ARCH_VERSION >= 4);
+                emitInst(static_cast<ARMWord>(cc) | DTRH | HDT_IMM | DT_PRE |
+                         (isLoad ? DT_LOAD : 0) |
+                         (size == 16 ? HDT_UH : 0) |
+                         (isSigned ? HDT_S : 0) |
+                         (posOffset ? DT_UP : 0), rd, rb, offset);
+            }
+        }
+
+        void mem_reg_off(bool isLoad, bool isSigned, int size, bool posOffset, int rd, int rb, int rm, Condition cc = AL)
+        {
+            char const * mnemonic_act = (isLoad) ? ("ld") : ("st");
+            char const * mnemonic_sign = (isSigned) ? ("s") : ("");
+
+            char const * mnemonic_size = NULL;
+            switch (size / 8) {
+            case 1:
+                mnemonic_size = "b";
+                break;
+            case 2:
+                mnemonic_size = "h";
+                break;
+            case 4:
+                mnemonic_size = "";
+                break;
+            }
+            char const * off_sign = (posOffset) ? ("+") : ("-");
+            js::JaegerSpew(js::JSpew_Insns, 
+                           IPFX "%sr%s%s, [%s, #%s%s]\n", MAYBE_PAD, mnemonic_act, mnemonic_sign, mnemonic_size,
+                           nameGpReg(rd), nameGpReg(rb), off_sign, nameGpReg(rm));
+            if (size == 32 || (size == 8 && !isSigned)) {
+                /* All (the one) 32 bit ops and the signed 8 bit ops use the original encoding.*/
+                emitInst(static_cast<ARMWord>(cc) | DTR |
+                         (isLoad ? DT_LOAD : 0) |
+                         (size == 8 ? DT_BYTE : 0) |
+                         (posOffset ? DT_UP : 0) |
+                         OP2_OFSREG, rd, rb, rm);
+            } else {
+                /* All 16 bit ops and 8 bit unsigned use the newer encoding.*/
+                ASSERT(WTF_ARM_ARCH_VERSION >= 4);
+                emitInst(static_cast<ARMWord>(cc) | DTRH | DT_PRE |
+                         (isLoad ? DT_LOAD : 0) |
+                         (size == 16 ? HDT_UH : 0) |
+                         (isSigned ? HDT_S : 0) |
+                         (posOffset ? DT_UP : 0), rd, rb, rm);
+            }
         }
 
         // Data transfers like this:
@@ -667,6 +680,17 @@ namespace JSC {
         }
 
         // Data transfers like this:
+        //  LDRSB rd, [rb, +offset]
+        //  STRSB rd, [rb, +offset]
+        void dtrsb_u(bool isLoad, int rd, int rb, ARMWord offset, Condition cc = AL)
+        {
+            char const * mnemonic = (isLoad) ? ("ldrsb") : ("strb");
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
+            emitInst(static_cast<ARMWord>(cc) | DTRH | HDT_S | (isLoad ? DT_LOAD : 0) | DT_UP, rd, rb, offset);
+        }
+
+        // Data transfers like this:
         //  LDRB rd, [rb, +rm]
         //  STRB rd, [rb, +rm]
         void dtrb_ur(bool isLoad, int rd, int rb, int rm, Condition cc = AL)
@@ -678,14 +702,27 @@ namespace JSC {
         }
 
         // Data transfers like this:
-        //  LDRB rd, [rb, -offset]
-        //  STRB rd, [rb, -offset]
+        //  LDRB rd, [rb, #-offset]
+        //  STRB rd, [rb, #-offset]
         void dtrb_d(bool isLoad, int rd, int rb, ARMWord offset, Condition cc = AL)
         {
             char const * mnemonic = (isLoad) ? ("ldrb") : ("strb");
             js::JaegerSpew(js::JSpew_Insns,
                     IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
             emitInst(static_cast<ARMWord>(cc) | DTR | DT_BYTE | (isLoad ? DT_LOAD : 0), rd, rb, offset);
+        }
+
+        // Data transfers like this:
+        //  LDRSB rd, [rb, #-offset]
+        //  STRSB rd, [rb, #-offset]
+        // TODO: this instruction does not exist on arm v4 and earlier
+        void dtrsb_d(bool isLoad, int rd, int rb, ARMWord offset, Condition cc = AL)
+        {
+            ASSERT(isLoad); /*can only do signed byte loads, not stores*/
+            char const * mnemonic = (isLoad) ? ("ldrsb") : ("strb");
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
+            emitInst(static_cast<ARMWord>(cc) | DTRH | HDT_S | (isLoad ? DT_LOAD : 0), rd, rb, offset);
         }
 
         // Data transfers like this:
@@ -720,29 +757,25 @@ namespace JSC {
             emitInst(static_cast<ARMWord>(cc) | LDRH | HDT_UH | DT_UP | DT_PRE, rd, rb, offset);
         }
 
+        void ldrsh_d(int rd, int rb, ARMWord offset, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, "ldrsh", nameGpReg(rd), nameGpReg(rb), offset);
+            emitInst(static_cast<ARMWord>(cc) | LDRH | HDT_UH | HDT_S | DT_PRE, rd, rb, offset); 
+       }
+
+        void ldrsh_u(int rd, int rb, ARMWord offset, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, "ldrsh", nameGpReg(rd), nameGpReg(rb), offset);
+            emitInst(static_cast<ARMWord>(cc) | LDRH | HDT_UH | HDT_S | DT_UP | DT_PRE, rd, rb, offset);
+        }
+
         void strh_r(int rb, int rm, int rd, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
                     IPFX   "%-15s %s, [%s, +%s]\n", MAYBE_PAD, "strh", nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
             emitInst(static_cast<ARMWord>(cc) | STRH | HDT_UH | DT_UP | DT_PRE, rd, rb, rm);
-        }
-
-        void fdtr_u(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
-        {
-            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
-            ASSERT(offset <= 0xff);
-            emitInst(static_cast<ARMWord>(cc) | FDTR | DT_UP | (isLoad ? DT_LOAD : 0), dd, rn, offset);
-        }
-
-        void fdtr_d(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
-        {
-            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
-            ASSERT(offset <= 0xff);
-            emitInst(static_cast<ARMWord>(cc) | FDTR | (isLoad ? DT_LOAD : 0), dd, rn, offset);
         }
 
         void push_r(int reg, Condition cc = AL)
@@ -771,47 +804,7 @@ namespace JSC {
             dtr_u(true, reg, ARMRegisters::sp, 0, cc);
         }
 
-        void fmsr_r(int dd, int rn, Condition cc = AL)
-        {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FMSR, rn, dd, 0);
-        }
 
-        void fmrs_r(int rd, int dn, Condition cc = AL)
-        {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FMRS, rd, dn, 0);
-        }
-
-        void fsitod_r(int dd, int dm, Condition cc = AL)
-        {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSITOD, dd, 0, dm);
-        }
-
-        void ftosid_r(int fd, int dm, Condition cc = AL)
-        {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FTOSID, fd, 0, dm);
-        }
-
-        void ftosizd_r(int fd, int dm, Condition cc = AL)
-        {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FTOSIZD, fd, 0, dm);
-        }
-
-        void fmstat(Condition cc = AL)
-        {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            m_buffer.putInt(static_cast<ARMWord>(cc) | FMSTAT);
-        }
 
 #if WTF_ARM_ARCH_VERSION >= 5
         void clz_r(int rd, int rm, Condition cc = AL)
@@ -1193,12 +1186,17 @@ namespace JSC {
         }
 
         // Memory load/store helpers
+        void dataTransferN(bool isLoad, bool isSigned, int size, RegisterID srcDst, RegisterID base, int32_t offset);
 
         void dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset);
-        void dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset);
+        void dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset, bool isSigned);
+        void baseIndexTransferN(bool isLoad, bool isSigned, int size, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void baseIndexTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
-
+        void floatTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
+        /**/
+        void baseIndexFloatTransfer(bool isLoad, bool isDouble, FPRegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
+ 
         // Constant pool hnadlers
 
         static ARMWord placeConstantPoolBarrier(int offset)
@@ -1209,6 +1207,7 @@ namespace JSC {
         }
 
     private:
+        // pretty-printing functions
         static char const * nameGpReg(int reg)
         {
             ASSERT(reg <= 16);
@@ -1235,6 +1234,22 @@ namespace JSC {
                 "d20",  "d21",  "d22",  "d23",
                 "d24",  "d25",  "d26",  "d27",
                 "d28",  "d29",  "d30",  "d31"
+            };
+            return names[reg];
+        }
+        static char const * nameFpRegS(int reg)
+        {
+            ASSERT(reg <= 31);
+            ASSERT(reg >= 0);
+            static char const * names[] = {
+                 "s0",   "s1",   "s2",   "s3",
+                 "s4",   "s5",   "s6",   "s7",
+                 "s8",   "s9",  "s10",  "s11",
+                "s12",  "s13",  "s14",  "s15",
+                "s16",  "s17",  "s18",  "s19",
+                "s20",  "s21",  "s22",  "s23",
+                "s24",  "s25",  "s26",  "s27",
+                "s28",  "s29",  "s30",  "s31"
             };
             return names[reg];
         }
@@ -1400,6 +1415,20 @@ namespace JSC {
             return ((reg << 1) & 0x20) | (reg & 0xf);
         }
 
+        ARMWord SD(int reg)
+        {
+            ASSERT(reg <= ARMRegisters::d31);
+            // Endoded as bits [15:12,22].
+            return ((reg << 11) | (reg << 22)) & 0x0040f000;
+        }
+
+        ARMWord SM(int reg)
+        {
+            ASSERT(reg <= ARMRegisters::d31);
+            // Encoded as bits [5,3:0].
+            return ((reg << 5) & 0x20) | ((reg >> 1) & 0xf);
+        }
+
         static ARMWord getConditionalField(ARMWord i)
         {
             return i & 0xf0000000;
@@ -1409,6 +1438,288 @@ namespace JSC {
 
         ARMBuffer m_buffer;
         Jumps m_jumps;
+    public:
+        // VFP instruction constants
+        enum {
+            VFP_DATA  = 0x0E000A00,
+            VFP_EXT   = 0x0C000A00,
+            VFP_XFER  = 0x0E000A08,
+            VFP_DXFER = 0x0C400A00,
+
+            VFP_DBL   = (1<<8),
+            
+            /*integer conversions*/
+            VFP_ICVT  = 0x00B80040,
+            VFP_FPCVT = 0x00B700C0,
+            
+            VFP_DTR   = 0x01000000,
+            VFP_MOV     = 0x00000010,
+
+            FCPYD = 0x0eb00b40,
+            FADDD = 0x0e300b00,
+            FNEGD = 0x0eb10b40,
+            FDIVD = 0x0e800b00,
+            FSUBD = 0x0e300b40,
+            FMULD = 0x0e200b00,
+            FCMPD = 0x0eb40b40,
+            FSQRTD = 0x0eb10bc0,
+            FMSR = 0x0e000a10,
+            FMRS = 0x0e100a10,
+            FSITOD = 0x0eb80bc0,
+            FUITOD = 0x0eb80b40,
+            FTOSID = 0x0ebd0b40,
+            FTOSIZD = 0x0ebd0bc0,
+            FMSTAT = 0x0ef1fa10,
+            FDTR = 0x0d000b00
+
+        };
+        enum RegType {
+            SIntReg32,
+            UIntReg32,
+            FloatReg32,
+            FloatReg64
+        };
+
+        const char * nameType(RegType t)
+        {
+            const char * const name[4] =
+                {"S32", "U32", "F32", "F64"};
+            return name[t];
+        }
+
+        const char * nameTypedReg(RegType t, int reg)
+        {
+            switch(t) {
+            case SIntReg32:
+            case UIntReg32:
+                return nameGpReg(reg);
+            case FloatReg32:
+                return nameFpRegS(reg);
+            case FloatReg64:
+                return nameFpRegD(reg);
+            }
+            return "";
+        }
+
+        bool isFloatType(RegType rt)
+        {
+            if (rt == FloatReg32 || rt == FloatReg64)
+                return true;
+            return false;
+        }
+
+        bool isIntType(RegType rt)
+        {
+            if (rt == FloatReg32 || rt == FloatReg64)
+                return false;
+            return true;
+        }
+
+        // ********************************************************************
+        // *                            VFP Code:
+        //*********************************************************************
+        /* this is horrible. There needs to be some sane way of distinguishing D from S from R*/
+        void emitVFPInst(ARMWord op, ARMWord rd, ARMWord rn, ARMWord op2)
+        {
+            m_buffer.putInt(op | rn | rd | op2);
+        }
+
+        // NOTE: offset is the actual value that is going to be encoded.  It is the offset in words, NOT in bytes.
+        void fmem_imm_off(bool isLoad, bool isDouble, bool isUp, int dest, int rn, ARMWord offset, Condition cc = AL)
+        {
+            char const * ins = isLoad ? "vldr.f" : "vstr.f";
+            js::JaegerSpew(js::JSpew_Insns,
+                           IPFX   "%s%d %s, [%s, #%s%u]\n", MAYBE_PAD, 
+                           ins, (isDouble ? 64 : 32), (isDouble ? nameFpRegD(dest) : nameFpRegS(dest)),
+                           nameGpReg(rn), (isUp ? "+" : "-"), offset);
+            ASSERT(offset <= 0xff);
+            emitVFPInst(static_cast<ARMWord>(cc) | 
+                        VFP_EXT | VFP_DTR | 
+                        (isDouble ? VFP_DBL : 0) |
+                        (isUp ? DT_UP : 0) | 
+                        (isLoad ? DT_LOAD : 0), isDouble ? DD(dest) : SD(dest), RN(rn), offset);
+            
+        }
+
+        // WARNING: even for an int -> float conversion, all registers used
+        // are VFP registers.
+        void vcvt(RegType srcType, RegType dstType, int src, int dest, Condition cc = AL)
+        {
+            ASSERT(srcType != dstType);
+            ASSERT(isFloatType(srcType) || isFloatType(dstType));
+
+            js::JaegerSpew(js::JSpew_Insns,
+                           IPFX   "vcvt.%s.%-15s, %s,%s\n", MAYBE_PAD, 
+                           nameType(dstType), nameType(srcType),
+                           nameTypedReg(dstType,dest), nameTypedReg(srcType,src));
+            
+            if (isFloatType(srcType) && isFloatType (dstType)) {
+                // doing a float -> float conversion
+                bool dblToFloat = srcType == FloatReg64;
+                emitVFPInst(static_cast<ARMWord>(cc) | VFP_DATA | VFP_FPCVT |
+                            (dblToFloat ? VFP_DBL : 0),
+                            dblToFloat ? SD(dest) : DD(dest),
+                            dblToFloat ? DM(src) : SM(src), 0);
+            } else {
+                JS_NOT_REACHED("Other conversions did not seem useful on 2011/08/04");
+            }
+        }
+
+        // does r2:r1 -> dn, dn -> r2:r1, r2:r1 -> s2:s1, etc.
+        void vmov64 (bool fromFP, bool isDbl, int r1, int r2, int rFP, Condition cc = AL)
+        {
+            if (fromFP) {
+                js::JaegerSpew(js::JSpew_Insns,
+                               IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmov", 
+                               nameGpReg(r1), nameGpReg(r2), nameFpRegD(rFP));
+            } else {
+                js::JaegerSpew(js::JSpew_Insns,
+                               IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmov",
+                               nameFpRegD(rFP), nameGpReg(r1), nameGpReg(r2));
+            }
+            emitVFPInst(static_cast<ARMWord>(cc) | VFP_DXFER | VFP_MOV |
+                        (fromFP ? DT_LOAD : 0) |
+                        (isDbl ? VFP_DBL : 0), RD(r1), RN(r2), isDbl ? DM(rFP) : SM(rFP));
+            
+        }
+
+        void fcpyd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmov.f64", 
+                           nameFpRegD(dd), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FCPYD, dd, dd, dm);
+        }
+
+        void faddd_r(int dd, int dn, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vadd.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FADDD, dd, dn, dm);
+        }
+
+        void fnegd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
+            m_buffer.putInt(static_cast<ARMWord>(cc) | FNEGD | DD(dd) | DM(dm));
+        }
+
+        void fdivd_r(int dd, int dn, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vdiv.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FDIVD, dd, dn, dm);
+        }
+
+        void fsubd_r(int dd, int dn, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vsub.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
+        }
+
+        void fmuld_r(int dd, int dn, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmul.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FMULD, dd, dn, dm);
+        }
+
+        void fcmpd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vcmp.f64", nameFpRegD(dd), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FCMPD, dd, 0, dm);
+        }
+
+        void fsqrtd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vsqrt.f64", nameFpRegD(dd), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
+        }
+
+        void fdtr_u(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
+        {
+            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
+            ASSERT(offset <= 0xff);
+            emitInst(static_cast<ARMWord>(cc) | FDTR | DT_UP | (isLoad ? DT_LOAD : 0), dd, rn, offset);
+        }
+
+        void fdtr_d(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
+        {
+            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
+            ASSERT(offset <= 0xff);
+            emitInst(static_cast<ARMWord>(cc) | FDTR | (isLoad ? DT_LOAD : 0), dd, rn, offset);
+        }
+
+        void fmsr_r(int dd, int rn, Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FMSR, rn, dd, 0);
+        }
+
+        void fmrs_r(int rd, int dn, Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FMRS, rd, dn, 0);
+        }
+
+        void fsitod_r(int dd, int dm, Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FSITOD, dd, 0, dm);
+        }
+
+        void fuitod_r(int dd, int dm, Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FUITOD, dd, 0, dm);
+        }
+
+        void ftosid_r(int fd, int dm, Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FTOSID, fd, 0, dm);
+        }
+
+        void ftosizd_r(int fd, int dm, Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FTOSIZD, fd, 0, dm);
+        }
+
+        void fmstat(Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            m_buffer.putInt(static_cast<ARMWord>(cc) | FMSTAT);
+        }
     };
 
 } // namespace JSC
