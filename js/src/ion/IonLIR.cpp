@@ -80,7 +80,9 @@ LBlock::lastId()
 LSnapshot::LSnapshot(MSnapshot *mir)
   : numSlots_(mir->numOperands() * BOX_PIECES),
     slots_(NULL),
-    mir_(mir)
+    mir_(mir),
+    snapshotOffset_(INVALID_SNAPSHOT_OFFSET),
+    bailoutId_(INVALID_BAILOUT_ID)
 { }
 
 bool

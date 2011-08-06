@@ -388,6 +388,8 @@ CPPSRCS +=	MIR.cpp \
 		TypePolicy.cpp \
 		CodeGenerator.cpp \
 		IonMacroAssembler.cpp \
+		Snapshots.cpp \
+		Bailouts.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
@@ -412,6 +414,7 @@ CPPSRCS += 	Lowering-x64.cpp \
 		CodeGenerator-x64.cpp \
 		Trampoline-x64.cpp \
 		Assembler-x64.cpp \
+		Bailouts-x64.cpp \
 		$(NULL)
 else
 #CPPSRCS		+= only_on_x86.cpp
@@ -420,6 +423,7 @@ CPPSRCS +=	Lowering-x86.cpp \
 		CodeGenerator-x86.cpp \
 		Trampoline-x86.cpp \
 		Assembler-x86.cpp \
+		Bailouts-x86.cpp \
 		$(NULL)
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s

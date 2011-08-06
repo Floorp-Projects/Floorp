@@ -50,12 +50,6 @@ namespace ion {
 static const ptrdiff_t STACK_SLOT_SIZE       = 8;
 static const uint32 MAX_STACK_SLOTS          = 256;
 
-// In bytes: slots in between arguments and the locals.
-//   +8 for callee token
-//   +8 for size descriptor
-//   +8 for return address.
-static const uint32 ION_FRAME_PREFIX_SIZE    = 24;
-
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
 //   +8 for gpr spills
@@ -67,6 +61,9 @@ static const uint32 ShadowStackSpace = 32;
 #else
 static const uint32 ShadowStackSpace = 0;
 #endif
+
+// An offset that is illegal for a local variable's stack allocation.
+static const int32 INVALID_STACK_SLOT       = -1;
 
 class Registers {
   public:
@@ -81,6 +78,7 @@ class Registers {
     }
 
     static const Code StackPointer = JSC::X86Registers::esp;
+    static const Code Invalid = JSC::X86Registers::invalid_reg;
 
     static const uint32 Total = 16;
     static const uint32 Allocatable = 13;
@@ -131,6 +129,8 @@ class FloatRegisters {
                                        "xmm12", "xmm13", "xmm14", "xmm15" };
         return Names[code];
     }
+
+    static const Code Invalid = JSC::X86Registers::invalid_xmm;
 
     static const uint32 Total = 16;
     static const uint32 Allocatable = 16;

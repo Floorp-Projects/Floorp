@@ -216,6 +216,9 @@ class Assembler : public AssemblerX86Shared
     }
     void lea(const Operand &src, const Register &dest) {
         switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.leal_mr(src.disp(), src.base(), dest.code());
+            break;
           case Operand::SCALE:
             masm.leal_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;

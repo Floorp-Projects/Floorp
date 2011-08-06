@@ -47,6 +47,8 @@
 namespace js {
 namespace ion {
 
+class OutOfLineBailout;
+
 class CodeGeneratorX86Shared : public CodeGeneratorShared
 {
     friend class MoveResolverX86;
@@ -56,19 +58,16 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     }
 
   protected:
-    Label *returnLabel_;
+    // Label for the common return path.
+    HeapLabel *returnLabel_;
+    HeapLabel *deoptLabel_;
 
     inline Operand ToOperand(const LAllocation &a) {
         if (a.isGeneralReg())
             return Operand(a.toGeneralReg()->reg());
         if (a.isFloatReg())
             return Operand(a.toFloatReg()->reg());
-        int32 disp;
-        if (a.isStackSlot())
-            disp = SlotToStackOffset(a.toStackSlot()->slot());
-        else
-            disp = ArgToStackOffset(a.toArgument()->index());
-        return Operand(StackPointer, disp);
+        return Operand(StackPointer, ToStackOffset(&a));
     }
     inline Operand ToOperand(const LAllocation *a) {
         return ToOperand(*a);
@@ -79,9 +78,12 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
 
+    bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
+
   protected:
     bool generatePrologue();
     bool generateEpilogue();
+    bool generateOutOfLineCode();
 
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
@@ -96,6 +98,28 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitMathD(LMathD *math);
     virtual bool visitTableSwitch(LTableSwitch *ins);
+
+    // Out of line visitors.
+    bool visitOutOfLineBailout(OutOfLineBailout *ool);
+};
+
+// An out-of-line bailout thunk.
+class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorX86Shared>
+{
+    LSnapshot *snapshot_;
+    uint32 frameSize_;
+
+  public:
+    OutOfLineBailout(LSnapshot *snapshot, uint32 frameSize)
+      : snapshot_(snapshot),
+        frameSize_(frameSize)
+    { }
+
+    bool accept(CodeGeneratorX86Shared *codegen);
+
+    LSnapshot *snapshot() const {
+        return snapshot_;
+    }
 };
 
 } // ion

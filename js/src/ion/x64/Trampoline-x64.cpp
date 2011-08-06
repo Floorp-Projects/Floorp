@@ -39,12 +39,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "Assembler-x64.h"
+#include "assembler/assembler/MacroAssembler.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"
+#include "ion/IonFrames.h"
+#include "ion/Bailouts.h"
 
+using namespace js;
 using namespace js::ion;
-using namespace JSC;
+
+static void
+GenerateReturn(MacroAssembler &masm, int returnCode)
+{
+    // Restore non-volatile registers.
+#if defined(_WIN64)
+    masm.pop(rsi);
+    masm.pop(rdi);
+#endif
+    masm.pop(r15);
+    masm.pop(r14);
+    masm.pop(r13);
+    masm.pop(r12);
+    masm.pop(rbx);
+
+    // Restore frame pointer and return.
+    masm.pop(rbp);
+    masm.movl(Imm32(returnCode), rax);
+    masm.ret();
+}
 
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
@@ -146,21 +168,118 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.pop(r12); // vp
     masm.movq(JSReturnReg, Operand(r12, 0));
 
-    // Restore non-volatile registers.
-#if defined(_WIN64)
-    masm.pop(rsi);
-    masm.pop(rdi);
-#endif
-    masm.pop(r15);
-    masm.pop(r14);
-    masm.pop(r13);
-    masm.pop(r12);
-    masm.pop(rbx);
+    GenerateReturn(masm, JS_TRUE);
 
-    // Restore frame pointer and return.
-    masm.pop(rbp);
-    masm.movq(ImmWord(1), rax);
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
+IonCode *
+IonCompartment::generateReturnError(JSContext *cx)
+{
+    MacroAssembler masm(cx);
+
+    // Pop arguments off the stack.
+    // eax <- 8*argc (size of all arugments we pushed on the stack)
+    masm.pop(r14);
+    masm.addq(r14, rsp);
+
+    GenerateReturn(masm, JS_FALSE);
+    
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
+static void
+GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
+{
+    // Push registers such that we can access them from [base + code].
+    masm.reserveStack(Registers::Total * sizeof(void *));
+    for (uint32 i = 0; i < Registers::Total; i++)
+        masm.movq(Register::FromCode(i), Operand(rsp, i * sizeof(void *)));
+
+    // Push xmm registers, such that we can access them from [base + code].
+    masm.reserveStack(FloatRegisters::Total * sizeof(double));
+    for (uint32 i = 0; i < FloatRegisters::Total; i++)
+        masm.movsd(FloatRegister::FromCode(i), Operand(rsp, i * sizeof(double)));
+
+    // Get the stack pointer into a register, pre-alignment.
+    masm.movq(rsp, r8);
+
+    // Call the bailout function.
+    masm.setupUnalignedABICall(1, rax);
+    masm.setABIArg(0, r8);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
+
+    // Remove the common bailout frame.
+    uint32 bailoutFrameSize = sizeof(void *) * Registers::Total +
+                              sizeof(double) * FloatRegisters::Total +
+                              sizeof(void *); // bailout id;
+    masm.addq(Imm32(bailoutFrameSize), rsp);
+
+    // Remove the Ion frame.
+    masm.pop(rcx);
+    masm.addq(rcx, rsp);
+
+    Label exception;
+
+    // Either interpret or handle an exception.
+    masm.testl(rax, rax);
+    masm.j(Assembler::NonZero, &exception);
+
+    // If we're about to interpret, we've removed the depth of the local ion
+    // frame, meaning we're aligned to its (callee, size, return) prefix. Save
+    // this prefix in a register.
+    masm.movq(rsp, rax);
+
+    // Reserve space for Interpret() to store a Value.
+    masm.subq(Imm32(sizeof(Value)), rsp);
+    masm.movq(rsp, rcx);
+
+    // Call out to the interpreter.
+    masm.setupUnalignedABICall(2, rdx);
+    masm.setABIArg(0, rax);
+    masm.setABIArg(1, rcx);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
+
+    // Load the value the interpreter returned.
+    masm.movq(Operand(rsp, 0), JSReturnReg);
+    masm.addq(Imm32(8), rsp);
+
+    // We're back, aligned to the frame prefix. Check for an exception.
+    masm.testl(rax, rax);
+    masm.j(Assembler::Zero, &exception);
+
+    // Return to the caller.
     masm.ret();
+
+    masm.bind(&exception);
+
+
+    // Call into HandleException, passing in the top frame prefix.
+    masm.movq(rsp, rax);
+    masm.setupUnalignedABICall(1, rcx);
+    masm.setABIArg(0, rax);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, HandleException));
+
+    // The return value is how much stack to adjust before returning.
+    masm.addq(rax, rsp);
+    masm.ret();
+}
+
+IonCode *
+IonCompartment::generateBailoutTable(JSContext *cx, uint32 frameClass)
+{
+    JS_NOT_REACHED("x64 does not use bailout tables");
+    return NULL;
+}
+
+IonCode *
+IonCompartment::generateBailoutHandler(JSContext *cx)
+{
+    MacroAssembler masm;
+
+    GenerateBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID);
 
     Linker linker(masm);
     return linker.newCode(cx);

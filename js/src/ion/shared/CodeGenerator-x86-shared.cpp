@@ -38,16 +38,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "jscntxt.h"
+#include "jscompartment.h"
 #include "CodeGenerator-x86-shared.h"
 #include "CodeGenerator-shared-inl.h"
 #include "ion/IonFrames.h"
 #include "ion/MoveEmitter.h"
+#include "ion/IonCompartment.h"
 
 using namespace js;
 using namespace js::ion;
 
 CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph)
-  : CodeGeneratorShared(gen, graph)
+  : CodeGeneratorShared(gen, graph),
+    deoptLabel_(NULL)
 {
 }
 
@@ -55,10 +59,7 @@ bool
 CodeGeneratorX86Shared::generatePrologue()
 {
     // Note that this automatically sets MacroAssembler::framePushed().
-    if (frameClass_ != FrameSizeClass::None())
-        masm.reserveStack(frameClass_.frameSize());
-    else
-        masm.reserveStack(frameDepth_);
+    masm.reserveStack(frameSize());
 
     // Allocate returnLabel_ on the heap, so we don't run it's destructor and
     // assert-not-bound in debug mode on compilation failure.
@@ -73,14 +74,17 @@ CodeGeneratorX86Shared::generateEpilogue()
     masm.bind(returnLabel_);
 
     // Pop the stack we allocated at the start of the function.
-    if (frameClass_ != FrameSizeClass::None())
-        masm.freeStack(frameClass_.frameSize());
-    else
-        masm.freeStack(frameDepth_);
+    masm.freeStack(frameSize());
     JS_ASSERT(masm.framePushed() == 0);
 
     masm.ret();
     return true;
+}
+
+bool
+OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
+{
+    return codegen->visitOutOfLineBailout(this);
 }
 
 bool
@@ -118,6 +122,78 @@ CodeGeneratorX86Shared::visitTestIAndBranch(LTestIAndBranch *test)
 }
 
 bool
+CodeGeneratorX86Shared::generateOutOfLineCode()
+{
+    if (!CodeGeneratorShared::generateOutOfLineCode())
+        return false;
+
+    if (deoptLabel_) {
+        // All non-table-based bailouts will go here.
+        masm.bind(deoptLabel_);
+        
+        // Push the frame size, so the handler can recover the IonScript.
+        masm.push(Imm32(frameSize()));
+
+        IonCompartment *ion = gen->cx->compartment->ionCompartment();
+        IonCode *handler = ion->getGenericBailoutHandler(gen->cx);
+        if (!handler)
+            return false;
+
+        masm.jmp(handler->raw(), Relocation::CODE);
+    }
+
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
+{
+    if (!encode(snapshot))
+        return false;
+
+    // Though the assembler doesn't track all frame pushes, at least make sure
+    // the known value makes sense. We can't use bailout tables if the stack
+    // isn't properly aligned to the static frame size.
+    JS_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
+                 frameClass_.frameSize() == masm.framePushed());
+
+    // On x64, bailout tables are pointless, because 16 extra bytes are
+    // reserved per external jump, whereas it takes only 10 bytes to encode a
+    // a non-table based bailout.
+#ifdef JS_CPU_X86
+    if (assignBailoutId(snapshot)) {
+        uint8 *code = deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
+        masm.j(condition, code, Relocation::EXTERNAL);
+        return true;
+    }
+#endif
+
+    // We could not use a jump table, either because all bailout IDs were
+    // reserved, or a jump table is not optimal for this frame size or
+    // platform. Whatever, we will generate a lazy bailout.
+    OutOfLineBailout *ool = new OutOfLineBailout(snapshot, masm.framePushed());
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    masm.j(condition, ool->entry());
+
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitOutOfLineBailout(OutOfLineBailout *ool)
+{
+    masm.bind(ool->entry());
+
+    if (!deoptLabel_)
+        deoptLabel_ = new HeapLabel();
+
+    masm.push(Imm32(ool->snapshot()->snapshotOffset()));
+    masm.jmp(deoptLabel_);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);
@@ -127,6 +203,9 @@ CodeGeneratorX86Shared::visitAddI(LAddI *ins)
         masm.addl(Imm32(ToInt32(rhs)), ToOperand(lhs));
     else
         masm.addl(ToOperand(rhs), ToRegister(lhs));
+
+    if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        return false;
 
     return true;
 }
@@ -180,10 +259,7 @@ CodeGeneratorX86Shared::toMoveOperand(const LAllocation *a) const
         return MoveOperand(ToRegister(a));
     if (a->isFloatReg())
         return MoveOperand(ToFloatRegister(a));
-    int32 disp = a->isStackSlot()
-                 ? SlotToStackOffset(a->toStackSlot()->slot())
-                 : ArgToStackOffset(a->toArgument()->index());
-    return MoveOperand(StackPointer, disp);
+    return MoveOperand(StackPointer, ToStackOffset(a));
 }
 
 bool

@@ -58,8 +58,8 @@ namespace ion {
 
 class CompactBufferReader
 {
-    uint8 *buffer_;
-    uint8 *end_;
+    const uint8 *buffer_;
+    const uint8 *end_;
 
     template <typename T> T readVariableLength() {
         JS_ASSERT(sizeof(T) == 4);
@@ -86,7 +86,9 @@ class CompactBufferReader
     }
 
   public:
-    CompactBufferReader(uint8 *start, uint8 *end) : buffer_(start), end_(end)
+    CompactBufferReader(const uint8 *start, const uint8 *end)
+      : buffer_(start),
+        end_(end)
     { }
     uint8 readByte() {
         JS_ASSERT(buffer_ < end_);

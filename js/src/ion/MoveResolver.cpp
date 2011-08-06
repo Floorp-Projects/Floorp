@@ -81,8 +81,6 @@ MoveResolver::findBlockingMove(const PendingMove *last)
 bool
 MoveResolver::resolve()
 {
-    JS_ASSERT(!pending_.empty());
-
     orderedMoves_.clear();
 
     InlineList<PendingMove> stack;

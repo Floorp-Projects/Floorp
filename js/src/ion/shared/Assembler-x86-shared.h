@@ -271,6 +271,15 @@ class AssemblerX86Shared
     void ret() {
         masm.ret();
     }
+    void call(Label *label) {
+        if (label->bound()) {
+            masm.linkJump(masm.call(), JmpDst(label->offset()));
+        } else {
+            JmpSrc j = masm.call();
+            JmpSrc prev = JmpSrc(label->use(j.offset()));
+            masm.setNextJump(j, prev);
+        }
+    }
     void call(const Register &reg) {
         masm.call(reg.code());
     }
@@ -370,6 +379,9 @@ class AssemblerX86Shared
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
+    }
+    void orl(Imm32 imm, const Register &reg) {
+        masm.orl_ir(imm.value, reg.code());
     }
     void orl(Imm32 imm, const Operand &op) {
         switch (op.kind()) {
