@@ -235,7 +235,6 @@ class IonBuilder : public MIRGenerator
     bool jsop_ifeq(JSOp op);
 
   private:
-    JSContext *cx;
     JSAtom **atoms;
     MBasicBlock *current;
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;

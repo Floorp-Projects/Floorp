@@ -89,6 +89,28 @@ class DummyOracle : public TypeOracle
     }
 };
 
+static inline JSValueType
+ValueTypeFromMIRType(MIRType type)
+{
+  switch (type) {
+    case MIRType_Undefined:
+      return JSVAL_TYPE_UNDEFINED;
+    case MIRType_Null:
+      return JSVAL_TYPE_NULL;
+    case MIRType_Boolean:
+      return JSVAL_TYPE_BOOLEAN;
+    case MIRType_Int32:
+      return JSVAL_TYPE_INT32;
+    case MIRType_Double:
+      return JSVAL_TYPE_DOUBLE;
+    case MIRType_String:
+      return JSVAL_TYPE_STRING;
+    default:
+      JS_ASSERT(type == MIRType_Object);
+      return JSVAL_TYPE_OBJECT;
+  }
+}
+
 }
 }
 

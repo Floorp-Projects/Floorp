@@ -57,8 +57,7 @@ using namespace js::ion;
 
 IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                        MIRGraph &graph, TypeOracle *oracle)
-  : MIRGenerator(temp, script, fun, graph),
-    cx(cx),
+  : MIRGenerator(cx, temp, script, fun, graph),
     oracle(oracle)
 {
     pc = script->code;

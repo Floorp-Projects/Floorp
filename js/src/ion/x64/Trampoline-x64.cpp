@@ -54,10 +54,10 @@ using namespace JSC;
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
-    const Register reg_code = ArgReg1;
-    const Register reg_argc = ArgReg2;
-    const Register reg_argv = ArgReg3;
-    const Register reg_vp   = ArgReg4;
+    const Register reg_code = ArgReg0;
+    const Register reg_argc = ArgReg1;
+    const Register reg_argv = ArgReg2;
+    const Register reg_vp   = ArgReg3;
 
     MacroAssembler masm(cx);
 

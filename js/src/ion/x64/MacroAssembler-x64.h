@@ -64,7 +64,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return total + ComputeByteAlignment(displacement, StackAlignment);
     }
 
-    uint32 alignStackForCall(uint32 stackForArgs, const Register &scratch) {
+    uint32 dynamicallyAlignStackForCall(uint32 stackForArgs, const Register &scratch) {
         // framePushed_ is bogus or we don't know it for sure, so instead, save
         // the original value of esp and then chop off its low bits. Then, we
         // push the original value of esp.

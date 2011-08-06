@@ -163,7 +163,7 @@ class AssemblerX86Shared
             masm.movl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void movl(const Register &src, const Operand &dest) {
@@ -175,7 +175,7 @@ class AssemblerX86Shared
             masm.movl_rm(src.code(), dest.disp(), dest.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
 
@@ -191,7 +191,7 @@ class AssemblerX86Shared
             masm.movsd_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void movsd(const FloatRegister &src, const Operand &dest) {
@@ -203,7 +203,7 @@ class AssemblerX86Shared
             masm.movsd_rm(src.code(), dest.disp(), dest.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
 
@@ -335,7 +335,7 @@ class AssemblerX86Shared
             masm.addl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void subl(Imm32 imm, const Register &dest) {
@@ -350,7 +350,7 @@ class AssemblerX86Shared
             masm.subl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void addl(const Register &src, const Register &dest) {
@@ -368,7 +368,7 @@ class AssemblerX86Shared
             masm.subl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void orl(Imm32 imm, const Operand &op) {
@@ -380,7 +380,7 @@ class AssemblerX86Shared
             masm.orl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void xorl(Imm32 imm, const Register &reg) {
@@ -395,7 +395,7 @@ class AssemblerX86Shared
             masm.xorl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void andl(Imm32 imm, const Register &dest) {
@@ -410,7 +410,7 @@ class AssemblerX86Shared
             masm.andl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void addl(const Operand &src, const Register &dest) {
@@ -422,7 +422,7 @@ class AssemblerX86Shared
             masm.addl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void orl(const Operand &src, const Register &dest) {
@@ -434,7 +434,7 @@ class AssemblerX86Shared
             masm.orl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void xorl(const Operand &src, const Register &dest) {
@@ -446,7 +446,7 @@ class AssemblerX86Shared
             masm.xorl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void andl(const Operand &src, const Register &dest) {
@@ -458,7 +458,7 @@ class AssemblerX86Shared
             masm.andl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
 
@@ -481,7 +481,7 @@ class AssemblerX86Shared
             masm.push_m(src.disp(), src.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void push(const Register &src) {
@@ -496,7 +496,7 @@ class AssemblerX86Shared
             masm.pop_m(src.disp(), src.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void pop(const Register &src) {

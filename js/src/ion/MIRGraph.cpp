@@ -50,8 +50,10 @@
 using namespace js;
 using namespace js::ion;
 
-MIRGenerator::MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph)
+MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
+                           MIRGraph &graph)
   : script(script),
+    cx(cx),
     pc(NULL),
     temp_(temp),
     fun_(fun),
