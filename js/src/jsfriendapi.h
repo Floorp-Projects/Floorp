@@ -66,48 +66,6 @@ JS_SetProtoCalled(JSContext *cx);
 extern JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx);
 
-extern JS_PUBLIC_API(JSPrincipals *)
-JS_GetCompartmentPrincipals(JSCompartment *compartment);
-
-extern JS_PUBLIC_API(void)
-JS_ClearDebugModeForCompartment(JSCompartment *comp);
-
-#ifdef __cplusplus
-
-extern JS_PUBLIC_API(JSBool)
-JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc);
-
-#endif
-
 JS_END_EXTERN_C
-
-#ifdef __cplusplus
-
-namespace JS {
-
-class JS_PUBLIC_API(AutoPreserveCompartment) {
-  private:
-    JSContext *cx;
-    JSCompartment *oldCompartment;
-  public:
-    AutoPreserveCompartment(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoPreserveCompartment();
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class JS_PUBLIC_API(AutoSwitchCompartment) {
-  private:
-    JSContext *cx;
-    JSCompartment *oldCompartment;
-  public:
-    AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    AutoSwitchCompartment(JSContext *cx, JSObject *target JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoSwitchCompartment();
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-}
-#endif
 
 #endif /* jsfriendapi_h___ */

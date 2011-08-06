@@ -42,7 +42,6 @@
 #include "XPCWrapper.h"
 
 #include "CrossOriginWrapper.h"
-#include "AccessCheck.h"
 #include "WrapperFactory.h"
 
 namespace xpc {
@@ -61,6 +60,12 @@ CrossOriginWrapper::CrossOriginWrapper(uintN flags) : NoWaiverWrapper(flags)
 
 CrossOriginWrapper::~CrossOriginWrapper()
 {
+}
+
+static nsIPrincipal *
+GetCompartmentPrincipal(JSCompartment *compartment)
+{
+    return static_cast<nsJSPrincipals *>(compartment->principals)->nsIPrincipalPtr;
 }
 
 bool
