@@ -57,7 +57,8 @@ class MStart;
 class MIRGenerator
 {
   public:
-    MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph);
+    MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
+                 MIRGraph &graph);
 
     TempAllocator &temp() {
         return temp_;
@@ -124,6 +125,7 @@ class MIRGenerator
 
   public:
     JSScript *script;
+    JSContext *cx;
 
   protected:
     jsbytecode *pc;

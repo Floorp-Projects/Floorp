@@ -75,7 +75,7 @@ MacroAssembler::setupUnalignedABICall(uint32 args, const Register &scratch)
     // Find the total number of bytes the stack will have been adjusted by,
     // in order to compute alignment. Include a stack slot for saving the stack
     // pointer, which will be dynamically aligned.
-    stackAdjust_ = alignStackForCall(stackForArgs, scratch);
+    stackAdjust_ = dynamicallyAlignStackForCall(stackForArgs, scratch);
     dynamicAlignment_ = true;
     reserveStack(stackAdjust_);
 }

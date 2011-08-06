@@ -75,15 +75,15 @@ static const Register ReturnReg = rax;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
-static const Register ArgReg1 = rcx;
-static const Register ArgReg2 = rdx;
-static const Register ArgReg3 = r8;
-static const Register ArgReg4 = r9;
+static const Register ArgReg0 = rcx;
+static const Register ArgReg1 = rdx;
+static const Register ArgReg2 = r8;
+static const Register ArgReg3 = r9;
 #else
-static const Register ArgReg1 = rdi;
-static const Register ArgReg2 = rsi;
-static const Register ArgReg3 = rdx;
-static const Register ArgReg4 = rcx;
+static const Register ArgReg0 = rdi;
+static const Register ArgReg1 = rsi;
+static const Register ArgReg2 = rdx;
+static const Register ArgReg3 = rcx;
 #endif
 
 enum Scale {

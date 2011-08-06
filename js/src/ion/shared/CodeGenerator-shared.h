@@ -77,12 +77,12 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Frame class this frame's size falls into (see IonFrame.h).
     FrameSizeClass frameClass_;
 
-    inline int32 ArgToStackOffset(int32 slot) {
+    inline int32 ArgToStackOffset(int32 slot) const {
         JS_ASSERT(slot >= 0);
         return masm.framePushed() + ION_FRAME_PREFIX_SIZE + slot;
     }
 
-    inline int32 SlotToStackOffset(int32 slot) {
+    inline int32 SlotToStackOffset(int32 slot) const {
         JS_ASSERT(slot > 0 && slot <= int32(graph.localSlotCount()));
         int32 offset = masm.framePushed() - slot * STACK_SLOT_SIZE;
         JS_ASSERT(offset >= 0);
@@ -102,6 +102,13 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     // Opcodes that are the same on all platforms.
     virtual bool visitParameter(LParameter *param);
+};
+
+// Wrapper around Label, on the heap, to avoid a bogus assert with OOM.
+struct HeapLabel
+  : public TempObject,
+    public Label
+{
 };
 
 // An out-of-line path is generated at the end of the function.

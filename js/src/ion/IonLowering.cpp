@@ -99,7 +99,7 @@ LIRGenerator::visitConstant(MConstant *ins)
       default:
         // Constants of special types (undefined, null) should never flow into
         // here directly. Operations blindly consuming them require a Box.
-        JS_NOT_REACHED("unexepcted constant type");
+        JS_NOT_REACHED("unexpected constant type");
         return false;
     }
     return true;
