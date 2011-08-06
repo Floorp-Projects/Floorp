@@ -1081,8 +1081,8 @@ nsSHistory::EvictGlobalContentViewer()
   }  // while shouldTryEviction
 }
 
-NS_IMETHODIMP
-nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
+nsresult
+nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry *aEntry)
 {
   PRInt32 startIndex = NS_MAX(0, mIndex - gHistoryMaxViewers);
   PRInt32 endIndex = NS_MIN(mLength - 1,
@@ -1094,8 +1094,11 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
   for (i = startIndex; trans && i <= endIndex; ++i) {
     nsCOMPtr<nsISHEntry> entry;
     trans->GetSHEntry(getter_AddRefs(entry));
-    if (entry == aEntry)
+
+    // Does entry have the same BFCacheEntry as the argument to this method?
+    if (entry->HasBFCacheEntry(aEntry)) {
       break;
+    }
 
     nsISHTransaction *temp = trans;
     temp->GetNext(getter_AddRefs(trans));
@@ -1117,7 +1120,7 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
   } else {
     EvictContentViewersInRange(i, endIndex + 1);
   }
-  
+
   return NS_OK;
 }
 

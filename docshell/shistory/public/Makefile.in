@@ -56,6 +56,7 @@ XPIDLSRCS	= \
                   nsISHContainer.idl    \
                   nsISHTransaction.idl  \
                   nsISHistoryInternal.idl \
+		  nsIBFCacheEntry.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
