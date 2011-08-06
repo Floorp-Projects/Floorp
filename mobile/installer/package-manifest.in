@@ -110,9 +110,6 @@
 @BINPATH@/mozilla-xremote-client
 #endif
 #endif
-#ifdef MOZ_SPLASHSCREEN
-@BINPATH@/splash.bmp
-#endif
 
 ; [Components]
 @BINPATH@/components/components.manifest
@@ -237,6 +234,7 @@
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
 @BINPATH@/components/storage.xpt
+@BINPATH@/components/telemetry.xpt
 @BINPATH@/components/toolkitprofile.xpt
 #ifdef MOZ_ENABLE_XREMOTE
 @BINPATH@/components/toolkitremote.xpt
@@ -400,6 +398,8 @@
 @BINPATH@/components/WeaveCrypto.manifest
 @BINPATH@/components/WeaveCrypto.js
 #endif
+@BINPATH@/components/TelemetryPing.js
+@BINPATH@/components/TelemetryPing.manifest
 
 ; Modules
 @BINPATH@/modules/*
