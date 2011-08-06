@@ -402,7 +402,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return NPERR_NO_ERROR;
     }
 
-    case NPNVSupportsCompositingCoreAnimationPluginsBool: {
+    case NPNVsupportsCompositingCoreAnimationPluginsBool: {
         *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;
     }
