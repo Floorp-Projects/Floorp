@@ -48,7 +48,14 @@ namespace js {
 namespace ion {
 
 class MInstruction;
-class MInstruction;
+class MDefinition;
+
+class TypeAnalysis
+{
+  public:
+    virtual void addPreferredType(MDefinition *def, MIRType type) = 0;
+    inline void preferType(MDefinition *def, MIRType type);
+};
 
 // A type policy directs the type analysis phases, which insert conversion,
 // boxing, unboxing, and type changes as necessary.
@@ -57,13 +64,16 @@ class TypePolicy
   public:
     // Returns whether an instruction needs to change its output type,
     // necessitating a reflow of its dependencies. If false, no
-    // respecialization was needed. This is also an opportunity for a
-    // specialized instruction to request a specific type of its inputs.
+    // respecialization was needed.
     //
     // A respecialization should never narrow, otherwise, the analysis could
     // not reach a fixpoint. For example, a Value should not narrow to an
     // Int32, lest it accidentally need to become a Value and back again.
     virtual bool respecialize(MInstruction *def) = 0;
+
+    // Asks the instruction whether it would like to prefer an untyped value as
+    // a particular type.
+    virtual void specializeInputs(MInstruction *ins, TypeAnalysis *analysis) = 0;
 
     // Analyze the inputs of the instruction and perform one of the following
     // actions for each input:
@@ -72,19 +82,14 @@ class TypePolicy
     //  * Replace the operand with a conversion instruction.
     //  * Insert an unconditional deoptimization (no conversion possible).
     virtual bool adjustInputs(MInstruction *def) = 0;
-
-    // Asks the instruction to accept a specialized version of a definition.
-    // Return true to replace this instruction's use of the definition, false
-    // otherwise.
-    virtual bool useSpecializedInput(MInstruction *def, size_t index, MInstruction *special) = 0;
 };
 
 class BoxInputsPolicy : public TypePolicy
 {
   public:
     virtual bool respecialize(MInstruction *def);
+    virtual void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
     virtual bool adjustInputs(MInstruction *def);
-    virtual bool useSpecializedInput(MInstruction *def, size_t index, MInstruction *special);
 };
 
 class BinaryArithPolicy : public BoxInputsPolicy
@@ -98,8 +103,8 @@ class BinaryArithPolicy : public BoxInputsPolicy
 
   public:
     bool respecialize(MInstruction *def);
+    void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
     bool adjustInputs(MInstruction *def);
-    bool useSpecializedInput(MInstruction *def, size_t index, MInstruction *special);
 };
 
 class BitwisePolicy : public BoxInputsPolicy
@@ -113,8 +118,8 @@ class BitwisePolicy : public BoxInputsPolicy
 
   public:
     bool respecialize(MInstruction *def);
+    void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
     bool adjustInputs(MInstruction *def);
-    bool useSpecializedInput(MInstruction *def, size_t index, MInstruction *special);
 };
 
 static inline bool
