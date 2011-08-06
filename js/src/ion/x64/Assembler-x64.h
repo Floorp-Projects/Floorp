@@ -71,6 +71,7 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
 static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
+static const Register ReturnReg = rax;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
@@ -262,6 +263,13 @@ class Assembler : public AssemblerX86Shared
     void movqsd(const FloatRegister &src, const Register &dest) {
         masm.movq_rr(src.code(), dest.code());
     }
+    void movq(const Register &src, const Register &dest) {
+        masm.movq_rr(src.code(), dest.code());
+    }
+
+    void andq(Imm32 imm, const Register &dest) {
+        masm.andq_ir(imm.value, dest.code());
+    }
 
     void addq(Imm32 imm, const Register &dest) {
         masm.addq_ir(imm.value, dest.code());
@@ -314,7 +322,7 @@ class Assembler : public AssemblerX86Shared
         movq(src, dest);
     }
     void mov(const Register &src, const Register &dest) {
-        masm.movq_rr(src.code(), dest.code());
+        movq(src, dest);
     }
     void mov(AbsoluteLabel *label, const Register &dest) {
         JS_ASSERT(!label->bound());
@@ -363,6 +371,9 @@ class Assembler : public AssemblerX86Shared
     void cmpq(const Register &lhs, const Register &rhs) {
         masm.cmpq_rr(rhs.code(), lhs.code());
     }
+    void testq(Imm32 lhs, const Register &rhs) {
+        masm.testq_i32r(lhs.value, rhs.code());
+    }
 
     void jmp(void *target, Relocation::Kind reloc) {
         JmpSrc src = masm.jmp();
@@ -373,6 +384,27 @@ class Assembler : public AssemblerX86Shared
         addPendingJump(src, target, reloc);
     }
 };
+
+#ifdef _WIN64
+static const uint32 NumArgRegs = 4;
+#else
+static const uint32 NumArgRegs = 6;
+#endif
+
+static inline bool
+GetArgReg(uint32 arg, Register *out)
+{
+#ifdef _WIN64
+    static const Register regs[] = { rcx, rdx, r8, r9 };
+#else
+    static const Register regs[] = { rdi, rsi, rdx, rcx, r8, r9 };
+#endif
+    JS_STATIC_ASSERT(NumArgRegs == JS_ARRAY_LENGTH(regs));
+    if (arg >= NumArgRegs)
+        return false;
+    *out = regs[arg];
+    return true;
+}
 
 } // namespace js
 } // namespace ion
