@@ -1,4 +1,4 @@
-// Test .type and .generator fields of topmost stack frame passed to debuggerHandler.
+// Test .type and .generator fields of topmost stack frame passed to onDebuggerStatement.
 
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);

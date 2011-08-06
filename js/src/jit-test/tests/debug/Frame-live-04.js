@@ -1,4 +1,5 @@
-// Frame.live is false for frames discarded during uncatchable error unwinding.
+// frame.live is false for frames discarded during uncatchable error unwinding.
+
 var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var hits = 0;
@@ -6,7 +7,7 @@ var snapshot;
 dbg.onDebuggerStatement = function (frame) {
     var stack = [];
     for (var f = frame; f; f = f.older) {
-        if (f.type === "call")
+        if (f.type === "call" && f.script !== null)
             stack.push(f);
     }
     snapshot = stack;

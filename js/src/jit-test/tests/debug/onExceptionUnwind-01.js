@@ -1,4 +1,4 @@
-// Basic throw hook test.
+// Basic onExceptionUnwind hook test.
 
 load(libdir + "asserts.js");
 
