@@ -663,6 +663,11 @@ PRUint64
 nsAccessible::NativeState()
 {
   PRUint64 state = 0;
+
+  nsDocAccessible* document = GetDocAccessible();
+  if (!document || !document->IsInDocument(this))
+    state |= states::STALE;
+
   PRBool disabled = PR_FALSE;
   if (mContent->IsElement()) {
     nsEventStates elementState = mContent->AsElement()->State();

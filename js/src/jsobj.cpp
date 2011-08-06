@@ -165,9 +165,14 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
 }
 
+size_t sSetProtoCalled = 0;
+
 static JSBool
 obj_setProto(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
+    if (!cx->runningWithTrustedPrincipals())
+        ++sSetProtoCalled;
+
     /* ECMAScript 5 8.6.2 forbids changing [[Prototype]] if not [[Extensible]]. */
     if (!obj->isExtensible()) {
         obj->reportNotExtensible(cx);
@@ -6499,7 +6504,6 @@ DumpProperty(JSObject *obj, const Shape &shape)
     if (attrs & JSPROP_READONLY) fprintf(stderr, "readonly ");
     if (attrs & JSPROP_PERMANENT) fprintf(stderr, "permanent ");
     if (attrs & JSPROP_SHARED) fprintf(stderr, "shared ");
-    if (shape.isAlias()) fprintf(stderr, "alias ");
     if (shape.isMethod()) fprintf(stderr, "method=%p ", (void *) &shape.methodObject());
 
     if (shape.hasGetterValue())

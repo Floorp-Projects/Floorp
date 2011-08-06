@@ -83,7 +83,8 @@ HISTOGRAM(MAC_INITFONTLIST_TOTAL, 1, 30000, 10, EXPONENTIAL, "gfxMacPlatformFont
 #endif
 HISTOGRAM(SHUTDOWN_OK, 0, 1, 2, BOOLEAN, "Did the browser start after a successful shutdown")
 
-HISTOGRAM(IMAGE_DECODE_LATENCY, 50, 5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")
+HISTOGRAM(IMAGE_DECODE_LATENCY, 50,  5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")
+HISTOGRAM(IMAGE_DECODE_TIME,    50, 50000000, 100, EXPONENTIAL, "Time spent decoding an image (us)")
 
 /**
  * Networking telemetry

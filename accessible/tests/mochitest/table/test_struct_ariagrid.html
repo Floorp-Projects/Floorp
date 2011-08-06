@@ -50,6 +50,14 @@
 
       testTableStruct("grid2", cellsArray);
 
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA grid of wrong markup
+      cellsArray = [ ];
+      testTableStruct("grid3", cellsArray);
+
+      cellsArray = [ [] ];
+      testTableStruct("grid4", cellsArray);
+
       SimpleTest.finish();
     }
 
@@ -68,6 +76,9 @@
   <a target="_blank"
      title="nsHTMLTableCellAccessible is used in dojo's crazy ARIA grid"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
+  <a target="_blank"
+     title="Crash [@ AccIterator::GetNext()]"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=675861">Mozilla Bug 675861</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -133,5 +144,8 @@
     </div>
   </div>
 
+  <!-- Wrong markup ARIA grid -->
+  <div role="grid" id="grid3"></div>
+  <div role="grid" id="grid4"><div role="row"></div></div>
 </body>
 </html>

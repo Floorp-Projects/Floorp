@@ -103,6 +103,7 @@
 
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
+#include "nsIJSEngineTelemetryStats.h"
 #include "nsDeque.h"
 
 #include "nsIConsoleService.h"
@@ -461,7 +462,8 @@ class nsXPConnect : public nsIXPConnect,
                     public nsCycleCollectionJSRuntime,
                     public nsCycleCollectionParticipant,
                     public nsIJSRuntimeService,
-                    public nsIThreadJSContextStack
+                    public nsIThreadJSContextStack,
+                    public nsIJSEngineTelemetryStats
 {
 public:
     // all the interface method declarations...
@@ -471,6 +473,7 @@ public:
     NS_DECL_NSIJSRUNTIMESERVICE
     NS_DECL_NSIJSCONTEXTSTACK
     NS_DECL_NSITHREADJSCONTEXTSTACK
+    NS_DECL_NSIJSENGINETELEMETRYSTATS
 
     // non-interface implementation
 public:

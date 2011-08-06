@@ -102,8 +102,10 @@ public:
   /**
    * The components that make up GetDataSize().
    */      
-  virtual PRUint32 GetDecodedDataSize() = 0;
-  virtual PRUint32 GetSourceDataSize() = 0;
+  virtual PRUint32 GetDecodedHeapSize() = 0;
+  virtual PRUint32 GetDecodedNonheapSize() = 0;
+  virtual PRUint32 GetDecodedOutOfProcessSize() = 0;
+  virtual PRUint32 GetSourceHeapSize() = 0;
 
   // Mimetype translation
   enum eDecoderType {

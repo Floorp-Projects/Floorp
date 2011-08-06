@@ -155,7 +155,7 @@ toolbarbutton.urlbar-button {
 
 /* left cap button --------------------------------------------------------- */
 #identity-box {
-  border-right: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
+  -moz-border-end: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -170,7 +170,7 @@ toolbarbutton.urlbar-button {
 
 #identity-box[open="true"],
 #identity-box:hover:active {
-  border-right: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
+  -moz-border-end: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
 }
 
 /* add special color */
@@ -219,8 +219,8 @@ toolbarbutton.urlbar-button {
 #urlbar-edit,
 #urlbar-title {
   margin: 0 !important;
-  border-left: @border_width_tiny@ solid white;
-  border-right: @border_width_tiny@ solid white;
+  -moz-border-start: @border_width_tiny@ solid white;
+  -moz-border-end: @border_width_tiny@ solid white;
   min-height: @touch_normal@;
 }
 
@@ -233,7 +233,7 @@ toolbarbutton.urlbar-button {
   -moz-appearance: none !important;
   border-radius: 0;
   border: 0 solid transparent;
-  border-right: @border_width_tiny@ solid rgba(0,0,0,0.5);
+  -moz-border-end: @border_width_tiny@ solid rgba(0,0,0,0.5);
   padding: 0 !important;
 }
 
@@ -262,7 +262,7 @@ toolbarbutton.urlbar-button {
 
 /* Right cap button --------------------------------------------------------- */
 #urlbar-icons {
-  border-left: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
+  -moz-border-start: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
 }
 
 #urlbar-icons:-moz-locale-dir(ltr) {
@@ -284,7 +284,7 @@ toolbarbutton.urlbar-button {
 }
 
 #urlbar-icons:not([disabled="true"]):hover:active {
-  border-left: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
+  -moz-border-start: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
 }
 
 #tool-reload {
