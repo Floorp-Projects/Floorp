@@ -153,7 +153,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
 
     snapshot->setSnapshotOffset(offset);
 
-    return !snapshots_.outOfMemory();
+    return !snapshots_.oom();
 }
 
 bool

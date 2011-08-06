@@ -39,6 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "MIRGenerator.h"
 #include "Snapshots.h"
 #include "jsscript.h"
 #include "IonLinker.h"
@@ -218,10 +219,10 @@ SnapshotOffset
 SnapshotWriter::start(JSFunction *fun, JSScript *script, jsbytecode *pc,
                       uint32 frameSize, uint32 exprStack)
 {
-    JS_ASSERT_IF(fun, uint32(fun->nargs + 1) < SNAPSHOT_MAX_NARGS);
+    JS_ASSERT(CountArgSlots(fun) < SNAPSHOT_MAX_NARGS);
     JS_ASSERT(exprStack < SNAPSHOT_MAX_STACK);
 
-    uint32 formalArgs = fun ? fun->nargs + 1 : 0;
+    uint32 formalArgs = CountArgSlots(fun);
 
     nslots_ = formalArgs + script->nfixed + exprStack;
     slotsWritten_ = 0;

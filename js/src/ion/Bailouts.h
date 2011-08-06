@@ -46,8 +46,10 @@
 
 #if defined(JS_CPU_X86)
 # include "ion/x86/Bailouts-x86.h"
-#else
+#elif defined(JS_CPU_X64)
 # include "ion/x64/Bailouts-x64.h"
+#else
+# error "CPU!"
 #endif
 
 namespace js {

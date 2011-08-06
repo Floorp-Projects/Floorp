@@ -154,21 +154,22 @@ IonCompartment::initialize(JSContext *cx)
 void
 IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 {
-    if (compartment->active) {
-        // These must be available if we could be running JIT code.
-        if (enterJIT_)
-            MarkIonCode(trc, enterJIT_, "enterJIT");
-        if (returnError_)
-            MarkIonCode(trc, returnError_, "returnError");
+    if (!compartment->active)
+        return;
 
-        // These need to be here until we can figure out how to make the GC
-        // scan these references inside the code generator itself.
-        if (bailoutHandler_)
-            MarkIonCode(trc, bailoutHandler_, "bailoutHandler");
-        for (size_t i = 0; i < bailoutTables_.length(); i++) {
-            if (bailoutTables_[i])
-                MarkIonCode(trc, bailoutTables_[i], "bailoutTable");
-        }
+    // These must be available if we could be running JIT code.
+    if (enterJIT_)
+        MarkIonCode(trc, enterJIT_, "enterJIT");
+    if (returnError_)
+        MarkIonCode(trc, returnError_, "returnError");
+
+    // These need to be here until we can figure out how to make the GC
+    // scan these references inside the code generator itself.
+    if (bailoutHandler_)
+        MarkIonCode(trc, bailoutHandler_, "bailoutHandler");
+    for (size_t i = 0; i < bailoutTables_.length(); i++) {
+        if (bailoutTables_[i])
+            MarkIonCode(trc, bailoutTables_[i], "bailoutTable");
     }
 }
 
@@ -465,7 +466,7 @@ CheckFrame(StackFrame *fp)
 {
     if (!fp->isFunctionFrame()) {
         // Support for this is almost there - we would need a new
-        // pushBailoutFrame. For the most part we just don't support support
+        // pushBailoutFrame. For the most part we just don't support
         // the opcodes in a global script yet.
         IonSpew(IonSpew_Abort, "global frame");
         return false;
