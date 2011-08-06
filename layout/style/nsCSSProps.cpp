@@ -581,6 +581,11 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kBackfaceVisibilityKTable[] = {
+  eCSSKeyword_visible, NS_STYLE_BACKFACE_VISIBILITY_VISIBLE,
+  eCSSKeyword_hidden, NS_STYLE_BACKFACE_VISIBILITY_HIDDEN
+};
+
 const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {
   eCSSKeyword_fixed, NS_STYLE_BG_ATTACHMENT_FIXED,
   eCSSKeyword_scroll, NS_STYLE_BG_ATTACHMENT_SCROLL,

@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage equal origins</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="interOriginTest2.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<!--
+  This test loads two frames from the same origin, clears in one frame,
+  sets a single key in another and then checks key(0) in the first frame.
+-->
+
+<script type="text/javascript">
+
+function startTest()
+{
+  masterFrameOrigin = "http://example.org:80";
+  slaveFrameOrigin = "http://example.org:80";
+
+  masterFrame.location = masterFrameOrigin + framePath + "frameKeySync.html?1";
+  slaveFrame.location = slaveFrameOrigin + framePath + "frameKeySync.html?2";
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" name="masterFrame"></iframe>
+  <iframe src="" name="slaveFrame"></iframe>
+</body>
+</html>

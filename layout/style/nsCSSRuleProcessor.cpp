@@ -391,6 +391,8 @@ public:
                          NodeMatchContext& aNodeMatchContext);
   PLArenaPool& Arena() { return mArena; }
 
+  PRInt64 SizeOf() const;
+
 protected:
   typedef nsTArray<RuleValue> RuleValueList;
   void AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
@@ -696,37 +698,48 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
   }
 }
 
-//--------------------------------
-
-// Attribute selectors hash table.
-struct AttributeSelectorEntry : public PLDHashEntryHdr {
-  nsIAtom *mAttribute;
-  nsTArray<nsCSSSelector*> *mSelectors;
-};
-
-static void
-AttributeSelectorClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
+static PLDHashOperator
+RuleHashTableSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
+                              PRUint32 i, void* aClosure)
 {
-  AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>(hdr);
-  delete entry->mSelectors;
-  memset(entry, 0, table->entrySize);
+  PRInt64* n = static_cast<PRInt64*>(aClosure);
+  RuleHashTableEntry* entry = static_cast<RuleHashTableEntry*>(aHdr);
+
+  *n += entry->mRules.SizeOf();
+  // The size of the RuleHashTableEntry itself is accounted for already
+
+  return PL_DHASH_NEXT;
 }
 
-static const PLDHashTableOps AttributeSelectorOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  PL_DHashVoidPtrKeyStub,
-  PL_DHashMatchEntryStub,
-  PL_DHashMoveEntryStub,
-  AttributeSelectorClearEntry,
-  PL_DHashFinalizeStub,
-  NULL
-};
+PRInt64
+RuleHash::SizeOf() const
+{
+  PRInt64 n = sizeof(*this);
 
+  n += PL_DHASH_TABLE_SIZE(&mIdTable) * sizeof(RuleHashTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mClassTable) * sizeof(RuleHashTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mTagTable) * sizeof(RuleHashTagTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mTagTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mNameSpaceTable) * sizeof(RuleHashTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mNameSpaceTable),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+  n += mUniversalRules.SizeOf();
+
+  return n;
+}
 
 //--------------------------------
 
-// Class selectors hash table.
+// A hash table mapping atoms to lists of selectors
 struct AtomSelectorEntry : public PLDHashEntryHdr {
   nsIAtom *mAtom;
   nsTArray<nsCSSSelector*> mSelectors;
@@ -796,8 +809,10 @@ struct RuleCascadeData {
       mNext(nsnull),
       mQuirksMode(aQuirksMode)
   {
-    PL_DHashTableInit(&mAttributeSelectors, &AttributeSelectorOps, nsnull,
-                      sizeof(AttributeSelectorEntry), 16);
+    // mAttributeSelectors is matching on the attribute _name_, not the value,
+    // and we case-fold names at parse-time, so this is a case-sensitive match.
+    PL_DHashTableInit(&mAttributeSelectors, &AtomSelector_CSOps.ops, nsnull,
+                      sizeof(AtomSelectorEntry), 16);
     PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops, nsnull,
                       sizeof(RuleHashTagTableEntry), 16);
     PL_DHashTableInit(&mIdSelectors,
@@ -828,6 +843,9 @@ struct RuleCascadeData {
       delete mPseudoElementRuleHashes[i];
     }
   }
+
+  PRInt64 SizeOf() const;
+
   RuleHash                 mRuleHash;
   RuleHash*
     mPseudoElementRuleHashes[nsCSSPseudoElements::ePseudo_PseudoElementCount];
@@ -856,21 +874,71 @@ struct RuleCascadeData {
   const PRBool mQuirksMode;
 };
 
+static PLDHashOperator
+SelectorsSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
+                          PRUint32 i, void* aClosure)
+{
+  PRInt64* n = (PRInt64*) aClosure;
+  AtomSelectorEntry* entry = (AtomSelectorEntry*)aHdr;
+
+  *n += entry->mSelectors.SizeOf();
+
+  return PL_DHASH_NEXT;
+}
+
+PRInt64
+RuleCascadeData::SizeOf() const
+{
+  PRInt64 n = sizeof(*this);
+
+  n += mRuleHash.SizeOf();
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mPseudoElementRuleHashes); ++i) {
+    if (mPseudoElementRuleHashes[i])
+      n += mPseudoElementRuleHashes[i]->SizeOf();
+  }
+
+  n += mStateSelectors.SizeOf();
+
+  n += PL_DHASH_TABLE_SIZE(&mIdSelectors) * sizeof(AtomSelectorEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdSelectors),
+                         SelectorsSizeOfEnumerator, &n);
+  n += PL_DHASH_TABLE_SIZE(&mClassSelectors) * sizeof(AtomSelectorEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassSelectors),
+                         SelectorsSizeOfEnumerator, &n);
+
+  n += mPossiblyNegatedClassSelectors.SizeOf();
+  n += mPossiblyNegatedIDSelectors.SizeOf();
+
+  n += PL_DHASH_TABLE_SIZE(&mAttributeSelectors) * sizeof(AtomSelectorEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAttributeSelectors),
+                         SelectorsSizeOfEnumerator, &n);
+
+  n += PL_DHASH_TABLE_SIZE(&mAnonBoxRules) * sizeof(RuleHashTagTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
+                         RuleHashTableSizeOfEnumerator, &n);
+
+#ifdef MOZ_XUL
+  n += PL_DHASH_TABLE_SIZE(&mXULTreeRules) * sizeof(RuleHashTagTableEntry);
+  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
+                         RuleHashTableSizeOfEnumerator, &n);
+#endif
+
+  n += mFontFaceRules.SizeOf();
+  n += mKeyframesRules.SizeOf();
+
+  return n;
+}
+
 nsTArray<nsCSSSelector*>*
 RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 {
-  AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
-                                             (PL_DHashTableOperate(&mAttributeSelectors, aAttribute, PL_DHASH_ADD));
+  AtomSelectorEntry *entry =
+    static_cast<AtomSelectorEntry*>
+               (PL_DHashTableOperate(&mAttributeSelectors, aAttribute,
+                                     PL_DHASH_ADD));
   if (!entry)
     return nsnull;
-  if (!entry->mSelectors) {
-    if (!(entry->mSelectors = new nsTArray<nsCSSSelector*>)) {
-      PL_DHashTableRawRemove(&mAttributeSelectors, entry);
-      return nsnull;
-    }
-    entry->mAttribute = aAttribute;
-  }
-  return entry->mSelectors;
+  return &entry->mSelectors;
 }
 
 class nsPrivateBrowsingObserver : nsIObserver,
@@ -2423,12 +2491,13 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       }
     }
 
-    AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
-                                               (PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
-                             PL_DHASH_LOOKUP));
+    AtomSelectorEntry *entry =
+      static_cast<AtomSelectorEntry*>
+                 (PL_DHashTableOperate(&cascade->mAttributeSelectors,
+                                       aData->mAttribute, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      nsCSSSelector **iter = entry->mSelectors->Elements(),
-                    **end = iter + entry->mSelectors->Length();
+      nsCSSSelector **iter = entry->mSelectors.Elements(),
+                    **end = iter + entry->mSelectors.Length();
       for(; iter != end; ++iter) {
         AttributeEnumFunc(*iter, &data);
       }
@@ -2457,7 +2526,13 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
 /* virtual */ PRInt64
 nsCSSRuleProcessor::SizeOf() const
 {
-  size_t n = sizeof(*this);
+  PRInt64 n = sizeof(*this);
+
+  n += mSheets.SizeOf();
+  for (RuleCascadeData* cascade = mRuleCascades; cascade;
+       cascade = cascade->mNext) {
+    n += cascade->SizeOf();
+  }
 
   return n;
 }

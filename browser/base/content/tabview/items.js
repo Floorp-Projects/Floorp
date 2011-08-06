@@ -310,9 +310,14 @@ Item.prototype = {
   // Parameters:
   //  immediately - boolean for doing the pushAway without animation
   pushAway: function Item_pushAway(immediately) {
+    var items = Items.getTopLevelItems();
+
+    // we need at least two top-level items to push something away
+    if (items.length < 2)
+      return;
+
     var buffer = Math.floor(Items.defaultGutter / 2);
 
-    var items = Items.getTopLevelItems();
     // setup each Item's pushAwayData attribute:
     items.forEach(function pushAway_setupPushAwayData(item) {
       var data = {};

@@ -179,13 +179,17 @@ public:
   NS_DECL_ISUPPORTS
 
   CallOnServerClose(nsIWebSocketListener *aListener,
-                    nsISupports          *aContext)
+                    nsISupports          *aContext,
+                    PRUint16              aCode,
+                    nsCString            &aReason)
     : mListener(aListener),
-      mContext(aContext) {}
+      mContext(aContext),
+      mCode(aCode),
+      mReason(aReason) {}
 
   NS_SCRIPTABLE NS_IMETHOD Run()
   {
-    mListener->OnServerClose(mContext);
+    mListener->OnServerClose(mContext, mCode, mReason);
     return NS_OK;
   }
 
@@ -194,6 +198,8 @@ private:
 
   nsCOMPtr<nsIWebSocketListener>    mListener;
   nsCOMPtr<nsISupports>             mContext;
+  PRUint16                          mCode;
+  nsCString                         mReason;
 };
 NS_IMPL_THREADSAFE_ISUPPORTS1(CallOnServerClose, nsIRunnable)
 
@@ -502,7 +508,8 @@ WebSocketChannel::WebSocketChannel() :
   mTCPClosed(0),
   mMaxMessageSize(16000000),
   mStopOnClose(NS_OK),
-  mCloseCode(kCloseAbnormal),
+  mServerCloseCode(CLOSE_ABNORMAL),
+  mScriptCloseCode(0),
   mFragmentOpcode(0),
   mFragmentAccumulator(0),
   mBuffered(0),
@@ -869,26 +876,29 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
         LOG(("WebSocketChannel:: close received\n"));
         mServerClosed = 1;
 
-        mCloseCode = kCloseNoStatus;
+        mServerCloseCode = CLOSE_NO_STATUS;
         if (payloadLength >= 2) {
-          memcpy(&mCloseCode, payload, 2);
-          mCloseCode = PR_ntohs(mCloseCode);
-          LOG(("WebSocketChannel:: close recvd code %u\n", mCloseCode));
+          memcpy(&mServerCloseCode, payload, 2);
+          mServerCloseCode = PR_ntohs(mServerCloseCode);
+          LOG(("WebSocketChannel:: close recvd code %u\n", mServerCloseCode));
           PRUint16 msglen = payloadLength - 2;
           if (msglen > 0) {
-            nsCString utf8Data((const char *)payload + 2, msglen);
+            mServerCloseReason.SetLength(msglen);
+            memcpy(mServerCloseReason.BeginWriting(),
+                   (const char *)payload + 2, msglen);
 
             // section 8.1 says to replace received non utf-8 sequences
             // (which are non-conformant to send) with u+fffd,
             // but secteam feels that silently rewriting messages is
             // inappropriate - so we will fail the connection instead.
-            if (!IsUTF8(utf8Data)) {
+            if (!IsUTF8(mServerCloseReason)) {
               LOG(("WebSocketChannel:: close frame invalid utf-8\n"));
               AbortSession(NS_ERROR_ILLEGAL_VALUE);
               return NS_ERROR_ILLEGAL_VALUE;
             }
 
-            LOG(("WebSocketChannel:: close msg %s\n", utf8Data.get()));
+            LOG(("WebSocketChannel:: close msg %s\n",
+                 mServerCloseReason.get()));
           }
         }
 
@@ -897,7 +907,9 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
           mCloseTimer = nsnull;
         }
         if (mListener)
-          NS_DispatchToMainThread(new CallOnServerClose(mListener, mContext));
+          NS_DispatchToMainThread(
+            new CallOnServerClose(mListener, mContext,
+                                  mServerCloseCode, mServerCloseReason));
 
         if (mClientClosed)
           ReleaseSession();
@@ -1058,16 +1070,16 @@ PRUint16
 WebSocketChannel::ResultToCloseCode(nsresult resultCode)
 {
   if (NS_SUCCEEDED(resultCode))
-    return kCloseNormal;
+    return CLOSE_NORMAL;
   if (resultCode == NS_ERROR_FILE_TOO_BIG)
-    return kCloseTooLarge;
+    return CLOSE_TOO_LARGE;
   if (resultCode == NS_BASE_STREAM_CLOSED ||
       resultCode == NS_ERROR_NET_TIMEOUT ||
       resultCode == NS_ERROR_CONNECTION_REFUSED) {
-    return kCloseAbnormal;
+    return CLOSE_ABNORMAL;
   }
 
-  return kCloseProtocolError;
+  return CLOSE_PROTOCOL_ERROR;
 }
 
 void
@@ -1107,16 +1119,34 @@ WebSocketChannel::PrimeNewOutgoingMessage()
     LOG(("WebSocketChannel:: PrimeNewOutgoingMessage() found close request\n"));
     mClientClosed = 1;
     mOutHeader[0] = kFinalFragBit | kClose;
-    mOutHeader[1] = 0x02; // payload len = 2
+    mOutHeader[1] = 0x02; // payload len = 2, maybe more for reason
     mOutHeader[1] |= kMaskBit;
 
     // payload is offset 6 including 4 for the mask
     payload = mOutHeader + 6;
 
-    // The close reason code sits in the first 2 bytes of payload
-    *((PRUint16 *)payload) = PR_htons(ResultToCloseCode(mStopOnClose));
-
+    // length is 8 plus any reason information
     mHdrOutToSend = 8;
+
+    // The close reason code sits in the first 2 bytes of payload
+    // If the channel user provided a code and reason during Close()
+    // and there isn't an internal error, use that.
+    if (NS_SUCCEEDED(mStopOnClose) && mScriptCloseCode) {
+      *((PRUint16 *)payload) = PR_htons(mScriptCloseCode);
+      if (!mScriptCloseReason.IsEmpty()) {
+        NS_ABORT_IF_FALSE(mScriptCloseReason.Length() <= 123,
+                          "Close Reason Too Long");
+        mOutHeader[1] += mScriptCloseReason.Length();
+        mHdrOutToSend += mScriptCloseReason.Length();
+        memcpy (payload + 2,
+                mScriptCloseReason.BeginReading(),
+                mScriptCloseReason.Length());
+      }
+    }
+    else {
+      *((PRUint16 *)payload) = PR_htons(ResultToCloseCode(mStopOnClose));
+    }
+
     if (mServerClosed) {
       /* bidi close complete */
       mReleaseOnTransmit = 1;
@@ -1486,6 +1516,7 @@ WebSocketChannel::HandleExtensions()
         AbortSession(NS_ERROR_UNEXPECTED);
         return NS_ERROR_UNEXPECTED;
       }
+      mNegotiatedExtensions = extensions;
     }
   }
 
@@ -1544,7 +1575,7 @@ WebSocketChannel::SetupRequest()
   PR_Free(b64);
   mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
                                  secKeyString, PR_FALSE);
-  LOG(("WebSocketChannel::AsyncOpen(): client key %s\n", secKeyString.get()));
+  LOG(("WebSocketChannel::SetupRequest: client key %s\n", secKeyString.get()));
 
   // prepare the value we expect to see in
   // the sec-websocket-accept response header
@@ -1559,7 +1590,7 @@ WebSocketChannel::SetupRequest()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = hasher->Finish(PR_TRUE, mHashedSecret);
   NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("WebSocketChannel::AsyncOpen(): expected server key %s\n",
+  LOG(("WebSocketChannel::SetupRequest: expected server key %s\n",
        mHashedSecret.get()));
 
   return NS_OK;
@@ -1583,7 +1614,7 @@ WebSocketChannel::ApplyForAdmission()
   mAddress = hostName;
 
   // expect the callback in ::OnLookupComplete
-  LOG(("WebSocketChannel::AsyncOpen(): checking for concurrent open\n"));
+  LOG(("WebSocketChannel::ApplyForAdmission: checking for concurrent open\n"));
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   dns->AsyncResolve(hostName, 0, this, mainThread, getter_AddRefs(mDNSRequest));
@@ -1984,17 +2015,30 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
-WebSocketChannel::Close()
+WebSocketChannel::Close(PRUint16 code, const nsACString & reason)
 {
   LOG(("WebSocketChannel::Close() %p\n", this));
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
+
+  if (!mTransport) {
+    LOG(("WebSocketChannel::Close() without transport - aborting."));
+    AbortSession(NS_ERROR_NOT_CONNECTED);
+    return NS_ERROR_NOT_CONNECTED;
+  }
+
   if (mRequestedClose) {
     LOG(("WebSocketChannel:: Double close error\n"));
     return NS_ERROR_UNEXPECTED;
   }
 
-  mRequestedClose = 1;
+  // The API requires the UTF-8 string to be 123 or less bytes
+  if (reason.Length() > 123)
+    return NS_ERROR_ILLEGAL_VALUE;
 
+  mRequestedClose = 1;
+  mScriptCloseReason = reason;
+  mScriptCloseCode = code;
+    
   return mSocketThread->Dispatch(new nsPostMessage(this, kFinMessage, -1),
                                  nsIEventTarget::DISPATCH_NORMAL);
 }

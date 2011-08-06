@@ -4824,7 +4824,9 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
   nsIPresShell *presShell = PresContext()->PresShell();
 
   // Attempt to find the line that contains the previous sibling
-  nsLineList::iterator prevSibLine = end_lines();
+  nsFrameList overflowFrames;
+  nsLineList* lineList = &mLines;
+  nsLineList::iterator prevSibLine = lineList->end();
   PRInt32 prevSiblingIndex = -1;
   if (aPrevSibling) {
     // XXX_perf This is technically O(N^2) in some cases, but by using
@@ -4832,15 +4834,31 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
     // which is appending content.
 
     // Find the line that contains the previous sibling
-    if (! nsLineBox::RFindLineContaining(aPrevSibling,
-                                         begin_lines(), prevSibLine,
-                                         mFrames.LastChild(),
-                                         &prevSiblingIndex)) {
-      // Note: defensive code! RFindLineContaining must not return
-      // false in this case, so if it does...
-      NS_NOTREACHED("prev sibling not in line list");
-      aPrevSibling = nsnull;
-      prevSibLine = end_lines();
+    if (!nsLineBox::RFindLineContaining(aPrevSibling, lineList->begin(),
+                                        prevSibLine, mFrames.LastChild(),
+                                        &prevSiblingIndex)) {
+      // Not in mLines - try overflow lines.
+      lineList = GetOverflowLines();
+      if (lineList) {
+        prevSibLine = lineList->end();
+        prevSiblingIndex = -1;
+        overflowFrames = nsFrameList(lineList->front()->mFirstChild,
+                                     lineList->back()->LastChild());
+        if (!nsLineBox::RFindLineContaining(aPrevSibling, lineList->begin(),
+                                            prevSibLine,
+                                            overflowFrames.LastChild(),
+                                            &prevSiblingIndex)) {
+          lineList = nsnull;
+        }
+      }
+      if (!lineList) {
+        // Note: defensive code! RFindLineContaining must not return
+        // false in this case, so if it does...
+        NS_NOTREACHED("prev sibling not in line list");
+        lineList = &mLines;
+        aPrevSibling = nsnull;
+        prevSibLine = lineList->end();
+      }
     }
   }
 
@@ -4856,7 +4874,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mLines.after_insert(prevSibLine, line);
+      lineList->after_insert(prevSibLine, line);
       prevSibLine->SetChildCount(prevSibLine->GetChildCount() - rem);
       // Mark prevSibLine dirty and as needing textrun invalidation, since
       // we may be breaking up text in the line. Its previous line may also
@@ -4868,12 +4886,13 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       line->SetInvalidateTextRuns(PR_TRUE);
     }
   }
-  else if (! mLines.empty()) {
-    mLines.front()->MarkDirty();
-    mLines.front()->SetInvalidateTextRuns(PR_TRUE);
+  else if (! lineList->empty()) {
+    lineList->front()->MarkDirty();
+    lineList->front()->SetInvalidateTextRuns(PR_TRUE);
   }
+  nsFrameList& frames = lineList == &mLines ? mFrames : overflowFrames;
   const nsFrameList::Slice& newFrames =
-    mFrames.InsertFrames(nsnull, aPrevSibling, aFrameList);
+    frames.InsertFrames(nsnull, aPrevSibling, aFrameList);
 
   // Walk through the new frames being added and update the line data
   // structures to fit.
@@ -4893,7 +4912,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
     // a new line, as an optimization, in the two cases we know we'll need it:
     // if the previous line ended with a <br>, or if it has significant whitespace
     // and ended in a newline.
-    if (isBlock || prevSibLine == end_lines() || prevSibLine->IsBlock() ||
+    if (isBlock || prevSibLine == lineList->end() || prevSibLine->IsBlock() ||
         (aPrevSibling && ShouldPutNextSiblingOnNewLine(aPrevSibling))) {
       // Create a new line for the frame and add its line to the line
       // list.
@@ -4901,15 +4920,15 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      if (prevSibLine != end_lines()) {
+      if (prevSibLine != lineList->end()) {
         // Append new line after prevSibLine
-        mLines.after_insert(prevSibLine, line);
+        lineList->after_insert(prevSibLine, line);
         ++prevSibLine;
       }
       else {
         // New line is going before the other lines
-        mLines.push_front(line);
-        prevSibLine = begin_lines();
+        lineList->push_front(line);
+        prevSibLine = lineList->begin();
       }
     }
     else {
@@ -6084,70 +6103,6 @@ nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
   return NS_SUCCEEDED(rv) && visible;
 }
 
-/* virtual */ void
-nsBlockFrame::PaintTextDecorationLine(
-                gfxContext* aCtx, 
-                const nsPoint& aPt,
-                nsLineBox* aLine,
-                nscolor aColor, 
-                PRUint8 aStyle,
-                gfxFloat aOffset, 
-                gfxFloat aAscent, 
-                gfxFloat aSize,
-                const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                const PRUint8 aDecoration) 
-{
-  NS_ASSERTION(!aLine->IsBlock(), "Why did we ask for decorations on a block?");
-
-  nscoord start = aLine->mBounds.x;
-  nscoord width = aLine->mBounds.width;
-
-  AdjustForTextIndent(aLine, start, width);
-  nscoord x = start + aPt.x;
-  aClipEdges.Intersect(&x, &width);
-
-  // Only paint if we have a positive width
-  if (width > 0) {
-    gfxPoint pt(PresContext()->AppUnitsToGfxUnits(x),
-                PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
-    gfxSize size(PresContext()->AppUnitsToGfxUnits(width), aSize);
-    nsCSSRendering::PaintDecorationLine(
-      aCtx, aColor, pt, size,
-      PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
-      aOffset, aDecoration, aStyle);
-  }
-}
-
-/*virtual*/ void
-nsBlockFrame::AdjustForTextIndent(const nsLineBox* aLine,
-                                  nscoord& start,
-                                  nscoord& width)
-{
-  if (!GetPrevContinuation() && aLine == begin_lines().get() &&
-      (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR)) {
-    // Adjust for the text-indent.  See similar code in
-    // nsLineLayout::BeginLineReflow.
-    const nsStyleCoord &textIndent = GetStyleText()->mTextIndent;
-    nscoord pctBasis = 0;
-    if (textIndent.HasPercent()) {
-      // Only work out the percentage basis if we need to.
-      // It's a percentage of the containing block width.
-      nsIFrame* containingBlock =
-        nsHTMLReflowState::GetContainingBlockFor(this);
-      NS_ASSERTION(containingBlock, "Must have containing block!");
-      pctBasis = containingBlock->GetContentRect().width;
-    }
-    nscoord indent = nsRuleNode::ComputeCoordPercentCalc(textIndent, pctBasis);
-
-    // Adjust the start position and the width of the decoration by the
-    // value of the indent.  Note that indent can be negative; that's OK.
-    // It'll just increase the width (which can also happen to be
-    // negative!).
-    start += indent;
-    width -= indent;
-  }
-}
-
 #ifdef DEBUG
 static void DebugOutputDrawLine(PRInt32 aDepth, nsLineBox* aLine, PRBool aDrawn) {
   if (nsBlockFrame::gNoisyDamageRepair) {
@@ -6195,13 +6150,6 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   nsDisplayListCollection collection;
   nsresult rv;
   nsDisplayList aboveTextDecorations;
-  if (lineInline) {
-    // Display the text-decoration for the hypothetical anonymous inline box
-    // that wraps these inlines
-    rv = aFrame->DisplayTextDecorations(aBuilder, collection.Content(),
-                                        &aboveTextDecorations, aLine);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   // Block-level child backgrounds go on the blockBorderBackgrounds list ...
   // Inline-level child backgrounds go on the regular child content list.

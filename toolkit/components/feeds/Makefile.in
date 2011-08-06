@@ -42,6 +42,10 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef ENABLE_TESTS
+TOOL_DIRS += test
+endif
+
 MODULE = feeds
 LIBRARY_NAME = feed_s
 MOZILLA_INTERNAL_API = 1

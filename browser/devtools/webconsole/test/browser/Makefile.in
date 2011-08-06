@@ -141,6 +141,8 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_663443_panel_title.js \
 	browser_webconsole_bug_660806_history_nav.js \
 	browser_webconsole_bug_651501_document_body_autocomplete.js \
+	browser_webconsole_bug_653531_highlighter_console_helper.js \
+	browser_webconsole_bug_659907_console_dir.js \
 	head.js \
 	$(NULL)
 

@@ -275,10 +275,14 @@ private:
   PRFileDesc* fd_;
 };
 
-// These are suggestions. If the number of ports to proxy on * 2
-// is greater than either of these, then we'll use that value instead.
-const PRUint32 INITIAL_THREADS = 1;
-const PRUint32 MAX_THREADS = 5;
+// These numbers are multiplied by the number of listening ports (actual
+// servers running).  According the thread pool implementation there is no
+// need to limit the number of threads initially, threads are allocated
+// dynamically and stored in a linked list.  Initial number of 2 is chosen
+// to allocate a thread for socket accept and preallocate one for the first
+// connection that is with high probability expected to come.
+const PRUint32 INITIAL_THREADS = 2;
+const PRUint32 MAX_THREADS = 100;
 const PRUint32 DEFAULT_STACKSIZE = (512 * 1024);
 
 // global data
@@ -1284,8 +1288,8 @@ int main(int argc, char** argv)
   }
 
   // create a thread pool to handle connections
-  threads = PR_CreateThreadPool(NS_MAX<PRInt32>(INITIAL_THREADS, servers.size()*2),
-                                NS_MAX<PRInt32>(MAX_THREADS, servers.size()*2),
+  threads = PR_CreateThreadPool(INITIAL_THREADS * servers.size(),
+                                MAX_THREADS * servers.size(),
                                 DEFAULT_STACKSIZE);
   if (!threads) {
     LOG_ERROR(("Failed to create thread pool\n"));

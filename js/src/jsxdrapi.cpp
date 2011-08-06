@@ -720,7 +720,7 @@ JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
         js_CallNewScriptHook(xdr->cx, script, NULL);
         *scriptObjp = js_NewScriptObject(xdr->cx, script);
         if (!*scriptObjp) {
-            js_DestroyScript(xdr->cx, script);
+            js_DestroyScript(xdr->cx, script, 8);
             return false;
         }
     }

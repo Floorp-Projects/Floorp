@@ -382,6 +382,7 @@ struct JITScript {
     uint32          nPICs;
 #endif
     uint32          nCallSites;
+    uint32          nRootedObjects;
 
 #ifdef JS_MONOIC
     // Additional ExecutablePools that IC stubs were generated into.
@@ -403,6 +404,7 @@ struct JITScript {
     ic::PICInfo     *pics() const;
 #endif
     js::mjit::CallSite *callSites() const;
+    JSObject **rootedObjects() const;
 
     ~JITScript();
 
@@ -416,6 +418,8 @@ struct JITScript {
     void sweepCallICs(JSContext *cx, bool purgeAll);
     void purgeMICs();
     void purgePICs();
+
+    void trace(JSTracer *trc);
 
     size_t scriptDataSize();
     jsbytecode *nativeToPC(void *returnAddress) const;
@@ -455,6 +459,9 @@ TryCompile(JSContext *cx, StackFrame *fp);
 
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);
+
+void
+TraceScript(JSTracer *trc, JSScript *script);
 
 struct CallSite
 {

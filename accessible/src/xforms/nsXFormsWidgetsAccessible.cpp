@@ -70,13 +70,10 @@ nsXFormsDropmarkerWidgetAccessible::NativeState()
   return isOpen ? states::PRESSED: 0;
 }
 
-NS_IMETHODIMP
-nsXFormsDropmarkerWidgetAccessible::GetNumActions(PRUint8 *aCount)
+PRUint8
+nsXFormsDropmarkerWidgetAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-
-  *aCount = 1;
-  return NS_OK;
+  return 1;
 }
 
 NS_IMETHODIMP
