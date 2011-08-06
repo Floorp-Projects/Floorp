@@ -251,8 +251,8 @@ class SnapshotWriter
 #endif
     void endSnapshot();
 
-    bool outOfMemory() const {
-        return writer_.outOfMemory() || writer_.length() >= MAX_BUFFER_SIZE;
+    bool oom() const {
+        return writer_.oom() || writer_.length() >= MAX_BUFFER_SIZE;
     }
 
     size_t length() const {

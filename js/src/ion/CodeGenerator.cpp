@@ -58,7 +58,7 @@ CodeGenerator::generateBody()
         current = graph.getBlock(i);
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
             if (!iter->accept(this))
-                return true;
+                return false;
         }
         if (masm.oom())
             return false;
