@@ -87,6 +87,8 @@ enum Scale {
     TimesEight
 };
 
+static const Scale ScalePointer = TimesFour;
+
 class Operand
 {
   public:
@@ -210,6 +212,15 @@ class Assembler : public AssemblerX86Shared
         // instruction stream.
         masm.movl_i32r(label->prev(), dest.code());
         label->setPrev(masm.size());
+    }
+    void lea(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::SCALE:
+            masm.leal_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
     }
 
     void jmp(void *target, Relocation::Kind reloc) {

@@ -92,6 +92,8 @@ enum Scale {
     TimesEight
 };
 
+static const Scale ScalePointer = TimesEight;
+
 class Operand
 {
   public:
@@ -320,6 +322,15 @@ class Assembler : public AssemblerX86Shared
         // instruction stream.
         masm.movq_i64r(label->prev(), dest.code());
         label->setPrev(masm.size());
+    }
+    void lea(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::SCALE:
+            masm.leaq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
     }
 
     // The below cmpq methods switch the lhs and rhs when it invokes the

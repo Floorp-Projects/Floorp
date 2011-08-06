@@ -49,6 +49,7 @@
     _(Double)                       \
     _(Value)                        \
     _(Parameter)                    \
+    _(TableSwitch)                  \
     _(Goto)                         \
     _(BitOp)                        \
     _(Return)                       \

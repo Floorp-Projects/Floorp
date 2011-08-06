@@ -181,3 +181,47 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
     return true;
 }
 
+bool
+TableSwitchPolicy::respecialize(MInstruction *ins)
+{
+    // We try to ask for the type Int32,
+    // because this gives us the best code,
+    MDefinition *in = ins->getOperand(0);
+    if (in->type() == MIRType_Value)
+        in->useAsType(MIRType_Int32);
+
+    return false;
+}
+
+bool
+TableSwitchPolicy::adjustInputs(MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(0);
+    MInstruction *replace;
+
+    // Tableswitch can consume all types, except:
+    // - Double: try to convert to int32
+    // - Value: unbox to int32
+    switch (in->type()) {
+        case MIRType_Value:
+            replace = MUnbox::New(in, MIRType_Int32);
+            break;
+        case MIRType_Double:
+            replace = MToInt32::New(in);
+            break;
+        default:
+            return true;
+    }
+    
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(0, replace);
+
+    return true;
+}
+
+bool
+TableSwitchPolicy::useSpecializedInput(MInstruction *ins, size_t index, MInstruction *special)
+{
+    // Use the specialized input (could be Int32 or something else)
+    return true;
+}

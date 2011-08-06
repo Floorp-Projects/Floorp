@@ -137,6 +137,38 @@ LIRGenerator::visitParameter(MParameter *param)
 }
 
 bool
+LIRGenerator::visitTableSwitch(MTableSwitch *tableswitch)
+{
+    MDefinition *opd = tableswitch->getOperand(0);
+
+    // There should be at least 1 successor. The default case!
+    JS_ASSERT(tableswitch->numSuccessors() > 0);
+
+    // If there are no cases, the default case is always taken. 
+    if (tableswitch->numSuccessors() == 1)
+        return add(new LGoto(tableswitch->getDefault()));        
+
+    // Case indices are int32, so other types will always go to the default case
+    if (opd->type() != MIRType_Int32)
+        return add(new LGoto(tableswitch->getDefault()));
+
+    // If input of switch is constant, it will always take the same case/default.
+    if (opd->isConstant()) {
+        MConstant *ins = opd->toConstant();
+
+        int32 switchval = ins->value().toInt32();
+        if (switchval < tableswitch->low() || switchval > tableswitch->high())
+            return add(new LGoto(tableswitch->getDefault()));
+
+        return add(new LGoto(tableswitch->getCase(switchval-tableswitch->low())));
+    }
+
+    // Return a LTableS witch if it isn't constant.
+    return add(new LTableSwitch(useRegister(opd), temp(LDefinition::INTEGER),
+                                temp(LDefinition::POINTER), tableswitch));
+}
+
+bool
 LIRGenerator::visitGoto(MGoto *ins)
 {
     return add(new LGoto(ins->target()));

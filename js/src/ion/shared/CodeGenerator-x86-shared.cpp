@@ -244,6 +244,56 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
 }
 
 bool
+CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
+{
+    MTableSwitch *mir = ins->mir();
+    const LAllocation *input = ins->getOperand(0);
+
+    // Put input in temp. register
+    LDefinition *index = ins->getTemp(0);
+    masm.mov(ToOperand(input), ToRegister(index));
+
+    // Lower value with low value
+    if (mir->low() != 0)
+        masm.subl(Imm32(mir->low()), ToOperand(index));
+
+    // Jump to default case if input is out of range
+    LBlock *defaultcase = mir->getDefault()->lir();
+    int32 cases = mir->numCases();
+    masm.cmpl(Imm32(cases), ToRegister(index));
+    masm.j(AssemblerX86Shared::AboveOrEqual, defaultcase->label());
+ 
+    // Create a label pointing to the jumptable
+    // This gets patched after linking
+    CodeLabel *label = new CodeLabel();
+    if (!masm.addCodeLabel(label))
+        return false;
+  
+    // Compute the pointer to the right case in the second temp. register
+    LDefinition *base = ins->getTemp(1);
+    masm.mov(label->dest(), ToRegister(base));
+    Operand pointer = Operand(ToRegister(base), ToRegister(index), TimesEight);
+    masm.lea(pointer, ToRegister(base));
+
+    // Jump to the right case
+    masm.jmp(ToOperand(base));
+
+    // Create the jumptable,
+    // Every jump statements get aligned on pointersize
+    // That way there is always 2*pointersize between each jump statement.
+    masm.align(1 << TimesFour);
+    masm.bind(label->src());
+
+    for (uint j=0; j<ins->mir()->numCases(); j++) { 
+        LBlock *caseblock = ins->mir()->getCase(j)->lir();
+
+        masm.jmp(caseblock->label());
+        masm.align(1 << TimesFour);
+    }
+
+    return true;
+}
+bool
 CodeGeneratorX86Shared::visitMathD(LMathD *math)
 {
     const LAllocation *input = math->getOperand(1);

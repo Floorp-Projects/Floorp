@@ -71,14 +71,14 @@ class IonBuilder : public MIRGenerator
         { }
     };
 
-    struct LoopInfo {
+    struct ControlFlowInfo {
         // Entry in the cfgStack.
         uint32 cfgEntry;
 
         // Label that continues go to.
         jsbytecode *continuepc;
 
-        LoopInfo(uint32 cfgEntry, jsbytecode *continuepc)
+        ControlFlowInfo(uint32 cfgEntry, jsbytecode *continuepc)
           : cfgEntry(cfgEntry),
             continuepc(continuepc)
         { }
@@ -100,7 +100,8 @@ class IonBuilder : public MIRGenerator
             WHILE_LOOP_BODY,    // while () { x }
             FOR_LOOP_COND,      // for (; x;) { }
             FOR_LOOP_BODY,      // for (; ;) { x }
-            FOR_LOOP_UPDATE     // for (; ; x) { }
+            FOR_LOOP_UPDATE,    // for (; ; x) { }
+            TABLE_SWITCH        // switch() { x }
         };
 
         State state;            // Current state of this control structure.
@@ -136,6 +137,20 @@ class IonBuilder : public MIRGenerator
                 jsbytecode *updatepc;
                 jsbytecode *updateEnd;
             } loop;
+            struct {
+                // pc immediately after the switch.
+                jsbytecode *exitpc;
+
+                // Deferred break and continue targets.
+                DeferredEdge *breaks;
+
+                // MIR instruction
+                MTableSwitch *ins;
+
+                // The number of current successor that get mapped into a block. 
+                uint32 currentSuccessor;
+
+            } tableswitch;
         };
 
         inline bool isLoop() const {
@@ -182,6 +197,9 @@ class IonBuilder : public MIRGenerator
     ControlStatus processForCondEnd(CFGState &state);
     ControlStatus processForBodyEnd(CFGState &state);
     ControlStatus processForUpdateEnd(CFGState &state);
+    ControlStatus processNextTableSwitchCase(CFGState &state);
+    ControlStatus processTableSwitchEnd(CFGState &state);
+    ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
     ControlStatus processReturn(JSOp op);
     ControlStatus processContinue(JSOp op, jssrcnote *sn);
     ControlStatus processBreak(JSOp op, jssrcnote *sn);
@@ -195,6 +213,7 @@ class IonBuilder : public MIRGenerator
     MBasicBlock *newBlock(jsbytecode *pc) {
         return newBlock(NULL, pc);
     }
+    MBasicBlock *createBreakCatchBlock(DeferredEdge *edge, jsbytecode *pc);
     bool finalizeLoop(CFGState &state, MDefinition *last);
     void assertValidTraceOp(JSOp op);
     bool forInLoop(JSOp op, jssrcnote *sn) {
@@ -203,6 +222,7 @@ class IonBuilder : public MIRGenerator
     ControlStatus forLoop(JSOp op, jssrcnote *sn);
     ControlStatus whileLoop(JSOp op, jssrcnote *sn);
     ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
+    ControlStatus tableSwitch(JSOp op, jssrcnote *sn);
 
     // Please see the Big Honkin' Comment about how snapshots work in
     // IonBuilder.cpp, near the definition for this function.
@@ -219,7 +239,8 @@ class IonBuilder : public MIRGenerator
     JSAtom **atoms;
     MBasicBlock *current;
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
-    Vector<LoopInfo, 4, IonAllocPolicy> loops_;
+    Vector<ControlFlowInfo, 4, IonAllocPolicy> loops_;
+    Vector<ControlFlowInfo, 0, IonAllocPolicy> switches_;
     TypeOracle *oracle;
 };
 
