@@ -109,12 +109,10 @@ bool
 LIRGenerator::visitParameter(MParameter *param)
 {
     ptrdiff_t offset;
-    if (param->index() == -2)
-        offset = CALLEE_FRAME_SLOT;
-    else if (param->index() == -1)
+    if (param->index() == -1)
         offset = THIS_FRAME_SLOT;
     else
-        offset = 2 + param->index();
+        offset = 1 + param->index();
 
     LParameter *ins = new LParameter;
     if (!defineBox(ins, param, LDefinition::PRESET))

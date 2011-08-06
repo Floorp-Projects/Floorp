@@ -159,11 +159,7 @@ IonBuilder::build()
 
     // Initialize argument references if inside a function frame.
     if (fun()) {
-        MParameter *param = MParameter::New(MParameter::CALLEE_SLOT);
-        current->add(param);
-        current->initSlot(calleeSlot(), param);
-
-        param = MParameter::New(MParameter::THIS_SLOT);
+        MParameter *param = MParameter::New(MParameter::THIS_SLOT);
         current->add(param);
         current->initSlot(thisSlot(), param);
 

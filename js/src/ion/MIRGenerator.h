@@ -54,6 +54,12 @@ class MBasicBlock;
 class MIRGraph;
 class MStart;
 
+static inline uint32
+CountArgSlots(JSFunction *fun)
+{
+    return fun ? fun->nargs + 1 : 0;
+}
+
 class MIRGenerator
 {
   public:
@@ -75,23 +81,19 @@ class MIRGenerator
     uint32 nlocals() const {
         return script->nfixed;
     }
-    uint32 calleeSlot() const {
+    uint32 thisSlot() const {
         JS_ASSERT(fun());
         return 0;
     }
-    uint32 thisSlot() const {
-        JS_ASSERT(fun());
-        return 1;
-    }
     uint32 firstArgSlot() const {
         JS_ASSERT(fun());
-        return 2;
+        return 1;
     }
     uint32 argSlot(uint32 i) const {
         return firstArgSlot() + i;
     }
     uint32 firstLocalSlot() const {
-        return (fun() ? fun()->nargs + 2 : 0);
+        return CountArgSlots(fun());
     }
     uint32 localSlot(uint32 i) const {
         return firstLocalSlot() + i;

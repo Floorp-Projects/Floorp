@@ -51,12 +51,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 {
     static const uint32 StackAlignment = 16;
 
-#ifdef _WIN64
-    static const uint32 ShadowStackSpace = 32;
-#else
-    static const uint32 ShadowStackSpace = 0;
-#endif
-
   protected:
     uint32 alignStackForCall(uint32 stackForArgs) {
         uint32 total = stackForArgs + ShadowStackSpace;

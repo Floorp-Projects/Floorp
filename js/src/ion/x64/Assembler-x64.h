@@ -84,6 +84,8 @@ static const Register ArgReg0 = rdi;
 static const Register ArgReg1 = rsi;
 static const Register ArgReg2 = rdx;
 static const Register ArgReg3 = rcx;
+static const Register ArgReg4 = r8;
+static const Register ArgReg5 = r9;
 #endif
 
 enum Scale {

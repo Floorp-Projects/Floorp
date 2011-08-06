@@ -42,8 +42,18 @@
 #ifndef jsion_frames_h__
 #define jsion_frames_h__
 
+#include "ion/IonCompartment.h"
+
 namespace js {
 namespace ion {
+
+// The layout of an Ion frame on the C stack:
+//   argN     _ 
+//   ...       \ - These are jsvals
+//   arg0      /
+//   this    _/
+//   calleeToken - Encodes script or JSFunction
+//   descriptor  - Size of the parent frame 
 
 // Ion frames have a few important numbers associated with them:
 //      Local depth:    The number of bytes required to spill local variables.
@@ -97,6 +107,34 @@ class FrameSizeClass
         return class_ != other.class_;
     }
 };
+
+static inline CalleeToken
+CalleeToToken(JSFunction *fun)
+{
+    return (CalleeToken *)fun;
+}
+static inline CalleeToken
+CalleeToToken(JSScript *script)
+{
+    return (CalleeToken *)(uintptr_t(script) | 1);
+}
+static inline bool
+IsCalleeTokenFunction(CalleeToken token)
+{
+    return (uintptr_t(token) & 1) == 0;
+}
+static inline JSFunction *
+CalleeTokenToFunction(CalleeToken token)
+{
+    JS_ASSERT(IsCalleeTokenFunction(token));
+    return (JSFunction *)token;
+}
+static inline JSScript *
+CalleeTokenToScript(CalleeToken token)
+{
+    JS_ASSERT(!IsCalleeTokenFunction(token));
+    return (JSScript *)(uintptr_t(token) & ~uintptr_t(1));
+}
 
 }
 }

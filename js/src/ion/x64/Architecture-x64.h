@@ -51,15 +51,22 @@ static const ptrdiff_t STACK_SLOT_SIZE       = 8;
 static const uint32 MAX_STACK_SLOTS          = 256;
 
 // In bytes: slots in between arguments and the locals.
-//   +4 for number of arguments.
-//   +4 for return address.
-static const uint32 ION_FRAME_PREFIX_SIZE    = 16;
+//   +8 for callee token
+//   +8 for size descriptor
+//   +8 for return address.
+static const uint32 ION_FRAME_PREFIX_SIZE    = 24;
 
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
 //   +8 for gpr spills
 //   +8 for double spills
 static const uint32 ION_FRAME_SLACK_SIZE     = 24;
+
+#ifdef _WIN64
+static const uint32 ShadowStackSpace = 32;
+#else
+static const uint32 ShadowStackSpace = 0;
+#endif
 
 class Registers {
   public:

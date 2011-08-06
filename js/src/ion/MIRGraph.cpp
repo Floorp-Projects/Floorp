@@ -60,7 +60,7 @@ MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script,
     graph_(graph),
     error_(false)
 {
-    nslots_ = script->nslots + (fun ? fun->nargs + 2 : 0);
+    nslots_ = script->nslots + CountArgSlots(fun);
 }
 
 bool
