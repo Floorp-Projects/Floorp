@@ -10,7 +10,7 @@ var log;
 var dbg = new Debugger;
 dbg.onDebuggerStatement = function (frame) { log += frame.callee.name; };
 
-// No debuggees: the debuggerHandler is not called.
+// No debuggees: onDebuggerStatement is not called.
 log = '';
 g1.f();
 assertEq(log, '');
@@ -21,7 +21,7 @@ log = '';
 g1.f();
 assertEq(log, 'f');
 
-// Two debuggees, two debuggerHandler calls.
+// Two debuggees, two onDebuggerStatement calls.
 dbg.addDebuggee(g2);
 log = '';
 g1.f();

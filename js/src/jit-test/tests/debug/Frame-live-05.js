@@ -10,7 +10,7 @@ dbg.onDebuggerStatement = function (frame) {
         assertEq(frame.eval("x();"), null);
     } else {
         for (var f = frame; f; f = f.older) {
-            if (f.type === "call")
+            if (f.type === "call" && f.script !== null)
                 snapshot.push(f);
         }
         dbg.removeDebuggee(g2);
