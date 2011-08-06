@@ -47,13 +47,13 @@
 using namespace js;
 using namespace js::ion;
 
-CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
+CodeGeneratorX86::CodeGeneratorX86(MIRGenerator *gen, LIRGraph &graph)
   : CodeGeneratorX86Shared(gen, graph)
 {
 }
 
 bool
-CodeGenerator::visitValue(LValue *value)
+CodeGeneratorX86::visitValue(LValue *value)
 {
     jsval_layout jv;
     jv.asBits = JSVAL_BITS(Jsvalify(value->value()));
@@ -88,7 +88,7 @@ MIRTypeToTag(MIRType type)
 }
 
 bool
-CodeGenerator::visitBox(LBox *box)
+CodeGeneratorX86::visitBox(LBox *box)
 {
     const LAllocation *a = box->getOperand(0);
     const LDefinition *type = box->getDef(TYPE_INDEX);
@@ -103,7 +103,7 @@ CodeGenerator::visitBox(LBox *box)
 }
 
 bool
-CodeGenerator::visitBoxDouble(LBoxDouble *box)
+CodeGeneratorX86::visitBoxDouble(LBoxDouble *box)
 {
     const LDefinition *payload = box->getDef(PAYLOAD_INDEX);
     const LDefinition *type = box->getDef(TYPE_INDEX);
@@ -118,7 +118,7 @@ CodeGenerator::visitBoxDouble(LBoxDouble *box)
 }
 
 bool
-CodeGenerator::visitUnbox(LUnbox *unbox)
+CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 {
     LAllocation *type = unbox->getOperand(TYPE_INDEX);
     masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(unbox->type())));
@@ -126,7 +126,7 @@ CodeGenerator::visitUnbox(LUnbox *unbox)
 }
 
 bool
-CodeGenerator::visitReturn(LReturn *ret)
+CodeGeneratorX86::visitReturn(LReturn *ret)
 {
 #ifdef DEBUG
     LAllocation *type = ret->getOperand(TYPE_INDEX);
@@ -158,7 +158,7 @@ class DeferredDouble : public DeferredData
 };
 
 bool
-CodeGenerator::visitDouble(LDouble *ins)
+CodeGeneratorX86::visitDouble(LDouble *ins)
 {
     const LDefinition *out = ins->getDef(0);
 
@@ -179,7 +179,7 @@ CodeGenerator::visitDouble(LDouble *ins)
 }
 
 bool
-CodeGenerator::visitUnboxDouble(LUnboxDouble *ins)
+CodeGeneratorX86::visitUnboxDouble(LUnboxDouble *ins)
 {
     const LAllocation *type = ins->getOperand(TYPE_INDEX);
     const LAllocation *payload = ins->getOperand(PAYLOAD_INDEX);
@@ -194,7 +194,7 @@ CodeGenerator::visitUnboxDouble(LUnboxDouble *ins)
 }
 
 bool
-CodeGenerator::visitUnboxDoubleSSE41(LUnboxDoubleSSE41 *ins)
+CodeGeneratorX86::visitUnboxDoubleSSE41(LUnboxDoubleSSE41 *ins)
 {
     const LAllocation *type = ins->getOperand(TYPE_INDEX);
     const LAllocation *payload = ins->getOperand(PAYLOAD_INDEX);

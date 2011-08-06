@@ -47,13 +47,13 @@
 using namespace js;
 using namespace js::ion;
 
-CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
+CodeGeneratorX64::CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph)
   : CodeGeneratorX86Shared(gen, graph)
 {
 }
 
 bool
-CodeGenerator::visitDouble(LDouble *ins)
+CodeGeneratorX64::visitDouble(LDouble *ins)
 {
     const LDefinition *temp = ins->getTemp(0);
     const LDefinition *out = ins->getDef(0);
@@ -72,7 +72,7 @@ CodeGenerator::visitDouble(LDouble *ins)
 }
 
 bool
-CodeGenerator::visitValue(LValue *value)
+CodeGeneratorX64::visitValue(LValue *value)
 {
     jsval_layout jv;
     jv.asBits = JSVAL_BITS(Jsvalify(value->value()));
@@ -105,7 +105,7 @@ MIRTypeToShiftedTag(MIRType type)
 }
 
 bool
-CodeGenerator::visitBox(LBox *box)
+CodeGeneratorX64::visitBox(LBox *box)
 {
     const LAllocation *in = box->getOperand(0);
     const LDefinition *result = box->getDef(0);
@@ -121,7 +121,7 @@ CodeGenerator::visitBox(LBox *box)
 }
 
 bool
-CodeGenerator::visitUnboxInteger(LUnboxInteger *unbox)
+CodeGeneratorX64::visitUnboxInteger(LUnboxInteger *unbox)
 {
     const LAllocation *value = unbox->getOperand(0);
     const LDefinition *result = unbox->getDef(0);
@@ -135,7 +135,7 @@ CodeGenerator::visitUnboxInteger(LUnboxInteger *unbox)
 }
 
 bool
-CodeGenerator::visitUnboxDouble(LUnboxDouble *unbox)
+CodeGeneratorX64::visitUnboxDouble(LUnboxDouble *unbox)
 {
     const LAllocation *value = unbox->getOperand(0);
     const LDefinition *result = unbox->getDef(0);
@@ -149,7 +149,7 @@ CodeGenerator::visitUnboxDouble(LUnboxDouble *unbox)
 }
 
 bool
-CodeGenerator::visitReturn(LReturn *ret)
+CodeGeneratorX64::visitReturn(LReturn *ret)
 {
 #ifdef DEBUG
     LAllocation *result = ret->getOperand(0);

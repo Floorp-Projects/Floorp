@@ -50,16 +50,14 @@
 #include "LinearScan.h"
 #include "jscompartment.h"
 #include "IonCompartment.h"
+#include "CodeGenerator.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
-# include "x86/CodeGenerator-x86.h"
 #elif defined(JS_CPU_X64)
 # include "x64/Lowering-x64.h"
-# include "x64/CodeGenerator-x64.h"
 #elif defined(JS_CPU_ARM)
 # include "arm/Lowering-arm.h"
-# include "arm/CodeGenerator-arm.h"
 #endif
 #include "jsgcmark.h"
 #include "jsgcinlines.h"
