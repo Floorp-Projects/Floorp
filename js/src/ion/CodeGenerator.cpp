@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,37 +39,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_x64_h__
-#define jsion_codegen_x64_h__
+#include "CodeGenerator.h"
+#include "IonLinker.h"
+#include "MIRGenerator.h"
 
-#include "ion/x64/Assembler-x64.h"
-#include "ion/shared/CodeGenerator-x86-shared.h"
+using namespace js;
+using namespace js::ion;
 
-namespace js {
-namespace ion {
-
-class CodeGeneratorX64 : public CodeGeneratorX86Shared
+CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
+  : CodeGeneratorSpecific(gen, graph)
 {
-    CodeGeneratorX64 *thisFromCtor() {
-        return this;
+}
+
+bool
+CodeGenerator::generateBody()
+{
+    for (size_t i = 0; i < graph.numBlocks(); i++) {
+        current = graph.getBlock(i);
+        for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
+            iter->accept(this);
+        }
+    }
+    return true;
+}
+
+bool
+CodeGenerator::generate()
+{
+    if (!generatePrologue())
+        return false;
+    if (!generateBody())
+        return false;
+    if (!generateEpilogue())
+        return false;
+    if (!generateOutOfLineCode())
+        return false;
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(GetIonContext()->cx);
+    if (!code)
+        return false;
+
+    if (!gen->script->ion) {
+        gen->script->ion= IonScript::New(GetIonContext()->cx);
+        if (!gen->script->ion)
+            return false;
     }
 
-  public:
-    CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph);
-
-  public:
-    bool visitValue(LValue *value);
-    bool visitReturn(LReturn *ret);
-    bool visitBox(LBox *box);
-    bool visitUnboxInteger(LUnboxInteger *unbox);
-    bool visitUnboxDouble(LUnboxDouble *unbox);
-    bool visitDouble(LDouble *ins);
-};
-
-typedef CodeGeneratorX64 CodeGeneratorSpecific;
-
-} // ion
-} // js
-
-#endif // jsion_codegen_x64_h__
+    gen->script->ion->setMethod(code);
+    return true;
+}
 

@@ -386,6 +386,7 @@ CPPSRCS +=	MIR.cpp \
 		MoveResolver.cpp \
 		CodeGenerator-shared.cpp \
 		TypePolicy.cpp \
+		CodeGenerator.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

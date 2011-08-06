@@ -48,14 +48,14 @@
 namespace js {
 namespace ion {
 
-class CodeGenerator : public CodeGeneratorX86Shared
+class CodeGeneratorX86 : public CodeGeneratorX86Shared
 {
-    CodeGenerator *thisFromCtor() {
+    CodeGeneratorX86 *thisFromCtor() {
         return this;
     }
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
+    CodeGeneratorX86(MIRGenerator *gen, LIRGraph &graph);
 
   public:
     bool visitBox(LBox *box);
@@ -67,6 +67,8 @@ class CodeGenerator : public CodeGeneratorX86Shared
     bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);
 };
+
+typedef CodeGeneratorX86 CodeGeneratorSpecific;
 
 } // ion
 } // js

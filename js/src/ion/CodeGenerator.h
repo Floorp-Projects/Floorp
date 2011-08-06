@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,37 +39,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_x64_h__
-#define jsion_codegen_x64_h__
+#ifndef jsion_codegen_h__
+#define jsion_codegen_h__
 
-#include "ion/x64/Assembler-x64.h"
-#include "ion/shared/CodeGenerator-x86-shared.h"
+#if defined(JS_CPU_X86)
+# include "x86/CodeGenerator-x86.h"
+#elif defined(JS_CPU_X64)
+# include "x64/CodeGenerator-x64.h"
+#endif
 
 namespace js {
 namespace ion {
 
-class CodeGeneratorX64 : public CodeGeneratorX86Shared
+class CodeGenerator : public CodeGeneratorSpecific
 {
-    CodeGeneratorX64 *thisFromCtor() {
-        return this;
-    }
+    bool generateBody();
 
   public:
-    CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph);
+    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
 
   public:
-    bool visitValue(LValue *value);
-    bool visitReturn(LReturn *ret);
-    bool visitBox(LBox *box);
-    bool visitUnboxInteger(LUnboxInteger *unbox);
-    bool visitUnboxDouble(LUnboxDouble *unbox);
-    bool visitDouble(LDouble *ins);
+    bool generate();
 };
 
-typedef CodeGeneratorX64 CodeGeneratorSpecific;
+} // namespace ion
+} // namespace js
 
-} // ion
-} // js
-
-#endif // jsion_codegen_x64_h__
+#endif // jsion_codegen_h__
 
