@@ -77,15 +77,17 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveResolver::MoveOperand toMoveOperand(const LAllocation *a);
+    MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
 
-  public:
-    CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
-
+  protected:
     bool generatePrologue();
     bool generateEpilogue();
 
   public:
+    CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
+
+  public:
+    // Instruction visitors.
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitBitOp(LBitOp *ins);

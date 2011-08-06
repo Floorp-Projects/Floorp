@@ -62,8 +62,7 @@ CodeGeneratorX86Shared::generatePrologue()
 
     // Allocate returnLabel_ on the heap, so we don't run it's destructor and
     // assert-not-bound in debug mode on compilation failure.
-    returnLabel_ = gen->allocate<Label>();
-    new (returnLabel_) Label();
+    returnLabel_ = new HeapLabel();
 
     return true;
 }
@@ -175,7 +174,7 @@ CodeGeneratorX86Shared::visitInteger(LInteger *ins)
 typedef MoveResolver::MoveOperand MoveOperand;
 
 MoveOperand
-CodeGeneratorX86Shared::toMoveOperand(const LAllocation *a)
+CodeGeneratorX86Shared::toMoveOperand(const LAllocation *a) const
 {
     if (a->isGeneralReg())
         return MoveOperand(ToRegister(a));
