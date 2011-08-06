@@ -160,7 +160,7 @@ class CompactBufferWriter
     const uint8 *buffer() const {
         return &buffer_[0];
     }
-    bool outOfMemory() const {
+    bool oom() const {
         return !enoughMemory_;
     }
 };

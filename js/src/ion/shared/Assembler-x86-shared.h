@@ -108,7 +108,7 @@ class AssemblerX86Shared
     bool oom() const {
         return masm.oom() ||
                !enoughMemory_ ||
-               relocations_.outOfMemory();
+               relocations_.oom();
     }
 
     void executableCopy(void *buffer);
