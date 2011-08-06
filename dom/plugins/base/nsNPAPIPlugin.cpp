@@ -2189,23 +2189,18 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
-  case NPNVsupportsCoreAnimationBool: {
-    *(NPBool*)result = PR_TRUE;
+   case NPNVsupportsCoreAnimationBool: {
+     *(NPBool*)result = PR_TRUE;
 
-    return NPERR_NO_ERROR;
-  }
+     return NPERR_NO_ERROR;
+   }
 
-  case NPNVsupportsInvalidatingCoreAnimationBool: {
-    *(NPBool*)result = PR_TRUE;
+   case NPNVsupportsInvalidatingCoreAnimationBool: {
+     *(NPBool*)result = PR_TRUE;
 
-    return NPERR_NO_ERROR;
-  }
+     return NPERR_NO_ERROR;
+   }
 
-  case NPNVsupportsCompositingCoreAnimationPluginsBool: {
-    *(NPBool*)result = PR_TRUE;
-
-    return NPERR_NO_ERROR;
-  }
 
 #ifndef NP_NO_CARBON
   case NPNVsupportsCarbonBool: {
