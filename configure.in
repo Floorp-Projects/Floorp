@@ -4795,7 +4795,6 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
-MOZ_STORAGE=1
 MOZ_SVG_DLISTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -6544,18 +6543,6 @@ else
     if test "$MOZ_BUILD_APP" = "browser"; then
         AC_MSG_ERROR([Cannot build Firefox with --disable-feeds.])
     fi
-fi
-
-dnl ========================================================
-dnl = Enable mozStorage
-dnl ========================================================
-dnl Implicitly enabled by default if building calendar or places
-MOZ_ARG_ENABLE_BOOL(storage,
-[  --enable-storage        Enable mozStorage module and related components],
-    MOZ_STORAGE=1,
-    MOZ_STORAGE= )
-if test -n "$MOZ_STORAGE"; then
-    AC_DEFINE(MOZ_STORAGE)
 fi
 
 dnl ========================================================
@@ -8908,7 +8895,6 @@ AC_SUBST(MOZ_PROFILING)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
-AC_SUBST(MOZ_STORAGE)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
