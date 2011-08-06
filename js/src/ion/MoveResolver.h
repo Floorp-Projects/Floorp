@@ -42,7 +42,9 @@
 #ifndef jsion_move_group_resolver_h__
 #define jsion_move_group_resolver_h__
 
-#include "IonLIR.h"
+#include "IonRegisters.h"
+#include "InlineList.h"
+#include "IonAllocPolicy.h"
 
 namespace js {
 namespace ion {
@@ -211,8 +213,6 @@ class MoveResolver
     // cycle resolution algorithm. Calling addMove() again resets the resolver.
     bool addMove(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
     bool resolve();
-
-    bool addUnorderedMove(const LMove &move);
 
     size_t numMoves() const {
         return orderedMoves_.length();

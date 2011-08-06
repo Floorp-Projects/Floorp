@@ -44,22 +44,45 @@
 
 #include "IonCode.h"
 #include "jsvalue.h"
+#include "jsvector.h"
+#include "vm/Stack.h"
+#include "IonFrames.h"
 
 namespace js {
 namespace ion {
 
-typedef void * CalleeToken;
+class FrameSizeClass;
 
 typedef JSBool (*EnterIonCode)(void *code, int argc, Value *argv, Value *vp,
                                CalleeToken calleeToken);
 
-class IonCompartment {
+class IonActivation;
+
+class IonCompartment
+{
+    friend class IonActivation;
+
     JSC::ExecutableAllocator *execAlloc_;
 
-    // Trampolines.
+    // Current activation of ion::Cannon.
+    IonActivation *active_;
+
+    // Trampoline for entering JIT code.
     IonCode *enterJIT_;
 
+    // Vector mapping frame class sizes to bailout tables.
+    js::Vector<IonCode *, 4, SystemAllocPolicy> bailoutTables_;
+
+    // Generic bailout table; used if the bailout table overflows.
+    IonCode *bailoutHandler_;
+
+    // Error-returning thunk.
+    IonCode *returnError_;
+
     IonCode *generateEnterJIT(JSContext *cx);
+    IonCode *generateReturnError(JSContext *cx);
+    IonCode *generateBailoutTable(JSContext *cx, uint32 frameClass);
+    IonCode *generateBailoutHandler(JSContext *cx);
 
   public:
     bool initialize(JSContext *cx);
@@ -73,16 +96,78 @@ class IonCompartment {
         return execAlloc_;
     }
 
+    IonCode *getBailoutTable(JSContext *cx, const FrameSizeClass &frameClass);
+    IonCode *getGenericBailoutHandler(JSContext *cx) {
+        if (!bailoutHandler_) {
+            bailoutHandler_ = generateBailoutHandler(cx);
+            if (!bailoutHandler_)
+                return NULL;
+        }
+        return bailoutHandler_;
+    }
+
+    // Infallible; does not generate a table.
+    IonCode *getBailoutTable(const FrameSizeClass &frameClass);
+
     EnterIonCode enterJIT(JSContext *cx) {
         if (!enterJIT_) {
             enterJIT_ = generateEnterJIT(cx);
             if (!enterJIT_)
                 return NULL;
         }
+        if (!returnError_) {
+            returnError_ = generateReturnError(cx);
+            if (!returnError_)
+                return NULL;
+        }
         return enterJIT_->as<EnterIonCode>();
+    }
+    IonCode *returnError() const {
+        JS_ASSERT(returnError_);
+        return returnError_;
+    }
+
+    IonActivation *activation() const {
+        return active_;
     }
 };
 
+class BailoutClosure;
+
+class IonActivation
+{
+    JSContext *cx_;
+    IonActivation *prev_;
+    StackFrame *entryfp_;
+    FrameRegs &oldFrameRegs_;
+    BailoutClosure *bailout_;
+
+  public:
+    IonActivation(JSContext *cx, StackFrame *fp);
+    ~IonActivation();
+    StackFrame *entryfp() const {
+        return entryfp_;
+    }
+    IonActivation *prev() const {
+        return prev_;
+    }
+    void setBailout(BailoutClosure *bailout) {
+        JS_ASSERT(!bailout_);
+        bailout_ = bailout;
+    }
+    BailoutClosure *maybeTakeBailout() {
+        BailoutClosure *br = bailout_;
+        bailout_ = NULL;
+        return br;
+    }
+    BailoutClosure *takeBailout() {
+        JS_ASSERT(bailout_);
+        return maybeTakeBailout();
+    }
+    FrameRegs &oldFrameRegs() {
+        return oldFrameRegs_;
+    }
+};
 
 } // namespace js
 } // namespace ion

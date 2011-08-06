@@ -48,8 +48,17 @@ namespace JSC {
     class ExecutablePool;
 }
 
+class JSScript;
+
 namespace js {
 namespace ion {
+
+// The maximum size of any buffer associated with an assembler or code object.
+// This is chosen to not overflow a signed integer, leaving room for an extra
+// bit on offsets.
+static const uint32 MAX_BUFFER_SIZE = (1 << 30) - 1;
+
+typedef uint32 SnapshotOffset;
 
 class MacroAssembler;
 
@@ -112,10 +121,28 @@ class IonCode : public gc::Cell
 
 #define ION_DISABLED_SCRIPT ((IonScript *)0x1)
 
+class SnapshotWriter;
+
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
 {
+    // Code pointer containing the actual method.
     IonCode *method_;
+
+    // Deoptimization table used by this method.
+    IonCode *deoptTable_;
+
+    // Offset from the start of the code buffer to its snapshot buffer.
+    uint32 snapshots_;
+    uint32 snapshotsSize_;
+
+    // Table mapping bailout IDs to snapshot offsets.
+    uint32 bailoutTable_;
+    uint32 bailoutEntries_;
+
+    SnapshotOffset *bailoutTable() {
+        return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
+    }
 
   private:
     void trace(JSTracer *trc, JSScript *script);
@@ -124,7 +151,7 @@ struct IonScript
     // Do not call directly, use IonScript::New. This is public for cx->new_.
     IonScript();
 
-    static IonScript *New(JSContext *cx);
+    static IonScript *New(JSContext *cx, size_t snapshotsSize, size_t snapshotEntries);
     static void Trace(JSTracer *trc, JSScript *script);
     static void Destroy(JSContext *cx, JSScript *script);
 
@@ -135,6 +162,21 @@ struct IonScript
     void setMethod(IonCode *code) {
         method_ = code;
     }
+    void setDeoptTable(IonCode *code) {
+        deoptTable_ = code;
+    }
+    const uint8 *snapshots() const {
+        return reinterpret_cast<const uint8 *>(this) + snapshots_;
+    }
+    size_t snapshotsSize() const {
+        return snapshotsSize_;
+    }
+    SnapshotOffset bailoutToSnapshot(uint32 bailoutId) {
+        JS_ASSERT(bailoutId < bailoutEntries_);
+        return bailoutTable()[bailoutId];
+    }
+    void copySnapshots(const SnapshotWriter *writer);
+    void copyBailoutTable(const SnapshotOffset *table);
 };
 
 }

@@ -142,6 +142,9 @@ CodeGeneratorX64::visitUnboxInteger(LUnboxInteger *unbox)
     masm.movq(ToOperand(value), ToRegister(result));
     masm.shlq(Imm32(JSVAL_TAG_SHIFT), ToRegister(result));
     masm.cmpl(ToOperand(result), Imm32(JSVAL_TAG_INT32));
+    if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
+        return false;
+
     masm.movl(ToOperand(value), ToRegister(result));
 
     return true;
@@ -156,6 +159,9 @@ CodeGeneratorX64::visitUnboxDouble(LUnboxDouble *unbox)
 
     masm.movq(ImmWord(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ToRegister(temp));
     masm.cmpq(ToRegister(value), ToRegister(temp));
+    if (!bailoutIf(Assembler::Above, unbox->snapshot()))
+        return false;
+
     masm.movqsd(ToRegister(value), ToFloatRegister(result));
 
     return true;

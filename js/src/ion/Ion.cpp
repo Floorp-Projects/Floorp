@@ -135,7 +135,9 @@ ion::SetIonContext(IonContext *ctx)
 
 IonCompartment::IonCompartment()
   : execAlloc_(NULL),
-    enterJIT_(NULL)
+    enterJIT_(NULL),
+    bailoutHandler_(NULL),
+    returnError_(NULL)
 {
 }
 
@@ -152,8 +154,22 @@ IonCompartment::initialize(JSContext *cx)
 void
 IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 {
-    if (compartment->active && enterJIT_)
-        MarkIonCode(trc, enterJIT_, "enterJIT");
+    if (compartment->active) {
+        // These must be available if we could be running JIT code.
+        if (enterJIT_)
+            MarkIonCode(trc, enterJIT_, "enterJIT");
+        if (returnError_)
+            MarkIonCode(trc, returnError_, "returnError");
+
+        // These need to be here until we can figure out how to make the GC
+        // scan these references inside the code generator itself.
+        if (bailoutHandler_)
+            MarkIonCode(trc, bailoutHandler_, "bailoutHandler");
+        for (size_t i = 0; i < bailoutTables_.length(); i++) {
+            if (bailoutTables_[i])
+                MarkIonCode(trc, bailoutTables_[i], "bailoutTable");
+        }
+    }
 }
 
 void
@@ -161,11 +177,66 @@ IonCompartment::sweep(JSContext *cx)
 {
     if (enterJIT_ && IsAboutToBeFinalized(cx, enterJIT_))
         enterJIT_ = NULL;
+    if (bailoutHandler_ && IsAboutToBeFinalized(cx, bailoutHandler_))
+        bailoutHandler_ = NULL;
+    if (returnError_ && IsAboutToBeFinalized(cx, returnError_))
+        returnError_ = NULL;
+
+    for (size_t i = 0; i < bailoutTables_.length(); i++) {
+        if (bailoutTables_[i] && IsAboutToBeFinalized(cx, bailoutTables_[i]))
+            bailoutTables_[i] = NULL;
+    }
+}
+
+IonCode *
+IonCompartment::getBailoutTable(const FrameSizeClass &frameClass)
+{
+    JS_ASSERT(frameClass != FrameSizeClass::None());
+    return bailoutTables_[frameClass.classId()];
+}
+
+IonCode *
+IonCompartment::getBailoutTable(JSContext *cx, const FrameSizeClass &frameClass)
+{
+    uint32 id = frameClass.classId();
+
+    if (id >= bailoutTables_.length()) {
+        size_t numToPush = id - bailoutTables_.length() + 1;
+        if (!bailoutTables_.reserve(bailoutTables_.length() + numToPush))
+            return NULL;
+        for (size_t i = 0; i < numToPush; i++)
+            bailoutTables_.infallibleAppend(NULL);
+    }
+
+    if (!bailoutTables_[id])
+        bailoutTables_[id] = generateBailoutTable(cx, id);
+
+    return bailoutTables_[id];
 }
 
 IonCompartment::~IonCompartment()
 {
     Foreground::delete_(execAlloc_);
+}
+
+IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
+  : cx_(cx),
+    prev_(cx->compartment->ionCompartment()->activation()),
+    entryfp_(fp),
+    oldFrameRegs_(cx->regs()),
+    bailout_(NULL)
+{
+    cx->compartment->ionCompartment()->active_ = this;
+    cx->stack.repointRegs(NULL);
+}
+
+IonActivation::~IonActivation()
+{
+    JS_ASSERT(cx_->compartment->ionCompartment()->active_ == this);
+    JS_ASSERT(!bailout_);
+
+    cx_->compartment->ionCompartment()->active_ = prev();
+    cx_->stack.repointRegs(&oldFrameRegs_);
 }
 
 IonCode *
@@ -218,21 +289,67 @@ IonCode::finalize(JSContext *cx)
 }
 
 IonScript::IonScript()
-  : method_(NULL)
+  : method_(NULL),
+    deoptTable_(NULL),
+    snapshots_(0),
+    snapshotsSize_(0),
+    bailoutTable_(0),
+    bailoutEntries_(0)
 {
 }
 
 IonScript *
-IonScript::New(JSContext *cx)
+IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries)
 {
-    return cx->new_<IonScript>();
+    if (snapshotsSize >= MAX_BUFFER_SIZE ||
+        (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
+    {
+        js_ReportOutOfMemory(cx);
+        return NULL;
+    }
+
+    // This should not overflow on x86, because the memory is already allocated
+    // *somewhere* and if their total overflowed there would be no memory left
+    // at all.
+    size_t bytes = snapshotsSize +
+                   bailoutEntries * sizeof(uint32);
+    uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
+    if (!buffer)
+        return NULL;
+
+    IonScript *script = reinterpret_cast<IonScript *>(buffer);
+    new (script) IonScript();
+
+    script->snapshots_ = sizeof(IonScript);
+    script->snapshotsSize_ = snapshotsSize;
+
+    script->bailoutTable_ = script->snapshots_ + snapshotsSize;
+    script->bailoutEntries_ = bailoutEntries;
+
+    return script;
 }
+
 
 void
 IonScript::trace(JSTracer *trc, JSScript *script)
 {
     if (method_)
         MarkIonCode(trc, method_, "method");
+    if (deoptTable_)
+        MarkIonCode(trc, deoptTable_, "deoptimizationTable");
+}
+
+void
+IonScript::copySnapshots(const SnapshotWriter *writer)
+{
+    JS_ASSERT(writer->length() == snapshotsSize_);
+    memcpy((uint8 *)this + snapshots_, writer->buffer(), snapshotsSize_);
+}
+
+void
+IonScript::copyBailoutTable(const SnapshotOffset *table)
+{
+    memcpy(bailoutTable(), table, bailoutEntries_ * sizeof(uint32));
 }
 
 void
@@ -343,6 +460,69 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
     return true;
 }
 
+static bool
+CheckFrame(StackFrame *fp)
+{
+    if (!fp->isFunctionFrame()) {
+        // Support for this is almost there - we would need a new
+        // pushBailoutFrame. For the most part we just don't support support
+        // the opcodes in a global script yet.
+        IonSpew(IonSpew_Abort, "global frame");
+        return false;
+    }
+
+    if (fp->isEvalFrame()) {
+        // Eval frames are not yet supported. Supporting this will require new
+        // logic in pushBailoutFrame to deal with linking prev.
+        IonSpew(IonSpew_Abort, "eval frame");
+        return false;
+    }
+
+    if (fp->isConstructing()) {
+        // Constructors are not supported yet. We need a way to communicate the
+        // constructing bit through Ion frames.
+        IonSpew(IonSpew_Abort, "constructing frame");
+        return false;
+    }
+
+    if (fp->hasCallObj()) {
+        // Functions with call objects aren't supported yet. To support them,
+        // we need to fix bug 659577 which would prevent aliasing locals to
+        // stack slots.
+        IonSpew(IonSpew_Abort, "frame has callobj");
+        return false;
+    }
+
+    if (fp->script()->usesArguments) {
+        // Functions with arguments objects, or scripts that use arguments, are
+        // not supported yet.
+        IonSpew(IonSpew_Abort, "frame has argsobj");
+        return false;
+    }
+
+    if (fp->isGeneratorFrame()) {
+        // Err... no.
+        IonSpew(IonSpew_Abort, "generator frame");
+        return false;
+    }
+
+    if (fp->isDebuggerFrame()) {
+        IonSpew(IonSpew_Abort, "debugger frame");
+        return false;
+    }
+
+    // This check is to not overrun the stack. Eventually, we will want to
+    // handle this when we support JSOP_ARGUMENTS or function calls.
+    if (fp->numActualArgs() >= SNAPSHOT_MAX_NARGS) {
+        IonSpew(IonSpew_Abort, "too many actual args");
+        return false;
+    }
+
+    JS_ASSERT(!fp->hasArgsObj());
+    JS_ASSERT_IF(fp->fun(), !fp->fun()->isHeavyweight());
+    return true;
+}
+
 MethodStatus
 ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
 {
@@ -354,6 +534,9 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
 
         return Method_Compiled;
     }
+
+    if (!CheckFrame(fp))
+        return Method_CantCompile;
 
     if (!IonCompile(cx, script, fp)) {
         script->ion = ION_DISABLED_SCRIPT;
@@ -367,6 +550,7 @@ bool
 ion::Cannon(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(ion::IsEnabled());
+    JS_ASSERT(CheckFrame(fp));
 
     EnterIonCode enterJIT = cx->compartment->ionCompartment()->enterJIT(cx);
     if (!enterJIT)
@@ -379,7 +563,7 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     if (fp->isFunctionFrame()) {
         argc = CountArgSlots(fp->fun());
         argv = fp->formalArgs() - 1;
-        calleeToken = CalleeToToken(fp->fun());
+        calleeToken = CalleeToToken(&fp->callee());
     } else {
         calleeToken = CalleeToToken(fp->script());
     }
@@ -389,18 +573,17 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     IonCode *code = ion->method();
     void *jitcode = code->raw();
 
-    FrameRegs &oldRegs = cx->regs();
-    cx->stack.repointRegs(NULL);
-
     JSBool ok;
     Value result;
     {
         AssertCompartmentUnchanged pcc(cx);
+        IonContext ictx(cx, NULL);
+        IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
+
         ok = enterJIT(jitcode, argc, argv, &result, calleeToken);
     }
 
-    cx->stack.repointRegs(&oldRegs);
     JS_ASSERT(fp == cx->fp());
 
     // The trampoline wrote the return value but did not set the HAS_RVAL flag.

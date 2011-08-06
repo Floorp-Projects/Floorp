@@ -50,17 +50,21 @@ namespace ion {
 static const ptrdiff_t STACK_SLOT_SIZE       = 4;
 static const uint32 DOUBLE_STACK_ALIGNMENT   = 2;
 
-// In bytes: slots in between arguments and the locals.
-//   +4 for callee token
-//   +4 for size descriptor
-//   +4 for return address.
-static const uint32 ION_FRAME_PREFIX_SIZE    = 12;
-
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
 //   +4 for gpr spills
 //   +8 for double spills
-static const uint32 ION_FRAME_SLACK_SIZE     = 20;
+static const uint32 ION_FRAME_SLACK_SIZE    = 20;
+
+// An offset that is illegal for a local variable's stack allocation.
+static const int32 INVALID_STACK_SLOT       = -1;
+
+////
+// These offsets are related to bailouts.
+////
+
+// Size of each bailout table entry. On x86 this is a 5-byte relative call.
+static const uint32 BAILOUT_TABLE_ENTRY_SIZE    = 5;
 
 class Registers {
   public:
@@ -73,6 +77,7 @@ class Registers {
     }
 
     static const Code StackPointer = JSC::X86Registers::esp;
+    static const Code Invalid = JSC::X86Registers::invalid_reg;
 
     static const uint32 Total = 8;
     static const uint32 Allocatable = 6;
@@ -111,6 +116,8 @@ class FloatRegisters {
                                        "xmm4", "xmm5", "xmm6", "xmm7" };
         return Names[code];
     }
+
+    static const Code Invalid = JSC::X86Registers::invalid_xmm;
 
     static const uint32 Total = 8;
     static const uint32 Allocatable = 8;
