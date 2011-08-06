@@ -56,6 +56,7 @@ CodeGenerator::generateBody()
 {
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         current = graph.getBlock(i);
+        masm.bind(current->label());
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
             if (!iter->accept(this))
                 return false;
