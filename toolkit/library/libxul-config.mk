@@ -232,21 +232,9 @@ EXTRA_DSO_LDOPTS += $(SQLITE_LIBS)
 endif
 
 ifdef MOZ_PLACES
-ifdef MOZ_MORKREADER
-STATIC_LIBS += morkreader_s
-endif
-
 COMPONENT_LIBS += \
 	places \
 	$(NULL)
-endif
-
-ifdef MOZ_MORK
-ifdef MOZ_XUL
-COMPONENT_LIBS += \
-	mork \
-	$(NULL)
-endif
 endif
 
 ifdef MOZ_XUL

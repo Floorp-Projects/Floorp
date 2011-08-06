@@ -37,7 +37,6 @@
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
-const NS_APP_HISTORY_50_FILE = "UHist";
 const NS_APP_BOOKMARKS_50_FILE = "BMarks";
 
 // Shortcuts to transitions type.
@@ -86,26 +85,6 @@ Services.prefs.setBoolPref("places.history.enabled", true);
 
 // Initialize profile.
 let gProfD = do_get_profile();
-
-// Add our own dirprovider for old history.dat.
-let (provider = {
-      getFile: function(prop, persistent) {
-        persistent.value = true;
-        if (prop == NS_APP_HISTORY_50_FILE) {
-          let histFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-          histFile.append("history.dat");
-          return histFile;
-        }
-        throw Cr.NS_ERROR_FAILURE;
-      },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider])
-    })
-{
-  Cc["@mozilla.org/file/directory_service;1"].
-  getService(Ci.nsIDirectoryService).
-  QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
-
 
 // Remove any old database.
 clearDB();

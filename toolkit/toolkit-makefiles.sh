@@ -40,11 +40,6 @@
 
 MAKEFILES_db="
   db/Makefile
-  db/mdb/Makefile
-  db/mdb/public/Makefile
-  db/mork/Makefile
-  db/mork/build/Makefile
-  db/mork/src/Makefile
 "
 
 MAKEFILES_dom="
@@ -937,13 +932,6 @@ if [ "$MOZ_ZIPWRITER" ]; then
     modules/libjar/zipwriter/public/Makefile
     modules/libjar/zipwriter/src/Makefile
     modules/libjar/zipwriter/test/Makefile
-  "
-fi
-
-if [ "$MOZ_MORKREADER" ]; then
-  add_makefiles "
-    db/morkreader/Makefile
-    db/morkreader/external/Makefile
   "
 fi
 

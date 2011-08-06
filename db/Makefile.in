@@ -42,14 +42,4 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef NSS_DISABLE_DBM
-ifdef MOZ_MORK
-PARALLEL_DIRS = mdb mork
-endif
-endif 
-
-ifdef MOZ_MORKREADER
-PARALLEL_DIRS += morkreader
-endif
-
 include $(topsrcdir)/config/rules.mk

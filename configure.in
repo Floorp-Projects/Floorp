@@ -4764,8 +4764,6 @@ MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
 MOZ_JSDEBUGGER=1
-MOZ_MORK=
-MOZ_MORKREADER=
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
@@ -8830,18 +8828,6 @@ fi
 
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
-
-dnl Only build Mork if it's required
-AC_SUBST(MOZ_MORK)
-if test "$MOZ_MORK"; then
-  AC_DEFINE(MOZ_MORK)
-fi
-
-dnl Build the lightweight Mork reader if required
-AC_SUBST(MOZ_MORKREADER)
-if test "$MOZ_MORKREADER"; then
-  AC_DEFINE(MOZ_MORKREADER)
-fi
 
 dnl Build Places if required
 if test "$MOZ_PLACES"; then

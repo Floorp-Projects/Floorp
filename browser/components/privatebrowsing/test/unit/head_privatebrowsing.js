@@ -47,7 +47,6 @@ const kEnter = "enter";
 const kExit = "exit";
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-const NS_APP_HISTORY_50_FILE = "UHist";
 
 function LOG(aMsg) {
   aMsg = ("*** PRIVATEBROWSING TESTS: " + aMsg);
@@ -64,26 +63,6 @@ function uri(spec) {
 
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 var profileDir = do_get_profile();
-
-var provider = {
-  getFile: function(prop, persistent) {
-    persistent.value = true;
-    if (prop == NS_APP_HISTORY_50_FILE) {
-      var histFile = profileDir.clone();
-      histFile.append("history.dat");
-      return histFile;
-    }
-    throw Cr.NS_ERROR_FAILURE;
-  },
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-        iid.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-};
-dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
 // Do not attempt to restore any session since we don't have any windows
 Cc["@mozilla.org/preferences-service;1"].
