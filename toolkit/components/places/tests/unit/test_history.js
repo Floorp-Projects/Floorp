@@ -238,14 +238,4 @@ function run_test() {
   do_check_false(uri_in_db(referrerURI));
   add_visit(uri("http://mozilla.com"), referrerURI);
   do_check_true(uri_in_db(referrerURI));
-
-  // test to ensure history.dat gets deleted if all history is being cleared
-  var file = do_get_file("history.dat");
-  var histFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  file.copyTo(histFile, "history.dat");
-  histFile.append("history.dat");
-  do_check_true(histFile.exists());
-
-  bh.removeAllPages();
-  do_check_false(histFile.exists());
 }

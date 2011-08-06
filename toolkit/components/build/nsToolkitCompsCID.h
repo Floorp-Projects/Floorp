@@ -107,9 +107,6 @@
 #define NS_LIVEMARKSERVICE_CONTRACTID \
   "@mozilla.org/browser/livemark-service;2"
 
-#define NS_MORKHISTORYIMPORTER_CONTRACTID \
-  "@mozilla.org/browser/history-importer;1"
-
 #define NS_FAVICONSERVICE_CONTRACTID \
   "@mozilla.org/browser/favicon-service;1"
 
@@ -190,9 +187,6 @@
 
 #define NS_NAVBOOKMARKSSERVICE_CID \
 { 0x9de95a0c, 0x39a4, 0x4d64, {0x9a, 0x53, 0x17, 0x94, 0x0d, 0xd7, 0xca, 0xbb}}
-
-#define NS_MORKHISTORYIMPORTER_CID \
-{ 0x428e6d12, 0x9c6d, 0x436f, {0xb7, 0xa3, 0x6c, 0xa5, 0xf4, 0x80, 0x92, 0x12}}
 
 #define NS_FAVICONSERVICE_CID \
 { 0x984e3259, 0x9266, 0x49cf, { 0xb6, 0x05, 0x60, 0xb0, 0x22, 0xa0, 0x07, 0x56 } }
