@@ -6,7 +6,7 @@ var hits = 0;
 dbg.onDebuggerStatement = function (frame) {
     f1 = frame;
 
-    // This trips the throw hook.
+    // This trips the onExceptionUnwind hook.
     var x = frame.evalWithBindings("wrongSpeling", {rightSpelling: 2}).throw;
 
     assertEq(frame.evalWithBindings("exc.name", {exc: x}).return, "ReferenceError");
