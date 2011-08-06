@@ -1059,7 +1059,7 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     *global = tempGlobal;
     *compartment = tempGlobal->compartment();
 
-    JS::AutoSwitchCompartment sc(cx, *compartment);
+    js::SwitchToCompartment sc(cx, *compartment);
     JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
     return true;
 }
@@ -1091,7 +1091,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     }
     else
     {
-        JS::AutoSwitchCompartment sc(cx, *compartment);
+        js::SwitchToCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -1128,7 +1128,7 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
     }
     else
     {
-        JS::AutoSwitchCompartment sc(cx, *compartment);
+        js::SwitchToCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -2559,7 +2559,7 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
         js::CompartmentVector &vector = rt->compartments;
         for (JSCompartment **p = vector.begin(); p != vector.end(); ++p) {
             JSCompartment *comp = *p;
-            if (!JS_GetCompartmentPrincipals(comp)) {
+            if (!comp->principals) {
                 /* Ignore special compartments (atoms, JSD compartments) */
                 continue;
             }
@@ -2576,7 +2576,7 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
                      * Existing scripts will continue to call JSD callbacks,
                      * which will have no effect.
                      */
-                    JS_ClearDebugModeForCompartment(comp);
+                    comp->debugMode = JS_FALSE;
                 }
             }
         }
