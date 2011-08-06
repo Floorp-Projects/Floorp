@@ -53,6 +53,7 @@ namespace js {
 namespace ion {
 
 class MBasicBlock;
+class MTableSwitch;
 class MIRGenerator;
 class MIRGraph;
 class MDefinition;

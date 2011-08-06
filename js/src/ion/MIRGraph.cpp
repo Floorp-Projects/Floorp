@@ -412,6 +412,7 @@ MBasicBlock::add(MInstruction *ins)
 void
 MBasicBlock::end(MControlInstruction *ins)
 {
+    JS_ASSERT(ins);
     add(ins);
     lastIns_ = ins;
 }
@@ -644,18 +645,21 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
 size_t
 MBasicBlock::numSuccessors() const
 {
+    JS_ASSERT(lastIns());
     return lastIns()->numSuccessors();
 }
 
 MBasicBlock *
 MBasicBlock::getSuccessor(size_t index) const
 {
+    JS_ASSERT(lastIns());
     return lastIns()->getSuccessor(index);
 }
 
 void
 MBasicBlock::replaceSuccessor(size_t pos, MBasicBlock *split)
 {
+    JS_ASSERT(lastIns());
     lastIns()->replaceSuccessor(pos, split);
 
     // Note, successors-with-phis is not yet set.

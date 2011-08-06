@@ -145,6 +145,9 @@ class AssemblerX86Shared
     }
 
   public:
+    void align(int alignment) {
+        masm.align(alignment);
+    }
     void movl(const Imm32 &imm32, const Register &dest) {
         masm.movl_i32r(imm32.value, dest.code());
     }
@@ -230,6 +233,9 @@ class AssemblerX86Shared
         switch (op.kind()) {
           case Operand::SCALE:
             masm.jmp_m(op.disp(), op.base(), op.index(), op.scale());
+            break;
+          case Operand::REG:
+            masm.jmp_r(op.reg());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
