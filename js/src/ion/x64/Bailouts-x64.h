@@ -39,73 +39,77 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "CodeGenerator.h"
-#include "IonLinker.h"
-#include "MIRGenerator.h"
+#ifndef jsion_bailouts_x64_h__
+#define jsion_bailouts_x64_h__
 
-using namespace js;
-using namespace js::ion;
+#include "ion/IonFrames.h"
+#include "ion/IonMacroAssembler.h"
 
-CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph &graph)
-  : CodeGeneratorSpecific(gen, graph)
+namespace js {
+namespace ion {
+
+class IonCompartment;
+
+class BailoutStack
 {
-}
+    double    fpregs_[FloatRegisters::Total];
+    uintptr_t regs_[Registers::Total];
+    uintptr_t frameSize_;
+    uintptr_t snapshotOffset_;
 
-bool
-CodeGenerator::generateBody()
-{
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        current = graph.getBlock(i);
-        for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
-            if (!iter->accept(this))
-                return true;
-        }
-        if (masm.oom())
-            return false;
+  public:
+    double readFloatReg(const FloatRegister &reg) const {
+        return fpregs_[reg.code()];
     }
-    return true;
-}
-
-bool
-CodeGenerator::generate()
-{
-    JSContext *cx = gen->cx;
-
-    if (frameClass_ != FrameSizeClass::None()) {
-        deoptTable_ = cx->compartment->ionCompartment()->getBailoutTable(cx, frameClass_);
-        if (!deoptTable_)
-            return false;
+    uintptr_t readReg(const Register &reg) const {
+        return regs_[reg.code()];
     }
+    uint32 snapshotOffset() const {
+        return snapshotOffset_;
+    }
+    uint32 frameSize() const {
+        return frameSize_;
+    }
+};
 
-    if (!generatePrologue())
-        return false;
-    if (!generateBody())
-        return false;
-    if (!generateEpilogue())
-        return false;
-    if (!generateOutOfLineCode())
-        return false;
+class BailoutEnvironment
+{
+    void **rsp_;
+    void **frame_;
+    const BailoutStack *bailout_;
 
-    if (masm.oom())
-        return false;
+  public:
+    BailoutEnvironment(IonCompartment *ion, void **rsp);
 
-    Linker linker(masm);
-    IonCode *code = linker.newCode(cx);
-    if (!code)
-        return false;
+    IonFramePrefix *top() const;
+    FrameSizeClass frameClass() const {
+        return FrameSizeClass::None();
+    }
+    uint32 bailoutId() const {
+        JS_NOT_REACHED("x64 does not have bailout IDs");
+        return uint32(-1);
+    }
+    uint32 snapshotOffset() const {
+        return bailout_->snapshotOffset();
+    }
+    uintptr_t readSlot(uint32 offset) const {
+        JS_ASSERT(offset % STACK_SLOT_SIZE == 0);
+        return *(uintptr_t *)((uint8 *)frame_ + offset);
+    }
+    double readDoubleSlot(uint32 offset) const {
+        JS_ASSERT(offset % STACK_SLOT_SIZE == 0);
+        return *(double *)((uint8 *)frame_ + offset);
+    }
+    uintptr_t readReg(const Register &reg) const {
+        return bailout_->readReg(reg);
+    }
+    double readFloatReg(const FloatRegister &reg) const {
+        return bailout_->readFloatReg(reg);
+    }
+};
 
-    JS_ASSERT(!gen->script->ion);
+} // namespace ion
+} // namespace js
 
-    gen->script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length());
-    if (!gen->script->ion)
-        return false;
-
-    gen->script->ion->setMethod(code);
-    gen->script->ion->setDeoptTable(deoptTable_);
-    if (snapshots_.length())
-        gen->script->ion->copySnapshots(&snapshots_);
-    if (bailouts_.length())
-        gen->script->ion->copyBailoutTable(&bailouts_[0]);
-    return true;
-}
+#endif // jsion_bailouts_x64_h__
 

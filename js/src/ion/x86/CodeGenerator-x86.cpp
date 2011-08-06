@@ -153,6 +153,8 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 {
     LAllocation *type = unbox->getOperand(TYPE_INDEX);
     masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(unbox->type())));
+    if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
+        return false;
     return true;
 }
 
@@ -218,6 +220,8 @@ CodeGeneratorX86::visitUnboxDouble(LUnboxDouble *ins)
     const LDefinition *temp = ins->getTemp(0);
 
     masm.cmpl(ImmTag(JSVAL_TAG_CLEAR), ToRegister(type));
+    if (!bailoutIf(Assembler::AboveOrEqual, ins->snapshot()))
+        return false;
     masm.movd(ToRegister(payload), ToFloatRegister(result));
     masm.movd(ToRegister(type), ToFloatRegister(temp));
     masm.unpcklps(ToFloatRegister(temp), ToFloatRegister(result));
@@ -232,6 +236,8 @@ CodeGeneratorX86::visitUnboxDoubleSSE41(LUnboxDoubleSSE41 *ins)
     const LDefinition *result = ins->getDef(0);
 
     masm.cmpl(ToOperand(type), ImmTag(JSVAL_TAG_CLEAR));
+    if (!bailoutIf(Assembler::AboveOrEqual, ins->snapshot()))
+        return false;
     masm.movd(ToRegister(payload), ToFloatRegister(result));
     masm.pinsrd(ToOperand(type), ToFloatRegister(result));
     return true;

@@ -106,6 +106,8 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
             LUnboxDoubleSSE41 *lir = new LUnboxDoubleSSE41();
             lir->setOperand(0, useType(inner, LUse::ANY));
             lir->setOperand(1, usePayloadInRegister(inner));
+            if (!assignSnapshot(lir))
+                return false;
             return define(lir, unbox, LDefinition::DEFAULT);
         }
 
@@ -115,6 +117,8 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
         LUnboxDouble *lir = new LUnboxDouble();
         lir->setOperand(0, useType(inner, LUse::REGISTER));
         lir->setOperand(1, usePayloadInRegister(inner));
+        if (!assignSnapshot(lir))
+            return false;
         return define(lir, unbox, LDefinition::DEFAULT);
     }
 

@@ -57,6 +57,7 @@ class InvokeArgsGuard;
 class InvokeFrameGuard;
 class FrameGuard;
 class ExecuteFrameGuard;
+class BailoutFrameGuard;
 class DummyFrameGuard;
 class GeneratorFrameGuard;
 
@@ -1494,6 +1495,10 @@ class ContextStack
                           JSObject &scopeChain, ExecuteType type,
                           StackFrame *evalInFrame, ExecuteFrameGuard *efg);
 
+    /* Called by ion::Bailout for execution of deoptimized code. */
+    StackFrame *pushBailoutFrame(JSContext *cx, JSObject *callee, JSFunction *fun,
+                                   JSScript *script, BailoutFrameGuard *bfg);
+
     /*
      * Called by SendToGenerator to resume a yielded generator. In addition to
      * pushing a frame onto the VM stack, this function copies over the
@@ -1596,6 +1601,9 @@ class InvokeFrameGuard : public FrameGuard
 {};
 
 class ExecuteFrameGuard : public FrameGuard
+{};
+
+class BailoutFrameGuard : public FrameGuard
 {};
 
 class DummyFrameGuard : public FrameGuard

@@ -47,6 +47,8 @@
 #include "ion/IonLIR.h"
 #include "ion/IonMacroAssembler.h"
 #include "ion/IonFrames.h"
+#include "ion/IonMacroAssembler.h"
+#include "ion/Snapshots.h"
 
 namespace js {
 namespace ion {
@@ -63,6 +65,11 @@ class CodeGeneratorShared : public LInstructionVisitor
     MIRGenerator *gen;
     LIRGraph &graph;
     LBlock *current;
+    SnapshotWriter snapshots_;
+    IonCode *deoptTable_;
+
+    // Mapping from bailout table ID to an offset in the snapshot buffer.
+    js::Vector<SnapshotOffset, 0, SystemAllocPolicy> bailouts_;
 
     static inline int32 ToInt32(const LAllocation *a) {
         return a->toConstant()->toInt32();
@@ -88,6 +95,27 @@ class CodeGeneratorShared : public LInstructionVisitor
         JS_ASSERT(offset >= 0);
         return offset;
     }
+
+    inline int32 ToStackOffset(const LAllocation *a) const {
+        if (a->isArgument())
+            return ArgToStackOffset(a->toArgument()->index());
+        return SlotToStackOffset(a->toStackSlot()->slot());
+    }
+
+    uint32 frameSize() const {
+        return frameClass_ == FrameSizeClass::None() ? frameDepth_ : frameClass_.frameSize();
+    }
+
+  protected:
+    // Encodes an LSnapshot into the compressed snapshot buffer, returning
+    // false on failure.
+    bool encode(LSnapshot *snapshot);
+
+    // Attempts to assign a BailoutId to a snapshot, if one isn't already set.
+    // If the bailout table is full, this returns false, which is not a fatal
+    // error (the code generator may use a slower bailout mechanism).
+    bool assignBailoutId(LSnapshot *snapshot);
+
 
     inline bool isNextBlock(LBlock *block) {
         return (current->mir()->id() + 1 == block->mir()->id());

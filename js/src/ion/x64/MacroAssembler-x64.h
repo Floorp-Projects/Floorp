@@ -47,6 +47,20 @@
 namespace js {
 namespace ion {
 
+struct ImmTag : public ImmWord
+{
+    ImmTag(JSValueShiftedTag shtag)
+      : ImmWord((uintptr_t)shtag)
+    { }
+};
+
+struct ImmType : ImmTag
+{
+    ImmType(JSValueType type)
+      : ImmTag(JSValueShiftedTag(JSVAL_TYPE_TO_SHIFTED_TAG(type)))
+    { }
+};
+
 class MacroAssemblerX64 : public MacroAssemblerX86Shared
 {
     static const uint32 StackAlignment = 16;
@@ -101,6 +115,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         breakpoint();
         bind(&good);
 #endif
+    }
+    void makeBox(ImmType type, const Register &payload, const Register &dest) {
+        JS_ASSERT(payload != dest);
+        movq(type, dest);
+        orq(payload, dest);
     }
 };
 

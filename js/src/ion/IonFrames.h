@@ -42,7 +42,11 @@
 #ifndef jsion_frames_h__
 #define jsion_frames_h__
 
-#include "ion/IonCompartment.h"
+#include "jstypes.h"
+#include "jsutil.h"
+
+class JSFunction;
+class JSScript;
 
 namespace js {
 namespace ion {
@@ -54,6 +58,44 @@ namespace ion {
 //   this    _/
 //   calleeToken - Encodes script or JSFunction
 //   descriptor  - Size of the parent frame 
+//   returnAddr - Return address, entering into the next call.
+//   .. locals ..
+
+// Layout of the frame prefix. This assumes the stack architecture grows down.
+// If this is ever not the case, we'll have to refactor.
+class IonFrameData
+{
+  protected:
+    void *returnAddress_;
+    uintptr_t sizeDescriptor_;
+    void *calleeToken_;
+};
+
+class IonFramePrefix : public IonFrameData
+{
+  public:
+    // True if this is the frame passed into EnterIonCode.
+    bool isEntryFrame() const {
+        return !(sizeDescriptor_ & 1);
+    }
+    // The depth of the parent frame.
+    size_t prevFrameDepth() const {
+        JS_ASSERT(!isEntryFrame());
+        return sizeDescriptor_ >> 1;
+    }
+    IonFramePrefix *prev() const {
+        JS_ASSERT(!isEntryFrame());
+        return (IonFramePrefix *)((uint8 *)this - prevFrameDepth());
+    }
+    void *calleeToken() const {
+        return calleeToken_;
+    }
+    void setReturnAddress(void *address) {
+        returnAddress_ = address;
+    }
+};
+
+static const uint32 ION_FRAME_PREFIX_SIZE = sizeof(IonFramePrefix);
 
 // Ion frames have a few important numbers associated with them:
 //      Local depth:    The number of bytes required to spill local variables.
@@ -89,14 +131,19 @@ class FrameSizeClass
     FrameSizeClass()
     { }
 
-    static FrameSizeClass FromDepth(uint32 frameDepth);
     static FrameSizeClass None() {
         return FrameSizeClass(NO_FRAME_SIZE_CLASS_ID);
     }
+    static FrameSizeClass FromClass(uint32 class_) {
+        return FrameSizeClass(class_);
+    }
 
+    // These two functions are implemented in specific CodeGenerator-* files.
+    static FrameSizeClass FromDepth(uint32 frameDepth);
     uint32 frameSize() const;
 
     uint32 classId() const {
+        JS_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
         return class_;
     }
 
@@ -108,8 +155,10 @@ class FrameSizeClass
     }
 };
 
+typedef void * CalleeToken;
+
 static inline CalleeToken
-CalleeToToken(JSFunction *fun)
+CalleeToToken(JSObject *fun)
 {
     return (CalleeToken *)fun;
 }
@@ -123,17 +172,17 @@ IsCalleeTokenFunction(CalleeToken token)
 {
     return (uintptr_t(token) & 1) == 0;
 }
-static inline JSFunction *
+static inline JSObject *
 CalleeTokenToFunction(CalleeToken token)
 {
     JS_ASSERT(IsCalleeTokenFunction(token));
-    return (JSFunction *)token;
+    return (JSObject *)token;
 }
 static inline JSScript *
 CalleeTokenToScript(CalleeToken token)
 {
     JS_ASSERT(!IsCalleeTokenFunction(token));
-    return (JSScript *)(uintptr_t(token) & ~uintptr_t(1));
+    return (JSScript*)(uintptr_t(token) & ~uintptr_t(1));
 }
 
 }

@@ -48,17 +48,12 @@
 namespace js {
 namespace ion {
 
-// The maximum size of any buffer associated with an assembler or code object.
-// This is chosen to not overflow a signed integer, leaving room for an extra
-// bit on offsets.
-static const uint32 MAX_BUFFER_SIZE = INT_MAX / 2;
-
 // Used for 32-bit immediates which do not require relocation.
 struct Imm32
 {
     int32_t value;
 
-    Imm32(int32_t value) : value(value)
+    explicit Imm32(int32_t value) : value(value)
     { }
 };
 

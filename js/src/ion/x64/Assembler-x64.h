@@ -301,6 +301,9 @@ class Assembler : public AssemblerX86Shared
     void shlq(Imm32 imm, const Register &dest) {
         masm.shlq_i8r(imm.value, dest.code());
     }
+    void orq(const Register &src, const Register &dest) {
+        masm.orq_rr(src.code(), dest.code());
+    }
     void orq(const Operand &src, const Register &dest) {
         switch (src.kind()) {
           case Operand::REG:
@@ -335,6 +338,9 @@ class Assembler : public AssemblerX86Shared
     }
     void lea(const Operand &src, const Register &dest) {
         switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.leaq_mr(src.disp(), src.base(), dest.code());
+            break;
           case Operand::SCALE:
             masm.leaq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;

@@ -55,6 +55,8 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "shared/Assembler-shared.h"
+#include "Snapshots.h"
+#include "Bailouts.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/StackAssignment-x86.h"
@@ -79,8 +81,7 @@ class MSnapshot;
 static const uint32 MAX_VIRTUAL_REGISTERS = (1 << 21) - 1;
 static const uint32 VREG_INCREMENT = 1;
 
-static const uint32 CALLEE_FRAME_SLOT = 0;
-static const uint32 THIS_FRAME_SLOT = 1;
+static const uint32 THIS_FRAME_SLOT = 0;
 
 #if defined(JS_NUNBOX32)
 # define BOX_PIECES         2
@@ -729,13 +730,19 @@ class LInstructionHelper : public LInstruction
     }
 };
 
-// A bailout captures the live state at an instruction, which the register
-// allocator can fill in for deoptimization.
+// An LSnapshot is a translation of an MSnapshot into LIR. Unlike MSnapshots,
+// they cannot be shared, as they are filled in by the register allocator in
+// order to capture the precise low-level stack state in between an
+// instruction's input and output. During code generation, LSnapshots are
+// compressed and saved in the compiled script.
 class LSnapshot : public TempObject
 {
+  private:
     uint32 numSlots_;
     LAllocation *slots_;
     MSnapshot *mir_;
+    SnapshotOffset snapshotOffset_;
+    BailoutId bailoutId_;
 
     LSnapshot(MSnapshot *mir);
     bool init(MIRGenerator *gen);
@@ -746,6 +753,21 @@ class LSnapshot : public TempObject
     size_t numEntries() const {
         return numSlots_;
     }
+    size_t numSlots() const {
+        return numSlots_ / BOX_PIECES;
+    }
+    LAllocation *payloadOfSlot(size_t i) {
+        JS_ASSERT(i < numSlots());
+        size_t entryIndex = (i * BOX_PIECES) + (BOX_PIECES - 1);
+        return getEntry(entryIndex);
+    }
+#ifdef JS_NUNBOX32
+    LAllocation *typeOfSlot(size_t i) {
+        JS_ASSERT(i < numSlots());
+        size_t entryIndex = (i * BOX_PIECES) + (BOX_PIECES - 2);
+        return getEntry(entryIndex);
+    }
+#endif
     LAllocation *getEntry(size_t i) {
         JS_ASSERT(i < numSlots_);
         return &slots_[i];
@@ -756,6 +778,20 @@ class LSnapshot : public TempObject
     }
     MSnapshot *mir() const {
         return mir_;
+    }
+    SnapshotOffset snapshotOffset() const {
+        return snapshotOffset_;
+    }
+    BailoutId bailoutId() const {
+        return bailoutId_;
+    }
+    void setSnapshotOffset(SnapshotOffset offset) {
+        JS_ASSERT(snapshotOffset_ == INVALID_SNAPSHOT_OFFSET);
+        snapshotOffset_ = offset;
+    }
+    void setBailoutId(BailoutId id) {
+        JS_ASSERT(bailoutId_ == INVALID_BAILOUT_ID);
+        bailoutId_ = id;
     }
 };
 
