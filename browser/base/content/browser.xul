@@ -234,14 +234,6 @@
            close="true"
            onpopuphiding="InspectorUI.closeInspectorUI();"
            label="&inspectPanelTitle.label;">
-      <toolbar id="inspector-toolbar"
-               nowindowdrag="true">
-        <toolbarbutton id="inspector-inspect-toolbutton"
-                       label="&inspectButton.label;"
-                       accesskey="&inspectButton.accesskey;"
-                       class="toolbarbutton-text"
-                       command="Inspector:Inspect"/>
-      </toolbar>
       <hbox id="tree-panel-resizer-box" align="end">
         <spacer flex="1" />
         <resizer dir="bottomend" />
@@ -971,6 +963,18 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
+    <toolbar id="inspector-toolbar"
+             hidden="true">
+      <toolbarbutton id="inspector-inspect-toolbutton"
+                     label="&inspectButton.label;"
+                     accesskey="&inspectButton.accesskey;"
+                     class="toolbarbutton-text"
+                     command="Inspector:Inspect"/>
+      <toolbarseparator />
+      <hbox id="inspector-tools">
+        <!-- registered tools go here -->
+      </hbox>
+    </toolbar>
     <toolbar id="addon-bar"
              toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"
              collapsed="true"

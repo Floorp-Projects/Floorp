@@ -194,6 +194,8 @@ protected:
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling,
                           InlineReflowState& aState);
+
+  nscoord mBaseline;
 };
 
 //----------------------------------------------------------------------

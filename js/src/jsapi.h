@@ -1671,7 +1671,7 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
  * that stores the reference.
  *
  * When printer callback is not null, the arg and index arguments are
- * available to the callback as debugPrinterArg and debugPrintIndex fields
+ * available to the callback as debugPrintArg and debugPrintIndex fields
  * of JSTracer.
  *
  * The storage for name or callback's arguments needs to live only until
@@ -1831,7 +1831,10 @@ typedef enum JSGCParamKey {
     JSGC_MODE = 6,
 
     /* Number of GC chunks waiting to expire. */
-    JSGC_UNUSED_CHUNKS = 7
+    JSGC_UNUSED_CHUNKS = 7,
+
+    /* Total number of allocated GC chunks. */
+    JSGC_TOTAL_CHUNKS = 8
 } JSGCParamKey;
 
 typedef enum JSGCMode {

@@ -54,25 +54,18 @@ CPPSRCS = nsBrowserApp.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
+
+DEFINES += -DXPCOM_GLUE
+STL_FLAGS=
 
 LIBS += $(JEMALLOC_LIBS)
 
-ifeq (Linux_1, $(OS_ARCH)_$(GNU_LD))
-OS_LDFLAGS += -Wl,-rpath='$$ORIGIN'
-NSDISTMODE = copy
-endif
-
 LIBS += \
-  $(XPCOM_GLUE_LDOPTS) \
-  $(NSPR_LIBS) \
+  $(EXTRA_DSO_LIBS) \
+  $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-LIBS += $(DIST)/bin/XUL
-else
-EXTRA_DSO_LIBS += xul
-LIBS += $(EXTRA_DSO_LIBS)
-endif
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
@@ -83,6 +76,9 @@ ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 endif #LIBXUL_SDK
+
+# Make sure the standalone glue doesn't try to get libxpcom.so from mobile/app.
+NSDISTMODE = copy
 
 include $(topsrcdir)/config/rules.mk
 

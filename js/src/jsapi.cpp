@@ -2688,6 +2688,8 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return uint32(rt->gcMode);
       case JSGC_UNUSED_CHUNKS:
         return uint32(rt->gcChunksWaitingToExpire);
+      case JSGC_TOTAL_CHUNKS:
+        return uint32(rt->gcUserChunkSet.count() + rt->gcSystemChunkSet.count());
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;
@@ -4473,7 +4475,7 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *p
     if (script) {
         scriptObj = js_NewScriptObject(cx, script);
         if (!scriptObj)
-            js_DestroyScript(cx, script);
+            js_DestroyScript(cx, script, 3);
     }
     LAST_FRAME_CHECKS(cx, scriptObj);
     return scriptObj;
@@ -4660,7 +4662,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 
     JSObject *scriptObj = js_NewScriptObject(cx, script);
     if (!scriptObj)
-        js_DestroyScript(cx, script);
+        js_DestroyScript(cx, script, 4);
 
     return scriptObj;
 }
@@ -4967,7 +4969,7 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
 
     bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
-    js_DestroyScript(cx, script);
+    js_DestroyScript(cx, script, 5);
     return ok;
 
 }

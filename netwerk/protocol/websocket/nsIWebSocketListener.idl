@@ -43,7 +43,7 @@
  * nsIWebSocketListener: passed to nsIWebSocketChannel::AsyncOpen. Receives
  * websocket traffic events as they arrive.
  */
-[scriptable, uuid(b0c27050-31e9-42e5-bc59-499d54b52f99)]
+[scriptable, uuid(d74c96b2-65b3-4e39-9e39-c577de5d7a73)]
 interface nsIWebSocketListener : nsISupports
 {
     /**
@@ -101,8 +101,14 @@ interface nsIWebSocketListener : nsISupports
      * onBinaryMessageAvailable() or onAcknowledge() will be delievered
      * to the listener after onServerClose(), though outgoing messages can still
      * be sent through the nsIWebSocketChannel connection.
+     *
+     * @param aContext user defined context
+     * @param aCode the websocket closing handshake close code.
+     * @param aReason the websocket closing handshake close reason
+
      */
-    void onServerClose(in nsISupports aContext);
+    void onServerClose(in nsISupports aContext, in unsigned short aCode,
+                       in AUTF8String aReason);
     
 };
 

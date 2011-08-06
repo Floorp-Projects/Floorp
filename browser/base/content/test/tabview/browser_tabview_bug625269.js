@@ -3,75 +3,75 @@
 
 function test() {
   waitForExplicitFinish();
-
-  newWindowWithTabView(onTabViewWindowLoaded);
+  newWindowWithTabView(onTabViewShown);
 }
 
-function onTabViewWindowLoaded(win) {
-  win.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
+function onTabViewShown(win) {
+  registerCleanupFunction(function () win.close());
 
-  ok(win.TabView.isVisible(), "Tab View is visible");
-
-  let contentWindow = win.document.getElementById("tab-view").contentWindow;
-  let [originalTab] = win.gBrowser.visibleTabs;
-
+  let contentWindow = win.TabView.getContentWindow();
   let currentGroup = contentWindow.GroupItems.getActiveGroupItem();
 
+  function checkResized(diffX, diffY, shouldResize, text, callback) {
+    let {width: origWidth, height: origHeight} = currentGroup.getBounds();
+
+    resizeWindow(win, diffX, diffY, function () {
+      let {width: newWidth, height: newHeight} = currentGroup.getBounds();
+      let resized = (origWidth != newWidth || origHeight != newHeight);
+
+      is(resized, shouldResize, text + ": The group should " +
+         (shouldResize ? "" : "not ") + "have been resized");
+
+      callback();
+    });
+  }
+
+  function next() {
+    let test = tests.shift();
+
+    if (test)
+      checkResized.apply(this, test.concat([next]));
+    else
+      finishTest();
+  }
+
+  function finishTest() {
+    // reset the usersize of the group, so this should clear the "cramped" feeling.
+    currentGroup.setSize(100, 100, true);
+    currentGroup.setUserSize();
+    checkResized(400, 400, false, "After clearing the cramp", finish);
+  }
+
+  let tests = [
+    // diffX, diffY, shouldResize, text
+    [ -50,  -50, false, "A little smaller"],
+    [  50,   50, false, "A little bigger"],
+    [-400, -400, true,  "Much smaller"],
+    [ 400,  400, true,  "Bigger after much smaller"],
+    [-400, -400, true,  "Much smaller"]
+  ];
+
+  // setup
   currentGroup.setSize(600, 600, true);
   currentGroup.setUserSize();
 
-  let down1 = function down1(resized) {
-    checkResized(currentGroup, 50, 50, false, "A little bigger", up1, contentWindow, win);
-  };
-  
-  let up1 = function up1(resized) {
-    checkResized(currentGroup, -400, -400, true, "Much smaller", down2, contentWindow, win);    
-  }
-
-  let down2 = function down2(resized) {
-    checkResized(currentGroup, 400, 400, undefined,
-      "Bigger after much smaller: TODO (bug 625668): the group should be resized!",
-      up2, contentWindow, win);
-  };
-  
-  let up2 = function up2(resized) {
-    checkResized(currentGroup, -400, -400, undefined,
-      "Much smaller: TODO (bug 625668): the group should be resized!",
-      down3, contentWindow, win);    
-  }
-
-  let down3 = function down3(resized) {
-    // reset the usersize of the group, so this should clear the "cramped" feeling.
-    currentGroup.setSize(100,100,true);
-    currentGroup.setUserSize();
-    checkResized(currentGroup, 400, 400, false,
-      "After clearing the cramp",
-      up3, contentWindow, win);
-  };
-  
-  let up3 = function up3(resized) {
-    win.close();
-    finish();
-  }
-
-  // start by making it a little smaller.
-  checkResized(currentGroup, -50, -50, false, "A little smaller", down1, contentWindow, win);
+  // run the tests
+  next();
 }
 
-function simulateResizeBy(xDiff, yDiff, win) {
-  win = win || window;
+// ----------
+function resizeWindow(win, diffX, diffY, callback) {
+  let targetWidth = win.outerWidth + diffX;
+  let targetHeight = win.outerHeight + diffY;
 
-  win.resizeBy(xDiff, yDiff);
-}
+  win.addEventListener("resize", function onResize() {
+    let {outerWidth: width, outerHeight: height} = win;
+    if (width != targetWidth || height != targetHeight)
+      return;
 
-function checkResized(item, xDiff, yDiff, expectResized, note, callback, contentWindow, win) {
-  let originalBounds = new contentWindow.Rect(item.getBounds());
-  simulateResizeBy(xDiff, yDiff, win);
+    win.removeEventListener("resize", onResize, false);
+    executeSoon(callback);
+  }, false);
 
-  let newBounds = item.getBounds();
-  let resized = !newBounds.equals(originalBounds);
-  if (expectResized !== undefined)
-    is(resized, expectResized, note + ": The group should " + 
-      (expectResized ? "" : "not ") + "be resized");
-  callback(resized);
+  win.resizeBy(diffX, diffY);
 }

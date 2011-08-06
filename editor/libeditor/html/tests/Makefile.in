@@ -55,7 +55,7 @@ _TEST_FILES = \
 		test_bug417418.html \
 		test_bug432225.html \
 		test_bug439808.html \
- 		test_bug449243.html \
+		test_bug449243.html \
 		test_bug455992.html \
 		test_bug456244.html \
 		test_bug460740.html \
@@ -81,6 +81,7 @@ _TEST_FILES = \
 		test_bug629845.html \
 		test_bug640321.html \
 		test_bug668599.html \
+		test_bug674861.html \
 		test_CF_HTML_clipboard.html \
 		test_contenteditable_focus.html \
 		test_htmleditor_keyevent_handling.html \

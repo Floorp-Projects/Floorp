@@ -87,46 +87,12 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   PRUint32 oldLen = aOldText.Length(), newLen = aNewText.Length();
   PRUint32 minLen = NS_MIN(oldLen, newLen);
 
-  // Text was appended or removed to/from the end.
-  if (aSkipStart == minLen) {
-    // If text has been appended to the end, fire text inserted event.
-    if (oldLen < newLen) {
-      UpdateTextNFireEvent(aNewText, Substring(aNewText, oldLen),
-                           oldLen, PR_TRUE);
-      return;
-    }
-
-    // Text has been removed from the end, fire text removed event.
-    UpdateTextNFireEvent(aNewText, Substring(aOldText, newLen),
-                         newLen, PR_FALSE);
-    return;
-  }
-
   // Trim coinciding substrings from the end.
   PRUint32 skipEnd = 0;
   while (minLen - skipEnd > aSkipStart &&
          aNewText[newLen - skipEnd - 1] == aOldText[oldLen - skipEnd - 1]) {
     skipEnd++;
   }
-
-  // Text was appended or removed to/from the start.
-  if (skipEnd == minLen) {
-    // If text has been appended to the start, fire text inserted event.
-    if (oldLen < newLen) {
-      UpdateTextNFireEvent(aNewText, Substring(aNewText, 0, newLen - skipEnd),
-                           0, PR_TRUE);
-      return;
-    }
-
-    // Text has been removed from the start, fire text removed event.
-    UpdateTextNFireEvent(aNewText, Substring(aOldText, 0, oldLen - skipEnd),
-                         0, PR_FALSE);
-    return;
-  }
-
-  // Find the difference between strings and fire events.
-  // Note: we can skip initial and final coinciding characters since they don't
-  // affect the Levenshtein distance.
 
   PRInt32 strLen1 = oldLen - aSkipStart - skipEnd;
   PRInt32 strLen2 = newLen - aSkipStart - skipEnd;
@@ -136,6 +102,42 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
 
   // Increase offset of the text leaf on skipped characters amount.
   mTextOffset += aSkipStart;
+
+  // It could be single insertion or removal or the case of long strings. Do not
+  // calculate the difference between long strings and prefer to fire pair of
+  // insert/remove events as the old string was replaced on the new one.
+  if (strLen1 == 0 || strLen2 == 0 ||
+      strLen1 > kMaxStrLen || strLen2 > kMaxStrLen) {
+    if (strLen1 > 0) {
+      // Fire text change event for removal.
+      nsRefPtr<AccEvent> textRemoveEvent =
+        new AccTextChangeEvent(mHyperText, mTextOffset, str1, PR_FALSE);
+      mDocument->FireDelayedAccessibleEvent(textRemoveEvent);
+    }
+
+    if (strLen2 > 0) {
+      // Fire text change event for insertion.
+      nsRefPtr<AccEvent> textInsertEvent =
+        new AccTextChangeEvent(mHyperText, mTextOffset, str2, PR_TRUE);
+      mDocument->FireDelayedAccessibleEvent(textInsertEvent);
+    }
+
+    // Fire value change event.
+    if (mHyperText->Role() == nsIAccessibleRole::ROLE_ENTRY) {
+      nsRefPtr<AccEvent> valueChangeEvent =
+        new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, mHyperText,
+                     eAutoDetect, AccEvent::eRemoveDupes);
+      mDocument->FireDelayedAccessibleEvent(valueChangeEvent);
+    }
+
+    // Update the text.
+    mTextLeaf->SetText(aNewText);
+    return;
+  }
+
+  // Otherwise find the difference between strings and fire events.
+  // Note: we can skip initial and final coinciding characters since they don't
+  // affect the Levenshtein distance.
 
   // Compute the flat structured matrix need to compute the difference.
   PRUint32 len1 = strLen1 + 1, len2 = strLen2 + 1;
@@ -237,28 +239,4 @@ TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
     FireInsertEvent(Substring(aStr2, 0, rowEnd), 0, aEvents);
   if (colEnd)
     FireDeleteEvent(Substring(aStr1, 0, colEnd), 0, aEvents);
-}
-
-void
-TextUpdater::UpdateTextNFireEvent(const nsAString& aNewText,
-                                  const nsAString& aChangeText,
-                                  PRUint32 aAddlOffset,
-                                  PRBool aIsInserted)
-{
-  // Fire text change event.
-  nsRefPtr<AccEvent> textChangeEvent =
-    new AccTextChangeEvent(mHyperText, mTextOffset + aAddlOffset, aChangeText,
-                           aIsInserted);
-  mDocument->FireDelayedAccessibleEvent(textChangeEvent);
-
-  // Fire value change event.
-  if (mHyperText->Role() == nsIAccessibleRole::ROLE_ENTRY) {
-    nsRefPtr<AccEvent> valueChangeEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, mHyperText,
-                   eAutoDetect, AccEvent::eRemoveDupes);
-    mDocument->FireDelayedAccessibleEvent(valueChangeEvent);
-  }
-
-  // Update the text.
-  mTextLeaf->SetText(aNewText);
 }

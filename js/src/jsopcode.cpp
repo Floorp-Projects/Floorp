@@ -2527,6 +2527,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     rval = OFF2STR(&ss->sprinter, todo);
                     todo = -2;
                     pc2 = pc + oplen;
+
+                    /* Skip a block chain annotation if one appears here. */
+                    if (*pc2 == JSOP_NOP) {
+                        if (pc2[JSOP_NOP_LENGTH] == JSOP_NULLBLOCKCHAIN)
+                            pc2 += JSOP_NOP_LENGTH + JSOP_NULLBLOCKCHAIN_LENGTH;
+                        else if (pc2[JSOP_NOP_LENGTH] == JSOP_BLOCKCHAIN)
+                            pc2 += JSOP_NOP_LENGTH + JSOP_BLOCKCHAIN_LENGTH;
+                    }
+
                     if (*pc2 == JSOP_NOP) {
                         sn = js_GetSrcNote(jp->script, pc2);
                         if (sn) {

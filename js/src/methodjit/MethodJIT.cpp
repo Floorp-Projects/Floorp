@@ -40,6 +40,7 @@
 #include "Logging.h"
 #include "assembler/jit/ExecutableAllocator.h"
 #include "jstracer.h"
+#include "jsgcmark.h"
 #include "BaseAssembler.h"
 #include "Compiler.h"
 #include "MonoIC.h"
@@ -752,7 +753,7 @@ JITScript::nmap() const
 char *
 JITScript::nmapSectionLimit() const
 {
-    return (char *)nmap() + sizeof(NativeMapEntry) * nNmapPairs;
+    return (char *)&nmap()[nNmapPairs];
 }
 
 #ifdef JS_MONOIC
@@ -772,26 +773,25 @@ JITScript::setGlobalNames() const
 ic::CallICInfo *
 JITScript::callICs() const
 {
-    return (ic::CallICInfo *)((char *)setGlobalNames() +
-            sizeof(ic::SetGlobalNameIC) * nSetGlobalNames);
+    return (ic::CallICInfo *)&setGlobalNames()[nSetGlobalNames];
 }
 
 ic::EqualityICInfo *
 JITScript::equalityICs() const
 {
-    return (ic::EqualityICInfo *)((char *)callICs() + sizeof(ic::CallICInfo) * nCallICs);
+    return (ic::EqualityICInfo *)&callICs()[nCallICs];
 }
 
 ic::TraceICInfo *
 JITScript::traceICs() const
 {
-    return (ic::TraceICInfo *)((char *)equalityICs() + sizeof(ic::EqualityICInfo) * nEqualityICs);
+    return (ic::TraceICInfo *)&equalityICs()[nEqualityICs];
 }
 
 char *
 JITScript::monoICSectionsLimit() const
 {
-    return (char *)traceICs() + sizeof(ic::TraceICInfo) * nTraceICs;
+    return (char *)&traceICs()[nTraceICs];
 }
 #else   // JS_MONOIC
 char *
@@ -839,6 +839,12 @@ JITScript::callSites() const
     return (js::mjit::CallSite *)polyICSectionsLimit();
 }
 
+JSObject **
+JITScript::rootedObjects() const
+{
+    return (JSObject **)&callSites()[nCallSites];
+}
+
 template <typename T>
 static inline void Destroy(T &t)
 {
@@ -873,6 +879,13 @@ mjit::JITScript::~JITScript()
     for (uint32 i = 0; i < nCallICs; i++)
         callICs_[i].releasePools();
 #endif
+}
+
+void
+mjit::JITScript::trace(JSTracer *trc)
+{
+    for (uint32 i = 0; i < nRootedObjects; ++i)
+        MarkObject(trc, *rootedObjects()[i], "mjit rooted object");
 }
 
 size_t
@@ -928,6 +941,16 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->jitCtor = NULL;
         script->jitArityCheckCtor = NULL;
     }
+}
+
+void
+mjit::TraceScript(JSTracer *trc, JSScript *script)
+{
+    if (JITScript *jit = script->jitNormal)
+        jit->trace(trc);
+
+    if (JITScript *jit = script->jitCtor)
+        jit->trace(trc);
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS

@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=674861
+-->
+<head>
+  <title>Test for Bug 674861</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=674861">Mozilla Bug 674861</a>
+<p id="display"></p>
+<div id="content">
+  <h2> Bullet List </h2>
+  <ul contenteditable>
+    <li> item 1 </li>
+    <li> item 2 </li>
+    <li> item 3 </li>
+  </ul>
+
+  <h2> Ordered List </h2>
+  <ol contenteditable>
+    <li> item 1 </li>
+    <li> item 2 </li>
+    <li> item 3 </li>
+  </ol>
+
+  <h2> Definition List </h2>
+  <dl contenteditable>
+    <dt> term 1 </dt>
+    <dd> definition 1 </dd>
+    <dt> term 2 </dt>
+    <dd> definition 2 </dd>
+    <dt> term 3 </dt>
+    <dd> definition 3 </dd>
+  </dl>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 674861 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+const CARET_BEGIN  = 0;
+const CARET_MIDDLE = 1;
+const CARET_END    = 2;
+
+function try2split(element, caretPos) {
+  // compute the requested position
+  var len = element.textContent.length;
+  var pos = -1;
+  switch (caretPos) {
+    case CARET_BEGIN:
+      pos = 0;
+      break;
+    case CARET_MIDDLE:
+      pos = Math.floor(len/2);
+      break;
+    case CARET_END:
+      pos = len;
+      break;
+  }
+
+  // put the caret on the requested position
+  var sel = window.getSelection();
+  for (var i = 0; i < sel.rangeCount; i++) {
+    var range = sel.getRangeAt(i);
+    sel.removeRange(range);
+  }
+  range = document.createRange();
+  range.setStart(element.firstChild, pos);
+  range.setEnd(element.firstChild, pos);
+  sel.addRange(range);
+  
+  // simulates two [Return] keypresses
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("VK_RETURN", {});
+}
+
+function runTests() {
+  const ul = document.querySelector("#content ul");
+  const ol = document.querySelector("#content ol");
+  const dl = document.querySelector("#content dl");
+
+  // bullet list
+  ul.focus();
+  try2split(ul.querySelector("li"), CARET_END);
+  is(document.querySelectorAll("#content ul").length, 1,
+    "The <ul> list should not be splittable.");
+  is(ul.querySelectorAll("li").length, 5,
+    "Two new <li> elements should have been created.");
+
+  // ordered list
+  ol.focus();
+  try2split(ol.querySelector("li"), CARET_END);
+  is(document.querySelectorAll("#content ol").length, 1,
+    "The <ol> list should not be splittable.");
+  is(ol.querySelectorAll("li").length, 5,
+    "Two new <li> elements should have been created.");
+
+  // definition list
+  dl.focus();
+  try2split(dl.querySelector("dd"), CARET_END);
+  is(document.querySelectorAll("#content dl").length, 1,
+    "The <dl> list should not be splittable.");
+  is(dl.querySelectorAll("dt").length, 5,
+    "Two new <dt> elements should have been created.");
+
+  // done
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

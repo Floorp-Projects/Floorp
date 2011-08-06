@@ -78,14 +78,5 @@ function test() {
   testPosition(7, 8, "blank tab without referrer opens at the end");
   testPosition(8, 9, "tab without referrer opens at the end");
 
-  gBrowser.selectedTab = tabs[0];
-  gBrowser.pinTab(gBrowser.selectedTab);
-  addTab("http://mochi.test:8888/#8", gBrowser.currentURI);
-  testPosition(9, 10, "tab with referrer should open at the end when the selected tab is pinned");
-  gBrowser.selectedTab = tabs[9];
-  gBrowser.removeTab(tabs.pop());
-  is(gBrowser.selectedTab, tabs[0],
-     "opening a tab from a pinned tab, selecting it and closing it should go back to the pinned tab");
-
   tabs.forEach(gBrowser.removeTab, gBrowser);
 }

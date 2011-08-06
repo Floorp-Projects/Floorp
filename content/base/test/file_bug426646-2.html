@@ -5,11 +5,15 @@ var url1 = "data:text/html;charset=utf-8,1st%20page";
 
 var win0 = null;
 
+function soon(f) {
+  return function() { setTimeout(f, 0); };
+}
+
 function doe() {
   document.body.innerHTML = "<iframe src='about:blank'></iframe>";
   document.body.innerHTML += "<iframe src='about:blank'></iframe>";
   win0 = window.frames[0];
-  win0.frameElement.onload = doe2;
+  win0.frameElement.onload = soon(doe2);
   win0.location.replace(url1);
 }
 
@@ -17,24 +21,44 @@ function doe2() {
   // Add some iframes/docshells. Session history should still work.
   var ifr1 = document.createElement("iframe");
   document.body.insertBefore(ifr1, document.body.firstChild);
+  ifr1.onload = soon(doe3);
+
   var ifr2 = document.createElement("iframe");
   document.body.insertBefore(ifr2, document.body.firstChild);
+  ifr2.onload = soon(doe3);
+
   var ifr3 = document.createElement("iframe");
   document.body.insertBefore(ifr3, document.body.firstChild);
-  win0.frameElement.onload = doe3;
+  ifr3.onload = soon(doe3);
+}
+
+var doe3_count = 0;
+function doe3() {
+  // Wait until all three iframes have loaded about:blank before navigating
+  // win0.
+  doe3_count++;
+  if (doe3_count < 3) {
+    return;
+  }
+  if (doe3_count > 3) {
+    ok(false, 'Unexpected ' + doe3_count + 'th call to doe3.');
+    return;
+  }
+
+  win0.frameElement.onload = soon(doe4);
   win0.location = 'data:text/html;charset=utf-8,2nd%20page';
 }
 
-function doe3() {
-  win0.frameElement.onload = doe4;
+function doe4() {
+  win0.frameElement.onload = soon(doe5);
   history.go(-1);
 }
 
-function doe4() {
+function doe5() {
   opener.is(win0.location, url1, "History.go(-1) didn't work?");
   close();
 }
 </script>
 </head>
-<body onload="doe();" onunload="opener.nextTest();">
+<body onload="setTimeout(doe, 0);" onunload="opener.nextTest();">
 </body></html>
