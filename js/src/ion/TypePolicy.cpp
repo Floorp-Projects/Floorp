@@ -46,10 +46,23 @@
 using namespace js;
 using namespace js::ion;
 
+void
+TypeAnalysis::preferType(MDefinition *def, MIRType type)
+{
+    if (def->type() != MIRType_Value)
+        return;
+    addPreferredType(def, type);
+}
+
 bool
 BoxInputsPolicy::respecialize(MInstruction *ins)
 {
     return false;
+}
+
+void
+BoxInputsPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
+{
 }
 
 bool
@@ -67,12 +80,6 @@ BoxInputsPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
-BoxInputsPolicy::useSpecializedInput(MInstruction *ins, size_t index, MInstruction *special)
-{
-    return false;
-}
-
-bool
 BinaryArithPolicy::respecialize(MInstruction *ins)
 {
     // If this operation is not specialized, we don't care.
@@ -82,16 +89,27 @@ BinaryArithPolicy::respecialize(MInstruction *ins)
     MDefinition *lhs = ins->getOperand(0);
     MDefinition *rhs = ins->getOperand(1);
 
+    MIRType oldType = ins->type();
+
     // Check if any input would coerce to a double.
     if (CoercesToDouble(lhs->type()) || CoercesToDouble(rhs->type())) {
         if (ins->type() != MIRType_Double) {
             specialization_ = MIRType_Double;
             ins->setResultType(specialization_);
-            return true;
         }
     }
 
-    return false;
+    return oldType != ins->type();
+}
+
+void
+BinaryArithPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
+{
+    if (specialization_ == MIRType_None)
+        return;
+
+    analysis->preferType(ins->getOperand(0), ins->type());
+    analysis->preferType(ins->getOperand(1), ins->type());
 }
 
 bool
@@ -123,19 +141,19 @@ BinaryArithPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
-BinaryArithPolicy::useSpecializedInput(MInstruction *ins, size_t index, MInstruction *special)
-{
-    // If we asked an instruction to specialize, and it was able to specialize,
-    // then it must be the correct type.
-    JS_ASSERT(ins->type() == special->type());
-    return true;
-}
-
-bool
 BitwisePolicy::respecialize(MInstruction *ins)
 {
-    // Bitwise operations never respecialize, they always operate on int32s.
     return false;
+}
+
+void
+BitwisePolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
+{
+    if (specialization_ == MIRType_None)
+        return;
+
+    analysis->preferType(ins->getOperand(0), MIRType_Int32);
+    analysis->preferType(ins->getOperand(1), MIRType_Int32);
 }
 
 bool
@@ -160,15 +178,6 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
         ins->replaceOperand(i, replace);
     }
 
-    return true;
-}
-
-bool
-BitwisePolicy::useSpecializedInput(MInstruction *ins, size_t index, MInstruction *special)
-{
-    // If we asked an instruction to specialize, and it was able to specialize,
-    // then it must be the correct type.
-    JS_ASSERT(ins->type() == special->type());
     return true;
 }
 

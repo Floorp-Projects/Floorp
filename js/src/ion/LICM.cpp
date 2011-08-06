@@ -173,7 +173,7 @@ Loop::optimize()
                 // if the consumer of this invariant instruction is in the
                 // loop, and it is also worth hoisting, then process it.
                 if (isInLoop(consumer) && isHoistable(consumer)) {
-                    if (insertInWorklist(consumer->toInstruction()))
+                    if (!insertInWorklist(consumer->toInstruction()))
                         return false;
                 }
             }
