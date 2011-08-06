@@ -632,10 +632,6 @@ GreedyAllocator::mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock
     VirtualRegister *vleft = state[reg];
     VirtualRegister *vright = blockInfo(right)->in[reg];
 
-    // Make sure virtual registers have sensible register state.
-    if (vleft)
-        vleft->setRegister(vleft->reg());
-
     // If the input register is unused or occupied by the same vr, we're done.
     if (vleft == vright)
         return true;
@@ -645,35 +641,40 @@ GreedyAllocator::mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock
     if (!vright)
         return true;
 
-    // If the left-hand side has no allocation, merge the right-hand side in.
-    if (!vleft) {
+    BlockInfo *rinfo = blockInfo(right);
+
+    if (!vleft && !vright->hasRegister()) {
+        // The left-hand side never assigned a register to |vright|, and has
+        // not assigned this register, so just inherit the right-hand side's
+        // allocation.
         assign(vright, reg);
         return true;
     }
 
-    BlockInfo *info = blockInfo(right);
+    // Otherwise, we have reached one of two situations:
+    //  (1) The left-hand and right-hand sides have two different definitions
+    //      in the same register.
+    //  (2) The right-hand side expects a definition in a different register
+    //      than the left-hand side has assigned.
+    //
+    // In both cases, we emit a load or move on the right-hand side to ensure
+    // that the definition is in the expected register.
+    if (!vright->hasRegister() && allocatableRegs().empty(vright->isDouble())) {
+        AnyRegister reg;
+        if (!allocate(vright->type(), DISALLOW, &reg))
+            return false;
+        assign(vright, reg);
+    }
 
-    // Otherwise, the same register is occupied by two different allocations:
-    // the left side expects R1=A, and the right side expects R1=B.
-    if (allocatableRegs().empty(vright->isDouble())) {
-        // There are no free registers, so put a move on the right-hand block
-        // that loads the correct register out of vright's stack.
+    if (vright->hasRegister()) {
+        JS_ASSERT(vright->reg() != reg);
+        if (!rinfo->restores.move(vright->reg(), reg))
+            return false;
+    } else {
         if (!allocateStack(vright))
             return false;
-        if (!info->restores.move(vright->backingStack(), reg))
+        if (!rinfo->restores.move(vright->backingStack(), reg))
             return false;
-
-        vright->unsetRegister();
-    } else {
-        // There is a free register, so grab it and assign it, and emit a move
-        // on the right-hand block.
-        AnyRegister newreg;
-        if (!allocate(vright->type(), TEMPORARY, &newreg))
-            return false;
-        if (!info->restores.move(newreg, reg))
-            return false;
-
-        assign(vright, newreg);
     }
 
     return true;
