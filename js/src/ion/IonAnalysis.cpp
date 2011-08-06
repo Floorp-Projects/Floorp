@@ -73,43 +73,104 @@ ion::SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph)
     return true;
 }
 
-class TypeAnalyzer
+// The type analysis algorithm inserts conversions and box/unbox instructions
+// to make the IR graph well-typed for future passes. Each definition has the
+// following type information:
+//
+//     * Actual type. This is the type the instruction will definitely return.
+//     * Specialization. Some instructions, like MAdd, may be specialized to a 
+//       particular type. This specialization directs the actual type.
+//     * Observed type. If the actual type of a node is not known (Value), then
+//       it may be annotated with the set of types it would be unboxed as
+//       (determined by specialization). This directs whether unbox operations
+//       can be hoisted to the definition versus placed near its uses.
+//
+// (1) Specialization.
+//     ------------------------
+//     All instructions and phis are added to a worklist, such that they are
+//     initially observed in postorder.
+//
+//     Each instruction looks at the types of its inputs and decides whether to
+//     respecialize (for example, prefer double inputs to int32). Instructions
+//     may also annotate untyped values with a preferred type.
+//
+//     Each phi looks at the effective types of its inputs. If all inputs have
+//     the same effective type, the phi specializes to that type.
+//
+//     If any definition's specialization changes, its uses are re-analyzed.
+//     If any definition's effective type changes, its phi uses are
+//     re-analyzed.
+//
+// (2) Conversions.
+//     ------------------------
+//     All instructions and phis are visited in reverse postorder.
+//
+//     (A) Output adjustment. If the definition's output is a Value, and has
+//         exactly one observed type, then an Unbox instruction is placed right
+//         after the definition. Each use is modified to take the narrowed
+//         type.
+//
+//     (B) Input adjustment. Each input is asked to apply conversion operations
+//         to its inputs. This may include Box, Unbox, or other
+//         instruction-specific type conversion operations.
+//
+class TypeAnalyzer : public TypeAnalysis
 {
     MIRGraph &graph;
-    js::Vector<MInstruction *, 0, SystemAllocPolicy> worklist_;
+    Vector<MInstruction *, 0, SystemAllocPolicy> worklist_;
+    Vector<MPhi *, 0, SystemAllocPolicy> phiWorklist_;
+    bool phisHaveBeenAnalyzed_;
 
-    bool empty() const {
-        return worklist_.empty();
-    }
-    MInstruction *pop() {
+    MInstruction *popInstruction() {
         MInstruction *ins = worklist_.popCopy();
         ins->setNotInWorklist();
         return ins;
     }
+    MPhi *popPhi() {
+        MPhi *phi = phiWorklist_.popCopy();
+        phi->setNotInWorklist();
+        return phi;
+    }
+    void repush(MDefinition *def) {
+#ifdef DEBUG
+        bool ok =
+#endif
+            push(def);
+        JS_ASSERT(ok);
+    }
     bool push(MDefinition *def) {
-        if (def->isInWorklist() || !def->typePolicy())
+        if (def->isInWorklist())
             return true;
-        JS_ASSERT(!def->isPhi());
+        if (!def->isPhi() && !def->typePolicy())
+            return true;
         def->setInWorklist();
+        if (def->isPhi())
+            return phiWorklist_.append(def->toPhi());
         return worklist_.append(def->toInstruction());
     }
 
+    // After building the worklist, insertion is infallible because memory for
+    // all instructions has been reserved.
     bool buildWorklist();
-    bool reflow(MDefinition *def);
-    bool despecializePhi(MPhi *phi);
-    bool specializePhi(MPhi *phi);
-    bool specializePhis();
-    bool specializeInstructions();
-    bool determineSpecializations();
+
+    void addPreferredType(MDefinition *def, MIRType type);
+    void reanalyzePhiUses(MDefinition *def);
+    void reanalyzeUses(MDefinition *def);
+    void despecializePhi(MPhi *phi);
+    void specializePhi(MPhi *phi);
+    void specializePhis();
+    void specializeInstructions();
+    void determineSpecializations();
     void replaceRedundantPhi(MPhi *phi);
-    bool insertConversions();
-    bool adjustPhiInputs(MPhi *phi);
+    void adjustPhiInputs(MPhi *phi);
     bool adjustInputs(MDefinition *def);
-    bool adjustOutput(MDefinition *def);
+    void adjustOutput(MDefinition *def);
+    bool insertConversions();
 
   public:
     TypeAnalyzer(MIRGraph &graph)
-      : graph(graph)
+      : graph(graph),
+        phisHaveBeenAnalyzed_(false)
     { }
 
     bool analyze();
@@ -121,6 +182,10 @@ TypeAnalyzer::buildWorklist()
     // The worklist is LIFO. We add items in postorder to get reverse-postorder
     // removal.
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        for (MPhiIterator iter = block->phisBegin(); iter != block->phisEnd(); iter++) {
+            if (!push(*iter))
+                return false;
+        }
         MInstructionIterator iter = block->begin();
         while (iter != block->end()) {
             if (iter->isCopy()) {
@@ -138,122 +203,134 @@ TypeAnalyzer::buildWorklist()
     return true;
 }
 
-bool
-TypeAnalyzer::reflow(MDefinition *def)
+void
+TypeAnalyzer::reanalyzePhiUses(MDefinition *def)
+{
+    // Only bother analyzing effective type changes if the phi queue has not
+    // yet been analyzed.
+    if (!phisHaveBeenAnalyzed_)
+        return;
+
+    for (MUseDefIterator uses(def); uses; uses++) {
+        if (uses.def()->isPhi())
+            repush(uses.def());
+    }
+}
+
+void
+TypeAnalyzer::reanalyzeUses(MDefinition *def)
 {
     // Reflow this definition's uses, since its output type changed.
     // Policies must guarantee this terminates by never narrowing
     // during a respecialization.
-    for (MUseDefIterator uses(def); uses; uses++) {
-        if (!push(uses.def()))
-            return false;
-    }
-    return true;
+    for (MUseDefIterator uses(def); uses; uses++)
+        repush(uses.def());
 }
 
-bool
+void
+TypeAnalyzer::addPreferredType(MDefinition *def, MIRType type)
+{
+    MIRType usedAsType = def->usedAsType();
+    def->useAsType(type);
+    if (usedAsType != def->usedAsType())
+        reanalyzePhiUses(def);
+}
+
+void
 TypeAnalyzer::specializeInstructions()
 {
     // For each instruction with a type policy, analyze its inputs to see if a
     // respecialization is needed, which may change its output type. If such a
     // change occurs, re-add each use of the instruction back to the worklist.
-    while (!empty()) {
-        MInstruction *ins = pop();
+    while (!worklist_.empty()) {
+        MInstruction *ins = popInstruction();
 
         TypePolicy *policy = ins->typePolicy();
-        if (policy->respecialize(ins)) {
-            if (!reflow(ins))
-                return false;
-        }
+        if (policy->respecialize(ins))
+            reanalyzeUses(ins);
+        policy->specializeInputs(ins, this);
     }
-    return true;
 }
 
 static inline MIRType
-GetEffectiveType(MDefinition *def)
+GetObservedType(MDefinition *def)
 {
     return def->type() != MIRType_Value
            ? def->type()
            : def->usedAsType();
 }
 
-bool
+void
 TypeAnalyzer::despecializePhi(MPhi *phi)
 {
     // If the phi is already despecialized, we're done.
     if (phi->type() == MIRType_Value)
-        return true;
+        return;
 
     phi->specialize(MIRType_Value);
-    if (!reflow(phi))
-        return false;
-    return true;
+    reanalyzeUses(phi);
 }
 
-bool
+void
 TypeAnalyzer::specializePhi(MPhi *phi)
 {
     // If this phi was despecialized, but we have already tried to specialize
     // it, just give up.
     if (phi->triedToSpecialize() && phi->type() == MIRType_Value)
-        return true;
+        return;
 
     // Find the type of the first phi input.
     MDefinition *in = phi->getOperand(0);
-    MIRType first = GetEffectiveType(in);
+    MIRType first = GetObservedType(in);
 
     // If it's a value, just give up and leave the phi unspecialized.
-    if (first == MIRType_Value)
-        return despecializePhi(phi);
+    if (first == MIRType_Value) {
+        despecializePhi(phi);
+        return;
+    }
 
     for (size_t i = 1; i < phi->numOperands(); i++) {
         MDefinition *other = phi->getOperand(i);
-        if (GetEffectiveType(other) != first)
-            return despecializePhi(phi);
+        if (GetObservedType(other) != first) {
+            despecializePhi(phi);
+            return;
+        }
     }
 
     if (phi->type() == first)
-        return true;
+        return;
 
     // All inputs have the same type - specialize this phi!
     phi->specialize(first);
-    if (!reflow(phi))
-        return false;
-
-    return true;
+    reanalyzeUses(phi);
 }
 
-bool
+void
 TypeAnalyzer::specializePhis()
 {
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
-            if (!specializePhi(*phi))
-                return false;
-        }
+    while (!phiWorklist_.empty()) {
+        MPhi *phi = popPhi();
+        specializePhi(phi);
     }
-    return true;
-}
 
-bool
+    phisHaveBeenAnalyzed_ = true;
+}
+ 
+// Part 1: Determine specializations.
+void
 TypeAnalyzer::determineSpecializations()
 {
     do {
         // First, specialize all non-phi instructions.
-        if (!specializeInstructions())
-            return false;
+        specializeInstructions();
 
         // Now, go through phis, and try to specialize those. If any phis
-        // become specialized, their uses are re-added to the worklist. Phis
-        // can "toggle" between specializations, so to ensure a fixpoint, we
-        // forcibly prevent a phi from specializing more than twice.
-        if (!specializePhis())
-            return false;
-    } while (!empty());
-    return true;
+        // become specialized, their uses are re-added to the worklist.
+        specializePhis();
+    } while (!worklist_.empty());
 }
 
-bool
+void
 TypeAnalyzer::adjustOutput(MDefinition *def)
 {
     JS_ASSERT(def->type() == MIRType_Value);
@@ -263,7 +340,7 @@ TypeAnalyzer::adjustOutput(MDefinition *def)
         // This definition is used as more than one type, so give up on
         // specializing its definition. Its uses instead will insert
         // appropriate conversion operations.
-        return true;
+        return;
     }
 
     MBasicBlock *block = def->block();
@@ -283,32 +360,28 @@ TypeAnalyzer::adjustOutput(MDefinition *def)
     JS_ASSERT(def->usesBegin()->node() == unbox);
 
     for (MUseIterator use(def->usesBegin()); use != def->usesEnd(); ) {
-        bool replace = true;
-
         if (use->node()->isSnapshot()) {
             MSnapshot *snapshot = use->node()->toSnapshot();
             
             // If this snapshot is the definition's snapshot (in case it is
             // effectful), we *cannot* replace its use! The snapshot comes in
             // between the definition and the unbox.
-            if (def->isInstruction() && def->toInstruction()->snapshot() == snapshot)
-                replace = false;
-        } else {
-            MDefinition *other = use->node()->toDefinition();
-            if (TypePolicy *policy = other->typePolicy())
-                replace = policy->useSpecializedInput(def->toInstruction(), use->index(), unbox);
+            if (def->isInstruction() && def->toInstruction()->snapshot() == snapshot) {
+                use++;
+                continue;
+            }
         }
 
-        if (replace)
+        // Only replace nodes that have a type policy. Otherwise, we would
+        // replace an unbox into its own input.
+        if (use->node()->typePolicy())
             use = use->node()->replaceOperand(use, unbox);
         else
             use++;
     }
-
-    return true;
 }
 
-bool
+void
 TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 {
     // If the phi returns a specific type, assert that its inputs are correct.
@@ -316,10 +389,10 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 #ifdef DEBUG
         for (size_t i = 0; i < phi->numOperands(); i++) {
             MDefinition *in = phi->getOperand(i);
-            JS_ASSERT(GetEffectiveType(in) == phi->type());
+            JS_ASSERT(GetObservedType(in) == phi->type());
         }
 #endif
-        return true;
+        return;
     }
 
     // Box every typed input.
@@ -332,8 +405,6 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
         in->block()->insertBefore(in->block()->lastIns(), box);
         phi->replaceOperand(i, box);
     }
-
-    return true;
 }
 
 bool
@@ -370,18 +441,17 @@ TypeAnalyzer::insertConversions()
                 replaceRedundantPhi(*phi);
                 phi = block->removePhiAt(phi);
             } else {
-                if (!adjustPhiInputs(*phi))
-                    return false;
-                if (phi->type() == MIRType_Value && !adjustOutput(*phi))
-                    return false;
+                adjustPhiInputs(*phi);
+                if (phi->type() == MIRType_Value)
+                    adjustOutput(*phi);
                 phi++;
             }
         }
         for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
             if (!adjustInputs(*iter))
                 return false;
-            if (iter->type() == MIRType_Value && !adjustOutput(*iter))
-                return false;
+            if (iter->type() == MIRType_Value)
+                adjustOutput(*iter);
         }
     }
     return true;
@@ -392,8 +462,7 @@ TypeAnalyzer::analyze()
 {
     if (!buildWorklist())
         return false;
-    if (!determineSpecializations())
-        return false;
+    determineSpecializations();
     if (!insertConversions())
         return false;
     return true;

@@ -374,8 +374,6 @@ class MUseDefIterator
 
     MUseIterator search(MUseIterator start) {
         MUseIterator i(start);
-        if (i != def_->usesEnd())
-            i++;
         for (; i != def_->usesEnd(); i++) {
             if (i->node()->isDefinition())
                 return i;
@@ -395,6 +393,8 @@ class MUseDefIterator
     }
     MUseDefIterator operator ++(int) {
         MUseDefIterator old(*this);
+        if (current_ != def_->usesEnd())
+            current_++;
         current_ = search(current_);
         return old;
     }
