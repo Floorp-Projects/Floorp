@@ -48,7 +48,10 @@
 namespace js {
 namespace ion {
 
-typedef JSBool (*EnterIonCode)(void *code, int argc, Value *argv, Value *vp);
+typedef void * CalleeToken;
+
+typedef JSBool (*EnterIonCode)(void *code, int argc, Value *argv, Value *vp,
+                               CalleeToken calleeToken);
 
 class IonCompartment {
     JSC::ExecutableAllocator *execAlloc_;

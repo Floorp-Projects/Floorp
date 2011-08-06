@@ -75,10 +75,11 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     // this possibility in, and simulate what the new stack address would be.
     //   +argc * 8 for arguments
     //   +4 for pushing alignment
+    //   +4 for pushing the callee token
     //   +4 for pushing the return address
     masm.movl(esp, ecx);
     masm.subl(eax, ecx);
-    masm.subl(Imm32(8), ecx);
+    masm.subl(Imm32(12), ecx);
 
     // ecx = ecx & 15, holds alignment.
     masm.andl(Imm32(15), ecx);
@@ -113,11 +114,15 @@ IonCompartment::generateEnterJIT(JSContext *cx)
         masm.bind(&footer);
     }
 
+    // Push the callee token.
+    masm.push(Operand(ebp, 20));
+
     // Save the stack size so we can remove arguments and alignment after the
     // call.
     masm.movl(Operand(ebp, 12), eax);
     masm.shll(Imm32(3), eax);
     masm.addl(eax, ecx);
+    masm.addl(Imm32(4), ecx);
     masm.push(ecx);
 
     /***************************************************************

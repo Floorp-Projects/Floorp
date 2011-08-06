@@ -58,6 +58,11 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     const Register reg_argc = ArgReg1;
     const Register reg_argv = ArgReg2;
     const Register reg_vp   = ArgReg3;
+#if defined(_WIN64)
+    const Operand token = Operand(rbp, 8 + ShadowStackSpace);
+#else
+    const Register token = ArgReg4;
+#endif
 
     MacroAssembler masm(cx);
 
@@ -87,10 +92,12 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.shll(Imm32(3), r13);
 
     // Guarantee 16-byte alignment.
-    // We push argc, frame size, and return address.
-    // The latter two are 16 bytes together, so we only consider argc.
+    // We push argc, callee token, frame size, and return address.
+    // The latter two are 16 bytes together, so we only consider argc and the
+    // token.
     masm.mov(rsp, r12);
     masm.subq(r13, r12);
+    masm.subq(Imm32(8), r12);
     masm.andl(Imm32(0xf), r12);
     masm.subq(r12, rsp);
 
@@ -115,6 +122,10 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 
         masm.bind(&footer);
     }
+
+    // Push the callee token. Remember on win64, there are 32 bytes of shadow
+    // stack space.
+    masm.push(token);
 
     /*****************************************************************
     Push the number of bytes we've pushed so far on the stack and call

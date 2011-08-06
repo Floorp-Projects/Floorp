@@ -51,9 +51,10 @@ static const ptrdiff_t STACK_SLOT_SIZE       = 4;
 static const uint32 DOUBLE_STACK_ALIGNMENT   = 2;
 
 // In bytes: slots in between arguments and the locals.
-//   +4 for number of arguments.
+//   +4 for callee token
+//   +4 for size descriptor
 //   +4 for return address.
-static const uint32 ION_FRAME_PREFIX_SIZE    = 8;
+static const uint32 ION_FRAME_PREFIX_SIZE    = 12;
 
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles

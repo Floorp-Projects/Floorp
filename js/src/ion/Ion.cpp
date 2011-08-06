@@ -375,9 +375,13 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     int argc = 0;
     Value *argv = NULL;
 
+    void *calleeToken;
     if (fp->isFunctionFrame()) {
-        argc = fp->fun()->nargs + 2;
-        argv = fp->formalArgs() - 2;
+        argc = CountArgSlots(fp->fun());
+        argv = fp->formalArgs() - 1;
+        calleeToken = CalleeToToken(fp->fun());
+    } else {
+        calleeToken = CalleeToToken(fp->script());
     }
 
     JSScript *script = fp->script();
@@ -393,7 +397,7 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     {
         AssertCompartmentUnchanged pcc(cx);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
-        ok = enterJIT(jitcode, argc, argv, &result);
+        ok = enterJIT(jitcode, argc, argv, &result, calleeToken);
     }
 
     cx->stack.repointRegs(&oldRegs);
