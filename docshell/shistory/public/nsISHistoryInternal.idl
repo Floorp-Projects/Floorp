@@ -57,7 +57,7 @@ struct nsTArrayDefaultAllocator;
 
 [ref] native nsDocshellIDArray(nsTArray<PRUint64, nsTArrayDefaultAllocator>);
 
-[scriptable, uuid(2dede933-25e1-47a3-8f61-0127c785ea01)]
+[scriptable, uuid(AFE77866-8859-4492-B131-4C58167E1630)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -106,10 +106,10 @@ interface nsISHistoryInternal: nsISupports
    void evictContentViewers(in long previousIndex, in long index);
    
    /**
-    * Evict the content viewer associated with a session history entry
+    * Evict the content viewer associated with a bfcache entry
     * that has timed out.
     */
-   void evictExpiredContentViewerForEntry(in nsISHEntry aEntry);
+   void evictExpiredContentViewerForEntry(in nsIBFCacheEntry aEntry);
 
    /**
     * Evict all the content viewers in this session history
