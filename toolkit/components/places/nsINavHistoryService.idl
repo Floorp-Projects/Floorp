@@ -1403,7 +1403,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(437f539b-d541-4a0f-a200-6f9a6d45cce2)]
+[scriptable, uuid(562e698d-04f0-4df1-bd5d-1f1e5b84d7ef)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1647,12 +1647,6 @@ interface nsINavHistoryService : nsISupports
    * history is disabled if the places.history.enabled pref is false.
    */
   readonly attribute boolean historyDisabled;
-
-  /**
-   * Import the given Mork history file.
-   *  @param file     The Mork history file to import
-   */
-  void importHistory(in nsIFile file);
 };
 
 /**
