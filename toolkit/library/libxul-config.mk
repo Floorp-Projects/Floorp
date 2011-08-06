@@ -142,6 +142,7 @@ COMPONENT_LIBS += \
 	composer \
 	jetpack_s \
 	telemetry \
+	storagecomps \
 	$(NULL)
 
 ifdef BUILD_CTYPES
@@ -224,11 +225,6 @@ ifdef MOZ_XUL
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
 endif
-endif
-
-ifdef MOZ_STORAGE
-COMPONENT_LIBS += storagecomps
-EXTRA_DSO_LDOPTS += $(SQLITE_LIBS)
 endif
 
 ifdef MOZ_PLACES
@@ -330,6 +326,7 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_HARFBUZZ_LIBS) \
 	$(MOZ_OTS_LIBS) \
 	$(MOZ_APP_EXTRA_LIBS) \
+	$(SQLITE_LIBS) \
 	$(NULL)
 
 ifdef MOZ_NATIVE_ZLIB
