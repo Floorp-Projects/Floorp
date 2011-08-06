@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "domstubs.idl"
+#include "nsIDOMEventTarget.idl"
 
 %{ C++
 #include "jspubtd.h"
@@ -74,8 +75,8 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(972cb379-6bdc-4544-8b46-8d721e12e906)]
-interface nsIDOMWindow : nsISupports
+[scriptable, builtinclass, uuid(74a4e350-0869-4e81-9e6c-83a981fd5f6c)]
+interface nsIDOMWindow : nsIDOMEventTarget
 {
   // the current browsing context
   readonly attribute nsIDOMWindow                       window;
