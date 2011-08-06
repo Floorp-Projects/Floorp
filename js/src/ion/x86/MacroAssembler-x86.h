@@ -49,6 +49,30 @@ namespace ion {
 
 class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
+    static const uint32 StackAlignment = 16;
+
+  protected:
+    uint32 alignStackForCall(uint32 stackForArgs) {
+        // framePushed_ is accurate, so precisely adjust the stack requirement.
+        uint32 displacement = stackForArgs + framePushed_;
+        return stackForArgs + ComputeByteAlignment(displacement, StackAlignment);
+    }
+
+    uint32 alignStackForCall(uint32 stackForArgs, const Register &scratch) {
+        // framePushed_ is bogus or we don't know it for sure, so instead, save
+        // the original value of esp and then chop off its low bits. Then, we
+        // push the original value of esp.
+        movl(esp, scratch);
+        andl(Imm32(~(StackAlignment - 1)), esp);
+        push(scratch);
+        uint32 displacement = stackForArgs + STACK_SLOT_SIZE;
+        return stackForArgs + ComputeByteAlignment(displacement, StackAlignment);
+    }
+
+    void restoreStackFromDynamicAlignment() {
+        pop(esp);
+    }
+
   public:
     void reserveStack(uint32 amount) {
         if (amount)
@@ -60,6 +84,22 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         if (amount)
             addl(Imm32(amount), esp);
         framePushed_ -= amount;
+    }
+    void movePtr(ImmWord imm, const Register &dest) {
+        movl(Imm32(imm.value), dest);
+    }
+    void setStackArg(const Register &reg, uint32 arg) {
+        movl(reg, Operand(esp, arg * STACK_SLOT_SIZE));
+    }
+    void checkCallAlignment() {
+#ifdef DEBUG
+        Label good;
+        movl(esp, eax);
+        testl(Imm32(StackAlignment - 1), eax);
+        j(Equal, &good);
+        breakpoint();
+        bind(&good);
+#endif
     }
 };
 

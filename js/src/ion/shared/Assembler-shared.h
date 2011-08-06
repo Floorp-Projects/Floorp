@@ -66,7 +66,9 @@ struct ImmWord
 {
     uintptr_t value;
 
-    ImmWord(uintptr_t value) : value(value)
+    explicit ImmWord(uintptr_t value) : value(value)
+    { }
+    explicit ImmWord(void *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
     { }
 };
 

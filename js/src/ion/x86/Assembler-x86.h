@@ -65,6 +65,7 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 static const Register StackPointer = esp;
+static const Register ReturnReg = eax;
 
 struct ImmTag : public Imm32
 {
@@ -240,6 +241,14 @@ class Assembler : public AssemblerX86Shared
         label->setPrev(masm.size());
     }
 };
+
+static const uint32 NumArgRegs = 0;
+
+static inline bool
+GetArgReg(uint32 arg, Register *out)
+{
+    return false;
+}
 
 } // namespace ion
 } // namespace js

@@ -387,6 +387,7 @@ CPPSRCS +=	MIR.cpp \
 		CodeGenerator-shared.cpp \
 		TypePolicy.cpp \
 		CodeGenerator.cpp \
+		IonMacroAssembler.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
