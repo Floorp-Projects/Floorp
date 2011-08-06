@@ -319,6 +319,10 @@ class AssemblerX86Shared
     void testl(const Register &lhs, const Register &rhs) {
         masm.testl_rr(rhs.code(), lhs.code());
     }
+    void testl(Imm32 lhs, const Register &rhs) {
+        masm.testl_i32r(lhs.value, rhs.code());
+    }
+
     void addl(Imm32 imm, const Register &dest) {
         masm.addl_ir(imm.value, dest.code());
     }
