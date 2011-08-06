@@ -74,9 +74,6 @@ class CodeGeneratorShared : public LInstructionVisitor
     // spills.
     int32 frameDepth_;
 
-    // Static size of the frame (see IonFrame.h). This is >= frameDepth_.
-    int32 frameStaticSize_;
-
     // Frame class this frame's size falls into (see IonFrame.h).
     FrameSizeClass frameClass_;
 

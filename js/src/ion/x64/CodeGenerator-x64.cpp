@@ -71,6 +71,19 @@ CodeGeneratorX64::visitDouble(LDouble *ins)
     return true;
 }
 
+FrameSizeClass
+FrameSizeClass::FromDepth(uint32 frameDepth)
+{
+    return FrameSizeClass::None();
+}
+
+uint32
+FrameSizeClass::frameSize() const
+{
+    JS_NOT_REACHED("x64 does not use frame size classes");
+    return 0;
+}
+
 bool
 CodeGeneratorX64::visitValue(LValue *value)
 {

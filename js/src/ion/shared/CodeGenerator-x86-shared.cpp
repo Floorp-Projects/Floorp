@@ -51,40 +51,14 @@ CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &grap
 {
 }
 
-// The first two size classes are 128 and 256 bytes respectively. After that we
-// increment by 512.
-static const uint32 LAST_FRAME_SIZE = 512;
-static const uint32 LAST_FRAME_INCREMENT = 512;
-static const uint32 FrameSizes[] = { 128, 256, LAST_FRAME_SIZE };
-
-FrameSizeClass
-FrameSizeClass::FromDepth(uint32 frameDepth)
-{
-    for (uint32 i = 0; i < JS_ARRAY_LENGTH(FrameSizes); i++) {
-        if (frameDepth < FrameSizes[i])
-            return FrameSizeClass(i);
-    }
-
-    uint32 newFrameSize = frameDepth - LAST_FRAME_SIZE;
-    uint32 sizeClass = (newFrameSize / LAST_FRAME_INCREMENT) + 1;
-
-    return FrameSizeClass(JS_ARRAY_LENGTH(FrameSizes) + sizeClass);
-}
-uint32
-FrameSizeClass::frameSize() const
-{
-    if (class_ < JS_ARRAY_LENGTH(FrameSizes))
-        return FrameSizes[class_];
-
-    uint32 step = class_ - JS_ARRAY_LENGTH(FrameSizes);
-    return LAST_FRAME_SIZE + step * LAST_FRAME_INCREMENT;
-}
-
 bool
 CodeGeneratorX86Shared::generatePrologue()
 {
     // Note that this automatically sets MacroAssembler::framePushed().
-    masm.reserveStack(frameStaticSize_);
+    if (frameClass_ != FrameSizeClass::None())
+        masm.reserveStack(frameClass_.frameSize());
+    else
+        masm.reserveStack(frameDepth_);
 
     // Allocate returnLabel_ on the heap, so we don't run it's destructor and
     // assert-not-bound in debug mode on compilation failure.
@@ -98,7 +72,14 @@ bool
 CodeGeneratorX86Shared::generateEpilogue()
 {
     masm.bind(returnLabel_);
-    masm.freeStack(frameStaticSize_);
+
+    // Pop the stack we allocated at the start of the function.
+    if (frameClass_ != FrameSizeClass::None())
+        masm.freeStack(frameClass_.frameSize());
+    else
+        masm.freeStack(frameDepth_);
+    JS_ASSERT(masm.framePushed() == 0);
+
     masm.ret();
     return true;
 }
