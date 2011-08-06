@@ -45,7 +45,6 @@
 namespace js {
 namespace ion {
 
-
 // Ion frames have a few important numbers associated with them:
 //      Local depth:    The number of bytes required to spill local variables.
 //      Argument depth: The number of bytes required to push arguments and make
@@ -63,6 +62,12 @@ namespace ion {
 // Jump tables are big. To control the amount of jump tables we generate, each
 // platform chooses how to segregate stack size classes based on its
 // architecture.
+//
+// On some architectures, these jump tables are not used at all, or frame
+// size segregation is not needed. Thus, there is an option for a frame to not
+// have any frame size class, and to be totally dynamic.
+static const uint32 NO_FRAME_SIZE_CLASS_ID = uint32(-1);
+
 class FrameSizeClass
 {
     uint32 class_;
@@ -75,11 +80,21 @@ class FrameSizeClass
     { }
 
     static FrameSizeClass FromDepth(uint32 frameDepth);
+    static FrameSizeClass None() {
+        return FrameSizeClass(NO_FRAME_SIZE_CLASS_ID);
+    }
 
     uint32 frameSize() const;
 
     uint32 classId() const {
         return class_;
+    }
+
+    bool operator ==(const FrameSizeClass &other) const {
+        return class_ == other.class_;
+    }
+    bool operator !=(const FrameSizeClass &other) const {
+        return class_ != other.class_;
     }
 };
 

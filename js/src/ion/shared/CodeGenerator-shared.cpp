@@ -51,7 +51,6 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
     frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE))
 {
     frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
-    frameStaticSize_ = frameClass_.frameSize();
 }
 
 bool
