@@ -220,7 +220,6 @@ INSTALLED_HEADERS = \
 		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
-		jscompartment.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \
