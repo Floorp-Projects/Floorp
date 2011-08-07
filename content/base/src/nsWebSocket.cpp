@@ -1496,7 +1496,7 @@ nsWebSocketEstablishedConnection::GetStatus(nsresult *aStatus)
   return NS_OK;
 }
 
-// probably means window went away or stop button pressed
+// Window closed, stop/reload button pressed, user navigated away from page, etc.
 NS_IMETHODIMP
 nsWebSocketEstablishedConnection::Cancel(nsresult aStatus)
 {
