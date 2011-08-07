@@ -52,11 +52,9 @@ EXPORTS		= \
 		nsAtomListUtils.h \
 		nsAttrName.h \
 		nsContentList.h \
-		nsContentSink.h \
 		nsGkAtomList.h \
 		nsGkAtoms.h \
 		nsNodeInfoManager.h \
-		nsNodeUtils.h \
 		nsPropertyTable.h \
 		nsScriptLoader.h \
 		nsStubDocumentObserver.h \
