@@ -3119,10 +3119,10 @@ WorkerPrivate::AssertIsOnWorkerThread() const
 }
 #endif
 
+BEGIN_WORKERS_NAMESPACE
+
 // Force instantiation.
 template class WorkerPrivateParent<WorkerPrivate>;
-
-BEGIN_WORKERS_NAMESPACE
 
 WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx)
