@@ -44,6 +44,10 @@
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
 
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#include "GLXLibrary.h"
+#endif
+
 class THEBES_API gfxXlibSurface : public gfxASurface {
 public:
     // construct a wrapper around the specified drawable with dpy/visual.
@@ -90,22 +94,23 @@ public:
 
     // take ownership of a passed-in Pixmap, calling XFreePixmap on it
     // when the gfxXlibSurface is destroyed.
-    void TakePixmap() {
-        NS_ASSERTION(!mPixmapTaken, "I already own the Pixmap!");
-        mPixmapTaken = PR_TRUE;
-    }
+    void TakePixmap();
 
     // Release ownership of this surface's Pixmap.  This is only valid
     // on gfxXlibSurfaces for which the user called TakePixmap(), or
     // on those created by a Create() factory method.
-    Drawable ReleasePixmap() {
-        NS_ASSERTION(mPixmapTaken, "I don't own the Pixmap!");
-        mPixmapTaken = PR_FALSE;
-        return mDrawable;
-    }
+    Drawable ReleasePixmap();
 
     // Find a visual and colormap pair suitable for rendering to this surface.
     PRBool GetColormapAndVisual(Colormap* colormap, Visual **visual);
+
+    // This surface is a wrapper around X pixmaps, which are stored in the X
+    // server, not the main application.
+    virtual gfxASurface::MemoryLocation GetMemoryLocation() const;
+
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+    GLXPixmap GetGLXPixmap();
+#endif
 
 protected:
     // if TakePixmap() has been called on this
@@ -117,6 +122,10 @@ protected:
     void DoSizeQuery();
 
     gfxIntSize mSize;
+
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+    GLXPixmap mGLXPixmap;
+#endif
 };
 
 #endif /* GFX_XLIBSURFACE_H */

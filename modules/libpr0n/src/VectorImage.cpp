@@ -249,14 +249,26 @@ VectorImage::GetCurrentFrameRect(nsIntRect& aRect)
 }
 
 PRUint32
-VectorImage::GetDecodedDataSize()
+VectorImage::GetDecodedHeapSize()
 {
   // XXXdholbert TODO: return num bytes used by helper SVG doc. (bug 590790)
   return sizeof(*this);
 }
 
 PRUint32
-VectorImage::GetSourceDataSize()
+VectorImage::GetDecodedNonheapSize()
+{
+  return 0;
+}
+
+PRUint32
+VectorImage::GetDecodedOutOfProcessSize()
+{
+  return 0;
+}
+
+PRUint32
+VectorImage::GetSourceHeapSize()
 {
   // We're not storing the source data -- we just feed that directly to
   // our helper SVG document as we receive it, for it to parse.
@@ -289,7 +301,7 @@ VectorImage::StopAnimation()
   return NS_OK;
 }
 
-PRBool
+bool
 VectorImage::ShouldAnimate()
 {
   return Image::ShouldAnimate() && mIsFullyLoaded && mHaveAnimations;

@@ -56,7 +56,7 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
 });
 
 var PlacesUIUtils = {
-  ORGANIZER_LEFTPANE_VERSION: 6,
+  ORGANIZER_LEFTPANE_VERSION: 7,
   ORGANIZER_FOLDER_ANNO: "PlacesOrganizer/OrganizerFolder",
   ORGANIZER_QUERY_ANNO: "PlacesOrganizer/OrganizerQuery",
 
@@ -988,6 +988,7 @@ var PlacesUIUtils = {
     let queries = {
       "PlacesRoot": { title: "" },
       "History": { title: this.getString("OrganizerQueryHistory") },
+      "Downloads": { title: this.getString("OrganizerQueryDownloads") },
       "Tags": { title: this.getString("OrganizerQueryTags") },
       "AllBookmarks": { title: this.getString("OrganizerQueryAllBookmarks") },
       "BookmarksToolbar":
@@ -1004,7 +1005,7 @@ var PlacesUIUtils = {
           concreteId: PlacesUtils.unfiledBookmarksFolderId },
     };
     // All queries but PlacesRoot.
-    const EXPECTED_QUERY_COUNT = 6;
+    const EXPECTED_QUERY_COUNT = 7;
 
     // Removes an item and associated annotations, ignoring eventual errors.
     function safeRemoveItem(aItemId) {
@@ -1177,7 +1178,12 @@ var PlacesUIUtils = {
                           "&sort=" +
                           Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
 
-        // XXX: Downloads.
+        // Downloads.
+        this.create_query("Downloads", leftPaneRoot,
+                          "place:transition=" +
+                          Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
+                          "&sort=" +
+                          Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
 
         // Tags Query.
         this.create_query("Tags", leftPaneRoot,

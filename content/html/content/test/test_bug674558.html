@@ -46,8 +46,22 @@ function test(ctor) {
 
   ok("selectionDirection" in elem, "elem should have the selectionDirection property");
 
+  is(elem.selectionStart, 0, "Default value");
+  is(elem.selectionEnd, 0, "Default value");
+  is(elem.selectionDirection, "forward", "Default value");
+
   var content = document.getElementById("content");
   content.appendChild(elem);
+
+  function flush() { document.body.clientWidth; }
+  function hide() {
+    content.style.display = "none";
+    flush();
+  }
+  function show() {
+    content.style.display = "";
+    flush();
+  }
 
   elem.value = "foobar";
 
@@ -60,6 +74,16 @@ function test(ctor) {
   is(elem.selectionEnd, 3, "Correct value");
   is(elem.selectionDirection, "forward", "If not set, should default to forward");
 
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 3, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 3, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
   // extend to right
   elem.focus();
   synthesizeKey("VK_RIGHT", {shiftKey: true});
@@ -68,12 +92,32 @@ function test(ctor) {
   is(elem.selectionEnd, 4, "Correct value");
   is(elem.selectionDirection, "forward", "Still forward");
 
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
   // change the direction
   elem.selectionDirection = "backward";
 
   is(elem.selectionStart, 1, "Value unchanged");
   is(elem.selectionEnd, 4, "Value unchanged");
   is(elem.selectionDirection, "backward", "Correct value");
+
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
 
   // extend to right again
   synthesizeKey("VK_RIGHT", {shiftKey: true});
@@ -82,11 +126,31 @@ function test(ctor) {
   is(elem.selectionEnd, 4, "Value unchanged");
   is(elem.selectionDirection, "backward", "Still backward");
 
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
   elem.selectionEnd = 5;
 
   is(elem.selectionStart, 2, "Value unchanged");
   is(elem.selectionEnd, 5, "Correct value");
   is(elem.selectionDirection, "backward", "Still backward");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
 
   elem.selectionDirection = "none";
 
@@ -94,11 +158,31 @@ function test(ctor) {
   is(elem.selectionEnd, 5, "Value unchanged");
   is(elem.selectionDirection, "forward", "none not supported");
 
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
   elem.selectionDirection = "backward";
 
   is(elem.selectionStart, 2, "Value unchanged");
   is(elem.selectionEnd, 5, "Value unchanged");
   is(elem.selectionDirection, "backward", "Correct Value");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
 
   elem.selectionDirection = "invalid";
 
@@ -106,17 +190,47 @@ function test(ctor) {
   is(elem.selectionEnd, 5, "Value unchanged");
   is(elem.selectionDirection, "forward", "Treated as none");
 
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
   elem.selectionDirection = "backward";
 
   is(elem.selectionStart, 2, "Value unchanged");
   is(elem.selectionEnd, 5, "Value unchanged");
   is(elem.selectionDirection, "backward", "Correct Value");
 
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
   elem.setSelectionRange(1, 4);
 
   is(elem.selectionStart, 1, "Correct value");
   is(elem.selectionEnd, 4, "Correct value");
   is(elem.selectionDirection, "forward", "Correct value");
+
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
 
   elem.setSelectionRange(1, 1);
   synthesizeKey("VK_RIGHT", {shiftKey: true});
@@ -127,6 +241,16 @@ function test(ctor) {
   is(elem.selectionEnd, 4, "Correct value");
   is(elem.selectionDirection, "forward", "Correct value");
 
+  hide();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 1, "Value unchanged");
+  is(elem.selectionEnd, 4, "Value unchanged");
+  is(elem.selectionDirection, "forward", "Value unchanged");
+
   elem.setSelectionRange(5, 5);
   synthesizeKey("VK_LEFT", {shiftKey: true});
   synthesizeKey("VK_LEFT", {shiftKey: true});
@@ -135,6 +259,16 @@ function test(ctor) {
   is(elem.selectionStart, 2, "Correct value");
   is(elem.selectionEnd, 5, "Correct value");
   is(elem.selectionDirection, "backward", "Correct value");
+
+  hide();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
+
+  show();
+  is(elem.selectionStart, 2, "Value unchanged");
+  is(elem.selectionEnd, 5, "Value unchanged");
+  is(elem.selectionDirection, "backward", "Value unchanged");
 }
 
 function name(elem) {

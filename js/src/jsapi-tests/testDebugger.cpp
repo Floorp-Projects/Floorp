@@ -103,3 +103,42 @@ BEGIN_TEST(testDebugger_getThisStrict)
     return true;
 }
 END_TEST(testDebugger_getThisStrict)
+
+bool called = false;
+
+static JSTrapStatus
+ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
+{
+    called = true;
+
+    JSObject *global = JS_GetGlobalForScopeChain(cx);
+
+    char text[] = "new Error()";
+    jsval _;
+    JS_EvaluateScript(cx, global, text, strlen(text), "", 0, &_);
+
+    return JSTRAP_CONTINUE;
+}
+
+BEGIN_TEST(testDebugger_throwHook)
+{
+    uint32 newopts = JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
+    uint32 oldopts = JS_SetOptions(cx, newopts);
+
+    JSDebugHooks hooks = { 0 };
+    hooks.throwHook = ThrowHook;
+    JSDebugHooks *old = JS_SetContextDebugHooks(cx, &hooks);
+    EXEC("function foo() { throw 3 };\n"
+         "for (var i = 0; i < 10; ++i) { \n"
+         "  var x = <tag></tag>;\n"
+         "  try {\n"
+         "    foo(); \n"
+         "  } catch(e) {}\n"
+         "}\n");
+    CHECK(called);
+
+    JS_SetContextDebugHooks(cx, old);
+    JS_SetOptions(cx, oldopts);
+    return true;
+}
+END_TEST(testDebugger_throwHook)

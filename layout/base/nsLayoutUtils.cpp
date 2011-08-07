@@ -2696,89 +2696,9 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
         tentHeight = nsPresContext::CSSPixelsToAppUnits(150);
       }
 
-      // Now apply min/max-width/height - CSS 2.1 sections 10.4 and 10.7:
-
-      if (minWidth > maxWidth)
-        maxWidth = minWidth;
-      if (minHeight > maxHeight)
-        maxHeight = minHeight;
-
-      nscoord heightAtMaxWidth, heightAtMinWidth,
-              widthAtMaxHeight, widthAtMinHeight;
-
-      if (tentWidth > 0) {
-        heightAtMaxWidth = MULDIV(maxWidth, tentHeight, tentWidth);
-        if (heightAtMaxWidth < minHeight)
-          heightAtMaxWidth = minHeight;
-        heightAtMinWidth = MULDIV(minWidth, tentHeight, tentWidth);
-        if (heightAtMinWidth > maxHeight)
-          heightAtMinWidth = maxHeight;
-      } else {
-        heightAtMaxWidth = tentHeight;
-        heightAtMinWidth = tentHeight;
-      }
-
-      if (tentHeight > 0) {
-        widthAtMaxHeight = MULDIV(maxHeight, tentWidth, tentHeight);
-        if (widthAtMaxHeight < minWidth)
-          widthAtMaxHeight = minWidth;
-        widthAtMinHeight = MULDIV(minHeight, tentWidth, tentHeight);
-        if (widthAtMinHeight > maxWidth)
-          widthAtMinHeight = maxWidth;
-      } else {
-        widthAtMaxHeight = tentWidth;
-        widthAtMinHeight = tentWidth;
-      }
-
-      // The table at http://www.w3.org/TR/CSS21/visudet.html#min-max-widths :
-
-      if (tentWidth > maxWidth) {
-        if (tentHeight > maxHeight) {
-          if (PRInt64(maxWidth) * PRInt64(tentHeight) <=
-              PRInt64(maxHeight) * PRInt64(tentWidth)) {
-            width = maxWidth;
-            height = heightAtMaxWidth;
-          } else {
-            width = widthAtMaxHeight;
-            height = maxHeight;
-          }
-        } else {
-          // This also covers "(w > max-width) and (h < min-height)" since in
-          // that case (max-width/w < 1), and with (h < min-height):
-          //   max(max-width * h/w, min-height) == min-height
-          width = maxWidth;
-          height = heightAtMaxWidth;
-        }
-      } else if (tentWidth < minWidth) {
-        if (tentHeight < minHeight) {
-          if (PRInt64(minWidth) * PRInt64(tentHeight) <=
-              PRInt64(minHeight) * PRInt64(tentWidth)) {
-            width = widthAtMinHeight;
-            height = minHeight;
-          } else {
-            width = minWidth;
-            height = heightAtMinWidth;
-          }
-        } else {
-          // This also covers "(w < min-width) and (h > max-height)" since in
-          // that case (min-width/w > 1), and with (h > max-height):
-          //   min(min-width * h/w, max-height) == max-height
-          width = minWidth;
-          height = heightAtMinWidth;
-        }
-      } else {
-        if (tentHeight > maxHeight) {
-          width = widthAtMaxHeight;
-          height = maxHeight;
-        } else if (tentHeight < minHeight) {
-          width = widthAtMinHeight;
-          height = minHeight;
-        } else {
-          width = tentWidth;
-          height = tentHeight;
-        }
-      }
-
+      return ComputeAutoSizeWithIntrinsicDimensions(minWidth, minHeight,
+                                                    maxWidth, maxHeight,
+                                                    tentWidth, tentHeight);
     } else {
 
       // 'auto' width, non-'auto' height
@@ -2813,6 +2733,99 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       width = NS_CSS_MINMAX(width, minWidth, maxWidth);
       height = NS_CSS_MINMAX(height, minHeight, maxHeight);
 
+    }
+  }
+
+  return nsSize(width, height);
+}
+
+nsSize
+nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord minHeight,
+                                                      nscoord maxWidth, nscoord maxHeight,
+                                                      nscoord tentWidth, nscoord tentHeight)
+{
+  // Now apply min/max-width/height - CSS 2.1 sections 10.4 and 10.7:
+
+  if (minWidth > maxWidth)
+    maxWidth = minWidth;
+  if (minHeight > maxHeight)
+    maxHeight = minHeight;
+
+  nscoord heightAtMaxWidth, heightAtMinWidth,
+          widthAtMaxHeight, widthAtMinHeight;
+
+  if (tentWidth > 0) {
+    heightAtMaxWidth = MULDIV(maxWidth, tentHeight, tentWidth);
+    if (heightAtMaxWidth < minHeight)
+      heightAtMaxWidth = minHeight;
+    heightAtMinWidth = MULDIV(minWidth, tentHeight, tentWidth);
+    if (heightAtMinWidth > maxHeight)
+      heightAtMinWidth = maxHeight;
+  } else {
+    heightAtMaxWidth = tentHeight;
+    heightAtMinWidth = tentHeight;
+  }
+
+  if (tentHeight > 0) {
+    widthAtMaxHeight = MULDIV(maxHeight, tentWidth, tentHeight);
+    if (widthAtMaxHeight < minWidth)
+      widthAtMaxHeight = minWidth;
+    widthAtMinHeight = MULDIV(minHeight, tentWidth, tentHeight);
+    if (widthAtMinHeight > maxWidth)
+      widthAtMinHeight = maxWidth;
+  } else {
+    widthAtMaxHeight = tentWidth;
+    widthAtMinHeight = tentWidth;
+  }
+
+  // The table at http://www.w3.org/TR/CSS21/visudet.html#min-max-widths :
+
+  nscoord width, height;
+
+  if (tentWidth > maxWidth) {
+    if (tentHeight > maxHeight) {
+      if (PRInt64(maxWidth) * PRInt64(tentHeight) <=
+          PRInt64(maxHeight) * PRInt64(tentWidth)) {
+        width = maxWidth;
+        height = heightAtMaxWidth;
+      } else {
+        width = widthAtMaxHeight;
+        height = maxHeight;
+      }
+    } else {
+      // This also covers "(w > max-width) and (h < min-height)" since in
+      // that case (max-width/w < 1), and with (h < min-height):
+      //   max(max-width * h/w, min-height) == min-height
+      width = maxWidth;
+      height = heightAtMaxWidth;
+    }
+  } else if (tentWidth < minWidth) {
+    if (tentHeight < minHeight) {
+      if (PRInt64(minWidth) * PRInt64(tentHeight) <=
+          PRInt64(minHeight) * PRInt64(tentWidth)) {
+        width = widthAtMinHeight;
+        height = minHeight;
+      } else {
+        width = minWidth;
+        height = heightAtMinWidth;
+      }
+    } else {
+      // This also covers "(w < min-width) and (h > max-height)" since in
+      // that case (min-width/w > 1), and with (h > max-height):
+      //   min(min-width * h/w, max-height) == max-height
+      width = minWidth;
+      height = heightAtMinWidth;
+    }
+  } else {
+    if (tentHeight > maxHeight) {
+      width = widthAtMaxHeight;
+      height = maxHeight;
+    } else if (tentHeight < minHeight) {
+      width = widthAtMinHeight;
+      height = minHeight;
+    } else {
+      width = tentWidth;
+      height = tentHeight;
     }
   }
 
