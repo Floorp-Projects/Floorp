@@ -61,7 +61,7 @@ interface nsIObjectOutputStream : nsIBinaryOutputStream
      * the primary inheritance chain ending in the root nsISupports, you must
      * call writeCompoundObject instead of this method.
      */
-    void writeObject(in nsISupports aObject, in PRBool aIsStrongRef);
+    void writeObject(in nsISupports aObject, in boolean aIsStrongRef);
 
     /**
      * Write an object referenced singly and strongly via its root nsISupports
@@ -80,7 +80,7 @@ interface nsIObjectOutputStream : nsIBinaryOutputStream
      */
     void writeCompoundObject(in nsISupports aObject,
                              in nsIIDRef aIID,
-                             in PRBool aIsStrongRef);
+                             in boolean aIsStrongRef);
 
     void writeID(in nsIDRef aID);
 

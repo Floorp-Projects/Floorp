@@ -158,7 +158,7 @@ interface nsIFocusManager : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG if aWindow is null
    */
-  nsIDOMElement getFocusedElementForWindow(in nsIDOMWindow aWindow, in PRBool aDeep,
+  nsIDOMElement getFocusedElementForWindow(in nsIDOMWindow aWindow, in boolean aDeep,
                                            out nsIDOMWindow aFocusedWindow);
 
   /**
@@ -249,7 +249,7 @@ interface nsIFocusManager : nsISupports
    * If aNeedsFocus is true, then focus events are expected to be fired on the
    * window if this window is in the focused window chain.
    */
-  [noscript] void windowShown(in nsIDOMWindow aWindow, in PRBool aNeedsFocus);
+  [noscript] void windowShown(in nsIDOMWindow aWindow, in boolean aNeedsFocus);
 
   /**
    * Called when a document in a window has been hidden or otherwise can no
