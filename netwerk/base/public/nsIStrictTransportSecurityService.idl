@@ -72,7 +72,7 @@ interface nsIStrictTransportSecurityService : nsISupports
      * Checks if the given security info is for an STS host with a broken
      * transport layer (certificate errors like invalid CN).
      */
-    PRBool shouldIgnoreStsHeader(in nsISupports aSecurityInfo);
+    boolean shouldIgnoreStsHeader(in nsISupports aSecurityInfo);
 
     /**
      * Checks whether or not the given hostname has STS state set.
@@ -81,7 +81,7 @@ interface nsIStrictTransportSecurityService : nsISupports
      *
      * @param aHost the hostname (punycode) to query for STS state.
      */
-    PRBool isStsHost(in string aHost);
+    boolean isStsHost(in string aHost);
 
     /**
      * Checks whether or not the URI's hostname has STS state set.
@@ -93,7 +93,7 @@ interface nsIStrictTransportSecurityService : nsISupports
      *
      * @param aURI the URI to query for STS state.
      */
-    PRBool isStsURI(in nsIURI aURI);
+    boolean isStsURI(in nsIURI aURI);
 
 };
 

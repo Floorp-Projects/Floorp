@@ -163,12 +163,12 @@ interface nsIPrintSettings : nsISupports
   /**
    * Set PrintOptions 
    */
-  void SetPrintOptions(in PRInt32 aType, in PRBool aTurnOnOff);
+  void SetPrintOptions(in PRInt32 aType, in boolean aTurnOnOff);
 
   /**
    * Get PrintOptions 
    */
-  PRBool GetPrintOptions(in PRInt32 aType);
+  boolean GetPrintOptions(in PRInt32 aType);
 
   /**
    * Set PrintOptions Bit field
