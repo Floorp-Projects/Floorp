@@ -354,21 +354,11 @@ MPhi::congruentTo(MDefinition *const &ins) const
     return MDefinition::congruentTo(ins);
 }
 
-
-
 bool
 MPhi::addInput(MDefinition *ins)
 {
-    for (size_t i = 0; i < inputs_.length(); i++) {
-        if (getOperand(i) == ins)
-            return true;
-    }
-
     ins->addUse(this, inputs_.length());
-
-    if (!inputs_.append(ins))
-        return false;
-    return true;
+    return inputs_.append(ins);
 }
 
 MReturn *
