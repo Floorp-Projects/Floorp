@@ -181,7 +181,7 @@ interface nsIDOMNSDataTransfer : nsISupports
    * user cancelled flag.
    */
   [noscript] nsIDOMDataTransfer clone(in PRUint32 aEventType,
-                                      in PRBool aUserCancelled);
+                                      in boolean aUserCancelled);
 
   /**
    * The number of items being dragged.
