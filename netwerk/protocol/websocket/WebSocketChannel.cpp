@@ -280,7 +280,7 @@ public:
     ~nsOpenConn() { MOZ_COUNT_DTOR(nsOpenConn); }
 
     nsCString mAddress;
-    nsRefPtr<WebSocketChannel> mChannel;
+    WebSocketChannel *mChannel;
   };
 
   ~nsWSAdmissionManager()
@@ -306,27 +306,85 @@ public:
     nsOpenConn *newdata = new nsOpenConn(aStr, ws);
     mData.AppendElement(newdata);
 
-    if (!found)
+    NS_ABORT_IF_FALSE (!ws->mOpenRunning && !ws->mOpenBlocked,
+                       "opening state");
+
+    if (!found) {
+      ws->mOpenRunning = 1;
       ws->BeginOpen();
+    }
+    else {
+      ws->mOpenBlocked = 1;
+    }
+
     return !found;
   }
 
-  PRBool Complete(nsCString &aStr)
+  PRBool Complete(WebSocketChannel *aChannel)
   {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-    PRInt32 index = IndexOf(aStr);
+    NS_ABORT_IF_FALSE(!aChannel->mOpenBlocked,
+                      "blocked, but complete nsOpenConn");
+
+    // It is possible this has already been canceled
+    if (!aChannel->mOpenRunning)
+      return PR_FALSE;
+
+    PRInt32 index = IndexOf(aChannel);
     NS_ABORT_IF_FALSE(index >= 0, "completed connection not in open list");
 
+    aChannel->mOpenRunning = 0;
     nsOpenConn *olddata = mData[index];
     mData.RemoveElementAt(index);
     delete olddata;
 
     // are there more of the same address pending dispatch?
-    index = IndexOf(aStr);
+    index = IndexOf(aChannel->mAddress);
     if (index >= 0) {
+      NS_ABORT_IF_FALSE((mData[index])->mChannel->mOpenBlocked,
+                        "transaction not blocked but in queue");
+      NS_ABORT_IF_FALSE(!(mData[index])->mChannel->mOpenRunning,
+                        "transaction already running");
+
+      (mData[index])->mChannel->mOpenBlocked = 0;
+      (mData[index])->mChannel->mOpenRunning = 1;
       (mData[index])->mChannel->BeginOpen();
       return PR_TRUE;
     }
+    return PR_FALSE;
+  }
+
+  PRBool Cancel(WebSocketChannel *aChannel)
+  {
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
+    PRInt32 index = IndexOf(aChannel);
+    NS_ABORT_IF_FALSE(index >= 0, "Cancelled connection not in open list");
+    NS_ABORT_IF_FALSE(aChannel->mOpenRunning ^ aChannel->mOpenBlocked,
+                      "cancel without running xor blocked");
+
+    bool wasRunning = aChannel->mOpenRunning;
+    aChannel->mOpenRunning = 0;
+    aChannel->mOpenBlocked = 0;
+    nsOpenConn *olddata = mData[index];
+    mData.RemoveElementAt(index);
+    delete olddata;
+
+    // if we are running we can run another one
+    if (wasRunning) {
+      index = IndexOf(aChannel->mAddress);
+      if (index >= 0) {
+        NS_ABORT_IF_FALSE((mData[index])->mChannel->mOpenBlocked,
+                        "transaction not blocked but in queue");
+        NS_ABORT_IF_FALSE(!(mData[index])->mChannel->mOpenRunning,
+                          "transaction already running");
+
+        (mData[index])->mChannel->mOpenBlocked = 0;
+        (mData[index])->mChannel->mOpenRunning = 1;
+        (mData[index])->mChannel->BeginOpen();
+        return PR_TRUE;
+      }
+    }
+
     return PR_FALSE;
   }
 
@@ -352,6 +410,14 @@ private:
   {
     for (PRUint32 i = 0; i < mData.Length(); i++)
       if (aStr == (mData[i])->mAddress)
+        return i;
+    return -1;
+  }
+
+  PRInt32 IndexOf(WebSocketChannel *aChannel)
+  {
+    for (PRUint32 i = 0; i < mData.Length(); i++)
+      if (aChannel == (mData[i])->mChannel)
         return i;
     return -1;
   }
@@ -506,6 +572,9 @@ WebSocketChannel::WebSocketChannel() :
   mAutoFollowRedirects(0),
   mReleaseOnTransmit(0),
   mTCPClosed(0),
+  mOpenBlocked(0),
+  mOpenStarted(0),
+  mOpenRunning(0),
   mMaxMessageSize(16000000),
   mStopOnClose(NS_OK),
   mServerCloseCode(CLOSE_ABNORMAL),
@@ -537,6 +606,7 @@ WebSocketChannel::~WebSocketChannel()
   // this stop is a nop if the normal connect/close is followed
   mStopped = 1;
   StopSession(NS_ERROR_UNEXPECTED);
+  NS_ABORT_IF_FALSE(!mOpenRunning && !mOpenBlocked, "op");
 
   moz_free(mBuffer);
   moz_free(mDynamicOutput);
@@ -618,6 +688,7 @@ WebSocketChannel::BeginOpen()
     AbortSession(NS_ERROR_CONNECTION_REFUSED);
     return rv;
   }
+  mOpenStarted = 1;
 
   mOpenTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv))
@@ -1327,6 +1398,17 @@ WebSocketChannel::StopSession(nsresult reason)
   NS_ABORT_IF_FALSE(mStopped,
                     "stopsession() has not transitioned through abort or close");
 
+  if (!mOpenStarted) {
+    // The HTTP channel information will never be used in this case
+    mChannel = nsnull;
+    mHttpChannel = nsnull;
+    mLoadGroup = nsnull;
+    mCallbacks = nsnull;
+  }
+
+  if (mOpenRunning || mOpenBlocked)
+    sWebSocketAdmissions->Cancel(this);
+
   if (mCloseTimer) {
     mCloseTimer->Cancel();
     mCloseTimer = nsnull;
@@ -1658,7 +1740,11 @@ WebSocketChannel::OnLookupComplete(nsICancelable *aRequest,
        this, aRequest, aRecord, aStatus));
 
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-  NS_ABORT_IF_FALSE(aRequest == mDNSRequest, "wrong dns request");
+  NS_ABORT_IF_FALSE(aRequest == mDNSRequest || mStopped,
+                    "wrong dns request");
+
+  if (mStopped)
+    return NS_OK;
 
   mDNSRequest = nsnull;
 
@@ -1769,9 +1855,11 @@ WebSocketChannel::AsyncOnChannelRedirect(
   // lookup chain for the new location - once that is complete and we have been
   // admitted, OnRedirectVerifyCallback(NS_OK) will be called out of BeginOpen()
 
-  sWebSocketAdmissions->Complete(mAddress);
+  sWebSocketAdmissions->Complete(this);
   mAddress.Truncate();
   mRedirectCallback = callback;
+
+  mOpenStarted = 0;
 
   rv = ApplyForAdmission();
   if (NS_FAILED(rv)) {
@@ -2136,7 +2224,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   // perhaps parallel, connection to the same host if one
   // is pending
 
-  if (sWebSocketAdmissions->Complete(mAddress))
+  if (sWebSocketAdmissions->Complete(this))
     LOG(("WebSocketChannel::OnStartRequest: Starting Pending Open\n"));
   else
     LOG(("WebSocketChannel::OnStartRequest: No More Pending Opens\n"));
