@@ -382,6 +382,8 @@ nsWebSocketEstablishedConnection::Close()
 
   if (mOwner->mReadyState == nsIMozWebSocket::CONNECTING) {
     mOwner->SetReadyState(nsIMozWebSocket::CLOSED);
+    mWebSocketChannel->Close(mOwner->mClientReasonCode,
+                             mOwner->mClientReason);
     Disconnect();
     return NS_OK;
   }
