@@ -312,8 +312,7 @@ public:
     if (!found) {
       ws->mOpenRunning = 1;
       ws->BeginOpen();
-    }
-    else {
+    } else {
       ws->mOpenBlocked = 1;
     }
 
@@ -339,19 +338,7 @@ public:
     delete olddata;
 
     // are there more of the same address pending dispatch?
-    index = IndexOf(aChannel->mAddress);
-    if (index >= 0) {
-      NS_ABORT_IF_FALSE((mData[index])->mChannel->mOpenBlocked,
-                        "transaction not blocked but in queue");
-      NS_ABORT_IF_FALSE(!(mData[index])->mChannel->mOpenRunning,
-                        "transaction already running");
-
-      (mData[index])->mChannel->mOpenBlocked = 0;
-      (mData[index])->mChannel->mOpenRunning = 1;
-      (mData[index])->mChannel->BeginOpen();
-      return PR_TRUE;
-    }
-    return PR_FALSE;
+    return ConnectNext(aChannel->mAddress);
   }
 
   PRBool Cancel(WebSocketChannel *aChannel)
@@ -370,19 +357,26 @@ public:
     delete olddata;
 
     // if we are running we can run another one
-    if (wasRunning) {
-      index = IndexOf(aChannel->mAddress);
-      if (index >= 0) {
-        NS_ABORT_IF_FALSE((mData[index])->mChannel->mOpenBlocked,
-                        "transaction not blocked but in queue");
-        NS_ABORT_IF_FALSE(!(mData[index])->mChannel->mOpenRunning,
-                          "transaction already running");
+    if (wasRunning)
+      return ConnectNext(aChannel->mAddress);
 
-        (mData[index])->mChannel->mOpenBlocked = 0;
-        (mData[index])->mChannel->mOpenRunning = 1;
-        (mData[index])->mChannel->BeginOpen();
-        return PR_TRUE;
-      }
+    return PR_FALSE;
+  }
+
+  PRBool ConnectNext(nsCString &hostName)
+  {
+    PRInt32 index = IndexOf(hostName);
+    if (index >= 0) {
+      WebSocketChannel *chan = mData[index]->mChannel;
+
+      NS_ABORT_IF_FALSE(chan->mOpenBlocked,
+                        "transaction not blocked but in queue");
+      NS_ABORT_IF_FALSE(!chan->mOpenRunning, "transaction already running");
+
+      chan->mOpenBlocked = 0;
+      chan->mOpenRunning = 1;
+      chan->BeginOpen();
+      return PR_TRUE;
     }
 
     return PR_FALSE;
@@ -573,8 +567,8 @@ WebSocketChannel::WebSocketChannel() :
   mReleaseOnTransmit(0),
   mTCPClosed(0),
   mOpenBlocked(0),
-  mOpenStarted(0),
   mOpenRunning(0),
+  mChannelWasOpened(0),
   mMaxMessageSize(16000000),
   mStopOnClose(NS_OK),
   mServerCloseCode(CLOSE_ABNORMAL),
@@ -688,7 +682,7 @@ WebSocketChannel::BeginOpen()
     AbortSession(NS_ERROR_CONNECTION_REFUSED);
     return rv;
   }
-  mOpenStarted = 1;
+  mChannelWasOpened = 1;
 
   mOpenTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv))
@@ -1218,8 +1212,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
                 mScriptCloseReason.BeginReading(),
                 mScriptCloseReason.Length());
       }
-    }
-    else {
+    } else {
       *((PRUint16 *)payload) = PR_htons(ResultToCloseCode(mStopOnClose));
     }
 
@@ -1398,7 +1391,7 @@ WebSocketChannel::StopSession(nsresult reason)
   NS_ABORT_IF_FALSE(mStopped,
                     "stopsession() has not transitioned through abort or close");
 
-  if (!mOpenStarted) {
+  if (!mChannelWasOpened) {
     // The HTTP channel information will never be used in this case
     mChannel = nsnull;
     mHttpChannel = nsnull;
@@ -1859,7 +1852,7 @@ WebSocketChannel::AsyncOnChannelRedirect(
   mAddress.Truncate();
   mRedirectCallback = callback;
 
-  mOpenStarted = 0;
+  mChannelWasOpened = 0;
 
   rv = ApplyForAdmission();
   if (NS_FAILED(rv)) {
