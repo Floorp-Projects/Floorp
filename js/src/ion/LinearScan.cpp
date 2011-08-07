@@ -58,12 +58,15 @@ LiveInterval::addRange(CodePosition from, CodePosition to)
     Range *i;
     // Find the location to insert the new range
     for (i = ranges_.end() - 1; i >= ranges_.begin(); i--) {
-        if (newRange.from <= i->from)
+        if (newRange.from <= i->to) {
+            if (i->from < newRange.from)
+                newRange.from = i->from;
             break;
+        }
     }
     // Perform coalescing on overlapping ranges
     for (; i >= ranges_.begin(); i--) {
-        if (newRange.to < i->from)
+        if (newRange.to < i->from.previous())
             break;
         if (newRange.to < i->to)
             newRange.to = i->to;
@@ -398,8 +401,8 @@ LinearScanAllocator::buildLivenessInfo()
         // Variables are assumed alive for the entire block, a define shortens
         // the interval to the point of definition.
         for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
-            vregs[*i].getInterval(0)->addRange(outputOf(block->firstId()),
-                                               inputOf(block->lastId() + 1));
+            vregs[*i].getInterval(0)->addRange(inputOf(block->firstId()),
+                                               outputOf(block->lastId()));
         }
 
         // Shorten the front end of live intervals for live variables to their
@@ -437,10 +440,10 @@ LinearScanAllocator::buildLivenessInfo()
                     vregs[use].addUse(LOperand(use, *ins));
 
                     if (ins->id() == block->firstId()) {
-                        vregs[use].getInterval(0)->addRange(inputOf(*ins), inputOf(*ins));
+                        vregs[use].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
                     } else {
-                        vregs[use].getInterval(0)->addRange(outputOf(block->firstId()),
-                                                            inputOf(*ins));
+                        vregs[use].getInterval(0)->addRange(inputOf(block->firstId()),
+                                                            outputOf(*ins));
                     }
                     live->insert(use->virtualRegister());
                 }
@@ -466,11 +469,12 @@ LinearScanAllocator::buildLivenessInfo()
         if (mblock->isLoopHeader()) {
             MBasicBlock *backedge = mblock->backedge();
             for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
-                vregs[*i].getInterval(0)->addRange(outputOf(block->firstId()),
+                vregs[*i].getInterval(0)->addRange(inputOf(block->firstId()),
                                                    outputOf(backedge->lir()->lastId()));
             }
         }
 
+        JS_ASSERT_IF(!mblock->numPredecessors(), live->empty());
         liveIn[mblock->id()] = live;
     }
 
@@ -707,10 +711,10 @@ LinearScanAllocator::resolveControlFlow()
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         LBlock *successor = graph.getBlock(i);
         MBasicBlock *mSuccessor = successor->mir();
-        if (mSuccessor->numPredecessors() <= 1)
+        if (mSuccessor->numPredecessors() < 1)
             continue;
 
-        IonSpew(IonSpew_LSRA, " Resolving control flow into block %d", i);
+        IonSpew(IonSpew_LSRA, " Resolving control flow into block %d", successor->mir()->id());
 
         // We want to recover the state of liveIn prior to the removal of phi-
         // defined instructions. So, we (destructively) add all phis back in.
@@ -751,7 +755,7 @@ LinearScanAllocator::resolveControlFlow()
                 // additional piece of control flow. These critical edges
                 // should have been split in an earlier pass so that this
                 // pass does not have to deal with them.
-                JS_ASSERT(mPredecessor->numSuccessors() == 1);
+                JS_ASSERT_IF(phi, mPredecessor->numSuccessors() == 1);
 
                 // Find the interval at the "from" half of the edge
                 if (phi) {

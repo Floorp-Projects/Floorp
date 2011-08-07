@@ -87,6 +87,9 @@ class BitSet : private TempObject
     // O(1): Check if this set contains the given value.
     bool contains(unsigned int value) const;
 
+    // O(max): Check if this set contains any value.
+    bool empty() const;
+
     // O(1): Insert the given value into this set.
     void insert(unsigned int value);
 

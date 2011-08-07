@@ -78,6 +78,17 @@ BitSet::contains(unsigned int value) const
     return bits_[wordForValue(value)] & bitForValue(value);
 }
 
+bool
+BitSet::empty() const
+{
+    JS_ASSERT(bits_);
+    for (unsigned int i = 0; i < numWords(); i++) {
+        if (bits_[i])
+            return false;
+    }
+    return true;
+}
+
 void
 BitSet::insert(unsigned int value)
 {
