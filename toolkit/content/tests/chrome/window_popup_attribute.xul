@@ -13,8 +13,8 @@
 window.opener.SimpleTest.waitForFocus(runTests, window);
 </script>
 
-<hbox style="margin-left: 325px; margin-top: 325px;">
-  <label id="trigger" popup="thepopup" value="Popup"/>
+<hbox style="margin-left: 200px; margin-top: 270px;">
+  <label id="trigger" popup="thepopup" value="Popup" height="60"/>
 </hbox>
 <!-- this frame is used to check that document.popupNode
      is inaccessible from different sources -->

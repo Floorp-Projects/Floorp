@@ -66,3 +66,4 @@ fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033
 == ctm-1.html ctm-1-ref.html
 
 fails-if(cocoaWidget) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
+== 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html

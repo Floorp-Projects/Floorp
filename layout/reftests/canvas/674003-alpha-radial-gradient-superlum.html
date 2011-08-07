@@ -1,0 +1,36 @@
+<body bgcolor="orange">
+    <canvas width="300" height="300" id="testcase-canvas" style="display:none"></canvas>
+    <canvas width="300" height="300" id="testcase-canvas-dest"></canvas>
+  <script>
+    const kShadow = "rgba(00%, 0%, 0%, 1)";
+    const kTransparent = "rgba(0%, 100%, 100%, 0.5)";
+
+    var cx, g;
+
+    cx = document.getElementById('testcase-canvas').getContext('2d');
+    
+    cx.fillStyle = kShadow;
+    cx.fillRect(100, 50, 150, 50);
+
+    g = cx.createLinearGradient(0, 50, 0, 0);
+    g.addColorStop(0, kShadow);
+    g.addColorStop(0.2, kTransparent);
+    g.addColorStop(1, kTransparent);
+    cx.fillStyle = g;
+    cx.fillRect(100, 0, 150, 50);
+
+    g = cx.createRadialGradient(100, 100, 50, 100, 100, 100);
+    g.addColorStop(0, kShadow);
+    g.addColorStop(0.2, kTransparent);
+    g.addColorStop(1, kTransparent);
+    cx.fillStyle = g;
+    cx.beginPath();
+    cx.arc(100, 100, 100, Math.PI * 0.5, Math.PI * 1.5);
+    cx.fill();
+    
+    cx2 = document.getElementById('testcase-canvas-dest').getContext('2d');
+    // draw a chunk of the gradients from above onto testcase-canvas-dest
+    cx2.drawImage(document.getElementById('testcase-canvas'),45,20, 100,20 ,0,0, 100,20);
+  </script>
+
+</window>
