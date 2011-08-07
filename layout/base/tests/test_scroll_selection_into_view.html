@@ -50,7 +50,7 @@ var FOCUS = 1;
 
 function testCollapsed(id, vPercent, startAt, expected) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var selection = window.getSelection().QueryInterface(Components.interfaces.nsISelection2);
+  var selection = window.getSelection().QueryInterface(Components.interfaces.nsISelectionPrivate);
 
   var c = document.getElementById("c" + id);
   var target = document.getElementById("target" + id);
