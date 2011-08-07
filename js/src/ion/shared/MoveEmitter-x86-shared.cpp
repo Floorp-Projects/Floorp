@@ -267,8 +267,8 @@ MoveEmitterX86::emit(const Move &move)
             return;
         }
 
+        breakCycle(from, to, move.kind());
         inCycle_ = true;
-        completeCycle(from, to, move.kind());
     }
     
     if (move.kind() == Move::DOUBLE)
