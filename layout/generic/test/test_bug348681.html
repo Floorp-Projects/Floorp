@@ -332,11 +332,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        selection.addRange(range8);
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 8, 10);
-       var sel2 = selection.QueryInterface(Components.interfaces.nsISelection2);
-       ok(sel2, "Test 17 - QIed to instance of nsISelection2 interface");
+       var privSel = selection.QueryInterface(Components.interfaces.nsISelectionPrivate);
+       ok(privSel, "Test 17 - QIed to instance of nsISelection2 interface");
        var numResults = {};
-       var results = sel2.GetRangesForInterval(testNode, 8, testNode, 10,
-                                               false, numResults);
+       var results = privSel.GetRangesForInterval(testNode, 8, testNode, 10,
+                                                  false, numResults);
        intervalChecker.check(17, results);
 
        // Test 18. Check GetRangesForInterval returns correct results.
@@ -344,16 +344,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.addExpected(testNode, 6, 8);
        intervalChecker.addExpected(testNode, 10, 12);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 8, testNode, 10,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 8, testNode, 10,
+                                              true, numResults);
        intervalChecker.check(18, results);
 
        // Test 19. Check GetRangesForInterval returns correct results.
        // Part 3 - Test interval not selected.
        intervalChecker.reset();
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 14, testNode, 16,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 14, testNode, 16,
+                                              true, numResults);
        intervalChecker.check(19, results);
 
        // Test 20. Check GetRangesForInterval returns correct results.
@@ -364,8 +364,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 0, 10);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 5, testNode, 7,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 5, testNode, 7,
+                                              true, numResults);
        intervalChecker.check(20, results);
 
        // Test 21. Check GetRangesForInterval returns correct results.
@@ -376,8 +376,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 6, 8);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 5, testNode, 9,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 5, testNode, 9,
+                                              true, numResults);
        intervalChecker.check(21, results);
 
        // Test 22. Check GetRangesForInterval returns correct results.
@@ -388,8 +388,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 8, 10);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 6, testNode, 8,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 6, testNode, 8,
+                                              true, numResults);
        intervalChecker.check(22, results);
 
        // Test 23. Check GetRangesForInterval returns correct results.
@@ -397,8 +397,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        //          the range array, and adjacencies not permitted.
        intervalChecker.reset();
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 6, testNode, 8,
-                                           false, numResults);
+       results = privSel.GetRangesForInterval(testNode, 6, testNode, 8,
+                                              false, numResults);
        intervalChecker.check(23, results);
 
        // Test 24. Check GetRangesForInterval returns correct results.
@@ -406,8 +406,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        //          and adjacencies permitted.
        intervalChecker.addExpected(testNode, 8, 10);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 10, testNode, 12,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 10, testNode, 12,
+                                              true, numResults);
        intervalChecker.check(24, results);
 
        // Test 25. Check GetRangesForInterval returns correct results.
@@ -415,8 +415,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        //          and adjacencies not permitted.
        intervalChecker.reset();
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 10, testNode, 12,
-                                           false, numResults);
+       results = privSel.GetRangesForInterval(testNode, 10, testNode, 12,
+                                              false, numResults);
        intervalChecker.check(25, results);
 
        // Test 26.  Check GetRangesForInterval returns correct results.
@@ -426,16 +426,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        selection.addRange(range4);
        intervalChecker.addExpected(testNode, 11, 11);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 11, testNode, 11,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              true, numResults);
        intervalChecker.check(26, results);
 
        // Test 27.  Check GetRangesForInterval returns correct results.
        // Part 11 - Test interval is equal to a collapsed range at position 0
        //           in the range array, and adjacencies not permitted.
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 11, testNode, 11,
-                                           false, numResults);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              false, numResults);
        intervalChecker.check(27, results);
 
        // Test 28.  Check GetRangesForInterval returns correct results.
@@ -445,16 +445,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        selection.addRange(range2);
        selection.addRange(range4);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 11, testNode, 11,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              true, numResults);
        intervalChecker.check(28, results);
 
        // Test 29.  Check GetRangesForInterval returns correct results.
        // Part 13 - Test interval is equal to a collapsed range at end of the
        //           range array, and adjacencies not permitted.
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 11, testNode, 11,
-                                           false, numResults);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 11,
+                                              false, numResults);
        intervalChecker.check(29, results);
 
        // Test 30.  Check GetRangesForInterval returns correct results.
@@ -465,8 +465,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 6, 8);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 7, testNode, 7,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 7, testNode, 7,
+                                              true, numResults);
        intervalChecker.check(30, results);
 
        // Test 31.  Check GetRangesForInterval returns correct results.
@@ -481,8 +481,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 8, 8);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 8, testNode, 8,
-                                           false, numResults);
+       results = privSel.GetRangesForInterval(testNode, 8, testNode, 8,
+                                              false, numResults);
        intervalChecker.check(31, results);
 
        // Test 32.  Check GetRangesForInterval returns correct results.
@@ -490,16 +490,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        //           at either endpoint of the selection's range array,
        //           adjacencies allowed.
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 8, testNode, 8,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 8, testNode, 8,
+                                              true, numResults);
        intervalChecker.check(32, results);
 
        // Test 33.  Check GetRangesForInterval returns correct results.
        // Part 17 - Test interval contains a collapsed range which is not
        //           stored at either endpoint of the selection's range array.
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 7, testNode, 9,
-                                           false, numResults);
+       results = privSel.GetRangesForInterval(testNode, 7, testNode, 9,
+                                              false, numResults);
        intervalChecker.check(33, results);
 
        // Test 34.  Check GetRangesForInterval returns correct results.
@@ -507,8 +507,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 5, 7);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 2, testNode, 6,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 2, testNode, 6,
+                                              true, numResults);
        intervalChecker.check(34, results);
 
        // Test 35.  Check GetRangesForInterval returns correct results.
@@ -518,8 +518,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 10, 12);
        numResults = {};
-       results = sel2.GetRangesForInterval(testNode, 11, testNode, 13,
-                                           true, numResults);
+       results = privSel.GetRangesForInterval(testNode, 11, testNode, 13,
+                                              true, numResults);
        intervalChecker.check(35, results);
 
        SimpleTest.finish();
