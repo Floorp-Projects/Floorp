@@ -654,6 +654,7 @@ GreedyAllocator::allocateRegistersInBlock(LBlock *block)
         if (!prepareBackedge(block))
             return false;
     }
+    blockInfo(block)->out = state;
 
     for (; ri != block->instructions().rend(); ri++) {
         LInstruction *ins = *ri;
@@ -765,6 +766,37 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
 {
     BlockInfo *info = blockInfo(backedge);
 
+    // Handle loop-carried carried registers, making sure anything live at the
+    // backedge is also properly held live at the top of the loop.
+    Mover carried;
+    for (AnyRegisterIterator iter; iter.more(); iter++) {
+        AnyRegister reg = *iter;
+        VirtualRegister *inVr = state[reg];
+        if (!inVr)
+            continue;
+
+        VirtualRegister *outVr = info->out[reg];
+        if (inVr == outVr)
+            continue;
+
+        // A register is live coming into the loop, but has a different exit
+        // assignment. For this to work, we either need to insert a spill or a
+        // move. This may insert unnecessary moves, since it cannot tell if a
+        // register was clobbered in the loop. It only knows if the allocation
+        // states at the loop edges are different. Note that for the same
+        // reasons, we cannot assume a register allocated here will be
+        // preserved across the loop.
+        if (!allocateStack(inVr))
+            return false;
+        if (!carried.move(inVr->backingStack(), reg))
+            return false;
+    }
+    if (carried.moves) {
+        LInstruction *ins = *header->instructions().begin();
+        header->insertBefore(ins, carried.moves);
+    }
+
+    // Handle loop phis.
     for (size_t i = 0; i < header->numPhis(); i++) {
         LPhi *phi = header->getPhi(i);
         LDefinition *def = phi->getDef(0);
