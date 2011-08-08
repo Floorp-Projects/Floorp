@@ -122,21 +122,32 @@ class nsNativeTheme : public nsITimerCallback
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
   }
   
+  PRBool IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset);
+  
+  PRBool IsBeforeSelectedTab(nsIFrame* aFrame) {
+    return IsNextToSelectedTab(aFrame, -1);
+  }
+  
+  PRBool IsAfterSelectedTab(nsIFrame* aFrame) {
+    return IsNextToSelectedTab(aFrame, 1);
+  }
+
+  PRBool IsLeftToSelectedTab(nsIFrame* aFrame) {
+    return IsFrameRTL(aFrame) ? IsAfterSelectedTab(aFrame) : IsBeforeSelectedTab(aFrame);
+  }
+
+  PRBool IsRightToSelectedTab(nsIFrame* aFrame) {
+    return IsFrameRTL(aFrame) ? IsBeforeSelectedTab(aFrame) : IsAfterSelectedTab(aFrame);
+  }
+
   // button / toolbarbutton:
   PRBool IsCheckedButton(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
   }
 
-  PRBool IsSelectedButton(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::checked) ||
-           CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
-  }
-
   PRBool IsOpenButton(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
   }
-
-  PRBool IsPressedButton(nsIFrame* aFrame);
 
   // treeheadercell:
   TreeSortDirection GetTreeSortDirection(nsIFrame* aFrame);
@@ -145,6 +156,7 @@ class nsNativeTheme : public nsITimerCallback
   // tab:
   PRBool IsBottomTab(nsIFrame* aFrame);
   PRBool IsFirstTab(nsIFrame* aFrame);
+  PRBool IsLastTab(nsIFrame* aFrame);
   
   PRBool IsHorizontal(nsIFrame* aFrame);
 
@@ -174,9 +186,6 @@ class nsNativeTheme : public nsITimerCallback
 
   PRBool QueueAnimatedContentForRefresh(nsIContent* aContent,
                                         PRUint32 aMinimumFrameRate);
-
-  nsIFrame* GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
-                                                      PRBool aNextSibling);
 
  private:
   PRUint32 mAnimatedContentTimeout;
