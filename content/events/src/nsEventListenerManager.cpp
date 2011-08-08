@@ -41,17 +41,6 @@
 #include "nsEventListenerManager.h"
 #include "nsCaret.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMContextMenuListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsIDOMLoadListener.h"
-#include "nsIDOMTextListener.h"
-#include "nsIDOMCompositionListener.h"
-#include "nsIDOMUIListener.h"
 #include "nsITextControlFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPIDOMWindow.h"
@@ -187,66 +176,6 @@ struct EventTypeData
 
 #define HANDLER(x) reinterpret_cast<GenericHandler>(x)
 
-static const EventDispatchData sMouseEvents[] = {
-  { NS_MOUSE_BUTTON_DOWN,        HANDLER(&nsIDOMMouseListener::MouseDown)     },
-  { NS_MOUSE_BUTTON_UP,          HANDLER(&nsIDOMMouseListener::MouseUp)       },
-  { NS_MOUSE_CLICK,              HANDLER(&nsIDOMMouseListener::MouseClick)    },
-  { NS_MOUSE_DOUBLECLICK,        HANDLER(&nsIDOMMouseListener::MouseDblClick) },
-  { NS_MOUSE_ENTER_SYNTH,        HANDLER(&nsIDOMMouseListener::MouseOver)     },
-  { NS_MOUSE_EXIT_SYNTH,         HANDLER(&nsIDOMMouseListener::MouseOut)      }
-};
-
-static const EventDispatchData sMouseMotionEvents[] = {
-  { NS_MOUSE_MOVE, HANDLER(&nsIDOMMouseMotionListener::MouseMove) }
-};
-
-static const EventDispatchData sContextMenuEvents[] = {
-  { NS_CONTEXTMENU, HANDLER(&nsIDOMContextMenuListener::ContextMenu) }
-};
-
-static const EventDispatchData sCompositionEvents[] = {
-  { NS_COMPOSITION_START,
-    HANDLER(&nsIDOMCompositionListener::HandleStartComposition)  },
-  { NS_COMPOSITION_END,
-    HANDLER(&nsIDOMCompositionListener::HandleEndComposition)    }
-};
-
-static const EventDispatchData sTextEvents[] = {
-  { NS_TEXT_TEXT, HANDLER(&nsIDOMTextListener::HandleText) }
-};
-
-static const EventDispatchData sKeyEvents[] = {
-  { NS_KEY_UP,    HANDLER(&nsIDOMKeyListener::KeyUp)    },
-  { NS_KEY_DOWN,  HANDLER(&nsIDOMKeyListener::KeyDown)  },
-  { NS_KEY_PRESS, HANDLER(&nsIDOMKeyListener::KeyPress) }
-};
-
-static const EventDispatchData sFocusEvents[] = {
-  { NS_FOCUS_CONTENT, HANDLER(&nsIDOMFocusListener::Focus) },
-  { NS_BLUR_CONTENT,  HANDLER(&nsIDOMFocusListener::Blur)  }
-};
-
-static const EventDispatchData sFormEvents[] = {
-  { NS_FORM_SUBMIT,   HANDLER(&nsIDOMFormListener::Submit) },
-  { NS_FORM_RESET,    HANDLER(&nsIDOMFormListener::Reset)  },
-  { NS_FORM_CHANGE,   HANDLER(&nsIDOMFormListener::Change) },
-  { NS_FORM_SELECTED, HANDLER(&nsIDOMFormListener::Select) },
-  { NS_FORM_INPUT,    HANDLER(&nsIDOMFormListener::Input)  }
-};
-
-static const EventDispatchData sLoadEvents[] = {
-  { NS_LOAD,               HANDLER(&nsIDOMLoadListener::Load)         },
-  { NS_PAGE_UNLOAD,        HANDLER(&nsIDOMLoadListener::Unload)       },
-  { NS_LOAD_ERROR,         HANDLER(&nsIDOMLoadListener::Error)        },
-  { NS_BEFORE_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::BeforeUnload) }
-};
-
-static const EventDispatchData sUIEvents[] = {
-  { NS_UI_ACTIVATE, HANDLER(&nsIDOMUIListener::Activate) },
-  { NS_UI_FOCUSIN,  HANDLER(&nsIDOMUIListener::FocusIn)  },
-  { NS_UI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut) }
-};
-
 #define IMPL_EVENTTYPEDATA(type) \
 { \
   s##type##Events, \
@@ -257,16 +186,6 @@ static const EventDispatchData sUIEvents[] = {
 // IMPORTANT: indices match up with eEventArrayType_ enum values
 
 static const EventTypeData sEventTypes[] = {
-  IMPL_EVENTTYPEDATA(Mouse),
-  IMPL_EVENTTYPEDATA(MouseMotion),
-  IMPL_EVENTTYPEDATA(ContextMenu),
-  IMPL_EVENTTYPEDATA(Key),
-  IMPL_EVENTTYPEDATA(Load),
-  IMPL_EVENTTYPEDATA(Focus),
-  IMPL_EVENTTYPEDATA(Form),
-  IMPL_EVENTTYPEDATA(Text),
-  IMPL_EVENTTYPEDATA(Composition),
-  IMPL_EVENTTYPEDATA(UI)
 };
 
 PRUint32 nsEventListenerManager::sCreatedCount = 0;
@@ -393,23 +312,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
 
   nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = aListener;
 
-  if (!aTypeData) {
-    // If we don't have type data, we can try to QI listener to the right
-    // interface and set mTypeData only if QI succeeds. This way we can save
-    // calls to DispatchToInterface (in HandleEvent) in those cases when QI
-    // would fail.
-    // @see also DispatchToInterface()
-    const EventTypeData* td = GetTypeDataForEventName(aTypeAtom);
-    if (td && td->iid) {
-      nsIDOMEventListener* ifaceListener = nsnull;
-      aListener->QueryInterface(*(td->iid), (void**) &ifaceListener);
-      if (ifaceListener) {
-        aTypeData = td;
-        NS_RELEASE(ifaceListener);
-      }
-    }
-  }
-
   nsListenerStruct* ls;
   PRUint32 count = mListeners.Length();
   for (PRUint32 i = 0; i < count; i++) {
@@ -516,24 +418,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
       break;
     }
   }
-}
-
-nsresult
-nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener, 
-                                              const nsIID& aIID,
-                                              PRInt32 aFlags)
-{
-  return AddEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
-                          GetTypeDataForIID(aIID), aFlags);
-}
-
-void
-nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener, 
-                                                 const nsIID& aIID,
-                                                 PRInt32 aFlags)
-{
-  RemoveEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
-                      GetTypeDataForIID(aIID), aFlags);
 }
 
 PRBool
@@ -1377,9 +1261,7 @@ nsEventListenerManager::HasUnloadListeners()
   for (PRUint32 i = 0; i < count; ++i) {
     nsListenerStruct* ls = &mListeners.ElementAt(i);
     if (ls->mEventType == NS_PAGE_UNLOAD ||
-        ls->mEventType == NS_BEFORE_PAGE_UNLOAD ||
-        (ls->mTypeData && ls->mTypeData->iid &&
-         ls->mTypeData->iid->Equals(NS_GET_IID(nsIDOMLoadListener)))) {
+        ls->mEventType == NS_BEFORE_PAGE_UNLOAD) {
       return PR_TRUE;
     }
   }
