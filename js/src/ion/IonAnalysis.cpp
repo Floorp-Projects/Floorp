@@ -341,6 +341,40 @@ TypeAnalyzer::determineSpecializations()
     } while (!worklist_.empty());
 }
 
+static inline bool
+ShouldSpecializeInput(MDefinition *box, MNode *use, MUnbox *unbox)
+{
+    // If the node is a snapshot, always replace the input to avoid carrying
+    // around a wider type.
+    if (use->isSnapshot()) {
+        MSnapshot *snapshot = use->toSnapshot();
+            
+        // If this snapshot is the definition's snapshot (in case it is
+        // effectful), we *cannot* replace its use! The snapshot comes in
+        // between the definition and the unbox.
+        MSnapshot *defSnapshot;
+        if (box->isInstruction())
+            defSnapshot = box->toInstruction()->snapshot();
+        else if (box->isPhi())
+            defSnapshot = box->block()->entrySnapshot();
+        return (defSnapshot != snapshot);
+    }
+
+    MDefinition *def = use->toDefinition();
+
+    // Phis do not have type policies, but if they are specialized need
+    // specialized inputs.
+    if (def->isPhi())
+        return def->type() != MIRType_Value;
+
+    // Otherwise, only replace nodes that have a type policy. Otherwise, we
+    // would replace an unbox into its own input.
+    if (def->typePolicy())
+        return true;
+
+    return false;
+}
+
 void
 TypeAnalyzer::adjustOutput(MDefinition *def)
 {
@@ -371,21 +405,7 @@ TypeAnalyzer::adjustOutput(MDefinition *def)
     JS_ASSERT(def->usesBegin()->node() == unbox);
 
     for (MUseIterator use(def->usesBegin()); use != def->usesEnd(); ) {
-        if (use->node()->isSnapshot()) {
-            MSnapshot *snapshot = use->node()->toSnapshot();
-            
-            // If this snapshot is the definition's snapshot (in case it is
-            // effectful), we *cannot* replace its use! The snapshot comes in
-            // between the definition and the unbox.
-            if (def->isInstruction() && def->toInstruction()->snapshot() == snapshot) {
-                use++;
-                continue;
-            }
-        }
-
-        // Only replace nodes that have a type policy. Otherwise, we would
-        // replace an unbox into its own input.
-        if (use->node()->typePolicy())
+        if (ShouldSpecializeInput(def, use->node(), unbox))
             use = use->node()->replaceOperand(use, unbox);
         else
             use++;
