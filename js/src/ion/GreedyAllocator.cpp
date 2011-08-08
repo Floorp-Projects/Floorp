@@ -659,7 +659,7 @@ GreedyAllocator::mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock
     //
     // In both cases, we emit a load or move on the right-hand side to ensure
     // that the definition is in the expected register.
-    if (!vright->hasRegister() && allocatableRegs().empty(vright->isDouble())) {
+    if (!vright->hasRegister() && !allocatableRegs().empty(vright->isDouble())) {
         AnyRegister reg;
         if (!allocate(vright->type(), DISALLOW, &reg))
             return false;
@@ -728,7 +728,7 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
         if (vr->hasStackSlot() && !info->phis.move(*a, vr->backingStack()))
             return false;
 
-        if (vr->hasRegister() && vr->reg() != a->toRegister()) {
+        if (vr->hasRegister() && (!a->isRegister() || vr->reg() != a->toRegister())) {
             if (!info->phis.move(*a, vr->reg()))
                 return false;
         }
@@ -882,6 +882,13 @@ GreedyAllocator::allocateRegisters()
         if (!allocateRegistersInBlock(block))
             return false;
 
+        // If this is a loop header, insert moves at the backedge from phi
+        // inputs to phi outputs.
+        if (block->mir()->isLoopHeader()) {
+            if (!mergeBackedgeState(block, block->mir()->backedge()->lir()))
+                return false;
+        }
+
         // Kill phis.
         for (size_t i = 0; i < block->numPhis(); i++) {
             LPhi *phi = block->getPhi(i);
@@ -904,13 +911,6 @@ GreedyAllocator::allocateRegisters()
                 JS_ASSERT(vr->reg() == reg);
                 vr->unsetRegister();
             }
-        }
-
-        // If this is a loop header, insert moves at the backedge from phi
-        // inputs to phi outputs.
-        if (block->mir()->isLoopHeader()) {
-            if (!mergeBackedgeState(block, block->mir()->backedge()->lir()))
-                return false;
         }
     }
     return true;
