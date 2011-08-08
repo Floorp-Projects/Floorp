@@ -52,11 +52,19 @@
  * enclosed in the FORWARDED_EVENT macro.  If this macro is not
  * defined, it will be defined to be equivalent to EVENT.
  *
+ * Event names that are exposed as IDL attributes on Windows only
+ * should be enclosed in the WINDOW_ONLY_EVENT macro.  If this macro
+ * is not defined, it will be defined to the empty string.
+ *
  * Event names that are exposed as content and IDL attributes on
  * <body> and <frameset>, which forward them to the Window, and are
  * exposed as IDL attributes on the Window should be enclosed in the
  * WINDOW_EVENT macro.  If this macro is not defined, it will be
- * defined to the empty string.
+ * defined to be equivalent to WINDOW_ONLY_EVENT.
+ *
+ * Touch-specific event names should be enclosed in TOUCH_EVENT.  They
+ * are otherwise equivalent to those enclosed in EVENT.  If
+ * TOUCH_EVENT is not defined, it will be defined to the empty string.
  */
 
 #ifdef DEFINED_FORWARDED_EVENT
@@ -68,14 +76,32 @@
 #define DEFINED_FORWARDED_EVENT
 #endif /* FORWARDED_EVENT */
 
+#ifdef DEFINED_WINDOW_ONLY_EVENT
+#error "Don't define DEFINED_WINDOW_ONLY_EVENT"
+#endif /* DEFINED_WINDOW_ONLY_EVENT */
+
+#ifndef WINDOW_ONLY_EVENT
+#define WINDOW_ONLY_EVENT(_name)
+#define DEFINED_WINDOW_ONLY_EVENT
+#endif /* WINDOW_ONLY_EVENT */
+
 #ifdef DEFINED_WINDOW_EVENT
 #error "Don't define DEFINED_WINDOW_EVENT"
 #endif /* DEFINED_WINDOW_EVENT */
 
 #ifndef WINDOW_EVENT
-#define WINDOW_EVENT(_name)
+#define WINDOW_EVENT(_name) WINDOW_ONLY_EVENT(_name)
 #define DEFINED_WINDOW_EVENT
 #endif /* WINDOW_EVENT */
+
+#ifdef DEFINED_TOUCH_EVENT
+#error "Don't define DEFINED_TOUCH_EVENT"
+#endif /* DEFINED_TOUCH_EVENT */
+
+#ifndef TOUCH_EVENT
+#define TOUCH_EVENT(_name)
+#define DEFINED_TOUCH_EVENT
+#endif /* TOUCH_EVENT */
 
 EVENT(abort)
 EVENT(canplay)
@@ -126,6 +152,12 @@ EVENT(suspend)
 EVENT(timeupdate)
 EVENT(volumechange)
 EVENT(waiting)
+// Gecko-specific extensions that apply to elements
+EVENT(copy)
+EVENT(cut)
+EVENT(paste)
+EVENT(beforescriptexecute)
+EVENT(afterscriptexecute)
 
 FORWARDED_EVENT(blur)
 FORWARDED_EVENT(error)
@@ -149,6 +181,16 @@ WINDOW_EVENT(storage)
 WINDOW_EVENT(undo)
 WINDOW_EVENT(unload)
 
+WINDOW_ONLY_EVENT(devicemotion)
+WINDOW_ONLY_EVENT(deviceorientation)
+
+TOUCH_EVENT(touchstart)
+TOUCH_EVENT(touchend)
+TOUCH_EVENT(touchmove)
+TOUCH_EVENT(touchenter)
+TOUCH_EVENT(touchleave)
+TOUCH_EVENT(touchcancel)
+
 #ifdef DEFINED_FORWARDED_EVENT
 #undef DEFINED_FORWARDED_EVENT
 #undef FORWARDED_EVENT
@@ -158,3 +200,14 @@ WINDOW_EVENT(unload)
 #undef DEFINED_WINDOW_EVENT
 #undef WINDOW_EVENT
 #endif /* DEFINED_WINDOW_EVENT */
+
+#ifdef DEFINED_WINDOW_ONLY_EVENT
+#undef DEFINED_WINDOW_ONLY_EVENT
+#undef WINDOW_ONLY_EVENT
+#endif /* DEFINED_WINDOW_ONLY_EVENT */
+
+#ifdef DEFINED_TOUCH_EVENT
+#undef DEFINED_TOUCH_EVENT
+#undef TOUCH_EVENT
+#endif /* DEFINED_TOUCH_EVENT */
+
