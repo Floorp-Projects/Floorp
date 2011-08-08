@@ -1220,7 +1220,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
         initial = CFGState::FOR_LOOP_BODY;
     }
 
-    if (!pushLoop(initial, ifne, header, bodyStart, bodyEnd, exitpc, updatepc))
+    if (!pushLoop(initial, stopAt, header, bodyStart, bodyEnd, exitpc, updatepc))
         return ControlStatus_Error;
 
     CFGState &state = cfgStack_.back();
