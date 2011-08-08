@@ -72,9 +72,20 @@ static const int sSnowLeopardThemeColors[][2] = {
   { 0x51, 0x99 }, // bottom separator line
 };
 
+static const int sLionThemeColors[][2] = {
+  /* { active window, inactive window } */
+  // toolbar:
+  { 0xD0, 0xF0 }, // top separator line
+  { 0xB2, 0xE1 }, // fill color
+  { 0x59, 0x87 }, // bottom separator line
+};
+
 __attribute__((unused))
 static int NativeGreyColorAsInt(ColorName name, BOOL isMain)
 {
+  if (nsToolkit::OnLionOrLater())
+    return sLionThemeColors[name][isMain ? 0 : 1];
+
   if (nsToolkit::OnSnowLeopardOrLater())
     return sSnowLeopardThemeColors[name][isMain ? 0 : 1];
 
