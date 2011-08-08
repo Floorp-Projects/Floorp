@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,16 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,24 +34,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMHTMLElement.idl"
+#include "nsCOMPtr.h"
+#include "nsCOMArray.h"
+#include "nsIContent.h"
+#include "nsIMenuBuilder.h"
+#include "nsIXULContextMenuBuilder.h"
+#include "nsIDOMDocumentFragment.h"
+#include "nsCycleCollectionParticipant.h"
 
-/**
- * The nsIDOMHTMLMenuElement interface is the interface to a [X]HTML
- * menu element.
- *
- * This interface is trying to follow the DOM Level 2 HTML specification:
- * http://www.w3.org/TR/DOM-Level-2-HTML/
- *
- * with changes from the work-in-progress WHATWG HTML specification:
- * http://www.whatwg.org/specs/web-apps/current-work/
- */
-
-[scriptable, uuid(43aa6818-f67f-420c-a400-59a2668e9fe5)]
-interface nsIDOMHTMLMenuElement : nsIDOMHTMLElement
+class nsXULContextMenuBuilder : public nsIMenuBuilder,
+                                public nsIXULContextMenuBuilder
 {
-           attribute boolean          compact;
+public:
+  nsXULContextMenuBuilder();
+  virtual ~nsXULContextMenuBuilder();
 
-           attribute DOMString        type;
-           attribute DOMString        label;
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULContextMenuBuilder,
+                                           nsIMenuBuilder)
+  NS_DECL_NSIMENUBUILDER
+
+  NS_DECL_NSIXULCONTEXTMENUBUILDER
+
+protected:
+  nsresult CreateElement(nsIAtom* aTag, nsIContent** aResult);
+
+  nsCOMPtr<nsIContent>          mFragment;
+  nsCOMPtr<nsIDocument>         mDocument;
+  nsCOMPtr<nsIAtom>             mGeneratedAttr;
+  nsCOMPtr<nsIAtom>             mIdentAttr;
+
+  nsCOMPtr<nsIContent>          mCurrentNode;
+  PRInt32                       mCurrentIdent;
+
+  nsCOMArray<nsIDOMHTMLElement> mElements;
 };

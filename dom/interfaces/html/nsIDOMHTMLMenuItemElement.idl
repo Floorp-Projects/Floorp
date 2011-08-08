@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Johnny Stenback <jst@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,44 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMHTMLCommandElement.idl"
 
-interface nsIDOMDOMStringMap;
-interface nsIDOMHTMLMenuElement;
+/**
+ * The nsIDOMHTMLMenuItemElement interface is the interface to a HTML
+ * <menuitem> element.
+ *
+ * @status UNDER_DEVELOPMENT
+ */
 
-[scriptable, uuid(0c3b4b63-30b2-4c93-906d-f983ee9af584)]
-interface nsIDOMNSHTMLElement : nsISupports
+[scriptable, uuid(613f28ee-01f5-42dc-8224-161f85f0f20b)]
+interface nsIDOMHTMLMenuItemElement : nsIDOMHTMLCommandElement
 {
-  readonly attribute long             offsetTop;
-  readonly attribute long             offsetLeft;
-  readonly attribute long             offsetWidth;
-  readonly attribute long             offsetHeight;
-  readonly attribute nsIDOMElement    offsetParent;
-           attribute DOMString        innerHTML;
-
-  /**
-   * Indicates that the element is not yet, or is no longer, relevant.
-   *
-   * See <http://www.whatwg.org/html5/#the-hidden-attribute>.
-   */
-           attribute boolean          hidden;
-
-           attribute long             tabIndex;
-
-           attribute DOMString        contentEditable;
-  readonly attribute boolean          isContentEditable;
-
-           // for WHAT-WG drag and drop
-           attribute boolean          draggable;
-
-  void insertAdjacentHTML(in DOMString position,
-                          in DOMString text)
-                          raises(DOMException);
-
-  [optional_argc] void scrollIntoView([optional] in boolean top);
-
-  readonly attribute nsIDOMHTMLMenuElement contextMenu;
-           attribute boolean         spellcheck;
-
-  readonly attribute nsIDOMDOMStringMap dataset;
 };

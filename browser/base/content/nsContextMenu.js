@@ -61,14 +61,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-function nsContextMenu(aXulMenu, aBrowser) {
+function nsContextMenu(aXulMenu, aBrowser, aIsShift) {
   this.shouldDisplay = true;
-  this.initMenu(aBrowser);
+  this.initMenu(aBrowser, aXulMenu, aIsShift);
 }
 
 // Prototype for nsContextMenu "class."
 nsContextMenu.prototype = {
-  initMenu: function CM_initMenu(aBrowser) {
+  initMenu: function CM_initMenu(aBrowser, aXulMenu, aIsShift) {
     // Get contextual info.
     this.setTarget(document.popupNode, document.popupRangeParent,
                    document.popupRangeOffset);
@@ -76,6 +76,12 @@ nsContextMenu.prototype = {
       return;
 
     this.browser = aBrowser;
+
+    this.hasPageMenu = false;
+    if (!aIsShift) {
+      this.hasPageMenu = PageMenu.init(this.target, aXulMenu);
+    }
+
     this.isFrameImage = document.getElementById("isFrameImage");
     this.ellipsis = "\u2026";
     try {
@@ -90,6 +96,7 @@ nsContextMenu.prototype = {
   },
 
   initItems: function CM_initItems() {
+    this.initPageMenuSeparator();
     this.initOpenItems();
     this.initNavigationItems();
     this.initViewItems();
@@ -98,6 +105,10 @@ nsContextMenu.prototype = {
     this.initSaveItems();
     this.initClipboardItems();
     this.initMediaPlayerItems();
+  },
+
+  initPageMenuSeparator: function CM_initPageMenuSeparator() {
+    this.showItem("page-menu-separator", this.hasPageMenu);
   },
 
   initOpenItems: function CM_initOpenItems() {
