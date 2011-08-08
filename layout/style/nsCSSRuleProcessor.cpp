@@ -738,6 +738,12 @@ RuleHash::SizeOf() const
 
   n += mUniversalRules.SizeOf();
 
+  const PLArena* current = &mArena.first;
+  while (current) {
+    n += current->limit - current->base;
+    current = current->next;
+  }
+
   return n;
 }
 
