@@ -111,7 +111,8 @@ ValueTypeFromMIRType(MIRType type)
   }
 }
 
-static const char *StringFromMIRType(MIRType type)
+static inline const char *
+StringFromMIRType(MIRType type)
 {
   switch (type) {
     case MIRType_Undefined:
