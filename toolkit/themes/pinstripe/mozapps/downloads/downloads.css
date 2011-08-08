@@ -111,35 +111,9 @@ richlistitem[type="download"] button {
 }
 
 #clearListButton {
-  -moz-appearance: none;
+  -moz-appearance: toolbarbutton;
   min-height: 18px;
   min-width: 0;
   margin: 0 6px;
-  padding: 0 2px;
   text-shadow: @loweredShadow@;
-  border: 1px solid @toolbarbuttonBorderColor@;
-  border-radius: @toolbarbuttonCornerRadius@;
-  box-shadow: @loweredShadow@;
-  background: @toolbarbuttonBackground@;
-  background-origin: border-box;
-}
-
-#clearListButton:hover:active:not([disabled="true"]) {
-  background: @toolbarbuttonPressedBackgroundColor@;
-  text-shadow: @loweredShadow@;
-  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
-}
-
-#clearListButton:-moz-focusring {
-  border-color: @toolbarbuttonFocusedBorderColorAqua@;
-  box-shadow: @focusRingShadow@;
-}
-
-#clearListButton:-moz-system-metric(mac-graphite-theme):-moz-focusring {
-  border-color: @toolbarbuttonFocusedBorderColorGraphite@;
-}
-
-#clearListButton:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
-  background-image: @toolbarbuttonInactiveBackgroundImage@;
 }
