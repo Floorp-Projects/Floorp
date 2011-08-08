@@ -87,7 +87,6 @@ static PRUintn gToolkitTLSIndex = 0;
 nsToolkit::nsToolkit()
 : mInited(false)
 , mSleepWakeNotificationRLS(nsnull)
-, mEventMonitorHandler(nsnull)
 , mEventTapPort(nsnull)
 , mEventTapRLS(nsnull)
 {
@@ -202,18 +201,6 @@ nsToolkit::RemoveSleepWakeNotifcations()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// This is the callback used in RegisterForAllProcessMouseEvents.
-static OSStatus EventMonitorHandler(EventHandlerCallRef aCaller, EventRef aEvent, void* aRefcon)
-{
-  // Up to Mac OS 10.4 (or when building with the 10.4 SDK), installing a Carbon
-  // event handler like this one caused the OS to post the equivalent Cocoa
-  // events to [NSApp sendEvent:]. When using the 10.5 SDK, this doesn't happen
-  // any more, so we need to do it manually.
-  [NSApp sendEvent:[NSEvent eventWithEventRef:aEvent]];
-
-  return eventNotHandledErr;
-}
-
 // Converts aPoint from the CoreGraphics "global display coordinate" system
 // (which includes all displays/screens and has a top-left origin) to its
 // (presumed) Cocoa counterpart (assumed to be the same as the "screen
@@ -275,12 +262,6 @@ nsToolkit::RegisterForAllProcessMouseEvents()
   return;
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 
-  if (!mEventMonitorHandler) {
-    EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseMoved}};
-    InstallEventHandler(GetEventMonitorTarget(), EventMonitorHandler,
-                        GetEventTypeCount(kEvents), kEvents, 0,
-                        &mEventMonitorHandler);
-  }
   if (!mEventTapRLS) {
     // Using an event tap for mouseDown events (instead of installing a
     // handler for them on the EventMonitor target) works around an Apple
@@ -320,10 +301,6 @@ nsToolkit::UnregisterAllProcessMouseEventHandlers()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mEventMonitorHandler) {
-    RemoveEventHandler(mEventMonitorHandler);
-    mEventMonitorHandler = nsnull;
-  }
   if (mEventTapRLS) {
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), mEventTapRLS,
                           kCFRunLoopDefaultMode);
