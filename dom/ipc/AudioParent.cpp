@@ -57,7 +57,7 @@ class AudioWriteEvent : public nsRunnable
 
   NS_IMETHOD Run()
   {
-    mOwner->Write(mData.get(), mCount, true);
+    mOwner->Write(mData.get(), mCount);
     return NS_OK;
   }
 
