@@ -317,6 +317,7 @@ typedef union jsval_layout
     } s;
     double asDouble;
     void *asPtr;
+    jsuword asWord;
 } jsval_layout;
 # endif  /* JS_BITS_PER_WORD */
 #else   /* defined(IS_LITTLE_ENDIAN) */
@@ -358,6 +359,7 @@ typedef union jsval_layout
     } s;
     double asDouble;
     void *asPtr;
+    jsuword asWord;
 } jsval_layout;
 # endif /* JS_BITS_PER_WORD */
 #endif  /* defined(IS_LITTLE_ENDIAN) */
