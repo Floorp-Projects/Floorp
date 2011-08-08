@@ -288,8 +288,6 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
     */
     if (ready > 0)
     {
-        PR_ASSERT(rd.fd_count || wt.fd_count || ex.fd_count);
-
         ready = 0;
         for (pd = pds, epd = pd + npds; pd < epd; pd++)
         {
@@ -301,7 +299,6 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                 PR_ASSERT(NULL != bottom);
 
                 osfd = (SOCKET) bottom->secret->md.osfd;
-                PR_ASSERT(INVALID_SOCKET != osfd);
 
                 if (FD_ISSET(osfd, &rd))
                 {
@@ -309,13 +306,6 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                         out_flags |= PR_POLL_READ;
                     if (pd->out_flags & _PR_POLL_WRITE_SYS_READ)
                         out_flags |= PR_POLL_WRITE;
-
-                    // Adding assertion for |pd->out_flags| before |out_flags|
-                    // to recognize if we have some out flags set on the socket
-                    // or not ; if we do, then the out flags are not one of 
-                    // flags tested above
-                    PR_ASSERT(pd->out_flags);
-                    PR_ASSERT(out_flags);
                 } 
                 if (FD_ISSET(osfd, &wt))
                 {
@@ -323,35 +313,12 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                         out_flags |= PR_POLL_READ;
                     if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE)
                         out_flags |= PR_POLL_WRITE;
-
-                    PR_ASSERT(pd->out_flags);
-                    PR_ASSERT(out_flags);
                 } 
                 if (FD_ISSET(osfd, &ex)) out_flags |= PR_POLL_EXCEPT;
             }
             pd->out_flags = out_flags;
             if (out_flags) ready++;
         }
-#ifdef DEBUG
-        if (ready == 0) {
-            printf("No ready socket but should be at least one, dumping: \n");
-            for (pd = pds, epd = pd + npds; pd < epd; pd++)
-            {
-                SOCKET osfd;
-                if (pd->fd) {
-                    bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
-                    osfd = (SOCKET) bottom->secret->md.osfd;
-                    printf("\tfd=%p, in=%d, out=%d, osfd=%x / rd:%d wt:%d, ex:%d\n", 
-                        pd->fd, pd->in_flags, pd->out_flags, osfd,
-                        FD_ISSET(osfd, &rd), FD_ISSET(osfd, &wt), FD_ISSET(osfd, &ex));
-                }
-                else {
-                    printf("\tfd=NULL !\n");
-                }
-
-            }
-        }
-#endif
         PR_ASSERT(ready > 0);
     }
     else if (ready == SOCKET_ERROR)

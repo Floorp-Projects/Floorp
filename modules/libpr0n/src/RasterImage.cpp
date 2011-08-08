@@ -2116,7 +2116,7 @@ RasterImage::Discard(bool force)
 }
 
 // Helper method to determine if we can discard an image
-PRBool
+bool
 RasterImage::CanDiscard() {
   return (DiscardingEnabled() && // Globally enabled...
           mDiscardable &&        // ...Enabled at creation time...
@@ -2125,7 +2125,7 @@ RasterImage::CanDiscard() {
           mDecoded);             // ...and have something to discard.
 }
 
-PRBool
+bool
 RasterImage::CanForciblyDiscard() {
   return mDiscardable &&         // ...Enabled at creation time...
          mHasSourceData;         // ...have the source data...
@@ -2133,14 +2133,14 @@ RasterImage::CanForciblyDiscard() {
 
 // Helper method to tell us whether the clock is currently running for
 // discarding this image. Mainly for assertions.
-PRBool
+bool
 RasterImage::DiscardingActive() {
   return !!(mDiscardTrackerNode.prev || mDiscardTrackerNode.next);
 }
 
 // Helper method to determine if we're storing the source data in a buffer
 // or just writing it directly to the decoder
-PRBool
+bool
 RasterImage::StoringSourceData() {
   return (mDecodeOnDraw || mDiscardable);
 }
@@ -2817,7 +2817,7 @@ RasterImage::WriteToRasterImage(nsIInputStream* /* unused */,
   return NS_OK;
 }
 
-PRBool
+bool
 RasterImage::ShouldAnimate()
 {
   return Image::ShouldAnimate() && mFrames.Length() >= 2 &&

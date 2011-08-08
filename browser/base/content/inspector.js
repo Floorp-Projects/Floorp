@@ -768,7 +768,7 @@ var InspectorUI = {
 
     this.openTreePanel();
 
-    this.toolbar.hidden = null;
+    this.toolbar.hidden = false;
     this.inspectCmd.setAttribute("checked", true);
   },
 

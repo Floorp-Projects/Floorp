@@ -251,9 +251,52 @@ public:
         m_assembler.eors_r(dest, dest, ARMRegisters::S1);
     }
 
+    void load8SignExtend(ImplicitAddress address, RegisterID dest)
+    {
+        m_assembler.dataTransferN(true, true, 8, dest, address.base, address.offset);
+    } 
+
+    void load8ZeroExtend(ImplicitAddress address, RegisterID dest)
+    {
+        m_assembler.dataTransferN(true, false, 8, dest, address.base, address.offset);
+    }
+
+    void load8SignExtend(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.baseIndexTransferN(true, true, 8, dest,
+                                       address.base, address.index, address.scale, address.offset);
+    }
+
+    void load8ZeroExtend(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.baseIndexTransferN(true, false, 8, dest,
+                                       address.base, address.index, address.scale, address.offset);
+    }
+
+    /* this is *identical* to the zero extending case*/
     void load8(ImplicitAddress address, RegisterID dest)
     {
-        m_assembler.dataTransfer8(true, dest, address.base, address.offset);
+        load8ZeroExtend(address, dest);
+    }
+   
+    void load16SignExtend(ImplicitAddress address, RegisterID dest)
+    {
+        m_assembler.dataTransferN(true, true, 16, dest, address.base, address.offset);
+    } 
+
+    void load16ZeroExtend(ImplicitAddress address, RegisterID dest)
+    {
+        m_assembler.dataTransferN(true, false, 16, dest, address.base, address.offset);
+    }
+    void load16SignExtend(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.baseIndexTransferN(true, true, 16, dest,
+                                       address.base, address.index, address.scale, address.offset);
+    }
+    void load16ZeroExtend(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.baseIndexTransferN(true, false, 16, dest,
+                                       address.base, address.index, address.scale, address.offset);
     }
 
     void load32(ImplicitAddress address, RegisterID dest)
@@ -414,6 +457,92 @@ public:
         m_assembler.dtr_u(false, ARMRegisters::S1, ARMRegisters::S0, 0);
     }
 
+    void store16(RegisterID src, ImplicitAddress address)
+    {
+        m_assembler.dataTransferN(false, false, 16,  src, address.base, address.offset);
+    }
+    void store16(RegisterID src, BaseIndex address)
+    {
+        m_assembler.baseIndexTransferN(false, false, 16, src, address.base, address.index, static_cast<int>(address.scale), address.offset);
+    }
+
+    void store16(TrustedImm32 imm, BaseIndex address)
+    {
+        if (imm.m_isPointer)
+            JS_ASSERT("What are you trying to do with 16 bits of a pointer?");
+        else
+            move(imm, ARMRegisters::S1);
+        store16(ARMRegisters::S1, address);
+    }
+    void store16(TrustedImm32 imm, ImplicitAddress address)
+    {
+        if (imm.m_isPointer)
+            JS_ASSERT("What are you trying to do with 16 bits of a pointer?");
+        else
+            move(imm, ARMRegisters::S1);
+        store16(ARMRegisters::S1, address);
+    }
+
+    void store16(RegisterID src, void* address)
+    {
+        m_assembler.ldr_un_imm(ARMRegisters::S0, reinterpret_cast<ARMWord>(address));
+        m_assembler.mem_imm_off(false, false, 16, true, src, ARMRegisters::S0, 0);
+    }
+
+    void store16(TrustedImm32 imm, void* address)
+    {
+        m_assembler.ldr_un_imm(ARMRegisters::S0, reinterpret_cast<ARMWord>(address));
+        if (imm.m_isPointer)
+            JS_ASSERT("What are you trying to do with 16 bits of a pointer?");
+        else
+            m_assembler.moveImm(imm.m_value, ARMRegisters::S1);
+        m_assembler.mem_imm_off(false, false, 16, true, ARMRegisters::S1, ARMRegisters::S0, 0);
+    }
+
+    void store8(RegisterID src, ImplicitAddress address)
+    {
+        m_assembler.dataTransferN(false, false, 16,  src, address.base, address.offset);
+    }
+
+    void store8(RegisterID src, BaseIndex address)
+    {
+        m_assembler.baseIndexTransferN(false, false, 8, src, address.base, address.index, static_cast<int>(address.scale), address.offset);
+    }
+
+    void store8(TrustedImm32 imm, BaseIndex address)
+    {
+        if (imm.m_isPointer)
+            JS_ASSERT("What are you trying to do with 8 bits of a pointer?");
+        else
+            move(imm, ARMRegisters::S1);
+        store8(ARMRegisters::S1, address);
+    }
+
+    void store8(TrustedImm32 imm, ImplicitAddress address)
+    {
+        if (imm.m_isPointer)
+            JS_ASSERT("What are you trying to do with 16 bits of a pointer?");
+        else
+            move(imm, ARMRegisters::S1);
+        store8(ARMRegisters::S1, address);
+    }
+
+    void store8(RegisterID src, void* address)
+    {
+        m_assembler.ldr_un_imm(ARMRegisters::S0, reinterpret_cast<ARMWord>(address));
+        m_assembler.mem_imm_off(false, false, 8, true, src, ARMRegisters::S0, 0);
+    }
+
+    void store8(TrustedImm32 imm, void* address)
+    {
+        m_assembler.ldr_un_imm(ARMRegisters::S0, reinterpret_cast<ARMWord>(address));
+        if (imm.m_isPointer)
+            JS_ASSERT("What are you trying to do with 16 bits of a pointer?");
+        else
+            m_assembler.moveImm(imm.m_value, ARMRegisters::S1);
+        m_assembler.mem_imm_off(false, false, 8, true, ARMRegisters::S1, ARMRegisters::S0, 0);
+    }
+
     void pop(RegisterID dest)
     {
         m_assembler.pop_r(dest);
@@ -546,6 +675,7 @@ public:
 
     Jump branch32(Condition cond, RegisterID left, Address right)
     {
+        /*If the load only takes a single instruction, then we could just do a load into*/
         load32(right, ARMRegisters::S1);
         return branch32(cond, left, ARMRegisters::S1);
     }
@@ -997,6 +1127,13 @@ public:
         m_assembler.doubleTransfer(true, dest, address.base, address.offset);
     }
 
+    void loadDouble(BaseIndex address, FPRegisterID dest)
+    {
+        m_assembler.baseIndexFloatTransfer(true, true, dest,
+                                           address.base, address.index,
+                                           address.scale, address.offset);
+    }
+
     DataLabelPtr loadDouble(const void* address, FPRegisterID dest)
     {
         DataLabelPtr label = moveWithPatch(ImmPtr(address), ARMRegisters::S0);
@@ -1004,9 +1141,92 @@ public:
         return label;
     }
 
+    void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
+        m_assembler.vmov64(false, true, lo, hi, fpReg);
+    }
+
+    void loadFloat(ImplicitAddress address, FPRegisterID dest)
+    {
+        // as long as this is a sane mapping, (*2) should just work
+        dest = (FPRegisterID) (dest * 2);
+        ASSERT((address.offset & 0x3) == 0);
+        // address.offset is the offset in bytes, fmem_imm_off is expecting the offset in words.
+        m_assembler.fmem_imm_off(true, false, true, dest, address.base, address.offset >> 2);
+        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, (FPRegisterID)(dest*2), dest);
+    }
+    void loadFloat(BaseIndex address, FPRegisterID dest)
+    {
+        m_assembler.baseIndexFloatTransfer(true, false, (FPRegisterID)(dest*2),
+                                           address.base, address.index,
+                                           address.scale, address.offset);
+        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, (FPRegisterID)(dest*2), dest);
+    }
+
+    DataLabelPtr loadFloat(const void* address, FPRegisterID dest)
+    {
+        DataLabelPtr label = moveWithPatch(ImmPtr(address), ARMRegisters::S0);
+        m_assembler.fmem_imm_off(true, false, true, (FPRegisterID)(dest*2), ARMRegisters::S0, 0);
+        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, (FPRegisterID)(dest*2), dest);
+        return label;
+    }
+ 
     void storeDouble(FPRegisterID src, ImplicitAddress address)
     {
         m_assembler.doubleTransfer(false, src, address.base, address.offset);
+    }
+
+    void storeDouble(FPRegisterID dest, BaseIndex address)
+    {
+        m_assembler.baseIndexFloatTransfer(false, true, dest,
+                                           address.base, address.index,
+                                           address.scale, address.offset);
+    }
+
+    void storeDouble(ImmDouble imm, Address address)
+    {
+        store32(Imm32(imm.u.s.lsb), address);
+        store32(Imm32(imm.u.s.msb), Address(address.base, address.offset + 4));
+    }
+
+    void storeDouble(ImmDouble imm, BaseIndex address)
+    {
+        store32(Imm32(imm.u.s.lsb), address);
+        store32(Imm32(imm.u.s.msb),
+                BaseIndex(address.base, address.index, address.scale, address.offset + 4));
+    }
+    void fastStoreDouble(FPRegisterID fpReg, RegisterID lo, RegisterID hi) {
+        m_assembler.vmov64(true, true, lo, hi, fpReg);
+    }
+
+    void storeFloat(FPRegisterID src, ImplicitAddress address)
+    {
+        m_assembler.fmem_imm_off(false, false, true, src, address.base, address.offset);
+    }
+
+    void storeFloat(FPRegisterID src, BaseIndex address)
+    {
+        m_assembler.baseIndexFloatTransfer(false, false, src,
+                                           address.base, address.index,
+                                           address.scale, address.offset);
+    }
+    void storeFloat(ImmDouble imm, Address address)
+    {
+        union {
+            float f;
+            uint32 u32;
+        } u;
+        u.f = imm.u.d;
+        store32(Imm32(u.u32), address);
+    }
+
+    void storeFloat(ImmDouble imm, BaseIndex address)
+    {
+        union {
+            float f;
+            uint32 u32;
+        } u;
+        u.f = imm.u.d;
+        store32(Imm32(u.u32), address);
     }
 
     void addDouble(FPRegisterID src, FPRegisterID dest)
@@ -1070,6 +1290,12 @@ public:
         m_assembler.fsitod_r(dest, dest);
     }
 
+    void convertUInt32ToDouble(RegisterID src, FPRegisterID dest)
+    {
+        m_assembler.fmsr_r(dest, src);
+        m_assembler.fuitod_r(dest, dest);
+    }
+
     void convertInt32ToDouble(Address src, FPRegisterID dest)
     {
         // flds does not worth the effort here
@@ -1084,6 +1310,11 @@ public:
         m_assembler.ldr_un_imm(ARMRegisters::S1, (ARMWord)src.m_ptr);
         m_assembler.dtr_u(true, ARMRegisters::S1, ARMRegisters::S1, 0);
         convertInt32ToDouble(ARMRegisters::S1, dest);
+    }
+
+    void convertDoubleToFloat(FPRegisterID src, FPRegisterID dest)
+    {
+        m_assembler.vcvt(m_assembler.FloatReg64, m_assembler.FloatReg32, src, dest);
     }
 
     Jump branchDouble(DoubleCondition cond, FPRegisterID left, FPRegisterID right)

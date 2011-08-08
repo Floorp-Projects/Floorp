@@ -4628,7 +4628,7 @@ IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
     if (!str)
         return false;
 
-    *isIndex = js_StringIsIndex(str, indexp);
+    *isIndex = StringIsArrayIndex(str, indexp);
     return true;
 }
 

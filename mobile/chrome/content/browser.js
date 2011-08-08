@@ -259,6 +259,8 @@ var Browser = {
       if (fullscreen && w != screen.width)
         return;
 
+      BrowserUI.updateTabletLayout();
+
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
 
       Browser.styles["window-width"].width = w + "px";
@@ -1249,6 +1251,7 @@ Browser.MainDragger.prototype = {
     let bcr = browser.getBoundingClientRect();
     this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
     this._stopAtSidebar = 0;
+    this._panToolbars = !Elements.urlbarState.getAttribute("tablet");
     if (this._sidebarTimeout) {
       clearTimeout(this._sidebarTimeout);
       this._sidebarTimeout = null;
@@ -1265,23 +1268,28 @@ Browser.MainDragger.prototype = {
 
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
     let doffset = new Point(dx, dy);
+    let sidebarOffset = null;
 
-    // If the sidebars are showing, we pan them out of the way before panning the content.
-    // The panning distance that should be used for the sidebars in is stored in sidebarOffset,
-    // and subtracted from doffset.
-    let sidebarOffset = this._getSidebarOffset(doffset);
+    if (this._panToolbars) {
+      // If the sidebars are showing, we pan them out of the way before panning the content.
+      // The panning distance that should be used for the sidebars in is stored in sidebarOffset,
+      // and subtracted from doffset.
+      sidebarOffset = this._getSidebarOffset(doffset);
 
-    // If we started with one sidebar open, stop when we get to the other.
-    if (sidebarOffset.x != 0)
-      this._blockSidebars(sidebarOffset);
+      // If we started with one sidebar open, stop when we get to the other.
+      if (sidebarOffset.x != 0)
+        this._blockSidebars(sidebarOffset);
+    }
 
     if (!this.contentMouseCapture)
       this._panContent(doffset);
 
-    if (aIsKinetic && doffset.x != 0)
-      return false;
+    if (this._panToolbars) {
+      if (aIsKinetic && doffset.x != 0)
+        return false;
 
-    this._panChrome(doffset, sidebarOffset);
+      this._panChrome(doffset, sidebarOffset);
+    }
 
     this._updateScrollbars();
 
@@ -1858,7 +1866,8 @@ const ContentTouchHandler = {
     // Check if the user touched near to one of the edges of the browser area
     // or if the urlbar is showing
     this.canCancelPan = (aX >= rect.left + kSafetyX) && (aX <= rect.right - kSafetyX) &&
-                        (aY >= rect.top  + kSafetyY) && bcr.top == 0;
+                        (aY >= rect.top  + kSafetyY) &&
+                        (bcr.top == 0 || Elements.urlbarState.getAttribute("tablet"));
   },
 
   tapDown: function tapDown(aX, aY) {
@@ -3063,7 +3072,12 @@ var ViewableAreaObserver = {
   },
 
   get height() {
-    return (this._height || window.innerHeight);
+    let height = (this._height || window.innerHeight);
+    if (Elements.urlbarState.getAttribute("tablet")) {
+      let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
+      height -= toolbarHeight;
+    }
+    return height;
   },
 
   _isKeyboardOpened: true,

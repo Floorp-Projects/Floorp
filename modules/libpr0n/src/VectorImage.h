@@ -99,7 +99,7 @@ public:
 protected:
   virtual nsresult StartAnimation();
   virtual nsresult StopAnimation();
-  virtual PRBool   ShouldAnimate();
+  virtual bool     ShouldAnimate();
 
 private:
   nsWeakPtr                          mObserver;   //! imgIDecoderObserver
