@@ -1009,7 +1009,7 @@
   <svg:svg height="0">
     <svg:mask id="pinstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.46" cy="0.48" r="0.65"/>
+      <svg:circle cx="-0.41" cy="0.5" r="0.65"/>
     </svg:mask>
     <svg:mask id="pinstripe-tab-ontop-left-curve-mask" maskContentUnits="userSpaceOnUse">
       <svg:circle cx="9" cy="3" r="3" fill="white"/>
