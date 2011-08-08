@@ -50,6 +50,10 @@ namespace ion {
 
 class IonCompartment;
 
+#if defined(_WIN32)
+# pragma pack(push, 1)
+#endif
+
 class BailoutStack
 {
     double    fpregs_[FloatRegisters::Total];
@@ -71,6 +75,10 @@ class BailoutStack
         return frameSize_;
     }
 };
+
+#if defined(_WIN32)
+# pragma pack(pop)
+#endif
 
 class BailoutEnvironment
 {
