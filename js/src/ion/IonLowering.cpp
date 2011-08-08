@@ -326,6 +326,8 @@ LIRGenerator::lowerPhi(MPhi *ins)
         return false;
     for (size_t i = 0; i < ins->numOperands(); i++) {
         MDefinition *opd = ins->getOperand(i);
+        JS_ASSERT(opd->type() == ins->type());
+
         phi->setOperand(i, LUse(opd->id(), LUse::ANY));
     }
     phi->setDef(0, LDefinition(ins->id(), LDefinition::TypeFrom(ins->type())));
