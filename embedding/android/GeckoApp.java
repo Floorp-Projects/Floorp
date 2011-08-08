@@ -68,6 +68,8 @@ abstract public class GeckoApp
 {
     public static final String ACTION_ALERT_CLICK = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
+    public static final String ACTION_WEBAPP      = "org.mozilla.gecko.WEBAPP";
+    public static final String ACTION_DEBUG       = "org.mozilla.gecko.DEBUG";
 
     public static FrameLayout mainLayout;
     public static GeckoSurfaceView surfaceView;
@@ -297,7 +299,7 @@ abstract public class GeckoApp
             return;
         }
         final String action = intent.getAction();
-        if ("org.mozilla.gecko.DEBUG".equals(action) &&
+        if (ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitButton)) {
             final Button launchButton = new Button(this);
             launchButton.setText("Launch"); // don't need to localize
@@ -324,7 +326,7 @@ abstract public class GeckoApp
             Log.i("GeckoApp", "Intent : ACTION_MAIN");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
         }
-        else if (action.equals("org.mozilla.gecko.WEBAPP")) {
+        else if (ACTION_WEBAPP.equals(action)) {
             String uri = intent.getStringExtra("args");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i("GeckoApp","Intent : WEBAPP - " + uri);

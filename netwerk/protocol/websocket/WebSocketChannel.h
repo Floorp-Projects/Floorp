@@ -240,6 +240,9 @@ private:
   PRUint32                        mAutoFollowRedirects       : 1;
   PRUint32                        mReleaseOnTransmit         : 1;
   PRUint32                        mTCPClosed                 : 1;
+  PRUint32                        mOpenBlocked               : 1;
+  PRUint32                        mOpenRunning               : 1;
+  PRUint32                        mChannelWasOpened          : 1;
 
   PRInt32                         mMaxMessageSize;
   nsresult                        mStopOnClose;

@@ -56,14 +56,6 @@ var provider = {
         retVal.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
       return retVal;
     }
-    if (prop == "UHist") {
-      var retVal = dirSvc.get("CurProcD", Ci.nsILocalFile);
-      retVal.append("test_docshell_profile");
-      if (!retVal.exists())
-        retVal.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-      retVal.append("history.dat");
-      return retVal;
-    }
     throw Cr.NS_ERROR_FAILURE;
   },
   QueryInterface: function(iid) {
