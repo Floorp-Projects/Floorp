@@ -168,6 +168,7 @@ class GreedyAllocator
 
     struct BlockInfo {
         AllocationState in;
+        AllocationState out;
         Mover restores;
         Mover phis;
     };
