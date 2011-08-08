@@ -259,7 +259,7 @@ ion::ThunkToInterpreter(IonFramePrefix *top, Value *vp)
     IonActivation *activation = cx->compartment->ionCompartment()->activation();
     BailoutClosure *br = activation->takeBailout();
 
-    bool ok = Interpret(cx, br->entryfp());
+    bool ok = Interpret(cx, br->entryfp(), JSINTERP_BAILOUT);
 
     if (ok)
         *vp = br->entryfp()->returnValue();
