@@ -10,5 +10,6 @@
 <!ENTITY feedback.about.button          "Go to Page">
 
 <!ENTITY feedback.tools.title           "Tools">
+<!ENTITY feedback.allowTelemetry.title  "Send performance data">
 <!ENTITY feedback.forceCompat.title     "Force add-ons compatibility">
 <!ENTITY feedback.errorConsole.title    "Enable the Error Console">
