@@ -186,6 +186,13 @@ IonBuilder::build()
         return false;
     current->makeStart(start);
 
+    // Attach start's snapshot to each parameter, so the type analyzer doesn't
+    // replace uses in the snapshot.
+    for (uint32 i = 0; i < nargs(); i++) {
+        MParameter *param = current->getEntrySlot(i)->toInstruction()->toParameter();
+        param->setSnapshot(start->snapshot());
+    }
+
     if (!traverseBytecode())
         return false;
 

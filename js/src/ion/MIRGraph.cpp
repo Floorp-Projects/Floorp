@@ -122,6 +122,7 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc, Kind kind)
     lastIns_(NULL),
     pc_(pc),
     lir_(NULL),
+    start_(NULL),
     successorWithPhis_(NULL),
     positionInPhiSuccessor_(0),
     kind_(kind),
