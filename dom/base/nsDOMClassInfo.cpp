@@ -285,6 +285,7 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLMenuElement.h"
+#include "nsIDOMHTMLMenuItemElement.h"
 #include "nsIDOMHTMLMetaElement.h"
 #include "nsIDOMHTMLModElement.h"
 #include "nsIDOMHTMLOListElement.h"
@@ -835,6 +836,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLMapElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLMenuElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLMenuItemElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLMetaElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -2692,6 +2695,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLMenuElement, nsIDOMHTMLMenuElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMenuElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLMenuItemElement, nsIDOMHTMLMenuItemElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMenuItemElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -7493,6 +7501,7 @@ nsEventReceiverSH::ReallyIsEventName(jsid id, jschar aFirstChar)
             id == sOnratechange_id);
   case 's' :
     return (id == sOnscroll_id       ||
+            id == sOnshow_id         ||
             id == sOnselect_id       ||
             id == sOnsubmit_id       || 
             id == sOnseeked_id       ||

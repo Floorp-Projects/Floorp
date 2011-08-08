@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,11 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla code.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# The Initial Developer of the Original Code is Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -45,36 +43,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xul
 
 ifdef MOZ_XUL
-LIBRARY_NAME	= gkconxulcon_s
-LIBXUL_LIBRARY	= 1
-endif
-
-
-ifdef MOZ_XUL
-CPPSRCS		+= \
-		nsXULElement.cpp \
-		nsXULPopupListener.cpp \
-		nsXULContextMenuBuilder.cpp \
+XPIDLSRCS	= \
+		nsIXULContextMenuBuilder.idl \
 		$(NULL)
 endif
 
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
-
-LOCAL_INCLUDES	= \
-	-I$(srcdir)/../../document/src \
-	-I$(srcdir)/../../templates/src \
-	-I$(srcdir)/../../../xml/content/src \
-	-I$(srcdir)/../../../base/src \
-	-I$(srcdir)/../../../xml/document/src \
-	-I$(srcdir)/../../../../layout/style \
-	-I$(srcdir)/../../../html/content/src \
-	-I$(srcdir)/../../../events/src \
-	-I$(srcdir)/../../../xbl/src \
-	-I$(topsrcdir)/xpcom/ds \
-	$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

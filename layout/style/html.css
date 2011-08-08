@@ -573,6 +573,10 @@ ul, menu, dir {
   -moz-padding-start: 40px;
 }
 
+menu[type="context"] {
+  display: none !important;
+}
+
 ol {
   display: block;
   list-style-type: decimal;
