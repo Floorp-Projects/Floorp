@@ -135,7 +135,7 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsRenderingContext.h"
-
+#include "nsAutoLayoutPhase.h"
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
