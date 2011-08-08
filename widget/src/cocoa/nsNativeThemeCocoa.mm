@@ -1596,71 +1596,28 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   float titlebarHeight = [(ToolbarWindow*)aWindow titlebarHeight];
+  float unifiedHeight = titlebarHeight + inBoxRect.size.height;
 
   BOOL isMain = [aWindow isMainWindow] || ![NSView focusView];
 
-  // Draw the gradient
-  UnifiedGradientInfo info = { titlebarHeight, inBoxRect.size.height, isMain, NO };
-  struct CGFunctionCallbacks callbacks = { 0, nsCocoaWindow::UnifiedShading, NULL };
-  CGFunctionRef function = CGFunctionCreate(&info, 1,  NULL, 4, NULL, &callbacks);
-  float srcY = inBoxRect.origin.y;
-  float dstY = srcY + inBoxRect.size.height - 1;
-  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-  CGShadingRef shading = CGShadingCreateAxial(colorSpace,
-                                              CGPointMake(0, srcY),
-                                              CGPointMake(0, dstY), function,
-                                              NO, NO);
-  CGColorSpaceRelease(colorSpace);
-  CGFunctionRelease(function);
+  CGContextSaveGState(cgContext);
   CGContextClipToRect(cgContext, inBoxRect);
-  CGContextDrawShading(cgContext, shading);
-  CGShadingRelease(shading);
 
-  // Draw the border at the bottom of the toolbar.
-  CGRect borderRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y +
-                                 inBoxRect.size.height - 1.0f,
-                                 inBoxRect.size.width, 1.0f);
-  DrawNativeGreyColorInRect(cgContext, headerBorderGrey, borderRect, isMain);
+  CGRect drawRect = CGRectOffset(inBoxRect, 0, -titlebarHeight);
+  CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
+          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+            @"kCUIWidgetWindowFrame", @"widget",
+            @"regularwin", @"windowtype",
+            (isMain ? @"normal" : @"inactive"), @"state",
+            [NSNumber numberWithInt:unifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+            [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
+            [NSNumber numberWithBool:YES], @"is.flipped",
+            nil],
+          nil);
+
+  CGContextRestoreGState(cgContext);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-struct GreyGradientInfo {
-  float startGrey;
-  float endGrey;
-};
-
-static void GreyGradientCallback(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
-{
-  GreyGradientInfo* info = static_cast<GreyGradientInfo*>(aInfo);
-  CGFloat result = (1.0f - *aIn) * info->startGrey + *aIn * info->endGrey;
-  aOut[0] = result;
-  aOut[1] = result;
-  aOut[2] = result;
-  aOut[3] = 1.0f;
-}
-
-static void DrawGreyGradient(CGContextRef cgContext, const HIRect& rect,
-                             float startGrey, float endGrey)
-{
-  if (rect.size.height <= 0.0f)
-    return;
-
-  GreyGradientInfo info = { startGrey, endGrey };
-  struct CGFunctionCallbacks callbacks = { 0, GreyGradientCallback, NULL };
-  CGFunctionRef function = CGFunctionCreate(&info, 1,  NULL, 4, NULL, &callbacks);
-  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-  CGShadingRef shading = CGShadingCreateAxial(colorSpace,
-                                              CGPointMake(0, CGRectGetMinY(rect)),
-                                              CGPointMake(0, CGRectGetMaxY(rect)),
-                                              function, false, false);
-  CGColorSpaceRelease(colorSpace);
-  CGFunctionRelease(function);
-  CGContextSaveGState(cgContext);
-  CGContextClipToRect(cgContext, rect);
-  CGContextDrawShading(cgContext, shading);
-  CGContextRestoreGState(cgContext);
-  CGShadingRelease(shading);
 }
 
 void
@@ -1674,18 +1631,28 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
 
   BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow] || ![NSView focusView];
 
-  // Draw the borders at the top of the statusbar.
-  CGRect rect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y,
-                           inBoxRect.size.width, 1.0f);
-  DrawNativeGreyColorInRect(cgContext, statusbarFirstTopBorderGrey, rect, isMain);
-  rect.origin.y += 1.0f;
-  DrawNativeGreyColorInRect(cgContext, statusbarSecondTopBorderGrey, rect, isMain);
+  CGContextSaveGState(cgContext);
+  CGContextClipToRect(cgContext, inBoxRect);
 
-  // Draw the gradient.
-  DrawGreyGradient(cgContext, CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 2.0f,
-                                         inBoxRect.size.width, inBoxRect.size.height - 2.0f),
-                   NativeGreyColorAsFloat(statusbarGradientStartGrey, isMain),
-                   NativeGreyColorAsFloat(statusbarGradientEndGrey, isMain));
+  // kCUIWidgetWindowFrame draws a complete window frame with both title bar
+  // and bottom bar. We only want the bottom bar, so we extend the draw rect
+  // upwards to make space for the title bar, and then we clip it away.
+  CGRect drawRect = inBoxRect;
+  const int extendUpwards = 40;
+  drawRect.origin.y -= extendUpwards;
+  drawRect.size.height += extendUpwards;
+  CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
+          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+            @"kCUIWidgetWindowFrame", @"widget",
+            @"regularwin", @"windowtype",
+            (isMain ? @"normal" : @"inactive"), @"state",
+            [NSNumber numberWithInt:inBoxRect.size.height], @"kCUIWindowFrameBottomBarHeightKey",
+            [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawBottomBarSeparatorKey",
+            [NSNumber numberWithBool:YES], @"is.flipped",
+            nil],
+          nil);
+
+  CGContextRestoreGState(cgContext);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1921,12 +1888,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       // background
       drawRect.origin.y += drawRect.size.height;
       drawRect.size.height = macRect.size.height - 2.0f;
-      DrawNativeGreyColorInRect(cgContext, headerEndGrey, drawRect, isMain);
+      DrawNativeGreyColorInRect(cgContext, toolbarFillGrey, drawRect, isMain);
 
       // bottom border
       drawRect.origin.y += drawRect.size.height;
       drawRect.size.height = 1.0f;
-      DrawNativeGreyColorInRect(cgContext, headerBorderGrey, drawRect, isMain);
+      DrawNativeGreyColorInRect(cgContext, toolbarBottomBorderGrey, drawRect, isMain);
     }
       break;
 

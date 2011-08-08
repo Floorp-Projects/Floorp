@@ -293,8 +293,6 @@ public:
     NS_IMETHOD BeginSecureKeyboardInput();
     NS_IMETHOD EndSecureKeyboardInput();
 
-    static void UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut);
-
     void SetPopupWindowLevel();
 
     PRBool IsChildInFailingLeftClickThrough(NSView *aChild);
