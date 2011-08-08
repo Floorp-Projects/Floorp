@@ -43,6 +43,7 @@
 
 #include "JSONSpewer.h"
 #include "IonLIR.h"
+#include "TypeOracle.h"
 
 using namespace js;
 using namespace js::ion;
@@ -225,6 +226,8 @@ JSONSpewer::spewMDef(MDefinition *def)
     for (MUseDefIterator use(def); use; use++)
         integerValue(use.def()->id());
     endList();
+
+    stringProperty("type", StringFromMIRType(def->type()));
 
     endObject();
 }
