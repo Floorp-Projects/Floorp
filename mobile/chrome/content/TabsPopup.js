@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla code.
+ * The Original Code is Mozilla Mobile Browser.
  *
  * The Initial Developer of the Original Code is
- *   mozilla.org
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,42 +35,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SPLASHSCREEN_H_
-#define NS_SPLASHSCREEN_H_
+var TabsPopup = {
+  get box() {
+    delete this.box;
+    return this.box = document.getElementById("tabs-sidebar");
+  },
 
-#include "prtypes.h"
+  get list() {
+    delete this.list;
+    return this.list = document.getElementById("tabs");
+  },
 
-/* Note: This is not XPCOM!  This class is used before any Gecko/XPCOM
- * support has been initialized, so any implementations should take care
- * to use platform-native methods as much as possible.
- */
+  get button() {
+    delete this.button;
+    return this.button = document.getElementById("tool-tabs");
+  },
 
-class nsSplashScreen {
-public:
-    // An implementation needs to provide these, to either get
-    // an existing splash screen, or create a new one if GetOrCreate is
-    // used.
-    static nsSplashScreen* GetOrCreate();
-    static nsSplashScreen* Get();
-public:
-    // Display the splash screen if it's not already displayed.
-    // Also resets progress to 0 and the message to empty.
-    virtual void Open() = 0;
-    virtual void Close() = 0;
+  hide: function hide() {
+    this.box.removeAttribute("open");
+    BrowserUI.popPopup(this);
+  },
 
-    /* Update the splash screen to the given progress value (0..100) */
-    virtual void Update(PRInt32 progress) = 0;
+  show: function show() {
+    // Set the box position.
+    this.box.setAttribute("open", "true");
+    this.list.resize();
+    BrowserUI.pushPopup(this, [this.box, this.button]);
+  },
 
-    PRBool IsOpen() { return mIsOpen; }
-
-protected:
-    nsSplashScreen() : mIsOpen(PR_FALSE) { }
-    PRBool mIsOpen;
+  toggle: function toggle() {
+    if (this.box.hasAttribute("open"))
+      this.hide();
+    else
+      this.show();
+  }
 };
-
-extern "C" {
-    nsSplashScreen *NS_GetSplashScreen(PRBool create);
-    typedef nsSplashScreen* (*NS_GetSplashScreenPtr) (PRBool);
-}
-
-#endif /* NS_SPLASHSCREEN_H_ */

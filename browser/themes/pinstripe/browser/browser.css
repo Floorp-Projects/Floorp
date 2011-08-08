@@ -1042,6 +1042,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-origin: border-box;
   border: none;
   -moz-border-start: 1px solid rgba(0,0,0,.25);
+  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+              -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 #urlbar:-moz-locale-dir(ltr) > toolbarbutton {
@@ -1054,17 +1056,20 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-bottom-left-radius: 2px;
 }
 
+#urlbar > toolbarbutton:not([disabled]):active:hover,
+#urlbar-reload-button:not(:hover) {
+  -moz-border-start-style: none;
+  -moz-padding-start: 4px;
+  box-shadow: none;
+}
+
 #urlbar > toolbarbutton:not([disabled]):active:hover {
   box-shadow: @toolbarbuttonPressedInnerShadow@;
-  -moz-padding-start: 4px;
-  -moz-border-start: none;
 }
 
 #urlbar-go-button {
   -moz-image-region: rect(0px, 56px, 14px, 42px);
   background-image: -moz-linear-gradient(rgb(184,221,142), rgb(154,201,111) 49%, rgb(130,187,92) 51%, rgb(114,171,79));
-  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-              -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
@@ -1078,15 +1083,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar-reload-button:not([disabled]):hover {
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
-  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-              -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 #urlbar-stop-button {
   -moz-image-region: rect(0px, 42px, 14px, 28px);
   background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
-  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-              -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 /* POPUP BLOCKER BUTTON */

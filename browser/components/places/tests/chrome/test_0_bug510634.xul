@@ -97,6 +97,10 @@
       // Bug 510634
       let cachedLeftPaneFolderIdGetter =
         PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
+      // Must also cache and restore this getter as it is affected by
+      // leftPaneFolderId, from bug 564900.
+      let cachedAllBookmarksFolderIdGetter =
+        PlacesUIUtils.__lookupGetter__("allBookmarksFolderId");
 
       let leftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
 
@@ -107,28 +111,36 @@
       let tree = document.getElementById("tree");
       tree.place = "place:queryType=1&folder=" + leftPaneFolderId;
 
-      // Open All Bookmarks
-      PlacesUtils.asContainer(tree.view.nodeForTreeIndex(2)).containerOpen = true;
-      
       // The query-property is set on the title column for each row.
       let titleColumn = tree.treeBoxObject.columns.getColumnAt(0);
 
-      ["History", "Tags", "AllBookmarks", "BookmarksToolbar",
+      // Open All Bookmarks
+      tree.selectItems([PlacesUIUtils.leftPaneQueries["AllBookmarks"]]);
+      PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
+      is(PlacesUIUtils.allBookmarksFolderId, tree.selectedNode.itemId,
+         "Opened All Bookmarks");
+
+      ["History", "Downloads", "Tags", "AllBookmarks", "BookmarksToolbar",
        "BookmarksMenu", "UnfiledBookmarks"].forEach(
-         function(aQueryName, aRow) {
-           let rowProperties = createSupportsArray();
-           tree.view.getCellProperties(aRow, titleColumn, rowProperties);
-           rowProperties = convertPropertiesToJSArray(rowProperties);
-           ok(rowProperties.indexOf("OrganizerQuery_" + aQueryName) != -1,
-             "OrganizerQuery_" + aQueryName + " is set");
-         }
-       );
+        function(aQueryName, aRow) {
+          let found = false;
+          for (let i = 0; i < tree.view.rowCount && !found; i++) {
+            let rowProperties = createSupportsArray();
+            tree.view.getCellProperties(i, titleColumn, rowProperties);
+            rowProperties = convertPropertiesToJSArray(rowProperties);
+            found = rowProperties.indexOf("OrganizerQuery_" + aQueryName) != -1;
+          }
+          ok(found, "OrganizerQuery_" + aQueryName + " is set");
+        }
+      );
 
       // Close the root node
       tree.result.root.containerOpen = false;
 
-      // Restore the getter for the next test.
+      // Restore the getters for the next test.
       PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
+      PlacesUIUtils.__defineGetter__("allBookmarksFolderId",
+                                     cachedAllBookmarksFolderIdGetter);
 
       SimpleTest.finish();
     }

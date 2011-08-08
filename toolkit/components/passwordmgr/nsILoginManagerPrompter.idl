@@ -85,7 +85,7 @@ interface nsILoginManagerPrompter : nsISupports {
      * @param count
      *        (length of the array)
      * @param aNewLogin
-     *        The new login. 
+     *        The new login.
      *
      * Note: Because the caller does not know the username of the login
      *       to be changed, aNewLogin.username and aNewLogin.usernameField

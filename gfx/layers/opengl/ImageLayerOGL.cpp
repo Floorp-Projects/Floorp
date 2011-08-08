@@ -111,6 +111,15 @@ GLTexture::Release()
     return;
   }
 
+  if (mContext->IsDestroyed() && !mContext->IsGlobalSharedContext()) {
+    mContext = mContext->GetSharedContext();
+    if (!mContext) {
+      NS_ASSERTION(!mTexture, 
+                   "Context has been destroyed and couldn't find a shared context!");
+      return;
+    }
+  }
+
   if (mTexture) {
     if (NS_IsMainThread() || mContext->IsGlobalSharedContext()) {
       mContext->MakeCurrent();

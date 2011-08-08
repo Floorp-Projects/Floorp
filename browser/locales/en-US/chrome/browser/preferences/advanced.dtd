@@ -64,7 +64,7 @@
 <!ENTITY enableAddonsUpdate2.label       "Add-ons">
 <!ENTITY enableAddonsUpdate2.accesskey   "n">
 <!ENTITY enableSearchUpdate.label        "Search Engines">
-<!ENTITY enableSearchUpdate.accesskey    "h">
+<!ENTITY enableSearchUpdate.accesskey    "E">
 <!ENTITY whenUpdatesFound.label          "When updates to &brandShortName; are found:">
 <!ENTITY askMe.label                     "Ask me what I want to do">
 <!ENTITY askMe.accesskey                 "k">
