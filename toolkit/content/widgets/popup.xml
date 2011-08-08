@@ -349,7 +349,20 @@
         let anchorRight = anchorLeft + anchorRect.width;
         let anchorBottom = anchorTop + anchorRect.height;
 
-        const epsilon = 0.1;
+        try {
+          let anchorWindow = anchor.ownerDocument.defaultView;
+          if (anchorWindow != window) {
+            let utils = anchorWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+            let spp = utils.screenPixelsPerCSSPixel;
+            anchorLeft *= spp;
+            anchorRight *= spp;
+            anchorTop *= spp;
+            anchorBottom *= spp;
+          }
+        } catch(ex) { }
+
+        const epsilon = 0.2;
 
         var horizPos = smallerTo(popupRight, anchorLeft, epsilon) ? -1 : smallerTo(anchorRight, popupLeft, epsilon) ? 1 : 0;
         var vertPos = smallerTo(popupBottom, anchorTop, epsilon) ? -1 : smallerTo(anchorBottom, popupTop, epsilon) ? 1 : 0;

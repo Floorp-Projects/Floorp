@@ -194,10 +194,6 @@
 #include "nsTextStore.h"
 #endif // defined(NS_ENABLE_TSF)
 
-#if defined(MOZ_SPLASHSCREEN)
-#include "nsSplashScreen.h"
-#endif // defined(MOZ_SPLASHSCREEN)
-
 // Windowless plugin support
 #include "npapi.h"
 
@@ -1123,19 +1119,6 @@ nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-#if defined(MOZ_SPLASHSCREEN)
-  // we're about to show the first toplevel window,
-  // so kill off any splash screen if we had one
-  nsSplashScreen *splash = nsSplashScreen::Get();
-  if (splash && splash->IsOpen() && mWnd && bState &&
-      (mWindowType == eWindowType_toplevel ||
-       mWindowType == eWindowType_dialog ||
-       mWindowType == eWindowType_popup))
-  {
-    splash->Close();
-  }
-#endif
-
   if (mWindowType == eWindowType_popup) {
     // See bug 603793. When we try to draw D3D9/10 windows with a drop shadow
     // without the DWM on a secondary monitor, windows fails to composite

@@ -181,6 +181,7 @@ _TEST_FILES +=  \
 		test_tree_hier_cell.xul \
 		test_mousescroll.xul \
 		test_mousecapture.xul \
+		test_arrowpanel.xul \
 		$(NULL)
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to

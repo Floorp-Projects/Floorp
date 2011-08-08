@@ -141,6 +141,16 @@ struct JS_FRIEND_API(TypedArray) {
         TYPE_MAX
     };
 
+    enum {
+        FIELD_LENGTH = 0,
+        FIELD_BYTEOFFSET,
+        FIELD_BYTELENGTH,
+        FIELD_TYPE,
+        FIELD_BUFFER,
+        FIELD_DATA,
+        FIELD_MAX
+    };
+
     // and MUST NOT be used to construct new objects.
     static Class fastClasses[TYPE_MAX];
 
@@ -150,7 +160,7 @@ struct JS_FRIEND_API(TypedArray) {
 
     static JSPropertySpec jsprops[];
 
-    static TypedArray *fromJSObject(JSObject *obj);
+    static JSObject *getTypedArray(JSObject *obj);
 
     static JSBool prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp);
     static JSBool prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp);
@@ -160,33 +170,25 @@ struct JS_FRIEND_API(TypedArray) {
     static JSBool obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                                      JSObject **objp, JSProperty **propp);
 
-    static void obj_trace(JSTracer *trc, JSObject *obj);
-
     static JSBool obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
     static JSBool obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
-    static int32 lengthOffset() { return offsetof(TypedArray, length); }
-    static int32 dataOffset() { return offsetof(TypedArray, data); }
-    static int32 typeOffset() { return offsetof(TypedArray, type); }
+    static JSUint32 getLength(JSObject *obj);
+    static JSUint32 getByteOffset(JSObject *obj);
+    static JSUint32 getByteLength(JSObject *obj);
+    static JSUint32 getType(JSObject *obj);
+    static JSObject * getBuffer(JSObject *obj);
+    static void * getDataOffset(JSObject *obj);
+
     static void *offsetData(JSObject *obj, uint32 offs);
 
   public:
-    TypedArray() : bufferJS(0) { }
+    static bool
+    isArrayIndex(JSContext *cx, JSObject *obj, jsid id, jsuint *ip = NULL);
 
-    bool isArrayIndex(JSContext *cx, jsid id, jsuint *ip = NULL);
-    bool valid() { return bufferJS != 0; }
-
-    JSObject *bufferJS;
-    uint32 byteOffset;
-    uint32 byteLength;
-    uint32 length;
-    uint32 type;
-
-    void *data;
-
-    inline int slotWidth() const {
-        switch (type) {
+    static inline int slotWidth(JSObject *obj) {
+        switch (getType(obj)) {
           case js::TypedArray::TYPE_INT8:
           case js::TypedArray::TYPE_UINT8:
           case js::TypedArray::TYPE_UINT8_CLAMPED:
@@ -206,6 +208,9 @@ struct JS_FRIEND_API(TypedArray) {
         }
     }
 };
+
+extern bool
+IsFastTypedArrayClass(const Class *clasp);
 
 } // namespace js
 
@@ -257,5 +262,23 @@ JS_GetArrayBufferByteLength(JSObject *obj);
 
 JS_FRIEND_API(uint8 *)
 JS_GetArrayBufferData(JSObject *obj);
+
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayLength(JSObject *obj);
+
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayByteOffset(JSObject *obj);
+
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayByteLength(JSObject *obj);
+
+JS_FRIEND_API(JSUint32)
+JS_GetTypedArrayType(JSObject *obj);
+
+JS_FRIEND_API(JSObject *)
+JS_GetTypedArrayBuffer(JSObject *obj);
+
+JS_FRIEND_API(void *)
+JS_GetTypedArrayData(JSObject *obj);
 
 #endif /* jstypedarray_h */

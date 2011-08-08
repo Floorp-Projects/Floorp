@@ -3523,79 +3523,6 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
     return ok;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *alias)
-{
-    JSObject *obj2;
-    JSProperty *prop;
-    JSBool ok;
-    Shape *shape;
-
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    if (!atom)
-        return JS_FALSE;
-    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED, &obj2, &prop))
-        return JS_FALSE;
-    if (!prop) {
-        js_ReportIsNotDefined(cx, name);
-        return JS_FALSE;
-    }
-    if (obj2 != obj || !obj->isNative()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
-                             alias, name, obj2->getClass()->name);
-        return JS_FALSE;
-    }
-    atom = js_Atomize(cx, alias, strlen(alias));
-    if (!atom) {
-        ok = JS_FALSE;
-    } else {
-        shape = (Shape *)prop;
-        ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
-                                   shape->getter(), shape->setter(), shape->slot,
-                                   shape->attributes(), shape->getFlags() | Shape::ALIAS,
-                                   shape->shortid)
-              != NULL);
-    }
-    return ok;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
-{
-    JSObject *obj2;
-    JSProperty *prop;
-    Shape *shape;
-
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    if (!atom)
-        return JS_FALSE;
-    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED, &obj2, &prop))
-        return JS_FALSE;
-    if (!prop) {
-        js_ReportIsNotDefined(cx, name);
-        return JS_FALSE;
-    }
-    if (obj2 != obj || !obj->isNative()) {
-        char numBuf[12];
-        JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)alias);
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
-                             numBuf, name, obj2->getClass()->name);
-        return JS_FALSE;
-    }
-    shape = (Shape *)prop;
-    return js_AddNativeProperty(cx, obj, INT_TO_JSID(alias),
-                                shape->getter(), shape->setter(), shape->slot,
-                                shape->attributes(), shape->getFlags() | Shape::ALIAS,
-                                shape->shortid)
-           != NULL;
-}
-
 static JSBool
 GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                           JSBool own, PropertyDescriptor *desc)
@@ -4044,7 +3971,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         JS_ASSERT(iterobj->getParent()->isNative());
         shape = (Shape *) iterobj->getPrivate();
 
-        while (shape->previous() && (!shape->enumerable() || shape->isAlias()))
+        while (shape->previous() && !shape->enumerable())
             shape = shape->previous();
 
         if (!shape->previous()) {

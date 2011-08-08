@@ -164,6 +164,8 @@ xml_isXMLName(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+size_t sE4XObjectsCreated = 0;
+
 /*
  * This wrapper is needed because NewBuiltinClassInstance doesn't
  * call the constructor, and we need a place to set the
@@ -172,6 +174,9 @@ xml_isXMLName(JSContext *cx, uintN argc, jsval *vp)
 static inline JSObject *
 NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
 {
+    if (!cx->runningWithTrustedPrincipals())
+        ++sE4XObjectsCreated;
+
     JSObject *obj = NewBuiltinClassInstance(cx, clasp);
     if (obj)
         obj->syncSpecialEquality();
@@ -4623,7 +4628,7 @@ IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
     if (!str)
         return false;
 
-    *isIndex = js_StringIsIndex(str, indexp);
+    *isIndex = StringIsArrayIndex(str, indexp);
     return true;
 }
 
@@ -7185,6 +7190,12 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
     xmlProto->setPrivate(xml);
     xml->object = xmlProto;
+
+    /* Don't count this as a real content-created XML object. */
+    if (!cx->runningWithTrustedPrincipals()) {
+        JS_ASSERT(sE4XObjectsCreated > 0);
+        --sE4XObjectsCreated;
+    }
 
     const uintN XML_CTOR_LENGTH = 1;
     JSFunction *ctor = global->createConstructor(cx, XML, &js_XMLClass, CLASS_ATOM(cx, XML),
