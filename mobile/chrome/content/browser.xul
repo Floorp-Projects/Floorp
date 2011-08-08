@@ -480,7 +480,7 @@
                     <setting pref="browser.ui.zoom.reflow" title="&reflowZoom.title;" type="bool"/>
                     <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
                     <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
-                    <setting pref="browser.menu.showCharacterEncoding" type="bool" localized="true" title="&showCharset.title;"/>
+                    <setting pref="browser.menu.showCharacterEncoding" type="bool" localized="true" title="&showCharsetEncoding.title;"/>
                   </settings>
                 </richlistbox>
               </notificationbox>
