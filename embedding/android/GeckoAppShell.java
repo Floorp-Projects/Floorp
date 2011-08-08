@@ -835,7 +835,7 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                ClipboardManager cm = (ClipboardManager)
+                android.text.ClipboardManager cm = (android.text.ClipboardManager)
                     context.getSystemService(Context.CLIPBOARD_SERVICE);
                 try {
                     sClipboardQueue.put(cm.hasText() ? cm.getText().toString() : "");
@@ -852,7 +852,7 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                ClipboardManager cm = (ClipboardManager)
+                android.text.ClipboardManager cm = (android.text.ClipboardManager)
                     context.getSystemService(Context.CLIPBOARD_SERVICE);
                 cm.setText(text);
             }});
