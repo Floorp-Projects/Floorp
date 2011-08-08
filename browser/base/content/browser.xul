@@ -964,6 +964,7 @@
 
   <vbox id="browser-bottombox" layer="true">
     <toolbar id="inspector-toolbar"
+             nowindowdrag="true"
              hidden="true">
       <toolbarbutton id="inspector-inspect-toolbutton"
                      label="&inspectButton.label;"

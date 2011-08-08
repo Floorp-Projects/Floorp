@@ -445,6 +445,9 @@ class NunboxAssembler : public JSC::MacroAssembler
         m_assembler.movd_rr(srcDest, typeReg);
 #elif defined JS_CPU_SPARC
         breakDoubleTo32(srcDest, typeReg, dataReg);
+#elif defined JS_CPU_ARM
+        // Yes, we are backwards from SPARC.
+        fastStoreDouble(srcDest, dataReg, typeReg);
 #else
         JS_NOT_REACHED("implement this - push double, pop pop is easiest");
 #endif

@@ -46,7 +46,6 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/ISO8601DateUtils.jsm");
 
 const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
 const FP_CLASSID = Components.ID("{26acb1f0-28fc-43bc-867a-a46aabc85dd4}");
@@ -198,11 +197,6 @@ function makePropGetter(key) {
     }
     return null;
   }
-}
-
-function W3CToIETFDate(dateString) {
-  var date = ISO8601DateUtils.parse(dateString);
-  return date.toUTCString();
 }
 
 const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -902,24 +896,13 @@ const RFC822_RE = "^((Mon|Tue|Wed|Thu|Fri|Sat|Sun)([a-z]+)?,? *)?\\d\\d?"
 function dateParse(dateString) {
   var date = dateString.trim();
 
-  if (date.search(/^\d\d\d\d/) != -1) //Could be a ISO8601/W3C date
-    return W3CToIETFDate(dateString);
+  // Could be a ISO8601/W3C date.
+  if (/^\d{4}/.test(date))
+    return new Date(dateString).toUTCString();
 
   if (isValidRFC822Date(date))
     return date; 
-  
-  if (!isNaN(parseInt(date, 10))) { 
-    //It's an integer, so maybe it's a timestamp
-    var d = new Date(parseInt(date, 10) * 1000);
-    var now = new Date();
-    var yeardiff = now.getFullYear() - d.getFullYear();
-    if ((yeardiff >= 0) && (yeardiff < 3)) {
-      // it's quite likely the correct date. 3 years is an arbitrary cutoff,
-      // but this is an invalid date format, and there's no way to verify
-      // its correctness.
-      return d.toString();
-    }
-  }
+
   // Can't help.
   return null;
 } 

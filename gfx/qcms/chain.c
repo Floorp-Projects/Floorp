@@ -956,7 +956,7 @@ static float* qcms_modular_transform_data(struct qcms_modular_transform *transfo
         while (transform != NULL) {
                 // Keep swaping src/dest when performing a transform to use less memory.
                 float *new_src = dest;
-		const void *transform_fn = transform->transform_module_fn;
+		const transform_module_fn_t transform_fn = transform->transform_module_fn;
 		if (transform_fn != qcms_transform_module_gamma_table &&
 		    transform_fn != qcms_transform_module_gamma_lut &&
 		    transform_fn != qcms_transform_module_clut &&

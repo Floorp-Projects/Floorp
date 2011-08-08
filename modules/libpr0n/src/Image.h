@@ -158,7 +158,7 @@ protected:
    * Extended by child classes, if they have additional
    * conditions for being able to animate
    */
-  virtual PRBool ShouldAnimate() {
+  virtual bool ShouldAnimate() {
     return mAnimationConsumers > 0 && mAnimationMode != kDontAnimMode;
   }
 };

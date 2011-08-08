@@ -59,9 +59,6 @@ endif
 ABS_DIST = $(call core_abspath,$(DIST))
 
 libs::
-	# Temporary, until bug 655058 lands on nspr. When that happens, we can
-	# revert the config/nspr/* part of bug 654975.
-	$(MAKE) -C $(DEPTH)/nsprpub PROFILE_USE_CFLAGS="$(PROFILE_USE_CFLAGS)"
 	$(MAKE) -C $(DEPTH)/nsprpub install prefix=$(ABS_DIST)/sdk exec_prefix=$(ABS_DIST)/sdk bindir=$(ABS_DIST)/sdk/dummy includedir=$(ABS_DIST)/include libdir=$(ABS_DIST)/sdk/lib datadir=$(ABS_DIST)/sdk/dummy DESTDIR=
 	$(INSTALL) $(DEPTH)/nsprpub/config/nspr-config $(DIST)/sdk/bin
 	$(RM) -rf $(DIST)/sdk/dummy
@@ -76,6 +73,3 @@ install::
 	$(MAKE) -C $(DEPTH)/nsprpub install DESTDIR=$(DESTDIR) libdir=$(mozappdir) includedir=$(includedir)/nspr
 	$(RM) -f $(addprefix $(DESTDIR)$(mozappdir)/$(LIB_PREFIX), $(addsuffix .$(LIB_SUFFIX), nspr4 plds4 plc4))
 	$(RM) -f $(addprefix $(DESTDIR)$(bindir)/,nspr-config compile-et.pl prerr.properties)
-
-clean distclean::
-	$(MAKE) -C $(DEPTH)/nsprpub $@

@@ -212,10 +212,13 @@
       <method name="resize">
         <body>
           <![CDATA[
-            let container = this.parentNode.getBoundingClientRect();
-            let element = this._scrollbox.getBoundingClientRect();
-            let undo = this._tabsUndo.getBoundingClientRect();
-            let lastChild = this.parentNode.lastChild.getBoundingClientRect();
+            let container = Rect.fromRect(this.parentNode.getBoundingClientRect());
+            if (container.height == 0)
+              return; // Don't try to resize while collapsed.
+
+            let element = Rect.fromRect(this._scrollbox.getBoundingClientRect());
+            let undo = Rect.fromRect(this._tabsUndo.getBoundingClientRect());
+            let lastChild = Rect.fromRect(this.parentNode.lastChild.getBoundingClientRect());
 
             let height = window.innerHeight - element.top - (lastChild.top - element.bottom) - lastChild.height;
             this.children.style.height = height + "px";
