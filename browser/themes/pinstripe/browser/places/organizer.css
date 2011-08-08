@@ -80,33 +80,9 @@
 #placesToolbar > toolbarbutton {
   list-style-image: url("chrome://browser/skin/places/toolbar.png");
   margin: 4px 4px 5px;
-  padding: 1px 3px;
-  border: 1px solid @toolbarbuttonBorderColor@;
-  border-radius: @toolbarbuttonCornerRadius@;
-  box-shadow: @loweredShadow@;
-  background: @toolbarbuttonBackground@;
-  background-origin: border-box;
-}
-
-#placesToolbar > toolbarbutton:not([disabled="true"]):active:hover,
-#placesToolbar > toolbarbutton[open="true"] {
-  background: @toolbarbuttonPressedBackgroundColor@;
-  text-shadow: @loweredShadow@;
-  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
-}
-
-#placesToolbar > toolbarbutton:-moz-focusring {
-  border-color: @toolbarbuttonFocusedBorderColorAqua@;
-  box-shadow: @focusRingShadow@;
-}
-
-#placesToolbar > toolbarbutton:-moz-system-metric(mac-graphite-theme):-moz-focusring {
-  border-color: @toolbarbuttonFocusedBorderColorGraphite@;
-}
-
-#placesToolbar > toolbarbutton:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
-  background-image: @toolbarbuttonInactiveBackgroundImage@;
+  padding: 0;
+  height: 22px;
+  -moz-appearance: toolbarbutton;
 }
 
 #placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon {
@@ -136,17 +112,12 @@
 #back-button:-moz-locale-dir(ltr),
 #forward-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
   margin-right: 0;
-  border-right: 0;
 }
 
 #forward-button:-moz-locale-dir(ltr),
 #back-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
   margin-left: 0;
 }
 
