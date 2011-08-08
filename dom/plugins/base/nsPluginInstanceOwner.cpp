@@ -70,7 +70,6 @@ using mozilla::DefaultXDisplay;
 #include "nsContentUtils.h"
 #include "nsRect.h"
 #include "nsSize.h"
-#include "nsIDOMContextMenuListener.h"
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
 #include "nsIDOMEventTarget.h"
@@ -124,23 +123,18 @@ using namespace mozilla;
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
 // same class
-class nsPluginDOMContextMenuListener : public nsIDOMContextMenuListener
+class nsPluginDOMContextMenuListener : public nsIDOMEventListener
 {
 public:
   nsPluginDOMContextMenuListener();
   virtual ~nsPluginDOMContextMenuListener();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
 
-  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
-  
   nsresult Init(nsIContent* aContent);
   nsresult Destroy(nsIContent* aContent);
   
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)
-  {
-    return NS_OK;
-  }
   nsEventStatus ProcessEvent(const nsGUIEvent& anEvent)
   {
     return nsEventStatus_eConsumeNoDefault;
@@ -3315,14 +3309,13 @@ nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener,
-                   nsIDOMContextMenuListener,
+NS_IMPL_ISUPPORTS1(nsPluginDOMContextMenuListener,
                    nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsPluginDOMContextMenuListener::ContextMenu(nsIDOMEvent* aContextMenuEvent)
+nsPluginDOMContextMenuListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  aContextMenuEvent->PreventDefault(); // consume event
+  aEvent->PreventDefault(); // consume event
   
   return NS_OK;
 }
