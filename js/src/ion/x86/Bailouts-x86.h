@@ -50,6 +50,10 @@ namespace ion {
 
 class IonCompartment;
 
+#if defined(_WIN32)
+# pragma pack(push, 1)
+#endif
+
 class BailoutStack
 {
     uintptr_t frameClassId_;
@@ -91,6 +95,10 @@ class ExtendedBailoutStack : public BailoutStack
         return snapshotOffset_;
     }
 };
+
+#if defined(_WIN32)
+# pragma pack(pop)
+#endif
 
 class BailoutEnvironment
 {
