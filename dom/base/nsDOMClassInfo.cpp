@@ -1620,10 +1620,10 @@ jsid nsDOMClassInfo::sKeyPath_id         = JSID_VOID;
 jsid nsDOMClassInfo::sAutoIncrement_id   = JSID_VOID;
 jsid nsDOMClassInfo::sUnique_id          = JSID_VOID;
 
-#define EVENT(name_) \
+#define EVENT(name_, id_, type_, struct_)             \
 jsid nsDOMClassInfo::sOn##name_##_id     = JSID_VOID;
-#define WINDOW_ONLY_EVENT(name_) EVENT(name_)
-#define TOUCH_EVENT(name_) EVENT(name_)
+#define WINDOW_ONLY_EVENT EVENT
+#define TOUCH_EVENT EVENT
 #include "nsEventNameList.h"
 #undef TOUCH_EVENT
 #undef WINDOW_ONLY_EVENT
@@ -1890,10 +1890,10 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sAutoIncrement_id,   cx, "autoIncrement");
   SET_JSID_TO_STRING(sUnique_id,          cx, "unique");
 
-#define EVENT(name_) \
+#define EVENT(name_, id_, type_, struct_)               \
   SET_JSID_TO_STRING(sOn##name_##_id, cx, "on" #name_); 
-#define WINDOW_ONLY_EVENT(name_) EVENT(name_)
-#define TOUCH_EVENT(name_) EVENT(name_)
+#define WINDOW_ONLY_EVENT EVENT
+#define TOUCH_EVENT EVENT
 #include "nsEventNameList.h"
 #undef TOUCH_EVENT
 #undef WINDOW_ONLY_EVENT
@@ -4907,10 +4907,10 @@ nsDOMClassInfo::ShutDown()
   sAutoIncrement_id   = JSID_VOID;
   sUnique_id          = JSID_VOID;
 
-#define EVENT(name_) \
+#define EVENT(name_, id_, type_, struct_)       \
   sOn##name_##_id     = JSID_VOID;
-#define WINDOW_ONLY_EVENT(name_) EVENT(name_)
-#define TOUCH_EVENT(name_) EVENT(name_)
+#define WINDOW_ONLY_EVENT EVENT
+#define TOUCH_EVENT EVENT
 #include "nsEventNameList.h"
 #undef TOUCH_EVENT
 #undef WINDOW_ONLY_EVENT
