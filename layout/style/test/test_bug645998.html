@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=645998
+-->
+<head>
+  <title>Test for Bug 645998</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <!-- This is the real test: will these stylesheets ever finish loading? -->
+  <link rel="stylesheet" href="file_bug645998-1.css">
+  <link rel="stylesheet" href="file_bug645998-2.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=645998">Mozilla Bug 645998</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 645998 **/
+ok(true, "Hey, we got here!  That's a good sign");
+
+</script>
+</pre>
+</body>
+</html>
