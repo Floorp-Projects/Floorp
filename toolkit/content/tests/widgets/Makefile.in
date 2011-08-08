@@ -50,7 +50,6 @@ _CHROME_FILES = \
 		$(NULL)
 
 _TEST_FILES =	\
-		test_arrowpanel.xul \
                 test_contextmenu_nested.xul \
 		test_tree_column_reorder.xul \
 		tree_shared.js \

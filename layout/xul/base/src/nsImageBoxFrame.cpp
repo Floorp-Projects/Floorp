@@ -440,7 +440,6 @@ nsImageBoxFrame::GetImageSize()
   }
 }
 
-
 /**
  * Ok return our dimensions
  */
@@ -456,12 +455,68 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
     size = nsSize(mSubRect.width, mSubRect.height);
   else
     size = mImageSize;
-  AddBorderAndPadding(size);
+
+  nsSize intrinsicSize = size;
+
+  nsMargin borderPadding(0,0,0,0);
+  GetBorderAndPadding(borderPadding);
+  size.width += borderPadding.LeftRight();
+  size.height += borderPadding.TopBottom();
+
   PRBool widthSet, heightSet;
   nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet);
+  NS_ASSERTION(size.width != NS_INTRINSICSIZE && size.height != NS_INTRINSICSIZE,
+               "non-nintrinsic size expected");
 
   nsSize minSize = GetMinSize(aState);
-  nsSize maxSize = GetMaxSize(aState);  
+  nsSize maxSize = GetMaxSize(aState);
+
+  if (!widthSet && !heightSet) {
+    if (minSize.width != NS_INTRINSICSIZE)
+      minSize.width -= borderPadding.LeftRight();
+    if (minSize.height != NS_INTRINSICSIZE)
+      minSize.height -= borderPadding.TopBottom();
+    if (maxSize.width != NS_INTRINSICSIZE)
+      maxSize.width -= borderPadding.LeftRight();
+    if (maxSize.height != NS_INTRINSICSIZE)
+      maxSize.height -= borderPadding.TopBottom();
+
+    size = nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(minSize.width, minSize.height,
+                                                                 maxSize.width, maxSize.height,
+                                                                 intrinsicSize.width, intrinsicSize.height);
+    NS_ASSERTION(size.width != NS_INTRINSICSIZE && size.height != NS_INTRINSICSIZE,
+                 "non-nintrinsic size expected");
+    size.width += borderPadding.LeftRight();
+    size.height += borderPadding.TopBottom();
+    return size;
+  }
+
+  if (!widthSet) {
+    if (intrinsicSize.height > 0) {
+      // Subtract off the border and padding from the height because the
+      // content-box needs to be used to determine the ratio
+      nscoord height = size.height - borderPadding.TopBottom();
+      size.width = nscoord(PRInt64(height) * PRInt64(intrinsicSize.width) /
+                           PRInt64(intrinsicSize.height));
+    }
+    else {
+      size.width = intrinsicSize.width;
+    }
+
+    size.width += borderPadding.LeftRight();
+  }
+  else if (!heightSet) {
+    if (intrinsicSize.width > 0) {
+      nscoord width = size.width - borderPadding.LeftRight();
+      size.height = nscoord(PRInt64(width) * PRInt64(intrinsicSize.height) /
+                            PRInt64(intrinsicSize.width));
+    }
+    else {
+      size.height = intrinsicSize.height;
+    }
+
+    size.height += borderPadding.TopBottom();
+  }
 
   return BoundsCheck(minSize, size, maxSize);
 }

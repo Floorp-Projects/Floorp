@@ -6,3 +6,4 @@ script sort-01.js
 script toLocaleString-01.js
 script toString-01.js
 script unshift-01.js
+script index-with-null-character.js

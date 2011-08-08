@@ -2726,9 +2726,6 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     //        The .xul file must be parsed from disk.
 
     PRBool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
-    if (aIsDynamic)
-        mIsWritingFastLoad = useXULCache;
-
     if (useXULCache && mCurrentPrototype) {
         PRBool loaded;
         rv = mCurrentPrototype->AwaitLoadDone(this, &loaded);
