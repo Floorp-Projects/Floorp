@@ -24,11 +24,11 @@ netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-function openContextMenuFor(element) {
+function openContextMenuFor(element, shiftkey) {
     // Context menu should be closed before we open it again.
     is(contextMenu.state, "closed", "checking if popup is closed");
 
-    var eventDetails = { type : "contextmenu", button : 2 };
+    var eventDetails = { type : "contextmenu", button : 2, shiftKey : shiftkey };
     synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
 }
 
@@ -50,7 +50,15 @@ function executeCopyCommand(command, expectedValue)
   is(input.value, expectedValue, "paste for command " + command);
 }
 
-function getVisibleMenuItems(aMenu) {
+function invokeItemAction(ident)
+{
+  var item = contextMenu.getElementsByAttribute("ident", ident)[0];
+  ok(item, "Got generated XUL menu item");
+  item.doCommand();
+  is(pagemenu.hasAttribute("hopeless"), false, "attribute got removed");
+}
+
+function getVisibleMenuItems(aMenu, aData) {
     var items = [];
     var accessKeys = {};
     for (var i = 0; i < aMenu.childNodes.length; i++) {
@@ -62,10 +70,14 @@ function getVisibleMenuItems(aMenu) {
         if (key)
             key = key.toLowerCase();
 
+        var isGenerated = item.hasAttribute("generated");
+
         if (item.nodeName == "menuitem") {
             var isSpellSuggestion = item.className == "spell-suggestion";
             if (isSpellSuggestion) {
               is(item.id, "", "child menuitem #" + i + " is a spelling suggestion");
+            } else if (isGenerated) {
+              is(item.id, "", "child menuitem #" + i + " is a generated item");
             } else {
               ok(item.id, "child menuitem #" + i + " has an ID");
             }
@@ -74,6 +86,8 @@ function getVisibleMenuItems(aMenu) {
             if (isSpellSuggestion) {
               is(key, "", "Spell suggestions shouldn't have an access key");
               items.push("*" + label);
+            } else if (isGenerated) {
+              items.push("+" + label);
             } else if (item.id.indexOf("spell-check-dictionary-") != 0 &&
                        item.id != "spell-no-suggestions") {
               ok(key, "menuitem " + item.id + " has an access key");
@@ -82,21 +96,35 @@ function getVisibleMenuItems(aMenu) {
               else
                   accessKeys[key] = item.id;
             }
-            if (!isSpellSuggestion) {
+            if (!isSpellSuggestion && !isGenerated) {
               items.push(item.id);
             }
-            items.push(!item.disabled);
+            if (isGenerated) {
+              var p = {};
+              p.type = item.getAttribute("type");
+              p.icon = item.getAttribute("image");
+              p.checked = item.hasAttribute("checked");
+              p.disabled = item.hasAttribute("disabled");
+              items.push(p);
+            } else {
+              items.push(!item.disabled);
+            }
         } else if (item.nodeName == "menuseparator") {
             ok(true, "--- seperator id is " + item.id);
             items.push("---");
             items.push(null);
         } else if (item.nodeName == "menu") {
+            if (isGenerated) {
+                item.id = "generated-submenu-" + aData.generatedSubmenuId++;
+            }
             ok(item.id, "child menu #" + i + " has an ID");
-            ok(key, "menu has an access key");
-            if (accessKeys[key])
-                ok(false, "menu " + item.id + " has same accesskey as " + accessKeys[key]);
-            else
-                accessKeys[key] = item.id;
+            if (!isGenerated) {
+                ok(key, "menu has an access key");
+                if (accessKeys[key])
+                    ok(false, "menu " + item.id + " has same accesskey as " + accessKeys[key]);
+                else
+                    accessKeys[key] = item.id;
+            }
             items.push(item.id);
             items.push(!item.disabled);
             // Add a dummy item to that the indexes in checkMenu are the same
@@ -113,7 +141,8 @@ function getVisibleMenuItems(aMenu) {
 
 function checkContextMenu(expectedItems) {
     is(contextMenu.state, "open", "checking if popup is open");
-    checkMenu(contextMenu, expectedItems);
+    var data = { generatedSubmenuId: 1 };
+    checkMenu(contextMenu, expectedItems, data);
 }
 
 /*
@@ -129,8 +158,8 @@ function checkContextMenu(expectedItems) {
  *               "lol", false]              // item disabled
  * 
  */
-function checkMenu(menu, expectedItems) {
-    var actualItems = getVisibleMenuItems(menu);
+function checkMenu(menu, expectedItems, data) {
+    var actualItems = getVisibleMenuItems(menu, data);
     //ok(false, "Items are: " + actualItems);
     for (var i = 0; i < expectedItems.length; i+=2) {
         var actualItem   = actualItems[i];
@@ -142,11 +171,40 @@ function checkMenu(menu, expectedItems) {
             var menuID = expectedItems[i - 2]; // The last item was the menu ID.
             var submenu = menu.getElementsByAttribute("id", menuID)[0];
             ok(submenu && submenu.nodeName == "menu", "got expected submenu element");
-            checkMenu(submenu.menupopup, expectedItem);
+            checkMenu(submenu.menupopup, expectedItem, data);
         } else {
             is(actualItem, expectedItem,
                "checking item #" + i/2 + " (" + expectedItem + ") name");
-            if (expectedEnabled != null)
+
+            if (typeof expectedEnabled == "object" && expectedEnabled != null ||
+                typeof actualEnabled == "object" && actualEnabled != null) {
+
+                ok(!(actualEnabled == null), "actualEnabled is not null");
+                ok(!(expectedEnabled == null), "expectedEnabled is not null");
+                is(typeof actualEnabled, typeof expectedEnabled, "checking types");
+
+                if (typeof actualEnabled != typeof expectedEnabled ||
+                    actualEnabled == null || expectedEnabled == null)
+                  continue;
+
+                is(actualEnabled.type, expectedEnabled.type,
+                   "checking item #" + i/2 + " (" + expectedItem + ") type attr value");
+                var icon = actualEnabled.icon;
+                if (icon) {
+                  var tmp = "";
+                  var j = icon.length - 1;
+                  while (j && icon[j] != "/") {
+                    tmp = icon[j--] + tmp;
+                  }
+                  icon = tmp;
+                }
+                is(icon, expectedEnabled.icon,
+                   "checking item #" + i/2 + " (" + expectedItem + ") icon attr value");
+                is(actualEnabled.checked, expectedEnabled.checked,
+                   "checking item #" + i/2 + " (" + expectedItem + ") has checked attr");
+                is(actualEnabled.disabled, expectedEnabled.disabled,
+                   "checking item #" + i/2 + " (" + expectedItem + ") has disabled attr");
+            } else if (expectedEnabled != null)
                 is(actualEnabled, expectedEnabled,
                    "checking item #" + i/2 + " (" + expectedItem + ") enabled state");
         }
@@ -408,9 +466,70 @@ function runTest(testNum) {
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
 
-  case 15:
+    case 15:
         executeCopyCommand("cmd_copyLink", "http://mozilla.com/");
         closeContextMenu();
+        openContextMenuFor(pagemenu); // Invoke context menu for next test.
+        break;
+
+    case 16:
+        // Context menu for element with assigned content context menu
+        checkContextMenu(["+Plain item",          {type: "", icon: "", checked: false, disabled: false},
+                          "+Disabled item",       {type: "", icon: "", checked: false, disabled: true},
+                          "---",                  null,
+                          "+Checkbox",            {type: "checkbox", icon: "", checked: true, disabled: false},
+                          "---",                  null,
+                          "+Radio1",              {type: "checkbox", icon: "", checked: true, disabled: false},
+                          "+Radio2",              {type: "checkbox", icon: "", checked: false, disabled: false},
+                          "+Radio3",              {type: "checkbox", icon: "", checked: false, disabled: false},
+                          "---",                  null,
+                          "+Item w/ icon",        {type: "", icon: "favicon.ico", checked: false, disabled: false},
+                          "+Item w/ bad icon",    {type: "", icon: "", checked: false, disabled: false},
+                          "---",                  null,
+                          "generated-submenu-1",  true,
+                              ["+Radio1",             {type: "checkbox", icon: "", checked: false, disabled: false},
+                               "+Radio2",             {type: "checkbox", icon: "", checked: true, disabled: false},
+                               "+Radio3",             {type: "checkbox", icon: "", checked: false, disabled: false},
+                               "---",                 null,
+                               "+Checkbox",           {type: "checkbox", icon: "", checked: false, disabled: false}], null,
+                          "---",                  null,
+                          "context-back",         false,
+                          "context-forward",      false,
+                          "context-reload",       true,
+                          "context-stop",         false,
+                          "---",                  null,
+                          "context-bookmarkpage", true,
+                          "context-savepage",     true,
+                          "context-sendpage",     true,
+                          "---",                  null,
+                          "context-viewbgimage",  false,
+                          "context-selectall",    true,
+                          "---",                  null,
+                          "context-viewsource",   true,
+                          "context-viewinfo",     true]);
+
+        invokeItemAction("0");
+        closeContextMenu();
+        openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
+        break;
+
+    case 17:
+        // Context menu for element with assigned content context menu
+        // The shift key should bypass content context menu processing
+        checkContextMenu(["context-back",         false,
+                          "context-forward",      false,
+                          "context-reload",       true,
+                          "context-stop",         false,
+                          "---",                  null,
+                          "context-bookmarkpage", true,
+                          "context-savepage",     true,
+                          "context-sendpage",     true,
+                          "---",                  null,
+                          "context-viewbgimage",  false,
+                          "context-selectall",    true,
+                          "---",                  null,
+                          "context-viewsource",   true,
+                          "context-viewinfo",     true]);
 
         subwindow.close();
         SimpleTest.finish();
@@ -437,7 +556,7 @@ function runTest(testNum) {
 var testNum = 1;
 var subwindow, chromeWin, contextMenu;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
-    iframe, textarea, contenteditable, inputspell;
+    iframe, textarea, contenteditable, inputspell, pagemenu;
 
 function startTest() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -470,6 +589,7 @@ function startTest() {
     textarea = subwindow.document.getElementById("test-textarea");
     contenteditable = subwindow.document.getElementById("test-contenteditable");
     inputspell = subwindow.document.getElementById("test-input-spellcheck");
+    pagemenu = subwindow.document.getElementById("test-pagemenu");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
     runTest(1);

@@ -66,6 +66,7 @@ struct nsRect;
 struct nsSize;
 class nsHTMLFormElement;
 class nsIDOMDOMStringMap;
+class nsIDOMHTMLMenuElement;
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
@@ -161,6 +162,7 @@ public:
   nsresult GetDataset(nsIDOMDOMStringMap** aDataset);
   // Callback for destructor of of dataset to ensure to null out weak pointer.
   nsresult ClearDataset();
+  nsresult GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu);
 
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -531,6 +533,11 @@ public:
    */
   virtual bool IsDisabled() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+  }
+
+  PRBool IsHidden() const
+  {
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::hidden);
   }
 
 protected:
@@ -1563,6 +1570,8 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Label)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Legend)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Link)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Map)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(Menu)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(MenuItem)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meta)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Object)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(OptGroup)
