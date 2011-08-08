@@ -159,7 +159,6 @@ protected:
 private:
   RequestHeaderTuples mRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
-  nsCOMPtr<nsIURI> mRedirectOriginalURI;
   nsCOMPtr<nsISupports> mSecurityInfo;
 
   PRPackedBool mIsFromCache;
