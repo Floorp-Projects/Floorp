@@ -141,10 +141,14 @@ struct RuleValue : RuleSelectorPair {
 
 // Uses any of the sets of ops below.
 struct RuleHashTableEntry : public PLDHashEntryHdr {
+  // If you add members that have heap allocated memory be sure to change the
+  // logic in RuleHashTableSizeOfEnumerator.
   nsTArray<RuleValue> mRules;
 };
 
 struct RuleHashTagTableEntry : public RuleHashTableEntry {
+  // If you add members that have heap allocated memory be sure to change the
+  // logic in RuleHash::SizeOf.
   nsCOMPtr<nsIAtom> mTag;
 };
 
