@@ -114,7 +114,7 @@ nsPerformanceTiming::GetDomainLookupStart(DOMTimeMilliSec* aTime)
   }
   mozilla::TimeStamp stamp;
   mChannel->GetDomainLookupStart(&stamp);
-  return mDOMTiming->TimeStampToDOM(stamp, aTime);
+  return mDOMTiming->TimeStampToDOMOrFetchStart(stamp, aTime);
 }
 
 NS_IMETHODIMP
@@ -125,7 +125,7 @@ nsPerformanceTiming::GetDomainLookupEnd(DOMTimeMilliSec* aTime)
   }
   mozilla::TimeStamp stamp;
   mChannel->GetDomainLookupEnd(&stamp);
-  return mDOMTiming->TimeStampToDOM(stamp, aTime);
+  return mDOMTiming->TimeStampToDOMOrFetchStart(stamp, aTime);
 }
 
 NS_IMETHODIMP
@@ -136,7 +136,7 @@ nsPerformanceTiming::GetConnectStart(DOMTimeMilliSec* aTime)
   }
   mozilla::TimeStamp stamp;
   mChannel->GetConnectStart(&stamp);
-  return mDOMTiming->TimeStampToDOM(stamp, aTime);
+  return mDOMTiming->TimeStampToDOMOrFetchStart(stamp, aTime);
 }
 
 NS_IMETHODIMP
@@ -147,7 +147,7 @@ nsPerformanceTiming::GetConnectEnd(DOMTimeMilliSec* aTime)
   }
   mozilla::TimeStamp stamp;
   mChannel->GetConnectEnd(&stamp);
-  return mDOMTiming->TimeStampToDOM(stamp, aTime);
+  return mDOMTiming->TimeStampToDOMOrFetchStart(stamp, aTime);
 }
 
 NS_IMETHODIMP
@@ -158,7 +158,7 @@ nsPerformanceTiming::GetRequestStart(DOMTimeMilliSec* aTime)
   }
   mozilla::TimeStamp stamp;
   mChannel->GetRequestStart(&stamp);
-  return mDOMTiming->TimeStampToDOM(stamp, aTime);
+  return mDOMTiming->TimeStampToDOMOrFetchStart(stamp, aTime);
 }
 
 NS_IMETHODIMP
@@ -174,7 +174,7 @@ nsPerformanceTiming::GetResponseStart(DOMTimeMilliSec* aTime)
   if (stamp.IsNull() || (!cacheStamp.IsNull() && cacheStamp < stamp)) {
     stamp = cacheStamp;
   }
-  return mDOMTiming->TimeStampToDOM(stamp, aTime);
+  return mDOMTiming->TimeStampToDOMOrFetchStart(stamp, aTime);
 }
 
 NS_IMETHODIMP
@@ -190,7 +190,7 @@ nsPerformanceTiming::GetResponseEnd(DOMTimeMilliSec* aTime)
   if (stamp.IsNull() || (!cacheStamp.IsNull() && cacheStamp < stamp)) {
     stamp = cacheStamp;
   }
-  return mDOMTiming->TimeStampToDOM(stamp, aTime);
+  return mDOMTiming->TimeStampToDOMOrFetchStart(stamp, aTime);
 }
 
 NS_IMETHODIMP
