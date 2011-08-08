@@ -3196,9 +3196,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   mExternalResourceMap.ShowViewers();
 
-  if (mScriptGlobalObject) {
-    RescheduleAnimationFrameNotifications();
-  }
+  MaybeRescheduleAnimationFrameNotifications();
 
   shell.swap(*aInstancePtrResult);
 
@@ -3206,8 +3204,13 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 }
 
 void
-nsDocument::RescheduleAnimationFrameNotifications()
+nsDocument::MaybeRescheduleAnimationFrameNotifications()
 {
+  if (!mPresShell || !IsEventHandlingEnabled()) {
+    // bail out for now, until one of those conditions changes
+    return;
+  }
+
   nsRefreshDriver* rd = mPresShell->GetPresContext()->RefreshDriver();
   if (mHavePendingPaint) {
     rd->ScheduleBeforePaintEvent(this);
@@ -3228,7 +3231,7 @@ void
 nsDocument::DeleteShell()
 {
   mExternalResourceMap.HideViewers();
-  if (mScriptGlobalObject) {
+  if (IsEventHandlingEnabled()) {
     RevokeAnimationFrameNotifications();
   }
   mPresShell = nsnull;
@@ -3776,7 +3779,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     // our layout history state now.
     mLayoutHistoryState = GetLayoutHistoryState();
 
-    if (mPresShell) {
+    if (mPresShell && !EventHandlingSuppressed()) {
       RevokeAnimationFrameNotifications();
     }
 
@@ -3837,9 +3840,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       }
     }
 
-    if (mPresShell) {
-      RescheduleAnimationFrameNotifications();
-    }
+    MaybeRescheduleAnimationFrameNotifications();
   }
 
   // Remember the pointer to our window (or lack there of), to avoid
@@ -7648,6 +7649,10 @@ SuppressEventHandlingInDocument(nsIDocument* aDocument, void* aData)
 void
 nsDocument::SuppressEventHandling(PRUint32 aIncrease)
 {
+  if (mEventsSuppressed == 0 && aIncrease != 0 && mPresShell &&
+      mScriptGlobalObject) {
+    RevokeAnimationFrameNotifications();
+  }
   mEventsSuppressed += aIncrease;
   EnumerateSubDocuments(SuppressEventHandlingInDocument, &aIncrease);
 }
@@ -7807,13 +7812,8 @@ GetAndUnsuppressSubDocuments(nsIDocument* aDocument, void* aData)
 void
 nsDocument::UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents)
 {
-  if (mEventsSuppressed > 0) {
-    --mEventsSuppressed;
-  }
-
   nsTArray<nsCOMPtr<nsIDocument> > documents;
-  documents.AppendElement(this);
-  EnumerateSubDocuments(GetAndUnsuppressSubDocuments, &documents);
+  GetAndUnsuppressSubDocuments(this, &documents);
 
   if (aFireEvents) {
     NS_DispatchToCurrentThread(new nsDelayedEventDispatcher(documents));
@@ -8042,7 +8042,7 @@ nsIDocument::ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener)
   if (aListener) {
     PRBool alreadyRegistered = !mAnimationFrameListeners.IsEmpty();
     if (mAnimationFrameListeners.AppendElement(aListener) &&
-        !alreadyRegistered && mPresShell) {
+        !alreadyRegistered && mPresShell && IsEventHandlingEnabled()) {
       mPresShell->GetPresContext()->RefreshDriver()->
         ScheduleAnimationFrameListeners(this);
     }
@@ -8056,6 +8056,7 @@ nsIDocument::ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener)
     // event will fire, or we'll quietly go away at some point.
     mHavePendingPaint =
       !mPresShell ||
+      !IsEventHandlingEnabled() ||
       mPresShell->GetPresContext()->RefreshDriver()->
         ScheduleBeforePaintEvent(this);
   }
