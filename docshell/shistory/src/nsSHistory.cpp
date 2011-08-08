@@ -72,12 +72,10 @@ using namespace mozilla;
 
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
 #define PREF_SHISTORY_MAX_TOTAL_VIEWERS "browser.sessionhistory.max_total_viewers"
-#define PREF_SHISTORY_OPTIMIZE_EVICTION "browser.sessionhistory.optimize_eviction"
 
 static const char* kObservedPrefs[] = {
   PREF_SHISTORY_SIZE,
   PREF_SHISTORY_MAX_TOTAL_VIEWERS,
-  PREF_SHISTORY_OPTIMIZE_EVICTION,
   nsnull
 };
 
@@ -90,15 +88,45 @@ static PRCList gSHistoryList;
 // means we will calculate how many viewers to cache based on total memory
 PRInt32 nsSHistory::sHistoryMaxTotalViewers = -1;
 
-// Whether we should optimize the search for which entry to evict,
-// by evicting older entries first. See entryLastTouched in
-// nsSHistory::EvictGlobalContentViewer().
-// NB: After 4.0, we should remove this option and the corresponding
-//     pref - optimization should always be used
-static PRBool gOptimizeEviction = PR_FALSE;
 // A counter that is used to be able to know the order in which
 // entries were touched, so that we can evict older entries first.
 static PRUint32 gTouchCounter = 0;
+
+static PRLogModuleInfo* gLogModule = PR_LOG_DEFINE("nsSHistory");
+#define LOG(format) PR_LOG(gLogModule, PR_LOG_DEBUG, format)
+
+// This macro makes it easier to print a log message which includes a URI's
+// spec.  Example use:
+//
+//  nsIURI *uri = [...];
+//  LOG_SPEC(("The URI is %s.", _spec), uri);
+//
+#define LOG_SPEC(format, uri)                              \
+  PR_BEGIN_MACRO                                           \
+    if (PR_LOG_TEST(gLogModule, PR_LOG_DEBUG)) {           \
+      nsCAutoString _specStr(NS_LITERAL_CSTRING("(null)"));\
+      if (uri) {                                           \
+        uri->GetSpec(_specStr);                            \
+      }                                                    \
+      const char* _spec = _specStr.get();                  \
+      LOG(format);                                         \
+    }                                                      \
+  PR_END_MACRO
+
+// This macro makes it easy to log a message including an SHEntry's URI.
+// For example:
+//
+//  nsCOMPtr<nsISHEntry> shentry = [...];
+//  LOG_SHENTRY_SPEC(("shentry %p has uri %s.", shentry.get(), _spec), shentry);
+//
+#define LOG_SHENTRY_SPEC(format, shentry)                  \
+  PR_BEGIN_MACRO                                           \
+    if (PR_LOG_TEST(gLogModule, PR_LOG_DEBUG)) {           \
+      nsCOMPtr<nsIURI> uri;                                \
+      shentry->GetURI(getter_AddRefs(uri));                \
+      LOG_SPEC(format, uri);                               \
+    }                                                      \
+  PR_END_MACRO
 
 enum HistCmd{
   HIST_CMD_BACK,
@@ -134,14 +162,59 @@ nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsSHistory::UpdatePrefs();
-    nsSHistory::EvictGlobalContentViewer();
+    nsSHistory::GloballyEvictContentViewers();
   } else if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID) ||
              !strcmp(aTopic, "memory-pressure")) {
-    nsSHistory::EvictAllContentViewersGlobally();
+    nsSHistory::GloballyEvictAllContentViewers();
   }
 
   return NS_OK;
 }
+
+namespace {
+
+already_AddRefed<nsIContentViewer>
+GetContentViewerForTransaction(nsISHTransaction *aTrans)
+{
+  nsCOMPtr<nsISHEntry> entry;
+  aTrans->GetSHEntry(getter_AddRefs(entry));
+  if (!entry) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsISHEntry> ownerEntry;
+  nsCOMPtr<nsIContentViewer> viewer;
+  entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
+                             getter_AddRefs(viewer));
+  return viewer.forget();
+}
+
+void
+EvictContentViewerForTransaction(nsISHTransaction *aTrans)
+{
+  nsCOMPtr<nsISHEntry> entry;
+  aTrans->GetSHEntry(getter_AddRefs(entry));
+  nsCOMPtr<nsIContentViewer> viewer;
+  nsCOMPtr<nsISHEntry> ownerEntry;
+  entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
+                             getter_AddRefs(viewer));
+  if (viewer) {
+    NS_ASSERTION(ownerEntry,
+                 "Content viewer exists but its SHEntry is null");
+
+    LOG_SHENTRY_SPEC(("Evicting content viewer 0x%p for "
+                      "owning SHEntry 0x%p at %s.",
+                      viewer.get(), ownerEntry.get(), _spec), ownerEntry);
+
+    // Drop the presentation state before destroying the viewer, so that
+    // document teardown is able to correctly persist the state.
+    ownerEntry->SetContentViewer(nsnull);
+    ownerEntry->SyncPresentationState();
+    viewer->Destroy();
+  }
+}
+
+} // anonymous namespace
 
 //*****************************************************************************
 //***    nsSHistory: Object Management
@@ -240,7 +313,6 @@ nsSHistory::UpdatePrefs()
   Preferences::GetInt(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
   Preferences::GetInt(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
                       &sHistoryMaxTotalViewers);
-  Preferences::GetBool(PREF_SHISTORY_OPTIMIZE_EVICTION, &gOptimizeEviction);
   // If the pref is negative, that means we calculate how many viewers
   // we think we should cache, based on total memory
   if (sHistoryMaxTotalViewers < 0) {
@@ -689,12 +761,12 @@ nsSHistory::GetListener(nsISHistoryListener ** aListener)
 }
 
 NS_IMETHODIMP
-nsSHistory::EvictContentViewers(PRInt32 aPreviousIndex, PRInt32 aIndex)
+nsSHistory::EvictOutOfRangeContentViewers(PRInt32 aIndex)
 {
   // Check our per SHistory object limit in the currently navigated SHistory
-  EvictWindowContentViewers(aPreviousIndex, aIndex);
+  EvictOutOfRangeWindowContentViewers(aIndex);
   // Check our total limit across all SHistory objects
-  EvictGlobalContentViewer();
+  GloballyEvictContentViewers();
   return NS_OK;
 }
 
@@ -703,7 +775,14 @@ nsSHistory::EvictAllContentViewers()
 {
   // XXXbz we don't actually do a good job of evicting things as we should, so
   // we might have viewers quite far from mIndex.  So just evict everything.
-  EvictContentViewersInRange(0, mLength);
+  nsCOMPtr<nsISHTransaction> trans = mListRoot;
+  while (trans) {
+    EvictContentViewerForTransaction(trans);
+
+    nsISHTransaction *temp = trans;
+    temp->GetNext(getter_AddRefs(trans));
+  }
+
   return NS_OK;
 }
 
@@ -847,103 +926,78 @@ nsSHistory::ReloadCurrentEntry()
 }
 
 void
-nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
+nsSHistory::EvictOutOfRangeWindowContentViewers(PRInt32 aIndex)
 {
-  // To enforce the per SHistory object limit on cached content viewers, we
-  // need to release all of the content viewers that are no longer in the
-  // "window" that now ends/begins at aToIndex.  Existing content viewers
-  // should be in the window from
-  // aFromIndex - gHistoryMaxViewers to aFromIndex + gHistoryMaxViewers
+  // XXX rename method to EvictContentViewersExceptAroundIndex, or something.
+
+  // We need to release all content viewers that are no longer in the range
   //
-  // We make the assumption that entries outside this range have no viewers so
-  // that we don't have to walk the whole entire session history checking for
-  // content viewers.
+  //  aIndex - gHistoryMaxViewers to aIndex + gHistoryMaxViewers
+  //
+  // to ensure that this SHistory object isn't responsible for more than
+  // gHistoryMaxViewers content viewers.  But our job is complicated by the
+  // fact that two transactions which are related by either hash navigations or
+  // history.pushState will have the same content viewer.
+  //
+  // To illustrate the issue, suppose gHistoryMaxViewers = 3 and we have four
+  // linked transactions in our history.  Suppose we then add a new content
+  // viewer and call into this function.  So the history looks like:
+  //
+  //   A A A A B
+  //     +     *
+  //
+  // where the letters are content viewers and + and * denote the beginning and
+  // end of the range aIndex +/- gHistoryMaxViewers.
+  //
+  // Although one copy of the content viewer A exists outside the range, we
+  // don't want to evict A, because it has other copies in range!
+  //
+  // We therefore adjust our eviction strategy to read:
+  //
+  //   Evict each content viewer outside the range aIndex -/+
+  //   gHistoryMaxViewers, unless that content viewer also appears within the
+  //   range.
+  //
+  // (Note that it's entirely legal to have two copies of one content viewer
+  // separated by a different content viewer -- call pushState twice, go back
+  // once, and refresh -- so we can't rely on identical viewers only appearing
+  // adjacent to one another.)
 
-  // This can happen on the first load of a page in a particular window
-  if (aFromIndex < 0 || aToIndex < 0) {
+  if (aIndex < 0) {
     return;
   }
-  NS_ASSERTION(aFromIndex < mLength, "aFromIndex is out of range");
-  NS_ASSERTION(aToIndex < mLength, "aToIndex is out of range");
-  if (aFromIndex >= mLength || aToIndex >= mLength) {
+  NS_ASSERTION(aIndex < mLength, "aIndex is out of range");
+  if (aIndex >= mLength) {
     return;
   }
 
-  // These indices give the range of SHEntries whose content viewers will be
-  // evicted
-  PRInt32 startIndex, endIndex;
-  if (aToIndex > aFromIndex) { // going forward
-    endIndex = aToIndex - gHistoryMaxViewers;
-    if (endIndex <= 0) {
-      return;
-    }
-    startIndex = NS_MAX(0, aFromIndex - gHistoryMaxViewers);
-  } else { // going backward
-    startIndex = aToIndex + gHistoryMaxViewers + 1;
-    if (startIndex >= mLength) {
-      return;
-    }
-    endIndex = NS_MIN(mLength, aFromIndex + gHistoryMaxViewers + 1);
-  }
+  // Calculate the range that's safe from eviction.
+  PRInt32 startSafeIndex = PR_MAX(0, aIndex - gHistoryMaxViewers);
+  PRInt32 endSafeIndex = PR_MIN(mLength, aIndex + gHistoryMaxViewers);
 
-#ifdef DEBUG
+  LOG(("EvictOutOfRangeWindowContentViewers(index=%d), "
+       "mLength=%d. Safe range [%d, %d]",
+       aIndex, mLength, startSafeIndex, endSafeIndex)); 
+
+  // The content viewers in range aIndex -/+ gHistoryMaxViewers will not be
+  // evicted.  Collect a set of them so we don't accidentally evict one of them
+  // if it appears outside this range.
+  nsCOMArray<nsIContentViewer> safeViewers;
   nsCOMPtr<nsISHTransaction> trans;
+  GetTransactionAtIndex(startSafeIndex, getter_AddRefs(trans));
+  for (PRUint32 i = startSafeIndex; trans && i <= endSafeIndex; i++) {
+    nsCOMPtr<nsIContentViewer> viewer = GetContentViewerForTransaction(trans);
+    safeViewers.AppendObject(viewer);
+    nsISHTransaction *temp = trans;
+    temp->GetNext(getter_AddRefs(trans));
+  }
+
+  // Walk the SHistory list and evict any content viewers that aren't safe.
   GetTransactionAtIndex(0, getter_AddRefs(trans));
-
-  // Walk the full session history and check that entries outside the window
-  // around aFromIndex have no content viewers
-  for (PRInt32 i = 0; trans && i < mLength; ++i) {
-    if (i < aFromIndex - gHistoryMaxViewers || 
-        i > aFromIndex + gHistoryMaxViewers) {
-      nsCOMPtr<nsISHEntry> entry;
-      trans->GetSHEntry(getter_AddRefs(entry));
-      nsCOMPtr<nsIContentViewer> viewer;
-      nsCOMPtr<nsISHEntry> ownerEntry;
-      entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
-                                 getter_AddRefs(viewer));
-      NS_WARN_IF_FALSE(!viewer,
-                       "ContentViewer exists outside gHistoryMaxViewer range");
-    }
-
-    nsISHTransaction *temp = trans;
-    temp->GetNext(getter_AddRefs(trans));
-  }
-#endif
-
-  EvictContentViewersInRange(startIndex, endIndex);
-}
-
-void
-nsSHistory::EvictContentViewersInRange(PRInt32 aStart, PRInt32 aEnd)
-{
-  nsCOMPtr<nsISHTransaction> trans;
-  GetTransactionAtIndex(aStart, getter_AddRefs(trans));
-
-  for (PRInt32 i = aStart; trans && i < aEnd; ++i) {
-    nsCOMPtr<nsISHEntry> entry;
-    trans->GetSHEntry(getter_AddRefs(entry));
-    nsCOMPtr<nsIContentViewer> viewer;
-    nsCOMPtr<nsISHEntry> ownerEntry;
-    entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
-                               getter_AddRefs(viewer));
-    if (viewer) {
-      NS_ASSERTION(ownerEntry,
-                   "ContentViewer exists but its SHEntry is null");
-#ifdef DEBUG_PAGE_CACHE
-      nsCOMPtr<nsIURI> uri;
-      ownerEntry->GetURI(getter_AddRefs(uri));
-      nsCAutoString spec;
-      if (uri)
-        uri->GetSpec(spec);
-
-      printf("per SHistory limit: evicting content viewer: %s\n", spec.get());
-#endif
-
-      // Drop the presentation state before destroying the viewer, so that
-      // document teardown is able to correctly persist the state.
-      ownerEntry->SetContentViewer(nsnull);
-      ownerEntry->SyncPresentationState();
-      viewer->Destroy();
+  while (trans) {
+    nsCOMPtr<nsIContentViewer> viewer = GetContentViewerForTransaction(trans);
+    if (safeViewers.IndexOf(viewer) == -1) {
+      EvictContentViewerForTransaction(trans);
     }
 
     nsISHTransaction *temp = trans;
@@ -951,138 +1005,153 @@ nsSHistory::EvictContentViewersInRange(PRInt32 aStart, PRInt32 aEnd)
   }
 }
 
-// static
-void
-nsSHistory::EvictGlobalContentViewer()
+namespace {
+
+class TransactionAndDistance
 {
-  // true until the total number of content viewers is <= total max
-  // The usual case is that we only need to evict one content viewer.
-  // However, if somebody resets the pref value, we might occasionally
-  // need to evict more than one.
-  PRBool shouldTryEviction = PR_TRUE;
-  while (shouldTryEviction) {
-    // Walk through our list of SHistory objects, looking for content
-    // viewers in the possible active window of all of the SHEntry objects.
-    // Keep track of the SHEntry object that has a ContentViewer and is
-    // farthest from the current focus in any SHistory object.  The
-    // ContentViewer associated with that SHEntry will be evicted
-    PRInt32 distanceFromFocus = 0;
-    PRUint32 candidateLastTouched = 0;
-    nsCOMPtr<nsISHEntry> evictFromSHE;
-    nsCOMPtr<nsIContentViewer> evictViewer;
-    PRInt32 totalContentViewers = 0;
-    nsSHistory* shist = static_cast<nsSHistory*>
-                                   (PR_LIST_HEAD(&gSHistoryList));
-    while (shist != &gSHistoryList) {
-      // Calculate the window of SHEntries that could possibly have a content
-      // viewer.  There could be up to gHistoryMaxViewers content viewers,
-      // but we don't know whether they are before or after the mIndex position
-      // in the SHEntry list.  Just check both sides, to be safe.
-      PRInt32 startIndex = NS_MAX(0, shist->mIndex - gHistoryMaxViewers);
-      PRInt32 endIndex = NS_MIN(shist->mLength - 1,
-                                shist->mIndex + gHistoryMaxViewers);
-      nsCOMPtr<nsISHTransaction> trans;
-      shist->GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
+public:
+  TransactionAndDistance(nsISHTransaction *aTrans, PRUint32 aDist)
+    : mTransaction(aTrans)
+    , mDistance(aDist)
+  {
+    mViewer = GetContentViewerForTransaction(aTrans);
+    NS_ASSERTION(mViewer, "Transaction should have a content viewer");
 
-      for (PRInt32 i = startIndex; trans && i <= endIndex; ++i) {
-        nsCOMPtr<nsISHEntry> entry;
-        trans->GetSHEntry(getter_AddRefs(entry));
-        nsCOMPtr<nsIContentViewer> viewer;
-        nsCOMPtr<nsISHEntry> ownerEntry;
-        entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
-                                   getter_AddRefs(viewer));
+    nsCOMPtr<nsISHEntry> shentry;
+    mTransaction->GetSHEntry(getter_AddRefs(shentry));
 
-        PRUint32 entryLastTouched = 0;
-        if (gOptimizeEviction) {
-          nsCOMPtr<nsISHEntryInternal> entryInternal = do_QueryInterface(entry);
-          if (entryInternal) {
-            // Find when this entry was last activated
-            entryInternal->GetLastTouched(&entryLastTouched);
-          }
-        }
-
-#ifdef DEBUG_PAGE_CACHE
-        nsCOMPtr<nsIURI> uri;
-        if (ownerEntry) {
-          ownerEntry->GetURI(getter_AddRefs(uri));
-        } else {
-          entry->GetURI(getter_AddRefs(uri));
-        }
-        nsCAutoString spec;
-        if (uri) {
-          uri->GetSpec(spec);
-          printf("Considering for eviction: %s\n", spec.get());
-        }
-#endif
-        
-        // This SHEntry has a ContentViewer, so check how far away it is from
-        // the currently used SHEntry within this SHistory object
-        if (viewer) {
-          PRInt32 distance = NS_ABS(shist->mIndex - i);
-          
-#ifdef DEBUG_PAGE_CACHE
-          printf("Has a cached content viewer: %s\n", spec.get());
-          printf("mIndex: %d i: %d\n", shist->mIndex, i);
-#endif
-          totalContentViewers++;
-
-          // If this entry is further away from focus than any previously found
-          // or at the same distance but it is longer time since it was activated
-          // then take this entry as the new candiate for eviction
-          if (distance > distanceFromFocus || (distance == distanceFromFocus && candidateLastTouched > entryLastTouched)) {
-
-#ifdef DEBUG_PAGE_CACHE
-            printf("Choosing as new eviction candidate: %s\n", spec.get());
-#endif
-            candidateLastTouched = entryLastTouched;
-            distanceFromFocus = distance;
-            evictFromSHE = ownerEntry;
-            evictViewer = viewer;
-          }
-        }
-        nsISHTransaction* temp = trans;
-        temp->GetNext(getter_AddRefs(trans));
-      }
-      shist = static_cast<nsSHistory*>(PR_NEXT_LINK(shist));
-    }
-
-#ifdef DEBUG_PAGE_CACHE
-    printf("Distance from focus: %d\n", distanceFromFocus);
-    printf("Total max viewers: %d\n", sHistoryMaxTotalViewers);
-    printf("Total number of viewers: %d\n", totalContentViewers);
-#endif
-
-    if (totalContentViewers > sHistoryMaxTotalViewers && evictViewer) {
-#ifdef DEBUG_PAGE_CACHE
-      nsCOMPtr<nsIURI> uri;
-      evictFromSHE->GetURI(getter_AddRefs(uri));
-      nsCAutoString spec;
-      if (uri) {
-        uri->GetSpec(spec);
-        printf("Evicting content viewer: %s\n", spec.get());
-      }
-#endif
-
-      // Drop the presentation state before destroying the viewer, so that
-      // document teardown is able to correctly persist the state.
-      evictFromSHE->SetContentViewer(nsnull);
-      evictFromSHE->SyncPresentationState();
-      evictViewer->Destroy();
-
-      // If we only needed to evict one content viewer, then we are done.
-      // Otherwise, continue evicting until we reach the max total limit.
-      if (totalContentViewers - sHistoryMaxTotalViewers == 1) {
-        shouldTryEviction = PR_FALSE;
-      }
+    nsCOMPtr<nsISHEntryInternal> shentryInternal = do_QueryInterface(shentry);
+    if (shentryInternal) {
+      shentryInternal->GetLastTouched(&mLastTouched);
     } else {
-      // couldn't find a content viewer to evict, so we are done
-      shouldTryEviction = PR_FALSE;
+      NS_WARNING("Can't cast to nsISHEntryInternal?");
+      mLastTouched = 0;
     }
-  }  // while shouldTryEviction
+  }
+
+  bool operator<(const TransactionAndDistance &aOther) const
+  {
+    // Compare distances first, and fall back to last-accessed times.
+    if (aOther.mDistance != this->mDistance) {
+      return this->mDistance < aOther.mDistance;
+    }
+
+    return this->mLastTouched < aOther.mLastTouched;
+  }
+
+  bool operator==(const TransactionAndDistance &aOther) const
+  {
+    // This is a little silly; we need == so the default comaprator can be
+    // instantiated, but this function is never actually called when we sort
+    // the list of TransactionAndDistance objects.
+    return aOther.mDistance == this->mDistance &&
+           aOther.mLastTouched == this->mLastTouched;
+  }
+
+  nsCOMPtr<nsISHTransaction> mTransaction;
+  nsCOMPtr<nsIContentViewer> mViewer;
+  PRUint32 mLastTouched;
+  PRInt32 mDistance;
+};
+
+} // anonymous namespace
+
+//static
+void
+nsSHistory::GloballyEvictContentViewers()
+{
+  // First, collect from each SHistory object the transactions which have a
+  // cached content viewer.  Associate with each transaction its distance from
+  // its SHistory's current index.
+
+  nsTArray<TransactionAndDistance> transactions;
+
+  nsSHistory *shist = static_cast<nsSHistory*>(PR_LIST_HEAD(&gSHistoryList));
+  while (shist != &gSHistoryList) {
+
+    // Maintain a list of the transactions which have viewers and belong to
+    // this particular shist object.  We'll add this list to the global list,
+    // |transactions|, eventually.
+    nsTArray<TransactionAndDistance> shTransactions;
+
+    // Content viewers are likely to exist only within shist->mIndex -/+
+    // gHistoryMaxViewers, so only search within that range.
+    //
+    // A content viewer might exist outside that range due to either:
+    //
+    //   * history.pushState or hash navigations, in which case a copy of the
+    //     content viewer should exist within the range, or
+    //
+    //   * bugs which cause us not to call nsSHistory::EvictContentViewers()
+    //     often enough.  Once we do call EvictContentViewers() for the
+    //     SHistory object in question, we'll do a full search of its history
+    //     and evict the out-of-range content viewers, so we don't bother here.
+    //
+    PRInt32 startIndex = NS_MAX(0, shist->mIndex - gHistoryMaxViewers);
+    PRInt32 endIndex = NS_MIN(shist->mLength - 1,
+                              shist->mIndex + gHistoryMaxViewers);
+    nsCOMPtr<nsISHTransaction> trans;
+    shist->GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
+    for (PRInt32 i = startIndex; trans && i <= endIndex; i++) {
+      nsCOMPtr<nsIContentViewer> contentViewer =
+        GetContentViewerForTransaction(trans);
+
+      if (contentViewer) {
+        // Because one content viewer might belong to multiple SHEntries, we
+        // have to search through shTransactions to see if we already know
+        // about this content viewer.  If we find the viewer, update its
+        // distance from the SHistory's index and continue.
+        PRBool found = PR_FALSE;
+        for (PRUint32 j = 0; j < shTransactions.Length(); j++) {
+          TransactionAndDistance &container = shTransactions[j];
+          if (container.mViewer == contentViewer) {
+            container.mDistance = PR_MIN(container.mDistance,
+                                         PR_ABS(i - shist->mIndex));
+            found = PR_TRUE;
+            break;
+          }
+        }
+
+        // If we didn't find a TransactionAndDistance for this content viewer, make a new
+        // one.
+        if (!found) {
+          TransactionAndDistance container(trans, PR_ABS(i - shist->mIndex));
+          shTransactions.AppendElement(container);
+        }
+      }
+
+      nsISHTransaction *temp = trans;
+      temp->GetNext(getter_AddRefs(trans));
+    }
+
+    // We've found all the transactions belonging to shist which have viewers.
+    // Add those transactions to our global list and move on.
+    transactions.AppendElements(shTransactions);
+    shist = static_cast<nsSHistory*>(PR_NEXT_LINK(shist));
+  }
+
+  // We now have collected all cached content viewers.  First check that we
+  // have enough that we actually need to evict some.
+  if ((PRInt32)transactions.Length() <= sHistoryMaxTotalViewers) {
+    return;
+  }
+
+  // If we need to evict, sort our list of transactions and evict the largest
+  // ones.  (We could of course get better algorithmic complexity here by using
+  // a heap or something more clever.  But sHistoryMaxTotalViewers isn't large,
+  // so let's not worry about it.)
+  transactions.Sort();
+
+  for (PRInt32 i = transactions.Length() - 1;
+       i >= sHistoryMaxTotalViewers; --i) {
+
+    EvictContentViewerForTransaction(transactions[i].mTransaction);
+
+  }
 }
 
-NS_IMETHODIMP
-nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
+nsresult
+nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry *aEntry)
 {
   PRInt32 startIndex = NS_MAX(0, mIndex - gHistoryMaxViewers);
   PRInt32 endIndex = NS_MIN(mLength - 1,
@@ -1094,8 +1163,11 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
   for (i = startIndex; trans && i <= endIndex; ++i) {
     nsCOMPtr<nsISHEntry> entry;
     trans->GetSHEntry(getter_AddRefs(entry));
-    if (entry == aEntry)
+
+    // Does entry have the same BFCacheEntry as the argument to this method?
+    if (entry->HasBFCacheEntry(aEntry)) {
       break;
+    }
 
     nsISHTransaction *temp = trans;
     temp->GetNext(getter_AddRefs(trans));
@@ -1103,21 +1175,13 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
   if (i > endIndex)
     return NS_OK;
   
-  NS_ASSERTION(i != mIndex, "How did the current session entry expire?");
-  if (i == mIndex)
+  if (i == mIndex) {
+    NS_WARNING("How did the current SHEntry expire?");
     return NS_OK;
-  
-  // We evict content viewers for the expired entry and any other entries that
-  // we would have to go through the expired entry to get to (i.e. the entries
-  // that have the expired entry between them and the current entry). Those
-  // other entries should have timed out already, actually, but this is just
-  // to be on the safe side.
-  if (i < mIndex) {
-    EvictContentViewersInRange(startIndex, i + 1);
-  } else {
-    EvictContentViewersInRange(i, endIndex + 1);
   }
-  
+
+  EvictContentViewerForTransaction(trans);
+
   return NS_OK;
 }
 
@@ -1128,11 +1192,11 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
 
 //static
 void
-nsSHistory::EvictAllContentViewersGlobally()
+nsSHistory::GloballyEvictAllContentViewers()
 {
   PRInt32 maxViewers = sHistoryMaxTotalViewers;
   sHistoryMaxTotalViewers = 0;
-  EvictGlobalContentViewer();
+  GloballyEvictContentViewers();
   sHistoryMaxTotalViewers = maxViewers;
 }
 

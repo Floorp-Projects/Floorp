@@ -82,7 +82,7 @@ interface nsIStreamCipher : nsISupports
      *        encoded string.  if false, then the returned value is
      *        binary data.
      */
-    ACString finish(in PRBool aASCII);
+    ACString finish(in boolean aASCII);
 
     /**
      * Discard aLen bytes of the keystream.

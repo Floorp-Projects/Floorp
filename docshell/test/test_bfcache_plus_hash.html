@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=646641
+-->
+<head>
+  <title>Test for Bug 646641</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=646641">Mozilla Bug 646641</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 646641 **/
+
+/* 
+ * In a popup (because navigating the main frame confuses Mochitest), do the
+ * following:
+ *
+ *  * Call history.pushState().
+ *  * Navigate to a new page.
+ *  * Go back two history entries.
+ *
+ * Check that we go back, we retrieve the document from bfcache.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+function debug(msg) {
+  // Wrap dump so we can turn debug messages on and off easily.
+  dump(msg + '\n');
+}
+
+var expectedLoadNum = -1;
+function childLoad(n) {
+  if (n == expectedLoadNum) {
+    debug('Got load ' + n);
+    expectedLoadNum = -1;
+
+    // Spin the event loop before calling gGen.next() so the generator runs
+    // outside the onload handler.  This prevents us from encountering all
+    // sorts of docshell quirks.
+    //
+    // (I don't know why I need to wrap gGen.next() in a function, but it
+    // throws an error otherwise.)
+    setTimeout(function() { gGen.next() }, 0);
+  }
+  else {
+    debug('Got unexpected load ' + n);
+    ok(false, 'Got unexpected load ' + n);
+  }
+}
+
+var expectedPageshowNum = -1;
+function childPageshow(n) {
+  if (n == expectedPageshowNum) {
+    debug('Got expected pageshow ' + n);
+    expectedPageshowNum = -1;
+    ok(true, 'Got expected pageshow ' + n);
+    setTimeout(function() { gGen.next() }, 0);
+  }
+  else {
+    debug('Got pageshow ' + n);
+  }
+
+  // Since a pageshow comes along with an onload, don't fail the test if we get
+  // an unexpected pageshow.
+}
+
+function waitForLoad(n) {
+  debug('Waiting for load ' + n);
+  expectedLoadNum = n;
+}
+
+function waitForShow(n) {
+  debug('Waiting for show ' + n);
+  expectedPageshowNum = n;
+}
+
+function test() {
+  var popup = window.open('data:text/html,' +
+                          '<html><body onload="opener.childLoad(1)" ' +
+                                      'onpageshow="opener.childPageshow(1)">' +
+                                'Popup 1' +
+                                '</body></html>');
+  waitForLoad(1);
+  yield;
+
+  popup.history.pushState('', '', '');
+
+  popup.location = 'data:text/html,<html><body onload="opener.childLoad(2)">Popup 2</body></html>';
+  waitForLoad(2);
+  yield;
+
+  // Now go back 2.  The first page should be retrieved from bfcache.
+  popup.history.go(-2);
+  waitForShow(1);
+  yield;
+
+  popup.close();
+  SimpleTest.finish();
+  
+  // Yield once more so we don't throw a StopIteration exception.
+  yield;
+}
+
+var gGen = test();
+gGen.next();
+
+</script>
+</pre>
+</body>
+</html>

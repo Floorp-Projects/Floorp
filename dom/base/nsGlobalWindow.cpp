@@ -8057,7 +8057,6 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
 {
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
 
-#ifdef MOZ_STORAGE
   if (!Preferences::GetBool(kStorageEnabled)) {
     *aGlobalStorage = nsnull;
     return NS_OK;
@@ -8072,9 +8071,6 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
   NS_IF_ADDREF(*aGlobalStorage);
 
   return NS_OK;
-#else
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-#endif
 }
 
 NS_IMETHODIMP

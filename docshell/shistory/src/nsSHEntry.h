@@ -42,28 +42,21 @@
 
 // Helper Classes
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 
 // Interfaces needed
-#include "nsIContentViewer.h"
 #include "nsIInputStream.h"
-#include "nsILayoutHistoryState.h"
 #include "nsISHEntry.h"
 #include "nsISHContainer.h"
 #include "nsIURI.h"
-#include "nsIEnumerator.h"
 #include "nsIHistoryEntry.h"
-#include "nsRect.h"
-#include "nsISupportsArray.h"
-#include "nsIMutationObserver.h"
-#include "nsExpirationTracker.h"
-#include "nsDocShellEditorData.h"
+
+class nsSHEntryShared;
 
 class nsSHEntry : public nsISHEntry,
                   public nsISHContainer,
-                  public nsIMutationObserver,
                   public nsISHEntryInternal
 {
 public: 
@@ -75,51 +68,30 @@ public:
   NS_DECL_NSISHENTRY
   NS_DECL_NSISHENTRYINTERNAL
   NS_DECL_NSISHCONTAINER
-  NS_DECL_NSIMUTATIONOBSERVER
 
   void DropPresentationState();
 
-  void Expire();
-  
-  nsExpirationState *GetExpirationState() { return &mExpirationState; }
-  
   static nsresult Startup();
   static void Shutdown();
   
 private:
   ~nsSHEntry();
 
-  nsCOMPtr<nsIURI>                mURI;
-  nsCOMPtr<nsIURI>                mReferrerURI;
-  nsCOMPtr<nsIContentViewer>      mContentViewer;
-  nsCOMPtr<nsIDocument>           mDocument; // document currently being observed
-  nsString                        mTitle;
-  nsCOMPtr<nsIInputStream>        mPostData;
-  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-  nsCOMArray<nsISHEntry>          mChildren;
-  PRUint32                        mLoadType;
-  PRUint32                        mID;
-  PRInt64                         mDocIdentifier;
-  PRInt32                         mScrollPositionX;
-  PRInt32                         mScrollPositionY;
-  PRPackedBool                    mURIWasModified;
-  PRPackedBool                    mIsFrameNavigation;
-  PRPackedBool                    mSaveLayoutState;
-  PRPackedBool                    mExpired;
-  PRPackedBool                    mSticky;
-  PRPackedBool                    mDynamicallyCreated;
-  nsCString                       mContentType;
-  nsCOMPtr<nsISupports>           mCacheKey;
-  nsISHEntry *                    mParent;  // weak reference
-  nsCOMPtr<nsISupports>           mWindowState;
-  nsIntRect                       mViewerBounds;
-  nsCOMArray<nsIDocShellTreeItem> mChildShells;
-  nsCOMPtr<nsISupportsArray>      mRefreshURIList;
-  nsCOMPtr<nsISupports>           mOwner;
-  nsExpirationState               mExpirationState;
-  nsAutoPtr<nsDocShellEditorData> mEditorData;
-  PRUint64                        mDocShellID;
-  PRUint32                        mLastTouched;
+  // We share the state in here with other SHEntries which correspond to the
+  // same document.
+  nsRefPtr<nsSHEntryShared> mShared;
+
+  // See nsSHEntry.idl for comments on these members.
+  nsCOMPtr<nsIURI>         mURI;
+  nsCOMPtr<nsIURI>         mReferrerURI;
+  nsString                 mTitle;
+  nsCOMPtr<nsIInputStream> mPostData;
+  PRUint32                 mLoadType;
+  PRUint32                 mID;
+  PRInt32                  mScrollPositionX;
+  PRInt32                  mScrollPositionY;
+  nsCOMArray<nsISHEntry>   mChildren;
+  PRPackedBool             mURIWasModified;
   nsCOMPtr<nsIStructuredCloneContainer> mStateData;
 };
 

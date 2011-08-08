@@ -93,7 +93,7 @@ interface nsILocalFile : nsIFile
      *  on all non unix systems.  On unix, this attribute is effectively
      *  a noop.  
      */
-    attribute PRBool followLinks;  
+    attribute boolean followLinks;  
 
     const unsigned long DELETE_ON_CLOSE = 0x80000000;
 
