@@ -67,7 +67,6 @@ typedef struct {
   nsCOMPtr<nsIAtom>             mTypeAtom;
   PRUint16                      mFlags;
   PRBool                        mHandlerIsString;
-  const EventTypeData*          mTypeData;
 } nsListenerStruct;
 
 /*
@@ -214,17 +213,14 @@ protected:
   nsresult AddEventListener(nsIDOMEventListener *aListener, 
                             PRUint32 aType,
                             nsIAtom* aTypeAtom,
-                            const EventTypeData* aTypeData,
                             PRInt32 aFlags);
   void RemoveEventListener(nsIDOMEventListener *aListener,
                            PRUint32 aType,
                            nsIAtom* aUserType,
-                           const EventTypeData* aTypeData,
                            PRInt32 aFlags);
   void RemoveAllListeners();
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
-  PRBool ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent);
   nsPIDOMWindow* GetInnerWindowForTarget();
 
   PRUint32 mMayHavePaintEventListener : 1;
