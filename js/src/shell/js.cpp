@@ -5739,6 +5739,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
             ion::js_IonOptions.gvn = false;
         else if (strcmp(str, "pessimistic") == 0)
             ion::js_IonOptions.gvnIsOptimistic = false;
+        else if (strcmp(str, "optimistic") == 0)
+            ion::js_IonOptions.gvnIsOptimistic = true;
         else
             return OptionFailure("ion-gvn", str);
     }
