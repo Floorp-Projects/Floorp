@@ -208,18 +208,6 @@ nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
 }
 
 PRBool
-nsNativeTheme::IsPressedButton(nsIFrame* aFrame)
-{
-  nsEventStates eventState = GetContentState(aFrame, NS_THEME_TOOLBAR_BUTTON);
-  if (IsDisabled(aFrame, eventState))
-    return PR_FALSE;
-
-  return IsOpenButton(aFrame) ||
-         eventState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER);
-}
-
-
-PRBool
 nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -422,6 +410,19 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
 }
 
 PRBool
+nsNativeTheme::IsLastTab(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  while ((aFrame = aFrame->GetNextSibling())) {
+    if (aFrame->GetRect().width > 0 && aFrame->GetContent()->Tag() == nsWidgetAtoms::tab)
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+PRBool
 nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -430,6 +431,34 @@ nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
   return !aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient,
                                             nsWidgetAtoms::vertical, 
                                             eCaseMatters);
+}
+
+PRBool
+nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  if (aOffset == 0)
+    return IsSelectedTab(aFrame);
+
+  PRInt32 thisTabIndex = -1, selectedTabIndex = -1;
+
+  nsIFrame* currentTab = aFrame->GetParent()->GetFirstChild(NULL);
+  for (PRInt32 i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
+    if (currentTab->GetRect().width == 0)
+      continue;
+    if (aFrame == currentTab)
+      thisTabIndex = i;
+    if (IsSelectedTab(currentTab))
+      selectedTabIndex = i;
+    ++i;
+  }
+
+  if (thisTabIndex == -1 || selectedTabIndex == -1)
+    return PR_FALSE;
+
+  return (thisTabIndex - selectedTabIndex == aOffset);
 }
 
 // progressbar:
@@ -559,26 +588,4 @@ nsNativeTheme::Notify(nsITimer* aTimer)
   mAnimatedContentList.Clear();
   mAnimatedContentTimeout = PR_UINT32_MAX;
   return NS_OK;
-}
-
-nsIFrame*
-nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
-                                                         PRBool aNextSibling)
-{
-  if (!aFrame)
-    return nsnull;
-
-  // Find the next visible sibling.
-  nsIFrame* sibling = aFrame;
-  do {
-    sibling = aNextSibling ? sibling->GetNextSibling() : sibling->GetPrevSibling();
-  } while (sibling && sibling->GetRect().width == 0);
-
-  // Check same appearance and adjacency.
-  if (!sibling ||
-      sibling->GetStyleDisplay()->mAppearance != aFrame->GetStyleDisplay()->mAppearance ||
-      (sibling->GetRect().XMost() != aFrame->GetRect().x &&
-       aFrame->GetRect().XMost() != sibling->GetRect().x))
-    return nsnull;
-  return sibling;
 }
