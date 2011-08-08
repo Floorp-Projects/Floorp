@@ -254,19 +254,6 @@ interface nsIDOMEventTarget : nsISupports
   nsEventListenerManagerPtr GetListenerManager(in boolean aMayCreate);
 
   /**
-   * Add an event listener for nsIID.
-   */
-  [noscript, nostdcall]
-  void AddEventListenerByIID(in nsIDOMEventListener aListener,
-                             in nsIIDRef aIID);
-  /**
-   * Remove event listener for nsIID.
-   */
-  [noscript, nostdcall]
-  void RemoveEventListenerByIID(in nsIDOMEventListener aListener,
-                                in nsIIDRef aIID);
-
-  /**
    * Get the script context in which the event handlers should be run.
    * May return null.
    * @note Caller *must* check the value of aRv.
