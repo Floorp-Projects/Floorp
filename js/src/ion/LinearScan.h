@@ -370,33 +370,47 @@ class VirtualRegisterMap
 {
   private:
     VirtualRegister *vregs_;
+#ifdef DEBUG
+    uint32 numVregs_;
+#endif
 
   public:
     VirtualRegisterMap()
       : vregs_(NULL)
+#ifdef DEBUG
+      , numVregs_(0)
+#endif
     { }
 
     bool init(MIRGenerator *gen, uint32 numVregs) {
         vregs_ = gen->allocate<VirtualRegister>(numVregs);
+#ifdef DEBUG
+        numVregs_ = numVregs;
+#endif
         if (!vregs_)
             return false;
         memset(vregs_, 0, sizeof(VirtualRegister) * numVregs);
         return true;
     }
-    VirtualRegister &operator[](int index) {
+    VirtualRegister &operator[](unsigned int index) {
+        JS_ASSERT(index < numVregs_);
         return vregs_[index];
     }
     VirtualRegister &operator[](const LAllocation *alloc) {
         JS_ASSERT(alloc->isUse());
+        JS_ASSERT(alloc->toUse()->virtualRegister() < numVregs_);
         return vregs_[alloc->toUse()->virtualRegister()];
     }
     VirtualRegister &operator[](const LDefinition *def) {
+        JS_ASSERT(def->virtualRegister() < numVregs_);
         return vregs_[def->virtualRegister()];
     }
     VirtualRegister &operator[](const CodePosition &pos) {
+        JS_ASSERT(pos.ins() < numVregs_);
         return vregs_[pos.ins()];
     }
     VirtualRegister &operator[](const LInstruction *ins) {
+        JS_ASSERT(ins->id() < numVregs_);
         return vregs_[ins->id()];
     }
 };

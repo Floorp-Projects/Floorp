@@ -431,9 +431,7 @@ LinearScanAllocator::buildLivenessInfo()
             for (size_t i = 0; i < ins->numTemps(); i++)
                 vregs[ins->getTemp(i)].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
 
-            for (LInstruction::InputIterator alloc(**ins);
-                 alloc.more();
-                 alloc.next())
+            for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next())
             {
                 if (alloc->isUse()) {
                     LUse *use = alloc->toUse();
