@@ -293,9 +293,10 @@ public:
   static jsid sAutoIncrement_id;
   static jsid sUnique_id;
 
-#define EVENT(name_) static jsid sOn##name_##_id;
-#define WINDOW_ONLY_EVENT(name_) EVENT(name_)
-#define TOUCH_EVENT(name_) EVENT(name_)
+#define EVENT(name_, id_, type_, struct_)       \
+  static jsid sOn##name_##_id;
+#define WINDOW_ONLY_EVENT EVENT
+#define TOUCH_EVENT EVENT
 #include "nsEventNameList.h"
 #undef TOUCH_EVENT
 #undef WINDOW_ONLY_EVENT

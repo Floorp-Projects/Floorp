@@ -419,7 +419,6 @@ class nsHashKey;
 #define NS_QUERY_SCROLL_TARGET_INFO     (NS_QUERY_CONTENT_EVENT_START + 99)
 
 // Video events
-#ifdef MOZ_MEDIA
 #define NS_MEDIA_EVENT_START            3300
 #define NS_LOADSTART           (NS_MEDIA_EVENT_START)
 #define NS_PROGRESS            (NS_MEDIA_EVENT_START+1)
@@ -442,7 +441,6 @@ class nsHashKey;
 #define NS_DURATIONCHANGE      (NS_MEDIA_EVENT_START+18)
 #define NS_VOLUMECHANGE        (NS_MEDIA_EVENT_START+19)
 #define NS_MOZAUDIOAVAILABLE   (NS_MEDIA_EVENT_START+20)
-#endif // MOZ_MEDIA
 
 // paint notification events
 #define NS_NOTIFYPAINT_START    3400
