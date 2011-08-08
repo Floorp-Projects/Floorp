@@ -133,7 +133,9 @@ SnapshotReader::Slot
 SnapshotReader::readSlot()
 {
     JS_ASSERT(slotsRead_ < slotCount_);
+#ifdef DEBUG
     slotsRead_++;
+#endif
 
     uint8 b = reader_.readByte();
 
