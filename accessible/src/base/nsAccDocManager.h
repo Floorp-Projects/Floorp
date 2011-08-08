@@ -121,24 +121,6 @@ private:
                              PRUint32 aLoadEventType);
 
   /**
-   * Return true if accessibility events accompanying document accessible
-   * loading should be fired.
-   *
-   * The rules are: do not fire events for root chrome document accessibles and
-   * for sub document accessibles (like HTML frame of iframe) of the loading
-   * document accessible.
-   *
-   * XXX: in general AT expect events for document accessible loading into
-   * tabbrowser, events from other document accessibles may break AT. We need to
-   * figure out what AT wants to know about loading page (for example, some of
-   * them have separate processing of iframe documents on the page and therefore
-   * they need a way to distinguish sub documents from page document). Ideally
-   * we should make events firing for any loaded document and provide additional
-   * info AT are needing.
-   */
-  PRBool IsEventTargetDocument(nsIDocument *aDocument) const;
-
-  /**
    * Add 'pagehide' and 'DOMContentLoaded' event listeners.
    */
   void AddListeners(nsIDocument *aDocument, PRBool aAddPageShowListener);
