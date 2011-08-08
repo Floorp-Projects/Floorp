@@ -4574,11 +4574,6 @@ if test "$SYSTEM_JPEG" = 1; then
                    SYSTEM_JPEG=1,
                    [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=]) 
 fi
-
-MOZ_LIBJPEG_TURBO=
-if test -z "$SYSTEM_JPEG"; then
-    MOZ_LIBJPEG_TURBO=1
-fi 
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
@@ -6196,11 +6191,19 @@ AC_DEFINE_UNQUOTED(MOZ_CRASHREPORTER_ENABLE_PERCENT, $MOZ_CRASHREPORTER_ENABLE_P
 dnl ========================================================
 dnl = libjpeg-turbo configuration
 dnl ========================================================
+MOZ_LIBJPEG_TURBO=
+if test -z "$SYSTEM_JPEG"; then
+    MOZ_LIBJPEG_TURBO=1
+fi
 
 MOZ_ARG_DISABLE_BOOL(libjpeg_turbo,
 [ --disable-libjpeg-turbo  Disable optimized jpeg decoding routines],
     MOZ_LIBJPEG_TURBO=,
     MOZ_LIBJPEG_TURBO=1)
+
+if test "$SYSTEM_JPEG" = 1 -a "$MOZ_LIBJPEG_TURBO" = 1; then
+    AC_MSG_ERROR([cannot use --with-system-jpeg with --enable-libjpeg-turbo.])
+fi
 
 dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
 dnl files.
