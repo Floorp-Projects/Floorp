@@ -111,8 +111,37 @@ ValueTypeFromMIRType(MIRType type)
   }
 }
 
-}
+static const char *StringFromMIRType(MIRType type)
+{
+  switch (type) {
+    case MIRType_Undefined:
+      return "Undefined";
+    case MIRType_Null:
+      return "Null";
+    case MIRType_Boolean:
+      return "Bool";
+    case MIRType_Int32:
+      return "Int32";
+    case MIRType_Double:
+      return "Double";
+    case MIRType_String:
+      return "String";
+    case MIRType_Object:
+      return "Object";
+    case MIRType_Value:
+      return "Value";
+    case MIRType_Any:
+      return "Any";
+    case MIRType_None:
+      return "None";
+    default:
+      JS_NOT_REACHED("Unknown MIRType.");
+      return "";
+  }
 }
 
-#endif // _js_ion_type_oracle_h__
+} /* ion */
+} /* js */
+
+#endif // js_ion_type_oracle_h__
 
