@@ -4854,7 +4854,6 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
-MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG_DLISTS=
 MOZ_TOOLKIT_SEARCH=1
@@ -6049,18 +6048,6 @@ linux*)
 fi
 
 dnl ========================================================
-dnl Splashscreen
-dnl ========================================================
-AC_ARG_ENABLE(splashscreen,
-              [  --enable-splashscreen   display splashscreen while loading (default=no)],
-              [enable_splash="yes"],[enable_splash=""])
-if test "x$enable_splash" = "xyes"; then
-  MOZ_SPLASHSCREEN=1
-  AC_DEFINE(MOZ_SPLASHSCREEN)
-fi
-AC_SUBST(MOZ_SPLASHSCREEN)
-
-dnl ========================================================
 dnl Permissions System
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(permissions,
@@ -6994,8 +6981,6 @@ arm-Android)
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
-    # Temporarily set nspr flags via configure, until bug 674880 lands
-    NSPR_CONFIGURE_FLAGS="--with-thumb --with-arch=armv7-a --with-fpu=vfp --with-float-abi=softfp"
     ;;
 arm-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then
@@ -9572,7 +9557,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
-    ac_configure_args="$ac_configure_args $NSPR_CONFIGURE_FLAGS"
     AC_OUTPUT_SUBDIRS(nsprpub)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi

@@ -101,7 +101,7 @@ nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv = JS_ARGV(cx, vp);
 
     int32 target;
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
     JSObject *wb = 0;
     int32 size;
     int32 usage;
@@ -120,7 +120,7 @@ nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
             if (js_IsArrayBuffer(arg2)) {
                 wb = js::ArrayBuffer::getArrayBuffer(arg2);
             } else if (js_IsTypedArray(arg2)) {
-                wa = js::TypedArray::fromJSObject(arg2);
+                wa = js::TypedArray::getTypedArray(arg2);
             }
         }
 
@@ -175,7 +175,7 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
 
     int32 target;
     int32 offset;
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
     JSObject *wb = 0;
 
     if (!JS_ValueToECMAInt32(cx, argv[0], &target))
@@ -195,7 +195,7 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
         if (js_IsArrayBuffer(arg3)) {
             wb = js::ArrayBuffer::getArrayBuffer(arg3);
         } else if (js_IsTypedArray(arg3)) {
-            wa = js::TypedArray::fromJSObject(arg3);
+            wa = js::TypedArray::getTypedArray(arg3);
         } else {
             xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 2);
             return JS_FALSE;
@@ -265,7 +265,7 @@ nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
         } else if (js_IsTypedArray(argv6)) {
             rv = self->ReadPixels_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5,
-                                        js::TypedArray::fromJSObject(argv6));
+                                        js::TypedArray::getTypedArray(argv6));
         } else {
             xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
             return JS_FALSE;
@@ -365,7 +365,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
             }
             rv = self->TexImage2D_imageData(argv0, argv1, argv2,
                                             int_width, int_height, 0,
-                                            argv3, argv4, js::TypedArray::fromJSObject(obj_data));
+                                            argv3, argv4, js::TypedArray::getTypedArray(obj_data));
         }
     } else if (argc > 8 &&
                JSVAL_IS_OBJECT(argv[8])) // here, we allow null !
@@ -392,7 +392,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
         } else if (js_IsTypedArray(argv8)) {
             rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5, argv6, argv7,
-                                        js::TypedArray::fromJSObject(argv8));
+                                        js::TypedArray::getTypedArray(argv8));
         } else {
             xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
             return JS_FALSE;
@@ -491,7 +491,7 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
             rv = self->TexSubImage2D_imageData(argv0, argv1, argv2, argv3,
                                                int_width, int_height,
                                                argv4, argv5,
-                                               js::TypedArray::fromJSObject(obj_data));
+                                               js::TypedArray::getTypedArray(obj_data));
         }
     } else if (argc > 8 &&
                !JSVAL_IS_PRIMITIVE(argv[8]))
@@ -511,7 +511,7 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
         } else if (js_IsTypedArray(argv8)) {
             rv = self->TexSubImage2D_array(argv0, argv1, argv2, argv3,
                                            argv4, argv5, argv6, argv7,
-                                           js::TypedArray::fromJSObject(argv8));
+                                           js::TypedArray::getTypedArray(argv8));
         } else {
             xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
             return JS_FALSE;
@@ -567,10 +567,10 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(JSContext *cx, uintN argc, jsval
 
     js::AutoValueRooter obj_tvr(cx);
 
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
 
     if (helper_isInt32Array(arg1)) {
-        wa = js::TypedArray::fromJSObject(arg1);
+        wa = js::TypedArray::getTypedArray(arg1);
     }  else if (JS_IsArrayObject(cx, arg1)) {
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_INT32, arg1);
         if (!nobj) {
@@ -579,7 +579,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(JSContext *cx, uintN argc, jsval
         }
 
         *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        wa = js::TypedArray::fromJSObject(nobj);
+        wa = js::TypedArray::getTypedArray(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 1);
         return JS_FALSE;
@@ -641,10 +641,10 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(JSContext *cx, uintN argc, jsval
 
     js::AutoValueRooter obj_tvr(cx);
 
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
 
     if (helper_isFloat32Array(arg1)) {
-        wa = js::TypedArray::fromJSObject(arg1);
+        wa = js::TypedArray::getTypedArray(arg1);
     }  else if (JS_IsArrayObject(cx, arg1)) {
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_FLOAT32, arg1);
         if (!nobj) {
@@ -653,7 +653,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(JSContext *cx, uintN argc, jsval
         }
 
         *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        wa = js::TypedArray::fromJSObject(nobj);
+        wa = js::TypedArray::getTypedArray(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 1);
         return JS_FALSE;
@@ -717,10 +717,10 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, uintN argc,
 
     js::AutoValueRooter obj_tvr(cx);
 
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
 
     if (helper_isFloat32Array(arg2)) {
-        wa = js::TypedArray::fromJSObject(arg2);
+        wa = js::TypedArray::getTypedArray(arg2);
     }  else if (JS_IsArrayObject(cx, arg2)) {
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_FLOAT32, arg2);
         if (!nobj) {
@@ -729,7 +729,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, uintN argc,
         }
 
         *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        wa = js::TypedArray::fromJSObject(nobj);
+        wa = js::TypedArray::getTypedArray(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 2);
         return JS_FALSE;
@@ -782,10 +782,10 @@ helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, uintN argc, 
 
     js::AutoValueRooter obj_tvr(cx);
 
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
 
     if (helper_isFloat32Array(arg1)) {
-        wa = js::TypedArray::fromJSObject(arg1);
+        wa = js::TypedArray::getTypedArray(arg1);
     }  else if (JS_IsArrayObject(cx, arg1)) {
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_FLOAT32, arg1);
         if (!nobj) {
@@ -794,7 +794,7 @@ helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, uintN argc, 
         }
 
         *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        wa = js::TypedArray::fromJSObject(nobj);
+        wa = js::TypedArray::getTypedArray(nobj);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 1);
         return JS_FALSE;
@@ -944,10 +944,10 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv_tn(JSContext *cx, JSObject *obj,
         return;
     }
 
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
 
     if (helper_isInt32Array(arg)) {
-        wa = js::TypedArray::fromJSObject(arg);
+        wa = js::TypedArray::getTypedArray(arg);
     }  else if (JS_IsArrayObject(cx, arg)) {
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_INT32, arg);
         if (!nobj) {
@@ -957,7 +957,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv_tn(JSContext *cx, JSObject *obj,
         }
 
         *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        wa = js::TypedArray::fromJSObject(nobj);
+        wa = js::TypedArray::getTypedArray(nobj);
     } else {
         xpc_qsThrowMethodFailedWithDetails(cx, NS_ERROR_FAILURE, "nsIDOMWebGLRenderingContext", "uniformNiv");
         js_SetTraceableNativeFailed(cx);
@@ -1015,10 +1015,10 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv_tn(JSContext *cx, JSObject *obj,
         return;
     }
 
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
 
     if (helper_isFloat32Array(arg)) {
-        wa = js::TypedArray::fromJSObject(arg);
+        wa = js::TypedArray::getTypedArray(arg);
     }  else if (JS_IsArrayObject(cx, arg)) {
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_FLOAT32, arg);
         if (!nobj) {
@@ -1028,7 +1028,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv_tn(JSContext *cx, JSObject *obj,
         }
 
         *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        wa = js::TypedArray::fromJSObject(nobj);
+        wa = js::TypedArray::getTypedArray(nobj);
     } else {
         xpc_qsThrowMethodFailedWithDetails(cx, NS_ERROR_FAILURE, "nsIDOMWebGLRenderingContext", "uniformNfv");
         js_SetTraceableNativeFailed(cx);
@@ -1088,10 +1088,10 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv_tn(JSContext *cx, JSObject
         return;
     }
 
-    js::TypedArray *wa = 0;
+    JSObject *wa = 0;
 
     if (helper_isFloat32Array(arg)) {
-        wa = js::TypedArray::fromJSObject(arg);
+        wa = js::TypedArray::getTypedArray(arg);
     }  else if (JS_IsArrayObject(cx, arg)) {
         JSObject *nobj = js_CreateTypedArrayWithArray(cx, js::TypedArray::TYPE_FLOAT32, arg);
         if (!nobj) {
@@ -1101,7 +1101,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv_tn(JSContext *cx, JSObject
         }
 
         *obj_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
-        wa = js::TypedArray::fromJSObject(nobj);
+        wa = js::TypedArray::getTypedArray(nobj);
     } else {
         xpc_qsThrowMethodFailedWithDetails(cx, NS_ERROR_FAILURE, "nsIDOMWebGLRenderingContext", "uniformMatrixNfv");
         js_SetTraceableNativeFailed(cx);

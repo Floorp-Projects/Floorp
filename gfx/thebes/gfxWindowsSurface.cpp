@@ -328,3 +328,9 @@ gfxWindowsSurface::GetDefaultContextFlags() const
 
     return 0;
 }
+
+gfxASurface::MemoryLocation
+gfxWindowsSurface::GetMemoryLocation() const
+{
+    return MEMORY_IN_PROCESS_NONHEAP;
+}

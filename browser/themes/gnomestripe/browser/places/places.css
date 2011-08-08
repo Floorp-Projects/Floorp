@@ -70,6 +70,11 @@ treechildren::-moz-tree-image(title, query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
 }
 
+treechildren::-moz-tree-image(query, OrganizerQuery_Downloads) {
+  list-style-image: url("chrome://browser/skin/places/downloads.png");
+  -moz-image-region: auto;
+}
+
 treechildren::-moz-tree-image(title, query, tagContainer),
 treechildren::-moz-tree-image(query, OrganizerQuery_Tags) {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");

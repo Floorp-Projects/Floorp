@@ -1086,6 +1086,9 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             case NS_HTML5TREE_BUILDER_AREA_OR_WBR: {
               reconstructTheActiveFormattingElements();
             }
+#ifdef ENABLE_VOID_MENUITEM
+            case NS_HTML5TREE_BUILDER_MENUITEM:
+#endif
             case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK: {
               appendVoidElementToCurrentMayFoster(elementName, attributes);
               selfClosing = PR_FALSE;
@@ -2386,6 +2389,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             NS_HTML5_BREAK(endtagloop);
           }
           case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
+#ifdef ENABLE_VOID_MENUITEM
+          case NS_HTML5TREE_BUILDER_MENUITEM:
+#endif
           case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK:
           case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
           case NS_HTML5TREE_BUILDER_IMAGE:

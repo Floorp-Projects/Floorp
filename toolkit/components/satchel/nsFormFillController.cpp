@@ -83,7 +83,7 @@ nsFormFillController::nsFormFillController() :
   mTimeout(50),
   mMinResultsForPopup(1),
   mMaxRows(0),
-  mDisableAutoComplete(PR_FALSE), 
+  mDisableAutoComplete(PR_FALSE),
   mCompleteDefaultIndex(PR_FALSE),
   mCompleteSelectedIndex(PR_FALSE),
   mForceComplete(PR_FALSE),
@@ -188,10 +188,10 @@ NS_IMETHODIMP
 nsFormFillController::AttachToBrowser(nsIDocShell *aDocShell, nsIAutoCompletePopup *aPopup)
 {
   NS_ENSURE_TRUE(aDocShell && aPopup, NS_ERROR_ILLEGAL_VALUE);
-  
+
   mDocShells->AppendElement(aDocShell);
   mPopups->AppendElement(aPopup);
-  
+
   // Listen for focus events on the domWindow of the docShell
   nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(aDocShell);
   AddWindowListeners(domWindow);
@@ -204,16 +204,16 @@ nsFormFillController::DetachFromBrowser(nsIDocShell *aDocShell)
 {
   PRInt32 index = GetIndexOfDocShell(aDocShell);
   NS_ENSURE_TRUE(index >= 0, NS_ERROR_FAILURE);
-  
+
   // Stop listening for focus events on the domWindow of the docShell
   nsCOMPtr<nsIDocShell> docShell;
   mDocShells->GetElementAt(index, getter_AddRefs(docShell));
   nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(docShell);
   RemoveWindowListeners(domWindow);
-    
+
   mDocShells->RemoveElementAt(index);
   mPopups->RemoveElementAt(index);
-  
+
   return NS_OK;
 }
 
@@ -424,13 +424,13 @@ nsFormFillController::GetSearchParam(nsAString &aSearchParam)
 {
   if (!mFocusedInput) {
     NS_WARNING("mFocusedInput is null for some reason! avoiding a crash. should find out why... - ben");
-    return NS_ERROR_FAILURE; // XXX why? fix me. 
+    return NS_ERROR_FAILURE; // XXX why? fix me.
   }
-    
+
   mFocusedInput->GetName(aSearchParam);
   if (aSearchParam.IsEmpty())
     mFocusedInput->GetId(aSearchParam);
-  
+
   return NS_OK;
 }
 
@@ -612,8 +612,8 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aListener->OnSearchResult(this, result);  
-  
+  aListener->OnSearchResult(this, result);
+
   return NS_OK;
 }
 
@@ -727,7 +727,7 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
     mPwmgrInputs.Enumerate(RemoveForDOMDocumentEnumerator, domDoc);
   }
 
-  return NS_OK; 
+  return NS_OK;
 }
 
 
@@ -751,7 +751,7 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetTarget(getter_AddRefs(target));
-  
+
   nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(target);
   if (!input)
     return NS_OK;
@@ -772,19 +772,19 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
       !isReadOnly || isPwmgrInput) {
     StartControllingInput(input);
   }
-    
+
   return NS_OK;
 }
 
-PRBool 
+PRBool
 nsFormFillController::IsInputAutoCompleteOff()
 {
   PRBool autoCompleteOff = PR_FALSE;
 
   if (mFocusedInput) {
-    nsAutoString autocomplete; 
+    nsAutoString autocomplete;
     mFocusedInput->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-    
+
     // Check the input for autocomplete="off", then the form
     if (autocomplete.LowerCaseEqualsLiteral("off")) {
       autoCompleteOff = PR_TRUE;
@@ -866,11 +866,11 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
     mController->HandleEnter(PR_FALSE, &cancel);
     break;
   }
-  
+
   if (cancel) {
     aEvent->PreventDefault();
   }
-  
+
   return NS_OK;
 }
 
@@ -963,7 +963,7 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
     return;
 
   StopControllingInput();
-  
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   aWindow->GetDocument(getter_AddRefs(domDoc));
   mPwmgrInputs.Enumerate(RemoveForDOMDocumentEnumerator, domDoc);
@@ -972,7 +972,7 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
   nsIDOMEventTarget* target = nsnull;
   if (privateDOMWindow)
     target = privateDOMWindow->GetChromeEventHandler();
-  
+
   if (!target)
     return;
 
@@ -1014,17 +1014,17 @@ void
 nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
 {
   // Make sure we're not still attached to an input
-  StopControllingInput(); 
+  StopControllingInput();
 
   // Find the currently focused docShell
   nsCOMPtr<nsIDocShell> docShell = GetDocShellForInput(aInput);
   PRInt32 index = GetIndexOfDocShell(docShell);
   if (index < 0)
     return;
-  
+
   // Cache the popup for the focused docShell
   mPopups->GetElementAt(index, getter_AddRefs(mFocusedPopup));
-  
+
   AddKeyListener(aInput);
   mFocusedInput = aInput;
 
@@ -1110,7 +1110,7 @@ nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
     nsCOMPtr<nsIDocShell> parentShell = do_QueryInterface(parentItem);
     return GetIndexOfDocShell(parentShell);
   }
-    
+
   return -1;
 }
 

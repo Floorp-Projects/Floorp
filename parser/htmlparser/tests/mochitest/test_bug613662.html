@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=613662
+-->
+<head>
+  <title>Test for Bug 613662</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613662">Mozilla Bug 613662</a>
+<p id="display"></p><div id="content" style="display: none"></div><div id="content2" style="display: none"></div><pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 613662 **/
+
+function testPositions(node) {
+  node.insertAdjacentHTML("beforeBegin", "\u003Cscript>ok(false, 'script should not have run');\u003C/script><i></i>");
+  is(node.previousSibling.localName, "i", "Should have had <i> as previous sibling");
+  node.insertAdjacentHTML("Afterbegin", "<b></b>\u003Cscript>ok(false, 'script should not have run');\u003C/script>");
+  is(node.firstChild.localName, "b", "Should have had <b> as first child");
+  node.insertAdjacentHTML("BeforeEnd", "\u003Cscript>ok(false, 'script should not have run');\u003C/script><u></u>");
+  is(node.lastChild.localName, "u", "Should have had <u> as last child");
+  node.insertAdjacentHTML("afterend", "<a></a>\u003Cscript>ok(false, 'script should not have run');\u003C/script>");
+  is(node.nextSibling.localName, "a", "Should have had <a> as next sibling");
+}
+
+var content = document.getElementById("content");
+testPositions(content); // without next sibling
+testPositions(content); // test again when there's next sibling
+
+try {
+  content.insertAdjacentHTML("bar", "foo");
+  ok(false, "insertAdjacentHTML should have thrown");
+} catch (e) {
+  is(e.code, 12, "insertAdjacentHTML should throw SYNTAX_ERR");
+}
+
+var parent = document.createElement("div");
+var child = document.createElement("div");
+
+try {
+  child.insertAdjacentHTML("Beforebegin", "foo");
+  ok(false, "insertAdjacentHTML should have thrown");
+} catch (e) {
+  is(e.code, 7, "insertAdjacentHTML should throw NO_MODIFICATION_ALLOWED_ERR");
+}
+
+try {
+  child.insertAdjacentHTML("AfterEnd", "foo");
+  ok(false, "insertAdjacentHTML should have thrown");
+} catch (e) {
+  is(e.code, 7, "insertAdjacentHTML should throw NO_MODIFICATION_ALLOWED_ERR");
+}
+
+child.insertAdjacentHTML("afterBegin", "foo"); // mustn't throw
+child.insertAdjacentHTML("beforeend", "foo"); // mustn't throw
+
+parent.appendChild(child);
+testPositions(child); // node not in tree but has parent
+
+content.appendChild(parent); // must not run scripts
+
+try {
+  document.documentElement.insertAdjacentHTML("afterend", "<div></div>");
+  ok(false, "insertAdjacentHTML should have thrown");
+} catch (e) {
+  is(e.code, 7, "insertAdjacentHTML should throw NO_MODIFICATION_ALLOWED_ERR");
+}
+
+var content2 = document.getElementById("content2");
+
+var events = [
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMSubtreeModified", null ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMSubtreeModified", null ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMSubtreeModified", null ],
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMSubtreeModified", null ],
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMSubtreeModified", null ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMSubtreeModified", null ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMNodeInserted", content2 ],
+  [ "DOMSubtreeModified", null ],
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMNodeInserted", document.body ],
+  [ "DOMSubtreeModified", null ]
+];
+
+function mutationEventListener(evt) {
+  var expected = events.shift();
+  is(evt.type, expected[0], "Unexpected mutation type");
+  is(evt.relatedNode, expected[1], "Unexpected related node");
+}
+/*
+document.addEventListener("DOMSubtreeModified", mutationEventListener, false);
+document.addEventListener("DOMNodeInserted", mutationEventListener, false);
+document.addEventListener("DOMNodeRemoved", mutationEventListener, false);
+document.addEventListener("DOMNodeRemovedFromDocument", mutationEventListener, false);
+document.addEventListener("DOMNodeInsertedIntoDocument", mutationEventListener, false);
+document.addEventListener("DOMAttrModified", mutationEventListener, false);
+document.addEventListener("DOMCharacterDataModified", mutationEventListener, false);
+
+testPositions(content2); // without next sibling
+testPositions(content2); // test again when there's next sibling
+
+is(events.length, 0, "Not all expected events fired.");
+*/
+// HTML only
+document.body.insertAdjacentHTML("afterend", "<p>");
+document.head.insertAdjacentHTML("beforebegin", "<p>");
+is(document.getElementsByTagName("head").length, 1, "Should still have one head");
+is(document.getElementsByTagName("body").length, 1, "Should still have one body");
+
+</script>
+</pre>
+</body></html>

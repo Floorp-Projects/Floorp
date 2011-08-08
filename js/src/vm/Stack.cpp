@@ -974,7 +974,8 @@ StackIter::settleOnNewState()
             }
 
             /* Censor pushed-but-not-active frames from InvokeSessionGuard. */
-            if (containsCall && !calls_->active() && calls_->argv() == fp_->actualArgs()) {
+            if (containsCall && !calls_->active() && fp_->hasArgs() &&
+                calls_->argv() == fp_->actualArgs()) {
                 popFrame();
                 continue;
             }

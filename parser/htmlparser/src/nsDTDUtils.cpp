@@ -535,7 +535,7 @@ void nsDTDContext::PushEntry(nsTagEntry* aEntry,
     mStack.PushEntry(aEntry, aRefCntNode);
 }
 
-/* This method will move the top entires, in the entry-stack, into dest context.
+/* This method will move the top entries, in the entry-stack, into dest context.
  * @param aDest  - Destination context for the entries.
  * @param aCount - Number of entries, on top of the entry-stack, to be moved.
  */

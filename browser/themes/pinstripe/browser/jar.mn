@@ -83,6 +83,7 @@ browser.jar:
   skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
   skin/classic/browser/places/twisty-closed.gif             (places/twisty-closed.gif)
   skin/classic/browser/places/tag.png                       (places/tag.png)
+  skin/classic/browser/places/downloads.png                 (places/downloads.png)
   skin/classic/browser/places/expander-closed-active.png    (places/expander-closed-active.png)
   skin/classic/browser/places/expander-closed.png           (places/expander-closed.png)
   skin/classic/browser/places/expander-open-active.png      (places/expander-open-active.png)

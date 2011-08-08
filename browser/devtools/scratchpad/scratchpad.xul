@@ -186,12 +186,12 @@
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
     <menupopup id="sp-menu_editpopup">
-      <menuitem id="sp-menu_undo"
+      <menuitem id="sp-menu-undo"
                 label="&undoCmd.label;"
                 key="key_undo"
                 accesskey="&undoCmd.accesskey;"
                 disabled="true"
-                oncommand="cmd_undo"/>
+                command="cmd_undo"/>
       <menuitem id="sp-menu-redo"
                 label="&redoCmd.label;"
                 key="key_redo"
