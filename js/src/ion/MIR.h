@@ -608,8 +608,8 @@ class MTableSwitch
     }
 
     void addCase(MBasicBlock *block) {
-        JS_ASSERT_IF(defaultCase_ == (uint32)-1, successors_.length() < (int32)(high_ - low_ + 1));
-        JS_ASSERT_IF(defaultCase_ != (uint32)-1, successors_.length() < (int32)(high_ - low_ + 2));
+        JS_ASSERT_IF(defaultCase_ == (uint32)-1, successors_.length() < (size_t)(high_ - low_ + 1));
+        JS_ASSERT_IF(defaultCase_ != (uint32)-1, successors_.length() < (size_t)(high_ - low_ + 2));
         successors_.append(block);
     }
 
