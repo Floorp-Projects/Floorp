@@ -85,11 +85,10 @@ public:
 
   // Write sound data to the audio hardware.  aBuf is an array of samples in
   // the format specified by mFormat of length aCount.  aCount should be
-  // evenly divisible by the number of channels in this audio stream.
-  // When aBlocking is PR_TRUE, we'll block until the write has completed,
-  // otherwise we'll buffer any data we can't write immediately, and write
-  // it in a later call.
-  virtual nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking) = 0;
+  // evenly divisible by the number of channels in this audio stream.  If
+  // aCount is larger than the result of Available(), the write will block
+  // until sufficient buffer space is available.
+  virtual nsresult Write(const void* aBuf, PRUint32 aCount) = 0;
 
   // Return the number of sound samples that can be written to the audio device
   // without blocking.

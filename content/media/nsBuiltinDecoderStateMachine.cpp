@@ -729,7 +729,7 @@ PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples,
   PRUint32 numValues = samples * aChannels;
   nsAutoArrayPtr<SoundDataValue> buf(new SoundDataValue[numValues]);
   memset(buf.get(), 0, sizeof(SoundDataValue) * numValues);
-  mAudioStream->Write(buf, numValues, PR_TRUE);
+  mAudioStream->Write(buf, numValues);
   // Dispatch events to the DOM for the audio just written.
   mEventManager.QueueWrittenAudioData(buf.get(), numValues,
                                       (aSampleOffset + samples) * aChannels);
@@ -760,8 +760,7 @@ PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aSampleOffset
   // audio stream.
   if (!mAudioStream->IsPaused()) {
     mAudioStream->Write(sound->mAudioData,
-                        sound->AudioDataLength(),
-                        PR_TRUE);
+                        sound->AudioDataLength());
 
     offset = sound->mOffset;
     samples = sound->mSamples;
