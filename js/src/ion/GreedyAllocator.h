@@ -283,6 +283,7 @@ class GreedyAllocator
 
     bool allocateRegisters();
     bool allocateRegistersInBlock(LBlock *block);
+    bool allocateInstruction(LBlock *block, LInstruction *ins);
     bool mergePhiState(LBlock *block);
     bool prepareBackedge(LBlock *block);
     bool mergeAllocationState(LBlock *block);

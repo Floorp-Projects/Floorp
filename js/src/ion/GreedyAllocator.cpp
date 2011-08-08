@@ -574,51 +574,99 @@ GreedyAllocator::assertValidRegisterState()
 }
 
 bool
+GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
+{
+    if (!gen->ensureBallast())
+        return false;
+
+    // Reset internal state used for evicting.
+    reset();
+    assertValidRegisterState();
+
+    // Step 1. Find all fixed writable registers, adding them to the
+    // disallow set.
+    if (!prescanDefinitions(ins))
+        return false;
+
+    // Step 2. For each use, add fixed policies to the disallow set and
+    // already allocated registers to the discouraged set.
+    if (!prescanUses(ins))
+        return false;
+
+    // Step 3. Allocate registers for each definition.
+    if (!allocateDefinitions(ins))
+        return false;
+
+    // Step 4. Allocate inputs and temporaries.
+    if (!allocateInputs(ins))
+        return false;
+
+    // Step 5. Assign fields of a snapshot.
+    if (ins->snapshot() && !informSnapshot(ins->snapshot()))
+        return false;
+
+    if (aligns)
+        block->insertBefore(ins, aligns);
+
+    return true;
+}
+
+bool
 GreedyAllocator::allocateRegistersInBlock(LBlock *block)
 {
-    for (LInstructionReverseIterator ri = block->instructions().rbegin();
-         ri != block->instructions().rend();
-         ri++)
-    {
-        if (!gen->ensureBallast())
-            return false;
+    LInstructionReverseIterator ri = block->instructions().rbegin();
 
+    // Control instructions need to be handled specially. Since they have no
+    // outputs, we are guaranteed they do not spill. But restores may occur,
+    // and may need to be duplicated on each outgoing edge.
+    if (!allocateInstruction(block, *ri))
+        return false;
+    ri++;
+
+    JS_ASSERT(!spills);
+
+    if (restores) {
+        // For each successor that has already been allocated, duplicate the
+        // move group into the start of its block. We don't yet have the
+        // ability to detect whether the receiving blocks actually need this
+        // move.
+        for (size_t i = 0; i < block->mir()->numSuccessors(); i++) {
+            MBasicBlock *msuccessor = block->mir()->getSuccessor(i);
+            if (msuccessor->id() <= block->mir()->id())
+                continue;
+
+            Mover moves;
+            LBlock *successor = msuccessor->lir();
+            for (size_t i = 0; i < restores->numMoves(); i++) {
+                const LMove &move = restores->getMove(i);
+                if (!moves.move(*move.from(), *move.to()))
+                    return false;
+            }
+
+            successor->insertBefore(*successor->begin(), moves.moves);
+        }
+    }
+
+    if (block->mir()->isLoopBackedge()) {
+        // If this is a loop backedge, save its exit allocation state at the
+        // loop header. Note this occurs after allocating the initial jump
+        // instruction, to avoid placing useless moves at the loop edge.
+        if (!prepareBackedge(block))
+            return false;
+    }
+
+    for (; ri != block->instructions().rend(); ri++) {
         LInstruction *ins = *ri;
 
-        // Reset internal state used for evicting.
-        reset();
-        assertValidRegisterState();
-
-        // Step 1. Find all fixed writable registers, adding them to the
-        // disallow set.
-        if (!prescanDefinitions(ins))
-            return false;
-
-        // Step 2. For each use, add fixed policies to the disallow set and
-        // already allocated registers to the discouraged set.
-        if (!prescanUses(ins))
-            return false;
-
-        // Step 3. Allocate registers for each definition.
-        if (!allocateDefinitions(ins))
-            return false;
-
-        // Step 4. Allocate inputs and temporaries.
-        if (!allocateInputs(ins))
-            return false;
-
-        // Step 5. Assign fields of a snapshot.
-        if (ins->snapshot() && !informSnapshot(ins->snapshot()))
+        if (!allocateInstruction(block, ins))
             return false;
 
         // Step 6. Insert move instructions.
         if (restores)
             block->insertAfter(ins, restores);
-        if (spills) 
+        if (spills) {
+            JS_ASSERT(ri != block->rbegin());
             block->insertAfter(ins, spills);
-        if (aligns) {
-            block->insertBefore(ins, aligns);
-            ri++;
         }
 
         assertValidRegisterState();
@@ -852,16 +900,11 @@ GreedyAllocator::mergeAllocationState(LBlock *block)
         // If there were parallel moves, append them now.
         BlockInfo *info = blockInfo(rightblock);
         if (info->restores.moves)
-            rightblock->insertAfter(*rightblock->begin(), info->restores.moves);
+            rightblock->insertBefore(*rightblock->begin(), info->restores.moves);
     }
 
-    if (mblock->isLoopBackedge()) {
-        if (!prepareBackedge(block))
-            return false;
-    } else {
-        if (!mergePhiState(block))
-            return false;
-    }
+    if (!mergePhiState(block))
+        return false;
 
     return true;
 }
