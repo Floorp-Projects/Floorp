@@ -62,6 +62,10 @@ ifdef MOZ_SOURCE_STAMP
 DEFINES += -DSOURCE_CHANGESET="$(MOZ_SOURCE_STAMP)"
 endif
 
+ifeq (Android,$(OS_TARGET))
+DEFINES += -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME)
+endif
+
 # strip a trailing slash from the repo URL because it's not always present,
 # and we want to construct a working URL in buildconfig.html
 # make+shell+sed = awful
