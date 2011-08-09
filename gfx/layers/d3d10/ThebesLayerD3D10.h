@@ -38,7 +38,6 @@
 #ifndef GFX_THEBESLAYERD3D10_H
 #define GFX_THEBESLAYERD3D10_H
 
-#include "Layers.h"
 #include "LayerManagerD3D10.h"
 
 namespace mozilla {
