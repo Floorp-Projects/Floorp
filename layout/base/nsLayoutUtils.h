@@ -934,8 +934,8 @@ public:
   static nscoord MinWidthFromInline(nsIFrame* aFrame,
                                     nsRenderingContext* aRenderingContext);
 
-  // Get a suitable foreground color for painting text for the frame.
-  static nscolor GetTextColor(nsIFrame* aFrame);
+  // Get a suitable foreground color for painting aProperty for aFrame.
+  static nscolor GetColor(nsIFrame* aFrame, nsCSSProperty aProperty);
 
   // Get a baseline y position in app units that is snapped to device pixels.
   static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
