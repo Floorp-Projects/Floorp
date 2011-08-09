@@ -40,11 +40,22 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(c893eb89-8650-49d2-aed7-0ef809a2b940)]
-interface nsIPhoneSupport : nsISupports
+[scriptable, uuid(fd2450a3-966b-44a9-a8eb-316256bb80b4)]
+interface nsIShellService : nsISupports
 {
   /**
    * This method displays a UI to switch to (or launch) a different task
    */
   void switchTask();
+
+  /**
+   * This method creates a shortcut on a desktop or homescreen that opens in
+   * the our application.
+   *
+   * @param aTitle     the user-friendly name of the shortcut.
+   * @param aURI       the URI to open.
+   * @param aIconData  a base64 encoded representation of the shortcut's icon.
+   * @param aIntent    how the URI should be opened. Examples: "default", "bookmark" and "webapp"
+   */
+  void createShortcut(in AString aTitle, in AString aURI, in AString aIconData, in AString aIntent);
 };
