@@ -63,7 +63,7 @@ interface nsIDirectoryServiceProvider: nsISupports
   * @return             The file represented by the property.
   *
   */ 
-  nsIFile getFile(in string prop, out PRBool persistent);
+  nsIFile getFile(in string prop, out boolean persistent);
 };
 
 /**

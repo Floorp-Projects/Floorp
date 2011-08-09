@@ -43,6 +43,8 @@
  * as passing new installs from webpages to the AddonManager.
  */
 
+"use strict";
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -139,18 +141,18 @@ amManager.prototype = {
       }
       let uri = aUris.shift();
       AddonManager.getInstallForURL(uri, function(aInstall) {
+        function callCallback(aUri, aStatus) {
+          try {
+            aCallback.onInstallEnded(aUri, aStatus);
+          }
+          catch (e) {
+            Components.utils.reportError(e);
+          }
+        }
+
         if (aInstall) {
           installs.push(aInstall);
           if (aCallback) {
-            function callCallback(aUri, aStatus) {
-              try {
-                aCallback.onInstallEnded(aUri, aStatus);
-              }
-              catch (e) {
-                Components.utils.reportError(e);
-              }
-            }
-
             aInstall.addListener({
               onDownloadCancelled: function(aInstall) {
                 callCallback(uri, USER_CANCELLED);

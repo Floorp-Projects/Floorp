@@ -83,29 +83,33 @@ WebSocketChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
       do_CreateInstance("@mozilla.org/network/protocol;1?name=ws", &rv);
   }
   if (NS_FAILED(rv))
-    return CancelEarly();
+    goto fail;
 
   rv = mChannel->SetNotificationCallbacks(this);
   if (NS_FAILED(rv))
-    return CancelEarly();
+    goto fail;
 
   rv = mChannel->SetProtocol(aProtocol);
   if (NS_FAILED(rv))
-    return CancelEarly();
+    goto fail;
 
   rv = mChannel->AsyncOpen(aURI, aOrigin, this, nsnull);
   if (NS_FAILED(rv))
-    return CancelEarly();
+    goto fail;
 
   return true;
+
+fail:
+  mChannel = nsnull;
+  return SendOnStop(rv);
 }
 
 bool
-WebSocketChannelParent::RecvClose()
+WebSocketChannelParent::RecvClose(const PRUint16& code, const nsCString& reason)
 {
   LOG(("WebSocketChannelParent::RecvClose() %p\n", this));
   if (mChannel) {
-    nsresult rv = mChannel->Close();
+    nsresult rv = mChannel->Close(code, reason);
     NS_ENSURE_SUCCESS(rv, true);
   }
   return true;
@@ -133,13 +137,6 @@ WebSocketChannelParent::RecvSendBinaryMsg(const nsCString& aMsg)
   return true;
 }
 
-bool
-WebSocketChannelParent::CancelEarly()
-{
-  LOG(("WebSocketChannelParent::CancelEarly() %p\n", this));
-  return mIPCOpen ? SendAsyncOpenFailed() : true;
-}
-
 NS_IMETHODIMP
 WebSocketChannelParent::GetInterface(const nsIID & iid, void **result NS_OUTPARAM)
 {
@@ -155,11 +152,12 @@ NS_IMETHODIMP
 WebSocketChannelParent::OnStart(nsISupports *aContext)
 {
   LOG(("WebSocketChannelParent::OnStart() %p\n", this));
-  nsCAutoString protocol;
+  nsCAutoString protocol, extensions;
   if (mChannel) {
     mChannel->GetProtocol(protocol);
+    mChannel->GetExtensions(extensions);
   }
-  if (!mIPCOpen || !SendOnStart(protocol)) {
+  if (!mIPCOpen || !SendOnStart(protocol, extensions)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -206,10 +204,11 @@ WebSocketChannelParent::OnAcknowledge(nsISupports *aContext, PRUint32 aSize)
 }
 
 NS_IMETHODIMP
-WebSocketChannelParent::OnServerClose(nsISupports *aContext)
+WebSocketChannelParent::OnServerClose(nsISupports *aContext,
+                                      PRUint16 code, const nsACString & reason)
 {
   LOG(("WebSocketChannelParent::OnServerClose() %p\n", this));
-  if (!mIPCOpen || !SendOnServerClose()) {
+  if (!mIPCOpen || !SendOnServerClose(code, nsCString(reason))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

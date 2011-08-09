@@ -201,14 +201,13 @@ PRStatus FastFetchFile(PRFileDesc *in, PRFileDesc *out, PRUint32 size)
     outfMap = PR_CreateFileMap(out, sz64, PR_PROT_READWRITE);
     PR_ASSERT(outfMap);
     addr = PR_MemMap(outfMap, LL_ZERO, size);
-    if (addr == (void *) -1) {
+    if (addr == NULL) {
 	fprintf(stderr, "cannot memory-map file: (%d, %d)\n", PR_GetError(),
 		PR_GetOSError());
 
 	PR_CloseFileMap(outfMap);
 	return PR_FAILURE;
     }
-    PR_ASSERT(addr != (void *) -1);
     start = (char *) addr;
     rem = size;
     while ((nBytes = DrainInputBuffer(start, rem)) > 0) {

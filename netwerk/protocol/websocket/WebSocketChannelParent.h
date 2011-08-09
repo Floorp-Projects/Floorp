@@ -67,11 +67,10 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const nsCString& aOrigin,
                      const nsCString& aProtocol,
                      const bool& aSecure);
-  bool RecvClose();
+  bool RecvClose(const PRUint16 & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);
   bool RecvDeleteSelf();
-  bool CancelEarly();
 
   void ActorDestroy(ActorDestroyReason why);
 

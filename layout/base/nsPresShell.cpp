@@ -135,7 +135,7 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsRenderingContext.h"
-
+#include "nsAutoLayoutPhase.h"
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
@@ -1432,6 +1432,15 @@ public:
     return PL_DHASH_NEXT;
   }
 
+  static PLDHashOperator StyleSizeEnumerator(PresShellPtrKey *aEntry,
+                                             void *userArg)
+  {
+    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
+    PRUint32 *val = (PRUint32*)userArg;
+    *val += aShell->StyleSet()->SizeOf();
+    return PL_DHASH_NEXT;
+  }
+
   static PRUint32
   EstimateShellsMemory(nsTHashtable<PresShellPtrKey>::Enumerator aEnumerator)
   {
@@ -1439,10 +1448,13 @@ public:
     sLiveShells->EnumerateEntries(aEnumerator, &result);
     return result;
   }
-                  
-                                  
+
   static PRInt64 SizeOfLayoutMemoryReporter() {
     return EstimateShellsMemory(LiveShellSizeEnumerator);
+  }
+
+  static PRInt64 SizeOfStyleMemoryReporter() {
+    return EstimateShellsMemory(StyleSizeEnumerator);
   }
 
 protected:
@@ -1654,11 +1666,18 @@ nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
 static PRBool sSynthMouseMove = PR_TRUE;
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
-    "explicit/layout/all",
+    "explicit/layout/arenas",
     KIND_HEAP,
     UNITS_BYTES,
     PresShell::SizeOfLayoutMemoryReporter,
     "Memory used by layout PresShell, PresContext, and other related areas.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(LayoutStyle,
+    "explicit/layout/styledata",
+    KIND_HEAP,
+    UNITS_BYTES,
+    PresShell::SizeOfStyleMemoryReporter,
+    "Memory used by the style system.")
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
@@ -1688,6 +1707,7 @@ PresShell::PresShell()
   static bool registeredReporter = false;
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutStyle));
     Preferences::AddBoolVarCache(&sSynthMouseMove,
                                  "layout.reflow.synthMouseMove", PR_TRUE);
     registeredReporter = true;
@@ -6178,14 +6198,6 @@ PresShell::Paint(nsIView*           aViewToPaint,
 void
 nsIPresShell::SetCapturingContent(nsIContent* aContent, PRUint8 aFlags)
 {
-  // If SetCapturingContent() is called during dragging mouse for selection,
-  // we should abort current transaction.
-  nsRefPtr<nsFrameSelection> fs =
-    nsFrameSelection::GetMouseDownFrameSelection();
-  if (fs) {
-    fs->AbortDragForSelection();
-  }
-
   NS_IF_RELEASE(gCaptureInfo.mContent);
 
   // only set capturing content if allowed or the CAPTURE_IGNOREALLOWED flag
@@ -9404,9 +9416,11 @@ PresShell::SetIsActive(PRBool aIsActive)
                                         &aIsActive);
   nsresult rv = UpdateImageLockingState();
 #ifdef ACCESSIBILITY
-  nsAccessibilityService* accService = AccService();
-  if (accService) {
-    accService->PresShellActivated(this);
+  if (aIsActive) {
+    nsAccessibilityService* accService = AccService();
+    if (accService) {
+      accService->PresShellActivated(this);
+    }
   }
 #endif
   return rv;

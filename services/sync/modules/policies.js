@@ -138,7 +138,7 @@ let SyncScheduler = {
         this.scheduleNextSync(sync_interval);
         break;
       case "weave:engine:sync:finish":
-        if (subject == "clients") {
+        if (data == "clients") {
           // Update the client mode because it might change what we sync.
           this.updateClientMode();
         }

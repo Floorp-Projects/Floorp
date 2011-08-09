@@ -60,7 +60,7 @@ get_content_type_from_mime_type(const char *mimeType)
   while (ct_ptr) {
     char *mimeTypeFromContentType =  g_content_type_get_mime_type((char*)ct_ptr->data);
     if (strcmp(mimeTypeFromContentType, mimeType) == 0) {
-      foundContentType = strdup((char*)ct_ptr->data);
+      foundContentType = g_strdup((char*)ct_ptr->data);
       g_free(mimeTypeFromContentType);
       break;
     }
@@ -245,7 +245,7 @@ NS_IMETHODIMP
 nsGIOMimeApp::SetAsDefaultForFileExtensions(nsACString const& fileExts)
 {
   GError *error = NULL;
-  char *extensions = strdup(PromiseFlatCString(fileExts).get());
+  char *extensions = g_strdup(PromiseFlatCString(fileExts).get());
   char *ext_pos = extensions;
   char *space_pos;
 

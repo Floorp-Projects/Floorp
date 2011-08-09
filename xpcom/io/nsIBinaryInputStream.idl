@@ -59,7 +59,7 @@ interface nsIBinaryInputStream : nsIInputStream {
      *
      * @return that byte to be treated as a boolean.
      */
-    PRBool readBoolean();
+    boolean readBoolean();
 
     PRUint8 read8();
     PRUint16 read16();

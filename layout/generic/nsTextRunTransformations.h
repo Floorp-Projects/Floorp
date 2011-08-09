@@ -117,7 +117,7 @@ public:
                          PRPackedBool* aCapitalization,
                          gfxContext* aRefContext);
   virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                        PRPackedBool* aBreakBefore,
+                                        PRUint8* aBreakBefore,
                                         gfxContext* aRefContext);
   /**
    * Called after SetCapitalization and SetPotentialLineBreaks

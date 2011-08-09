@@ -294,16 +294,16 @@ public:
 
   static void MouseMoved(NSEvent* aEvent);
   static void OnDestroyView(ChildView* aView);
+  static void OnDestroyWindow(NSWindow* aWindow);
   static BOOL WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
                                  ChildView* aView, BOOL isClickThrough = NO);
+  static void MouseExitedWindow(NSEvent* aEvent);
+  static void MouseEnteredWindow(NSEvent* aEvent);
   static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil);
   static ChildView* ViewForEvent(NSEvent* aEvent);
 
   static ChildView* sLastMouseEventView;
-
-private:
-
-  static NSWindow* WindowForEvent(NSEvent* aEvent);
+  static NSWindow* sWindowUnderMouse;
 };
 
 //-------------------------------------------------------------------------

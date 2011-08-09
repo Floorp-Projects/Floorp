@@ -225,6 +225,8 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
         if (ec == NS_OK && duration >= 0) {
           mDecoder->SetDuration(duration);
         }
+      } else {
+        mDecoder->SetInfinite(PR_TRUE);
       }
     }
 
@@ -256,6 +258,10 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
     // support seeking.
     seekable =
       responseStatus == HTTP_PARTIAL_RESPONSE_CODE || acceptsRanges;
+
+    if (seekable) {
+      mDecoder->SetInfinite(PR_FALSE);
+    }
   }
   mDecoder->SetSeekable(seekable);
   mCacheStream.SetSeekable(seekable);

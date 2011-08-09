@@ -105,6 +105,7 @@ class nsStyleTransformMatrix
                                    nsRect& aBounds, float aAppUnitsPerMatrixUnit,
                                    PRBool *aPercentX = nsnull, 
                                    PRBool *aPercentY = nsnull);
+  static gfx3DMatrix ProcessMatrix3D(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessInterpolateMatrix(const nsCSSValue::Array *aData,
                                               nsStyleContext *aContext,
                                               nsPresContext *aPresContext,
@@ -120,20 +121,40 @@ class nsStyleTransformMatrix
                                        nsPresContext *aPresContext,
                                        PRBool &aCanStoreInRuleTree,
                                        nsRect& aBounds, float aAppUnitsPerMatrixUnit);
+  static gfx3DMatrix ProcessTranslateZ(const nsCSSValue::Array *aData,
+                                       nsStyleContext *aContext,
+                                       nsPresContext *aPresContext,
+                                       PRBool &aCanStoreInRuleTree,
+                                       float aAppUnitsPerMatrixUnit);
   static gfx3DMatrix ProcessTranslate(const nsCSSValue::Array *aData,
                                       nsStyleContext *aContext,
                                       nsPresContext *aPresContext,
                                       PRBool &aCanStoreInRuleTree,
                                       nsRect& aBounds, float aAppUnitsPerMatrixUnit);
+  static gfx3DMatrix ProcessTranslate3D(const nsCSSValue::Array *aData,
+                                        nsStyleContext *aContext,
+                                        nsPresContext *aPresContext,
+                                        PRBool &aCanStoreInRuleTree,
+                                        nsRect& aBounds, float aAppUnitsPerMatrixUnit);
   static gfx3DMatrix ProcessScaleHelper(float aXScale, float aYScale, float aZScale);
   static gfx3DMatrix ProcessScaleX(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessScaleY(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessScaleZ(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessScale(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessScale3D(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessSkewHelper(double aXAngle, double aYAngle);
   static gfx3DMatrix ProcessSkewX(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessSkewY(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessSkew(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessRotateX(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessRotateY(const nsCSSValue::Array *aData);
   static gfx3DMatrix ProcessRotateZ(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessRotate3D(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessPerspective(const nsCSSValue::Array *aData,
+                                        nsStyleContext *aContext,
+                                        nsPresContext *aPresContext,
+                                        PRBool &aCanStoreInRuleTree,
+                                        float aAppUnitsPerMatrixUnit);
 };
 
 #endif

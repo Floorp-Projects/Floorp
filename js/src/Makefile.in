@@ -1021,7 +1021,7 @@ ifdef MOZ_ETW
 ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
 	$(MC) -um -mof $^
 
-$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): ETWProvider.h
+jsprobes.$(OBJ_SUFFIX): ETWProvider.h
 
 ETWProvider.res: ETWProvider.rc
 	$(RC) -r -i "$(SDKDIR)Include" $^

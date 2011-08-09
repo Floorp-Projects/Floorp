@@ -54,25 +54,18 @@ CPPSRCS = nsBrowserApp.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
+
+DEFINES += -DXPCOM_GLUE
+STL_FLAGS=
 
 LIBS += $(JEMALLOC_LIBS)
 
-ifeq (Linux_1, $(OS_ARCH)_$(GNU_LD))
-OS_LDFLAGS += -Wl,-rpath='$$ORIGIN'
-NSDISTMODE = copy
-endif
-
 LIBS += \
-  $(XPCOM_GLUE_LDOPTS) \
-  $(NSPR_LIBS) \
+  $(EXTRA_DSO_LIBS) \
+  $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-LIBS += $(DIST)/bin/XUL
-else
-EXTRA_DSO_LIBS += xul
-LIBS += $(EXTRA_DSO_LIBS)
-endif
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
@@ -84,6 +77,9 @@ WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 endif #LIBXUL_SDK
 
+# Make sure the standalone glue doesn't try to get libxpcom.so from mobile/app.
+NSDISTMODE = copy
+
 include $(topsrcdir)/config/rules.mk
 
 GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
@@ -94,7 +90,6 @@ else
 APP_BUILDID = $(MOZ_BUILD_DATE)
 endif
 APP_ICON = mobile
-APP_SPLASH = splash
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) \
            -DGRE_BUILDID=$(GRE_BUILDID) \
@@ -187,7 +182,6 @@ endif # SKIP_COPY_XULRUNNER
 
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
-	cp $(srcdir)/$(APP_SPLASH).bmp $(DIST)/bin/$(APP_SPLASH).bmp
 	$(REDIT_PATH)/redit$(HOST_BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
 endif
 

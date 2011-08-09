@@ -82,6 +82,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsIDOMNode.h"
 #include "nsAHtml5FragmentParser.h"
 #include "nsIFragmentContentSink.h"
+#include "nsMathUtils.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -1854,7 +1855,8 @@ private:
 #ifdef DEBUG
   static PRUint32 sDOMNodeRemovedSuppressCount;
 #endif
-  static nsCOMArray<nsIRunnable>* sBlockedScriptRunners;
+  // Not an nsCOMArray because removing elements from those is slower
+  static nsTArray< nsCOMPtr<nsIRunnable> >* sBlockedScriptRunners;
   static PRUint32 sRunnersCountAtFirstBlocker;
   static PRUint32 sScriptBlockerCountWhereRunnersPrevented;
 
@@ -2035,49 +2037,37 @@ public:
 #endif
 
 /*
- * Check whether a floating point number is finite (not +/-infinity and not a
- * NaN value).
- */
-inline NS_HIDDEN_(PRBool) NS_FloatIsFinite(jsdouble f) {
-#ifdef WIN32
-  return _finite(f);
-#else
-  return finite(f);
-#endif
-}
-
-/*
  * In the following helper macros we exploit the fact that the result of a
  * series of additions will not be finite if any one of the operands in the
  * series is not finite.
  */
 #define NS_ENSURE_FINITE(f, rv)                                               \
-  if (!NS_FloatIsFinite(f)) {                                                 \
+  if (!NS_finite(f)) {                                                        \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE2(f1, f2, rv)                                         \
-  if (!NS_FloatIsFinite((f1)+(f2))) {                                         \
+  if (!NS_finite((f1)+(f2))) {                                                \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE3(f1, f2, f3, rv)                                     \
-  if (!NS_FloatIsFinite((f1)+(f2)+(f3))) {                                    \
+  if (!NS_finite((f1)+(f2)+(f3))) {                                           \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE4(f1, f2, f3, f4, rv)                                 \
-  if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4))) {                               \
+  if (!NS_finite((f1)+(f2)+(f3)+(f4))) {                                      \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE5(f1, f2, f3, f4, f5, rv)                             \
-  if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4)+(f5))) {                          \
+  if (!NS_finite((f1)+(f2)+(f3)+(f4)+(f5))) {                                 \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE6(f1, f2, f3, f4, f5, f6, rv)                         \
-  if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4)+(f5)+(f6))) {                     \
+  if (!NS_finite((f1)+(f2)+(f3)+(f4)+(f5)+(f6))) {                            \
     return (rv);                                                              \
   }
 

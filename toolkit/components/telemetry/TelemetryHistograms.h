@@ -83,7 +83,8 @@ HISTOGRAM(MAC_INITFONTLIST_TOTAL, 1, 30000, 10, EXPONENTIAL, "gfxMacPlatformFont
 #endif
 HISTOGRAM(SHUTDOWN_OK, 0, 1, 2, BOOLEAN, "Did the browser start after a successful shutdown")
 
-HISTOGRAM(IMAGE_DECODE_LATENCY, 50, 5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")
+HISTOGRAM(IMAGE_DECODE_LATENCY, 50,  5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")
+HISTOGRAM(IMAGE_DECODE_TIME,    50, 50000000, 100, EXPONENTIAL, "Time spent decoding an image (us)")
 
 /**
  * Networking telemetry
@@ -118,25 +119,55 @@ HTTP_HISTOGRAMS(SUB, "subitem: ")
 #undef HTTP_HISTOGRAMS
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
-HISTOGRAM(MOZ_SQLITE_OPEN, 1, 3000, 10, EXPONENTIAL, "Time spent on SQLite open() (ms)")
-HISTOGRAM(MOZ_SQLITE_READ_MS, 1, 3000, 10, EXPONENTIAL, "Time spent on SQLite read() (ms)")
+
+/* Define 2 histograms: MOZ_SQLITE_(NAME)_MS and
+ * MOZ_SQLITE_(NAME)_MAIN_THREAD_MS. These are meant to be used by
+ * IOThreadAutoTimer which relies on _MAIN_THREAD_MS histogram being
+ * "+ 1" away from MOZ_SQLITE_(NAME)_MS.
+ */
+#define SQLITE_TIME_SPENT(NAME, DESC) \
+  HISTOGRAM(MOZ_SQLITE_ ## NAME ## _MS, 1, 3000, 10, EXPONENTIAL, DESC) \
+  HISTOGRAM(MOZ_SQLITE_ ## NAME ## _MAIN_THREAD_MS, 1, 3000, 10, EXPONENTIAL, DESC)
+
+#define SQLITE_TIME_PER_FILE(NAME, DESC) \
+  SQLITE_TIME_SPENT(OTHER_ ## NAME, DESC) \
+  SQLITE_TIME_SPENT(PLACES_ ## NAME, DESC) \
+  SQLITE_TIME_SPENT(COOKIES_ ## NAME, DESC) \
+  SQLITE_TIME_SPENT(URLCLASSIFIER_ ## NAME, DESC)
+
+SQLITE_TIME_SPENT(OPEN, "Time spent on SQLite open() (ms)")
+SQLITE_TIME_SPENT(TRUNCATE, "Time spent on SQLite truncate() (ms)")
+SQLITE_TIME_PER_FILE(READ, "Time spent on SQLite read() (ms)")
+SQLITE_TIME_PER_FILE(WRITE, "Time spent on SQLite write() (ms)")
+SQLITE_TIME_PER_FILE(SYNC, "Time spent on SQLite fsync() (ms)")
+#undef SQLITE_TIME_PER_FILE
+#undef SQLITE_TIME_SPENT
 HISTOGRAM(MOZ_SQLITE_OTHER_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
 HISTOGRAM(MOZ_SQLITE_PLACES_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
 HISTOGRAM(MOZ_SQLITE_COOKIES_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
 HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_READ_B, 1, 32768, 3, LINEAR, "SQLite read() (bytes)")
-HISTOGRAM(MOZ_SQLITE_WRITE_MS, 1, 3000, 10, EXPONENTIAL, "Time spent on SQLite write() (ms)")
 HISTOGRAM(MOZ_SQLITE_PLACES_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_SQLITE_COOKIES_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
 HISTOGRAM(MOZ_SQLITE_OTHER_WRITE_B, 1, 32768, 3, LINEAR, "SQLite write (bytes)")
-HISTOGRAM(MOZ_SQLITE_TRUNCATE, 1, 3000, 10, EXPONENTIAL, "Time spent on SQLite truncate() (ms)")
-HISTOGRAM(MOZ_SQLITE_PLACES_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on SQLite fsync() (ms)")
-HISTOGRAM(MOZ_SQLITE_COOKIES_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on SQLite fsync() (ms)")
-HISTOGRAM(MOZ_SQLITE_URLCLASSIFIER_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on SQLite fsync() (ms)")
-HISTOGRAM(MOZ_SQLITE_OTHER_SYNC, 1, 10000, 10, EXPONENTIAL, "Time spent on SQLite fsync() (ms)")
 HISTOGRAM(STARTUP_MEASUREMENT_ERRORS, 1, 3, 4, LINEAR, "Flags errors in startup calculation()")
 HISTOGRAM(NETWORK_DISK_CACHE_OPEN, 1, 10000, 10, EXPONENTIAL, "Time spent opening disk cache (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_TRASHRENAME, 1, 10000, 10, EXPONENTIAL, "Time spent renaming bad Cache to Cache.Trash (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_DELETEDIR, 1, 10000, 10, EXPONENTIAL, "Time spent deleting disk cache (ms)")
-HISTOGRAM(MOZ_SQLITE_MAIN_THREAD_WAIT_MS, 1, 3000, 10, EXPONENTIAL, "Time spent waiting on SQLite IO on main thread (ms)")
-HISTOGRAM(MOZ_SQLITE_OTHER_THREAD_WAIT_MS, 1, 3000, 10, EXPONENTIAL, "Time spent waiting on SQLite IO off main thread (ms)")
+
+/**
+ * Places telemetry.
+ */
+HISTOGRAM(PLACES_PAGES_COUNT, 1000, 150000, 20, EXPONENTIAL, "PLACES: Number of unique pages")
+HISTOGRAM(PLACES_BOOKMARKS_COUNT, 100, 8000, 15, EXPONENTIAL, "PLACES: Number of bookmarks")
+HISTOGRAM(PLACES_TAGS_COUNT, 1, 200, 10, EXPONENTIAL, "PLACES: Number of tags")
+HISTOGRAM(PLACES_FOLDERS_COUNT, 1, 200, 10, EXPONENTIAL, "PLACES: Number of folders")
+HISTOGRAM(PLACES_KEYWORDS_COUNT, 1, 200, 10, EXPONENTIAL, "PLACES: Number of keywords")
+HISTOGRAM(PLACES_SORTED_BOOKMARKS_PERC, 1, 100, 10, LINEAR, "PLACES: Percentage of bookmarks organized in folders")
+HISTOGRAM(PLACES_TAGGED_BOOKMARKS_PERC, 1, 100, 10, LINEAR, "PLACES: Percentage of tagged bookmarks")
+HISTOGRAM(PLACES_DATABASE_FILESIZE_MB, 5, 200, 10, EXPONENTIAL, "PLACES: Database filesize (MB)")
+HISTOGRAM(PLACES_DATABASE_JOURNALSIZE_MB, 1, 50, 10, EXPONENTIAL, "PLACES: Database journal size (MB)")
+HISTOGRAM(PLACES_DATABASE_PAGESIZE_B, 1024, 32768, 10, EXPONENTIAL, "PLACES: Database page size (bytes)")
+HISTOGRAM(PLACES_DATABASE_SIZE_PER_PAGE_B, 500, 10240, 20, EXPONENTIAL, "PLACES: Average size of a place in the database (bytes)")
+HISTOGRAM(PLACES_EXPIRATION_STEPS_TO_CLEAN, 1, 10, 10, LINEAR, "PLACES: Expiration steps to cleanup the database")
+HISTOGRAM(PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS, 50, 500, 10, EXPONENTIAL, "PLACES: Time for first autocomplete result if > 50ms (ms)")

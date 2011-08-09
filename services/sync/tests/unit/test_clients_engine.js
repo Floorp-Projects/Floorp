@@ -207,6 +207,38 @@ add_test(function test_sync() {
   }
 });
 
+add_test(function test_client_name_change() {
+  _("Ensure client name change incurs a client record update.");
+
+  let tracker = Clients._tracker;
+
+  let localID = Clients.localID;
+  let initialName = Clients.localName;
+
+  Svc.Obs.notify("weave:engine:start-tracking");
+  _("initial name: " + initialName);
+
+  // Tracker already has data, so clear it.
+  tracker.clearChangedIDs();
+
+  let initialScore = tracker.score;
+
+  do_check_eq(Object.keys(tracker.changedIDs).length, 0);
+
+  Svc.Prefs.set("client.name", "new name");
+
+  _("new name: " + Clients.localName);
+  do_check_neq(initialName, Clients.localName);
+  do_check_eq(Object.keys(tracker.changedIDs).length, 1);
+  do_check_true(Clients.localID in tracker.changedIDs);
+  do_check_true(tracker.score > initialScore);
+  do_check_true(tracker.score >= SCORE_INCREMENT_XLARGE);
+
+  Svc.Obs.notify("weave:engine:stop-tracking");
+
+  run_next_test();
+});
+
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.Engine.Clients").level = Log4Moz.Level.Trace;

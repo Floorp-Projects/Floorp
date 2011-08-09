@@ -381,6 +381,22 @@ nsSplitterFrame::HandleMultiplePress(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+nsSplitterFrame::HandleDrag(nsPresContext* aPresContext,
+                        nsGUIEvent *    aEvent,
+                        nsEventStatus*  aEventStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
+                           nsGUIEvent *    aEvent,
+                           nsEventStatus*  aEventStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)

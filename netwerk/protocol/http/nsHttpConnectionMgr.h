@@ -44,7 +44,7 @@
 #include "nsHttpTransaction.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-#include "nsHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsAutoPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
@@ -262,12 +262,12 @@ private:
     // NOTE: these members are only accessed on the socket transport thread
     //-------------------------------------------------------------------------
 
-    static PRIntn ProcessOneTransactionCB(nsHashKey *, void *, void *);
+    static PLDHashOperator ProcessOneTransactionCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
 
-    static PRIntn PruneDeadConnectionsCB(nsHashKey *, void *, void *);
-    static PRIntn ShutdownPassCB(nsHashKey *, void *, void *);
-    static PRIntn PurgeExcessIdleConnectionsCB(nsHashKey *, void *, void *);
-    static PRIntn ClosePersistentConnectionsCB(nsHashKey *, void *, void *);
+    static PLDHashOperator PruneDeadConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
+    static PLDHashOperator ShutdownPassCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
+    static PLDHashOperator PurgeExcessIdleConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
+    static PLDHashOperator ClosePersistentConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     PRBool   ProcessPendingQForEntry(nsConnectionEntry *);
     PRBool   AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
     void     GetConnection(nsConnectionEntry *, nsHttpTransaction *,
@@ -357,9 +357,9 @@ private:
     // the connection table
     //
     // this table is indexed by connection key.  each entry is a
-    // ConnectionEntry object.
+    // nsConnectionEntry object.
     //
-    nsHashtable mCT;
+    nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
 };
 
 #endif // !nsHttpConnectionMgr_h__

@@ -75,6 +75,7 @@ chrome.jar:
   skin/images/back-default-hdpi.png           (images/back-default-hdpi.png)
   skin/images/allpages-48.png               (images/allpages-48.png)
   skin/images/history-48.png                (images/history-48.png)
+  skin/images/tabs-hdpi.png                 (images/tabs-hdpi.png)
   skin/images/bookmark-default-hdpi.png     (images/bookmark-default-hdpi.png)
   skin/images/bookmarks-48.png              (images/bookmarks-48.png)
   skin/images/bookmark-starred-hdpi.png     (images/bookmark-starred-hdpi.png)
@@ -131,7 +132,7 @@ chrome.jar:
   skin/images/handle-end.png                (images/handle-end.png)
 
 chrome.jar:
-% skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4
+% skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4 osversion=2.3.5 osversion=2.3.6 osversion=2.3.7
 % skin browser gingerbread/1.0 %skin/gingerbread/
   skin/gingerbread/aboutPage.css                        (aboutPage.css)
   skin/gingerbread/about.css                            (about.css)
@@ -250,6 +251,7 @@ chrome.jar:
   skin/gingerbread/images/scrubber-hdpi.png             (gingerbread/images/scrubber-hdpi.png)
   skin/gingerbread/images/handle-start.png              (gingerbread/images/handle-start.png)
   skin/gingerbread/images/handle-end.png                (gingerbread/images/handle-end.png)
+  skin/gingerbread/images/tabs-hdpi.png                 (images/tabs-hdpi.png)
   skin/gingerbread/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/gingerbread/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/gingerbread/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
@@ -376,6 +378,7 @@ chrome.jar:
   skin/honeycomb/images/scrubber-hdpi.png             (honeycomb/images/scrubber-hdpi.png)
   skin/honeycomb/images/handle-start.png              (images/handle-start.png)
   skin/honeycomb/images/handle-end.png                (images/handle-end.png)
+  skin/honeycomb/images/tabs-hdpi.png                 (images/tabs-hdpi.png)
   skin/honeycomb/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/honeycomb/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/honeycomb/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)

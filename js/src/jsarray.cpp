@@ -120,63 +120,11 @@
 using namespace js;
 using namespace js::gc;
 
-/* 2^32 - 1 as a number and a string */
-#define MAXINDEX 4294967295u
-#define MAXSTR   "4294967295"
-
 static inline bool
 ENSURE_SLOW_ARRAY(JSContext *cx, JSObject *obj)
 {
     return obj->getClass() == &js_SlowArrayClass ||
            obj->makeDenseArraySlow(cx);
-}
-
-/*
- * Determine if the id represents an array index or an XML property index.
- *
- * An id is an array index according to ECMA by (15.4):
- *
- * "Array objects give special treatment to a certain class of property names.
- * A property name P (in the form of a string value) is an array index if and
- * only if ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal
- * to 2^32-1."
- *
- * In our implementation, it would be sufficient to check for JSVAL_IS_INT(id)
- * except that by using signed 31-bit integers we miss the top half of the
- * valid range. This function checks the string representation itself; note
- * that calling a standard conversion routine might allow strings such as
- * "08" or "4.0" as array indices, which they are not.
- *
- * 'id' is passed as a jsboxedword since the given id need not necessarily hold
- * an atomized string.
- */
-bool
-js_StringIsIndex(JSLinearString *str, jsuint *indexp)
-{
-    const jschar *cp = str->chars();
-    if (JS7_ISDEC(*cp) && str->length() < sizeof(MAXSTR)) {
-        jsuint index = JS7_UNDEC(*cp++);
-        jsuint oldIndex = 0;
-        jsuint c = 0;
-        if (index != 0) {
-            while (JS7_ISDEC(*cp)) {
-                oldIndex = index;
-                c = JS7_UNDEC(*cp);
-                index = 10*index + c;
-                cp++;
-            }
-        }
-
-        /* Ensure that all characters were consumed and we didn't overflow. */
-        if (*cp == 0 &&
-             (oldIndex < (MAXINDEX / 10) ||
-              (oldIndex == (MAXINDEX / 10) && c < (MAXINDEX % 10))))
-        {
-            *indexp = index;
-            return true;
-        }
-    }
-    return false;
 }
 
 JSBool
@@ -206,6 +154,66 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 
     JS_STATIC_ASSERT(sizeof(jsuint) == sizeof(uint32_t));
     return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)lengthp);
+}
+
+namespace js {
+
+/*
+ * Determine if the id represents an array index or an XML property index.
+ *
+ * An id is an array index according to ECMA by (15.4):
+ *
+ * "Array objects give special treatment to a certain class of property names.
+ * A property name P (in the form of a string value) is an array index if and
+ * only if ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal
+ * to 2^32-1."
+ *
+ * This means the largest allowed index is actually 2^32-2 (4294967294).  
+ * 
+ * In our implementation, it would be sufficient to check for JSVAL_IS_INT(id)
+ * except that by using signed 31-bit integers we miss the top half of the
+ * valid range. This function checks the string representation itself; note
+ * that calling a standard conversion routine might allow strings such as
+ * "08" or "4.0" as array indices, which they are not.
+ *
+ */
+bool
+StringIsArrayIndex(JSLinearString *str, jsuint *indexp)
+{
+    const jschar *s = str->chars();
+    uint32 length = str->length();
+    const jschar *end = s + length;
+
+    if (length == 0 || length > (sizeof("4294967294") - 1) || !JS7_ISDEC(*s))
+        return false;
+
+    uint32 c = 0, previous = 0;    
+    uint32 index = JS7_UNDEC(*s++);
+
+    /* Don't allow leading zeros. */
+    if (index == 0 && s != end)
+        return false;
+
+    for (; s < end; s++) {
+        if (!JS7_ISDEC(*s))
+            return false;
+
+        previous = index;
+        c = JS7_UNDEC(*s);
+        index = 10 * index + c;
+    }
+
+    /* Make sure we didn't overflow. */
+    if (previous < (MAX_ARRAY_INDEX / 10) || (previous == (MAX_ARRAY_INDEX / 10) && 
+        c <= (MAX_ARRAY_INDEX % 10))) {
+        JS_ASSERT(index <= MAX_ARRAY_INDEX);
+        *indexp = index;
+        return true;
+    }
+    
+    return false;
+}
+
 }
 
 static JSBool
@@ -1399,7 +1407,7 @@ array_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Value *vector)
 {
-    JS_ASSERT(count < MAXINDEX);
+    JS_ASSERT(count <= MAX_ARRAY_INDEX);
 
     /*
      * Optimize for dense arrays so long as adding the given set of elements
@@ -1429,7 +1437,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     } while (false);
 
     Value* end = vector + count;
-    while (vector != end && start < MAXINDEX) {
+    while (vector != end && start <= MAX_ARRAY_INDEX) {
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !SetArrayElement(cx, obj, start++, *vector++)) {
             return JS_FALSE;
@@ -1443,10 +1451,10 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     if (obj->isDenseArray() && !ENSURE_SLOW_ARRAY(cx, obj))
         return JS_FALSE;
 
-    JS_ASSERT(start == MAXINDEX);
+    JS_ASSERT(start == MAX_ARRAY_INDEX + 1);
     AutoValueRooter tvr(cx);
     AutoIdRooter idr(cx);
-    Value idval = DoubleValue(MAXINDEX);
+    Value idval = DoubleValue(MAX_ARRAY_INDEX + 1);
     do {
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||

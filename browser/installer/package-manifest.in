@@ -108,9 +108,6 @@
 @BINPATH@/mozilla-xremote-client
 #endif
 #endif
-#ifdef MOZ_SPLASHSCREEN
-@BINPATH@/splash.bmp
-#endif
 
 ; [Components]
 @BINPATH@/components/components.manifest
@@ -259,6 +256,7 @@
 @BINPATH@/components/xpcom_xpti.xpt
 @BINPATH@/components/xpconnect.xpt
 @BINPATH@/components/xulapp.xpt
+@BINPATH@/components/xul.xpt
 @BINPATH@/components/xuldoc.xpt
 @BINPATH@/components/xultmpl.xpt
 @BINPATH@/components/zipwriter.xpt

@@ -18,6 +18,10 @@
 
 .mediaControlsFrame {
   direction: ltr;
+  /* Prevent unwanted style inheritance. See bug 554717. */
+  list-style-image: none !important;
+  font: normal normal normal 100%/normal sans-serif !important;
+  text-decoration: none !important;
 }
 
 /* CSS Transitions

@@ -1,0 +1,83 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMHTMLMenuItemElement;
+
+/**
+ * An interface used to construct native toolbar or context menus from <menu>
+ */
+
+[scriptable, uuid(12724737-f7db-43b4-94ab-708a7b86e115)]
+interface nsIMenuBuilder : nsISupports
+{
+
+  /**
+   * Create the top level menu or a submenu. The implementation should create
+   * a new context for this menu, so all subsequent methods will add new items
+   * to this newly created menu.
+   */
+  void openContainer(in DOMString aLabel);
+
+  /**
+   * Add a new menu item. All menu item details can be obtained from
+   * the element. This method is not called for hidden elements or elements
+   * with no or empty label. The icon should be loaded only if aCanLoadIcon
+   * is true.
+   */
+  void addItemFor(in nsIDOMHTMLMenuItemElement aElement,
+                  in boolean aCanLoadIcon);
+
+  /**
+   * Create a new separator.
+   */
+  void addSeparator();
+
+  /**
+   * Remove last added separator.
+   * Sometimes it's needed to remove last added separator, otherwise it's not
+   * possible to implement the postprocessing in one pass.
+   * See http://www.whatwg.org/specs/web-apps/current-work/multipage/interactive-elements.html#building-menus-and-toolbars
+   */
+  void undoAddSeparator();
+
+  /**
+   * Set the context to the parent menu.
+   */
+  void closeContainer();
+
+};

@@ -39,36 +39,11 @@ wizardpage {
 }
 
 .wizard-buttons button {
-  -moz-appearance: none;
+  -moz-appearance: toolbarbutton;
   min-height: 22px;
   margin: 0 6px;
-  padding: 0 2px;
+  padding: 0;
   text-shadow: @loweredShadow@;
-  border: 1px solid @toolbarbuttonBorderColor@;
-  border-radius: @toolbarbuttonCornerRadius@;
-  box-shadow: @loweredShadow@;
-  background: @toolbarbuttonBackground@;
-  background-origin: border-box;
-}
-
-.wizard-buttons button:hover:active:not([disabled="true"]) {
-  background: @toolbarbuttonPressedBackgroundColor@;
-  text-shadow: @loweredShadow@;
-  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
-}
-
-.wizard-buttons button:-moz-focusring {
-  border-color: @toolbarbuttonFocusedBorderColorAqua@;
-  box-shadow: @focusRingShadow@;
-}
-
-.wizard-buttons button:-moz-system-metric(mac-graphite-theme):-moz-focusring {
-  border-color: @toolbarbuttonFocusedBorderColorGraphite@;
-}
-
-.wizard-buttons button:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
-  background-image: @toolbarbuttonInactiveBackgroundImage@;
 }
 
 .loadingBox {

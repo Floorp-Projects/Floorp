@@ -3143,7 +3143,7 @@ AllocateSwitchConstant(JSContext *cx)
 /*
  * Sometimes, let-slots are pushed to the JS stack before we logically enter
  * the let scope. For example,
- *     for (let x = EXPR;;) BODY
+ *     let (x = EXPR) BODY
  * compiles to roughly {enterblock; EXPR; setlocal x; BODY; leaveblock} even
  * though EXPR is evaluated in the enclosing scope; it does not see x.
  *
@@ -4196,10 +4196,6 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
      */
     let = (pn->pn_op == JSOP_NOP);
     forInVar = (pn->pn_xflags & PNX_FORINVAR) != 0;
-#if JS_HAS_BLOCK_SCOPE
-    bool popScope = (inLetHead || (let && (cg->flags & TCF_IN_FOR_INIT)));
-    JS_ASSERT_IF(popScope, let);
-#endif
 
     off = noteIndex = -1;
     for (pn2 = pn->pn_head; ; pn2 = next) {
@@ -4332,23 +4328,11 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     return JS_FALSE;
                 }
 
-#if JS_HAS_BLOCK_SCOPE
-                /* Evaluate expr in the outer lexical scope if requested. */
-                TempPopScope tps;
-                if (popScope && !tps.popBlock(cx, cg))
-                    return JS_FALSE;
-#endif
-
                 oldflags = cg->flags;
                 cg->flags &= ~TCF_IN_FOR_INIT;
                 if (!js_EmitTree(cx, cg, pn3))
                     return JS_FALSE;
                 cg->flags |= oldflags & TCF_IN_FOR_INIT;
-
-#if JS_HAS_BLOCK_SCOPE
-                if (popScope && !tps.repushBlock(cx, cg))
-                    return JS_FALSE;
-#endif
             }
         }
 
@@ -5261,10 +5245,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!EmitAssignment(cx, cg, pn2->pn_kid2, JSOP_NOP, NULL))
                 return false;
             tmp2 = CG_OFFSET(cg);
-            if (pn2->pn_kid1 && !js_NewSrcNote2(cx, cg, SRC_DECL,
-                                                (pn2->pn_kid1->pn_op == JSOP_DEFVAR)
-                                                ? SRC_DECL_VAR
-                                                : SRC_DECL_LET) < 0) {
+            if (pn2->pn_kid1 && js_NewSrcNote2(cx, cg, SRC_DECL,
+                                               (pn2->pn_kid1->pn_op == JSOP_DEFVAR)
+                                               ? SRC_DECL_VAR
+                                               : SRC_DECL_LET) < 0) {
                 return false;
             }
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
@@ -6693,8 +6677,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       }
 
 #if JS_HAS_BLOCK_SCOPE
-      case TOK_LET:
-        /* Let statements have their variable declarations on the left. */
+      case TOK_LET: {
+        /*
+         * pn represents one of these syntactic constructs:
+         *   let-expression:                        (let (x = y) EXPR)
+         *   let-statement:                         let (x = y) { ... }
+         *   let-declaration in statement context:  let x = y;
+         *   let-declaration in for-loop head:      for (let ...) ...
+         *
+         * Let-expressions and let-statements are represented as binary nodes
+         * with their variable declarations on the left and the body on the
+         * right.
+         */
         if (pn->pn_arity == PN_BINARY) {
             pn2 = pn->pn_right;
             pn = pn->pn_left;
@@ -6702,13 +6696,27 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn2 = NULL;
         }
 
-        /* Non-null pn2 means that pn is the variable list from a let head. */
+        /*
+         * Non-null pn2 means that pn is the variable list from a let head.
+         *
+         * Use TempPopScope to evaluate the expressions in the enclosing scope.
+         * This also causes the initializing assignments to be emitted in the
+         * enclosing scope, but the assignment opcodes emitted here
+         * (essentially just setlocal, though destructuring assignment uses
+         * other additional opcodes) do not care about the block chain.
+         */
         JS_ASSERT(pn->pn_arity == PN_LIST);
+        TempPopScope tps;
+        bool popScope = pn2 || (cg->flags & TCF_IN_FOR_INIT);
+        if (popScope && !tps.popBlock(cx, cg))
+            return JS_FALSE;
         if (!EmitVariables(cx, cg, pn, pn2 != NULL, &noteIndex))
+            return JS_FALSE;
+        tmp = CG_OFFSET(cg);
+        if (popScope && !tps.repushBlock(cx, cg))
             return JS_FALSE;
 
         /* Thus non-null pn2 is the body of the let block or expression. */
-        tmp = CG_OFFSET(cg);
         if (pn2 && !js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
 
@@ -6718,6 +6726,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         }
         break;
+      }
 #endif /* JS_HAS_BLOCK_SCOPE */
 
 #if JS_HAS_GENERATORS

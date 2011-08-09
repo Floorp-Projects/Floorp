@@ -108,6 +108,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_600183_charset.js \
 	browser_webconsole_bug_601177_log_levels.js \
 	browser_webconsole_bug_597460_filter_scroll.js \
+	browser_webconsole_gcli_require.js \
 	browser_webconsole_console_extras.js \
 	browser_webconsole_bug_598357_jsterm_output.js \
 	browser_webconsole_bug_603750_websocket.js \
@@ -141,6 +142,8 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_663443_panel_title.js \
 	browser_webconsole_bug_660806_history_nav.js \
 	browser_webconsole_bug_651501_document_body_autocomplete.js \
+	browser_webconsole_bug_653531_highlighter_console_helper.js \
+	browser_webconsole_bug_659907_console_dir.js \
 	head.js \
 	$(NULL)
 

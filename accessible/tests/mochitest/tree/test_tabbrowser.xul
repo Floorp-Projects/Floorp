@@ -23,6 +23,8 @@
           src="../common.js" />
   <script type="application/javascript"
           src="../role.js" />
+  <script type="application/javascript"
+          src="../events.js" />
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript">
@@ -47,24 +49,31 @@
     {
       var tabBrowser = document.getElementById("tabbrowser");
 
-      var progressListener =
-      {
-        onStateChange: function onStateChange(aWebProgress,
-                                              aRequest,
-                                              aStateFlags,
-                                              aStatus)
-        {
-          if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-            tabBrowser.removeProgressListener(progressListener);
+      // Load documents into tabs and wait for reorder events caused by these
+      // documents load before we start the test.
+      var docURIs = ["about:", "about:mozilla"];
 
-            SimpleTest.executeSoon(testAccTree);
+      var handler = {
+        handleEvent: function handleEvent(aEvent) {
+          var target = aEvent.accessible;
+          if (target.role == ROLE_INTERNAL_FRAME &&
+              target.parent.parent == getAccessible(this.tabBrowser.mTabBox.tabpanels)) {
+            this.reorderCnt++;
           }
-        }
+
+          if (this.reorderCnt == docURIs.length) {
+            unregisterA11yEventListener(EVENT_REORDER, this);
+            testAccTree();
+          }
+        },
+
+        tabBrowser: tabBrowser,
+        reorderCnt: 0
       };
-      tabBrowser.addProgressListener(progressListener);
+      registerA11yEventListener(EVENT_REORDER, handler);
 
       // Test XUL and HTML documents.
-      tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
+      tabBrowser.loadTabs(docURIs, false, true);
     }
 
     function testAccTree()

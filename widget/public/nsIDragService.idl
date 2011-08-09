@@ -132,7 +132,7 @@ interface nsIDragService : nsISupports
     * If aDoneDrag is true, the drag has finished, otherwise the drag has
     * just left the window.
     */
-  void endDragSession ( in PRBool aDoneDrag ) ;
+  void endDragSession ( in boolean aDoneDrag ) ;
 
   /**
    * Fire a drag event at the source of the drag

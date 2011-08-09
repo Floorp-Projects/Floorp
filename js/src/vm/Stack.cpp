@@ -911,6 +911,16 @@ StackIter::startOnSegment(StackSegment *seg)
     settleOnNewSegment();
 }
 
+static void JS_NEVER_INLINE
+CrashIfInvalidSlot(StackFrame *fp, Value *vp)
+{
+    if (vp < fp->slots() || vp >= fp->slots() + fp->script()->nslots) {
+        JS_ASSERT(false && "About to dereference invalid slot");
+        *(int *)0xbad = 0;  // show up nicely in crash-stats
+        JS_Assert("About to dereference invalid slot", __FILE__, __LINE__);
+    }
+}
+
 void
 StackIter::settleOnNewState()
 {
@@ -963,6 +973,13 @@ StackIter::settleOnNewState()
                 continue;
             }
 
+            /* Censor pushed-but-not-active frames from InvokeSessionGuard. */
+            if (containsCall && !calls_->active() && fp_->hasArgs() &&
+                calls_->argv() == fp_->actualArgs()) {
+                popFrame();
+                continue;
+            }
+
             /*
              * As an optimization, there is no CallArgsList element pushed for
              * natives called directly by a script (compiled or interpreted).
@@ -997,6 +1014,7 @@ StackIter::settleOnNewState()
 #endif
                 Value *vp = sp_ - (2 + argc);
 
+                CrashIfInvalidSlot(fp_, vp);
                 if (IsNativeFunction(*vp)) {
                     state_ = IMPLICIT_NATIVE;
                     args_ = CallArgsFromVp(argc, vp);
@@ -1009,6 +1027,7 @@ StackIter::settleOnNewState()
                 Value *sp = fp_->base() + spoff;
                 Value *vp = sp - (2 + argc);
 
+                CrashIfInvalidSlot(fp_, vp);
                 if (IsNativeFunction(*vp)) {
                     if (sp_ != sp) {
                         JS_ASSERT(argc == 2);

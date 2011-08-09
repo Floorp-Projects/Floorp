@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scaled vector image without intrinsic dimensions as background, with rendering dependent on the diagonal</title>
+  <style type="text/css">
+#outer
+{
+  width: 256px; height: 768px;
+  border: 1px solid black;
+}
+#inner
+{
+  width: 100px; height: 700px;
+  background-image: url(diagonal-scaled-fixed.svg);
+  background-repeat: no-repeat;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"></div></div>
+</body>
+</html>

@@ -42,6 +42,9 @@
  */
 #include <stdlib.h>
 #include <string.h>
+
+#include "mozilla/RangedPtr.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -123,6 +126,7 @@ const char *const js_common_atom_names[] = {
     js_apply_str,               /* applyAtom                    */
     js_arguments_str,           /* argumentsAtom                */
     js_arity_str,               /* arityAtom                    */
+    js_BYTES_PER_ELEMENT_str,   /* BYTES_PER_ELEMENTAtom        */
     js_call_str,                /* callAtom                     */
     js_callee_str,              /* calleeAtom                   */
     js_caller_str,              /* callerAtom                   */
@@ -246,6 +250,7 @@ const char js_anonymous_str[]       = "anonymous";
 const char js_apply_str[]           = "apply";
 const char js_arguments_str[]       = "arguments";
 const char js_arity_str[]           = "arity";
+const char js_BYTES_PER_ELEMENT_str[] = "BYTES_PER_ELEMENT";
 const char js_call_str[]            = "call";
 const char js_callee_str[]          = "callee";
 const char js_caller_str[]          = "caller";
@@ -666,6 +671,27 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, AtomIndexMap *indices)
     }
 }
 
+namespace js {
+
+bool
+IndexToIdSlow(JSContext *cx, uint32 index, jsid *idp)
+{
+    JS_ASSERT(index > JSID_INT_MAX);
+
+    jschar buf[UINT32_CHAR_BUFFER_LENGTH];
+    RangedPtr<jschar> end(buf + JS_ARRAY_LENGTH(buf), buf, buf + JS_ARRAY_LENGTH(buf));
+    RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
+
+    JSAtom *atom = js_AtomizeChars(cx, start.get(), end - start);
+    if (!atom)
+        return false;
+
+    *idp = ATOM_TO_JSID(atom);
+    JS_ASSERT(js_CheckForStringIndex(*idp) == *idp);
+    return true;
+}
+
+} /* namespace js */
 
 /* JSBOXEDWORD_INT_MAX as a string */
 #define JSBOXEDWORD_INT_MAX_STRING "1073741823"

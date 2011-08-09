@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Jason Duell <jduell.mcbugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,7 @@
 #include "nsString.h"
 #include "prthread.h"
 #include "mozilla/Telemetry.h"
+#include "nsITimer.h"
 
 using namespace mozilla;
 
@@ -52,7 +54,17 @@ static void DeleteDirThreadFunc(void *arg)
   NS_RELEASE(dir);
 }
 
-nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash, PRBool sync)
+static void CreateDeleterThread(nsITimer *aTimer, void *arg)
+{
+  nsIFile *dir = static_cast<nsIFile *>(arg);
+
+  // create the worker thread
+  PR_CreateThread(PR_USER_THREAD, DeleteDirThreadFunc, dir, PR_PRIORITY_LOW,
+                  PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+}
+
+nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash, PRBool sync,
+                   PRUint32 delay)
 {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_TRASHRENAME> timer;
   nsresult rv;
@@ -82,9 +94,13 @@ nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash, PRBool sync)
       // TrashDir may already exist (if we crashed while deleting it, etc.)
       // In that case current Cache dir should be small--just move it to
       // subdirectory of TrashDir and eat the NTFS ACL overhead.
+      leaf.AppendInt(rand()); // support this happening multiple times
       rv = dir->MoveToNative(trash, leaf);
       if (NS_FAILED(rv))
         return rvMove;
+      // Be paranoid and delete immediately if we're seeing old trash when
+      // we're creating a new one
+      delay = 0;
     }
   } else {
     // we want to pass a clone of the original off to the worker thread.
@@ -98,16 +114,15 @@ nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash, PRBool sync)
   if (sync) {
     DeleteDirThreadFunc(trashRef);
   } else {
-    // now, invoke the worker thread
-    PRThread *thread = PR_CreateThread(PR_USER_THREAD,
-                                       DeleteDirThreadFunc,
-                                       trashRef,
-                                       PR_PRIORITY_LOW,
-                                       PR_GLOBAL_THREAD,
-                                       PR_UNJOINABLE_THREAD,
-                                       0);
-    if (!thread)
-      return NS_ERROR_UNEXPECTED;
+    if (delay) {
+      nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+      if (NS_FAILED(rv))
+        return NS_ERROR_UNEXPECTED;
+      timer->InitWithFuncCallback(CreateDeleterThread, trashRef, delay,
+                                  nsITimer::TYPE_ONE_SHOT);
+    } else {
+      CreateDeleterThread(nsnull, trashRef);
+    }
   }
 
   return NS_OK;

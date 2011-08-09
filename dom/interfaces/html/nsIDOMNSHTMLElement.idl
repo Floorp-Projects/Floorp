@@ -39,8 +39,9 @@
 #include "domstubs.idl"
 
 interface nsIDOMDOMStringMap;
+interface nsIDOMHTMLMenuElement;
 
-[scriptable, uuid(4012e9a9-f6fb-48b3-9a80-b096c1dcb5ba)]
+[scriptable, uuid(0c3b4b63-30b2-4c93-906d-f983ee9af584)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -71,7 +72,8 @@ interface nsIDOMNSHTMLElement : nsISupports
 
   [optional_argc] void scrollIntoView([optional] in boolean top);
 
+  readonly attribute nsIDOMHTMLMenuElement contextMenu;
            attribute boolean         spellcheck;
-           
+
   readonly attribute nsIDOMDOMStringMap dataset;
 };
