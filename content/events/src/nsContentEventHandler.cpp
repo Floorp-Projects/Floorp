@@ -59,7 +59,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsISelection2.h"
 #include "nsIMEStateManager.h"
 #include "nsIObjectFrame.h"
 
@@ -1071,8 +1070,7 @@ nsContentEventHandler::OnSelectionEvent(nsSelectionEvent* aEvent)
   nsCOMPtr<nsIDOMNode> endDomNode(do_QueryInterface(endNode));
   NS_ENSURE_TRUE(startDomNode && endDomNode, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(mSelection);
-  NS_ENSURE_TRUE(selPrivate, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSelection));
   selPrivate->StartBatchChanges();
 
   // Clear selection first before setting
@@ -1096,7 +1094,7 @@ nsContentEventHandler::OnSelectionEvent(nsSelectionEvent* aEvent)
   selPrivate->EndBatchChanges();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISelection2>(do_QueryInterface(mSelection))->ScrollIntoView(
+  selPrivate->ScrollIntoView(
       nsISelectionController::SELECTION_FOCUS_REGION, PR_FALSE, -1, -1);
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;

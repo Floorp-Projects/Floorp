@@ -343,7 +343,7 @@ case "$target" in
     CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
-    LIBS="$LIBS $STLPORT_LIBS -static-libstdc++"
+    LIBS="$LIBS $STLPORT_LIBS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -366,8 +366,8 @@ case "$target" in
     fi
 
     ANDROID_NDK="${android_ndk}"
-    ANDROID_TOOLCHAIN="{android_toolchain}"
-    ANDROID_PLATFORM="{android_platform}"
+    ANDROID_TOOLCHAIN="${android_toolchain}"
+    ANDROID_PLATFORM="${android_platform}"
     ANDROID_SDK="${android_sdk}"
     ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_VERSION="${android_version}"
@@ -7268,6 +7268,38 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
+dnl = Identical Code Folding
+dnl ========================================================
+
+MOZ_ARG_DISABLE_BOOL(icf,
+[  --disable-icf          Disable Identical Code Folding],
+    MOZ_DISABLE_ICF=1,
+    MOZ_DISABLE_ICF= )
+
+if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF"; then
+    AC_CACHE_CHECK([whether the linker supports Identical Code Folding],
+        LD_SUPPORTS_ICF,
+        [echo 'int foo() {return 42;}' \
+              'int bar() {return 42;}' \
+              'int main() {return foo() - bar();}' > conftest.${ac_ext}
+        # If the linker supports ICF, foo and bar symbols will have
+        # the same address
+        if AC_TRY_COMMAND([${CC-cc} -o conftest${ac_exeext} $LDFLAGS -Wl,--icf=safe -ffunction-sections conftest.${ac_ext} $LIBS 1>&2]) &&
+           test -s conftest${ac_exeext} &&
+           objdump -t conftest${ac_exeext} | awk '{a[[$6]] = $1} END {if (a[["foo"]] && (a[["foo"]] != a[["bar"]])) { exit 1 }}'; then
+            LD_SUPPORTS_ICF=yes
+        else
+            LD_SUPPORTS_ICF=no
+        fi
+        rm -rf conftest*])
+    if test "$LD_SUPPORTS_ICF" = yes; then
+        LDFLAGS="$LDFLAGS -Wl,--icf=safe"
+        CFLAGS="$CFLAGS -ffunction-sections"
+        CXXFLAGS="$CXXFLAGS -ffunction-sections"
+    fi
+fi
+
+dnl ========================================================
 dnl = Automatically remove dead symbols
 dnl ========================================================
 
@@ -7294,8 +7326,16 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
         rm -rf conftest*])
     if test "$GC_SECTIONS_BREAKS_DEBUG_RANGES" = no; then
         DSO_LDOPTS="$DSO_LDOPTS -Wl,--gc-sections"
-        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
+        case "$CFLAGS" in
+        *-ffunction-sections*)
+            CFLAGS="$CFLAGS -fdata-sections"
+            CXXFLAGS="$CXXFLAGS -fdata-sections"
+            ;;
+        *)
+            CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
+            CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
+            ;;
+        esac
     fi
 fi
 
@@ -7859,7 +7899,7 @@ dnl done during packaging with omnijar.
 if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     MOZ_OMNIJAR=1
     AC_DEFINE(MOZ_OMNIJAR)
-    if test "$OS_ARCH" = "WINNT"; then
+    if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2"; then
         MOZ_CHROME_FILE_FORMAT=flat
     else
         MOZ_CHROME_FILE_FORMAT=symlink
