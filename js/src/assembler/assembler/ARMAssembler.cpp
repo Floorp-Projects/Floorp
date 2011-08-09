@@ -38,19 +38,24 @@ namespace JSC {
 
 // Patching helpers
 
-void ARMAssembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
+void ARMAssembler::patchConstantPoolLoad(void* load, void* pool)
 {
-    ARMWord *ldr = reinterpret_cast<ARMWord*>(loadAddr);
-    ARMWord diff = reinterpret_cast<ARMWord*>(constPoolAddr) - ldr;
-    ARMWord index = (*ldr & 0xfff) >> 1;
+    ARMWord *   ldr = reinterpret_cast<ARMWord*>(load);
+    ARMWord     index = (*ldr & 0xfff) >> 1;
+    ARMWord *   slot = reinterpret_cast<ARMWord*>(pool) + index;
 
-    ASSERT(diff >= 1);
-    if (diff >= 2 || index > 0) {
-        diff = (diff + index - 2) * sizeof(ARMWord);
-        ASSERT(diff <= 0xfff);
-        *ldr = (*ldr & ~0xfff) | diff;
-    } else
-        *ldr = (*ldr & ~(0xfff | ARMAssembler::DT_UP)) | sizeof(ARMWord);
+    ptrdiff_t   offset = getApparentPCOffset(ldr, slot);
+
+    ASSERT(offset >= 0);        // We can't handle negative load offsets.
+    ASSERT(!(offset & 0x3));    // Pool loads should always be word-aligned.
+    ASSERT(offset <= 0xfff);
+    ASSERT(checkIsLDRLiteral(ldr));
+
+    // TODO: Try to optimize the load with patchLiteral32. This is not
+    // straightfoward because fixUpOffsets needs to interpret the literals
+    // later on, when the code is finalized. There is no point optimizing
+    // branch target loads here because they'll all move in fixUpOffsets.
+    *ldr = (*ldr & 0xfffff000) | offset;
 }
 
 // Handle immediates
@@ -540,27 +545,23 @@ void ARMAssembler::baseIndexFloatTransfer(bool isLoad, bool isDouble, FPRegister
 // already contain the code from m_buffer.
 inline void ARMAssembler::fixUpOffsets(void * buffer)
 {
-    char * data = reinterpret_cast<char *>(buffer);
+    char * base = reinterpret_cast<char *>(buffer);
     for (Jumps::Iterator iter = m_jumps.begin(); iter != m_jumps.end(); ++iter) {
-        // The last bit is set if the constant must be placed on constant pool.
-        int pos = (*iter) & (~0x1);
-        ARMWord* ldrAddr = reinterpret_cast<ARMWord*>(data + pos);
-        ARMWord* addr = getLdrImmAddress(ldrAddr);
-        if (*addr != InvalidBranchTarget) {
-// The following is disabled for JM because we patch some branches after
-// calling fixUpOffset, and the branch patcher doesn't know how to handle 'B'
-// instructions.
-#if 0
-            if (!(*iter & 1)) {
-                int diff = reinterpret_cast<ARMWord*>(data + *addr) - (ldrAddr + DefaultPrefetching);
+        // The last bit is set if the constant needs to be patchable.
+        int         offset_to_branch = (*iter) & (~0x1);
+        bool        patchable = (*iter) & 0x1;
+        ARMWord *   branch = reinterpret_cast<ARMWord*>(base + offset_to_branch);
+        ARMWord *   slot = getLdrImmAddress(branch);
 
-                if ((diff <= BOFFSET_MAX && diff >= BOFFSET_MIN)) {
-                    *ldrAddr = B | getConditionalField(*ldrAddr) | (diff & BRANCH_MASK);
-                    continue;
-                }
-            }
-#endif
-            *addr = reinterpret_cast<ARMWord>(data + *addr);
+        // During code generation, branches are given target addresses
+        // relative to the buffer base, so we need to adjust the offsets.
+        // The exception is InvalidBranchTarget, which is a fixed constant.
+        if (*slot != InvalidBranchTarget) {
+            void *      to = reinterpret_cast<void*>(base + *slot);
+
+            // patchLiteral32 will try to optimize full-range ("LDR")
+            // branchs to short-range ("B") branches where possible.
+            patchLiteral32(branch, to, patchable);
         }
     }
 }

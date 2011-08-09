@@ -68,6 +68,10 @@ namespace JSC {
     - barrierSize: size of jump instruction in bytes which protects the
         constant pool from execution
 
+    - markerSize: size of constant marker in bytes which marks the
+        start of the constant pool, so late-patching code can find it
+        in a raw instruction stream.
+
     - maxInstructionSize: maximum length of a machine instruction in bytes
 
     There are some callbacks which solve the target architecture specific
@@ -87,11 +91,15 @@ namespace JSC {
         return with a constant pool barrier instruction which jumps over the
         constant pool.
 
+    - void placeConstantPoolMarker(AssemblerBufferWithConstantPool<...> * buffer):
+        Place the constant pool marker (if one is required). The size of the
+        marker must exactly match markerSize.
+
     The 'put*WithConstant*' functions should be used to place a data into the
     constant pool.
 */
 
-template <int maxPoolSize, int barrierSize, int maxInstructionSize, class AssemblerType>
+template <int maxPoolSize, int barrierSize, int markerSize, int maxInstructionSize, class AssemblerType>
 class AssemblerBufferWithConstantPool: public AssemblerBuffer {
     typedef SegmentedVector<uint32_t, 512> LoadOffsets;
 public:
@@ -205,7 +213,7 @@ public:
         flushIfNoSpaceFor(4, 4);
 
         m_loadOffsets.append(AssemblerBuffer::size());
-        if (isReusable)
+        if (isReusable) {
             for (int i = 0; i < m_numConsts; ++i) {
                 if (m_mask[i] == ReusableConst && m_pool[i] == constant) {
                     AssemblerBuffer::putInt(AssemblerType::patchConstantPoolLoad(insn, i));
@@ -213,6 +221,7 @@ public:
                     return;
                 }
             }
+        }
 
         m_pool[m_numConsts] = constant;
         m_mask[m_numConsts] = static_cast<char>(isReusable ? ReusableConst : UniqueConst);
@@ -274,14 +283,26 @@ private:
         ASSERT(m_allowFlush);
         if (m_numConsts == 0)
             return;
-        int alignPool = (AssemblerBuffer::size() + (useBarrier ? barrierSize : 0)) & (sizeof(uint64_t) - 1);
+        int alignPool = (AssemblerBuffer::size() + markerSize + (useBarrier ? barrierSize : 0)) & (sizeof(uint64_t) - 1);
 
         if (alignPool)
             alignPool = sizeof(uint64_t) - alignPool;
 
         // Callback to protect the constant pool from execution
-        if (useBarrier)
-            AssemblerBuffer::putInt(AssemblerType::placeConstantPoolBarrier(m_numConsts * sizeof(uint32_t) + alignPool));
+        if (useBarrier) {
+            if (barrierSize == 4) {
+                AssemblerBuffer::putInt(AssemblerType::placeConstantPoolBarrier(m_numConsts * sizeof(uint32_t) + alignPool + markerSize));
+            } else {
+                ASSERT(barrierSize != 0);
+            }
+        }
+
+        // Callback to allow the assembler to annotate the start of the constant pool.
+        if (markerSize == 4) {
+            AssemblerBuffer::putInt(AssemblerType::placeConstantPoolMarker());
+        } else {
+            ASSERT(markerSize != 0);
+        }
 
         if (alignPool) {
             if (alignPool & 1)
@@ -311,7 +332,7 @@ private:
         if (m_numConsts == 0)
             return;
         int lastConstDelta = m_lastConstDelta > nextInsnSize ? m_lastConstDelta - nextInsnSize : 0;
-        if ((m_maxDistance < nextInsnSize + lastConstDelta + barrierSize + (int)sizeof(uint32_t)))
+        if ((m_maxDistance < nextInsnSize + lastConstDelta + markerSize + barrierSize + (int)sizeof(uint32_t)))
             flushConstantPool();
     }
 
@@ -319,7 +340,7 @@ private:
     {
         if (m_numConsts == 0)
             return;
-        if ((m_maxDistance < nextInsnSize + m_lastConstDelta + nextConstSize + barrierSize + (int)sizeof(uint32_t)) ||
+        if ((m_maxDistance < nextInsnSize + m_lastConstDelta + nextConstSize + markerSize + barrierSize + (int)sizeof(uint32_t)) ||
             (m_numConsts * sizeof(uint32_t) + nextConstSize >= maxPoolSize))
             flushConstantPool();
     }
