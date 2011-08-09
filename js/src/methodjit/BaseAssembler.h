@@ -1211,6 +1211,82 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         return true;
     }
 
+    /*
+     * Get a free object for the specified GC kind in compartment, writing it
+     * to result and filling it in according to templateObject. Returns a jump
+     * taken if a free thing was not retrieved.
+     */
+    Jump getNewObject(JSContext *cx, RegisterID result, JSObject *templateObject)
+    {
+        unsigned thingKind = templateObject->arenaHeader()->getThingKind();
+
+        JS_ASSERT(thingKind >= gc::FINALIZE_OBJECT0 && thingKind <= gc::FINALIZE_OBJECT_LAST);
+        size_t thingSize = gc::GCThingSizeMap[thingKind];
+
+        JS_ASSERT(cx->typeInferenceEnabled());
+        JS_ASSERT(!templateObject->hasSlotsArray());
+
+#ifdef JS_GC_ZEAL
+        if (cx->runtime->needZealousGC())
+            return jump();
+#endif
+
+        /*
+         * Inline FreeLists::getNext. Only the case where the current freelist
+         * span is not empty is handled.
+         */
+        gc::FreeSpan *list = &cx->compartment->freeLists.lists[thingKind];
+
+        loadPtr(&list->start, result);
+        Jump jump = branchPtr(Assembler::Equal, AbsoluteAddress(&list->end), result);
+
+        addPtr(Imm32(thingSize), result);
+        storePtr(result, &list->start);
+
+        /*
+         * Fill in the blank object. Order doesn't matter here, from here
+         * everything is infallible. Note that this bakes GC thing pointers
+         * into the code without explicitly pinning them. With type inference
+         * enabled, JIT code is collected on GC except when analysis or
+         * compilation is active, in which case type objects won't be collected
+         * but other things may be. The shape held by templateObject *must* be
+         * pinned against GC either by the script or by some type object.
+         */
+
+        /*
+         * Write out the slots pointer before readjusting the result register,
+         * as for dense arrays this is relative to the JSObject itself.
+         */
+        if (templateObject->isDenseArray()) {
+            JS_ASSERT(!templateObject->initializedLength);
+            addPtr(Imm32(-thingSize + sizeof(JSObject)), result);
+            storePtr(result, Address(result, -sizeof(JSObject) + JSObject::offsetOfSlots()));
+            addPtr(Imm32(-sizeof(JSObject)), result);
+        } else {
+            JS_ASSERT(!templateObject->newType);
+            addPtr(Imm32(-thingSize), result);
+            storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
+        }
+
+        storePtr(ImmPtr(templateObject->lastProp), Address(result, offsetof(JSObject, lastProp)));
+        storePtr(ImmPtr(templateObject->clasp), Address(result, offsetof(JSObject, clasp)));
+        store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
+        store32(Imm32(templateObject->objShape), Address(result, offsetof(JSObject, objShape)));
+        storePtr(ImmPtr(templateObject->newType), Address(result, offsetof(JSObject, newType)));
+        storePtr(ImmPtr(templateObject->parent), Address(result, offsetof(JSObject, parent)));
+        storePtr(ImmPtr(templateObject->privateData), Address(result, offsetof(JSObject, privateData)));
+        storePtr(ImmPtr((void *) templateObject->capacity), Address(result, offsetof(JSObject, capacity)));
+        storePtr(ImmPtr(templateObject->gctype()), Address(result, JSObject::offsetOfType()));
+
+        /* Fixed slots of non-array objects are required to be initialized. */
+        if (!templateObject->isDenseArray()) {
+            for (unsigned i = 0; i < templateObject->numFixedSlots(); i++)
+                storeValue(UndefinedValue(), Address(result, JSObject::getFixedSlotOffset(i)));
+        }
+
+        return jump;
+    }
+
     /* Add the value stored in 'value' to the accumulator 'counter'. */
     void addCounter(const double *value, double *counter, RegisterID scratch)
     {

@@ -785,15 +785,20 @@ mjit::Compiler::generatePrologue()
     if (isConstructing)
         constructThis();
 
-    if (debugMode())
+    if (debugMode()) {
+        prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
-    else if (Probes::callTrackingActive(cx))
+    } else if (Probes::callTrackingActive(cx)) {
+        prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue, REJOIN_RESUME);
+    }
 
     if (cx->typeInferenceEnabled()) {
 #ifdef DEBUG
-        if (script->hasFunction)
+        if (script->hasFunction) {
+            prepareStubCall(Uses(0));
             INLINE_STUBCALL(stubs::AssertArgumentTypes, REJOIN_NONE);
+        }
 #endif
         ensureDoubleArguments();
     }
@@ -1971,7 +1976,7 @@ mjit::Compiler::generateMethod()
             bool callingNew = (op == JSOP_NEW);
 
             bool done = false;
-            if (op == JSOP_CALL && !monitored(PC)) {
+            if ((op == JSOP_CALL || op == JSOP_NEW) && !monitored(PC)) {
                 CompileStatus status = inlineNativeFunction(GET_ARGC(PC), callingNew);
                 if (status == Compile_Okay)
                     done = true;
@@ -1984,6 +1989,10 @@ mjit::Compiler::generateMethod()
                     done = true;
                 else if (status != Compile_InlineAbort)
                     return status;
+                if (script->pcCounters) {
+                    /* Code generated while inlining has been accounted for. */
+                    updatePCCounters(PC, &codeStart, &countersUpdated);
+                }
             }
 
             FrameSize frameSize;
@@ -6206,7 +6215,14 @@ mjit::Compiler::jsop_newinit()
         return false;
     }
 
-    prepareStubCall(Uses(0));
+    void *stub, *stubArg;
+    if (isArray) {
+        stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitArray);
+        stubArg = (void *) count;
+    } else {
+        stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitObject);
+        stubArg = (void *) baseobj;
+    }
 
     /* Don't bake in types for non-compileAndGo scripts. */
     types::TypeObject *type = NULL;
@@ -6216,17 +6232,49 @@ mjit::Compiler::jsop_newinit()
         if (!type)
             return false;
     }
-    masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
 
-    if (isArray) {
-        masm.move(Imm32(count), Registers::ArgReg1);
-        INLINE_STUBCALL(stubs::NewInitArray, REJOIN_PUSH_OBJECT);
-    } else {
-        masm.move(ImmPtr(baseobj), Registers::ArgReg1);
-        INLINE_STUBCALL(stubs::NewInitObject, REJOIN_PUSH_OBJECT);
+    if (!cx->typeInferenceEnabled() ||
+        !globalObj ||
+        (isArray && count >= gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST)) ||
+        (!isArray && !baseobj) ||
+        (!isArray && baseobj->hasSlotsArray())) {
+        prepareStubCall(Uses(0));
+        masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
+        masm.move(ImmPtr(stubArg), Registers::ArgReg1);
+        INLINE_STUBCALL(stub, REJOIN_FALLTHROUGH);
+        frame.pushSynced(JSVAL_TYPE_OBJECT);
+
+        frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
+        frame.extra(frame.peek(-1)).initObject = baseobj;
+
+        return true;
     }
-    frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+
+    JSObject *templateObject;
+    if (isArray) {
+        templateObject = NewDenseUnallocatedArray(cx, count);
+        if (!templateObject)
+            return false;
+        templateObject->setType(type);
+    } else {
+        templateObject = CopyInitializerObject(cx, baseobj, type);
+        if (!templateObject)
+            return false;
+    }
+
+    RegisterID result = frame.allocReg();
+    Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+
+    stubcc.linkExit(emptyFreeList, Uses(0));
+    stubcc.leave();
+
+    stubcc.masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
+    stubcc.masm.move(ImmPtr(stubArg), Registers::ArgReg1);
+    OOL_STUBCALL(stub, REJOIN_FALLTHROUGH);
+
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, result);
+
+    stubcc.rejoin(Changes(1));
 
     frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
     frame.extra(frame.peek(-1)).initObject = baseobj;
@@ -6599,6 +6647,30 @@ bool
 mjit::Compiler::constructThis()
 {
     JS_ASSERT(isConstructing);
+
+    if (cx->typeInferenceEnabled()) {
+        jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+        types::TypeSet *protoTypes = script->function()->getType(cx)->getProperty(cx, id, false);
+
+        JSObject *proto = protoTypes->getSingleton(cx, true);
+        if (proto) {
+            JSObject *templateObject = js_CreateThisForFunctionWithProto(cx, script->function(), proto);
+
+            RegisterID result = frame.allocReg();
+            Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+
+            stubcc.linkExit(emptyFreeList, Uses(0));
+            stubcc.leave();
+
+            stubcc.masm.move(ImmPtr(proto), Registers::ArgReg1);
+            OOL_STUBCALL(stubs::CreateThis, REJOIN_RESUME);
+
+            frame.setThis(result);
+
+            stubcc.rejoin(Changes(1));
+            return true;
+        }
+    }
 
     // Load the callee.
     frame.pushCallee();

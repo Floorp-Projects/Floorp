@@ -392,6 +392,7 @@ class FrameState
     void pushCallee();
     void pushThis();
     void pushCopyOf(FrameEntry *fe);
+    inline void setThis(RegisterID reg);
     inline void learnThisIsObject(bool unsync = true);
 
     inline FrameEntry *getStack(uint32 slot);
