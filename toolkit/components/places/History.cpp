@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Allison Naaktgeboren <ally@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -566,8 +567,13 @@ public:
     nsCOMPtr<mozIPlaceInfo> place =
       new PlaceInfo(mPlace.placeId, mPlace.guid, uri.forget(), mPlace.title,
                     -1, visits);
+    if (NS_SUCCEEDED(mResult)) {
+      (void)mCallback->HandleResult(place);
+    }
+    else {
+      (void)mCallback->HandleError(mResult, place);
+    }
 
-    (void)mCallback->OnComplete(mResult, place);
     return NS_OK;
   }
 

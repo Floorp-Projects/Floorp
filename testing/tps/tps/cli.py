@@ -38,6 +38,7 @@
 import json
 import optparse
 import os
+import sys
 import logging
 
 from threading import RLock
@@ -76,7 +77,7 @@ def main():
                            "will be searched;")
   parser.add_option("--configfile",
                     action = "store", type = "string", dest = "configfile",
-                    default = "config.json",
+                    default = None,
                     help = "path to the config file to use "
                            "[default: %default]")
   parser.add_option("--pulsefile",
@@ -86,15 +87,33 @@ def main():
                            "json format that you want to inject into the monitor")
   (options, args) = parser.parse_args()
 
+  configfile = options.configfile
+  if configfile is None:
+    if os.environ.get('VIRTUAL_ENV'):
+      configfile = os.path.join(os.path.dirname(__file__), 'config.json')
+    else:
+      raise Exception("Unable to find config.json in a VIRTUAL_ENV; you must "
+                      "specify a config file using the --configfile option")
+
   # load the config file
-  f = open(options.configfile, 'r')
+  f = open(configfile, 'r')
   configcontent = f.read()
   f.close()
   config = json.loads(configcontent)
 
   rlock = RLock()
  
-  extensionDir = os.path.join(os.getcwd(), "..", "..", "services", "sync", "tps")
+  extensionDir = config.get("extensiondir")
+  if not extensionDir or extensionDir == '__EXTENSIONDIR__':
+    extensionDir = os.path.join(os.getcwd(), "..", "..", "services", "sync", "tps")
+  else:
+    if sys.platform == 'win32':
+      # replace msys-style paths with proper Windows paths
+      import re
+      m = re.match('^\/\w\/', extensionDir)
+      if m:
+        extensionDir = "%s:/%s" % (m.group(0)[1:2], extensionDir[3:])
+        extensionDir = extensionDir.replace("/", "\\")
 
   if options.binary is None:
     # If no binary is specified, start the pulse build monitor, and wait

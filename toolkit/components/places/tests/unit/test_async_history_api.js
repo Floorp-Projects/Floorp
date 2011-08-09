@@ -159,6 +159,38 @@ function do_check_title_for_uri(aURI,
   stmt.finalize();
 }
 
+/**
+ * Default callback handler throws when success is unexpected.
+ *
+ * @param handleErrorFunc
+ *        The error handling function
+ */
+function expectHandleError(handleErrorFunc)
+{
+  return {
+    handleError: handleErrorFunc,
+    handleResult: function handleResult(aPlaceInfo) {
+      do_throw("Unexpected success.");
+    }
+  };
+}
+/**
+ * Default callback handler throws when failure is unexpected.
+ *
+ * @param handleResultFunc
+ *        The success handling function
+ */
+
+function expectHandleResult(handleResultFunc)
+{
+  return {
+    handleError: function handleError(aResultCode, aPlacesInfo) {
+      do_throw("Unexpected error: " + aResultCode);
+    },
+    handleResult: handleResultFunc
+  };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
@@ -422,7 +454,7 @@ function test_non_addable_uri_errors()
   });
 
   let callbackCount = 0;
-  gHistory.updatePlaces(places, function(aResultCode, aPlaceInfo) {
+  gHistory.updatePlaces(places, expectHandleError(function(aResultCode, aPlaceInfo) {
     do_log_info("Checking '" + aPlaceInfo.uri.spec + "'");
     do_check_eq(aResultCode, Cr.NS_ERROR_INVALID_ARG);
     do_check_false(gGlobalHistory.isVisited(aPlaceInfo.uri));
@@ -431,7 +463,7 @@ function test_non_addable_uri_errors()
     if (++callbackCount == places.length) {
       waitForAsyncUpdates(run_next_test);
     }
-  });
+  }));
 }
 
 function test_duplicate_guid_errors()
@@ -446,8 +478,7 @@ function test_duplicate_guid_errors()
   };
 
   do_check_false(gGlobalHistory.isVisited(place.uri));
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     do_check_true(gGlobalHistory.isVisited(place.uri));
 
     let badPlace = {
@@ -459,13 +490,13 @@ function test_duplicate_guid_errors()
     };
 
     do_check_false(gGlobalHistory.isVisited(badPlace.uri));
-    gHistory.updatePlaces(badPlace, function(aResultCode, aPlaceInfo) {
+    gHistory.updatePlaces(badPlace, expectHandleError(function(aResultCode, aPlaceInfo) {
       do_check_eq(aResultCode, Cr.NS_ERROR_STORAGE_CONSTRAINT);
       do_check_false(gGlobalHistory.isVisited(badPlace.uri));
 
       waitForAsyncUpdates(run_next_test);
-    });
-  });
+    }));
+  }));
 }
 
 function test_invalid_referrerURI_ignored()
@@ -481,8 +512,7 @@ function test_invalid_referrerURI_ignored()
   do_check_false(gGlobalHistory.isVisited(place.uri));
   do_check_false(gGlobalHistory.isVisited(place.visits[0].referrerURI));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
 
@@ -501,7 +531,7 @@ function test_invalid_referrerURI_ignored()
     stmt.finalize();
 
     waitForAsyncUpdates(run_next_test);
-  });
+  }));
 }
 
 function test_nonnsIURI_referrerURI_ignored()
@@ -516,8 +546,7 @@ function test_nonnsIURI_referrerURI_ignored()
   place.visits[0].referrerURI = place.uri.spec + "_nonnsIURI";
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
 
@@ -533,7 +562,7 @@ function test_nonnsIURI_referrerURI_ignored()
     stmt.finalize();
 
     waitForAsyncUpdates(run_next_test);
-  });
+  }));
 }
 
 function test_invalid_sessionId_ignored()
@@ -548,8 +577,7 @@ function test_invalid_sessionId_ignored()
   place.visits[0].sessionId = -1;
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
 
@@ -569,7 +597,7 @@ function test_invalid_sessionId_ignored()
     stmt.finalize();
 
     waitForAsyncUpdates(run_next_test);
-  });
+  }));
 }
 
 function test_unstored_sessionId_ignored()
@@ -595,8 +623,7 @@ function test_unstored_sessionId_ignored()
   place.visits[0].sessionId = maxSessionId + 10;
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
 
@@ -618,7 +645,7 @@ function test_unstored_sessionId_ignored()
     stmt.finalize();
 
     waitForAsyncUpdates(run_next_test);
-  });
+  }));
 }
 
 
@@ -638,11 +665,10 @@ function test_old_referrer_ignored()
   // First we must add our referrer to the history so that it is not ignored
   // as being invalid.
   do_check_false(gGlobalHistory.isVisited(referrerPlace.uri));
-  gHistory.updatePlaces(referrerPlace, function(aResultCode, aPlaceInfo) {
+  gHistory.updatePlaces(referrerPlace, expectHandleResult(function(aPlaceInfo) {
     // Now that the referrer is added, we can add a page with a valid
     // referrer to determine if the recency of the referrer is taken into
     // account.
-    do_check_true(Components.isSuccessCode(aResultCode));
     do_check_true(gGlobalHistory.isVisited(referrerPlace.uri));
 
     let visitInfo = new VisitInfo();
@@ -655,8 +681,7 @@ function test_old_referrer_ignored()
     };
 
     do_check_false(gGlobalHistory.isVisited(place.uri));
-    gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-      do_check_true(Components.isSuccessCode(aResultCode));
+    gHistory.updatePlaces(place, expectHandleResult (function(aPlaceInfo) {
       do_check_true(gGlobalHistory.isVisited(place.uri));
 
       // Though the visit will not contain the referrer, we must examine the
@@ -674,8 +699,8 @@ function test_old_referrer_ignored()
       stmt.finalize();
 
       waitForAsyncUpdates(run_next_test);
-    });
-  });
+    }));
+  }));
 }
 
 function test_place_id_ignored()
@@ -688,8 +713,7 @@ function test_place_id_ignored()
   };
 
   do_check_false(gGlobalHistory.isVisited(place.uri));
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     do_check_true(gGlobalHistory.isVisited(place.uri));
 
     let placeId = aPlaceInfo.placeId;
@@ -704,15 +728,18 @@ function test_place_id_ignored()
     };
 
     do_check_false(gGlobalHistory.isVisited(badPlace.uri));
-    gHistory.updatePlaces(badPlace, function(aResultCode, aPlaceInfo) {
-      do_check_true(Components.isSuccessCode(aResultCode));
+    gHistory.updatePlaces(badPlace, {
+      handleResult: function handleResult(aPlaceInfo) {
+        do_check_neq(aPlaceInfo.placeId, placeId);
+        do_check_true(gGlobalHistory.isVisited(badPlace.uri));
 
-      do_check_neq(aPlaceInfo.placeId, placeId);
-      do_check_true(gGlobalHistory.isVisited(badPlace.uri));
-
-      waitForAsyncUpdates(run_next_test);
+        waitForAsyncUpdates(run_next_test);
+      },
+      handleError: function handleError(aResultCode) {
+        do_throw("Unexpected error: " + aResultCode);
+      }
     });
-  });
+  }));
 }
 
 function test_observer_topic_dispatched_when_complete()
@@ -737,21 +764,28 @@ function test_observer_topic_dispatched_when_complete()
   do_check_false(gGlobalHistory.isVisited(places[0].uri));
   do_check_false(gGlobalHistory.isVisited(places[1].uri));
 
-  const EXPECTED_COUNT = 3;
-  let callbackCount = 0;
+  const EXPECTED_COUNT_SUCCESS = 2;
+  const EXPECTED_COUNT_FAILURE = 1;
+  let callbackCountSuccess = 0;
+  let callbackCountFailure = 0;
 
-  gHistory.updatePlaces(places, function(aResultCode, aPlaceInfo) {
-    let checker = PlacesUtils.history.canAddURI(aPlaceInfo.uri) ?
-      do_check_true : do_check_false;
-    checker(Components.isSuccessCode(aResultCode));
-    callbackCount++;
+  gHistory.updatePlaces(places, {
+    handleResult: function handleResult(aPlaceInfo) {
+      let checker = PlacesUtils.history.canAddURI(aPlaceInfo.uri) ?
+        do_check_true : do_check_false;
+      callbackCountSuccess++;
+    },
+    handleError: function handleError(aResultCode, aPlaceInfo) {
+      callbackCountFailure++;
+    }
   });
 
   let observer = {
     observe: function(aSubject, aTopic, aData)
     {
       do_check_eq(aTopic, TOPIC_UPDATEPLACES_COMPLETE);
-      do_check_eq(callbackCount, EXPECTED_COUNT);
+      do_check_eq(callbackCountSuccess, EXPECTED_COUNT_SUCCESS);
+      do_check_eq(callbackCountFailure, EXPECTED_COUNT_FAILURE);
       Services.obs.removeObserver(observer, TOPIC_UPDATEPLACES_COMPLETE);
       waitForAsyncUpdates(run_next_test);
     },
@@ -775,8 +809,7 @@ function test_add_visit()
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
   let callbackCount = 0;
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     do_check_true(gGlobalHistory.isVisited(place.uri));
 
     // Check mozIPlaceInfo properties.
@@ -790,14 +823,14 @@ function test_add_visit()
     let visit = visits[0];
     do_check_eq(visit.visitDate, VISIT_TIME);
     do_check_true(visit.transitionType >= TRANSITION_LINK &&
-                  visit.transitionType <= TRANSITION_FRAMED_LINK);
+                    visit.transitionType <= TRANSITION_FRAMED_LINK);
     do_check_true(visit.referrerURI === null);
 
     // For TRANSITION_EMBED visits, many properties will always be zero or
     // undefined.
     if (visit.transitionType == TRANSITION_EMBED) {
       // Check mozIPlaceInfo properties.
-      do_check_eq(aPlaceInfo.placeId, 0);
+      do_check_eq(aPlaceInfo.placeId, 0, '//');
       do_check_eq(aPlaceInfo.guid, null);
 
       // Check mozIVisitInfo properties.
@@ -819,7 +852,7 @@ function test_add_visit()
     if (++callbackCount == place.visits.length) {
       waitForAsyncUpdates(run_next_test);
     }
-  });
+  }));
 }
 
 function test_properties_saved()
@@ -842,8 +875,7 @@ function test_properties_saved()
   }
 
   let callbackCount = 0;
-  gHistory.updatePlaces(places, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(places, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
     let visit = aPlaceInfo.visits[0];
@@ -915,7 +947,7 @@ function test_properties_saved()
     if (++callbackCount == places.length) {
       waitForAsyncUpdates(run_next_test);
     }
-  });
+  }));
 }
 
 function test_guid_saved()
@@ -930,15 +962,13 @@ function test_guid_saved()
   do_check_valid_places_guid(place.guid);
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
     do_check_eq(aPlaceInfo.guid, place.guid);
     do_check_guid_for_uri(uri, place.guid);
-
     waitForAsyncUpdates(run_next_test);
-  });
+  }));
 }
 
 function test_referrer_saved()
@@ -961,8 +991,7 @@ function test_referrer_saved()
 
   let callbackCount = 0;
   let referrerSessionId;
-  gHistory.updatePlaces(places, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(places, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
     let visit = aPlaceInfo.visits[0];
@@ -993,7 +1022,7 @@ function test_referrer_saved()
     stmt.finalize();
 
     waitForAsyncUpdates(run_next_test);
-  });
+  }));
 }
 
 function test_sessionId_saved()
@@ -1007,8 +1036,7 @@ function test_sessionId_saved()
   place.visits[0].sessionId = 3;
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     let uri = aPlaceInfo.uri;
     do_check_true(gGlobalHistory.isVisited(uri));
 
@@ -1028,7 +1056,7 @@ function test_sessionId_saved()
     stmt.finalize();
 
     waitForAsyncUpdates(run_next_test);
-  });
+  }));
 }
 
 function test_guid_change_saved()
@@ -1042,19 +1070,17 @@ function test_guid_change_saved()
   };
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
 
     // Then, change the guid with visits.
     place.guid = "_GUIDCHANGE_";
     place.visits = [new VisitInfo()];
-    gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-      do_check_true(Components.isSuccessCode(aResultCode));
+    gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
       do_check_guid_for_uri(place.uri, place.guid);
 
       waitForAsyncUpdates(run_next_test);
-    });
-  });
+    }));
+  }));
 }
 
 function test_title_change_saved()
@@ -1069,35 +1095,31 @@ function test_title_change_saved()
   };
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
 
     // Now, make sure the empty string clears the title.
     place.title = "";
     place.visits = [new VisitInfo()];
-    gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-      do_check_true(Components.isSuccessCode(aResultCode));
+    gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
       do_check_title_for_uri(place.uri, null);
 
       // Then, change the title with visits.
       place.title = "title change";
       place.visits = [new VisitInfo()];
-      gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-        do_check_true(Components.isSuccessCode(aResultCode));
+      gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
         do_check_title_for_uri(place.uri, place.title);
 
         // Lastly, check that the title is cleared if we set it to null.
         place.title = null;
         place.visits = [new VisitInfo()];
-        gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-          do_check_true(Components.isSuccessCode(aResultCode));
+        gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
           do_check_title_for_uri(place.uri, place.title);
 
           waitForAsyncUpdates(run_next_test);
-        });
-      });
-    });
-  });
+        }));
+      }));
+    }));
+  }));
 }
 
 function test_no_title_does_not_clear_title()
@@ -1113,19 +1135,16 @@ function test_no_title_does_not_clear_title()
   };
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
-  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
-
+  gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
     // Now, make sure that not specifying a title does not clear it.
     delete place.title;
     place.visits = [new VisitInfo()];
-    gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-      do_check_true(Components.isSuccessCode(aResultCode));
+    gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
       do_check_title_for_uri(place.uri, TITLE);
 
       waitForAsyncUpdates(run_next_test);
-    });
-  });
+    }));
+  }));
 }
 
 function test_title_change_notifies()
@@ -1229,8 +1248,7 @@ function test_referrer_sessionId_persists()
   // First we add the referrer visit, and then the main visit with referrer
   // attached. We ensure that the sessionId is maintained across the updates.
   do_check_false(gGlobalHistory.isVisited(referrerPlace.uri));
-  gHistory.updatePlaces(referrerPlace, function(aResultCode, aPlaceInfo) {
-    do_check_true(Components.isSuccessCode(aResultCode));
+  gHistory.updatePlaces(referrerPlace, expectHandleResult(function(aPlaceInfo) {
     do_check_true(gGlobalHistory.isVisited(referrerPlace.uri));
 
     let sessionId = aPlaceInfo.visits[0].sessionId;
@@ -1245,15 +1263,52 @@ function test_referrer_sessionId_persists()
     place.visits[0].referrerURI = referrerPlace.uri;
 
     do_check_false(gGlobalHistory.isVisited(place.uri));
-    gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
-      do_check_true(Components.isSuccessCode(aResultCode));
+    gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {
       do_check_true(gGlobalHistory.isVisited(place.uri));
 
       do_check_eq(aPlaceInfo.visits[0].sessionId, sessionId);
 
       waitForAsyncUpdates(run_next_test);
-    });
+    }));
+  }));
+}
+
+// test with empty mozIVisitInfoCallback object
+function test_callbacks_not_supplied()
+{
+  const URLS = [
+    "imap://cyrus.andrew.cmu.edu/archive.imap",  // bad URI
+    "http://mozilla.org/" // valid URI
+  ];
+  let places = [];
+  URLS.forEach(function(url) {
+    try {
+      let place = {
+        uri: NetUtil.newURI(url),
+        title: "test for " + url,
+        visits: [
+          new VisitInfo(),
+        ],
+      };
+      places.push(place);
+    }
+    catch (e if e.result === Cr.NS_ERROR_FAILURE) {
+      // NetUtil.newURI() can throw if e.g. our app knows about imap://
+      // but the account is not set up and so the URL is invalid for us.
+      // Note this in the log but ignore as it's not the subject of this test.
+      do_log_info("Could not construct URI for '" + url + "'; ignoring");
+    }
   });
+  
+  gHistory.updatePlaces(places, {} );
+  let observer = {
+    observe: function(aSubject, aTopic, aData)
+    {
+      Services.obs.removeObserver(observer, TOPIC_UPDATEPLACES_COMPLETE);
+      waitForAsyncUpdates(run_next_test);
+    },
+  };
+  Services.obs.addObserver(observer, TOPIC_UPDATEPLACES_COMPLETE, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1290,6 +1345,7 @@ function test_referrer_sessionId_persists()
   test_title_change_notifies,
   test_visit_notifies,
   test_referrer_sessionId_persists,
+  test_callbacks_not_supplied,
 ].forEach(add_test);
 
 function run_test()
