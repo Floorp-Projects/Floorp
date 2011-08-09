@@ -68,6 +68,9 @@ abstract public class GeckoApp
 {
     public static final String ACTION_ALERT_CLICK = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
+    public static final String ACTION_WEBAPP      = "org.mozilla.gecko.WEBAPP";
+    public static final String ACTION_DEBUG       = "org.mozilla.gecko.DEBUG";
+    public static final String ACTION_BOOKMARK    = "org.mozilla.gecko.BOOKMARK";
 
     public static FrameLayout mainLayout;
     public static GeckoSurfaceView surfaceView;
@@ -297,7 +300,7 @@ abstract public class GeckoApp
             return;
         }
         final String action = intent.getAction();
-        if ("org.mozilla.gecko.DEBUG".equals(action) &&
+        if (ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitButton)) {
             final Button launchButton = new Button(this);
             launchButton.setText("Launch"); // don't need to localize
@@ -315,19 +318,24 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.WaitButton) || launch(intent))
             return;
 
-        if (Intent.ACTION_VIEW.equals(action)) {
+        if (Intent.ACTION_MAIN.equals(action)) {
+            Log.i("GeckoApp", "Intent : ACTION_MAIN");
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
+        }
+        else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i("GeckoApp","onNewIntent: "+uri);
         }
-        else if (Intent.ACTION_MAIN.equals(action)) {
-            Log.i("GeckoApp", "Intent : ACTION_MAIN");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
-        }
-        else if (action.equals("org.mozilla.gecko.WEBAPP")) {
+        else if (ACTION_WEBAPP.equals(action)) {
             String uri = intent.getStringExtra("args");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i("GeckoApp","Intent : WEBAPP - " + uri);
+        }
+        else if (ACTION_BOOKMARK.equals(action)) {
+            String args = intent.getStringExtra("args");
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(args));
+            Log.i("GeckoApp","Intent : BOOKMARK - " + args);
         }
     }
 
@@ -393,14 +401,17 @@ abstract public class GeckoApp
         // etc., and generally mark the profile as 'clean', and then
         // dirty it again if we get an onResume.
 
+
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
         super.onStop();
+        GeckoAppShell.putChildInBackground();
     }
 
     @Override
     public void onRestart()
     {
         Log.i("GeckoApp", "restart");
+        GeckoAppShell.putChildInForeground();
         super.onRestart();
     }
 
@@ -668,7 +679,7 @@ abstract public class GeckoApp
         intent.setType(aMimeType);
         GeckoApp.this.
             startActivityForResult(
-                Intent.createChooser(intent,"choose a file"),
+                Intent.createChooser(intent, getString(R.string.choose_file)),
                 FILE_PICKER_REQUEST);
         String filePickerResult = "";
         try {

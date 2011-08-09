@@ -368,8 +368,8 @@ checkbox:focus > .checkbox-label-center-box > .checkbox-label-box {
   -moz-border-right-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
-  min-width: 46px;
-  min-height: 46px;
+  width: 46px;
+  height: 46px;
   background: url("chrome://browser/skin/images/check-unselected-hdpi.png") no-repeat 50% 50%;
 }
 
@@ -737,7 +737,7 @@ dialog {
     -moz-box-align: start;
   }
   
-  .panel-row-button {
+  #panel-controls > .panel-row-button {
     -moz-box-orient: horizontal;
     -moz-box-flex: 0;
     min-width: @tablet_panel_controls@ !important;

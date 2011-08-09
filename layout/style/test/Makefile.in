@@ -129,6 +129,9 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug657143.html \
 		test_bug664955.html \
 		test_bug667520.html \
+		test_bug645998.html \
+		file_bug645998-1.css \
+		file_bug645998-2.css \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style.html \

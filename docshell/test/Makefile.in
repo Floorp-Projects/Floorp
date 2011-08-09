@@ -118,6 +118,8 @@ _TEST_FILES = \
 		bug668513_redirect.html^headers^ \
 		test_bug669671.html \
 		file_bug669671.sjs \
+		test_bug675587.html \
+		test_bfcache_plus_hash.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

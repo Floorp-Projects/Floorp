@@ -391,7 +391,7 @@ _ABS_RUN_TEST_PROGRAM = $(call core_abspath,$(RUN_TEST_PROGRAM))
 endif
 
 GENERATE_CACHE = \
-  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$$PWD" -a "$$PWD" -f $(topsrcdir)/toolkit/mozapps/installer/precompile_cache.js -e 'populate_startupcache("omni.jar", "startupCache.zip");' && \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$$PWD" -a "$$PWD" -f $(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js -e 'populate_startupcache("omni.jar", "startupCache.zip");' && \
   rm -rf jsloader && \
   $(UNZIP) startupCache.zip && \
   rm startupCache.zip && \

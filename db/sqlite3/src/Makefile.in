@@ -77,6 +77,12 @@ export:: sqlite-version.h
 endif
 endif
 
+# XXX Force -O2 optimisation on Mac because using the default -O3 causes
+# crashes. See bug 676499.
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+MODULE_OPTIMIZE_FLAGS = -O2
+endif
+
 EXPORTS = \
   sqlite3.h \
   $(NULL)

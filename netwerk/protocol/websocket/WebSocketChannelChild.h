@@ -64,7 +64,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
                                      const nsACString &aOrigin,
                                      nsIWebSocketListener *aListener,
                                      nsISupports *aContext);
-  NS_SCRIPTABLE NS_IMETHOD Close();
+  NS_SCRIPTABLE NS_IMETHOD Close(PRUint16 code, const nsACString & reason);
   NS_SCRIPTABLE NS_IMETHOD SendMsg(const nsACString &aMsg);
   NS_SCRIPTABLE NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
   NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
@@ -73,25 +73,24 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void ReleaseIPDLReference();
 
  private:
-  bool RecvOnStart(const nsCString& aProtocol);
+  bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions);
   bool RecvOnStop(const nsresult& aStatusCode);
   bool RecvOnMessageAvailable(const nsCString& aMsg);
   bool RecvOnBinaryMessageAvailable(const nsCString& aMsg);
   bool RecvOnAcknowledge(const PRUint32& aSize);
-  bool RecvOnServerClose();
+  bool RecvOnServerClose(const PRUint16& aCode, const nsCString &aReason);
   bool RecvAsyncOpenFailed();
 
-  void OnStart(const nsCString& aProtocol);
+  void OnStart(const nsCString& aProtocol, const nsCString& aExtensions);
   void OnStop(const nsresult& aStatusCode);
   void OnMessageAvailable(const nsCString& aMsg);
   void OnBinaryMessageAvailable(const nsCString& aMsg);
   void OnAcknowledge(const PRUint32& aSize);
-  void OnServerClose();
+  void OnServerClose(const PRUint16& aCode, const nsCString& aReason);
   void AsyncOpenFailed();  
 
   ChannelEventQueue mEventQ;
   bool mIPCOpen;
-  bool mCancelled;
 
   friend class StartEvent;
   friend class StopEvent;

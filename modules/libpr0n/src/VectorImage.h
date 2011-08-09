@@ -87,8 +87,11 @@ public:
                 const char* aURIString,
                 PRUint32 aFlags);
   void GetCurrentFrameRect(nsIntRect& aRect);
-  PRUint32 GetDecodedDataSize();
-  PRUint32 GetSourceDataSize();
+
+  virtual PRUint32 GetDecodedHeapSize();
+  virtual PRUint32 GetDecodedNonheapSize();
+  virtual PRUint32 GetDecodedOutOfProcessSize();
+  virtual PRUint32 GetSourceHeapSize();
 
   // Callback for SVGRootRenderingObserver
   void InvalidateObserver();
@@ -96,7 +99,7 @@ public:
 protected:
   virtual nsresult StartAnimation();
   virtual nsresult StopAnimation();
-  virtual PRBool   ShouldAnimate();
+  virtual bool     ShouldAnimate();
 
 private:
   nsWeakPtr                          mObserver;   //! imgIDecoderObserver

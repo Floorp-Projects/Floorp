@@ -156,11 +156,10 @@ input > .anonymous-div {
   /* The 1px horizontal padding is for parity with Win/IE */
   padding: 0px 1px;
   margin: 0px;
-  /* XXXldb I'm not sure if we really want the 'text-decoration: inherit',
-     but it's needed to make 'text-decoration' "work" on text inputs. */
   text-decoration: inherit;
   -moz-text-decoration-color: inherit;
   -moz-text-decoration-style: inherit;
+  display: inline-block;
   ime-mode: inherit;
   resize: inherit;
 }

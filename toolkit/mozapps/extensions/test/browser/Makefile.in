@@ -111,7 +111,9 @@ _TEST_RESOURCES = \
   browser_searching.xml \
   browser_searching_empty.xml \
   browser_updatessl.rdf \
+  browser_updatessl.rdf^headers^ \
   browser_install.rdf \
+  browser_install.rdf^headers^ \
   browser_install.xml \
   browser_install1_3.xpi \
   browser_eula.xml \

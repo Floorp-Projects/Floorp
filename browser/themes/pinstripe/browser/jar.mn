@@ -42,6 +42,7 @@ browser.jar:
   skin/classic/browser/section_collapsed-rtl.png
   skin/classic/browser/section_expanded.png
   skin/classic/browser/Secure-Glyph-White.png
+  skin/classic/browser/keyhole-circle.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/urlbar-arrow.png
@@ -83,6 +84,7 @@ browser.jar:
   skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
   skin/classic/browser/places/twisty-closed.gif             (places/twisty-closed.gif)
   skin/classic/browser/places/tag.png                       (places/tag.png)
+  skin/classic/browser/places/downloads.png                 (places/downloads.png)
   skin/classic/browser/places/expander-closed-active.png    (places/expander-closed-active.png)
   skin/classic/browser/places/expander-closed.png           (places/expander-closed.png)
   skin/classic/browser/places/expander-open-active.png      (places/expander-open-active.png)
@@ -133,3 +135,8 @@ browser.jar:
   skin/classic/browser/syncCommon.css
   skin/classic/browser/syncQuota.css
 #endif
+  skin/classic/browser/lion/keyhole-circle.png              (keyhole-circle-lion.png)
+  skin/classic/browser/lion/Toolbar.png                     (Toolbar-lion.png)
+
+% override chrome://browser/skin/keyhole-circle.png chrome://browser/skin/lion/keyhole-circle.png os=Darwin osversion>=10.7
+% override chrome://browser/skin/Toolbar.png chrome://browser/skin/lion/Toolbar.png os=Darwin osversion>=10.7

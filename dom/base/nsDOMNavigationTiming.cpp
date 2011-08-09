@@ -91,6 +91,17 @@ nsDOMNavigationTiming::TimeStampToDOM(mozilla::TimeStamp aStamp,
   return NS_OK;
 }
 
+nsresult 
+nsDOMNavigationTiming::TimeStampToDOMOrFetchStart(mozilla::TimeStamp aStamp, 
+                                                  DOMTimeMilliSec* aResult)
+{
+  if (!aStamp.IsNull()) {
+    return TimeStampToDOM(aStamp, aResult);
+  } else {
+    return GetFetchStart(aResult);
+  }
+}
+
 DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart(){
   DOMTimeMilliSec result; 
   TimeStampToDOM(mozilla::TimeStamp::Now(), &result);

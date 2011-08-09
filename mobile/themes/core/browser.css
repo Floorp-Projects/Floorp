@@ -155,7 +155,7 @@ toolbarbutton.urlbar-button {
 
 /* left cap button --------------------------------------------------------- */
 #identity-box {
-  border-right: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
+  -moz-border-end: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -170,7 +170,7 @@ toolbarbutton.urlbar-button {
 
 #identity-box[open="true"],
 #identity-box:hover:active {
-  border-right: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
+  -moz-border-end: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
 }
 
 /* add special color */
@@ -219,8 +219,8 @@ toolbarbutton.urlbar-button {
 #urlbar-edit,
 #urlbar-title {
   margin: 0 !important;
-  border-left: @border_width_tiny@ solid white;
-  border-right: @border_width_tiny@ solid white;
+  -moz-border-start: @border_width_tiny@ solid white;
+  -moz-border-end: @border_width_tiny@ solid white;
   min-height: @touch_normal@;
 }
 
@@ -233,7 +233,7 @@ toolbarbutton.urlbar-button {
   -moz-appearance: none !important;
   border-radius: 0;
   border: 0 solid transparent;
-  border-right: @border_width_tiny@ solid rgba(0,0,0,0.5);
+  -moz-border-end: @border_width_tiny@ solid rgba(0,0,0,0.5);
   padding: 0 !important;
 }
 
@@ -262,7 +262,7 @@ toolbarbutton.urlbar-button {
 
 /* Right cap button --------------------------------------------------------- */
 #urlbar-icons {
-  border-left: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
+  -moz-border-start: @border_width_tiny@ solid rgba(118,121,126,0.5) !important;
 }
 
 #urlbar-icons:-moz-locale-dir(ltr) {
@@ -284,7 +284,7 @@ toolbarbutton.urlbar-button {
 }
 
 #urlbar-icons:not([disabled="true"]):hover:active {
-  border-left: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
+  -moz-border-start: @border_width_tiny@ solid rgba(0, 0, 0, 0.2);
 }
 
 #tool-reload {
@@ -323,7 +323,7 @@ toolbarbutton.urlbar-button {
   background: #5e6166;
 }
 
-toolbarbutton.button-control {
+.button-control {
   padding: 0 !important;
   min-width: @sidebar_width_minimum@ !important;
   border-top: @border_width_tiny@ solid rgba(255,255,255,0.2) !important;
@@ -334,34 +334,38 @@ toolbarbutton.button-control {
   height: @sidebar_button_height@;
 }
 
-toolbarbutton.button-control:last-child {
+.button-control:last-child {
   border-bottom: 0 solid rgba(0,0,0,0.2) !important;
 }
 
-toolbarbutton.button-control[disabled="true"] {
+.button-control[disabled="true"] {
   opacity: 0.5;
 }
 
-toolbarbutton.button-control:not([disabled="true"]):hover:active {
+.button-control:not([disabled="true"]):hover:active {
   background-image: url("chrome://browser/skin/images/sidebarbutton-active-hdpi.png");
   border-top: none;
 }
 
-#tool-star {
+#tool-tabs {
+  list-style-image: url("chrome://browser/skin/images/tabs-hdpi.png");
+}
+
+.tool-star {
   list-style-image: url("chrome://browser/skin/images/bookmark-default-hdpi.png");
 }
 
-#tool-star[starred="true"] {
+.tool-star[starred="true"] {
   list-style-image: url("chrome://browser/skin/images/bookmark-starred-hdpi.png");
 }
 
-#tool-back,
-#tool-forward:-moz-locale-dir(rtl) {
+.tool-back,
+.tool-forward:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/images/back-default-hdpi.png");
 }
 
-#tool-back:-moz-locale-dir(rtl),
-#tool-forward {
+.tool-back:-moz-locale-dir(rtl),
+.tool-forward {
   list-style-image: url("chrome://browser/skin/images/forward-default-hdpi.png");
 }
 
@@ -1550,6 +1554,49 @@ setting {
   90% { -moz-transform: translateX(@sidebar_width_minimum@); }
   to { -moz-transform: translateX(0); }
 }
+
+/* Tablet mode */
+
+.button-actionbar {
+  visibility: collapse;
+}
+
+.button-actionbar[disabled="true"] {
+  opacity: 0.5;
+}
+
+.button-actionbar:hover:active {
+  background-color: #8db8d8;
+}
+
+#toolbar-main[tablet="true"] > .button-actionbar {
+  visibility: visible;
+}
+#toolbar-main[tablet="true"][mode="edit"] > .button-actionbar {
+  visibility: collapse;
+}
+
+#controls-scrollbox[tablet="true"] > #controls-sidebar {
+  visibility: collapse;
+}
+
+#controls-scrollbox[tablet="true"] > #tabs-sidebar {
+  border: none;
+  position: fixed;
+  top: -moz-calc(@touch_button_xlarge@ + @margin_normal@);
+  visibility: collapse;
+}
+#controls-scrollbox[tablet="true"] > #tabs-sidebar:-moz-locale-dir(ltr) {
+  right: 0;
+}
+#controls-scrollbox[tablet="true"] > #tabs-sidebar:-moz-locale-dir(rtl) {
+  left: 0;
+}
+#controls-scrollbox[tablet="true"] > #tabs-sidebar[open] {
+  visibility: visible;
+}
+
+/* Text selection handles */
 
 #selectionhandle-start,
 #selectionhandle-end {

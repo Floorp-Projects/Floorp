@@ -39,13 +39,13 @@
 #include "nsSVGElement.h"
 #include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
-#include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsSVGUtils.h"
 #include "string.h"
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsMathUtils.h"
 
 namespace mozilla {
 
@@ -98,7 +98,7 @@ SVGNumberList::SetValueFromString(const nsAString& aValue)
     }
     char *end;
     float num = float(PR_strtod(token, &end));
-    if (*end != '\0' || !NS_FloatIsFinite(num)) {
+    if (*end != '\0' || !NS_finite(num)) {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
     temp.AppendItem(num);

@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIURIRefObject_h__
-#define nsIURIRefObject_h__
-
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
@@ -76,6 +73,3 @@ interface nsIURIRefObject  : nsISupports
   void RewriteAllURIs(in DOMString aOldPat, in DOMString aNewPat,
                       in boolean aMakeRel);
 };
-
-#endif /* nsIURIRefObject_h__ */
-

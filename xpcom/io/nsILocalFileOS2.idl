@@ -74,7 +74,7 @@ interface nsILocalFileOS2 : nsILocalFile
     *       a string in the filesystem's native character set
     *
     */
-    PRBool isFileType( in ACString fileType );
+    boolean isFileType( in ACString fileType );
 
    /**
     * setFileSource

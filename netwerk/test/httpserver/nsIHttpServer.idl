@@ -315,7 +315,7 @@ interface nsIHttpServerIdentity : nsISupports
    * @returns
    *   true if the given name was a name for this server, false otherwise
    */
-  PRBool remove(in string scheme, in string host, in long port);
+  boolean remove(in string scheme, in string host, in long port);
 
   /**
    * Returns true if the given name is in this, false otherwise.
@@ -324,7 +324,7 @@ interface nsIHttpServerIdentity : nsISupports
    *   if scheme or host do not match the scheme or host productions imported
    *   into RFC 2616 from RFC 2396, or if port is not a valid port number
    */
-  PRBool has(in string scheme, in string host, in long port);
+  boolean has(in string scheme, in string host, in long port);
 
   /**
    * Returns the scheme for the name with the given host and port, if one is

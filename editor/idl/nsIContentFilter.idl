@@ -105,7 +105,7 @@ interface nsIContentFilter : nsISupports
   void notifyOfInsertion(in AString mimeType,
                          in nsIURL contentSourceURL,
                          in nsIDOMDocument sourceDocument,
-                         in PRBool willDeleteSelection,
+                         in boolean willDeleteSelection,
                          inout nsIDOMNode docFragment,
                          inout nsIDOMNode contentStartNode,
                          inout long contentStartOffset,

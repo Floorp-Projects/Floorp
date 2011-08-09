@@ -44,8 +44,6 @@
 #include "nsHTMLEditUtils.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMAttr.h"
-#include "nsIDOMKeyListener.h" 
-#include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"

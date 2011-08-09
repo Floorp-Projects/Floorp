@@ -1,6 +1,6 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Global/
 fails-if(!xulRuntime.shell) script adding-global-var-nonextensible-error.js
-fails-if(!xulRuntime.shell) script cross-global-implicit-this.js
+skip-if(!xulRuntime.shell) script cross-global-implicit-this.js
 script parseInt-01.js
 script parseFloat-01.js
 script eval-01.js

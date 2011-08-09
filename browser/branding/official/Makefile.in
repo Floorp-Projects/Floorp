@@ -60,10 +60,6 @@ WINDOWS_BRANDING_FILES = \
 	wizWatermark.bmp \
 	$(NULL)
 
-ifdef MOZ_SPLASHSCREEN
-WINDOWS_BRANDING_FILES += splash.bmp
-endif
-
 OSX_BRANDING_FILES = \
 	background.png \
 	firefox.icns \

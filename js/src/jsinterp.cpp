@@ -90,6 +90,7 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsopcodeinlines.h"
+
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -696,6 +697,9 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
     /* Callees may clobber 'this' or 'callee'. */
     savedCallee_ = args_.calleev() = calleev;
     savedThis_ = args_.thisv() = thisv;
+
+    /* If anyone (through jsdbgapi) finds this frame, make it safe. */
+    MakeRangeGCSafe(args_.argv(), args_.argc());
 
     do {
         /* Hoist dynamic checks from scripted Invoke. */
@@ -2347,15 +2351,19 @@ BEGIN_CASE(JSOP_STOP)
         argv = regs.fp()->maybeFormalArgs();
         atoms = FrameAtomBase(cx, regs.fp());
 
+        JS_ASSERT(*regs.pc == JSOP_TRAP || *regs.pc == JSOP_NEW || *regs.pc == JSOP_CALL ||
+                  *regs.pc == JSOP_FUNCALL || *regs.pc == JSOP_FUNAPPLY);
+
         /* Resume execution in the calling frame. */
         RESET_USE_METHODJIT();
         if (JS_LIKELY(interpReturnOK)) {
-            JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
-                      == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
             len = JSOP_CALL_LENGTH;
             DO_NEXT_OP(len);
         }
+
+        /* Increment pc so that |sp - fp->slots == ReconstructStackDepth(pc)|. */
+        regs.pc += JSOP_CALL_LENGTH;
         goto error;
     } else {
         JS_ASSERT(regs.sp == regs.fp()->base());
@@ -3545,8 +3553,8 @@ BEGIN_CASE(JSOP_LENGTH)
             }
 
             if (js_IsTypedArray(obj)) {
-                TypedArray *tarray = TypedArray::fromJSObject(obj);
-                regs.sp[-1].setNumber(tarray->length);
+                JSObject *tarray = TypedArray::getTypedArray(obj);
+                regs.sp[-1].setInt32(TypedArray::getLength(tarray));
                 len = JSOP_LENGTH_LENGTH;
                 DO_NEXT_OP(len);
             }

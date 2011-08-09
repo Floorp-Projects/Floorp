@@ -70,6 +70,8 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
@@ -162,6 +164,8 @@ xml_isXMLName(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+size_t sE4XObjectsCreated = 0;
+
 /*
  * This wrapper is needed because NewBuiltinClassInstance doesn't
  * call the constructor, and we need a place to set the
@@ -170,6 +174,9 @@ xml_isXMLName(JSContext *cx, uintN argc, jsval *vp)
 static inline JSObject *
 NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
 {
+    if (!cx->runningWithTrustedPrincipals())
+        ++sE4XObjectsCreated;
+
     JSObject *obj = NewBuiltinClassInstance(cx, clasp);
     if (obj)
         obj->syncSpecialEquality();
@@ -207,7 +214,6 @@ namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 
 JS_FRIEND_DATA(Class) js_NamespaceClass = {
     "Namespace",
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
     PropertyStub,         /* addProperty */
@@ -324,7 +330,6 @@ qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 
 JS_FRIEND_DATA(Class) js_QNameClass = {
     "QName",
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
     PropertyStub,         /* addProperty */
@@ -359,7 +364,6 @@ JS_FRIEND_DATA(Class) js_QNameClass = {
  */
 JS_FRIEND_DATA(Class) js_AttributeNameClass = {
     js_AttributeName_str,
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
@@ -374,7 +378,6 @@ JS_FRIEND_DATA(Class) js_AttributeNameClass = {
 
 JS_FRIEND_DATA(Class) js_AnyNameClass = {
     js_AnyName_str,
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
@@ -4625,7 +4628,7 @@ IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
     if (!str)
         return false;
 
-    *isIndex = js_StringIsIndex(str, indexp);
+    *isIndex = StringIsArrayIndex(str, indexp);
     return true;
 }
 
@@ -7108,70 +7111,130 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
 JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_NamespaceClass, Namespace, 2,
-                        NULL, namespace_methods, NULL, NULL);
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *namespaceProto = global->createBlankPrototype(cx, &js_NamespaceClass);
+    if (!namespaceProto)
+        return NULL;
+    JSFlatString *empty = cx->runtime->emptyString;
+    namespaceProto->setNamePrefix(empty);
+    namespaceProto->setNameURI(empty);
+    namespaceProto->syncSpecialEquality();
+
+    const uintN NAMESPACE_CTOR_LENGTH = 2;
+    JSFunction *ctor = global->createConstructor(cx, Namespace, &js_NamespaceClass,
+                                                 CLASS_ATOM(cx, Namespace),
+                                                 NAMESPACE_CTOR_LENGTH);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, namespaceProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, namespaceProto, namespace_props, namespace_methods))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_Namespace, ctor, namespaceProto))
+        return NULL;
+
+    return namespaceProto;
 }
 
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
-                        NULL, qname_methods, NULL, NULL);
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *qnameProto = global->createBlankPrototype(cx, &js_QNameClass);
+    if (!qnameProto)
+        return NULL;
+    JSFlatString *empty = cx->runtime->emptyString;
+    if (!InitXMLQName(cx, qnameProto, empty, empty, empty))
+        return NULL;
+    qnameProto->syncSpecialEquality();
+
+    const uintN QNAME_CTOR_LENGTH = 2;
+    JSFunction *ctor = global->createConstructor(cx, QName, &js_QNameClass,
+                                                 CLASS_ATOM(cx, QName), QNAME_CTOR_LENGTH);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, qnameProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, qnameProto, NULL, qname_methods))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_QName, ctor, qnameProto))
+        return NULL;
+
+    return qnameProto;
 }
 
 JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *xmlProto = global->createBlankPrototype(cx, &js_XMLClass);
+    if (!xmlProto)
+        return NULL;
+    JSXML *xml = js_NewXML(cx, JSXML_CLASS_TEXT);
+    if (!xml)
+        return NULL;
+    xmlProto->setPrivate(xml);
+    xml->object = xmlProto;
+
+    /* Don't count this as a real content-created XML object. */
+    if (!cx->runningWithTrustedPrincipals()) {
+        JS_ASSERT(sE4XObjectsCreated > 0);
+        --sE4XObjectsCreated;
+    }
+
+    const uintN XML_CTOR_LENGTH = 1;
+    JSFunction *ctor = global->createConstructor(cx, XML, &js_XMLClass, CLASS_ATOM(cx, XML),
+                                                 XML_CTOR_LENGTH);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, xmlProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, xmlProto, NULL, xml_methods) ||
+        !DefinePropertiesAndBrand(cx, ctor, xml_static_props, xml_static_methods))
+    {
+        return NULL;
+    }
+
+    if (!SetDefaultXMLSettings(cx, ctor))
+        return NULL;
+
+    /* Define the XMLList function, and give it the same .prototype as XML. */
+    JSFunction *xmllist =
+        JS_DefineFunction(cx, global, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
+    if (!xmllist)
+        return NULL;
+    if (!xmllist->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                                 ObjectValue(*xmlProto), PropertyStub, StrictPropertyStub,
+                                 JSPROP_PERMANENT | JSPROP_READONLY))
+    {
+        return NULL;
+    }
+
     /* Define the isXMLName function. */
     if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
         return NULL;
 
-    /* Define the XML class constructor and prototype. */
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
-                                   NULL, xml_methods, xml_static_props, xml_static_methods);
-    if (!proto)
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_XML, ctor, xmlProto))
         return NULL;
 
-    JSXML *xml = js_NewXML(cx, JSXML_CLASS_TEXT);
-    if (!xml)
-        return NULL;
-    proto->setPrivate(xml);
-    xml->object = proto;
-
-    /*
-     * Prepare to set default settings on the XML constructor we just made.
-     * NB: We can't use JS_GetConstructor, because it calls
-     * JSObject::getProperty, which is xml_getProperty, which creates a new
-     * XMLList every time!  We must instead call js_LookupProperty directly.
-     */
-    JSObject *pobj;
-    JSProperty *prop;
-    if (!js_LookupProperty(cx, proto,
-                           ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                           &pobj, &prop)) {
-        return NULL;
-    }
-    JS_ASSERT(prop);
-    Shape *shape = (Shape *) prop;
-    jsval cval = Jsvalify(pobj->nativeGetSlot(shape->slot));
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
-
-    /* Set default settings. */
-    jsval vp[3];
-    vp[0] = JSVAL_NULL;
-    vp[1] = cval;
-    vp[2] = JSVAL_VOID;
-    if (!xml_setSettings(cx, 1, vp))
-        return NULL;
-
-    /* Define the XMLList function and give it the same prototype as XML. */
-    JSFunction *fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
-    if (!fun)
-        return NULL;
-    if (!LinkConstructorAndPrototype(cx, FUN_OBJECT(fun), proto))
-        return NULL;
-
-    return proto;
+    return xmlProto;
 }
 
 JSObject *

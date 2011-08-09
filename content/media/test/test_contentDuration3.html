@@ -13,7 +13,7 @@
 function on_metadataloaded() {
   var v = document.getElementById('v');
   var d = Math.round(v.duration*1000);
-  ok(d.toString() == "NaN", "Checking duration: " + d);
+  ok(d.toString() == "Infinity", "Checking duration: " + d);
   SimpleTest.finish();
 }
 

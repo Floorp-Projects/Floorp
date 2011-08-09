@@ -609,6 +609,9 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
 {
   nsresult rv = NS_OK;
 
+  // keep track where we are within the header field
+  PRBool seenParameters = PR_FALSE;
+
   // parse link content and call process style link
   nsAutoString href;
   nsAutoString rel;
@@ -704,12 +707,15 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
       if ((*start == kLessThan) && (*last == kGreaterThan)) {
         *last = kNullCh;
 
-        if (href.IsEmpty()) { // first one wins
+        // first instance of <...> wins
+        // also, do not allow hrefs after the first param was seen
+        if (href.IsEmpty() && !seenParameters) {
           href = (start + 1);
           href.StripWhitespace();
         }
       } else {
         PRUnichar* equals = start;
+        seenParameters = PR_TRUE;
 
         while ((*equals != kNullCh) && (*equals != kEqual)) {
           equals++;
@@ -791,6 +797,8 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
       type.Truncate();
       media.Truncate();
       anchor.Truncate();
+      
+      seenParameters = PR_FALSE;
     }
 
     start = ++end;

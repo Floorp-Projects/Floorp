@@ -421,7 +421,9 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
   } else {
     useIntermediateSurface = PR_FALSE;
     gfxMatrix contTransform;
-    if (!mEffectiveTransform.Is2D(&contTransform) ||
+    if (!mEffectiveTransform.Is2D(&contTransform)) {
+     useIntermediateSurface = PR_TRUE;   
+    } else if (
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
         !contTransform.PreservesAxisAlignedRectangles()) {
 #else

@@ -395,6 +395,9 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual void SetVolume(double aVolume);
   virtual double GetDuration();
 
+  virtual void SetInfinite(PRBool aInfinite);
+  virtual PRBool IsInfinite();
+
   virtual nsMediaStream* GetCurrentStream();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
@@ -688,6 +691,9 @@ public:
   // from jumping around. Read/Write from any thread. Must have decode monitor
   // locked before accessing.
   PRPackedBool mIgnoreProgressData;
+
+  // PR_TRUE if the stream is infinite (e.g. a webradio).
+  PRPackedBool mInfiniteStream;
 };
 
 #endif

@@ -15,3 +15,5 @@ script new-with-non-constructor.js
 script error-undefined-message.js
 script regexp-functions-with-undefined.js
 script unnamed-function.js
+script unicode-identifier-1d17.js
+script unicode-identifier-82f1.js

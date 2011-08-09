@@ -371,6 +371,7 @@ LayerManagerD3D9::SetupPipeline()
    */
   viewMatrix._11 = 2.0f / rect.width;
   viewMatrix._22 = -2.0f / rect.height;
+  viewMatrix._33 = 0.0f;
   viewMatrix._41 = -1.0f;
   viewMatrix._42 = 1.0f;
 

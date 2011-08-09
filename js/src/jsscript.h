@@ -728,7 +728,7 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
  * only on the current thread.
  */
 extern void
-js_DestroyScript(JSContext *cx, JSScript *script);
+js_DestroyScript(JSContext *cx, JSScript *script, uint32 caller);
 
 extern void
 js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner);

@@ -78,10 +78,10 @@ nsHTMLCheckboxAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_CHECKBUTTON;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsHTMLCheckboxAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;
+  return 1;
 }
 
 NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
@@ -237,10 +237,10 @@ nsHTMLButtonAccessible::
 {
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsHTMLButtonAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;
+  return 1;
 }
 
 NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
@@ -325,10 +325,10 @@ nsHTML4ButtonAccessible::
 {
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsHTML4ButtonAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;;
+  return 1;
 }
 
 NS_IMETHODIMP nsHTML4ButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
@@ -514,10 +514,10 @@ nsHTMLTextFieldAccessible::NativeState()
   return state;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsHTMLTextFieldAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;;
+  return 1;
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)

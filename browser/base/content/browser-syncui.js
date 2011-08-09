@@ -40,6 +40,20 @@
 
 // gSyncUI handles updating the tools menu
 let gSyncUI = {
+  _obs: ["weave:service:sync:start",
+         "weave:service:sync:finish",
+         "weave:service:sync:error",
+         "weave:service:sync:delayed",
+         "weave:service:quota:remaining",
+         "weave:service:setup-complete",
+         "weave:service:login:start",
+         "weave:service:login:finish",
+         "weave:service:login:error",
+         "weave:service:logout:finish",
+         "weave:service:start-over"],
+
+  _unloaded: false,
+
   init: function SUI_init() {
     // Proceed to set up the UI if Sync has already started up.
     // Otherwise we'll do it when Sync is firing up.
@@ -52,31 +66,26 @@ let gSyncUI = {
 
     // Remove the observer if the window is closed before the observer
     // was triggered.
-    window.addEventListener("unload", function() {
-      window.removeEventListener("unload", arguments.callee, false);
+    window.addEventListener("unload", function onUnload() {
+      gSyncUI._unloaded = true;
+      window.removeEventListener("unload", onUnload, false);
       Services.obs.removeObserver(gSyncUI, "weave:service:ready");
+
+      if (Weave.Status.ready) {
+        gSyncUI._obs.forEach(function(topic) {
+          Services.obs.removeObserver(gSyncUI, topic);
+        });
+      }
     }, false);
   },
 
   initUI: function SUI_initUI() {
-    let obs = ["weave:service:sync:start",
-               "weave:service:sync:finish",
-               "weave:service:sync:error",
-               "weave:service:sync:delayed",
-               "weave:service:quota:remaining",
-               "weave:service:setup-complete",
-               "weave:service:login:start",
-               "weave:service:login:finish",
-               "weave:service:login:error",
-               "weave:service:logout:finish",
-               "weave:service:start-over"];
-
     // If this is a browser window?
     if (gBrowser) {
-      obs.push("weave:notification:added");
+      this._obs.push("weave:notification:added");
     }
 
-    obs.forEach(function(topic) {
+    this._obs.forEach(function(topic) {
       Services.obs.addObserver(this, topic, true);
     }, this);
 
@@ -93,7 +102,7 @@ let gSyncUI = {
     }
     this.updateUI();
   },
-  
+
   initNotifications: function SUI_initNotifications() {
     const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     let notificationbox = document.createElementNS(XULNS, "notificationbox");
@@ -151,7 +160,7 @@ let gSyncUI = {
     let popup = document.getElementById("alltabs-popup");
     if (!popup)
       return;
-    
+
     let menuitem = document.createElement("menuitem");
     menuitem.setAttribute("id", "sync-tabs-menuitem");
     menuitem.setAttribute("label", label);
@@ -295,7 +304,7 @@ let gSyncUI = {
     let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
     if (win)
       win.focus();
-    else 
+    else
       Services.ww.activeWindow.openDialog(
         "chrome://browser/content/syncQuota.xul", "",
         "centerscreen,chrome,dialog,modal");
@@ -414,8 +423,13 @@ let gSyncUI = {
 
     this.updateUI();
   },
-  
+
   observe: function SUI_observe(subject, topic, data) {
+    if (this._unloaded) {
+      Cu.reportError("SyncUI observer called after unload: " + topic);
+      return;
+    }
+
     switch (topic) {
       case "weave:service:sync:start":
         this.onActivityStart();

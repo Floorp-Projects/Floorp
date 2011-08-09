@@ -6771,19 +6771,21 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
   NS_PRECONDITION(PR_TRUE == nsHTMLEditUtils::IsListItem(aListItem),
                   "expected a list item and didn't get one");
   
+  // get the listitem parent and the active editing host.
+  nsIContent* rootContent = mHTMLEditor->GetActiveEditingHost();
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootContent);
+  nsCOMPtr<nsIDOMNode> list;
+  PRInt32 itemOffset;
+  res = nsEditor::GetNodeLocation(aListItem, address_of(list), &itemOffset);
+  NS_ENSURE_SUCCESS(res, res);
+
   // if we are in an empty listitem, then we want to pop up out of the list
+  // but only if prefs says it's ok and if the parent isn't the active editing host.
   PRBool isEmpty;
   res = IsEmptyBlock(aListItem, &isEmpty, PR_TRUE, PR_FALSE);
   NS_ENSURE_SUCCESS(res, res);
-  if (isEmpty && mReturnInEmptyLIKillsList)   // but only if prefs says it's ok
+  if (isEmpty && (rootNode != list) && mReturnInEmptyLIKillsList)
   {
-    nsCOMPtr<nsIDOMNode> list, listparent;
-    PRInt32 offset, itemOffset;
-    res = nsEditor::GetNodeLocation(aListItem, address_of(list), &itemOffset);
-    NS_ENSURE_SUCCESS(res, res);
-    res = nsEditor::GetNodeLocation(list, address_of(listparent), &offset);
-    NS_ENSURE_SUCCESS(res, res);
-    
     // are we the last list item in the list?
     PRBool bIsLast;
     res = mHTMLEditor->IsLastEditableChild(aListItem, &bIsLast);
@@ -6795,7 +6797,12 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
       res = mHTMLEditor->SplitNode(list, itemOffset, getter_AddRefs(tempNode));
       NS_ENSURE_SUCCESS(res, res);
     }
+
     // are we in a sublist?
+    nsCOMPtr<nsIDOMNode> listparent;
+    PRInt32 offset;
+    res = nsEditor::GetNodeLocation(list, address_of(listparent), &offset);
+    NS_ENSURE_SUCCESS(res, res);
     if (nsHTMLEditUtils::IsList(listparent))  //in a sublist
     {
       // if so, move this list item out of this list and into the grandparent list

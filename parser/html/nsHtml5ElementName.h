@@ -386,6 +386,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_LOWLIMIT;
     static nsHtml5ElementName* ELT_METADATA;
     static nsHtml5ElementName* ELT_MENCLOSE;
+    static nsHtml5ElementName* ELT_MENUITEM;
     static nsHtml5ElementName* ELT_MPHANTOM;
     static nsHtml5ElementName* ELT_NOFRAMES;
     static nsHtml5ElementName* ELT_NOSCRIPT;
