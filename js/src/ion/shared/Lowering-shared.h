@@ -131,11 +131,8 @@ class LIRGeneratorShared : public MInstructionVisitor
     template <typename T> bool annotate(T *ins);
     template <typename T> bool add(T *ins);
 
-    bool lowerPhi(MPhi *ins);
-
-    bool addPhi(LPhi *phi) {
-        return current->addPhi(phi) && annotate(phi);
-    }
+    void lowerTypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
+    bool defineTypedPhi(MPhi *phi, size_t lirIndex);
 
   public:
     bool visitConstant(MConstant *ins);

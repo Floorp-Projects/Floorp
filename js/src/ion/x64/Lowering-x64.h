@@ -56,7 +56,9 @@ class LIRGeneratorX64 : public LIRGeneratorShared
 
   protected:
     bool assignSnapshot(LInstruction *ins);
-    bool preparePhi(MPhi *phi);
+    void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
+    bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
+
     bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
 
     bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,

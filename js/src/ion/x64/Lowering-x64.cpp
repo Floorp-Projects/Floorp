@@ -134,17 +134,6 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorX64::preparePhi(MPhi *phi)
-{
-    uint32 vreg = getVirtualRegister();
-    if (vreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
-
-    phi->setId(vreg);
-    return true;
-}
-
-bool
 LIRGeneratorX64::assignSnapshot(LInstruction *ins)
 {
     LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
@@ -176,5 +165,17 @@ LIRGeneratorX64::lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MD
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useRegister(rhs));
     return defineReuseInput(ins, mir);
+}
+
+bool
+LIRGeneratorX64::defineUntypedPhi(MPhi *phi, size_t lirIndex)
+{
+    return defineTypedPhi(phi, lirIndex);
+}
+
+void
+LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex)
+{
+    lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
 }
 
