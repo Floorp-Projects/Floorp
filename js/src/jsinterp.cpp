@@ -914,7 +914,6 @@ ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value
     }
 
     LeaveTrace(cx);
-    AutoScriptRooter root(cx, script);
 
     ExecuteFrameGuard efg;
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
@@ -1856,14 +1855,13 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         JS_ASSERT(regs.fp()->hasImacropc()                                    \
                   ? atoms == rt->atomState.commonAtomsStart() &&              \
                     GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
-                  : (size_t)(atoms - script->atomMap.vector) <                \
-                    (size_t)(script->atomMap.length -                         \
-                             GET_INDEX(regs.pc + PCOFF)));                    \
+                  : (size_t)(atoms - script->atoms) <                         \
+                    (size_t)(script->natoms - GET_INDEX(regs.pc + PCOFF)));   \
         atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
     JS_END_MACRO
 
 #define GET_FULL_INDEX(PCOFF)                                                 \
-    (atoms - script->atomMap.vector + GET_INDEX(regs.pc + (PCOFF)))
+    (atoms - script->atoms + GET_INDEX(regs.pc + (PCOFF)))
 
 #define LOAD_OBJECT(PCOFF, obj)                                               \
     (obj = script->getObject(GET_FULL_INDEX(PCOFF)))
@@ -2035,7 +2033,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * access. For less frequent object and regexp loads we have to recover
      * the segment from atoms pointer first.
      */
-    JSAtom **atoms = script->atomMap.vector;
+    JSAtom **atoms = script->atoms;
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
@@ -2443,7 +2441,7 @@ BEGIN_CASE(JSOP_STOP)
             regs.pc += GetDecomposeLength(imacpc, js_CodeSpec[*imacpc].length);
         regs.fp()->clearImacropc();
         LEAVE_ON_SAFE_POINT();
-        atoms = script->atomMap.vector;
+        atoms = script->atoms;
         op = JSOp(*regs.pc);
         DO_OP();
     }
@@ -4359,7 +4357,7 @@ END_CASE(JSOP_INT32)
 
 BEGIN_CASE(JSOP_INDEXBASE)
     /*
-     * Here atoms can exceed script->atomMap.length as we use atoms as a
+     * Here atoms can exceed script->natoms as we use atoms as a
      * segment register for object literals as well.
      */
     atoms += GET_INDEXBASE(regs.pc);
@@ -4373,7 +4371,7 @@ END_CASE(JSOP_INDEXBASE3)
 
 BEGIN_CASE(JSOP_RESETBASE0)
 BEGIN_CASE(JSOP_RESETBASE)
-    atoms = script->atomMap.vector;
+    atoms = script->atoms;
 END_CASE(JSOP_RESETBASE)
 
 BEGIN_CASE(JSOP_DOUBLE)
@@ -4535,7 +4533,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
      * index in it would exceed 64K limit.
      */
     JS_ASSERT(!regs.fp()->hasImacropc());
-    JS_ASSERT(atoms == script->atomMap.vector);
+    JS_ASSERT(atoms == script->atoms);
     jsbytecode *pc2 = regs.pc;
 
     Value lval = regs.sp[-1];
@@ -5499,7 +5497,7 @@ END_CASE(JSOP_SHARPINIT)
 {
 BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
-    jsint i = (regs.pc - script->main) + JSOP_GOSUB_LENGTH;
+    jsint i = (regs.pc - script->code) + JSOP_GOSUB_LENGTH;
     PUSH_INT32(i);
     len = GET_JUMP_OFFSET(regs.pc);
 END_VARLEN_CASE
@@ -5508,7 +5506,7 @@ END_VARLEN_CASE
 {
 BEGIN_CASE(JSOP_GOSUBX)
     PUSH_BOOLEAN(false);
-    jsint i = (regs.pc - script->main) + JSOP_GOSUBX_LENGTH;
+    jsint i = (regs.pc - script->code) + JSOP_GOSUBX_LENGTH;
     len = GET_JUMPX_OFFSET(regs.pc);
     PUSH_INT32(i);
 END_VARLEN_CASE
@@ -5533,7 +5531,7 @@ BEGIN_CASE(JSOP_RETSUB)
     }
     JS_ASSERT(rval.isInt32());
     len = rval.toInt32();
-    regs.pc = script->main;
+    regs.pc = script->code;
 END_VARLEN_CASE
 }
 
@@ -6162,7 +6160,7 @@ END_CASE(JSOP_ARRAYPUSH)
         uint32 offset;
 
         /* Restore atoms local in case we will resume. */
-        atoms = script->atomMap.vector;
+        atoms = script->atoms;
 
         /* Call debugger throw hook if set. */
         if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
@@ -6197,7 +6195,7 @@ END_CASE(JSOP_ARRAYPUSH)
         if (!JSScript::isValidOffset(script->trynotesOffset))
             goto no_catch;
 
-        offset = (uint32)(regs.pc - script->main);
+        offset = (uint32)(regs.pc - script->main());
         tn = script->trynotes()->vector;
         tnlimit = tn + script->trynotes()->length;
         do {
@@ -6231,7 +6229,7 @@ END_CASE(JSOP_ARRAYPUSH)
              * to the beginning of catch or finally or to [enditer] closing
              * the for-in loop.
              */
-            regs.pc = (script)->main + tn->start + tn->length;
+            regs.pc = (script)->main() + tn->start + tn->length;
 
             JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(regs.sp == regs.fp()->base() + tn->stackDepth);

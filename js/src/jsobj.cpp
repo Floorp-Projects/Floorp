@@ -984,7 +984,7 @@ EvalCacheHash(JSContext *cx, JSLinearString *str)
 
     h *= JS_GOLDEN_RATIO;
     h >>= 32 - JS_EVAL_CACHE_SHIFT;
-    return &JS_SCRIPTS_TO_GC(cx)[h];
+    return &cx->compartment->evalCache[h];
 }
 
 static JS_ALWAYS_INLINE JSScript *
@@ -1032,7 +1032,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
                  * Get the source string passed for safekeeping in the
                  * atom map by the prior eval to Compiler::compileScript.
                  */
-                JSAtom *src = script->atomMap.vector[0];
+                JSAtom *src = script->atoms[0];
 
                 if (src == str || EqualStrings(src, str)) {
                     /*
@@ -1056,8 +1056,8 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
                     if (i < 0 ||
                         objarray->vector[i]->getParent() == &scopeobj) {
                         JS_ASSERT(staticLevel == script->staticLevel);
-                        *scriptp = script->u.nextToGC;
-                        script->u.nextToGC = NULL;
+                        *scriptp = script->u.evalHashLink;
+                        script->u.evalHashLink = NULL;
                         return script;
                     }
                 }
@@ -1066,7 +1066,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
 
         if (++count == EVAL_CACHE_CHAIN_LIMIT)
             return NULL;
-        scriptp = &script->u.nextToGC;
+        scriptp = &script->u.evalHashLink;
     }
     return NULL;
 }
@@ -1080,7 +1080,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
  * a jsdbgapi user's perspective, we want each eval() to create and destroy a
  * script. This hides implementation details and means we don't have to deal
  * with calls to JS_GetScriptObject for scripts in the eval cache (currently,
- * script->u.object aliases script->u.nextToGC).
+ * script->u.object aliases script->u.evalHashLink).
  */
 class EvalScriptGuard
 {
@@ -1102,11 +1102,8 @@ class EvalScriptGuard
             js_CallDestroyScriptHook(cx_, script_);
             script_->isActiveEval = false;
             script_->isCachedEval = true;
-            script_->u.nextToGC = *bucket_;
+            script_->u.evalHashLink = *bucket_;
             *bucket_ = script_;
-#ifdef CHECK_SCRIPT_OWNER
-            script_->owner = NULL;
-#endif
         }
     }
 
@@ -5578,12 +5575,8 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     }
 
     sample = cx->runtime->propertyRemovals;
-    {
-        AutoShapeRooter tvr(cx, shape);
-        AutoObjectRooter tvr2(cx, pobj);
-        if (!shape->get(cx, receiver, obj, pobj, vp))
-            return false;
-    }
+    if (!shape->get(cx, receiver, obj, pobj, vp))
+        return false;
 
     if (pobj->containsSlot(slot) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
@@ -5646,14 +5639,11 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
     }
 
     sample = cx->runtime->propertyRemovals;
-    {
-        AutoShapeRooter tvr(cx, shape);
-        if (!shape->set(cx, obj, strict, vp))
-            return false;
-
-        JS_ASSERT_IF(!obj->inDictionaryMode(), shape->slot == slot);
-        slot = shape->slot;
-    }
+    if (!shape->set(cx, obj, strict, vp))
+        return false;
+    
+    JS_ASSERT_IF(!obj->inDictionaryMode(), shape->slot == slot);
+    slot = shape->slot;
 
     if (obj->containsSlot(slot) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||

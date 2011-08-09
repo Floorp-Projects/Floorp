@@ -112,7 +112,7 @@ struct Shape;
 
 namespace gc {
 
-inline uint32
+inline JSGCTraceKind
 GetGCThingTraceKind(const void *thing)
 {
     JS_ASSERT(thing);
@@ -256,6 +256,118 @@ ForEachArenaAndCell(JSCompartment *compartment, FinalizeKind thingKind,
     }
 }
 
+class CellIterImpl
+{
+    size_t thingSize;
+    ArenaHeader *aheader;
+    FreeSpan firstSpan;
+    const FreeSpan *span;
+    uintptr_t thing;
+    Cell *cell;
+
+  protected:
+    CellIterImpl() {
+    }
+
+    void init(JSCompartment *comp, FinalizeKind thingKind) {
+        thingSize = GCThingSizeMap[thingKind];
+        aheader = comp->arenas[thingKind].getHead();
+        firstSpan.initAsEmpty();
+        span = &firstSpan;
+        thing = span->first;
+        next();
+    }
+
+  public:
+    bool done() const {
+        return !cell;
+    }
+
+    template<typename T> T *get() const {
+        JS_ASSERT(!done());
+        return static_cast<T *>(cell);
+    }
+
+    Cell *getCell() const {
+        JS_ASSERT(!done());
+        return cell;
+    }
+
+    void next() {
+        for (;;) {
+            if (thing != span->first)
+                break;
+            if (JS_LIKELY(span->hasNext())) {
+                thing = span->last + thingSize;
+                span = span->nextSpan();
+                break;
+            }
+            if (!aheader) {
+                cell = NULL;
+                return;
+            }
+            firstSpan = aheader->getFirstFreeSpan();
+            span = &firstSpan;
+            thing = aheader->getArena()->thingsStart(thingSize);
+            aheader = aheader->next;
+        }
+        cell = reinterpret_cast<Cell *>(thing);
+        thing += thingSize;
+    }
+};
+
+class CellIterUnderGC : public CellIterImpl {
+
+  public:
+    CellIterUnderGC(JSCompartment *comp, FinalizeKind thingKind) {
+        JS_ASSERT(comp->rt->gcRunning);
+        JS_ASSERT(comp->freeLists.lists[thingKind].isEmpty());
+        init(comp, thingKind);
+    }
+};
+
+/*
+ * When using the iterator outside the GC the caller must ensure that no GC or
+ * allocations of GC things are possible and that the background finalization
+ * for the given thing kind is not enabled or is done.
+ */
+class CellIter: public CellIterImpl
+{
+    FreeLists *lists;
+    FinalizeKind thingKind;
+#ifdef DEBUG
+    size_t *counter;
+#endif
+  public:
+    CellIter(JSContext *cx, JSCompartment *comp, FinalizeKind thingKind)
+      : lists(&comp->freeLists),
+        thingKind(thingKind) {
+#ifdef JS_THREADSAFE
+        JS_ASSERT(comp->arenas[thingKind].doneBackgroundFinalize());
+#endif
+        if (lists->isSynchronizedWithArena(thingKind)) {
+            lists = NULL;
+        } else {
+            JS_ASSERT(!comp->rt->gcRunning);
+            lists->copyToArena(thingKind);
+        }
+#ifdef DEBUG
+        counter = &JS_THREAD_DATA(cx)->noGCOrAllocationCheck;
+        ++*counter;
+#endif
+        init(comp, thingKind);
+    }
+
+    ~CellIter() {
+#ifdef DEBUG
+        JS_ASSERT(*counter > 0);
+        --*counter;
+#endif
+        if (lists)
+            lists->clearInArena(thingKind);
+    }
+};
+
 /* Signatures for ArenaOp and CellOp above. */
 
 inline void EmptyArenaOp(Arena *arena) {}
@@ -283,6 +395,7 @@ NewGCThing(JSContext *cx, unsigned thingKind, size_t thingSize)
                  (thingKind == js::gc::FINALIZE_SHORT_STRING));
 #endif
     JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT(!JS_THREAD_DATA(cx)->noGCOrAllocationCheck);
 
 #ifdef JS_GC_ZEAL
     if (cx->runtime->needZealousGC())
@@ -331,6 +444,12 @@ js_NewGCFunction(JSContext *cx)
         fun->lastProp = NULL; /* Stops fun from being scanned until initializated. */
     }
     return fun;
+}
+
+inline JSScript *
+js_NewGCScript(JSContext *cx)
+{
+    return NewGCThing<JSScript>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
 }
 
 inline js::Shape *

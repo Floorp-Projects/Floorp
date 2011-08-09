@@ -49,7 +49,8 @@ JS_BEGIN_EXTERN_C
 struct JSGCInfo
 {
     double appTime, gcTime, waitTime, markTime, sweepTime;
-    double sweepObjTime, sweepStringTime, sweepShapeTime, destroyTime, endTime;
+    double sweepObjTime, sweepStringTime, sweepScriptTime, sweepShapeTime;
+    double destroyTime, endTime;
     bool isCompartmental;
 };
 
@@ -134,6 +135,7 @@ struct GCTimer
     uint64 startSweep;
     uint64 sweepObjectEnd;
     uint64 sweepStringEnd;
+    uint64 sweepScriptEnd;
     uint64 sweepShapeEnd;
     uint64 sweepDestroyEnd;
     uint64 end;

@@ -87,7 +87,7 @@ FindExceptionHandler(JSContext *cx)
 top:
     if (cx->isExceptionPending() && JSScript::isValidOffset(script->trynotesOffset)) {
         // The PC is updated before every stub call, so we can use it here.
-        unsigned offset = cx->regs().pc - script->main;
+        unsigned offset = cx->regs().pc - script->main();
 
         JSTryNoteArray *tnarray = script->trynotes();
         for (unsigned i = 0; i < tnarray->length; ++i) {
@@ -113,7 +113,7 @@ top:
             if (tn->stackDepth > cx->regs().sp - fp->base())
                 continue;
 
-            jsbytecode *pc = script->main + tn->start + tn->length;
+            jsbytecode *pc = script->main() + tn->start + tn->length;
             cx->regs().pc = pc;
             JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(cx->regs().sp == fp->base() + tn->stackDepth);
