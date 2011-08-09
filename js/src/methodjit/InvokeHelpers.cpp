@@ -466,32 +466,34 @@ js_InternalThrow(VMFrame &f)
 
     jsbytecode *pc = NULL;
     for (;;) {
-        // Call the throw hook if necessary
-        JSThrowHook handler = cx->debugHooks->throwHook;
-        if (handler || !cx->compartment->getDebuggees().empty()) {
-            Value rval;
-            JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
-            if (st == JSTRAP_CONTINUE && handler) {
-                st = handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
-                             cx->debugHooks->throwHookData);
-            }
+        if (cx->isExceptionPending()) {
+            // Call the throw hook if necessary
+            JSThrowHook handler = cx->debugHooks->throwHook;
+            if (handler || !cx->compartment->getDebuggees().empty()) {
+                Value rval;
+                JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
+                if (st == JSTRAP_CONTINUE && handler) {
+                    st = handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
+                                 cx->debugHooks->throwHookData);
+                }
 
-            switch (st) {
-              case JSTRAP_ERROR:
-                cx->clearPendingException();
-                return NULL;
+                switch (st) {
+                case JSTRAP_ERROR:
+                    cx->clearPendingException();
+                    return NULL;
 
-              case JSTRAP_RETURN:
-                cx->clearPendingException();
-                cx->fp()->setReturnValue(rval);
-                return cx->jaegerCompartment()->forceReturnFromExternC();
+                case JSTRAP_RETURN:
+                    cx->clearPendingException();
+                    cx->fp()->setReturnValue(rval);
+                    return cx->jaegerCompartment()->forceReturnFromExternC();
 
-              case JSTRAP_THROW:
-                cx->setPendingException(rval);
-                break;
+                case JSTRAP_THROW:
+                    cx->setPendingException(rval);
+                    break;
 
-              default:
-                break;
+                default:
+                    break;
+                }
             }
         }
 
