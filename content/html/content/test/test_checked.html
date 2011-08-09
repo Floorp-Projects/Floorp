@@ -2,26 +2,41 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=418756
+https://bugzilla.mozilla.org/show_bug.cgi?id=617528
 -->
 <head>
-  <title>Test for Bug 418756</title>
+  <title>Test for Bug 418756 and 617528</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418756">Mozilla Bug 418756</a>
+Mozilla bug
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418756">418756</a>
+and
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=617528">617528</a>
 <p id="display"></p>
 <div id="content">
   <form id="f1">
   </form>
   <form id="f2">
   </form>
+  <menu id="m1">
+  </menu>
+  <menu id="m2">
+  </menu>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript; version=1.7">
 
-/** Test for Bug 418756 **/
+/** Test for Bug 418756 and 617528 **/
+let group1;
+let group2;
+let group3;
+
+let tags = ["input", "menuitem"];
+for each (let tag in tags) {
+
 function bounce(node) {
   let n = node.nextSibling;
   let p = node.parentNode;
@@ -50,13 +65,13 @@ let id = 0;
 
 // type can be 'c' for 'checkbox' and 'r' for 'radio'
 function createNode(type, name, checked) {
-  let node = document.createElement("input");
+  let node = document.createElement(tag);
   node.setAttribute("type",  typeMapper[type]);
   if (checked) {
     node.setAttribute("checked", "checked");
   }
   node.setAttribute("id", type + (++id));
-  node.setAttribute("name", name);
+  node.setAttribute(tag == "input" ? "name" : "radiogroup", name);
   createdNodes.push(node);
   return node;
 }
@@ -97,7 +112,7 @@ cleanup();
 // effect
 for each (let type in types) {
   let n = createNode(type, 'test1', true);
-  $("f1").appendChild(n);
+  $(tag == "input" ? "f1" : "m1").appendChild(n);
   n.checked = false;
   n.defaultChecked = false;
   bounce(n);
@@ -109,23 +124,23 @@ cleanup();
 
 // Now check that playing with a single radio in a group affects all
 // other radios in the group (but not radios not in that group)
-let group1 = [ createNode('r', 'g1', false),
-               createNode('r', 'g1', false),
-               createNode('r', 'g1', false) ];
-let group2 = [ createNode('r', 'g2', false),
-               createNode('r', 'g2', false),
-               createNode('r', 'g2', false) ];
-let group3 = [ createNode('r', 'g1', false),
-               createNode('r', 'g1', false),
-               createNode('r', 'g1', false) ];
+group1 = [ createNode('r', 'g1', false),
+           createNode('r', 'g1', false),
+           createNode('r', 'g1', false) ];
+group2 = [ createNode('r', 'g2', false),
+           createNode('r', 'g2', false),
+           createNode('r', 'g2', false) ];
+group3 = [ createNode('r', 'g1', false),
+           createNode('r', 'g1', false),
+           createNode('r', 'g1', false) ];
 for each (let g in group1) {
-  $("f1").appendChild(g);
+  $(tag == "input" ? "f1" : "m1").appendChild(g);
 }
 for each (let g in group2) {
-  $("f1").appendChild(g);
+  $(tag == "input" ? "f1" : "m1").appendChild(g);
 }
 for each (let g in group3) {
-  $("f2").appendChild(g);
+  $(tag == "input" ? "f2" : "m2").appendChild(g);
 }
 
 for each (let n in [1, 2, 3]) {
@@ -335,6 +350,8 @@ for each (let n in [1, 2, 3]) {
 }
 
 cleanup();
+
+}
 </script>
 </pre>
 </body>
