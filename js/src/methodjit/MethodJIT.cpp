@@ -132,7 +132,7 @@ static uint32 StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment->jaegerCompartment()->pushActiveFrame(&f);
+    f.entryfp->script()->compartment()->jaegerCompartment()->pushActiveFrame(&f);
     f.entryfp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
     f.regs.clearInlined();
 }
@@ -140,7 +140,7 @@ PushActiveVMFrame(VMFrame &f)
 extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment->jaegerCompartment()->popActiveFrame();
+    f.entryfp->script()->compartment()->jaegerCompartment()->popActiveFrame();
 }
 
 extern "C" void JS_FASTCALL
