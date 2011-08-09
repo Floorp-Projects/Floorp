@@ -371,6 +371,11 @@ LinearScanAllocator::createDataStructures()
 bool
 LinearScanAllocator::buildLivenessInfo()
 {
+    Vector<MBasicBlock *, 1, SystemAllocPolicy> loopWorkList;
+    BitSet *loopDone = BitSet::New(graph.numBlockIds());
+    if (!loopDone)
+        return false;
+
     for (size_t i = graph.numBlocks(); i > 0; i--) {
         LBlock *block = graph.getBlock(i - 1);
         MBasicBlock *mblock = block->mir();
@@ -378,6 +383,7 @@ LinearScanAllocator::buildLivenessInfo()
         BitSet *live = BitSet::New(graph.numVirtualRegisters());
         if (!live)
             return false;
+        liveIn[mblock->id()] = live;
 
         // Propagate liveIn from our successors to us
         for (size_t i = 0; i < mblock->lastIns()->numSuccessors(); i++) {
@@ -462,18 +468,50 @@ LinearScanAllocator::buildLivenessInfo()
             }
         }
 
-        // Add whole-loop intervals for virtual registers live at the top of
-        // the loop header.
         if (mblock->isLoopHeader()) {
-            MBasicBlock *backedge = mblock->backedge();
-            for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
-                vregs[*i].getInterval(0)->addRange(inputOf(block->firstId()),
-                                                   outputOf(backedge->lir()->lastId()));
+            // A divergence from the published algorithm is required here, as
+            // our block order does not guarantee that blocks of a loop are
+            // contiguous. As a result, a single live interval spanning the
+            // loop is not possible. Additionally, we require liveIn in a later
+            // pass for resolution, so that must also be fixed up here.
+            MBasicBlock *loopBlock = mblock->backedge();
+            while (true) {
+                // Add an interval for this entire loop block
+                for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
+                    vregs[*i].getInterval(0)->addRange(inputOf(loopBlock->lir()->firstId()),
+                                                       outputOf(loopBlock->lir()->lastId()));
+                }
+
+                // Fix up the liveIn set to account for the new interval
+                liveIn[loopBlock->id()]->insertAll(live);
+
+                // Make sure we don't visit this node again
+                loopDone->insert(loopBlock->id());
+
+                // If this is the loop header, any predecessors are either the
+                // backedge or out of the loop, so skip any predecessors of
+                // this block
+                if (loopBlock != mblock) {
+                    for (size_t i = 0; i < loopBlock->numPredecessors(); i++) {
+                        MBasicBlock *pred = loopBlock->getPredecessor(i);
+                        if (loopDone->contains(pred->id()))
+                            continue;
+                        if (!loopWorkList.append(pred))
+                            return false;
+                    }
+                }
+
+                // Grab the next block off the work list
+                if (loopWorkList.empty())
+                    break;
+                loopBlock = loopWorkList.popCopy();
             }
+
+            // Clear the done set for other loops
+            loopDone->clear();
         }
 
         JS_ASSERT_IF(!mblock->numPredecessors(), live->empty());
-        liveIn[mblock->id()] = live;
     }
 
     return true;
