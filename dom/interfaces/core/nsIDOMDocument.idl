@@ -62,7 +62,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(d53c3d3d-2413-4abc-b54e-11c5c8380776)]
+[scriptable, uuid(10034b87-384e-4e19-902c-c4edafb899be)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -315,6 +315,12 @@ interface nsIDOMDocument : nsIDOMNode
    * @see <https://developer.mozilla.org/en/DOM/document.contentType>
    */
   readonly attribute DOMString      contentType;
+
+  /**
+   * True if this document is synthetic : stand alone image, video, audio file,
+   * etc.
+   */
+  readonly attribute boolean        mozSyntheticDocument;
 
   /**
    * Returns the script element whose script is currently being processed.
