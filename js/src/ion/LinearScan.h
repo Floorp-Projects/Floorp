@@ -46,7 +46,7 @@
 #include "MIRGraph.h"
 #include "InlineList.h"
 #include "IonLIR.h"
-#include "IonLowering.h"
+#include "Lowering.h"
 #include "BitSet.h"
 
 #include "jsvector.h"

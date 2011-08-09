@@ -40,8 +40,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ion/MIR.h"
-#include "ion/IonLowering.h"
-#include "ion/IonLowering-inl.h"
+#include "ion/Lowering.h"
+#include "ion/Lowering-inl.h"
 #include "Lowering-x86.h"
 #include "Lowering-x86-inl.h"
 #include "Assembler-x86.h"

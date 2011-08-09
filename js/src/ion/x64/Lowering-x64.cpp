@@ -41,7 +41,7 @@
 
 #include "ion/MIR.h"
 #include "Lowering-x64.h"
-#include "ion/IonLowering-inl.h"
+#include "ion/Lowering-inl.h"
 #include "Assembler-x64.h"
 
 using namespace js;
