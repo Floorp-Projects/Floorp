@@ -141,8 +141,8 @@ class LIRGeneratorShared : public MInstructionVisitor
     bool visitConstant(MConstant *ins);
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_lowering_shared_h__
 
