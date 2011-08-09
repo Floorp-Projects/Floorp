@@ -5,10 +5,6 @@
 <!ENTITY feedback.feedback.good         "Good">
 <!ENTITY feedback.feedback.bad          "Bad">
 
-<!ENTITY feedback.information.title     "More Information">
-<!ENTITY feedback.about.title           "About this Beta">
-<!ENTITY feedback.about.button          "Go to Page">
-
 <!ENTITY feedback.tools.title           "Tools">
 <!ENTITY feedback.allowTelemetry.title  "Send performance data">
 <!ENTITY feedback.forceCompat.title     "Force add-ons compatibility">

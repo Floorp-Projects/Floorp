@@ -162,7 +162,7 @@ JSValToDashArray(JSContext* cx, const jsval& patternArray,
         }
 
         bool haveNonzeroElement = false;
-        for (jsint i = 0; i < jsint(length); ++i) {
+        for (uint32 i = 0; i < length; ++i) {
             jsval elt;
             double d;
             if (!JS_GetElement(cx, obj, i, &elt)) {

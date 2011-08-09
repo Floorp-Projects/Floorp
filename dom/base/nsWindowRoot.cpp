@@ -149,24 +149,6 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
   return elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
 }
 
-nsresult
-nsWindowRoot::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
-{
-  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-  
-nsresult
-nsWindowRoot::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
-{
-  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  if (manager) {
-    manager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
-}
-
 nsEventListenerManager*
 nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound)
 {
