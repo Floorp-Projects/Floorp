@@ -751,10 +751,6 @@ colorpicker[type="button"] { /* Fixes some styling inconsistencies */
   margin: 1px 5px 2px 5px;
 }
 
-setting[type="radio"] > radiogroup {
-  -moz-box-orient: horizontal;
-}
-
 /*** creator ***/
 
 .creator > label {
