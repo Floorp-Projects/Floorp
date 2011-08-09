@@ -168,6 +168,14 @@ BitSet::complement()
         bits_[i] = ~bits_[i];
 }
 
+void
+BitSet::clear()
+{
+    JS_ASSERT(bits_);
+    for (unsigned int i = 0; i < numWords(); i++)
+        bits_[i] = 0;
+}
+
 BitSet::Iterator
 BitSet::begin()
 {

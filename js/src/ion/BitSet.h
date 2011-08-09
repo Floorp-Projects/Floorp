@@ -112,6 +112,9 @@ class BitSet : private TempObject
     // O(max): Does inplace complement of the set.
     void complement();
 
+    // O(max): Clear this set.
+    void clear();
+
     // Iterator to the beginning of this set.
     Iterator begin();
 
