@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -51,6 +51,7 @@
 #include "CanvasLayerD3D10.h"
 #include "ReadbackLayerD3D10.h"
 #include "ImageLayerD3D10.h"
+#include "mozilla/layers/PLayerChild.h"
 
 #include "../d3d9/Nv3DVUtils.h"
 
@@ -770,6 +771,43 @@ LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)
   : mD3DManager(aManager)
 {
 }
+
+WindowLayer::WindowLayer(LayerManagerD3D10* aManager)
+  : ThebesLayer(aManager, nsnull)
+{
+ }
+
+WindowLayer::~WindowLayer()
+{
+  PLayerChild::Send__delete__(GetShadow());
+}
+
+DummyRoot::DummyRoot(LayerManagerD3D10* aManager)
+  : ContainerLayer(aManager, nsnull)
+{
+}
+
+DummyRoot::~DummyRoot()
+{
+  RemoveChild(nsnull);
+  PLayerChild::Send__delete__(GetShadow());
+}
+
+void
+DummyRoot::InsertAfter(Layer* aLayer, Layer* aNull)
+{
+  NS_ABORT_IF_FALSE(!mFirstChild && !aNull,
+                    "Expect to append one child, once");
+  mFirstChild = nsRefPtr<Layer>(aLayer).forget().get();
+}
+
+void
+DummyRoot::RemoveChild(Layer* aNull)
+{
+  NS_ABORT_IF_FALSE(!aNull, "Unused argument should be null");
+  NS_IF_RELEASE(mFirstChild);
+}
+
 
 }
 }
