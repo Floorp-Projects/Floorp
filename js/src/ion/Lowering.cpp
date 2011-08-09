@@ -205,7 +205,10 @@ LIRGenerator::visitAdd(MAdd *ins)
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
-        return lowerForALU(new LAddI, ins, lhs, rhs);
+        LAddI *lir = new LAddI;
+        if (!assignSnapshot(lir))
+            return false;
+        return lowerForALU(lir, ins, lhs, rhs);
     }
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
