@@ -477,7 +477,7 @@ MBitAnd::foldsTo(bool useValueNumbers)
         return rhs; // x & 0 => 0
 
     if (EqualValues(useValueNumbers, lhs, rhs))
-        return lhs;
+        return lhs; // x & x => x
     return this;
 }
 
@@ -541,7 +541,7 @@ MBitXor::foldsTo(bool useValueNumbers)
         return lhs; // x ^ 0 => x
 
     if (EqualValues(useValueNumbers, lhs, rhs))
-        return MConstant::New(Int32Value(0)); // x ^ x => x
+        return MConstant::New(Int32Value(0)); // x ^ x => 0
 
     return this;
 }
