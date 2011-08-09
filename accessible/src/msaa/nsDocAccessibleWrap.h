@@ -97,7 +97,7 @@ public:
 
 protected:
   // nsDocAccessible
-  virtual void NotifyOfInitialUpdate();
+  virtual void DoInitialUpdate();
 
 protected:
   void* mHWND;

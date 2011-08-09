@@ -80,10 +80,10 @@
 
   <popupset id="mainPopupSet">
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
-    <menupopup id="contentAreaContextMenu"
+    <menupopup id="contentAreaContextMenu" pagemenu="start"
                onpopupshowing="if (event.target != this)
                                  return true;
-                               gContextMenu = new nsContextMenu(this, getPanelBrowser());
+                               gContextMenu = new nsContextMenu(this, getPanelBrowser(), event.shiftKey);
                                if (gContextMenu.shouldDisplay)
                                  document.popupNode = this.triggerNode;
                                return gContextMenu.shouldDisplay;"

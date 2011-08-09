@@ -252,6 +252,9 @@ XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func)
         libHandle = dlopen(xpcomFile, RTLD_GLOBAL | RTLD_LAZY);
         if (libHandle) {
             AppendDependentLib(libHandle);
+        } else {
+            fprintf(stderr, "XPCOMGlueLoad error for file %s:\n%s\n", xpcomFile,
+                    dlerror());
         }
     }
 

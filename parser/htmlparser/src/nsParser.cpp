@@ -1357,6 +1357,7 @@ DetermineParseMode(const nsString& aBuffer, nsDTDMode& aParseMode,
              aMimeType.EqualsLiteral(TEXT_CSS) ||
              aMimeType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
              aMimeType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
+             aMimeType.EqualsLiteral(APPLICATION_JSON) ||
              aMimeType.EqualsLiteral(TEXT_ECMASCRIPT) ||
              aMimeType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
              aMimeType.EqualsLiteral(TEXT_JAVASCRIPT)) {

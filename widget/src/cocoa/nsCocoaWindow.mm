@@ -642,7 +642,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           parentIsSheet) {
         piParentWidget->GetSheetWindowParent(&topNonSheetWindow);
         [NSApp endSheet:nativeParentWindow];
-        [nativeParentWindow setAcceptsMouseMovedEvents:NO];
       }
 
       nsCocoaWindow* sheetShown = nsnull;
@@ -657,7 +656,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           // Only set contextInfo if our parent isn't a sheet.
           NSWindow* contextInfo = parentIsSheet ? nil : mSheetWindowParent;
           [TopLevelWindowData deactivateInWindow:mSheetWindowParent];
-          [mWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:mWindow
              modalForWindow:mSheetWindowParent
               modalDelegate:mDelegate
@@ -684,7 +682,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       NSInteger windowNumber = [mWindow windowNumber];
       [mWindow _setWindowNumber:-1];
       [mWindow _setWindowNumber:windowNumber];
-      [mWindow setAcceptsMouseMovedEvents:YES];
       // For reasons that aren't yet clear, calls to [NSWindow orderFront:] or
       // [NSWindow makeKeyAndOrderFront:] can sometimes trigger "Error (1000)
       // creating CGSWindow", which in turn triggers an internal inconsistency
@@ -716,7 +713,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
                             ordered:NSWindowAbove];
     }
     else {
-      [mWindow setAcceptsMouseMovedEvents:YES];
       NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
       [mWindow makeKeyAndOrderFront:nil];
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
@@ -743,8 +739,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         // hide the sheet
         [NSApp endSheet:mWindow];
         
-        [mWindow setAcceptsMouseMovedEvents:NO];
-
         [TopLevelWindowData deactivateInWindow:mWindow];
 
         nsCocoaWindow* siblingSheetToShow = nsnull;
@@ -774,7 +768,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           // If there are no sibling sheets, but the parent is a sheet, restore
           // it.  It wasn't sent any deactivate events when it was hidden, so
           // don't call through Show, just let the OS put it back up.
-          [nativeParentWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:nativeParentWindow
              modalForWindow:sheetParent
               modalDelegate:[nativeParentWindow delegate]
@@ -787,7 +780,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
           [sheetParent makeKeyAndOrderFront:nil];
           NS_OBJC_END_TRY_LOGONLY_BLOCK;
-          [sheetParent setAcceptsMouseMovedEvents:YES];
         }
         SendSetZLevelEvent();
       }
@@ -812,10 +804,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // uses it for a different purpose).
       if (mWindowType == eWindowType_popup)
         [NSApp _removeWindowFromCache:mWindow];
-
-      // it's very important to turn off mouse moved events when hiding a window, otherwise
-      // the windows' tracking rects will interfere with each other. (bug 356528)
-      [mWindow setAcceptsMouseMovedEvents:NO];
 
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has closed.
@@ -1417,7 +1405,6 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
     mPopupContentView->SetFocus(aState);
   }
   else if (aState && ([mWindow isVisible] || [mWindow isMiniaturized])) {
-    [mWindow setAcceptsMouseMovedEvents:YES];
     [mWindow makeKeyAndOrderFront:nil];
     SendSetZLevelEvent();
   }
@@ -1649,26 +1636,6 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-// Callback used by the default titlebar and toolbar shading.
-// *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
-/* static */ void
-nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
-{
-  UnifiedGradientInfo* info = (UnifiedGradientInfo*)aInfo;
-  // The gradient percentage at the bottom of the titlebar / top of the toolbar
-  float start = info->titlebarHeight / (info->titlebarHeight + info->toolbarHeight - 1);
-  const float startGrey = NativeGreyColorAsFloat(headerStartGrey, info->windowIsMain);
-  const float endGrey = NativeGreyColorAsFloat(headerEndGrey, info->windowIsMain);
-  // *aIn is the gradient percentage of the titlebar or toolbar gradient,
-  // a is the gradient percentage of the whole unified gradient.
-  float a = info->drawTitlebar ? *aIn * start : start + *aIn * (1 - start);
-  float result = (1.0f - a) * startGrey + a * endGrey;
-  aOut[0] = result;
-  aOut[1] = result;
-  aOut[2] = result;
-  aOut[3] = 1.0f;
-}
-
 void nsCocoaWindow::SetPopupWindowLevel()
 {
   // Floating popups are at the floating level and hide when the window is
@@ -1786,6 +1753,9 @@ PRBool nsCocoaWindow::ShouldFocusPlugin()
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
+  BaseWindow* window = [aNotification object];
+  [window updateTrackingArea];
+
   if (!mGeckoWindow)
     return;
 
@@ -1993,6 +1963,11 @@ GetDPI(NSWindow* aWindow)
   return (heightPx / scaleFactor) / (heightMM / MM_PER_INCH_FLOAT);
 }
 
+@interface BaseWindow(Private)
+- (void)removeTrackingArea;
+- (void)cursorUpdated:(NSEvent*)aEvent;
+@end
+
 @implementation BaseWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
@@ -2004,6 +1979,8 @@ GetDPI(NSWindow* aWindow)
   mInactiveTitlebarColor = nil;
   mScheduledShadowInvalidation = NO;
   mDPI = GetDPI(self);
+  mTrackingArea = nil;
+  [self updateTrackingArea];
 
   return self;
 }
@@ -2012,6 +1989,8 @@ GetDPI(NSWindow* aWindow)
 {
   [mActiveTitlebarColor release];
   [mInactiveTitlebarColor release];
+  [self removeTrackingArea];
+  ChildViewMouseTracker::OnDestroyWindow(self);
   [super dealloc];
 }
 
@@ -2095,6 +2074,55 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (float)getDPI
 {
   return mDPI;
+}
+
+- (NSView*)trackingAreaView
+{
+  NSView* contentView = [self contentView];
+  return [contentView superview] ? [contentView superview] : contentView;
+}
+
+- (void)removeTrackingArea
+{
+  if (mTrackingArea) {
+    [[self trackingAreaView] removeTrackingArea:mTrackingArea];
+    [mTrackingArea release];
+    mTrackingArea = nil;
+  }
+}
+
+- (void)updateTrackingArea
+{
+  [self removeTrackingArea];
+
+  NSView* view = [self trackingAreaView];
+  const NSTrackingAreaOptions options =
+    NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveAlways;
+  mTrackingArea = [[NSTrackingArea alloc] initWithRect:[view bounds]
+                                               options:options
+                                                 owner:self
+                                              userInfo:nil];
+  [view addTrackingArea:mTrackingArea];
+}
+
+- (void)mouseEntered:(NSEvent*)aEvent
+{
+  ChildViewMouseTracker::MouseEnteredWindow(aEvent);
+}
+
+- (void)mouseExited:(NSEvent*)aEvent
+{
+  ChildViewMouseTracker::MouseExitedWindow(aEvent);
+}
+
+- (void)mouseMoved:(NSEvent*)aEvent
+{
+  ChildViewMouseTracker::MouseMoved(aEvent);
+}
+
+- (void)cursorUpdated:(NSEvent*)aEvent
+{
+  // Nothing to do here, but NSTrackingArea wants us to implement this method.
 }
 
 - (BOOL)respondsToSelector:(SEL)aSelector
@@ -2377,93 +2405,79 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return self;
 }
 
-// Our pattern width is 1 pixel. CoreGraphics can cache and tile for us.
-static const float sPatternWidth = 1.0f;
-
 static void
-DrawTitlebarGradient(CGContextRef aContext, float aTitlebarHeight,
-                     float aTitlebarOrigin, float aToolbarHeight, BOOL aIsMain)
+DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
+                   float aToolbarHeight, BOOL aIsMain)
 {
-  // Create and draw a CGShading that uses nsCocoaWindow::UnifiedShading() as its callback.
-  CGFunctionCallbacks callbacks = {0, nsCocoaWindow::UnifiedShading, NULL};
-  UnifiedGradientInfo info = { aTitlebarHeight, aToolbarHeight, aIsMain, YES };
-  CGFunctionRef function = CGFunctionCreate(&info, 1, NULL, 4, NULL, &callbacks);
-  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-  CGShadingRef shading = CGShadingCreateAxial(colorSpace,
-                                              CGPointMake(0.0f, aTitlebarOrigin + aTitlebarHeight),
-                                              CGPointMake(0.0f, aTitlebarOrigin),
-                                              function, NO, NO);
-  CGColorSpaceRelease(colorSpace);
-  CGFunctionRelease(function);
-  CGContextDrawShading(aContext, shading);
-  CGShadingRelease(shading);
-  // Draw the one pixel border at the bottom of the titlebar.
-  if (aToolbarHeight == 0) {
-    CGRect borderRect = CGRectMake(0.0f, aTitlebarOrigin, sPatternWidth, 1.0f);
-    DrawNativeGreyColorInRect(aContext, headerBorderGrey, borderRect, aIsMain);
-  }
+  int unifiedHeight = aTitlebarRect.size.height + aToolbarHeight;
+  CUIDraw([NSWindow coreUIRenderer], aTitlebarRect, aContext,
+          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+            @"kCUIWidgetWindowFrame", @"widget",
+            @"regularwin", @"windowtype",
+            (aIsMain ? @"normal" : @"inactive"), @"state",
+            [NSNumber numberWithInt:unifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+            [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
+            nil],
+          nil);
+
+  // At some window widths the call to CUIDraw doesn't draw the top pixel strip.
+  // We don't want to have a flickering transparent line, so we overdraw it.
+  CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
+  CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
+                                         aTitlebarRect.size.width, 1));
 }
 
 // Pattern draw callback for standard titlebar gradients and solid titlebar colors
 static void
-RepeatedPatternDrawCallback(void* aInfo, CGContextRef aContext)
+TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 {
   ToolbarWindow *window = (ToolbarWindow*)aInfo;
 
   // Remember: this context is NOT flipped, so the origin is in the bottom left.
+  float titlebarWidth = [window frame].size.width;
   float titlebarHeight = [window titlebarHeight];
   float titlebarOrigin = [window frame].size.height - titlebarHeight;
+  NSRect titlebarRect = NSMakeRect(0, titlebarOrigin, titlebarWidth, titlebarHeight);
 
   [NSGraphicsContext saveGraphicsState];
   [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
 
-  BOOL isMain = [window isMainWindow];
-  NSColor *titlebarColor = [window titlebarColorForActiveWindow:isMain];
-  if (!titlebarColor) {
-    // If the titlebar color is nil, draw the default titlebar shading.
-    DrawTitlebarGradient(aContext, titlebarHeight, titlebarOrigin,
-                         [window unifiedToolbarHeight], isMain);
-  } else {
-    // If the titlebar color is not nil, just set and draw it normally.
-    [titlebarColor set];
-    NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, titlebarHeight));
-  }
+  if ([window drawsContentsIntoWindowFrame]) {
+    NSView* view = [[[window contentView] subviews] lastObject];
+    if (!view || ![view isKindOfClass:[ChildView class]])
+      return;
 
-  // Draw the background color of the window everywhere but where the titlebar is.
-  [[window windowBackgroundColor] set];
-  NSRectFill(NSMakeRect(0.0f, 0.0f, 1.0f, titlebarOrigin));
+    // Gecko drawing assumes flippedness, but the current context isn't flipped
+    // (because we're painting into the window's border view, which is not a
+    // ChildView, so it isn't flpped).
+    // So we need to set a flip transform.
+    CGContextScaleCTM(aContext, 1.0f, -1.0f);
+    CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
+
+    NSRect flippedTitlebarRect = NSMakeRect(0, 0, titlebarWidth, titlebarHeight);
+    [(ChildView*)view drawRect:flippedTitlebarRect inTitlebarContext:aContext];
+  } else {
+    BOOL isMain = [window isMainWindow];
+    NSColor *titlebarColor = [window titlebarColorForActiveWindow:isMain];
+    if (!titlebarColor) {
+      // If the titlebar color is nil, draw the default titlebar shading.
+      DrawNativeTitlebar(aContext, NSRectToCGRect(titlebarRect),
+                         [window unifiedToolbarHeight], isMain);
+    } else {
+      // If the titlebar color is not nil, just set and draw it normally.
+      [titlebarColor set];
+      NSRectFill(titlebarRect);
+    }
+  }
 
   [NSGraphicsContext restoreGraphicsState];
 }
 
-// Pattern draw callback for "drawsContentsIntoWindowFrame" windows
-static void
-ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
-{
-  ToolbarWindow *window = (ToolbarWindow*)aInfo;
-
-  NSView* view = [[[window contentView] subviews] lastObject];
-  if (!view || ![view isKindOfClass:[ChildView class]])
-    return;
-
-  // Gecko drawing assumes flippedness, but the current context isn't flipped
-  // (because we're painting into the window's border view, which is not a
-  // ChildView, so it isn't flpped).
-  // So we need to set a flip transform.
-  CGContextScaleCTM(aContext, 1.0f, -1.0f);
-  CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
-
-  NSRect titlebarRect = NSMakeRect(0, 0, [window frame].size.width, [window titlebarHeight]);
-  [(ChildView*)view drawRect:titlebarRect inTitlebarContext:aContext];
-}
-
 - (void)setFill
 {
-  CGPatternDrawPatternCallback cb = [mWindow drawsContentsIntoWindowFrame] ?
-                                      &ContentPatternDrawCallback : &RepeatedPatternDrawCallback;
-  float patternWidth = [mWindow drawsContentsIntoWindowFrame] ? [mWindow frame].size.width : sPatternWidth;
+  float patternWidth = [mWindow frame].size.width;
 
-  CGPatternCallbacks callbacks = {0, cb, NULL};
+  CGPatternCallbacks callbacks = {0, &TitlebarDrawCallback, NULL};
   CGPatternRef pattern = CGPatternCreate(mWindow, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height), 
                                          CGAffineTransformIdentity, patternWidth, [mWindow frame].size.height,
                                          kCGPatternTilingConstantSpacing, true, &callbacks);
@@ -2492,87 +2506,6 @@ ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
 @end
 
 @implementation PopupWindow
-
-// The OS treats our custom popup windows very strangely -- many mouse events
-// sent to them never reach their target NSView objects.  (That these windows
-// are borderless and of level NSPopUpMenuWindowLevel may have something to do
-// with it.)  The best solution is to pre-empt the OS, as follows.  (All
-// events for a given NSWindow object go through its sendEvent: method.)
-- (void)sendEvent:(NSEvent *)anEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NSView *target = nil;
-  NSView *contentView = nil;
-  NSEventType type = [anEvent type];
-  NSPoint windowLocation = NSZeroPoint;
-  switch (type) {
-    case NSScrollWheel:
-    case NSLeftMouseDown:
-    case NSLeftMouseUp:
-    case NSRightMouseDown:
-    case NSRightMouseUp:
-    case NSOtherMouseDown:
-    case NSOtherMouseUp:
-    case NSMouseMoved:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged:
-      if ((contentView = [self contentView])) {
-        // Since [anEvent window] might not be us, we can't use [anEvent locationInWindow].
-        windowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, self);
-        target = [contentView hitTest:[contentView convertPoint:windowLocation fromView:nil]];
-        // If the hit test failed, the event is targeted here but is not over the window.
-        // Send it to our content view.
-        if (!target)
-          target = contentView;
-      }
-      break;
-    default:
-      break;
-  }
-  if (target) {
-    switch (type) {
-      case NSScrollWheel:
-        [target scrollWheel:anEvent];
-        break;
-      case NSLeftMouseUp:
-        [target mouseUp:anEvent];
-        break;
-      case NSRightMouseDown:
-        [target rightMouseDown:anEvent];
-        break;
-      case NSRightMouseUp:
-        [target rightMouseUp:anEvent];
-        break;
-      case NSOtherMouseDown:
-        [target otherMouseDown:anEvent];
-        break;
-      case NSOtherMouseUp:
-        [target otherMouseUp:anEvent];
-        break;
-      case NSMouseMoved:
-        [target mouseMoved:anEvent];
-        break;
-      case NSLeftMouseDragged:
-        [target mouseDragged:anEvent];
-        break;
-      case NSRightMouseDragged:
-        [target rightMouseDragged:anEvent];
-        break;
-      case NSOtherMouseDragged:
-        [target otherMouseDragged:anEvent];
-        break;
-      default:
-        [super sendEvent:anEvent];
-        break;
-    }
-  } else {
-    [super sendEvent:anEvent];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation

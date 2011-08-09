@@ -1869,6 +1869,36 @@ Loader::LoadStyleLink(nsIContent* aElement,
   return rv;
 }
 
+static PRBool
+HaveAncestorDataWithURI(SheetLoadData *aData, nsIURI *aURI)
+{
+  if (!aData->mURI) {
+    // Inline style; this won't have any ancestors
+    NS_ABORT_IF_FALSE(!aData->mParentData,
+                      "How does inline style have a parent?");
+    return PR_FALSE;
+  }
+
+  PRBool equal;
+  if (NS_FAILED(aData->mURI->Equals(aURI, &equal)) || equal) {
+    return PR_TRUE;
+  }
+
+  // Datas down the mNext chain have the same URI as aData, so we
+  // don't have to compare to them.  But they might have different
+  // parents, and we have to check all of those.
+  while (aData) {
+    if (aData->mParentData &&
+        HaveAncestorDataWithURI(aData->mParentData, aURI)) {
+      return PR_TRUE;
+    }
+
+    aData = aData->mNext;
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
                        nsIURI* aURL,
@@ -1923,16 +1953,11 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
     LOG(("  Have a parent load"));
     parentData = mParsingDatas.ElementAt(count - 1);
     // Check for cycles
-    SheetLoadData* data = parentData;
-    while (data && data->mURI) {
-      PRBool equal;
-      if (NS_SUCCEEDED(data->mURI->Equals(aURL, &equal)) && equal) {
-        // Houston, we have a loop, blow off this child and pretend this never
-        // happened
-        LOG_ERROR(("  @import cycle detected, dropping load"));
-        return NS_OK;
-      }
-      data = data->mParentData;
+    if (HaveAncestorDataWithURI(parentData, aURL)) {
+      // Houston, we have a loop, blow off this child and pretend this never
+      // happened
+      LOG_ERROR(("  @import cycle detected, dropping load"));
+      return NS_OK;
     }
 
     NS_ASSERTION(parentData->mSheet == aParentSheet,

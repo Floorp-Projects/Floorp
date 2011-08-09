@@ -857,6 +857,15 @@ const nsHTMLElement gHTMLElements[] = {
     /*special parents,kids*/            0,&gULKids,
   },
   {
+    /*tag*/                             eHTMLTag_menuitem,
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
+    /*autoclose starttags and endtags*/ 0,0,0,0,
+    /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,
+    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*special parents,kids*/            0,0,
+  },
+  {
     /*tag*/                             eHTMLTag_meta,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gInHead,&gInHead,

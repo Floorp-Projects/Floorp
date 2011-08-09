@@ -75,6 +75,8 @@
 #include "jsxml.h"
 #endif
 
+#include "vm/GlobalObject.h"
+
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
@@ -1406,32 +1408,81 @@ static JSFunctionSpec generator_methods[] = {
 
 #endif /* JS_HAS_GENERATORS */
 
+static bool
+InitIteratorClass(JSContext *cx, GlobalObject *global)
+{
+    JSObject *iteratorProto = global->createBlankPrototype(cx, &js_IteratorClass);
+    if (!iteratorProto)
+        return false;
+
+    JSFunction *ctor = global->createConstructor(cx, Iterator, &js_IteratorClass,
+                                                 CLASS_ATOM(cx, Iterator), 2);
+    if (!ctor)
+        return false;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
+        return false;
+
+    if (!DefinePropertiesAndBrand(cx, iteratorProto, NULL, iterator_methods))
+        return false;
+
+    return DefineConstructorAndPrototype(cx, global, JSProto_Iterator, ctor, iteratorProto);
+}
+
+static bool
+InitGeneratorClass(JSContext *cx, GlobalObject *global)
+{
+#if JS_HAS_GENERATORS
+    JSObject *proto = global->createBlankPrototype(cx, &js_GeneratorClass);
+    if (!proto)
+        return false;
+
+    if (!DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
+        return false;
+
+    /* This should use a non-JSProtoKey'd slot, but this is easier for now. */
+    return DefineConstructorAndPrototype(cx, global, JSProto_Generator, proto, proto);
+#else
+    return true;
+#endif
+}
+
+static JSObject *
+InitStopIterationClass(JSContext *cx, GlobalObject *global)
+{
+    JSObject *proto = global->createBlankPrototype(cx, &js_StopIterationClass);
+    if (!proto || !proto->freeze(cx))
+        return NULL;
+
+    /* This should use a non-JSProtoKey'd slot, but this is easier for now. */
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_StopIteration, proto, proto))
+        return NULL;
+
+    MarkStandardClassInitializedNoProto(global, &js_StopIterationClass);
+
+    return proto;
+}
+
 JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto, *stop;
+    JS_ASSERT(obj->isNative());
 
-    /* Idempotency required: we initialize several things, possibly lazily. */
-    if (!js_GetClassObject(cx, obj, JSProto_StopIteration, &stop))
+    GlobalObject *global = obj->asGlobal();
+
+    /*
+     * Bail if Iterator has already been initialized.  We test for Iterator
+     * rather than for StopIteration because if js_InitIteratorClasses recurs,
+     * as happens when the StopIteration object is frozen, initializing the
+     * Iterator class a second time will assert.
+     */
+    JSObject *iter;
+    if (!js_GetClassObject(cx, global, JSProto_Iterator, &iter))
         return NULL;
-    if (stop)
-        return stop;
+    if (iter)
+        return iter;
 
-    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2,
-                         NULL, iterator_methods, NULL, NULL);
-    if (!proto)
+    if (!InitIteratorClass(cx, global) || !InitGeneratorClass(cx, global))
         return NULL;
-
-#if JS_HAS_GENERATORS
-    /* Initialize the generator internals if configured. */
-    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
-                      NULL, generator_methods, NULL, NULL)) {
-        return NULL;
-    }
-#endif
-
-    MarkStandardClassInitializedNoProto(obj, &js_StopIterationClass);
-
-    return js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
-                        NULL, NULL, NULL, NULL);
+    return InitStopIterationClass(cx, global);
 }

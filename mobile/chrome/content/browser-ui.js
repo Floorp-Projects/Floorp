@@ -874,8 +874,8 @@ var BrowserUI = {
 
   switchTask: function switchTask() {
     try {
-      let phone = Cc["@mozilla.org/phone/support;1"].createInstance(Ci.nsIPhoneSupport);
-      phone.switchTask();
+      let shell = Cc["@mozilla.org/browser/shell-service;1"].createInstance(Ci.nsIShellService);
+      shell.switchTask();
     } catch(e) { }
   },
 

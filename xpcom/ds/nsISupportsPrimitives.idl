@@ -115,7 +115,7 @@ interface nsISupportsString : nsISupportsPrimitive
 [scriptable, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRBool : nsISupportsPrimitive
 {
-    attribute PRBool data;
+    attribute boolean data;
     string toString();
 };
 
