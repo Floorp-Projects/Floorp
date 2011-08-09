@@ -213,6 +213,7 @@ members = [
     # but it is also present in other objects where it isn't shadowed.
     # Quick stubs handle the shadowing the same as XPConnect.
     'nsIDOMHTMLCollection.length',
+    'nsIDOMHTMLCommandElement.*',
     'nsIDOMHTMLDocument.body',
     'nsIDOMHTMLDocument.getElementsByName',
     'nsIDOMHTMLDocument.anchors',
@@ -261,6 +262,8 @@ members = [
     'nsIDOMHTMLInputElement.selectionDirection',
     'nsIDOMHTMLInputElement.setSelectionRange',
     'nsIDOMHTMLLinkElement.disabled',
+    'nsIDOMHTMLMenuElement.*',
+    'nsIDOMHTMLMenuItemElement.*',
     'nsIDOMHTMLOptionElement.index',
     'nsIDOMHTMLOptionElement.selected',
     'nsIDOMHTMLOptionElement.form',

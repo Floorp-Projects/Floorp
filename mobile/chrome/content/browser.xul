@@ -480,7 +480,7 @@
                     <setting pref="browser.ui.zoom.reflow" title="&reflowZoom.title;" type="bool"/>
                     <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
                     <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
-                    <setting pref="browser.menu.showCharacterEncoding" type="bool" localized="true" title="&showCharset.title;"/>
+                    <setting pref="browser.menu.showCharacterEncoding" type="bool" localized="true" title="&showCharsetEncoding.title;"/>
                   </settings>
                 </richlistbox>
               </notificationbox>
@@ -663,6 +663,9 @@
             <label value="&contextRemoveBookmark.label;"/>
           </richlistitem>
 #ifdef ANDROID
+          <richlistitem class="context-command" id="context-shortcutbookmark" type="edit-bookmark" onclick="ContextCommands.shortcutBookmark();">
+            <label value="&contextShortcutBookmark.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-select-input" type="input-text" onclick="ContextCommands.selectInput();">
             <label value="&inputMethod.label;"/>
           </richlistitem>

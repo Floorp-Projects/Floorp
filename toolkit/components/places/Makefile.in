@@ -97,12 +97,6 @@ CPPSRCS = \
   VisitInfo.cpp \
   $(NULL)
 
-ifdef MOZ_MORKREADER
-CPPSRCS += nsMorkHistoryImporter.cpp
-else
-CPPSRCS += nsNoMorkStubImporter.cpp
-endif
-
 LOCAL_INCLUDES += -I$(srcdir)/../build
 
 # This is the default value.  Must be in sync with the one defined in SQLite.

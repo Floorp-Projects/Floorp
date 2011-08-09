@@ -7677,13 +7677,15 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
     NS_ASSERTION(destWindow, "destWindow must not be NULL");
     // If the found window is our plugin window, it means that the message
     // has been handled by the plugin but not consumed.  We should handle the
-    // message on its parent window.
+    // message on its parent window.  However, note that the DOM event may
+    // cause accessing the plugin.  Therefore, we should unlock the plugin
+    // process by using PostMessage().
     if (destWindow->mWindowType == eWindowType_plugin) {
       destWindow = destWindow->GetParentWindow(PR_FALSE);
       NS_ENSURE_TRUE(destWindow, );
     }
     UINT internalMessage = GetInternalMessage(aMsg);
-    destWindow->ProcessMessage(internalMessage, aWParam, aLParam, aRetValue);
+    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
     return;
   }
 
@@ -7700,12 +7702,14 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
 
   // If we're a plugin window (MozillaWindowClass) and cursor in this window,
   // the message shouldn't go to plugin's wndproc again.  So, we should handle
-  // it on parent window.
+  // it on parent window.  However, note that the DOM event may cause accessing
+  // the plugin.  Therefore, we should unlock the plugin process by using
+  // PostMessage().
   if (mWindowType == eWindowType_plugin && pluginWnd == mWnd) {
     nsWindow* destWindow = GetParentWindow(PR_FALSE);
     NS_ENSURE_TRUE(destWindow, );
     UINT internalMessage = GetInternalMessage(aMsg);
-    destWindow->ProcessMessage(internalMessage, aWParam, aLParam, aRetValue);
+    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
     return;
   }
 

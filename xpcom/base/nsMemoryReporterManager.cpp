@@ -308,16 +308,14 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
     KIND_OTHER,
     UNITS_BYTES,
     GetHeapCommitted,
-    "Memory mapped by the heap allocator that is committed, i.e. in physical "
-    "memory or paged to disk.  The allocator may map blocks of many pages and "
-    "then hand out only some of those pages in response to a call to malloc. "
-    "Only those pages which have been handed out to the application are counted "
-    "as committed -- the OS lazily assigns physical pages to mappings, so those "
-    "pages which the allocator has not handed out haven't been written to and "
-    "therefore don't have a corresponding physical page.  (Of course, the "
-    "application may malloc pages and free them without ever writing to the "
-    "pages and causing them to be committed.  But the allocator conservatively "
-    "assumes that the application writes to all pages it receives.)")
+    "This number reported only for completeness; it is not particularly "
+    "meaningful. On Windows, all mapped memory is committed (because jemalloc's "
+    "MALLOC_DECOMMIT flag is set). Thus heap-committed should equal "
+    "heap-allocated + heap-unallocated. Elsewhere, jemalloc uses "
+    "madvise(DONT_NEED) to instruct the OS to drop the physical memory backing "
+    "pages the allocator doesn't need.  In this case, jemalloc counts the memory "
+    "as 'committed', but it's not taking up any space in physical memory or in "
+    "the swap file.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
     "heap-dirty",

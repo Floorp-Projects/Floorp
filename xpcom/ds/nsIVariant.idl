@@ -104,7 +104,7 @@ interface nsIVariant : nsISupports
     [noscript] PRUint64     getAsUint64();
     [noscript] float        getAsFloat();
     [noscript] double       getAsDouble();
-    [noscript] PRBool       getAsBool();
+    [noscript] boolean      getAsBool();
     [noscript] char         getAsChar();
     [noscript] wchar        getAsWChar();
     [notxpcom] nsresult     getAsID(out nsID retval);
@@ -143,7 +143,7 @@ interface nsIVariant : nsISupports
 [scriptable, uuid(5586a590-8c82-11d5-90f3-0010a4e73d9a)]
 interface nsIWritableVariant : nsIVariant
 {
-    attribute PRBool writable;
+    attribute boolean writable;
 
     void setAsInt8(in PRUint8 aValue);
     void setAsInt16(in PRInt16 aValue);
@@ -155,7 +155,7 @@ interface nsIWritableVariant : nsIVariant
     void setAsUint64(in PRUint64 aValue);
     void setAsFloat(in float aValue);
     void setAsDouble(in double aValue);
-    void setAsBool(in PRBool aValue);
+    void setAsBool(in boolean aValue);
     void setAsChar(in char aValue);
     void setAsWChar(in wchar aValue);
     void setAsID(in nsIDRef aValue);

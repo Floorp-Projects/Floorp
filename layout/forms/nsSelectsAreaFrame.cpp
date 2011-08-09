@@ -59,32 +59,6 @@ NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRUint32 
 NS_IMPL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
 //---------------------------------------------------------
-PRBool 
-nsSelectsAreaFrame::IsOptionElement(nsIContent* aContent)
-{
-  PRBool result = PR_FALSE;
- 
-  nsCOMPtr<nsIDOMHTMLOptionElement> optElem;
-  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),(void**) getter_AddRefs(optElem)))) {      
-    if (optElem != nsnull) {
-      result = PR_TRUE;
-    }
-  }
- 
-  return result;
-}
-
-//---------------------------------------------------------
-PRBool 
-nsSelectsAreaFrame::IsOptionElementFrame(nsIFrame *aFrame)
-{
-  nsIContent *content = aFrame->GetContent();
-  if (content) {
-    return IsOptionElement(content);
-  }
-  return PR_FALSE;
-}
-
 /**
  * This wrapper class lets us redirect mouse hits from the child frame of
  * an option element to the element's own frame.
@@ -115,7 +89,8 @@ void nsDisplayOptionEventGrabber::HitTest(nsDisplayListBuilder* aBuilder,
   for (PRUint32 i = 0; i < outFrames.Length(); i++) {
     nsIFrame* selectedFrame = outFrames.ElementAt(i);
     while (selectedFrame &&
-           !nsSelectsAreaFrame::IsOptionElementFrame(selectedFrame)) {
+           !(selectedFrame->GetContent() &&
+             selectedFrame->GetContent()->IsHTML(nsGkAtoms::option))) {
       selectedFrame = selectedFrame->GetParent();
     }
     if (selectedFrame) {
