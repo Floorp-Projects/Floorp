@@ -3083,12 +3083,13 @@ static JSBool
 DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "defineProperty", dbg, obj);
+    REQUIRE_ARGC("Debugger.Object.defineProperty", 2);
 
     jsid id;
-    if (!ValueToId(cx, argc >= 1 ? vp[2] : UndefinedValue(), &id))
+    if (!ValueToId(cx, vp[2], &id))
         return JS_FALSE;
 
-    const Value &descval = argc >= 1 ? vp[3] : UndefinedValue();
+    const Value &descval = vp[3];
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
     if (!desc || !desc->initialize(cx, descval, false))
