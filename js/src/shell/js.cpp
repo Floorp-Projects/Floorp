@@ -2675,7 +2675,9 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv = JS_ARGV(cx, vp);
     {
         JSAutoEnterCompartment ac;
-        if (JSVAL_IS_OBJECT(argv[0]) && JSVAL_TO_OBJECT(argv[0])->isCrossCompartmentWrapper()) {
+        if (!JSVAL_IS_PRIMITIVE(argv[0]) &&
+            JSVAL_TO_OBJECT(argv[0])->isCrossCompartmentWrapper())
+        {
             JSObject *obj = JSVAL_TO_OBJECT(argv[0])->unwrap();
             if (!ac.enter(cx, obj))
                 return JS_FALSE;

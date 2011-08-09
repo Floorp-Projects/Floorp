@@ -52,3 +52,4 @@ script weakmap.js
 script regress-645160.js
 script regress-650753.js
 script regress-668438.js
+script regress-677589.js
