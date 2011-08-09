@@ -49,123 +49,48 @@
 #include "IonLIR.h"
 #include "MOpcodes.h"
 
+#if defined(JS_CPU_X86)
+# include "x86/Lowering-x86.h"
+#elif defined(JS_CPU_X64)
+# include "x64/Lowering-x64.h"
+#else
+# error "CPU!"
+#endif
+
 namespace js {
 namespace ion {
 
-class MBasicBlock;
-class MTableSwitch;
-class MIRGenerator;
-class MIRGraph;
-class MDefinition;
-class MInstruction;
-
-class LIRGenerator : public MInstructionVisitor
+class LIRGenerator : public LIRGeneratorSpecific
 {
-  protected:
-    MIRGenerator *gen;
-
-  private:
-    MIRGraph &graph;
-    LIRGraph &lirGraph_;
-    LBlock *current;
-    MSnapshot *last_snapshot_;
-
   public:
     LIRGenerator(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
-      : gen(gen),
-        graph(graph),
-        lirGraph_(lirGraph),
-        last_snapshot_(NULL)
+      : LIRGeneratorSpecific(gen, graph, lirGraph)
     { }
 
     bool generate();
-    MIRGenerator *mir() {
-        return gen;
-    }
 
-  protected:
-    // A backend can decide that an instruction should be emitted at its uses,
-    // rather than at its definition. To communicate this, set the
-    // instruction's virtual register set to 0. When using the instruction,
-    // its virtual register is temporarily reassigned. To know to clear it
-    // after constructing the use information, the worklist bit is temporarily
-    // unset.
-    //
-    // The backend can use the worklist bit to determine whether or not a
-    // definition should be created.
-    bool emitAtUses(MInstruction *mir);
-
-    // The lowest-level calls to use, those that do not wrap another call to
-    // use(), must prefix grabbing virtual register IDs by these calls.
-    inline bool ensureDefined(MDefinition *mir);
-
-    // These all create a use of a virtual register, with an optional
-    // allocation policy.
-    LUse use(MDefinition *mir, LUse policy);
-    inline LUse use(MDefinition *mir);
-    inline LUse useRegister(MDefinition *mir);
-    inline LUse useFixed(MDefinition *mir, Register reg);
-    inline LUse useFixed(MDefinition *mir, FloatRegister reg);
-    inline LAllocation useOrConstant(MDefinition *mir);
-    inline LAllocation useKeepaliveOrConstant(MDefinition *mir);
-    inline LAllocation useRegisterOrConstant(MDefinition *mir);
-
-    // Adds a box operand to an instruction, where |n| is the operand number to
-    // start from.
-    virtual bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir) = 0;
-
-    // These create temporary register requests.
-    inline LDefinition temp(LDefinition::Type type);
-
-    template <size_t Ops, size_t Temps>
-    inline bool define(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir,
-                        const LDefinition &def);
-
-    template <size_t Ops, size_t Temps>
-    inline bool define(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir,
-                       LDefinition::Policy policy = LDefinition::DEFAULT);
-
-    template <size_t Ops, size_t Temps>
-    inline bool defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir);
-
-    template <size_t Ops, size_t Temps>
-    inline bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
-                          LDefinition::Policy policy = LDefinition::DEFAULT);
-
-    typedef LInstructionHelper<1, 2, 0> LMathI;
-    virtual bool lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs) = 0;
-
-    virtual bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs) = 0;
-
-    uint32 getVirtualRegister() {
-        return lirGraph_.getVirtualRegister();
-    }
-
-    template <typename T> bool annotate(T *ins);
-    template <typename T> bool add(T *ins);
-
-    bool addPhi(LPhi *phi) {
-        return current->addPhi(phi) && annotate(phi);
-    }
-
-    // Assign a snapshot to an instruction that may need to deoptimize.
-    bool assignSnapshot(LInstruction *ins);
-    virtual void fillSnapshot(LSnapshot *snapshot) = 0;
-
-    // Prepares a phi's virtual register(s), not yet creating the instructions.
-    virtual bool preparePhi(MPhi *phi) = 0;
-
-  public:
-    virtual bool lowerPhi(MPhi *phi);
-    bool doBitOp(JSOp op, MInstruction *ins);
+  private:
+    bool lowerBitOp(JSOp op, MInstruction *ins);
 
   public:
     bool visitInstruction(MInstruction *ins);
     bool visitBlock(MBasicBlock *block);
 
-#define VISITMIR(op) bool visit##op(M##op *ins);
-    MIR_OPCODE_LIST(VISITMIR)
-#undef VISITMIR
+    // Visitor hooks are explicit, to give CPU-specific versions a chance to
+    // intercept without a bunch of explicit gunk in the .cpp.
+    bool visitParameter(MParameter *param);
+    bool visitTableSwitch(MTableSwitch *tableswitch);
+    bool visitGoto(MGoto *ins);
+    bool visitTest(MTest *test);
+    bool visitBitAnd(MBitAnd *ins);
+    bool visitBitOr(MBitOr *ins);
+    bool visitBitXor(MBitXor *ins);
+    bool visitAdd(MAdd *ins);
+    bool visitStart(MStart *start);
+    bool visitToDouble(MToDouble *convert);
+    bool visitToInt32(MToInt32 *convert);
+    bool visitTruncateToInt32(MTruncateToInt32 *truncate);
+    bool visitCopy(MCopy *ins);
 };
 
 } // namespace js

@@ -414,7 +414,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     }
 
     LIRGraph lir(graph);
-    LIRBuilder lirgen(&builder, graph, lir);
+    LIRGenerator lirgen(&builder, graph, lir);
     if (!lirgen.generate())
         return false;
     spew.spewPass("Generate LIR");

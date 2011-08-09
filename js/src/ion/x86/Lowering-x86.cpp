@@ -41,10 +41,9 @@
 
 #include "ion/MIR.h"
 #include "ion/Lowering.h"
-#include "ion/Lowering-inl.h"
-#include "Lowering-x86.h"
-#include "Lowering-x86-inl.h"
 #include "Assembler-x86.h"
+#include "ion/shared/Lowering-shared-inl.h"
+#include "Lowering-x86-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -52,11 +51,13 @@ using namespace js::ion;
 bool
 LIRGeneratorX86::visitConstant(MConstant *ins)
 {
-    // On x86, moving a double is non-trivial so only do it once.
-    if (!ins->isEmittedAtUses() && !ins->value().isDouble())
+    if (!ins->isEmittedAtUses() && ins->type() != MIRType_Double)
         return emitAtUses(ins);
 
-    return LIRGenerator::visitConstant(ins);
+    if (ins->type() == MIRType_Double)
+        return define(new LDouble(ins->value().toDouble()), ins);
+
+    return LIRGeneratorShared::visitConstant(ins);
 }
 
 bool
@@ -172,7 +173,7 @@ LIRGeneratorX86::lowerPhi(MPhi *ins)
 
     // Typed phis can be handled much simpler.
     if (ins->type() != MIRType_Value)
-        return LIRGenerator::lowerPhi(ins);
+        return LIRGeneratorShared::lowerPhi(ins);
 
     // Otherwise, we create two phis: one for the set of types and one for the
     // set of payloads. They form two separate instructions but their
@@ -198,9 +199,13 @@ LIRGeneratorX86::lowerPhi(MPhi *ins)
     return addPhi(type) && addPhi(payload);
 }
 
-void
-LIRGeneratorX86::fillSnapshot(LSnapshot *snapshot)
+bool
+LIRGeneratorX86::assignSnapshot(LInstruction *ins)
 {
+    LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
+    if (!snapshot)
+        return false;
+
     MSnapshot *mir = snapshot->mir();
     for (size_t i = 0; i < mir->numOperands(); i++) {
         MDefinition *ins = mir->getOperand(i);
@@ -223,10 +228,13 @@ LIRGeneratorX86::fillSnapshot(LSnapshot *snapshot)
             *payload = usePayload(ins, LUse::KEEPALIVE);
         }
     }
+
+    ins->assignSnapshot(snapshot);
+    return true;
 }
 
 bool
-LIRGeneratorX86::lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
+LIRGeneratorX86::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useOrConstant(rhs));
@@ -234,7 +242,7 @@ LIRGeneratorX86::lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MD
 }
 
 bool
-LIRGeneratorX86::lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
+LIRGeneratorX86::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, use(rhs));
