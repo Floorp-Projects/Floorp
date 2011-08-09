@@ -486,7 +486,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: getContentBounds
   // Returns a <Rect> for the groupItem's content area (which doesn't include the title, etc).
-  getContentBounds: function GroupItem_getContentBounds() {
+  //
+  // Parameters:
+  //   options - an object with additional parameters, see below
+  //
+  // Possible options:
+  //   forceStacked - true to force content bounds for stacked mode
+  getContentBounds: function GroupItem_getContentBounds(options) {
     var box = this.getBounds();
     var titleHeight = this.$titlebar.height();
     box.top += titleHeight;
@@ -502,10 +508,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       box.left += appTabTrayWidth;
     }
 
-    // Make the computed bounds' "padding" and new tab button margin actually be
+    // Make the computed bounds' "padding" and expand button margin actually be
     // themeable --OR-- compute this from actual bounds. Bug 586546
     box.inset(6, 6);
-    box.height -= 33; // For new tab button
+
+    // make some room for the expand button if we're stacked
+    let isStacked = (options && options.forceStacked) || this.isStacked();
+    if (isStacked)
+      box.height -= 33; // 33px room for the expand button
 
     return box;
   },
@@ -1355,10 +1365,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     }
     
     let shouldStack = this.shouldStack(childrenToArrange.length + (options.addTab ? 1 : 0));
-    let box = this.getContentBounds();
+    let shouldStackArrange = (shouldStack && !this.expanded);
+    let box = this.getContentBounds({forceStacked: shouldStackArrange});
     
     // if we should stack and we're not expanded
-    if (shouldStack && !this.expanded) {
+    if (shouldStackArrange) {
       this.showExpandControl();
       this._stackArrange(childrenToArrange, box, options);
       return false;
