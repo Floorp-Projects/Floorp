@@ -1,4 +1,3 @@
 // don't crash
-gczeal(2)
-evalcx('split')
-
+gczeal(2);
+evalcx('lazy');

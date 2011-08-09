@@ -64,9 +64,7 @@
 
 #define NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER "domstorage-flush-timer"
 
-#ifdef MOZ_STORAGE
 #include "nsDOMStorageDBWrapper.h"
-#endif
 
 #define IS_PERMISSION_ALLOWED(perm) \
       ((perm) != nsIPermissionManager::UNKNOWN_ACTION && \
@@ -311,9 +309,7 @@ public:
   virtual bool CacheStoragePermissions();
 
 private:
-#ifdef MOZ_STORAGE
   static nsDOMStorageDBWrapper* gStorageDB;
-#endif
   friend class nsDOMStorageManager;
   friend class nsDOMStoragePersistentDB;
   friend class StorageParent;

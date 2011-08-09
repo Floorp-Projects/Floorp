@@ -1127,26 +1127,6 @@ nsINode::DispatchDOMEvent(nsEvent* aEvent,
                                              aPresContext, aEventStatus);
 }
 
-nsresult
-nsINode::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                               const nsIID& aIID)
-{
-  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-nsresult
-nsINode::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                  const nsIID& aIID)
-{
-  nsEventListenerManager* elm = GetListenerManager(PR_FALSE);
-  if (elm) {
-    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
-}
-
 nsEventListenerManager*
 nsINode::GetListenerManager(PRBool aCreateIfNotFound)
 {

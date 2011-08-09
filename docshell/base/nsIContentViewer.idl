@@ -126,7 +126,7 @@ interface nsIContentViewer : nsISupports
    * Change the layout to view the document with page layout (like print preview), but
    * dynamic and editable (like Galley layout).
   */
-  void setPageMode(in PRBool aPageMode, in nsIPrintSettings aPrintSettings);
+  void setPageMode(in boolean aPageMode, in nsIPrintSettings aPrintSettings);
 
   /**
    * Get the history entry that this viewer will save itself into when

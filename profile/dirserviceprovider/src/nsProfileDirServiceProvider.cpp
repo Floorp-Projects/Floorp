@@ -51,7 +51,6 @@
 #define PREFS_FILE_50_NAME           NS_LITERAL_CSTRING("prefs.js")
 #define USER_CHROME_DIR_50_NAME      NS_LITERAL_CSTRING("chrome")
 #define LOCAL_STORE_FILE_50_NAME     NS_LITERAL_CSTRING("localstore.rdf")
-#define HISTORY_FILE_50_NAME         NS_LITERAL_CSTRING("history.dat")
 #define PANELS_FILE_50_NAME          NS_LITERAL_CSTRING("panels.rdf")
 #define MIME_TYPES_FILE_50_NAME      NS_LITERAL_CSTRING("mimeTypes.rdf")
 #define BOOKMARKS_FILE_50_NAME       NS_LITERAL_CSTRING("bookmarks.html")
@@ -224,11 +223,6 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
         (void) EnsureProfileFileExists(localFile, domainDir);
       }
     }
-  }
-  else if (strcmp(prop, NS_APP_HISTORY_50_FILE) == 0) {
-    rv = domainDir->Clone(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv))
-      rv = localFile->AppendNative(HISTORY_FILE_50_NAME);
   }
   else if (strcmp(prop, NS_APP_USER_PANELS_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
@@ -435,7 +429,6 @@ nsProfileDirServiceProvider::UndefineFileLocations()
   (void) directoryService->Undefine(NS_APP_USER_PROFILE_50_DIR);
   (void) directoryService->Undefine(NS_APP_USER_CHROME_DIR);
   (void) directoryService->Undefine(NS_APP_LOCALSTORE_50_FILE);
-  (void) directoryService->Undefine(NS_APP_HISTORY_50_FILE);
   (void) directoryService->Undefine(NS_APP_USER_PANELS_50_FILE);
   (void) directoryService->Undefine(NS_APP_USER_MIMETYPES_50_FILE);
   (void) directoryService->Undefine(NS_APP_BOOKMARKS_50_FILE);

@@ -131,7 +131,7 @@ interface nsICryptoHMAC : nsISupports
      *       is called.  This call resets the object to its
      *       pre-init state.
      */
-    ACString finish(in PRBool aASCII);
+    ACString finish(in boolean aASCII);
 
     /**
      * Reinitialize HMAC context to be reused with the same

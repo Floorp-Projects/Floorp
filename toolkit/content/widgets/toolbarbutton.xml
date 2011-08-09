@@ -66,7 +66,7 @@
                          xbl:inherits="disabled,crop,image,label,accesskey,command,
                                        align,dir,pack,orient"/>
       <xul:dropmarker type="menu-button" class="toolbarbutton-menubutton-dropmarker"
-                      xbl:inherits="align,dir,pack,orient,disabled,label"/>
+                      xbl:inherits="align,dir,pack,orient,disabled,label,open"/>
     </content>
   </binding>
 

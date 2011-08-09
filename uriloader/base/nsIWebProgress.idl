@@ -172,5 +172,5 @@ interface nsIWebProgress : nsISupports
    * Indicates whether or not a document is currently being loaded
    * in the context of this nsIWebProgress instance.
    */
-  readonly attribute PRBool isLoadingDocument;
+  readonly attribute boolean isLoadingDocument;
 };

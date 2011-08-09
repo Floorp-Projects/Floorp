@@ -58,7 +58,7 @@ interface nsIBinaryOutputStream : nsIOutputStream {
     /**
      * Write a boolean as an 8-bit char to the stream.
      */
-    void writeBoolean(in PRBool aBoolean);
+    void writeBoolean(in boolean aBoolean);
 
     void write8(in PRUint8 aByte);
     void write16(in PRUint16 a16);

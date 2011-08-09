@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!--
 
-Description: atom author name works
+Description: raw atom updated works
 Expect: feed.fields.getProperty('atom:updated') == '2003-12-13T18:30:02Z'
 
 -->
 
 <feed xmlns="http://www.w3.org/2005/Atom">
-  
+
   <title>Example Feed</title>
   <link href="http://example.org/"/>
   <updated>2003-12-13T18:30:02Z</updated>
@@ -15,7 +15,7 @@ Expect: feed.fields.getProperty('atom:updated') == '2003-12-13T18:30:02Z'
        <name>John Doe</name>
   </author>
   <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
-  
+
   <entry>
     <title>Atom-Powered Robots Run Amok</title>
     <link href="http://example.org/2003/12/13/atom03"/>
@@ -23,5 +23,5 @@ Expect: feed.fields.getProperty('atom:updated') == '2003-12-13T18:30:02Z'
     <updated>2003-12-13T18:30:02Z</updated>
     <summary>Some text.</summary>
   </entry>
-  
+
 </feed>
