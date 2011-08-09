@@ -275,10 +275,10 @@ void ARMAssembler::dataTransferN(bool isLoad, bool isSigned, int size, RegisterI
 {
     bool posOffset = true;
 
-    // there may be more elegant ways of handling this, but this one works.
+    // There may be more elegant ways of handling this, but this one works.
     if (offset == 0x80000000) {
-        // for even bigger offsets, load the entire offset into a register, then do an
-        // indexed load using the base register and the index register
+        // For even bigger offsets, load the entire offset into a register, then do an
+        // indexed load using the base register and the index register.
         moveImm(offset, ARMRegisters::S0);
         mem_reg_off(isLoad, isSigned, size, posOffset, rt, base, ARMRegisters::S0);
         return;
@@ -291,18 +291,18 @@ void ARMAssembler::dataTransferN(bool isLoad, bool isSigned, int size, RegisterI
         // LDR rd, [rb, #+offset]
         mem_imm_off(isLoad, isSigned, size, posOffset, rt, base, offset);
     } else if (offset <= 0xfffff) {
-        // add upper bits of offset to the base, and store the result into the temp registe
+        // Add upper bits of offset to the base, and store the result into the temp register.
         if (posOffset) {
-            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
+            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
         } else {
-            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
+            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
         }
-        // load using the lower bits of the offset
+        // Load using the lower bits of the offset.
         mem_imm_off(isLoad, isSigned, size, posOffset, rt,
                     ARMRegisters::S0, (offset & 0xfff));
     } else {
-        // for even bigger offsets, load the entire offset into a register, then do an
-        // indexed load using the base register and the index register
+        // For even bigger offsets, load the entire offset into a register, then do an
+        // indexed load using the base register and the index register.
         moveImm(offset, ARMRegisters::S0);
         mem_reg_off(isLoad, isSigned, size, posOffset, rt, base, ARMRegisters::S0);
     }
@@ -315,23 +315,23 @@ void ARMAssembler::dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID bas
             // LDR rd, [rb, +offset]
             dtr_u(isLoad, srcDst, base, offset);
         else if (offset <= 0xfffff) {
-            // add upper bits of offset to the base, and store the result into the temp registe
-            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
-            // load using the lower bits of the register
+            // Add upper bits of offset to the base, and store the result into the temp register.
+            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
+            // Load using the lower bits of the register.
             dtr_u(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff));
         } else {
-            // for even bigger offsets, load the entire offset into a registe, then do an
-            // indexed load using the base register and the index register
+            // For even bigger offsets, load the entire offset into a register, then do an
+            // indexed load using the base register and the index register.
             moveImm(offset, ARMRegisters::S0);
             dtr_ur(isLoad, srcDst, base, ARMRegisters::S0);
         }
     } else {
-        // negative offsets 
+        // Negative offsets.
         offset = -offset;
         if (offset <= 0xfff)
             dtr_d(isLoad, srcDst, base, offset);
         else if (offset <= 0xfffff) {
-            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
+            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
             dtr_d(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff));
         } else {
             moveImm(offset, ARMRegisters::S0);
@@ -349,7 +349,7 @@ void ARMAssembler::dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base
             else
                 dtrb_u(isLoad, srcDst, base, offset);
         } else if (offset <= 0xfffff) {
-            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
+            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
             if (isSigned)
                 mem_imm_off(isLoad, true, 8, true, srcDst, ARMRegisters::S0, (offset & 0xfff));
             else
@@ -370,7 +370,7 @@ void ARMAssembler::dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base
                 dtrb_d(isLoad, srcDst, base, offset);
         }
         else if (offset <= 0xfffff) {
-            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
+            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
             if (isSigned)
                 mem_imm_off(isLoad, true, 8, false, srcDst, ARMRegisters::S0, (offset & 0xfff));
             else
@@ -435,75 +435,75 @@ void ARMAssembler::baseIndexTransferN(bool isLoad, bool isSigned, int size, Regi
 
 void ARMAssembler::doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset)
 {
-    if (offset & 0x3) {
-        if (offset <= 0x3ff && offset >= 0) {
-            fdtr_u(isLoad, srcDst, base, offset >> 2);
-            return;
-        }
-        if (offset <= 0x3ffff && offset >= 0) {
-            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
-            fdtr_u(isLoad, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
-            return;
-        }
-        offset = -offset;
-
-        if (offset <= 0x3ff && offset >= 0) {
-            fdtr_d(isLoad, srcDst, base, offset >> 2);
-            return;
-        }
-        if (offset <= 0x3ffff && offset >= 0) {
-            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
-            fdtr_d(isLoad, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
-            return;
-        }
-        offset = -offset;
-    }
-
-    // TODO: This is broken in the case that offset is unaligned. VFP can never
-    // perform unaligned accesses, even from an unaligned register base. (NEON
-    // can, but VFP isn't NEON. It is not advisable to interleave a NEON load
-    // with VFP code, so the best solution here is probably to perform an
-    // unaligned integer load, then move the result into VFP using VMOV.)
+    // VFP cannot directly access memory that is not four-byte-aligned, so
+    // special-case support will be required for such cases. However, we don't
+    // currently use any unaligned floating-point memory accesses and probably
+    // never will, so for now just assert that the offset is aligned.
+    //
+    // Note that we cannot assert that the base register is aligned, but in
+    // that case, an alignment fault will be raised at run-time.
     ASSERT((offset & 0x3) == 0);
 
+    // Try to use a single load/store instruction, or at least a simple address
+    // calculation.
+    if (offset >= 0) {
+        if (offset <= 0x3ff) {
+            fmem_imm_off(isLoad, true, true, srcDst, base, offset >> 2);
+            return;
+        }
+        if (offset <= 0x3ffff) {
+            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | getOp2RotLSL(10));
+            fmem_imm_off(isLoad, true, true, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
+            return;
+        }
+    } else {
+        if (offset >= -0x3ff) {
+            fmem_imm_off(isLoad, true, false, srcDst, base, -offset >> 2);
+            return;
+        }
+        if (offset >= -0x3ffff) {
+            sub_r(ARMRegisters::S0, base, OP2_IMM | (-offset >> 10) | getOp2RotLSL(10));
+            fmem_imm_off(isLoad, true, false, srcDst, ARMRegisters::S0, (-offset >> 2) & 0xff);
+            return;
+        }
+    }
+
+    // Slow case for long-range accesses.
     ldr_un_imm(ARMRegisters::S0, offset);
     add_r(ARMRegisters::S0, ARMRegisters::S0, base);
-    fdtr_u(isLoad, srcDst, ARMRegisters::S0, 0);
+    fmem_imm_off(isLoad, true, true, srcDst, ARMRegisters::S0, 0);
 }
 
 void ARMAssembler::floatTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset)
 {
-    if (offset & 0x3) {
-        if (offset <= 0x3ff && offset >= 0) {
+    // Assert that the access is aligned, as in doubleTransfer.
+    ASSERT((offset & 0x3) == 0);
+
+    // Try to use a single load/store instruction, or at least a simple address
+    // calculation.
+    if (offset >= 0) {
+        if (offset <= 0x3ff) {
             fmem_imm_off(isLoad, false, true, srcDst, base, offset >> 2);
             return;
         }
-        if (offset <= 0x3ffff && offset >= 0) {
-            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
+        if (offset <= 0x3ffff) {
+            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | getOp2RotLSL(10));
             fmem_imm_off(isLoad, false, true, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
             return;
         }
-        offset = -offset;
-
-        if (offset <= 0x3ff && offset >= 0) {
-            fmem_imm_off(isLoad, false, false, srcDst, base, offset >> 2);
+    } else {
+        if (offset >= -0x3ff) {
+            fmem_imm_off(isLoad, false, false, srcDst, base, -offset >> 2);
             return;
         }
-        if (offset <= 0x3ffff && offset >= 0) {
-            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
-            fmem_imm_off(isLoad, false, true, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
+        if (offset >= -0x3ffff) {
+            sub_r(ARMRegisters::S0, base, OP2_IMM | (-offset >> 10) | getOp2RotLSL(10));
+            fmem_imm_off(isLoad, false, false, srcDst, ARMRegisters::S0, (-offset >> 2) & 0xff);
             return;
         }
-        offset = -offset;
     }
 
-    // TODO: This is broken in the case that offset is unaligned. VFP can never
-    // perform unaligned accesses, even from an unaligned register base. (NEON
-    // can, but VFP isn't NEON. It is not advisable to interleave a NEON load
-    // with VFP code, so the best solution here is probably to perform an
-    // unaligned integer load, then move the result into VFP using VMOV.)
-    ASSERT((offset & 0x3) == 0);
-
+    // Slow case for long-range accesses.
     ldr_un_imm(ARMRegisters::S0, offset);
     add_r(ARMRegisters::S0, ARMRegisters::S0, base);
     fmem_imm_off(isLoad, false, true, srcDst, ARMRegisters::S0, 0);
