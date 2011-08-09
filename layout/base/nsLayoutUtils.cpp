@@ -2877,20 +2877,20 @@ DarkenColor(nscolor aColor)
   return aColor;
 }
 
-// Check whether we should darken text colors. We need to do this if
+// Check whether we should darken text/decoration colors. We need to do this if
 // background images and colors are being suppressed, because that means
 // light text will not be visible against the (presumed light-colored) background.
 static PRBool
 ShouldDarkenColors(nsPresContext* aPresContext)
 {
   return !aPresContext->GetBackgroundColorDraw() &&
-    !aPresContext->GetBackgroundImageDraw();
+         !aPresContext->GetBackgroundImageDraw();
 }
 
 nscolor
-nsLayoutUtils::GetTextColor(nsIFrame* aFrame)
+nsLayoutUtils::GetColor(nsIFrame* aFrame, nsCSSProperty aProperty)
 {
-  nscolor color = aFrame->GetVisitedDependentColor(eCSSProperty_color);
+  nscolor color = aFrame->GetVisitedDependentColor(aProperty);
   if (ShouldDarkenColors(aFrame->PresContext())) {
     color = DarkenColor(color);
   }
