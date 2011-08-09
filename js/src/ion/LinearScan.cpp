@@ -435,7 +435,7 @@ LinearScanAllocator::buildLivenessInfo()
             {
                 if (alloc->isUse()) {
                     LUse *use = alloc->toUse();
-                    vregs[use].addUse(LOperand(use, *ins));
+                    vregs[use].addUse(LOperand(use, *ins, alloc.isSnapshotInput()));
 
                     if (ins->id() == block->firstId()) {
                         vregs[use].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
@@ -813,6 +813,8 @@ LinearScanAllocator::reifyAllocations()
             LOperand *use = reg->getUse(i);
             LAllocation *alloc = use->use;
             CodePosition pos = inputOf(use->ins);
+            if (use->snapshot)
+                pos = outputOf(use->ins);
             if (interval->covers(pos))
                 *alloc = *interval->getAllocation();
         }

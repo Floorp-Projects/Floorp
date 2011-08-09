@@ -819,6 +819,10 @@ public:
         return false;
     }
 
+    bool isSnapshotInput() const {
+        return snapshot_;
+    }
+
     void next() {
         JS_ASSERT(more());
         idx_++;

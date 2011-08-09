@@ -59,10 +59,12 @@ struct LOperand
   public:
     LUse *use;
     LInstruction *ins;
+    bool snapshot;
 
-    LOperand(LUse *use, LInstruction *ins) :
+    LOperand(LUse *use, LInstruction *ins, bool snapshot) :
         use(use),
-        ins(ins)
+        ins(ins),
+        snapshot(snapshot)
     { }
 
 };
