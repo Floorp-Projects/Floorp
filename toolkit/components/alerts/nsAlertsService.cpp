@@ -53,7 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIWindowWatcher.h"
-#include "nsDependentString.h"
+#include "nsPromiseFlatString.h"
 #include "nsWidgetsCID.h"
 #include "nsILookAndFeel.h"
 #include "nsToolkitCompsCID.h"
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
     ContentChild* cpc = ContentChild::GetSingleton();
 
     if (aAlertListener)
-      cpc->AddRemoteAlertObserver(nsDependentString(aAlertCookie), aAlertListener);
+      cpc->AddRemoteAlertObserver(PromiseFlatString(aAlertCookie), aAlertListener);
 
     cpc->SendShowAlertNotification(nsAutoString(aImageUrl),
                                    nsAutoString(aAlertTitle),
