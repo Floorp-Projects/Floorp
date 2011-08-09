@@ -1318,22 +1318,21 @@ stubs::Neg(VMFrame &f)
         TypeScript::MonitorOverflow(f.cx, f.script(), f.pc());
 }
 
-JSObject * JS_FASTCALL
+void JS_FASTCALL
 stubs::NewInitArray(VMFrame &f, uint32 count)
 {
     JSObject *obj = NewDenseAllocatedArray(f.cx, count);
     if (!obj)
-        THROWV(NULL);
+        THROW();
 
     TypeObject *type = (TypeObject *) f.scratch;
     if (type)
         obj->setType(type);
 
-    obj->setArrayLength(f.cx, count);
-    return obj;
+    f.regs.sp[0].setObject(*obj);
 }
 
-JSObject * JS_FASTCALL
+void JS_FASTCALL
 stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 {
     JSContext *cx = f.cx;
@@ -1343,18 +1342,19 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
         gc::FinalizeKind kind = GuessObjectGCKind(0, false);
         JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
-            THROWV(NULL);
+            THROW();
         if (type)
             obj->setType(type);
-        return obj;
+        f.regs.sp[0].setObject(*obj);
+        return;
     }
 
     JS_ASSERT(type);
     JSObject *obj = CopyInitializerObject(cx, baseobj, type);
 
     if (!obj)
-        THROWV(NULL);
-    return obj;
+        THROW();
+    f.regs.sp[0].setObject(*obj);
 }
 
 void JS_FASTCALL
