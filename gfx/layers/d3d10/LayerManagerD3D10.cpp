@@ -296,6 +296,9 @@ LayerManagerD3D10::Destroy()
     if (mRoot) {
       static_cast<LayerD3D10*>(mRoot->ImplData())->LayerManagerDestroyed();
     }
+    mRootForShadowTree = nsnull;
+    // XXX need to be careful here about surface destruction
+    // racing with share-to-chrome message
   }
   LayerManager::Destroy();
 }
@@ -709,8 +712,74 @@ LayerManagerD3D10::Render()
   if (mTarget) {
     PaintToTarget();
   } else if (mBackBuffer) {
+    ShadowLayerForwarder::BeginTransaction();
+    
+    nsIntRect contentRect = nsIntRect(0, 0, rect.width, rect.height);
+    if (!mRootForShadowTree) {
+        mRootForShadowTree = new DummyRoot(this);
+        mRootForShadowTree->SetShadow(ConstructShadowFor(mRootForShadowTree));
+        CreatedContainerLayer(mRootForShadowTree);
+        ShadowLayerForwarder::SetRoot(mRootForShadowTree);
+    }
+
+    nsRefPtr<WindowLayer> windowLayer =
+        static_cast<WindowLayer*>(mRootForShadowTree->GetFirstChild());
+    if (!windowLayer) {
+        windowLayer = new WindowLayer(this);
+        windowLayer->SetShadow(ConstructShadowFor(windowLayer));
+        CreatedThebesLayer(windowLayer);
+        ShadowLayerForwarder::CreatedThebesBuffer(windowLayer,
+                                                  contentRect,
+                                                  contentRect,
+                                                  SurfaceDescriptor());
+
+        mRootForShadowTree->InsertAfter(windowLayer, nsnull);
+        ShadowLayerForwarder::InsertAfter(mRootForShadowTree, windowLayer);
+    }
+
+    if (!mRootForShadowTree->GetVisibleRegion().IsEqual(contentRect)) {
+        mRootForShadowTree->SetVisibleRegion(contentRect);
+        windowLayer->SetVisibleRegion(contentRect);
+
+        ShadowLayerForwarder::Mutated(mRootForShadowTree);
+        ShadowLayerForwarder::Mutated(windowLayer);
+    }
+
+    FrameMetrics m;
+    if (ContainerLayer* cl = mRoot->AsContainerLayer()) {
+        m = cl->GetFrameMetrics();
+    } else {
+        m.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
+    }
+    if (m != mRootForShadowTree->GetFrameMetrics()) {
+        mRootForShadowTree->SetFrameMetrics(m);
+        ShadowLayerForwarder::Mutated(mRootForShadowTree);
+    }
+
+    SurfaceDescriptorD3D10 sd;
+    GetDescriptor(mBackBuffer, &sd);
+    ShadowLayerForwarder::PaintedThebesBuffer(windowLayer,
+                                              contentRect,
+                                              contentRect, nsIntPoint(),
+                                              sd);
+
+    // A source in the graphics pipeline can't also be a target.  So
+    // unbind here to avoid racing with the chrome process sourcing
+    // the back texture.
+    mDevice->OMSetRenderTargets(0, NULL, NULL);
+
+    // XXX revisit this Flush() in bug 662109.  It's not clear it's
+    // needed.
+    mDevice->Flush();
+
+    mRTView = NULL;
+
+    AutoInfallibleTArray<EditReply, 10> replies;
+    ShadowLayerForwarder::EndTransaction(&replies);
+    // We expect only 1 reply, but might get none if the parent
+    // process crashed
+
     swap(mBackBuffer, mRemoteFrontBuffer);
-    mRTView = nsnull;
   } else {
     mSwapChain->Present(0, 0);
   }
