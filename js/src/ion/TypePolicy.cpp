@@ -184,13 +184,16 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
 bool
 TableSwitchPolicy::respecialize(MInstruction *ins)
 {
-    // We try to ask for the type Int32,
-    // because this gives us the best code,
-    MDefinition *in = ins->getOperand(0);
-    if (in->type() == MIRType_Value)
-        in->useAsType(MIRType_Int32);
-
+    // Has no outputs
     return false;
+}
+
+void
+TableSwitchPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
+{
+    // We try to ask for the type Int32,
+    // because this gives us the best code
+    analysis->preferType(ins->getOperand(0), MIRType_Int32);
 }
 
 bool
@@ -216,12 +219,5 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     ins->block()->insertBefore(ins, replace);
     ins->replaceOperand(0, replace);
 
-    return true;
-}
-
-bool
-TableSwitchPolicy::useSpecializedInput(MInstruction *ins, size_t index, MInstruction *special)
-{
-    // Use the specialized input (could be Int32 or something else)
     return true;
 }

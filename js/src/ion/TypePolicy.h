@@ -126,8 +126,8 @@ class TableSwitchPolicy : public BoxInputsPolicy
 {
   public:
     bool respecialize(MInstruction *def);
+    void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
     bool adjustInputs(MInstruction *def);
-    bool useSpecializedInput(MInstruction *def, size_t index, MInstruction *special);
 };
 
 static inline bool
