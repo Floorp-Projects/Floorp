@@ -1339,7 +1339,7 @@ Debugger::addDebuggee(JSContext *cx, uintN argc, Value *vp)
     if (!referent)
         return false;
     GlobalObject *global = referent->getGlobal();
-    if (!dbg->debuggees.has(global) && !dbg->addDebuggeeGlobal(cx, global))
+    if (!dbg->addDebuggeeGlobal(cx, global))
         return false;
 
     Value v = ObjectValue(*referent);
@@ -1478,6 +1478,9 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
 bool
 Debugger::addDebuggeeGlobal(JSContext *cx, GlobalObject *global)
 {
+    if (debuggees.has(global))
+        return true;
+
     JSCompartment *debuggeeCompartment = global->compartment();
 
     /*
