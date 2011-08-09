@@ -49,7 +49,7 @@ dnl
 dnl for example:
 dnl MOZ_N_BYTE_TYPE([JS_INT32_T], [4], [int long 'long long' short])
 dnl
-AC_DEFUN(MOZ_N_BYTE_TYPE,
+AC_DEFUN([MOZ_N_BYTE_TYPE],
 [
 dnl The simplest approach would simply be to run a program that says
 dnl   printf ("%d\n", sizeof ($type));
@@ -83,7 +83,7 @@ dnl found.
 dnl
 dnl for example:
 dnl MOZ_SIZE_OF_TYPE([JS_BYTES_PER_WORD], [void*], [4 8])
-AC_DEFUN(MOZ_SIZE_OF_TYPE,
+AC_DEFUN([MOZ_SIZE_OF_TYPE],
 [
 AC_CACHE_CHECK([for the size of $2], moz_cv_size_of_$1, [
   moz_cv_size_of_$1=
@@ -113,7 +113,7 @@ dnl found.
 dnl
 dnl for example:
 dnl MOZ_ALIGN_OF_TYPE(JS_ALIGN_OF_POINTER, void*, 2 4 8 16)
-AC_DEFUN(MOZ_ALIGN_OF_TYPE,
+AC_DEFUN([MOZ_ALIGN_OF_TYPE],
 [
 AC_CACHE_CHECK([for the alignment of $2], moz_cv_align_of_$1, [
   moz_cv_align_of_$1=
