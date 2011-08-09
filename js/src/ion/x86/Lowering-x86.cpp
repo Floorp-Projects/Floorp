@@ -148,58 +148,6 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorX86::preparePhi(MPhi *phi)
-{
-    uint32 first_vreg = getVirtualRegister();
-    if (first_vreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
-
-    phi->setId(first_vreg);
-
-    if (phi->type() == MIRType_Value) {
-        uint32 payload_vreg = getVirtualRegister();
-        if (payload_vreg >= MAX_VIRTUAL_REGISTERS)
-            return false;
-        JS_ASSERT(first_vreg + VREG_DATA_OFFSET == payload_vreg);
-    }
-
-    return true;
-}
-
-bool
-LIRGeneratorX86::lowerPhi(MPhi *ins)
-{
-    JS_ASSERT(ins->isInWorklist() && ins->id());
-
-    // Typed phis can be handled much simpler.
-    if (ins->type() != MIRType_Value)
-        return LIRGeneratorShared::lowerPhi(ins);
-
-    // Otherwise, we create two phis: one for the set of types and one for the
-    // set of payloads. They form two separate instructions but their
-    // definitions are paired such that they act as one. That is, the type phi
-    // has vreg V and the data phi has vreg V++.
-    LPhi *type = LPhi::New(gen, ins);
-    LPhi *payload = LPhi::New(gen, ins);
-    if (!type || !payload)
-        return false;
-
-    for (size_t i = 0; i < ins->numOperands(); i++) {
-        MDefinition *opd = ins->getOperand(i);
-        JS_ASSERT(opd->type() == MIRType_Value);
-        JS_ASSERT(opd->id());
-        JS_ASSERT(opd->isInWorklist());
-
-        type->setOperand(i, LUse(opd->id() + VREG_TYPE_OFFSET, LUse::ANY));
-        payload->setOperand(i, LUse(VirtualRegisterOfPayload(opd), LUse::ANY));
-    }
-
-    type->setDef(0, LDefinition(ins->id() + VREG_TYPE_OFFSET, LDefinition::TYPE));
-    payload->setDef(0, LDefinition(ins->id() + VREG_DATA_OFFSET, LDefinition::PAYLOAD));
-    return addPhi(type) && addPhi(payload);
-}
-
-bool
 LIRGeneratorX86::assignSnapshot(LInstruction *ins)
 {
     LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
@@ -247,5 +195,37 @@ LIRGeneratorX86::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, use(rhs));
     return defineReuseInput(ins, mir);
+}
+
+bool
+LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
+{
+    LPhi *type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
+    LPhi *payload = current->getPhi(lirIndex + VREG_DATA_OFFSET);
+
+    uint32 typeVreg = getVirtualRegister();
+    if (typeVreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+    phi->setId(typeVreg);
+
+    uint32 payloadVreg = getVirtualRegister();
+    if (payloadVreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+    JS_ASSERT(typeVreg + 1 == payloadVreg);
+
+    type->setDef(0, LDefinition(typeVreg, LDefinition::TYPE));
+    payload->setDef(0, LDefinition(payloadVreg, LDefinition::PAYLOAD));
+    return annotate(type) && annotate(payload);
+}
+
+void
+LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex)
+{
+    MDefinition *operand = phi->getOperand(inputPosition);
+    LPhi *type = block->getPhi(lirIndex + VREG_TYPE_OFFSET);
+    LPhi *payload = block->getPhi(lirIndex + VREG_DATA_OFFSET);
+    type->setOperand(inputPosition, LUse(operand->id() + VREG_TYPE_OFFSET, LUse::ANY));
+    payload->setOperand(inputPosition, LUse(VirtualRegisterOfPayload(operand), LUse::ANY));
 }
 

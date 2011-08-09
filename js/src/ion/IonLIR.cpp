@@ -108,10 +108,15 @@ LPhi::init(MIRGenerator *gen)
     return !!inputs_;
 }
 
+LPhi::LPhi(MPhi *mir)
+  : numInputs_(mir->numOperands())
+{
+}
+
 LPhi *
 LPhi::New(MIRGenerator *gen, MPhi *ins)
 {
-    LPhi *phi = new LPhi(ins->numOperands());
+    LPhi *phi = new LPhi(ins);
     if (!phi->init(gen))
         return NULL;
     return phi;
