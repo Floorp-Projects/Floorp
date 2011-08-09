@@ -247,7 +247,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       break;
     case eColor__moz_mac_chrome_active:
     case eColor__moz_mac_chrome_inactive: {
-      int grey = NativeGreyColorAsInt(headerEndGrey, (aID == eColor__moz_mac_chrome_active));
+      int grey = NativeGreyColorAsInt(toolbarFillGrey, (aID == eColor__moz_mac_chrome_active));
       aColor = NS_RGB(grey, grey, grey);
     }
       break;

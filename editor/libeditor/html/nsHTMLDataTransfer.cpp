@@ -51,8 +51,6 @@
 #include "nsIDOMEventTarget.h" 
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMKeyListener.h" 
-#include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMComment.h"
 #include "nsISelection.h"

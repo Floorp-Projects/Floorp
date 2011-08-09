@@ -3569,45 +3569,46 @@ nsLayoutUtils::DrawSingleImage(nsRenderingContext* aRenderingContext,
 /* static */ void
 nsLayoutUtils::ComputeSizeForDrawing(imgIContainer *aImage,
                                      nsIntSize&     aImageSize, /*outparam*/
-                                     PRBool&        aGotWidth,  /*outparam*/
-                                     PRBool&        aGotHeight  /*outparam*/)
+                                     nsSize&        aIntrinsicRatio, /*outparam*/
+                                     bool&          aGotWidth,  /*outparam*/
+                                     bool&          aGotHeight  /*outparam*/)
 {
   aGotWidth  = NS_SUCCEEDED(aImage->GetWidth(&aImageSize.width));
   aGotHeight = NS_SUCCEEDED(aImage->GetHeight(&aImageSize.height));
 
-  if ((aGotWidth && aGotHeight) ||    // Trivial success!
-      (!aGotWidth && !aGotHeight)) {  // Trivial failure!
+  if (aGotWidth && aGotHeight) {
+    aIntrinsicRatio = nsSize(aImageSize.width, aImageSize.height);
     return;
   }
 
-  // If we get here, we succeeded at querying *either* the width *or* the
-  // height, but not both.
-  NS_ASSERTION(aImage->GetType() == imgIContainer::TYPE_VECTOR,
-               "GetWidth and GetHeight should only fail for vector images");
-
-  nsIFrame* rootFrame = aImage->GetRootLayoutFrame();
-  NS_ASSERTION(rootFrame,
-               "We should have a VectorImage, which should have a rootFrame");
-
-  // This falls back on failure, if we somehow end up without a rootFrame.
-  nsSize ratio = rootFrame ? rootFrame->GetIntrinsicRatio() : nsSize(0,0);
-  if (!aGotWidth) { // Have height, missing width
-    if (ratio.height != 0) { // don't divide by zero
-      aImageSize.width = NSToCoordRound(aImageSize.height *
-                                        float(ratio.width) /
-                                        float(ratio.height));
-      aGotWidth = PR_TRUE;
-    }
-  } else { // Have width, missing height
-    if (ratio.width != 0) { // don't divide by zero
-      aImageSize.height = NSToCoordRound(aImageSize.width *
-                                         float(ratio.height) /
-                                         float(ratio.width));
-      aGotHeight = PR_TRUE;
-    }
+  // If we failed to get width or height, we either have a vector image and
+  // should return its intrinsic ratio, or we hit an error (say, because the
+  // image failed to load or couldn't be decoded) and should return zero size.
+  if (nsIFrame* rootFrame = aImage->GetRootLayoutFrame()) {
+    aIntrinsicRatio = rootFrame->GetIntrinsicRatio();
+  } else {
+    aGotWidth = aGotHeight = true;
+    aImageSize = nsIntSize(0, 0);
+    aIntrinsicRatio = nsSize(0, 0);
   }
 }
 
+
+/* static */ nsresult
+nsLayoutUtils::DrawBackgroundImage(nsRenderingContext* aRenderingContext,
+                                   imgIContainer*      aImage,
+                                   const nsIntSize&    aImageSize,
+                                   GraphicsFilter      aGraphicsFilter,
+                                   const nsRect&       aDest,
+                                   const nsRect&       aFill,
+                                   const nsPoint&      aAnchor,
+                                   const nsRect&       aDirty,
+                                   PRUint32            aImageFlags)
+{
+  return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter,
+                           aDest, aFill, aAnchor, aDirty,
+                           aImageSize, aImageFlags);
+}
 
 /* static */ nsresult
 nsLayoutUtils::DrawImage(nsRenderingContext* aRenderingContext,
@@ -3620,10 +3621,32 @@ nsLayoutUtils::DrawImage(nsRenderingContext* aRenderingContext,
                          PRUint32             aImageFlags)
 {
   nsIntSize imageSize;
-  PRBool gotHeight, gotWidth;
-  ComputeSizeForDrawing(aImage, imageSize, gotWidth, gotHeight);
+  nsSize imageRatio;
+  bool gotHeight, gotWidth;
+  ComputeSizeForDrawing(aImage, imageSize, imageRatio, gotWidth, gotHeight);
 
-  // fallback size based on aFill.
+  // XXX Dimensionless images shouldn't fall back to filled-area size -- the
+  //     caller should provide the image size, a la DrawBackgroundImage.
+  if (gotWidth != gotHeight) {
+    if (!gotWidth) {
+      if (imageRatio.height != 0) {
+        imageSize.width =
+          NSCoordSaturatingNonnegativeMultiply(imageSize.height,
+                                               float(imageRatio.width) /
+                                               float(imageRatio.height));
+        gotWidth = true;
+      }
+    } else {
+      if (imageRatio.width != 0) {
+        imageSize.height =
+          NSCoordSaturatingNonnegativeMultiply(imageSize.width,
+                                               float(imageRatio.height) /
+                                               float(imageRatio.width));
+        gotHeight = true;
+      }
+    }
+  }
+
   if (!gotWidth) {
     imageSize.width = nsPresContext::AppUnitsToIntCSSPixels(aFill.width);
   }

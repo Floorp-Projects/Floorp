@@ -2054,7 +2054,7 @@ ethogram_getAllEvents(JSContext *cx, uintN argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(rarray));
 
-    for (int i = 0; !p->isEmpty(); i++) {
+    for (uint32 i = 0; !p->isEmpty(); i++) {
 
         JSObject *x = JS_NewObject(cx, NULL, NULL, NULL);
         if (x == NULL)
