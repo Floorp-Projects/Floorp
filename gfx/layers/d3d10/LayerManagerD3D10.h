@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,6 +38,7 @@
 #ifndef GFX_LAYERMANAGERD3D10_H
 #define GFX_LAYERMANAGERD3D10_H
 
+#include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "Layers.h"
 
@@ -52,6 +53,7 @@
 namespace mozilla {
 namespace layers {
 
+class DummyRoot;
 class Nv3DVUtils;
 
 /**
@@ -293,6 +295,44 @@ public:
 
 protected:
   LayerManagerD3D10 *mD3DManager;
+};
+
+/**
+ * WindowLayer is a simple, special kinds of shadowable layer into
+ * which layer trees are rendered.  It represents something like an OS
+ * window.  It exists only to allow sharing textures with the
+ * compositor while reusing existing shadow-layer machinery.
+ *
+ * WindowLayer being implemented as a thebes layer isn't an important
+ * detail; other layer types could have been used.
+ */
+class WindowLayer : public ThebesLayer, public ShadowableLayer {
+public:
+  WindowLayer(LayerManagerD3D10* aManager);
+  virtual ~WindowLayer();
+
+  void InvalidateRegion(const nsIntRegion&) {}
+  Layer* AsLayer() { return this; }
+
+  void SetShadow(PLayerChild* aChild) { mShadow = aChild; }
+};
+
+/**
+ * DummyRoot is the root of the shadowable layer tree created by
+ * remote content.  It exists only to contain WindowLayers.  It always
+ * has exactly one child WindowLayer.
+ */
+class DummyRoot : public ContainerLayer, public ShadowableLayer {
+public:
+  DummyRoot(LayerManagerD3D10* aManager);
+  virtual ~DummyRoot();
+
+  void ComputeEffectiveTransforms(const gfx3DMatrix&) {}
+  void InsertAfter(Layer*, Layer*);
+  void RemoveChild(Layer*);
+  Layer* AsLayer() { return this; }
+
+  void SetShadow(PLayerChild* aChild) { mShadow = aChild; }
 };
 
 } /* layers */
