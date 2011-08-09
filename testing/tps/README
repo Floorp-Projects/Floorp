@@ -1,0 +1,17 @@
+TPS is a test automation framework for Firefox Sync.  See 
+https://developer.mozilla.org/en/TPS for documentation.
+
+INSTALLATION:
+
+TPS requires several packages to operate properly.  To install TPS and
+required packages, use the INSTALL.sh script, provided:
+
+  ./INSTALL.sh /path/to/create/virtualenv
+
+This script will create a virtalenv and install TPS into it.  TPS can then
+be run by activating the virtualenv and executing:
+
+  runtps --binary=/path/to/firefox
+
+
+

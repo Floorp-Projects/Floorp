@@ -80,18 +80,19 @@
       <property name="offset" onget="return parseInt(this.getAttribute('offset')) || 0;"
                               onset="this.setAttribute('offset', val); return val;"/>
 
-      <field name="anchorNode">null</field>
-      <method name="anchorTo">
-         <parameter name="aAnchorNode"/>
+      <method name="_updateArrow">
+         <parameter name="popupRect"/>
+         <parameter name="targetRect"/>
+         <parameter name="horizPos"/>
+         <parameter name="vertPos"/>
          <body>
             <![CDATA[
               let arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
-              if (!aAnchorNode) {
+              if (!popupRect || !targetRect) {
                 arrow.hidden = true;
                 return;
               }
 
-              this.anchorNode = aAnchorNode;
               let container = document.getAnonymousElementByAttribute(this, "anonid", "container");
               let content = document.getAnonymousElementByAttribute(this, "anonid", "arrowcontent");
               let arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
@@ -107,15 +108,6 @@
                 this.style.minHeight = (window.innerHeight - parseInt(this.top) - kBottomMargin) + "px";
               }
 
-              let anchorRect = aAnchorNode.getBoundingClientRect();
-              let popupRect = this.getBoundingClientRect();
-              let offset = this.offset;
-
-              let horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left + offset)) ? -1 :
-                             (Math.round(popupRect.left) >= Math.round(anchorRect.right - offset)) ? 1 : 0;
-              let vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top + offset)) ? -1 :
-                            (Math.round(popupRect.top) >= Math.round(anchorRect.bottom - offset)) ? 1 : 0;
-
               let HALF_ARROW_WIDTH = 16;
 
               let anchorClass = "";
@@ -126,7 +118,7 @@
                 if (vertPos == 0) {
                   hideArrow = true;
                 } else {
-                  arrowbox.style.marginLeft = ((anchorRect.left - popupRect.left) + (anchorRect.width / 2) - HALF_ARROW_WIDTH) + "px";
+                  arrowbox.style.marginLeft = ((targetRect.left - popupRect.left) + (targetRect.width / 2) - HALF_ARROW_WIDTH) + "px";
                   if (vertPos == 1) {
                     container.dir = "normal"; 
                     anchorClass = "top";
@@ -138,7 +130,7 @@
               } else if (vertPos == 0) {
                 container.orient = "";
                 arrowbox.orient = "vertical";
-                arrowbox.style.marginTop = ((anchorRect.top - popupRect.top) + (anchorRect.height / 2) - HALF_ARROW_WIDTH) + "px";
+                arrowbox.style.marginTop = ((targetRect.top - popupRect.top) + (targetRect.height / 2) - HALF_ARROW_WIDTH) + "px";
                 if (horizPos == 1) {
                   container.dir = "ltr"; 
                   anchorClass = "left";
@@ -154,6 +146,64 @@
             ]]>
          </body>
       </method>
+      <field name="anchorNode">null</field>
+      <method name="anchorTo">
+         <parameter name="aAnchorNode"/>
+         <body>
+            <![CDATA[
+              if (!aAnchorNode) {
+                this._updateArrow(null, null, 0, 0);
+                return;
+              }
+
+              this.anchorNode = aAnchorNode;
+
+              let anchorRect = aAnchorNode.getBoundingClientRect();
+              let popupRect = this.getBoundingClientRect();
+              let offset = this.offset;
+
+              let horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left + offset)) ? -1 :
+                             (Math.round(popupRect.left) >= Math.round(anchorRect.right - offset)) ? 1 : 0;
+              let vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top + offset)) ? -1 :
+                            (Math.round(popupRect.top) >= Math.round(anchorRect.bottom - offset)) ? 1 : 0;
+
+              this._updateArrow(popupRect, anchorRect, horizPos, vertPos);
+            ]]>
+         </body>
+      </method>
+
+      <method name="pointLeftAt">
+         <parameter name="targetNode"/>
+         <body>
+            <![CDATA[
+              if (!targetNode) {
+                this._updateArrow(null, null, 0, 0);
+                return;
+              }
+
+              let popupRect = this.getBoundingClientRect();
+              let targetRect = targetNode.getBoundingClientRect();
+              this._updateArrow(popupRect, targetRect, 1, 0);
+            ]]>
+         </body>
+      </method>
+
+      <method name="pointRightAt">
+         <parameter name="targetNode"/>
+         <body>
+            <![CDATA[
+              if (!targetNode) {
+                this._updateArrow(null, null, 0, 0);
+                return;
+              }
+
+              let popupRect = this.getBoundingClientRect();
+              let targetRect = targetNode.getBoundingClientRect();
+
+              this._updateArrow(popupRect, targetRect, -1, 0);
+            ]]>
+         </body>
+      </method>
 
       <field name="_eventHandler"><![CDATA[
         ({
@@ -164,6 +214,9 @@
             let self = this.self;
             switch (aEvent.type) {
               case "resize":
+                // Do nothing if there's no anchorNode
+                if (!self.anchorNode)
+                  break;
                 let arrowbox = document.getAnonymousElementByAttribute(self, "anonid", "arrowbox");
                 arrowbox.style.marginLeft = "0px";
                 arrowbox.style.marginTop = "0px";

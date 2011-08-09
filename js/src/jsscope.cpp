@@ -402,24 +402,20 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
     JS_ASSERT(!child.inDictionary());
 
     /*
-     * Aliases share another property's slot, passed in the |slot| parameter.
-     * Shared properties have no slot. Unshared properties that do not alias
-     * another property's slot allocate a slot here, but may lose it due to a
-     * JS_ClearScope call.
+     * Shared properties have no slot. Unshared properties allocate a slot here
+     * but may lose it due to a JS_ClearScope call.
      */
-    if (!child.isAlias()) {
-        if (child.attrs & JSPROP_SHARED) {
-            child.slot = SHAPE_INVALID_SLOT;
-        } else {
-            /*
-             * We may have set slot from a nearly-matching shape, above. If so,
-             * we're overwriting that nearly-matching shape, so we can reuse
-             * its slot -- we don't need to allocate a new one. Similarly, we
-             * use a specific slot if provided by the caller.
-             */
-            if (child.slot == SHAPE_INVALID_SLOT && !allocSlot(cx, &child.slot))
-                return NULL;
-        }
+    if (child.attrs & JSPROP_SHARED) {
+        child.slot = SHAPE_INVALID_SLOT;
+    } else {
+        /*
+         * We may have set slot from a nearly-matching shape, above. If so,
+         * we're overwriting that nearly-matching shape, so we can reuse its
+         * slot -- we don't need to allocate a new one. Similarly, we use a
+         * specific slot if provided by the caller.
+         */
+        if (child.slot == SHAPE_INVALID_SLOT && !allocSlot(cx, &child.slot))
+            return NULL;
     }
 
     Shape *shape;
@@ -772,7 +768,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
      * copy the existing shape's slot into slot so we can match shape, if all
      * other members match.
      */
-    bool hadSlot = !shape->isAlias() && shape->hasSlot();
+    bool hadSlot = shape->hasSlot();
     uint32 oldSlot = shape->slot;
     if (!(attrs & JSPROP_SHARED) && slot == SHAPE_INVALID_SLOT && hadSlot)
         slot = oldSlot;
@@ -810,7 +806,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
      */
     if (inDictionaryMode()) {
         /* FIXME bug 593129 -- slot allocation and JSObject *this must move out of here! */
-        if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED) && !(flags & Shape::ALIAS)) {
+        if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED)) {
             if (!allocSlot(cx, &slot))
                 return NULL;
         }
@@ -932,7 +928,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
     if (inDictionaryMode()) {
         /* FIXME bug 593129 -- slot allocation and JSObject *this must move out of here! */
         uint32 slot = shape->slot;
-        if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED) && !(flags & Shape::ALIAS)) {
+        if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED)) {
             if (!allocSlot(cx, &slot))
                 return NULL;
         }
@@ -1000,7 +996,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 
     /* First, if shape is unshared and not has a slot, free its slot number. */
     bool addedToFreelist = false;
-    bool hadSlot = !shape->isAlias() && shape->hasSlot();
+    bool hadSlot = shape->hasSlot();
     if (hadSlot) {
         addedToFreelist = freeSlot(cx, shape->slot);
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);

@@ -78,12 +78,6 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
-ifeq (Android,$(OS_TARGET))
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../webapps \
-  $(NULL)
-endif
-
 SHARED_LIBRARY_LIBS = \
   ../find/$(LIB_PREFIX)mozfind_s.$(LIB_SUFFIX) \
   ../typeaheadfind/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
@@ -121,10 +115,6 @@ endif
 
 ifdef MOZ_FEEDS
 SHARED_LIBRARY_LIBS += ../feeds/$(LIB_PREFIX)feed_s.$(LIB_SUFFIX)
-endif
-
-ifeq (Android,$(OS_TARGET))
-SHARED_LIBRARY_LIBS += ../webapps/$(LIB_PREFIX)webapps_s.$(LIB_SUFFIX)
 endif
 
 include $(topsrcdir)/config/rules.mk

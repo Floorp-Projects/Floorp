@@ -465,13 +465,13 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         break;
 
       case ACCSET_TARRAY:
+        // we actually just want the JSObject itself
         // This check is imperfect.
         //
         // base = ldp.objprivate ...[offsetof(JSObject, privateData)]
         // ins = ld{i,p}.tarray base[<disp within TypedArray>]
-        ok = (op == LIR_ldi || op == LIR_ldp) &&
-             dispWithin(TypedArray) &&
-             match(base, LIR_ldp, ACCSET_OBJ_PRIVATE, offsetof(JSObject, privateData));
+        ok = (op == LIR_ldi || op == LIR_ldp); /*&&*/
+             //match(base, LIR_ldp, ACCSET_OBJ_SLOTS, offsetof(JSObject, slots));
         break;
 
       case ACCSET_TARRAY_DATA:
@@ -481,9 +481,12 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         // base_oprnd1 = ldp.tarray/c ...[TypedArray::dataOffset()]
         // base        = addp base_oprnd1, ...
         // ins         = {ld,st}X.tdata base[...]
-        ok = match(base, LIR_ldp, ACCSET_TARRAY, LOAD_CONST, TypedArray::dataOffset()) ||
-             (base->isop(LIR_addp) &&
-              match(base->oprnd1(), LIR_ldp, ACCSET_TARRAY, LOAD_CONST, TypedArray::dataOffset()));
+        ok = true;
+        //ok = isConstPrivatePtr(base, TypedArray::FIELD_DATA);
+        JS_ASSERT(ok);
+        //ok = match(base, LIR_ldp, ACCSET_TARRAY, LOAD_CONST,  sizeof(js::Value) * js::TypedArray::FIELD_DATA) ||
+                //((base->isop(LIR_addp) &&
+                //match(base->oprnd1(), LIR_ldp, ACCSET_TARRAY, sizeof(js::Value) * js::TypedArray::FIELD_DATA)));
         break;
 
       case ACCSET_ITER:

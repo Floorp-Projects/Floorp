@@ -57,7 +57,7 @@ interface nsIScriptableUnescapeHTML : nsISupports
    * Appends the text to the element.
    */
   nsIDOMDocumentFragment parseFragment(in AString fragment,
-                                       in PRBool isXML,
+                                       in boolean isXML,
                                        in nsIURI baseURI,
                                        in nsIDOMElement element);
 };

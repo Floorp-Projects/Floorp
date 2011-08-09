@@ -23,8 +23,7 @@
  *  4. client tries to connect using a relative url;
  *  5. client uses an invalid protocol value;
  *  6. counter and encoding check;
- *  7. client calls close() and the server keeps sending messages and it doesn't
- *     send the close frame;
+ *  7. onmessage event origin property check
  *  8. client calls close() and the server sends the close frame in
  *     acknowledgement;
  *  9. client closes the connection before the ws connection is established;
@@ -45,14 +44,32 @@
  * 22. server takes too long to establish the ws connection;
  * 23. see bug 664692 - feature detection should detect MozWebSocket but not
  *     WebSocket on window object;
+ * 24. server rejects sub-protocol string
+ * 25. ctor with valid empty sub-protocol array
+ * 26. ctor with invalid sub-protocol array containing 1 empty element
+ * 27. ctor with invalid sub-protocol array containing an empty element in list
+ * 28. ctor using valid 1 element sub-protocol array
+ * 29. ctor using all valid 5 element sub-protocol array
+ * 30. ctor using valid 1 element sub-protocol array with element server will
+ *     reject
+ * 31. ctor using valid 2 element sub-protocol array with 1 element server
+ *     will reject and one server will accept.
+ * 32. ctor using invalid sub-protocol array that contains duplicate items
+ * 33. default close code test
+ * 34. test for receiving custom close code and reason
+ * 35. test for sending custom close code and reason
+ * 36. negative test for sending out of range close code
+ * 37. negative test for too long of a close reason
+ * 38. ensure extensions attribute is defined
+ * 39. a basic wss:// connectivity test
+ * 40. negative test for wss:// with no cert
  */
 
 var first_test = 1;
-var last_test = 23;
+var last_test = 40;
 
 var current_test = first_test;
 
-var timeoutToAbortTest = 60000;
 var all_ws = [];
 
 function shouldNotOpen(e)
@@ -91,6 +108,10 @@ function shouldCloseNotCleanly(e)
 {
   var ws = e.target;
   ok(!e.wasClean, "the ws connection in test " + ws._testNumber + " shouldn't be closed cleanly");
+}
+
+function ignoreError(e)
+{
 }
 
 function CreateTestWS(ws_location, ws_protocol)
@@ -141,13 +162,9 @@ function forcegc()
 
 function doTest(number)
 {
-  if (doTest.timeoutId !== null) {
-    clearTimeout(doTest.timeoutId);
-    doTest.timeoutId = null;
-  }
-
   if (number > last_test) {
-    setTimeout(finishWSTest, 30000);  // wait for the close events be dispatched
+    ranAllTests = true;
+    maybeFinished();
     return;
   }
 
@@ -159,12 +176,6 @@ function doTest(number)
     doTest(number + 1);
     return;
   }
-
-  doTest.timeoutId = setTimeout(function()
-  {
-    ok(false, "test " + number + " took too long to finish!");
-    doTest(number + 1);
-  }, timeoutToAbortTest);
 
   fnTest._started = true;
   fnTest();
@@ -184,36 +195,67 @@ function test1()
 }
 
 // this test expects that the serialization list to connect to the proxy
-// is empty
+// is empty. Use different domain so we can run this in the background
+// and not delay other tests.
+
+var waitTest2Part1 = false;
+var waitTest2Part2 = false;
+
 function test2()
 {
-  var ws1 = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-2.1");
+  waitTest2Part1 = true;
+  waitTest2Part2 = true;
+
+  var ws1 = CreateTestWS("ws://sub2.test2.example.com/tests/content/base/test/file_websocket", "test-2.1");
   current_test--; // CreateTestWS incremented this
-  var ws2 = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-2.2");
+  var ws2 = CreateTestWS("ws://sub2.test2.example.com/tests/content/base/test/file_websocket", "test-2.2");
 
   var ws2CanConnect = false;
 
-  // the server will delay ws1 for 5 seconds
+  // the server will delay ws1 for 5 seconds, but the other tests can
+  // proceed in parallel
+  doTest(3);
 
   ws1.onopen = function()
   {
+    ok(true, "ws1 open in test 2");
     ws2CanConnect = true;
+    ws1.close();
   }
+
+  ws1.onclose = function(e)
+  {
+    waitTest2Part1 = false;
+    maybeFinished();
+  };
 
   ws2.onopen = function()
   {
     ok(ws2CanConnect, "shouldn't connect yet in test-2!");
-    doTest(3);
+    ws2.close();
   }
+
+  ws2.onclose = function(e)
+  {
+    waitTest2Part2 = false;
+    maybeFinished();
+  };
 }
 
 function test3()
 {
+  var hasError = false;
   var ws = CreateTestWS("ws://this.websocket.server.probably.does.not.exist");
   ws.onopen = shouldNotOpen;
+  ws.onerror = function (e)
+  {
+    hasError = true;
+  }
+
   ws.onclose = function(e)
   {
     shouldCloseNotCleanly(e);
+    ok(hasError, "rcvd onerror event");
     doTest(4);
   };
 }
@@ -283,25 +325,26 @@ function test6()
 
 function test7()
 {
-// with pywebsockets for -06 ths test no longer does anything useful
-// as the server handles the receipt of the close event directly, not
-// as part of the wsh - so we cannot fake the non-clean close which is
-// what we're trying to do here.
+  var ws = CreateTestWS("ws://sub2.test2.example.org/tests/content/base/test/file_websocket", "test-7");
+  var gotmsg = false;
 
-  ok(true, "test disabled");
-  current_test++;
-  doTest(8);
-
-//  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-7");
-//  ws.onopen = function()
-//  {
-//    ws.close();
-//  }
-//  ws.onclose = function(e)
-//  {
-//    shouldCloseNotCleanly(e);
-//    doTest(8);
-//  };
+  ws.onopen = function()
+  {
+    ok(true, "test 7 open");
+  }
+  ws.onmessage = function(e)
+  {
+    ok(true, "test 7 message");
+    ok(e.origin == "ws://sub2.test2.example.org", "onmessage origin set to ws:// host");
+    gotmsg = true;
+    ws.close();
+  }
+  ws.onclose = function(e)
+  {
+    ok(gotmsg, "recvd message in test 7 before close");
+    shouldCloseCleanly(e);
+    doTest(8);
+  };
 }
 
 function test8()
@@ -309,6 +352,7 @@ function test8()
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-8");
   ws.onopen = function()
   {
+    ok(ws.protocol == "test-8", "test-8 subprotocol selection");
     ws.close();
   }
   ws.onclose = function(e)
@@ -318,23 +362,40 @@ function test8()
   };
 }
 
+var waitTest9 = false;
+
 function test9()
 {
-  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-9");
+  waitTest9 = true;
+
+  var ws = CreateTestWS("ws://test2.example.org/tests/content/base/test/file_websocket", "test-9");
   ws.onopen = shouldNotOpen;
   ws.onclose = function(e)
   {
     shouldCloseNotCleanly(e);
-    doTest(10);
+    waitTest9 = false;
+    maybeFinished();
   };
 
   ws.close();
+  
+  // the server injects a delay, so proceed with this in the background
+  doTest(10);
 }
+
+var waitTest10 = false;
 
 function test10()
 {
-  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-10");
-  ws.onclose = shouldCloseCleanly;
+  waitTest10 = true;
+
+  var ws = CreateTestWS("ws://sub1.test1.example.com/tests/content/base/test/file_websocket", "test-10");
+  ws.onclose = function(e)
+  {
+    shouldCloseCleanly(e);
+    waitTest10 = false;
+    maybeFinished();
+  }
 
   try {
     ws.send("client data");
@@ -345,8 +406,12 @@ function test10()
   }
   ws.onopen = function()
   {
-    doTest(11);
+    ok(true, "test 10 opened");
+    ws.close();
   }
+
+  // proceed with this test in the background
+  doTest(11);
 }
 
 function test11()
@@ -377,6 +442,8 @@ function test11()
 
 function test12()
 {
+ ok(true,"test 12");
+
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-12");
   ws.onopen = function()
   {
@@ -473,9 +540,13 @@ function test16()
 
 var status_test17 = "not started";
 
+var waitTest17 = false;
+
 window._test17 = function()
 {
-  var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-17");
+  waitTest17 = true;
+
+  var local_ws = new MozWebSocket("ws://sub1.test2.example.org/tests/content/base/test/file_websocket", "test-17");
   local_ws._testNumber = "local17";
   local_ws._testNumber = current_test++;
 
@@ -506,12 +577,16 @@ window._test17 = function()
     shouldCloseCleanly(e);
     status_test17 = "closed";
     forcegc();
-    doTest(18);
-    forcegc();
+    waitTest17 = false;
+    maybeFinished();
   };
 
   local_ws = null;
   window._test17 = null;
+  forcegc();
+
+// do this in the background
+  doTest(18);
   forcegc();
 }
 
@@ -528,6 +603,7 @@ function test18()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket_http_resource.txt");
   ws.onopen = shouldNotOpen;
+  ws.onerror = ignoreError;
   ws.onclose = function(e)
   {
     shouldCloseNotCleanly(e);
@@ -539,6 +615,7 @@ function test19()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-19");
   ws.onopen = shouldNotOpen;
+  ws.onerror = ignoreError;
   ws.onclose = function(e)
   {
     shouldCloseNotCleanly(e);
@@ -546,9 +623,13 @@ function test19()
   };
 }
 
+var waitTest20 = false;
+
 window._test20 = function()
 {
-  var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-20");
+  waitTest20 = true;
+
+  var local_ws = new MozWebSocket("ws://sub1.test1.example.org/tests/content/base/test/file_websocket", "test-20");
   local_ws._testNumber = "local20";
   local_ws._testNumber = current_test++;
 
@@ -559,13 +640,17 @@ window._test20 = function()
 
   local_ws.onclose = function(e)
   {
-    shouldCloseCleanly(e);
-    doTest(21);
+    ok(true, "test 20 closed despite gc");
+    waitTest20 = false;
+    maybeFinished();
   };
 
   local_ws = null;
   window._test20 = null;
   forcegc();
+
+  // let test run in the background
+  doTest(21);
 }
 
 function test20()
@@ -573,20 +658,19 @@ function test20()
   window._test20();
 }
 
-var timeoutTest21;
+var waitTest21 = false;
 
 window._test21 = function()
 {
+  waitTest21 = true;
+
   var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-21");
   local_ws._testNumber = current_test++;
+  var received_message = false;
 
   local_ws.onopen = function(e)
   {
     e.target.send("client data");
-    timeoutTest21 = setTimeout(function()
-    {
-      ok(false, "Didn't received message on test-21!");
-    }, 15000);
     forcegc();
     e.target.onopen = null;
     forcegc();
@@ -599,8 +683,8 @@ window._test21 = function()
 
   local_ws.onmessage = function(e)
   {
-    clearTimeout(timeoutTest21);
     ok(e.data == "server data", "Bad message in test-21");
+    received_message = true;
     forcegc();
     e.target.onmessage = null;
     forcegc();
@@ -609,12 +693,17 @@ window._test21 = function()
   local_ws.onclose = function(e)
   {
     shouldCloseCleanly(e);
-    doTest(22);
+    ok(received_message, "close transitioned through onmessage");
+    waitTest21 = false;
+    maybeFinished();
   };
 
   local_ws = null;
   window._test21 = null;
   forcegc();
+
+  doTest(22);
+
 }
 
 function test21()
@@ -622,32 +711,437 @@ function test21()
   window._test21();
 }
 
+var waitTest22 = false;
+
 function test22()
 {
-  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-22");
+  waitTest22 = true;
+
+  const pref_open = "network.websocket.timeout.open";
+  var oldpref_open_value = 20;
+  oldpref_open_value = SpecialPowers.getIntPref(pref_open);
+  SpecialPowers.setIntPref(pref_open, 5);
+
+  var ws = CreateTestWS("ws://sub2.test2.example.org/tests/content/base/test/file_websocket", "test-22");
   ws.onopen = shouldNotOpen;
+  ws.onerror = ignoreError;
   ws.onclose = function(e)
   {
     shouldCloseNotCleanly(e);
-    doTest(23);
+    waitTest22 = false;
+    maybeFinished();
   };
+
+  SpecialPowers.setIntPref(pref_open, oldpref_open_value);
+  doTest(23);
 }
 
 function test23()
 {
+  current_test++;
   is(false, "WebSocket" in window, "WebSocket shouldn't be available on window object");
   is(true, "MozWebSocket" in window, "MozWebSocket should be available on window object");
   doTest(24);
 }
 
-function finishWSTest()
+function test24()
 {
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-does-not-exist");
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(25);
+  };
+  ws.onerror = function()
+  {
+  }
+}
+
+function test25()
+{
+  var prots=[];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+
+  // This test errors because the server requires a sub-protocol, but
+  // the test just wants to ensure that the ctor doesn't generate an
+  // exception
+  ws.onerror = ignoreError;
+  ws.onopen = shouldNotOpen;
+
+  ws.onclose = function(e)
+  {
+    ok(ws.protocol == "", "test25 subprotocol selection");
+    ok(true, "test 25 protocol array close");
+    doTest(26);
+  };
+}
+
+function test26()
+{
+  var prots=[""];
+
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+    ok(false, "testing empty element sub protocol array");
+  }
+  catch (e) {
+    ok(true, "testing empty sub element protocol array");
+  }
+  doTest(27);
+}
+
+function test27()
+{
+  var prots=["test27", ""];
+
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+    ok(false, "testing empty element mixed sub protocol array");
+  }
+  catch (e) {
+    ok(true, "testing empty element mixed sub protocol array");
+  }
+  doTest(28);
+}
+
+function test28()
+{
+  var prots=["test28"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 28 protocol array open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(ws.protocol == "test28", "test28 subprotocol selection");
+    ok(true, "test 28 protocol array close");
+    doTest(29);
+  };
+}
+
+function test29()
+{
+  var prots=["test29a", "test29b"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 29 protocol array open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 29 protocol array close");
+    doTest(30);
+  };
+}
+
+function test30()
+{
+  var prots=["test-does-not-exist"];
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(31);
+  };
+  ws.onerror = function()
+  {
+  }
+}
+
+function test31()
+{
+  var prots=["test-does-not-exist", "test31"];
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+
+  ws.onopen = function(e)
+  {
+    ok(true, "test 31 protocol array open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(ws.protocol == "test31", "test31 subprotocol selection");
+    ok(true, "test 31 protocol array close");
+    doTest(32);
+  };
+}
+
+function test32()
+{
+  var prots=["test32","test32"];
+
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+    ok(false, "testing duplicated element sub protocol array");
+  }
+  catch (e) {
+    ok(true, "testing duplicated sub element protocol array");
+  }
+  doTest(33);
+}
+
+function test33()
+{
+  var prots=["test33"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 33 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 33 close");
+    ok(e.wasClean, "test 33 closed cleanly");
+    ok(e.code == 1000, "test 33 had normal 1000 error code");
+    doTest(34);
+  };
+}
+
+function test34()
+{
+  var prots=["test-34"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 34 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 34 close");
+    ok(e.wasClean, "test 34 closed cleanly");
+    ok(e.code == 1001, "test 34 custom server code");
+    ok(e.reason == "going away now", "test 34 custom server reason");
+    doTest(35);
+  };
+}
+
+function test35()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-35a");
+
+  ws.onopen = function(e)
+  {
+    ok(true, "test 35a open");
+    ws.close(3500, "my code");
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 35a close");
+    ok(e.wasClean, "test 35a closed cleanly");
+    current_test--; // CreateTestWS for 35a incremented this
+    var wsb = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-35b");
+
+  wsb.onopen = function(e)
+  {
+    ok(true, "test 35b open");
+    wsb.close();
+  };
+
+  wsb.onclose = function(e)
+  {
+    ok(true, "test 35b close");
+    ok(e.wasClean, "test 35b closed cleanly");
+    ok(e.code == 3501, "test 35 custom server code");
+    ok(e.reason == "my code", "test 35 custom server reason");
+    doTest(36);
+  };
+  }
+}
+
+function test36()
+{
+  var prots=["test-36"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 36 open");
+
+    try {
+      ws.close(13200);
+      ok(false, "testing custom close code out of range");
+     }
+     catch (e) {
+       ok(true, "testing custom close code out of range");
+       ws.close(3200);
+     }
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 36 close");
+    ok(e.wasClean, "test 36 closed cleanly");
+    doTest(37);
+  };
+}
+
+function test37()
+{
+  var prots=["test-37"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 37 open");
+
+    try {
+	ws.close(3100,"0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123");
+      ok(false, "testing custom close reason out of range");
+     }
+     catch (e) {
+       ok(true, "testing custom close reason out of range");
+       ws.close(3100,"012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012");
+     }
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 37 close");
+    ok(e.wasClean, "test 37 closed cleanly");
+
+    current_test--; // CreateTestWS for 37 incremented this
+    var wsb = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-37b");
+
+    wsb.onopen = function(e)
+    {
+      // now test that a rejected close code and reason dont persist
+      ok(true, "test 37b open");
+      try {
+        wsb.close(3101,"0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123");
+        ok(false, "testing custom close reason out of range 37b");
+      }
+      catch (e) {
+        ok(true, "testing custom close reason out of range 37b");
+        wsb.close();
+     }
+    }
+
+    wsb.onclose = function(e)
+    {
+      ok(true, "test 37b close");
+      ok(e.wasClean, "test 37b closed cleanly");
+
+      current_test--; // CreateTestWS for 37 incremented this
+      var wsc = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-37c");
+
+      wsc.onopen = function(e)
+      {
+        ok(true, "test 37c open");
+        wsc.close();
+      }
+
+      wsc.onclose = function(e)
+      {
+         ok(e.code != 3101, "test 37c custom server code not present");
+         ok(e.reason == "", "test 37c custom server reason not present");
+         doTest(38);  
+      }
+    }
+  }
+}
+
+function test38()
+{
+  var prots=["test-38"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 38 open");
+    ok(ws.extensions != undefined, "extensions attribute defined");
+    ok(ws.extensions == "deflate-stream", "extensions attribute deflate-stream");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 38 close");
+    doTest(39);
+  };
+}
+
+function test39()
+{
+  var prots=["test-39"];
+
+  var ws = CreateTestWS("wss://example.com/tests/content/base/test/file_websocket", prots);
+  status_test39 = "started";
+  ws.onopen = function(e)
+  {
+    status_test39 = "opened";
+    ok(true, "test 39 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 39 close");
+    ok(status_test39 == "opened", "test 39 did open"); 
+    doTest(40);
+  };
+}
+
+function test40()
+{
+  var prots=["test-40"];
+
+  var ws = CreateTestWS("wss://nocert.example.com/tests/content/base/test/file_websocket", prots);
+
+  status_test40 = "started";
+  ws.onerror = ignoreError;
+
+  ws.onopen = function(e)
+  {
+    status_test40 = "opened";
+    ok(false, "test 40 open");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 40 close");
+    ok(status_test40 == "started", "test 40 did not open"); 
+    doTest(41);
+  };
+}
+
+var ranAllTests = false;
+
+function maybeFinished()
+{
+  if (!ranAllTests)
+    return;
+
+  if (waitTest2Part1 || waitTest2Part2 || waitTest9 || waitTest10 ||
+      waitTest17 || waitTest20 || waitTest21 || waitTest22)
+    return;
+
   for (i = 0; i < all_ws.length; ++i) {
     if (all_ws[i] != shouldNotReceiveCloseEvent &&
         !all_ws[i]._receivedCloseEvent) {
       ok(false, "didn't called close on test " + all_ws[i]._testNumber + "!");
     }
   }
+
   SimpleTest.finish();
 }
 

@@ -41,6 +41,8 @@
 #include "methodjit/FrameState-inl.h"
 #include "methodjit/StubCalls.h"
 
+#include "jstypedarrayinlines.h"
+
 using namespace js;
 using namespace js::mjit;
 using namespace js::analyze;
@@ -1314,12 +1316,10 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
              * in the invariant list, so don't recheck this is an object.
              */
             masm.loadPayload(frame.addressOf(entry.u.check.arraySlot), T0);
-            if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK) {
+            if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK)
                 masm.load32(Address(T0, offsetof(JSObject, initializedLength)), T0);
-            } else {
-                masm.loadPtr(Address(T0, offsetof(JSObject, privateData)), T0);
+            else
                 masm.load32(Address(T0, TypedArray::lengthOffset()), T0);
-            }
 
             int32 constant = entry.u.check.constant;
 
@@ -1408,9 +1408,6 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
             masm.loadPayload(frame.addressOf(array), T0);
 
             Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
-
-            /* Load the internal typed array. */
-            masm.loadPtr(Address(T0, offsetof(JSObject, privateData)), T0);
 
             if (entry.kind == InvariantEntry::TYPED_ARRAY_LENGTH) {
                 masm.load32(Address(T0, TypedArray::lengthOffset()), T0);

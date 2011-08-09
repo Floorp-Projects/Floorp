@@ -44,15 +44,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-const MODE_RDONLY   = 0x01;
-const MODE_WRONLY   = 0x02;
-const MODE_CREATE   = 0x08;
-const MODE_APPEND   = 0x10;
-const MODE_TRUNCATE = 0x20;
-
-const PERMS_FILE      = 0644;
-const PERMS_DIRECTORY = 0755;
-
 const ONE_BYTE = 1;
 const ONE_KILOBYTE = 1024 * ONE_BYTE;
 const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;

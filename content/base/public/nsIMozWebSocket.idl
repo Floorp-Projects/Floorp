@@ -43,6 +43,13 @@ interface nsIDOMEventListener;
 interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsPIDOMWindow;
+interface nsIDOMDOMStringList;
+
+%{C++
+#include "nsTArray.h"
+class nsString;
+%}
+[ref] native nsStringTArrayRef(nsTArray<nsString>);
 
 /**
  * The nsIMozWebSocket interface enables Web applications to maintain
@@ -51,10 +58,11 @@ interface nsPIDOMWindow;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(eae76132-e4a4-4765-8494-5e136521c846)]
+[scriptable, uuid(5b124f54-7d46-4bc0-8507-e58ed22c19b9)]
 interface nsIMozWebSocket : nsISupports
 {
   readonly attribute DOMString url;
+  readonly attribute DOMString extensions;
   readonly attribute DOMString protocol;
 
   //ready state
@@ -79,13 +87,14 @@ interface nsIMozWebSocket : nsISupports
    * @return if the connection is still established (and the data was queued or
    *         sent successfully).
    */
-  boolean send(in DOMString data);
+  void send(in DOMString data);
 
   /**
    * Closes the Web Socket connection or connection attempt, if any.
    * If the connection is already closed, it does nothing.
    */
-  void close();
+  [optional_argc] void close([optional] in unsigned short code,
+                             [optional] in DOMString reason);
 
   /**
    * Initialize the object for use from C++ code with the principal, script
@@ -98,13 +107,16 @@ interface nsIMozWebSocket : nsISupports
    * @param ownerWindow The associated window for the request. May be null.
    * @param url The url for opening the socket. This must not be empty, and
    *            must have an absolute url, using either the ws or wss schemes.
-   * @param protocol  Specifies a sub-protocol that the server must support for
-   *                  the connection to be successful. If empty, no protocol is
-   *                  specified.
+   * @param protocol  Specifies array of sub-protocols acceptable to the client.
+   *                  If the length of the array is at least one, the server
+   *                  must select one of the listed sub-protocols for the
+   *                  connection to be successful. If empty, no sub-protocol is
+   *                  specified. The server selected sub-protocol can be read
+   *                  from the protocol attribute after connection.
    */
   [noscript] void init(in nsIPrincipal principal,
                        in nsIScriptContext scriptContext,
                        in nsPIDOMWindow ownerWindow,
                        in DOMString url,
-                       in DOMString protocol);
+                       in nsStringTArrayRef protocol);
 };

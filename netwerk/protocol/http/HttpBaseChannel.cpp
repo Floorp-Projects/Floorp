@@ -1295,20 +1295,20 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID)
     return NS_ERROR_NOT_RESUMABLE;
   }
 
-  // Don't return an entity if the server sent the following header:
-  // Accept-Ranges: none
-  // Not sending the Accept-Ranges header means we can still try
-  // sending range requests.
-  const char* acceptRanges =
-      mResponseHead->PeekHeader(nsHttp::Accept_Ranges);
-  if (acceptRanges &&
-      !nsHttp::FindToken(acceptRanges, "bytes", HTTP_HEADER_VALUE_SEPS)) {
-    return NS_ERROR_NOT_RESUMABLE;
-  }
-
   PRUint64 size = LL_MAXUINT;
   nsCAutoString etag, lastmod;
   if (mResponseHead) {
+    // Don't return an entity if the server sent the following header:
+    // Accept-Ranges: none
+    // Not sending the Accept-Ranges header means we can still try
+    // sending range requests.
+    const char* acceptRanges =
+        mResponseHead->PeekHeader(nsHttp::Accept_Ranges);
+    if (acceptRanges &&
+        !nsHttp::FindToken(acceptRanges, "bytes", HTTP_HEADER_VALUE_SEPS)) {
+      return NS_ERROR_NOT_RESUMABLE;
+    }
+
     size = mResponseHead->TotalEntitySize();
     const char* cLastMod = mResponseHead->PeekHeader(nsHttp::Last_Modified);
     if (cLastMod)

@@ -64,6 +64,7 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "DiscardTracker.h"
+#include "mozilla/TimeStamp.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -148,7 +149,7 @@ namespace imagelib {
 class imgDecodeWorker;
 class Decoder;
 
-class RasterImage : public mozilla::imagelib::Image
+class RasterImage : public Image
                   , public nsITimerCallback
                   , public nsIProperties
                   , public nsSupportsWeakReference
@@ -209,8 +210,10 @@ public:
   /* The total number of frames in this image. */
   PRUint32 GetNumFrames();
 
-  PRUint32 GetDecodedDataSize();
-  PRUint32 GetSourceDataSize();
+  virtual PRUint32 GetDecodedHeapSize();
+  virtual PRUint32 GetDecodedNonheapSize();
+  virtual PRUint32 GetDecodedOutOfProcessSize();
+  virtual PRUint32 GetSourceHeapSize();
 
   /* Triggers discarding. */
   void Discard(bool force = false);
@@ -382,7 +385,7 @@ private:
   imgFrame* GetCurrentDrawableImgFrame();
   PRUint32 GetCurrentImgFrameIndex() const;
   
-  inline Anim* ensureAnimExists()
+  inline void EnsureAnimExists()
   {
     if (!mAnim) {
 
@@ -400,7 +403,6 @@ private:
       // is acceptable for the moment.
       LockImage();
     }
-    return mAnim;
   }
   
   /** Function for doing the frame compositing of animations
@@ -543,13 +545,13 @@ private: // data
 
   // Helpers
   void DoError();
-  PRBool CanDiscard();
-  PRBool CanForciblyDiscard();
-  PRBool DiscardingActive();
-  PRBool StoringSourceData();
+  bool CanDiscard();
+  bool CanForciblyDiscard();
+  bool DiscardingActive();
+  bool StoringSourceData();
 
 protected:
-  PRBool ShouldAnimate();
+  bool ShouldAnimate();
 };
 
 // XXXdholbert These helper classes should move to be inside the
@@ -572,6 +574,7 @@ class imgDecodeWorker : public nsRunnable
 
   private:
     nsWeakPtr mContainer;
+    TimeDuration mDecodeTime; // the default constructor initializes to 0
 };
 
 // Asynchronous Decode Requestor

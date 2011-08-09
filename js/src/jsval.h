@@ -317,11 +317,11 @@ typedef union jsval_layout
             int32          i32;
             uint32         u32;
             JSWhyMagic     why;
-            jsuword        word;
         } payload;
     } s;
     double asDouble;
     void *asPtr;
+    jsuword asWord;
 } jsval_layout;
 # endif  /* JS_BITS_PER_WORD */
 #else   /* defined(IS_LITTLE_ENDIAN) */
@@ -354,18 +354,21 @@ typedef union jsval_layout
         uint64             payload47 : 47;
     } debugView;
     struct {
+        uint32             padding;
         union {
             int32          i32;
             uint32         u32;
             JSWhyMagic     why;
-            jsuword        word;
         } payload;
     } s;
     double asDouble;
     void *asPtr;
+    jsuword asWord;
 } jsval_layout;
 # endif /* JS_BITS_PER_WORD */
 #endif  /* defined(IS_LITTLE_ENDIAN) */
+
+JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 
 #if JS_BITS_PER_WORD == 32
 

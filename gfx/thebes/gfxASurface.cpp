@@ -502,6 +502,12 @@ gfxASurface::GetSubpixelAntialiasingEnabled()
 #endif
 }
 
+gfxASurface::MemoryLocation
+gfxASurface::GetMemoryLocation() const
+{
+    return MEMORY_IN_PROCESS_HEAP;
+}
+
 PRInt32
 gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 {
@@ -561,39 +567,54 @@ gfxASurface::MovePixels(const nsIntRect& aSourceRect,
 
 /** Memory reporting **/
 
-static const char *sSurfaceNamesForSurfaceType[] = {
-    "gfx-surface-image",
-    "gfx-surface-pdf",
-    "gfx-surface-ps",
-    "gfx-surface-xlib",
-    "gfx-surface-xcb",
-    "gfx-surface-glitz",
-    "gfx-surface-quartz",
-    "gfx-surface-win32",
-    "gfx-surface-beos",
-    "gfx-surface-directfb",
-    "gfx-surface-svg",
-    "gfx-surface-os2",
-    "gfx-surface-win32printing",
-    "gfx-surface-quartzimage",
-    "gfx-surface-script",
-    "gfx-surface-qpainter",
-    "gfx-surface-recording",
-    "gfx-surface-vg",
-    "gfx-surface-gl",
-    "gfx-surface-drm",
-    "gfx-surface-tee",
-    "gfx-surface-xml",
-    "gfx-surface-skia",
-    "gfx-surface-subsurface",
-    "gfx-surface-d2d"
+static const char *sDefaultSurfaceDescription =
+    "Memory used by gfx surface of the given type.";
+
+struct SurfaceMemoryReporterAttrs {
+  const char *name;
+  const char *description;
 };
 
-PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceNamesForSurfaceType) == gfxASurface::SurfaceTypeMax);
+static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
+    {"gfx-surface-image", nsnull},
+    {"gfx-surface-pdf", nsnull},
+    {"gfx-surface-ps", nsnull},
+    {"gfx-surface-xlib",
+     "Memory used by xlib surfaces to store pixmaps. This memory lives in "
+     "the X server's process rather than in this application, so the bytes "
+     "accounted for here aren't counted in vsize, resident, explicit, or any of "
+     "the other measurements on this page."},
+    {"gfx-surface-xcb", nsnull},
+    {"gfx-surface-glitz", nsnull},
+    {"gfx-surface-quartz", nsnull},
+    {"gfx-surface-win32", nsnull},
+    {"gfx-surface-beos", nsnull},
+    {"gfx-surface-directfb", nsnull},
+    {"gfx-surface-svg", nsnull},
+    {"gfx-surface-os2", nsnull},
+    {"gfx-surface-win32printing", nsnull},
+    {"gfx-surface-quartzimage", nsnull},
+    {"gfx-surface-script", nsnull},
+    {"gfx-surface-qpainter", nsnull},
+    {"gfx-surface-recording", nsnull},
+    {"gfx-surface-vg", nsnull},
+    {"gfx-surface-gl", nsnull},
+    {"gfx-surface-drm", nsnull},
+    {"gfx-surface-tee", nsnull},
+    {"gfx-surface-xml", nsnull},
+    {"gfx-surface-skia", nsnull},
+    {"gfx-surface-subsurface", nsnull},
+    {"gfx-surface-d2d", nsnull},
+};
+
+PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
+                 gfxASurface::SurfaceTypeMax);
 #ifdef CAIRO_HAS_D2D_SURFACE
-PR_STATIC_ASSERT(PRUint32(CAIRO_SURFACE_TYPE_D2D) == PRUint32(gfxASurface::SurfaceTypeD2D));
+PR_STATIC_ASSERT(PRUint32(CAIRO_SURFACE_TYPE_D2D) ==
+                 PRUint32(gfxASurface::SurfaceTypeD2D));
 #endif
-PR_STATIC_ASSERT(PRUint32(CAIRO_SURFACE_TYPE_SKIA) == PRUint32(gfxASurface::SurfaceTypeSkia));
+PR_STATIC_ASSERT(PRUint32(CAIRO_SURFACE_TYPE_SKIA) ==
+                 PRUint32(gfxASurface::SurfaceTypeSkia));
 
 static const char *
 SurfaceMemoryReporterPathForType(gfxASurface::gfxSurfaceType aType)
@@ -602,7 +623,17 @@ SurfaceMemoryReporterPathForType(gfxASurface::gfxSurfaceType aType)
         aType >= gfxASurface::SurfaceTypeMax)
         return "gfx-surface-unknown";
 
-    return sSurfaceNamesForSurfaceType[aType];
+    return sSurfaceMemoryReporterAttrs[aType].name;
+}
+
+static const char *
+SurfaceMemoryReporterDescriptionForType(gfxASurface::gfxSurfaceType aType)
+{
+    if (aType >= 0 && aType < gfxASurface::SurfaceTypeMax &&
+        sSurfaceMemoryReporterAttrs[aType].description)
+        return sSurfaceMemoryReporterAttrs[aType].description;
+
+    return sDefaultSurfaceDescription;
 }
 
 /* Surface size memory reporting */
@@ -645,7 +676,7 @@ public:
     }
 
     NS_IMETHOD GetDescription(nsACString &desc) {
-        desc.AssignLiteral("Memory used by gfx surface of the given type.");
+        desc.Assign(SurfaceMemoryReporterDescriptionForType(mType));
         return NS_OK;
     }
 

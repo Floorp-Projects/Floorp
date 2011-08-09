@@ -131,22 +131,11 @@ nsHTMLImageAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-NS_IMETHODIMP
-nsHTMLImageAccessible::GetNumActions(PRUint8 *aNumActions)
+PRUint8
+nsHTMLImageAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aNumActions);
-  *aNumActions = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv= nsLinkableAccessible::GetNumActions(aNumActions);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (HasLongDesc())
-    (*aNumActions)++;
-
-  return NS_OK;
+  PRUint8 actionCount = nsLinkableAccessible::ActionCount();
+  return HasLongDesc() ? actionCount + 1 : actionCount;
 }
 
 NS_IMETHODIMP
@@ -248,9 +237,5 @@ nsHTMLImageAccessible::IsValidLongDescIndex(PRUint8 aIndex)
   if (!HasLongDesc())
     return PR_FALSE;
 
-  PRUint8 numActions = 0;
-  nsresult rv = nsLinkableAccessible::GetNumActions(&numActions);  
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  return (aIndex == numActions);
+  return aIndex == nsLinkableAccessible::ActionCount();
 }

@@ -47,6 +47,7 @@ include $(topsrcdir)/config/config.mk
 
 DIRS = \
   webconsole \
+  scratchpad \
   $(NULL)
 
 ifdef ENABLE_TESTS

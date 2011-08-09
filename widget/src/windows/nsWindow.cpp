@@ -194,10 +194,6 @@
 #include "nsTextStore.h"
 #endif // defined(NS_ENABLE_TSF)
 
-#if defined(MOZ_SPLASHSCREEN)
-#include "nsSplashScreen.h"
-#endif // defined(MOZ_SPLASHSCREEN)
-
 // Windowless plugin support
 #include "npapi.h"
 
@@ -1123,19 +1119,6 @@ nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-#if defined(MOZ_SPLASHSCREEN)
-  // we're about to show the first toplevel window,
-  // so kill off any splash screen if we had one
-  nsSplashScreen *splash = nsSplashScreen::Get();
-  if (splash && splash->IsOpen() && mWnd && bState &&
-      (mWindowType == eWindowType_toplevel ||
-       mWindowType == eWindowType_dialog ||
-       mWindowType == eWindowType_popup))
-  {
-    splash->Close();
-  }
-#endif
-
   if (mWindowType == eWindowType_popup) {
     // See bug 603793. When we try to draw D3D9/10 windows with a drop shadow
     // without the DWM on a secondary monitor, windows fails to composite
@@ -7694,13 +7677,15 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
     NS_ASSERTION(destWindow, "destWindow must not be NULL");
     // If the found window is our plugin window, it means that the message
     // has been handled by the plugin but not consumed.  We should handle the
-    // message on its parent window.
+    // message on its parent window.  However, note that the DOM event may
+    // cause accessing the plugin.  Therefore, we should unlock the plugin
+    // process by using PostMessage().
     if (destWindow->mWindowType == eWindowType_plugin) {
       destWindow = destWindow->GetParentWindow(PR_FALSE);
       NS_ENSURE_TRUE(destWindow, );
     }
     UINT internalMessage = GetInternalMessage(aMsg);
-    destWindow->ProcessMessage(internalMessage, aWParam, aLParam, aRetValue);
+    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
     return;
   }
 
@@ -7717,12 +7702,14 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
 
   // If we're a plugin window (MozillaWindowClass) and cursor in this window,
   // the message shouldn't go to plugin's wndproc again.  So, we should handle
-  // it on parent window.
+  // it on parent window.  However, note that the DOM event may cause accessing
+  // the plugin.  Therefore, we should unlock the plugin process by using
+  // PostMessage().
   if (mWindowType == eWindowType_plugin && pluginWnd == mWnd) {
     nsWindow* destWindow = GetParentWindow(PR_FALSE);
     NS_ENSURE_TRUE(destWindow, );
     UINT internalMessage = GetInternalMessage(aMsg);
-    destWindow->ProcessMessage(internalMessage, aWParam, aLParam, aRetValue);
+    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
     return;
   }
 

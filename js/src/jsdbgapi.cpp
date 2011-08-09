@@ -1132,7 +1132,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     script->isUncachedEval = true;
     bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, Valueify(rval));
 
-    js_DestroyScript(cx, script);
+    js_DestroyScript(cx, script, 6);
     return ok;
 }
 
@@ -2061,7 +2061,7 @@ ethogram_getAllEvents(JSContext *cx, uintN argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(rarray));
 
-    for (int i = 0; !p->isEmpty(); i++) {
+    for (uint32 i = 0; !p->isEmpty(); i++) {
 
         JSObject *x = JS_NewObject(cx, NULL, NULL, NULL);
         if (x == NULL)

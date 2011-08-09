@@ -93,6 +93,7 @@ EXTRA_PP_JS_MODULES = \
   LightweightThemeConsumer.jsm \
   Services.jsm \
   WindowDraggingUtils.jsm \
+  PageMenu.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

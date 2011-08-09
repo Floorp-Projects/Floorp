@@ -263,11 +263,10 @@ function GroupItem(listOfEls, options) {
   if (options.dontPush) {
     this.setZ(drag.zIndex);
     drag.zIndex++; 
-  } else
+  } else {
     // Calling snap will also trigger pushAway
     this.snap(immediately);
-  if ($container)
-    this.setBounds(rectToBe, immediately);
+  }
 
   if (!options.immediately && listOfEls.length > 0)
     $container.hide().fadeIn();
@@ -1656,11 +1655,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     container.mousedown(function(e) {
       let target = e.target;
       // only set the last mouse down target if it is a left click, not on the
-      // close button, not on the new tab button, not on the title bar and its
-      // element
+      // close button, not on the expand button, not on the title bar and its
+      // elements
       if (Utils.isLeftClick(e) &&
           self.$closeButton[0] != target &&
           self.$titlebar[0] != target &&
+          self.$expander[0] != target &&
           !self.$titlebar.contains(target) &&
           !self.$appTabTray.contains(target)) {
         lastMouseDownTarget = target;
@@ -2233,11 +2233,13 @@ let GroupItems = {
   // Function: groupItemStorageSanity
   // Given persistent storage data for a groupItem, returns true if it appears to not be damaged.
   groupItemStorageSanity: function GroupItems_groupItemStorageSanity(groupItemData) {
-    // TODO: check everything
-    // Bug 586555
-    var sane = true;
-    if (!Utils.isRect(groupItemData.bounds)) {
+    let sane = true;
+    if (!groupItemData.bounds || !Utils.isRect(groupItemData.bounds)) {
       Utils.log('GroupItems.groupItemStorageSanity: bad bounds', groupItemData.bounds);
+      sane = false;
+    } else if ((groupItemData.userSize && 
+               !Utils.isPoint(groupItemData.userSize)) ||
+               !groupItemData.id) {
       sane = false;
     }
 

@@ -576,6 +576,7 @@ struct JITScript {
     bool            singleStepMode:1;   /* compiled in "single step mode" */
     uint32          nInlineFrames;
     uint32          nCallSites;
+    uint32          nRootedObjects;
 #ifdef JS_MONOIC
     uint32          nGetGlobalNames;
     uint32          nSetGlobalNames;
@@ -610,6 +611,7 @@ struct JITScript {
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;
+    JSObject **rootedObjects() const;
 #ifdef JS_MONOIC
     ic::GetGlobalNameIC *getGlobalNames() const;
     ic::SetGlobalNameIC *setGlobalNames() const;
@@ -636,11 +638,11 @@ struct JITScript {
     void purgeMICs();
     void purgePICs();
 
+    void trace(JSTracer *trc);
+
     size_t scriptDataSize();
 
     jsbytecode *nativeToPC(void *returnAddress, CallSite **pinline) const;
-
-    void trace(JSTracer *trc);
 
   private:
     /* Helpers used to navigate the variable-length sections. */

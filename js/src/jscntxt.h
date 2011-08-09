@@ -1306,6 +1306,12 @@ struct JSContext
     bool stackIterAssertionEnabled;
 #endif
 
+    /*
+     * See JS_SetTrustedPrincipals in jsapi.h.
+     * Note: !cx->compartment is treated as trusted.
+     */
+    bool runningWithTrustedPrincipals() const;
+
   private:
     /*
      * The allocation code calls the function to indicate either OOM failure

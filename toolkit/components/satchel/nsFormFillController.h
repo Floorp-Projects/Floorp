@@ -55,6 +55,11 @@
 #include "nsILoginManager.h"
 #include "nsIMutationObserver.h"
 
+// X.h defines KeyPress
+#ifdef KeyPress
+#undef KeyPress
+#endif
+
 class nsFormHistory;
 
 class nsFormFillController : public nsIFormFillController,
@@ -81,16 +86,16 @@ public:
 protected:
   void AddWindowListeners(nsIDOMWindow *aWindow);
   void RemoveWindowListeners(nsIDOMWindow *aWindow);
-  
+
   void AddKeyListener(nsIDOMHTMLInputElement *aInput);
   void RemoveKeyListener();
-  
+
   void StartControllingInput(nsIDOMHTMLInputElement *aInput);
   void StopControllingInput();
-  
+
   void RevalidateDataList();
   PRBool RowMatch(nsFormHistory *aHistory, PRUint32 aIndex, const nsAString &aInputName, const nsAString &aInputValue);
-  
+
   inline nsIDocShell *GetDocShellForInput(nsIDOMHTMLInputElement *aInput);
   inline nsIDOMWindow *GetWindowForDocShell(nsIDocShell *aDocShell);
   inline PRInt32 GetIndexOfDocShell(nsIDocShell *aDocShell);
@@ -120,7 +125,7 @@ protected:
   PRUint32 mTimeout;
   PRUint32 mMinResultsForPopup;
   PRUint32 mMaxRows;
-  PRPackedBool mDisableAutoComplete; 
+  PRPackedBool mDisableAutoComplete;
   PRPackedBool mCompleteDefaultIndex;
   PRPackedBool mCompleteSelectedIndex;
   PRPackedBool mForceComplete;

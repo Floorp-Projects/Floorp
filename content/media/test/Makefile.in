@@ -207,6 +207,7 @@ _TEST_FILES += \
 		bug604067.webm \
 		chain.ogv \
 		dirac.ogg \
+		multiple-bos.ogg \
 		split.webm \
 		seek.ogv \
 		seek.webm \

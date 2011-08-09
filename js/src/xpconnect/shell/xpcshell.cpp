@@ -1153,7 +1153,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 {
     const char rcfilename[] = "xpcshell.js";
     FILE *rcfile;
-    int i, j, length;
+    int i;
     JSObject *argsObj;
     char *filename = NULL;
     JSBool isInteractive = JS_TRUE;
@@ -1199,8 +1199,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         return 1;
     }
 
-    length = argc - i;
-    for (j = 0; j < length; j++) {
+    for (size_t j = 0, length = argc - i; j < length; j++) {
         JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
         if (!str)
             return 1;

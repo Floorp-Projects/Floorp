@@ -49,6 +49,7 @@ EXTRA_JS_MODULES = \
 		PropertyPanel.jsm \
 		NetworkHelper.jsm \
 		AutocompletePopup.jsm \
+		gcli.jsm \
 		$(NULL)
 
 ifdef ENABLE_TESTS
