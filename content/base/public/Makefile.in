@@ -108,8 +108,6 @@ XPIDLSRCS	= \
 		nsIDOMFormData.idl \
 		nsIDOMParser.idl \
 		nsIDOMSerializer.idl \
-		nsISelection2.idl \
-		nsISelection3.idl \
 		nsISelectionController.idl  \
 		nsISelectionDisplay.idl  \
 		nsISelectionListener.idl  \
