@@ -43,7 +43,7 @@
 #define jsion_ion_lowering_x86_inl_h__
 
 #include "ion/IonLIR-inl.h"
-#include "ion/IonLowering-inl.h"
+#include "ion/Lowering-inl.h"
 
 namespace js {
 namespace ion {

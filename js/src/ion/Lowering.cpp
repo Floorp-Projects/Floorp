@@ -40,8 +40,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "IonLIR.h"
-#include "IonLowering.h"
-#include "IonLowering-inl.h"
+#include "Lowering.h"
+#include "Lowering-inl.h"
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "jsbool.h"
