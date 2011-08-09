@@ -379,18 +379,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
   return PR_TRUE;
 }
 
-LayersBackend
-ShadowLayerForwarder::GetParentBackendType()
-{
-  if (mParentBackend == LayerManager::LAYERS_NONE) {
-    LayersBackend backend;
-    if (mShadowManager->SendGetParentType(&backend)) {
-      mParentBackend = backend;
-    }
-  }
-  return mParentBackend;
-}
-
 static gfxASurface::gfxImageFormat
 OptimalFormatFor(gfxASurface::gfxContentType aContent)
 {
