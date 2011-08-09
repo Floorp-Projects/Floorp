@@ -54,10 +54,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
 		$(NULL)
 
-CSRCS		= \
-		$(XPCOM_GLUE_SRC_LCSRCS) \
-		$(NULL)  
-
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS) \
 		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
@@ -69,7 +65,7 @@ SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)xpcomglue_s_nomozalloc.$(LIB_SUFFIX) \
 		$(NULL)
 
-GARBAGE += $(CSRCS) $(CPPSRCS) DeadlockDetector.h SSE.h arm.h
+GARBAGE += $(CPPSRCS) DeadlockDetector.h SSE.h arm.h
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
@@ -94,7 +90,7 @@ OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
 endif
 
-export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp $(topsrcdir)/xpcom/glue/GenericModule.cpp $(topsrcdir)/xpcom/glue/DeadlockDetector.h $(topsrcdir)/xpcom/glue/SSE.h $(topsrcdir)/xpcom/glue/arm.h
+export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp $(topsrcdir)/xpcom/glue/GenericModule.cpp $(topsrcdir)/xpcom/glue/DeadlockDetector.h $(topsrcdir)/xpcom/glue/SSE.h $(topsrcdir)/xpcom/glue/arm.h
 	$(INSTALL) $^ .
 
 ifdef TARGET_XPCOM_ABI

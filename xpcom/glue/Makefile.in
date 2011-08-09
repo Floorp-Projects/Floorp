@@ -55,10 +55,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \
 		$(NULL)
 
-CSRCS		= \
-		$(XPCOM_GLUE_SRC_LCSRCS) \
-		$(NULL)  
-
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS) \
 		$(XPCOM_GLUENS_SRC_LCPPSRCS) \

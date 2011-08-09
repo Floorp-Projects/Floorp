@@ -128,6 +128,7 @@ _TEST_FILES = \
 		test_play_events_2.html \
 		test_playback.html \
 		test_playback_errors.html \
+ 		test_seekable1.html \
 		test_preload_actions.html \
 		test_preload_attribute.html \
 		test_progress.html \
@@ -259,6 +260,9 @@ _TEST_FILES += \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
 		contentDuration7.sjs \
+		noContentLength.sjs \
+		test_seekable2.html \
+		test_seekable3.html \
 		test_a4_tone.html \
 		file_audio_event_adopt_iframe.html \
 		test_audio_event_adopt.html \

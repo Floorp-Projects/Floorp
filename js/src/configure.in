@@ -334,7 +334,7 @@ case "$target" in
     CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
-    LIBS="$LIBS $STLPORT_LIBS -static-libstdc++"
+    LIBS="$LIBS $STLPORT_LIBS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -357,8 +357,8 @@ case "$target" in
     fi
 
     ANDROID_NDK="${android_ndk}"
-    ANDROID_TOOLCHAIN="{android_toolchain}"
-    ANDROID_PLATFORM="{android_platform}"
+    ANDROID_TOOLCHAIN="${android_toolchain}"
+    ANDROID_PLATFORM="${android_platform}"
     ANDROID_SDK="${android_sdk}"
     ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_VERSION="${android_version}"
