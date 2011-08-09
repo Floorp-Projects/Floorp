@@ -2090,7 +2090,7 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
     return PR_FALSE;
   }
 
-  PRBool skipNavigatingDisabledMenuItem = PR_TRUE;
+  PRInt32 skipNavigatingDisabledMenuItem = PR_TRUE;
   if (aOnPopup) {
     aPresContext->LookAndFeel()->
       GetMetric(nsILookAndFeel::eMetric_SkipNavigatingDisabledMenuItem,

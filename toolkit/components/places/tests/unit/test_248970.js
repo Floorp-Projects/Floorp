@@ -247,7 +247,7 @@ function run_test() {
       do_check_false(PlacesUtils.bhistory.isVisited(uri(nonvisited_uri)));
     });
 
-    // We attempted to add another 7 new entires, but we still have 7 history entries
+    // We attempted to add another 7 new entries, but we still have 7 history entries
     // and 1 history entry, Bookmark-A.
     // Private browsing blocked the entry of the new history entries
     check_placesItem_Count();

@@ -78,3 +78,5 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 # animated progress bars.
 skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
 skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
+
+== 676387-1.xul 676387-1-ref.xul

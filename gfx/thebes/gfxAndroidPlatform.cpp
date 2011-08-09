@@ -157,7 +157,7 @@ public:
     typedef nsAutoTArray<PRUint32, 8> IndexList;
     PLDHashTableOps ops;
     FontNameCache() : mWriteNeeded(PR_FALSE) {
-        ops = {
+        ops = (PLDHashTableOps) {
             PL_DHashAllocTable,
             PL_DHashFreeTable,
             StringHash,

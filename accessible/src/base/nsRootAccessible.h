@@ -49,8 +49,7 @@
 #include "nsHashtable.h"
 #include "nsCaretAccessible.h"
 #include "nsIDocument.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMFormListener.h"
+#include "nsIDOMEventListener.h"
 
 #define NS_ROOTACCESSIBLE_IMPL_CID                      \
 {  /* eaba2cf0-21b1-4e2b-b711-d3a89dcd5e1a */           \

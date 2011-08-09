@@ -91,6 +91,7 @@
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
 #include "jsopcodeinlines.h"
+#include "jstypedarrayinlines.h"
 
 #include "vm/Stack-inl.h"
 
@@ -11576,7 +11577,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (clasp == &js_FunctionClass)
             RETURN_STOP("new Function");
 
-        if (!clasp->isNative())
+        if (!IsFastTypedArrayClass(clasp) && !clasp->isNative())
             RETURN_STOP("new with non-native ops");
 
         // Don't trace |new Math.sin(0)|.
@@ -13197,22 +13198,28 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj_ins, obj->getClass(), branchExit, LOAD_CONST);
 
-        js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
-
-        LIns* priv_ins = w.ldpObjPrivate(obj_ins);
+        JSObject* tarray = js::TypedArray::getTypedArray(obj);
 
         // The index was on the stack and is therefore a LIR float; force it to
         // be an integer.                              
         CHECK_STATUS_A(makeNumberInt32(idx_ins, &idx_ins));
 
+        LIns* slots_ins = w.ldpObjFixedSlots(obj_ins);
         // Ensure idx >= 0 && idx < length (by using uint32)
         CHECK_STATUS_A(guard(true,
-                             w.name(w.ltui(idx_ins, w.ldiConstTypedArrayLength(priv_ins)),
+                             w.name(w.ltui(idx_ins, w.ldiConstTypedArrayLength(slots_ins)),
                                     "inRange"),
                              OVERFLOW_EXIT, /* abortIfAlwaysExits = */true));
 
         // We're now ready to store
-        LIns* data_ins = w.ldpConstTypedArrayData(priv_ins);
+        LIns* data_base_ins = w.ldpConstTypedArrayData(slots_ins);
+        LIns* offset_ins = w.ldiConstTypedArrayByteOffset(slots_ins);
+#ifdef NANOJIT_64BIT
+        LIns* data_ins = w.addp(data_base_ins, w.ui2uq(offset_ins));
+#else
+        LIns* data_ins = w.addp(data_base_ins, offset_ins);
+#endif
+
         LIns* pidx_ins = w.ui2p(idx_ins);
         LIns* typed_v_ins = v_ins;
 
@@ -13239,7 +13246,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
             }
         }
 
-        switch (tarray->type) {
+        switch (js::TypedArray::getType(tarray)) {
           case js::TypedArray::TYPE_INT8:
           case js::TypedArray::TYPE_INT16:
           case js::TypedArray::TYPE_INT32:
@@ -13270,7 +13277,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
             JS_NOT_REACHED("Unknown typed array type in tracer");       
         }
 
-        switch (tarray->type) {
+        switch (js::TypedArray::getType(tarray)) {
           case js::TypedArray::TYPE_INT8:
           case js::TypedArray::TYPE_UINT8_CLAMPED:
           case js::TypedArray::TYPE_UINT8:
@@ -14280,14 +14287,13 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     CHECK_STATUS_A(makeNumberInt32(get(&ival), &idx_ins));
     LIns* pidx_ins = w.ui2p(idx_ins);
 
-    js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
+    JSObject* tarray = js::TypedArray::getTypedArray(obj);
     JS_ASSERT(tarray);
 
-    /* priv_ins will load the TypedArray* */
-    LIns* priv_ins = w.ldpObjPrivate(obj_ins);
+    LIns *slots_ins = w.ldpObjFixedSlots(obj_ins);
 
     /* Abort if out-of-range. */
-    if ((jsuint) idx >= tarray->length)
+    if ((jsuint) idx >= js::TypedArray::getLength(tarray))
         RETURN_STOP_A("out-of-range index on typed array");
 
     /*
@@ -14300,14 +14306,20 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
      * length.
      */
     guard(true,
-          w.name(w.ltui(idx_ins, w.ldiConstTypedArrayLength(priv_ins)), "inRange"),
+          w.name(w.ltui(idx_ins, w.ldiConstTypedArrayLength(slots_ins)), "inRange"),
           BRANCH_EXIT);
 
     /* We are now ready to load.  Do a different type of load
      * depending on what type of thing we're loading. */
-    LIns* data_ins = w.ldpConstTypedArrayData(priv_ins);
+    LIns* data_base_ins = w.ldpConstTypedArrayData(slots_ins);
+    LIns* offset_ins = w.ldiConstTypedArrayByteOffset(slots_ins);
+#ifdef NANOJIT_64BIT
+    LIns* data_ins = w.addp(data_base_ins, w.ui2uq(offset_ins));
+#else
+    LIns* data_ins = w.addp(data_base_ins, offset_ins);
+#endif
 
-    switch (tarray->type) {
+    switch (js::TypedArray::getType(tarray)) {
       case js::TypedArray::TYPE_INT8:
         v_ins = w.i2d(w.ldc2iTypedArrayElement(data_ins, pidx_ins));
         break;
@@ -16336,7 +16348,7 @@ TraceRecorder::record_JSOP_LENGTH()
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), LOAD_NORMAL);
-        v_ins = w.i2d(w.ldiConstTypedArrayLength(w.ldpObjPrivate(obj_ins)));
+        v_ins = w.i2d(w.ldiConstTypedArrayLength(w.ldpObjFixedSlots(obj_ins)));
     } else {
         if (!obj->isNative())
             RETURN_STOP_A("can't trace length property access on non-array, non-native object");

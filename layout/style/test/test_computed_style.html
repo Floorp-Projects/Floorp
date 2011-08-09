@@ -94,10 +94,18 @@ var noframe_container = document.getElementById("content");
   p.style.overflowY = "scroll";
   is(cs.borderTopLeftRadius, "50px",
      "computed value of clamped border radius (top left, overflow-y)");
-  is(cs.borderTopRightRadius, "5px",
-     "computed value of clamped border radius (top right, overflow-y)");
-  is(cs.borderBottomRightRadius, "5px",
-     "computed value of clamped border radius (bottom right, overflow-y)");
+  // Fennec doesn't have scrollbars for overflow:scroll content
+  if (p.clientWidth == p.offsetWidth - 10) {
+    is(cs.borderTopRightRadius, "50px",
+       "computed value of border radius (top right, overflow-y)");
+    is(cs.borderBottomRightRadius, "50px",
+       "computed value of border radius (bottom right, overflow-y)");
+  } else {
+    is(cs.borderTopRightRadius, "5px",
+       "computed value of clamped border radius (top right, overflow-y)");
+    is(cs.borderBottomRightRadius, "5px",
+       "computed value of clamped border radius (bottom right, overflow-y)");
+  }
   is(cs.borderBottomLeftRadius, "50px",
      "computed value of clamped border radius (bottom left, overflow-y)");
 
@@ -107,10 +115,18 @@ var noframe_container = document.getElementById("content");
      "computed value of clamped border radius (top left, overflow-x)");
   is(cs.borderTopRightRadius, "50px",
      "computed value of clamped border radius (top right, overflow-x)");
-  is(cs.borderBottomRightRadius, "5px",
-     "computed value of clamped border radius (bottom right, overflow-x)");
-  is(cs.borderBottomLeftRadius, "5px",
-     "computed value of clamped border radius (bottom left, overflow-x)");
+  // Fennec doesn't have scrollbars for overflow:scroll content
+  if (p.clientHeight == p.offsetHeight - 10) {
+    is(cs.borderBottomRightRadius, "50px",
+       "computed value of border radius (bottom right, overflow-x)");
+    is(cs.borderBottomLeftRadius, "50px",
+       "computed value of  border radius (bottom left, overflow-x)");
+  } else {
+    is(cs.borderBottomRightRadius, "5px",
+       "computed value of clamped border radius (bottom right, overflow-x)");
+    is(cs.borderBottomLeftRadius, "5px",
+       "computed value of clamped border radius (bottom left, overflow-x)");
+  }
 
   p.parentNode.removeChild(p);
 })();

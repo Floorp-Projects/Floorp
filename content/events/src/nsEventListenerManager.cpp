@@ -42,16 +42,6 @@
 #include "nsCaret.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMContextMenuListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsIDOMLoadListener.h"
-#include "nsIDOMTextListener.h"
-#include "nsIDOMCompositionListener.h"
-#include "nsIDOMUIListener.h"
 #include "nsITextControlFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPIDOMWindow.h"
@@ -95,12 +85,8 @@
 using namespace mozilla::dom;
 
 #define EVENT_TYPE_EQUALS( ls, type, userType ) \
-  (ls->mEventType && ls->mEventType == type && \
+  (ls->mEventType == type && \
   (ls->mEventType != NS_USER_DEFINED_EVENT || ls->mTypeAtom == userType))
-
-#define EVENT_TYPE_DATA_EQUALS( type1, type2 ) \
-  (type1 && type2 && type1->iid && type2->iid && \
-   type1->iid->Equals(*(type2->iid)))
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -137,137 +123,6 @@ MutationBitForEventType(PRUint32 aEventType)
   }
   return 0;
 }
-
-typedef
-NS_STDCALL_FUNCPROTO(nsresult,
-                     GenericHandler,
-                     nsIDOMEventListener, HandleEvent, 
-                     (nsIDOMEvent*));
-
-/*
- * Things here are not as they appear.  Namely, |ifaceListener| below is
- * not really a pointer to the nsIDOMEventListener interface, and aMethod is
- * not really a pointer-to-member for nsIDOMEventListener.  They both
- * actually refer to the event-type-specific listener interface.  The casting
- * magic allows us to use a single dispatch method.  This relies on the
- * assumption that nsIDOMEventListener and the event type listener interfaces
- * have the same object layout and will therefore have compatible
- * pointer-to-member implementations.
- */
-
-static nsresult DispatchToInterface(nsIDOMEvent* aEvent,
-                                    nsIDOMEventListener* aListener,
-                                    GenericHandler aMethod,
-                                    const nsIID& aIID)
-{
-  nsIDOMEventListener* ifaceListener = nsnull;
-  nsresult rv = NS_OK;
-  aListener->QueryInterface(aIID, (void**) &ifaceListener);
-  NS_WARN_IF_FALSE(ifaceListener,
-                   "DispatchToInterface couldn't QI to the right interface");
-  if (ifaceListener) {
-    rv = (ifaceListener->*aMethod)(aEvent);
-    NS_RELEASE(ifaceListener);
-  }
-  return rv;
-}
-
-struct EventDispatchData
-{
-  PRUint32 message;
-  GenericHandler method;
-};
-
-struct EventTypeData
-{
-  const EventDispatchData* events;
-  int                      numEvents;
-  const nsIID*             iid;
-};
-
-#define HANDLER(x) reinterpret_cast<GenericHandler>(x)
-
-static const EventDispatchData sMouseEvents[] = {
-  { NS_MOUSE_BUTTON_DOWN,        HANDLER(&nsIDOMMouseListener::MouseDown)     },
-  { NS_MOUSE_BUTTON_UP,          HANDLER(&nsIDOMMouseListener::MouseUp)       },
-  { NS_MOUSE_CLICK,              HANDLER(&nsIDOMMouseListener::MouseClick)    },
-  { NS_MOUSE_DOUBLECLICK,        HANDLER(&nsIDOMMouseListener::MouseDblClick) },
-  { NS_MOUSE_ENTER_SYNTH,        HANDLER(&nsIDOMMouseListener::MouseOver)     },
-  { NS_MOUSE_EXIT_SYNTH,         HANDLER(&nsIDOMMouseListener::MouseOut)      }
-};
-
-static const EventDispatchData sMouseMotionEvents[] = {
-  { NS_MOUSE_MOVE, HANDLER(&nsIDOMMouseMotionListener::MouseMove) }
-};
-
-static const EventDispatchData sContextMenuEvents[] = {
-  { NS_CONTEXTMENU, HANDLER(&nsIDOMContextMenuListener::ContextMenu) }
-};
-
-static const EventDispatchData sCompositionEvents[] = {
-  { NS_COMPOSITION_START,
-    HANDLER(&nsIDOMCompositionListener::HandleStartComposition)  },
-  { NS_COMPOSITION_END,
-    HANDLER(&nsIDOMCompositionListener::HandleEndComposition)    }
-};
-
-static const EventDispatchData sTextEvents[] = {
-  { NS_TEXT_TEXT, HANDLER(&nsIDOMTextListener::HandleText) }
-};
-
-static const EventDispatchData sKeyEvents[] = {
-  { NS_KEY_UP,    HANDLER(&nsIDOMKeyListener::KeyUp)    },
-  { NS_KEY_DOWN,  HANDLER(&nsIDOMKeyListener::KeyDown)  },
-  { NS_KEY_PRESS, HANDLER(&nsIDOMKeyListener::KeyPress) }
-};
-
-static const EventDispatchData sFocusEvents[] = {
-  { NS_FOCUS_CONTENT, HANDLER(&nsIDOMFocusListener::Focus) },
-  { NS_BLUR_CONTENT,  HANDLER(&nsIDOMFocusListener::Blur)  }
-};
-
-static const EventDispatchData sFormEvents[] = {
-  { NS_FORM_SUBMIT,   HANDLER(&nsIDOMFormListener::Submit) },
-  { NS_FORM_RESET,    HANDLER(&nsIDOMFormListener::Reset)  },
-  { NS_FORM_CHANGE,   HANDLER(&nsIDOMFormListener::Change) },
-  { NS_FORM_SELECTED, HANDLER(&nsIDOMFormListener::Select) },
-  { NS_FORM_INPUT,    HANDLER(&nsIDOMFormListener::Input)  }
-};
-
-static const EventDispatchData sLoadEvents[] = {
-  { NS_LOAD,               HANDLER(&nsIDOMLoadListener::Load)         },
-  { NS_PAGE_UNLOAD,        HANDLER(&nsIDOMLoadListener::Unload)       },
-  { NS_LOAD_ERROR,         HANDLER(&nsIDOMLoadListener::Error)        },
-  { NS_BEFORE_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::BeforeUnload) }
-};
-
-static const EventDispatchData sUIEvents[] = {
-  { NS_UI_ACTIVATE, HANDLER(&nsIDOMUIListener::Activate) },
-  { NS_UI_FOCUSIN,  HANDLER(&nsIDOMUIListener::FocusIn)  },
-  { NS_UI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut) }
-};
-
-#define IMPL_EVENTTYPEDATA(type) \
-{ \
-  s##type##Events, \
-  NS_ARRAY_LENGTH(s##type##Events), \
-  &NS_GET_IID(nsIDOM##type##Listener) \
-}
- 
-// IMPORTANT: indices match up with eEventArrayType_ enum values
-
-static const EventTypeData sEventTypes[] = {
-  IMPL_EVENTTYPEDATA(Mouse),
-  IMPL_EVENTTYPEDATA(MouseMotion),
-  IMPL_EVENTTYPEDATA(ContextMenu),
-  IMPL_EVENTTYPEDATA(Key),
-  IMPL_EVENTTYPEDATA(Load),
-  IMPL_EVENTTYPEDATA(Focus),
-  IMPL_EVENTTYPEDATA(Form),
-  IMPL_EVENTTYPEDATA(Text),
-  IMPL_EVENTTYPEDATA(Composition),
-  IMPL_EVENTTYPEDATA(UI)
-};
 
 PRUint32 nsEventListenerManager::sCreatedCount = 0;
 
@@ -333,33 +188,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsEventListenerManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
-const EventTypeData*
-nsEventListenerManager::GetTypeDataForIID(const nsIID& aIID)
-{
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sEventTypes); ++i) {
-    if (aIID.Equals(*(sEventTypes[i].iid))) {
-      return &sEventTypes[i];
-    }
-  }
-  return nsnull;
-}
-
-const EventTypeData*
-nsEventListenerManager::GetTypeDataForEventName(nsIAtom* aName)
-{
-  PRUint32 event = nsContentUtils::GetEventId(aName);
-  if (event != NS_USER_DEFINED_EVENT) {
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sEventTypes); ++i) {
-      for (PRInt32 j = 0; j < sEventTypes[i].numEvents; ++j) {
-         if (event == sEventTypes[i].events[j].message) {
-           return &sEventTypes[i];
-         }
-      }
-    }
-  }
-  return nsnull;
-}
-
 nsPIDOMWindow*
 nsEventListenerManager::GetInnerWindowForTarget()
 {
@@ -385,38 +213,19 @@ nsresult
 nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          PRUint32 aType,
                                          nsIAtom* aTypeAtom,
-                                         const EventTypeData* aTypeData,
                                          PRInt32 aFlags)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(aType || aTypeData, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aType, NS_ERROR_FAILURE);
 
   nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = aListener;
-
-  if (!aTypeData) {
-    // If we don't have type data, we can try to QI listener to the right
-    // interface and set mTypeData only if QI succeeds. This way we can save
-    // calls to DispatchToInterface (in HandleEvent) in those cases when QI
-    // would fail.
-    // @see also DispatchToInterface()
-    const EventTypeData* td = GetTypeDataForEventName(aTypeAtom);
-    if (td && td->iid) {
-      nsIDOMEventListener* ifaceListener = nsnull;
-      aListener->QueryInterface(*(td->iid), (void**) &ifaceListener);
-      if (ifaceListener) {
-        aTypeData = td;
-        NS_RELEASE(ifaceListener);
-      }
-    }
-  }
 
   nsListenerStruct* ls;
   PRUint32 count = mListeners.Length();
   for (PRUint32 i = 0; i < count; i++) {
     ls = &mListeners.ElementAt(i);
     if (ls->mListener == aListener && ls->mFlags == aFlags &&
-        (EVENT_TYPE_EQUALS(ls, aType, aTypeAtom) ||
-         EVENT_TYPE_DATA_EQUALS(aTypeData, ls->mTypeData))) {
+        EVENT_TYPE_EQUALS(ls, aType, aTypeAtom)) {
       return NS_OK;
     }
   }
@@ -430,7 +239,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mTypeAtom = aTypeAtom;
   ls->mFlags = aFlags;
   ls->mHandlerIsString = PR_FALSE;
-  ls->mTypeData = aTypeData;
 
   if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
     mMayHaveSystemGroupListeners = PR_TRUE;
@@ -491,10 +299,9 @@ void
 nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener, 
                                             PRUint32 aType,
                                             nsIAtom* aUserType,
-                                            const EventTypeData* aTypeData,
                                             PRInt32 aFlags)
 {
-  if (!aListener || !(aType || aTypeData)) {
+  if (!aListener || !aType) {
     return;
   }
 
@@ -506,9 +313,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
     ls = &mListeners.ElementAt(i);
     if (ls->mListener == aListener &&
         ((ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) &&
-        (EVENT_TYPE_EQUALS(ls, aType, aUserType) ||
-         (!(ls->mEventType) &&
-          EVENT_TYPE_DATA_EQUALS(ls->mTypeData, aTypeData)))) {
+        EVENT_TYPE_EQUALS(ls, aType, aUserType)) {
       nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
       mListeners.RemoveElementAt(i);
       mNoListenerForEvent = NS_EVENT_TYPE_NULL;
@@ -518,33 +323,15 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   }
 }
 
-nsresult
-nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener, 
-                                              const nsIID& aIID,
-                                              PRInt32 aFlags)
+static inline PRBool
+ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent)
 {
-  return AddEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
-                          GetTypeDataForIID(aIID), aFlags);
-}
-
-void
-nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener, 
-                                                 const nsIID& aIID,
-                                                 PRInt32 aFlags)
-{
-  RemoveEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
-                      GetTypeDataForIID(aIID), aFlags);
-}
-
-PRBool
-nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
-                                          nsEvent* aEvent)
-{
-  if (aEvent->message == NS_USER_DEFINED_EVENT) {
-    // We don't want to check aLs->mEventType here, bug 276846.
-    return (aEvent->userType && aLs->mTypeAtom == aEvent->userType);
-  }
-  return (aLs->mEventType == aEvent->message);
+  // This is slightly different from EVENT_TYPE_EQUALS in that it returns
+  // true even when aEvent->message == NS_USER_DEFINED_EVENT and
+  // aLs=>mEventType != NS_USER_DEFINED_EVENT as long as the atoms are the same
+  return aEvent->message == NS_USER_DEFINED_EVENT ?
+    (aLs->mTypeAtom == aEvent->userType) :
+    (aLs->mEventType == aEvent->message);
 }
 
 nsresult
@@ -554,7 +341,7 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
   PRUint32 type = nsContentUtils::GetEventId(atom);
-  return AddEventListener(aListener, type, atom, nsnull, aFlags);
+  return AddEventListener(aListener, type, atom, aFlags);
 }
 
 void
@@ -564,7 +351,7 @@ nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
   PRUint32 type = nsContentUtils::GetEventId(atom);
-  RemoveEventListener(aListener, type, atom, nsnull, aFlags);
+  RemoveEventListener(aListener, type, atom, aFlags);
 }
 
 nsListenerStruct*
@@ -603,7 +390,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
     rv = NS_NewJSEventListener(aContext, aScopeObject, mTarget, aName,
                                getter_AddRefs(scriptListener));
     if (NS_SUCCEEDED(rv)) {
-      AddEventListener(scriptListener, eventType, aName, nsnull,
+      AddEventListener(scriptListener, eventType, aName,
                        NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT);
 
       ls = FindJSEventListener(eventType, aName);
@@ -1078,10 +865,6 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   return result;
 }
 
-static PRUint32                 sLatestEventType = 0;
-static const EventTypeData*     sLatestEventTypeData = nsnull;
-static const EventDispatchData* sLatestEventDispData = nsnull;
-
 /**
 * Causes a check for event listeners and processing by them if they exist.
 * @param an event listener
@@ -1101,79 +884,39 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     aEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
   }
 
-  const EventTypeData* typeData = nsnull;
-  const EventDispatchData* dispData = nsnull;
-  if (aEvent->message != NS_USER_DEFINED_EVENT) {
-    // Check if this is the same type of event as what a listener manager
-    // handled last time.
-    if (aEvent->message == sLatestEventType) {
-      typeData = sLatestEventTypeData;
-      dispData = sLatestEventDispData;
-      goto found;
-    }
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sEventTypes); ++i) {
-     typeData = &sEventTypes[i];
-     for (PRInt32 j = 0; j < typeData->numEvents; ++j) {
-       dispData = &(typeData->events[j]);
-       if (aEvent->message == dispData->message) {
-         sLatestEventType = aEvent->message;
-         sLatestEventTypeData = typeData;
-         sLatestEventDispData = dispData;
-         goto found;
-       }
-     }
-     typeData = nsnull;
-     dispData = nsnull;
-    }
-  }
-
-found:
-
   nsAutoTObserverArray<nsListenerStruct, 2>::EndLimitedIterator iter(mListeners);
   nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
   PRBool hasListener = PR_FALSE;
   while (iter.HasMore()) {
     nsListenerStruct* ls = &iter.GetNext();
-    PRBool useTypeInterface =
-      EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData);
-    PRBool useGenericInterface =
-      (!useTypeInterface && ListenerCanHandle(ls, aEvent));
-    // Don't fire the listener if it's been removed.
     // Check that the phase is same in event and event listener.
     // Handle only trusted events, except when listener permits untrusted events.
-    if (useTypeInterface || useGenericInterface) {
-      if (ls->mListener) {
-        hasListener = PR_TRUE;
-        // XXX The (mFlags & aFlags) test here seems fragile. Shouldn't we
-        // specifically only test the capture/bubble flags.
-        if ((ls->mFlags & aFlags & ~NS_EVENT_FLAG_SYSTEM_EVENT) &&
-            (ls->mFlags & NS_EVENT_FLAG_SYSTEM_EVENT) ==
-            (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-            (NS_IS_TRUSTED_EVENT(aEvent) ||
-             ls->mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED)) {
-          if (!*aDOMEvent) {
-            nsEventDispatcher::CreateEvent(aPresContext, aEvent,
-                                           EmptyString(), aDOMEvent);
-          }
-          if (*aDOMEvent) {
+    if (ListenerCanHandle(ls, aEvent)) {
+      hasListener = PR_TRUE;
+      // XXX The (mFlags & aFlags) test here seems fragile. Shouldn't we
+      // specifically only test the capture/bubble flags.
+      if ((ls->mFlags & aFlags & ~NS_EVENT_FLAG_SYSTEM_EVENT) &&
+          (ls->mFlags & NS_EVENT_FLAG_SYSTEM_EVENT) ==
+          (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
+          (NS_IS_TRUSTED_EVENT(aEvent) ||
+           ls->mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED)) {
+        if (!*aDOMEvent) {
+          nsEventDispatcher::CreateEvent(aPresContext, aEvent,
+                                         EmptyString(), aDOMEvent);
+        }
+        if (*aDOMEvent) {
+          if (!aEvent->currentTarget) {
+            aEvent->currentTarget = aCurrentTarget->GetTargetForDOMEvent();
             if (!aEvent->currentTarget) {
-              aEvent->currentTarget = aCurrentTarget->GetTargetForDOMEvent();
-              if (!aEvent->currentTarget) {
-                break;
-              }
+              break;
             }
-            nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
-            if (useTypeInterface) {
-              aPusher->Pop();
-              DispatchToInterface(*aDOMEvent, ls->mListener,
-                                  dispData->method, *typeData->iid);
-            } else if (useGenericInterface &&
-                       aPusher->RePush(aCurrentTarget)) {
-              if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
-                                               aCurrentTarget, aFlags,
-                                               aPusher))) {
-                aEvent->flags |= NS_EVENT_FLAG_EXCEPTION_THROWN;
-              }
+          }
+          nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
+          if (aPusher->RePush(aCurrentTarget)) {
+            if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
+                                             aCurrentTarget, aFlags,
+                                             aPusher))) {
+              aEvent->flags |= NS_EVENT_FLAG_EXCEPTION_THROWN;
             }
           }
         }
@@ -1267,30 +1010,11 @@ PRBool
 nsEventListenerManager::HasListenersFor(const nsAString& aEventName)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aEventName);
-  PRUint32 type = nsContentUtils::GetEventId(atom);
-
-  const EventTypeData* typeData = nsnull;
-  const EventDispatchData* dispData = nsnull;
-  if (type != NS_USER_DEFINED_EVENT) {
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sEventTypes); ++i) {
-     typeData = &sEventTypes[i];
-     for (PRInt32 j = 0; j < typeData->numEvents; ++j) {
-       dispData = &(typeData->events[j]);
-       if (type == dispData->message) {
-         goto found;
-       }
-     }
-     typeData = nsnull;
-     dispData = nsnull;
-    }
-  }
-found:
 
   PRUint32 count = mListeners.Length();
   for (PRUint32 i = 0; i < count; ++i) {
     nsListenerStruct* ls = &mListeners.ElementAt(i);
-    if (ls->mTypeAtom == atom ||
-        EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData)) {
+    if (ls->mTypeAtom == atom) {
       return PR_TRUE;
     }
   }
@@ -1329,43 +1053,13 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
                                     PR_TRUE);
       }
     }
-    if (ls.mTypeData) {
-      // Handle special event listener interfaces, like nsIDOMFocusListener.
-      for (PRInt32 j = 0; j < ls.mTypeData->numEvents; ++j) {
-        const EventDispatchData* dispData = &(ls.mTypeData->events[j]);
-        const char* eventName = nsDOMEvent::GetEventName(dispData->message);
-        if (eventName) {
-          NS_ConvertASCIItoUTF16 eventType(eventName);
-          nsRefPtr<nsEventListenerInfo> info =
-            new nsEventListenerInfo(eventType, ls.mListener, capturing,
-                                    allowsUntrusted, systemGroup);
-          NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
-          aList->AppendObject(info);
-        }
-      }
-    } else if (ls.mEventType == NS_USER_DEFINED_EVENT) {
-      // Handle user defined event types.
-      if (ls.mTypeAtom) {
-        const nsDependentSubstring& eventType =
-          Substring(nsDependentAtomString(ls.mTypeAtom), 2);
-        nsRefPtr<nsEventListenerInfo> info =
-          new nsEventListenerInfo(eventType, ls.mListener, capturing,
-                                  allowsUntrusted, systemGroup);
-        NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
-        aList->AppendObject(info);
-      }
-    } else {
-      // Handle normal events.
-      const char* eventName = nsDOMEvent::GetEventName(ls.mEventType);
-      if (eventName) {
-        NS_ConvertASCIItoUTF16 eventType(eventName);
-        nsRefPtr<nsEventListenerInfo> info =
-          new nsEventListenerInfo(eventType, ls.mListener, capturing,
-                                  allowsUntrusted, systemGroup);
-        NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
-        aList->AppendObject(info);
-      }
-    }
+    const nsDependentSubstring& eventType =
+      Substring(nsDependentAtomString(ls.mTypeAtom), 2);
+    nsRefPtr<nsEventListenerInfo> info =
+      new nsEventListenerInfo(eventType, ls.mListener, capturing,
+                              allowsUntrusted, systemGroup);
+    NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+    aList->AppendObject(info);
   }
   return NS_OK;
 }
@@ -1377,9 +1071,7 @@ nsEventListenerManager::HasUnloadListeners()
   for (PRUint32 i = 0; i < count; ++i) {
     nsListenerStruct* ls = &mListeners.ElementAt(i);
     if (ls->mEventType == NS_PAGE_UNLOAD ||
-        ls->mEventType == NS_BEFORE_PAGE_UNLOAD ||
-        (ls->mTypeData && ls->mTypeData->iid &&
-         ls->mTypeData->iid->Equals(NS_GET_IID(nsIDOMLoadListener)))) {
+        ls->mEventType == NS_BEFORE_PAGE_UNLOAD) {
       return PR_TRUE;
     }
   }

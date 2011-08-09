@@ -3,4 +3,4 @@
 <!ENTITY webapps.perm.geolocation "Location-aware browsing">
 <!ENTITY webapps.perm.offline "Offline data storage">
 <!ENTITY webapps.perm.notifications "Desktop notifications">
-<!ENTITY webapps.perm.requested "requested">
+<!ENTITY webapps.perm.requestedHint "(requested)">

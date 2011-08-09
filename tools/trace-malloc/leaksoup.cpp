@@ -340,7 +340,7 @@ int main(int argc, char **argv)
 
         // Loop over the sorted nodes twice, first printing the roots
         // and then the non-roots.
-        for (PRBool root_type = PR_TRUE;
+        for (PRInt32 root_type = PR_TRUE;
              root_type == PR_TRUE || root_type == PR_FALSE; --root_type) {
             if (root_type) {
                 printf("\n\n"

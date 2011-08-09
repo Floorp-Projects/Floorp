@@ -77,7 +77,7 @@ static const char* const sEventNames[] = {
   "DOMAttrModified", "DOMCharacterDataModified",
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide", "DOMMouseScroll", "MozMousePixelScroll",
-  "offline", "online", "copy", "cut", "paste", "open", "message",
+  "offline", "online", "copy", "cut", "paste", "open", "message", "show",
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
   "SVGZoom",
 #ifdef MOZ_SMIL
@@ -1257,6 +1257,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_open];
   case NS_MESSAGE:
     return sEventNames[eDOMEvents_message];
+  case NS_SHOW_EVENT:
+    return sEventNames[eDOMEvents_show];
   case NS_SVG_LOAD:
     return sEventNames[eDOMEvents_SVGLoad];
   case NS_SVG_UNLOAD:

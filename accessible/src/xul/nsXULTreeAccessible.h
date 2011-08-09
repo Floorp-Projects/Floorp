@@ -195,7 +195,6 @@ public:
                            PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
 
-  NS_IMETHOD GetNumActions(PRUint8 *aCount);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
@@ -208,6 +207,9 @@ public:
   virtual PRUint64 NativeState();
   virtual PRInt32 IndexInParent() const;
   virtual nsAccessible* FocusedChild();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
   // nsXULTreeItemAccessibleBase
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULTREEITEMBASEACCESSIBLE_IMPL_CID)

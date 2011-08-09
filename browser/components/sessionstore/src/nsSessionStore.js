@@ -235,7 +235,10 @@ SessionStoreService.prototype = {
   // whether to restore hidden tabs or not, pref controlled.
   _restoreHiddenTabs: null,
 
-  // The state from the previous session (after restoring pinned tabs)
+  // The state from the previous session (after restoring pinned tabs). This
+  // state is persisted and passed through to the next session during an app
+  // restart to make the third party add-on warning not trash the deferred
+  // session
   _lastSessionState: null,
 
   // Whether we've been initialized
@@ -331,6 +334,10 @@ SessionStoreService.prototype = {
             this._lastSessionState = remainingState;
         }
         else {
+          // Get the last deferred session in case the user still wants to
+          // restore it
+          this._lastSessionState = this._initialState.lastSessionState;
+
           let lastSessionCrashed =
             this._initialState.session && this._initialState.session.state &&
             this._initialState.session.state == STATE_RUNNING_STR;
@@ -488,6 +495,12 @@ SessionStoreService.prototype = {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once",
                                      this._resume_session_once_on_shutdown);
       }
+
+      if (aData != "restart") {
+        // Throw away the previous session on shutdown
+        this._lastSessionState = null;
+      }
+
       this._loadState = STATE_QUITTING; // just to be sure
       this._uninit();
       break;
@@ -640,15 +653,16 @@ SessionStoreService.prototype = {
         let quitting = aSubject.data;
         if (quitting) {
           // save the backed up state with session set to stopped,
-          // otherwise resuming next time would look like a crash
+          // otherwise resuming next time would look like a crash.
+          // Whether we restore the session upon resume will be determined by the
+          // usual startup prefs, so we will have the same behavior regardless of
+          // whether the browser was closed while in normal or private browsing mode.
           if ("_stateBackup" in this) {
             var oState = this._stateBackup;
             oState.session = { state: STATE_STOPPED_STR };
 
             this._saveStateObject(oState);
           }
-          // make sure to restore the non-private session upon resuming
-          this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
         }
         else
           this._inPrivateBrowsing = false;
@@ -1858,9 +1872,7 @@ SessionStoreService.prototype = {
       catch (ex) { debug(ex); }
     }
 
-    if (aEntry.docIdentifier) {
-      entry.docIdentifier = aEntry.docIdentifier;
-    }
+    entry.docIdentifier = aEntry.BFCacheEntry.ID;
 
     if (aEntry.stateData != null) {
       entry.structuredCloneState = aEntry.stateData.getDataAsBase64();
@@ -1912,7 +1924,15 @@ SessionStoreService.prototype = {
     let hasContent = false;
 
     for (let i = 0; i < aHistory.count; i++) {
-      let uri = aHistory.getEntryAtIndex(i, false).URI;
+      let uri;
+      try {
+        uri = aHistory.getEntryAtIndex(i, false).URI;
+      }
+      catch (ex) {
+        // Chances are that this is getEntryAtIndex throwing, as seen in bug 669196.
+        // We've already asserted in _collectTabData, so we won't show that again.
+        continue;
+      }
       // sessionStorage is saved per origin (cf. nsDocShell::GetSessionStorageForURI)
       let domain = uri.spec;
       try {
@@ -2960,7 +2980,6 @@ SessionStoreService.prototype = {
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
       browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = aTab;
-      browser.__SS_restore_docIdentifier = curSHEntry.docIdentifier;
 
       didStartLoad = true;
       try {
@@ -3113,24 +3132,16 @@ SessionStoreService.prototype = {
     }
 
     if (aEntry.docIdentifier) {
-      // Get a new document identifier for this entry to ensure that history
-      // entries after a session restore are considered to have different
-      // documents from the history entries before the session restore.
-      // Document identifiers are 64-bit ints, so JS will loose precision and
-      // start assigning all entries the same doc identifier if these ever get
-      // large enough.
-      //
-      // It's a potential security issue if document identifiers aren't
-      // globally unique, but shEntry.setUniqueDocIdentifier() below guarantees
-      // that we won't re-use a doc identifier within a given instance of the
-      // application.
-      let ident = aDocIdentMap[aEntry.docIdentifier];
-      if (!ident) {
-        shEntry.setUniqueDocIdentifier();
-        aDocIdentMap[aEntry.docIdentifier] = shEntry.docIdentifier;
+      // If we have a serialized document identifier, try to find an SHEntry
+      // which matches that doc identifier and adopt that SHEntry's
+      // BFCacheEntry.  If we don't find a match, insert shEntry as the match
+      // for the document identifier.
+      let matchingEntry = aDocIdentMap[aEntry.docIdentifier];
+      if (!matchingEntry) {
+        aDocIdentMap[aEntry.docIdentifier] = shEntry;
       }
       else {
-        shEntry.docIdentifier = ident;
+        shEntry.adoptBFCacheEntry(matchingEntry);
       }
     }
 
@@ -3266,19 +3277,12 @@ SessionStoreService.prototype = {
       aBrowser.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
     }
 
-    if (aBrowser.__SS_restore_docIdentifier) {
-      let sh = aBrowser.webNavigation.sessionHistory;
-      sh.getEntryAtIndex(sh.index, false).QueryInterface(Ci.nsISHEntry).
-         docIdentifier = aBrowser.__SS_restore_docIdentifier;
-    }
-
     // notify the tabbrowser that this document has been completely restored
     this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
 
     delete aBrowser.__SS_restore_data;
     delete aBrowser.__SS_restore_pageStyle;
     delete aBrowser.__SS_restore_tab;
-    delete aBrowser.__SS_restore_docIdentifier;
   },
 
   /**
@@ -3475,6 +3479,10 @@ SessionStoreService.prototype = {
     };
     if (this._recentCrashes)
       oState.session.recentCrashes = this._recentCrashes;
+
+    // Persist the last session if we deferred restoring it
+    if (this._lastSessionState)
+      oState.lastSessionState = this._lastSessionState;
 
     this._saveStateObject(oState);
   },

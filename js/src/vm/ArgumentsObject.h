@@ -182,7 +182,7 @@ class ArgumentsObject : public ::JSObject
 #endif
 #ifdef JS_POLYIC
     friend class ::GetPropCompiler;
-    friend class mjit::ic::GetElementIC;
+    friend struct mjit::ic::GetElementIC;
 #endif
 
     void setInitialLength(uint32 length);

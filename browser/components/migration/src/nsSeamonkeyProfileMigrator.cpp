@@ -61,7 +61,6 @@
 #define FILE_NAME_CERT8DB         NS_LITERAL_STRING("cert8.db")
 #define FILE_NAME_KEY3DB          NS_LITERAL_STRING("key3.db")
 #define FILE_NAME_SECMODDB        NS_LITERAL_STRING("secmod.db")
-#define FILE_NAME_HISTORY         NS_LITERAL_STRING("history.dat")
 #define FILE_NAME_MIMETYPES       NS_LITERAL_STRING("mimeTypes.rdf")
 #define FILE_NAME_DOWNLOADS       NS_LITERAL_STRING("downloads.rdf")
 #define FILE_NAME_PREFS           NS_LITERAL_STRING("prefs.js")
@@ -100,7 +99,6 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup
 
   COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
   COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
-  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
   COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS);
   COPY_DATA(CopyOtherData,    aReplace, nsIBrowserProfileMigrator::OTHERDATA);
 
@@ -151,9 +149,6 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                            { ToNewUnicode(FILE_NAME_COOKIES),
                              nsIBrowserProfileMigrator::COOKIES,
                              PR_FALSE },
-                           { ToNewUnicode(FILE_NAME_HISTORY),
-                             nsIBrowserProfileMigrator::HISTORY,
-                             PR_TRUE },
                            { ToNewUnicode(FILE_NAME_BOOKMARKS),
                              nsIBrowserProfileMigrator::BOOKMARKS,
                              PR_FALSE },
@@ -641,12 +636,6 @@ nsSeamonkeyProfileMigrator::CopyCookies(PRBool aReplace)
     rv = ImportNetscapeCookies(seamonkeyCookiesFile);
   }
   return rv;
-}
-
-nsresult
-nsSeamonkeyProfileMigrator::CopyHistory(PRBool aReplace)
-{
-  return aReplace ? CopyFile(FILE_NAME_HISTORY, FILE_NAME_HISTORY) : NS_OK;
 }
 
 nsresult

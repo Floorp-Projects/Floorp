@@ -417,6 +417,61 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       aDistance = sqrt(squareDistance);
       return PR_TRUE;
     }
+    case eUnit_CSSValueTriplet: {
+      const nsCSSValueTriplet *triplet1 = aStartValue.GetCSSValueTripletValue();
+      const nsCSSValueTriplet *triplet2 = aEndValue.GetCSSValueTripletValue();
+      nsCSSUnit unit[3];
+      unit[0] = GetCommonUnit(aProperty, triplet1->mXValue.GetUnit(),
+                              triplet2->mXValue.GetUnit());
+      unit[1] = GetCommonUnit(aProperty, triplet1->mYValue.GetUnit(),
+                              triplet2->mYValue.GetUnit());
+      unit[2] = GetCommonUnit(aProperty, triplet1->mZValue.GetUnit(),
+                              triplet2->mZValue.GetUnit());
+      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
+          unit[0] == eCSSUnit_URL) {
+        return PR_FALSE;
+      }
+
+      double squareDistance = 0.0;
+      static nsCSSValue nsCSSValueTriplet::* const pairValues[3] = {
+        &nsCSSValueTriplet::mXValue, &nsCSSValueTriplet::mYValue, &nsCSSValueTriplet::mZValue
+      };
+      for (PRUint32 i = 0; i < 3; ++i) {
+        nsCSSValue nsCSSValueTriplet::*member = pairValues[i];
+        double diffsquared;
+        switch (unit[i]) {
+          case eCSSUnit_Pixel: {
+            float diff = (triplet1->*member).GetFloatValue() -
+                         (triplet2->*member).GetFloatValue();
+            diffsquared = diff * diff;
+            break;
+          }
+          case eCSSUnit_Percent: {
+            float diff = (triplet1->*member).GetPercentValue() -
+                         (triplet2->*member).GetPercentValue();
+             diffsquared = diff * diff;
+             break;
+          }
+          case eCSSUnit_Calc: {
+            CalcValue v1 = ExtractCalcValue(triplet1->*member);
+            CalcValue v2 = ExtractCalcValue(triplet2->*member);
+            float difflen = v2.mLength - v1.mLength;
+            float diffpct = v2.mPercent - v1.mPercent;
+            diffsquared = difflen * difflen + diffpct * diffpct;
+            break;
+          }
+          case eCSSUnit_Null:
+            break;
+          default:
+            NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
+            return PR_FALSE;
+        }
+        squareDistance += diffsquared;
+      }
+
+      aDistance = sqrt(squareDistance);
+      return PR_TRUE;
+    }
     case eUnit_CSSRect: {
       const nsCSSRect *rect1 = aStartValue.GetCSSRectValue();
       const nsCSSRect *rect2 = aEndValue.GetCSSRectValue();
@@ -1166,7 +1221,7 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
     nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(a1);
     nsRefPtr<nsCSSValue::Array> arr;
-    if (tfunc != eCSSKeyword_matrix) {
+    if (tfunc != eCSSKeyword_matrix && tfunc != eCSSKeyword_interpolatematrix) {
       arr = AppendTransformFunction(tfunc, resultTail);
     }
 
@@ -1272,10 +1327,8 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
         break;
       }
-      case eCSSKeyword_matrix: {
-        NS_ABORT_IF_FALSE(a1->Count() == 7, "unexpected count");
-        NS_ABORT_IF_FALSE(a2->Count() == 7, "unexpected count");
-
+      case eCSSKeyword_matrix:
+      case eCSSKeyword_interpolatematrix: {
         // FIXME: If the matrix contains only numbers then we could decompose
         // here. We can't do this for matrix3d though, so it's probably
         // best to stay consistent.
@@ -1489,6 +1542,66 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
 
       aResultValue.SetAndAdoptCSSValuePairValue(result.forget(),
                                                 eUnit_CSSValuePair);
+      return PR_TRUE;
+    }
+    case eUnit_CSSValueTriplet: {
+      nsCSSValueTriplet triplet1(*aValue1.GetCSSValueTripletValue());
+      nsCSSValueTriplet triplet2(*aValue2.GetCSSValueTripletValue());
+
+      if (triplet1.mZValue.GetUnit() == eCSSUnit_Null) {
+        triplet1.mZValue.SetFloatValue(0.0, eCSSUnit_Pixel);
+      }
+      if (triplet2.mZValue.GetUnit() == eCSSUnit_Null) {
+          triplet2.mZValue.SetFloatValue(0.0, eCSSUnit_Pixel);
+      }
+
+      nsCSSUnit unit[3];
+      unit[0] = GetCommonUnit(aProperty, triplet1.mXValue.GetUnit(),
+                              triplet2.mXValue.GetUnit());
+      unit[1] = GetCommonUnit(aProperty, triplet1.mYValue.GetUnit(),
+                               triplet2.mYValue.GetUnit());
+      unit[2] = GetCommonUnit(aProperty, triplet1.mZValue.GetUnit(),
+                              triplet2.mZValue.GetUnit());
+      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
+          unit[0] == eCSSUnit_Null || unit[0] == eCSSUnit_URL) {
+        return PR_FALSE;
+      }
+
+      nsAutoPtr<nsCSSValueTriplet> result(new nsCSSValueTriplet);
+      static nsCSSValue nsCSSValueTriplet::* const tripletValues[3] = {
+        &nsCSSValueTriplet::mXValue, &nsCSSValueTriplet::mYValue, &nsCSSValueTriplet::mZValue
+      };
+      PRUint32 restrictions = nsCSSProps::ValueRestrictions(aProperty);
+      for (PRUint32 i = 0; i < 3; ++i) {
+        nsCSSValue nsCSSValueTriplet::*member = tripletValues[i];
+        switch (unit[i]) {
+          case eCSSUnit_Pixel:
+            AddCSSValuePixel(aCoeff1, &triplet1->*member, aCoeff2, &triplet2->*member,
+                             result->*member, restrictions);
+            break;
+          case eCSSUnit_Percent:
+            AddCSSValuePercent(aCoeff1, &triplet1->*member,
+                               aCoeff2, &triplet2->*member,
+                               result->*member, restrictions);
+            break;
+          case eCSSUnit_Calc:
+            AddCSSValueCanonicalCalc(aCoeff1, &triplet1->*member,
+                                     aCoeff2, &triplet2->*member,
+                                     result->*member);
+            break;
+          default:
+            NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
+            return PR_FALSE;
+        }
+      }
+
+      if (result->mZValue.GetUnit() == eCSSUnit_Pixel &&
+          result->mZValue.GetFloatValue() == 0.0f) {
+        result->mZValue.Reset();
+      }
+
+      aResultValue.SetAndAdoptCSSValueTripletValue(result.forget(),
+                                                   eUnit_CSSValueTriplet);
       return PR_TRUE;
     }
     case eUnit_CSSRect: {
@@ -1958,6 +2071,18 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
         aSpecifiedValue.SetPairValue(pair);
       }
     } break;
+    case eUnit_CSSValueTriplet: {
+      // Rule node processing expects triplet values to be collapsed to a
+      // single value if both halves would be equal, for most but not
+      // all properties.  At present, all animatable properties that
+      // use pairs do expect collapsing.
+      const nsCSSValueTriplet* triplet = aComputedValue.GetCSSValueTripletValue();
+      if (triplet->mXValue == triplet->mYValue && triplet->mYValue == triplet->mZValue) {
+        aSpecifiedValue = triplet->mXValue;
+      } else {
+        aSpecifiedValue.SetTripletValue(triplet);
+      }
+    } break;
     case eUnit_CSSRect: {
       nsCSSRect& rect = aSpecifiedValue.SetRectValue();
       rect = *aComputedValue.GetCSSRectValue();
@@ -2268,11 +2393,33 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty__moz_transform_origin: {
           const nsStyleDisplay *styleDisplay =
             static_cast<const nsStyleDisplay*>(styleStruct);
+          nsAutoPtr<nsCSSValueTriplet> triplet(new nsCSSValueTriplet);
+          if (!triplet ||
+              !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[0],
+                                    triplet->mXValue) ||
+              !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[1],
+                                    triplet->mYValue) ||
+              !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[2],
+                                    triplet->mZValue)) {
+            return PR_FALSE;
+          }
+          if (triplet->mZValue.GetUnit() == eCSSUnit_Pixel &&
+              triplet->mZValue.GetFloatValue() == 0.0f) {
+            triplet->mZValue.Reset();
+          }
+          aComputedValue.SetAndAdoptCSSValueTripletValue(triplet.forget(),
+                                                         eUnit_CSSValueTriplet);
+          break;
+        }
+
+        case eCSSProperty_perspective_origin: {
+          const nsStyleDisplay *styleDisplay =
+            static_cast<const nsStyleDisplay*>(styleStruct);
           nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
           if (!pair ||
-              !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[0],
+              !StyleCoordToCSSValue(styleDisplay->mPerspectiveOrigin[0],
                                     pair->mXValue) ||
-              !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[1],
+              !StyleCoordToCSSValue(styleDisplay->mPerspectiveOrigin[1],
                                     pair->mYValue)) {
             return PR_FALSE;
           }
@@ -2776,6 +2923,14 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
         mUnit = eUnit_Null;
       }
       break;
+    case eUnit_CSSValueTriplet:
+      NS_ABORT_IF_FALSE(aOther.mValue.mCSSValueTriplet,
+                        "value triplets may not be null");
+      mValue.mCSSValueTriplet = new nsCSSValueTriplet(*aOther.mValue.mCSSValueTriplet);
+      if (!mValue.mCSSValueTriplet) {
+        mUnit = eUnit_Null;
+      }
+      break;
     case eUnit_CSSRect:
       NS_ABORT_IF_FALSE(aOther.mValue.mCSSRect, "rects may not be null");
       mValue.mCSSRect = new nsCSSRect(*aOther.mValue.mCSSRect);
@@ -2913,6 +3068,17 @@ nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
 }
 
 void
+nsStyleAnimation::Value::SetAndAdoptCSSValueTripletValue(
+                           nsCSSValueTriplet *aValueTriplet, Unit aUnit)
+{
+    FreeValue();
+    NS_ABORT_IF_FALSE(IsCSSValueTripletUnit(aUnit), "bad unit");
+    NS_ABORT_IF_FALSE(aValueTriplet != nsnull, "value pairs may not be null");
+    mUnit = aUnit;
+    mValue.mCSSValueTriplet = aValueTriplet; // take ownership
+}
+
+void
 nsStyleAnimation::Value::SetAndAdoptCSSRectValue(nsCSSRect *aRect, Unit aUnit)
 {
   FreeValue();
@@ -2953,6 +3119,8 @@ nsStyleAnimation::Value::FreeValue()
     delete mValue.mCSSValueList;
   } else if (IsCSSValuePairUnit(mUnit)) {
     delete mValue.mCSSValuePair;
+  } else if (IsCSSValueTripletUnit(mUnit)) {
+    delete mValue.mCSSValueTriplet;
   } else if (IsCSSRectUnit(mUnit)) {
     delete mValue.mCSSRect;
   } else if (IsCSSValuePairListUnit(mUnit)) {
@@ -2991,6 +3159,8 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
       return *mValue.mCSSValue == *aOther.mValue.mCSSValue;
     case eUnit_CSSValuePair:
       return *mValue.mCSSValuePair == *aOther.mValue.mCSSValuePair;
+    case eUnit_CSSValueTriplet:
+      return *mValue.mCSSValueTriplet == *aOther.mValue.mCSSValueTriplet;
     case eUnit_CSSRect:
       return *mValue.mCSSRect == *aOther.mValue.mCSSRect;
     case eUnit_Dasharray:

@@ -1372,19 +1372,15 @@
             // aReferrerURI is null or undefined if the tab is opened from
             // an external application or bookmark, i.e. somewhere other
             // than the current tab.
-            if (aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent) {
+            if ((aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent) &&
+                Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
               let newTabPos = (this._lastRelatedTab ||
                                this.selectedTab)._tPos + 1;
-
               if (this._lastRelatedTab)
                 this._lastRelatedTab.owner = null;
               else
                 t.owner = this.selectedTab;
-
-              if (!this.selectedTab.pinned &&
-                  Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent"))
-                this.moveTabTo(t, newTabPos);
-
+              this.moveTabTo(t, newTabPos);
               this._lastRelatedTab = t;
             }
 
@@ -3819,8 +3815,8 @@
         if (event.ctrlKey) {
 #endif
           let dt = event.dataTransfer;
-          let spec = this.tabbrowser.getBrowserForTab(tab).currentURI.spec;
-          dt.setData("text/x-moz-url", spec);
+          let browser = tab.linkedBrowser;
+          dt.setData("text/x-moz-url", browser.currentURI.spec + "\n" + browser.contentTitle);
           let favicon = document.getAnonymousElementByAttribute(tab, "class", "tab-icon-image");
           dt.setDragImage(favicon, 16, 16);
           return;

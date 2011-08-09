@@ -38,7 +38,6 @@
 #define nsSelectsAreaFrame_h___
 
 #include "nsBlockFrame.h"
-class nsIContent;
 
 class nsSelectsAreaFrame : public nsBlockFrame
 {
@@ -60,9 +59,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  static PRBool IsOptionElement(nsIContent* aContent);
-  static PRBool IsOptionElementFrame(nsIFrame *aFrame);
-  
   nscoord HeightOfARow() const { return mHeightOfARow; }
   
 protected:

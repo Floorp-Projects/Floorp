@@ -30,6 +30,10 @@ skip-if(!xulRuntime.shell) script clone-forge.js
 skip-if(!xulRuntime.shell) script clone-complex-object.js
 script set-property-non-extensible.js
 script recursion.js
+script findReferences-01.js
+script findReferences-02.js
+script findReferences-03.js
+script findReferences-04.js
 script regress-627859.js
 script regress-627984-1.js
 script regress-627984-2.js

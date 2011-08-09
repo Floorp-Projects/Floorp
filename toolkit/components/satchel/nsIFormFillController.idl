@@ -60,7 +60,7 @@ interface nsIFormFillController : nsISupports
    * @param popup - The popup to show when autocomplete results are available
    */
   void attachToBrowser(in nsIDocShell docShell, in nsIAutoCompletePopup popup);
-  
+
   /*
    * Stop controlling form fill behavior for the given browser
    *

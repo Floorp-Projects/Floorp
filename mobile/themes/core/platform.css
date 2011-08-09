@@ -750,7 +750,7 @@ dialog {
     -moz-box-align: start;
   }
   
-  .panel-row-button {
+  #panel-controls > .panel-row-button {
     -moz-box-orient: horizontal;
     -moz-box-flex: 0;
     min-width: @tablet_panel_controls@ !important;

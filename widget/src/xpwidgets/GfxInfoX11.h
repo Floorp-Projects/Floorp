@@ -79,7 +79,8 @@ private:
   nsCString mVersion;
   nsCString mAdapterDescription;
   bool mIsMesa, mIsNVIDIA, mIsFGLRX;
-  int mMajorVersion, mMinorVersion;
+  bool mHasTextureFromPixmap;
+  int mMajorVersion, mMinorVersion, mRevisionVersion;
 
   void AddCrashReportAnnotations();
   void GetData();

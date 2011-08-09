@@ -37,6 +37,8 @@
 # ***** END LICENSE BLOCK *****
 */
 
+"use strict";
+
 (function(){
 
 let Cc = Components.classes;

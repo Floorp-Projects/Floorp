@@ -13,8 +13,8 @@
 window.opener.SimpleTest.waitForFocus(runTests, window);
 </script>
 
-<hbox style="margin-left: 325px; margin-top: 325px;">
-  <button id="trigger" type="menu" label="Popup">
+<hbox style="margin-left: 200px; margin-top: 270px;">
+  <button id="trigger" type="menu" label="Popup" width="100" height="50">
     <menupopup id="thepopup">
       <menuitem id="item1" label="First"/>
       <menuitem id="item2" label="Main Item"/>

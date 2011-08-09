@@ -52,7 +52,7 @@ interface nsIApplicationCacheChannel : nsIApplicationCacheContainer
      * e.g. in case of fallback of load of an entry matching bypass
      * namespace.
      */
-    readonly attribute PRBool loadedFromApplicationCache;
+    readonly attribute boolean loadedFromApplicationCache;
 
     /**
      * When true, the channel will ask its notification callbacks for

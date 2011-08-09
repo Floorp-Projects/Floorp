@@ -385,16 +385,16 @@ mtd[_moz-math-columnline="dashed"] {
    Authors can make elements on a document to be stretched with different
    fonts, e.g.,
 
-   To request the use of TeX fonts, you can add a <style>...</style> with:
-   <mo myfonts="tex">...</mo> with the associated CSS declaration
-   mo[myfonts="tex"]::-moz-math-stretchy {
-     font-family: CMSY10, CMEX10;
+   To request the use of STIX fonts, you can add a <style>...</style> with:
+   <mo myfonts="stix">...</mo> with the associated CSS declaration
+   mo[myfonts="stix"]::-moz-math-stretchy {
+     font-family: STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral;
    }
 
-   To request the use of Mathematica fonts, you can add a <style>...</style> with:
-   <mo myfonts="mathematica">...</mo> with the associated CSS declaration
-   mo[myfonts="mathematica"]::-moz-math-stretchy {
-     font-family: Math1, Math2, Math4;
+   To request the use of Asana fonts, you can add a <style>...</style> with:
+   <mo myfonts="asana">...</mo> with the associated CSS declaration
+   mo[myfonts="asana"]::-moz-math-stretchy {
+     font-family: Asana Math;
    }
 
    Of course, if you just want all of the stretchy characters in your

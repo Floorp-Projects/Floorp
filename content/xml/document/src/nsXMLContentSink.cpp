@@ -1070,7 +1070,8 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   // properly (eg form state restoration).
   if (nodeInfo->NamespaceID() == kNameSpaceID_XHTML) {
     if (nodeInfo->NameAtom() == nsGkAtoms::input ||
-        nodeInfo->NameAtom() == nsGkAtoms::button) {
+        nodeInfo->NameAtom() == nsGkAtoms::button ||
+        nodeInfo->NameAtom() == nsGkAtoms::menuitem) {
       content->DoneCreatingElement();
     } else if (nodeInfo->NameAtom() == nsGkAtoms::head && !mCurrentHead) {
       mCurrentHead = content;

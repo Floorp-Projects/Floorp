@@ -133,5 +133,5 @@ interface nsICryptoHash : nsISupports
      *       is called.  This call resets the object to its
      *       pre-init state.
      */
-    ACString finish(in PRBool aASCII);
+    ACString finish(in boolean aASCII);
 };

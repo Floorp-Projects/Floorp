@@ -66,7 +66,6 @@
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
-#include "nsIDOMLocation.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMJSWindow.h"
@@ -1089,47 +1088,6 @@ nsresult NS_GetNavigatorUserAgent(nsAString& aUserAgent);
 nsresult NS_GetNavigatorPlatform(nsAString& aPlatform);
 nsresult NS_GetNavigatorAppVersion(nsAString& aAppVersion);
 nsresult NS_GetNavigatorAppName(nsAString& aAppName);
-
-class nsIURI;
-
-//*****************************************************************************
-// nsLocation: Script "location" object
-//*****************************************************************************
-
-class nsLocation : public nsIDOMLocation
-{
-public:
-  nsLocation(nsIDocShell *aDocShell);
-  virtual ~nsLocation();
-
-  NS_DECL_ISUPPORTS
-
-  void SetDocShell(nsIDocShell *aDocShell);
-  nsIDocShell *GetDocShell();
-
-  // nsIDOMLocation
-  NS_DECL_NSIDOMLOCATION
-
-protected:
-  // In the case of jar: uris, we sometimes want the place the jar was
-  // fetched from as the URI instead of the jar: uri itself.  Pass in
-  // PR_TRUE for aGetInnermostURI when that's the case.
-  nsresult GetURI(nsIURI** aURL, PRBool aGetInnermostURI = PR_FALSE);
-  nsresult GetWritableURI(nsIURI** aURL);
-  nsresult SetURI(nsIURI* aURL, PRBool aReplace = PR_FALSE);
-  nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                           PRBool aReplace);
-  nsresult SetHrefWithContext(JSContext* cx, const nsAString& aHref,
-                              PRBool aReplace);
-
-  nsresult GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL);
-  nsresult GetSourceDocument(JSContext* cx, nsIDocument** aDocument);
-
-  nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
-
-  nsString mCachedHash;
-  nsWeakPtr mDocShell;
-};
 
 /* factory function */
 nsresult

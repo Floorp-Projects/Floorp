@@ -398,19 +398,6 @@ public:
                                    nsCOMArray<nsNavHistoryQuery>* aQueries,
                                    nsNavHistoryQueryOptions** aOptions);
 
-  // Import-friendly version of AddVisit.
-  // This method adds a page to history along with a single last visit.
-  // aLastVisitDate can be -1 if there is no last visit date to record.
-  //
-  // This is only for use by the import of history.dat on first-run of Places,
-  // which currently occurs if no places.sqlite file previously exists.
-  nsresult AddPageWithVisits(nsIURI *aURI,
-                             const nsString &aTitle,
-                             PRInt32 aVisitCount,
-                             PRInt32 aTransitionType,
-                             PRTime aFirstVisitDate,
-                             PRTime aLastVisitDate);
-
   // sets the schema version in the database to match SCHEMA_VERSION
   nsresult UpdateSchemaVersion();
 

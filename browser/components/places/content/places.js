@@ -72,7 +72,7 @@ var PlacesOrganizer = {
     this._initFolderTree();
 
     var leftPaneSelection = "AllBookmarks"; // default to all-bookmarks
-    if ("arguments" in window && window.arguments.length > 0)
+    if (window.arguments && window.arguments[0])
       leftPaneSelection = window.arguments[0];
 
     this.selectLeftPaneQuery(leftPaneSelection);

@@ -375,11 +375,6 @@ protected:
   // Convert nsEventStatus value to a windows boolean
   static PRBool           ConvertStatus(nsEventStatus aStatus);
   static void             PostSleepWakeNotification(const char* aNotification);
-  PRBool                  HandleScrollingPlugins(UINT aMsg, WPARAM aWParam, 
-                                                 LPARAM aLParam,
-                                                 PRBool& aResult,
-                                                 LRESULT* aRetValue,
-                                                 PRBool& aQuitProcessing);
   PRInt32                 ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my);
   static WORD             GetScanCode(LPARAM aLParam)
   {
@@ -417,7 +412,9 @@ protected:
                                     PRUint32 aFlags = 0,
                                     const MSG *aMsg = nsnull,
                                     PRBool *aEventDispatched = nsnull);
-  virtual PRBool          OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
+  PRBool                  OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
+  void                    OnScrollInternal(UINT aMsg, WPARAM aWParam,
+                                           LPARAM aLParam);
   PRBool                  OnGesture(WPARAM wParam, LPARAM lParam);
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   PRBool                  OnTouch(WPARAM wParam, LPARAM lParam);
@@ -426,9 +423,13 @@ protected:
   BOOL                    OnInputLangChange(HKL aHKL);
   PRBool                  OnPaint(HDC aDC, PRUint32 aNestingLevel);
   void                    OnWindowPosChanged(WINDOWPOS *wp, PRBool& aResult);
-  PRBool                  OnMouseWheel(UINT aMessage, WPARAM aWParam,
-                                       LPARAM aLParam, PRBool& aHandled,
-                                       LRESULT *aRetValue);
+  static UINT             GetInternalMessage(UINT aNativeMessage);
+  static UINT             GetNativeMessage(UINT aInternalMessage);
+  void                    OnMouseWheel(UINT aMsg, WPARAM aWParam,
+                                       LPARAM aLParam, LRESULT *aRetValue);
+  void                    OnMouseWheelInternal(UINT aMessage, WPARAM aWParam,
+                                               LPARAM aLParam,
+                                               LRESULT *aRetValue);
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
 
   /**

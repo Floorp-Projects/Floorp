@@ -2645,7 +2645,7 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
         return false;
 
     bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
-    js_DestroyScript(cx, script);
+    js_DestroyScript(cx, script, 6);
     return ok;
 }
 

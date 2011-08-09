@@ -82,6 +82,8 @@ CPPSRCS		= \
 		nsHTMLLegendElement.cpp \
 		nsHTMLLinkElement.cpp \
 		nsHTMLMapElement.cpp \
+		nsHTMLMenuElement.cpp \
+		nsHTMLMenuItemElement.cpp \
 		nsHTMLMetaElement.cpp \
 		nsHTMLModElement.cpp \
 		nsHTMLObjectElement.cpp \
@@ -134,6 +136,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../events/src \
 		-I$(srcdir)/../../../xbl/src \
+		-I$(srcdir)/../../../xul/content/src \
 		-I$(srcdir)/../../../../layout/forms \
 		-I$(srcdir)/../../../../layout/style \
 		-I$(srcdir)/../../../../layout/tables \

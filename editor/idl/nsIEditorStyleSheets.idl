@@ -106,7 +106,7 @@ interface nsIEditorStyleSheets : nsISupports
     * @param aURL  The style sheet to be enabled or disabled
     * @param aEnable true to enable, or false to disable the style sheet
     */
-  void enableStyleSheet(in AString aURL, in PRBool aEnable);
+  void enableStyleSheet(in AString aURL, in boolean aEnable);
 
   /** Get the nsCSSStyleSheet associated with the given URL.
     *
