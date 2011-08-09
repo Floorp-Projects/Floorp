@@ -43,10 +43,10 @@ interface nsICipherInfo : nsISupports
 {
   readonly attribute ACString longName;
 
-  readonly attribute PRBool isSSL2;
-  readonly attribute PRBool isFIPS;
-  readonly attribute PRBool isExportable;
-  readonly attribute PRBool nonStandard;
+  readonly attribute boolean isSSL2;
+  readonly attribute boolean isFIPS;
+  readonly attribute boolean isExportable;
+  readonly attribute boolean nonStandard;
   readonly attribute ACString symCipherName;
   readonly attribute ACString authAlgorithmName;
   readonly attribute ACString keaTypeName;

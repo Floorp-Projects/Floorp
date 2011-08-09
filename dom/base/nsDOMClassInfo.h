@@ -267,45 +267,6 @@ public:
   static jsid sScreenY_id;
   static jsid sStatus_id;
   static jsid sName_id;
-  static jsid sOnmousedown_id;
-  static jsid sOnmouseup_id;
-  static jsid sOnclick_id;
-  static jsid sOndblclick_id;
-  static jsid sOncontextmenu_id;
-  static jsid sOnmouseover_id;
-  static jsid sOnmouseout_id;
-  static jsid sOnkeydown_id;
-  static jsid sOnkeyup_id;
-  static jsid sOnkeypress_id;
-  static jsid sOnmousemove_id;
-  static jsid sOnfocus_id;
-  static jsid sOnblur_id;
-  static jsid sOnsubmit_id;
-  static jsid sOnreset_id;
-  static jsid sOnchange_id;
-  static jsid sOninput_id;
-  static jsid sOninvalid_id;
-  static jsid sOnselect_id;
-  static jsid sOnload_id;
-  static jsid sOnpopstate_id;
-  static jsid sOnbeforeunload_id;
-  static jsid sOnunload_id;
-  static jsid sOnhashchange_id;
-  static jsid sOnreadystatechange_id;
-  static jsid sOnpageshow_id;
-  static jsid sOnpagehide_id;
-  static jsid sOnabort_id;
-  static jsid sOnerror_id;
-  static jsid sOnpaint_id;
-  static jsid sOnresize_id;
-  static jsid sOnscroll_id;
-  static jsid sOndrag_id;
-  static jsid sOndragend_id;
-  static jsid sOndragenter_id;
-  static jsid sOndragleave_id;
-  static jsid sOndragover_id;
-  static jsid sOndragstart_id;
-  static jsid sOndrop_id;
   static jsid sScrollX_id;
   static jsid sScrollY_id;
   static jsid sScrollMaxX_id;
@@ -324,52 +285,23 @@ public:
   static jsid sBaseURIObject_id;
   static jsid sNodePrincipal_id;
   static jsid sDocumentURIObject_id;
-  static jsid sOncopy_id;
-  static jsid sOncut_id;
-  static jsid sOnpaste_id;
   static jsid sJava_id;
   static jsid sPackages_id;
-  static jsid sOnloadstart_id;
-  static jsid sOnprogress_id;
-  static jsid sOnsuspend_id;
-  static jsid sOnemptied_id;
-  static jsid sOnstalled_id;
-  static jsid sOnplay_id;
-  static jsid sOnpause_id;
-  static jsid sOnloadedmetadata_id;
-  static jsid sOnloadeddata_id;
-  static jsid sOnwaiting_id;
-  static jsid sOnplaying_id;
-  static jsid sOncanplay_id;
-  static jsid sOncanplaythrough_id;
-  static jsid sOnseeking_id;
-  static jsid sOnseeked_id;
-  static jsid sOntimeupdate_id;
-  static jsid sOnended_id;
-  static jsid sOnratechange_id;
-  static jsid sOndurationchange_id;
-  static jsid sOnvolumechange_id;
-  static jsid sOnmessage_id;
-  static jsid sOnbeforescriptexecute_id;
-  static jsid sOnafterscriptexecute_id;
   static jsid sWrappedJSObject_id;
   static jsid sURL_id;
   static jsid sKeyPath_id;
   static jsid sAutoIncrement_id;
   static jsid sUnique_id;
+
+#define EVENT(name_, id_, type_, struct_)       \
+  static jsid sOn##name_##_id;
+#define WINDOW_ONLY_EVENT EVENT
+#define TOUCH_EVENT EVENT
+#include "nsEventNameList.h"
+#undef TOUCH_EVENT
+#undef WINDOW_ONLY_EVENT
+#undef EVENT
   
-  static jsid sOntouchstart_id;
-  static jsid sOntouchend_id;
-  static jsid sOntouchmove_id;
-  static jsid sOntouchenter_id;
-  static jsid sOntouchleave_id;
-  static jsid sOntouchcancel_id;
-  static jsid sOnbeforeprint_id;
-  static jsid sOnafterprint_id;
-
-  static jsid sOndevicemotion_id;
-  static jsid sOndeviceorientation_id;
-
 protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;

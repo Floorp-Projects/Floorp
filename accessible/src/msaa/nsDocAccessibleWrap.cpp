@@ -268,9 +268,9 @@ nsDocAccessibleWrap::GetNativeWindow() const
 // nsDocAccessible protected
 
 void
-nsDocAccessibleWrap::NotifyOfInitialUpdate()
+nsDocAccessibleWrap::DoInitialUpdate()
 {
-  nsDocAccessible::NotifyOfInitialUpdate();
+  nsDocAccessible::DoInitialUpdate();
 
   if (nsWinUtils::IsWindowEmulationStarted()) {
     // Create window for tab document.

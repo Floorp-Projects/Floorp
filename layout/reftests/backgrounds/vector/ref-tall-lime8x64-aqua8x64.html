@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>tall reference, 8x64 lime, 8x64 aqua</title>
+  <style type="text/css">
+div
+{
+  width: 256px; height: 768px;
+}
+#outer
+{
+  border: 1px solid black;
+}
+#inner
+{
+  width: 8px; height: 128px;
+}
+#inner > div { width: 8px; height: 64px; }
+#top { background-color: lime; }
+#bottom { background-color: aqua; }
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"><div id="top"></div><div id="bottom"></div></div></div>
+</body>
+</html>

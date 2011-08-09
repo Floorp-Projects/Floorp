@@ -65,7 +65,7 @@
 
           if (this.reorderCnt == docURIs.length) {
             unregisterA11yEventListener(EVENT_REORDER, this);
-            testAccTree();
+            testRelations();
           }
         },
 
