@@ -148,11 +148,9 @@ namespace JSC {
         ARMAssembler() { }
 #endif
 
-        static unsigned int const maxPoolSlots = 512;
-
         typedef ARMRegisters::RegisterID RegisterID;
         typedef ARMRegisters::FPRegisterID FPRegisterID;
-        typedef AssemblerBufferWithConstantPool<maxPoolSlots * sizeof(ARMWord), 4, 4, 4, ARMAssembler> ARMBuffer;
+        typedef AssemblerBufferWithConstantPool<2048, 4, 4, ARMAssembler> ARMBuffer;
         typedef SegmentedVector<int, 64> Jumps;
 
         unsigned char *buffer() const { return m_buffer.buffer(); }
@@ -206,8 +204,7 @@ namespace JSC {
             STMDB = 0x09200000,
             LDMIA = 0x08b00000,
             B = 0x0a000000,
-            BL = 0x0b000000,
-            NOP = 0x01a00000    // Effective NOP ("MOV r0, r0").
+            BL = 0x0b000000
 #if WTF_ARM_ARCH_VERSION >= 5 || defined(__ARM_ARCH_4T__)
            ,BX = 0x012fff10
 #endif
@@ -320,19 +317,6 @@ namespace JSC {
         {
             ASSERT ( ((op2 & ~OP2_IMM) <= 0xfff) || (((op2 & ~OP2_IMMh) <= 0xfff)) );
             m_buffer.putInt(op | RN(rn) | RD(rd) | op2);
-        }
-
-        // Work out the pre-shifted constant necessary to encode the specified
-        // logical shift left for op2 immediates. Only even shifts can be
-        // applied.
-        //
-        // Input validity is asserted in debug builds.
-        ARMWord getOp2RotLSL(int lsl)
-        {
-            ASSERT((lsl >= 0) && (lsl <= 24));
-            ASSERT(!(lsl % 2));
-
-            return (-(lsl/2) & 0xf) << 8;
         }
 
         void and_r(int rd, int rn, ARMWord op2, Condition cc = AL)
@@ -987,180 +971,23 @@ namespace JSC {
 
         // Patching helpers
 
-        // Generate a single LDR instruction loading from the specified literal pool
-        // slot into rd, with condition cc. It is assumed that the literal pool
-        // slot is within range of an LDR instruction.
-        static void putLDRLiteral(ARMWord* ldr, Condition cc, int rd, ARMWord* literal)
-        {
-            ptrdiff_t   offset = getApparentPCOffset(ldr, literal);
-            ASSERT((rd >= 0) && (rd <= 15));
-
-            if (offset >= 0) {
-                ASSERT(!(offset & ~0xfff));
-                *ldr = cc | DT_UP | 0x051f0000 | (rd << 12) | (offset & 0xfff);
-            } else {
-                offset = -offset;
-                ASSERT(!(offset & ~0xfff));
-                *ldr = cc |         0x051f0000 | (rd << 12) | (offset & 0xfff);
-            }
-        }
-
-        // Try to generate a single branch instruction. The insturction address
-        // is assumed to be finalized, so the branch offset will be relative to
-        // the address of 'insn'.
-        static bool tryPutImmediateBranch(ARMWord * insn, Condition cc, ARMWord value, bool pic=false)
-        {
-            if (value & 0x1) {
-                // We can't handle interworking branches here.
-                return false;
-            }
-
-            if (pic) {
-                // We can't generate a position-independent branch to an
-                // absolute address using the relative 'B' instruction.
-                return false;
-            }
-
-            ptrdiff_t offset = getApparentPCOffset(insn, value);
-
-            // ARM instructions are always word-aligned.
-            ASSERT(!(offset & 0x3));
-            ASSERT(!(value & 0x3));
-
-            if (value == reinterpret_cast<ARMWord>(insn+1)) {
-                // The new branch target is the next instruction
-                // anyway, so just insert a NOP.
-                *insn = cc | NOP;
-                return true;
-            } else if ((offset >= -33554432) && (offset <= 33554428)) {
-                // Use a simple branch instruction (B):
-                //          "B(cc)      addr"
-                ASSERT(!((offset/4) & 0xff000000) || !((-offset/4) & 0xff000000));
-                *insn = cc | B | ((offset/4) & 0x00ffffff);
-                return true;
-            }
-
-            return false;
-        }
-
-        // Try to generate a single insturction to load an immediate.
-        //
-        // The immediate-load may be a branch (if rd=15). In this case, an
-        // appropriate branching instruction will be used.
-        //
-        // Specify pic=true if the code must be position-independent. For
-        // position-independent code, this method will _not_ use ADR to encode
-        // a literal.
-        static bool tryPutImmediateMove(ARMWord * insn, Condition cc, ARMWord value, int rd, bool pic=false)
-        {
-            if (rd == 15) {
-                // Filter out branches.
-                return tryPutImmediateBranch(insn, cc, value, pic);
-            }
-
-            ARMWord op2;
-
-#if WTF_ARM_ARCH_VERSION >= 7
-            // ---- Try MOVW. ----
-            op2 = getImm16Op2(value);
-            if (op2 != INVALID_IMM) {
-                ASSERT(!(op2 & 0xfff0f000));
-                *insn = cc | MOVW | RD(rd) | op2;
-                return true;
-            }
-#endif
-            // ---- Try MOV. ----
-            op2 = getOp2(value);
-            if (op2 != INVALID_IMM) {
-                ASSERT((op2 & 0xfffff000) == OP2_IMM);
-                *insn = cc | MOV | RD(rd) | op2;
-                return true;
-            }
-            // ---- Try MVN. ----
-            op2 = getOp2(~value);
-            if (op2 != INVALID_IMM) {
-                ASSERT((op2 & 0xfffff000) == OP2_IMM);
-                *insn = cc | MVN | RD(rd) | op2;
-                return true;
-            }
-            // ---- Try ADR. ----
-            if (!pic) {
-                // ---- Try ADR (ADD to PC). ----
-                op2 = getOp2(getApparentPCOffset(insn, value));
-                if (op2 != INVALID_IMM) {
-                    ASSERT((op2 & 0xfffff000) == OP2_IMM);
-                    *insn = cc | ADD | RD(rd) | RN(15) | op2;
-                    return true;
-                }
-                // ---- Try ADR (SUB from PC). ----
-                op2 = getOp2(-getApparentPCOffset(insn, value));
-                if (op2 != INVALID_IMM) {
-                    ASSERT((op2 & 0xfffff000) == OP2_IMM);
-                    *insn = cc | SUB | RD(rd) | RN(15) | op2;
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-
-        // Try to get the address of a pool slot referenced by the LDR at
-        // *insn. If *insn is a BLX <reg> instruction preceeded by an LDR into
-        // the same register, that LDR is used instead.
-        //
-        // This mechanism allows the common LDR-BLX call sequence to be
-        // handled, where the patching address ('insn') is the BLX itself.
-        static ARMWord* tryGetLdrImmAddress(ARMWord* insn)
-        {
-#if WTF_CPU_ARM && WTF_ARM_ARCH_VERSION >= 5
-            // If *insn is not a load ...
-            if ((*insn & 0x0f7f0000) != 0x051f0000) {
-                // ... check that it is a BLX ...
-                if((*insn & 0x0ffffff0) != 0x012fff30) {
-                    return NULL;
-                }
-                ARMWord blx_reg = *insn & 0xf;
-                // *insn is a BLX, so look at the instruction before it. It
-                // should be an LDR.
-                insn--;
-                ARMWord ldr_reg = (*insn >> 12) & 0xf;
-
-                // Check that the BLX calls to the same register that is loaded
-                // before it. (We verify that the previous instruction is an
-                // LDR in the next step.)
-                if (blx_reg != ldr_reg) {
-                    return NULL;
-                }
-            }
-#endif
-            // *insn is expected to be an LDR. If it isn't, report failure.
-            if((*insn & 0x0f7f0000) != 0x051f0000) {
-                return NULL;
-            }
-
-            // Assume that the load targets an aligned address.
-            ASSERT(!(*insn & 0x3));
-
-            // Extract the address from the LDR instruction.
-            ARMWord *   addr = getApparentPC(insn);
-            ptrdiff_t   offset = (*insn & SDT_OFFSET_MASK) / 4;
-            return addr + ((*insn & DT_UP) ? (offset) : (-offset));
-        }
-
-        // Get the address of a pool slot referenced by the LDR at *insn. If
-        // *insn is a BLX instruction preceeded by an LDR, that LDR is used
-        // instead.
-        //
-        // This mechanism allows the common LDR-BLX call sequence to be
-        // handled, where the patching address ('insn') is the BLX itself.
-        //
-        // An assertion is thrown if the provided instruction is not a
-        // recognized LDR or LDR-BLX sequence.
         static ARMWord* getLdrImmAddress(ARMWord* insn)
         {
-            ARMWord * addr = tryGetLdrImmAddress(insn);
-            ASSERT(addr);
-            return addr;
+#if WTF_CPU_ARM && WTF_ARM_ARCH_VERSION >= 5
+            // Check for call
+            if ((*insn & 0x0f7f0000) != 0x051f0000) {
+                // Must be BLX
+                ASSERT((*insn & 0x012fff30) == 0x012fff30);
+                insn--;
+            }
+#endif
+            // Must be an ldr ..., [pc +/- imm]
+            ASSERT((*insn & 0x0f7f0000) == 0x051f0000);
+
+            ARMWord addr = reinterpret_cast<ARMWord>(insn) + DefaultPrefetching * sizeof(ARMWord);
+            if (*insn & DT_UP)
+                return reinterpret_cast<ARMWord*>(addr + (*insn & SDT_OFFSET_MASK));
+            return reinterpret_cast<ARMWord*>(addr - (*insn & SDT_OFFSET_MASK));
         }
 
         static ARMWord* getLdrImmAddressOnPool(ARMWord* insn, uint32_t* constPool)
@@ -1173,502 +1000,21 @@ namespace JSC {
             return getLdrImmAddress(insn);
         }
 
-        // Return true only if the instruction (*insn) has the following form:
-        //  "LDR Rt, [PC, offset]"
-        static inline bool checkIsLDRLiteral(ARMWord const * insn)
+        static void patchPointerInternal(intptr_t from, void* to)
         {
-            return (*insn & 0x0f7f0000) == 0x051f0000;
+            ARMWord* insn = reinterpret_cast<ARMWord*>(from);
+            ARMWord* addr = getLdrImmAddress(insn);
+            *addr = reinterpret_cast<ARMWord>(to);
         }
 
-        static bool checkIsLDRLiteral(ARMWord const * insn, int * rt, Condition * cc)
+        static ARMWord patchConstantPoolLoad(ARMWord load, ARMWord value)
         {
-            *rt = (*insn >> 12) & 0xf;
-            *cc = getCondition(*insn);
-            return checkIsLDRLiteral(insn);
+            value = (value << 1) + 1;
+            ASSERT(!(value & ~0xfff));
+            return (load & ~0xfff) | value;
         }
 
-        // Return true only if the instruction is one that could be emitted
-        // from tryPutImmediateMove (or tryPutImmediateBranch).
-        static bool checkIsImmediateMoveOrBranch(ARMWord const * insn, int * rd, Condition * cc)
-        {
-            if (((*insn & 0x0ff00000) == MOVW)                      ||
-                ((*insn & 0x0ff00000) == (MOV | OP2_IMM))           ||
-                ((*insn & 0x0ff00000) == (MVN | OP2_IMM))           ||
-                ((*insn & 0x0fff0000) == (ADD | OP2_IMM | RN(15)))  ||  // ADR (ADD)
-                ((*insn & 0x0fff0000) == (SUB | OP2_IMM | RN(15))))     // ADR (SUB)
-            {
-                // All immediate moves have a similar encoding, so we can
-                // handle them in one case. This mechanism also catches
-                // branches that may have been generated using the above
-                // instructions. (*rd will be set to 15 in that case.)
-                *cc = getCondition(*insn);
-                *rd = (*insn >> 12) & 0xf;
-                return true;
-            }
-
-            if ((*insn & 0x0f000000) == B) {
-                // Simple 'B' branches.
-                *cc = getCondition(*insn);
-                *rd = 15;
-                return true;
-            }
-
-            if ((*insn & 0x0ff00000) == MOV) {
-                // Instructions like "MOV  Rd, Rm"
-                if (((*insn >> 12) & 0xf) == (*insn & 0xf)) {
-                    // If Rd is the same register as Rm, this is a NOP. This
-                    // may be used as a branch-to-next instruction.
-                    *cc = getCondition(*insn);
-                    *rd = 15;
-                    return true;
-                }
-            }
-
-#if WTF_ARM_ARCH_VERSION >= 7
-            if ((*insn & 0x0fffffff) == 0x0320f000) {
-                // Architectural ARMv7 NOP. This may be used as a
-                // branch-to-next instruction.
-                *cc = getCondition(*insn);
-                *rd = 15;
-                return true;
-            }
-#endif
-
-            return false;
-        }
-
-        // --------
-        //
-        // Patching Constant Pool Loads
-        //
-        // Constant pool loads (including branches) are optimized when they are
-        // patched. This occurs during fixUpOffsets (i.e. at finalization) as
-        // well as during late patching, after finalization. The loads are
-        // optimized to single-instruction branches or immediate moves as
-        // necessary. However, when these optimized instruction are repatched
-        // again, they might need to be replaced with the original load
-        // instruction as single-instruction branches and moves can only encode
-        // a limited subset of possible values. Finding the original pool slot
-        // allocated to these instructions is not trivial, but it is necessary
-        // to find the original pool slot because LDR instructions have a
-        // limited offset range, and if _any_ free slot is used, a future LDR
-        // patch might fail.
-        //
-        // TODO: Since literal pool loads always have positive offsets, it
-        // should be possible to simply re-use the highest-addressed reachable
-        // free slot in the pool when reinstating an LDR. This would allow a
-        // simple bitmap to be used to show free slots, to avoid the expensive
-        // linked-list traversal.
-        //
-        // The following scheme is used:
-        //
-        // When a load is optimized to a branch (in the case of an LDR into the
-        // PC) or an immediate move (in the case of any other LDR), its literal
-        // pool slot is no longer needed. It becomes part of a linked list,
-        // which enumerates all unused pool slots in each pool. Because the
-        // LDR instruction has just 12 bits (plus an up/down indicator bit) to
-        // encode an offset, and because pool slots are always 4-byte-aligned,
-        // only 11 bits are required to form an offset from one pool slot to
-        // any other. The pool slots can form a doubly-linked list with a
-        // 10-bit offset to the original LDR instruction:
-        //
-        //      [31:21]     Offset to previous.
-        //      [20:10]     Offset to next.
-        //      [ 9: 0]     Reverse offset to LDR.
-        //
-        // Node offsets are aligned to 4 bytes and are stored with a bias of
-        // 1023 words. Thus, 0x000 (the minimum) represents an offset of -4092
-        // and 0x7ff (the maximum) represents an offset of 4096.
-        //
-        // Note: A bias is used rather than a signed field only because it
-        // simplifies encoding and decoding of the fields.
-        //
-        // The LDR offset is stored with the same bias (of 1023 words), but has
-        // fewer bits and can only represent negative offsets. Also, note that
-        // the PC offset (DefaultPrefetching) is taken into account for the LDR
-        // offset, so its range matches that of a PC-relative load.
-        //
-        // When an LDR is optimized to something else, its pool slot is
-        // inserted into the linked list. This is the common case, and is
-        // relatively cheap.
-        //
-        // When an LDR must be reinstated, the linked list must be walked. The
-        // reverse LDR offset in each element can be checked to find a matching
-        // slot. At this point, the slot is removed from the linked list and is
-        // reinstated as a normal literal pool slot.
-        //
-        // Because the location of the literal pools is not stored anywhere, a
-        // mechanism must exist for patching code to find it. Every literal
-        // pool begins with a special marker, as in placeConstantPoolMarker.
-        // This marker forms the first element of the linked list of empty
-        // slots, but always has an offset to previous of 1024 (encoded as
-        // 0xffe00000) and an LDR offset of 0 (encoded as 0x000003ff). The
-        // 'next' offset points to the first element in the linked list of
-        // unused slots. The marker is always an invalid ARM instruction, so it
-        // is safe to walk forwards through ARM instructions looking for it.
-        //
-        // There is a cost associated with finding the literal pool. A memory
-        // scan must be performed, and this can be time-consuming. However,
-        // these pool look-ups are cached and the overal performance benefit
-        // should greatly outweight the cost of these look-ups.
-        //
-        // This scheme is elaborate and complex, but greatly beneficial, and
-        // hopefully worth the extra complexity.
-        //
-        // Note that the method 'patchLiteral32' is the entry point for
-        // this mechanism. Calling code should not need to be aware of the
-        // optimizations performed internally.
-        //
-        // ----
-
-        // Pool slot offset getters.
-
-        static inline ptrdiff_t getPoolSlotOffsetNext(ARMWord slot)
-        {
-            return ((slot >> 10) & 0x7ff) - 1023;               // Remove bias.
-        }
-
-        static inline ptrdiff_t getPoolSlotOffsetPrev(ARMWord slot)
-        {
-            return ((slot >> 21) & 0x7ff) - 1023;               // Remove bias.
-        }
-
-        static inline ptrdiff_t getPoolSlotOffsetLDR(ARMWord slot)
-        {
-            return (slot & 0x3ff) - 1023 - DefaultPrefetching;  // Remove bias.
-        }
-
-        // Pool slot offset setters.
-
-        static inline ARMWord setPoolSlotOffsetNext(ARMWord slot, ptrdiff_t offset)
-        {
-            offset += 1023;                         // Apply bias.
-            ASSERT(!(offset & ~0x7ff));
-            return (slot & ~(0x7ff << 10)) | (offset << 10);
-        }
-
-        static inline ARMWord setPoolSlotOffsetPrev(ARMWord slot, ptrdiff_t offset)
-        {
-            offset += 1023;                         // Apply bias.
-            ASSERT(!(offset & ~0x7ff));
-            return (slot & ~(0x7ff << 21)) | (offset << 21);
-        }
-
-        static inline ARMWord setPoolSlotOffsetLDR(ARMWord slot, ptrdiff_t offset)
-        {
-            offset += 1023 + DefaultPrefetching;    // Apply bias.
-            ASSERT(!(offset & ~0x3ff));
-            return (slot & ~0x3ff) | offset;
-        }
-
-        // Pool slot linked list navigation utilities.
-
-        static inline ARMWord * getNextEmptyPoolSlot(ARMWord * current)
-        {
-            ptrdiff_t offset = getPoolSlotOffsetNext(*current);
-            // If offset is 0 (indicating the end of the list), return NULL.
-            return (offset) ? (current + offset) : (NULL);
-        }
-
-        static inline ARMWord * getPrevEmptyPoolSlot(ARMWord * current)
-        {
-            ptrdiff_t offset = getPoolSlotOffsetPrev(*current);
-            // Assert that we never back-track beyond the marker slot.
-            ASSERT(offset != 1024);
-            return current + offset;
-        }
-
-        static inline ARMWord * getLDROfPoolSlot(ARMWord * current)
-        {
-            ptrdiff_t offset = getPoolSlotOffsetLDR(*current);
-            // The LDR offset must always be valid, except for the marker slot.
-            ASSERT(offset || ((*current & 0xffe003ff) == 0xffe003ff));
-            return current + offset;
-        }
-
-        // This method scans forward through code looking for a literal pool
-        // marker. This is an expensive operation, and should be avoided where
-        // possible.
-        static ARMWord * findLiteralPool(ARMWord * ldr)
-        {
-            ARMWord * pool;
-
-            static ARMWord *  lastPool = NULL;  // Cached pool location.
-            static ARMWord *  lastLDR = NULL;   // Cache LDR location.
-
-            if (lastPool) {
-                // Literal pool loads never jump over literal pools. That is,
-                // any pool load will always refer to the next pool, and never
-                // the one after it. Therefore, if 'ldr' lies between lastPool
-                // and lastLDR, we can guarantee that the last pool base is the
-                // right one for 'ldr', and the cost of scanning through code
-                // can be avoided.
-                if ((ldr >= lastLDR) && (ldr < lastPool)) {
-                    // The cached lastPool location is valid for this LDR.
-                    // However, don't update lastLDR here. Keep the
-                    // lastLDR->lastPool range as large as possible.
-                    ASSERT((*lastPool & 0xffe003ff) == 0xffe003ff);
-                    return lastPool;
-                }
-            }
-
-            // Scan to find the start of the literal pool. The marker has a
-            // 'prev' offset of 1024 (0xffe00000) and an LDR offset of 0
-            // (0x000003ff), but note that the 'next' offset can vary once
-            // elements are added to the list.
-            for (pool = ldr+1; (*pool & 0xffe003ff) != 0xffe003ff; pool++) {
-                // Assert that we don't run off the end of the pool. This
-                // should never happen if the marker is correctly placed.
-                ASSERT(getApparentPCOffset(ldr, pool) < (ptrdiff_t)(maxPoolSlots * sizeof(ARMWord)));
-
-                if (lastLDR && (pool == lastLDR)) {
-                    // If we reach lastLDR, we know that the next pool is after
-                    // lastLDR. We can therefore guarantee that lastPool is the
-                    // pool referenced by 'ldr', and we can also use 'ldr' to
-                    // expand the range of the lastLDR-lastPool cache.
-                    lastLDR = ldr;
-                    ASSERT((*lastPool & 0xffe003ff) == 0xffe003ff);
-                    ASSERT(getApparentPCOffset(ldr, lastPool) < (ptrdiff_t)(maxPoolSlots * sizeof(ARMWord)));
-                    return lastPool;
-                }
-            }
-
-            lastPool = pool;
-            lastLDR = ldr;
-
-            ASSERT(pool);
-            return pool;
-        }
-
-        // Use this when an active pool slot is becoming inactive. The (now
-        // inactive) pool slot no longer holds an LDR value and becomes part of
-        // the linked list of inactive slots.
-        //
-        // The previous node ('prev') can be NULL if the location of the pool
-        // is not known. In this case, findLiteralPool is invoked to find the
-        // marker slot, and 'slot' is inserted immediately after the marker.
-        static void setEmptyPoolSlot(ARMWord * slot, ARMWord * prev, ARMWord * ldr)
-        {
-            // Retrieve and check the prev and next slots. If 'prev' is not
-            // specified, point it at the marker slot.
-            if (!prev) {
-                prev = findLiteralPool(ldr);
-            }
-            ARMWord * next = getNextEmptyPoolSlot(prev);
-            if (!next) {
-                // The new slot will be at the end of the list.
-                next = slot;
-            }
-
-            ASSERT(slot > ldr); // We only use positive LDR offsets.
-            ASSERT(prev > ldr); // If this fails, prev is probably a slot in a different pool.
-
-            // Build the new slot and update 'next' and 'prev'.
-            ARMWord     prev_scratch = *prev;
-            prev_scratch = setPoolSlotOffsetNext(*prev, slot-prev);
-            ASSERT((slot-prev) == getPoolSlotOffsetNext(prev_scratch));
-
-            ARMWord     next_scratch = *next;
-            next_scratch = setPoolSlotOffsetPrev(*next, slot-next);
-            ASSERT((slot-next) == getPoolSlotOffsetPrev(next_scratch));
-
-            ARMWord     slot_scratch = 0;
-            slot_scratch = setPoolSlotOffsetPrev(slot_scratch, prev-slot);
-            slot_scratch = setPoolSlotOffsetNext(slot_scratch, next-slot);
-            slot_scratch = setPoolSlotOffsetLDR(slot_scratch, ldr-slot);
-
-            ASSERT((prev-slot) == getPoolSlotOffsetPrev(slot_scratch));
-            ASSERT((next-slot) == getPoolSlotOffsetNext(slot_scratch));
-            ASSERT((ldr-slot)  == getPoolSlotOffsetLDR(slot_scratch));
-
-            // Write the new slots out to memory. Ensure that 'next' is written
-            // before 'slot'; they are the same if 'slot' is the end of the
-            // list.
-            *prev = prev_scratch;
-            *next = next_scratch;
-            *slot = slot_scratch;
-
-            // Assert the validity of the list.
-            ASSERT(getNextEmptyPoolSlot(prev) == slot);
-            ASSERT(getPrevEmptyPoolSlot(slot) == prev);
-            ASSERT(getLDROfPoolSlot(slot) == ldr);
-            if (slot != next) {
-                ASSERT(getNextEmptyPoolSlot(slot) == next);
-                ASSERT(getPrevEmptyPoolSlot(next) == slot);
-                ASSERT(getPoolSlotOffsetLDR(*next));
-            } else {
-                ASSERT(!getNextEmptyPoolSlot(slot));
-            }
-        }
-
-        // Use this when an inactive pool slot is becoming active. After
-        // calling this method, the (now active) pool slot can hold an LDR
-        // value and is no longer part of the linked list of inactive slots.
-        static inline void clearEmptyPoolSlot(ARMWord * slot)
-        {
-            ARMWord * prev = getPrevEmptyPoolSlot(slot);
-            ARMWord * next = getNextEmptyPoolSlot(slot);
-
-            if (!next) {
-                // We're removing the last slot in the list.
-                *prev = setPoolSlotOffsetNext(*prev, 0);
-
-                ASSERT(!getNextEmptyPoolSlot(prev));
-            } else {
-                // Join the two adjacent slots, next and prev.
-                *next = setPoolSlotOffsetPrev(*next, prev-next);
-                *prev = setPoolSlotOffsetNext(*prev, next-prev);
-
-                ASSERT(getNextEmptyPoolSlot(prev) == next);
-                ASSERT(getPrevEmptyPoolSlot(next) == prev);
-            }
-        }
-
-        // Use this to find an empty pool slot belonging to the specified load
-        // site. A base slot can be specified, and this must occur _before_
-        // the target slot in the linked list. The marker slot is usually the
-        // only safe bet as the list is unlikely to be in any particular order.
-        // If base is NULL, findLiteralPool will be used to find it.
-        //
-        // This method is expensive. It not only calls the already expensive
-        // findLiteralPool method, but also walks the linked list. However, it
-        // should only be necessary to use this when deoptimizing a
-        // single-instruction move or branch into an LDR instruction.
-        static ARMWord * findEmptyPoolSlot(ARMWord * base, ARMWord * ldr)
-        {
-            ARMWord * slot = base;
-            if (!slot) {
-                slot = findLiteralPool(ldr);
-            }
-            ASSERT(slot);
-            while (getLDROfPoolSlot(slot) != ldr) {
-                ARMWord * next = getNextEmptyPoolSlot(slot);
-                slot = next;
-
-                // We should never hit the end of the list. If we do, there is
-                // no empty slot belonging to the specified LDR site.
-                ASSERT(slot);
-            }
-            return slot;
-        }
-
-        // This is the generic patching method for 32-bit literal values. All
-        // such values must start off as literal-pool loads, but this method
-        // may optimize them into more efficient sequences. Optimized loads are
-        // tracked and may be passed into this method again (if 'repatchable'
-        // is true).
-        //
-        // Specify repatchable=false where possible, as this will greatly
-        // improve patching time.
-        //
-        // Specify pic=true if position-independent code is required. Specify
-        // this if calling before the code is copied to its final location.
-        static void patchLiteral32(ARMWord * from, void* to, bool repatchable=true, bool pic=false)
-        {
-            ASSERT(!(reinterpret_cast<ARMWord>(from) & 0x3));  // ARM instructions are always word-aligned.
-
-            ARMWord *   slot = tryGetLdrImmAddress(from);
-
-            Condition   cc;
-            int         rt;
-
-            if (slot) {
-                // ---- Existing code is NOT optimized. ----
-                //
-                // tryGetLdrImmAddress returned a meaningful address, so 'from'
-                // is an LDR instruction (or an LDR-BLX sequence) and has an
-                // active literal pool slot.
-
-                if (checkIsLDRLiteral(from, &rt, &cc)) {
-                    // Try to optimize the following load:
-                    //  from -> "LDR(cc)    rt, [PC, offset]"
-                    // If rt is the PC (15), the load is a branch.
-
-                    // Try to emit an optimized move (or branch).
-                    if (tryPutImmediateMove(from, cc, reinterpret_cast<ARMWord>(to), rt, pic)) {
-                        // Success! Synchonize the caches and update the linked
-                        // list of inactive pool slots.
-                        ExecutableAllocator::cacheFlush(from, sizeof(ARMWord));
-                        if (repatchable) {
-                            setEmptyPoolSlot(slot, NULL, from);
-                        }
-                        return;
-                    }
-                }
-
-                // Fall back to simply patching the value in the pool slot.
-                *slot = reinterpret_cast<ARMWord>(to);
-                return;
-            } else {
-                // ---- Existing code IS optimized. ----
-                //
-                // tryGetLdrImmAddress did not find a slot, so the instruction
-                // is not an LDR (or an LDR-BLX sequence). This can only occur
-                // if we've previously optimized an LDR-based sequence to a
-                // shorter branch, so this section includes patchers for
-                // optimized cases (including de-optimizations where the offset
-                // does not fit in the existing optimized case).
-                
-                // This only occurs on the second patch, so the branch _must_
-                // be repatchable if we get here.
-                ASSERT(repatchable);
-
-                if (checkIsImmediateMoveOrBranch(from, &rt, &cc)) {
-                    // Try to patch optimized immediate loads (where rt<15) or
-                    // simple branches (where rt==15). If we can do this
-                    // in-place, there is no need to look up the literal pool's
-                    // linked list of inactive slots.
-                    if (tryPutImmediateMove(from, cc, reinterpret_cast<ARMWord>(to), rt, pic)) {
-                        // Success! Synchronize the caches.
-                        ExecutableAllocator::cacheFlush(from, sizeof(ARMWord));
-                        return;
-                    }
-
-                    // Fall back to the slow case:
-                    //      "LDR(cc) rt, [PC, offset]"
-                    slot = findEmptyPoolSlot(NULL, from);
-                    clearEmptyPoolSlot(slot);
-                    putLDRLiteral(from, cc, rt, slot);
-                    ExecutableAllocator::cacheFlush(from, sizeof(ARMWord));
-                    *slot = reinterpret_cast<ARMWord>(to);
-                    return;
-                }
-            }
-
-            // Every possible optimized case (where repatchable was set to
-            // true) must be recognized, so this assertion should be
-            // unreachable.
-            ASSERT_NOT_REACHED();
-            return;
-        }
-
-        // Patch the LDR instruction ('load') with the specified index, and
-        // return the resulting LDR instruction. The result is not a valid LDR
-        // instruction. The index simply points into the yet-to-be-flushed
-        // literal pool.
-        //
-        // This method should not be called on any load whose literal pool has
-        // already been flushed.
-        //
-        // As for all literal-pool loads, the offset must be positive.
-        static ARMWord patchConstantPoolLoad(ARMWord load, ARMWord index)
-        {
-            index = (index << 1) + 1;
-            ASSERT(!(index & ~0xfff));
-            return (load & ~0xfff) | index;
-        }
-
-        // Patch an LDR instruction in the instruction stream so that the LDR
-        // offset refers to a constant in the constant pool at 'pool'. The
-        // existing load instruction at 'load' must contain (as its load
-        // offset) an index into the constant pool. This method
-        // should be used when flushing the constant pool to the instruction
-        // stream. It reads the LDR offset as an index into 'pool' and replaces
-        // it with the real offset between the pool slot and 'load'.
-        //
-        // As for all literal-pool loads, the literal pool must appear _after_
-        // the LDR instruction.
-        static void patchConstantPoolLoad(void* load, void* pool);
+        static void patchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
 
         // Patch pointers
 
@@ -1678,9 +1024,7 @@ namespace JSC {
                            ISPFX "##linkPointer     ((%p + %#x)) points to ((%p))\n",
                            code, from.m_offset, to);
 
-            ASSERT(!(from.m_offset & 0x3));
-            ARMWord offset = from.m_offset / sizeof(ARMWord);
-            patchLiteral32(reinterpret_cast<ARMWord*>(code) + offset, to);
+            patchPointerInternal(reinterpret_cast<intptr_t>(code) + from.m_offset, to);
         }
 
         static void repatchInt32(void* from, int32_t to)
@@ -1689,7 +1033,7 @@ namespace JSC {
                            ISPFX "##repatchInt32    ((%p)) holds ((%p))\n",
                            from, to);
 
-            patchLiteral32(reinterpret_cast<ARMWord*>(from), reinterpret_cast<void*>(to));
+            patchPointerInternal(reinterpret_cast<intptr_t>(from), reinterpret_cast<void*>(to));
         }
 
         static void repatchPointer(void* from, void* to)
@@ -1698,12 +1042,12 @@ namespace JSC {
                            ISPFX "##repatchPointer  ((%p)) points to ((%p))\n",
                            from, to);
 
-            patchLiteral32(reinterpret_cast<ARMWord*>(from), to);
+            patchPointerInternal(reinterpret_cast<intptr_t>(from), to);
         }
 
         static void repatchLoadPtrToLEA(void* from)
         {
-            // On ARM, this is a patch from LDR to ADD. It is restricted conversion,
+            // On arm, this is a patch from LDR to ADD. It is restricted conversion,
             // from special case to special case, altough enough for its purpose
             ARMWord* insn = reinterpret_cast<ARMWord*>(from);
             ASSERT((*insn & 0x0ff00f00) == 0x05900000);
@@ -1745,9 +1089,8 @@ namespace JSC {
             js::JaegerSpew(js::JSpew_Insns,
                            ISPFX "##linkJump        ((%p + %#x)) jumps to ((%p))\n",
                            code, from.m_offset, to);
-            ASSERT(!(from.m_offset & 0x3));
-            ARMWord offset = from.m_offset / sizeof(ARMWord);
-            patchLiteral32(reinterpret_cast<ARMWord*>(code) + offset, to);
+
+            patchPointerInternal(reinterpret_cast<intptr_t>(code) + from.m_offset, to);
         }
 
         static void relinkJump(void* from, void* to)
@@ -1756,7 +1099,7 @@ namespace JSC {
                            ISPFX "##relinkJump      ((%p)) jumps to ((%p))\n",
                            from, to);
 
-            patchLiteral32(reinterpret_cast<ARMWord*>(from), to);
+            patchPointerInternal(reinterpret_cast<intptr_t>(from), to);
         }
 
         static bool canRelinkJump(void* from, void* to)
@@ -1770,9 +1113,7 @@ namespace JSC {
                            ISPFX "##linkCall        ((%p + %#x)) jumps to ((%p))\n",
                            code, from.m_offset, to);
 
-            ASSERT(!(from.m_offset & 0x3));
-            ARMWord offset = from.m_offset / sizeof(ARMWord);
-            patchLiteral32(reinterpret_cast<ARMWord*>(code) + offset, to);
+            patchPointerInternal(reinterpret_cast<intptr_t>(code) + from.m_offset, to);
         }
 
         static void relinkCall(void* from, void* to)
@@ -1781,7 +1122,7 @@ namespace JSC {
                            ISPFX "##relinkCall      ((%p)) jumps to ((%p))\n",
                            from, to);
 
-            patchLiteral32(reinterpret_cast<ARMWord*>(from), to);
+            patchPointerInternal(reinterpret_cast<intptr_t>(from), to);
         }
 
         // Address operations
@@ -1865,45 +1206,19 @@ namespace JSC {
             return AL | B | (offset & BRANCH_MASK);
         }
 
-        static ARMWord placeConstantPoolMarker()
-        {
-            // The marker forms the first element in a linked list of empty
-            // pool slots. Each unused pool slot has the following structure:
-            //
-            // Bits:
-            //  [31:21]     Offset to previous. (Always +1024 for the marker.)
-            //  [20:10]     Offset to next. (Initially 0 for the marker.)
-            //  [ 9: 0]     Reverse offset to LDR. (Always 0 for the marker.)
-            //
-            // Node offsets are aligned to 4 bytes and are stored with a bias
-            // of 1023 words. Thus, 0x000 represents an offset of -4092 and
-            // 0x7ff (the maximum) represents an offset of 4096.
-            //
-            // The LDR offset is stored with the same bias, but has fewer bits
-            // and can only represent negative offsets. Also, note that the PC
-            // offset is taken into account for the LDR offset, so its range
-            // matches that of a PC-relative load.
-            return 0xffefffff;
-        }
-
     private:
         // pretty-printing functions
         static char const * nameGpReg(int reg)
         {
+            ASSERT(reg <= 16);
+            ASSERT(reg >= 0);
             static char const * names[] = {
                 "r0", "r1", "r2", "r3",
                 "r4", "r5", "r6", "r7",
                 "r8", "r9", "r10", "r11",
                 "ip", "sp", "lr", "pc"
             };
-            // Keep GCC's warnings quiet by clamping the subscript range.
-            if ((reg >= 0) && (reg <= 15)) {
-                return names[reg];
-            } else {
-                ASSERT(reg <= 15);
-                ASSERT(reg >= 0);
-                return "!!";
-            }
+            return names[reg];
         }
 
         static char const * nameFpRegD(int reg)
@@ -2055,88 +1370,68 @@ namespace JSC {
                     IPFX   "%-15s %s, %s\n", MAYBE_PAD, mnemonic, nameGpReg(r), op2_fmt);
         }
 
-        static ARMWord RM(int reg)
+        ARMWord RM(int reg)
         {
             ASSERT(reg <= ARMRegisters::pc);
             return reg;
         }
 
-        static ARMWord RS(int reg)
+        ARMWord RS(int reg)
         {
             ASSERT(reg <= ARMRegisters::pc);
             return reg << 8;
         }
 
-        static ARMWord RD(int reg)
+        ARMWord RD(int reg)
         {
             ASSERT(reg <= ARMRegisters::pc);
             return reg << 12;
         }
 
-        static ARMWord RN(int reg)
+        ARMWord RN(int reg)
         {
             ASSERT(reg <= ARMRegisters::pc);
             return reg << 16;
         }
 
-        static ARMWord DD(int reg)
+        ARMWord DD(int reg)
         {
             ASSERT(reg <= ARMRegisters::d31);
             // Endoded as bits [22,15:12].
             return ((reg << 12) | (reg << 18)) & 0x0040f000;
         }
 
-        static ARMWord DN(int reg)
+        ARMWord DN(int reg)
         {
             ASSERT(reg <= ARMRegisters::d31);
             // Endoded as bits [7,19:16].
             return ((reg << 16) | (reg << 3)) & 0x000f0080;
         }
 
-        static ARMWord DM(int reg)
+        ARMWord DM(int reg)
         {
             ASSERT(reg <= ARMRegisters::d31);
             // Encoded as bits [5,3:0].
             return ((reg << 1) & 0x20) | (reg & 0xf);
         }
 
-        static ARMWord SD(int reg)
+        ARMWord SD(int reg)
         {
             ASSERT(reg <= ARMRegisters::d31);
             // Endoded as bits [15:12,22].
             return ((reg << 11) | (reg << 22)) & 0x0040f000;
         }
 
-        static ARMWord SM(int reg)
+        ARMWord SM(int reg)
         {
             ASSERT(reg <= ARMRegisters::d31);
             // Encoded as bits [5,3:0].
             return ((reg << 5) & 0x20) | ((reg >> 1) & 0xf);
         }
 
-        static inline ARMWord getConditionalField(ARMWord i)
+        static ARMWord getConditionalField(ARMWord i)
         {
             return i & 0xf0000000;
-        }
-
-        static inline Condition getCondition(ARMWord i)
-        {
-            return static_cast<Condition>(getConditionalField(i));
-        }
-
-        static inline ARMWord * getApparentPC(ARMWord * insn)
-        {
-            return insn + DefaultPrefetching;
-        }
-
-        static inline ptrdiff_t getApparentPCOffset(ARMWord * insn, ARMWord * target)
-        {
-            return reinterpret_cast<intptr_t>(target) - reinterpret_cast<intptr_t>(getApparentPC(insn));
-        }
-
-        static inline ptrdiff_t getApparentPCOffset(ARMWord * insn, ARMWord target_addr)
-        {
-            return getApparentPCOffset(insn, reinterpret_cast<ARMWord*>(target_addr));
         }
 
         int genInt(int reg, ARMWord imm, bool positive);
@@ -2357,6 +1652,24 @@ namespace JSC {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
+        }
+
+        void fdtr_u(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
+        {
+            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
+            ASSERT(offset <= 0xff);
+            emitInst(static_cast<ARMWord>(cc) | FDTR | DT_UP | (isLoad ? DT_LOAD : 0), dd, rn, offset);
+        }
+
+        void fdtr_d(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
+        {
+            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
+            ASSERT(offset <= 0xff);
+            emitInst(static_cast<ARMWord>(cc) | FDTR | (isLoad ? DT_LOAD : 0), dd, rn, offset);
         }
 
         void fmsr_r(int dd, int rn, Condition cc = AL)
