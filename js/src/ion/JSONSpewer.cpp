@@ -396,6 +396,7 @@ void
 JSONSpewer::endPass()
 {
     endObject();
+    fflush(fp_);
 }
 
 void
@@ -403,6 +404,7 @@ JSONSpewer::endFunction()
 {
     endList();
     endObject();
+    fflush(fp_);
 }
 
 void
@@ -414,5 +416,6 @@ JSONSpewer::finish()
     endList();
     endObject();
     fprintf(fp_, "\n");
+    fflush(fp_);
 }
 
