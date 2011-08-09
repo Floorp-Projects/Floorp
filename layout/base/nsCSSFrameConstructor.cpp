@@ -118,6 +118,7 @@
 #include "nsGenericDOMDataNode.h"
 #include "mozilla/dom/Element.h"
 #include "FrameLayerBuilder.h"
+#include "nsAutoLayoutPhase.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"

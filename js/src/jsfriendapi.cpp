@@ -111,3 +111,32 @@ JS_ObjectCountDynamicSlots(JSObject *obj)
         return obj->numDynamicSlots(obj->numSlots());
     return 0;
 }
+
+/*
+ * The below code is for temporary telemetry use. It can be removed when
+ * sufficient data has been harvested.
+ */
+
+extern size_t sE4XObjectsCreated;
+
+JS_FRIEND_API(size_t)
+JS_GetE4XObjectsCreated(JSContext *)
+{
+    return sE4XObjectsCreated;
+}
+
+extern size_t sSetProtoCalled;
+
+JS_FRIEND_API(size_t)
+JS_SetProtoCalled(JSContext *)
+{
+    return sSetProtoCalled;
+}
+
+extern size_t sCustomIteratorCount;
+
+JS_FRIEND_API(size_t)
+JS_GetCustomIteratorCount(JSContext *cx)
+{
+    return sCustomIteratorCount;
+}

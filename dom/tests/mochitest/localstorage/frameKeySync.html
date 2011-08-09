@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>frame for localStorage test</title>
+
+<script type="text/javascript" src="interOriginFrame.js"></script>
+<script type="text/javascript">
+
+var currentStep = parseInt(location.search.substring(1));
+
+function doStep()
+{
+  switch (currentStep)
+  {
+    case 1:
+      localStorage.clear();
+      break;
+
+    case 2:
+      localStorage.setItem("a", "1");
+      is(localStorage["a"], "1", "Value a=1 set");
+      break;
+
+    case 3:
+      try {
+        is(localStorage.key(0), "a", "Key 'a' present in 'key' array")
+      }
+      catch (exc) {
+        ok(false, "Shouldn't throw when accessing key(0) " + exc);
+      }
+      is(localStorage["a"], "1", "Value a=1 set");
+      break;
+
+    default:
+      return finishTest();
+  }
+
+  // Increase by two to as odd number are executed in a window separate from
+  // where even step are.
+  ++currentStep;
+  ++currentStep;
+
+  return true;
+}
+
+</script>
+
+</head>
+
+<body onload="postMsg('frame loaded');">
+</body>
+</html>

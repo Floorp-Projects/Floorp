@@ -130,7 +130,6 @@ pref("browser.display.remotetabs.timeout", 10);
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 1);
 pref("browser.sessionhistory.max_entries", 50);
-pref("browser.sessionhistory.optimize_eviction", true);
 
 /* session store */
 pref("browser.sessionstore.resume_session_once", false);
@@ -394,6 +393,8 @@ pref("dom.max_script_run_time", 20);
 // JS error console
 pref("devtools.errorconsole.enabled", false);
 
+pref("browser.ui.layout.tablet", 0); // on: 1, off: 0, auto: -1
+
 // kinetic tweakables
 pref("browser.ui.kinetic.updateInterval", 16);
 pref("browser.ui.kinetic.exponentialC", 1400);
@@ -651,3 +652,13 @@ pref("browser.firstrun.show.localepicker", true);
 
 // initiated by a user
 pref("content.ime.strict_policy", true);
+
+// True if you always want dump() to work
+//
+// On Android, you also need to do the following for the output
+// to show up in logcat:
+//
+// $ adb shell stop
+// $ adb shell setprop log.redirect-stdio true
+// $ adb shell start
+pref("browser.dom.window.dump.enabled", false);

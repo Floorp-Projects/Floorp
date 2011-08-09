@@ -41,6 +41,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <elf.h>
 #include <asm/byteorder.h>
 
@@ -370,7 +371,8 @@ public:
                 (getType() == SHT_GNU_HASH) ||
                 (getType() == SHT_GNU_verdef) ||
                 (getType() == SHT_GNU_verneed) ||
-                (getType() == SHT_GNU_versym)) &&
+                (getType() == SHT_GNU_versym) ||
+                isInSegmentType(PT_INTERP)) &&
                 (getFlags() & SHF_ALLOC);
     }
 
@@ -410,6 +412,20 @@ public:
         file.seekp(getOffset());
         file.write(data, getSize());
     }
+
+private:
+    friend class ElfSegment;
+
+    void addToSegment(ElfSegment *segment) {
+        segments.push_back(segment);
+    }
+
+    void removeFromSegment(ElfSegment *segment) {
+        std::vector<ElfSegment *>::iterator i = std::find(segments.begin(), segments.end(), segment);
+        segments.erase(i, i + 1);
+    }
+
+    bool isInSegmentType(unsigned int type);
 protected:
     Elf_Shdr shdr;
     char *data;
@@ -419,6 +435,7 @@ private:
     SectionInfo info;
     ElfSection *next, *previous;
     int index;
+    std::vector<ElfSegment *> segments;
 };
 
 class ElfSegment {
@@ -634,6 +651,13 @@ inline unsigned int Elf::getSize() {
     for (section = shdr_section /* It's usually not far from the end */;
         section->getNext() != NULL; section = section->getNext());
     return section->getOffset() + section->getSize();
+}
+
+inline bool ElfSection::isInSegmentType(unsigned int type) {
+    for (std::vector<ElfSegment *>::iterator seg = segments.begin(); seg != segments.end(); seg++)
+        if ((*seg)->getType() == type)
+            return true;
+    return false;
 }
 
 inline ElfLocation::ElfLocation(ElfSection *section, unsigned int off, enum position pos)

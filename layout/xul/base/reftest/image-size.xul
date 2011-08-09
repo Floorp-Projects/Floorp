@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<hbox align="end">
+  <image src="image4x3.png"/>
+  <image src="image4x3.png" width="80" height="20"/>
+  <image src="image4x3.png" width="10" height="70"/>
+  <image src="image4x3.png" width="80"/>
+  <image src="image4x3.png" height="60"/>
+  <image src="image4x3.png" width="20"/>
+  <image src="image4x3.png" height="15"/>
+  <image src="image4x3.png" style="border: 8px solid green;"/>
+  <image src="image4x3.png" width="80" style="border: 8px solid yellow;"/>
+  <image src="image4x3.png" height="58" style="border: 8px solid green;"/>
+  <image src="image4x3.png" width="24" style="border: 8px solid yellow;"/>
+  <image src="image4x3.png" height="22" style="border: 8px solid green;"/>
+  <image src="image4x3.png" width="74"
+         style="border: 1px solid yellow; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/>
+  <image src="image4x3.png" height="11"
+         style="border: 1px solid green; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" style="width: auto; height: auto;"/>
+  <image src="image4x3.png" style="width: 80px; height: 20px;"/>
+  <image src="image4x3.png" style="width: 10px; height: 70px;"/>
+  <image src="image4x3.png" style="width: 80px;"/>
+  <image src="image4x3.png" style="height: 60px;"/>
+  <image src="image4x3.png" style="width: 20px;"/>
+  <image src="image4x3.png" style="height: 15px;"/>
+  <image src="image4x3.png" style="width: 80px; height: 20px;" width="60" height="25"/>
+  <image src="image4x3.png" style="width: 10px; height: 70px;" width="20" height="75"/>
+  <image src="image4x3.png" style="width: 80px; padding: 8px;"/>
+  <image src="image4x3.png" style="height: 58px; padding: 8px;"/>
+  <image src="image4x3.png" style="width: 24px; padding: 8px;"/>
+  <image src="image4x3.png" style="height: 22px; padding: 8px;"/>
+  <image src="image4x3.png" style="width: 67px; padding: 4px 2px 8px 1px"/>
+  <image src="image4x3.png" style="height: 18px; padding: 4px 2px 8px 1px"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" maxwidth="20"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" maxheight="15"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" maxwidth="30" maxheight="25"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" style="max-width: 20px;"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" style="max-height: 15px;"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" style="max-width: 30px; max-height: 25px;"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" maxwidth="24" style="border: 8px solid green;"/>
+</hbox>
+<hbox align="end">
+  <image src="image4x3.png" maxheight="22" style="border: 8px solid green;"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" minwidth="20"/>
+  <image src="image4x3.png" minheight="20"/>
+  <image src="image4x3.png" minwidth="20" minheight="25"/>
+  <image src="image4x3.png" minwidth="60" style="border: 8px solid green;"/>
+  <image src="image4x3.png" minheight="88" style="border: 8px solid yellow;"/>
+  <image src="image4x3.png" minwidth="90" minheight="76" style="border: 8px solid green;"/>
+  <image src="image4x3.png" minwidth="112" minheight="76" style="border: 8px solid yellow;"/>
+  <image src="image4x3.png" minwidth="106"
+         style="border: 1px solid yellow; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/>
+</hbox>
+
+<hbox align="end">
+  <image src="image4x3.png" style="min-width: 60px;"/>
+  <image src="image4x3.png" style="min-height: 90px;"/>
+  <image src="image4x3.png" style="min-width 41px; min-height: 45px;"/>
+  <image src="image4x3.png" style="min-width: 60px; padding: 8px;"/>
+  <image src="image4x3.png" style="min-height: 88px; padding: 8px;"/>
+  <image src="image4x3.png" style="min-width: 90px; min-height: 76px; padding: 8px;"/>
+  <image src="image4x3.png" style="min-width: 112px; min-height: 76px; padding: 8px;"/>
+</hbox>
+
+<hbox align="start">
+  <image style="width: auto; height: auto; list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 20px, 5px);"/>
+  <image width="80" style="list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 20px, 5px);"/>
+  <image height="30" style="list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 20px, 5px);"/>
+  <image style="width: 10px; list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 21px, 5px);"/>
+  <image style="height: 8px; list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 21px, 5px);"/>
+</hbox>
+
+<hbox align="end">
+  <image maxwidth="20"
+         style="list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 20px, 5px);"/>
+</hbox>
+
+<hbox align="end">
+  <image maxheight="15"
+         style="list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 20px, 5px);"/>
+</hbox>
+
+<hbox align="end">
+  <image maxwidth="24"
+         style="list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 20px, 5px); border: 8px solid green;"/>
+</hbox>
+
+<hbox align="end">
+  <image maxheight="22"
+         style="list-style-image: url(image4x3.png); -moz-image-region: rect(5px, 25px, 20px, 5px); border: 8px solid green;"/>
+</hbox>
+
+</window>

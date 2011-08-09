@@ -1,0 +1,28 @@
+{ "tests": [
+    "test_sync.js",
+    "test_prefs.js",
+    "test_tabs.js",
+    "test_passwords.js",
+    "test_history.js",
+    "test_formdata.js",
+    "test_bug530717.js",
+    "test_bug531489.js",
+    "test_bug538298.js",
+    "test_bug556509.js",
+    "test_bug562515.js",
+    "test_bug563989.js",
+    "test_bug535326.js",
+    "test_bug501528.js",
+    "test_bug575423.js",
+    "test_bug546807.js",
+    "test_history_collision.js",
+    "test_privbrw_formdata.js",
+    "test_privbrw_passwords.js",
+    "test_privbrw_tabs.js",
+    "test_bookmarks_in_same_named_folder.js",
+    "test_client_wipe.js",
+    "test_special_tabs.js"
+  ]
+}
+
+

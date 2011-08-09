@@ -601,7 +601,7 @@ LoginManagerStorage_mozStorage.prototype = {
     _searchLogins : function (matchData) {
         let conditions = [], params = {};
 
-        for (field in matchData) {
+        for (let field in matchData) {
             let value = matchData[field];
             switch (field) {
                 // Historical compatibility requires this special case
@@ -780,7 +780,7 @@ LoginManagerStorage_mozStorage.prototype = {
             httpRealm: httpRealm
         };
         let matchData = { };
-        for each (field in ["hostname", "formSubmitURL", "httpRealm"])
+        for each (let field in ["hostname", "formSubmitURL", "httpRealm"])
           if (loginData[field] != '')
               matchData[field] = loginData[field];
         let [logins, ids] = this._searchLogins(matchData);
@@ -866,7 +866,7 @@ LoginManagerStorage_mozStorage.prototype = {
      */
     _getIdForLogin : function (login) {
         let matchData = { };
-        for each (field in ["hostname", "formSubmitURL", "httpRealm"])
+        for each (let field in ["hostname", "formSubmitURL", "httpRealm"])
             if (login[field] != '')
                 matchData[field] = login[field];
         let [logins, ids] = this._searchLogins(matchData);
@@ -1478,7 +1478,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
         // Determine encryption type for each login and update the DB.
         query = "UPDATE moz_logins SET encType = :encType WHERE id = :id";
-        for each (params in logins) {
+        for each (let params in logins) {
             try {
                 stmt = this._dbCreateStatement(query, params);
                 stmt.execute();

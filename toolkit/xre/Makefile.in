@@ -77,10 +77,6 @@ ifdef MOZ_INSTRUMENT_EVENT_LOOP
 CPPSRCS += EventTracer.cpp
 endif
 
-ifdef MOZ_SPLASHSCREEN
-CPPSRCS += nsSplashScreenDummy.cpp
-endif
-
 DEFINES += -DIMPL_XREAPI -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
 
 ifdef MOZ_UPDATER

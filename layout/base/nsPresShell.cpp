@@ -135,7 +135,7 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsRenderingContext.h"
-
+#include "nsAutoLayoutPhase.h"
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
@@ -6198,14 +6198,6 @@ PresShell::Paint(nsIView*           aViewToPaint,
 void
 nsIPresShell::SetCapturingContent(nsIContent* aContent, PRUint8 aFlags)
 {
-  // If SetCapturingContent() is called during dragging mouse for selection,
-  // we should abort current transaction.
-  nsRefPtr<nsFrameSelection> fs =
-    nsFrameSelection::GetMouseDownFrameSelection();
-  if (fs) {
-    fs->AbortDragForSelection();
-  }
-
   NS_IF_RELEASE(gCaptureInfo.mContent);
 
   // only set capturing content if allowed or the CAPTURE_IGNOREALLOWED flag
@@ -9424,9 +9416,11 @@ PresShell::SetIsActive(PRBool aIsActive)
                                         &aIsActive);
   nsresult rv = UpdateImageLockingState();
 #ifdef ACCESSIBILITY
-  nsAccessibilityService* accService = AccService();
-  if (accService) {
-    accService->PresShellActivated(this);
+  if (aIsActive) {
+    nsAccessibilityService* accService = AccService();
+    if (accService) {
+      accService->PresShellActivated(this);
+    }
   }
 #endif
   return rv;

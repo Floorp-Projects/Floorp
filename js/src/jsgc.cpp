@@ -2979,3 +2979,16 @@ RunDebugGC(JSContext *cx)
 } /* namespace gc */
 
 } /* namespace js */
+
+#if JS_HAS_XML_SUPPORT
+extern size_t sE4XObjectsCreated;
+
+JSXML *
+js_NewGCXML(JSContext *cx)
+{
+    if (!cx->runningWithTrustedPrincipals())
+        ++sE4XObjectsCreated;
+
+    return NewGCThing<JSXML>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
+}
+#endif

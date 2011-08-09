@@ -80,12 +80,19 @@ fails == underline-block-propagation-2-quirks.html underline-block-propagation-2
 != underline-table-caption-standards.html underline-table-caption-standards-notref.html
 == underline-table-cell-standards.html underline-table-cell-standards-ref.html
 != underline-table-cell-standards.html underline-table-cell-standards-notref.html
-fails == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html # bug that decoration is drawn through non-text child (bug 428599)
-fails-if(Android) fails-if(d2d) == underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html # bug 585684
+== underline-block-propagation-standards.html underline-block-propagation-standards-ref.html
+== underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html
 == text-decoration-zorder-1-standards.html text-decoration-zorder-1-ref.html
-fails == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html # bug 403524
+== text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html
 == table-quirk-1.html table-quirk-1-ref.html
 == table-quirk-2.html table-quirk-2-ref.html
 == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks-ref.html
-fails == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
+== text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
 == 641444-1.html 641444-1-ref.html
+== decoration-css21.html decoration-css21-ref.html
+== decoration-color-override-quirks.html decoration-color-override-quirks-ref.html
+== decoration-color-override-standards.html decoration-color-override-standards-ref.html
+!= decoration-color-override-standards-ref.html decoration-color-override-quirks-ref.html
+== decoration-css21-block.html decoration-css21-block-ref.html
+!= inline-baseline-almost-standards.html inline-baseline-almost-standards-ref.html
+!= inline-baseline-quirks.html inline-baseline-quirks-ref.html

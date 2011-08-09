@@ -372,6 +372,9 @@ DEFINE_STATIC_SETTER(static_multiline_setter,
 const uint8 REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE;
 const uint8 RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;
 
+const uint8 HIDDEN_PROP_ATTRS = JSPROP_PERMANENT | JSPROP_SHARED;
+const uint8 RO_HIDDEN_PROP_ATTRS = HIDDEN_PROP_ATTRS | JSPROP_READONLY;
+
 static JSPropertySpec regexp_static_props[] = {
     {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter, static_input_setter},
     {"multiline",    0, REGEXP_STATIC_PROP_ATTRS,    static_multiline_getter,
@@ -389,6 +392,13 @@ static JSPropertySpec regexp_static_props[] = {
     {"$7",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren7_getter,       NULL},
     {"$8",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren8_getter,       NULL},
     {"$9",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren9_getter,       NULL},
+
+    {"$_",           0, HIDDEN_PROP_ATTRS,    static_input_getter, static_input_setter},
+    {"$*",           0, HIDDEN_PROP_ATTRS,    static_multiline_getter, static_multiline_setter},
+    {"$&",           0, RO_HIDDEN_PROP_ATTRS, static_lastMatch_getter, NULL},
+    {"$+",           0, RO_HIDDEN_PROP_ATTRS, static_lastParen_getter, NULL},
+    {"$`",           0, RO_HIDDEN_PROP_ATTRS, static_leftContext_getter, NULL},
+    {"$'",           0, RO_HIDDEN_PROP_ATTRS, static_rightContext_getter, NULL},
     {0,0,0,0,0}
 };
 
@@ -830,15 +840,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Add static properties to the RegExp constructor. */
-    if (!JS_DefineProperties(cx, ctor, regexp_static_props) ||
-        !JS_AliasProperty(cx, ctor, "input",        "$_") ||
-        !JS_AliasProperty(cx, ctor, "multiline",    "$*") ||
-        !JS_AliasProperty(cx, ctor, "lastMatch",    "$&") ||
-        !JS_AliasProperty(cx, ctor, "lastParen",    "$+") ||
-        !JS_AliasProperty(cx, ctor, "leftContext",  "$`") ||
-        !JS_AliasProperty(cx, ctor, "rightContext", "$'")) {
+    if (!JS_DefineProperties(cx, ctor, regexp_static_props))
         return NULL;
-    }
 
     /* Capture normal data properties pregenerated for RegExp objects. */
     TypeObject *type = proto->getNewType(cx);

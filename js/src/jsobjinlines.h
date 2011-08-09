@@ -1631,7 +1631,7 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
 
 inline bool
 DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
-                              JSProtoKey key, JSFunction *ctor, JSObject *proto)
+                              JSProtoKey key, JSObject *ctor, JSObject *proto)
 {
     JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
     JS_ASSERT(ctor);

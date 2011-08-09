@@ -35,39 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(PLARENAS_H)
-#else  /* defined(PLARENAS_H) */
+#ifndef PLARENAS_H
 #define PLARENAS_H
 
 PR_BEGIN_EXTERN_C
 
 typedef struct PLArenaPool      PLArenaPool;
-
-/*
-** Allocate an arena pool as specified by the parameters.
-**
-** This is equivelant to allocating the space yourself and then
-** calling PL_InitArenaPool().
-**
-** This function may fail (and return a NULL) for a variety of
-** reasons. The reason for a particular failure can be discovered
-** by calling PR_GetError().
-*/
-#if 0  /* Not implemented */
-PR_EXTERN(PLArenaPool*) PL_AllocArenaPool(
-    const char *name, PRUint32 size, PRUint32 align);
-#endif
-
-/*
-** Destroy an arena pool previously allocated by PL_AllocArenaPool().
-**
-** This function may fail if the arena is not empty and the caller
-** wishes to check for empty upon descruction.
-*/
-#if 0  /* Not implemented */
-PR_EXTERN(PRStatus) PL_DestroyArenaPool(PLArenaPool *pool, PRBool checkEmpty);
-#endif
-
 
 /*
 ** Initialize an arena pool with the given name for debugging and metering,
@@ -95,6 +68,7 @@ PR_EXTERN(void) PL_FinishArenaPool(PLArenaPool *pool);
 
 /*
 ** Compact all of the arenas in a pool so that no space is wasted.
+** NOT IMPLEMENTED.  Do not use.
 **/
 PR_EXTERN(void) PL_CompactArenaPool(PLArenaPool *pool);
 
@@ -115,6 +89,4 @@ PR_EXTERN(void) PL_ClearArenaPool(PLArenaPool *pool, PRInt32 pattern);
 
 PR_END_EXTERN_C
 
-#endif /* defined(PLARENAS_H) */
-
-/* plarenas */
+#endif /* PLARENAS_H */

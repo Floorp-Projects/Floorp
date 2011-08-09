@@ -1066,6 +1066,7 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
           aScreenPoint = aScreenEnd - aSize;
         }
         else {
+          aScreenPoint = endpos + aMarginBegin;
           popupSize = aScreenEnd - aScreenPoint;
         }
       }
@@ -1090,7 +1091,22 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
     }
   }
 
-  return popupSize;
+  // Make sure that the point is within the screen boundaries and that the
+  // size isn't off the edge of the screen. This can happen when a large
+  // positive or negative margin is used.
+  if (aScreenPoint < aScreenBegin) {
+    aScreenPoint = aScreenBegin;
+  }
+  if (aScreenPoint > aScreenEnd) {
+    aScreenPoint = aScreenEnd - aSize;
+  }
+
+  // If popupSize ended up being negative, or the original size was actually
+  // smaller than the calculated popup size, just use the original size instead.
+  if (popupSize <= 0 || aSize < popupSize) {
+    popupSize = aSize;
+  }
+  return NS_MIN(popupSize, aScreenEnd - aScreenPoint);
 }
 
 nsresult

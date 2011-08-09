@@ -10,6 +10,8 @@ In this order:
   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
   angle-amap-arev-fix.patch - plain bug fix, this is ANGLE r699
   angle-r702.patch - this is ANGLE r702
+  angle-limit-identifiers-to-250-chars.patch - see bug 675625
+  angle-r712.patch - this is ANGLE r712
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

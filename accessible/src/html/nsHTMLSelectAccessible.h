@@ -108,7 +108,6 @@ public:
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD SetSelected(PRBool aSelect);
 
   // nsAccessible
@@ -119,6 +118,9 @@ public:
   virtual PRInt32 GetLevelInternal();
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
   /**
    * Return focused option if any.
@@ -154,11 +156,13 @@ public:
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);  
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD GetNumActions(PRUint8 *_retval);
 
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
 protected:
   // nsAccessible
@@ -185,7 +189,6 @@ public:
   // nsIAccessible
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   // nsAccessNode
@@ -196,6 +199,9 @@ public:
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
   virtual void InvalidateChildren();
+
+  // ActionAccessible
+  virtual PRUint8 ActionCount();
 
 protected:
   // nsAccessible

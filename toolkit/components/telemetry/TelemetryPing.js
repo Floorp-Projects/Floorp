@@ -186,6 +186,7 @@ function getSimpleMeasurements() {
     // uptime in minutes
     uptime: Math.round((new Date() - si.process) / 60000)
   }
+
   if (si.process) {
     for each (let field in ["main", "firstPaint", "sessionRestored"]) {
       if (!(field in si))
@@ -193,6 +194,11 @@ function getSimpleMeasurements() {
       ret[field] = si[field] - si.process
     }
   }
+
+  ret.js = Cc["@mozilla.org/js/xpc/XPConnect;1"]
+           .getService(Ci.nsIJSEngineTelemetryStats)
+           .telemetryValue;
+
   return ret;
 }
 

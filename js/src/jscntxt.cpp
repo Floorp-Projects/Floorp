@@ -1451,6 +1451,12 @@ JSContext::generatorFor(StackFrame *fp) const
     return NULL;
 }
 
+bool
+JSContext::runningWithTrustedPrincipals() const
+{
+    return !compartment || compartment->principals == runtime->trustedPrincipals();
+}
+
 JS_FRIEND_API(void)
 JSRuntime::onTooMuchMalloc()
 {

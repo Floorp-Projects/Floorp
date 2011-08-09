@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=617528
+-->
+<head>
+  <title>Test for Bug 617528</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=617528">Mozilla Bug 617528</a>
+<p id="display"></p>
+<div id="content">
+  <menu>
+    <menuitem id="checkbox" type="checkbox" label="Checkbox" checked></menuitem>
+    <menuitem id="radio1" type="radio" label="Radio1" checked></menuitem>
+    <menuitem id="radio2" type="radio" label="Radio2"></menuitem>
+  </menu>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 617528 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  function click(element, preventDefault, checked) {
+    function handleClick(event) {
+      is(this.checked, checked,
+         "checking .checked (" + this.id + ")");
+      if (preventDefault)
+        event.preventDefault();
+    }
+    element.addEventListener("click", handleClick);
+    element.click();
+    element.removeEventListener("click", handleClick);
+  }
+
+  function verify(elements, data) {
+    for (var i = 0; i < elements.length; i++) {
+      var element = elements[i];
+      is(element.checked, data[i*2],
+         "checking .checked (" + element.id + ")");
+      is(element.defaultChecked, data[i*2+1],
+         'checking .defaultChecked (' + element.id + ")");
+    }
+  }
+
+  var checkbox = document.getElementById("checkbox");
+  click(checkbox, false, false);
+  verify([checkbox], [false, true]);
+
+  click(checkbox, true, true);
+  verify([checkbox], [false, true]);
+
+  var radio1 = document.getElementById("radio1");
+  var radio2 = document.getElementById("radio2");
+  click(radio2, false, true);
+  verify([radio1, radio2], [false, true,
+                            true, false]);
+
+  click(radio1, true, true);
+  verify([radio1, radio2], [false, true,
+                            true, false]);
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -378,7 +378,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     nsISupports TranslateThis(in nsISupports        aInitialThis,
                               in nsIInterfaceInfo   aInterfaceInfo,
                               in PRUint16           aMethodIndex,
-                              out PRBool            aHideFirstParamFromJS,
+                              out boolean            aHideFirstParamFromJS,
                               out nsIIDPtr          aIIDOfResult);
 };
 
@@ -590,9 +590,9 @@ interface nsIXPConnect : nsISupports
 
     void debugDump(in short depth);
     void debugDumpObject(in nsISupports aCOMObj, in short depth);
-    void debugDumpJSStack(in PRBool showArgs,
-                          in PRBool showLocals,
-                          in PRBool showThisProps);
+    void debugDumpJSStack(in boolean showArgs,
+                          in boolean showLocals,
+                          in boolean showThisProps);
     void debugDumpEvalInJSStackFrame(in PRUint32 aFrameNumber,
                                      in string aSourceText);
 
@@ -653,7 +653,7 @@ interface nsIXPConnect : nsISupports
                               in JSObjectPtr  aScope,
                               in nsIClassInfo aClassInfo);
 
-    void releaseJSContext(in JSContextPtr aJSContext, in PRBool noGC);
+    void releaseJSContext(in JSContextPtr aJSContext, in boolean noGC);
 
     jsval variantToJS(in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value);
     nsIVariant JSToVariant(in JSContextPtr ctx, in jsval value);
@@ -700,7 +700,7 @@ interface nsIXPConnect : nsISupports
      */
     [noscript] jsval evalInSandboxObject(in AString source, in JSContextPtr cx,
                                          in nsIXPConnectJSObjectHolder sandbox,
-                                         in PRBool returnStringOnly);
+                                         in boolean returnStringOnly);
 
     /**
      * Root JS objects held by aHolder.
@@ -761,7 +761,7 @@ interface nsIXPConnect : nsISupports
      *     The interfaces the class implements; interfaceArray and
      *     interfaceCount are like what nsIClassInfo.getInterfaces returns.
      */
-    [noscript,notxpcom] PRBool defineDOMQuickStubs(
+    [noscript,notxpcom] boolean defineDOMQuickStubs(
         in JSContextPtr cx,
         in JSObjectPtr proto,
         in PRUint32 flags,
@@ -802,5 +802,5 @@ interface nsIXPConnect : nsISupports
      * This method will turn debug mode on or off when the context 
      * stack reaches zero length.
      */
-    [noscript] void setDebugModeWhenPossible(in PRBool mode);
+    [noscript] void setDebugModeWhenPossible(in boolean mode);
 };

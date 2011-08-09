@@ -501,6 +501,8 @@ _TEST_FILES2 = \
 		delayedServerEvents.sjs \
 		test_bug664916.html \
 		test_bug666604.html \
+		test_bug675121.html \
+		file_bug675121.sjs \
 		$(NULL)
 
 _CHROME_FILES =	\

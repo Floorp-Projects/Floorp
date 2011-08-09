@@ -408,12 +408,9 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     // the Component interface are supported by all nsIAccessible
     interfacesBits |= 1 << MAI_INTERFACE_COMPONENT;
 
-    // Add Action interface if the action count is more than zero.
-    PRUint8 actionCount = 0;
-    nsresult rv = GetNumActions(&actionCount);
-    if (NS_SUCCEEDED(rv) && actionCount > 0) {
-       interfacesBits |= 1 << MAI_INTERFACE_ACTION; 
-    }
+  // Add Action interface if the action count is more than zero.
+  if (ActionCount() > 0)
+    interfacesBits |= 1 << MAI_INTERFACE_ACTION;
 
     //nsIAccessibleText
     nsCOMPtr<nsIAccessibleText> accessInterfaceText;

@@ -106,7 +106,6 @@
 #define NS_APP_USER_SEARCH_DIR                  "UsrSrchPlugns"
          
 #define NS_APP_LOCALSTORE_50_FILE               "LclSt"
-#define NS_APP_HISTORY_50_FILE                  "UHist"
 #define NS_APP_USER_PANELS_50_FILE              "UPnls"
 #define NS_APP_USER_MIMETYPES_50_FILE           "UMimTyp"
 #define NS_APP_CACHE_PARENT_DIR                 "cachePDir"

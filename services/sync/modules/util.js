@@ -142,31 +142,44 @@ let Utils = {
   },
 
   /**
-   * Wrap functions to notify when it starts and finishes executing or if it got
-   * an error. The message is a combination of a provided prefix and local name
-   * with the current state and the subject is the provided subject.
-   *
-   * @usage function MyObj() { this._notify = Utils.notify("prefix:"); }
-   *        MyObj.foo = function() { this._notify(name, subject, func)(); }
+   * Wrap functions to notify when it starts and finishes executing or if it
+   * threw an error.
+   * 
+   * The message is a combination of a provided prefix, the local name, and
+   * the event. Possible events are: "start", "finish", "error". The subject
+   * is the function's return value on "finish" or the caught exception on
+   * "error". The data argument is the predefined data value.
+   * 
+   * Example:
+   * 
+   * @usage function MyObj(name) {
+   *          this.name = name;
+   *          this._notify = Utils.notify("obj:");
+   *        }
+   *        MyObj.prototype = {
+   *          foo: function() this._notify("func", "data-arg", function () {
+   *            //...
+   *          }(),
+   *        };
    */
   notify: function Utils_notify(prefix) {
-    return function NotifyMaker(name, subject, func) {
+    return function NotifyMaker(name, data, func) {
       let thisArg = this;
-      let notify = function(state) {
+      let notify = function(state, subject) {
         let mesg = prefix + name + ":" + state;
         thisArg._log.trace("Event: " + mesg);
-        Observers.notify(mesg, subject);
+        Observers.notify(mesg, subject, data);
       };
 
       return function WrappedNotify() {
         try {
-          notify("start");
+          notify("start", null);
           let ret = func.call(thisArg);
-          notify("finish");
+          notify("finish", ret);
           return ret;
         }
         catch(ex) {
-          notify("error");
+          notify("error", ex);
           throw ex;
         }
       };

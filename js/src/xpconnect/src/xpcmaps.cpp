@@ -547,7 +547,7 @@ XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
 JSBool
 XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
                                            char* name,
-                                           JSBool isGlobal,
+                                           PRBool isGlobal,
                                            PRUint32 interfacesBitmap,
                                            XPCNativeScriptableInfo* si)
 {

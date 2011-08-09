@@ -291,16 +291,16 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
 
 class WorkerMemoryReporter : public nsIMemoryMultiReporter
 {
-  JSRuntime* mRuntime;
+  WorkerPrivate* mWorkerPrivate;
   nsCString mPathPrefix;
 
 public:
   NS_DECL_ISUPPORTS
 
-  WorkerMemoryReporter(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
-  : mRuntime(aRuntime)
+  WorkerMemoryReporter(WorkerPrivate* aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
   {
-    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+    aWorkerPrivate->AssertIsOnWorkerThread();
 
     nsCString escapedDomain(aWorkerPrivate->Domain());
     escapedDomain.ReplaceChar('/', '\\');
@@ -331,21 +331,12 @@ public:
   {
     AssertIsOnMainThread();
 
-    JS_TriggerAllOperationCallbacks(mRuntime);
-
     IterateData data;
-    if (!CollectCompartmentStatsForRuntime(mRuntime, &data)) {
+    if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&data)) {
       return NS_ERROR_FAILURE;
     }
 
-    for (CompartmentStats *stats = data.compartmentStatsVector.begin();
-         stats != data.compartmentStatsVector.end();
-         ++stats)
-    {
-      ReportCompartmentStats(*stats, mPathPrefix, aCallback, aClosure);
-    }
-
-    ReportJSStackSizeForRuntime(mRuntime, mPathPrefix, aCallback, aClosure);
+    ReportJSRuntimeStats(data, mPathPrefix, aCallback, aClosure);
 
     return NS_OK;
   }
@@ -379,16 +370,17 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    JSRuntime* rt = JS_GetRuntime(cx);
-
     nsRefPtr<WorkerMemoryReporter> reporter =
-      new WorkerMemoryReporter(workerPrivate, rt);
+      new WorkerMemoryReporter(workerPrivate);
     if (NS_FAILED(NS_RegisterMemoryMultiReporter(reporter))) {
       NS_WARNING("Failed to register memory reporter!");
       reporter = nsnull;
     }
 
-    workerPrivate->DoRunLoop(cx);
+    {
+      JSAutoRequest ar(cx);
+      workerPrivate->DoRunLoop(cx);
+    }
 
     if (reporter) {
       if (NS_FAILED(NS_UnregisterMemoryMultiReporter(reporter))) {
@@ -396,6 +388,8 @@ public:
       }
       reporter = nsnull;
     }
+
+    JSRuntime* rt = JS_GetRuntime(cx);
 
     // XXX Bug 666963 - CTypes can create another JSContext for use with
     // closures, and then it holds that context in a reserved slot on the CType

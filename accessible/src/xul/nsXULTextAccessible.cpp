@@ -189,13 +189,10 @@ nsXULLinkAccessible::NativeState()
   return nsHyperTextAccessible::NativeState() | states::LINKED;
 }
 
-NS_IMETHODIMP
-nsXULLinkAccessible::GetNumActions(PRUint8 *aNumActions)
+PRUint8
+nsXULLinkAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aNumActions);
-  
-  *aNumActions = 1;
-  return NS_OK;
+  return 1;
 }
 
 NS_IMETHODIMP
