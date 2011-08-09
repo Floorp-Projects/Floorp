@@ -319,12 +319,12 @@ TypeAnalyzer::specializePhi(MPhi *phi)
 void
 TypeAnalyzer::specializePhis()
 {
+    phisHaveBeenAnalyzed_ = true;
+
     while (!phiWorklist_.empty()) {
         MPhi *phi = popPhi();
         specializePhi(phi);
     }
-
-    phisHaveBeenAnalyzed_ = true;
 }
  
 // Part 1: Determine specializations.
