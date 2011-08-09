@@ -133,12 +133,6 @@ setting[type="directory"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-path");
 }
 
-setting[type="radio"],
-setting[type="menulist"] {
-  display: -moz-grid-line;
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
-}
-
 #addonitem-popup > menuitem[disabled="true"] {
   display: none;
 }

@@ -119,7 +119,6 @@ _TEST_RESOURCES = \
   browser_eula.xml \
   browser_purchase.xml \
   discovery.html \
-  more_options.xul \
   options.xul \
   redirect.sjs \
   releaseNotes.xhtml \

@@ -1084,7 +1084,7 @@ setting[type="string"] > .setting-input > textbox {
 
 .addon-control,
 setting:not([type="integer"]) button,
-setting[type="menulist"] menulist,
+setting[type="control"] menulist,
 setting[type="color"] colorpicker[type="button"] {
   -moz-appearance: none;
   padding: 1px 4px;
@@ -1096,10 +1096,6 @@ setting[type="color"] colorpicker[type="button"] {
   background-clip: padding-box;
   color: #252F3B;
   text-shadow: @loweredShadow@;
-}
-
-setting[type="radio"] > radiogroup {
-  -moz-box-orient: horizontal;
 }
 
 .addon-control[disabled="true"] {
@@ -1114,7 +1110,7 @@ setting[type="color"] colorpicker[type="button"] {
 
 .addon-control:active:hover,
 setting:not([type="integer"]) button:active:hover,
-setting[type="menulist"] menulist:active:hover,
+setting[type="control"] menulist:active:hover,
 setting[type="color"] colorpicker[type="button"]:active:hover {
   box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 1px rgba(255,255,255,0.25);
   background-image: -moz-linear-gradient(rgba(45,54,71,0.3), rgba(45,54,71,0.1));
