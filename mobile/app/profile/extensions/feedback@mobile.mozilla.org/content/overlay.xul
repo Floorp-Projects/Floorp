@@ -62,11 +62,6 @@
               <button id="feedback-feedback-sad" oncommand="Feedback.openFeedback('sad');"/>
             </setting>
           </settings>
-          <settings id="feedback-information" label="&feedback.information.title;">
-            <setting id="feedback-about" title="&feedback.about.title;" type="control">
-              <button id="feedback-about-button" label="&feedback.about.button;" oncommand="Feedback.openReadme();"/>
-            </setting>
-          </settings>
           <settings id="feedback-tools" label="&feedback.tools.title;">
             <setting pref="toolkit.telemetry.enabled" title="&feedback.allowTelemetry.title;" type="bool"/>
             <setting pref="extensions.checkCompatibility.4.0b" title="&feedback.forceCompat.title;" type="bool" inverted="true" oninputchanged="Feedback.updateRestart();"/>

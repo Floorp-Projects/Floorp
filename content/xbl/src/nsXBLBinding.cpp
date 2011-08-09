@@ -73,13 +73,7 @@
 
 // Event listeners
 #include "nsEventListenerManager.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMLoadListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsIDOMContextMenuListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsAttrName.h"
 
 #include "nsGkAtoms.h"

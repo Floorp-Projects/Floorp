@@ -227,9 +227,6 @@ DestroyContext(JSContext *cx, bool withGC);
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
-static JSObject *
-split_setup(JSContext *cx, JSBool evalcx);
-
 #ifdef EDITLINE
 JS_BEGIN_EXTERN_C
 JS_EXTERN_API(char)    *readline(const char *prompt);
@@ -2474,7 +2471,7 @@ DumpStack(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(iter.nativeArgs().callee().getFunctionPrivate()->native() == DumpStack);
     ++iter;
 
-    jsint index = 0;
+    uint32 index = 0;
     for (; !iter.done(); ++index, ++iter) {
         Value v;
         if (iter.isScript()) {
@@ -2701,7 +2698,6 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok;
     JSPropertyDescArray pda;
     JSPropertyDesc *pd;
-    uint32 i;
     jsval v;
 
     if (!JS_ValueToObject(cx, argc == 0 ? JSVAL_VOID : vp[2], &vobj))
@@ -2720,7 +2716,7 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
     if (!ok)
         return JS_FALSE;
     pd = pda.array;
-    for (i = 0; i < pda.length; i++, pd++) {
+    for (uint32 i = 0; i < pda.length; i++, pd++) {
         pdobj = JS_NewObject(cx, NULL, NULL, NULL);
         if (!pdobj) {
             ok = JS_FALSE;
@@ -2834,379 +2830,6 @@ typedef struct ComplexObject {
     JSObject *outer;
 } ComplexObject;
 
-static JSObject *
-split_create_outer(JSContext *cx);
-
-static JSObject *
-split_create_inner(JSContext *cx, JSObject *outer);
-
-static ComplexObject *
-split_get_private(JSContext *cx, JSObject *obj);
-
-static JSBool
-split_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
-{
-    ComplexObject *cpx;
-
-    cpx = split_get_private(cx, obj);
-    if (!cpx)
-        return JS_TRUE;
-    if (!cpx->isInner && cpx->inner) {
-        /* Make sure to define this property on the inner object. */
-        return JS_DefinePropertyById(cx, cpx->inner, id, *vp, NULL, NULL, JSPROP_ENUMERATE);
-    }
-    return JS_TRUE;
-}
-
-static JSBool
-split_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
-{
-    ComplexObject *cpx;
-
-    cpx = split_get_private(cx, obj);
-    if (!cpx)
-        return JS_TRUE;
-
-    if (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "isInner")) {
-        *vp = BOOLEAN_TO_JSVAL(cpx->isInner);
-        return JS_TRUE;
-    }
-
-    if (!cpx->isInner && cpx->inner) {
-        if (JSID_IS_ATOM(id)) {
-            JSString *str = JSID_TO_STRING(id);
-
-            size_t length;
-            const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
-            if (!chars)
-                return false;
-
-            return JS_GetUCProperty(cx, cpx->inner, chars, length, vp);
-        }
-        if (JSID_IS_INT(id))
-            return JS_GetElement(cx, cpx->inner, JSID_TO_INT(id), vp);
-        return JS_TRUE;
-    }
-
-    return JS_TRUE;
-}
-
-static JSBool
-split_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
-{
-    ComplexObject *cpx;
-
-    cpx = split_get_private(cx, obj);
-    if (!cpx)
-        return true;
-    if (!cpx->isInner && cpx->inner) {
-        if (JSID_IS_ATOM(id)) {
-            JSString *str = JSID_TO_STRING(id);
-
-            size_t length;
-            const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
-            if (!chars)
-                return false;
-
-            return JS_SetUCProperty(cx, cpx->inner, chars, length, vp);
-        }
-        if (JSID_IS_INT(id))
-            return JS_SetElement(cx, cpx->inner, JSID_TO_INT(id), vp);
-        return true;
-    }
-
-    return true;
-}
-
-static JSBool
-split_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
-{
-    ComplexObject *cpx;
-    jsid asId;
-
-    cpx = split_get_private(cx, obj);
-    if (!cpx)
-        return JS_TRUE;
-    if (!cpx->isInner && cpx->inner) {
-        /* Make sure to define this property on the inner object. */
-        if (!JS_ValueToId(cx, *vp, &asId))
-            return JS_FALSE;
-        return cpx->inner->deleteProperty(cx, asId, Valueify(vp), true);
-    }
-    return JS_TRUE;
-}
-
-static JSBool
-split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                jsval *statep, jsid *idp)
-{
-    ComplexObject *cpx;
-    JSObject *iterator;
-
-    switch (enum_op) {
-      case JSENUMERATE_INIT:
-      case JSENUMERATE_INIT_ALL:
-        cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
-
-        if (!cpx->isInner && cpx->inner)
-            obj = cpx->inner;
-
-        iterator = JS_NewPropertyIterator(cx, obj);
-        if (!iterator)
-            return JS_FALSE;
-
-        *statep = OBJECT_TO_JSVAL(iterator);
-        if (idp)
-            *idp = INT_TO_JSID(0);
-        break;
-
-      case JSENUMERATE_NEXT:
-        iterator = (JSObject*)JSVAL_TO_OBJECT(*statep);
-        if (!JS_NextProperty(cx, iterator, idp))
-            return JS_FALSE;
-
-        if (!JSID_IS_VOID(*idp))
-            break;
-        /* Fall through. */
-
-      case JSENUMERATE_DESTROY:
-        /* Let GC at our iterator object. */
-        *statep = JSVAL_NULL;
-        break;
-    }
-
-    return JS_TRUE;
-}
-
-static JSBool
-split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
-{
-    ComplexObject *cpx;
-
-    if (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "isInner")) {
-        *objp = obj;
-        return JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, NULL, NULL, JSPROP_SHARED);
-    }
-
-    cpx = split_get_private(cx, obj);
-    if (!cpx)
-        return JS_TRUE;
-    if (!cpx->isInner && cpx->inner) {
-        JSProperty *prop;
-        return cpx->inner->lookupProperty(cx, id, objp, &prop);
-    }
-
-#ifdef LAZY_STANDARD_CLASSES
-    if (!(flags & JSRESOLVE_ASSIGNING)) {
-        JSBool resolved;
-
-        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
-            return JS_FALSE;
-
-        if (resolved) {
-            *objp = obj;
-            return JS_TRUE;
-        }
-    }
-#endif
-
-    /* XXX For additional realism, let's resolve some random property here. */
-    return JS_TRUE;
-}
-
-static void
-split_finalize(JSContext *cx, JSObject *obj)
-{
-    JS_free(cx, JS_GetPrivate(cx, obj));
-}
-
-static void
-split_trace(JSTracer *trc, JSObject *obj)
-{
-    ComplexObject *cpx;
-
-    cpx = (ComplexObject *) JS_GetPrivate(trc->context, obj);
-
-    if (!cpx)
-        return; /* The object is not fully constructed. */
-
-    if (!cpx->isInner && cpx->inner) {
-        /* Mark the inner object. */
-        JS_CALL_TRACER(trc, cpx->inner, JSTRACE_OBJECT, "ComplexObject.inner");
-    }
-
-    if (cpx->isInner && cpx->outer) {
-        /* Mark the inner object. */
-        JS_CALL_TRACER(trc, cpx->outer, JSTRACE_OBJECT, "ComplexObject.outer");
-    }
-}
-
-static JSObject *
-split_outerObject(JSContext *cx, JSObject *obj)
-{
-    ComplexObject *cpx;
-
-    cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
-    return cpx->isInner ? cpx->outer : obj;
-}
-
-static JSObject *
-split_thisObject(JSContext *cx, JSObject *obj)
-{
-    OBJ_TO_OUTER_OBJECT(cx, obj);
-    if (!obj)
-        return NULL;
-    return obj;
-}
-
-
-static JSBool
-split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
-
-static JSObject *
-split_innerObject(JSContext *cx, JSObject *obj)
-{
-    ComplexObject *cpx;
-
-    cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
-    if (cpx->frozen) {
-        JS_ASSERT(!cpx->isInner);
-        return obj;
-    }
-    return !cpx->isInner ? cpx->inner : obj;
-}
-
-static Class split_global_class = {
-    "split_global",
-    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE | JSCLASS_GLOBAL_FLAGS,
-    Valueify(split_addProperty),
-    Valueify(split_delProperty),
-    Valueify(split_getProperty),
-    Valueify(split_setProperty),
-    (JSEnumerateOp)split_enumerate,
-    (JSResolveOp)split_resolve,
-    ConvertStub,
-    split_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    split_trace,
-    {
-        Valueify(split_equality),
-        split_outerObject,
-        split_innerObject,
-        NULL, /* iteratorObject */
-        NULL, /* wrappedObject  */
-    },
-    {
-        NULL, /* lookupProperty */
-        NULL, /* defineProperty */
-        NULL, /* getProperty    */
-        NULL, /* setProperty    */
-        NULL, /* getAttributes  */
-        NULL, /* setAttributes  */
-        NULL, /* deleteProperty */
-        NULL, /* enumerate      */
-        NULL, /* typeOf         */
-        NULL, /* fix            */
-        split_thisObject,
-        NULL, /* clear          */
-    },
-};
-
-static JSBool
-split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp)
-{
-    *bp = JS_FALSE;
-    if (JSVAL_IS_PRIMITIVE(*v))
-        return JS_TRUE;
-
-    JSObject *obj2 = JSVAL_TO_OBJECT(*v);
-    if (obj2->getClass() != &split_global_class)
-        return JS_TRUE;
-
-    ComplexObject *cpx = (ComplexObject *) JS_GetPrivate(cx, obj2);
-    JS_ASSERT(!cpx->isInner);
-
-    ComplexObject *ourCpx = (ComplexObject *) JS_GetPrivate(cx, obj);
-    JS_ASSERT(!ourCpx->isInner);
-
-    *bp = (cpx == ourCpx);
-    return JS_TRUE;
-}
-
-JSObject *
-split_create_outer(JSContext *cx)
-{
-    ComplexObject *cpx;
-    JSObject *obj;
-
-    cpx = (ComplexObject *) JS_malloc(cx, sizeof *obj);
-    if (!cpx)
-        return NULL;
-    cpx->isInner = JS_FALSE;
-    cpx->frozen = JS_TRUE;
-    cpx->inner = NULL;
-    cpx->outer = NULL;
-
-    obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
-    if (!obj) {
-        JS_free(cx, cpx);
-        return NULL;
-    }
-
-    if (!JS_SetPrivate(cx, obj, cpx)) {
-        JS_free(cx, cpx);
-        return NULL;
-    }
-
-    return obj;
-}
-
-static JSObject *
-split_create_inner(JSContext *cx, JSObject *outer)
-{
-    ComplexObject *cpx, *outercpx;
-    JSObject *obj;
-
-    JS_ASSERT(outer->getClass() == &split_global_class);
-
-    cpx = (ComplexObject *) JS_malloc(cx, sizeof *cpx);
-    if (!cpx)
-        return NULL;
-    cpx->isInner = JS_TRUE;
-    cpx->frozen = JS_FALSE;
-    cpx->inner = NULL;
-    cpx->outer = outer;
-
-    obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
-    if (!obj || !JS_SetPrivate(cx, obj, cpx)) {
-        JS_free(cx, cpx);
-        return NULL;
-    }
-
-    outercpx = (ComplexObject *) JS_GetPrivate(cx, outer);
-    outercpx->inner = obj;
-    outercpx->frozen = JS_FALSE;
-
-    return obj;
-}
-
-static ComplexObject *
-split_get_private(JSContext *cx, JSObject *obj)
-{
-    do {
-        if (obj->getClass() == &split_global_class)
-            return (ComplexObject *) JS_GetPrivate(cx, obj);
-        obj = JS_GetParent(cx, obj);
-    } while (obj);
-
-    return NULL;
-}
-
 static JSBool
 sandbox_enumerate(JSContext *cx, JSObject *obj)
 {
@@ -3254,7 +2877,7 @@ static JSClass sandbox_class = {
 };
 
 static JSObject *
-NewSandbox(JSContext *cx, bool lazy, bool split)
+NewSandbox(JSContext *cx, bool lazy)
 {
     JSObject *obj = JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL);
     if (!obj)
@@ -3265,20 +2888,12 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
         if (!ac.enter(cx, obj))
             return NULL;
 
-        if (split) {
-            obj = split_setup(cx, JS_TRUE);
-            if (!obj)
-                return NULL;
-        }
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return NULL;
 
         AutoValueRooter root(cx, BooleanValue(lazy));
         if (!JS_SetProperty(cx, obj, "lazy", root.jsval_addr()))
             return NULL;
-
-        if (split)
-            obj = split_outerObject(cx, obj);
     }
 
     AutoObjectRooter objroot(cx, obj);
@@ -3300,21 +2915,16 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
     if (!src)
         return false;
 
-    bool split = false, lazy = false;
+    bool lazy = false;
     if (srclen == 4) {
         if (src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
             lazy = true;
             srclen = 0;
         }
-    } else if (srclen == 5) {
-        if (src[0] == 's' && src[1] == 'p' && src[2] == 'l' && src[3] == 'i' && src[4] == 't') {
-            split = lazy = true;
-            srclen = 0;
-        }
     }
 
     if (!sobj) {
-        sobj = NewSandbox(cx, lazy, split);
+        sobj = NewSandbox(cx, lazy);
         if (!sobj)
             return false;
     }
@@ -3747,7 +3357,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         sd.threads[i].fn = JSVAL_NULL;
 
         ok = JS_AddValueRoot(cx, &sd.threads[i].fn);
-        if (ok && !JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn)) {
+        if (ok && !JS_GetElement(cx, inArr, i, &sd.threads[i].fn)) {
             JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             ok = JS_FALSE;
         }
@@ -4684,8 +4294,7 @@ static const char *const shell_help_messages[] = {
 "evalcx(s[, o])\n"
 "  Evaluate s in optional sandbox object o\n"
 "  if (s == '' && !o) return new o with eager standard classes\n"
-"  if (s == 'lazy' && !o) return new o with lazy standard classes\n"
-"  if (s == 'split' && !o) return new split-object o with lazy standard classes",
+"  if (s == 'lazy' && !o) return new o with lazy standard classes",
 "evalInFrame(n,str,save)  Evaluate 'str' in the nth up frame.\n"
 "                         If 'save' (default false), save the frame chain",
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
@@ -4845,47 +4454,6 @@ Help(JSContext *cx, uintN argc, jsval *vp)
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
-}
-
-static JSObject *
-split_setup(JSContext *cx, JSBool evalcx)
-{
-    JSObject *outer, *inner, *arguments;
-
-    outer = split_create_outer(cx);
-    if (!outer)
-        return NULL;
-    AutoObjectRooter root(cx, outer);
-    if (!evalcx)
-        JS_SetGlobalObject(cx, outer);
-
-    inner = split_create_inner(cx, outer);
-    if (!inner)
-        return NULL;
-
-    if (!evalcx) {
-        if (!JS_DefineFunctions(cx, inner, shell_functions) ||
-            !JS_DefineProfilingFunctions(cx, inner)) {
-            return NULL;
-        }
-
-        /* Create a dummy arguments object. */
-        arguments = JS_NewArrayObject(cx, 0, NULL);
-        if (!arguments ||
-            !JS_DefineProperty(cx, inner, "arguments", OBJECT_TO_JSVAL(arguments),
-                               NULL, NULL, 0)) {
-            return NULL;
-        }
-    }
-
-    JS_ClearScope(cx, outer);
-
-#ifndef LAZY_STANDARD_CLASSES
-    if (!JS_InitStandardClasses(cx, inner))
-        return NULL;
-#endif
-
-    return inner;
 }
 
 /*

@@ -81,6 +81,8 @@ typedef struct _nsCocoaWindowList {
   // is ridiculously slow, so we cache it in the toplevel window for all
   // descendants to use.
   float mDPI;
+
+  NSTrackingArea* mTrackingArea;
 }
 
 - (void)importState:(NSDictionary*)aState;
@@ -93,6 +95,12 @@ typedef struct _nsCocoaWindowList {
 - (void)deferredInvalidateShadow;
 - (void)invalidateShadow;
 - (float)getDPI;
+
+- (void)mouseEntered:(NSEvent*)aEvent;
+- (void)mouseExited:(NSEvent*)aEvent;
+- (void)mouseMoved:(NSEvent*)aEvent;
+- (void)updateTrackingArea;
+- (NSView*)trackingAreaView;
 
 @end
 
@@ -292,8 +300,6 @@ public:
     
     NS_IMETHOD BeginSecureKeyboardInput();
     NS_IMETHOD EndSecureKeyboardInput();
-
-    static void UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut);
 
     void SetPopupWindowLevel();
 

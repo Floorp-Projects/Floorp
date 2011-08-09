@@ -49,6 +49,7 @@ XPIDL_MODULE = MobileComponents
 XPIDLSRCS = \
         SessionStore.idl \
         LoginManagerPrompter.idl \
+        WebappsSupport.idl \
         $(NULL)
 
 EXTRA_PP_COMPONENTS = \
