@@ -307,9 +307,7 @@ class LPhi : public LInstruction
 
     bool init(MIRGenerator *gen);
 
-    LPhi(uint32 numInputs)
-      : numInputs_(numInputs)
-    { }
+    LPhi(MPhi *mir);
 
   public:
     LIR_HEADER(Phi);

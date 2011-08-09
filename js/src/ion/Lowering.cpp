@@ -269,39 +269,57 @@ LIRGenerator::visitInstruction(MInstruction *ins)
 }
 
 bool
+LIRGenerator::definePhis()
+{
+    size_t lirIndex = 0;
+    MBasicBlock *block = current->mir();
+    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+        if (phi->type() == MIRType_Value) {
+            if (!defineUntypedPhi(*phi, lirIndex))
+                return false;
+            lirIndex += BOX_PIECES;
+        } else {
+            if (!defineTypedPhi(*phi, lirIndex))
+                return false;
+            lirIndex += 1;
+        }
+    }
+    return true;
+}
+
+bool
 LIRGenerator::visitBlock(MBasicBlock *block)
 {
-    current = LBlock::New(block);
-    if (!current)
-        return false;
-
+    current = block->lir();
     last_snapshot_ = block->entrySnapshot();
 
-    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
-        if (!gen->ensureBallast())
-            return false;
-        if (!preparePhi(*phi))
-            return false;
-#ifdef DEBUG
-        phi->setInWorklist();
-#endif
-    }
+    if (!definePhis())
+        return false;
 
     for (MInstructionIterator iter = block->begin(); *iter != block->lastIns(); iter++) {
         if (!visitInstruction(*iter))
             return false;
     }
 
-    // For each successor, make sure we've assigned a virtual register to any
-    // phi inputs that emit at uses.
     if (block->successorWithPhis()) {
+        // If we have a successor with phis, lower the phi input now that we
+        // are approaching the join point.
         MBasicBlock *successor = block->successorWithPhis();
         uint32 position = block->positionInPhiSuccessor();
+        size_t lirIndex = 0;
         for (MPhiIterator phi(successor->phisBegin()); phi != successor->phisEnd(); phi++) {
             MDefinition *opd = phi->getOperand(position);
-            if (opd->isEmittedAtUses() && !opd->id()) {
-                if (!ensureDefined(opd))
-                    return false;
+            if (!ensureDefined(opd))
+                return false;
+
+            JS_ASSERT(opd->type() == phi->type());
+
+            if (phi->type() == MIRType_Value) {
+                lowerUntypedPhiInput(*phi, position, successor->lir(), lirIndex);
+                lirIndex += BOX_PIECES;
+            } else {
+                lowerTypedPhiInput(*phi, position, successor->lir(), lirIndex);
+                lirIndex += 1;
             }
         }
     }
@@ -310,27 +328,47 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (!visitInstruction(block->lastIns()))
         return false;
 
-    if (!lirGraph_.addBlock(current))
+    return true;
+}
+
+bool
+LIRGenerator::precreatePhi(LBlock *block, MPhi *phi)
+{
+    LPhi *lir = LPhi::New(gen, phi);
+    if (!lir)
         return false;
-    block->assignLir(current);
+    if (!block->addPhi(lir))
+        return false;
     return true;
 }
 
 bool
 LIRGenerator::generate()
 {
+    // Create all blocks and prep all phis beforehand.
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        current = LBlock::New(*block);
+        if (!current)
+            return false;
+        if (!lirGraph_.addBlock(current))
+            return false;
+        block->assignLir(current);
+
+        // For each MIR phi, add LIR phis as appropriate. We'll fill in their
+        // operands on each incoming edge, and set their definitions at the
+        // start of their defining block.
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+            int numPhis = (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
+            for (int i = 0; i < numPhis; i++) {
+                if (!precreatePhi(block->lir(), *phi))
+                    return false;
+            }
+        }
+    }
+
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         if (!visitBlock(*block))
             return false;
-    }
-
-    // Emit phis now that all their inputs have definitions.
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        current = block->lir();
-        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
-            if (!lowerPhi(*phi))
-                return false;
-        }
     }
 
     return true;

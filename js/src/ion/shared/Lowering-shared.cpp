@@ -49,25 +49,6 @@ using namespace js;
 using namespace ion;
 
 bool
-LIRGeneratorShared::lowerPhi(MPhi *ins)
-{
-    // The virtual register of the phi was determined in the first pass.
-    JS_ASSERT(ins->id());
-
-    LPhi *phi = LPhi::New(gen, ins);
-    if (!phi)
-        return false;
-    for (size_t i = 0; i < ins->numOperands(); i++) {
-        MDefinition *opd = ins->getOperand(i);
-        JS_ASSERT(opd->type() == ins->type());
-
-        phi->setOperand(i, LUse(opd->id(), LUse::ANY));
-    }
-    phi->setDef(0, LDefinition(ins->id(), LDefinition::TypeFrom(ins->type())));
-    return addPhi(phi);
-}
-
-bool
 LIRGeneratorShared::visitConstant(MConstant *ins)
 {
     const Value &v = ins->value();
@@ -87,5 +68,27 @@ LIRGeneratorShared::visitConstant(MConstant *ins)
         return false;
     }
     return true;
+}
+
+bool
+LIRGeneratorShared::defineTypedPhi(MPhi *phi, size_t lirIndex)
+{
+    LPhi *lir = current->getPhi(lirIndex);
+
+    uint32 vreg = getVirtualRegister();
+    if (vreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+    phi->setId(vreg);
+    lir->setDef(0, LDefinition(vreg, LDefinition::TypeFrom(phi->type())));
+    return annotate(lir);
+}
+
+void
+LIRGeneratorShared::lowerTypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex)
+{
+    MDefinition *operand = phi->getOperand(inputPosition);
+    LPhi *lir = block->getPhi(lirIndex);
+    lir->setOperand(inputPosition, LUse(operand->id(), LUse::ANY));
 }
 
