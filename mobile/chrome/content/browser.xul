@@ -663,6 +663,9 @@
             <label value="&contextRemoveBookmark.label;"/>
           </richlistitem>
 #ifdef ANDROID
+          <richlistitem class="context-command" id="context-shortcutbookmark" type="edit-bookmark" onclick="ContextCommands.shortcutBookmark();">
+            <label value="&contextShortcutBookmark.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-select-input" type="input-text" onclick="ContextCommands.selectInput();">
             <label value="&inputMethod.label;"/>
           </richlistitem>

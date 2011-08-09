@@ -59,15 +59,15 @@ REQUIRES	= \
 		  pref \
 		  $(NULL)
 
+XPIDL_MODULE = browsercomps
+
+XPIDLSRCS = nsIShellService.idl
+
 CPPSRCS = \
 	nsSSLCertErrorDialog.cpp \
 	nsBrowserModule.cpp \
+	nsShellService.cpp \
 	$(NULL)
-
-ifndef ANDROID
-CPPSRCS += nsPhoneSupport.cpp
-XPIDLSRCS = nsIPhoneSupport.idl
-endif
 
 ifeq ($(MOZ_PLATFORM_MAEMO),5)
 LOCAL_INCLUDES   += $(MOZ_DBUS_GLIB_CFLAGS)

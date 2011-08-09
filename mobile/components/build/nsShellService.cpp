@@ -48,13 +48,17 @@
 #include <QtGui/QWidget>
 #endif
 
-#include "nsPhoneSupport.h"
+#ifdef ANDROID
+#include "AndroidBridge.h"
+#endif
+
+#include "nsShellService.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1(nsPhoneSupport, nsIPhoneSupport)
+NS_IMPL_ISUPPORTS1(nsShellService, nsIShellService)
 
 NS_IMETHODIMP
-nsPhoneSupport::SwitchTask()
+nsShellService::SwitchTask()
 {
 #if (MOZ_PLATFORM_MAEMO == 5)
   DBusError error;
@@ -76,6 +80,20 @@ nsPhoneSupport::SwitchTask()
   QWidget * window = QApplication::activeWindow();
   if (window)
       window->showMinimized();
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP
+nsShellService::CreateShortcut(const nsAString& aTitle, const nsAString& aURI, const nsAString& aIconData, const nsAString& aIntent)
+{
+  if (!aTitle.Length() || !aURI.Length() || !aIconData.Length())
+    return NS_ERROR_FAILURE;
+
+#if ANDROID
+  mozilla::AndroidBridge::Bridge()->CreateShortcut(aTitle, aURI, aIconData, aIntent);
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
