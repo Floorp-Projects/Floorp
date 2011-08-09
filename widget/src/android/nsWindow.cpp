@@ -448,14 +448,6 @@ nsWindow::Resize(PRInt32 aX,
 
     PRBool needSizeDispatch = aWidth != mBounds.width || aHeight != mBounds.height;
 
-    if (IsTopLevel()) {
-        ALOG("... ignoring Resize sizes on toplevel window");
-        aX = 0;
-        aY = 0;
-        aWidth = gAndroidBounds.width;
-        aHeight = gAndroidBounds.height;
-    }
-
     mBounds.x = aX;
     mBounds.y = aY;
     mBounds.width = aWidth;
@@ -586,6 +578,8 @@ nsWindow::BringToFront()
     nsGUIEvent event(PR_TRUE, NS_ACTIVATE, this);
     DispatchEvent(&event);
 
+    // force a window resize
+    nsAppShell::gAppShell->ResendLastResizeEvent(this);
     nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 }
 
@@ -738,11 +732,19 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
         return;
 
     switch (ae->Type()) {
+        case AndroidGeckoEvent::FORCED_RESIZE:
+            win->mBounds.width = 0;
+            win->mBounds.height = 0;
+            // also resize the children
+            for (PRUint32 i = 0; i < win->mChildren.Length(); i++) {
+                win->mChildren[i]->mBounds.width = 0;
+                win->mChildren[i]->mBounds.height = 0;
+            }
         case AndroidGeckoEvent::SIZE_CHANGED: {
             int nw = ae->P0().x;
             int nh = ae->P0().y;
 
-            if (nw != gAndroidBounds.width ||
+            if (ae->Type() == AndroidGeckoEvent::FORCED_RESIZE || nw != gAndroidBounds.width ||
                 nh != gAndroidBounds.height) {
 
                 gAndroidBounds.width = nw;
