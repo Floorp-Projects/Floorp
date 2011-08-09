@@ -146,6 +146,19 @@ function fileUriToSrc(path, mustExist) {
   return f.path;
 }
 
+// Returns true if two nsTimeRanges are equal, false otherwise
+function range_equals(r1, r2) {
+  if (r1.length != r2.length) {
+    return false;
+  }
+  for (var i = 0; i < r1.length; i++) {
+    if (r1.start(i) != r2.start(i) || r1.end(i) != r2.end(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // These are URIs to files that we use to check that we don't leak any state
 // or other information such that script can determine stuff about a user's
 // environment. Used by test_info_leak.
