@@ -116,9 +116,6 @@
 #define NS_APPSTARTUP_CONTRACTID \
   "@mozilla.org/toolkit/app-startup;1"
 
-#define NS_WEBAPPSSUPPORT_CONTRACTID \
-  "@mozilla.org/webapps/installer;1"
-
 /////////////////////////////////////////////////////////////////////////////
 
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
@@ -194,7 +191,3 @@
 // {6fb0c970-e1b1-11db-8314-0800200c9a66}
 #define NS_PLACESIMPORTEXPORTSERVICE_CID \
 { 0x6fb0c970, 0xe1b1, 0x11db, { 0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
-
-#define NS_WEBAPPSSUPPORT_CID \
-{ 0xd0b62752, 0x88be, 0x4c88, {0x94, 0xe5, 0xc6, 0x9e, 0x15, 0xa1, 0x0c, 0x4e} }
-

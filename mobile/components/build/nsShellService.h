@@ -1,4 +1,5 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +13,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Webapp code.
+ * The Original Code is Minimo Tel Protocol Handler.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation <http://www.mozilla.org/>.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Fabrice Desré <fabrice@mozilla.com>
+ *  Doug Turner <dougt@meer.net>
+ *  Nino D'Aversa <ninodaversa@gmail.com>
+ *  Alex Pakhotin <alexp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,22 +39,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsWebappsSupport_h__
-#define nsWebappsSupport_h__
+#ifndef __NS_SHELLSERVICE_H__
+#define __NS_SHELLSERVICE_H__
 
-#include "nsIWebappsSupport.h"
+#include "nsIShellService.h"
 
-class nsWebappsSupport : public nsIWebappsSupport
+class nsShellService : public nsIShellService
 {
 public:
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEBAPPSSUPPORT
+  NS_DECL_NSISHELLSERVICE
 
-  nsWebappsSupport() {};
-  ~nsWebappsSupport() {};
+  nsShellService() {};
+  ~nsShellService() {};
 
 };
 
-#endif // nsWebappsSupport_h__
+#define nsShellService_CID                          \
+{0xae9ebe1c, 0x61e9, 0x45fa, {0x8f, 0x34, 0xc1, 0x07, 0x80, 0x3a, 0x5b, 0x44}}
 
+#define nsShellService_ContractID "@mozilla.org/browser/shell-service;1"
+
+#endif
