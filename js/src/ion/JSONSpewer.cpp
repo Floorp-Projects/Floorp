@@ -44,6 +44,7 @@
 #include "JSONSpewer.h"
 #include "IonLIR.h"
 #include "TypeOracle.h"
+#include "MIR.h"
 
 using namespace js;
 using namespace js::ion;
@@ -216,6 +217,12 @@ JSONSpewer::spewMDef(MDefinition *def)
     fprintf(fp_, "\"");
     def->printOpcode(fp_);
     fprintf(fp_, "\"");
+
+    beginListProperty("attributes");
+#define OUTPUT_ATTRIBUTE(X) do{ if(def->is##X()) stringValue(#X); } while(0)
+    MIR_FLAG_LIST(OUTPUT_ATTRIBUTE);
+#undef OUTPUT_ATTRIBUTE
+    endList();
 
     beginListProperty("inputs");
     for (size_t i = 0; i < def->numOperands(); i++)
