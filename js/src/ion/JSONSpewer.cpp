@@ -219,7 +219,7 @@ JSONSpewer::spewMDef(MDefinition *def)
     fprintf(fp_, "\"");
 
     beginListProperty("attributes");
-#define OUTPUT_ATTRIBUTE(X) do{ if(def->is##X()) stringValue(#X); } while(0)
+#define OUTPUT_ATTRIBUTE(X) do{ if(def->is##X()) stringValue(#X); } while(0);
     MIR_FLAG_LIST(OUTPUT_ATTRIBUTE);
 #undef OUTPUT_ATTRIBUTE
     endList();
