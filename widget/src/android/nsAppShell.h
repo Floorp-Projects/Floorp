@@ -52,6 +52,8 @@ bool ProcessNextEvent();
 void NotifyEvent();
 }
 
+class nsWindow;
+
 class nsAppShell :
     public nsBaseAppShell
 {
@@ -81,6 +83,7 @@ public:
     void CallObserver(const nsAString &aObserverKey, const nsAString &aTopic, const nsAString &aData);
     void RemoveObserver(const nsAString &aObserverKey);
     void NotifyObservers(nsISupports *aSupports, const char *aTopic, const PRUnichar *aData);
+    void ResendLastResizeEvent(nsWindow* aDest);
 
 protected:
     virtual void ScheduleNativeEventCallback();
