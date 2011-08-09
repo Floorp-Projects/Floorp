@@ -469,8 +469,12 @@ class TypeSet
     bool hasObjectFlags(JSContext *cx, TypeObjectFlags flags);
     static bool HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags);
 
-    /* Watch for slot reallocations on a particular object. */
-    static void WatchObjectReallocation(JSContext *cx, JSObject *object);
+    /*
+     * Watch for a generic object state change on a type object. This currently
+     * includes reallocations of slot pointers for global objects, and changes
+     * to newScript data on types.
+     */
+    static void WatchObjectStateChange(JSContext *cx, TypeObject *object);
 
     /*
      * For type sets on a property, return true if the property has any 'own'
@@ -818,7 +822,7 @@ struct TypeObject : gc::Cell
     void addPropertyType(JSContext *cx, const char *name, Type type);
     void addPropertyType(JSContext *cx, const char *name, const Value &value);
     void markPropertyConfigured(JSContext *cx, jsid id);
-    void markSlotReallocation(JSContext *cx);
+    void markStateChange(JSContext *cx);
     void setFlags(JSContext *cx, TypeObjectFlags flags);
     void markUnknown(JSContext *cx);
     void clearNewScript(JSContext *cx);

@@ -782,8 +782,10 @@ mjit::Compiler::generatePrologue()
         }
     }
 
-    if (isConstructing)
-        constructThis();
+    if (isConstructing) {
+        if (!constructThis())
+            return Compile_Error;
+    }
 
     if (debugMode()) {
         prepareStubCall(Uses(0));
@@ -6655,6 +6657,16 @@ mjit::Compiler::constructThis()
         JSObject *proto = protoTypes->getSingleton(cx, true);
         if (proto) {
             JSObject *templateObject = js_CreateThisForFunctionWithProto(cx, script->function(), proto);
+            if (!templateObject)
+                return false;
+
+            /*
+             * The template incorporates a shape and/or fixed slots from any
+             * newScript on its type, so make sure recompilation is triggered
+             * should this information change later.
+             */
+            if (templateObject->type()->newScript)
+                types::TypeSet::WatchObjectStateChange(cx, templateObject->type());
 
             RegisterID result = frame.allocReg();
             Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
@@ -6897,7 +6909,7 @@ mjit::Compiler::watchGlobalReallocation()
     JS_ASSERT(cx->typeInferenceEnabled());
     if (hasGlobalReallocation)
         return;
-    types::TypeSet::WatchObjectReallocation(cx, globalObj);
+    types::TypeSet::WatchObjectStateChange(cx, globalObj->getType(cx));
     hasGlobalReallocation = true;
 }
 
