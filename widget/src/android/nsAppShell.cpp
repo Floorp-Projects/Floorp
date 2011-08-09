@@ -74,6 +74,7 @@ PRLogModuleInfo *gWidgetLog = nsnull;
 
 nsDeviceMotionSystem *gDeviceMotionSystem = nsnull;
 nsIGeolocationUpdate *gLocationCallback = nsnull;
+nsAutoPtr<mozilla::AndroidGeckoEvent> gLastSizeChange;
 
 nsAppShell *nsAppShell::gAppShell = nsnull;
 
@@ -380,6 +381,15 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         break;
     }
 
+    case AndroidGeckoEvent::SIZE_CHANGED: {
+        // store the last resize event to dispatch it to new windows with a FORCED_RESIZE event
+        if (curEvent != gLastSizeChange) {
+            gLastSizeChange = new AndroidGeckoEvent(curEvent);
+        }
+        nsWindow::OnGlobalAndroidEvent(curEvent);
+        break;
+    }
+
     default:
         nsWindow::OnGlobalAndroidEvent(curEvent);
     }
@@ -387,6 +397,13 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
     EVLOG("nsAppShell: -- done event %p %d", (void*)curEvent.get(), curEvent->Type());
 
     return true;
+}
+
+void
+nsAppShell::ResendLastResizeEvent(nsWindow* aDest) {
+    if (gLastSizeChange) {
+        nsWindow::OnGlobalAndroidEvent(gLastSizeChange);
+    }
 }
 
 AndroidGeckoEvent*
