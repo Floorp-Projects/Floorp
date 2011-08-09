@@ -41,8 +41,8 @@
 
 #include "ion/MIR.h"
 #include "Lowering-x64.h"
-#include "ion/Lowering-inl.h"
 #include "Assembler-x64.h"
+#include "ion/shared/Lowering-shared-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -60,7 +60,12 @@ LIRGeneratorX64::visitConstant(MConstant *ins)
     if (!ins->isEmittedAtUses())
         return emitAtUses(ins);
 
-    return LIRGenerator::visitConstant(ins);
+    if (ins->type() == MIRType_Double) {
+        LDouble *lir = new LDouble(ins->value().toDouble(), temp(LDefinition::DOUBLE));
+        return define(lir, ins);
+    }
+
+    return LIRGeneratorShared::visitConstant(ins);
 }
 
 bool
@@ -139,19 +144,26 @@ LIRGeneratorX64::preparePhi(MPhi *phi)
     return true;
 }
 
-void
-LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
+bool
+LIRGeneratorX64::assignSnapshot(LInstruction *ins)
 {
+    LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
+    if (!snapshot)
+        return false;
+
     MSnapshot *mir = snapshot->mir();
     for (size_t i = 0; i < mir->numOperands(); i++) {
         MDefinition *ins = mir->getOperand(i);
         LAllocation *a = snapshot->getEntry(i);
         *a = useKeepaliveOrConstant(ins);
     }
+
+    ins->assignSnapshot(snapshot);
+    return true;
 }
 
 bool
-LIRGeneratorX64::lowerForALU(LMathI *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
+LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useOrConstant(rhs));

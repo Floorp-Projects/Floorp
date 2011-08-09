@@ -385,6 +385,7 @@ CPPSRCS +=	MIR.cpp \
 		LinearScan.cpp \
 		MoveResolver.cpp \
 		CodeGenerator-shared.cpp \
+		Lowering-shared.cpp \
 		TypePolicy.cpp \
 		CodeGenerator.cpp \
 		IonMacroAssembler.cpp \

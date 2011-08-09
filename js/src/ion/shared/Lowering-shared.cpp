@@ -39,65 +39,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_lowering_x86_inl_h__
-#define jsion_ion_lowering_x86_inl_h__
+#include "ion/IonLIR.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
+#include "Lowering-shared.h"
+#include "Lowering-shared-inl.h"
 
-#include "ion/IonLIR-inl.h"
+using namespace js;
+using namespace ion;
 
-namespace js {
-namespace ion {
-
-// Returns the virtual register of a js::Value-defining instruction. This is
-// abstracted because MBox is a special value-returning instruction that
-// redefines its input payload if its input is not constant. Therefore, it is
-// illegal to request a box's payload by adding VREG_DATA_OFFSET to its raw id.
-static inline uint32
-VirtualRegisterOfPayload(MDefinition *mir)
+bool
+LIRGeneratorShared::lowerPhi(MPhi *ins)
 {
-    if (mir->isBox()) {
-        MDefinition *inner = mir->toBox()->getOperand(0);
-        if (!inner->isConstant() && inner->type() != MIRType_Double)
-            return inner->id();
+    // The virtual register of the phi was determined in the first pass.
+    JS_ASSERT(ins->id());
+
+    LPhi *phi = LPhi::New(gen, ins);
+    if (!phi)
+        return false;
+    for (size_t i = 0; i < ins->numOperands(); i++) {
+        MDefinition *opd = ins->getOperand(i);
+        JS_ASSERT(opd->type() == ins->type());
+
+        phi->setOperand(i, LUse(opd->id(), LUse::ANY));
     }
-    return mir->id() + VREG_DATA_OFFSET;
-}
-
-LUse
-LIRGeneratorX86::useType(MDefinition *mir, LUse::Policy policy)
-{
-    JS_ASSERT(mir->id());
-    JS_ASSERT(mir->type() == MIRType_Value);
-
-    return LUse(mir->id() + VREG_TYPE_OFFSET, policy);
-}
-
-LUse
-LIRGeneratorX86::usePayload(MDefinition *mir, LUse::Policy policy)
-{
-    JS_ASSERT(mir->id());
-    JS_ASSERT(mir->type() == MIRType_Value);
-
-    return LUse(VirtualRegisterOfPayload(mir), policy);
-}
-
-LUse
-LIRGeneratorX86::usePayloadInRegister(MDefinition *mir)
-{
-    return usePayload(mir, LUse::REGISTER);
+    phi->setDef(0, LDefinition(ins->id(), LDefinition::TypeFrom(ins->type())));
+    return addPhi(phi);
 }
 
 bool
-LIRGeneratorX86::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
+LIRGeneratorShared::visitConstant(MConstant *ins)
 {
-    if (!ensureDefined(mir))
+    const Value &v = ins->value();
+    switch (ins->type()) {
+      case MIRType_Boolean:
+        return define(new LInteger(v.toBoolean()), ins);
+      case MIRType_Int32:
+        return define(new LInteger(v.toInt32()), ins);
+      case MIRType_String:
+        return define(new LPointer(v.toString()), ins);
+      case MIRType_Object:
+        return define(new LPointer(&v.toObject()), ins);
+      default:
+        // Constants of special types (undefined, null) should never flow into
+        // here directly. Operations blindly consuming them require a Box.
+        JS_NOT_REACHED("unexpected constant type");
         return false;
-    lir->getOperand(n)->toUse()->setVirtualRegister(mir->id() + VREG_TYPE_OFFSET);
-    lir->getOperand(n + 1)->toUse()->setVirtualRegister(VirtualRegisterOfPayload(mir));
+    }
     return true;
 }
-
-} // namespace js
-} // namespace ion
-
-#endif // jsion_ion_lowering_x86_h__
 

@@ -42,14 +42,35 @@
 #ifndef jsion_ion_lowering_inl_h__
 #define jsion_ion_lowering_inl_h__
 
-#include "MIR.h"
-#include "MIRGraph.h"
+#include "ion/MIR.h"
+#include "ion/MIRGraph.h"
 
 namespace js {
 namespace ion {
 
+bool
+LIRGeneratorShared::emitAtUses(MInstruction *mir)
+{
+    mir->setEmittedAtUses();
+    mir->setId(0);
+    return true;
+}
+
+LUse
+LIRGeneratorShared::use(MDefinition *mir, LUse policy)
+{
+    // It is illegal to call use() on an instruction with two defs.
+#if BOX_PIECES > 1
+    JS_ASSERT(mir->type() != MIRType_Value);
+#endif
+    if (!ensureDefined(mir))
+        return policy;
+    policy.setVirtualRegister(mir->id());
+    return policy;
+}
+
 template <size_t X, size_t Y> bool
-LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LDefinition &def)
+LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LDefinition &def)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
@@ -64,21 +85,21 @@ LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const L
 }
 
 template <size_t X, size_t Y> bool
-LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, LDefinition::Policy policy)
+LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, LDefinition::Policy policy)
 {
     LDefinition::Type type = LDefinition::TypeFrom(mir->type());
     return define(lir, mir, LDefinition(type, policy));
 }
 
 template <size_t Ops, size_t Temps> bool
-LIRGenerator::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir)
+LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir)
 {
     return define(lir, mir, LDefinition::MUST_REUSE_INPUT);
 }
 
 template <size_t Ops, size_t Temps> bool
-LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
-                        LDefinition::Policy policy)
+LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
+                              LDefinition::Policy policy)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
@@ -98,7 +119,7 @@ LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefini
 }
 
 bool
-LIRGenerator::ensureDefined(MDefinition *mir)
+LIRGeneratorShared::ensureDefined(MDefinition *mir)
 {
     if (mir->isEmittedAtUses()) {
         if (!mir->toInstruction()->accept(this))
@@ -109,19 +130,19 @@ LIRGenerator::ensureDefined(MDefinition *mir)
 }
 
 LUse
-LIRGenerator::useRegister(MDefinition *mir)
+LIRGeneratorShared::useRegister(MDefinition *mir)
 {
     return use(mir, LUse(LUse::REGISTER));
 }
 
 LUse
-LIRGenerator::use(MDefinition *mir)
+LIRGeneratorShared::use(MDefinition *mir)
 {
     return use(mir, LUse(LUse::ANY));
 }
 
 LAllocation
-LIRGenerator::useOrConstant(MDefinition *mir)
+LIRGeneratorShared::useOrConstant(MDefinition *mir)
 {
     if (mir->isConstant())
         return LAllocation(mir->toConstant()->vp());
@@ -129,7 +150,7 @@ LIRGenerator::useOrConstant(MDefinition *mir)
 }
 
 LAllocation
-LIRGenerator::useRegisterOrConstant(MDefinition *mir)
+LIRGeneratorShared::useRegisterOrConstant(MDefinition *mir)
 {
     if (mir->isConstant())
         return LAllocation(mir->toConstant()->vp());
@@ -137,7 +158,7 @@ LIRGenerator::useRegisterOrConstant(MDefinition *mir)
 }
 
 LAllocation
-LIRGenerator::useKeepaliveOrConstant(MDefinition *mir)
+LIRGeneratorShared::useKeepaliveOrConstant(MDefinition *mir)
 {
     if (mir->isConstant())
         return LAllocation(mir->toConstant()->vp());
@@ -145,19 +166,19 @@ LIRGenerator::useKeepaliveOrConstant(MDefinition *mir)
 }
 
 LUse
-LIRGenerator::useFixed(MDefinition *mir, Register reg)
+LIRGeneratorShared::useFixed(MDefinition *mir, Register reg)
 {
     return use(mir, LUse(reg));
 }
 
 LUse
-LIRGenerator::useFixed(MDefinition *mir, FloatRegister reg)
+LIRGeneratorShared::useFixed(MDefinition *mir, FloatRegister reg)
 {
     return use(mir, LUse(reg));
 }
 
 LDefinition
-LIRGenerator::temp(LDefinition::Type type)
+LIRGeneratorShared::temp(LDefinition::Type type)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS) {
@@ -168,7 +189,7 @@ LIRGenerator::temp(LDefinition::Type type)
 }
 
 template <typename T> bool
-LIRGenerator::annotate(T *ins)
+LIRGeneratorShared::annotate(T *ins)
 {
     for (size_t i = 0; i < ins->numDefs(); i++) {
         if (ins->getDef(i)->policy() != LDefinition::REDEFINED) {
@@ -182,7 +203,7 @@ LIRGenerator::annotate(T *ins)
 }
 
 template <typename T> bool
-LIRGenerator::add(T *ins)
+LIRGeneratorShared::add(T *ins)
 {
     JS_ASSERT(!ins->isPhi());
     current->add(ins);
