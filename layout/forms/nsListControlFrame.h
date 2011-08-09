@@ -369,7 +369,6 @@ protected:
    */
   PRBool   IsContentSelectedByIndex(PRInt32 aIndex) const;
 
-  PRBool   IsOptionElement(nsIContent* aContent);
   PRBool   CheckIfAllFramesHere();
   PRInt32  GetIndexFromContent(nsIContent *aContent);
   PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);

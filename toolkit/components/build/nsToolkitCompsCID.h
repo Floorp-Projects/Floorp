@@ -107,9 +107,6 @@
 #define NS_LIVEMARKSERVICE_CONTRACTID \
   "@mozilla.org/browser/livemark-service;2"
 
-#define NS_MORKHISTORYIMPORTER_CONTRACTID \
-  "@mozilla.org/browser/history-importer;1"
-
 #define NS_FAVICONSERVICE_CONTRACTID \
   "@mozilla.org/browser/favicon-service;1"
 
@@ -118,9 +115,6 @@
 
 #define NS_APPSTARTUP_CONTRACTID \
   "@mozilla.org/toolkit/app-startup;1"
-
-#define NS_WEBAPPSSUPPORT_CONTRACTID \
-  "@mozilla.org/webapps/installer;1"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -191,16 +185,9 @@
 #define NS_NAVBOOKMARKSSERVICE_CID \
 { 0x9de95a0c, 0x39a4, 0x4d64, {0x9a, 0x53, 0x17, 0x94, 0x0d, 0xd7, 0xca, 0xbb}}
 
-#define NS_MORKHISTORYIMPORTER_CID \
-{ 0x428e6d12, 0x9c6d, 0x436f, {0xb7, 0xa3, 0x6c, 0xa5, 0xf4, 0x80, 0x92, 0x12}}
-
 #define NS_FAVICONSERVICE_CID \
 { 0x984e3259, 0x9266, 0x49cf, { 0xb6, 0x05, 0x60, 0xb0, 0x22, 0xa0, 0x07, 0x56 } }
 
 // {6fb0c970-e1b1-11db-8314-0800200c9a66}
 #define NS_PLACESIMPORTEXPORTSERVICE_CID \
 { 0x6fb0c970, 0xe1b1, 0x11db, { 0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
-
-#define NS_WEBAPPSSUPPORT_CID \
-{ 0xd0b62752, 0x88be, 0x4c88, {0x94, 0xe5, 0xc6, 0x9e, 0x15, 0xa1, 0x0c, 0x4e} }
-

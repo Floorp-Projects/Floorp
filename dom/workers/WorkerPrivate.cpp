@@ -64,6 +64,7 @@
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "xpcpublic.h"
 
 #include "Events.h"
 #include "Exceptions.h"
@@ -83,6 +84,7 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForCode;
+using mozilla::xpconnect::memory::IterateData;
 
 USING_WORKERS_NAMESPACE
 
@@ -1070,6 +1072,60 @@ public:
 };
 #endif
 
+class CollectRuntimeStatsRunnable : public WorkerControlRunnable
+{
+  typedef mozilla::Mutex Mutex;
+  typedef mozilla::CondVar CondVar;
+
+  Mutex* mMutex;
+  CondVar* mCondVar;
+  volatile bool* mDoneFlag;
+  IterateData* mData;
+  volatile bool* mSucceeded;
+
+public:
+  CollectRuntimeStatsRunnable(WorkerPrivate* aWorkerPrivate, Mutex* aMutex,
+                              CondVar* aCondVar, volatile bool* aDoneFlag,
+                              IterateData* aData, volatile bool* aSucceeded)
+  : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
+    mMutex(aMutex), mCondVar(aCondVar), mDoneFlag(aDoneFlag), mData(aData),
+    mSucceeded(aSucceeded)
+  { }
+
+  bool
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    AssertIsOnMainThread();
+    return true;
+  }
+
+  void
+  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult)
+  {
+    AssertIsOnMainThread();
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    JSAutoSuspendRequest asr(aCx);
+
+    *mSucceeded = CollectCompartmentStatsForRuntime(JS_GetRuntime(aCx), mData);
+
+    {
+      MutexAutoLock lock(*mMutex);
+
+      NS_ASSERTION(!*mDoneFlag, "Should be false!");
+
+      *mDoneFlag = true;
+      mCondVar->Notify();
+    }
+
+    return true;
+  }
+};
+
 } /* anonymous namespace */
 
 #ifdef DEBUG
@@ -2042,8 +2098,6 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       {
         MutexAutoUnlock unlock(mMutex);
 
-        JSAutoRequest ar(aCx);
-
 #ifdef EXTRA_GC
         // Find GC bugs...
         JS_GC(aCx);
@@ -2055,8 +2109,6 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
       currentStatus = mStatus;
     }
-
-    JSAutoRequest ar(aCx);
 
 #ifdef EXTRA_GC
     // Find GC bugs...
@@ -2097,8 +2149,6 @@ WorkerPrivate::OperationCallback(JSContext* aCx)
 {
   AssertIsOnWorkerThread();
 
-  JS_YieldRequest(aCx);
-
   bool mayContinue = true;
 
   for (;;) {
@@ -2133,7 +2183,6 @@ WorkerPrivate::OperationCallback(JSContext* aCx)
         break;
       }
 
-      JSAutoSuspendRequest asr(aCx);
       mCondVar.Wait(PR_MillisecondsToInterval(RemainingRunTimeMS()));
     }
   }
@@ -2182,6 +2231,36 @@ WorkerPrivate::ScheduleDeletion(bool aWasPending)
       NS_WARNING("Failed to dispatch runnable!");
     }
   }
+}
+
+bool
+WorkerPrivate::BlockAndCollectRuntimeStats(IterateData* aData)
+{
+  AssertIsOnMainThread();
+  mMutex.AssertNotCurrentThreadOwns();
+  NS_ASSERTION(aData, "Null data!");
+
+  mozilla::Mutex mutex("BlockAndCollectRuntimeStats mutex");
+  mozilla::CondVar condvar(mutex, "BlockAndCollectRuntimeStats condvar");
+  volatile bool doneFlag = false;
+  volatile bool succeeded = false;
+
+  nsRefPtr<CollectRuntimeStatsRunnable> runnable =
+    new CollectRuntimeStatsRunnable(this, &mutex, &condvar, &doneFlag, aData,
+                                    &succeeded);
+  if (!runnable->Dispatch(nsnull)) {
+    NS_WARNING("Failed to dispatch runnable!");
+    return false;
+  }
+
+  {
+    MutexAutoLock lock(mutex);
+    while (!doneFlag) {
+      condvar.Wait();
+    }
+  }
+
+  return succeeded;
 }
 
 bool
@@ -2488,7 +2567,6 @@ WorkerPrivate::RunSyncLoop(JSContext* aCx, PRUint32 aSyncLoopKey)
       MutexAutoLock lock(mMutex);
 
       while (!mControlQueue.Pop(event) && !syncQueue->mQueue.Pop(event)) {
-        JSAutoSuspendRequest asr(aCx);
         mCondVar.Wait();
       }
     }
