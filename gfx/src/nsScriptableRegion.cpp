@@ -184,7 +184,7 @@ NS_IMETHODIMP nsScriptableRegion::GetRects() {
   *retvalPtr = OBJECT_TO_JSVAL(destArray);
   ncc->SetReturnValueWasSet(PR_TRUE);
 
-  int n = 0;
+  uint32 n = 0;
   nsIntRegionRectIterator iter(mRegion);
   const nsIntRect *rect;
 

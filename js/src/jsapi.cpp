@@ -3249,9 +3249,13 @@ JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
+JS_LookupElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
-    return JS_LookupPropertyById(cx, obj, INT_TO_JSID(index), vp);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_LookupPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3303,9 +3307,13 @@ JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
+JS_HasElement(JSContext *cx, JSObject *obj, uint32 index, JSBool *foundp)
 {
-    return JS_HasPropertyById(cx, obj, INT_TO_JSID(index), foundp);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_HasPropertyById(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3345,9 +3353,13 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foun
 }
 
 JS_PUBLIC_API(JSBool)
-JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
+JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, uint32 index, JSBool *foundp)
 {
-    return JS_AlreadyHasOwnPropertyById(cx, obj, INT_TO_JSID(index), foundp);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3396,10 +3408,14 @@ JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
+JS_DefineElement(JSContext *cx, JSObject *obj, uint32 index, jsval value,
                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
 {
-    return DefinePropertyById(cx, obj, INT_TO_JSID(index), Valueify(value),
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return DefinePropertyById(cx, obj, id, Valueify(value),
                               Valueify(getter), Valueify(setter), attrs, 0, 0);
 }
 
@@ -3707,9 +3723,13 @@ JS_GetPropertyByIdDefault(JSContext *cx, JSObject *obj, jsid id, jsval def, jsva
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
+JS_GetElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
-    return JS_GetPropertyById(cx, obj, INT_TO_JSID(index), vp);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_GetPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3762,8 +3782,12 @@ JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
+JS_SetElement(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
     return JS_SetPropertyById(cx, obj, INT_TO_JSID(index), vp);
 }
 
@@ -3791,9 +3815,13 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DeleteElement2(JSContext *cx, JSObject *obj, jsint index, jsval *rval)
+JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32 index, jsval *rval)
 {
-    return JS_DeletePropertyById2(cx, obj, INT_TO_JSID(index), rval);
+    CHECK_REQUEST(cx);
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_DeletePropertyById2(cx, obj, id, rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3818,7 +3846,7 @@ JS_DeletePropertyById(JSContext *cx, JSObject *obj, jsid id)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DeleteElement(JSContext *cx, JSObject *obj, jsint index)
+JS_DeleteElement(JSContext *cx, JSObject *obj, uint32 index)
 {
     jsval junk;
     return JS_DeleteElement2(cx, obj, index, &junk);

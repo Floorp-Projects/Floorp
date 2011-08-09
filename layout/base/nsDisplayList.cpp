@@ -1023,12 +1023,15 @@ nsDisplayBackground::HitTest(nsDisplayListBuilder* aBuilder,
                              HitTestState* aState,
                              nsTArray<nsIFrame*> *aOutFrames)
 {
-  // For theme backgrounds, assume that any point in our bounds is a hit.
-  // We don't know the true hit region of the theme background.
-  if (!mIsThemed &&
-      !RoundedBorderIntersectsRect(mFrame, ToReferenceFrame(), aRect)) {
-    // aRect doesn't intersect our border-radius curve.
-    return;
+  if (mIsThemed) {
+    // For theme backgrounds, assume that any point in our border rect is a hit.
+    if (!nsRect(ToReferenceFrame(), mFrame->GetSize()).Intersects(aRect))
+      return;
+  } else {
+    if (!RoundedBorderIntersectsRect(mFrame, ToReferenceFrame(), aRect)) {
+      // aRect doesn't intersect our border-radius curve.
+      return;
+    }
   }
 
   aOutFrames->AppendElement(mFrame);

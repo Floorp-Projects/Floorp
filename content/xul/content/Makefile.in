@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xul
-PARALLEL_DIRS	= src
+PARALLEL_DIRS	= public src
 
 ifdef ENABLE_TESTS
 PARALLEL_DIRS	+= test

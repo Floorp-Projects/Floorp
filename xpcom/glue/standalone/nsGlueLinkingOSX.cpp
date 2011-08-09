@@ -227,6 +227,16 @@ XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func)
                          NSADDIMAGE_OPTION_RETURN_ON_ERROR |
                          NSADDIMAGE_OPTION_WITH_SEARCHING |
                          NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
+
+        if (!lib) {
+            NSLinkEditErrors linkEditError;
+            int errorNum;
+            const char *errorString;
+            const char *fileName;
+            NSLinkEditError(&linkEditError, &errorNum, &fileName, &errorString);
+            fprintf(stderr, "XPCOMGlueLoad error %d:%d for file %s:\n%s\n",
+                    linkEditError, errorNum, fileName, errorString);
+        }
     }
 
     *func = (GetFrozenFunctionsFunc) LookupSymbol(lib, "_NS_GetFrozenFunctions");

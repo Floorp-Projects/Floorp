@@ -57,6 +57,7 @@ EXPORTS = \
 		mozView.h \
 		nsChangeObserver.h \
 		nsCocoaUtils.h \
+		nsCocoaFeatures.h \
 		$(NULL)
 
 CMMSRCS = \
@@ -72,6 +73,7 @@ CMMSRCS = \
   nsDragService.mm \
   nsToolkit.mm \
   nsAppShell.mm \
+  nsCocoaFeatures.mm \
   nsCocoaUtils.mm \
   nsCocoaWindow.mm \
   nsChildView.mm \
@@ -141,4 +143,5 @@ LOCAL_INCLUDES	= \
 LDFLAGS	+= \
 	-framework QuickTime \
 	-framework IOKit \
+	-F/System/Library/PrivateFrameworks -framework CoreUI \
 	$(NULL)

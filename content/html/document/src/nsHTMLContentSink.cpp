@@ -1021,7 +1021,10 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 
       case eHTMLTag_input:
         content->DoneCreatingElement();
+        break;
 
+      case eHTMLTag_menuitem:
+        content->DoneCreatingElement();
         break;
 
       default:

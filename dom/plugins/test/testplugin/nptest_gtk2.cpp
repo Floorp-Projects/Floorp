@@ -303,15 +303,15 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
   /* all the events that our widget wants to receive */
   gtk_widget_add_events(plug, GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK |
                               GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
-  g_signal_connect(G_OBJECT(plug), "expose-event", G_CALLBACK(ExposeWidget),
+  g_signal_connect(plug, "expose-event", G_CALLBACK(ExposeWidget),
                    instanceData);
-  g_signal_connect(G_OBJECT(plug), "motion_notify_event", G_CALLBACK(MotionEvent),
+  g_signal_connect(plug, "motion_notify_event", G_CALLBACK(MotionEvent),
                    instanceData);
-  g_signal_connect(G_OBJECT(plug), "button_press_event", G_CALLBACK(ButtonEvent),
+  g_signal_connect(plug, "button_press_event", G_CALLBACK(ButtonEvent),
                    instanceData);
-  g_signal_connect(G_OBJECT(plug), "button_release_event", G_CALLBACK(ButtonEvent),
+  g_signal_connect(plug, "button_release_event", G_CALLBACK(ButtonEvent),
                    instanceData);
-  g_signal_connect(G_OBJECT(plug), "delete-event", G_CALLBACK(DeleteWidget),
+  g_signal_connect(plug, "delete-event", G_CALLBACK(DeleteWidget),
                    instanceData);
   gtk_widget_show(plug);
 
@@ -374,7 +374,7 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
         gdk_x11_colormap_foreign_new(gdkVisual,
                                      instanceData->platformData->colormap);
       gdk_drawable_set_colormap(gdkDrawable, gdkColormap);
-      g_object_unref(G_OBJECT(gdkColormap));
+      g_object_unref(gdkColormap);
     }
 
     const NPRect& clip = window.clipRect;

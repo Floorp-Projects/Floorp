@@ -62,5 +62,5 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
   AString onBeforeLinkTraversal(in AString originalTarget,
                                 in nsIURI linkURI,
                                 in nsIDOMNode linkNode,
-                                in PRBool isAppTab);
+                                in boolean isAppTab);
 };

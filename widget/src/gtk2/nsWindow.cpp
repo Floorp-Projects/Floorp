@@ -2379,6 +2379,15 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
+    // mBounds.x/y are set to the window manager frame top-left when Move() or
+    // Resize()d from within Gecko, so comparing with the client window
+    // top-left is weird.  However, mBounds.x/y are set to client window
+    // position below, so this check avoids unwanted rollup on spurious
+    // configure events from Cygwin/X (bug 672103).
+    if (mBounds.x == aEvent->x &&
+        mBounds.y == aEvent->y)
+        return FALSE;
+
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
         check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
     }

@@ -361,7 +361,10 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     underDelta2 = ruleThickness;
   }
   // empty under?
-  if (!(bmUnder.ascent + bmUnder.descent)) underDelta1 = 0;
+  if (!(bmUnder.ascent + bmUnder.descent)) {
+    underDelta1 = 0;
+    underDelta2 = 0;
+  }
 
   nscoord overDelta1 = 0; // gap between base and overscript
   nscoord overDelta2 = 0; // extra space above overscript
@@ -391,7 +394,10 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     overDelta2 = ruleThickness;
   }
   // empty over?
-  if (!(bmOver.ascent + bmOver.descent)) overDelta1 = 0;
+  if (!(bmOver.ascent + bmOver.descent)) {
+    overDelta1 = 0;
+    overDelta2 = 0;
+  }
 
   nscoord dxBase, dxOver = 0, dxUnder = 0;
 
@@ -419,8 +425,7 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
 
   mBoundingMetrics.ascent = 
     bmBase.ascent + overDelta1 + bmOver.ascent + bmOver.descent;
-  mBoundingMetrics.descent = 
-    bmBase.descent + underDelta1 + bmUnder.ascent + bmUnder.descent;
+  mBoundingMetrics.descent = bmBase.descent;
   mBoundingMetrics.leftBearing = 
     NS_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
   mBoundingMetrics.rightBearing = 
@@ -437,6 +442,7 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   nscoord ascentAnonymousBase =
     NS_MAX(mBoundingMetrics.ascent + overDelta2,
            overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
+  ascentAnonymousBase = NS_MAX(ascentAnonymousBase, baseSize.ascent);
 
   GetItalicCorrection(bmAnonymousBase, correction);
 
@@ -463,6 +469,9 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
 
   mBoundingMetrics.width =
     NS_MAX(dxAnonymousBase + bmAnonymousBase.width, dxUnder + bmUnder.width);
+  // At this point, mBoundingMetrics.ascent = bmAnonymousBase.ascent 
+  mBoundingMetrics.descent = 
+    bmAnonymousBase.descent + underDelta1 + bmUnder.ascent + bmUnder.descent;
   mBoundingMetrics.leftBearing =
     NS_MIN(dxAnonymousBase + bmAnonymousBase.leftBearing, dxUnder + bmUnder.leftBearing);
   mBoundingMetrics.rightBearing = 
@@ -473,6 +482,9 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     NS_MAX(mBoundingMetrics.descent + underDelta2,
            bmAnonymousBase.descent + underDelta1 + bmUnder.ascent +
              underSize.height - underSize.ascent);
+  aDesiredSize.height = NS_MAX(aDesiredSize.height,
+                               aDesiredSize.ascent +
+                               baseSize.height - baseSize.ascent);
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 

@@ -203,24 +203,9 @@ toolbarseparator {
 #Console\:clear {
   -moz-box-orient: vertical;
   -moz-box-align: center;
+  -moz-appearance: toolbarbutton;
   font: menu;
   text-shadow: @loweredShadow@;
   margin: 4px 0 9px;
-  padding: 0 4px;
-  border: 1px solid @toolbarbuttonBorderColor@;
-  border-radius: @toolbarbuttonCornerRadius@;
-  box-shadow: @loweredShadow@;
-  background: @toolbarbuttonBackground@;
-  background-origin: border-box;
-}
-
-#Console\:clear:active:hover {
-  background: @toolbarbuttonPressedBackgroundColor@;
-  text-shadow: @loweredShadow@;
-  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
-}
-
-#Console\:clear:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
-  background-image: @toolbarbuttonInactiveBackgroundImage@;
+  padding: 0 1px;
 }
