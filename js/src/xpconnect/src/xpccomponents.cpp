@@ -111,7 +111,7 @@ char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    const PRUint32 count = 2;
+    const PRUint32 count = 3;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -129,6 +129,7 @@ nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PUSH_IID(nsIScriptableInterfaces)
     PUSH_IID(nsIXPCScriptable)
+    PUSH_IID(nsISecurityCheckedComponent)
 #undef PUSH_IID
 
     return NS_OK;
@@ -226,6 +227,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Interfaces)
   NS_INTERFACE_MAP_ENTRY(nsIScriptableInterfaces)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptableInterfaces)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -369,6 +371,42 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP
+nsXPCComponents_Interfaces::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // We let anyone do this...
+    *_retval = xpc_CloneAllAccess();
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP
+nsXPCComponents_Interfaces::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXPCComponents_Interfaces::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXPCComponents_Interfaces::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -376,7 +414,8 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
 class nsXPCComponents_InterfacesByID :
             public nsIScriptableInterfacesByID,
             public nsIXPCScriptable,
-            public nsIClassInfo
+            public nsIClassInfo,
+            public nsISecurityCheckedComponent
 {
 public:
     // all the interface method declarations...
@@ -384,6 +423,7 @@ public:
     NS_DECL_NSISCRIPTABLEINTERFACESBYID
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
     nsXPCComponents_InterfacesByID();
@@ -399,7 +439,7 @@ private:
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    const PRUint32 count = 2;
+    const PRUint32 count = 3;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -417,6 +457,7 @@ nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray
 
     PUSH_IID(nsIScriptableInterfacesByID)
     PUSH_IID(nsIXPCScriptable)
+    PUSH_IID(nsISecurityCheckedComponent)
 #undef PUSH_IID
 
     return NS_OK;
@@ -500,6 +541,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_InterfacesByID)
   NS_INTERFACE_MAP_ENTRY(nsIScriptableInterfacesByID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptableInterfacesByID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -650,6 +692,42 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
             }
         }
     }
+    return NS_OK;
+}
+
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // We let anyone do this...
+    *_retval = xpc_CloneAllAccess();
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
     return NS_OK;
 }
 
@@ -4318,7 +4396,8 @@ nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, c
 NS_IMETHODIMP
 nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    *_retval = nsnull;
+    static const char* allowed[] = { "interfaces", "interfacesByID", "results", nsnull};
+    *_retval = xpc_CheckAccessList(propertyName, allowed);
     return NS_OK;
 }
 
