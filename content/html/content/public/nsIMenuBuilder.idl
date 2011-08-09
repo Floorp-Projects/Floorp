@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Johnny Stenback <jst@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,44 +34,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsISupports.idl"
 
-interface nsIDOMDOMStringMap;
-interface nsIDOMHTMLMenuElement;
+interface nsIDOMHTMLMenuItemElement;
 
-[scriptable, uuid(0c3b4b63-30b2-4c93-906d-f983ee9af584)]
-interface nsIDOMNSHTMLElement : nsISupports
+/**
+ * An interface used to construct native toolbar or context menus from <menu>
+ */
+
+[scriptable, uuid(12724737-f7db-43b4-94ab-708a7b86e115)]
+interface nsIMenuBuilder : nsISupports
 {
-  readonly attribute long             offsetTop;
-  readonly attribute long             offsetLeft;
-  readonly attribute long             offsetWidth;
-  readonly attribute long             offsetHeight;
-  readonly attribute nsIDOMElement    offsetParent;
-           attribute DOMString        innerHTML;
 
   /**
-   * Indicates that the element is not yet, or is no longer, relevant.
-   *
-   * See <http://www.whatwg.org/html5/#the-hidden-attribute>.
+   * Create the top level menu or a submenu. The implementation should create
+   * a new context for this menu, so all subsequent methods will add new items
+   * to this newly created menu.
    */
-           attribute boolean          hidden;
+  void openContainer(in DOMString aLabel);
 
-           attribute long             tabIndex;
+  /**
+   * Add a new menu item. All menu item details can be obtained from
+   * the element. This method is not called for hidden elements or elements
+   * with no or empty label. The icon should be loaded only if aCanLoadIcon
+   * is true.
+   */
+  void addItemFor(in nsIDOMHTMLMenuItemElement aElement,
+                  in boolean aCanLoadIcon);
 
-           attribute DOMString        contentEditable;
-  readonly attribute boolean          isContentEditable;
+  /**
+   * Create a new separator.
+   */
+  void addSeparator();
 
-           // for WHAT-WG drag and drop
-           attribute boolean          draggable;
+  /**
+   * Remove last added separator.
+   * Sometimes it's needed to remove last added separator, otherwise it's not
+   * possible to implement the postprocessing in one pass.
+   * See http://www.whatwg.org/specs/web-apps/current-work/multipage/interactive-elements.html#building-menus-and-toolbars
+   */
+  void undoAddSeparator();
 
-  void insertAdjacentHTML(in DOMString position,
-                          in DOMString text)
-                          raises(DOMException);
+  /**
+   * Set the context to the parent menu.
+   */
+  void closeContainer();
 
-  [optional_argc] void scrollIntoView([optional] in boolean top);
-
-  readonly attribute nsIDOMHTMLMenuElement contextMenu;
-           attribute boolean         spellcheck;
-
-  readonly attribute nsIDOMDOMStringMap dataset;
 };
