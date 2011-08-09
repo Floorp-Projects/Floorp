@@ -137,8 +137,9 @@ class LDouble : public LInstructionHelper<1, 0, 1>
   public:
     LIR_HEADER(Double);
 
-    LDouble(double d) : d_(d)
-    { }
+    LDouble(double d, const LDefinition &temp) : d_(d) {
+        setTemp(0, temp);
+    }
 
     double getDouble() const {
         return d_;

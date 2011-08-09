@@ -41,69 +41,13 @@
 
 #include "IonLIR.h"
 #include "Lowering.h"
-#include "Lowering-inl.h"
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "jsbool.h"
+#include "shared/Lowering-shared-inl.h"
 
 using namespace js;
 using namespace ion;
-
-bool
-LIRGenerator::emitAtUses(MInstruction *mir)
-{
-    mir->setEmittedAtUses();
-    mir->setId(0);
-    return true;
-}
-
-LUse
-LIRGenerator::use(MDefinition *mir, LUse policy)
-{
-    // It is illegal to call use() on an instruction with two defs.
-#if BOX_PIECES > 1
-    JS_ASSERT(mir->type() != MIRType_Value);
-#endif
-    if (!ensureDefined(mir))
-        return policy;
-    policy.setVirtualRegister(mir->id());
-    return policy;
-}
-
-bool
-LIRGenerator::assignSnapshot(LInstruction *ins)
-{
-    LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
-    if (!snapshot)
-        return false;
-    fillSnapshot(snapshot);
-    ins->assignSnapshot(snapshot);
-    return true;
-}
-
-bool
-LIRGenerator::visitConstant(MConstant *ins)
-{
-    const Value &v = ins->value();
-    switch (ins->type()) {
-      case MIRType_Boolean:
-        return define(new LInteger(v.toBoolean()), ins);
-      case MIRType_Int32:
-        return define(new LInteger(v.toInt32()), ins);
-      case MIRType_Double:
-        return define(new LDouble(v.toDouble()), ins);
-      case MIRType_String:
-        return define(new LPointer(v.toString()), ins);
-      case MIRType_Object:
-        return define(new LPointer(&v.toObject()), ins);
-      default:
-        // Constants of special types (undefined, null) should never flow into
-        // here directly. Operations blindly consuming them require a Box.
-        JS_NOT_REACHED("unexpected constant type");
-        return false;
-    }
-    return true;
-}
 
 bool
 LIRGenerator::visitParameter(MParameter *param)
@@ -218,15 +162,14 @@ ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
 }
 
 bool
-LIRGenerator::doBitOp(JSOp op, MInstruction *ins)
+LIRGenerator::lowerBitOp(JSOp op, MInstruction *ins)
 {
     MDefinition *lhs = ins->getOperand(0);
     MDefinition *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
         ReorderCommutative(&lhs, &rhs);
-        LBitOp *bitop = new LBitOp(op, useRegister(lhs), useOrConstant(rhs));
-        return defineReuseInput(bitop, ins);
+        return lowerForALU(new LBitOp(op), ins, lhs, rhs);
     }
 
     JS_NOT_REACHED("NYI");
@@ -236,19 +179,19 @@ LIRGenerator::doBitOp(JSOp op, MInstruction *ins)
 bool
 LIRGenerator::visitBitAnd(MBitAnd *ins)
 {
-    return doBitOp(JSOP_BITAND, ins);
+    return lowerBitOp(JSOP_BITAND, ins);
 }
 
 bool
 LIRGenerator::visitBitOr(MBitOr *ins)
 {
-    return doBitOp(JSOP_BITOR, ins);
+    return lowerBitOp(JSOP_BITOR, ins);
 }
 
 bool
 LIRGenerator::visitBitXor(MBitXor *ins)
 {
-    return doBitOp(JSOP_BITXOR, ins);
+    return lowerBitOp(JSOP_BITXOR, ins);
 }
 
 bool
@@ -305,53 +248,6 @@ bool
 LIRGenerator::visitCopy(MCopy *ins)
 {
     JS_NOT_REACHED("unexpected copy");
-    return false;
-}
-
-bool
-LIRGenerator::visitPhi(MPhi *phi)
-{
-    JS_NOT_REACHED("should not call accept() on phis");
-    return false;
-}
-
-bool
-LIRGenerator::lowerPhi(MPhi *ins)
-{
-    // The virtual register of the phi was determined in the first pass.
-    JS_ASSERT(ins->id());
-
-    LPhi *phi = LPhi::New(gen, ins);
-    if (!phi)
-        return false;
-    for (size_t i = 0; i < ins->numOperands(); i++) {
-        MDefinition *opd = ins->getOperand(i);
-        JS_ASSERT(opd->type() == ins->type());
-
-        phi->setOperand(i, LUse(opd->id(), LUse::ANY));
-    }
-    phi->setDef(0, LDefinition(ins->id(), LDefinition::TypeFrom(ins->type())));
-    return addPhi(phi);
-}
-
-bool
-LIRGenerator::visitBox(MBox *ins)
-{
-    JS_NOT_REACHED("Must be implemented by arch");
-    return false;
-}
-
-bool
-LIRGenerator::visitUnbox(MUnbox *ins)
-{
-    JS_NOT_REACHED("Must be implemented by arch");
-    return false;
-}
-
-bool
-LIRGenerator::visitReturn(MReturn *ins)
-{
-    JS_NOT_REACHED("Must be implemented by arch");
     return false;
 }
 
