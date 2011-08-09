@@ -358,11 +358,25 @@ LayerManagerD3D10::CreateThebesLayer()
   nsRefPtr<ThebesLayer> layer = new ThebesLayerD3D10(this);
   return layer.forget();
 }
+ 
+already_AddRefed<ShadowThebesLayer>
+LayerManagerD3D10::CreateShadowThebesLayer()
+{
+  nsRefPtr<ShadowThebesLayerD3D10> layer = new ShadowThebesLayerD3D10(this);
+  return layer.forget();
+}
 
 already_AddRefed<ContainerLayer>
 LayerManagerD3D10::CreateContainerLayer()
 {
   nsRefPtr<ContainerLayer> layer = new ContainerLayerD3D10(this);
+  return layer.forget();
+}
+
+already_AddRefed<ShadowContainerLayer>
+LayerManagerD3D10::CreateShadowContainerLayer()
+{
+  nsRefPtr<ShadowContainerLayer> layer = new ShadowContainerLayerD3D10(this);
   return layer.forget();
 }
 
