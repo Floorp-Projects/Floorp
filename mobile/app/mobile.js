@@ -372,7 +372,7 @@ pref("plugins.force.wmode", "opaque");
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
 // base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://www.google.com/loc/json");
+pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
 
 // enable geo
 pref("geo.enabled", true);

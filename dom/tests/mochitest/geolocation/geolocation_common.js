@@ -77,15 +77,15 @@ function check_geolocation(location) {
 
   ok("latitude" in coords, "Check to see if there is a latitude");
   ok("longitude" in coords, "Check to see if there is a longitude");
-  ok("altitude" in coords, "Check to see if there is a altitude");
   ok("accuracy" in coords, "Check to see if there is a accuracy");
-  ok("altitudeAccuracy" in coords, "Check to see if there is a alt accuracy");
-
+  
+  // optional ok("altitude" in coords, "Check to see if there is a altitude");
+  // optional ok("altitudeAccuracy" in coords, "Check to see if there is a alt accuracy");
   // optional ok("heading" in coords, "Check to see if there is a heading");
   // optional ok("speed" in coords, "Check to see if there is a speed");
 
   ok (location.coords.latitude  == 37.41857, "lat matches known value");
   ok (location.coords.longitude == -122.08769, "lon matches known value");
-  ok(location.coords.altitude == 42, "alt matches known value");
-  ok(location.coords.altitudeAccuracy == 42, "alt acc matches known value");
+  // optional  ok(location.coords.altitude == 42, "alt matches known value");
+  // optional  ok(location.coords.altitudeAccuracy == 42, "alt acc matches known value");
 }
