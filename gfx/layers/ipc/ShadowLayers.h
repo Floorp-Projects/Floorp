@@ -245,6 +245,11 @@ public:
     mShadowManager = aShadowManager;
   }
 
+  void SetParentBackendType(LayersBackend aBackendType)
+  {
+    mParentBackend = aBackendType;
+  }
+
   /**
    * True if this is forwarding to a ShadowLayerManager.
    */
@@ -325,7 +330,10 @@ public:
    */
   PLayerChild* ConstructShadowFor(ShadowableLayer* aLayer);
 
-  LayersBackend GetParentBackendType();
+  LayersBackend GetParentBackendType()
+  {
+    return mParentBackend;
+  }
 
   /*
    * No need to use double buffer in system memory with GPU rendering,
