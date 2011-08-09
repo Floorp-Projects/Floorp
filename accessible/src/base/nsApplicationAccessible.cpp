@@ -170,6 +170,18 @@ nsApplicationAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
   return nsnull;
 }
 
+nsAccessible*
+nsApplicationAccessible::FocusedChild()
+{
+  if (gLastFocusedNode) {
+    nsAccessible* focusedChild =
+      GetAccService()->GetAccessible(gLastFocusedNode);
+    if (focusedChild && focusedChild->Parent() == this)
+      return focusedChild;
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsApplicationAccessible::GetRelationByType(PRUint32 aRelationType,
                                            nsIAccessibleRelation **aRelation)
