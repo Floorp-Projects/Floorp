@@ -48,12 +48,8 @@ window.onload = function() {
   // (for when the tab is closed or the session crashes right again)
   var sessionData = document.getElementById("sessionData");
   if (!sessionData.value) {
-    var ss = Cc["@mozilla.org/browser/sessionstartup;1"].getService(Ci.nsISessionStartup);
-    sessionData.value = ss.state;
-    if (!sessionData.value) {
-      document.getElementById("errorTryAgain").disabled = true;
-      return;
-    }
+    document.getElementById("errorTryAgain").disabled = true;
+    return;
   }
 
   // remove unneeded braces (added for compatibility with Firefox 2.0 and 3.0)

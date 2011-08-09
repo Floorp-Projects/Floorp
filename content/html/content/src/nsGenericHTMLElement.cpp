@@ -50,6 +50,7 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMHTMLMenuElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -115,6 +116,7 @@
 #include "nsITextControlElement.h"
 #include "mozilla/dom/Element.h"
 #include "nsHTMLFieldSetElement.h"
+#include "nsHTMLMenuElement.h"
 
 #include "mozilla/Preferences.h"
 
@@ -758,9 +760,9 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
 
   // Remove childnodes.
-  // i is unsigned, so i >= is always true
-  for (PRUint32 i = GetChildCount(); i-- != 0; ) {
-    RemoveChildAt(i, PR_TRUE);
+  PRUint32 childCount = GetChildCount();
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    RemoveChildAt(0, PR_TRUE);
   }
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
@@ -826,9 +828,6 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
   nsIDocument* doc = GetOwnerDoc();
   NS_ENSURE_STATE(doc);
 
-  // Needed when insertAdjacentHTML is used in combination with contenteditable
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
-
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nsnull);
 
@@ -837,6 +836,9 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
       (position == eBeforeEnd ||
        (position == eAfterEnd && !GetNextSibling()) ||
        (position == eAfterBegin && !GetFirstChild()))) {
+    // Needed when insertAdjacentHTML is used in combination with contenteditable
+    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
+
     PRInt32 oldChildCount = destination->GetChildCount();
     PRInt32 contextNs = destination->GetNameSpaceID();
     nsIAtom* contextLocal = destination->Tag();
@@ -2448,6 +2450,28 @@ nsGenericHTMLElement::GetIsContentEditable(PRBool* aContentEditable)
   }
 
   *aContentEditable = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
+{
+  *aContextMenu = nsnull;
+
+  nsAutoString value;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::contextmenu, value);
+
+  if (value.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    nsRefPtr<nsHTMLMenuElement> element =
+      nsHTMLMenuElement::FromContent(doc->GetElementById(value));
+    element.forget(aContextMenu);
+  }
+
   return NS_OK;
 }
 

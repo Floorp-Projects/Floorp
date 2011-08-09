@@ -1389,16 +1389,13 @@ mjit::Compiler::jsop_setelem_typed(int atype)
     } else {
         objReg = frame.copyDataIntoReg(obj);
 
-        // Get the internal typed array.
-        masm.loadPtr(Address(objReg, offsetof(JSObject, privateData)), objReg);
-
         // Bounds check.
         Jump lengthGuard = masm.guardArrayExtent(TypedArray::lengthOffset(),
                                                  objReg, key, Assembler::BelowOrEqual);
         stubcc.linkExit(lengthGuard, Uses(3));
 
         // Load the array's packed data vector.
-        masm.loadPtr(Address(objReg, js::TypedArray::dataOffset()), objReg);
+        masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);
     }
 
     // Unpin value so that convertForTypedArray can assign a new data
@@ -1891,16 +1888,13 @@ mjit::Compiler::jsop_getelem_typed(int atype)
     } else {
         objReg = frame.copyDataIntoReg(obj);
 
-        // Get the internal typed array.
-        masm.loadPtr(Address(objReg, offsetof(JSObject, privateData)), objReg);
-
         // Bounds check.
         Jump lengthGuard = masm.guardArrayExtent(TypedArray::lengthOffset(),
                                                  objReg, key, Assembler::BelowOrEqual);
         stubcc.linkExit(lengthGuard, Uses(2));
 
         // Load the array's packed data vector.
-        masm.loadPtr(Address(objReg, js::TypedArray::dataOffset()), objReg);
+        masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);
     }
 
     // We can load directly into an FP-register if the following conditions

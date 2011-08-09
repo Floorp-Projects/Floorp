@@ -40,6 +40,7 @@
 #define GFX_3DMATRIX_H
 
 #include <gfxTypes.h>
+#include <gfxPoint3D.h>
 #include <gfxMatrix.h>
 
 /**
@@ -111,11 +112,33 @@ public:
    */
   gfxRect TransformBounds(const gfxRect& rect) const;
 
+  /** 
+   * Transforms a 3D vector according to this matrix.
+   */
+  gfxPoint3D Transform3D(const gfxPoint3D& point) const;
+
+  gfxPoint ProjectPoint(const gfxPoint& aPoint) const;
+  gfxRect ProjectRectBounds(const gfxRect& aRect) const;
+
+
   /**
    * Inverts this matrix, if possible. Otherwise, the matrix is left
    * unchanged.
    */
   gfx3DMatrix& Invert();
+
+  inline gfx3DMatrix Inverse() const
+  {
+    gfx3DMatrix temp = *this;
+    temp.Invert();
+    return temp;
+  }
+
+  /**
+   * Returns a unit vector that is perpendicular to the plane formed
+   * by transform the screen plane (z=0) by this matrix.
+   */
+  gfxPoint3D GetNormalVector() const;
 
   /**
    * Check if matrix is singular (no inverse exists).
@@ -130,6 +153,7 @@ public:
    * \param aZ Translation on Z-axis.
    */
   static gfx3DMatrix Translation(float aX, float aY, float aZ);
+  static gfx3DMatrix Translation(const gfxPoint3D& aPoint);
 
   /**
    * Create a scale matrix. Scales uniformly along all axes.

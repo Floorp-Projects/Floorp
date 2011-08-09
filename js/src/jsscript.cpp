@@ -760,7 +760,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 
   error:
     if (xdr->mode == JSXDR_DECODE) {
-        js_DestroyScript(cx, script);
+        js_DestroyScript(cx, script, 1);
         *scriptp = NULL;
     }
     xdr->script = oldscript;
@@ -1299,7 +1299,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     return script;
 
 bad:
-    js_DestroyScript(cx, script);
+    js_DestroyScript(cx, script, 2);
     return NULL;
 }
 
@@ -1374,7 +1374,7 @@ CheckCompartmentScripts(JSCompartment *comp)
 } /* namespace js */
 
 static void
-DestroyScript(JSContext *cx, JSScript *script, JSObject *owner)
+DestroyScript(JSContext *cx, JSScript *script, JSObject *owner, uint32 caller)
 {
     CheckScript(script, NULL);
     CheckScriptOwner(script, owner);
@@ -1444,16 +1444,17 @@ DestroyScript(JSContext *cx, JSScript *script, JSObject *owner)
     if (script->sourceMap)
         cx->free_(script->sourceMap);
 
-    memset(script, JS_FREE_PATTERN, script->totalSize());
+    memset(script, 0xdb, script->totalSize());
+    *(uint32 *)script = caller;
     cx->free_(script);
 }
 
 void
-js_DestroyScript(JSContext *cx, JSScript *script)
+js_DestroyScript(JSContext *cx, JSScript *script, uint32 caller)
 {
     JS_ASSERT(!cx->runtime->gcRunning);
     js_CallDestroyScriptHook(cx, script);
-    DestroyScript(cx, script, JS_NEW_SCRIPT);
+    DestroyScript(cx, script, JS_NEW_SCRIPT, caller);
 }
 
 void
@@ -1461,14 +1462,14 @@ js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner)
 {
     JS_ASSERT(cx->runtime->gcRunning);
     js_CallDestroyScriptHook(cx, script);
-    DestroyScript(cx, script, owner);
+    DestroyScript(cx, script, owner, 100);
 }
 
 void
 js_DestroyCachedScript(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(cx->runtime->gcRunning);
-    DestroyScript(cx, script, JS_CACHED_SCRIPT);
+    DestroyScript(cx, script, JS_CACHED_SCRIPT, 101);
 }
 
 void

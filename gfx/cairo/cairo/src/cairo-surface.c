@@ -1454,6 +1454,16 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
     if (unlikely (status))
 	return _cairo_surface_set_error (surface, status);
 
+    if (PIXMAN_FORMAT_BPP((*image_out)->pixman_format) == 0) {
+	volatile char* acquire_source_image_ptr[10];
+	volatile char* crasher;
+	int i;
+        for (i = 0; i < 10; i++) {
+	    acquire_source_image_ptr[i] = (char*)surface->backend->acquire_source_image;
+	}
+	crasher = NULL;
+	*crasher = acquire_source_image_ptr[5];
+    }
     _cairo_debug_check_image_surface_is_defined (&(*image_out)->base);
 
     return CAIRO_STATUS_SUCCESS;

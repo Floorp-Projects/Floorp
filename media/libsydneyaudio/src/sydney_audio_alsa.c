@@ -249,7 +249,6 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
   }
 
   nframes = snd_pcm_bytes_to_frames(s->output_unit, nbytes);
-
   while(nframes>0) {
     if (s->resumed) {
       avail = snd_pcm_avail_update(s->output_unit);
@@ -257,7 +256,9 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
       avail = snd_pcm_avail_update(s->output_unit);
       s->resumed = avail != 0;
     } else {
-      frames = snd_pcm_writei(s->output_unit, data, nframes);
+      avail = snd_pcm_avail_update(s->output_unit);
+      avail = avail < 64 ? 64 : avail;
+      frames = snd_pcm_writei(s->output_unit, data, nframes > avail ? avail : nframes);
     }
     if (frames < 0) {
       int r = snd_pcm_recover(s->output_unit, frames, 1);
@@ -265,12 +266,12 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
         return SA_ERROR_SYSTEM;
       }
     } else {
+      size_t bytes = snd_pcm_frames_to_bytes(s->output_unit, frames);
       nframes -= frames;
-      data = ((unsigned char *)data) + snd_pcm_frames_to_bytes(s->output_unit, frames);
+      data = ((unsigned char *)data) + bytes;
+      s->bytes_written += bytes;
     }
   }
-
-  s->bytes_written += nbytes;
 
   return SA_SUCCESS;
 }

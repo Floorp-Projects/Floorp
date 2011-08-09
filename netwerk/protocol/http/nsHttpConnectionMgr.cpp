@@ -93,6 +93,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mTimeOfNextWakeUp(LL_MAXUINT)
 {
     LOG(("Creating nsHttpConnectionMgr @%x\n", this));
+    mCT.Init();
 }
 
 nsHttpConnectionMgr::~nsHttpConnectionMgr()
@@ -338,8 +339,7 @@ nsHttpConnectionMgr::AddTransactionToPipeline(nsHttpPipeline *pipeline)
     nsRefPtr<nsHttpConnectionInfo> ci;
     pipeline->GetConnectionInfo(getter_AddRefs(ci));
     if (ci) {
-        nsCStringKey key(ci->HashKey());
-        nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+        nsConnectionEntry *ent = mCT.Get(ci->HashKey());
         if (ent) {
             // search for another request to pipeline...
             PRInt32 i, count = ent->mPendingQ.Length();
@@ -400,8 +400,7 @@ nsHttpConnectionMgr::CloseIdleConnection(nsHttpConnection *conn)
     if (!ci)
         return NS_ERROR_UNEXPECTED;
 
-    nsCStringKey key(ci->HashKey());
-    nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
 
     if (!ent || !ent->mIdleConns.RemoveElement(conn))
         return NS_ERROR_UNEXPECTED;
@@ -417,32 +416,33 @@ nsHttpConnectionMgr::CloseIdleConnection(nsHttpConnection *conn)
 //-----------------------------------------------------------------------------
 // enumeration callbacks
 
-PRIntn
-nsHttpConnectionMgr::ProcessOneTransactionCB(nsHashKey *key, void *data, void *closure)
+PLDHashOperator
+nsHttpConnectionMgr::ProcessOneTransactionCB(const nsACString &key,
+                                             nsAutoPtr<nsConnectionEntry> &ent,
+                                             void *closure)
 {
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-    nsConnectionEntry *ent = (nsConnectionEntry *) data;
 
     if (self->ProcessPendingQForEntry(ent))
-        return kHashEnumerateStop;
+        return PL_DHASH_STOP;
 
-    return kHashEnumerateNext;
+    return PL_DHASH_NEXT;
 }
 
 // If the global number of idle connections is preventing the opening of
 // new connections to a host without idle connections, then
 // close them regardless of their TTL
-PRIntn
-nsHttpConnectionMgr::PurgeExcessIdleConnectionsCB(nsHashKey *key,
-                                                  void *data, void *closure)
+PLDHashOperator
+nsHttpConnectionMgr::PurgeExcessIdleConnectionsCB(const nsACString &key,
+                                                  nsAutoPtr<nsConnectionEntry> &ent,
+                                                  void *closure)
 {
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-    nsConnectionEntry *ent = (nsConnectionEntry *) data;
 
     while (self->mNumIdleConns + self->mNumActiveConns + 1 >= self->mMaxConns) {
         if (!ent->mIdleConns.Length()) {
             // There are no idle conns left in this connection entry
-            return kHashEnumerateNext;
+            return PL_DHASH_NEXT;
         }
         nsHttpConnection *conn = ent->mIdleConns[0];
         ent->mIdleConns.RemoveElementAt(0);
@@ -452,14 +452,15 @@ nsHttpConnectionMgr::PurgeExcessIdleConnectionsCB(nsHashKey *key,
         if (0 == self->mNumIdleConns)
             self->StopPruneDeadConnectionsTimer();
     }
-    return kHashEnumerateStop;
+    return PL_DHASH_STOP;
 }
 
-PRIntn
-nsHttpConnectionMgr::PruneDeadConnectionsCB(nsHashKey *key, void *data, void *closure)
+PLDHashOperator
+nsHttpConnectionMgr::PruneDeadConnectionsCB(const nsACString &key,
+                                            nsAutoPtr<nsConnectionEntry> &ent,
+                                            void *closure)
 {
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-    nsConnectionEntry *ent = (nsConnectionEntry *) data;
 
     LOG(("  pruning [ci=%s]\n", ent->mConnInfo->HashKey().get()));
 
@@ -512,8 +513,7 @@ nsHttpConnectionMgr::PruneDeadConnectionsCB(nsHashKey *key, void *data, void *cl
         ent->mHalfOpens.Length()   == 0 &&
         ent->mPendingQ.Length()    == 0) {
         LOG(("    removing empty connection entry\n"));
-        delete ent;
-        return kHashEnumerateRemove;
+        return PL_DHASH_REMOVE;
     }
 
     // else, use this opportunity to compact our arrays...
@@ -521,14 +521,15 @@ nsHttpConnectionMgr::PruneDeadConnectionsCB(nsHashKey *key, void *data, void *cl
     ent->mActiveConns.Compact();
     ent->mPendingQ.Compact();
 
-    return kHashEnumerateNext;
+    return PL_DHASH_NEXT;
 }
 
-PRIntn
-nsHttpConnectionMgr::ShutdownPassCB(nsHashKey *key, void *data, void *closure)
+PLDHashOperator
+nsHttpConnectionMgr::ShutdownPassCB(const nsACString &key,
+                                    nsAutoPtr<nsConnectionEntry> &ent,
+                                    void *closure)
 {
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-    nsConnectionEntry *ent = (nsConnectionEntry *) data;
 
     nsHttpTransaction *trans;
     nsHttpConnection *conn;
@@ -573,8 +574,7 @@ nsHttpConnectionMgr::ShutdownPassCB(nsHashKey *key, void *data, void *closure)
     for (PRInt32 i = ((PRInt32) ent->mHalfOpens.Length()) - 1; i >= 0; i--)
         ent->mHalfOpens[i]->Abandon();
 
-    delete ent;
-    return kHashEnumerateRemove;
+    return PL_DHASH_REMOVE;
 }
 
 //-----------------------------------------------------------------------------
@@ -707,14 +707,14 @@ nsHttpConnectionMgr::ClosePersistentConnections(nsConnectionEntry *ent)
         ent->mActiveConns[i]->DontReuse();
 }
 
-PRIntn
-nsHttpConnectionMgr::ClosePersistentConnectionsCB(nsHashKey *key,
-                                                  void *data, void *closure)
+PLDHashOperator
+nsHttpConnectionMgr::ClosePersistentConnectionsCB(const nsACString &key,
+                                                  nsAutoPtr<nsConnectionEntry> &ent,
+                                                  void *closure)
 {
     nsHttpConnectionMgr *self = static_cast<nsHttpConnectionMgr *>(closure);
-    nsConnectionEntry *ent = static_cast<nsConnectionEntry *>(data);
     self->ClosePersistentConnections(ent);
-    return kHashEnumerateNext;
+    return PL_DHASH_NEXT;
 }
 
 void
@@ -947,8 +947,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
     nsHttpConnectionInfo *ci = trans->ConnectionInfo();
     NS_ASSERTION(ci, "no connection info");
 
-    nsCStringKey key(ci->HashKey());
-    nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
     if (!ent) {
         nsHttpConnectionInfo *clone = ci->Clone();
         if (!clone)
@@ -956,7 +955,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         ent = new nsConnectionEntry(clone);
         if (!ent)
             return NS_ERROR_OUT_OF_MEMORY;
-        mCT.Put(&key, ent);
+        mCT.Put(ci->HashKey(), ent);
     }
 
     // If we are doing a force reload then close out any existing conns
@@ -1005,7 +1004,7 @@ nsHttpConnectionMgr::OnMsgShutdown(PRInt32, void *)
 {
     LOG(("nsHttpConnectionMgr::OnMsgShutdown\n"));
 
-    mCT.Reset(ShutdownPassCB, this);
+    mCT.Enumerate(ShutdownPassCB, this);
 
     // signal shutdown complete
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -1034,8 +1033,7 @@ nsHttpConnectionMgr::OnMsgReschedTransaction(PRInt32 priority, void *param)
     trans->SetPriority(priority);
 
     nsHttpConnectionInfo *ci = trans->ConnectionInfo();
-    nsCStringKey key(ci->HashKey());
-    nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
     if (ent) {
         PRInt32 index = ent->mPendingQ.IndexOf(trans);
         if (index >= 0) {
@@ -1063,8 +1061,7 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(PRInt32 reason, void *param)
         conn->CloseTransaction(trans, reason);
     else {
         nsHttpConnectionInfo *ci = trans->ConnectionInfo();
-        nsCStringKey key(ci->HashKey());
-        nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+        nsConnectionEntry *ent = mCT.Get(ci->HashKey());
         if (ent) {
             PRInt32 index = ent->mPendingQ.IndexOf(trans);
             if (index >= 0) {
@@ -1086,8 +1083,7 @@ nsHttpConnectionMgr::OnMsgProcessPendingQ(PRInt32, void *param)
     LOG(("nsHttpConnectionMgr::OnMsgProcessPendingQ [ci=%s]\n", ci->HashKey().get()));
 
     // start by processing the queue identified by the given connection info.
-    nsCStringKey key(ci->HashKey());
-    nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
     if (!(ent && ProcessPendingQForEntry(ent))) {
         // if we reach here, it means that we couldn't dispatch a transaction
         // for the specified connection info.  walk the connection table...
@@ -1132,8 +1128,7 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
     nsHttpConnectionInfo *ci = conn->ConnectionInfo();
     NS_ADDREF(ci);
 
-    nsCStringKey key(ci->HashKey());
-    nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
 
     NS_ASSERTION(ent, "no connection entry");
     if (ent) {

@@ -24,6 +24,7 @@
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Shawn Wilsher <me@shawnwilsher.com>
  *   Marco Bonardo <mak77@bonardo.net>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -180,7 +181,7 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SELECT f.data, f.mime_type FROM moz_favicons f WHERE url = :icon_url"));
 
   RETURN_IF_STMT(mDBInsertIcon, NS_LITERAL_CSTRING(
-    "INSERT OR REPLACE INTO moz_favicons (id, url, data, mime_type, expiration) "
+    "INSERT INTO moz_favicons (id, url, data, mime_type, expiration) "
       "VALUES (:icon_id, :icon_url, :data, :mime_type, :expiration)"));
 
   RETURN_IF_STMT(mDBUpdateIcon, NS_LITERAL_CSTRING(

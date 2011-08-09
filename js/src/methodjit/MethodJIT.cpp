@@ -41,6 +41,7 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #include "assembler/assembler/RepatchBuffer.h"
 #include "jstracer.h"
+#include "jsgcmark.h"
 #include "BaseAssembler.h"
 #include "Compiler.h"
 #include "MonoIC.h"
@@ -985,13 +986,19 @@ JITScript::inlineFrames() const
 js::mjit::CallSite *
 JITScript::callSites() const
 {
-    return (js::mjit::CallSite *)((char *)inlineFrames() + sizeof(js::mjit::InlineFrame) * nInlineFrames);
+    return (js::mjit::CallSite *)&inlineFrames()[nInlineFrames];
+}
+
+JSObject **
+JITScript::rootedObjects() const
+{
+    return (JSObject **)&callSites()[nCallSites];
 }
 
 char *
 JITScript::commonSectionLimit() const
 {
-    return ((char *)callSites() + sizeof(js::mjit::CallSite) * nCallSites);
+    return (char *)&rootedObjects()[nRootedObjects];
 }
 
 #ifdef JS_MONOIC
@@ -1011,26 +1018,25 @@ JITScript::setGlobalNames() const
 ic::CallICInfo *
 JITScript::callICs() const
 {
-    return (ic::CallICInfo *)((char *)setGlobalNames() +
-            sizeof(ic::SetGlobalNameIC) * nSetGlobalNames);
+    return (ic::CallICInfo *)&setGlobalNames()[nSetGlobalNames];
 }
 
 ic::EqualityICInfo *
 JITScript::equalityICs() const
 {
-    return (ic::EqualityICInfo *)((char *)callICs() + sizeof(ic::CallICInfo) * nCallICs);
+    return (ic::EqualityICInfo *)&callICs()[nCallICs];
 }
 
 ic::TraceICInfo *
 JITScript::traceICs() const
 {
-    return (ic::TraceICInfo *)((char *)equalityICs() + sizeof(ic::EqualityICInfo) * nEqualityICs);
+    return (ic::TraceICInfo *)&equalityICs()[nEqualityICs];
 }
 
 char *
 JITScript::monoICSectionsLimit() const
 {
-    return (char *)traceICs() + sizeof(ic::TraceICInfo) * nTraceICs;
+    return (char *)&traceICs()[nTraceICs];
 }
 #else   // JS_MONOIC
 char *
@@ -1297,6 +1303,9 @@ JITScript::trace(JSTracer *trc)
     InlineFrame *inlineFrames_ = inlineFrames();
     for (unsigned i = 0; i < nInlineFrames; i++)
         MarkObject(trc, *inlineFrames_[i].fun, "jitscript_fun");
+
+    for (uint32 i = 0; i < nRootedObjects; ++i)
+        MarkObject(trc, *rootedObjects()[i], "mjit rooted object");
 }
 
 /* static */ const double mjit::Assembler::oneDouble = 1.0;

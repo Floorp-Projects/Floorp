@@ -48,6 +48,8 @@ XPIDL_MODULE = content_html
 XPIDLSRCS = \
 		nsIFormSubmitObserver.idl \
 		nsIPhonetic.idl \
+		nsIHTMLMenu.idl \
+		nsIMenuBuilder.idl \
 		$(NULL)
 
 EXPORTS = \

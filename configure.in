@@ -3892,63 +3892,6 @@ if test "x$ac_cv_va_val_copy" = "xno"; then
 fi
 AC_MSG_RESULT($ac_cv_va_val_copy)
 
-dnl Check for dll-challenged libc's.
-dnl This check is apparently only needed for Linux.
-case "$target" in
-	*-linux*)
-	    dnl ===================================================================
-	    _curdir=`pwd`
-	    export _curdir
-	    rm -rf conftest* _conftest
-	    mkdir _conftest
-	    cat >> conftest.C <<\EOF
-#include <stdio.h>
-#include <link.h>
-#include <dlfcn.h>
-#ifdef _dl_loaded
-void __dump_link_map(void) {
-  struct link_map *map = _dl_loaded;
-  while (NULL != map) {printf("0x%08x %s\n", map->l_addr, map->l_name); map = map->l_next;}
-}
-int main() {
-  dlopen("./conftest1.so",RTLD_LAZY);
-  dlopen("./../_conftest/conftest1.so",RTLD_LAZY);
-  dlopen("CURDIR/_conftest/conftest1.so",RTLD_LAZY);
-  dlopen("CURDIR/_conftest/../_conftest/conftest1.so",RTLD_LAZY);
-  __dump_link_map();
-}
-#else
-/* _dl_loaded isn't defined, so this should be either a libc5 (glibc1) system, or a glibc2 system that doesn't have the multiple load bug (i.e., RH6.0).*/
-int main() { printf("./conftest1.so\n"); }
-#endif
-EOF
-
-	    $PERL -p -i -e "s/CURDIR/\$ENV{_curdir}/g;" conftest.C
-
-	    cat >> conftest1.C <<\EOF
-#include <stdio.h>
-void foo(void) {printf("foo in dll called\n");}
-EOF
-	    ${CXX-g++} -fPIC -c -g conftest1.C
-	    ${CXX-g++} -shared -Wl,-h -Wl,conftest1.so -o conftest1.so conftest1.o
-	    ${CXX-g++} -g conftest.C -o conftest -ldl
-	    cp -f conftest1.so conftest _conftest
-	    cd _conftest
-	    if test `./conftest | grep conftest1.so | wc -l` -gt 1
-	    then
-		echo
-		echo "*** Your libc has a bug that can result in loading the same dynamic"
-		echo "*** library multiple times.  This bug is known to be fixed in glibc-2.0.7-32"
-		echo "*** or later.  However, if you choose not to upgrade, the only effect"
-		echo "*** will be excessive memory usage at runtime."
-		echo
-	    fi
-	    cd ${_curdir}
-	    rm -rf conftest* _conftest
-	    dnl ===================================================================
-	    ;;
-esac
-
 dnl ===================================================================
 dnl ========================================================
 dnl Put your C++ language/feature checks below
@@ -4631,11 +4574,6 @@ if test "$SYSTEM_JPEG" = 1; then
                    SYSTEM_JPEG=1,
                    [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=]) 
 fi
-
-MOZ_LIBJPEG_TURBO=
-if test -z "$SYSTEM_JPEG"; then
-    MOZ_LIBJPEG_TURBO=1
-fi 
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
@@ -4821,8 +4759,6 @@ MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
 MOZ_JSDEBUGGER=1
-MOZ_MORK=
-MOZ_MORKREADER=
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
@@ -4854,8 +4790,6 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
-MOZ_SPLASHSCREEN=
-MOZ_STORAGE=1
 MOZ_SVG_DLISTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -6049,18 +5983,6 @@ linux*)
 fi
 
 dnl ========================================================
-dnl Splashscreen
-dnl ========================================================
-AC_ARG_ENABLE(splashscreen,
-              [  --enable-splashscreen   display splashscreen while loading (default=no)],
-              [enable_splash="yes"],[enable_splash=""])
-if test "x$enable_splash" = "xyes"; then
-  MOZ_SPLASHSCREEN=1
-  AC_DEFINE(MOZ_SPLASHSCREEN)
-fi
-AC_SUBST(MOZ_SPLASHSCREEN)
-
-dnl ========================================================
 dnl Permissions System
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(permissions,
@@ -6269,11 +6191,19 @@ AC_DEFINE_UNQUOTED(MOZ_CRASHREPORTER_ENABLE_PERCENT, $MOZ_CRASHREPORTER_ENABLE_P
 dnl ========================================================
 dnl = libjpeg-turbo configuration
 dnl ========================================================
+MOZ_LIBJPEG_TURBO=
+if test -z "$SYSTEM_JPEG"; then
+    MOZ_LIBJPEG_TURBO=1
+fi
 
 MOZ_ARG_DISABLE_BOOL(libjpeg_turbo,
 [ --disable-libjpeg-turbo  Disable optimized jpeg decoding routines],
     MOZ_LIBJPEG_TURBO=,
     MOZ_LIBJPEG_TURBO=1)
+
+if test "$SYSTEM_JPEG" = 1 -a "$MOZ_LIBJPEG_TURBO" = 1; then
+    AC_MSG_ERROR([cannot use --with-system-jpeg with --enable-libjpeg-turbo.])
+fi
 
 dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
 dnl files.
@@ -6616,18 +6546,6 @@ else
     if test "$MOZ_BUILD_APP" = "browser"; then
         AC_MSG_ERROR([Cannot build Firefox with --disable-feeds.])
     fi
-fi
-
-dnl ========================================================
-dnl = Enable mozStorage
-dnl ========================================================
-dnl Implicitly enabled by default if building calendar or places
-MOZ_ARG_ENABLE_BOOL(storage,
-[  --enable-storage        Enable mozStorage module and related components],
-    MOZ_STORAGE=1,
-    MOZ_STORAGE= )
-if test -n "$MOZ_STORAGE"; then
-    AC_DEFINE(MOZ_STORAGE)
 fi
 
 dnl ========================================================
@@ -6994,8 +6912,6 @@ arm-Android)
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
-    # Temporarily set nspr flags via configure, until bug 674880 lands
-    NSPR_CONFIGURE_FLAGS="--with-thumb --with-arch=armv7-a --with-fpu=vfp --with-float-abi=softfp"
     ;;
 arm-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then
@@ -8903,18 +8819,6 @@ fi
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
-dnl Only build Mork if it's required
-AC_SUBST(MOZ_MORK)
-if test "$MOZ_MORK"; then
-  AC_DEFINE(MOZ_MORK)
-fi
-
-dnl Build the lightweight Mork reader if required
-AC_SUBST(MOZ_MORKREADER)
-if test "$MOZ_MORKREADER"; then
-  AC_DEFINE(MOZ_MORKREADER)
-fi
-
 dnl Build Places if required
 if test "$MOZ_PLACES"; then
   AC_DEFINE(MOZ_PLACES)
@@ -8994,7 +8898,6 @@ AC_SUBST(MOZ_PROFILING)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
-AC_SUBST(MOZ_STORAGE)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
@@ -9396,6 +9299,20 @@ xpcom/xpcom-config.h
 xpcom/xpcom-private.h
 )
 
+# Hack around an Apple bug that effects the egrep that comes with OS X 10.7.
+# "arch -arch i386 egrep" always uses the 32-bit Intel part of the egrep fat
+# binary, even on 64-bit systems.  It should work on OS X 10.4.5 and up.  We
+# (apparently) only need this hack when egrep's "pattern" is particularly
+# long (as in the following code).  See bug 655339.
+case "$host" in
+x86_64-apple-darwin*)
+    FIXED_EGREP="arch -arch i386 egrep"
+    ;;
+*)
+    FIXED_EGREP="egrep"
+    ;;
+esac
+
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
   _CONFIG_TMP=confdefs-tmp.h
@@ -9419,7 +9336,7 @@ if test -n "$_NON_GLOBAL_ACDEFINES"; then
 fi
 _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
 
-  sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
+  sort confdefs.h | $FIXED_EGREP -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
 
   if test "$?" != 0; then
     AC_MSG_ERROR([Error outputting config definitions])
@@ -9450,7 +9367,7 @@ EOF
 dnl Probably shouldn't call this manually but we always want the output of DEFS
 rm -f confdefs.h.save
 mv confdefs.h confdefs.h.save
-egrep -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
+$FIXED_EGREP -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
 if test "$?" != 0; then
   AC_MSG_ERROR([Error outputting confdefs.h])
 fi
@@ -9558,7 +9475,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
-    ac_configure_args="$ac_configure_args $NSPR_CONFIGURE_FLAGS"
     AC_OUTPUT_SUBDIRS(nsprpub)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi

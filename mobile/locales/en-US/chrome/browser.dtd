@@ -7,6 +7,7 @@
 <!ENTITY go.label              "Go">
 <!ENTITY star.label            "Star">
 
+<!ENTITY showTabs.label        "Show Tabs">
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
 
@@ -103,6 +104,7 @@
 <!ENTITY contextFullScreen.label      "Full Screen">
 <!ENTITY contextEditBookmark.label    "Edit">
 <!ENTITY contextRemoveBookmark.label  "Remove">
+<!ENTITY contextShortcutBookmark.label "Add to Home Screen">
 
 <!ENTITY pageactions.saveas.pdf      "Save As PDF">
 <!ENTITY pageactions.share.page      "Share Page">

@@ -66,13 +66,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMLoadListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsIDOMContextMenuListener.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -2435,6 +2428,29 @@ nsXULElement::SetDrawsInTitlebar(PRBool aState)
     }
 }
 
+class MarginSetter : public nsRunnable
+{
+public:
+    MarginSetter(nsIWidget* aWidget) :
+        mWidget(aWidget), mMargin(-1, -1, -1, -1)
+    {}
+    MarginSetter(nsIWidget *aWidget, const nsIntMargin& aMargin) :
+        mWidget(aWidget), mMargin(aMargin)
+    {}
+
+    NS_IMETHOD Run()
+    {
+        // SetNonClientMargins can dispatch native events, hence doing
+        // it off a script runner.
+        mWidget->SetNonClientMargins(mMargin);
+        return NS_OK;
+    }
+
+private:
+    nsCOMPtr<nsIWidget> mWidget;
+    nsIntMargin mMargin;
+};
+
 void
 nsXULElement::SetChromeMargins(const nsAString* aValue)
 {
@@ -2453,7 +2469,7 @@ nsXULElement::SetChromeMargins(const nsAString* aValue)
     data.Assign(*aValue);
     if (attrValue.ParseIntMarginValue(data) &&
         attrValue.GetIntMarginValue(margins)) {
-        mainWidget->SetNonClientMargins(margins);
+        nsContentUtils::AddScriptRunner(new MarginSetter(mainWidget, margins));
     }
 }
 
@@ -2464,8 +2480,7 @@ nsXULElement::ResetChromeMargins()
     if (!mainWidget)
         return;
     // See nsIWidget
-    nsIntMargin margins(-1,-1,-1,-1);
-    mainWidget->SetNonClientMargins(margins);
+    nsContentUtils::AddScriptRunner(new MarginSetter(mainWidget));
 }
 
 PRBool

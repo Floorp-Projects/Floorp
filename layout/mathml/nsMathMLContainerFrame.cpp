@@ -668,7 +668,8 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = DisplayTextDecorationsAndChildren(aBuilder, aDirtyRect, aLists);
+  rv = BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
+                                           DISPLAY_CHILD_INLINE);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)

@@ -103,7 +103,8 @@ public:
   nsresult BeginSpan(nsIFrame* aFrame,
                      const nsHTMLReflowState* aSpanReflowState,
                      nscoord aLeftEdge,
-                     nscoord aRightEdge);
+                     nscoord aRightEdge,
+                     nscoord* aBaseline);
 
   // Returns the width of the span
   nscoord EndSpan(nsIFrame* aFrame);
@@ -506,6 +507,7 @@ protected:
     nscoord mTopLeading, mBottomLeading;
     nscoord mLogicalHeight;
     nscoord mMinY, mMaxY;
+    nscoord* mBaseline;
 
     void AppendFrame(PerFrameData* pfd) {
       if (nsnull == mLastFrame) {

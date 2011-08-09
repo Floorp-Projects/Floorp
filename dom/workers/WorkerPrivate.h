@@ -68,6 +68,16 @@ class nsIURI;
 class nsPIDOMWindow;
 class nsITimer;
 
+namespace mozilla {
+namespace xpconnect {
+namespace memory {
+
+struct IterateData;
+
+} // namespace memory
+} // namespace xpconnect
+} // namespace mozilla
+
 BEGIN_WORKERS_NAMESPACE
 
 class WorkerPrivate;
@@ -639,6 +649,9 @@ public:
 
   void
   ScheduleDeletion(bool aWasPending);
+
+  bool
+  BlockAndCollectRuntimeStats(mozilla::xpconnect::memory::IterateData* aData);
 
 #ifdef JS_GC_ZEAL
   void

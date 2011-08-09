@@ -76,3 +76,4 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
 != link-1.xhtml link-ref.xhtml
+== munderover-empty-scripts.html munderover-empty-scripts-ref.html

@@ -66,5 +66,46 @@ ClampIntForUint8Array(int32 x)
         return 255;
     return x;
 }
+
+inline JSUint32
+TypedArray::getLength(JSObject *obj) {
+    return obj->getFixedSlot(FIELD_LENGTH).toInt32();
+}
+
+inline JSUint32
+TypedArray::getByteOffset(JSObject *obj) {
+    return obj->getFixedSlot(FIELD_BYTEOFFSET).toInt32();
+}
+
+inline JSUint32
+TypedArray::getByteLength(JSObject *obj) {
+    return obj->getFixedSlot(FIELD_BYTELENGTH).toInt32();
+}
+
+inline JSUint32
+TypedArray::getType(JSObject *obj) {
+    return obj->getFixedSlot(FIELD_TYPE).toInt32();
+}
+
+inline JSObject *
+TypedArray::getBuffer(JSObject *obj) {
+    return &obj->getFixedSlot(FIELD_BUFFER).toObject();
+}
+
+inline void *
+TypedArray::getDataOffset(JSObject *obj) {
+    return (void *)((uint8*)obj->getFixedSlot(FIELD_DATA).toPrivate() + getByteOffset(obj));
+}
+
+inline int
+TypedArray::lengthOffset() {
+    return JSObject::getFixedSlotOffset(FIELD_LENGTH);
+}
+
+inline int
+TypedArray::dataOffset() {
+    return JSObject::getFixedSlotOffset(FIELD_DATA);
+}
+
 }
 #endif /* jstypedarrayinlines_h */

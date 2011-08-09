@@ -51,7 +51,7 @@ interface nsIDroppedLinkHandler : nsISupports
    * includes any parent, sibling and child frames in the same content tree.
    * If true, the source is not checked.
    */
-  boolean canDropLink(in nsIDOMDragEvent aEvent, in PRBool aAllowSameDocument);
+  boolean canDropLink(in nsIDOMDragEvent aEvent, in boolean aAllowSameDocument);
 
   /**
    * Given a drop event aEvent, determines the link being dragged and returns

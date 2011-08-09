@@ -1,3 +1,6 @@
+include gradient/reftest.list
+include vector/reftest.list
+
 == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
 == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
@@ -99,14 +102,7 @@ fails-if(Android) == viewport-translucent-color-3.html viewport-translucent-colo
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails-if(!Android) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
-
-# background-size affects images without intrinsic dimensions specially; we may
-# not support such image formats right now, but when we do, we want
-# background-size to be changed accordingly, and hopefully these tests should
-# start failing when we do.
-fails == background-size-no-intrinsic-width-image.html background-size-no-intrinsic-width-image-ref.html
-fails == background-size-no-intrinsic-height-image.html background-size-no-intrinsic-height-image-ref.html
+fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html

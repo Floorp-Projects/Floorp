@@ -66,6 +66,7 @@
 #define APPLICATION_ECMASCRIPT              "application/ecmascript"
 #define APPLICATION_JAVASCRIPT              "application/javascript"
 #define APPLICATION_XJAVASCRIPT             "application/x-javascript"
+#define APPLICATION_JSON                    "application/json"
 #define APPLICATION_NETSCAPE_REVOCATION     "application/x-netscape-revocation"
 #define APPLICATION_NS_PROXY_AUTOCONFIG     "application/x-ns-proxy-autoconfig"
 #define APPLICATION_NS_JAVASCRIPT_AUTOCONFIG        "application/x-javascript-config"

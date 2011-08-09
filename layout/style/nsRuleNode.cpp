@@ -4470,19 +4470,71 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   const nsCSSValue* transformOriginValue =
     aRuleData->ValueForTransformOrigin();
   if (transformOriginValue->GetUnit() != eCSSUnit_Null) {
-#ifdef DEBUG
-    PRBool result =
-#endif
-      SetPairCoords(*transformOriginValue,
-                    display->mTransformOrigin[0],
-                    display->mTransformOrigin[1],
-                    parentDisplay->mTransformOrigin[0],
-                    parentDisplay->mTransformOrigin[1],
+    const nsCSSValue& valX =
+      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
+        transformOriginValue->GetTripletValue().mXValue : *transformOriginValue;
+    const nsCSSValue& valY =
+      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
+        transformOriginValue->GetTripletValue().mYValue : *transformOriginValue;
+    const nsCSSValue& valZ =
+      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
+        transformOriginValue->GetTripletValue().mZValue : *transformOriginValue;
+
+    mozilla::DebugOnly<PRBool> cX =
+       SetCoord(valX, display->mTransformOrigin[0],
+                parentDisplay->mTransformOrigin[0],
+                SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                  SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC,
+                aContext, mPresContext, canStoreInRuleTree);
+
+     mozilla::DebugOnly<PRBool> cY =
+       SetCoord(valY, display->mTransformOrigin[1],
+                parentDisplay->mTransformOrigin[1],
+                SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                  SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC,
+                aContext, mPresContext, canStoreInRuleTree);
+
+     if (valZ.GetUnit() == eCSSUnit_Null) {
+       // Null for the z component means a 0 translation, not
+       // unspecified, as we have already checked the triplet
+       // value for Null.
+       display->mTransformOrigin[2].SetCoordValue(0);
+     } else {
+       mozilla::DebugOnly<PRBool> cZ =
+         SetCoord(valZ, display->mTransformOrigin[2],
+                  parentDisplay->mTransformOrigin[2],
+                  SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
+                  aContext, mPresContext, canStoreInRuleTree);
+       NS_ABORT_IF_FALSE(cY == cZ, "changed one but not the other");
+     }
+     NS_ABORT_IF_FALSE(cX == cY, "changed one but not the other");
+     NS_ASSERTION(cX, "Malformed -moz-transform-origin parse!");
+  }
+
+  const nsCSSValue* perspectiveOriginValue =
+    aRuleData->ValueForPerspectiveOrigin();
+  if (perspectiveOriginValue->GetUnit() != eCSSUnit_Null) {
+    mozilla::DebugOnly<PRBool> result =
+      SetPairCoords(*perspectiveOriginValue,
+                    display->mPerspectiveOrigin[0],
+                    display->mPerspectiveOrigin[1],
+                    parentDisplay->mPerspectiveOrigin[0],
+                    parentDisplay->mPerspectiveOrigin[1],
                     SETCOORD_LPH | SETCOORD_INITIAL_HALF |
                     SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC,
                     aContext, mPresContext, canStoreInRuleTree);
-    NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
+    NS_ASSERTION(result, "Malformed -moz-perspective-origin parse!");
   }
+
+  SetCoord(*aRuleData->ValueForPerspective(), 
+           display->mChildPerspective, parentDisplay->mChildPerspective,
+           SETCOORD_LAH | SETCOORD_INITIAL_ZERO | SETCOORD_NONE,
+           aContext, mPresContext, canStoreInRuleTree);
+
+  SetDiscrete(*aRuleData->ValueForBackfaceVisibility(),
+              display->mBackfaceVisibility, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentDisplay->mBackfaceVisibility,
+              NS_STYLE_BACKFACE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
 
   // orient: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForOrient(),

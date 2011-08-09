@@ -50,6 +50,9 @@
 
     const LISTEN_EVENTS = ["pageshow"];
 
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
     var gBrowser;
     var gTestCount = 0;
     var gTestsIterator;
@@ -95,6 +98,23 @@
           var shEntry = history.getEntryAtIndex(i,false).
                           QueryInterface(Components.interfaces.nsISHEntry);
           is(!!shEntry.contentViewer, gExpected[i], "content viewer "+i+", test "+gTestCount);
+        }
+
+        // Make sure none of the SHEntries share bfcache entries with one
+        // another.
+        for (var i = 0; i < history.count; i++) {
+          for (var j = 0; j < history.count; j++) {
+            if (j == i)
+              continue;
+
+            let shentry1 = history.getEntryAtIndex(i, false)
+                                  .QueryInterface(Ci.nsISHEntry);
+            let shentry2 = history.getEntryAtIndex(j, false)
+                                  .QueryInterface(Ci.nsISHEntry);
+            ok(!shentry1.sharesDocumentWith(shentry2),
+               'Test ' + gTestCount + ': shentry[' + i + "] shouldn't " +
+               "share document with shentry[" + j + ']');
+          }
         }
       }
       else {

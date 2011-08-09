@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Arrow Panels"
+        style="padding: 10px;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<stack flex="1">
+  <label id="topleft" value="Top Left" left="15" top="15"/>
+  <label id="topright" value="Top Right" right="15" top="15"/>
+  <label id="bottomleft" value="Bottom Left" left="15" bottom="15"/>
+  <label id="bottomright" value="Bottom Right" right="15" bottom="15"/>
+  <!-- Our SimpleTest/TestRunner.js runs tests inside an iframe which sizes are W=500 H=300.
+       'left' and 'top' values need to be set so that the panel (popup) has enough room to display on its 4 sides. -->
+  <label id="middle" value="+/- Centered" left="225" top="135"/>
+  <iframe id="frame" type="content"
+          src="data:text/html,&lt;input id='input'&gt;" width="100" height="100" left="225" top="120"/>
+</stack>
+
+<panel id="panel" type="arrow" onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">
+  <label id="panellabel" value="This is some text." height="65"/>
+</panel>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var expectedAnchor = null;
+var expectedSide = "", expectedAnchorEdge = "";
+var zoomFactor = 1;
+var runNextTest;
+
+function startTest()
+{
+  runNextTest = nextTest();
+  runNextTest.next();
+}
+
+function nextTest()
+{
+  var panel = $("panel");
+
+  function openPopup(position, anchor, expected, anchorEdge)
+  {
+    expectedAnchor = anchor instanceof Node ? anchor : $(anchor);
+    expectedSide = expected;
+    expectedAnchorEdge = anchorEdge;
+
+    panel.removeAttribute("side");
+    panel.openPopup(expectedAnchor, position, 0, 0, false, false, null);
+  }
+
+  openPopup("after_start", "topleft", "top", "left");
+  yield;
+  openPopup("after_start", "bottomleft", "bottom", "left");
+  yield;
+  openPopup("before_start", "topleft", "top", "left");
+  yield;
+  openPopup("before_start", "bottomleft", "bottom", "left");
+  yield;
+  openPopup("after_start", "middle", "top", "left");
+  yield;
+  openPopup("before_start", "middle", "bottom", "left");
+  yield;
+
+  openPopup("after_start", "topright", "top", "right");
+  yield;
+  openPopup("after_start", "bottomright", "bottom", "right");
+  yield;
+  openPopup("before_start", "topright", "top", "right");
+  yield;
+  openPopup("before_start", "bottomright", "bottom", "right");
+  yield;
+
+  openPopup("start_before", "topleft", "left", "top");
+  yield;
+  openPopup("start_before", "topright", "right", "top");
+  yield;
+  openPopup("end_before", "topleft", "left", "top");
+  yield;
+  openPopup("end_before", "topright", "right", "top");
+  yield;
+  openPopup("start_before", "middle", "right", "top");
+  yield;
+  openPopup("end_before", "middle", "left", "top");
+  yield;
+
+  openPopup("start_before", "bottomleft", "left", "bottom");
+  yield;
+  openPopup("start_before", "bottomright", "right", "bottom");
+  yield;
+  openPopup("end_before", "bottomleft", "left", "bottom");
+  yield;
+  openPopup("end_before", "bottomright", "right", "bottom");
+  yield;
+
+  openPopup("topcenter bottomleft", "bottomleft", "bottom", "center left");
+  yield;
+  openPopup("bottomcenter topleft", "topleft", "top", "center left");
+  yield;
+  openPopup("topcenter bottomright", "bottomright", "bottom", "center right");
+  yield;
+  openPopup("bottomcenter topright", "topright", "top", "center right");
+  yield;
+  openPopup("topcenter bottomleft", "middle", "bottom", "center left");
+  yield;
+  openPopup("bottomcenter topleft", "middle", "top", "center left");
+  yield;
+
+  openPopup("leftcenter topright", "middle", "right", "center top");
+  yield;
+  openPopup("rightcenter bottomleft", "middle", "left", "center bottom");
+  yield;
+
+/*
+  XXXndeakin disable these parts of the test which often cause problems, see bug 626563
+
+  openPopup("after_start", frames[0].document.getElementById("input"), "top", "left");
+  yield;
+
+  setScale(frames[0], 1.5);
+  openPopup("after_start", frames[0].document.getElementById("input"), "top", "left");
+  yield;
+
+  setScale(frames[0], 2.5);
+  openPopup("before_start", frames[0].document.getElementById("input"), "bottom", "left");
+  yield;
+
+  setScale(frames[0], 1);
+*/
+
+  SimpleTest.finish();
+  yield;
+}
+
+function setScale(win, scale)
+{
+  var wn = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIWebNavigation);
+  var shell = wn.QueryInterface(Components.interfaces.nsIDocShell);
+  var docViewer = shell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  docViewer.fullZoom = scale;
+  zoomFactor = scale;
+}
+
+function checkPanelPosition(panel)
+{
+  let anchor = panel.anchorNode;
+  let adj = 0, hwinpos = 0, vwinpos = 0;
+  if (anchor.ownerDocument != document) {
+    var framerect = anchor.ownerDocument.defaultView.frameElement.getBoundingClientRect();
+    hwinpos = framerect.left;
+    vwinpos = framerect.top;
+  }
+
+  var panelRect = panel.getBoundingClientRect();
+  var anchorRect = anchor.getBoundingClientRect();
+  var labelRect = $("panellabel").getBoundingClientRect();
+  switch (expectedSide) {
+    case "top":
+      ok(labelRect.top > vwinpos + anchorRect.bottom * zoomFactor + 5, "panel label is below");
+      break;
+    case "bottom":
+      ok(labelRect.bottom < vwinpos + anchorRect.top * zoomFactor - 5, "panel label is above");
+      break;
+    case "left":
+      ok(labelRect.left > hwinpos + anchorRect.right * zoomFactor + 5, "panel label is right");
+      break;
+    case "right":
+      ok(labelRect.right < hwinpos + anchorRect.left * zoomFactor - 5, "panel label is left");
+      break;
+  }
+
+  let iscentered = false;
+  if (expectedAnchorEdge.indexOf("center ") == 0) {
+    expectedAnchorEdge = expectedAnchorEdge.substring(7);
+    iscentered = true;
+  }
+
+  switch (expectedAnchorEdge) {
+    case "top":
+      adj = vwinpos + parseInt(getComputedStyle(panel, "").marginTop);
+      if (iscentered)
+        adj += anchorRect.height / 2;
+      is(Math.round(panelRect.top), Math.round(anchorRect.top * zoomFactor +  + adj), "anchored on top");
+      break;
+    case "bottom":
+      adj = vwinpos + parseInt(getComputedStyle(panel, "").marginBottom);
+      if (iscentered)
+        adj += anchorRect.height / 2;
+      is(Math.round(panelRect.bottom), Math.round(anchorRect.bottom * zoomFactor +  - adj), "anchored on bottom");
+      break;
+    case "left":
+      adj = hwinpos + parseInt(getComputedStyle(panel, "").marginLeft);
+      if (iscentered)
+        adj += anchorRect.width / 2;
+      is(Math.round(panelRect.left), Math.round((anchorRect.left * zoomFactor + adj)), "anchored on left ");
+      break;
+    case "right":
+      adj = hwinpos + parseInt(getComputedStyle(panel, "").marginRight);
+      if (iscentered)
+        adj += anchorRect.width / 2;
+      is(Math.round(panelRect.right), Math.round(anchorRect.right * zoomFactor +  - adj), "anchored on right");
+      break;
+  }
+
+  is(anchor, expectedAnchor, "anchor");
+
+  var arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
+  is(arrow.getAttribute("side"), expectedSide, "panel arrow side");
+  is(arrow.hidden, false, "panel hidden");
+
+  panel.hidePopup();
+}
+
+SimpleTest.waitForFocus(startTest);
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml"/>
+
+</window>

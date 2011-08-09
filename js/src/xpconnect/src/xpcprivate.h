@@ -103,6 +103,7 @@
 
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
+#include "nsIJSEngineTelemetryStats.h"
 #include "nsDeque.h"
 
 #include "nsIConsoleService.h"
@@ -461,7 +462,8 @@ class nsXPConnect : public nsIXPConnect,
                     public nsCycleCollectionJSRuntime,
                     public nsCycleCollectionParticipant,
                     public nsIJSRuntimeService,
-                    public nsIThreadJSContextStack
+                    public nsIThreadJSContextStack,
+                    public nsIJSEngineTelemetryStats
 {
 public:
     // all the interface method declarations...
@@ -471,6 +473,7 @@ public:
     NS_DECL_NSIJSRUNTIMESERVICE
     NS_DECL_NSIJSCONTEXTSTACK
     NS_DECL_NSITHREADJSCONTEXTSTACK
+    NS_DECL_NSIJSENGINETELEMETRYSTATS
 
     // non-interface implementation
 public:
@@ -654,6 +657,7 @@ public:
 
     JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
     nsXPConnect*   GetXPConnect() const {return mXPConnect;}
+    JSContext*     GetJSCycleCollectionContext();
 
     JSObject2WrappedJSMap*     GetWrappedJSMap()        const
         {return mWrappedJSMap;}
@@ -785,7 +789,7 @@ public:
     void AddGCCallback(JSGCCallback cb);
     void RemoveGCCallback(JSGCCallback cb);
 
-    static void ActivityCallback(void *arg, PRBool active);
+    static void ActivityCallback(void *arg, JSBool active);
 
 private:
     XPCJSRuntime(); // no implementation
@@ -800,8 +804,9 @@ private:
     jsid mStrIDs[IDX_TOTAL_COUNT];
     jsval mStrJSVals[IDX_TOTAL_COUNT];
 
-    nsXPConnect* mXPConnect;
-    JSRuntime*  mJSRuntime;
+    nsXPConnect*             mXPConnect;
+    JSRuntime*               mJSRuntime;
+    JSContext*               mJSCycleCollectionContext;
     JSObject2WrappedJSMap*   mWrappedJSMap;
     IID2WrappedJSClassMap*   mWrappedJSClassMap;
     IID2NativeInterfaceMap*  mIID2NativeInterfaceMap;
@@ -1034,7 +1039,6 @@ public:
     inline XPCPerThreadData*            GetThreadData() const ;
     inline XPCContext*                  GetXPCContext() const ;
     inline JSContext*                   GetJSContext() const ;
-    inline JSContext*                   GetSafeJSContext() const ;
     inline JSBool                       GetContextPopRequired() const ;
     inline XPCContext::LangType         GetCallerLanguage() const ;
     inline XPCContext::LangType         GetPrevCallerLanguage() const ;

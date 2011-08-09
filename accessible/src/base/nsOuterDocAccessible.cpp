@@ -112,14 +112,11 @@ nsOuterDocAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-NS_IMETHODIMP
-nsOuterDocAccessible::GetNumActions(PRUint8 *aNumActions)
+PRUint8
+nsOuterDocAccessible::ActionCount()
 {
-  NS_ENSURE_ARG_POINTER(aNumActions);
-  *aNumActions = 0;
-
   // Internal frame, which is the doc's parent, should not have a click action.
-  return NS_OK;
+  return 0;
 }
 
 NS_IMETHODIMP
