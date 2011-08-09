@@ -352,3 +352,18 @@ function restoreTab(callback, index, win) {
     finalize();
   });
 }
+
+// ----------
+function togglePrivateBrowsing(callback) {
+  let topic = "private-browsing-transition-complete";
+
+  Services.obs.addObserver(function observe() {
+    Services.obs.removeObserver(observe, topic);
+    afterAllTabsLoaded(callback);
+  }, topic, false);
+
+  let pb = Cc["@mozilla.org/privatebrowsing;1"].
+           getService(Ci.nsIPrivateBrowsingService);
+
+  pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
+}
