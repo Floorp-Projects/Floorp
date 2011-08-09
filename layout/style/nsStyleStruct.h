@@ -376,13 +376,32 @@ struct nsStyleBackground {
   struct Size;
   friend struct Size;
   struct Size {
-    typedef nsStyleCoord::Calc Dimension;
+    struct Dimension : public nsStyleCoord::Calc {
+      nscoord ResolveLengthPercentage(nscoord aAvailable) const {
+        double d = double(mPercent) * double(aAvailable) + double(mLength);
+        if (d < 0.0)
+          return 0;
+        return NSToCoordRoundWithClamp(float(d));
+      }
+    };
     Dimension mWidth, mHeight;
+
+    nscoord ResolveWidthLengthPercentage(const nsSize& aBgPositioningArea) const {
+      NS_ABORT_IF_FALSE(mWidthType == eLengthPercentage,
+                        "resolving non-length/percent dimension!");
+      return mWidth.ResolveLengthPercentage(aBgPositioningArea.width);
+    }
+
+    nscoord ResolveHeightLengthPercentage(const nsSize& aBgPositioningArea) const {
+      NS_ABORT_IF_FALSE(mHeightType == eLengthPercentage,
+                        "resolving non-length/percent dimension!");
+      return mHeight.ResolveLengthPercentage(aBgPositioningArea.height);
+    }
 
     // Except for eLengthPercentage, Dimension types which might change
     // how a layer is painted when the corresponding frame's dimensions
     // change *must* precede all dimension types which are agnostic to
-    // frame size; see DependsOnFrameSize below.
+    // frame size; see DependsOnFrameSize.
     enum DimensionType {
       // If one of mWidth and mHeight is eContain or eCover, then both are.
       // Also, these two values must equal the corresponding values in
@@ -395,28 +414,10 @@ struct nsStyleBackground {
     };
     PRUint8 mWidthType, mHeightType;
 
-    // True if the effective image size described by this depends on
-    // the size of the corresponding frame.  Gradients depend on the
-    // frame size when their dimensions are 'auto', images don't; both
-    // types depend on the frame size when their dimensions are
-    // 'contain', 'cover', or a percentage.
-    // -moz-element also depends on the frame size when the dimensions
-    // are 'auto' since it could be an SVG gradient or pattern which
-    // behaves exactly like a CSS gradient.
-    bool DependsOnFrameSize(nsStyleImageType aType) const {
-      if ((mWidthType == eLengthPercentage && mWidth.mPercent != 0.0f) ||
-          (mHeightType == eLengthPercentage && mHeight.mPercent != 0.0f)) {
-        return true;
-      }
-      if (aType == eStyleImageType_Image) {
-        return mWidthType <= eCover || mHeightType <= eCover;
-      } else {
-        NS_ABORT_IF_FALSE(aType == eStyleImageType_Gradient ||
-                          aType == eStyleImageType_Element,
-                          "unrecognized image type");
-        return mWidthType <= eAuto || mHeightType <= eAuto;
-      }
-    }
+    // True if the effective image size described by this depends on the size of
+    // the corresponding frame, when aImage (which must not have null type) is
+    // the background image.
+    bool DependsOnFrameSize(const nsStyleImage& aImage) const;
 
     // Initialize nothing
     Size() {}

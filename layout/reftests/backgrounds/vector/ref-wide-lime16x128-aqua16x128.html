@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>wide reference, 16x128 lime, 16x128 aqua</title>
+  <style type="text/css">
+div
+{
+  width: 768px; height: 256px;
+}
+#outer
+{
+  border: 1px solid black;
+}
+#inner
+{
+  width: 16px; height: 256px;
+}
+#inner > div { width: 16px; height: 128px; }
+#top { background-color: lime; }
+#bottom { background-color: aqua; }
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"><div id="top"></div><div id="bottom"></div></div></div>
+</body>
+</html>

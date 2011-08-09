@@ -49,6 +49,7 @@
 #include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
 #include "nsStringGlue.h"
+#include "nsTArray.h"
 
 class nsIPrincipal;
 
@@ -242,7 +243,7 @@ struct IterateData
     PRInt64 gcHeapChunkAdmin;
     PRInt64 gcHeapUnusedPercentage;
 
-    js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
+    nsTArray<CompartmentStats> compartmentStatsVector;
     CompartmentStats *currCompartmentStats;
 };
 

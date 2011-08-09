@@ -135,7 +135,7 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsRenderingContext.h"
-
+#include "nsAutoLayoutPhase.h"
 #ifdef MOZ_REFLOW_PERF
 #include "nsFontMetrics.h"
 #endif
@@ -9416,9 +9416,11 @@ PresShell::SetIsActive(PRBool aIsActive)
                                         &aIsActive);
   nsresult rv = UpdateImageLockingState();
 #ifdef ACCESSIBILITY
-  nsAccessibilityService* accService = AccService();
-  if (accService) {
-    accService->PresShellActivated(this);
+  if (aIsActive) {
+    nsAccessibilityService* accService = AccService();
+    if (accService) {
+      accService->PresShellActivated(this);
+    }
   }
 #endif
   return rv;

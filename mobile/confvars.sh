@@ -53,7 +53,6 @@ if test "$LIBXUL_SDK"; then
 MOZ_XULRUNNER=1
 else
 MOZ_XULRUNNER=
-MOZ_MORK=
 MOZ_PLACES=1
 fi
 

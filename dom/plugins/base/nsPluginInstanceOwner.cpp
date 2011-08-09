@@ -70,7 +70,6 @@ using mozilla::DefaultXDisplay;
 #include "nsContentUtils.h"
 #include "nsRect.h"
 #include "nsSize.h"
-#include "nsIDOMContextMenuListener.h"
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
 #include "nsIDOMEventTarget.h"
@@ -124,23 +123,18 @@ using namespace mozilla;
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
 // same class
-class nsPluginDOMContextMenuListener : public nsIDOMContextMenuListener
+class nsPluginDOMContextMenuListener : public nsIDOMEventListener
 {
 public:
   nsPluginDOMContextMenuListener();
   virtual ~nsPluginDOMContextMenuListener();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
 
-  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
-  
   nsresult Init(nsIContent* aContent);
   nsresult Destroy(nsIContent* aContent);
   
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)
-  {
-    return NS_OK;
-  }
   nsEventStatus ProcessEvent(const nsGUIEvent& anEvent)
   {
     return nsEventStatus_eConsumeNoDefault;
@@ -385,19 +379,10 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 }
 
-NS_IMPL_ADDREF(nsPluginInstanceOwner)
-NS_IMPL_RELEASE(nsPluginInstanceOwner)
-
-NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
-  NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
-  NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPluginInstanceOwner)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS3(nsPluginInstanceOwner,
+                   nsIPluginInstanceOwner,
+                   nsIPluginTagInfo,
+                   nsIDOMEventListener)
 
 nsresult
 nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
@@ -1673,19 +1658,6 @@ void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 #endif
 }
 
-/*=============== nsIDOMFocusListener ======================*/
-nsresult nsPluginInstanceOwner::Focus(nsIDOMEvent * aFocusEvent)
-{
-  mContentFocused = PR_TRUE;
-  return DispatchFocusToPlugin(aFocusEvent);
-}
-
-nsresult nsPluginInstanceOwner::Blur(nsIDOMEvent * aFocusEvent)
-{
-  mContentFocused = PR_FALSE;
-  return DispatchFocusToPlugin(aFocusEvent);
-}
-
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
 #ifndef XP_MACOSX
@@ -1715,18 +1687,6 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   return NS_OK;
 }    
 
-
-/*=============== nsIKeyListener ======================*/
-nsresult nsPluginInstanceOwner::KeyDown(nsIDOMEvent* aKeyEvent)
-{
-  return DispatchKeyToPlugin(aKeyEvent);
-}
-
-nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
-{
-  return DispatchKeyToPlugin(aKeyEvent);
-}
-
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
 #ifdef XP_MACOSX
@@ -1738,11 +1698,10 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
     if (privateEvent) {
       nsEvent *theEvent = privateEvent->GetInternalNSEvent();
-      const nsGUIEvent *guiEvent = (nsGUIEvent*)theEvent;
-      const EventRecord *ev = (EventRecord*)(guiEvent->pluginEvent); 
-      if (guiEvent &&
-          guiEvent->message == NS_KEY_PRESS &&
-          ev &&
+      const EventRecord *ev;
+      if (theEvent &&
+          theEvent->message == NS_KEY_PRESS &&
+          (ev = (EventRecord*)(((nsGUIEvent*)theEvent)->pluginEvent)) &&
           ev->what == keyDown)
         return aKeyEvent->PreventDefault(); // consume event
     }
@@ -1789,9 +1748,9 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
   if (mInstance) {
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
     if (privateEvent) {
-      nsKeyEvent *keyEvent = (nsKeyEvent *) privateEvent->GetInternalNSEvent();
-      if (keyEvent) {
-        nsEventStatus rv = ProcessEvent(*keyEvent);
+      nsEvent *event = privateEvent->GetInternalNSEvent();
+      if (event && event->eventStructType == NS_KEY_EVENT) {
+        nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
         if (nsEventStatus_eConsumeNoDefault == rv) {
           aKeyEvent->PreventDefault();
           aKeyEvent->StopPropagation();
@@ -1804,39 +1763,6 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 
   return NS_OK;
 }    
-
-/*=============== nsIDOMMouseMotionListener ======================*/
-
-nsresult
-nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
-{
-#if !defined(XP_MACOSX)
-  if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow))
-    return aMouseEvent->PreventDefault(); // consume event
-  // continue only for cases without child window
-#endif
-
-  // don't send mouse events if we are hidden
-  if (!mWidgetVisible)
-    return NS_OK;
-
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
-  if (privateEvent) {
-    nsMouseEvent* mouseEvent = (nsMouseEvent *) privateEvent->GetInternalNSEvent();
-    if (mouseEvent) {
-      nsEventStatus rv = ProcessEvent(*mouseEvent);
-      if (nsEventStatus_eConsumeNoDefault == rv) {
-        return aMouseEvent->PreventDefault(); // consume event
-      }
-    }
-    else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseMove failed, mouseEvent null");   
-  }
-  else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseMove failed, privateEvent null");   
-  
-  return NS_OK;
-}
-
-/*=============== nsIDOMMouseListener ======================*/
 
 nsresult
 nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
@@ -1861,9 +1787,9 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
   if (privateEvent) {
-    nsMouseEvent* mouseEvent = (nsMouseEvent *) privateEvent->GetInternalNSEvent();
-    if (mouseEvent) {
-      nsEventStatus rv = ProcessEvent(*mouseEvent);
+    nsEvent* event = privateEvent->GetInternalNSEvent();
+      if (event && event->eventStructType == NS_MOUSE_EVENT) {
+        nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
       if (nsEventStatus_eConsumeNoDefault == rv) {
         return aMouseEvent->PreventDefault(); // consume event
       }
@@ -1873,44 +1799,6 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
   else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseDown failed, privateEvent null");   
   
   return NS_OK;
-}
-
-nsresult
-nsPluginInstanceOwner::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-  // Don't send a mouse-up event to the plugin if it isn't focused.  This can
-  // happen if the previous mouse-down was sent to a DOM element above the
-  // plugin, the mouse is still above the plugin, and the mouse-down event
-  // caused the element to disappear.  See bug 627649.
-  if (!mContentFocused) {
-    aMouseEvent->PreventDefault();
-    return NS_OK;
-  }
-  return DispatchMouseToPlugin(aMouseEvent);
-}
-
-nsresult
-nsPluginInstanceOwner::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-  return DispatchMouseToPlugin(aMouseEvent);
-}
-
-nsresult
-nsPluginInstanceOwner::MouseDblClick(nsIDOMEvent* aMouseEvent)
-{
-  return DispatchMouseToPlugin(aMouseEvent);
-}
-
-nsresult
-nsPluginInstanceOwner::MouseOver(nsIDOMEvent* aMouseEvent)
-{
-  return DispatchMouseToPlugin(aMouseEvent);
-}
-
-nsresult
-nsPluginInstanceOwner::MouseOut(nsIDOMEvent* aMouseEvent)
-{
-  return DispatchMouseToPlugin(aMouseEvent);
 }
 
 nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
@@ -1926,9 +1814,9 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
   if (privateEvent) {
-    nsMouseEvent* mouseEvent = (nsMouseEvent *) privateEvent->GetInternalNSEvent();
-    if (mouseEvent) {
-      nsEventStatus rv = ProcessEvent(*mouseEvent);
+    nsEvent* event = privateEvent->GetInternalNSEvent();
+    if (event && event->eventStructType == NS_MOUSE_EVENT) {
+      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
       if (nsEventStatus_eConsumeNoDefault == rv) {
         aMouseEvent->PreventDefault();
         aMouseEvent->StopPropagation();
@@ -1944,10 +1832,49 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 nsresult
 nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 {
-  if (mInstance) {
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  if (eventType.EqualsLiteral("focus")) {
+    mContentFocused = PR_TRUE;
+    return DispatchFocusToPlugin(aEvent);
+  }
+  if (eventType.EqualsLiteral("blur")) {
+    mContentFocused = PR_FALSE;
+    return DispatchFocusToPlugin(aEvent);
+  }
+  if (eventType.EqualsLiteral("mousedown")) {
+    return MouseDown(aEvent);
+  }
+  if (eventType.EqualsLiteral("mouseup")) {
+    // Don't send a mouse-up event to the plugin if it isn't focused.  This can
+    // happen if the previous mouse-down was sent to a DOM element above the
+    // plugin, the mouse is still above the plugin, and the mouse-down event
+    // caused the element to disappear.  See bug 627649.
+    if (!mContentFocused) {
+      aEvent->PreventDefault();
+      return NS_OK;
+    }
+    return DispatchMouseToPlugin(aEvent);
+  }
+  if (eventType.EqualsLiteral("mousemove") ||
+      eventType.EqualsLiteral("click") ||
+      eventType.EqualsLiteral("dblclick") ||
+      eventType.EqualsLiteral("mouseover") ||
+      eventType.EqualsLiteral("mouseout")) {
+    return DispatchMouseToPlugin(aEvent);
+  }
+  if (eventType.EqualsLiteral("keydown") ||
+      eventType.EqualsLiteral("keyup")) {
+    return DispatchKeyToPlugin(aEvent);
+  }
+  if (eventType.EqualsLiteral("keypress")) {
+    return KeyPress(aEvent);
+  }
+
+  nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
+  if (dragEvent && mInstance) {
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
-    nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
-    if (privateEvent && dragEvent) {
+    if (privateEvent) {
       nsEvent* ievent = privateEvent->GetInternalNSEvent();
       if (ievent && NS_IS_TRUSTED_EVENT(ievent) &&
           (ievent->message == NS_DRAGDROP_ENTER || ievent->message == NS_DRAGDROP_OVER)) {
@@ -2506,38 +2433,28 @@ nsPluginInstanceOwner::Destroy()
     mCXMenuListener = nsnull;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mContent));
-  if (target) {
-
-    nsCOMPtr<nsIDOMEventListener> listener;
-    QueryInterface(NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener));
-
-    // Unregister focus event listener
-    mContent->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
-
-    // Unregister mouse event listener
-    mContent->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
-
-    // now for the mouse motion listener
-    mContent->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
-
-    // Unregister key event listener;
-    target->RemoveEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
-
-    // Unregister drag event listener;
-    target->RemoveEventListener(NS_LITERAL_STRING("drop"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("drag"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("dragleave"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("dragstart"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("dragend"), listener, PR_TRUE);
-  }
+  mContent->RemoveEventListener(NS_LITERAL_STRING("focus"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("mouseup"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dblclick"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("mouseover"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this, PR_FALSE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("keydown"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("drop"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("drag"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dragenter"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dragover"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dragleave"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dragexit"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dragstart"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("draggesture"), this, PR_TRUE);
+  mContent->RemoveEventListener(NS_LITERAL_STRING("dragend"), this, PR_TRUE);
 
   if (mWidget) {
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
@@ -2967,38 +2884,37 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
     mCXMenuListener->Init(aContent);
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mContent));
-  if (target) {
-
-    nsCOMPtr<nsIDOMEventListener> listener;
-    QueryInterface(NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener));
-
-    // Register focus listener
-    mContent->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
-
-    // Register mouse listener
-    mContent->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
-
-    // now do the mouse motion listener
-    mContent->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
-
-    // Register key listener
-    target->AddEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
-
-    // Register drag listener
-    target->AddEventListener(NS_LITERAL_STRING("drop"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("drag"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("dragleave"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("dragstart"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
-    target->AddEventListener(NS_LITERAL_STRING("dragend"), listener, PR_TRUE);
-  }
+  mContent->AddEventListener(NS_LITERAL_STRING("focus"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("mouseup"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("mousedown"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("mousemove"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dblclick"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("mouseover"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("mouseout"), this, PR_FALSE,
+                             PR_FALSE);
+  mContent->AddEventListener(NS_LITERAL_STRING("keypress"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("keydown"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("keyup"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("drop"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dragdrop"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("drag"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dragenter"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dragover"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dragleave"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dragexit"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dragstart"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("draggesture"), this, PR_TRUE);
+  mContent->AddEventListener(NS_LITERAL_STRING("dragend"), this, PR_TRUE);
   
   // Register scroll position listeners
   // We need to register a scroll position listener on every scrollable
@@ -3393,14 +3309,13 @@ nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener,
-                   nsIDOMContextMenuListener,
+NS_IMPL_ISUPPORTS1(nsPluginDOMContextMenuListener,
                    nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsPluginDOMContextMenuListener::ContextMenu(nsIDOMEvent* aContextMenuEvent)
+nsPluginDOMContextMenuListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  aContextMenuEvent->PreventDefault(); // consume event
+  aEvent->PreventDefault(); // consume event
   
   return NS_OK;
 }

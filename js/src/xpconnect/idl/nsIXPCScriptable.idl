@@ -126,64 +126,64 @@ interface nsIXPCScriptable : nsISupports
     void   postCreate(in nsIXPConnectWrappedNative wrapper,
                       in JSContextPtr cx, in JSObjectPtr obj);
 
-    PRBool addProperty(in nsIXPConnectWrappedNative wrapper,
+    boolean addProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in JSValPtr vp);
 
-    PRBool delProperty(in nsIXPConnectWrappedNative wrapper,
-                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
-                       in JSValPtr vp);
-
-    // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
-    // this method does something.
-    PRBool getProperty(in nsIXPConnectWrappedNative wrapper,
+    boolean delProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in JSValPtr vp);
 
     // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
     // this method does something.
-    PRBool setProperty(in nsIXPConnectWrappedNative wrapper,
+    boolean getProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in JSValPtr vp);
 
-    PRBool enumerate(in nsIXPConnectWrappedNative wrapper,
+    // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
+    // this method does something.
+    boolean setProperty(in nsIXPConnectWrappedNative wrapper,
+                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
+                       in JSValPtr vp);
+
+    boolean enumerate(in nsIXPConnectWrappedNative wrapper,
                      in JSContextPtr cx, in JSObjectPtr obj);
 
-    PRBool newEnumerate(in nsIXPConnectWrappedNative wrapper,
+    boolean newEnumerate(in nsIXPConnectWrappedNative wrapper,
                         in JSContextPtr cx, in JSObjectPtr obj,
                         in PRUint32 enum_op, in JSValPtr statep, out jsid idp);
 
-    PRBool newResolve(in nsIXPConnectWrappedNative wrapper,
+    boolean newResolve(in nsIXPConnectWrappedNative wrapper,
                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                       in PRUint32 flags, out JSObjectPtr objp);
 
-    PRBool convert(in nsIXPConnectWrappedNative wrapper,
+    boolean convert(in nsIXPConnectWrappedNative wrapper,
                    in JSContextPtr cx, in JSObjectPtr obj,
                    in PRUint32 type, in JSValPtr vp);
 
     void   finalize(in nsIXPConnectWrappedNative wrapper,
                     in JSContextPtr cx, in JSObjectPtr obj);
 
-    PRBool checkAccess(in nsIXPConnectWrappedNative wrapper,
+    boolean checkAccess(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in PRUint32 mode, in JSValPtr vp);
 
-    PRBool call(in nsIXPConnectWrappedNative wrapper,
+    boolean call(in nsIXPConnectWrappedNative wrapper,
                 in JSContextPtr cx, in JSObjectPtr obj,
                 in PRUint32 argc, in JSValPtr argv, in JSValPtr vp);
 
-    PRBool construct(in nsIXPConnectWrappedNative wrapper,
+    boolean construct(in nsIXPConnectWrappedNative wrapper,
                      in JSContextPtr cx, in JSObjectPtr obj,
                      in PRUint32 argc, in JSValPtr argv, in JSValPtr vp);
 
-    PRBool hasInstance(in nsIXPConnectWrappedNative wrapper,
+    boolean hasInstance(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj,
-                       in jsval val, out PRBool bp);
+                       in jsval val, out boolean bp);
 
     void trace(in nsIXPConnectWrappedNative wrapper,
                in JSTracerPtr trc, in JSObjectPtr obj);
 
-    PRBool equality(in nsIXPConnectWrappedNative wrapper,
+    boolean equality(in nsIXPConnectWrappedNative wrapper,
                     in JSContextPtr cx, in JSObjectPtr obj, in jsval val);
 
     JSObjectPtr outerObject(in nsIXPConnectWrappedNative wrapper,
