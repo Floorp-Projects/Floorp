@@ -18,6 +18,8 @@
   },
   "platform": "win32",
   "os": "win7",
-  "es": "localhost:9200"
+  "es": "localhost:9200",
+  "testdir": "__TESTDIR__",
+  "extensiondir": "__EXTENSIONDIR__"
 }
 
