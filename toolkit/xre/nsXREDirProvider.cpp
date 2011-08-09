@@ -372,9 +372,6 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
         ensureFilePermissions = PR_TRUE;
       }
     }
-    else if (!strcmp(aProperty, NS_APP_HISTORY_50_FILE)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("history.dat"));
-    }
     else if (!strcmp(aProperty, NS_APP_USER_MIMETYPES_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("mimeTypes.rdf"));
       EnsureProfileFileExists(file);

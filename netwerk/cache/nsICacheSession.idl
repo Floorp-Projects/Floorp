@@ -55,7 +55,7 @@ interface nsICacheSession : nsISupports
      * mode and clients, such as HTTP, that can update the valid lifetime of
      * cached content).  This attribute defaults to true.
      */
-    attribute PRBool doomEntriesIfExpired;
+    attribute boolean doomEntriesIfExpired;
 
     /**
      * A cache session can only give out one descriptor with WRITE access
@@ -93,5 +93,5 @@ interface nsICacheSession : nsISupports
      * Return whether any of the cache devices implied by the session storage policy
      * are currently enabled for instantiation if they don't already exist.
      */
-    PRBool isStorageEnabled();
+    boolean isStorageEnabled();
 };

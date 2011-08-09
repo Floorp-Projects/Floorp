@@ -51,5 +51,5 @@ interface nsIRedirectResultListener : nsISupports
    *         Indicated whether the redirect will be proceeding, or not (i.e.
    *         has been canceled, or failed).
    */
-  void onRedirectResult(in PRBool proceeding);
+  void onRedirectResult(in boolean proceeding);
 };

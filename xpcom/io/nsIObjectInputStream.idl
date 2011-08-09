@@ -56,7 +56,7 @@ interface nsIObjectInputStream : nsIBinaryInputStream
      *
      * @see nsIObjectOutputStream
      */
-    nsISupports readObject(in PRBool aIsStrongRef);
+    nsISupports readObject(in boolean aIsStrongRef);
 
     [notxpcom] nsresult readID(out nsID aID);
 

@@ -54,6 +54,7 @@ ifdef MOZ_XUL
 CPPSRCS		+= \
 		nsXULElement.cpp \
 		nsXULPopupListener.cpp \
+		nsXULContextMenuBuilder.cpp \
 		$(NULL)
 endif
 

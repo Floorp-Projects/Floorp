@@ -249,7 +249,7 @@ interface jsdIDebuggerService : nsISupports
     /**
      * Recompile all active scripts in the runtime for debugMode.
      */
-    [noscript] void recompileForDebugMode(in JSContext cx, in JSCompartment comp, in PRBool mode);
+    [noscript] void recompileForDebugMode(in JSContext cx, in JSCompartment comp, in boolean mode);
 
     /**
      * Turn the debugger off. This will invalidate all of your jsdIEphemeral
@@ -1056,7 +1056,7 @@ interface jsdIScript : jsdIEphemeral
     /**
      * Call interrupt hook at least once per source line
      */
-    void enableSingleStepInterrupts(in PRBool mode);
+    void enableSingleStepInterrupts(in boolean mode);
 };
 
 /**

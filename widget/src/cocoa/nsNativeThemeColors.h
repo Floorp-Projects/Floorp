@@ -41,48 +41,51 @@
 #include "nsToolkit.h"
 #import <Cocoa/Cocoa.h>
 
+extern "C" {
+  typedef CFTypeRef CUIRendererRef;
+  void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef options, CFDictionaryRef* result);
+}
+
+@interface NSWindow(CoreUIRendererPrivate)
++ (CUIRendererRef)coreUIRenderer;
+@end
+
 enum ColorName {
-  headerStartGrey,
-  headerEndGrey,
-  headerBorderGrey,
   toolbarTopBorderGrey,
-  statusbarFirstTopBorderGrey,
-  statusbarSecondTopBorderGrey,
-  statusbarGradientStartGrey,
-  statusbarGradientEndGrey
+  toolbarFillGrey,
+  toolbarBottomBorderGrey,
 };
 
 static const int sLeopardThemeColors[][2] = {
   /* { active window, inactive window } */
-  // titlebar and toolbar:
-  { 0xC5, 0xE9 }, // start grey
-  { 0x96, 0xCA }, // end grey
-  { 0x42, 0x89 }, // bottom separator line
+  // toolbar:
   { 0xC0, 0xE2 }, // top separator line
-  // statusbar:
-  { 0x42, 0x86 }, // first top border
-  { 0xD8, 0xEE }, // second top border
-  { 0xBD, 0xE4 }, // gradient start
-  { 0x96, 0xCF }  // gradient end
+  { 0x96, 0xCA }, // fill color
+  { 0x42, 0x89 }, // bottom separator line
 };
 
 static const int sSnowLeopardThemeColors[][2] = {
   /* { active window, inactive window } */
-  // titlebar and toolbar:
-  { 0xD1, 0xEE }, // start grey
-  { 0xA7, 0xD8 }, // end grey
-  { 0x51, 0x99 }, // bottom separator line
+  // toolbar:
   { 0xD0, 0xF1 }, // top separator line
-  // statusbar:
-  { 0x51, 0x99 }, // first top border
-  { 0xE8, 0xF6 }, // second top border
-  { 0xCB, 0xEA }, // gradient start
-  { 0xA7, 0xDE }  // gradient end
+  { 0xA7, 0xD8 }, // fill color
+  { 0x51, 0x99 }, // bottom separator line
+};
+
+static const int sLionThemeColors[][2] = {
+  /* { active window, inactive window } */
+  // toolbar:
+  { 0xD0, 0xF0 }, // top separator line
+  { 0xB2, 0xE1 }, // fill color
+  { 0x59, 0x87 }, // bottom separator line
 };
 
 __attribute__((unused))
 static int NativeGreyColorAsInt(ColorName name, BOOL isMain)
 {
+  if (nsToolkit::OnLionOrLater())
+    return sLionThemeColors[name][isMain ? 0 : 1];
+
   if (nsToolkit::OnSnowLeopardOrLater())
     return sSnowLeopardThemeColors[name][isMain ? 0 : 1];
 
