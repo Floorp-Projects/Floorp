@@ -1622,17 +1622,16 @@ ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown, bool f
 }
 
 void
-TypeSet::WatchObjectReallocation(JSContext *cx, JSObject *obj)
+TypeSet::WatchObjectStateChange(JSContext *cx, TypeObject *obj)
 {
-    JS_ASSERT(obj->isGlobal() && !obj->getType(cx)->unknownProperties());
-    TypeSet *types = obj->getType(cx)->getProperty(cx, JSID_EMPTY, false);
+    JS_ASSERT(!obj->unknownProperties());
+    TypeSet *types = obj->getProperty(cx, JSID_EMPTY, false);
     if (!types)
         return;
 
     /*
-     * Reallocating the slots on a global object triggers an object state
-     * change on the object with the 'force' parameter set, so we just need
-     * a constraint which watches for such changes but no actual object flags.
+     * Use a constraint which triggers recompilation when markStateChange is
+     * called, which will set 'force' to true.
      */
     types->add(cx, ArenaNew<TypeConstraintFreezeObjectFlags>(cx->compartment->pool,
                                                              cx->compartment->types.compiledScript,
@@ -2783,12 +2782,8 @@ TypeObject::markPropertyConfigured(JSContext *cx, jsid id)
 }
 
 void
-TypeObject::markSlotReallocation(JSContext *cx)
+TypeObject::markStateChange(JSContext *cx)
 {
-    /*
-     * Constraints listening for reallocation will trigger recompilation if
-     * newObjectState is invoked with 'force' set to true.
-     */
     AutoEnterTypeInference enter(cx);
     TypeSet *types = maybeGetProperty(cx, JSID_EMPTY);
     if (types) {
@@ -2830,6 +2825,9 @@ TypeObject::markUnknown(JSContext *cx)
 
     JS_ASSERT(cx->compartment->activeInference);
     JS_ASSERT(!unknownProperties());
+
+    if (!(flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED))
+        clearNewScript(cx);
 
     InferSpew(ISpewOps, "UnknownProperties: %s", name());
 
@@ -2964,6 +2962,8 @@ TypeObject::clearNewScript(JSContext *cx)
 
     cx->free_(newScript);
     newScript = NULL;
+
+    markStateChange(cx);
 }
 
 void

@@ -4317,6 +4317,7 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
 
             type()->newScript->finalizeKind = kind;
             type()->newScript->shape = obj->lastProperty();
+            type()->markStateChange(cx);
         }
     }
 
@@ -4408,7 +4409,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     }
 
     if (changed && isGlobal())
-        MarkGlobalReallocation(cx, this);
+        types::MarkObjectStateChange(cx, this);
 
     Probes::resizeObject(cx, this, oldSize, slotsAndStructSize());
 
@@ -4458,7 +4459,7 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     }
 
     if (changed && isGlobal())
-        MarkGlobalReallocation(cx, this);
+        types::MarkObjectStateChange(cx, this);
 
     Probes::resizeObject(cx, this, oldSize, slotsAndStructSize());
 }
