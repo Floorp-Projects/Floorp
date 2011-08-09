@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-ifneq (,$(filter aurora beta,$(MOZ_UPDATE_CHANNEL)))
+ifneq (,$(filter nightly aurora beta,$(MOZ_UPDATE_CHANNEL)))
 EXTENSIONS = \
   feedback@mobile.mozilla.org \
   $(NULL)

@@ -63,6 +63,7 @@
 
 #include "nsSVGUtils.h"
 #include "nsBidiUtils.h"
+#include "nsLayoutUtils.h"
 
 #include "imgIRequest.h"
 #include "imgIContainer.h"
@@ -1834,6 +1835,85 @@ nsStyleBackground::Position::SetInitialValues()
   mYPosition.mHasPercent = PR_TRUE;
 }
 
+bool
+nsStyleBackground::Size::DependsOnFrameSize(const nsStyleImage& aImage) const
+{
+  NS_ABORT_IF_FALSE(aImage.GetType() != eStyleImageType_Null,
+                    "caller should have handled this");
+
+  // If either dimension contains a non-zero percentage, rendering for that
+  // dimension straightforwardly depends on frame size.
+  if ((mWidthType == eLengthPercentage && mWidth.mPercent != 0.0f) ||
+      (mHeightType == eLengthPercentage && mHeight.mPercent != 0.0f)) {
+    return true;
+  }
+
+  // So too for contain and cover.
+  if (mWidthType == eContain || mWidthType == eCover) {
+    return true;
+  }
+
+  // If both dimensions are fixed lengths, there's no dependency.
+  if (mWidthType == eLengthPercentage && mHeightType == eLengthPercentage) {
+    return false;
+  }
+
+  NS_ABORT_IF_FALSE((mWidthType == eLengthPercentage && mHeightType == eAuto) ||
+                    (mWidthType == eAuto && mHeightType == eLengthPercentage) ||
+                    (mWidthType == eAuto && mHeightType == eAuto),
+                    "logic error");
+
+  nsStyleImageType type = aImage.GetType();
+
+  // Gradient rendering depends on frame size when auto is involved because
+  // gradients have no intrinsic ratio or dimensions, and therefore the relevant
+  // dimension is "treat[ed] as 100%".
+  if (type == eStyleImageType_Gradient) {
+    return true;
+  }
+
+  // XXX Element rendering for auto or fixed length doesn't depend on frame size
+  //     according to the spec.  However, we don't implement the spec yet, so
+  //     for now we bail and say element() plus auto affects ultimate size.
+  if (type == eStyleImageType_Element) {
+    return true;
+  }
+
+  if (type == eStyleImageType_Image) {
+    nsCOMPtr<imgIContainer> imgContainer;
+    aImage.GetImageData()->GetImage(getter_AddRefs(imgContainer));
+    if (imgContainer) {
+      nsIntSize imageSize;
+      nsSize imageRatio;
+      bool hasWidth, hasHeight;
+      nsLayoutUtils::ComputeSizeForDrawing(imgContainer, imageSize, imageRatio,
+                                           hasWidth, hasHeight);
+
+      // If the image has a fixed width and height, rendering never depends on
+      // the frame size.
+      if (hasWidth && hasHeight) {
+        return false;
+      }
+
+      // If the image has an intrinsic ratio, rendering will depend on frame
+      // size when background-size is all auto.
+      if (imageRatio != nsSize(0, 0)) {
+        return mWidthType == mHeightType;
+      }
+
+      // Otherwise, rendering depends on frame size when the image dimensions
+      // and background-size don't complement each other.
+      return !(hasWidth && mHeightType == eLengthPercentage) &&
+             !(hasHeight && mWidthType == eLengthPercentage);
+    }
+  } else {
+    NS_NOTREACHED("missed an enum value");
+  }
+
+  // Passed the gauntlet: no dependency.
+  return false;
+}
+
 void
 nsStyleBackground::Size::SetInitialValues()
 {
@@ -1886,27 +1966,7 @@ nsStyleBackground::Layer::RenderingMightDependOnFrameSize() const
     return PR_FALSE;
   }
 
-  // Does our position or size depend on frame size?
-  if (mPosition.DependsOnFrameSize() ||
-      mSize.DependsOnFrameSize(mImage.GetType())) {
-    return PR_TRUE;
-  }
-
-  // Are we an SVG image with a viewBox attribute?
-  if (mImage.GetType() == eStyleImageType_Image) {
-    nsCOMPtr<imgIContainer> imageContainer;
-    mImage.GetImageData()->GetImage(getter_AddRefs(imageContainer));
-    if (imageContainer &&
-        imageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
-      nsIFrame* rootFrame = imageContainer->GetRootLayoutFrame();
-      if (rootFrame &&
-          nsSVGUtils::RootSVGElementHasViewbox(rootFrame->GetContent())) {
-        return PR_TRUE;
-      }
-    }
-  }
-
-  return PR_FALSE;
+  return mPosition.DependsOnFrameSize() || mSize.DependsOnFrameSize(mImage);
 }
 
 PRBool

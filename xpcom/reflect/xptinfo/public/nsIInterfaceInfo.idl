@@ -64,8 +64,8 @@ interface nsIInterfaceInfo : nsISupports
     readonly attribute string   name;
     readonly attribute nsIIDPtr InterfaceIID;
 
-    PRBool isScriptable();
-    PRBool isBuiltinClass();
+    boolean isScriptable();
+    boolean isBuiltinClass();
 
     readonly attribute nsIInterfaceInfo parent;
 
@@ -122,14 +122,14 @@ interface nsIInterfaceInfo : nsISupports
     PRUint8 getInterfaceIsArgNumberForParam(in PRUint16 methodIndex, 
                                             [const] in nsXPTParamInfoPtr param);
 
-    PRBool isIID(in nsIIDPtr IID);
+    boolean isIID(in nsIIDPtr IID);
 
     void   getNameShared([shared,retval] out string name);
     void   getIIDShared([shared,retval] out nsIIDPtrShared iid);
 
-    PRBool isFunction();
+    boolean isFunction();
 
-    PRBool hasAncestor(in nsIIDPtr iid);
+    boolean hasAncestor(in nsIIDPtr iid);
 
     [notxpcom] nsresult getIIDForParamNoAlloc(in PRUint16 methodIndex, 
                                               [const] in nsXPTParamInfoPtr param,

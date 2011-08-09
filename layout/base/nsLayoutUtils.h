@@ -1049,6 +1049,38 @@ public:
    */
 
   /**
+   * Draw a background image.  The image's dimensions are as specified in aDest;
+   * the image itself is not consulted to determine a size.
+   * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
+   *   @param aRenderingContext Where to draw the image, set up with an
+   *                            appropriate scale and transform for drawing in
+   *                            app units.
+   *   @param aImage            The image.
+   *   @param aImageSize        The unscaled size of the image being drawn.
+   *                            (This might be the image's size if no scaling
+   *                            occurs, or it might be the image's size if
+   *                            the image is a vector image being rendered at
+   *                            that size.)
+   *   @param aDest             The position and scaled area where one copy of
+   *                            the image should be drawn.
+   *   @param aFill             The area to be filled with copies of the
+   *                            image.
+   *   @param aAnchor           A point in aFill which we will ensure is
+   *                            pixel-aligned in the output.
+   *   @param aDirty            Pixels outside this area may be skipped.
+   *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
+   */
+  static nsresult DrawBackgroundImage(nsRenderingContext* aRenderingContext,
+                                      imgIContainer*      aImage,
+                                      const nsIntSize&    aImageSize,
+                                      GraphicsFilter      aGraphicsFilter,
+                                      const nsRect&       aDest,
+                                      const nsRect&       aFill,
+                                      const nsPoint&      aAnchor,
+                                      const nsRect&       aDirty,
+                                      PRUint32            aImageFlags);
+
+  /**
    * Draw an image.
    * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
    *   @param aRenderingContext Where to draw the image, set up with an
@@ -1152,7 +1184,9 @@ public:
    * Given an imgIContainer, this method attempts to obtain an intrinsic
    * px-valued height & width for it.  If the imgIContainer has a non-pixel
    * value for either height or width, this method tries to generate a pixel
-   * value for that dimension using the intrinsic ratio (if available).
+   * value for that dimension using the intrinsic ratio (if available).  The
+   * intrinsic ratio will be assigned to aIntrinsicRatio; if there's no
+   * intrinsic ratio then (0, 0) will be assigned.
    *
    * This method will always set aGotWidth and aGotHeight to indicate whether
    * we were able to successfully obtain (or compute) a value for each
@@ -1164,8 +1198,9 @@ public:
    */
   static void ComputeSizeForDrawing(imgIContainer* aImage,
                                     nsIntSize&     aImageSize,
-                                    PRBool&        aGotWidth,
-                                    PRBool&        aGotHeight);
+                                    nsSize&        aIntrinsicRatio,
+                                    bool&          aGotWidth,
+                                    bool&          aGotHeight);
 
   /**
    * Given a source area of an image (in appunits) and a destination area

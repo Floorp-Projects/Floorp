@@ -60,7 +60,7 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
   void completion(in ACString hash,
                   in ACString table,
                   in PRUint32 chunkId,
-                  in PRBool trusted);
+                  in boolean trusted);
 
   /**
    * The completion is complete.  This method is called once per

@@ -1323,8 +1323,8 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     // Append a new CompartmentStats to the vector.
     IterateData *data = static_cast<IterateData *>(vdata);
     CompartmentStats compartmentStats(cx, compartment);
-    data->compartmentStatsVector.infallibleAppend(compartmentStats);
-    CompartmentStats *curr = data->compartmentStatsVector.end() - 1;
+    CompartmentStats *curr =
+        data->compartmentStatsVector.AppendElement(compartmentStats);
     data->currCompartmentStats = curr;
 
     // Get the compartment-level numbers.
@@ -1610,8 +1610,7 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
     {
         JSAutoRequest ar(cx);
 
-        if (!data->compartmentStatsVector.reserve(rt->compartments.length()))
-            return false;
+        data->compartmentStatsVector.SetCapacity(rt->compartments.length());
 
         data->gcHeapChunkCleanUnused =
             PRInt64(JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS)) *
@@ -1635,17 +1634,19 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                                    data->gcHeapChunkCleanUnused;
     data->gcHeapArenaUnused = 0;
 
-    for(CompartmentStats *stats = data->compartmentStatsVector.begin();
-        stats != data->compartmentStatsVector.end();
-        ++stats)
+    for(PRUint32 index = 0;
+        index < data->compartmentStatsVector.Length();
+        index++)
     {
+        CompartmentStats &stats = data->compartmentStatsVector[index];
+
         data->gcHeapChunkDirtyUnused -=
-            stats->gcHeapArenaHeaders + stats->gcHeapArenaPadding +
-            stats->gcHeapArenaUnused +
-            stats->gcHeapObjects + stats->gcHeapStrings +
-            stats->gcHeapShapes + stats->gcHeapXml;
+            stats.gcHeapArenaHeaders + stats.gcHeapArenaPadding +
+            stats.gcHeapArenaUnused +
+            stats.gcHeapObjects + stats.gcHeapStrings +
+            stats.gcHeapShapes + stats.gcHeapXml;
         
-        data->gcHeapArenaUnused += stats->gcHeapArenaUnused;
+        data->gcHeapArenaUnused += stats.gcHeapArenaUnused;
     }
 
     size_t numDirtyChunks = (data->gcHeapChunkTotal -
@@ -1808,11 +1809,12 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
                      nsIMemoryMultiReporterCallback *callback,
                      nsISupports *closure)
 {
-    for(const CompartmentStats *stats = data.compartmentStatsVector.begin();
-        stats != data.compartmentStatsVector.end();
-        ++stats)
+    for(PRUint32 index = 0;
+        index < data.compartmentStatsVector.Length();
+        index++)
     {
-        ReportCompartmentStats(*stats, pathPrefix, callback, closure);
+        ReportCompartmentStats(data.compartmentStatsVector[index], pathPrefix,
+                               callback, closure);
     }
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("stack"),
