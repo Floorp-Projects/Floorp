@@ -1085,14 +1085,29 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
             Native native = obj->getFunctionPrivate()->native();
 
             if (native == js::array_push) {
-                for (size_t ind = 0; ind < callsite->argumentCount; ind++) {
+                for (size_t i = 0; i < callsite->argumentCount; i++) {
                     callsite->thisTypes->addSetProperty(cx, script, pc,
-                                                        callsite->argumentTypes[ind], JSID_VOID);
+                                                        callsite->argumentTypes[i], JSID_VOID);
                 }
             }
 
             if (native == js::array_pop)
                 callsite->thisTypes->addGetProperty(cx, script, pc, callsite->returnTypes, JSID_VOID);
+
+            if (native == js_Array) {
+                TypeObject *res = TypeScript::InitObject(cx, script, pc, JSProto_Array);
+                if (!res)
+                    return;
+
+                callsite->returnTypes->addType(cx, Type::ObjectType(res));
+
+                if (callsite->argumentCount >= 2) {
+                    for (unsigned i = 0; i < callsite->argumentCount; i++) {
+                        PropertyAccess(cx, script, pc, res, true,
+                                       callsite->argumentTypes[i], JSID_VOID);
+                    }
+                }
+            }
 
             return;
         }

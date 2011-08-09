@@ -439,10 +439,96 @@ mjit::Compiler::compileArrayPop(FrameEntry *thisValue, bool isPacked)
 }
 
 CompileStatus
+mjit::Compiler::compileArrayWithLength(uint32 argc)
+{
+    /* Match Array() or Array(n) for constant n. */
+    JS_ASSERT(argc == 0 || argc == 1);
+
+    int32 length = 0;
+    if (argc == 1) {
+        FrameEntry *arg = frame.peek(-1);
+        if (!arg->isConstant() || !arg->getValue().isInt32())
+            return Compile_InlineAbort;
+        length = arg->getValue().toInt32();
+        if (length < 0)
+            return Compile_InlineAbort;
+    }
+
+    types::TypeObject *type = types::TypeScript::InitObject(cx, script, PC, JSProto_Array);
+    if (!type)
+        return Compile_Error;
+
+    JSObject *templateObject = NewDenseUnallocatedArray(cx, length, type->proto);
+    if (!templateObject)
+        return Compile_Error;
+    templateObject->setType(type);
+
+    RegisterID result = frame.allocReg();
+    Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+
+    stubcc.linkExit(emptyFreeList, Uses(0));
+    stubcc.leave();
+
+    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
+
+    frame.popn(argc + 2);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, result);
+
+    stubcc.rejoin(Changes(1));
+    return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::compileArrayWithArgs(uint32 argc)
+{
+    /*
+     * Match Array(x, y, z) with at least two arguments. Don't inline the case
+     * where a non-number argument is passed, so we don't need to care about
+     * the types of the arguments.
+     */
+    JS_ASSERT(argc >= 2);
+
+    if (argc >= gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST))
+        return Compile_InlineAbort;
+
+    types::TypeObject *type = types::TypeScript::InitObject(cx, script, PC, JSProto_Array);
+    if (!type)
+        return Compile_Error;
+
+    JSObject *templateObject = NewDenseUnallocatedArray(cx, argc, type->proto);
+    if (!templateObject)
+        return Compile_Error;
+    templateObject->setType(type);
+
+    JS_ASSERT(templateObject->getDenseArrayCapacity() >= argc);
+
+    RegisterID result = frame.allocReg();
+    Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+    stubcc.linkExit(emptyFreeList, Uses(0));
+
+    for (unsigned i = 0; i < argc; i++) {
+        FrameEntry *arg = frame.peek(-argc + i);
+        frame.storeTo(arg, Address(result, JSObject::getFixedSlotOffset(i)), /* popped = */ true);
+    }
+
+    masm.storePtr(ImmPtr((void *) argc), Address(result, offsetof(JSObject, initializedLength)));
+
+    stubcc.leave();
+
+    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
+
+    frame.popn(argc + 2);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, result);
+
+    stubcc.rejoin(Changes(1));
+    return Compile_Okay;
+}
+
+CompileStatus
 mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
 {
-    JS_ASSERT(!callingNew);
-
     if (!cx->typeInferenceEnabled())
         return Compile_InlineAbort;
 
@@ -477,6 +563,23 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
     JSValueType thisType = thisValue->isTypeKnown()
                            ? thisValue->getKnownType()
                            : JSVAL_TYPE_UNKNOWN;
+
+    /*
+     * Note: when adding new natives which operate on properties, add relevant
+     * constraint generation to the behavior of TypeConstraintCall.
+     */
+
+    /* Handle natives that can be called either with or without 'new'. */
+
+    if (native == js_Array && type == JSVAL_TYPE_OBJECT && globalObj) {
+        if (argc == 0 || argc == 1)
+            return compileArrayWithLength(argc);
+        return compileArrayWithArgs(argc);
+    }
+
+    /* Remaining natives must not be called with 'new'. */
+    if (callingNew)
+        return Compile_InlineAbort;
 
     if (argc == 0) {
         if (native == js::array_pop && thisType == JSVAL_TYPE_OBJECT) {
