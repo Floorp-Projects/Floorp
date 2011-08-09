@@ -300,6 +300,10 @@ LayerManagerD3D10::SetRoot(Layer *aRoot)
 void
 LayerManagerD3D10::BeginTransaction()
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("[----- BeginTransaction"));
+  Log();
+#endif
 }
 
 void
@@ -330,10 +334,20 @@ LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+    MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
+    Log();
+#endif
+
     Render();
     mCurrentCallbackInfo.Callback = nsnull;
     mCurrentCallbackInfo.CallbackData = nsnull;
   }
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  Log();
+  MOZ_LAYERS_LOG(("]----- EndTransaction"));
+#endif
 
   mTarget = nsnull;
 }
