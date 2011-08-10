@@ -288,6 +288,10 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      js::Value *vp, JSBool strict);
 
 extern JSBool
+js_SetElementHelper(JSContext *cx, JSObject *obj, uint32 index, uintN defineHow,
+                    js::Value *vp, JSBool strict);
+
+extern JSBool
 js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 extern JSBool
@@ -1434,9 +1438,15 @@ struct JSObject : js::gc::Cell {
         return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
     }
 
-    inline JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
+    JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict) {
+        if (getOps()->setElement)
+            return nonNativeSetElement(cx, index, vp, strict);
+        return js_SetElementHelper(cx, this, index, 0, vp, strict);
+    }
 
     JSBool nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
+
+    JSBool nonNativeSetElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
 
     JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
         js::AttributesOp op = getOps()->getAttributes;
