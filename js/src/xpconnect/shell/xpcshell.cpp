@@ -1842,9 +1842,7 @@ main(int argc, char **argv, char **envp)
                 XRE_GetFileFromPath(argv[4], getter_AddRefs(appOmni));
                 argc-=2;
                 argv+=2;
-            } else {
-                appOmni = greOmni;
-            }
+            } 
             
             XRE_InitOmnijar(greOmni, appOmni);
             argc-=2;
