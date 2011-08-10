@@ -503,13 +503,8 @@ ifdef MOZ_NATIVE_FFI
 EXTRA_DSO_LDOPTS += $(MOZ_FFI_LIBS)
 else
 ifeq ($(OS_ARCH),OS2)
-libs:: ctypes/libffi/.libs/ffi.$(LIB_SUFFIX)
-
-ctypes/libffi/.libs/ffi.$(LIB_SUFFIX): ctypes/libffi/.libs/$(LIB_PREFIX)ffi.a
-	emxomf $<
-
 SHARED_LIBRARY_LIBS += \
-    ctypes/libffi/.libs/ffi.$(LIB_SUFFIX) \
+    ctypes/libffi/.libs/ffi.a \
     $(NULL)
 else
 SHARED_LIBRARY_LIBS += \
