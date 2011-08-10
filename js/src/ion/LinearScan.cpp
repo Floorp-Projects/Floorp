@@ -457,14 +457,15 @@ LinearScanAllocator::buildLivenessInfo()
         // Phis have simultaneous assignment semantics at block begin, so at
         // the beginning of the block we can be sure that liveIn does not
         // contain any phi outputs.
-        for (unsigned int i = 0; i < block->numPhis();) {
-            if (live->contains(block->getPhi(i)->getDef(0)->virtualRegister())) {
-                live->remove(block->getPhi(i)->getDef(0)->virtualRegister());
-                i++;
+        for (unsigned int i = 0; i < block->numPhis(); i++) {
+            LDefinition *def = block->getPhi(i)->getDef(0);
+            if (live->contains(def->virtualRegister())) {
+                live->remove(def->virtualRegister());
             } else {
-                // This is a dead phi, so we can be shamelessly opportunistic
-                // and remove it here.
-                block->removePhi(i);
+                // This is a dead phi, so add a dummy range over all phis. This
+                // can go away if we have an earlier dead code elimination pass.
+                vregs[def].getInterval(0)->addRange(inputOf(block->firstId()),
+                                                    inputOf(*block->begin()).previous());
             }
         }
 
@@ -478,6 +479,7 @@ LinearScanAllocator::buildLivenessInfo()
             while (true) {
                 // Add an interval for this entire loop block
                 for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
+                    IonSpew(IonSpew_LSRA, " Marking %d live for all of block %d", *i, loopBlock->id());
                     vregs[*i].getInterval(0)->addRange(inputOf(loopBlock->lir()->firstId()),
                                                        outputOf(loopBlock->lir()->lastId()));
                 }
