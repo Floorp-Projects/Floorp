@@ -391,13 +391,13 @@ class JSPCCounters {
  public:
 
     enum {
-        INTERP          = 0,
-        TRACEJIT        = 1,
-        METHODJIT       = 2,
-        METHODJIT_STUBS = 3,
-        METHODJIT_CODE  = 4,
-        METHODJIT_PICS  = 5,
-        COUNT = 6,
+        INTERP = 0,
+        TRACEJIT,
+        METHODJIT,
+        METHODJIT_STUBS,
+        METHODJIT_CODE,
+        METHODJIT_PICS,
+        NUM_COUNTERS
     };
 
     JSPCCounters() : numBytecodes(0), counts(NULL) {
@@ -416,7 +416,7 @@ class JSPCCounters {
     }
 
     double *get(int runmode) {
-        JS_ASSERT(runmode >= 0 && runmode < COUNT);
+        JS_ASSERT(runmode >= 0 && runmode < NUM_COUNTERS);
         return counts ? &counts[numBytecodes * runmode] : NULL;
     }
 
