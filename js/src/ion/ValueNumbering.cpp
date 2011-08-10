@@ -149,7 +149,7 @@ ValueNumberer::computeValueNumbers()
             for (MDefinitionIterator iter(*block); iter; ) {
                 MDefinition *ins = simplify(*iter, false);
 
-                if (ins != *iter || !ins->hasUses()) {
+                if (ins != *iter) {
                     iter = block->removeDefAt(iter);
                     continue;
                 }
@@ -256,7 +256,7 @@ ValueNumberer::eliminateRedundancies()
         for (MDefinitionIterator iter(block); iter; ) {
             MDefinition *ins = simplify(*iter, true);
 
-            if (ins != *iter || !ins->hasUses()) {
+            if (ins != *iter) {
                 iter = block->removeDefAt(iter);
                 continue;
             }
