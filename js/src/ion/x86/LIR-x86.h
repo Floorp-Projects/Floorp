@@ -109,18 +109,13 @@ class LUnboxDoubleSSE41 : public LInstructionHelper<1, 2, 0>
 };
 
 // Constant double.
-class LDouble : public LInstructionHelper<1, 0, 0>
+class LDouble : public LInstructionHelper<1, 1, 0>
 {
-    double d_;
-
   public:
     LIR_HEADER(Double);
 
-    LDouble(double d) : d_(d)
-    { }
-
-    double getDouble() const {
-        return d_;
+    LDouble(const LConstantIndex &cindex) {
+        setOperand(0, cindex);
     }
 };
 

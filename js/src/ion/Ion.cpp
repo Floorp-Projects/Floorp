@@ -263,13 +263,13 @@ IonCode::copyFrom(MacroAssembler &masm)
     insnSize_ = masm.instructionsSize();
     masm.executableCopy(code_);
 
-    masm.processCodeLabels(code_);
-
-    dataSize_ = masm.dataSize();
-    masm.processDeferredData(code_, code_ + dataOffset());
-
     relocTableSize_ = masm.relocationTableSize();
     masm.copyRelocationTable(code_ + relocTableOffset());
+
+    dataSize_ = masm.dataSize();
+    masm.processDeferredData(this, code_ + dataOffset());
+
+    masm.processCodeLabels(this);
 }
 
 void
@@ -300,7 +300,7 @@ IonScript::IonScript()
 }
 
 IonScript *
-IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries)
+IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_t constants)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
@@ -313,7 +313,8 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries)
     // *somewhere* and if their total overflowed there would be no memory left
     // at all.
     size_t bytes = snapshotsSize +
-                   bailoutEntries * sizeof(uint32);
+                   bailoutEntries * sizeof(uint32) +
+                   constants * sizeof(Value);
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -326,6 +327,9 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries)
 
     script->bailoutTable_ = script->snapshots_ + snapshotsSize;
     script->bailoutEntries_ = bailoutEntries;
+
+    script->constantTable_ = script->bailoutTable_ + bailoutEntries * sizeof(uint32);
+    script->constantEntries_ = constants;
 
     return script;
 }
@@ -351,6 +355,12 @@ void
 IonScript::copyBailoutTable(const SnapshotOffset *table)
 {
     memcpy(bailoutTable(), table, bailoutEntries_ * sizeof(uint32));
+}
+
+void
+IonScript::copyConstants(const Value *vp)
+{
+    memcpy(constants(), vp, constantEntries_ * sizeof(Value));
 }
 
 void

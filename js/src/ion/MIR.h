@@ -478,6 +478,7 @@ class MStart : public MAryInstruction<0>
 class MConstant : public MAryInstruction<0>
 {
     js::Value value_;
+    uint32 constantPoolIndex_;
 
     MConstant(const Value &v);
 
@@ -490,6 +491,16 @@ class MConstant : public MAryInstruction<0>
     }
     const js::Value *vp() const {
         return &value_;
+    }
+    void setConstantPoolIndex(uint32 index) {
+        constantPoolIndex_ = index;
+    }
+    uint32 constantPoolIndex() const {
+        JS_ASSERT(hasConstantPoolIndex());
+        return constantPoolIndex_;
+    }
+    bool hasConstantPoolIndex() const {
+        return !!constantPoolIndex_;
     }
 
     void printOpcode(FILE *fp);

@@ -54,8 +54,13 @@ LIRGeneratorX86::visitConstant(MConstant *ins)
     if (!ins->isEmittedAtUses() && ins->type() != MIRType_Double)
         return emitAtUses(ins);
 
-    if (ins->type() == MIRType_Double)
-        return define(new LDouble(ins->value().toDouble()), ins);
+    if (ins->type() == MIRType_Double) {
+        uint32 index;
+        if (!lirGraph_.addConstantToPool(ins, &index))
+            return false;
+        LDouble *lir = new LDouble(LConstantIndex::FromIndex(index));
+        return define(lir, ins);
+    }
 
     return LIRGeneratorShared::visitConstant(ins);
 }
@@ -166,10 +171,10 @@ LIRGeneratorX86::assignSnapshot(LInstruction *ins)
         // constants, including known types, we record a dummy placeholder,
         // since we can recover the same information, much cleaner, from MIR.
         if (ins->isConstant()) {
-            *type = LConstantIndex(0);
-            *payload = LConstantIndex(0);
+            *type = LConstantIndex::Bogus();
+            *payload = LConstantIndex::Bogus();
         } else if (ins->type() != MIRType_Value) {
-            *type = LConstantIndex(0);
+            *type = LConstantIndex::Bogus();
             *payload = use(ins, LUse::KEEPALIVE);
         } else {
             *type = useType(ins, LUse::KEEPALIVE);

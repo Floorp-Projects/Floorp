@@ -112,8 +112,8 @@ class AssemblerX86Shared
     }
 
     void executableCopy(void *buffer);
-    void processDeferredData(uint8 *code, uint8 *data);
-    void processCodeLabels(uint8 *code);
+    void processDeferredData(IonCode *code, uint8 *data);
+    void processCodeLabels(IonCode *code);
     void copyRelocationTable(uint8 *buffer);
 
     bool addDeferredData(DeferredData *data, size_t bytes) {
@@ -255,17 +255,19 @@ class AssemblerX86Shared
         }
         label->bind(masm.label().offset());
     }
-    void bind(AbsoluteLabel *label, uint8 *code, uint8 *address) {
+
+    static void Bind(IonCode *code, AbsoluteLabel *label, const void *address) {
+        uint8 *raw = code->raw();
         if (label->used()) {
             intptr_t src = label->offset();
             do {
-                intptr_t next = reinterpret_cast<intptr_t>(JSC::X86Assembler::getPointer(code + src));
-                JSC::X86Assembler::setPointer(code + src, address);
+                intptr_t next = reinterpret_cast<intptr_t>(JSC::X86Assembler::getPointer(raw + src));
+                JSC::X86Assembler::setPointer(raw + src, address);
                 src = next;
             } while (src != AbsoluteLabel::INVALID_OFFSET);
         }
-        JS_ASSERT((address - code) >= 0 && (address - code) < INT_MAX);
-        label->bind(address - code);
+        JS_ASSERT(((uint8 *)address - raw) >= 0 && ((uint8 *)address - raw) < INT_MAX);
+        label->bind();
     }
 
     void ret() {

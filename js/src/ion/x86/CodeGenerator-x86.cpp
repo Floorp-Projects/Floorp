@@ -174,37 +174,35 @@ CodeGeneratorX86::visitReturn(LReturn *ret)
     return true;
 }
 
-class DeferredDouble : public DeferredData
+void
+CodeGeneratorX86::linkAbsoluteLabels()
 {
-    double d_;
+    IonCode *method = gen->script->ion->method();
 
-  public:
-    DeferredDouble(double d) : d_(d)
-    { }
-    
-    double d() const {
-        return d_;
+    for (size_t i = 0; i < deferredDoubles_.length(); i++) {
+        DeferredDouble *d = deferredDoubles_[i];
+        const Value &v = gen->script->ion->getConstant(d->index());
+        MacroAssembler::Bind(method, d->label(), &v);
     }
-    void copy(uint8 *code, uint8 *buffer) const {
-        *(double *)buffer = d_;
-    }
-};
+}
 
 bool
 CodeGeneratorX86::visitDouble(LDouble *ins)
 {
     const LDefinition *out = ins->getDef(0);
+    const LConstantIndex *cindex = ins->getOperand(0)->toConstantIndex();
+    const Value &v = graph.getConstant(cindex->index());
 
     jsdpun dpun;
-    dpun.d = ins->getDouble();
+    dpun.d = v.toDouble();
 
     if (dpun.u64 == 0) {
         masm.xorpd(ToFloatRegister(out), ToFloatRegister(out));
         return true;
     }
 
-    DeferredDouble *d = new DeferredDouble(ins->getDouble());
-    if (!masm.addDeferredData(d, sizeof(double)))
+    DeferredDouble *d = new DeferredDouble(cindex->index());
+    if (!deferredDoubles_.append(d))
         return false;
 
     masm.movsd(d->label(), ToFloatRegister(out));

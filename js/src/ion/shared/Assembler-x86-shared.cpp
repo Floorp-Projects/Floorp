@@ -69,20 +69,21 @@ AssemblerX86Shared::executableCopy(void *buffer)
 }
 
 void
-AssemblerX86Shared::processDeferredData(uint8 *code, uint8 *data)
+AssemblerX86Shared::processDeferredData(IonCode *code, uint8 *data)
 {
     for (size_t i = 0; i < data_.length(); i++) {
         DeferredData *deferred = data_[i];
-        bind(deferred->label(), code, data + deferred->offset());
+        Bind(code, deferred->label(), data + deferred->offset());
         deferred->copy(code, data + deferred->offset());
     }
 }
 
 void
-AssemblerX86Shared::processCodeLabels(uint8 *code)
+AssemblerX86Shared::processCodeLabels(IonCode *code)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
         CodeLabel *label = codeLabels_[i];
-        bind(label->dest(), code, code + label->src()->offset());
+        Bind(code, label->dest(), code->raw() + label->src()->offset());
     }
 }
+

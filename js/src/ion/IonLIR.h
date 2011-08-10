@@ -349,10 +349,19 @@ class LFloatReg : public LAllocation
 // Arbitrary constant index.
 class LConstantIndex : public LAllocation
 {
-  public:
     explicit LConstantIndex(uint32 index)
       : LAllocation(CONSTANT_INDEX, index)
     { }
+
+  public:
+    // Used as a placeholder for inputs that can be ignored.
+    static LConstantIndex Bogus() {
+        return LConstantIndex(0);
+    }
+
+    static LConstantIndex FromIndex(uint32 index) {
+        return LConstantIndex(index);
+    }
 
     uint32 index() const {
         return data();
@@ -852,7 +861,8 @@ public:
 
 class LIRGraph
 {
-    Vector<LBlock *, 16, IonAllocPolicy> blocks_;
+    Vector<LBlock *, 16, SystemAllocPolicy> blocks_;
+    js::Vector<Value, 0, SystemAllocPolicy> constantPool_;
     uint32 numVirtualRegisters_;
 
     // Number of stack slots needed for local spills.
@@ -889,6 +899,16 @@ class LIRGraph
     }
     uint32 localSlotCount() const {
         return localSlotCount_;
+    }
+    bool addConstantToPool(MConstant *ins, uint32 *index);
+    size_t numConstants() const {
+        return constantPool_.length();
+    }
+    Value *constantPool() {
+        return &constantPool_[0];
+    }
+    const Value &getConstant(size_t index) const {
+        return constantPool_[index];
     }
 };
 

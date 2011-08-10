@@ -125,6 +125,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     bool addOutOfLineCode(OutOfLineCode *code);
     bool generateOutOfLineCode();
 
+    void linkAbsoluteLabels() {
+    }
+
   public:
     CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph);
 

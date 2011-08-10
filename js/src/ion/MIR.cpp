@@ -226,7 +226,8 @@ MConstant::New(const Value &v)
 }
 
 MConstant::MConstant(const js::Value &vp)
-  : value_(vp)
+  : value_(vp),
+    constantPoolIndex_(0)
 {
     setResultType(MIRTypeFromValue(vp));
     setIdempotent();
