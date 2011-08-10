@@ -1035,7 +1035,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         rval->setBoolean(false);
-        return JS_TRUE;
+        return true;
     }
 
     if (js_IdIsIndex(id, &i) && i < obj->getDenseArrayInitializedLength()) {
@@ -1047,17 +1047,26 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
         return false;
 
     rval->setBoolean(true);
-    return JS_TRUE;
+    return true;
 }
 
 /* non-static for direct deletion of array elements within the engine */
 JSBool
 array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    if (!obj->isDenseArray())
+        return js_DeleteElement(cx, obj, index, rval, strict);
+
+    if (index < obj->getDenseArrayInitializedLength()) {
+        obj->markDenseArrayNotPacked(cx);
+        obj->setDenseArrayElement(index, MagicValue(JS_ARRAY_HOLE));
+    }
+
+    if (!js_SuppressDeletedElement(cx, obj, index))
         return false;
-    return array_deleteProperty(cx, obj, id, rval, strict);
+
+    rval->setBoolean(true);
+    return true;
 }
 
 } // namespace js
