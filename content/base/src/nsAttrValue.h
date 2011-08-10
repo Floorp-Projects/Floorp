@@ -310,6 +310,8 @@ public:
    */
   PRBool ParseIntMarginValue(const nsAString& aString);
 
+  PRInt64 SizeOf() const;
+
 private:
   // These have to be the same as in ValueType
   enum ValueBaseType {
