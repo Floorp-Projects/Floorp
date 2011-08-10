@@ -112,14 +112,26 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
           {
             LAllocation *payload = snapshot->payloadOfSlot(i);
             JSValueType type = ValueTypeFromMIRType(mir->type());
-            if (payload->isMemory())
+            if (payload->isMemory()) {
                 snapshots_.addSlot(type, ToStackOffset(payload));
-            else if (payload->isGeneralReg())
+            } else if (payload->isGeneralReg()) {
                 snapshots_.addSlot(type, ToRegister(payload));
-            else if (payload->isFloatReg())
+            } else if (payload->isFloatReg()) {
                 snapshots_.addSlot(ToFloatRegister(payload));
-            else
-                JS_NOT_REACHED("need a constant table");
+            } else {
+                MConstant *constant = mir->toConstant();
+                const Value &v = constant->value();
+
+                // Don't bother with the constant pool for smallish integers.
+                if (v.isInt32() && v.toInt32() >= -32 && v.toInt32() <= 32) {
+                    snapshots_.addInt32Slot(v.toInt32());
+                } else {
+                    uint32 index;
+                    if (!graph.addConstantToPool(constant, &index))
+                        return false;
+                    snapshots_.addConstantPoolSlot(index);
+                }
+            }
             break;
           }
           default:

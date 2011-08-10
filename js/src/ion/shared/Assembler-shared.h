@@ -185,6 +185,12 @@ struct AbsoluteLabel : public LabelBase
     void setPrev(int32 offset) {
         use(offset);
     }
+    void bind() {
+        bound_ = true;
+
+        // These labels cannot be used after being bound.
+        offset_ = -1;
+    }
 };
 
 // A code label contains an absolute reference to a point in the code
@@ -236,7 +242,7 @@ class DeferredData : public TempObject
     }
 
     // Must copy pending data into the buffer.
-    virtual void copy(uint8 *code, uint8 *buffer) const = 0;
+    virtual void copy(IonCode *code, uint8 *buffer) const = 0;
 };
 
 } // namespace ion

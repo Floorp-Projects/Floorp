@@ -51,6 +51,7 @@ using namespace js::ion;
 
 class IonFrameIterator
 {
+    IonScript *ionScript_;
     BailoutEnvironment *env_;
     SnapshotReader reader_;
 
@@ -78,8 +79,9 @@ class IonFrameIterator
     }
 
   public:
-    IonFrameIterator(BailoutEnvironment *env, const uint8 *start, const uint8 *end)
-      : env_(env),
+    IonFrameIterator(IonScript *ionScript, BailoutEnvironment *env, const uint8 *start, const uint8 *end)
+      : ionScript_(ionScript),
+        env_(env),
         reader_(start, end)
     {
     }
@@ -118,6 +120,12 @@ class IonFrameIterator
 
           case SnapshotReader::JS_NULL:
             return NullValue();
+
+          case SnapshotReader::JS_INT32:
+            return Int32Value(slot.int32Value());
+
+          case SnapshotReader::CONSTANT:
+            return ionScript_->getConstant(slot.constantIndex());
 
           default:
             JS_NOT_REACHED("huh?");
@@ -199,8 +207,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, BailoutEnvironment *env)
     JS_ASSERT(snapshotOffset < ionScript->snapshotsSize());
     const uint8 *start = ionScript->snapshots() + snapshotOffset;
     const uint8 *end = ionScript->snapshots() + ionScript->snapshotsSize();
-    IonFrameIterator iter(env, start, end);
-
+    IonFrameIterator iter(ionScript, env, start, end);
 
     // It is critical to temporarily repoint the frame regs here, otherwise
     // pushing a new frame could clobber existing frames, since the stack code

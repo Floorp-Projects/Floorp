@@ -79,7 +79,8 @@ class SnapshotReader
         TYPED_STACK,        // Type is constant, payload is on the stack.
         UNTYPED,            // Type is not known.
         JS_UNDEFINED,       // UndefinedValue()
-        JS_NULL             // NullValue()
+        JS_NULL,            // NullValue()
+        JS_INT32            // Int32Value(n)
     };
 
     class Location
@@ -137,7 +138,7 @@ class SnapshotReader
                 Location value;
             } unknown_type_;
 #endif
-            uint32 constantIndex_;
+            int32 value_;
         };
 
         Slot(SlotMode mode, JSValueType type, const Location &loc)
@@ -157,8 +158,8 @@ class SnapshotReader
         Slot(SlotMode mode, uint32 index)
           : mode_(mode)
         {
-            JS_ASSERT(mode == CONSTANT);
-            constantIndex_ = index;
+            JS_ASSERT(mode == CONSTANT || mode == JS_INT32);
+            value_ = index;
         }
 
       public:
@@ -167,7 +168,11 @@ class SnapshotReader
         }
         uint32 constantIndex() const {
             JS_ASSERT(mode() == CONSTANT);
-            return constantIndex_;
+            return value_;
+        }
+        int32 int32Value() const {
+            JS_ASSERT(mode() == JS_INT32);
+            return value_;
         }
         JSValueType knownType() const {
             JS_ASSERT(mode() == TYPED_REG || mode() == TYPED_STACK);
@@ -240,6 +245,8 @@ class SnapshotWriter
     void addSlot(JSValueType type, int32 stackOffset);
     void addUndefinedSlot();
     void addNullSlot();
+    void addInt32Slot(int32 value);
+    void addConstantPoolSlot(uint32 index);
 #if defined(JS_NUNBOX32)
     void addSlot(const Register &type, const Register &payload);
     void addSlot(const Register &type, int32 payloadStackOffset);

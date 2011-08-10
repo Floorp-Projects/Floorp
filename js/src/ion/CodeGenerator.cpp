@@ -97,7 +97,8 @@ CodeGenerator::generate()
 
     JS_ASSERT(!gen->script->ion);
 
-    gen->script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length());
+    gen->script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length(),
+                                      graph.numConstants());
     if (!gen->script->ion)
         return false;
 
@@ -107,6 +108,11 @@ CodeGenerator::generate()
         gen->script->ion->copySnapshots(&snapshots_);
     if (bailouts_.length())
         gen->script->ion->copyBailoutTable(&bailouts_[0]);
+    if (graph.numConstants())
+        gen->script->ion->copyConstants(graph.constantPool());
+
+    linkAbsoluteLabels();
+
     return true;
 }
 

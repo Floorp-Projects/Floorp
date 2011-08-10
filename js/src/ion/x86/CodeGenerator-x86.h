@@ -50,9 +50,32 @@ namespace ion {
 
 class CodeGeneratorX86 : public CodeGeneratorX86Shared
 {
+    class DeferredDouble : public TempObject
+    {
+        AbsoluteLabel label_;
+        uint32 index_;
+
+      public:
+        DeferredDouble(uint32 index) : index_(index)
+        { }
+
+        AbsoluteLabel *label() {
+            return &label_;
+        }
+        uint32 index() const {
+            return index_;
+        }
+    };
+
+  private:
+    js::Vector<DeferredDouble *, 0, SystemAllocPolicy> deferredDoubles_;
+
     CodeGeneratorX86 *thisFromCtor() {
         return this;
     }
+
+  protected:
+    void linkAbsoluteLabels();
 
   public:
     CodeGeneratorX86(MIRGenerator *gen, LIRGraph &graph);
