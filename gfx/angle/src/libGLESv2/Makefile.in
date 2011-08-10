@@ -60,7 +60,12 @@ ENABLE_CXX_EXCEPTIONS=1
 OS_COMPILE_CFLAGS = $(OS_CPPFLAGS)
 OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS)
 
-LOCAL_INCLUDES = -I$(srcdir)/../../include -I$(srcdir)/.. -I"$(DXSDK_DIR)/include"
+LOCAL_INCLUDES = \
+ -I$(srcdir)/../../include \
+ -I$(srcdir)/.. \
+ -I"$(DXSDK_DIR)/include" \
+ -I"$(MOZ_DIRECTX_SDK_PATH)/include" \
+
 
 VPATH += $(srcdir)/..
 VPATH += $(srcdir)/../compiler
