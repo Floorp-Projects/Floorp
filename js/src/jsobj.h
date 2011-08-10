@@ -247,6 +247,9 @@ extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp);
 
+extern JS_FRIEND_API(JSBool)
+js_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp, JSProperty **propp);
+
 extern JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
                   js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs);
