@@ -935,6 +935,29 @@ class MTruncateToInt32 : public MUnaryInstruction
     }
 };
 
+class MBitNot
+  : public MUnaryInstruction,
+    public BitwisePolicy
+{
+  protected:
+    MBitNot(MDefinition *input)
+      : MUnaryInstruction(input)
+    {
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BitNot);
+    static MBitNot *New(MDefinition *input);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+    void infer(const TypeOracle::Unary &u);
+};
+
 class MBinaryBitwiseInstruction
   : public MBinaryInstruction,
     public BitwisePolicy

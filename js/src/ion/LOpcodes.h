@@ -51,6 +51,7 @@
     _(Parameter)                    \
     _(TableSwitch)                  \
     _(Goto)                         \
+    _(BitNot)                       \
     _(BitOp)                        \
     _(Return)                       \
     _(Phi)                          \

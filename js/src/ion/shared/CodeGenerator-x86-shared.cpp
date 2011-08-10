@@ -211,6 +211,16 @@ CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitBitNot(LBitNot *ins)
+{
+    const LAllocation *input = ins->getOperand(0);
+    JS_ASSERT(!input->isConstant());
+
+    masm.notl(ToOperand(input));
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitBitOp(LBitOp *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);
