@@ -365,6 +365,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_IFEQ:
         return jsop_ifeq(JSOP_IFEQ);
 
+      case JSOP_BITNOT:
+        return jsop_bitnot(op);
+
       case JSOP_BITAND:
       case JSOP_BITOR:
       case JSOP_BITXOR:
@@ -1462,6 +1465,18 @@ IonBuilder::pushConstant(const Value &v)
     return true;
 }
 
+bool
+IonBuilder::jsop_bitnot(JSOp op)
+{
+    MDefinition *input = current->pop();
+    MBitNot *ins = MBitNot::New(input);
+
+    current->add(ins);
+    ins->infer(oracle->unaryOp(script, pc));
+
+    current->push(ins);
+    return true;
+}
 bool
 IonBuilder::jsop_bitop(JSOp op)
 {

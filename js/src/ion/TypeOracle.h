@@ -67,6 +67,10 @@ enum MIRType
 class TypeOracle
 {
   public:
+    struct Unary {
+        MIRType ival;
+        MIRType rval;
+    };
     struct Binary {
         MIRType lhs;
         MIRType rhs;
@@ -74,12 +78,19 @@ class TypeOracle
     };
 
   public:
+    virtual Unary unaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
 };
 
 class DummyOracle : public TypeOracle
 {
   public:
+    Unary unaryOp(JSScript *script, jsbytecode *pc) {
+        Unary u;
+        u.ival = MIRType_Int32;
+        u.rval = MIRType_Int32;
+        return u;
+    }
     Binary binaryOp(JSScript *script, jsbytecode *pc) {
         Binary b;
         b.lhs = MIRType_Int32;

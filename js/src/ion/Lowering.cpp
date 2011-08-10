@@ -177,6 +177,16 @@ LIRGenerator::lowerBitOp(JSOp op, MInstruction *ins)
 }
 
 bool
+LIRGenerator::visitBitNot(MBitNot *ins)
+{
+    MDefinition *input = ins->getOperand(0);
+
+    JS_ASSERT(input->type() == MIRType_Int32);
+
+    return lowerForALU(new LBitNot(), ins, input);
+}
+
+bool
 LIRGenerator::visitBitAnd(MBitAnd *ins)
 {
     return lowerBitOp(JSOP_BITAND, ins);

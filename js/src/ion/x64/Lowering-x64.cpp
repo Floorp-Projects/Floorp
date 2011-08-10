@@ -152,6 +152,13 @@ LIRGeneratorX64::assignSnapshot(LInstruction *ins)
 }
 
 bool
+LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
+{
+    ins->setOperand(0, useRegister(input));
+    return defineReuseInput(ins, mir);
+}
+
+bool
 LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));

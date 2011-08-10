@@ -404,6 +404,17 @@ MReturn::New(MDefinition *ins)
 }
 
 void
+MBitNot::infer(const TypeOracle::Unary &u)
+{
+    if (u.ival == MIRType_Object) {
+        specialization_ = MIRType_None;
+    } else {
+        specialization_ = MIRType_Int32;
+        setIdempotent();
+    }
+}
+
+void
 MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
 {
     if (b.lhs == MIRType_Object || b.rhs == MIRType_Object)
@@ -457,6 +468,31 @@ ToDouble(MDefinition *def)
 {
     JS_ASSERT(def->isConstant());
     return def->toConstant()->value().toDouble();
+}
+
+MBitNot *
+MBitNot::New(MDefinition *input)
+{
+    return new MBitNot(input);
+}
+
+MDefinition *
+MBitNot::foldsTo(bool useValueNumbers)
+{
+    if (specialization_ != MIRType_Int32)
+        return this;
+
+    MDefinition *input = getOperand(0);
+
+    if (input->isConstant()) {
+        js::Value v = Int32Value(~ToInt32(input));
+        return MConstant::New(v);
+    }
+
+    if (input->isBitNot())
+        return input->getOperand(0); // ~~x => x
+
+    return this;
 }
 
 MDefinition *

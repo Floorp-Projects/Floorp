@@ -61,6 +61,7 @@ class LIRGeneratorX64 : public LIRGeneratorShared
 
     bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
 
+    bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
     bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);
     bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
