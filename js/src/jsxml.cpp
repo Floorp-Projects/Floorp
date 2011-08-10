@@ -4737,10 +4737,28 @@ static JSBool
 xml_lookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
                   JSProperty **propp)
 {
+    JSXML *xml = reinterpret_cast<JSXML *>(obj->getPrivate());
+    if (!HasIndexedProperty(xml, index)) {
+        *objp = NULL;
+        *propp = NULL;
+        return true;
+    }
+
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return xml_lookupProperty(cx, obj, id, objp, propp);
+
+    const Shape *shape =
+        js_AddNativeProperty(cx, obj, id,
+                             Valueify(GetProperty), Valueify(PutProperty),
+                             SHAPE_INVALID_SLOT, JSPROP_ENUMERATE,
+                             0, 0);
+    if (!shape)
+        return false;
+
+    *objp = obj;
+    *propp = (JSProperty *) shape;
+    return true;
 }
 
 static JSBool

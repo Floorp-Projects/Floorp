@@ -1096,10 +1096,8 @@ JSObject::setSharedNonNativeMap()
 inline JSBool
 JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp)
 {
-    jsid id;
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return lookupProperty(cx, id, objp, propp);
+    js::LookupElementOp op = getOps()->lookupElement;
+    return (op ? op : js_LookupElement)(cx, this, index, objp, propp);
 }
 
 inline JSBool

@@ -237,12 +237,14 @@ ArrayBuffer::obj_trace(JSTracer *trc, JSObject *obj)
         MarkObject(trc, *delegate, "arraybuffer.delegate");
 }
 
+static JSProperty * const PROPERTY_FOUND = reinterpret_cast<JSProperty *>(1);
+
 JSBool
 ArrayBuffer::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                                 JSObject **objp, JSProperty **propp)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
-        *propp = (JSProperty *) 1;
+        *propp = PROPERTY_FOUND;
         *objp = getArrayBuffer(obj);
         return true;
     }
@@ -281,10 +283,31 @@ JSBool
 ArrayBuffer::obj_lookupElement(JSContext *cx, JSObject *obj, uint32 index,
                                JSObject **objp, JSProperty **propp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
         return false;
-    return obj_lookupProperty(cx, obj, id, objp, propp);
+
+    /*
+     * If false, there was an error, so propagate it.
+     * Otherwise, if propp is non-null, the property
+     * was found. Otherwise it was not
+     * found so look in the prototype chain.
+     */
+    if (!delegate->lookupElement(cx, index, objp, propp))
+        return false;
+
+    if (*propp != NULL) {
+        if (*objp == delegate)
+            *objp = obj;
+        return true;
+    }
+
+    if (JSObject *proto = obj->getProto())
+        return proto->lookupElement(cx, index, objp, propp);
+
+    *objp = NULL;
+    *propp = NULL;
+    return true;
 }
 
 JSBool
@@ -589,7 +612,7 @@ TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     JS_ASSERT(tarray);
 
     if (isArrayIndex(cx, tarray, id)) {
-        *propp = (JSProperty *) 1;  /* non-null to indicate found */
+        *propp = PROPERTY_FOUND;
         *objp = obj;
         return true;
     }
@@ -608,10 +631,21 @@ JSBool
 TypedArray::obj_lookupElement(JSContext *cx, JSObject *obj, uint32 index,
                               JSObject **objp, JSProperty **propp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return obj_lookupProperty(cx, obj, id, objp, propp);
+    JSObject *tarray = getTypedArray(obj);
+    JS_ASSERT(tarray);
+
+    if (index < getLength(tarray)) {
+        *propp = PROPERTY_FOUND;
+        *objp = obj;
+        return true;
+    }
+
+    if (JSObject *proto = obj->getProto())
+        return proto->lookupElement(cx, index, objp, propp);
+
+    *objp = NULL;
+    *propp = NULL;
+    return true;
 }
 
 JSBool
