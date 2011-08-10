@@ -424,18 +424,16 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
     if (!js_GetLengthProperty(cx, obj, &length))
         return false;
 
-    AutoIdRooter idr(cx);
-    AutoValueRooter tvr(cx);
     for (jsuint n = 0; n < length; ++n) {
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
-        if (!IndexToId(cx, n, idr.addr()))
+        Value v;
+        if (!obj->getElement(cx, n, &v))
             return false;
-        if (!obj->getProperty(cx, idr.id(), tvr.addr()))
+        jsid id;
+        if (!ValueToId(cx, v, &id))
             return false;
-        if (!ValueToId(cx, tvr.value(), idr.addr()))
-            return false;
-        if (!props.append(js_CheckForStringIndex(idr.id())))
+        if (!props.append(js_CheckForStringIndex(id)))
             return false;
     }
 
