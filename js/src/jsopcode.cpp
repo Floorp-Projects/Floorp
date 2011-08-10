@@ -446,7 +446,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     Sprint(sp, "%05u:", loc);
     if (counts) {
         ptrdiff_t start = Sprint(sp, "%.0f", counts.get(0, loc));
-        for (size_t i = 1; i < JSPCCounters::COUNT; ++i)
+        for (size_t i = 1; i < JSPCCounters::NUM_COUNTERS; ++i)
             Sprint(sp, "/%.0f", counts.get(i, loc));
         int l = Sprint(sp, "") - start;
         if (l < COUNTS_LEN)

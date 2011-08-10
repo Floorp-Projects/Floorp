@@ -773,7 +773,7 @@ bool
 JSPCCounters::init(JSContext *cx, size_t numBytecodes)
 {
     this->numBytecodes = numBytecodes;
-    size_t nbytes = sizeof(*counts) * numBytecodes * COUNT;
+    size_t nbytes = sizeof(*counts) * numBytecodes * NUM_COUNTERS;
     counts = (double*) cx->calloc_(nbytes);
     if (!counts)
         return false;
