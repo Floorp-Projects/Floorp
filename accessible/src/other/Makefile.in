@@ -66,6 +66,7 @@ EXPORTS = \
   nsHyperTextAccessibleWrap.h \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
+  nsAccessibleRelationWrap.h \
   nsApplicationAccessibleWrap.h \
   $(NULL)
 

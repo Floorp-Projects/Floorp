@@ -61,6 +61,7 @@ CPPSRCS = \
   nsHyperTextAccessibleWrap.cpp \
   nsHTMLImageAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
+  nsAccessibleRelationWrap.cpp \
   nsApplicationAccessibleWrap.cpp \
   nsWinUtils.cpp \
   CAccessibleAction.cpp \
@@ -70,7 +71,6 @@ CPPSRCS = \
   CAccessibleEditableText.cpp \
   CAccessibleHyperlink.cpp \
   CAccessibleHypertext.cpp \
-  ia2AccessibleRelation.cpp \
   CAccessibleTable.cpp \
   CAccessibleTableCell.cpp \
   CAccessibleValue.cpp \
@@ -90,6 +90,7 @@ EXPORTS = \
   nsHyperTextAccessibleWrap.h \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
+  nsAccessibleRelationWrap.h \
   nsApplicationAccessibleWrap.h \
   CAccessibleAction.h \
   CAccessibleImage.h \

@@ -38,13 +38,12 @@
 
 #include "nsHTMLFormControlAccessible.h"
 
-#include "Relation.h"
 #include "States.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccUtils.h"
+#include "nsRelUtils.h"
 #include "nsTextEquivUtils.h"
 
-#include "nsIAccessibleRelation.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLElement.h"
@@ -616,16 +615,23 @@ nsHTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-Relation
-nsHTMLGroupboxAccessible::RelationByType(PRUint32 aType)
+NS_IMETHODIMP
+nsHTMLGroupboxAccessible::GetRelationByType(PRUint32 aRelationType,
+                                            nsIAccessibleRelation **aRelation)
 {
-  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
-    // No override for label, so use <legend> for this <fieldset>
-  if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
-    rel.AppendTarget(GetLegend());
+  nsresult rv = nsHyperTextAccessibleWrap::GetRelationByType(aRelationType,
+                                                             aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return rel;
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABELLED_BY) {
+    // No override for label, so use <legend> for this <fieldset>
+    return nsRelUtils::
+      AddTargetFromContent(aRelationType, aRelation, GetLegend());
+  }
+
+  return NS_OK;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLLegendAccessible
@@ -637,18 +643,35 @@ nsHTMLLegendAccessible::
 {
 }
 
-Relation
-nsHTMLLegendAccessible::RelationByType(PRUint32 aType)
+NS_IMETHODIMP
+nsHTMLLegendAccessible::GetRelationByType(PRUint32 aRelationType,
+                                          nsIAccessibleRelation **aRelation)
 {
-  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
-    return rel;
+  nsresult rv = nsHyperTextAccessibleWrap::
+    GetRelationByType(aRelationType, aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAccessible* groupbox = Parent();
-  if (groupbox && groupbox->Role() == nsIAccessibleRole::ROLE_GROUPING)
-    rel.AppendTarget(groupbox);
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
+    // Look for groupbox parent
+    nsAccessible* groupbox = Parent();
 
-  return rel;
+    if (groupbox && groupbox->Role() == nsIAccessibleRole::ROLE_GROUPING) {
+      // XXX: if group box exposes more than one relation of the given type
+      // then we fail.
+      nsCOMPtr<nsIAccessible> testLabelAccessible =
+        nsRelUtils::GetRelatedAccessible(groupbox,
+                                         nsIAccessibleRelation::RELATION_LABELLED_BY);
+
+      if (testLabelAccessible == this) {
+        // We're the first child of the parent groupbox, see
+        // nsHTMLGroupboxAccessible::GetRelationByType().
+        return nsRelUtils::
+          AddTarget(aRelationType, aRelation, groupbox);
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 PRUint32
