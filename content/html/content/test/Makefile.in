@@ -281,6 +281,7 @@ _TEST_FILES = \
 		test_restore_from_parser_fragment.html \
 		test_bug617528.html \
 		test_checked.html \
+		test_bug677658.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
