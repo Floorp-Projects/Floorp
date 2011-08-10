@@ -54,6 +54,13 @@ LIRGraph::LIRGraph(MIRGraph &mir)
 {
 }
 
+bool
+LIRGraph::addConstantToPool(MConstant *ins, uint32 *index)
+{
+    *index = constantPool_.length();
+    return constantPool_.append(ins->value());
+}
+
 uint32
 LBlock::firstId()
 {

@@ -140,8 +140,15 @@ struct IonScript
     uint32 bailoutTable_;
     uint32 bailoutEntries_;
 
+    // Constant table for constants stored in snapshots.
+    uint32 constantTable_;
+    uint32 constantEntries_;
+
     SnapshotOffset *bailoutTable() {
         return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
+    }
+    Value *constants() {
+        return (Value *)(reinterpret_cast<uint8 *>(this) + constantTable_);
     }
 
   private:
@@ -151,7 +158,8 @@ struct IonScript
     // Do not call directly, use IonScript::New. This is public for cx->new_.
     IonScript();
 
-    static IonScript *New(JSContext *cx, size_t snapshotsSize, size_t snapshotEntries);
+    static IonScript *New(JSContext *cx, size_t snapshotsSize, size_t snapshotEntries,
+                          size_t constants);
     static void Trace(JSTracer *trc, JSScript *script);
     static void Destroy(JSContext *cx, JSScript *script);
 
@@ -171,12 +179,20 @@ struct IonScript
     size_t snapshotsSize() const {
         return snapshotsSize_;
     }
+    Value &getConstant(size_t index) {
+        JS_ASSERT(index < numConstants());
+        return constants()[index];
+    }
+    size_t numConstants() const {
+        return constantEntries_;
+    }
     SnapshotOffset bailoutToSnapshot(uint32 bailoutId) {
         JS_ASSERT(bailoutId < bailoutEntries_);
         return bailoutTable()[bailoutId];
     }
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
+    void copyConstants(const Value *vp);
 };
 
 }

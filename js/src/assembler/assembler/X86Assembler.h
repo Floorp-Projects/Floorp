@@ -2587,11 +2587,11 @@ public:
         return reinterpret_cast<void **>(where)[-1];
     }
 
-    static void setPointer(void* where, void* value)
+    static void setPointer(void* where, const void* value)
     {
         js::JaegerSpew(js::JSpew_Insns,
                        ISPFX "##setPtr     ((where=%p)) ((value=%p))\n", where, value);
-        reinterpret_cast<void**>(where)[-1] = value;
+        reinterpret_cast<const void**>(where)[-1] = value;
     }
 
 private:
