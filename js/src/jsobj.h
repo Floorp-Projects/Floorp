@@ -298,6 +298,9 @@ js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrs
 extern JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval, JSBool strict);
 
+extern JSBool
+js_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, js::Value *rval, JSBool strict);
+
 extern JS_FRIEND_API(JSBool)
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              js::Value *statep, jsid *idp);

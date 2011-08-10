@@ -484,10 +484,10 @@ ArrayBuffer::obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rv
 JSBool
 ArrayBuffer::obj_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
         return false;
-    return obj_deleteElement(cx, obj, index, rval, strict);
+    return js_DeleteElement(cx, delegate, index, rval, strict);
 }
 
 JSBool
@@ -1065,10 +1065,16 @@ class TypedArrayTemplate
     static JSBool
     obj_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
     {
-        jsid id;
-        if (!IndexToId(cx, index, &id))
-            return false;
-        return obj_deleteProperty(cx, obj, id, rval, strict);
+        JSObject *tarray = TypedArray::getTypedArray(obj);
+        JS_ASSERT(tarray);
+
+        if (index < getLength(tarray)) {
+            rval->setBoolean(false);
+            return true;
+        }
+
+        rval->setBoolean(true);
+        return true;
     }
 
     static JSBool
