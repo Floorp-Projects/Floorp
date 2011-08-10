@@ -1448,3 +1448,63 @@ nsAttrValue::StringToInteger(const nsAString& aValue, PRBool* aStrict,
   nsAutoString tmp(aValue);
   return tmp.ToInteger(aErrorCode);
 }
+
+PRInt64
+nsAttrValue::SizeOf() const
+{
+  PRInt64 size = sizeof(*this);
+
+  switch (BaseType()) {
+    case eStringBase:
+    {
+      // TODO: we might be counting the string size more than once.
+      // This should be fixed with bug 677487.
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
+      size += str ? str->StorageSize() : 0;
+      break;
+    }
+    case eOtherBase:
+    {
+      MiscContainer* container = GetMiscContainer();
+
+      if (!container) {
+        break;
+      }
+
+      size += sizeof(*container);
+
+      void* otherPtr = MISC_STR_PTR(container);
+      // We only count the size of the object pointed by otherPtr if it's a
+      // string. When it's an atom, it's counted separatly.
+      if (otherPtr &&
+          static_cast<ValueBaseType>(container->mStringBits & NS_ATTRVALUE_BASETYPE_MASK) == eStringBase) {
+        // TODO: we might be counting the string size more than once.
+        // This should be fixed with bug 677487.
+        nsStringBuffer* str = static_cast<nsStringBuffer*>(otherPtr);
+        size += str ? str->StorageSize() : 0;
+      }
+
+      // TODO: mCSSStyleRule and mSVGValue might be owned by another object
+      // which would make us count them twice, bug 677493.
+      if (Type() == eCSSStyleRule && container->mCSSStyleRule) {
+        // TODO: Add SizeOf() to StyleRule, bug 677503.
+        size += sizeof(*container->mCSSStyleRule);
+      } else if (Type() == eSVGValue && container->mSVGValue) {
+        // TODO: Add SizeOf() to nsSVGValue, bug 677504.
+        size += sizeof(*container->mSVGValue);
+      } else if (Type() == eAtomArray && container->mAtomArray) {
+        size += sizeof(container->mAtomArray) + sizeof(nsTArrayHeader);
+        size += container->mAtomArray->Capacity() * sizeof(nsCOMPtr<nsIAtom>);
+        // Don't count the size of each nsIAtom, they are counted separatly.
+      }
+
+      break;
+    }
+    case eAtomBase:    // Atoms are counted separatly.
+    case eIntegerBase: // The value is in mBits, nothing to do.
+      break;
+  }
+
+  return size;
+}
+
