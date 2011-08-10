@@ -257,10 +257,19 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, js::Value *vp);
 
+extern JSBool
+js_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32, js::Value *vp);
+
 inline JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp)
 {
     return js_GetProperty(cx, obj, obj, id, vp);
+}
+
+inline JSBool
+js_GetElement(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp)
+{
+    return js_GetElement(cx, obj, obj, index, vp);
 }
 
 namespace js {

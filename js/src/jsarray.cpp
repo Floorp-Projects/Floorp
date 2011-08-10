@@ -822,10 +822,38 @@ array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Val
 static JSBool
 array_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
 {
+    if (!obj->isDenseArray())
+        return js_GetElement(cx, obj, index, vp);
+
+    if (index < obj->getDenseArrayCapacity() &&
+        !obj->getDenseArrayElement(index).isMagic(JS_ARRAY_HOLE))
+    {
+        *vp = obj->getDenseArrayElement(index);
+        return true;
+    }
+
+    JSObject *proto = obj->getProto();
+    if (!proto) {
+        vp->setUndefined();
+        return true;
+    }
+
+    vp->setUndefined();
+
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return array_getProperty(cx, obj, receiver, id, vp);
+
+    JSObject *obj2;
+    JSProperty *prop;
+    if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
+        return false;
+
+    if (!prop || !obj2->isNative())
+        return true;
+
+    const Shape *shape = (const Shape *) prop;
+    return js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp);
 }
 
 static JSBool
