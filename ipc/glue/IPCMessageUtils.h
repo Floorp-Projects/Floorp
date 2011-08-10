@@ -75,6 +75,7 @@ namespace mozilla {
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
 typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
 typedef LayerManager::LayersBackend LayersBackend;
+typedef gfxASurface::gfxImageFormat PixelFormat;
 
 // This is a cross-platform approximation to HANDLE, which we expect
 // to be typedef'd to void* or thereabouts.
@@ -508,19 +509,19 @@ struct ParamTraits<mozilla::gfxSurfaceType>
   }
 };
 
- template<>
+template<>
 struct ParamTraits<mozilla::LayersBackend>
 {
   typedef mozilla::LayersBackend paramType;
 
   static void Write(Message* msg, const paramType& param)
   {
-    if (LayerManager::LAYERS_NONE < param &&
+    if (LayerManager::LAYERS_NONE <= param &&
         param < LayerManager::LAYERS_LAST) {
       WriteParam(msg, int32(param));
       return;
     }
-    NS_RUNTIMEABORT("surface type not reached");
+    NS_RUNTIMEABORT("backend type not reached");
   }
 
   static bool Read(const Message* msg, void** iter, paramType* result)
@@ -529,12 +530,44 @@ struct ParamTraits<mozilla::LayersBackend>
     if (!ReadParam(msg, iter, &type))
       return false;
 
-    if (LayerManager::LAYERS_NONE < type &&
+    if (LayerManager::LAYERS_NONE <= type &&
         type < LayerManager::LAYERS_LAST) {
       *result = paramType(type);
       return true;
     }
     return false;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::PixelFormat>
+{
+  typedef mozilla::PixelFormat paramType;
+
+  static bool IsLegalPixelFormat(const paramType& format)
+  {
+    return (gfxASurface::ImageFormatARGB32 <= format &&
+            format < gfxASurface::ImageFormatUnknown);
+  }
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    if (!IsLegalPixelFormat(param)) {
+      NS_RUNTIMEABORT("Unknown pixel format");
+    }
+    WriteParam(msg, int32(param));
+    return;
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    int32 format;
+    if (!ReadParam(msg, iter, &format) ||
+        !IsLegalPixelFormat(paramType(format))) {
+      return false;
+    }
+    *result = paramType(format);
+    return true;
   }
 };
 

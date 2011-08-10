@@ -990,6 +990,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   background-color: @color_background_panel@;
   padding: @padding_normal@; /* core spacing */
   padding-bottom: @padding_xxxnormal@;
+  color: @color_text_panel@;
 }
 
 /* Popup Icons */

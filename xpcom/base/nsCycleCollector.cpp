@@ -144,7 +144,6 @@
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsTPtrArray.h"
 #include "nsTArray.h"
 #include "mozilla/Services.h"
 #include "nsICycleCollectorListener.h"
@@ -1058,7 +1057,7 @@ struct nsCycleCollector
 
     nsCycleCollectorParams mParams;
 
-    nsTPtrArray<PtrInfo> *mWhiteNodes;
+    nsTArray<PtrInfo*> *mWhiteNodes;
     PRUint32 mWhiteNodeCount;
 
     // mVisitedRefCounted and mVisitedGCed are only used for telemetry
@@ -1091,7 +1090,7 @@ struct nsCycleCollector
                      nsICycleCollectorListener *aListener);
 
     // Prepare for and cleanup after one or more collection(s).
-    PRBool PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes);
+    PRBool PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes);
     void GCIfNeeded(PRBool aForceGC);
     void CleanupAfterCollection();
 
@@ -2601,7 +2600,7 @@ nsCycleCollector::GCIfNeeded(PRBool aForceGC)
 }
 
 PRBool
-nsCycleCollector::PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes)
+nsCycleCollector::PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes)
 {
 #if defined(DEBUG_CC) && !defined(__MINGW32__)
     if (!mParams.mDoNothing && mParams.mHookMalloc)
@@ -2667,7 +2666,7 @@ PRUint32
 nsCycleCollector::Collect(PRUint32 aTryCollections,
                           nsICycleCollectorListener *aListener)
 {
-    nsAutoTPtrArray<PtrInfo, 4000> whiteNodes;
+    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
     if (!PrepareForCollection(&whiteNodes))
         return 0;
@@ -3511,7 +3510,7 @@ public:
         if (!mRunning)
             return 0;
 
-        nsAutoTPtrArray<PtrInfo, 4000> whiteNodes;
+        nsAutoTArray<PtrInfo*, 4000> whiteNodes;
         if (!mCollector->PrepareForCollection(&whiteNodes))
             return 0;
 
