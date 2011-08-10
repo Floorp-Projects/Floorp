@@ -341,7 +341,7 @@ static JSFunctionSpec string_functions[] = {
 jschar      js_empty_ucstr[]  = {0};
 JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
-#define STRING_ELEMENT_ATTRS (JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT)
+static const uintN STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
 static JSBool
 str_enumerate(JSContext *cx, JSObject *obj)
@@ -351,9 +351,9 @@ str_enumerate(JSContext *cx, JSObject *obj)
         JSString *str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
             return false;
-        if (!obj->defineProperty(cx, INT_TO_JSID(i), StringValue(str1),
-                                 PropertyStub, StrictPropertyStub,
-                                 STRING_ELEMENT_ATTRS)) {
+        if (!obj->defineElement(cx, i, StringValue(str1),
+                                PropertyStub, StrictPropertyStub,
+                                STRING_ELEMENT_ATTRS)) {
             return false;
         }
     }
@@ -375,8 +375,8 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         JSString *str1 = JSAtom::getUnitStringForElement(cx, str, size_t(slot));
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, id, StringValue(str1), NULL, NULL,
-                                 STRING_ELEMENT_ATTRS)) {
+        if (!obj->defineElement(cx, uint32(slot), StringValue(str1), NULL, NULL,
+                                STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
         *objp = obj;
@@ -1510,7 +1510,7 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
         return false;
     vp->setObject(*obj);
 
-    return obj->defineProperty(cx, INT_TO_JSID(0), StringValue(fm.pattern())) &&
+    return obj->defineElement(cx, 0, StringValue(fm.pattern())) &&
            obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.indexAtom),
                                Int32Value(fm.match())) &&
            obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.inputAtom),
@@ -1536,8 +1536,7 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     }
 
     Value v;
-    return res->createLastMatch(cx, &v) &&
-           arrayobj->defineProperty(cx, INT_TO_JSID(count), v);
+    return res->createLastMatch(cx, &v) && arrayobj->defineElement(cx, count, v);
 }
 
 static JSBool
