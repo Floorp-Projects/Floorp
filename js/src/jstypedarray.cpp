@@ -327,10 +327,10 @@ JSBool
 ArrayBuffer::obj_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *v,
                    PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
         return false;
-    return obj_defineProperty(cx, obj, id, v, getter, setter, attrs);
+    return js_DefineElement(cx, delegate, index, v, getter, setter, attrs);
 }
 
 JSBool
@@ -1036,10 +1036,8 @@ class TypedArrayTemplate
     obj_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *v,
                        PropertyOp getter, StrictPropertyOp setter, uintN attrs)
     {
-        jsid id;
-        if (!IndexToId(cx, index, &id))
-            return false;
-        return obj_defineProperty(cx, obj, id, v, getter, setter, attrs);
+        Value tmp = *v;
+        return obj_setElement(cx, obj, index, &tmp, false);
     }
 
     static JSBool
