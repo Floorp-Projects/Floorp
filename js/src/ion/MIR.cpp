@@ -164,8 +164,10 @@ MNode::replaceOperand(MUseIterator use, MDefinition *ins)
 
     MUse *save = *use;
     MUseIterator result(used->removeUse(use));
-    setOperand(save->index(), ins);
-    ins->linkUse(save);
+    if (ins) {
+        setOperand(save->index(), ins);
+        ins->linkUse(save);
+    }
     return result;
 }
 
