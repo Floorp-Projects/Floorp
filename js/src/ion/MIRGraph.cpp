@@ -371,6 +371,9 @@ MBasicBlock::remove(MInstruction *ins)
 MInstructionIterator
 MBasicBlock::removeAt(MInstructionIterator &iter)
 {
+    for (size_t i = 0; i < iter->numOperands(); i++)
+        iter->replaceOperand(i, NULL);
+
     return instructions_.removeAt(iter);
 }
 
@@ -433,7 +436,11 @@ MBasicBlock::removePhiAt(MPhiIterator &at)
 {
     JS_ASSERT(!phis_.empty());
 
+    for (size_t i = 0; i < at->numOperands(); i++)
+        at->replaceOperand(i, NULL);
+
     MPhiIterator result = phis_.removeAt(at);
+
     if (phis_.empty()) {
         for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
             (*pred)->setSuccessorWithPhis(NULL, 0);
