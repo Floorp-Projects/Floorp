@@ -63,8 +63,7 @@ function test() {
     let prefix = 'enter';
     ok(!pb.privateBrowsingEnabled, prefix + ': private browsing is disabled');
     registerCleanupFunction(function () {
-      if (pb.privateBrowsingEnabled)
-        pb.privateBrowsingEnabled = false
+      pb.privateBrowsingEnabled = false;
     });
 
     togglePrivateBrowsing(function () {
@@ -128,20 +127,4 @@ function test() {
       hideTabView(testStateAfterEnteringPB);
     });
   });
-}
-
-// ----------
-function togglePrivateBrowsing(callback) {
-  let topic = 'private-browsing-transition-complete';
-
-  function pbObserver(aSubject, aTopic, aData) {
-    if (aTopic != topic)
-      return;
-
-    Services.obs.removeObserver(pbObserver, topic);
-    afterAllTabsLoaded(callback);
-  }
-
-  Services.obs.addObserver(pbObserver, topic, false);
-  pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
 }
