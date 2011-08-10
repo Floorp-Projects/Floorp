@@ -1888,13 +1888,13 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_BEGIN_MACRO                                                            \
         if (status == mjit::Jaeger_Unfinished) {                              \
             op = (JSOp) *regs.pc;                                             \
-            RESTORE_INTERP_VARS();                                            \
+            RESTORE_INTERP_VARS_CHECK_EXCEPTION();                            \
             DO_OP();                                                          \
         } else if (status == mjit::Jaeger_UnfinishedAtTrap) {                 \
             interpMode = JSINTERP_SKIP_TRAP;                                  \
             JS_ASSERT(JSOp(*regs.pc) == JSOP_TRAP);                           \
             op = JSOP_TRAP;                                                   \
-            RESTORE_INTERP_VARS();                                            \
+            RESTORE_INTERP_VARS_CHECK_EXCEPTION();                            \
             DO_OP();                                                          \
         }                                                                     \
     JS_END_MACRO
@@ -1933,6 +1933,11 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
+    JS_END_MACRO
+
+#define RESTORE_INTERP_VARS_CHECK_EXCEPTION()                                 \
+    JS_BEGIN_MACRO                                                            \
+        RESTORE_INTERP_VARS();                                                \
         if (cx->isExceptionPending())                                         \
             goto error;                                                       \
     JS_END_MACRO
@@ -1951,10 +1956,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
                     ENABLE_INTERRUPTS();                                      \
                     CLEAR_LEAVE_ON_TRACE_POINT();                             \
                 }                                                             \
-                RESTORE_INTERP_VARS();                                        \
                 JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);   \
-                if (r == MONITOR_ERROR)                                       \
-                    goto error;                                               \
+                RESTORE_INTERP_VARS_CHECK_EXCEPTION();                        \
             }                                                                 \
         } else {                                                              \
             MONITOR_BRANCH_METHODJIT();                                       \
