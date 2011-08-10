@@ -35,8 +35,14 @@
   function testTexture(url, crossOriginAttribute, expected_result) {
     number_of_tests_live++;
     var image = new Image();
-    if (crossOriginAttribute != "missing-value-default")
+    if (crossOriginAttribute == "just-crossOrigin-without-value") {
+      var div = document.createElement('div');
+      div.innerHTML="<img crossOrigin>";
+      image = div.children[0];
+    }
+    else if (crossOriginAttribute != "missing-value-default")
       image.crossOrigin = crossOriginAttribute;
+    
 
     function testDone() {
       number_of_tests_live--;
@@ -77,19 +83,24 @@
       return;
     }
 
+
     testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
                 "missing-value-default",
                 OK);
-
     testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
                 "",
                 OK);
-
+    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
+                "just-crossOrigin-without-value",
+                OK);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
                 "missing-value-default",
                 SECURITY_ERR);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
                 "",
+                SECURITY_ERR);
+    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
+                "just-crossOrigin-without-value",
                 SECURITY_ERR);
 
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
@@ -97,6 +108,9 @@
                 SECURITY_ERR);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
                 "",
+                OK);
+    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+                "just-crossOrigin-without-value",
                 OK);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
                 "anonymous",
@@ -110,6 +124,9 @@
                 SECURITY_ERR);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
                 "",
+                OK);
+    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+                "just-crossOrigin-without-value",
                 OK);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
                 "anonymous",
