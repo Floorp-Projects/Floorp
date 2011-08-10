@@ -5066,6 +5066,16 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     return !!DefineNativeProperty(cx, obj, id, *value, getter, setter, attrs, 0, 0);
 }
 
+JSBool
+js_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+                 PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return !!DefineNativeProperty(cx, obj, id, *value, getter, setter, attrs, 0, 0);
+}
+
 /*
  * Backward compatibility requires allowing addProperty hooks to mutate the
  * nominal initial value of a slotful property, while GC safety wants that

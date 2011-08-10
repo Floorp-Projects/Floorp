@@ -255,6 +255,10 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
                   js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs);
 
 extern JSBool
+js_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const js::Value *value,
+                 js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs);
+
+extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, js::Value *vp);
 
 extern JSBool
@@ -1407,10 +1411,14 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
     }
 
-    inline JSBool defineElement(JSContext *cx, uint32 index, const js::Value &value,
-                                js::PropertyOp getter = js::PropertyStub,
-                                js::StrictPropertyOp setter = js::StrictPropertyStub,
-                                uintN attrs = JSPROP_ENUMERATE);
+    JSBool defineElement(JSContext *cx, uint32 index, const js::Value &value,
+                         js::PropertyOp getter = js::PropertyStub,
+                         js::StrictPropertyOp setter = js::StrictPropertyStub,
+                         uintN attrs = JSPROP_ENUMERATE)
+    {
+        js::DefineElementOp op = getOps()->defineElement;
+        return (op ? op : js_DefineElement)(cx, this, index, &value, getter, setter, attrs);
+    }
 
     inline JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
 

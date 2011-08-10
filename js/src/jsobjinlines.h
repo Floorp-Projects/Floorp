@@ -1101,16 +1101,6 @@ JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty
 }
 
 inline JSBool
-JSObject::defineElement(JSContext *cx, uint32 index, const js::Value &value,
-                        js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs)
-{
-    jsid id;
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return defineProperty(cx, id, value, getter, setter, attrs);
-}
-
-inline JSBool
 JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp)
 {
     jsid id;
