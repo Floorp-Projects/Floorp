@@ -408,7 +408,7 @@ static bool
 GetElementsSlow(JSContext *cx, JSObject *aobj, uint32 length, Value *vp)
 {
     for (uint32 i = 0; i < length; i++) {
-        if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), &vp[i]))
+        if (!aobj->getElement(cx, i, &vp[i]))
             return false;
     }
 

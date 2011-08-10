@@ -229,27 +229,27 @@ class RegExpMatchBuilder
     JSContext   * const cx;
     JSObject    * const array;
 
+    bool setProperty(JSAtom *name, Value v) {
+        return !!js_DefineProperty(cx, array, ATOM_TO_JSID(name), &v,
+                                   PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE);
+    }
+
   public:
     RegExpMatchBuilder(JSContext *cx, JSObject *array) : cx(cx), array(array) {}
 
-    bool append(int index, JSString *str) {
+    bool append(uint32 index, Value v) {
+        JS_ASSERT(!array->getOps()->getElement);
+        return !!js_DefineElement(cx, array, index, &v, PropertyStub, StrictPropertyStub,
+                                  JSPROP_ENUMERATE);
+    }
+
+    bool setIndex(int index) {
+        return setProperty(cx->runtime->atomState.indexAtom, Int32Value(index));
+    }
+
+    bool setInput(JSString *str) {
         JS_ASSERT(str);
-        return append(INT_TO_JSID(index), StringValue(str));
-    }
-
-    bool append(jsid id, Value val) {
-        return !!js_DefineProperty(cx, array, id, &val, js::PropertyStub, js::StrictPropertyStub,
-                                   JSPROP_ENUMERATE);
-    }
-
-    bool appendIndex(int index) {
-        return append(ATOM_TO_JSID(cx->runtime->atomState.indexAtom), Int32Value(index));
-    }
-
-    /* Sets the input attribute of the match array. */
-    bool appendInput(JSString *str) {
-        JS_ASSERT(str);
-        return append(ATOM_TO_JSID(cx->runtime->atomState.inputAtom), StringValue(str));
+        return setProperty(cx->runtime->atomState.inputAtom, StringValue(str));
     }
 };
 
@@ -315,18 +315,17 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
             JS_ASSERT(start <= end);
             JS_ASSERT(unsigned(end) <= input->length());
             captured = js_NewDependentString(cx, input, start, end - start);
-            if (!(captured && builder.append(i / 2, captured)))
+            if (!captured || !builder.append(i / 2, StringValue(captured)))
                 return NULL;
         } else {
             /* Missing parenthesized match. */
             JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
-            if (!builder.append(INT_TO_JSID(i / 2), UndefinedValue()))
+            if (!builder.append(i / 2, UndefinedValue()))
                 return NULL;
         }
     }
 
-    if (!builder.appendIndex(buf[0]) ||
-        !builder.appendInput(input))
+    if (!builder.setIndex(buf[0]) || !builder.setInput(input))
         return NULL;
 
     return array;
