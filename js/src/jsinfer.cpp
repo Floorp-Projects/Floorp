@@ -3950,7 +3950,7 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
      * above does not account for. We filter in the interpreter and JITs
      * themselves.
      */
-    if (script->function()->isHeavyweight() || cx->compartment->debugMode) {
+    if (script->function()->isHeavyweight() || cx->compartment->debugMode || localsAliasStack()) {
         MarkArgumentsCreated(cx, script);
         return;
     }
