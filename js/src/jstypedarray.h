@@ -215,13 +215,8 @@ struct JS_FRIEND_API(TypedArray) {
         return slotWidth(getType(obj));
     }
 
-    static inline int lengthOffset() {
-        return JSObject::getFixedSlotOffset(FIELD_LENGTH);
-    }
-
-    static inline int dataOffset() {
-        return offsetof(JSObject, privateData);
-    }
+    static int lengthOffset();
+    static int dataOffset();
 };
 
 extern bool
