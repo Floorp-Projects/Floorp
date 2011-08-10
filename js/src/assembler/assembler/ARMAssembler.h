@@ -1221,7 +1221,6 @@ namespace JSC {
             return AL | B | (offset & BRANCH_MASK);
         }
 
-    private:
         // pretty-printing functions
         static char const * nameGpReg(int reg)
         {
