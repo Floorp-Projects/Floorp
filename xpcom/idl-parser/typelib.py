@@ -159,7 +159,7 @@ def build_interface(iface, ifaces):
             raise Exception("Attribute param must be for a getter or a setter!")
 
         type = get_type(a.realtype, getter and 'out' or 'in')
-        if set:
+        if setter:
             return xpt.Param(type)
         else:
             if isDipperType(type.tag):
