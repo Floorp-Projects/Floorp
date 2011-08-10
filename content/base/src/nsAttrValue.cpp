@@ -980,28 +980,35 @@ nsAttrValue::SetIntValueAndType(PRInt32 aValue, ValueType aType,
   }
 }
 
-PRBool
-nsAttrValue::GetEnumTableIndex(const EnumTable* aTable, PRInt16& aResult)
+PRInt16
+nsAttrValue::GetEnumTableIndex(const EnumTable* aTable)
 {
   PRInt16 index = sEnumTableArray->IndexOf(aTable);
   if (index < 0) {
     index = sEnumTableArray->Length();
     NS_ASSERTION(index <= NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE,
         "too many enum tables");
-    if (!sEnumTableArray->AppendElement(aTable)) {
-      return PR_FALSE;
-    }
+    sEnumTableArray->AppendElement(aTable);
   }
 
-  aResult = index;
+  return index;
+}
 
-  return PR_TRUE;
+PRInt32
+nsAttrValue::EnumTableEntryToValue(const EnumTable* aEnumTable,
+                                   const EnumTable* aTableEntry)
+{
+  PRInt16 index = GetEnumTableIndex(aEnumTable);
+  PRInt32 value = (aTableEntry->value << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) +
+                  index;
+  return value;
 }
 
 PRBool
 nsAttrValue::ParseEnumValue(const nsAString& aValue,
                             const EnumTable* aTable,
-                            PRBool aCaseSensitive)
+                            PRBool aCaseSensitive,
+                            const EnumTable* aDefaultValue)
 {
   ResetIfSet();
   const EnumTable* tableEntry = aTable;
@@ -1009,13 +1016,7 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
   while (tableEntry->tag) {
     if (aCaseSensitive ? aValue.EqualsASCII(tableEntry->tag) :
                          aValue.LowerCaseEqualsASCII(tableEntry->tag)) {
-      PRInt16 index;
-      if (!GetEnumTableIndex(aTable, index)) {
-        return PR_FALSE;
-      }
-
-      PRInt32 value = (tableEntry->value << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) +
-                      index;
+      PRInt32 value = EnumTableEntryToValue(aTable, tableEntry);
 
       PRBool equals = aCaseSensitive || aValue.EqualsASCII(tableEntry->tag);
       if (!equals) {
@@ -1033,6 +1034,14 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
       return PR_TRUE;
     }
     tableEntry++;
+  }
+
+  if (aDefaultValue) {
+    NS_PRECONDITION(aTable <= aDefaultValue && aDefaultValue < tableEntry,
+                    "aDefaultValue not inside aTable?");
+    SetIntValueAndType(EnumTableEntryToValue(aTable, aDefaultValue),
+                       eEnum, &aValue);
+    return PR_TRUE;
   }
 
   return PR_FALSE;
