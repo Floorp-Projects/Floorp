@@ -795,6 +795,9 @@ class MBinaryInstruction : public MAryInstruction<2>
         if (op() != ins->op())
             return false;
 
+        if (type() != ins->type())
+            return false;
+
         MDefinition *left = getOperand(0);
         MDefinition *right = getOperand(1);
         MDefinition *tmp;
