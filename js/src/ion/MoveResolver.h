@@ -201,6 +201,9 @@ class MoveResolver
 
     PendingMove *findBlockingMove(const PendingMove *last);
 
+    // Internal reset function. Does not clear lists.
+    void resetState();
+
   public:
     MoveResolver();
 
