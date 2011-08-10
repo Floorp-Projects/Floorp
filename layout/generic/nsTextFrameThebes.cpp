@@ -3239,7 +3239,7 @@ nsTextPaintStyle::EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackCo
 nscolor
 nsTextPaintStyle::GetTextColor()
 {
-  return nsLayoutUtils::GetTextColor(mFrame);
+  return nsLayoutUtils::GetColor(mFrame, eCSSProperty_color);
 }
 
 PRBool
@@ -4289,13 +4289,12 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     const PRUint8 textDecorations = styleText->mTextDecorationLine;
 
     if (!useOverride &&
-        (NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL & textDecorations))
-    {
+        (NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL & textDecorations)) {
       // This handles the <a href="blah.html"><font color="green">La 
       // la la</font></a> case. The link underline should be green.
       useOverride = PR_TRUE;
-      overrideColor = context->GetVisitedDependentColor(
-                                 eCSSProperty_text_decoration_color);
+      overrideColor =
+        nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
     }
 
     fParent = nsLayoutUtils::GetParentOrPlaceholderFor(
@@ -4327,22 +4326,19 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     // Accumulate only elements that have decorations with a genuine style
     if (textDecorations && style != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
       const nscolor color = useOverride ? overrideColor
-        : context->GetVisitedDependentColor(eCSSProperty_text_decoration_color);
+        : nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
 
       if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
         aDecorations.mUnderlines.AppendElement(
-          nsTextFrame::LineDecoration(f, baselineOffset, color,
-                                      style));
+          nsTextFrame::LineDecoration(f, baselineOffset, color, style));
       }
       if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
         aDecorations.mOverlines.AppendElement(
-          nsTextFrame::LineDecoration(f, baselineOffset, color,
-                                      style));
+          nsTextFrame::LineDecoration(f, baselineOffset, color, style));
       }
       if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
         aDecorations.mStrikes.AppendElement(
-          nsTextFrame::LineDecoration(f, baselineOffset, color,
-                                      style));
+          nsTextFrame::LineDecoration(f, baselineOffset, color, style));
       }
     }
 

@@ -142,7 +142,6 @@
 #include "mozAutoDocUpdate.h"
 
 #include "nsCSSParser.h"
-#include "nsTPtrArray.h"
 #include "prprf.h"
 
 #include "nsSVGFeatures.h"
@@ -756,7 +755,7 @@ nsINode::CompareDocPosition(nsINode* aOtherNode)
     return 0;
   }
 
-  nsAutoTPtrArray<nsINode, 32> parents1, parents2;
+  nsAutoTArray<nsINode*, 32> parents1, parents2;
 
   nsINode *node1 = aOtherNode, *node2 = this;
 

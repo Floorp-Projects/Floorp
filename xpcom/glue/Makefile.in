@@ -97,7 +97,6 @@ SDK_HEADERS = \
 		nsTArray-inl.h \
 		nsTHashtable.h \
 		nsTObserverArray.h \
-		nsTPtrArray.h \
 		nsTWeakRef.h \
 		nsTextFormatter.h \
 		nsTraceRefcnt.h \

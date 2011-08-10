@@ -541,7 +541,7 @@ FindReferences(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "findReferences", 1, "");
+                             "findReferences", "0", "s");
         return false;
     }
 
