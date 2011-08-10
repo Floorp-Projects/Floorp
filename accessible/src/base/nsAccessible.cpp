@@ -48,12 +48,10 @@
 #include "nsEventShell.h"
 
 #include "nsAccEvent.h"
-#include "nsAccessibleRelation.h"
 #include "nsAccessibilityService.h"
 #include "nsAccTreeWalker.h"
-#include "nsIAccessibleRelation.h"
+#include "nsRelUtils.h"
 #include "nsTextEquivUtils.h"
-#include "Relation.h"
 #include "States.h"
 
 #include "nsIDOMElement.h"
@@ -1530,11 +1528,13 @@ nsAccessible::State()
       state |= states::SELECTED;
     } else {
       // If focus is in a child of the tab panel surely the tab is selected!
-      Relation rel = RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
-      nsAccessible* relTarget = nsnull;
-      while ((relTarget = rel.Next())) {
-        if (relTarget->Role() == nsIAccessibleRole::ROLE_PROPERTYPAGE &&
-            nsCoreUtils::IsAncestorOf(relTarget->GetNode(), gLastFocusedNode))
+      nsCOMPtr<nsIAccessible> tabPanel = nsRelUtils::
+        GetRelatedAccessible(this, nsIAccessibleRelation::RELATION_LABEL_FOR);
+
+      if (nsAccUtils::Role(tabPanel) == nsIAccessibleRole::ROLE_PROPERTYPAGE) {
+        nsRefPtr<nsAccessible> tabPanelAcc(do_QueryObject(tabPanel));
+        nsINode *tabPanelNode = tabPanelAcc->GetNode();
+        if (nsCoreUtils::IsAncestorOf(tabPanelNode, gLastFocusedNode))
           state |= states::SELECTED;
       }
     }
@@ -1830,11 +1830,11 @@ nsAccessible::ARIARoleInternal()
     if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX) {
       return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
 
-      Relation rel = RelationByType(nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
-      nsAccessible* targetAcc = nsnull;
-      while ((targetAcc = rel.Next()))
-        if (targetAcc->Role() == nsIAccessibleRole::ROLE_COMBOBOX)
-          return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+      nsCOMPtr<nsIAccessible> possibleCombo =
+        nsRelUtils::GetRelatedAccessible(this,
+                                         nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
+      if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX)
+        return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
     }
 
   } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OPTION) {
@@ -1998,95 +1998,155 @@ NS_IMETHODIMP nsAccessible::GetAccessibleBelow(nsIAccessible **_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIContent*
-nsAccessible::GetAtomicRegion() const
+nsIDOMNode* nsAccessible::GetAtomicRegion()
 {
   nsIContent *loopContent = mContent;
   nsAutoString atomic;
-  while (loopContent && !loopContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
+  while (loopContent && !loopContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic)) {
     loopContent = loopContent->GetParent();
+  }
 
-  return atomic.EqualsLiteral("true") ? loopContent : nsnull;
+  nsCOMPtr<nsIDOMNode> atomicRegion;
+  if (atomic.EqualsLiteral("true")) {
+    atomicRegion = do_QueryInterface(loopContent);
+  }
+  return atomicRegion;
 }
 
 // nsIAccessible getRelationByType()
 NS_IMETHODIMP
-nsAccessible::GetRelationByType(PRUint32 aType,
-                                nsIAccessibleRelation** aRelation)
+nsAccessible::GetRelationByType(PRUint32 aRelationType,
+                                nsIAccessibleRelation **aRelation)
 {
   NS_ENSURE_ARG_POINTER(aRelation);
   *aRelation = nsnull;
+
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  Relation rel = RelationByType(aType);
-  NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &rel));
-  return *aRelation ? NS_OK : NS_ERROR_FAILURE;
-}
-
-Relation
-nsAccessible::RelationByType(PRUint32 aType)
-{
   // Relationships are defined on the same content node that the role would be
   // defined on.
-  switch (aType) {
-    case nsIAccessibleRelation::RELATION_LABEL_FOR: {
-      Relation rel(new RelatedAccIterator(GetDocAccessible(), mContent,
-                                          nsAccessibilityAtoms::aria_labelledby));
-      if (mContent->Tag() == nsAccessibilityAtoms::label)
-        rel.AppendIter(new IDRefsIterator(mContent, mContent->IsHTML() ?
-                                          nsAccessibilityAtoms::_for :
-                                          nsAccessibilityAtoms::control));
+  nsresult rv = NS_OK_NO_RELATION_TARGET;
+  switch (aRelationType)
+  {
+  case nsIAccessibleRelation::RELATION_LABEL_FOR:
+    {
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_labelledby);
 
-      return rel;
-    }
-    case nsIAccessibleRelation::RELATION_LABELLED_BY: {
-      Relation rel(new IDRefsIterator(mContent,
-                                      nsAccessibilityAtoms::aria_labelledby));
-      if (mContent->IsHTML()) {
-        rel.AppendIter(new HTMLLabelIterator(GetDocAccessible(), mContent));
-      } else if (mContent->IsXUL()) {
-        rel.AppendIter(new XULLabelIterator(GetDocAccessible(), mContent));
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      return rel;
+      if (mContent->Tag() == nsAccessibilityAtoms::label) {
+        nsIAtom *IDAttr = mContent->IsHTML() ?
+          nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
+        rv = nsRelUtils::
+          AddTargetFromIDRefAttr(aRelationType, aRelation, mContent, IDAttr);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      return rv;
     }
-    case nsIAccessibleRelation::RELATION_DESCRIBED_BY: {
-      Relation rel(new IDRefsIterator(mContent,
-                                        nsAccessibilityAtoms::aria_describedby));
-      if (mContent->IsXUL())
-        rel.AppendIter(new XULDescriptionIterator(GetDocAccessible(), mContent));
 
-      return rel;
+  case nsIAccessibleRelation::RELATION_LABELLED_BY:
+    {
+      rv = nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, mContent,
+                                nsAccessibilityAtoms::aria_labelledby);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAccessible* label = nsnull;
+      if (mContent->IsHTML()) {
+        HTMLLabelIterator iter(GetDocAccessible(), mContent);
+        while ((label = iter.Next())) {
+          rv = nsRelUtils::AddTarget(aRelationType, aRelation, label);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+        return rv;
+      }
+
+      if (mContent->IsXUL()) {
+        XULLabelIterator iter(GetDocAccessible(), mContent);
+        while ((label = iter.Next())) {
+          rv = nsRelUtils::AddTarget(aRelationType, aRelation, label);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+      return rv;
     }
-    case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR: {
-      Relation rel(new RelatedAccIterator(GetDocAccessible(), mContent,
-                                            nsAccessibilityAtoms::aria_describedby));
 
-      // This affectively adds an optional control attribute to xul:description,
-      // which only affects accessibility, by allowing the description to be
-      // tied to a control.
+  case nsIAccessibleRelation::RELATION_DESCRIBED_BY:
+    {
+      rv = nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, mContent,
+                                nsAccessibilityAtoms::aria_describedby);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (mContent->IsXUL()) {
+        XULDescriptionIterator iter(GetDocAccessible(), mContent);
+        nsAccessible* descr = nsnull;
+        while ((descr = iter.Next())) {
+          rv = nsRelUtils::AddTarget(aRelationType, aRelation, descr);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+
+      return rv;
+    }
+
+  case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
+    {
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_describedby);
+
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
       if (mContent->Tag() == nsAccessibilityAtoms::description &&
-          mContent->IsXUL())
-        rel.AppendIter(new IDRefsIterator(mContent,
-                                          nsAccessibilityAtoms::control));
+          mContent->IsXUL()) {
+        // This affectively adds an optional control attribute to xul:description,
+        // which only affects accessibility, by allowing the description to be
+        // tied to a control.
+        return nsRelUtils::
+          AddTargetFromIDRefAttr(aRelationType, aRelation, mContent,
+                                 nsAccessibilityAtoms::control);
+      }
 
-      return rel;
+      return rv;
     }
-    case nsIAccessibleRelation::RELATION_NODE_CHILD_OF: {
-      Relation rel(new RelatedAccIterator(GetDocAccessible(), mContent,
-                                            nsAccessibilityAtoms::aria_owns));
-      
+
+  case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
+    {
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_owns);
+
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Got relation from aria-owns, don't calculate it from native markup.
+      if (rv != NS_OK_NO_RELATION_TARGET)
+        return NS_OK;
+
       // This is an ARIA tree or treegrid that doesn't use owns, so we need to
       // get the parent the hard way.
       if (mRoleMapEntry &&
           (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM ||
            mRoleMapEntry->role == nsIAccessibleRole::ROLE_ROW)) {
+
         AccGroupInfo* groupInfo = GetGroupInfo();
         if (!groupInfo)
-          return rel;
+          return NS_OK_NO_RELATION_TARGET;
 
-        rel.AppendTarget(groupInfo->ConceptualParent());
+        return nsRelUtils::AddTarget(aRelationType, aRelation,
+                                     groupInfo->ConceptualParent());
       }
 
       // If accessible is in its own Window, or is the root of a document,
@@ -2101,28 +2161,65 @@ nsAccessible::RelationByType(PRUint32 aType)
         if (view) {
           nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
           if (scrollFrame || view->GetWidget() || !frame->GetParent())
-            rel.AppendTarget(Parent());
+            return nsRelUtils::AddTarget(aRelationType, aRelation, Parent());
         }
       }
 
-      return rel;
+      return rv;
     }
-    case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
-      return Relation(new RelatedAccIterator(GetDocAccessible(), mContent,
-                                             nsAccessibilityAtoms::aria_controls));
-    case nsIAccessibleRelation::RELATION_CONTROLLER_FOR: {
-      Relation rel(new IDRefsIterator(mContent,
-                                      nsAccessibilityAtoms::aria_controls));
-      rel.AppendIter(new HTMLOutputIterator(GetDocAccessible(), mContent));
-      return rel;
+
+  case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
+    {
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_controls);
+
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      return rv;
     }
-    case nsIAccessibleRelation::RELATION_FLOWS_TO:
-      return Relation(new IDRefsIterator(mContent,
-                                         nsAccessibilityAtoms::aria_flowto));
-    case nsIAccessibleRelation::RELATION_FLOWS_FROM:
-      return Relation(new RelatedAccIterator(GetDocAccessible(), mContent,
-                                             nsAccessibilityAtoms::aria_flowto));
-    case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON: {
+
+  case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
+    {
+      nsresult rv = nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, mContent,
+                                nsAccessibilityAtoms::aria_controls);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      HTMLOutputIterator iter(GetDocAccessible(), mContent);
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      return rv;
+    }
+
+  case nsIAccessibleRelation::RELATION_FLOWS_TO:
+    {
+      return nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, mContent,
+                                nsAccessibilityAtoms::aria_flowto);
+    }
+
+  case nsIAccessibleRelation::RELATION_FLOWS_FROM:
+    {
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_flowto);
+
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      return rv;
+    }
+
+  case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
+    {
       if (mContent->IsHTML()) {
         // HTML form controls implements nsIFormControl interface.
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(mContent));
@@ -2131,10 +2228,12 @@ nsAccessible::RelationByType(PRUint32 aType)
           if (form) {
             nsCOMPtr<nsIContent> formContent =
               do_QueryInterface(form->GetDefaultSubmitElement());
-            return Relation(formContent);
+            return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                                    formContent);
           }
         }
-      } else {
+      }
+      else {
         // In XUL, use first <button default="true" .../> in the document
         nsCOMPtr<nsIDOMXULDocument> xulDoc =
           do_QueryInterface(mContent->GetOwnerDoc());
@@ -2172,31 +2271,39 @@ nsAccessible::RelationByType(PRUint32 aType)
             }
           }
           nsCOMPtr<nsIContent> relatedContent(do_QueryInterface(buttonEl));
-          return Relation(relatedContent);
+          return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                                  relatedContent);
         }
       }
-      return Relation();
+      return NS_OK;
     }
-    case nsIAccessibleRelation::RELATION_MEMBER_OF:
-      return Relation(GetAtomicRegion());
-    case nsIAccessibleRelation::RELATION_SUBWINDOW_OF:
-    case nsIAccessibleRelation::RELATION_EMBEDS:
-    case nsIAccessibleRelation::RELATION_EMBEDDED_BY:
-    case nsIAccessibleRelation::RELATION_POPUP_FOR:
-    case nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF:
-    default:
-    return Relation();
+
+  case nsIAccessibleRelation::RELATION_MEMBER_OF:
+    {
+      nsCOMPtr<nsIContent> regionContent = do_QueryInterface(GetAtomicRegion());
+      return nsRelUtils::
+        AddTargetFromContent(aRelationType, aRelation, regionContent);
+    }
+
+  case nsIAccessibleRelation::RELATION_SUBWINDOW_OF:
+  case nsIAccessibleRelation::RELATION_EMBEDS:
+  case nsIAccessibleRelation::RELATION_EMBEDDED_BY:
+  case nsIAccessibleRelation::RELATION_POPUP_FOR:
+  case nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF:
+    {
+      return NS_OK_NO_RELATION_TARGET;
+    }
+
+  default:
+    return NS_ERROR_INVALID_ARG;
   }
 }
 
 NS_IMETHODIMP
-nsAccessible::GetRelationsCount(PRUint32* aCount)
+nsAccessible::GetRelationsCount(PRUint32 *aCount)
 {
   NS_ENSURE_ARG_POINTER(aCount);
   *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIArray> relations;
   nsresult rv = GetRelations(getter_AddRefs(relations));
@@ -2206,31 +2313,33 @@ nsAccessible::GetRelationsCount(PRUint32* aCount)
 }
 
 NS_IMETHODIMP
-nsAccessible::GetRelation(PRUint32 aIndex, nsIAccessibleRelation** aRelation)
+nsAccessible::GetRelation(PRUint32 aIndex, nsIAccessibleRelation **aRelation)
 {
   NS_ENSURE_ARG_POINTER(aRelation);
   *aRelation = nsnull;
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIArray> relations;
-  nsresult rv= GetRelations(getter_AddRefs(relations));
+  nsresult rv = GetRelations(getter_AddRefs(relations));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIAccessibleRelation> relation = do_QueryElementAt(relations,
-                                                               aIndex, &rv);
-  NS_ADDREF(*aRelation = relation);
-  return rv;
+
+  nsCOMPtr<nsIAccessibleRelation> relation;
+  rv = relations->QueryElementAt(aIndex, NS_GET_IID(nsIAccessibleRelation),
+                                 getter_AddRefs(relation));
+
+  // nsIArray::QueryElementAt() returns NS_ERROR_ILLEGAL_VALUE on invalid index.
+  if (rv == NS_ERROR_ILLEGAL_VALUE)
+    return NS_ERROR_INVALID_ARG;
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_IF_ADDREF(*aRelation = relation);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessible::GetRelations(nsIArray **aRelations)
 {
   NS_ENSURE_ARG_POINTER(aRelations);
-  *aRelations = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIMutableArray> relations = do_CreateInstance(NS_ARRAY_CONTRACTID);
   NS_ENSURE_TRUE(relations, NS_ERROR_OUT_OF_MEMORY);
@@ -2242,12 +2351,8 @@ nsAccessible::GetRelations(nsIArray **aRelations)
     nsCOMPtr<nsIAccessibleRelation> relation;
     nsresult rv = GetRelationByType(relType, getter_AddRefs(relation));
 
-    if (NS_SUCCEEDED(rv) && relation) {
-      PRUint32 targets = 0;
-      relation->GetTargetsCount(&targets);
-      if (targets)
-        relations->AppendElement(relation, PR_FALSE);
-    }
+    if (NS_SUCCEEDED(rv) && relation)
+      relations->AppendElement(relation, PR_FALSE);
   }
 
   NS_ADDREF(*aRelations = relations);
@@ -2869,7 +2974,7 @@ nsAccessible::SelectedItems()
 
   AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   nsIAccessible* selected = nsnull;
-  while ((selected = iter.Next()))
+  while ((selected = iter.GetNext()))
     selectedItems->AppendElement(selected, PR_FALSE);
 
   nsIMutableArray* items = nsnull;
@@ -2883,7 +2988,7 @@ nsAccessible::SelectedItemCount()
   PRUint32 count = 0;
   AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   nsAccessible* selected = nsnull;
-  while ((selected = iter.Next()))
+  while ((selected = iter.GetNext()))
     ++count;
 
   return count;
@@ -2896,7 +3001,7 @@ nsAccessible::GetSelectedItem(PRUint32 aIndex)
   nsAccessible* selected = nsnull;
 
   PRUint32 index = 0;
-  while ((selected = iter.Next()) && index < aIndex)
+  while ((selected = iter.GetNext()) && index < aIndex)
     index++;
 
   return selected;
@@ -2908,7 +3013,7 @@ nsAccessible::IsItemSelected(PRUint32 aIndex)
   PRUint32 index = 0;
   AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
   nsAccessible* selected = nsnull;
-  while ((selected = iter.Next()) && index < aIndex)
+  while ((selected = iter.GetNext()) && index < aIndex)
     index++;
 
   return selected &&
@@ -2921,7 +3026,7 @@ nsAccessible::AddItemToSelection(PRUint32 aIndex)
   PRUint32 index = 0;
   AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
   nsAccessible* selected = nsnull;
-  while ((selected = iter.Next()) && index < aIndex)
+  while ((selected = iter.GetNext()) && index < aIndex)
     index++;
 
   if (selected)
@@ -2936,7 +3041,7 @@ nsAccessible::RemoveItemFromSelection(PRUint32 aIndex)
   PRUint32 index = 0;
   AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
   nsAccessible* selected = nsnull;
-  while ((selected = iter.Next()) && index < aIndex)
+  while ((selected = iter.GetNext()) && index < aIndex)
     index++;
 
   if (selected)
@@ -2952,7 +3057,7 @@ nsAccessible::SelectAll()
   nsAccessible* selectable = nsnull;
 
   AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
-  while((selectable = iter.Next())) {
+  while((selectable = iter.GetNext())) {
     success = true;
     selectable->SetSelected(PR_TRUE);
   }
@@ -2966,7 +3071,7 @@ nsAccessible::UnselectAll()
   nsAccessible* selected = nsnull;
 
   AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
-  while ((selected = iter.Next())) {
+  while ((selected = iter.GetNext())) {
     success = true;
     selected->SetSelected(PR_FALSE);
   }

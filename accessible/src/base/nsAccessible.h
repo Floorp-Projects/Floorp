@@ -62,7 +62,6 @@ class nsAccessible;
 class nsHyperTextAccessible;
 class nsHTMLLIAccessible;
 struct nsRoleMapEntry;
-class Relation;
 class nsTextAccessible;
 
 struct nsRect;
@@ -237,11 +236,6 @@ public:
    */
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
-
-  /**
-   * Get the relation of the given type.
-   */
-  virtual Relation RelationByType(PRUint32 aType);
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing methods
@@ -673,7 +667,7 @@ protected:
    *  Get the container node for an atomic region, defined by aria-atomic="true"
    *  @return the container node
    */
-  nsIContent* GetAtomicRegion() const;
+  nsIDOMNode* GetAtomicRegion();
 
   /**
    * Get numeric value of the given ARIA attribute.

@@ -1,4 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -23,8 +25,8 @@
  *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,34 +38,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsAccessibleRelation_H_
-#define _nsAccessibleRelation_H_
+#ifndef _NS_ACCESSIBLE_RELATION_WRAP_H
+#define _NS_ACCESSIBLE_RELATION_WRAP_H
 
-#include "nsIAccessibleRelation.h"
+#include "nsAccessibleRelation.h"
+#include "AccessibleRelation.h"
 
-#include "nsCOMPtr.h"
-#include "nsIMutableArray.h"
+#include "nsIWinAccessNode.h"
+#include "nsISupports.h"
 
-class Relation;
-
-/**
- * Class represents an accessible relation.
- */
-class nsAccessibleRelation: public nsIAccessibleRelation
+class nsAccessibleRelationWrap: public nsAccessibleRelation,
+                                public nsIWinAccessNode,
+                                public IAccessibleRelation
 {
 public:
-  nsAccessibleRelation(PRUint32 aType, Relation* aRel);
+  nsAccessibleRelationWrap(PRUint32 aType, nsIAccessible *aTarget);
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCESSIBLERELATION
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
-private:
-  nsAccessibleRelation();
-  nsAccessibleRelation(const nsAccessibleRelation&);
-  nsAccessibleRelation& operator = (const nsAccessibleRelation&);
-  
-  PRUint32 mType;
-  nsCOMPtr<nsIMutableArray> mTargets;
+  // nsIWinAccessNode
+  NS_DECL_NSIWINACCESSNODE
+
+  // IUnknown
+  STDMETHODIMP QueryInterface(REFIID, void**);
+
+  // IAccessibleRelation
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_relationType(
+      /* [retval][out] */ BSTR *relationType);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedRelationType(
+      /* [retval][out] */ BSTR *localizedRelationType);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nTargets(
+      /* [retval][out] */ long *nTargets);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_target(
+      /* [in] */ long targetIndex,
+      /* [retval][out] */ IUnknown **target);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_targets(
+      /* [in] */ long maxTargets,
+      /* [length_is][size_is][out] */ IUnknown **target,
+      /* [retval][out] */ long *nTargets);
+
 };
 
 #endif
+
