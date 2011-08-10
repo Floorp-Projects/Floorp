@@ -533,56 +533,6 @@ namespace JSC {
             m_buffer.putInt(static_cast<ARMWord>(cc) | MULL | RN(rdhi) | RD(rdlo) | RS(rn) | RM(rm));
         }
 
-        void fcpyd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmov.f64", nameFpRegD(dd), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FCPYD, dd, dd, dm);
-        }
-
-        void faddd_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vadd.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FADDD, dd, dn, dm);
-        }
-
-        void fnegd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
-            m_buffer.putInt(static_cast<ARMWord>(cc) | FNEGD | DD(dd) | DM(dm));
-        }
-
-        void fabsd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fabsd", nameFpRegD(dd), nameFpRegD(dm));
-            m_buffer.putInt(static_cast<ARMWord>(cc) | FABSD | DD(dd) | DM(dm));
-        }
-
-        void fdivd_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vdiv.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FDIVD, dd, dn, dm);
-        }
-
-        void fsubd_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vsub.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
-        }
-
         void fmuld_r(int dd, int dn, int dm, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
@@ -590,24 +540,6 @@ namespace JSC {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FMULD, dd, dn, dm);
-        }
-
-        void fcmpd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vcmp.f64", nameFpRegD(dd), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FCMPD, dd, 0, dm);
-        }
-
-        void fsqrtd_r(int dd, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vsqrt.f64", nameFpRegD(dd), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
         }
 
         // pc relative loads (useful for loading from pools).
@@ -1549,13 +1481,7 @@ namespace JSC {
             VFP_MOV     = 0x00000010,
 
             FCPYD = 0x0eb00b40,
-            FADDD = 0x0e300b00,
-            FNEGD = 0x0eb10b40,
             FDIVD = 0x0e800b00,
-            FSUBD = 0x0e300b40,
-            FMULD = 0x0e200b00,
-            FCMPD = 0x0eb40b40,
-            FSQRTD = 0x0eb10bc0,
             FMSR = 0x0e000a10,
             FMRS = 0x0e100a10,
             FSITOD = 0x0eb80bc0,
@@ -1718,6 +1644,13 @@ namespace JSC {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
+        }
+
+        void fabsd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fabsd", nameFpRegD(dd), nameFpRegD(dm));
+            m_buffer.putInt(static_cast<ARMWord>(cc) | FABSD | DD(dd) | DM(dm));
         }
 
         void fmuld_r(int dd, int dn, int dm, Condition cc = AL)
