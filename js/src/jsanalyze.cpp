@@ -1597,6 +1597,15 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             stack[stackDepth - 1] = code->poppedValues[2];
             break;
 
+          case JSOP_DUP:
+            stack[stackDepth - 1] = stack[stackDepth - 2] = code->poppedValues[0];
+            break;
+
+          case JSOP_DUP2:
+            stack[stackDepth - 1] = stack[stackDepth - 3] = code->poppedValues[0];
+            stack[stackDepth - 2] = stack[stackDepth - 4] = code->poppedValues[1];
+            break;
+
           case JSOP_SWAP:
             /* Swap is like pick 1. */
           case JSOP_PICK: {
