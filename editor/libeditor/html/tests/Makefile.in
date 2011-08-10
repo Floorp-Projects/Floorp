@@ -57,6 +57,7 @@ _TEST_FILES = \
 		test_bug417418.html \
 		test_bug432225.html \
 		test_bug439808.html \
+		test_bug442186.html \
 		test_bug449243.html \
 		test_bug455992.html \
 		test_bug456244.html \
