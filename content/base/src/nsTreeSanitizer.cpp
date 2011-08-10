@@ -1195,7 +1195,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     rv = NS_OK;
     const nsAttrName* attrName = aElement->GetAttrNameAt(i);
     PRInt32 attrNs = attrName->NamespaceID();
-    nsIAtom* attrLocal = attrName->LocalName();
+    nsCOMPtr<nsIAtom> attrLocal = attrName->LocalName();
 
     if (kNameSpaceID_None == attrNs) {
       if (aAllowStyle && nsGkAtoms::style == attrLocal) {
