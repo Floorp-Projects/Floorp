@@ -142,12 +142,12 @@ struct JS_FRIEND_API(TypedArray) {
     };
 
     enum {
+        /* Properties of the typed array stored in reserved slots. */
         FIELD_LENGTH = 0,
         FIELD_BYTEOFFSET,
         FIELD_BYTELENGTH,
         FIELD_TYPE,
         FIELD_BUFFER,
-        FIELD_DATA,
         FIELD_MAX
     };
 
@@ -180,8 +180,6 @@ struct JS_FRIEND_API(TypedArray) {
     static JSUint32 getType(JSObject *obj);
     static JSObject * getBuffer(JSObject *obj);
     static void * getDataOffset(JSObject *obj);
-
-    static void *offsetData(JSObject *obj, uint32 offs);
 
   public:
     static bool
