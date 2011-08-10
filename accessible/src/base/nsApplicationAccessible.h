@@ -93,11 +93,6 @@ public:
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
-  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
-                               nsIAccessibleRelation **aRelation);
-  NS_IMETHOD GetRelationsCount(PRUint32 *aRelationsCount);
-  NS_IMETHOD GetRelation(PRUint32 aIndex, nsIAccessibleRelation **aRelation);
-  NS_IMETHOD GetRelations(nsIArray **aRelations);
   NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
                        PRInt32 *aWidth, PRInt32 *aHeight);
   NS_IMETHOD SetSelected(PRBool aIsSelected);
@@ -122,6 +117,7 @@ public:
   virtual PRUint32 NativeRole();
   virtual PRUint64 State();
   virtual PRUint64 NativeState();
+  virtual Relation RelationByType(PRUint32 aRelType);
 
   virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                      EWhichChildAtPoint aWhichChild);
