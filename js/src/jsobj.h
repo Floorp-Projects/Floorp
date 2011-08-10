@@ -287,6 +287,9 @@ extern JSBool
 js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 extern JSBool
+js_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
+
+extern JSBool
 js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 extern JSBool
@@ -1426,7 +1429,10 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
     }
 
-    inline JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+    JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp) {
+        js::ElementAttributesOp op = getOps()->getElementAttributes;
+        return (op ? op : js_GetElementAttributes)(cx, this, index, attrsp);
+    }
 
     inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
 

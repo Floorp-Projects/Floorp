@@ -6267,6 +6267,24 @@ js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 JSBool
+js_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    JSProperty *prop;
+    if (!js_LookupElement(cx, obj, index, &obj, &prop))
+        return false;
+    if (!prop) {
+        *attrsp = 0;
+        return true;
+    }
+    if (!obj->isNative())
+        return obj->getElementAttributes(cx, index, attrsp);
+
+    const Shape *shape = (Shape *)prop;
+    *attrsp = shape->attributes();
+    return true;
+}
+
+JSBool
 js_SetNativeAttributes(JSContext *cx, JSObject *obj, Shape *shape, uintN attrs)
 {
     JS_ASSERT(obj->isNative());
