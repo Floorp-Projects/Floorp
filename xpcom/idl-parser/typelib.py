@@ -270,7 +270,7 @@ def write_typelib(idl, fd, filename):
     typelib = xpt.Typelib(interfaces=ifaces)
     typelib.writefd(fd)
 
-def main(*args):
+if __name__ == '__main__':
     from optparse import OptionParser
     o = OptionParser()
     o.add_option('-I', action='append', dest='incdirs', default=['.'],
@@ -312,6 +312,3 @@ def main(*args):
         deps = [dep.replace('\\', '/') for dep in idl.deps]
 
         print >>depfd, "%s: %s" % (options.outfile, " ".join(deps))
-
-if __name__ == '__main__':
-    main()
