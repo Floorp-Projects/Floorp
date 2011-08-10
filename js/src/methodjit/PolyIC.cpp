@@ -2661,7 +2661,7 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     }
 
     // Load the array's packed data vector.
-    masm.loadPrivate(Address(objReg, TypedArray::dataOffset()), objReg);
+    masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);
 
     Int32Key key = idRemat.isConstant()
                  ? Int32Key::FromConstant(v.toInt32())
@@ -3010,11 +3010,9 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, keyReg);
 
     // Load the array's packed data vector.
-    JSObject *tarray = js::TypedArray::getTypedArray(obj);
-    int byteOffset = js::TypedArray::getByteOffset(tarray);
-    masm.loadPrivate(Address(objReg, TypedArray::dataOffset()), objReg);
-    masm.addPtr(Imm32(byteOffset), objReg);
+    masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);
 
+    JSObject *tarray = js::TypedArray::getTypedArray(obj);
     int shift = js::TypedArray::slotWidth(obj);
     if (hasConstantKey) {
         Address addr(objReg, keyValue * shift);
