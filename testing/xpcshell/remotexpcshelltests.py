@@ -36,294 +36,265 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import re, sys, os
+import re, sys, os, os.path, logging, shutil, signal
+from glob import glob
+from optparse import OptionParser
+from subprocess import Popen, PIPE, STDOUT
+from tempfile import mkdtemp
+
 import runxpcshelltests as xpcshell
 from automationutils import *
-import devicemanager, devicemanagerADB, devicemanagerSUT
+import devicemanager
 
-# A specialization of XPCShellTests that runs tests on an Android device
-# via devicemanager.
 class XPCShellRemote(xpcshell.XPCShellTests, object):
 
-    def __init__(self, devmgr, options, args):
-        xpcshell.XPCShellTests.__init__(self)
-        self.options = options
+    def __init__(self, devmgr):
         self.device = devmgr
-        self.pathMapping = []
-        self.remoteTestRoot = self.device.getTestRoot("xpcshell")
-        # Terse directory names are used here ("b" for a binaries directory)
-        # to minimize the length of the command line used to execute
-        # xpcshell on the remote device. adb has a limit to the number
-        # of characters used in a shell command, and the xpcshell command
-        # line can be quite complex.
-        self.remoteBinDir = self.remoteJoin(self.remoteTestRoot, "b")
-        self.remoteScriptsDir = self.remoteTestRoot
-        self.remoteComponentsDir = self.remoteJoin(self.remoteTestRoot, "c")
-        self.profileDir = self.remoteJoin(self.remoteTestRoot, "p")
-        if options.setup:
-          self.setupUtilities()
-          self.setupTestDir()
-        self.remoteAPK = self.remoteJoin(self.remoteBinDir, os.path.basename(options.localAPK))
-        self.remoteDebugger = options.debugger
-        self.remoteDebuggerArgs = options.debuggerArgs  
+        self.testRoot = "/tests/xpcshell"
+        xpcshell.XPCShellTests.__init__(self)
+        self.profileDir = self.testRoot + '/profile'
+        self.device.mkDir(self.profileDir)
 
-    def remoteJoin(self, path1, path2):
-        joined = os.path.join(path1, path2)
-        joined = joined.replace('\\', '/')
-        return joined
+    #todo: figure out the remote version of this, only used for debuggerInfo
+    def getcwd(self):
+        return "/tests/"
+        
+    def readManifest(self, manifest):
+        """Given a manifest file containing a list of test directories,
+        return a list of absolute paths to the directories contained within."""
 
-    def remoteForLocal(self, local):
-        for mapping in self.pathMapping:
-          if (os.path.abspath(mapping.local) == os.path.abspath(local)):
-            return mapping.remote
-        return local
+        manifestdir = self.testRoot + '/tests'
+        testdirs = []
+        try:
+            f = self.device.getFile(manifest, "temp.txt")
+            for line in f.split():
+                dir = line.rstrip()
+                path = manifestdir + '/' + dir
+                testdirs.append(path)
+            f.close()
+        except:
+            pass # just eat exceptions
+        return testdirs
 
-    def setupUtilities(self):
-        remotePrefDir = self.remoteJoin(self.remoteBinDir, "defaults/pref")
-        if (not self.device.dirExists(remotePrefDir)):
-          self.device.mkDirs(self.remoteJoin(remotePrefDir, "extra"))
-        if (not self.device.dirExists(self.remoteScriptsDir)):
-          self.device.mkDir(self.remoteScriptsDir)
-        if (not self.device.dirExists(self.remoteComponentsDir)):
-          self.device.mkDir(self.remoteComponentsDir)
+    def verifyFilePath(self, fileName):
+        # approot - path to root of application - firefox or fennec
+        # xreroot - path to xulrunner binaries - firefox or fennec/xulrunner
+        # xpcshell - full or relative path to xpcshell binary
+        #given fileName, returns full path of existing file
+        if (self.device.fileExists(fileName)):
+            return fileName
+        
+        fileName = self.device.getAppRoot() + '/xulrunner/' + fileName.split('/')[-1]
+        if (self.device.fileExists(fileName)):
+            return fileName
+        
+        fileName = self.device.getAppRoot() + '/' + fileName.split('/')[-1]
+        if (not self.device.fileExists(fileName)):
+            raise devicemanager.FileError("No File found for: " + str(fileName))
 
-        local = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'head.js')
-        self.device.pushFile(local, self.remoteScriptsDir)
+        return fileName
 
-        localBin = os.path.join(self.options.objdir, "dist/bin")
-        if not os.path.exists(localBin):
-          localBin = os.path.join(self.options.objdir, "bin")
-          if not os.path.exists(localBin):
-            print >>sys.stderr, "Error: could not find bin in objdir"
-            sys.exit(1)
+    def verifyDirPath(self, fileName):
+        # approot - path to root of application - firefox or fennec
+        # xreroot - path to xulrunner binaries - firefox or fennec/xulrunner
+        # xpcshell - full or relative path to xpcshell binary
+        #given fileName, returns full path of existing file
+        if (self.device.dirExists(fileName)):
+            return fileName
+        
+        fileName = self.device.getAppRoot() + '/' + fileName.split('/')[-1]
+        if (self.device.dirExists(fileName)):
+            return fileName
+        
+        fileName = self.device.getDeviceRoot() + '/' + fileName.split('/')[-1]
+        if (not self.device.dirExists(fileName)):
+            raise devicemanager.FileError("No Dir found for: " + str(fileName))
+        return fileName
 
-        local = os.path.join(localBin, "xpcshell")
-        self.device.pushFile(local, self.remoteBinDir)
+    def setAbsPath(self):
+        #testharnessdir is used for head.js
+        self.testharnessdir = "/tests/xpcshell/"
 
-        local = os.path.join(localBin, "plugin-container")
-        self.device.pushFile(local, self.remoteBinDir)
+        # If the file exists then we have a full path (no notion of cwd)
+        self.xpcshell = self.verifyFilePath(self.xpcshell)
+        if self.xrePath is None:
+            # If no xrePath, assume it is the directory containing xpcshell
+            self.xrePath = '/'.join(self.xpcshell.split('/')[:-1])
+        else:
+            self.xrePath = self.verifyDirPath(self.xrePath)
 
-        local = os.path.join(localBin, "components/httpd.js")
-        self.device.pushFile(local, self.remoteComponentsDir)
-
-        local = os.path.join(localBin, "components/httpd.manifest")
-        self.device.pushFile(local, self.remoteComponentsDir)
-
-        local = os.path.join(localBin, "components/test_necko.xpt")
-        self.device.pushFile(local, self.remoteComponentsDir)
-
-        self.device.pushFile(self.options.localAPK, self.remoteBinDir)
-
-        localLib = os.path.join(self.options.objdir, "dist/fennec")
-        if not os.path.exists(localLib):
-          localLib = os.path.join(self.options.objdir, "fennec/lib")
-          if not os.path.exists(localLib):
-            print >>sys.stderr, "Error: could not find libs in objdir"
-            sys.exit(1)
-
-        for file in os.listdir(localLib):
-          if (file.endswith(".so")):
-            self.device.pushFile(os.path.join(localLib, file), self.remoteBinDir)
-
-    def setupTestDir(self):
-        xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
-        self.device.pushDir(xpcDir, self.remoteScriptsDir)
-
-    def buildTestList(self):
-        xpcshell.XPCShellTests.buildTestList(self)
-        uniqueTestPaths = set([])
-        for test in self.alltests:
-          uniqueTestPaths.add(test['here'])
-        for testdir in uniqueTestPaths:
-          xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
-          abbrevTestDir = os.path.relpath(testdir, xpcDir)
-          remoteScriptDir = self.remoteJoin(self.remoteScriptsDir, abbrevTestDir)
-          self.pathMapping.append(PathMapping(testdir, remoteScriptDir))
+        # we assume that httpd.js lives in components/ relative to xpcshell
+        self.httpdJSPath = self.xrePath + '/components/httpd.js'
 
     def buildXpcsCmd(self, testdir):
-        self.xpcsCmd = [
-           self.remoteJoin(self.remoteBinDir, "xpcshell"),
-           '-r', self.remoteJoin(self.remoteComponentsDir, 'httpd.manifest'),
-           '--greomni', self.remoteAPK,
-           '-j', '-s',
-           '-e', 'const _HTTPD_JS_PATH = "%s";' % self.remoteJoin(self.remoteComponentsDir, 'httpd.js'),
-           '-e', 'const _HEAD_JS_PATH = "%s";' % self.remoteJoin(self.remoteScriptsDir, 'head.js'),
-           '-f', self.remoteScriptsDir+'/head.js']
+        # <head.js> has to be loaded by xpchell: it can't load itself.
+        self.env["XPCSHELL_TEST_PROFILE_DIR"] = self.profileDir
+        self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-v', '170', '-j', '-s', \
+                        "--environ:CWD='" + testdir + "'", \
+                        "--environ:XPCSHELL_TEST_PROFILE_DIR='" + self.env["XPCSHELL_TEST_PROFILE_DIR"] + "'", \
+                        '-e', 'const _HTTPD_JS_PATH = \'%s\';' % self.httpdJSPath,
+                        '-f', self.testharnessdir + '/head.js']
 
-        if self.remoteDebugger:
-          # for example, "/data/local/gdbserver" "localhost:12345"
-          self.xpcsCmd = [
-            self.remoteDebugger, 
-            self.remoteDebuggerArgs, 
-            self.xpcsCmd]
+        if self.debuggerInfo:
+            self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
 
-    def getHeadFiles(self, test):
-        self.remoteHere = self.remoteForLocal(test['here'])
-        return [f.strip() for f in sorted(test['head'].split(' ')) if self.device.fileExists(self.remoteJoin(self.remoteHere, f))]
-    
-    def getTailFiles(self, test):
-        return [f.strip() for f in sorted(test['tail'].split(' ')) if self.device.fileExists(self.remoteJoin(self.remoteHere, f))]
+    def getHeadFiles(self, testdir):
+        # get the list of head and tail files from the directory
+        testHeadFiles = []
+        for f in self.device.listFiles(testdir):
+            hdmtch = re.compile("head_.*\.js")
+            if (hdmtch.match(f)):
+                testHeadFiles += [(testdir + '/' + f).replace('/', '//')]
+                
+        return sorted(testHeadFiles)
+                
+    def getTailFiles(self, testdir):
+        testTailFiles = []
+        # Tails are executed in the reverse order, to "match" heads order,
+        # as in "h1-h2-h3 then t3-t2-t1".
+        for f in self.device.listFiles(testdir):
+            tlmtch = re.compile("tail_.*\.js")
+            if (tlmtch.match(f)):
+                testTailFiles += [(testdir + '/' + f).replace('/', '//')]
+        return reversed(sorted(testTailFiles))
         
-    def buildCmdTestFile(self, name):
-        remoteDir = self.remoteForLocal(os.path.dirname(name))
-        if remoteDir == self.remoteHere:
-          remoteName = os.path.basename(name)
-        else:
-          remoteName = self.remoteJoin(remoteDir, os.path.basename(name))
-        return ['-e', 'const _TEST_FILE = ["%s"];' %
-                 replaceBackSlashes(remoteName)]
+    def getTestFiles(self, testdir):
+        testfiles = []
+        # if a single test file was specified, we only want to execute that test
+        for f in self.device.listFiles(testdir):
+            tstmtch = re.compile("test_.*\.js")
+            if (tstmtch.match(f)):
+                testfiles += [(testdir + '/' + f).replace('/', '//')]
+        
+        for f in testfiles:
+            if (self.singleFile == f.split('/')[-1]):
+                return [(testdir + '/' + f).replace('/', '//')]
+            else:
+                pass
+        return testfiles
 
     def setupProfileDir(self):
         self.device.removeDir(self.profileDir)
         self.device.mkDir(self.profileDir)
-        if self.interactive or self.singleFile:
-          self.log.info("TEST-INFO | profile dir is %s" % self.profileDir)
+        self.env["XPCSHELL_TEST_PROFILE_DIR"] = self.profileDir
         return self.profileDir
 
+    def setupLeakLogging(self):
+        filename = "runxpcshelltests_leaks.log"
+        
+        # Enable leaks (only) detection to its own log file.
+        leakLogFile = self.profileDir + '/' + filename
+        self.env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
+        return leakLogFile
+
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
-        # Some xpcshell arguments contain characters that are interpretted
-        # by the adb shell; enclose these arguments in quotes.
-        index = 0
-        for part in cmd:
-          if (part.find(" ")>=0 or part.find("(")>=0 or part.find(")")>=0 or part.find("\"")>=0):
-            part = '\''+part+'\''
-            cmd[index] = part
-          index = index + 1
-
-        xpcshell = self.remoteJoin(self.remoteBinDir, "xpcshell")
-
-        shellArgs = "cd "+self.remoteHere
-        shellArgs += "; LD_LIBRARY_PATH="+self.remoteBinDir
-        shellArgs += "; export CACHE_PATH="+self.remoteBinDir
-        shellArgs += "; export GRE_HOME="+self.device.getAppRoot()
-        shellArgs += "; export XPCSHELL_TEST_PROFILE_DIR="+self.profileDir
-        shellArgs += "; "+xpcshell+" "
-        shellArgs += " ".join(cmd[1:])
-
-        if self.verbose:
-          self.log.info(shellArgs)
-
-        # If the adb version of devicemanager is used and the arguments passed
-        # to adb exceed ~1024 characters, the command may not execute.
-        if len(shellArgs) > 1000:
-          self.log.info("adb command length is excessive and may cause failure")
-
-        proc = self.device.runCmd(["shell", shellArgs])
+        print "launching : " + " ".join(cmd)
+        proc = self.device.launchProcess(cmd, cwd=cwd)
         return proc
 
+    def setSignal(self, proc, sig1, sig2):
+        self.device.signal(proc, sig1, sig2)
+
     def communicate(self, proc):
-        return proc.communicate()
+        return self.device.communicate(proc)
 
     def removeDir(self, dirname):
         self.device.removeDir(dirname)
 
     def getReturnCode(self, proc):
-        return proc.returncode
+        return self.device.getReturnCode(proc)
 
     #TODO: consider creating a separate log dir.  We don't have the test file structure,
     #      so we use filename.log.  Would rather see ./logs/filename.log
-    def createLogFile(self, test, stdout, leakLogs):
+    def createLogFile(self, test, stdout):
         try:
             f = None
             filename = test.replace('\\', '/').split('/')[-1] + ".log"
             f = open(filename, "w")
             f.write(stdout)
 
-            for leakLog in leakLogs:
-              if os.path.exists(leakLog):
-                leaks = open(leakLog, "r")
+            if os.path.exists(self.leakLogFile):
+                leaks = open(self.leakLogFile, "r")
                 f.write(leaks.read())
                 leaks.close()
         finally:
             if f <> None:
                 f.close()
 
+    #NOTE: the only difference between this and parent is the " vs ' arond the filename
+    def buildCmdHead(self, headfiles, tailfiles, xpcscmd):
+        cmdH = ", ".join(['\'' + f.replace('\\', '/') + '\''
+                       for f in headfiles])
+        cmdT = ", ".join(['\'' + f.replace('\\', '/') + '\''
+                       for f in tailfiles])
+        cmdH = xpcscmd + \
+                ['-e', 'const _HEAD_FILES = [%s];' % cmdH] + \
+                ['-e', 'const _TAIL_FILES = [%s];' % cmdT]
+        return cmdH
+
 class RemoteXPCShellOptions(xpcshell.XPCShellOptions):
 
-    def __init__(self):
-        xpcshell.XPCShellOptions.__init__(self)
-        defaults = {}
+  def __init__(self):
+    xpcshell.XPCShellOptions.__init__(self)
+    self.add_option("--device",
+                    type="string", dest="device", default='',
+                    help="ip address for the device")
 
-        self.add_option("--deviceIP", action="store",
-                        type = "string", dest = "deviceIP",
-                        help = "ip address of remote device to test")
-        defaults["deviceIP"] = None
- 
-        self.add_option("--devicePort", action="store",
-                        type = "string", dest = "devicePort",
-                        help = "port of remote device to test")
-        defaults["devicePort"] = 20701
-
-        self.add_option("--dm_trans", action="store",
-                        type = "string", dest = "dm_trans",
-                        help = "the transport to use to communicate with device: [adb|sut]; default=sut")
-        defaults["dm_trans"] = "sut"
- 
-        self.add_option("--objdir", action="store",
-                        type = "string", dest = "objdir",
-                        help = "local objdir, containing xpcshell binaries")
-        defaults["objdir"] = None
- 
-        self.add_option("--apk", action="store",
-                        type = "string", dest = "localAPK",
-                        help = "local path to Fennec APK")
-        defaults["localAPK"] = None
-
-        self.add_option("--noSetup", action="store_false",
-                        dest = "setup",
-                        help = "do not copy any files to device (to be used only if device is already setup)")
-        defaults["setup"] = True
-
-        self.set_defaults(**defaults)
-
-class PathMapping:
-
-    def __init__(self, localDir, remoteDir):
-        self.local = localDir
-        self.remote = remoteDir
 
 def main():
 
-    dm_none = devicemanagerADB.DeviceManagerADB(None, None)
-    parser = RemoteXPCShellOptions()
-    options, args = parser.parse_args()
+  parser = RemoteXPCShellOptions()
+  options, args = parser.parse_args()
 
-    if len(args) < 1 and options.manifest is None:
-      print >>sys.stderr, """Usage: %s <test dirs>
-           or: %s --manifest=test.manifest """ % (sys.argv[0], sys.argv[0])
-      sys.exit(1)
+  if len(args) < 2 and options.manifest is None or \
+     (len(args) < 1 and options.manifest is not None):
+     print "len(args): " + str(len(args))
+     print >>sys.stderr, """Usage: %s <path to xpcshell> <test dirs>
+           or: %s --manifest=test.manifest <path to xpcshell>""" % (sys.argv[0],
+                                                           sys.argv[0])
+     sys.exit(1)
 
-    if (options.dm_trans == "adb"):
-      if (options.deviceIP):
-        dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
-      else:
-        dm = dm_none
-    else:
-      dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
-      if (options.deviceIP == None):
-        print "Error: you must provide a device IP to connect to via the --device option"
-        sys.exit(1)
+  if (options.device == ''):
+    print >>sys.stderr, "Error: Please provide an ip address for the remote device with the --device option"
+    sys.exit(1)
 
-    if options.interactive and not options.testPath:
-      print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
-      sys.exit(1)
 
-    if not options.objdir:
-      print >>sys.stderr, "Error: You must specify an objdir"
-      sys.exit(1)
+  dm = devicemanager.DeviceManager(options.device, 20701)
+  xpcsh = XPCShellRemote(dm)
+  debuggerInfo = getDebuggerInfo(xpcsh.oldcwd, options.debugger, options.debuggerArgs,
+    options.debuggerInteractive);
 
-    if not options.localAPK:
-      print >>sys.stderr, "Error: You must specify an APK"
-      sys.exit(1)
+  if options.interactive and not options.testPath:
+    print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
+    sys.exit(1)
 
-    xpcsh = XPCShellRemote(dm, options, args)
+  # Zip up the xpcshell directory: 7z a <zipName> xpcshell/*, assuming we are in the xpcshell directory
+  # TODO: ensure the system has 7z, this is adding a new dependency to the overall system
+  zipName = 'xpcshell.7z'
+  try:
+    Popen(['7z', 'a', zipName, '../xpcshell']).wait()
+  except:
+    print "to run these tests remotely, we require 7z to be installed and in your path"
+    sys.exit(1)
 
-    if not xpcsh.runTests(xpcshell='xpcshell', 
-                          testdirs=args[0:], 
-                          **options.__dict__):
-      sys.exit(1)
+  if dm.pushFile(zipName, '/tests/xpcshell.7z') == None:
+     raise devicemanager.FileError("failed to copy xpcshell.7z to device")
+  if dm.unpackFile('xpcshell.7z') == None:
+     raise devicemanager.FileError("failed to unpack xpcshell.7z on the device")
 
+  if not xpcsh.runTests(args[0],
+                        xrePath=options.xrePath,
+                        symbolsPath=options.symbolsPath,
+                        manifest=options.manifest,
+                        testdirs=args[1:],
+                        testPath=options.testPath,
+                        interactive=options.interactive,
+                        logfiles=options.logfiles,
+                        debuggerInfo=debuggerInfo):
+    sys.exit(1)
 
 if __name__ == '__main__':
   main()
+
+
 
