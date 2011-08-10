@@ -48,6 +48,12 @@ MoveResolver::MoveResolver()
 {
 }
 
+void
+MoveResolver::resetState()
+{
+    hasCycles_ = false;
+}
+
 bool
 MoveResolver::addMove(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
@@ -81,6 +87,7 @@ MoveResolver::findBlockingMove(const PendingMove *last)
 bool
 MoveResolver::resolve()
 {
+    resetState();
     orderedMoves_.clear();
 
     InlineList<PendingMove> stack;
