@@ -275,7 +275,6 @@ EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
 		ArgumentsObject.h \
-		Debugger.h \
 		GlobalObject.h \
 		Stack.h \
 		String.h \
