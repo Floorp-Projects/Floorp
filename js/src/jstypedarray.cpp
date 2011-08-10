@@ -925,17 +925,13 @@ class TypedArrayTemplate
 
         do {
             obj->setSlot(FIELD_BUFFER, ObjectValue(*bufobj));
+
             /*
-             * NOTE: unlike the earlier implementation where the 'data' pointed
-             * directly to the right offset in the ArrayBuffer
-             * this points to the base of the ArrayBuffer.
-             * getIndex is modified to get the right index.
-             *
-             * This is because on 64 bit systems the jsval.h Private API
-             * requires pointers stored in jsvals to be two-byte aligned.
-             * TM and JM both need a few extra instructions to add the offset.
+             * N.B. The base of the array's data is stored in the object's
+             * private data rather than a slot, to avoid alignment restrictions
+             * on private Values.
              */
-            obj->setSlot(FIELD_DATA, PrivateValue(ArrayBuffer::getDataOffset(bufobj)));
+            obj->setPrivate(ArrayBuffer::getDataOffset(bufobj) + byteOffset);
         } while(0);
 
         obj->setSlot(FIELD_LENGTH, Int32Value(len));
@@ -1742,6 +1738,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
 {                                                                              \
     #_typedArray,                                                              \
     JSCLASS_HAS_RESERVED_SLOTS(TypedArray::FIELD_MAX) |                        \
+    JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
     PropertyStub,         /* addProperty */                                    \
     PropertyStub,         /* delProperty */                                    \
@@ -1757,6 +1754,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
 {                                                                              \
     #_typedArray,                                                              \
     JSCLASS_HAS_RESERVED_SLOTS(TypedArray::FIELD_MAX) |                        \
+    JSCLASS_HAS_PRIVATE |                                                      \
     Class::NON_NATIVE,                                                         \
     PropertyStub,         /* addProperty */                                    \
     PropertyStub,         /* delProperty */                                    \
