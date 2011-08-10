@@ -39,7 +39,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "nsTArray.h"
-#include "nsTPtrArray.h"
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
@@ -428,7 +427,7 @@ static PRBool test_refptr_array() {
 //----
 
 static PRBool test_ptrarray() {
-  nsTPtrArray<PRUint32> ary;
+  nsTArray<PRUint32*> ary;
   if (ary.SafeElementAt(0) != nsnull)
     return PR_FALSE;
   if (ary.SafeElementAt(1000) != nsnull)
@@ -440,7 +439,7 @@ static PRBool test_ptrarray() {
   if (*ary.SafeElementAt(0) != a)
     return PR_FALSE;
 
-  nsTPtrArray<const PRUint32> cary;
+  nsTArray<const PRUint32*> cary;
   if (cary.SafeElementAt(0) != nsnull)
     return PR_FALSE;
   if (cary.SafeElementAt(1000) != nsnull)
