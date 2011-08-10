@@ -153,19 +153,3 @@ function enterAndLeavePrivateBrowsing(callback) {
     togglePrivateBrowsing(callback);
   });
 }
-
-// ----------
-function togglePrivateBrowsing(callback) {
-  let topic = "private-browsing-transition-complete";
-
-  function pbObserver(aSubject, aTopic, aData) {
-    if (aTopic != topic)
-      return;
-
-    Services.obs.removeObserver(pbObserver, topic, false);
-    afterAllTabsLoaded(callback);
-  }
-
-  Services.obs.addObserver(pbObserver, topic, false);
-  pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
-}

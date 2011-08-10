@@ -15,7 +15,7 @@ function test() {
     HttpRequestObserver.unregister();
     if (gBrowser.tabs[1])
       gBrowser.removeTab(gBrowser.tabs[1]);
-    hideTabView(function () {});
+    hideTabView();
 
     contentWindow.ThumbnailStorage.enablePersistentHttpsCaching =
         enablePersistentHttpsCaching;

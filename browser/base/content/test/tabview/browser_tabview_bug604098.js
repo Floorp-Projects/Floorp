@@ -10,7 +10,7 @@ function test() {
   registerCleanupFunction(function() {
     if (gBrowser.tabs.length > 1)
       gBrowser.removeTab(gBrowser.tabs[1]);
-    hideTabView(function() {});
+    hideTabView();
   });
 
   showTabView(function() {
