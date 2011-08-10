@@ -42,6 +42,7 @@
  
 #include "nsApplicationAccessible.h"
 
+#include "Relation.h"
 #include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
@@ -182,38 +183,10 @@ nsApplicationAccessible::FocusedChild()
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetRelationByType(PRUint32 aRelationType,
-                                           nsIAccessibleRelation **aRelation)
+Relation
+nsApplicationAccessible::RelationByType(PRUint32 aRelationType)
 {
-  NS_ENSURE_ARG_POINTER(aRelation);
-  *aRelation = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetRelationsCount(PRUint32 *aCount)
-{
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetRelation(PRUint32 aIndex,
-                                     nsIAccessibleRelation **aRelation)
-{
-  NS_ENSURE_ARG_POINTER(aRelation);
-  *aRelation = nsnull;
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetRelations(nsIArray **aRelations)
-{
-  NS_ENSURE_ARG_POINTER(aRelations);
-  *aRelations = nsnull;
-  return NS_OK;
+  return Relation();
 }
 
 NS_IMETHODIMP
