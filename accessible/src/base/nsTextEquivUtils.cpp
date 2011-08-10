@@ -39,7 +39,6 @@
 
 #include "nsTextEquivUtils.h"
 
-#include "AccIterator.h"
 #include "nsAccessibilityService.h"
 #include "nsAccessible.h"
 #include "nsAccUtils.h"

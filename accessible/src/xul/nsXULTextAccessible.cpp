@@ -44,11 +44,10 @@
 #include "nsAccUtils.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsCoreUtils.h"
+#include "nsRelUtils.h"
 #include "nsTextEquivUtils.h"
-#include "Relation.h"
 #include "States.h"
 
-#include "nsIAccessibleRelation.h"
 #include "nsIDOMXULDescriptionElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsString.h"
@@ -89,21 +88,25 @@ nsXULTextAccessible::NativeState()
   return nsHyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
 
-Relation
-nsXULTextAccessible::RelationByType(PRUint32 aType)
+NS_IMETHODIMP
+nsXULTextAccessible::GetRelationByType(PRUint32 aRelationType,
+                                       nsIAccessibleRelation **aRelation)
 {
-  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
-  if (aType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
+  nsresult rv =
+    nsHyperTextAccessibleWrap::GetRelationByType(aRelationType, aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
     // Caption is the label for groupbox
     nsIContent *parent = mContent->GetParent();
     if (parent && parent->Tag() == nsAccessibilityAtoms::caption) {
       nsAccessible* parent = Parent();
       if (parent && parent->Role() == nsIAccessibleRole::ROLE_GROUPING)
-        rel.AppendTarget(parent);
+        return nsRelUtils::AddTarget(aRelationType, aRelation, parent);
     }
   }
 
-  return rel;
+  return NS_OK;
 }
 
 

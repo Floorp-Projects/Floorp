@@ -44,13 +44,12 @@
 #include "nsAccTreeWalker.h"
 #include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
-#include "Relation.h"
+#include "nsRelUtils.h"
 #include "States.h"
 
 // NOTE: alphabetically ordered
 #include "nsHTMLFormControlAccessible.h"
 #include "nsXULMenuAccessible.h"
-#include "nsIAccessibleRelation.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMXULButtonElement.h"
@@ -418,41 +417,48 @@ nsresult
 nsXULGroupboxAccessible::GetNameInternal(nsAString& aName)
 {
   // XXX: we use the first related accessible only.
-  nsAccessible* label =
-    RelationByType(nsIAccessibleRelation::RELATION_LABELLED_BY).Next();
-  if (label)
+  nsCOMPtr<nsIAccessible> label =
+    nsRelUtils::GetRelatedAccessible(this, nsIAccessibleRelation::RELATION_LABELLED_BY);
+
+  if (label) {
     return label->GetName(aName);
+  }
 
   return NS_OK;
 }
 
-Relation
-nsXULGroupboxAccessible::RelationByType(PRUint32 aType)
+NS_IMETHODIMP
+nsXULGroupboxAccessible::GetRelationByType(PRUint32 aRelationType,
+                                           nsIAccessibleRelation **aRelation)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABELLED_BY)
-    return rel;
+  nsresult rv = nsAccessibleWrap::GetRelationByType(aRelationType, aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // The label for xul:groupbox is generated from xul:label that is
-  // inside the anonymous content of the xul:caption.
-  // The xul:label has an accessible object but the xul:caption does not
-  PRInt32 childCount = GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *childAcc = GetChildAt(childIdx);
-    if (childAcc->Role() == nsIAccessibleRole::ROLE_LABEL) {
-      // Ensure that it's our label
-      Relation reverseRel =
-        childAcc->RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
-      nsAccessible* testGroupbox = nsnull;
-      while ((testGroupbox = reverseRel.Next()))
-        if (testGroupbox == this) {
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABELLED_BY) {
+    // The label for xul:groupbox is generated from xul:label that is
+    // inside the anonymous content of the xul:caption.
+    // The xul:label has an accessible object but the xul:caption does not
+    PRInt32 childCount = GetChildCount();
+    for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+      nsAccessible *childAcc = GetChildAt(childIdx);
+      if (childAcc->Role() == nsIAccessibleRole::ROLE_LABEL) {
+        // Ensure that it's our label
+        // XXX: we'll fail if group accessible expose more than one relation
+        // targets.
+        nsCOMPtr<nsIAccessible> testGroupboxAccessible =
+          nsRelUtils::GetRelatedAccessible(childAcc,
+                                           nsIAccessibleRelation::RELATION_LABEL_FOR);
+
+        if (testGroupboxAccessible == this) {
           // The <label> points back to this groupbox
-          rel.AppendTarget(childAcc);
+          return nsRelUtils::
+            AddTarget(aRelationType, aRelation, childAcc);
         }
+      }
     }
   }
 
-  return rel;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

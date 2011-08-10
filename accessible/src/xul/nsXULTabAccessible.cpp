@@ -39,11 +39,10 @@
 #include "nsXULTabAccessible.h"
 
 #include "nsAccUtils.h"
-#include "Relation.h"
+#include "nsRelUtils.h"
 #include "States.h"
 
 // NOTE: alphabetically ordered
-#include "nsIAccessibleRelation.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIDOMDocument.h"
@@ -139,28 +138,32 @@ nsXULTabAccessible::NativeState()
 }
 
 // nsIAccessible
-Relation
-nsXULTabAccessible::RelationByType(PRUint32 aType)
+NS_IMETHODIMP
+nsXULTabAccessible::GetRelationByType(PRUint32 aRelationType,
+                                      nsIAccessibleRelation **aRelation)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
-    return rel;
+  nsresult rv = nsAccessibleWrap::GetRelationByType(aRelationType,
+                                                    aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aRelationType != nsIAccessibleRelation::RELATION_LABEL_FOR)
+    return NS_OK;
 
   // Expose 'LABEL_FOR' relation on tab accessible for tabpanel accessible.
   nsCOMPtr<nsIDOMXULRelatedElement> tabsElm =
     do_QueryInterface(mContent->GetParent());
   if (!tabsElm)
-    return rel;
+    return NS_OK;
 
   nsCOMPtr<nsIDOMNode> DOMNode(GetDOMNode());
   nsCOMPtr<nsIDOMNode> tabpanelNode;
   tabsElm->GetRelatedElement(DOMNode, getter_AddRefs(tabpanelNode));
   if (!tabpanelNode)
-    return rel;
+    return NS_OK;
 
   nsCOMPtr<nsIContent> tabpanelContent(do_QueryInterface(tabpanelNode));
-  rel.AppendTarget(tabpanelContent);
-  return rel;
+  return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                          tabpanelContent);
 }
 
 void
@@ -241,26 +244,29 @@ nsXULTabpanelAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_PROPERTYPAGE;
 }
 
-Relation
-nsXULTabpanelAccessible::RelationByType(PRUint32 aType)
+NS_IMETHODIMP
+nsXULTabpanelAccessible::GetRelationByType(PRUint32 aRelationType,
+                                           nsIAccessibleRelation **aRelation)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABELLED_BY)
-    return rel;
+  nsresult rv = nsAccessibleWrap::GetRelationByType(aRelationType, aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aRelationType != nsIAccessibleRelation::RELATION_LABELLED_BY)
+    return NS_OK;
 
   // Expose 'LABELLED_BY' relation on tabpanel accessible for tab accessible.
   nsCOMPtr<nsIDOMXULRelatedElement> tabpanelsElm =
     do_QueryInterface(mContent->GetParent());
   if (!tabpanelsElm)
-    return rel;
+    return NS_OK;
 
   nsCOMPtr<nsIDOMNode> DOMNode(GetDOMNode());
   nsCOMPtr<nsIDOMNode> tabNode;
   tabpanelsElm->GetRelatedElement(DOMNode, getter_AddRefs(tabNode));
   if (!tabNode)
-    return rel;
+    return NS_OK;
 
   nsCOMPtr<nsIContent> tabContent(do_QueryInterface(tabNode));
-  rel.AppendTarget(tabContent);
-  return rel;
+  return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                          tabContent);
 }

@@ -188,6 +188,9 @@ public:
   NS_IMETHOD SetSelected(PRBool aSelect); 
   NS_IMETHOD TakeFocus();
 
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
+
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel,
                            PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
@@ -203,7 +206,6 @@ public:
   // nsAccessible
   virtual PRUint64 NativeState();
   virtual PRInt32 IndexInParent() const;
-  virtual Relation RelationByType(PRUint32 aType);
   virtual nsAccessible* FocusedChild();
 
   // ActionAccessible

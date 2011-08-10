@@ -56,13 +56,14 @@ public:
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
 
   // nsAccessible
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
-  virtual Relation RelationByType(PRUint32 aType);
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
@@ -117,9 +118,12 @@ class nsXULTabpanelAccessible : public nsAccessibleWrap
 public:
   nsXULTabpanelAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
+  // nsIAccessible
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
+
   // nsAccessible
   virtual PRUint32 NativeRole();
-  virtual Relation RelationByType(PRUint32 aType);
 };
 
 #endif

@@ -51,8 +51,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
 
-class Relation;
-
 #define NS_ROOTACCESSIBLE_IMPL_CID                      \
 {  /* eaba2cf0-21b1-4e2b-b711-d3a89dcd5e1a */           \
   0xeaba2cf0,                                           \
@@ -75,6 +73,8 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -83,7 +83,6 @@ public:
   virtual void Shutdown();
 
   // nsAccessible
-  virtual Relation RelationByType(PRUint32 aType);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
 
