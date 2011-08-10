@@ -533,15 +533,6 @@ namespace JSC {
             m_buffer.putInt(static_cast<ARMWord>(cc) | MULL | RN(rdhi) | RD(rdlo) | RS(rn) | RM(rm));
         }
 
-        void fmuld_r(int dd, int dn, int dm, Condition cc = AL)
-        {
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmul.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FMULD, dd, dn, dm);
-        }
-
         // pc relative loads (useful for loading from pools).
         void ldr_imm(int rd, ARMWord imm, Condition cc = AL)
         {
@@ -1480,8 +1471,6 @@ namespace JSC {
             VFP_DTR   = 0x01000000,
             VFP_MOV     = 0x00000010,
 
-            FCPYD = 0x0eb00b40,
-            FDIVD = 0x0e800b00,
             FMSR = 0x0e000a10,
             FMRS = 0x0e100a10,
             FSITOD = 0x0eb80bc0,
