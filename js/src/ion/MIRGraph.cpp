@@ -97,7 +97,7 @@ MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc, Kind
     if (!block->init())
         return NULL;
 
-    if (pred && !block->inherit(pred))
+    if (!block->inherit(pred))
         return NULL;
 
     return block;
@@ -138,9 +138,6 @@ MBasicBlock::init()
     slots_ = gen()->allocate<StackSlot>(gen()->nslots());
     if (!slots_)
         return false;
-    entrySnapshot_ = new MSnapshot(this, pc());
-    if (!entrySnapshot_->init(this))
-        return false;
     return true;
 }
 
@@ -156,12 +153,21 @@ MBasicBlock::copySlots(MBasicBlock *from)
 bool
 MBasicBlock::inherit(MBasicBlock *pred)
 {
-    copySlots(pred);
-    if (!predecessors_.append(pred))
+    if (pred)
+        copySlots(pred);
+
+    // Create a snapshot using our initial stack state.
+    entrySnapshot_ = new MSnapshot(this, pc());
+    if (!entrySnapshot_->init(this))
         return false;
 
-    for (size_t i = 0; i < stackDepth(); i++)
-        entrySnapshot()->initOperand(i, getSlot(i));
+    if (pred) {
+        if (!predecessors_.append(pred))
+            return false;
+
+        for (size_t i = 0; i < stackDepth(); i++)
+            entrySnapshot()->initOperand(i, getSlot(i));
+    }
 
     return true;
 }
@@ -451,8 +457,7 @@ MBasicBlock::removePhiAt(MPhiIterator &at)
 bool
 MBasicBlock::addPredecessor(MBasicBlock *pred)
 {
-    if (predecessors_.length() == 0)
-        return inherit(pred);
+    JS_ASSERT(predecessors_.length() > 0);
 
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(pred->lastIns_);
