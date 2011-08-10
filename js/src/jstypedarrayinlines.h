@@ -94,17 +94,7 @@ TypedArray::getBuffer(JSObject *obj) {
 
 inline void *
 TypedArray::getDataOffset(JSObject *obj) {
-    return (void *)((uint8*)obj->getFixedSlot(FIELD_DATA).toPrivate() + getByteOffset(obj));
-}
-
-inline int
-TypedArray::lengthOffset() {
-    return JSObject::getFixedSlotOffset(FIELD_LENGTH);
-}
-
-inline int
-TypedArray::dataOffset() {
-    return JSObject::getFixedSlotOffset(FIELD_DATA);
+    return (void *)obj->getPrivate();
 }
 
 }

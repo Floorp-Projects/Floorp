@@ -147,12 +147,12 @@ struct JS_FRIEND_API(TypedArray) {
     };
 
     enum {
+        /* Properties of the typed array stored in reserved slots. */
         FIELD_LENGTH = 0,
         FIELD_BYTEOFFSET,
         FIELD_BYTELENGTH,
         FIELD_TYPE,
         FIELD_BUFFER,
-        FIELD_DATA,
         FIELD_MAX
     };
 
@@ -186,8 +186,6 @@ struct JS_FRIEND_API(TypedArray) {
     static JSObject * getBuffer(JSObject *obj);
     static void * getDataOffset(JSObject *obj);
 
-    static void *offsetData(JSObject *obj, uint32 offs);
-
   public:
     static bool
     isArrayIndex(JSContext *cx, JSObject *obj, jsid id, jsuint *ip = NULL);
@@ -217,8 +215,13 @@ struct JS_FRIEND_API(TypedArray) {
         return slotWidth(getType(obj));
     }
 
-    static inline int lengthOffset();
-    static inline int dataOffset();
+    static inline int lengthOffset() {
+        return JSObject::getFixedSlotOffset(FIELD_LENGTH);
+    }
+
+    static inline int dataOffset() {
+        return offsetof(JSObject, privateData);
+    }
 };
 
 extern bool
