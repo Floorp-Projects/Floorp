@@ -135,12 +135,10 @@ js_Int32ToId(JSContext* cx, int32 index, jsid* id)
 
 namespace js {
 
-static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
-
 /*
  * Write out character representing |index| to the memory just before |end|.
  * Thus |*end| is not touched, but |end[-1]| and earlier are modified as
- * appropriate.  There must be at least UINT32_CHAR_BUFFER_LENGTH elements
+ * appropriate.  There must be at least js::UINT32_CHAR_BUFFER_LENGTH elements
  * before |end| to avoid buffer underflow.  The start of the characters written
  * is returned and is necessarily before |end|.
  */
