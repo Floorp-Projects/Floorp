@@ -1376,6 +1376,8 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_LookupProperty)(cx, this, id, objp, propp);
     }
 
+    inline JSBool lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp);
+
     JSBool defineProperty(JSContext *cx, jsid id, const js::Value &value,
                           js::PropertyOp getter = js::PropertyStub,
                           js::StrictPropertyOp setter = js::StrictPropertyStub,
@@ -1384,14 +1386,26 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
     }
 
+    inline JSBool defineElement(JSContext *cx, uint32 index, const js::Value &value,
+                                js::PropertyOp getter = js::PropertyStub,
+                                js::StrictPropertyOp setter = js::StrictPropertyStub,
+                                uintN attrs = JSPROP_ENUMERATE);
+
     inline JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
+
+    inline JSBool getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp);
+
     inline JSBool getProperty(JSContext *cx, jsid id, js::Value *vp);
+
+    inline JSBool getElement(JSContext *cx, uint32 index, js::Value *vp);
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
         if (getOps()->setProperty)
             return nonNativeSetProperty(cx, id, vp, strict);
         return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
     }
+
+    inline JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
 
     JSBool nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
 
@@ -1400,8 +1414,15 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
     }
 
+    inline JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+
     inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
+
+    inline JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+
     inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
+
+    inline JSBool deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict);
 
     JSBool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp) {
         js::NewEnumerateOp op = getOps()->enumerate;
