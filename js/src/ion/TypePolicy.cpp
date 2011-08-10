@@ -152,8 +152,8 @@ BitwisePolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
     if (specialization_ == MIRType_None)
         return;
 
-    analysis->preferType(ins->getOperand(0), MIRType_Int32);
-    analysis->preferType(ins->getOperand(1), MIRType_Int32);
+    for (size_t i = 0; i < ins->numOperands(); i++)
+        analysis->preferType(ins->getOperand(i), MIRType_Int32);
 }
 
 bool

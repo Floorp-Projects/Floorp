@@ -243,6 +243,14 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
     { }
 };
 
+// Bitwise not operation, takes a 32-bit integer as input and returning
+// a 32-bit integer result as an output.
+class LBitNot : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(BitNot);
+};
+
 // Binary bitwise operation, taking two 32-bit integers as inputs and returning
 // a 32-bit integer result as an output.
 class LBitOp : public LInstructionHelper<1, 2, 0>

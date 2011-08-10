@@ -53,6 +53,7 @@ namespace ion {
     _(Goto)                                                                 \
     _(Test)                                                                 \
     _(Phi)                                                                  \
+    _(BitNot)                                                               \
     _(BitAnd)                                                               \
     _(BitOr)                                                                \
     _(BitXor)                                                               \

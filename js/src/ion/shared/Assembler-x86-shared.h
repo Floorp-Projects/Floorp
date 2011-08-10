@@ -475,6 +475,18 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void notl(const Operand &src) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.notl_r(src.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.notl_m(src.disp(), src.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexepcted operand kind");
+        }
+    }
 
     void shrl(const Imm32 imm, const Register &dest) {
         masm.shrl_i8r(imm.value, dest.code());
