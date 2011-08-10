@@ -1532,6 +1532,7 @@ $(XPIDL_GEN_DIR)/.done:
 
 XPIDL_DEPS = \
   $(topsrcdir)/xpcom/idl-parser/header.py \
+  $(topsrcdir)/xpcom/idl-parser/typelib.py \
   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
   $(NULL)
 
@@ -1547,9 +1548,13 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(XPIDL_MODULE).xpt and export it to $(FINAL_TARGET)/components.
-$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
+$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m typelib -w $(XPIDL_FLAGS) -e $@ -d $(MDDEPDIR)/$(@F).pp $(_VPATH_SRCS)
+	$(PYTHON_PATH) \
+	  -I$(topsrcdir)/other-licenses/ply \
+	  -I$(topsrcdir)/xpcom/idl-parser \
+	  -I$(topsrcdir)/xpcom/typelib/xpt/tools \
+	  $(topsrcdir)/xpcom/idl-parser/typelib.py --cachedir=$(topsrcdir)/xpcom/idl-parser $(XPIDL_FLAGS) $(_VPATH_SRCS) -d $(MDDEPDIR)/$(@F).pp -o $@
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
