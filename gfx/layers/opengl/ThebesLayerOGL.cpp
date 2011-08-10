@@ -116,6 +116,7 @@ public:
 
 protected:
   virtual nsIntPoint GetOriginOffset() = 0;
+  virtual nsIntRect GetBufferRect() = 0;
 
   GLContext* gl() const { return mOGLLayer->gl(); }
 
@@ -197,14 +198,13 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
       NS_ASSERTION(mTexImageOnWhite->GetTileRect() == mTexImage->GetTileRect(), "component alpha textures should be the same size.");
     }
     nsIntRegion region(*renderRegion);
-    nsIntPoint origin = GetOriginOffset();
-    region.MoveBy(-origin);           // translate into TexImage space, buffer origin might not be at texture (0,0)
 
+    nsIntPoint origin = GetOriginOffset();
     do {
       nsIntRect textureRect = mTexImage->GetTileRect();
-      textureRect.MoveBy(region.GetBounds().x, region.GetBounds().y);
       nsIntRegion subregion(region);
-      subregion.And(region, textureRect); // region this texture is visible in
+      textureRect.MoveBy(GetBufferRect().TopLeft());
+      subregion.And(subregion, textureRect); // region this texture is visible in
       if (subregion.IsEmpty()) {
         continue;
       }
@@ -214,18 +214,19 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
 
       nsIntRegionRectIterator iter(subregion);
       while (const nsIntRect *iterRect = iter.Next()) {
-        nsIntRect regionRect = *iterRect;  // one rectangle of this texture's region
-        // translate into the correct place for this texture sub-region
-        nsIntRect screenRect = regionRect;
-        screenRect.MoveBy(origin);
+        nsIntRect screenRect = *iterRect;
         program->SetLayerQuadRect(screenRect);
 
-        regionRect.MoveBy(-mTexImage->GetTileRect().TopLeft()); // get region of tile
-        aManager->BindAndDrawQuadWithTextureRect(program, regionRect,
+        nsIntRect textureCoord = *iterRect;  // one rectangle of this texture's region
+        textureCoord.MoveBy(-mTexImage->GetTileRect().TopLeft()); // get region of tile
+        textureCoord.MoveBy(-origin); // get region of tile
+
+        aManager->BindAndDrawQuadWithTextureRect(program, textureCoord,
                                                  textureRect.Size(),
                                                  mTexImage->GetWrapMode());
       }
     } while (mTexImage->NextTile());
+
   }
 
   if (mTexImageOnWhite) {
@@ -273,6 +274,10 @@ public:
   }
 
 protected:
+  virtual nsIntRect GetBufferRect() {
+    return BufferRect();
+  }
+
   virtual nsIntPoint GetOriginOffset() {
     return BufferRect().TopLeft() - BufferRotation();
   }
@@ -304,6 +309,10 @@ protected:
     TOP, BOTTOM
   };
   nsIntRect GetQuadrantRectangle(XSide aXSide, YSide aYSide);
+
+  virtual nsIntRect GetBufferRect() {
+    return mBufferRect;
+  }
 
   virtual nsIntPoint GetOriginOffset() {
     return mBufferRect.TopLeft() - mBufferRotation;
@@ -764,6 +773,10 @@ public:
               const nsIntRect& aRect, const nsIntPoint& aRotation);
 
 protected:
+  virtual nsIntRect GetBufferRect() {
+    return mBufferRect;
+  }
+
   virtual nsIntPoint GetOriginOffset() {
     return mBufferRect.TopLeft() - mBufferRotation;
   }
