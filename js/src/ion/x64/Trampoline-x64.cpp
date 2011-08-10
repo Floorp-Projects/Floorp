@@ -212,15 +212,16 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setABIArg(0, r8);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
 
-    // Remove the common bailout frame.
+    // Stack is:
+    //     [frame]
+    //     snapshotOffset
+    //     frameSize
+    //     [bailoutFrame]
     uint32 bailoutFrameSize = sizeof(void *) * Registers::Total +
-                              sizeof(double) * FloatRegisters::Total +
-                              sizeof(void *); // bailout id;
+                              sizeof(double) * FloatRegisters::Total;
     masm.addq(Imm32(bailoutFrameSize), rsp);
-
-    // Remove the Ion frame.
     masm.pop(rcx);
-    masm.addq(rcx, rsp);
+    masm.lea(Operand(rsp, rcx, TimesOne, sizeof(void *)), rsp);
 
     Label exception;
 
