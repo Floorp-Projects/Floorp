@@ -41,10 +41,11 @@
 
 #include "nsDocAccessible.h"
 #include "nsAccUtils.h"
-#include "nsRelUtils.h"
 #include "nsTextEquivUtils.h"
+#include "Relation.h"
 #include "States.h"
 
+#include "nsIAccessibleRelation.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsBlockFrame.h"
@@ -198,23 +199,14 @@ nsHTMLOutputAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLOutputAccessible, nsHyperTextAccessible)
 
-NS_IMETHODIMP
-nsHTMLOutputAccessible::GetRelationByType(PRUint32 aRelationType,
-                                          nsIAccessibleRelation** aRelation)
+Relation
+nsHTMLOutputAccessible::RelationByType(PRUint32 aType)
 {
-  nsresult rv = nsAccessibleWrap::GetRelationByType(aRelationType, aRelation);
-  NS_ENSURE_SUCCESS(rv, rv);
+  Relation rel = nsAccessibleWrap::RelationByType(aType);
+  if (aType == nsIAccessibleRelation::RELATION_CONTROLLED_BY)
+    rel.AppendIter(new IDRefsIterator(mContent, nsAccessibilityAtoms::_for));
 
-  if (rv != NS_OK_NO_RELATION_TARGET)
-    return NS_OK; // XXX bug 381599, avoid performance problems
-
-  if (aRelationType == nsIAccessibleRelation::RELATION_CONTROLLED_BY) {
-    return nsRelUtils::
-      AddTargetFromIDRefsAttr(aRelationType, aRelation, mContent,
-                              nsAccessibilityAtoms::_for);
-  }
-
-  return NS_OK;
+  return rel;
 }
 
 PRUint32

@@ -46,7 +46,6 @@
 #define nsXULControllers_h__
 
 #include "nsCOMPtr.h"
-#include "nsTPtrArray.h"
 #include "nsWeakPtr.h"
 #include "nsIControllers.h"
 #include "nsISecurityCheckedComponent.h"
@@ -97,7 +96,7 @@ protected:
 
     void        DeleteControllers();
 
-    nsTPtrArray<nsXULControllerData> mControllers;
+    nsTArray<nsXULControllerData*>   mControllers;
     PRUint32                         mCurControllerID;
 };
 

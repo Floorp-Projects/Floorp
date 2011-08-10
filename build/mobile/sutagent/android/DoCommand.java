@@ -137,7 +137,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.01";
+    private final String prgVersion = "SUTAgentAndroid Version 1.02";
 
     public enum Command
         {

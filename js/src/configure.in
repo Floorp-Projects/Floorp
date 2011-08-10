@@ -1339,8 +1339,6 @@ OSF1)
 OS_2)
     HOST_OS_ARCH=OS2
     ;;
-QNX)
-    ;;
 SCO_SV)
     HOST_OS_ARCH=SCOOS
     ;;
@@ -1433,14 +1431,6 @@ OS_2)
     OS_ARCH=OS2
     OS_TARGET=OS2
     OS_RELEASE=`uname -v`
-    ;;
-QNX)
-    if test "$OS_TARGET" != "NTO"; then
-        changequote(,)
-        OS_RELEASE=`uname -v | sed 's/^\([0-9]\)\([0-9]*\)$/\1.\2/'`
-        changequote([,])
-    fi
-    OS_TEST=x86
     ;;
 SCO_SV)
     OS_ARCH=SCOOS
@@ -2421,32 +2411,6 @@ ia64*-hpux*)
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,lib$(LIBRARY_NAME)$(DLL_SUFFIX) -o $@'
     ;;
 
-*-nto*) 
-	AC_DEFINE(NTO)	
-	AC_DEFINE(_QNX_SOURCE)
-	AC_DEFINE(_i386)
-	OS_TARGET=NTO
-	WARNINGS_AS_ERRORS=''
-	MOZ_OPTIMIZE_FLAGS="-O"
-	MOZ_DEBUG_FLAGS="-gstabs"
-	USE_PTHREADS=1
-	_PEDANTIC=
-	LIBS="$LIBS -lsocket -lstdc++"
-	_DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
-	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js-confdefs.h -D_POSIX_C_SOURCE=199506'
-	if test "$with_x" != "yes"
-	then
-		_PLATFORM_DEFAULT_TOOLKIT="photon"
-	    TK_CFLAGS='-I/usr/include/photon'
-		TK_LIBS='-lph'
-	fi
-	case "${target_cpu}" in
-	ppc*)
-	AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)	
-	;;
-	esac
-	;;
-
 *-openbsd*)
     DLL_SUFFIX=".so.1.0"
     DSO_CFLAGS=''
@@ -2545,20 +2509,6 @@ alpha*-*-osf*)
       COMPAQ_CXX=1
     fi
     AC_DEFINE(NEED_USLEEP_PROTOTYPE)
-    ;;
-
-*-qnx*) 
-    DIRENT_INO=d_stat.st_ino
-    dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
-    AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    dnl Explicit set STDC_HEADERS to workaround QNX 6.0's failing of std test
-    AC_DEFINE(STDC_HEADERS)
-    if test "$no_x" = "yes"; then
-	    _PLATFORM_DEFAULT_TOOLKIT='photon'
-	    TK_CFLAGS='-I/usr/nto/include/photon'
-	    TK_LIBS='-lphoton -lphrender'
-    fi
     ;;
 
 *-sco*) 

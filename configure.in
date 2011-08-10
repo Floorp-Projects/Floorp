@@ -1360,8 +1360,6 @@ OSF1)
 OS_2)
     HOST_OS_ARCH=OS2
     ;;
-QNX)
-    ;;
 SCO_SV)
     HOST_OS_ARCH=SCOOS
     ;;
@@ -1449,14 +1447,6 @@ OS_2)
     OS_ARCH=OS2
     OS_TARGET=OS2
     OS_RELEASE=`uname -v`
-    ;;
-QNX)
-    if test "$OS_TARGET" != "NTO"; then
-        changequote(,)
-        OS_RELEASE=`uname -v | sed 's/^\([0-9]\)\([0-9]*\)$/\1.\2/'`
-        changequote([,])
-    fi
-    OS_TEST=x86
     ;;
 SCO_SV)
     OS_ARCH=SCOOS
@@ -2499,37 +2489,6 @@ ia64*-hpux*)
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,lib$(LIBRARY_NAME)$(DLL_SUFFIX) -o $@'
     ;;
 
-*-nto*) 
-	AC_DEFINE(NTO)	
-	AC_DEFINE(_QNX_SOURCE)
-	AC_DEFINE(_i386)
-	OS_TARGET=NTO
-	WARNINGS_AS_ERRORS=''
-	MOZ_OPTIMIZE_FLAGS="-O"
-	MOZ_DEBUG_FLAGS="-gstabs"
-	USE_PTHREADS=1
-	_PEDANTIC=
-	LIBS="$LIBS -lsocket -lstdc++"
-	_DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
-	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h -D_POSIX_C_SOURCE=199506'
-	if test "$with_x" != "yes"
-	then
-		_PLATFORM_DEFAULT_TOOLKIT="photon"
-	    TK_CFLAGS='-I/usr/include/photon'
-		TK_LIBS='-lph'
-	fi
-	case "${target_cpu}" in
-	ppc*)
-	AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)	
-	;;
-	esac
-	case "${host_cpu}" in
-	i*86)
-	USE_ELF_DYNSTR_GC=1
-	;;
-	esac
-	;;
-
 *-openbsd*)
     if test "$SO_VERSION"; then
         DLL_SUFFIX=".so.$SO_VERSION"
@@ -2634,20 +2593,6 @@ alpha*-*-osf*)
       COMPAQ_CXX=1
     fi
     AC_DEFINE(NEED_USLEEP_PROTOTYPE)
-    ;;
-
-*-qnx*) 
-    DIRENT_INO=d_stat.st_ino
-    dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
-    AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    dnl Explicit set STDC_HEADERS to workaround QNX 6.0's failing of std test
-    AC_DEFINE(STDC_HEADERS)
-    if test "$no_x" = "yes"; then
-	    _PLATFORM_DEFAULT_TOOLKIT='photon'
-	    TK_CFLAGS='-I/usr/nto/include/photon'
-	    TK_LIBS='-lphoton -lphrender'
-    fi
     ;;
 
 *-sco*) 
@@ -4963,7 +4908,6 @@ MOZ_ARG_HEADER(Toolkit Options)
                           Select default toolkit
                           Platform specific defaults:
                             Mac OS X - cairo-cocoa
-                            Neutrino/QNX - photon
                             OS/2 - cairo-os2
                             Win32 - cairo-windows
                             Gtk2 with DirectFB - cairo-gtk2-dfb
@@ -4972,8 +4916,7 @@ MOZ_ARG_HEADER(Toolkit Options)
     [ _DEFAULT_TOOLKIT=$enableval ],
     [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
 
-    if test "$_DEFAULT_TOOLKIT" = "photon" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
+    if test "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-dfb" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
@@ -4994,10 +4937,6 @@ dnl = Enable the toolkit as needed                         =
 dnl ========================================================
 
 case "$MOZ_WIDGET_TOOLKIT" in
-photon)
-	MOZ_ENABLE_PHOTON=1
-	AC_DEFINE(MOZ_WIDGET_PHOTON)
-    ;;
 
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
@@ -5252,7 +5191,6 @@ AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
 
 AC_SUBST(MOZ_ENABLE_GTK2)
-AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
@@ -7501,6 +7439,7 @@ else
       AC_MSG_RESULT([no])
       WIN32_NEW_STYLE_JEMALLOC=1
       AC_DEFINE(WIN32_NEW_STYLE_JEMALLOC)
+      WIN32_CRT_SRC_DIR=
       if test -z "$MOZ_DEBUG"; then
         WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
       else
@@ -7510,7 +7449,7 @@ else
       WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
       lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
       if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-        MOZ_MEMORY_LDFLAGS='-MANIFEST:NO -LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+        MOZ_MEMORY_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
       else
         MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
       fi
