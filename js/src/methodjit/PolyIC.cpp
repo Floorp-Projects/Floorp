@@ -2718,7 +2718,13 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
 LookupStatus
 GetElementIC::update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
-    if (v.isString())
+    /*
+     * Only treat this as a GETPROP for non-numeric string identifiers. The
+     * GETPROP IC assumes the id has already gone through filtering for string
+     * indexes in the emitter, i.e. js_GetProtoIfDenseArray is only valid to
+     * use when looking up non-integer identifiers.
+     */
+    if (v.isString() && js_CheckForStringIndex(id) == id)
         return attachGetProp(f, cx, obj, v, id, vp);
 
 #if defined JS_METHODJIT_TYPED_ARRAY
