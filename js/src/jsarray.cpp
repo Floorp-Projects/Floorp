@@ -985,10 +985,38 @@ JSBool
 array_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
+    if (!obj->isDenseArray())
+        return js_DefineElement(cx, obj, index, value, getter, setter, attrs);
+
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return array_defineProperty(cx, obj, id, value, getter, setter, attrs);
+
+    do {
+        /*
+         * UINT32_MAX is not an array index and must not affect the length
+         * property, so specifically reject it.
+         */
+        if (attrs != JSPROP_ENUMERATE || index == UINT32_MAX)
+            break;
+
+        JSObject::EnsureDenseResult result = obj->ensureDenseArrayElements(cx, index, 1);
+        if (result != JSObject::ED_OK) {
+            if (result == JSObject::ED_FAILED)
+                return false;
+            JS_ASSERT(result == JSObject::ED_SPARSE);
+            break;
+        }
+
+        if (index >= obj->getArrayLength())
+            obj->setDenseArrayLength(index + 1);
+        obj->setDenseArrayElementWithType(cx, index, *value);
+        return true;
+    } while (false);
+
+    if (!obj->makeDenseArraySlow(cx))
+        return false;
+    return js_DefineElement(cx, obj, index, value, getter, setter, attrs);
 }
 
 } // namespace js
