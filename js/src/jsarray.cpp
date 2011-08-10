@@ -1004,10 +1004,8 @@ array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 static JSBool
 array_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return array_getAttributes(cx, obj, id, attrsp);
+    *attrsp = JSPROP_ENUMERATE;
+    return true;
 }
 
 static JSBool
