@@ -220,7 +220,7 @@ def build_interface(iface, ifaces):
                                   getter=True, setter=False, notxpcom=a.notxpcom,
                                   constructor=False, hidden=a.noscript,
                                   optargc=False,
-                                  implict_jscontext=a.implicit_jscontext))
+                                  implicit_jscontext=a.implicit_jscontext))
 
         # And maybe the setter
         if not a.readonly:
