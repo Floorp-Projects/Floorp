@@ -2004,6 +2004,19 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
             break;
           }
 
+          case JSOP_TOID: {
+            /*
+             * TOID acts as identity for integers, so to get better precision
+             * we should propagate its popped values forward if it acted as
+             * identity.
+             */
+            ScriptAnalysis *analysis = frame.script->analysis();
+            SSAValue toidv = analysis->poppedValue(pc, 0);
+            if (analysis->getValueTypes(toidv)->getKnownTypeTag(cx) == JSVAL_TYPE_INT32)
+                return foldValue(CrossSSAValue(cv.frame, toidv));
+            break;
+          }
+
           default:;
         }
     }
