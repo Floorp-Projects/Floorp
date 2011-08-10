@@ -61,9 +61,8 @@ class CompactBufferReader
     const uint8 *buffer_;
     const uint8 *end_;
 
-    template <typename T> T readVariableLength() {
-        JS_ASSERT(sizeof(T) == 4);
-        T val = 0;
+    uint32 readVariableLength() {
+        uint32 val = 0;
         uint32 shift = 0;
         uint byte;
         while (true) {
@@ -71,15 +70,8 @@ class CompactBufferReader
             byte = readByte();
             val |= (uint32(byte) >> 1) << shift;
             shift += 7;
-            if (!(byte & 1)) {
-                if (shift < 32) {
-                    // If T = signed, this will force sign extension (compilers we
-                    // care about obey this though it is not specified).
-                    val <<= 32 - shift;
-                    val >>= 32 - shift;
-                }
+            if (!(byte & 1))
                 return val;
-            }
         }
         JS_NOT_REACHED("unreachable");
         return 0;
@@ -102,10 +94,18 @@ class CompactBufferReader
         return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
     }
     uint32 readUnsigned() {
-        return readVariableLength<uint32>();
+        return readVariableLength();
     }
     int32 readSigned() {
-        return readVariableLength<int32>();
+        uint8 b = readByte();
+        bool isNegative = !!(b & (1 << 0));
+        bool more = !!(b & (1 << 1));
+        int32 result = b >> 2;
+        if (more)
+            result |= readUnsigned() << 6;
+        if (isNegative)
+            return -result;
+        return result;
     }
 
     bool more() const {
@@ -137,13 +137,17 @@ class CompactBufferWriter
             value >>= 7;
         } while (value);
     }
-    void writeSigned(int32 value) {
-        do {
-            int32 shifted = value >> 7;
-            uint8 byte = ((value & 0x7F) << 1) | (shifted != 0 && shifted != -1);
-            writeByte(byte);
-            value = shifted;
-        } while (value != 0 && value != -1);
+    void writeSigned(int32 v) {
+        bool isNegative = v < 0;
+        uint32 value = isNegative ? -v : v;
+        uint8 byte = ((value & 0x3F) << 2) | ((value > 0x3F) << 1) | isNegative;
+        writeByte(byte);
+
+        // Write out the rest of the bytes, if needed.
+        value >>= 6;
+        if (value == 0)
+            return;
+        writeUnsigned(value);
     }
     void writeFixedUint32(uint32 value) {
         writeByte(value & 0xFF);
