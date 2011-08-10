@@ -894,6 +894,7 @@ class ScriptAnalysis
     bool isInlineable;
     uint32 numReturnSites_;
     bool modifiesArguments_;
+    bool localsAliasStack_;
 
     /* Offsets at which each local becomes unconditionally defined, or a value below. */
     uint32 *definedLocals;
@@ -941,6 +942,12 @@ class ScriptAnalysis
      * object cannot escape, the arguments are never modified within the script.
      */
     bool modifiesArguments() { return modifiesArguments_; }
+
+    /*
+     * True if there are any LOCAL opcodes aliasing values on the stack (above
+     * script->nfixed).
+     */
+    bool localsAliasStack() { return localsAliasStack_; }
 
     /* Accessors for bytecode information. */
 
@@ -1077,6 +1084,10 @@ class ScriptAnalysis
             (v.kind() != SSAValue::VAR || !v.varInitial());
     }
 
+    /*
+     * Get the use chain for an SSA value. May be invalid for some opcodes in
+     * scripts where localsAliasStack(). You have been warned!
+     */
     SSAUseChain *& useChain(const SSAValue &v) {
         JS_ASSERT(trackUseChain(v));
         if (v.kind() == SSAValue::PUSHED)
