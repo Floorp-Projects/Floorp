@@ -351,10 +351,10 @@ ArrayBuffer::obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, j
 JSBool
 ArrayBuffer::obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    JSObject *delegate = DelegateObject(cx, getArrayBuffer(obj));
+    if (!delegate)
         return false;
-    return obj_getProperty(cx, obj, receiver, id, vp);
+    return js_GetElement(cx, delegate, receiver, index, vp);
 }
 
 JSBool
@@ -908,10 +908,36 @@ class TypedArrayTemplate
     static JSBool
     obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
     {
+        JSObject *tarray = getTypedArray(obj);
+
+        if (index < getLength(tarray)) {
+            // this inline function is specialized for each type
+            copyIndexToValue(cx, tarray, index, vp);
+            return true;
+        }
+
+        JSObject *proto = obj->getProto();
+        if (!proto) {
+            vp->setUndefined();
+            return true;
+        }
+
+        vp->setUndefined();
+
         jsid id;
         if (!IndexToId(cx, index, &id))
             return false;
-        return obj_getProperty(cx, obj, receiver, id, vp);
+
+        JSObject *obj2;
+        JSProperty *prop;
+        if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
+            return false;
+
+        if (!prop || !obj2->isNative())
+            return true;
+
+        const Shape *shape = (Shape *) prop;
+        return js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp);
     }
 
     static JSBool
