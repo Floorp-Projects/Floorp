@@ -417,9 +417,9 @@ MBitNot::infer(const TypeOracle::Unary &u)
 void
 MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
 {
-    if (b.lhs == MIRType_Object || b.rhs == MIRType_Object)
+    if (b.lhs == MIRType_Object || b.rhs == MIRType_Object) {
         specialization_ = MIRType_None;
-    else {
+    } else {
         specialization_ = MIRType_Int32;
         setIdempotent();
         setCommutative();
@@ -448,12 +448,6 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
     } else {
         specialization_ = MIRType_None;
     }
-}
-
-MBitAnd *
-MBitAnd::New(MDefinition *left, MDefinition *right)
-{
-    return new MBitAnd(left, right);
 }
 
 static inline int32
@@ -493,6 +487,12 @@ MBitNot::foldsTo(bool useValueNumbers)
         return input->getOperand(0); // ~~x => x
 
     return this;
+}
+
+MBitAnd *
+MBitAnd::New(MDefinition *left, MDefinition *right)
+{
+    return new MBitAnd(left, right);
 }
 
 MDefinition *
