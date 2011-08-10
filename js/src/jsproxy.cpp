@@ -902,6 +902,16 @@ proxy_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
+proxy_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
+                    JSProperty **propp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return proxy_LookupProperty(cx, obj, id, objp, propp);
+}
+
+static JSBool
 proxy_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                      PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
@@ -916,15 +926,43 @@ proxy_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
 }
 
 static JSBool
+proxy_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return proxy_DefineProperty(cx, obj, id, value, getter, setter, attrs);
+}
+
+static JSBool
 proxy_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     return JSProxy::get(cx, obj, receiver, id, vp);
 }
 
 static JSBool
+proxy_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return proxy_GetProperty(cx, obj, receiver, id, vp);
+}
+
+static JSBool
 proxy_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     return JSProxy::set(cx, obj, obj, id, strict, vp);
+}
+
+static JSBool
+proxy_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return proxy_SetProperty(cx, obj, id, vp, strict);
 }
 
 static JSBool
@@ -935,6 +973,15 @@ proxy_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
         return false;
     *attrsp = desc.attrs;
     return true;
+}
+
+static JSBool
+proxy_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return proxy_GetAttributes(cx, obj, id, attrsp);
 }
 
 static JSBool
@@ -949,6 +996,15 @@ proxy_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
+proxy_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return proxy_SetAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
 proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     // TODO: throwing away strict
@@ -957,6 +1013,15 @@ proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
         return false;
     rval->setBoolean(deleted);
     return true;
+}
+
+static JSBool
+proxy_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return proxy_DeleteProperty(cx, obj, id, rval, strict);
 }
 
 static void
@@ -1046,12 +1111,19 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     JS_NULL_CLASS_EXT,
     {
         proxy_LookupProperty,
+        proxy_LookupElement,
         proxy_DefineProperty,
+        proxy_DefineElement,
         proxy_GetProperty,
+        proxy_GetElement,
         proxy_SetProperty,
+        proxy_SetElement,
         proxy_GetAttributes,
+        proxy_GetElementAttributes,
         proxy_SetAttributes,
+        proxy_SetElementAttributes,
         proxy_DeleteProperty,
+        proxy_DeleteElement,
         NULL,             /* enumerate       */
         proxy_TypeOf,
         proxy_Fix,        /* fix             */
@@ -1086,12 +1158,19 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
     },
     {
         proxy_LookupProperty,
+        proxy_LookupElement,
         proxy_DefineProperty,
+        proxy_DefineElement,
         proxy_GetProperty,
+        proxy_GetElement,
         proxy_SetProperty,
+        proxy_SetElement,
         proxy_GetAttributes,
+        proxy_GetElementAttributes,
         proxy_SetAttributes,
+        proxy_SetElementAttributes,
         proxy_DeleteProperty,
+        proxy_DeleteElement,
         NULL,             /* enumerate       */
         NULL,             /* typeof          */
         NULL,             /* fix             */
@@ -1138,12 +1217,19 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     JS_NULL_CLASS_EXT,
     {
         proxy_LookupProperty,
+        proxy_LookupElement,
         proxy_DefineProperty,
+        proxy_DefineElement,
         proxy_GetProperty,
+        proxy_GetElement,
         proxy_SetProperty,
+        proxy_SetElement,
         proxy_GetAttributes,
+        proxy_GetElementAttributes,
         proxy_SetAttributes,
+        proxy_SetElementAttributes,
         proxy_DeleteProperty,
+        proxy_DeleteElement,
         NULL,             /* enumerate       */
         proxy_TypeOf,
         NULL,             /* fix             */

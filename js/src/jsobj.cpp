@@ -3270,9 +3270,28 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
+with_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
+                   JSProperty **propp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_LookupProperty(cx, obj, id, objp, propp);
+}
+
+static JSBool
 with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     return obj->getProto()->getProperty(cx, id, vp);
+}
+
+static JSBool
+with_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_GetProperty(cx, obj, receiver, id, vp);
 }
 
 static JSBool
@@ -3282,9 +3301,27 @@ with_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict
 }
 
 static JSBool
+with_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_SetProperty(cx, obj, id, vp, strict);
+}
+
+static JSBool
 with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     return obj->getProto()->getAttributes(cx, id, attrsp);
+}
+
+static JSBool
+with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_GetAttributes(cx, obj, id, attrsp);
 }
 
 static JSBool
@@ -3294,9 +3331,27 @@ with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
+with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_SetAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
 with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     return obj->getProto()->deleteProperty(cx, id, rval, strict);
+}
+
+static JSBool
+with_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_DeleteProperty(cx, obj, id, rval, strict);
 }
 
 static JSBool
@@ -3339,12 +3394,19 @@ Class js::WithClass = {
     JS_NULL_CLASS_EXT,
     {
         with_LookupProperty,
+        with_LookupElement,
         NULL,             /* defineProperty */
+        NULL,             /* defineElement */
         with_GetProperty,
+        with_GetElement,
         with_SetProperty,
+        with_SetElement,
         with_GetAttributes,
+        with_GetElementAttributes,
         with_SetAttributes,
+        with_SetElementAttributes,
         with_DeleteProperty,
+        with_DeleteElement,
         with_Enumerate,
         with_TypeOf,
         NULL,             /* fix   */

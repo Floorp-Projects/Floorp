@@ -907,12 +907,19 @@ js::Class XPC_WN_NoHelper_JSClass = {
     // ObjectOps
     {
         nsnull, // lookupProperty
+        nsnull, // lookupElement
         nsnull, // defineProperty
+        nsnull, // defineElement
         nsnull, // getProperty
+        nsnull, // getElement
         nsnull, // setProperty
+        nsnull, // setElement
         nsnull, // getAttributes
+        nsnull, // getElementAttributes
         nsnull, // setAttributes
+        nsnull, // setElementAttributes
         nsnull, // deleteProperty
+        nsnull, // deleteElement
         JS_VALUEIFY(js::NewEnumerateOp, XPC_WN_JSOp_Enumerate),
         XPC_WN_JSOp_TypeOf_Object,
         nsnull, // fix
