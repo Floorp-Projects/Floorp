@@ -414,10 +414,11 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, J
 JSBool
 ArrayBuffer::obj_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
         return false;
-    return obj_setProperty(cx, obj, id, vp, strict);
+
+    return js_SetElementHelper(cx, delegate, index, 0, vp, strict);
 }
 
 JSBool
@@ -935,33 +936,11 @@ class TypedArrayTemplate
         return js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp);
     }
 
-    static JSBool
-    obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+    static bool
+    setElementTail(JSContext *cx, JSObject *tarray, uint32 index, Value *vp, JSBool strict)
     {
-        JSObject *tarray = getTypedArray(obj);
         JS_ASSERT(tarray);
-
-        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-            vp->setNumber(getLength(tarray));
-            return true;
-        }
-
-        jsuint index;
-        // We can't just chain to js_SetPropertyHelper, because we're not a normal object.
-        if (!isArrayIndex(cx, tarray, id, &index)) {
-#if 0
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_INDEX);
-            return false;
-#endif
-            // Silent ignore is better than an exception here, because
-            // at some point we may want to support other properties on
-            // these objects.  This is especially true when these arrays
-            // are used to implement HTML Canvas 2D's PixelArray objects,
-            // which used to be plain old arrays.
-            vp->setUndefined();
-            return true;
-        }
+        JS_ASSERT(index < getLength(tarray));
 
         if (vp->isInt32()) {
             setIndex(tarray, index, NativeType(vp->toInt32()));
@@ -969,11 +948,10 @@ class TypedArrayTemplate
         }
 
         jsdouble d;
-
         if (vp->isDouble()) {
             d = vp->toDouble();
         } else if (vp->isNull()) {
-            d = 0.0f;
+            d = 0.0;
         } else if (vp->isPrimitive()) {
             JS_ASSERT(vp->isString() || vp->isUndefined() || vp->isBoolean());
             if (vp->isString()) {
@@ -981,7 +959,7 @@ class TypedArrayTemplate
             } else if (vp->isUndefined()) {
                 d = js_NaN;
             } else {
-                d = (double) vp->toBoolean();
+                d = double(vp->toBoolean());
             }
         } else {
             // non-primitive assignments become NaN or 0 (for float/int arrays)
@@ -1013,12 +991,48 @@ class TypedArrayTemplate
     }
 
     static JSBool
+    obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+    {
+        JSObject *tarray = getTypedArray(obj);
+        JS_ASSERT(tarray);
+
+        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+            vp->setNumber(getLength(tarray));
+            return true;
+        }
+
+        jsuint index;
+        // We can't just chain to js_SetPropertyHelper, because we're not a normal object.
+        if (!isArrayIndex(cx, tarray, id, &index)) {
+            // Silent ignore is better than an exception here, because
+            // at some point we may want to support other properties on
+            // these objects.  This is especially true when these arrays
+            // are used to implement HTML Canvas 2D's PixelArray objects,
+            // which used to be plain old arrays.
+            vp->setUndefined();
+            return true;
+        }
+
+        return setElementTail(cx, tarray, index, vp, strict);
+    }
+
+    static JSBool
     obj_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
     {
-        jsid id;
-        if (!IndexToId(cx, index, &id))
-            return false;
-        return obj_setProperty(cx, obj, id, vp, strict);
+        JSObject *tarray = getTypedArray(obj);
+        JS_ASSERT(tarray);
+
+        if (index >= getLength(tarray)) {
+            // Silent ignore is better than an exception here, because
+            // at some point we may want to support other properties on
+            // these objects.  This is especially true when these arrays
+            // are used to implement HTML Canvas 2D's PixelArray objects,
+            // which used to be plain old arrays.
+            vp->setUndefined();
+            return true;
+        }
+
+        return setElementTail(cx, tarray, index, vp, strict);
     }
 
     static JSBool

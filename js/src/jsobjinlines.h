@@ -1119,15 +1119,6 @@ JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
 }
 
 inline JSBool
-JSObject::setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict)
-{
-    jsid id;
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return setProperty(cx, id, vp, strict);
-}
-
-inline JSBool
 JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict)
 {
     jsid id;

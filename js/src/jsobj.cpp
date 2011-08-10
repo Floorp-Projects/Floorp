@@ -3610,6 +3610,21 @@ JSObject::nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool str
     return getOps()->setProperty(cx, this, id, vp, strict);
 }
 
+JSBool
+JSObject::nonNativeSetElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict)
+{
+    if (JS_UNLIKELY(watched())) {
+        jsid id;
+        if (!IndexToId(cx, index, &id))
+            return false;
+        JS_ASSERT(id == js_CheckForStringIndex(id));
+        WatchpointMap *wpmap = cx->compartment->watchpointMap;
+        if (wpmap && !wpmap->triggerWatchpoint(cx, this, id, vp))
+            return false;
+    }
+    return getOps()->setElement(cx, this, index, vp, strict);
+}
+
 bool
 JSObject::copyPropertiesFrom(JSContext *cx, JSObject *obj)
 {
@@ -6256,6 +6271,16 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
   error: // TRACE_1 jumps here in case of error.
     return JS_FALSE;
 #endif
+}
+
+JSBool
+js_SetElementHelper(JSContext *cx, JSObject *obj, uint32 index, uintN defineHow,
+                    Value *vp, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return js_SetPropertyHelper(cx, obj, id, defineHow, vp, strict);
 }
 
 JSBool
