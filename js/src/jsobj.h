@@ -1335,7 +1335,7 @@ JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0);
 /*
  * The only sensible way to compare JSObject with == is by identity. We use
  * const& instead of * as a syntactic way to assert non-null. This leads to an
-  * abundance of address-of operators to identity. Hence this overload.
+ * abundance of address-of operators to identity. Hence this overload.
  */
 static JS_ALWAYS_INLINE bool
 operator==(const JSObject &lhs, const JSObject &rhs)
