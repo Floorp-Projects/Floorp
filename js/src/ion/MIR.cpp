@@ -100,6 +100,9 @@ MDefinition::congruentTo(MDefinition * const &ins) const
     if (op() != ins->op())
         return false;
 
+    if (type() != ins->type())
+        return false;
+
     for (size_t i = 0; i < numOperands(); i++) {
         if (getOperand(i)->valueNumber() != ins->getOperand(i)->valueNumber())
             return false;
