@@ -128,15 +128,19 @@ function test() {
     groupItem.setSize(250, 250, true);
     groupItem.setUserSize();
 
-    let originalBounds = groupItem.getChild(0).getBounds();
     ok(!groupItem.isStacked(), 'testRemoveWhileStacked: group is not stacked');
 
+    let originalBounds;
+    let tabItem = groupItem.getChild(0);
+
     // add new tabs to let the group stack
-    while (!groupItem.isStacked())
-      win.gBrowser.loadOneTab('about:blank', {inBackground: true});
+    while (!groupItem.isStacked()) {
+      originalBounds = tabItem.getBounds();
+      win.gBrowser.addTab();
+    }
 
     afterAllTabsLoaded(function () {
-      groupItem.getChild(0).close();
+      tabItem.close();
       ok(!groupItem.isStacked(), 'testRemoveWhileStacked: group is not stacked');
 
       let bounds = groupItem.getChild(0).getBounds();

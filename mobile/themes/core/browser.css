@@ -1018,6 +1018,10 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   display: none;
 }
 
+#bookmark-popup .action-button {
+  -moz-border-right-colors: white;
+}
+
 /* Identity popup   -------------------------------------------------------- */
 #identity-popup-container {
   padding: @padding_normal@; /* core spacing */
@@ -1199,6 +1203,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 #share-title,
+#bookmark-popup-title,
 #context-hint {
   font-size: @font_small@;
   padding: @padding_small@;
