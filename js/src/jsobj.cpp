@@ -6306,6 +6306,19 @@ js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 JSBool
+js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    JSProperty *prop;
+    if (!js_LookupElement(cx, obj, index, &obj, &prop))
+        return false;
+    if (!prop)
+        return true;
+    return obj->isNative()
+           ? js_SetNativeAttributes(cx, obj, (Shape *) prop, *attrsp)
+           : obj->setElementAttributes(cx, index, attrsp);
+}
+
+JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     JSObject *proto;
