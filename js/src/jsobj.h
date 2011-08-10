@@ -293,6 +293,9 @@ extern JSBool
 js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 extern JSBool
+js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
+
+extern JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval, JSBool strict);
 
 extern JS_FRIEND_API(JSBool)
@@ -1436,7 +1439,10 @@ struct JSObject : js::gc::Cell {
 
     inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
 
-    inline JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+    JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp) {
+        js::ElementAttributesOp op = getOps()->setElementAttributes;
+        return (op ? op : js_SetElementAttributes)(cx, this, index, attrsp);
+    }
 
     inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
 

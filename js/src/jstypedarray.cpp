@@ -461,10 +461,10 @@ ArrayBuffer::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *att
 JSBool
 ArrayBuffer::obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
         return false;
-    return obj_setAttributes(cx, obj, id, attrsp);
+    return js_SetElementAttributes(cx, delegate, index, attrsp);
 }
 
 JSBool
@@ -667,18 +667,15 @@ TypedArray::obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index,
 JSBool
 TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_CANT_SET_ARRAY_ATTRS);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
     return false;
 }
 
 JSBool
 TypedArray::obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return obj_setAttributes(cx, obj, id, attrsp);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
+    return false;
 }
 
 /* static */ int
