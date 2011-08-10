@@ -437,10 +437,10 @@ ArrayBuffer::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *att
 JSBool
 ArrayBuffer::obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
         return false;
-    return obj_getAttributes(cx, obj, id, attrsp);
+    return js_GetElementAttributes(cx, delegate, index, attrsp);
 }
 
 JSBool
@@ -660,10 +660,8 @@ TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attr
 JSBool
 TypedArray::obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return obj_getAttributes(cx, obj, id, attrsp);
+    *attrsp = JSPROP_PERMANENT | JSPROP_ENUMERATE;
+    return true;
 }
 
 JSBool
