@@ -2658,6 +2658,10 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
 {
     assertSameCompartment(cx, scobj, fp);
 
+    /* Execute assumes an already-computed 'this" value. */
+    if (!ComputeThis(cx, fp))
+        return false;
+
     /*
      * NB: This function breaks the assumption that the compiler can see all
      * calls and properly compute a static level. In order to get around this,
