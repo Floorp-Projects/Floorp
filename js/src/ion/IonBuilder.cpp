@@ -375,6 +375,12 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DECLOCAL:
         return jsop_localinc(op);
 
+      case JSOP_LT:
+      case JSOP_LE:
+      case JSOP_GT:
+      case JSOP_GE:
+        return jsop_compare(op);
+
       case JSOP_ARGINC:
       case JSOP_INCARG:
       case JSOP_ARGDEC:
@@ -1597,6 +1603,24 @@ IonBuilder::jsop_arginc(JSOp op)
     if (post_incr)
         current->pop();
 
+    return true;
+}
+
+bool
+IonBuilder::jsop_compare(JSOp op)
+{
+    // Pop inputs
+    MDefinition *right = current->pop();
+    MDefinition *left = current->pop();
+
+    // Add instruction to current block
+    MCompare *ins = MCompare::New(left, right, op);
+    current->add(ins);
+
+    ins->infer(oracle->binaryOp(script, pc));
+
+    // Push result
+    current->push(ins);
     return true;
 }
 

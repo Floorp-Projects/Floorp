@@ -133,6 +133,17 @@ class TableSwitchPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
+class ComparePolicy : public BoxInputsPolicy
+{
+  protected:
+    MIRType specialization_;
+
+  public:
+    bool respecialize(MInstruction *def);
+    void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
+    bool adjustInputs(MInstruction *def);
+};
+
 static inline bool
 CoercesToDouble(MIRType type)
 {
