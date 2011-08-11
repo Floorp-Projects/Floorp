@@ -376,6 +376,12 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_ADD:
       	return jsop_binary(op);
 
+      case JSOP_LOCALINC:
+      case JSOP_INCLOCAL:
+      case JSOP_LOCALDEC:
+      case JSOP_DECLOCAL:
+        return jsop_localinc(op);
+
       case JSOP_DOUBLE:
         return pushConstant(script->getConst(readIndex(pc)));
 
@@ -1532,6 +1538,32 @@ IonBuilder::jsop_binary(JSOp op)
     ins->infer(oracle->binaryOp(script, pc));
 
     current->push(ins);
+    return true;
+}
+
+bool
+IonBuilder::jsop_localinc(JSOp op)
+{
+    int32 amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
+    bool post_incr = !!(js_CodeSpec[op].format & JOF_POST);
+
+    if (post_incr)
+        current->pushLocal(GET_SLOTNO(pc));
+    
+    current->pushLocal(GET_SLOTNO(pc));
+
+    if (!pushConstant(Int32Value(amt)))
+        return false;
+
+    if (!jsop_binary(JSOP_ADD))
+        return false;
+
+    if (current->setLocal(GET_SLOTNO(pc)))
+        return false;
+
+    if (post_incr)
+        current->pop();
+
     return true;
 }
 
