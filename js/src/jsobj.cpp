@@ -1191,7 +1191,6 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
 
 #ifdef DEBUG
         jsbytecode *callerPC = caller->pcQuadratic(cx);
-        JS_ASSERT_IF(caller->isFunctionFrame(), caller->fun()->isHeavyweight());
         JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
 #endif
     } else {
