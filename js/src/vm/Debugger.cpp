@@ -1136,13 +1136,13 @@ Class Debugger::jsclass = {
 };
 
 Debugger *
-Debugger::fromThisValue(JSContext *cx, Value *vp, const char *fnname)
+Debugger::fromThisValue(JSContext *cx, const CallArgs &args, const char *fnname)
 {
-    if (!vp[1].isObject()) {
+    if (!args.thisv().isObject()) {
         ReportObjectRequired(cx);
         return NULL;
     }
-    JSObject *thisobj = &vp[1].toObject();
+    JSObject *thisobj = &args.thisv().toObject();
     if (thisobj->getClass() != &Debugger::jsclass) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger", fnname, thisobj->getClass()->name);
@@ -1162,16 +1162,17 @@ Debugger::fromThisValue(JSContext *cx, Value *vp, const char *fnname)
     return dbg;
 }
 
-#define THIS_DEBUGGER(cx, vp, fnname, dbg)                                   \
-    Debugger *dbg = Debugger::fromThisValue(cx, vp, fnname);                 \
+#define THIS_DEBUGGER(cx, argc, vp, fnname, args, dbg)                       \
+    CallArgs args = CallArgsFromVp(argc, vp);                                \
+    Debugger *dbg = Debugger::fromThisValue(cx, args, fnname);               \
     if (!dbg)                                                                \
         return false
 
 JSBool
 Debugger::getEnabled(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGGER(cx, vp, "get enabled", dbg);
-    vp->setBoolean(dbg->enabled);
+    THIS_DEBUGGER(cx, argc, vp, "get enabled", args, dbg);
+    args.rval().setBoolean(dbg->enabled);
     return true;
 }
 
@@ -1179,8 +1180,8 @@ JSBool
 Debugger::setEnabled(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.set enabled", 1);
-    THIS_DEBUGGER(cx, vp, "set enabled", dbg);
-    bool enabled = js_ValueToBoolean(vp[2]);
+    THIS_DEBUGGER(cx, argc, vp, "set enabled", args, dbg);
+    bool enabled = js_ValueToBoolean(args[0]);
 
     if (enabled != dbg->enabled) {
         for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
@@ -1205,7 +1206,7 @@ Debugger::setEnabled(JSContext *cx, uintN argc, Value *vp)
     }
 
     dbg->enabled = enabled;
-    vp->setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 
@@ -1213,8 +1214,8 @@ JSBool
 Debugger::getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
     JS_ASSERT(which >= 0 && which < HookCount);
-    THIS_DEBUGGER(cx, vp, "getHook", dbg);
-    *vp = dbg->object->getReservedSlot(JSSLOT_DEBUG_HOOK_START + which);
+    THIS_DEBUGGER(cx, argc, vp, "getHook", args, dbg);
+    args.rval() = dbg->object->getReservedSlot(JSSLOT_DEBUG_HOOK_START + which);
     return true;
 }
 
@@ -1223,8 +1224,8 @@ Debugger::setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
     JS_ASSERT(which >= 0 && which < HookCount);
     REQUIRE_ARGC("Debugger.setHook", 1);
-    THIS_DEBUGGER(cx, vp, "setHook", dbg);
-    const Value &v = vp[2];
+    THIS_DEBUGGER(cx, argc, vp, "setHook", args, dbg);
+    const Value &v = args[0];
     if (v.isObject()) {
         if (!v.toObject().isCallable()) {
             js_ReportIsNotFunction(cx, vp, JSV2F_SEARCH_STACK);
@@ -1235,7 +1236,7 @@ Debugger::setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
         return false;
     }
     dbg->object->setReservedSlot(JSSLOT_DEBUG_HOOK_START + which, v);
-    vp->setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 
@@ -1290,8 +1291,8 @@ Debugger::setOnEnterFrame(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debugger::getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGGER(cx, vp, "get uncaughtExceptionHook", dbg);
-    vp->setObjectOrNull(dbg->uncaughtExceptionHook);
+    THIS_DEBUGGER(cx, argc, vp, "get uncaughtExceptionHook", args, dbg);
+    args.rval().setObjectOrNull(dbg->uncaughtExceptionHook);
     return true;
 }
 
@@ -1299,20 +1300,20 @@ JSBool
 Debugger::setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.set uncaughtExceptionHook", 1);
-    THIS_DEBUGGER(cx, vp, "set uncaughtExceptionHook", dbg);
-    if (!vp[2].isNull() && (!vp[2].isObject() || !vp[2].toObject().isCallable())) {
+    THIS_DEBUGGER(cx, argc, vp, "set uncaughtExceptionHook", args, dbg);
+    if (!args[0].isNull() && (!args[0].isObject() || !args[0].toObject().isCallable())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ASSIGN_FUNCTION_OR_NULL,
                              "uncaughtExceptionHook");
         return false;
     }
 
-    dbg->uncaughtExceptionHook = vp[2].toObjectOrNull();
-    vp->setUndefined();
+    dbg->uncaughtExceptionHook = args[0].toObjectOrNull();
+    args.rval().setUndefined();
     return true;
 }
 
 JSObject *
-Debugger::unwrapDebuggeeArgument(JSContext *cx, Value *vp)
+Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
 {
     /*
      * The argument to {add,remove,has}Debuggee may be
@@ -1322,13 +1323,13 @@ Debugger::unwrapDebuggeeArgument(JSContext *cx, Value *vp)
      * If it is a primitive, or a Debugger.Object that belongs to some other
      * Debugger, throw a TypeError.
      */
-    Value v = JS_ARGV(cx, vp)[0];
     JSObject *obj = NonNullObject(cx, v);
     if (obj) {
         if (obj->clasp == &DebuggerObject_class) {
-            if (!unwrapDebuggeeValue(cx, &v))
+            Value rv = v;
+            if (!unwrapDebuggeeValue(cx, &rv))
                 return NULL;
-            return &v.toObject();
+            return &rv.toObject();
         }
         if (obj->isCrossCompartmentWrapper())
             return &obj->getProxyPrivate().toObject();
@@ -1340,8 +1341,8 @@ JSBool
 Debugger::addDebuggee(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.addDebuggee", 1);
-    THIS_DEBUGGER(cx, vp, "addDebuggee", dbg);
-    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
+    THIS_DEBUGGER(cx, argc, vp, "addDebuggee", args, dbg);
+    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, args[0]);
     if (!referent)
         return false;
     GlobalObject *global = referent->getGlobal();
@@ -1351,7 +1352,7 @@ Debugger::addDebuggee(JSContext *cx, uintN argc, Value *vp)
     Value v = ObjectValue(*referent);
     if (!dbg->wrapDebuggeeValue(cx, &v))
         return false;
-    *vp = v;
+    args.rval() = v;
     return true;
 }
 
@@ -1359,14 +1360,14 @@ JSBool
 Debugger::removeDebuggee(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.removeDebuggee", 1);
-    THIS_DEBUGGER(cx, vp, "removeDebuggee", dbg);
-    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
+    THIS_DEBUGGER(cx, argc, vp, "removeDebuggee", args, dbg);
+    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, args[0]);
     if (!referent)
         return false;
     GlobalObject *global = referent->getGlobal();
     if (dbg->debuggees.has(global))
         dbg->removeDebuggeeGlobal(cx, global, NULL, NULL);
-    vp->setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 
@@ -1374,18 +1375,18 @@ JSBool
 Debugger::hasDebuggee(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.hasDebuggee", 1);
-    THIS_DEBUGGER(cx, vp, "hasDebuggee", dbg);
-    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
+    THIS_DEBUGGER(cx, argc, vp, "hasDebuggee", args, dbg);
+    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, args[0]);
     if (!referent)
         return false;
-    vp->setBoolean(!!dbg->debuggees.lookup(referent->getGlobal()));
+    args.rval().setBoolean(!!dbg->debuggees.lookup(referent->getGlobal()));
     return true;
 }
 
 JSBool
 Debugger::getDebuggees(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGGER(cx, vp, "getDebuggees", dbg);
+    THIS_DEBUGGER(cx, argc, vp, "getDebuggees", args, dbg);
     JSObject *arrobj = NewDenseAllocatedArray(cx, dbg->debuggees.count(), NULL);
     if (!arrobj)
         return false;
@@ -1396,14 +1397,14 @@ Debugger::getDebuggees(JSContext *cx, uintN argc, Value *vp)
             return false;
         arrobj->setDenseArrayElement(i++, v);
     }
-    vp->setObject(*arrobj);
+    args.rval().setObject(*arrobj);
     return true;
 }
 
 JSBool
 Debugger::getNewestFrame(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGGER(cx, vp, "getNewestFrame", dbg);
+    THIS_DEBUGGER(cx, argc, vp, "getNewestFrame", args, dbg);
 
     /*
      * cx->fp() would return the topmost frame in the current context.
@@ -1413,14 +1414,14 @@ Debugger::getNewestFrame(JSContext *cx, uintN argc, Value *vp)
         if (dbg->observesFrame(i.fp()))
             return dbg->getScriptFrame(cx, i.fp(), vp);
     }
-    vp->setNull();
+    args.rval().setNull();
     return true;
 }
 
 JSBool
 Debugger::clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGGER(cx, vp, "clearAllBreakpoints", dbg);
+    THIS_DEBUGGER(cx, argc, vp, "clearAllBreakpoints", args, dbg);
     for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
         r.front()->compartment()->clearBreakpointsIn(cx, dbg, NULL, NULL);
     return true;
@@ -1429,10 +1430,11 @@ Debugger::clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debugger::construct(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Check that the arguments, if any, are cross-compartment wrappers. */
-    Value *argv = vp + 2, *argvEnd = argv + argc;
-    for (Value *p = argv; p != argvEnd; p++) {
-        const Value &arg = *p;
+    for (uintN i = 0; i < argc; i++) {
+        const Value &arg = args[i];
         if (!arg.isObject())
             return ReportObjectRequired(cx);
         JSObject *argobj = &arg.toObject();
@@ -1445,7 +1447,7 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
     /* Get Debugger.prototype. */
     Value v;
     jsid prototypeId = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    if (!vp[0].toObject().getProperty(cx, prototypeId, &v))
+    if (!args.callee().getProperty(cx, prototypeId, &v))
         return false;
     JSObject *proto = &v.toObject();
     JS_ASSERT(proto->getClass() == &Debugger::jsclass);
@@ -1471,13 +1473,13 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Add the initial debuggees, if any. */
-    for (Value *p = argv; p != argvEnd; p++) {
-        GlobalObject *debuggee = p->toObject().getProxyPrivate().toObject().getGlobal();
+    for (uintN i = 0; i < argc; i++) {
+        GlobalObject *debuggee = args[i].toObject().getProxyPrivate().toObject().getGlobal();
         if (!dbg->addDebuggeeGlobal(cx, debuggee))
             return false;
     }
 
-    vp->setObject(*obj);
+    args.rval().setObject(*obj);
     return true;
 }
 
