@@ -40,6 +40,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPLDOMEvent.h"
+#include "nsContentUtils.h"
 
 
 class nsHTMLMetaElement : public nsGenericHTMLElement,

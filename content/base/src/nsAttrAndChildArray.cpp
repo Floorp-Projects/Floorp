@@ -51,6 +51,7 @@
 #include "nsMappedAttributes.h"
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h" // nsAutoScriptBlocker
 
 /*
 CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.

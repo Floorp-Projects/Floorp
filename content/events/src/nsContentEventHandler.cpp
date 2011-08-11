@@ -43,7 +43,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
-#include "nsIDOMText.h"
 #include "nsIDOMRange.h"
 #include "nsRange.h"
 #include "nsGUIEvent.h"

@@ -226,9 +226,7 @@ protected:
 
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
-  bool IsSystemXHR() {
-    return !!nsContentUtils::IsSystemPrincipal(mPrincipal);
-  }
+  bool IsSystemXHR();
 
   /**
    * Check if aChannel is ok for a cross-site request by making sure no

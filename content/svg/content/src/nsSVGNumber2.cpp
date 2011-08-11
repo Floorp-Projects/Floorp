@@ -39,6 +39,7 @@
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
 #include "nsMathUtils.h"
+#include "nsContentUtils.h" // NS_ENSURE_FINITE
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "nsSMILFloatType.h"

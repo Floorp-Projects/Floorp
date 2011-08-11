@@ -42,13 +42,12 @@
 #include "nsIDOMHTMLHeadElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsGenericHTMLElement.h"
+
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsRuleData.h"
 #include "nsMappedAttributes.h"
-#include "nsNetUtil.h"
-#include "nsHTMLFormElement.h"
-#include "nsHtml5Module.h"
+#include "nsContentUtils.h"
 
 
 // XXX nav4 has type= start= (same as OL/UL)

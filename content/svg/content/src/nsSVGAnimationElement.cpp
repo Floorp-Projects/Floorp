@@ -42,6 +42,7 @@
 #include "nsSMILAnimationController.h"
 #include "nsSMILAnimationFunction.h"
 #include "nsISMILAttr.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla::dom;
 

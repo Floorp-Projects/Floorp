@@ -48,8 +48,6 @@
 #include "nsRenderingContext.h"
 #include "nsContentUtils.h"
 
-#include "nsIDOMText.h"
-
 #include "nsMathMLmoFrame.h"
 
 //
