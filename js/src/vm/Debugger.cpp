@@ -1848,64 +1848,65 @@ DebuggerScript_check(JSContext *cx, const Value &v, const char *clsname, const c
 }
 
 static JSObject *
-DebuggerScript_checkThis(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
+DebuggerScript_checkThis(JSContext *cx, const CallArgs &args, const char *fnname, bool checkLive)
 {
-    return DebuggerScript_check(cx, vp[1], "Debugger.Script", fnname, checkLive);
+    return DebuggerScript_check(cx, args.thisv(), "Debugger.Script", fnname, checkLive);
 }
 
-#define THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, vp, fnname, obj, script, checkLive)    \
-    JSObject *obj = DebuggerScript_checkThis(cx, vp, fnname, checkLive);            \
+#define THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, argc, vp, fnname, args, obj, script, checkLive) \
+    CallArgs args = CallArgsFromVp(argc, vp);                                       \
+    JSObject *obj = DebuggerScript_checkThis(cx, args, fnname, checkLive);          \
     if (!obj)                                                                       \
         return false;                                                               \
     JSScript *script = GetScriptReferent(obj)
 
-#define THIS_DEBUGSCRIPT_SCRIPT(cx, vp, fnname, obj, script)                  \
-    THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, vp, fnname, obj, script, false)
-#define THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, fnname, obj, script)             \
-    THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, vp, fnname, obj, script, true)
+#define THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, fnname, args, obj, script)            \
+    THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, argc, vp, fnname, args, obj, script, false)
+#define THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, fnname, args, obj, script)       \
+    THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, argc, vp, fnname, args, obj, script, true)
 
 static JSBool
 DebuggerScript_getUrl(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get url", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "get url", args, obj, script);
 
     JSString *str = js_NewStringCopyZ(cx, script->filename);
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 
 static JSBool
 DebuggerScript_getStartLine(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get startLine", obj, script);
-    vp->setNumber(script->lineno);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "get startLine", args, obj, script);
+    args.rval().setNumber(script->lineno);
     return true;
 }
 
 static JSBool
 DebuggerScript_getLineCount(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get lineCount", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "get lineCount", args, obj, script);
 
     uintN maxLine = js_GetScriptLineExtent(script);
-    vp->setNumber(jsdouble(maxLine));
+    args.rval().setNumber(jsdouble(maxLine));
     return true;
 }
 
 static JSBool
 DebuggerScript_getLive(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, vp, "get live", obj, script);
-    vp->setBoolean(!!script);
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "get live", args, obj, script);
+    args.rval().setBoolean(!!script);
     return true;
 }
 
 static JSBool
 DebuggerScript_getChildScripts(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "get live", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "get live", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
     JSObject *result = NewDenseEmptyArray(cx);
@@ -1927,7 +1928,7 @@ DebuggerScript_getChildScripts(JSContext *cx, uintN argc, Value *vp)
             }
         }
     }
-    vp->setObject(*result);
+    args.rval().setObject(*result);
     return true;
 }
 
@@ -1954,12 +1955,12 @@ static JSBool
 DebuggerScript_getOffsetLine(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.Script.getOffsetLine", 1);
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "getOffsetLine", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "getOffsetLine", args, obj, script);
     size_t offset;
-    if (!ScriptOffset(cx, script, vp[2], &offset))
+    if (!ScriptOffset(cx, script, args[0], &offset))
         return false;
     uintN lineno = JS_PCToLineNumber(cx, script, script->code + offset);
-    vp->setNumber(lineno);
+    args.rval().setNumber(lineno);
     return true;
 }
 
@@ -2114,7 +2115,7 @@ class FlowGraphSummary : public Vector<size_t> {
 static JSBool
 DebuggerScript_getAllOffsets(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "getAllOffsets", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "getAllOffsets", args, obj, script);
 
     /*
      * First pass: determine which offsets in this script are jump targets and
@@ -2165,21 +2166,21 @@ DebuggerScript_getAllOffsets(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    vp->setObject(*result);
+    args.rval().setObject(*result);
     return true;
 }
 
 static JSBool
 DebuggerScript_getLineOffsets(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "getAllOffsets", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "getAllOffsets", args, obj, script);
     REQUIRE_ARGC("Debugger.Script.getLineOffsets", 1);
 
     /* Parse lineno argument. */
     size_t lineno;
     bool ok = false;
-    if (vp[2].isNumber()) {
-        jsdouble d = vp[2].toNumber();
+    if (args[0].isNumber()) {
+        jsdouble d = args[0].toNumber();
         lineno = size_t(d);
         ok = (lineno == d);
     }
@@ -2213,7 +2214,7 @@ DebuggerScript_getLineOffsets(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    vp->setObject(*result);
+    args.rval().setObject(*result);
     return true;
 }
 
@@ -2221,7 +2222,7 @@ static JSBool
 DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.Script.setBreakpoint", 2);
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "setBreakpoint", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "setBreakpoint", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
     JSObject *holder = GetScriptHolder(obj);
@@ -2231,10 +2232,10 @@ DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
     }
 
     size_t offset;
-    if (!ScriptOffset(cx, script, vp[2], &offset))
+    if (!ScriptOffset(cx, script, args[0], &offset))
         return false;
 
-    JSObject *handler = NonNullObject(cx, vp[3]);
+    JSObject *handler = NonNullObject(cx, args[1]);
     if (!handler)
         return false;
 
@@ -2243,7 +2244,7 @@ DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
     BreakpointSite *site = comp->getOrCreateBreakpointSite(cx, script, pc, holder);
     if (site->inc(cx)) {
         if (cx->runtime->new_<Breakpoint>(dbg, site, handler)) {
-            vp->setUndefined();
+            args.rval().setUndefined();
             return true;
         }
         site->dec(cx);
@@ -2255,13 +2256,13 @@ DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerScript_getBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "getBreakpoints", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "getBreakpoints", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
     jsbytecode *pc;
     if (argc > 0) {
         size_t offset;
-        if (!ScriptOffset(cx, script, vp[2], &offset))
+        if (!ScriptOffset(cx, script, args[0], &offset))
             return false;
         pc = script->code + offset;
     } else {
@@ -2284,7 +2285,7 @@ DebuggerScript_getBreakpoints(JSContext *cx, uintN argc, Value *vp)
             }
         }
     }
-    vp->setObject(*arr);
+    args.rval().setObject(*arr);
     return true;
 }
 
@@ -2292,25 +2293,25 @@ static JSBool
 DebuggerScript_clearBreakpoint(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.Script.clearBreakpoint", 1);
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "clearBreakpoint", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "clearBreakpoint", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
-    JSObject *handler = NonNullObject(cx, vp[2]);
+    JSObject *handler = NonNullObject(cx, args[0]);
     if (!handler)
         return false;
 
     script->compartment->clearBreakpointsIn(cx, dbg, script, handler);
-    vp->setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 
 static JSBool
 DebuggerScript_clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "clearBreakpoint", obj, script);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "clearBreakpoint", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
     script->compartment->clearBreakpointsIn(cx, dbg, script, NULL);
-    vp->setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 
