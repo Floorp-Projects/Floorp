@@ -185,23 +185,19 @@ class LiveInterval : public InlineListNode<LiveInterval>
         CodePosition to;
     };
 
-    enum Flag {
-        FIXED
-    };
-
   private:
     Vector<Range, 1, IonAllocPolicy> ranges_;
     LAllocation alloc_;
     VirtualRegister *reg_;
     uint32 index_;
-    uint32 flags_;
+    int priority_;
 
   public:
 
     LiveInterval(VirtualRegister *reg, uint32 index)
       : reg_(reg),
         index_(index),
-        flags_(0)
+        priority_(0)
     { }
 
     bool addRange(CodePosition from, CodePosition to);
@@ -234,20 +230,20 @@ class LiveInterval : public InlineListNode<LiveInterval>
         return reg_;
     }
 
-    bool hasFlag(Flag flag) const {
-        return !!(flags_ & (1 << (uint32)flag));
-    }
-
-    void setFlag(Flag flag) {
-        flags_ |= (1 << (uint32)flag);
-    }
-
     uint32 index() const {
         return index_;
     }
 
     void setIndex(uint32 index) {
         index_ = index;
+    }
+
+    int priority() const {
+        return priority_;
+    }
+
+    void setPriority(int priority) {
+        priority_ = priority;
     }
 
     bool splitFrom(CodePosition pos, LiveInterval *after);
@@ -489,6 +485,7 @@ class LinearScanAllocator
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
+    void setIntervalPriority(LiveInterval *interval);
 
 #ifdef DEBUG
     void validateIntervals();
