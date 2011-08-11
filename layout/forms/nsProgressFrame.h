@@ -42,6 +42,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
 
+class nsBaseContentList;
 
 class nsProgressFrame : public nsHTMLContainerFrame,
                         public nsIAnonymousContentCreator

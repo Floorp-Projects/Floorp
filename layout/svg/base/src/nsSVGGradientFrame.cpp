@@ -48,6 +48,7 @@
 #include "nsSVGGradientFrame.h"
 #include "gfxContext.h"
 #include "gfxPattern.h"
+#include "nsContentUtils.h"
 
 //----------------------------------------------------------------------
 // Implementation

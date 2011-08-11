@@ -58,7 +58,7 @@
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif
-
+#include "nsContentUtils.h"
 #include "imgILoader.h"
 #include "nsIParser.h"
 #include "nsMimeTypes.h"

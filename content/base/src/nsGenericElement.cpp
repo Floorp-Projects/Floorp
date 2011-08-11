@@ -2034,6 +2034,13 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
 }
 
 nsresult
+nsGenericElement::GetElementsByClassName(const nsAString& aClasses,
+                                         nsIDOMNodeList** aReturn)
+{
+  return nsContentUtils::GetElementsByClassName(this, aClasses, aReturn);
+}
+
+nsresult
 nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
 {
   *aResult = nsnull;
@@ -3541,6 +3548,19 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   aKid->UnbindFromTree();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetTextContent(nsAString &aTextContent)
+{
+  nsContentUtils::GetNodeTextContent(this, PR_TRUE, aTextContent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetTextContent(const nsAString& aTextContent)
+{
+  return nsContentUtils::SetNodeTextContent(this, aTextContent, PR_FALSE);
 }
 
 /* static */
