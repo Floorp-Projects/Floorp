@@ -57,6 +57,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsComponentManagerUtils.h"
 
+namespace dom = mozilla::dom;
 using namespace mozilla::a11y;
 
 void
@@ -333,6 +334,24 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
         return PR_FALSE;
   }
   return PR_TRUE;
+}
+
+nsIAtom*
+nsAccUtils::GetARIAToken(dom::Element* aElement, nsIAtom* aAttr)
+{
+  if (!nsAccUtils::HasDefinedARIAToken(aElement, aAttr))
+    return nsAccessibilityAtoms::_empty;
+
+  static nsIContent::AttrValuesArray tokens[] =
+    { &nsAccessibilityAtoms::_false, &nsAccessibilityAtoms::_true,
+      &nsAccessibilityAtoms::mixed, nsnull};
+
+  PRInt32 idx = aElement->FindAttrValueIn(kNameSpaceID_None,
+                                          aAttr, tokens, eCaseMatters);
+  if (idx >= 0)
+    return *(tokens[idx]);
+
+  return nsnull;
 }
 
 nsAccessible *
