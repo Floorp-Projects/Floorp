@@ -58,7 +58,6 @@ class nsIAtom;
 class nsISVGValue;
 class nsIDocument;
 template<class E, class A> class nsTArray;
-template<class E, class A> class nsTPtrArray;
 struct nsTArrayDefaultAllocator;
 
 namespace mozilla {
@@ -311,6 +310,8 @@ public:
    */
   PRBool ParseIntMarginValue(const nsAString& aString);
 
+  PRInt64 SizeOf() const;
+
 private:
   // These have to be the same as in ValueType
   enum ValueBaseType {
@@ -377,7 +378,7 @@ private:
                           PRBool aCanBePercent = PR_FALSE,
                           PRBool* aIsPercent = nsnull) const;
 
-  static nsTPtrArray<const EnumTable, nsTArrayDefaultAllocator>* sEnumTableArray;
+  static nsTArray<const EnumTable*, nsTArrayDefaultAllocator>* sEnumTableArray;
 
   PtrBits mBits;
 };

@@ -41,6 +41,8 @@
 include protocol PBrowser;
 include protocol PLayers;
 
+using mozilla::LayersBackend;
+
 namespace mozilla {
 namespace layout {
 
@@ -59,7 +61,9 @@ sync protocol PRenderFrame
     manages PLayers;
 
 parent:
-    async PLayers();
+    sync PLayers()
+      returns (LayersBackend backend);
+
     async __delete__();
 
 state EMPTY:

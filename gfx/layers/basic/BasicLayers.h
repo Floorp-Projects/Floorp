@@ -224,6 +224,15 @@ public:
   BasicShadowLayerManager(nsIWidget* aWidget);
   virtual ~BasicShadowLayerManager();
 
+  virtual ShadowLayerForwarder* AsShadowForwarder()
+  {
+    return this;
+  }
+  virtual ShadowLayerManager* AsShadowManager()
+  {
+    return this;
+  }
+
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
@@ -247,12 +256,6 @@ public:
   ShadowableLayer* Hold(Layer* aLayer);
 
   bool HasShadowManager() const { return ShadowLayerForwarder::HasShadowManager(); }
-  PLayersChild* GetShadowManager() const { return mShadowManager; }
-
-  void SetShadowManager(PLayersChild* aShadowManager)
-  {
-    mShadowManager = aShadowManager;
-  }
 
   virtual PRBool IsCompositingCheap();
   virtual bool HasShadowManagerInternal() const { return HasShadowManager(); }

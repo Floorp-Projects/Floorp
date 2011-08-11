@@ -74,7 +74,7 @@
       };
       registerA11yEventListener(EVENT_REORDER, handler);
 
-      tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
+      tabBrowser.loadTabs(docURIs, false, true);
     }
 
     function testRelations()

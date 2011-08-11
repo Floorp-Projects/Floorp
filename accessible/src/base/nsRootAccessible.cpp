@@ -38,15 +38,16 @@
 #define CreateEvent CreateEventA
 #include "nsIDOMDocument.h"
 
-#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsRelUtils.h"
+#include "Relation.h"
+#include "States.h"
 
 #include "mozilla/dom/Element.h"
 #include "nsHTMLSelectAccessible.h"
+#include "nsIAccessibleRelation.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
@@ -830,27 +831,20 @@ nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
 }
 
 // nsIAccessible method
-NS_IMETHODIMP
-nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
-                                    nsIAccessibleRelation **aRelation)
+Relation
+nsRootAccessible::RelationByType(PRUint32 aType)
 {
-  NS_ENSURE_ARG_POINTER(aRelation);
-  *aRelation = nsnull;
-
-  if (!mDocument || aRelationType != nsIAccessibleRelation::RELATION_EMBEDS) {
-    return nsDocAccessibleWrap::GetRelationByType(aRelationType, aRelation);
-  }
+  if (!mDocument || aType != nsIAccessibleRelation::RELATION_EMBEDS)
+    return nsDocAccessibleWrap::RelationByType(aType);
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mDocument);
   nsCOMPtr<nsIDocShellTreeItem> contentTreeItem = GetContentDocShell(treeItem);
   // there may be no content area, so we need a null check
-  if (contentTreeItem) {
-    nsDocAccessible *accDoc = nsAccUtils::GetDocAccessibleFor(contentTreeItem);
-    return nsRelUtils::AddTarget(aRelationType, aRelation, accDoc);
-  }
+  if (!contentTreeItem)
+    return Relation();
 
-  return NS_OK;
+  return Relation(nsAccUtils::GetDocAccessibleFor(contentTreeItem));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

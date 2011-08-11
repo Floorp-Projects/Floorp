@@ -176,13 +176,10 @@ class nsHTMLGroupboxAccessible : public nsHyperTextAccessibleWrap
 public:
   nsHTMLGroupboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
-  // nsIAccessible
-  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
-                               nsIAccessibleRelation **aRelation);
-
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual PRUint32 NativeRole();
+  virtual Relation RelationByType(PRUint32 aType);
 
 protected:
   nsIContent* GetLegend();
@@ -197,12 +194,9 @@ class nsHTMLLegendAccessible : public nsHyperTextAccessibleWrap
 public:
   nsHTMLLegendAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
-  // nsIAccessible
-  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
-                               nsIAccessibleRelation **aRelation);
-
   // nsAccessible
   virtual PRUint32 NativeRole();
+  virtual Relation RelationByType(PRUint32 aType);
 };
 
 #endif  

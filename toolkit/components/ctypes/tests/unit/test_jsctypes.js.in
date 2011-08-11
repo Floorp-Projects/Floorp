@@ -681,7 +681,6 @@ function run_basic_abi_tests(library, t, name, toprimitive,
     toprimitive, get_test, set_tests, sum_tests, sum_many_tests);
 
 #ifdef WIN32
-#ifndef HAVE_64BIT_OS
   function declare_fn_stdcall(fn_t, prefix) {
     return library.declare(prefix + name + "_stdcall", fn_t);
   }
@@ -696,7 +695,6 @@ function run_basic_abi_tests(library, t, name, toprimitive,
                                     ctypes.char.ptr);
   let hello = ctypes.char.array()("hello!");
   do_check_eq(charupper(hello).readString(), "HELLO!");
-#endif
 #endif
 
   // Check the alignment of the type, and its behavior in a struct,
@@ -1877,14 +1875,12 @@ function run_FunctionType_tests() {
   do_check_eq(f3_t.name, "char*(*(**[][8])())[]");
 
 #ifdef WIN32
-#ifndef HAVE_64BIT_OS
   f3_t = ctypes.FunctionType(ctypes.stdcall_abi,
     ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
   do_check_eq(f3_t.name, "char*(*(__stdcall **[][8])())[]");
   f3_t = ctypes.FunctionType(ctypes.winapi_abi,
     ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
   do_check_eq(f3_t.name, "char*(*(WINAPI **[][8])())[]");
-#endif
 #endif
 
   let f4_t = ctypes.FunctionType(ctypes.default_abi,
@@ -2090,11 +2086,12 @@ function run_void_tests(library) {
   }, Error);
 
 #ifdef WIN32
-#ifndef HAVE_64BIT_OS
   test_void_t = library.declare("test_void_t_stdcall", ctypes.stdcall_abi, ctypes.void_t);
   do_check_eq(test_void_t(), undefined);
 
-  // Check that WINAPI symbol lookup for a regular stdcall function fails.
+  // Check that WINAPI symbol lookup for a regular stdcall function fails on
+  // Win32 (it's all the same on Win64 though).
+#ifndef HAVE_64BIT_OS
   do_check_throws(function() {
     let test_winapi_t = library.declare("test_void_t_stdcall", ctypes.winapi_abi, ctypes.void_t);
   }, Error);
@@ -2253,7 +2250,6 @@ function run_closure_tests(library)
 {
   run_single_closure_tests(library, ctypes.default_abi, "cdecl");
 #ifdef WIN32
-#ifndef HAVE_64BIT_OS
   run_single_closure_tests(library, ctypes.stdcall_abi, "stdcall");
 
   // Check that attempting to construct a ctypes.winapi_abi closure throws.
@@ -2263,7 +2259,6 @@ function run_closure_tests(library)
   }
   let fn_t = ctypes.FunctionType(ctypes.winapi_abi, ctypes.int32_t, []).ptr;
   do_check_throws(function() { fn_t(closure_fn) }, Error);
-#endif
 #endif
 }
 
@@ -2324,7 +2319,6 @@ function run_variadic_tests(library) {
   }, Error);
 
 #ifdef WIN32
-#ifndef HAVE_64BIT_OS
   do_check_throws(function() {
       ctypes.FunctionType(ctypes.stdcall_abi, ctypes.bool,
                           [ctypes.bool, "..."]);
@@ -2333,7 +2327,6 @@ function run_variadic_tests(library) {
       ctypes.FunctionType(ctypes.winapi_abi, ctypes.bool,
                           [ctypes.bool, "..."]);
   }, Error);
-#endif
 #endif
 
   do_check_throws(function() {
