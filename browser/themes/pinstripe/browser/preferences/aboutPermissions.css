@@ -1,27 +1,23 @@
-/* background styles borrowed from extensions.css */
-#permissions-page {
-  -moz-appearance: none;
-  padding: 18px;
-  background-image: /* Texture */
-                    url("chrome://mozapps/skin/extensions/background-texture.png"),
-                    /* Gradient */
-                    -moz-linear-gradient(top, #ADB5C2, #BFC6D1);
-}
+@import url("chrome://global/skin/inContentUI.css");
 
-#permissions-content {
-  background-image: -moz-linear-gradient(top,
-                                         rgba(255, 255, 255, 0.4),
-                                         rgba(255, 255, 255, 0.25) 50%,
-                                         rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(50, 65, 92, 0.4);
-  border-radius: 5px;
-}
 
 /* sites box */
 
 #sites-box {
   padding: 10px;
   width: 25em;
+}
+
+#sites-filter {
+  margin: 0;
+}
+
+#sites-list {
+  -moz-appearance: none;
+  border: 1px solid rgba(60,73,97,0.5);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 1px rgba(255,255,255,0.25);
+  background: -moz-linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.3));
+  margin: 5px 0 0 0;
 }
 
 .site {
