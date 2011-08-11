@@ -90,9 +90,17 @@ class Debugger {
     JSCList breakpoints;                /* cyclic list of all js::Breakpoints in this debugger */
 
     /*
-     * Weak references to stack frames that are currently on the stack and thus
-     * necessarily alive. We drop them as soon as they leave the stack (see
-     * slowPathOnLeaveFrame) and in removeDebuggee.
+     * Map from stack frames that are currently on the stack to Debugger.Frame
+     * instances.
+     *
+     * The keys are always live stack frames. We drop them from this map as
+     * soon as they leave the stack (see slowPathOnLeaveFrame) and in
+     * removeDebuggee.
+     *
+     * We don't trace the keys of this map (the frames are on the stack and
+     * thus necessarily live), but we do trace the values. It's like a WeakMap
+     * that way, but since stack frames are not gc-things, the implementation
+     * has to be different.
      */
     typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, RuntimeAllocPolicy>
         FrameMap;
@@ -154,8 +162,35 @@ class Debugger {
      * debuggee compartment.
      */
     JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
+
+    /*
+     * Handle the result of a hook that is expected to return a resumption
+     * value <https://wiki.mozilla.org/Debugger#Resumption_Values>. This is called
+     * when we return from a debugging hook to debuggee code. The interpreter wants
+     * a (JSTrapStatus, Value) pair telling it how to proceed.
+     *
+     * Precondition: ac is entered. We are in the debugger compartment.
+     *
+     * Postcondition: This called ac.leave(). See handleUncaughtException.
+     *
+     * If ok is false, the hook failed. If an exception is pending in
+     * ac.context(), return handleUncaughtException(ac, vp, callhook).
+     * Otherwise just return JSTRAP_ERROR.
+     *
+     * If ok is true, there must be no exception pending in ac.context(). rv may be:
+     *     undefined - Return JSTRAP_CONTINUE to continue execution normally.
+     *     {return: value} or {throw: value} - Call unwrapDebuggeeValue to
+     *         unwrap value. Store the result in *vp and return JSTRAP_RETURN
+     *         or JSTRAP_THROW. The interpreter will force the current frame to
+     *         return or throw an exception.
+     *     null - Return JSTRAP_ERROR to terminate the debuggee with an
+     *         uncatchable error.
+     *     anything else - Make a new TypeError the pending exception and
+     *         return handleUncaughtException(ac, vp, callHook).
+     */
     JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
                                       bool callHook = true);
+
     JSObject *unwrapDebuggeeArgument(JSContext *cx, Value *vp);
 
     static void traceObject(JSTracer *trc, JSObject *obj);
@@ -216,10 +251,11 @@ class Debugger {
 
     /*
      * Receive a "new script" event from the engine. A new script was compiled
-     * or deserialized. If kind is NewHeldScript, obj is the holder
-     * object. Otherwise kind is NewNonHeldScript and obj is an arbitrary
-     * object in the same global as the scope in which the script is being
-     * evaluated.
+     * or deserialized. If kind is NewHeldScript, obj must be the holder
+     * object. Otherwise, kind must be NewNonHeldScript, script must be an eval
+     * or JS_Evaluate* script, and we must have
+     *     obj->getGlobal() == scopeObj->getGlobal()
+     * where scopeObj is the scope in which the new script will be executed.
      */
     void fireNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind);
 
