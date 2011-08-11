@@ -6039,8 +6039,6 @@ i*86)
   ;;
 x86_64)
   MOZ_DIRECTX_SDK_CPU_SUFFIX=x64
-  # currently we disable ANGLE in 64bit builds
-  MOZ_ANGLE=
   ;;
 esac
 

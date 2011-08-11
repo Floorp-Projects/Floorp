@@ -1,0 +1,235 @@
+diff --git a/gfx/angle/src/libEGL/Surface.cpp b/gfx/angle/src/libEGL/Surface.cpp
+--- a/gfx/angle/src/libEGL/Surface.cpp
++++ b/gfx/angle/src/libEGL/Surface.cpp
+@@ -285,17 +285,17 @@ void Surface::subclassWindow()
+     DWORD processId;
+     DWORD threadId = GetWindowThreadProcessId(mWindow, &processId);
+     if (processId != GetCurrentProcessId() || threadId != GetCurrentThreadId())
+     {
+         return;
+     }
+ 
+     SetLastError(0);
+-    LONG oldWndProc = SetWindowLong(mWindow, GWL_WNDPROC, reinterpret_cast<LONG>(SurfaceWindowProc));
++    LONG_PTR oldWndProc = SetWindowLongPtr(mWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(SurfaceWindowProc));
+     if(oldWndProc == 0 && GetLastError() != ERROR_SUCCESS)
+     {
+         mWindowSubclassed = false;
+         return;
+     }
+ 
+     SetProp(mWindow, kSurfaceProperty, reinterpret_cast<HANDLE>(this));
+     SetProp(mWindow, kParentWndProc, reinterpret_cast<HANDLE>(oldWndProc));
+@@ -305,27 +305,27 @@ void Surface::subclassWindow()
+ void Surface::unsubclassWindow()
+ {
+     if(!mWindowSubclassed)
+     {
+         return;
+     }
+ 
+     // un-subclass
+-    LONG parentWndFunc = reinterpret_cast<LONG>(GetProp(mWindow, kParentWndProc));
++    LONG_PTR parentWndFunc = reinterpret_cast<LONG_PTR>(GetProp(mWindow, kParentWndProc));
+ 
+     // Check the windowproc is still SurfaceWindowProc.
+     // If this assert fails, then it is likely the application has subclassed the
+     // hwnd as well and did not unsubclass before destroying its EGL context. The
+     // application should be modified to either subclass before initializing the
+     // EGL context, or to unsubclass before destroying the EGL context.
+     if(parentWndFunc)
+     {
+-        LONG prevWndFunc = SetWindowLong(mWindow, GWL_WNDPROC, parentWndFunc);
+-        ASSERT(prevWndFunc == reinterpret_cast<LONG>(SurfaceWindowProc));
++        LONG_PTR prevWndFunc = SetWindowLongPtr(mWindow, GWLP_WNDPROC, parentWndFunc);
++        ASSERT(prevWndFunc == reinterpret_cast<LONG_PTR>(SurfaceWindowProc));
+     }
+ 
+     RemoveProp(mWindow, kSurfaceProperty);
+     RemoveProp(mWindow, kParentWndProc);
+     mWindowSubclassed = false;
+ }
+ 
+ bool Surface::checkForOutOfDateSwapChain()
+diff --git a/gfx/angle/src/libGLESv2/VertexDataManager.cpp b/gfx/angle/src/libGLESv2/VertexDataManager.cpp
+--- a/gfx/angle/src/libGLESv2/VertexDataManager.cpp
++++ b/gfx/angle/src/libGLESv2/VertexDataManager.cpp
+@@ -50,24 +50,24 @@ VertexDataManager::~VertexDataManager()
+     delete mStreamingBuffer;
+ 
+     for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
+     {
+         delete mCurrentValueBuffer[i];
+     }
+ }
+ 
+-UINT VertexDataManager::writeAttributeData(ArrayVertexBuffer *vertexBuffer, GLint start, GLsizei count, const VertexAttribute &attribute)
++std::size_t VertexDataManager::writeAttributeData(ArrayVertexBuffer *vertexBuffer, GLint start, GLsizei count, const VertexAttribute &attribute)
+ {
+     Buffer *buffer = attribute.mBoundBuffer.get();
+ 
+     int inputStride = attribute.stride();
+     int elementSize = attribute.typeSize();
+     const FormatConverter &converter = formatConverter(attribute);
+-    UINT streamOffset = 0;
++    std::size_t streamOffset = 0;
+ 
+     void *output = NULL;
+     
+     if (vertexBuffer)
+     {
+         output = vertexBuffer->map(attribute, spaceRequired(attribute, count), &streamOffset);
+     }
+ 
+@@ -198,17 +198,17 @@ GLenum VertexDataManager::prepareVertexD
+                     return GL_INVALID_OPERATION;
+                 }
+ 
+                 const FormatConverter &converter = formatConverter(attribs[i]);
+ 
+                 StaticVertexBuffer *staticBuffer = buffer ? buffer->getStaticVertexBuffer() : NULL;
+                 ArrayVertexBuffer *vertexBuffer = staticBuffer ? staticBuffer : static_cast<ArrayVertexBuffer*>(mStreamingBuffer);
+ 
+-                UINT streamOffset = -1;
++                std::size_t streamOffset = -1;
+ 
+                 if (staticBuffer)
+                 {
+                     streamOffset = staticBuffer->lookupAttribute(attribs[i]);
+ 
+                     if (streamOffset == -1)
+                     {
+                         // Convert the entire buffer
+@@ -666,17 +666,17 @@ void StreamingVertexBuffer::reserveRequi
+ StaticVertexBuffer::StaticVertexBuffer(IDirect3DDevice9 *device) : ArrayVertexBuffer(device, 0, D3DUSAGE_WRITEONLY)
+ {
+ }
+ 
+ StaticVertexBuffer::~StaticVertexBuffer()
+ {
+ }
+ 
+-void *StaticVertexBuffer::map(const VertexAttribute &attribute, std::size_t requiredSpace, UINT *streamOffset)
++void *StaticVertexBuffer::map(const VertexAttribute &attribute, std::size_t requiredSpace, std::size_t *streamOffset)
+ {
+     void *mapPtr = NULL;
+ 
+     if (mVertexBuffer)
+     {
+         HRESULT result = mVertexBuffer->Lock(mWritePosition, requiredSpace, &mapPtr, 0);
+         
+         if (FAILED(result))
+diff --git a/gfx/angle/src/libGLESv2/VertexDataManager.h b/gfx/angle/src/libGLESv2/VertexDataManager.h
+--- a/gfx/angle/src/libGLESv2/VertexDataManager.h
++++ b/gfx/angle/src/libGLESv2/VertexDataManager.h
+@@ -30,17 +30,17 @@ struct TranslatedAttribute
+     UINT stride;   // 0 means not to advance the read pointer at all
+ 
+     IDirect3DVertexBuffer9 *vertexBuffer;
+ };
+ 
+ class VertexBuffer
+ {
+   public:
+-    VertexBuffer(IDirect3DDevice9 *device, UINT size, DWORD usageFlags);
++    VertexBuffer(IDirect3DDevice9 *device, std::size_t size, DWORD usageFlags);
+     virtual ~VertexBuffer();
+ 
+     void unmap();
+ 
+     IDirect3DVertexBuffer9 *getBuffer() const;
+ 
+   protected:
+     IDirect3DDevice9 *const mDevice;
+@@ -55,60 +55,60 @@ class ConstantVertexBuffer : public Vert
+   public:
+     ConstantVertexBuffer(IDirect3DDevice9 *device, float x, float y, float z, float w);
+     ~ConstantVertexBuffer();
+ };
+ 
+ class ArrayVertexBuffer : public VertexBuffer
+ {
+   public:
+-    ArrayVertexBuffer(IDirect3DDevice9 *device, UINT size, DWORD usageFlags);
++    ArrayVertexBuffer(IDirect3DDevice9 *device, std::size_t size, DWORD usageFlags);
+     ~ArrayVertexBuffer();
+ 
+-    UINT size() const { return mBufferSize; }
+-    virtual void *map(const VertexAttribute &attribute, UINT requiredSpace, UINT *streamOffset) = 0;
++    std::size_t size() const { return mBufferSize; }
++    virtual void *map(const VertexAttribute &attribute, std::size_t requiredSpace, std::size_t *streamOffset) = 0;
+     virtual void reserveRequiredSpace() = 0;
+     void addRequiredSpace(UINT requiredSpace);
+ 
+   protected:
+-    UINT mBufferSize;
+-    UINT mWritePosition;
+-    UINT mRequiredSpace;
++    std::size_t mBufferSize;
++    std::size_t mWritePosition;
++    std::size_t mRequiredSpace;
+ };
+ 
+ class StreamingVertexBuffer : public ArrayVertexBuffer
+ {
+   public:
+-    StreamingVertexBuffer(IDirect3DDevice9 *device, UINT initialSize);
++    StreamingVertexBuffer(IDirect3DDevice9 *device, std::size_t initialSize);
+     ~StreamingVertexBuffer();
+ 
+-    void *map(const VertexAttribute &attribute, UINT requiredSpace, UINT *streamOffset);
++    void *map(const VertexAttribute &attribute, std::size_t requiredSpace, std::size_t *streamOffset);
+     void reserveRequiredSpace();
+ };
+ 
+ class StaticVertexBuffer : public ArrayVertexBuffer
+ {
+   public:
+     explicit StaticVertexBuffer(IDirect3DDevice9 *device);
+     ~StaticVertexBuffer();
+ 
+-    void *map(const VertexAttribute &attribute, UINT requiredSpace, UINT *streamOffset);
++    void *map(const VertexAttribute &attribute, std::size_t requiredSpace, std::size_t *streamOffset);
+     void reserveRequiredSpace();
+ 
+     UINT lookupAttribute(const VertexAttribute &attribute);   // Returns the offset into the vertex buffer, or -1 if not found
+ 
+   private:
+     struct VertexElement
+     {
+         GLenum type;
+         GLint size;
+         bool normalized;
+         int attributeOffset;
+ 
+-        UINT streamOffset;
++        std::size_t streamOffset;
+     };
+ 
+     std::vector<VertexElement> mCache;
+ };
+ 
+ class VertexDataManager
+ {
+   public:
+@@ -117,18 +117,18 @@ class VertexDataManager
+ 
+     void dirtyCurrentValue(int index) { mDirtyCurrentValue[index] = true; }
+ 
+     GLenum prepareVertexData(GLint start, GLsizei count, TranslatedAttribute *outAttribs);
+ 
+   private:
+     DISALLOW_COPY_AND_ASSIGN(VertexDataManager);
+ 
+-    UINT spaceRequired(const VertexAttribute &attrib, std::size_t count) const;
+-    UINT writeAttributeData(ArrayVertexBuffer *vertexBuffer, GLint start, GLsizei count, const VertexAttribute &attribute);
++    std::size_t spaceRequired(const VertexAttribute &attrib, std::size_t count) const;
++    std::size_t writeAttributeData(ArrayVertexBuffer *vertexBuffer, GLint start, GLsizei count, const VertexAttribute &attribute);
+ 
+     Context *const mContext;
+     IDirect3DDevice9 *const mDevice;
+ 
+     StreamingVertexBuffer *mStreamingBuffer;
+ 
+     bool mDirtyCurrentValue[MAX_VERTEX_ATTRIBS];
+     ConstantVertexBuffer *mCurrentValueBuffer[MAX_VERTEX_ATTRIBS];
