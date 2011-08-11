@@ -10,6 +10,7 @@
 
 do_load_httpd_js();
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 const PATH = "/submit/telemetry/test-ping";
 const SERVER = "http://localhost:4444";
@@ -21,6 +22,7 @@ const BinaryInputStream = Components.Constructor(
   "setInputStream");
 
 var httpserver = new nsHttpServer();
+var gFinished = false;
 
 function telemetry_ping () {
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
@@ -46,27 +48,12 @@ function telemetryObserver(aSubject, aTopic, aData) {
   telemetry_ping();
 }
 
-function run_test() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  Services.obs.addObserver(nonexistentServerObserver, "telemetry-test-xhr-complete", false);
-  telemetry_ping();
-  // spin the event loop
-  do_test_pending();
-}
-
-function readBytesFromInputStream(inputStream, count) {
-  if (!count) {
-    count = inputStream.available();
-  }
-  return new BinaryInputStream(inputStream).readBytes(count);
-}
-
 function checkHistograms(request, response) {
   // do not need the http server anymore
   httpserver.stop(do_test_finished);
   let s = request.bodyInputStream
   let payload = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON)
-                                             .decode(readBytesFromInputStream(s))
+                                             .decodeFromStream(s, s.available())
 
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0)
@@ -102,6 +89,7 @@ function checkHistograms(request, response) {
   let tc = payload.histograms[TELEMETRY_SUCCESS]
   do_check_eq(uneval(tc), 
               uneval(expected_tc));
+  gFinished = true;
 }
 
 // copied from toolkit/mozapps/extensions/test/xpcshell/head_addons.js
@@ -152,3 +140,34 @@ function createAppInfo(id, name, version, platformVersion) {
   registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
+
+function dummyTheme(id) {
+  return {
+    id: id,
+    name: Math.random().toString(),
+    headerURL: "http://lwttest.invalid/a.png",
+    footerURL: "http://lwttest.invalid/b.png",
+    textcolor: Math.random().toString(),
+    accentcolor: Math.random().toString()
+  };
+}
+
+function run_test() {
+  // Addon manager needs a profile directory
+  do_get_profile();
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  // try to make LightweightThemeManager do stuff
+  let gInternalManager = Cc["@mozilla.org/addons/integration;1"]
+                         .getService(Ci.nsIObserver)
+                         .QueryInterface(Ci.nsITimerCallback);
+
+  gInternalManager.observe(null, "addons-startup", null);
+  LightweightThemeManager.currentTheme = dummyTheme("1234");
+
+  Services.obs.addObserver(nonexistentServerObserver, "telemetry-test-xhr-complete", false);
+  telemetry_ping();
+  // spin the event loop
+  do_test_pending();
+  // ensure that test runs to completion
+  do_register_cleanup(function () do_check_true(gFinished))
+ }
