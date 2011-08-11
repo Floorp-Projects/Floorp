@@ -1495,7 +1495,7 @@ nsLineLayout::VerticalAlignLine()
 
       if (vAlign.GetUnit() != eStyleUnit_Enumerated ||
           vAlign.GetIntValue() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
-        const nscoord offset = baselineY - (pfd->mBounds.y);
+        const nscoord offset = baselineY - pfd->mBounds.y;
         f->Properties().Set(nsIFrame::LineBaselineOffset(),
                             NS_INT32_TO_PTR(offset));
       }

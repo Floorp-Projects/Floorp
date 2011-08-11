@@ -642,7 +642,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           parentIsSheet) {
         piParentWidget->GetSheetWindowParent(&topNonSheetWindow);
         [NSApp endSheet:nativeParentWindow];
-        [nativeParentWindow setAcceptsMouseMovedEvents:NO];
       }
 
       nsCocoaWindow* sheetShown = nsnull;
@@ -657,7 +656,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           // Only set contextInfo if our parent isn't a sheet.
           NSWindow* contextInfo = parentIsSheet ? nil : mSheetWindowParent;
           [TopLevelWindowData deactivateInWindow:mSheetWindowParent];
-          [mWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:mWindow
              modalForWindow:mSheetWindowParent
               modalDelegate:mDelegate
@@ -684,7 +682,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       NSInteger windowNumber = [mWindow windowNumber];
       [mWindow _setWindowNumber:-1];
       [mWindow _setWindowNumber:windowNumber];
-      [mWindow setAcceptsMouseMovedEvents:YES];
       // For reasons that aren't yet clear, calls to [NSWindow orderFront:] or
       // [NSWindow makeKeyAndOrderFront:] can sometimes trigger "Error (1000)
       // creating CGSWindow", which in turn triggers an internal inconsistency
@@ -716,7 +713,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
                             ordered:NSWindowAbove];
     }
     else {
-      [mWindow setAcceptsMouseMovedEvents:YES];
       NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
       [mWindow makeKeyAndOrderFront:nil];
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
@@ -743,8 +739,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         // hide the sheet
         [NSApp endSheet:mWindow];
         
-        [mWindow setAcceptsMouseMovedEvents:NO];
-
         [TopLevelWindowData deactivateInWindow:mWindow];
 
         nsCocoaWindow* siblingSheetToShow = nsnull;
@@ -774,7 +768,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           // If there are no sibling sheets, but the parent is a sheet, restore
           // it.  It wasn't sent any deactivate events when it was hidden, so
           // don't call through Show, just let the OS put it back up.
-          [nativeParentWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:nativeParentWindow
              modalForWindow:sheetParent
               modalDelegate:[nativeParentWindow delegate]
@@ -787,7 +780,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
           [sheetParent makeKeyAndOrderFront:nil];
           NS_OBJC_END_TRY_LOGONLY_BLOCK;
-          [sheetParent setAcceptsMouseMovedEvents:YES];
         }
         SendSetZLevelEvent();
       }
@@ -812,10 +804,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // uses it for a different purpose).
       if (mWindowType == eWindowType_popup)
         [NSApp _removeWindowFromCache:mWindow];
-
-      // it's very important to turn off mouse moved events when hiding a window, otherwise
-      // the windows' tracking rects will interfere with each other. (bug 356528)
-      [mWindow setAcceptsMouseMovedEvents:NO];
 
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has closed.
@@ -1414,7 +1402,6 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
     mPopupContentView->SetFocus(aState);
   }
   else if (aState && ([mWindow isVisible] || [mWindow isMiniaturized])) {
-    [mWindow setAcceptsMouseMovedEvents:YES];
     [mWindow makeKeyAndOrderFront:nil];
     SendSetZLevelEvent();
   }
@@ -1763,6 +1750,9 @@ PRBool nsCocoaWindow::ShouldFocusPlugin()
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
+  BaseWindow* window = [aNotification object];
+  [window updateTrackingArea];
+
   if (!mGeckoWindow)
     return;
 
@@ -1970,6 +1960,11 @@ GetDPI(NSWindow* aWindow)
   return (heightPx / scaleFactor) / (heightMM / MM_PER_INCH_FLOAT);
 }
 
+@interface BaseWindow(Private)
+- (void)removeTrackingArea;
+- (void)cursorUpdated:(NSEvent*)aEvent;
+@end
+
 @implementation BaseWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
@@ -1981,6 +1976,8 @@ GetDPI(NSWindow* aWindow)
   mInactiveTitlebarColor = nil;
   mScheduledShadowInvalidation = NO;
   mDPI = GetDPI(self);
+  mTrackingArea = nil;
+  [self updateTrackingArea];
 
   return self;
 }
@@ -1989,6 +1986,8 @@ GetDPI(NSWindow* aWindow)
 {
   [mActiveTitlebarColor release];
   [mInactiveTitlebarColor release];
+  [self removeTrackingArea];
+  ChildViewMouseTracker::OnDestroyWindow(self);
   [super dealloc];
 }
 
@@ -2072,6 +2071,55 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (float)getDPI
 {
   return mDPI;
+}
+
+- (NSView*)trackingAreaView
+{
+  NSView* contentView = [self contentView];
+  return [contentView superview] ? [contentView superview] : contentView;
+}
+
+- (void)removeTrackingArea
+{
+  if (mTrackingArea) {
+    [[self trackingAreaView] removeTrackingArea:mTrackingArea];
+    [mTrackingArea release];
+    mTrackingArea = nil;
+  }
+}
+
+- (void)updateTrackingArea
+{
+  [self removeTrackingArea];
+
+  NSView* view = [self trackingAreaView];
+  const NSTrackingAreaOptions options =
+    NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveAlways;
+  mTrackingArea = [[NSTrackingArea alloc] initWithRect:[view bounds]
+                                               options:options
+                                                 owner:self
+                                              userInfo:nil];
+  [view addTrackingArea:mTrackingArea];
+}
+
+- (void)mouseEntered:(NSEvent*)aEvent
+{
+  ChildViewMouseTracker::MouseEnteredWindow(aEvent);
+}
+
+- (void)mouseExited:(NSEvent*)aEvent
+{
+  ChildViewMouseTracker::MouseExitedWindow(aEvent);
+}
+
+- (void)mouseMoved:(NSEvent*)aEvent
+{
+  ChildViewMouseTracker::MouseMoved(aEvent);
+}
+
+- (void)cursorUpdated:(NSEvent*)aEvent
+{
+  // Nothing to do here, but NSTrackingArea wants us to implement this method.
 }
 
 - (BOOL)respondsToSelector:(SEL)aSelector
@@ -2455,87 +2503,6 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 @end
 
 @implementation PopupWindow
-
-// The OS treats our custom popup windows very strangely -- many mouse events
-// sent to them never reach their target NSView objects.  (That these windows
-// are borderless and of level NSPopUpMenuWindowLevel may have something to do
-// with it.)  The best solution is to pre-empt the OS, as follows.  (All
-// events for a given NSWindow object go through its sendEvent: method.)
-- (void)sendEvent:(NSEvent *)anEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NSView *target = nil;
-  NSView *contentView = nil;
-  NSEventType type = [anEvent type];
-  NSPoint windowLocation = NSZeroPoint;
-  switch (type) {
-    case NSScrollWheel:
-    case NSLeftMouseDown:
-    case NSLeftMouseUp:
-    case NSRightMouseDown:
-    case NSRightMouseUp:
-    case NSOtherMouseDown:
-    case NSOtherMouseUp:
-    case NSMouseMoved:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged:
-      if ((contentView = [self contentView])) {
-        // Since [anEvent window] might not be us, we can't use [anEvent locationInWindow].
-        windowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, self);
-        target = [contentView hitTest:[contentView convertPoint:windowLocation fromView:nil]];
-        // If the hit test failed, the event is targeted here but is not over the window.
-        // Send it to our content view.
-        if (!target)
-          target = contentView;
-      }
-      break;
-    default:
-      break;
-  }
-  if (target) {
-    switch (type) {
-      case NSScrollWheel:
-        [target scrollWheel:anEvent];
-        break;
-      case NSLeftMouseUp:
-        [target mouseUp:anEvent];
-        break;
-      case NSRightMouseDown:
-        [target rightMouseDown:anEvent];
-        break;
-      case NSRightMouseUp:
-        [target rightMouseUp:anEvent];
-        break;
-      case NSOtherMouseDown:
-        [target otherMouseDown:anEvent];
-        break;
-      case NSOtherMouseUp:
-        [target otherMouseUp:anEvent];
-        break;
-      case NSMouseMoved:
-        [target mouseMoved:anEvent];
-        break;
-      case NSLeftMouseDragged:
-        [target mouseDragged:anEvent];
-        break;
-      case NSRightMouseDragged:
-        [target rightMouseDragged:anEvent];
-        break;
-      case NSOtherMouseDragged:
-        [target otherMouseDragged:anEvent];
-        break;
-      default:
-        [super sendEvent:anEvent];
-        break;
-    }
-  } else {
-    [super sendEvent:anEvent];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
