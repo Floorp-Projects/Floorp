@@ -3527,7 +3527,7 @@ gfxTextRun::AdjustAdvancesForSyntheticBold(PRUint32 aStart, PRUint32 aLength)
                 
                 if (glyphData->IsSimpleGlyph()) {
                     // simple glyphs ==> just add the advance
-                    PRUint32 advance = glyphData->GetSimpleAdvance() + synAppUnitOffset;
+                    PRInt32 advance = glyphData->GetSimpleAdvance() + synAppUnitOffset;
                     if (CompressedGlyph::IsSimpleAdvance(advance)) {
                         glyphData->SetSimpleGlyph(advance, glyphData->GetSimpleGlyph());
                     } else {
