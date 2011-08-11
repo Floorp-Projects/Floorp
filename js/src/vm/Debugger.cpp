@@ -117,39 +117,37 @@ ReportObjectRequired(JSContext *cx)
     return false;
 }
 
-JSObject *
-CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
+Debugger *
+Debugger::fromThisValue(JSContext *cx, Value *vp, const char *fnname)
 {
     if (!vp[1].isObject()) {
         ReportObjectRequired(cx);
         return NULL;
     }
     JSObject *thisobj = &vp[1].toObject();
-    if (thisobj->getClass() != clasp) {
+    if (thisobj->getClass() != &Debugger::jsclass) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                             clasp->name, fnname, thisobj->getClass()->name);
+                             "Debugger", fnname, thisobj->getClass()->name);
         return NULL;
     }
 
     /*
-     * Forbid e.g. Debugger.prototype, which is of the Debugger JSClass but isn't
+     * Forbid Debugger.prototype, which is of the Debugger JSClass but isn't
      * really a Debugger object. The prototype object is distinguished by
      * having a NULL private value.
      */
-    if ((clasp->flags & JSCLASS_HAS_PRIVATE) && !thisobj->getPrivate()) {
+    Debugger *dbg = fromJSObject(thisobj);
+    if (!dbg) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                             clasp->name, fnname, "prototype object");
-        return NULL;
+                             "Debugger", fnname, "prototype object");
     }
-    return thisobj;
+    return dbg;
 }
 
-#define THISOBJ(cx, vp, classname, fnname, thisobj, private)                 \
-    JSObject *thisobj =                                                      \
-        CheckThisClass(cx, vp, &js::classname::jsclass, fnname);             \
-    if (!thisobj)                                                            \
-        return false;                                                        \
-    js::classname *private = (classname *) thisobj->getPrivate();
+#define THIS_DEBUGGER(cx, vp, fnname, dbg)                                   \
+    Debugger *dbg = Debugger::fromThisValue(cx, vp, fnname);                 \
+    if (!dbg)                                                                \
+        return false
 
 
 /*** Breakpoints *********************************************************************************/
@@ -1172,7 +1170,7 @@ Class Debugger::jsclass = {
 JSBool
 Debugger::getEnabled(JSContext *cx, uintN argc, Value *vp)
 {
-    THISOBJ(cx, vp, Debugger, "get enabled", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "get enabled", dbg);
     vp->setBoolean(dbg->enabled);
     return true;
 }
@@ -1181,7 +1179,7 @@ JSBool
 Debugger::setEnabled(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.set enabled", 1);
-    THISOBJ(cx, vp, Debugger, "set enabled", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "set enabled", dbg);
     bool enabled = js_ValueToBoolean(vp[2]);
 
     if (enabled != dbg->enabled) {
@@ -1215,7 +1213,7 @@ JSBool
 Debugger::getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
     JS_ASSERT(which >= 0 && which < HookCount);
-    THISOBJ(cx, vp, Debugger, "getHook", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "getHook", dbg);
     *vp = dbg->object->getReservedSlot(JSSLOT_DEBUG_HOOK_START + which);
     return true;
 }
@@ -1225,7 +1223,7 @@ Debugger::setHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which)
 {
     JS_ASSERT(which >= 0 && which < HookCount);
     REQUIRE_ARGC("Debugger.setHook", 1);
-    THISOBJ(cx, vp, Debugger, "setHook", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "setHook", dbg);
     const Value &v = vp[2];
     if (v.isObject()) {
         if (!v.toObject().isCallable()) {
@@ -1292,7 +1290,7 @@ Debugger::setOnEnterFrame(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debugger::getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
 {
-    THISOBJ(cx, vp, Debugger, "get uncaughtExceptionHook", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "get uncaughtExceptionHook", dbg);
     vp->setObjectOrNull(dbg->uncaughtExceptionHook);
     return true;
 }
@@ -1301,7 +1299,7 @@ JSBool
 Debugger::setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.set uncaughtExceptionHook", 1);
-    THISOBJ(cx, vp, Debugger, "set uncaughtExceptionHook", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "set uncaughtExceptionHook", dbg);
     if (!vp[2].isNull() && (!vp[2].isObject() || !vp[2].toObject().isCallable())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ASSIGN_FUNCTION_OR_NULL,
                              "uncaughtExceptionHook");
@@ -1342,7 +1340,7 @@ JSBool
 Debugger::addDebuggee(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.addDebuggee", 1);
-    THISOBJ(cx, vp, Debugger, "addDebuggee", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "addDebuggee", dbg);
     JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
     if (!referent)
         return false;
@@ -1361,7 +1359,7 @@ JSBool
 Debugger::removeDebuggee(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.removeDebuggee", 1);
-    THISOBJ(cx, vp, Debugger, "removeDebuggee", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "removeDebuggee", dbg);
     JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
     if (!referent)
         return false;
@@ -1376,7 +1374,7 @@ JSBool
 Debugger::hasDebuggee(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.hasDebuggee", 1);
-    THISOBJ(cx, vp, Debugger, "hasDebuggee", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "hasDebuggee", dbg);
     JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
     if (!referent)
         return false;
@@ -1387,7 +1385,7 @@ Debugger::hasDebuggee(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debugger::getDebuggees(JSContext *cx, uintN argc, Value *vp)
 {
-    THISOBJ(cx, vp, Debugger, "getDebuggees", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "getDebuggees", dbg);
     JSObject *arrobj = NewDenseAllocatedArray(cx, dbg->debuggees.count(), NULL);
     if (!arrobj)
         return false;
@@ -1405,7 +1403,7 @@ Debugger::getDebuggees(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debugger::getNewestFrame(JSContext *cx, uintN argc, Value *vp)
 {
-    THISOBJ(cx, vp, Debugger, "getNewestFrame", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "getNewestFrame", dbg);
 
     /*
      * cx->fp() would return the topmost frame in the current context.
@@ -1422,7 +1420,7 @@ Debugger::getNewestFrame(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debugger::clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
-    THISOBJ(cx, vp, Debugger, "clearAllBreakpoints", thisobj, dbg);
+    THIS_DEBUGGER(cx, vp, "clearAllBreakpoints", dbg);
     for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
         r.front()->compartment()->clearBreakpointsIn(cx, dbg, NULL, NULL);
     return true;
