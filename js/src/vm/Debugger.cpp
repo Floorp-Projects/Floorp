@@ -2824,13 +2824,13 @@ Class DebuggerObject_class = {
 };
 
 static JSObject *
-DebuggerObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
+DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname)
 {
-    if (!vp[1].isObject()) {
+    if (!args.thisv().isObject()) {
         ReportObjectRequired(cx);
         return NULL;
     }
-    JSObject *thisobj = &vp[1].toObject();
+    JSObject *thisobj = &args.thisv().toObject();
     if (thisobj->clasp != &DebuggerObject_class) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Object", fnname, thisobj->getClass()->name);
@@ -2850,15 +2850,17 @@ DebuggerObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
     return thisobj;
 }
 
-#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, obj)                        \
-    JSObject *obj = DebuggerObject_checkThis(cx, vp, fnname);                 \
+#define THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj)            \
+    CallArgs args = CallArgsFromVp(argc, vp);                                 \
+    JSObject *obj = DebuggerObject_checkThis(cx, args, fnname);               \
     if (!obj)                                                                 \
         return false;                                                         \
     obj = (JSObject *) obj->getPrivate();                                     \
     JS_ASSERT(obj)
 
-#define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, fnname, dbg, obj)             \
-    JSObject *obj = DebuggerObject_checkThis(cx, vp, fnname);                 \
+#define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj) \
+    CallArgs args = CallArgsFromVp(argc, vp);                                 \
+    JSObject *obj = DebuggerObject_checkThis(cx, args, fnname);               \
     if (!obj)                                                                 \
         return false;                                                         \
     Debugger *dbg = Debugger::fromChildJSObject(obj);                         \
@@ -2875,56 +2877,62 @@ DebuggerObject_construct(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerObject_getProto(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get proto", dbg, refobj);
-    vp->setObjectOrNull(refobj->getProto());
-    return dbg->wrapDebuggeeValue(cx, vp);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get proto", args, dbg, refobj);
+    Value protov = ObjectOrNullValue(refobj->getProto());
+    if (!dbg->wrapDebuggeeValue(cx, &protov))
+        return false;
+    args.rval() = protov;
+    return true;
 }
 
 static JSBool
 DebuggerObject_getClass(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get class", refobj);
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get class", args, refobj);
     const char *s = refobj->clasp->name;
     JSAtom *str = js_Atomize(cx, s, strlen(s));
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 
 static JSBool
 DebuggerObject_getCallable(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get callable", refobj);
-    vp->setBoolean(refobj->isCallable());
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get callable", args, refobj);
+    args.rval().setBoolean(refobj->isCallable());
     return true;
 }
 
 static JSBool
 DebuggerObject_getName(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get name", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get name", args, dbg, obj);
     if (!obj->isFunction()) {
-        vp->setUndefined();
+        args.rval().setUndefined();
         return true;
     }
 
     JSString *name = obj->getFunctionPrivate()->atom;
     if (!name) {
-        vp->setUndefined();
+        args.rval().setUndefined();
         return true;
     }
 
-    vp->setString(name);
-    return dbg->wrapDebuggeeValue(cx, vp);
+    Value namev = StringValue(name);
+    if (!dbg->wrapDebuggeeValue(cx, &namev))
+        return false;
+    args.rval() = namev;
+    return true;
 }
 
 static JSBool
 DebuggerObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get parameterNames", obj);
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get parameterNames", args, obj);
     if (!obj->isFunction()) {
-        vp->setUndefined();
+        args.rval().setUndefined();
         return true;
     }
 
@@ -2951,16 +2959,16 @@ DebuggerObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
             result->setDenseArrayElement(i, UndefinedValue());
     }
 
-    vp->setObject(*result);
+    args.rval().setObject(*result);
     return true;
 }
 
 static JSBool
 DebuggerObject_getScript(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get script", args, dbg, obj);
 
-    vp->setUndefined();
+    args.rval().setUndefined();
 
     if (!obj->isFunction())
         return true;
@@ -2973,17 +2981,17 @@ DebuggerObject_getScript(JSContext *cx, uintN argc, Value *vp)
     if (!scriptObject)
         return false;
 
-    vp->setObject(*scriptObject);
+    args.rval().setObject(*scriptObject);
     return true;
 }
 
 static JSBool
 DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "getOwnPropertyDescriptor", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyDescriptor", args, dbg, obj);
 
     jsid id;
-    if (!ValueToId(cx, argc >= 1 ? vp[2] : UndefinedValue(), &id))
+    if (!ValueToId(cx, argc >= 1 ? args[0] : UndefinedValue(), &id))
         return false;
 
     /* Bug: This can cause the debuggee to run! */
@@ -3015,13 +3023,13 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    return NewPropertyDescriptorObject(cx, &desc, vp);
+    return NewPropertyDescriptorObject(cx, &desc, &args.rval());
 }
 
 static JSBool
 DebuggerObject_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "getOwnPropertyNames", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyNames", args, dbg, obj);
 
     AutoIdVector keys(cx);
     {
@@ -3058,7 +3066,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
     JSObject *aobj = NewDenseCopiedArray(cx, vals.length(), vals.begin());
     if (!aobj)
         return false;
-    vp->setObject(*aobj);
+    args.rval().setObject(*aobj);
     return true;
 }
 
@@ -3111,14 +3119,14 @@ WrapIdAndPropDesc(JSContext *cx, JSObject *obj, jsid *idp, PropDesc *desc)
 static JSBool
 DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "defineProperty", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperty", args, dbg, obj);
     REQUIRE_ARGC("Debugger.Object.defineProperty", 2);
 
     jsid id;
-    if (!ValueToId(cx, vp[2], &id))
+    if (!ValueToId(cx, args[0], &id))
         return JS_FALSE;
 
-    const Value &descval = vp[3];
+    const Value &descval = args[1];
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
     if (!desc || !desc->initialize(cx, descval, false))
@@ -3139,16 +3147,16 @@ DebuggerObject_defineProperty(JSContext *cx, uintN argc, Value *vp)
             return false;
     }
 
-    vp->setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 
 static JSBool
 DebuggerObject_defineProperties(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "defineProperties", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperties", args, dbg, obj);
     REQUIRE_ARGC("Debugger.Object.defineProperties", 1);
-    JSObject *props = ToObject(cx, &vp[2]);
+    JSObject *props = ToObject(cx, &args[0]);
     if (!props)
         return false;
 
@@ -3180,7 +3188,7 @@ DebuggerObject_defineProperties(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    vp->setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 
@@ -3191,8 +3199,8 @@ DebuggerObject_defineProperties(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "deleteProperty", dbg, obj);
-    Value arg = argc > 0 ? vp[2] : UndefinedValue();
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "deleteProperty", args, dbg, obj);
+    Value arg = argc > 0 ? args[0] : UndefinedValue();
     jsid id;
     if (!ValueToId(cx, arg, &id))
         return false;
@@ -3202,7 +3210,7 @@ DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     ErrorCopier ec(ac, dbg->toJSObject());
-    return obj->deleteProperty(cx, id, vp, false);
+    return obj->deleteProperty(cx, id, &args.rval(), false);
 }
 
 enum SealHelperOp { Seal, Freeze, PreventExtensions };
@@ -3210,7 +3218,7 @@ enum SealHelperOp { Seal, Freeze, PreventExtensions };
 static JSBool
 DebuggerObject_sealHelper(JSContext *cx, uintN argc, Value *vp, SealHelperOp op, const char *name)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, name, dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, name, args, dbg, obj);
 
     AutoCompartment ac(cx, obj);
     if (!ac.enter())
@@ -3231,8 +3239,8 @@ DebuggerObject_sealHelper(JSContext *cx, uintN argc, Value *vp, SealHelperOp op,
     }
     if (!ok)
         return false;
-    vp->setUndefined();
-    return ok;
+    args.rval().setUndefined();
+    return true;
 }
 
 static JSBool
@@ -3257,7 +3265,7 @@ static JSBool
 DebuggerObject_isSealedHelper(JSContext *cx, uintN argc, Value *vp, SealHelperOp op,
                               const char *name)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, name, dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, name, args, dbg, obj);
 
     AutoCompartment ac(cx, obj);
     if (!ac.enter())
@@ -3274,7 +3282,7 @@ DebuggerObject_isSealedHelper(JSContext *cx, uintN argc, Value *vp, SealHelperOp
     } else {
         r = obj->isExtensible();
     }
-    vp->setBoolean(r);
+    args.rval().setBoolean(r);
     return true;
 }
 
@@ -3301,7 +3309,7 @@ enum ApplyOrCallMode { ApplyMode, CallMode };
 static JSBool
 ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "apply", dbg, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "apply", args, dbg, obj);
 
     /*
      * Any JS exceptions thrown must be in the debugger compartment, so do
@@ -3318,20 +3326,20 @@ ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
      * Unwrap Debugger.Objects. This happens in the debugger's compartment since
      * that is where any exceptions must be reported.
      */
-    Value thisv = argc > 0 ? vp[2] : UndefinedValue();
+    Value thisv = argc > 0 ? args[0] : UndefinedValue();
     if (!dbg->unwrapDebuggeeValue(cx, &thisv))
         return false;
     uintN callArgc = 0;
     Value *callArgv = NULL;
     AutoValueVector argv(cx);
     if (mode == ApplyMode) {
-        if (argc >= 2 && !vp[3].isNullOrUndefined()) {
-            if (!vp[3].isObject()) {
+        if (argc >= 2 && !args[1].isNullOrUndefined()) {
+            if (!args[1].isObject()) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS,
                                      js_apply_str);
                 return false;
             }
-            JSObject *argsobj = &vp[3].toObject();
+            JSObject *argsobj = &args[1].toObject();
             if (!js_GetLengthProperty(cx, argsobj, &callArgc))
                 return false;
             callArgc = uintN(JS_MIN(callArgc, StackSpace::ARGS_LENGTH_MAX));
@@ -3341,7 +3349,7 @@ ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
         }
     } else {
         callArgc = argc > 0 ? uintN(JS_MIN(argc - 1, StackSpace::ARGS_LENGTH_MAX)) : 0;
-        callArgv = vp + 3;
+        callArgv = args.argv() + 1;
     }
     for (uintN i = 0; i < callArgc; i++) {
         if (!dbg->unwrapDebuggeeValue(cx, &callArgv[i]))
@@ -3362,11 +3370,11 @@ ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
 
     /*
      * Call the function. Use newCompletionValue to return to the debugger
-     * compartment and populate *vp.
+     * compartment and populate args.rval().
      */
     Value rval;
     bool ok = ExternalInvoke(cx, thisv, calleev, callArgc, callArgv, &rval);
-    return dbg->newCompletionValue(ac, ok, rval, vp);
+    return dbg->newCompletionValue(ac, ok, rval, &args.rval());
 }
 
 static JSBool
