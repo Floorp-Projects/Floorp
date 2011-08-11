@@ -98,7 +98,6 @@ _BROWSER_FILES = head.js \
                  browser_bug611242.js \
                  browser_bug638292.js \
                  browser_bug645699.js \
-                 browser_bug672485.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \
