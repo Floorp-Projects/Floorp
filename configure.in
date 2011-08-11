@@ -9366,6 +9366,16 @@ _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
  * is defined before <stdint.h> is included. */
 #define __STDC_LIMIT_MACROS
 
+/* Force-include hunspell_alloc_hooks.h for hunspell, so that we don't need to
+ * modify it directly.
+ *
+ * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/Makefile.in,
+ * unless --enable-system-hunspell is defined.
+ */
+#if defined(HUNSPELL_STATIC)
+#include "hunspell_alloc_hooks.h"
+#endif
+
 #endif /* _MOZILLA_CONFIG_H_ */
 
 EOF
