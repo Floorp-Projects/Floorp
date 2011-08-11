@@ -1246,7 +1246,7 @@ bool MinidumpGenerator::WriteMiscInfoStream(MDRawDirectory *misc_info_stream) {
     info_ptr->process_kernel_time =
         static_cast<u_int32_t>(usage.ru_stime.tv_sec);
   }
-  int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, info_ptr->process_id };
+  int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, static_cast<int>(info_ptr->process_id) };
   u_int mibsize = static_cast<u_int>(sizeof(mib) / sizeof(mib[0]));
   size_t size;
   if (!sysctl(mib, mibsize, NULL, &size, NULL, 0)) {
