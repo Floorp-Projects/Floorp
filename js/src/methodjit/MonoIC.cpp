@@ -726,7 +726,8 @@ class CallCompiler : public BaseCompiler
                        JSC::CodeLocationLabel(jit->fastEntry));
 
         JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n",
-                   ic.funGuard.executableAddress(), ic.fastGuardedObject);
+                   ic.funGuard.executableAddress(),
+                   static_cast<void*>(ic.fastGuardedObject));
 
         return true;
     }
