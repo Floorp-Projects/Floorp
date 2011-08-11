@@ -117,38 +117,6 @@ ReportObjectRequired(JSContext *cx)
     return false;
 }
 
-Debugger *
-Debugger::fromThisValue(JSContext *cx, Value *vp, const char *fnname)
-{
-    if (!vp[1].isObject()) {
-        ReportObjectRequired(cx);
-        return NULL;
-    }
-    JSObject *thisobj = &vp[1].toObject();
-    if (thisobj->getClass() != &Debugger::jsclass) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                             "Debugger", fnname, thisobj->getClass()->name);
-        return NULL;
-    }
-
-    /*
-     * Forbid Debugger.prototype, which is of the Debugger JSClass but isn't
-     * really a Debugger object. The prototype object is distinguished by
-     * having a NULL private value.
-     */
-    Debugger *dbg = fromJSObject(thisobj);
-    if (!dbg) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                             "Debugger", fnname, "prototype object");
-    }
-    return dbg;
-}
-
-#define THIS_DEBUGGER(cx, vp, fnname, dbg)                                   \
-    Debugger *dbg = Debugger::fromThisValue(cx, vp, fnname);                 \
-    if (!dbg)                                                                \
-        return false
-
 
 /*** Breakpoints *********************************************************************************/
 
@@ -1166,6 +1134,38 @@ Class Debugger::jsclass = {
     NULL,                 /* hasInstance */
     Debugger::traceObject
 };
+
+Debugger *
+Debugger::fromThisValue(JSContext *cx, Value *vp, const char *fnname)
+{
+    if (!vp[1].isObject()) {
+        ReportObjectRequired(cx);
+        return NULL;
+    }
+    JSObject *thisobj = &vp[1].toObject();
+    if (thisobj->getClass() != &Debugger::jsclass) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debugger", fnname, thisobj->getClass()->name);
+        return NULL;
+    }
+
+    /*
+     * Forbid Debugger.prototype, which is of the Debugger JSClass but isn't
+     * really a Debugger object. The prototype object is distinguished by
+     * having a NULL private value.
+     */
+    Debugger *dbg = fromJSObject(thisobj);
+    if (!dbg) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debugger", fnname, "prototype object");
+    }
+    return dbg;
+}
+
+#define THIS_DEBUGGER(cx, vp, fnname, dbg)                                   \
+    Debugger *dbg = Debugger::fromThisValue(cx, vp, fnname);                 \
+    if (!dbg)                                                                \
+        return false
 
 JSBool
 Debugger::getEnabled(JSContext *cx, uintN argc, Value *vp)
