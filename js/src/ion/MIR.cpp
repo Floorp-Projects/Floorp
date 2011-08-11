@@ -345,6 +345,12 @@ MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
     return new MTest(ins, ifTrue, ifFalse);
 }
 
+MCompare *
+MCompare::New(MDefinition *left, MDefinition *right, JSOp op)
+{
+    return new MCompare(left, right, op);
+}
+
 MTableSwitch *
 MTableSwitch::New(MDefinition *ins, int32 low, int32 high)
 {
@@ -449,6 +455,25 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
         else
             setResultType(MIRType_Int32);
     } else {
+        specialization_ = MIRType_None;
+    }
+}
+
+void
+MCompare::infer(const TypeOracle::Binary &b)
+{
+    // If neither operand is an object, then we are idempotent
+    if (b.lhs != MIRType_Object && b.rhs != MIRType_Object)
+        setIdempotent();
+
+    // Set specialization
+    if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
+        if (CoercesToDouble(b.lhs) || CoercesToDouble(b.rhs))
+            specialization_ = MIRType_Double;
+        else
+            specialization_ = MIRType_Int32;
+    }
+    else {
         specialization_ = MIRType_None;
     }
 }

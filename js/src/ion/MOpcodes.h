@@ -52,6 +52,7 @@ namespace ion {
     _(TableSwitch)                                                          \
     _(Goto)                                                                 \
     _(Test)                                                                 \
+    _(Compare)                                                              \
     _(Phi)                                                                  \
     _(BitNot)                                                               \
     _(BitAnd)                                                               \
