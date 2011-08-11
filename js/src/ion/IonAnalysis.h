@@ -56,6 +56,9 @@ bool
 SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph);
 
 bool
+EliminateDeadCode(MIRGraph &graph);
+
+bool
 ApplyTypeInformation(MIRGraph &graph);
 
 bool

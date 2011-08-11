@@ -263,8 +263,9 @@ class InlineList : protected InlineListNode<T>
     reverse_iterator rend() {
         return reverse_iterator(this);
     }
-    iterator removeAt(iterator &where) {
-        iterator iter(where);
+    template <typename itertype>
+    itertype removeAt(itertype &where) {
+        itertype iter(where);
         iter++;
 
         // Once the element 'where' points at has been removed, it is no longer

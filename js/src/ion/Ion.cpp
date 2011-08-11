@@ -416,6 +416,10 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         spew.spewPass("GVN");
     }
 
+    if (!EliminateDeadCode(graph))
+        return false;
+    spew.spewPass("DCE");
+
     if (js_IonOptions.licm) {
         LICM licm(graph);
         if (!licm.analyze())
