@@ -921,6 +921,11 @@ Debugger::markKeysInCompartment(JSTracer *tracer, const ObjectWeakMap &map)
     JSCompartment *comp = tracer->context->runtime->gcCurrentCompartment;
     JS_ASSERT(comp);
 
+    /*
+     * WeakMap::Range is deliberately private, to discourage C++ code from
+     * enumerating WeakMap keys. However in this case we need access, so we
+     * make a base-class reference. Range is public in HashMap.
+     */
     typedef HashMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, RuntimeAllocPolicy> Map;
     const Map &storage = map;
     for (Map::Range r = storage.all(); !r.empty(); r.popFront()) {
