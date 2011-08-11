@@ -5005,8 +5005,8 @@ nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock,
 
   if (aWhere == kBlockEnd)
   {
-    nsCOMPtr<nsIDOMNode> rightmostNode;
-    rightmostNode = mHTMLEditor->GetRightmostChild(aBlock, PR_TRUE); // no block crossing
+    nsCOMPtr<nsIDOMNode> rightmostNode =
+      mHTMLEditor->GetRightmostChild(aBlock, PR_TRUE); // no block crossing
 
     if (rightmostNode)
     {

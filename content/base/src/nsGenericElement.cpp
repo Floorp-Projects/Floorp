@@ -52,7 +52,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMText.h"
 #include "nsIContentIterator.h"
 #include "nsEventListenerManager.h"
 #include "nsFocusManager.h"
@@ -2034,6 +2033,13 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
 }
 
 nsresult
+nsGenericElement::GetElementsByClassName(const nsAString& aClasses,
+                                         nsIDOMNodeList** aReturn)
+{
+  return nsContentUtils::GetElementsByClassName(this, aClasses, aReturn);
+}
+
+nsresult
 nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
 {
   *aResult = nsnull;
@@ -3541,6 +3547,19 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   aKid->UnbindFromTree();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetTextContent(nsAString &aTextContent)
+{
+  nsContentUtils::GetNodeTextContent(this, PR_TRUE, aTextContent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetTextContent(const nsAString& aTextContent)
+{
+  return nsContentUtils::SetNodeTextContent(this, aTextContent, PR_FALSE);
 }
 
 /* static */

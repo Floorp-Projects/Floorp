@@ -87,7 +87,6 @@
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
-#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMXPathNSResolver.h"
@@ -99,7 +98,7 @@
 #include "imgIRequest.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMTouchEvent.h"
-
+#include "nsDataHashtable.h"
 #include "TimeStamp.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
