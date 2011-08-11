@@ -2719,6 +2719,7 @@ imgDecodeWorker::Run()
 
   // Loop control
   bool haveMoreData = true;
+  PRInt32 chunkCount = 0;
   TimeStamp start = TimeStamp::Now();
   TimeStamp deadline = start + TimeDuration::FromMilliseconds(gMaxMSBeforeYield);
 
@@ -2730,6 +2731,7 @@ imgDecodeWorker::Run()
          (TimeStamp::Now() < deadline)) {
 
     // Decode a chunk of data
+    chunkCount++;
     rv = image->DecodeSomeData(maxBytes);
     if (NS_FAILED(rv)) {
       image->DoError();
@@ -2742,8 +2744,10 @@ imgDecodeWorker::Run()
   }
 
   TimeDuration decodeLatency = TimeStamp::Now() - start;
-  Telemetry::Accumulate(Telemetry::IMAGE_DECODE_LATENCY, PRInt32(decodeLatency.ToMicroseconds()));
-
+  if (chunkCount) {
+      Telemetry::Accumulate(Telemetry::IMAGE_DECODE_LATENCY, PRInt32(decodeLatency.ToMicroseconds()));
+      Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, chunkCount);
+  }
   // accumulate the total decode time
   mDecodeTime += decodeLatency;
 
