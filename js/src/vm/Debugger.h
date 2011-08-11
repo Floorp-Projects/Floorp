@@ -191,7 +191,7 @@ class Debugger {
     JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
                                       bool callHook = true);
 
-    JSObject *unwrapDebuggeeArgument(JSContext *cx, Value *vp);
+    JSObject *unwrapDebuggeeArgument(JSContext *cx, const Value &v);
 
     static void traceObject(JSTracer *trc, JSObject *obj);
     void trace(JSTracer *trc);
@@ -200,7 +200,7 @@ class Debugger {
 
     static Class jsclass;
 
-    static Debugger *fromThisValue(JSContext *cx, Value *vp, const char *fnname);
+    static Debugger *fromThisValue(JSContext *cx, const CallArgs &ca, const char *fnname);
     static JSBool getEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
