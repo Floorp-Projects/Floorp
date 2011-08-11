@@ -114,6 +114,7 @@ top:
                 continue;
 
             jsbytecode *pc = script->main + tn->start + tn->length;
+            cx->regs().pc = pc;
             JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(cx->regs().sp == fp->base() + tn->stackDepth);
 
