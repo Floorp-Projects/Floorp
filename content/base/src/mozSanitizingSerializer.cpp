@@ -52,7 +52,6 @@
 
 #include "mozSanitizingSerializer.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsTextFragment.h"
 #include "nsContentUtils.h"

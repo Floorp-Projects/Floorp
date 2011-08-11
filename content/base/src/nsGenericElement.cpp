@@ -52,7 +52,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMText.h"
 #include "nsIContentIterator.h"
 #include "nsEventListenerManager.h"
 #include "nsFocusManager.h"

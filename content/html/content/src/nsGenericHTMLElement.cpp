@@ -102,8 +102,6 @@
 
 #include "nsContentCID.h"
 
-#include "nsIDOMText.h"
-
 #include "nsDOMStringMap.h"
 
 #include "nsIEditor.h"
