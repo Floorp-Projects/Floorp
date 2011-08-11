@@ -2352,13 +2352,13 @@ Class DebuggerFrame_class = {
 };
 
 static JSObject *
-CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
+CheckThisFrame(JSContext *cx, const CallArgs &args, const char *fnname, bool checkLive)
 {
-    if (!vp[1].isObject()) {
+    if (!args.thisv().isObject()) {
         ReportObjectRequired(cx);
         return NULL;
     }
-    JSObject *thisobj = &vp[1].toObject();
+    JSObject *thisobj = &args.thisv().toObject();
     if (thisobj->getClass() != &DebuggerFrame_class) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Frame", fnname, thisobj->getClass()->name);
@@ -2398,8 +2398,9 @@ StackContains(JSContext *cx, StackFrame *fp)
 }
 #endif
 
-#define THIS_FRAME(cx, vp, fnname, thisobj, fp)                              \
-    JSObject *thisobj = CheckThisFrame(cx, vp, fnname, true);                \
+#define THIS_FRAME(cx, argc, vp, fnname, args, thisobj, fp)                  \
+    CallArgs args = CallArgsFromVp(argc, vp);                                \
+    JSObject *thisobj = CheckThisFrame(cx, args, fnname, true);              \
     if (!thisobj)                                                            \
         return false;                                                        \
     StackFrame *fp = (StackFrame *) thisobj->getPrivate();                   \
@@ -2408,69 +2409,76 @@ StackContains(JSContext *cx, StackFrame *fp)
 static JSBool
 DebuggerFrame_getType(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get type", thisobj, fp);
+    THIS_FRAME(cx, argc, vp, "get type", args, thisobj, fp);
 
     /*
      * Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
      * order of checks here is significant.
      */
-    vp->setString(fp->isEvalFrame()
-                  ? cx->runtime->atomState.evalAtom
-                  : fp->isGlobalFrame()
-                  ? cx->runtime->atomState.globalAtom
-                  : cx->runtime->atomState.callAtom);
+    args.rval().setString(fp->isEvalFrame()
+                          ? cx->runtime->atomState.evalAtom
+                          : fp->isGlobalFrame()
+                          ? cx->runtime->atomState.globalAtom
+                          : cx->runtime->atomState.callAtom);
     return true;
 }
 
 static JSBool
 DebuggerFrame_getCallee(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get callee", thisobj, fp);
-    *vp = (fp->isFunctionFrame() && !fp->isEvalFrame()) ? fp->calleev() : NullValue();
-    return Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
+    THIS_FRAME(cx, argc, vp, "get callee", args, thisobj, fp);
+    Value calleev = (fp->isFunctionFrame() && !fp->isEvalFrame()) ? fp->calleev() : NullValue();
+    if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &calleev))
+        return false;
+    args.rval() = calleev;
+    return true;
 }
 
 static JSBool
 DebuggerFrame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get generator", thisobj, fp);
-    vp->setBoolean(fp->isGeneratorFrame());
+    THIS_FRAME(cx, argc, vp, "get generator", args, thisobj, fp);
+    args.rval().setBoolean(fp->isGeneratorFrame());
     return true;
 }
 
 static JSBool
 DebuggerFrame_getConstructing(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get constructing", thisobj, fp);
-    vp->setBoolean(fp->isFunctionFrame() && fp->isConstructing());
+    THIS_FRAME(cx, argc, vp, "get constructing", args, thisobj, fp);
+    args.rval().setBoolean(fp->isFunctionFrame() && fp->isConstructing());
     return true;
 }
 
 static JSBool
 DebuggerFrame_getThis(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get this", thisobj, fp);
+    THIS_FRAME(cx, argc, vp, "get this", args, thisobj, fp);
+    Value thisv;
     {
         AutoCompartment ac(cx, &fp->scopeChain());
         if (!ac.enter())
             return false;
         if (!ComputeThis(cx, fp))
             return false;
-        *vp = fp->thisValue();
+        thisv = fp->thisValue();
     }
-    return Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
+    if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &thisv))
+        return false;
+    args.rval() = thisv;
+    return true;
 }
 
 static JSBool
 DebuggerFrame_getOlder(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get this", thisobj, thisfp);
+    THIS_FRAME(cx, argc, vp, "get this", args, thisobj, thisfp);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     for (StackFrame *fp = thisfp->prev(); fp; fp = fp->prev()) {
         if (!fp->isDummyFrame() && dbg->observesFrame(fp))
             return dbg->getScriptFrame(cx, fp, vp);
     }
-    vp->setNull();
+    args.rval().setNull();
     return true;
 }
 
@@ -2484,15 +2492,15 @@ Class DebuggerArguments_class = {
 static JSBool
 DebuggerArguments_getArg(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *callee = &CallArgsFromVp(argc, vp).callee();
-    int32 i = callee->getReservedSlot(0).toInt32();
+    CallArgs args = CallArgsFromVp(argc, vp);
+    int32 i = args.callee().getReservedSlot(0).toInt32();
 
     /* Check that the this value is an Arguments object. */
-    if (!vp[1].isObject()) {
+    if (!args.thisv().isObject()) {
         ReportObjectRequired(cx);
         return false;
     }
-    JSObject *argsobj = &vp[1].toObject();
+    JSObject *argsobj = &args.thisv().toObject();
     if (argsobj->getClass() != &DebuggerArguments_class) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Arguments", "getArgument", argsobj->getClass()->name);
@@ -2503,36 +2511,41 @@ DebuggerArguments_getArg(JSContext *cx, uintN argc, Value *vp)
      * Put the Debugger.Frame into the this-value slot, then use THIS_FRAME
      * to check that it is still live and get the fp.
      */
-    vp[1] = argsobj->getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME);
-    THIS_FRAME(cx, vp, "get argument", thisobj, fp);
+    args.thisv() = argsobj->getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME);
+    THIS_FRAME(cx, argc, vp, "get argument", ca2, thisobj, fp);
 
     /*
      * Since getters can be extracted and applied to other objects,
      * there is no guarantee this object has an ith argument.
      */
     JS_ASSERT(i >= 0);
+    Value arg;
     if (uintN(i) < fp->numActualArgs())
-        *vp = fp->canonicalActualArg(i);
+        arg = fp->canonicalActualArg(i);
     else
-        vp->setUndefined();
-    return Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
+        arg.setUndefined();
+
+    if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &arg))
+        return false;
+    args.rval() = arg;
+    return true;
 }
 
 static JSBool
 DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get arguments", thisobj, fp);
+    THIS_FRAME(cx, argc, vp, "get arguments", args, thisobj, fp);
     Value argumentsv = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS);
     if (!argumentsv.isUndefined()) {
         JS_ASSERT(argumentsv.isObjectOrNull());
-        *vp = argumentsv;
+        args.rval() = argumentsv;
         return true;
     }
 
     JSObject *argsobj;
     if (fp->hasArgs()) {
         /* Create an arguments object. */
-        GlobalObject *global = CallArgsFromVp(argc, vp).callee().getGlobal();
+        GlobalObject *global = args.callee().getGlobal();
         JSObject *proto;
         if (!js_GetClassPrototype(cx, global, JSProto_Array, &proto))
             return false;
@@ -2567,15 +2580,15 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
     } else {
         argsobj = NULL;
     }
-    *vp = ObjectOrNullValue(argsobj);
-    thisobj->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS, *vp);
+    args.rval() = ObjectOrNullValue(argsobj);
+    thisobj->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS, args.rval());
     return true;
 }
 
 static JSBool
 DebuggerFrame_getScript(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get script", thisobj, fp);
+    THIS_FRAME(cx, argc, vp, "get script", args, thisobj, fp);
     Debugger *debug = Debugger::fromChildJSObject(thisobj);
 
     JSObject *scriptObject = NULL;
@@ -2602,23 +2615,23 @@ DebuggerFrame_getScript(JSContext *cx, uintN argc, Value *vp)
         if (!scriptObject)
             return false;
     }
-    vp->setObjectOrNull(scriptObject);
+    args.rval().setObjectOrNull(scriptObject);
     return true;
 }
 
 static JSBool
 DebuggerFrame_getOffset(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_FRAME(cx, vp, "get offset", thisobj, fp);
+    THIS_FRAME(cx, argc, vp, "get offset", args, thisobj, fp);
     if (fp->isScriptFrame()) {
         JSScript *script = fp->script();
         jsbytecode *pc = fp->pcQuadratic(cx);
         JS_ASSERT(script->code <= pc);
         JS_ASSERT(pc < script->code + script->length);
         size_t offset = pc - script->code;
-        vp->setNumber(double(offset));
+        args.rval().setNumber(double(offset));
     } else {
-        vp->setUndefined();
+        args.rval().setUndefined();
     }
     return true;
 }
@@ -2626,11 +2639,12 @@ DebuggerFrame_getOffset(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebuggerFrame_getLive(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *thisobj = CheckThisFrame(cx, args, "get live", false);
     if (!thisobj)
         return false;
     StackFrame *fp = (StackFrame *) thisobj->getPrivate();
-    vp->setBoolean(!!fp);
+    args.rval().setBoolean(!!fp);
     return true;
 }
 
@@ -2668,18 +2682,21 @@ enum EvalBindingsMode { WithoutBindings, WithBindings };
 static JSBool
 DebuggerFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
 {
-    REQUIRE_ARGC(mode == WithBindings ? "Debugger.Frame.evalWithBindings" : "Debugger.Frame.eval",
-                 uintN(mode == WithBindings ? 2 : 1));
-    THIS_FRAME(cx, vp, mode == WithBindings ? "evalWithBindings" : "eval", thisobj, fp);
-    Debugger *dbg = Debugger::fromChildJSObject(&vp[1].toObject());
+    if (mode == WithBindings)
+        REQUIRE_ARGC("Debugger.Frame.evalWithBindings", 2);
+    else
+        REQUIRE_ARGC("Debugger.Frame.eval", 1);
+    THIS_FRAME(cx, argc, vp, mode == WithBindings ? "evalWithBindings" : "eval",
+               args, thisobj, fp);
+    Debugger *dbg = Debugger::fromChildJSObject(thisobj);
 
     /* Check the first argument, the eval code string. */
-    if (!vp[2].isString()) {
+    if (!args[0].isString()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
-                             "Debugger.Frame.eval", "string", InformalValueTypeName(vp[2]));
+                             "Debugger.Frame.eval", "string", InformalValueTypeName(args[0]));
         return false;
     }
-    JSLinearString *linearStr = vp[2].toString()->ensureLinear(cx);
+    JSLinearString *linearStr = args[0].toString()->ensureLinear(cx);
     if (!linearStr)
         return false;
 
@@ -2691,7 +2708,7 @@ DebuggerFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
     AutoIdVector keys(cx);
     AutoValueVector values(cx);
     if (mode == WithBindings) {
-        JSObject *bindingsobj = NonNullObject(cx, vp[3]);
+        JSObject *bindingsobj = NonNullObject(cx, args[1]);
         if (!bindingsobj ||
             !GetPropertyNames(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
             !values.growBy(keys.length()))
@@ -2699,9 +2716,9 @@ DebuggerFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
             return false;
         }
         for (size_t i = 0; i < keys.length(); i++) {
-            Value *vp = &values[i];
-            if (!bindingsobj->getProperty(cx, bindingsobj, keys[i], vp) ||
-                !dbg->unwrapDebuggeeValue(cx, vp))
+            Value *valp = &values[i];
+            if (!bindingsobj->getProperty(cx, bindingsobj, keys[i], valp) ||
+                !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
             }
