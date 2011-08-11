@@ -2083,7 +2083,7 @@ NS_IMETHODIMP nsXULWindow::SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowser
 // nsXULWindow: Accessors
 //*****************************************************************************
 
-PRInt32 nsXULWindow::AppUnitsPerDevPixel()
+PRUint32 nsXULWindow::AppUnitsPerDevPixel()
 {
   if (mWindow && mWindow->GetDeviceContext()) {
     mAppPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
