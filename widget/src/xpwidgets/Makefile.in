@@ -97,6 +97,10 @@ ifdef MOZ_X11
 SHARED_LIBRARY_LIBS += ../shared/x11/$(LIB_PREFIX)widget_shared_x11.$(LIB_SUFFIX)
 endif
 
+ifdef MOZ_ENABLE_D3D10_LAYER
+DEFINES		+= -DMOZ_ENABLE_D3D10_LAYER
+endif
+
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
 		-I$(srcdir)/../shared \

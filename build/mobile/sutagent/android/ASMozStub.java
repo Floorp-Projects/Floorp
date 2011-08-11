@@ -65,15 +65,20 @@ public class ASMozStub extends android.app.Service {
     Timer timer = null;
 
     @SuppressWarnings("unchecked")
-    private static final Class[] mStartForegroundSignature = new Class[] {
+    private static final Class<?>[] mSetForegroundSignature = new Class[] {
+    boolean.class};
+    @SuppressWarnings("unchecked")
+    private static final Class<?>[] mStartForegroundSignature = new Class[] {
         int.class, Notification.class};
     @SuppressWarnings("unchecked")
-    private static final Class[] mStopForegroundSignature = new Class[] {
+    private static final Class<?>[] mStopForegroundSignature = new Class[] {
         boolean.class};
 
     private NotificationManager mNM;
+    private Method mSetForeground;
     private Method mStartForeground;
     private Method mStopForeground;
+    private Object[] mSetForegroundArgs = new Object[1];
     private Object[] mStartForegroundArgs = new Object[2];
     private Object[] mStopForegroundArgs = new Object[1];
 
@@ -95,6 +100,13 @@ public class ASMozStub extends android.app.Service {
         catch (NoSuchMethodException e) {
             // Running on an older platform.
             mStartForeground = mStopForeground = null;
+            }
+
+        try {
+            mSetForeground = getClass().getMethod("setForeground", mSetForegroundSignature);
+            }
+        catch (NoSuchMethodException e) {
+            mSetForeground = null;
             }
 
         doToast("Listener Service created...");
@@ -183,7 +195,18 @@ public class ASMozStub extends android.app.Service {
         }
 
         // Fall back on the old API.
-        setForeground(true);
+        if  (mSetForeground != null) {
+            try {
+                mSetForegroundArgs[0] = Boolean.TRUE;
+                mSetForeground.invoke(this, mSetForegroundArgs);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
         mNM.notify(id, notification);
     }
 
@@ -210,6 +233,17 @@ public class ASMozStub extends android.app.Service {
         // Fall back on the old API.  Note to cancel BEFORE changing the
         // foreground state, since we could be killed at that point.
         mNM.cancel(id);
-        setForeground(false);
+        if  (mSetForeground != null) {
+            try {
+                mSetForegroundArgs[0] = Boolean.FALSE;
+                mSetForeground.invoke(this, mSetForegroundArgs);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

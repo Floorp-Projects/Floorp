@@ -41,7 +41,6 @@
 
 #include "nsAccessibilityAtoms.h"
 
-#include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsIBoxObject.h"
@@ -399,40 +398,6 @@ public:
 
 private:
   nsTArray<nsString> mNames;
-};
-
-/**
- * Used to iterate through IDs or elements pointed by IDRefs attribute. Note,
- * any method used to iterate through IDs or elements moves iterator to next
- * position.
- */
-class IDRefsIterator
-{
-public:
-  IDRefsIterator(nsIContent* aContent, nsIAtom* aIDRefsAttr);
-
-  /**
-   * Return next ID.
-   */
-  const nsDependentSubstring NextID();
-
-  /**
-   * Return next element.
-   */
-  nsIContent* NextElem();
-
-  /**
-   * Return the element with the given ID.
-   */
-  nsIContent* GetElem(const nsDependentSubstring& aID);
-
-private:
-  nsString mIDs;
-  nsAString::index_type mCurrIdx;
-
-  nsIDocument* mDocument;
-  nsCOMPtr<nsIDOMDocumentXBL> mXBLDocument;
-  nsCOMPtr<nsIDOMElement> mBindingParent;
 };
 
 #endif

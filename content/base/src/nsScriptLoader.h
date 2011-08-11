@@ -336,4 +336,27 @@ private:
   PRPackedBool mDocumentParsingDone;
 };
 
+class nsAutoScriptLoaderDisabler
+{
+public:
+  nsAutoScriptLoaderDisabler(nsIDocument* aDoc)
+  {
+    mLoader = aDoc->ScriptLoader();
+    mWasEnabled = mLoader->GetEnabled();
+    if (mWasEnabled) {
+      mLoader->SetEnabled(PR_FALSE);
+    }
+  }
+  
+  ~nsAutoScriptLoaderDisabler()
+  {
+    if (mWasEnabled) {
+      mLoader->SetEnabled(PR_TRUE);
+    }
+  }
+  
+  PRBool mWasEnabled;
+  nsRefPtr<nsScriptLoader> mLoader;
+};
+
 #endif //__nsScriptLoader_h__

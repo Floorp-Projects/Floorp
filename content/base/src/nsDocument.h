@@ -523,7 +523,7 @@ public:
   virtual void NotifyPossibleTitleChange(PRBool aBoundTitleElement);
 
   virtual void SetDocumentURI(nsIURI* aURI);
-  
+
   /**
    * Set the principal responsible for this document.
    */

@@ -41,14 +41,13 @@
 
 NS_IMPL_ISUPPORTS1(nsScriptableInputStream, nsIScriptableInputStream)
 
-// nsIBaseStream methods
+// nsIScriptableInputStream methods
 NS_IMETHODIMP
 nsScriptableInputStream::Close(void) {
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
     return mInputStream->Close();
 }
 
-// nsIScriptableInputStream methods
 NS_IMETHODIMP
 nsScriptableInputStream::Init(nsIInputStream *aInputStream) {
     if (!aInputStream) return NS_ERROR_NULL_POINTER;

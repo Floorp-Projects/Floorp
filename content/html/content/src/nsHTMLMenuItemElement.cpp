@@ -248,7 +248,8 @@ nsHTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMenuItemElement, Type, type,
                                 kMenuItemDefaultType->tag)
-NS_IMPL_STRING_ATTR(nsHTMLMenuItemElement, Label, label)
+// GetText returns a whitespace compressed .textContent value.
+NS_IMPL_STRING_ATTR_WITH_FALLBACK(nsHTMLMenuItemElement, Label, label, GetText)
 NS_IMPL_URI_ATTR(nsHTMLMenuItemElement, Icon, icon)
 NS_IMPL_BOOL_ATTR(nsHTMLMenuItemElement, Disabled, disabled)
 NS_IMPL_BOOL_ATTR(nsHTMLMenuItemElement, DefaultChecked, checked)
@@ -406,6 +407,16 @@ nsHTMLMenuItemElement::DoneCreatingElement()
     InitChecked();
     mShouldInitChecked = false;
   }
+}
+
+void
+nsHTMLMenuItemElement::GetText(nsAString& aText)
+{
+  nsAutoString text;
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, text);
+
+  text.CompressWhitespace(PR_TRUE, PR_TRUE);
+  aText = text;
 }
 
 nsresult
