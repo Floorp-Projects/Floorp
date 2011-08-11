@@ -567,7 +567,11 @@ protected:
    */
   PRUint32 mLoadEventType;
 
-  static PRUint64 gLastFocusedAccessiblesState;
+  /**
+   * Keep the ARIA attribute old value that is initialized by
+   * AttributeWillChange and used by AttributeChanged notifications.
+   */
+  nsIAtom* mARIAAttrOldValue;
 
   nsTArray<nsRefPtr<nsDocAccessible> > mChildDocuments;
 

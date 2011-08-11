@@ -84,8 +84,6 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Static member initialization
 
-PRUint64 nsDocAccessible::gLastFocusedAccessiblesState = 0;
-
 static nsIAtom** kRelationAttrs[] =
 {
   &nsAccessibilityAtoms::aria_labelledby,
@@ -918,21 +916,33 @@ nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, PRInt32 aModType)
 {
-  // XXX TODO: bugs 467143, 472142, 472143.
-  // Here we will want to cache whatever state we are potentially interested in,
-  // such as the existence of aria-pressed for button (so we know if we need to
-  // newly expose it as a toggle button) etc.
+  nsAccessible* accessible = GetAccessible(aElement);
+  if (!accessible) {
+    if (aElement != mContent)
+      return;
+
+    accessible = this;
+  }
 
   // Update dependent IDs cache. Take care of elements that are accessible
   // because dependent IDs cache doesn't contain IDs from non accessible
   // elements.
-  if (aModType == nsIDOMMutationEvent::MODIFICATION ||
-      aModType == nsIDOMMutationEvent::REMOVAL) {
-    nsAccessible* accessible = GetAccessible(aElement);
-    if (accessible)
-      RemoveDependentIDsFor(accessible, aAttribute);
-    else if (aElement == mContent)
-      RemoveDependentIDsFor(this, aAttribute);
+  if (aModType != nsIDOMMutationEvent::ADDITION)
+    RemoveDependentIDsFor(accessible, aAttribute);
+
+  // Store the ARIA attribute old value so that it can be used after
+  // attribute change. Note, we assume there's no nested ARIA attribute
+  // changes. If this happens then we should end up with keeping a stack of
+  // old values.
+
+  // XXX TODO: bugs 472142, 472143.
+  // Here we will want to cache whatever attribute values we are interested
+  // in, such as the existence of aria-pressed for button (so we know if we
+  // need to newly expose it as a toggle button) etc.
+  if (aAttribute == nsAccessibilityAtoms::aria_checked ||
+      aAttribute == nsAccessibilityAtoms::aria_pressed) {
+    mARIAAttrOldValue = (aModType != nsIDOMMutationEvent::ADDITION) ?
+      nsAccUtils::GetARIAToken(aElement, aAttribute) : nsnull;
   }
 }
 
@@ -976,10 +986,6 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
       aModType == nsIDOMMutationEvent::ADDITION) {
     AddDependentIDsFor(accessible, aAttribute);
   }
-
-  // If it was the focused node, cache the new state.
-  if (aElement == gLastFocusedNode)
-    gLastFocusedAccessiblesState = accessible->State();
 }
 
 // nsDocAccessible protected member
@@ -1045,8 +1051,8 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   }
 
   if (aAttribute == nsAccessibilityAtoms::aria_busy) {
-    PRBool isOn = !aContent->AttrValueIs(aNameSpaceID, aAttribute,
-                                         nsAccessibilityAtoms::_true, eCaseMatters);
+    PRBool isOn = aContent->AttrValueIs(aNameSpaceID, aAttribute,
+                                        nsAccessibilityAtoms::_true, eCaseMatters);
     nsRefPtr<AccEvent> event = new AccStateChangeEvent(aContent, states::BUSY, isOn);
     FireDelayedAccessibleEvent(event);
     return;
@@ -1158,24 +1164,18 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
       aAttribute == nsAccessibilityAtoms::aria_pressed) {
     const PRUint32 kState = (aAttribute == nsAccessibilityAtoms::aria_checked) ?
                             states::CHECKED : states::PRESSED;
-    nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(aContent, kState);
+    nsRefPtr<AccEvent> event = new AccStateChangeEvent(aContent, kState);
     FireDelayedAccessibleEvent(event);
-    if (aContent == gLastFocusedNode) {
-      // State changes for MIXED state currently only supported for focused item, because
-      // otherwise we would need access to the old attribute value in this listener.
-      // This is because we don't know if the previous value of aria-checked or aria-pressed was "mixed"
-      // without caching that info.
-      nsAccessible *accessible = event->GetAccessible();
-      if (accessible) {
-        PRBool wasMixed = (gLastFocusedAccessiblesState & states::MIXED) != 0;
-        PRBool isMixed  =
-          (accessible->State() & states::MIXED) != 0;
-        if (wasMixed != isMixed) {
-          nsRefPtr<AccEvent> event =
-            new AccStateChangeEvent(aContent, states::MIXED, isMixed);
-          FireDelayedAccessibleEvent(event);
-        }
+
+    nsAccessible* accessible = event->GetAccessible();
+    if (accessible) {
+      bool wasMixed = (mARIAAttrOldValue == nsAccessibilityAtoms::mixed);
+      bool isMixed = aContent->AttrValueIs(kNameSpaceID_None, aAttribute,
+                                           nsAccessibilityAtoms::mixed, eCaseMatters);
+      if (isMixed != wasMixed) {
+        nsRefPtr<AccEvent> event =
+          new AccStateChangeEvent(aContent, states::MIXED, isMixed);
+        FireDelayedAccessibleEvent(event);
       }
     }
     return;
