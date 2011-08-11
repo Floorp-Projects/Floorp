@@ -40,9 +40,9 @@
 
 static bool patched_func_called = false;
 
-static BOOL (*orig_GetVersionExA)(__inout LPOSVERSIONINFO);
+static BOOL (WINAPI *orig_GetVersionExA)(__inout LPOSVERSIONINFO);
 
-static BOOL
+static BOOL WINAPI
 patched_GetVersionExA(__inout LPOSVERSIONINFO lpVersionInfo)
 {
   patched_func_called = true;
