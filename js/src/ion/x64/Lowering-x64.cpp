@@ -142,9 +142,15 @@ LIRGeneratorX64::assignSnapshot(LInstruction *ins)
 
     MSnapshot *mir = snapshot->mir();
     for (size_t i = 0; i < mir->numOperands(); i++) {
-        MDefinition *ins = mir->getOperand(i);
+        MDefinition *def = mir->getOperand(i);
         LAllocation *a = snapshot->getEntry(i);
-        *a = useKeepaliveOrConstant(ins);
+        *a = useKeepaliveOrConstant(def);
+#ifdef DEBUG
+        if (a->isUse()) {
+            for (size_t j = 0; j < ins->numDefs(); j++)
+                JS_ASSERT(ins->getDef(j)->virtualRegister() != a->toUse()->virtualRegister());
+        }
+#endif
     }
 
     ins->assignSnapshot(snapshot);
