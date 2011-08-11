@@ -1,12 +1,12 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -14,15 +14,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ *   The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,12 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NS_ACCESSIBLE_RELATION_WRAP_H
-#define _NS_ACCESSIBLE_RELATION_WRAP_H
+#ifndef mozilla_layers_ShadowLayerUtilsD3D10_h
+#define mozilla_layers_ShadowLayerUtilsD3D10_h
 
-#include "nsAccessibleRelation.h"
+#define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 
-typedef class nsAccessibleRelation nsAccessibleRelationWrap;
+struct ID3D10Device;
+struct ID3D10Texture2D;
 
-#endif
+namespace mozilla {
+namespace layers {
 
+class SurfaceDescriptorD3D10;
+
+/**
+ * Write into |aDescr| a cross-process descriptor of |aTexture|, if
+ * possible.  Return true iff |aDescr| was successfully set.
+ */
+bool
+GetDescriptor(ID3D10Texture2D* aTexture, SurfaceDescriptorD3D10* aDescr);
+
+already_AddRefed<ID3D10Texture2D>
+OpenForeign(ID3D10Device* aDevice, const SurfaceDescriptorD3D10& aDescr);
+
+} // namespace layers
+} // namespace mozilla
+
+#endif  // mozilla_layers_ShadowLayerUtilsD3D10_h

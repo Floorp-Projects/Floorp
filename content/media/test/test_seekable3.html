@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Media test: seek test 3</title>
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="manifest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onunload="mediaTestCleanup();">
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function on_metadataloaded() {
+  var v = document.getElementById('v');
+  ok(range_equals(v.seekable, v.buffered), "seekable.length should be initialy empty");
+  v.addEventListener("playing", function() {
+    ok(v.seekable.length > 0, "seekable.length should not empty while playing.");
+  }, false);
+  v.addEventListener("ended", function() {
+    is(v.seekable.length, 1, "seekable.length should be 1 at end of playback.");
+    is(v.seekable.start(0), 0.0, "start of first range should 0.0");
+    is(v.seekable.end(0), v.duration, "end of first range should be equal to duration");
+    SimpleTest.finish();
+  }, false);
+
+  v.play();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v'
+src='noContentLength.sjs'
+onloadedmetadata='on_metadataloaded();'></video>
+</body>
+</html>

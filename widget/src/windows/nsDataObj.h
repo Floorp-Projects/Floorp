@@ -51,7 +51,6 @@
 #include "nsIURI.h"
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
-#include "nsTPtrArray.h"
 #include "nsCOMArray.h"
 #include "nsITimer.h"
 

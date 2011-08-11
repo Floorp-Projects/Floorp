@@ -919,19 +919,16 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 LayerManager*
-nsCocoaWindow::GetLayerManager(bool *aAllowRetaining)
+nsCocoaWindow::GetLayerManager(PLayersChild* aShadowManager,
+                               LayersBackend aBackendHint,
+                               LayerManagerPersistence aPersistence,
+                               bool* aAllowRetaining)
 {
   if (mPopupContentView) {
-    return mPopupContentView->GetLayerManager(aAllowRetaining);
-  }
-  return nsnull;
-}
-
-LayerManager*
-nsCocoaWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
-{
-  if (mPopupContentView) {
-    return mPopupContentView->GetLayerManager(aAllowRetaining);
+    return mPopupContentView->GetLayerManager(aShadowManager,
+                                              aBackendHint,
+                                              aPersistence,
+                                              aAllowRetaining);
   }
   return nsnull;
 }

@@ -355,10 +355,12 @@ var Browser = {
         // Initial window resizes call functions that assume a tab is in the tab list
         // and restored tabs are added too late. We add a dummy to to satisfy the resize
         // code and then remove the dummy after the session has been restored.
-        let dummy = this.addTab("about:blank");
+        let dummy = this.addTab("about:blank", true);
         let dummyCleanup = {
-          observe: function() {
+          observe: function(aSubject, aTopic, aData) {
             Services.obs.removeObserver(dummyCleanup, "sessionstore-windows-restored");
+            if (aData == "fail")
+              Browser.addTab(commandURL || Browser.getHomePage(), true);
             dummy.chromeTab.ignoreUndo = true;
             Browser.closeTab(dummy, { forceClose: true });
           }
@@ -384,12 +386,6 @@ var Browser = {
     let event = document.createEvent("Events");
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
-
-    // If we have an opener this was not the first window opened and will not
-    // receive an initial resize event. instead we fire the resize handler manually
-    // Bug 610834
-    if (window.opener)
-      resizeHandler({ target: window });
   },
 
   _alertShown: function _alertShown() {

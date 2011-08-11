@@ -1692,6 +1692,10 @@ protected:
   // True if we're an SVG document being used as an image.
   PRPackedBool mIsBeingUsedAsImage;
 
+  // True is this document is synthetic : stand alone image, video, audio
+  // file, etc.
+  PRPackedBool mIsSyntheticDocument;
+
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.

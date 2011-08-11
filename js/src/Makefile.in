@@ -688,14 +688,9 @@ endif
 JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
-
-check-jit-test-valgrind::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 
 check:: check-jit-test
-check-valgrind:: check-jit-test-valgrind
 
 # jstests doesn't have a --jitflags option, so we need to loop, updating the
 # exit code (RC) after each invocation.

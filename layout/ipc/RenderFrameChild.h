@@ -56,7 +56,7 @@ public:
 
 protected:
   NS_OVERRIDE
-  virtual PLayersChild* AllocPLayers();
+  virtual PLayersChild* AllocPLayers(LayerManager::LayersBackend* aBackendType);
   NS_OVERRIDE
   virtual bool DeallocPLayers(PLayersChild* aLayers);
 };

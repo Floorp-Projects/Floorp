@@ -22,7 +22,7 @@ function rootView() {
 }
 
 function enableAsyncScrolling() {
-    frameLoader().renderMode = Components.interfaces.nsIFrameLoaer.RENDER_MODE_ASYNC_SCROLL;
+    frameLoader().renderMode = Components.interfaces.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
 }
 
 // Functions affecting the content window.
