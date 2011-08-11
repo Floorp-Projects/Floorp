@@ -45,19 +45,18 @@ MODULE = test_xulapp
 
 
 CPPSRCS = \
-  TestXREMakeCommandLineWin.cpp \
-  TestDllInterceptor.cpp \
-  $(NULL)
+	TestXREMakeCommandLineWin.cpp \
+	$(NULL)
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(topsrcdir)/toolkit/xre \
-  -I$(topsrcdir)/config \
-  $(NULL)
+	-I$(srcdir) \
+	-I$(topsrcdir)/toolkit/xre \
+	-I$(topsrcdir)/config \
+	$(NULL)
 
 MOZ_WINCONSOLE = 1
 
@@ -71,5 +70,3 @@ libs:: TestXREMakeCommandLineWin.ini
 check::
 	@echo "Running TestXREMakeCommandLineWin tests"
 	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestXREMakeCommandLineWin.exe
-	@echo "Running TestDllInterceptor tests"
-	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestDllInterceptor.exe
