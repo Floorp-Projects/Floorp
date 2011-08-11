@@ -1659,7 +1659,7 @@ static JSStdName standard_class_names[] = {
 #endif
 
     /* Typed Arrays */
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::fastClass},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js_ArrayBufferClass},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},

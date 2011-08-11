@@ -3674,10 +3674,11 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     JS_ASSERT(!a->isRegExp() && !b->isRegExp());
 
     /*
-     * Callers should not try to swap dense arrays, these use a different slot
-     * representation from other objects.
+     * Callers should not try to swap dense arrays or ArrayBuffer objects,
+     * these use a different slot representation from other objects.
      */
     JS_ASSERT(!a->isDenseArray() && !b->isDenseArray());
+    JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
 
     /* Trade the guts of the objects. */
     const size_t size = a->structSize();

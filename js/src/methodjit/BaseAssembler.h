@@ -1261,7 +1261,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
             JS_ASSERT(!templateObject->initializedLength);
             addPtr(Imm32(-thingSize + sizeof(JSObject)), result);
             storePtr(result, Address(result, -sizeof(JSObject) + JSObject::offsetOfSlots()));
-            addPtr(Imm32(-sizeof(JSObject)), result);
+            addPtr(Imm32(-(int)sizeof(JSObject)), result);
         } else {
             JS_ASSERT(!templateObject->newType);
             addPtr(Imm32(-thingSize), result);

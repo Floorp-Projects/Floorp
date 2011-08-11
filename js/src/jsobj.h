@@ -316,13 +316,18 @@ class ValidateWriter;
  * the value for property '5'). If a dynamic array is in use, slots in the
  * fixed array are not used.
  *
- * For objects other than dense arrays, if the object has N fixed slots then
- * those are always the first N slots of the object. The dynamic slots pointer
- * is used if those fixed slots overflow, and stores all remaining slots.
- * The dynamic slots pointer is NULL if there is no slots overflow, and never
- * points to the object's fixed slots. Unlike dense arrays, the fixed slots
- * can always be accessed. Two objects with the same shape are guaranteed to
- * have the same number of fixed slots.
+ * ArrayBuffer objects may also use their fixed slots for storage in a similar
+ * manner to dense arrays. The fixed slots do not represent Values in such
+ * cases. (ArrayBuffers never have other properties added directly to them, as
+ * they delegate such attempts to another JSObject).
+ *
+ * For objects other than dense arrays and array buffers, if the object has N
+ * fixed slots then those are always the first N slots of the object. The
+ * dynamic slots pointer is used if those fixed slots overflow, and stores all
+ * remaining slots. The dynamic slots pointer is NULL if there is no slots
+ * overflow, and never points to the object's fixed slots. Unlike dense arrays,
+ * the fixed slots can always be accessed. Two objects with the same shape are
+ * guaranteed to have the same number of fixed slots.
  *
  * If you change this struct, you'll probably need to change the AccSet values
  * in jsbuiltins.h.
@@ -964,6 +969,11 @@ struct JSObject : js::gc::Cell {
     JSBool makeDenseArraySlow(JSContext *cx);
 
   public:
+    bool allocateArrayBufferSlots(JSContext *cx, uint32 size);
+    inline uint32 arrayBufferByteLength();
+    inline uint8 * arrayBufferDataOffset();
+
+  public:
     inline js::ArgumentsObject *asArguments();
     inline js::NormalArgumentsObject *asNormalArguments();
     inline js::StrictArgumentsObject *asStrictArguments();
@@ -1405,6 +1415,7 @@ struct JSObject : js::gc::Cell {
     inline bool isProxy() const;
     inline bool isObjectProxy() const;
     inline bool isFunctionProxy() const;
+    inline bool isArrayBuffer() const;
 
     JS_FRIEND_API(bool) isWrapper() const;
     JS_FRIEND_API(JSObject *) unwrap(uintN *flagsp = NULL);
@@ -1508,7 +1519,7 @@ class ValueArray {
     ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
 
-extern js::Class js_ArrayClass, js_SlowArrayClass;
+extern js::Class js_ArrayClass, js_SlowArrayClass, js_ArrayBufferClass;
 
 inline bool
 JSObject::isDenseArray() const
@@ -1526,6 +1537,12 @@ inline bool
 JSObject::isArray() const
 {
     return isDenseArray() || isSlowArray();
+}
+
+inline bool
+JSObject::isArrayBuffer() const
+{
+    return getClass() == &js_ArrayBufferClass;
 }
 
 extern js::Class js_ObjectClass;

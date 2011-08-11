@@ -57,7 +57,6 @@ namespace js {
  */
 struct JS_FRIEND_API(ArrayBuffer) {
     static Class slowClass;
-    static Class fastClass;
     static JSPropertySpec jsprops[];
 
     static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
@@ -107,15 +106,6 @@ struct JS_FRIEND_API(ArrayBuffer) {
 
     static JSObject *
     getArrayBuffer(JSObject *obj);
-
-    static inline unsigned int getByteLength(JSObject *obj);
-
-    static inline uint8 * getDataOffset(JSObject *obj);
-
-    /* Reserved slots for array buffer objects. */
-    static const uint32 JSSLOT_ARRAY_BYTELENGTH = 0;
-    static const uint32 JSSLOT_ARRAY_DATA = 1;
-    static const uint32 JSSLOT_ARRAY_RESERVED_SLOTS = 2;
 };
 
 /*
