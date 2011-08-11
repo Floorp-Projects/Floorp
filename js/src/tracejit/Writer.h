@@ -555,19 +555,9 @@ class Writer
                     "typedArrayByteOffset");
     }
 
-    nj::LIns *ldpConstTypedArrayData(nj::LIns *array) const {
-        //return name(lir->insLoad(nj::LIR_ldp, array, sizeof(Value) * js::TypedArray::FIELD_DATA + sPayloadOffset, ACCSET_TARRAY,
-                                 //nj::LOAD_CONST),
-                    //"typedElems");
-        uint32 offset = sizeof(Value) * js::TypedArray::FIELD_DATA + sPayloadOffset;
-#if JS_BITS_PER_WORD == 32
-        return name(lir->insLoad(nj::LIR_ldi, array, offset, ACCSET_TARRAY, nj::LOAD_CONST), "typedArrayData");
-#elif JS_BITS_PER_WORD == 64
-        /* N.B. On 64-bit, privatized value are encoded differently from other pointers. */
-        nj::LIns *v_ins = lir->insLoad(nj::LIR_ldq, array, offset,
-                                       ACCSET_TARRAY, nj::LOAD_CONST);
-        return name(lshqN(v_ins, 1), "typedArrayData");
-#endif
+    nj::LIns *ldpConstTypedArrayData(nj::LIns *obj) const {
+        uint32 offset = offsetof(JSObject, privateData);
+        return name(lir->insLoad(nj::LIR_ldp, obj, offset, ACCSET_TARRAY, nj::LOAD_CONST), "typedArrayData");
     }
 
     nj::LIns *ldc2iTypedArrayElement(nj::LIns *elems, nj::LIns *index) const {
