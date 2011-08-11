@@ -2506,7 +2506,7 @@ DebuggerArguments_getArg(JSContext *cx, uintN argc, Value *vp)
      */
     JS_ASSERT(i >= 0);
     if (uintN(i) < fp->numActualArgs())
-        *vp = fp->actualArgs()[i];
+        *vp = fp->canonicalActualArg(i);
     else
         vp->setUndefined();
     return Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
