@@ -228,15 +228,15 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
 static const nsAttrValue::EnumTable kCrossOriginTable[] = {
-  // Order matters here; see ParseAttribute
+  { "",                nsImageLoadingContent::CORS_NONE },
   { "anonymous",       nsImageLoadingContent::CORS_ANONYMOUS },
   { "use-credentials", nsImageLoadingContent::CORS_USE_CREDENTIALS },
   { 0 }
 };
+// Default crossOrigin mode is CORS_NONE.
+static const nsAttrValue::EnumTable* kCrossOriginDefault = &kCrossOriginTable[0];
 
-// crossorigin is not "limited to only known values" per spec, so it's
-// just a string attr purposes of the DOM crossOrigin property.
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, CrossOrigin, crossorigin)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLImageElement, CrossOrigin, crossorigin, kCrossOriginDefault->tag)
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetDraggable(PRBool* aDraggable)
@@ -352,10 +352,7 @@ nsHTMLImageElement::ParseAttribute(PRInt32 aNamespaceID,
       return ParseAlignValue(aValue, aResult);
     }
     if (aAttribute == nsGkAtoms::crossorigin) {
-      return aResult.ParseEnumValue(aValue, kCrossOriginTable, PR_FALSE,
-                                    // default value is anonymous if aValue is
-                                    // not a value we understand
-                                    &kCrossOriginTable[0]);
+      return aResult.ParseEnumValue(aValue, kCrossOriginTable, PR_FALSE);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return PR_TRUE;
@@ -659,9 +656,7 @@ nsHTMLImageElement::GetCORSMode()
   nsImageLoadingContent::CORSMode ret = nsImageLoadingContent::CORS_NONE;
 
   const nsAttrValue* value = GetParsedAttr(nsGkAtoms::crossorigin);
-  if (value) {
-    NS_ASSERTION(value->Type() == nsAttrValue::eEnum,
-                 "Why is this not an enum value?");
+  if (value && value->Type() == nsAttrValue::eEnum) {
     ret = (nsImageLoadingContent::CORSMode) value->GetEnumValue();
   }
 
