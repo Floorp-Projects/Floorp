@@ -114,8 +114,8 @@ BinaryArithPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
     if (specialization_ == MIRType_None)
         return;
 
-    analysis->preferType(ins->getOperand(0), ins->type());
-    analysis->preferType(ins->getOperand(1), ins->type());
+    analysis->preferType(ins->getOperand(0), specialization_);
+    analysis->preferType(ins->getOperand(1), specialization_);
 }
 
 bool
@@ -147,6 +147,62 @@ BinaryArithPolicy::adjustInputs(MInstruction *ins)
 
         ins->block()->insertBefore(ins, replace);
         ins->replaceOperand(i, replace);
+    }
+
+    return true;
+}
+
+bool
+ComparePolicy::respecialize(MInstruction *def)
+{
+    // If this operation is not specialized, we don't care.
+    if (specialization_ == MIRType_None)
+        return false;
+
+    MDefinition *lhs = def->getOperand(0);
+    MDefinition *rhs = def->getOperand(1);
+
+    // Check if any input would coerce to a double.
+    if (CoercesToDouble(lhs->type()) || CoercesToDouble(rhs->type()))
+        specialization_ = MIRType_Double;
+
+    return false;
+}
+
+void
+ComparePolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analyzer)
+{
+    if (specialization_ == MIRType_None)
+        return;
+
+    analyzer->preferType(ins->getOperand(0), specialization_);
+    analyzer->preferType(ins->getOperand(1), specialization_);
+}
+
+bool
+ComparePolicy::adjustInputs(MInstruction *def)
+{
+    if (specialization_ == MIRType_None)
+        return BoxInputsPolicy::adjustInputs(def);
+
+    for (size_t i = 0; i < 2; i++) {
+        MDefinition *in = def->getOperand(i);
+        if (in->type() == specialization_)
+            continue;
+
+        MInstruction *replace;
+
+        // See BinaryArithPolicy::adjustInputs for an explanation of the following
+        if (in->type() == MIRType_Object || in->type() == MIRType_String)
+            in = boxAt(def, in);
+
+        if (specialization_ == MIRType_Double)
+            replace = MToDouble::New(in);
+        else
+            replace = MToInt32::New(in);
+
+        def->block()->insertBefore(def, replace);
+        def->replaceOperand(i, replace);
     }
 
     return true;

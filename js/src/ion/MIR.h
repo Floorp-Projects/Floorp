@@ -821,6 +821,26 @@ class MBinaryInstruction : public MAryInstruction<2>
     }
 };
 
+class MCompare
+  : public MBinaryInstruction,
+    public ComparePolicy
+{
+    JSOp compareOp_;
+
+    MCompare(MDefinition *left, MDefinition *right, JSOp op)
+      : MBinaryInstruction(left, right),
+        compareOp_(op)
+    {
+        setResultType(MIRType_Boolean);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Compare);
+    static MCompare *New(MDefinition *left, MDefinition *right, JSOp op);
+
+    void infer(const TypeOracle::Binary &b);
+};
+
 // Wraps an SSA name in a new SSA name. This is used for correctness while
 // constructing SSA, and is removed immediately after the initial SSA is built.
 class MCopy : public MUnaryInstruction
