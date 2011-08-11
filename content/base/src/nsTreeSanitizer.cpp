@@ -52,6 +52,7 @@
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNullPrincipal.h"
+#include "nsContentUtils.h"
 
 //
 // Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist

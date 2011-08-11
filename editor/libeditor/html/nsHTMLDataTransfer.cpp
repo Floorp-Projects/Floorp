@@ -118,7 +118,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 
 // Misc
-#include "TextEditorTest.h"
 #include "nsEditorUtils.h"
 #include "nsIContentFilter.h"
 #include "nsEventDispatcher.h"
@@ -128,6 +127,7 @@
 #include "nsIPrincipal.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
