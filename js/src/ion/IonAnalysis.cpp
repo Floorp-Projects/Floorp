@@ -73,6 +73,32 @@ ion::SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph)
     return true;
 }
 
+// Instructions are useless if they are idempotent and unused.
+// This pass eliminates useless instructions.
+// The graph itself is unchanged.
+bool
+ion::EliminateDeadCode(MIRGraph &graph)
+{
+    // Traverse in postorder so that we hit uses before definitions.
+    // Traverse instruction list backwards for the same reason.
+    for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
+        // Remove unused instructions.
+        for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
+            if (inst->isIdempotent() && !inst->hasUses())
+                inst = block->removeAt(inst);
+            else
+                inst++;
+        }
+
+        // FIXME: Bug 678273.
+        // All phi nodes currently have non-zero uses as determined
+        // by hasUses(). They are kept alive by snapshots, and therefore cannot
+        // currently be eliminated.
+    }
+
+    return true;
+}
+
 // The type analysis algorithm inserts conversions and box/unbox instructions
 // to make the IR graph well-typed for future passes. Each definition has the
 // following type information:

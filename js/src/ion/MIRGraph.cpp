@@ -383,6 +383,15 @@ MBasicBlock::removeAt(MInstructionIterator &iter)
     return instructions_.removeAt(iter);
 }
 
+MInstructionReverseIterator
+MBasicBlock::removeAt(MInstructionReverseIterator &iter)
+{
+    for (size_t i = 0; i < iter->numOperands(); i++)
+        iter->replaceOperand(i, NULL);
+
+    return instructions_.removeAt(iter);
+}
+
 MDefinitionIterator
 MBasicBlock::removeDefAt(MDefinitionIterator &old)
 {

@@ -57,8 +57,9 @@ class MStart;
 
 class MDefinitionIterator;
 
-typedef InlineList<MInstruction>::iterator MInstructionIterator;
-typedef InlineForwardList<MPhi>::iterator MPhiIterator;
+typedef InlineListIterator<MInstruction> MInstructionIterator;
+typedef InlineListReverseIterator<MInstruction> MInstructionReverseIterator;
+typedef InlineForwardListIterator<MPhi> MPhiIterator;
 
 class LBlock;
 
@@ -185,6 +186,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void insertAfter(MInstruction *at, MInstruction *ins);
     void remove(MInstruction *ins);
     MInstructionIterator removeAt(MInstructionIterator &iter);
+    MInstructionReverseIterator removeAt(MInstructionReverseIterator &iter);
 
     MDefinitionIterator removeDefAt(MDefinitionIterator &iter);
     ///////////////////////////////////////////////////////
@@ -220,6 +222,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     }
     MInstructionIterator end() {
         return instructions_.end();
+    }
+    MInstructionReverseIterator rbegin() {
+        return instructions_.rbegin();
+    }
+    MInstructionReverseIterator rend() {
+        return instructions_.rend();
     }
     bool isLoopHeader() const {
         return kind_ == LOOP_HEADER;
