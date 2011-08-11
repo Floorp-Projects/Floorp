@@ -456,6 +456,12 @@ class Native(object):
 
         return self.modifier == 'ref'
 
+    def isPtr(self, calltype):
+        return self.modifier == 'ptr' or (self.modifier == 'ref' and self.specialtype == 'jsval' and calltype == 'out')
+
+    def isRef(self, calltype):
+        return self.modifier == 'ref' and not (self.specialtype == 'jsval' and calltype == 'out')
+
     def nativeType(self, calltype, const=False, shared=False):
         if shared:
             if calltype != 'out':
@@ -465,14 +471,10 @@ class Native(object):
         if self.specialtype is not None and calltype == 'in':
             const = True
 
-        if self.modifier == 'ptr':
-            m = '*' + (calltype != 'in' and '*' or '')
-        elif self.modifier == 'ref':
-            # jsval outparams are odd, for compatibility with existing code
-            if self.specialtype == 'jsval' and calltype == 'out':
-                m = '*'
-            else:
-                m = '& '
+        if self.isRef(calltype):
+            m = '& '
+        elif self.isPtr(calltype):
+            m = '*' + ((self.modifier == 'ptr' and calltype != 'in') and '*' or '')
         else:
             m = calltype != 'in' and '*' or ''
         return "%s%s %s" % (const and 'const ' or '', self.nativename, m)
