@@ -540,7 +540,7 @@ var Scratchpad = {
     fp.defaultString = "scratchpad.js";
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
       document.title = this.filename = fp.file.path;
-      this.exportToFile(fp.file);
+      this.exportToFile(fp.file, true);
     }
   },
 
