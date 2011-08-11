@@ -978,9 +978,9 @@ Debugger::markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer)
  *      may yet be called.
  *   2. Mark breakpoint handlers.
  *
- * This happens during the incremental long tail of the GC mark phase. This
- * method returns true if it has to mark anything; GC calls it repeatedly until
- * it returns false.
+ * This happens during the iterative part of the GC mark phase. This method
+ * returns true if it has to mark anything; GC calls it repeatedly until it
+ * returns false.
  */
 bool
 Debugger::markAllIteratively(GCMarker *trc, JSGCInvocationKind gckind)
@@ -1004,37 +1004,37 @@ Debugger::markAllIteratively(GCMarker *trc, JSGCInvocationKind gckind)
          * If this is a single-compartment GC, no compartment can debug itself, so skip
          * |comp|. If it's a global GC, then search every live compartment.
          */
-        if (comp ? dc != comp : !dc->isAboutToBeCollected(gckind)) {
-            const GlobalObjectSet &debuggees = dc->getDebuggees();
-            for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
-                GlobalObject *global = r.front();
+        if (comp && dc == comp)
+            continue;
+
+        const GlobalObjectSet &debuggees = dc->getDebuggees();
+        for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+            GlobalObject *global = r.front();
+
+            /*
+             * Every debuggee has at least one debugger, so in this case
+             * getDebuggers can't return NULL.
+             */
+            const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
+            JS_ASSERT(debuggers);
+            for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
+                Debugger *dbg = *p;
+                JSObject *obj = dbg->toJSObject();
 
                 /*
-                 * Every debuggee has at least one debugger, so in this case
-                 * getDebuggers can't return NULL.
+                 * dbg is a Debugger with at least one debuggee. Check three things:
+                 *   - dbg is actually in a compartment being GC'd
+                 *   - it isn't already marked
+                 *   - it actually has hooks that might be called
+                 * IsAboutToBeFinalized covers the first two criteria.
                  */
-                const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
-                JS_ASSERT(debuggers);
-                for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
-                    Debugger *dbg = *p;
-                    JSObject *obj = dbg->toJSObject();
-
+                if (IsAboutToBeFinalized(trc->context, obj) && dbg->hasAnyLiveHooks()) {
                     /*
-                     * dbg is a Debugger with at least one debuggee. Check three things:
-                     *   - dbg is actually in a compartment being GC'd
-                     *   - it isn't already marked
-                     *   - it actually has hooks that might be called
+                     * obj could be reachable only via its live, enabled
+                     * debugger hooks, which may yet be called.
                      */
-                    if ((!comp || obj->compartment() == comp) && !obj->isMarked()) {
-                        if (dbg->hasAnyLiveHooks()) {
-                            /*
-                             * obj could be reachable only via its live, enabled
-                             * debugger hooks, which may yet be called.
-                             */
-                            MarkObject(trc, *obj, "enabled Debugger");
-                            markedAny = true;
-                        }
-                    }
+                    MarkObject(trc, *obj, "enabled Debugger");
+                    markedAny = true;
                 }
             }
         }
@@ -1091,16 +1091,19 @@ void
 Debugger::sweepAll(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+    JS_ASSERT(!rt->gcCurrentCompartment);
+
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debugger *dbg = Debugger::fromLinks(p);
 
-        if (!dbg->object->isMarked()) {
+        if (IsAboutToBeFinalized(cx, dbg->object)) {
             /*
-             * If this Debugger is being GC'd, detach it from its debuggees. In the case of
-             * runtime-wide GC, the debuggee might be GC'd too. Since detaching requires
-             * access to both objects, this must be done before finalize time. However, in
-             * a per-compartment GC, it is impossible for both objects to be GC'd (since
-             * they are in different compartments), so in that case we just wait for
+             * dbg is being GC'd. Detach it from its debuggees. In the case of
+             * runtime-wide GC, the debuggee might be GC'd too. Since detaching
+             * requires access to both objects, this must be done before
+             * finalize time. However, in a per-compartment GC, it is
+             * impossible for both objects to be GC'd (since they are in
+             * different compartments), so in that case we just wait for
              * Debugger::finalize.
              */
             for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
@@ -1114,7 +1117,7 @@ Debugger::sweepAll(JSContext *cx)
         GlobalObjectSet &debuggees = (*c)->getDebuggees();
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
-            if (!global->isMarked())
+            if (IsAboutToBeFinalized(cx, global))
                 detachAllDebuggersFromGlobal(cx, global, &e);
         }
     }
@@ -1133,7 +1136,7 @@ Debugger::detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
 void
 Debugger::finalize(JSContext *cx, JSObject *obj)
 {
-    Debugger *dbg = (Debugger *) obj->getPrivate();
+    Debugger *dbg = fromJSObject(obj);
     if (!dbg)
         return;
     if (!dbg->debuggees.empty()) {

@@ -2185,7 +2185,9 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     while (read < end) {
         JSCompartment *compartment = *read++;
 
-        if (compartment->isAboutToBeCollected(gckind)) {
+        if (!compartment->hold &&
+            (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT))
+        {
             compartment->freeLists.checkEmpty();
             Probes::GCEndSweepPhase(compartment);
             if (callback)
@@ -2316,7 +2318,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     js_SweepAtomState(cx);
 
     /* Collect watch points associated with unreachable objects. */
-    WatchpointMap::sweepAll(rt);
+    WatchpointMap::sweepAll(cx);
 
     /*
      * We finalize objects before other GC things to ensure that object's finalizer 

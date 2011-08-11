@@ -635,12 +635,6 @@ JSCompartment::incBackEdgeCount(jsbytecode *pc)
 }
 
 bool
-JSCompartment::isAboutToBeCollected(JSGCInvocationKind gckind)
-{
-    return !hold && (arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT);
-}
-
-bool
 JSCompartment::hasScriptsOnStack(JSContext *cx)
 {
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
@@ -812,14 +806,20 @@ bool
 JSCompartment::markBreakpointsIteratively(JSTracer *trc)
 {
     bool markedAny = false;
+    JSContext *cx = trc->context;
     for (BreakpointSiteMap::Range r = breakpointSites.all(); !r.empty(); r.popFront()) {
         BreakpointSite *site = r.front().value;
 
         // Mark jsdbgapi state if any. But if we know the scriptObject, put off
         // marking trap state until we know the scriptObject is live.
-        if (site->trapHandler && (!site->scriptObject || site->scriptObject->isMarked())) {
-            if (site->trapClosure.isObject() && !site->trapClosure.toObject().isMarked())
+        if (site->trapHandler &&
+            (!site->scriptObject || IsAboutToBeFinalized(cx, site->scriptObject)))
+        {
+            if (site->trapClosure.isObject() &&
+                IsAboutToBeFinalized(cx, &site->trapClosure.toObject()))
+            {
                 markedAny = true;
+            }
             MarkValue(trc, site->trapClosure, "trap closure");
         }
 
@@ -831,11 +831,11 @@ JSCompartment::markBreakpointsIteratively(JSTracer *trc)
         // collected. If scriptObject is null, then site->script is an eval
         // script on the stack, so it is definitely live.
         //
-        if (!site->scriptObject || site->scriptObject->isMarked()) {
+        if (!site->scriptObject || !IsAboutToBeFinalized(cx, site->scriptObject)) {
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
-                if (bp->debugger->toJSObject()->isMarked() &&
+                if (!IsAboutToBeFinalized(cx, bp->debugger->toJSObject()) &&
                     bp->handler &&
-                    !bp->handler->isMarked())
+                    IsAboutToBeFinalized(cx, bp->handler))
                 {
                     MarkObject(trc, *bp->handler, "breakpoint handler");
                     markedAny = true;
