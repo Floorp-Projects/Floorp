@@ -44,18 +44,21 @@
 #include "jsvalue.h"
 #include "jsobj.h"
 
-namespace js {
-inline JSUint32
-ArrayBuffer::getByteLength(JSObject *obj)
+inline uint32
+JSObject::arrayBufferByteLength()
 {
-    return obj->getFixedSlot(JSSLOT_ARRAY_BYTELENGTH).toPrivateUint32();
+    JS_ASSERT(isArrayBuffer());
+    return *((uint32*) slots);
 }
 
 inline uint8 *
-ArrayBuffer::getDataOffset(JSObject *obj)
+JSObject::arrayBufferDataOffset()
 {
-    return (uint8 *) obj->getFixedSlot(JSSLOT_ARRAY_DATA).toPrivate();
+    uint64 *base = ((uint64*)slots) + 1;
+    return (uint8*) base;
 }
+
+namespace js {
 
 static inline int32
 ClampIntForUint8Array(int32 x)

@@ -405,7 +405,7 @@ inline bool
 JSObject::hasSlotsArray() const
 {
     JS_ASSERT_IF(!slots, !isDenseArray());
-    JS_ASSERT_IF(slots == fixedSlots(), isDenseArray());
+    JS_ASSERT_IF(slots == fixedSlots(), isDenseArray() || isArrayBuffer());
     return slots && slots != fixedSlots();
 }
 
