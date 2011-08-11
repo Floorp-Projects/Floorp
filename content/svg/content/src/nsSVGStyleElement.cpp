@@ -42,6 +42,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIDocument.h"
 #include "nsStyleLinkElement.h"
+#include "nsContentUtils.h"
 
 typedef nsSVGElement nsSVGStyleElementBase;
 

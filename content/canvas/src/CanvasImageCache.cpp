@@ -44,6 +44,7 @@
 #include "nsIDOMElement.h"
 #include "nsTHashtable.h"
 #include "nsHTMLCanvasElement.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 
@@ -211,4 +212,4 @@ CanvasImageCacheShutdownObserver::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-}
+} // namespace mozilla

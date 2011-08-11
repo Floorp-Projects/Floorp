@@ -53,6 +53,7 @@
 #include "nsIDOMRange.h"
 #include "nsISelectionPrivate.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableElement.h"
@@ -65,6 +66,7 @@
 #include "nsFrameSelection.h"
 #include "nsLayoutErrors.h"
 #include "nsArrayUtils.h"
+#include "nsComponentManagerUtils.h"
 
 using namespace mozilla::a11y;
 

@@ -608,7 +608,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
 #ifdef MOZ_XUL
       mNeedTitletip = PR_FALSE;
 #endif
-      *aTooltip = tooltipEl.forget().get();
+      tooltipEl.forget(aTooltip);
       return NS_OK;
     }
   }
