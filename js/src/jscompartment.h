@@ -528,7 +528,6 @@ struct JS_FRIEND_API(JSCompartment) {
     void finalizeStringArenaLists(JSContext *cx);
     void finalizeShapeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
-    bool isAboutToBeCollected(JSGCInvocationKind gckind);
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(uint32 amount);
