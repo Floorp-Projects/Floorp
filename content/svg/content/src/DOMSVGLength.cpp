@@ -150,7 +150,9 @@ DOMSVGLength::SetValue(float aUserUnitValue)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  NS_ENSURE_FINITE(aUserUnitValue, NS_ERROR_ILLEGAL_VALUE);
+  if (!NS_finite(aUserUnitValue)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   // Although the value passed in is in user units, this method does not turn
   // this length into a user unit length. Instead it converts the user unit
@@ -196,7 +198,9 @@ DOMSVGLength::SetValueInSpecifiedUnits(float aValue)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+  if (!NS_finite(aValue)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   if (HasOwner()) {
     InternalItem().SetValueInCurrentUnits(aValue);
@@ -261,7 +265,9 @@ DOMSVGLength::NewValueSpecifiedUnits(PRUint16 aUnit, float aValue)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+  if (!NS_finite(aValue)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   if (!SVGLength::IsValidUnitType(aUnit)) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;

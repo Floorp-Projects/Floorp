@@ -47,7 +47,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsScriptElement.h"
-#include "nsIDOMText.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla::dom;
 

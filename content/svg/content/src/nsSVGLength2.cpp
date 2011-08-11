@@ -43,7 +43,7 @@
 #include "nsIFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGAttrTearoffTable.h"
-#include "nsMathUtils.h"
+#include "nsContentUtils.h" // NS_ENSURE_FINITE
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "nsSMILFloatType.h"

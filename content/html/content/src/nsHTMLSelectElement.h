@@ -49,7 +49,6 @@
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsISelectControlFrame.h"
-#include "nsContentUtils.h"
 #include "nsIHTMLCollection.h"
 #include "nsIConstraintValidation.h"
 

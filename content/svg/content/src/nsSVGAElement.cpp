@@ -43,7 +43,7 @@
 #include "nsSVGString.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-
+#include "nsContentUtils.h"
 
 nsSVGElement::StringInfo nsSVGAElement::sStringInfo[2] =
 {
