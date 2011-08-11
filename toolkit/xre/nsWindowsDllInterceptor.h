@@ -56,6 +56,10 @@
  *    to invoke the original function (so address of trampoline is
  *    returned).
  * 
+ * When the WindowsDllInterceptor class is destructed, OrigFunction is
+ * patched again to jump directly to the trampoline instead of going
+ * through the hook function. As such, re-intercepting the same function
+ * won't work, as jump instructions are not supported.
  */
 
 class WindowsDllInterceptor
@@ -69,6 +73,39 @@ public:
 
   WindowsDllInterceptor(const char *modulename, int nhooks = 0) {
     Init(modulename, nhooks);
+  }
+
+  ~WindowsDllInterceptor() {
+    int i;
+    byteptr_t p;
+    for (i = 0, p = mHookPage; i < mCurHooks; i++, p += kHookSize) {
+#if defined(_M_IX86)
+      size_t nBytes = 1 + sizeof(intptr_t);
+#elif defined(_M_X64)
+      size_t nBytes = 2 + sizeof(intptr_t);
+#else
+#error "Unknown processor type"
+#endif
+      byteptr_t origBytes = *((byteptr_t *)p);
+      // ensure we can modify the original code
+      DWORD op;
+      if (!VirtualProtectEx(GetCurrentProcess(), origBytes, nBytes, PAGE_EXECUTE_READWRITE, &op)) {
+        //printf ("VirtualProtectEx failed! %d\n", GetLastError());
+        continue;
+      }
+      // Remove the hook by making the original function jump directly
+      // in the trampoline.
+      intptr_t dest = (intptr_t)(p + sizeof(void *));
+#if defined(_M_IX86)
+      *((intptr_t*)(origBytes+1)) = dest - (intptr_t)(origBytes+5); // target displacement
+#elif defined(_M_X64)
+      *((intptr_t*)(origBytes+2)) = dest;
+#else
+#error "Unknown processor type"
+#endif
+      // restore protection; if this fails we can't really do anything about it
+      VirtualProtectEx(GetCurrentProcess(), origBytes, nBytes, op, &op);
+    }
   }
 
   void Init(const char *modulename, int nhooks = 0) {
@@ -300,6 +337,11 @@ protected:
       //printf ("Too big!");
       return 0;
     }
+
+    // We keep the address of the original function in the first bytes of
+    // the trampoline buffer
+    *((void **)tramp) = origFunction;
+    tramp += sizeof(void *);
 
     memcpy(tramp, origFunction, nBytes);
 
