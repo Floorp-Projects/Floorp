@@ -4279,7 +4279,12 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
 
   bool nearestBlockFound = false;
 
-  for (nsIFrame* f = this, *fParent; f; f = fParent) {
+  for (nsIFrame* f = this, *fChild = nsnull;
+       f;
+       fChild = f,
+       f = nsLayoutUtils::GetParentOrPlaceholderFor(
+             aPresContext->FrameManager(), f))
+  {
     nsStyleContext *const context = f->GetStyleContext();
     if (!context->HasTextDecorationLines()) {
       break;
@@ -4297,10 +4302,7 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
         nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
     }
 
-    fParent = nsLayoutUtils::GetParentOrPlaceholderFor(
-                aPresContext->FrameManager(), f);
-    const bool firstBlock = !nearestBlockFound &&
-                            nsLayoutUtils::GetAsBlock(fParent);
+    const bool firstBlock = !nearestBlockFound && nsLayoutUtils::GetAsBlock(f);
 
     // Not updating positions once we hit a parent block is equivalent to
     // the CSS 2.1 spec that blocks should propagate decorations down to their
@@ -4308,19 +4310,28 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
     // However, if we're vertically aligned within a block, then we need to
     // recover the right baseline from the line by querying the FrameProperty
     // that should be set (see nsLineLayout::VerticalAlignLine).
-    if (firstBlock &&
-        (styleText->mVerticalAlign.GetUnit() != eStyleUnit_Enumerated ||
-         styleText->mVerticalAlign.GetIntValue() !=
-           NS_STYLE_VERTICAL_ALIGN_BASELINE)) {
-      baselineOffset = frameTopOffset -
-        NS_PTR_TO_INT32(f->Properties().Get(nsIFrame::LineBaselineOffset()));
+    if (firstBlock) {
+      // At this point, fChild can't be null since TextFrames can't be blocks
+      const nsStyleCoord& vAlign =
+        fChild->GetStyleContext()->GetStyleTextReset()->mVerticalAlign;
+      if (vAlign.GetUnit() != eStyleUnit_Enumerated ||
+          vAlign.GetIntValue() != NS_STYLE_VERTICAL_ALIGN_BASELINE)
+      {
+        // Since offset is the offset in the child's coordinate space, we have
+        // to undo the accumulation to bring the transform out of the block's
+        // coordinate space
+        baselineOffset =
+          frameTopOffset - (fChild->GetRect().y - fChild->GetRelativeOffset().y)
+          - NS_PTR_TO_INT32(
+              fChild->Properties().Get(nsIFrame::LineBaselineOffset()));
+      }
     }
     else if (!nearestBlockFound) {
       baselineOffset = frameTopOffset - f->GetBaseline();
     }
 
     nearestBlockFound = nearestBlockFound || firstBlock;
-    frameTopOffset += f->GetRect().Y() - f->GetRelativeOffset().y;
+    frameTopOffset += f->GetRect().y - f->GetRelativeOffset().y;
 
     const PRUint8 style = styleText->GetDecorationStyle();
     // Accumulate only elements that have decorations with a genuine style

@@ -13212,13 +13212,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                              OVERFLOW_EXIT, /* abortIfAlwaysExits = */true));
 
         // We're now ready to store
-        LIns* data_base_ins = w.ldpConstTypedArrayData(slots_ins);
-        LIns* offset_ins = w.ldiConstTypedArrayByteOffset(slots_ins);
-#ifdef NANOJIT_64BIT
-        LIns* data_ins = w.addp(data_base_ins, w.ui2uq(offset_ins));
-#else
-        LIns* data_ins = w.addp(data_base_ins, offset_ins);
-#endif
+        LIns* data_ins = w.ldpConstTypedArrayData(obj_ins);
 
         LIns* pidx_ins = w.ui2p(idx_ins);
         LIns* typed_v_ins = v_ins;
@@ -14311,13 +14305,7 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
 
     /* We are now ready to load.  Do a different type of load
      * depending on what type of thing we're loading. */
-    LIns* data_base_ins = w.ldpConstTypedArrayData(slots_ins);
-    LIns* offset_ins = w.ldiConstTypedArrayByteOffset(slots_ins);
-#ifdef NANOJIT_64BIT
-    LIns* data_ins = w.addp(data_base_ins, w.ui2uq(offset_ins));
-#else
-    LIns* data_ins = w.addp(data_base_ins, offset_ins);
-#endif
+    LIns* data_ins = w.ldpConstTypedArrayData(obj_ins);
 
     switch (js::TypedArray::getType(tarray)) {
       case js::TypedArray::TYPE_INT8:

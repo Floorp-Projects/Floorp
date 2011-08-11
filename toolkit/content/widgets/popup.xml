@@ -302,12 +302,12 @@
 
   <binding id="arrowpanel" extends="chrome://global/content/bindings/popup.xml#panel">
     <content flip="both" side="top" position="bottomcenter topleft">
-      <xul:box anonid="container" class="panel-arrowcontainer">
+      <xul:box anonid="container" class="panel-arrowcontainer" flex="1">
         <xul:box anonid="arrowbox" class="panel-arrowbox">
           <xul:image anonid="arrow" class="panel-arrow"/>
         </xul:box>
-        <xul:box class="panel-arrowcontent">
-          <xul:box class="panel-inner-arrowcontent" xbl:inherits="align,dir,orient,pack">
+        <xul:box class="panel-arrowcontent" flex="1">
+          <xul:box class="panel-inner-arrowcontent" xbl:inherits="align,dir,orient,pack" flex="1">
             <children/>
             <xul:box class="panel-inner-arrowcontentfooter" xbl:inherits="footertype" hidden="true"/>
           </xul:box>

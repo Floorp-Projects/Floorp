@@ -256,8 +256,13 @@ let WebNavigation =  {
     if (aEntry.docshellID)
       shEntry.docshellID = aEntry.docshellID;
 
-    if (aEntry.stateData)
-      shEntry.stateData = aEntry.stateData;
+    if (aEntry.structuredCloneState && aEntry.structuredCloneVersion) {
+      shEntry.stateData =
+        Cc["@mozilla.org/docshell/structured-clone-container;1"].
+        createInstance(Ci.nsIStructuredCloneContainer);
+
+      shEntry.stateData.initFromBase64(aEntry.structuredCloneState, aEntry.structuredCloneVersion);
+    }
 
     if (aEntry.scroll) {
       let scrollPos = aEntry.scroll.split(",");
@@ -266,23 +271,15 @@ let WebNavigation =  {
     }
 
     if (aEntry.docIdentifier) {
-      // Get a new document identifier for this entry to ensure that history
-      // entries after a session restore are considered to have different
-      // documents from the history entries before the session restore.
-      // Document identifiers are 64-bit ints, so JS will loose precision and
-      // start assigning all entries the same doc identifier if these ever get
-      // large enough.
-      //
-      // It's a potential security issue if document identifiers aren't
-      // globally unique, but shEntry.setUniqueDocIdentifier() below guarantees
-      // that we won't re-use a doc identifier within a given instance of the
-      // application.
-      let ident = aDocIdentMap[aEntry.docIdentifier];
-      if (!ident) {
-        shEntry.setUniqueDocIdentifier();
-        aDocIdentMap[aEntry.docIdentifier] = shEntry.docIdentifier;
+      // If we have a serialized document identifier, try to find an SHEntry
+      // which matches that doc identifier and adopt that SHEntry's
+      // BFCacheEntry.  If we don't find a match, insert shEntry as the match
+      // for the document identifier.
+      let matchingEntry = aDocIdentMap[aEntry.docIdentifier];
+      if (!matchingEntry) {
+        aDocIdentMap[aEntry.docIdentifier] = shEntry;
       } else {
-        shEntry.docIdentifier = ident;
+        shEntry.adoptBFCacheEntry(matchingEntry);
       }
     }
 
@@ -367,11 +364,12 @@ let WebNavigation =  {
       } catch (e) { dump(e); }
     }
 
-    if (aEntry.docIdentifier)
-      entry.docIdentifier = aEntry.docIdentifier;
+    entry.docIdentifier = aEntry.BFCacheEntry.ID;
 
-    if (aEntry.stateData)
-      entry.stateData = aEntry.stateData;
+    if (aEntry.stateData != null) {
+      entry.structuredCloneState = aEntry.stateData.getDataAsBase64();
+      entry.structuredCloneVersion = aEntry.stateData.formatVersion;
+    }
 
     if (!(aEntry instanceof Ci.nsISHContainer))
       return entry;
