@@ -44,6 +44,7 @@
 #include "jsfun.h"
 
 struct JSContext;
+struct JSCompartment;
 
 namespace js {
 
@@ -1455,9 +1456,14 @@ class StackSpace
     friend class StackFrame;
 
     inline bool ensureSpace(JSContext *cx, MaybeReportError report,
+                            Value *from, ptrdiff_t nvals,
+                            JSCompartment *dest) const;
+    inline bool ensureSpace(JSContext *cx, MaybeReportError report,
                             Value *from, ptrdiff_t nvals) const;
     JS_FRIEND_API(bool) ensureSpaceSlow(JSContext *cx, MaybeReportError report,
-                                        Value *from, ptrdiff_t nvals) const;
+                                        Value *from, ptrdiff_t nvals,
+                                        JSCompartment *dest) const;
+
     StackSegment &findContainingSegment(const StackFrame *target) const;
 
   public:
@@ -1558,6 +1564,9 @@ class ContextStack
     StackSegment *pushSegment(JSContext *cx);
     enum MaybeExtend { CAN_EXTEND = true, CANT_EXTEND = false };
     Value *ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
+                       MaybeExtend extend, bool *pushedSeg,
+                       JSCompartment *dest);
+    Value *ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
                        MaybeExtend extend, bool *pushedSeg);
 
     inline StackFrame *
@@ -1639,9 +1648,16 @@ class ContextStack
      */
     bool pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrameGuard *gfg);
 
-    /* Pushes a "dummy" frame; should be removed one day. */
-    bool pushDummyFrame(JSContext *cx, MaybeReportError report, JSObject &scopeChain,
-                        DummyFrameGuard *dfg);
+    /*
+     * When changing the compartment of a cx, it is necessary to immediately
+     * change the scope chain to a global in the right compartment since any
+     * amount of general VM code can run before the first scripted frame is
+     * pushed (if at all). This is currently and hackily accomplished by
+     * pushing a "dummy frame" with the correct scope chain. On success, this
+     * function will change the compartment to 'c' and push a dummy frame for
+     * 'scopeChain'. On failure, nothing is changed.
+     */
+    bool pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg);
 
     /*
      * An "inline frame" may only be pushed from within the top, active
