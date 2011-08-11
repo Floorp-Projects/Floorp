@@ -200,6 +200,7 @@ class Debugger {
 
     static Class jsclass;
 
+    static Debugger *fromThisValue(JSContext *cx, Value *vp, const char *fnname);
     static JSBool getEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool getHookImpl(JSContext *cx, uintN argc, Value *vp, Hook which);
