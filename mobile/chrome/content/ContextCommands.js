@@ -29,6 +29,13 @@ var ContextCommands = {
     }
   },
 
+  pasteAndGo: function cc_pasteAndGo() {
+    let target = ContextHelper.popupState.target;
+    target.editor.selectAll();
+    target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+    BrowserUI.goToURI();
+  },
+
   selectAll: function cc_selectAll() {
     let target = ContextHelper.popupState.target;
     if (target.localName == "browser") {
