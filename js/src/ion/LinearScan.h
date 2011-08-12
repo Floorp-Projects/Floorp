@@ -462,7 +462,6 @@ class LinearScanAllocator
     StackAssignment stackAssignment;
 
     // Run-time state
-    RegisterSet allowedRegs;
     UnhandledQueue unhandled;
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
@@ -481,8 +480,8 @@ class LinearScanAllocator
     bool assign(LAllocation allocation);
     bool spill();
     void finishInterval(LiveInterval *interval);
-    Register::Code findBestFreeRegister(CodePosition *freeUntil);
-    Register::Code findBestBlockedRegister(CodePosition *nextUsed);
+    AnyRegister::Code findBestFreeRegister(CodePosition *freeUntil);
+    AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);

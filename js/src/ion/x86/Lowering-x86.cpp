@@ -96,7 +96,7 @@ LIRGeneratorX86::visitBox(MBox *box)
 
     // If the box wrapped a double, it needs a new register.
     if (inner->type() == MIRType_Double)
-        return defineBox(new LBoxDouble(use(inner)), box);
+        return defineBox(new LBoxDouble(use(inner), temp(LDefinition::DOUBLE)), box);
 
     if (!box->isEmittedAtUses())
         return emitAtUses(box);
