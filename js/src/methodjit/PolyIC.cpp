@@ -1759,10 +1759,17 @@ class BindNameCompiler : public PICStubCompiler
     JSObject *update()
     {
         JS_ASSERT(scopeChain->getParent());
+        RecompilationMonitor monitor(cx);
 
         JSObject *obj = js_FindIdentifierBase(cx, scopeChain, ATOM_TO_JSID(atom));
-        if (!obj)
+
+        if (monitor.recompiled())
             return obj;
+
+        if (!obj) {
+            disable("error");
+            return obj;
+        }
 
         if (!pic.hit) {
             spew("first hit", "nop");
@@ -1771,8 +1778,10 @@ class BindNameCompiler : public PICStubCompiler
         }
 
         LookupStatus status = generateStub(obj);
-        if (status == Lookup_Error)
+        if (status == Lookup_Error) {
+            disable("error");
             return NULL;
+        }
 
         return obj;
     }
@@ -2166,10 +2175,8 @@ ic::BindName(VMFrame &f, ic::PICInfo *pic)
     BindNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, stub);
 
     JSObject *obj = cc.update();
-    if (!obj) {
-        cc.disable("error");
+    if (!obj)
         THROW();
-    }
 
     f.regs.sp[0].setObject(*obj);
 }
