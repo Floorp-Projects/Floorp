@@ -369,6 +369,12 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
   nsresult rv;
   nsCString *contractId;
 
+  if (aDictionary.IsEmpty()) {
+    mCurrentEngineContractId = nsnull;
+    mSpellCheckingEngine = nsnull;
+    return NS_OK;
+  }
+
   if (!mDictionariesMap.Get(aDictionary, &contractId)){
     NS_WARNING("Dictionary not found");
     return NS_ERROR_NOT_AVAILABLE;
