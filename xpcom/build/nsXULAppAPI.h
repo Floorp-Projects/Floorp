@@ -564,7 +564,7 @@ XRE_API(bool,
 XRE_API(void,
         XRE_InstallX11ErrorHandler, ())
 
-#if defined(_MSC_VER) && defined(_M_IX86)
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
 #define XRE_HAS_DLL_BLOCKLIST
 XRE_API(void,
         XRE_SetupDllBlocklist, ())

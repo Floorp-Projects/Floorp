@@ -166,13 +166,6 @@ typedef struct _nsCocoaWindowList {
 - (void)sendToplevelDeactivateEvents;
 @end
 
-struct UnifiedGradientInfo {
-  float titlebarHeight;
-  float toolbarHeight;
-  BOOL windowIsMain;
-  BOOL drawTitlebar; // NO for toolbar, YES for titlebar
-};
-
 @class ToolbarWindow;
 
 // NSColor subclass that allows us to draw separate colors both in the titlebar 

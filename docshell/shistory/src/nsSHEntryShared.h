@@ -83,7 +83,6 @@ class nsSHEntryShared : public nsIBFCacheEntry,
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
     static already_AddRefed<nsSHEntryShared> Duplicate(nsSHEntryShared *aEntry);
-    void SetDocIdentifier(PRUint64 aDocIdentifier);
 
     void RemoveFromExpirationTracker();
     void Expire();

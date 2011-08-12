@@ -66,7 +66,7 @@ MockObjectRegisterer.prototype = {
    */
   register: function MOR_register() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (this._originalCID)
+    if (this._originalFactory)
       throw new Exception("Invalid object state when calling register()");
 
     // Define a factory that creates a new object using the given constructor.
@@ -79,14 +79,17 @@ MockObjectRegisterer.prototype = {
       }
     };
 
-    this._cid = Components.classes["@mozilla.org/uuid-generator;1"].
-      getService(Components.interfaces.nsIUUIDGenerator).generateUUID();
-
-    // Preserve the original CID
     var componentRegistrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-    this._originalCID = componentRegistrar.contractIDToCID(this._contractID);
 
-    // Replace the original factory with the mock one.
+    // Get the component CID.
+    this._cid = componentRegistrar.contractIDToCID(this._contractID);
+
+    // ... and make sure we correctly replace the original factory with the mock one.
+    this._originalFactory = Components.manager.getClassObject(Components.classes[this._contractID],
+                                                              Components.interfaces.nsIFactory);
+
+    componentRegistrar.unregisterFactory(this._cid, this._originalFactory);
+
     componentRegistrar.registerFactory(this._cid,
                                        "",
                                        this._contractID,
@@ -98,7 +101,7 @@ MockObjectRegisterer.prototype = {
    */
   unregister: function MOR_unregister() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (!this._originalCID)
+    if (!this._originalFactory)
       throw new Exception("Invalid object state when calling unregister()");
 
     // Free references to the mock factory.
@@ -107,23 +110,23 @@ MockObjectRegisterer.prototype = {
                                          this._mockFactory);
 
     // Restore the original factory.
-    componentRegistrar.registerFactory(this._originalCID,
+    componentRegistrar.registerFactory(this._cid,
                                        "",
                                        this._contractID,
-                                       null);
+                                       this._originalFactory);
 
     // Allow registering a mock factory again later.
     this._cid = null;
-    this._originalCID = null;
+    this._originalFactory = null;
     this._mockFactory = null;
   },
 
   // --- Private methods and properties ---
 
   /**
-   * The CID of the component being replaced.
+   * The factory of the component being replaced.
    */
-  _originalCID: null,
+  _originalFactory: null,
 
   /**
    * The CID under which the mock contractID was registered.

@@ -5347,6 +5347,8 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   // Assert that we're on the thread we were created from.
   JS_ASSERT(cinfo->cxThread == JS_GetContextThread(cx));
 
+  JS_AbortIfWrongThread(JS_GetRuntime(cx));
+
   JSAutoRequest ar(cx);
 
   JSAutoEnterCompartment ac;
