@@ -2,7 +2,6 @@
 <head>
 <title>Cache update test</title>
 
-<script type="text/javascript" src="/MochiKit/packed.js"></script>
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -146,7 +145,6 @@ function implicitCached()
 
   // Explicit entries
   OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
-  OfflineTest.checkCache("http://mochi.test:8888/MochiKit/packed.js", true);
   OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
 
   // Fallback entries
@@ -194,7 +192,6 @@ function manifestUpdated()
 
     // Explicit entries
     OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-    OfflineTest.checkCache("http://mochi.test:8888/MochiKit/packed.js", true);
     OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
 
     // Fallback entries
@@ -237,7 +234,6 @@ function manifestUpdated()
 
     // Explicit entries
     OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
-    OfflineTest.checkCache("http://mochi.test:8888/MochiKit/packed.js", true);
     OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
 
     // Fallback entries

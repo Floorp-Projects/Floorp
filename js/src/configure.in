@@ -294,11 +294,39 @@ case "$target" in
     fi
 
     if test -z "$android_toolchain" ; then
-        android_toolchain="$android_ndk"/build/prebuilt/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/arm-eabi-4.4.0
+        AC_MSG_CHECKING([for android toolchain directory])
+
+        kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
+
+        android_toolchain="$android_ndk"/build/prebuilt/$kernel_name-x86/arm-eabi-4.4.0
+
+        # With newer NDK, the toolchain path has changed.
+        if ! test -d "$android_toolchain" ; then
+            android_toolchain="$android_ndk"/toolchains/arm-$kernel_name-androideabi-4.4.3/prebuilt/$kernel_name-x86
+        fi
+
+        if test -d "$android_toolchain" ; then
+            AC_MSG_RESULT([$android_toolchain])
+        else
+            AC_MSG_ERROR([not found. You have to specify --with-android-toolchain=/path/to/ndk/toolchain.])
+        fi
     fi
 
     if test -z "$android_platform" ; then
-       android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$target_cpu"
+        AC_MSG_CHECKING([for android platform directory])
+
+        android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$target_cpu"
+
+        # With newer NDK, the platform path has changed.
+        if ! test -d "$android_platform" ; then
+            android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_cpu"
+        fi
+
+        if test -d "$android_platform" ; then
+            AC_MSG_RESULT([$android_platform])
+        else
+            AC_MSG_ERROR([not found. You have to specify --with-android-platform=/path/to/ndk/platform.])
+        fi
     fi
 
     dnl set up compilers
@@ -334,7 +362,7 @@ case "$target" in
     CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
-    LIBS="$LIBS $STLPORT_LIBS -static-libstdc++"
+    LIBS="$LIBS $STLPORT_LIBS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -357,8 +385,8 @@ case "$target" in
     fi
 
     ANDROID_NDK="${android_ndk}"
-    ANDROID_TOOLCHAIN="{android_toolchain}"
-    ANDROID_PLATFORM="{android_platform}"
+    ANDROID_TOOLCHAIN="${android_toolchain}"
+    ANDROID_PLATFORM="${android_platform}"
     ANDROID_SDK="${android_sdk}"
     ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_VERSION="${android_version}"
@@ -1339,8 +1367,6 @@ OSF1)
 OS_2)
     HOST_OS_ARCH=OS2
     ;;
-QNX)
-    ;;
 SCO_SV)
     HOST_OS_ARCH=SCOOS
     ;;
@@ -1433,14 +1459,6 @@ OS_2)
     OS_ARCH=OS2
     OS_TARGET=OS2
     OS_RELEASE=`uname -v`
-    ;;
-QNX)
-    if test "$OS_TARGET" != "NTO"; then
-        changequote(,)
-        OS_RELEASE=`uname -v | sed 's/^\([0-9]\)\([0-9]*\)$/\1.\2/'`
-        changequote([,])
-    fi
-    OS_TEST=x86
     ;;
 SCO_SV)
     OS_ARCH=SCOOS
@@ -2421,32 +2439,6 @@ ia64*-hpux*)
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,lib$(LIBRARY_NAME)$(DLL_SUFFIX) -o $@'
     ;;
 
-*-nto*) 
-	AC_DEFINE(NTO)	
-	AC_DEFINE(_QNX_SOURCE)
-	AC_DEFINE(_i386)
-	OS_TARGET=NTO
-	WARNINGS_AS_ERRORS=''
-	MOZ_OPTIMIZE_FLAGS="-O"
-	MOZ_DEBUG_FLAGS="-gstabs"
-	USE_PTHREADS=1
-	_PEDANTIC=
-	LIBS="$LIBS -lsocket -lstdc++"
-	_DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
-	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js-confdefs.h -D_POSIX_C_SOURCE=199506'
-	if test "$with_x" != "yes"
-	then
-		_PLATFORM_DEFAULT_TOOLKIT="photon"
-	    TK_CFLAGS='-I/usr/include/photon'
-		TK_LIBS='-lph'
-	fi
-	case "${target_cpu}" in
-	ppc*)
-	AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)	
-	;;
-	esac
-	;;
-
 *-openbsd*)
     DLL_SUFFIX=".so.1.0"
     DSO_CFLAGS=''
@@ -2545,20 +2537,6 @@ alpha*-*-osf*)
       COMPAQ_CXX=1
     fi
     AC_DEFINE(NEED_USLEEP_PROTOTYPE)
-    ;;
-
-*-qnx*) 
-    DIRENT_INO=d_stat.st_ino
-    dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
-    AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    dnl Explicit set STDC_HEADERS to workaround QNX 6.0's failing of std test
-    AC_DEFINE(STDC_HEADERS)
-    if test "$no_x" = "yes"; then
-	    _PLATFORM_DEFAULT_TOOLKIT='photon'
-	    TK_CFLAGS='-I/usr/nto/include/photon'
-	    TK_LIBS='-lphoton -lphrender'
-    fi
     ;;
 
 *-sco*) 

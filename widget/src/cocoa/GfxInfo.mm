@@ -265,6 +265,26 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
     if (!foundGoodDevice)
       status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
   }
+
+  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL) {
+    // same comment as above for FEATURE_OPENGL_LAYERS.
+    bool foundGoodDevice = false;
+
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
+      switch (mRendererIDs[i]) {
+        case kCGLRendererGeForceFXID: // bug 678053. We must blacklist Geforce 7300 GT. This family
+                                      // covers all Geforce FX, 6, 7 series. Need bug 678330 for finer
+                                      // blacklisting.
+          break;
+        default:
+          if (mRendererIDs[i])
+            foundGoodDevice = true;
+      }
+    }
+    if (!foundGoodDevice)
+      status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+  }
+
   *aStatus = status;
   return NS_OK;
 }

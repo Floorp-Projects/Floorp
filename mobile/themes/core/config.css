@@ -56,7 +56,7 @@ richlistitem[default="false"] .preferences-title {
   font-weight: bold;
 }
 
-richlistitem .prefvalue {
+richlistitem .preferences-value {
   min-width: 200px;
   pointer-events: none;
   -moz-box-flex: 4;

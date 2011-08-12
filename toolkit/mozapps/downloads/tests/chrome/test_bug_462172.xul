@@ -58,8 +58,6 @@ close window
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="test();">
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"/>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript"
           src="utils.js"/>

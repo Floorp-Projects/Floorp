@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <algorithm>
+
 #include "LayerManagerD3D10.h"
 #include "LayerManagerD3D10Effect.h"
 #include "gfxWindowsPlatform.h"
@@ -49,11 +51,13 @@
 #include "CanvasLayerD3D10.h"
 #include "ReadbackLayerD3D10.h"
 #include "ImageLayerD3D10.h"
+#include "mozilla/layers/PLayerChild.h"
 
 #include "../d3d9/Nv3DVUtils.h"
 
 #include "gfxCrashReporterUtils.h"
 
+using namespace std;
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -227,6 +231,11 @@ LayerManagerD3D10::Initialize()
     mInputLayout = attachments->mInputLayout;
   }
 
+  if (HasShadowManager()) {
+    reporter.SetSuccessful();
+    return true;
+  }
+
   nsRefPtr<IDXGIDevice> dxgiDevice;
   nsRefPtr<IDXGIAdapter> dxgiAdapter;
   nsRefPtr<IDXGIFactory> dxgiFactory;
@@ -287,6 +296,9 @@ LayerManagerD3D10::Destroy()
     if (mRoot) {
       static_cast<LayerD3D10*>(mRoot->ImplData())->LayerManagerDestroyed();
     }
+    mRootForShadowTree = nsnull;
+    // XXX need to be careful here about surface destruction
+    // racing with share-to-chrome message
   }
   LayerManager::Destroy();
 }
@@ -300,6 +312,10 @@ LayerManagerD3D10::SetRoot(Layer *aRoot)
 void
 LayerManagerD3D10::BeginTransaction()
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("[----- BeginTransaction"));
+  Log();
+#endif
 }
 
 void
@@ -330,10 +346,20 @@ LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+    MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
+    Log();
+#endif
+
     Render();
     mCurrentCallbackInfo.Callback = nsnull;
     mCurrentCallbackInfo.CallbackData = nsnull;
   }
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  Log();
+  MOZ_LAYERS_LOG(("]----- EndTransaction"));
+#endif
 
   mTarget = nsnull;
 }
@@ -344,11 +370,25 @@ LayerManagerD3D10::CreateThebesLayer()
   nsRefPtr<ThebesLayer> layer = new ThebesLayerD3D10(this);
   return layer.forget();
 }
+ 
+already_AddRefed<ShadowThebesLayer>
+LayerManagerD3D10::CreateShadowThebesLayer()
+{
+  nsRefPtr<ShadowThebesLayerD3D10> layer = new ShadowThebesLayerD3D10(this);
+  return layer.forget();
+}
 
 already_AddRefed<ContainerLayer>
 LayerManagerD3D10::CreateContainerLayer()
 {
   nsRefPtr<ContainerLayer> layer = new ContainerLayerD3D10(this);
+  return layer.forget();
+}
+
+already_AddRefed<ShadowContainerLayer>
+LayerManagerD3D10::CreateShadowContainerLayer()
+{
+  nsRefPtr<ShadowContainerLayer> layer = new ShadowContainerLayerD3D10(this);
   return layer.forget();
 }
 
@@ -546,9 +586,13 @@ LayerManagerD3D10::UpdateRenderTarget()
 
   nsRefPtr<ID3D10Texture2D> backBuf;
   
-  hr = mSwapChain->GetBuffer(0, __uuidof(ID3D10Texture2D), (void**)backBuf.StartAssignment());
-  if (FAILED(hr)) {
-    return;
+  if (mSwapChain) {
+    hr = mSwapChain->GetBuffer(0, __uuidof(ID3D10Texture2D), (void**)backBuf.StartAssignment());
+    if (FAILED(hr)) {
+      return;
+    }
+  } else {
+    backBuf = mBackBuffer;
   }
   
   mDevice->CreateRenderTargetView(backBuf, NULL, getter_AddRefs(mRTView));
@@ -557,28 +601,57 @@ LayerManagerD3D10::UpdateRenderTarget()
 void
 LayerManagerD3D10::VerifyBufferSize()
 {
-  DXGI_SWAP_CHAIN_DESC swapDesc;
-  mSwapChain->GetDesc(&swapDesc);
-
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  if (swapDesc.BufferDesc.Width == rect.width &&
-      swapDesc.BufferDesc.Height == rect.height) {
-    return;
-  }
+  HRESULT hr;
+  if (mSwapChain) {
+    DXGI_SWAP_CHAIN_DESC swapDesc;
+    mSwapChain->GetDesc(&swapDesc);
 
-  mRTView = nsnull;
-  if (gfxWindowsPlatform::IsOptimus()) {
-    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
-                              DXGI_FORMAT_B8G8R8A8_UNORM,
-                              0);
+    if (swapDesc.BufferDesc.Width == rect.width &&
+        swapDesc.BufferDesc.Height == rect.height) {
+      return;
+    }
+
+    mRTView = nsnull;
+    if (gfxWindowsPlatform::IsOptimus()) {
+      mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+                                DXGI_FORMAT_B8G8R8A8_UNORM,
+                                0);
+    } else {
+      mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+                                DXGI_FORMAT_B8G8R8A8_UNORM,
+                                DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
+    }
   } else {
-    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
-                              DXGI_FORMAT_B8G8R8A8_UNORM,
-                              DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
-  }
+    D3D10_TEXTURE2D_DESC oldDesc;    
+    if (mBackBuffer) {
+        mBackBuffer->GetDesc(&oldDesc);
+    } else {
+        oldDesc.Width = oldDesc.Height = 0;
+    }
+    if (oldDesc.Width == rect.width &&
+        oldDesc.Height == rect.height) {
+      return;
+    }
 
+    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+                               rect.width, rect.height, 1, 1);
+    desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+    desc.MiscFlags = D3D10_RESOURCE_MISC_SHARED
+                     // FIXME/bug 662109: synchronize using KeyedMutex
+                     /*D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX*/;
+    hr = device()->CreateTexture2D(&desc, nsnull, getter_AddRefs(mBackBuffer));
+    if (FAILED(hr)) {
+        ReportFailure(nsDependentCString("Failed to create shared texture"),
+                      hr);
+        NS_RUNTIMEABORT("Failed to create back buffer");
+    }
+
+    // XXX resize texture?
+    mRTView = nsnull;
+  }
 }
 
 void
@@ -638,6 +711,75 @@ LayerManagerD3D10::Render()
 
   if (mTarget) {
     PaintToTarget();
+  } else if (mBackBuffer) {
+    ShadowLayerForwarder::BeginTransaction();
+    
+    nsIntRect contentRect = nsIntRect(0, 0, rect.width, rect.height);
+    if (!mRootForShadowTree) {
+        mRootForShadowTree = new DummyRoot(this);
+        mRootForShadowTree->SetShadow(ConstructShadowFor(mRootForShadowTree));
+        CreatedContainerLayer(mRootForShadowTree);
+        ShadowLayerForwarder::SetRoot(mRootForShadowTree);
+    }
+
+    nsRefPtr<WindowLayer> windowLayer =
+        static_cast<WindowLayer*>(mRootForShadowTree->GetFirstChild());
+    if (!windowLayer) {
+        windowLayer = new WindowLayer(this);
+        windowLayer->SetShadow(ConstructShadowFor(windowLayer));
+        CreatedThebesLayer(windowLayer);
+        ShadowLayerForwarder::CreatedThebesBuffer(windowLayer,
+                                                  contentRect,
+                                                  contentRect,
+                                                  SurfaceDescriptor());
+
+        mRootForShadowTree->InsertAfter(windowLayer, nsnull);
+        ShadowLayerForwarder::InsertAfter(mRootForShadowTree, windowLayer);
+    }
+
+    if (!mRootForShadowTree->GetVisibleRegion().IsEqual(contentRect)) {
+        mRootForShadowTree->SetVisibleRegion(contentRect);
+        windowLayer->SetVisibleRegion(contentRect);
+
+        ShadowLayerForwarder::Mutated(mRootForShadowTree);
+        ShadowLayerForwarder::Mutated(windowLayer);
+    }
+
+    FrameMetrics m;
+    if (ContainerLayer* cl = mRoot->AsContainerLayer()) {
+        m = cl->GetFrameMetrics();
+    } else {
+        m.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
+    }
+    if (m != mRootForShadowTree->GetFrameMetrics()) {
+        mRootForShadowTree->SetFrameMetrics(m);
+        ShadowLayerForwarder::Mutated(mRootForShadowTree);
+    }
+
+    SurfaceDescriptorD3D10 sd;
+    GetDescriptor(mBackBuffer, &sd);
+    ShadowLayerForwarder::PaintedThebesBuffer(windowLayer,
+                                              contentRect,
+                                              contentRect, nsIntPoint(),
+                                              sd);
+
+    // A source in the graphics pipeline can't also be a target.  So
+    // unbind here to avoid racing with the chrome process sourcing
+    // the back texture.
+    mDevice->OMSetRenderTargets(0, NULL, NULL);
+
+    // XXX revisit this Flush() in bug 662109.  It's not clear it's
+    // needed.
+    mDevice->Flush();
+
+    mRTView = NULL;
+
+    AutoInfallibleTArray<EditReply, 10> replies;
+    ShadowLayerForwarder::EndTransaction(&replies);
+    // We expect only 1 reply, but might get none if the parent
+    // process crashed
+
+    swap(mBackBuffer, mRemoteFrontBuffer);
   } else {
     mSwapChain->Present(0, 0);
   }
@@ -698,6 +840,43 @@ LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)
   : mD3DManager(aManager)
 {
 }
+
+WindowLayer::WindowLayer(LayerManagerD3D10* aManager)
+  : ThebesLayer(aManager, nsnull)
+{
+ }
+
+WindowLayer::~WindowLayer()
+{
+  PLayerChild::Send__delete__(GetShadow());
+}
+
+DummyRoot::DummyRoot(LayerManagerD3D10* aManager)
+  : ContainerLayer(aManager, nsnull)
+{
+}
+
+DummyRoot::~DummyRoot()
+{
+  RemoveChild(nsnull);
+  PLayerChild::Send__delete__(GetShadow());
+}
+
+void
+DummyRoot::InsertAfter(Layer* aLayer, Layer* aNull)
+{
+  NS_ABORT_IF_FALSE(!mFirstChild && !aNull,
+                    "Expect to append one child, once");
+  mFirstChild = nsRefPtr<Layer>(aLayer).forget().get();
+}
+
+void
+DummyRoot::RemoveChild(Layer* aNull)
+{
+  NS_ABORT_IF_FALSE(!aNull, "Unused argument should be null");
+  NS_IF_RELEASE(mFirstChild);
+}
+
 
 }
 }

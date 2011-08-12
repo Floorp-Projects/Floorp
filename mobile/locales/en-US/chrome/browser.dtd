@@ -68,6 +68,7 @@
 <!ENTITY bookmarkPopup.label       "Page Bookmarked">
 <!ENTITY bookmarkRemove.label      "Remove">
 <!ENTITY bookmarkEdit.label        "Edit">
+<!ENTITY bookmarkShortcut.label    "Add to Home Screen">
 
 <!ENTITY identity.unverifiedsite2 "This web site does not supply identity information.">
 <!ENTITY identity.connectedTo2 "Connected to">
@@ -104,7 +105,7 @@
 <!ENTITY contextFullScreen.label      "Full Screen">
 <!ENTITY contextEditBookmark.label    "Edit">
 <!ENTITY contextRemoveBookmark.label  "Remove">
-<!ENTITY contextShortcutBookmark.label "Add Shortcut to Home">
+<!ENTITY contextShortcutBookmark.label "Add to Home Screen">
 
 <!ENTITY pageactions.saveas.pdf      "Save As PDF">
 <!ENTITY pageactions.share.page      "Share Page">

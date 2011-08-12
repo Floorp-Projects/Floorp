@@ -38,37 +38,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessibleRelationWrap.h"
+#include "ia2AccessibleRelation.h"
+
+#include "Relation.h"
+
+#include "nsIAccessibleRelation.h"
+#include "nsID.h"
 
 #include "AccessibleRelation_i.c"
-#include "nsAccessNodeWrap.h"
 
-#include "nsArrayUtils.h"
-
-nsAccessibleRelationWrap::
-  nsAccessibleRelationWrap(PRUint32 aType, nsIAccessible *aTarget) :
-  nsAccessibleRelation(aType, aTarget)
+ia2AccessibleRelation::ia2AccessibleRelation(PRUint32 aType, Relation* aRel) :
+  mType(aType), mReferences(0)
 {
-}
-
-// ISupports
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsAccessibleRelationWrap, nsAccessibleRelation,
-                             nsIWinAccessNode)
-
-// nsIWinAccessNode
-
-NS_IMETHODIMP
-nsAccessibleRelationWrap::QueryNativeInterface(REFIID aIID, void** aInstancePtr)
-{
-  return QueryInterface(aIID, aInstancePtr);
+  nsAccessible* target = nsnull;
+  while ((target = aRel->Next()))
+    mTargets.AppendElement(target);
 }
 
 // IUnknown
 
 STDMETHODIMP
-nsAccessibleRelationWrap::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleRelation::QueryInterface(REFIID iid, void** ppv)
 {
+  if (!ppv)
+    return E_INVALIDARG;
+
   *ppv = NULL;
 
   if (IID_IAccessibleRelation == iid || IID_IUnknown == iid) {
@@ -80,63 +74,78 @@ nsAccessibleRelationWrap::QueryInterface(REFIID iid, void** ppv)
   return E_NOINTERFACE;
 }
 
+ULONG STDMETHODCALLTYPE
+ia2AccessibleRelation::AddRef()
+{
+  return mReferences++;
+}
+
+ULONG STDMETHODCALLTYPE 
+ia2AccessibleRelation::Release()
+{
+  mReferences--;
+  ULONG references = mReferences;
+  if (!mReferences)
+    delete this;
+
+  return references;
+}
+
 // IAccessibleRelation
 
 STDMETHODIMP
-nsAccessibleRelationWrap::get_relationType(BSTR *aRelationType)
+ia2AccessibleRelation::get_relationType(BSTR *aRelationType)
 {
 __try {
+  if (!aRelationType)
+    return E_INVALIDARG;
+
   *aRelationType = NULL;
 
-  PRUint32 type = 0;
-  nsresult rv = GetRelationType(&type);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  switch (type) {
-    case RELATION_CONTROLLED_BY:
+  switch (mType) {
+    case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_CONTROLLED_BY);
       break;
-    case RELATION_CONTROLLER_FOR:
+    case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_CONTROLLER_FOR);
       break;
-    case RELATION_DESCRIBED_BY:
+    case nsIAccessibleRelation::RELATION_DESCRIBED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_DESCRIBED_BY);
       break;
-    case RELATION_DESCRIPTION_FOR:
+    case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_DESCRIPTION_FOR);
       break;
-    case RELATION_EMBEDDED_BY:
+    case nsIAccessibleRelation::RELATION_EMBEDDED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_EMBEDDED_BY);
       break;
-    case RELATION_EMBEDS:
+    case nsIAccessibleRelation::RELATION_EMBEDS:
       *aRelationType = ::SysAllocString(IA2_RELATION_EMBEDS);
       break;
-    case RELATION_FLOWS_FROM:
+    case nsIAccessibleRelation::RELATION_FLOWS_FROM:
       *aRelationType = ::SysAllocString(IA2_RELATION_FLOWS_FROM);
       break;
-    case RELATION_FLOWS_TO:
+    case nsIAccessibleRelation::RELATION_FLOWS_TO:
       *aRelationType = ::SysAllocString(IA2_RELATION_FLOWS_TO);
       break;
-    case RELATION_LABEL_FOR:
+    case nsIAccessibleRelation::RELATION_LABEL_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_LABEL_FOR);
       break;
-    case RELATION_LABELLED_BY:
+    case nsIAccessibleRelation::RELATION_LABELLED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_LABELED_BY);
       break;
-    case RELATION_MEMBER_OF:
+    case nsIAccessibleRelation::RELATION_MEMBER_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_MEMBER_OF);
       break;
-    case RELATION_NODE_CHILD_OF:
+    case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_NODE_CHILD_OF);
       break;
-    case RELATION_PARENT_WINDOW_OF:
+    case nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_PARENT_WINDOW_OF);
       break;
-    case RELATION_POPUP_FOR:
+    case nsIAccessibleRelation::RELATION_POPUP_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_POPUP_FOR);
       break;
-    case RELATION_SUBWINDOW_OF:
+    case nsIAccessibleRelation::RELATION_SUBWINDOW_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_SUBWINDOW_OF);
       break;
     default:
@@ -150,9 +159,12 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleRelationWrap::get_localizedRelationType(BSTR *aLocalizedRelationType)
+ia2AccessibleRelation::get_localizedRelationType(BSTR *aLocalizedRelationType)
 {
 __try {
+  if (!aLocalizedRelationType)
+    return E_INVALIDARG;
+
   *aLocalizedRelationType = NULL;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -160,17 +172,26 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleRelationWrap::get_nTargets(long *aNTargets)
+ia2AccessibleRelation::get_nTargets(long *aNTargets)
 {
 __try {
-  *aNTargets = 0;
+ if (!aNTargets)
+   return E_INVALIDARG;
 
-  PRUint32 count = 0;
-  nsresult rv = GetTargetsCount(&count);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+ *aNTargets = mTargets.Length();
+  return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
+}
 
-  *aNTargets = count;
+STDMETHODIMP
+ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown **aTarget)
+{
+__try {
+  if (aTargetIndex < 0 || aTargetIndex >= mTargets.Length() || !aTarget)
+    return E_INVALIDARG;
+
+  mTargets[aTargetIndex]->QueryInterface((const nsID&) IID_IUnknown, (void**) aTarget);
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -178,77 +199,22 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleRelationWrap::get_target(long aTargetIndex, IUnknown **aTarget)
+ia2AccessibleRelation::get_targets(long aMaxTargets, IUnknown **aTargets,
+                                   long *aNTargets)
 {
 __try {
-  nsCOMPtr<nsIAccessible> accessible;
-  nsresult rv = GetTarget(aTargetIndex, getter_AddRefs(accessible));
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  if (!aNTargets || !aTargets)
+    return E_INVALIDARG;
 
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(accessible));
-  if (!winAccessNode)
-    return E_FAIL;
-
-  void *instancePtr = NULL;
-  rv = winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aTarget = static_cast<IUnknown*>(instancePtr);
-  return S_OK;
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
-}
-
-STDMETHODIMP
-nsAccessibleRelationWrap::get_targets(long aMaxTargets, IUnknown **aTarget,
-                                      long *aNTargets)
-{
-__try {
   *aNTargets = 0;
+  PRUint32 maxTargets = mTargets.Length();
+  if (maxTargets > aMaxTargets)
+    maxTargets = aMaxTargets;
 
-  nsCOMPtr<nsIArray> targets;
-  nsresult rv = GetTargets(getter_AddRefs(targets));
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  for (PRUint32 idx = 0; idx < maxTargets; idx++)
+    get_target(idx, aTargets + idx);
 
-  PRUint32 length = 0;
-  rv = targets->GetLength(&length);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  if (length == 0)
-    return S_FALSE;
-
-  PRUint32 count = length < PRUint32(aMaxTargets) ? length : aMaxTargets;
-
-  PRUint32 index = 0;
-  for (; index < count; index++) {
-    nsCOMPtr<nsIWinAccessNode> winAccessNode =
-      do_QueryElementAt(targets, index, &rv);
-    if (NS_FAILED(rv))
-      break;
-
-    void *instancePtr = NULL;
-    nsresult rv =  winAccessNode->QueryNativeInterface(IID_IUnknown,
-                                                       &instancePtr);
-    if (NS_FAILED(rv))
-      break;
-
-    aTarget[index] = static_cast<IUnknown*>(instancePtr);
-  }
-
-  if (NS_FAILED(rv)) {
-    for (PRUint32 index2 = 0; index2 < index; index2++) {
-      aTarget[index2]->Release();
-      aTarget[index2] = NULL;
-    }
-    return GetHRESULT(rv);
-  }
-
-  *aNTargets = count;
+  *aNTargets = maxTargets;
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

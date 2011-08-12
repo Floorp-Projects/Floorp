@@ -42,11 +42,17 @@ var Feedback = {
 
   init: function(aEvent) {
     // Delay the widget initialization during startup.
-    window.addEventListener("UIReadyDelayed", function(aEvent) {
+    let panel = document.getElementById("feedback-container");
+    panel.addEventListener("ToolPanelShown", function delayedInit(aEvent) {
+      panel.removeEventListener("ToolPanelShown", delayedInit, false);
+
       // A simple frame script to fill in the referrer page and device info
       messageManager.loadFrameScript("chrome://feedback/content/content.js", true);
 
-      window.removeEventListener(aEvent.type, arguments.callee, false);
+      let setting = document.getElementById("feedback-checkCompatibility");
+      setting.setAttribute("pref", Feedback.compatibilityPref);
+      setting.preferenceChanged();
+
       document.getElementById("feedback-container").hidden = false;
 
       let feedbackPrefs = document.getElementById("feedback-tools").childNodes;
@@ -63,6 +69,20 @@ var Feedback = {
       Feedback._device = sysInfo.get("device");
       Feedback._manufacturer = sysInfo.get("manufacturer");
     }, false);
+  },
+
+  get compatibilityPref() {
+    let result = "extensions.checkCompatibility.";
+    let channel = Services.prefs.getCharPref("app.update.channel");
+    if (channel == "nightly") {
+      result += "nightly";
+    } else {
+      // Copied from toolkit/mozapps/extensions/XPIProvider.jsm
+      const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
+      result += Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
+    }
+    delete this.compatibilityPref;
+    return this.compatibilityPref = result;
   },
 
   openFeedback: function(aName) {

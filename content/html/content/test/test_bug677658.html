@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677658
+-->
+<head>
+  <title>Test for Bug 677658</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677658">Mozilla Bug 677658</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript"><!--
+
+/** Test for Bug 677658 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function testDone() {
+  ok(window.testPassed, "Script shouldn't have run!");
+  SimpleTest.finish();
+}
+
+function test() {
+  window.testPassed = true;
+  document.getElementById("testtarget").innerHTML =
+    "<script async src='data:text/plain, window.testPassed = false;'></script>";
+  SimpleTest.executeSoon(testDone);
+}
+
+// -->
+</script>
+</pre>
+<div id="testtarget"></div>
+</body>
+</html>

@@ -707,14 +707,16 @@ SessionStore.prototype = {
   },
 
   restoreLastSession: function ss_restoreLastSession(aBringToFront) {
-    // The previous session data has already been renamed to the backup file
-    if (!this._sessionFileBackup.exists())
-      return;
-
     let self = this;
-    function notifyObservers() {
+    function notifyObservers(aMessage) {
       self._clearCache();
-      Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
+      Services.obs.notifyObservers(null, "sessionstore-windows-restored", aMessage || "");
+    }
+
+    // The previous session data has already been renamed to the backup file
+    if (!this._sessionFileBackup.exists()) {
+      notifyObservers("fail")
+      return;
     }
 
     try {
@@ -723,7 +725,7 @@ SessionStore.prototype = {
       NetUtil.asyncFetch(channel, function(aStream, aResult) {
         if (!Components.isSuccessCode(aResult)) {
           Cu.reportError("SessionStore: Could not read from sessionstore.bak file");
-          notifyObservers();
+          notifyObservers("fail");
           return;
         }
 
@@ -742,14 +744,17 @@ SessionStore.prototype = {
         }
 
         if (!data || data.windows.length == 0) {
-          notifyObservers();
+          notifyObservers("fail");
           return;
         }
 
         let window = Services.wm.getMostRecentWindow("navigator:browser");
 
-        let selected = data.windows[0].selected;
         let tabs = data.windows[0].tabs;
+        let selected = data.windows[0].selected;
+        if (selected > tabs.length) // Clamp the selected index if it's bogus
+          selected = 1;
+
         for (let i=0; i<tabs.length; i++) {
           let tabData = tabs[i];
 
@@ -795,7 +800,7 @@ SessionStore.prototype = {
       });
     } catch (ex) {
       Cu.reportError("SessionStore: Could not read from sessionstore.bak file: " + ex);
-      notifyObservers();
+      notifyObservers("fail");
     }
   }
 };

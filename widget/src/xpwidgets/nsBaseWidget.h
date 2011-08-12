@@ -115,9 +115,10 @@ public:
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   virtual nsDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();
-  virtual LayerManager*   GetLayerManager(LayerManagerPersistence aPersistence,
+  virtual LayerManager*   GetLayerManager(PLayersChild* aShadowManager = nsnull,
+                                          LayersBackend aBackendHint = LayerManager::LAYERS_NONE,
+                                          LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nsnull);
-  using nsIWidget::GetLayerManager;
 
   virtual void            DrawOver(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}

@@ -1,6 +1,5 @@
 <?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css" ?>
 <root>
-  <script type="text/javascript" src="/MochiKit/packed.js" xmlns="http://www.w3.org/1999/xhtml"/>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js" xmlns="http://www.w3.org/1999/xhtml"/>
 
   <body xmlns="http://www.w3.org/1999/xhtml">

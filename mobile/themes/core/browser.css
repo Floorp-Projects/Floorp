@@ -201,6 +201,7 @@ toolbarbutton.urlbar-button {
 #urlbar-favicon {
   width: 32px;
   height: 32px;
+  image-rendering: -moz-crisp-edges;
 }
 
 #urlbar-favicon[src=""] {
@@ -730,6 +731,7 @@ placeitem > .bookmark-manage > image {
   width: 32px;
   height: 32px;
   max-height: 32px;
+  image-rendering: -moz-crisp-edges;
   /* margin-top = (1 - title's line-height) * title's font-size */
   margin-top: @autocomplete_item_container_image_padding@;
   margin-bottom: 0;
@@ -1018,6 +1020,10 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   display: none;
 }
 
+#bookmark-popup .action-button {
+  -moz-border-right-colors: white;
+}
+
 /* Identity popup   -------------------------------------------------------- */
 #identity-popup-container {
   padding: @padding_normal@; /* core spacing */
@@ -1199,6 +1205,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 #share-title,
+#bookmark-popup-title,
 #context-hint {
   font-size: @font_small@;
   padding: @padding_small@;

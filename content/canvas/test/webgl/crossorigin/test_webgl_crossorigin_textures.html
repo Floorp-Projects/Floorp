@@ -35,8 +35,14 @@
   function testTexture(url, crossOriginAttribute, expected_result) {
     number_of_tests_live++;
     var image = new Image();
-    if (crossOriginAttribute != "leave-default-crossOrigin-attribute")
+    if (crossOriginAttribute == "just-crossOrigin-without-value") {
+      var div = document.createElement('div');
+      div.innerHTML="<img crossOrigin>";
+      image = div.children[0];
+    }
+    else if (crossOriginAttribute != "missing-value-default")
       image.crossOrigin = crossOriginAttribute;
+    
 
     function testDone() {
       number_of_tests_live--;
@@ -77,27 +83,35 @@
       return;
     }
 
-    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
-                "leave-default-crossOrigin-attribute",
-                OK);
 
+    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
+                "missing-value-default",
+                OK);
     testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
                 "",
                 OK);
-
+    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
+                "just-crossOrigin-without-value",
+                OK);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
-                "leave-default-crossOrigin-attribute",
+                "missing-value-default",
                 SECURITY_ERR);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
                 "",
+                SECURITY_ERR);
+    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
+                "just-crossOrigin-without-value",
                 SECURITY_ERR);
 
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
-                "leave-default-crossOrigin-attribute",
+                "missing-value-default",
                 SECURITY_ERR);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
                 "",
-                SECURITY_ERR);
+                OK);
+    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+                "just-crossOrigin-without-value",
+                OK);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
                 "anonymous",
                 OK);
@@ -106,11 +120,14 @@
                 SECURITY_ERR);
 
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
-                "leave-default-crossOrigin-attribute",
+                "missing-value-default",
                 SECURITY_ERR);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
                 "",
-                SECURITY_ERR);
+                OK);
+    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+                "just-crossOrigin-without-value",
+                OK);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
                 "anonymous",
                 OK);
@@ -118,7 +135,7 @@
                 "use-credentials",
                 OK);
 
-    // Test that bad values for crossorigin="..." are interpreted as default.
+    // Test that bad values for crossorigin="..." are interpreted as invalid-value-default which is "anonymous".
     testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
                 "foobar",
                 OK);
@@ -127,10 +144,10 @@
                 SECURITY_ERR);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
                 "foobar",
-                SECURITY_ERR);
+                OK);
     testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
                 "foobar",
-                SECURITY_ERR);
+                OK);
 
     all_tests_started = true;
   });

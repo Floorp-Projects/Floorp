@@ -51,6 +51,7 @@
 #include "nsMappedAttributes.h"
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h" // nsAutoScriptBlocker
 
 /*
 CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.
@@ -860,6 +861,12 @@ nsAttrAndChildArray::SizeOf() const
     // so, we just have to compute the size of *mBuffer given that this object
     // doesn't own the children list.
     size += mImpl->mBufferSize * sizeof(*(mImpl->mBuffer)) + NS_IMPL_EXTRA_SIZE;
+
+    PRUint32 slotCount = AttrSlotCount();
+    for (PRUint32 i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
+      nsAttrValue* value = &ATTRS(mImpl)[i].mValue;
+      size += value->SizeOf() - sizeof(*value);
+    }
   }
 
   return size;

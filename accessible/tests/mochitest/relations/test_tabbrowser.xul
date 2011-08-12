@@ -13,8 +13,6 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Accessible XUL tabbrowser relation tests">
 
-  <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
@@ -74,7 +72,7 @@
       };
       registerA11yEventListener(EVENT_REORDER, handler);
 
-      tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
+      tabBrowser.loadTabs(docURIs, false, true);
     }
 
     function testRelations()

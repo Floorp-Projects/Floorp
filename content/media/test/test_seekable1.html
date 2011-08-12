@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test seekable member for media elements</title>
+<script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id='test'>
+<script class="testbody" type='application/javascript;version=1.8'>
+
+let manager = new MediaTestManager;
+
+function finish_test(element) {
+  if (element.parentNode)
+    element.parentNode.removeChild(element);
+  element.src="";
+  manager.finished(element.token);
+}
+
+var tests = [
+// Test using a finite media stream, and a server supporting range requests
+{
+setup : function(element) {
+          is(element.seekable.length, 0, "seekable.length should be initialy 0.");
+          element.addEventListener("loadedmetadata", function() {
+              is(element.seekable.length, 1, "seekable.length should be 1 for a server supporting range requests.");
+
+              //TODO : change this by using element.initialTime
+              is(element.seekable.start(0), 0.0, "The start of the first range should be the initialTime.");
+              is(element.seekable.end(0), element.duration, "The end of the first range should be the duration.")
+              finish_test(element);
+              }, false);
+        }
+}
+];
+
+function createTestArray() {
+  var A = [];
+    for (var k=0; k < gProgressTests.length; k++) {
+      var t = new Object();
+      t.setup = tests[0].setup;
+      t.name = gProgressTests[k].name;
+      t.type = gProgressTests[k].type;
+      A.push(t);
+    }
+  return A;
+}
+
+function startTest(test, token) {
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var element = document.createElement(elemType);
+  element.src = test.name;
+  element.token = token;
+  test.setup(element);
+  manager.started(token);
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

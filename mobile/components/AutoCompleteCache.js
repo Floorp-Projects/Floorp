@@ -300,9 +300,13 @@ AutoCompleteCache.prototype = {
       usedCache = true;
     } else if (prev) {
       // Otherwise, check if this is the same as the prev search,
-      // and if the previous search was null
+      // and if the previous search was null. We have to special
+      // case 'www.' here due to it being ignore in autocomplete
+      // searches (see bug 461483).
       let prevSearch = prev.searchString;
-      if (prev.matchCount == this.searchEngines.length && (query.indexOf(prevSearch) == 0)) {
+      if (prev.matchCount == this.searchEngines.length &&
+          prevSearch !== "www." &&
+          (query.indexOf(prevSearch) == 0)) {
         done(new cacheResult(query, []), RESULT_NEW);
         usedCache = true;
       }

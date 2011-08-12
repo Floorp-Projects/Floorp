@@ -77,7 +77,7 @@ var indexErrTests = ["characterdataindexsizeerrdeletedatacountnegative", "charac
 var attributeModTests = ["hc_attrappendchild1", "hc_attrappendchild3", "hc_attrappendchild5",
                          "hc_attrappendchild6", "hc_attrchildnodes2", "hc_attrclonenode1", "hc_attrinsertbefore1",
                          "hc_attrinsertbefore2", "hc_attrinsertbefore3", "hc_attrinsertbefore4", "hc_attrinsertbefore6",
-                         "hc_attrnormalize", "hc_attrremovechild2", "hc_attrreplacechild1", "hc_attrreplacechild2",
+                         "hc_attrnormalize", "hc_attrreplacechild1", "hc_attrreplacechild2",
                          "hc_attrsetvalue2", "hc_elementnormalize2", "hc_elementnotfounderr", "hc_elementremoveattribute", "hc_elementnormalize2",
                          "hc_elementnotfounderr", "hc_elementremoveattribute", ];
 var modTests = ["hc_elementwrongdocumenterr", "hc_namednodemapwrongdocumenterr", "hc_nodeappendchildnewchilddiffdocument", "hc_nodeinsertbeforenewchilddiffdocument",
@@ -91,5 +91,15 @@ var createEntityRef = ["documentinvalidcharacterexceptioncreateentref",
 
 
 var todoTests = {};
+function concat(lst/*...*/) {
+  var f = [];
+  if (arguments !== null) {
+    f = arguments[0];
+  }
+  for (var i = 1; i < arguments.length; i++) {
+    f = f.concat(arguments[i]);
+  }
+  return f;
+}
 var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests, createEntityRef);
 for (var excludedTestName in exclusions) { todoTests[exclusions[excludedTestName]] = true; }

@@ -830,8 +830,8 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     // Ligature features are enabled by default in the generic shaper,
     // so we explicitly turn them off if necessary (for letter-spacing)
     if (disableLigatures) {
-        hb_feature_t ligaOff = { HB_TAG('l','i','g','a'), 0, 0, -1 };
-        hb_feature_t cligOff = { HB_TAG('c','l','i','g'), 0, 0, -1 };
+        hb_feature_t ligaOff = { HB_TAG('l','i','g','a'), 0, 0, UINT_MAX };
+        hb_feature_t cligOff = { HB_TAG('c','l','i','g'), 0, 0, UINT_MAX };
         features.AppendElement(ligaOff);
         features.AppendElement(cligOff);
     }
@@ -852,7 +852,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         }
         if (j == features.Length()) {
             const gfxFontFeature& f = cssFeatures->ElementAt(i);
-            hb_feature_t hbf = { f.mTag, f.mValue, 0, -1 };
+            hb_feature_t hbf = { f.mTag, f.mValue, 0, UINT_MAX };
             features.AppendElement(hbf);
         }
     }

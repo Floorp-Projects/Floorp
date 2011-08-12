@@ -44,7 +44,6 @@
  */
 
 #include "mozilla/layout/RenderFrameParent.h"
-using mozilla::layout::RenderFrameParent;
 
 #include "nsSubDocumentFrame.h"
 #include "nsCOMPtr.h"
@@ -89,6 +88,8 @@ using mozilla::layout::RenderFrameParent;
 #include "nsLayoutUtils.h"
 #include "FrameLayerBuilder.h"
 #include "nsObjectFrame.h"
+#include "nsIServiceManager.h"
+#include "nsContentUtils.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -98,9 +99,9 @@ using mozilla::layout::RenderFrameParent;
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
-#include "nsIServiceManager.h"
 
 using namespace mozilla;
+using mozilla::layout::RenderFrameParent;
 
 static nsIDocument*
 GetDocumentFromView(nsIView* aView)

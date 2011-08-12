@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664299
 -->
 <head>
   <title>Test for Bug 664299</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="reflect.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -18,12 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664299
 <pre id="test">
 <script type="application/javascript">
 /** Test to ensure we reflect <img crossorigin> correctly **/
-reflectLimitedEnumerated({
+reflectString({
   element: new Image(),
   attribute: "crossOrigin",
-  validValues: [ "", "anonymous", "use-credentials" ],
-  invalidValues: [ "foobar" ],
-  defaultValue: "" });
+  otherValues: [ "", "anonymous", "ANONYMOUS", "  aNOnYmous    ",
+                 "use-credentials", "USE-CREDENTIALS", "   UsE-CreDEntIALS      ",
+                 "foobar", "FOOBAR", "  fOoBaR  " ]});
 </script>
 </pre>
 </body>

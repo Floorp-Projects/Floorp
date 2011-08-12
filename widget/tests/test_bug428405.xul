@@ -7,7 +7,6 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 

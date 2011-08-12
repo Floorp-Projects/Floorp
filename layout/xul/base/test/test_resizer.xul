@@ -7,7 +7,6 @@ XUL <resizer> tests
 -->
 <window title="XUL resizer tests"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="/MochiKit/packed.js" />
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
 

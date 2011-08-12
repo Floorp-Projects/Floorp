@@ -7,7 +7,7 @@ function test() {
   registerCleanupFunction(function() {
     while (gBrowser.tabs[1])
       gBrowser.removeTab(gBrowser.tabs[1]);
-    hideTabView(function() {});
+    hideTabView();
   });
   showTabView(onTabViewWindowLoaded);
 }
@@ -20,7 +20,7 @@ function onTabViewWindowLoaded() {
   registerCleanupFunction(function() {
     let groupItem = contentWindow.GroupItems.groupItem(groupItemId);
     if (groupItem)
-      closeGroupItem(groupItem, function() {});
+      closeGroupItem(groupItem);
   });
 
   // create a group item

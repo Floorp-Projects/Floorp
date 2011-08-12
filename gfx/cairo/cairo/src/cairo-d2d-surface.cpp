@@ -2558,6 +2558,15 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
 										  size.width,
 										  size.height,
 										  data.RowPitch);
+
+    if (cairo_surface_status(&((*image_out)->base))) {
+	volatile cairo_status_t flambo[10];
+	for (int i=0; i<10; i++) {
+	    flambo[i] = cairo_surface_status(&((*image_out)->base));
+	}
+	volatile int p = 0;
+	p = 5/p;
+    }
     *image_extra = softTexture.forget();
 
     return CAIRO_STATUS_SUCCESS;

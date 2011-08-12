@@ -177,7 +177,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
     if (!compartment->rt->gcRunning)
         return;
 
-    FreeSpan firstSpan(address() + firstFreeSpanStart, address() + firstFreeSpanEnd);
+    FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
     if (firstSpan.isEmpty())
         return;
     FreeSpan *list = &compartment->freeLists.lists[getThingKind()];
@@ -188,8 +188,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * Here this arena has free things, FreeList::lists[thingKind] is not
      * empty and also points to this arena. Thus they must the same.
      */
-    JS_ASSERT(firstSpan.start == list->start);
-    JS_ASSERT(firstSpan.end == list->end);
+    JS_ASSERT(firstSpan.isSameNonEmptySpan(list));
 }
 #endif
 
@@ -201,7 +200,7 @@ Arena::finalize(JSContext *cx)
     JS_ASSERT(!aheader.getMarkingDelay()->link);
 
     uintptr_t thing = thingsStart(sizeof(T));
-    uintptr_t end = thingsEnd();
+    uintptr_t lastByte = thingsEnd() - 1;
 
     FreeSpan nextFree(aheader.getFirstFreeSpan());
     nextFree.checkSpan();
@@ -214,15 +213,15 @@ Arena::finalize(JSContext *cx)
     size_t nmarked = 0;
 #endif
     for (;; thing += sizeof(T)) {
-        JS_ASSERT(thing <= end);
-        if (thing == nextFree.start) {
-            JS_ASSERT(nextFree.end <= end);
-            if (nextFree.end == end)
+        JS_ASSERT(thing <= lastByte + 1);
+        if (thing == nextFree.first) {
+            JS_ASSERT(nextFree.last <= lastByte);
+            if (nextFree.last == lastByte)
                 break;
-            JS_ASSERT(Arena::isAligned(nextFree.end, sizeof(T)));
+            JS_ASSERT(Arena::isAligned(nextFree.last, sizeof(T)));
             if (!newFreeSpanStart)
                 newFreeSpanStart = thing;
-            thing = nextFree.end;
+            thing = nextFree.last;
             nextFree = *nextFree.nextSpan();
             nextFree.checkSpan();
         } else {
@@ -234,9 +233,9 @@ Arena::finalize(JSContext *cx)
 #endif
                 if (newFreeSpanStart) {
                     JS_ASSERT(thing >= thingsStart(sizeof(T)) + sizeof(T));
-                    newListTail->start = newFreeSpanStart;
-                    newListTail->end = thing - sizeof(T);
-                    newListTail = newListTail->nextSpanUnchecked();
+                    newListTail->first = newFreeSpanStart;
+                    newListTail->last = thing - sizeof(T);
+                    newListTail = newListTail->nextSpanUnchecked(sizeof(T));
                     newFreeSpanStart = 0;
                 }
             } else {
@@ -254,20 +253,20 @@ Arena::finalize(JSContext *cx)
         return true;
     }
 
-    newListTail->start = newFreeSpanStart ? newFreeSpanStart : nextFree.start;
-    JS_ASSERT(Arena::isAligned(newListTail->start, sizeof(T)));
-    newListTail->end = end;
+    newListTail->first = newFreeSpanStart ? newFreeSpanStart : nextFree.first;
+    JS_ASSERT(Arena::isAligned(newListTail->first, sizeof(T)));
+    newListTail->last = lastByte;
 
 #ifdef DEBUG
     size_t nfree = 0;
-    for (FreeSpan *span = &newListHead; span != newListTail; span = span->nextSpan()) {
+    for (const FreeSpan *span = &newListHead; span != newListTail; span = span->nextSpan()) {
         span->checkSpan();
-        JS_ASSERT(Arena::isAligned(span->start, sizeof(T)));
-        JS_ASSERT(Arena::isAligned(span->end, sizeof(T)));
-        nfree += (span->end - span->start) / sizeof(T) + 1;
+        JS_ASSERT(Arena::isAligned(span->first, sizeof(T)));
+        JS_ASSERT(Arena::isAligned(span->last, sizeof(T)));
+        nfree += (span->last - span->first) / sizeof(T) + 1;
         JS_ASSERT(nfree + nmarked <= thingsPerArena(sizeof(T)));
     }
-    nfree += (newListTail->end - newListTail->start) / sizeof(T);
+    nfree += (newListTail->last + 1 - newListTail->first) / sizeof(T);
     JS_ASSERT(nfree + nmarked == thingsPerArena(sizeof(T)));
 #endif
     aheader.setFirstFreeSpan(&newListHead);
@@ -630,9 +629,9 @@ InFreeList(ArenaHeader *aheader, uintptr_t addr)
 
     FreeSpan firstSpan(aheader->getFirstFreeSpan());
 
-    for (FreeSpan *span = &firstSpan;;) {
+    for (const FreeSpan *span = &firstSpan;;) {
         /* If the thing comes fore the current span, it's not free. */
-        if (addr < span->start)
+        if (addr < span->first)
             return false;
 
         /*
@@ -640,7 +639,7 @@ InFreeList(ArenaHeader *aheader, uintptr_t addr)
          * "<" even for the last span as we know that thing is inside the
          * arena. Thus for the last span thing < span->end.
          */
-        if (addr <= span->end)
+        if (addr <= span->last)
             return true;
 
         /*
@@ -1365,7 +1364,7 @@ IsGCAllowed(JSContext *cx)
 }
 
 template <typename T>
-inline Cell *
+inline void *
 RefillTypedFreeList(JSContext *cx, unsigned thingKind)
 {
     JS_ASSERT(!cx->runtime->gcRunning);
@@ -1392,7 +1391,7 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
              * things and populate the free list. If that happens, just
              * return that list head.
              */
-            if (Cell *thing = compartment->freeLists.getNext(thingKind, sizeof(T)))
+            if (void *thing = compartment->freeLists.getNext(thingKind, sizeof(T)))
                 return thing;
         }
         ArenaHeader *aheader =
@@ -1415,7 +1414,7 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
     return NULL;
 }
 
-Cell *
+void *
 RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 {
     switch (thingKind) {
@@ -1453,7 +1452,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 #endif
       default:
         JS_NOT_REACHED("bad finalize kind");
-        return NULL;
+        return 0;
     }
 }
 
@@ -1906,6 +1905,7 @@ void
 MaybeGC(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->onOwnerThread());
 
     if (rt->gcZeal()) {
         GCREASON(MAYBEGC);
@@ -2321,7 +2321,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     WatchpointMap::sweepAll(cx);
 
     /*
-     * We finalize objects before other GC things to ensure that object's finalizer 
+     * We finalize objects before other GC things to ensure that object's finalizer
      * can access them even if they will be freed. Sweep the runtime's property trees
      * after finalizing objects, in case any had watchpoints referencing tree nodes.
      * Do this before sweeping compartments, so that we sweep all shapes in
@@ -2675,6 +2675,7 @@ void
 js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
+    JS_AbortIfWrongThread(rt);
 
     /*
      * Don't collect garbage if the runtime isn't up, and cx is not the last
@@ -2836,18 +2837,18 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
                 Arena *arena = aheader->getArena();
                 (*arenaCallback)(cx, data, arena, traceKind, thingSize);
                 FreeSpan firstSpan(aheader->getFirstFreeSpan());
-                FreeSpan *span = &firstSpan;
+                const FreeSpan *span = &firstSpan;
 
                 for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
                     JS_ASSERT(thing <= arena->thingsEnd());
-                    if (thing == span->start) {
+                    if (thing == span->first) {
                         if (!span->hasNext())
                             break;
-                        thing = span->end;
+                        thing = span->last;
                         span = span->nextSpan();
                     } else {
-                        (*cellCallback)(cx, data, reinterpret_cast<void *>(thing), traceKind,
-                                        thingSize);
+                        void *t = reinterpret_cast<void *>(thing);
+                        (*cellCallback)(cx, data, t, traceKind, thingSize);
                     }
                 }
             }
@@ -2861,6 +2862,8 @@ JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
     JSRuntime *rt = cx->runtime;
+    JS_AbortIfWrongThread(rt);
+
     JSCompartment *compartment = cx->new_<JSCompartment>(rt);
     if (compartment && compartment->init()) {
         // Any compartment with the trusted principals -- and there can be

@@ -85,7 +85,7 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-
+#include "nsContentUtils.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
 #include "prenv.h"
@@ -2083,7 +2083,7 @@ NS_IMETHODIMP nsXULWindow::SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowser
 // nsXULWindow: Accessors
 //*****************************************************************************
 
-PRInt32 nsXULWindow::AppUnitsPerDevPixel()
+PRUint32 nsXULWindow::AppUnitsPerDevPixel()
 {
   if (mWindow && mWindow->GetDeviceContext()) {
     mAppPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();

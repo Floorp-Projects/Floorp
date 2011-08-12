@@ -42,6 +42,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
+#include "nsMathUtils.h"
 
 #ifdef MOZ_SMIL
 #include "nsISMILAttr.h"
@@ -173,7 +174,9 @@ private:
       { *aResult = mVal->GetBaseValue(mSVGElement); return NS_OK; }
     NS_IMETHOD SetValue(float aValue)
       {
-        NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+        if (!NS_finite(aValue)) {
+          return NS_ERROR_ILLEGAL_VALUE;
+        }
         mVal->SetBaseValue(aValue, mSVGElement);
         return NS_OK;
       }
@@ -182,7 +185,9 @@ private:
       { *aResult = mVal->mBaseVal; return NS_OK; }
     NS_IMETHOD SetValueInSpecifiedUnits(float aValue)
       {
-        NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+        if (!NS_finite(aValue)) {
+          return NS_ERROR_ILLEGAL_VALUE;
+        }
         mVal->SetBaseValueInSpecifiedUnits(aValue, mSVGElement);
         return NS_OK;
       }

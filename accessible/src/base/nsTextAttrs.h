@@ -52,7 +52,6 @@ class nsHyperTextAccessible;
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsTPtrArray.h"
 
 class nsITextAttr;
 
@@ -112,7 +111,7 @@ protected:
    * @param aStartHTOffset  [in, out] the start offset
    * @param aEndHTOffset    [in, out] the end offset
    */
-   nsresult GetRange(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
+   nsresult GetRange(const nsTArray<nsITextAttr*>& aTextAttrArray,
                      PRInt32 *aStartHTOffset, PRInt32 *aEndHTOffset);
 
 private:
