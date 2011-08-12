@@ -253,6 +253,11 @@ FrameState::evictReg(AnyRegisterID reg)
 inline Lifetime *
 FrameState::variableLive(FrameEntry *fe, jsbytecode *pc) const
 {
+    /*
+     * Whether an argument, local or 'this' entry is live at pc. Note: this
+     * does not account for the 'this' entry when the script is used as a
+     * constructor, in which case it is live the entire frame.
+     */
     JS_ASSERT(cx->typeInferenceEnabled());
     JS_ASSERT(fe > a->callee_ && fe < a->spBase);
 
@@ -332,9 +337,19 @@ FrameState::bestEvictReg(uint32 mask, bool includePinned) const
             continue;
         }
 
-        /* All entries still in registers should be live. */
+        /*
+         * All entries still in registers should have a lifetime, except 'this'
+         * in constructors which are not accessed later on.
+         */
         Lifetime *lifetime = variableLive(fe, a->PC);
-        JS_ASSERT(lifetime);
+
+        if (!lifetime) {
+            JS_ASSERT(isConstructorThis(fe));
+            fallback = reg;
+            fallbackOffset = a->script->length;
+            JaegerSpew(JSpew_Regalloc, "    %s is 'this' in a constructor\n", reg.name());
+            continue;
+        }
 
         /*
          * Evict variables which are only live in future loop iterations, and are
@@ -385,8 +400,10 @@ FrameState::evictDeadEntries(bool includePinned)
         if (!fe)
             continue;
 
-        if (fe == a->callee_ || fe >= a->spBase || fe->isCopied() || (a->parent && fe < a->locals))
+        if (fe == a->callee_ || isConstructorThis(fe) ||
+            fe >= a->spBase || fe->isCopied() || (a->parent && fe < a->locals)) {
             continue;
+        }
 
         Lifetime *lifetime = variableLive(fe, a->PC);
         if (lifetime)
@@ -585,6 +602,7 @@ FrameState::computeAllocation(jsbytecode *target)
             continue;
         FrameEntry *fe = regstate(reg).fe();
         if (fe < a->callee_ ||
+            isConstructorThis(fe) ||
             (fe > a->callee_ && fe < a->spBase && variableLive(fe, target)) ||
             (isTemporary(fe) && (a->parent || uint32(target - a->script->code) <= loop->backedgeOffset()))) {
             /*
