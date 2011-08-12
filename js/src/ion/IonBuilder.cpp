@@ -417,6 +417,10 @@ IonBuilder::inspectOpcode(JSOp op)
         current->pushArg(GET_SLOTNO(pc));
         return true;
 
+      case JSOP_SETARG:
+        current->setArg(GET_SLOTNO(pc));
+        return true;
+
       case JSOP_GETLOCAL:
         current->pushLocal(GET_SLOTNO(pc));
         return true;
