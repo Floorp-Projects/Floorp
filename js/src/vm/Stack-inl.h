@@ -388,8 +388,7 @@ StackSpace::ensureEnoughSpaceToEnterTrace(JSContext *cx)
 
 STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
-StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals,
-                        JSCompartment *dest) const
+StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
 {
     assertInvariants();
     JS_ASSERT(from >= firstUnused());
@@ -397,14 +396,8 @@ StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptr
     JS_ASSERT(from <= commitEnd_);
 #endif
     if (JS_UNLIKELY(conservativeEnd_ - from < nvals))
-        return ensureSpaceSlow(cx, report, from, nvals, dest);
+        return ensureSpaceSlow(cx, report, from, nvals);
     return true;
-}
-
-bool
-StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
-{
-    return ensureSpace(cx, report, from, nvals, cx->compartment);
 }
 
 inline Value *
