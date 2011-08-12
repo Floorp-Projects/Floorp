@@ -46,6 +46,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
+#include "jscrashreport.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
@@ -288,43 +289,25 @@ Bindings::trace(JSTracer *trc)
 } /* namespace js */
 
 static void
-volatile_memcpy(volatile char *dst, void *src, size_t n)
-{
-    for (size_t i = 0; i < n; i++)
-        dst[i] = ((char *)src)[i];
-}
-
-static void
 CheckScript(JSScript *script, JSScript *prev)
 {
-    volatile char dbg1[sizeof(JSScript)], dbg2[sizeof(JSScript)];
+#ifdef JS_CRASH_DIAGNOSTICS
     if (script->cookie1 != JS_SCRIPT_COOKIE || script->cookie2 != JS_SCRIPT_COOKIE) {
-        volatile_memcpy(dbg1, script, sizeof(JSScript));
-        if (prev)
-            volatile_memcpy(dbg2, prev, sizeof(JSScript));
+        crash::StackBuffer<sizeof(JSScript), 0x87> buf1(script);
+        crash::StackBuffer<sizeof(JSScript), 0x88> buf2(prev);
+        JS_OPT_ASSERT(false);
     }
-    JS_OPT_ASSERT(script->cookie1 == JS_SCRIPT_COOKIE && script->cookie2 == JS_SCRIPT_COOKIE);
+#endif
 }
 
 static void
 CheckScriptOwner(JSScript *script, JSObject *owner)
 {
-    if (script->ownerObject != owner) {
-        volatile char scriptData[sizeof(JSScript)];
-        volatile char owner1Data[sizeof(JSObject)], owner2Data[sizeof(JSObject)];
-        volatile char savedOwner[sizeof(JSObject *)];
-
-        volatile_memcpy(scriptData, script, sizeof(JSScript));
-        volatile_memcpy(savedOwner, &owner, sizeof(JSObject *));
-        if (script->ownerObject != JS_NEW_SCRIPT && script->ownerObject != JS_CACHED_SCRIPT)
-            volatile_memcpy(owner1Data, script->ownerObject, sizeof(JSObject));
-        if (owner != JS_NEW_SCRIPT && owner != JS_CACHED_SCRIPT)
-            volatile_memcpy(owner2Data, owner, sizeof(JSObject));
-    }
+#ifdef JS_CRASH_DIAGNOSTICS
     JS_OPT_ASSERT(script->ownerObject == owner);
-
     if (owner != JS_NEW_SCRIPT && owner != JS_CACHED_SCRIPT)
         JS_OPT_ASSERT(script->compartment == owner->compartment());
+#endif
 }
 
 #if JS_HAS_XDR
@@ -981,8 +964,10 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
         return NULL;
 
     PodZero(script);
+#ifdef JS_CRASH_DIAGNOSTICS
     script->cookie1 = script->cookie2 = JS_SCRIPT_COOKIE;
     script->ownerObject = JS_NEW_SCRIPT;
+#endif
     script->length = length;
     script->version = version;
     new (&script->bindings) Bindings(cx, emptyCallShape);
@@ -1286,8 +1271,10 @@ JSScript::totalSize()
 void
 JSScript::setOwnerObject(JSObject *owner)
 {
+#ifdef JS_CRASH_DIAGNOSTICS
     CheckScriptOwner(this, JS_NEW_SCRIPT);
     ownerObject = owner;
+#endif
 }
 
 /*
@@ -1327,22 +1314,6 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
     JS_ClearScriptTraps(cx, script);
 }
-
-namespace js {
-
-void
-CheckCompartmentScripts(JSCompartment *comp)
-{
-    JSScript *prev = NULL;
-    for (JSScript *script = (JSScript *)comp->scripts.next;
-         &script->links != &comp->scripts;
-         prev = script, script = (JSScript *)script->links.next)
-    {
-        CheckScript(script, prev);
-    }
-}
-
-} /* namespace js */
 
 static void
 DestroyScript(JSContext *cx, JSScript *script, JSObject *owner, uint32 caller)
@@ -1408,7 +1379,7 @@ DestroyScript(JSContext *cx, JSScript *script, JSObject *owner, uint32 caller)
     if (script->sourceMap)
         cx->free_(script->sourceMap);
 
-    memset(script, 0xdb, script->totalSize());
+    JS_POISON(script, 0xdb, sizeof(JSScript));
     *(uint32 *)script = caller;
     cx->free_(script);
 }
@@ -1443,9 +1414,10 @@ js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner)
     if (owner)
         CheckScriptOwner(script, owner);
 
+#ifdef JS_CRASH_DIAGNOSTICS
     JSRuntime *rt = trc->context->runtime;
-    if (rt->gcCheckCompartment && script->compartment != rt->gcCheckCompartment)
-        JS_Assert("compartment mismatch in GC", __FILE__, __LINE__);
+    JS_OPT_ASSERT_IF(rt->gcCheckCompartment, script->compartment == rt->gcCheckCompartment);
+#endif
 
     JSAtomMap *map = &script->atomMap;
     MarkAtomRange(trc, map->length, map->vector, "atomMap");
