@@ -588,11 +588,11 @@ menuitem.bookmark-item {
 /* ::::: bookmark items ::::: */
 
 .bookmark-item  {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .bookmark-item[container] {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
@@ -1376,12 +1376,11 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 #page-proxy-favicon:not([src]) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px)
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 #page-proxy-favicon[pageproxystate="invalid"] {
-  -moz-image-region: rect(32px, 16px, 48px, 0px);
+  opacity: 0.5;
 }
 
 #urlbar-throbber {
@@ -1782,8 +1781,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tab-icon-image {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
   -moz-margin-start: 2px;
   -moz-margin-end: 3px;
 }
@@ -1977,8 +1975,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* All tabs menupopup */
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .alltabs-item[selected="true"] {
