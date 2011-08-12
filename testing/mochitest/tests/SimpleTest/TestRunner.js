@@ -4,6 +4,13 @@
  * type = eventName (QuitApplication, LoggerInit, LoggerClose, Logger, GetPref, SetPref)
  * data = json object {"filename":filename} <- for LoggerInit
  */
+function getElement(id) {
+    return ((typeof(id) == "string") ?
+        document.getElementById(id) : id); 
+};   
+
+this.$ = this.getElement;
+
 function contentDispatchEvent(type, data, sync) {
   if (typeof(data) == "undefined") {
     data = {};
@@ -24,6 +31,39 @@ function contentSyncEvent(type, data) {
 function contentAsyncEvent(type, data) {
   contentDispatchEvent(type, data, 0);
 }
+
+/* Helper Function */
+function extend(obj, /* optional */skip) {        
+    // Extend an array with an array-like object starting
+    // from the skip index
+    if (!skip) {
+        skip = 0;
+    }
+    if (obj) {
+        var l = obj.length;
+        var ret = [];
+        for (var i = skip; i < l; i++) {
+            ret.push(obj[i]);
+        }
+    }
+    return ret;
+};
+
+function flattenArguments(lst/* ...*/) {
+    var res = [];
+    var args = extend(arguments);
+    while (args.length) {
+        var o = args.shift();
+        if (o && typeof(o) == "object" && typeof(o.length) == "number") {
+            for (var i = o.length - 1; i >= 0; i--) {
+                args.unshift(o[i]);
+            }
+        } else {
+            res.push(o);
+        }
+    }
+    return res;
+};
 
 /**
  * TestRunner: A test runner for SimpleTest
@@ -78,7 +118,7 @@ TestRunner._checkForHangs = function() {
         return;
     }
 
-    TestRunner.deferred = callLater(30, TestRunner._checkForHangs);
+    setTimeout(TestRunner._checkForHangs, 30000);
   }
 }
 
@@ -100,7 +140,7 @@ TestRunner.onComplete = null;
 /**
  * If logEnabled is true, this is the logger that will be used.
 **/
-TestRunner.logger = MochiKit.Logging.logger;
+TestRunner.logger = LogController;
 
 TestRunner.log = function(msg) {
     if (TestRunner.logEnabled) {

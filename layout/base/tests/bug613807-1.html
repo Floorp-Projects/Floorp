@@ -7,6 +7,40 @@
 <body>
 <textarea id="t" rows="4"></textarea>
 <script>
+  if (typeof(addLoadEvent) == 'undefined') {
+    _newCallStack = function(path) {
+      var rval = function () {
+        var callStack = arguments.callee.callStack;
+        for (var i = 0; i < callStack.length; i++) {
+          if (callStack[i].apply(this, arguments) === false) {
+            break;
+          }
+        }
+        try {
+          this[path] = null;
+        } catch (e) {
+          // pass
+        }
+      };
+      rval.callStack = [];
+      return rval;
+    };
+    function addLoadEvent(func) {
+      var existing = window["onload"];
+      var regfunc = existing;
+      if (!(typeof(existing) == 'function'
+            && typeof(existing.callStack) == "object"
+            && existing.callStack !== null)) {
+        regfunc = _newCallStack("onload");
+        if (typeof(existing) == 'function') {
+          regfunc.callStack.push(existing);
+        }
+        window["onload"] = regfunc;
+      }
+      regfunc.callStack.push(func);
+    };
+  }
+
   addLoadEvent(function() {
     var area = document.getElementById('t');
     area.focus();

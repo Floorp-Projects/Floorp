@@ -12,6 +12,8 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
@@ -45,7 +47,7 @@ function loadTests()
   var tableContent = srvScope.linksToTableRows(links, 0);
 
   function populate() {
-    $("test-table").innerHTML += tableContent;
+    document.getElementById("test-table").innerHTML += tableContent;
   }
   gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
   populate();
