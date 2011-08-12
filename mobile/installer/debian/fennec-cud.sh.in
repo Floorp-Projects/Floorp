@@ -1,0 +1,3 @@
+#filter substitution
+#!/bin/sh
+rm -rf $HOME/.mozilla/@MOZ_APP_NAME@
