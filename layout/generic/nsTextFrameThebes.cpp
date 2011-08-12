@@ -2766,7 +2766,7 @@ AdvanceToNextTab(gfxFloat aX, nsIFrame* aFrame,
   // Advance aX to the next multiple of *aCachedTabWidth. We must advance
   // by at least 1 appunit.
   // XXX should we make this 1 CSS pixel?
-  return NS_ceil((aX + 1)/(*aCachedTabWidth))*(*aCachedTabWidth);
+  return ceil((aX + 1)/(*aCachedTabWidth))*(*aCachedTabWidth);
 }
 
 void
@@ -4517,7 +4517,7 @@ ComputeSelectionUnderlineHeight(nsPresContext* aPresContext,
       gfxFloat fontSize = NS_MIN(gfxFloat(defaultFontSize),
                                  aFontMetrics.emHeight);
       fontSize = NS_MAX(fontSize, 1.0);
-      return NS_ceil(fontSize / 20);
+      return ceil(fontSize / 20);
     }
     default:
       NS_WARNING("Requested underline style is not valid");

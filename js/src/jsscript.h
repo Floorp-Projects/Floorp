@@ -449,7 +449,9 @@ struct JSScript {
     jsbytecode      *code;      /* bytecodes and their immediate operands */
     uint32          length;     /* length of code vector */
 
+#ifdef JS_CRASH_DIAGNOSTICS
     uint32          cookie1;
+#endif
 
   private:
     uint16          version;    /* JS version under which script was compiled */
@@ -507,7 +509,9 @@ struct JSScript {
     JSPrincipals    *principals;/* principals for this script */
     jschar          *sourceMap; /* source map file or null */
 
+#ifdef JS_CRASH_DIAGNOSTICS
     JSObject        *ownerObject;
+#endif
 
     void setOwnerObject(JSObject *owner);
 
@@ -541,7 +545,9 @@ struct JSScript {
     /* array of execution counters for every JSOp in the script, by runmode */
     JSPCCounters    pcCounters;
 
+#ifdef JS_CRASH_DIAGNOSTICS
     uint32          cookie2;
+#endif
 
   public:
 #ifdef JS_METHODJIT
@@ -746,19 +752,6 @@ js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner);
  */
 extern void
 js_DestroyCachedScript(JSContext *cx, JSScript *script);
-
-namespace js {
-
-/*
- * This diagnostic function checks that a compartment's list of scripts
- * contains only valid scripts. It also searches for the target script
- * in the list. If expected is true, it asserts that the target script
- * is found. If expected is false, it asserts that it's not found.
- */
-void
-CheckCompartmentScripts(JSCompartment *comp);
-
-} /* namespace js */
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner);

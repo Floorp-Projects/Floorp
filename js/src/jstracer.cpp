@@ -10467,7 +10467,10 @@ TraceRecorder::record_EnterFrame()
 
     /* Try inlining one level in case this recursion doesn't go too deep. */
     if (fp->script() == fp->prev()->script() &&
-        fp->prev()->prev() && fp->prev()->prev()->script() == fp->script()) {
+        fp->prev()->prev() &&
+        fp->prev()->prev()->isScriptFrame() &&
+        fp->prev()->prev()->script() == fp->script())
+    {
         RETURN_STOP_A("recursion started inlining");
     }
 
