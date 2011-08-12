@@ -24,7 +24,7 @@ try {
   threw = false;
 } catch (e) {
   /* Check that we can touch various properties */
-  is(e.lineNumber, 24, "Unexpected line number");
+  is(e.lineNumber, 23, "Unexpected line number"); //This line number is dependent on the line number of document.appendChild()
   is(e.name, "NS_ERROR_XPC_NOT_ENOUGH_ARGS", "Unexpected exception name");
   isnot(e.message, "", "Should have a message");
   isnot(e.result, 0, "Should have a result");
