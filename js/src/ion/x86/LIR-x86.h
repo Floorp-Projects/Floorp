@@ -70,9 +70,9 @@ class LBoxDouble : public LInstructionHelper<2, 1, 1>
   public:
     LIR_HEADER(BoxDouble);
 
-    LBoxDouble(const LAllocation &in) {
+    LBoxDouble(const LAllocation &in, const LDefinition &temp) {
         setOperand(0, in);
-        setTemp(0, LDefinition(LDefinition::DOUBLE));
+        setTemp(0, temp);
     }
 };
 

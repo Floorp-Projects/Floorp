@@ -115,6 +115,11 @@ struct FloatRegister {
 };
 
 struct AnyRegister {
+    typedef uint32 Code;
+
+    static const uint32 Total = Registers::Total + FloatRegisters::Total;
+    static const uint32 Invalid = UINT_MAX;
+
     union {
         Registers::Code gpr_;
         FloatRegisters::Code fpu_;
@@ -130,6 +135,18 @@ struct AnyRegister {
     explicit AnyRegister(FloatRegister fpu) {
         fpu_ = fpu.code();
         isFloat_ = true;
+    }
+    static AnyRegister FromCode(uint32 i) {
+        JS_ASSERT(i < Total);
+        AnyRegister r;
+        if (i < Registers::Total) {
+            r.gpr_ = Register::Code(i);
+            r.isFloat_ = false;
+        } else {
+            r.fpu_ = FloatRegister::Code(i - Registers::Total);
+            r.isFloat_ = true;
+        }
+        return r;
     }
     bool isFloat() const {
         return isFloat_;
@@ -156,6 +173,16 @@ struct AnyRegister {
         return isFloat()
                ? FloatRegister::FromCode(fpu_).allocatable()
                : Register::FromCode(gpr_).allocatable();
+    }
+    const char *name() const {
+        return isFloat()
+               ? FloatRegister::FromCode(fpu_).name()
+               : Register::FromCode(gpr_).name();
+    }
+    const Code code() const {
+        return isFloat()
+               ? fpu_ + Registers::Total
+               : gpr_;
     }
 };
 
@@ -312,7 +339,7 @@ class AnyRegisterIterator
     AnyRegisterIterator(const AnyRegisterIterator &other) : code_(other.code_)
     { }
     bool more() const {
-        return code_ < Registers::Total + FloatRegisters::Total;
+        return code_ < AnyRegister::Total;
     }
     AnyRegisterIterator operator ++(int) {
         AnyRegisterIterator old(*this);
@@ -320,9 +347,7 @@ class AnyRegisterIterator
         return old;
     }
     AnyRegister operator *() const {
-        if (code_ < Registers::Total)
-            return AnyRegister(Register::FromCode(code_));
-        return AnyRegister(FloatRegister::FromCode(code_ - Registers::Total));
+        return AnyRegister::FromCode(code_);
     }
 };
 
