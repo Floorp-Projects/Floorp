@@ -2242,6 +2242,8 @@ DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
     JSCompartment *comp = script->compartment;
     jsbytecode *pc = script->code + offset;
     BreakpointSite *site = comp->getOrCreateBreakpointSite(cx, script, pc, holder);
+    if (!site)
+        return false;
     if (site->inc(cx)) {
         if (cx->runtime->new_<Breakpoint>(dbg, site, handler)) {
             args.rval().setUndefined();
