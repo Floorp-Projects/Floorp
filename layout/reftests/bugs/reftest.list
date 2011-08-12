@@ -1654,3 +1654,5 @@ fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html #
 != 669015-1.xul 669015-1-notref.xul
 == 668319-1.xul about:blank
 == 670442-1.html 670442-1-ref.html
+== 670467-1.html 670467-1-ref.html
+== 670467-2.html 670467-2-ref.html

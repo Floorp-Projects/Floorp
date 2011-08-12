@@ -89,7 +89,7 @@
 #include "nsFocusManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-
+#include "nsContentUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 

@@ -45,13 +45,9 @@
 #include "nsXMLContentSerializer.h"
 
 #include "nsGkAtoms.h"
-#include "nsIDOMText.h"
-#include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMComment.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
-#include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"

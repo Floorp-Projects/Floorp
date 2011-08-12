@@ -73,6 +73,31 @@ var BookmarkHelper = {
     this.box.hidden = true;
   },
 
+  createShortcut: function BH_createShortcut(aTitle, aURL, aIconURL) {
+    const kIconSize = 64;
+
+    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    canvas.setAttribute("style", "display: none");
+
+    let self = this;
+    let image = new Image();
+    image.onload = function() {
+      canvas.width = canvas.height = kIconSize; // clears the canvas
+      let ctx = canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0, kIconSize, kIconSize);
+      let icon = canvas.toDataURL("image/png", "");
+      canvas = null;
+      try {
+        let shell = Cc["@mozilla.org/browser/shell-service;1"].createInstance(Ci.nsIShellService);
+        shell.createShortcut(aTitle, aURL, icon, "bookmark");
+      } catch(e) {
+        Cu.reportError(e);
+      }
+    }
+
+    image.src = aIconURL;
+  },
+
   removeBookmarksForURI: function BH_removeBookmarksForURI(aURI) {
     //XXX blargle xpconnect! might not matter, but a method on
     // nsINavBookmarksService that takes an array of items to

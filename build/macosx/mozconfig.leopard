@@ -1,0 +1,13 @@
+if test -z "$CC" ; then
+   CC=gcc-4.2
+fi
+
+if test -z "$CXX" ; then
+   CXX=g++-4.2
+fi
+
+# We do 32 bit builds for leopard
+CC="$CC -arch i386"
+CXX="$CXX -arch i386"
+
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk

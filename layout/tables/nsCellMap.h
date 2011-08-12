@@ -40,7 +40,7 @@
 #include "nscore.h"
 #include "celldata.h"
 #include "nsTArray.h"
-#include "nsTPtrArray.h"
+#include "nsTArray.h"
 #include "nsRect.h"
 #include "nsCOMPtr.h"
 #include "nsAlgorithm.h"
@@ -460,7 +460,7 @@ public:
                               PRInt32     aColIndex,
                               PRBool&     aIsZeroColSpan) const;
 
-  typedef nsTPtrArray<CellData> CellDataArray;
+  typedef nsTArray<CellData*> CellDataArray;
 
   /** dump a representation of the cell map to stdout for debugging */
 #ifdef NS_DEBUG

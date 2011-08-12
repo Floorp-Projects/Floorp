@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDOMNotifyAudioAvailableEvent.h"
+#include "nsDOMClassInfoID.h" // DOMCI_DATA, NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO
+#include "nsContentUtils.h" // NS_DROP_JS_OBJECTS
 #include "jstypedarray.h"
 
 nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(nsPresContext* aPresContext,

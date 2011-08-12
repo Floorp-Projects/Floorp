@@ -38,15 +38,16 @@
 #define CreateEvent CreateEventA
 #include "nsIDOMDocument.h"
 
-#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsRelUtils.h"
+#include "Relation.h"
+#include "States.h"
 
 #include "mozilla/dom/Element.h"
 #include "nsHTMLSelectAccessible.h"
+#include "nsIAccessibleRelation.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
@@ -353,8 +354,6 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
 
   nsDocAccessible* focusDocument = focusAccessible->GetDocAccessible();
   NS_ASSERTION(focusDocument, "No document while accessible is in document?!");
-
-  gLastFocusedAccessiblesState = focusAccessible->State();
 
   // Fire menu start/end events for ARIA menus.
   if (focusAccessible->ARIARole() == nsIAccessibleRole::ROLE_MENUITEM) {
@@ -667,7 +666,6 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   }
   else if (eventType.EqualsLiteral("blur")) {
     NS_IF_RELEASE(gLastFocusedNode);
-    gLastFocusedAccessiblesState = 0;
   }
   else if (eventType.EqualsLiteral("AlertActive")) { 
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
@@ -830,27 +828,20 @@ nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
 }
 
 // nsIAccessible method
-NS_IMETHODIMP
-nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
-                                    nsIAccessibleRelation **aRelation)
+Relation
+nsRootAccessible::RelationByType(PRUint32 aType)
 {
-  NS_ENSURE_ARG_POINTER(aRelation);
-  *aRelation = nsnull;
-
-  if (!mDocument || aRelationType != nsIAccessibleRelation::RELATION_EMBEDS) {
-    return nsDocAccessibleWrap::GetRelationByType(aRelationType, aRelation);
-  }
+  if (!mDocument || aType != nsIAccessibleRelation::RELATION_EMBEDS)
+    return nsDocAccessibleWrap::RelationByType(aType);
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mDocument);
   nsCOMPtr<nsIDocShellTreeItem> contentTreeItem = GetContentDocShell(treeItem);
   // there may be no content area, so we need a null check
-  if (contentTreeItem) {
-    nsDocAccessible *accDoc = nsAccUtils::GetDocAccessibleFor(contentTreeItem);
-    return nsRelUtils::AddTarget(aRelationType, aRelation, accDoc);
-  }
+  if (!contentTreeItem)
+    return Relation();
 
-  return NS_OK;
+  return Relation(nsAccUtils::GetDocAccessibleFor(contentTreeItem));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

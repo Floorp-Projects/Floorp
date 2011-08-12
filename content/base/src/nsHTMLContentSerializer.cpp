@@ -47,7 +47,6 @@
 #include "nsHTMLContentSerializer.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMText.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"

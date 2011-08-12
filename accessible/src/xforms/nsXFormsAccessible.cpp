@@ -51,6 +51,7 @@
 #include "nsIMutableArray.h"
 #include "nsIXFormsUtilityService.h"
 #include "nsIPlaintextEditor.h"
+#include "nsINodeList.h"
 
 using namespace mozilla::a11y;
 
