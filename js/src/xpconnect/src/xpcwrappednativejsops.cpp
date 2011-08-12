@@ -906,20 +906,34 @@ js::Class XPC_WN_NoHelper_JSClass = {
    
     // ObjectOps
     {
+        nsnull, // lookupGeneric
         nsnull, // lookupProperty
         nsnull, // lookupElement
+        nsnull, // lookupSpecial
+        nsnull, // defineGeneric
         nsnull, // defineProperty
         nsnull, // defineElement
+        nsnull, // defineSpecial
+        nsnull, // getGeneric
         nsnull, // getProperty
         nsnull, // getElement
+        nsnull, // getSpecial
+        nsnull, // setGeneric
         nsnull, // setProperty
         nsnull, // setElement
+        nsnull, // setSpecial
+        nsnull, // getGenericAttributes
         nsnull, // getAttributes
         nsnull, // getElementAttributes
+        nsnull, // getSpecialAttributes
+        nsnull, // setGenericAttributes
         nsnull, // setAttributes
         nsnull, // setElementAttributes
+        nsnull, // setSpecialAttributes
+        nsnull, // deleteGeneric
         nsnull, // deleteProperty
         nsnull, // deleteElement
+        nsnull, // deleteSpecial
         XPC_WN_JSOp_Enumerate,
         XPC_WN_JSOp_TypeOf_Object,
         nsnull, // fix

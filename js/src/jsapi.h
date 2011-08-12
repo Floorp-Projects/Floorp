@@ -2977,7 +2977,7 @@ struct JSClass {
     JSTraceOp           trace;
 
     JSClassInternal     reserved1;
-    void                *reserved[26];
+    void                *reserved[40];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */

@@ -4754,6 +4754,12 @@ xml_lookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
 }
 
 static JSBool
+xml_lookupSpecial(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProperty **propp)
+{
+    return xml_lookupProperty(cx, obj, id, objp, propp);
+}
+
+static JSBool
 xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                    PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
@@ -4778,6 +4784,13 @@ xml_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *v,
 }
 
 static JSBool
+xml_defineSpecial(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+                  PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    return xml_defineProperty(cx, obj, id, v, getter, setter, attrs);
+}
+
+static JSBool
 xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     if (JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
@@ -4798,6 +4811,12 @@ xml_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, V
 }
 
 static JSBool
+xml_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+{
+    return xml_getProperty(cx, obj, receiver, id, vp);
+}
+
+static JSBool
 xml_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     return PutProperty(cx, obj, id, strict, vp);
@@ -4809,6 +4828,12 @@ xml_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool str
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
+    return xml_setProperty(cx, obj, id, vp, strict);
+}
+
+static JSBool
+xml_setSpecial(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+{
     return xml_setProperty(cx, obj, id, vp, strict);
 }
 
@@ -4833,6 +4858,12 @@ xml_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attr
 }
 
 static JSBool
+xml_getSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
+    return xml_getAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
 xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSBool found;
@@ -4853,6 +4884,12 @@ xml_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attr
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
+    return xml_setAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
+xml_setSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
     return xml_setAttributes(cx, obj, id, attrsp);
 }
 
@@ -4926,6 +4963,12 @@ xml_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBoo
 
     rval->setBoolean(true);
     return true;
+}
+
+static JSBool
+xml_deleteSpecial(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+{
+    return xml_deleteProperty(cx, obj, id, rval, strict);
 }
 
 static JSString *
@@ -5227,19 +5270,33 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
     JS_NULL_CLASS_EXT,
     {
         xml_lookupProperty,
+        xml_lookupProperty,
         xml_lookupElement,
+        xml_lookupSpecial,
+        xml_defineProperty,
         xml_defineProperty,
         xml_defineElement,
+        xml_defineSpecial,
+        xml_getProperty,
         xml_getProperty,
         xml_getElement,
+        xml_getSpecial,
+        xml_setProperty,
         xml_setProperty,
         xml_setElement,
+        xml_setSpecial,
+        xml_getAttributes,
         xml_getAttributes,
         xml_getElementAttributes,
+        xml_getSpecialAttributes,
+        xml_setAttributes,
         xml_setAttributes,
         xml_setElementAttributes,
+        xml_setSpecialAttributes,
+        xml_deleteProperty,
         xml_deleteProperty,
         xml_deleteElement,
+        xml_deleteSpecial,
         xml_enumerate,
         xml_typeOf,
         xml_fix,
