@@ -533,6 +533,7 @@ private: // data
   nsresult WriteToDecoder(const char *aBuffer, PRUint32 aCount);
   nsresult DecodeSomeData(PRUint32 aMaxBytes);
   PRBool   IsDecodeFinished();
+  TimeStamp mDrawStartTime;
 
   // Decoder shutdown
   enum eShutdownIntent {
