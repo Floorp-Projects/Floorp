@@ -47,7 +47,56 @@ namespace js {
 
 namespace mjit {
 
+/* Common handling for both general purpose and floating point registers. */
+
+struct AnyRegisterID {
+    unsigned reg_;
+
+    AnyRegisterID()
+        : reg_((unsigned)-1)
+    { pin(); }
+
+    AnyRegisterID(const AnyRegisterID &o)
+        : reg_(o.reg_)
+    { pin(); }
+
+    AnyRegisterID(JSC::MacroAssembler::RegisterID reg)
+        : reg_((unsigned)reg)
+    { pin(); }
+
+    AnyRegisterID(JSC::MacroAssembler::FPRegisterID reg)
+        : reg_(JSC::MacroAssembler::TotalRegisters + (unsigned)reg)
+    { pin(); }
+
+    static inline AnyRegisterID fromRaw(unsigned reg);
+
+    inline JSC::MacroAssembler::RegisterID reg();
+    inline JSC::MacroAssembler::FPRegisterID fpreg();
+
+    bool isSet() { return reg_ != unsigned(-1); }
+    bool isReg() { return reg_ < JSC::MacroAssembler::TotalRegisters; }
+    bool isFPReg() { return isSet() && !isReg(); }
+
+    inline const char * name();
+
+  private:
+    unsigned * pin() {
+        /*
+         * Workaround for apparent compiler bug in GCC 4.2. If GCC thinks that reg_
+         * cannot escape then it compiles isReg() and other accesses to reg_ incorrectly.
+         */
+        static unsigned *v;
+        v = &reg_;
+        return v;
+    }
+};
+
 struct Registers {
+
+    /* General purpose registers. */
+
+    static const uint32 TotalRegisters = JSC::MacroAssembler::TotalRegisters;
+
     enum CallConvention {
         NormalCall,
         FastCall
@@ -63,8 +112,10 @@ struct Registers {
     static const RegisterID ScratchReg = JSC::X86Registers::r11;
 #endif
 
-    // Register that homes the current StackFrame.
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    // Register that homes the current JSStackFrame.
+#if defined(JS_CPU_X86)
+    static const RegisterID JSFrameReg = JSC::X86Registers::ebp;
+#elif defined(JS_CPU_X64)
     static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
 #elif defined(JS_CPU_ARM)
     static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
@@ -117,6 +168,9 @@ struct Registers {
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     static const uint32 TempRegs =
           (1 << JSC::X86Registers::eax)
+# if defined(JS_CPU_X86)
+        | (1 << JSC::X86Registers::ebx)
+# endif
         | (1 << JSC::X86Registers::ecx)
         | (1 << JSC::X86Registers::edx)
 # if defined(JS_CPU_X64)
@@ -163,6 +217,7 @@ struct Registers {
         | (1 << JSC::ARMRegisters::r1)
         | (1 << JSC::ARMRegisters::r2);
     // r3 is reserved as a scratch register for the assembler.
+    // r12 is IP, and is used for stub calls.
 
     static const uint32 SavedRegs =
           (1 << JSC::ARMRegisters::r4)
@@ -173,7 +228,6 @@ struct Registers {
         | (1 << JSC::ARMRegisters::r9)
         | (1 << JSC::ARMRegisters::r10);
     // r11 is reserved for JSFrameReg.
-    // r12 is IP, and is used for stub calls.
     // r13 is SP and must always point to VMFrame whilst in generated code.
     // r14 is LR and is used for return sequences.
     // r15 is PC (program counter).
@@ -208,6 +262,11 @@ struct Registers {
 #endif
 
     static const uint32 AvailRegs = SavedRegs | TempRegs;
+
+    static bool isAvail(RegisterID reg) {
+        uint32 mask = maskReg(reg);
+        return bool(mask & AvailRegs);
+    }
 
     static bool isSaved(RegisterID reg) {
         uint32 mask = maskReg(reg);
@@ -290,9 +349,83 @@ struct Registers {
         return true;
     }
 
-    Registers()
-      : freeMask(AvailRegs)
-    { }
+    /* Floating point registers. */
+
+    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
+
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#ifdef _WIN64
+    /* xmm0-xmm5 are scratch register on Win64 ABI */
+    static const uint32 TotalFPRegisters = 5;
+    static const FPRegisterID FPConversionTemp = JSC::X86Registers::xmm5;
+#else
+    static const uint32 TotalFPRegisters = 7;
+    static const FPRegisterID FPConversionTemp = JSC::X86Registers::xmm7;
+#endif
+    static const uint32 TempFPRegs = (
+          (1 << JSC::X86Registers::xmm0)
+        | (1 << JSC::X86Registers::xmm1)
+        | (1 << JSC::X86Registers::xmm2)
+        | (1 << JSC::X86Registers::xmm3)
+        | (1 << JSC::X86Registers::xmm4)
+#ifndef _WIN64
+        | (1 << JSC::X86Registers::xmm5)
+        | (1 << JSC::X86Registers::xmm6)
+#endif
+        ) << TotalRegisters;
+#elif defined(JS_CPU_ARM)
+    static const uint32 TotalFPRegisters = 3;
+    static const uint32 TempFPRegs = (
+          (1 << JSC::ARMRegisters::d0)
+        | (1 << JSC::ARMRegisters::d1)
+        | (1 << JSC::ARMRegisters::d2)
+        ) << TotalRegisters;
+    static const FPRegisterID FPConversionTemp = JSC::ARMRegisters::d3;
+#elif defined(JS_CPU_SPARC)
+    static const uint32 TotalFPRegisters = 16;
+    static const uint32 TempFPRegs = 
+          (1 << JSC::SparcRegisters::f2)
+        | (1 << JSC::SparcRegisters::f4)
+        | (1 << JSC::SparcRegisters::f6)
+        | (1 << JSC::SparcRegisters::f8)
+        | (1 << JSC::SparcRegisters::f10)
+        | (1 << JSC::SparcRegisters::f12)
+        | (1 << JSC::SparcRegisters::f14)
+        | (1 << JSC::SparcRegisters::f16)
+        | (1 << JSC::SparcRegisters::f18)
+        | (1 << JSC::SparcRegisters::f20)
+        | (1 << JSC::SparcRegisters::f22)
+        | (1 << JSC::SparcRegisters::f24)
+        | (1 << JSC::SparcRegisters::f26)
+        | (1 << JSC::SparcRegisters::f28);
+    static const FPRegisterID FPConversionTemp = JSC::SparcRegisters::f0;
+#else
+# error "Unsupported platform"
+#endif
+
+    static const uint32 AvailFPRegs = TempFPRegs;
+
+    static inline uint32 maskReg(FPRegisterID reg) {
+        return (1 << reg) << TotalRegisters;
+    }
+
+    /* Common code. */
+
+    static const uint32 TotalAnyRegisters = TotalRegisters + TotalFPRegisters;
+    static const uint32 TempAnyRegs = TempRegs | TempFPRegs;
+    static const uint32 AvailAnyRegs = AvailRegs | AvailFPRegs;
+
+    static inline uint32 maskReg(AnyRegisterID reg) {
+        return (1 << reg.reg_);
+    }
+
+    /* Get a register which is not live before a FASTCALL. */
+    static inline RegisterID tempCallReg() {
+        Registers regs(AvailRegs);
+        regs.takeReg(Registers::ArgReg0);
+        regs.takeReg(Registers::ArgReg1);
+        return regs.takeAnyReg().reg();
+    }
 
     Registers(uint32 freeMask)
       : freeMask(freeMask)
@@ -308,64 +441,63 @@ struct Registers {
         return *this;
     }
 
-    void reset() {
-        freeMask = AvailRegs;
+    bool empty(uint32 mask) const {
+        return !(freeMask & mask);
     }
 
     bool empty() const {
         return !freeMask;
     }
 
-    bool empty(uint32 mask) const {
-        return !(freeMask & mask);
+    AnyRegisterID peekReg(uint32 mask) {
+        JS_ASSERT(!empty(mask));
+        unsigned ireg;
+        JS_FLOOR_LOG2(ireg, freeMask & mask);
+        return AnyRegisterID::fromRaw(ireg);
     }
 
-    RegisterID peekReg() {
-        JS_ASSERT(!empty());
-        int ireg;
-        JS_FLOOR_LOG2(ireg, freeMask);
-        RegisterID reg = (RegisterID)ireg;
-        return reg;
+    AnyRegisterID peekReg() {
+        return peekReg(freeMask);
     }
 
-    RegisterID takeAnyReg() {
-        RegisterID reg = peekReg();
+    AnyRegisterID takeAnyReg(uint32 mask) {
+        AnyRegisterID reg = peekReg(mask);
         takeReg(reg);
         return reg;
+    }
+
+    AnyRegisterID takeAnyReg() {
+        return takeAnyReg(freeMask);
+    }
+
+    bool hasReg(AnyRegisterID reg) const {
+        return !!(freeMask & (1 << reg.reg_));
     }
 
     bool hasRegInMask(uint32 mask) const {
-        Registers temp(freeMask & mask);
-        return !temp.empty();
+        return !!(freeMask & mask);
     }
 
-    RegisterID takeRegInMask(uint32 mask) {
-        Registers temp(freeMask & mask);
-        RegisterID reg = temp.takeAnyReg();
-        takeReg(reg);
-        return reg;
+    bool hasAllRegs(uint32 mask) const {
+        return (freeMask & mask) == mask;
     }
 
-    bool hasReg(RegisterID reg) const {
-        return !!(freeMask & (1 << reg));
+    void putRegUnchecked(AnyRegisterID reg) {
+        freeMask |= (1 << reg.reg_);
     }
 
-    void putRegUnchecked(RegisterID reg) {
-        freeMask |= (1 << reg);
-    }
-
-    void putReg(RegisterID reg) {
+    void putReg(AnyRegisterID reg) {
         JS_ASSERT(!hasReg(reg));
         putRegUnchecked(reg);
     }
 
-    void takeReg(RegisterID reg) {
+    void takeReg(AnyRegisterID reg) {
         JS_ASSERT(hasReg(reg));
         takeRegUnchecked(reg);
     }
 
-    void takeRegUnchecked(RegisterID reg) {
-        freeMask &= ~(1 << reg);
+    void takeRegUnchecked(AnyRegisterID reg) {
+        freeMask &= ~(1 << reg.reg_);
     }
 
     bool operator ==(const Registers &other) {
@@ -375,151 +507,43 @@ struct Registers {
     uint32 freeMask;
 };
 
-
-struct FPRegisters {
-
-    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
-
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-#ifdef _WIN64
-    /* xmm0-xmm5 are scratch register on Win64 ABI */
-    static const uint32 TotalFPRegisters = 6;
-#else
-    static const uint32 TotalFPRegisters = 8;
-#endif
-    static const uint32 TempFPRegs =
-          (1 << JSC::X86Registers::xmm0)
-        | (1 << JSC::X86Registers::xmm1)
-        | (1 << JSC::X86Registers::xmm2)
-        | (1 << JSC::X86Registers::xmm3)
-        | (1 << JSC::X86Registers::xmm4)
-        | (1 << JSC::X86Registers::xmm5)
-#ifndef _WIN64
-        | (1 << JSC::X86Registers::xmm6)
-        | (1 << JSC::X86Registers::xmm7)
-#endif
-        ;
-    /* FIXME: Temporary hack until FPRegister allocation exists. */
-    static const FPRegisterID First  = JSC::X86Registers::xmm0;
-    static const FPRegisterID Second = JSC::X86Registers::xmm1;
-    static const FPRegisterID Temp0 = JSC::X86Registers::xmm2;
-    static const FPRegisterID Temp1 = JSC::X86Registers::xmm3;
-#elif defined(JS_CPU_ARM)
-    static const uint32 TotalFPRegisters = 4;
-    static const uint32 TempFPRegs = 
-          (1 << JSC::ARMRegisters::d0)
-        | (1 << JSC::ARMRegisters::d1)
-        | (1 << JSC::ARMRegisters::d2)
-        | (1 << JSC::ARMRegisters::d3);
-    /* FIXME: Temporary hack until FPRegister allocation exists. */
-    static const FPRegisterID First  = JSC::ARMRegisters::d0;
-    static const FPRegisterID Second = JSC::ARMRegisters::d1;
-    static const FPRegisterID Temp0 = JSC::ARMRegisters::d2;
-    static const FPRegisterID Temp1 = JSC::ARMRegisters::d3;
-#elif defined(JS_CPU_SPARC)
-    static const uint32 TotalFPRegisters = 16;
-    static const uint32 TempFPRegs = 
-          (1 << JSC::SparcRegisters::f0)
-        | (1 << JSC::SparcRegisters::f2)
-        | (1 << JSC::SparcRegisters::f4)
-        | (1 << JSC::SparcRegisters::f6)
-        | (1 << JSC::SparcRegisters::f8)
-        | (1 << JSC::SparcRegisters::f10)
-        | (1 << JSC::SparcRegisters::f12)
-        | (1 << JSC::SparcRegisters::f14)
-        | (1 << JSC::SparcRegisters::f16)
-        | (1 << JSC::SparcRegisters::f18)
-        | (1 << JSC::SparcRegisters::f20)
-        | (1 << JSC::SparcRegisters::f22)
-        | (1 << JSC::SparcRegisters::f24)
-        | (1 << JSC::SparcRegisters::f26)
-        | (1 << JSC::SparcRegisters::f28);
-    /* FIXME: Temporary hack until FPRegister allocation exists. */
-    static const FPRegisterID First  = JSC::SparcRegisters::f0;
-    static const FPRegisterID Second = JSC::SparcRegisters::f2;
-#else
-# error "Unsupported platform"
-#endif
-
-    static const uint32 AvailFPRegs = TempFPRegs;
-
-    FPRegisters()
-      : freeFPMask(AvailFPRegs)
-    { }
-
-    FPRegisters(uint32 freeFPMask)
-      : freeFPMask(freeFPMask)
-    { }
-
-    FPRegisters(const FPRegisters &other)
-      : freeFPMask(other.freeFPMask)
-    { }
-
-    FPRegisters & operator =(const FPRegisters &other)
-    {
-        freeFPMask = other.freeFPMask;
-        return *this;
-    }
-
-    void reset() {
-        freeFPMask = AvailFPRegs;
-    }
-
-    bool empty() const {
-        return !freeFPMask;
-    }
-
-    bool empty(uint32 mask) const {
-        return !(freeFPMask & mask);
-    }
-
-    FPRegisterID takeAnyReg() {
-        JS_ASSERT(!empty());
-        int ireg;
-        JS_FLOOR_LOG2(ireg, freeFPMask);
-        FPRegisterID reg = (FPRegisterID)ireg;
-        takeReg(reg);
-        return reg;
-    }
-
-    bool hasRegInMask(uint32 mask) const {
-        FPRegisters temp(freeFPMask & mask);
-        return !temp.empty();
-    }
-
-    FPRegisterID takeRegInMask(uint32 mask) {
-        FPRegisters temp(freeFPMask & mask);
-        FPRegisterID reg = temp.takeAnyReg();
-        takeReg(reg);
-        return reg;
-    }
-
-    bool hasReg(FPRegisterID fpreg) const {
-        return !!(freeFPMask & (1 << fpreg));
-    }
-
-    void putRegUnchecked(FPRegisterID fpreg) {
-        freeFPMask |= (1 << fpreg);
-    }
-
-    void putReg(FPRegisterID fpreg) {
-        JS_ASSERT(!hasReg(fpreg));
-        putRegUnchecked(fpreg);
-    }
-
-    void takeReg(FPRegisterID fpreg) {
-        JS_ASSERT(hasReg(fpreg));
-        freeFPMask &= ~(1 << fpreg);
-    }
-
-    bool operator ==(const FPRegisters &other) {
-        return freeFPMask == other.freeFPMask;
-    }
-
-    uint32 freeFPMask;
-};
-
 static const JSC::MacroAssembler::RegisterID JSFrameReg = Registers::JSFrameReg;
+
+AnyRegisterID
+AnyRegisterID::fromRaw(unsigned reg_)
+{
+    JS_ASSERT(reg_ < Registers::TotalAnyRegisters);
+    AnyRegisterID reg;
+    reg.reg_ = reg_;
+    return reg;
+}
+
+JSC::MacroAssembler::RegisterID
+AnyRegisterID::reg()
+{
+    JS_ASSERT(reg_ < Registers::TotalRegisters);
+    return (JSC::MacroAssembler::RegisterID) reg_;
+}
+
+JSC::MacroAssembler::FPRegisterID
+AnyRegisterID::fpreg()
+{
+    JS_ASSERT(reg_ >= Registers::TotalRegisters &&
+              reg_ < Registers::TotalAnyRegisters);
+    return (JSC::MacroAssembler::FPRegisterID) (reg_ - Registers::TotalRegisters);
+}
+
+const char *
+AnyRegisterID::name()
+{
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    return isReg() ? JSC::X86Registers::nameIReg(reg()) : JSC::X86Registers::nameFPReg(fpreg());
+#elif defined(JS_CPU_ARM)
+    return isReg() ? JSC::ARMAssembler::nameGpReg(reg()) : JSC::ARMAssembler::nameFpRegD(fpreg());
+#else
+    return "???";
+#endif
+}
 
 } /* namespace mjit */
 

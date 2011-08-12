@@ -39,6 +39,7 @@
 #include "nsGUIEvent.h"
 #include "nsPresContext.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsDOMClassInfoID.h"
 
 nsDOMTimeEvent::nsDOMTimeEvent(nsPresContext* aPresContext, nsEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ? aEvent : new nsUIEvent(PR_FALSE, 0, 0)),

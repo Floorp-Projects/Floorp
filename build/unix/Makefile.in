@@ -1,3 +1,4 @@
+# -*- makefile -*-
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -21,6 +22,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Joey Armstrong <joey@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,7 +51,15 @@ ifdef USE_ELF_HACK
 DIRS = elfhack
 endif
 
+ifdef ENABLE_TESTS
+  ifeq (,$(filter WINNT OS2,$(OS_ARCH)))
+    DIRS += test
+  endif # WIN
+endif # ENABLE_TESTS
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(srcdir)/run-mozilla.sh
 	$(INSTALL) $< $(DIST)/bin
+
+# EOF

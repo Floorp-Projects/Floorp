@@ -6662,7 +6662,7 @@ PresShell::HandleEvent(nsIView         *aView,
           ignoreRootScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame;
         }
         nsIFrame* target = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
-                                                           PR_FALSE, ignoreRootScrollFrame);
+                                                           PR_TRUE, ignoreRootScrollFrame);
         if (target) {
           frame = target;
         }

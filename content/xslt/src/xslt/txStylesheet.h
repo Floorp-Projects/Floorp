@@ -43,7 +43,6 @@
 #include "txExpandedNameMap.h"
 #include "txList.h"
 #include "txXSLTPatterns.h"
-#include "nsTPtrArray.h"
 #include "nsISupportsImpl.h"
 
 class txInstruction;
@@ -145,7 +144,7 @@ private:
     nsresult addGlobalVariable(txVariableItem* aVariable);
     nsresult addFrames(txListIterator& aInsertIter);
     nsresult addStripSpace(txStripSpaceItem* aStripSpaceItem,
-                           nsTPtrArray<txStripSpaceTest>& aFrameStripSpaceTests);
+                           nsTArray<txStripSpaceTest*>& aFrameStripSpaceTests);
     nsresult addAttributeSet(txAttributeSetItem* aAttributeSetItem);
 
     // List of ImportFrames

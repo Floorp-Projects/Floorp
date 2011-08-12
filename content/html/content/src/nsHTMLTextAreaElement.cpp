@@ -67,7 +67,6 @@
 #include "nsGUIEvent.h"
 #include "nsLinebreakConverter.h"
 #include "nsPresState.h"
-#include "nsIDOMText.h"
 #include "nsReadableUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"

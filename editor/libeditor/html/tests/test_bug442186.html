@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=442186
+-->
+<head>
+  <title>Test for Bug 442186</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=442186">Mozilla Bug 442186</a>
+<p id="display"></p>
+<div id="content">
+  <h2> two &lt;div&gt; containers </h2>
+  <section contenteditable id="test1">
+    <div> First paragraph with some text. </div>
+    <div> Second paragraph with some text. </div>
+  </section>
+
+  <h2> two paragraphs </h2>
+  <section contenteditable id="test2">
+    <p> First paragraph with some text. </p>
+    <p> Second paragraph with some text. </p>
+  </section>
+
+  <h2> one text node, one paragraph </h2>
+  <section contenteditable id="test3">
+    First paragraph with some text.
+    <p> Second paragraph with some text. </p>
+  </section>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 442186 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function justify(textNode, pos) {
+  if (!pos) pos = 10;
+
+  // put the caret on the requested character
+  var range = document.createRange();
+  var sel = window.getSelection();
+  range.setStart(textNode, pos);
+  range.setEnd(textNode, pos);
+  sel.addRange(range);
+
+  // align
+  document.execCommand("justifyright", false, null);
+}
+
+function runTests() {
+  const test1 = document.getElementById("test1");
+  const test2 = document.getElementById("test2");
+  const test3 = document.getElementById("test3");
+
+  // #test1: two <div> containers
+  const line1 = test1.querySelector("div").firstChild;
+  test1.focus();
+  justify(line1);
+  is(test1.querySelectorAll("*").length, 2,
+    "Aligning the first child should not create nor remove any element.");
+  is(line1.parentNode.nodeName.toLowerCase(), "div",
+    "Aligning the first <div> should not modify its node type.");
+  is(line1.parentNode.style.textAlign, "right",
+    "Aligning the first <div> should set a 'text-align: right' style rule.");
+
+  // #test2: two paragraphs
+  const line2 = test2.querySelector("p").firstChild;
+  test2.focus();
+  justify(line2);
+  is(test2.querySelectorAll("*").length, 2,
+    "Aligning the first child should not create nor remove any element.");
+  is(line2.parentNode.nodeName.toLowerCase(), "p",
+    "Aligning the first paragraph should not modify its node type.");
+  is(line2.parentNode.style.textAlign, "right",
+    "Aligning the first paragraph should set a 'text-align: right' style rule.");
+
+  // #test3: one text node, two paragraphs
+  const line3 = test3.firstChild;
+  test3.focus();
+  justify(line3);
+  is(test3.querySelectorAll("*").length, 2,
+    "Aligning the first child should create a block element.");
+  is(line3.parentNode.nodeName.toLowerCase(), "div",
+    "Aligning the first child should create a block element.");
+  is(line3.parentNode.style.textAlign, "right",
+    "Aligning the first line should set a 'text-align: right' style rule.");
+
+  // done
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

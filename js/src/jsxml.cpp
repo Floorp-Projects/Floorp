@@ -73,6 +73,7 @@
 #include "vm/GlobalObject.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
@@ -84,6 +85,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /*
  * NOTES
@@ -6450,8 +6452,10 @@ xml_setLocalName(JSContext *cx, uintN argc, jsval *vp)
     JSLinearString *namestr;
 
     NON_LIST_XML_METHOD_PROLOG;
-    if (!JSXML_HAS_NAME(xml))
+    if (!JSXML_HAS_NAME(xml)) {
+        vp[0] = JSVAL_VOID;
         return JS_TRUE;
+    }
 
     if (argc == 0) {
         namestr = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
@@ -6476,6 +6480,7 @@ xml_setLocalName(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     if (namestr)
         xml->name->setQNameLocalName(namestr);
+    vp[0] = JSVAL_VOID;
     return JS_TRUE;
 }
 
@@ -6548,8 +6553,10 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
 
         /* XXXbe have to test membership to see whether GetNamespace added */
-        if (XMLARRAY_HAS_MEMBER(&nsowner->xml_namespaces, ns, NULL))
+        if (XMLARRAY_HAS_MEMBER(&nsowner->xml_namespaces, ns, NULL)) {
+            vp[0] = JSVAL_VOID;
             return JS_TRUE;
+        }
     } else {
         /*
          * At this point, we know prefix of nameqn is null, so its uri can't
@@ -6572,6 +6579,7 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
             ns = XMLARRAY_MEMBER(nsarray, i, JSObject);
             if (ns && EqualStrings(ns->getNameURI(), nameqn->getNameURI())) {
                 nameqn->setNamePrefix(ns->getNamePrefix());
+                vp[0] = JSVAL_VOID;
                 return JS_TRUE;
             }
         }
@@ -6890,11 +6898,14 @@ xml_setSettings(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
         ok = SetDefaultXMLSettings(cx, obj);
     } else {
-        if (JSVAL_IS_PRIMITIVE(v))
+        if (JSVAL_IS_PRIMITIVE(v)) {
+            vp[0] = JSVAL_VOID;
             return JS_TRUE;
+        }
         settings = JSVAL_TO_OBJECT(v);
         ok = CopyXMLSettings(cx, settings, obj);
     }
+    vp[0] = JSVAL_VOID;
     return ok;
 }
 
@@ -7227,11 +7238,11 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    /* Define the isXMLName function. */
-    if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_XML, ctor, xmlProto))
         return NULL;
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_XML, ctor, xmlProto))
+    /* Define the isXMLName function. */
+    if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
         return NULL;
 
     return xmlProto;
@@ -7268,7 +7279,7 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
          * names, its prefix and uri references are copied to the QName.
          * The parent remains set and links back to global.
          */
-        obj->clearProto();
+        obj->clearType();
 
         v.setObject(*obj);
     }
@@ -7466,7 +7477,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     if (!IsFunctionQName(cx, qn, &funid))
         return JS_FALSE;
 
-    obj = &js_GetTopStackFrame(cx)->scopeChain();
+    obj = cx->stack.currentScriptedScopeChain();
     do {
         /* Skip any With object that can wrap XML. */
         target = obj;

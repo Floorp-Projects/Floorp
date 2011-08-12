@@ -133,11 +133,17 @@ JSCompartment::~JSCompartment()
 }
 
 bool
-JSCompartment::init()
+JSCompartment::init(JSContext *cx)
 {
     chunk = NULL;
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         arenas[i].init();
+
+    activeAnalysis = activeInference = false;
+    types.init(cx);
+
+    JS_InitArenaPool(&pool, "analysis", 4096, 8);
+
     freeLists.init();
     if (!crossCompartmentWrappers.init())
         return false;
@@ -371,7 +377,9 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     vp->setObject(*wrapper);
 
-    wrapper->setProto(proto);
+    if (wrapper->getProto() != proto && !SetProto(cx, wrapper, proto, false))
+        return false;
+
     if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
         return false;
 
@@ -478,7 +486,16 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
     }
     return pool->m_destroy;
 }
-#endif
+
+static inline void
+ScriptTryDestroyCode(JSContext *cx, JSScript *script, bool normal,
+                     uint32 releaseInterval, uint32 &counter)
+{
+    mjit::JITScript *jit = normal ? script->jitNormal : script->jitCtor;
+    if (jit && ScriptPoolDestroyed(cx, jit, releaseInterval, counter))
+        mjit::ReleaseScriptCode(cx, script, normal);
+}
+#endif // JS_METHODJIT && JS_MONOIC
 
 /*
  * This method marks pointers that cross compartment boundaries. It should be
@@ -501,6 +518,41 @@ JSCompartment::mark(JSTracer *trc)
     if (ionCompartment_)
         ionCompartment_->mark(trc, this);
 #endif
+}
+
+void
+JSCompartment::markTypes(JSTracer *trc)
+{
+    /* Mark all scripts and type objects in the compartment. */ 
+    JS_ASSERT(activeAnalysis);
+
+    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        js_TraceScript(trc, script, NULL);
+    }
+
+    gc::ArenaHeader *aheader = arenas[gc::FINALIZE_TYPE_OBJECT].getHead();
+    size_t thingSize = sizeof(types::TypeObject);
+
+    for (; aheader; aheader = aheader->next) {
+        gc::Arena *arena = aheader->getArena();
+        gc::FreeSpan firstSpan(aheader->getFirstFreeSpan());
+        const gc::FreeSpan *span = &firstSpan;
+
+        for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
+            JS_ASSERT(thing <= arena->thingsEnd());
+            if (thing == span->first) {
+                if (!span->hasNext())
+                    break;
+                thing = span->last;
+                span = span->nextSpan();
+            } else {
+                types::TypeObject *object = reinterpret_cast<types::TypeObject *>(thing);
+                if (!object->isMarked())
+                    object->trace(trc);
+            }
+        }
+    }
 }
 
 void
@@ -546,6 +598,18 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         traceMonitor()->sweep(cx);
 #endif
 
+# if defined JS_METHODJIT && defined JS_POLYIC
+    /*
+     * Purge all PICs in the compartment. These can reference type data and
+     * need to know which types are pending collection.
+     */
+    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        if (script->hasJITCode())
+            mjit::ic::PurgePICs(cx, script);
+    }
+# endif
+
 #if defined JS_METHODJIT && defined JS_MONOIC
 
     /*
@@ -563,20 +627,49 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         if (script->hasJITCode()) {
             mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {
-                if (script->jitNormal &&
-                    ScriptPoolDestroyed(cx, script->jitNormal, releaseInterval, counter)) {
-                    mjit::ReleaseScriptCode(cx, script);
-                    continue;
-                }
-                if (script->jitCtor &&
-                    ScriptPoolDestroyed(cx, script->jitCtor, releaseInterval, counter)) {
-                    mjit::ReleaseScriptCode(cx, script);
-                }
+                ScriptTryDestroyCode(cx, script, true, releaseInterval, counter);
+                ScriptTryDestroyCode(cx, script, false, releaseInterval, counter);
             }
         }
     }
 
-#endif /* JS_METHODJIT && JS_MONOIC */
+#endif
+
+    if (!activeAnalysis) {
+        /*
+         * Sweep analysis information and everything depending on it from the
+         * compartment, including all remaining mjit code if inference is
+         * enabled in the compartment.
+         */
+        if (types.inferenceEnabled) {
+#ifdef JS_METHODJIT
+            mjit::ClearAllFrames(this);
+#endif
+
+            for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+                JSScript *script = reinterpret_cast<JSScript *>(cursor);
+                if (script->types)
+                    types::TypeScript::Sweep(cx, script);
+            }
+        }
+
+        types.sweep(cx);
+
+        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+            JSScript *script = reinterpret_cast<JSScript *>(cursor);
+            if (script->types)
+                script->types->analysis = NULL;
+        }
+
+        /* Reset the analysis pool, releasing all analysis and intermediate type data. */
+        JS_FinishArenaPool(&pool);
+
+        /*
+         * Destroy eval'ed scripts, now that any type inference information referring
+         * to eval scripts has been removed.
+         */
+        js_DestroyScriptsToGC(cx, this);
+    }
 
     active = false;
 }
@@ -586,9 +679,6 @@ JSCompartment::purge(JSContext *cx)
 {
     freeLists.purge();
     dtoaCache.purge();
-
-    /* Destroy eval'ed scripts. */
-    js_DestroyScriptsToGC(cx, this);
 
     nativeIterCache.purge();
     toSourceCache.destroyIfConstructed();
@@ -610,9 +700,6 @@ JSCompartment::purge(JSContext *cx)
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {
         if (script->hasJITCode()) {
-# if defined JS_POLYIC
-            mjit::ic::PurgePICs(cx, script);
-# endif
 # if defined JS_MONOIC
             /*
              * MICs do not refer to data which can be GC'ed and do not generate stubs
@@ -668,4 +755,3 @@ JSCompartment::incBackEdgeCount(jsbytecode *pc)
         return ++p->value;
     return 1;  /* oom not reported by backEdgeTable, so ignore. */
 }
-
