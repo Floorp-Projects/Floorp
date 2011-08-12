@@ -16,6 +16,13 @@
  *
  * sendMouseEvent({type:'click'}, 'node');
  */
+function getElement(id) {
+  return ((typeof(id) == "string") ?
+    document.getElementById(id) : id); 
+};   
+
+this.$ = this.getElement;
+
 function sendMouseEvent(aEvent, aTarget, aWindow) {
   if (['click', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
     throw new Error("sendMouseEvent doesn't know about event type '"+aEvent.type+"'");

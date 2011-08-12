@@ -62,6 +62,17 @@ attrAppendChild = ["elementsetattributenodens06", "importNode01"];
 bogusPrefix = ["nodesetprefix05", "nodesetprefix09", "prefix06", "prefix07"];
 prefixReplacement = ["setAttributeNodeNS04"];
 
+function concat(lst/*...*/) {
+  var f = [];
+  if (arguments !== null) {
+    f = arguments[0];
+  }
+  for (var i = 1; i < arguments.length; i++) {
+    f = f.concat(arguments[i]);
+  }
+  return f;
+}
+
 var todoTests = {};
 var exclusions = concat(dtdTests, bug371552, wrongDocError, attrAppendChild,
                         bogusPrefix, prefixReplacement);
