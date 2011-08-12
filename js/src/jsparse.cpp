@@ -4967,14 +4967,16 @@ CloneLeftHandSide(JSParseNode *opn, JSTreeContext *tc)
 
         pn->pn_link = dn->dn_uses;
         dn->dn_uses = pn;
-    } else if (opn->pn_defn) {
-        /* We copied some definition-specific state into pn. Clear it out. */
+    } else {
         pn->pn_expr = NULL;
-        pn->pn_cookie.makeFree();
-        pn->pn_dflags &= ~PND_BOUND;
-        pn->pn_defn = false;
+        if (opn->pn_defn) {
+            /* We copied some definition-specific state into pn. Clear it out. */
+            pn->pn_cookie.makeFree();
+            pn->pn_dflags &= ~PND_BOUND;
+            pn->pn_defn = false;
 
-        LinkUseToDef(pn, (JSDefinition *) opn, tc);
+            LinkUseToDef(pn, (JSDefinition *) opn, tc);
+        }
     }
     return pn;
 }
