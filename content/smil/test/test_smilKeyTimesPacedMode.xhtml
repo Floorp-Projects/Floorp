@@ -61,7 +61,7 @@ function testByAnimation() {
     is(gCircle.cx.animVal.value, 100,
        "Checking animVal with 'by' and keyTimes='" + curKeyTimes + "'");
 
-    removeElement(anim); // clean up
+    anim.parentNode.removeChild(anim); // clean up
   }
 }
 
@@ -77,7 +77,7 @@ function testToAnimation() {
     is(gCircle.cx.animVal.value, 100,
        "Checking animVal with 'to' and keyTimes='" + curKeyTimes + "'");
 
-    removeElement(anim); // clean up
+    anim.parentNode.removeChild(anim); // clean up
   }
 }
 
@@ -93,7 +93,7 @@ function testValuesAnimation() {
     is(gCircle.cx.animVal.value, 150,
        "Checking animVal with 'values' and keyTimes='" + curKeyTimes + "'");
 
-    removeElement(anim); // clean up
+    anim.parentNode.removeChild(anim); // clean up
   }
 }
 

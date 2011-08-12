@@ -96,7 +96,7 @@ function testSpecs() {
     }
   }
 
-  removeElement(anim);
+  anim.parentNode.removeChild(anim);
 }
 
 function testChangeId() {
@@ -113,7 +113,7 @@ function testChangeId() {
   is(anim.getStartTime(), 2,
      "Unexpected start time after resetting target ID.");
 
-  removeElement(anim);
+  anim.parentNode.removeChild(anim);
 }
 
 function testRemoveTimebase() {
@@ -127,7 +127,7 @@ function testRemoveTimebase() {
   is(a, circle.firstElementChild, "Unexpected document structure");
 
   // Remove timebase
-  removeElement(a);
+  a.parentNode.removeChild(a);
   ok(noStart(anim), "Unexpected start time after removing timebase.");
 
   // Reinsert timebase
@@ -135,7 +135,7 @@ function testRemoveTimebase() {
   ok(!noStart(anim), "Unexpected start time after re-inserting timebase.");
 
   // Remove dependent element
-  removeElement(anim);
+  anim.parentNode.removeChild(anim);
   ok(noStart(anim), "Unexpected start time after removing dependent.");
 
   // Create a new dependent

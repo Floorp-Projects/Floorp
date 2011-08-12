@@ -91,6 +91,14 @@ To have the battery of generic tests run for a new list attribute, add an elemen
     property is omitted, it is assumed that we can just compare
     "item.value" (which is the case for most list types).
 */
+//helper method
+function keys(obj) {
+    var rval = [];
+    for (var prop in obj) {
+        rval.push(prop);
+    }    
+    return rval;
+};
 
 var tests = [
   {

@@ -46,7 +46,7 @@ function main() {
     var anim = createAnim();
     svg.setCurrentTime(0);
     tests[i](anim);
-    removeElement(anim);
+    anim.parentNode.removeChild(anim);
   }
   SimpleTest.finish();
 }
