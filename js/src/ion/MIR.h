@@ -845,6 +845,7 @@ class MBox : public MUnaryInstruction
     MBox(MDefinition *ins)
       : MUnaryInstruction(ins)
     {
+        setIdempotent();
         setResultType(MIRType_Value);
     }
 
