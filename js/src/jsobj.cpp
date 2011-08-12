@@ -3417,24 +3417,6 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
     return true;
 }
 
-static void
-CheckProxy(JSObject *obj)
-{
-    if (!obj->isProxy())
-        return;
-
-    JSProxyHandler *handler = obj->getProxyHandler();
-    if (handler->isCrossCompartment())
-        return;
-
-    Value priv = obj->getProxyPrivate();
-    if (!priv.isObject())
-        return;
-
-    if (priv.toObject().compartment() != obj->compartment())
-        JS_Assert("compartment mismatch in proxy object", __FILE__, __LINE__);
-}
-
 JSObject *
 JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
 {
@@ -3471,8 +3453,6 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
         if (!CopySlots(cx, this, clone))
             return NULL;
     }
-
-    CheckProxy(clone);
 
     return clone;
 }
@@ -3585,11 +3565,6 @@ JSObject::swap(JSContext *cx, JSObject *other)
     }
     TradeGuts(this, otherClone);
     TradeGuts(other, thisClone);
-
-    CheckProxy(this);
-    CheckProxy(other);
-    CheckProxy(thisClone);
-    CheckProxy(otherClone);
 
     return true;
 }
