@@ -815,6 +815,7 @@ var gViewController = {
         var numUpdated = 0;
         var numManualUpdates = 0;
         var restartNeeded = false;
+        var autoUpdateDefault = AddonManager.autoUpdateDefault;
         var self = this;
 
         function updateStatus() {
@@ -866,7 +867,7 @@ var gViewController = {
           onUpdateAvailable: function(aAddon, aInstall) {
             gEventManager.delegateAddonEvent("onUpdateAvailable",
                                              [aAddon, aInstall]);
-            if (AddonManager.shouldAutoUpdate(aAddon)) {
+            if (shouldAutoUpdate(aAddon, autoUpdateDefault)) {
               aInstall.addListener(updateInstallListener);
               aInstall.install();
             } else {
@@ -911,7 +912,7 @@ var gViewController = {
           onUpdateAvailable: function(aAddon, aInstall) {
             gEventManager.delegateAddonEvent("onUpdateAvailable",
                                              [aAddon, aInstall]);
-            if (AddonManager.shouldAutoUpdate(aAddon))
+            if (shouldAutoUpdate(aAddon))
               aInstall.install();
           },
           onNoUpdateAvailable: function(aAddon) {
@@ -1243,6 +1244,17 @@ function isPending(aAddon, aAction) {
 function isInState(aInstall, aState) {
   var state = AddonManager["STATE_" + aState.toUpperCase()];
   return aInstall.state == state;
+}
+
+
+function shouldAutoUpdate(aAddon, aDefault) {
+  if (!("applyBackgroundUpdates" in aAddon))
+    return false;
+  if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_ENABLE)
+    return true;
+  if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE)
+    return false;
+  return aDefault !== undefined ? aDefault : AddonManager.autoUpdateDefault;
 }
 
 function shouldShowVersionNumber(aAddon) {
@@ -2663,7 +2675,7 @@ var gDetailView = {
     if ("applyBackgroundUpdates" in aAddon) {
       this._autoUpdate.hidden = false;
       this._autoUpdate.value = aAddon.applyBackgroundUpdates;
-      let hideFindUpdates = AddonManager.shouldAutoUpdate(this._addon);
+      let hideFindUpdates = shouldAutoUpdate(this._addon);
       document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     } else {
       this._autoUpdate.hidden = true;
@@ -2928,7 +2940,7 @@ var gDetailView = {
   onPropertyChanged: function(aProperties) {
     if (aProperties.indexOf("applyBackgroundUpdates") != -1) {
       this._autoUpdate.value = this._addon.applyBackgroundUpdates;
-      let hideFindUpdates = AddonManager.shouldAutoUpdate(this._addon);
+      let hideFindUpdates = shouldAutoUpdate(this._addon);
       document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     }
   },
@@ -2957,6 +2969,7 @@ var gUpdatesView = {
   _emptyNotice: null,
   _sorters: null,
   _updateSelected: null,
+  _updatePrefs: null,
   _categoryItem: null,
 
   initialize: function() {
@@ -2973,6 +2986,9 @@ var gUpdatesView = {
       gUpdatesView.installSelected();
     }, false);
 
+    this._updatePrefs = Services.prefs.getBranch("extensions.update.");
+    this._updatePrefs.QueryInterface(Ci.nsIPrefBranch2);
+    this._updatePrefs.addObserver("", this, false);
     this.updateAvailableCount(true);
 
     AddonManager.addAddonListener(this);
@@ -2982,6 +2998,8 @@ var gUpdatesView = {
   shutdown: function() {
     AddonManager.removeAddonListener(this);
     AddonManager.removeInstallListener(this);
+    this._updatePrefs.removeObserver("", this);
+    delete this._updatePrefs;
   },
 
   show: function(aType, aRequest) {
@@ -3088,10 +3106,15 @@ var gUpdatesView = {
 
   isManualUpdate: function(aInstall, aOnlyAvailable) {
     var isManual = aInstall.existingAddon &&
-                   !AddonManager.shouldAutoUpdate(aInstall.existingAddon);
+                   !shouldAutoUpdate(aInstall.existingAddon);
     if (isManual && aOnlyAvailable)
       return isInState(aInstall, "available");
     return isManual;
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != "nsPref:changed")
+      return;
   },
 
   maybeRefresh: function() {
