@@ -118,6 +118,21 @@ LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, M
     return add(lir);
 }
 
+template <size_t Ops, size_t Temps> bool
+LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir)
+{
+    defineBox(lir, mir, LDefinition::PRESET);
+
+#if defined(JS_NUNBOX32)
+    lir->getDef(TYPE_INDEX)->setOutput(LGeneralReg(JSReturnReg_Type));
+    lir->getDef(PAYLOAD_INDEX)->setOutput(LGeneralReg(JSReturnReg_Data));
+#elif defined(JS_PUNBOX64)
+    lir->getDef(0)->setOutput(LGeneralReg(JSReturnReg));
+#endif
+
+    return true;
+}
+
 // In LIR, we treat booleans and integers as the same low-level type (INTEGER).
 // When snapshotting, we recover the actual JS type from MIR. This function
 // checks that when making redefinitions, we don't accidentally coerce two

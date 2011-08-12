@@ -105,6 +105,11 @@ class Registers {
         (1 << JSC::X86Registers::esp);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
+
+    static const uint32 JSCallClobberMask =
+        AllocatableMask &
+        ~(1 << JSC::X86Registers::ecx) &
+        ~(1 << JSC::X86Registers::edx);
 };
 
 class FloatRegisters {
@@ -131,10 +136,12 @@ class FloatRegisters {
         (1 << JSC::X86Registers::xmm7);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
+
+    static const uint32 JSCallClobberMask = AllocatableMask;
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_architecture_x86_h__
 

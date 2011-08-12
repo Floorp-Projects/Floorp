@@ -94,17 +94,47 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
   public:
+    /////////////////////////////////////////////////////////////////
+    // X86/X64-common interface.
+    /////////////////////////////////////////////////////////////////
+    void storeValue(ValueOperand val, Operand dest) {
+        movq(val.valueReg(), dest);
+    }
+    void movePtr(Operand op, const Register &dest) {
+        movq(op, dest);
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Common interface.
+    /////////////////////////////////////////////////////////////////
     void reserveStack(uint32 amount) {
         if (amount)
-            subq(Imm32(amount), rsp);
+            subq(Imm32(amount), StackPointer);
         framePushed_ += amount;
     }
     void freeStack(uint32 amount) {
         JS_ASSERT(amount <= framePushed_);
         if (amount)
-            addq(Imm32(amount), rsp);
+            addq(Imm32(amount), StackPointer);
         framePushed_ -= amount;
     }
+
+    void cmpPtr(const Register &lhs, const ImmWord rhs) {
+        JS_ASSERT(lhs != ScratchReg);
+        movq(rhs, ScratchReg);
+        return cmpq(lhs, ScratchReg);
+    }
+    void testPtr(const Register &lhs, const Register &rhs) {
+        return testq(lhs, rhs);
+    }
+
+    void addPtr(Imm32 imm, const Register &dest) {
+        addq(imm, dest);
+    }
+    void subPtr(Imm32 imm, const Register &dest) {
+        subq(imm, dest);
+    }
+
     void movePtr(ImmWord imm, const Register &dest) {
         movq(imm, dest);
     }
@@ -177,6 +207,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpq(src.value(), ScratchReg);
         return (cond == NotEqual) ? Above : BelowOrEqual;
     }
+    Condition testObject(Condition cond, const ValueOperand &src) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpTag(src, ImmTag(JSVAL_TAG_OBJECT));
+        return cond;
+    }
     Condition testNull(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testNull(cond, ScratchReg);
@@ -188,10 +223,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testString(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testString(cond, ScratchReg);
-    }
-    Condition testObject(Condition cond, const ValueOperand &src) {
-        splitTag(src, ScratchReg);
-        return testObject(cond, ScratchReg);
     }
 
     // Note that the |dest| register here may be ScratchReg, so we shouldn't
@@ -208,6 +239,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void unboxString(const ValueOperand &src, const Register &dest) {
         movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
         andq(src.valueReg(), dest);
+    }
+    void unboxObject(const ValueOperand &src, const Register &dest) {
+        // TODO: Can we unbox more efficiently? Bug 680294.
+        movq(JSVAL_PAYLOAD_MASK, ScratchReg);
+        movq(src.value(), dest);
+        andq(ScratchReg, dest);
     }
 
     // These two functions use the low 32-bits of the full value register.

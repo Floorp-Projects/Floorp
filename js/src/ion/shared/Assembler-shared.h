@@ -57,6 +57,7 @@ struct Imm32
     { }
 };
 
+// Pointer-sized immediate.
 struct ImmWord
 {
     uintptr_t value;

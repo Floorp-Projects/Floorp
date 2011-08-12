@@ -67,9 +67,11 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
   public:
     bool visitValue(LValue *value);
     bool visitReturn(LReturn *ret);
+    bool visitStackArg(LStackArg *arg);
     bool visitBox(LBox *box);
     bool visitUnboxInteger(LUnboxInteger *unbox);
     bool visitUnboxDouble(LUnboxDouble *unbox);
+    bool visitUnboxObject(LUnboxObject *unbox);
     bool visitDouble(LDouble *ins);
 };
 

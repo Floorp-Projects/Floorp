@@ -158,8 +158,8 @@ class Operand
     }
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #include "ion/shared/Assembler-x86-shared.h"
 
@@ -239,6 +239,9 @@ class Assembler : public AssemblerX86Shared
         // instruction stream.
         masm.movl_i32r(label->prev(), dest.code());
         label->setPrev(masm.size());
+    }
+    void mov(const Register &src, const Register &dest) {
+        movl(src, dest);
     }
     void lea(const Operand &src, const Register &dest) {
         switch (src.kind()) {

@@ -64,6 +64,7 @@ class MacroAssembler;
 
 class IonCode : public gc::Cell
 {
+  protected:
     uint8 *code_;
     JSC::ExecutablePool *pool_;
     uint32 bufferSize_;             // Total buffer size.
@@ -111,6 +112,10 @@ class IonCode : public gc::Cell
         IonCode *code = *(IonCode **)(buffer - sizeof(IonCode *));
         JS_ASSERT(code->raw() == buffer);
         return code;
+    }
+
+    static size_t OffsetOfCode() {
+        return offsetof(IonCode, code_);
     }
 
     // Allocates a new IonCode object which will be managed by the GC. If no

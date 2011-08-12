@@ -795,6 +795,96 @@ class MReturn
     }
 };
 
+// Designates the start of call frame construction.
+// Generates code to adjust the stack pointer for the argument vector.
+// Argc is inferred by checking the use chain during lowering.
+class MPrepareCall : public MAryInstruction<0>
+{
+  public:
+    INSTRUCTION_HEADER(PrepareCall);
+
+    MPrepareCall()
+    { }
+
+    // Get the vector size for the upcoming call by looking at the call.
+    uint32 argc() const;
+};
+
+class MVariadicInstruction : public MInstruction
+{
+    FixedList<MDefinition *> operands_;
+
+  protected:
+    bool init(size_t length) {
+        return operands_.init(length);
+    }
+
+  public:
+    // Will assert if called before initialization.
+    MDefinition *getOperand(size_t index) const {
+        return operands_[index];
+    }
+    size_t numOperands() const {
+        return operands_.length();
+    }
+    void setOperand(size_t index, MDefinition *operand) {
+        operands_[index] = operand;
+    }
+};
+
+class MCall
+  : public MVariadicInstruction,
+    public CallPolicy
+{
+  private:
+    // An MCall uses the MPrepareCall, MDefinition for the function, and
+    // MPassArg instructions. They are stored in the same list.
+    static const size_t PrepareCallOperandIndex  = 0;
+    static const size_t FunctionOperandIndex   = 1;
+    static const size_t NumNonArgumentOperands = 2;
+
+  protected:
+    MCall()
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Call);
+    static MCall *New(size_t argc);
+
+    void initPrepareCall(MDefinition *start) {
+        JS_ASSERT(start->isPrepareCall());
+        return initOperand(PrepareCallOperandIndex, start);
+    }
+    void initFunction(MDefinition *func) {
+        JS_ASSERT(!func->isPassArg());
+        return initOperand(FunctionOperandIndex, func);
+    }
+
+    MDefinition *getFunction() const {
+        return getOperand(FunctionOperandIndex);
+    }
+    void replaceFunction(MInstruction *newfunc) {
+        replaceOperand(FunctionOperandIndex, newfunc);
+    }
+
+    void addArg(size_t argnum, MPassArg *arg);
+
+    MDefinition *getArg(uint32 index) const {
+        return getOperand(NumNonArgumentOperands + index);
+    }
+
+    // Includes |this|.
+    uint32 argc() const {
+        return numOperands() - NumNonArgumentOperands;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MUnaryInstruction : public MAryInstruction<1>
 {
   protected:
@@ -939,6 +1029,49 @@ class MUnbox : public MUnaryInstruction
     static MUnbox *New(MDefinition *ins, MIRType type)
     {
         return new MUnbox(ins, type);
+    }
+};
+
+// Passes an MDefinition to an MCall. Must occur between an MPrepareCall and
+// MCall. Boxes the input and stores it to the correct location on stack.
+//
+// Arguments are *not* simply pushed onto a call stack: they are evaluated
+// left-to-right, but stored in the arg vector in C-style, right-to-left.
+class MPassArg
+  : public MUnaryInstruction,
+    public BoxInputsPolicy
+{
+    int32 argnum_;
+
+  private:
+    MPassArg(MDefinition *def)
+      : MUnaryInstruction(def), argnum_(-1) 
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(PassArg);
+    static MPassArg *New(MDefinition *def)
+    {
+        return new MPassArg(def);
+    }
+
+    MDefinition *getArgument() const {
+        return getOperand(0);
+    }
+
+    // Set by the MCall.
+    void setArgnum(uint32 argnum) {
+        argnum_ = argnum;
+    }
+    uint32 getArgnum() const {
+        JS_ASSERT(argnum_ >= 0);
+        return (uint32)argnum_;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 

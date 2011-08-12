@@ -163,6 +163,65 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     }
 };
 
+// Writes an argument for a function call to the frame's argument vector.
+class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
+{
+    uint32 argslot_; // Index into frame-scope argument vector.
+
+  public:
+    LIR_HEADER(StackArg);
+
+    LStackArg(uint32 argslot)
+      : argslot_(argslot)
+    { }
+
+    uint32 argslot() const {
+        return argslot_;
+    }
+};
+
+// Generates a polymorphic callsite, wherein the function being called is
+// unknown and anticipated to vary.
+class LCallGeneric : public LInstructionHelper<BOX_PIECES, 1, 2>
+{
+    // Slot below which %esp should be adjusted to make the call.
+    // Zero for a function without arguments.
+    uint32 argslot_;
+    MCall *mir_;
+
+  public:
+    LIR_HEADER(CallGeneric);
+
+    LCallGeneric(MCall *mir, const LAllocation &func,
+                 uint32 argslot, const LDefinition &token,
+                 const LDefinition &nargsreg)
+      : argslot_(argslot), mir_(mir)
+    {
+        setOperand(0, func);
+        setTemp(0, token);
+        setTemp(1, nargsreg);
+    }
+
+    uint32 argslot() const {
+        return argslot_;
+    }
+
+    uint32 nargs() const {
+        JS_ASSERT(mir_->argc() >= 1);
+        return mir_->argc() - 1; // |this| is not a formal argument.
+    }
+
+    const LAllocation *getFunction() {
+        return getOperand(0);
+    }
+    const LAllocation *getToken() {
+        return getTemp(0)->output();
+    }
+    const LAllocation *getNargsReg() {
+        return getTemp(1)->output();
+    }
+};
+
 // Takes a tableswitch with an integer to decide
 class LTableSwitch : public LInstructionHelper<0, 1, 2>
 {

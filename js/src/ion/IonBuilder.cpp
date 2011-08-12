@@ -417,6 +417,15 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_TRUE:
         return pushConstant(BooleanValue(true));
 
+      case JSOP_NOTEARG:
+        return jsop_notearg();
+
+      case JSOP_CALLARG:
+        current->pushArg(GET_SLOTNO(pc));
+        if (!pushConstant(UndefinedValue())) // Implicit |this|.
+            return false;
+        return jsop_notearg();
+
       case JSOP_GETARG:
         current->pushArg(GET_SLOTNO(pc));
         return true;
@@ -438,6 +447,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_IFEQX:
         return jsop_ifeq(JSOP_IFEQX);
+
+      case JSOP_CALL:
+        return jsop_call(GET_ARGC(pc));
 
       case JSOP_NULLBLOCKCHAIN:
         return true;
@@ -1617,7 +1629,46 @@ IonBuilder::jsop_neg()
 
     if (!jsop_binary(JSOP_MUL))
         return false;
+    return true;
+}
 
+bool
+IonBuilder::jsop_notearg()
+{
+    // JSOP_NOTEARG notes that the value in current->pop() has just
+    // been pushed onto the stack for use in calling a function.
+    MDefinition *def = current->pop();
+    MPassArg *arg = MPassArg::New(def);
+
+    current->add(arg);
+    current->push(arg);
+    return true;
+}
+
+bool
+IonBuilder::jsop_call(uint32 argc)
+{
+    MCall *ins = MCall::New(argc + 1); // +1 for implicit this.
+    if (!ins)
+        return false;
+
+    // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
+    for (int32 i = argc; i >= 0; i--)
+        ins->addArg(i, current->pop()->toPassArg());
+    ins->initFunction(current->pop());
+
+    // Insert an MPrepareCall immediately before the first argument is pushed.
+    MPrepareCall *start = new MPrepareCall;
+    MPassArg *arg = ins->getArg(0)->toPassArg();
+    current->insertBefore(arg, start);
+
+    ins->initPrepareCall(start);
+
+    current->add(ins);
+    current->push(ins);
+
+    if (!resumeAfter(ins))
+        return false;
     return true;
 }
 
@@ -1741,6 +1792,8 @@ IonBuilder::resumeAfter(MInstruction *ins)
 bool
 IonBuilder::resumeAt(MInstruction *ins, jsbytecode *pc)
 {
+    JS_ASSERT(!ins->isIdempotent());
+
     MResumePoint *resumePoint = MResumePoint::New(current, pc);
     if (!resumePoint)
         return false;
