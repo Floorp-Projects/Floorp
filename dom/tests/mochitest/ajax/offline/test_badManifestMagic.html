@@ -2,7 +2,6 @@
 <head>
 <title>bad manifest magic</title>
 
-<script type="text/javascript" src="/MochiKit/packed.js"></script>
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -18,7 +17,6 @@ function handleError() {
   // These items are listed in the manifest, but the error should have
   // prevented them from being committed to the cache.
   OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
-  OfflineTest.checkCache("http://mochi.test:8888/MochiKit/packed.js", false);
   OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false);
 
   OfflineTest.teardown();
