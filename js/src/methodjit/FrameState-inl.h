@@ -1315,9 +1315,7 @@ FrameState::learnThisIsObject(bool unsync)
     // If the 'this' object is a copy, this must be an inline frame, in which
     // case we will trigger recompilation if the 'this' entry isn't actually
     // an object (thus, it is OK to modify the backing directly).
-    FrameEntry *fe = a->this_;
-    if (!fe->isTracked())
-        addToTracker(fe);
+    FrameEntry *fe = getThis();
     if (fe->isCopy())
         fe = fe->copyOf();
     learnType(fe, JSVAL_TYPE_OBJECT, unsync);
@@ -1326,11 +1324,16 @@ FrameState::learnThisIsObject(bool unsync)
 void
 FrameState::setThis(RegisterID reg)
 {
-    FrameEntry *fe = a->this_;
-    if (!fe->isTracked())
-        addToTracker(fe);
+    FrameEntry *fe = getThis();
     JS_ASSERT(!fe->isCopy());
     learnType(fe, JSVAL_TYPE_OBJECT, reg);
+}
+
+void
+FrameState::syncThis()
+{
+    FrameEntry *fe = getThis();
+    syncFe(fe);
 }
 
 inline void
