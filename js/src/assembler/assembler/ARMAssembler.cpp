@@ -92,6 +92,46 @@ ARMWord ARMAssembler::getOp2(ARMWord imm)
     return INVALID_IMM;
 }
 
+ARMWord ARMAssembler::getOp2RegScale(RegisterID reg, ARMWord scale)
+{
+    // The field that this method constructs looks like this:
+    // [11:7]   Shift immediate.
+    // [ 6:5]   Shift type. Only LSL ("00") is used here.
+    // [ 4:4]   0.
+    // [ 3:0]   The register to shift.
+
+    ARMWord shift;  // Shift field. This is log2(scale).
+    ARMWord lz;     // Leading zeroes.
+
+    // Calculate shift=log2(scale).
+#if WTF_ARM_ARCH_AT_LEAST(5)
+    asm (
+    "   clz     %[lz], %[scale]\n"
+    : [lz]      "=r"  (lz)
+    : [scale]   "r"   (scale)
+    : // No clobbers.
+    );
+#else
+    ARMWord lz = 0; // Accumulate leading zeroes.
+    for (ARMWord s = 16; s > 0; s /= 2) {
+        ARMWord mask = 0xffffffff << (32-lz-s);
+        if ((x & mask) == 0) {
+            lz += s;
+        }
+    }
+#endif
+    if (lz >= 32) {
+        return INVALID_IMM;
+    }
+    shift = 31-lz;
+    // Check that scale was a power of 2.
+    if ((1<<shift) != scale) {
+        return INVALID_IMM;
+    }
+
+    return (shift << 7) | (reg);
+}
+
 int ARMAssembler::genInt(int reg, ARMWord imm, bool positive)
 {
     // Step1: Search a non-immediate part
@@ -435,40 +475,63 @@ void ARMAssembler::baseIndexTransferN(bool isLoad, bool isSigned, int size, Regi
 
 void ARMAssembler::doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset)
 {
-    if (offset & 0x3) {
-        if (offset <= 0x3ff && offset >= 0) {
-            fdtr_u(isLoad, srcDst, base, offset >> 2);
-            return;
-        }
-        if (offset <= 0x3ffff && offset >= 0) {
-            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
-            fdtr_u(isLoad, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
-            return;
-        }
-        offset = -offset;
-
-        if (offset <= 0x3ff && offset >= 0) {
-            fdtr_d(isLoad, srcDst, base, offset >> 2);
-            return;
-        }
-        if (offset <= 0x3ffff && offset >= 0) {
-            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
-            fdtr_d(isLoad, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
-            return;
-        }
-        offset = -offset;
-    }
-
-    // TODO: This is broken in the case that offset is unaligned. VFP can never
-    // perform unaligned accesses, even from an unaligned register base. (NEON
-    // can, but VFP isn't NEON. It is not advisable to interleave a NEON load
-    // with VFP code, so the best solution here is probably to perform an
-    // unaligned integer load, then move the result into VFP using VMOV.)
+    // This method does not support accesses that are not four-byte-aligned.
     ASSERT((offset & 0x3) == 0);
+
+    if (offset <= 0x3ff && offset >= 0) {
+        fdtr_u(isLoad, srcDst, base, offset >> 2);
+        return;
+    }
+    if (offset <= 0x3ffff && offset >= 0) {
+        add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
+        fdtr_u(isLoad, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
+        return;
+    }
+    offset = -offset;
+
+    if (offset <= 0x3ff && offset >= 0) {
+        fdtr_d(isLoad, srcDst, base, offset >> 2);
+        return;
+    }
+    if (offset <= 0x3ffff && offset >= 0) {
+        sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
+        fdtr_d(isLoad, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
+        return;
+    }
+    offset = -offset;
 
     ldr_un_imm(ARMRegisters::S0, offset);
     add_r(ARMRegisters::S0, ARMRegisters::S0, base);
     fdtr_u(isLoad, srcDst, ARMRegisters::S0, 0);
+}
+
+void ARMAssembler::doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset, RegisterID index, int32_t scale)
+{
+    // This variant accesses memory at base+offset+(index*scale). VLDR and VSTR
+    // don't have such an addressing mode, so this access will require some
+    // arithmetic instructions.
+
+    // This method does not support accesses that are not four-byte-aligned.
+    ASSERT((offset & 0x3) == 0);
+
+    // Catch the trivial case, where scale is 0.
+    if (scale == 0) {
+        doubleTransfer(isLoad, srcDst, base, offset);
+        return;
+    }
+
+    // Calculate the address, excluding the non-scaled offset. This is
+    // efficient for scale factors that are powers of two.
+    ARMWord op2_index = getOp2RegScale(index, scale);
+    if (op2_index == INVALID_IMM) {
+        // Use MUL to calculate scale factors that are not powers of two.
+        moveImm(scale, ARMRegisters::S0);
+        mul_r(ARMRegisters::S0, index, ARMRegisters::S0);
+        op2_index = ARMRegisters::S0;
+    }
+
+    add_r(ARMRegisters::S0, base, op2_index);
+    doubleTransfer(isLoad, srcDst, ARMRegisters::S0, offset);
 }
 
 void ARMAssembler::floatTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset)

@@ -150,6 +150,8 @@ MediaDocument::Init()
                                 getter_AddRefs(mStringBundle));
   }
 
+  mIsSyntheticDocument = PR_TRUE;
+
   return NS_OK;
 }
 

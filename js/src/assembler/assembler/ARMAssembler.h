@@ -195,6 +195,15 @@ namespace JSC {
             MVN = (0xf << 21),
             MUL = 0x00000090,
             MULL = 0x00c00090,
+            FCPYD = 0x0eb00b40,
+            FADDD = 0x0e300b00,
+            FNEGD = 0x0eb10b40,
+            FABSD = 0x0eb00bc0,
+            FDIVD = 0x0e800b00,
+            FSUBD = 0x0e300b40,
+            FMULD = 0x0e200b00,
+            FCMPD = 0x0eb40b40,
+            FSQRTD = 0x0eb10bc0,
             DTR = 0x05000000,
 #if WTF_ARM_ARCH_VERSION >= 5
             LDRH = 0x00100090,
@@ -1164,6 +1173,10 @@ namespace JSC {
 
         static ARMWord getOp2(ARMWord imm);
 
+        // Get an operand-2 field for immediate-shifted-registers in arithmetic
+        // instructions.
+        static ARMWord getOp2RegScale(RegisterID reg, ARMWord scale);
+
 #if WTF_ARM_ARCH_VERSION >= 7
         static ARMWord getImm16Op2(ARMWord imm)
         {
@@ -1193,10 +1206,12 @@ namespace JSC {
         void baseIndexTransferN(bool isLoad, bool isSigned, int size, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void baseIndexTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
+        void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset, RegisterID index, int32_t scale);
+
         void floatTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
         /**/
         void baseIndexFloatTransfer(bool isLoad, bool isDouble, FPRegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
- 
+
         // Constant pool hnadlers
 
         static ARMWord placeConstantPoolBarrier(int offset)
@@ -1206,7 +1221,6 @@ namespace JSC {
             return AL | B | (offset & BRANCH_MASK);
         }
 
-    private:
         // pretty-printing functions
         static char const * nameGpReg(int reg)
         {
@@ -1274,6 +1288,7 @@ namespace JSC {
             return names[ccIndex];
         }
 
+    private:
         // Decodes operand 2 immediate values (for debug output and assertions).
         inline uint32_t decOp2Imm(uint32_t op2)
         {
@@ -1455,14 +1470,6 @@ namespace JSC {
             VFP_DTR   = 0x01000000,
             VFP_MOV     = 0x00000010,
 
-            FCPYD = 0x0eb00b40,
-            FADDD = 0x0e300b00,
-            FNEGD = 0x0eb10b40,
-            FDIVD = 0x0e800b00,
-            FSUBD = 0x0e300b40,
-            FMULD = 0x0e200b00,
-            FCMPD = 0x0eb40b40,
-            FSQRTD = 0x0eb10bc0,
             FMSR = 0x0e000a10,
             FMRS = 0x0e100a10,
             FSITOD = 0x0eb80bc0,
@@ -1605,7 +1612,7 @@ namespace JSC {
         void fnegd_r(int dd, int dm, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
+                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
             m_buffer.putInt(static_cast<ARMWord>(cc) | FNEGD | DD(dd) | DM(dm));
         }
 
@@ -1625,6 +1632,13 @@ namespace JSC {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
+        }
+
+        void fabsd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fabsd", nameFpRegD(dd), nameFpRegD(dm));
+            m_buffer.putInt(static_cast<ARMWord>(cc) | FABSD | DD(dd) | DM(dm));
         }
 
         void fmuld_r(int dd, int dn, int dm, Condition cc = AL)

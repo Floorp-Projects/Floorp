@@ -58,7 +58,6 @@ FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
 ifeq ($(OS_ARCH),Linux)
-include $(topsrcdir)/config/config.mk
 # need this to suppress errors when compiling common/linux/eintr_wrapper.h
 OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 endif

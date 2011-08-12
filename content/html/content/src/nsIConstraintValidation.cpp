@@ -43,7 +43,7 @@
 #include "nsDOMValidityState.h"
 #include "nsIFormControl.h"
 #include "nsHTMLFormElement.h"
-
+#include "nsContentUtils.h"
 
 const PRUint16 nsIConstraintValidation::sContentSpecifiedMaxLengthMessage = 256;
 

@@ -46,6 +46,8 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		green.png \
+		test_bug290026.html \
+		test_bug291780.html \
 		test_bug332636.html \
 		test_bug332636.html^headers^ \
 		test_bug366682.html \
@@ -55,6 +57,7 @@ _TEST_FILES = \
 		test_bug417418.html \
 		test_bug432225.html \
 		test_bug439808.html \
+		test_bug442186.html \
 		test_bug449243.html \
 		test_bug455992.html \
 		test_bug456244.html \

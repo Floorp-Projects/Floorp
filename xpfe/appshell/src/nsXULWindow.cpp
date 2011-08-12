@@ -85,7 +85,7 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-
+#include "nsContentUtils.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
 #include "prenv.h"

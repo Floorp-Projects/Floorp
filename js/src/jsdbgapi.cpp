@@ -70,6 +70,7 @@
 #include "jswrapper.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
@@ -216,7 +217,8 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
             return JS_FALSE;
         }
 
-        mjit::ReleaseScriptCode(cx, script);
+        mjit::ReleaseScriptCode(cx, script, true);
+        mjit::ReleaseScriptCode(cx, script, false);
         script->debugMode = !!debug;
     }
 #endif
@@ -243,10 +245,7 @@ js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
     js::mjit::JITScript *jit = script->jitNormal ? script->jitNormal : script->jitCtor;
     if (jit && script->singleStepMode != jit->singleStepMode) {
         js::mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile()) {
-            script->singleStepMode = !singleStep;
-            return JS_FALSE;
-        }
+        recompiler.recompile();
     }
 #endif
     return JS_TRUE;
@@ -338,6 +337,8 @@ JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, jsval closure)
 {
+    JS_ASSERT(uint32(pc - script->code) < script->length);
+
     JSTrap *junk, *trap, *twin;
     JSRuntime *rt;
     uint32 sample;
@@ -385,8 +386,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
         js::mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile())
-            return JS_FALSE;
+        recompiler.recompile();
     }
 #endif
 
@@ -437,8 +437,13 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
+        JSCompartment *oldCompartment = cx->compartment;
+        cx->setCompartment(script->compartment);
+
         mjit::Recompiler recompiler(cx, script);
         recompiler.recompile();
+
+        cx->setCompartment(oldCompartment);
     }
 #endif
 }
@@ -606,7 +611,6 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 
 /************************************************************************/
 
-
 JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                  JSWatchPointHandler handler, JSObject *closure)
@@ -646,6 +650,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                              obj->getClass()->name);
         return false;
     }
+
+    types::MarkTypePropertyConfigured(cx, obj, propid);
 
     WatchpointMap *wpmap = cx->compartment->watchpointMap;
     if (!wpmap) {
@@ -842,7 +848,7 @@ JS_PUBLIC_API(JSStackFrame *)
 JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 {
     StackFrame *fp = Valueify(*iteratorp);
-    *iteratorp = Jsvalify((fp == NULL) ? js_GetTopStackFrame(cx) : fp->prev());
+    *iteratorp = Jsvalify((fp == NULL) ? js_GetTopStackFrame(cx, FRAME_EXPAND_ALL) : fp->prev());
     return *iteratorp;
 }
 
@@ -855,7 +861,7 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->pcQuadratic(cx);
+    return Valueify(fp)->pcQuadratic(cx->stack);
 }
 
 JS_PUBLIC_API(JSStackFrame *)
@@ -1123,6 +1129,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!script)
         return false;
 
+    script->isUncachedEval = true;
     bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, Valueify(rval));
 
     js_DestroyScript(cx, script, 6);
@@ -1914,9 +1921,9 @@ jstv_Filename(JSStackFrame *fp)
 inline uintN
 jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 {
-    while (fp && fp->pcQuadratic(cx) == NULL)
+    while (fp && fp->pcQuadratic(cx->stack) == NULL)
         fp = fp->prev();
-    return (fp && fp->pcQuadratic(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
+    return (fp && fp->pcQuadratic(cx->stack)) ? js_FramePCToLineNumber(cx, fp) : 0;
 }
 
 /* Collect states here and distribute to a matching buffer, if any */

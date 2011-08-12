@@ -55,6 +55,8 @@ const TELEMETRY_DELAY = 60000;
 // about:memory values to turn into histograms
 const MEM_HISTOGRAMS = {
   "js-gc-heap": "MEMORY_JS_GC_HEAP",
+  "js-compartments-system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
+  "js-compartments-user": "MEMORY_JS_COMPARTMENTS_USER",
   "resident": "MEMORY_RESIDENT",
   "explicit/layout/all": "MEMORY_LAYOUT_ALL",
   "explicit/images/content/used/uncompressed":

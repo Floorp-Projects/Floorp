@@ -44,6 +44,8 @@
 #ifndef nsDOMClassInfoID_h__
 #define nsDOMClassInfoID_h__
 
+#include "nsIXPCScriptable.h"
+
 #define DOMCI_CLASS(_dom_class)                                               \
   eDOMClassInfo_##_dom_class##_id,
 

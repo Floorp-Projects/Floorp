@@ -91,10 +91,15 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!obj_proto)
         return NULL;
 
-    /* Function.prototype and the global object delegate to Object.prototype. */
-    fun_proto->setProto(obj_proto);
-    if (!obj->getProto())
-        obj->setProto(obj_proto);
+    /*
+     * Function.prototype and the global object delegate to Object.prototype.
+     * Don't update the prototype if the __proto__ of either object was cleared
+     * after the objects started getting used.
+     */
+    if (fun_proto->shouldSplicePrototype(cx) && !fun_proto->splicePrototype(cx, obj_proto))
+        return NULL;
+    if (obj->shouldSplicePrototype(cx) && !obj->splicePrototype(cx, obj_proto))
+        return NULL;
 
     return fun_proto;
 }
@@ -107,7 +112,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, NULL, NULL);
-    if (!obj)
+    if (!obj || !obj->setSingletonType(cx))
         return NULL;
 
     GlobalObject *globalObj = obj->asGlobal();
@@ -120,6 +125,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
         return NULL;
     globalObj->setSlot(REGEXP_STATICS, ObjectValue(*res));
     globalObj->setFlags(0);
+
     return globalObj;
 }
 
@@ -229,14 +235,15 @@ GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
         return NULL;
 
     JSObject *proto = NewNonFunction<WithProto::Given>(cx, clasp, objectProto, this);
-    if (!proto)
+    if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
     /*
      * Supply the created prototype object with an empty shape for the benefit
      * of callers of JSObject::initSharingEmptyShape.
      */
-    if (!proto->getEmptyShape(cx, clasp, gc::FINALIZE_OBJECT0))
+    types::TypeObject *type = proto->getNewType(cx);
+    if (!type || !type->getEmptyShape(cx, clasp, gc::FINALIZE_OBJECT0))
         return NULL;
 
     return proto;
@@ -257,7 +264,8 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFun
 {
     if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
         return false;
-    obj->brand(cx);
+    if (!cx->typeInferenceEnabled())
+        obj->brand(cx);
     return true;
 }
 

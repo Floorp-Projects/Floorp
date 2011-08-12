@@ -445,12 +445,18 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     len = (ptrdiff_t) cs->length;
     Sprint(sp, "%05u:", loc);
     if (counts) {
-        ptrdiff_t start = Sprint(sp, "%d", counts.get(0, loc));
-        for (size_t i = 1; i < counts.numRunmodes(); ++i)
-            Sprint(sp, "/%d", counts.get(i, loc));
+        ptrdiff_t start = Sprint(sp, "%.0f", counts.get(0, loc));
+        for (size_t i = 1; i < JSPCCounters::NUM_COUNTERS; ++i)
+            Sprint(sp, "/%.0f", counts.get(i, loc));
         int l = Sprint(sp, "") - start;
         if (l < COUNTS_LEN)
             Sprint(sp, "%*s", COUNTS_LEN - l, "");
+        double mjitHits = counts.get(JSPCCounters::METHODJIT, loc);
+        if (mjitHits) {
+            Sprint(sp, "  %.0f/%.0f",
+                   counts.get(JSPCCounters::METHODJIT_CODE, loc) / mjitHits,
+                   counts.get(JSPCCounters::METHODJIT_PICS, loc) / mjitHits);
+        }
         Sprint(sp, " x ");
     }
     if (lines)
@@ -479,10 +485,16 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 v = STRING_TO_JSVAL(atom);
             }
         } else {
-            if (type == JOF_OBJECT)
+            if (type == JOF_OBJECT) {
+                /* Don't call obj.toSource if analysis/inference is active. */
+                if (cx->compartment->activeAnalysis) {
+                    Sprint(sp, " object");
+                    break;
+                }
                 obj = script->getObject(index);
-            else
+            } else {
                 obj = script->getRegExp(index);
+            }
             v = OBJECT_TO_JSVAL(obj);
         }
         {
@@ -1703,15 +1715,11 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
             }
             break;
 
-          case JSOP_LENGTH:
-            atom = cx->runtime->atomState.lengthAtom;
-            goto do_destructure_atom;
-
           case JSOP_CALLPROP:
           case JSOP_GETPROP:
-            LOAD_ATOM(0);
-          do_destructure_atom:
+          case JSOP_LENGTH:
           {
+            LOAD_ATOM(0);
             *OFF2STR(&ss->sprinter, head) = '{';
 #if JS_HAS_DESTRUCTURING_SHORTHAND
             nameoff = ss->sprinter.offset;
@@ -2153,28 +2161,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                           case JSOP_ENUMCONSTELEM:
                             op = JSOP_GETELEM;
                             break;
-                          case JSOP_GETTHISPROP:
-                            /*
-                             * NB: JSOP_GETTHISPROP can't fail due to |this|
-                             * being null or undefined at runtime (beware that
-                             * this may change for ES4). Therefore any error
-                             * resulting from this op must be due to the value
-                             * of the property accessed via |this|, so do not
-                             * rewrite op to JSOP_THIS.
-                             *
-                             * The next two cases should not change op if
-                             * js_DecompileValueGenerator was called from the
-                             * the property getter. They should rewrite only
-                             * if the base object in the arg/var/local is null
-                             * or undefined. FIXME: bug 431569.
-                             */
-                            break;
-                          case JSOP_GETARGPROP:
-                            op = JSOP_GETARG;
-                            break;
-                          case JSOP_GETLOCALPROP:
-                            op = JSOP_GETLOCAL;
-                            break;
                           case JSOP_SETXMLNAME:
                             op = JSOp(JSOP_GETELEM2);
                             break;
@@ -2192,8 +2178,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 else if (op == JSOP_GETELEM2)
                     saveop = JSOP_GETELEM;
             }
-            LOCAL_ASSERT(js_CodeSpec[saveop].length == oplen ||
-                         JOF_TYPE(format) == JOF_SLOTATOM);
 
             jp->dvgfence = NULL;
         }
@@ -2969,7 +2953,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * object that's not a constructor, causing us to be
                      * called with an intervening frame on the stack.
                      */
-                    StackFrame *fp = js_GetTopStackFrame(cx);
+                    StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
                     if (fp) {
                         while (!fp->isEvalFrame())
                             fp = fp->prev();
@@ -3779,6 +3763,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               do_inclval:
                 todo = Sprint(&ss->sprinter, ss_format,
                               js_incop_strs[!(cs->format & JOF_INC)], lval);
+                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+                    len += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
                 break;
 
               case JSOP_INCPROP:
@@ -3795,6 +3781,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = Sprint(&ss->sprinter, fmt,
                               js_incop_strs[!(cs->format & JOF_INC)],
                               lval, rval);
+                len += GetDecomposeLength(pc, JSOP_INCPROP_LENGTH);
                 break;
 
               case JSOP_INCELEM:
@@ -3814,6 +3801,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = Sprint(&ss->sprinter, ss_format,
                                   js_incop_strs[!(cs->format & JOF_INC)], lval);
                 }
+                len += GetDecomposeLength(pc, JSOP_INCELEM_LENGTH);
                 break;
 
               case JSOP_ARGINC:
@@ -3835,6 +3823,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               do_lvalinc:
                 todo = Sprint(&ss->sprinter, ss_format,
                               lval, js_incop_strs[!(cs->format & JOF_INC)]);
+                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+                    len += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
                 break;
 
               case JSOP_PROPINC:
@@ -3850,6 +3840,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt, lval, rval,
                               js_incop_strs[!(cs->format & JOF_INC)]);
+                len += GetDecomposeLength(pc, JSOP_PROPINC_LENGTH);
                 break;
 
               case JSOP_ELEMINC:
@@ -3869,12 +3860,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = Sprint(&ss->sprinter, ss_format,
                                   lval, js_incop_strs[!(cs->format & JOF_INC)]);
                 }
+                len += GetDecomposeLength(pc, JSOP_ELEMINC_LENGTH);
                 break;
-
-              case JSOP_LENGTH:
-                fmt = dot_format;
-                rval = js_length_str;
-                goto do_getprop_lval;
 
               case JSOP_GETPROP2:
                 op = JSOP_GETPROP;
@@ -3884,49 +3871,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALLPROP:
               case JSOP_GETPROP:
               case JSOP_GETXPROP:
+              case JSOP_LENGTH:
                 LOAD_ATOM(0);
 
-              do_getprop:
                 GET_QUOTE_AND_FMT(index_format, dot_format, rval);
-              do_getprop_lval:
                 PROPAGATE_CALLNESS();
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt, lval, rval);
                 break;
-
-              case JSOP_GETTHISPROP:
-                LOAD_ATOM(0);
-                GET_QUOTE_AND_FMT(index_format, dot_format, rval);
-                todo = Sprint(&ss->sprinter, fmt, js_this_str, rval);
-                break;
-
-              case JSOP_GETARGPROP:
-                /* Get the name of the argument or variable. */
-                i = GET_ARGNO(pc);
-
-              do_getarg_prop:
-                atom = GetArgOrVarAtom(ss->printer, i);
-                LOCAL_ASSERT(atom);
-                lval = QuoteString(&ss->sprinter, atom, 0);
-                if (!lval || !PushOff(ss, STR2OFF(&ss->sprinter, lval), op))
-                    return NULL;
-
-                /* Get the name of the property. */
-                LOAD_ATOM(ARGNO_LEN);
-                goto do_getprop;
-
-              case JSOP_GETLOCALPROP:
-                if (IsVarSlot(jp, pc, &i))
-                    goto do_getarg_prop;
-                LOCAL_ASSERT((uintN)i < ss->top);
-                lval = GetLocal(ss, i);
-                if (!lval)
-                    return NULL;
-                todo = SprintCString(&ss->sprinter, lval);
-                if (todo < 0 || !PushOff(ss, todo, op))
-                    return NULL;
-                LOAD_ATOM(2);
-                goto do_getprop;
 
               case JSOP_SETPROP:
               case JSOP_SETMETHOD:
@@ -3977,6 +3929,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_SETELEM:
+              case JSOP_SETHOLE:
                 rval = POP_STR();
                 op = JSOP_NOP;          /* turn off parens */
                 xval = POP_STR();
@@ -4487,6 +4440,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 cs = &js_CodeSpec[op];
                 len = cs->length;
                 DECOMPILE_CODE(pc, len);
+                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
+                    len += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
                 *pc = JSOP_TRAP;
                 todo = -2;
                 break;
@@ -5132,7 +5087,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     if (!cx->hasfp() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 
-    fp = cx->fp();
+    fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
     script = fp->script();
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs().pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
@@ -5533,6 +5488,9 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
         oplen = cs->length;
         if (oplen < 0)
             oplen = js_GetVariableBytecodeLength(pc);
+
+        if (cs->format & JOF_DECOMPOSE)
+            continue;
 
         /*
          * A (C ? T : E) expression requires skipping either T (if target is in

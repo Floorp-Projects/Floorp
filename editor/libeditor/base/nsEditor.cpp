@@ -3393,54 +3393,52 @@ nsEditor::GetNextNodeImpl(nsIDOMNode  *aCurrentNode,
 }
 
 
-nsCOMPtr<nsIDOMNode>
+already_AddRefed<nsIDOMNode>
 nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, 
                             PRBool bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(aCurrentNode, nsnull);
-  nsCOMPtr<nsIDOMNode> resultNode, temp=aCurrentNode;
+  nsCOMPtr<nsIDOMNode> resultNode, temp = aCurrentNode;
   PRBool hasChildren;
   aCurrentNode->HasChildNodes(&hasChildren);
-  while (hasChildren)
-  {
+  while (hasChildren) {
     temp->GetLastChild(getter_AddRefs(resultNode));
-    if (resultNode)
-    {
-      if (bNoBlockCrossing && IsBlockNode(resultNode))
-         return resultNode;
+    if (resultNode) {
+      if (bNoBlockCrossing && IsBlockNode(resultNode)) {
+        return resultNode.forget();
+      }
       resultNode->HasChildNodes(&hasChildren);
       temp = resultNode;
-    }
-    else 
+    } else {
       hasChildren = PR_FALSE;
+    }
   }
 
-  return resultNode;
+  return resultNode.forget();
 }
 
-nsCOMPtr<nsIDOMNode>
+already_AddRefed<nsIDOMNode>
 nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode,
                            PRBool bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(aCurrentNode, nsnull);
-  nsCOMPtr<nsIDOMNode> resultNode, temp=aCurrentNode;
+  nsCOMPtr<nsIDOMNode> resultNode, temp = aCurrentNode;
   PRBool hasChildren;
   aCurrentNode->HasChildNodes(&hasChildren);
-  while (hasChildren)
-  {
+  while (hasChildren) {
     temp->GetFirstChild(getter_AddRefs(resultNode));
-    if (resultNode)
-    {
-      if (bNoBlockCrossing && IsBlockNode(resultNode))
-         return resultNode;
+    if (resultNode) {
+      if (bNoBlockCrossing && IsBlockNode(resultNode)) {
+        return resultNode.forget();
+      }
       resultNode->HasChildNodes(&hasChildren);
       temp = resultNode;
-    }
-    else 
+    } else {
       hasChildren = PR_FALSE;
+    }
   }
 
-  return resultNode;
+  return resultNode.forget();
 }
 
 PRBool 

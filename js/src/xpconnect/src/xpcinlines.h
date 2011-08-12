@@ -44,6 +44,8 @@
 #ifndef xpcinlines_h___
 #define xpcinlines_h___
 
+#include "jsfriendapi.h"
+
 /***************************************************************************/
 PRBool
 xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
@@ -665,13 +667,17 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id)
 
 inline JSObject*
 xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                JSObject *parent)
+                                bool uniqueType, JSObject *parent)
 {
     JSObject *obj;
     if (clasp->flags & JSCLASS_IS_GLOBAL) {
         obj = JS_NewGlobalObject(cx, clasp);
-        if (obj && proto)
-            JS_SetPrototype(cx, obj, proto);
+        if (obj && proto) {
+            if (!JS_SplicePrototype(cx, obj, proto))
+                obj = NULL;
+        }
+    } else if (uniqueType) {
+        obj = JS_NewObjectWithUniqueType(cx, clasp, proto, parent);
     } else {
         obj = JS_NewObject(cx, clasp, proto, parent);
     }
