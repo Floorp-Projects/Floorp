@@ -99,6 +99,9 @@ _TEST_FILES = \
   browser_updatessl.js \
   browser_installssl.js \
   browser_newaddon.js \
+  browser_select_selection.js \
+  browser_select_confirm.js \
+  browser_select_update.js \
   $(NULL)
 
 _TEST_RESOURCES = \
