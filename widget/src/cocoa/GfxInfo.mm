@@ -134,26 +134,12 @@ GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
   return NS_OK;
 }
 
-/* readonly attribute DOMString adapterDescription2; */
-NS_IMETHODIMP
-GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
-{
-  return NS_ERROR_FAILURE;
-}
-
 /* readonly attribute DOMString adapterRAM; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 {
   aAdapterRAM = mAdapterRAMString;
   return NS_OK;
-}
-
-/* readonly attribute DOMString adapterRAM2; */
-NS_IMETHODIMP
-GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
-{
-  return NS_ERROR_FAILURE;
 }
 
 /* readonly attribute DOMString adapterDriver; */
@@ -164,26 +150,12 @@ GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
   return NS_OK;
 }
 
-/* readonly attribute DOMString adapterDriver2; */
-NS_IMETHODIMP
-GfxInfo::GetAdapterDriver2(nsAString & aAdapterDriver)
-{
-  return NS_ERROR_FAILURE;
-}
-
 /* readonly attribute DOMString adapterDriverVersion; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
 {
   aAdapterDriverVersion.AssignLiteral("");
   return NS_OK;
-}
-
-/* readonly attribute DOMString adapterDriverVersion2; */
-NS_IMETHODIMP
-GfxInfo::GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion)
-{
-  return NS_ERROR_FAILURE;
 }
 
 /* readonly attribute DOMString adapterDriverDate; */
@@ -194,13 +166,6 @@ GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
   return NS_OK;
 }
 
-/* readonly attribute DOMString adapterDriverDate2; */
-NS_IMETHODIMP
-GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
-{
-  return NS_ERROR_FAILURE;
-}
-
 /* readonly attribute unsigned long adapterVendorID; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
@@ -209,33 +174,12 @@ GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterVendorID2; */
-NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
-{
-  return NS_ERROR_FAILURE;
-}
-
 /* readonly attribute unsigned long adapterDeviceID; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
   *aAdapterDeviceID = 0;
   return NS_OK;
-}
-
-/* readonly attribute unsigned long adapterDeviceID2; */
-NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
-{
-  return NS_ERROR_FAILURE;
-}
-
-/* readonly attribute boolean isGPU2Active; */
-NS_IMETHODIMP
-GfxInfo::GetIsGPU2Active(PRBool* aIsGPU2Active)
-{
-  return NS_ERROR_FAILURE;
 }
 
 void
@@ -321,6 +265,26 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
     if (!foundGoodDevice)
       status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
   }
+
+  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL) {
+    // same comment as above for FEATURE_OPENGL_LAYERS.
+    bool foundGoodDevice = false;
+
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
+      switch (mRendererIDs[i]) {
+        case kCGLRendererGeForceFXID: // bug 678053. We must blacklist Geforce 7300 GT. This family
+                                      // covers all Geforce FX, 6, 7 series. Need bug 678330 for finer
+                                      // blacklisting.
+          break;
+        default:
+          if (mRendererIDs[i])
+            foundGoodDevice = true;
+      }
+    }
+    if (!foundGoodDevice)
+      status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+  }
+
   *aStatus = status;
   return NS_OK;
 }
