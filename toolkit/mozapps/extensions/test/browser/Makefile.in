@@ -98,6 +98,7 @@ _TEST_FILES = \
   browser_bug623950.js \
   browser_updatessl.js \
   browser_installssl.js \
+  browser_newaddon.js \
   $(NULL)
 
 _TEST_RESOURCES = \

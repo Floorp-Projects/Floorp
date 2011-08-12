@@ -42,6 +42,7 @@ toolkit.jar:
   skin/classic/mozapps/extensions/update.css                      (extensions/update.css)
   skin/classic/mozapps/extensions/eula.css                        (extensions/eula.css)
   skin/classic/mozapps/extensions/blocklist.css                   (extensions/blocklist.css)
+* skin/classic/mozapps/extensions/newaddon.css                    (extensions/newaddon.css)
   skin/classic/mozapps/passwordmgr/key.png                        (passwordmgr/key.png)
   skin/classic/mozapps/passwordmgr/key-16.png                     (passwordmgr/key-16.png)
   skin/classic/mozapps/passwordmgr/key-64.png                     (passwordmgr/key-64.png)
