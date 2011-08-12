@@ -45,9 +45,9 @@
 #
 
 # Define an include-at-most-once flag
-#ifdef INCLUDED_CONFIG_MK
-#$(error Don't include config.mk twice!)
-#endif
+ifdef INCLUDED_CONFIG_MK
+$(error Don't include config.mk twice!)
+endif
 INCLUDED_CONFIG_MK = 1
 
 EXIT_ON_ERROR = set -e; # Shell loops continue past errors without this.

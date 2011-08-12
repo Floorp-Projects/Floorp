@@ -40,7 +40,6 @@
 #include "nsIDeviceMotion.h"
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsCOMArray.h"
-#include "nsTPtrArray.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 
@@ -65,7 +64,7 @@ public:
 
 private:
   nsCOMArray<nsIDeviceMotionListener> mListeners;
-  nsTPtrArray<nsIDOMWindow> mWindowListeners;
+  nsTArray<nsIDOMWindow*> mWindowListeners;
 
   void StartDisconnectTimer();
 

@@ -1630,6 +1630,8 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
 
         for(js::ThreadDataIter i(rt); !i.empty(); i.popFront())
             data->stackSize += i.threadData()->stackSpace.committedSize();
+
+        data->atomsTableSize += rt->atomState.atoms.tableSize();
     }
 
     JS_DestroyContextNoGC(cx);
@@ -1865,6 +1867,16 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
         ReportCompartmentStats(data.compartmentStatsVector[index], pathPrefix,
                                callback, closure);
     }
+
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/runtime-object"),
+                      nsIMemoryReporter::KIND_NONHEAP, sizeof(JSRuntime),
+    "Memory used by the JSRuntime object.",
+                      callback, closure);
+
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/atoms-table"),
+                      nsIMemoryReporter::KIND_NONHEAP, data.atomsTableSize,
+    "Memory used by the atoms table.",
+                      callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("stack"),
                       nsIMemoryReporter::KIND_NONHEAP, data.stackSize,

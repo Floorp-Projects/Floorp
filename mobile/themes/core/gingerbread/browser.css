@@ -981,11 +981,16 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   display: none;
 }
 
+#bookmark-popup-title {
+  background-color: @color_background_default@;
+}
+
 /* Identity popup   -------------------------------------------------------- */
 #identity-popup-container {
   background-color: @color_background_panel@;
   padding: @padding_normal@; /* core spacing */
   padding-bottom: @padding_xxxnormal@;
+  color: @color_text_panel@;
 }
 
 /* Popup Icons */
@@ -1171,6 +1176,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 #share-title,
+#bookmark-popup-title,
 #context-hint {
   color: @color_text_default@;
   font-size: @font_small@;

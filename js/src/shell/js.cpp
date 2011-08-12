@@ -686,11 +686,26 @@ static JSBool
 Version(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv = JS_ARGV(cx, vp);
-    if (argc > 0 && JSVAL_IS_INT(argv[0]))
-        *vp = INT_TO_JSVAL(JS_SetVersion(cx, (JSVersion) JSVAL_TO_INT(argv[0])));
-    else
+    if (argc == 0 || JSVAL_IS_VOID(argv[0])) {
+        /* Get version. */
         *vp = INT_TO_JSVAL(JS_GetVersion(cx));
-    return JS_TRUE;
+    } else {
+        /* Set version. */
+        int32 v = -1;
+        if (JSVAL_IS_INT(argv[0])) {
+            v = JSVAL_TO_INT(argv[0]);
+        } else if (JSVAL_IS_DOUBLE(argv[0])) {
+            jsdouble fv = JSVAL_TO_DOUBLE(argv[0]);
+            if (int32(fv) == fv)
+                v = int32(fv);
+        }
+        if (v < 0 || v > JSVERSION_LATEST) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "version");
+            return false;
+        }
+        *vp = INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(v)));
+    }
+    return true;
 }
 
 static JSBool

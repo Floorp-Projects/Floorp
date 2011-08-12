@@ -291,7 +291,10 @@ public:
   virtual void SetSeekable(PRBool aSeekable) = 0;
 
   // Return PR_TRUE if seeking is supported.
-  virtual PRBool GetSeekable() = 0;
+  virtual PRBool IsSeekable() = 0;
+
+  // Return the time ranges that can be seeked into.
+  virtual nsresult GetSeekable(nsTimeRanges* aSeekable) = 0;
 
   // Invalidate the frame.
   virtual void Invalidate();

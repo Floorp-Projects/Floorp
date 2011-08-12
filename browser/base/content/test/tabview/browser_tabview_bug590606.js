@@ -15,7 +15,7 @@ function test() {
   registerCleanupFunction(function() {
     while (gBrowser.tabs[1])
       gBrowser.removeTab(gBrowser.tabs[1]);
-    hideTabView(function() {});
+    hideTabView();
   });
 
   showTabView(function() {
@@ -24,7 +24,7 @@ function test() {
     registerCleanupFunction(function() {
       let groupItem = contentWindow.GroupItems.groupItem(groupItemTwoId);
       if (groupItem)
-        closeGroupItem(groupItem, function() {});
+        closeGroupItem(groupItem);
     });
 
     is(contentWindow.GroupItems.groupItems.length, 1, 

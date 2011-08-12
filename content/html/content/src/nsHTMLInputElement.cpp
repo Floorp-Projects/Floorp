@@ -120,12 +120,6 @@
 #include "nsContentUtils.h"
 #include "nsRadioVisitor.h"
 
-#include "nsTextEditRules.h"
-
-// JS headers are needed for the pattern attribute.
-#include "jsapi.h"
-#include "jscntxt.h"
-
 using namespace mozilla::dom;
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs

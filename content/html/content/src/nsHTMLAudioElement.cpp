@@ -65,6 +65,7 @@
 
 #include "nsEventDispatcher.h"
 #include "nsIDOMProgressEvent.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla::dom;
 

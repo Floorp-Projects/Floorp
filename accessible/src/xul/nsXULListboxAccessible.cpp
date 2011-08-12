@@ -47,6 +47,8 @@
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIDOMNodeList.h"
+#include "nsComponentManagerUtils.h"
 
 using namespace mozilla::a11y;
 

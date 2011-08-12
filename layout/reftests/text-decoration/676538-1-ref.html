@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>text-decoration alignment</title>
+<meta charset=UTF-8>
+<style>
+
+span.block { position: absolute; top: 0; left: 0; }
+span.dec { text-decoration: underline }
+span.hide { color: transparent }
+
+</style>
+</head>
+<body>
+
+<p style="position: relative">
+  <span class="block" style="margin-top: 16px"><span class="hide"></span><span class="dec" style="color:black  ">x<span class="hide">xx</span></span></span>
+  <span class="block" style="margin-top: 08px"><span class="hide">x</span><span class="dec" style="color:fuchsia">x<span class="hide">x</span></span></span>
+  <span class="block" style="margin-top: 00px"><span class="hide">xx</span><span class="dec" style="color:aqua   ">x<span class="hide"></span></span></span>
+</p>
+
+</body>
+</html>

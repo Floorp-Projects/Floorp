@@ -714,7 +714,7 @@ class CallCompiler : public BaseCompiler
         linker.link(notCompiled, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
         JSC::CodeLocationLabel cs = linker.finalize();
 
-        JaegerSpew(JSpew_PICs, "generated CALL stub %p (%d bytes)\n", cs.executableAddress(),
+        JaegerSpew(JSpew_PICs, "generated CALL stub %p (%lu bytes)\n", cs.executableAddress(),
                    masm.size());
 
         if (f.regs.inlined()) {
@@ -799,7 +799,7 @@ class CallCompiler : public BaseCompiler
         linker.link(done, ic.funGuard.labelAtOffset(ic.hotPathOffset));
         JSC::CodeLocationLabel cs = linker.finalize();
 
-        JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%d bytes)\n",
+        JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%lu bytes)\n",
                    cs.executableAddress(), masm.size());
 
         Repatcher repatch(from);
@@ -1057,7 +1057,7 @@ class CallCompiler : public BaseCompiler
         linker.link(funGuard, ic.slowPathStart);
         JSC::CodeLocationLabel start = linker.finalize();
 
-        JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%d bytes)\n",
+        JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%lu bytes)\n",
                    start.executableAddress(), masm.size());
 
         Repatcher repatch(jit);
@@ -1352,7 +1352,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
 
     JSC::CodeLocationLabel cs = linker.finalize();
 
-    JaegerSpew(JSpew_PICs, "generated ARGS CHECK stub %p (%d bytes)\n",
+    JaegerSpew(JSpew_PICs, "generated ARGS CHECK stub %p (%lu bytes)\n",
                cs.executableAddress(), masm.size());
 
     Repatcher repatch(jit);

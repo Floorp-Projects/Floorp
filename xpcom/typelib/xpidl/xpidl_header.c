@@ -639,9 +639,9 @@ list(TreeState *state)
 }
 
 typedef enum write_type_mode {
-    WT_PLAIN, // for use with typedef; also with NS_IMETHOD_() or NS_IMETHODIMP_()
-    WT_IN, // [in] param or setter
-    WT_OUT // [out] param, [inout] param, or getter
+    WT_PLAIN, /* for use with typedef; also with NS_IMETHOD_() or NS_IMETHODIMP_() */
+    WT_IN, /* [in] param or setter */
+    WT_OUT /* [out] param, [inout] param, or getter */
 } write_type_mode;
 
 static gboolean

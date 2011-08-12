@@ -92,6 +92,7 @@ nsFontFaceLoader::nsFontFaceLoader(gfxProxyFontEntry *aProxy, nsIURI *aFontURI,
   : mFontEntry(aProxy), mFontURI(aFontURI), mFontSet(aFontSet),
     mChannel(aChannel)
 {
+  mFontFamily = aProxy->Family();
 }
 
 nsFontFaceLoader::~nsFontFaceLoader()
