@@ -211,10 +211,10 @@ nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   nsDocAccessible* document = GetAccService()->GetDocAccessible(documentNode);
 
 #ifdef DEBUG_NOTIFICATIONS
-  nsCOMPtr<nsISelection2> sel2(do_QueryInterface(aSelection));
+  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
 
   PRInt16 type = 0;
-  sel2->GetType(&type);
+  privSel->GetType(&type);
 
   if (type == nsISelectionController::SELECTION_NORMAL ||
       type == nsISelectionController::SELECTION_SPELLCHECK) {
@@ -245,10 +245,10 @@ nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
 void
 nsCaretAccessible::ProcessSelectionChanged(nsISelection* aSelection)
 {
-  nsCOMPtr<nsISelection2> sel2(do_QueryInterface(aSelection));
+  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
 
   PRInt16 type = 0;
-  sel2->GetType(&type);
+  privSel->GetType(&type);
 
   if (type == nsISelectionController::SELECTION_NORMAL)
     NormalSelectionChanged(aSelection);

@@ -1232,16 +1232,16 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 #endif
 
         /*
-         * Inline FreeLists::getNext. Only the case where the current freelist
+         * Inline FreeSpan::allocate. Only the case where the current freelist
          * span is not empty is handled.
          */
         gc::FreeSpan *list = &cx->compartment->freeLists.lists[thingKind];
+        loadPtr(&list->first, result);
 
-        loadPtr(&list->start, result);
-        Jump jump = branchPtr(Assembler::Equal, AbsoluteAddress(&list->end), result);
+        Jump jump = branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result);
 
         addPtr(Imm32(thingSize), result);
-        storePtr(result, &list->start);
+        storePtr(result, &list->first);
 
         /*
          * Fill in the blank object. Order doesn't matter here, from here
@@ -1255,7 +1255,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
         /*
          * Write out the slots pointer before readjusting the result register,
-         * as for dense arrays this is relative to the JSObject itself.
+         * as for dense arrays we will need to get the address of the fixed
+         * slots first.
          */
         if (templateObject->isDenseArray()) {
             JS_ASSERT(!templateObject->initializedLength);

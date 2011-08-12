@@ -2402,8 +2402,8 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     CodeLocationLabel cs = buffer.finalize();
 #if DEBUG
     char *chars = DeflateString(cx, v.toString()->getChars(cx), v.toString()->length());
-    JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%x (\"%s\") shape 0x%x (%s: %d)\n",
-               js_CodeName[op], cs.executableAddress(), id, chars, holder->shape(),
+    JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%lx (\"%s\") shape 0x%x (%s: %d)\n",
+               js_CodeName[op], cs.executableAddress(), JSID_BITS(id), chars, holder->shape(),
                cx->fp()->script()->filename, CurrentLine(cx));
     cx->free_(chars);
 #endif
@@ -3014,6 +3014,9 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(keyValue));
     else
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, keyReg);
+
+    // Restore |obj|.
+    masm.rematPayload(StateRemat::FromInt32(objRemat), objReg);
 
     // Load the array's packed data vector.
     masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);

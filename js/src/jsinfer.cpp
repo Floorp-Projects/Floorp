@@ -5387,14 +5387,14 @@ SweepTypeObjects(JSContext *cx, JSCompartment *compartment)
     for (; aheader; aheader = aheader->next) {
         gc::Arena *arena = aheader->getArena();
         gc::FreeSpan firstSpan(aheader->getFirstFreeSpan());
-        gc::FreeSpan *span = &firstSpan;
+        const gc::FreeSpan *span = &firstSpan;
 
         for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
             JS_ASSERT(thing <= arena->thingsEnd());
-            if (thing == span->start) {
+            if (thing == span->first) {
                 if (!span->hasNext())
                     break;
-                thing = span->end;
+                thing = span->last;
                 span = span->nextSpan();
             } else {
                 SweepTypeObject(cx, reinterpret_cast<TypeObject *>(thing));

@@ -160,6 +160,19 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
 
     JSScript *script = fp->script();
     jsbytecode *start = script->code;
+
+    /*
+     * If the debugger asks for the scope chain at a pc where we are about to
+     * fix it up, advance target past the fixup. See bug 672804.
+     */
+    JSOp op = js_GetOpcode(cx, script, target);
+    while (op == JSOP_NOP || op == JSOP_INDEXBASE || op == JSOP_INDEXBASE1 ||
+           op == JSOP_INDEXBASE2 || op == JSOP_INDEXBASE3 ||
+           op == JSOP_BLOCKCHAIN || op == JSOP_NULLBLOCKCHAIN)
+    {
+        target += js_CodeSpec[op].length;
+        op = js_GetOpcode(cx, script, target);
+    }
     JS_ASSERT(target >= start && target < start + script->length);
 
     JSObject *blockChain = NULL;

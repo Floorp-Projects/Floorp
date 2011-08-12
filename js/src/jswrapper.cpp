@@ -407,7 +407,6 @@ ForceFrame::enter()
     LeaveTrace(context);
 
     JS_ASSERT(context->compartment == target->compartment());
-    JSCompartment *destination = context->compartment;
 
     JSObject *scopeChain = target->getGlobal();
     JS_ASSERT(scopeChain->isNative());
@@ -441,7 +440,6 @@ AutoCompartment::enter()
         JS_ASSERT(scopeChain->isNative());
 
         frame.construct();
-
         if (!context->stack.pushDummyFrame(context, *scopeChain, &frame.ref()))
             return false;
 

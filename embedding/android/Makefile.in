@@ -101,13 +101,18 @@ GARBAGE_DIRS += classes res
 ifeq ($(MOZ_APP_NAME),fennec)
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_72x72.png
-ifeq (org.mozilla.fennec_unofficial,$(ANDROID_PACKAGE_NAME))
-DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec_unofficial.sharedID"
-else ifeq (,$(MOZ_OFFICIAL_BRANDING))
-DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
-else
+
+# we released these builds to the public with shared IDs and need to keep them
+ifeq (org.mozilla.firefox,$(ANDROID_PACKAGE_NAME))
 DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.firefox.sharedID"
+else ifeq (org.mozilla.firefox_beta,$(ANDROID_PACKAGE_NAME))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.firefox.sharedID"
+else ifeq (org.mozilla.fennec_aurora,$(ANDROID_PACKAGE_NAME))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
+else ifeq (org.mozilla.fennec,$(ANDROID_PACKAGE_NAME))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
 endif
+
 else
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png

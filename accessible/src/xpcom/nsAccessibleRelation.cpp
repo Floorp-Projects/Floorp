@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,11 +36,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsAccessibleRelation.h"
 
-[scriptable, uuid(6ccb17a0-e95e-11d1-beae-00805f8a66dc)]
-interface nsIBaseStream : nsISupports
+#include "Relation.h"
+#include "nsAccessible.h"
+
+#include "nsArrayUtils.h"
+#include "nsComponentManagerUtils.h"
+
+nsAccessibleRelation::nsAccessibleRelation(PRUint32 aType,
+                                           Relation* aRel) :
+  mType(aType)
 {
-    /** Close the stream. */
-    void close();
-};
+  mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  nsIAccessible* targetAcc = nsnull;
+  while ((targetAcc = aRel->Next()))
+    mTargets->AppendElement(targetAcc, false);
+}
+
+// nsISupports
+NS_IMPL_ISUPPORTS1(nsAccessibleRelation, nsIAccessibleRelation)
+
+// nsIAccessibleRelation
+NS_IMETHODIMP
+nsAccessibleRelation::GetRelationType(PRUint32 *aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+  *aType = mType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibleRelation::GetTargetsCount(PRUint32 *aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+  return mTargets->GetLength(aCount);
+}
+
+NS_IMETHODIMP
+nsAccessibleRelation::GetTarget(PRUint32 aIndex, nsIAccessible **aTarget)
+{
+  NS_ENSURE_ARG_POINTER(aTarget);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIAccessible> target = do_QueryElementAt(mTargets, aIndex, &rv);
+  target.forget(aTarget);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAccessibleRelation::GetTargets(nsIArray **aTargets)
+{
+  NS_ENSURE_ARG_POINTER(aTargets);
+  NS_ADDREF(*aTargets = mTargets);
+  return NS_OK;
+}

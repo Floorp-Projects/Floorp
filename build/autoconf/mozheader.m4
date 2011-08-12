@@ -37,7 +37,7 @@ dnl
 dnl ***** END LICENSE BLOCK *****
 
 dnl MOZ_CHECK_HEADER(HEADER-FILE, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
-AC_DEFUN(MOZ_CHECK_HEADER,
+AC_DEFUN([MOZ_CHECK_HEADER],
 [ dnl Do the transliteration at runtime so arg 1 can be a shell variable.
   ac_safe=`echo "$1" | sed 'y%./+-%__p_%'`
   AC_MSG_CHECKING([for $1])
@@ -55,7 +55,7 @@ AC_DEFUN(MOZ_CHECK_HEADER,
 ])
 
 dnl MOZ_CHECK_HEADERS(HEADER-FILE... [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
-AC_DEFUN(MOZ_CHECK_HEADERS,
+AC_DEFUN([MOZ_CHECK_HEADERS],
 [ for ac_hdr in $1
   do
     MOZ_CHECK_HEADER($ac_hdr,

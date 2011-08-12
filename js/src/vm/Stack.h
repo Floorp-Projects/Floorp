@@ -1654,8 +1654,8 @@ class ContextStack
      * amount of general VM code can run before the first scripted frame is
      * pushed (if at all). This is currently and hackily accomplished by
      * pushing a "dummy frame" with the correct scope chain. On success, this
-     * function will change the compartment to 'c' and push a dummy frame for
-     * 'scopeChain'. On failure, nothing is changed.
+     * function will change the compartment to 'scopeChain.compartment()' and
+     * push a dummy frame for 'scopeChain'. On failure, nothing is changed.
      */
     bool pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg);
 

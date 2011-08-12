@@ -37,6 +37,7 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGString.h"
 #include "nsSVGTextPositioningElement.h"
+#include "nsContentUtils.h"
 
 typedef nsSVGTextPositioningElement nsSVGAltGlyphElementBase;
 
