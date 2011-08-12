@@ -386,6 +386,12 @@ var Browser = {
     let event = document.createEvent("Events");
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
+
+    // If we have an opener this was not the first window opened and will not
+    // receive an initial resize event. instead we fire the resize handler manually
+    // Bug 610834
+    if (window.opener)
+      resizeHandler({ target: window });
   },
 
   _alertShown: function _alertShown() {

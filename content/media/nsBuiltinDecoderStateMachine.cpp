@@ -216,11 +216,11 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mDecodeThreadIdle(PR_FALSE),
   mStopAudioThread(PR_TRUE),
   mQuickBuffering(PR_FALSE),
-  mEventManager(aDecoder),
   mIsRunning(PR_FALSE),
   mRunAgain(PR_FALSE),
   mDispatchedRunEvent(PR_FALSE),
-  mDecodeThreadWaiting(PR_FALSE)
+  mDecodeThreadWaiting(PR_FALSE),
+  mEventManager(aDecoder)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
