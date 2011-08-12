@@ -76,6 +76,9 @@ var BookmarkHelper = {
   createShortcut: function BH_createShortcut(aTitle, aURL, aIconURL) {
     const kIconSize = 64;
 
+    aTitle = aTitle || aURL;
+    aIconURL = aIconURL || "chrome://browser/skin/images/favicon-default-32.png";
+
     let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     canvas.setAttribute("style", "display: none");
 
@@ -93,6 +96,10 @@ var BookmarkHelper = {
       } catch(e) {
         Cu.reportError(e);
       }
+    }
+
+    image.onerror = function() {
+      Cu.reportError("CreateShortcut: image load error");
     }
 
     image.src = aIconURL;
