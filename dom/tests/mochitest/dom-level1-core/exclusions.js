@@ -91,5 +91,15 @@ var createEntityRef = ["documentinvalidcharacterexceptioncreateentref",
 
 
 var todoTests = {};
+function concat(lst/*...*/) {
+  var f = [];
+  if (arguments !== null) {
+    f = arguments[0];
+  }
+  for (var i = 1; i < arguments.length; i++) {
+    f = f.concat(arguments[i]);
+  }
+  return f;
+}
 var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests, createEntityRef);
 for (var excludedTestName in exclusions) { todoTests[exclusions[excludedTestName]] = true; }
