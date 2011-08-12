@@ -404,11 +404,15 @@ class Assembler : public AssemblerX86Shared
     void cmpq(const Register &lhs, const Register &rhs) {
         masm.cmpq_rr(rhs.code(), lhs.code());
     }
-    void testq(const Register &lhs, const Register &rhs) {
-        masm.testq_rr(lhs.code(), rhs.code());
+    void cmpq(Imm32 lhs, const Register &rhs) {
+        masm.cmpq_ir(lhs.value, rhs.code());
     }
+    
     void testq(Imm32 lhs, const Register &rhs) {
         masm.testq_i32r(lhs.value, rhs.code());
+    }
+    void testq(const Register &lhs, const Register &rhs) {
+        masm.testq_rr(lhs.code(), rhs.code());
     }
 
     void jmp(void *target, Relocation::Kind reloc) {

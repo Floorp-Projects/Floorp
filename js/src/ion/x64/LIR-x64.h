@@ -125,6 +125,12 @@ class LUnboxObject : public LInstructionHelper<1, 1, 0>
     LUnboxObject(const LAllocation &input) {
         setOperand(0, input);
     }
+
+    static const size_t Input = 0;
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
 };
 
 // Given an untyped input, guards on whether it's a string and returns the

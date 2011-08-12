@@ -144,6 +144,13 @@ class ComparePolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
+class CallPolicy : public BoxInputsPolicy
+{
+  public:
+    void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
+    bool adjustInputs(MInstruction *def);
+};
+
 static inline bool
 CoercesToDouble(MIRType type)
 {

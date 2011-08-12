@@ -157,6 +157,20 @@ CodeGeneratorX64::visitUnboxDouble(LUnboxDouble *unbox)
 }
 
 bool
+CodeGeneratorX64::visitUnboxObject(LUnboxObject *unbox)
+{
+    const ValueOperand value = ToValue(unbox, LUnboxObject::Input);
+    const LDefinition *object = unbox->output();
+
+    Assembler::Condition cond = masm.testObject(Assembler::NotEqual, value);
+    if (!bailoutIf(cond, unbox->snapshot()))
+        return false;
+    masm.unboxObject(value, ToRegister(object));
+    
+    return true;
+}
+
+bool
 CodeGeneratorX64::visitReturn(LReturn *ret)
 {
 #ifdef DEBUG
@@ -186,5 +200,16 @@ CodeGeneratorX64::testStringTruthy(bool truthy, const ValueOperand &value)
     masm.shrq(Imm32(JSString::LENGTH_SHIFT), ScratchReg);
     masm.testq(ScratchReg, ScratchReg);
     return truthy ? Assembler::NonZero : Assembler::Zero;
+}
+
+bool
+CodeGeneratorX64::visitStackArg(LStackArg *arg)
+{
+    ValueOperand val = ToValue(arg, 0);
+    uint32 argslot = arg->argslot();
+    int32 stack_offset = StackOffsetOfPassedArg(argslot);
+
+    masm.storeValue(val, Operand(StackPointer, stack_offset));
+    return true;
 }
 

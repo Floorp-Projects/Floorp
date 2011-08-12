@@ -165,6 +165,17 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 }
 
 bool
+CodeGeneratorX86::visitStackArg(LStackArg *arg)
+{
+    ValueOperand val = ToValue(arg, 0);
+    uint32 argslot = arg->argslot();
+    int32 stack_offset = StackOffsetOfPassedArg(argslot);
+
+    masm.storeValue(val, Operand(StackPointer, stack_offset));
+    return true;
+}
+
+bool
 CodeGeneratorX86::visitReturn(LReturn *ret)
 {
 #ifdef DEBUG

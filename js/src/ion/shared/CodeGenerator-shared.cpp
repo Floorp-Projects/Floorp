@@ -52,7 +52,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
   : gen(gen),
     graph(graph),
     deoptTable_(NULL),
-    frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE))
+    frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE) +
+                graph.argumentSlotCount() * sizeof(Value))
 {
     frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
 }

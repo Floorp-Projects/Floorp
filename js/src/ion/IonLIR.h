@@ -864,6 +864,8 @@ class LIRGraph
 
     // Number of stack slots needed for local spills.
     uint32 localSlotCount_;
+    // Number of stack slots needed for argument construction for calls.
+    uint32 argumentSlotCount_;
 
     MIRGraph &mir_;
 
@@ -896,6 +898,12 @@ class LIRGraph
     }
     uint32 localSlotCount() const {
         return localSlotCount_;
+    }
+    void setArgumentSlotCount(uint32 argumentSlotCount) {
+        argumentSlotCount_ = argumentSlotCount;
+    }
+    uint32 argumentSlotCount() const {
+        return argumentSlotCount_;
     }
     bool addConstantToPool(double d, uint32 *index);
     bool addConstantToPool(MConstant *ins, uint32 *index);

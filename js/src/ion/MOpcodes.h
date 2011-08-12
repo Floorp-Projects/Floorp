@@ -54,6 +54,9 @@ namespace ion {
     _(Test)                                                                 \
     _(Compare)                                                              \
     _(Phi)                                                                  \
+    _(PrepareCall)                                                          \
+    _(PassArg)                                                              \
+    _(Call)                                                                 \
     _(BitNot)                                                               \
     _(BitAnd)                                                               \
     _(BitOr)                                                                \
