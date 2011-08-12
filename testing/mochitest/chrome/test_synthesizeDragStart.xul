@@ -55,8 +55,6 @@ check if nsIFile can be determined
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="setTimeout(test,0)">
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"/>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
