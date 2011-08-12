@@ -83,17 +83,20 @@ struct leaky {
   ~leaky();
 
   void initialize(int argc, char** argv);
-  void open();
+  void open(char *arg);
 
   char*  applicationName;
-  char*  logFile;
+  int    logFileIndex;
+  int    numLogFiles;
   char*  progFile;
+  FILE*  outputfd;
 
-  int   quiet;
-  int   showAddress;
-  int   showThreads;
-  u_int  stackDepth;
+  bool  quiet;
+  bool  showAddress;
+  bool  showThreads;
+  u_int stackDepth;
   int   onlyThread;
+  char* output_dir;
 
   int   mappedLogFile;
   malloc_log_entry* firstLogEntry;
