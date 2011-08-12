@@ -67,16 +67,11 @@
 
 #include "nsGenericHTMLElement.h"
 
-#include "nsIDOMText.h"
-#include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
-#include "nsIDOMHTMLScriptElement.h"
 #include "nsIScriptElement.h"
 
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 

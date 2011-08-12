@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677495
+
+As mandated by the spec, the body of a media document must only contain one child.
+-->
+<head>
+  <title>Test for Bug 571981</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function frameLoaded() {
+    var testframe = document.getElementById('testframe');
+    var testframeChildren = testframe.contentDocument.body.childNodes;
+    is(testframeChildren.length, 1, "Body of video document has 1 child");
+    is(testframeChildren[0].nodeName, "VIDEO", "Only child of body must be a <video> element");
+
+    SimpleTest.finish();
+  }
+</script>
+
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe" onload="frameLoaded()"
+   src="data:video/webm,"></iframe>
+
+</body>
+</html>

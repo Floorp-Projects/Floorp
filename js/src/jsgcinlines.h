@@ -239,8 +239,8 @@ NewGCThing(JSContext *cx, unsigned thingKind, size_t thingSize)
         js::gc::RunDebugGC(cx);
 #endif
 
-    js::gc::Cell *cell = cx->compartment->freeLists.getNext(thingKind, thingSize);
-    return static_cast<T *>(cell ? cell : js::gc::RefillFinalizableFreeList(cx, thingKind));
+    void *t = cx->compartment->freeLists.getNext(thingKind, thingSize);
+    return static_cast<T *>(t ? t : js::gc::RefillFinalizableFreeList(cx, thingKind));
 }
 
 inline JSObject *

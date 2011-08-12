@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(d8213322-46d8-47ca-a15c-2abae47ddfde)]
+[scriptable, uuid(9441effd-fbe1-4f48-aa90-1741c1e390a1)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -89,6 +89,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
            attribute double currentTime;
   readonly attribute double duration;
   readonly attribute boolean paused;
+  readonly attribute nsIDOMTimeRanges seekable;
   readonly attribute boolean ended;
   readonly attribute boolean mozAutoplayEnabled;
            attribute boolean autoplay;

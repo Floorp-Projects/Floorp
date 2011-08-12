@@ -50,7 +50,7 @@
 #include "imgIRequest.h"
 #include "prtypes.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // NS_CONTENT_DELETE_LIST_MEMBER
 #include "nsString.h"
 #include "nsEventStates.h"
 
