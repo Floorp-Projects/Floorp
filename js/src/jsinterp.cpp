@@ -1594,7 +1594,8 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
     JSBool ok;
 
     if (JOF_OPMODE(*regs.pc) == JOF_NAME) {
-        ok = js_FindProperty(cx, ATOM_TO_JSID(atom), false, &obj, &pobj, &prop);
+        bool global = js_CodeSpec[*regs.pc].format & JOF_GNAME;
+        ok = js_FindProperty(cx, ATOM_TO_JSID(atom), global, &obj, &pobj, &prop);
     } else {
         obj = start;
         ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
