@@ -1529,7 +1529,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tab-icon-image {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://global/skin/tree/item.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .tab-throbber {
@@ -2027,7 +2027,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* All Tabs Menupopup */
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/tree/item.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
