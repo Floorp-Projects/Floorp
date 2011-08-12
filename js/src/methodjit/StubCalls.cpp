@@ -2455,12 +2455,18 @@ stubs::AssertArgumentTypes(VMFrame &f)
     JSFunction *fun = fp->fun();
     JSScript *script = fun->script();
 
-    Type type = GetValueType(f.cx, fp->thisValue());
-    if (!TypeScript::ThisTypes(script)->hasType(type))
-        TypeFailure(f.cx, "Missing type for this: %s", TypeString(type));
+    /*
+     * Don't check the type of 'this' for constructor frames, the 'this' value
+     * has not been constructed yet.
+     */
+    if (!fp->isConstructing()) {
+        Type type = GetValueType(f.cx, fp->thisValue());
+        if (!TypeScript::ThisTypes(script)->hasType(type))
+            TypeFailure(f.cx, "Missing type for this: %s", TypeString(type));
+    }
 
     for (unsigned i = 0; i < fun->nargs; i++) {
-        type = GetValueType(f.cx, fp->formalArg(i));
+        Type type = GetValueType(f.cx, fp->formalArg(i));
         if (!TypeScript::ArgTypes(script, i)->hasType(type))
             TypeFailure(f.cx, "Missing type for arg %d: %s", i, TypeString(type));
     }

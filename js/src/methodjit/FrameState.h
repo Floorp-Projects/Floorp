@@ -1026,6 +1026,8 @@ class FrameState
         return fe == a->this_;
     }
 
+    inline bool isConstructorThis(const FrameEntry *fe) const;
+
     bool isArg(const FrameEntry *fe) const {
         return a->script->hasFunction && fe >= a->args && fe - a->args < a->script->function()->nargs;
     }

@@ -488,6 +488,7 @@ class Compiler : public BaseCompiler
 
     bool debugMode() { return debugMode_; }
     bool inlining() { return inlining_; }
+    bool constructing() { return isConstructing; }
 
     jsbytecode *outerPC() {
         if (a == outer)
