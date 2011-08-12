@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Randell Jesup (recent improvements, threads, etc)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -131,6 +132,7 @@ leaky::leaky()
   showAddress = FALSE;
   showThreads = FALSE;
   stackDepth = 100000;
+  onlyThread = 0;
 
   mappedLogFile = -1;
   firstLogEntry = lastLogEntry = 0;
@@ -143,6 +145,10 @@ leaky::leaky()
   highestSymbolAddr = 0;
 
   loadMap = NULL;
+
+  collect_last  = false;
+  collect_start = -1;
+  collect_end   = -1;
 }
 
 leaky::~leaky()
@@ -151,10 +157,27 @@ leaky::~leaky()
 
 void leaky::usageError()
 {
-  fprintf(stderr, "Usage: %s [-v][-t] [-e exclude] [-i include] [-s stackdepth] prog log\n", (char*) applicationName);
-  fprintf(stderr, "\t-v: verbose\n\t-t: split threads\n");
+  fprintf(stderr, "Usage: %s [-v] [-t] [-e exclude] [-i include] [-s stackdepth] [--last] [--all] [--start n [--end m]] prog log\n", (char*) applicationName);
+  fprintf(stderr, 
+          "\t-v: verbose\n"
+          "\t-t | --threads: split threads\n"
+          "\t--only-thread n: only profile thread N\n"
+          "\t-i include-id: stack must include specified id\n"
+          "\t-e exclude-id: stack must NOT include specified id\n"
+          "\t--last: only profile the last capture section\n"
+          "\t--start n [--end m]: profile n to m (or end) capture sections\n"
+          );
   exit(-1);
 }
+
+static struct option longopts[] = {
+    { "threads", 0, NULL, 't' },
+    { "only-thread", 1, NULL, 'T' },
+    { "last", 0, NULL, 'l' },
+    { "start", 1, NULL, 'x' },
+    { "end", 1, NULL, 'n' },
+    { NULL, 0, NULL, 0 },
+};
 
 void leaky::initialize(int argc, char** argv)
 {
@@ -168,10 +191,14 @@ void leaky::initialize(int argc, char** argv)
 
   int arg;
   int errflg = 0;
-  while ((arg = getopt(argc, argv, "adEe:gh:i:r:Rs:tqvx")) != -1) {
+  int longindex = 0;
+  onlyThread = 0;
+  // XXX tons of cruft here left over from tracemalloc
+  while (((arg = getopt_long(argc, argv, "adEe:gh:i:r:Rs:tT:qvx:ln:",longopts,&longindex)) != -1)) {
     switch (arg) {
       case '?':
       default:
+        fprintf(stderr,"error: unknown option %c\n",optopt);
 	errflg++;
 	break;
       case 'a':
@@ -209,7 +236,17 @@ void leaky::initialize(int argc, char** argv)
 	}
 	break;
       case 'x':
+        // --start
+        collect_start = atoi(optarg);
 	break;
+      case 'n':
+        // --end
+        collect_end = atoi(optarg);
+        break;
+      case 'l':
+        // --last
+        collect_last = true;
+        break;
       case 'q':
         break;
       case 'v':
@@ -217,6 +254,10 @@ void leaky::initialize(int argc, char** argv)
         break;
       case 't':
         showThreads = TRUE;
+	break;
+      case 'T':
+        showThreads = TRUE;
+        onlyThread = atoi(optarg);
 	break;
     }
   }
@@ -260,7 +301,7 @@ void leaky::LoadMap()
     if (nb != (int)mme.nameLen) break;
     name[mme.nameLen] = 0;
     if (!quiet) {
-      printf("%s @ %lx\n", name, mme.address);
+      fprintf(stderr,"%s @ %lx\n", name, mme.address);
     }
 
     LoadMapEntry* lme = new LoadMapEntry;
@@ -276,7 +317,9 @@ void leaky::open()
 {
   int threadArray[100]; // should auto-expand
   int last_thread = -1;
-  int numThreads=0;
+  int numThreads = 0;
+  int section = -1;
+  bool collecting = false;
 
   LoadMap();
 
@@ -292,11 +335,37 @@ void leaky::open()
   firstLogEntry = (malloc_log_entry*) mapFile(mappedLogFile, PROT_READ, &size);
   lastLogEntry = (malloc_log_entry*)((char*)firstLogEntry + size);
 
-  fprintf(stdout,"<html><head><title>Jprof Profile Report</title></head><body>\n");
-  fprintf(stdout,"<h1><center>Jprof Profile Report</center></h1>\n");
+  if (!collect_last || collect_start < 0) {
+    collecting = true;
+  }
 
-  if (showThreads)
-  {
+  // First, restrict it to the capture sections specified (all, last, start/end)
+  // This loop walks through all the call stacks we recorded
+  for (malloc_log_entry* lep=firstLogEntry;
+       lep < lastLogEntry;
+       lep = reinterpret_cast<malloc_log_entry*>(&lep->pcs[lep->numpcs])) {
+
+    if (lep->flags & JP_FIRST_AFTER_PAUSE) {
+      section++;
+      if (collect_last) {
+        firstLogEntry = lep;
+        numThreads = 0;
+        collecting = true;
+      }
+      if (collect_start == section) {
+        collecting = true;
+        firstLogEntry = lep;
+      }
+      if (collect_end == section) {
+        collecting = false;
+        lastLogEntry = lep;
+      }
+      fprintf(stderr,"New section %d: first=%x, last=%x, collecting=%d\n",
+              section,firstLogEntry,lastLogEntry,collecting);
+    }
+
+    // Capture thread info at the same time
+
     // Find all the threads captured
 
     // pthread/linux docs say the signal can be delivered to any thread in
@@ -304,11 +373,7 @@ void leaky::open()
     // delivered to the thread that called setitimer(), and each thread can
     // have a separate itimer.  There's a support library for gprof that
     // overlays pthread_create() to set timers in any threads you spawn.
-
-    // This loop walks through all the call stacks we recorded
-    for (malloc_log_entry* lep=firstLogEntry;
-         lep < lastLogEntry;
-         lep = reinterpret_cast<malloc_log_entry*>(&lep->pcs[lep->numpcs])) {
+    if (showThreads && collecting) {
       if (lep->thread != last_thread)
       {
         int i;
@@ -322,23 +387,34 @@ void leaky::open()
         {
           threadArray[i] = lep->thread;
           numThreads++;
-          fprintf(stderr,"new thread %d\n",lep->thread);
+          if (!quiet)
+            fprintf(stderr,"new thread %d\n",lep->thread);
         }
       }
     }
+  }  
+  fprintf(stderr,"Done collecting: sections %d: first=%x, last=%x, numThreads=%d\n",
+          section,firstLogEntry,lastLogEntry,numThreads);
+
+  fprintf(stdout,"<html><head><title>Jprof Profile Report</title></head><body>\n");
+  fprintf(stdout,"<h1><center>Jprof Profile Report</center></h1>\n");
+
+  if (showThreads)
+  {
     fprintf(stderr,"Num threads %d\n",numThreads);
 
     fprintf(stdout,"<hr>Threads:<p><pre>\n");
     for (int i=0; i<numThreads; i++)
     {
-      fprintf(stdout,"   <a href=\"thread_%d\">%d</a><p>\n",
+      fprintf(stdout,"   <a href=\"#thread_%d\">%d</a>  ",
               threadArray[i],threadArray[i]);
     }
-    fprintf(stdout,"</pre><hr>");
+    fprintf(stdout,"</pre>");
 
     for (int i=0; i<numThreads; i++)
     {
-      analyze(threadArray[i]);
+      if (!onlyThread || onlyThread == threadArray[i])
+        analyze(threadArray[i]);
     }
   }
   else
@@ -380,7 +456,7 @@ void leaky::setupSymbols(const char *fileName)
   ReadSharedLibrarySymbols();
 
   if (!quiet) {
-    printf("A total of %d symbols were loaded\n", usefulSymbols);
+    fprintf(stderr,"A total of %d symbols were loaded\n", usefulSymbols);
   }
 
   // Now sort them
@@ -627,6 +703,12 @@ void leaky::analyze(int thread)
   //Zero our function call counter
   memset(countArray, 0, sizeof(countArray[0])*usefulSymbols);
 
+  // reset hit counts
+  for(int i=0; i<usefulSymbols; i++) {
+    externalSymbols[i].timerHit = 0;
+    externalSymbols[i].regClear();
+  }
+
   // The flag array is used to prevent counting symbols multiple times
   // if functions are called recursively.  In order to keep from having
   // to zero it on each pass through the loop, we mark it with the value
@@ -636,6 +718,7 @@ void leaky::analyze(int thread)
   memset(flagArray, -1, sizeof(flagArray[0])*usefulSymbols);
 
   // This loop walks through all the call stacks we recorded
+  // --last, --start and --end can restrict it, as can excludes/includes
   stacks = 0;
   for(malloc_log_entry* lep=firstLogEntry; 
     lep < lastLogEntry;
