@@ -55,11 +55,20 @@ class AutoIdVector;
 /* js::Class operation signatures. */
 
 typedef JSBool
+(* LookupGenericOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                    JSProperty **propp);
+typedef JSBool
 (* LookupPropOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  JSProperty **propp);
 typedef JSBool
 (* LookupElementOp)(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
                     JSProperty **propp);
+typedef JSBool
+(* LookupSpecialOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                    JSProperty **propp);
+typedef JSBool
+(* DefineGenericOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
 (* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                  PropertyOp getter, StrictPropertyOp setter, uintN attrs);
@@ -67,21 +76,40 @@ typedef JSBool
 (* DefineElementOp)(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
+(* DefineSpecialOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+typedef JSBool
+(* GenericIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 typedef JSBool
 (* ElementIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp);
+typedef JSBool
+(* SpecialIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+typedef JSBool
+(* StrictGenericIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
 (* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
 (* StrictElementIdOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
 typedef JSBool
+(* StrictSpecialIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
+(* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+typedef JSBool
 (* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 typedef JSBool
 (* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
 typedef JSBool
+(* SpecialAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+typedef JSBool
+(* DeleteGenericOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
 (* DeleteIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
 (* DeleteElementOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
+typedef JSBool
+(* DeleteSpecialOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSType
 (* TypeOfOp)(JSContext *cx, JSObject *obj);
 
@@ -151,20 +179,34 @@ struct ClassExtension
 
 struct ObjectOps
 {
+    LookupGenericOp     lookupGeneric;
     LookupPropOp        lookupProperty;
     LookupElementOp     lookupElement;
+    LookupSpecialOp     lookupSpecial;
+    DefineGenericOp     defineGeneric;
     DefinePropOp        defineProperty;
     DefineElementOp     defineElement;
+    DefineSpecialOp     defineSpecial;
+    GenericIdOp         getGeneric;
     PropertyIdOp        getProperty;
     ElementIdOp         getElement;
+    SpecialIdOp         getSpecial;
+    StrictGenericIdOp   setGeneric;
     StrictPropertyIdOp  setProperty;
     StrictElementIdOp   setElement;
+    StrictSpecialIdOp   setSpecial;
+    GenericAttributesOp getGenericAttributes;
     AttributesOp        getAttributes;
     ElementAttributesOp getElementAttributes;
+    SpecialAttributesOp getSpecialAttributes;
+    GenericAttributesOp setGenericAttributes;
     AttributesOp        setAttributes;
     ElementAttributesOp setElementAttributes;
+    SpecialAttributesOp setSpecialAttributes;
+    DeleteGenericOp     deleteGeneric;
     DeleteIdOp          deleteProperty;
     DeleteElementOp     deleteElement;
+    DeleteSpecialOp     deleteSpecial;
 
     JSNewEnumerateOp    enumerate;
     TypeOfOp            typeOf;
@@ -175,6 +217,7 @@ struct ObjectOps
 
 #define JS_NULL_OBJECT_OPS                                                    \
     {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,   \
+     NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,   \
      NULL,NULL,NULL,NULL,NULL}
 
 struct Class

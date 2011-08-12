@@ -83,11 +83,18 @@ struct JS_FRIEND_API(ArrayBuffer) {
                       JSObject **objp, JSProperty **propp);
 
     static JSBool
+    obj_lookupSpecial(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProperty **propp);
+
+    static JSBool
     obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                        PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 
     static JSBool
     obj_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *v,
+                      PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+
+    static JSBool
+    obj_defineSpecial(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 
     static JSBool
@@ -97,10 +104,16 @@ struct JS_FRIEND_API(ArrayBuffer) {
     obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp);
 
     static JSBool
+    obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+
+    static JSBool
     obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 
     static JSBool
     obj_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
+
+    static JSBool
+    obj_setSpecial(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 
     static JSBool
     obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
@@ -109,16 +122,25 @@ struct JS_FRIEND_API(ArrayBuffer) {
     obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
 
     static JSBool
+    obj_getSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+
+    static JSBool
     obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
     static JSBool
     obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
 
     static JSBool
+    obj_setSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+
+    static JSBool
     obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
 
     static JSBool
     obj_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict);
+
+    static JSBool
+    obj_deleteSpecial(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
 
     static JSBool
     obj_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
@@ -189,12 +211,16 @@ struct JS_FRIEND_API(TypedArray) {
                                      JSObject **objp, JSProperty **propp);
     static JSBool obj_lookupElement(JSContext *cx, JSObject *obj, uint32 index,
                                     JSObject **objp, JSProperty **propp);
+    static JSBool obj_lookupSpecial(JSContext *cx, JSObject *obj, jsid id,
+                                    JSObject **objp, JSProperty **propp);
 
     static JSBool obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
     static JSBool obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
+    static JSBool obj_getSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
     static JSBool obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
     static JSBool obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
+    static JSBool obj_setSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
     static JSUint32 getLength(JSObject *obj);
     static JSUint32 getByteOffset(JSObject *obj);

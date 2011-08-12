@@ -1441,12 +1441,11 @@ struct JSObject : js::gc::Cell {
     }
 
     inline JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
-
     inline JSBool getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp);
 
     inline JSBool getProperty(JSContext *cx, jsid id, js::Value *vp);
-
     inline JSBool getElement(JSContext *cx, uint32 index, js::Value *vp);
+    inline JSBool getSpecial(JSContext *cx, jsid id, js::Value *vp);
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
         if (getOps()->setProperty)
