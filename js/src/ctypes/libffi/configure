@@ -11277,7 +11277,7 @@ case "$host" in
   powerpc-*-aix* | rs6000-*-aix*)
 	TARGET=POWERPC_AIX; TARGETDIR=powerpc
 	;;
-  powerpc-*-freebsd*)
+  powerpc-*-freebsd* | powerpc-*-openbsd*)
 	TARGET=POWERPC_FREEBSD; TARGETDIR=powerpc
 	;;
   powerpc*-*-rtems*)
