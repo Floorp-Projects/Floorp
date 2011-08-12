@@ -1532,6 +1532,9 @@ NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::
 {
     JS_ASSERT(type == type->proto->newType);
 
+    if (CanBeFinalizedInBackground(kind, &js_ObjectClass))
+        kind = GetBackgroundFinalizeKind(kind);
+
     JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
         goto out;
