@@ -120,18 +120,17 @@
           "npnInvokeDefaultTest return value was of unexpected type");
       var success = (json_result == json_expected && 
           typeof(result) == typeof(expected));
-      appendChildNodes($("verbose"),
-          SPAN((success ? "pass" : "fail") + ": " + test[0] + "("));
+      $("verbose").appendChild(
+          createEl('span', null, ((success ? "pass" : "fail") + ": " + test[0] + "(")));
       for (var i = 1; i < test.length - 1; i++) {
-        appendChildNodes($("verbose"),
-            SPAN(JSON.stringify(test[i]) + (i < test.length - 2 ? "," : "")));
+        $("verbose").appendChild(
+            createEl('span', null, (JSON.stringify(test[i]) + (i < test.length - 2 ? "," : ""))));
       }
-      appendChildNodes($("verbose"),
-          SPAN(") == " + json_result + "(" + 
+      $("verbose").appendChild(
+          createEl('span', null, (") == " + json_result + "(" + 
           typeof(result) + "), expected " + json_expected + "(" + 
-          typeof(expected) + ")"),
-          BR()
-          );
+          typeof(expected) + ")")));
+      $("verbose").appendChild(createEl('br'));
     }
     
     // Test calling the invokedefault method of plugin-defined object

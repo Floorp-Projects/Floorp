@@ -92,7 +92,7 @@ function testMenuFilterButton(aCategory) {
        aCategory + " is checked after clicking the button");
     ok(HUDService.filterPrefs[hudId][prefKey], prefKey + " messages are " +
        "on after clicking the button");
-    menuItem = menuItem.nextSibling; i++;
+    menuItem = menuItem.nextSibling; 
   }
 
   // Turn all the filters off by clicking the main part of the button.

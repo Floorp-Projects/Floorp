@@ -148,8 +148,8 @@ function main()
     }
 
     // Tidy up
-    removeElement(animA);
-    removeElement(animB);
+    animA.parentNode.removeChild(animA);
+    animB.parentNode.removeChild(animB);
   }
 
   SimpleTest.finish();

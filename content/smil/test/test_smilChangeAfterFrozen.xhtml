@@ -130,7 +130,7 @@ function testBaseValueChange()
   is(gCircle.cx.animVal.value, 70,
      "Checking animated cx after anim ends & after changing base val");
 
-  removeElement(anim); // clean up
+  anim.parentNode.removeChild(anim); // clean up
   runNextTest();
 }
 
@@ -154,7 +154,7 @@ function testCurrentColorChange_final()
 
   // Clean up
   gCircle.removeAttribute("color");
-  removeElement(gCircle.firstChild);
+  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
 
   // Kick off next test
   runNextTest();
@@ -182,7 +182,7 @@ function testCurrentColorChangeUsingStyle_final()
 
   // Clean up
   gCircle.removeAttribute("style");
-  removeElement(gCircle.firstChild);
+  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
   runNextTest();
 }
 
@@ -205,7 +205,7 @@ function testInheritChange_final() {
      "Checking animated fill=inherit after anim ends and parent val changes");
 
   gCircleParent.removeAttribute("fill");
-  removeElement(gCircle.firstChild);
+  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
   runNextTest();
 }
 
@@ -229,7 +229,7 @@ function testInheritChangeUsingStyle_final() {
      + "(using style attr)");
 
   gCircleParent.removeAttribute("style");
-  removeElement(gCircle.firstChild);
+  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
   runNextTest();
 }
 
