@@ -753,6 +753,13 @@ array_lookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
     return true;
 }
 
+static JSBool
+array_lookupSpecial(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                    JSProperty **propp)
+{
+    return array_lookupProperty(cx, obj, id, objp, propp);
+}
+
 JSBool
 js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
@@ -857,6 +864,12 @@ array_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
 }
 
 static JSBool
+array_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+{
+    return array_getProperty(cx, obj, receiver, id, vp);
+}
+
+static JSBool
 slowarray_addProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     jsuint index, length;
@@ -948,6 +961,12 @@ array_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool s
     if (!obj->makeDenseArraySlow(cx))
         return false;
     return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
+}
+
+static JSBool
+array_setSpecial(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+{
+    return array_setProperty(cx, obj, id, vp, strict);
 }
 
 JSBool
@@ -1052,6 +1071,13 @@ array_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *val
 } // namespace js
 
 static JSBool
+array_defineSpecial(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    return array_defineProperty(cx, obj, id, value, getter, setter, attrs);
+}
+
+static JSBool
 array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     *attrsp = JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)
@@ -1067,6 +1093,12 @@ array_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 }
 
 static JSBool
+array_getSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
+    return array_getAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
 array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
@@ -1078,6 +1110,12 @@ array_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
     return false;
+}
+
+static JSBool
+array_setSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
+    return array_setAttributes(cx, obj, id, attrsp);
 }
 
 namespace js {
@@ -1129,6 +1167,12 @@ array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSB
 
 } // namespace js
 
+static JSBool
+array_deleteSpecial(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+{
+    return array_deleteProperty(cx, obj, id, rval, strict);
+}
+
 static void
 array_trace(JSTracer *trc, JSObject *obj)
 {
@@ -1176,19 +1220,33 @@ Class js::ArrayClass = {
     JS_NULL_CLASS_EXT,
     {
         array_lookupProperty,
+        array_lookupProperty,
         array_lookupElement,
+        array_lookupSpecial,
+        array_defineProperty,
         array_defineProperty,
         array_defineElement,
+        array_defineSpecial,
+        array_getProperty,
         array_getProperty,
         array_getElement,
+        array_getSpecial,
+        array_setProperty,
         array_setProperty,
         array_setElement,
+        array_setSpecial,
+        array_getAttributes,
         array_getAttributes,
         array_getElementAttributes,
+        array_getSpecialAttributes,
+        array_setAttributes,
         array_setAttributes,
         array_setElementAttributes,
+        array_setSpecialAttributes,
+        array_deleteProperty,
         array_deleteProperty,
         array_deleteElement,
+        array_deleteSpecial,
         NULL,       /* enumerate      */
         array_typeOf,
         array_fix,

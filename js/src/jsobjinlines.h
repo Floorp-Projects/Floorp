@@ -1125,6 +1125,12 @@ JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool str
     return deleteProperty(cx, id, rval, strict);
 }
 
+inline JSBool
+JSObject::getSpecial(JSContext *cx, jsid id, js::Value *vp)
+{
+    return getProperty(cx, id, vp);
+}
+
 static inline bool
 js_IsCallable(const js::Value &v)
 {
