@@ -1568,7 +1568,7 @@ IonBuilder::jsop_localinc(JSOp op)
     if (!jsop_binary(JSOP_ADD))
         return false;
 
-    if (current->setLocal(GET_SLOTNO(pc)))
+    if (!current->setLocal(GET_SLOTNO(pc)))
         return false;
 
     if (post_incr)
@@ -1594,7 +1594,7 @@ IonBuilder::jsop_arginc(JSOp op)
     if (!jsop_binary(JSOP_ADD))
         return false;
 
-    if (current->setArg(GET_SLOTNO(pc)))
+    if (!current->setArg(GET_SLOTNO(pc)))
         return false;
 
     if (post_incr)
