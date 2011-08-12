@@ -179,6 +179,10 @@ PP_DEB_FILES =	debian/control \
 		debian/fennec.postinst \
 		$(NULL)
 
+ifdef MOZ_ENABLE_CONTENTMANAGER
+PP_DEB_FILES += debian/fennec.aegis \
+               $(NULL)
+endif
 
 $(PP_DEB_FILES):
 	@$(EXIT_ON_ERROR) \
@@ -214,7 +218,18 @@ else
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/icons/hicolor/40x40/hildon/
 	cp $(DIST)/branding/$(MOZ_APP_NAME)_40x40.png $(DEBDESTDIR)/usr/share/icons/hicolor/40x40/hildon/$(MOZ_APP_NAME).png
 endif
-	dh_link; fakeroot dh_fixperms; fakeroot dh_installdeb; dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
+	fakeroot dh_link; fakeroot dh_fixperms; fakeroot dh_installdeb; fakeroot dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; fakeroot dh_builddeb;
+
+# a defined CONTENTMANAGER implicitly means MOZ_PLATFORM_MAEMO is equals 6
+# in case you use CONTENTMANGER you need to sign your package to gain tracker access.
+ifdef MOZ_ENABLE_CONTENTMANAGER
+	if test -e "/usr/bin/aegis-deb-add"; then \
+	   fakeroot aegis-deb-add -control $(DEBDESTDIR)/DEBIAN/control .. debian/fennec.aegis=_aegis; \
+	else \
+	   echo aegis-builder not found, security signing failed!; \
+	fi
+endif
+
 	echo $(DEB_PKG_NAME) > $(DIST)/deb_name.txt
 
 installer: deb

@@ -47,7 +47,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
-#include "nsParserCIID.h"
+#include "nsContentUtils.h"
 #include "nsIContentSink.h"
 #include "nsIHTMLToTextSink.h"
 #include "nsIDocumentEncoder.h"

@@ -98,7 +98,7 @@ public:
 } // anon namespace
 
 nsFontMetrics::nsFontMetrics()
-    : mDeviceContext(nsnull), mP2A(-1), mTextRunRTL(PR_FALSE)
+    : mDeviceContext(nsnull), mP2A(0), mTextRunRTL(PR_FALSE)
 {
 }
 
@@ -113,7 +113,7 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                     nsDeviceContext *aContext,
                     gfxUserFontSet *aUserFontSet)
 {
-    NS_ABORT_IF_FALSE(mP2A == -1, "already initialized");
+    NS_ABORT_IF_FALSE(mP2A == 0, "already initialized");
 
     mFont = aFont;
     mLanguage = aLanguage;

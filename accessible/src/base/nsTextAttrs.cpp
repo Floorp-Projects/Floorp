@@ -147,7 +147,7 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
     frame = offsetElm->GetPrimaryFrame();
   }
 
-  nsTPtrArray<nsITextAttr> textAttrArray(10);
+  nsTArray<nsITextAttr*> textAttrArray(10);
 
   // "language" text attribute
   nsLangTextAttr langTextAttr(mHyperTextAcc, hyperTextElm, offsetNode);
@@ -212,7 +212,7 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
 }
 
 nsresult
-nsTextAttrsMgr::GetRange(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
+nsTextAttrsMgr::GetRange(const nsTArray<nsITextAttr*>& aTextAttrArray,
                          PRInt32 *aStartHTOffset, PRInt32 *aEndHTOffset)
 {
   PRUint32 attrLen = aTextAttrArray.Length();

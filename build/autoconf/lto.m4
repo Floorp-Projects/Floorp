@@ -1,6 +1,6 @@
 dnl check if the build is using lto. This is really primitive and only detects llvm based
 dnl compilers right now.
-AC_DEFUN(MOZ_DOING_LTO,
+AC_DEFUN([MOZ_DOING_LTO],
 [
   cat > conftest.c <<EOF
                   int foo = 1;

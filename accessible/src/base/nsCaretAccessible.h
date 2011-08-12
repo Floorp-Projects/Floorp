@@ -42,7 +42,6 @@
 #include "nsHyperTextAccessible.h"
 
 #include "nsISelectionListener.h"
-#include "nsISelection2.h"
 
 class nsRootAccessible;
 

@@ -37,20 +37,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsILink.h"
+#include "Link.h"
+
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsGenericHTMLElement.h"
-#include "nsILink.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-
 #include "nsHTMLDNSPrefetch.h"
 
-#include "Link.h"
 using namespace mozilla::dom;
 
 class nsHTMLAnchorElement : public nsGenericHTMLElement,

@@ -66,7 +66,7 @@ RenderFrameChild::Destroy()
 }
 
 PLayersChild*
-RenderFrameChild::AllocPLayers()
+RenderFrameChild::AllocPLayers(LayerManager::LayersBackend* aBackendType)
 {
   return new ShadowLayersChild();
 }

@@ -919,19 +919,16 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 LayerManager*
-nsCocoaWindow::GetLayerManager(bool *aAllowRetaining)
+nsCocoaWindow::GetLayerManager(PLayersChild* aShadowManager,
+                               LayersBackend aBackendHint,
+                               LayerManagerPersistence aPersistence,
+                               bool* aAllowRetaining)
 {
   if (mPopupContentView) {
-    return mPopupContentView->GetLayerManager(aAllowRetaining);
-  }
-  return nsnull;
-}
-
-LayerManager*
-nsCocoaWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
-{
-  if (mPopupContentView) {
-    return mPopupContentView->GetLayerManager(aAllowRetaining);
+    return mPopupContentView->GetLayerManager(aShadowManager,
+                                              aBackendHint,
+                                              aPersistence,
+                                              aAllowRetaining);
   }
   return nsnull;
 }
@@ -986,7 +983,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
-  NSPoint coord = {aX, nsCocoaUtils::FlippedScreenY(aY)};
+  NSPoint coord = {static_cast<CGFloat>(aX), nsCocoaUtils::FlippedScreenY(aY)};
   [mWindow setFrameTopLeftPoint:coord];
 
   return NS_OK;
