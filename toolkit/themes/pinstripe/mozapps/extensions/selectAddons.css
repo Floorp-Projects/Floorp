@@ -1,0 +1,192 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Extension Manager UI.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dave Townsend <dtownsend@oxymoronical.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+%include ../../global/shared.inc
+
+.heading {
+  font-size: 270%;
+  text-align: center;
+  margin: 0 120px;
+}
+
+.progress {
+  margin: 10px 128px;
+}
+
+.progress-label,
+#errors-description {
+  text-align: center;
+  margin: 0 10px;
+}
+
+#checking-heading,
+#update-heading,
+#errors-heading {
+  margin-top: 90px;
+}
+
+#select-heading,
+#confirm-heading {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#select-description,
+#confirm-description {
+  margin: 10px;
+}
+
+#select-list {
+  border: 1px solid WindowFrame;
+  background-color: Window;
+  margin: 10px;
+}
+
+#select-grid column {
+  -moz-box-align: center;
+}
+
+#select-grid row {
+  -moz-box-align: stretch;
+}
+
+#select-grid row:nth-of-type(odd) {
+  background-color: -moz-oddtreerow;
+}
+
+#select-grid label,
+#select-grid checkbox {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.select-cell {
+  -moz-box-align: center;
+  -moz-box-pack: start;
+  -moz-box-sizing: border-box;
+}
+
+#select-header {
+  background-color: Window !important;
+}
+
+#select-header .select-cell {
+  -moz-appearance: treeheadercell;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+.select-keep {
+  -moz-box-pack: center;
+}
+
+.select-icon {
+  width: 20px;
+}
+
+#select-grid separator {
+  display: none;
+}
+
+.addon-name,
+.addon-action-message,
+.addon-action-update {
+  -moz-box-sizing: border-box;
+  margin: 0;
+  padding: 2px 6px;
+}
+
+.addon:not([active]) .addon-name,
+.addon:not([active]) .addon-action-message,
+.addon:not([active]) .addon-action-update {
+  color: GrayText;
+}
+
+.addon-icon {
+  height: 16px;
+  width: 16px;
+  margin: 2px;
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
+}
+
+.addon-icon[type="theme"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric-16.png");
+}
+
+.addon-icon[type="plugin"] {
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric-16.png");
+}
+
+.action-list {
+  margin-top: 10px;
+  -moz-margin-start: 5em;
+}
+
+.action-header {
+  margin-bottom: 10px;
+}
+
+#confirm .addon {
+  -moz-margin-start: 3em;
+  -moz-box-align: center;
+}
+
+.addon:not([active]) .addon-icon,
+#disable-list .addon-icon,
+#incompatible-list .addon-icon {
+  filter: url("chrome://mozapps/skin/extensions/extensions.svg#greyscale");
+}
+
+#footer {
+  padding: 15px 12px;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+  -moz-appearance: statusbar;
+}
+
+button {
+  -moz-appearance: toolbarbutton;
+  min-height: 22px;
+  margin: 0 6px;
+  padding: 0;
+  text-shadow: @loweredShadow@;
+}
