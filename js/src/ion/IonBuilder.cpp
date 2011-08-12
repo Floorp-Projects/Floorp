@@ -403,6 +403,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NULL:
         return pushConstant(NullValue());
 
+      case JSOP_VOID:
+        current->pop();
+        return pushConstant(UndefinedValue());
+
       case JSOP_FALSE:
         return pushConstant(BooleanValue(false));
 
