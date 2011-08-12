@@ -160,7 +160,7 @@ Loop::optimize()
         if (isLoopInvariant(ins)) {
             // Flag this instruction as loop invariant.
             ins->setLoopInvariant();
-            if (!invariantInstructions.insert(invariantInstructions.begin(), ins))
+            if (!invariantInstructions.append(ins))
                 return false;
 
             // Loop through uses of invariant instruction and add back to work list.
@@ -192,8 +192,8 @@ bool
 Loop::hoistInstructions(InstructionQueue &toHoist)
 {
     // Move all instructions to the preLoop_ block just before the control instruction.
-    while (!toHoist.empty()) {
-        MInstruction *ins = toHoist.popCopy();
+    for (size_t i = 0; i < toHoist.length(); i++) {
+        MInstruction *ins = toHoist[i];
         if (checkHotness(ins->block())) {
             ins->block()->remove(ins);
             preLoop_->insertBefore(preLoop_->lastIns(), ins);
