@@ -2,7 +2,6 @@ ver1manifest =
   "CACHE MANIFEST\n" +
   "# v1\n" +
   "\n" +
-  "http://mochi.test:8888/MochiKit/packed.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs\n" +
   "\n" +
@@ -17,7 +16,6 @@ ver2manifest =
   "# v2\n" +
   "\n" +
   "http://mochi.test:8888/tests/SimpleTest/SimpleTest.js\n" +
-  "http://mochi.test:8888/MochiKit/packed.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs" +
   "\n" +
@@ -29,7 +27,6 @@ ver3manifest =
   "CACHE MANIFEST\n" +
   "# v3\n" +
   "\n" +
-  "http://mochi.test:8888/MochiKit/packed.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs" +
   "\n" +
