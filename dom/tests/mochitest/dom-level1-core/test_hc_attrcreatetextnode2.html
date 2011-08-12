@@ -73,34 +73,6 @@ var docName = 'hc_attrcreatetextnode2';
 window.doc = window;  
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(setUpPage);
-function testFails (test) {
-  if (!test.result) {
-    test.todo = true;
-    return true;
-  }
-  return false;
-}
-function markTodos() {
-  if (todoTests[docName]) {
-    // mark the failures as todos
-    var failures = filter(testFails, SimpleTest._tests);
-    // shouldn't be 0 failures
-    todo(SimpleTest._tests != 0 && failures == 0, "test marked todo should fail somewhere");
-  }
-}
-
-function runJSUnitTests() {
-  builder = createConfiguredBuilder();
-  try {
-   forEach(exposeTestFunctionNames(), 
-     function (testName) { 
-       window[testName](); 
-     }
-   );
-  } catch (ex) {
-    ok(false, "Test threw exception: " + ex);
-  }
-}
 
 
 /**

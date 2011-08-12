@@ -73,33 +73,6 @@ var docName = 'hc_attrremovechild2';
 window.doc = window;  
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(setUpPage);
-function testFails (test) {
-  if (!test.result) {
-    test.todo = true;
-    return true;
-  }
-  return false;
-}
-function markTodos() {
-  if (todoTests[docName]) {
-    var failures = filter(testFails, SimpleTest._tests);
-    ok(SimpleTest._tests != 0 && failures == 0, "test failed somewhere");
-  }
-}
-
-function runJSUnitTests() {
-  builder = createConfiguredBuilder();
-  try {
-   forEach(exposeTestFunctionNames(), 
-     function (testName) { 
-       window[testName](); 
-     }
-   );
-  } catch (ex) {
-    ok(false, "Test threw exception: " + ex);
-  }
-}
-
 
 /**
 * 

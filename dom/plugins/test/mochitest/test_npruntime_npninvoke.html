@@ -144,11 +144,11 @@
           is(false, "bad number of test arguments");
       }
       is(result, test[1], "npnInvokeTestFailed: " + plugin.getError());
-      appendChildNodes($("verbose"), 
-          SPAN((result == test[1] ? "pass" : "fail") + ": " + test[0]));
+      $("verbose").appendChild(
+          createEl('span', null, ((result == test[1] ? "pass" : "fail") + ": " + test[0])));
       if (result != test[1])
-        appendChildNodes($("verbose"), SPAN(" " + plugin.getError()));
-      appendChildNodes($("verbose"), BR());
+        $("verbose").appendChild(createEl("span", null, (" " + plugin.getError())));
+      $("verbose").appendChild(createEl('br'));
     }
             
     SimpleTest.finish();
