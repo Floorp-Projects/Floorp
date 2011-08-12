@@ -1336,6 +1336,12 @@ FrameState::syncThis()
     syncFe(fe);
 }
 
+inline bool
+FrameState::isConstructorThis(const FrameEntry *fe) const
+{
+    return isThis(fe) && cc.constructing();
+}
+
 inline void
 FrameState::leaveBlock(uint32 n)
 {
