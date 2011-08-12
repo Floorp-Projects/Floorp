@@ -5,8 +5,6 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTests()">
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>

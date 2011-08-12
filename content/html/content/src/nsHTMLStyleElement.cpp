@@ -49,7 +49,7 @@
 #include "nsUnicharUtils.h"
 #include "nsParserUtils.h"
 #include "nsThreadUtils.h"
-
+#include "nsContentUtils.h"
 
 class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLStyleElement,

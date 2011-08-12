@@ -357,7 +357,7 @@ inline void
 JSObject::setArrayLength(uint32 length)
 {
     JS_ASSERT(isArray());
-    setPrivate((void*) length);
+    setPrivate((void*)(size_t)length);
 }
 
 inline uint32

@@ -852,7 +852,9 @@ nsBaseWidget::GetShouldAccelerate()
   return mUseAcceleratedRendering;
 }
 
-LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,
+LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
+                                            LayersBackend aBackendHint,
+                                            LayerManagerPersistence aPersistence,
                                             bool* aAllowRetaining)
 {
   if (!mLayerManager) {
@@ -860,8 +862,7 @@ LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,
     mUseAcceleratedRendering = GetShouldAccelerate();
 
     if (mUseAcceleratedRendering) {
-      nsRefPtr<LayerManagerOGL> layerManager =
-        new mozilla::layers::LayerManagerOGL(this);
+      nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
       /**
        * XXX - On several OSes initialization is expected to fail for now.
        * If we'd get a none-basic layer manager they'd crash. This is ok though

@@ -1,7 +1,6 @@
 <!DOCTYPE HTML>
 <title>Canvas test: 2d.composite.uncovered.image.destination-in</title>
 <!-- Testing: drawImage() draws pixels not covered by the source object as (0,0,0,0), and does not leave the pixels unchanged. -->
-<script src="/MochiKit/packed.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
@@ -33,7 +32,7 @@ function todo_isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
 }
 
 SimpleTest.waitForExplicitFinish();
-MochiKit.DOM.addLoadEvent(function () {
+addLoadEvent(function () {
 
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');

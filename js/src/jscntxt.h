@@ -327,7 +327,8 @@ typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> CompartmentVector;
 
 }
 
-struct JSRuntime {
+struct JSRuntime
+{
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
 #ifdef JS_THREADSAFE
@@ -339,6 +340,20 @@ struct JSRuntime {
 
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
+
+    /* See comment for JS_AbortIfWrongThread in jsapi.h. */
+#ifdef JS_THREADSAFE
+  public:
+    void clearOwnerThread();
+    void setOwnerThread();
+    JS_FRIEND_API(bool) onOwnerThread() const;
+  private:
+    void                *ownerThread_;
+  public:
+#else
+  public:
+    bool onOwnerThread() const { return true; }
+#endif
 
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
@@ -1335,11 +1350,11 @@ class AutoCheckRequestDepth {
 # define CHECK_REQUEST(cx)                                                    \
     JS_ASSERT((cx)->thread());                                                \
     JS_ASSERT((cx)->thread()->data.requestDepth || (cx)->thread() == (cx)->runtime->gcThread); \
+    JS_ASSERT(cx->runtime->onOwnerThread());                                  \
     AutoCheckRequestDepth _autoCheckRequestDepth(cx);
 
 #else
 # define CHECK_REQUEST(cx)          ((void) 0)
-# define CHECK_REQUEST_THREAD(cx)   ((void) 0)
 #endif
 
 static inline JSAtom **

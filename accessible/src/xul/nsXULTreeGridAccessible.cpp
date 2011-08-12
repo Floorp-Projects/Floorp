@@ -46,6 +46,7 @@
 #include "States.h"
 
 #include "nsITreeSelection.h"
+#include "nsComponentManagerUtils.h"
 
 using namespace mozilla::a11y;
 

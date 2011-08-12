@@ -19,8 +19,6 @@
         sizemode="fullscreen">
 
   <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" 
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
 
 <box id="box" height="100"/>

@@ -47,7 +47,6 @@
 #include "nsStyleConsts.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
-#include "nsIDOMText.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsISelectControlFrame.h"
@@ -66,26 +65,6 @@
 #include "mozAutoDocUpdate.h"
 
 using namespace mozilla::dom;
-
-/**
- * This macro is similar to NS_IMPL_STRING_ATTR except that the getter method
- * falls back to GetText if the content attribute isn't set. GetText returns a
- * whitespace compressed .textContent value.
- */
-#define NS_IMPL_STRING_ATTR_WITH_TEXTCONTENT(_class, _method, _atom) \
-  NS_IMETHODIMP                                                      \
-  _class::Get##_method(nsAString& aValue)                            \
-  {                                                                  \
-    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue)) {     \
-      GetText(aValue);                                               \
-    }                                                                \
-    return NS_OK;                                                    \
-  }                                                                  \
-  NS_IMETHODIMP                                                      \
-  _class::Set##_method(const nsAString& aValue)                      \
-  {                                                                  \
-    return SetAttrHelper(nsGkAtoms::_atom, aValue);                  \
-  }
 
 /**
  * Implementation of &lt;option&gt;
@@ -209,8 +188,9 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, selected)
-NS_IMPL_STRING_ATTR_WITH_TEXTCONTENT(nsHTMLOptionElement, Label, label)
-NS_IMPL_STRING_ATTR_WITH_TEXTCONTENT(nsHTMLOptionElement, Value, value)
+// GetText returns a whitespace compressed .textContent value.
+NS_IMPL_STRING_ATTR_WITH_FALLBACK(nsHTMLOptionElement, Label, label, GetText)
+NS_IMPL_STRING_ATTR_WITH_FALLBACK(nsHTMLOptionElement, Value, value, GetText)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
 
 NS_IMETHODIMP 

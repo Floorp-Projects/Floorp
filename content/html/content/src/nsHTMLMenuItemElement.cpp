@@ -37,6 +37,7 @@
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsHTMLMenuItemElement.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla::dom;
 
@@ -218,13 +219,8 @@ nsHTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  nsHTMLMenuItemElement *it = new nsHTMLMenuItemElement(ni.forget(),
-                                                        NOT_FROM_PARSER);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsINode> kungFuDeathGrip = it;
+  nsRefPtr<nsHTMLMenuItemElement> it =
+    new nsHTMLMenuItemElement(ni.forget(), NOT_FROM_PARSER);
   nsresult rv = CopyInnerTo(it);
   if (NS_SUCCEEDED(rv)) {
     switch (mType) {
@@ -239,7 +235,7 @@ nsHTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         break;
     }
 
-    kungFuDeathGrip.swap(*aResult);
+    it.forget(aResult);
   }
 
   return rv;
@@ -248,7 +244,8 @@ nsHTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMenuItemElement, Type, type,
                                 kMenuItemDefaultType->tag)
-NS_IMPL_STRING_ATTR(nsHTMLMenuItemElement, Label, label)
+// GetText returns a whitespace compressed .textContent value.
+NS_IMPL_STRING_ATTR_WITH_FALLBACK(nsHTMLMenuItemElement, Label, label, GetText)
 NS_IMPL_URI_ATTR(nsHTMLMenuItemElement, Icon, icon)
 NS_IMPL_BOOL_ATTR(nsHTMLMenuItemElement, Disabled, disabled)
 NS_IMPL_BOOL_ATTR(nsHTMLMenuItemElement, DefaultChecked, checked)
@@ -406,6 +403,16 @@ nsHTMLMenuItemElement::DoneCreatingElement()
     InitChecked();
     mShouldInitChecked = false;
   }
+}
+
+void
+nsHTMLMenuItemElement::GetText(nsAString& aText)
+{
+  nsAutoString text;
+  nsContentUtils::GetNodeTextContent(this, PR_FALSE, text);
+
+  text.CompressWhitespace(PR_TRUE, PR_TRUE);
+  aText = text;
 }
 
 nsresult

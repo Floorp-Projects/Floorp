@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Tests for browser context menu</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -476,6 +475,7 @@ function runTest(testNum) {
         // Context menu for element with assigned content context menu
         checkContextMenu(["+Plain item",          {type: "", icon: "", checked: false, disabled: false},
                           "+Disabled item",       {type: "", icon: "", checked: false, disabled: true},
+                          "+Item w/ textContent", {type: "", icon: "", checked: false, disabled: false},
                           "---",                  null,
                           "+Checkbox",            {type: "checkbox", icon: "", checked: true, disabled: false},
                           "---",                  null,

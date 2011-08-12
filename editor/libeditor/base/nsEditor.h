@@ -496,17 +496,19 @@ public:
                        nsCOMPtr<nsIDOMNode> *aResultNode,
                        PRBool       bNoBlockCrossing = PR_FALSE);
 
-  /** Get the rightmost child of aCurrentNode;
-    * return nsnull if aCurrentNode has no children.
-    */
-  nsCOMPtr<nsIDOMNode> GetRightmostChild(nsIDOMNode *aCurrentNode, 
-                                         PRBool      bNoBlockCrossing = PR_FALSE);
+  /**
+   * Get the rightmost child of aCurrentNode;
+   * return nsnull if aCurrentNode has no children.
+   */
+  already_AddRefed<nsIDOMNode> GetRightmostChild(nsIDOMNode *aCurrentNode, 
+                                                 PRBool      bNoBlockCrossing = PR_FALSE);
 
-  /** Get the leftmost child of aCurrentNode;
-    * return nsnull if aCurrentNode has no children.
-    */
-  nsCOMPtr<nsIDOMNode> GetLeftmostChild(nsIDOMNode  *aCurrentNode, 
-                                         PRBool      bNoBlockCrossing = PR_FALSE);
+  /**
+   * Get the leftmost child of aCurrentNode;
+   * return nsnull if aCurrentNode has no children.
+   */
+  already_AddRefed<nsIDOMNode> GetLeftmostChild(nsIDOMNode  *aCurrentNode, 
+                                                PRBool      bNoBlockCrossing = PR_FALSE);
 
   /** returns PR_TRUE if aNode is of the type implied by aTag */
   static inline PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)

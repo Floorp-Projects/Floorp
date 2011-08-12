@@ -527,12 +527,14 @@ ContentParent::RecvGetClipboardText(const PRInt32& whichClipboard, nsString* tex
     clipboard->GetData(trans, whichClipboard);
     nsCOMPtr<nsISupports> tmp;
     PRUint32 len;
-    rv  = trans->GetTransferData(kUnicodeMime, getter_AddRefs(tmp), &len);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = trans->GetTransferData(kUnicodeMime, getter_AddRefs(tmp), &len);
+    if (NS_FAILED(rv))
+        return false;
 
     nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(tmp);
     // No support for non-text data
-    NS_ENSURE_TRUE(supportsString, NS_ERROR_NOT_IMPLEMENTED);
+    if (!supportsString)
+        return false;
     supportsString->GetData(*text);
     return true;
 }

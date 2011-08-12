@@ -6,7 +6,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}
 -->
 <window title="Mozilla Bug {BUGNUMBER}"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="/MochiKit/packed.js"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- test results are displayed in the html:body -->

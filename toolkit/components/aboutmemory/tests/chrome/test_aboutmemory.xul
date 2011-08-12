@@ -3,7 +3,6 @@
 <?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 <window title="about:memory"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
@@ -85,8 +84,7 @@
     f("", "explicit/g/a",       HEAP,      6 * MB),
     f("", "explicit/g/b",       HEAP,      5 * MB),
     f("", "other1",             OTHER,   111 * MB),
-    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888),
-    f2("", "unknown-unit",      OTHER,   /*bogus unit*/999, 999)
+    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888)
   ];
   var fakeMultiReporters = [
      { collectReports: function(cbObj, closure) {
@@ -203,7 +201,6 @@ Other Measurements\n\
       888 -- other4\n\
    45.67% -- perc1\n\
   100.00% -- perc2\n\
-    (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
 \n\
@@ -276,7 +273,6 @@ Other Measurements\n\
           888 -- other4\n\
        45.67% -- perc1\n\
       100.00% -- perc2\n\
-        (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
 \n\

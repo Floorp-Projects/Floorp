@@ -140,13 +140,10 @@ class nsXULGroupboxAccessible : public nsAccessibleWrap
 public:
   nsXULGroupboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
-  // nsIAccessible
-  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
-                               nsIAccessibleRelation **aRelation);
-
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual Relation RelationByType(PRUint32 aRelationType);
 };
 
 /**

@@ -43,7 +43,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMText.h"
 #include "nsGkAtoms.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsIDOMNSEvent.h"

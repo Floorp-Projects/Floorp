@@ -12,8 +12,8 @@ function test() {
     contentWindow.gPrefBranch.clearUserPref("animate_zoom");
     let createdGroupItem = contentWindow.GroupItems.groupItem(groupItemId)
     if (createdGroupItem)
-      closeGroupItem(createdGroupItem, function() {});
-    hideTabView(function() {});
+      closeGroupItem(createdGroupItem);
+    hideTabView();
   });
 
   showTabView(function() {

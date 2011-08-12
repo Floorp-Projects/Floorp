@@ -7,8 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
 <window title="Mozilla Bug 503926"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <!-- test results are displayed in the html:body -->

@@ -1,4 +1,3 @@
 # This doesn't start with the magic cache manifest line.
 http://mochi.test:8888/tests/SimpleTest/SimpleTest.js
-http://mochi.test:8888/MochiKit/packed.js
 http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js

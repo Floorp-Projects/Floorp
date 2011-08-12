@@ -49,6 +49,7 @@
 #include "mozilla/layers/PLayersParent.h"
 #include "ShadowLayers.h"
 #include "ShadowLayerChild.h"
+#include "ShadowLayerUtils.h"
 
 using namespace mozilla::ipc;
 
@@ -377,18 +378,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return PR_TRUE;
-}
-
-LayersBackend
-ShadowLayerForwarder::GetParentBackendType()
-{
-  if (mParentBackend == LayerManager::LAYERS_NONE) {
-    LayersBackend backend;
-    if (mShadowManager->SendGetParentType(&backend)) {
-      mParentBackend = backend;
-    }
-  }
-  return mParentBackend;
 }
 
 static gfxASurface::gfxImageFormat
