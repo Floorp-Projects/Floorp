@@ -546,6 +546,10 @@ public:
                         nsCycleCollectionTraversalCallback &cb);
     
     // nsCycleCollectionLanguageRuntime
+    virtual void NotifyLeaveMainThread();
+    virtual void NotifyEnterCycleCollectionThread();
+    virtual void NotifyLeaveCycleCollectionThread();
+    virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                           bool explainExpectedLiveGarbage);
     virtual nsresult FinishTraverse();
