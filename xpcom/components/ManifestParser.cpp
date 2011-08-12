@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Philipp Kewisch <mozilla@kewis.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -430,6 +431,7 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
   NS_NAMED_LITERAL_STRING(kContentAccessible, "contentaccessible");
   NS_NAMED_LITERAL_STRING(kApplication, "application");
   NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
+  NS_NAMED_LITERAL_STRING(kGeckoVersion, "platformversion");
   NS_NAMED_LITERAL_STRING(kOs, "os");
   NS_NAMED_LITERAL_STRING(kOsVersion, "osversion");
   NS_NAMED_LITERAL_STRING(kABI, "abi");
@@ -439,6 +441,7 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
 
   nsAutoString appID;
   nsAutoString appVersion;
+  nsAutoString geckoVersion;
   nsAutoString osTarget;
   nsAutoString abi;
 
@@ -452,6 +455,10 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
     rv = xapp->GetVersion(s);
     if (NS_SUCCEEDED(rv))
       CopyUTF8toUTF16(s, appVersion);
+
+    rv = xapp->GetPlatformVersion(s);
+    if (NS_SUCCEEDED(rv))
+      CopyUTF8toUTF16(s, geckoVersion);
 
     nsCOMPtr<nsIXULRuntime> xruntime (do_QueryInterface(xapp));
     if (xruntime) {
@@ -576,6 +583,7 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
 
     bool ok = true;
     TriState stAppVersion = eUnspecified;
+    TriState stGeckoVersion = eUnspecified;
     TriState stApp = eUnspecified;
     TriState stOsVersion = eUnspecified;
     TriState stOs = eUnspecified;
@@ -591,7 +599,8 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
           CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
           CheckStringFlag(kABI, wtoken, abi, stABI) ||
           CheckVersionFlag(kOsVersion, wtoken, osVersion, stOsVersion) ||
-          CheckVersionFlag(kAppVersion, wtoken, appVersion, stAppVersion))
+          CheckVersionFlag(kAppVersion, wtoken, appVersion, stAppVersion) ||
+          CheckVersionFlag(kGeckoVersion, wtoken, geckoVersion, stGeckoVersion))
         continue;
 
       if (directive->contentflags &&
@@ -616,6 +625,7 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
     if (!ok ||
         stApp == eBad ||
         stAppVersion == eBad ||
+        stGeckoVersion == eBad ||
         stOs == eBad ||
         stOsVersion == eBad ||
         stABI == eBad)

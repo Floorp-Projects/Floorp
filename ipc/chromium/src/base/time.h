@@ -182,15 +182,15 @@ class Time {
   // like the Win32 SYSTEMTIME structure or the Unix "struct tm" with a few
   // additions and changes to prevent errors.
   struct Exploded {
-    int year;          // Four digit year "2007"
-    int month;         // 1-based month (values 1 = January, etc.)
-    int day_of_week;   // 0-based day of week (0 = Sunday, etc.)
-    int day_of_month;  // 1-based day of month (1-31)
-    int hour;          // Hour within the current day (0-23)
-    int minute;        // Minute within the current hour (0-59)
-    int second;        // Second within the current minute (0-59 plus leap
-                       //   seconds which may take it up to 60).
-    int millisecond;   // Milliseconds within the current second (0-999)
+    int year;                 // Four digit year "2007"
+    signed char month;        // 1-based month (values 1 = January, etc.)
+    signed char day_of_week;  // 0-based day of week (0 = Sunday, etc.)
+    signed char day_of_month; // 1-based day of month (1-31)
+    signed char hour;         // Hour within the current day (0-23)
+    signed char minute;       // Minute within the current hour (0-59)
+    signed char second;       // Second within the current minute (0-59 plus
+                              // leap seconds which may take it up to 60).
+    int millisecond;          // Milliseconds within the current second (0-999)
   };
 
   // Contains the NULL time. Use Time::Now() to get the current time.

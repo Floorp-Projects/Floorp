@@ -141,10 +141,6 @@
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
-
-#ifdef MOZ_WIDGET_COCOA
-#include "nsCocoaFeatures.h"
-#endif 
 #endif
 
 using namespace mozilla;
@@ -377,7 +373,6 @@ public:
   static void OnEvent(nsEvent* aEvent);
   static void Shutdown();
   static PRUint32 GetTimeoutTime();
-  static PRUint32 GetGestureTimeoutTime();
   static PRInt32 AccelerateWheelDelta(PRInt32 aScrollLines,
                    PRBool aIsHorizontal, PRBool aAllowScrollSpeedOverride,
                    nsIScrollableFrame::ScrollUnit *aScrollQuantity,
@@ -387,10 +382,6 @@ public:
   enum {
     kScrollSeriesTimeout = 80
   };
-#ifdef MOZ_WIDGET_COCOA
-  static PRBool GetGestureTriggered();
-  static void SetGestureTriggered();
-#endif
 protected:
   static nsIntPoint GetScreenPoint(nsGUIEvent* aEvent);
   static void OnFailToScrollTarget();
@@ -411,9 +402,6 @@ protected:
   static PRUint32    sMouseMoved;  // in milliseconds
   static nsITimer*   sTimer;
   static PRInt32     sScrollSeriesCounter;
-#ifdef MOZ_WIDGET_COCOA
-  static PRUint32    sGestureTriggered; // in milliseconds
-#endif
 };
 
 nsWeakFrame nsMouseWheelTransaction::sTargetFrame(nsnull);
@@ -421,9 +409,6 @@ PRUint32    nsMouseWheelTransaction::sTime        = 0;
 PRUint32    nsMouseWheelTransaction::sMouseMoved  = 0;
 nsITimer*   nsMouseWheelTransaction::sTimer       = nsnull;
 PRInt32     nsMouseWheelTransaction::sScrollSeriesCounter = 0;
-#ifdef MOZ_WIDGET_COCOA
-PRUint32      nsMouseWheelTransaction::sGestureTriggered = 0;
-#endif
 
 static PRBool
 OutOfTime(PRUint32 aBaseTime, PRUint32 aThreshold)
@@ -502,28 +487,7 @@ nsMouseWheelTransaction::EndTransaction()
     sTimer->Cancel();
   sTargetFrame = nsnull;
   sScrollSeriesCounter = 0;
-#ifdef MOZ_WIDGET_COCOA
-  sGestureTriggered = 0;
-#endif
 }
-
-#ifdef MOZ_WIDGET_COCOA
-void
-nsMouseWheelTransaction::SetGestureTriggered() {
-  sGestureTriggered = PR_IntervalToMilliseconds(PR_IntervalNow());
-}
-
-PRBool
-nsMouseWheelTransaction::GetGestureTriggered() {
-  if (sGestureTriggered != 0 &&
-      OutOfTime(sGestureTriggered, GetGestureTimeoutTime())) {
-    // Start accepting new gestures
-    sGestureTriggered = 0;
-  }
-
-  return sGestureTriggered != 0;
-}
-#endif
 
 void
 nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
@@ -668,12 +632,6 @@ nsMouseWheelTransaction::GetScreenPoint(nsGUIEvent* aEvent)
   NS_ASSERTION(aEvent, "aEvent is null");
   NS_ASSERTION(aEvent->widget, "aEvent-widget is null");
   return aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
-}
-
-PRUint32
-nsMouseWheelTransaction::GetGestureTimeoutTime()
-{
-  return Preferences::GetUint("mousewheel.transaction.gesturetimeout", 300);
 }
 
 PRUint32
@@ -2838,22 +2796,6 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
       }
     }
   }
-
-#ifdef MOZ_WIDGET_COCOA
-  // On lion scroll will trigger back/forward at the edge of the page
-  if (isHorizontal && passToParent && nsCocoaFeatures::OnLionOrLater()) {
-    if (!nsMouseWheelTransaction::GetGestureTriggered()) {
-      if (numLines > 4 || numLines < -4) {
-        DoScrollHistory(-numLines);
-        nsMouseWheelTransaction::SetGestureTriggered();
-        return NS_OK;
-      }
-    } else {
-      // Extend the gesture in progress
-      nsMouseWheelTransaction::SetGestureTriggered();
-    }
-  }
-#endif
 
   if (!passToParent && frameToScroll) {
     if (aScrollQuantity == nsIScrollableFrame::LINES) {

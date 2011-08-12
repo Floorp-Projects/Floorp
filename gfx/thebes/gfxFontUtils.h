@@ -165,8 +165,6 @@ public:
         Block *block = mBlocks[blockIndex];
         if (!block) {
             block = new Block;
-            if (NS_UNLIKELY(!block)) // OOM
-                return;
             mBlocks[blockIndex] = block;
         }
         block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
@@ -201,9 +199,6 @@ public:
                     fullBlock = PR_TRUE;
 
                 block = new Block(fullBlock ? 0xFF : 0);
-
-                if (NS_UNLIKELY(!block)) // OOM
-                    return;
                 mBlocks[i] = block;
 
                 if (fullBlock)
@@ -279,7 +274,44 @@ public:
         for (i = 0; i < mBlocks.Length(); i++)
             mBlocks[i] = nsnull;    
     }
-    
+
+    // set this bitset to the union of its current contents and another
+    void Union(const gfxSparseBitSet& aBitset) {
+        // ensure mBlocks is large enough
+        PRUint32 blockCount = aBitset.mBlocks.Length();
+        if (blockCount > mBlocks.Length()) {
+            PRUint32 needed = blockCount - mBlocks.Length();
+            nsAutoPtr<Block> *blocks = mBlocks.AppendElements(needed);
+            if (NS_UNLIKELY(!blocks)) { // OOM
+                return;
+            }
+        }
+        // for each block that may be present in aBitset...
+        for (PRUint32 i = 0; i < blockCount; ++i) {
+            // if it is missing (implicitly empty), just skip
+            if (!aBitset.mBlocks[i]) {
+                continue;
+            }
+            // if the block is missing in this set, just copy the other
+            if (!mBlocks[i]) {
+                mBlocks[i] = new Block(*aBitset.mBlocks[i]);
+                continue;
+            }
+            // else set existing block to the union of both
+            PRUint32 *dst = reinterpret_cast<PRUint32*>(mBlocks[i]->mBits);
+            const PRUint32 *src =
+                reinterpret_cast<const PRUint32*>(aBitset.mBlocks[i]->mBits);
+            for (PRUint32 j = 0; j < BLOCK_SIZE / 4; ++j) {
+                dst[j] |= src[j];
+            }
+        }
+    }
+
+    void Compact() {
+        mBlocks.Compact();
+    }
+
+private:
     nsTArray< nsAutoPtr<Block> > mBlocks;
 };
 

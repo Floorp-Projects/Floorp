@@ -1104,6 +1104,25 @@ protected:
   }
 
 /**
+ * This macro is similar to NS_IMPL_STRING_ATTR except that the getter method
+ * falls back to an alternative method if the content attribute isn't set.
+ */
+#define NS_IMPL_STRING_ATTR_WITH_FALLBACK(_class, _method, _atom, _fallback) \
+  NS_IMETHODIMP                                                              \
+  _class::Get##_method(nsAString& aValue)                                    \
+  {                                                                          \
+    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue)) {             \
+      _fallback(aValue);                                                     \
+    }                                                                        \
+    return NS_OK;                                                            \
+  }                                                                          \
+  NS_IMETHODIMP                                                              \
+  _class::Set##_method(const nsAString& aValue)                              \
+  {                                                                          \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);                          \
+  }
+
+/**
  * A macro to implement the getter and setter for a given boolean
  * valued content property. The method uses the generic GetAttr and
  * SetAttr methods.

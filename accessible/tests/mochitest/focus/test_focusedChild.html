@@ -1,0 +1,85 @@
+<html>
+
+<head>
+  <title>nsIAccessible::focusedChild testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function openWnd()
+    {
+      this.eventSeq = [ new invokerChecker(EVENT_FOCUS,
+                                           getDialogAccessible,
+                                           this) ];
+
+      this.invoke = function openWnd_invoke()
+      {
+        this.dialog = window.openDialog("about:mozilla",
+                                        "AboutMozilla",
+                                        "chrome,width=600,height=600");
+      }
+
+      this.finalCheck = function openWnd_finalCheck()
+      {
+        var app = getApplicationAccessible();
+        is(app.focusedChild, getDialogAccessible(this),
+           "Wrong focused child");
+
+        this.dialog.close();
+      }
+
+      this.getID = function openWnd_getID()
+      {
+        return "focusedChild for application accessible";
+      }
+
+      function getDialogAccessible(aInvoker)
+      {
+        return getAccessible(aInvoker.dialog.document);
+      }
+    }
+
+    //gA11yEventDumpToConsole = true;
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new openWnd());
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=677467"
+     title="focusedChild crashes on application accessible">
+    Mozilla Bug 677467
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+</body>
+</html>

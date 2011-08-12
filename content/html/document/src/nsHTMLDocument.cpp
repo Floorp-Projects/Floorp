@@ -56,12 +56,7 @@
 #include "nsIDOMNode.h" // for Find
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMText.h"
-#include "nsIDOMComment.h"
-#include "nsIDOMDOMImplementation.h"
-#include "nsIDOMDocumentType.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsDOMString.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"

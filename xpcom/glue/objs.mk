@@ -34,12 +34,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-XPCOM_GLUE_SRC_LCSRCS =          \
-  pldhash.c                      \
-  $(NULL)
-
-XPCOM_GLUE_SRC_CSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCSRCS))
-
 XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsArrayEnumerator.cpp          \
   nsArrayUtils.cpp               \
@@ -66,6 +60,7 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsCycleCollectionParticipant.cpp \
   nsCycleCollectorUtils.cpp      \
   nsDeque.cpp \
+  pldhash.cpp \
   $(NULL)
 
 XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCPPSRCS))

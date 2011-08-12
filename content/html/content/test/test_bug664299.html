@@ -18,12 +18,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664299
 <pre id="test">
 <script type="application/javascript">
 /** Test to ensure we reflect <img crossorigin> correctly **/
-reflectLimitedEnumerated({
+reflectString({
   element: new Image(),
   attribute: "crossOrigin",
-  validValues: [ "", "anonymous", "use-credentials" ],
-  invalidValues: [ "foobar" ],
-  defaultValue: "" });
+  otherValues: [ "", "anonymous", "ANONYMOUS", "  aNOnYmous    ",
+                 "use-credentials", "USE-CREDENTIALS", "   UsE-CreDEntIALS      ",
+                 "foobar", "FOOBAR", "  fOoBaR  " ]});
 </script>
 </pre>
 </body>
