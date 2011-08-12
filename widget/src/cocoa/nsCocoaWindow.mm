@@ -2417,11 +2417,14 @@ DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
             nil],
           nil);
 
-  // At some window widths the call to CUIDraw doesn't draw the top pixel strip.
-  // We don't want to have a flickering transparent line, so we overdraw it.
-  CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
-  CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
-                                         aTitlebarRect.size.width, 1));
+  if (nsToolkit::OnLionOrLater()) {
+    // On Lion the call to CUIDraw doesn't draw the top pixel strip at some
+    // window widths. We don't want to have a flickering transparent line, so
+    // we overdraw it.
+    CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
+    CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
+                                           aTitlebarRect.size.width, 1));
+  }
 }
 
 // Pattern draw callback for standard titlebar gradients and solid titlebar colors
