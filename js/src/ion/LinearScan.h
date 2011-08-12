@@ -115,6 +115,9 @@ class CodePosition
         OUTPUT
     };
 
+    CodePosition() : bits_(0)
+    { }
+
     CodePosition(uint32 instruction, SubPosition where) {
         JS_ASSERT(instruction < 0x80000000u);
         JS_ASSERT(((uint32)where & SUBPOSITION_MASK) == (uint32)where);
@@ -464,8 +467,6 @@ class LinearScanAllocator
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
     InlineList<LiveInterval> handled;
-    CodePosition *freeUntilPos;
-    CodePosition *nextUsePos;
     LiveInterval *current;
     LOperand *firstUse;
     CodePosition firstUsePos;
@@ -480,8 +481,8 @@ class LinearScanAllocator
     bool assign(LAllocation allocation);
     bool spill();
     void finishInterval(LiveInterval *interval);
-    Register findBestFreeRegister();
-    Register findBestBlockedRegister();
+    Register::Code findBestFreeRegister(CodePosition *freeUntil);
+    Register::Code findBestBlockedRegister(CodePosition *nextUsed);
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
