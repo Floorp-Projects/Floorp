@@ -12,8 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
 
   <title>Test for Bug 263683</title>
   <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" 
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
 
   <body  xmlns="http://www.w3.org/1999/xhtml">
