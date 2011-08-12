@@ -60,6 +60,7 @@
 
 class nsIRDFResource;
 class nsIRDFService;
+class nsIXULPrototypeCache;
 class nsPIWindowRoot;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
 class nsIObjectInputStream;
