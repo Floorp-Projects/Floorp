@@ -58,7 +58,7 @@ $(NSINSTALL) -D $(dir) && \
   $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/$(dir)/install.rdf.in > $(dir)/install.rdf && \
   cd $(dir) && \
   $(ZIP) -r9XD $(DISTROEXT)/$(dir).xpi install.rdf && \
-  cd $(srcdir)/$(dir) && \
+  cd $(call core_abspath,$(srcdir)/$(dir)) && \
   $(ZIP) -r9XD $(DISTROEXT)/$(dir).xpi * -x install.rdf.in
 
 endef # do not remove the blank line!
