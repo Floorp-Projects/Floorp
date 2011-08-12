@@ -517,6 +517,17 @@ var AddonManagerInternal = {
       scope.AddonRepository.repopulateCache(ids, notifyComplete);
 
       pendingUpdates += aAddons.length;
+      var autoUpdateDefault = AddonManager.autoUpdateDefault;
+
+      function shouldAutoUpdate(aAddon) {
+        if (!("applyBackgroundUpdates" in aAddon))
+          return false;
+        if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_ENABLE)
+          return true;
+        if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE)
+          return false;
+        return autoUpdateDefault;
+      }
 
       aAddons.forEach(function BUC_forEachCallback(aAddon) {
         // Check all add-ons for updates so that any compatibility updates will
@@ -526,7 +537,7 @@ var AddonManagerInternal = {
             // Start installing updates when the add-on can be updated and
             // background updates should be applied.
             if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
-                AddonManager.shouldAutoUpdate(aAddon)) {
+                shouldAutoUpdate(aAddon)) {
               aInstall.install();
             }
           },
@@ -1074,7 +1085,10 @@ var AddonManagerInternal = {
   },
 
   get autoUpdateDefault() {
-    return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
+    try {
+      return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
+    } catch(e) { }
+    return true;
   }
 };
 
@@ -1385,16 +1399,6 @@ var AddonManager = {
 
   get autoUpdateDefault() {
     return AddonManagerInternal.autoUpdateDefault;
-  },
-
-  shouldAutoUpdate: function AM_shouldAutoUpdate(aAddon) {
-    if (!("applyBackgroundUpdates" in aAddon))
-      return false;
-    if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_ENABLE)
-      return true;
-    if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE)
-      return false;
-    return this.autoUpdateDefault;
   }
 };
 
