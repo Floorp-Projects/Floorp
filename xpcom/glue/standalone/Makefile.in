@@ -71,10 +71,6 @@ LINKSRC = nsGlueLinkingNull.cpp
 $(warning TinderboxPrint:<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=298044">Error: XPCOM Glue</a>)
 endif
 
-CSRCS		= \
-		$(XPCOM_GLUE_SRC_LCSRCS) \
-		$(NULL)
-
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS)   \
 		nsStringAPI.cpp              \
@@ -104,7 +100,7 @@ USE_STATIC_LIBS = 1
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
 STL_FLAGS	=
 
-GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(XPCOM_GLUE_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 SRCS_IN_OBJDIR	= 1
 
@@ -117,7 +113,7 @@ OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
 endif
 
-export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp
+export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp
 	$(INSTALL) $^ .
 
 GARBAGE += nsStringAPI.cpp

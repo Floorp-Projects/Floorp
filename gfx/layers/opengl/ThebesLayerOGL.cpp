@@ -610,7 +610,16 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
   // Move rgnToPaint back into position so that the thebes callback
   // gets the right coordintes.
   result.mRegionToDraw.MoveBy(-offset);
-  
+
+  // If we do partial updates, we have to clip drawing to the regionToDraw.
+  // If we don't clip, background images will be fillrect'd to the region correctly,
+  // while text or lines will paint outside of the regionToDraw. This becomes apparent
+  // with concave regions. Right now the scrollbars invalidate a narrow strip of the awesomebar
+  // although they never cover it. This leads to two draw rects, the narow strip and the actually
+  // newly exposed area. It would be wise to fix this glitch in any way to have simpler
+  // clip and draw regions.
+  gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
+
   return result;
 }
 

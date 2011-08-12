@@ -42,7 +42,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
-#include "nsTPtrArray.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
@@ -1298,7 +1297,7 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
   nsCOMPtr<nsIDocShellTreeItem> dsti2 = do_QueryInterface(webnav);
   NS_ENSURE_TRUE(dsti2, nsnull);
 
-  nsAutoTPtrArray<nsIDocShellTreeItem, 30> parents1, parents2;
+  nsAutoTArray<nsIDocShellTreeItem*, 30> parents1, parents2;
   do {
     parents1.AppendElement(dsti1);
     nsCOMPtr<nsIDocShellTreeItem> parentDsti1;

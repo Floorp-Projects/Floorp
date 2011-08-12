@@ -668,10 +668,19 @@ function testFails (test) {
   }
   return false;
 }
+
 function markTodos() {
   if (todoTests[docName]) {
     // mark the failures as todos
-    var failures = filter(testFails, SimpleTest._tests);
+    var tests = SimpleTest._tests;
+    var failures = [];
+    var o;
+    for (var i = 0; i < tests.length; i++) {
+      o = tests[i];
+      if (testFails(o)) {
+        failures.push(o);
+      } 
+    }
     // shouldn't be 0 failures
     todo(SimpleTest._tests != 0 && failures == 0, "test marked todo should fail somewhere");
   }
@@ -680,11 +689,10 @@ function markTodos() {
 function runJSUnitTests() {
   builder = createConfiguredBuilder();
   try {
-   forEach(exposeTestFunctionNames(), 
-     function (testName) { 
-       window[testName](); 
-     }
-   );
+    var tests = exposeTestFunctionNames(); 
+    for (var i = 0; i < tests.length; i++) {
+      window[tests[i]](); 
+   }   
   } catch (ex) {
     //if (todoTests[docName]) {
     //  todo(false, "Text threw exception: " + ex);

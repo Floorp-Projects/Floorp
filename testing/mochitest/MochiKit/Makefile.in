@@ -59,7 +59,6 @@ _JS_FILES =	Async.js \
 		MockDOM.js \
 		New.js \
 		__package__.js \
-		packed.js \
 		Signal.js \
 		Sortable.js \
 		Style.js \

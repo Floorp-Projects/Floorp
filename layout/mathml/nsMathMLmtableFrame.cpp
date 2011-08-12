@@ -540,9 +540,10 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
   // Negative indices mean to find upwards from the end.
   if (aRowIndex < 0) {
     aRowIndex = rowCount + aRowIndex;
+  } else {
+    // aRowIndex is 1-based, so convert it to a 0-based index
+    --aRowIndex;
   }
-  // aRowIndex is 1-based, so convert it to a 0-based index
-  --aRowIndex;
 
   // if our inner table says that the index is valid, find the row now
   if (0 <= aRowIndex && aRowIndex <= rowCount) {

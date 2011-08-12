@@ -47,6 +47,7 @@
 #include "nsStyleConsts.h"
 #include "nsHTMLParts.h"
 #include "nsRuleData.h"
+#include "nsContentUtils.h"
 
 class nsHTMLTableRowElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLTableRowElement

@@ -47,6 +47,7 @@
 #include "nsStringGlue.h"
 
 #include "prthread.h"
+#include "Layers.h"
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsITheme.h"
@@ -71,11 +72,11 @@ class   nsIContent;
 class   ViewWrapper;
 
 namespace mozilla {
-namespace layers {
-class LayerManager;
-}
 namespace dom {
 class PBrowserChild;
+}
+namespace layers {
+class PLayersChild;
 }
 }
 
@@ -117,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xac809e35, 0x632c, 0x448d, \
-    { 0x9e, 0x34, 0x11, 0x62, 0x32, 0x60, 0x5e, 0xe6 } }
+  { 0xf43254ce, 0xd315, 0x458b, \
+    { 0xba, 0x72, 0xa8, 0xdf, 0x21, 0xcf, 0xa7, 0x2a } }
 
 /*
  * Window shadow styles
@@ -274,6 +275,8 @@ class nsIWidget : public nsISupports {
 
   public:
     typedef mozilla::layers::LayerManager LayerManager;
+    typedef LayerManager::LayersBackend LayersBackend;
+    typedef mozilla::layers::PLayersChild PLayersChild;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -894,6 +897,12 @@ class nsIWidget : public nsISupports {
 
     virtual nsIToolkit* GetToolkit() = 0;    
 
+    enum LayerManagerPersistence
+    {
+      LAYER_MANAGER_CURRENT = 0,
+      LAYER_MANAGER_PERSISTENT
+    };
+
     /**
      * Return the widget's LayerManager. The layer tree for that
      * LayerManager is what gets rendered to the widget.
@@ -903,17 +912,25 @@ class nsIWidget : public nsISupports {
      */
     inline LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull)
     {
-        return GetLayerManager(LAYER_MANAGER_CURRENT, aAllowRetaining);
+        return GetLayerManager(nsnull, LayerManager::LAYERS_NONE,
+                               LAYER_MANAGER_CURRENT, aAllowRetaining);
     }
 
-
-    enum LayerManagerPersistence
+    inline LayerManager* GetLayerManager(LayerManagerPersistence aPersistence,
+                                         bool* aAllowRetaining = nsnull)
     {
-      LAYER_MANAGER_CURRENT = 0,
-      LAYER_MANAGER_PERSISTENT
-    };
+        return GetLayerManager(nsnull, LayerManager::LAYERS_NONE,
+                               aPersistence, aAllowRetaining);
+    }
 
-    virtual LayerManager *GetLayerManager(LayerManagerPersistence aPersistence,
+    /**
+     * Like GetLayerManager(), but prefers creating a layer manager of
+     * type |aBackendHint| instead of what would normally be created.
+     * LAYERS_NONE means "no hint".
+     */
+    virtual LayerManager* GetLayerManager(PLayersChild* aShadowManager,
+                                          LayersBackend aBackendHint,
+                                          LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nsnull) = 0;
 
     /**

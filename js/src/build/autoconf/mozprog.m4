@@ -36,14 +36,14 @@ dnl the terms of any one of the MPL, the GPL or the LGPL.
 dnl
 dnl ***** END LICENSE BLOCK *****
 
-AC_DEFUN(MOZ_PROG_CHECKMSYS,
+AC_DEFUN([MOZ_PROG_CHECKMSYS],
 [AC_REQUIRE([AC_INIT_BINSH])dnl
 if test `uname -s | grep -c MINGW 2>/dev/null` != "0"; then
   msyshost=1
 fi
 ])
 
-AC_DEFUN(MOZ_PATH_PROG,
+AC_DEFUN([MOZ_PATH_PROG],
 [ AC_PATH_PROG($1,$2,$3,$4)
   if test "$msyshost"; then
     case "[$]$1" in
@@ -59,7 +59,7 @@ AC_DEFUN(MOZ_PATH_PROG,
   fi
 ])
 
-AC_DEFUN(MOZ_PATH_PROGS,
+AC_DEFUN([MOZ_PATH_PROGS],
 [  AC_PATH_PROGS($1,$2,$3,$4)
   if test "$msyshost"; then
     case "[$]$1" in

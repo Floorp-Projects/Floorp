@@ -1294,7 +1294,7 @@ BookmarksTracker.prototype = {
         this._log.debug("Restore succeeded: wiping server and other clients.");
         Weave.Service.resetClient([this.name]);
         Weave.Service.wipeServer([this.name]);
-        Weave.Service.prepCommand("wipeEngine", [this.name]);
+        Clients.sendCommand("wipeEngine", [this.name]);
         break;
       case "bookmarks-restore-failed":
         this._log.debug("Tracking all items on failed import.");

@@ -40,6 +40,7 @@
 #include "SVGLength.h"
 #include "nsContentCreatorFunctions.h" // For NS_NewSVGElement
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 

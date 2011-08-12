@@ -7,8 +7,6 @@
         onload="RunTest();">
   <title>Preferences Window Tests</title>
 
-  <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 

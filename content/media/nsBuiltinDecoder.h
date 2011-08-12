@@ -316,7 +316,7 @@ public:
   // Returns PR_TRUE if the media resource can seek into unbuffered ranges,
   // as set by SetSeekable(). The decoder monitor must be obtained before
   // calling this.
-  virtual PRBool GetSeekable() = 0;
+  virtual PRBool IsSeekable() = 0;
 
   // Update the playback position. This can result in a timeupdate event
   // and an invalidate of the frame being dispatched asynchronously if
@@ -433,7 +433,9 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual void SetSeekable(PRBool aSeekable);
 
   // Return PR_TRUE if seeking is supported.
-  virtual PRBool GetSeekable();
+  virtual PRBool IsSeekable();
+
+  virtual nsresult GetSeekable(nsTimeRanges* aSeekable);
 
   virtual Statistics GetStatistics();
 

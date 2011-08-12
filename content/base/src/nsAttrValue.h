@@ -58,7 +58,6 @@ class nsIAtom;
 class nsISVGValue;
 class nsIDocument;
 template<class E, class A> class nsTArray;
-template<class E, class A> class nsTPtrArray;
 struct nsTArrayDefaultAllocator;
 
 namespace mozilla {
@@ -214,11 +213,15 @@ public:
    * @param aValue the string to find the value for
    * @param aTable the enumeration to map with
    * @param aCaseSensitive specify if the parsing has to be case sensitive
+   * @param aDefaultValue if non-null, this function will always return true.
+   *        Failure to parse aValue as one of the values in aTable will just
+   *        cause aDefaultValue->value to be stored as the enumeration value.
    * @return whether the enum value was found or not
    */
   PRBool ParseEnumValue(const nsAString& aValue,
                         const EnumTable* aTable,
-                        PRBool aCaseSensitive);
+                        PRBool aCaseSensitive,
+                        const EnumTable* aDefaultValue = nsnull);
 
   /**
    * Parse a string into an integer. Can optionally parse percent (n%).
@@ -311,6 +314,8 @@ public:
    */
   PRBool ParseIntMarginValue(const nsAString& aString);
 
+  PRInt64 SizeOf() const;
+
 private:
   // These have to be the same as in ValueType
   enum ValueBaseType {
@@ -346,13 +351,11 @@ private:
   /**
    * Get the index of an EnumTable in the sEnumTableArray.
    * If the EnumTable is not in the sEnumTableArray, it is added.
-   * If there is no more space in sEnumTableArray, it returns PR_FALSE.
    *
    * @param aTable   the EnumTable to get the index of.
-   * @param aResult  the index of the EnumTable.
-   * @return         whether the index has been found or inserted.
+   * @return         the index of the EnumTable.
    */
-  PRBool GetEnumTableIndex(const EnumTable* aTable, PRInt16& aResult);
+  PRInt16  GetEnumTableIndex(const EnumTable* aTable);
 
   inline void SetPtrValueAndType(void* aValue, ValueBaseType aType);
   void SetIntValueAndType(PRInt32 aValue, ValueType aType,
@@ -376,8 +379,12 @@ private:
                           PRInt32* aErrorCode,
                           PRBool aCanBePercent = PR_FALSE,
                           PRBool* aIsPercent = nsnull) const;
+  // Given an enum table and a particular entry in that table, return
+  // the actual integer value we should store.
+  PRInt32 EnumTableEntryToValue(const EnumTable* aEnumTable,
+                                const EnumTable* aTableEntry);  
 
-  static nsTPtrArray<const EnumTable, nsTArrayDefaultAllocator>* sEnumTableArray;
+  static nsTArray<const EnumTable*, nsTArrayDefaultAllocator>* sEnumTableArray;
 
   PtrBits mBits;
 };

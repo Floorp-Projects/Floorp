@@ -34,6 +34,7 @@ script findReferences-01.js
 script findReferences-02.js
 script findReferences-03.js
 script findReferences-04.js
+script regress-613452.js
 script regress-627859.js
 script regress-627984-1.js
 script regress-627984-2.js
@@ -53,3 +54,4 @@ script regress-645160.js
 script regress-650753.js
 script regress-668438.js
 script regress-677589.js
+script regress-677924.js

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=291780
+-->
+<head>
+  <title>Test for Bug 291780</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=291780">Mozilla Bug 291780</a>
+<p id="display"></p>
+<div id="editor" contenteditable></div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 291780 **/
+SimpleTest.waitForExplicitFinish();
+
+var original = '<ul style="margin-left: 40px;"><li>Item 1</li><li>Item 2</li><li>Item 3</li><li>Item 4</li></ul>';
+var editor = document.getElementById("editor");
+editor.innerHTML = original;
+editor.focus();
+
+addLoadEvent(function() {
+
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var lis = document.getElementsByTagName("li");
+  var range = document.createRange();
+  range.setStart(lis[1], 0);
+  range.setEnd(lis[2], lis[2].childNodes.length);
+  sel.addRange(range);
+  document.execCommand("indent", false, false);
+  var expected = '<ul style="margin-left: 40px;"><li>Item 1</li><ul><li>Item 2</li><li>Item 3</li></ul><li>Item 4</li></ul>';
+  is(editor.innerHTML, expected, "indenting part of an already indented bulleted list");
+  document.execCommand("outdent", false, false);
+  todo_is(editor.innerHTML, original, "outdenting the partially indented part of an already indented bulleted list"); 
+
+  // done
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

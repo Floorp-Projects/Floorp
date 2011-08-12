@@ -4,7 +4,6 @@
 -->
 <head>
   <title>Test for copy/paste</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -224,6 +223,14 @@ if (false) {
   is(textarea.value, val);
   textarea.value="";
 
+  // ============ NOSCRIPT should not be copied
+
+  copyChildrenToClipboard("div13");
+  testSelectionToString("__");
+  testClipboardValue("text/unicode", "__");
+  testClipboardValue("text/html", "<div id=\"div13\">__</div>");
+  testPasteText("__");
+
   // ============ manipulating Selection in oncopy
 
   copyRangeToClipboard($("div11").childNodes[0],0, $("div11").childNodes[1],2);
@@ -310,6 +317,8 @@ x.appendChild(document.createTextNode('10'))
 
 <div id="div11" oncopy="modifySelection('X')"><span>div</span>11</div>
 <div id="div12" oncopy="modifySelection('X<b style=\'display:none\'>Y</b>')"><span>div</span>12</div>
+
+<div id="div13">_<noscript>FAIL</noscript>_</div>
 
 </div>
 </body>
