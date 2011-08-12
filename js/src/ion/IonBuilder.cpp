@@ -382,6 +382,12 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DECLOCAL:
         return jsop_localinc(op);
 
+      case JSOP_ARGINC:
+      case JSOP_INCARG:
+      case JSOP_ARGDEC:
+      case JSOP_DECARG:
+        return jsop_arginc(op);
+
       case JSOP_DOUBLE:
         return pushConstant(script->getConst(readIndex(pc)));
 
@@ -1559,6 +1565,32 @@ IonBuilder::jsop_localinc(JSOp op)
         return false;
 
     if (current->setLocal(GET_SLOTNO(pc)))
+        return false;
+
+    if (post_incr)
+        current->pop();
+
+    return true;
+}
+
+bool
+IonBuilder::jsop_arginc(JSOp op)
+{
+    int32 amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
+    bool post_incr = !!(js_CodeSpec[op].format & JOF_POST);
+
+    if (post_incr)
+        current->pushArg(GET_SLOTNO(pc));
+    
+    current->pushArg(GET_SLOTNO(pc));
+
+    if (!pushConstant(Int32Value(amt)))
+        return false;
+
+    if (!jsop_binary(JSOP_ADD))
+        return false;
+
+    if (current->setArg(GET_SLOTNO(pc)))
         return false;
 
     if (post_incr)
