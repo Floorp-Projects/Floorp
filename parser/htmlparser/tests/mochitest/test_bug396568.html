@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396568
    noSuchIdentifier;
    reached = true;
  } catch (e) {
-   is(e.lineNumber, 37, "Unexpected line number");
+   is(e.lineNumber, 36, "Unexpected line number"); //this line number is dependent on the line number of noSuchIdentifier
  }
  is(reached, false, "Exception needed to be thrown");
  
