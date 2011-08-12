@@ -768,8 +768,7 @@ PRenderFrameParent*
 TabParent::AllocPRenderFrame()
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  NS_WARN_IF_FALSE(frameLoader, "'message sent to unknown actor ID' coming up");
-  return frameLoader ? new RenderFrameParent(frameLoader) : nsnull;
+  return new RenderFrameParent(frameLoader);
 }
 
 bool

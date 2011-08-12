@@ -144,6 +144,11 @@ BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
 inline bool
 ComputeThis(JSContext *cx, StackFrame *fp);
 
+enum MaybeConstruct {
+    NO_CONSTRUCT = INITIAL_NONE,
+    CONSTRUCT = INITIAL_CONSTRUCT
+};
+
 /*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
  * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,
@@ -249,7 +254,9 @@ enum InterpMode
     JSINTERP_RECORD    = 1, /* interpreter has been started to record/run traces */
     JSINTERP_SAFEPOINT = 2, /* interpreter should leave on a method JIT safe point */
     JSINTERP_PROFILE   = 3, /* interpreter should profile a loop */
-    JSINTERP_BAILOUT   = 4  /* interpreter is running from an Ion bailout */
+    JSINTERP_REJOIN    = 4, /* as normal, but the frame has already started */
+    JSINTERP_SKIP_TRAP = 5, /* as REJOIN, but skip trap at first opcode */
+    JSINTERP_BAILOUT   = 6  /* interpreter is running from an Ion bailout */
 };
 
 /*

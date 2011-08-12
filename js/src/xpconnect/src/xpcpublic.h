@@ -41,6 +41,7 @@
 #define xpcpublic_h
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "jsobj.h"
 #include "jsgc.h"
 #include "jspubtd.h"
@@ -220,12 +221,14 @@ struct CompartmentStats
     PRInt64 tjitDataAllocatorsMain;
     PRInt64 tjitDataAllocatorsReserve;
 #endif
+    TypeInferenceMemoryStats typeInferenceMemory;
 };
 
 struct IterateData
 {
     IterateData()
-      : stackSize(0),
+      : atomsTableSize(0),
+        stackSize(0),
         gcHeapChunkTotal(0),
         gcHeapChunkCleanUnused(0),
         gcHeapChunkDirtyUnused(0),
@@ -235,6 +238,7 @@ struct IterateData
         compartmentStatsVector(),
         currCompartmentStats(NULL) { }
 
+    PRInt64 atomsTableSize;
     PRInt64 stackSize;
     PRInt64 gcHeapChunkTotal;
     PRInt64 gcHeapChunkCleanUnused;

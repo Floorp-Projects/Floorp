@@ -64,12 +64,14 @@
 #include "jsstaticcheck.h"
 #include "jswrapper.h"
 
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /* Forward declarations for js_ErrorClass's initializer. */
 static JSBool
@@ -292,7 +294,6 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
     stackDepth = 0;
     valueCount = 0;
-
     FrameRegsIter firstPass(cx);
     for (; !firstPass.done(); ++firstPass) {
         StackFrame *fp = firstPass.fp();
@@ -337,6 +338,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
+
     for (FrameRegsIter iter(cx); iter != firstPass; ++iter) {
         StackFrame *fp = iter.fp();
         if (fp->compartment() != cx->compartment)

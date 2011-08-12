@@ -332,6 +332,18 @@ JSWrapper::trace(JSTracer *trc, JSObject *wrapper)
     MarkObject(trc, *wrappedObject(wrapper), "wrappedObject");
 }
 
+JSObject *
+JSWrapper::wrappedObject(const JSObject *wrapper)
+{
+    return wrapper->getProxyPrivate().toObjectOrNull();
+}
+
+JSWrapper *
+JSWrapper::wrapperHandler(const JSObject *wrapper)
+{
+    return static_cast<JSWrapper *>(wrapper->getProxyHandler());
+}
+
 bool
 JSWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp)
 {
@@ -399,7 +411,7 @@ ForceFrame::enter()
     JSObject *scopeChain = target->getGlobal();
     JS_ASSERT(scopeChain->isNative());
 
-    return context->stack.pushDummyFrame(context, REPORT_ERROR, *scopeChain, frame);
+    return context->stack.pushDummyFrame(context, *scopeChain, frame);
 }
 
 AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
@@ -428,21 +440,8 @@ AutoCompartment::enter()
         JS_ASSERT(scopeChain->isNative());
 
         frame.construct();
-
-        /*
-         * Set the compartment eagerly so that pushDummyFrame associates the
-         * resource allocation request with 'destination' instead of 'origin'.
-         * (This is important when content has overflowed the stack and chrome
-         * is preparing to run JS to throw up a slow script dialog.) However,
-         * if an exception is thrown, we need it to be in origin's compartment
-         * so be careful to only report after restoring.
-         */
-        context->compartment = destination;
-        if (!context->stack.pushDummyFrame(context, DONT_REPORT_ERROR, *scopeChain, &frame.ref())) {
-            context->compartment = origin;
-            js_ReportOverRecursed(context);
+        if (!context->stack.pushDummyFrame(context, *scopeChain, &frame.ref()))
             return false;
-        }
 
         if (context->isExceptionPending())
             context->wrapPendingException();

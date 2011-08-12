@@ -152,6 +152,7 @@ CPPSRCS		= \
 		jsgcstats.cpp \
 		jscrashreport.cpp \
 		jshash.cpp \
+		jsinfer.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
 		jsiter.cpp \
@@ -222,6 +223,8 @@ INSTALLED_HEADERS = \
 		jsgcstats.h \
 		jscompartment.h \
 		jshash.h \
+		jsinfer.h \
+		jsinferinlines.h \
 		jsinterp.h \
 		jsinttypes.h \
 		jsiter.h \
@@ -353,7 +356,9 @@ CPPSRCS += 	MethodJIT.cpp \
 		Compiler.cpp \
 		FrameState.cpp \
 		FastArithmetic.cpp \
+		FastBuiltins.cpp \
 		FastOps.cpp \
+		LoopState.cpp \
 		StubCompiler.cpp \
 		MonoIC.cpp \
 		PolyIC.cpp \
@@ -733,20 +738,15 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
 
 ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
-check:: check-malloc-function-usage
+#check:: check-malloc-function-usage FIXME: disable on JM until closer to merge time.
 endif
 
-JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd
+JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd,n,mn,jn,mjn,mjpn,amn,amjn,amjpn,amdn
 check-jit-test::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
-
-check-jit-test-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 
 check:: check-jit-test
-check-valgrind:: check-jit-test-valgrind
 
 # jstests doesn't have a --jitflags option, so we need to loop, updating the
 # exit code (RC) after each invocation.

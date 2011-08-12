@@ -60,7 +60,9 @@ struct ImmType : ImmTag
 {
     ImmType(JSValueType type)
       : ImmTag(JSVAL_TYPE_TO_TAG(type))
-    { }
+    {
+        JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
+    }
 };
 
 struct ImmPayload : JSC::MacroAssembler::Imm32
@@ -168,6 +170,13 @@ class NunboxAssembler : public JSC::MacroAssembler
         move(Imm32(jv.s.payload.u32), payload);
     }
 
+    void loadValuePayload(const Value &val, RegisterID payload) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(val));
+
+        move(Imm32(jv.s.payload.u32), payload);
+    }
+
     /*
      * Load a (64b) js::Value from 'address' into 'type' and 'payload', and
      * return a label which can be used by
@@ -268,6 +277,7 @@ class NunboxAssembler : public JSC::MacroAssembler
 
     /* Overloaded for store with value remat info. */
     DataLabel32 storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        JS_ASSERT(!vr.isFPRegister());
         if (vr.isConstant()) {
             return storeValueWithAddressOffsetPatch(vr.value(), address);
         } else if (vr.isTypeKnown()) {
@@ -311,6 +321,10 @@ class NunboxAssembler : public JSC::MacroAssembler
     Label storeValue(const ValueRemat &vr, T address) {
         if (vr.isConstant()) {
             return storeValue(vr.value(), address);
+        } else if (vr.isFPRegister()) {
+            Label l = label();
+            storeDouble(vr.fpReg(), address);
+            return l;
         } else {
             if (vr.isTypeKnown())
                 storeTypeTag(ImmType(vr.knownType()), address);
@@ -422,6 +436,13 @@ class NunboxAssembler : public JSC::MacroAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_STRING));
     }
 
+    void compareValue(Address one, Address two, RegisterID T0, RegisterID T1,
+                      Vector<Jump> *mismatches) {
+        loadValueAsComponents(one, T0, T1);
+        mismatches->append(branch32(NotEqual, T0, tagOf(two)));
+        mismatches->append(branch32(NotEqual, T1, payloadOf(two)));
+    }
+
 #ifdef JS_CPU_X86
     void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
         if (MacroAssemblerX86Common::getSSEState() >= HasSSE4_1) {
@@ -429,8 +450,8 @@ class NunboxAssembler : public JSC::MacroAssembler
             m_assembler.pinsrd_rr(hi, fpReg);
         } else {
             m_assembler.movd_rr(lo, fpReg);
-            m_assembler.movd_rr(hi, FPRegisters::Temp0);
-            m_assembler.unpcklps_rr(FPRegisters::Temp0, fpReg);
+            m_assembler.movd_rr(hi, Registers::FPConversionTemp);
+            m_assembler.unpcklps_rr(Registers::FPConversionTemp, fpReg);
         }
     }
 #endif
@@ -459,9 +480,17 @@ class NunboxAssembler : public JSC::MacroAssembler
     }
 
     template <typename T>
-    Jump fastArrayLoadSlot(T address, RegisterID typeReg, RegisterID dataReg) {
-        loadTypeTag(address, typeReg);
-        Jump notHole = branch32(Equal, typeReg, ImmType(JSVAL_TYPE_MAGIC));
+    Jump fastArrayLoadSlot(T address, bool holeCheck,
+                           MaybeRegisterID typeReg, RegisterID dataReg)
+    {
+        Jump notHole;
+        if (typeReg.isSet()) {
+            loadTypeTag(address, typeReg.reg());
+            if (holeCheck)
+                notHole = branch32(Equal, typeReg.reg(), ImmType(JSVAL_TYPE_MAGIC));
+        } else if (holeCheck) {
+            notHole = branch32(Equal, tagOf(address), ImmType(JSVAL_TYPE_MAGIC));
+        }
         loadPayload(address, dataReg);
         return notHole;
     }

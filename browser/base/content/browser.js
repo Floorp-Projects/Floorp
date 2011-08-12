@@ -7330,7 +7330,8 @@ var FeedHandler = {
    * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
-    clearTimeout(this._updateFeedTimeout);
+    if (this._updateFeedTimeout)
+      clearTimeout(this._updateFeedTimeout);
 
     var feeds = gBrowser.selectedBrowser.feeds;
     var haveFeeds = feeds && feeds.length > 0;

@@ -142,6 +142,9 @@ typedef enum JSOp {
                                      that needs fixup when in global code (see
                                      Compiler::compileScript) */
 #define JOF_GNAME        (1U<<25) /* predicted global name */
+#define JOF_TYPESET      (1U<<26) /* has an entry in a script's type sets */
+#define JOF_DECOMPOSE    (1U<<27) /* followed by an equivalent decomposed
+                                   * version of the opcode */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
@@ -519,6 +522,17 @@ Sprint(Sprinter *sp, const char *format, ...);
 
 extern bool
 CallResultEscapes(jsbytecode *pc);
+
+static inline uintN
+GetDecomposeLength(jsbytecode *pc, size_t len)
+{
+    /*
+     * The last byte of a DECOMPOSE op stores the decomposed length. This can
+     * vary across different instances of an opcode due to INDEXBASE ops.
+     */
+    JS_ASSERT_IF(JSOp(*pc) != JSOP_TRAP, size_t(js_CodeSpec[*pc].length) == len);
+    return (uintN) pc[len - 1];
+}
 
 }
 #endif

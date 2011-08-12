@@ -106,10 +106,12 @@ public:
 
     virtual ~gfxMixedFontFamily() { }
 
-    void AddFontEntry(gfxFontEntry *aFontEntry) {
+    void AddFontEntry(gfxFontEntry *aFontEntry)
+    {
         nsRefPtr<gfxFontEntry> fe = aFontEntry;
         mAvailableFonts.AppendElement(fe);
         aFontEntry->SetFamily(this);
+        ResetCharacterMap();
     }
 
     void ReplaceFontEntry(gfxFontEntry *aOldFontEntry, gfxFontEntry *aNewFontEntry) 
@@ -123,9 +125,10 @@ public:
                 // other reference to it except from its family
                 mAvailableFonts[i] = aNewFontEntry;
                 aNewFontEntry->SetFamily(this);
-                return;
+                break;
             }
         }
+        ResetCharacterMap();
     }
 
     void RemoveFontEntry(gfxFontEntry *aFontEntry) 
@@ -136,9 +139,10 @@ public:
             if (fe == aFontEntry) {
                 aFontEntry->SetFamily(nsnull);
                 mAvailableFonts.RemoveElementAt(i);
-                return;
+                break;
             }
         }
+        ResetCharacterMap();
     }
 
     // temp method to determine if all proxies are loaded

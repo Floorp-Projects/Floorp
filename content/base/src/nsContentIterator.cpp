@@ -41,7 +41,6 @@
 #include "nsIContentIterator.h"
 #include "nsRange.h"
 #include "nsIContent.h"
-#include "nsIDOMText.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"

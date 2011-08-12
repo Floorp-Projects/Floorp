@@ -91,6 +91,7 @@
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsregexpinlines.h"
@@ -115,6 +116,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /*
  * This class is a version-establising barrier at the head of a VM entry or
@@ -663,7 +665,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
 
     if (!(atomsCompartment = this->new_<JSCompartment>(this)) ||
-        !atomsCompartment->init() ||
+        !atomsCompartment->init(NULL) ||
         !compartments.append(atomsCompartment)) {
         Foreground::delete_(atomsCompartment);
         return false;
@@ -1666,7 +1668,7 @@ static JSStdName standard_class_names[] = {
 #endif
 
     /* Typed Arrays */
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::fastClass},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js_ArrayBufferClass},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},
@@ -3055,9 +3057,9 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
     AutoHoldCompartment hold(compartment);
 
     JSCompartment *saved = cx->compartment;
-    cx->compartment = compartment;
+    cx->setCompartment(compartment);
     JSObject *obj = JS_NewGlobalObject(cx, clasp);
-    cx->compartment = saved;
+    cx->setCompartment(saved);
 
     return obj;
 }
@@ -3076,9 +3078,16 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JS_ASSERT(clasp != &js_FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
+    if (proto)
+        proto->getNewType(cx, NULL, /* markUnknown = */ true);
+
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
-    if (obj)
+    if (obj) {
+        if (clasp->ext.equality)
+            MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
         obj->syncSpecialEquality();
+        MarkTypeObjectUnknownProperties(cx, obj->type());
+    }
 
     JS_ASSERT_IF(obj, obj->getParent());
     return obj;
@@ -3099,8 +3108,10 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
-    if (obj)
+    if (obj) {
         obj->syncSpecialEquality();
+        MarkTypeObjectUnknownProperties(cx, obj->type());
+    }
     return obj;
 }
 
@@ -4178,7 +4189,8 @@ JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSO
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
-    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, JSID_TO_ATOM(id));
+    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent,
+                          JSID_TO_ATOM(id));
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4205,6 +4217,15 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     }
 
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    if (!fun->isInterpreted())
+        return CloneFunctionObject(cx, fun, parent);
+
+    if (fun->script()->compileAndGo) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
+        return NULL;
+    }
+
     if (!FUN_FLAT_CLOSURE(fun))
         return CloneFunctionObject(cx, fun, parent);
 
@@ -4240,8 +4261,11 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
             obj = obj->getParent();
         }
 
-        if (!obj->getProperty(cx, r.front().propid, clone->getFlatClosureUpvars() + i))
+        Value v;
+        if (!obj->getProperty(cx, r.front().propid, &v))
             return NULL;
+        TypeScript::SetUpvar(cx, fun->script(), i, v);
+        clone->getFlatClosureUpvars()[i] = v;
     }
 
     return clone;
@@ -4329,6 +4353,10 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
     for (; fs->name; fs++) {
         flags = fs->flags;
 
+        JSAtom *atom = js_Atomize(cx, fs->name, strlen(fs->name));
+        if (!atom)
+            return JS_FALSE;
+
         /*
          * Define a generic arity N+1 static method for the arity N prototype
          * method if flags contains JSFUN_GENERIC_NATIVE.
@@ -4341,8 +4369,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             }
 
             flags &= ~JSFUN_GENERIC_NATIVE;
-            fun = JS_DefineFunction(cx, ctor, fs->name,
-                                    Jsvalify(js_generic_native_method_dispatcher),
+            fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
+                                    js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
                                     flags & ~JSFUN_TRCINFO);
             if (!fun)
@@ -4357,7 +4385,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                 return JS_FALSE;
         }
 
-        fun = JS_DefineFunction(cx, obj, fs->name, fs->call, fs->nargs, flags);
+        fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(fs->call), fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
     }
@@ -4726,17 +4754,10 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         goto out2;
 
     {
-        EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-        if (!emptyCallShape) {
-            fun = NULL;
-            goto out2;
-        }
-        AutoShapeRooter shapeRoot(cx, emptyCallShape);
-
         AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
         MUST_FLOW_THROUGH("out");
 
-        Bindings bindings(cx, emptyCallShape);
+        Bindings bindings(cx);
         AutoBindingsRooter root(cx, bindings);
         for (i = 0; i < nargs; i++) {
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]));
@@ -4929,6 +4950,8 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
         LAST_FRAME_CHECKS(cx, script);
         return false;
     }
+    script->isUncachedEval = true;
+
     JS_ASSERT(script->getVersion() == compileVersion);
 
     bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));

@@ -124,13 +124,30 @@ InvokeSessionGuard::invoke(JSContext *cx)
     /* Prevent spurious accessing-callee-after-rval assert. */
     args_.calleeHasBeenReset();
 
-#ifdef JS_METHODJIT
-    void *code;
-    if (!optimized() || !(code = script_->getJIT(false /* !constructing */)->invokeEntry))
-#else
     if (!optimized())
-#endif
         return Invoke(cx, args_);
+
+    /*
+     * Update the types of each argument. The 'this' type and missing argument
+     * types were handled when the invoke session was created.
+     */
+    for (unsigned i = 0; i < Min(argc(), nformals_); i++)
+        types::TypeScript::SetArgument(cx, script_, i, (*this)[i]);
+
+#ifdef JS_METHODJIT
+    mjit::JITScript *jit = script_->getJIT(false /* !constructing */);
+    if (!jit) {
+        /* Watch in case the code was thrown away due a recompile. */
+        mjit::CompileStatus status = mjit::TryCompile(cx, ifg_.fp());
+        if (status == mjit::Compile_Error)
+            return false;
+        JS_ASSERT(status == mjit::Compile_Okay);
+        jit = script_->getJIT(false);
+    }
+    void *code;
+    if (!(code = jit->invokeEntry))
+        return Invoke(cx, args_);
+#endif
 
     /* Clear any garbage left from the last Invoke. */
     StackFrame *fp = ifg_.fp();
@@ -142,7 +159,7 @@ InvokeSessionGuard::invoke(JSContext *cx)
         args_.setActive();  /* From js::Invoke(InvokeArgsGuard) overload. */
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
-        ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
+        ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_, /* partial = */ false);
         cx->regs().pc = stop_;
 #else
         cx->regs().pc = script_->code;
@@ -315,12 +332,12 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
 }
 
 inline bool
-ScriptPrologue(JSContext *cx, StackFrame *fp)
+ScriptPrologue(JSContext *cx, StackFrame *fp, bool newType)
 {
     JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(), fp->hasCallObj());
 
     if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
+        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
         if (!obj)
             return false;
         fp->functionThis().setObject(*obj);
@@ -353,10 +370,10 @@ ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 }
 
 inline bool
-ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp)
+ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp, bool newType)
 {
     if (!fp->isGeneratorFrame())
-        return ScriptPrologue(cx, fp);
+        return ScriptPrologue(cx, fp, newType);
     if (cx->compartment->debugMode)
         ScriptDebugPrologue(cx, fp);
     return true;

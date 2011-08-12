@@ -96,3 +96,4 @@ fails == underline-block-propagation-2-quirks.html underline-block-propagation-2
 == decoration-css21-block.html decoration-css21-block-ref.html
 != inline-baseline-almost-standards.html inline-baseline-almost-standards-ref.html
 != inline-baseline-quirks.html inline-baseline-quirks-ref.html
+== 676538-1.html 676538-1-ref.html

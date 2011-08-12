@@ -1,0 +1,83 @@
+<html>
+
+<head>
+  <title>nsIAccessible::takeFocus testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    var gQueue = null;
+
+    function takeFocusInvoker(aID)
+    {
+      this.accessible = getAccessible(aID);
+
+      this.eventSeq = [ new invokerChecker(EVENT_FOCUS, this.accessible) ];
+
+      this.invoke = function takeFocusInvoker_invoke()
+      {
+        this.accessible.takeFocus();
+      }
+
+      this.finalCheck = function takeFocusInvoker()
+      {
+        testStates(this.accessible, STATE_FOCUSED);
+      }
+
+      this.getID = function takeFocusInvoker_getID()
+      {
+        return "takeFocus for " + prettyName(aID);
+      }
+    }
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new takeFocusInvoker("aria-link"));
+      gQueue.push(new takeFocusInvoker("aria-link2"));
+      gQueue.push(new takeFocusInvoker("link"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452710"
+     title="nsIAccessible::takeFocus testing">
+    Mozilla Bug 452710
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <span id="aria-link" role="link" tabindex="0">link</span>
+  <span id="aria-link2" role="link" tabindex="0">link</span>
+
+  <a id="link" href="">link</span>
+
+</body>
+</html>

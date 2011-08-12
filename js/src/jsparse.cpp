@@ -92,6 +92,7 @@
 #endif
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
@@ -192,7 +193,6 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldCons
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
-    emptyCallShape(NULL),
     keepAtoms(cx->runtime),
     foldConstants(foldConstants)
 {
@@ -208,9 +208,6 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
 {
     JSContext *cx = context;
     if (!cx->ensureParseMapPool())
-        return false;
-    emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-    if (!emptyCallShape)
         return false;
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
     if (!tokenStream.init(base, length, filename, lineno, version)) {
@@ -294,7 +291,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->methods = NULL;
-    new (&funbox->bindings) Bindings(context, emptyCallShape);
+    new (&funbox->bindings) Bindings(context);
     funbox->queued = false;
     funbox->inLoop = false;
     for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
@@ -357,9 +354,6 @@ Parser::trace(JSTracer *trc)
             static_cast<JSFunctionBox *>(objbox)->bindings.trace(trc);
         objbox = objbox->traceLink;
     }
-
-    if (emptyCallShape)
-        MarkShape(trc, emptyCallShape, "emptyCallShape");
 
     for (JSTreeContext *tc = this->tc; tc; tc = tc->parent)
         tc->trace(trc);
@@ -1091,13 +1085,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             if ((cs->format & JOF_SHARPSLOT) ||
                 JOF_TYPE(cs->format) == JOF_LOCAL ||
                 (JOF_TYPE(cs->format) == JOF_SLOTATOM)) {
-                /*
-                 * JSOP_GETARGPROP also has JOF_SLOTATOM type, but it may be
-                 * emitted only for a function.
-                 */
                 JS_ASSERT_IF(!(cs->format & JOF_SHARPSLOT),
-                             (JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
-                             (op == JSOP_GETLOCALPROP));
+                             JOF_TYPE(cs->format) != JOF_SLOTATOM);
                 slot = GET_SLOTNO(code);
                 if (!(cs->format & JOF_SHARPSLOT))
                     slot += cg.sharpSlots();
@@ -1175,13 +1164,21 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
              * optimizations only take place if the property is not defined.
              */
             rval.setObject(*fun);
+            types::AddTypePropertyId(cx, globalObj, id, rval);
         } else {
             rval.setUndefined();
         }
 
+        /*
+         * Don't update the type information when defining the property for the
+         * global object, per the consistency rules for type properties. If the
+         * property is only undefined before it is ever written, we can check
+         * the global directly during compilation and avoid having to emit type
+         * checks every time it is accessed in the script.
+         */
         const Shape *shape =
             DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
-                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0);
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
         if (!shape)
             return false;
         def.knownSlot = shape->slot;
@@ -1981,7 +1978,7 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
                        parent, atom);
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearProto();
+        FUN_OBJECT(fun)->clearType();
     }
     return fun;
 }
@@ -7349,7 +7346,7 @@ Parser::generatorExpr(JSParseNode *kid)
          * removed from tc->flags.
          */
         gentc.flags |= TCF_FUN_IS_GENERATOR | TCF_GENEXP_LAMBDA |
-                       (tc->flags & (TCF_FUN_FLAGS & ~TCF_FUN_PARAM_ARGUMENTS));
+                       (outertc->flags & (TCF_FUN_FLAGS & ~TCF_FUN_PARAM_ARGUMENTS));
         funbox->tcflags |= gentc.flags;
         genfn->pn_funbox = funbox;
         genfn->pn_blockid = gentc.bodyid;
@@ -8955,7 +8952,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (!tc->compileAndGo()) {
             obj->clearParent();
-            obj->clearProto();
+            obj->clearType();
         }
 
         pn->pn_objbox = tc->parser->newObjectBox(obj);

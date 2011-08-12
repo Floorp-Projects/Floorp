@@ -414,20 +414,26 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    void setNumber(uint32 ui) {
-        if (ui > JSVAL_INT_MAX)
+    bool setNumber(uint32 ui) {
+        if (ui > JSVAL_INT_MAX) {
             setDouble((double)ui);
-        else
+            return false;
+        } else {
             setInt32((int32)ui);
+            return true;
+        }
     }
 
     JS_ALWAYS_INLINE
-    void setNumber(double d) {
+    bool setNumber(double d) {
         int32_t i;
-        if (JSDOUBLE_IS_INT32(d, &i))
+        if (JSDOUBLE_IS_INT32(d, &i)) {
             setInt32(i);
-        else
+            return true;
+        } else {
             setDouble(d);
+            return false;
+        }
     }
 
     JS_ALWAYS_INLINE
@@ -541,6 +547,11 @@ class Value
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
+    bool isMagicCheck(JSWhyMagic why) const {
+        return isMagic() && data.s.payload.why == why;
+    }
+
 #if JS_BITS_PER_WORD == 64
     JS_ALWAYS_INLINE
     bool hasPtrPayload() const {
@@ -559,13 +570,11 @@ class Value
         return JSVAL_TRACE_KIND_IMPL(data);
     }
 
-#ifdef DEBUG
     JS_ALWAYS_INLINE
     JSWhyMagic whyMagic() const {
         JS_ASSERT(isMagic());
         return data.s.payload.why;
     }
-#endif
 
     /*** Comparison ***/
 
@@ -643,6 +652,11 @@ class Value
     JS_ALWAYS_INLINE
     uint64 asRawBits() const {
         return data.asBits;
+    }
+
+    JS_ALWAYS_INLINE
+    void setRawBits(uint64 bits) {
+        data.asBits = bits;
     }
 
     /*

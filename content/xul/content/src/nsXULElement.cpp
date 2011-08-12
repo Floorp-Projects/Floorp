@@ -3177,6 +3177,35 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     return rv;
 }
 
+void
+nsXULPrototypeScript::UnlinkJSObjects()
+{
+    if (mScriptObject.mObject) {
+        nsContentUtils::DropScriptObjects(mScriptObject.mLangID, this,
+                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        mScriptObject.mObject = nsnull;
+    }
+}
+
+void
+nsXULPrototypeScript::Set(void *aObject)
+{
+    NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
+    if (!aObject) {
+        mScriptObject.mObject = nsnull;
+
+        return;
+    }
+
+    nsresult rv = nsContentUtils::HoldScriptObject(mScriptObject.mLangID,
+                                                   this,
+                                                   &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
+                                                   aObject, PR_FALSE);
+    if (NS_SUCCEEDED(rv)) {
+        mScriptObject.mObject = aObject;
+    }
+}
+
 //----------------------------------------------------------------------
 //
 // nsXULPrototypeText

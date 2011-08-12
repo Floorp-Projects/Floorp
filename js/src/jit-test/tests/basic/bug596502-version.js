@@ -15,7 +15,7 @@ revertVersion();
 
 for (vno in {160: null, 170: null, 180: null}) {
     print('Setting version to: ' + vno);
-    version(vno);
+    version(Number(vno));
     assertEq(syntaxErrorFromXML(), false);
     revertVersion();
 }

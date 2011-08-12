@@ -49,8 +49,8 @@
 #include "nsIPrefService.h"
 #include "nsDOMDeviceMotionEvent.h"
 
-static const nsTPtrArray<nsIDOMWindow>::index_type NoIndex =
-    nsTPtrArray<nsIDOMWindow>::NoIndex;
+static const nsTArray<nsIDOMWindow*>::index_type NoIndex =
+    nsTArray<nsIDOMWindow*>::NoIndex;
 
 class nsDeviceMotionData : public nsIDeviceMotionData
 {
