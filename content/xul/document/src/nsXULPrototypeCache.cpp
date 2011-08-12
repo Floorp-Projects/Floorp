@@ -69,8 +69,6 @@
 using namespace mozilla;
 using namespace mozilla::scache;
 
-static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
-
 static PRBool gDisableXULCache = PR_FALSE; // enabled by default
 static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
 static const char kXULCacheInfoKey[] = "nsXULPrototypeCache.startupCache";
@@ -109,10 +107,7 @@ nsXULPrototypeCache::~nsXULPrototypeCache()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsXULPrototypeCache,
-                              nsIXULPrototypeCache,
-                              nsIObserver)
-
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXULPrototypeCache, nsIObserver)
 
 nsresult
 NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -161,13 +156,8 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 /* static */ nsXULPrototypeCache*
 nsXULPrototypeCache::GetInstance()
 {
-    // Theoretically this can return nsnull and callers should handle that.
     if (!sInstance) {
-        nsIXULPrototypeCache* cache;
-
-        CallGetService(kXULPrototypeCacheCID, &cache);
-
-        sInstance = static_cast<nsXULPrototypeCache*>(cache);
+        NS_ADDREF(sInstance = new nsXULPrototypeCache());
     }
     return sInstance;
 }
@@ -587,9 +577,7 @@ CachePrefChangedCallback(const char* aPref, void* aClosure)
                              gDisableXULDiskCache);
 
     if (wasEnabled && gDisableXULDiskCache) {
-        static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
-        nsCOMPtr<nsIXULPrototypeCache> cache =
-            do_GetService(kXULPrototypeCacheCID);
+        nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
 
         if (cache)
             cache->AbortCaching();
