@@ -125,6 +125,7 @@ const AnimatedZoom = {
     let event = document.createEvent("Events");
     event.initEvent("AnimatedZoomEnd", true, true);
     window.dispatchEvent(event);
+    browser._updateCSSViewport();
   },
 
   isZooming: function isZooming() {

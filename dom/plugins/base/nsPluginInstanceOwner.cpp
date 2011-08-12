@@ -1942,7 +1942,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
                   presContext->AppUnitsToDevPixels(pt.y));
 #ifndef NP_NO_CARBON
   nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
-  ::Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
+  ::Point carbonPt = { static_cast<short>(ptPx.y + geckoScreenCoords.y),
+                       static_cast<short>(ptPx.x + geckoScreenCoords.x) };
   if (eventModel == NPEventModelCarbon) {
     if (event && anEvent.eventStructType == NS_MOUSE_EVENT) {
       static_cast<EventRecord*>(event)->where = carbonPt;
