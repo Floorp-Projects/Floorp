@@ -245,6 +245,8 @@ class IonBuilder : public MIRGenerator
     bool jsop_bitop(JSOp op);
     bool jsop_binary(JSOp op);
     bool jsop_neg();
+    bool jsop_notearg();
+    bool jsop_call(uint32 argc);
     bool jsop_ifeq(JSOp op);
     bool jsop_localinc(JSOp op);
     bool jsop_arginc(JSOp op);

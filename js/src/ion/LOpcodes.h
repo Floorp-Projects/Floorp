@@ -51,6 +51,8 @@
     _(Parameter)                    \
     _(TableSwitch)                  \
     _(Goto)                         \
+    _(CallGeneric)                  \
+    _(StackArg)                     \
     _(BitNot)                       \
     _(BitOp)                        \
     _(ShiftOp)                      \

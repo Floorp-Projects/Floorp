@@ -84,6 +84,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Frame class this frame's size falls into (see IonFrame.h).
     FrameSizeClass frameClass_;
 
+    // For arguments to the current function.
     inline int32 ArgToStackOffset(int32 slot) const {
         JS_ASSERT(slot >= 0);
         return masm.framePushed() + ION_FRAME_PREFIX_SIZE + slot;
@@ -91,7 +92,18 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     inline int32 SlotToStackOffset(int32 slot) const {
         JS_ASSERT(slot > 0 && slot <= int32(graph.localSlotCount()));
-        int32 offset = masm.framePushed() - slot * STACK_SLOT_SIZE;
+        int32 offset = masm.framePushed() - (slot * STACK_SLOT_SIZE);
+        JS_ASSERT(offset >= 0);
+        return offset;
+    }
+
+    // For argument construction for calls. Argslots are Value-sized.
+    inline int32 StackOffsetOfPassedArg(int32 slot) const {
+        // A slot of 0 is permitted only to calculate %esp offset for calls.
+        JS_ASSERT(slot >= 0 && slot <= int32(graph.argumentSlotCount()));
+        int32 offset = masm.framePushed() -
+                       (graph.localSlotCount() * STACK_SLOT_SIZE) -
+                       (slot * sizeof(Value));
         JS_ASSERT(offset >= 0);
         return offset;
     }

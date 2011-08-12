@@ -74,17 +74,60 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
   public:
+    /////////////////////////////////////////////////////////////////
+    // X86-specific interface.
+    /////////////////////////////////////////////////////////////////
+    Operand ToPayload(Operand base) {
+        return base;
+    }
+    Operand ToType(Operand base) {
+        return Operand(Register::FromCode(base.base()),
+                       base.disp() + sizeof(void *));
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // X86/X64-common interface.
+    /////////////////////////////////////////////////////////////////
+    void storeValue(ValueOperand val, Operand dest) {
+        movl(val.payloadReg(), ToPayload(dest));
+        movl(val.typeReg(), ToType(dest));
+    }
+    void movePtr(Operand op, const Register &dest) {
+        movl(op, dest);
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Common interface.
+    /////////////////////////////////////////////////////////////////
     void reserveStack(uint32 amount) {
         if (amount)
-            subl(Imm32(amount), esp);
+            subl(Imm32(amount), StackPointer);
         framePushed_ += amount;
     }
     void freeStack(uint32 amount) {
         JS_ASSERT(amount <= framePushed_);
         if (amount)
-            addl(Imm32(amount), esp);
+            addl(Imm32(amount), StackPointer);
         framePushed_ -= amount;
     }
+
+    void addPtr(Imm32 imm, const Register &dest) {
+        addl(imm, dest);
+    }
+    void subPtr(Imm32 imm, const Register &dest) {
+        subl(imm, dest);
+    }
+
+    void cmpPtr(const Register &lhs, const Imm32 rhs) {
+        return cmpl(lhs, rhs);
+    }
+    void cmpPtr(const Register &lhs, const ImmWord rhs) {
+        return cmpl(lhs, Imm32(rhs.value));
+    }
+    void testPtr(const Register &lhs, const Register &rhs) {
+        return testl(lhs, rhs);
+    }
+
     void movePtr(ImmWord imm, const Register &dest) {
         movl(Imm32(imm.value), dest);
     }

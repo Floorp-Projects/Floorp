@@ -120,6 +120,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
     virtual bool visitMathD(LMathD *math);
     virtual bool visitTableSwitch(LTableSwitch *ins);
+    virtual bool visitCallGeneric(LCallGeneric *call);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);

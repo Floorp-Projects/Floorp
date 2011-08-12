@@ -117,6 +117,58 @@ LIRGenerator::visitGoto(MGoto *ins)
 }
 
 bool
+LIRGenerator::visitPrepareCall(MPrepareCall *ins)
+{
+    allocateArguments(ins->argc());
+    return true;
+}
+
+bool
+LIRGenerator::visitPassArg(MPassArg *arg)
+{
+    MDefinition *opd = arg->getArgument();
+    JS_ASSERT(opd->type() == MIRType_Value);
+
+    uint32 argslot = getArgumentSlot(arg->getArgnum());
+
+    LStackArg *stack = new LStackArg(argslot);
+    if (!useBox(stack, 0, opd))
+        return false;
+
+    // Pass through the virtual register of the operand.
+    // This causes snapshots to correctly copy the operand on the stack.
+    // 
+    // This keeps the backing store around longer than strictly required.
+    // We could do better by informing snapshots about the argument vector.
+    arg->setVirtualRegister(opd->virtualRegister());
+
+    return add(stack);
+}
+
+bool
+LIRGenerator::visitCall(MCall *call)
+{
+    uint32 argc = call->argc();
+    JS_ASSERT(call->getFunction()->type() == MIRType_Object);
+
+    // Height of the current argument vector.
+    uint32 argslot = getArgumentSlotForCall();
+
+    // A call is entirely stateful, depending upon arguments already being
+    // stored in an argument vector. Therefore visitCall() may be generic.
+    LCallGeneric *ins = new LCallGeneric(call, useRegister(call->getFunction()),
+                                         argslot, temp(LDefinition::POINTER),
+                                         temp(LDefinition::POINTER));
+    if (!defineReturn(ins, call))
+        return false;
+    if (!assignSnapshot(ins))
+        return false;
+
+    freeArguments(argc);
+    return true;
+}
+
+bool
 LIRGenerator::visitTest(MTest *test)
 {
     MDefinition *opd = test->getOperand(0);
@@ -538,6 +590,29 @@ LIRGenerator::updateResumeState(MBasicBlock *block)
         SpewResumePoint(block, NULL, lastResumePoint_);
 }
 
+void
+LIRGenerator::allocateArguments(uint32 argc)
+{
+    argslots_ += argc;
+    if (argslots_ > maxargslots_)
+        maxargslots_ = argslots_;
+}
+
+uint32
+LIRGenerator::getArgumentSlot(uint32 argnum)
+{
+    // First slot has index 1.
+    JS_ASSERT(argnum < argslots_);
+    return argslots_ - argnum ;
+}
+
+void
+LIRGenerator::freeArguments(uint32 argc)
+{
+    JS_ASSERT(argc <= argslots_);
+    argslots_ -= argc;
+}
+
 bool
 LIRGenerator::visitBlock(MBasicBlock *block)
 {
@@ -621,6 +696,8 @@ LIRGenerator::generate()
         if (!visitBlock(*block))
             return false;
     }
+
+    lirGraph_.setArgumentSlotCount(maxargslots_);
 
     return true;
 }

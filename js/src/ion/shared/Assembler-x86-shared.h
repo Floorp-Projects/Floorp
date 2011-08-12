@@ -211,6 +211,16 @@ class AssemblerX86Shared
         }
     }
 
+    void load16(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.movzwl_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+
     void j(Condition cond, Label *label) {
         if (label->bound()) {
             // The jump can be immediately patched to the correct destination.
