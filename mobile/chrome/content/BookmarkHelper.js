@@ -74,20 +74,19 @@ var BookmarkHelper = {
   },
 
   createShortcut: function BH_createShortcut(aTitle, aURL, aIconURL) {
-    const kIconSize = 64;
+    // The background images are 72px, but Android will resize as needed.
+    // Bigger is better than too small.
+    const kIconSize = 72;
+    const kOverlaySize = 32;
+    const kOffset = 20;
 
+    // We have to fallback to something
     aTitle = aTitle || aURL;
-    aIconURL = aIconURL || "chrome://browser/skin/images/favicon-default-32.png";
 
     let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     canvas.setAttribute("style", "display: none");
 
-    let self = this;
-    let image = new Image();
-    image.onload = function() {
-      canvas.width = canvas.height = kIconSize; // clears the canvas
-      let ctx = canvas.getContext("2d");
-      ctx.drawImage(image, 0, 0, kIconSize, kIconSize);
+    function _createShortcut() {
       let icon = canvas.toDataURL("image/png", "");
       canvas = null;
       try {
@@ -98,11 +97,39 @@ var BookmarkHelper = {
       }
     }
 
-    image.onerror = function() {
-      Cu.reportError("CreateShortcut: image load error");
+    // Load the main background image first
+    let image = new Image();
+    image.onload = function() {
+      canvas.width = canvas.height = kIconSize;
+      let ctx = canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0, kIconSize, kIconSize);
+
+      // If we have a favicon, lets draw it next
+      if (aIconURL) {
+        let favicon = new Image();
+        favicon.onload = function() {
+          // Center the favicon and overlay it on the background
+          ctx.drawImage(favicon, kOffset, kOffset, kOverlaySize, kOverlaySize);
+          _createShortcut();
+        }
+
+        favicon.onerror = function() {
+          Cu.reportError("CreateShortcut: favicon image load error");
+        }
+
+        favicon.src = aIconURL;
+      } else {
+        _createShortcut();
+      }
     }
 
-    image.src = aIconURL;
+    image.onerror = function() {
+      Cu.reportError("CreateShortcut: background image load error");
+    }
+
+    // Pick the right background
+    image.src = aIconURL ? "chrome://browser/skin/images/homescreen-blank-hdpi.png"
+                         : "chrome://browser/skin/images/homescreen-default-hdpi.png";
   },
 
   removeBookmarksForURI: function BH_removeBookmarksForURI(aURI) {
