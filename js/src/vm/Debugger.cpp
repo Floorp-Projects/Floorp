@@ -3102,7 +3102,7 @@ UnwrapPropDesc(JSContext *cx, Debugger *dbg, JSObject *obj, PropDesc *desc)
 
 /*
  * Rewrap *idp and the fields of *desc for the current compartment.  Also:
- * defining a property on a proxy requiers the pd field to contain a descriptor
+ * defining a property on a proxy requires the pd field to contain a descriptor
  * object, so reconstitute desc->pd if needed.
  */
 static bool
@@ -3232,8 +3232,10 @@ DebuggerObject_sealHelper(JSContext *cx, uintN argc, Value *vp, SealHelperOp op,
         ok = obj->freeze(cx);
     } else {
         JS_ASSERT(op == PreventExtensions);
-        if (!obj->isExtensible())
+        if (!obj->isExtensible()) {
+            args.rval().setUndefined();
             return true;
+        }
         AutoIdVector props(cx);
         ok = obj->preventExtensions(cx, &props);
     }
