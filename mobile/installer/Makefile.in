@@ -183,6 +183,14 @@ ifdef MOZ_ENABLE_CONTENTMANAGER
 PP_DEB_FILES += debian/fennec.aegis \
                $(NULL)
 endif
+ifeq ($(MOZ_PLATFORM_MAEMO),6)
+PP_DEB_FILES += debian/backup \
+                debian/restore \
+		 debian/fennec.conf \
+		 debian/fennec-cud.sh \
+		 debian/fennec-rfs.sh \
+                $(NULL)
+endif
 
 $(PP_DEB_FILES):
 	@$(EXIT_ON_ERROR) \
@@ -207,6 +215,16 @@ ifeq ($(MOZ_PLATFORM_MAEMO),6)
 	cp debian/$(MOZ_APP_NAME).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_APP_NAME).service
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/themes/blanco/meegotouch/icons/
 	cp $(DIST)/branding/$(MOZ_APP_NAME)_scalable.png $(DEBDESTDIR)/usr/share/themes/blanco/meegotouch/icons/$(MOZ_APP_NAME).png
+	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/backup-framework/applications
+	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/$(MOZ_APP_NAME)
+	$(NSINSTALL) -D $(DEBDESTDIR)/etc/osso-cud-scripts
+	$(NSINSTALL) -D $(DEBDESTDIR)/etc/osso-rfs-scripts
+	$(NSINSTALL) -m 755 debian/backup  $(DEBDESTDIR)/usr/share/$(MOZ_APP_NAME)/
+	$(NSINSTALL) -m 755 debian/restore $(DEBDESTDIR)/usr/share/$(MOZ_APP_NAME)/
+	cp debian/$(MOZ_APP_NAME).conf $(DEBDESTDIR)/usr/share/backup-framework/applications/$(MOZ_APP_NAME).conf
+	cp debian/$(MOZ_APP_NAME)-cud.sh $(DEBDESTDIR)/etc/osso-cud-scripts/$(MOZ_APP_NAME)-cud.sh
+	cp debian/$(MOZ_APP_NAME)-rfs.sh $(DEBDESTDIR)/etc/osso-rfs-scripts/$(MOZ_APP_NAME)-rfs.sh
+
 else
 	$(NSINSTALL)  debian/$(MOZ_APP_NAME).desktop $(DEBDESTDIR)/usr/share/applications/hildon/
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
