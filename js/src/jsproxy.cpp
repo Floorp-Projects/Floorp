@@ -1184,6 +1184,11 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
     else
         clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
 
+    if (!handler->isCrossCompartment() && priv.isObject()) {
+        if (priv.toObject().compartment() != cx->compartment)
+            JS_Assert("compartment mismatch in proxy object", __FILE__, __LINE__);
+    }
+
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (!obj || !obj->ensureInstanceReservedSlots(cx, 0))
         return NULL;
