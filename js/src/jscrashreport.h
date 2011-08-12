@@ -42,46 +42,18 @@
 #define jscrashreport_h___
 
 #include "jstypes.h"
-#include "jsutil.h"
 
-namespace js {
-namespace crash {
+JS_BEGIN_EXTERN_C
 
-void
-SnapshotGCStack();
+JS_FRIEND_API(void)
+js_SnapshotGCStack();
 
-void
-SnapshotErrorStack();
+JS_FRIEND_API(void)
+js_SnapshotErrorStack();
 
-void
-SaveCrashData(uint64 tag, void *ptr, size_t size);
+JS_FRIEND_API(void)
+js_SaveCrashData(uint64 tag, void *ptr, size_t size);
 
-template<size_t size, char marker>
-class StackBuffer {
-  private:
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-    volatile char buffer[size + 4];
-
-  public:
-    StackBuffer(void *data JS_GUARD_OBJECT_NOTIFIER_PARAM) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-
-        buffer[0] = marker;
-        buffer[1] = '[';
-
-        for (size_t i = 0; i < size; i++) {
-            if (data)
-                buffer[i + 2] = ((char *)data)[i];
-            else
-                buffer[i + 2] = 0;
-        }
-
-        buffer[size - 2] = ']';
-        buffer[size - 1] = marker;
-    }
-};
-
-} /* namespace crash */
-} /* namespace js */
+JS_END_EXTERN_C
 
 #endif /* jscrashreport_h___ */

@@ -241,7 +241,7 @@ Arena::finalize(JSContext *cx)
                 if (!newFreeSpanStart)
                     newFreeSpanStart = thing;
                 t->finalize(cx);
-                JS_POISON(t, JS_FREE_PATTERN, sizeof(T));
+                memset(t, JS_FREE_PATTERN, sizeof(T));
             }
         }
     }
@@ -2399,6 +2399,9 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
 #endif
+
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        js::CheckCompartmentScripts(*c);
 }
 
 #ifdef JS_THREADSAFE
@@ -2690,7 +2693,7 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     GCCrashData crashData;
     crashData.isRegen = rt->shapeGen & SHAPE_OVERFLOW_BIT;
     crashData.isCompartment = !!comp;
-    crash::SaveCrashData(crash::JS_CRASH_TAG_GC, &crashData, sizeof(crashData));
+    js_SaveCrashData(crash::JS_CRASH_TAG_GC, &crashData, sizeof(crashData));
 
     GCTIMER_BEGIN(rt, comp);
 
@@ -2741,7 +2744,7 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     rt->gcChunkAllocationSinceLastGC = false;
     GCTIMER_END(gckind == GC_LAST_CONTEXT);
 
-    crash::SnapshotGCStack();
+    js_SnapshotGCStack();
 }
 
 namespace js {
