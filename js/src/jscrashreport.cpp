@@ -245,37 +245,37 @@ static Stack gGCStack(JS_CRASH_STACK_GC);
 static Stack gErrorStack(JS_CRASH_STACK_ERROR);
 static Ring gRingBuffer(JS_CRASH_RING);
 
-void
-SnapshotGCStack()
-{
-    if (gInitialized)
-        gGCStack.snapshot();
-}
-
-void
-SnapshotErrorStack()
-{
-    if (gInitialized)
-        gErrorStack.snapshot();
-}
-
-void
-SaveCrashData(uint64 tag, void *ptr, size_t size)
-{
-    if (gInitialized)
-        gRingBuffer.push(tag, ptr, size);
-}
-
 } /* namespace crash */
 } /* namespace js */
 
 using namespace js;
 using namespace js::crash;
 
+JS_FRIEND_API(void)
+js_SnapshotGCStack()
+{
+    if (gInitialized)
+        gGCStack.snapshot();
+}
+
+JS_FRIEND_API(void)
+js_SnapshotErrorStack()
+{
+    if (gInitialized)
+        gErrorStack.snapshot();
+}
+
+JS_FRIEND_API(void)
+js_SaveCrashData(uint64 tag, void *ptr, size_t size)
+{
+    if (gInitialized)
+        gRingBuffer.push(tag, ptr, size);
+}
+
 JS_PUBLIC_API(void)
 JS_EnumerateDiagnosticMemoryRegions(JSEnumerateDiagnosticMemoryCallback callback)
 {
-#ifdef JS_CRASH_DIAGNOSTICS
+#if 1
     if (!gInitialized) {
         gInitialized = true;
         (*callback)(&gGCStack, sizeof(gGCStack));

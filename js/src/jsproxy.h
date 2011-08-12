@@ -92,6 +92,10 @@ class JS_FRIEND_API(JSProxyHandler) {
         return false;
     }
 
+    virtual bool isCrossCompartment() {
+        return false;
+    }
+
     inline void *family() {
         return mFamily;
     }
