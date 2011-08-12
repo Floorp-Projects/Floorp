@@ -355,8 +355,6 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
   nsDocAccessible* focusDocument = focusAccessible->GetDocAccessible();
   NS_ASSERTION(focusDocument, "No document while accessible is in document?!");
 
-  gLastFocusedAccessiblesState = focusAccessible->State();
-
   // Fire menu start/end events for ARIA menus.
   if (focusAccessible->ARIARole() == nsIAccessibleRole::ROLE_MENUITEM) {
     // The focus is inside a menu.
@@ -668,7 +666,6 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   }
   else if (eventType.EqualsLiteral("blur")) {
     NS_IF_RELEASE(gLastFocusedNode);
-    gLastFocusedAccessiblesState = 0;
   }
   else if (eventType.EqualsLiteral("AlertActive")) { 
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);

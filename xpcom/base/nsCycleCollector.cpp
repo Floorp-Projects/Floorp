@@ -3448,6 +3448,12 @@ class nsCycleCollectorRunner : public nsRunnable
     PRBool mShutdown;
     PRBool mCollected;
 
+    nsCycleCollectionJSRuntime *GetJSRuntime()
+    {
+        return static_cast<nsCycleCollectionJSRuntime*>
+                 (mCollector->mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]);
+    }
+
 public:
     NS_IMETHOD Run()
     {
@@ -3478,7 +3484,9 @@ public:
                 return NS_OK;
             }
 
+            GetJSRuntime()->NotifyEnterCycleCollectionThread();
             mCollected = mCollector->BeginCollection(mListener);
+            GetJSRuntime()->NotifyLeaveCycleCollectionThread();
 
             mReply.Notify();
         }
@@ -3517,8 +3525,10 @@ public:
         NS_ASSERTION(!mListener, "Should have cleared this already!");
         mListener = aListener;
 
+        GetJSRuntime()->NotifyLeaveMainThread();
         mRequest.Notify();
         mReply.Wait();
+        GetJSRuntime()->NotifyEnterMainThread();
 
         mListener = nsnull;
 
