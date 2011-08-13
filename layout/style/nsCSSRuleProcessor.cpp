@@ -1195,29 +1195,6 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 }
 #endif
 
-// If we have a useful @lang, then aLang will end up nonempty.
-static void GetLang(nsIContent* aContent, nsString& aLang)
-{
-  for (nsIContent* content = aContent; content;
-       content = content->GetParent()) {
-    if (content->GetAttrCount() > 0) {
-      // xml:lang has precedence over lang on HTML elements (see
-      // XHTML1 section C.7).
-      PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
-                                        aLang);
-      if (!hasAttr && content->IsHTML()) {
-        hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
-                                   aLang);
-      }
-      NS_ASSERTION(hasAttr || aLang.IsEmpty(),
-                   "GetAttr that returns false should not make string non-empty");
-      if (hasAttr) {
-        return;
-      }
-    }
-  }
-}
-
 /* static */
 nsEventStates
 nsCSSRuleProcessor::GetContentState(Element* aElement)
@@ -1697,7 +1674,7 @@ static PRBool SelectorMatches(Element* aElement,
           // from the parent we have to be prepared to look at all parent
           // nodes.  The language itself is encoded in the LANG attribute.
           nsAutoString language;
-          GetLang(aElement, language);
+          aElement->GetLang(language);
           if (!language.IsEmpty()) {
             if (!nsStyleUtil::DashMatchCompare(language,
                                                nsDependentString(pseudoClass->u.mString),

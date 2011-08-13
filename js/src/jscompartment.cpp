@@ -127,7 +127,6 @@ JSCompartment::~JSCompartment()
 bool
 JSCompartment::init()
 {
-    chunk = NULL;
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         arenas[i].init();
     freeLists.init();
@@ -467,8 +466,6 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
-    chunk = NULL;
-
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key.toGCThing()) &&
@@ -562,8 +559,6 @@ JSCompartment::purge(JSContext *cx)
 #endif
 
 #ifdef JS_METHODJIT
-    js::CheckCompartmentScripts(this);
-
     for (JSScript *script = (JSScript *)scripts.next;
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {

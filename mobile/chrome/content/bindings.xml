@@ -1820,8 +1820,12 @@
           let flavors = ["text/unicode"];
           let hasData = clipboard.hasDataMatchingFlavors(flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
 
-          if (hasData && (!aTextbox.readOnly || aIgnoreReadOnly))
+          if (hasData && (!aTextbox.readOnly || aIgnoreReadOnly)) {
             json.types.push("paste");
+            if (aTextbox.type == "url") {
+              json.types.push("paste-url");
+            }
+          }
 
           ContextHelper.showPopup({ target: aTextbox, json: json });
         ]]></body>

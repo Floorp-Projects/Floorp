@@ -818,7 +818,7 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
     }
   }
 
-  mEditor->InitializeSelection(target);
+  mEditor->OnFocus(target);
   return NS_OK;
 }
 

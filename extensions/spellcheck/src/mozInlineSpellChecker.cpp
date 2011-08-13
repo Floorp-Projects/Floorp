@@ -1384,6 +1384,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     PRBool isMisspelled;
     aWordUtil.NormalizeWord(wordText);
     rv = mSpellCheck->CheckCurrentWordNoSuggest(wordText.get(), &isMisspelled);
+    if (NS_FAILED(rv))
+      continue;
+
     if (isMisspelled) {
       // misspelled words count extra toward the max
       wordsSinceTimeCheck += MISSPELLED_WORD_COUNT_PENALTY;
@@ -1441,6 +1444,23 @@ mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
   nsCOMPtr<nsISelection> spellCheckSelection;
   rv = GetSpellCheckSelection(getter_AddRefs(spellCheckSelection));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUnichar *currentDictionary = nsnull;
+  rv = mSpellCheck->GetCurrentDictionary(&currentDictionary);
+  if (NS_FAILED(rv)) {
+    // no active dictionary
+    PRInt32 count;
+    spellCheckSelection->GetRangeCount(&count);
+    for (PRInt32 index = count - 1; index >= 0; index--) {
+      nsCOMPtr<nsIDOMRange> checkRange;
+      spellCheckSelection->GetRangeAt(index, getter_AddRefs(checkRange));
+      if (checkRange) {
+        RemoveRange(spellCheckSelection, checkRange);
+      }
+    }
+    return NS_OK; 
+  }
+ 
   CleanupRangesInSelection(spellCheckSelection);
 
   rv = aStatus->FinishInitOnEvent(wordUtil);
@@ -1732,4 +1752,39 @@ nsresult mozInlineSpellChecker::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
+{
+  if (!mSpellCheck) {
+    return NS_OK;
+  }
+
+  PRUnichar *previousDictionary = nsnull;
+  nsDependentString previousDictionaryStr;
+  if (NS_SUCCEEDED(mSpellCheck->GetCurrentDictionary(&previousDictionary))) {
+    previousDictionaryStr.Assign(previousDictionary);
+  }
+
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  nsresult rv = mSpellCheck->UpdateCurrentDictionary(editor);
+
+  PRUnichar *currentDictionary = nsnull;
+  nsDependentString currentDictionaryStr;
+  if (NS_SUCCEEDED(mSpellCheck->GetCurrentDictionary(&currentDictionary))) {
+    currentDictionaryStr.Assign(currentDictionary);
+  }
+
+  if (!previousDictionary || !currentDictionary || !previousDictionaryStr.Equals(currentDictionaryStr)) {
+      rv = SpellCheckRange(nsnull);
+  }
+
+  if (previousDictionary) {
+     nsMemory::Free(previousDictionary);
+  }
+  if (currentDictionary) {
+     nsMemory::Free(currentDictionary);
+  }
+
+  return rv;
 }
