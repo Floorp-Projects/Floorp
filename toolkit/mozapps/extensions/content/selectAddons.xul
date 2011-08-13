@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is The Extension Update Service.
+#
+# The Initial Developer of the Original Code is
+# the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Dave Townsend <dtownsend@oxymoronical.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/content/extensions/selectAddons.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/selectAddons.css" type="text/css"?> 
+
+<!DOCTYPE window [
+<!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/extensions/selectAddons.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%updateDTD;
+%brandDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="&upgrade.style;" id="select-window">
+
+  <script type="application/javascript" src="chrome://mozapps/content/extensions/selectAddons.js"/>
+  <stringbundle id="app-strings" src="chrome://branding/locale/brand.properties"/>
+  <stringbundle id="strings" src="chrome://mozapps/locale/extensions/selectAddons.properties"/>
+
+  <deck id="view-deck" flex="1" align="stretch" pack="stretch">
+    <vbox id="checking" align="stretch">
+      <vbox flex="1">
+        <label id="checking-heading" class="heading">&checking.heading;</label>
+      </vbox>
+      <progressmeter id="checking-progress" class="progress" mode="undetermined"/>
+      <vbox flex="1">
+        <label id="checking-progress-label" class="progress-label">&checking.progress.label;</label>
+      </vbox>
+    </vbox>
+
+    <vbox id="select" align="stretch">
+      <label id="select-heading" class="heading">&select.heading;</label>
+
+      <description id="select-description">&select.description;</description>
+
+      <vbox id="select-list" align="stretch" flex="1">
+        <hbox id="select-header">
+          <hbox class="select-keep select-cell" style="&select.keep.style;">
+            <label value="&select.keep;"/>
+          </hbox>
+          <hbox class="select-icon select-cell"/>
+          <hbox id="heading-name" class="select-name select-cell" style="&select.name.style;">
+            <label value="&select.name;"/>
+          </hbox>
+          <hbox id="heading-action" class="select-action select-cell" style="&select.action.style;">
+            <label value="&select.action;"/>
+          </hbox>
+          <hbox class="select-source select-cell" flex="1">
+            <label value="&select.source;"/>
+          </hbox>
+        </hbox>
+
+        <scrollbox id="select-scrollbox" flex="1">
+          <grid id="select-grid" flex="1">
+            <columns>
+              <column style="&select.keep.style;"/>
+              <column/>
+              <column id="column-name"/>
+              <column id="column-action" class="select-action"/>
+              <column class="select-source" flex="1"/>
+            </columns>
+
+            <rows id="select-rows"/>
+          </grid>
+        </scrollbox>
+      </vbox>
+    </vbox>
+
+    <vbox id="confirm" align="stretch">
+      <label id="confirm-heading" class="heading">&confirm.heading;</label>
+
+      <description id="confirm-description">&confirm.description;</description>
+
+      <scrollbox id="confirm-scrollbox" flex="1">
+        <vbox id="disable-list" class="action-list" hidden="true">
+          <label class="action-header">&action.disable.heading;</label>
+        </vbox>
+
+        <vbox id="incompatible-list" class="action-list" hidden="true">
+          <label class="action-header">&action.incompatible.heading;</label>
+        </vbox>
+
+        <vbox id="update-list" class="action-list" hidden="true">
+          <label class="action-header">&action.update.heading;</label>
+        </vbox>
+
+        <vbox id="enable-list" class="action-list" hidden="true">
+          <label class="action-header">&action.enable.heading;</label>
+        </vbox>
+      </scrollbox>
+    </vbox>
+
+    <vbox id="update" align="stretch">
+      <vbox flex="1">
+        <label id="update-heading" class="heading">&update.heading;</label>
+      </vbox>
+      <progressmeter id="update-progress" class="progress" mode="undetermined"/>
+      <vbox flex="1">
+        <label id="update-progress-label" class="progress-label">&update.progress.label;</label>
+      </vbox>
+    </vbox>
+
+    <vbox id="errors">
+      <vbox flex="1">
+        <label id="errors-heading" class="heading">&errors.heading;</label>
+      </vbox>
+      <description id="errors-description" value="&errors.description;"/>
+      <spacer flex="1"/>
+    </vbox>
+  </deck>
+
+  <hbox id="footer" align="center">
+    <label id="footer-label">&footer.label;</label>
+    <spacer flex="1"/>
+    <button id="cancel" label="&cancel.label;" oncommand="window.close()"/>
+    <button id="back" label="&back.label;" oncommand="gView.back()" hidden="true"/>
+    <button id="next" label="&next.label;" oncommand="gView.next()" hidden="true"/>
+    <button id="done" label="&done.label;" oncommand="gView.done()" hidden="true"/>
+  </hbox>
+
+</window>

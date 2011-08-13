@@ -205,6 +205,9 @@ protected:
 
 
   // helper functions
+
+  /** check for and replace a redundant trailing break */
+  nsresult RemoveRedundantTrailingBR();
   
   /** creates a trailing break in the text doc if there is not one already */
   nsresult CreateTrailingBRIfNeeded();

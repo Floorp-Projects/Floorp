@@ -350,14 +350,14 @@ inline uint32
 JSObject::getArrayLength() const
 {
     JS_ASSERT(isArray());
-    return (uint32)(size_t) getPrivate();
+    return (uint32)(uintptr_t) getPrivate();
 }
 
 inline void
 JSObject::setArrayLength(uint32 length)
 {
     JS_ASSERT(isArray());
-    setPrivate((void*)(size_t)length);
+    setPrivate((void*)(uintptr_t) length);
 }
 
 inline uint32

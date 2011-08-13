@@ -169,13 +169,6 @@ struct JSAtomMap {
 
 namespace js {
 
-/* N.B. must correspond to boolean tagging behavior. */
-enum InternBehavior
-{
-    DoNotInternAtom = false,
-    InternAtom = true
-};
-
 typedef TaggedPointerEntry<JSAtom> AtomStateEntry;
 
 struct AtomHasher
@@ -506,13 +499,6 @@ js_InitCommonAtoms(JSContext *cx);
 
 extern void
 js_FinishCommonAtoms(JSContext *cx);
-
-/*
- * Find or create the atom for a string. Return null on failure to allocate
- * memory.
- */
-extern JSAtom *
-js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 extern JSAtom *
 js_Atomize(JSContext *cx, const char *bytes, size_t length,
