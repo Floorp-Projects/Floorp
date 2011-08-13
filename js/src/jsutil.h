@@ -276,13 +276,13 @@ JS_END_EXTERN_C
  *
  *   Allocation:
  *   - Prefer to allocate using JSContext:
- *       cx->{malloc_,realloc_,calloc_,new_,new_array}
+ *       cx->{malloc_,realloc_,calloc_,new_,array_new}
  *
  *   - If no JSContext is available, use a JSRuntime:
- *       rt->{malloc_,realloc_,calloc_,new_,new_array}
+ *       rt->{malloc_,realloc_,calloc_,new_,array_new}
  *
  *   - As a last resort, use unaccounted allocation ("OffTheBooks"):
- *       js::OffTheBooks::{malloc_,realloc_,calloc_,new_,new_array}
+ *       js::OffTheBooks::{malloc_,realloc_,calloc_,new_,array_new}
  *
  *   Deallocation:
  *   - When the deallocation occurs on a slow path, use:
