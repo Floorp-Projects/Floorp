@@ -14,14 +14,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * June 12, 2009.
- *
- * The Initial Developer of the Original Code is
- *   the Mozilla Corporation.
+ * Copyright (C) 2007  Sun Microsystems, Inc. All Rights Reserved.
  *
  * Contributor(s):
- *      Steve Fink <sfink@mozilla.org>
+ *      Brendan Eich <brendan@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,204 +44,168 @@
 
 namespace js {
 
-namespace Probes {
+class Probes {
+    static bool ProfilingActive;
+    static bool controlProfilers(JSContext *cx, bool toState);
 
-/*
- * Static probes
- *
- * The probe points defined in this file are scattered around the SpiderMonkey
- * source tree. The presence of Probes::someEvent() means that someEvent is
- * about to happen or has happened. To the extent possible, probes should be
- * inserted in all paths associated with a given event, regardless of the
- * active runmode (interpreter/traceJIT/methodJIT/ionJIT).
- *
- * When a probe fires, it is handled by any probe handling backends that have
- * been compiled in. By default, most probes do nothing or at least do nothing
- * expensive, so the presence of the probe should have negligible effect on
- * running time. (Probes in slow paths may do something by default, as long as
- * there is no noticeable slowdown.)
- *
- * For some probes, the mere existence of the probe is too expensive even if it
- * does nothing when called. For example, just having consistent information
- * available for a function call entry/exit probe causes the JITs to
- * de-optimize function calls. In those cases, the JITs may query at compile
- * time whether a probe is desired, and omit the probe invocation if not. If a
- * probe is runtime-disabled at compilation time, it is not guaranteed to fire
- * within a compiled function if it is later enabled.
- *
- * Not all backends handle all of the probes listed here.
- */
+    static const char nullName[];
+    static const char anonymousName[];
 
-/*
- * Internal use only: remember whether "profiling", whatever that means, is
- * currently active. Used for state management.
- */
-extern bool ProfilingActive;
+    static const char *FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString* bytes)
+    {
+        if (!fun)
+            return nullName;
+        JSAtom *atom = const_cast<JSAtom*>(fun->atom);
+        if (!atom)
+            return anonymousName;
+        return bytes->encode(cx, atom) ? bytes->ptr() : nullName;
+    }
 
-extern const char nullName[];
-extern const char anonymousName[];
+    static const char *ScriptFilename(const JSScript *script) {
+        if (! script)
+            return "(null)";
+        if (! script->filename)
+            return "(anonymous)";
+        return script->filename;
+    }
 
-/* JSRuntime created, with currently valid fields */
-bool createRuntime(JSRuntime *rt);
+    static const char *ObjectClassname(JSObject *obj) {
+        if (! obj)
+            return "(null object)";
+        Class *clasp = obj->getClass();
+        if (! clasp)
+            return "(null)";
+        const char *class_name = clasp->name;
+        if (! class_name)
+            return "(null class name)";
+        return class_name;
+    }
 
-/* JSRuntime about to be destroyed */
-bool destroyRuntime(JSRuntime *rt);
+    static void current_location(JSContext *cx, int* lineno, char const **filename);
 
-/* Total JS engine shutdown */
-bool shutdown();
+    static const char *FunctionClassname(const JSFunction *fun);
+    static const char *ScriptFilename(JSScript *script);
+    static int FunctionLineNumber(JSContext *cx, const JSFunction *fun);
 
-/*
- * Test whether we are tracking JS function call enter/exit. The JITs use this
- * to decide whether they can optimize in a way that would prevent probes from
- * firing.
- */
-bool callTrackingActive(JSContext *);
+    static void enterJSFunImpl(JSContext *cx, JSFunction *fun, JSScript *script);
+    static void handleFunctionReturn(JSContext *cx, JSFunction *fun, JSScript *script);
+    static void finalizeObjectImpl(JSObject *obj);
+  public:
+    static bool createRuntime(JSRuntime *rt);
+    static bool destroyRuntime(JSRuntime *rt);
+    static bool shutdown();
 
-/* Entering a JS function */
-bool enterJSFun(JSContext *, JSFunction *, JSScript *, int counter = 1);
+    /*
+     * Pause/resume whatever profiling mechanism is currently compiled
+     * in, if applicable. This will not affect things like dtrace.
+     *
+     * Do not mix calls to these APIs with calls to the individual
+     * profilers' pase/resume functions, because only overall state is
+     * tracked, not the state of each profiler.
+     *
+     * Return the previous state.
+     */
+    static bool pauseProfilers(JSContext *cx) {
+        bool prevState = ProfilingActive;
+        controlProfilers(cx, false);
+        return prevState;
+    }
+    static bool resumeProfilers(JSContext *cx) {
+        bool prevState = ProfilingActive;
+        controlProfilers(cx, true);
+        return prevState;
+    }
 
-/* About to leave a JS function */
-bool exitJSFun(JSContext *, JSFunction *, JSScript *, int counter = 0);
+    static bool callTrackingActive(JSContext *);
 
-/* Executing a script */
-bool startExecution(JSContext *cx, JSScript *script);
+    static bool enterJSFun(JSContext *, JSFunction *, JSScript *, int counter = 1);
+    static bool exitJSFun(JSContext *, JSFunction *, JSScript *, int counter = 0);
 
-/* Script has completed execution */
-bool stopExecution(JSContext *cx, JSScript *script);
+    static bool startExecution(JSContext *cx, JSScript *script);
+    static bool stopExecution(JSContext *cx, JSScript *script);
 
-/* Heap has been resized */
-bool resizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
+    static bool resizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
 
-/*
- * Object has been created. |obj| must exist (its class and size are read)
- */
-bool createObject(JSContext *cx, JSObject *obj);
+    /* |obj| must exist (its class and size are computed) */
+    static bool createObject(JSContext *cx, JSObject *obj);
 
-/* Object has been resized */
-bool resizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize);
+    static bool resizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize);
 
-/*
- * Object is about to be finalized. |obj| must still exist (its class is
- * read)
- */
-bool finalizeObject(JSObject *obj);
+    /* |obj| must still exist (its class is accessed) */
+    static bool finalizeObject(JSObject *obj);
 
-/*
- * String has been created.
- *
- * |string|'s content is not (yet) valid. |length| is the length of the string
- * and does not imply anything about the amount of storage consumed to store
- * the string. (It may be a short string, an external string, or a rope, and
- * the encoding is not taken into consideration.)
- */
-bool createString(JSContext *cx, JSString *string, size_t length);
+    /*
+     * |string| does not need to contain any content yet; only its
+     * pointer value is used. |length| is the length of the string and
+     * does not imply anything about the amount of storage consumed to
+     * store the string. (It may be a short string, an external
+     * string, or a rope, and the encoding is not taken into
+     * consideration.)
+     */
+    static bool createString(JSContext *cx, JSString *string, size_t length);
 
-/*
- * String is about to be finalized
- *
- * |string| must still have a valid length.
- */
-bool finalizeString(JSString *string);
+    /*
+     * |string| must still have a valid length.
+     */
+    static bool finalizeString(JSString *string);
 
-/* Script is about to be compiled */
-bool compileScriptBegin(JSContext *cx, const char *filename, int lineno);
+    static bool compileScriptBegin(JSContext *cx, const char *filename, int lineno);
+    static bool compileScriptEnd(JSContext *cx, JSScript *script, const char *filename, int lineno);
 
-/* Script has just finished compilation */
-bool compileScriptEnd(JSContext *cx, JSScript *script, const char *filename, int lineno);
+    static bool calloutBegin(JSContext *cx, JSFunction *fun);
+    static bool calloutEnd(JSContext *cx, JSFunction *fun);
 
-/* About to make a call from JS into native code */
-bool calloutBegin(JSContext *cx, JSFunction *fun);
+    static bool acquireMemory(JSContext *cx, void *address, size_t nbytes);
+    static bool releaseMemory(JSContext *cx, void *address, size_t nbytes);
 
-/* Native code called by JS has terminated */
-bool calloutEnd(JSContext *cx, JSFunction *fun);
+    static bool GCStart(JSCompartment *compartment);
+    static bool GCEnd(JSCompartment *compartment);
+    static bool GCStartMarkPhase(JSCompartment *compartment);
 
-/* Unimplemented */
-bool acquireMemory(JSContext *cx, void *address, size_t nbytes);
-bool releaseMemory(JSContext *cx, void *address, size_t nbytes);
+    static bool GCEndMarkPhase(JSCompartment *compartment);
+    static bool GCStartSweepPhase(JSCompartment *compartment);
+    static bool GCEndSweepPhase(JSCompartment *compartment);
 
-/*
- * Garbage collection probes
- *
- * GC timing is tricky and at the time of this writing is changing frequently.
- * GCStart(NULL)/GCEnd(NULL) are intended to bracket the entire garbage
- * collection (either global or single-compartment), but a separate thread may
- * continue doing work after GCEnd.
- *
- * Multiple compartments' GC will be interleaved during a global collection
- * (eg, compartment 1 starts, compartment 2 starts, compartment 1 ends, ...)
- */
-bool GCStart(JSCompartment *compartment);
-bool GCEnd(JSCompartment *compartment);
+    static bool CustomMark(JSString *string);
+    static bool CustomMark(const char *string);
+    static bool CustomMark(int marker);
 
-bool GCStartMarkPhase(JSCompartment *compartment);
-bool GCEndMarkPhase(JSCompartment *compartment);
+    static bool startProfiling();
+    static void stopProfiling();
 
-bool GCStartSweepPhase(JSCompartment *compartment);
-bool GCEndSweepPhase(JSCompartment *compartment);
-
-/*
- * Various APIs for inserting custom probe points. These might be used to mark
- * when something starts and stops, or for various other purposes the user has
- * in mind. These are useful to export to JS so that JS code can mark
- * application-meaningful events and phases of execution.
- *
- * Not all backends support these.
- */
-bool CustomMark(JSString *string);
-bool CustomMark(const char *string);
-bool CustomMark(int marker);
-
-/*
- * Internal: DTrace-specific functions to be called during Probes::enterJSFun
- * and Probes::exitJSFun. These will not be inlined, but the argument
- * marshalling required for these probe points is expensive enough that it
- * shouldn't really matter.
- */
-void DTraceEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script);
-void DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script);
-
-/*
- * Internal: ETW-specific probe functions
- */
 #ifdef MOZ_ETW
-// ETW Handlers
-bool ETWCreateRuntime(JSRuntime *rt);
-bool ETWDestroyRuntime(JSRuntime *rt);
-bool ETWShutdown();
-bool ETWCallTrackingActive(JSContext *cx);
-bool ETWEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter);
-bool ETWExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter);
-bool ETWCreateObject(JSContext *cx, JSObject *obj);
-bool ETWFinalizeObject(JSObject *obj);
-bool ETWResizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize);
-bool ETWCreateString(JSContext *cx, JSString *string, size_t length);
-bool ETWFinalizeString(JSString *string);
-bool ETWCompileScriptBegin(const char *filename, int lineno);
-bool ETWCompileScriptEnd(const char *filename, int lineno);
-bool ETWCalloutBegin(JSContext *cx, JSFunction *fun);
-bool ETWCalloutEnd(JSContext *cx, JSFunction *fun);
-bool ETWAcquireMemory(JSContext *cx, void *address, size_t nbytes);
-bool ETWReleaseMemory(JSContext *cx, void *address, size_t nbytes);
-bool ETWGCStart(JSCompartment *compartment);
-bool ETWGCEnd(JSCompartment *compartment);
-bool ETWGCStartMarkPhase(JSCompartment *compartment);
-bool ETWGCEndMarkPhase(JSCompartment *compartment);
-bool ETWGCStartSweepPhase(JSCompartment *compartment);
-bool ETWGCEndSweepPhase(JSCompartment *compartment);
-bool ETWCustomMark(JSString *string);
-bool ETWCustomMark(const char *string);
-bool ETWCustomMark(int marker);
-bool ETWStartExecution(JSContext *cx, JSScript *script);
-bool ETWStopExecution(JSContext *cx, JSScript *script);
-bool ETWResizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
+    // ETW Handlers
+    static bool ETWCreateRuntime(JSRuntime *rt);
+    static bool ETWDestroyRuntime(JSRuntime *rt);
+    static bool ETWShutdown();
+    static bool ETWCallTrackingActive(JSContext *cx);
+    static bool ETWEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter);
+    static bool ETWExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter);
+    static bool ETWCreateObject(JSContext *cx, JSObject *obj);
+    static bool ETWFinalizeObject(JSObject *obj);
+    static bool ETWResizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize);
+    static bool ETWCreateString(JSContext *cx, JSString *string, size_t length);
+    static bool ETWFinalizeString(JSString *string);
+    static bool ETWCompileScriptBegin(const char *filename, int lineno);
+    static bool ETWCompileScriptEnd(const char *filename, int lineno);
+    static bool ETWCalloutBegin(JSContext *cx, JSFunction *fun);
+    static bool ETWCalloutEnd(JSContext *cx, JSFunction *fun);
+    static bool ETWAcquireMemory(JSContext *cx, void *address, size_t nbytes);
+    static bool ETWReleaseMemory(JSContext *cx, void *address, size_t nbytes);
+    static bool ETWGCStart(JSCompartment *compartment);
+    static bool ETWGCEnd(JSCompartment *compartment);
+    static bool ETWGCStartMarkPhase(JSCompartment *compartment);
+    static bool ETWGCEndMarkPhase(JSCompartment *compartment);
+    static bool ETWGCStartSweepPhase(JSCompartment *compartment);
+    static bool ETWGCEndSweepPhase(JSCompartment *compartment);
+    static bool ETWCustomMark(JSString *string);
+    static bool ETWCustomMark(const char *string);
+    static bool ETWCustomMark(int marker);
+    static bool ETWStartExecution(JSContext *cx, JSScript *script);
+    static bool ETWStopExecution(JSContext *cx, JSScript *script);
+    static bool ETWResizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
 #endif
-
-} /* namespace Probes */
-
-/*
- * Probe handlers are implemented inline for minimal performance impact,
- * especially important when no backends are enabled.
- */
+};
 
 inline bool
 Probes::createRuntime(JSRuntime *rt)
@@ -298,13 +258,30 @@ Probes::callTrackingActive(JSContext *cx)
     return false;
 }
 
+extern inline JS_FRIEND_API(JSBool)
+js_PauseProfilers(JSContext *cx, uintN argc, jsval *vp)
+{
+    Probes::pauseProfilers(cx);
+    return JS_TRUE;
+}
+
+extern inline JS_FRIEND_API(JSBool)
+js_ResumeProfilers(JSContext *cx, uintN argc, jsval *vp)
+{
+    Probes::resumeProfilers(cx);
+    return JS_TRUE;
+}
+
+extern JS_FRIEND_API(JSBool)
+js_ResumeProfilers(JSContext *cx, uintN argc, jsval *vp);
+
 inline bool
 Probes::enterJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter)
 {
     bool ok = true;
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-        DTraceEnterJSFun(cx, fun, script);
+        enterJSFunImpl(cx, fun, script);
 #endif
 #ifdef MOZ_TRACE_JSCALLS
     cx->doFunctionCallback(fun, script, counter);
@@ -324,7 +301,7 @@ Probes::exitJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter)
 
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-        DTraceExitJSFun(cx, fun, script);
+        handleFunctionReturn(cx, fun, script);
 #endif
 #ifdef MOZ_TRACE_JSCALLS
     if (counter > 0)
@@ -351,20 +328,6 @@ Probes::resizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize)
 
     return ok;
 }
-
-#ifdef INCLUDE_MOZILLA_DTRACE
-static const char *ObjectClassname(JSObject *obj) {
-    if (! obj)
-        return "(null object)";
-    Class *clasp = obj->getClass();
-    if (! clasp)
-        return "(null)";
-    const char *class_name = clasp->name;
-    if (! class_name)
-        return "(null class name)";
-    return class_name;
-}
-#endif
 
 inline bool
 Probes::createObject(JSContext *cx, JSObject *obj)
@@ -694,10 +657,5 @@ struct AutoFunctionCallProbe {
 };
 
 } /* namespace js */
-
-/*
- * Internal functions for controlling various profilers. The profiler-specific
- * implementations of these are mostly in jsdbgapi.cpp.
- */
-
+    
 #endif /* _JSPROBES_H */
