@@ -2432,15 +2432,7 @@ static void
 TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 {
   ToolbarWindow *window = (ToolbarWindow*)aInfo;
-
-  // Remember: this context is NOT flipped, so the origin is in the bottom left.
-  float titlebarWidth = [window frame].size.width;
-  float titlebarHeight = [window titlebarHeight];
-  float titlebarOrigin = [window frame].size.height - titlebarHeight;
-  NSRect titlebarRect = NSMakeRect(0, titlebarOrigin, titlebarWidth, titlebarHeight);
-
-  [NSGraphicsContext saveGraphicsState];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
+  NSRect titlebarRect = [window titlebarRect];
 
   if ([window drawsContentsIntoWindowFrame]) {
     NSView* view = [[[window contentView] subviews] lastObject];
@@ -2449,12 +2441,12 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 
     // Gecko drawing assumes flippedness, but the current context isn't flipped
     // (because we're painting into the window's border view, which is not a
-    // ChildView, so it isn't flpped).
+    // ChildView, so it isn't flipped).
     // So we need to set a flip transform.
     CGContextScaleCTM(aContext, 1.0f, -1.0f);
     CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
 
-    NSRect flippedTitlebarRect = NSMakeRect(0, 0, titlebarWidth, titlebarHeight);
+    NSRect flippedTitlebarRect = { NSZeroPoint, titlebarRect.size };
     [(ChildView*)view drawRect:flippedTitlebarRect inTitlebarContext:aContext];
   } else {
     BOOL isMain = [window isMainWindow];
@@ -2465,12 +2457,13 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
                          [window unifiedToolbarHeight], isMain);
     } else {
       // If the titlebar color is not nil, just set and draw it normally.
+      [NSGraphicsContext saveGraphicsState];
+      [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
       [titlebarColor set];
       NSRectFill(titlebarRect);
+      [NSGraphicsContext restoreGraphicsState];
     }
   }
-
-  [NSGraphicsContext restoreGraphicsState];
 }
 
 - (void)setFill
