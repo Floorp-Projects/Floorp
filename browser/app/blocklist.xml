@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1311096050000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1311891123000">
   <emItems>
       <emItem  blockID="i41" id="{99079a25-328f-4bd4-be04-00955acaa0a7}">
-                        <versionRange  minVersion="0.1" maxVersion="4.3.0.00" severity="1">
+                        <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i8" id="{B13721C7-F507-4982-B2E5-502A71474FED}">
@@ -30,7 +30,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i39" id="{c2d64ff7-0ab8-4263-89c9-ea3b0f8f050c}">
-                        <versionRange  minVersion="0.1" maxVersion="4.3.0.00" severity="1">
+                        <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i10" id="{8CE11043-9A15-4207-A565-0C94C42D590D}">
@@ -61,7 +61,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i40" id="{28387537-e3f9-4ed7-860c-11e69af4a8a0}">
-                        <versionRange  minVersion="0.1" maxVersion="4.3.0.00" severity="1">
+                        <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i23" id="firefox@bandoo.com">
