@@ -155,10 +155,6 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
 
     virtual void trace(JSTracer *trc, JSObject *wrapper);
 
-    virtual bool isCrossCompartment() {
-        return true;
-    }
-
     static JSCrossCompartmentWrapper singleton;
 };
 
