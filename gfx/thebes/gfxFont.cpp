@@ -651,15 +651,12 @@ void gfxFontFamily::LocalizedName(nsAString& aLocalizedName)
 void
 gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
 {
-    if (!mHasStyles) {
+    if (!mHasStyles)
         FindStyleVariations();
-    }
 
-    if (!TestCharacterMap(aMatchData->mCh)) {
-        // none of the faces in the family support the required char,
-        // so bail out immediately
-        return;
-    }
+    // xxx - optimization point - keep a bit vector with the union of supported unicode ranges
+    // by all fonts for this family and bail immediately if the character is not in any of
+    // this family's cmaps
 
     // iterate over fonts
     PRUint32 numFonts = mAvailableFonts.Length();
@@ -2614,8 +2611,11 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
             return font.forget();
         }
         // check other faces of the family
+        // XXX optimization point: give the family a charmap that is the union
+        // of the char maps of all its faces, so we can quickly test whether
+        // it's worth doing this search
         gfxFontFamily *family = font->GetFontEntry()->Family();
-        if (family && family->TestCharacterMap(aCh)) {
+        if (family) {
             FontSearch matchData(aCh, font);
             family->FindFontForChar(&matchData);
             gfxFontEntry *fe = matchData.mBestMatch;
