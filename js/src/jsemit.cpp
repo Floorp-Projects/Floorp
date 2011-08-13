@@ -3158,9 +3158,7 @@ class TempPopScope {
     JSObjectBox *savedBlockBox;
 
   public:
-#ifdef DEBUG
-    TempPopScope() : savedStmt(NULL) {}
-#endif
+    TempPopScope() : savedStmt(NULL), savedScopeStmt(NULL), savedBlockBox(NULL) {}
 
     bool popBlock(JSContext *cx, JSCodeGenerator *cg) {
         savedStmt = cg->topStmt;
