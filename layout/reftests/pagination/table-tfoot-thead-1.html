@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US" class="reftest-print">
+<head>
+<style type="text/css">
+div.filler {height:5px; width: 50px; border:thin solid blue;}
+div.spacer { height: 0px; width: 0px; padding: 5px;border:thin solid green;}
+tfoot div.spacer {border-color:orange;
+height: 10px}
+tbody div.spacer{border-width: 4px}
+thead div.spacer{height: 140px}
+</style>
+</head>
+<body>
+<div class="filler"></div>
+<table cellspacing="1" cellpadding="0">
+<tfoot><tr><td><div class="spacer"></div></td></tr></tfoot>
+<tbody>
+ <tr><td><div class="spacer"></div></td></tr>
+ <tr><td><div class="spacer"></div></td></tr>
+</tbody>
+<thead><tr><td><div class="spacer"></div></td></tr></thead>
+</table>
+</body>
+</html>
