@@ -944,6 +944,31 @@ public:
    */
   nsIContent* GetEditingHost();
 
+  /**
+   * Determing language. Look at the nearest ancestor element that has a lang
+   * attribute in the XML namespace or is an HTML element and has a lang in
+   * no namespace attribute.
+   */
+  void GetLang(nsAString& aResult) const {
+    for (const nsIContent* content = this; content; content = content->GetParent()) {
+      if (content->GetAttrCount() > 0) {
+        // xml:lang has precedence over lang on HTML elements (see
+        // XHTML1 section C.7).
+        PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
+                                          aResult);
+        if (!hasAttr && content->IsHTML()) {
+          hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
+                                     aResult);
+        }
+        NS_ASSERTION(hasAttr || aResult.IsEmpty(),
+                     "GetAttr that returns false should not make string non-empty");
+        if (hasAttr) {
+          return;
+        }
+      }
+    }
+  }
+
   // Overloaded from nsINode
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 

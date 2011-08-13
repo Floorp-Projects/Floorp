@@ -741,7 +741,6 @@ toolbar[mode="icons"] #zoom-out-button {
 toolbar[mode="icons"] #zoom-in-button {
   -moz-border-start: none;
   -moz-margin-start: 0;
-  height: 16px;
 }
 
 #zoom-out-button:-moz-locale-dir(ltr),

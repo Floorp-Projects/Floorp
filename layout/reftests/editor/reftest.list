@@ -64,3 +64,6 @@ fails-if(Android) != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-m
 != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
 != selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
 == 672709.html 672709-ref.html
+== 338427-1.html 338427-1-ref.html
+skip-if(Android) == 338427-2.html 338427-2-ref.html
+skip-if(Android) == 338427-3.html 338427-3-ref.html
