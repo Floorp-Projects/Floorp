@@ -2682,8 +2682,12 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
   nsPresContext* presContext = PresContext();
   // XXXldb Should we be checking constrained height instead?
+  // tables are not able to pull back children from its next inflow, so even
+  // under paginated contexts tables are should not paginate if they are inside
+  // column set
   PRBool isPaginated = presContext->IsPaginated() &&
-                       NS_UNCONSTRAINEDSIZE != aReflowState.availSize.height;
+                       NS_UNCONSTRAINEDSIZE != aReflowState.availSize.height &&
+                       aReflowState.reflowState.mFlags.mTableIsSplittable;
 
   aOverflowAreas.Clear();
 
