@@ -364,9 +364,11 @@ public:
   static void MouseExitedWindow(NSEvent* aEvent);
   static void MouseEnteredWindow(NSEvent* aEvent);
   static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil);
+  static void ResendLastMouseMoveEvent();
   static ChildView* ViewForEvent(NSEvent* aEvent);
 
   static ChildView* sLastMouseEventView;
+  static NSEvent* sLastMouseMoveEvent;
   static NSWindow* sWindowUnderMouse;
 };
 

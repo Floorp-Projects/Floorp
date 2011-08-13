@@ -2301,6 +2301,14 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
       // Re-layout our contents.
       geckoWindow->ReportSizeEvent();
     }
+
+    // Resizing the content area causes a reflow which would send a synthesized
+    // mousemove event to the old mouse position relative to the top left
+    // corner of the content area. But the mouse has shifted relative to the
+    // content area, so that event would have wrong position information. So
+    // we'll send a mouse move event with the correct new position.
+    ChildViewMouseTracker::ResendLastMouseMoveEvent();
+
     [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
   }
 }
