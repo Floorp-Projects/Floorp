@@ -2131,8 +2131,6 @@ TokenStream::getTokenInternal()
     return tt;
 
   error:
-    JS_ASSERT(cx->isExceptionPending());
-
     /*
      * For erroneous multi-line tokens we won't have changed end.lineno (it'll
      * still be equal to begin.lineno) so we revert end.index to be equal to

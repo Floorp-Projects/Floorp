@@ -98,11 +98,11 @@ function doGlobalGC()
   update();
 }
 
-function doGlobalGCandCC()
+function doCC()
 {
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
-        .garbageCollect();
+        .cycleCollect();
   update();
 }
 
@@ -239,10 +239,7 @@ function update()
 
   // Memory-related actions.
   const GCDesc = "Do a global garbage collection.";
-  // XXX: once bug 625302 is fixed, should change this button to just do a CC.
-  const CCDesc = "Do a global garbage collection followed by a cycle " +
-                 "collection. (It currently is not possible to do a cycle " +
-                 "collection on its own, see bug 625302.)";
+  const CCDesc = "Do a cycle collection.";
   const MPDesc = "Send three \"heap-minimize\" notifications in a " +
                  "row.  Each notification triggers a global garbage " +
                  "collection followed by a cycle collection, and causes the " +
@@ -251,7 +248,7 @@ function update()
 
   text += "<div>" +
     "<button title='" + GCDesc + "' onclick='doGlobalGC()'>GC</button>" +
-    "<button title='" + CCDesc + "' onclick='doGlobalGCandCC()'>GC + CC</button>" +
+    "<button title='" + CCDesc + "' onclick='doCC()'>CC</button>" +
     "<button title='" + MPDesc + "' onclick='sendHeapMinNotifications()'>" + "Minimize memory usage</button>" +
     "</div>";
 

@@ -89,6 +89,21 @@ JSDependentString::new_(JSContext *cx, JSLinearString *base, const jschar *chars
     return str;
 }
 
+inline js::PropertyName *
+JSFlatString::toPropertyName(JSContext *cx)
+{
+#ifdef DEBUG
+    uint32 dummy;
+    JS_ASSERT(!isElement(&dummy));
+#endif
+    if (isAtom())
+        return asAtom().asPropertyName();
+    JSAtom *atom = js_AtomizeString(cx, this);
+    if (!atom)
+        return NULL;
+    return atom->asPropertyName();
+}
+
 JS_ALWAYS_INLINE void
 JSFixedString::init(const jschar *chars, size_t length)
 {

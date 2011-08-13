@@ -41,7 +41,7 @@
 interface nsIEditor;
 interface nsITextServicesFilter;
 
-[scriptable, uuid(90c93610-c116-44ab-9793-62dccb9f43ce)]
+[scriptable, uuid(803ff0dd-07f2-4438-b3a6-ab9c2fe4e1dd)]
 interface nsIEditorSpellCheck : nsISupports
 {
 
@@ -187,5 +187,11 @@ interface nsIEditorSpellCheck : nsISupports
    * invalid.
    */
   boolean       CheckCurrentWordNoSuggest(in wstring suggestedWord);
+
+  /**
+   * Update the dictionary in use to be sure it corresponds to what the editor
+   * needs.
+   */
+  void          UpdateCurrentDictionary(in nsIEditor editor);
 
 };

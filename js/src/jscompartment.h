@@ -391,7 +391,6 @@ typedef HashSet<ScriptFilenameEntry *,
 struct JS_FRIEND_API(JSCompartment) {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
-    js::gc::Chunk                *chunk;
 
     js::gc::ArenaList            arenas[js::gc::FINALIZE_LIMIT];
     js::gc::FreeLists            freeLists;
