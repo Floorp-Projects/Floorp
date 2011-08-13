@@ -1,0 +1,21 @@
+#filter substitution
+<backup-configuration>
+    <application-type>nokia</application-type>
+    <application-name>@MOZ_APP_NAME@</application-name>
+    <backup-method>backup-scripts</backup-method>
+
+    <backup-scripts>
+        <backup-script-name>
+        /usr/share/@MOZ_APP_NAME@/backup
+        </backup-script-name>
+        <restore-script-name>
+        /usr/share/@MOZ_APP_NAME@/restore
+        </restore-script-name>
+    </backup-scripts>
+
+    <locations>
+        <location type="file" category="settings">
+        $HOME/.mozilla/backup
+        </location>
+    </locations>
+</backup-configuration>
