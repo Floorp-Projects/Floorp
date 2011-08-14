@@ -20,4 +20,13 @@
       <radio label="Kilo" value="kilo" />
     </radiogroup>
   </setting>
+  <setting pref="extensions.inlinesettings3.menulist" type="menulist" title="Menulist">
+    <menulist sizetopopup="always">
+      <menupopup>
+        <menuitem label="Lima" value="7" />
+        <menuitem label="Mike" value="8" />
+        <menuitem label="November" value="9" />
+      </menupopup>
+    </menulist>
+  </setting>
 </vbox>
