@@ -262,10 +262,14 @@ XXX The winner is the outermost setting in conflicting settings like these:
     }
   }
 
+  PRBool subsupDisplay =
+    NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
+    !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
+
   // disable the stretch-all flag if we are going to act like a superscript
-  if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
-      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags))
+  if (subsupDisplay) {
     mPresentationData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+  }
 
   // Now transmit any change that we want to our children so that they
   // can update their mPresentationData structs
@@ -278,6 +282,10 @@ XXX The winner is the outermost setting in conflicting settings like these:
      Within overscript, <munderover> always sets displaystyle to "false", 
      but increments scriptlevel by 1 only when accent is "false".
  
+     Within subscript and superscript it increments scriptlevel by 1, and 
+     sets displaystyle to "false", but leaves both attributes unchanged within 
+     base.
+
      The TeXBook treats 'over' like a superscript, so p.141 or Rule 13a
      say it shouldn't be compressed. However, The TeXBook says
      that math accents and \overline change uncramped styles to their
@@ -288,7 +296,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
     PRUint32 compress = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
       ? NS_MATHML_COMPRESSED : 0;
     SetIncrementScriptLevel(tag == nsGkAtoms::mover_ ? 1 : 2,
-                            !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags));
+                            !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags) || subsupDisplay);
     PropagatePresentationDataFor(overscriptFrame,
                                  ~NS_MATHML_DISPLAYSTYLE | compress,
                                  NS_MATHML_DISPLAYSTYLE | compress);
@@ -299,7 +307,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
   */
   if (tag == nsGkAtoms::munder_ ||
       tag == nsGkAtoms::munderover_) {
-    SetIncrementScriptLevel(1, !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags));
+    SetIncrementScriptLevel(1, !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags) || subsupDisplay);
     PropagatePresentationDataFor(underscriptFrame,
                                  ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
                                  NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
