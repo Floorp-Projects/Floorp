@@ -600,6 +600,7 @@ protected:
                           const nsRuleData* aRuleData,
                           const nsStyleFont* aFont,
                           const nsStyleFont* aParentFont,
+                          const nsStyleVisibility* aLanguageVisibility,
                           nscoord* aSize,
                           const nsFont& aSystemFont,
                           nscoord aParentSize,
