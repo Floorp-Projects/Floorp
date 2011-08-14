@@ -89,7 +89,6 @@
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
 #include "prenv.h"
-#include "nsIDOMWindowInternal.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
