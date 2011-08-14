@@ -66,7 +66,6 @@
 #include "nsScriptableUnescapeHTML.h"
 #include "nsAutoPtr.h"
 #include "nsTreeSanitizer.h"
-#include "nsAHtml5FragmentParser.h"
 #include "nsHtml5Module.h"
 
 #define XHTML_DIV_TAG "div xmlns=\"http://www.w3.org/1999/xhtml\""
