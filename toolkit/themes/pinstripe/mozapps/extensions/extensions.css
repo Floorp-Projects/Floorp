@@ -920,6 +920,10 @@ setting[type="string"] > .setting-input > textbox {
   -moz-box-flex: 1;
 }
 
+setting[type="radio"] > radiogroup {
+  -moz-box-orient: horizontal;
+}
+
 
 /*** creator ***/
 
