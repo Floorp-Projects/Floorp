@@ -74,6 +74,7 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
 == math-display.html math-display-ref.html
+== scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
 != link-1.xhtml link-ref.xhtml
