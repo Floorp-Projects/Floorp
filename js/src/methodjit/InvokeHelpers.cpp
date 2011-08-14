@@ -877,7 +877,8 @@ ResetTraceHintAt(JSScript *script, js::mjit::JITScript *jit,
     
     JS_ASSERT(ic.jumpTargetPC == pc);
 
-    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index, script);
+    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index,
+               static_cast<void*>(script));
 
     Repatcher repatcher(jit);
 
