@@ -215,14 +215,6 @@
 
 #include "nsPluginError.h"
 #include "nsContentUtils.h"
-#include "nsContentErrors.h"
-#include "nsIChannelPolicy.h"
-#include "nsIContentSecurityPolicy.h"
-
-#include "nsXULAppAPI.h"
-
-#include "nsDOMNavigationTiming.h"
-#include "nsITimedChannel.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -232,6 +224,15 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 //#define DEBUG_DOCSHELL_FOCUS
 #define DEBUG_PAGE_CACHE
 #endif
+
+#include "nsContentErrors.h"
+#include "nsIChannelPolicy.h"
+#include "nsIContentSecurityPolicy.h"
+
+#include "nsXULAppAPI.h"
+
+#include "nsDOMNavigationTiming.h"
+#include "nsITimedChannel.h"
 
 using namespace mozilla;
 
@@ -921,8 +922,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         *aSink = mScriptGlobal;
     }
     else if ((aIID.Equals(NS_GET_IID(nsPIDOMWindow)) ||
-              aIID.Equals(NS_GET_IID(nsIDOMWindow)) ||
-              aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) &&
+              aIID.Equals(NS_GET_IID(nsIDOMWindow))) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
         return mScriptGlobal->QueryInterface(aIID, aSink);
     }
