@@ -89,6 +89,7 @@
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
 #include "prenv.h"
+
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -200,9 +201,6 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
     return GetWindowDOMWindow(reinterpret_cast<nsIDOMWindow**>(aSink));
-  }   
-  if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
-    return GetWindowDOMWindow(reinterpret_cast<nsIDOMWindowInternal**>(aSink));
   }   
   if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
     NS_SUCCEEDED(EnsureContentTreeOwner()) &&

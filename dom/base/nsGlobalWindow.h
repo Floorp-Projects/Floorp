@@ -967,7 +967,6 @@ protected:
   static nsIDOMStorageList* sGlobalStorageList;
 
   static WindowByIdTable* sWindowsById;
-  static bool sWarnedAboutWindowInternal;
 };
 
 /*
