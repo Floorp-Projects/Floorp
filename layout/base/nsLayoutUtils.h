@@ -1214,11 +1214,6 @@ public:
                                          const nsRect& aDestArea);
 
   /**
-   * Set the font on aRC based on the style in aSC
-   */
-  static void SetFontFromStyle(nsRenderingContext* aRC, nsStyleContext* aSC);
-
-  /**
    * Determine if any corner radius is of nonzero size
    *   @param aCorners the |nsStyleCorners| object to check
    *   @return PR_TRUE unless all the coordinates are 0%, 0 or null.

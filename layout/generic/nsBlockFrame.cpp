@@ -2371,12 +2371,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         metrics.ascent = metrics.height;
       }
 
-      nsRenderingContext *rc = aState.mReflowState.rendContext;
-      nsLayoutUtils::SetFontFromStyle(rc, GetStyleContext());
+      nsRefPtr<nsFontMetrics> fm;
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+      aState.mReflowState.rendContext->SetFont(fm); // FIXME: needed?
 
       nscoord minAscent =
-        nsLayoutUtils::GetCenteredFontBaseline(rc->FontMetrics(),
-                                               aState.mMinLineHeight);
+        nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
       aState.mY += NS_MAX(minAscent, metrics.ascent) +

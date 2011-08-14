@@ -3675,16 +3675,6 @@ nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
                 nsSize(wholeSizeX, wholeSizeY));
 }
 
-void
-nsLayoutUtils::SetFontFromStyle(nsRenderingContext* aRC, nsStyleContext* aSC)
-{
-  const nsStyleFont* font = aSC->GetStyleFont();
-  const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
-
-  aRC->SetFont(font->mFont, visibility->mLanguage,
-               aSC->PresContext()->GetUserFontSet());
-}
-
 static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
 {
   if (aCoord.IsCoordPercentCalcUnit()) {
