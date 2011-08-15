@@ -534,6 +534,7 @@ var InspectorUI = {
   inspecting: false,
   treeLoaded: false,
   prefEnabledName: "devtools.inspector.enabled",
+  isDirty: false,
 
   /**
    * Toggle the inspector interface elements on or off.
@@ -579,7 +580,7 @@ var InspectorUI = {
   get defaultSelection()
   {
     let doc = this.win.document;
-    return doc.documentElement.lastElementChild;
+    return doc.documentElement ? doc.documentElement.lastElementChild : null;
   },
 
   initializeTreePanel: function IUI_initializeTreePanel()
@@ -770,6 +771,8 @@ var InspectorUI = {
 
     this.toolbar.hidden = false;
     this.inspectCmd.setAttribute("checked", true);
+
+    gBrowser.addProgressListener(InspectorProgressListener);
   },
 
   /**
@@ -823,6 +826,8 @@ var InspectorUI = {
 
     this.closing = true;
     this.toolbar.hidden = true;
+
+    gBrowser.removeProgressListener(InspectorProgressListener);
 
     if (!aKeepStore) {
       InspectorStore.deleteStore(this.winID);
@@ -1487,9 +1492,135 @@ var InspectorStore = {
   }
 };
 
+/**
+ * The InspectorProgressListener object is an nsIWebProgressListener which
+ * handles onStateChange events for the inspected browser. If the user makes
+ * changes to the web page and he tries to navigate away, he is prompted to
+ * confirm page navigation, such that he's given the chance to prevent the loss
+ * of edits.
+ */
+var InspectorProgressListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener]),
+
+  onStateChange:
+  function IPL_onStateChange(aProgress, aRequest, aFlag, aStatus)
+  {
+    // Remove myself if the Inspector is no longer open.
+    if (!InspectorUI.isTreePanelOpen) {
+      gBrowser.removeProgressListener(InspectorProgressListener);
+      return;
+    }
+
+    // Skip non-start states.
+    if (!(aFlag & Ci.nsIWebProgressListener.STATE_START)) {
+      return;
+    }
+
+    // If the request is about to happen in a new window, we are not concerned
+    // about the request.
+    if (aProgress.DOMWindow != InspectorUI.win) {
+      return;
+    }
+
+    if (InspectorUI.isDirty) {
+      this.showNotification(aRequest);
+    } else {
+      InspectorUI.closeInspectorUI();
+    }
+  },
+
+  onLocationChange: function() {},
+  onProgressChange: function() {},
+  onStatusChange: function() {},
+  onSecurityChange: function() {},
+
+  /**
+   * Show an asynchronous notification which asks the user to confirm or cancel
+   * the page navigation request.
+   *
+   * @param nsIRequest aRequest
+   *        The request initiated by the user or by the page itself.
+   * @returns void
+   */
+  showNotification: function IPL_showNotification(aRequest)
+  {
+    aRequest.suspend();
+
+    let notificationBox = gBrowser.getNotificationBox(InspectorUI.browser);
+    let notification = notificationBox.
+      getNotificationWithValue("inspector-page-navigation");
+
+    if (notification) {
+      notificationBox.removeNotification(notification, true);
+    }
+
+    let cancelRequest = function onCancelRequest() {
+      if (aRequest) {
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+        aRequest.resume(); // needed to allow the connection to be cancelled.
+        aRequest = null;
+      }
+    };
+
+    let buttons = [
+      {
+        id: "inspector.confirmNavigationAway.buttonLeave",
+        label: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonLeave"),
+        accessKey: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonLeaveAccesskey"),
+        callback: function onButtonLeave() {
+          if (aRequest) {
+            aRequest.resume();
+            aRequest = null;
+            InspectorUI.closeInspectorUI();
+          }
+        },
+      },
+      {
+        id: "inspector.confirmNavigationAway.buttonStay",
+        label: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonStay"),
+        accessKey: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonStayAccesskey"),
+        callback: cancelRequest
+      },
+    ];
+
+    let message = InspectorUI.strings.
+      GetStringFromName("confirmNavigationAway.message");
+
+    notification = notificationBox.appendNotification(message,
+      "inspector-page-navigation", "chrome://browser/skin/Info.png",
+      notificationBox.PRIORITY_WARNING_HIGH, buttons);
+
+    // Make sure this not a transient notification, to avoid the automatic
+    // transient notification removal.
+    notification.persistence = -1;
+
+    // We need a removed() callback for notifications. See bug 600501.
+    notification.addEventListener("DOMNodeRemoved",
+      function onNotificationRemoved(aEvent) {
+        if (notification != aEvent.target) {
+          return;
+        }
+
+        notification.removeEventListener(aEvent.type,
+          onNotificationRemoved, false);
+        cancelRequest();
+      }, false);
+  },
+};
+
 /////////////////////////////////////////////////////////////////////////
-//// Initializors
+//// Initializers
 
 XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
   return document.getElementById("Tools:Inspect");
 });
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
+  return Services.strings.
+         createBundle("chrome://browser/locale/inspector.properties");
+});
+
