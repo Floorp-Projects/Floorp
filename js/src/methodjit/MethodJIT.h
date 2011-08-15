@@ -216,7 +216,7 @@ struct VMFrame
     }
 };
 
-#ifdef JS_CPU_ARM
+#if defined(JS_CPU_ARM) || defined(JS_CPU_SPARC)
 // WARNING: Do not call this function directly from C(++) code because it is not ABI-compliant.
 extern "C" void JaegerStubVeneer(void);
 #endif

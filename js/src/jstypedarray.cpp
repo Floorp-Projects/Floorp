@@ -558,7 +558,7 @@ TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attr
 /* static */ int
 TypedArray::lengthOffset()
 {
-    return JSObject::getFixedSlotOffset(FIELD_LENGTH);
+    return JSObject::getFixedSlotOffset(FIELD_LENGTH) + offsetof(jsval_layout, s.payload);
 }
 
 /* static */ int

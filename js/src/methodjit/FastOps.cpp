@@ -2194,12 +2194,21 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         /* Ignore the sign bit. */
         masm.lshiftPtr(Imm32(1), treg);
-#ifndef JS_CPU_X64
-        static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
 #ifdef JS_CPU_SPARC
         /* On Sparc the result 0/0 is 0x7FFFFFFF not 0x7FF80000 */
-        masm.and32(Imm32(ShiftedCanonicalNaNType), treg);
-#endif
+        static const int ShiftedCanonicalNaNType1 = 0x7FFFFFFF << 1;
+        static const int ShiftedCanonicalNaNType2 = 0x7FF80000 << 1;
+        RegisterID result1 = frame.allocReg();
+        masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType1), result1);
+        masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType2), result);
+        if(op == JSOP_STRICTEQ) {
+            masm.and32(result1, result);
+        } else {
+            masm.or32(result1, result);
+        }
+        frame.freeReg(result1);
+#elif !defined(JS_CPU_X64)
+        static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
         masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType), result);
 #else
         static const void *ShiftedCanonicalNaNType = (void *)(0x7FF8000000000000 << 1);

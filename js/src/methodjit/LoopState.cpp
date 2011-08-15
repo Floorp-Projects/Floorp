@@ -1396,7 +1396,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
             if (entry.kind == InvariantEntry::DENSE_ARRAY_LENGTH)
                 masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
             else
-                masm.storePtr(T0, address);
+                masm.storePayload(T0, address);
             break;
           }
 
@@ -1414,7 +1414,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
                 masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
             } else {
                 masm.loadPtr(Address(T0, js::TypedArray::dataOffset()), T0);
-                masm.storePtr(T0, address);
+                masm.storePayload(T0, address);
             }
             break;
           }
@@ -1422,7 +1422,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
           case InvariantEntry::INVARIANT_ARGS_BASE: {
             Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
             masm.loadFrameActuals(outerScript->function(), T0);
-            masm.storePtr(T0, address);
+            masm.storePayload(T0, address);
             break;
           }
 

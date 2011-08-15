@@ -2659,7 +2659,6 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     // Bounds check.
     Jump outOfBounds;
     Address typedArrayLength(objReg, TypedArray::lengthOffset());
-    typedArrayLength = masm.payloadOf(typedArrayLength);
     if (idRemat.isConstant()) {
         JS_ASSERT(idRemat.value().toInt32() == v.toInt32());
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(v.toInt32()));
@@ -3016,7 +3015,6 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
     // Bounds check.
     Jump outOfBounds;
     Address typedArrayLength(objReg, TypedArray::lengthOffset());
-    typedArrayLength = masm.payloadOf(typedArrayLength);
     if (hasConstantKey)
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(keyValue));
     else
