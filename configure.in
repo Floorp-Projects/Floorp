@@ -9322,7 +9322,7 @@ xpcom/xpcom-private.h
 # (apparently) only need this hack when egrep's "pattern" is particularly
 # long (as in the following code).  See bug 655339.
 case "$host" in
-x86_64-apple-darwin*)
+*-apple-darwin*)
     FIXED_EGREP="arch -arch i386 egrep"
     ;;
 *)
