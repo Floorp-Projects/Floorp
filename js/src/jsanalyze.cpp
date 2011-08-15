@@ -890,7 +890,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             loop->lastBlock = offset;
 
         if (code->exceptionEntry) {
-            bool found = false;
+            DebugOnly<bool> found = false;
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -905,7 +905,9 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                             ensureVariable(lifetimes[i], startOffset - 1);
                     }
 
+#ifdef DEBUG
                     found = true;
+#endif
                     break;
                 }
             }

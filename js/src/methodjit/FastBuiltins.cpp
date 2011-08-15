@@ -92,8 +92,8 @@ mjit::Compiler::compileMathAbsDouble(FrameEntry *arg)
     FPRegisterID fpReg;
     bool allocate;
 
-    MaybeJump notNumber = loadDouble(arg, &fpReg, &allocate);
-    JS_ASSERT(!notNumber.isSet());
+    DebugOnly<MaybeJump> notNumber = loadDouble(arg, &fpReg, &allocate);
+    JS_ASSERT(!((MaybeJump)notNumber).isSet());
 
     masm.absDouble(fpReg, fpResultReg);
 
@@ -114,8 +114,8 @@ mjit::Compiler::compileRound(FrameEntry *arg, RoundingMode mode)
     FPRegisterID fpReg;
     bool allocate;
 
-    MaybeJump notNumber = loadDouble(arg, &fpReg, &allocate);
-    JS_ASSERT(!notNumber.isSet());
+    DebugOnly<MaybeJump> notNumber = loadDouble(arg, &fpReg, &allocate);
+    JS_ASSERT(!((MaybeJump)notNumber).isSet());
 
     masm.zeroDouble(fpScratchReg);
 
@@ -161,8 +161,8 @@ mjit::Compiler::compileMathSqrt(FrameEntry *arg)
     FPRegisterID fpReg;
     bool allocate;
 
-    MaybeJump notNumber = loadDouble(arg, &fpReg, &allocate);
-    JS_ASSERT(!notNumber.isSet());
+    DebugOnly<MaybeJump> notNumber = loadDouble(arg, &fpReg, &allocate);
+    JS_ASSERT(!((MaybeJump)notNumber).isSet());
 
     masm.sqrtDouble(fpReg, fpResultReg);
 
@@ -184,8 +184,8 @@ mjit::Compiler::compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2)
     FPRegisterID fpReg;
     bool allocate;
 
-    MaybeJump notNumber = loadDouble(arg1, &fpReg, &allocate);
-    JS_ASSERT(!notNumber.isSet());
+    DebugOnly<MaybeJump> notNumber = loadDouble(arg1, &fpReg, &allocate);
+    JS_ASSERT(!((MaybeJump)notNumber).isSet());
 
     /* Slow path for -Infinity (must return Infinity, not NaN). */
     masm.slowLoadConstantDouble(js_NegativeInfinity, fpResultReg);
