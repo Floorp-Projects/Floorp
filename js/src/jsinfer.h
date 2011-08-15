@@ -48,6 +48,7 @@
 #include "jstl.h"
 #include "jsprvtd.h"
 #include "jsvalue.h"
+#include "jshashtable.h"
 
 namespace js {
     class CallArgs;
