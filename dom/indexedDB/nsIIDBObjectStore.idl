@@ -46,10 +46,6 @@ interface nsIIDBTransaction;
 interface nsIVariant;
 interface nsIDOMDOMStringList;
 
-%{C++
-#include "jspubtd.h"
-%}
-
 /**
  * nsIIDBObjectStore interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
