@@ -1384,8 +1384,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       switch (aProperty) {
         case eCSSProperty_font_stretch: {
           // Animate just like eUnit_Integer.
-          PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
-                                    aCoeff2 * double(aValue2.GetIntValue()));
+          PRInt32 result = floor(aCoeff1 * double(aValue1.GetIntValue()) +
+                                 aCoeff2 * double(aValue2.GetIntValue()));
           if (result < NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED) {
             result = NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED;
           } else if (result > NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED) {
@@ -1409,8 +1409,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
     case eUnit_Integer: {
       // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
       // says we should use floor
-      PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
-                                aCoeff2 * double(aValue2.GetIntValue()));
+      PRInt32 result = floor(aCoeff1 * double(aValue1.GetIntValue()) +
+                             aCoeff2 * double(aValue2.GetIntValue()));
       if (aProperty == eCSSProperty_font_weight) {
         if (result < 100) {
           result = 100;

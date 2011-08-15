@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=678671
+-->
+<head>
+  <title>Test for Bug 678671</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678671">Mozilla Bug 678671</a>
+<p id="display"></p>
+<div id="content"></div>
+<script type="application/javascript">
+
+/** Test for Bug 678671 **/
+
+/**
+ * Test 'ex' and 'ch' units in every place we possible can to make
+ * sure they don't cause an infinite loop.
+ */
+
+var content = document.getElementById("content");
+var cs = getComputedStyle(content, "");
+
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (info.backend_only) {
+    continue;
+  }
+  function test_val(v) {
+    content.style.setProperty(prop, v, "");
+    isnot(get_computed_value(cs, prop), "",
+      "Setting '" + prop + "' to '" + v + "' should not cause infinite loop");
+  }
+  test_val('3ex');
+  test_val('2ch');
+  function test_replaced_values(value_list) {
+    // For each item in value_list, if it looks like it has a dimension
+    // in it, replace those dimensions with 3ex and 2ch and test it.
+    for (var i = 0; i < value_list.length; ++i) {
+      var value = value_list[i];
+      function try_replace(withval) {
+        var rep = value.replace(/[0-9.]+[a-zA-Z]+/g, withval)
+        if (rep != value) {
+          test_val(rep);
+        }
+      }
+      try_replace('3ex');
+      try_replace('2ch');
+    }
+  }
+  test_replaced_values(info.initial_values);
+  test_replaced_values(info.other_values);
+  content.style.removeProperty(prop);
+}
+
+</script>
+</pre>
+</body>
+</html>

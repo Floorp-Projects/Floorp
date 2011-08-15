@@ -443,14 +443,14 @@
                             oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
 #endif
                   </setting>
-                  <setting id="prefs-uilanguage" title="&language.title;" type="control">
+                  <setting id="prefs-uilanguage" title="&language.title;" type="menulist">
                     <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
                       <menupopup>
                         <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
                       </menupopup>
                     </menulist>
                   </setting>
-                  <setting id="prefs-homepage" title="&homepage.title;" type="control">
+                  <setting id="prefs-homepage" title="&homepage.title;" type="menulist">
                     <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
                       <menupopup onpopupshowing="PreferencesView.updateHomePageList();">
                         <menuitem id="prefs-homepage-default" label="&homepage.default;" value="default"/>
@@ -625,6 +625,9 @@
           </richlistitem>
           <richlistitem class="context-command" id="context-paste" type="paste" onclick="ContextCommands.paste();">
             <label value="&paste.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-paste-n-go" type="paste-url" onclick="ContextCommands.pasteAndGo();">
+            <label value="&pasteAndGo.label;"/>
           </richlistitem>
           <richlistitem class="context-command" id="context-select-all" type="select-all" onclick="ContextCommands.selectAll();">
             <label value="&selectAll.label;"/>

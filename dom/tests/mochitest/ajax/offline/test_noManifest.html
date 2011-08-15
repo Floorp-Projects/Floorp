@@ -2,7 +2,6 @@
 <head>
 <title>bad manifest content type</title>
 
-<script type="text/javascript" src="/MochiKit/packed.js"></script>
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
@@ -25,10 +24,6 @@ is(typeof(applicationCache), "object");
 is(applicationCache.mozLength, 0, "applicationCache.mozLength should be 0");
 is(applicationCache.status, 0, "applicationCache.status should be 0 (UNCACHED)");
 
-expectInvalidState(function() { applicationCache.mozAdd("http://mochi.test:8888/MochiKit/packed.js"); },
-                   "applicationCache.mozAdd should throw INVALID_STATE_ERR");
-expectInvalidState(function() { applicationCache.mozRemove("http://mochi.test:8888/MochiKit/packed.js"); },
-                   "applicationCache.mozRemove should throw INVALID_STATE_ERR");
 expectInvalidState(function() { applicationCache.update(); },
                    "applicationCache.update should throw INVALID_STATE_ERR");
 expectInvalidState(function() { applicationCache.swapCache(); },

@@ -1,0 +1,20 @@
+# Introduction
+
+This is the Orion editor packaged for Mozilla.
+
+The Orion editor web site: http://www.eclipse.org/orion
+
+# Upgrade
+
+To upgrade Orion to a newer version see the UPGRADE file.
+
+Orion version: git clone from 2011-07-06 (after the 0.2 release)
+               commit hash b19bc0b0f4e2843823bb1b8c8b4a64395c59e617
+
+# License
+
+The following files are licensed according to the contents in the LICENSE
+file:
+  orion.js
+  orion.css
+

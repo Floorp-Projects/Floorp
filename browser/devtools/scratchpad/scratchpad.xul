@@ -78,6 +78,8 @@
   <command id="sp-cmd-resetContext" oncommand="Scratchpad.resetContext();"/>
   <command id="sp-cmd-errorConsole" oncommand="Scratchpad.openErrorConsole();" disabled="true"/>
   <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
+  <command id="sp-cmd-undo" oncommand="Scratchpad.undo();" disabled="true"/>
+  <command id="sp-cmd-redo" oncommand="Scratchpad.redo();" disabled="true"/>
 </commandset>
 
 <keyset id="sp-keyset">
@@ -116,8 +118,10 @@
        key="&pasteCmd.key;"
        modifiers="accel"/>
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
-  <key id="key_undo" key="&undoCmd.key;" modifiers="accel"/>
-  <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"/>
+  <key id="key_undo" key="&undoCmd.key;" modifiers="accel"
+       oncommand="Scratchpad.undo();"/>
+  <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"
+       oncommand="Scratchpad.redo();"/>
   <key id="sp-key-run"
        key="&run.key;"
        command="sp-cmd-run"
@@ -185,19 +189,18 @@
 
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
-    <menupopup id="sp-menu_editpopup">
+    <menupopup id="sp-menu_editpopup"
+               onpopupshowing="Scratchpad.onEditPopupShowing()">
       <menuitem id="sp-menu-undo"
                 label="&undoCmd.label;"
                 key="key_undo"
                 accesskey="&undoCmd.accesskey;"
-                disabled="true"
-                command="cmd_undo"/>
+                command="sp-cmd-undo"/>
       <menuitem id="sp-menu-redo"
                 label="&redoCmd.label;"
                 key="key_redo"
-                disabled="true"
                 accesskey="&redoCmd.accesskey;"
-                command="cmd_redo"/>
+                command="sp-cmd-redo"/>
       <menuseparator/>
       <menuitem id="sp-menu-cut"
                 label="&cutCmd.label;"
@@ -329,12 +332,8 @@
   </menupopup>
 </popupset>
 
-<textbox id="scratchpad-textbox"
-         class="monospace"
-         multiline="true"
-         flex="1"
-         context="scratchpad-text-popup"
-         placeholder="&textbox.placeholder1;" />
+<hbox id="scratchpad-editor" flex="1" context="scratchpad-text-popup" />
+
 <statusbar id="scratchpad-statusbar" align="end">
   <statusbarpanel id="scratchpad-status"
                   label="&contentContext.label;"

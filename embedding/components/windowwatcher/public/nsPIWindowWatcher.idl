@@ -48,10 +48,6 @@ interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
 
-%{C++
-#include "jspubtd.h"
-%}
-
 [uuid(8624594a-28d7-4bc3-8d12-b1c2b9eefd90)]
 
 interface nsPIWindowWatcher : nsISupports

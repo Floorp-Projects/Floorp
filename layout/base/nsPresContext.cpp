@@ -1279,16 +1279,6 @@ nsPresContext::SetImageAnimationModeExternal(PRUint16 aMode)
   SetImageAnimationModeInternal(aMode);
 }
 
-already_AddRefed<nsFontMetrics>
-nsPresContext::GetMetricsFor(const nsFont& aFont, PRBool aUseUserFontSet)
-{
-  nsFontMetrics* metrics = nsnull;
-  mDeviceContext->GetMetricsFor(aFont, mLanguage,
-                                aUseUserFontSet ? GetUserFontSet() : nsnull,
-                                metrics);
-  return metrics;
-}
-
 const nsFont*
 nsPresContext::GetDefaultFont(PRUint8 aFontID) const
 {

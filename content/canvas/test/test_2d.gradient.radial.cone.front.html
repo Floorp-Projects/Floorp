@@ -1,6 +1,5 @@
 <!DOCTYPE HTML>
 <title>Canvas test: 2d.gradient.radial.cone.front</title>
-<script src="/MochiKit/packed.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
@@ -20,7 +19,7 @@ function isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
 }
 
 SimpleTest.waitForExplicitFinish();
-MochiKit.DOM.addLoadEvent(function () {
+addLoadEvent(function () {
 
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');

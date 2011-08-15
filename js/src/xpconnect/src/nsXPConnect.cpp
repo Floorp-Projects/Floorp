@@ -2596,18 +2596,8 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
 
             /* ParticipatesInCycleCollection means "on the main thread" */
             if (xpc::CompartmentParticipatesInCycleCollection(cx, comp)) {
-                if (gDesiredDebugMode) {
-                    if (!JS_SetDebugModeForCompartment(cx, comp, JS_TRUE))
-                        goto fail;
-                } else {
-                    /*
-                     * Debugging may be turned off with live scripts, so just
-                     * mark future scripts to be compiled into non-debug mode.
-                     * Existing scripts will continue to call JSD callbacks,
-                     * which will have no effect.
-                     */
-                    comp->debugMode = JS_FALSE;
-                }
+                if (!JS_SetDebugModeForCompartment(cx, comp, gDesiredDebugMode))
+                    goto fail;
             }
         }
     }

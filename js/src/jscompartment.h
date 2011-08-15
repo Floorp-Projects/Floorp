@@ -46,6 +46,7 @@
 #include "jsgc.h"
 #include "jsgcstats.h"
 #include "jsobj.h"
+#include "vm/GlobalObject.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -286,6 +287,7 @@ struct TraceMonitor {
     JS_FRIEND_API(void) getCodeAllocStats(size_t &total, size_t &frag_size, size_t &free_size) const;
     JS_FRIEND_API(size_t) getVMAllocatorsMainSize() const;
     JS_FRIEND_API(size_t) getVMAllocatorsReserveSize() const;
+    JS_FRIEND_API(size_t) getTraceMonitorSize() const;
 };
 
 namespace mjit {
@@ -390,7 +392,6 @@ typedef HashSet<ScriptFilenameEntry *,
 struct JS_FRIEND_API(JSCompartment) {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
-    js::gc::Chunk                *chunk;
 
     js::gc::ArenaList            arenas[js::gc::FINALIZE_LIMIT];
     js::gc::FreeLists            freeLists;
@@ -417,6 +418,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
+    bool                         hasDebugModeCodeToDrop;
     js::WrapperMap               crossCompartmentWrappers;
 
 #ifdef JS_METHODJIT
@@ -487,8 +489,13 @@ struct JS_FRIEND_API(JSCompartment) {
     const js::Shape              *initialRegExpShape;
     const js::Shape              *initialStringShape;
 
-    bool                         debugMode;  // true iff debug mode on
-    JSCList                      scripts;    // scripts in this compartment
+  private:
+    enum { DebugFromC = 1, DebugFromJS = 2 };
+
+    uintN                        debugModeBits;  // see debugMode() below
+
+  public:
+    JSCList                      scripts;        // scripts in this compartment
 
     js::NativeIterCache          nativeIterCache;
 
@@ -539,7 +546,18 @@ struct JS_FRIEND_API(JSCompartment) {
 
     BackEdgeMap                  backEdgeTable;
 
+    /*
+     * Weak reference to each global in this compartment that is a debuggee.
+     * Each global has its own list of debuggers.
+     */
+    js::GlobalObjectSet              debuggees;
+
+  public:
+    js::BreakpointSiteMap            breakpointSites;
+
+  private:
     JSCompartment *thisForCtor() { return this; }
+
   public:
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
@@ -561,6 +579,44 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
 
+    /*
+     * There are dueling APIs for debug mode. It can be enabled or disabled via
+     * JS_SetDebugModeForCompartment. It is automatically enabled and disabled
+     * by Debugger objects. Therefore debugModeBits has the DebugFromC bit set
+     * if the C API wants debug mode and the DebugFromJS bit set if debuggees
+     * is non-empty.
+     */
+    bool debugMode() const { return !!debugModeBits; }
+
+    /*
+     * True if any scripts from this compartment are on the JS stack in the
+     * calling thread. cx is a context in the calling thread, and it is assumed
+     * that no other thread is using this compartment.
+     */
+    bool hasScriptsOnStack(JSContext *cx);
+
+  private:
+    /* This is called only when debugMode() has just toggled. */
+    void updateForDebugMode(JSContext *cx);
+
+  public:
+    js::GlobalObjectSet &getDebuggees() { return debuggees; }
+    bool addDebuggee(JSContext *cx, js::GlobalObject *global);
+    void removeDebuggee(JSContext *cx, js::GlobalObject *global,
+                        js::GlobalObjectSet::Enum *debuggeesEnum = NULL);
+    bool setDebugModeFromC(JSContext *cx, bool b);
+
+    js::BreakpointSite *getBreakpointSite(jsbytecode *pc);
+    js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc,
+                                                  JSObject *scriptObject);
+    void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script, JSObject *handler);
+    void clearTraps(JSContext *cx, JSScript *script);
+    bool markBreakpointsIteratively(JSTracer *trc);
+
+  private:
+    void sweepBreakpoints(JSContext *cx);
+
+  public:
     js::WatchpointMap *watchpointMap;
 };
 
