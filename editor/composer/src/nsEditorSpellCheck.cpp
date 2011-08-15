@@ -378,34 +378,22 @@ nsEditorSpellCheck::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aC
 }
 
 NS_IMETHODIMP    
-nsEditorSpellCheck::GetCurrentDictionary(PRUnichar **aDictionary)
+nsEditorSpellCheck::GetCurrentDictionary(nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_TRUE(aDictionary, NS_ERROR_NULL_POINTER);
-
-  *aDictionary = 0;
-
-  nsAutoString dictStr;
-  nsresult rv = mSpellChecker->GetCurrentDictionary(dictStr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aDictionary = ToNewUnicode(dictStr);
-
-  return rv;
+  return mSpellChecker->GetCurrentDictionary(aDictionary);
 }
 
 NS_IMETHODIMP    
-nsEditorSpellCheck::SetCurrentDictionary(const PRUnichar *aDictionary)
+nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
-
-  NS_ENSURE_TRUE(aDictionary, NS_ERROR_NULL_POINTER);
 
   if (!mUpdateDictionaryRunning) {
     mDictWasSetManually = PR_TRUE;
   }
-  return mSpellChecker->SetCurrentDictionary(nsDependentString(aDictionary));
+  return mSpellChecker->SetCurrentDictionary(aDictionary);
 }
 
 NS_IMETHODIMP    
@@ -428,18 +416,12 @@ nsEditorSpellCheck::SaveDefaultDictionary()
   if (!mDictWasSetManually) {
     return NS_OK;
   }
-  PRUnichar *dictName = nsnull;
-  nsresult rv = GetCurrentDictionary(&dictName);
 
-  if (NS_SUCCEEDED(rv) && dictName && *dictName) {
-    rv = Preferences::SetString("spellchecker.dictionary", dictName);
-  }
+  nsAutoString dictName;
+  nsresult rv = GetCurrentDictionary(dictName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (dictName) {
-    nsMemory::Free(dictName);
-  }
-
-  return rv;
+  return Preferences::SetString("spellchecker.dictionary", dictName);
 }
 
 
@@ -522,10 +504,10 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditor* aEditor)
     }
   }
 
-  SetCurrentDictionary(NS_LITERAL_STRING("").get());
+  SetCurrentDictionary(EmptyString());
 
   if (NS_SUCCEEDED(rv) && !dictName.IsEmpty()) {
-    rv = SetCurrentDictionary(dictName.get());
+    rv = SetCurrentDictionary(dictName);
     if (NS_FAILED(rv)) {
       // required dictionary was not available. Try to get a dictionary
       // matching at least language part of dictName: If required dictionary is
@@ -535,7 +517,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditor* aEditor)
       if (dashIdx != -1) {
         langCode.Assign(Substring(dictName, 0, dashIdx));
         // try to use langCode
-        rv = SetCurrentDictionary(langCode.get());
+        rv = SetCurrentDictionary(langCode);
       } else {
         langCode.Assign(dictName);
       }
@@ -550,7 +532,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditor* aEditor)
         for (i = 0; i < count; i++) {
           nsAutoString dictStr(dictList.ElementAt(i));
           if (nsStyleUtil::DashMatchCompare(dictStr, langCode, comparator) &&
-              NS_SUCCEEDED(SetCurrentDictionary(dictStr.get()))) {
+              NS_SUCCEEDED(SetCurrentDictionary(dictStr))) {
               break;
           }
         }
@@ -563,14 +545,14 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditor* aEditor)
   // not work, pick the first one.
   if (editorLang.IsEmpty()) {
     nsAutoString currentDictionary;
-    rv = mSpellChecker->GetCurrentDictionary(currentDictionary);
+    rv = GetCurrentDictionary(currentDictionary);
     if (NS_FAILED(rv) || currentDictionary.IsEmpty()) {
-      rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US").get());
+      rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
       if (NS_FAILED(rv)) {
         nsTArray<nsString> dictList;
         rv = mSpellChecker->GetDictionaryList(&dictList);
         if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
-          SetCurrentDictionary(dictList[0].get());
+          SetCurrentDictionary(dictList[0]);
         }
       }
     }
