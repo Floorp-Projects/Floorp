@@ -125,7 +125,7 @@ const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 const DB_SCHEMA                       = 5;
 const REQ_VERSION                     = 2;
 
-#ifdef MOZ_COMPATABILITY_NIGHTLY
+#ifdef MOZ_COMPATIBILITY_NIGHTLY
 const PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE +
                                     ".nightly";
 #else
