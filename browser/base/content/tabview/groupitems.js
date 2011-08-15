@@ -515,7 +515,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // make some room for the expand button if we're stacked
     let isStacked = (options && options.forceStacked) || this.isStacked();
     if (isStacked)
-      box.height -= 33; // 33px room for the expand button
+      box.height -= this.$expander.height() + 9; // the button height plus padding
 
     return box;
   },
@@ -1266,7 +1266,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   showExpandControl: function GroupItem_showExpandControl() {
     let parentBB = this.getBounds();
     let childBB = this.getChild(0).getBounds();
-    let padding = 7;
     this.$expander
         .show()
         .css({
@@ -1392,15 +1391,17 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     
     let shouldStack = this.shouldStack(childrenToArrange.length + (options.addTab ? 1 : 0));
     let shouldStackArrange = (shouldStack && !this.expanded);
-    let box = this.getContentBounds({forceStacked: shouldStackArrange});
-    
+    let box;
+
     // if we should stack and we're not expanded
     if (shouldStackArrange) {
       this.showExpandControl();
+      box = this.getContentBounds({forceStacked: true});
       this._stackArrange(childrenToArrange, box, options);
       return false;
     } else {
       this.hideExpandControl();
+      box = this.getContentBounds({forceStacked: false});
       // a dropIndex is returned
       return this._gridArrange(childrenToArrange, box, options);
     }
