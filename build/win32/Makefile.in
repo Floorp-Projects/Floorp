@@ -42,6 +42,8 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+
 ifdef ENABLE_TESTS
 
 ifdef _MSC_VER

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=338427
+-->
+<head>
+  <title>Test for Bug 338427</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=338427">Mozilla Bug 338427</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="editor" lang="testing-XX"></textarea>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 338427 **/
+function init() {
+    var textarea = document.getElementById("editor");
+    var editor = textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+    var spellchecker = editor.getInlineSpellChecker(true);
+    spellchecker.enableRealTimeSpell = true;
+
+    var list = {}, count = {};
+    spellchecker.spellChecker.GetDictionaryList(list, count);
+    if (count.value === 0) {
+        return; // no dictionary, no test possible
+    }
+    var lang = list.value[0];
+    spellchecker.spellChecker.SetCurrentDictionary(lang);
+
+    textarea.addEventListener("focus", function() {
+        var dictionary = "";
+        try {
+            dictionary = spellchecker.spellChecker.GetCurrentDictionary();
+        } catch(e) {}
+        is(dictionary, lang, "Unexpected spell check dictionary");
+        SimpleTest.finish();
+    }, false);
+    textarea.focus();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(init);
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -46,6 +46,27 @@
 #
 topsrcdir=$1
 
+abspath() {
+  if uname -s | grep -q MINGW; then
+    # We have no way to figure out whether we're in gmake or pymake right
+    # now. gmake gives us Unix-style paths while pymake gives us Windows-style
+    # paths, so attempt to handle both.
+    regexes='^\([A-Za-z]:\|\\\\\|\/\) ^\/'
+  else
+    regexes='^\/'
+  fi
+
+  for regex in $regexes; do
+    if echo $1 | grep -q $regex; then
+      echo $1
+      exit 0
+    fi
+  done
+
+  # If we're at this point, we have a relative path
+  echo `pwd`/$1
+}
+
 for _config in "$MOZCONFIG" \
                "$MOZ_MYCONFIG"
 do
@@ -66,7 +87,7 @@ for _config in "$MOZCONFIG" \
                "$HOME/.mozmyconfig.sh"
 do
   if test -f "$_config"; then
-    echo "$_config";
+    echo `abspath $_config`
     exit 0
   fi
 done

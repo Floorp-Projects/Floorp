@@ -46,10 +46,6 @@ interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
 interface nsIDOMEventListener;
 
-%{C++
-#include "jspubtd.h"
-%}
-
 /**
  * IDBDatabase interface.  See
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
