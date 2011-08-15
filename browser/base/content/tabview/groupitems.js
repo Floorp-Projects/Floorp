@@ -744,13 +744,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: _unhide
   // Shows the hidden group.
-  //
-  // Parameters:
-  //   options - various options (see below)
-  //
-  // Possible options:
-  //   immediately - true when no animations should be used
-  _unhide: function GroupItem__unhide(options) {
+  _unhide: function GroupItem__unhide() {
+    let self = this;
+
     this._cancelFadeAwayUndoButtonTimer();
     this.hidden = false;
     this.$undoContainer.remove();
@@ -758,31 +754,20 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.droppable(true);
     this.setTrenches(this.bounds);
 
-    let self = this;
+    iQ(this.container).show().animate({
+      "-moz-transform": "scale(1)",
+      "opacity": 1
+    }, {
+      duration: 170,
+      complete: function() {
+        self._children.forEach(function(child) {
+          iQ(child.container).show();
+        });
 
-    let finalize = function () {
-      self._children.forEach(function(child) {
-        iQ(child.container).show();
-      });
-
-      UI.setActive(self);
-      self._sendToSubscribers("groupShown", { groupItemId: self.id });
-    };
-
-    let $container = iQ(this.container).show();
-
-    if (!options || !options.immediately) {
-      $container.animate({
-        "-moz-transform": "scale(1)",
-        "opacity": 1
-      }, {
-        duration: 170,
-        complete: finalize
-      });
-    } else {
-      $container.css({"-moz-transform": "none", opacity: 1});
-      finalize();
-    }
+        UI.setActive(self);
+        self._sendToSubscribers("groupShown", { groupItemId: self.id });
+      }
+    });
 
     GroupItems.updateGroupCloseButtons();
   },
@@ -800,29 +785,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let remainingGroups = GroupItems.groupItems.filter(function (groupItem) {
       return (groupItem != self && groupItem.getChildren().length);
     });
-
-    let tab = null;
-
     if (!gBrowser._numPinnedTabs && !remainingGroups.length) {
       let emptyGroups = GroupItems.groupItems.filter(function (groupItem) {
         return (groupItem != self && !groupItem.getChildren().length);
       });
       let group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
-      tab = group.newTab(null, {dontZoomIn: true});
+      group.newTab(null, { closedLastTab: true });
     }
 
-    let closed = this.destroy();
-
-    if (!tab)
-      return;
-
-    if (closed) {
-      // Let's make the new tab the selected tab.
-      UI.goToTab(tab);
-    } else {
-      // Remove the new tab and group, if this group is no longer closed.
-      tab._tabViewTabItem.parent.destroy({immediately: true});
-    }
+    this.destroy();
   },
 
   // ----------
@@ -835,10 +806,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   // Options:
   //   immediately - (bool) if true, no animation will be used
-  //
-  // Returns true if the groupItem has been closed, or false otherwise. A group
-  // could not have been closed due to a tab with an onUnload handler (that
-  // waits for user interaction).
   destroy: function GroupItem_destroy(options) {
     let self = this;
 
@@ -847,11 +814,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // In other words, the group "close" event is fired before all browser
     // tabs in the group are closed.  The below code would fire the group "close"
     // event only after all browser tabs in that group are closed.
-    this._children.concat().forEach(function(child) {
+    let shouldRemoveTabItems = [];
+    let toClose = this._children.concat();
+    toClose.forEach(function(child) {
       child.removeSubscriber("close", self._onChildClose);
 
-      if (child.close(true)) {
-        self.remove(child, { dontArrange: true });
+      let removed = child.close(true);
+      if (removed) {
+        shouldRemoveTabItems.push(child);
       } else {
         // child.removeSubscriber() must be called before child.close(), 
         // therefore we call child.addSubscriber() if the tab is not removed.
@@ -859,14 +829,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     });
 
-    if (this._children.length) {
-      if (this.hidden)
-        this.$undoContainer.fadeOut(function() { self._unhide() });
+    if (shouldRemoveTabItems.length != toClose.length) {
+      // remove children without the assiciated tab and show the group item
+      shouldRemoveTabItems.forEach(function(child) {
+        self.remove(child, { dontArrange: true });
+      });
 
-      return false;
+      this.$undoContainer.fadeOut(function() { self._unhide() });
     } else {
       this.close(options);
-      return true;
     }
   },
 
@@ -1847,16 +1818,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Parameters:
   //  url - the new tab should open this url as well
   //  options - the options object
-  //    dontZoomIn - set to true to not zoom into the newly created tab
   //    closedLastTab - boolean indicates the last tab has just been closed
   newTab: function GroupItem_newTab(url, options) {
     if (options && options.closedLastTab)
       UI.closedLastTabInTabView = true;
 
     UI.setActive(this, { dontSetActiveTabInGroup: true });
-
-    let dontZoomIn = !!(options && options.dontZoomIn);
-    return gBrowser.loadOneTab(url || "about:blank", { inBackground: dontZoomIn });
+    gBrowser.loadOneTab(url || "about:blank", { inBackground: false });
   },
 
   // ----------

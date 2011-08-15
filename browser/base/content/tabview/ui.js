@@ -26,7 +26,6 @@
  * Raymond Lee <raymond@appcoast.com>
  * Sean Dunn <seanedunn@yahoo.com>
  * Tim Taubert <tim.taubert@gmx.de>
- * Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,10 +79,6 @@ let UI = {
   // Variable: restoredClosedTab
   // If true, a closed tab has just been restored.
   restoredClosedTab: false,
-
-  // Variable: _isChangingVisibility
-  // Tracks whether we're currently in the process of showing/hiding the tabview.
-  _isChangingVisibility: false,
 
   // Variable: _reorderTabItemsOnShow
   // Keeps track of the <GroupItem>s which their tab items' tabs have been moved
@@ -235,15 +230,6 @@ let UI = {
         self.uninit();
       });
 
-      // ___ setup DOMWillOpenModalDialog message handler
-      let mm = gWindow.messageManager;
-      let callback = this._onDOMWillOpenModalDialog.bind(this);
-      mm.addMessageListener("Panorama:DOMWillOpenModalDialog", callback);
-
-      this._cleanupFunctions.push(function () {
-        mm.removeMessageListener("Panorama:DOMWillOpenModalDialog", callback);
-      });
-
       // ___ setup key handlers
       this._setTabViewFrameKeyHandlers();
 
@@ -285,10 +271,6 @@ let UI = {
         TabItems.saveAll(true);
         self._save();
       }, false);
-
-      // ___ load frame script
-      let frameScript = "chrome://browser/content/tabview-content.js";
-      gWindow.messageManager.loadFrameScript(frameScript, true);
 
       // ___ Done
       this._frameInitialized = true;
@@ -495,10 +477,8 @@ let UI = {
   // Parameters:
   //   zoomOut - true for zoom out animation, false for nothing.
   showTabView: function UI_showTabView(zoomOut) {
-    if (this.isTabViewVisible() || this._isChangingVisibility)
+    if (this.isTabViewVisible())
       return;
-
-    this._isChangingVisibility = true;
 
     // initialize the direction of the page
     this._initPageDirection();
@@ -542,7 +522,6 @@ let UI = {
         self.setActive(item);
 
         self._resize(true);
-        self._isChangingVisibility = false;
         dispatchEvent(event);
 
         // Flush pending updates
@@ -552,7 +531,6 @@ let UI = {
       });
     } else {
       self.clearActiveTab();
-      self._isChangingVisibility = false;
       dispatchEvent(event);
 
       // Flush pending updates
@@ -569,10 +547,8 @@ let UI = {
   // Function: hideTabView
   // Hides TabView and shows the main browser UI.
   hideTabView: function UI_hideTabView() {
-    if (!this.isTabViewVisible() || this._isChangingVisibility)
+    if (!this.isTabViewVisible())
       return;
-
-    this._isChangingVisibility = true;
 
     // another tab might be select if user decides to stay on a page when
     // a onclose confirmation prompts.
@@ -599,8 +575,6 @@ let UI = {
     this.setTitlebarColors(false);
 #endif
     Storage.saveVisibilityData(gWindow, "false");
-
-    this._isChangingVisibility = false;
 
     let event = document.createEvent("Events");
     event.initEvent("tabviewhidden", true, false);
@@ -775,14 +749,21 @@ let UI = {
               groupItem._children.length == 1 && 
               groupItem._children[0].tab == tab);
 
-          // 2) When a blank tab is active while restoring a closed tab the
+          // 2) Take care of the case where you've closed the last tab in
+          // an un-named groupItem, which means that the groupItem is gone (null) and
+          // there are no visible tabs. 
+          let closingUnnamedGroup = (groupItem == null &&
+              gBrowser.visibleTabs.length <= 1); 
+
+          // 3) When a blank tab is active while restoring a closed tab the
           // blank tab gets removed. The active group is not closed as this is
           // where the restored tab goes. So do not show the TabView.
           let tabItem = tab && tab._tabViewTabItem;
           let closingBlankTabAfterRestore =
             (tabItem && tabItem.isRemovedAfterRestore);
 
-          if (closingLastOfGroup && !closingBlankTabAfterRestore) {
+          if ((closingLastOfGroup || closingUnnamedGroup) &&
+              !closingBlankTabAfterRestore) {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
             self.showTabView();
@@ -902,14 +883,8 @@ let UI = {
 
     // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
-    if (this.isTabViewVisible()) {
-      // Unhide the group of the tab the user is activating.
-      if (tab && tab._tabViewTabItem && tab._tabViewTabItem.parent &&
-          tab._tabViewTabItem.parent.hidden)
-        tab._tabViewTabItem.parent._unhide({immediately: true});
-
+    if (this.isTabViewVisible())
       this.hideTabView();
-    }
 
     // another tab might be selected when hideTabView() is invoked so a
     // validation is needed.
@@ -941,27 +916,6 @@ let UI = {
       if (GroupItems.getActiveGroupItem())
         GroupItems._updateTabBar();
     }
-  },
-
-  // ----------
-  // Function: _onDOMWillOpenModalDialog
-  // Called when a web page is about to show a modal dialog.
-  _onDOMWillOpenModalDialog: function UI__onDOMWillOpenModalDialog(cx) {
-    if (!this.isTabViewVisible())
-      return;
-
-    let index = gBrowser.browsers.indexOf(cx.target);
-    if (index == -1)
-      return;
-
-    let tab = gBrowser.tabs[index];
-
-    // When TabView is visible, we need to call onTabSelect to make sure that
-    // TabView is hidden and that the correct group is activated. When a modal
-    // dialog is shown for currently selected tab the onTabSelect event handler
-    // is not called, so we need to do it.
-    if (gBrowser.selectedTab == tab && this._currentTab == tab)
-      this.onTabSelect(tab);
   },
 
   // ----------
