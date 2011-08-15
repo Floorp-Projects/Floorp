@@ -42,32 +42,6 @@ const TEST_UNICODE_ARGS = ["M\u00F8z\u00EEll\u00E5",
                            "\u09AE\u09CB\u099C\u09BF\u09B2\u09BE",
                            "\uD808\uDE2C\uD808\uDF63\uD808\uDDB7"];
 
-var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-
-function get_test_program(prog)
-{
-  var progPath = do_get_cwd();
-  progPath.append(prog);
-  if (isWindows)
-    progPath.leafName = progPath.leafName + ".exe";
-  return progPath;
-}
-
-function set_environment()
-{
-  var envSvc = Components.classes["@mozilla.org/process/environment;1"].
-    getService(Components.interfaces.nsIEnvironment);
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].
-    getService(Components.interfaces.nsIProperties);
-  var greDir = dirSvc.get("GreD", Components.interfaces.nsIFile);
-
-  envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
-  // For Linux
-  envSvc.set("LD_LIBRARY_PATH", greDir.path);
-  //XXX: handle windows
-}
-
-
 // test if a process can be started, polled for its running status
 // and then killed
 function test_kill()
@@ -231,35 +205,8 @@ function test_notify_killed()
   process.kill();
 }
 
-// test if killing a process that is already finished doesn't crash
-function test_kill_2()
-{
-  var file = get_test_program("TestQuickReturn");
-  var thread = Components.classes["@mozilla.org/thread-manager;1"]
-                         .getService().currentThread;
-
-  for (var i = 0; i < 1000; i++) {
-    var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
-    process.init(file);
-
-    process.run(false, [], 0);
-
-    try {
-      process.kill();
-    }
-    catch (e) { }
-
-    // We need to ensure that we process any events on the main thread -
-    // this allow threads to clean up properly and avoid out of memory
-    // errors during the test.
-    while (thread.hasPendingEvents())
-      thread.processNextEvent(false);
-  }
-}
-
 function run_test() {
-  set_environment();
+  set_process_running_environment();
   test_kill();
   test_quick();
   test_arguments();
@@ -267,5 +214,4 @@ function run_test() {
   test_unicode_app();
   do_test_pending();
   test_notify_blocking();
-  test_kill_2();
 }
