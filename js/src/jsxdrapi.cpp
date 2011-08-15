@@ -54,6 +54,7 @@
 #include "jsscript.h"           /* js_XDRScript */
 #include "jsstr.h"
 #include "jsxdrapi.h"
+#include "vm/Debugger.h"
 
 #include "jsobjinlines.h"
 
@@ -717,12 +718,13 @@ JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
-        js_CallNewScriptHook(xdr->cx, script, NULL);
         *scriptObjp = js_NewScriptObject(xdr->cx, script);
         if (!*scriptObjp) {
             js_DestroyScript(xdr->cx, script, 8);
             return false;
         }
+        js_CallNewScriptHook(xdr->cx, script, NULL);
+        Debugger::onNewScript(xdr->cx, script, *scriptObjp, Debugger::NewHeldScript);
     }
 
     return true;

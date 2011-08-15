@@ -1778,7 +1778,7 @@ LoopState::analyzeLoopBody(unsigned frame)
     unsigned offset = start;
     while (offset < end) {
         jsbytecode *pc = script->code + offset;
-        uint32 successorOffset = offset + GetBytecodeLength(pc);
+        uint32 successorOffset = offset + analyze::GetBytecodeLength(pc);
 
         analyze::Bytecode *opinfo = analysis->maybeCode(offset);
         if (!opinfo) {

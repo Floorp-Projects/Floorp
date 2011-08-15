@@ -766,6 +766,34 @@ ElementForStyleContext(nsIContent* aParentContent,
   return content->AsElement();
 }
 
+static nsIFrame*
+GetPrevContinuationWithPossiblySameStyle(nsIFrame* aFrame)
+{
+  // Account for {ib} splits when looking for "prevContinuation".  In
+  // particular, for the first-continuation of a part of an {ib} split we
+  // want to use the special prevsibling of the special prevsibling of
+  // aFrame, which should have the same style context as aFrame itself.
+  // In particular, if aFrame is the first continuation of an inline part
+  // of an {ib} split then its special prevsibling is a block, and the
+  // special prevsibling of _that_ is an inline, just like aFrame.
+  // Similarly, if aFrame is the first continuation of a block part of an
+  // {ib} split (an {ib} wrapper block), then its special prevsibling is
+  // an inline and the special prevsibling of that is either another {ib}
+  // wrapper block block or null.
+  nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
+  if (!prevContinuation && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+    // We're the first continuation, so we can just get the frame
+    // property directly
+    prevContinuation = static_cast<nsIFrame*>(
+      aFrame->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+    if (prevContinuation) {
+      prevContinuation = static_cast<nsIFrame*>(
+        prevContinuation->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+    }
+  }
+  return prevContinuation;
+}
+
 nsresult
 nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
 {
@@ -831,7 +859,8 @@ nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
     }
 #endif
 
-    nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
+    nsIFrame *prevContinuation =
+      GetPrevContinuationWithPossiblySameStyle(aFrame);
     nsStyleContext *prevContinuationContext;
     PRBool copyFromContinuation =
       prevContinuation &&
@@ -1147,12 +1176,35 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                        nextContinuationContext->GetParent(),
                      "continuations should have the same style context");
       }
+      // And assert the same thing for {ib} splits.  See the comments in
+      // GetPrevContinuationWithPossiblySameStyle for an explanation of
+      // why we step two forward in the special sibling chain.
+      if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+          !aFrame->GetPrevContinuation()) {
+        nsIFrame *nextIBSibling = static_cast<nsIFrame*>(
+          aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+        if (nextIBSibling) {
+          nextIBSibling = static_cast<nsIFrame*>(
+            nextIBSibling->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+        }
+        if (nextIBSibling) {
+          nsStyleContext *nextIBSiblingContext =
+            nextIBSibling->GetStyleContext();
+          NS_ASSERTION(oldContext == nextIBSiblingContext ||
+                       oldContext->GetPseudo() !=
+                         nextIBSiblingContext->GetPseudo() ||
+                       oldContext->GetParent() !=
+                         nextIBSiblingContext->GetParent(),
+                       "continuations should have the same style context");
+        }
+      }
     }
 #endif
 
     // do primary context
     nsRefPtr<nsStyleContext> newContext;
-    nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
+    nsIFrame *prevContinuation =
+      GetPrevContinuationWithPossiblySameStyle(aFrame);
     nsStyleContext *prevContinuationContext;
     PRBool copyFromContinuation =
       prevContinuation &&
@@ -1171,7 +1223,15 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                    "non pseudo-element frame without content node");
       newContext = styleSet->ResolveStyleForNonElement(parentContext);
     }
-    else if (!aRestyleHint) {
+    else if (!aRestyleHint && !prevContinuation) {
+      // Unfortunately, if prevContinuation is non-null then we may have
+      // already stolen the restyle tracker entry for this element while
+      // processing prevContinuation.  So we don't know whether aRestyleHint
+      // should really be 0 here or whether it should be eRestyle_Self.  Be
+      // pessimistic and force an actual reresolve in that situation.  The good
+      // news is that in the common case when prevContinuation is non-null we
+      // just used prevContinuationContext anyway and aren't reaching this code
+      // to start with.
       newContext =
         styleSet->ReparentStyleContext(oldContext, parentContext,
                                        ElementForStyleContext(aParentContent,

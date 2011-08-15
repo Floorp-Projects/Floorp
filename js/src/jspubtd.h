@@ -166,6 +166,7 @@ typedef struct JSCrossCompartmentCall JSCrossCompartmentCall;
 typedef struct JSStructuredCloneWriter JSStructuredCloneWriter;
 typedef struct JSStructuredCloneReader JSStructuredCloneReader;
 typedef struct JSStructuredCloneCallbacks JSStructuredCloneCallbacks;
+typedef struct JSPropertyName    JSPropertyName;
 
 #ifdef __cplusplus
 typedef class JSWrapper          JSWrapper;

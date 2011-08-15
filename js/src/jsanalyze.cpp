@@ -308,7 +308,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     PodZero(escapedSlots, numSlots);
 
-    if (script->usesEval || script->usesArguments || script->compartment->debugMode) {
+    if (script->usesEval || script->usesArguments || script->compartment->debugMode()) {
         for (unsigned i = 0; i < nargs; i++)
             escapedSlots[ArgSlot(i)] = true;
     } else {
@@ -319,7 +319,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         }
     }
 
-    if (script->usesEval || script->compartment->debugMode) {
+    if (script->usesEval || script->compartment->debugMode()) {
         for (unsigned i = 0; i < script->nfixed; i++) {
             escapedSlots[LocalSlot(script, i)] = true;
             setLocal(i, LOCAL_USE_BEFORE_DEF);
@@ -341,13 +341,13 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
      * If the script is in debug mode, JS_SetFrameReturnValue can be called at
      * any safe point.
      */
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         usesRval = true;
 
     isInlineable = true;
     if (script->nClosedArgs || script->nClosedVars || script->nfixed >= LOCAL_LIMIT ||
         (script->hasFunction && script->function()->isHeavyweight()) ||
-        script->usesEval || script->usesArguments || cx->compartment->debugMode) {
+        script->usesEval || script->usesArguments || cx->compartment->debugMode()) {
         isInlineable = false;
     }
 

@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486990
 <window title="Mozilla Bug 486990"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="setTimeout(runTests, 0);">
-  <script type="application/javascript" src="/MochiKit/packed.js"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
 

@@ -300,7 +300,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i)
        */
       case OptionKindString:
       {
-        char *value;
+        char *value = NULL;
         if (Result r = extractValue(argc, argv, i, &value))
             return r;
         opt->asStringOption()->value = value;
@@ -308,7 +308,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i)
       }
       case OptionKindInt:
       {
-        char *value;
+        char *value = NULL;
         if (Result r = extractValue(argc, argv, i, &value))
             return r;
         opt->asIntOption()->value = atoi(value);
@@ -316,7 +316,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i)
       }
       case OptionKindMultiString:
       {
-        char *value;
+        char *value = NULL;
         if (Result r = extractValue(argc, argv, i, &value))
             return r;
         StringArg arg(value, *i);

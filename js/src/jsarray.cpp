@@ -342,6 +342,32 @@ IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
     return ReallyBigIndexToId(cx, index, idp);
 }
 
+bool
+JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
+{
+    JS_ASSERT(isArray());
+
+    if (isDenseArray()) {
+        if (i >= getArrayLength())
+            vp->setMagic(JS_ARRAY_HOLE);
+        else
+            *vp = getDenseArrayElement(uint32(i));
+        return true;
+    }
+
+    JSBool hole;
+    jsid id;
+    if (!IndexToId(cx, this, i, &hole, &id))
+        return false;
+
+    const Shape *shape = nativeLookup(id);
+    if (!shape || !shape->isDataDescriptor())
+        vp->setMagic(JS_ARRAY_HOLE);
+    else
+        *vp = getSlot(shape->slot);
+    return true;
+}
+
 /*
  * If the property at the given index exists, get its value into location
  * pointed by vp and set *hole to false. Otherwise set *hole to true and *vp

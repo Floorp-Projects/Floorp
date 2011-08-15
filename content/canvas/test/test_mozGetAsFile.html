@@ -22,7 +22,7 @@ function compareAsync(file, canvas, type)
 }
 
 SimpleTest.waitForExplicitFinish();
-MochiKit.DOM.addLoadEvent(function () {
+addLoadEvent(function () {
 
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');

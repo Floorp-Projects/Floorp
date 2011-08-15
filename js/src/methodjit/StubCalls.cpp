@@ -50,6 +50,7 @@
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jsiter.h"
 #include "jstypes.h"
+#include "vm/Debugger.h"
 #include "vm/String.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -1203,13 +1204,20 @@ stubs::Mod(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::Debugger(VMFrame &f, jsbytecode *pc)
+stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
 {
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
-    if (handler) {
+    if (handler || !f.cx->compartment->getDebuggees().empty()) {
+        JSTrapStatus st = JSTRAP_CONTINUE;
         Value rval;
-        switch (handler(f.cx, f.script(), f.pc(), Jsvalify(&rval),
-                        f.cx->debugHooks->debuggerHandlerData)) {
+        if (handler) {
+            st = handler(f.cx, f.script(), pc, Jsvalify(&rval),
+                         f.cx->debugHooks->debuggerHandlerData);
+        }
+        if (st == JSTRAP_CONTINUE)
+            st = Debugger::onDebuggerStatement(f.cx, &rval);
+
+        switch (st) {
           case JSTRAP_THROW:
             f.cx->setPendingException(rval);
             THROW();
@@ -1268,7 +1276,7 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
     }
 
     if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))
-        result = JS_HandleTrap(f.cx, f.script(), f.pc(), Jsvalify(&rval));
+        result = Debugger::onTrap(f.cx, &rval);
 
     switch (result) {
       case JSTRAP_THROW:

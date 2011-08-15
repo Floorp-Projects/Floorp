@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Tests for browser context menu</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -589,6 +588,7 @@ function startTest() {
     iframe = subwindow.document.getElementById("test-iframe");
     textarea = subwindow.document.getElementById("test-textarea");
     contenteditable = subwindow.document.getElementById("test-contenteditable");
+    contenteditable.focus(); // content editable needs to be focused to enable spellcheck
     inputspell = subwindow.document.getElementById("test-input-spellcheck");
     pagemenu = subwindow.document.getElementById("test-pagemenu");
 

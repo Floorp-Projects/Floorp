@@ -11,8 +11,6 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the nsTryToClose component.
- *
  * The Initial Developer of the Original Code is
  * the Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2011
@@ -42,6 +40,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -49,7 +48,7 @@ const PAYLOAD_VERSION = 1;
 const PREF_SERVER = "toolkit.telemetry.server";
 const PREF_ENABLED = "toolkit.telemetry.enabled";
 // Do not gather data more than once a minute
-const TELEMETRY_INTERVAL = 60;
+const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = 60000;
 // about:memory values to turn into histograms
@@ -64,6 +63,8 @@ const MEM_HISTOGRAMS = {
   "heap-allocated": "MEMORY_HEAP_ALLOCATED",
   "page-faults-hard": "PAGE_FAULTS_HARD"
 };
+
+var gLastMemoryPoll = null;
 
 function getLocale() {
   return Cc["@mozilla.org/chrome/chrome-registry;1"].
@@ -221,6 +222,54 @@ TelemetryPing.prototype = {
   },
 
   /**
+   * Descriptive metadata
+   * 
+   * @param  reason
+   *         The reason for the telemetry ping, this will be included in the
+   *         returned metadata,
+   * @return The metadata as a JS object
+   */
+  getMetadata: function getMetadata(reason) {
+    let ai = Services.appinfo;
+    let ret = {
+      reason: reason,
+      OS: ai.OS,
+      appID: ai.ID,
+      appVersion: ai.version,
+      appName: ai.name,
+      appBuildID: ai.appBuildID,
+      platformBuildID: ai.platformBuildID,
+    };
+
+    // sysinfo fields are not always available, get what we can.
+    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+    let fields = ["cpucount", "memsize", "arch", "version", "device", "manufacturer", "hardware"];
+    for each (let field in fields) {
+      let value;
+      try {
+        value = sysInfo.getProperty(field);
+      } catch (e) {
+        continue
+      }
+      if (field == "memsize") {
+        // Send RAM size in megabytes. Rounding because sysinfo doesn't
+        // always provide RAM in multiples of 1024.
+        value = Math.round(value / 1024 / 1024)
+      }
+      ret[field] = value
+    }
+
+    let theme = LightweightThemeManager.currentTheme;
+    if (theme)
+      ret.persona = theme.id;
+
+    if (this._addons)
+      ret.addons = this._addons;
+
+    return ret;
+  },
+
+  /**
    * Pull values from about:memory into corresponding histograms
    */
   gatherMemory: function gatherMemory() {
@@ -286,10 +335,11 @@ TelemetryPing.prototype = {
     this.gatherMemory();
     let payload = {
       ver: PAYLOAD_VERSION,
-      info: getMetadata(reason),
+      info: this.getMetadata(reason),
       simpleMeasurements: getSimpleMeasurements(),
       histograms: getHistograms()
     };
+
     let isTestPing = (reason == "test-ping");
     // Generate a unique id once per session so the server can cope with duplicate submissions.
     // Use a deterministic url for testing.
@@ -329,19 +379,15 @@ TelemetryPing.prototype = {
   attachObservers: function attachObservers() {
     if (!this._initialized)
       return;
-    let idleService = Cc["@mozilla.org/widget/idleservice;1"].
-                      getService(Ci.nsIIdleService);
-    idleService.addIdleObserver(this, TELEMETRY_INTERVAL);
+    Services.obs.addObserver(this, "cycle-collector-begin", false);
     Services.obs.addObserver(this, "idle-daily", false);
   },
 
   detachObservers: function detachObservers() {
     if (!this._initialized)
       return;
-    let idleService = Cc["@mozilla.org/widget/idleservice;1"].
-                      getService(Ci.nsIIdleService);
-    idleService.removeIdleObserver(this, TELEMETRY_INTERVAL);
     Services.obs.removeObserver(this, "idle-daily");
+    Services.obs.removeObserver(this, "cycle-collector-begin");
   },
 
   /**
@@ -395,14 +441,22 @@ TelemetryPing.prototype = {
     var server = this._server;
 
     switch (aTopic) {
+    case "Add-ons":
+      this._addons = aData;
+      break;
     case "profile-after-change":
       this.setup();
       break;
     case "profile-before-change":
       this.uninstall();
       break;
-    case "idle":
-      this.gatherMemory();
+    case "cycle-collector-begin":
+      let now = new Date();
+      if (!gLastMemoryPoll
+          || (TELEMETRY_INTERVAL <= now - gLastMemoryPoll)) {
+        gLastMemoryPoll = now;
+        this.gatherMemory();
+      }
       break;
     case "private-browsing":
       Telemetry.canRecord = aData == "exit";

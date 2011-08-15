@@ -100,13 +100,6 @@ PushMarkStack(GCMarker *gcmarker, JSShortString *thing);
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *thing);
 
-static void
-volatile_memcpy(volatile unsigned char *dst, const void *src, size_t n)
-{
-    for (size_t i = 0; i < n; i++)
-        dst[i] = ((char *)src)[i];
-}
-
 template<typename T>
 static inline void
 CheckMarkedThing(JSTracer *trc, T *thing)
@@ -131,15 +124,9 @@ Mark(JSTracer *trc, T *thing)
 
     JSRuntime *rt = trc->context->runtime;
 
-    if (rt->gcCheckCompartment && thing->compartment() != rt->gcCheckCompartment &&
-        thing->compartment() != rt->atomsCompartment)
-    {
-        volatile unsigned char dbg[sizeof(T) + 2];
-        dbg[0] = 0xab;
-        dbg[1] = 0xcd;
-        volatile_memcpy(dbg + 2, thing, sizeof(T));
-        JS_Assert("compartment mismatch in GC", __FILE__, __LINE__);
-    }
+    JS_OPT_ASSERT_IF(rt->gcCheckCompartment,
+                     thing->compartment() == rt->gcCheckCompartment ||
+                     thing->compartment() == rt->atomsCompartment);
 
     /*
      * Don't mark things outside a compartment if we are in a per-compartment

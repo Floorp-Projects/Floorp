@@ -227,7 +227,7 @@ public:
     gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
     gfxUserFontSet* GetUserFontSet() { return mFontGroup->GetUserFontSet(); }
 
-    PRInt32 AppUnitsPerDevPixel() { return mP2A; }
+    PRUint32 AppUnitsPerDevPixel() { return mP2A; }
 
 protected:
     const gfxFont::Metrics& GetMetrics() const;
@@ -236,7 +236,7 @@ protected:
     nsRefPtr<gfxFontGroup> mFontGroup;
     nsCOMPtr<nsIAtom> mLanguage;
     nsDeviceContext *mDeviceContext;
-    PRInt32 mP2A;
+    PRUint32 mP2A;
     PRPackedBool mTextRunRTL;
 };
 
