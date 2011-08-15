@@ -54,7 +54,7 @@
  *                            |
  *                        filePath
  */
-[scriptable, uuid(eab18ad5-e3be-4eb3-9c78-7d4e750200d6)]
+[scriptable, uuid(067d697a-c725-4293-9656-e658a75e6bcf)]
 interface nsIURL : nsIURI
 {
     /*************************************************************************

@@ -248,6 +248,20 @@ nsJARURI::GetSpec(nsACString &aSpec)
 }
 
 NS_IMETHODIMP
+nsJARURI::GetSpecIgnoringRef(nsACString &aSpec)
+{
+    nsCAutoString entrySpec;
+    mJAREntry->GetSpecIgnoringRef(entrySpec);
+    return FormatSpec(entrySpec, aSpec);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetHasRef(PRBool *result)
+{
+    return mJAREntry->GetHasRef(result);
+}
+
+NS_IMETHODIMP
 nsJARURI::SetSpec(const nsACString& aSpec)
 {
     return SetSpecWithBase(aSpec, nsnull);
