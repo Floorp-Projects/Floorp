@@ -170,8 +170,7 @@ NS_IMETHODIMP nsPassErrorToWifiListeners::Run()
 {
   LOG(("About to send error to the wifi listeners\n"));
   for (PRInt32 i = 0; i < mListeners->Count(); i++) {
-    nsresult rv = (*mListeners)[i]->OnError(mResult);
-    LOG( ("... sent %d\n", rv));
+    (*mListeners)[i]->OnError(mResult);
   }
   return NS_OK;
 }
@@ -229,9 +228,7 @@ NS_IMETHODIMP nsCallWifiListeners::Run()
 {
   LOG(("About to send data to the wifi listeners\n"));
   for (PRInt32 i = 0; i < mListeners->Count(); i++) {
-    nsresult rv = (*mListeners)[i]->OnChange(mAccessPoints->Elements(),
-                                             mAccessPoints->Length());
-    LOG( ("... sent %d\n", rv));
+    (*mListeners)[i]->OnChange(mAccessPoints->Elements(), mAccessPoints->Length());
   }
   return NS_OK;
 }

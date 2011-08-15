@@ -42,10 +42,6 @@
 interface nsIIDBRequest;
 interface nsIVariant;
 
-%{C++
-#include "jspubtd.h"
-%}
-
 /**
  * IDBCursor interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more

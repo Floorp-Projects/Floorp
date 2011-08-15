@@ -52,7 +52,7 @@ The general format in EBNF is:
     cookie    ::= "|jit-test|"
     item      ::= flag | attribute
 
-    flag      ::= "slow" | "allow-oom"
+    flag      ::= "slow" | "allow-oom" | "valgrind" | "mjitalways" | "debug"
 
     attribute ::= name ":" value
     name      ::= "TMFLAGS" | "error"
@@ -66,6 +66,8 @@ The meaning of the items:
     slow         Test runs slowly. Do not run if the --no-slow option is given.
     allow-oom    If the test runs out of memory, it counts as passing.
     valgrind     Run test under valgrind.
+    mjitalways   Run js with -a, whether --jitflags says to or not
+    debug        Run js with -d, whether --jitflags says to or not
 
     error        The test should be considered to pass iff it throws the
                  given JS exception.

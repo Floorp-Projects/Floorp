@@ -17,6 +17,7 @@ mochikit.jar:
   content/tests/SimpleTest/EventUtils.js (tests/SimpleTest/EventUtils.js)
   content/tests/SimpleTest/ChromeUtils.js (tests/SimpleTest/ChromeUtils.js)
   content/tests/SimpleTest/MozillaLogger.js (tests/SimpleTest/MozillaLogger.js)
+  content/tests/SimpleTest/LogController.js (tests/SimpleTest/LogController.js)
   content/tests/SimpleTest/PluginUtils.js (tests/SimpleTest/PluginUtils.js)
   content/tests/SimpleTest/quit.js (tests/SimpleTest/quit.js)
   content/tests/SimpleTest/setup.js (tests/SimpleTest/setup.js)
@@ -26,6 +27,4 @@ mochikit.jar:
   content/tests/SimpleTest/WindowSnapshot.js (tests/SimpleTest/WindowSnapshot.js)
   content/tests/SimpleTest/mockObjects.js (../../toolkit/content/tests/browser/common/mockObjects.js)
   content/tests/SimpleTest/docshell_helpers.js (../..//docshell/test/chrome/docshell_helpers.js)
-
-  content/MochiKit/packed.js (MochiKit/packed.js)
 

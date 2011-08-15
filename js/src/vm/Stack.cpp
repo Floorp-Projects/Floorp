@@ -434,13 +434,13 @@ StackSpace::mark(JSTracer *trc)
 }
 
 JS_FRIEND_API(bool)
-StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals,
-                            JSCompartment *dest) const
+StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report,
+                            Value *from, ptrdiff_t nvals) const
 {
     assertInvariants();
 
-    JS_ASSERT_IF(dest, cx);
-    bool trusted = !dest || dest->principals == cx->runtime->trustedPrincipals();
+    bool trusted = !cx->compartment ||
+                   cx->compartment->principals == cx->runtime->trustedPrincipals();
     Value *end = trusted ? trustedEnd_ : defaultEnd_;
 
     /*
@@ -568,7 +568,7 @@ ContextStack::containsSlow(const StackFrame *target) const
  */
 Value *
 ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
-                          MaybeExtend extend, bool *pushedSeg, JSCompartment *dest)
+                          MaybeExtend extend, bool *pushedSeg)
 {
     Value *firstUnused = space().firstUnused();
 
@@ -604,12 +604,12 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
 #endif
 
     if (onTop() && extend) {
-        if (!space().ensureSpace(cx, report, firstUnused, nvars, dest))
+        if (!space().ensureSpace(cx, report, firstUnused, nvars))
             return NULL;
         return firstUnused;
     }
 
-    if (!space().ensureSpace(cx, report, firstUnused, VALUES_PER_STACK_SEGMENT + nvars, dest))
+    if (!space().ensureSpace(cx, report, firstUnused, VALUES_PER_STACK_SEGMENT + nvars))
         return NULL;
 
     FrameRegs *regs;
@@ -626,13 +626,6 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
     space().seg_ = seg_;
     *pushedSeg = true;
     return seg_->slotsBegin();
-}
-
-Value *
-ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
-                          MaybeExtend extend, bool *pushedSeg)
-{
-    return ensureOnTop(cx, report, nvars, extend, pushedSeg, cx->compartment);
 }
 
 void
@@ -754,12 +747,11 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
 }
 
 bool
-ContextStack::pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg)
+ContextStack::pushDummyFrame(JSContext *cx, MaybeReportError report, JSObject &scopeChain,
+                             DummyFrameGuard *dfg)
 {
-    JSCompartment *dest = scopeChain.compartment();
-
     uintN nvars = VALUES_PER_STACK_FRAME;
-    Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &dfg->pushedSeg_, dest);
+    Value *firstUnused = ensureOnTop(cx, report, nvars, CAN_EXTEND, &dfg->pushedSeg_);
     if (!firstUnused)
         return NULL;
 
@@ -767,7 +759,6 @@ ContextStack::pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuar
     fp->initDummyFrame(cx, scopeChain);
     dfg->regs_.initDummyFrame(*fp);
 
-    cx->setCompartment(dest);
     dfg->prevRegs_ = seg_->pushRegs(dfg->regs_);
     JS_ASSERT(space().firstUnused() == dfg->regs_.sp);
     dfg->setPushed(*this);
@@ -850,11 +841,24 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 bool
 ContextStack::saveFrameChain()
 {
-    JSCompartment *dest = NULL;
+    /*
+     * The StackSpace uses the context's current compartment to determine
+     * whether to allow access to the privileged end-of-stack buffer.
+     * However, we always want saveFrameChain to have access to this privileged
+     * buffer since it gets used to prepare calling trusted JS. To force this,
+     * we clear the current compartment (which is interpreted by ensureSpace as
+     * 'trusted') and either restore it on OOM or let resetCompartment()
+     * clobber it.
+     */
+    JSCompartment *original = cx_->compartment;
+    cx_->setCompartment(NULL);
 
     bool pushedSeg;
-    if (!ensureOnTop(cx_, REPORT_ERROR, 0, CANT_EXTEND, &pushedSeg, dest))
+    if (!ensureOnTop(cx_, DONT_REPORT_ERROR, 0, CANT_EXTEND, &pushedSeg)) {
+        cx_->setCompartment(original);
+        js_ReportOverRecursed(cx_);
         return false;
+    }
 
     JS_ASSERT(pushedSeg);
     JS_ASSERT(!hasfp());

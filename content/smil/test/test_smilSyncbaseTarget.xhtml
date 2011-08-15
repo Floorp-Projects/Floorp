@@ -2,7 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>Test for syncbase targetting</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -96,7 +95,7 @@ function testSpecs() {
     }
   }
 
-  removeElement(anim);
+  anim.parentNode.removeChild(anim);
 }
 
 function testChangeId() {
@@ -113,7 +112,7 @@ function testChangeId() {
   is(anim.getStartTime(), 2,
      "Unexpected start time after resetting target ID.");
 
-  removeElement(anim);
+  anim.parentNode.removeChild(anim);
 }
 
 function testRemoveTimebase() {
@@ -127,7 +126,7 @@ function testRemoveTimebase() {
   is(a, circle.firstElementChild, "Unexpected document structure");
 
   // Remove timebase
-  removeElement(a);
+  a.parentNode.removeChild(a);
   ok(noStart(anim), "Unexpected start time after removing timebase.");
 
   // Reinsert timebase
@@ -135,7 +134,7 @@ function testRemoveTimebase() {
   ok(!noStart(anim), "Unexpected start time after re-inserting timebase.");
 
   // Remove dependent element
-  removeElement(anim);
+  anim.parentNode.removeChild(anim);
   ok(noStart(anim), "Unexpected start time after removing dependent.");
 
   // Create a new dependent

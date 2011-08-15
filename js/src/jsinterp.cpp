@@ -80,15 +80,17 @@
 #include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
 #endif
+#include "vm/Debugger.h"
+
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 #include "jsprobes.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsopcodeinlines.h"
 #include "jstypedarrayinlines.h"
 
 #include "vm/Stack-inl.h"
@@ -425,23 +427,10 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
 #endif
 
     if (JSFunction *fun = js_ValueToFunction(cx, &vp[0], 0)) {
-        const char *name = thisv.isObject()
-                           ? thisv.toObject().getClass()->name
-                           : thisv.isString()
-                           ? "string"
-                           : thisv.isNumber()
-                           ? "number"
-                           : thisv.isBoolean()
-                           ? "boolean"
-                           : thisv.isNull()
-                           ? js_null_str
-                           : thisv.isUndefined()
-                           ? js_undefined_str
-                           : "value";
         JSAutoByteString funNameBytes;
         if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                                 clasp->name, funName, name);
+                                 clasp->name, funName, InformalValueTypeName(thisv));
         }
     }
 }
@@ -4579,7 +4568,7 @@ BEGIN_CASE(JSOP_TRAP)
     }
 
     Value rval;
-    JSTrapStatus status = JS_HandleTrap(cx, script, regs.pc, Jsvalify(&rval));
+    JSTrapStatus status = Debugger::onTrap(cx, &rval);
     switch (status) {
       case JSTRAP_ERROR:
         goto error;
@@ -5609,25 +5598,27 @@ END_CASE(JSOP_INSTANCEOF)
 
 BEGIN_CASE(JSOP_DEBUGGER)
 {
-    JSDebuggerHandler handler = cx->debugHooks->debuggerHandler;
-    if (handler) {
-        Value rval;
-        switch (handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->debuggerHandlerData)) {
-        case JSTRAP_ERROR:
-            goto error;
-        case JSTRAP_CONTINUE:
-            break;
-        case JSTRAP_RETURN:
-            regs.fp()->setReturnValue(rval);
-            interpReturnOK = JS_TRUE;
-            goto forced_return;
-        case JSTRAP_THROW:
-            cx->setPendingException(rval);
-            goto error;
-        default:;
-        }
-        CHECK_INTERRUPT_HANDLER();
+    JSTrapStatus st = JSTRAP_CONTINUE;
+    Value rval;
+    if (JSDebuggerHandler handler = cx->debugHooks->debuggerHandler)
+        st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->debuggerHandlerData);
+    if (st == JSTRAP_CONTINUE)
+        st = Debugger::onDebuggerStatement(cx, &rval);
+    switch (st) {
+      case JSTRAP_ERROR:
+        goto error;
+      case JSTRAP_CONTINUE:
+        break;
+      case JSTRAP_RETURN:
+        regs.fp()->setReturnValue(rval);
+        interpReturnOK = JS_TRUE;
+        goto forced_return;
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        goto error;
+      default:;
     }
+    CHECK_INTERRUPT_HANDLER();
 }
 END_CASE(JSOP_DEBUGGER)
 
@@ -6139,11 +6130,16 @@ END_CASE(JSOP_ARRAYPUSH)
         atoms = script->atomMap.vector;
 
         /* Call debugger throw hook if set. */
-        handler = cx->debugHooks->throwHook;
-        if (handler) {
+        if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
             Value rval;
-            switch (handler(cx, script, regs.pc, Jsvalify(&rval),
-                            cx->debugHooks->throwHookData)) {
+            JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
+            if (st == JSTRAP_CONTINUE) {
+                handler = cx->debugHooks->throwHook;
+                if (handler)
+                    st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->throwHookData);
+            }
+
+            switch (st) {
               case JSTRAP_ERROR:
                 cx->clearPendingException();
                 goto error;

@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Daniel Brooks <db48x@yahoo.com>
    -   Mark Finkle <mfinkle@mozilla.com>
+   -   Geoff Lankow <geoff@darktrojan.net>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -311,7 +312,7 @@
         </xul:label>
       </xul:vbox>
       <xul:hbox anonid="input-container" class="setting-input">
-        <children includes="button|menulist"/>
+        <children includes="button"/>
       </xul:hbox>
     </content>
   </binding>
@@ -469,6 +470,73 @@
        ]]>
         </setter>
       </property>
+    </implementation>
+  </binding>
+
+  <binding id="setting-multi" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
+    <content>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox class="setting-input">
+        <children includes="radiogroup|menulist" />
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <constructor>
+      <![CDATA[
+        this.control.addEventListener("command", this.valueToPreference.bind(this), false);
+      ]]>
+      </constructor>
+
+      <method name="valueFromPreference">
+        <body>
+        <![CDATA[
+          let val;
+          switch (Services.prefs.getPrefType(this.pref)) {
+            case Ci.nsIPrefBranch.PREF_STRING:
+              val = Services.prefs.getCharPref(this.pref);
+              break;
+            case Ci.nsIPrefBranch.PREF_INT:
+              val = Services.prefs.getIntPref(this.pref);
+              break;
+            case Ci.nsIPrefBranch.PREF_BOOL:
+              val = Services.prefs.getBoolPref(this.pref).toString();
+              break;
+            default:
+              return;
+          }
+
+          for (let i = 0; i < this.control.itemCount; i++) {
+            if (this.control.getItemAtIndex(i).value == val) {
+              this.control.selectedIndex = i;
+              break;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="valueToPreference">
+        <body>
+        <![CDATA[
+          // We might not have a pref already set, so we guess the type from the value attribute
+          let val = this.control.selectedItem.value;
+          if (val == "true" || val == "false")
+            Services.prefs.setBoolPref(this.pref, val == "true");
+          else if (/^-?\d+$/.test(val))
+            Services.prefs.setIntPref(this.pref, val);
+          else
+            Services.prefs.setCharPref(this.pref, val);
+        ]]>
+        </body>
+      </method>
+
+      <field name="control">this.getElementsByTagName(this.getAttribute("type") == "radio" ? "radiogroup" : "menulist")[0];</field>
     </implementation>
   </binding>
 </bindings>

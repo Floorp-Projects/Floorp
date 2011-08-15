@@ -45,6 +45,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"
+#include "jsgcmark.h"
 
 namespace js {
 
@@ -81,7 +82,7 @@ namespace js {
 //   
 //     MarkPolicy(JSTracer *)
 //
-//   and the following static member functions:
+//   and the following member functions:
 //
 //     bool keyMarked(Key &k)
 //     bool valueMarked(Value &v)
@@ -174,8 +175,8 @@ class WeakMapBase {
     virtual void sweep(JSTracer *tracer) = 0;
 
   private:
-    // Link in a list of all the WeakMaps we have marked in this garbage collection,
-    // headed by JSRuntime::gcWeakMapList.
+    // Link in a list of WeakMaps to mark iteratively and sweep in this garbage
+    // collection, headed by JSRuntime::gcWeakMapList.
     WeakMapBase *next;
 };
 
@@ -189,7 +190,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     typedef typename Base::Enum Enum;
 
   public:
-    WeakMap(JSContext *cx) : Base(cx) { }
+    explicit WeakMap(JSRuntime *rt) : Base(rt) { }
+    explicit WeakMap(JSContext *cx) : Base(cx) { }
 
   private:
     void nonMarkingTrace(JSTracer *tracer) {
@@ -284,6 +286,36 @@ class DefaultMarkPolicy<JSObject *, Value> {
         js::gc::MarkValue(tracer, v, "WeakMap entry value");
     }
 };
+
+template <>
+class DefaultMarkPolicy<JSObject *, JSObject *> {
+  protected:
+    JSTracer *tracer;
+  public:
+    DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
+    bool keyMarked(JSObject *k)   { return !IsAboutToBeFinalized(tracer->context, k); }
+    bool valueMarked(JSObject *v) { return !IsAboutToBeFinalized(tracer->context, v); }
+    bool markEntryIfLive(JSObject *k, JSObject *v) {
+        if (keyMarked(k) && !valueMarked(v)) {
+            js::gc::MarkObject(tracer, *v, "WeakMap entry value");
+            return true;
+        }
+        return false;
+    }
+    void markEntry(JSObject *k, JSObject *v) {
+        js::gc::MarkObject(tracer, *k, "WeakMap entry key");
+        js::gc::MarkObject(tracer, *v, "WeakMap entry value");
+    }
+};
+
+// A MarkPolicy for WeakMaps whose keys and values may be objects in arbitrary
+// compartments within a runtime.
+//
+// With the current GC, the implementation turns out to be identical to the
+// default mark policy. We give it a distinct name anyway, in case this ever
+// changes.
+//
+typedef DefaultMarkPolicy<JSObject *, JSObject *> CrossCompartmentMarkPolicy;
 
 // The class of JavaScript WeakMap objects.
 extern Class WeakMapClass;

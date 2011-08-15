@@ -683,6 +683,15 @@ TryCompile(JSContext *cx, StackFrame *fp);
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal);
 
+inline void
+ReleaseScriptCode(JSContext *cx, JSScript *script)
+{
+    if (script->jitNormal)
+        mjit::ReleaseScriptCode(cx, script, true);
+    if (script->jitCtor)
+        mjit::ReleaseScriptCode(cx, script, false);
+}
+
 // Expand all stack frames inlined by the JIT within a compartment.
 void
 ExpandInlineFrames(JSCompartment *compartment);

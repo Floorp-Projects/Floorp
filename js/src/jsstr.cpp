@@ -1536,11 +1536,8 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     }
 
     Value v;
-    if (!res->createLastMatch(cx, &v))
-        return false;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return !!arrayobj->setProperty(cx, INT_TO_JSID(count), &v, false);
+    return res->createLastMatch(cx, &v) &&
+           arrayobj->defineProperty(cx, INT_TO_JSID(count), v);
 }
 
 static JSBool

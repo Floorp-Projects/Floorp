@@ -2,7 +2,7 @@
 setDebug(true);
 x = "notset";
 function main() {
-  /* The JSOP_STOP in a. */
+  /* The JSOP_STOP in main. */
   a = { valueOf: function () { trap(main, 58, "success()"); } };
   b = "";
   eval();

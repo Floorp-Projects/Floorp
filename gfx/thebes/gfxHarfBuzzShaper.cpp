@@ -830,8 +830,8 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     // Ligature features are enabled by default in the generic shaper,
     // so we explicitly turn them off if necessary (for letter-spacing)
     if (disableLigatures) {
-        hb_feature_t ligaOff = { HB_TAG('l','i','g','a'), 0, 0, -1 };
-        hb_feature_t cligOff = { HB_TAG('c','l','i','g'), 0, 0, -1 };
+        hb_feature_t ligaOff = { HB_TAG('l','i','g','a'), 0, 0, UINT_MAX };
+        hb_feature_t cligOff = { HB_TAG('c','l','i','g'), 0, 0, UINT_MAX };
         features.AppendElement(ligaOff);
         features.AppendElement(cligOff);
     }
@@ -852,7 +852,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         }
         if (j == features.Length()) {
             const gfxFontFeature& f = cssFeatures->ElementAt(i);
-            hb_feature_t hbf = { f.mTag, f.mValue, 0, -1 };
+            hb_feature_t hbf = { f.mTag, f.mValue, 0, UINT_MAX };
             features.AppendElement(hbf);
         }
     }
@@ -1128,7 +1128,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         hb_position_t x_advance = posInfo[glyphStart].x_advance;
         nscoord advance =
             roundX ? dev2appUnits * FixedToIntRound(x_advance)
-            : NS_floor(hb2appUnits * x_advance + 0.5);
+            : floor(hb2appUnits * x_advance + 0.5);
 
         if (glyphsInClump == 1 &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(ginfo[glyphStart].codepoint) &&
@@ -1158,18 +1158,18 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                 hb_position_t x_offset = posInfo[glyphStart].x_offset;
                 details->mXOffset =
                     roundX ? dev2appUnits * FixedToIntRound(x_offset)
-                    : NS_floor(hb2appUnits * x_offset + 0.5);
+                    : floor(hb2appUnits * x_offset + 0.5);
                 hb_position_t y_offset = posInfo[glyphStart].y_offset;
                 details->mYOffset = yPos -
                     (roundY ? dev2appUnits * FixedToIntRound(y_offset)
-                     : NS_floor(hb2appUnits * y_offset + 0.5));
+                     : floor(hb2appUnits * y_offset + 0.5));
 
                 details->mAdvance = advance;
                 hb_position_t y_advance = posInfo[glyphStart].y_advance;
                 if (y_advance != 0) {
                     yPos -=
                         roundY ? dev2appUnits * FixedToIntRound(y_advance)
-                        : NS_floor(hb2appUnits * y_advance + 0.5);
+                        : floor(hb2appUnits * y_advance + 0.5);
                 }
                 if (++glyphStart >= glyphEnd) {
                     break;
@@ -1177,7 +1177,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                 x_advance = posInfo[glyphStart].x_advance;
                 advance =
                     roundX ? dev2appUnits * FixedToIntRound(x_advance)
-                    : NS_floor(hb2appUnits * x_advance + 0.5);
+                    : floor(hb2appUnits * x_advance + 0.5);
             }
 
             gfxTextRun::CompressedGlyph g;

@@ -123,7 +123,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     rootedObjects(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame),
-    debugMode_(cx->compartment->debugMode),
+    debugMode_(cx->compartment->debugMode()),
 #if defined JS_TRACER
     addTraceHints(cx->traceJitEnabled),
 #else
@@ -243,7 +243,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
     while (nextOffset < script->length) {
         uint32 offset = nextOffset;
         jsbytecode *pc = script->code + offset;
-        nextOffset = offset + GetBytecodeLength(pc);
+        nextOffset = offset + analyze::GetBytecodeLength(pc);
 
         Bytecode *code = analysis->maybeCode(pc);
         if (!code)
@@ -857,7 +857,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     masm.forceFlushConstantPool();
     stubcc.masm.forceFlushConstantPool();
 #endif
-    JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %lu, Slow code (stubcc) size = %lu.\n", masm.size(), stubcc.size());
+    JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %lu, Slow code (stubcc) size = %lu.\n",
+               (unsigned long) masm.size(), (unsigned long) stubcc.size());
 
     size_t codeSize = masm.size() +
                       stubcc.size() +
@@ -2666,7 +2667,7 @@ mjit::Compiler::generateMethod()
           {
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(PC), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::Debugger, REJOIN_FALLTHROUGH);
+            INLINE_STUBCALL(stubs::DebuggerStatement, REJOIN_FALLTHROUGH);
           }
           END_CASE(JSOP_DEBUGGER)
 
@@ -2700,7 +2701,7 @@ mjit::Compiler::generateMethod()
      *  END COMPILER OPS  *
      **********************/ 
 
-        if (cx->typeInferenceEnabled() && PC == lastPC + GetBytecodeLength(lastPC)) {
+        if (cx->typeInferenceEnabled() && PC == lastPC + analyze::GetBytecodeLength(lastPC)) {
             /*
              * Inform the frame of the type sets for values just pushed. Skip
              * this if we did any opcode fusions, we don't keep track of the
