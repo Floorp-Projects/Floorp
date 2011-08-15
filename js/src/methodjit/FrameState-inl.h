@@ -350,6 +350,17 @@ FrameState::push(Address address, JSValueType knownType, bool reuseBase)
     pushRegs(typeReg, dataReg, JSVAL_TYPE_UNKNOWN);
 }
 
+inline void
+FrameState::pushWord(Address address, JSValueType knownType, bool reuseBase)
+{
+    JS_ASSERT(knownType != JSVAL_TYPE_DOUBLE);
+    JS_ASSERT(knownType != JSVAL_TYPE_UNKNOWN);
+
+    RegisterID dataReg = reuseBase ? address.base : allocReg();
+    masm.loadPtr(address, dataReg);
+    pushTypedPayload(knownType, dataReg);
+}
+
 inline JSC::MacroAssembler::FPRegisterID
 FrameState::storeRegs(int32 depth, RegisterID type, RegisterID data, JSValueType knownType)
 {

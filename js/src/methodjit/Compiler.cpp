@@ -4239,7 +4239,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
             RegisterID reg = frame.tempRegForData(top);
             frame.pop();
-            frame.push(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
             return true;
@@ -4259,7 +4259,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
             RegisterID reg = frame.copyDataIntoReg(top);
             frame.pop();
-            frame.push(Address(reg, TypedArray::lengthOffset()), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(reg, TypedArray::lengthOffset()), JSVAL_TYPE_INT32);
             frame.freeReg(reg);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
@@ -4273,7 +4273,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
          */
         if (types->isLazyArguments(cx)) {
             frame.pop();
-            frame.push(Address(JSFrameReg, StackFrame::offsetOfArgs()), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfArgs()), JSVAL_TYPE_INT32);
             return true;
         }
     }
