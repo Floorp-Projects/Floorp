@@ -34,7 +34,7 @@ function test() {
       ok(!document.getElementById("context_openTabInWindow").disabled, "The 'Move to New Window' menu item is enabled");
 
       let newTabTwo = gBrowser.selectedTab;
-      gBrowser.selectedTab = originalTab;
+      gBrowser.selected = originalTab;
 
       gBrowser.removeTab(newTabOne);
       gBrowser.removeTab(newTabTwo);
