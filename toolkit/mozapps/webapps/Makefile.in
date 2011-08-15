@@ -11,16 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.
+# The Original Code is the Open Web Apps.
 #
-# The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mark Finkle <mfinkle@mozilla.com>
-#   Nino D'Aversa <ninodaversa@gmail.com>
+#   Fabrice Desré <fabrice@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,53 +34,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH      = ../..
-topsrcdir  = @top_srcdir@
-srcdir     = @srcdir@
-VPATH      = @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = MobileComponents
-XPIDL_MODULE = MobileComponents
+MODULE = openwebapps
 
-XPIDLSRCS = \
-        SessionStore.idl \
-        LoginManagerPrompter.idl \
-        $(NULL)
+XPIDLSRCS = OpenWebapps.idl
 
-EXTRA_PP_COMPONENTS = \
-        MobileComponents.manifest \
-        AboutRedirector.js \
-        BrowserCLH.js \
-        BrowserStartup.js \
-        DirectoryProvider.js\
-        HelperAppDialog.js \
-        Sidebar.js \
-        SessionStore.js \
-        $(NULL)
+EXTRA_COMPONENTS += \
+  OpenWebapps.js \
+  OpenWebapps.manifest \
+  $(NULL)
 
-EXTRA_COMPONENTS = \
-        AlertsService.js \
-        ContentPermissionPrompt.js \
-        XPIDialogService.js \
-        DownloadManagerUI.js \
-        PromptService.js \
-        ContentDispatchChooser.js \
-        AutoCompleteCache.js \
-        AddonUpdateService.js \
-        FormAutoComplete.js \
-        LoginManager.js \
-        LoginManagerPrompter.js \
-        BlocklistPrompt.js \
-        $(NULL)
-
-ifdef MOZ_SAFE_BROWSING
-EXTRA_COMPONENTS += SafeBrowsing.js
-endif
-
-ifdef MOZ_UPDATER
-EXTRA_COMPONENTS += UpdatePrompt.js
-endif
+EXTRA_JS_MODULES = \
+  OpenWebapps.jsm \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

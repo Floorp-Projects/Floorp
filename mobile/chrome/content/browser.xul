@@ -366,7 +366,6 @@
           onclick="PageActions.clearPagePermissions(event);"/>
         <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
         <pageaction id="pageaction-charset" title="&pageactions.charEncoding;" onclick="CharsetMenu.show();"/>
-        <pageaction id="pageaction-webapps-install" title="&pageactions.webapps.install;" onclick="WebappsUI.show();"/>
       </hbox>
     </arrowbox>
 
