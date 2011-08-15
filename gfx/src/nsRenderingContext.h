@@ -117,9 +117,6 @@ public:
 
     // Text
 
-    void SetFont(const nsFont& aFont, nsIAtom* aLanguage,
-                 gfxUserFontSet *aUserFontSet);
-    void SetFont(const nsFont& aFont, gfxUserFontSet *aUserFontSet);
     void SetFont(nsFontMetrics *aFontMetrics);
     nsFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
 

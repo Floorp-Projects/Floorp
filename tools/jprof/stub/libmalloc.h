@@ -47,11 +47,17 @@ extern "C" {
 
 typedef unsigned long u_long;
 
-// Format of a malloc log entry. This is what's written out to the
-// "malloc-log" file.
+// For me->flags
+#define JP_FIRST_AFTER_PAUSE 1
+
+// Format of a jprof log entry. This is what's written out to the
+// "jprof-log" file.
+// It's called malloc_log_entry because the history of jprof is that
+// it's a modified version of tracemalloc.
 struct malloc_log_entry {
   u_long delTime;
   u_long numpcs;
+  unsigned int flags;
   int thread;
   char* pcs[MAX_STACK_CRAWL];
 };

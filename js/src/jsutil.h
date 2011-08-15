@@ -45,7 +45,6 @@
 #define jsutil_h___
 
 #include "jstypes.h"
-#include "jscrashreport.h"
 #include "mozilla/Util.h"
 #include <stdlib.h>
 #include <string.h>
@@ -62,11 +61,23 @@ JS_BEGIN_EXTERN_C
 
 #define JS_FREE_PATTERN 0xDA
 
+#ifdef JS_CRASH_DIAGNOSTICS
+
+#define JS_POISON(p, val, size) memset((p), (val), (size))
+
 #define JS_OPT_ASSERT(expr)                                                   \
     ((expr) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
 
 #define JS_OPT_ASSERT_IF(cond, expr)                                          \
     ((!(cond) || (expr)) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
+
+#else
+
+#define JS_POISON(p, val, size) ((void) 0)
+#define JS_OPT_ASSERT(expr) ((void) 0)
+#define JS_OPT_ASSERT_IF(cond, expr) ((void) 0)
+
+#endif /* JS_CRASH_DIAGNOSTICS */
 
 #ifdef DEBUG
 
@@ -227,12 +238,6 @@ extern JS_PUBLIC_DATA(JSUint32) OOM_counter; /* data race, who cares. */
 #define JS_OOM_POSSIBLY_FAIL() do {} while(0)
 #endif
 
-static JS_INLINE void *js_record_oom(void *p) {
-    if (!p)
-        js_SnapshotErrorStack();
-    return p;
-}
-
 /*
  * SpiderMonkey code should not be calling these allocation functions directly.
  * Instead, all calls should go through JSRuntime, JSContext or OffTheBooks.
@@ -240,17 +245,17 @@ static JS_INLINE void *js_record_oom(void *p) {
  */
 static JS_INLINE void* js_malloc(size_t bytes) {
     JS_OOM_POSSIBLY_FAIL();
-    return js_record_oom(malloc(bytes));
+    return malloc(bytes);
 }
 
 static JS_INLINE void* js_calloc(size_t bytes) {
     JS_OOM_POSSIBLY_FAIL();
-    return js_record_oom(calloc(bytes, 1));
+    return calloc(bytes, 1);
 }
 
 static JS_INLINE void* js_realloc(void* p, size_t bytes) {
     JS_OOM_POSSIBLY_FAIL();
-    return js_record_oom(realloc(p, bytes));
+    return realloc(p, bytes);
 }
 
 static JS_INLINE void js_free(void* p) {
@@ -271,13 +276,13 @@ JS_END_EXTERN_C
  *
  *   Allocation:
  *   - Prefer to allocate using JSContext:
- *       cx->{malloc_,realloc_,calloc_,new_,new_array}
+ *       cx->{malloc_,realloc_,calloc_,new_,array_new}
  *
  *   - If no JSContext is available, use a JSRuntime:
- *       rt->{malloc_,realloc_,calloc_,new_,new_array}
+ *       rt->{malloc_,realloc_,calloc_,new_,array_new}
  *
  *   - As a last resort, use unaccounted allocation ("OffTheBooks"):
- *       js::OffTheBooks::{malloc_,realloc_,calloc_,new_,new_array}
+ *       js::OffTheBooks::{malloc_,realloc_,calloc_,new_,array_new}
  *
  *   Deallocation:
  *   - When the deallocation occurs on a slow path, use:

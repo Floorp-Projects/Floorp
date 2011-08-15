@@ -1,7 +1,7 @@
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="/static/harness.css" />
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/LogController.js"></script>        
   <script type="text/javascript" src="/tests/SimpleTest/TestRunner.js"></script>        
   <script type="text/javascript" src="/tests/SimpleTest/MozillaFileLogger.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/setup.js"></script>
@@ -16,7 +16,7 @@ function loadTests()
     params = parseQueryString(location.search.substring(1), true);
   }
 
-  var table = $("test-table");
+  var table = document.getElementById("test-table");
   var row = table.rows[1];
   row.id = 'tr-' + params.testname;
   row.cells[3].innerHTML= "<a href=" + params.testname + ">" + params.testname + "</a>";

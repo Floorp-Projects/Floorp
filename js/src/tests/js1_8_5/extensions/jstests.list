@@ -53,4 +53,8 @@ script weakmap.js
 script regress-645160.js
 script regress-650753.js
 script regress-668438.js
+require-or(debugMode,skip) script regress-672804-1.js
+require-or(debugMode,skip) script regress-672804-2.js
+require-or(debugMode,skip) script regress-672804-3.js
+skip-if(!xulRuntime.shell) script regress-677589.js
 script regress-677924.js

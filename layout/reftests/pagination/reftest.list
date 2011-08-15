@@ -44,6 +44,7 @@ fails == float-continuations-000.html float-continuations-000.ref.html
 == row-page-break-after-always-2.html table-page-break-before-auto-2-ref.html
 == rowgroup-thead-page-break-after-always-1.html table-page-break-before-auto-3-ref.html 
 == rowgroup-tfoot-page-break-after-always-1.html table-page-break-before-auto-3-ref.html
+== table-tfoot-thead-1.html table-tfoot-thead-1-ref.html
 == table-caption-splitrowgroup-1.html table-caption-splitrowgroup-1-ref.html
 == table-caption-splitaftercaption-1.html table-caption-splitaftercaption-1-ref.html
 == table-caption-splitaftercaption-2.html table-caption-splitaftercaption-2-ref.html

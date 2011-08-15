@@ -2,7 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>Test for moving animations between time containers</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -77,7 +76,7 @@ function main() {
   // Remove animation so that it belongs to no container and check that
   // advancing the second container to the next milestone doesn't cause a crash
   // (when the animation controller goes to run the next milestone sample).
-  removeElement(anim);
+  anim.parentNode.removeChild(anim);
   svgb.setCurrentTime(3);
 
   // Do likewise with syncbase relationships

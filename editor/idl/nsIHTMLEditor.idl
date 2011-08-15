@@ -42,6 +42,7 @@
 #include "domstubs.idl"
 
 interface nsIAtom;
+interface nsIContent;
 interface nsISupportsArray;
 interface nsISelection;
 interface nsIContentFilter;
@@ -51,7 +52,7 @@ interface nsIContentFilter;
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
 %}
-[scriptable, uuid(c964b8b0-e9e8-11df-9492-0800200c9a66)]
+[scriptable, uuid(d58f35a7-c269-4292-b9aa-a79e200a7c99)]
 
 interface nsIHTMLEditor : nsISupports
 {
@@ -613,5 +614,11 @@ interface nsIHTMLEditor : nsISupports
    * Checks whether a BR node is visible to the user.
    */
   boolean breakIsVisible(in nsIDOMNode aNode);
+
+  /**
+   * Get an active editor's editing host in DOM window.  If this editor isn't
+   * active in the DOM window, this returns NULL.
+   */
+  [noscript, notxpcom] nsIContent GetActiveEditingHost();
 };
 

@@ -42,11 +42,15 @@
 
 #include "nsEditorSpellCheck.h"
 
+#include "nsStyleUtil.h"
+#include "nsIContent.h"
+#include "nsIDOMElement.h"
 #include "nsITextServicesDocument.h"
 #include "nsISpellChecker.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 
 #include "nsIComponentManager.h"
 #include "nsServiceManagerUtils.h"
@@ -54,10 +58,27 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsITextServicesFilter.h"
+#include "nsUnicharUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+
+class UpdateDictionnaryHolder {
+  private:
+    nsEditorSpellCheck* mSpellCheck;
+  public:
+    UpdateDictionnaryHolder(nsEditorSpellCheck* esc): mSpellCheck(esc) {
+      if (mSpellCheck) {
+        mSpellCheck->BeginUpdateDictionary();
+      }
+    }
+    ~UpdateDictionnaryHolder() {
+      if (mSpellCheck) {
+        mSpellCheck->EndUpdateDictionary();
+      }
+    }
+};
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEditorSpellCheck)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEditorSpellCheck)
@@ -75,6 +96,8 @@ NS_IMPL_CYCLE_COLLECTION_2(nsEditorSpellCheck,
 nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)
   , mDictionaryIndex(0)
+  , mUpdateDictionaryRunning(PR_FALSE)
+  , mDictWasSetManually(PR_FALSE)
 {
 }
 
@@ -183,61 +206,9 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
   rv = mSpellChecker->SetDocument(tsDoc, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Tell the spellchecker what dictionary to use:
-
-  nsAdoptingString dictName =
-    Preferences::GetLocalizedString("spellchecker.dictionary");
-
-  if (dictName.IsEmpty())
-  {
-    // Prefs didn't give us a dictionary name, so just get the current
-    // locale and use that as the default dictionary name!
-
-    nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
-      mozilla::services::GetXULChromeRegistryService();
-
-    if (packageRegistry) {
-      nsCAutoString utf8DictName;
-      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
-                                              utf8DictName);
-      AppendUTF8toUTF16(utf8DictName, dictName);
-    }
-  }
-
-  PRBool setDictionary = PR_FALSE;
-  if (NS_SUCCEEDED(rv) && !dictName.IsEmpty()) {
-    rv = SetCurrentDictionary(dictName.get());
-
-    // fall back to "en-US" if the current locale doesn't have a dictionary.
-    if (NS_FAILED(rv)) {
-      rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US").get());
-    }
-
-    if (NS_SUCCEEDED(rv))
-      setDictionary = PR_TRUE;
-  }
-
-  // If there was no dictionary specified by spellchecker.dictionary and setting it to the 
-  // locale dictionary didn't work, try to use the first dictionary we find. This helps when 
-  // the first dictionary is installed
-  if (! setDictionary) {
-    nsTArray<nsString> dictList;
-    rv = mSpellChecker->GetDictionaryList(&dictList);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (dictList.Length() > 0) {
-      rv = SetCurrentDictionary(dictList[0].get());
-      if (NS_SUCCEEDED(rv))
-        SaveDefaultDictionary();
-    }
-  }
-
-  // If an error was thrown while checking the dictionary pref, just
-  // fail silently so that the spellchecker dialog is allowed to come
-  // up. The user can manually reset the language to their choice on
-  // the dialog if it is wrong.
-
-  DeleteSuggestedWordList();
-
+  // do not fail if UpdateCurrentDictionary fails because this method may
+  // succeed later.
+  UpdateCurrentDictionary(aEditor);
   return NS_OK;
 }
 
@@ -407,45 +378,28 @@ nsEditorSpellCheck::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aC
 }
 
 NS_IMETHODIMP    
-nsEditorSpellCheck::GetCurrentDictionary(PRUnichar **aDictionary)
+nsEditorSpellCheck::GetCurrentDictionary(nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_TRUE(aDictionary, NS_ERROR_NULL_POINTER);
-
-  *aDictionary = 0;
-
-  nsAutoString dictStr;
-  nsresult rv = mSpellChecker->GetCurrentDictionary(dictStr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aDictionary = ToNewUnicode(dictStr);
-
-  return rv;
+  return mSpellChecker->GetCurrentDictionary(aDictionary);
 }
 
 NS_IMETHODIMP    
-nsEditorSpellCheck::SetCurrentDictionary(const PRUnichar *aDictionary)
+nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_TRUE(aDictionary, NS_ERROR_NULL_POINTER);
-
-  return mSpellChecker->SetCurrentDictionary(nsDependentString(aDictionary));
+  if (!mUpdateDictionaryRunning) {
+    mDictWasSetManually = PR_TRUE;
+  }
+  return mSpellChecker->SetCurrentDictionary(aDictionary);
 }
 
 NS_IMETHODIMP    
 nsEditorSpellCheck::UninitSpellChecker()
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
-
-  // we preserve the last selected language, but ignore errors so we continue
-  // to uninitialize
-#ifdef DEBUG
-  nsresult rv =
-#endif
-  SaveDefaultDictionary();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to set default dictionary");
 
   // Cleanup - kill the spell checker
   DeleteSuggestedWordList();
@@ -455,22 +409,19 @@ nsEditorSpellCheck::UninitSpellChecker()
   return NS_OK;
 }
 
-// Save the last used dictionary to the user's preferences.
+// Save the last set dictionary to the user's preferences.
 NS_IMETHODIMP
 nsEditorSpellCheck::SaveDefaultDictionary()
 {
-  PRUnichar *dictName = nsnull;
-  nsresult rv = GetCurrentDictionary(&dictName);
-
-  if (NS_SUCCEEDED(rv) && dictName && *dictName) {
-    rv = Preferences::SetString("spellchecker.dictionary", dictName);
+  if (!mDictWasSetManually) {
+    return NS_OK;
   }
 
-  if (dictName) {
-    nsMemory::Free(dictName);
-  }
+  nsAutoString dictName;
+  nsresult rv = GetCurrentDictionary(dictName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return rv;
+  return Preferences::SetString("spellchecker.dictionary", dictName);
 }
 
 
@@ -487,5 +438,132 @@ nsEditorSpellCheck::DeleteSuggestedWordList()
 {
   mSuggestedWordList.Clear();
   mSuggestedWordIndex = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditor* aEditor)
+{
+  if (mDictWasSetManually) { // user has set dictionary manually; we better not change it.
+    return NS_OK;
+  }
+
+  nsresult rv;
+
+  UpdateDictionnaryHolder holder(this);
+
+  // Tell the spellchecker what dictionary to use:
+  nsAutoString dictName;
+
+  // First, try to get language with html5 algorithm
+  nsAutoString editorLang;
+
+  nsCOMPtr<nsIContent> rootContent;
+
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
+  if (htmlEditor) {
+    rootContent = htmlEditor->GetActiveEditingHost();
+  } else {
+    nsCOMPtr<nsIDOMElement> rootElement;
+    rv = aEditor->GetRootElement(getter_AddRefs(rootElement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rootContent = do_QueryInterface(rootElement);
+  }
+  NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
+
+  rootContent->GetLang(editorLang);
+
+  if (editorLang.IsEmpty()) {
+    nsCOMPtr<nsIDocument> doc = rootContent->GetCurrentDoc();
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    doc->GetContentLanguage(editorLang);
+  }
+
+  if (!editorLang.IsEmpty()) {
+    dictName.Assign(editorLang);
+  }
+
+  // otherwise, get language from preferences
+  if (dictName.IsEmpty()) {
+    dictName.Assign(Preferences::GetLocalizedString("spellchecker.dictionary"));
+  }
+
+  if (dictName.IsEmpty())
+  {
+    // Prefs didn't give us a dictionary name, so just get the current
+    // locale and use that as the default dictionary name!
+
+    nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
+      mozilla::services::GetXULChromeRegistryService();
+
+    if (packageRegistry) {
+      nsCAutoString utf8DictName;
+      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
+                                              utf8DictName);
+      AppendUTF8toUTF16(utf8DictName, dictName);
+    }
+  }
+
+  SetCurrentDictionary(EmptyString());
+
+  if (NS_SUCCEEDED(rv) && !dictName.IsEmpty()) {
+    rv = SetCurrentDictionary(dictName);
+    if (NS_FAILED(rv)) {
+      // required dictionary was not available. Try to get a dictionary
+      // matching at least language part of dictName: If required dictionary is
+      // "aa-bb", we try "aa", then we try any available dictionary aa-XX
+      nsAutoString langCode;
+      PRInt32 dashIdx = dictName.FindChar('-');
+      if (dashIdx != -1) {
+        langCode.Assign(Substring(dictName, 0, dashIdx));
+        // try to use langCode
+        rv = SetCurrentDictionary(langCode);
+      } else {
+        langCode.Assign(dictName);
+      }
+      if (NS_FAILED(rv)) {
+        // loop over avaible dictionaries; if we find one with required
+        // language, use it
+        nsTArray<nsString> dictList;
+        rv = mSpellChecker->GetDictionaryList(&dictList);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsDefaultStringComparator comparator;
+        PRInt32 i, count = dictList.Length();
+        for (i = 0; i < count; i++) {
+          nsAutoString dictStr(dictList.ElementAt(i));
+          if (nsStyleUtil::DashMatchCompare(dictStr, langCode, comparator) &&
+              NS_SUCCEEDED(SetCurrentDictionary(dictStr))) {
+              break;
+          }
+        }
+      }
+    }
+  }
+
+  // If we have not set dictionary, and the editable element doesn't have a
+  // lang attribute, we try to get a dictionary. First try, en-US. If it does
+  // not work, pick the first one.
+  if (editorLang.IsEmpty()) {
+    nsAutoString currentDictionary;
+    rv = GetCurrentDictionary(currentDictionary);
+    if (NS_FAILED(rv) || currentDictionary.IsEmpty()) {
+      rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
+      if (NS_FAILED(rv)) {
+        nsTArray<nsString> dictList;
+        rv = mSpellChecker->GetDictionaryList(&dictList);
+        if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
+          SetCurrentDictionary(dictList[0]);
+        }
+      }
+    }
+  }
+
+  // If an error was thrown while setting the dictionary, just
+  // fail silently so that the spellchecker dialog is allowed to come
+  // up. The user can manually reset the language to their choice on
+  // the dialog if it is wrong.
+
+  DeleteSuggestedWordList();
+
   return NS_OK;
 }

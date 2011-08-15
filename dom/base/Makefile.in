@@ -88,6 +88,11 @@ EXPORTS = \
   nsDOMMemoryReporter.h \
   $(NULL)
 
+EXPORTS_NAMESPACES = mozilla/dom
+EXPORTS_mozilla/dom = \
+  StructuredCloneTags.h \
+  $(NULL)
+
 CPPSRCS =			\
 	nsBarProps.cpp          \
 	nsDOMException.cpp 	\

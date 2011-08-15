@@ -8,8 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462106
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="initAndRunTests()">
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"/>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- test results are displayed in the html:body -->

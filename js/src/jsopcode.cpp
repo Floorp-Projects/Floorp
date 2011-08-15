@@ -72,9 +72,10 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
-#include "jsobjinlines.h"
-#include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
 
@@ -170,14 +171,12 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
     return base + GET_UINT16(pc + pcoff);
 }
 
-uintN
-js_GetVariableBytecodeLength(jsbytecode *pc)
+size_t
+js_GetVariableBytecodeLength(JSOp op, jsbytecode *pc)
 {
-    JSOp op;
     uintN jmplen, ncases;
     jsint low, high;
 
-    op = (JSOp) *pc;
     JS_ASSERT(js_CodeSpec[op].length == -1);
     switch (op) {
       case JSOP_TABLESWITCHX:
@@ -2939,10 +2938,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_GETFCSLOT:
               case JSOP_CALLFCSLOT:
               {
-                if (!jp->fun) {
-                    JS_ASSERT(jp->script->savedCallerFun);
-                    jp->fun = jp->script->getFunction(0);
-                }
+                if (!jp->fun)
+                    jp->fun = jp->script->getCallerFunction();
 
                 if (!jp->localNames) {
                     JS_ASSERT(fun == jp->fun);
@@ -5613,6 +5610,29 @@ CallResultEscapes(jsbytecode *pc)
         pc += JSOP_NOT_LENGTH;
 
     return (*pc != JSOP_IFEQ);
+}
+
+size_t
+GetBytecodeLength(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    JSOp op = js_GetOpcode(cx, script, pc);
+    JS_ASSERT(op < JSOP_LIMIT);
+    JS_ASSERT(op != JSOP_TRAP);
+    if (js_CodeSpec[op].length != -1)
+        return js_CodeSpec[op].length;
+    return js_GetVariableBytecodeLength(op, pc);
+}
+
+extern bool
+IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
+{
+    // This could be faster (by following jump instructions if the target is <= offset).
+    for (BytecodeRange r(cx, script); !r.empty(); r.popFront()) {
+        size_t here = r.frontOffset();
+        if (here >= offset)
+            return here == offset;
+    }
+    return false;
 }
 
 } // namespace js

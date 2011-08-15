@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 -->
 <head>
   <title>Test for Bug 479711</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="manifest.js"></script>
@@ -102,7 +101,7 @@ v.load(); // load started while in this document, this doc's load will block unt
 // Opening a new window to do this is a bit annoying, but if we use an iframe here,
 // delaying of the iframe's load event might interfere with the firing of our load event
 // in some confusing way. So it's simpler just to open another window.
-var w = window.open("", "testWindow"+i, "width=400,height=400");
+var w = window.open("", "testWindow", "width=400,height=400");
 w.document.body.appendChild(v);
 testWindows.push(w);
 

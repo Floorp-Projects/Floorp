@@ -4,7 +4,7 @@ var x = "notset";
 function main() { x = "failure"; }
 function success() { x = "success"; }
 
-/* The JSOP_STOP in a. */
+/* The JSOP_STOP in main. */
 trap(main, 10, "success()");
 main();
 

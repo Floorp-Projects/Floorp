@@ -532,10 +532,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Possible options:
   //   force - true to always update the DOM even if the bounds haven't changed; default false
   setBounds: function GroupItem_setBounds(inRect, immediately, options) {
-    if (!Utils.isRect(inRect)) {
-      Utils.trace('GroupItem.setBounds: rect is not a real rectangle!', inRect);
-      return;
-    }
+      Utils.assert(Utils.isRect(inRect), 'GroupItem.setBounds: rect is not a real rectangle!');
 
     // Validate and conform passed in size
     let validSize = GroupItems.calcValidSize(
