@@ -968,6 +968,14 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
 }
 
+%ifdef WINSTRIPE_AERO
+#TabsToolbar > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+#TabsToolbar > toolbarpaletteitem > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+%endif
+#tabview-button:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/tabview/tabview-inverted.png);
+}
+
 #tabview-button {
   -moz-image-region: rect(0, 90px, 18px, 72px);
 }
@@ -1887,21 +1895,24 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
-  -moz-image-region: rect(0, 15px, 17px, 0);
   margin: 0;
   padding-right: 2px;
   border-right: 2px solid transparent;
   background-origin: border-box;
 }
 
+%ifdef WINSTRIPE_AERO
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+%endif
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-lwtheme-brighttext,
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
 .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
   opacity: .4;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover:active,
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover:active {
-  -moz-image-region: rect(0, 30px, 17px, 15px);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
@@ -1932,7 +1943,17 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #TabsToolbar > #new-tab-button,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
-  -moz-image-region: rect(0, 16px, 18px, 0);
+  -moz-image-region: auto;
+}
+
+%ifdef WINSTRIPE_AERO
+#TabsToolbar > #new-tab-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+#TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+%endif
+.tabs-newtab-button:-moz-lwtheme-brighttext,
+#TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
 }
 
 .tabs-newtab-button {
@@ -1943,23 +1964,22 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   width: 26px;
 }
 
-.tabs-newtab-button:hover:active,
-#TabsToolbar > #new-tab-button:hover:active {
-  -moz-image-region: rect(0, 32px, 18px, 16px);
-}
-
 #alltabs-button {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
   -moz-image-region: rect(0, 14px, 16px, 0);
 }
 
-#alltabs-button:hover:active {
-  -moz-image-region: rect(0, 28px, 16px, 14px);
-}
-
 #alltabs-button[type="menu"] {
   list-style-image: url("chrome://browser/skin/mainwindow-dropdown-arrow.png");
   -moz-image-region: rect(0, 13px, 11px, 0);
+}
+
+%ifdef WINSTRIPE_AERO
+#TabsToolbar > #alltabs-button[type="menu"]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+#TabsToolbar > toolbarpaletteitem > #alltabs-button[type="menu"]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
+%endif
+#alltabs-button[type="menu"]:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/mainwindow-dropdown-arrow-inverted.png);
 }
 
 #alltabs-button[type="menu"] > .toolbarbutton-icon {
@@ -1968,11 +1988,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
   display: none;
-}
-
-#alltabs-button[type="menu"]:hover:active,
-#alltabs-button[type="menu"][open="true"] {
-  -moz-image-region: rect(0, 26px, 11px, 13px);
 }
 
 /* All tabs menupopup */
