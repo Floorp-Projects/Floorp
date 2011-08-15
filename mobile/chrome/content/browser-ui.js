@@ -550,6 +550,7 @@ var BrowserUI = {
       FullScreenVideo.init();
       NewTabPopup.init();
       CharsetMenu.init();
+      WebappsUI.init();
 
       // If some add-ons were disabled during during an application update, alert user
       let addonIDs = AddonManager.getStartupChanges("disabled");
