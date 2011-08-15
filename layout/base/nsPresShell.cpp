@@ -2986,6 +2986,12 @@ PresShell::FireResizeEvent()
 void
 PresShell::SetIgnoreFrameDestruction(PRBool aIgnore)
 {
+  if (mPresContext) {
+    // We need to destroy the image loaders first, as they won't be
+    // notified when frames are destroyed once this setting takes effect.
+    // (See bug 673984)
+    mPresContext->DestroyImageLoaders();
+  }
   mIgnoreFrameDestruction = aIgnore;
 }
 
