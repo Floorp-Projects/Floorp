@@ -8885,9 +8885,12 @@ static PRBool
 HasRegistryKey(HKEY aRoot, PRUnichar* aName)
 {
   HKEY key;
-  LONG result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ, &key);
-  if (result != ERROR_SUCCESS)
-    return PR_FALSE;
+  LONG result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ | KEY_WOW64_32KEY, &key);
+  if (result != ERROR_SUCCESS) {
+    result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+    if (result != ERROR_SUCCESS)
+      return PR_FALSE;
+  }
   ::RegCloseKey(key);
   return PR_TRUE;
 }
@@ -8913,9 +8916,12 @@ GetRegistryKey(HKEY aRoot, PRUnichar* aKeyName, PRUnichar* aValueName, PRUnichar
   }
 
   HKEY key;
-  LONG result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ, &key);
-  if (result != ERROR_SUCCESS)
-    return PR_FALSE;
+  LONG result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_32KEY, &key);
+  if (result != ERROR_SUCCESS) {
+    result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_64KEY, &key);
+    if (result != ERROR_SUCCESS)
+      return PR_FALSE;
+  }
   DWORD type;
   result = ::RegQueryValueExW(key, aValueName, NULL, &type, (BYTE*) aBuffer, &aBufferLength);
   ::RegCloseKey(key);
@@ -8939,7 +8945,12 @@ IsObsoleteSynapticsDriver()
     return PR_FALSE;
 
   int majorVersion = wcstol(buf, NULL, 10);
-  return majorVersion < 15;
+  int minorVersion = 0;
+  PRUnichar* p = wcschr(buf, L'.');
+  if (p) {
+    minorVersion = wcstol(p + 1, NULL, 10);
+  }
+  return majorVersion < 15 || majorVersion == 15 && minorVersion == 0;
 }
 
 static PRInt32
