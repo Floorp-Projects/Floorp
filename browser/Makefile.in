@@ -45,7 +45,6 @@ include $(topsrcdir)/config/config.mk
 PARALLEL_DIRS = \
   base \
   components \
-  devtools \
   fuel \
   locales \
   themes \
@@ -53,6 +52,7 @@ PARALLEL_DIRS = \
 
 DIRS = \
   app \
+  devtools \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
