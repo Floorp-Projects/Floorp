@@ -136,7 +136,7 @@
   margin-bottom: 15px;
 }
 
-.alert .addon-control {
+.alert button {
   margin: 1em 2em;
 }
 
@@ -749,6 +749,10 @@ menulist { /* Fixes some styling inconsistencies */
 colorpicker[type="button"] { /* Fixes some styling inconsistencies */
   height: 29px;
   margin: 1px 5px 2px 5px;
+}
+
+setting[type="radio"] > radiogroup {
+  -moz-box-orient: horizontal;
 }
 
 /*** creator ***/

@@ -6359,7 +6359,7 @@ nsWindow::ResetRemainingWheelDelta()
 
 static PRInt32 RoundDelta(double aDelta)
 {
-  return aDelta >= 0 ? (PRInt32)NS_floor(aDelta) : (PRInt32)NS_ceil(aDelta);
+  return aDelta >= 0 ? (PRInt32)floor(aDelta) : (PRInt32)ceil(aDelta);
 }
 
 /**

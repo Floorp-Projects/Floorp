@@ -48,8 +48,7 @@ function runTests()
   is(statusbar.getAttribute("label"), contentMenu.getAttribute("label"),
      "statusbar label is correct");
 
-  ok(sp.textbox, "textbox exists");
-  sp.textbox.value = "window.foobarBug636725 = 'aloha';";
+  sp.setText("window.foobarBug636725 = 'aloha';");
 
   ok(!content.wrappedJSObject.foobarBug636725,
      "no content.foobarBug636725");
@@ -73,7 +72,10 @@ function runTests()
   is(statusbar.getAttribute("label"), chromeMenu.getAttribute("label"),
      "statusbar label is correct");
 
-  sp.textbox.value = "window.foobarBug636725 = 'aloha2';";
+  sp.setText("2'", 31, 33);
+
+  ok(sp.getText(), "window.foobarBug636725 = 'aloha2';",
+     "setText() worked");
 
   ok(!window.foobarBug636725, "no window.foobarBug636725");
 
@@ -81,20 +83,23 @@ function runTests()
 
   is(window.foobarBug636725, "aloha2", "window.foobarBug636725 has been set");
 
-  sp.textbox.value = "window.gBrowser";
+  sp.setText("gBrowser", 7);
+
+  ok(sp.getText(), "window.gBrowser",
+     "setText() worked with no end for the replace range");
 
   is(typeof sp.run()[1].addTab, "function",
      "chrome context has access to chrome objects");
 
   // Check that the sandbox is cached.
 
-  sp.textbox.value = "typeof foobarBug636725cache;";
+  sp.setText("typeof foobarBug636725cache;");
   is(sp.run()[1], "undefined", "global variable does not exist");
 
-  sp.textbox.value = "var foobarBug636725cache = 'foo';";
+  sp.setText("var foobarBug636725cache = 'foo';");
   sp.run();
 
-  sp.textbox.value = "typeof foobarBug636725cache;";
+  sp.setText("typeof foobarBug636725cache;");
   is(sp.run()[1], "string",
      "global variable exists across two different executions");
 
@@ -103,10 +108,10 @@ function runTests()
   is(sp.run()[1], "undefined",
      "global variable no longer exists after calling resetContext()");
 
-  sp.textbox.value = "var foobarBug636725cache2 = 'foo';";
+  sp.setText("var foobarBug636725cache2 = 'foo';");
   sp.run();
 
-  sp.textbox.value = "typeof foobarBug636725cache2;";
+  sp.setText("typeof foobarBug636725cache2;");
   is(sp.run()[1], "string",
      "global variable exists across two different executions");
 

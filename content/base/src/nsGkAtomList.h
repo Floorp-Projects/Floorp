@@ -1794,7 +1794,6 @@ GK_ATOM(svgTextFrame, "SVGTextFrame")
 GK_ATOM(svgTextPathFrame, "SVGTextPathFrame")
 GK_ATOM(svgTSpanFrame, "SVGTSpanFrame")
 GK_ATOM(svgUseFrame, "SVGUseFrame")
-#ifdef MOZ_MEDIA
 GK_ATOM(HTMLVideoFrame, "VideoFrame")
 GK_ATOM(onloadstart, "onloadstart")
 GK_ATOM(onprogress, "onprogress")
@@ -1836,7 +1835,6 @@ GK_ATOM(canplaythrough, "canplaythrough")
 GK_ATOM(ratechange, "ratechange")
 GK_ATOM(durationchange, "durationchange")
 GK_ATOM(volumechange, "volumechange")
-#endif
 
 // Content property names
 GK_ATOM(animationsProperty, "AnimationsProperty")        // FrameAnimations*

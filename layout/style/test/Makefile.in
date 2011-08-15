@@ -133,6 +133,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		file_bug645998-1.css \
 		file_bug645998-2.css \
 		test_cascade.html \
+		test_ch_ex_no_infloops.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style.html \
 		test_computed_style_no_pseudo.html \

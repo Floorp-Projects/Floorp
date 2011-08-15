@@ -644,7 +644,7 @@ JSRuntime::JSRuntime()
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
-    JS_INIT_CLIST(&trapList);
+    JS_INIT_CLIST(&debuggerList);
 }
 
 bool
@@ -690,13 +690,9 @@ JSRuntime::init(uint32 maxbytes)
     stateChange = JS_NEW_CONDVAR(gcLock);
     if (!stateChange)
         return false;
-    debuggerLock = JS_NEW_LOCK();
-    if (!debuggerLock)
-        return false;
 #endif
 
-    debugMode = JS_FALSE;
-
+    debugMode = false;
     if (!js_InitThreads(this))
         return false;
     if (!InitRuntimeNumberState(this))
@@ -744,8 +740,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_LOCK(rtLock);
     if (stateChange)
         JS_DESTROY_CONDVAR(stateChange);
-    if (debuggerLock)
-        JS_DESTROY_LOCK(debuggerLock);
 #endif
 }
 
@@ -2718,9 +2712,9 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_MODE:
         return uint32(rt->gcMode);
       case JSGC_UNUSED_CHUNKS:
-        return uint32(rt->gcChunksWaitingToExpire);
+        return uint32(rt->gcEmptyChunkCount);
       case JSGC_TOTAL_CHUNKS:
-        return uint32(rt->gcUserChunkSet.count() + rt->gcSystemChunkSet.count());
+        return uint32(rt->gcChunkSet.count() + rt->gcEmptyChunkCount);
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;
@@ -3459,6 +3453,25 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
             return JS_FALSE;
         id = ATOM_TO_JSID(atom);
     }
+
+    if (attrs & JSPROP_NATIVE_ACCESSORS) {
+        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+        attrs &= ~JSPROP_NATIVE_ACCESSORS;
+        if (getter) {
+            JSObject *getobj = JS_NewFunction(cx, (JSNative) getter, 0, 0, obj->getGlobal(), NULL);
+            if (!getobj)
+                return false;
+            getter = JS_DATA_TO_FUNC_PTR(PropertyOp, getobj);
+            attrs |= JSPROP_GETTER;
+        }
+        if (setter) {
+            JSObject *setobj = JS_NewFunction(cx, (JSNative) setter, 1, 0, obj->getGlobal(), NULL);
+            if (!setobj)
+                return false;
+            setter = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setobj);
+            attrs |= JSPROP_SETTER;
+        }
+    }
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
 }
 
@@ -3690,7 +3703,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    return js_GetOwnPropertyDescriptor(cx, obj, id, Valueify(vp));
+    return GetOwnPropertyDescriptor(cx, obj, id, Valueify(vp));
 }
 
 static JSBool
@@ -4454,17 +4467,12 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *p
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
 
-    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
+    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT | TCF_NEED_SCRIPT_OBJECT;
     JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
                                                chars, length, filename, lineno, version);
-    JSObject *scriptObj = NULL;
-    if (script) {
-        scriptObj = js_NewScriptObject(cx, script);
-        if (!scriptObj)
-            js_DestroyScript(cx, script, 3);
-    }
-    LAST_FRAME_CHECKS(cx, scriptObj);
-    return scriptObj;
+    JS_ASSERT_IF(script, script->u.object);
+    LAST_FRAME_CHECKS(cx, script);
+    return script ? script->u.object : NULL;
 }
 
 extern JS_PUBLIC_API(JSObject *)
@@ -4639,18 +4647,14 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 
     JS_ASSERT(i <= len);
     len = i;
-    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
+    uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT | TCF_NEED_SCRIPT_OBJECT;
     script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1,
                                      cx->findVersion());
     cx->free_(buf);
     if (!script)
         return NULL;
-
-    JSObject *scriptObj = js_NewScriptObject(cx, script);
-    if (!scriptObj)
-        js_DestroyScript(cx, script, 4);
-
-    return scriptObj;
+    JS_ASSERT(script->u.object);
+    return script->u.object;
 }
 
 JS_PUBLIC_API(JSObject *)

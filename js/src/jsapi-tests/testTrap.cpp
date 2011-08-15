@@ -54,17 +54,17 @@ BEGIN_TEST(testTrap_gc)
         JSScript *script = JS_GetScriptFromObject(scriptObj);
         jsbytecode *line2 = JS_LineNumberToPC(cx, script, 1);
         CHECK(line2);
-        
+
         jsbytecode *line6 = JS_LineNumberToPC(cx, script, 5);
         CHECK(line2);
-        
+
         trapClosure = JS_NewStringCopyZ(cx, trapClosureText);
         CHECK(trapClosure);
         JS_SetTrap(cx, script, line2, EmptyTrapHandler, STRING_TO_JSVAL(trapClosure));
         JS_SetTrap(cx, script, line6, EmptyTrapHandler, STRING_TO_JSVAL(trapClosure));
-        
+
         JS_GC(cx);
-        
+
         CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(trapClosure), trapClosureText));
     }
 

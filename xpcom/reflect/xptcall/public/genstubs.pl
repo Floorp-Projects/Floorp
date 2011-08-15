@@ -8,12 +8,14 @@
 # if "$entry_count" is ever changed and the .inc files regenerated then
 # the following issues need to be addressed:
 #
-# 1) Alpha NT has a .def file that lists exports by symbol. It will need
-#    updating.
-# 2) The current Linux ARM code has a limitation of only having 256-3 stubs
+# 1) The current Linux ARM code has a limitation of only having 256-3 stubs,
+#    as a result of the limitations of immediate values in ARM assembly.
 #
-# more dependencies???
-#
+# This number is verified by the IDL parser in xpcom/idl-parser/xpidl.py, as
+# well as in xpcom/reflect/xptinfo/src/xptiInterfaceInfoManager.cpp, to
+# prevent generating interfaces or loading xpt files that would cause the
+# stubs to run off the entries.
+# If you change this number, please update that location.
 
 # 3 entries are already 'used' by the 3 methods of nsISupports.
 # 3+247+5=255 This should get us in under the Linux ARM limitation

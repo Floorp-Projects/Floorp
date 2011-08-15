@@ -5311,3 +5311,12 @@ nsEditor::BeginKeypressHandling(nsIDOMNSEvent* aEvent)
     mLastKeypressEventWasTrusted = isTrusted ? eTriTrue : eTriFalse;
   }
 }
+
+void
+nsEditor::OnFocus(nsIDOMEventTarget* aFocusEventTarget)
+{
+  InitializeSelection(aFocusEventTarget);
+  if (mInlineSpellChecker) {
+    mInlineSpellChecker->UpdateCurrentDictionary();
+  }
+}

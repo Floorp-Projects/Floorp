@@ -98,6 +98,10 @@ _TEST_FILES = \
   browser_bug623950.js \
   browser_updatessl.js \
   browser_installssl.js \
+  browser_newaddon.js \
+  browser_select_selection.js \
+  browser_select_confirm.js \
+  browser_select_update.js \
   $(NULL)
 
 _TEST_RESOURCES = \
@@ -119,6 +123,7 @@ _TEST_RESOURCES = \
   browser_eula.xml \
   browser_purchase.xml \
   discovery.html \
+  more_options.xul \
   options.xul \
   redirect.sjs \
   releaseNotes.xhtml \

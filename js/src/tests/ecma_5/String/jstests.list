@@ -3,6 +3,7 @@ script 15.5.4.2.js
 script 15.5.4.7.js
 script 15.5.4.11-01.js
 script defaultvalue.js
+script match-defines-match-elements.js
 script split-01.js
 script split-undefined-separator.js
 script split-xregexp.js

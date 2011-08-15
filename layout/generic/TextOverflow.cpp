@@ -245,8 +245,9 @@ void
 nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                                                 nsPoint aOffsetFromRect)
 {
-  nsStyleContext* sc = mFrame->GetStyleContext();
-  nsLayoutUtils::SetFontFromStyle(aCtx, sc);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
+  aCtx->SetFont(fm);
   gfxFloat y = nsLayoutUtils::GetSnappedBaselineY(mFrame, aCtx->ThebesContext(),
                                                   mRect.y, mAscent);
   nsPoint baselinePt(mRect.x, NSToCoordFloor(y));
@@ -658,7 +659,9 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   }
   nsRefPtr<nsRenderingContext> rc =
     aFrame->PresContext()->PresShell()->GetReferenceRenderingContext();
-  nsLayoutUtils::SetFontFromStyle(rc, aFrame->GetStyleContext());
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+  rc->SetFont(fm);
 
   mMarkerString = mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS ?
                     GetEllipsis(aFrame) : mStyle->mString;

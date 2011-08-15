@@ -57,7 +57,7 @@ void JS_FASTCALL This(VMFrame &f);
 JSObject * JS_FASTCALL NewInitArray(VMFrame &f, uint32 count);
 JSObject * JS_FASTCALL NewInitObject(VMFrame &f, JSObject *base);
 void JS_FASTCALL Trap(VMFrame &f, uint32 trapTypes);
-void JS_FASTCALL Debugger(VMFrame &f, jsbytecode *pc);
+void JS_FASTCALL DebuggerStatement(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Interrupt(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL InitElem(VMFrame &f, uint32 last);
 void JS_FASTCALL InitProp(VMFrame &f, JSAtom *atom);

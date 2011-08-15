@@ -58,6 +58,7 @@
 #include "jsanalyze.h"
 #include "methodjit/BaseCompiler.h"
 #include "methodjit/ICRepatcher.h"
+#include "vm/Debugger.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycacheinlines.h"
@@ -463,32 +464,39 @@ js_InternalThrow(VMFrame &f)
     // Make sure sp is up to date.
     JS_ASSERT(&cx->regs() == &f.regs);
 
-    // Call the throw hook if necessary
-    JSThrowHook handler = f.cx->debugHooks->throwHook;
-    if (handler) {
-        Value rval;
-        switch (handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
-                        cx->debugHooks->throwHookData)) {
-          case JSTRAP_ERROR:
-            cx->clearPendingException();
-            return NULL;
-
-          case JSTRAP_RETURN:
-            cx->clearPendingException();
-            cx->fp()->setReturnValue(rval);
-            return cx->jaegerCompartment()->forceReturnFromExternC();
-
-          case JSTRAP_THROW:
-            cx->setPendingException(rval);
-            break;
-
-          default:
-            break;
-        }
-    }
-
     jsbytecode *pc = NULL;
     for (;;) {
+        if (cx->isExceptionPending()) {
+            // Call the throw hook if necessary
+            JSThrowHook handler = cx->debugHooks->throwHook;
+            if (handler || !cx->compartment->getDebuggees().empty()) {
+                Value rval;
+                JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
+                if (st == JSTRAP_CONTINUE && handler) {
+                    st = handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
+                                 cx->debugHooks->throwHookData);
+                }
+
+                switch (st) {
+                case JSTRAP_ERROR:
+                    cx->clearPendingException();
+                    return NULL;
+
+                case JSTRAP_RETURN:
+                    cx->clearPendingException();
+                    cx->fp()->setReturnValue(rval);
+                    return cx->jaegerCompartment()->forceReturnFromExternC();
+
+                case JSTRAP_THROW:
+                    cx->setPendingException(rval);
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+
         pc = FindExceptionHandler(cx);
         if (pc)
             break;
@@ -869,7 +877,8 @@ ResetTraceHintAt(JSScript *script, js::mjit::JITScript *jit,
     
     JS_ASSERT(ic.jumpTargetPC == pc);
 
-    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index, script);
+    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index,
+               static_cast<void*>(script));
 
     Repatcher repatcher(jit);
 

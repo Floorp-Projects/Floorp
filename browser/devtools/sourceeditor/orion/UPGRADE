@@ -1,0 +1,20 @@
+Upgrade notes:
+
+1. Get the Orion client source code from:
+http://www.eclipse.org/orion
+
+2. Install Dryice from:
+https://github.com/mozilla/dryice
+
+You also need nodejs for Dryice to run:
+http://nodejs.org
+
+3. Copy Makefile.dryice.js to:
+org.eclipse.orion.client/bundles/
+
+4. Execute Makefile.dryice.js. You should get orion.js and orion.css.
+
+5. Copy the two files back here.
+
+6. Make a new build of Firefox.
+

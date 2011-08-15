@@ -52,10 +52,6 @@
 
 Cc["@mozilla.org/moz/jssubscript-loader;1"].
   getService(Ci.mozIJSSubScriptLoader).
-  loadSubScript("chrome://mochikit/content/MochiKit/packed.js");
-
-Cc["@mozilla.org/moz/jssubscript-loader;1"].
-  getService(Ci.mozIJSSubScriptLoader).
   loadSubScript("chrome://browser/content/sanitize.js");
 
 const dm = Cc["@mozilla.org/download-manager;1"].

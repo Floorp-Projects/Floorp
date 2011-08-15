@@ -2517,6 +2517,15 @@ TraceMonitor::getVMAllocatorsReserveSize() const
            tempAlloc->mReserveSize;
 }
 
+size_t
+TraceMonitor::getTraceMonitorSize() const
+{
+    return sizeof(TraceMonitor) +           // TraceMonitor
+           sizeof(*storage) +               // TraceNativeStorage
+           recordAttempts->tableSize() +    // RecordAttemptMap
+           loopProfiles->tableSize();       // LoopProfileMap
+}
+
 /*
  * This function destroys the recorder after a successful recording, possibly
  * starting a suspended outer recorder.
@@ -10467,7 +10476,10 @@ TraceRecorder::record_EnterFrame()
 
     /* Try inlining one level in case this recursion doesn't go too deep. */
     if (fp->script() == fp->prev()->script() &&
-        fp->prev()->prev() && fp->prev()->prev()->script() == fp->script()) {
+        fp->prev()->prev() &&
+        fp->prev()->prev()->isScriptFrame() &&
+        fp->prev()->prev()->script() == fp->script())
+    {
         RETURN_STOP_A("recursion started inlining");
     }
 
@@ -14035,7 +14047,7 @@ JS_DEFINE_CALLINFO_4(static, OBJECT_FAIL, MethodReadBarrier, CONTEXT, OBJECT, SH
 /*
  * Get a property. The current opcode has JOF_ATOM.
  *
- * There are two modes. The caller must pass nonnull pointers for either outp
+ * There are two modes. The caller must pass non-null pointers for either outp
  * or both slotp and v_insp. In the latter case, we require a plain old
  * property with a slot; if the property turns out to be anything else, abort
  * tracing (rather than emit a call to a native getter or GetAnyProperty).

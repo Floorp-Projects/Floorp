@@ -185,27 +185,26 @@ mDocChangeRange(nsnull)
 ,mUtilRange(nsnull)
 ,mJoinOffset(0)
 {
-  nsString emptyString;
   // populate mCachedStyles
-  mCachedStyles[0] = StyleCache(nsEditProperty::b, emptyString, emptyString);
-  mCachedStyles[1] = StyleCache(nsEditProperty::i, emptyString, emptyString);
-  mCachedStyles[2] = StyleCache(nsEditProperty::u, emptyString, emptyString);
-  mCachedStyles[3] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("face"), emptyString);
-  mCachedStyles[4] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("size"), emptyString);
-  mCachedStyles[5] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("color"), emptyString);
-  mCachedStyles[6] = StyleCache(nsEditProperty::tt, emptyString, emptyString);
-  mCachedStyles[7] = StyleCache(nsEditProperty::em, emptyString, emptyString);
-  mCachedStyles[8] = StyleCache(nsEditProperty::strong, emptyString, emptyString);
-  mCachedStyles[9] = StyleCache(nsEditProperty::dfn, emptyString, emptyString);
-  mCachedStyles[10] = StyleCache(nsEditProperty::code, emptyString, emptyString);
-  mCachedStyles[11] = StyleCache(nsEditProperty::samp, emptyString, emptyString);
-  mCachedStyles[12] = StyleCache(nsEditProperty::var, emptyString, emptyString);
-  mCachedStyles[13] = StyleCache(nsEditProperty::cite, emptyString, emptyString);
-  mCachedStyles[14] = StyleCache(nsEditProperty::abbr, emptyString, emptyString);
-  mCachedStyles[15] = StyleCache(nsEditProperty::acronym, emptyString, emptyString);
-  mCachedStyles[16] = StyleCache(nsEditProperty::cssBackgroundColor, emptyString, emptyString);
-  mCachedStyles[17] = StyleCache(nsEditProperty::sub, emptyString, emptyString);
-  mCachedStyles[18] = StyleCache(nsEditProperty::sup, emptyString, emptyString);
+  mCachedStyles[0] = StyleCache(nsEditProperty::b, EmptyString(), EmptyString());
+  mCachedStyles[1] = StyleCache(nsEditProperty::i, EmptyString(), EmptyString());
+  mCachedStyles[2] = StyleCache(nsEditProperty::u, EmptyString(), EmptyString());
+  mCachedStyles[3] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("face"), EmptyString());
+  mCachedStyles[4] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("size"), EmptyString());
+  mCachedStyles[5] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("color"), EmptyString());
+  mCachedStyles[6] = StyleCache(nsEditProperty::tt, EmptyString(), EmptyString());
+  mCachedStyles[7] = StyleCache(nsEditProperty::em, EmptyString(), EmptyString());
+  mCachedStyles[8] = StyleCache(nsEditProperty::strong, EmptyString(), EmptyString());
+  mCachedStyles[9] = StyleCache(nsEditProperty::dfn, EmptyString(), EmptyString());
+  mCachedStyles[10] = StyleCache(nsEditProperty::code, EmptyString(), EmptyString());
+  mCachedStyles[11] = StyleCache(nsEditProperty::samp, EmptyString(), EmptyString());
+  mCachedStyles[12] = StyleCache(nsEditProperty::var, EmptyString(), EmptyString());
+  mCachedStyles[13] = StyleCache(nsEditProperty::cite, EmptyString(), EmptyString());
+  mCachedStyles[14] = StyleCache(nsEditProperty::abbr, EmptyString(), EmptyString());
+  mCachedStyles[15] = StyleCache(nsEditProperty::acronym, EmptyString(), EmptyString());
+  mCachedStyles[16] = StyleCache(nsEditProperty::cssBackgroundColor, EmptyString(), EmptyString());
+  mCachedStyles[17] = StyleCache(nsEditProperty::sub, EmptyString(), EmptyString());
+  mCachedStyles[18] = StyleCache(nsEditProperty::sup, EmptyString(), EmptyString());
 }
 
 nsHTMLEditRules::~nsHTMLEditRules()

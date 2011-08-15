@@ -80,7 +80,7 @@ FrameState::init()
         return false;
 #endif
 
-    eval = script->usesEval || cx->compartment->debugMode;
+    eval = script->usesEval || cx->compartment->debugMode();
 
     size_t totalBytes = sizeof(FrameEntry) * nentries +                     // entries[], w/ callee+this
                         sizeof(FrameEntry *) * nentries +                   // tracker.entries

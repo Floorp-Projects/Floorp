@@ -381,6 +381,7 @@ var Browser = {
     messageManager.addMessageListener("scroll", this);
     messageManager.addMessageListener("Browser:CertException", this);
     messageManager.addMessageListener("Browser:BlockedSite", this);
+    messageManager.addMessageListener("Browser:ErrorPage", this);
 
     // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
@@ -483,6 +484,7 @@ var Browser = {
     messageManager.removeMessageListener("scroll", this);
     messageManager.removeMessageListener("Browser:CertException", this);
     messageManager.removeMessageListener("Browser:BlockedSite", this);
+    messageManager.removeMessageListener("Browser:ErrorPage", this);
 
     var os = Services.obs;
     os.removeObserver(XPInstallObserver, "addon-install-blocked");
@@ -936,6 +938,14 @@ var Browser = {
   },
 
   /**
+   * Handle error page message from the content.
+   */
+  _handleErrorPage: function _handleErrorPage(aMessage) {
+    let tab = this.getTabForBrowser(aMessage.target);
+    tab.updateThumbnail({ force: true });
+  },
+
+  /**
    * Compute the sidebar percentage visibility.
    *
    * @param [optional] dx
@@ -1224,6 +1234,9 @@ var Browser = {
         break;
       case "Browser:BlockedSite":
         this._handleBlockedSite(aMessage);
+        break;
+      case "Browser:ErrorPage":
+        this._handleErrorPage(aMessage);
         break;
     }
   }
@@ -1631,7 +1644,6 @@ nsBrowserAccess.prototype = {
       if (isExternal)
         tab.closeOnExit = true;
       browser = tab.browser;
-      BrowserUI.hidePanel();
     } else if (aWhere == OPEN_APPTAB) {
       Browser.tabs.forEach(function(aTab) {
         if ("appURI" in aTab.browser && aTab.browser.appURI.spec == aURI.spec) {
@@ -1649,7 +1661,6 @@ nsBrowserAccess.prototype = {
         // Just use the existing browser, but return null to keep the system from trying to load the URI again
         browser = null;
       }
-      BrowserUI.hidePanel();
     } else { // OPEN_CURRENTWINDOW and illegal values
       browser = Browser.selectedBrowser;
     }
@@ -1666,7 +1677,10 @@ nsBrowserAccess.prototype = {
       browser.focus();
     } catch(e) { }
 
+    // We are loading web content into this window, so make sure content is visible
+    BrowserUI.hidePanel();
     BrowserUI.closeAutoComplete();
+    Browser.hideSidebars();
     return browser;
   },
 
@@ -2971,7 +2985,8 @@ Tab.prototype = {
     return this.metadata.allowZoom && !Util.isURLEmpty(this.browser.currentURI.spec);
   },
 
-  updateThumbnail: function updateThumbnail() {
+  updateThumbnail: function updateThumbnail(options) {
+    let options = options || {};
     let browser = this._browser;
 
     if (this._loading) {
@@ -2979,9 +2994,11 @@ Tab.prototype = {
       return;
     }
 
+    let forceUpdate = ("force" in options && options.force);
+
     // Do not repaint thumbnail if we already painted for this load. Bad things
     // happen when we do async canvas draws in quick succession.
-    if (!browser || this._thumbnailWindowId == browser.contentWindowId)
+    if (!forceUpdate && (!browser || this._thumbnailWindowId == browser.contentWindowId))
       return;
 
     // Do not try to paint thumbnails if contentWindowWidth/Height have not been

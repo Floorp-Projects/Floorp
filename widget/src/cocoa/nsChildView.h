@@ -174,6 +174,15 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 // support "blocks"
 // (http://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/Blocks/Articles/00_Introduction.html)
 // -- which it does on 10.6 and up (using the 10.6 SDK or higher).
+//
+// MAC_OS_X_VERSION_MAX_ALLOWED "controls which OS functionality, if used,
+// will result in a compiler error because that functionality is not
+// available" (quoting from AvailabilityMacros.h).  The compiler initializes
+// it to the version of the SDK being used.  Its value does *not* prevent the
+// binary from running on higher OS versions.  MAC_OS_X_VERSION_10_7 and
+// friends are defined (in AvailabilityMacros.h) as decimal numbers (not
+// hexadecimal numbers).
+#if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
 #ifdef __LP64__
 enum {
   NSEventPhaseNone        = 0,
@@ -210,6 +219,7 @@ typedef NSInteger NSEventGestureAxis;
                       usingHandler:(void (^)(CGFloat gestureAmount, NSEventPhase phase, BOOL isComplete, BOOL *stop))trackingHandler;
 @end
 #endif // #ifdef __LP64__
+#endif // #if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
 
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY
@@ -354,9 +364,11 @@ public:
   static void MouseExitedWindow(NSEvent* aEvent);
   static void MouseEnteredWindow(NSEvent* aEvent);
   static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil);
+  static void ResendLastMouseMoveEvent();
   static ChildView* ViewForEvent(NSEvent* aEvent);
 
   static ChildView* sLastMouseEventView;
+  static NSEvent* sLastMouseMoveEvent;
   static NSWindow* sWindowUnderMouse;
 };
 
