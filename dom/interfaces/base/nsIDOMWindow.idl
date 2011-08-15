@@ -41,10 +41,6 @@
 
 #include "domstubs.idl"
 
-%{ C++
-#include "jspubtd.h"
-%}
-
 interface nsIAnimationFrameListener;
 interface nsIControllers;
 interface nsIDOMBlob;

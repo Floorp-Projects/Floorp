@@ -532,6 +532,34 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
     return NS_OK;
 }
 
+void
+nsXPConnect::NotifyLeaveMainThread()
+{
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
+    JS_ClearRuntimeThread(mRuntime->GetJSRuntime());
+}
+
+void
+nsXPConnect::NotifyEnterCycleCollectionThread()
+{
+    NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
+    JS_SetRuntimeThread(mRuntime->GetJSRuntime());
+}
+
+void
+nsXPConnect::NotifyLeaveCycleCollectionThread()
+{
+    NS_ABORT_IF_FALSE(!NS_IsMainThread(), "On main thread");
+    JS_ClearRuntimeThread(mRuntime->GetJSRuntime());
+}
+
+void
+nsXPConnect::NotifyEnterMainThread()
+{
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
+    JS_SetRuntimeThread(mRuntime->GetJSRuntime());
+}
+
 nsresult 
 nsXPConnect::FinishTraverse()
 {
@@ -2445,7 +2473,9 @@ nsXPConnect::GetRuntime(JSRuntime **runtime)
     if(!runtime)
         return NS_ERROR_NULL_POINTER;
 
-    *runtime = GetRuntime()->GetJSRuntime();
+    JSRuntime *rt = GetRuntime()->GetJSRuntime();
+    JS_AbortIfWrongThread(rt);
+    *runtime = rt;
     return NS_OK;
 }
 
@@ -2567,18 +2597,8 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
 
             /* ParticipatesInCycleCollection means "on the main thread" */
             if (xpc::CompartmentParticipatesInCycleCollection(cx, comp)) {
-                if (gDesiredDebugMode) {
-                    if (!JS_SetDebugModeForCompartment(cx, comp, JS_TRUE))
-                        goto fail;
-                } else {
-                    /*
-                     * Debugging may be turned off with live scripts, so just
-                     * mark future scripts to be compiled into non-debug mode.
-                     * Existing scripts will continue to call JSD callbacks,
-                     * which will have no effect.
-                     */
-                    comp->debugMode = JS_FALSE;
-                }
+                if (!JS_SetDebugModeForCompartment(cx, comp, gDesiredDebugMode))
+                    goto fail;
             }
         }
     }

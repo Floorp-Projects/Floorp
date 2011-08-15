@@ -458,9 +458,6 @@ protected:
   // @return    If the editor has focus, this returns the focused node.
   //            Otherwise, returns null.
   already_AddRefed<nsINode> GetFocusedNode();
-  // Get an active editor's editing host in DOM window.  If this editor isn't
-  // active in the DOM window, this returns NULL.
-  nsIContent* GetActiveEditingHost();
 
   // Return TRUE if aElement is a table-related elemet and caret was set
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);

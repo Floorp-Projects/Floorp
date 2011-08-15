@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291377
 -->
 <head>
   <title>Test for Bug 291377</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -25,7 +24,7 @@ try {
   threw = false;
 } catch (e) {
   /* Check that we can touch various properties */
-  is(e.lineNumber, 24, "Unexpected line number");
+  is(e.lineNumber, 23, "Unexpected line number"); //This line number is dependent on the line number of document.appendChild()
   is(e.name, "NS_ERROR_XPC_NOT_ENOUGH_ARGS", "Unexpected exception name");
   isnot(e.message, "", "Should have a message");
   isnot(e.result, 0, "Should have a result");

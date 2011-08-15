@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Plaintext Editor Test code
+   -
+   - The Initial Developer of the Original Code is
+   - Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>.
+   - Portions created by the Initial Developer are Copyright (C) 2009
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=483651
+-->
+
+<head>
+  <title>Test for Bug 483651</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body onload="doTest();">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=483651">Mozilla Bug 483651</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 483651 **/
+
+      SimpleTest.waitForExplicitFinish();
+
+      function doTest() {
+        var t1 = $("t1");
+        var editor = null;
+
+        if (t1 instanceof Components.interfaces.nsIDOMNSEditableElement)
+          editor = t1.editor;
+
+        ok(editor, "able to get editor for the element");
+        t1.focus();
+        synthesizeKey("A", {});
+        synthesizeKey("VK_BACK_SPACE", {});
+
+        try {
+          // Was the trailing br removed?
+          is(editor.documentIsEmpty, true, "trailing <br> correctly removed");
+        } catch (e) {
+          ok(false, "test failed with error "+e);
+        }
+        SimpleTest.finish();
+      }
+   </script>
+  </pre>
+
+  <textarea id="t1" rows="2" columns="80"></textarea>
+</body>
+</html>

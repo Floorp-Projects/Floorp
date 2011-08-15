@@ -2,8 +2,6 @@
 <head>
   <title>NPN_Evaluate Tests</title>
   <script type="text/javascript" 
-          src="/MochiKit/packed.js"></script>
-  <script type="text/javascript" 
           src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
@@ -73,13 +71,14 @@
           "npnEvaluateTest return value was of unexpected type");
       var success = (json_result == json_expected && 
           typeof(result) == typeof(expected));
-      appendChildNodes($("verbose"),
-          SPAN((success ? "pass" : "fail") + ": eval(" + test[0] + ")"));
-      appendChildNodes($("verbose"),
-          SPAN(" == " + json_result + "(" + 
+      $("verbose").appendChild(
+          createEl('span',null, (success ? "pass" : "fail") + ": eval(" + test[0] + ")"));
+      $("verbose").appendChild(
+          createEl('span', null," == " + json_result + "(" + 
           typeof(result) + "), expected " + json_expected + "(" + 
-          typeof(expected) + ")"),
-          BR()
+          typeof(expected) + ")"));
+      $("verbose").appendChild(
+          createEl('br')
           );
     }
     

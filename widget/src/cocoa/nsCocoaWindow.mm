@@ -983,7 +983,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
-  NSPoint coord = {aX, nsCocoaUtils::FlippedScreenY(aY)};
+  NSPoint coord = {static_cast<CGFloat>(aX), nsCocoaUtils::FlippedScreenY(aY)};
   [mWindow setFrameTopLeftPoint:coord];
 
   return NS_OK;
@@ -2301,6 +2301,14 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
       // Re-layout our contents.
       geckoWindow->ReportSizeEvent();
     }
+
+    // Resizing the content area causes a reflow which would send a synthesized
+    // mousemove event to the old mouse position relative to the top left
+    // corner of the content area. But the mouse has shifted relative to the
+    // content area, so that event would have wrong position information. So
+    // we'll send a mouse move event with the correct new position.
+    ChildViewMouseTracker::ResendLastMouseMoveEvent();
+
     [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
   }
 }
@@ -2417,11 +2425,14 @@ DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
             nil],
           nil);
 
-  // At some window widths the call to CUIDraw doesn't draw the top pixel strip.
-  // We don't want to have a flickering transparent line, so we overdraw it.
-  CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
-  CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
-                                         aTitlebarRect.size.width, 1));
+  if (nsToolkit::OnLionOrLater()) {
+    // On Lion the call to CUIDraw doesn't draw the top pixel strip at some
+    // window widths. We don't want to have a flickering transparent line, so
+    // we overdraw it.
+    CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
+    CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
+                                           aTitlebarRect.size.width, 1));
+  }
 }
 
 // Pattern draw callback for standard titlebar gradients and solid titlebar colors
@@ -2429,15 +2440,7 @@ static void
 TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 {
   ToolbarWindow *window = (ToolbarWindow*)aInfo;
-
-  // Remember: this context is NOT flipped, so the origin is in the bottom left.
-  float titlebarWidth = [window frame].size.width;
-  float titlebarHeight = [window titlebarHeight];
-  float titlebarOrigin = [window frame].size.height - titlebarHeight;
-  NSRect titlebarRect = NSMakeRect(0, titlebarOrigin, titlebarWidth, titlebarHeight);
-
-  [NSGraphicsContext saveGraphicsState];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
+  NSRect titlebarRect = [window titlebarRect];
 
   if ([window drawsContentsIntoWindowFrame]) {
     NSView* view = [[[window contentView] subviews] lastObject];
@@ -2446,12 +2449,12 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 
     // Gecko drawing assumes flippedness, but the current context isn't flipped
     // (because we're painting into the window's border view, which is not a
-    // ChildView, so it isn't flpped).
+    // ChildView, so it isn't flipped).
     // So we need to set a flip transform.
     CGContextScaleCTM(aContext, 1.0f, -1.0f);
     CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
 
-    NSRect flippedTitlebarRect = NSMakeRect(0, 0, titlebarWidth, titlebarHeight);
+    NSRect flippedTitlebarRect = { NSZeroPoint, titlebarRect.size };
     [(ChildView*)view drawRect:flippedTitlebarRect inTitlebarContext:aContext];
   } else {
     BOOL isMain = [window isMainWindow];
@@ -2462,12 +2465,13 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
                          [window unifiedToolbarHeight], isMain);
     } else {
       // If the titlebar color is not nil, just set and draw it normally.
+      [NSGraphicsContext saveGraphicsState];
+      [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
       [titlebarColor set];
       NSRectFill(titlebarRect);
+      [NSGraphicsContext restoreGraphicsState];
     }
   }
-
-  [NSGraphicsContext restoreGraphicsState];
 }
 
 - (void)setFill

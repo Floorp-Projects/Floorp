@@ -51,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(10f43750-b379-11e0-aff2-0800200c9a66)]
+[builtinclass, scriptable, uuid(10f43750-b379-11e0-aff2-0800200c9a66)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;

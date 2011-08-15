@@ -139,7 +139,7 @@ struct GSNCache {
 
     void purge();
 };
- 
+
 inline GSNCache *
 GetGSNCache(JSContext *cx);
 
@@ -213,7 +213,7 @@ struct ThreadData {
     ~ThreadData();
 
     bool init();
-    
+
     void mark(JSTracer *trc) {
         stackSpace.mark(trc);
     }
@@ -264,7 +264,7 @@ struct JSThread {
         suspendCount(0)
 # ifdef DEBUG
       , checkRequestDepth(0)
-# endif        
+# endif
     {
         JS_INIT_CLIST(&contextList);
     }
@@ -328,7 +328,8 @@ typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> CompartmentVector;
 
 }
 
-struct JSRuntime {
+struct JSRuntime
+{
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
 #ifdef JS_THREADSAFE
@@ -340,6 +341,20 @@ struct JSRuntime {
 
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
+
+    /* See comment for JS_AbortIfWrongThread in jsapi.h. */
+#ifdef JS_THREADSAFE
+  public:
+    void clearOwnerThread();
+    void setOwnerThread();
+    JS_FRIEND_API(bool) onOwnerThread() const;
+  private:
+    void                *ownerThread_;
+  public:
+#else
+  public:
+    bool onOwnerThread() const { return true; }
+#endif
 
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
@@ -376,8 +391,31 @@ struct JSRuntime {
     uint32              protoHazardShape;
 
     /* Garbage collector state, used by jsgc.c. */
-    js::GCChunkSet      gcUserChunkSet;
-    js::GCChunkSet      gcSystemChunkSet;
+
+    /*
+     * Set of all GC chunks with at least one allocated thing. The
+     * conservative GC uses it to quickly check if a possible GC thing points
+     * into an allocated chunk.
+     */
+    js::GCChunkSet      gcChunkSet;
+
+    /*
+     * Doubly-linked lists of chunks from user and system compartments. The GC
+     * allocates its arenas from the corresponding list and when all arenas
+     * in the list head are taken, then the chunk is removed from the list.
+     * During the GC when all arenas in a chunk become free, that chunk is
+     * removed from the list and scheduled for release.
+     */
+    js::gc::Chunk       *gcSystemAvailableChunkListHead;
+    js::gc::Chunk       *gcUserAvailableChunkListHead;
+
+    /*
+     * Singly-linked list of empty chunks and its length. We use the list not
+     * to release empty chunks immediately so they can be used for future
+     * allocations. This avoids very high overhead of chunk release/allocation.
+     */
+    js::gc::Chunk       *gcEmptyChunkListHead;
+    size_t              gcEmptyChunkCount;
 
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
@@ -387,7 +425,6 @@ struct JSRuntime {
     size_t              gcLastBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
-    size_t              gcChunksWaitingToExpire;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
     js::GCMarker        *gcMarkingTracer;
@@ -507,10 +544,8 @@ struct JSRuntime {
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        globalDebugHooks;
 
-    /*
-     * Right now, we only support runtime-wide debugging.
-     */
-    JSBool              debugMode;
+    /* If true, new compartments are initially in debug mode. */
+    bool                debugMode;
 
     /* Had an out-of-memory error which did not populate an exception. */
     JSBool              hadOutOfMemory;
@@ -523,8 +558,11 @@ struct JSRuntime {
     }
 #endif
 
-    /* More debugging state, see jsdbgapi.c. */
-    JSCList             trapList;
+    /*
+     * Linked list of all js::Debugger objects. This may be accessed by the GC
+     * thread, if any, or a thread that is in a request and holds gcLock.
+     */
+    JSCList             debuggerList;
 
     /* Client opaque pointers */
     void                *data;
@@ -549,14 +587,14 @@ struct JSRuntime {
     PRCondVar           *stateChange;
 
     /*
-     * Lock serializing trapList accesses, and count of all mutations to
-     * trapList made by debugger threads. To keep the code simple, we define
-     * debuggerMutations for the thread-unsafe case too.
+     * Mapping from NSPR thread identifiers to JSThreads.
+     *
+     * This map can be accessed by the GC thread; or by the thread that holds
+     * gcLock, if GC is not running.
      */
-    PRLock              *debuggerLock;
-
     JSThread::Map       threads;
 #endif /* JS_THREADSAFE */
+
     uint32              debuggerMutations;
 
     /*
@@ -661,7 +699,7 @@ struct JSRuntime {
             return infoEnabled;
         }
 
-        /* 
+        /*
          * Circular buffer with GC data.
          * count may grow >= INFO_LIMIT, which would indicate data loss.
          */
@@ -1344,11 +1382,11 @@ class AutoCheckRequestDepth {
 # define CHECK_REQUEST(cx)                                                    \
     JS_ASSERT((cx)->thread());                                                \
     JS_ASSERT((cx)->thread()->data.requestDepth || (cx)->thread() == (cx)->runtime->gcThread); \
+    JS_ASSERT(cx->runtime->onOwnerThread());                                  \
     AutoCheckRequestDepth _autoCheckRequestDepth(cx);
 
 #else
 # define CHECK_REQUEST(cx)          ((void) 0)
-# define CHECK_REQUEST_THREAD(cx)   ((void) 0)
 #endif
 
 static inline JSAtom **

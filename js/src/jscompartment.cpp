@@ -54,6 +54,7 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
+#include "vm/Debugger.h"
 
 #include "jsgcinlines.h"
 #include "jsscopeinlines.h"
@@ -77,6 +78,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 #endif
     data(NULL),
     active(false),
+    hasDebugModeCodeToDrop(false),
 #ifdef JS_METHODJIT
     jaegerCompartment_(NULL),
 #endif
@@ -92,8 +94,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     emptyWithShape(NULL),
     initialRegExpShape(NULL),
     initialStringShape(NULL),
-    debugMode(rt->debugMode),
+    debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
+    breakpointSites(rt),
     watchpointMap(NULL)
 {
     JS_INIT_CLIST(&scripts);
@@ -127,7 +130,6 @@ JSCompartment::~JSCompartment()
 bool
 JSCompartment::init(JSContext *cx)
 {
-    chunk = NULL;
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         arenas[i].init();
 
@@ -150,7 +152,7 @@ JSCompartment::init(JSContext *cx)
     if (!backEdgeTable.init())
         return false;
 
-    return true;
+    return debuggees.init() && breakpointSites.init();
 }
 
 #ifdef JS_METHODJIT
@@ -519,8 +521,6 @@ JSCompartment::markTypes(JSTracer *trc)
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
-    chunk = NULL;
-
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key.toGCThing()) &&
@@ -551,6 +551,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
         initialStringShape = NULL;
 
+    sweepBreakpoints(cx);
+
 #ifdef JS_TRACER
     if (hasTraceMonitor())
         traceMonitor()->sweep(cx);
@@ -578,7 +580,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
      * for compartments which currently have active stack frames.
      */
     uint32 counter = 1;
-    bool discardScripts = !active && releaseInterval != 0;
+    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
+    if (discardScripts)
+        hasDebugModeCodeToDrop = false;
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
@@ -652,8 +656,6 @@ JSCompartment::purge(JSContext *cx)
 #endif
 
 #ifdef JS_METHODJIT
-    js::CheckCompartmentScripts(this);
-
     for (JSScript *script = (JSScript *)scripts.next;
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {
@@ -712,4 +714,240 @@ JSCompartment::incBackEdgeCount(jsbytecode *pc)
     if (BackEdgeMap::Ptr p = backEdgeTable.lookupWithDefault(pc, 0))
         return ++p->value;
     return 1;  /* oom not reported by backEdgeTable, so ignore. */
+}
+
+bool
+JSCompartment::hasScriptsOnStack(JSContext *cx)
+{
+    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
+        JSScript *script = i.fp()->maybeScript();
+        if (script && script->compartment == this)
+            return true;
+    }
+    return false;
+}
+
+bool
+JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
+{
+    bool enabledBefore = debugMode();
+    bool enabledAfter = (debugModeBits & ~uintN(DebugFromC)) || b;
+
+    // Debug mode can be enabled only when no scripts from the target
+    // compartment are on the stack. It would even be incorrect to discard just
+    // the non-live scripts' JITScripts because they might share ICs with live
+    // scripts (bug 632343).
+    //
+    // We do allow disabling debug mode while scripts are on the stack.  In
+    // that case the debug-mode code for those scripts remains, so subsequently
+    // hooks may be called erroneously, even though debug mode is supposedly
+    // off, and we have to live with it.
+    //
+    bool onStack = false;
+    if (enabledBefore != enabledAfter) {
+        onStack = hasScriptsOnStack(cx);
+        if (b && onStack) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
+            return false;
+        }
+    }
+
+    debugModeBits = (debugModeBits & ~uintN(DebugFromC)) | (b ? DebugFromC : 0);
+    JS_ASSERT(debugMode() == enabledAfter);
+    if (enabledBefore != enabledAfter && !onStack)
+        updateForDebugMode(cx);
+    return true;
+}
+
+void
+JSCompartment::updateForDebugMode(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    bool enabled = debugMode();
+
+    if (enabled) {
+        JS_ASSERT(!hasScriptsOnStack(cx));
+    } else if (hasScriptsOnStack(cx)) {
+        hasDebugModeCodeToDrop = true;
+        return;
+    }
+
+    // Discard JIT code for any scripts that change debugMode. This assumes
+    // that 'comp' is in the same thread as 'cx'.
+    for (JSScript *script = (JSScript *) scripts.next;
+         &script->links != &scripts;
+         script = (JSScript *) script->links.next)
+    {
+        if (script->debugMode != enabled) {
+            mjit::ReleaseScriptCode(cx, script);
+            script->debugMode = enabled;
+        }
+    }
+    hasDebugModeCodeToDrop = false;
+#endif
+}
+
+bool
+JSCompartment::addDebuggee(JSContext *cx, js::GlobalObject *global)
+{
+    bool wasEnabled = debugMode();
+    if (!debuggees.put(global)) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+    debugModeBits |= DebugFromJS;
+    if (!wasEnabled)
+        updateForDebugMode(cx);
+    return true;
+}
+
+void
+JSCompartment::removeDebuggee(JSContext *cx,
+                              js::GlobalObject *global,
+                              js::GlobalObjectSet::Enum *debuggeesEnum)
+{
+    bool wasEnabled = debugMode();
+    JS_ASSERT(debuggees.has(global));
+    if (debuggeesEnum)
+        debuggeesEnum->removeFront();
+    else
+        debuggees.remove(global);
+
+    if (debuggees.empty()) {
+        debugModeBits &= ~DebugFromJS;
+        if (wasEnabled && !debugMode())
+            updateForDebugMode(cx);
+    }
+}
+
+BreakpointSite *
+JSCompartment::getBreakpointSite(jsbytecode *pc)
+{
+    BreakpointSiteMap::Ptr p = breakpointSites.lookup(pc);
+    return p ? p->value : NULL;
+}
+
+BreakpointSite *
+JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc, JSObject *scriptObject)
+{
+    JS_ASSERT(script->code <= pc);
+    JS_ASSERT(pc < script->code + script->length);
+    JS_ASSERT_IF(scriptObject, scriptObject->isScript() || scriptObject->isFunction());
+    JS_ASSERT_IF(scriptObject && scriptObject->isFunction(),
+                 scriptObject->getFunctionPrivate()->script() == script);
+    JS_ASSERT_IF(scriptObject && scriptObject->isScript(), scriptObject->getScript() == script);
+
+    BreakpointSiteMap::AddPtr p = breakpointSites.lookupForAdd(pc);
+    if (!p) {
+        BreakpointSite *site = cx->runtime->new_<BreakpointSite>(script, pc);
+        if (!site || !breakpointSites.add(p, pc, site)) {
+            js_ReportOutOfMemory(cx);
+            return NULL;
+        }
+    }
+
+    BreakpointSite *site = p->value;
+    if (site->scriptObject)
+        JS_ASSERT_IF(scriptObject, site->scriptObject == scriptObject);
+    else
+        site->scriptObject = scriptObject;
+
+    return site;
+}
+
+void
+JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script,
+                                  JSObject *handler)
+{
+    JS_ASSERT_IF(script, script->compartment == this);
+
+    for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
+        BreakpointSite *site = e.front().value;
+        if (!script || site->script == script) {
+            Breakpoint *nextbp;
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+                nextbp = bp->nextInSite();
+                if ((!dbg || bp->debugger == dbg) && (!handler || bp->getHandler() == handler))
+                    bp->destroy(cx, &e);
+            }
+        }
+    }
+}
+
+void
+JSCompartment::clearTraps(JSContext *cx, JSScript *script)
+{
+    for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
+        BreakpointSite *site = e.front().value;
+        if (!script || site->script == script)
+            site->clearTrap(cx, &e);
+    }
+}
+
+bool
+JSCompartment::markBreakpointsIteratively(JSTracer *trc)
+{
+    bool markedAny = false;
+    JSContext *cx = trc->context;
+    for (BreakpointSiteMap::Range r = breakpointSites.all(); !r.empty(); r.popFront()) {
+        BreakpointSite *site = r.front().value;
+
+        // Mark jsdbgapi state if any. But if we know the scriptObject, put off
+        // marking trap state until we know the scriptObject is live.
+        if (site->trapHandler &&
+            (!site->scriptObject || IsAboutToBeFinalized(cx, site->scriptObject)))
+        {
+            if (site->trapClosure.isMarkable() &&
+                IsAboutToBeFinalized(cx, site->trapClosure.toGCThing()))
+            {
+                markedAny = true;
+            }
+            MarkValue(trc, site->trapClosure, "trap closure");
+        }
+
+        // Mark js::Debugger breakpoints. If either the debugger or the script is
+        // collected, then the breakpoint is collected along with it. So do not
+        // mark the handler in that case.
+        //
+        // If scriptObject is non-null, examine it to see if the script will be
+        // collected. If scriptObject is null, then site->script is an eval
+        // script on the stack, so it is definitely live.
+        //
+        if (!site->scriptObject || !IsAboutToBeFinalized(cx, site->scriptObject)) {
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
+                if (!IsAboutToBeFinalized(cx, bp->debugger->toJSObject()) &&
+                    bp->handler &&
+                    IsAboutToBeFinalized(cx, bp->handler))
+                {
+                    MarkObject(trc, *bp->handler, "breakpoint handler");
+                    markedAny = true;
+                }
+            }
+        }
+    }
+    return markedAny;
+}
+
+void
+JSCompartment::sweepBreakpoints(JSContext *cx)
+{
+    for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
+        BreakpointSite *site = e.front().value;
+        if (site->scriptObject) {
+            // clearTrap and nextbp are necessary here to avoid possibly
+            // reading *site or *bp after destroying it.
+            bool scriptGone = IsAboutToBeFinalized(cx, site->scriptObject);
+            bool clearTrap = scriptGone && site->hasTrap();
+
+            Breakpoint *nextbp;
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+                nextbp = bp->nextInSite();
+                if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
+                    bp->destroy(cx, &e);
+            }
+
+            if (clearTrap)
+                site->clearTrap(cx, &e);
+        }
+    }
 }

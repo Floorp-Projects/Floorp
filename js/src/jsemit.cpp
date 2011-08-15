@@ -1405,9 +1405,59 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
     return EmitJump(cx, cg, op, delta);
 }
 
-static ptrdiff_t
-EmitTraceOp(JSContext *cx, JSCodeGenerator *cg)
+/* A macro for inlining at the top of js_EmitTree (whence it came). */
+#define UPDATE_LINE_NUMBER_NOTES(cx, cg, line)                                \
+    JS_BEGIN_MACRO                                                            \
+        uintN line_ = (line);                                                 \
+        uintN delta_ = line_ - CG_CURRENT_LINE(cg);                           \
+        if (delta_ != 0) {                                                    \
+            /*                                                                \
+             * Encode any change in the current source line number by using   \
+             * either several SRC_NEWLINE notes or just one SRC_SETLINE note, \
+             * whichever consumes less space.                                 \
+             *                                                                \
+             * NB: We handle backward line number deltas (possible with for   \
+             * loops where the update part is emitted after the body, but its \
+             * line number is <= any line number in the body) here by letting \
+             * unsigned delta_ wrap to a very large number, which triggers a  \
+             * SRC_SETLINE.                                                   \
+             */                                                               \
+            CG_CURRENT_LINE(cg) = line_;                                      \
+            if (delta_ >= (uintN)(2 + ((line_ > SN_3BYTE_OFFSET_MASK)<<1))) { \
+                if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)line_) < 0)\
+                    return JS_FALSE;                                          \
+            } else {                                                          \
+                do {                                                          \
+                    if (js_NewSrcNote(cx, cg, SRC_NEWLINE) < 0)               \
+                        return JS_FALSE;                                      \
+                } while (--delta_ != 0);                                      \
+            }                                                                 \
+        }                                                                     \
+    JS_END_MACRO
+
+/* A function, so that we avoid macro-bloating all the other callsites. */
+static JSBool
+UpdateLineNumberNotes(JSContext *cx, JSCodeGenerator *cg, uintN line)
 {
+    UPDATE_LINE_NUMBER_NOTES(cx, cg, line);
+    return JS_TRUE;
+}
+
+static ptrdiff_t
+EmitTraceOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *nextpn)
+{
+    if (nextpn) {
+        /*
+         * Try to give the JSOP_TRACE the same line number as the next
+         * instruction. nextpn is often a block, in which case the next
+         * instruction typically comes from the first statement inside.
+         */
+        if (nextpn->pn_type == TOK_LC && nextpn->pn_arity == PN_LIST && nextpn->pn_head)
+            nextpn = nextpn->pn_head;
+        if (!UpdateLineNumberNotes(cx, cg, nextpn->pn_pos.begin.lineno))
+            return -1;
+    }
+
     uint32 index = cg->traceIndex;
     if (index < UINT16_MAX)
         cg->traceIndex++;
@@ -3272,9 +3322,7 @@ class TempPopScope {
     JSObjectBox *savedBlockBox;
 
   public:
-#ifdef DEBUG
-    TempPopScope() : savedStmt(NULL) {}
-#endif
+    TempPopScope() : savedStmt(NULL), savedScopeStmt(NULL), savedBlockBox(NULL) {}
 
     bool popBlock(JSContext *cx, JSCodeGenerator *cg) {
         savedStmt = cg->topStmt;
@@ -3901,44 +3949,6 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
     return js_EmitTree(cx, cg, body) &&
            js_Emit1(cx, cg, JSOP_STOP) >= 0 &&
            JSScript::NewScriptFromCG(cx, cg);
-}
-
-/* A macro for inlining at the top of js_EmitTree (whence it came). */
-#define UPDATE_LINE_NUMBER_NOTES(cx, cg, line)                                \
-    JS_BEGIN_MACRO                                                            \
-        uintN line_ = (line);                                                 \
-        uintN delta_ = line_ - CG_CURRENT_LINE(cg);                           \
-        if (delta_ != 0) {                                                    \
-            /*                                                                \
-             * Encode any change in the current source line number by using   \
-             * either several SRC_NEWLINE notes or just one SRC_SETLINE note, \
-             * whichever consumes less space.                                 \
-             *                                                                \
-             * NB: We handle backward line number deltas (possible with for   \
-             * loops where the update part is emitted after the body, but its \
-             * line number is <= any line number in the body) here by letting \
-             * unsigned delta_ wrap to a very large number, which triggers a  \
-             * SRC_SETLINE.                                                   \
-             */                                                               \
-            CG_CURRENT_LINE(cg) = line_;                                      \
-            if (delta_ >= (uintN)(2 + ((line_ > SN_3BYTE_OFFSET_MASK)<<1))) { \
-                if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)line_) < 0)\
-                    return JS_FALSE;                                          \
-            } else {                                                          \
-                do {                                                          \
-                    if (js_NewSrcNote(cx, cg, SRC_NEWLINE) < 0)               \
-                        return JS_FALSE;                                      \
-                } while (--delta_ != 0);                                      \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
-
-/* A function, so that we avoid macro-bloating all the other callsites. */
-static JSBool
-UpdateLineNumberNotes(JSContext *cx, JSCodeGenerator *cg, uintN line)
-{
-    UPDATE_LINE_NUMBER_NOTES(cx, cg, line);
-    return JS_TRUE;
 }
 
 static bool
@@ -5246,7 +5256,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         noteIndex2 = js_NewSrcNote(cx, cg, SRC_TRACE);
         if (noteIndex2 < 0)
             return JS_FALSE;
-        top = EmitTraceOp(cx, cg);
+        top = EmitTraceOp(cx, cg, pn->pn_right);
         if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
@@ -5279,7 +5289,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /* Compile the loop body. */
-        top = EmitTraceOp(cx, cg);
+        top = EmitTraceOp(cx, cg, pn->pn_left);
         if (top < 0)
             return JS_FALSE;
         js_PushStatement(cg, &stmtInfo, STMT_DO_LOOP, top);
@@ -5382,7 +5392,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
-            if (EmitTraceOp(cx, cg) < 0)
+            if (EmitTraceOp(cx, cg, NULL) < 0)
                 return JS_FALSE;
 
 #ifdef DEBUG
@@ -5501,7 +5511,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             
             /* Emit code for the loop body. */
-            if (EmitTraceOp(cx, cg) < 0)
+            if (EmitTraceOp(cx, cg, pn->pn_right) < 0)
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
@@ -6662,7 +6672,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = EmitJump(cx, cg, JSOP_FILTER, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = EmitTraceOp(cx, cg);
+        top = EmitTraceOp(cx, cg, pn->pn_right);
         if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))

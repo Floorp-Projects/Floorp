@@ -48,6 +48,7 @@ include $(topsrcdir)/config/config.mk
 DIRS = \
   webconsole \
   scratchpad \
+  sourceeditor \
   $(NULL)
 
 ifdef ENABLE_TESTS

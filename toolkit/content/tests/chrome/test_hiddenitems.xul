@@ -6,7 +6,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=317422
 -->
 <window title="Mozilla Bug 317422"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 

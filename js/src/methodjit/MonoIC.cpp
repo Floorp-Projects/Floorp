@@ -715,7 +715,7 @@ class CallCompiler : public BaseCompiler
         JSC::CodeLocationLabel cs = linker.finalize();
 
         JaegerSpew(JSpew_PICs, "generated CALL stub %p (%lu bytes)\n", cs.executableAddress(),
-                   masm.size());
+                   (unsigned long) masm.size());
 
         if (f.regs.inlined()) {
             JSC::LinkBuffer code((uint8 *) cs.executableAddress(), masm.size());
@@ -756,7 +756,8 @@ class CallCompiler : public BaseCompiler
                        JSC::CodeLocationLabel(entry));
 
         JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n",
-                   ic.funGuard.executableAddress(), ic.fastGuardedObject);
+                   ic.funGuard.executableAddress(),
+                   static_cast<void*>(ic.fastGuardedObject));
 
         return true;
     }
@@ -800,7 +801,7 @@ class CallCompiler : public BaseCompiler
         JSC::CodeLocationLabel cs = linker.finalize();
 
         JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%lu bytes)\n",
-                   cs.executableAddress(), masm.size());
+                   cs.executableAddress(), (unsigned long) masm.size());
 
         Repatcher repatch(from);
         repatch.relink(ic.funJump, cs);
@@ -1058,7 +1059,7 @@ class CallCompiler : public BaseCompiler
         JSC::CodeLocationLabel start = linker.finalize();
 
         JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%lu bytes)\n",
-                   start.executableAddress(), masm.size());
+                   start.executableAddress(), (unsigned long) masm.size());
 
         Repatcher repatch(jit);
         repatch.relink(ic.funJump, start);

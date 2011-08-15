@@ -326,7 +326,7 @@
             <spacer class="alert-spacer-before"/>
             <vbox class="alert">
               <label value="&listEmpty.search.label;"/>
-              <button label="&listEmpty.button.label;" class="addon-control"
+              <button label="&listEmpty.button.label;"
                       command="cmd_goToDiscoverPane"/>
             </vbox>
             <spacer class="alert-spacer-after"/>
@@ -386,7 +386,7 @@
             <spacer class="alert-spacer-before"/>
             <vbox class="alert">
               <label value="&listEmpty.installed.label;"/>
-              <button label="&listEmpty.button.label;" class="addon-control"
+              <button label="&listEmpty.button.label;"
                       command="cmd_goToDiscoverPane"/>
             </vbox>
             <spacer class="alert-spacer-after"/>
@@ -437,7 +437,7 @@
             <vbox class="alert">
               <label id="empty-availableUpdates-msg" value="&listEmpty.availableUpdates.label;"/>
               <label id="empty-recentUpdates-msg" value="&listEmpty.recentUpdates.label;"/>
-              <button label="&listEmpty.findUpdates.label;" class="addon-control"
+              <button label="&listEmpty.findUpdates.label;"
                       command="cmd_findAllUpdates"/>
             </vbox>
             <spacer class="alert-spacer-after"/>

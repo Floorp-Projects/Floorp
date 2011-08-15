@@ -457,7 +457,9 @@ struct JSScript {
     jsbytecode      *code;      /* bytecodes and their immediate operands */
     uint32          length;     /* length of code vector */
 
+#ifdef JS_CRASH_DIAGNOSTICS
     uint32          cookie1;
+#endif
 
   private:
     size_t          useCount_;  /* Number of times the script has been called
@@ -490,7 +492,7 @@ struct JSScript {
 
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
-    bool            savedCallerFun:1; /* object 0 is caller function */
+    bool            savedCallerFun:1; /* can call getCallerFunction() */
     bool            hasSharps:1;      /* script uses sharp variables */
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
@@ -530,7 +532,9 @@ struct JSScript {
     JSPrincipals    *principals;/* principals for this script */
     jschar          *sourceMap; /* source map file or null */
 
+#ifdef JS_CRASH_DIAGNOSTICS
     JSObject        *ownerObject;
+#endif
 
     void setOwnerObject(JSObject *owner);
 
@@ -544,12 +548,6 @@ struct JSScript {
          * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
          *   similar functions never have these objects; such scripts are
          *   explicitly destroyed by the code that created them.
-         * Debugging API functions (JSDebugHooks::newScriptHook;
-         * JS_GetFunctionScript) may reveal sans-script-object Function and
-         * temporary scripts to clients, but clients must never call
-         * JS_NewScriptObject on such scripts: doing so would double-free them,
-         * once from the explicit call to js_DestroyScript, and once when the
-         * script object is garbage collected.
          */
         JSObject    *object;
         JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
@@ -564,7 +562,9 @@ struct JSScript {
     /* array of execution counters for every JSOp in the script, by runmode */
     JSPCCounters    pcCounters;
 
+#ifdef JS_CRASH_DIAGNOSTICS
     uint32          cookie2;
+#endif
 
   public:
 
@@ -731,6 +731,7 @@ struct JSScript {
     }
 
     inline JSFunction *getFunction(size_t index);
+    inline JSFunction *getCallerFunction();
 
     inline JSObject *getRegExp(size_t index);
 
@@ -826,19 +827,6 @@ js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner);
  */
 extern void
 js_DestroyCachedScript(JSContext *cx, JSScript *script);
-
-namespace js {
-
-/*
- * This diagnostic function checks that a compartment's list of scripts
- * contains only valid scripts. It also searches for the target script
- * in the list. If expected is true, it asserts that the target script
- * is found. If expected is false, it asserts that it's not found.
- */
-void
-CheckCompartmentScripts(JSCompartment *comp);
-
-} /* namespace js */
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner);

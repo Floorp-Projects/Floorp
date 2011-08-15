@@ -201,6 +201,7 @@ toolbarbutton.urlbar-button {
 #urlbar-favicon {
   width: 32px;
   height: 32px;
+  image-rendering: -moz-crisp-edges;
 }
 
 #urlbar-favicon[src=""] {
@@ -730,6 +731,7 @@ placeitem > .bookmark-manage > image {
   width: 32px;
   height: 32px;
   max-height: 32px;
+  image-rendering: -moz-crisp-edges;
   /* margin-top = (1 - title's line-height) * title's font-size */
   margin-top: @autocomplete_item_container_image_padding@;
   margin-bottom: 0;

@@ -590,9 +590,9 @@ namespace places {
         }
         else {
           // Estimate frecency using the last few visits.
-          // Use NS_ceilf() so that we don't round down to 0, which
+          // Use ceilf() so that we don't round down to 0, which
           // would cause us to completely ignore the place during autocomplete.
-          NS_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits) / numSampledVisits)));
+          NS_ADDREF(*_result = new IntegerVariant((PRInt32) ceilf(fullVisitCount * ceilf(pointsForSampledVisits) / numSampledVisits)));
         }
 
         return NS_OK;
@@ -625,9 +625,9 @@ namespace places {
     // Assume "now" as our ageInDays, so use the first bucket.
     pointsForSampledVisits = history->GetFrecencyBucketWeight(1) * (bonus / (float)100.0); 
 
-    // use NS_ceilf() so that we don't round down to 0, which
+    // use ceilf() so that we don't round down to 0, which
     // would cause us to completely ignore the place during autocomplete
-    NS_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits))));
+    NS_ADDREF(*_result = new IntegerVariant((PRInt32) ceilf(fullVisitCount * ceilf(pointsForSampledVisits))));
 
     return NS_OK;
   }
