@@ -62,7 +62,7 @@ const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
 
 const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
-#ifdef MOZ_COMPATABILITY_NIGHTLY
+#ifdef MOZ_COMPATIBILITY_NIGHTLY
 const PREF_CHECK_COMPATIBILITY = PREF_CHECK_COMPATIBILITY_BASE +
                                  ".nightly";
 #else
