@@ -56,6 +56,7 @@ _BROWSER_FILES = \
 		browser_inspector_treePanel_result.html \
 		browser_inspector_registertools.js \
 		browser_inspector_bug_665880.js \
+		browser_inspector_bug_566084_location_changed.js \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)
