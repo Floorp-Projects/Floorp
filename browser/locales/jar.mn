@@ -16,7 +16,6 @@
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/scratchpad.properties           (%chrome/browser/scratchpad.properties)
     locale/browser/scratchpad.dtd                  (%chrome/browser/scratchpad.dtd)
-    locale/browser/inspector.properties            (%chrome/browser/inspector.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)
     locale/browser/openLocation.properties         (%chrome/browser/openLocation.properties)
 *   locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
