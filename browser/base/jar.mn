@@ -53,6 +53,7 @@ browser.jar:
         content/browser/tabview.css                   (content/tabview/tabview.css)
 *       content/browser/tabview.js                    (content/tabview/tabview.js)
         content/browser/tabview.html                  (content/tabview/tabview.html)
+        content/browser/tabview-content.js            (content/tabview/content.js)
 *       content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
 *       content/browser/web-panels.js                 (content/web-panels.js)
