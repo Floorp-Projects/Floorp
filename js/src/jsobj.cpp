@@ -3413,7 +3413,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
 
     TypeObject *type = proto->getNewType(cx);
     if (!type)
-        return false;
+        return NULL;
 
     JSObject *clone = js_NewGCObject(cx, kind);
     if (!clone)

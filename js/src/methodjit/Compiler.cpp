@@ -778,7 +778,7 @@ mjit::Compiler::generatePrologue()
                                                    StackFrame::UNDERFLOW_ARGS |
                                                    StackFrame::OVERFLOW_ARGS |
                                                    StackFrame::HAS_ARGS_OBJ));
-            masm.storePtr(ImmPtr((void *) script->function()->nargs),
+            masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
                           Address(JSFrameReg, StackFrame::offsetOfArgs()));
             hasArgs.linkTo(masm.label(), &masm);
         }
