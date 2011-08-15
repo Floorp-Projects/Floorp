@@ -2517,6 +2517,15 @@ TraceMonitor::getVMAllocatorsReserveSize() const
            tempAlloc->mReserveSize;
 }
 
+size_t
+TraceMonitor::getTraceMonitorSize() const
+{
+    return sizeof(TraceMonitor) +           // TraceMonitor
+           sizeof(*storage) +               // TraceNativeStorage
+           recordAttempts->tableSize() +    // RecordAttemptMap
+           loopProfiles->tableSize();       // LoopProfileMap
+}
+
 /*
  * This function destroys the recorder after a successful recording, possibly
  * starting a suspended outer recorder.
