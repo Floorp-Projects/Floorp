@@ -41,7 +41,7 @@
 interface nsIEditor;
 interface nsITextServicesFilter;
 
-[scriptable, uuid(803ff0dd-07f2-4438-b3a6-ab9c2fe4e1dd)]
+[scriptable, uuid(3da0ce96-7d3a-48d0-80b7-2d90dab09747)]
 interface nsIEditorSpellCheck : nsISupports
 {
 
@@ -143,12 +143,12 @@ interface nsIEditorSpellCheck : nsISupports
   /**
    * @see nsISpellChecker::GetCurrentDictionary
    */
-  wstring       GetCurrentDictionary();
+  AString       GetCurrentDictionary();
 
   /**
    * @see nsISpellChecker::SetCurrentDictionary
    */
-  void          SetCurrentDictionary(in wstring dictionary);
+  void          SetCurrentDictionary(in AString dictionary);
 
   /**
    * Call to save the currently selected dictionary as the default. The

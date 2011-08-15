@@ -78,6 +78,13 @@ protected:
   nsresult       DeleteSuggestedWordList();
 
   nsCOMPtr<nsITextServicesFilter> mTxtSrvFilter;
+
+  PRPackedBool mUpdateDictionaryRunning;
+  PRPackedBool mDictWasSetManually;
+
+public:
+  void BeginUpdateDictionary() { mUpdateDictionaryRunning = PR_TRUE ;}
+  void EndUpdateDictionary() { mUpdateDictionaryRunning = PR_FALSE ;}
 };
 
 #endif // nsEditorSpellCheck_h___
