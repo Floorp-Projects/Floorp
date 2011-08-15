@@ -2812,8 +2812,8 @@ ReportBadXMLName(JSContext *cx, const Value &idval)
     js_ReportValueError(cx, JSMSG_BAD_XML_NAME, JSDVG_IGNORE_STACK, idval, NULL);
 }
 
-static JSBool
-IsFunctionQName(JSContext *cx, JSObject *qn, jsid *funidp)
+static bool
+GetLocalNameFromFunctionQName(JSObject *qn, jsid *funidp, JSContext *cx)
 {
     JSAtom *atom = cx->runtime->atomState.functionNamespaceURIAtom;
     JSLinearString *uri = qn->getNameURI();
@@ -2821,17 +2821,15 @@ IsFunctionQName(JSContext *cx, JSObject *qn, jsid *funidp)
         *funidp = ATOM_TO_JSID(qn->getQNameLocalName());
         return true;
     }
-    *funidp = JSID_VOID;
-    return true;
+    return false;
 }
 
-JSBool
-js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp)
+bool
+js_GetLocalNameFromFunctionQName(JSObject *obj, jsid *funidp, JSContext *cx)
 {
-    if (obj->getClass() == &js_QNameClass)
-        return IsFunctionQName(cx, obj, funidp);
-    *funidp = JSID_VOID;
-    return JS_TRUE;
+    if (!obj->isQName())
+        return false;
+    return GetLocalNameFromFunctionQName(obj, funidp, cx);
 }
 
 static JSObject *
@@ -2899,8 +2897,8 @@ construct:
         return NULL;
 
 out:
-    if (!IsFunctionQName(cx, obj, funidp))
-        return NULL;
+    if (!GetLocalNameFromFunctionQName(obj, funidp, cx))
+        *funidp = JSID_VOID;
     return obj;
 
 bad:
@@ -4979,14 +4977,8 @@ js_GetXMLMethod(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     JS_ASSERT(obj->isXML());
 
-    if (JSID_IS_OBJECT(id)) {
-        jsid funid;
-
-        if (!js_IsFunctionQName(cx, JSID_TO_OBJECT(id), &funid))
-            return JS_FALSE;
-        if (!JSID_IS_VOID(funid))
-            id = funid;
-    }
+    if (JSID_IS_OBJECT(id))
+        js_GetLocalNameFromFunctionQName(JSID_TO_OBJECT(id), &id, cx);
 
     /*
      * As our callers have a bad habit of passing a pointer to an unrooted
@@ -7447,8 +7439,8 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     }
 
     qn = nameobj;
-    if (!IsFunctionQName(cx, qn, &funid))
-        return JS_FALSE;
+    if (!GetLocalNameFromFunctionQName(qn, &funid, cx))
+        funid = JSID_VOID;
 
     obj = &js_GetTopStackFrame(cx)->scopeChain();
     do {
