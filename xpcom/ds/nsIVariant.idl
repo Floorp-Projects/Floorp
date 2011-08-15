@@ -77,10 +77,6 @@ interface nsIDataType : nsISupports
     const PRUint16 VTYPE_EMPTY               = 255;
 };
 
-%{ C++
-#include "jspubtd.h"
-%}
-
 /**
  * XPConnect has magic to transparently convert between nsIVariant and JS types.
  * We mark the interface [scriptable] so that JS can use methods
