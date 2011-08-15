@@ -55,7 +55,8 @@ const STRING_KEY_MAP = {
   version:            "version",
   icon:               "iconURL",
   homepage:           "homepageURL",
-  support:            "supportURL"
+  support:            "supportURL",
+  strings:            "strings"
 };
 
 var LocaleRepository = {
@@ -320,6 +321,7 @@ LocaleSearchResult.prototype = {
   sourceURI: null,
   repositoryStatus: null,
   size: null,
+  strings: "",
   updateDate: null,
   isCompatible: true,
   isPlatformCompatible: true,
