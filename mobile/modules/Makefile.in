@@ -46,6 +46,7 @@ EXTRA_JS_MODULES = \
   LocaleRepository.jsm \
   linuxTypes.jsm \
   video.jsm \
+  openWebapps.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
