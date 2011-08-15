@@ -18,6 +18,6 @@ function test() {
     cw.GroupItems.resumeArrange();
     ok(groupItem.isStacked(), 'groupItem is now stacked');
 
-    closeGroupItem(groupItem, finish);
+    closeGroupItem(groupItem, function () hideTabView(finish));
   });
 }
