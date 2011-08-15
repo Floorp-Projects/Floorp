@@ -64,6 +64,22 @@
 
 using namespace mozilla;
 
+class UpdateDictionnaryHolder {
+  private:
+    nsEditorSpellCheck* mSpellCheck;
+  public:
+    UpdateDictionnaryHolder(nsEditorSpellCheck* esc): mSpellCheck(esc) {
+      if (mSpellCheck) {
+        mSpellCheck->BeginUpdateDictionary();
+      }
+    }
+    ~UpdateDictionnaryHolder() {
+      if (mSpellCheck) {
+        mSpellCheck->EndUpdateDictionary();
+      }
+    }
+};
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEditorSpellCheck)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEditorSpellCheck)
 
@@ -80,6 +96,8 @@ NS_IMPL_CYCLE_COLLECTION_2(nsEditorSpellCheck,
 nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)
   , mDictionaryIndex(0)
+  , mUpdateDictionaryRunning(PR_FALSE)
+  , mDictWasSetManually(PR_FALSE)
 {
 }
 
@@ -384,6 +402,9 @@ nsEditorSpellCheck::SetCurrentDictionary(const PRUnichar *aDictionary)
 
   NS_ENSURE_TRUE(aDictionary, NS_ERROR_NULL_POINTER);
 
+  if (!mUpdateDictionaryRunning) {
+    mDictWasSetManually = PR_TRUE;
+  }
   return mSpellChecker->SetCurrentDictionary(nsDependentString(aDictionary));
 }
 
@@ -400,10 +421,13 @@ nsEditorSpellCheck::UninitSpellChecker()
   return NS_OK;
 }
 
-// Save the last used dictionary to the user's preferences.
+// Save the last set dictionary to the user's preferences.
 NS_IMETHODIMP
 nsEditorSpellCheck::SaveDefaultDictionary()
 {
+  if (!mDictWasSetManually) {
+    return NS_OK;
+  }
   PRUnichar *dictName = nsnull;
   nsresult rv = GetCurrentDictionary(&dictName);
 
@@ -438,7 +462,13 @@ nsEditorSpellCheck::DeleteSuggestedWordList()
 NS_IMETHODIMP
 nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditor* aEditor)
 {
+  if (mDictWasSetManually) { // user has set dictionary manually; we better not change it.
+    return NS_OK;
+  }
+
   nsresult rv;
+
+  UpdateDictionnaryHolder holder(this);
 
   // Tell the spellchecker what dictionary to use:
   nsAutoString dictName;
@@ -532,9 +562,9 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditor* aEditor)
   // lang attribute, we try to get a dictionary. First try, en-US. If it does
   // not work, pick the first one.
   if (editorLang.IsEmpty()) {
-    nsAutoString currentDictonary;
-    rv = mSpellChecker->GetCurrentDictionary(currentDictonary);
-    if (NS_FAILED(rv) || currentDictonary.IsEmpty()) {
+    nsAutoString currentDictionary;
+    rv = mSpellChecker->GetCurrentDictionary(currentDictionary);
+    if (NS_FAILED(rv) || currentDictionary.IsEmpty()) {
       rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US").get());
       if (NS_FAILED(rv)) {
         nsTArray<nsString> dictList;
