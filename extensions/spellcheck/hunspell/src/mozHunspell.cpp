@@ -112,7 +112,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(Hunspell,
     HunspellGetCurrentAllocatedSize,
     "Memory used by the Hunspell spell checking engine.  This number accounts "
     "for the memory in use by Hunspell's internal data structures."
-);
+)
 
 nsresult
 mozHunspell::Init()
