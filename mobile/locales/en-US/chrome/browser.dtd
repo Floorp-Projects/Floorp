@@ -118,6 +118,5 @@
 <!ENTITY pageactions.findInPage      "Find In Page">
 <!ENTITY pageactions.search.addNew   "Add Search Engine">
 <!ENTITY pageactions.charEncoding    "Character Encoding">
-<!ENTITY pageactions.webapps.install "Install as App">
 
 <!ENTITY appMenu.siteOptions         "Site Options">
