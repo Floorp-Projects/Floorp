@@ -1776,9 +1776,7 @@ nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(PRFileDesc* ssl_layer_fd, ns
 
   PRBool enableSSL3 = PR_FALSE;
   SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL3, &enableSSL3);
-  PRBool enableSSL2 = PR_FALSE;
-  SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL2, &enableSSL2);
-  if (enableSSL3 || enableSSL2) {
+  if (enableSSL3) {
     // Add this site to the list of TLS intolerant sites.
     addIntolerantSite(key);
   }
@@ -3754,15 +3752,6 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
     infoObject->SetHasCleartextPhase(PR_TRUE);
   }
 
-  if (forSTARTTLS) {
-    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_SSL2, PR_FALSE)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (SECSuccess != SSL_OptionSet(fd, SSL_V2_COMPATIBLE_HELLO, PR_FALSE)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   // Let's see if we're trying to connect to a site we know is
   // TLS intolerant.
   nsCAutoString key;
@@ -3780,10 +3769,6 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
     // One advantage of this approach, if a site only supports the older
     // hellos, it is more likely that we will get a reasonable error code
     // on our single retry attempt.
-    
-    if (!forSTARTTLS &&
-        SECSuccess != SSL_OptionSet(fd, SSL_V2_COMPATIBLE_HELLO, PR_TRUE))
-      return NS_ERROR_FAILURE;
   }
 
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
