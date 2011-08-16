@@ -37,26 +37,20 @@ function setupTwo(win) {
     contentWindow.TabItems.update(tabItem.tab);
     tabItem.addSubscriber("savedCachedImageData", function onSaved(item) {
       item.removeSubscriber("savedCachedImageData", onSaved);
-      --numTabsToSave;
+
+      if (!--numTabsToSave)
+        restoreWindow();
     });
   });
 
   // after the window is closed, restore it.
-  let xulWindowDestory = function() {
-    Services.obs.removeObserver(
-       xulWindowDestory, "xul-window-destroyed", false);
-
-    // "xul-window-destroyed" is just fired just before a XUL window is
-    // destroyed so restore window and test it after a delay
+  let restoreWindow = function() {
     executeSoon(function() {
       restoredWin = undoCloseWindow();
       restoredWin.addEventListener("load", function onLoad(event) {
         restoredWin.removeEventListener("load", onLoad, false);
 
         registerCleanupFunction(function() restoredWin.close());
-
-        // ensure that closed tabs have been saved
-        is(numTabsToSave, 0, "All tabs were saved when window was closed.");
         is(restoredWin.gBrowser.tabs.length, 3, "The total number of tabs is 3");
 
         // setup tab variables and listen to the tabs load progress
@@ -103,7 +97,6 @@ function setupTwo(win) {
       }, false);
     });
   };
-  Services.obs.addObserver(xulWindowDestory, "xul-window-destroyed", false);
 
   win.close();
 }
