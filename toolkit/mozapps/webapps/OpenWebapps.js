@@ -209,11 +209,11 @@ OpenWebapps.prototype = {
   },
   
   list: function(aSuccess, aError) {
-    this.mm.sendAsyncMessage("OpenWebapps:MgmtList", { callbackID:  this.getCallbackId({ success: aSuccess, error: aError }) });
+    this.mm.sendAsyncMessage("OpenWebapps:MgmtList", { from: this._window.location.href, callbackID:  this.getCallbackId({ success: aSuccess, error: aError }) });
   },
   
   uninstall: function(aOrigin, aSuccess, aError) {
-    this.mm.sendAsyncMessage("OpenWebapps:MgmtUninstall", { origin: aOrigin, callbackID:  this.getCallbackId({ success: aSuccess, error: aError }) });
+    this.mm.sendAsyncMessage("OpenWebapps:MgmtUninstall", { from: this._window.location.href, origin: aOrigin, callbackID:  this.getCallbackId({ success: aSuccess, error: aError }) });
   },
 
   _onRepoChange: function(aWhat, aApps) {
