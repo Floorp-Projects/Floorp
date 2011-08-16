@@ -69,9 +69,9 @@ function load_entries(entries, prefix) {
   }
 }
 
-function getGreDir() {
+function getDir(prop) {
   return Cc["@mozilla.org/file/directory_service;1"].
-    getService(Ci.nsIProperties).get("GreD", Ci.nsIFile);
+    getService(Ci.nsIProperties).get(prop, Ci.nsIFile);
 }
 
 function openJar(file) {
@@ -81,12 +81,12 @@ function openJar(file) {
   return zipreader;
 }
 
-function populate_startupcache(omnijarName, startupcacheName) {
-  var file = getGreDir();
+function populate_startupcache(prop, omnijarName, startupcacheName) {
+  var file = getDir(prop);
   file.append(omnijarName);
   zipreader = openJar(file);
 
-  var scFile = getGreDir();
+  var scFile = getDir(prop);
   scFile.append(startupcacheName);
   setenv("MOZ_STARTUP_CACHE", scFile.path);
 

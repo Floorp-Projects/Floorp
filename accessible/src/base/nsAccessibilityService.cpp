@@ -56,6 +56,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleProvider.h"
 #include "States.h"
+#include "Statistics.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -1771,6 +1772,8 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
     service->Shutdown();
     return NS_ERROR_FAILURE;
   }
+
+  statistics::A11yInitialized();
 
   nsAccessibilityService::gAccessibilityService = service;
   NS_ADDREF(*aResult = service);

@@ -29,6 +29,7 @@
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Drew Willcoxon <adw@mozilla.com>
  *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Paolo Amadini <http://www.amadzone.org/>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -169,6 +170,14 @@ static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 
 // Sync guid annotation
 #define SYNCGUID_ANNO NS_LITERAL_CSTRING("sync/guid")
+
+// Download destination file URI annotation
+#define DESTINATIONFILEURI_ANNO \
+  NS_LITERAL_CSTRING("downloads/destinationFileURI")
+
+// Download destination file name annotation
+#define DESTINATIONFILENAME_ANNO \
+  NS_LITERAL_CSTRING("downloads/destinationFileName")
 
 // These macros are used when splitting history by date.
 // These are the day containers and catch-all final container.
@@ -5216,7 +5225,7 @@ nsNavHistory::OnEndVacuum(PRBool aSucceeded)
 
 NS_IMETHODIMP
 nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
-                          PRTime aStartTime)
+                          PRTime aStartTime, nsIURI* aDestination)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aSource);
@@ -5226,8 +5235,62 @@ nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
     return NS_OK;
 
   PRInt64 visitID;
-  return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
-                  0, &visitID);
+  nsresult rv = AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD,
+                         PR_FALSE, 0, &visitID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aDestination) {
+    return NS_OK;
+  }
+
+  // Exit silently if the download destination is not a local file.
+  nsCOMPtr<nsIFileURL> destinationFileURL = do_QueryInterface(aDestination);
+  if (!destinationFileURL) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIFile> destinationFile;
+  rv = destinationFileURL->GetFile(getter_AddRefs(destinationFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString destinationFileName;
+  rv = destinationFile->GetLeafName(destinationFileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString destinationURISpec;
+  rv = destinationFileURL->GetSpec(destinationURISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use annotations for storing the additional download metadata.
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+
+  (void)annosvc->SetPageAnnotationString(
+    aSource,
+    DESTINATIONFILEURI_ANNO,
+    NS_ConvertUTF8toUTF16(destinationURISpec),
+    0,
+    nsIAnnotationService::EXPIRE_WITH_HISTORY
+  );
+
+  (void)annosvc->SetPageAnnotationString(
+    aSource,
+    DESTINATIONFILENAME_ANNO,
+    destinationFileName,
+    0,
+    nsIAnnotationService::EXPIRE_WITH_HISTORY
+  );
+
+  // In case we are downloading a file that does not correspond to a web
+  // page for which the title is present, we populate the otherwise empty
+  // history title with the name of the destination file, to allow it to be
+  // visible and searchable in history results.
+  nsAutoString title;
+  if (NS_SUCCEEDED(GetPageTitle(aSource, title)) && title.IsEmpty()) {
+    (void)SetPageTitle(aSource, destinationFileName);
+  }
+
+  return NS_OK;
 }
 
 

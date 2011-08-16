@@ -1445,8 +1445,8 @@ mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
   rv = GetSpellCheckSelection(getter_AddRefs(spellCheckSelection));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUnichar *currentDictionary = nsnull;
-  rv = mSpellCheck->GetCurrentDictionary(&currentDictionary);
+  nsAutoString currentDictionary;
+  rv = mSpellCheck->GetCurrentDictionary(currentDictionary);
   if (NS_FAILED(rv)) {
     // no active dictionary
     PRInt32 count;
@@ -1760,30 +1760,21 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
     return NS_OK;
   }
 
-  PRUnichar *previousDictionary = nsnull;
-  nsDependentString previousDictionaryStr;
-  if (NS_SUCCEEDED(mSpellCheck->GetCurrentDictionary(&previousDictionary))) {
-    previousDictionaryStr.Assign(previousDictionary);
+  nsAutoString previousDictionary;
+  if (NS_FAILED(mSpellCheck->GetCurrentDictionary(previousDictionary))) {
+    previousDictionary.Truncate();
   }
 
   nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
   nsresult rv = mSpellCheck->UpdateCurrentDictionary(editor);
 
-  PRUnichar *currentDictionary = nsnull;
-  nsDependentString currentDictionaryStr;
-  if (NS_SUCCEEDED(mSpellCheck->GetCurrentDictionary(&currentDictionary))) {
-    currentDictionaryStr.Assign(currentDictionary);
+  nsAutoString currentDictionary;
+  if (NS_FAILED(mSpellCheck->GetCurrentDictionary(currentDictionary))) {
+    currentDictionary.Truncate();
   }
 
-  if (!previousDictionary || !currentDictionary || !previousDictionaryStr.Equals(currentDictionaryStr)) {
+  if (!previousDictionary.Equals(currentDictionary)) {
       rv = SpellCheckRange(nsnull);
-  }
-
-  if (previousDictionary) {
-     nsMemory::Free(previousDictionary);
-  }
-  if (currentDictionary) {
-     nsMemory::Free(currentDictionary);
   }
 
   return rv;
