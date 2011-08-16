@@ -89,7 +89,7 @@ var PageActions = {
   },
 
   // Permissions we track in Page Actions
-  _permissions: ["popup", "offline-app", "geolocation", "desktop-notification"],
+  _permissions: ["popup", "offline-app", "geolocation", "desktop-notification", "openWebappsManage"],
 
   _forEachPermissions: function _forEachPermissions(aHost, aCallback) {
     let pm = Services.perms;
