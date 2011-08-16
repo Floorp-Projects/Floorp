@@ -40,10 +40,6 @@
 #include "nsIDOMEvent.idl"
 #include "nsIVariant.idl"
 
-%{ C++
-#include "jspubtd.h"
-%}
-
 [scriptable, uuid(6250652d-7a6a-49a4-a2ee-9114e1e83427)]
 interface nsIDOMNotifyAudioAvailableEvent : nsIDOMEvent
 {
