@@ -122,6 +122,20 @@ CodeGeneratorX86Shared::visitTestIAndBranch(LTestIAndBranch *test)
 }
 
 bool
+CodeGeneratorX86Shared::visitCompareI(LCompareI *comp)
+{
+    JS_NOT_REACHED("Codegen for LCompareI NYI");
+    return false;
+}
+
+bool
+CodeGeneratorX86Shared::visitCompareIAndBranch(LCompareIAndBranch *comp)
+{
+    JS_NOT_REACHED("Codegen for LCompareIAndBranch NYI");
+    return false;
+}
+
+bool
 CodeGeneratorX86Shared::generateOutOfLineCode()
 {
     if (!CodeGeneratorShared::generateOutOfLineCode())

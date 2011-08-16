@@ -84,6 +84,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTableSwitch(MTableSwitch *tableswitch);
     bool visitGoto(MGoto *ins);
     bool visitTest(MTest *test);
+    bool visitCompare(MCompare *comp);
     bool visitBitNot(MBitNot *ins);
     bool visitBitAnd(MBitAnd *ins);
     bool visitBitOr(MBitOr *ins);

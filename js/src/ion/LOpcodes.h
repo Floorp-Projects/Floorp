@@ -58,6 +58,10 @@
     _(TestIAndBranch)               \
     _(TestDAndBranch)               \
     _(TestVAndBranch)               \
+    _(CompareI)                     \
+    _(CompareD)                     \
+    _(CompareIAndBranch)            \
+    _(CompareDAndBranch)            \
     _(AddI)                         \
     _(MathD)                        \
     _(Int32ToDouble)                \
