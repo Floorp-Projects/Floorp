@@ -17,7 +17,7 @@ def set_limits():
     try:
         import resource
         GB = 2**30
-        resource.setrlimit(resource.RLIMIT_AS, (2*GB, 2*GB))
+        resource.setrlimit(resource.RLIMIT_AS, (1*GB, 1*GB))
     except:
         return
 
