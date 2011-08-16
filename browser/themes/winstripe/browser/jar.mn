@@ -25,6 +25,7 @@ browser.jar:
         skin/classic/browser/KUI-background.png
         skin/classic/browser/KUI-close.png
         skin/classic/browser/mainwindow-dropdown-arrow.png
+        skin/classic/browser/mainwindow-dropdown-arrow-inverted.png
         skin/classic/browser/pageInfo.css
         skin/classic/browser/pageInfo.png                            (pageInfo.png)
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
@@ -89,10 +90,12 @@ browser.jar:
         skin/classic/browser/preferences/aboutPermissions.css        (preferences/aboutPermissions.css)
         skin/classic/browser/tabbrowser/alltabs.png                  (tabbrowser/alltabs.png)
         skin/classic/browser/tabbrowser/newtab.png                   (tabbrowser/newtab.png)
+        skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
         skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
         skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
         skin/classic/browser/tabbrowser/tab.png                      (tabbrowser/tab.png)
         skin/classic/browser/tabbrowser/tab-arrow-left.png           (tabbrowser/tab-arrow-left.png)
+        skin/classic/browser/tabbrowser/tab-arrow-left-inverted.png  (tabbrowser/tab-arrow-left-inverted.png)
         skin/classic/browser/tabbrowser/tab-overflow-border.png      (tabbrowser/tab-overflow-border.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
         skin/classic/browser/tabview/close.png                      (tabview/close.png)
@@ -101,6 +104,7 @@ browser.jar:
         skin/classic/browser/tabview/search.png                     (tabview/search.png)
         skin/classic/browser/tabview/stack-expander.png             (tabview/stack-expander.png)
         skin/classic/browser/tabview/tabview.png                    (tabview/tabview.png)
+        skin/classic/browser/tabview/tabview-inverted.png           (tabview/tabview-inverted.png)
         skin/classic/browser/tabview/tabview.css                    (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/sync-throbber.png
@@ -140,6 +144,7 @@ browser.jar:
         skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/KUI-close.png
         skin/classic/aero/browser/mainwindow-dropdown-arrow.png      (mainwindow-dropdown-arrow-aero.png)
+        skin/classic/aero/browser/mainwindow-dropdown-arrow-inverted.png
         skin/classic/aero/browser/pageInfo.css
         skin/classic/aero/browser/pageInfo.png                       (pageInfo-aero.png)
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
@@ -205,10 +210,12 @@ browser.jar:
         skin/classic/aero/browser/preferences/aboutPermissions.css   (preferences/aboutPermissions.css)
         skin/classic/aero/browser/tabbrowser/alltabs.png             (tabbrowser/alltabs.png)
         skin/classic/aero/browser/tabbrowser/newtab.png              (tabbrowser/newtab.png)
+        skin/classic/aero/browser/tabbrowser/newtab-inverted.png     (tabbrowser/newtab-inverted.png)
         skin/classic/aero/browser/tabbrowser/connecting.png          (tabbrowser/connecting.png)
         skin/classic/aero/browser/tabbrowser/loading.png             (tabbrowser/loading.png)
         skin/classic/aero/browser/tabbrowser/tab.png                 (tabbrowser/tab.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left.png      (tabbrowser/tab-arrow-left.png)
+        skin/classic/aero/browser/tabbrowser/tab-arrow-left-inverted.png (tabbrowser/tab-arrow-left-inverted.png)
         skin/classic/aero/browser/tabbrowser/tab-overflow-border.png (tabbrowser/tab-overflow-border.png)
         skin/classic/aero/browser/tabbrowser/tabDragIndicator.png    (tabbrowser/tabDragIndicator.png)
         skin/classic/aero/browser/tabview/close.png                  (tabview/close.png)
@@ -217,6 +224,7 @@ browser.jar:
         skin/classic/aero/browser/tabview/search.png                 (tabview/search.png)
         skin/classic/aero/browser/tabview/stack-expander.png         (tabview/stack-expander.png)
         skin/classic/aero/browser/tabview/tabview.png                (tabview/tabview.png)
+        skin/classic/aero/browser/tabview/tabview-inverted.png       (tabview/tabview-inverted.png)
         skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-throbber.png

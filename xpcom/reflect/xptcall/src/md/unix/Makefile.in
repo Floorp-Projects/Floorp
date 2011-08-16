@@ -370,6 +370,7 @@ endif
 ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDpowerpc)
 CPPSRCS		:= xptcinvoke_ppc_openbsd.cpp xptcstubs_ppc_openbsd.cpp
 ASFILES		:= xptcinvoke_asm_ppc_openbsd.s xptcstubs_asm_ppc_openbsd.s
+AS		:= $(CC) -c -x assembler-with-cpp
 endif
 
 #

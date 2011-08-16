@@ -9322,7 +9322,7 @@ xpcom/xpcom-private.h
 # (apparently) only need this hack when egrep's "pattern" is particularly
 # long (as in the following code).  See bug 655339.
 case "$host" in
-x86_64-apple-darwin*)
+*-apple-darwin*)
     FIXED_EGREP="arch -arch i386 egrep"
     ;;
 *)
@@ -9365,6 +9365,16 @@ _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
  * C++ implementations should define these macros only when __STDC_LIMIT_MACROS
  * is defined before <stdint.h> is included. */
 #define __STDC_LIMIT_MACROS
+
+/* Force-include hunspell_alloc_hooks.h for hunspell, so that we don't need to
+ * modify it directly.
+ *
+ * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/Makefile.in,
+ * unless --enable-system-hunspell is defined.
+ */
+#if defined(HUNSPELL_STATIC)
+#include "hunspell_alloc_hooks.h"
+#endif
 
 #endif /* _MOZILLA_CONFIG_H_ */
 
