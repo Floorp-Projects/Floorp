@@ -19,11 +19,8 @@ function test() {
   waitForExplicitFinish();
 
   registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("browser.sessionstore.max_concurrent_tabs");
     Services.prefs.clearUserPref("browser.sessionstore.restore_hidden_tabs");
   });
-
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 3);
 
   // First stage: restoreHiddenTabs = true
   // Second stage: restoreHiddenTabs = false
