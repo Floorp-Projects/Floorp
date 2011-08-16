@@ -60,6 +60,7 @@
     _(TestVAndBranch)               \
     _(AddI)                         \
     _(MathD)                        \
+    _(Int32ToDouble)                \
     _(ValueToDouble)                \
     _(ValueToInt32)
 

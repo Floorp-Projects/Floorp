@@ -43,6 +43,7 @@
 #include "IonLinker.h"
 #include "MIRGenerator.h"
 #include "shared/CodeGenerator-shared-inl.h"
+#include "jsnum.h"
 
 using namespace js;
 using namespace js::ion;
@@ -100,6 +101,59 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
 
     masm.bind(&done);
 
+    return true;
+}
+
+static const double DoubleZero = 0.0;
+
+bool
+CodeGenerator::visitValueToDouble(LValueToDouble *lir)
+{
+    ValueOperand operand = ToValue(lir, LValueToDouble::Input);
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    Assembler::Condition cond;
+    Label isDouble, isInt32, isBool, isNull, done;
+
+    // Type-check switch.
+    cond = masm.testDouble(Assembler::Equal, operand);
+    masm.j(cond, &isDouble);
+    cond = masm.testInt32(Assembler::Equal, operand);
+    masm.j(cond, &isInt32);
+    cond = masm.testBoolean(Assembler::Equal, operand);
+    masm.j(cond, &isBool);
+    cond = masm.testNull(Assembler::Equal, operand);
+    masm.j(cond, &isNull);
+
+    cond = masm.testUndefined(Assembler::NotEqual, operand);
+    if (!bailoutIf(cond, lir->snapshot()))
+        return false;
+    masm.loadStaticDouble(&js_NaN, output);
+    masm.jump(&done);
+
+    masm.bind(&isNull);
+    masm.loadStaticDouble(&DoubleZero, output);
+    masm.jump(&done);
+
+    masm.bind(&isBool);
+    masm.boolValueToDouble(operand, output);
+    masm.jump(&done);
+
+    masm.bind(&isInt32);
+    masm.int32ValueToDouble(operand, output);
+    masm.jump(&done);
+
+    masm.bind(&isDouble);
+    masm.unboxDouble(operand, output);
+    masm.bind(&done);
+
+    return true;
+}
+
+bool
+CodeGenerator::visitInt32ToDouble(LInt32ToDouble *lir)
+{
+    masm.convertInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
     return true;
 }
 

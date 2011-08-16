@@ -71,6 +71,9 @@ class MacroAssemblerX86Shared : public Assembler
         framePushed_ += STACK_SLOT_SIZE;
     }
 
+    void convertInt32ToDouble(const Register &src, const FloatRegister &dest) {
+        cvtsi2sd(Operand(src), dest);
+    }
     void jump(Label *label) {
         jmp(label);
     }

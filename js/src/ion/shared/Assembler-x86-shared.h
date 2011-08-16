@@ -552,6 +552,19 @@ class AssemblerX86Shared
     void psrlq(Imm32 shift, const FloatRegister &dest) {
         masm.psrldq_rr(dest.code(), shift.value);
     }
+
+    void cvtsi2sd(const Operand &src, const FloatRegister &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.cvtsi2sd_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.cvtsi2sd_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void cvttsd2si(const FloatRegister &src, const Register &dest) {
         masm.cvttsd2si_rr(src.code(), dest.code());
     }

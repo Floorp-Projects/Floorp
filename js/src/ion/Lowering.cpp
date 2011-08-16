@@ -241,7 +241,38 @@ LIRGenerator::visitStart(MStart *start)
 bool
 LIRGenerator::visitToDouble(MToDouble *convert)
 {
-    JS_NOT_REACHED("NYI");
+    MDefinition *opd = convert->input();
+
+    switch (opd->type()) {
+      case MIRType_Value:
+      {
+        LValueToDouble *lir = new LValueToDouble();
+        if (!useBox(lir, LValueToDouble::Input, opd))
+            return false;
+        return define(lir, convert) && assignSnapshot(lir);
+      }
+
+      case MIRType_Null:
+        return lowerConstantDouble(0, convert);
+
+      case MIRType_Undefined:
+        return lowerConstantDouble(js_NaN, convert);
+
+      case MIRType_Int32:
+      case MIRType_Boolean:
+      {
+        LInt32ToDouble *lir = new LInt32ToDouble(useRegister(opd));
+        return define(lir, convert);
+      }
+
+      case MIRType_Double:
+        return redefine(convert, opd);
+
+      default:
+        // Objects might not be idempotent.
+        // Strings are complicated - we don't handle them yet.
+        JS_NOT_REACHED("unexpected type");
+    }
     return false;
 }
 

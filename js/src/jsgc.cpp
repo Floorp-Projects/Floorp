@@ -241,7 +241,7 @@ Arena::finalize(JSContext *cx)
                     newListTail->first = newFreeSpanStart;
                     newListTail->last = thing - sizeof(T);
                     newListTail = newListTail->nextSpanUnchecked(sizeof(T));
-                    newFreeSpanStart = NULL;
+                    newFreeSpanStart = 0;
                 }
             } else {
                 if (!newFreeSpanStart)
