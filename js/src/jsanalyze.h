@@ -1031,13 +1031,13 @@ class ScriptAnalysis
 
     bool hasPushedTypes(const jsbytecode *pc) { return getCode(pc).pushedTypes != NULL; }
 
-    types::TypeBarrier *typeBarriers(uint32 offset) {
+    types::TypeBarrier *typeBarriers(JSContext *cx, uint32 offset) {
         if (getCode(offset).typeBarriers)
-            pruneTypeBarriers(offset);
+            pruneTypeBarriers(cx, offset);
         return getCode(offset).typeBarriers;
     }
-    types::TypeBarrier *typeBarriers(const jsbytecode *pc) {
-        return typeBarriers(pc - script->code);
+    types::TypeBarrier *typeBarriers(JSContext *cx, const jsbytecode *pc) {
+        return typeBarriers(cx, pc - script->code);
     }
     void addTypeBarrier(JSContext *cx, const jsbytecode *pc,
                         types::TypeSet *target, types::Type type);
@@ -1045,7 +1045,7 @@ class ScriptAnalysis
                                  types::TypeSet *target, JSObject *singleton, jsid singletonId);
 
     /* Remove obsolete type barriers at the given offset. */
-    void pruneTypeBarriers(uint32 offset);
+    void pruneTypeBarriers(JSContext *cx, uint32 offset);
 
     /*
      * Remove still-active type barriers at the given offset. If 'all' is set,

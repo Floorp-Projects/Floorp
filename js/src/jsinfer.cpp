@@ -756,16 +756,16 @@ TypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target, FilterKind filter)
 
 /* If id is a normal slotful 'own' property of an object, get its shape. */
 static inline const Shape *
-GetSingletonShape(JSObject *obj, jsid id)
+GetSingletonShape(JSContext *cx, JSObject *obj, jsid id)
 {
-    const Shape *shape = obj->nativeLookup(id);
+    const Shape *shape = obj->nativeLookup(cx, id);
     if (shape && shape->hasDefaultGetterOrIsMethod() && shape->slot != SHAPE_INVALID_SLOT)
         return shape;
     return NULL;
 }
 
 void
-ScriptAnalysis::pruneTypeBarriers(uint32 offset)
+ScriptAnalysis::pruneTypeBarriers(JSContext *cx, uint32 offset)
 {
     TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
     while (*pbarrier) {
@@ -777,7 +777,7 @@ ScriptAnalysis::pruneTypeBarriers(uint32 offset)
         }
         if (barrier->singleton) {
             JS_ASSERT(barrier->type.isPrimitive(JSVAL_TYPE_UNDEFINED));
-            const Shape *shape = GetSingletonShape(barrier->singleton, barrier->singletonId);
+            const Shape *shape = GetSingletonShape(cx, barrier->singleton, barrier->singletonId);
             if (shape && !barrier->singleton->nativeGetSlot(shape->slot).isUndefined()) {
                 /*
                  * When we analyzed the script the singleton had an 'own'
@@ -805,7 +805,7 @@ static const uint32 BARRIER_OBJECT_LIMIT = 10;
 
 void ScriptAnalysis::breakTypeBarriers(JSContext *cx, uint32 offset, bool all)
 {
-    pruneTypeBarriers(offset);
+    pruneTypeBarriers(cx, offset);
 
     TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
     while (*pbarrier) {
@@ -1004,7 +1004,7 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
                  * to remove the barrier after the property becomes defined,
                  * even if no undefined value is ever observed at pc.
                  */
-                const Shape *shape = GetSingletonShape(object->singleton, id);
+                const Shape *shape = GetSingletonShape(cx, object->singleton, id);
                 if (shape && object->singleton->nativeGetSlot(shape->slot).isUndefined())
                     script->analysis()->addSingletonTypeBarrier(cx, pc, target, object->singleton, id);
             }
@@ -2728,7 +2728,7 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
                 shape = shape->previous();
             }
         } else {
-            const Shape *shape = singleton->nativeLookup(id);
+            const Shape *shape = singleton->nativeLookup(cx, id);
             if (shape)
                 UpdatePropertyType(cx, &base->types, singleton, shape, false);
         }
