@@ -1080,6 +1080,17 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
             if (freeUntilPos[prevReg.code()] != CodePosition::MIN)
                 bestCode = prevReg.code();
         }
+    } else if (current->reg()->ins()->isPhi()) {
+        // As another, use the allocation of the first input to the phi.
+        VirtualRegister *inputReg = &vregs[current->reg()->ins()->toPhi()->getOperand(0)];
+        LBlock *predecessor = current->reg()->block()->mir()->getPredecessor(0)->lir();
+        LiveInterval *previous = inputReg->intervalFor(outputOf(predecessor->lastId()));
+        JS_ASSERT(previous);
+        if (previous->getAllocation()->isRegister()) {
+            AnyRegister prevReg = previous->getAllocation()->toRegister();
+            if (freeUntilPos[prevReg.code()] != CodePosition::MIN)
+                bestCode = prevReg.code();
+        }
     }
     if (bestCode == AnyRegister::Invalid && firstUse && firstUse->use->policy() == LUse::FIXED) {
         // As another, use the upcoming fixed register if it is available.
