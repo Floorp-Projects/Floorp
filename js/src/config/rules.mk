@@ -390,7 +390,7 @@ endif
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
 	$(filter-out $(ASFILES),$(OBJS:.$(OBJ_SUFFIX)=.s)) $(OBJS:.$(OBJ_SUFFIX)=.ii) \
-	$(OBJS:.$(OBJ_SUFFIX)=.i) \
+	$(OBJS:.$(OBJ_SUFFIX)=.i) $(OBJS:.$(OBJ_SUFFIX)=.i_o) \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
 	$(EXE_DEF_FILE) so_locations _gen _stubs $(wildcard *.res) $(wildcard *.RES) \
 	$(wildcard *.pdb) $(CODFILE) $(MAPFILE) $(IMPORT_LIBRARY) \
@@ -899,7 +899,7 @@ ifdef SHARED_LIBRARY
 endif
 endif # SHARED_LIBRARY || PROGRAM
 endif # WINNT_
-endif # MOZ_PROFILE_GENERATE || MOZ_PROFILE_USE
+endif # MOZ_PROFILE_USE
 ifdef MOZ_PROFILE_GENERATE
 # Clean up profiling data during PROFILE_GENERATE phase
 export::
@@ -911,6 +911,15 @@ ifdef GNU_CC
 endif
 endif
 endif
+
+ifneq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
+ifdef GNU_CC
+# Force rebuilding libraries and programs in both passes because each
+# pass uses different object files.
+$(PROGRAM) $(SHARED_LIBRARY) $(LIBRARY): FORCE
+endif
+endif
+
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
 ##############################################
