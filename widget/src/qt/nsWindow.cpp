@@ -3092,9 +3092,22 @@ nsWindow::SetInputMode(const IMEContext& aContext)
     NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
 
     mIMEContext = aContext;
+
+     // Ensure that opening the virtual keyboard is allowed for this specific
+     // IMEContext depending on the content.ime.strict.policy pref
+     if (aContext.mStatus != nsIWidget::IME_STATUS_DISABLED && 
+         aContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
+       if (Preferences::GetBool("content.ime.strict_policy", PR_FALSE) &&
+           !aContext.FocusMovedByUser() &&
+           aContext.FocusMovedInContentProcess()) {
+         return NS_OK;
+       }
+     }
+
     switch (aContext.mStatus) {
         case nsIWidget::IME_STATUS_ENABLED:
         case nsIWidget::IME_STATUS_PASSWORD:
+        case nsIWidget::IME_STATUS_PLUGIN:
             {
                 PRInt32 openDelay =
                     Preferences::GetInt("ui.vkb.open.delay", 200);
