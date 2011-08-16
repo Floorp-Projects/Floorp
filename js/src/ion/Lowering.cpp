@@ -144,10 +144,61 @@ LIRGenerator::visitTest(MTest *test)
     if (opd->type() == MIRType_Undefined || opd->type() == MIRType_Null)
         return add(new LGoto(ifFalse));
 
+    // Check if the operand for this test is a compare operation. If it is, we want
+    // to emit an LCompare*AndBranch rather than an LTest*AndBranch, to fuse the
+    // compare and jump instructions.
+    if (opd->isCompare()) {
+        MCompare *comp = opd->toCompare();
+        MDefinition *left = comp->getOperand(0);
+        MDefinition *right = comp->getOperand(1);
+
+        if (comp->specialization() == MIRType_Int32) {
+            return add(new LCompareIAndBranch(comp->jsop(), useRegister(left), use(right),
+                                              ifTrue, ifFalse));
+        }
+        if (comp->specialization() == MIRType_Double) {
+            return add(new LCompareDAndBranch(comp->jsop(), useRegister(left), use(right),
+                                              ifTrue, ifFalse));
+        }
+        // :TODO: implment LCompareVAndBranch. Bug: 679804
+    }
+
     if (opd->type() == MIRType_Double)
         return add(new LTestDAndBranch(useRegister(opd), temp(LDefinition::DOUBLE), ifTrue, ifFalse));
 
     return add(new LTestIAndBranch(useRegister(opd), ifTrue, ifFalse));
+}
+
+bool
+LIRGenerator::visitCompare(MCompare *comp)
+{
+    // Sniff out if the output of this compare is used only for a branching.
+    // If it is, then we willl emit an LCompare*AndBranch instruction in place of
+    // this compare and any test that uses this compare. Thus, we can ignore this Compare.
+    bool willOptimize = true;
+    for (MUseDefIterator iter(comp->toDefinition()); iter; iter++) {
+        MDefinition *consumer = iter.def();
+        if (!consumer->isControlInstruction()) {
+            willOptimize = false;
+            break;
+        }
+    }
+
+    // This compare can be annoyed, see above comment.
+    if (willOptimize)
+        return true;
+
+    MDefinition *left = comp->getOperand(0);
+    MDefinition *right = comp->getOperand(1);
+
+    if (comp->specialization() == MIRType_Int32)
+        return define(new LCompareI(comp->jsop(), useRegister(left), use(right)), comp);
+    if (comp->specialization() == MIRType_Double)
+        return define(new LCompareD(comp->jsop(), useRegister(left), use(right)), comp);
+
+    // :TODO: implement LCompareV. Bug: 679804
+    JS_NOT_REACHED("LCompareV NYI");
+    return true;
 }
 
 static void
