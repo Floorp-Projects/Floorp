@@ -543,15 +543,15 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
 {
     JS_ASSERT(ion::IsEnabled());
 
+    if (!CheckFrame(fp))
+        return Method_CantCompile;
+
     if (script->ion) {
         if (script->ion == ION_DISABLED_SCRIPT || !script->ion->method())
             return Method_CantCompile;
 
         return Method_Compiled;
     }
-
-    if (!CheckFrame(fp))
-        return Method_CantCompile;
 
     if (!IonCompile(cx, script, fp)) {
         script->ion = ION_DISABLED_SCRIPT;
