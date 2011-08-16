@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Mobile Browser.
+ * The Original Code is Mozilla Webapp code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,33 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Expose API under window.navigator.apps */
-if (window && window.navigator) {
-  window.navigator.mozApps = {
-    install: function(aParam) {
-      return OpenWebapps_install(window.location, aParam.url, aParam.install_data, aParam.onsuccess, aParam.onerror);
-    },
-    
-    amInstalled: function(aSuccessCallback, aErrorCallback) {
-      return OpenWebapps_amInstalled(window.location, aSuccessCallback, aErrorCallback);
-    },
-    
-    getInstalledBy: function(aSuccessCallback, aErrorCallback) {
-      return OpenWebapps_getInstalledBy(window.location, aSuccessCallback, aErrorCallback);
-    }
-  }
+#include "nsISupports.idl"
+
+[scriptable, uuid(adb91273-0cf1-4bbe-a37b-22e660192e2a)]
+interface nsIWebappsSupport : nsISupports
+{
+  /**
+   * This method installs a web app.
+   *
+   * @param title     the user-friendly name of the application.
+   * @param uri       the uri of the web app.
+   * @param iconData  a base64 encoded representation of the application's icon.
+   */
+  void installApplication(in wstring title, in wstring uri, in wstring iconUri, in wstring iconData);
   
-  window.navigator.mozApps.mgmt = {
-    launch: function(aOrigin, aSuccessCallback, aErrorCallback) {
-      return OpenWebappsMgmt_launch(aOrigin, aSuccessCallback, aErrorCallback);
-    },
-    
-    list: function(aSuccessCallback, aErrorCallback) {
-      return OpenWebappsMgmt_list(aSuccessCallback, aErrorCallback);
-    },
-    
-    uninstall: function(aOrigin, aSuccessCallback, aErrorCallback) {
-      return OpenWebappsMgmt_uninstall(aOrigin, aSuccessCallback, aErrorCallback);
-    }
-  }
-}
+  /**
+   * Checks is a web app is already installed
+   *
+   * @param uri the uri of the web app
+   * @return true if the web app is installed, false if it's not installed
+   */
+  boolean isApplicationInstalled(in wstring uri);
+};
+

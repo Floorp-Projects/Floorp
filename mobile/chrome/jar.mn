@@ -76,7 +76,6 @@ chrome.jar:
   content/fullscreen-video.js          (content/fullscreen-video.js)
   content/fullscreen-video.xhtml       (content/fullscreen-video.xhtml)
   content/netError.xhtml               (content/netError.xhtml)
-  content/injected.js                  (content/injected.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
