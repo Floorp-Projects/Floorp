@@ -62,6 +62,7 @@ import android.telephony.*;
 import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
+import android.provider.Settings;
 
 import android.util.*;
 import android.net.Uri;
@@ -1365,5 +1366,17 @@ public class GeckoAppShell
         ActivityInfo activityInfo = resolveInfo.activityInfo;
 
         return activityInfo.loadIcon(pm);
+    }
+
+    public static boolean getShowPasswordSetting() {
+        try {
+            int showPassword =
+                Settings.System.getInt(GeckoApp.mAppContext.getContentResolver(),
+                                       Settings.System.TEXT_SHOW_PASSWORD);
+            return (showPassword > 0);
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 }

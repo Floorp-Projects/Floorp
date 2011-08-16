@@ -599,6 +599,19 @@ ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32
     return true;
 }
 
+bool
+ContentParent::RecvGetShowPasswordSetting(PRBool* showPassword)
+{
+    // default behavior is to show the last password character
+    *showPassword = PR_TRUE;
+#ifdef ANDROID
+    NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
+    if (AndroidBridge::Bridge() != nsnull)
+        *showPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
+#endif
+    return true;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS4(ContentParent,
                               nsIObserver,
                               nsIThreadObserver,
