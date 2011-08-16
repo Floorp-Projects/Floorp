@@ -389,16 +389,6 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aMouseEvent->GetTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
-  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
-  if (!mEditor->IsModifiableNode(node)) {
-    // We shouldn't handle the event for non-editable content.
-    return NS_OK;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aMouseEvent);
   NS_ENSURE_TRUE(nsuiEvent, NS_ERROR_NULL_POINTER);
