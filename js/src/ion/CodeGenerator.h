@@ -60,6 +60,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
   public:
     bool generate();
+
+    virtual bool visitValueToInt32(LValueToInt32 *lir);
 };
 
 } // namespace ion

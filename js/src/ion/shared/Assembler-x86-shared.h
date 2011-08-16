@@ -91,7 +91,9 @@ class AssemblerX86Shared
         Overflow = JSC::X86Assembler::ConditionO,
         Signed = JSC::X86Assembler::ConditionS,
         Zero = JSC::X86Assembler::ConditionE,
-        NonZero = JSC::X86Assembler::ConditionNE
+        NonZero = JSC::X86Assembler::ConditionNE,
+        Parity = JSC::X86Assembler::ConditionP,
+        NoParity = JSC::X86Assembler::ConditionNP
     };
 
     AssemblerX86Shared()
@@ -532,6 +534,9 @@ class AssemblerX86Shared
     void unpcklps(const FloatRegister &src, const FloatRegister &dest) {
         masm.unpcklps_rr(src.code(), dest.code());
     }
+    void pinsrd(const Register &src, const FloatRegister &dest) {
+        masm.pinsrd_rr(src.code(), dest.code());
+    }
     void pinsrd(const Operand &src, const FloatRegister &dest) {
         switch (src.kind()) {
           case Operand::REG:
@@ -546,6 +551,22 @@ class AssemblerX86Shared
     }
     void psrlq(Imm32 shift, const FloatRegister &dest) {
         masm.psrldq_rr(dest.code(), shift.value);
+    }
+    void cvttsd2si(const FloatRegister &src, const Register &dest) {
+        masm.cvttsd2si_rr(src.code(), dest.code());
+    }
+    void cvtsi2sd(const Register &src, const FloatRegister &dest) {
+        masm.cvtsi2sd_rr(src.code(), dest.code());
+    }
+    void movmskpd(const FloatRegister &src, const Register &dest) {
+        masm.movmskpd_rr(src.code(), dest.code());
+    }
+    void ptest(const FloatRegister &lhs, const FloatRegister &rhs) {
+        JS_ASSERT(HasSSE41());
+        masm.ptest_rr(rhs.code(), lhs.code());
+    }
+    void ucomisd(const FloatRegister &lhs, const FloatRegister &rhs) {
+        masm.ucomisd_rr(rhs.code(), lhs.code());
     }
     void movd(const Register &src, const FloatRegister &dest) {
         masm.movd_rr(src.code(), dest.code());

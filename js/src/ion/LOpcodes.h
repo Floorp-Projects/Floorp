@@ -59,7 +59,9 @@
     _(TestDAndBranch)               \
     _(TestVAndBranch)               \
     _(AddI)                         \
-    _(MathD)
+    _(MathD)                        \
+    _(ValueToDouble)                \
+    _(ValueToInt32)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

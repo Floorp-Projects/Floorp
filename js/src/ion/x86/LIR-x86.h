@@ -92,20 +92,16 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LUnboxDouble : public LInstructionHelper<1, 2, 1>
+class LUnboxDouble : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(UnboxDouble);
 
-    LUnboxDouble() {
-        setTemp(0, LDefinition(LDefinition::DOUBLE));
-    }
-};
+    static const size_t Input = 0;
 
-class LUnboxDoubleSSE41 : public LInstructionHelper<1, 2, 0>
-{
-  public:
-    LIR_HEADER(UnboxDoubleSSE41);
+    const LDefinition *output() {
+        return getDef(0);
+    }
 };
 
 // Constant double.

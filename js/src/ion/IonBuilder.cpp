@@ -177,20 +177,13 @@ IonBuilder::build()
         current->initSlot(localSlot(i), undef);
     }
 
-    // Set as the start block. This is needed because the available snapshot
-    // before MStart is technically invalid, since the snapshot has uses maybe
-    // not yet defined. So MStart is the highest we can hoist any fallible
-    // operations.
-    MStart *start = new MStart;
-    if (!snapshotAt(start, pc))
-        return false;
-    current->makeStart(start);
+    current->makeStart(new MStart());
 
     // Attach start's snapshot to each parameter, so the type analyzer doesn't
     // replace uses in the snapshot.
     for (uint32 i = 0; i < CountArgSlots(fun()); i++) {
         MParameter *param = current->getEntrySlot(i)->toInstruction()->toParameter();
-        param->setSnapshot(start->snapshot());
+        param->setSnapshot(current->entrySnapshot());
     }
 
     if (!traverseBytecode())
@@ -1646,7 +1639,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 // injected in between by a future analysis pass.
 //
 // During LIR construction, if an instruction can bail back to the interpreter,
-// we create an LBailout, which uses the last known snapshot to request
+// we create an LSnapshot, which uses the last known snapshot to request
 // register/stack assignments for every live value.
 bool
 IonBuilder::snapshotAfter(MInstruction *ins)

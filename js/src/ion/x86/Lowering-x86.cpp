@@ -49,6 +49,30 @@ using namespace js;
 using namespace js::ion;
 
 bool
+LIRGeneratorX86::useBox(LInstruction *lir, size_t n, MDefinition *mir,
+                        LUse::Policy policy)
+{
+    JS_ASSERT(mir->type() == MIRType_Value);
+
+    if (!ensureDefined(mir))
+        return false;
+    lir->setOperand(n, LUse(mir->id(), policy));
+    lir->setOperand(n + 1, LUse(VirtualRegisterOfPayload(mir), policy));
+    return true;
+}
+
+bool
+LIRGeneratorX86::lowerConstantDouble(double d, MInstruction *mir)
+{
+    uint32 index;
+    if (!lirGraph_.addConstantToPool(d, &index))
+        return false;
+
+    LDouble *lir = new LDouble(LConstantIndex::FromIndex(index));
+    return define(lir, mir);
+}
+
+bool
 LIRGeneratorX86::visitConstant(MConstant *ins)
 {
     if (!ins->isEmittedAtUses() && ins->type() != MIRType_Double)
@@ -106,26 +130,12 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
         if (!ensureDefined(inner))
             return false;
 
-        if (Assembler::HasSSE41()) {
-            // With SSE4.1, we can emit a faster sequence of instructions that
-            // does not need a temporary register.
-            LUnboxDoubleSSE41 *lir = new LUnboxDoubleSSE41();
-            lir->setOperand(0, useType(inner, LUse::ANY));
-            lir->setOperand(1, usePayloadInRegister(inner));
-            if (!assignSnapshot(lir))
-                return false;
-            return define(lir, unbox, LDefinition::DEFAULT);
-        }
-
-        // With SSE < 4.1, use a slower (but still very efficient) sequence of
-        // instructions that needs a temporary register. Note that it also
-        // needs to read the type twice so we keep it in a register.
         LUnboxDouble *lir = new LUnboxDouble();
-        lir->setOperand(0, useType(inner, LUse::REGISTER));
-        lir->setOperand(1, usePayloadInRegister(inner));
         if (!assignSnapshot(lir))
             return false;
-        return define(lir, unbox, LDefinition::DEFAULT);
+        if (!useBox(lir, LUnboxDouble::Input, unbox))
+            return false;
+        return define(lir, unbox);
     }
 
     LUnbox *lir = new LUnbox(unbox->type());

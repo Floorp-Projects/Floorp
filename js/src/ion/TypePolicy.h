@@ -86,6 +86,9 @@ class TypePolicy
 
 class BoxInputsPolicy : public TypePolicy
 {
+  protected:
+    MDefinition *boxAt(MInstruction *at, MDefinition *operand);
+
   public:
     virtual bool respecialize(MInstruction *def);
     virtual void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);

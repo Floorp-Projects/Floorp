@@ -43,7 +43,9 @@
 #include "Lowering.h"
 #include "MIR.h"
 #include "MIRGraph.h"
+#include "IonSpewer.h"
 #include "jsbool.h"
+#include "jsnum.h"
 #include "shared/Lowering-shared-inl.h"
 
 using namespace js;
@@ -132,7 +134,7 @@ LIRGenerator::visitTest(MTest *test)
 
     if (opd->type() == MIRType_Value) {
         LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse);
-        if (!fillBoxUses(lir, 0, opd))
+        if (!useBox(lir, 0, opd))
             return false;
         return add(lir);
     }
@@ -246,7 +248,32 @@ LIRGenerator::visitToDouble(MToDouble *convert)
 bool
 LIRGenerator::visitToInt32(MToInt32 *convert)
 {
-    JS_NOT_REACHED("NYI");
+    MDefinition *opd = convert->input();
+
+    switch (opd->type()) {
+      case MIRType_Value:
+      {
+        LValueToInt32 *lir = new LValueToInt32(tempFloat());
+        if (!useBox(lir, LValueToInt32::Input, opd))
+            return false;
+        return define(lir, convert) && assignSnapshot(lir);
+      }
+
+      case MIRType_Null:
+        return define(new LInteger(0), convert);
+
+      case MIRType_Int32:
+      case MIRType_Boolean:
+        return redefine(convert, opd);
+
+      default:
+        // Undefined coerces to NaN, not int32.
+        // Objects might not be idempotent.
+        // Strings are complicated - we don't handle them yet.
+        // Doubles should have changed the caller's specialization.
+        JS_NOT_REACHED("unexpected type");
+    }
+
     return false;
 }
 
@@ -264,6 +291,24 @@ LIRGenerator::visitCopy(MCopy *ins)
     return false;
 }
 
+static void
+SpewSnapshot(MInstruction *ins, MSnapshot *snapshot)
+{
+    fprintf(IonSpewFile, "Current snapshot %p details:\n", (void *)snapshot);
+
+    fprintf(IonSpewFile, "    taken after:");
+    ins->printName(IonSpewFile);
+    fprintf(IonSpewFile, "\n");
+    fprintf(IonSpewFile, "    pc: %p\n", snapshot->pc());
+
+    for (size_t i = 0; i < snapshot->numOperands(); i++) {
+        MDefinition *in = snapshot->getOperand(i);
+        fprintf(IonSpewFile, "    slot%d: ", i);
+        in->printName(IonSpewFile);
+        fprintf(IonSpewFile, "\n");
+    }
+}
+
 bool
 LIRGenerator::visitInstruction(MInstruction *ins)
 {
@@ -271,8 +316,14 @@ LIRGenerator::visitInstruction(MInstruction *ins)
         return false;
     if (!ins->accept(this))
         return false;
-    if (ins->snapshot())
+
+    if (ins->snapshot()) {
         last_snapshot_ = ins->snapshot();
+
+        if (IonSpewEnabled(IonSpew_Snapshots))
+            SpewSnapshot(ins, last_snapshot_);
+    }
+
     if (gen->errored())
         return false;
 #ifdef DEBUG

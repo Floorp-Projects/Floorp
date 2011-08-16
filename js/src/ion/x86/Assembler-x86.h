@@ -66,6 +66,7 @@ static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 static const Register StackPointer = esp;
 static const Register ReturnReg = eax;
+static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm7 };
 
 struct ImmTag : public Imm32
 {
@@ -165,6 +166,24 @@ class Operand
 namespace js {
 namespace ion {
 
+class ValueOperand
+{
+    Register type_;
+    Register payload_;
+
+  public:
+    ValueOperand(Register type, Register payload)
+      : type_(type), payload_(payload)
+    { }
+
+    Register typeReg() const {
+        return type_;
+    }
+    Register payloadReg() const {
+        return payload_;
+    }
+};
+
 class Assembler : public AssemblerX86Shared
 {
     void writeRelocation(JmpSrc src) {
@@ -225,6 +244,9 @@ class Assembler : public AssemblerX86Shared
           default:
             JS_NOT_REACHED("unexepcted operand kind");
         }
+    }
+    void cvttsd2s(const FloatRegister &src, const Register &dest) {
+        cvttsd2si(src, dest);
     }
 
     void jmp(void *target, Relocation::Kind reloc) {

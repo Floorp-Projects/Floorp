@@ -52,11 +52,16 @@ CodeGeneratorX64::CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph)
 {
 }
 
+ValueOperand
+CodeGeneratorX64::ToValue(LInstruction *ins, size_t pos)
+{
+    return ValueOperand(ToRegister(ins->getOperand(pos)));
+}
+
 bool
 CodeGeneratorX64::visitDouble(LDouble *ins)
 {
-    const LDefinition *temp = ins->getTemp(0);
-    const LDefinition *out = ins->getDef(0);
+    const LDefinition *out = ins->output();
 
     jsdpun dpun;
     dpun.d = ins->getDouble();
@@ -66,8 +71,8 @@ CodeGeneratorX64::visitDouble(LDouble *ins)
         return true;
     }
 
-    masm.movq(ImmWord(dpun.u64), ToRegister(temp));
-    masm.movqsd(ToRegister(temp), ToFloatRegister(out));
+    masm.movq(ImmWord(dpun.u64), ScratchReg);
+    masm.movqsd(ScratchReg, ToFloatRegister(out));
     return true;
 }
 
@@ -136,16 +141,13 @@ CodeGeneratorX64::visitBox(LBox *box)
 bool
 CodeGeneratorX64::visitUnboxInteger(LUnboxInteger *unbox)
 {
-    const LAllocation *value = unbox->getOperand(0);
-    const LDefinition *result = unbox->getDef(0);
+    const ValueOperand value = ToValue(unbox, LUnboxInteger::Input);
+    const LDefinition *result = unbox->output();
 
-    masm.movq(ToOperand(value), ToRegister(result));
-    masm.shlq(Imm32(JSVAL_TAG_SHIFT), ToRegister(result));
-    masm.cmpl(ToOperand(result), Imm32(JSVAL_TAG_INT32));
-    if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
+    Assembler::Condition cond = masm.testInt32(Assembler::NotEqual, value);
+    if (!bailoutIf(cond, unbox->snapshot()))
         return false;
-
-    masm.movl(ToOperand(value), ToRegister(result));
+    masm.unboxInt32(value, ToRegister(result));
 
     return true;
 }
@@ -153,16 +155,13 @@ CodeGeneratorX64::visitUnboxInteger(LUnboxInteger *unbox)
 bool
 CodeGeneratorX64::visitUnboxDouble(LUnboxDouble *unbox)
 {
-    const LAllocation *value = unbox->getOperand(0);
-    const LDefinition *result = unbox->getDef(0);
-    const LDefinition *temp = unbox->getTemp(0);
+    const ValueOperand value = ToValue(unbox, LUnboxDouble::Input);
+    const LDefinition *result = unbox->output();
 
-    masm.movq(ImmWord(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ToRegister(temp));
-    masm.cmpq(ToRegister(value), ToRegister(temp));
-    if (!bailoutIf(Assembler::Above, unbox->snapshot()))
+    Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, value);
+    if (!bailoutIf(cond, unbox->snapshot()))
         return false;
-
-    masm.movqsd(ToRegister(value), ToFloatRegister(result));
+    masm.unboxDouble(value, ToFloatRegister(result));
 
     return true;
 }

@@ -72,6 +72,8 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
 static const Register ReturnReg = rax;
+static const Register ScratchReg = r11;
+static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm15 };
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
@@ -172,6 +174,23 @@ class Operand
 namespace js {
 namespace ion {
 
+class ValueOperand
+{
+    Register value_;
+
+  public:
+    ValueOperand(Register value)
+      : value_(value)
+    { }
+
+    Operand value() const {
+        return Operand(value_);
+    }
+    Register valueReg() const {
+        return value_;
+    }
+};
+
 class Assembler : public AssemblerX86Shared
 {
     // x64 jumps may need extra bits of relocation, because a jump may extend
@@ -239,10 +258,10 @@ class Assembler : public AssemblerX86Shared
         switch (src.kind()) {
           case Operand::REG:
             masm.movq_rr(src.reg(), dest.code());
-              break;
-            case Operand::REG_DISP:
-              masm.movq_mr(src.disp(), src.base(), dest.code());
-              break;
+            break;
+          case Operand::REG_DISP:
+            masm.movq_mr(src.disp(), src.base(), dest.code());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
@@ -301,6 +320,9 @@ class Assembler : public AssemblerX86Shared
     void shlq(Imm32 imm, const Register &dest) {
         masm.shlq_i8r(imm.value, dest.code());
     }
+    void shrq(Imm32 imm, const Register &dest) {
+        masm.shrq_i8r(imm.value, dest.code());
+    }
     void orq(const Register &src, const Register &dest) {
         masm.orq_rr(src.code(), dest.code());
     }
@@ -318,7 +340,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     void mov(const Imm32 &imm32, const Register &dest) {
-        movq(ImmWord(imm32.value), dest);
+        movl(imm32, dest);
     }
     void mov(const Operand &src, const Register &dest) {
         movq(src, dest);
@@ -390,6 +412,13 @@ class Assembler : public AssemblerX86Shared
     void j(Condition cond, void *target, Relocation::Kind reloc) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
+    }
+
+    void cvttsd2sq(const FloatRegister &src, const Register &dest) {
+        masm.cvttsd2sq_rr(src.code(), dest.code());
+    }
+    void cvttsd2s(const FloatRegister &src, const Register &dest) {
+        cvttsd2sq(src, dest);
     }
 };
 

@@ -71,6 +71,10 @@ class MacroAssemblerX86Shared : public Assembler
         framePushed_ += STACK_SLOT_SIZE;
     }
 
+    void jump(Label *label) {
+        jmp(label);
+    }
+
     uint32 framePushed() const {
         return framePushed_;
     }
