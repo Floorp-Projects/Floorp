@@ -75,6 +75,10 @@ const PRIVACY_FULL = 2;
 const NOTIFY_WINDOWS_RESTORED = "sessionstore-windows-restored";
 const NOTIFY_BROWSER_STATE_RESTORED = "sessionstore-browser-state-restored";
 
+// Maximum number of tabs to restore simultaneously. Previously controlled by
+// the browser.sessionstore.max_concurrent_tabs pref.
+const MAX_CONCURRENT_TAB_RESTORES = 3;
+
 // global notifications observed
 const OBSERVING = [
   "domwindowopened", "domwindowclosed",
@@ -229,9 +233,9 @@ SessionStoreService.prototype = {
   _tabsToRestore: { visible: [], hidden: [] },
   _tabsRestoringCount: 0,
 
-  // number of tabs to restore concurrently, pref controlled.
-  _maxConcurrentTabRestores: null,
-  
+  // overrides MAX_CONCURRENT_TAB_RESTORES and _restoreHiddenTabs when true
+  _restoreOnDemand: false,
+
   // whether to restore hidden tabs or not, pref controlled.
   _restoreHiddenTabs: null,
 
@@ -281,7 +285,10 @@ SessionStoreService.prototype = {
     var pbs = Cc["@mozilla.org/privatebrowsing;1"].
               getService(Ci.nsIPrivateBrowsingService);
     this._inPrivateBrowsing = pbs.privateBrowsingEnabled;
-    
+
+    // Do pref migration before we store any values and start observing changes
+    this._migratePrefs();
+
     // observe prefs changes so we can modify stored data to match
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
     this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
@@ -290,9 +297,9 @@ SessionStoreService.prototype = {
     this._sessionhistory_max_entries =
       this._prefBranch.getIntPref("sessionhistory.max_entries");
 
-    this._maxConcurrentTabRestores =
-      this._prefBranch.getIntPref("sessionstore.max_concurrent_tabs");
-    this._prefBranch.addObserver("sessionstore.max_concurrent_tabs", this, true);
+    this._restoreOnDemand =
+      this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
+    this._prefBranch.addObserver("sessionstore.restore_on_demand", this, true);
 
     this._restoreHiddenTabs =
       this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
@@ -440,6 +447,19 @@ SessionStoreService.prototype = {
     if (this._saveTimer) {
       this._saveTimer.cancel();
       this._saveTimer = null;
+    }
+  },
+
+  _migratePrefs: function sss__migratePrefs() {
+    // Added For Firefox 8
+    // max_concurrent_tabs is going away. We're going to hard code a max value
+    // (MAX_CONCURRENT_TAB_RESTORES) and start using a boolean pref restore_on_demand.
+    if (this._prefBranch.prefHasUserValue("sessionstore.max_concurrent_tabs") &&
+        !this._prefBranch.prefHasUserValue("sessionstore.restore_on_demand")) {
+      let maxConcurrentTabs =
+        this._prefBranch.getIntPref("sessionstore.max_concurrent_tabs");
+      this._prefBranch.setBoolPref("sessionstore.restore_on_demand", maxConcurrentTabs == 0);
+      this._prefBranch.clearUserPref("sessionstore.max_concurrent_tabs");
     }
   },
 
@@ -632,9 +652,9 @@ SessionStoreService.prototype = {
           this._clearDisk();
         this.saveState(true);
         break;
-      case "sessionstore.max_concurrent_tabs":
-        this._maxConcurrentTabRestores =
-          this._prefBranch.getIntPref("sessionstore.max_concurrent_tabs");
+      case "sessionstore.restore_on_demand":
+        this._restoreOnDemand =
+          this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
         break;
       case "sessionstore.restore_hidden_tabs":
         this._restoreHiddenTabs =
@@ -2906,7 +2926,7 @@ SessionStoreService.prototype = {
       _this.restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap);
     }, 0);
 
-    // This could cause us to ignore the max_concurrent_tabs pref a bit, but
+    // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
     // it ensures each window will have its selected tab loaded.
     if (aWindow.gBrowser.selectedBrowser == browser) {
       this.restoreTab(tab);
@@ -3042,8 +3062,8 @@ SessionStoreService.prototype = {
       return;
 
     // If it's not possible to restore anything, then just bail out.
-    if (this._maxConcurrentTabRestores >= 0 &&
-        this._tabsRestoringCount >= this._maxConcurrentTabRestores)
+    if (this._restoreOnDemand ||
+        this._tabsRestoringCount >= MAX_CONCURRENT_TAB_RESTORES)
       return;
 
     // Look in visible, then hidden
