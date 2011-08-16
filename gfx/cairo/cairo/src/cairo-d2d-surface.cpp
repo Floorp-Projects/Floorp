@@ -2510,11 +2510,28 @@ _cairo_d2d_finish(void	    *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* The input types for src and dst don't match because in our particular use case, copying from a texture,
+ * those types don't match. */
+static void
+_copy_data_to_different_stride(unsigned char *dst, int dst_stride, void *src, UINT src_stride, int height)
+{
+
+    unsigned char *src_p = (unsigned char *)src;
+    int min_stride = MIN(dst_stride, src_stride);
+    while (height) {
+        memcpy(dst, src_p, min_stride);
+        height--;
+        dst += dst_stride;
+        src_p += src_stride;
+    }
+}
+
 static cairo_status_t
 _cairo_d2d_acquire_source_image(void                    *abstract_surface,
-				cairo_image_surface_t  **image_out,
+				cairo_image_surface_t  **image_out_ret,
 				void                   **image_extra)
 {
+    cairo_surface_t *image_out;
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(abstract_surface);
     _cairo_d2d_flush(d2dsurf);
 
@@ -2552,24 +2569,36 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     if (FAILED(hr)) {
 	return _cairo_error(CAIRO_STATUS_NO_DEVICE);
     }
-    *image_out = 
-	(cairo_image_surface_t*)cairo_image_surface_create_for_data((unsigned char*)data.pData,
-										  d2dsurf->format,
-										  size.width,
-										  size.height,
-										  data.RowPitch);
 
-    if (cairo_surface_status(&((*image_out)->base))) {
-	volatile cairo_status_t flambo[10];
-	for (int i=0; i<10; i++) {
-	    flambo[i] = cairo_surface_status(&((*image_out)->base));
-	}
-	volatile int p = 0;
-	p = 5/p;
+    if (_cairo_valid_stride_alignment(data.RowPitch)) {
+	image_out = cairo_image_surface_create_for_data((unsigned char*)data.pData,
+						  d2dsurf->format,
+						  size.width,
+						  size.height,
+						  data.RowPitch);
+    } else {
+	/* Slow path used when the stride doesn't match our requirements.
+	 * This is possible on at least the Intel driver 8.15.10.2302.
+	 *
+	 * Create a new image surface and copy our data into it */
+	image_out = cairo_image_surface_create(d2dsurf->format,
+					 size.width,
+					 size.height);
+	_copy_data_to_different_stride(cairo_image_surface_get_data(image_out),
+				       cairo_image_surface_get_stride(image_out),
+				       data.pData,
+				       data.RowPitch,
+				       size.height);
+
     }
-    *image_extra = softTexture.forget();
+    /* these are the only surface statuses we expect */
+    assert(cairo_surface_status(image_out) == CAIRO_STATUS_SUCCESS ||
+	   cairo_surface_status(image_out) == CAIRO_STATUS_NO_MEMORY);
 
-    return CAIRO_STATUS_SUCCESS;
+    *image_extra = softTexture.forget();
+    *image_out_ret = (cairo_image_surface_t*)image_out;
+
+    return cairo_surface_status(image_out);
 }
 
 static void
