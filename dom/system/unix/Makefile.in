@@ -66,6 +66,10 @@ ifdef MOZ_PLATFORM_MAEMO
 CPPSRCS += nsHapticFeedback.cpp
 LOCAL_INCLUDES  += $(MOZ_DBUS_CFLAGS) \
                    $(NULL)
+ifdef MOZ_ENABLE_QTMOBILITY
+LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
+                   $(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
