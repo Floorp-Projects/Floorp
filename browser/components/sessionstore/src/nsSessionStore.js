@@ -364,6 +364,9 @@ SessionStoreService.prototype = {
           delete this._initialState.windows[0].hidden;
           // Since nothing is hidden in the first window, it cannot be a popup
           delete this._initialState.windows[0].isPopup;
+          // We don't want to minimize and then open a window at startup.
+          if (this._initialState.windows[0].sizemode == "minimized")
+            this._initialState.windows[0].sizemode = "normal";
         }
       }
       catch (ex) { debug("The session file is invalid: " + ex); }
