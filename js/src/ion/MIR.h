@@ -1006,6 +1006,9 @@ class MBinaryBitwiseInstruction
         return this;
     }
 
+    MDefinition *foldsTo(bool useValueNumbers);
+    virtual MDefinition *foldIfZero(size_t operand) = 0;
+    virtual MDefinition *foldIfEqual()  = 0;
     void infer(const TypeOracle::Binary &b);
 };
 
@@ -1018,7 +1021,14 @@ class MBitAnd : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitAnd);
     static MBitAnd *New(MDefinition *left, MDefinition *right);
-    MDefinition *foldsTo(bool useValueNumbers);
+
+    MDefinition *foldIfZero(size_t operand) {
+        return getOperand(operand); // 0 & x => 0;
+    }
+
+    MDefinition *foldIfEqual() {
+        return getOperand(0); // x & x => x;
+    }
 };
 
 class MBitOr : public MBinaryBitwiseInstruction
@@ -1030,7 +1040,15 @@ class MBitOr : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitOr);
     static MBitOr *New(MDefinition *left, MDefinition *right);
-    MDefinition *foldsTo(bool useValueNumbers);
+
+    MDefinition *foldIfZero(size_t operand) {
+        return getOperand(1 - operand); // 0 | x => x, so if ith is 0, return (1-i)th
+    }
+
+    MDefinition *foldIfEqual() {
+        return getOperand(0); // x | x => x
+    }
+
 };
 
 class MBitXor : public MBinaryBitwiseInstruction
@@ -1042,7 +1060,14 @@ class MBitXor : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitXor);
     static MBitXor *New(MDefinition *left, MDefinition *right);
-    MDefinition *foldsTo(bool useValueNumbers);
+
+    MDefinition *foldIfZero(size_t operand) {
+        return getOperand(1 - operand); // 0 ^ x => x
+    }
+
+    MDefinition *foldIfEqual() {
+        return MConstant::New(Int32Value(0));
+    }
 };
 
 class MBinaryArithInstruction
@@ -1060,6 +1085,11 @@ class MBinaryArithInstruction
     MIRType specialization() const {
         return specialization_;
     }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+
+    virtual double getIdentity() = 0;
+
     void infer(const TypeOracle::Binary &b);
 };
 
@@ -1076,7 +1106,10 @@ class MAdd : public MBinaryArithInstruction
     static MAdd *New(MDefinition *left, MDefinition *right) {
         return new MAdd(left, right);
     }
-    MDefinition *foldsTo(bool useValueNumbers);
+
+    double getIdentity() {
+        return 0;
+    }
 };
 
 class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
