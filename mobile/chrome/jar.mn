@@ -31,6 +31,7 @@ chrome.jar:
   content/SelectHelperUI.js            (content/SelectHelperUI.js)
   content/SharingUI.js                 (content/SharingUI.js)
   content/TabsPopup.js                 (content/TabsPopup.js)
+  content/MasterPasswordUI.js          (content/MasterPasswordUI.js)
 * content/content.js                   (content/content.js)
   content/commandUtil.js               (content/commandUtil.js)
 * content/bindings.xml                 (content/bindings.xml)
@@ -65,6 +66,8 @@ chrome.jar:
   content/prompt/prompt.js             (content/prompt/prompt.js)
   content/share.xul                    (content/share.xul)
   content/webapps.xul                  (content/webapps.xul)
+  content/masterPassword.xul           (content/masterPassword.xul)
+  content/removeMasterPassword.xul     (content/removeMasterPassword.xul)
   content/AnimatedZoom.js              (content/AnimatedZoom.js)
 #ifdef MOZ_SERVICES_SYNC
   content/sync.js                      (content/sync.js)
@@ -73,7 +76,6 @@ chrome.jar:
   content/fullscreen-video.js          (content/fullscreen-video.js)
   content/fullscreen-video.xhtml       (content/fullscreen-video.xhtml)
   content/netError.xhtml               (content/netError.xhtml)
-  content/injected.js                  (content/injected.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
