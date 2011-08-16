@@ -87,7 +87,7 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
     JSAtom *atom = f.script()->getAtom(GET_INDEX(f.pc()));
     jsid id = ATOM_TO_JSID(atom);
 
-    const Shape *shape = obj->nativeLookup(id);
+    const Shape *shape = obj->nativeLookup(f.cx, id);
     if (!shape ||
         !shape->hasDefaultGetterOrIsMethod() ||
         !shape->hasSlot())
@@ -322,7 +322,7 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
     JSObject *obj = f.fp()->scopeChain().getGlobal();
     JSScript *script = f.script();
     JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
-    const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
+    const Shape *shape = obj->nativeLookup(f.cx, ATOM_TO_JSID(atom));
 
     LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);
     if (status == Lookup_Error)

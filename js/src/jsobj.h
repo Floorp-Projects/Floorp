@@ -425,11 +425,11 @@ struct JSObject : js::gc::Cell {
   public:
     inline const js::Shape *lastProperty() const;
 
-    inline js::Shape **nativeSearch(jsid id, bool adding = false);
-    inline const js::Shape *nativeLookup(jsid id);
+    inline js::Shape **nativeSearch(JSContext *cx, jsid id, bool adding = false);
+    inline const js::Shape *nativeLookup(JSContext *cx, jsid id);
 
-    inline bool nativeContains(jsid id);
-    inline bool nativeContains(const js::Shape &shape);
+    inline bool nativeContains(JSContext *cx, jsid id);
+    inline bool nativeContains(JSContext *cx, const js::Shape &shape);
 
     enum {
         DELEGATE                  =       0x01,
@@ -1984,7 +1984,7 @@ namespace js {
  * store the property value in *vp.
  */
 extern bool
-HasDataProperty(JSObject *obj, jsid methodid, js::Value *vp);
+HasDataProperty(JSContext *cx, JSObject *obj, jsid methodid, js::Value *vp);
 
 extern JSBool
 CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
