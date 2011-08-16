@@ -192,7 +192,7 @@ SessionStoreService.prototype = {
 
   // During the initial restore and setBrowserState calls tracks the number of
   // windows yet to be restored
-  _restoreCount: 0,
+  _restoreCount: -1,
 
   // whether a setBrowserState call is in progress
   _browserSetState: false,
@@ -3972,16 +3972,23 @@ SessionStoreService.prototype = {
   },
 
   _sendRestoreCompletedNotifications: function sss_sendRestoreCompletedNotifications() {
-    if (this._restoreCount) {
+    // not all windows restored, yet
+    if (this._restoreCount > 1) {
       this._restoreCount--;
-      if (this._restoreCount == 0) {
-        // This was the last window restored at startup, notify observers.
-        Services.obs.notifyObservers(null,
-          this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
-          "");
-        this._browserSetState = false;
-      }
+      return;
     }
+
+    // observers were already notified
+    if (this._restoreCount == -1)
+      return;
+
+    // This was the last window restored at startup, notify observers.
+    Services.obs.notifyObservers(null,
+      this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
+      "");
+
+    this._browserSetState = false;
+    this._restoreCount = -1;
   },
 
   /**
