@@ -762,7 +762,7 @@ SessionStoreService.prototype = {
     aWindow.__SSi = "window" + Date.now();
 
     // and create its data object
-    this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [] };
+    this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [], busy: false };
     if (!this._isWindowLoaded(aWindow))
       this._windows[aWindow.__SSi]._restoring = true;
     if (!aWindow.toolbar.visible)
@@ -946,6 +946,9 @@ SessionStoreService.prototype = {
       // save the window if it has multiple tabs or a single saveable tab
       if (winData.tabs.length > 1 ||
           (winData.tabs.length == 1 && this._shouldSaveTabState(winData.tabs[0]))) {
+        // we don't want to save the busy state
+        delete winData.busy;
+
         this._closedWindows.unshift(winData);
         this._capClosedWindows();
       }
@@ -1242,7 +1245,7 @@ SessionStoreService.prototype = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     
     var window = aTab.ownerDocument.defaultView;
-    this._sendWindowStateEvent(window, "Busy");
+    this._setWindowStateBusy(window);
     this.restoreHistoryPrecursor(window, [aTab], [tabState], 0, 0, 0);
   },
 
@@ -1258,7 +1261,7 @@ SessionStoreService.prototype = {
     tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
     tabState.pinned = false;
 
-    this._sendWindowStateEvent(aWindow, "Busy");
+    this._setWindowStateBusy(aWindow);
     let newTab = aTab == aWindow.gBrowser.selectedTab ?
       aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab}) :
       aWindow.gBrowser.addTab();
@@ -1301,7 +1304,7 @@ SessionStoreService.prototype = {
     let closedTab = closedTabs.splice(aIndex, 1).shift();
     let closedTabState = closedTab.state;
 
-    this._sendWindowStateEvent(aWindow, "Busy");
+    this._setWindowStateBusy(aWindow);
     // create a new tab
     let browser = aWindow.gBrowser;
     let tab = browser.addTab();
@@ -2511,7 +2514,7 @@ SessionStoreService.prototype = {
 
     // We're not returning from this before we end up calling restoreHistoryPrecursor
     // for this window, so make sure we send the SSWindowStateBusy event.
-    this._sendWindowStateEvent(aWindow, "Busy");
+    this._setWindowStateBusy(aWindow);
 
     if (root._closedWindows)
       this._closedWindows = root._closedWindows;
@@ -2698,7 +2701,7 @@ SessionStoreService.prototype = {
     if (aTabs.length == 0) {
       // this is normally done in restoreHistory() but as we're returning early
       // here we need to take care of it.
-      this._sendWindowStateEvent(aWindow, "Ready");
+      this._setWindowStateReady(aWindow);
       return;
     }
 
@@ -2843,7 +2846,7 @@ SessionStoreService.prototype = {
     if (aTabs.length == 0) {
       // At this point we're essentially ready for consumers to read/write data
       // via the sessionstore API so we'll send the SSWindowStateReady event.
-      this._sendWindowStateEvent(aWindow, "Ready");
+      this._setWindowStateReady(aWindow);
       return; // no more tabs to restore
     }
     
@@ -3979,6 +3982,42 @@ SessionStoreService.prototype = {
         this._browserSetState = false;
       }
     }
+  },
+
+  /**
+   * Set the given window's busy state
+   * @param aWindow the window
+   * @param aValue the window's busy state
+   */
+  _setWindowStateBusyValue:
+    function sss__changeWindowStateBusyValue(aWindow, aValue) {
+
+    this._windows[aWindow.__SSi].busy = aValue;
+
+    // Keep the to-be-restored state in sync because that is returned by
+    // getWindowState() as long as the window isn't loaded, yet.
+    if (!this._isWindowLoaded(aWindow)) {
+      let stateToRestore = this._statesToRestore[aWindow.__SS_restoreID].windows[0];
+      stateToRestore.busy = aValue;
+    }
+  },
+
+  /**
+   * Set the given window's state to 'not busy'.
+   * @param aWindow the window
+   */
+  _setWindowStateReady: function sss__setWindowStateReady(aWindow) {
+    this._setWindowStateBusyValue(aWindow, false);
+    this._sendWindowStateEvent(aWindow, "Ready");
+  },
+
+  /**
+   * Set the given window's state to 'busy'.
+   * @param aWindow the window
+   */
+  _setWindowStateBusy: function sss__setWindowStateBusy(aWindow) {
+    this._setWindowStateBusyValue(aWindow, true);
+    this._sendWindowStateEvent(aWindow, "Busy");
   },
 
   /**
