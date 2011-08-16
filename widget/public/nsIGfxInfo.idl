@@ -51,27 +51,38 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean AzureEnabled;
   readonly attribute DOMString DWriteVersion;
   readonly attribute DOMString cleartypeParameters;
-  
+
+  // XXX: Switch to a list of devices, rather than explicitly numbering them. 
+
   /**
    * The name of the display adapter.
    */
   readonly attribute DOMString adapterDescription;
+  readonly attribute DOMString adapterDescription2;
 
   readonly attribute DOMString adapterDriver;
+  readonly attribute DOMString adapterDriver2;
   
   /* These types are inspired by DXGI_ADAPTER_DESC */
   readonly attribute unsigned long adapterVendorID;
+  readonly attribute unsigned long adapterVendorID2;
   
   readonly attribute unsigned long adapterDeviceID;
-  
+  readonly attribute unsigned long adapterDeviceID2;
+
   /**
    * The amount of RAM in MB in the display adapter.
    */
   readonly attribute DOMString adapterRAM;
+  readonly attribute DOMString adapterRAM2;
   
   readonly attribute DOMString adapterDriverVersion;
+  readonly attribute DOMString adapterDriverVersion2;
   
   readonly attribute DOMString adapterDriverDate;
+  readonly attribute DOMString adapterDriverDate2;
+
+  readonly attribute boolean isGPU2Active;
 
   void getFailures(
                [optional] out unsigned long failureCount,

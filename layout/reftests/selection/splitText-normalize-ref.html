@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=191864
+-->
+<head>
+  <title>Test for Bug 191864</title>
+  <script type="application/javascript;version=1.7" src="splitText-normalize.js"></script>
+<script type="application/javascript;version=1.7">
+var id;
+function checkFinished() {
+  if (window.frames.length == tests_done) {
+    clearInterval(id);
+    document.documentElement.className = "";
+  }
+}
+
+function runTest() {
+  let col1 = document.getElementById('col1');
+  let col2 = document.getElementById('col2');
+  let col3 = document.getElementById('col3');
+  let col4 = document.getElementById('col4');
+  for (let i=0; i < tests.length; ++i) {
+    let t = tests[i];
+    col1.appendChild(createFrame(test_ref,t));
+    col2.appendChild(createFrame(test_ref,t));
+    col3.appendChild(createFrame(test_ref,t));
+    col4.appendChild(createFrame(test_ref,t));
+  }
+  id = setInterval(checkFinished,500);
+}
+</script>
+</head>
+<body onload="runTest()">
+<span id="col1" style="float:left; height:800px; width:180px;"></span>
+<span id="col2" style="float:left; height:800px; width:180px;"></span>
+<span id="col3" style="float:left; height:800px; width:180px;"></span>
+<span id="col4" style="float:left; height:800px; width:180px;"></span>
+</body>
+</html>

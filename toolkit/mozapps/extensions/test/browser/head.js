@@ -20,6 +20,7 @@ const TESTROOT = "http://example.com/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/" + RELATIVE_DIR;
 const CHROMEROOT = pathParts.join("/") + "/";
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
+const PREF_UPDATEURL = "extensions.update.url";
 
 const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
@@ -33,6 +34,7 @@ var gTestStart = null;
 var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 
 var gDiscoveryURL = Services.prefs.getCharPref(PREF_DISCOVERURL);
+var gUpdateURL = Services.prefs.getCharPref(PREF_UPDATEURL);
 
 // Turn logging on for all tests
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
@@ -47,6 +49,7 @@ registerCleanupFunction(function() {
   }
 
   Services.prefs.setCharPref(PREF_DISCOVERURL, gDiscoveryURL);
+  Services.prefs.setCharPref(PREF_UPDATEURL, gUpdateURL);
 
   // Throw an error if the add-ons manager window is open anywhere
   var windows = Services.wm.getEnumerator("Addons:Manager");

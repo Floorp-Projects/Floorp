@@ -3960,19 +3960,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("evalInFrame",    EvalInFrame,    2,0),
     JS_FN("shapeOf",        ShapeOf,        1,0),
     JS_FN("resolver",       Resolver,       1,0),
-    JS_FN("pauseProfilers", js_PauseProfilers, 0,0),
-    JS_FN("resumeProfilers", js_ResumeProfilers, 0,0),
-#ifdef MOZ_CALLGRIND
-    JS_FN("startCallgrind", js_StartCallgrind,  0,0),
-    JS_FN("stopCallgrind",  js_StopCallgrind,   0,0),
-    JS_FN("dumpCallgrind",  js_DumpCallgrind,   1,0),
-#endif
-#ifdef MOZ_VTUNE
-    JS_FN("startVtune",     js_StartVtune,    1,0),
-    JS_FN("stopVtune",      js_StopVtune,     0,0),
-    JS_FN("pauseVtune",     js_PauseVtune,    0,0),
-    JS_FN("resumeVtune",    js_ResumeVtune,   0,0),
-#endif
 #ifdef MOZ_TRACEVIS
     JS_FN("startTraceVis",  StartTraceVisNative, 1,0),
     JS_FN("stopTraceVis",   StopTraceVisNative,  0,0),
@@ -4099,19 +4086,6 @@ static const char *const shell_help_messages[] = {
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 "resolver(src[, proto])   Create object with resolve hook that copies properties\n"
 "                         from src. If proto is omitted, use Object.prototype.",
-"pauseProfilers()         Pause all profilers that can be paused",
-"resumeProfilers()        Resume profilers if they are paused",
-#ifdef MOZ_CALLGRIND
-"startCallgrind()         Start callgrind instrumentation",
-"stopCallgrind()          Stop callgrind instrumentation",
-"dumpCallgrind([name])    Dump callgrind counters",
-#endif
-#ifdef MOZ_VTUNE
-"startVtune([filename])   Start vtune instrumentation",
-"stopVtune()              Stop vtune instrumentation",
-"pauseVtune()             Pause vtune collection",
-"resumeVtune()            Resume vtune collection",
-#endif
 #ifdef MOZ_TRACEVIS
 "startTraceVis(filename)  Start TraceVis recording (stops any current recording)",
 "stopTraceVis()           Stop TraceVis recording",
@@ -4153,20 +4127,50 @@ static const char *const shell_help_messages[] = {
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
-"startProfiling()         Start a profiling session.\n"
+"startProfiling([profileName])\n"
+"                         Start a profiling session\n"
 "                         Profiler must be running with programatic sampling",
-"stopProfiling()          Stop a running profiling session\n"
+"stopProfiling([profileName])\n"
+"                         Stop a running profiling session",
+"pauseProfilers([profileName])\n"
+"                         Pause a running profiling session",
+"resumeProfilers([profileName])\n"
+"                         Resume a paused profiling session",
+"dumpProfile([outfile[, profileName]])\n"
+"                         Dump out current profile info (only valid for callgrind)",
+# ifdef MOZ_CALLGRIND
+"startCallgrind()         Start Callgrind instrumentation",
+"stopCallgrind()          Stop Callgrind instrumentation",
+"dumpCallgrind([outfile]) Dump current Callgrind counters to file or stdout",
+# endif
+# ifdef MOZ_VTUNE
+"startVtune()             Start Vtune instrumentation",
+"stopVtune()              Stop Vtune instrumentation",
+"pauseVtune()             Pause Vtune collection",
+"resumeVtune()            Resume Vtune collection",
+# endif
 #endif
 };
 
 #ifdef MOZ_PROFILING
-#define PROFILING_FUNCTION_COUNT 2
+# define PROFILING_FUNCTION_COUNT 5
+# ifdef MOZ_CALLGRIND
+#  define CALLGRIND_FUNCTION_COUNT 3
+# else
+#  define CALLGRIND_FUNCTION_COUNT 0
+# endif
+# ifdef MOZ_VTUNE
+#  define VTUNE_FUNCTION_COUNT 4
+# else
+#  define VTUNE_FUNCTION_COUNT 0
+# endif
+# define EXTERNAL_FUNCTION_COUNT (PROFILING_FUNCTION_COUNT + CALLGRIND_FUNCTION_COUNT + VTUNE_FUNCTION_COUNT)
 #else
-#define PROFILING_FUNCTION_COUNT 0
+# define EXTERNAL_FUNCTION_COUNT 0
 #endif
 
 /* Help messages must match shell functions. */
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - PROFILING_FUNCTION_COUNT ==
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - EXTERNAL_FUNCTION_COUNT ==
                  JS_ARRAY_LENGTH(shell_functions) - 1 /* JS_FS_END */);
 
 #ifdef DEBUG
@@ -4177,7 +4181,7 @@ CheckHelpMessages()
     const char *lp;
 
     /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - PROFILING_FUNCTION_COUNT; ++m) {
+    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
@@ -4190,6 +4194,9 @@ CheckHelpMessages()
 #endif
 
 #undef PROFILING_FUNCTION_COUNT
+#undef CALLGRIND_FUNCTION_COUNT
+#undef VTUNE_FUNCTION_COUNT
+#undef EXTERNAL_FUNCTION_COUNT
 
 static JSBool
 Help(JSContext *cx, uintN argc, jsval *vp)
@@ -5030,7 +5037,14 @@ BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     JSObject *scriptArgs = JS_NewArrayObject(cx, 0, NULL);
     if (!scriptArgs)
         return false;
-    if (!JS_DefineProperty(cx, obj, "scriptArgs", OBJECT_TO_JSVAL(scriptArgs), NULL, NULL, 0))
+
+    /* 
+     * Script arguments are bound as a normal |arguments| property on the
+     * global object. It has no special significance, like |arguments| in
+     * function scope does -- this identifier is used de-facto across shell
+     * implementations, see bug 675269.
+     */
+    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(scriptArgs), NULL, NULL, 0))
         return false;
 
     for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {
@@ -5214,7 +5228,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 #endif  /* JSDEBUGGER */
 
     if (enableDisassemblyDumps)
-        JS_DumpAllProfiles(cx);
+        JS_DumpCompartmentBytecode(cx);
  
     return result;
 }
@@ -5350,7 +5364,7 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
         || !op.addOptionalMultiStringArg("scriptArgs",
-                                         "String arguments to bind as |scriptArgs| in the "
+                                         "String arguments to bind as |arguments| in the "
                                          "shell's global")) {
         return EXIT_FAILURE;
     }

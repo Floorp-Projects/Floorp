@@ -1,4 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,6 +46,7 @@
 #include "nsTraceRefcnt.h"
 
 #include "WorkerInlines.h"
+#include "WorkerPrivate.h"
 
 #define PROPERTY_FLAGS \
   JSPROP_ENUMERATE | JSPROP_SHARED
@@ -415,6 +417,8 @@ class MessageEvent : public Event
 protected:
   uint64* mData;
   size_t mDataByteCount;
+  nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
+  bool mMainRuntime;
 
 public:
   static bool
@@ -435,7 +439,7 @@ public:
 
   static JSObject*
   Create(JSContext* aCx, JSObject* aParent, JSAutoStructuredCloneBuffer& aData,
-         bool aMainRuntime)
+         nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects, bool aMainRuntime)
   {
     JSString* type = JS_InternString(aCx, "message");
     if (!type) {
@@ -449,7 +453,7 @@ public:
       return NULL;
     }
 
-    MessageEvent* priv = new MessageEvent();
+    MessageEvent* priv = new MessageEvent(aMainRuntime);
     if (!SetJSPrivateSafeish(aCx, obj, priv) ||
         !InitMessageEventCommon(aCx, obj, priv, type, false, false, NULL, NULL,
                                 NULL, true)) {
@@ -459,12 +463,14 @@ public:
     }
 
     aData.steal(&priv->mData, &priv->mDataByteCount);
+    priv->mClonedObjects.SwapElements(aClonedObjects);
+
     return obj;
   }
 
 protected:
-  MessageEvent()
-  : mData(NULL), mDataByteCount(0)
+  MessageEvent(bool aMainRuntime)
+  : mData(NULL), mDataByteCount(0), mMainRuntime(aMainRuntime)
   {
     MOZ_COUNT_CTOR(mozilla::dom::workers::MessageEvent);
   }
@@ -570,8 +576,14 @@ private:
       event->mData = NULL;
       event->mDataByteCount = 0;
 
+      // Release reference to objects that were AddRef'd for
+      // cloning into worker when array goes out of scope.
+      nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
+      clonedObjects.SwapElements(event->mClonedObjects);
+
       jsval data;
-      if (!buffer.read(aCx, &data) ||
+      if (!buffer.read(aCx, &data,
+                       WorkerStructuredCloneCallbacks(event->mMainRuntime)) ||
           !JS_SetReservedSlot(aCx, aObj, slot, data)) {
         return false;
       }
@@ -1057,10 +1069,11 @@ CreateGenericEvent(JSContext* aCx, JSString* aType, bool aBubbles,
 
 JSObject*
 CreateMessageEvent(JSContext* aCx, JSAutoStructuredCloneBuffer& aData,
+                   nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
                    bool aMainRuntime)
 {
   JSObject* global = JS_GetGlobalForScopeChain(aCx);
-  return MessageEvent::Create(aCx, global, aData, aMainRuntime);
+  return MessageEvent::Create(aCx, global, aData, aClonedObjects, aMainRuntime);
 }
 
 JSObject*
