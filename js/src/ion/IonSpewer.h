@@ -59,7 +59,9 @@ namespace ion {
     /* Information during LICM */           \
     _(LICM)                                 \
     /* Information during LSRA */           \
-    _(LSRA)
+    _(LSRA)                                 \
+    /* Debug info about snapshots */        \
+    _(Snapshots)
 
 enum IonSpewChannel {
 #define IONSPEW_CHANNEL(name) IonSpew_##name,

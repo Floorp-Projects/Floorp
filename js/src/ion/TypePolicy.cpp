@@ -65,6 +65,14 @@ BoxInputsPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
 {
 }
 
+MDefinition *
+BoxInputsPolicy::boxAt(MInstruction *at, MDefinition *operand)
+{
+    MBox *box = MBox::New(operand);
+    at->block()->insertBefore(at, box);
+    return box;
+}
+
 bool
 BoxInputsPolicy::adjustInputs(MInstruction *ins)
 {
@@ -72,9 +80,7 @@ BoxInputsPolicy::adjustInputs(MInstruction *ins)
         MDefinition *in = ins->getOperand(i);
         if (in->type() == MIRType_Value)
             continue;
-        MBox *box = MBox::New(in);
-        ins->block()->insertBefore(ins, box);
-        ins->replaceOperand(i, box);
+        ins->replaceOperand(i, boxAt(ins, in));
     }
     return true;
 }
@@ -126,9 +132,15 @@ BinaryArithPolicy::adjustInputs(MInstruction *ins)
             continue;
 
         MInstruction *replace;
-        if (in->type() == MIRType_Value && specialization_ != MIRType_Any)
-            replace = MUnbox::New(in, ins->type());
-        else if (ins->type() == MIRType_Double)
+
+        // If the input is a string or an object, the conversion is not
+        // possible, at least, we can't specialize. So box the input. Note
+        // that we don't do this for (undefined -> int32) because we
+        // should have despecialized that earlier.
+        if (in->type() == MIRType_Object || in->type() == MIRType_String)
+            in = boxAt(ins, in);
+
+        if (ins->type() == MIRType_Double)
             replace = MToDouble::New(in);
         else
             replace = MToInt32::New(in);

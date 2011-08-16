@@ -120,13 +120,17 @@ class FloatRegisters {
     static const Code Invalid = JSC::X86Registers::invalid_xmm;
 
     static const uint32 Total = 8;
-    static const uint32 Allocatable = 8;
+    static const uint32 Allocatable = 7;
 
     static const uint32 AllMask = (1 << Total) - 1;
 
     static const uint32 VolatileMask = AllMask;
     static const uint32 NonVolatileMask = 0;
-    static const uint32 AllocatableMask = AllMask;
+
+    static const uint32 NonAllocatableMask =
+        (1 << JSC::X86Registers::xmm7);
+
+    static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
 } // namespace js

@@ -199,7 +199,6 @@ private:
         OP_OR_EvGv                      = 0x09,
         OP_OR_GvEv                      = 0x0B,
         OP_2BYTE_ESCAPE                 = 0x0F,
-        OP_3BYTE_ESCAPE                 = 0x3A,
         OP_AND_EvGv                     = 0x21,
         OP_AND_GvEv                     = 0x23,
         OP_SUB_EvGv                     = 0x29,
@@ -264,6 +263,7 @@ private:
         OP2_CVTSI2SD_VsdEd  = 0x2A,
         OP2_CVTTSD2SI_GdWsd = 0x2C,
         OP2_UCOMISD_VsdWsd  = 0x2E,
+        OP2_MOVMSKPD_EdVd   = 0x50,
         OP2_ADDSD_VsdWsd    = 0x58,
         OP2_MULSD_VsdWsd    = 0x59,
         OP2_CVTSS2SD_VsdEd  = 0x5A,
@@ -287,8 +287,14 @@ private:
     } TwoByteOpcodeID;
 
     typedef enum {
-        OP3_PINSRD_VsdWsd   = 0x22
+        OP3_PINSRD_VsdWsd   = 0x22,
+        OP3_PTEST_VdVd      = 0x17 
     } ThreeByteOpcodeID;
+
+    typedef enum {
+        ESCAPE_PTEST        = 0x38,
+        ESCAPE_PINSRD       = 0x3A 
+    } ThreeByteEscape;
 
     TwoByteOpcodeID jccRel32(Condition cond)
     {
@@ -996,6 +1002,18 @@ public:
             m_formatter.oneByteOp64(OP_GROUP2_Ev1, GROUP2_OP_SHL, dst);
         else {
             m_formatter.oneByteOp64(OP_GROUP2_EvIb, GROUP2_OP_SHL, dst);
+            m_formatter.immediate8(imm);
+        }
+    }
+
+    void shrq_i8r(int imm, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "shrq       $%d, %s\n", MAYBE_PAD, imm, nameIReg(8, dst));
+        if (imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, GROUP2_OP_SHR, dst);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, GROUP2_OP_SHR, dst);
             m_formatter.immediate8(imm);
         }
     }
@@ -1814,7 +1832,9 @@ public:
     
     void call_m(int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "call       %s0x%x(%s)\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_CALLN, base, offset);
     }
 
@@ -2060,6 +2080,17 @@ public:
         m_formatter.twoByteOp(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
     }
 
+#if WTF_CPU_X86_64
+    void cvttsd2sq_rr(XMMRegisterID src, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvttsd2sq  %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameIReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp64(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
+    }
+#endif
+
     void unpcklps_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -2085,6 +2116,23 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)3, (RegisterID)dest);
         m_formatter.immediate8(shift);
+    }
+
+    void movmskpd_rr(XMMRegisterID src, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movmskpd   %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameIReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVMSKPD_EdVd, (RegisterID)src, dst);
+    }
+
+    void ptest_rr(XMMRegisterID lhs, XMMRegisterID rhs) {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "ptest      %s, %s\n", MAYBE_PAD,
+                       nameFPReg(lhs), nameFPReg(rhs));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PTEST_VdVd, ESCAPE_PTEST, (RegisterID)rhs, (RegisterID)lhs);
     }
 
     void movd_rr(XMMRegisterID src, RegisterID dst)
@@ -2321,7 +2369,7 @@ public:
                        IPFX "pinsrd     $1, %s, %s\n", MAYBE_PAD,
                        nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, ESCAPE_PINSRD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(0x01); // the $1
     }
 
@@ -2332,7 +2380,7 @@ public:
                        PRETTY_PRINT_OFFSET(offset),
                        nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, (RegisterID)dst, base, offset);
+        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, ESCAPE_PINSRD, (RegisterID)dst, base, offset);
         m_formatter.immediate8(0x01); // the $1
     }
 
@@ -2757,22 +2805,22 @@ private:
         }
 #endif
 
-        void threeByteOp(ThreeByteOpcodeID opcode, int reg, RegisterID rm)
+        void threeByteOp(ThreeByteOpcodeID opcode, ThreeByteEscape escape, int reg, RegisterID rm)
         {
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIfNeeded(reg, 0, rm);
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
-            m_buffer.putByteUnchecked(OP_3BYTE_ESCAPE);
+            m_buffer.putByteUnchecked(escape);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(reg, rm);
         }
 
-        void threeByteOp(ThreeByteOpcodeID opcode, int reg, RegisterID base, int offset)
+        void threeByteOp(ThreeByteOpcodeID opcode, ThreeByteEscape escape, int reg, RegisterID base, int offset)
         {
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIfNeeded(reg, 0, base);
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
-            m_buffer.putByteUnchecked(OP_3BYTE_ESCAPE);
+            m_buffer.putByteUnchecked(escape);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM(reg, base, offset);
         }

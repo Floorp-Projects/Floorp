@@ -75,6 +75,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     }
 
   protected:
+    ValueOperand ToValue(LInstruction *ins, size_t pos);
+
+  protected:
     void linkAbsoluteLabels();
 
   public:
@@ -85,7 +88,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitBoxDouble(LBoxDouble *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitUnboxDouble(LUnboxDouble *ins);
-    bool visitUnboxDoubleSSE41(LUnboxDoubleSSE41 *ins);
     bool visitValue(LValue *value);
     bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);

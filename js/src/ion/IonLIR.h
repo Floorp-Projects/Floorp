@@ -900,6 +900,7 @@ class LIRGraph
     uint32 localSlotCount() const {
         return localSlotCount_;
     }
+    bool addConstantToPool(double d, uint32 *index);
     bool addConstantToPool(MConstant *ins, uint32 *index);
     size_t numConstants() const {
         return constantPool_.length();

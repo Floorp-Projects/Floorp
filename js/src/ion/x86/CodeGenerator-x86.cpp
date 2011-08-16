@@ -83,6 +83,14 @@ FrameSizeClass::frameSize() const
     return LAST_FRAME_SIZE + step * LAST_FRAME_INCREMENT;
 }
 
+ValueOperand
+CodeGeneratorX86::ToValue(LInstruction *ins, size_t pos)
+{
+    Register typeReg = ToRegister(ins->getOperand(pos + TYPE_INDEX));
+    Register payloadReg = ToRegister(ins->getOperand(pos + PAYLOAD_INDEX));
+    return ValueOperand(typeReg, payloadReg);
+}
+
 bool
 CodeGeneratorX86::visitValue(LValue *value)
 {
@@ -212,32 +220,13 @@ CodeGeneratorX86::visitDouble(LDouble *ins)
 bool
 CodeGeneratorX86::visitUnboxDouble(LUnboxDouble *ins)
 {
-    const LAllocation *type = ins->getOperand(TYPE_INDEX);
-    const LAllocation *payload = ins->getOperand(PAYLOAD_INDEX);
-    const LDefinition *result = ins->getDef(0);
-    const LDefinition *temp = ins->getTemp(0);
+    const ValueOperand box = ToValue(ins, LUnboxDouble::Input);
+    const LDefinition *result = ins->output();
 
-    masm.cmpl(ImmTag(JSVAL_TAG_CLEAR), ToRegister(type));
-    if (!bailoutIf(Assembler::AboveOrEqual, ins->snapshot()))
+    Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, box);
+    if (!bailoutIf(cond, ins->snapshot()))
         return false;
-    masm.movd(ToRegister(payload), ToFloatRegister(result));
-    masm.movd(ToRegister(type), ToFloatRegister(temp));
-    masm.unpcklps(ToFloatRegister(temp), ToFloatRegister(result));
-    return true;
-}
-
-bool
-CodeGeneratorX86::visitUnboxDoubleSSE41(LUnboxDoubleSSE41 *ins)
-{
-    const LAllocation *type = ins->getOperand(TYPE_INDEX);
-    const LAllocation *payload = ins->getOperand(PAYLOAD_INDEX);
-    const LDefinition *result = ins->getDef(0);
-
-    masm.cmpl(ToOperand(type), ImmTag(JSVAL_TAG_CLEAR));
-    if (!bailoutIf(Assembler::AboveOrEqual, ins->snapshot()))
-        return false;
-    masm.movd(ToRegister(payload), ToFloatRegister(result));
-    masm.pinsrd(ToOperand(type), ToFloatRegister(result));
+    masm.unboxDouble(box, ToFloatRegister(result));
     return true;
 }
 

@@ -63,6 +63,11 @@ class LIRGeneratorX86 : public LIRGeneratorShared
     LUse usePayloadInRegister(MDefinition *mir);
 
     // Adds a box input to an instruction, setting operand |n| to the type and
+    // |n+1| to the payload.
+    bool useBox(LInstruction *lir, size_t n, MDefinition *mir,
+                LUse::Policy policy = LUse::REGISTER);
+
+    // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload. Does not modify the operands, instead expecting a
     // policy to already be set.
     bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
@@ -76,6 +81,8 @@ class LIRGeneratorX86 : public LIRGeneratorShared
                      MDefinition *rhs);
     bool lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);
+
+    bool lowerConstantDouble(double d, MInstruction *ins);
 
   public:
     bool visitConstant(MConstant *ins);

@@ -48,10 +48,20 @@ using namespace js;
 using namespace js::ion;
 
 bool
-LIRGeneratorX64::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
+LIRGeneratorX64::useBox(LInstruction *lir, size_t n, MDefinition *mir, LUse::Policy policy)
 {
-    lir->setOperand(n, useRegister(mir));
+    JS_ASSERT(mir->type() == MIRType_Value);
+
+    if (!ensureDefined(mir))
+        return false;
+    lir->setOperand(n, LUse(mir->id(), policy));
     return true;
+}
+
+bool
+LIRGeneratorX64::lowerConstantDouble(double d, MInstruction *mir)
+{
+    return define(new LDouble(d), mir);
 }
 
 bool
@@ -60,10 +70,8 @@ LIRGeneratorX64::visitConstant(MConstant *ins)
     if (!ins->isEmittedAtUses())
         return emitAtUses(ins);
 
-    if (ins->type() == MIRType_Double) {
-        LDouble *lir = new LDouble(ins->value().toDouble(), temp(LDefinition::DOUBLE));
-        return define(lir, ins);
-    }
+    if (ins->type() == MIRType_Double)
+        return lowerConstantDouble(ins->value().toDouble(), ins);
 
     return LIRGeneratorShared::visitConstant(ins);
 }
@@ -111,8 +119,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
         return define(ins, unbox, out) && assignSnapshot(ins);
       }
       case MIRType_Double: {
-        // Doubles don't need a temporary.
-        LUnboxDouble *ins = new LUnboxDouble(useRegister(box), temp(LDefinition::INTEGER));
+        LUnboxDouble *ins = new LUnboxDouble(useRegister(box));
         return define(ins, unbox) && assignSnapshot(ins);
       }
       default:
