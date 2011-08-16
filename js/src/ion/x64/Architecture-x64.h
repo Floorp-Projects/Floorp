@@ -81,7 +81,7 @@ class Registers {
     static const Code Invalid = JSC::X86Registers::invalid_reg;
 
     static const uint32 Total = 16;
-    static const uint32 Allocatable = 13;
+    static const uint32 Allocatable = 14;
 
     static const uint32 AllMask = (1 << Total) - 1;
 
@@ -113,7 +113,8 @@ class Registers {
     static const uint32 SingleByteRegs = VolatileMask | NonVolatileMask;
 
     static const uint32 NonAllocatableMask =
-        (1 << JSC::X86Registers::esp);
+        (1 << JSC::X86Registers::esp) |
+        (1 << JSC::X86Registers::r11);      // This is ScratchReg.
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
@@ -133,7 +134,7 @@ class FloatRegisters {
     static const Code Invalid = JSC::X86Registers::invalid_xmm;
 
     static const uint32 Total = 16;
-    static const uint32 Allocatable = 16;
+    static const uint32 Allocatable = 15;
 
     static const uint32 AllMask = (1 << Total) - 1;
 
@@ -151,7 +152,11 @@ class FloatRegisters {
 
 
     static const uint32 NonVolatileMask = AllMask & ~VolatileMask;
-    static const uint32 AllocatableMask = AllMask;
+
+    static const uint32 NonAllocatableMask =
+        (1 << JSC::X86Registers::xmm15);    // This is ScratchFloatReg.
+
+    static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
 } // namespace js

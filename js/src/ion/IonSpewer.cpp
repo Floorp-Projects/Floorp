@@ -150,6 +150,8 @@ ion::CheckLogging()
         LoggingBits |= (1 << uint32(IonSpew_LICM));
     if (ContainsFlag(env, "lsra"))
         LoggingBits |= (1 << uint32(IonSpew_LSRA));
+    if (ContainsFlag(env, "snapshots"))
+        LoggingBits |= (1 << uint32(IonSpew_Snapshots));
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32(-1);
 

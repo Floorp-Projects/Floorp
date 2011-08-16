@@ -85,6 +85,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
+    bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, LSnapshot *snapshot);
+
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
 

@@ -101,6 +101,48 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         bind(&good);
 #endif
     }
+
+    Condition testInt32(Condition cond, const ValueOperand &value) {
+        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        cmpl(ImmType(JSVAL_TYPE_INT32), value.typeReg());
+        return cond;
+    }
+    Condition testBoolean(Condition cond, const ValueOperand &value) {
+        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        cmpl(ImmType(JSVAL_TYPE_BOOLEAN), value.typeReg());
+        return cond;
+    }
+    Condition testDouble(Condition cond, const ValueOperand &value) {
+        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        Condition actual = (cond == Assembler::Equal)
+                           ? Assembler::Below
+                           : Assembler::AboveOrEqual;
+        cmpl(ImmTag(JSVAL_TAG_CLEAR), value.typeReg());
+        return actual;
+    }
+    Condition testNull(Condition cond, const ValueOperand &value) {
+        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        cmpl(ImmType(JSVAL_TYPE_NULL), value.typeReg());
+        return cond;
+    }
+
+    void unboxInt32(const ValueOperand &operand, const Register &dest) {
+        movl(operand.payloadReg(), dest);
+    }
+    void unboxBoolean(const ValueOperand &operand, const Register &dest) {
+        movl(operand.payloadReg(), dest);
+    }
+    void unboxDouble(const ValueOperand &operand, const FloatRegister &dest) {
+        JS_ASSERT(dest != ScratchFloatReg);
+        if (Assembler::HasSSE41()) {
+            movd(operand.payloadReg(), dest);
+            pinsrd(operand.typeReg(), dest);
+        } else {
+            movd(operand.payloadReg(), dest);
+            movd(operand.typeReg(), ScratchFloatReg);
+            unpcklps(ScratchFloatReg, dest);
+        }
+    }
 };
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;

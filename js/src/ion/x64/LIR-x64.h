@@ -89,18 +89,29 @@ class LUnboxInteger : public LInstructionHelper<1, 1, 0>
     LUnboxInteger(const LAllocation &input) {
         setOperand(0, input);
     }
+
+    static const size_t Input = 0;
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
 };
 
 // Given an untyped input, guards on whether it's a double and returns a double
 // payload.
-class LUnboxDouble : public LInstructionHelper<1, 1, 1>
+class LUnboxDouble : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(UnboxDouble);
 
-    LUnboxDouble(const LAllocation &input, const LDefinition &temp) {
+    LUnboxDouble(const LAllocation &input) {
         setOperand(0, input);
-        setTemp(0, temp);
+    }
+
+    static const size_t Input = 0;
+
+    const LDefinition *output() {
+        return getDef(0);
     }
 };
 
@@ -130,19 +141,21 @@ class LUnboxString : public LInstructionHelper<1, 1, 1>
 };
 
 // Constant double.
-class LDouble : public LInstructionHelper<1, 0, 1>
+class LDouble : public LInstructionHelper<1, 0, 0>
 {
     double d_;
 
   public:
     LIR_HEADER(Double);
 
-    LDouble(double d, const LDefinition &temp) : d_(d) {
-        setTemp(0, temp);
-    }
+    LDouble(double d) : d_(d)
+    { }
 
     double getDouble() const {
         return d_;
+    }
+    const LDefinition *output() {
+        return getDef(0);
     }
 };
 

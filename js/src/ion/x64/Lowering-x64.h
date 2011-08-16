@@ -59,12 +59,16 @@ class LIRGeneratorX64 : public LIRGeneratorShared
     void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
 
-    bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
+    // Adds a use at operand |n| of a value-typed insturction.
+    bool useBox(LInstruction *lir, size_t n, MDefinition *mir,
+                LUse::Policy policy = LUse::REGISTER);
 
     bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
     bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);
     bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
+
+    bool lowerConstantDouble(double d, MInstruction *ins);
 
   public:
     bool visitConstant(MConstant *ins);

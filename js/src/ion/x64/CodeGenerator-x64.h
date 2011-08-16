@@ -54,6 +54,9 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
         return this;
     }
 
+  protected:
+    ValueOperand ToValue(LInstruction *ins, size_t pos);
+
   public:
     CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph);
 

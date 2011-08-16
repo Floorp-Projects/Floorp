@@ -359,6 +359,7 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
 
     return true;
 }
+
 bool
 CodeGeneratorX86Shared::visitMathD(LMathD *math)
 {
@@ -373,6 +374,46 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
         JS_NOT_REACHED("unexpected opcode");
         return false;
     }
+    return true;
+}
+
+// Checks whether a double is representable as a 32-bit integer. If so, the
+// integer is written to the output register. Otherwise, a bailout is taken to
+// the given snapshot. This function overwrites the scratch float register.
+bool
+CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Register &dest, LSnapshot *snapshot)
+{
+    // Note that we don't specify the destination width for the truncated
+    // conversion to integer. x64 will use the native width (quadword) which
+    // sign-extends the top bits, preserving a little sanity.
+    masm.cvttsd2s(src, dest);
+    masm.cvtsi2sd(dest, ScratchFloatReg);
+    masm.ucomisd(src, ScratchFloatReg);
+    if (!bailoutIf(Assembler::Parity, snapshot))
+        return false;
+    if (!bailoutIf(Assembler::NotEqual, snapshot))
+        return false;
+
+    // Check for -0
+    Label notZero;
+    masm.testl(dest, dest);
+    masm.j(Assembler::NonZero, &notZero);
+
+    if (Assembler::HasSSE41()) {
+        masm.ptest(src, src);
+        if (!bailoutIf(Assembler::NonZero, snapshot))
+            return false;
+    } else {
+        // bit 0 = sign of low double
+        // bit 1 = sign of high double
+        masm.movmskpd(src, dest);
+        masm.andl(Imm32(1), dest);
+        if (!bailoutIf(Assembler::NonZero, snapshot))
+            return false;
+    }
+    
+    masm.bind(&notZero);
+
     return true;
 }
 

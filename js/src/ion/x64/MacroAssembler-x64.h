@@ -47,17 +47,21 @@
 namespace js {
 namespace ion {
 
-struct ImmTag : public ImmWord
+struct ImmShiftedTag : public ImmWord
 {
-    ImmTag(JSValueShiftedTag shtag)
+    ImmShiftedTag(JSValueShiftedTag shtag)
       : ImmWord((uintptr_t)shtag)
+    { }
+
+    ImmShiftedTag(JSValueType type)
+      : ImmWord(uintptr_t(JSValueShiftedTag(JSVAL_TYPE_TO_SHIFTED_TAG(type))))
     { }
 };
 
-struct ImmType : ImmTag
+struct ImmTag : public Imm32
 {
-    ImmType(JSValueType type)
-      : ImmTag(JSValueShiftedTag(JSVAL_TYPE_TO_SHIFTED_TAG(type)))
+    ImmTag(JSValueTag tag)
+      : Imm32(tag)
     { }
 };
 
@@ -116,10 +120,44 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         bind(&good);
 #endif
     }
-    void makeBox(ImmType type, const Register &payload, const Register &dest) {
-        JS_ASSERT(payload != dest);
-        movq(type, dest);
-        orq(payload, dest);
+
+    void cmpTag(const ValueOperand &operand, ImmTag tag) {
+        movq(operand.value(), ScratchReg);
+        shrq(Imm32(JSVAL_TAG_SHIFT), ScratchReg);
+        cmpl(tag, ScratchReg);
+    }
+
+    // Type-testing instructions on x64 will clobber ScratchReg.
+    Condition testInt32(Condition cond, const ValueOperand &src) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpTag(src, ImmTag(JSVAL_TAG_INT32));
+        return cond;
+    }
+    Condition testBoolean(Condition cond, const ValueOperand &src) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpTag(src, ImmTag(JSVAL_TAG_BOOLEAN));
+        return cond;
+    }
+    Condition testDouble(Condition cond, const ValueOperand &src) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        movq(ImmShiftedTag(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ScratchReg);
+        cmpq(src.value(), ScratchReg);
+        return (cond == NotEqual) ? Above : BelowOrEqual;
+    }
+    Condition testNull(Condition cond, const ValueOperand &src) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpTag(src, ImmTag(JSVAL_TAG_NULL));
+        return cond;
+    }
+
+    void unboxInt32(const ValueOperand &src, const Register &dest) {
+        movl(src.value(), dest);
+    }
+    void unboxBoolean(const ValueOperand &src, const Register &dest) {
+        movl(src.value(), dest);
+    }
+    void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
+        movqsd(src.valueReg(), dest);
     }
 };
 
