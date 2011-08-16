@@ -1581,27 +1581,27 @@ let OpenWebapps = {
 
     xhr.send(null);
   },
-
+  
   amInstalled: function(aAppURI, aSuccessCallback, aErrorCallback) {
     sendAsyncMessage("OpenWebapps:AmInstalled", { appURI: aAppURI, callbackID:  OpenWebapps.getCallbackId({ success: aSuccessCallback, error: aErrorCallback }) });
   },
-
+  
   getInstalledBy: function(aStoreURI, aSuccessCallback, aErrorCallback) {
     sendAsyncMessage("OpenWebapps:GetInstalledBy", { storeURI: aStoreURI.href, callbackID:  OpenWebapps.getCallbackId({ success: aSuccessCallback, error: aErrorCallback }) });
   },
-
+  
   mgmtLaunch: function(aOrigin, aSuccessCallback, aErrorCallback) {
     sendAsyncMessage("OpenWebapps:MgmtLaunch", { origin: aOrigin, callbackID:  OpenWebapps.getCallbackId({ success: aSuccessCallback, error: aErrorCallback }) });
   },
-
-  mgmtList: function(aFrom, aSuccessCallback, aErrorCallback) {
-    sendAsyncMessage("OpenWebapps:MgmtList", { from: aFrom.href, callbackID:  OpenWebapps.getCallbackId({ success: aSuccessCallback, error: aErrorCallback }) });
+  
+  mgmtList: function(aSuccessCallback, aErrorCallback) {
+    sendAsyncMessage("OpenWebapps:MgmtList", { callbackID:  OpenWebapps.getCallbackId({ success: aSuccessCallback, error: aErrorCallback }) });
   },
-
-  mgmtUninstall: function(aFrom, aOrigin, aSuccessCallback, aErrorCallback) {
-    sendAsyncMessage("OpenWebapps:MgmtUninstall", { from: aFrom.href, origin: aOrigin, callbackID:  OpenWebapps.getCallbackId({ success: aSuccessCallback, error: aErrorCallback }) });
+  
+  mgmtUninstall: function(aOrigin, aSuccessCallback, aErrorCallback) {
+    sendAsyncMessage("OpenWebapps:MgmtUninstall", { origin: aOrigin, callbackID:  OpenWebapps.getCallbackId({ success: aSuccessCallback, error: aErrorCallback }) });
   },
-
+  
   receiveMessage: function(aMessage) {
     let msg = aMessage.json;
     let callbacks = OpenWebapps.getCallback(msg.callbackID);
@@ -1680,12 +1680,12 @@ let OpenWebapps = {
         OpenWebapps.mgmtLaunch(aOrigin, aSuccessCallback, aErrorCallback);
         }, "OpenWebappsMgmt_launch");
     
-    sandbox.importFunction(function(aFrom, aSuccessCallback, aErrorCallback) {
-        OpenWebapps.mgmtList(aFrom, aSuccessCallback, aErrorCallback);
+    sandbox.importFunction(function(aSuccessCallback, aErrorCallback) {
+        OpenWebapps.mgmtList(aSuccessCallback, aErrorCallback);
         }, "OpenWebappsMgmt_list");
     
-    sandbox.importFunction(function(aFrom, aOrigin, aSuccessCallback, aErrorCallback) {
-        OpenWebapps.mgmtUninstall(aFrom, aOrigin, aSuccessCallback, aErrorCallback);
+    sandbox.importFunction(function(aOrigin, aSuccessCallback, aErrorCallback) {
+        OpenWebapps.mgmtUninstall(aOrigin, aSuccessCallback, aErrorCallback);
         }, "OpenWebappsMgmt_uninstall");
 
     let toInject = OpenWebapps.getInjected();

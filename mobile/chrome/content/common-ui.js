@@ -211,7 +211,7 @@ var PageActions = {
   },
 
   // Permissions we track in Page Actions
-  _permissions: ["popup", "offline-app", "geolocation", "desktop-notification", "openWebappsList", "openWebappsUninstall"],
+  _permissions: ["popup", "offline-app", "geolocation", "desktop-notification"],
 
   _forEachPermissions: function _forEachPermissions(aHost, aCallback) {
     let pm = Services.perms;
@@ -1734,37 +1734,6 @@ var WebappsUI = {
     return app;
   },
 
-  askPermission: function(aMessage, aType, aCallbacks) {
-    let uri = Services.io.newURI(aMessage.json.from, null, null);
-    let perm = Services.perms.testExactPermission(uri, aType);
-    switch(perm) {
-      case Ci.nsIPermissionManager.ALLOW_ACTION:
-        aCallbacks.allow();
-        return;
-      case Ci.nsIPermissionManager.DENY_ACTION:
-        aCallbacks.cancel();
-        return;
-    }
-
-    let prompt = Cc["@mozilla.org/content-permission/prompt;1"].createInstance(Ci.nsIContentPermissionPrompt);
-
-    prompt.prompt({
-      type: aType,
-      uri: uri,
-      window: null,
-      element: aMessage.target,
-
-      cancel: function() {
-        aCallbacks.cancel();
-      },
-
-      allow: function() {
-        Services.perms.add(uri, aType, Ci.nsIPermissionManager.ALLOW_ACTION);
-        aCallbacks.allow();
-      },
-    });
-  },
-
   receiveMessage: function(aMessage) {
     let browser = aMessage.target;
     switch(aMessage.name) {
@@ -1783,18 +1752,9 @@ var WebappsUI = {
             { installed: app != null, app: app, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:MgmtList":
-        this.askPermission(aMessage, "openWebappsList", {
-          cancel: function() {
-            browser.messageManager.sendAsyncMessage("OpenWebapps:MgmtList:Return",
-              { ok: false, callbackID: aMessage.json.callbackID });
-          },
-          
-          allow: function() {
-            let list = OpenWebapps.mgmtList();
-            browser.messageManager.sendAsyncMessage("OpenWebapps:MgmtList:Return",
-              { ok: true, apps: list, callbackID: aMessage.json.callbackID });
-          }
-        });
+        let list = OpenWebapps.mgmtList();
+        browser.messageManager.sendAsyncMessage("OpenWebapps:MgmtList:Return",
+            { ok: true, apps: list, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:MgmtLaunch":
         let res = OpenWebapps.mgmtLaunch(aMessage.json.origin);
@@ -1802,19 +1762,9 @@ var WebappsUI = {
             { ok: res, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:MgmtUninstall":
-        this.askPermission(aMessage, "openWebappsUninstall", {
-          cancel: function() {
-            browser.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
-              { ok: false, callbackID: aMessage.json.callbackID });
-          },
-          
-          allow: function() {
-            let uninstalled = OpenWebapps.mgmtUninstall(aMessage.json.origin);
-            browser.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
-              { ok: uninstalled, callbackID: aMessage.json.callbackID });
-          }
-        });
-        
+        let uninstalled = OpenWebapps.mgmtUninstall(aMessage.json.origin);
+        browser.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
+            { ok: uninstalled, callbackID: aMessage.json.callbackID });
         break;
     }
   },
