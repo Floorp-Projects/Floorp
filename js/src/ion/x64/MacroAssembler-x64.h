@@ -43,6 +43,7 @@
 #define jsion_macro_assembler_x64_h__
 
 #include "ion/shared/MacroAssembler-x86-shared.h"
+#include "jsnum.h"
 
 namespace js {
 namespace ion {
@@ -149,6 +150,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpTag(src, ImmTag(JSVAL_TAG_NULL));
         return cond;
     }
+    Condition testUndefined(Condition cond, const ValueOperand &src) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpTag(src, ImmTag(JSVAL_TAG_UNDEFINED));
+        return cond;
+    }
 
     void unboxInt32(const ValueOperand &src, const Register &dest) {
         movl(src.value(), dest);
@@ -158,6 +164,28 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
         movqsd(src.valueReg(), dest);
+    }
+
+    // These two functions use the low 32-bits of the full value register.
+    void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+        cvtsi2sd(operand.value(), dest);
+    }
+    void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+        cvtsi2sd(operand.value(), dest);
+    }
+
+    void loadDouble(double d, const FloatRegister &dest) {
+        jsdpun dpun;
+        dpun.d = d;
+        if (dpun.u64 == 0) {
+            xorpd(dest, dest);
+        } else {
+            movq(ImmWord(dpun.u64), ScratchReg);
+            movqsd(ScratchReg, dest);
+        }
+    }
+    void loadStaticDouble(const double *dp, const FloatRegister &dest) {
+        loadDouble(*dp, dest);
     }
 };
 

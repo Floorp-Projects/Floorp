@@ -125,6 +125,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(ImmType(JSVAL_TYPE_NULL), value.typeReg());
         return cond;
     }
+    Condition testUndefined(Condition cond, const ValueOperand &value) {
+        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        cmpl(ImmType(JSVAL_TYPE_UNDEFINED), value.typeReg());
+        return cond;
+    }
 
     void unboxInt32(const ValueOperand &operand, const Register &dest) {
         movl(operand.payloadReg(), dest);
@@ -142,6 +147,17 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movd(operand.typeReg(), ScratchFloatReg);
             unpcklps(ScratchFloatReg, dest);
         }
+    }
+
+    void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+        cvtsi2sd(operand.payloadReg(), dest);
+    }
+    void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
+        cvtsi2sd(operand.payloadReg(), dest);
+    }
+
+    void loadStaticDouble(const double *dp, const FloatRegister &dest) {
+        movsd(dp, dest);
     }
 };
 
