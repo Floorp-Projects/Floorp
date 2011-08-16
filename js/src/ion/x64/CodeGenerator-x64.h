@@ -67,6 +67,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitUnboxInteger(LUnboxInteger *unbox);
     bool visitUnboxDouble(LUnboxDouble *unbox);
     bool visitDouble(LDouble *ins);
+    bool visitCompareD(LCompareD *comp);
+    bool visitCompareDAndBranch(LCompareDAndBranch *comp);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;

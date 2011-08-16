@@ -169,3 +169,16 @@ CodeGeneratorX64::visitReturn(LReturn *ret)
     return true;
 }
 
+bool
+CodeGeneratorX64::visitCompareD(LCompareD *comp)
+{
+    JS_NOT_REACHED("Codegen for CompareD NYI");
+    return false;
+}
+
+bool
+CodeGeneratorX64::visitCompareDAndBranch(LCompareDAndBranch *comp)
+{
+    JS_NOT_REACHED("Codegen for CompareDAndBranch NYI");
+    return false;
+}

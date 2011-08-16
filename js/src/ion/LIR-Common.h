@@ -243,6 +243,86 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
     { }
 };
 
+class LCompareI : public LInstructionHelper<1, 2, 0>
+{
+    JSOp op_;
+
+  public:
+    LIR_HEADER(CompareI);
+    LCompareI(JSOp op, const LAllocation &left, const LAllocation &right)
+      : op_(op)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+};
+
+class LCompareD : public LInstructionHelper<1, 2, 0>
+{
+    JSOp op_;
+
+  public:
+    LIR_HEADER(CompareD);
+    LCompareD(JSOp op, const LAllocation &left, const LAllocation &right)
+      : op_(op)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+};
+
+class LCompareIAndBranch : public LInstructionHelper<0, 2, 0>
+{
+    JSOp op_;
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
+
+  public:
+    LIR_HEADER(CompareIAndBranch);
+    LCompareIAndBranch(JSOp op, const LAllocation &left, const LAllocation &right,
+                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : op_(op),
+        ifTrue_(ifTrue),
+        ifFalse_(ifFalse)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return ifTrue_;
+    }
+    MBasicBlock *ifFalse() const {
+        return ifFalse_;
+    }
+};
+
+class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
+{
+    JSOp op_;
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
+
+  public:
+    LIR_HEADER(CompareDAndBranch);
+    LCompareDAndBranch(JSOp op, const LAllocation &left, const LAllocation &right,
+                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : op_(op),
+        ifTrue_(ifTrue),
+        ifFalse_(ifFalse)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return ifTrue_;
+    }
+    MBasicBlock *ifFalse() const {
+        return ifFalse_;
+    }
+};
+
 // Bitwise not operation, takes a 32-bit integer as input and returning
 // a 32-bit integer result as an output.
 class LBitNot : public LInstructionHelper<1, 1, 0>
