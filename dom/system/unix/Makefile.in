@@ -50,6 +50,8 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
 
 CPPSRCS     = \
         nsDeviceMotionSystem.cpp \
@@ -67,7 +69,12 @@ CPPSRCS += nsHapticFeedback.cpp
 LOCAL_INCLUDES  += $(MOZ_DBUS_CFLAGS) \
                    $(NULL)
 ifdef MOZ_ENABLE_QTMOBILITY
+MOCSRCS         += moc_QTMLocationProvider.cpp
+CPPSRCS         += $(MOCSRCS) \
+                   QTMLocationProvider.cpp \
+                   $(NULL)
 LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
+                   -I$(topsrcdir)/dom/src/geolocation \
                    $(NULL)
 endif
 endif

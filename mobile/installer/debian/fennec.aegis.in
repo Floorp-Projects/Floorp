@@ -2,6 +2,9 @@
   <request>
     <credential name="TrackerReadAccess" />
     <credential name="TrackerWriteAccess" />
+    <credential name="Location" />
+    <for path="@installdir@/@MOZ_APP_NAME@" />
+    <for path="@installdir@/plugin-container" />
   </request>
 </aegis>
 
