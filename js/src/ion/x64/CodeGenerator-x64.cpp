@@ -62,17 +62,7 @@ bool
 CodeGeneratorX64::visitDouble(LDouble *ins)
 {
     const LDefinition *out = ins->output();
-
-    jsdpun dpun;
-    dpun.d = ins->getDouble();
-
-    if (dpun.u64 == 0) {
-        masm.xorpd(ToFloatRegister(out), ToFloatRegister(out));
-        return true;
-    }
-
-    masm.movq(ImmWord(dpun.u64), ScratchReg);
-    masm.movqsd(ScratchReg, ToFloatRegister(out));
+    masm.loadDouble(ins->getDouble(), ToFloatRegister(out));
     return true;
 }
 

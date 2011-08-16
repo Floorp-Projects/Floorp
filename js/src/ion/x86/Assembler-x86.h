@@ -258,6 +258,9 @@ class Assembler : public AssemblerX86Shared
         addPendingJump(src, target, reloc);
     }
 
+    void movsd(const double *dp, const FloatRegister &dest) {
+        masm.movsd_mr((const void *)dp, dest.code());
+    }
     void movsd(AbsoluteLabel *label, const FloatRegister &dest) {
         JS_ASSERT(!label->bound());
         // Thread the patch list through the unpatched address word in the
