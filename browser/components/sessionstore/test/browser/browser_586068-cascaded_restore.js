@@ -60,7 +60,7 @@ let tests = [test_cascade, test_select, test_multiWindowState,
 function runNextTest() {
   // Reset the pref
   try {
-    Services.prefs.clearUserPref("browser.sessionstore.max_concurrent_tabs");
+    Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
   } catch (e) {}
 
   // set an empty state & run the next test, or finish
@@ -88,9 +88,6 @@ function runNextTest() {
 
 
 function test_cascade() {
-  // Set the pref to 1 so we know exactly how many tabs should be restoring at any given time
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 1);
-
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
     onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -118,11 +115,11 @@ function test_cascade() {
   // before sessionstore has marked the tab as finished restoring and before it
   // starts restoring the next tab
   let expectedCounts = [
-    [5, 1, 0],
-    [4, 1, 1],
-    [3, 1, 2],
-    [2, 1, 3],
-    [1, 1, 4],
+    [3, 3, 0],
+    [2, 3, 1],
+    [1, 3, 2],
+    [0, 3, 3],
+    [0, 2, 4],
     [0, 1, 5]
   ];
 
@@ -149,9 +146,9 @@ function test_cascade() {
 
 
 function test_select() {
-  // Set the pref to 0 so we know exactly how many tabs should be restoring at
+  // Set the pref to true so we know exactly how many tabs should be restoring at
   // any given time. This guarantees that a finishing load won't start another.
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 0);
+  Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
 
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
@@ -298,9 +295,6 @@ function test_multiWindowState() {
 
 
 function test_setWindowStateNoOverwrite() {
-  // Set the pref to 1 so we know exactly how many tabs should be restoring at any given time
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 1);
-
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
     onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -370,9 +364,6 @@ function test_setWindowStateNoOverwrite() {
 
 
 function test_setWindowStateOverwrite() {
-  // Set the pref to 1 so we know exactly how many tabs should be restoring at any given time
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 1);
-
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
     onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -442,9 +433,6 @@ function test_setWindowStateOverwrite() {
 
 
 function test_setBrowserStateInterrupted() {
-  // Set the pref to 1 so we know exactly how many tabs should be restoring at any given time
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 1);
-
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
     onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -561,9 +549,9 @@ function test_setBrowserStateInterrupted() {
 
 
 function test_reload() {
-  // Set the pref to 0 so we know exactly how many tabs should be restoring at
+  // Set the pref to true so we know exactly how many tabs should be restoring at
   // any given time. This guarantees that a finishing load won't start another.
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 0);
+  Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
 
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
