@@ -481,6 +481,7 @@
                     <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2"/>
                     <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
                     <setting pref="privacy.donottrackheader.enabled" title="&doNotTrack.title;" type="bool"/>
+                    <setting id="prefs-master-password" title="&masterPassword.title;" type="bool" oncommand="MasterPasswordUI.show(this.value);"/>
                     <setting title="&clearPrivateData2.title;" type="control">
                       <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
                     </setting>

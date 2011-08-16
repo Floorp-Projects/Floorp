@@ -859,6 +859,8 @@ class Method(object):
     def needsJSTypes(self):
         if self.implicit_jscontext:
             return True
+        if self.type == "jsval":
+            return True
         for p in self.params:
             t = p.realtype
             if isinstance(t, Native) and t.specialtype == "jsval":
