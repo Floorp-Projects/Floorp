@@ -79,8 +79,13 @@ using namespace mozilla::xpconnect::memory;
 // The size of the worker runtime heaps in bytes.
 #define WORKER_RUNTIME_HEAPSIZE 32 * 1024 * 1024
 
-// The size of the C stack in bytes.
-#define WORKER_CONTEXT_NATIVE_STACK_LIMIT sizeof(size_t) * 32 * 1024
+// The C stack size. We use the same stack size on all platforms for
+// consistency.
+#define WORKER_STACK_SIZE 256 * sizeof(size_t) * 1024
+
+// The stack limit the JS engine will check. Half the size of the
+// actual C stack, to be safe.
+#define WORKER_CONTEXT_NATIVE_STACK_LIMIT 128 * sizeof(size_t) * 1024
 
 // The maximum number of threads to use for workers, overridable via pref.
 #define MAX_WORKERS_PER_DOMAIN 10
@@ -791,7 +796,8 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   }
 
   if (!thread) {
-    if (NS_FAILED(NS_NewThread(getter_AddRefs(thread), nsnull))) {
+    if (NS_FAILED(NS_NewThread(getter_AddRefs(thread), nsnull,
+                               WORKER_STACK_SIZE))) {
       UnregisterWorker(aCx, aWorkerPrivate);
       JS_ReportError(aCx, "Could not create new thread!");
       return false;
