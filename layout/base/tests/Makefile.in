@@ -153,6 +153,7 @@ _TEST_FILES =	\
 		test_bug559499.html \
 		test_bug582181-1.html \
 		test_bug582181-2.html \
+		test_bug677878.html \
 		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
