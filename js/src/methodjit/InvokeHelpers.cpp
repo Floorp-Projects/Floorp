@@ -179,6 +179,13 @@ InlineReturn(VMFrame &f)
     JS_ASSERT(f.fp() != f.entryfp);
     JS_ASSERT(!js_IsActiveWithOrBlock(f.cx, &f.fp()->scopeChain(), 0));
     f.cx->stack.popInlineFrame(f.regs);
+
+    JS_ASSERT(*f.regs.pc == JSOP_CALL ||
+              *f.regs.pc == JSOP_NEW ||
+              *f.regs.pc == JSOP_EVAL ||
+              *f.regs.pc == JSOP_FUNCALL ||
+              *f.regs.pc == JSOP_FUNAPPLY);
+    f.regs.pc += JSOP_CALL_LENGTH;
 }
 
 void JS_FASTCALL
@@ -709,20 +716,6 @@ FrameIsFinished(JSContext *cx)
         : cx->fp()->finishedInInterpreter();
 }
 
-
-/* Simulate an inline_return by advancing the pc. */
-static inline void
-AdvanceReturnPC(JSContext *cx)
-{
-    JS_ASSERT(*cx->regs().pc == JSOP_CALL ||
-              *cx->regs().pc == JSOP_NEW ||
-              *cx->regs().pc == JSOP_EVAL ||
-              *cx->regs().pc == JSOP_FUNCALL ||
-              *cx->regs().pc == JSOP_FUNAPPLY);
-    cx->regs().pc += JSOP_CALL_LENGTH;
-}
-
-
 /*
  * Given a frame that is about to return, make sure its return value and
  * activation objects are fixed up. Then, pop the frame and advance the
@@ -774,7 +767,6 @@ HandleFinishedFrame(VMFrame &f, StackFrame *entryFrame)
 
     if (cx->fp() != entryFrame) {
         InlineReturn(f);
-        AdvanceReturnPC(cx);
     }
 
     return returnOK;
@@ -814,7 +806,6 @@ EvaluateExcessFrame(VMFrame &f, StackFrame *entryFrame)
         if (!JaegerShotAtSafePoint(cx, ncode))
             return false;
         InlineReturn(f);
-        AdvanceReturnPC(cx);
         return true;
     }
 
