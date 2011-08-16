@@ -56,11 +56,11 @@ if (window && window.navigator) {
     },
     
     list: function(aSuccessCallback, aErrorCallback) {
-      return OpenWebappsMgmt_list(window.location, aSuccessCallback, aErrorCallback);
+      return OpenWebappsMgmt_list(aSuccessCallback, aErrorCallback);
     },
     
     uninstall: function(aOrigin, aSuccessCallback, aErrorCallback) {
-      return OpenWebappsMgmt_uninstall(window.location, aOrigin, aSuccessCallback, aErrorCallback);
+      return OpenWebappsMgmt_uninstall(aOrigin, aSuccessCallback, aErrorCallback);
     }
   }
 }

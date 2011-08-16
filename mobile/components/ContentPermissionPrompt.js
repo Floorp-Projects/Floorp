@@ -30,8 +30,7 @@ function setPagePermission(type, uri, allow) {
 }
 
 const kEntities = { "geolocation": "geolocation", "desktop-notification": "desktopNotification",
-                    "indexedDB": "offlineApps", "indexedDBQuota": "indexedDBQuota",
-                    "openWebappsList": "openWebappsList", "openWebappsUninstall": "openWebappsUninstall"};
+                    "indexedDB": "offlineApps", "indexedDBQuota": "indexedDBQuota" };
 
 function ContentPermissionPrompt() {}
 
