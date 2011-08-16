@@ -361,7 +361,10 @@ function togglePrivateBrowsing(callback) {
 
   Services.obs.addObserver(function observe() {
     Services.obs.removeObserver(observe, topic);
-    afterAllTabsLoaded(callback);
+
+    // use executeSoon() to let Panorama load its group data from the session
+    // before we call afterAllTabsLoaded()
+    executeSoon(function () afterAllTabsLoaded(callback));
   }, topic, false);
 
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
