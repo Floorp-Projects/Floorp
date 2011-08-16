@@ -1359,7 +1359,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                 logBuffer.Append(bytes.ptr());
             logBuffer.AppendLiteral(" ");
             if (i == symbolCount - 1) {
-                LOG(("%s] from %s\n", PromiseFlatCString(logBuffer).get(),
+                LOG(("%s] from %s\n", logBuffer.get(),
                                       PromiseFlatCString(aLocation).get()));
             }
 #endif

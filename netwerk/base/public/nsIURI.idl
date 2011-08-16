@@ -101,7 +101,7 @@
  * we will need to add additional checks there for all intermediate IIDs, until
  * nsPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
  */
-[scriptable, uuid(12120b20-0929-40e9-88cf-6e08766e8b23)]
+[scriptable, uuid(395fe045-7d18-4adb-a3fd-af98c8a1af11)]
 interface nsIURI : nsISupports
 {
     /************************************************************************
@@ -272,4 +272,13 @@ interface nsIURI : nsISupports
      */
     nsIURI cloneIgnoringRef();
 
+    /**
+     * returns a string for the current URI with the ref element cleared.
+     */
+   readonly attribute AUTF8String specIgnoringRef;
+
+    /**
+     * Returns if there is a reference portion (the part after the "#") of the URI.
+     */
+   readonly attribute boolean hasRef;
 };
