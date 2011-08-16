@@ -755,7 +755,6 @@ nsEditor::Undo(PRUint32 aCount)
     }
   }
 
-  NotifyEditorObservers();  
   return result;
 }
 
@@ -807,7 +806,6 @@ nsEditor::Redo(PRUint32 aCount)
     }
   }
 
-  NotifyEditorObservers();  
   return result;
 }
 

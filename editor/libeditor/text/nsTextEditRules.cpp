@@ -943,7 +943,7 @@ nsTextEditRules::WillUndo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHa
  * Since undo and redo are relatively rare, it makes sense to take the (small) performance hit here.
  */
 nsresult
-nsTextEditRules:: DidUndo(nsISelection *aSelection, nsresult aResult)
+nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
 {
   nsresult res = aResult;  // if aResult is an error, we return it.
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
