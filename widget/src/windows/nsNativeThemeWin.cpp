@@ -72,6 +72,10 @@
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gWindowsLog;
+#endif
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
 static inline PRBool IsHTMLContent(nsIFrame *frame)
@@ -1285,10 +1289,13 @@ RENDER_AGAIN:
 
 #if 0
   {
-    fprintf (stderr, "xform: %f %f %f %f [%f %f]\n", m.xx, m.yx, m.xy, m.yy, m.x0, m.y0);
-    fprintf (stderr, "tr: [%d %d %d %d]\ndr: [%d %d %d %d]\noff: [%f %f]\n",
-             tr.x, tr.y, tr.width, tr.height, dr.x, dr.y, dr.width, dr.height,
-             offset.x, offset.y);
+    PR_LOG(gWindowsLog, PR_LOG_ERROR,
+           (stderr, "xform: %f %f %f %f [%f %f]\n", m.xx, m.yx, m.xy, m.yy, 
+            m.x0, m.y0));
+    PR_LOG(gWindowsLog, PR_LOG_ERROR,
+           (stderr, "tr: [%d %d %d %d]\ndr: [%d %d %d %d]\noff: [%f %f]\n",
+            tr.x, tr.y, tr.width, tr.height, dr.x, dr.y, dr.width, dr.height,
+            offset.x, offset.y));
   }
 #endif
 

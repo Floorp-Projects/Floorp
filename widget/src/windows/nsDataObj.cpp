@@ -569,7 +569,8 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC aFormat, LPSTGMEDIUM pSTM)
           return GetFileContents ( *aFormat, *pSTM );
         if ( format == PreferredDropEffect )
           return GetPreferredDropEffect( *aFormat, *pSTM );
-        //printf("***** nsDataObj::GetData - Unknown format %u\n", format);
+        //PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
+        //       ("***** nsDataObj::GetData - Unknown format %u\n", format));
         return GetText(df, *aFormat, *pSTM);
       } //switch
     } // if
