@@ -173,14 +173,6 @@ function test() {
     sidebar.contentDocument.documentElement.style.direction = aDirection;
   }
 
-  function waitForClearHistory(aCallback) {
-    Services.obs.addObserver(function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(arguments.callee, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-      aCallback(aSubject, aTopic, aData);
-    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-    PlacesUtils.bhistory.removeAllPages();
-  }
-
   function runNextTest() {
     // Remove eventual tabs created by previous sub-tests.
     while (gBrowser.tabs.length > 1) {
