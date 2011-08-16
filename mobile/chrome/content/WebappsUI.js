@@ -96,6 +96,37 @@ var WebappsUI = {
     return app;
   },
 
+  askPermission: function(aMessage, aType, aCallbacks) {
+    let uri = Services.io.newURI(aMessage.json.from, null, null);
+    let perm = Services.perms.testExactPermission(uri, aType);
+    switch(perm) {
+      case Ci.nsIPermissionManager.ALLOW_ACTION:
+        aCallbacks.allow();
+        return;
+      case Ci.nsIPermissionManager.DENY_ACTION:
+        aCallbacks.cancel();
+        return;
+    }
+
+    let prompt = Cc["@mozilla.org/content-permission/prompt;1"].createInstance(Ci.nsIContentPermissionPrompt);
+
+    prompt.prompt({
+      type: aType,
+      uri: uri,
+      window: null,
+      element: getBrowser(),
+
+      cancel: function() {
+        aCallbacks.cancel();
+      },
+
+      allow: function() {
+        Services.perms.add(uri, aType, Ci.nsIPermissionManager.ALLOW_ACTION);
+        aCallbacks.allow();
+      }
+    });
+  },
+
   receiveMessage: function(aMessage) {
     this._browser = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
     switch(aMessage.name) {
@@ -113,9 +144,18 @@ var WebappsUI = {
             { installed: app != null, app: app, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:MgmtList":
-        let list = OpenWebapps.mgmtList();
-        this._browser.sendAsyncMessage("OpenWebapps:MgmtList:Return",
-            { ok: true, apps: list, callbackID: aMessage.json.callbackID });
+        this.askPermission(aMessage, "openWebappsManage", {
+          cancel: function() {
+            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtList:Return",
+              { ok: false, callbackID: aMessage.json.callbackID });
+          },
+
+          allow: function() {
+            let list = OpenWebapps.mgmtList();
+            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtList:Return",
+              { ok: true, apps: list, callbackID: aMessage.json.callbackID });
+          }
+        });
         break;
       case "OpenWebapps:MgmtLaunch":
         let res = OpenWebapps.mgmtLaunch(aMessage.json.origin);
@@ -123,10 +163,19 @@ var WebappsUI = {
             { ok: res, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:MgmtUninstall":
-        app = OpenWebapps.amInstalled(aMessage.json.origin);
-        let uninstalled = OpenWebapps.mgmtUninstall(aMessage.json.origin);
-        this.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
-            { ok: uninstalled, app: app, callbackID: aMessage.json.callbackID });
+        this.askPermission(aMessage, "openWebappsManage", {
+          cancel: function() {
+            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
+              { ok: false, callbackID: aMessage.json.callbackID });
+          },
+
+          allow: function() {
+            let app = OpenWebapps.amInstalled(aMessage.json.origin);
+            let uninstalled = OpenWebapps.mgmtUninstall(aMessage.json.origin);
+            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
+              { ok: uninstalled, app: app, callbackID: aMessage.json.callbackID });
+          }
+        });
         break;
     }
   },
