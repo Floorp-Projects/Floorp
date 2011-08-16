@@ -602,15 +602,15 @@ PRBool nsAudioStreamLocal::IsPaused()
 
 PRInt32 nsAudioStreamLocal::GetMinWriteSamples()
 {
-  size_t samples;
+  size_t size;
   int r = sa_stream_get_min_write(static_cast<sa_stream_t*>(mAudioHandle),
-                                  &samples);
-  if (r == SA_ERROR_NOT_SUPPORTED)
+                                  &size);
+  if (r == SA_ERROR_NOT_SUPPORTED) {
     return 1;
-  else if (r != SA_SUCCESS || samples > PR_INT32_MAX)
+  } else if (r != SA_SUCCESS) {
     return -1;
-
-  return static_cast<PRInt32>(samples);
+  }
+  return static_cast<PRInt32>(size / mChannels / sizeof(short));
 }
 
 nsAudioStreamRemote::nsAudioStreamRemote()
