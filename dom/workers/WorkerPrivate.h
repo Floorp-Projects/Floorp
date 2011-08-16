@@ -219,6 +219,7 @@ private:
   bool mJSObjectRooted;
   bool mParentSuspended;
   bool mIsChromeWorker;
+  bool mPrincipalIsSystem;
 
 protected:
   WorkerPrivateParent(JSContext* aCx, JSObject* aObject, WorkerPrivate* aParent,
@@ -398,10 +399,12 @@ public:
   }
 
   void
-  SetPrincipal(nsIPrincipal* aPrincipal)
+  SetPrincipal(nsIPrincipal* aPrincipal);
+
+  bool
+  UsesSystemPrincipal() const
   {
-    AssertIsOnMainThread();
-    mPrincipal = aPrincipal;
+    return mPrincipalIsSystem;
   }
 
   nsIDocument*
@@ -745,11 +748,19 @@ private:
 WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx);
 
-JSStructuredCloneCallbacks*
-WorkerStructuredCloneCallbacks();
+enum WorkerStructuredDataType
+{
+  DOMWORKER_SCTAG_FILE = JS_SCTAG_USER_MIN + 0x1000,
+  DOMWORKER_SCTAG_BLOB,
+
+  DOMWORKER_SCTAG_END
+};
 
 JSStructuredCloneCallbacks*
-ChromeWorkerStructuredCloneCallbacks();
+WorkerStructuredCloneCallbacks(bool aMainRuntime);
+
+JSStructuredCloneCallbacks*
+ChromeWorkerStructuredCloneCallbacks(bool aMainRuntime);
 
 END_WORKERS_NAMESPACE
 
