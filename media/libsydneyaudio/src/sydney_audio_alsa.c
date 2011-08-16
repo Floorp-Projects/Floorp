@@ -190,7 +190,7 @@ sa_stream_open(sa_stream_t *s) {
 
 
 int
-sa_stream_get_min_write(sa_stream_t *s, size_t *samples) {
+sa_stream_get_min_write(sa_stream_t *s, size_t *size) {
   int r;
   snd_pcm_uframes_t threshold;
   snd_pcm_sw_params_t* swparams;
@@ -200,9 +200,10 @@ sa_stream_get_min_write(sa_stream_t *s, size_t *samples) {
   snd_pcm_sw_params_alloca(&swparams);
   snd_pcm_sw_params_current(s->output_unit, swparams);
   r = snd_pcm_sw_params_get_start_threshold(swparams, &threshold);
-  if (r < 0)
+  if (r < 0) {
     return SA_ERROR_NO_INIT;
-  *samples = threshold;
+  }
+  *size = snd_pcm_frames_to_bytes(s->output_unit, threshold);
 
   return SA_SUCCESS;
 }

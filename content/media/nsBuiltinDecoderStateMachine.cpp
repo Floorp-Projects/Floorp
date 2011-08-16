@@ -671,7 +671,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
           PRUint32 numValues = samples * channels;
           nsAutoArrayPtr<SoundDataValue> buf(new SoundDataValue[numValues]);
           memset(buf.get(), 0, sizeof(SoundDataValue) * numValues);
-          mAudioStream->Write(buf, numValues, PR_TRUE);
+          mAudioStream->Write(buf, numValues);
         }
       }
 
