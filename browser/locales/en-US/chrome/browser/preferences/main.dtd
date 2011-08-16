@@ -6,7 +6,7 @@
 <!ENTITY startupBlankPage.label    "Show a blank page">
 <!ENTITY startupLastSession.label  "Show my windows and tabs from last time">
 <!ENTITY restoreOnDemand.label     "Don’t load tabs until selected">
-<!ENTITY restoreOnDemand.accesskey "d">
+<!ENTITY restoreOnDemand.accesskey "l">
 
 <!ENTITY homepage.label            "Home Page:">
 <!ENTITY homepage.accesskey        "P">
