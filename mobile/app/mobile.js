@@ -163,6 +163,9 @@ pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 6000);
 pref("alerts.height", 50);
 
+/* download helper */
+pref("browser.helperApps.deleteTempFileOnExit", false);
+
 /* password manager */
 pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
