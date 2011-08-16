@@ -1113,7 +1113,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT(script->savedCallerFun == savedCallerFun);
 
     {
-        AutoShapeRooter shapeRoot(cx, script->bindings.lastShape());
+        AutoScriptRooter root(cx, script);
         if (!defineGlobals(cx, globalScope, script))
             goto late_error;
     }
