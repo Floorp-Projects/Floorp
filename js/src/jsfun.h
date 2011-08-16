@@ -326,9 +326,9 @@ ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, N
     JS_ASSERT(obj->getClass() == clasp);
 
     Value v;
-    if (!HasDataProperty(obj, methodid, &v)) {
+    if (!HasDataProperty(cx, obj, methodid, &v)) {
         JSObject *proto = obj->getProto();
-        if (!proto || proto->getClass() != clasp || !HasDataProperty(proto, methodid, &v))
+        if (!proto || proto->getClass() != clasp || !HasDataProperty(cx, proto, methodid, &v))
             return false;
     }
 

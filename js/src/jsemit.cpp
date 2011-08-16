@@ -1718,7 +1718,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
         JSObject *obj = stmt->blockBox->object;
         JS_ASSERT(obj->isStaticBlock());
 
-        const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
+        const Shape *shape = obj->nativeLookup(tc->parser->context, ATOM_TO_JSID(atom));
         if (shape) {
             JS_ASSERT(shape->hasShortID());
 
@@ -1779,7 +1779,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                 JS_ASSERT(cg->compileAndGo());
                 obj = cg->scopeChain();
 
-                const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
+                const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
                 if (shape) {
                     /*
                      * We're compiling code that will be executed immediately,

@@ -367,7 +367,7 @@ struct Shape : public js::gc::Cell
                                            else to obj->lastProp */
     };
 
-    static inline js::Shape **search(JSRuntime *rt, js::Shape **startp, jsid id,
+    static inline js::Shape **search(JSContext *cx, js::Shape **startp, jsid id,
                                      bool adding = false);
     static js::Shape *newDictionaryShape(JSContext *cx, const js::Shape &child, js::Shape **listp);
     static js::Shape *newDictionaryList(JSContext *cx, js::Shape **listp);
@@ -377,7 +377,7 @@ struct Shape : public js::gc::Cell
 
     js::Shape *getChild(JSContext *cx, const js::Shape &child, js::Shape **listp);
 
-    bool hashify(JSRuntime *rt);
+    bool hashify(JSContext *cx);
 
     void setTable(js::PropertyTable *t) const {
         JS_ASSERT_IF(t && t->freelist != SHAPE_INVALID_SLOT, t->freelist < slotSpan);
@@ -704,14 +704,14 @@ js_GenerateShape(JSContext *cx);
 namespace js {
 
 JS_ALWAYS_INLINE js::Shape **
-Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
+Shape::search(JSContext *cx, js::Shape **startp, jsid id, bool adding)
 {
     js::Shape *start = *startp;
     if (start->hasTable())
         return start->getTable()->search(id, adding);
 
     if (start->numLinearSearches == PropertyTable::MAX_LINEAR_SEARCHES) {
-        if (start->hashify(rt))
+        if (start->hashify(cx))
             return start->getTable()->search(id, adding);
         /* OOM!  Don't increment numLinearSearches, to keep hasTable() false. */
         JS_ASSERT(!start->hasTable());

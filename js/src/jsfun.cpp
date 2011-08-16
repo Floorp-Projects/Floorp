@@ -1207,7 +1207,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                     continue;
 
                 if (thisp->hasMethodBarrier()) {
-                    const Shape *shape = thisp->nativeLookup(ATOM_TO_JSID(fun->methodAtom()));
+                    const Shape *shape = thisp->nativeLookup(cx, ATOM_TO_JSID(fun->methodAtom()));
                     if (shape) {
                         /*
                          * Two cases follow: the method barrier was not crossed
@@ -2313,11 +2313,11 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
 #endif
 
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    const Shape *shape = funobj->nativeLookup(id);
+    const Shape *shape = funobj->nativeLookup(cx, id);
     if (!shape) {
         if (!ResolveInterpretedFunctionPrototype(cx, funobj))
             return NULL;
-        shape = funobj->nativeLookup(id);
+        shape = funobj->nativeLookup(cx, id);
     }
     JS_ASSERT(!shape->configurable());
     JS_ASSERT(shape->isDataDescriptor());
