@@ -51,7 +51,16 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
+#include "prlog.h"
+#include "prtime.h"
+#include "prprf.h"
+#include "prmem.h"
+
 #include "nsNativeCharsetUtils.h"
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* gWin32SoundLog = nsnull;
+#endif
 
 class nsSoundPlayer: public nsRunnable {
 public:
@@ -126,7 +135,13 @@ NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 nsSound::nsSound()
 {
-  mLastSound = nsnull;
+#ifdef PR_LOGGING
+    if (!gWin32SoundLog) {
+      gWin32SoundLog = PR_NewLogModule("nsSound");
+    }
+#endif
+
+    mLastSound = nsnull;
 }
 
 nsSound::~nsSound()
@@ -177,7 +192,8 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (uri) {
           nsCAutoString uriSpec;
           uri->GetSpec(uriSpec);
-          printf("Failed to load %s\n", uriSpec.get());
+          PR_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
+                 ("Failed to load %s\n", uriSpec.get()));
         }
       }
     }
@@ -209,7 +225,8 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 #ifdef DEBUG_SOUND
   char *url;
   aURL->GetSpec(&url);
-  printf("%s\n", url);
+  PR_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
+         ("%s\n", url));
 #endif
 
   nsCOMPtr<nsIStreamLoader> loader;

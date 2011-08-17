@@ -91,6 +91,7 @@ var ViewConfig = {
     switch (aType) {
       case Ci.nsIPrefBranch.PREF_INT:
         setting.setAttribute("type", "integer");
+        setting.setAttribute("min", -Infinity);
         break;
       case Ci.nsIPrefBranch.PREF_BOOL:
         setting.setAttribute("type", "bool");
@@ -158,6 +159,7 @@ var ViewConfig = {
       case Ci.nsIPrefBranch.PREF_INT:
         setting.setAttribute("type", "integer");
         setting.setAttribute("increment", this.getIncrementForValue(pref.value));
+        setting.setAttribute("min", -Infinity);
         shouldFocus = true;
         break;
 

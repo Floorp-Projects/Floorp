@@ -678,9 +678,6 @@ nsSocketTransportService::DoPollIteration(PRBool wait)
     //
     // poll loop
     //
-    PRBool pollError = PR_FALSE;
-
-    //
     // walk active list backwards to see if any sockets should actually be
     // idle, then walk the idle list backwards to see if any idle sockets
     // should become active.  take care to check only idle sockets that
@@ -728,7 +725,6 @@ nsSocketTransportService::DoPollIteration(PRBool wait)
     PRInt32 n = Poll(wait, &pollInterval);
     if (n < 0) {
         SOCKET_LOG(("  PR_Poll error [%d]\n", PR_GetError()));
-        pollError = PR_TRUE;
     }
     else {
         //
