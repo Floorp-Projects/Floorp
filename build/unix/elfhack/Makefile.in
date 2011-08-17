@@ -47,7 +47,6 @@ INTERNAL_TOOLS = 1
 
 HOST_PROGRAM = elfhack
 NO_DIST_INSTALL = 1
-override MOZ_PROFILE_GENERATE =
 
 VPATH += $(topsrcdir)/build
 
