@@ -3092,7 +3092,16 @@ NSEvent* gLastDragMouseDownEvent = nil;
         *stop = YES;
         return;
       }
-      if (isComplete) {
+      // gestureAmount is documented to be '-1', '0' or '1' when isComplete
+      // is TRUE, but the docs don't say anything about its value at other
+      // times.  However, tests show that, when phase == NSEventPhaseEnded,
+      // gestureAmount is negative when it will be '-1' at isComplete, and
+      // positive when it will be '1'.  And phase is never equal to
+      // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
+      // Not waiting until isComplete is TRUE substantially reduces the
+      // time it takes to change pages after a swipe, and helps resolve
+      // bug 678891.
+      if (phase == NSEventPhaseEnded) {
         if (gestureAmount) {
           nsSimpleGestureEvent geckoEventCopy(geckoEvent);
           if (gestureAmount > 0) {
@@ -3102,6 +3111,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
           }
           mGeckoChild->DispatchWindowEvent(geckoEventCopy);
         }
+        mSwipeAnimationCancelled = nil;
+      } else if (phase == NSEventPhaseCancelled) {
         mSwipeAnimationCancelled = nil;
       }
     }];
