@@ -583,7 +583,7 @@ js_GCThingIsMarked(void *thing, uintN color = BLACK)
  * JIT code is discarded in inactive compartments, regardless of how often that
  * code runs.
  */
-static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 120 * 1000 * 1000;
+static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 60 * 1000 * 1000;
 
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)

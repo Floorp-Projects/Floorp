@@ -455,7 +455,7 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
-    return script->nTypeSets + analyze::TotalSlots(script) + script->bindings.countUpvars();
+    return script->nTypeSets + analyze::TotalSlots(script);
 }
 
 /* static */ inline TypeSet *
@@ -488,13 +488,6 @@ TypeScript::LocalTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->nfixed);
     return script->types->typeArray() + script->nTypeSets + js::analyze::LocalSlot(script, i);
-}
-
-/* static */ inline TypeSet *
-TypeScript::UpvarTypes(JSScript *script, unsigned i)
-{
-    JS_ASSERT(i < script->bindings.countUpvars());
-    return script->types->typeArray() + script->nTypeSets + js::analyze::TotalSlots(script) + i;
 }
 
 /* static */ inline TypeSet *
@@ -681,21 +674,6 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js:
     }
 }
 
-/* static */ inline void
-TypeScript::SetUpvar(JSContext *cx, JSScript *script, unsigned upvar, const js::Value &value)
-{
-    if (!cx->typeInferenceEnabled() || !script->ensureHasTypes(cx))
-        return;
-    Type type = GetValueType(cx, value);
-    if (!UpvarTypes(script, upvar)->hasType(type)) {
-        AutoEnterTypeInference enter(cx);
-
-        InferSpew(ISpewOps, "externalType: setUpvar #%u %u: %s",
-                  script->id(), upvar, TypeString(type));
-        UpvarTypes(script, upvar)->addType(cx, type);
-    }
-}
-
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
@@ -796,7 +774,7 @@ HashKey(T v)
  */
 template <class T, class U, class KEY>
 static U **
-HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
+HashSetInsertTry(JSCompartment *compartment, U **&values, unsigned &count, T key)
 {
     unsigned capacity = HashSetCapacity(count);
     unsigned insertpos = HashKey<T,KEY>(key) & (capacity - 1);
@@ -820,13 +798,9 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         return &values[insertpos];
     }
 
-    U **newValues = pool
-        ? ArenaArray<U*>(cx->compartment->pool, newCapacity)
-        : (U **) js::OffTheBooks::malloc_(newCapacity * sizeof(U*));
-    if (!newValues) {
-        cx->compartment->types.setPendingNukeTypes(cx);
+    U **newValues = ArenaArray<U*>(compartment->pool, newCapacity);
+    if (!newValues)
         return NULL;
-    }
     PodZero(newValues, newCapacity);
 
     for (unsigned i = 0; i < capacity; i++) {
@@ -838,8 +812,6 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         }
     }
 
-    if (values && !pool)
-        Foreground::free_(values);
     values = newValues;
 
     insertpos = HashKey<T,KEY>(key) & (newCapacity - 1);
@@ -854,7 +826,7 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
  */
 template <class T, class U, class KEY>
 static inline U **
-HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
+HashSetInsert(JSCompartment *compartment, U **&values, unsigned &count, T key)
 {
     if (count == 0) {
         JS_ASSERT(values == NULL);
@@ -867,12 +839,9 @@ HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         if (KEY::getKey(oldData) == key)
             return (U **) &values;
 
-        values = pool
-            ? ArenaArray<U*>(cx->compartment->pool, SET_ARRAY_SIZE)
-            : (U **) js::OffTheBooks::malloc_(SET_ARRAY_SIZE * sizeof(U*));
+        values = ArenaArray<U*>(compartment->pool, SET_ARRAY_SIZE);
         if (!values) {
             values = (U **) oldData;
-            cx->compartment->types.setPendingNukeTypes(cx);
             return NULL;
         }
         PodZero(values, SET_ARRAY_SIZE);
@@ -894,7 +863,7 @@ HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         }
     }
 
-    return HashSetInsertTry<T,U,KEY>(cx, values, count, key, pool);
+    return HashSetInsertTry<T,U,KEY>(compartment, values, count, key);
 }
 
 /* Lookup an entry in a hash set, return NULL if it does not exist. */
@@ -964,8 +933,6 @@ TypeSet::setBaseObjectCount(uint32 count)
 inline void
 TypeSet::clearObjects()
 {
-    if (baseObjectCount() >= 2 && !intermediate())
-        Foreground::free_(objectSet);
     setBaseObjectCount(0);
     objectSet = NULL;
 }
@@ -999,8 +966,12 @@ TypeSet::addType(JSContext *cx, Type type)
         uint32 objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                                     (cx, objectSet, objectCount, object, intermediate());
-        if (!pentry || *pentry)
+                                     (cx->compartment, objectSet, objectCount, object);
+        if (!pentry) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
+        }
+        if (*pentry)
             return;
         *pentry = object;
 
@@ -1168,9 +1139,11 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 
     uint32 propertyCount = basePropertyCount();
     Property **pprop = HashSetInsert<jsid,Property,Property>
-                           (cx, propertySet, propertyCount, id, singleton != NULL);
-    if (!pprop)
+                           (cx->compartment, propertySet, propertyCount, id);
+    if (!pprop) {
+        cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
+    }
 
     if (!*pprop) {
         setBasePropertyCount(propertyCount);

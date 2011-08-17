@@ -298,6 +298,14 @@ ArenaAllocatedSize(const JSArenaPool &pool)
     return res;
 }
 
+/* Move the contents of oldPool into newPool, and reset oldPool. */
+inline void
+MoveArenaPool(JSArenaPool *oldPool, JSArenaPool *newPool)
+{
+    *newPool = *oldPool;
+    JS_InitArenaPool(oldPool, NULL, newPool->arenasize, newPool->mask + 1);
+}
+
 } /* namespace js */
 
 #endif /* __cplusplus */

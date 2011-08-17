@@ -2643,10 +2643,8 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
     uintN level = fun->script()->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
-    for (uint32 i = 0, n = uva->length; i < n; i++) {
+    for (uint32 i = 0, n = uva->length; i < n; i++)
         upvars[i] = GetUpvar(cx, level, uva->vector[i]);
-        TypeScript::SetUpvar(cx, fun->script(), i, upvars[i]);
-    }
 
     return closure;
 }

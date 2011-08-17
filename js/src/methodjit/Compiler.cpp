@@ -1330,6 +1330,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
 
     JS_ASSERT(size_t(cursor - (uint8*)jit) == dataSize);
+    JS_ASSERT(jit->scriptDataSize() == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
@@ -2511,8 +2512,11 @@ mjit::Compiler::generateMethod()
             Address upvarAddress(reg, JSObject::getFlatClosureUpvarsOffset());
             masm.loadPrivate(upvarAddress, reg);
             // push ((Value *) reg)[index]
-            frame.freeReg(reg);
-            frame.push(Address(reg, index * sizeof(Value)), knownPushedType(0));
+
+            BarrierState barrier = pushAddressMaybeBarrier(Address(reg, index * sizeof(Value)),
+                                                           knownPushedType(0), true);
+            finishBarrier(barrier, REJOIN_GETTER, 0);
+
             if (op == JSOP_CALLFCSLOT)
                 frame.push(UndefinedValue());
           }

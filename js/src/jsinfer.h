@@ -178,8 +178,13 @@ inline Type GetValueType(JSContext *cx, const Value &val);
  * which occurs while we are not actively working with inference or other
  * analysis information, we clear out all generated constraints, all type sets
  * describing stack types within scripts, and (normally) all data describing
- * type objects describing particular JS objects (see the lazy type objects
- * overview below). JIT code depends on this data and is cleared as well.
+ * type objects for particular JS objects (see the lazy type objects overview
+ * below). JIT code depends on this data and is cleared as well.
+ *
+ * All this data is allocated into compartment->pool. Some type inference data
+ * lives across GCs: type sets for scripts and non-singleton type objects, and
+ * propeties for such type objects. This data is also allocated into
+ * compartment->pool, but everything still live is copied to a new arena on GC.
  */
 
 /*
@@ -247,33 +252,30 @@ enum {
     /* Mask of normal type flags on a type set. */
     TYPE_FLAG_BASE_MASK           = 0x000100ff,
 
-    /* Flag for type sets which are cleared on GC. */
-    TYPE_FLAG_INTERMEDIATE_SET    = 0x00020000,
-
     /* Flags for type sets which are on object properties. */
 
     /*
      * Whether there are subset constraints propagating the possible types
      * for this property inherited from the object's prototypes. Reset on GC.
      */
-    TYPE_FLAG_PROPAGATED_PROPERTY = 0x00040000,
+    TYPE_FLAG_PROPAGATED_PROPERTY = 0x00020000,
 
     /* Whether this property has ever been directly written. */
-    TYPE_FLAG_OWN_PROPERTY        = 0x00080000,
+    TYPE_FLAG_OWN_PROPERTY        = 0x00040000,
 
     /*
      * Whether the property has ever been deleted or reconfigured to behave
      * differently from a normal native property (e.g. made non-writable or
      * given a scripted getter or setter).
      */
-    TYPE_FLAG_CONFIGURED_PROPERTY = 0x00100000,
+    TYPE_FLAG_CONFIGURED_PROPERTY = 0x00080000,
 
     /*
      * Whether the property is definitely in a particular inline slot on all
      * objects from which it has not been deleted or reconfigured. Implies
      * OWN_PROPERTY and unlike OWN/CONFIGURED property, this cannot change.
      */
-    TYPE_FLAG_DEFINITE_PROPERTY   = 0x00200000,
+    TYPE_FLAG_DEFINITE_PROPERTY   = 0x00100000,
 
     /* If the property is definite, mask and shift storing the slot. */
     TYPE_FLAG_DEFINITE_MASK       = 0x0f000000,
@@ -370,7 +372,7 @@ class TypeSet
     void print(JSContext *cx);
 
     inline void sweep(JSContext *cx, JSCompartment *compartment);
-    size_t dynamicSize();
+    inline size_t dynamicSize();
 
     /* Whether this set contains a specific type. */
     inline bool hasType(Type type);
@@ -412,8 +414,6 @@ class TypeSet
     inline JSObject *getSingleObject(unsigned i);
     inline TypeObject *getTypeObject(unsigned i);
 
-    bool intermediate() { return !!(flags & TYPE_FLAG_INTERMEDIATE_SET); }
-    void setIntermediate() { JS_ASSERT(!flags); flags = TYPE_FLAG_INTERMEDIATE_SET; }
     void setOwnProperty(bool configurable) {
         flags |= TYPE_FLAG_OWN_PROPERTY;
         if (configurable)
@@ -446,8 +446,8 @@ class TypeSet
     void addLazyArguments(JSContext *cx, TypeSet *target);
 
     /*
-     * Make an intermediate type set with the specified debugging name,
-     * not embedded in another structure.
+     * Make an type set with the specified debugging name, not embedded in
+     * another structure.
      */
     static TypeSet *make(JSContext *cx, const char *name);
 
@@ -497,9 +497,6 @@ class TypeSet
 
     /* Get the single value which can appear in this type set, otherwise NULL. */
     JSObject *getSingleton(JSContext *cx, bool freeze = true);
-
-    static bool
-    SweepTypeSet(JSContext *cx, JSCompartment *compartment, TypeSet *types);
 
     inline void clearObjects();
 
@@ -606,6 +603,10 @@ struct Property
 
     Property(jsid id)
         : id(id)
+    {}
+
+    Property(const Property &o)
+        : id(o.id), types(o.types)
     {}
 
     static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
@@ -833,6 +834,9 @@ struct TypeObject : gc::Cell
     void trace(JSTracer *trc, bool weak = false);
 
     inline void clearProperties();
+    inline void sweep(JSContext *cx);
+
+    inline size_t dynamicSize();
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
@@ -905,7 +909,6 @@ struct TypeScript
     static inline TypeSet *ThisTypes(JSScript *script);
     static inline TypeSet *ArgTypes(JSScript *script, unsigned i);
     static inline TypeSet *LocalTypes(JSScript *script, unsigned i);
-    static inline TypeSet *UpvarTypes(JSScript *script, unsigned i);
 
     /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
     static inline TypeSet *SlotTypes(JSScript *script, unsigned slot);
@@ -950,7 +953,6 @@ struct TypeScript
     static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, const js::Value &value);
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type);
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value);
-    static inline void SetUpvar(JSContext *cx, JSScript *script, unsigned upvar, const js::Value &value);
 
     static void Sweep(JSContext *cx, JSScript *script);
     void destroy();
