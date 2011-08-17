@@ -98,6 +98,7 @@ enum FinalizeKind {
     FINALIZE_FUNCTION,
     FINALIZE_FUNCTION_AND_OBJECT_LAST = FINALIZE_FUNCTION,
     FINALIZE_SHAPE,
+    FINALIZE_SCRIPT,
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
 #endif
@@ -106,6 +107,12 @@ enum FinalizeKind {
     FINALIZE_EXTERNAL_STRING,
     FINALIZE_LIMIT
 };
+
+/*
+ * This must be an upper bound, but we do not need the least upper bound, so
+ * we just exclude non-background objects.
+ */
+const size_t MAX_BACKGROUND_FINALIZE_KINDS = FINALIZE_LIMIT - (FINALIZE_OBJECT_LAST + 1) / 2;
 
 extern JS_FRIEND_DATA(const uint8) GCThingSizeMap[];
 
@@ -755,12 +762,12 @@ Cell::compartment() const
     return arenaHeader()->compartment;
 }
 
-#define JSTRACE_XML         3
+#define JSTRACE_XML         4
 
 /*
  * One past the maximum trace kind.
  */
-#define JSTRACE_LIMIT       4
+#define JSTRACE_LIMIT       5
 
 /*
  * Lower limit after which we limit the heap growth
@@ -797,6 +804,7 @@ GetFinalizableTraceKind(size_t thingKind)
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT16_BACKGROUND */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
         JSTRACE_SHAPE,      /* FINALIZE_SHAPE */
+        JSTRACE_SCRIPT,     /* FINALIZE_SCRIPT */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
         JSTRACE_XML,
 #endif
@@ -1191,10 +1199,6 @@ js_WaitForGC(JSRuntime *rt);
 
 #endif
 
-extern void
-js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp);
-
-
 namespace js {
 
 #ifdef JS_THREADSAFE
@@ -1270,7 +1274,7 @@ class GCHelperThread {
             replenishAndFreeLater(ptr);
     }
 
-    void setContext(JSContext *context) { cx = context; }
+    bool prepareForBackgroundSweep(JSContext *context);
 };
 
 #endif /* JS_THREADSAFE */
@@ -1492,7 +1496,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_SHAPE)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_SCRIPT)
 #endif
 
 namespace js {

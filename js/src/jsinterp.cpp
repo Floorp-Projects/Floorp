@@ -890,7 +890,6 @@ Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &this
     }
 
     LeaveTrace(cx);
-    AutoScriptRooter root(cx, script);
 
     ExecuteFrameGuard efg;
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
