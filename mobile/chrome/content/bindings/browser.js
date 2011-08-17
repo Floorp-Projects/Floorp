@@ -618,11 +618,16 @@ let ContentScroll =  {
         if (content != doc.defaultView) // We are only interested in root scroll pane changes
           return;
 
-        sendAsyncMessage("MozScrolledAreaChanged", {
-          width: aEvent.width,
-          height: aEvent.height,
-          left: aEvent.x
-        });
+        // Send event only after painting to make sure content views in the parent process have
+        // been updated.
+        addEventListener("MozAfterPaint", function afterPaint() {
+          sendAsyncMessage("MozScrolledAreaChanged", {
+            width: aEvent.width,
+            height: aEvent.height,
+            left: aEvent.x
+          });
+          removeEventListener("MozAfterPaint", afterPaint, false);
+        }, false);
 
         break;
       }
