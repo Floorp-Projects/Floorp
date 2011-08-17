@@ -794,6 +794,11 @@ array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Val
     }
 
     *vp = obj->getDenseArrayElement(i);
+
+    /* Type information for dense array elements must be correct. */
+    JS_ASSERT_IF(!obj->hasSingletonType(),
+                 js::types::TypeHasProperty(cx, obj->type(), JSID_VOID, *vp));
+
     return JS_TRUE;
 }
 

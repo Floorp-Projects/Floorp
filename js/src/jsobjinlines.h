@@ -140,11 +140,11 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     if (op) {
         if (!op(cx, this, receiver, id, vp))
             return false;
-        js::types::AddTypePropertyId(cx, this, id, *vp);
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
-        JS_ASSERT_IF(!hasSingletonType(), js::types::TypeHasProperty(cx, type(), id, *vp));
+        JS_ASSERT_IF(!hasSingletonType(),
+                     js::types::TypeHasProperty(cx, type(), id, *vp));
     }
     return true;
 }

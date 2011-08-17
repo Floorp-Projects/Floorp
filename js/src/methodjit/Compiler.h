@@ -708,7 +708,7 @@ class Compiler : public BaseCompiler
     void jsop_getelem_dense(bool isPacked);
     void jsop_getelem_args();
 #ifdef JS_METHODJIT_TYPED_ARRAY
-    void jsop_getelem_typed(int atype);
+    bool jsop_getelem_typed(int atype);
 #endif
     void jsop_toid();
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
