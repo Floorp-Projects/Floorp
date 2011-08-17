@@ -482,11 +482,10 @@ endif
 endif
 
 ifdef JS_HAS_CTYPES
-VPATH += $(srcdir)/ctypes
 
 CPPSRCS += \
-    CTypes.cpp \
-    Library.cpp \
+    ctypes/CTypes.cpp \
+    ctypes/Library.cpp \
     $(NULL)
 
 ifdef MOZ_NATIVE_FFI
@@ -526,13 +525,12 @@ endif
 # it just doesn't necessarily do anything useful.  There is one
 # implementation source file per supported operating system, plus a stub
 # for unsupported OSes, plus the Javascript wrapper.
-VPATH += $(srcdir)/perf
-INSTALLED_HEADERS += jsperf.h
-CPPSRCS += jsperf.cpp
+INSTALLED_HEADERS += perf/jsperf.h
+CPPSRCS += perf/jsperf.cpp
 ifdef HAVE_LINUX_PERF_EVENT_H
-CPPSRCS += pm_linux.cpp
+CPPSRCS += perf/pm_linux.cpp
 else
-CPPSRCS += pm_stub.cpp
+CPPSRCS += perf/pm_stub.cpp
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -745,6 +743,14 @@ distclean::
 # our build system doesn't handle subdir srcs very gracefully today
 export::
 	$(MKDIR) -p nanojit
+	$(MKDIR) -p vm
+	$(MKDIR) -p frontend
+	$(MKDIR) -p tracejit
+	$(MKDIR) -p methodjit
+	$(MKDIR) -p v8-dtoa
+	$(MKDIR) -p perf
+
+GARBAGE_DIRS += nanojit vm frontend tracejit methodjit v8-dtoa perf
 
 DEFINES		+= -DEXPORT_JS_API
 
