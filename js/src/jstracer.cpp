@@ -15356,6 +15356,12 @@ TraceRecorder::record_JSOP_LINENO()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_NOTEARG()
+{
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_BLOCKCHAIN()
 {
     return ARECORD_CONTINUE;

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -6787,8 +6787,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             callop = false;             /* trigger JSOP_PUSH after */
             break;
         }
-        if (!callop && js_Emit1(cx, cg, JSOP_PUSH) < 0)
-            return JS_FALSE;
+        if (!callop) {
+            if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, JSOP_NOTEARG) < 0)
+                return JS_FALSE;
+        }
 
         /* Remember start of callable-object bytecode for decompilation hint. */
         off = top;
@@ -6802,6 +6806,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         cg->flags &= ~TCF_IN_FOR_INIT;
         for (pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
             if (!js_EmitTree(cx, cg, pn3))
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, JSOP_NOTEARG) < 0)
                 return JS_FALSE;
         }
         cg->flags |= oldflags & TCF_IN_FOR_INIT;

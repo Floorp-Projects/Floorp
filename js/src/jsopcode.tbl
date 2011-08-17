@@ -597,3 +597,6 @@ OPDEF(JSOP_SETHOLE,       231, "sethole",      NULL,  1,  3,  1,  3,  JOF_BYTE |
 
 /* Pop the stack, convert to a jsid (int or string), and push back. */
 OPDEF(JSOP_TOID,          232, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)
+
+/* Notes the point at which a value is pushed as an argument. */
+OPDEF(JSOP_NOTEARG,       233, "notearg",      NULL,  1,  0,  0,  0,  JOF_BYTE)
