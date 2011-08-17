@@ -42,6 +42,8 @@
 #include "Workers.h"
 
 #include "jspubtd.h"
+#include "nsTArray.h"
+#include "nsCOMPtr.h"
 
 class JSAutoStructuredCloneBuffer;
 
@@ -58,6 +60,7 @@ CreateGenericEvent(JSContext* aCx, JSString* aType, bool aBubbles,
 
 JSObject*
 CreateMessageEvent(JSContext* aCx, JSAutoStructuredCloneBuffer& aData,
+                   nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
                    bool aMainRuntime);
 
 JSObject*

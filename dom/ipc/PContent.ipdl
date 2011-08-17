@@ -205,6 +205,9 @@ parent:
     sync GetIconForExtension(nsCString aFileExt, PRUint32 aIconSize)
         returns (PRUint8[] bits);
 
+    sync GetShowPasswordSetting()
+        returns (PRBool showPassword);
+
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);
 

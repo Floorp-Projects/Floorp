@@ -212,6 +212,8 @@ public:
 
     void GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * const aBuf);
 
+    bool GetShowPasswordSetting();
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             // Make sure there is enough space to store a local ref to the
@@ -322,6 +324,7 @@ protected:
     jmethodID jGetSystemColors;
     jmethodID jGetIconForExtension;
     jmethodID jCreateShortcut;
+    jmethodID jGetShowPasswordSetting;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

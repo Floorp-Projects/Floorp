@@ -324,7 +324,7 @@ toolbarbutton.urlbar-button {
   list-style-image: url("chrome://browser/skin/images/bookmark-default-hdpi.png");
 }
 
-#tool-star[starred="true"] {
+.tool-star[starred="true"] {
   list-style-image: url("chrome://browser/skin/images/bookmark-starred-hdpi.png");
 }
 

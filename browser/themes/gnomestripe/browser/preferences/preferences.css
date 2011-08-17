@@ -119,7 +119,7 @@ radio[pane=paneSync] {
   width: 16px;
   height: 16px;
   margin: 0px 2px;
-  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 #paneApplications {
