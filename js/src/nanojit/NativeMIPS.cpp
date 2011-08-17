@@ -1412,20 +1412,20 @@ namespace nanojit
                 else {
                     //  [linkedinstructions]
                     //  bxxx trampoline
-                    //   lui $at,%hi(targ)
+                    //   lui $ra,%hi(targ)
                     //  ...
                     // trampoline:
-                    //  addiu $at,%lo(targ)
-                    //  jr $at
+                    //  addiu $ra,%lo(targ)
+                    //  jr $ra
                     //   nop
 
                     underrunProtect(5 * 4);             // keep bxx and trampoline together
 
-                    LUI(AT,hi(uint32_t(targ)));         // delay slot
+                    LUI(RA,hi(uint32_t(targ)));         // delay slot
 
                     // NB trampoline code is emitted in the correct order
-                    trampADDIU(AT, AT, lo(uint32_t(targ)));
-                    trampJR(AT);
+                    trampADDIU(RA, RA, lo(uint32_t(targ)));
+                    trampJR(RA);
                     trampNOP();                         // trampoline delay slot
 
                 }
@@ -1634,16 +1634,30 @@ namespace nanojit
     void Assembler::asm_j(NIns * const targ, bool bdelay)
     {
         if (targ == NULL) {
+            // target is unknown - asm_bxx wiill generate tramopline code
             NanoAssert(bdelay);
             (void) asm_bxx(false, LIR_eqi, ZERO, ZERO, targ);
         }
-        else {
-            NanoAssert(SEG(targ) == SEG(_nIns));
+        else if (SEG(targ) == SEG(_nIns)) {
+            // target is known and in same segment
             if (bdelay) {
                 underrunProtect(2*4);    // j + delay
                 NOP();
             }
             J(targ);
+        }
+        else {
+            // target is known but in different segment
+            // generate register jump using $ra
+            // lui $ra,%hi(targ)
+            // ori $ra,%lo(targ) # will be omitted if (targ & 0xffff)==0
+            // jr $ra
+            //  [nop]
+            underrunProtect(4*4); // worst case to prevent underrunProtect from reinvoking asm_j
+            if (bdelay)
+                NOP();
+            JR(RA);
+            asm_li(RA, (uint32_t)targ);
         }
         TAG("asm_j(targ=%p) bdelay=%d", targ);
     }
@@ -1874,7 +1888,6 @@ namespace nanojit
             if (!_epilogue)
                 _epilogue = genEpilogue();
             GuardRecord *lr = guard->record();
-            // FIXME: _epilogue may be in another segment
             // lui    $v0,%hi(lr)
             // j      _epilogue
             //  addiu $v0,%lo(lr)
@@ -1966,11 +1979,11 @@ namespace nanojit
     {
         /*
          * Use a non standard fp because we don't know the final framesize until now
-         * addiu  $sp,-FRAMESIZE
+         * addiu   $sp,-FRAMESIZE
          * sw      $ra,RA_OFFSET($sp)
          * sw      $fp,FP_OFFSET($sp)
-         * move   $fp,$sp
-         * addu      $sp,-stackNeeded
+         * move    $fp,$sp
+         * addu    $sp,-stackNeeded
          */
 
         uint32_t stackNeeded = max_out_args + STACK_GRANULARITY * _activation.stackSlotsNeeded();
@@ -1989,7 +2002,8 @@ namespace nanojit
 
         MOVE(FP, SP);
         SW(FP, FP_OFFSET, SP);
-        SW(RA, RA_OFFSET, SP);        // No need to save for leaf functions
+        underrunProtect(2 * 4);         // code page switch could change $ra
+        SW(RA, RA_OFFSET, SP);
         ADDIU(SP, SP, -FRAMESIZE);
 
         TAG("genPrologue()");
@@ -2002,16 +2016,16 @@ namespace nanojit
     {
         /*
          * move    $sp,$fp
-         * lw      $ra,RA_OFFSET($sp)
          * lw      $fp,FP_OFFSET($sp)
+         * lw      $ra,RA_OFFSET($sp)
          * j       $ra
          * addiu   $sp,FRAMESIZE
          */
-        underrunProtect(2*4);   // j $ra; addiu $sp,FRAMESIZE
+        underrunProtect(3*4);   // lw $ra,RA_OFFSET($sp);j $ra; addiu $sp,FRAMESIZE
         ADDIU(SP, SP, FRAMESIZE);
         JR(RA);
-        LW(FP, FP_OFFSET, SP);
         LW(RA, RA_OFFSET, SP);
+        LW(FP, FP_OFFSET, SP);
         MOVE(SP, FP);
 
         TAG("genEpilogue()");
