@@ -1467,9 +1467,9 @@ class AutoGCRooter {
 
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
-        SHAPE =        -2, /* js::AutoShapeRooter */
+        BINDINGS =     -2, /* js::Bindings */
         PARSER =       -3, /* js::Parser */
-        SCRIPT =       -4, /* js::AutoScriptRooter */
+        SHAPEVECTOR =  -4, /* js::AutoShapeVector */
         ENUMERATOR =   -5, /* js::AutoEnumStateRooter */
         IDARRAY =      -6, /* js::AutoIdArray */
         DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
@@ -1480,9 +1480,7 @@ class AutoGCRooter {
         VALVECTOR =   -12, /* js::AutoValueVector */
         DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
         STRING =      -14, /* js::AutoStringRooter */
-        IDVECTOR =    -15, /* js::AutoIdVector */
-        BINDINGS =    -16, /* js::Bindings */
-        SHAPEVECTOR = -17  /* js::AutoShapeVector */
+        IDVECTOR =    -15  /* js::AutoIdVector */
     };
 
     private:
@@ -1650,43 +1648,6 @@ class AutoArrayRooter : private AutoGCRooter {
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class AutoShapeRooter : private AutoGCRooter {
-  public:
-    AutoShapeRooter(JSContext *cx, const js::Shape *shape
-                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, SHAPE), shape(shape)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
-
-  private:
-    const js::Shape * const shape;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class AutoScriptRooter : private AutoGCRooter {
-  public:
-    AutoScriptRooter(JSContext *cx, JSScript *script
-                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, SCRIPT), script(script)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    void setScript(JSScript *script) {
-        this->script = script;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    JSScript *script;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
