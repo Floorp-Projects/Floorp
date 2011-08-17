@@ -41,6 +41,7 @@
 #include "nsStyleConsts.h"
 #include "nsIAtom.h"
 #include "nsRuleData.h"
+#include "nsDOMMemoryReporter.h"
 
 class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement
@@ -60,6 +61,9 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+
+  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsHTMLSpanElement,
+                                              nsGenericHTMLElement)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
