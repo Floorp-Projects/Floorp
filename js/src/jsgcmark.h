@@ -77,10 +77,10 @@ void
 MarkShape(JSTracer *trc, const Shape *shape, const char *name);
 
 void
-MarkXML(JSTracer *trc, JSXML *xml, const char *name);
+MarkScript(JSTracer *trc, JSScript *script, const char *name);
 
 void
-MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name);
+MarkXML(JSTracer *trc, JSXML *xml, const char *name);
 
 void
 MarkObjectRange(JSTracer *trc, size_t len, JSObject **vec, const char *name);
@@ -154,6 +154,9 @@ void
 MarkRoot(JSTracer *trc, const Shape *thing, const char *name);
 
 void
+MarkRoot(JSTracer *trc, JSScript *thing, const char *name);
+
+void
 MarkRoot(JSTracer *trc, JSXML *thing, const char *name);
 
 void
@@ -164,6 +167,9 @@ MarkChildren(JSTracer *trc, JSString *str);
 
 void
 MarkChildren(JSTracer *trc, const Shape *shape);
+
+void
+MarkChildren(JSTracer *trc, JSScript *script);
 
 void
 MarkChildren(JSTracer *trc, JSXML *xml);

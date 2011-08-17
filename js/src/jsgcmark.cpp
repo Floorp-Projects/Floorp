@@ -46,6 +46,7 @@
 #include "jsscopeinlines.h"
 
 #include "vm/String-inl.h"
+#include "methodjit/MethodJIT.h"
 
 /*
  * There are two mostly separate mark paths. The first is a fast path used
@@ -93,6 +94,9 @@ PushMarkStack(GCMarker *gcmarker, JSFunction *thing);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, const Shape *thing);
+
+static inline void
+PushMarkStack(GCMarker *gcmarker, JSScript *thing);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSShortString *thing);
@@ -191,6 +195,15 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
     Mark(trc, shape);
 }
 
+void
+MarkScript(JSTracer *trc, JSScript *script, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(script);
+    JS_SET_TRACING_NAME(trc, name);
+    Mark(trc, script);
+}
+
 #if JS_HAS_XML_SUPPORT
 void
 MarkXML(JSTracer *trc, JSXML *xml, const char *name)
@@ -256,6 +269,21 @@ PushMarkStack(GCMarker *gcmarker, const Shape *thing)
 }
 
 void
+PushMarkStack(GCMarker *gcmarker, JSScript *thing)
+{
+    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+
+    /*
+     * We mark scripts directly rather than pushing on the stack as they can
+     * refer to other scripts only indirectly (like via nested functions) and
+     * we cannot get to deep recursion.
+     */
+    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+        MarkChildren(gcmarker, thing);
+}
+
+static void
 MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 {
     for (uint32 i = 0; i < len; i++) {
@@ -329,22 +357,24 @@ MarkKind(JSTracer *trc, void *thing, uint32 kind)
     JS_ASSERT(thing);
     JS_ASSERT(kind == GetGCThingTraceKind(thing));
     switch (kind) {
-        case JSTRACE_OBJECT:
-            Mark(trc, reinterpret_cast<JSObject *>(thing));
-            break;
-        case JSTRACE_STRING:
-            MarkString(trc, reinterpret_cast<JSString *>(thing));
-            break;
-        case JSTRACE_SHAPE:
-            Mark(trc, reinterpret_cast<Shape *>(thing));
-            break;
+      default:
+        JS_ASSERT(kind == JSTRACE_OBJECT);
+        Mark(trc, static_cast<JSObject *>(thing));
+        break;
+      case JSTRACE_STRING:
+        MarkString(trc, static_cast<JSString *>(thing));
+        break;
+      case JSTRACE_SHAPE:
+        Mark(trc, static_cast<Shape *>(thing));
+        break;
+      case JSTRACE_SCRIPT:
+        Mark(trc, static_cast<JSScript *>(thing));
+        break;
 #if JS_HAS_XML_SUPPORT
-        case JSTRACE_XML:
-            Mark(trc, reinterpret_cast<JSXML *>(thing));
-            break;
+      case JSTRACE_XML:
+        Mark(trc, static_cast<JSXML *>(thing));
+        break;
 #endif
-        default:
-            JS_ASSERT(false);
     }
 }
 
@@ -467,6 +497,12 @@ void
 MarkRoot(JSTracer *trc, const Shape *thing, const char *name)
 {
     MarkShape(trc, thing, name);
+}
+
+void
+MarkRoot(JSTracer *trc, JSScript *thing, const char *name)
+{
+    MarkScript(trc, thing, name);
 }
 
 void
@@ -765,6 +801,54 @@ restart:
         goto restart;
 }
 
+void
+MarkChildren(JSTracer *trc, JSScript *script)
+{
+    CheckScript(script, NULL);
+
+#ifdef JS_CRASH_DIAGNOSTICS
+    JSRuntime *rt = trc->context->runtime;
+    JS_OPT_ASSERT_IF(rt->gcCheckCompartment, script->compartment() == rt->gcCheckCompartment);
+#endif
+    
+    JSAtomMap *map = &script->atomMap;
+    MarkAtomRange(trc, map->length, map->vector, "atomMap");
+
+    if (JSScript::isValidOffset(script->objectsOffset)) {
+        JSObjectArray *objarray = script->objects();
+        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
+    }
+
+    if (JSScript::isValidOffset(script->regexpsOffset)) {
+        JSObjectArray *objarray = script->regexps();
+        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
+    }
+
+    if (JSScript::isValidOffset(script->constOffset)) {
+        JSConstArray *constarray = script->consts();
+        MarkValueRange(trc, constarray->length, constarray->vector, "consts");
+    }
+
+    /*
+     * For cached eval scripts JSScript::u.evalHashLink is cleared during the
+     * purge phase. So we can assume that if JSScript::u is not null, it
+     * points to JSObject, not another script.
+     */
+    if (script->u.object) {
+        JS_ASSERT(GetGCThingTraceKind(script->u.object) == JSTRACE_OBJECT);
+        MarkObject(trc, *script->u.object, "object");
+    }
+
+    if (IS_GC_MARKING_TRACER(trc) && script->filename)
+        js_MarkScriptFilename(script->filename);
+
+    script->bindings.trace(trc);
+
+#ifdef JS_METHODJIT
+    mjit::TraceScript(trc, script);
+#endif
+}
+
 #ifdef JS_HAS_XML_SUPPORT
 void
 MarkChildren(JSTracer *trc, JSXML *xml)
@@ -815,22 +899,28 @@ JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 {
     switch (kind) {
-      case JSTRACE_OBJECT:
-	MarkChildren(trc, (JSObject *)thing);
+      default:
+        JS_ASSERT(kind == JSTRACE_OBJECT);
+	MarkChildren(trc, static_cast<JSObject *>(thing));
         break;
 
       case JSTRACE_STRING:
-	MarkChildren(trc, (JSString *)thing);
+	MarkChildren(trc, static_cast<JSString *>(thing));
         break;
 
       case JSTRACE_SHAPE:
-	MarkChildren(trc, (js::Shape *)thing);
+	MarkChildren(trc, static_cast<Shape *>(thing));
+        break;
+
+      case JSTRACE_SCRIPT:
+	MarkChildren(trc, static_cast<JSScript *>(thing));
         break;
 
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
-        MarkChildren(trc, (JSXML *)thing);
+        MarkChildren(trc, static_cast<JSXML *>(thing));
         break;
 #endif
     }
 }
+
