@@ -93,6 +93,23 @@ struct CharacterDataChangeInfo
    * The text that used to begin at mChangeEnd now begins at
    * mChangeStart + mReplaceLength.
    */
+
+  struct Details {
+    enum {
+      eMerge,  // two text nodes are merged as a result of normalize()
+      eSplit   // a text node is split as a result of splitText()
+    } mType;
+    /**
+     * For eMerge it's the text node that will be removed, for eSplit it's the
+     * new text node.
+     */
+    nsIContent* mNextSibling;
+  };
+
+  /**
+   * Used for splitText() and normalize(), otherwise null.
+   */
+  Details* mDetails;
 };
 
 /**

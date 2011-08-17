@@ -185,6 +185,23 @@ let Storage = {
   },
 
   // ----------
+  // Function: readWindowBusyState
+  // Returns the current busyState for the given window.
+  readWindowBusyState: function Storage_readWindowBusyState(win) {
+    let state;
+
+    try {
+      let data = this._sessionStore.getWindowState(win);
+      if (data)
+        state = JSON.parse(data);
+    } catch (e) {
+      Utils.log("Error while parsing window state");
+    }
+
+    return (state && state.windows[0].busy);
+  },
+
+  // ----------
   // Function: saveGroupItemsData
   // Saves the global data for the <GroupItems> singleton for the given window.
   saveGroupItemsData: function Storage_saveGroupItemsData(win, data) {

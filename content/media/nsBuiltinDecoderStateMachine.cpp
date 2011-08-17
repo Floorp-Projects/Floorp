@@ -493,12 +493,11 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   LOG(PR_LOG_DEBUG, ("%p Begun audio thread/loop", mDecoder.get()));
   PRInt64 audioDuration = 0;
   PRInt64 audioStartTime = -1;
+  PRInt64 samplesWritten = 0;
   PRUint32 channels, rate;
   double volume = -1;
   PRBool setVolume;
   PRInt32 minWriteSamples = -1;
-  PRInt64 samplesAtLastSleep = 0;
-
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mAudioCompleted = PR_FALSE;
@@ -548,7 +547,6 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
         if (!IsPlaying() && !mAudioStream->IsPaused()) {
           mAudioStream->Pause();
         }
-        samplesAtLastSleep = audioDuration;
         mon.Wait();
       }
 
@@ -616,11 +614,12 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       // hardware so that the next sound chunk begins playback at the correct
       // time.
       missingSamples = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX), missingSamples);
-      audioDuration += PlaySilence(static_cast<PRUint32>(missingSamples),
+      samplesWritten = PlaySilence(static_cast<PRUint32>(missingSamples),
                                    channels, playedSamples);
     } else {
-      audioDuration += PlayFromAudioQueue(sampleTime, channels);
+      samplesWritten = PlayFromAudioQueue(sampleTime, channels);
     }
+    audioDuration += samplesWritten;
     {
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       PRInt64 playedUsecs;
@@ -635,9 +634,8 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
 
       PRInt64 audioAhead = mAudioEndTime - GetMediaTime();
       if (audioAhead > AMPLE_AUDIO_USECS &&
-          audioDuration - samplesAtLastSleep > minWriteSamples)
+          samplesWritten > minWriteSamples)
       {
-        samplesAtLastSleep = audioDuration;
         // We've pushed enough audio onto the hardware that we've queued up a
         // significant amount ahead of the playback position. The decode
         // thread will be going to sleep, so we won't get any new samples
@@ -662,6 +660,21 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     PRBool seeking = PR_FALSE;
     {
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+      if (samplesWritten < minWriteSamples) {
+        // We've not written minWriteSamples in the last write, the audio
+        // may not start playing. Write silence to ensure we've got enough
+        // samples written to start playback.
+        PRInt64 samples = minWriteSamples - samplesWritten;
+        if (samples < PR_UINT32_MAX / channels) {
+          // Write silence manually rather than using PlaySilence(), so that
+          // the AudioAPI doesn't get a copy of the samples.
+          PRUint32 numValues = samples * channels;
+          nsAutoArrayPtr<SoundDataValue> buf(new SoundDataValue[numValues]);
+          memset(buf.get(), 0, sizeof(SoundDataValue) * numValues);
+          mAudioStream->Write(buf, numValues, PR_TRUE);
+        }
+      }
+
       PRInt64 oldPosition = -1;
       PRInt64 position = GetMediaTime();
       while (oldPosition != position &&

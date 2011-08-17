@@ -118,11 +118,11 @@ radio[pane=paneSync] {
   width: 16px;
   height: 16px;
   margin: 0 2px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png") !important;
 }
 
 #cookiesChildren::-moz-tree-image(domainCol, container) {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 

@@ -1001,6 +1001,21 @@ nsStandardURL::GetSpec(nsACString &result)
 
 // result may contain unescaped UTF-8 characters
 NS_IMETHODIMP
+nsStandardURL::GetSpecIgnoringRef(nsACString &result)
+{
+    // URI without ref is 0 to one char before ref
+    if (mRef.mLen >= 0) {
+        URLSegment noRef(0, mRef.mPos - 1);
+
+        result = Segment(noRef);
+    } else {
+        result = mSpec;
+    }
+    return NS_OK;
+}
+
+// result may contain unescaped UTF-8 characters
+NS_IMETHODIMP
 nsStandardURL::GetPrePath(nsACString &result)
 {
     result = Prepath();
@@ -2141,6 +2156,13 @@ NS_IMETHODIMP
 nsStandardURL::GetRef(nsACString &result)
 {
     result = Ref();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetHasRef(PRBool *result)
+{
+    *result = (mRef.mLen >= 0);
     return NS_OK;
 }
 

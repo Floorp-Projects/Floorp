@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677878
+-->
+<head>
+  <title>Test for Bug 677878</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <style>
+    #test1 {
+      background: green;
+      height: 100px;
+      width: 100px;
+      -moz-transform: scale(20, 20);
+      -moz-transform-origin: 0 0%;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677878">Mozilla Bug 677878</a>
+<div id="content">
+  <div id="test1">
+    <div id="test2" onclick="testFinish();">
+      test
+    </div>
+  </div>
+  
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+runtests();
+
+function runtests() {
+  function doClick() {
+    document.getElementById("test2").addEventListener("mousedown", testFinish, true);
+    synthesizeMouseAtCenter(document.getElementById("test2"), { type: "mousedown" })
+  }
+  setTimeout(doClick, 300);
+}
+
+function testFinish(event){
+  ok(true, "We can still interact with the item after it is transformed");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

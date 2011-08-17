@@ -30,3 +30,4 @@ fails-if(cocoaWidget) == non-themed-widget.html non-themed-widget-ref.html
 fails-if(cocoaWidget) == themed-widget.html themed-widget-ref.html
 == addrange-1.html addrange-ref.html
 == addrange-2.html addrange-ref.html
+== splitText-normalize.html splitText-normalize-ref.html
