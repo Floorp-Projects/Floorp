@@ -541,6 +541,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub,
 
     /* The compiler should have handled constant folding. */
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
+    JS_ASSERT(fused == JSOP_NOP || fused == JSOP_IFEQ || fused == JSOP_IFNE);
 
     /* Always slow path... */
     if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE) &&
@@ -804,10 +805,10 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
 
     frame.syncAndForgetEverything();
 
-    Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_OR)
+    Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_IFNEX || op == JSOP_OR)
                                 ? Assembler::NonZero
                                 : Assembler::Zero;
-    Assembler::Condition ncond = (op == JSOP_IFNE || op == JSOP_OR)
+    Assembler::Condition ncond = (op == JSOP_IFNE || op == JSOP_IFNEX || op == JSOP_OR)
                                  ? Assembler::Zero
                                  : Assembler::NonZero;
 
@@ -881,7 +882,7 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
 
         frame.pop();
 
-        if (op == JSOP_IFEQ)
+        if (op == JSOP_IFEQ || op == JSOP_IFEQX)
             b = !b;
         if (b) {
             if (!frame.syncForBranch(target, Uses(0)))
