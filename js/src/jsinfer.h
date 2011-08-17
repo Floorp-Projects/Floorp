@@ -1050,8 +1050,8 @@ struct TypeCompartment
     /* Resolve pending type registrations, excluding delayed ones. */
     inline void resolvePending(JSContext *cx);
 
-    /* Prints results of this compartment if spew is enabled, checks for warnings. */
-    void print(JSContext *cx);
+    /* Prints results of this compartment if spew is enabled or force is set. */
+    void print(JSContext *cx, bool force);
 
     /*
      * Make a function or non-function object associated with an optional
