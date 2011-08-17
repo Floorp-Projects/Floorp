@@ -51,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(c7a41566-3a44-4e74-ab1a-452c2e7e7d07)]
+[builtinclass, scriptable, uuid(10f43750-b379-11e0-aff2-0800200c9a66)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -655,9 +655,6 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozBorderImage;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        MozColumns;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozColumnRule;
