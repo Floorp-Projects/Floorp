@@ -48,20 +48,6 @@ function uri(spec) {
   return ios.newURI(spec, null, null);
 }
 
-/**
- * Clears history invoking callback when done.
- */
-function waitForClearHistory(aCallback) {
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-      aCallback(aSubject, aTopic, aData);
-    }
-  };
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-  PlacesUtils.bhistory.removeAllPages();
-}
-
 var sidebar = document.getElementById("sidebar");
 
 function add_visit(aURI, aDate) {
