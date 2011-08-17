@@ -41,6 +41,7 @@
 #define __nanojit_h__
 
 #include "avmplus.h"
+#include "njcpudetect.h"
 
 #ifdef FEATURE_NANOJIT
 
