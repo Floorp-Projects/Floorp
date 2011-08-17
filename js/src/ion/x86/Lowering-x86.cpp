@@ -133,7 +133,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
         LUnboxDouble *lir = new LUnboxDouble();
         if (!assignSnapshot(lir))
             return false;
-        if (!useBox(lir, LUnboxDouble::Input, unbox))
+        if (!useBox(lir, LUnboxDouble::Input, inner))
             return false;
         return define(lir, unbox);
     }
