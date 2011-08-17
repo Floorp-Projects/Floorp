@@ -433,7 +433,7 @@ endif
 
 define SUBMAKE # $(call SUBMAKE,target,directory)
 +@$(UPDATE_TITLE)
-+@$(MAKE) $(if $(2),-C $(2)) $(1)
++$(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it
 
