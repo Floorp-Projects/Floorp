@@ -276,7 +276,7 @@ public:
         throw std::runtime_error("Unsupported ELF class or data encoding");
     }
 
-    static inline int size(char ei_class)
+    static inline unsigned int size(char ei_class)
     {
         if (ei_class == ELFCLASS32)
             return sizeof(typename T::Type32);
