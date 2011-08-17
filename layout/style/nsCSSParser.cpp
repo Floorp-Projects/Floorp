@@ -492,6 +492,7 @@ protected:
 
   // for 'clip' and '-moz-image-region'
   PRBool ParseRect(nsCSSProperty aPropID);
+  PRBool ParseColumns();
   PRBool ParseContent();
   PRBool ParseCounterData(nsCSSProperty aPropID);
   PRBool ParseCursor();
@@ -5491,6 +5492,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
 
   case eCSSProperty_clip:
     return ParseRect(eCSSProperty_clip);
+  case eCSSProperty__moz_columns:
+    return ParseColumns();
   case eCSSProperty__moz_column_rule:
     return ParseBorderSide(kColumnRuleIDs, PR_FALSE);
   case eCSSProperty_content:
@@ -6840,6 +6843,36 @@ CSSParserImpl::ParseRect(nsCSSProperty aPropID)
   }
 
   AppendValue(aPropID, val);
+  return PR_TRUE;
+}
+
+PRBool
+CSSParserImpl::ParseColumns()
+{
+  static const nsCSSProperty columnIDs[] = {
+    eCSSProperty__moz_column_count,
+    eCSSProperty__moz_column_width
+  };
+  const PRInt32 numProps = NS_ARRAY_LENGTH(columnIDs);
+
+  nsCSSValue values[numProps];
+  PRInt32 found = ParseChoice(values, columnIDs, numProps);
+  if (found < 1 || !ExpectEndProperty()) {
+    return PR_FALSE;
+  }
+
+  if ((found & 1) == 0) {
+    // Default to 'auto' column-count
+    values[0].SetAutoValue();
+  }
+  if ((found & 2) == 0) {
+    // Default to 'auto' column-width
+    values[1].SetAutoValue();
+  }
+
+  for (PRInt32 index = 0; index < numProps; index++) {
+    AppendValue(columnIDs[index], values[index]);
+  }
   return PR_TRUE;
 }
 
