@@ -136,7 +136,10 @@ JSCompartment::init(JSContext *cx)
     activeAnalysis = activeInference = false;
     types.init(cx);
 
-    JS_InitArenaPool(&pool, "analysis", 4096, 8);
+    /* Duplicated from jscntxt.cpp. :XXX: bug 675150 fix hack. */
+    static const size_t ARENA_HEADER_SIZE_HACK = 40;
+
+    JS_InitArenaPool(&pool, "analysis", 4096 - ARENA_HEADER_SIZE_HACK, 8);
 
     freeLists.init();
     if (!crossCompartmentWrappers.init())
@@ -599,6 +602,13 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
     if (!activeAnalysis) {
         /*
+         * Clear the analysis pool, but don't releas its data yet. While
+         * sweeping types any live data will be allocated into the pool.
+         */
+        JSArenaPool oldPool;
+        MoveArenaPool(&pool, &oldPool);
+
+        /*
          * Sweep analysis information and everything depending on it from the
          * compartment, including all remaining mjit code if inference is
          * enabled in the compartment.
@@ -610,8 +620,19 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
             for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
                 JSScript *script = reinterpret_cast<JSScript *>(cursor);
-                if (script->types)
+                if (script->types) {
                     types::TypeScript::Sweep(cx, script);
+
+                    /*
+                     * On each 1/8 lifetime, release observed types for all scripts.
+                     * This is always safe to do when there are no frames for the
+                     * compartment on the stack.
+                     */
+                    if (discardScripts) {
+                        script->types->destroy();
+                        script->types = NULL;
+                    }
+                }
             }
         }
 
@@ -624,7 +645,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         }
 
         /* Reset the analysis pool, releasing all analysis and intermediate type data. */
-        JS_FinishArenaPool(&pool);
+        JS_FinishArenaPool(&oldPool);
 
         /*
          * Destroy eval'ed scripts, now that any type inference information referring

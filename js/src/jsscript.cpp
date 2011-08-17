@@ -1419,10 +1419,8 @@ DestroyScript(JSContext *cx, JSScript *script, JSObject *owner, uint32 caller)
         PurgeScriptFragments(script->compartment->traceMonitor(), script);
 #endif
 
-    if (script->types) {
+    if (script->types)
         script->types->destroy();
-        Foreground::free_(script->types);
-    }
 
 #ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, script);

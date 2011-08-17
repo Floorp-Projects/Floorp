@@ -356,7 +356,6 @@ TypeSet::make(JSContext *cx, const char *name)
     InferSpew(ISpewOps, "typeSet: %sT%p%s intermediate %s",
               InferSpewColor(res), res, InferSpewColorReset(),
               name);
-    res->setIntermediate();
 
     return res;
 }
@@ -812,9 +811,7 @@ public:
 
     TypeConstraintSubsetBarrier(JSScript *script, jsbytecode *pc, TypeSet *target)
         : TypeConstraint("subsetBarrier"), script(script), pc(pc), target(target)
-    {
-        JS_ASSERT(!target->intermediate());
-    }
+    {}
 
     void newType(JSContext *cx, TypeSet *source, Type type)
     {
@@ -1951,7 +1948,7 @@ void
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
-    PendingWork *newArray = (PendingWork *) js::OffTheBooks::calloc_(newCapacity * sizeof(PendingWork));
+    PendingWork *newArray = (PendingWork *) OffTheBooks::calloc_(newCapacity * sizeof(PendingWork));
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
@@ -1992,9 +1989,10 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
 void
 TypeCompartment::setPendingNukeTypes(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment->activeInference);
+    JS_ASSERT(compartment()->activeInference);
     if (!pendingNukeTypes) {
-        js_ReportOutOfMemory(cx);
+        if (cx->compartment)
+            js_ReportOutOfMemory(cx);
         pendingNukeTypes = true;
     }
 }
@@ -2623,17 +2621,13 @@ bool
 TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 {
     JS_ASSERT(!*pprop);
-    Property *base = singleton
-        ? ArenaNew<Property>(cx->compartment->pool, id)
-        : cx->new_<Property>(id);
+    Property *base = ArenaNew<Property>(cx->compartment->pool, id);
     if (!base) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return false;
     }
 
     if (singleton) {
-        base->types.setIntermediate();
-
         /*
          * Fill the property in with any type the object already has in an
          * own property. We are only interested in plain native properties
@@ -3096,7 +3090,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             if (!state.phiNodes.append(newv->value.phiNode()))
                 return false;
             TypeSet &types = newv->value.phiNode()->types;
-            types.setIntermediate();
             InferSpew(ISpewOps, "typeSet: %sT%p%s phi #%u:%05u:%u",
                       InferSpewColor(&types), &types, InferSpewColorReset(),
                       script->id(), offset, newv->slot);
@@ -3112,7 +3105,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         return true;
 
     for (unsigned i = 0; i < defCount; i++) {
-        pushed[i].setIntermediate();
         InferSpew(ISpewOps, "typeSet: %sT%p%s pushed%u #%u:%05u",
                   InferSpewColor(&pushed[i]), &pushed[i], InferSpewColorReset(),
                   i, script->id(), offset);
@@ -3348,18 +3340,12 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
 
-      case JSOP_GETXPROP: {
-        TypeSet *seen = script->analysis()->bytecodeTypes(pc);
-        addTypeBarrier(cx, pc, seen, Type::UnknownType());
-        seen->addSubset(cx, &pushed[0]);
-        break;
-      }
-
+      case JSOP_GETXPROP:
       case JSOP_GETFCSLOT:
       case JSOP_CALLFCSLOT: {
-        unsigned index = GET_UINT16(pc);
-        TypeSet *types = TypeScript::UpvarTypes(script, index);
-        types->addSubset(cx, &pushed[0]);
+        TypeSet *seen = bytecodeTypes(pc);
+        addTypeBarrier(cx, pc, seen, Type::UnknownType());
+        seen->addSubset(cx, &pushed[0]);
         if (op == JSOP_CALLFCSLOT) {
             pushed[1].addType(cx, Type::UndefinedType());
             pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType());
@@ -4516,10 +4502,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
             TypeScript::LocalTypes(script, i)->print(cx);
         }
     }
-    for (unsigned i = 0; i < script->bindings.countUpvars(); i++) {
-        printf("\n    upvar%u:", i);
-        TypeScript::UpvarTypes(script, i)->print(cx);
-    }
     printf("\n");
 
     for (unsigned offset = 0; offset < script->length; offset++) {
@@ -4931,12 +4913,6 @@ JSScript::makeTypes(JSContext *cx)
                   InferSpewColor(types), types, InferSpewColorReset(),
                   i, id());
     }
-    for (unsigned i = 0; i < bindings.countUpvars(); i++) {
-        TypeSet *types = TypeScript::UpvarTypes(this, i);
-        InferSpew(ISpewOps, "typeSet: %sT%p%s upvar%u #%u",
-                  InferSpewColor(types), types, InferSpewColorReset(),
-                  i, id());
-    }
 #endif
 
     return true;
@@ -5228,39 +5204,32 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool unknown)
 void
 TypeSet::sweep(JSContext *cx, JSCompartment *compartment)
 {
-    JS_ASSERT(!intermediate());
-    uint32 objectCount = baseObjectCount();
-
+    /*
+     * Purge references to type objects that are no longer live. Type sets hold
+     * only weak references. For type sets containing more than one object,
+     * live entries in the object hash need to be copied to the compartment's
+     * new arena.
+     */
+    unsigned objectCount = baseObjectCount();
     if (objectCount >= 2) {
-        bool removed = false;
-        unsigned objectCapacity = HashSetCapacity(objectCount);
-        for (unsigned i = 0; i < objectCapacity; i++) {
-            TypeObjectKey *object = objectSet[i];
-            if (object && IsAboutToBeFinalized(cx, object)) {
-                objectSet[i] = NULL;
-                removed = true;
+        unsigned oldCapacity = HashSetCapacity(objectCount);
+        TypeObjectKey **oldArray = objectSet;
+
+        clearObjects();
+        objectCount = 0;
+        for (unsigned i = 0; i < oldCapacity; i++) {
+            TypeObjectKey *object = oldArray[i];
+            if (object && !IsAboutToBeFinalized(cx, object)) {
+                TypeObjectKey **pentry =
+                    HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
+                        (compartment, objectSet, objectCount, object);
+                if (pentry)
+                    *pentry = object;
+                else
+                    compartment->types.setPendingNukeTypes(cx);
             }
         }
-        if (removed) {
-            /* Reconstruct the type set to re-resolve hash collisions. */
-            TypeObjectKey **oldArray = objectSet;
-            objectSet = NULL;
-            objectCount = 0;
-            for (unsigned i = 0; i < objectCapacity; i++) {
-                TypeObjectKey *object = oldArray[i];
-                if (object) {
-                    TypeObjectKey **pentry =
-                        HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                            (cx, objectSet, objectCount, object, false);
-                    if (pentry)
-                        *pentry = object;
-                    else
-                        compartment->types.setPendingNukeTypes(cx);
-                }
-            }
-            setBaseObjectCount(objectCount);
-            cx->free_(oldArray);
-        }
+        setBaseObjectCount(objectCount);
     } else if (objectCount == 1) {
         TypeObjectKey *object = (TypeObjectKey *) objectSet;
         if (IsAboutToBeFinalized(cx, object)) {
@@ -5289,7 +5258,6 @@ JSObject::revertLazyType()
 inline void
 TypeObject::clearProperties()
 {
-    JS_ASSERT(singleton);
     setBasePropertyCount(0);
     propertySet = NULL;
 }
@@ -5301,27 +5269,26 @@ TypeObject::clearProperties()
  * elsewhere. This also releases memory associated with dead type objects,
  * so that type objects do not need later finalization.
  */
-static inline void
-SweepTypeObject(JSContext *cx, TypeObject *object)
+inline void
+TypeObject::sweep(JSContext *cx)
 {
     /*
      * We may be regenerating existing type sets containing this object,
      * so reset contributions on each GC to avoid tripping the limit.
      */
-    object->contribution = 0;
+    contribution = 0;
 
-    if (object->singleton) {
-        JS_ASSERT(!object->emptyShapes);
-        JS_ASSERT(!object->newScript);
+    if (singleton) {
+        JS_ASSERT(!emptyShapes);
+        JS_ASSERT(!newScript);
 
         /*
-         * All properties on the object are allocated from the analysis pool,
-         * and can be discarded. We will regenerate them as needed as code gets
-         * reanalyzed.
+         * All properties can be discarded. We will regenerate them as needed
+         * as code gets reanalyzed.
          */
-        object->clearProperties();
+        clearProperties();
 
-        if (!object->isMarked()) {
+        if (!isMarked()) {
             /*
              * Singleton objects do not hold strong references on their types.
              * When removing the type, however, we need to fixup the singleton
@@ -5329,41 +5296,76 @@ SweepTypeObject(JSContext *cx, TypeObject *object)
              * proto must be live, since the type's prototype and its 'new'
              * type are both strong references.
              */
-            JS_ASSERT_IF(object->singleton->isMarked() && object->proto,
-                         object->proto->isMarked() && object->proto->newType->isMarked());
-            object->singleton->revertLazyType();
+            JS_ASSERT_IF(singleton->isMarked() && proto,
+                         proto->isMarked() && proto->newType->isMarked());
+            singleton->revertLazyType();
         }
 
         return;
     }
 
-    if (!object->isMarked()) {
-        if (object->emptyShapes)
-            Foreground::free_(object->emptyShapes);
+    if (!isMarked()) {
+        if (emptyShapes)
+            Foreground::free_(emptyShapes);
+        if (newScript)
+            Foreground::free_(newScript);
+        return;
+    }
 
-        unsigned count = object->getPropertyCount();
-        for (unsigned i = 0; i < count; i++) {
-            Property *prop = object->getProperty(i);
-            if (prop) {
-                prop->types.clearObjects();
-                Foreground::delete_(prop);
+    JSCompartment *compartment = this->compartment();
+
+    /*
+     * Properties were allocated from the old arena, and need to be copied over
+     * to the new one. Don't hang onto properties without the OWN_PROPERTY
+     * flag; these were never directly assigned, and get any possible values
+     * from the object's prototype.
+     */
+    unsigned propertyCount = basePropertyCount();
+    if (propertyCount >= 2) {
+        unsigned oldCapacity = HashSetCapacity(propertyCount);
+        Property **oldArray = propertySet;
+
+        clearProperties();
+        propertyCount = 0;
+        for (unsigned i = 0; i < oldCapacity; i++) {
+            Property *prop = oldArray[i];
+            if (prop && prop->types.isOwnProperty(false)) {
+                Property *newProp = ArenaNew<Property>(compartment->pool, *prop);
+                if (newProp) {
+                    Property **pentry =
+                        HashSetInsert<jsid,Property,Property>
+                            (compartment, propertySet, propertyCount, prop->id);
+                    if (pentry) {
+                        *pentry = newProp;
+                        newProp->types.sweep(cx, compartment);
+                    } else {
+                        compartment->types.setPendingNukeTypes(cx);
+                    }
+                } else {
+                    compartment->types.setPendingNukeTypes(cx);
+                }
             }
         }
-        if (count >= 2)
-            Foreground::free_(object->propertySet);
-
-        if (object->newScript)
-            Foreground::free_(object->newScript);
-
-        return;
+        setBasePropertyCount(propertyCount);
+    } else if (propertyCount == 1) {
+        Property *prop = (Property *) propertySet;
+        if (prop->types.isOwnProperty(false)) {
+            Property *newProp = ArenaNew<Property>(compartment->pool, *prop);
+            if (newProp) {
+                propertySet = (Property **) newProp;
+                newProp->types.sweep(cx, compartment);
+            } else {
+                compartment->types.setPendingNukeTypes(cx);
+            }
+        } else {
+            propertySet = NULL;
+            setBasePropertyCount(0);
+        }
     }
 
-    /* Sweep type sets for all properties of the object. */
-    unsigned count = object->getPropertyCount();
-    for (unsigned i = 0; i < count; i++) {
-        Property *prop = object->getProperty(i);
-        if (prop)
-            prop->types.sweep(cx, object->compartment());
+    if (basePropertyCount() <= SET_ARRAY_SIZE) {
+        for (unsigned i = 0; i < basePropertyCount(); i++)
+            JS_ASSERT(propertySet[i]);
     }
 
     /*
@@ -5371,8 +5373,8 @@ SweepTypeObject(JSContext *cx, TypeObject *object)
      * newScript information, these constraints will need to be regenerated
      * the next time we compile code which depends on this info.
      */
-    if (object->newScript)
-        object->flags |= OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
+    if (newScript)
+        flags |= OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
 }
 
 void
@@ -5397,7 +5399,7 @@ SweepTypeObjects(JSContext *cx, JSCompartment *compartment)
                 thing = span->last;
                 span = span->nextSpan();
             } else {
-                SweepTypeObject(cx, reinterpret_cast<TypeObject *>(thing));
+                reinterpret_cast<TypeObject *>(thing)->sweep(cx);
             }
         }
     }
@@ -5470,6 +5472,16 @@ TypeCompartment::sweep(JSContext *cx)
                 e.removeFront();
         }
     }
+
+    /*
+     * The pending array is reset on GC, it can grow large (75+ KB) and is easy
+     * to reallocate if the compartment becomes active again.
+     */
+    if (pendingArray)
+        cx->free_(pendingArray);
+
+    pendingArray = NULL;
+    pendingCapacity = 0;
 }
 
 TypeCompartment::~TypeCompartment()
@@ -5537,15 +5549,37 @@ TypeScript::destroy()
         Foreground::delete_(dynamicList);
         dynamicList = next;
     }
+
+    Foreground::free_(this);
 }
 
-size_t
+inline size_t
 TypeSet::dynamicSize()
 {
+    /* Get the amount of memory allocated from the analysis pool for this set. */
     uint32 count = baseObjectCount();
     if (count >= 2)
         return HashSetCapacity(count) * sizeof(TypeObject *);
     return 0;
+}
+
+inline size_t
+TypeObject::dynamicSize()
+{
+    size_t bytes = 0;
+
+    uint32 count = basePropertyCount();
+    if (count >= 2)
+        bytes += HashSetCapacity(count) * sizeof(TypeObject *);
+
+    count = getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        Property *prop = getProperty(i);
+        if (prop)
+            bytes += sizeof(Property) + prop->types.dynamicSize();
+    }
+
+    return bytes;
 }
 
 static void
@@ -5555,21 +5589,24 @@ GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats)
         return;
 
     if (!script->compartment->types.inferenceEnabled) {
-        stats->scriptMain += sizeof(TypeScript);
+        stats->scripts += sizeof(TypeScript);
         return;
     }
 
     unsigned count = TypeScript::NumTypeSets(script);
-    stats->scriptMain += sizeof(TypeScript) + count * sizeof(TypeSet);
-
-    TypeSet *typeArray = script->types->typeArray();
-    for (unsigned i = 0; i < count; i++)
-        stats->scriptSets += typeArray[i].dynamicSize();
+    stats->scripts += sizeof(TypeScript) + count * sizeof(TypeSet);
 
     TypeResult *result = script->types->dynamicList;
     while (result) {
-        stats->scriptMain += sizeof(TypeResult);
+        stats->scripts += sizeof(TypeResult);
         result = result->next;
+    }
+
+    TypeSet *typeArray = script->types->typeArray();
+    for (unsigned i = 0; i < count; i++) {
+        size_t bytes = typeArray[i].dynamicSize();
+        stats->scripts += bytes;
+        stats->temporary -= bytes;
     }
 }
 
@@ -5577,6 +5614,16 @@ JS_FRIEND_API(void)
 JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
                                TypeInferenceMemoryStats *stats)
 {
+    /*
+     * Note: not all data in the pool is temporary, and some will survive GCs
+     * by being copied to the replacement pool. This memory will be counted too
+     * and deducted from the amount of temporary data.
+     */
+    stats->temporary += ArenaAllocatedSize(compartment->pool);
+
+    /* Pending arrays are cleared on GC along with the analysis pool. */
+    stats->temporary += sizeof(TypeCompartment::PendingWork) * compartment->types.pendingCapacity;
+
     for (JSCList *cursor = compartment->scripts.next;
          cursor != &compartment->scripts;
          cursor = cursor->next) {
@@ -5584,32 +5631,54 @@ JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
         GetScriptMemoryStats(script, stats);
     }
 
-    stats->poolMain += ArenaAllocatedSize(compartment->pool);
+    if (compartment->types.allocationSiteTable)
+        stats->tables += compartment->types.allocationSiteTable->allocatedSize();
+
+    if (compartment->types.arrayTypeTable)
+        stats->tables += compartment->types.arrayTypeTable->allocatedSize();
+
+    if (compartment->types.objectTypeTable) {
+        stats->tables += compartment->types.objectTypeTable->allocatedSize();
+
+        for (ObjectTypeTable::Enum e(*compartment->types.objectTypeTable);
+             !e.empty();
+             e.popFront()) {
+            const ObjectTableKey &key = e.front().key;
+            stats->tables += key.nslots * (sizeof(jsid) + sizeof(Type));
+        }
+    }
 }
 
 JS_FRIEND_API(void)
 JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats)
 {
     TypeObject *object = (TypeObject *) object_;
-    stats->objectMain += sizeof(TypeObject);
+    stats->objects += sizeof(TypeObject);
 
     if (object->singleton) {
         /*
-         * Properties and TypeSet data for singletons are allocated in the
-         * compartment's analysis pool.
+         * Properties and associated type sets for singletons are cleared on
+         * every GC. The type object is normally destroyed too, but we don't
+         * charge this to 'temporary' as this is not for GC heap values.
          */
+        JS_ASSERT(!object->newScript && !object->emptyShapes);
         return;
     }
 
-    uint32 count = object->getPropertyCount();
-    if (count >= 2)
-        stats->objectMain += count * sizeof(Property *);
-
-    for (unsigned i = 0; i < count; i++) {
-        Property *prop = object->getProperty(i);
-        if (prop) {
-            stats->objectMain += sizeof(Property);
-            stats->objectSets += prop->types.dynamicSize();
+    if (object->newScript) {
+        size_t length = 0;
+        for (TypeNewScript::Initializer *init = object->newScript->initializerList;; init++) {
+            length++;
+            if (init->kind == TypeNewScript::Initializer::DONE)
+                break;
         }
+        stats->objects += sizeof(TypeNewScript) + (length * sizeof(TypeNewScript::Initializer));
     }
+
+    if (object->emptyShapes)
+        stats->emptyShapes += sizeof(EmptyShape*) * gc::FINALIZE_FUNCTION_AND_OBJECT_LAST;
+
+    size_t bytes = object->dynamicSize();
+    stats->objects += bytes;
+    stats->temporary -= bytes;
 }

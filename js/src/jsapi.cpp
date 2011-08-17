@@ -4299,7 +4299,6 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         Value v;
         if (!obj->getProperty(cx, r.front().propid, &v))
             return NULL;
-        TypeScript::SetUpvar(cx, fun->script(), i, v);
         clone->getFlatClosureUpvars()[i] = v;
     }
 
