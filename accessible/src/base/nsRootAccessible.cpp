@@ -393,10 +393,10 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
 
   // Coalesce focus events from the same document, because DOM focus event might
   // be fired for the document node and then for the focused DOM element.
-  focusDocument->FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                                            focusNode,
-                                            AccEvent::eCoalesceFromSameDocument,
-                                            aIsFromUserInput);
+  nsRefPtr<AccEvent> focusEvent =
+    new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, focusAccessible,
+                 aIsFromUserInput, AccEvent::eCoalesceFromSameDocument);
+  focusDocument->FireDelayedAccessibleEvent(focusEvent);
 }
 
 void

@@ -136,39 +136,10 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AccEvent, Release)
 ////////////////////////////////////////////////////////////////////////////////
 // AccEvent protected methods
 
-nsAccessible *
+nsAccessible*
 AccEvent::GetAccessibleForNode() const
 {
-  if (!mNode)
-    return nsnull;
-
-  nsAccessible *accessible = GetAccService()->GetAccessible(mNode);
-
-#ifdef MOZ_XUL
-  // hack for xul tree table. We need a better way for firing delayed event
-  // against xul tree table. see bug 386821.
-  // There will be problem if some day we want to fire delayed event against
-  // the xul tree itself or an unselected treeitem.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mNode));
-  if (content && content->NodeInfo()->Equals(nsAccessibilityAtoms::tree,
-                                             kNameSpaceID_XUL)) {
-
-    nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-      do_QueryInterface(mNode);
-
-    if (multiSelect) {
-      PRInt32 treeIndex = -1;
-      multiSelect->GetCurrentIndex(&treeIndex);
-      if (treeIndex >= 0) {
-        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
-        if (treeAcc)
-          return treeAcc->GetTreeItemAccessible(treeIndex);
-      }
-    }
-  }
-#endif
-
-  return accessible;
+  return mNode ? GetAccService()->GetAccessible(mNode) : nsnull;
 }
 
 void

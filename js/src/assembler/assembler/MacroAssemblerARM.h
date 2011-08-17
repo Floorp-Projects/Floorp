@@ -1137,7 +1137,7 @@ public:
     DataLabelPtr loadDouble(const void* address, FPRegisterID dest)
     {
         DataLabelPtr label = moveWithPatch(ImmPtr(address), ARMRegisters::S0);
-        m_assembler.fdtr_u(true, dest, ARMRegisters::S0, 0);
+        m_assembler.doubleTransfer(true, dest, ARMRegisters::S0, 0);
         return label;
     }
 
