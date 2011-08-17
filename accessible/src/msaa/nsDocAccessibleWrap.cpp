@@ -43,6 +43,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsRootAccessible.h"
 #include "nsWinUtils.h"
+#include "Statistics.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
@@ -53,6 +54,8 @@
 #include "nsIURI.h"
 #include "nsIViewManager.h"
 #include "nsIWebNavigation.h"
+
+using namespace mozilla::a11y;
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -91,12 +94,11 @@ STDMETHODIMP nsDocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
-  if (IID_ISimpleDOMDocument == iid)
-    *ppv = static_cast<ISimpleDOMDocument*>(this);
-
-  if (NULL == *ppv)
+  if (IID_ISimpleDOMDocument != iid)
     return nsHyperTextAccessibleWrap::QueryInterface(iid, ppv);
-    
+
+  statistics::ISimpleDOMUsed();
+  *ppv = static_cast<ISimpleDOMDocument*>(this);
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
   return S_OK;
 }

@@ -49,6 +49,12 @@ namespace statistics {
   inline void A11yInitialized()
     { Telemetry::Accumulate(Telemetry::A11Y_INSTANTIATED, true); }
 
+  /**
+   * Report that ISimpleDOM* has been used.
+   */
+  inline void ISimpleDOMUsed()
+    { Telemetry::Accumulate(Telemetry::ISIMPLE_DOM_USAGE, 1); }
+
 } // namespace statistics
 } // namespace a11y
 } // namespace mozilla
