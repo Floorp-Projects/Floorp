@@ -5340,10 +5340,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     if (op->getBoolOption('b'))
         printTiming = true;
 
-    if (op->getBoolOption('D')) {
+    if (op->getBoolOption('D'))
         enableDisassemblyDumps = true;
-        JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
-    }
 
     /* |scriptArgs| gets bound on the global before any code is run. */
     if (!BindScriptArgs(cx, obj, op))
@@ -5663,6 +5661,10 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
+
+    /* Must be done before creating the global object */
+    if (op.getBoolOption('D'))
+        JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
 
     result = Shell(cx, &op, envp);
 
