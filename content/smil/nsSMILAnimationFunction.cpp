@@ -187,7 +187,9 @@ nsSMILAnimationFunction::SampleAt(nsSMILTime aSampleTime,
     !IsValueFixedForSimpleDuration();
 
   // Are we on a new repeat and accumulating across repeats?
-  mHasChanged |= (mRepeatIteration != aRepeatIteration) && GetAccumulate();
+  if (!mErrorFlags) { // (can't call GetAccumulate() if we've had parse errors)
+    mHasChanged |= (mRepeatIteration != aRepeatIteration) && GetAccumulate();
+  }
 
   mSampleTime       = aSampleTime;
   mSimpleDuration   = aSimpleDuration;

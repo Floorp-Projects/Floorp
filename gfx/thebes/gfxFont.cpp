@@ -2610,25 +2610,6 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
             *aMatchType = gfxTextRange::kFontGroup;
             return font.forget();
         }
-        // check other faces of the family
-        // XXX optimization point: give the family a charmap that is the union
-        // of the char maps of all its faces, so we can quickly test whether
-        // it's worth doing this search
-        gfxFontFamily *family = font->GetFontEntry()->Family();
-        if (family) {
-            FontSearch matchData(aCh, font);
-            family->FindFontForChar(&matchData);
-            gfxFontEntry *fe = matchData.mBestMatch;
-            if (fe) {
-                PRBool needsBold =
-                    font->GetStyle()->weight >= 600 && !fe->IsBold();
-                selectedFont =
-                    fe->FindOrMakeFont(font->GetStyle(), needsBold);
-                if (selectedFont) {
-                    return selectedFont.forget();
-                }
-            }
-        }
     }
 
     // if character is in Private Use Area, don't do matching against pref or system fonts

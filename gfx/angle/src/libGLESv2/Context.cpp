@@ -2109,16 +2109,16 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     IDirect3DSurface9 *systemSurface;
     HRESULT result = device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &systemSurface, NULL);
 
-    if (result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY)
+    if (FAILED(result))
     {
+        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
         return error(GL_OUT_OF_MEMORY);
     }
-
-    ASSERT(SUCCEEDED(result));
 
     if (desc.MultiSampleType != D3DMULTISAMPLE_NONE)
     {
         UNIMPLEMENTED();   // FIXME: Requires resolve using StretchRect into non-multisampled render target
+        return error(GL_OUT_OF_MEMORY);
     }
 
     result = device->GetRenderTargetData(renderTarget, systemSurface);

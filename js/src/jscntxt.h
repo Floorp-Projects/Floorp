@@ -535,7 +535,7 @@ struct JSRuntime
     js::Value           negativeInfinityValue;
     js::Value           positiveInfinityValue;
 
-    JSFlatString        *emptyString;
+    JSAtom              *emptyString;
 
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
