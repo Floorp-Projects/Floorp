@@ -1968,6 +1968,12 @@ static const nsCSSProperty gOutlineSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gColumnsSubpropTable[] = {
+  eCSSProperty__moz_column_count,
+  eCSSProperty__moz_column_width,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gColumnRuleSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
