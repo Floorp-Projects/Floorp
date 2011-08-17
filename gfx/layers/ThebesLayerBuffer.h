@@ -112,6 +112,10 @@ public:
    * but used MovePixels() to shift its content.
    */
   struct PaintState {
+    PaintState()
+      : mDidSelfCopy(PR_FALSE)
+    {}
+
     nsRefPtr<gfxContext> mContext;
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
