@@ -564,6 +564,13 @@ struct TypeResult
  * grows to match the set of possible types --- then the result of the bytecode
  * no longer needs to be dynamically checked (unless the set of possible types
  * grows, triggering the generation of new type barriers).
+ *
+ * Barriers are only relevant for accesses on properties whose types inference
+ * actually tracks (see propertySet comment under TypeObject). Accesses on
+ * other properties may be able to produce additional unobserved types even
+ * without a barrier present, and can only be compiled to jitcode with special
+ * knowledge of the property in question (e.g. for lengths of arrays, or
+ * elements of typed arrays).
  */
 
 /*
@@ -736,27 +743,26 @@ struct TypeObject : gc::Cell
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
      * types of all integer indexes of the object, and/or JSID_EMPTY, holding
-     * constraints listening to changes to the object's state. Correspondence
-     * between the properties of a TypeObject and the properties of
-     * script-visible JSObjects (not Call, Block, etc.) which have that type is
-     * as follows:
+     * constraints listening to changes to the object's state.
+     *
+     * The type sets in the properties of a type object describe the possible
+     * values that can be read out of that property in actual JS objects.
+     * Properties only account for native properties (those with a slot and no
+     * specialized getter hook) and the elements of dense arrays. For accesses
+     * on such properties, the correspondence is as follows:
      *
      * - If the type has unknownProperties(), the possible properties and value
      *   types for associated JSObjects are unknown.
      *
      * - Otherwise, for any JSObject obj with TypeObject type, and any jsid id
-     *   which is a property in obj, after obj->getProperty(id) the property in
+     *   which is a property in obj, before obj->getProperty(id) the property in
      *   type for id must reflect the result of the getProperty. The result is
      *   additionally allowed to be undefined for properties of global objects
      *   defined with 'var' but not yet written.
      *
-     * - Additionally, if id is a normal owned native property within obj, then
-     *   after the setProperty or defineProperty which wrote its value, the
-     *   property in type for id must reflect that type.
-     *
      * We establish these by using write barriers on calls to setProperty and
-     * defineProperty which are on native properties, and read barriers on
-     * getProperty that go through a class hook or special PropertyOp.
+     * defineProperty which are on native properties, and by using the inference
+     * analysis to determine the side effects of code which is JIT-compiled.
      */
     Property **propertySet;
 

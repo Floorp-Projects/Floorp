@@ -1850,9 +1850,34 @@ mjit::Compiler::jsop_getelem_args()
 }
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
-void
+bool
 mjit::Compiler::jsop_getelem_typed(int atype)
 {
+    // Unlike dense arrays, the types of elements in typed arrays are not
+    // guaranteed to be present in the object's type, and we need to use
+    // knowledge about the possible contents of the array vs. the types
+    // that have been read out of it to figure out how to do the load.
+
+    //                          Array contents
+    //                   Float     Uint32         Int32
+    // Observed types
+    //
+    // {int}             XXX       reg pair+test  reg
+    // {int,float}       FP reg    FP reg         reg pair
+    // {X,int}           XXX       reg pair+test  reg pair
+    // {X,int,float}     reg pair  reg pair       reg pair
+    // {X}               XXX       XXX            XXX
+
+    // Reject entries marked 'XXX' above, and compile a normal GETELEM.
+    types::TypeSet *pushedTypes = pushedTypeSet(0);
+    if (atype == TypedArray::TYPE_FLOAT32 || atype == TypedArray::TYPE_FLOAT64) {
+        if (!pushedTypes->hasType(types::Type::DoubleType()))
+            return false;
+    } else {
+        if (!pushedTypes->hasType(types::Type::Int32Type()))
+            return false;
+    }
+
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *id = frame.peek(-1);
 
@@ -1937,6 +1962,12 @@ mjit::Compiler::jsop_getelem_typed(int atype)
     if (tempReg.isSet())
         frame.freeReg(tempReg.reg());
 
+    if (atype == TypedArray::TYPE_UINT32 &&
+        !pushedTypes->hasType(types::Type::DoubleType())) {
+        Jump isDouble = masm.testDouble(Assembler::Equal, typeReg.reg());
+        stubcc.linkExit(isDouble, Uses(2));
+    }
+
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
 
@@ -1947,8 +1978,6 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         frame.pushDouble(dataReg.fpreg());
     } else if (typeReg.isSet()) {
         frame.pushRegs(typeReg.reg(), dataReg.reg(), knownPushedType(0));
-        if (hasTypeBarriers(PC))
-            barrier = testBarrier(typeReg.reg(), dataReg.reg(), false);
     } else {
         JS_ASSERT(type == JSVAL_TYPE_INT32);
         frame.pushTypedPayload(JSVAL_TYPE_INT32, dataReg.reg());
@@ -1956,6 +1985,8 @@ mjit::Compiler::jsop_getelem_typed(int atype)
     stubcc.rejoin(Changes(2));
 
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
+
+    return true;
 }
 #endif /* JS_METHODJIT_TYPED_ARRAY */
 
@@ -1994,13 +2025,13 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
-            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
-            pushedTypeSet(0)->baseFlags() != 0) {
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             // Inline typed array path.
             int atype = types->getTypedArrayType(cx);
             if (atype != TypedArray::TYPE_MAX) {
-                jsop_getelem_typed(atype);
-                return true;
+                if (jsop_getelem_typed(atype))
+                    return true;
+                // Fallthrough to the normal GETELEM path.
             }
         }
 #endif
