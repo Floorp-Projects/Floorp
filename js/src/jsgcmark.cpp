@@ -899,8 +899,11 @@ js::types::TypeObject::trace(JSTracer *trc, bool weak)
      * from singleton JS objects, as if there are no outstanding refs we will
      * destroy the type object and revert the JS object to a lazy type.
      */
-    if (IS_GC_MARKING_TRACER(trc) && (!weak || !singleton))
+    if (IS_GC_MARKING_TRACER(trc) && (!weak || !singleton)) {
+        JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment,
+                     compartment() == trc->context->runtime->gcCurrentCompartment);
         markIfUnmarked(static_cast<GCMarker *>(trc)->getMarkColor());
+    }
 
 #ifdef DEBUG
     InlineMarkId(trc, name_, "type_name");

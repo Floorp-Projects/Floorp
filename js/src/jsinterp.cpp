@@ -4694,6 +4694,7 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
 
     JS_ASSERT(index < obj->getFunctionPrivate()->script()->bindings.countUpvars());
     PUSH_COPY(obj->getFlatClosureUpvar(index));
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
     if (op == JSOP_CALLFCSLOT)
         PUSH_UNDEFINED();
 }

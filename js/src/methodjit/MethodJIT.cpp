@@ -1153,6 +1153,9 @@ mjit::JITScript::scriptDataSize()
 {
     return sizeof(JITScript) +
         sizeof(NativeMapEntry) * nNmapPairs +
+        sizeof(InlineFrame) * nInlineFrames +
+        sizeof(CallSite) * nCallSites +
+        sizeof(JSObject *) * nRootedObjects +
 #if defined JS_MONOIC
         sizeof(ic::GetGlobalNameIC) * nGetGlobalNames +
         sizeof(ic::SetGlobalNameIC) * nSetGlobalNames +
@@ -1165,7 +1168,7 @@ mjit::JITScript::scriptDataSize()
         sizeof(ic::GetElementIC) * nGetElems +
         sizeof(ic::SetElementIC) * nSetElems +
 #endif
-        sizeof(CallSite) * nCallSites;
+        0;
 }
 
 void
