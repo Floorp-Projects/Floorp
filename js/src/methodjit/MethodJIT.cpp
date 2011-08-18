@@ -119,14 +119,14 @@ extern "C" void JaegerTrampolineReturn();
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment()->jaegerCompartment()->pushActiveFrame(&f);
+    f.entryfp->script()->compartment->jaegerCompartment()->pushActiveFrame(&f);
     f.regs.fp()->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
 }
 
 extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment()->jaegerCompartment()->popActiveFrame();
+    f.entryfp->script()->compartment->jaegerCompartment()->popActiveFrame();
 }
 
 extern "C" void JS_FASTCALL

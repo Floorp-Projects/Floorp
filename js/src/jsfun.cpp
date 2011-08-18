@@ -202,6 +202,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx);
     if (!emptyArgumentsShape)
         return NULL;
+    AutoShapeRooter shapeRoot(cx, emptyArgumentsShape);
 
     ArgumentsData *data = (ArgumentsData *)
         cx->malloc_(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
@@ -1598,6 +1599,9 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         *objp = FUN_OBJECT(fun);
         fun->u.i.script->setOwnerObject(fun);
+#ifdef CHECK_SCRIPT_OWNER
+        fun->script()->owner = NULL;
+#endif
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
     }
@@ -1666,16 +1670,30 @@ fun_trace(JSTracer *trc, JSObject *obj)
     if (fun->atom)
         MarkString(trc, fun->atom, "atom");
 
-    if (fun->isInterpreted() && fun->script()) {
-        CheckScriptOwner(fun->script(), obj);
-        MarkScript(trc, fun->script(), "script");
-    }
+    if (fun->isInterpreted() && fun->script())
+        js_TraceScript(trc, fun->script(), obj);
 }
 
 static void
 fun_finalize(JSContext *cx, JSObject *obj)
 {
-    obj->finalizeUpvarsIfFlatClosure();
+    /* Ignore newborn function objects. */
+    JSFunction *fun = obj->getFunctionPrivate();
+    if (!fun)
+        return;
+
+    /* Cloned function objects may be flat closures with upvars to free. */
+    if (fun != obj) {
+        if (fun->isFlatClosure() && fun->script()->bindings.hasUpvars())
+            cx->free_((void *) obj->getFlatClosureUpvars());
+        return;
+    }
+
+    /*
+     * Null-check fun->script() because the parser sets interpreted very early.
+     */
+    if (fun->isInterpreted() && fun->script())
+        js_DestroyScriptFromGC(cx, fun->script(), obj);
 }
 
 /*
@@ -1687,8 +1705,7 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSFunction::CLASS_RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Function) |
-    JSCLASS_CONCURRENT_FINALIZER,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -2138,6 +2155,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
     EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
     if (!emptyCallShape)
         return false;
+    AutoShapeRooter shapeRoot(cx, emptyCallShape);
 
     Bindings bindings(cx, emptyCallShape);
     AutoBindingsRooter root(cx, bindings);
@@ -2354,6 +2372,9 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->noScriptRval = true;
     script->code[0] = JSOP_STOP;
     script->code[1] = SRC_NULL;
+#ifdef CHECK_SCRIPT_OWNER
+    script->owner = NULL;
+#endif
     fun->u.i.script = script;
     script->setOwnerObject(fun);
     js_CallNewScriptHook(cx, script, fun);
@@ -2456,8 +2477,8 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         if (cfun->isInterpreted()) {
             JSScript *script = cfun->script();
             JS_ASSERT(script);
-            JS_ASSERT(script->compartment() == fun->compartment());
-            JS_ASSERT(script->compartment() != cx->compartment);
+            JS_ASSERT(script->compartment == fun->compartment());
+            JS_ASSERT(script->compartment != cx->compartment);
             JS_OPT_ASSERT(script->ownerObject == fun);
 
             JSScript *cscript = js_CloneScript(cx, script);
@@ -2465,6 +2486,9 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
                 return NULL;
             cfun->u.i.script = cscript;
             cfun->script()->setOwnerObject(cfun);
+#ifdef CHECK_SCRIPT_OWNER
+            cfun->script()->owner = NULL;
+#endif
             js_CallNewScriptHook(cx, cfun->script(), cfun);
             Debugger::onNewScript(cx, cfun->script(), cfun, Debugger::NewHeldScript);
         }

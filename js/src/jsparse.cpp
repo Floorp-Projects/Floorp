@@ -372,7 +372,7 @@ AddNodeToFreeList(JSParseNode *pn, js::Parser *parser)
     /* Catch back-to-back dup recycles. */
     JS_ASSERT(pn != parser->nodeList);
 
-    /*
+    /* 
      * It's too hard to clear these nodes from the AtomDefnMaps, etc. that
      * hold references to them, so we never free them. It's our caller's job to
      * recognize and process these, since their children do need to be dealt
@@ -585,7 +585,7 @@ PushNodeChildren(JSParseNode *pn, NodeStack *stack)
         stack->pushUnlessNull(pn->pn_kid);
         break;
       case PN_NULLARY:
-        /*
+        /* 
          * E4X function namespace nodes are PN_NULLARY, but can appear on use
          * lists.
          */
@@ -1123,8 +1123,11 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     JS_ASSERT(script->savedCallerFun == savedCallerFun);
 
-    if (!defineGlobals(cx, globalScope, script))
-        script = NULL;
+    {
+        AutoScriptRooter root(cx, script);
+        if (!defineGlobals(cx, globalScope, script))
+            goto late_error;
+    }
 
   out:
     JS_FinishArenaPool(&codePool);
@@ -1134,6 +1137,11 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
   too_many_slots:
     parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
+    /* Fall through. */
+
+  late_error:
+    if (script && !script->u.object)
+        js_DestroyScript(cx, script, 7);
     script = NULL;
     goto out;
 }
@@ -2609,13 +2617,13 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
  * js::Bindings::extensibleParents explain why.
  */
 void
-Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent)
+Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent) 
 {
     for (; funbox; funbox = funbox->siblings) {
         /*
          * It would be nice to use FUN_KIND(fun) here to recognize functions
          * that will never consult their parent chains, and thus don't need
-         * their 'extensible parents' flag set. Filed as bug 619750.
+         * their 'extensible parents' flag set. Filed as bug 619750. 
          */
 
         JS_ASSERT(!funbox->bindings.extensibleParents());
@@ -3221,11 +3229,11 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
      * parent to call eval. We need this for two reasons: (1) the Jaegermonkey
      * optimizations really need to know if eval is called transitively, and
      * (2) in strict mode, eval called transitively requires eager argument
-     * creation in strict mode parent functions.
+     * creation in strict mode parent functions. 
      *
-     * For the latter, we really only need to propagate callsEval if both
-     * functions are strict mode, but we don't lose much by always propagating.
-     * The only optimization we lose this way is in the case where a function
+     * For the latter, we really only need to propagate callsEval if both 
+     * functions are strict mode, but we don't lose much by always propagating. 
+     * The only optimization we lose this way is in the case where a function 
      * is strict, does not mutate arguments, does not call eval directly, but
      * calls eval transitively.
      */
@@ -3724,7 +3732,7 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
                 !shape->hasDefaultSetter()) {
                 return true;
             }
-
+            
             def = GlobalScope::GlobalDef(shape->slot);
         } else {
             def = GlobalScope::GlobalDef(atom, funbox);
@@ -6763,7 +6771,7 @@ class CompExprTransplanter {
  * Use in any context which may turn out to be inside a generator expression. This
  * includes parenthesized expressions and argument lists, and it includes the tail
  * of generator expressions.
- *
+ * 
  * The guard will keep track of any |yield| or |arguments| tokens that occur while
  * parsing the body. As soon as the parser reaches the end of the body expression,
  * call endBody() to reset the context's state, and then immediately call:
@@ -7005,7 +7013,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         return false;
                     dn2->pn_pos = root->pn_pos;
 
-                    /*
+                    /* 
                      * Change all uses of |dn| that lie within the generator's
                      * |yield| expression into uses of dn2.
                      */

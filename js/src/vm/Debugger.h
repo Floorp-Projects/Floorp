@@ -548,14 +548,14 @@ void
 Debugger::onNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScriptKind kind)
 {
     JS_ASSERT_IF(kind == NewHeldScript || script->compileAndGo, obj);
-    if (!script->compartment()->getDebuggees().empty())
+    if (!script->compartment->getDebuggees().empty())
         slowPathOnNewScript(cx, script, obj, kind);
 }
 
 void
 Debugger::onDestroyScript(JSScript *script)
 {
-    if (!script->compartment()->getDebuggees().empty())
+    if (!script->compartment->getDebuggees().empty())
         slowPathOnDestroyScript(script);
 }
 

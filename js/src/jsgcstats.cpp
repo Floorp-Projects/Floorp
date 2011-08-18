@@ -258,8 +258,7 @@ GCTimer::finish(bool lastGC)
         double sweepTime = TIMEDIFF(startSweep, sweepDestroyEnd);
         double sweepObjTime = TIMEDIFF(startSweep, sweepObjectEnd);
         double sweepStringTime = TIMEDIFF(sweepObjectEnd, sweepStringEnd);
-        double sweepScriptTime = TIMEDIFF(sweepStringEnd, sweepScriptEnd);
-        double sweepShapeTime = TIMEDIFF(sweepScriptEnd, sweepShapeEnd);
+        double sweepShapeTime = TIMEDIFF(sweepStringEnd, sweepShapeEnd);
         double destroyTime = TIMEDIFF(sweepShapeEnd, sweepDestroyEnd);
         double endTime = TIMEDIFF(sweepDestroyEnd, end);
 
@@ -276,7 +275,6 @@ GCTimer::finish(bool lastGC)
         info.sweepTime = sweepTime;
         info.sweepObjTime = sweepObjTime;
         info.sweepStringTime = sweepStringTime;
-        info.sweepScriptTime = sweepScriptTime;
         info.sweepShapeTime = sweepShapeTime;
         info.destroyTime = destroyTime;
         info.endTime = endTime;
@@ -299,7 +297,7 @@ GCTimer::finish(bool lastGC)
                 JS_ASSERT(gcFile);
                 fullFormat = true;
                 fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,"
-                        " FinStr, SwScripts, SwShapes, Destroy,    End, +Chu, -Chu, T, Reason\n");
+                        " FinStr, SwShapes, Destroy,    End, +Chu, -Chu, T, Reason\n");
             }
         }
 
@@ -309,10 +307,10 @@ GCTimer::finish(bool lastGC)
                     TIMEDIFF(startMark, startSweep),
                     TIMEDIFF(startSweep, sweepDestroyEnd));
         } else {
-            /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwScr , SwS  , Des   , End */
-            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
+            /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwS  , Des   , End */
+            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
                     appTime, gcTime, waitTime, markTime, sweepTime, sweepObjTime, sweepStringTime,
-                    sweepScriptTime, sweepShapeTime, destroyTime, endTime);
+                    sweepShapeTime, destroyTime, endTime);
             fprintf(gcFile, "%4d, %4d,", newChunkCount, destroyChunkCount);
             fprintf(gcFile, " %s, %s\n", isCompartmental ? "C" : "G", gcReasons[gcReason]);
         }

@@ -16975,7 +16975,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     TraceMonitor* tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
 
     JS_ASSERT(tm == traceMonitor);
-    JS_ASSERT(entryScript->compartment()->traceMonitor() == tm);
+    JS_ASSERT(entryScript->compartment->traceMonitor() == tm);
 
     if (profiled) {
         stopProfiling(cx);

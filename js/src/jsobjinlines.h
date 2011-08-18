@@ -525,37 +525,6 @@ JSObject::getFlatClosureUpvars() const
     return (js::Value *) getSlot(JSSLOT_FLAT_CLOSURE_UPVARS).toPrivate();
 }
 
-inline void
-JSObject::finalizeUpvarsIfFlatClosure()
-{
-    /*
-     * Cloned function objects may be flat closures with upvars to free.
-     *
-     * We do not record in the closure objects any flags. Rather we use flags
-     * stored in the compiled JSFunction that we get via getFunctionPrivate()
-     * to distinguish between closure types. Then during finalization we must
-     * ensure that the compiled JSFunction always finalized after the closures
-     * so we can safely access it here. Currently the GC ensures that through
-     * finalizing JSFunction instances after finalizing any other objects even
-     * during the background finalization.
-     *
-     * But we must not access JSScript here that is stored in JSFunction. The
-     * script can be finalized before the function or closure instances. So we
-     * just check if JSSLOT_FLAT_CLOSURE_UPVARS holds a private value encoded
-     * as a double. We must also ignore newborn closures that do not have the
-     * private pointer set.
-     *
-     * FIXME bug 648320 - allocate upvars on the GC heap to avoid doing it
-     * here explicitly.
-     */
-    JSFunction *fun = getFunctionPrivate();
-    if (fun && fun != this && fun->isFlatClosure()) {
-        const js::Value &v = getSlot(JSSLOT_FLAT_CLOSURE_UPVARS);
-        if (v.isDouble())
-            js::Foreground::free_(v.toPrivate());
-    }
-}
-
 inline js::Value
 JSObject::getFlatClosureUpvar(uint32 i) const
 {
