@@ -154,19 +154,6 @@ MDefinition::foldsTo(bool useValueNumbers)
     return this;
 }
 
-static const char *MirTypeNames[] =
-{
-    "",
-    "v",
-    "n",
-    "b",
-    "i",
-    "s",
-    "d",
-    "x",
-    "a"
-};
-
 void
 MDefinition::printOpcode(FILE *fp)
 {
