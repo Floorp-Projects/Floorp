@@ -82,8 +82,6 @@ CPPSRCS = \
   nsDeleteDir.cpp \
   $(NULL)
 
-DEFINES += -DNECKO_OFFLINE_CACHE
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \
   $(NULL)
