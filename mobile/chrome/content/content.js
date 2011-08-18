@@ -1351,6 +1351,7 @@ var SelectionHandler = {
     addMessageListener("Browser:SelectionStart", this);
     addMessageListener("Browser:SelectionEnd", this);
     addMessageListener("Browser:SelectionMove", this);
+    addMessageListener("Browser:SelectionMeasure", this);
   },
 
   getCurrentWindowAndOffset: function(x, y, offset) {
@@ -1501,6 +1502,26 @@ var SelectionHandler = {
         let range = selection.getRangeAt(0).QueryInterface(Ci.nsIDOMNSRange);
         this.cache.rect = this._extractFromRange(range, this.cache.offset).rect;
         break;
+      case "Browser:SelectionMeasure": {
+        let selection = this.contentWindow.getSelection();
+        let range = selection.getRangeAt(0).QueryInterface(Ci.nsIDOMNSRange);
+        if (!range)
+          return;
+
+        // Cache the selected text since the selection might be gone by the time we get the "end" message
+        this.selectedText = selection.toString().trim();
+
+        // If the range didn't have any text, let's bail
+        if (!this.selectedText.length) {
+          selection.removeAllRanges();
+          return;
+        }
+
+        this.cache = this._extractFromRange(range, this.cache.offset);
+
+        sendAsyncMessage("Browser:SelectionRange", this.cache);
+        break;
+      }
     }
   },
 
