@@ -71,6 +71,15 @@ protected:
   static void AdjustDimensions(PRInt32* aPos, PRInt32* aSize,
                         PRInt32 aMovement, PRInt8 aResizerDirection);
 
+  struct SizeInfo {
+    nsString width, height;
+  };
+  static void SizeInfoDtorFunc(void *aObject, nsIAtom *aPropertyName,
+                               void *aPropertyValue, void *aData);
+  static void ResizeContent(nsIContent* aContent, const Direction& aDirection,
+                            const SizeInfo& aSizeInfo, SizeInfo* aOriginalSizeInfo);
+  static void MaybePersistOriginalSize(nsIContent* aContent, const SizeInfo& aSizeInfo);
+  static void RestoreOriginalSize(nsIContent* aContent);
 protected:
 	nsIntRect mMouseDownRect;
 	nsIntPoint mMouseDownPoint;
