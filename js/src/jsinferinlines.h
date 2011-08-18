@@ -508,9 +508,8 @@ TypeScript::StandardType(JSContext *cx, JSScript *script, JSProtoKey key)
 
 struct AllocationSiteKey {
     JSScript *script;
-    uint32 offset : 23;
+    uint32 offset : 24;
     JSProtoKey kind : 8;
-    bool uncached : 1;
 
     static const uint32 OFFSET_LIMIT = (1 << 23);
 
@@ -539,7 +538,6 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, const jsbytecode *pc, JS
     AllocationSiteKey key;
     key.script = script;
     key.offset = offset;
-    key.uncached = script->isUncachedEval;
     key.kind = kind;
 
     if (!cx->compartment->types.allocationSiteTable)
@@ -607,7 +605,7 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
         return;
 
     /* Analyze the script regardless if -a was used. */
-    bool analyze = cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) && !script->isUncachedEval;
+    bool analyze = cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS);
 
     if (!ThisTypes(script)->hasType(type) || analyze) {
         AutoEnterTypeInference enter(cx);

@@ -2666,16 +2666,15 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
      * variable references made by this frame.
      */
     JSScript *script = Compiler::compileScript(cx, scobj, fp, fp->scopeChain().principals(cx),
-                                               TCF_COMPILE_N_GO, chars, length,
+                                               TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_OBJECT,
+                                               chars, length,
                                                filename, lineno, cx->findVersion(),
                                                NULL, UpvarCookie::UPVAR_LEVEL_LIMIT);
 
     if (!script)
         return false;
 
-    script->isUncachedEval = true;
     bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
-    js_DestroyScript(cx, script, 6);
     return ok;
 }
 
