@@ -1130,18 +1130,26 @@ let UI = {
       function getClosestTabBy(norm) {
         if (!self.getActiveTab())
           return null;
-        let centers =
-          [[item.bounds.center(), item]
-             for each(item in TabItems.getItems()) if (!item.parent || !item.parent.hidden)];
-        let myCenter = self.getActiveTab().bounds.center();
-        let matches = centers
-          .filter(function(item){return norm(item[0], myCenter)})
-          .sort(function(a,b){
-            return myCenter.distance(a[0]) - myCenter.distance(b[0]);
-          });
-        if (matches.length > 0)
-          return matches[0][1];
-        return null;
+
+        let activeTab = self.getActiveTab();
+        let activeTabGroup = activeTab.parent;
+        let myCenter = activeTab.bounds.center();
+        let match;
+
+        TabItems.getItems().forEach(function (item) {
+          if (!item.parent.hidden &&
+              (!activeTabGroup.expanded || activeTabGroup.id == item.parent.id)) {
+            let itemCenter = item.bounds.center();
+
+            if (norm(itemCenter, myCenter)) {
+              let itemDist = myCenter.distance(itemCenter);
+              if (!match || match[0] > itemDist)
+                match = [itemDist, item];
+            }
+          }
+        });
+
+        return match && match[1];
       }
 
       let preventDefault = true;
