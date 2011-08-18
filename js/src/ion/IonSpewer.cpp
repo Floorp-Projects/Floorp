@@ -39,13 +39,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef DEBUG
+
 #include "IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;
 
-static bool LoggingChecked = false;
+// IonSpewer singleton.
+static IonSpewer ionspewer;
 
+static bool LoggingChecked = false;
 static uint32 LoggingBits = 0;
 
 static const char *ChannelNames[] =
@@ -55,23 +59,72 @@ static const char *ChannelNames[] =
 #undef IONSPEW_CHANNEL
 };
 
+
+void
+ion::IonSpewNewFunction(MIRGraph *graph, JSScript *function)
+{
+    ionspewer.init();
+    ionspewer.beginFunction(graph, function);
+}
+
+void
+ion::IonSpewPass(const char *pass)
+{
+    ionspewer.spewPass(pass);
+}
+
+void
+ion::IonSpewPass(const char *pass, LinearScanAllocator *ra)
+{
+    ionspewer.spewPass(pass, ra);
+}
+
+void
+ion::IonSpewEndFunction()
+{
+    ionspewer.endFunction();
+}
+
+
+IonSpewer::~IonSpewer() {
+    if (!inited_)
+        return;
+    c1Spewer.finish();
+    jsonSpewer.finish();
+}
+
 bool
 IonSpewer::init()
 {
-#ifdef DEBUG
-    c1Spewer.enable("/tmp/ion.cfg");
+    if (inited_)
+        return true;
+
+    if (!c1Spewer.init("/tmp/ion.cfg"))
+        return false;
     if (!jsonSpewer.init("/tmp/ion.json"))
         return false;
-#endif
 
-    jsonSpewer.beginFunction(function);
+    inited_ = true;
     return true;
+}
+
+void
+IonSpewer::beginFunction(MIRGraph *graph, JSScript *function)
+{
+    JS_ASSERT(inited_);
+
+    this->graph = graph;
+    this->function = function;
+
+    c1Spewer.beginFunction(graph, function);
+    jsonSpewer.beginFunction(function);
 }
 
 void
 IonSpewer::spewPass(const char *pass)
 {
-    c1Spewer.spewCFG(pass);
+    JS_ASSERT(inited_);
+    c1Spewer.spewPass(pass);
     jsonSpewer.beginPass(pass);
     jsonSpewer.spewMIR(graph);
     jsonSpewer.spewLIR(graph);
@@ -81,7 +134,8 @@ IonSpewer::spewPass(const char *pass)
 void
 IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 {
-    c1Spewer.spewCFG(pass);
+    JS_ASSERT(inited_);
+    c1Spewer.spewPass(pass);
     c1Spewer.spewIntervals(pass, ra);
     jsonSpewer.beginPass(pass);
     jsonSpewer.spewMIR(graph);
@@ -91,13 +145,14 @@ IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 }
 
 void
-IonSpewer::finish()
+IonSpewer::endFunction()
 {
+    JS_ASSERT(inited_);
+    c1Spewer.endFunction();
     jsonSpewer.endFunction();
-    jsonSpewer.finish();
 }
 
-#ifdef DEBUG
+
 FILE *ion::IonSpewFile = NULL;
 
 static bool
@@ -195,4 +250,5 @@ ion::IonSpewEnabled(IonSpewChannel channel)
     return LoggingBits & (1 << uint32(channel));
 }
 
-#endif
+#endif /* DEBUG */
+

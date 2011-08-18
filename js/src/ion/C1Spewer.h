@@ -39,8 +39,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_spew_h__
-#define jsion_ion_spew_h__
+#ifdef DEBUG
+
+#ifndef jsion_c1spewer_h__
+#define jsion_c1spewer_h__
 
 #include "jscntxt.h"
 #include "MIR.h"
@@ -51,24 +53,31 @@ namespace ion {
 
 class C1Spewer
 {
-    MIRGraph &graph;
+    MIRGraph *graph;
     JSScript *script;
     FILE *spewout_;
 
   public:
-    C1Spewer(MIRGraph &graph, JSScript *script);
-    ~C1Spewer();
-    void enable(const char *path);
-    void spewCFG(const char *pass);
+    C1Spewer()
+      : graph(NULL), script(NULL), spewout_(NULL)
+    { }
+
+    bool init(const char *path);
+    void beginFunction(MIRGraph *graph, JSScript *script);
+    void spewPass(const char *pass);
     void spewIntervals(const char *pass, LinearScanAllocator *regalloc);
+    void endFunction();
+    void finish();
 
   private:
-    void spewCFG(FILE *fp, MBasicBlock *block);
+    void spewPass(FILE *fp, MBasicBlock *block);
     void spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regalloc, size_t &nextId);
 };
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_ion_spew_h__
+#endif // jsion_c1spewer_h__
+
+#endif /* DEBUG */
 
