@@ -101,9 +101,6 @@
 // Fired after frecency has been updated.
 #define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
 
-// Fired after frecency has been updated.
-#define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
-
 // Fired when Places is shutting down.  Any code should stop accessing Places
 // APIs after this notification.  If you need to listen for Places shutdown
 // you should only use this notification, next ones are intended only for
