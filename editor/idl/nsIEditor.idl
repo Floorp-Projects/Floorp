@@ -55,7 +55,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(bd5d93f0-6451-11e0-ae3e-0800200c9a66)]
+[scriptable, uuid(20ee0b70-c528-11e0-9572-0800200c9a66)]
 
 interface nsIEditor  : nsISupports
 {
@@ -121,6 +121,9 @@ interface nsIEditor  : nsISupports
 
   /** Returns true if we have a document that is not marked read-only */
   readonly attribute boolean isDocumentEditable;
+
+  /** Returns true if the current selection anchor is editable */
+  readonly attribute boolean isSelectionEditable;
 
   /**
    * the DOM Document this editor is associated with, refcounted.

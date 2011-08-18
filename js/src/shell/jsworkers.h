@@ -61,13 +61,13 @@ namespace js {
         };
 
         /*
-         * Initialize workers. This defines the Worker constructor on global.
-         * Requires request. rootp must point to a GC root.
-         *
-         * On success, *rootp receives a pointer to an object, and init returns
+	 * Initialize workers. This defines the Worker constructor on global.
+	 * Requires request. rootp must point to a GC root.
+	 *
+	 * On success, *rootp receives a pointer to an object, and init returns
          * a non-null value. The caller must keep the object rooted and must
          * pass it to js::workers::finish later.
-         */
+	 */
         ThreadPool *init(JSContext *cx, WorkerHooks *hooks, JSObject *global, JSObject **rootp);
 
         /* Asynchronously signal for all workers to terminate.
@@ -75,7 +75,7 @@ namespace js {
          * Call this before calling finish() to shut down without waiting for
          * all messages to be proceesed.
          */
-        void terminateAll(ThreadPool *tp);
+        void terminateAll(JSRuntime *rt, ThreadPool *tp);
 
 	/*
 	 * Finish running any workers, shut down the thread pool, and free all

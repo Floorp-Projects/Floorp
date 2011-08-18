@@ -90,7 +90,7 @@ class nsAudioStreamLocal : public nsAudioStream
 
   nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
   void Shutdown();
-  nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
+  nsresult Write(const void* aBuf, PRUint32 aCount);
   PRUint32 Available();
   void SetVolume(double aVolume);
   void Drain();
@@ -110,12 +110,6 @@ class nsAudioStreamLocal : public nsAudioStream
 
   SampleFormat mFormat;
 
-  // When a Write() request is made, and the number of samples
-  // requested to be written exceeds the buffer size of the audio
-  // backend, the remaining samples are stored in this variable. They
-  // will be written on the next Write() request.
-  nsTArray<short> mBufferOverflow;
-
   // PR_TRUE if this audio stream is paused.
   PRPackedBool mPaused;
 
@@ -134,7 +128,7 @@ class nsAudioStreamRemote : public nsAudioStream
 
   nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
   void Shutdown();
-  nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
+  nsresult Write(const void* aBuf, PRUint32 aCount);
   PRUint32 Available();
   void SetVolume(double aVolume);
   void Drain();
@@ -452,7 +446,7 @@ void nsAudioStreamLocal::Shutdown()
   mInError = PR_TRUE;
 }
 
-nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
+nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount)
 {
   NS_ABORT_IF_FALSE(aCount % mChannels == 0,
                     "Buffer size must be divisible by channel count");
@@ -461,24 +455,16 @@ nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBl
   if (mInError)
     return NS_ERROR_FAILURE;
 
-  PRUint32 offset = mBufferOverflow.Length();
-  PRUint32 count = aCount + offset;
-
-  nsAutoArrayPtr<short> s_data(new short[count]);
+  nsAutoArrayPtr<short> s_data(new short[aCount]);
 
   if (s_data) {
-    for (PRUint32 i=0; i < offset; ++i) {
-      s_data[i] = mBufferOverflow.ElementAt(i);
-    }
-    mBufferOverflow.Clear();
-
     double scaled_volume = GetVolumeScale() * mVolume;
     switch (mFormat) {
       case FORMAT_U8: {
         const PRUint8* buf = static_cast<const PRUint8*>(aBuf);
         PRInt32 volume = PRInt32((1 << 16) * scaled_volume);
         for (PRUint32 i = 0; i < aCount; ++i) {
-          s_data[i + offset] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
+          s_data[i] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
         }
         break;
       }
@@ -490,7 +476,7 @@ nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBl
 #if defined(IS_BIG_ENDIAN)
           s = ((s & 0x00ff) << 8) | ((s & 0xff00) >> 8);
 #endif
-          s_data[i + offset] = short((PRInt32(s) * volume) >> 16);
+          s_data[i] = short((PRInt32(s) * volume) >> 16);
         }
         break;
       }
@@ -499,11 +485,11 @@ nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBl
         for (PRUint32 i = 0; i <  aCount; ++i) {
           float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
           if (buf[i] < 0.0) {
-            s_data[i + offset] = (scaled_value < -32768.0) ?
+            s_data[i] = (scaled_value < -32768.0) ?
               -32768 :
               short(scaled_value);
           } else {
-            s_data[i+offset] = (scaled_value > 32767.0) ?
+            s_data[i] = (scaled_value > 32767.0) ?
               32767 :
               short(scaled_value);
           }
@@ -512,20 +498,9 @@ nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBl
       }
     }
 
-    if (!aBlocking) {
-      // We're running in non-blocking mode, crop the data to the amount 
-      // which is available in the audio buffer, and save the rest for
-      // subsequent calls.
-      PRUint32 available = Available();
-      if (available < count) {
-        mBufferOverflow.AppendElements(s_data.get() + available, (count - available));
-        count = available;
-      }
-    }
-
     if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
                         s_data.get(),
-                        count * sizeof(short)) != SA_SUCCESS)
+                        aCount * sizeof(short)) != SA_SUCCESS)
     {
       PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_write error"));
       mInError = PR_TRUE;
@@ -568,16 +543,6 @@ void nsAudioStreamLocal::Drain()
 
   if (mInError)
     return;
-
-  // Write any remaining unwritten sound data in the overflow buffer
-  if (!mBufferOverflow.IsEmpty()) {
-    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
-                        mBufferOverflow.Elements(),
-                        mBufferOverflow.Length() * sizeof(short)) != SA_SUCCESS)
-      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_write error"));
-      mInError = PR_TRUE;
-      return;
-  }
 
   int r = sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle));
   if (r != SA_SUCCESS && r != SA_ERROR_INVALID) {
@@ -637,15 +602,15 @@ PRBool nsAudioStreamLocal::IsPaused()
 
 PRInt32 nsAudioStreamLocal::GetMinWriteSamples()
 {
-  size_t samples;
+  size_t size;
   int r = sa_stream_get_min_write(static_cast<sa_stream_t*>(mAudioHandle),
-                                  &samples);
-  if (r == SA_ERROR_NOT_SUPPORTED)
+                                  &size);
+  if (r == SA_ERROR_NOT_SUPPORTED) {
     return 1;
-  else if (r != SA_SUCCESS || samples > PR_INT32_MAX)
+  } else if (r != SA_SUCCESS) {
     return -1;
-
-  return static_cast<PRInt32>(samples);
+  }
+  return static_cast<PRInt32>(size / mChannels / sizeof(short));
 }
 
 nsAudioStreamRemote::nsAudioStreamRemote()
@@ -703,9 +668,7 @@ nsAudioStreamRemote::Shutdown()
 }
 
 nsresult
-nsAudioStreamRemote::Write(const void* aBuf,
-                           PRUint32 aCount,
-                           PRBool aBlocking)
+nsAudioStreamRemote::Write(const void* aBuf, PRUint32 aCount)
 {
   if (!mAudioChild)
     return NS_ERROR_FAILURE;

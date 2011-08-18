@@ -92,8 +92,11 @@ nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
                                               PRBool *outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-  *outCmdEnabled = (editor != nsnull);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (editor)
+    return editor->GetIsSelectionEditable(outCmdEnabled);
+
+  *outCmdEnabled = PR_FALSE;
   return NS_OK;
 }
 
@@ -218,7 +221,10 @@ nsSetDocumentStateCommand::IsCommandEnabled(const char * aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  *outCmdEnabled = (editor != nsnull);
+  if (editor)
+    return editor->GetIsSelectionEditable(outCmdEnabled);
+
+  *outCmdEnabled = PR_FALSE;
   return NS_OK;
 }
 
