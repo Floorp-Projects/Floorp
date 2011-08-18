@@ -212,7 +212,7 @@ jsbytecode *
 js_UntrapScriptCode(JSContext *cx, JSScript *script)
 {
     jsbytecode *code = script->code;
-    BreakpointSiteMap &sites = script->compartment()->breakpointSites;
+    BreakpointSiteMap &sites = script->compartment->breakpointSites;
     for (BreakpointSiteMap::Range r = sites.all(); !r.empty(); r.popFront()) {
         BreakpointSite *site = r.front().value;
         if (site->script == script && size_t(site->pc - script->code) < script->length) {
@@ -242,7 +242,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handle
     if (!CheckDebugMode(cx))
         return false;
 
-    BreakpointSite *site = script->compartment()->getOrCreateBreakpointSite(cx, script, pc, NULL);
+    BreakpointSite *site = script->compartment->getOrCreateBreakpointSite(cx, script, pc, NULL);
     if (!site)
         return false;
     site->setTrap(cx, handler, Valueify(closure));
@@ -252,7 +252,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handle
 JS_PUBLIC_API(JSOp)
 JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    BreakpointSite *site = script->compartment()->getBreakpointSite(pc);
+    BreakpointSite *site = script->compartment->getBreakpointSite(pc);
     return site ? site->realOpcode : JSOp(*pc);
 }
 
@@ -260,7 +260,7 @@ JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
-    if (BreakpointSite *site = script->compartment()->getBreakpointSite(pc)) {
+    if (BreakpointSite *site = script->compartment->getBreakpointSite(pc)) {
         site->clearTrap(cx, NULL, handlerp, Valueify(closurep));
     } else {
         if (handlerp)
@@ -273,7 +273,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
-    script->compartment()->clearTraps(cx, script);
+    script->compartment->clearTraps(cx, script);
 }
 
 JS_PUBLIC_API(void)

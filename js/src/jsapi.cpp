@@ -1209,7 +1209,7 @@ JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 
     JSObject *scriptObject = target->u.object;
     if (!scriptObject) {
-        SwitchToCompartment sc(cx, target->compartment());
+        SwitchToCompartment sc(cx, target->compartment);
         scriptObject = JS_NewGlobalObject(cx, &js_dummy_class);
         if (!scriptObject)
             return NULL;
@@ -1259,7 +1259,7 @@ bool
 AutoEnterScriptCompartment::enter(JSContext *cx, JSScript *target)
 {
     JS_ASSERT(!call);
-    if (cx->compartment == target->compartment()) {
+    if (cx->compartment == target->compartment) {
         call = reinterpret_cast<JSCrossCompartmentCall*>(1);
         return true;
     }
@@ -3195,6 +3195,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
         Shape *shape = (Shape *) prop;
 
         if (shape->isMethod()) {
+            AutoShapeRooter root(cx, shape);
             vp->setObject(shape->methodObject());
             return !!obj2->methodReadBarrier(cx, *shape, vp);
         }
@@ -4725,7 +4726,9 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
             fun = NULL;
             goto out2;
         }
+        AutoShapeRooter shapeRoot(cx, emptyCallShape);
 
+        AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
         MUST_FLOW_THROUGH("out");
 
         Bindings bindings(cx, emptyCallShape);
@@ -4834,8 +4837,8 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN inde
 
     CHECK_REQUEST(cx);
 #ifdef DEBUG
-    if (cx->compartment != script->compartment())
-        CompartmentChecker::fail(cx->compartment, script->compartment());
+    if (cx->compartment != script->compartment)
+        CompartmentChecker::fail(cx->compartment, script->compartment);
 #endif
     jp = js_NewPrinter(cx, name, NULL,
                        indent & ~JS_DONT_PRETTY_PRINT,
@@ -4924,8 +4927,8 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
     JS_ASSERT(script->getVersion() == compileVersion);
 
     bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));
-    js_CallDestroyScriptHook(cx, script);
     LAST_FRAME_CHECKS(cx, ok);
+    js_DestroyScript(cx, script, 5);
     return ok;
 
 }

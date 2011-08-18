@@ -255,12 +255,6 @@ js_NewGCShape(JSContext *cx)
     return NewGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
 }
 
-inline JSScript *
-js_NewGCScript(JSContext *cx)
-{
-    return NewGCThing<JSScript>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
-}
-
 #if JS_HAS_XML_SUPPORT
 extern JSXML *
 js_NewGCXML(JSContext *cx);

@@ -845,14 +845,11 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
         else
         {
-            static const char trace_types[][7] = {
+            static const char trace_types[JSTRACE_LIMIT][7] = {
                 "Object",
                 "String",
-                "Shape",
-                "Script",
                 "Xml"
             };
-            JS_STATIC_ASSERT(JS_ARRAY_LENGTH(trace_types) == JSTRACE_LIMIT);
             JS_snprintf(name, sizeof(name), "JS %s", trace_types[traceKind]);
         }
 
