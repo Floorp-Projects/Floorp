@@ -4778,7 +4778,6 @@ MOZ_DISABLE_DOMCRYPTO=
 NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
-NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
@@ -8763,19 +8762,6 @@ AC_SUBST(NECKO_PROTOCOLS)
 for p in $NECKO_PROTOCOLS; do
     AC_DEFINE_UNQUOTED(NECKO_PROTOCOL_$p)
 done
-
-dnl
-dnl option to disable necko's disk cache
-dnl
-MOZ_ARG_DISABLE_BOOL(necko-disk-cache,
-[  --disable-necko-disk-cache
-                          Disable necko disk cache],
-    NECKO_DISK_CACHE=,
-    NECKO_DISK_CACHE=1)
-AC_SUBST(NECKO_DISK_CACHE)
-if test "$NECKO_DISK_CACHE"; then
-    AC_DEFINE(NECKO_DISK_CACHE)
-fi
 
 dnl
 dnl option to disable necko's wifi scanner
