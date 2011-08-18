@@ -1508,7 +1508,7 @@ js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner)
      * separately if, e.g. we are GC'ing while type inference code is active,
      * and we need to make sure both the script and the object survive the GC.
      */
-    if (!script->isCachedEval && !script->isUncachedEval && script->u.object)
+    if (!script->isCachedEval && script->u.object)
         MarkObject(trc, *script->u.object, "object");
     if (script->hasFunction)
         MarkObject(trc, *script->function(), "script_fun");

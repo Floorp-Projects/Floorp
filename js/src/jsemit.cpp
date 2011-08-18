@@ -3042,7 +3042,7 @@ EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             return false;
     }
 
-    if (!EmitAtomOp(cx, pn, JSOP_SETPROP, cg))     // N? N+1
+    if (!EmitAtomOp(cx, pn, global ? JSOP_SETGNAME : JSOP_SETNAME, cg))     // N? N+1
         return false;
     if (post && js_Emit1(cx, cg, JSOP_POP) < 0)    // RESULT
         return false;
