@@ -46,7 +46,7 @@
  * failed to supply the requested interface.  Both aFirst and aSecond may
  * be null.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor  *aFirst,
                                     nsIInterfaceRequestor  *aSecond,
                                     nsIInterfaceRequestor **aResult);

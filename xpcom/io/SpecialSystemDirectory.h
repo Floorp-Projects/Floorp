@@ -50,9 +50,8 @@
 #include "prenv.h"
 #endif
 
-
-extern NS_COM void StartupSpecialSystemDirectory();
-extern NS_COM void ShutdownSpecialSystemDirectory();
+extern void StartupSpecialSystemDirectory();
+extern void ShutdownSpecialSystemDirectory();
 
 
 enum SystemDirectories {
