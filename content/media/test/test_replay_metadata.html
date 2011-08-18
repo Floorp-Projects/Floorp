@@ -65,7 +65,6 @@ function playbackEnded(evt) {
     ok(v.seeking, "seeking should be true for " + v._name);
     ok(!v.ended, "ended shouldn't be true once seeking has begun for " + v._name);
     v._playedOnce = true;
-    v.play();
   } else {
     ok(v._gotSeekEnded, "Should have received seekended for " + v._name);
     ok(v._gotSeekStarted, "Should have received seekstarted for " + v._name);
