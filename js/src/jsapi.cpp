@@ -343,7 +343,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             if (!obj)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(obj);
-            *va_arg(ap, JSFunction **) = GET_FUNCTION_PRIVATE(cx, obj);
+            *va_arg(ap, JSFunction **) = obj->getFunctionPrivate();
             break;
           case 'v':
             *va_arg(ap, jsval *) = *sp;
@@ -2270,10 +2270,10 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
             JSObject  *obj = (JSObject *)thing;
             Class *clasp = obj->getClass();
             if (clasp == &js_FunctionClass) {
-                JSFunction *fun = GET_FUNCTION_PRIVATE(trc->context, obj);
+                JSFunction *fun = obj->getFunctionPrivate();
                 if (!fun) {
                     JS_snprintf(buf, bufsize, "<newborn>");
-                } else if (FUN_OBJECT(fun) != obj) {
+                } else if (fun != obj) {
                     JS_snprintf(buf, bufsize, "%p", fun);
                 } else {
                     if (fun->atom)
@@ -4208,8 +4208,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         return NULL;
     }
 
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    if (!FUN_FLAT_CLOSURE(fun))
+    JSFunction *fun = funobj->getFunctionPrivate();
+    if (!fun->isFlatClosure())
         return CloneFunctionObject(cx, fun, parent);
 
     /*
@@ -4254,7 +4254,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun)
 {
-    return FUN_OBJECT(fun);
+    return fun;
 }
 
 JS_PUBLIC_API(JSString *)
@@ -4357,7 +4357,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
              * as fun->object lives.
              */
             Value priv = PrivateValue(fs);
-            if (!js_SetReservedSlot(cx, FUN_OBJECT(fun), 0, priv))
+            if (!js_SetReservedSlot(cx, fun, 0, priv))
                 return JS_FALSE;
         }
 
@@ -4712,24 +4712,21 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         funAtom = js_Atomize(cx, name, strlen(name));
         if (!funAtom) {
             fun = NULL;
-            goto out2;
+            goto out;
         }
     }
 
     fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
-        goto out2;
+        goto out;
 
     {
         EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-        if (!emptyCallShape) {
+        if (!emptyCallShape)
             fun = NULL;
-            goto out2;
-        }
         AutoShapeRooter shapeRoot(cx, emptyCallShape);
 
-        AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
-        MUST_FLOW_THROUGH("out");
+        AutoObjectRooter tvr(cx, fun);
 
         Bindings bindings(cx, emptyCallShape);
         AutoBindingsRooter root(cx, bindings);
@@ -4737,20 +4734,20 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]));
             if (!argAtom) {
                 fun = NULL;
-                goto out2;
+                goto out;
             }
 
             uint16 dummy;
             if (!bindings.addArgument(cx, argAtom, &dummy)) {
                 fun = NULL;
-                goto out2;
+                goto out;
             }
         }
 
         if (!Compiler::compileFunctionBody(cx, fun, principals, &bindings,
                                            chars, length, filename, lineno, version)) {
             fun = NULL;
-            goto out2;
+            goto out;
         }
 
         if (obj && funAtom &&
@@ -4760,10 +4757,11 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         }
     }
 
-  out2:
+  out:
     LAST_FRAME_CHECKS(cx, fun);
     return fun;
 }
+
 JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                          JSPrincipals *principals, const char *name,

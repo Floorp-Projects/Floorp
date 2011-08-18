@@ -3919,7 +3919,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
             js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom);
         if (!fun)
             goto bad;
-        FUN_CLASP(fun) = clasp;
+        fun->setConstructorClass(clasp);
 
         AutoValueRooter tvr2(cx, ObjectValue(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
@@ -3931,7 +3931,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
          * different object, as is done for operator new -- and as at least
          * XML support requires.
          */
-        ctor = FUN_OBJECT(fun);
+        ctor = fun;
         if (clasp->flags & JSCLASS_CONSTRUCT_PROTOTYPE) {
             Value rval;
             if (!InvokeConstructorWithGivenThis(cx, proto, ObjectOrNullValue(ctor),
@@ -4709,7 +4709,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
             JS_ASSERT(!getter && !setter);
 
             JSObject *funobj = &value.toObject();
-            if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
+            if (funobj->getFunctionPrivate() == funobj) {
                 flags |= Shape::METHOD;
                 getter = CastAsPropertyOp(funobj);
             }
@@ -5662,7 +5662,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
             JSObject *funobj = &vp->toObject();
-            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+            JSFunction *fun = funobj->getFunctionPrivate();
             if (fun == funobj) {
                 flags |= Shape::METHOD;
                 getter = CastAsPropertyOp(funobj);
@@ -5797,7 +5797,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
             JSObject *funobj;
 
             if (IsFunctionObject(v, &funobj)) {
-                JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+                JSFunction *fun = funobj->getFunctionPrivate();
 
                 if (fun != funobj) {
                     for (StackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
@@ -6492,7 +6492,7 @@ dumpValue(const Value &v)
         dumpString(v.toString());
     else if (v.isObject() && v.toObject().isFunction()) {
         JSObject *funobj = &v.toObject();
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        JSFunction *fun = funobj->getFunctionPrivate();
         if (fun->atom) {
             fputs("<function ", stderr);
             FileEscapedString(stderr, fun->atom, 0);
