@@ -664,8 +664,6 @@ struct JSObject : js::gc::Cell {
 
     inline bool hasPropertyTable() const;
 
-    /* gc::FinalizeKind */ unsigned finalizeKind() const;
-
     uint32 numSlots() const { return uint32(capacity); }
 
     inline size_t structSize() const;
@@ -1279,7 +1277,7 @@ struct JSObject : js::gc::Cell {
                                       js::types::TypeObject *type,
                                       JSObject *parent,
                                       void *priv,
-                                      /* gc::FinalizeKind */ unsigned kind);
+                                      js::gc::AllocKind kind);
 
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags = 0);
 

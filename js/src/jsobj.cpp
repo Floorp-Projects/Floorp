@@ -2913,7 +2913,7 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
     if (!obj) {
         /* Make an object whether this was called with 'new' or not. */
         JS_ASSERT(!argc || vp[2].isNull() || vp[2].isUndefined());
-        gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+        gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
         obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
             return JS_FALSE;
@@ -2928,7 +2928,7 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
 
 JSObject *
 js::NewReshapedObject(JSContext *cx, TypeObject *type, JSObject *parent,
-                      gc::FinalizeKind kind, const Shape *shape)
+                      gc::AllocKind kind, const Shape *shape)
 {
     JSObject *res = NewObjectWithType(cx, type, parent, kind);
     if (!res)
@@ -2979,7 +2979,7 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
-    gc::FinalizeKind kind = NewObjectGCKind(cx, newclasp);
+    gc::AllocKind kind = NewObjectGCKind(cx, newclasp);
     JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
     if (obj)
         obj->syncSpecialEquality();
@@ -2995,14 +2995,14 @@ CreateThisForFunctionWithType(JSContext *cx, types::TypeObject *type, JSObject *
          * which reflects any properties that will definitely be added to the
          * object before it is read from.
          */
-        gc::FinalizeKind kind = gc::FinalizeKind(type->newScript->finalizeKind);
+        gc::AllocKind kind = type->newScript->allocKind;
         JSObject *res = NewObjectWithType(cx, type, parent, kind);
         if (res)
             res->setMap((Shape *) type->newScript->shape);
         return res;
     }
 
-    gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+    gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
     return NewObjectWithType(cx, type, parent, kind);
 }
 
@@ -3018,7 +3018,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
             return NULL;
         res = CreateThisForFunctionWithType(cx, type, callee->getParent());
     } else {
-        gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+        gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
         res = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
     }
 
@@ -3077,7 +3077,7 @@ JSObject* FASTCALL
 js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
 {
     if (!baseobj) {
-        gc::FinalizeKind kind = GuessObjectGCKind(0, false);
+        gc::AllocKind kind = GuessObjectGCKind(0, false);
         return NewObjectWithClassProto(cx, &js_ObjectClass, proto, kind);
     }
 
@@ -3129,7 +3129,7 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
             return NULL;
     }
 
-    gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+    gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
     return NewNativeClassInstance(cx, &js_ObjectClass, proto, parent, kind);
 }
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, OBJECT, UINTN, 0,
@@ -3405,7 +3405,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     JS_ASSERT(proto->isStaticBlock());
 
     size_t count = OBJ_BLOCK_COUNT(cx, proto);
-    gc::FinalizeKind kind = gc::GetGCObjectKind(count + 1);
+    gc::AllocKind kind = gc::GetGCObjectKind(count + 1);
 
     TypeObject *type = proto->getNewType(cx);
     if (!type)
@@ -3615,9 +3615,7 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
             return NULL;
         }
     }
-    JSObject *clone = NewObject<WithProto::Given>(cx, getClass(),
-                                                  proto, parent,
-                                                  gc::FinalizeKind(finalizeKind()));
+    JSObject *clone = NewObject<WithProto::Given>(cx, getClass(), proto, parent, getAllocKind());
     if (!clone)
         return NULL;
     if (isNative()) {
@@ -4364,16 +4362,15 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
      * objects are constructed.
      */
     if (!hasLazyType() && type()->newScript) {
-        gc::FinalizeKind kind = gc::FinalizeKind(type()->newScript->finalizeKind);
+        gc::AllocKind kind = type()->newScript->allocKind;
         unsigned newScriptSlots = gc::GetGCKindSlots(kind);
-        if (newScriptSlots == numFixedSlots() && gc::CanBumpFinalizeKind(kind)) {
-            kind = gc::BumpFinalizeKind(kind);
+        if (newScriptSlots == numFixedSlots() && gc::TryIncrementAllocKind(&kind)) {
             JSObject *obj = NewReshapedObject(cx, type(), getParent(), kind,
                                               type()->newScript->shape);
             if (!obj)
                 return false;
 
-            type()->newScript->finalizeKind = kind;
+            type()->newScript->allocKind = kind;
             type()->newScript->shape = obj->lastProperty();
             type()->markStateChange(cx);
         }
