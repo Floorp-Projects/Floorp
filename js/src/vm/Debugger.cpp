@@ -236,7 +236,7 @@ BreakpointSite::destroyIfEmpty(JSRuntime *rt, BreakpointSiteMap::Enum *e)
         if (e)
             e->removeFront();
         else
-            script->compartment()->breakpointSites.remove(pc);
+            script->compartment->breakpointSites.remove(pc);
         rt->delete_(this);
     }
 }
@@ -446,7 +446,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx)
      */
     if (fp->isEvalFrame()) {
         JSScript *script = fp->script();
-        script->compartment()->clearBreakpointsIn(cx, NULL, script, NULL);
+        script->compartment->clearBreakpointsIn(cx, NULL, script, NULL);
     }
 }
 
@@ -804,7 +804,7 @@ Debugger::slowPathOnNewScript(JSContext *cx, JSScript *script, JSObject *obj, Ne
         }
     } else {
         global = NULL;
-        GlobalObjectSet &debuggees = script->compartment()->getDebuggees();
+        GlobalObjectSet &debuggees = script->compartment->getDebuggees();
         for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
             if (!AddNewScriptRecipients(r.front()->getDebuggers(), &triggered))
                 return;
@@ -1742,8 +1742,8 @@ JSObject *
 Debugger::wrapHeldScript(JSContext *cx, JSScript *script, JSObject *obj)
 {
     assertSameCompartment(cx, object);
-    JS_ASSERT(cx->compartment != script->compartment());
-    JS_ASSERT(script->compartment() == obj->compartment());
+    JS_ASSERT(cx->compartment != script->compartment);
+    JS_ASSERT(script->compartment == obj->compartment());
 
     ScriptWeakMap::AddPtr p = heldScripts.lookupForAdd(obj);
     if (!p) {
@@ -1775,7 +1775,7 @@ JSObject *
 Debugger::wrapNonHeldScript(JSContext *cx, JSScript *script)
 {
     assertSameCompartment(cx, object);
-    JS_ASSERT(cx->compartment != script->compartment());
+    JS_ASSERT(cx->compartment != script->compartment);
 
     ScriptMap::AddPtr p = nonHeldScripts.lookupForAdd(script);
     if (!p) {
@@ -1794,7 +1794,7 @@ void
 Debugger::slowPathOnDestroyScript(JSScript *script)
 {
     /* Find all debuggers that might have Debugger.Script referring to this script. */
-    js::GlobalObjectSet *debuggees = &script->compartment()->getDebuggees();
+    js::GlobalObjectSet *debuggees = &script->compartment->getDebuggees();
     for (GlobalObjectSet::Range r = debuggees->all(); !r.empty(); r.popFront()) {
         GlobalObject::DebuggerVector *debuggers = r.front()->getDebuggers();
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++)
@@ -2239,7 +2239,7 @@ DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
     if (!handler)
         return false;
 
-    JSCompartment *comp = script->compartment();
+    JSCompartment *comp = script->compartment;
     jsbytecode *pc = script->code + offset;
     BreakpointSite *site = comp->getOrCreateBreakpointSite(cx, script, pc, holder);
     if (!site)
@@ -2274,7 +2274,7 @@ DebuggerScript_getBreakpoints(JSContext *cx, uintN argc, Value *vp)
     JSObject *arr = NewDenseEmptyArray(cx);
     if (!arr)
         return false;
-    JSCompartment *comp = script->compartment();
+    JSCompartment *comp = script->compartment;
     for (BreakpointSiteMap::Range r = comp->breakpointSites.all(); !r.empty(); r.popFront()) {
         BreakpointSite *site = r.front().value;
         if (site->script == script && (!pc || site->pc == pc)) {
@@ -2302,7 +2302,7 @@ DebuggerScript_clearBreakpoint(JSContext *cx, uintN argc, Value *vp)
     if (!handler)
         return false;
 
-    script->compartment()->clearBreakpointsIn(cx, dbg, script, handler);
+    script->compartment->clearBreakpointsIn(cx, dbg, script, handler);
     args.rval().setUndefined();
     return true;
 }
@@ -2312,7 +2312,7 @@ DebuggerScript_clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, argc, vp, "clearBreakpoint", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
-    script->compartment()->clearBreakpointsIn(cx, dbg, script, NULL);
+    script->compartment->clearBreakpointsIn(cx, dbg, script, NULL);
     args.rval().setUndefined();
     return true;
 }
@@ -2672,8 +2672,8 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
     if (!script)
         return false;
 
-    JSBool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
-    js_CallDestroyScriptHook(cx, script);
+    bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
+    js_DestroyScript(cx, script, 6);
     return ok;
 }
 

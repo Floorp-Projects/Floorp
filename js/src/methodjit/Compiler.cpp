@@ -424,7 +424,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     JSC::ExecutablePool *execPool;
     uint8 *result =
-        (uint8 *)script->compartment()->jaegerCompartment()->execAlloc()->alloc(codeSize, &execPool);
+        (uint8 *)script->compartment->jaegerCompartment()->execAlloc()->alloc(codeSize, &execPool);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -4054,7 +4054,7 @@ mjit::Compiler::iter(uintN flags)
     frame.unpinReg(reg);
 
     /* Fetch the most recent iterator. */
-    masm.loadPtr(&script->compartment()->nativeIterCache.last, ioreg);
+    masm.loadPtr(&script->compartment->nativeIterCache.last, ioreg);
 
     /* Test for NULL. */
     Jump nullIterator = masm.branchTest32(Assembler::Zero, ioreg, ioreg);

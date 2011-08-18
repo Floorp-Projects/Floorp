@@ -20,5 +20,4 @@ plot 'gcTimer.dat' using 2 title columnheader(2), \
 '' u 7 title columnheader(7) with points, \
 '' u 8 title columnheader(8) with points, \
 '' u 9 title columnheader(9) with points, \
-'' u 10 title columnheader(10) with points, \
-'' u 11 title columnheader(11) with points
+'' u 10 title columnheader(10) with points

@@ -101,7 +101,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 {
     JS_INIT_CLIST(&scripts);
 
-    PodArrayZero(evalCache);
+    PodArrayZero(scriptsToGC);
 }
 
 JSCompartment::~JSCompartment()
@@ -122,8 +122,8 @@ JSCompartment::~JSCompartment()
     Foreground::delete_(watchpointMap);
 
 #ifdef DEBUG
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i)
-        JS_ASSERT(!evalCache[i]);
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
+        JS_ASSERT(!scriptsToGC[i]);
 #endif
 }
 
@@ -549,20 +549,8 @@ JSCompartment::purge(JSContext *cx)
     freeLists.purge();
     dtoaCache.purge();
 
-    /*
-     * Clear the hash and reset all evalHashLink to null before the GC. This
-     * way MarkChildren(trc, JSScript *) can assume that JSScript::u.object is
-     * not null when we have script owned by an object and not from the eval
-     * cache.
-     */
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i) {
-        for (JSScript **listHeadp = &evalCache[i]; *listHeadp; ) {
-            JSScript *script = *listHeadp;
-            JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
-            *listHeadp = NULL;
-            listHeadp = &script->u.evalHashLink;
-        }
-    }
+    /* Destroy eval'ed scripts. */
+    js_DestroyScriptsToGC(cx, this);
 
     nativeIterCache.purge();
     toSourceCache.destroyIfConstructed();
@@ -646,7 +634,7 @@ JSCompartment::hasScriptsOnStack(JSContext *cx)
 {
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         JSScript *script = i.fp()->maybeScript();
-        if (script && script->compartment() == this)
+        if (script && script->compartment == this)
             return true;
     }
     return false;
@@ -784,7 +772,7 @@ void
 JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script,
                                   JSObject *handler)
 {
-    JS_ASSERT_IF(script, script->compartment() == this);
+    JS_ASSERT_IF(script, script->compartment == this);
 
     for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
         BreakpointSite *site = e.front().value;

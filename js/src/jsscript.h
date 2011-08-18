@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -358,6 +358,10 @@ class Bindings {
 #define JS_OBJECT_ARRAY_SIZE(length)                                          \
     (offsetof(JSObjectArray, vector) + sizeof(JSObject *) * (length))
 
+#if defined DEBUG && defined JS_THREADSAFE
+# define CHECK_SCRIPT_OWNER 1
+#endif
+
 #ifdef JS_METHODJIT
 namespace JSC {
     class ExecutablePool;
@@ -421,7 +425,7 @@ static const uint32 JS_SCRIPT_COOKIE = 0xc00cee;
 static JSObject * const JS_NEW_SCRIPT = (JSObject *)0x12345678;
 static JSObject * const JS_CACHED_SCRIPT = (JSObject *)0x12341234;
 
-struct JSScript : public js::gc::Cell {
+struct JSScript {
     /*
      * Two successively less primitive ways to make a new JSScript.  The first
      * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
@@ -443,12 +447,12 @@ struct JSScript : public js::gc::Cell {
     /* FIXME: bug 586181 */
     JSCList         links;      /* Links for compartment script list */
     jsbytecode      *code;      /* bytecodes and their immediate operands */
+    uint32          length;     /* length of code vector */
+
 #ifdef JS_CRASH_DIAGNOSTICS
     uint32          cookie1;
 #endif
 
-    uint8           *data;      /* pointer to variable-length data array */  
-    uint32          length;     /* length of code vector */
   private:
     uint16          version;    /* JS version under which script was compiled */
 
@@ -490,11 +494,11 @@ struct JSScript : public js::gc::Cell {
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
 #endif
-    bool            callDestroyHook:1;/* need to call destroy hook */
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
-    const char      *filename;  /* source filename or null */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
+    JSCompartment   *compartment; /* compartment the script was compiled for */
+    const char      *filename;  /* source filename or null */
     uint32          lineno;     /* base line number of script */
     uint16          nslots;     /* vars plus maximum stack depth */
     uint16          staticLevel;/* static level for display maintenance */
@@ -523,10 +527,12 @@ struct JSScript : public js::gc::Cell {
          *   explicitly destroyed by the code that created them.
          */
         JSObject    *object;
-
-        /* Hash table chaining for JSCompartment::evalCache. */
-        JSScript    *evalHashLink;
+        JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
     } u;
+
+#ifdef CHECK_SCRIPT_OWNER
+    JSThread        *owner;     /* for thread-safe life-cycle assertions */
+#endif
 
     uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
 
@@ -548,14 +554,7 @@ struct JSScript : public js::gc::Cell {
 
     js::mjit::JITScript *jitNormal;   /* Extra JIT info for normal scripts */
     js::mjit::JITScript *jitCtor;     /* Extra JIT info for constructors */
-#endif
 
-#if JS_BYTES_PER_WORD == 4 && !defined JS_CRASH_DIAGNOSTICS
-    uint32          gcpad;            /* sizeof(JSScript) must be multiple of
-                                         js::gc::Cell::CellSize. */
-#endif
-    
-#ifdef JS_METHODJIT
     bool hasJITCode() {
         return jitNormal || jitCtor;
     }
@@ -585,7 +584,7 @@ struct JSScript : public js::gc::Cell {
     JS_FRIEND_API(size_t) jitDataSize();/* Size of the JITScript and all sections */
 #endif
 
-    JS_FRIEND_API(size_t) dataSize();   /* Size of all data sections */
+    JS_FRIEND_API(size_t) totalSize();  /* Size of the JSScript and all sections */
     uint32 numNotes();                  /* Number of srcnote slots in the srcnotes section */
 
     /* Script notes are allocated right after the code. */
@@ -596,32 +595,32 @@ struct JSScript : public js::gc::Cell {
 
     JSObjectArray *objects() {
         JS_ASSERT(isValidOffset(objectsOffset));
-        return reinterpret_cast<JSObjectArray *>(data + objectsOffset);
+        return reinterpret_cast<JSObjectArray *>(uintptr_t(this + 1) + objectsOffset);
     }
 
     JSUpvarArray *upvars() {
         JS_ASSERT(isValidOffset(upvarsOffset));
-        return reinterpret_cast<JSUpvarArray *>(data + upvarsOffset);
+        return reinterpret_cast<JSUpvarArray *>(uintptr_t(this + 1) + upvarsOffset);
     }
 
     JSObjectArray *regexps() {
         JS_ASSERT(isValidOffset(regexpsOffset));
-        return reinterpret_cast<JSObjectArray *>(data + regexpsOffset);
+        return reinterpret_cast<JSObjectArray *>(uintptr_t(this + 1) + regexpsOffset);
     }
 
     JSTryNoteArray *trynotes() {
         JS_ASSERT(isValidOffset(trynotesOffset));
-        return reinterpret_cast<JSTryNoteArray *>(data + trynotesOffset);
+        return reinterpret_cast<JSTryNoteArray *>(uintptr_t(this + 1) + trynotesOffset);
     }
 
     js::GlobalSlotArray *globals() {
         JS_ASSERT(isValidOffset(globalsOffset));
-        return reinterpret_cast<js::GlobalSlotArray *>(data + globalsOffset);
+        return reinterpret_cast<js::GlobalSlotArray *>(uintptr_t(this + 1) + globalsOffset);
     }
 
     JSConstArray *consts() {
         JS_ASSERT(isValidOffset(constOffset));
-        return reinterpret_cast<JSConstArray *>(data + constOffset);
+        return reinterpret_cast<JSConstArray *>(uintptr_t(this + 1) + constOffset);
     }
 
     JSAtom *getAtom(size_t index) {
@@ -680,11 +679,7 @@ struct JSScript : public js::gc::Cell {
     }
 
     void copyClosedSlotsTo(JSScript *other);
-
-    void finalize(JSContext *cx);
 };
-
-JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize== 0);
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
                                            uses sharp variables */
@@ -734,31 +729,24 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 extern void
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
-namespace js {
+/*
+ * The function must be used only outside the GC for a script that was run
+ * only on the current thread.
+ */
+extern void
+js_DestroyScript(JSContext *cx, JSScript *script, uint32 caller);
 
-#ifdef JS_CRASH_DIAGNOSTICS
+extern void
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner);
 
-void
-CheckScriptOwner(JSScript *script, JSObject *owner);
-
-void
-CheckScript(JSScript *script, JSScript *prev);
-
-#else
-
-inline void
-CheckScriptOwner(JSScript *script, JSObject *owner)
-{
-}
-
-inline void
-CheckScript(JSScript *script, JSScript *prev)
-{
-}
-
-#endif /* !JS_CRASH_DIAGNOSTICS */
-
-} /* namespace js */
+/*
+ * Script objects may be cached and reused, in which case their JSD-visible
+ * lifetimes may be shorter than their actual lifetimes. Destroy one such
+ * script for real as part of a GC pass. From JSD's point of view, the script
+ * is already dead.
+ */
+extern void
+js_DestroyCachedScript(JSContext *cx, JSScript *script);
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner);
