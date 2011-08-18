@@ -7376,8 +7376,8 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
 
   nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
-  return manager->AddEventListener(aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
+  manager->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
+  return NS_OK;
 }
 
 nsEventListenerManager*

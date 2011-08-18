@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=667612
+-->
+<head>
+  <title>Test for Bug 667612</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=667612">Mozilla Bug 667612</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+xhr = new XMLHttpRequest;
+w = new Worker("empty.js");
+window.addEventListener("load", null, false);
+document.addEventListener("load", null, false);
+document.body.addEventListener("load", null, false);
+xhr.addEventListener("load", null, false);
+w.addEventListener("load", null, false);
+window.addEventListener("load", undefined, false);
+document.addEventListener("load", undefined, false);
+document.body.addEventListener("load", undefined, false);
+xhr.addEventListener("load", undefined, false);
+w.addEventListener("load", undefined, false);
+
+ok(true, "didn't throw");
+
+</script>
+</pre>
+</body>
+</html>
