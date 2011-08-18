@@ -65,14 +65,13 @@ class LBox : public LInstructionHelper<2, 1, 0>
     }
 };
 
-class LBoxDouble : public LInstructionHelper<2, 1, 1>
+class LBoxDouble : public LInstructionHelper<2, 1, 0>
 {
   public:
     LIR_HEADER(BoxDouble);
 
-    LBoxDouble(const LAllocation &in, const LDefinition &temp) {
+    LBoxDouble(const LAllocation &in) {
         setOperand(0, in);
-        setTemp(0, temp);
     }
 };
 
