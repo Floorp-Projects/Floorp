@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef DEBUG
+
 #include <stdarg.h>
 #include "IonBuilder.h"
 #include "Ion.h"
@@ -51,25 +53,21 @@
 using namespace js;
 using namespace js::ion;
 
-C1Spewer::C1Spewer(MIRGraph &graph, JSScript *script)
-  : graph(graph),
-    script(script),
-    spewout_(NULL)
+bool
+C1Spewer::init(const char *path)
 {
-}
-
-C1Spewer::~C1Spewer()
-{
-    if (spewout_)
-        fclose(spewout_);
+    spewout_ = fopen(path, "w");
+    return (spewout_ != NULL);
 }
 
 void
-C1Spewer::enable(const char *path)
+C1Spewer::beginFunction(MIRGraph *graph, JSScript *script)
 {
-    spewout_ = fopen(path, "w");
     if (!spewout_)
         return;
+
+    this->graph  = graph;
+    this->script = script;
 
     fprintf(spewout_, "begin_compilation\n");
     fprintf(spewout_, "  name \"%s:%d\"\n", script->filename, script->lineno);
@@ -79,7 +77,7 @@ C1Spewer::enable(const char *path)
 }
 
 void
-C1Spewer::spewCFG(const char *pass)
+C1Spewer::spewPass(const char *pass)
 {
     if (!spewout_)
         return;
@@ -87,8 +85,8 @@ C1Spewer::spewCFG(const char *pass)
     fprintf(spewout_, "begin_cfg\n");
     fprintf(spewout_, "  name \"%s\"\n", pass);
 
-    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
-        spewCFG(spewout_, *block);
+    for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++)
+        spewPass(spewout_, *block);
 
     fprintf(spewout_, "end_cfg\n");
     fflush(spewout_);
@@ -104,11 +102,24 @@ C1Spewer::spewIntervals(const char *pass, LinearScanAllocator *regalloc)
     fprintf(spewout_, " name \"%s\"\n", pass);
 
     size_t nextId = 0x4000;
-    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
+    for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++)
         spewIntervals(spewout_, *block, regalloc, nextId);
 
     fprintf(spewout_, "end_intervals\n");
     fflush(spewout_);
+}
+
+void
+C1Spewer::endFunction()
+{
+    return;
+}
+
+void
+C1Spewer::finish()
+{
+    if (spewout_)
+        fclose(spewout_);
 }
 
 static void
@@ -159,7 +170,7 @@ C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regal
     }
 }
 void
-C1Spewer::spewCFG(FILE *fp, MBasicBlock *block)
+C1Spewer::spewPass(FILE *fp, MBasicBlock *block)
 {
     fprintf(fp, "  begin_block\n");
     fprintf(fp, "    name \"B%d\"\n", block->id());
@@ -222,3 +233,6 @@ C1Spewer::spewCFG(FILE *fp, MBasicBlock *block)
 
     fprintf(fp, "  end_block\n");
 }
+
+#endif /* DEBUG */
+

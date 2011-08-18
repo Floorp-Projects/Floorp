@@ -39,11 +39,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef jsion_ion_spewer_h__
+#define jsion_ion_spewer_h__
+
 #include <stdarg.h>
 #include "C1Spewer.h"
 #include "JSONSpewer.h"
-#include "MIRGraph.h"
 #include "LinearScan.h"
+#include "MIRGraph.h"
 
 namespace js {
 namespace ion {
@@ -70,18 +73,59 @@ enum IonSpewChannel {
     IonSpew_Terminator
 };
 
-#if defined(DEBUG) && !defined(JS_ION_SPEW)
-# define JS_ION_SPEW
-#endif
 
-#if defined(JS_ION_SPEW)
+// The IonSpewer is only available on debug builds.
+// None of the global functions have effect on non-debug builds.
+
+#ifdef DEBUG
+
+class IonSpewer
+{
+  private:
+    MIRGraph *graph;
+    JSScript *function;
+    C1Spewer c1Spewer;
+    JSONSpewer jsonSpewer;
+    bool inited_;
+
+  public:
+    IonSpewer()
+      : graph(NULL), function(NULL), inited_(false)
+    { }
+
+    // File output is terminated safely upon destruction.
+    ~IonSpewer();
+
+    bool init();
+    void beginFunction(MIRGraph *graph, JSScript *);
+    void spewPass(const char *pass);
+    void spewPass(const char *pass, LinearScanAllocator *ra);
+    void endFunction();
+};
+
+void IonSpewNewFunction(MIRGraph *graph, JSScript *function);
+void IonSpewPass(const char *pass);
+void IonSpewPass(const char *pass, LinearScanAllocator *ra);
+void IonSpewEndFunction();
+
 void CheckLogging();
 extern FILE *IonSpewFile;
 void IonSpew(IonSpewChannel channel, const char *fmt, ...);
 void IonSpewHeader(IonSpewChannel channel);
 bool IonSpewEnabled(IonSpewChannel channel);
 void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap);
+
 #else
+
+static inline void IonSpewNewFunction(MIRGraph *graph, JSScript *function)
+{ }
+static inline void IonSpewPass(const char *pass)
+{ }
+static inline void IonSpewPass(const char *pass, LinearScanAllocator *ra)
+{ }
+static inline void IonSpewEndFunction()
+{ }
+
 static inline void CheckLogging()
 { }
 static FILE *const IonSpewFile = NULL;
@@ -93,32 +137,11 @@ static inline bool IonSpewEnabled(IonSpewChannel channel)
 { return false; }
 static inline void IonSpewVA(IonSpewChannel, const char *fmt, va_list ap)
 { } 
-#endif
 
+#endif /* DEBUG */
 
-class IonSpewer
-{
-  private:
-    MIRGraph *graph;
-    JSScript *function;
-    C1Spewer c1Spewer;
-    JSONSpewer jsonSpewer;
+} /* ion */
+} /* js */
 
-  public:
-    IonSpewer(MIRGraph *graph, JSScript *function)
-      : graph(graph),
-        function(function),
-        c1Spewer(*graph, function)
-    { }
+#endif /* jsion_ion_spewer_h__ */
 
-    bool init();
-    void spewPass(const char *pass);
-    void spewPass(const char *pass, LinearScanAllocator *ra);
-    void finish();
-
-};
-
-
-
-}
-}
