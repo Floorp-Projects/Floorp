@@ -624,6 +624,13 @@ let ContentScroll =  {
           left: aEvent.x
         });
 
+        // Send event only after painting to make sure content views in the parent process have
+        // been updated.
+        addEventListener("MozAfterPaint", function afterPaint() {
+          removeEventListener("MozAfterPaint", afterPaint, false);
+          sendAsyncMessage("Content:UpdateDisplayPort");
+        }, false);
+
         break;
       }
     }
