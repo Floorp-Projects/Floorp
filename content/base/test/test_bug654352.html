@@ -23,16 +23,16 @@ function afterLoad() {
   var testpre = document.getElementById("testpre");
   var rect1 = testpre.getBoundingClientRect();
   dump(rect1 + "\n");
-  var caret1 = document.caretPositionFromPoint(rect1.left + 30, rect1.top + 10);
+  var caret1 = document.caretPositionFromPoint(rect1.right - 5, rect1.top + 10);
   ok(caret1.offsetNode == testpre.firstChild, "node in CaretPosition not correct (" + caret1.offsetNode + " == " + testpre.firstChild + ")")
-  ok(caret1.offset == 5, "offset in CaretPosition not correct (" + caret1.offset + "== 5)")
+  ok(caret1.offset == 9, "offset in CaretPosition not correct (" + caret1.offset + "== 9)")
 
   var testinput = document.getElementById("testinput");
   var rect2 = testinput.getBoundingClientRect();
   dump(rect2.top +", " + rect2.left + "\n");
-  var caret2 = document.caretPositionFromPoint( rect2.left + 30, rect2.top + 10);
+  var caret2 = document.caretPositionFromPoint( rect2.right - 5, rect2.top + 10);
   ok(caret2.offsetNode == testinput, "node in CaretPosition not correct (" + caret2.offsetNode + " == " + testinput + ")")
-  ok(caret2.offset == 6, "offset in CaretPosition not correct (" + caret2.offset + "== 6)")
+  ok(caret2.offset == 9, "offset in CaretPosition not correct (" + caret2.offset + "== 9)")
   SimpleTest.finish();
 };
 addLoadEvent(afterLoad);
