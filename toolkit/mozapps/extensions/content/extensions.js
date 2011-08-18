@@ -1486,7 +1486,7 @@ var gCategories = {
     // If there was no last view or no existing category matched the last view
     // then the list will default to selecting the search category and we never
     // want to show that as the first view so switch to the default category
-    if (this.node.selectedItem == this._search)
+    if (!this.node.selectedItem || this.node.selectedItem == this._search)
       this.node.value = VIEW_DEFAULT;
 
     var self = this;
