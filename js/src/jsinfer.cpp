@@ -2042,9 +2042,9 @@ TypeCompartment::nukeTypes(JSContext *cx)
      */
 
 #ifdef JS_THREADSAFE
-    Maybe<AutoLockGC> maybeLock;
+    AutoLockGC maybeLock;
     if (!cx->runtime->gcMarkAndSweep)
-        maybeLock.construct(cx->runtime);
+        maybeLock.lock(cx->runtime);
 #endif
 
     inferenceEnabled = false;
@@ -4411,7 +4411,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
         return;
     }
 
-    gc::FinalizeKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
+    gc::AllocKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
 
     /* We should not have overflowed the maximum number of fixed slots for an object. */
     JS_ASSERT(gc::GetGCKindSlots(kind) >= baseobj->slotSpan());
@@ -4441,7 +4441,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
     }
 
     type->newScript->script = script;
-    type->newScript->finalizeKind = unsigned(kind);
+    type->newScript->allocKind = kind;
     type->newScript->shape = baseobj->lastProperty();
 
     type->newScript->initializerList = (TypeNewScript::Initializer *)
