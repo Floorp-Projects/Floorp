@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=674770
+-->
+<head>
+  <title>Test for Bug 674770</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=674770">Mozilla Bug 674770</a>
+<p id="display"></p>
+<div id="content">
+<a href="file_bug674770.html" id="link1">test</a>
+<div contenteditable>
+<a href="file_bug674770.html" id="link2">test</a>
+</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 674770 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.setBoolPref("middlemouse.paste", true);
+  localStorage.removeItem("clicked");
+  window.linkWasClicked = false;
+
+  var link = document.querySelector("#link1");
+  addEventListener("storage", function(e) {
+    is(e.key, "clicked", "Correct event");
+    is(e.newValue, "true", "Correct value");
+    window.linkWasClicked = true;
+  }, false);
+  synthesizeMouseAtCenter(link, {button: 1});
+
+  hitEventLoop(function() {
+    ok(window.linkWasClicked, "The click operation worked successfully");
+    window.linkWasClicked = false;
+
+    link = document.querySelector("#link2");
+    localStorage.removeItem("clicked");
+    synthesizeMouseAtCenter(link, {button: 1});
+
+    hitEventLoop(function() {
+      ok(!window.linkWasClicked, "The click operation shouldn't work in the contenteditable area");
+
+      localStorage.removeItem("clicked");
+      SpecialPowers.clearUserPref("middlemouse.paste");
+      focus(); // reset focus
+      SimpleTest.finish();
+    }, 100);
+  }, 100);
+});
+
+function hitEventLoop(func, times) {
+  if (times > 0) {
+    setTimeout(hitEventLoop, 0, func, times - 1);
+  } else {
+    setTimeout(func, 0);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

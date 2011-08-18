@@ -56,7 +56,7 @@ class nsIEventTarget;
  * This function is designed to be used to implement AsyncWait when the
  * aTarget parameter is non-null.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_NewInputStreamReadyEvent(nsIInputStreamCallback **aEvent,
                             nsIInputStreamCallback  *aNotify,
                             nsIEventTarget          *aTarget);
@@ -71,7 +71,7 @@ NS_NewInputStreamReadyEvent(nsIInputStreamCallback **aEvent,
  * This function is designed to be used to implement AsyncWait when the
  * aTarget parameter is non-null.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback **aEvent,
                              nsIOutputStreamCallback  *aNotify,
                              nsIEventTarget           *aTarget);
@@ -105,7 +105,7 @@ typedef void (* nsAsyncCopyCallbackFun)(void *closure, nsresult status);
  *
  * Caller can obtain aCopierCtx to be able to cancel copying.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_AsyncCopy(nsIInputStream         *aSource,
              nsIOutputStream        *aSink,
              nsIEventTarget         *aTarget,
@@ -126,7 +126,7 @@ NS_AsyncCopy(nsIInputStream         *aSource,
  *        A failure code indicating why the operation is being canceled.
  *        It is an error to pass a success code.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason);
 
 /**
@@ -152,7 +152,7 @@ NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason);
  *        Note: The data copied to the string may contain null bytes and may
  *        contain non-ASCII values.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_ConsumeStream(nsIInputStream *aSource, PRUint32 aMaxCount,
                  nsACString &aBuffer);
 
@@ -169,7 +169,7 @@ NS_ConsumeStream(nsIInputStream *aSource, PRUint32 aMaxCount,
  * @param aInputStream
  *        The input stream to test.
  */
-extern NS_COM PRBool
+extern PRBool
 NS_InputStreamIsBuffered(nsIInputStream *aInputStream);
 
 /**
@@ -185,7 +185,7 @@ NS_InputStreamIsBuffered(nsIInputStream *aInputStream);
  * @param aOutputStream
  *        The output stream to test.
  */
-extern NS_COM PRBool
+extern PRBool
 NS_OutputStreamIsBuffered(nsIOutputStream *aOutputStream);
 
 /**
@@ -195,7 +195,7 @@ NS_OutputStreamIsBuffered(nsIOutputStream *aOutputStream);
  *
  * @see nsIInputStream.idl for a description of this function's parameters.
  */
-extern NS_COM NS_METHOD
+extern NS_METHOD
 NS_CopySegmentToStream(nsIInputStream *aInputStream, void *aClosure,
                        const char *aFromSegment, PRUint32 aToOffset,
                        PRUint32 aCount, PRUint32 *aWriteCount);
@@ -208,7 +208,7 @@ NS_CopySegmentToStream(nsIInputStream *aInputStream, void *aClosure,
  *
  * @see nsIInputStream.idl for a description of this function's parameters.
  */
-extern NS_COM NS_METHOD
+extern NS_METHOD
 NS_CopySegmentToBuffer(nsIInputStream *aInputStream, void *aClosure,
                        const char *aFromSegment, PRUint32 aToOffset,
                        PRUint32 aCount, PRUint32 *aWriteCount);
@@ -220,7 +220,7 @@ NS_CopySegmentToBuffer(nsIInputStream *aInputStream, void *aClosure,
  *
  * @see nsIInputStream.idl for a description of this function's parameters.
  */
-extern NS_COM NS_METHOD
+extern NS_METHOD
 NS_DiscardSegment(nsIInputStream *aInputStream, void *aClosure,
                   const char *aFromSegment, PRUint32 aToOffset,
                   PRUint32 aCount, PRUint32 *aWriteCount);
@@ -236,7 +236,7 @@ NS_DiscardSegment(nsIInputStream *aInputStream, void *aClosure,
  * This function comes in handy when implementing ReadSegments in terms of an
  * inner stream's ReadSegments.
  */
-extern NS_COM NS_METHOD
+extern NS_METHOD
 NS_WriteSegmentThunk(nsIInputStream *aInputStream, void *aClosure,
                      const char *aFromSegment, PRUint32 aToOffset,
                      PRUint32 aCount, PRUint32 *aWriteCount);

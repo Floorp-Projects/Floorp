@@ -419,7 +419,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 
     if (IsFunctionObject(args.calleev(), &ucr->callee)) {
         ucr->callee = &args.callee();
-        ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
+        ucr->fun = ucr->callee->getFunctionPrivate();
 
         if (ucr->fun->isInterpreted()) {
             if (!UncachedInlineCall(f, NO_CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))

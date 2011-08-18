@@ -259,7 +259,7 @@ function DisplayVerificationData(cert, result)
     verifystr = bundle.GetStringFromName('certNotVerified_Unknown');
   }
   var verified=document.getElementById('verified');
-  verified.setAttribute("value", verifystr);
+  verified.textContent = verifystr;
   if (count > 0) {
     var verifyInfoBox = document.getElementById('verify_info_box');
     for (var i=0; i<count; i++) {

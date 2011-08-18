@@ -71,7 +71,8 @@ nsUndoCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
   {
     PRBool isEnabled, isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return editor->CanUndo(&isEnabled, outCmdEnabled);
   }
@@ -119,7 +120,8 @@ nsRedoCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
   {
     PRBool isEnabled, isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return editor->CanRedo(&isEnabled, outCmdEnabled);
   }
@@ -215,7 +217,8 @@ nsCutCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
   {
     PRBool isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return editor->CanCut(outCmdEnabled);
   }
@@ -319,7 +322,8 @@ nsCopyCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
   {
     PRBool isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return editor->CanCopy(outCmdEnabled);
   }
@@ -422,7 +426,8 @@ nsPasteCommand::IsCommandEnabled(const char *aCommandName,
   if (editor)
   {
     PRBool isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return editor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
   }
@@ -469,7 +474,8 @@ nsPasteTransferableCommand::IsCommandEnabled(const char *aCommandName,
   if (editor)
   {
     PRBool isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return editor->CanPasteTransferable(nsnull, outCmdEnabled);
   }
@@ -580,7 +586,8 @@ nsDeleteCommand::IsCommandEnabled(const char * aCommandName,
   NS_ENSURE_TRUE(editor, NS_OK);
     
   PRBool isEditable = PR_FALSE;
-  NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+  nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isEditable)
     return NS_OK;

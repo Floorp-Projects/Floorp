@@ -117,7 +117,7 @@ class nsTDependentString_CharT : public nsTString_CharT
           Rebind(data, PRUint32(char_traits::length(data)));
         }
 
-      NS_COM void Rebind( const char_type* data, size_type length );
+      void Rebind( const char_type* data, size_type length );
 
       void Rebind( const char_type* start, const char_type* end )
         {

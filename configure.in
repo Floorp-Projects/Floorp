@@ -3588,53 +3588,6 @@ then
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
 fi
 
-dnl ========================================================
-dnl See if mmap sees writes
-dnl For cross compiling, just define it as no, which is a safe default
-dnl ========================================================
-AC_MSG_CHECKING(whether mmap() sees write()s)
-
-changequote(,)
-mmap_test_prog='
-    #include <stdlib.h>
-    #include <unistd.h>
-    #include <sys/mman.h>
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <fcntl.h>
-
-    char fname[] = "conftest.file";
-    char zbuff[1024]; /* Fractional page is probably worst case */
-
-    int main() {
-	char *map;
-	int fd;
-	int i;
-	unlink(fname);
-	fd = open(fname, O_RDWR | O_CREAT, 0660);
-	if(fd<0) return 1;
-	unlink(fname);
-	write(fd, zbuff, sizeof(zbuff));
-	lseek(fd, 0, SEEK_SET);
-	map = (char*)mmap(0, sizeof(zbuff), PROT_READ, MAP_SHARED, fd, 0);
-	if(map==(char*)-1) return 2;
-	for(i=0; fname[i]; i++) {
-	    int rc = write(fd, &fname[i], 1);
-	    if(map[i]!=fname[i]) return 4;
-	}
-	return 0;
-    }
-'
-changequote([,])
-
-AC_TRY_RUN($mmap_test_prog , result="yes", result="no", result="yes")
-
-AC_MSG_RESULT("$result")
-
-if test "$result" = "no"; then
-    AC_DEFINE(MMAP_MISSES_WRITES)
-fi
-
 
 dnl Checks for library functions.
 dnl ========================================================
@@ -4778,7 +4731,6 @@ MOZ_DISABLE_DOMCRYPTO=
 NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
-NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
@@ -5194,7 +5146,7 @@ incorrect])
     fi
 
     MOZ_ENABLE_QTMOBILITY=
-    PKG_CHECK_MODULES(_QTMOBILITY, QtSensors QtFeedback,
+    PKG_CHECK_MODULES(_QTMOBILITY, QtSensors QtFeedback QtLocation,
                       MOZ_ENABLE_QTMOBILITY=1,
                       MOZ_ENABLE_QTMOBILITY=)
     if test "$MOZ_ENABLE_QTMOBILITY"; then
@@ -5202,12 +5154,13 @@ incorrect])
        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
        MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
     else
-       AC_CHECK_LIB(QtSensors QtFeedback, main, [
+       AC_CHECK_LIB(QtSensors QtFeedback QtLocation, main, [
           MOZ_ENABLE_QTMOBILITY=1
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtMobility"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtSensors"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtFeedback"
-          MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors -lQtFeedback"
+          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtLocation"
+          MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors -lQtFeedback -lQtLocation"
        ])
     fi
     if test "$MOZ_ENABLE_QTMOBILITY"; then
@@ -8763,19 +8716,6 @@ AC_SUBST(NECKO_PROTOCOLS)
 for p in $NECKO_PROTOCOLS; do
     AC_DEFINE_UNQUOTED(NECKO_PROTOCOL_$p)
 done
-
-dnl
-dnl option to disable necko's disk cache
-dnl
-MOZ_ARG_DISABLE_BOOL(necko-disk-cache,
-[  --disable-necko-disk-cache
-                          Disable necko disk cache],
-    NECKO_DISK_CACHE=,
-    NECKO_DISK_CACHE=1)
-AC_SUBST(NECKO_DISK_CACHE)
-if test "$NECKO_DISK_CACHE"; then
-    AC_DEFINE(NECKO_DISK_CACHE)
-fi
 
 dnl
 dnl option to disable necko's wifi scanner

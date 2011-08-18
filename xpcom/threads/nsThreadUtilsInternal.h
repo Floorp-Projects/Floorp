@@ -54,7 +54,7 @@ class nsIThreadObserver;
  * other threads will return an error.
  */
 extern nsresult
-NS_COM NS_SetGlobalThreadObserver(nsIThreadObserver* aObserver);
+NS_SetGlobalThreadObserver(nsIThreadObserver* aObserver);
 
 #endif // MOZILLA_INTERNAL_API
 

@@ -48,12 +48,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsInterfaceHashtable.h"
 
-// Set IMETHOD_VISIBILITY to empty so that the class-level NS_COM declaration
-// controls member method visibility.
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY
-
-class NS_COM nsHashPropertyBag : public nsIWritablePropertyBag
+class nsHashPropertyBag : public nsIWritablePropertyBag
                                , public nsIWritablePropertyBag2
 {
 public:
@@ -82,7 +77,7 @@ protected:
 
 // Note: NS_NewHashPropertyBag returns a HPB that
 // uses a non-thread-safe internal hash
-extern "C" NS_COM nsresult
+extern "C" nsresult
 NS_NewHashPropertyBag(nsIWritablePropertyBag* *_retval);
 
 #endif /* nsHashPropertyBag_h___ */

@@ -528,24 +528,25 @@ js_ErrorFromException(JSContext *cx, jsval exn)
 }
 
 static JSString *
-ValueToShortSource(JSContext *cx, jsval v)
+ValueToShortSource(JSContext *cx, const Value &v)
 {
     JSString *str;
 
     /* Avoid toSource bloat and fallibility for object types. */
-    if (JSVAL_IS_PRIMITIVE(v))
-        return js_ValueToSource(cx, Valueify(v));
+    if (!v.isObject())
+        return js_ValueToSource(cx, v);
 
-    AutoCompartment ac(cx, JSVAL_TO_OBJECT(v));
+    JSObject *obj = &v.toObject();
+    AutoCompartment ac(cx, obj);
     if (!ac.enter())
         return NULL;
 
-    if (VALUE_IS_FUNCTION(cx, v)) {
+    if (obj->isFunction()) {
         /*
          * XXX Avoid function decompilation bloat for now.
          */
-        str = JS_GetFunctionId(JS_ValueToFunction(cx, v));
-        if (!str && !(str = js_ValueToSource(cx, Valueify(v)))) {
+        str = JS_GetFunctionId(obj->getFunctionPrivate());
+        if (!str && !(str = js_ValueToSource(cx, v))) {
             /*
              * Continue to soldier on if the function couldn't be
              * converted into a string.
@@ -559,8 +560,7 @@ ValueToShortSource(JSContext *cx, jsval v)
          * memory, for too many classes (see Mozilla bug 166743).
          */
         char buf[100];
-        JS_snprintf(buf, sizeof buf, "[object %s]",
-                    JSVAL_TO_OBJECT(v)->getClass()->name);
+        JS_snprintf(buf, sizeof buf, "[object %s]", obj->getClass()->name);
         str = JS_NewStringCopyZ(cx, buf);
     }
 
@@ -638,7 +638,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
             for (i = 0; i != elem->argc; i++, values++) {
                 if (i > 0)
                     APPEND_CHAR_TO_STACK(',');
-                str = ValueToShortSource(cx, *values);
+                str = ValueToShortSource(cx, Valueify(*values));
                 if (!str)
                     goto bad;
                 APPEND_STRING_TO_STACK(str);
