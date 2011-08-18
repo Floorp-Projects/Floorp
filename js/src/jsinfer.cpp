@@ -2777,6 +2777,9 @@ TypeObject::markPropertyConfigured(JSContext *cx, jsid id)
 void
 TypeObject::markStateChange(JSContext *cx)
 {
+    if (unknownProperties())
+        return;
+
     AutoEnterTypeInference enter(cx);
     TypeSet *types = maybeGetProperty(cx, JSID_EMPTY);
     if (types) {
