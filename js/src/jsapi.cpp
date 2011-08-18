@@ -4965,23 +4965,22 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
 
+    uint32 flags = TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_OBJECT;
+    if (!rval)
+        flags |= TCF_NO_SCRIPT_RVAL;
+
     CHECK_REQUEST(cx);
-    JSScript *script = Compiler::compileScript(cx, obj, NULL, principals,
-                                               !rval
-                                               ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
-                                               : TCF_COMPILE_N_GO,
+    JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, flags,
                                                chars, length, filename, lineno, compileVersion);
     if (!script) {
         LAST_FRAME_CHECKS(cx, script);
         return false;
     }
-    script->isUncachedEval = true;
 
     JS_ASSERT(script->getVersion() == compileVersion);
 
     bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
-    js_DestroyScript(cx, script, 5);
     return ok;
 
 }

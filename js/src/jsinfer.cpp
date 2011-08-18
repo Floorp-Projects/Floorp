@@ -1853,14 +1853,11 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSite
     jsbytecode *pc = key.script->code + key.offset;
     UntrapOpcode untrap(cx, key.script, pc);
 
-    if (JSOp(*pc) == JSOP_NEWOBJECT && !key.uncached) {
+    if (JSOp(*pc) == JSOP_NEWOBJECT) {
         /*
          * This object is always constructed the same way and will not be
          * observed by other code before all properties have been added. Mark
          * all the properties as definite properties of the object.
-         * :XXX: skipping for objects from uncached eval scripts, as entries
-         * in the allocation site table may be stale and we could potentially
-         * get a spurious hit. Fix this hack.
          */
         JSObject *baseobj = key.script->getObject(GET_SLOTNO(pc));
 
@@ -3842,14 +3839,6 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
 {
     JS_ASSERT(!ranInference());
 
-    /*
-     * Types in uncached eval scripts cannot be analyzed. These are manually
-     * destroyed, rather than destroyed on GC, and we cannot ensure that type
-     * constraints do not refer to the script after it has been destroyed.are
-     * referring to 
-     */
-    JS_ASSERT(!script->isUncachedEval);
-
     if (OOM()) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
@@ -4482,7 +4471,7 @@ ScriptAnalysis::printTypes(JSContext *cx)
 
     if (script->hasFunction)
         printf("Function");
-    else if (script->isCachedEval || script->isUncachedEval)
+    else if (script->isCachedEval)
         printf("Eval");
     else
         printf("Main");
@@ -5470,7 +5459,7 @@ TypeCompartment::sweep(JSContext *cx)
             const AllocationSiteKey &key = e.front().key;
             TypeObject *object = e.front().value;
 
-            if (key.uncached || key.script->isAboutToBeFinalized(cx) || !object->isMarked())
+            if (key.script->isAboutToBeFinalized(cx) || !object->isMarked())
                 e.removeFront();
         }
     }
