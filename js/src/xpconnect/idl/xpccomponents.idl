@@ -42,13 +42,30 @@
 #include "xpcexception.idl"
 #include "xpcjsid.idl"
 #include "nsIComponentManager.idl"
-#include "nsIScriptableInterfaces.idl"
 
 %{C++
 #include "jspubtd.h"
 %}
 
 interface xpcIJSWeakReference;
+
+/**
+* interface of Components.interfacesByID
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, uuid(c99cffac-5aed-4267-ad2f-f4a4c9d4a081)]
+interface nsIXPCComponents_InterfacesByID : nsISupports
+{
+};
+
+/**
+* interface of Components.interfaces
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, uuid(b8c31bba-79db-4a1d-930d-4cdd68713f9e)]
+interface nsIXPCComponents_Interfaces : nsISupports
+{
+};
 
 /**
 * interface of Components.classes
@@ -282,18 +299,18 @@ interface nsIXPCComponents_Utils : nsISupports
 [scriptable, uuid(155809f1-71f1-47c5-be97-d812ba560405)]
 interface nsIXPCComponents : nsISupports
 {
-    readonly attribute nsIScriptableInterfaces      interfaces;
-    readonly attribute nsIScriptableInterfacesByID  interfacesByID;
-    readonly attribute nsIXPCComponents_Classes     classes;
-    readonly attribute nsIXPCComponents_ClassesByID classesByID;
-    readonly attribute nsIStackFrame                stack;
-    readonly attribute nsIXPCComponents_Results     results;
-    readonly attribute nsIComponentManager          manager;
-    readonly attribute nsIXPCComponents_Utils       utils;
+    readonly attribute nsIXPCComponents_Interfaces      interfaces;
+    readonly attribute nsIXPCComponents_InterfacesByID  interfacesByID;
+    readonly attribute nsIXPCComponents_Classes         classes;
+    readonly attribute nsIXPCComponents_ClassesByID     classesByID;
+    readonly attribute nsIStackFrame                    stack;
+    readonly attribute nsIXPCComponents_Results         results;
+    readonly attribute nsIComponentManager              manager;
+    readonly attribute nsIXPCComponents_Utils           utils;
 
-    readonly attribute nsIXPCComponents_ID          ID;
-    readonly attribute nsIXPCComponents_Exception   Exception;
-    readonly attribute nsIXPCComponents_Constructor Constructor;
+    readonly attribute nsIXPCComponents_ID              ID;
+    readonly attribute nsIXPCComponents_Exception       Exception;
+    readonly attribute nsIXPCComponents_Constructor     Constructor;
 
     boolean isSuccessCode(in nsresult result);
 

@@ -433,7 +433,7 @@ endif
 
 define SUBMAKE # $(call SUBMAKE,target,directory)
 +@$(UPDATE_TITLE)
-+@$(MAKE) $(if $(2),-C $(2)) $(1)
++$(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it
 
@@ -898,8 +898,11 @@ ifdef SHARED_LIBRARY
 	  $(SHARED_LIBRARY_NAME) $(DIST)/$(MOZ_APP_NAME)
 endif
 endif # SHARED_LIBRARY || PROGRAM
+else  # ! WINNT_
+# Force rebuilding all objects on the second pass
+$(OBJS): FORCE
 endif # WINNT_
-endif # MOZ_PROFILE_GENERATE || MOZ_PROFILE_USE
+endif # MOZ_PROFILE_USE
 ifdef MOZ_PROFILE_GENERATE
 # Clean up profiling data during PROFILE_GENERATE phase
 export::

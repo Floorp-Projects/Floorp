@@ -52,7 +52,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsIThread.h"
-#include "nsIXPConnect.h"
 
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
@@ -207,14 +206,6 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
     } else if (aTarget == NS_PROXY_TO_MAIN_THREAD) {
       thread = do_GetMainThread();
       aTarget = thread.get();
-    }
-
-    if (nsCOMPtr<nsIXPConnectWrappedJS> wjs = do_QueryInterface(aObj)) {
-      // Only proxy wrapped JS from the main thread to the main thread
-      if (!NS_IsMainThread() || aTarget != NS_GetCurrentThread()) {
-        NS_ABORT_IF_FALSE(false, "GetProxyForObject on wrapped JS not allowed");
-        return NS_ERROR_FAILURE;
-      }
     }
 
     // check to see if the target is on our thread.  If so, just return the

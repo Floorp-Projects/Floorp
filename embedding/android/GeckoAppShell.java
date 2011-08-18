@@ -558,6 +558,9 @@ public class GeckoAppShell
         if (imm == null)
             return;
 
+        // Log.d("GeckoAppJava", String.format("IME: notifyIMEChange: t=%s s=%d ne=%d oe=%d",
+        //                                      text, start, newEnd, end));
+
         if (newEnd < 0)
             GeckoApp.surfaceView.inputConnection.notifySelectionChange(
                 imm, start, end);

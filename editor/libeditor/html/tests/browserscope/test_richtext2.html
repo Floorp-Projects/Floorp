@@ -54,6 +54,22 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
     // This is useful for updating the currentStatus.js file when an editor bug is fixed.
     const UPDATE_TEST_RESULTS = false;
 
+    // some tests (at least RTE2-QE_PASTE_TEXT-1) require clipboard data
+    function startTest() {
+      SimpleTest.waitForClipboard("foo",
+        function() {
+          Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                    .getService(Components.interfaces.nsIClipboardHelper)
+                    .copyString("foo");
+        },
+        runTest,
+        function() {
+          ok(false, "Failed to copy a string to the clipboard");
+          SimpleTest.finish();
+        }
+      );
+    }
+
     function runTest() {
       initVariables();
       initEditorDocs();
@@ -253,7 +269,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
   </script>
 </head>
 
-<body onload="runTest()">
+<body onload="startTest()">
   <iframe name="iframe-dM" id="iframe-dM" src="lib/richtext2/richtext2/static/editable-dM.html"></iframe>
   <iframe name="iframe-body" id="iframe-body" src="lib/richtext2/richtext2/static/editable-body.html"></iframe>
   <iframe name="iframe-div" id="iframe-div" src="lib/richtext2/richtext2/static/editable-div.html"></iframe>

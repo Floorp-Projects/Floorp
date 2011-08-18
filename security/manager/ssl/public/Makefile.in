@@ -97,7 +97,6 @@ XPIDLSRCS = \
     nsIPKCS11Module.idl \
     nsICRLManager.idl \
     nsISMimeCert.idl \
-    nsICipherInfo.idl \
     nsIStreamCipher.idl \
     nsIKeyModule.idl \
     nsIProtectedAuthThread.idl \
