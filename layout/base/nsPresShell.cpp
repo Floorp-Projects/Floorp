@@ -9411,6 +9411,16 @@ SetExternalResourceIsActive(nsIDocument* aDocument, void* aClosure)
   return PR_TRUE;
 }
 
+static void
+SetPluginIsActive(nsIContent* aContent, void* aClosure)
+{
+  nsIFrame *frame = aContent->GetPrimaryFrame();
+  nsIObjectFrame *objectFrame = do_QueryFrame(frame);
+  if (objectFrame) {
+    objectFrame->SetIsDocumentActive(*static_cast<PRBool*>(aClosure));
+  }
+}
+
 nsresult
 PresShell::SetIsActive(PRBool aIsActive)
 {
@@ -9425,6 +9435,8 @@ PresShell::SetIsActive(PRBool aIsActive)
 
   // Propagate state-change to my resource documents' PresShells
   mDocument->EnumerateExternalResources(SetExternalResourceIsActive,
+                                        &aIsActive);
+  mDocument->EnumerateFreezableElements(SetPluginIsActive,
                                         &aIsActive);
   nsresult rv = UpdateImageLockingState();
 #ifdef ACCESSIBILITY

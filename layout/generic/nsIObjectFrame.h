@@ -94,6 +94,13 @@ public:
    * Get the native widget for the plugin, if any.
    */
   virtual nsIWidget* GetWidget() = 0;
+
+  /**
+   * Update plugin active state. Frame should update if it is on an active tab
+   * or not and forward that information to the plugin to make it possible to
+   * throttle down plugin instance in non active case.
+   */
+  virtual void SetIsDocumentActive(PRBool aIsActive) = 0;
 };
 
 #endif /* nsIObjectFrame_h___ */
