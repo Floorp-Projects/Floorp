@@ -1,4 +1,5 @@
 # -*- makefile -*-
+# vim:set ts=8 sw=8 sts=8 noet:
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -15,12 +16,13 @@
 #
 # The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is Mozilla Foundation.
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation
 # Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Joey Armstrong <joey@mozilla.com>
+#  Joey Armstrong <joey@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,35 +38,33 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+SPACE ?= $(NULL) $(NULL)
 
-include $(DEPTH)/config/autoconf.mk
+  get_auto_arg = $(word $(2),$(subst ^,$(SPACE),$(1))) # get(1=var, 2=offset)
+gen_auto_macro = $(addsuffix ^$(1),$(2))  # gen(1=target_pattern, 2=value)
 
-TS = .ts
-GENERATED_DIRS += $(TS)
-GARBAGE_DIRS   += $(TS)
+# Library macros
+mkdir_deps = $(foreach dir,$($(1)),$(dir)/.mkdir.done)
 
-include $(topsrcdir)/config/rules.mk
-
-##################################################
-## Gather a list of tests, generate timestamp deps
-##################################################
-ifneq (,$(findstring check,$(MAKECMDGOALS)))
-          allsrc = $(wildcard $(srcdir)/*)
-       tests2run = $(notdir $(filter %.tpl,$(allsrc)))
-  check_targets += $(addprefix $(TS)/,$(tests2run))
+###########################################################################
+## Automatic dependency macro generation.
+## Macros should be defined prior to the inclusion of rules.mk
+##  GENERATED_DIRS - a list of directories to create
+##  AUTO_DEPS      - [returned] a list of generated deps targets can depend on
+##  Usage:
+##    all bootstrap: $(AUTO_DEPS)
+##    target: $(dir)/.mkdir.done $(dir)/foobar
+##    mydirs = $(call mkdir_deps,dirlist_macro_name)
+###########################################################################
+ifdef GENERATED_DIRS
+  AUTO_DEPS += $(call mkdir_deps,GENERATED_DIRS)
 endif
 
-check:: $(AUTO_DEPS) $(check_targets)
+.SECONDARY: $(GENERATED_DIRS) # preserve intermediates: .mkdir.done
 
-#############################################
-# Only invoke tests when sources have changed
-#############################################
-$(TS)/%: $(srcdir)/%
-	$(PERL) $(srcdir)/runtest $<
+###################################################################
+## Thread safe directory creation
+###################################################################
+%/.mkdir.done:
+	$(MKDIR) -p $(dir $@)
 	@touch $@
-
-# EOF
