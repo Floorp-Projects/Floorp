@@ -382,75 +382,74 @@ IonScript::Destroy(JSContext *cx, JSScript *script)
 static bool
 TestCompiler(IonBuilder &builder, MIRGraph &graph)
 {
-    IonSpewer spew(&graph, builder.script);
-    spew.init();
+    IonSpewNewFunction(&graph, builder.script);
 
     if (!builder.build())
         return false;
-    spew.spewPass("Build SSA");
+    IonSpewPass("BuildSSA");
 
     if (!SplitCriticalEdges(&builder, graph))
         return false;
-    spew.spewPass("Split Critical Edges");
+    IonSpewPass("Split Critical Edges");
 
     if (!ReorderBlocks(graph))
         return false;
-    spew.spewPass("Reorder Blocks");
+    IonSpewPass("Reorder Blocks");
 
     if (!BuildDominatorTree(graph))
         return false;
-    spew.spewPass("Dominator tree");
+    // No spew: graph not changed.
 
     if (!BuildPhiReverseMapping(graph))
         return false;
-    // No spew, graph not changed.
+    // No spew: graph not changed.
 
     if (!ApplyTypeInformation(graph))
         return false;
-    spew.spewPass("Apply types");
+    IonSpewPass("Apply types");
 
     if (js_IonOptions.gvn) {
         ValueNumberer gvn(graph, js_IonOptions.gvnIsOptimistic);
         if (!gvn.analyze())
             return false;
-        spew.spewPass("GVN");
+        IonSpewPass("GVN");
     }
 
     if (!EliminateDeadCode(graph))
         return false;
-    spew.spewPass("DCE");
+    IonSpewPass("DCE");
 
     if (js_IonOptions.licm) {
         LICM licm(graph);
         if (!licm.analyze())
             return false;
-        spew.spewPass("LICM");
+        IonSpewPass("LICM");
     }
 
     LIRGraph lir(graph);
     LIRGenerator lirgen(&builder, graph, lir);
     if (!lirgen.generate())
         return false;
-    spew.spewPass("Generate LIR");
+    IonSpewPass("Generate LIR");
 
     if (js_IonOptions.lsra) {
         LinearScanAllocator regalloc(&lirgen, lir);
         if (!regalloc.go())
             return false;
-        spew.spewPass("Allocate Registers", &regalloc);
+        IonSpewPass("Allocate Registers", &regalloc);
     } else {
         GreedyAllocator greedy(&builder, lir);
         if (!greedy.allocate())
             return false;
-        spew.spewPass("Allocate Registers");
+        IonSpewPass("Allocate Registers");
     }
 
     CodeGenerator codegen(&builder, lir);
     if (!codegen.generate())
         return false;
-    spew.spewPass("Code generation");
+    // No spew: graph not changed.
 
-    spew.finish();
+    IonSpewEndFunction();
 
     return true;
 }

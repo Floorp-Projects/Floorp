@@ -194,9 +194,14 @@ JSONSpewer::init(const char *path)
 void
 JSONSpewer::beginFunction(JSScript *script)
 {
+    if (inFunction_)
+        endFunction();
+
     beginObject();
     stringProperty("name", "%s:%d", script->filename, script->lineno);
     beginListProperty("passes");
+
+    inFunction_ = true;
 }
 
 void
@@ -402,9 +407,11 @@ JSONSpewer::endPass()
 void
 JSONSpewer::endFunction()
 {
+    JS_ASSERT(inFunction_);
     endList();
     endObject();
     fflush(fp_);
+    inFunction_ = false;
 }
 
 void
@@ -413,9 +420,14 @@ JSONSpewer::finish()
     if (!fp_)
         return;
 
+    if (inFunction_)
+        endFunction();
+
     endList();
     endObject();
     fprintf(fp_, "\n");
-    fflush(fp_);
+
+    fclose(fp_);
+    fp_ = NULL;
 }
 

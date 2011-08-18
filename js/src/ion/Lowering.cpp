@@ -385,7 +385,7 @@ SpewSnapshot(MInstruction *ins, MSnapshot *snapshot)
 
     for (size_t i = 0; i < snapshot->numOperands(); i++) {
         MDefinition *in = snapshot->getOperand(i);
-        fprintf(IonSpewFile, "    slot%d: ", i);
+        fprintf(IonSpewFile, "    slot%u: ", (unsigned)i);
         in->printName(IonSpewFile);
         fprintf(IonSpewFile, "\n");
     }
