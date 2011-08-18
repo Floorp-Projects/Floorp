@@ -56,6 +56,7 @@ UseCompatibleWith(const LUse *use, LAllocation alloc)
       case LUse::KEEPALIVE:
         return alloc.isRegister() || alloc.isMemory();
       case LUse::REGISTER:
+      case LUse::COPY:
         return alloc.isRegister();
       case LUse::FIXED:
         if (alloc.isGeneralReg())
@@ -98,6 +99,26 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
     return false;
 }
 #endif
+
+int
+Requirement::priority()
+{
+    switch (kind_) {
+      case Requirement::FIXED:
+      case Requirement::SAME_AS_OTHER:
+        return 0;
+
+      case Requirement::REGISTER:
+        return 1;
+
+      case Requirement::NONE:
+        return 2;
+
+      default:
+        JS_NOT_REACHED("Unknown requirement kind.");
+        return -1;
+    }
+}
 
 bool
 LiveInterval::addRange(CodePosition from, CodePosition to)
@@ -363,7 +384,7 @@ LinearScanAllocator::createDataStructures()
             }
             for (size_t j = 0; j < ins->numTemps(); j++) {
                 LDefinition *def = ins->getTemp(j);
-                if (!vregs[def].init(def->virtualRegister(), block, *ins, def, true))
+                if (!vregs[def].init(def->virtualRegister(), block, *ins, def))
                     return false;
             }
         }
@@ -480,6 +501,13 @@ LinearScanAllocator::buildLivenessInfo()
                                                             outputOf(*ins));
                     }
                     live->insert(use->virtualRegister());
+
+                    if (use->policy() == LUse::COPY) {
+                        LiveInterval *bogus = new LiveInterval(NULL, 0);
+                        bogus->addRange(outputOf(*ins), outputOf(*ins));
+                        bogus->setRequirement(Requirement(use->virtualRegister(), inputOf(*ins)));
+                        unhandled.enqueue(bogus);
+                    }
                 }
             }
         }
@@ -575,7 +603,7 @@ LinearScanAllocator::allocateRegisters()
     for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         LiveInterval *live = vregs[i].getInterval(0);
         if (live->numRanges() > 0) {
-            setIntervalPriority(live);
+            setIntervalRequirement(live);
             unhandled.enqueue(live);
         }
     }
@@ -586,10 +614,12 @@ LinearScanAllocator::allocateRegisters()
         JS_ASSERT(current->numRanges() > 0);
 
         CodePosition position = current->start();
+        Requirement *req = current->requirement();
+        Requirement *hint = current->hint();
 
         IonSpew(IonSpew_LSRA, "Processing %d = [%u, %u] (pri=%d)",
-                current->reg()->reg(), current->start().pos(),
-                current->end().pos(), current->priority());
+                current->reg() ? current->reg()->reg() : 0, current->start().pos(),
+                current->end().pos(), current->requirement()->priority());
 
         // Shift active intervals to the inactive or handled sets as appropriate
         for (IntervalIterator i(active.begin()); i != active.end(); ) {
@@ -626,83 +656,24 @@ LinearScanAllocator::allocateRegisters()
         // Sanity check all intervals in all sets
         validateIntervals();
 
-        // Check the allocation policy if this is a definition or a use
-        bool mustHaveRegister = false;
-        bool canSpillOthers = true;
-        if (position == current->reg()->getFirstInterval()->start()) {
-            LDefinition *def = current->reg()->def();
-            LDefinition::Policy policy = def->policy();
-            if (policy == LDefinition::PRESET) {
-                IonSpew(IonSpew_LSRA, " Definition has preset policy.");
-                if (!assign(*def->output()))
-                    return false;
-                continue;
-            }
-            if (policy == LDefinition::MUST_REUSE_INPUT) {
-                IonSpew(IonSpew_LSRA, " Definition has 'must reuse input' policy.");
-                LInstruction *ins = current->reg()->ins();
-                JS_ASSERT(ins->numOperands() > 0);
-                JS_ASSERT(ins->getOperand(0)->isUse());
-                LiveInterval *inputInterval = vregs[ins->getOperand(0)].intervalFor(inputOf(ins));
-                JS_ASSERT(inputInterval);
-                JS_ASSERT(inputInterval->getAllocation()->isRegister());
-                if (!assign(*inputInterval->getAllocation()))
-                    return false;
-                continue;
-            }
-            if (policy == LDefinition::DEFAULT) {
-                if (current->reg()->ins()->isPhi()) {
-                    mustHaveRegister = false;
-                    canSpillOthers = false;
-                } else {
-                    mustHaveRegister = true;
-                }
-            } else {
-                JS_ASSERT(policy == LDefinition::REDEFINED);
-            }
-        } else if (position.subpos() == CodePosition::INPUT) {
-            // Scan uses for any at the current instruction
-            LOperand *fixedOp = NULL;
-            for (size_t i = 0; i < current->reg()->numUses(); i++) {
-                LOperand *op = current->reg()->getUse(i);
-                if (op->ins->id() == position.ins()) {
-                    LUse::Policy pol = op->use->policy();
-                    if (pol == LUse::FIXED) {
-                        IonSpew(IonSpew_LSRA, " Use has fixed policy.");
-                        JS_ASSERT(!fixedOp);
-                        fixedOp = op;
-                    } else if (pol == LUse::REGISTER) {
-                        IonSpew(IonSpew_LSRA, " Use has 'must have register' policy.");
-                        mustHaveRegister = true;
-                    } else {
-                        JS_ASSERT(pol == LUse::ANY || pol == LUse::KEEPALIVE);
-                    }
-                }
-            }
-
-            // Handle the fixed constraint if present
-            if (fixedOp) {
-                uint32 code = fixedOp->use->registerCode();
-                if (vregs[fixedOp->use].def()->type() == LDefinition::DOUBLE) {
-                    if (!assign(LFloatReg(FloatRegister::FromCode(code))))
-                        return false;
-                } else {
-                    if (!assign(LGeneralReg(Register::FromCode(code))))
-                        return false;
-                }
-                continue;
-            }
+        // If the interval has a hard requirement, grant it
+        if (req->kind() == Requirement::FIXED) {
+            if (!assign(req->allocation()))
+                return false;
+            continue;
+        } else if (req->kind() == Requirement::SAME_AS_OTHER) {
+            LiveInterval *other = vregs[req->virtualRegister()].intervalFor(req->pos());
+            JS_ASSERT(other);
+            if (!assign(*other->getAllocation()))
+                return false;
+            continue;
         }
 
-        // Find the first use of this register
-        firstUse = current->reg()->nextUseAfter(position);
-        if (firstUse)
-            firstUsePos = inputOf(firstUse->ins);
-        else
-            firstUsePos = CodePosition::MAX;
-
-        // If we really don't need this in a register, don't allocate one
-        if (!mustHaveRegister && !firstUse && current->reg()->canonicalSpill()) {
+        // If we don't really need this in a register, don't allocate one
+        if (req->kind() != Requirement::REGISTER && hint->kind() == Requirement::NONE) {
+            // FIXME: Eager spill ok? Check for canonical spill location?
+            IonSpew(IonSpew_LSRA, "  Eagerly spilling virtual register %d",
+                    current->reg() ? current->reg()->reg() : 0);
             if (!spill())
                 return false;
             continue;
@@ -710,7 +681,6 @@ LinearScanAllocator::allocateRegisters()
 
         // Try to allocate a free register
         IonSpew(IonSpew_LSRA, " Attempting free register allocation");
-
         CodePosition bestFreeUntil;
         AnyRegister::Code bestCode = findBestFreeRegister(&bestFreeUntil);
         if (bestCode != AnyRegister::Invalid) {
@@ -730,9 +700,9 @@ LinearScanAllocator::allocateRegisters()
 
         IonSpew(IonSpew_LSRA, "  Unable to allocate free register");
 
-        // We may need to allocate a blocked register
-        if (!canSpillOthers) {
-            IonSpew(IonSpew_LSRA, " Can't spill any other intervals, spilling this one");
+        // Phis can't spill other intervals at their definition
+        if (!current->index() && current->reg() && current->reg()->ins()->isPhi()) {
+            IonSpew(IonSpew_LSRA, " Can't split at phi, spilling this interval");
             if (!spill())
                 return false;
             continue;
@@ -745,7 +715,9 @@ LinearScanAllocator::allocateRegisters()
         // spill the current interval.
         CodePosition bestNextUsed;
         bestCode = findBestBlockedRegister(&bestNextUsed);
-        if (bestCode != AnyRegister::Invalid && (mustHaveRegister || firstUsePos < bestNextUsed)) {
+        if (bestCode != AnyRegister::Invalid &&
+            (req->kind() == Requirement::REGISTER || hint->pos() < bestNextUsed))
+        {
             AnyRegister best = AnyRegister::FromCode(bestCode);
             IonSpew(IonSpew_LSRA, "  Decided best register was %s", best.name());
 
@@ -756,7 +728,7 @@ LinearScanAllocator::allocateRegisters()
         }
 
         IonSpew(IonSpew_LSRA, "  No registers available to spill");
-        JS_ASSERT(!mustHaveRegister);
+        JS_ASSERT(req->kind() == Requirement::NONE);
 
         if (!spill())
             return false;
@@ -848,6 +820,10 @@ LinearScanAllocator::reifyAllocations()
     while ((interval = unhandled.dequeue()) != NULL) {
         VirtualRegister *reg = interval->reg();
 
+        // Bogus intervals get thrown out, nothing to reify
+        if (!reg)
+            continue;
+
         // Erase all uses of this interval
         for (size_t i = 0; i < reg->numUses(); i++) {
             LOperand *use = reg->getUse(i);
@@ -867,9 +843,9 @@ LinearScanAllocator::reifyAllocations()
             reg->def()->setOutput(*interval->getAllocation());
         }
         else if (interval->start() != inputOf(vregs[interval->start()].block()->firstId()) &&
-                 (!interval->reg()->canonicalSpill() ||
-                  interval->reg()->canonicalSpill() == interval->getAllocation() ||
-                  *interval->reg()->canonicalSpill() != *interval->getAllocation()))
+                 (!reg->canonicalSpill() ||
+                  reg->canonicalSpill() == interval->getAllocation() ||
+                  *reg->canonicalSpill() != *interval->getAllocation()))
         {
             // If this virtual register has no canonical spill location, this
             // is the first spill to that location, or this is a move to somewhere
@@ -898,6 +874,9 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
 
     VirtualRegister *reg = interval->reg();
 
+    // "Bogus" intervals can't get split, so we should never try
+    JS_ASSERT(reg);
+
     // Do the split
     LiveInterval *newInterval = new LiveInterval(reg, interval->index() + 1);
     if (!interval->splitFrom(pos, newInterval))
@@ -921,7 +900,7 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     // We always want to enqueue the resulting split. We always split
     // forward, and we never want to handle something forward of our
     // current position.
-    setIntervalPriority(newInterval);
+    setIntervalRequirement(newInterval);
     unhandled.enqueue(newInterval);
 
     return true;
@@ -939,10 +918,13 @@ LinearScanAllocator::assign(LAllocation allocation)
     current->setAllocation(allocation);
 
     // Split this interval at the next incompatible one
-    CodePosition toSplit = current->reg()->nextIncompatibleUseAfter(current->start(), allocation);
-    if (toSplit <= current->end()) {
-        if (!splitInterval(current, toSplit))
-            return false;
+    VirtualRegister *reg = current->reg();
+    if (reg) {
+        CodePosition toSplit = reg->nextIncompatibleUseAfter(current->start(), allocation);
+        if (toSplit <= current->end()) {
+            if (!splitInterval(current, toSplit))
+                return false;
+        }
     }
 
     if (allocation.isRegister()) {
@@ -985,11 +967,11 @@ LinearScanAllocator::assign(LAllocation allocation)
                 i++;
             }
         }
-    } else if (allocation.isMemory()) {
-        if (current->reg()->canonicalSpill())
+    } else if (reg && allocation.isMemory()) {
+        if (reg->canonicalSpill())
             JS_ASSERT(allocation == *current->reg()->canonicalSpill());
         else
-            current->reg()->setCanonicalSpill(current->getAllocation());
+            reg->setCanonicalSpill(current->getAllocation());
     }
 
     active.pushBack(current);
@@ -1002,6 +984,9 @@ LinearScanAllocator::spill()
 {
     IonSpew(IonSpew_LSRA, "  Decided to spill current interval");
 
+    // We can't spill bogus intervals
+    JS_ASSERT(current->reg());
+
     if (current->reg()->canonicalSpill()) {
         IonSpew(IonSpew_LSRA, "  Allocating canonical spill location");
 
@@ -1009,12 +994,16 @@ LinearScanAllocator::spill()
     }
 
     uint32 stackSlot;
-    if (!stackAssignment.allocateSlot(&stackSlot))
-        return false;
+    if (current->reg()->isDouble()) {
+        if (!stackAssignment.allocateDoubleSlot(&stackSlot))
+            return false;
+    } else {
+        if (!stackAssignment.allocateSlot(&stackSlot))
+            return false;
+    }
+    JS_ASSERT(stackSlot <= stackAssignment.stackHeight());
 
-    IonSpew(IonSpew_LSRA, "  Allocated spill slot %u", stackSlot);
-
-    return assign(LStackSlot(stackSlot));
+    return assign(LStackSlot(stackSlot, current->reg()->isDouble()));
 }
 
 void
@@ -1022,6 +1011,10 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
 {
     LAllocation *alloc = interval->getAllocation();
     JS_ASSERT(!alloc->isUse());
+
+    // Toss out the bogus interval now that it's run its course
+    if (!interval->reg())
+        return;
 
     bool lastInterval = interval->index() == (interval->reg()->numIntervals() - 1);
     if (alloc->isStackSlot() && (alloc != interval->reg()->canonicalSpill() || lastInterval)) {
@@ -1046,7 +1039,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
 
     // Compute free-until positions for all registers
     CodePosition freeUntilPos[AnyRegister::Total];
-    bool needFloat = current->reg()->def()->type() == LDefinition::DOUBLE;
+    bool needFloat = current->reg()->isDouble();
     for (size_t i = 0; i < AnyRegister::Total; i++) {
         AnyRegister reg = AnyRegister::FromCode(i);
         if (reg.allocatable() && reg.isFloat() == needFloat)
@@ -1080,32 +1073,19 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
             if (freeUntilPos[prevReg.code()] != CodePosition::MIN)
                 bestCode = prevReg.code();
         }
-    } else if (current->reg()->ins()->isPhi()) {
-        // As another, use the allocation of the first input to the phi.
-        VirtualRegister *inputReg = &vregs[current->reg()->ins()->toPhi()->getOperand(0)];
-        LBlock *predecessor = current->reg()->block()->mir()->getPredecessor(0)->lir();
-        LiveInterval *previous = inputReg->intervalFor(outputOf(predecessor->lastId()));
-        JS_ASSERT(previous);
-        if (previous->getAllocation()->isRegister()) {
-            AnyRegister prevReg = previous->getAllocation()->toRegister();
-            if (freeUntilPos[prevReg.code()] != CodePosition::MIN)
-                bestCode = prevReg.code();
-        }
     }
-    if (bestCode == AnyRegister::Invalid && firstUse && firstUse->use->policy() == LUse::FIXED) {
-        // As another, use the upcoming fixed register if it is available.
-        uint32 fixedRegCode = firstUse->use->registerCode();
-        AnyRegister fixedReg;
-        if (current->reg()->def()->type() == LDefinition::DOUBLE)
-            fixedReg = AnyRegister(FloatRegister::FromCode(fixedRegCode));
-        else
-            fixedReg = AnyRegister(Register::FromCode(fixedRegCode));
+    if (current->hint()->kind() == Requirement::FIXED &&
+        current->hint()->allocation().isRegister())
+    {
+        // As another, use the register suggested by the hint if free until
+        // needed.
+        AnyRegister hintReg = current->hint()->allocation().toRegister();
+        if (freeUntilPos[hintReg.code()] > current->hint()->pos())
+            bestCode = hintReg.code();
+    }
 
-        if (freeUntilPos[fixedReg.code()] != CodePosition::MIN)
-            bestCode = fixedReg.code();
-    }
     if (bestCode == AnyRegister::Invalid) {
-        // Search freeUntilPos for largest value
+        // If all else fails, search freeUntilPos for largest value
         for (uint32 i = 0; i < AnyRegister::Total; i++) {
             if (freeUntilPos[i] == CodePosition::MIN)
                 continue;
@@ -1132,7 +1112,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
 
     // Compute next-used positions for all registers
     CodePosition nextUsePos[AnyRegister::Total];
-    bool needFloat = current->reg()->def()->type() == LDefinition::DOUBLE;
+    bool needFloat = current->reg()->isDouble();
     for (size_t i = 0; i < AnyRegister::Total; i++) {
         AnyRegister reg = AnyRegister::FromCode(i);
         if (reg.allocatable() && reg.isFloat() == needFloat)
@@ -1349,6 +1329,89 @@ LinearScanAllocator::go()
     return true;
 }
 
+void
+LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
+{
+    JS_ASSERT(interval->requirement()->kind() == Requirement::NONE);
+    JS_ASSERT(interval->hint()->kind() == Requirement::NONE);
+
+    // This function computes requirement by virtual register, other types of
+    // interval should have requirements set manually
+    VirtualRegister *reg = interval->reg();
+    JS_ASSERT(reg);
+
+    if (interval->index() == 0) {
+        // The first interval is the definition, so deal with any definition
+        // constraints/hints
+
+        if (reg->def()->policy() == LDefinition::PRESET) {
+            // Preset policies get a FIXED requirement
+            interval->setRequirement(Requirement(*reg->def()->output()));
+        } else if (reg->def()->policy() == LDefinition::MUST_REUSE_INPUT) {
+            // Reuse policies get a SAME_AS requirement of the first input
+            LUse *use = reg->ins()->getOperand(0)->toUse();
+            interval->setRequirement(Requirement(use->virtualRegister(), interval->start()));
+        } else if (reg->ins()->isPhi()) {
+            // Phis don't have any requirements, but they should prefer
+            // their input allocations, so they get a SAME_AS hint of the
+            // first input
+            LUse *use = reg->ins()->getOperand(0)->toUse();
+            LBlock *predecessor = reg->block()->mir()->getPredecessor(0)->lir();
+            CodePosition predEnd = outputOf(predecessor->lastId());
+            interval->setHint(Requirement(use->virtualRegister(), predEnd));
+        } else {
+            // Non-phis get a REGISTER requirement
+            interval->setRequirement(Requirement(Requirement::REGISTER));
+        }
+
+        return;
+    }
+
+    // Search for any uses for requirements or hints
+    bool fixedOpIsHint = false;
+    LOperand *fixedOp = NULL;
+    LOperand *registerOp = NULL;
+    for (size_t i = 0; i < interval->reg()->numUses(); i++) {
+        LOperand *op = interval->reg()->getUse(i);
+        if (interval->start() == inputOf(op->ins)) {
+            if (op->use->policy() == LUse::FIXED) {
+                fixedOp = op;
+                break;
+            } else if (op->use->policy() == LUse::REGISTER || op->use->policy() == LUse::COPY) {
+                // Register uses get a REGISTER requirement
+                interval->setRequirement(Requirement(Requirement::REGISTER));
+            }
+        } else if (interval->start() < inputOf(op->ins) && inputOf(op->ins) <= interval->end()) {
+            if (op->use->policy() == LUse::FIXED) {
+                if (!fixedOp || op->ins->id() < fixedOp->ins->id()) {
+                    fixedOpIsHint = true;
+                    fixedOp = op;
+                }
+            } else if (op->use->policy() == LUse::REGISTER || op->use->policy() == LUse::COPY) {
+                if (!registerOp || op->ins->id() < registerOp->ins->id())
+                    registerOp = op;
+            }
+        }
+    }
+
+    if (fixedOp) {
+        // Intervals with a fixed use now get a FIXED requirement/hint
+        AnyRegister required;
+        if (reg->isDouble())
+            required = AnyRegister(FloatRegister::FromCode(fixedOp->use->registerCode()));
+        else
+            required = AnyRegister(Register::FromCode(fixedOp->use->registerCode()));
+
+        if (fixedOpIsHint)
+            interval->setHint(Requirement(LAllocation(required), inputOf(fixedOp->ins)));
+        else
+            interval->setRequirement(Requirement(LAllocation(required)));
+    } else if (registerOp) {
+        // Intervals with register uses get a REGISTER hint
+        interval->setHint(Requirement(Requirement::REGISTER, inputOf(registerOp->ins)));
+    }
+}
+
 /*
  * If we assign registers to intervals in order of their start positions
  * without regard to their requirements, we can end up in situations where
@@ -1358,50 +1421,17 @@ LinearScanAllocator::go()
  * requirements are handled first.
  */
 void
-LinearScanAllocator::setIntervalPriority(LiveInterval *interval)
-{
-    int priority = 2;
-
-    if (interval == interval->reg()->getFirstInterval()) {
-        if (interval->reg()->def()->policy() == LDefinition::PRESET) {
-            // Interval is a fixed definition
-            priority = 0;
-        } else if (interval->reg()->def()->policy() == LDefinition::MUST_REUSE_INPUT) {
-            // Interval is a must-reuse, which as good as being fixed
-            priority = 0;
-        } else if (!interval->reg()->ins()->isPhi()) {
-            // Interval is a normal definition (and thus needs a register)
-            priority = 1;
-        }
-        // Otherwise, interval is some other sort of definition
-    } else {
-        for (size_t i = 0; i < interval->reg()->numUses(); i++) {
-            LOperand *op = interval->reg()->getUse(i);
-            if (interval->start() == inputOf(op->ins)) {
-                if (op->use->policy() == LUse::FIXED) {
-                    // Interval has a fixed use
-                    priority = 0;
-                    break;
-                } else if (op->use->policy() == LUse::REGISTER) {
-                    // Interval just needs a register
-                    priority = priority < 1 ? priority : 1;
-                }
-            }
-        }
-    }
-
-    interval->setPriority(priority);
-}
-
-void
 LinearScanAllocator::UnhandledQueue::enqueue(LiveInterval *interval)
 {
     IntervalIterator i(begin());
     for (; i != end(); i++) {
         if (i->start() < interval->start())
             break;
-        if (i->start() == interval->start() && i->priority() < interval->priority())
+        if (i->start() == interval->start() &&
+            i->requirement()->priority() < interval->requirement()->priority())
+        {
             break;
+        }
     }
     insertBefore(*i, interval);
 }

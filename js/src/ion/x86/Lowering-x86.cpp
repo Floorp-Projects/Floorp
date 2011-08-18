@@ -215,7 +215,7 @@ bool
 LIRGeneratorX86::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegister(lhs));
-    ins->setOperand(1, use(rhs));
+    ins->setOperand(1, useRegister(rhs));
     return defineReuseInput(ins, mir);
 }
 
