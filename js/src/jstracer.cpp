@@ -15498,6 +15498,9 @@ TraceRecorder::record_JSOP_LAMBDA()
 
         LIns* args[] = { w.immpObjGC(globalObj), proto_ins, w.immpFunGC(fun), cx_ins };
         LIns* x = w.call(&js_NewNullClosure_ci, args);
+        guard(false,
+              w.name(w.eqp0(x), "guard(js_NewNullClosure_ci)"),
+              OOM_EXIT);
         stack(0, x);
         return ARECORD_CONTINUE;
     }
