@@ -402,12 +402,6 @@ JSObject::setPrimitiveThis(const js::Value &pthis)
     setFixedSlot(JSSLOT_PRIMITIVE_THIS, pthis);
 }
 
-inline /* gc::FinalizeKind */ unsigned
-JSObject::finalizeKind() const
-{
-    return js::gc::FinalizeKind(arenaHeader()->getThingKind());
-}
-
 inline bool
 JSObject::hasSlotsArray() const
 {
@@ -964,7 +958,7 @@ JSObject::initSharingEmptyShape(JSContext *cx,
                                 js::types::TypeObject *type,
                                 JSObject *parent,
                                 void *privateValue,
-                                /* js::gc::FinalizeKind */ unsigned kind)
+                                js::gc::AllocKind kind)
 {
     init(cx, aclasp, type, parent, privateValue, false);
 
@@ -1245,7 +1239,7 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 
 static inline bool
 InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::TypeObject *type,
-                   gc::FinalizeKind kind)
+                   gc::AllocKind kind)
 {
     JS_ASSERT(clasp->isNative());
 
@@ -1273,7 +1267,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
 }
 
 static inline bool
-CanBeFinalizedInBackground(gc::FinalizeKind kind, Class *clasp)
+CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 {
 #ifdef JS_THREADSAFE
     JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
@@ -1281,10 +1275,10 @@ CanBeFinalizedInBackground(gc::FinalizeKind kind, Class *clasp)
      * a different thread, we change the finalize kind. For example,
      * FINALIZE_OBJECT0 calls the finalizer on the main thread,
      * FINALIZE_OBJECT0_BACKGROUND calls the finalizer on the gcHelperThread.
-     * IsBackgroundFinalizeKind is called to prevent recursively incrementing
+     * IsBackgroundAllocKind is called to prevent recursively incrementing
      * the finalize kind; kind may already be a background finalize kind.
      */
-    if (!gc::IsBackgroundFinalizeKind(kind) &&
+    if (!gc::IsBackgroundAllocKind(kind) &&
         (!clasp->finalize || clasp->flags & JSCLASS_CONCURRENT_FINALIZER)) {
         return true;
     }
@@ -1300,7 +1294,7 @@ CanBeFinalizedInBackground(gc::FinalizeKind kind, Class *clasp)
  */
 static inline JSObject *
 NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
-                       JSObject *parent, gc::FinalizeKind kind)
+                       JSObject *parent, gc::AllocKind kind)
 {
     JS_ASSERT(proto);
     JS_ASSERT(parent);
@@ -1316,7 +1310,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
      */
 
     if (CanBeFinalizedInBackground(kind, clasp))
-        kind = GetBackgroundFinalizeKind(kind);
+        kind = GetBackgroundAllocKind(kind);
 
     JSObject* obj = js_NewGCObject(cx, kind);
 
@@ -1343,7 +1337,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 static inline JSObject *
 NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
 {
-    gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
     return NewNativeClassInstance(cx, clasp, proto, parent, kind);
 }
 
@@ -1358,7 +1352,7 @@ FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject
  * right default proto and parent for clasp in cx.
  */
 static inline JSObject *
-NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
+NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::AllocKind kind)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
@@ -1392,7 +1386,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
 static inline JSObject *
 NewBuiltinClassInstance(JSContext *cx, Class *clasp)
 {
-    gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
     return NewBuiltinClassInstance(cx, clasp, kind);
 }
 
@@ -1457,7 +1451,7 @@ namespace detail
 template <bool withProto, bool isFunction>
 static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-          gc::FinalizeKind kind)
+          gc::AllocKind kind)
 {
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (withProto == WithProto::Class && !proto) {
@@ -1478,7 +1472,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
      */
 
     if (!isFunction && CanBeFinalizedInBackground(kind, clasp))
-        kind = GetBackgroundFinalizeKind(kind);
+        kind = GetBackgroundAllocKind(kind);
 
     JSObject* obj = isFunction ? js_NewGCFunction(cx) : js_NewGCObject(cx, kind);
     if (!obj)
@@ -1530,7 +1524,7 @@ NewFunction(JSContext *cx, JSObject *parent)
 template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-               gc::FinalizeKind kind)
+               gc::AllocKind kind)
 {
     return detail::NewObject<withProto, false>(cx, clasp, proto, parent, kind);
 }
@@ -1539,14 +1533,14 @@ template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
-    gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
     return detail::NewObject<withProto, false>(cx, clasp, proto, parent, kind);
 }
 
 template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-          gc::FinalizeKind kind)
+          gc::AllocKind kind)
 {
     if (clasp == &js_FunctionClass)
         return detail::NewObject<withProto, true>(cx, clasp, proto, parent, kind);
@@ -1557,7 +1551,7 @@ template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
-    gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
     return NewObject<withProto>(cx, clasp, proto, parent, kind);
 }
 
@@ -1566,12 +1560,12 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
  * avoid losing creation site information for objects made by scripted 'new'.
  */
 static JS_ALWAYS_INLINE JSObject *
-NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::FinalizeKind kind)
+NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind)
 {
     JS_ASSERT(type == type->proto->newType);
 
     if (CanBeFinalizedInBackground(kind, &js_ObjectClass))
-        kind = GetBackgroundFinalizeKind(kind);
+        kind = GetBackgroundAllocKind(kind);
 
     JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
@@ -1597,14 +1591,14 @@ out:
 
 extern JSObject *
 NewReshapedObject(JSContext *cx, js::types::TypeObject *type, JSObject *parent,
-                  gc::FinalizeKind kind, const Shape *shape);
+                  gc::AllocKind kind, const Shape *shape);
 
 /*
  * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
  * the object, zero if the final size is unknown. This should only be used for
  * objects that do not require any fixed slots.
  */
-static inline gc::FinalizeKind
+static inline gc::AllocKind
 GuessObjectGCKind(size_t numSlots, bool isArray)
 {
     if (numSlots)
@@ -1616,7 +1610,7 @@ GuessObjectGCKind(size_t numSlots, bool isArray)
  * Get the GC kind to use for scripted 'new' on the given class.
  * FIXME bug 547327: estimate the size from the allocation site.
  */
-static inline gc::FinalizeKind
+static inline gc::AllocKind
 NewObjectGCKind(JSContext *cx, js::Class *clasp)
 {
     if (clasp == &js_ArrayClass || clasp == &js_SlowArrayClass)
@@ -1628,17 +1622,16 @@ NewObjectGCKind(JSContext *cx, js::Class *clasp)
 
 static JS_ALWAYS_INLINE JSObject*
 NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
-                        /*gc::FinalizeKind*/ unsigned _kind)
+                        gc::AllocKind kind)
 {
     JS_ASSERT(clasp->isNative());
-    gc::FinalizeKind kind = gc::FinalizeKind(_kind);
 
     types::TypeObject *type = proto->getNewType(cx);
     if (!type)
         return NULL;
 
     if (CanBeFinalizedInBackground(kind, clasp))
-        kind = GetBackgroundFinalizeKind(kind);
+        kind = GetBackgroundAllocKind(kind);
 
     JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
@@ -1656,8 +1649,7 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
     JS_ASSERT(baseobj->getClass() == &js_ObjectClass);
     JS_ASSERT(!baseobj->inDictionaryMode());
 
-    gc::FinalizeKind kind = gc::FinalizeKind(baseobj->finalizeKind());
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, baseobj->getAllocKind());
 
     if (!obj || !obj->ensureSlots(cx, baseobj->numSlots()))
         return NULL;
