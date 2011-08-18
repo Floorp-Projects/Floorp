@@ -1089,18 +1089,6 @@ static CipherPref CipherPrefs[] = {
  {NULL, 0} /* end marker */
 };
 
-nsresult nsNSSComponent::GetNSSCipherIDFromPrefString(const nsACString &aPrefString, PRUint16 &aCipherId)
-{
-  for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
-    if (nsDependentCString(cp->pref) == aPrefString) {
-      aCipherId = (PRUint16) cp->id;
-      return NS_OK;
-    }
-  }
-  
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
 static void
 setNonPkixOcspEnabled(PRInt32 ocspEnabled, nsIPrefBranch * pref)
 {
