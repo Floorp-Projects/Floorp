@@ -2083,6 +2083,28 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     if (sendable) {
       return sendable->GetSendInfo(aResult, aContentType, aCharset);
     }
+
+    // ArrayBuffer?
+    jsval realVal;
+    JSObject* obj;
+    nsresult rv = aBody->GetAsJSVal(&realVal);
+    if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal) &&
+        (obj = JSVAL_TO_OBJECT(realVal)) &&
+        (js_IsArrayBuffer(obj))) {
+
+      aContentType.SetIsVoid(PR_TRUE);
+      PRInt32 abLength = JS_GetArrayBufferByteLength(obj);
+      char* data = (char*)JS_GetArrayBufferData(obj);
+
+      nsCOMPtr<nsIInputStream> stream;
+      nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), data,
+                                          abLength, NS_ASSIGNMENT_COPY);
+      NS_ENSURE_SUCCESS(rv, rv);
+      stream.forget(aResult);
+      aCharset.Truncate();
+
+      return NS_OK;
+    }
   }
   else if (dataType == nsIDataType::VTYPE_VOID ||
            dataType == nsIDataType::VTYPE_EMPTY) {
