@@ -272,6 +272,7 @@ class GreedyAllocator
     bool allocateRegisterOperand(LAllocation *a, VirtualRegister *vr);
     bool allocateAnyOperand(LAllocation *a, VirtualRegister *vr, bool preferReg = false);
     bool allocateFixedOperand(LAllocation *a, VirtualRegister *vr);
+    bool allocateWritableOperand(LAllocation *a, VirtualRegister *vr);
 
     bool prescanDefinition(LDefinition *def);
     bool prescanDefinitions(LInstruction *ins);

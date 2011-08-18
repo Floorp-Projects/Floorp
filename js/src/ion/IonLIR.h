@@ -238,14 +238,11 @@ class LAllocation : public TempObject
 
 class LUse : public LAllocation
 {
-    static const uint32 POLICY_BITS = 2;
+    static const uint32 POLICY_BITS = 3;
     static const uint32 POLICY_SHIFT = 0;
     static const uint32 POLICY_MASK = (1 << POLICY_BITS) - 1;
-    static const uint32 FLAG_BITS = 1;
-    static const uint32 FLAG_SHIFT = POLICY_SHIFT + POLICY_BITS;
-    static const uint32 FLAG_MASK = (1 << FLAG_BITS) - 1;
     static const uint32 REG_BITS = 5;
-    static const uint32 REG_SHIFT = FLAG_SHIFT + FLAG_BITS;
+    static const uint32 REG_SHIFT = POLICY_SHIFT + POLICY_BITS;
     static const uint32 REG_MASK = (1 << REG_BITS) - 1;
 
     // Virtual registers get the remaining 21 bits.
@@ -255,40 +252,41 @@ class LUse : public LAllocation
 
   public:
     enum Policy {
-        ANY,                // Register or stack slot.
-        REGISTER,           // Must have a register.
-        FIXED,              // A specific register is required.
+        // Input should be in a read-only register or stack slot.
+        ANY,
+
+        // Input must be in a read-only register.
+        REGISTER,
+
+        // Input must be in a specific, read-only register.
+        FIXED,
+
         // Keep the used virtual register alive, and use whatever allocation is
         // available. This is similar to ANY but hints to the register allocator
         // that it is never useful to optimize this site.
-        KEEPALIVE
+        KEEPALIVE,
+
+        // Input should be in a writable register.
+        COPY                
     };
 
-    // The register is killed at the start, meaning it can be re-used as either
-    // a temporary or an output. Only one input per register class can have
-    // this on a single instruction.
-    static const uint32 KILLED_AT_START = (1 << 0);
-
-    void set(Policy policy, uint32 reg, uint32 flags) {
-        JS_ASSERT(flags <= KILLED_AT_START);
-        setKindAndData(USE, (policy << POLICY_SHIFT) |
-                            (flags << FLAG_SHIFT) |
-                            (reg << REG_SHIFT));
+    void set(Policy policy, uint32 reg) {
+        setKindAndData(USE, (policy << POLICY_SHIFT) | (reg << REG_SHIFT));
     }
 
   public:
-    LUse(uint32 vreg, Policy policy, uint32 flags = 0) {
-        set(policy, 0, flags);
+    LUse(uint32 vreg, Policy policy) {
+        set(policy, 0);
         setVirtualRegister(vreg);
     }
-    LUse(Policy policy, uint32 flags = 0) {
-        set(policy, 0, flags);
+    LUse(Policy policy) {
+        set(policy, 0);
     }
-    LUse(Register reg, uint32 flags = 0) {
-        set(FIXED, reg.code(), flags);
+    LUse(Register reg) {
+        set(FIXED, reg.code());
     }
-    LUse(FloatRegister reg, uint32 flags = 0) {
-        set(FIXED, reg.code(), flags);
+    LUse(FloatRegister reg) {
+        set(FIXED, reg.code());
     }
 
     void setVirtualRegister(uint32 index) {
@@ -303,15 +301,9 @@ class LUse : public LAllocation
         Policy policy = (Policy)((data() >> POLICY_SHIFT) & POLICY_MASK);
         return policy;
     }
-    bool killedAtStart() const {
-        return !!(flags() & KILLED_AT_START);
-    }
     uint32 virtualRegister() const {
         uint32 index = (data() >> VREG_SHIFT) & VREG_MASK;
         return index;
-    }
-    uint32 flags() const {
-        return (data() >> FLAG_SHIFT) & FLAG_MASK;
     }
     uint32 registerCode() const {
         JS_ASSERT(policy() == FIXED);
