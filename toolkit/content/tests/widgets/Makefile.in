@@ -77,10 +77,6 @@ _TEST_FILES =	\
 		videomask.css \
 		$(NULL)
 
-_CHROME_TEST_FILES = \
-		test_editor_currentURI.xul \
-		$(NULL)
-
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _TEST_FILES += test_menubar.xul \
                window_menubar.xul
@@ -91,7 +87,3 @@ libs:: $(_CHROME_FILES)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
-
