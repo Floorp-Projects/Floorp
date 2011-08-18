@@ -82,6 +82,7 @@ class ValueNumberer
 
     MIRGraph &graph_;
     bool pessimisticPass_;
+    size_t count_;
 
     uint32 lookupValue(ValueMap &values, MDefinition *ins);
     MDefinition *findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index);
@@ -90,6 +91,16 @@ class ValueNumberer
     bool eliminateRedundancies();
 
     bool computeValueNumbers();
+
+    inline bool isMarked(MDefinition *def) {
+        return pessimisticPass_ || def->isInWorklist();
+    }
+
+    void markDefinition(MDefinition *def);
+    void unmarkDefinition(MDefinition *def);
+
+    void markConsumers(MDefinition *def);
+    void markBlock(MBasicBlock *block);
 
   public:
     ValueNumberer(MIRGraph &graph, bool optimistic);

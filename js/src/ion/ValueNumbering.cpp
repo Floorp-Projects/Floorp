@@ -48,9 +48,9 @@ using namespace js::ion;
 
 ValueNumberer::ValueNumberer(MIRGraph &graph, bool optimistic)
   : graph_(graph),
-    pessimisticPass_(!optimistic)
+    pessimisticPass_(!optimistic),
+    count_(0)
 { }
-
 
 uint32
 ValueNumberer::lookupValue(ValueMap &values, MDefinition *ins)
@@ -95,8 +95,48 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
     return ins;
 }
 
+void
+ValueNumberer::markDefinition(MDefinition *def)
+{
+    if (isMarked(def))
+        return;
 
+    IonSpew(IonSpew_GVN, "marked %d", def->id());
+    def->setInWorklist();
+    count_++;
+}
 
+void
+ValueNumberer::unmarkDefinition(MDefinition *def)
+{
+    if (pessimisticPass_)
+        return;
+
+    JS_ASSERT(count_ > 0);
+    IonSpew(IonSpew_GVN, "unmarked %d", def->id());
+    def->setNotInWorklist();
+    count_--;
+}
+
+void
+ValueNumberer::markBlock(MBasicBlock *block)
+{
+    for (MDefinitionIterator iter(block); iter; iter++)
+        markDefinition(*iter);
+    markDefinition(block->lastIns());
+}
+
+void
+ValueNumberer::markConsumers(MDefinition *def)
+{
+    if (pessimisticPass_)
+        return;
+
+    JS_ASSERT(!def->isInWorklist());
+    JS_ASSERT(!def->isControlInstruction());
+    for (MUseDefIterator use(def); use; use++)
+        markDefinition(use.def());
+}
 
 bool
 ValueNumberer::computeValueNumbers()
@@ -139,14 +179,41 @@ ValueNumberer::computeValueNumbers()
             for (MDefinitionIterator iter(*block); iter; iter++)
                 iter->setValueNumber(iter->id());
         }
+    } else {
+        markBlock(*(graph_.begin()));
     }
 
-    bool changed = true;
-    while (changed) {
-        changed = false;
-
+    while (count_ > 0) {
+#ifdef DEBUG
+        if (!pessimisticPass_) {
+            size_t debugCount = 0;
+            IonSpew(IonSpew_GVN, "The following instructions require processing:");
+            for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+                for (MDefinitionIterator iter(*block); iter; iter++) {
+                    if (iter->isInWorklist()) {
+                        IonSpew(IonSpew_GVN, "\t%d", iter->id());
+                        debugCount++;
+                    }
+                }
+                if (block->lastIns()->isInWorklist()) {
+                    IonSpew(IonSpew_GVN, "\t%d", block->lastIns()->id());
+                    debugCount++;
+                }
+            }
+            JS_ASSERT(debugCount == count_);
+        }
+#endif
         for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
             for (MDefinitionIterator iter(*block); iter; ) {
+
+                if (!isMarked(*iter)) {
+                    iter++;
+                    continue;
+                }
+
+                JS_ASSERT_IF(!pessimisticPass_, count_ > 0);
+                unmarkDefinition(*iter);
+
                 MDefinition *ins = simplify(*iter, false);
 
                 if (ins != *iter) {
@@ -164,25 +231,46 @@ ValueNumberer::computeValueNumbers()
                             "Broke congruence for instruction %d (%p) with VN %d (now using %d)",
                             ins->id(), ins, ins->valueNumber(), value);
                     ins->setValueNumber(value);
-                    changed = true;
+                    markConsumers(ins);
                 }
 
                 iter++;
             }
+            // Process control flow instruction:
+            MControlInstruction *jump = block->lastIns();
+
+            // If we are pessimistic, then this will never get set.
+            if (!jump->isInWorklist())
+                continue;
+            unmarkDefinition(jump);
+            if (jump->valueNumber() == 0) {
+                jump->setValueNumber(jump->id());
+                for (size_t i = 0; i < jump->numSuccessors(); i++)
+                    markBlock(jump->getSuccessor(i));
+            }
+
         }
-        values.clear();
 
         // If we are doing a pessimistic pass, we only go once through the
         // instruction list.
         if (pessimisticPass_)
             break;
     }
+#ifdef DEBUG
+    for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+        for (MDefinitionIterator iter(*block); iter; iter++) {
+            JS_ASSERT(!iter->isInWorklist());
+            JS_ASSERT(iter->valueNumber() != 0);
+        }
+    }
+#endif
     return true;
 }
 
 MDefinition *
 ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index)
 {
+    JS_ASSERT(ins->valueNumber() != 0);
     InstructionMap::Ptr p = defs.lookup(ins->valueNumber());
     MDefinition *dom;
     if (!p || index > p->value.validUntil) {
