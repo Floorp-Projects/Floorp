@@ -214,7 +214,7 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom
      * Remember the class this function is a constructor for so that we know to
      * create an object of this class when we call the constructor.
      */
-    FUN_CLASP(fun) = clasp;
+    fun->setConstructorClass(clasp);
     return fun;
 }
 
