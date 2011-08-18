@@ -52,10 +52,9 @@
 #include <stdlib.h>
 
 /*
- * This release (4.8.9) is backward compatible with the
+ * This release (4.9) is backward compatible with the
  * 4.0.x, 4.1.x, 4.2.x, 4.3.x, 4.4.x, 4.5.x, 4.6.x, 4.7.x,
- * 4.8, 4.8.1, 4.8.2, 4.8.3, 4.8.4, 4.8.5, 4.8.6, 4.8.7, and
- * 4.8.8 releases.  It, of course, is compatible with itself.
+ * and 4.8.x releases.  It, of course, is compatible with itself.
  */
 static char *compatible_version[] = {
     "4.0", "4.0.1", "4.1", "4.1.1", "4.1.2", "4.1.3",
@@ -66,7 +65,8 @@ static char *compatible_version[] = {
     "4.7", "4.7.1", "4.7.2", "4.7.3", "4.7.4", "4.7.5",
     "4.7.6",
     "4.8", "4.8.1", "4.8.2", "4.8.3", "4.8.4", "4.8.5",
-    "4.8.6", "4.8.7", "4.8.8", PR_VERSION
+    "4.8.6", "4.8.7", "4.8.8", "4.8.9",
+    PR_VERSION
 };
 
 /*
@@ -81,8 +81,8 @@ static char *incompatible_version[] = {
     "3.0", "3.0.1",
     "3.1", "3.1.1", "3.1.2", "3.1.3",
     "3.5", "3.5.1",
-    "4.8.10",
-    "4.9", "4.9.1",
+    "4.9.1",
+    "4.10", "4.10.1",
     "10.0", "11.1", "12.14.20"
 };
 
