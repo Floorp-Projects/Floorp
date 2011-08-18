@@ -2810,7 +2810,7 @@ ValueToNative(const Value &v, JSValueType type, double* slot)
 
       case JSVAL_TYPE_FUNOBJ: {
         JS_ASSERT(IsFunctionObject(v));
-        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.toObject());
+        JSFunction* fun = v.toObject().getFunctionPrivate();
 #if defined JS_JIT_SPEW
         if (LogController.lcbits & LC_TMTracer) {
             char funName[40];
@@ -3109,7 +3109,7 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
         JS_ASSERT(IsFunctionObject(v));
 #if defined JS_JIT_SPEW
         if (LogController.lcbits & LC_TMTracer) {
-            JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.toObject());
+            JSFunction* fun = v.toObject().getFunctionPrivate();
             char funName[40];
             if (fun->atom)
                 JS_PutEscapedFlatString(funName, sizeof funName, fun->atom, 0);
@@ -3385,7 +3385,7 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
          */
         stackOffset -= fi->callerHeight;
         JSObject* callee = *(JSObject**)(&state->stackBase[stackOffset]);
-        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, callee);
+        JSFunction* fun = callee->getFunctionPrivate();
         uintN calleeLevel = fun->script()->staticLevel;
         if (calleeLevel == upvarLevel) {
             /*
@@ -10541,7 +10541,7 @@ static JSBool JS_FASTCALL
 functionProbe(JSContext *cx, JSFunction *fun, int enter)
 {
 #ifdef MOZ_TRACE_JSCALLS
-    JSScript *script = fun ? FUN_SCRIPT(fun) : NULL;
+    JSScript *script = fun ? fun->maybeScript() : NULL;
     if (enter > 0)
         Probes::enterJSFun(cx, fun, script, enter);
     else
@@ -11011,7 +11011,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 {
     // ctor must be a function created via js_InitClass.
 #ifdef DEBUG
-    Class *clasp = FUN_CLASP(GET_FUNCTION_PRIVATE(cx, ctor));
+    Class *clasp = ctor->getFunctionPrivate()->getConstructorClass();
     JS_ASSERT(clasp);
 
     TraceMonitor &localtm = *traceMonitor;
@@ -11553,7 +11553,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     }
 
     if (fun->flags & JSFUN_TRCINFO) {
-        JSNativeTraceInfo *trcinfo = FUN_TRCINFO(fun);
+        JSNativeTraceInfo *trcinfo = fun->getTraceInfo();
         JS_ASSERT(trcinfo && fun->u.n.native == trcinfo->native);
 
         /* Try to call a type specialized version of the native. */
@@ -11708,10 +11708,10 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
      * Bytecode sequences that push shapeless callees must guard on the callee
      * class being Function and the function being interpreted.
      */
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &fval.toObject());
+    JSFunction* fun = fval.toObject().getFunctionPrivate();
 
     if (Probes::callTrackingActive(cx)) {
-        JSScript *script = FUN_SCRIPT(fun);
+        JSScript *script = fun->maybeScript();
         if (!script || !script->isEmpty()) {
             LIns* args[] = { w.immi(1), w.nameImmpNonGC(fun), cx_ins };
             LIns* call_ins = w.call(&functionProbe_ci, args);
@@ -11719,7 +11719,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         }
     }
 
-    if (FUN_INTERPRETED(fun))
+    if (fun->isInterpreted())
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
 
     Native native = fun->maybeNative();
@@ -13617,7 +13617,8 @@ TraceRecorder::guardCallee(Value& callee)
      * private data) case as noted above.
      */
     if (callee_fun->isInterpreted() &&
-        (!FUN_NULL_CLOSURE(callee_fun) || callee_fun->script()->bindings.hasUpvars())) {
+        (!callee_fun->isNullClosure() || callee_fun->script()->bindings.hasUpvars()))
+    {
         JSObject* parent = callee_obj.getParent();
 
         if (parent != globalObj) {
@@ -13819,8 +13820,8 @@ TraceRecorder::record_JSOP_FUNAPPLY()
     RETURN_IF_XML_A(vp[0]);
 
     JSObject* obj = &vp[0].toObject();
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
-    if (FUN_INTERPRETED(fun))
+    JSFunction* fun = obj->getFunctionPrivate();
+    if (fun->isInterpreted())
         return record_JSOP_CALL();
 
     bool apply = fun->u.n.native == js_fun_apply;
@@ -15422,7 +15423,7 @@ TraceRecorder::record_JSOP_LAMBDA()
     JSFunction* fun;
     fun = cx->fp()->script()->getFunction(getFullIndex());
 
-    if (FUN_NULL_CLOSURE(fun) && FUN_OBJECT(fun)->getParent() != globalObj)
+    if (fun->isNullClosure() && fun->getParent() != globalObj)
         RETURN_STOP_A("Null closure function object parent must be global object");
 
     /*
@@ -15436,12 +15437,12 @@ TraceRecorder::record_JSOP_LAMBDA()
      * JSOP_INITMETHOD logic governing the early ARECORD_CONTINUE returns below
      * must agree with the corresponding break-from-do-while(0) logic there.
      */
-    if (FUN_NULL_CLOSURE(fun) && FUN_OBJECT(fun)->getParent() == &cx->fp()->scopeChain()) {
+    if (fun->isNullClosure() && fun->getParent() == &cx->fp()->scopeChain()) {
         jsbytecode *pc2 = AdvanceOverBlockchainOp(cx->regs().pc + JSOP_LAMBDA_LENGTH);
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_INITMETHOD) {
-            stack(0, w.immpObjGC(FUN_OBJECT(fun)));
+            stack(0, w.immpObjGC(fun));
             return ARECORD_CONTINUE;
         }
 
@@ -15449,7 +15450,7 @@ TraceRecorder::record_JSOP_LAMBDA()
             Value lval = stackval(-1);
 
             if (!lval.isPrimitive() && lval.toObject().canHaveMethodBarrier()) {
-                stack(0, w.immpObjGC(FUN_OBJECT(fun)));
+                stack(0, w.immpObjGC(fun));
                 return ARECORD_CONTINUE;
             }
         } else if (fun->joinable()) {
@@ -15477,7 +15478,7 @@ TraceRecorder::record_JSOP_LAMBDA()
 
                     if ((iargc == 1 && native == array_sort) ||
                         (iargc == 2 && native == str_replace)) {
-                        stack(0, w.immpObjGC(FUN_OBJECT(fun)));
+                        stack(0, w.immpObjGC(fun));
                         return ARECORD_CONTINUE;
                     }
                 }
@@ -15486,7 +15487,7 @@ TraceRecorder::record_JSOP_LAMBDA()
                 op2 = JSOp(*pc2);
 
                 if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0) {
-                    stack(0, w.immpObjGC(FUN_OBJECT(fun)));
+                    stack(0, w.immpObjGC(fun));
                     return ARECORD_CONTINUE;
                 }
             }
@@ -15524,7 +15525,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     JSFunction* fun;
     fun = cx->fp()->script()->getFunction(getFullIndex());
 
-    if (FUN_OBJECT(fun)->getParent() != globalObj)
+    if (fun->getParent() != globalObj)
         return ARECORD_STOP;
 
     if (GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH))
@@ -15672,9 +15673,9 @@ TraceRecorder::record_JSOP_ARGCNT()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
 {
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JSFunction* fun = obj->getFunctionPrivate();
 
-    if (FUN_NULL_CLOSURE(fun) && FUN_OBJECT(fun)->getParent() == globalObj) {
+    if (fun->isNullClosure() && fun->getParent() == globalObj) {
         LIns *proto_ins;
         CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
 
@@ -16012,7 +16013,7 @@ TraceRecorder::record_JSOP_CALLPROP()
 
     if (pcval.isFunObj()) {
         if (l.isPrimitive()) {
-            JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &pcval.toFunObj());
+            JSFunction* fun = pcval.toFunObj().getFunctionPrivate();
             if (fun->isInterpreted() && !fun->inStrictMode())
                 RETURN_STOP_A("callee does not accept primitive |this|");
         }

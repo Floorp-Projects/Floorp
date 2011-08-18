@@ -4590,10 +4590,10 @@ BEGIN_CASE(JSOP_DEFFUN)
      */
     JSFunction *fun;
     LOAD_FUNCTION(0);
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
     JSObject *obj2;
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         /*
          * Even a null closure needs a parent for principals finding.
          * FIXME: bug 476950, although debugger users may also demand some kind
@@ -4730,10 +4730,10 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JSFunction *fun;
     LOAD_FUNCTION(SLOTNO_LEN);
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
-    JSObject *obj = FUN_OBJECT(fun);
+    JS_ASSERT(!fun->isFlatClosure());
+    JSObject *obj = fun;
 
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         obj = CloneFunctionObject(cx, fun, &regs.fp()->scopeChain());
         if (!obj)
             goto error;
@@ -4782,12 +4782,12 @@ BEGIN_CASE(JSOP_LAMBDA)
     /* Load the specified function object literal. */
     JSFunction *fun;
     LOAD_FUNCTION(0);
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
     /* do-while(0) so we can break instead of using a goto. */
     do {
         JSObject *parent;
-        if (FUN_NULL_CLOSURE(fun)) {
+        if (fun->isNullClosure()) {
             parent = &regs.fp()->scopeChain();
 
             if (obj->getParent() == parent) {
@@ -4845,7 +4845,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                         JSObject *callee;
 
                         if (IsFunctionObject(cref, &callee)) {
-                            JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
+                            JSFunction *calleeFun = callee->getFunctionPrivate();
                             if (Native native = calleeFun->maybeNative()) {
                                 if ((iargc == 1 && native == array_sort) ||
                                     (iargc == 2 && native == str_replace)) {
