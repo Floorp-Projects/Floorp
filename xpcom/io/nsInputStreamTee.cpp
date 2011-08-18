@@ -338,7 +338,7 @@ nsInputStreamTee::GetEventTarget(nsIEventTarget **anEventTarget)
 }
 
 
-NS_COM nsresult
+nsresult
 NS_NewInputStreamTeeAsync(nsIInputStream **result,
                           nsIInputStream *source,
                           nsIOutputStream *sink,
@@ -363,7 +363,7 @@ NS_NewInputStreamTeeAsync(nsIInputStream **result,
     return rv;
 }
 
-NS_COM nsresult
+nsresult
 NS_NewInputStreamTee(nsIInputStream **result,
                      nsIInputStream *source,
                      nsIOutputStream *sink)

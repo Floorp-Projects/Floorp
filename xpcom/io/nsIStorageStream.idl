@@ -102,6 +102,6 @@ interface nsIStorageStream : nsISupports
 
 %{C++
 // Factory method
-NS_COM nsresult
+nsresult
 NS_NewStorageStream(PRUint32 segmentSize, PRUint32 maxSize, nsIStorageStream **result);
 %}

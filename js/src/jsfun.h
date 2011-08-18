@@ -60,14 +60,14 @@
  *   10   interpreted, flat closure
  *   11   interpreted, null closure
  *
- * FUN_FLAT_CLOSURE implies FUN_INTERPRETED and u.i.script->upvarsOffset != 0.
- * FUN_NULL_CLOSURE implies FUN_INTERPRETED and u.i.script->upvarsOffset == 0.
+ * isFlatClosure() implies isInterpreted() and u.i.script->upvarsOffset != 0.
+ * isNullClosure() implies isInterpreted() and u.i.script->upvarsOffset == 0.
  *
- * FUN_INTERPRETED but not FUN_FLAT_CLOSURE and u.i.script->upvarsOffset != 0
+ * isInterpreted() but not isFlatClosure() and u.i.script->upvarsOffset != 0
  * is an Algol-like function expression or nested function, i.e., a function
  * that never escapes upward or downward (heapward), and is only ever called.
  *
- * Finally, FUN_INTERPRETED and u.i.script->upvarsOffset == 0 could be either
+ * Finally, isInterpreted() and u.i.script->upvarsOffset == 0 could be either
  * a non-closure (a global function definition, or any function that uses no
  * outer names), or a closure of an escaping function that uses outer names
  * whose values can't be snapshot (because the outer names could be reassigned
@@ -80,8 +80,8 @@
  * NB: JSFUN_EXPR_CLOSURE reuses JSFUN_STUB_GSOPS, which is an API request flag
  * bit only, never stored in fun->flags.
  *
- * If we need more bits in the future, all flags for FUN_INTERPRETED functions
- * can move to u.i.script->flags. For now we use function flag bits to minimize
+ * If we need more bits in the future, all flags for interpreted functions can
+ * move to u.i.script->flags. For now we use function flag bits to minimize
  * pointer-chasing.
  */
 #define JSFUN_JOINABLE      0x0001  /* function is null closure that does not
@@ -100,19 +100,6 @@
 #define JSFUN_NULL_CLOSURE  0xc000  /* null closure entrains no scope chain */
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
-
-#define FUN_OBJECT(fun)      (static_cast<JSObject *>(fun))
-#define FUN_KIND(fun)        ((fun)->flags & JSFUN_KINDMASK)
-#define FUN_SET_KIND(fun,k)  ((fun)->flags = ((fun)->flags & ~JSFUN_KINDMASK) | (k))
-#define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
-#define FUN_FLAT_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_FLAT_CLOSURE)
-#define FUN_NULL_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_NULL_CLOSURE)
-#define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->script() : NULL)
-#define FUN_CLASP(fun)       (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
-                              fun->u.n.clasp)
-#define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
-                              JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
-                              fun->u.n.trcinfo)
 
 struct JSFunction : public JSObject_Slots2
 {
@@ -145,16 +132,25 @@ struct JSFunction : public JSObject_Slots2
     } u;
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
-    bool optimizedClosure()  const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
-    bool isInterpreted()     const { return FUN_INTERPRETED(this); }
-    bool isNative()          const { return !FUN_INTERPRETED(this); }
+    bool optimizedClosure()  const { return kind() > JSFUN_INTERPRETED; }
+    bool isInterpreted()     const { return kind() >= JSFUN_INTERPRETED; }
+    bool isNative()          const { return !isInterpreted(); }
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
-    bool isFlatClosure()     const { return FUN_KIND(this) == JSFUN_FLAT_CLOSURE; }
+    bool isNullClosure()     const { return kind() == JSFUN_NULL_CLOSURE; }
+    bool isFlatClosure()     const { return kind() == JSFUN_FLAT_CLOSURE; }
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
     bool isInterpretedConstructor() const { return isInterpreted() && !isFunctionPrototype(); }
+
+    uint16 kind()            const { return flags & JSFUN_KINDMASK; }
+    void setKind(uint16 k) {
+        JS_ASSERT(!(k & ~JSFUN_KINDMASK));
+        flags = (flags & ~JSFUN_KINDMASK) | k;
+    }
+
     /* Returns the strictness of this function, which must be interpreted. */
     inline bool inStrictMode() const;
+
     void setArgCount(uint16 nargs) {
         JS_ASSERT(this->nargs == 0);
         this->nargs = nargs;
@@ -210,6 +206,10 @@ struct JSFunction : public JSObject_Slots2
         return u.i.script;
     }
 
+    JSScript * maybeScript() const {
+        return isInterpreted() ? script() : NULL;
+    }
+
     js::Native native() const {
         JS_ASSERT(isNative());
         return u.n.native;
@@ -227,6 +227,23 @@ struct JSFunction : public JSObject_Slots2
 
     /* Number of extra fixed function object slots. */
     static const uint32 CLASS_RESERVED_SLOTS = JSObject::FUN_CLASS_RESERVED_SLOTS;
+
+
+    js::Class *getConstructorClass() const {
+        JS_ASSERT(isNative());
+        return u.n.clasp;
+    }
+
+    void setConstructorClass(js::Class *clasp) {
+        JS_ASSERT(isNative());
+        u.n.clasp = clasp;
+    }
+
+    JSNativeTraceInfo *getTraceInfo() const {
+        JS_ASSERT(isNative());
+        JS_ASSERT(flags & JSFUN_TRCINFO);
+        return u.n.trcinfo;
+    }
 };
 
 /*
@@ -268,12 +285,6 @@ JSObject::getFunctionPrivate() const
 }
 
 namespace js {
-
-/*
- * NB: jsapi.h and jsobj.h must be included before any call to this macro.
- */
-#define VALUE_IS_FUNCTION(cx, v)                                              \
-    (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isFunction())
 
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)
@@ -353,14 +364,6 @@ SameTraceType(const Value &lhs, const Value &rhs)
            (lhs.isPrimitive() ||
             lhs.toObject().isFunction() == rhs.toObject().isFunction());
 }
-
-/*
- * Macro to access the private slot of the function object after the slot is
- * initialized.
- */
-#define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
-    (JS_ASSERT((funobj)->isFunction()),                                       \
-     (JSFunction *) (funobj)->getPrivate())
 
 /*
  * Return true if this is a compiler-created internal function accessed by

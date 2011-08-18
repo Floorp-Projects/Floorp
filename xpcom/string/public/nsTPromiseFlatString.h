@@ -99,7 +99,7 @@ class nsTPromiseFlatString_CharT : public nsTString_CharT
 
     private:
 
-      NS_COM void Init( const substring_type& );
+      void Init( const substring_type& );
 
         // NOT TO BE IMPLEMENTED
       void operator=( const self_type& );

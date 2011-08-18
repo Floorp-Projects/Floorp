@@ -150,12 +150,12 @@ class nsTString_CharT : public nsTSubstring_CharT
          *  @return  offset in string, or kNotFound
          */
 
-      NS_COM PRInt32 Find( const nsCString& aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
-      NS_COM PRInt32 Find( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
+      PRInt32 Find( const nsCString& aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
+      PRInt32 Find( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
 
 #ifdef CharT_is_PRUnichar
-      NS_COM PRInt32 Find( const nsAFlatString& aString, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
-      NS_COM PRInt32 Find( const PRUnichar* aString, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
+      PRInt32 Find( const nsAFlatString& aString, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
+      PRInt32 Find( const PRUnichar* aString, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
 #endif
 
         
@@ -171,12 +171,12 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @return  offset in string, or kNotFound
          */
 
-      NS_COM PRInt32 RFind( const nsCString& aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
-      NS_COM PRInt32 RFind( const char* aCString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
+      PRInt32 RFind( const nsCString& aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
+      PRInt32 RFind( const char* aCString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
 
 #ifdef CharT_is_PRUnichar
-      NS_COM PRInt32 RFind( const nsAFlatString& aString, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
-      NS_COM PRInt32 RFind( const PRUnichar* aString, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
+      PRInt32 RFind( const nsAFlatString& aString, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
+      PRInt32 RFind( const PRUnichar* aString, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
 #endif
 
 
@@ -191,7 +191,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          */
 
       // PRInt32 FindChar( PRUnichar aChar, PRInt32 aOffset=0, PRInt32 aCount=-1 ) const;
-      NS_COM PRInt32 RFindChar( PRUnichar aChar, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
+      PRInt32 RFindChar( PRUnichar aChar, PRInt32 aOffset=-1, PRInt32 aCount=-1 ) const;
 
 
         /**
@@ -204,14 +204,14 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @return offset in string, or kNotFound
          */
 
-      NS_COM PRInt32 FindCharInSet( const char* aString, PRInt32 aOffset=0 ) const;
+      PRInt32 FindCharInSet( const char* aString, PRInt32 aOffset=0 ) const;
       PRInt32 FindCharInSet( const self_type& aString, PRInt32 aOffset=0 ) const
         {
           return FindCharInSet(aString.get(), aOffset);
         }
 
 #ifdef CharT_is_PRUnichar
-      NS_COM PRInt32 FindCharInSet( const PRUnichar* aString, PRInt32 aOffset=0 ) const;
+      PRInt32 FindCharInSet( const PRUnichar* aString, PRInt32 aOffset=0 ) const;
 #endif
 
 
@@ -225,7 +225,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @return offset in string, or kNotFound
          */
 
-      NS_COM PRInt32 RFindCharInSet( const char_type* aString, PRInt32 aOffset=-1 ) const;
+      PRInt32 RFindCharInSet( const char_type* aString, PRInt32 aOffset=-1 ) const;
       PRInt32 RFindCharInSet( const self_type& aString, PRInt32 aOffset=-1 ) const
         {
           return RFindCharInSet(aString.get(), aOffset);
@@ -242,7 +242,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          */
 
 #ifdef CharT_is_char
-      NS_COM PRInt32 Compare( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1 ) const;
+      PRInt32 Compare( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1 ) const;
 #endif
 
 
@@ -259,7 +259,7 @@ class nsTString_CharT : public nsTSubstring_CharT
         return Compare(aString, PR_TRUE, aCount) == 0;
       }
 #else
-      NS_COM PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const;
+      PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const;
 
 
 #endif // !CharT_is_PRUnichar
@@ -270,7 +270,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @param   aErrorCode will contain error if one occurs
          * @return  double-precision float rep of string value
          */
-      NS_COM double ToDouble( PRInt32* aErrorCode ) const;
+      double ToDouble( PRInt32* aErrorCode ) const;
 
         /**
          * Perform string to single-precision float conversion.
@@ -289,7 +289,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
          * @return  int rep of string value, and possible (out) error code
          */
-      NS_COM PRInt32 ToInteger( PRInt32* aErrorCode, PRUint32 aRadix=kRadix10 ) const;
+      PRInt32 ToInteger( PRInt32* aErrorCode, PRUint32 aRadix=kRadix10 ) const;
       PRInt32 ToInteger( nsresult* aErrorCode, PRUint32 aRadix=kRadix10 ) const {
         return ToInteger(reinterpret_cast<PRInt32*>(aErrorCode), aRadix);
       }
@@ -311,7 +311,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * aWritable = Substring(aReadable, 0, 17);
          */
 
-      NS_COM size_type Mid( self_type& aResult, PRUint32 aStartPos, PRUint32 aCount ) const;
+      size_type Mid( self_type& aResult, PRUint32 aStartPos, PRUint32 aCount ) const;
 
       size_type Left( self_type& aResult, size_type aCount ) const
         {
@@ -333,7 +333,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @return TRUE if successful
          */
 
-      NS_COM PRBool SetCharAt( PRUnichar aChar, PRUint32 aIndex );
+      PRBool SetCharAt( PRUnichar aChar, PRUint32 aIndex );
 
 
         /**
@@ -342,23 +342,23 @@ class nsTString_CharT : public nsTSubstring_CharT
          *  
          *  @param  aSet -- characters to be cut from this
          */
-      NS_COM void StripChars( const char* aSet );
+      void StripChars( const char* aSet );
 
 
         /**
          *  This method strips whitespace throughout the string.
          */
-      NS_COM void StripWhitespace();
+      void StripWhitespace();
 
 
         /**
          *  swaps occurence of 1 string for another
          */
 
-      NS_COM void ReplaceChar( char_type aOldChar, char_type aNewChar );
-      NS_COM void ReplaceChar( const char* aSet, char_type aNewChar );
-      NS_COM void ReplaceSubstring( const self_type& aTarget, const self_type& aNewValue);
-      NS_COM void ReplaceSubstring( const char_type* aTarget, const char_type* aNewValue);
+      void ReplaceChar( char_type aOldChar, char_type aNewChar );
+      void ReplaceChar( const char* aSet, char_type aNewChar );
+      void ReplaceSubstring( const self_type& aTarget, const self_type& aNewValue);
+      void ReplaceSubstring( const char_type* aTarget, const char_type* aNewValue);
 
 
         /**
@@ -371,7 +371,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          *  @param   aIgnoreQuotes -- if true, causes surrounding quotes to be ignored
          *  @return  this
          */
-      NS_COM void Trim( const char* aSet, PRBool aEliminateLeading=PR_TRUE, PRBool aEliminateTrailing=PR_TRUE, PRBool aIgnoreQuotes=PR_FALSE );
+      void Trim( const char* aSet, PRBool aEliminateLeading=PR_TRUE, PRBool aEliminateTrailing=PR_TRUE, PRBool aIgnoreQuotes=PR_FALSE );
 
         /**
          *  This method strips whitespace from string.
@@ -381,18 +381,18 @@ class nsTString_CharT : public nsTSubstring_CharT
          *  @param   aEliminateLeading controls stripping of leading ws
          *  @param   aEliminateTrailing controls stripping of trailing ws
          */
-      NS_COM void CompressWhitespace( PRBool aEliminateLeading=PR_TRUE, PRBool aEliminateTrailing=PR_TRUE );
+      void CompressWhitespace( PRBool aEliminateLeading=PR_TRUE, PRBool aEliminateTrailing=PR_TRUE );
 
 
         /**
          * assign/append/insert with _LOSSY_ conversion
          */
 
-      NS_COM void AssignWithConversion( const nsTAString_IncompatibleCharT& aString );
-      NS_COM void AssignWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
+      void AssignWithConversion( const nsTAString_IncompatibleCharT& aString );
+      void AssignWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
 
-      NS_COM void AppendWithConversion( const nsTAString_IncompatibleCharT& aString );
-      NS_COM void AppendWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
+      void AppendWithConversion( const nsTAString_IncompatibleCharT& aString );
+      void AppendWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
 
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
 
@@ -701,7 +701,7 @@ class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
         // Adopt(), if possible, when assigning to a self_type&. Note
         // that this violates the constness of str, str is always
         // truncated when this operator is called.
-      NS_COM self_type& operator=( const self_type& str );
+      self_type& operator=( const self_type& str );
 
     private:
         // NOT TO BE IMPLEMENTED.

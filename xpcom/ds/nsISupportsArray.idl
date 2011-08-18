@@ -67,7 +67,7 @@ class nsISupportsArray;
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
  
-NS_COM nsresult
+nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *result NS_OUTPARAM,
                       nsISupportsArray* array);
 %}
@@ -131,11 +131,11 @@ interface nsISupportsArray : nsICollection {
 %{C++
 
 // Construct and return a default implementation of nsISupportsArray:
-extern NS_COM nsresult
+extern nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult);
 
 // Construct and return a default implementation of an enumerator for nsISupportsArrays:
-extern NS_COM nsresult
+extern nsresult
 NS_NewISupportsArrayEnumerator(nsISupportsArray* array,
                                nsIBidirectionalEnumerator* *aInstancePtrResult);
 

@@ -80,7 +80,7 @@
  * If aLength is less than zero, then the length of aStringToRead will be
  * determined by scanning the buffer for the first null byte.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_NewByteInputStream(nsIInputStream** aStreamResult,
                       const char* aStringToRead, PRInt32 aLength = -1,
                       nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
@@ -93,7 +93,7 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
  * truncation (i.e., the high-order byte of each character will be discarded).
  * This could result in data-loss, so be careful when using this function.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_NewStringInputStream(nsIInputStream** aStreamResult,
                         const nsAString& aStringToRead);
 
@@ -101,7 +101,7 @@ NS_NewStringInputStream(nsIInputStream** aStreamResult,
  * Factory method to get an nsInputStream from an nsACString.  Result will
  * implement nsIStringInputStream and nsISeekableStream.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
                          const nsACString& aStringToRead);
 

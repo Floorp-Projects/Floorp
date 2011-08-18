@@ -207,7 +207,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsOutputStreamReadyEvent, nsIRunnable,
 
 //-----------------------------------------------------------------------------
 
-NS_COM nsresult
+nsresult
 NS_NewInputStreamReadyEvent(nsIInputStreamCallback **event,
                             nsIInputStreamCallback *callback,
                             nsIEventTarget *target)
@@ -221,7 +221,7 @@ NS_NewInputStreamReadyEvent(nsIInputStreamCallback **event,
     return NS_OK;
 }
 
-NS_COM nsresult
+nsresult
 NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback **event,
                              nsIOutputStreamCallback *callback,
                              nsIEventTarget *target)
@@ -584,7 +584,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-NS_COM nsresult
+nsresult
 NS_AsyncCopy(nsIInputStream         *source,
              nsIOutputStream        *sink,
              nsIEventTarget         *target,
@@ -626,7 +626,7 @@ NS_AsyncCopy(nsIInputStream         *source,
 
 //-----------------------------------------------------------------------------
 
-NS_COM nsresult
+nsresult
 NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason)
 {
   nsAStreamCopier *copier = static_cast<nsAStreamCopier *>(
@@ -636,7 +636,7 @@ NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason)
 
 //-----------------------------------------------------------------------------
 
-NS_COM nsresult
+nsresult
 NS_ConsumeStream(nsIInputStream *stream, PRUint32 maxCount, nsACString &result)
 {
     nsresult rv = NS_OK;
@@ -691,7 +691,7 @@ TestInputStream(nsIInputStream *inStr,
     return NS_ERROR_ABORT;  // don't call me anymore
 }
 
-NS_COM PRBool
+PRBool
 NS_InputStreamIsBuffered(nsIInputStream *stream)
 {
     PRBool result = PR_FALSE;
@@ -714,7 +714,7 @@ TestOutputStream(nsIOutputStream *outStr,
     return NS_ERROR_ABORT;  // don't call me anymore
 }
 
-NS_COM PRBool
+PRBool
 NS_OutputStreamIsBuffered(nsIOutputStream *stream)
 {
     PRBool result = PR_FALSE;
@@ -725,7 +725,7 @@ NS_OutputStreamIsBuffered(nsIOutputStream *stream)
 
 //-----------------------------------------------------------------------------
 
-NS_COM NS_METHOD
+NS_METHOD
 NS_CopySegmentToStream(nsIInputStream *inStr,
                        void *closure,
                        const char *buffer,
@@ -747,7 +747,7 @@ NS_CopySegmentToStream(nsIInputStream *inStr,
     return NS_OK;
 }
 
-NS_COM NS_METHOD
+NS_METHOD
 NS_CopySegmentToBuffer(nsIInputStream *inStr,
                        void *closure,
                        const char *buffer,
@@ -761,7 +761,7 @@ NS_CopySegmentToBuffer(nsIInputStream *inStr,
     return NS_OK;
 }
 
-NS_COM NS_METHOD
+NS_METHOD
 NS_DiscardSegment(nsIInputStream *inStr,
                   void *closure,
                   const char *buffer,
@@ -775,7 +775,7 @@ NS_DiscardSegment(nsIInputStream *inStr,
 
 //-----------------------------------------------------------------------------
 
-NS_COM NS_METHOD
+NS_METHOD
 NS_WriteSegmentThunk(nsIInputStream *inStr,
                      void *closure,
                      const char *buffer,

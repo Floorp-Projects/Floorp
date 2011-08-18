@@ -558,7 +558,7 @@ class SetPropCompiler : public PICStubCompiler
                     return disable("can't have method barrier");
 
                 JSObject *funobj = &f.regs.sp[-1].toObject();
-                if (funobj != GET_FUNCTION_PRIVATE(cx, funobj))
+                if (funobj != funobj->getFunctionPrivate())
                     return disable("mismatched function");
 
                 flags |= Shape::METHOD;

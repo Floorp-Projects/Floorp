@@ -49,8 +49,7 @@ void
 test_file_perms()
 {
   nsCOMPtr<nsIFile> profDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(profDir));
+  (void)NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profDir));
   nsCOMPtr<nsILocalFile> sqlite_file = do_QueryInterface(profDir);
   sqlite_file->Append(NS_LITERAL_STRING("places.sqlite"));
   PRUint32 perms = 0;

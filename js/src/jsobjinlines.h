@@ -218,7 +218,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JSObject *funobj = &vp->toObject();
     JSFunction *fun = funobj->getFunctionPrivate();
     JS_ASSERT(fun == funobj);
-    JS_ASSERT(FUN_NULL_CLOSURE(fun));
+    JS_ASSERT(fun->isNullClosure());
 
     funobj = CloneFunctionObject(cx, fun, funobj->getParent());
     if (!funobj)
@@ -550,7 +550,7 @@ inline void
 JSObject::setFlatClosureUpvars(js::Value *upvars)
 {
     JS_ASSERT(isFunction());
-    JS_ASSERT(FUN_FLAT_CLOSURE(getFunctionPrivate()));
+    JS_ASSERT(getFunctionPrivate()->isFlatClosure());
     setSlot(JSSLOT_FLAT_CLOSURE_UPVARS, PrivateValue(upvars));
 }
 
