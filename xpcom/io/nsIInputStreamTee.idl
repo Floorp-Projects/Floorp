@@ -63,12 +63,12 @@ interface nsIInputStreamTee : nsIInputStream
 
 %{C++
 // factory methods
-extern NS_COM nsresult
+extern nsresult
 NS_NewInputStreamTee(nsIInputStream **tee, // read from this input stream
                      nsIInputStream *source,
                      nsIOutputStream *sink);
                      
-extern NS_COM nsresult
+extern nsresult
 NS_NewInputStreamTeeAsync(nsIInputStream **tee, // read from this input stream
                      nsIInputStream *source,
                      nsIOutputStream *sink,

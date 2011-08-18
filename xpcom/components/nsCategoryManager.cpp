@@ -742,7 +742,7 @@ nsCategoryManager::SuppressNotifications(PRBool aSuppress)
  * this will attempt to notify the observer with the origin, observerTopic string
  * as parameter.
  */
-NS_COM void
+void
 NS_CreateServicesFromCategory(const char *category,
                               nsISupports *origin,
                               const char *observerTopic)

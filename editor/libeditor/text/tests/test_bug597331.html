@@ -24,7 +24,7 @@ line3
 
 /** Test for Bug 597331 **/
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
+SimpleTest.waitForFocus(function() {
   var t = document.querySelector("textarea");
   t.focus();
   t.selectionStart = 4;

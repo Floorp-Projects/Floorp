@@ -130,7 +130,7 @@ nsSupportsArrayEnumerator::Prev()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_COM nsresult
+nsresult
 NS_NewISupportsArrayEnumerator(nsISupportsArray* array,
                                nsIBidirectionalEnumerator* *aInstancePtrResult)
 {

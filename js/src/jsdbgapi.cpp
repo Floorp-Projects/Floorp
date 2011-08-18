@@ -548,7 +548,7 @@ JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark)
 JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
-    return FUN_SCRIPT(fun);
+    return fun->maybeScript();
 }
 
 JS_PUBLIC_API(JSNative)
@@ -1095,8 +1095,8 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     size_t nbytes;
 
     nbytes = sizeof *fun;
-    nbytes += JS_GetObjectTotalSize(cx, FUN_OBJECT(fun));
-    if (FUN_INTERPRETED(fun))
+    nbytes += JS_GetObjectTotalSize(cx, fun);
+    if (fun->isInterpreted())
         nbytes += JS_GetScriptTotalSize(cx, fun->script());
     if (fun->atom)
         nbytes += GetAtomTotalSize(cx, fun->atom);

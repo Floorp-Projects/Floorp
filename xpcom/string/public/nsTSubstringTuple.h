@@ -73,20 +73,20 @@ class nsTSubstringTuple_CharT
         /**
          * computes the aggregate string length
          */
-      NS_COM size_type Length() const;
+      size_type Length() const;
 
         /**
          * writes the aggregate string to the given buffer.  bufLen is assumed
          * to be equal to or greater than the value returned by the Length()
          * method.  the string written to |buf| is not null-terminated.
          */
-      NS_COM void WriteTo(char_type *buf, PRUint32 bufLen) const;
+      void WriteTo(char_type *buf, PRUint32 bufLen) const;
 
         /**
          * returns true if this tuple is dependent on (i.e., overlapping with)
          * the given char sequence.
          */
-      NS_COM PRBool IsDependentOn(const char_type *start, const char_type *end) const;
+      PRBool IsDependentOn(const char_type *start, const char_type *end) const;
 
     private:
 

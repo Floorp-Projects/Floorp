@@ -107,6 +107,8 @@ _TEST_FILES = \
 		test_bug662678.html \
 		test_bug667919-1.html \
 		test_bug667919-2.html \
+		test_bug667612.html \
+		empty.js \
 		$(NULL)
 
 #bug 585630

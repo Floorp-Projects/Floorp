@@ -323,8 +323,20 @@ function finish() {
 
   // Close the test window and signal the framework that the test is done.
   let opener = window.opener;
+  let SimpleTest = opener.wrappedJSObject.SimpleTest;
+
+  // Wait for the window to be closed before finishing the test
+  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
+  ww.registerNotification(function(subject, topic, data) {
+    if (topic == "domwindowclosed") {
+      ww.unregisterNotification(arguments.callee);
+      SimpleTest.waitForFocus(function() {
+        SimpleTest.finish();
+      }, opener);
+    }
+  });
+
   window.close();
-  opener.wrappedJSObject.SimpleTest.finish();
 }
 
 /**

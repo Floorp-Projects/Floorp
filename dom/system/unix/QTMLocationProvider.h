@@ -11,15 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is Mozilla Qt code.
  *
- * The Initial Developer of the Original Code is
- * James L. Nance.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   James L. Nance <jim_nance@yahoo.com>
+ *   Oleg Romashin <romaxa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,13 +34,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "prio.h"
+#ifndef QTMLocationProvider_h
+#define QTMLocationProvider_h
 
-typedef struct MmioFileStruct MmioFile;
+#include <QGeoPositionInfoSource>
+#include "nsGeolocation.h"
+#include "nsIGeolocationProvider.h"
+#include "nsCOMPtr.h"
 
-PRStatus mmio_FileSeek(MmioFile *file, PRInt32 offset, PRSeekWhence whence);
-PRInt32  mmio_FileRead(MmioFile *file, char *dest, PRInt32 count);
-PRInt32  mmio_FileWrite(MmioFile *file, const char *src, PRInt32 count);
-PRInt32  mmio_FileTell(MmioFile *file);
-PRStatus mmio_FileClose(MmioFile *file);
-MmioFile *mmio_FileOpen(char *path, PRIntn flags, PRIntn mode);
+using namespace QtMobility;
+
+class QTMLocationProvider : public QObject,
+                            public nsIGeolocationProvider
+{
+    Q_OBJECT
+
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIGEOLOCATIONPROVIDER
+
+    QTMLocationProvider();
+
+public Q_SLOTS:
+    // QGeoPositionInfoSource
+    void positionUpdated(const QGeoPositionInfo&);
+
+private:
+    ~QTMLocationProvider();
+
+    QtMobility::QGeoPositionInfoSource* mLocation;
+    nsCOMPtr<nsIGeolocationUpdate> mCallback;
+};
+
+#endif /* QTMLocationProvider_h */
