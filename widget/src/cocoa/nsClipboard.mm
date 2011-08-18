@@ -428,8 +428,13 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       nsCOMPtr<nsISupports> genericDataWrapper;
       rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &dataSize);
       nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr, genericDataWrapper, &data, dataSize);
+
+      NSString* nativeString;
+      if (data)
+        nativeString = [NSString stringWithCharacters:(const unichar*)data length:(dataSize / sizeof(PRUnichar))];
+      else
+        nativeString = [NSString string];
       
-      NSString* nativeString = [NSString stringWithCharacters:(const unichar*)data length:(dataSize / sizeof(PRUnichar))];
       // be nice to Carbon apps, normalize the receiver's contents using Form C.
       nativeString = [nativeString precomposedStringWithCanonicalMapping];
 
