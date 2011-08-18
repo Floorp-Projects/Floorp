@@ -39,6 +39,7 @@
 #define __nsCheapSets_h__
 
 #include "nsHashSets.h"
+#include <stdint.h>
 
 /**
  * A string set that takes up minimal size when there are 0 or 1 strings in the
