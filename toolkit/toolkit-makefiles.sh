@@ -322,7 +322,6 @@ MAKEFILES_libvorbis="
 MAKEFILES_libtremor="
   media/libtremor/Makefile
   media/libtremor/lib/Makefile
-  media/libtremor/include/Makefile
   media/libtremor/include/tremor/Makefile
 "
 
