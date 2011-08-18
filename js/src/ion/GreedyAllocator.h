@@ -124,7 +124,7 @@ class GreedyAllocator
         }
         LAllocation backingStack() const {
             if (hasStackSlot())
-                return LStackSlot(stackSlot_);
+                return LStackSlot(stackSlot_, isDouble());
             JS_ASSERT(def->policy() == LDefinition::PRESET);
             JS_ASSERT(def->output()->isMemory());
             return *def->output();
