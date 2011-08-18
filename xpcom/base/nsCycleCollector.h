@@ -64,8 +64,8 @@ struct nsCycleCollectionLanguageRuntime
 
 nsresult nsCycleCollector_startup();
 // Returns the number of collected nodes.
-NS_COM PRUint32 nsCycleCollector_collect(nsICycleCollectorListener *aListener);
-NS_COM PRUint32 nsCycleCollector_suspectedCount();
+PRUint32 nsCycleCollector_collect(nsICycleCollectorListener *aListener);
+PRUint32 nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdownThreads();
 void nsCycleCollector_shutdown();
 
@@ -88,15 +88,15 @@ struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
 };
 
 #ifdef DEBUG
-NS_COM void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);
-NS_COM void nsCycleCollector_DEBUG_wasFreed(nsISupports *n);
+void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);
+void nsCycleCollector_DEBUG_wasFreed(nsISupports *n);
 #endif
 
 // Helpers for interacting with language-identified scripts
 
-NS_COM void nsCycleCollector_registerRuntime(PRUint32 langID, nsCycleCollectionLanguageRuntime *rt);
-NS_COM nsCycleCollectionLanguageRuntime * nsCycleCollector_getRuntime(PRUint32 langID);
-NS_COM void nsCycleCollector_forgetRuntime(PRUint32 langID);
+void nsCycleCollector_registerRuntime(PRUint32 langID, nsCycleCollectionLanguageRuntime *rt);
+nsCycleCollectionLanguageRuntime * nsCycleCollector_getRuntime(PRUint32 langID);
+void nsCycleCollector_forgetRuntime(PRUint32 langID);
 
 #define NS_CYCLE_COLLECTOR_LOGGER_CID \
 { 0x58be81b4, 0x39d2, 0x437c, \

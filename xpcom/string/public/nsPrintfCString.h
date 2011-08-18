@@ -67,7 +67,7 @@
    * much more efficiently handled with |NS_LITERAL_[C]STRING| and |nsLiteral[C]String|.
    */
 
-class NS_COM nsPrintfCString : public nsCString
+class nsPrintfCString : public nsCString
   {
     typedef nsCString string_type;
 

@@ -746,7 +746,7 @@ NS_IMETHODIMP nsMemoryReporter::GetDescription(nsACString &aDescription)
     return NS_OK;
 }
 
-NS_COM nsresult
+nsresult
 NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
@@ -755,7 +755,7 @@ NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
     return mgr->RegisterReporter(reporter);
 }
 
-NS_COM nsresult
+nsresult
 NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
@@ -764,7 +764,7 @@ NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
     return mgr->RegisterMultiReporter(reporter);
 }
 
-NS_COM nsresult
+nsresult
 NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
@@ -773,7 +773,7 @@ NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter)
     return mgr->UnregisterReporter(reporter);
 }
 
-NS_COM nsresult
+nsresult
 NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");

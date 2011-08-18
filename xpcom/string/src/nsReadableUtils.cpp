@@ -41,7 +41,6 @@
 #include "nsString.h"
 #include "nsUTF8Utils.h"
 
-NS_COM
 void
 LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
@@ -49,7 +48,6 @@ LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest )
     LossyAppendUTF16toASCII(aSource, aDest);
   }
 
-NS_COM
 void
 CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
@@ -57,7 +55,6 @@ CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
     AppendASCIItoUTF16(aSource, aDest);
   }
 
-NS_COM
 void
 LossyCopyUTF16toASCII( const PRUnichar* aSource, nsACString& aDest )
   {
@@ -67,7 +64,6 @@ LossyCopyUTF16toASCII( const PRUnichar* aSource, nsACString& aDest )
     }
   }
 
-NS_COM
 void
 CopyASCIItoUTF16( const char* aSource, nsAString& aDest )
   {
@@ -77,7 +73,6 @@ CopyASCIItoUTF16( const char* aSource, nsAString& aDest )
     }
   }
 
-NS_COM
 void
 CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
   {
@@ -85,7 +80,6 @@ CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
     AppendUTF16toUTF8(aSource, aDest);
   }
 
-NS_COM
 void
 CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
   {
@@ -93,7 +87,6 @@ CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
     AppendUTF8toUTF16(aSource, aDest);
   }
 
-NS_COM
 void
 CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest )
   {
@@ -101,7 +94,6 @@ CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest )
     AppendUTF16toUTF8(aSource, aDest);
   }
 
-NS_COM
 void
 CopyUTF8toUTF16( const char* aSource, nsAString& aDest )
   {
@@ -130,7 +122,6 @@ SetLengthForWritingC(nsACString& aDest, PRUint32 aDesiredLength)
   }
 
 
-NS_COM
 void
 LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
@@ -151,7 +142,6 @@ LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
-NS_COM
 void
 AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
@@ -172,7 +162,6 @@ AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
-NS_COM
 void
 LossyAppendUTF16toASCII( const PRUnichar* aSource, nsACString& aDest )
   {
@@ -181,7 +170,6 @@ LossyAppendUTF16toASCII( const PRUnichar* aSource, nsACString& aDest )
     }
   }
 
-NS_COM
 void
 AppendASCIItoUTF16( const char* aSource, nsAString& aDest )
   {
@@ -190,7 +178,6 @@ AppendASCIItoUTF16( const char* aSource, nsAString& aDest )
     }
   }
 
-NS_COM
 void
 AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
   {
@@ -221,7 +208,6 @@ AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
       }
   }
 
-NS_COM
 void
 AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
   {
@@ -259,7 +245,6 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
       }
   }
 
-NS_COM
 void
 AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest )
   {
@@ -268,7 +253,6 @@ AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest )
     }
   }
 
-NS_COM
 void
 AppendUTF8toUTF16( const char* aSource, nsAString& aDest )
   {
@@ -294,7 +278,6 @@ AllocateStringCopy( const FromStringT& aSource, ToCharT* )
   }
 
 
-NS_COM
 char*
 ToNewCString( const nsAString& aSource )
   {
@@ -308,7 +291,6 @@ ToNewCString( const nsAString& aSource )
     return result;
   }
 
-NS_COM
 char*
 ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count )
   {
@@ -333,7 +315,6 @@ ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count )
     return result;
   }
 
-NS_COM
 char*
 ToNewCString( const nsACString& aSource )
   {
@@ -349,7 +330,6 @@ ToNewCString( const nsACString& aSource )
     return result;
   }
 
-NS_COM
 PRUnichar*
 ToNewUnicode( const nsAString& aSource )
   {
@@ -365,7 +345,6 @@ ToNewUnicode( const nsAString& aSource )
     return result;
   }
 
-NS_COM
 PRUnichar*
 ToNewUnicode( const nsACString& aSource )
   {
@@ -379,7 +358,6 @@ ToNewUnicode( const nsACString& aSource )
     return result;
   }
 
-NS_COM
 PRUnichar*
 UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
   {
@@ -404,7 +382,6 @@ UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
     return result;
   }
 
-NS_COM
 PRUnichar*
 CopyUnicodeTo( const nsAString& aSource, PRUint32 aSrcOffset, PRUnichar* aDest, PRUint32 aLength )
   {
@@ -414,8 +391,7 @@ CopyUnicodeTo( const nsAString& aSource, PRUint32 aSrcOffset, PRUnichar* aDest, 
     return aDest;
   }
 
-NS_COM 
-void 
+void
 CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
                const nsAString::const_iterator& aSrcEnd,
                nsAString& aDest )
@@ -430,8 +406,7 @@ CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
     copy_string(fromBegin, aSrcEnd, writer);
   }
 
-NS_COM 
-void 
+void
 AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
                  const nsAString::const_iterator& aSrcEnd,
                  nsAString& aDest )
@@ -447,7 +422,6 @@ AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
     copy_string(fromBegin, aSrcEnd, writer);
   }
 
-NS_COM
 PRBool
 IsASCII( const nsAString& aString )
   {
@@ -472,7 +446,6 @@ IsASCII( const nsAString& aString )
     return PR_TRUE;
   }
 
-NS_COM
 PRBool
 IsASCII( const nsACString& aString )
   {
@@ -497,7 +470,6 @@ IsASCII( const nsACString& aString )
     return PR_TRUE;
   }
 
-NS_COM
 PRBool
 IsUTF8( const nsACString& aString )
   {
@@ -612,7 +584,6 @@ class ConvertToUpperCase
         }
   };
 
-NS_COM
 void
 ToUpperCase( nsCSubstring& aCString )
   {
@@ -657,7 +628,6 @@ class CopyToUpperCase
       nsACString::iterator& mIter;
   };
 
-NS_COM
 void
 ToUpperCase( const nsACString& aSource, nsACString& aDest )
   {
@@ -693,7 +663,6 @@ class ConvertToLowerCase
         }
   };
 
-NS_COM
 void
 ToLowerCase( nsCSubstring& aCString )
   {
@@ -738,7 +707,6 @@ class CopyToLowerCase
       nsACString::iterator& mIter;
   };
 
-NS_COM
 void
 ToLowerCase( const nsACString& aSource, nsACString& aDest )
   {
@@ -751,7 +719,6 @@ ToLowerCase( const nsACString& aSource, nsACString& aDest )
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
-NS_COM
 PRBool
 ParseString(const nsACString& aSource, char aDelimiter, 
             nsTArray<nsCString>& aArray)
@@ -910,43 +877,37 @@ RFindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, Iterator
     return PR_FALSE;
   }
 
-NS_COM
 PRBool
 FindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd, const nsStringComparator& aComparator )
   {
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
-NS_COM
 PRBool
 FindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd, const nsCStringComparator& aComparator)
   {
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
-NS_COM
 PRBool
 CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd )
   {
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, nsCaseInsensitiveCStringComparator());
   }
 
-NS_COM
 PRBool
 RFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd, const nsStringComparator& aComparator)
   {
     return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
-NS_COM
 PRBool
 RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd, const nsCStringComparator& aComparator)
   {
     return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
-NS_COM 
-PRBool 
+PRBool
 FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd )
   {
     PRInt32 fragmentLength = aSearchEnd.get() - aSearchStart.get();
@@ -961,8 +922,7 @@ FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, co
     return PR_FALSE;
   }
 
-NS_COM 
-PRBool 
+PRBool
 FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const nsACString::const_iterator& aSearchEnd )
   {
     PRInt32 fragmentLength = aSearchEnd.get() - aSearchStart.get();
@@ -975,10 +935,9 @@ FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const 
 
     aSearchStart.advance(fragmentLength);
     return PR_FALSE;
-  } 
+  }
 
-NS_COM 
-PRUint32 
+PRUint32
 CountCharInReadable( const nsAString& aStr,
                      PRUnichar aChar )
 {
@@ -998,8 +957,7 @@ CountCharInReadable( const nsAString& aStr,
   return count;
 }
 
-NS_COM 
-PRUint32 
+PRUint32
 CountCharInReadable( const nsACString& aStr,
                      char aChar )
 {
@@ -1019,7 +977,7 @@ CountCharInReadable( const nsACString& aStr,
   return count;
 }
 
-NS_COM PRBool
+PRBool
 StringBeginsWith( const nsAString& aSource, const nsAString& aSubstring,
                   const nsStringComparator& aComparator )
   {
@@ -1030,7 +988,7 @@ StringBeginsWith( const nsAString& aSource, const nsAString& aSubstring,
     return Substring(aSource, 0, sub_len).Equals(aSubstring, aComparator);
   }
 
-NS_COM PRBool
+PRBool
 StringBeginsWith( const nsACString& aSource, const nsACString& aSubstring,
                   const nsCStringComparator& aComparator )
   {
@@ -1041,7 +999,7 @@ StringBeginsWith( const nsACString& aSource, const nsACString& aSubstring,
     return Substring(aSource, 0, sub_len).Equals(aSubstring, aComparator);
   }
 
-NS_COM PRBool
+PRBool
 StringEndsWith( const nsAString& aSource, const nsAString& aSubstring,
                 const nsStringComparator& aComparator )
   {
@@ -1053,7 +1011,7 @@ StringEndsWith( const nsAString& aSource, const nsAString& aSubstring,
                                                                  aComparator);
   }
 
-NS_COM PRBool
+PRBool
 StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
                 const nsCStringComparator& aComparator )
   {
@@ -1069,7 +1027,6 @@ StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
 
 static const PRUnichar empty_buffer[1] = { '\0' };
 
-NS_COM
 const nsAFlatString&
 EmptyString()
   {
@@ -1078,7 +1035,6 @@ EmptyString()
     return sEmpty;
   }
 
-NS_COM
 const nsAFlatCString&
 EmptyCString()
   {
@@ -1087,7 +1043,7 @@ EmptyCString()
     return sEmpty;
   }
 
-NS_COM PRInt32
+PRInt32
 CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
                    const nsASingleFragmentString& aUTF16String)
   {
@@ -1164,7 +1120,6 @@ CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
     return 0;
   }
 
-NS_COM
 void
 AppendUCS4ToUTF16(const PRUint32 aSource, nsAString& aDest)
   {
