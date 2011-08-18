@@ -389,16 +389,6 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   // IME to commit before we change the cursor position
   mEditor->ForceCompositionEnd();
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aMouseEvent->GetTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
-  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
-  if (!mEditor->IsModifiableNode(node)) {
-    // We shouldn't handle the event for non-editable content.
-    return NS_OK;
-  }
-
   PRUint16 button = (PRUint16)-1;
   mouseEvent->GetButton(&button);
   // middle-mouse click (paste);
