@@ -201,7 +201,7 @@ void nsGIFDecoder2::BeginGIF()
 }
 
 //******************************************************************************
-nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
+nsresult nsGIFDecoder2::BeginImageFrame(PRUint16 aDepth)
 {
   PRUint32 imageDataLength;
   nsresult rv;
