@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-NS_COM nsTAdoptingString_CharT&
+nsTAdoptingString_CharT&
 nsTAdoptingString_CharT::operator=( const self_type& str )
   {
     // This'll violate the constness of this argument, that's just

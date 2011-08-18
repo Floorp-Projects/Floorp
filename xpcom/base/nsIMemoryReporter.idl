@@ -292,10 +292,10 @@ interface nsIMemoryReporterManager : nsISupports
 
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
 
-NS_COM nsresult NS_RegisterMemoryReporter (nsIMemoryReporter *reporter);
-NS_COM nsresult NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
+nsresult NS_RegisterMemoryReporter (nsIMemoryReporter *reporter);
+nsresult NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
 
-NS_COM nsresult NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter);
-NS_COM nsresult NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
+nsresult NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter);
+nsresult NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
 
 %}
