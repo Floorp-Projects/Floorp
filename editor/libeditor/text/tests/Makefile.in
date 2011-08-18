@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+		test_bug318065.html \
 		test_bug471722.html \
 		test_bug527935.html \
 		test_bug569988.html \
