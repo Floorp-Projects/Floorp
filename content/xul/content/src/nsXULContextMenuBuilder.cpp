@@ -41,7 +41,7 @@
 
 
 nsXULContextMenuBuilder::nsXULContextMenuBuilder()
-  : mCurrentIdent(0)
+  : mCurrentGeneratedItemId(0)
 {
 }
 
@@ -85,13 +85,14 @@ nsXULContextMenuBuilder::OpenContainer(const nsAString& aLabel)
     mCurrentNode = mFragment;
   } else {
     nsCOMPtr<nsIContent> menu;
-    nsresult rv = CreateElement(nsGkAtoms::menu, getter_AddRefs(menu));
+    nsresult rv = CreateElement(nsGkAtoms::menu, nsnull, getter_AddRefs(menu));
     NS_ENSURE_SUCCESS(rv, rv);
 
     menu->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel, PR_FALSE);
 
     nsCOMPtr<nsIContent> menuPopup;
-    rv = CreateElement(nsGkAtoms::menupopup, getter_AddRefs(menuPopup));
+    rv = CreateElement(nsGkAtoms::menupopup, nsnull,
+                       getter_AddRefs(menuPopup));
     NS_ENSURE_SUCCESS(rv, rv);
         
     rv = menu->AppendChildTo(menuPopup, PR_FALSE);
@@ -115,7 +116,8 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
   }
 
   nsCOMPtr<nsIContent> menuitem;
-  nsresult rv = CreateElement(nsGkAtoms::menuitem, getter_AddRefs(menuitem));
+  nsresult rv = CreateElement(nsGkAtoms::menuitem, aElement,
+                              getter_AddRefs(menuitem));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString type;
@@ -154,17 +156,7 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
                       NS_LITERAL_STRING("true"), PR_FALSE);
   }
 
-  nsAutoString ident;
-  ident.AppendInt(mCurrentIdent++);
-
-  menuitem->SetAttr(kNameSpaceID_None, mIdentAttr, ident, PR_FALSE);
-
-  rv = mCurrentNode->AppendChildTo(menuitem, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mElements.AppendObject(aElement);
-
-  return NS_OK;
+  return mCurrentNode->AppendChildTo(menuitem, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -175,7 +167,7 @@ nsXULContextMenuBuilder::AddSeparator()
   }
 
   nsCOMPtr<nsIContent> menuseparator;
-  nsresult rv = CreateElement(nsGkAtoms::menuseparator,
+  nsresult rv = CreateElement(nsGkAtoms::menuseparator, nsnull,
                               getter_AddRefs(menuseparator));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -218,24 +210,22 @@ nsXULContextMenuBuilder::CloseContainer()
 
 NS_IMETHODIMP
 nsXULContextMenuBuilder::Init(nsIDOMDocumentFragment* aDocumentFragment,
-                              const nsAString& aGeneratedAttrName,
-                              const nsAString& aIdentAttrName)
+                              const nsAString& aGeneratedItemIdAttrName)
 {
   NS_ENSURE_ARG_POINTER(aDocumentFragment);
 
   mFragment = do_QueryInterface(aDocumentFragment);
   mDocument = mFragment->GetOwnerDocument();
-  mGeneratedAttr = do_GetAtom(aGeneratedAttrName);
-  mIdentAttr = do_GetAtom(aIdentAttrName);
+  mGeneratedItemIdAttr = do_GetAtom(aGeneratedItemIdAttrName);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULContextMenuBuilder::Click(const nsAString& aIdent)
+nsXULContextMenuBuilder::Click(const nsAString& aGeneratedItemId)
 {
   PRInt32 rv;
-  PRInt32 idx = nsString(aIdent).ToInteger(&rv);
+  PRInt32 idx = nsString(aGeneratedItemId).ToInteger(&rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMHTMLElement> element = mElements.SafeObjectAt(idx);
     if (element) {
@@ -247,7 +237,9 @@ nsXULContextMenuBuilder::Click(const nsAString& aIdent)
 }
 
 nsresult
-nsXULContextMenuBuilder::CreateElement(nsIAtom* aTag, nsIContent** aResult)
+nsXULContextMenuBuilder::CreateElement(nsIAtom* aTag,
+                                       nsIDOMHTMLElement* aHTMLElement,
+                                       nsIContent** aResult)
 {
   *aResult = nsnull;
 
@@ -261,7 +253,14 @@ nsXULContextMenuBuilder::CreateElement(nsIAtom* aTag, nsIContent** aResult)
     return rv;
   }
 
-  (*aResult)->SetAttr(kNameSpaceID_None, mGeneratedAttr, EmptyString(),
+  nsAutoString generateditemid;
+
+  if (aHTMLElement) {
+    mElements.AppendObject(aHTMLElement);
+    generateditemid.AppendInt(mCurrentGeneratedItemId++);
+  }
+
+  (*aResult)->SetAttr(kNameSpaceID_None, mGeneratedItemIdAttr, generateditemid,
                       PR_FALSE);
 
   return NS_OK;
