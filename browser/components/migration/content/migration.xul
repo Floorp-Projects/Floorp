@@ -70,19 +70,14 @@
            browser/components/migration/src/nsProfileMigrator.cpp -->
 #ifdef XP_MACOSX
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
-      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
 #elifdef XP_UNIX
-      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
 #elifdef XP_WIN
 #ifndef NO_IE_MIGRATOR
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
 #endif
-      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
-#else
-      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
 #endif
       <radio id="fromfile"  label="&importFromHTMLFile.label;"  accesskey="&importFromHTMLFile.accesskey;" hidden="true"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>

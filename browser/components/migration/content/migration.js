@@ -340,9 +340,6 @@ var MigrationWizard = {
       case "safari":
         source = "sourceNameSafari";
         break;
-      case "seamonkey":
-        source = "sourceNameSeamonkey";
-        break;
     }
 
     // semi-wallpaper for crash when multiple profiles exist, since we haven't initialized mSourceProfile in places
