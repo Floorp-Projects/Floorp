@@ -166,6 +166,77 @@ class CodePosition
     }
 };
 
+class Requirement
+{
+public:
+    enum Kind {
+        NONE,
+        REGISTER,
+        FIXED,
+        SAME_AS_OTHER
+    };
+
+    Requirement()
+      : kind_(NONE)
+    { }
+
+    Requirement(Kind kind)
+      : kind_(kind)
+    {
+        // These have dedicated constructors;
+        JS_ASSERT(kind != FIXED && kind != SAME_AS_OTHER);
+    }
+
+    Requirement(Kind kind, CodePosition at)
+      : kind_(kind),
+        position_(at)
+    { }
+
+    Requirement(LAllocation fixed)
+      : kind_(FIXED),
+        allocation_(fixed)
+    { }
+
+    // Only useful as a hint, encodes where the fixed requirement is used to
+    // avoid allocating a fixed register too early.
+    Requirement(LAllocation fixed, CodePosition at)
+      : kind_(FIXED),
+        allocation_(fixed),
+        position_(at)
+    { }
+
+    Requirement(uint32 reg, CodePosition where)
+      : kind_(SAME_AS_OTHER),
+        allocation_(LUse(reg, LUse::ANY)),
+        position_(where)
+    { }
+
+    Kind kind() {
+        return kind_;
+    }
+
+    LAllocation allocation() {
+        JS_ASSERT(!allocation_.isUse());
+        return allocation_;
+    }
+
+    uint32 virtualRegister() {
+        JS_ASSERT(allocation_.isUse());
+        return allocation_.toUse()->virtualRegister();
+    }
+
+    CodePosition pos() {
+        return position_;
+    }
+
+    int priority();
+
+private:
+    Kind kind_;
+    LAllocation allocation_;
+    CodePosition position_;
+};
+
 /*
  * A live interval is a set of disjoint ranges of code positions where a
  * virtual register is live. Linear scan register allocation operates on
@@ -193,14 +264,14 @@ class LiveInterval : public InlineListNode<LiveInterval>
     LAllocation alloc_;
     VirtualRegister *reg_;
     uint32 index_;
-    int priority_;
+    Requirement requirement_;
+    Requirement hint_;
 
   public:
 
     LiveInterval(VirtualRegister *reg, uint32 index)
       : reg_(reg),
-        index_(index),
-        priority_(0)
+        index_(index)
     { }
 
     bool addRange(CodePosition from, CodePosition to);
@@ -241,12 +312,20 @@ class LiveInterval : public InlineListNode<LiveInterval>
         index_ = index;
     }
 
-    int priority() const {
-        return priority_;
+    Requirement *requirement() {
+        return &requirement_;
     }
 
-    void setPriority(int priority) {
-        priority_ = priority;
+    void setRequirement(const Requirement &requirement) {
+        requirement_ = requirement;
+    }
+
+    Requirement *hint() {
+        return &hint_;
+    }
+
+    void setHint(const Requirement &hint) {
+        hint_ = hint;
     }
 
     bool splitFrom(CodePosition pos, LiveInterval *after);
@@ -269,7 +348,6 @@ class VirtualRegister : public TempObject
     LMoveGroup *inputMoves_;
     LMoveGroup *outputMoves_;
     LAllocation *canonicalSpill_;
-    bool isTemporary_;
 
   public:
     VirtualRegister()
@@ -282,14 +360,11 @@ class VirtualRegister : public TempObject
         canonicalSpill_(NULL)
     { }
 
-    bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def,
-              bool temporary_ = false)
-    {
+    bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
         reg_ = reg;
         block_ = block;
         ins_ = ins;
         def_ = def;
-        isTemporary_ = temporary_;
         LiveInterval *initial = new LiveInterval(this, 0);
         if (!initial)
             return false;
@@ -356,8 +431,8 @@ class VirtualRegister : public TempObject
     LAllocation *canonicalSpill() {
         return canonicalSpill_;
     }
-    bool isTemporary() {
-        return isTemporary_;
+    bool isDouble() {
+        return def_->type() == LDefinition::DOUBLE;
     }
 
     LiveInterval *intervalFor(CodePosition pos);
@@ -485,7 +560,7 @@ class LinearScanAllocator
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
-    void setIntervalPriority(LiveInterval *interval);
+    void setIntervalRequirement(LiveInterval *interval);
 
 #ifdef DEBUG
     void validateIntervals();
