@@ -343,6 +343,17 @@ typedef long PRInt32;
 **      architectures and even different compilers have varying support for
 **      64 bit values. The only guaranteed portability requires the use of
 **      the LL_ macros (see prlong.h).
+**
+** MACROS:      PR_INT64
+**              PR_UINT64
+** DESCRIPTION:
+**  The PR_INT64 and PR_UINT64 macros provide a portable way for
+**      specifying 64-bit integer constants. They can only be used if
+**      PRInt64 and PRUint64 are defined as compiler-supported 64-bit
+**      integer types (i.e., if HAVE_LONG_LONG is defined, which is true
+**      for all the supported compilers topday). If PRInt64 and PRUint64
+**      are defined as structs, the LL_INIT macro defined in prlong.h has
+**      to be used.
 ************************************************************************/
 #ifdef HAVE_LONG_LONG
 /* Keep this in sync with prlong.h. */
@@ -354,12 +365,18 @@ typedef long PRInt32;
 #if PR_BYTES_PER_LONG == 8 && !defined(__APPLE__)
 typedef long PRInt64;
 typedef unsigned long PRUint64;
+#define PR_INT64(x)  x ## L
+#define PR_UINT64(x) x ## UL
 #elif defined(WIN32) && !defined(__GNUC__)
 typedef __int64  PRInt64;
 typedef unsigned __int64 PRUint64;
+#define PR_INT64(x)  x ## i64
+#define PR_UINT64(x) x ## ui64
 #else
 typedef long long PRInt64;
 typedef unsigned long long PRUint64;
+#define PR_INT64(x)  x ## LL
+#define PR_UINT64(x) x ## ULL
 #endif /* PR_BYTES_PER_LONG == 8 */
 #else  /* !HAVE_LONG_LONG */
 typedef struct {
