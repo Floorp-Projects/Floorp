@@ -512,7 +512,7 @@ class SetPropCompiler : public PICStubCompiler
 
         if (!obj->getType(cx)->unknownProperties()) {
             types::AutoEnterTypeInference enter(cx);
-            types::TypeSet *types = obj->getType(cx)->getProperty(cx, id, true);
+            types::TypeSet *types = obj->getType(cx)->getProperty(cx, types::MakeTypeId(cx, id), true);
             if (!types)
                 return false;
             pic.rhsTypes->addSubset(cx, types);
