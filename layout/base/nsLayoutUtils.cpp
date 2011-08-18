@@ -2762,8 +2762,7 @@ nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord 
     if (heightAtMinWidth > maxHeight)
       heightAtMinWidth = maxHeight;
   } else {
-    heightAtMaxWidth = tentHeight;
-    heightAtMinWidth = tentHeight;
+    heightAtMaxWidth = heightAtMinWidth = NS_CSS_MINMAX(tentHeight, minHeight, maxHeight);
   }
 
   if (tentHeight > 0) {
@@ -2774,8 +2773,7 @@ nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord 
     if (widthAtMinHeight > maxWidth)
       widthAtMinHeight = maxWidth;
   } else {
-    widthAtMaxHeight = tentWidth;
-    widthAtMinHeight = tentWidth;
+    widthAtMaxHeight = widthAtMinHeight = NS_CSS_MINMAX(tentWidth, minWidth, maxWidth);
   }
 
   // The table at http://www.w3.org/TR/CSS21/visudet.html#min-max-widths :
