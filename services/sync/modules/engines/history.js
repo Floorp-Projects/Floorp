@@ -46,7 +46,6 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 const HISTORY_TTL = 5184000; // 60 days
-const TOPIC_UPDATEPLACES_COMPLETE = "places-updatePlaces-complete";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
@@ -253,20 +252,15 @@ HistoryStore.prototype = {
       return failed;
     }
 
-    let cb = Async.makeSyncCallback();
     let updatePlacesCallback = { 
       handleResult: function handleResult() {},
       handleError: function handleError(resultCode, placeInfo) {
         failed.push(placeInfo.guid);
-      }
+      },
+      handleCompletion: Async.makeSyncCallback()
     };
-    let onComplete = function onComplete(subject, topic, data) {
-      Svc.Obs.remove(TOPIC_UPDATEPLACES_COMPLETE, onComplete);
-      cb();
-    };
-    Svc.Obs.add(TOPIC_UPDATEPLACES_COMPLETE, onComplete);
     this._asyncHistory.updatePlaces(records, updatePlacesCallback);
-    Async.waitForSyncCallback(cb);
+    Async.waitForSyncCallback(updatePlacesCallback.handleCompletion);
     return failed;
   },
 
