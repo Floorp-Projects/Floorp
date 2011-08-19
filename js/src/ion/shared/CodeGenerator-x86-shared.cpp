@@ -229,11 +229,12 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);
     const LAllocation *rhs = ins->getOperand(1);
+    MMul *mul = ins->mir();
 
     if (rhs->isConstant()) {
         // Bailout on -0.0
         int32 constant = ToInt32(rhs);
-        if (ins->snapshot() && constant <= 0) {
+        if (mul->canBeNegativeZero() && constant <= 0) {
             Assembler::Condition bailoutCond = (constant == 0) ? Assembler::LessThan : Assembler::Equal;
             masm.cmpl(Imm32(0), ToRegister(lhs));
             if (bailoutIf(bailoutCond, ins->snapshot()))
@@ -243,17 +244,17 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
         masm.imull(Imm32(ToInt32(rhs)), ToRegister(lhs));
 
         // Bailout on overflow
-        if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        if (mul->canOverflow() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
             return false;
     } else {
         masm.imull(ToOperand(rhs), ToRegister(lhs));
 
         // Bailout on overflow
-        if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        if (mul->canOverflow() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
             return false;
 
         // Bailout on 0 (could be -0.0)
-        if (ins->snapshot()) {
+        if (mul->canBeNegativeZero()) {
             masm.cmpl(Imm32(0), ToRegister(lhs));
             if (!bailoutIf(Assembler::Zero, ins->snapshot()))
                 return false;
