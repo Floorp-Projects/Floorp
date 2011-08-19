@@ -529,14 +529,14 @@ private:
 };
 
 /**
- * Notifies a callback object about completion.
+ * Notifies a callback object when a visit has been handled.
  */
-class NotifyCompletion : public nsRunnable
+class NotifyVisitInfoCallback : public nsRunnable
 {
 public:
-  NotifyCompletion(mozIVisitInfoCallback* aCallback,
-                   const VisitData& aPlace,
-                   nsresult aResult)
+  NotifyVisitInfoCallback(mozIVisitInfoCallback* aCallback,
+                          const VisitData& aPlace,
+                          nsresult aResult)
   : mCallback(aCallback)
   , mPlace(aPlace)
   , mResult(aResult)
@@ -616,7 +616,7 @@ CanAddURI(nsIURI* aURI,
 
   // We cannot add the URI.  Notify the callback, if we were given one.
   if (aCallback) {
-    // NotifyCompletion does not hold a strong reference to the callback, so we
+    // NotifyVisitInfoCallback does not hold a strong reference to the callback, so we
     // have to manage it by AddRefing now and then releasing it after the event
     // has run.
     NS_ADDREF(aCallback);
@@ -624,11 +624,11 @@ CanAddURI(nsIURI* aURI,
     VisitData place(aURI);
     place.guid = aGUID;
     nsCOMPtr<nsIRunnable> event =
-      new NotifyCompletion(aCallback, place, NS_ERROR_INVALID_ARG);
+      new NotifyVisitInfoCallback(aCallback, place, NS_ERROR_INVALID_ARG);
     (void)NS_DispatchToMainThread(event);
 
     // Also dispatch an event to release our reference to the callback after
-    // NotifyCompletion has run.
+    // NotifyVisitInfoCallback has run.
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
   }
@@ -695,7 +695,7 @@ public:
       nsresult rv = DoDatabaseInserts(known, place, referrer);
       if (mCallback) {
         nsCOMPtr<nsIRunnable> event =
-          new NotifyCompletion(mCallback, place, rv);
+          new NotifyVisitInfoCallback(mCallback, place, rv);
         nsresult rv2 = NS_DispatchToMainThread(event);
         NS_ENSURE_SUCCESS(rv2, rv2);
       }
@@ -1228,16 +1228,16 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   navHistory->registerEmbedVisit(uri, aPlace.visitTime);
 
   if (aCallback) {
-    // NotifyCompletion does not hold a strong reference to the callback, so we
-    // have to manage it by AddRefing now and then releasing it after the event
-    // has run.
+    // NotifyVisitInfoCallback does not hold a strong reference to the callback,
+    // so we have to manage it by AddRefing now and then releasing it after the
+    // event has run.
     NS_ADDREF(aCallback);
     nsCOMPtr<nsIRunnable> event =
-      new NotifyCompletion(aCallback, aPlace, NS_OK);
+      new NotifyVisitInfoCallback(aCallback, aPlace, NS_OK);
     (void)NS_DispatchToMainThread(event);
 
     // Also dispatch an event to release our reference to the callback after
-    // NotifyCompletion has run.
+    // NotifyVisitInfoCallback has run.
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
   }
