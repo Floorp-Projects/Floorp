@@ -370,6 +370,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_MUL:
       	return jsop_binary(op);
 
+      case JSOP_NEG:
+        return jsop_neg();
+
       case JSOP_LOCALINC:
       case JSOP_INCLOCAL:
       case JSOP_LOCALDEC:
@@ -1556,6 +1559,18 @@ IonBuilder::jsop_binary(JSOp op)
     ins->infer(oracle->binaryOp(script, pc));
 
     current->push(ins);
+    return true;
+}
+
+bool
+IonBuilder::jsop_neg()
+{
+    if (!pushConstant(Int32Value(-1)))
+        return false;
+
+    if (!jsop_binary(JSOP_MUL))
+        return false;
+
     return true;
 }
 
