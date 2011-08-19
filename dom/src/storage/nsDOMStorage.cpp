@@ -70,8 +70,8 @@ using mozilla::dom::StorageChild;
 #include "nsIPrivateBrowsingService.h"
 #include "nsDOMString.h"
 #include "nsNetCID.h"
-#include "nsIProxyObjectManager.h"
 #include "mozilla/Preferences.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla;
 
@@ -1898,6 +1898,34 @@ nsDOMStorage2::StorageType()
   return nsPIDOMStorage::Unknown;
 }
 
+namespace {
+
+class StorageNotifierRunnable : public nsRunnable
+{
+public:
+  StorageNotifierRunnable(nsISupports* aSubject)
+    : mSubject(aSubject)
+  { }
+
+  NS_DECL_NSIRUNNABLE
+
+private:
+  nsCOMPtr<nsISupports> mSubject;
+};
+
+NS_IMETHODIMP
+StorageNotifierRunnable::Run()
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(mSubject, "dom-storage2-changed", nsnull);
+  }
+  return NS_OK;
+}
+
+} // anonymous namespace
+
 void
 nsDOMStorage2::BroadcastChangeNotification(const nsSubstring &aKey,
                                           const nsSubstring &aOldValue,
@@ -1917,26 +1945,8 @@ nsDOMStorage2::BroadcastChangeNotification(const nsSubstring &aKey,
     return;
   }
 
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (!observerService) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> observerServiceProxy;
-  rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                            NS_GET_IID(nsIObserverService),
-                            observerService,
-                            NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
-                            getter_AddRefs(observerServiceProxy));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  // Fire off a notification that a storage object changed.
-  observerServiceProxy->NotifyObservers(event,
-                                        "dom-storage2-changed",
-                                        nsnull);
+  nsRefPtr<StorageNotifierRunnable> r = new StorageNotifierRunnable(event);
+  NS_DispatchToMainThread(r);
 }
 
 NS_IMETHODIMP
