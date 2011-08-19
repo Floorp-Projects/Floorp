@@ -49,15 +49,11 @@ function onTabViewLoadedAndShown() {
     groupTitles[a] = gi.getTitle();
   }
 
-  contentWindow.gPrefBranch.setBoolPref("animate_zoom", false);
-
   // Create a second tab
   gBrowser.addTab("about:robots");
   is(gBrowser.tabs.length, 2, "we now have 2 tabs");
-
   registerCleanupFunction(function() {
     gBrowser.removeTab(gBrowser.tabs[1]);
-    contentWindow.gPrefBranch.clearUserPref("animate_zoom");
   });
 
   afterAllTabsLoaded(function() {

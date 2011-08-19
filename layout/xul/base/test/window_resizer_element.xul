@@ -41,10 +41,17 @@ function testResizer(resizerid, noShrink, hResize, vResize, testid)
          " " + testid + " width moving " + mouseX + "," + mouseY + ",,," + hResize);
       is(Math.round(newrect.height), Math.round(expectedHeight), "resize element " + resizerid +
          " " + testid + " height moving " + mouseX + "," + mouseY);
-      // move it back before we release!
-      synthesizeMouse(document.documentElement, originalX + 5, originalY + 5, { type:"mousemove" });
-      synthesizeMouse(document.documentElement, originalX + 5, originalY + 5, { type:"mouseup" });
-    }
+      // release
+      synthesizeMouse(document.documentElement, originalX + 5 + mouseX * scale,
+                      originalY + 5 + mouseY * scale, { type:"mouseup" });    }
+      // return to the original size
+      synthesizeMouse(document.documentElement, originalX + 5 + mouseX * scale,
+                      originalY + 5 + mouseY * scale, { type:"dblclick" });    }
+      var newrect = document.getElementById(resizerid + "-container").getBoundingClientRect();
+      is(Math.round(newrect.width), Math.round(rect.width), "resize element " + resizerid +
+         " " + testid + " doubleclicking to restore original size");
+      is(Math.round(newrect.height), Math.round(rect.height), "resize element " + resizerid +
+         " " + testid + " doubleclicking to restore original size");
   }
 }
 

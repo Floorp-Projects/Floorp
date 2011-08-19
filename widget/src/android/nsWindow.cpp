@@ -95,8 +95,8 @@ class ContentCreationNotifier : public nsIObserver
                        const PRUnichar* aData)
     {
         if (!strcmp(aTopic, "ipc:content-created")) {
-            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-            NS_ABORT_IF_FALSE(cp, "Must have content process if notified of its creation");
+            nsCOMPtr<nsIObserver> cpo = do_QueryInterface(aSubject);
+            ContentParent* cp = static_cast<ContentParent*>(cpo.get());
             unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
         } else if (!strcmp(aTopic, "xpcom-shutdown")) {
             nsCOMPtr<nsIObserverService>
@@ -774,9 +774,10 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 break;
 
             // Tell the content process the new screen size.
-            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-            if (cp)
-                unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
+            nsTArray<ContentParent*> cplist;
+            ContentParent::GetAll(cplist);
+            for (PRUint32 i = 0; i < cplist.Length(); ++i)
+                unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
 
             if (gContentCreationNotifier)
                 break;
