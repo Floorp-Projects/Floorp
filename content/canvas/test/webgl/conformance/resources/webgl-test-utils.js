@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -100,9 +100,7 @@ var simpleTextureVertexShader = '' +
  * @type {string}
  */
 var simpleTextureFragmentShader = '' +
-  '#ifdef GL_ES\n' +
   'precision mediump float;\n' +
-  '#endif\n' +
   'uniform sampler2D tex;\n' +
   'varying vec2 texCoord;\n' +
   'void main() {\n' +
@@ -351,9 +349,11 @@ var checkCanvasRect = function(gl, x, y, width, height, color, msg, errorRange) 
  * @param {!Array.<number>} color The color to fill clear with before drawing. A
  *        4 element array where each element is in the range 0 to 255.
  * @param {string} msg Message to associate with success. Eg ("should be red").
+ * @param {number} errorRange Optional. Acceptable error in
+ *        color checking. 0 by default.
  */
-var checkCanvas = function(gl, color, msg) {
-  checkCanvasRect(gl, 0, 0, gl.canvas.width, gl.canvas.height, color, msg);
+var checkCanvas = function(gl, color, msg, errorRange) {
+  checkCanvasRect(gl, 0, 0, gl.canvas.width, gl.canvas.height, color, msg, errorRange);
 };
 
 /**
@@ -620,8 +620,19 @@ var readFileList = function(url) {
           str[0] != '#' &&
           str[0] != ";" &&
           str.substr(0, 2) != "//") {
-        new_url = prefix + str;
-        files = files.concat(readFileList(new_url));
+        var names = str.split(/ +/);
+        if (names.length == 1) {
+          new_url = prefix + str;
+          files = files.concat(readFileList(new_url));
+        } else {
+          var s = "";
+          var p = "";
+          for (var jj = 0; jj < names.length; ++jj) {
+            s += p + prefix + names[jj];
+            p = " ";
+          }
+          files.push(s);
+        }
       }
     }
   } else {
@@ -835,6 +846,29 @@ var loadImagesAsync = function(urls, callback) {
   countDown();
 };
 
+var getUrlArguments = function() {
+  var args = {};
+  try {
+    var s = window.location.href;
+    var q = s.indexOf("?");
+    var e = s.indexOf("#");
+    if (e < 0) {
+      e = s.length;
+    }
+    var query = s.substring(q + 1, e);
+    var pairs = query.split("&");
+    for (var ii = 0; ii < pairs.length; ++ii) {
+      var keyValue = pairs[ii].split("=");
+      var key = keyValue[0];
+      var value = decodeURIComponent(keyValue[1]);
+      args[key] = value;
+    }
+  } catch (e) {
+    throw "could not parse url";
+  }
+  return args;
+};
+
 return {
   create3DContext: create3DContext,
   create3DContextWithWrapperThatThrowsOnGLError:
@@ -845,6 +879,7 @@ return {
   drawQuad: drawQuad,
   endsWith: endsWith,
   getLastError: getLastError,
+  getUrlArguments: getUrlArguments,
   glEnumToString: glEnumToString,
   glErrorShouldBe: glErrorShouldBe,
   fillTexture: fillTexture,
