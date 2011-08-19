@@ -2495,6 +2495,16 @@ nsObjectFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor)
 }
 
 void
+nsObjectFrame::SetIsDocumentActive(PRBool aIsActive)
+{
+#ifndef XP_MACOSX
+  if (mInstanceOwner) {
+    mInstanceOwner->UpdateDocumentActiveState(aIsActive);
+  }
+#endif
+}
+
+void
 nsObjectFrame::NotifyContentObjectWrapper()
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();

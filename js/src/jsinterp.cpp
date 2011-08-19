@@ -512,7 +512,7 @@ Class js_NoSuchMethodClass = {
  * the base object, we search for the __noSuchMethod__ method in the base.
  * If it exists, we store the method and the property's id into an object of
  * NoSuchMethod class and store this object into the callee's stack slot.
- * Later, js_Invoke will recognise such an object and transfer control to
+ * Later, Invoke will recognise such an object and transfer control to
  * NoSuchMethod that invokes the method like:
  *
  *   this.__noSuchMethod__(id, args)
@@ -621,7 +621,7 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
  * when done.  Then push the return value.
  */
 JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
+InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 {
     /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
 
@@ -781,8 +781,8 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
 }
 
 bool
-ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
-               uintN argc, Value *argv, Value *rval)
+Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
+       Value *rval)
 {
     LeaveTrace(cx);
 
@@ -814,8 +814,7 @@ ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
 }
 
 bool
-ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
-                          Value *rval)
+InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
 {
     LeaveTrace(cx);
 
@@ -835,18 +834,18 @@ ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *a
 }
 
 bool
-ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
-                 JSAccessMode mode, uintN argc, Value *argv, Value *rval)
+InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
+                     Value *rval)
 {
     LeaveTrace(cx);
 
     /*
-     * ExternalInvoke could result in another try to get or set the same id
-     * again, see bug 355497.
+     * Invoke could result in another try to get or set the same id again, see
+     * bug 355497.
      */
     JS_CHECK_RECURSION(cx, return false);
 
-    return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
+    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
 
 #if JS_HAS_SHARP_VARS
@@ -878,8 +877,8 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
 #endif
 
 bool
-Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
-        ExecuteType type, StackFrame *evalInFrame, Value *result)
+ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+              ExecuteType type, StackFrame *evalInFrame, Value *result)
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
 
@@ -919,7 +918,7 @@ Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &this
 }
 
 bool
-ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
+Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
 {
     /* The scope chain could be anything, so innerize just in case. */
     JSObject *scopeChain = &scopeChainArg;
@@ -944,8 +943,8 @@ ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value 
         return false;
     Value thisv = ObjectValue(*thisObj);
 
-    return Execute(cx, script, *scopeChain, thisv, EXECUTE_GLOBAL,
-                   NULL /* evalInFrame */, rval);
+    return ExecuteKernel(cx, script, *scopeChain, thisv, EXECUTE_GLOBAL,
+                         NULL /* evalInFrame */, rval);
 }
 
 bool
@@ -1190,7 +1189,7 @@ TypeOfValue(JSContext *cx, const Value &vref)
 }
 
 JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
+InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
 {
     JS_ASSERT(!js_FunctionClass.construct);
     CallArgs args = argsRef;
@@ -1212,7 +1211,7 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
             if (!fun->isInterpretedConstructor())
                 goto error;
 
-            if (!Invoke(cx, args, CONSTRUCT))
+            if (!InvokeKernel(cx, args, CONSTRUCT))
                 return false;
 
             JS_ASSERT(args.rval().isObject());
@@ -3986,7 +3985,7 @@ BEGIN_CASE(JSOP_EVAL)
         if (!DirectEval(cx, args))
             goto error;
     } else {
-        if (!Invoke(cx, args))
+        if (!InvokeKernel(cx, args))
             goto error;
     }
     CHECK_INTERRUPT_HANDLER();
@@ -4010,10 +4009,10 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
     if (!IsFunctionObject(args.calleev(), &callee, &fun) || !fun->isInterpretedConstructor()) {
         if (construct) {
-            if (!InvokeConstructor(cx, args))
+            if (!InvokeConstructorKernel(cx, args))
                 goto error;
         } else {
-            if (!Invoke(cx, args))
+            if (!InvokeKernel(cx, args))
                 goto error;
         }
         regs.sp = args.spAfterCall();
@@ -4590,10 +4589,10 @@ BEGIN_CASE(JSOP_DEFFUN)
      */
     JSFunction *fun;
     LOAD_FUNCTION(0);
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
     JSObject *obj2;
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         /*
          * Even a null closure needs a parent for principals finding.
          * FIXME: bug 476950, although debugger users may also demand some kind
@@ -4730,10 +4729,10 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JSFunction *fun;
     LOAD_FUNCTION(SLOTNO_LEN);
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
-    JSObject *obj = FUN_OBJECT(fun);
+    JS_ASSERT(!fun->isFlatClosure());
+    JSObject *obj = fun;
 
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         obj = CloneFunctionObject(cx, fun, &regs.fp()->scopeChain());
         if (!obj)
             goto error;
@@ -4782,12 +4781,12 @@ BEGIN_CASE(JSOP_LAMBDA)
     /* Load the specified function object literal. */
     JSFunction *fun;
     LOAD_FUNCTION(0);
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
     /* do-while(0) so we can break instead of using a goto. */
     do {
         JSObject *parent;
-        if (FUN_NULL_CLOSURE(fun)) {
+        if (fun->isNullClosure()) {
             parent = &regs.fp()->scopeChain();
 
             if (obj->getParent() == parent) {
@@ -4845,7 +4844,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                         JSObject *callee;
 
                         if (IsFunctionObject(cref, &callee)) {
-                            JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
+                            JSFunction *calleeFun = callee->getFunctionPrivate();
                             if (Native native = calleeFun->maybeNative()) {
                                 if ((iargc == 1 && native == array_sort) ||
                                     (iargc == 2 && native == str_replace)) {
@@ -6092,7 +6091,7 @@ END_CASE(JSOP_ARRAYPUSH)
     /*
      * At this point we are inevitably leaving an interpreted function or a
      * top-level script, and returning to one of:
-     * (a) an "out of line" call made through js_Invoke;
+     * (a) an "out of line" call made through Invoke;
      * (b) a js_Execute activation;
      * (c) a generator (SendToGenerator, jsiter.c).
      *

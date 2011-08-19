@@ -26,7 +26,7 @@ BEGIN_TEST(testLookup_bug522590)
     JSObject *funobj = JSVAL_TO_OBJECT(r);
     CHECK(funobj->isFunction());
     CHECK(!js::IsInternalFunctionObject(funobj));
-    CHECK(GET_FUNCTION_PRIVATE(cx, funobj) != (JSFunction *) funobj);
+    CHECK(funobj->getFunctionPrivate() != (JSFunction *) funobj);
 
     return true;
 }

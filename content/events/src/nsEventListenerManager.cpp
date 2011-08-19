@@ -209,14 +209,17 @@ nsEventListenerManager::GetInnerWindowForTarget()
   return nsnull;
 }
 
-nsresult
+void
 nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          PRUint32 aType,
                                          nsIAtom* aTypeAtom,
                                          PRInt32 aFlags)
 {
-  NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(aType, NS_ERROR_FAILURE);
+  NS_ABORT_IF_FALSE(aType && aTypeAtom, "Missing type");
+
+  if (!aListener) {
+    return;
+  }
 
   nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = aListener;
 
@@ -226,7 +229,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     ls = &mListeners.ElementAt(i);
     if (ls->mListener == aListener && ls->mFlags == aFlags &&
         EVENT_TYPE_EQUALS(ls, aType, aTypeAtom)) {
-      return NS_OK;
+      return;
     }
   }
 
@@ -291,8 +294,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     if (window)
       window->SetHasTouchEventListeners();
   }
-
-  return NS_OK;
 }
 
 void
@@ -334,14 +335,14 @@ ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent)
     (aLs->mEventType == aEvent->message);
 }
 
-nsresult
+void
 nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener, 
                                                const nsAString& aType,
                                                PRInt32 aFlags)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
   PRUint32 type = nsContentUtils::GetEventId(atom);
-  return AddEventListener(aListener, type, atom, aFlags);
+  AddEventListener(aListener, type, atom, aFlags);
 }
 
 void
@@ -943,8 +944,7 @@ nsEventListenerManager::Disconnect()
   RemoveAllListeners();
 }
 
-// nsIDOMEventTarget interface
-nsresult
+void
 nsEventListenerManager::AddEventListener(const nsAString& aType,
                                          nsIDOMEventListener* aListener,
                                          PRBool aUseCapture,
