@@ -90,6 +90,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitBitOr(MBitOr *ins);
     bool visitBitXor(MBitXor *ins);
     bool visitAdd(MAdd *ins);
+    bool visitMul(MMul *ins);
     bool visitStart(MStart *start);
     bool visitToDouble(MToDouble *convert);
     bool visitToInt32(MToInt32 *convert);

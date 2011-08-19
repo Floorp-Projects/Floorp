@@ -96,6 +96,9 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         case MDefinition::Op_Add:
             ret.setNumber(lhs.toNumber() + rhs.toNumber());
             break;
+        case MDefinition::Op_Mul:
+            ret.setNumber(lhs.toNumber() * rhs.toNumber());
+            break;
         default:
             JS_NOT_REACHED("NYI");
     }

@@ -63,6 +63,7 @@
     _(CompareIAndBranch)            \
     _(CompareDAndBranch)            \
     _(AddI)                         \
+    _(MulI)                         \
     _(MathD)                        \
     _(Int32ToDouble)                \
     _(ValueToDouble)                \
