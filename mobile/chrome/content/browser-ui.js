@@ -272,31 +272,33 @@ var BrowserUI = {
     let awesomePanel = document.getElementById("awesome-panels");
     let awesomeHeader = document.getElementById("awesome-header");
 
-    let willShowPanel = (!this._activePanel && aPanel);
-    if (willShowPanel) {
-      this.pushDialog(aPanel);
-      this._edit.attachController();
-      this._editURI();
-      awesomePanel.hidden = awesomeHeader.hidden = false;
-    };
-
-    if (aPanel) {
-      aPanel.open();
-      if (this._edit.value == "")
-        this._showURI();
-    }
-
     let willHidePanel = (this._activePanel && !aPanel);
     if (willHidePanel) {
       awesomePanel.hidden = true;
       awesomeHeader.hidden = false;
       this._edit.reset();
       this._edit.detachController();
-      this.popDialog();
     }
 
-    if (this._activePanel)
+    if (this._activePanel) {
+      this.popDialog();
       this._activePanel.close();
+    }
+
+    let willShowPanel = (!this._activePanel && aPanel);
+    if (willShowPanel) {
+      this._edit.attachController();
+      this._editURI();
+      awesomePanel.hidden = awesomeHeader.hidden = false;
+    };
+
+    if (aPanel) {
+      this.pushDialog(aPanel);
+      aPanel.open();
+
+      if (this._edit.value == "")
+        this._showURI();
+    }
 
     // If the keyboard will cover the full screen, we do not want to show it right away.
     let isReadOnly = (aPanel != AllPagesList || this._isKeyboardFullscreen() || (!willShowPanel && this._edit.readOnly));
