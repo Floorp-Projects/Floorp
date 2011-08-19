@@ -482,7 +482,7 @@ sftkdb_SignAttribute(PLArenaPool *arena, SECItem *passKey,
     signValue.value.len = hmacLength;
     RNG_GenerateGlobalRandomBytes(saltData,prfLength);
 
-    /* initialize our pkcs5 paramter */
+    /* initialize our pkcs5 parameter */
     param = nsspkcs5_NewParam(signValue.alg, &signValue.salt, 1);
     if (param == NULL) {
 	rv = SECFailure;

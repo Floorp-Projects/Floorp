@@ -129,11 +129,8 @@ Usage(const char *progName)
 void
 errWarn(char *function)
 {
-    PRErrorCode  errorNumber = PR_GetError();
-    const char * errorString = SECU_Strerror(errorNumber);
-
-    fprintf(stderr, "Error in function %s: %d\n - %s\n",
-		    function, errorNumber, errorString);
+    fprintf(stderr, "Error in function %s: %s\n",
+		    function, SECU_Strerror(PR_GetError()));
 }
 
 void
@@ -210,7 +207,7 @@ getCert(const char *name, PRBool isAscii, const char * progName)
      * open a file with such name and get the cert from there.*/
     fd = PR_Open(name, PR_RDONLY, 0777); 
     if (!fd) {
-	PRIntn err = PR_GetError();
+	PRErrorCode err = PR_GetError();
     	fprintf(stderr, "open of %s failed, %d = %s\n", 
 	        name, err, SECU_Strerror(err));
 	return cert;
@@ -233,7 +230,7 @@ getCert(const char *name, PRBool isAscii, const char * progName)
                                    PR_FALSE /* isPerm */, 
 				   PR_TRUE  /* copyDER */);
     if (!cert) {
-	PRIntn err = PR_GetError();
+	PRErrorCode err = PR_GetError();
 	fprintf(stderr, "couldn't import %s, %d = %s\n",
 	        name, err, SECU_Strerror(err));
     }
@@ -538,12 +535,12 @@ breakout:
     if (usePkix < 2) {
         if (oidStr) {
             fprintf(stderr, "Policy oid(-o) can be used only with"
-                    " CERT_PKIXVerifyChain(-pp) function.\n");
+                    " CERT_PKIXVerifyCert(-pp) function.\n");
             Usage(progName);
         }
         if (trusted) {
             fprintf(stderr, "Cert trust flag can be used only with"
-                    " CERT_PKIXVerifyChain(-pp) function.\n");
+                    " CERT_PKIXVerifyCert(-pp) function.\n");
             Usage(progName);
         }
     }
@@ -586,7 +583,7 @@ breakout:
 	case  0  : /* positional parameter */
             if (usePkix < 2 && trusted) {
                 fprintf(stderr, "Cert trust flag can be used only with"
-                        " CERT_PKIXVerifyChain(-pp) function.\n");
+                        " CERT_PKIXVerifyCert(-pp) function.\n");
                 Usage(progName);
             }
 	    cert = getCert(optstate->value, isAscii, progName);
@@ -788,6 +785,7 @@ punt:
     if (pwdata.data) {
         PORT_Free(pwdata.data);
     }
+    PL_ArenaFinish();
     PR_Cleanup();
     return rv;
 }

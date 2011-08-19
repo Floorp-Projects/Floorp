@@ -84,7 +84,7 @@ VerifyJar(char *filename)
 	    if (status >= JAR_BASE && status <= JAR_BASE_END) {
 		errtext = JAR_get_error (status);
 	    } else {
-		errtext = SECU_ErrorString ((int16) PORT_GetError());
+		errtext = SECU_Strerror(PORT_GetError());
 	    }
 
 	    PR_fprintf(outputFD, "  (reported reason: %s)\n\n",
@@ -315,7 +315,7 @@ JarWho(char *filename)
 	    if (status >= JAR_BASE && status <= JAR_BASE_END) {
 		errtext = JAR_get_error (status);
 	    } else {
-		errtext = SECU_ErrorString ((int16) PORT_GetError());
+		errtext = SECU_Strerror(PORT_GetError());
 	    }
 
 	    PR_fprintf(outputFD, "  (reported reason: %s)\n\n", errtext);

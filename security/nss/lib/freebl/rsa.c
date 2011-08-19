@@ -37,7 +37,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.39.22.2 2011/03/30 18:39:44 rrelyea%redhat.com Exp $
+ * $Id: rsa.c,v 1.42 2011/03/30 01:20:12 rrelyea%redhat.com Exp $
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -1420,6 +1420,8 @@ RSA_PrivateKeyCheck(RSAPrivateKey *key)
     mp_int p, q, n, psub1, qsub1, e, d, d_p, d_q, qInv, res;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
+    MP_DIGITS(&p)    = 0;
+    MP_DIGITS(&q)    = 0;
     MP_DIGITS(&n)    = 0;
     MP_DIGITS(&psub1)= 0;
     MP_DIGITS(&qsub1)= 0;
@@ -1429,9 +1431,9 @@ RSA_PrivateKeyCheck(RSAPrivateKey *key)
     MP_DIGITS(&d_q)  = 0;
     MP_DIGITS(&qInv) = 0;
     MP_DIGITS(&res)  = 0;
-    CHECK_MPI_OK( mp_init(&n)    );
     CHECK_MPI_OK( mp_init(&p)    );
     CHECK_MPI_OK( mp_init(&q)    );
+    CHECK_MPI_OK( mp_init(&n)    );
     CHECK_MPI_OK( mp_init(&psub1));
     CHECK_MPI_OK( mp_init(&qsub1));
     CHECK_MPI_OK( mp_init(&e)    );
@@ -1593,13 +1595,13 @@ void BL_Cleanup(void)
     RSA_Cleanup();
 }
 
-PRBool parentForkedAfterC_Initialize;
+PRBool bl_parentForkedAfterC_Initialize;
 
 /*
  * Set fork flag so it can be tested in SKIP_AFTER_FORK on relevant platforms.
  */
 void BL_SetForkState(PRBool forked)
 {
-    parentForkedAfterC_Initialize = forked;
+    bl_parentForkedAfterC_Initialize = forked;
 }
 

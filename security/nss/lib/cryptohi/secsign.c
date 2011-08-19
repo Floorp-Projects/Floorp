@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.22 2010/02/10 00:49:43 wtc%google.com Exp $ */
+/* $Id: secsign.c,v 1.26 2011/07/24 13:48:12 wtc%google.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -83,8 +83,7 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 
     /* verify our key type */
     if (key->keyType != keyType &&
-	!((key->keyType == dsaKey) && (keyType == fortezzaKey)) &&
-	!((key->keyType == fortezzaKey) && (keyType == dsaKey)) ) {
+	!((key->keyType == dsaKey) && (keyType == fortezzaKey)) ) {
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return 0;
     }
@@ -341,7 +340,8 @@ SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SignedDataTemplate)
 
 SECStatus
 SEC_DerSignData(PRArenaPool *arena, SECItem *result, 
-	unsigned char *buf, int len, SECKEYPrivateKey *pk, SECOidTag algID)
+	const unsigned char *buf, int len, SECKEYPrivateKey *pk,
+	SECOidTag algID)
 {
     SECItem it;
     CERTSignedData sd;
@@ -376,7 +376,7 @@ SEC_DerSignData(PRArenaPool *arena, SECItem *result,
 
     /* Fill out SignedData object */
     PORT_Memset(&sd, 0, sizeof(sd));
-    sd.data.data = buf;
+    sd.data.data = (unsigned char*) buf;
     sd.data.len = len;
     sd.signature.data = it.data;
     sd.signature.len = it.len << 3;		/* convert to bit string */

@@ -70,6 +70,7 @@
 #include <secport.h>
 #include <secitem.h>
 #include <blapi.h>
+#include <private/pprio.h>
 
 #define FREEBL_NO_WEAK 1
 
@@ -155,6 +156,7 @@ STUB_DECLARE(void,PR_DestroyCondVar,(PRCondVar *cvar));
 STUB_DECLARE(void,PR_Free,(void *ptr));
 STUB_DECLARE(char * ,PR_GetLibraryFilePathname,(const char *name,
 			PRFuncPtr addr));
+STUB_DECLARE(PRFileDesc *,PR_ImportPipe,(PROsfd osfd));
 STUB_DECLARE(void,PR_Lock,(PRLock *lock));
 STUB_DECLARE(PRCondVar *,PR_NewCondVar,(PRLock *lock));
 STUB_DECLARE(PRLock *,PR_NewLock,(void));
@@ -169,6 +171,7 @@ STUB_DECLARE(PRStatus,PR_Sleep,(PRIntervalTime ticks));
 STUB_DECLARE(PRStatus,PR_Unlock,(PRLock *lock));
 STUB_DECLARE(PRStatus,PR_WaitCondVar,(PRCondVar *cvar,
 			PRIntervalTime timeout));
+
 
 STUB_DECLARE(SECItem *,SECITEM_AllocItem_Util,(PRArenaPool *arena, 
 			SECItem *item,unsigned int len));
@@ -299,6 +302,20 @@ PR_Open_stub(const char *name, PRIntn flags, PRIntn mode)
 	if (lfd != NULL) {
 	    *lfd = fd;
 	}
+    }
+    return (PRFileDesc *)lfd;
+}
+
+extern PRFileDesc *
+PR_ImportPipe_stub(PROsfd fd)
+{
+    int *lfd = NULL;
+
+    STUB_SAFE_CALL1(PR_ImportPipe, fd);
+
+    lfd = PORT_New_stub(int);
+    if (lfd != NULL) {
+	*lfd = fd;
     }
     return (PRFileDesc *)lfd;
 }
@@ -549,6 +566,7 @@ freebl_InitNSPR(void *lib)
 {
     STUB_FETCH_FUNCTION(PR_Free);
     STUB_FETCH_FUNCTION(PR_Open);
+    STUB_FETCH_FUNCTION(PR_ImportPipe);
     STUB_FETCH_FUNCTION(PR_Close);
     STUB_FETCH_FUNCTION(PR_Read);
     STUB_FETCH_FUNCTION(PR_Seek);

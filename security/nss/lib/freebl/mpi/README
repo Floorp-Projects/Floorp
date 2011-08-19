@@ -676,10 +676,7 @@ exptmod.c       Computes arbitrary precision modular exponentiation
                 from the command line (exptmod a b m -> a^b (mod m))
 
 Most of these can be built from the Makefile that comes with the
-library.  Try 'make tools', if your environment supports it.  (If you
-are compiling on a Macintosh, I'm afraid you'll have to build them by
-hand -- fortunately, this is not difficult -- the library itself
-should compile just fine under Metrowerks CodeWarrior).
+library.  Try 'make tools', if your environment supports it.
 
 
 Testing the Library
@@ -704,9 +701,9 @@ what platform and compiler you were using, as well as which test
 failed.  If a reason for failure was given, please send me that text
 as well.
 
-If you're on a system such as the Macintosh, where the standard Unix
-build tools don't work, you can build the 'mpi-test' program manually,
-and run it by hand.  This is tedious and obnoxious, sorry.
+If you're on a system where the standard Unix build tools don't work,
+you can build the 'mpi-test' program manually, and run it by hand.
+This is tedious and obnoxious, sorry.
 
 Further manual testing can be performed by building the manual testing
 programs, whose source is found in the 'tests' subdirectory.  Each
@@ -736,8 +733,7 @@ cannot use make, here is what needs to be done:
 
 (1) Use 'make-test-arrays' to generate the file 'test-info.c' from
     the 'test-arrays.txt' file.  Since Perl can be found everywhere,
-    even on the Macintosh, this should be no trouble.  Under Unix, 
-    this looks like:
+    this should be no trouble.  Under Unix, this looks like:
 
         make-test-arrays test-arrays.txt > test-info.c
 

@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.77.2.2 2011/03/16 18:55:38 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslimpl.h,v 1.82 2011/03/10 04:29:04 alexei.volkov.bugs%sun.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1258,15 +1258,24 @@ extern PRBool    ssl3_CanFalseStart(sslSocket *ss);
 #define SSL_LOCK_WRITER(ss)		if (ss->sendLock) PZ_Lock(ss->sendLock)
 #define SSL_UNLOCK_WRITER(ss)		if (ss->sendLock) PZ_Unlock(ss->sendLock)
 
+/* firstHandshakeLock -> recvBufLock */
 #define ssl_Get1stHandshakeLock(ss)     \
-    { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->firstHandshakeLock); }
+    { if (!ss->opt.noLocks) { \
+	  PORT_Assert(PZ_InMonitor((ss)->firstHandshakeLock) || \
+		      !ssl_HaveRecvBufLock(ss)); \
+	  PZ_EnterMonitor((ss)->firstHandshakeLock); \
+      } }
 #define ssl_Release1stHandshakeLock(ss) \
     { if (!ss->opt.noLocks) PZ_ExitMonitor((ss)->firstHandshakeLock); }
 #define ssl_Have1stHandshakeLock(ss)    \
     (PZ_InMonitor((ss)->firstHandshakeLock))
 
+/* ssl3HandshakeLock -> xmitBufLock */
 #define ssl_GetSSL3HandshakeLock(ss)	\
-    { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->ssl3HandshakeLock); }
+    { if (!ss->opt.noLocks) { \
+	  PORT_Assert(!ssl_HaveXmitBufLock(ss)); \
+	  PZ_EnterMonitor((ss)->ssl3HandshakeLock); \
+      } }
 #define ssl_ReleaseSSL3HandshakeLock(ss) \
     { if (!ss->opt.noLocks) PZ_ExitMonitor((ss)->ssl3HandshakeLock); }
 #define ssl_HaveSSL3HandshakeLock(ss)	\
@@ -1276,6 +1285,8 @@ extern PRBool    ssl3_CanFalseStart(sslSocket *ss);
     { if (!ss->opt.noLocks) NSSRWLock_LockRead((ss)->specLock); }
 #define ssl_ReleaseSpecReadLock(ss)	\
     { if (!ss->opt.noLocks) NSSRWLock_UnlockRead((ss)->specLock); }
+/* NSSRWLock_HaveReadLock is not exported so there's no
+ * ssl_HaveSpecReadLock macro. */
 
 #define ssl_GetSpecWriteLock(ss)	\
     { if (!ss->opt.noLocks) NSSRWLock_LockWrite((ss)->specLock); }
@@ -1284,13 +1295,19 @@ extern PRBool    ssl3_CanFalseStart(sslSocket *ss);
 #define ssl_HaveSpecWriteLock(ss)	\
     (NSSRWLock_HaveWriteLock((ss)->specLock))
 
+/* recvBufLock -> ssl3HandshakeLock -> xmitBufLock */
 #define ssl_GetRecvBufLock(ss)		\
-    { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->recvBufLock); }
+    { if (!ss->opt.noLocks) { \
+	  PORT_Assert(!ssl_HaveSSL3HandshakeLock(ss)); \
+	  PORT_Assert(!ssl_HaveXmitBufLock(ss)); \
+	  PZ_EnterMonitor((ss)->recvBufLock); \
+      } }
 #define ssl_ReleaseRecvBufLock(ss)	\
     { if (!ss->opt.noLocks) PZ_ExitMonitor( (ss)->recvBufLock); }
 #define ssl_HaveRecvBufLock(ss)		\
     (PZ_InMonitor((ss)->recvBufLock))
 
+/* xmitBufLock -> specLock */
 #define ssl_GetXmitBufLock(ss)		\
     { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->xmitBufLock); }
 #define ssl_ReleaseXmitBufLock(ss)	\

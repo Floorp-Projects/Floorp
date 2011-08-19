@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.3 2009/04/12 01:31:46 nelson%bolyard.com Exp $
+ * $Id: pcertt.h,v 1.4 2011/04/13 00:10:27 rrelyea%redhat.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -431,7 +431,7 @@ typedef union {
 #define DB_CERT_ENTRY_HEADER_LEN	10
 
 /* common flags for all types of certificates */
-#define CERTDB_VALID_PEER	(1<<0)
+#define CERTDB_TERMINAL_RECORD	(1<<0)
 #define CERTDB_TRUSTED		(1<<1)
 #define CERTDB_SEND_WARN	(1<<2)
 #define CERTDB_VALID_CA		(1<<3)
@@ -441,11 +441,11 @@ typedef union {
 #define CERTDB_TRUSTED_CLIENT_CA (1<<7) /* trusted for issuing client certs */
 #define CERTDB_INVISIBLE_CA	(1<<8) /* don't show in UI */
 #define CERTDB_GOVT_APPROVED_CA	(1<<9) /* can do strong crypto in export ver */
-#define CERTDB_NOT_TRUSTED	(1<<10) /* explicitly don't trust this cert */
+#define CERTDB_MUST_VERIFY	(1<<10) /* explicitly don't trust this cert */
 #define CERTDB_TRUSTED_UNKNOWN	(1<<11) /* accept trust from another source */
 
 /* bits not affected by the CKO_NETSCAPE_TRUST object */
-#define CERTDB_PRESERVE_TRUST_BITS (CERTDB_USER | CERTDB_VALID_PEER | \
+#define CERTDB_PRESERVE_TRUST_BITS (CERTDB_USER | \
         CERTDB_NS_TRUSTED_CA | CERTDB_VALID_CA | CERTDB_INVISIBLE_CA | \
                                         CERTDB_GOVT_APPROVED_CA)
 

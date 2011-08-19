@@ -254,7 +254,7 @@ sftkdb_ReadSecmodDB(SDBType dbType, const char *appName,
     if (fd == NULL) goto done;
 
     /*
-     * the following loop takes line separated config lines and colapses
+     * the following loop takes line separated config lines and collapses
      * the lines to a single string, escaping and quoting as necessary.
      */
     /* loop state variables */
@@ -579,7 +579,7 @@ sftkdb_DeleteSecmodDB(SDBType dbType, const char *appName,
 
 
     /*
-     * the following loop takes line separated config files and colapses
+     * the following loop takes line separated config files and collapses
      * the lines to a single string, escaping and quoting as necessary.
      */
     /* loop state variables */
@@ -638,6 +638,7 @@ sftkdb_DeleteSecmodDB(SDBType dbType, const char *appName,
     PORT_Free(dbname2);
     PORT_Free(lib);
     PORT_Free(name);
+    PORT_Free(block);
     return SECSuccess;
 
 loser:

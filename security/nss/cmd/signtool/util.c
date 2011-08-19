@@ -50,7 +50,7 @@ long	*mozilla_event_queue = 0;
 #ifndef XP_WIN
 char	*XP_GetString (int i)
 {
-    return SECU_ErrorStringRaw ((int16) i);
+    return SECU_Strerror (i);
 }
 #endif
 

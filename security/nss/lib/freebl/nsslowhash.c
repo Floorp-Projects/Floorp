@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsslowhash.c,v 1.4.8.1 2011/01/20 18:41:51 emaldona%redhat.com Exp $ */
+/* $Id: nsslowhash.c,v 1.6 2010/09/10 00:42:36 emaldona%redhat.com Exp $ */
 
 #include "stubs.h"
 #include "prtypes.h"
@@ -129,6 +129,13 @@ freebl_fips_SHA_PowerUpSelfTest( void )
 			       0x72,0xf6,0xc7,0x22,0xf1,0x27,0x9f,0xf0,
 			       0xe0,0x68,0x47,0x7a};
 
+    /* SHA-224 Known Digest Message (224-bits). */
+    static const PRUint8 sha224_known_digest[] = {
+        0x1c,0xc3,0x06,0x8e,0xce,0x37,0x68,0xfb, 
+        0x1a,0x82,0x4a,0xbe,0x2b,0x00,0x51,0xf8,
+        0x9d,0xb6,0xe0,0x90,0x0d,0x00,0xc9,0x64,
+        0x9a,0xb8,0x98,0x4e};
+
     /* SHA-256 Known Digest Message (256-bits). */
     static const PRUint8 sha256_known_digest[] = {
         0x38,0xa9,0xc1,0xf0,0x35,0xf6,0x5d,0x61,
@@ -170,6 +177,18 @@ freebl_fips_SHA_PowerUpSelfTest( void )
     if( ( sha_status != SECSuccess ) ||
         ( PORT_Memcmp( sha_computed_digest, sha1_known_digest,
                        SHA1_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+    /***************************************************/
+    /* SHA-224 Single-Round Known Answer Hashing Test. */
+    /***************************************************/
+
+    sha_status = SHA224_HashBuf( sha_computed_digest, known_hash_message,
+                                FIPS_KNOWN_HASH_MESSAGE_LENGTH );
+
+    if( ( sha_status != SECSuccess ) ||
+        ( PORT_Memcmp( sha_computed_digest, sha224_known_digest,
+                       SHA224_LENGTH ) != 0 ) )
         return( CKR_DEVICE_ERROR );
 
     /***************************************************/

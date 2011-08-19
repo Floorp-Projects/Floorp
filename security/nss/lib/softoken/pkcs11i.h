@@ -266,19 +266,29 @@ typedef enum {
     SFTK_VERIFY_RECOVER
 } SFTKContextType;
 
-
+/** max block size of supported block ciphers */
 #define SFTK_MAX_BLOCK_SIZE 16
-/* currently SHA512 is the biggest hash length */
+/** currently SHA512 is the biggest hash length */
 #define SFTK_MAX_MAC_LENGTH 64
 #define SFTK_INVALID_MAC_SIZE 0xffffffff
 
+/** Particular ongoing operation in session (sign/verify/digest/encrypt/...)
+ *
+ *  Understanding sign/verify context:
+ *      multi=1 hashInfo=0   block (symmetric) cipher MACing
+ *      multi=1 hashInfo=X   PKC S/V with prior hashing
+ *      multi=0 hashInfo=0   PKC S/V one shot (w/o hashing)
+ *      multi=0 hashInfo=X   *** shouldn't happen ***
+ */
 struct SFTKSessionContextStr {
     SFTKContextType	type;
     PRBool		multi; 		/* is multipart */
     PRBool		doPad; 		/* use PKCS padding for block ciphers */
     unsigned int	blockSize; 	/* blocksize for padding */
     unsigned int	padDataLength; 	/* length of the valid data in padbuf */
+    /** latest incomplete block of data for block cipher */
     unsigned char	padBuf[SFTK_MAX_BLOCK_SIZE];
+    /** result of MAC'ing of latest full block of data with block cipher */
     unsigned char	macBuf[SFTK_MAX_BLOCK_SIZE];
     CK_ULONG		macSize;	/* size of a general block cipher mac*/
     void		*cipherInfo;
@@ -385,11 +395,13 @@ struct SFTKSlotStr {
  */
 struct SFTKHashVerifyInfoStr {
     SECOidTag   	hashOid;
+    void		*params;
     NSSLOWKEYPublicKey	*key;
 };
 
 struct SFTKHashSignInfoStr {
     SECOidTag   	hashOid;
+    void		*params;
     NSSLOWKEYPrivateKey	*key;
 };
 
@@ -565,18 +577,11 @@ typedef struct sftk_parametersStr {
 } sftk_parameters;
 
 
-/* machine dependent path stuff used by dbinit.c and pk11db.c */
-#ifdef macintosh
-#define PATH_SEPARATOR ":"
-#define SECMOD_DB "Security Modules"
-#define CERT_DB_FMT "%sCertificates%s"
-#define KEY_DB_FMT "%sKey Database%s"
-#else
+/* path stuff (was machine dependent) used by dbinit.c and pk11db.c */
 #define PATH_SEPARATOR "/"
 #define SECMOD_DB "secmod.db"
 #define CERT_DB_FMT "%scert%s.db"
 #define KEY_DB_FMT "%skey%s.db"
-#endif
 
 SEC_BEGIN_PROTOS
 

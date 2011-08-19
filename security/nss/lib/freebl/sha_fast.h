@@ -93,7 +93,6 @@ swap4b(PRUint32 dwd)
 
 #if defined(__GNUC__) 
 /* __x86_64__  and __x86_64 are defined by GCC on x86_64 CPUs */
-
 #if defined( SHA1_USING_64_BIT )
 static __inline__ PRUint64 SHA_ROTL(PRUint64 x, PRUint32 n)
 {
@@ -115,6 +114,26 @@ static __inline__ PRUint32 swap4b(PRUint32 value)
     return (value);
 }
 #define SHA_HTONL(x) swap4b(x)
+
+#elif defined(__thumb2__) || \
+      (!defined(__thumb__) && \
+       (defined(__ARM_ARCH_6__) || \
+        defined(__ARM_ARCH_6J__) || \
+        defined(__ARM_ARCH_6K__) || \
+        defined(__ARM_ARCH_6Z__) || \
+        defined(__ARM_ARCH_6ZK__) || \
+        defined(__ARM_ARCH_6T2__) || \
+        defined(__ARM_ARCH_7__) || \
+        defined(__ARM_ARCH_7A__) || \
+        defined(__ARM_ARCH_7R__)))
+static __inline__ PRUint32 swap4b(PRUint32 value)
+{
+    PRUint32 ret;
+    __asm__("rev %0, %1" : "=r" (ret) : "r"(value));
+    return ret;
+}
+#define SHA_HTONL(x) swap4b(x)
+
 #endif /* x86 family */
 
 #endif /* __GNUC__ */

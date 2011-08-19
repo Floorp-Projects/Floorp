@@ -37,7 +37,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.23.2.3 2011/02/11 16:44:02 emaldona%redhat.com Exp $
+ * $Id: cms.h,v 1.26 2011/02/24 22:06:14 emaldona%redhat.com Exp $
  */
 
 #ifndef _CMS_H_

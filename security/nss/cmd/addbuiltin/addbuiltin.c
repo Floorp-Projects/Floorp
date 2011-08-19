@@ -37,7 +37,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.14.68.1 2011/03/23 20:07:57 kaie%kuix.de Exp $
+ * $Id: addbuiltin.c,v 1.16 2011/04/13 00:10:21 rrelyea%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -68,22 +68,22 @@ char *getTrustString(unsigned int trust)
 {
     if (trust & CERTDB_TRUSTED) {
 	if (trust & CERTDB_TRUSTED_CA) {
-		return "CKT_NETSCAPE_TRUSTED_DELEGATOR|CKT_NETSCAPE_TRUSTED";
+		return "CKT_NSS_TRUSTED_DELEGATOR";
 	} else {
-		return "CKT_NETSCAPE_TRUSTED";
+		return "CKT_NSS_TRUSTED";
 	}
     } else {
 	if (trust & CERTDB_TRUSTED_CA) {
-		return "CKT_NETSCAPE_TRUSTED_DELEGATOR";
+		return "CKT_NSS_TRUSTED_DELEGATOR";
 	} else if (trust & CERTDB_VALID_CA) {
-		return "CKT_NETSCAPE_VALID_DELEGATOR";
-	} else if (trust & CERTDB_VALID_PEER) {
-		return "CKT_NETSCAPE_VALID";
+		return "CKT_NSS_VALID_DELEGATOR";
+	} else if (trust & CERTDB_TERMINAL_RECORD) {
+		return "CKT_NSS_NOT_TRUSTED";
 	} else {
-		return "CKT_NETSCAPE_TRUST_UNKNOWN";
+		return "CKT_NSS_MUST_VERIFY_TRUST";
 	}
     }
-    return "CKT_NETSCAPE_TRUST_UNKNOWN"; /* not reached */
+    return "CKT_NSS_TRUST_UNKNOWN"; /* not reached */
 }
 
 static const SEC_ASN1Template serialTemplate[] = {
@@ -133,7 +133,7 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     PK11_HashBuf(SEC_OID_SHA1, sha1_hash, sdder->data, sdder->len);
     PK11_HashBuf(SEC_OID_MD5, md5_hash, sdder->data, sdder->len);
     printf("\n# Trust for Certificate \"%s\"\n",nickname);
-    printf("CKA_CLASS CK_OBJECT_CLASS CKO_NETSCAPE_TRUST\n");
+    printf("CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST\n");
     printf("CKA_TOKEN CK_BBOOL CK_TRUE\n");
     printf("CKA_PRIVATE CK_BBOOL CK_FALSE\n");
     printf("CKA_MODIFIABLE CK_BBOOL CK_FALSE\n");
@@ -159,13 +159,13 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     printf("CKA_TRUST_CODE_SIGNING CK_TRUST %s\n",
 				 getTrustString(trust->objectSigningFlags));
 #ifdef notdef
-    printf("CKA_TRUST_CLIENT_AUTH CK_TRUST CKT_NETSCAPE_TRUSTED\n");*/
-    printf("CKA_TRUST_DIGITAL_SIGNATURE CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
-    printf("CKA_TRUST_NON_REPUDIATION CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
-    printf("CKA_TRUST_KEY_ENCIPHERMENT CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
-    printf("CKA_TRUST_DATA_ENCIPHERMENT CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
-    printf("CKA_TRUST_KEY_AGREEMENT CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
-    printf("CKA_TRUST_KEY_CERT_SIGN CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
+    printf("CKA_TRUST_CLIENT_AUTH CK_TRUST CKT_NSS_TRUSTED\n");
+    printf("CKA_TRUST_DIGITAL_SIGNATURE CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
+    printf("CKA_TRUST_NON_REPUDIATION CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
+    printf("CKA_TRUST_KEY_ENCIPHERMENT CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
+    printf("CKA_TRUST_DATA_ENCIPHERMENT CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
+    printf("CKA_TRUST_KEY_AGREEMENT CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
+    printf("CKA_TRUST_KEY_CERT_SIGN CK_TRUST CKT_NSS_TRUSTED_DELEGATOR\n");
 #endif
     printf("CKA_TRUST_STEP_UP_APPROVED CK_BBOOL %s\n",
                 trust->sslFlags & CERTDB_GOVT_APPROVED_CA ? 
@@ -215,7 +215,7 @@ void printheader() {
 "#\n"
 "# ***** END LICENSE BLOCK *****\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.14.68.1 $ $Date: 2011/03/23 20:07:57 $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.16 $ $Date: 2011/04/13 00:10:21 $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
@@ -239,7 +239,7 @@ void printheader() {
      "#  CKA_ISSUER               DER+base64              (varies)\n"
      "#  CKA_SERIAL_NUMBER        DER+base64              (varies)\n"
      "#  CKA_VALUE                DER+base64              (varies)\n"
-     "#  CKA_NETSCAPE_EMAIL       ASCII7                  (unused here)\n"
+     "#  CKA_NSS_EMAIL            ASCII7                  (unused here)\n"
      "#\n"
      "#    Trust\n"
      "#\n"
@@ -276,7 +276,7 @@ void printheader() {
      "# have to go looking for others.\n"
      "#\n"
      "BEGINDATA\n"
-     "CKA_CLASS CK_OBJECT_CLASS CKO_NETSCAPE_BUILTIN_ROOT_LIST\n"
+     "CKA_CLASS CK_OBJECT_CLASS CKO_NSS_BUILTIN_ROOT_LIST\n"
      "CKA_TOKEN CK_BBOOL CK_TRUE\n"
      "CKA_PRIVATE CK_BBOOL CK_FALSE\n"
      "CKA_MODIFIABLE CK_BBOOL CK_FALSE\n"

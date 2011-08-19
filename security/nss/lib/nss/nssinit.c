@@ -36,14 +36,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.106 2010/04/03 20:06:00 nelson%bolyard.com Exp $ */
+/* $Id: nssinit.c,v 1.108 2011/08/17 14:40:49 emaldona%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
 #include "seccomon.h"
+#include "prerror.h"
 #include "prinit.h"
 #include "prprf.h"
 #include "prmem.h"
+#include "prtypes.h"
 #include "cert.h"
 #include "key.h"
 #include "secmod.h"
@@ -51,7 +53,9 @@
 #include "nss.h"
 #include "pk11func.h"
 #include "secerr.h"
+#include "errstrs.h"
 #include "nssbase.h"
+#include "nssutil.h"
 #include "pkixt.h"
 #include "pkix.h"
 #include "pkix_tools.h"
@@ -377,6 +381,7 @@ nss_InitModules(const char *configdir, const char *certPrefix,
 		PRBool isContextInit)
 {
     SECStatus rv = SECFailure;
+    PRStatus status = PR_SUCCESS;
     char *moduleSpec = NULL;
     char *flags = NULL;
     char *lconfigdir = NULL;
@@ -388,6 +393,12 @@ nss_InitModules(const char *configdir, const char *certPrefix,
     char *lupdKeyPrefix = NULL;
     char *lupdateID = NULL;
     char *lupdateName = NULL;
+
+    status = NSS_InitializePRErrorTable();
+    if (status != PR_SUCCESS) {
+	PORT_SetError(status);
+	return SECFailure;
+    }
 
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
 					pwRequired, optimizeSpace);
@@ -1203,4 +1214,10 @@ NSS_VersionCheck(const char *importedVersion)
         return PR_FALSE;
     }
     return PR_TRUE;
+}
+
+const char *
+NSS_GetVersion(void)
+{
+    return NSS_VERSION;
 }

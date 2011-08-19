@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslauth.c,v 1.16.66.1 2010/08/03 18:52:13 wtc%google.com Exp $ */
+/* $Id: sslauth.c,v 1.17 2010/08/03 18:48:45 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "ssl.h"

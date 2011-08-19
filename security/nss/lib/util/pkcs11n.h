@@ -39,7 +39,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.19.22.2 $ $Date: 2010/12/04 19:10:46 $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.22 $ $Date: 2011/04/13 00:10:27 $";
 #endif /* DEBUG */
 
 /*
@@ -330,16 +330,71 @@ typedef CK_ULONG          CK_TRUST;
 /* If trust goes standard, these'll probably drop out of vendor space. */
 #define CKT_NSS_TRUSTED            (CKT_NSS + 1)
 #define CKT_NSS_TRUSTED_DELEGATOR  (CKT_NSS + 2)
-#define CKT_NSS_UNTRUSTED          (CKT_NSS + 3)
-#define CKT_NSS_MUST_VERIFY        (CKT_NSS + 4)
+#define CKT_NSS_MUST_VERIFY_TRUST  (CKT_NSS + 3)
+#define CKT_NSS_NOT_TRUSTED        (CKT_NSS + 10)
 #define CKT_NSS_TRUST_UNKNOWN      (CKT_NSS + 5) /* default */
 
 /* 
  * These may well remain NSS-specific; I'm only using them
  * to cache resolution data.
  */
-#define CKT_NSS_VALID              (CKT_NSS + 10)
 #define CKT_NSS_VALID_DELEGATOR    (CKT_NSS + 11)
+
+
+/*
+ * old definitions. They still exist, but the plain meaning of the
+ * labels have never been accurate to was was really implemented.
+ * The new labels correctly reflect what the values effectively mean.
+ */
+#if __GNUC__ > 3
+/* make GCC warn when we use these #defines */
+/*
+ *  This is really painful because GCC doesn't allow us to mark random
+ *  #defines as deprecated. We can only mark the following:
+ *      functions, variables, and types.
+ *  const variables will create extra storage for everyone including this
+ *       header file, so it's undesirable.
+ *  functions could be inlined to prevent storage creation, but will fail
+ *       when constant values are expected (like switch statements).
+ *  enum types do not seem to pay attention to the deprecated attribute.
+ *
+ *  That leaves typedefs. We declare new types that we then deprecate, then
+ *  cast the resulting value to the deprecated type in the #define, thus
+ *  producting the warning when the #define is used.
+ */
+#if (__GNUC__  == 4) && (__GNUC_MINOR < 5)
+/* The mac doesn't like the friendlier deprecate messages. I'm assuming this
+ * is a gcc version issue rather than mac or ppc specific */
+typedef CK_TRUST __CKT_NSS_UNTRUSTED __attribute__((deprecated));
+typedef CK_TRUST __CKT_NSS_VALID __attribute__ ((deprecated));
+typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated));
+#else
+/* when possible, get a full deprecation warning. This works on gcc 4.5
+ * it may work on earlier versions of gcc */
+typedef CK_TRUST __CKT_NSS_UNTRUSTED __attribute__((deprecated
+    ("CKT_NSS_UNTRUSTED really means CKT_NSS_MUST_VERIFY_TRUST")));
+typedef CK_TRUST __CKT_NSS_VALID __attribute__ ((deprecated
+    ("CKT_NSS_VALID really means CKT_NSS_NOT_TRUSTED")));
+typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated
+    ("CKT_NSS_MUST_VERIFY really functions as CKT_NSS_TRUST_UNKNOWN")));
+#endif
+#define CKT_NSS_UNTRUSTED ((__CKT_NSS_UNTRUSTED)CKT_NSS_MUST_VERIFY_TRUST)
+#define CKT_NSS_VALID     ((__CKT_NSS_VALID) CKT_NSS_NOT_TRUSTED)
+/* keep the old value for compatibility reasons*/
+#define CKT_NSS_MUST_VERIFY ((__CKT_NSS_MUST_VERIFY)(CKT_NSS +4))
+#else
+#ifdef _WIN32
+/* This magic gets the windows compiler to give us a deprecation
+ * warning */
+#pragma deprecated(CKT_NSS_UNTRUSTED, CKT_NSS_MUST_VERIFY, CKT_NSS_VALID)
+#endif
+/* CKT_NSS_UNTRUSTED really means CKT_NSS_MUST_VERIFY_TRUST */
+#define CKT_NSS_UNTRUSTED          CKT_NSS_MUST_VERIFY_TRUST
+/* CKT_NSS_VALID really means CKT_NSS_NOT_TRUSTED */
+#define CKT_NSS_VALID              CKT_NSS_NOT_TRUSTED
+/* CKT_NSS_MUST_VERIFY was always treated as CKT_NSS_TRUST_UNKNOWN */
+#define CKT_NSS_MUST_VERIFY        (CKT_NSS + 4)  /*really means trust unknown*/
+#endif
 
 /* don't leave old programs in a lurch just yet, give them the old NETSCAPE
  * synonym */
@@ -367,6 +422,7 @@ typedef CK_ULONG          CK_TRUST;
 #define CKM_NETSCAPE_AES_KEY_WRAP_PAD	CKM_NSS_AES_KEY_WRAP_PAD
 #define CKR_NETSCAPE_CERTDB_FAILED      CKR_NSS_CERTDB_FAILED
 #define CKR_NETSCAPE_KEYDB_FAILED       CKR_NSS_KEYDB_FAILED
+
 #define CKT_NETSCAPE_TRUSTED            CKT_NSS_TRUSTED
 #define CKT_NETSCAPE_TRUSTED_DELEGATOR  CKT_NSS_TRUSTED_DELEGATOR
 #define CKT_NETSCAPE_UNTRUSTED          CKT_NSS_UNTRUSTED

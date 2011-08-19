@@ -408,6 +408,19 @@ static const HALF PC2[8][64] = {
 #pragma intrinsic(_byteswap_ulong)
 #define BYTESWAP(word, temp) \
     word = _byteswap_ulong(word);
+#elif defined(__GNUC__) && (defined(__thumb2__) || \
+      (!defined(__thumb__) && \
+      (defined(__ARM_ARCH_6__) || \
+       defined(__ARM_ARCH_6J__) || \
+       defined(__ARM_ARCH_6K__) || \
+       defined(__ARM_ARCH_6Z__) || \
+       defined(__ARM_ARCH_6ZK__) || \
+       defined(__ARM_ARCH_6T2__) || \
+       defined(__ARM_ARCH_7__) || \
+       defined(__ARM_ARCH_7A__) || \
+       defined(__ARM_ARCH_7R__))))
+#define BYTESWAP(word, temp) \
+    __asm("rev %0, %0" : "+r" (word));
 #else
 #define BYTESWAP(word, temp) \
     word = (word >> 16) | (word << 16); \

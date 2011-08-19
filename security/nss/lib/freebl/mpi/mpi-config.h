@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi-config.h,v 1.5.198.1 2011/04/07 22:31:40 wtc%google.com Exp $ */
+/* $Id: mpi-config.h,v 1.6 2010/07/20 01:26:02 wtc%google.com Exp $ */
 
 #ifndef MPI_CONFIG_H_
 #define MPI_CONFIG_H_
