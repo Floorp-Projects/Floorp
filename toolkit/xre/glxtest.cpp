@@ -114,6 +114,9 @@ static void glxtest()
   typedef GLXFBConfig* (* PFNGLXQUERYEXTENSION) (Display *, int *, int *);
   PFNGLXQUERYEXTENSION glXQueryExtension = cast<PFNGLXQUERYEXTENSION>(dlsym(libgl, "glXQueryExtension"));
 
+  typedef GLXFBConfig* (* PFNGLXQUERYVERSION) (Display *, int *, int *);
+  PFNGLXQUERYVERSION glXQueryVersion = cast<PFNGLXQUERYVERSION>(dlsym(libgl, "glXQueryVersion"));
+
   typedef GLXFBConfig* (* PFNGLXCHOOSEFBCONFIG) (Display *, int, const int *, int *);
   PFNGLXCHOOSEFBCONFIG glXChooseFBConfig = cast<PFNGLXCHOOSEFBCONFIG>(dlsym(libgl, "glXChooseFBConfig"));
 
@@ -142,6 +145,7 @@ static void glxtest()
   PFNGLXGETPROCADDRESS glXGetProcAddress = cast<PFNGLXGETPROCADDRESS>(dlsym(libgl, "glXGetProcAddress"));
 
   if (!glXQueryExtension ||
+      !glXQueryVersion ||
       !glXChooseFBConfig ||
       !glXGetVisualFromFBConfig ||
       !glXCreatePixmap ||
@@ -162,6 +166,14 @@ static void glxtest()
   ///// Check that the GLX extension is present /////
   if (!glXQueryExtension(dpy, NULL, NULL))
     fatal_error("GLX extension missing");
+  
+  ///// Check that the GLX version is >= 1.3, needed for glXCreatePixmap, bug 659932 /////
+  int majorVersion, minorVersion;
+  if (!glXQueryVersion(dpy, &majorVersion, &minorVersion))
+    fatal_error("Unable to query GLX version");
+
+  if (majorVersion < 1 || (majorVersion == 1 && minorVersion < 3))
+    fatal_error("GLX version older than the required 1.3");
 
   XSetErrorHandler(x_error_handler);
 
