@@ -2,3 +2,4 @@
 != textbox-multiline-resize.xul textbox-multiline-ref.xul 
 == popup-explicit-size.xul popup-explicit-size-ref.xul
 == image-size.xul image-size-ref.xul
+== image-scaling-min-height-1.xul image-scaling-min-height-1-ref.xul
