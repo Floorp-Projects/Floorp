@@ -119,6 +119,8 @@ public class GeckoAppShell
     public static native void onChangeNetworkLinkStatus(String status, String type);
     public static native void reportJavaCrash(String stack);
 
+    public static native void processNextNativeEvent();
+
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
         public SynchronousQueue<Handler> mHandlerQueue =

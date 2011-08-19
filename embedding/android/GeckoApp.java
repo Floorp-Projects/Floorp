@@ -684,8 +684,12 @@ abstract public class GeckoApp
                 Intent.createChooser(intent, getString(R.string.choose_file)),
                 FILE_PICKER_REQUEST);
         String filePickerResult = "";
+
         try {
-            filePickerResult = mFilePickerResult.take();
+            while (null == (filePickerResult = mFilePickerResult.poll(1, TimeUnit.MILLISECONDS))) {
+                Log.i("GeckoApp", "processing events from showFilePicker ");
+                GeckoAppShell.processNextNativeEvent();
+            }
         } catch (InterruptedException e) {
             Log.i(LOG_FILE_NAME, "showing file picker ",  e);
         }
