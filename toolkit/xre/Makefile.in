@@ -102,9 +102,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += nsNativeAppSupportUnix.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-MOCSRCS += moc_nsNativeAppSupportQt.cpp
-  $(NULL)
-CPPSRCS += $(MOCSRCS)
 CPPSRCS += nsNativeAppSupportQt.cpp
 CPPSRCS += nsQAppInstance.cpp
 EXPORTS += nsQAppInstance.h
