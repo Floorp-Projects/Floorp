@@ -608,6 +608,9 @@ class AssemblerX86Shared
     void addsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.addsd_rr(src.code(), dest.code());
     }
+    void mulsd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.mulsd_rr(src.code(), dest.code());
+    }
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.xorpd_rr(src.code(), dest.code());
     }
