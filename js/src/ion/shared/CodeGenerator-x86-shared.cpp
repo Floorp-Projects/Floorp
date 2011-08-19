@@ -111,11 +111,11 @@ CodeGeneratorX86Shared::visitTestIAndBranch(LTestIAndBranch *test)
     masm.testl(ToRegister(opd), ToRegister(opd));
 
     if (isNextBlock(ifFalse)) {
-        masm.j(AssemblerX86Shared::NonZero, ifTrue->label());
+        masm.j(Assembler::NonZero, ifTrue->label());
     } else if (isNextBlock(ifTrue)) {
-        masm.j(AssemblerX86Shared::Zero, ifFalse->label());
+        masm.j(Assembler::Zero, ifFalse->label());
     } else {
-        masm.j(AssemblerX86Shared::Zero, ifFalse->label());
+        masm.j(Assembler::Zero, ifFalse->label());
         masm.jmp(ifTrue->label());
     }
     return true;
@@ -124,15 +124,41 @@ CodeGeneratorX86Shared::visitTestIAndBranch(LTestIAndBranch *test)
 bool
 CodeGeneratorX86Shared::visitCompareI(LCompareI *comp)
 {
-    JS_NOT_REACHED("Codegen for LCompareI NYI");
-    return false;
+    const LAllocation *left = comp->getOperand(0);
+    const LAllocation *right = comp->getOperand(1);
+    const LDefinition *def = comp->getDef(0);
+
+    Label ifFalse;
+    masm.cmpl(ToRegister(left), ToOperand(right));
+    masm.movl(Imm32(0), ToRegister(def));
+    masm.j(comp->condition(), &ifFalse);
+    masm.movl(Imm32(1), ToRegister(def));
+    masm.bind(&ifFalse);
+    return true;
 }
 
 bool
 CodeGeneratorX86Shared::visitCompareIAndBranch(LCompareIAndBranch *comp)
 {
-    JS_NOT_REACHED("Codegen for LCompareIAndBranch NYI");
-    return false;
+    const LAllocation *left = comp->getOperand(0);
+    const LAllocation *right = comp->getOperand(1);
+    LBlock *ifTrue = comp->ifTrue()->lir();
+    LBlock *ifFalse = comp->ifFalse()->lir();
+    Assembler::Condition cond = comp->condition();
+
+    // Compare the operands
+    masm.cmpl(ToRegister(left), ToOperand(right));
+
+    // Take advantage of block fallthrough when possible
+    if (isNextBlock(ifFalse)) {
+        masm.j(cond, ifTrue->label());
+    } else if (isNextBlock(ifTrue)) {
+        masm.j(Assembler::inverseCondition(cond), ifFalse->label());
+    } else {
+        masm.j(cond, ifTrue->label());
+        masm.jmp(ifFalse->label());
+    }
+    return true;
 }
 
 bool
