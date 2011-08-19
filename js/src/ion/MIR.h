@@ -852,6 +852,10 @@ class MCompare
         return cond_;
     }
 
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
   private:
     void setCondition(JSOp op);
 };

@@ -128,12 +128,12 @@ CodeGeneratorX86Shared::visitCompareI(LCompareI *comp)
     const LAllocation *right = comp->getOperand(1);
     const LDefinition *def = comp->getDef(0);
 
-    Label ifFalse;
+    Label ifTrue;
     masm.cmpl(ToRegister(left), ToOperand(right));
-    masm.movl(Imm32(0), ToRegister(def));
-    masm.j(comp->condition(), &ifFalse);
     masm.movl(Imm32(1), ToRegister(def));
-    masm.bind(&ifFalse);
+    masm.j(comp->condition(), &ifTrue);
+    masm.movl(Imm32(0), ToRegister(def));
+    masm.bind(&ifTrue);
     return true;
 }
 
