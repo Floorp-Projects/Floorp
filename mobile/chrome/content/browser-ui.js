@@ -890,16 +890,16 @@ var BrowserUI = {
       return;
     }
 
-    // Check active panel
-    if (this.activePanel) {
-      this.activePanel = null;
+    // Check open dialogs
+    let dialog = this.activeDialog;
+    if (dialog && dialog != this.activePanel) {
+      dialog.close();
       return;
     }
 
-    // Check open dialogs
-    let dialog = this.activeDialog;
-    if (dialog) {
-      dialog.close();
+    // Check active panel
+    if (this.activePanel) {
+      this.activePanel = null;
       return;
     }
 
