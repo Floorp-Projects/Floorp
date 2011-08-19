@@ -81,10 +81,11 @@ class ValueNumberer
                     IonAllocPolicy> InstructionMap;
 
     MIRGraph &graph_;
+    ValueMap values;
     bool pessimisticPass_;
     size_t count_;
 
-    uint32 lookupValue(ValueMap &values, MDefinition *ins);
+    uint32 lookupValue(MDefinition *ins);
     MDefinition *findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index);
 
     MDefinition *simplify(MDefinition *def, bool useValueNumbers);

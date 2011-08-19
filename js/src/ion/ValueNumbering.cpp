@@ -53,7 +53,7 @@ ValueNumberer::ValueNumberer(MIRGraph &graph, bool optimistic)
 { }
 
 uint32
-ValueNumberer::lookupValue(ValueMap &values, MDefinition *ins)
+ValueNumberer::lookupValue(MDefinition *ins)
 {
 
     ValueMap::AddPtr p = values.lookupForAdd(ins);
@@ -85,6 +85,7 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
         JS_ASSERT(!def->isPhi());
 
         def->block()->insertAfter(def->toInstruction(), ins->toInstruction());
+        ins->setValueNumber(lookupValue(ins));
     }
 
     JS_ASSERT(ins->id() != 0);
@@ -166,8 +167,6 @@ ValueNumberer::computeValueNumbers()
 
     IonSpew(IonSpew_GVN, "Numbering instructions");
 
-    ValueMap values;
-
     if (!values.init())
         return false;
 
@@ -221,7 +220,7 @@ ValueNumberer::computeValueNumbers()
                     continue;
                 }
 
-                uint32 value = lookupValue(values, ins);
+                uint32 value = lookupValue(ins);
 
                 if (!value)
                     return false; // Hashtable insertion failed
