@@ -93,10 +93,10 @@ var ContentPopupHelper = {
   },
 
   /**
-   * This method positioned an arrowbox on the screen using a 'virtual'
+   * This method positions an arrowbox on the screen using a 'virtual'
    * element as referrer that match the real content element
-   * This method called element.getBoundingClientRect() many times and can be
-   * expensive, do not called it too many times.
+   * This method calls element.getBoundingClientRect() many times and can be
+   * expensive, do not call it too many times.
    */
   anchorTo: function(aAnchorRect) {
     let popup = this._popup;
