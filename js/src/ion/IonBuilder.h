@@ -230,7 +230,7 @@ class IonBuilder : public MIRGenerator
     bool snapshotAfter(MInstruction *ins);
 
     bool pushConstant(const Value &v);
-    bool jsop_bitnot(JSOp op);
+    bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
     bool jsop_binary(JSOp op);
     bool jsop_neg();
