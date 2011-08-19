@@ -1,12 +1,12 @@
 <!--
-Copyright (c) 2009 The Chromium Authors. All rights reserved.
+Copyright (c) 2011 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
  -->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-  "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>WebGL More than 65536 points.</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
@@ -27,9 +27,7 @@ void main() {
 }
 </script>
 <script id="fs" type="text/something-not-javascript">
-#if defined(GL_ES)
 precision mediump float;
-#endif
 varying vec4 color;
 void main() {
     gl_FragColor = color;
