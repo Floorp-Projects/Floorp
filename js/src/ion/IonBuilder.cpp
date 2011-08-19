@@ -359,7 +359,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_ifeq(JSOP_IFEQ);
 
       case JSOP_BITNOT:
-        return jsop_bitnot(op);
+        return jsop_bitnot();
 
       case JSOP_BITAND:
       case JSOP_BITOR:
@@ -1489,7 +1489,7 @@ IonBuilder::pushConstant(const Value &v)
 }
 
 bool
-IonBuilder::jsop_bitnot(JSOp op)
+IonBuilder::jsop_bitnot()
 {
     MDefinition *input = current->pop();
     MBitNot *ins = MBitNot::New(input);
