@@ -1363,8 +1363,6 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
             // Non-phis get a REGISTER requirement
             interval->setRequirement(Requirement(Requirement::REGISTER));
         }
-
-        return;
     }
 
     // Search for any uses for requirements or hints
