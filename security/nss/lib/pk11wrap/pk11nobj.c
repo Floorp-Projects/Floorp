@@ -138,31 +138,31 @@ pk11_HandleTrustObject(PK11SlotInfo *slot, CERTCertificate *cert, CERTCertTrust 
   /* First implementation: keep it simple for testing.  We can study what other
    * mappings would be appropriate and add them later.. fgmr 20000724 */
 
-  if ( serverAuth ==  CKT_NETSCAPE_TRUSTED ) {
-    trust->sslFlags |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
+  if ( serverAuth ==  CKT_NSS_TRUSTED ) {
+    trust->sslFlags |= CERTDB_TERMINAL_RECORD | CERTDB_TRUSTED;
   }
 
-  if ( serverAuth == CKT_NETSCAPE_TRUSTED_DELEGATOR ) {
+  if ( serverAuth == CKT_NSS_TRUSTED_DELEGATOR ) {
     trust->sslFlags |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | 
 							CERTDB_NS_TRUSTED_CA;
   }
-  if ( clientAuth == CKT_NETSCAPE_TRUSTED_DELEGATOR ) {
+  if ( clientAuth == CKT_NSS_TRUSTED_DELEGATOR ) {
     trust->sslFlags |=  CERTDB_TRUSTED_CLIENT_CA ;
   }
 
-  if ( emailProtection == CKT_NETSCAPE_TRUSTED ) {
-    trust->emailFlags |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
+  if ( emailProtection == CKT_NSS_TRUSTED ) {
+    trust->emailFlags |= CERTDB_TERMINAL_RECORD | CERTDB_TRUSTED;
   }
 
-  if ( emailProtection == CKT_NETSCAPE_TRUSTED_DELEGATOR ) {
+  if ( emailProtection == CKT_NSS_TRUSTED_DELEGATOR ) {
     trust->emailFlags |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | CERTDB_NS_TRUSTED_CA;
   }
 
-  if( codeSigning == CKT_NETSCAPE_TRUSTED ) {
-    trust->objectSigningFlags |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
+  if( codeSigning == CKT_NSS_TRUSTED ) {
+    trust->objectSigningFlags |= CERTDB_TERMINAL_RECORD | CERTDB_TRUSTED;
   }
 
-  if( codeSigning == CKT_NETSCAPE_TRUSTED_DELEGATOR ) {
+  if( codeSigning == CKT_NSS_TRUSTED_DELEGATOR ) {
     trust->objectSigningFlags |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | CERTDB_NS_TRUSTED_CA;
   }
 

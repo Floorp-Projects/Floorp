@@ -37,7 +37,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.15 2008/11/19 16:04:38 nelson%bolyard.com Exp $
+ * $Id: secitem.c,v 1.16 2011/07/22 21:22:40 wtc%google.com Exp $
  */
 
 #include "seccomon.h"
@@ -251,6 +251,10 @@ SECITEM_CopyItem(PRArenaPool *arena, SECItem *to, const SECItem *from)
 	PORT_Memcpy(to->data, from->data, from->len);
 	to->len = from->len;
     } else {
+	/*
+	 * If from->data is NULL but from->len is nonzero, this function
+	 * will succeed.  Is this right?
+	 */
 	to->data = 0;
 	to->len = 0;
     }

@@ -223,7 +223,7 @@ lg_key_collect(DBT *key, DBT *data, void *arg)
 							~LG_KEY;
 		haveMatch = (PRBool)
 			((classFlags & (LG_KEY|LG_PRIVATE|LG_PUBLIC)) != 0);
-		nsslowkey_DestroyPrivateKey(privKey);
+		lg_nsslowkey_DestroyPrivateKey(privKey);
 	    }
 	} else {
 	    SHA1_HashBuf( hashKey, key->data, key->size ); /* match id */
@@ -289,7 +289,7 @@ lg_key_collect(DBT *key, DBT *data, void *arg)
 
 loser:
     if ( privKey ) {
-	nsslowkey_DestroyPrivateKey(privKey);
+	lg_nsslowkey_DestroyPrivateKey(privKey);
     }
     return(SECSuccess);
 }
@@ -327,7 +327,7 @@ lg_searchKeys(SDB *sdb, SECItem *key_id,
 			lg_mkHandle(sdb,key_id,LG_TOKEN_TYPE_PUB));
 		found = PR_TRUE;
 	    }
-    	    nsslowkey_DestroyPrivateKey(privKey);
+    	    lg_nsslowkey_DestroyPrivateKey(privKey);
 	}
 	/* don't do the traversal if we have an up to date db */
 	if (keyHandle->version != 3) {

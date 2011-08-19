@@ -41,7 +41,7 @@
 # ***** END LICENSE BLOCK *****
 
 #
-# $Id: Makefile,v 1.26 2007/05/09 00:09:37 neil.williams%sun.com Exp $
+# $Id: Makefile,v 1.27 2011/02/06 08:42:27 nelson%bolyard.com Exp $
 #
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -169,6 +169,8 @@ mpv_sparcv8.s: vis_64.il mpv_sparc.c
 
 montmulfv8.o montmulfv9.o mpv_sparcv8.o mpv_sparcv9.o : %.o : %.s 
 	$(CC) -o $@ $(SOLARIS_ASM_FLAGS) -c $<
+
+mpi_arm.o: mpi_arm.c $(LIBHDRS)
 
 # This rule is used to build the .s sources, which are then hand optimized.
 #montmulfv8.s montmulfv9.s : montmulf%.s : montmulf%.il montmulf.c montmulf.h 

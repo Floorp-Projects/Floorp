@@ -84,7 +84,7 @@ extern SECStatus
  *    The function fn will be called, probably multiple times whenever 
  *    the ASN1 encoder wants to write out DER-encoded bytes.  Look at the 
  *    comments in crmft.h where the CRMFEncoderOutputCallback type is
- *    defined for information on proper behavior of the funciton fn.
+ *    defined for information on proper behavior of the function fn.
  * RETURN:
  *    SECSuccess if encoding was successful.  Any other return value 
  *    indicates an error occurred during encoding.
@@ -116,7 +116,7 @@ extern SECStatus CRMF_EncodeCertRequest (CRMFCertRequest           *inCertReq,
  * OUTPUT:
  *    The function fn will be called, probably multiple times.  Look at the 
  *    comments in crmft.h where the CRMFEncoderOutputCallback type is
- *    defined for information on proper behavior of the funciton fn.
+ *    defined for information on proper behavior of the function fn.
  *
  * RETURN:
  * SECSuccess if encoding the Certificate Request Messages was successful. 
@@ -616,7 +616,7 @@ extern SECStatus CRMF_CertReqMsgSetRAVerifiedPOP(CRMFCertReqMsg *inCertReqMsg);
  *
  * The last 3 arguments are for future compatibility in case we ever want to
  * support generating POPOSigningKeyInput.  Pass in NULL for all 3 if you 
- * definitely don't want the funciton to even try to generate 
+ * definitely don't want the function to even try to generate 
  * POPOSigningKeyInput.  If you try to use POPOSigningKeyInput, the function
  * will fail.
  *
@@ -655,10 +655,10 @@ extern SECStatus
  * Adds Proof Of Possession using the keyEncipherment field of
  * ProofOfPossession.
  *
- * The funciton looks at the the inKeyChoice parameter and interprets it in
+ * The function looks at the the inKeyChoice parameter and interprets it in
  * in the following manner.
  *
- * If a parameter is not mentioned under interpretation, the funciton will not
+ * If a parameter is not mentioned under interpretation, the function will not
  * look at its value when implementing that case.
  *
  * inKeyChoice          Interpretation
@@ -709,10 +709,10 @@ extern SECStatus
  * Adds Proof Of Possession using the keyAgreement field of
  * ProofOfPossession.
  *
- * The funciton looks at the the inKeyChoice parameter and interprets it in
+ * The function looks at the the inKeyChoice parameter and interprets it in
  * in the following manner.
  *
- * If a parameter is not mentioned under interpretation, the funciton will not
+ * If a parameter is not mentioned under interpretation, the function will not
  * look at its value when implementing that case.
  *
  * inKeyChoice          Interpretation
@@ -954,7 +954,7 @@ extern SECStatus
  * RETURN:
  * If the issuer is present in the cert request cert template, the function 
  * returns SECSuccess and places a  copy of the issuer in *destIssuer.
- * If there is no issuer present, the funciton returns SECFailure and the
+ * If there is no issuer present, the function returns SECFailure and the
  * value at *destIssuer is unchanged.
  */
 extern SECStatus 
@@ -1766,7 +1766,7 @@ extern SECStatus
 
 /* Helper functions that can be used by other libraries. */
 /*
- * A quick helper funciton to get the best wrap mechanism.
+ * A quick helper function to get the best wrap mechanism.
  */
 extern CK_MECHANISM_TYPE CRMF_GetBestWrapPadMechanism(PK11SlotInfo *slot); 
 

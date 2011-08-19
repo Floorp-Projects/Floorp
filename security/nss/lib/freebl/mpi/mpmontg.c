@@ -36,11 +36,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpmontg.c,v 1.22 2010/05/02 22:36:41 nelson%bolyard.com Exp $ */
+/* $Id: mpmontg.c,v 1.23 2010/07/20 01:26:02 wtc%google.com Exp $ */
 
 /* This file implements moduluar exponentiation using Montgomery's
  * method for modular reduction.  This file implements the method
- * described as "Improvement 1" in the paper "A Cryptogrpahic Library for
+ * described as "Improvement 2" in the paper "A Cryptogrpahic Library for
  * the Motorola DSP56000" by Stephen R. Dusse' and Burton S. Kaliski Jr.
  * published in "Advances in Cryptology: Proceedings of EUROCRYPT '90"
  * "Lecture Notes in Computer Science" volume 473, 1991, pg 230-244,
@@ -76,13 +76,15 @@
 #define ABORT abort()
 #endif
 
-/* computes T = REDC(T), 2^b == R */
+/*! computes T = REDC(T), 2^b == R 
+    \param T < RN
+*/
 mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
 {
   mp_err res;
   mp_size i;
 
-  i = MP_USED(T) + MP_USED(&mmm->N) + 2;
+  i = (MP_USED(&mmm->N) << 1) + 1;
   MP_CHECKOK( s_mp_pad(T, i) );
   for (i = 0; i < MP_USED(&mmm->N); ++i ) {
     mp_digit m_i = MP_DIGIT(T, i) * mmm->n0prime;
@@ -92,7 +94,7 @@ mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
   s_mp_clamp(T);
 
   /* T /= R */
-  s_mp_div_2d(T, mmm->b); 
+  s_mp_rshd( T, MP_USED(&mmm->N) );
 
   if ((res = s_mp_cmp(T, &mmm->N)) >= 0) {
     /* T = T - N */
@@ -109,14 +111,20 @@ CLEANUP:
   return res;
 }
 
-#if !defined(MP_ASSEMBLY_MUL_MONT) && !defined(MP_MONT_USE_MP_MUL)
+#if !defined(MP_MONT_USE_MP_MUL)
+
+/*! c <- REDC( a * b ) mod N
+    \param a < N  i.e. "reduced"
+    \param b < N  i.e. "reduced"
+    \param mmm modulus N and n0' of N
+*/
 mp_err s_mp_mul_mont(const mp_int *a, const mp_int *b, mp_int *c, 
 	           mp_mont_modulus *mmm)
 {
   mp_digit *pb;
   mp_digit m_i;
   mp_err   res;
-  mp_size  ib;
+  mp_size  ib; /* "index b": index of current digit of B */
   mp_size  useda, usedb;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
@@ -128,7 +136,7 @@ mp_err s_mp_mul_mont(const mp_int *a, const mp_int *b, mp_int *c,
   }
 
   MP_USED(c) = 1; MP_DIGIT(c, 0) = 0;
-  ib = MP_USED(a) + MP_MAX(MP_USED(b), MP_USED(&mmm->N)) + 2;
+  ib = (MP_USED(&mmm->N) << 1) + 1;
   if((res = s_mp_pad(c, ib)) != MP_OKAY)
     goto CLEANUP;
 
@@ -157,7 +165,7 @@ mp_err s_mp_mul_mont(const mp_int *a, const mp_int *b, mp_int *c,
     }
   }
   s_mp_clamp(c);
-  s_mp_div_2d(c, mmm->b); 
+  s_mp_rshd( c, MP_USED(&mmm->N) ); /* c /= R */
   if (s_mp_cmp(c, &mmm->N) >= 0) {
     MP_CHECKOK( s_mp_sub(c, &mmm->N) );
   }
@@ -174,7 +182,8 @@ mp_err s_mp_to_mont(const mp_int *x, mp_mont_modulus *mmm, mp_int *xMont)
   mp_err res;
 
   /* xMont = x * R mod N   where  N is modulus */
-  MP_CHECKOK( mpl_lsh(x, xMont, mmm->b) );  		/* xMont = x << b */
+  MP_CHECKOK( mp_copy( x, xMont ) );
+  MP_CHECKOK( s_mp_lshd( xMont, MP_USED(&mmm->N) ) );	/* xMont = x << b */
   MP_CHECKOK( mp_div(xMont, &mmm->N, 0, xMont) );	/*         mod N */
 CLEANUP:
   return res;
@@ -1109,9 +1118,6 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   MP_CHECKOK( mp_init_size(&montBase, 2 * nLen + 2) );
 
   mmm.N = *modulus;			/* a copy of the mp_int struct */
-  i = mpl_significant_bits(modulus);
-  i += MP_DIGIT_BIT - 1;
-  mmm.b = i - i % MP_DIGIT_BIT;
 
   /* compute n0', given n0, n0' = -(n0 ** -1) mod MP_RADIX
   **		where n0 = least significant mp_digit of N, the modulus.

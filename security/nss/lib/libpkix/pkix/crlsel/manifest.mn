@@ -52,7 +52,5 @@ CSRCS = \
 	pkix_comcrlselparams.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = pkixcrlsel
 

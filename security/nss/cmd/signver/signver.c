@@ -320,7 +320,7 @@ int main(int argc, char **argv)
 		fprintf(outFile, "no");
 		if (verbose) {
 		    fprintf(outFile, ":%s",
-			    SECU_ErrorString((int16)PORT_GetError()));
+			    SECU_Strerror(PORT_GetError()));
 		}
 	    }
 	    fprintf(outFile, "\n");

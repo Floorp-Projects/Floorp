@@ -68,16 +68,16 @@
 #define SECITEM_CopyItem  SECITEM_CopyItem_stub
 #define SECITEM_FreeItem  SECITEM_FreeItem_stub
 #define SECITEM_ZfreeItem  SECITEM_ZfreeItem_stub
-
 #define NSS_SecureMemcmp NSS_SecureMemcmp_stub
 
-#define PR_DestroyCondVar PR_DestroyCondVar_stub
 #define PR_Assert  PR_Assert_stub
 #define PR_CallOnce  PR_CallOnce_stub
 #define PR_Close  PR_Close_stub
+#define PR_DestroyCondVar PR_DestroyCondVar_stub
 #define PR_DestroyLock  PR_DestroyLock_stub
 #define PR_Free  PR_Free_stub
 #define PR_GetLibraryFilePathname  PR_GetLibraryFilePathname_stub
+#define PR_ImportPipe  PR_ImportPipe_stub
 #define PR_Lock  PR_Lock_stub
 #define PR_NewCondVar PR_NewCondVar_stub
 #define PR_NewLock  PR_NewLock_stub

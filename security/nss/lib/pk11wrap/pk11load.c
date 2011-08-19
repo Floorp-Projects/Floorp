@@ -387,7 +387,6 @@ SECStatus
 secmod_LoadPKCS11Module(SECMODModule *mod, SECMODModule **oldModule) {
     PRLibrary *library = NULL;
     CK_C_GetFunctionList entry = NULL;
-    char * full_name;
     CK_INFO info;
     CK_ULONG slotCount = 0;
     SECStatus rv;
@@ -434,14 +433,11 @@ secmod_LoadPKCS11Module(SECMODModule *mod, SECMODModule **oldModule) {
 	    return SECFailure;
 	}
 
-	full_name = PORT_Strdup(mod->dllName);
-
 	/* load the library. If this succeeds, then we have to remember to
 	 * unload the library if anything goes wrong from here on out...
 	 */
-	library = PR_LoadLibrary(full_name);
+	library = PR_LoadLibrary(mod->dllName);
 	mod->library = (void *)library;
-	PORT_Free(full_name);
 
 	if (library == NULL) {
 	    return SECFailure;

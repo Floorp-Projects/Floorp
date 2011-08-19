@@ -83,15 +83,9 @@ static char consoleName[] =  {
 #endif
 };
 
+#include "nssutil.h"
+#include "ssl.h"
 
-char *
-SECU_GetString(int16 error_number)
-{
-
-    static char errString[80];
-    sprintf(errString, "Unknown error string (%d)", error_number);
-    return errString;
-}
 
 void 
 SECU_PrintErrMsg(FILE *out, int level, char *progName, char *msg, ...)
@@ -1516,6 +1510,70 @@ const SEC_ASN1Template secuPBEV2Params[] =
 };
 
 void
+secu_PrintRSAPSSParams(FILE *out, SECItem *value, char *m, int level)
+{
+    PRArenaPool *pool = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    SECStatus rv;
+    SECKEYRSAPSSParams param;
+    SECAlgorithmID maskHashAlg;
+
+    if (m) {
+	SECU_Indent(out, level);
+	fprintf (out, "%s:\n", m);
+    }
+
+    if (!pool) {
+	SECU_Indent(out, level);
+	fprintf(out, "Out of memory\n");
+	return;
+    }
+
+    PORT_Memset(&param, 0, sizeof param);
+
+    rv = SEC_QuickDERDecodeItem(pool, &param,
+				SEC_ASN1_GET(SECKEY_RSAPSSParamsTemplate),
+				value);
+    if (rv == SECSuccess) {
+	if (!param.hashAlg) {
+	    SECU_Indent(out, level+1);
+	    fprintf(out, "Hash algorithm: default, SHA-1\n");
+	} else {
+	    SECU_PrintObjectID(out, &param.hashAlg->algorithm,
+			       "Hash algorithm", level+1);
+	}
+	if (!param.maskAlg) {
+	    SECU_Indent(out, level+1);
+	    fprintf(out, "Mask algorithm: default, MGF1\n");
+	    SECU_Indent(out, level+1);
+	    fprintf(out, "Mask hash algorithm: default, SHA-1\n");
+	} else {
+	    SECU_PrintObjectID(out, &param.maskAlg->algorithm,
+			       "Mask algorithm", level+1);
+	    rv = SEC_QuickDERDecodeItem(pool, &maskHashAlg,
+		     SEC_ASN1_GET(SECOID_AlgorithmIDTemplate),
+		     &param.maskAlg->parameters);
+	    if (rv == SECSuccess) {
+		SECU_PrintObjectID(out, &maskHashAlg.algorithm,
+				   "Mask hash algorithm", level+1);
+	    } else {
+		SECU_Indent(out, level+1);
+		fprintf(out, "Invalid mask generation algorithm parameters\n");
+	    }
+	}
+	if (!param.saltLength.data) {
+	    SECU_Indent(out, level+1);
+	    fprintf(out, "Salt length: default, %i (0x%2X)\n", 20, 20);
+	} else {
+	    SECU_PrintInteger(out, &param.saltLength, "Salt Length", level+1);
+	}
+    } else {
+	SECU_Indent(out, level+1);
+	fprintf(out, "Invalid RSA-PSS parameters\n");
+    }
+    PORT_FreeArena(pool, PR_FALSE);
+}
+
+void
 secu_PrintKDF2Params(FILE *out, SECItem *value, char *m, int level)
 {
     PRArenaPool *pool = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1625,7 +1683,11 @@ SECU_PrintAlgorithmID(FILE *out, SECAlgorithmID *a, char *m, int level)
 	}
 	return;
     }
-	
+
+    if (algtag == SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
+	secu_PrintRSAPSSParams(out, &a->parameters, "Parameters", level+1);
+	return;
+    }
 
     if (a->parameters.len == 0
 	|| (a->parameters.len == 2
@@ -2384,7 +2446,7 @@ printflags(char *trusts, unsigned int flags)
 	if (!(flags & CERTDB_TRUSTED_CA) &&
 	    !(flags & CERTDB_TRUSTED_CLIENT_CA))
 	    PORT_Strcat(trusts, "c");
-    if (flags & CERTDB_VALID_PEER)
+    if (flags & CERTDB_TERMINAL_RECORD)
 	if (!(flags & CERTDB_TRUSTED))
 	    PORT_Strcat(trusts, "p");
     if (flags & CERTDB_TRUSTED_CA)
@@ -3209,8 +3271,8 @@ SECU_PrintPKCS7ContentInfo(FILE *out, SECItem *der, char *m, int level)
 void
 printFlags(FILE *out, unsigned int flags, int level)
 {
-    if ( flags & CERTDB_VALID_PEER ) {
-	SECU_Indent(out, level); fprintf(out, "Valid Peer\n");
+    if ( flags & CERTDB_TERMINAL_RECORD ) {
+	SECU_Indent(out, level); fprintf(out, "Terminal Record\n");
     }
     if ( flags & CERTDB_TRUSTED ) {
 	SECU_Indent(out, level); fprintf(out, "Trusted\n");
@@ -3250,6 +3312,29 @@ SECU_PrintTrustFlags(FILE *out, CERTCertTrust *trust, char *m, int level)
     printFlags(out, trust->objectSigningFlags, level+2);
 }
 
+int SECU_PrintDERName(FILE *out, SECItem *der, const char *m, int level)
+{
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    CERTName *name;
+    int rv = SEC_ERROR_NO_MEMORY;
+
+    if (!arena)
+	return rv;
+
+    name = PORT_ArenaZNew(arena, CERTName);
+    if (!name)
+	goto loser;
+
+    rv = SEC_ASN1DecodeItem(arena, name, SEC_ASN1_GET(CERT_NameTemplate), der);
+    if (rv)
+	goto loser;
+
+    SECU_PrintName(out, name, m, level);
+loser:
+    PORT_FreeArena(arena, PR_FALSE);
+    return rv;
+}
+
 int SECU_PrintSignedData(FILE *out, SECItem *der, const char *m,
 			   int level, SECU_PPFunc inner)
 {
@@ -3281,7 +3366,6 @@ int SECU_PrintSignedData(FILE *out, SECItem *der, const char *m,
 loser:
     PORT_FreeArena(arena, PR_FALSE);
     return rv;
-
 }
 
 SECStatus
@@ -3509,123 +3593,6 @@ SECU_GetOptionArg(const secuCommand *cmd, int optionNum)
 		return PL_strdup(cmd->options[optionNum].arg);
 	else
 		return NULL;
-}
-
-static char SECUErrorBuf[64];
-
-char *
-SECU_ErrorStringRaw(int16 err)
-{
-    if (err == 0)
-	SECUErrorBuf[0] = '\0';
-    else if (err == SEC_ERROR_BAD_DATA)
-	sprintf(SECUErrorBuf, "Bad data");
-    else if (err == SEC_ERROR_BAD_DATABASE)
-	sprintf(SECUErrorBuf, "Problem with database");
-    else if (err == SEC_ERROR_BAD_DER)
-	sprintf(SECUErrorBuf, "Problem with DER");
-    else if (err == SEC_ERROR_BAD_KEY)
-	sprintf(SECUErrorBuf, "Problem with key");
-    else if (err == SEC_ERROR_BAD_PASSWORD)
-	sprintf(SECUErrorBuf, "Incorrect password");
-    else if (err == SEC_ERROR_BAD_SIGNATURE)
-	sprintf(SECUErrorBuf, "Bad signature");
-    else if (err == SEC_ERROR_EXPIRED_CERTIFICATE)
-	sprintf(SECUErrorBuf, "Expired certificate");
-    else if (err == SEC_ERROR_EXTENSION_VALUE_INVALID)
-	sprintf(SECUErrorBuf, "Invalid extension value");
-    else if (err == SEC_ERROR_INPUT_LEN)
-	sprintf(SECUErrorBuf, "Problem with input length");
-    else if (err == SEC_ERROR_INVALID_ALGORITHM)
-	sprintf(SECUErrorBuf, "Invalid algorithm");
-    else if (err == SEC_ERROR_INVALID_ARGS)
-	sprintf(SECUErrorBuf, "Invalid arguments");
-    else if (err == SEC_ERROR_INVALID_AVA)
-	sprintf(SECUErrorBuf, "Invalid AVA");
-    else if (err == SEC_ERROR_INVALID_TIME)
-	sprintf(SECUErrorBuf, "Invalid time");
-    else if (err == SEC_ERROR_IO)
-	sprintf(SECUErrorBuf, "Security I/O error");
-    else if (err == SEC_ERROR_LIBRARY_FAILURE)
-	sprintf(SECUErrorBuf, "Library failure");
-    else if (err == SEC_ERROR_NO_MEMORY)
-	sprintf(SECUErrorBuf, "Out of memory");
-    else if (err == SEC_ERROR_OLD_CRL)
-	sprintf(SECUErrorBuf, "CRL is older than the current one");
-    else if (err == SEC_ERROR_OUTPUT_LEN)
-	sprintf(SECUErrorBuf, "Problem with output length");
-    else if (err == SEC_ERROR_UNKNOWN_ISSUER)
-	sprintf(SECUErrorBuf, "Unknown issuer");
-    else if (err == SEC_ERROR_UNTRUSTED_CERT)
-	sprintf(SECUErrorBuf, "Untrusted certificate");
-    else if (err == SEC_ERROR_UNTRUSTED_ISSUER)
-	sprintf(SECUErrorBuf, "Untrusted issuer");
-    else if (err == SSL_ERROR_BAD_CERTIFICATE)
-	sprintf(SECUErrorBuf, "Bad certificate");
-    else if (err == SSL_ERROR_BAD_CLIENT)
-	sprintf(SECUErrorBuf, "Bad client");
-    else if (err == SSL_ERROR_BAD_SERVER)
-	sprintf(SECUErrorBuf, "Bad server");
-    else if (err == SSL_ERROR_EXPORT_ONLY_SERVER)
-	sprintf(SECUErrorBuf, "Export only server");
-    else if (err == SSL_ERROR_NO_CERTIFICATE)
-	sprintf(SECUErrorBuf, "No certificate");
-    else if (err == SSL_ERROR_NO_CYPHER_OVERLAP)
-	sprintf(SECUErrorBuf, "No cypher overlap");
-    else if (err == SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE)
-	sprintf(SECUErrorBuf, "Unsupported certificate type");
-    else if (err == SSL_ERROR_UNSUPPORTED_VERSION)
-	sprintf(SECUErrorBuf, "Unsupported version");
-    else if (err == SSL_ERROR_US_ONLY_SERVER)
-	sprintf(SECUErrorBuf, "U.S. only server");
-    else if (err == PR_IO_ERROR)
-	sprintf(SECUErrorBuf, "I/O error");
-
-    else if (err == SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE)
-        sprintf (SECUErrorBuf, "Expired Issuer Certificate");
-    else if (err == SEC_ERROR_REVOKED_CERTIFICATE)
-        sprintf (SECUErrorBuf, "Revoked certificate");
-    else if (err == SEC_ERROR_NO_KEY)
-        sprintf (SECUErrorBuf, "No private key in database for this cert");
-    else if (err == SEC_ERROR_CERT_NOT_VALID)
-        sprintf (SECUErrorBuf, "Certificate is not valid");
-    else if (err == SEC_ERROR_EXTENSION_NOT_FOUND)
-        sprintf (SECUErrorBuf, "Certificate extension was not found");
-    else if (err == SEC_ERROR_EXTENSION_VALUE_INVALID)
-        sprintf (SECUErrorBuf, "Certificate extension value invalid");
-    else if (err == SEC_ERROR_CA_CERT_INVALID)
-        sprintf (SECUErrorBuf, "Issuer certificate is invalid");
-    else if (err == SEC_ERROR_CERT_USAGES_INVALID)
-        sprintf (SECUErrorBuf, "Certificate usages is invalid");
-    else if (err == SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION)
-        sprintf (SECUErrorBuf, "Certificate has unknown critical extension");
-    else if (err == SEC_ERROR_PKCS7_BAD_SIGNATURE)
-        sprintf (SECUErrorBuf, "Bad PKCS7 signature");
-    else if (err == SEC_ERROR_INADEQUATE_KEY_USAGE)
-        sprintf (SECUErrorBuf, "Certificate not approved for this operation");
-    else if (err == SEC_ERROR_INADEQUATE_CERT_TYPE)
-        sprintf (SECUErrorBuf, "Certificate not approved for this operation");
-
-    return SECUErrorBuf;
-}
-
-char *
-SECU_ErrorString(int16 err)
-{
-    char *error_string;
-
-    *SECUErrorBuf = 0;
-    SECU_ErrorStringRaw (err);
-
-    if (*SECUErrorBuf == 0) { 
-	error_string = SECU_GetString(err);
-	if (error_string == NULL || *error_string == '\0') 
-	    sprintf(SECUErrorBuf, "No error string found for %d.",  err);
-	else
-	    return error_string;
-    }
-
-    return SECUErrorBuf;
 }
 
 

@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.11.22.1 2010/08/07 05:49:16 wtc%google.com Exp $ */
+/* $Id: keydb.c,v 1.12 2010/07/20 01:26:04 wtc%google.com Exp $ */
 
 #include "lowkeyi.h"
 #include "secasn1.h"
@@ -1209,7 +1209,7 @@ nsslowkey_KeyForCertExists(NSSLOWKEYDBHandle *handle, NSSLOWCERTCertificate *cer
 	    PORT_Free(buf);
 	}
     }
-    nsslowkey_DestroyPublicKey(pubkey);
+    lg_nsslowkey_DestroyPublicKey(pubkey);
     if ( status ) {
 	return PR_FALSE;
     }
@@ -1396,7 +1396,7 @@ loser:
     if (dbkey) {
  	sec_destroy_dbkey(dbkey);
     }
-    if (global_salt && global_salt != &none) {
+    if (global_salt != &none) {
 	SECITEM_FreeItem(global_salt,PR_TRUE);
     }
     return rv;
@@ -1535,9 +1535,9 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
     /* Encode the key, and set the algorithm (with params) */
     switch (pk->keyType) {
       case NSSLOWKEYRSAKey:
-        prepare_low_rsa_priv_key_for_asn1(pk);
+        lg_prepare_low_rsa_priv_key_for_asn1(pk);
 	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk, 
-				   nsslowkey_RSAPrivateKeyTemplate);
+				   lg_nsslowkey_RSAPrivateKeyTemplate);
 	if (dummy == NULL) {
 	    rv = SECFailure;
 	    goto loser;
@@ -1551,17 +1551,17 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 	
 	break;
       case NSSLOWKEYDSAKey:
-        prepare_low_dsa_priv_key_for_asn1(pk);
+        lg_prepare_low_dsa_priv_key_for_asn1(pk);
 	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk,
-				   nsslowkey_DSAPrivateKeyTemplate);
+				   lg_nsslowkey_DSAPrivateKeyTemplate);
 	if (dummy == NULL) {
 	    rv = SECFailure;
 	    goto loser;
 	}
 	
-        prepare_low_pqg_params_for_asn1(&pk->u.dsa.params);
+        lg_prepare_low_pqg_params_for_asn1(&pk->u.dsa.params);
 	dummy = SEC_ASN1EncodeItem(temparena, NULL, &pk->u.dsa.params,
-				   nsslowkey_PQGParamsTemplate);
+				   lg_nsslowkey_PQGParamsTemplate);
 	if (dummy == NULL) {
 	    rv = SECFailure;
 	    goto loser;
@@ -1575,9 +1575,9 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 	
 	break;
       case NSSLOWKEYDHKey:
-        prepare_low_dh_priv_key_for_asn1(pk);
+        lg_prepare_low_dh_priv_key_for_asn1(pk);
 	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk,
-				   nsslowkey_DHPrivateKeyTemplate);
+				   lg_nsslowkey_DHPrivateKeyTemplate);
 	if (dummy == NULL) {
 	    rv = SECFailure;
 	    goto loser;
@@ -1591,7 +1591,7 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 	break;
 #ifdef NSS_ENABLE_ECC
       case NSSLOWKEYECKey:
-	prepare_low_ec_priv_key_for_asn1(pk);
+	lg_prepare_low_ec_priv_key_for_asn1(pk);
 	/* Public value is encoded as a bit string so adjust length
 	 * to be in bits before ASN encoding and readjust 
 	 * immediately after.
@@ -1604,7 +1604,7 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 	savelen = pk->u.ec.ecParams.curveOID.len;
 	pk->u.ec.ecParams.curveOID.len = 0;
 	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk,
-				   nsslowkey_ECPrivateKeyTemplate);
+				   lg_nsslowkey_ECPrivateKeyTemplate);
 	pk->u.ec.ecParams.curveOID.len = savelen;
 	pk->u.ec.publicValue.len >>= 3;
 
@@ -1637,7 +1637,7 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 
     /* setup encrypted private key info */
     dummy = SEC_ASN1EncodeItem(temparena, der_item, pki, 
-	nsslowkey_PrivateKeyInfoTemplate);
+	lg_nsslowkey_PrivateKeyInfoTemplate);
 
     SEC_PRINT("seckey_encrypt_private_key()", "PrivateKeyInfo", 
 	      pk->keyType, der_item);
@@ -1777,50 +1777,50 @@ seckey_decrypt_private_key(SECItem*epki,
 		  dest);
 
 	rv = SEC_QuickDERDecodeItem(temparena, pki, 
-	    nsslowkey_PrivateKeyInfoTemplate, dest);
+	    lg_nsslowkey_PrivateKeyInfoTemplate, dest);
 	if(rv == SECSuccess)
 	{
 	    switch(SECOID_GetAlgorithmTag(&pki->algorithm)) {
 	      case SEC_OID_X500_RSA_ENCRYPTION:
 	      case SEC_OID_PKCS1_RSA_ENCRYPTION:
 		pk->keyType = NSSLOWKEYRSAKey;
-		prepare_low_rsa_priv_key_for_asn1(pk);
+		lg_prepare_low_rsa_priv_key_for_asn1(pk);
                 if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
                     &pki->privateKey) ) break;
 		rv = SEC_QuickDERDecodeItem(permarena, pk,
-					nsslowkey_RSAPrivateKeyTemplate,
+					lg_nsslowkey_RSAPrivateKeyTemplate,
 					&newPrivateKey);
 		break;
 	      case SEC_OID_ANSIX9_DSA_SIGNATURE:
 		pk->keyType = NSSLOWKEYDSAKey;
-		prepare_low_dsa_priv_key_for_asn1(pk);
+		lg_prepare_low_dsa_priv_key_for_asn1(pk);
                 if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
                     &pki->privateKey) ) break;
 		rv = SEC_QuickDERDecodeItem(permarena, pk,
-					nsslowkey_DSAPrivateKeyTemplate,
+					lg_nsslowkey_DSAPrivateKeyTemplate,
 					&newPrivateKey);
 		if (rv != SECSuccess)
 		    goto loser;
-		prepare_low_pqg_params_for_asn1(&pk->u.dsa.params);
+		lg_prepare_low_pqg_params_for_asn1(&pk->u.dsa.params);
                 if (SECSuccess != SECITEM_CopyItem(permarena, &newAlgParms,
                     &pki->algorithm.parameters) ) break;
 		rv = SEC_QuickDERDecodeItem(permarena, &pk->u.dsa.params,
-					nsslowkey_PQGParamsTemplate,
+					lg_nsslowkey_PQGParamsTemplate,
 					&newAlgParms);
 		break;
 	      case SEC_OID_X942_DIFFIE_HELMAN_KEY:
 		pk->keyType = NSSLOWKEYDHKey;
-		prepare_low_dh_priv_key_for_asn1(pk);
+		lg_prepare_low_dh_priv_key_for_asn1(pk);
                 if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
                     &pki->privateKey) ) break;
 		rv = SEC_QuickDERDecodeItem(permarena, pk,
-					nsslowkey_DHPrivateKeyTemplate,
+					lg_nsslowkey_DHPrivateKeyTemplate,
 					&newPrivateKey);
 		break;
 #ifdef NSS_ENABLE_ECC
 	      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
 		pk->keyType = NSSLOWKEYECKey;
-		prepare_low_ec_priv_key_for_asn1(pk);
+		lg_prepare_low_ec_priv_key_for_asn1(pk);
 
 		fordebug = &pki->privateKey;
 		SEC_PRINT("seckey_decrypt_private_key()", "PrivateKey", 
@@ -1828,12 +1828,12 @@ seckey_decrypt_private_key(SECItem*epki,
                 if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
                     &pki->privateKey) ) break;
 		rv = SEC_QuickDERDecodeItem(permarena, pk,
-					nsslowkey_ECPrivateKeyTemplate,
+					lg_nsslowkey_ECPrivateKeyTemplate,
 					&newPrivateKey);
 		if (rv != SECSuccess)
 		    goto loser;
 
-		prepare_low_ecparams_for_asn1(&pk->u.ec.ecParams);
+		lg_prepare_low_ecparams_for_asn1(&pk->u.ec.ecParams);
 
 		rv = SECITEM_CopyItem(permarena, 
 		    &pk->u.ec.ecParams.DEREncoding, 
@@ -1980,7 +1980,7 @@ nsslowkey_FindKeyNicknameByPublicKey(NSSLOWKEYDBHandle *handle,
 
     pk = seckey_get_private_key(handle, &namekey, &nickname, sdbpw);
     if (pk) {
-	nsslowkey_DestroyPrivateKey(pk);
+	lg_nsslowkey_DestroyPrivateKey(pk);
     }
     
     /* no need to free dbkey, since its on the stack, and the data it

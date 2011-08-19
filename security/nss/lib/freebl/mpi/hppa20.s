@@ -40,7 +40,7 @@
 #else
 ;       .LEVEL   1.1
 ;       .ALLOW   2.0N
-        .LEVEL   2.0N
+        .LEVEL   2.0
 #endif
         .SPACE   $TEXT$,SORT=8
         .SUBSPA  $CODE$,QUAD=0,ALIGN=4,ACCESS=0x2c,CODE_ONLY,SORT=24
@@ -108,17 +108,10 @@ maxpy_little
 maxpy_big
 #endif
         .PROC
-        .CALLINFO FRAME=120,ENTRY_GR=%r4
-        .ENTER
-
-; Of course, real men don't use the sissy "enter" and "leave" commands.
-; They write their own stack manipulation stuff.  Unfortunately,
-; that doesn't generate complete unwind info, whereas "enter" and
-; "leave" (if the documentation is to be believed) do so.  Therefore,
-; we use the sissy commands.  We have verified (by real-man methods)
-; that the above command generates what we want:
-;       STW,MA  %r3,128(%sp)
-;       STW     %r4,-124(%sp)
+        .CALLINFO FRAME=120,ENTRY_GR=4
+        .ENTRY
+        STW,MA  %r3,128(%sp)
+        STW     %r4,-124(%sp)
 
         ADDIB,< -1,%r26,$L0         ; If N = 0, exit immediately.
         FLDD    0(%r25),%fr9        ; fr9 = scalar
@@ -502,12 +495,10 @@ $JOIN5
 ; exit
 
 $L0
-        .LEAVE
-
-; We have verified that the above command generates what we want:
-;       LDW     -124(%sp),%r4
-;       BVE     (%r2)
-;       LDW,MB  -128(%sp),%r3
+        LDW     -124(%sp),%r4
+        BVE     (%r2)
+        .EXIT
+        LDW,MB  -128(%sp),%r3
 
         .PROCEND
 
@@ -529,8 +520,10 @@ add_diag_little
 add_diag_big
 #endif
         .PROC
-        .CALLINFO FRAME=120,ENTRY_GR=%r4
-        .ENTER
+        .CALLINFO FRAME=120,ENTRY_GR=4
+        .ENTRY
+        STW,MA  %r3,128(%sp)
+        STW     %r4,-124(%sp)
 
         ADDIB,< -1,%r26,$Z0         ; If N=0, exit immediately.
         NOP
@@ -747,15 +740,24 @@ $FDIAG1
         STD     %r26,EIGHT(%r24)
 
 $Z0
-        .LEAVE
+        LDW     -124(%sp),%r4
+        BVE     (%r2)
+        .EXIT
+        LDW,MB  -128(%sp),%r3
         .PROCEND
 ;	.ALLOW
 
         .SPACE         $TEXT$
         .SUBSPA        $CODE$
 #ifdef LITTLE_WORDIAN
+#ifdef __GNUC__
+; GNU-as (as of 2.19) does not support LONG_RETURN
+        .EXPORT        maxpy_little,ENTRY,PRIV_LEV=3,ARGW0=GR,ARGW1=GR,ARGW2=GR,ARGW3=GR
+        .EXPORT        add_diag_little,ENTRY,PRIV_LEV=3,ARGW0=GR,ARGW1=GR,ARGW2=GR
+#else
         .EXPORT        maxpy_little,ENTRY,PRIV_LEV=3,ARGW0=GR,ARGW1=GR,ARGW2=GR,ARGW3=GR,LONG_RETURN
         .EXPORT        add_diag_little,ENTRY,PRIV_LEV=3,ARGW0=GR,ARGW1=GR,ARGW2=GR,LONG_RETURN
+#endif
 #else
         .EXPORT        maxpy_big,ENTRY,PRIV_LEV=3,ARGW0=GR,ARGW1=GR,ARGW2=GR,ARGW3=GR,LONG_RETURN
         .EXPORT        add_diag_big,ENTRY,PRIV_LEV=3,ARGW0=GR,ARGW1=GR,ARGW2=GR,LONG_RETURN

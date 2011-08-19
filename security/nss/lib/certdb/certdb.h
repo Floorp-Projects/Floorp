@@ -39,7 +39,7 @@
 
 
 /* common flags for all types of certificates */
-#define CERTDB_VALID_PEER	(1<<0)
+#define CERTDB_TERMINAL_RECORD	(1<<0)
 #define CERTDB_TRUSTED		(1<<1)
 #define CERTDB_SEND_WARN	(1<<2)
 #define CERTDB_VALID_CA		(1<<3)
@@ -50,6 +50,24 @@
 #define CERTDB_INVISIBLE_CA	(1<<8) /* don't show in UI */
 #define CERTDB_GOVT_APPROVED_CA	(1<<9) /* can do strong crypto in export ver */
 
+/* old usage, to keep old programs compiling */
+/* On Windows, Mac, and Linux (and other gcc platforms), we can give compile
+ * time deprecation warnings when applications use the old CERTDB_VALID_PEER
+ * define */
+#if __GNUC__ > 3
+#if (__GNUC__ == 4) && (__GNUC_MINOR__ < 5)
+typedef unsigned int __CERTDB_VALID_PEER __attribute__((deprecated));
+#else
+typedef unsigned int __CERTDB_VALID_PEER __attribute__((deprecated
+    ("CERTDB_VALID_PEER is now CERTDB_TERMINAL_RECORD")));
+#endif
+#define CERTDB_VALID_PEER  ((__CERTDB_VALID_PEER) CERTDB_TERMINAL_RECORD)
+#else
+#ifdef _WIN32
+#pragma deprecated(CERTDB_VALID_PEER)
+#endif
+#define CERTDB_VALID_PEER  CERTDB_TERMINAL_RECORD 
+#endif
 
 SEC_BEGIN_PROTOS
 

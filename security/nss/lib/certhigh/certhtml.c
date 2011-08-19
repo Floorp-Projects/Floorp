@@ -37,7 +37,7 @@
 /*
  * certhtml.c --- convert a cert to html
  *
- * $Id: certhtml.c,v 1.8.66.1 2010/08/28 19:49:28 nelson%bolyard.com Exp $
+ * $Id: certhtml.c,v 1.10 2010/08/28 18:00:28 nelson%bolyard.com Exp $
  */
 
 #include "seccomon.h"

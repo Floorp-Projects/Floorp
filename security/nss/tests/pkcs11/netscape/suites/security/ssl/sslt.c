@@ -1006,7 +1006,7 @@ int Client() {
 
   r = PR_Connect(cl.s, &cl.na, PR_SecondsToInterval(50));
   if (PR_FAILURE == r) {
-    dbmsg((PR_STDERR, "Client: Seclib error: %s\n",SECU_ErrorString ((int16) PR_GetError())));
+    dbmsg((PR_STDERR, "Client: Seclib error: %s\n",SECU_Strerror(PR_GetError())));
     return Error(104);
   }
 
@@ -1015,7 +1015,7 @@ int Client() {
     r = SSL_ForceHandshake(cl.s);
     if (PR_FAILURE == r) {
       dbmsg((PR_STDERR, "Client: Seclib error: %s\n",
-	     SECU_ErrorString ((int16) PR_GetError())));
+	SECU_Strerror(PR_GetError())));
       return Error(105);
     }
   }

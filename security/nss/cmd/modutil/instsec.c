@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <plarena.h>
+#include <prerror.h>
 #include <prio.h>
 #include <prprf.h>
 #include <seccomon.h>
@@ -175,7 +176,7 @@ PR_fgets(char *buf, int size, PRFileDesc *file)
  * m y S E C U _ E r r o r S t r i n g
  *
  */
-const char* mySECU_ErrorString(int16 errnum)
+const char* mySECU_ErrorString(PRErrorCode errnum)
 {
 	return SECU_Strerror(errnum);
 }

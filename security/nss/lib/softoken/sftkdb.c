@@ -1914,17 +1914,15 @@ sftkdb_reconcileTrustEntry(PRArenaPool *arena, CK_ATTRIBUTE *target,
      * trust attribute should be, and neither agree exactly. 
      * At this point, we prefer 'hard' attributes over 'soft' ones. 
      * 'hard' ones are CKT_NSS_TRUSTED, CKT_NSS_TRUSTED_DELEGATOR, and
-     * CKT_NSS_UNTRUTED. Soft ones are ones which don't change the
-     * actual trust of the cert (CKT_MUST_VERIFY, CKT_NSS_VALID,
+     * CKT_NSS_NOT_TRUTED. Soft ones are ones which don't change the
+     * actual trust of the cert (CKT_MUST_VERIFY_TRUST, 
      * CKT_NSS_VALID_DELEGATOR).
      */
-    if ((sourceTrust == CKT_NSS_MUST_VERIFY) 
-	|| (sourceTrust == CKT_NSS_VALID)
+    if ((sourceTrust == CKT_NSS_MUST_VERIFY_TRUST) 
 	|| (sourceTrust == CKT_NSS_VALID_DELEGATOR)) {
 	return SFTKDB_DROP_ATTRIBUTE;
     }
-    if ((targetTrust == CKT_NSS_MUST_VERIFY) 
-	|| (targetTrust == CKT_NSS_VALID)
+    if ((targetTrust == CKT_NSS_MUST_VERIFY_TRUST) 
 	|| (targetTrust == CKT_NSS_VALID_DELEGATOR)) {
 	/* again, overwriting the target in this case is OK */
 	return SFTKDB_MODIFY_OBJECT;
@@ -2424,7 +2422,7 @@ sftk_freeDB(SFTKDBHandle *handle)
     PRInt32 ref;
 
     if (!handle) return;
-    ref = PR_AtomicDecrement(&handle->ref);
+    ref = PR_ATOMIC_DECREMENT(&handle->ref);
     if (ref == 0) {
 	sftkdb_CloseDB(handle);
     }
@@ -2444,7 +2442,7 @@ sftk_getCertDB(SFTKSlot *slot)
     PZ_Lock(slot->slotLock);
     dbHandle = slot->certDB;
     if (dbHandle) {
-        PR_AtomicIncrement(&dbHandle->ref);
+        PR_ATOMIC_INCREMENT(&dbHandle->ref);
     }
     PZ_Unlock(slot->slotLock);
     return dbHandle;
@@ -2462,7 +2460,7 @@ sftk_getKeyDB(SFTKSlot *slot)
     SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
     dbHandle = slot->keyDB;
     if (dbHandle) {
-        PR_AtomicIncrement(&dbHandle->ref);
+        PR_ATOMIC_INCREMENT(&dbHandle->ref);
     }
     SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
     return dbHandle;
@@ -2480,7 +2478,7 @@ sftk_getDBForTokenObject(SFTKSlot *slot, CK_OBJECT_HANDLE objectID)
     PZ_Lock(slot->slotLock);
     dbHandle = objectID & SFTK_KEYDB_TYPE ? slot->keyDB : slot->certDB;
     if (dbHandle) {
-        PR_AtomicIncrement(&dbHandle->ref);
+        PR_ATOMIC_INCREMENT(&dbHandle->ref);
     }
     PZ_Unlock(slot->slotLock);
     return dbHandle;

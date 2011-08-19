@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.142.2.5 2011/01/25 01:49:22 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.151 2011/07/26 02:13:37 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -86,7 +86,8 @@ static SECStatus ssl3_SendServerHello(       sslSocket *ss);
 static SECStatus ssl3_SendServerHelloDone(   sslSocket *ss);
 static SECStatus ssl3_SendServerKeyExchange( sslSocket *ss);
 static SECStatus ssl3_NewHandshakeHashes(    sslSocket *ss);
-static SECStatus ssl3_UpdateHandshakeHashes( sslSocket *ss, unsigned char *b, 
+static SECStatus ssl3_UpdateHandshakeHashes( sslSocket *ss,
+                                             const unsigned char *b,
                                              unsigned int l);
 
 static SECStatus Null_Cipher(void *ctx, unsigned char *output, int *outputLen,
@@ -928,8 +929,7 @@ ssl3_VerifySignedHashes(SSL3Hashes *hash, CERTCertificate *cert,
 
     key = CERT_ExtractPublicKey(cert);
     if (key == NULL) {
-	/* CERT_ExtractPublicKey doesn't set error code */
-	PORT_SetError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
+	ssl_MapLowLevelError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
     	return SECFailure;
     }
 
@@ -3178,7 +3178,8 @@ loser:
 ** Caller must hold the ssl3Handshake lock.
 */
 static SECStatus
-ssl3_UpdateHandshakeHashes(sslSocket *ss, unsigned char *b, unsigned int l)
+ssl3_UpdateHandshakeHashes(sslSocket *ss, const unsigned char *b,
+			   unsigned int l)
 {
     SECStatus  rv = SECSuccess;
 
@@ -4741,7 +4742,7 @@ ssl3_SendClientKeyExchange(sslSocket *ss)
     if (ss->sec.peerKey == NULL) {
 	serverKey = CERT_ExtractPublicKey(ss->sec.peerCert);
 	if (serverKey == NULL) {
-	    PORT_SetError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
+	    ssl_MapLowLevelError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
 	    return SECFailure;
 	}
     } else {
@@ -5671,14 +5672,21 @@ ssl3_RestartHandshakeAfterCertReq(sslSocket *         ss,
 
 PRBool
 ssl3_CanFalseStart(sslSocket *ss) {
-    return ss->opt.enableFalseStart &&
-	   !ss->sec.isServer &&
-	   !ss->ssl3.hs.isResuming &&
-	   ss->ssl3.cwSpec &&
-	   ss->ssl3.cwSpec->cipher_def->secret_key_size >= 10 &&
-	   (ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_rsa ||
-	    ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_dh  ||
-	    ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh);
+    PRBool rv;
+
+    PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
+
+    ssl_GetSpecReadLock(ss);
+    rv = ss->opt.enableFalseStart &&
+	 !ss->sec.isServer &&
+	 !ss->ssl3.hs.isResuming &&
+	 ss->ssl3.cwSpec &&
+	 ss->ssl3.cwSpec->cipher_def->secret_key_size >= 10 &&
+	(ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_rsa ||
+	 ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_dh  ||
+	 ss->ssl3.hs.kea_def->exchKeyType == ssl_kea_ecdh);
+    ssl_ReleaseSpecReadLock(ss);
+    return rv;
 }
 
 /* Called from ssl3_HandleHandshakeMessage() when it has deciphered a complete
@@ -7760,6 +7768,7 @@ static SECStatus
 ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
     ssl3CertNode *   c;
+    ssl3CertNode *   lastCert 	= NULL;
     ssl3CertNode *   certs 	= NULL;
     PRArenaPool *    arena 	= NULL;
     CERTCertificate *cert;
@@ -7887,8 +7896,13 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	if (c->cert->trust)
 	    trusted = PR_TRUE;
 
-	c->next = certs;
-	certs = c;
+	c->next = NULL;
+	if (lastCert) {
+	    lastCert->next = c;
+	} else {
+	    certs = c;
+	}
+	lastCert = c;
     }
 
     if (remaining != 0)

@@ -202,8 +202,5 @@ PROCESS_MAP_FILE = grep -v ';-' $< | \
         sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
 
 ifeq ($(OS_RELEASE),2.4)
-# Softoken 3.13 uses NO_FORK_CHECK only.
-# Softoken 3.12 uses NO_FORK_CHECK and NO_CHECK_FORK.
-# Don't use NO_CHECK_FORK in new code.
-DEFINES += -DNO_FORK_CHECK -DNO_CHECK_FORK
+DEFINES += -DNO_FORK_CHECK
 endif

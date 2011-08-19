@@ -37,7 +37,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.17.2.1 2010/09/27 21:22:20 wtc%google.com Exp $
+ * $Id: ocsp.h,v 1.19 2011/01/15 19:47:11 nelson%bolyard.com Exp $
  */
 
 #ifndef _OCSP_H_
@@ -588,7 +588,7 @@ CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
 
 /*
  * FUNCTION: CERT_GetOCSPStatusForCertID
- *  Returns the OCSP status contained in the passed in paramter response
+ *  Returns the OCSP status contained in the passed in parameter response
  *  that corresponds to the certID passed in.
  * INPUTS:
  *  CERTCertDBHandle *handle

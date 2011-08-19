@@ -59,7 +59,7 @@ static const SEC_ASN1Template nsslowkey_SetOfAttributeTemplate[] = {
     { SEC_ASN1_SET_OF, 0, nsslowkey_AttributeTemplate },
 };
 /* ASN1 Templates for new decoder/encoder */
-const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[] = {
+const SEC_ASN1Template lg_nsslowkey_PrivateKeyInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE,
 	0, NULL, sizeof(NSSLOWKEYPrivateKeyInfo) },
     { SEC_ASN1_INTEGER,
@@ -75,7 +75,7 @@ const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[] = {
     { 0 }
 };
 
-const SEC_ASN1Template nsslowkey_PQGParamsTemplate[] = {
+const SEC_ASN1Template lg_nsslowkey_PQGParamsTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(PQGParams) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams,prime) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams,subPrime) },
@@ -83,7 +83,7 @@ const SEC_ASN1Template nsslowkey_PQGParamsTemplate[] = {
     { 0, }
 };
 
-const SEC_ASN1Template nsslowkey_RSAPrivateKeyTemplate[] = {
+const SEC_ASN1Template lg_nsslowkey_RSAPrivateKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPrivateKey) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.version) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.rsa.modulus) },
@@ -98,18 +98,14 @@ const SEC_ASN1Template nsslowkey_RSAPrivateKeyTemplate[] = {
 };                                                                            
 
 
-const SEC_ASN1Template nsslowkey_DSAPrivateKeyTemplate[] = {
+const SEC_ASN1Template lg_nsslowkey_DSAPrivateKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPrivateKey) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dsa.publicValue) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dsa.privateValue) },
     { 0, }
 };
 
-const SEC_ASN1Template nsslowkey_DSAPrivateKeyExportTemplate[] = {
-    { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dsa.privateValue) },
-};
-
-const SEC_ASN1Template nsslowkey_DHPrivateKeyTemplate[] = {
+const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPrivateKey) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dh.publicValue) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dh.privateValue) },
@@ -124,9 +120,9 @@ const SEC_ASN1Template nsslowkey_DHPrivateKeyTemplate[] = {
  * generic curves and need full-blown support for parsing EC
  * parameters. For now, we only support named curves in which
  * EC params are simply encoded as an object ID and we don't
- * use nsslowkey_ECParamsTemplate.
+ * use lg_nsslowkey_ECParamsTemplate.
  */
-const SEC_ASN1Template nsslowkey_ECParamsTemplate[] = {
+const SEC_ASN1Template lg_nsslowkey_ECParamsTemplate[] = {
     { SEC_ASN1_CHOICE, offsetof(ECParams,type), NULL, sizeof(ECParams) },
     { SEC_ASN1_OBJECT_ID, offsetof(ECParams,curveOID), NULL, ec_params_named },
     { 0, }
@@ -138,7 +134,7 @@ const SEC_ASN1Template nsslowkey_ECParamsTemplate[] = {
  * in the PrivateKeyAlgorithmIdentifier field of the PrivateKeyInfo
  * instead.
  */
-const SEC_ASN1Template nsslowkey_ECPrivateKeyTemplate[] = {
+const SEC_ASN1Template lg_nsslowkey_ECPrivateKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPrivateKey) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.ec.version) },
     { SEC_ASN1_OCTET_STRING, 
@@ -146,7 +142,7 @@ const SEC_ASN1Template nsslowkey_ECPrivateKeyTemplate[] = {
     /* XXX The following template works for now since we only
      * support named curves for which the parameters are
      * encoded as an object ID. When we support generic curves,
-     * we'll need to define nsslowkey_ECParamsTemplate
+     * we'll need to define lg_nsslowkey_ECParamsTemplate
      */
 #if 1
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED |
@@ -157,7 +153,7 @@ const SEC_ASN1Template nsslowkey_ECPrivateKeyTemplate[] = {
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED |
       SEC_ASN1_EXPLICIT | SEC_ASN1_CONTEXT_SPECIFIC | 0, 
       offsetof(NSSLOWKEYPrivateKey,u.ec.ecParams), 
-      nsslowkey_ECParamsTemplate }, 
+      lg_nsslowkey_ECParamsTemplate }, 
 #endif
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED |
       SEC_ASN1_EXPLICIT | SEC_ASN1_CONTEXT_SPECIFIC |
@@ -246,7 +242,7 @@ loser:
  */
 
 void
-prepare_low_rsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
+lg_prepare_low_rsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 {
     key->u.rsa.modulus.type = siUnsignedInteger;
     key->u.rsa.publicExponent.type = siUnsignedInteger;
@@ -259,7 +255,7 @@ prepare_low_rsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 }
 
 void
-prepare_low_pqg_params_for_asn1(PQGParams *params)
+lg_prepare_low_pqg_params_for_asn1(PQGParams *params)
 {
     params->prime.type = siUnsignedInteger;
     params->subPrime.type = siUnsignedInteger;
@@ -267,7 +263,7 @@ prepare_low_pqg_params_for_asn1(PQGParams *params)
 }
 
 void
-prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
+lg_prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 {
     key->u.dsa.publicValue.type = siUnsignedInteger;
     key->u.dsa.privateValue.type = siUnsignedInteger;
@@ -277,13 +273,7 @@ prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 }
 
 void
-prepare_low_dsa_priv_key_export_for_asn1(NSSLOWKEYPrivateKey *key)
-{
-    key->u.dsa.privateValue.type = siUnsignedInteger;
-}
-
-void
-prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
+lg_prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 {
     key->u.dh.prime.type = siUnsignedInteger;
     key->u.dh.base.type = siUnsignedInteger;
@@ -293,14 +283,14 @@ prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 
 #ifdef NSS_ENABLE_ECC
 void
-prepare_low_ecparams_for_asn1(ECParams *params)
+lg_prepare_low_ecparams_for_asn1(ECParams *params)
 {
     params->DEREncoding.type = siUnsignedInteger;
     params->curveOID.type = siUnsignedInteger;
 }
 
 void
-prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
+lg_prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 {
     key->u.ec.version.type = siUnsignedInteger;
     key->u.ec.ecParams.DEREncoding.type = siUnsignedInteger;
@@ -311,7 +301,7 @@ prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
 #endif /* NSS_ENABLE_ECC */
 
 void
-nsslowkey_DestroyPrivateKey(NSSLOWKEYPrivateKey *privk)
+lg_nsslowkey_DestroyPrivateKey(NSSLOWKEYPrivateKey *privk)
 {
     if (privk && privk->arena) {
 	PORT_FreeArena(privk->arena, PR_TRUE);
@@ -319,48 +309,15 @@ nsslowkey_DestroyPrivateKey(NSSLOWKEYPrivateKey *privk)
 }
 
 void
-nsslowkey_DestroyPublicKey(NSSLOWKEYPublicKey *pubk)
+lg_nsslowkey_DestroyPublicKey(NSSLOWKEYPublicKey *pubk)
 {
     if (pubk && pubk->arena) {
 	PORT_FreeArena(pubk->arena, PR_FALSE);
     }
 }
-unsigned
-nsslowkey_PublicModulusLen(NSSLOWKEYPublicKey *pubk)
-{
-    unsigned char b0;
-
-    /* interpret modulus length as key strength... in
-     * fortezza that's the public key length */
-
-    switch (pubk->keyType) {
-    case NSSLOWKEYRSAKey:
-    	b0 = pubk->u.rsa.modulus.data[0];
-    	return b0 ? pubk->u.rsa.modulus.len : pubk->u.rsa.modulus.len - 1;
-    default:
-	break;
-    }
-    return 0;
-}
-
-unsigned
-nsslowkey_PrivateModulusLen(NSSLOWKEYPrivateKey *privk)
-{
-
-    unsigned char b0;
-
-    switch (privk->keyType) {
-    case NSSLOWKEYRSAKey:
-	b0 = privk->u.rsa.modulus.data[0];
-	return b0 ? privk->u.rsa.modulus.len : privk->u.rsa.modulus.len - 1;
-    default:
-	break;
-    }
-    return 0;
-}
 
 NSSLOWKEYPublicKey *
-nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
+lg_nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
 {
     NSSLOWKEYPublicKey *pubk;
     PLArenaPool *arena;

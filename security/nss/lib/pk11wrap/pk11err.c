@@ -40,6 +40,10 @@
  *  operations). If any of these errors need more detail in the upper layers
  *  which call PK11 library functions, we can add more SEC_ERROR_XXX functions
  *  and change there mappings here.
+ *
+ *  Some PKCS11 errors are mapped to SEC_ERROR_LIBRARY_FAILURE intentionally
+ *  because they indicate that there is a bug in the library (either NSS or
+ *  the token).
  */
 #include "pkcs11t.h"
 #include "pk11func.h"
@@ -147,7 +151,7 @@ PK11_MapError(CK_RV rv) {
 	    return pk11_error_map[i].sec_error;
 	}
     }
-    return SEC_ERROR_IO;
+    return SEC_ERROR_UNKNOWN_PKCS11_ERROR;
  }
 
 
@@ -156,7 +160,7 @@ PK11_MapError(CK_RV rv) {
     default:
 	break;
     }
-    return SEC_ERROR_IO;
+    return SEC_ERROR_UNKNOWN_PKCS11_ERROR;
 }
 
 

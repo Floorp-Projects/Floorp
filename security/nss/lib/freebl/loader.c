@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.44.22.2 2010/12/04 18:59:01 rrelyea%redhat.com Exp $ */
+/* $Id: loader.c,v 1.53 2011/01/15 19:54:49 nelson%bolyard.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -122,7 +122,7 @@ getLibName(void)
     long cpu = sysconf(_SC_CPU_VERSION);
     return (cpu == CPU_PA_RISC2_0) 
 		? "libfreebl_32fpu_3.sl"
-	        : "libfreebl_32int32_3.sl" ;
+	        : "libfreebl_32int_3.sl" ;
 }
 #else
 /* default case, for platforms/ABIs that have only one freebl shared lib. */
@@ -1261,13 +1261,14 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 
 /*
  * The Caller is expected to pass NULL as the name, which will
- * trigger the p_BLAPI_VerifySelf() to return 'TRUE'. If we really loaded
- * from a shared library, BLAPI_VerifySelf will get pick up the real name
- * from the static set in freebl_LoadDSO( void ) 
+ * trigger the p_BLAPI_VerifySelf() to return 'TRUE'. Pass the real
+ * name of the shared library we loaded (the static libraryName set
+ * in freebl_LoadDSO) to p_BLAPI_VerifySelf.
  */
 PRBool
 BLAPI_VerifySelf(const char *name)
 {
+  PORT_Assert(!name);
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return PR_FALSE;
   return vector->p_BLAPI_VerifySelf(libraryName);
@@ -1712,6 +1713,7 @@ RSA_PopulatePrivateKey(RSAPrivateKey *key)
     return (vector->p_RSA_PopulatePrivateKey)(key);
 }
 
+
 SECStatus
 JPAKE_Sign(PLArenaPool * arena, const PQGParams * pqg, HASH_HashType hashType,
            const SECItem * signerID, const SECItem * x,
@@ -1754,4 +1756,128 @@ JPAKE_Final(PLArenaPool * arena, const SECItem * p, const SECItem  *q,
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
         return SECFailure;
     return (vector->p_JPAKE_Final)(arena, p, q, x2, gx4, x2s, B, K);
+}
+
+SECStatus
+MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
+     const unsigned char *mgfSeed, unsigned int mgfSeedLen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+	return SECFailure;
+    return (vector->p_MGF1)(hashAlg, mask, maskLen, mgfSeed, mgfSeedLen);
+}
+
+SECStatus 
+TLS_P_hash(HASH_HashType hashAlg, const SECItem *secret, const char *label,
+           SECItem *seed, SECItem *result, PRBool isFIPS)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_TLS_P_hash)(hashAlg, secret, label, seed, result, isFIPS);
+}
+
+SECStatus 
+SHA224_Hash(unsigned char *dest, const char *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA224_Hash)(dest, src);
+}
+
+SECStatus
+SHA224_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA224_HashBuf)(dest, src, src_length);
+}
+
+SHA224Context *
+SHA224_NewContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA224_NewContext)();
+}
+
+void
+SHA224_DestroyContext(SHA224Context *cx, PRBool freeit)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA224_DestroyContext)(cx, freeit);
+}
+
+void
+SHA224_Begin(SHA256Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA224_Begin)(cx);
+}
+
+void
+SHA224_Update(SHA224Context *cx, const unsigned char *input,
+			unsigned int inputLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA224_Update)(cx, input, inputLen);
+}
+
+void
+SHA224_End(SHA224Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA224_End)(cx, digest, digestLen, maxDigestLen);
+}
+
+void
+SHA224_TraceState(SHA224Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA224_TraceState)(cx);
+}
+
+unsigned int
+SHA224_FlattenSize(SHA224Context *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return 0;
+  return (vector->p_SHA224_FlattenSize)(cx);
+}
+
+SECStatus
+SHA224_Flatten(SHA224Context *cx,unsigned char *space)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_SHA224_Flatten)(cx, space);
+}
+
+SHA224Context *
+SHA224_Resurrect(unsigned char *space, void *arg)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SHA224_Resurrect)(space, arg);
+}
+
+void 
+SHA224_Clone(SHA224Context *dest, SHA224Context *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA224_Clone)(dest, src);
+}
+
+PRBool
+BLAPI_SHVerifyFile(const char *name)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return PR_FALSE;
+  return vector->p_BLAPI_SHVerifyFile(name);
 }

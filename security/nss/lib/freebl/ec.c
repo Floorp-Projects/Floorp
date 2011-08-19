@@ -248,6 +248,7 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
 #if EC_DEBUG
     printf("ec_NewKey called\n");
 #endif
+    MP_DIGITS(&k) = 0;
 
     if (!ecParams || !privKey || !privKeyBytes || (privKeyLen < 0)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -316,7 +317,6 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
     }
 
     /* Compute corresponding public key */
-    MP_DIGITS(&k) = 0;
     CHECK_MPI_OK( mp_init(&k) );
     CHECK_MPI_OK( mp_read_unsigned_octets(&k, key->privateValue.data, 
 	(mp_size) len) );
@@ -578,12 +578,12 @@ ECDH_Derive(SECItem  *publicValue,
 	return SECFailure;
     }
 
+    MP_DIGITS(&k) = 0;
     memset(derivedSecret, 0, sizeof *derivedSecret);
     len = (ecParams->fieldID.size + 7) >> 3;  
     pointQ.len = 2*len + 1;
     if ((pointQ.data = PORT_Alloc(2*len + 1)) == NULL) goto cleanup;
 
-    MP_DIGITS(&k) = 0;
     CHECK_MPI_OK( mp_init(&k) );
     CHECK_MPI_OK( mp_read_unsigned_octets(&k, privateValue->data, 
 	                                  (mp_size) privateValue->len) );
@@ -655,6 +655,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     SECItem kGpoint = { siBuffer, NULL, 0};
     int flen = 0;    /* length in bytes of the field size */
     unsigned olen;   /* length in bytes of the base point order */
+    unsigned obits;  /* length in bits  of the base point order */
 
 #if EC_DEBUG
     char mpstr[256];
@@ -697,6 +698,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
 
     SECITEM_TO_MPINT( ecParams->order, &n );
     SECITEM_TO_MPINT( key->privateValue, &d );
+
     CHECK_MPI_OK( mp_read_unsigned_octets(&k, kb, kblen) );
     /* Make sure k is in the interval [1, n-1] */
     if ((mp_cmp_z(&k) <= 0) || (mp_cmp(&k, &n) >= 0)) {
@@ -758,8 +760,9 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     /* In the definition of EC signing, digests are truncated
      * to the length of n in bits. 
      * (see SEC 1 "Elliptic Curve Digit Signature Algorithm" section 4.1.*/
-    if (digest->len*8 > ecParams->fieldID.size) {
-	mpl_rsh(&s,&s,digest->len*8 - ecParams->fieldID.size);
+    CHECK_MPI_OK( (obits = mpl_significant_bits(&n)) );
+    if (digest->len*8 > obits) {
+	mpl_rsh(&s,&s,digest->len*8 - obits);
     }
 
 #if EC_DEBUG
@@ -898,6 +901,7 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     int slen;       /* length in bytes of a half signature (r or s) */
     int flen;       /* length in bytes of the field size */
     unsigned olen;  /* length in bytes of the base point order */
+    unsigned obits; /* length in bits  of the base point order */
 
 #if EC_DEBUG
     char mpstr[256];
@@ -979,8 +983,9 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     /* In the definition of EC signing, digests are truncated
      * to the length of n in bits. 
      * (see SEC 1 "Elliptic Curve Digit Signature Algorithm" section 4.1.*/
-    if (digest->len*8 > ecParams->fieldID.size) {  /* u1 = HASH(M')     */
-	mpl_rsh(&u1,&u1,digest->len*8- ecParams->fieldID.size);
+    CHECK_MPI_OK( (obits = mpl_significant_bits(&n)) );
+    if (digest->len*8 > obits) {  /* u1 = HASH(M')     */
+	mpl_rsh(&u1,&u1,digest->len*8 - obits);
     }
 
 #if EC_DEBUG

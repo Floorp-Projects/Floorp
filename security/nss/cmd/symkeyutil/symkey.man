@@ -27,7 +27,7 @@ DESCRIPTION
     Exceptions to these catagories are listed first:
 
     -H    takes no additional options. It lists a more detailed help message.
-    -L    takes the standard set of options. It lists all the keys in a the 
+    -L    takes the standard set of options. It lists all the keys in the 
           specified token (NSS Internal DB Token is the default).  Only the 
           -L option accepts the all option for tokens to list all the fixed 
           keys.

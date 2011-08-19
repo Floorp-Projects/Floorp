@@ -254,3 +254,13 @@ PORT_RegExpSearch;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.13 {    # NSS 3.13 release
+;+    global:
+NSSUTIL_GetVersion;
+NSS_InitializePRErrorTable;
+NSS_Strerror;
+NSS_StrerrorTS;
+NSS_Perror;
+;+    local:
+;+       *;
+;+};
