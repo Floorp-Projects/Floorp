@@ -477,6 +477,24 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void imull(Imm32 imm, const Register &dest) {
+        masm.imull_i32r(dest.code(), imm.value, dest.code());
+    }
+    void imull(const Register &src, const Register &dest) {
+        masm.imull_rr(src.code(), dest.code());
+    }
+    void imull(const Operand &src, const Register &dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.imull_rr(src.reg(), dest.code());
+            break;
+          case Operand::REG_DISP:
+            masm.imull_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void notl(const Operand &src) {
         switch (src.kind()) {
           case Operand::REG:

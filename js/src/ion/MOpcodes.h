@@ -59,6 +59,7 @@ namespace ion {
     _(BitOr)                                                                \
     _(BitXor)                                                               \
     _(Add)                                                                  \
+    _(Mul)                                                                  \
     _(Return)                                                               \
     _(Copy)                                                                 \
     _(Box)                                                                  \

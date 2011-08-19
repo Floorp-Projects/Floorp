@@ -1123,6 +1123,25 @@ class MAdd : public MBinaryArithInstruction
     }
 };
 
+class MMul : public MBinaryArithInstruction
+{
+    MMul(MDefinition *left, MDefinition *right)
+      : MBinaryArithInstruction(left, right)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Mul);
+    static MMul *New(MDefinition *left, MDefinition *right) {
+        return new MMul(left, right);
+    }
+
+    double getIdentity() {
+        return 1;
+    }
+};
+
 class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;

@@ -283,6 +283,31 @@ LIRGenerator::visitAdd(MAdd *ins)
 }
 
 bool
+LIRGenerator::visitMul(MMul *ins)
+{
+    MDefinition *lhs = ins->getOperand(0);
+    MDefinition *rhs = ins->getOperand(1);
+
+    JS_ASSERT(lhs->type() == rhs->type());
+
+    if (ins->specialization() == MIRType_Int32) {
+        JS_ASSERT(lhs->type() == MIRType_Int32);
+        ReorderCommutative(&lhs, &rhs);
+        LMulI *lir = new LMulI;
+        if (!assignSnapshot(lir))
+            return false;
+        return lowerForALU(lir, ins, lhs, rhs);
+    }
+    if (ins->specialization() == MIRType_Double) {
+        JS_ASSERT(lhs->type() == MIRType_Double);
+        return lowerForFPU(new LMathD(JSOP_MUL), ins, lhs, rhs);
+    }
+
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
 LIRGenerator::visitStart(MStart *start)
 {
     // This is a no-op.
