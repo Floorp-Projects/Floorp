@@ -364,6 +364,13 @@ class LAddI : public LInstructionHelper<1, 2, 0>
     LIR_HEADER(AddI);
 };
 
+// Adds two integers, returning an integer value.
+class LMulI : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(MulI);
+};
+
 // Performs an add, sub, mul, or div on two double values.
 class LMathD : public LInstructionHelper<1, 2, 0>
 {

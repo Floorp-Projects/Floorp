@@ -367,6 +367,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_bitop(op);
 
       case JSOP_ADD:
+      case JSOP_MUL:
       	return jsop_binary(op);
 
       case JSOP_LOCALINC:
@@ -1540,6 +1541,10 @@ IonBuilder::jsop_binary(JSOp op)
     switch (op) {
       case JSOP_ADD:
         ins = MAdd::New(left, right);
+        break;
+
+      case JSOP_MUL:
+        ins = MMul::New(left, right);
         break;
 
       default:
