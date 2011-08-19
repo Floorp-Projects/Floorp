@@ -4886,11 +4886,10 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             } else {
                 JS_ASSERT(pnid->pn_type == TOK_NAME ||
                           pnid->pn_type == TOK_STRING);
+                JS_ASSERT(pnid->pn_atom != cx->runtime->atomState.protoAtom);
                 jsid id = ATOM_TO_JSID(pnid->pn_atom);
-                if ((pnid->pn_atom == cx->runtime->atomState.protoAtom)
-                    ? !js_SetPropertyHelper(cx, obj, id, 0, &value, strictChecks)
-                    : !DefineNativeProperty(cx, obj, id, value, NULL, NULL,
-                                            JSPROP_ENUMERATE, 0, 0)) {
+                if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
+                                          JSPROP_ENUMERATE, 0, 0)) {
                     return false;
                 }
             }
