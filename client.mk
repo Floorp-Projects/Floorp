@@ -212,6 +212,7 @@ profiledbuild::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1
 	$(MAKE) -C $(PGO_OBJDIR) package
 	OBJDIR=${PGO_OBJDIR} JARLOG_DIR=${PGO_OBJDIR}/jarlog/en-US $(PROFILE_GEN_SCRIPT)
+	$(MAKE) -f $(TOPSRCDIR)/client.mk maybe_clobber_profiledbuild
 	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1
 
 #####################################################
@@ -253,7 +254,7 @@ endif
 # loop through them.
 
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_BUILD_PROJECTS),,1))
-configure depend realbuild install export libs clean realclean distclean alldep preflight postflight upload sdk::
+configure depend realbuild install export libs clean realclean distclean alldep preflight postflight maybe_clobber_profiledbuild upload sdk::
 	set -e; \
 	for app in $(MOZ_BUILD_PROJECTS); do \
 	  $(MAKE) -f $(TOPSRCDIR)/client.mk $@ MOZ_CURRENT_PROJECT=$$app; \
@@ -353,7 +354,7 @@ realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Other targets
 
 # Pass these target onto the real build system
-install export libs clean realclean distclean alldep upload sdk:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
+install export libs clean realclean distclean alldep maybe_clobber_profiledbuild upload sdk:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@
 
 ####################################
@@ -412,4 +413,4 @@ echo-variable-%:
 # in parallel.
 .NOTPARALLEL:
 
-.PHONY: checkout real_checkout depend realbuild build profiledbuild export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all upload sdk
+.PHONY: checkout real_checkout depend realbuild build profiledbuild maybe_clobber_profiledbuild export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all upload sdk
