@@ -118,8 +118,15 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] nsIContent getOwnerContent();
 };
 
-[scriptable, uuid(ed6522fd-ffb6-4920-b50d-cf629309616b)]
-interface nsIChromeFrameMessageManager : nsIFrameMessageManager
+[scriptable, uuid(6331bbca-2c9f-4766-b3c7-ae75554bf1ec)]
+interface nsITreeItemFrameMessageManager : nsIFrameMessageManager
+{
+  readonly attribute unsigned long childCount;
+  nsITreeItemFrameMessageManager getChildAt(in unsigned long aIndex);
+};
+
+[scriptable, uuid(23e6ef7b-8cc5-4e8b-9391-453440a3b858)]
+interface nsIChromeFrameMessageManager : nsITreeItemFrameMessageManager
 {
   /*
    * Load a script in the (remote) frame. aURL must be the absolute URL.
