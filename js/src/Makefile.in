@@ -185,12 +185,12 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
-		vm/Debugger.cpp \
-		vm/GlobalObject.cpp \
-		vm/Stack.cpp \
-		vm/String.cpp \
-		frontend/ParseMaps.cpp \
-		vm/Unicode.cpp \
+		Debugger.cpp \
+		GlobalObject.cpp \
+		Stack.cpp \
+		String.cpp \
+		ParseMaps.cpp \
+		Unicode.cpp \
 		$(NULL)
 
 # Changes to internal header files, used externally, massively slow down
@@ -266,71 +266,80 @@ INSTALLED_HEADERS = \
 ######################################################
 # BEGIN include sources for the engine subdirectories
 #
+VPATH		+= \
+		$(srcdir)/vm \
+		$(srcdir)/frontend \
+		$(NULL)
 
 EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
-  vm/ArgumentsObject.h \
-  vm/GlobalObject.h \
-  vm/Stack.h \
-  vm/String.h \
-  vm/StringObject.h \
-  vm/Unicode.h  \
-  $(NULL)
+		ArgumentsObject.h \
+		GlobalObject.h \
+		Stack.h \
+		String.h \
+		StringObject.h \
+		Unicode.h  \
+		$(NULL)
 
 ###############################################
 # BEGIN include sources for low-level code shared with Gecko
 #
-MFBT_DIR = $(srcdir)/../../mfbt
+VPATH		+= \
+		$(srcdir)/../../mfbt \
+		$(NULL)
 
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
-  $(MFBT_DIR)/RangedPtr.h \
-  $(MFBT_DIR)/RefPtr.h \
-  $(MFBT_DIR)/Types.h \
-  $(MFBT_DIR)/Util.h \
-  $(NULL)
+		RangedPtr.h \
+		RefPtr.h	\
+		Types.h		\
+		Util.h          \
+		$(NULL)
 
 ifdef ENABLE_TRACEJIT
+VPATH		+= \
+		$(srcdir)/tracejit \
+		$(srcdir)/nanojit \
 
 INSTALLED_HEADERS += \
-  jsbuiltins.h \
-  nanojit/Assembler.h \
-  nanojit/Allocator.h \
-  nanojit/CodeAlloc.h \
-  nanojit/Containers.h \
-  nanojit/LIR.h \
-  nanojit/LIRopcode.tbl \
-  nanojit/avmplus.h \
-  nanojit/Fragmento.h \
-  nanojit/Native.h \
-  nanojit/NativeCommon.h \
-  nanojit/Native$(NANOJIT_ARCH).h \
-  nanojit/njconfig.h \
-  nanojit/njcpudetect.h \
-  nanojit/RegAlloc.h \
-  nanojit/nanojit.h \
-  nanojit/VMPI.h \
-  tracejit/Writer.h \
-  $(NULL)
+		jsbuiltins.h    \
+		Assembler.h     \
+		Allocator.h     \
+		CodeAlloc.h     \
+		Containers.h    \
+		LIR.h		\
+		LIRopcode.tbl \
+		avmplus.h	\
+		Fragmento.h	\
+		Native.h	\
+		NativeCommon.h	\
+		Native$(NANOJIT_ARCH).h \
+		njconfig.h      \
+		njcpudetect.h   \
+		RegAlloc.h	\
+		nanojit.h	\
+		VMPI.h		\
+		Writer.h	\
+		$(NULL)
 
 CPPSRCS += \
-  jstracer.cpp \
-  nanojit/Assembler.cpp  \
-  nanojit/Allocator.cpp  \
-  nanojit/CodeAlloc.cpp  \
-  nanojit/Containers.cpp \
-  nanojit/Fragmento.cpp  \
-  nanojit/LIR.cpp        \
-  nanojit/njconfig.cpp   \
-  nanojit/RegAlloc.cpp   \
-  nanojit/avmplus.cpp    \
-  nanojit/Native$(NANOJIT_ARCH).cpp \
-  jsbuiltins.cpp \
-  nanojit/VMPI.cpp \
-  tracejit/Writer.cpp \
-  $(NULL)
+		jstracer.cpp \
+		Assembler.cpp  \
+		Allocator.cpp  \
+		CodeAlloc.cpp  \
+		Containers.cpp \
+		Fragmento.cpp  \
+		LIR.cpp        \
+		njconfig.cpp   \
+		RegAlloc.cpp   \
+		avmplus.cpp    \
+		Native$(NANOJIT_ARCH).cpp \
+		jsbuiltins.cpp \
+		VMPI.cpp       \
+		Writer.cpp     \
+		$(NULL)
 
 endif # ENABLE_TRACEJIT
 ifdef ENABLE_METHODJIT
@@ -338,41 +347,41 @@ ifdef ENABLE_METHODJIT
 ###############################################
 # BEGIN include sources for the method JIT
 #
+VPATH += 	$(srcdir)/methodjit
 
-CPPSRCS += \
-  methodjit/MethodJIT.cpp \
-  methodjit/StubCalls.cpp \
-  methodjit/Compiler.cpp \
-  methodjit/FrameState.cpp \
-  methodjit/FastArithmetic.cpp \
-  methodjit/FastOps.cpp \
-  methodjit/StubCompiler.cpp \
-  methodjit/MonoIC.cpp \
-  methodjit/PolyIC.cpp \
-  methodjit/ImmutableSync.cpp \
-  methodjit/InvokeHelpers.cpp \
-  methodjit/Retcon.cpp \
-  methodjit/TrampolineCompiler.cpp \
-  $(NULL)
+CPPSRCS += 	MethodJIT.cpp \
+		StubCalls.cpp \
+		Compiler.cpp \
+		FrameState.cpp \
+		FastArithmetic.cpp \
+		FastOps.cpp \
+		StubCompiler.cpp \
+		MonoIC.cpp \
+		PolyIC.cpp \
+		ImmutableSync.cpp \
+		InvokeHelpers.cpp \
+		Retcon.cpp \
+		TrampolineCompiler.cpp \
+		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
-ASFILES +=	methodjit/TrampolineMasmX64.asm
+ASFILES +=	TrampolineMasmX64.asm
 endif
 ifeq ($(OS_ARCH),WINNT)
 ifdef GNU_CC
-ASFILES +=	methodjit/TrampolineMingwX64.s
+ASFILES +=	TrampolineMingwX64.s
 endif
 endif
 ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	methodjit/TrampolineSUNWX64.s
+ASFILES +=	TrampolineSUNWX64.s
 endif
 #CPPSRCS		+= only_on_x86_64.cpp
 else
 #CPPSRCS		+= only_on_x86.cpp
 ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	methodjit/TrampolineSUNWX86.s
+ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
 endif
@@ -380,7 +389,7 @@ ifeq (arm, $(TARGET_CPU))
 #CPPSRCS		+= only_on_arm.cpp
 endif
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
-ASFILES +=	methodjit/TrampolineSparc.s
+ASFILES +=	TrampolineSparc.s
 endif
 #
 # END enclude sources for the method JIT
@@ -391,16 +400,17 @@ endif
 ###############################################
 # BEGIN include sources for V8 dtoa
 #
+VPATH += 	$(srcdir)/v8-dtoa \
+		$(NONE)
 
-CPPSRCS += \
-  v8-dtoa/checks.cc \
-  v8-dtoa/conversions.cc \
-  v8-dtoa/diy-fp.cc \
-  v8-dtoa/v8-dtoa.cc \
-  v8-dtoa/fast-dtoa.cc \
-  v8-dtoa/platform.cc \
-  v8-dtoa/utils.cc \
-  $(NULL)
+CPPSRCS += 	checks.cc \
+		conversions.cc \
+		diy-fp.cc \
+		v8-dtoa.cc \
+		fast-dtoa.cc \
+		platform.cc \
+		utils.cc \
+		$(NONE)
 
 #
 # END enclude sources for V8 dtoa
