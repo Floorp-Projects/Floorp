@@ -458,6 +458,23 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     type = JOF_TYPE(cs->format);
     switch (type) {
       case JOF_BYTE:
+          // Scan the trynotes to find the associated catch block
+          // and make the try opcode look like a jump instruction
+          // with an offset. This simplifies code coverage analysis
+          // based on this disassembled output.
+          if (op == JSOP_TRY) {
+              JSTryNoteArray *trynotes = script->trynotes();
+              uint32 i;
+              for(i = 0; i < trynotes->length; i++) {
+                  JSTryNote note = trynotes->vector[i];
+                  if (note.kind == JSTRY_CATCH && note.start == loc + 1) {
+                      Sprint(sp, " %u (%+d)",
+                             (unsigned int) (loc+note.length+1),
+                             (int) (note.length+1));
+                      break;
+                  }
+              }
+          }
         break;
 
       case JOF_JUMP:
