@@ -53,6 +53,7 @@
 #include "InlineList.h"
 #include "MOpcodes.h"
 #include "FixedArityList.h"
+#include "IonMacroAssembler.h"
 
 namespace js {
 namespace ion {
@@ -829,13 +830,13 @@ class MCompare
   : public MBinaryInstruction,
     public ComparePolicy
 {
-    JSOp jsop_;
+    AssemblerX86Shared::Condition cond_;
 
     MCompare(MDefinition *left, MDefinition *right, JSOp op)
-      : MBinaryInstruction(left, right),
-        jsop_(op)
+      : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Boolean);
+        setCondition(op);
     }
 
   public:
@@ -847,9 +848,12 @@ class MCompare
         return specialization_;
     }
 
-    JSOp jsop() const {
-        return jsop_;
+    AssemblerX86Shared::Condition condition() {
+        return cond_;
     }
+
+  private:
+    void setCondition(JSOp op);
 };
 
 // Wraps an SSA name in a new SSA name. This is used for correctness while

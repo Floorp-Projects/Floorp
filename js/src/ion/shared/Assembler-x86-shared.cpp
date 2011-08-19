@@ -87,3 +87,20 @@ AssemblerX86Shared::processCodeLabels(IonCode *code)
     }
 }
 
+AssemblerX86Shared::Condition
+AssemblerX86Shared::inverseCondition(Condition cond)
+{
+    switch (cond) {
+      case LessThan:
+        return GreaterThanOrEqual;
+      case LessThanOrEqual:
+        return GreaterThan;
+      case GreaterThan:
+        return LessThanOrEqual;
+      case GreaterThanOrEqual:
+        return LessThan;
+      default:
+        JS_NOT_REACHED("Comparisons other than LT, LE, GT, GE not yet supported");
+        return Equal;
+    }
+}
