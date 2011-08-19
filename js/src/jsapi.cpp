@@ -343,7 +343,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             if (!obj)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(obj);
-            *va_arg(ap, JSFunction **) = GET_FUNCTION_PRIVATE(cx, obj);
+            *va_arg(ap, JSFunction **) = obj->getFunctionPrivate();
             break;
           case 'v':
             *va_arg(ap, jsval *) = *sp;
@@ -2270,10 +2270,10 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
             JSObject  *obj = (JSObject *)thing;
             Class *clasp = obj->getClass();
             if (clasp == &js_FunctionClass) {
-                JSFunction *fun = GET_FUNCTION_PRIVATE(trc->context, obj);
+                JSFunction *fun = obj->getFunctionPrivate();
                 if (!fun) {
                     JS_snprintf(buf, bufsize, "<newborn>");
-                } else if (FUN_OBJECT(fun) != obj) {
+                } else if (fun != obj) {
                     JS_snprintf(buf, bufsize, "%p", fun);
                 } else {
                     if (fun->atom)
@@ -4208,8 +4208,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         return NULL;
     }
 
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    if (!FUN_FLAT_CLOSURE(fun))
+    JSFunction *fun = funobj->getFunctionPrivate();
+    if (!fun->isFlatClosure())
         return CloneFunctionObject(cx, fun, parent);
 
     /*
@@ -4254,7 +4254,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun)
 {
-    return FUN_OBJECT(fun);
+    return fun;
 }
 
 JS_PUBLIC_API(JSString *)
@@ -4357,7 +4357,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
              * as fun->object lives.
              */
             Value priv = PrivateValue(fs);
-            if (!js_SetReservedSlot(cx, FUN_OBJECT(fun), 0, priv))
+            if (!js_SetReservedSlot(cx, fun, 0, priv))
                 return JS_FALSE;
         }
 
@@ -4712,24 +4712,21 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         funAtom = js_Atomize(cx, name, strlen(name));
         if (!funAtom) {
             fun = NULL;
-            goto out2;
+            goto out;
         }
     }
 
     fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
-        goto out2;
+        goto out;
 
     {
         EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-        if (!emptyCallShape) {
+        if (!emptyCallShape)
             fun = NULL;
-            goto out2;
-        }
         AutoShapeRooter shapeRoot(cx, emptyCallShape);
 
-        AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
-        MUST_FLOW_THROUGH("out");
+        AutoObjectRooter tvr(cx, fun);
 
         Bindings bindings(cx, emptyCallShape);
         AutoBindingsRooter root(cx, bindings);
@@ -4737,20 +4734,20 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]));
             if (!argAtom) {
                 fun = NULL;
-                goto out2;
+                goto out;
             }
 
             uint16 dummy;
             if (!bindings.addArgument(cx, argAtom, &dummy)) {
                 fun = NULL;
-                goto out2;
+                goto out;
             }
         }
 
         if (!Compiler::compileFunctionBody(cx, fun, principals, &bindings,
                                            chars, length, filename, lineno, version)) {
             fun = NULL;
-            goto out2;
+            goto out;
         }
 
         if (obj && funAtom &&
@@ -4760,10 +4757,11 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         }
     }
 
-  out2:
+  out:
     LAST_FRAME_CHECKS(cx, fun);
     return fun;
 }
+
 JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                          JSPrincipals *principals, const char *name,
@@ -4892,7 +4890,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptObj);
 
-    JSBool ok = ExternalExecute(cx, scriptObj->getScript(), *obj, Valueify(rval));
+    JSBool ok = Execute(cx, scriptObj->getScript(), *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4926,7 +4924,7 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
     }
     JS_ASSERT(script->getVersion() == compileVersion);
 
-    bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));
+    bool ok = Execute(cx, script, *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     js_DestroyScript(cx, script, 5);
     return ok;
@@ -5006,8 +5004,8 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fun, JSValueArray(argv, argc));
-    JSBool ok = ExternalInvoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), argc,
-                               Valueify(argv), Valueify(rval));
+    JSBool ok = Invoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), argc, Valueify(argv),
+                       Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5025,8 +5023,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc, 
     JSBool ok =
         atom &&
         js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, tvr.addr()) &&
-        ExternalInvoke(cx, ObjectOrNullValue(obj), tvr.value(), argc, Valueify(argv),
-                       Valueify(rval));
+        Invoke(cx, ObjectOrNullValue(obj), tvr.value(), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5039,8 +5036,8 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fval, JSValueArray(argv, argc));
-    JSBool ok = ExternalInvoke(cx, ObjectOrNullValue(obj), Valueify(fval), argc, Valueify(argv),
-                               Valueify(rval));
+    JSBool ok = Invoke(cx, ObjectOrNullValue(obj), Valueify(fval), argc, Valueify(argv),
+                       Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5054,7 +5051,7 @@ Call(JSContext *cx, jsval thisv, jsval fval, uintN argc, jsval *argv, jsval *rva
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, thisv, fval, JSValueArray(argv, argc));
-    ok = ExternalInvoke(cx, Valueify(thisv), Valueify(fval), argc, Valueify(argv), Valueify(rval));
+    ok = Invoke(cx, Valueify(thisv), Valueify(fval), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5070,7 +5067,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // This is not a simple variation of JS_CallFunctionValue because JSOP_NEW
     // is not a simple variation of JSOP_CALL. We have to determine what class
     // of object to create, create it, and clamp the return value to an object,
-    // among other details. js_InvokeConstructor does the hard work.
+    // among other details. InvokeConstructor does the hard work.
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return NULL;

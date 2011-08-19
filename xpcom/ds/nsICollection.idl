@@ -63,7 +63,7 @@ interface nsICollection : nsISerializable
 #include "nsCOMPtr.h"
 #endif
 
-class NS_COM nsQueryElementAt : public nsCOMPtr_helper
+class nsQueryElementAt : public nsCOMPtr_helper
   {
     public:
       nsQueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr )

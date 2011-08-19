@@ -2166,10 +2166,6 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "ghistory2", function() {
   return PlacesUtils.history.QueryInterface(Ci.nsIGlobalHistory2);
 });
 
-XPCOMUtils.defineLazyGetter(PlacesUtils, "ghistory3", function() {
-  return PlacesUtils.history.QueryInterface(Ci.nsIGlobalHistory3);
-});
-
 XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "favicons",
                                    "@mozilla.org/browser/favicon-service;1",
                                    "nsIFaviconService");

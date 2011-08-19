@@ -231,11 +231,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { loc };
-            return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
         }
 
         Value argv[] = { NullValue() }; /* no zero-length arrays allowed! */
-        return ExternalInvoke(cx, userv, fun, 0, argv, dst);
+        return Invoke(cx, userv, fun, 0, argv, dst);
     }
 
     bool callback(Value fun, Value v1, TokenPos *pos, Value *dst) {
@@ -244,11 +244,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, loc };
-            return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
         }
 
         Value argv[] = { v1 };
-        return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, TokenPos *pos, Value *dst) {
@@ -257,11 +257,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, loc };
-            return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2 };
-        return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, Value v3, TokenPos *pos, Value *dst) {
@@ -270,11 +270,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, v3, loc };
-            return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2, v3 };
-        return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, Value v3, Value v4, TokenPos *pos, Value *dst) {
@@ -283,11 +283,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, v3, v4, loc };
-            return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2, v3, v4 };
-        return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, Value v3, Value v4, Value v5,
@@ -297,11 +297,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, v3, v4, v5, loc };
-            return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2, v3, v4, v5 };
-        return ExternalInvoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
     }
 
     Value opt(Value v) {

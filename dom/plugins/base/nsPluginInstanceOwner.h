@@ -202,6 +202,7 @@ public:
 #else // XP_MACOSX
   void UpdateWindowPositionAndClipRect(PRBool aSetWindow);
   void UpdateWindowVisibility(PRBool aVisible);
+  void UpdateDocumentActiveState(PRBool aIsActive);
 #endif // XP_MACOSX
   void CallSetWindow();
   
@@ -343,6 +344,7 @@ private:
   PRPackedBool                mFlash10Quirks;
 #endif
   PRPackedBool                mPluginWindowVisible;
+  PRPackedBool                mPluginDocumentActiveState;
   
   // If true, destroy the widget on destruction. Used when plugin stop
   // is being delayed to a safer point in time.

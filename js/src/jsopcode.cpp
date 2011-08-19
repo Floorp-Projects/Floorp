@@ -396,7 +396,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
         }
 
         if (clasp == &js_FunctionClass) {
-            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+            JSFunction *fun = obj->getFunctionPrivate();
             JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (!str)
                 return false;
@@ -4972,7 +4972,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
 
     JS_ASSERT(jp->fun);
     JS_ASSERT(!jp->script);
-    if (!FUN_INTERPRETED(jp->fun)) {
+    if (!jp->fun->isInterpreted()) {
         js_printf(jp, native_code_str);
         return JS_TRUE;
     }
@@ -5011,7 +5011,7 @@ js_DecompileFunction(JSPrinter *jp)
         return JS_FALSE;
     js_puts(jp, "(");
 
-    if (!FUN_INTERPRETED(fun)) {
+    if (!fun->isInterpreted()) {
         js_printf(jp, ") {\n");
         jp->indent += 4;
         js_printf(jp, native_code_str);

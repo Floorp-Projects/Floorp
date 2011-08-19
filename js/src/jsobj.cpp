@@ -1191,7 +1191,6 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
 
 #ifdef DEBUG
         jsbytecode *callerPC = caller->pcQuadratic(cx);
-        JS_ASSERT_IF(caller->isFunctionFrame(), caller->fun()->isHeavyweight());
         JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
 #endif
     } else {
@@ -1275,8 +1274,8 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         esg.setNewScript(compiled);
     }
 
-    return Execute(cx, esg.script(), scopeobj, thisv, ExecuteType(evalType),
-                   NULL /* evalInFrame */, &call.rval());
+    return ExecuteKernel(cx, esg.script(), scopeobj, thisv, ExecuteType(evalType),
+                         NULL /* evalInFrame */, &call.rval());
 }
 
 /*
@@ -1405,8 +1404,8 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
         return true;
 
     Value argv[] = { IdToValue(id), Valueify(old), Valueify(*nvp) };
-    return ExternalInvoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable),
-                          JS_ARRAY_LENGTH(argv), argv, Valueify(nvp));
+    return Invoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), JS_ARRAY_LENGTH(argv), argv,
+                  Valueify(nvp));
 }
 
 static JSBool
@@ -3919,7 +3918,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
             js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom);
         if (!fun)
             goto bad;
-        FUN_CLASP(fun) = clasp;
+        fun->setConstructorClass(clasp);
 
         AutoValueRooter tvr2(cx, ObjectValue(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
@@ -3931,7 +3930,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
          * different object, as is done for operator new -- and as at least
          * XML support requires.
          */
-        ctor = FUN_OBJECT(fun);
+        ctor = fun;
         if (clasp->flags & JSCLASS_CONSTRUCT_PROTOTYPE) {
             Value rval;
             if (!InvokeConstructorWithGivenThis(cx, proto, ObjectOrNullValue(ctor),
@@ -4709,7 +4708,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
             JS_ASSERT(!getter && !setter);
 
             JSObject *funobj = &value.toObject();
-            if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
+            if (funobj->getFunctionPrivate() == funobj) {
                 flags |= Shape::METHOD;
                 getter = CastAsPropertyOp(funobj);
             }
@@ -5449,7 +5448,7 @@ JSObject::callMethod(JSContext *cx, jsid id, uintN argc, Value *argv, Value *vp)
 {
     Value fval;
     return js_GetMethod(cx, this, id, JSGET_NO_METHOD_BARRIER, &fval) &&
-           ExternalInvoke(cx, ObjectValue(*this), fval, argc, argv, vp);
+           Invoke(cx, ObjectValue(*this), fval, argc, argv, vp);
 }
 
 JSBool
@@ -5662,7 +5661,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
             JSObject *funobj = &vp->toObject();
-            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+            JSFunction *fun = funobj->getFunctionPrivate();
             if (fun == funobj) {
                 flags |= Shape::METHOD;
                 getter = CastAsPropertyOp(funobj);
@@ -5797,7 +5796,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
             JSObject *funobj;
 
             if (IsFunctionObject(v, &funobj)) {
-                JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+                JSFunction *fun = funobj->getFunctionPrivate();
 
                 if (fun != funobj) {
                     for (StackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
@@ -5854,7 +5853,7 @@ MaybeCallMethod(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         *vp = ObjectValue(*obj);
         return true;
     }
-    return ExternalInvoke(cx, ObjectValue(*obj), *vp, 0, NULL, vp);
+    return Invoke(cx, ObjectValue(*obj), *vp, 0, NULL, vp);
 }
 
 JSBool
@@ -6492,7 +6491,7 @@ dumpValue(const Value &v)
         dumpString(v.toString());
     else if (v.isObject() && v.toObject().isFunction()) {
         JSObject *funobj = &v.toObject();
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        JSFunction *fun = funobj->getFunctionPrivate();
         if (fun->atom) {
             fputs("<function ", stderr);
             FileEscapedString(stderr, fun->atom, 0);

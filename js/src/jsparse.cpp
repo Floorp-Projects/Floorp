@@ -313,7 +313,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
 bool
 JSFunctionBox::joinable() const
 {
-    return FUN_NULL_CLOSURE(function()) &&
+    return function()->isNullClosure() &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
 }
 
@@ -990,7 +990,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
              * function captured in case it refers to an upvar, and someone
              * wishes to decompile it while it's running.
              */
-            JSObjectBox *funbox = parser.newObjectBox(FUN_OBJECT(callerFrame->fun()));
+            JSObjectBox *funbox = parser.newObjectBox(callerFrame->fun());
             if (!funbox)
                 goto out;
             funbox->emitLink = cg.objectList.lastbox;
@@ -1978,8 +1978,8 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
                        JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
                        parent, atom);
     if (fun && !tc->compileAndGo()) {
-        FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearProto();
+        fun->clearParent();
+        fun->clearProto();
     }
     return fun;
 }
@@ -2461,12 +2461,12 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 
         JSFunction *fun = funbox->function();
 
-        JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
+        JS_ASSERT(fun->kind() == JSFUN_INTERPRETED);
 
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
             /* nothing to do */
         } else if (funbox->inAnyDynamicScope()) {
-            JS_ASSERT(!FUN_NULL_CLOSURE(fun));
+            JS_ASSERT(!fun->isNullClosure());
         } else if (pn->pn_type != TOK_UPVARS) {
             /*
              * No lexical dependencies => null closure, for best performance.
@@ -2484,7 +2484,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
              *
              * FIXME: bug 476950.
              */
-            FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
+            fun->setKind(JSFUN_NULL_CLOSURE);
         } else {
             AtomDefnMapPtr upvars = pn->pn_names;
             JS_ASSERT(!upvars->empty());
@@ -2512,7 +2512,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                 }
 
                 if (r.empty())
-                    FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
+                    fun->setKind(JSFUN_NULL_CLOSURE);
             } else {
                 uintN nupvars = 0, nflattened = 0;
 
@@ -2550,13 +2550,13 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                 }
 
                 if (nupvars == 0) {
-                    FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
+                    fun->setKind(JSFUN_NULL_CLOSURE);
                 } else if (nflattened == nupvars) {
                     /*
                      * We made it all the way through the upvar loop, so it's
                      * safe to optimize to a flat closure.
                      */
-                    FUN_SET_KIND(fun, JSFUN_FLAT_CLOSURE);
+                    fun->setKind(JSFUN_FLAT_CLOSURE);
                     switch (PN_OP(fn)) {
                       case JSOP_DEFFUN:
                         fn->pn_op = JSOP_DEFFUN_FC;
@@ -2575,7 +2575,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
             }
         }
 
-        if (FUN_KIND(fun) == JSFUN_INTERPRETED && pn->pn_type == TOK_UPVARS) {
+        if (fun->kind() == JSFUN_INTERPRETED && pn->pn_type == TOK_UPVARS) {
             /*
              * One or more upvars cannot be safely snapshot into a flat
              * closure's non-reserved slot (see JSOP_GETFCSLOT), so we loop
@@ -2621,7 +2621,7 @@ Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensible
 {
     for (; funbox; funbox = funbox->siblings) {
         /*
-         * It would be nice to use FUN_KIND(fun) here to recognize functions
+         * It would be nice to use fun->kind() here to recognize functions
          * that will never consult their parent chains, and thus don't need
          * their 'extensible parents' flag set. Filed as bug 619750. 
          */
@@ -2663,7 +2663,7 @@ EnterFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
         return NULL;
 
     /* Create box for fun->object early to protect against last-ditch GC. */
-    JSFunctionBox *funbox = tc->parser->newFunctionBox(FUN_OBJECT(fun), fn, tc);
+    JSFunctionBox *funbox = tc->parser->newFunctionBox(fun, fn, tc);
     if (!funbox)
         return NULL;
 

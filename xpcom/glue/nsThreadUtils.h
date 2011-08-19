@@ -105,7 +105,7 @@ extern NS_COM_GLUE NS_METHOD
 NS_GetMainThread(nsIThread **result);
 
 #if defined(MOZILLA_INTERNAL_API) && defined(XP_WIN)
-NS_COM bool NS_IsMainThread();
+bool NS_IsMainThread();
 #elif defined(MOZILLA_INTERNAL_API) && defined(NS_TLS)
 // This is defined in nsThreadManager.cpp and initialized to `Main` for the
 // main thread by nsThreadManager::Init.

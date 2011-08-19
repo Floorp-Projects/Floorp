@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #ifndef nscore_h___
 #define nscore_h___
 
@@ -295,10 +296,8 @@
 #define XPCOM_API(type) IMPORT_XPCOM_API(type)
 #endif
 
-#define NS_COM
-
 #ifdef MOZILLA_INTERNAL_API
-#  define NS_COM_GLUE NS_COM
+#  define NS_COM_GLUE
    /*
      The frozen string API has different definitions of nsAC?String
      classes than the internal API. On systems that explicitly declare

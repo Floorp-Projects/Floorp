@@ -37,8 +37,6 @@
 #ifndef _NECKO_CONFIG_H_
 #define _NECKO_CONFIG_H_
 
-#undef NECKO_DISK_CACHE
-
 #undef NECKO_COOKIES
 
 #undef NECKO_WIFI

@@ -68,6 +68,11 @@ LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
                    -I$(topsrcdir)/dom/system/unix \
                    $(NULL)
 endif
+ifdef MOZ_ENABLE_QTMOBILITY
+LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
+                   -I$(topsrcdir)/dom/system/unix \
+                   $(NULL)
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/android \

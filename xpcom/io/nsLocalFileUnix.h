@@ -108,7 +108,7 @@
 #endif
 
 
-class NS_COM nsLocalFile :
+class nsLocalFile :
 #ifdef XP_MACOSX
                            public nsILocalFileMac,
 #else
