@@ -107,8 +107,7 @@ NS_IMETHODIMP
 nsThebesFontEnumerator::HaveFontFor(const char *aLangGroup,
                                     PRBool *aResult)
 {
-    NS_ENSURE_ARG_POINTER(*aResult);
-    NS_ENSURE_ARG_POINTER(*aLangGroup);
+    NS_ENSURE_ARG_POINTER(aResult);
 
     *aResult = PR_TRUE;
     return NS_OK;
