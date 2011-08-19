@@ -153,11 +153,11 @@ LIRGenerator::visitTest(MTest *test)
         MDefinition *right = comp->getOperand(1);
 
         if (comp->specialization() == MIRType_Int32) {
-            return add(new LCompareIAndBranch(comp->jsop(), useRegister(left), use(right),
+            return add(new LCompareIAndBranch(comp->condition(), useRegister(left), use(right),
                                               ifTrue, ifFalse));
         }
         if (comp->specialization() == MIRType_Double) {
-            return add(new LCompareDAndBranch(comp->jsop(), useRegister(left), use(right),
+            return add(new LCompareDAndBranch(comp->condition(), useRegister(left), use(right),
                                               ifTrue, ifFalse));
         }
         // :TODO: implment LCompareVAndBranch. Bug: 679804
@@ -192,9 +192,9 @@ LIRGenerator::visitCompare(MCompare *comp)
     MDefinition *right = comp->getOperand(1);
 
     if (comp->specialization() == MIRType_Int32)
-        return define(new LCompareI(comp->jsop(), useRegister(left), use(right)), comp);
+        return define(new LCompareI(comp->condition(), useRegister(left), use(right)), comp);
     if (comp->specialization() == MIRType_Double)
-        return define(new LCompareD(comp->jsop(), useRegister(left), use(right)), comp);
+        return define(new LCompareD(comp->condition(), useRegister(left), use(right)), comp);
 
     // :TODO: implement LCompareV. Bug: 679804
     JS_NOT_REACHED("LCompareV NYI");
