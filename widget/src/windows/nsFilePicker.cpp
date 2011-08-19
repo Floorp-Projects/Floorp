@@ -361,6 +361,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       // Remember what filter type the user selected
       mSelectedType = (PRInt16)ofn.nFilterIndex;
 
+      // Clear out any files from previous Show calls
+      mFiles.Clear();
+
       // Set user-selected location of file or directory
       if (mMode == modeOpenMultiple) {
         
