@@ -39,7 +39,6 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSListener.h"
 #include "nsICancelable.h"
-#include "nsIProxyObjectManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
@@ -50,6 +49,7 @@
 #include "nsNetCID.h"
 #include "nsNetError.h"
 #include "nsDNSPrefetch.h"
+#include "nsThreadUtils.h"
 #include "nsIProtocolProxyService.h"
 #include "prsystem.h"
 #include "prnetdb.h"
@@ -469,6 +469,67 @@ nsDNSService::Shutdown()
     return NS_OK;
 }
 
+namespace {
+
+class DNSListenerProxy : public nsIDNSListener
+{
+public:
+  DNSListenerProxy(nsIDNSListener* aListener, nsIEventTarget* aTargetThread)
+    : mListener(aListener)
+    , mTargetThread(aTargetThread)
+  { }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDNSLISTENER
+
+  class OnLookupCompleteRunnable : public nsRunnable
+  {
+  public:
+    OnLookupCompleteRunnable(nsIDNSListener* aListener,
+                             nsICancelable* aRequest,
+                             nsIDNSRecord* aRecord,
+                             nsresult aStatus)
+      : mListener(aListener)
+      , mRequest(aRequest)
+      , mRecord(aRecord)
+      , mStatus(aStatus)
+    { }
+
+    NS_DECL_NSIRUNNABLE
+
+  private:
+    nsCOMPtr<nsIDNSListener> mListener;
+    nsCOMPtr<nsICancelable> mRequest;
+    nsCOMPtr<nsIDNSRecord> mRecord;
+    nsresult mStatus;
+  };
+
+private:
+  nsCOMPtr<nsIDNSListener> mListener;
+  nsCOMPtr<nsIEventTarget> mTargetThread;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(DNSListenerProxy, nsIDNSListener)
+
+NS_IMETHODIMP
+DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
+                                   nsIDNSRecord* aRecord,
+                                   nsresult aStatus)
+{
+  nsRefPtr<OnLookupCompleteRunnable> r =
+    new OnLookupCompleteRunnable(mListener, aRequest, aRecord, aStatus);
+  return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
+}
+
+NS_IMETHODIMP
+DNSListenerProxy::OnLookupCompleteRunnable::Run()
+{
+  mListener->OnLookupComplete(mRequest, mRecord, mStatus);
+  return NS_OK;
+}
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 nsDNSService::AsyncResolve(const nsACString  &hostname,
                            PRUint32           flags,
@@ -501,15 +562,8 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
             hostPtr = &hostACE;
     }
 
-    nsCOMPtr<nsIDNSListener> listenerProxy;
     if (target) {
-        rv = NS_GetProxyForObject(target,
-                                  NS_GET_IID(nsIDNSListener),
-                                  listener,
-                                  NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
-                                  getter_AddRefs(listenerProxy));
-        if (NS_FAILED(rv)) return rv;
-        listener = listenerProxy;
+      listener = new DNSListenerProxy(listener, target);
     }
 
     PRUint16 af = GetAFForLookup(*hostPtr, flags);
