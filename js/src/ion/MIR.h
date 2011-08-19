@@ -1125,8 +1125,13 @@ class MAdd : public MBinaryArithInstruction
 
 class MMul : public MBinaryArithInstruction
 {
+    bool canOverflow_;
+    bool canBeNegativeZero_;
+
     MMul(MDefinition *left, MDefinition *right)
-      : MBinaryArithInstruction(left, right)
+      : MBinaryArithInstruction(left, right),
+        canOverflow_(true),
+        canBeNegativeZero_(true)
     {
         setResultType(MIRType_Value);
     }
@@ -1139,6 +1144,18 @@ class MMul : public MBinaryArithInstruction
 
     double getIdentity() {
         return 1;
+    }
+
+    bool canOverflow() {
+        return canOverflow_;
+    }
+
+    bool canBeNegativeZero() {
+        return canBeNegativeZero_;
+    }
+
+    bool fallible() {
+        return canBeNegativeZero_ || canOverflow_;
     }
 };
 
