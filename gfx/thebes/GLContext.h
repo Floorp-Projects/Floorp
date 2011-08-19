@@ -227,6 +227,11 @@ public:
     };
 
     virtual GLuint GetTextureID() = 0;
+
+    virtual PRUint32 GetTileCount() {
+        return 1;
+    };
+
     /**
      * Set this TextureImage's size, and ensure a texture has been
      * allocated.  Must not be called between BeginUpdate and EndUpdate.
@@ -405,6 +410,7 @@ public:
     virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
     virtual void Resize(const nsIntSize& aSize);
+    virtual PRUint32 GetTileCount();
     virtual void BeginTileIteration();
     virtual PRBool NextTile();
     virtual nsIntRect GetTileRect();
