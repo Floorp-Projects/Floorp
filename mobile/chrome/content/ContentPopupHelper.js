@@ -210,7 +210,6 @@ var ContentPopupHelper = {
 
       case "PanBegin":
       case "AnimatedZoomBegin":
-        popup.left = 0;
         popup.style.visibility = "hidden";
         break;
 
@@ -220,7 +219,6 @@ var ContentPopupHelper = {
         break;
 
       case "MozBeforeResize":
-        popup.left = 0;
         popup.style.visibility = "hidden";
 
         // When screen orientation changes, we have to ensure that
