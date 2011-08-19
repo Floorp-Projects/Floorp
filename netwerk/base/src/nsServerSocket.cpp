@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsSocketTransport2.h"
 #include "nsServerSocket.h"
@@ -361,6 +360,99 @@ nsServerSocket::Close()
   return PostEvent(this, &nsServerSocket::OnMsgClose);
 }
 
+namespace {
+
+class ServerSocketListenerProxy : public nsIServerSocketListener
+{
+public:
+  ServerSocketListenerProxy(nsIServerSocketListener* aListener)
+    : mListener(aListener)
+    , mTargetThread(do_GetCurrentThread())
+  { }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISERVERSOCKETLISTENER
+
+  class OnSocketAcceptedRunnable : public nsRunnable
+  {
+  public:
+    OnSocketAcceptedRunnable(nsIServerSocketListener* aListener,
+                             nsIServerSocket* aServ,
+                             nsISocketTransport* aTransport)
+      : mListener(aListener)
+      , mServ(aServ)
+      , mTransport(aTransport)
+    { }
+    
+    NS_DECL_NSIRUNNABLE
+
+  private:
+    nsCOMPtr<nsIServerSocketListener> mListener;
+    nsCOMPtr<nsIServerSocket> mServ;
+    nsCOMPtr<nsISocketTransport> mTransport;
+  };
+
+  class OnStopListeningRunnable : public nsRunnable
+  {
+  public:
+    OnStopListeningRunnable(nsIServerSocketListener* aListener,
+                            nsIServerSocket* aServ,
+                            nsresult aStatus)
+      : mListener(aListener)
+      , mServ(aServ)
+      , mStatus(aStatus)
+    { }
+
+    NS_DECL_NSIRUNNABLE
+
+  private:
+    nsCOMPtr<nsIServerSocketListener> mListener;
+    nsCOMPtr<nsIServerSocket> mServ;
+    nsresult mStatus;
+  };
+
+private:
+  nsCOMPtr<nsIServerSocketListener> mListener;
+  nsCOMPtr<nsIEventTarget> mTargetThread;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(ServerSocketListenerProxy,
+                              nsIServerSocketListener)
+
+NS_IMETHODIMP
+ServerSocketListenerProxy::OnSocketAccepted(nsIServerSocket* aServ,
+                                            nsISocketTransport* aTransport)
+{
+  nsRefPtr<OnSocketAcceptedRunnable> r =
+    new OnSocketAcceptedRunnable(mListener, aServ, aTransport);
+  return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
+}
+
+NS_IMETHODIMP
+ServerSocketListenerProxy::OnStopListening(nsIServerSocket* aServ,
+                                           nsresult aStatus)
+{
+  nsRefPtr<OnStopListeningRunnable> r =
+    new OnStopListeningRunnable(mListener, aServ, aStatus);
+  return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
+}
+
+NS_IMETHODIMP
+ServerSocketListenerProxy::OnSocketAcceptedRunnable::Run()
+{
+  mListener->OnSocketAccepted(mServ, mTransport);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServerSocketListenerProxy::OnStopListeningRunnable::Run()
+{
+  mListener->OnStopListening(mServ, mStatus);
+  return NS_OK;
+}
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)
 {
@@ -369,13 +461,7 @@ nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)
   NS_ENSURE_TRUE(mListener == nsnull, NS_ERROR_IN_PROGRESS);
   {
     MutexAutoLock lock(mLock);
-    nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
-                                       NS_GET_IID(nsIServerSocketListener),
-                                       aListener,
-                                       NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
-                                       getter_AddRefs(mListener));
-    if (NS_FAILED(rv))
-      return rv;
+    mListener = new ServerSocketListenerProxy(aListener);
     mListenerTarget = NS_GetCurrentThread();
   }
   return PostEvent(this, &nsServerSocket::OnMsgAttach);
