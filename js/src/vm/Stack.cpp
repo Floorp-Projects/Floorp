@@ -763,7 +763,7 @@ ContextStack::pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scope
     fp->initDummyFrame(cx, scopeChain);
     dfg->regs_.initDummyFrame(*fp);
 
-    cx->compartment = dest;
+    cx->setCompartment(dest);
     dfg->prevRegs_ = seg_->pushRegs(dfg->regs_);
     JS_ASSERT(space().firstUnused() == dfg->regs_.sp);
     dfg->setPushed(*this);

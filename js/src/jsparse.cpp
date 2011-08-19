@@ -8605,8 +8605,16 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             tt = tokenStream.getToken();
             if (tt == TOK_COLON) {
                 pnval = assignExpr();
-                if (pnval && !pnval->isConstant())
+
+                /*
+                 * Treat initializers which mutate __proto__ as non-constant,
+                 * so that we can later assume singleton objects delegate to
+                 * the default Object.prototype.
+                 */
+                if ((pnval && !pnval->isConstant()) ||
+                    atom == context->runtime->atomState.protoAtom) {
                     pn->pn_xflags |= PNX_NONCONST;
+                }
             } else {
 #if JS_HAS_DESTRUCTURING_SHORTHAND
                 if (tt != TOK_COMMA && tt != TOK_RC) {
