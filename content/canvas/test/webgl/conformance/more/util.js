@@ -1,7 +1,7 @@
 /*
 Utilities for the OpenGL ES 2.0 HTML Canvas context
 
-Copyright (C) 2009  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
+Copyright (C) 2011  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
