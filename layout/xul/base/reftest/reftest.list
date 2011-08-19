@@ -1,4 +1,4 @@
-== textbox-multiline-noresize.xul textbox-multiline-ref.xul 
+fails-if(Android) == textbox-multiline-noresize.xul textbox-multiline-ref.xul # reference is blank on Android (due to no native theme support?)
 != textbox-multiline-resize.xul textbox-multiline-ref.xul 
 == popup-explicit-size.xul popup-explicit-size-ref.xul
 == image-size.xul image-size-ref.xul
