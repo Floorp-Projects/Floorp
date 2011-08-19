@@ -1,0 +1,4 @@
+#filter substitution
+[classify browser]
+@installdir@/@MOZ_APP_NAME@
+@installdir@/plugin-container
