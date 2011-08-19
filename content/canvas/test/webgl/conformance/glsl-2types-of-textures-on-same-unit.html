@@ -1,12 +1,12 @@
 <!--
-Copyright (c) 2011 The Chromium Authors. All rights reserved.
+Copyright (c) 2009 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
  -->
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
 <html>
   <head>
-<meta charset="utf-8">
     <title>WebGL GLSL 2 types of textures on same unit conformance test.</title>
     <link rel="stylesheet" href="../resources/js-test-style.css"/>
     <script src="../resources/js-test-pre.js"></script>
@@ -30,8 +30,9 @@ void main()
 </script>
 
 <script id="fshader" type="x-shader/x-fragment">
-precision mediump float;
-
+#ifdef GL_ES
+precision highp float;
+#endif
 uniform sampler2D tex2d;
 uniform samplerCube texCube;
 varying vec2 texCoord;
@@ -130,7 +131,11 @@ function init()
 init();
 successfullyParsed = true;
 </script>
+</body>
 <script src="../resources/js-test-post.js"></script>
+
+<script>
+</script>
 
 </body>
 </html>

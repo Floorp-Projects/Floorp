@@ -3,10 +3,11 @@ Copyright (c) 2011 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
  -->
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>WebGL OES_standard_derivatives Conformance Tests</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
@@ -69,7 +70,7 @@ void main() {
 </script>
 <script id="outputFragmentShader" type="x-shader/x-fragment">
 #extension GL_OES_standard_derivatives : enable
-precision mediump float;
+precision highp float;
 varying vec4 position;
 void main() {
     float dzdx = dFdx(position.z);
@@ -357,8 +358,6 @@ function runUniqueObjectTest()
     gl.getExtension("OES_standard_derivatives").myProperty = 2;
     if (window.GCController) {
         window.GCController.collect();
-    } else if (window.opera && window.opera.collect) {
-        window.opera.collect();
     } else {
         attemptToForceGC();
     }
@@ -370,6 +369,8 @@ debug("");
 successfullyParsed = true;
 </script>
 <script src="../resources/js-test-post.js"></script>
+<script>
+</script>
 
 </body>
 </html>

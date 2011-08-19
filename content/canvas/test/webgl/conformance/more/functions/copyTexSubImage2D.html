@@ -1,10 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
-<meta charset="utf-8">
 <!--
 Tests for the OpenGL ES 2.0 HTML Canvas context
 
-Copyright (C) 2011  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
+Copyright (C) 2009  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -28,6 +27,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 -->
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" type="text/css" href="../unit.css" />
 <script type="application/x-javascript" src="../unit.js"></script>
 <script type="application/x-javascript" src="../util.js"></script>
@@ -125,8 +125,9 @@ void main()
 }
 </script>
 <script id="identity-frag" type="x-shader/x-fragment">
-precision mediump float;
-
+#ifdef GL_ES
+precision highp float;
+#endif
 uniform sampler2D Texture;
 
 varying vec4 texCoord0;

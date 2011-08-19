@@ -25,7 +25,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 attribute vec4 a_vertex;
 attribute vec3 a_normal;
 
+// Workaround for non-compliant WebGL implementations (FIXME)
+#if defined(GL_ES)
 uniform mediump mat4 u_modelViewProjMatrix;
+#else
+uniform mat4 u_modelViewProjMatrix;
+#endif
 
 varying vec3 v_normal;
 
