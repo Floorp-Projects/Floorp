@@ -39,7 +39,6 @@
 #define __nsCheapSets_h__
 
 #include "nsHashSets.h"
-#include <stdint.h>
 
 /**
  * A string set that takes up minimal size when there are 0 or 1 strings in the
@@ -176,7 +175,7 @@ private:
   /** Set the single integer */
   void SetInt(PRInt32 aInt)
   {
-    mValOrHash = (void*)(intptr_t)((aInt << 1) | 0x1);
+    mValOrHash = (void*)((aInt << 1) | 0x1);
   }
   /** Create the hash and initialize */
   nsresult InitHash(nsInt32HashSet** aSet);
