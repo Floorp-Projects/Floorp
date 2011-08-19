@@ -1,7 +1,7 @@
 conformance/constants.html
 conformance/getContext.html
 conformance/methods.html
-conformance/quickCheckAPI.html
+#conformance/quickCheckAPI.html
 conformance/webGLArrays.html
 functions/bindBuffer.html
 functions/bindBufferBadArgs.html
