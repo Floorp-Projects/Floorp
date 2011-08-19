@@ -10,6 +10,13 @@ assertEq(mul(0, -2), -0);
 assertEq(mul(0, 0), 0);
 
 // Constant * value checks:
+assertEq(function(x){return x*1}(4), 4);
+assertEq(function(x){return x*1}(0), 0);
+assertEq(function(x){return x*1}(-4), -4);
+assertEq(function(x){return x*2}(4), 8);
+assertEq(function(x){return x*2}(0), 0);
+assertEq(function(x){return x*2}(-4), -8);
+assertEq(function(x){return x*2}(2000000000), 4000000000);
 assertEq(function(x){return x*5}(4), 20);
 assertEq(function(x){return x*5}(0), 0);
 assertEq(function(x){return x*5}(-4), -20);
