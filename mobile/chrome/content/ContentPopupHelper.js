@@ -221,6 +221,12 @@ var ContentPopupHelper = {
 
       case "MozBeforeResize":
         popup.left = 0;
+        popup.style.visibility = "hidden";
+
+        // When screen orientation changes, we have to ensure that
+        // the popup width doesn't overflow the content's visible
+        // area.
+        popup.firstChild.style.maxWidth = "0px";
         break;
 
       case "resize":
