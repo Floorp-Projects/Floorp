@@ -6,6 +6,7 @@ found in the LICENSE file.
 <!DOCTYPE HTML>
 <html>
 <head>
+<meta charset="utf-8">
 <!-- This is a visual test that programs must have both a vertex and
      fragment shader attached; the fixed function pipeline on the
      desktop must remain disabled. -->
@@ -30,7 +31,7 @@ found in the LICENSE file.
 	gl.compileShader(vs);
 
 	var fs = gl.createShader(gl.FRAGMENT_SHADER);
-	gl.shaderSource(fs, "#ifdef GL_ES\nprecision mediump float;\n#endif\n varying vec4 vColor; void main() { gl_FragColor = vColor; }");
+	gl.shaderSource(fs, "precision mediump float; varying vec4 vColor; void main() { gl_FragColor = vColor; }");
 	gl.compileShader(fs);
 
 	var prog = gl.createProgram();
