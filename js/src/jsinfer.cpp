@@ -2323,6 +2323,20 @@ NumberTypes(Type a, Type b)
         && (b.isPrimitive(JSVAL_TYPE_INT32) || b.isPrimitive(JSVAL_TYPE_DOUBLE));
 }
 
+/*
+ * As for GetValueType, but requires object types to be non-singletons with
+ * their default prototype. These are the only values that should appear in
+ * arrays and objects whose type can be fixed.
+ */
+static inline Type
+GetValueTypeForTable(JSContext *cx, const Value &v)
+{
+    Type type = GetValueType(cx, v);
+    JS_ASSERT(!type.isSingleObject());
+    JS_ASSERT_IF(type.isTypeObject(), type.typeObject() != &emptyTypeObject);
+    return type;
+}
+
 struct types::ArrayTableKey
 {
     Type type;
@@ -2369,10 +2383,10 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
     if (len == 0)
         return;
 
-    Type type = GetValueType(cx, obj->getDenseArrayElement(0));
+    Type type = GetValueTypeForTable(cx, obj->getDenseArrayElement(0));
 
     for (unsigned i = 1; i < len; i++) {
-        Type ntype = GetValueType(cx, obj->getDenseArrayElement(i));
+        Type ntype = GetValueTypeForTable(cx, obj->getDenseArrayElement(i));
         if (ntype != type) {
             if (NumberTypes(type, ntype))
                 type = Type::DoubleType();
@@ -2488,7 +2502,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         /* The lookup ensures the shape matches, now check that the types match. */
         Type *types = p->value.types;
         for (unsigned i = 0; i < obj->slotSpan(); i++) {
-            Type ntype = GetValueType(cx, obj->getSlot(i));
+            Type ntype = GetValueTypeForTable(cx, obj->getSlot(i));
             if (ntype != types[i]) {
                 if (NumberTypes(ntype, types[i])) {
                     if (types[i].isPrimitive(JSVAL_TYPE_INT32)) {
@@ -2543,7 +2557,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         const Shape *shape = baseShape;
         while (!JSID_IS_EMPTY(shape->propid)) {
             ids[shape->slot] = shape->propid;
-            types[shape->slot] = GetValueType(cx, obj->getSlot(shape->slot));
+            types[shape->slot] = GetValueTypeForTable(cx, obj->getSlot(shape->slot));
             if (!objType->unknownProperties()) {
                 jsid id = MakeTypeId(cx, shape->propid);
                 objType->addPropertyType(cx, id, types[shape->slot]);
