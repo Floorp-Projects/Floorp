@@ -1251,8 +1251,9 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                             JSObject *clone;
 
                             if (IsFunctionObject(v, &clone) &&
-                                GET_FUNCTION_PRIVATE(cx, clone) == fun &&
-                                clone->hasMethodObj(*thisp)) {
+                                clone->getFunctionPrivate() == fun &&
+                                clone->hasMethodObj(*thisp))
+                            {
                                 JS_ASSERT(clone != &funobj);
                                 *vp = v;
                                 overwriteCallee(*clone);
@@ -1544,8 +1545,8 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 
     cx = xdr->cx;
     if (xdr->mode == JSXDR_ENCODE) {
-        fun = GET_FUNCTION_PRIVATE(cx, *objp);
-        if (!FUN_INTERPRETED(fun)) {
+        fun = (*objp)->getFunctionPrivate();
+        if (!fun->isInterpreted()) {
             JSAutoByteString funNameBytes;
             if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_SCRIPTED_FUNCTION,
@@ -1566,11 +1567,11 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
-        FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearProto();
+        fun->clearParent();
+        fun->clearProto();
     }
 
-    AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
+    AutoObjectRooter tvr(cx, fun);
 
     if (!JS_XDRUint32(xdr, &firstword))
         return false;
@@ -1597,7 +1598,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     fun->u.i.script = script;
 
     if (xdr->mode == JSXDR_DECODE) {
-        *objp = FUN_OBJECT(fun);
+        *objp = fun;
         fun->u.i.script->setOwnerObject(fun);
 #ifdef CHECK_SCRIPT_OWNER
         fun->script()->owner = NULL;
@@ -1736,7 +1737,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
         return NULL;
     }
 
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JSFunction *fun = obj->getFunctionPrivate();
     if (!fun)
         return NULL;
 
@@ -2029,7 +2030,7 @@ fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    JSFunction *fun = funobj->getFunctionPrivate();
 
     bool result = false;
     if (fun->isInterpreted()) {
@@ -2439,7 +2440,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     fun->atom = atom;
 
     /* Set private to self to indicate non-cloned fully initialized function. */
-    FUN_OBJECT(fun)->setPrivate(fun);
+    fun->setPrivate(fun);
     return fun;
 }
 
@@ -2653,7 +2654,7 @@ js_ValueToFunction(JSContext *cx, const Value *vp, uintN flags)
         js_ReportIsNotFunction(cx, vp, flags);
         return NULL;
     }
-    return GET_FUNCTION_PRIVATE(cx, funobj);
+    return funobj->getFunctionPrivate();
 }
 
 JSObject *

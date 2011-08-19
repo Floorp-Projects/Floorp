@@ -48,6 +48,7 @@ interface nsIDOMNodeIterator;
 interface nsIDOMNodeFilter;
 interface nsIDOMTreeWalker;
 interface nsIDOMLocation;
+interface nsIDOMCaretPosition;
 
 /**
  * The nsIDOMDocument interface represents the entire HTML or XML document.
@@ -62,7 +63,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(10034b87-384e-4e19-902c-c4edafb899be)]
+[scriptable, uuid(d19897dc-948a-42e7-8ac6-d8a0bd141b85)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -368,4 +369,6 @@ interface nsIDOMDocument : nsIDOMNode
    */
   void mozSetImageElement(in DOMString aImageElementId,
                           in nsIDOMElement aImageElement);
+
+  nsIDOMCaretPosition caretPositionFromPoint(in float x, in float y);
 };

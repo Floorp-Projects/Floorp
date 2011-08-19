@@ -484,7 +484,7 @@ ErrorCopier::~ErrorCopier()
         cx->isExceptionPending())
     {
         Value exc = cx->getPendingException();
-        if (exc.isObject() && exc.toObject().isError()) {
+        if (exc.isObject() && exc.toObject().isError() && exc.toObject().getPrivate()) {
             cx->clearPendingException();
             ac.leave();
             JSObject *copyobj = js_CopyErrorObject(cx, &exc.toObject(), scope);

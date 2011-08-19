@@ -126,78 +126,62 @@ nsEditorEventListener::InstallToEditor()
   nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetDOMEventTarget();
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
-  nsresult rv;
-
   // register the event listeners with the listener manager
   nsEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elmP);
 
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("keypress"),
-                                    NS_EVENT_FLAG_BUBBLE |
-                                    NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT);
-  NS_ENSURE_SUCCESS(rv, rv);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("keypress"),
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
   // See bug 455215, we cannot use the standard dragstart event yet
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("draggesture"),
-                                    NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("dragenter"),
-                                    NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("dragover"),
-                                    NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("dragexit"),
-                                    NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("drop"),
-                                    NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("mousedown"),
-                                    NS_EVENT_FLAG_CAPTURE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("mouseup"),
-                                    NS_EVENT_FLAG_CAPTURE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("click"),
-                                    NS_EVENT_FLAG_CAPTURE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Focus event doesn't bubble so adding the listener to capturing phase.
-  // Make sure this works after bug 235441 gets fixed.
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("blur"),
-                                    NS_EVENT_FLAG_CAPTURE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("focus"),
-                                    NS_EVENT_FLAG_CAPTURE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("text"),
-                                    NS_EVENT_FLAG_BUBBLE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("compositionstart"),
-                                    NS_EVENT_FLAG_BUBBLE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(this,
-                                    NS_LITERAL_STRING("compositionend"),
-                                    NS_EVENT_FLAG_BUBBLE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("draggesture"),
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("dragenter"),
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("dragover"),
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("dragexit"),
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("drop"),
+                               NS_EVENT_FLAG_BUBBLE |
+                               NS_EVENT_FLAG_SYSTEM_EVENT);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("mousedown"),
+                               NS_EVENT_FLAG_CAPTURE);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("mouseup"),
+                               NS_EVENT_FLAG_CAPTURE);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("click"),
+                               NS_EVENT_FLAG_CAPTURE);
+// Focus event doesn't bubble so adding the listener to capturing phase.
+// Make sure this works after bug 235441 gets fixed.
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("blur"),
+                               NS_EVENT_FLAG_CAPTURE);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("focus"),
+                               NS_EVENT_FLAG_CAPTURE);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("text"),
+                               NS_EVENT_FLAG_BUBBLE);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("compositionstart"),
+                               NS_EVENT_FLAG_BUBBLE);
+  elmP->AddEventListenerByType(this,
+                               NS_LITERAL_STRING("compositionend"),
+                               NS_EVENT_FLAG_BUBBLE);
 
   return NS_OK;
 }
