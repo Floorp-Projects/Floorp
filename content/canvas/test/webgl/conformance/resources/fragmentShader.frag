@@ -24,7 +24,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 // Workaround for non-compliant WebGL implementations (FIXME)
+#if defined(GL_ES)
 varying mediump vec3 v_normal;
+#else
+varying vec3 v_normal;
+#endif
 
 void main()
 {
