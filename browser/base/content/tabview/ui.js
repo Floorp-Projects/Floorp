@@ -123,9 +123,9 @@ let UI = {
     wasInTabView: false 
   },
   
-  // Variable: _storageBusy
-  // Tells whether the storage is currently busy or not.
-  _storageBusy: false,
+  // Variable: _storageBusyCount
+  // Used to keep track of how many calls to storageBusy vs storageReady.
+  _storageBusyCount: 0,
 
   // Variable: isDOMWindowClosing
   // Tells wether the parent window is about to close
@@ -169,10 +169,6 @@ let UI = {
 
       // ___ storage
       Storage.init();
-
-      if (Storage.readWindowBusyState(gWindow))
-        this.storageBusy();
-
       let data = Storage.readUIData(gWindow);
       this._storageSanity(data);
       this._pageBounds = data.pageBounds;
@@ -616,13 +612,12 @@ let UI = {
   // Pauses the storage activity that conflicts with sessionstore updates and 
   // private browsing mode switches. Calls can be nested. 
   storageBusy: function UI_storageBusy() {
-    if (this._storageBusy)
-      return;
-
-    this._storageBusy = true;
-
-    TabItems.pauseReconnecting();
-    GroupItems.pauseAutoclose();
+    if (!this._storageBusyCount) {
+      TabItems.pauseReconnecting();
+      GroupItems.pauseAutoclose();
+    }
+    
+    this._storageBusyCount++;
   },
   
   // ----------
@@ -630,18 +625,16 @@ let UI = {
   // Resumes the activity paused by storageBusy, and updates for any new group
   // information in sessionstore. Calls can be nested. 
   storageReady: function UI_storageReady() {
-    if (!this._storageBusy)
-      return;
-
-    this._storageBusy = false;
-
-    let hasGroupItemsData = GroupItems.load();
-    if (!hasGroupItemsData)
-      this.reset();
-
-    TabItems.resumeReconnecting();
-    GroupItems._updateTabBar();
-    GroupItems.resumeAutoclose();
+    this._storageBusyCount--;
+    if (!this._storageBusyCount) {
+      let hasGroupItemsData = GroupItems.load();
+      if (!hasGroupItemsData)
+        this.reset();
+  
+      TabItems.resumeReconnecting();
+      GroupItems._updateTabBar();
+      GroupItems.resumeAutoclose();
+    }
   },
 
   // ----------
@@ -737,7 +730,7 @@ let UI = {
       } else {
         // If we're currently in the process of entering private browsing,
         // we don't want to go to the Tab View UI. 
-        if (self._storageBusy)
+        if (self._storageBusyCount)
           return;
 
         // if not closing the last tab
