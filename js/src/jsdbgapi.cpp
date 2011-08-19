@@ -2202,7 +2202,7 @@ JS_DumpBytecode(JSContext *cx, JSScript *script)
 
     fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename, script->lineno);
     js_Disassemble(cx, script, true, &sprinter);
-    fprintf(stdout, "%s\n", sprinter.base);
+    fputs(sprinter.base, stdout);
     fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename, script->lineno);
 #endif
 }
