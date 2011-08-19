@@ -898,9 +898,6 @@ ifdef SHARED_LIBRARY
 	  $(SHARED_LIBRARY_NAME) $(DIST)/$(MOZ_APP_NAME)
 endif
 endif # SHARED_LIBRARY || PROGRAM
-else  # ! WINNT_
-# Force rebuilding all objects on the second pass
-$(OBJS): FORCE
 endif # WINNT_
 endif # MOZ_PROFILE_USE
 ifdef MOZ_PROFILE_GENERATE
