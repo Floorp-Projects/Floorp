@@ -216,7 +216,6 @@ var ContentPopupHelper = {
 
       case "PanFinished":
       case "AnimatedZoomEnd":
-        popup.style.visibility = "visible";
         this.anchorTo();
         break;
 
