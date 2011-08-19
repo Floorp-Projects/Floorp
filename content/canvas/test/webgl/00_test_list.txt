@@ -2,4 +2,5 @@
 // other lines are assumed to be .html files
 
 conformance/00_test_list.txt
+conformance/more/00_test_list.txt
 
