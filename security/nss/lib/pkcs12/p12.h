@@ -64,6 +64,11 @@ typedef void (PR_CALLBACK * SEC_PKCS12EncoderOutputCallback)(
 typedef void (PR_CALLBACK * SEC_PKCS12DecoderOutputCallback)(
                             void *arg, const char *buf,
                             unsigned long len);
+/*
+ * In NSS 3.12 or later, 'arg' actually points to a CERTCertificate,
+ * the 'leafCert' variable in sec_pkcs12_validate_cert in p12d.c. 
+ * See r1.35 of p12d.c ("Patch 2" in bug 321584).
+ */
 typedef SECItem * (PR_CALLBACK * SEC_PKCS12NicknameCollisionCallback)(
                                  SECItem *old_nickname,
                                  PRBool *cancel,

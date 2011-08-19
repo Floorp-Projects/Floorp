@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.80.2.3 2011/04/08 22:54:34 kaie%kuix.de Exp $
+ * $Id: cert.h,v 1.86 2011/07/24 13:48:09 wtc%google.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -298,13 +298,6 @@ CERT_GetCertificateRequestExtensions(CERTCertificateRequest *req,
 extern SECKEYPublicKey *CERT_ExtractPublicKey(CERTCertificate *cert);
 
 /*
- * used to get a public key with Key Material ID. Only used for fortezza V1
- * certificates.
- */
-extern SECKEYPublicKey *CERT_KMIDPublicKey(CERTCertificate *cert);
-
-
-/*
 ** Retrieve the Key Type associated with the cert we're dealing with
 */
 
@@ -450,12 +443,12 @@ extern SECStatus CERT_AddOKDomainName(CERTCertificate *cert, const char *hostnam
 extern CERTCertificate *
 CERT_DecodeDERCertificate (SECItem *derSignedCert, PRBool copyDER, char *nickname);
 /*
-** Decode a DER encoded CRL/KRL into an CERTSignedCrl structure
-**	"derSignedCrl" is the DER encoded signed crl/krl.
-**	"type" is this a CRL or KRL.
+** Decode a DER encoded CRL into a CERTSignedCrl structure
+**	"derSignedCrl" is the DER encoded signed CRL.
+**	"type" must be SEC_CRL_TYPE.
 */
 #define SEC_CRL_TYPE	1
-#define SEC_KRL_TYPE	0
+#define SEC_KRL_TYPE	0 /* deprecated */
 
 extern CERTSignedCrl *
 CERT_DecodeDERCrl (PLArenaPool *arena, SECItem *derSignedCrl,int type);
@@ -520,12 +513,6 @@ SECStatus CERT_CacheCRL(CERTCertDBHandle* dbhandle, SECItem* newcrl);
    for the application to free the memory after a successful removal
 */
 SECStatus CERT_UncacheCRL(CERTCertDBHandle* dbhandle, SECItem* oldcrl);
-
-/*
-** Decode a certificate and put it into the temporary certificate database
-*/
-extern CERTCertificate *
-CERT_DecodeCertificate (SECItem *derCert, char *nickname,PRBool copyDER);
 
 /*
 ** Find a certificate in the database
@@ -1305,9 +1292,6 @@ CERT_GetCertificateNames(CERTCertificate *cert, PLArenaPool *arena);
 CERTGeneralName *
 CERT_GetConstrainedCertificateNames(CERTCertificate *cert, PLArenaPool *arena,
                                     PRBool includeSubjectCommonName);
-
-char *
-CERT_GetNickName(CERTCertificate   *cert, CERTCertDBHandle *handle, PLArenaPool *nicknameArena);
 
 /*
  * Creates or adds to a list of all certs with a give subject name, sorted by

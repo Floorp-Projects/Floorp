@@ -49,8 +49,6 @@ CSRCS =	\
 	jarint.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 EXPORTS	 = jar.h jar-ds.h jarfile.h
 
 DEFINES = -DMOZILLA_CLIENT=1

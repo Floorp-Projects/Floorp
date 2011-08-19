@@ -155,6 +155,17 @@ const SECHashObject SECRawHashObjects[] = {
     SHA512_BLOCK_LENGTH,
     HASH_AlgSHA512
   },
+  { SHA224_LENGTH,
+    (void * (*)(void)) SHA224_NewContext,
+    (void * (*)(void *)) null_hash_clone_context,
+    (void (*)(void *, PRBool)) SHA224_DestroyContext,
+    (void (*)(void *)) SHA224_Begin,
+    (void (*)(void *, const unsigned char *, unsigned int)) SHA224_Update,
+    (void (*)(void *, unsigned char *, unsigned int *,
+	      unsigned int)) SHA224_End,
+    SHA224_BLOCK_LENGTH,
+    HASH_AlgSHA224
+  },
 };
 
 const SECHashObject *

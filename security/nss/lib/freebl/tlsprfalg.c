@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: tlsprfalg.c,v 1.6 2008/11/18 19:48:24 rrelyea%redhat.com Exp $ */
+/* $Id: tlsprfalg.c,v 1.7 2010/08/10 22:03:36 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -46,11 +46,11 @@
 #include "blapi.h"
 
 
-#define PHASH_STATE_MAX_LEN SHA1_LENGTH
+#define PHASH_STATE_MAX_LEN HASH_LENGTH_MAX
 
 /* TLS P_hash function */
-static SECStatus
-sftk_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label, 
+SECStatus
+TLS_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label, 
 	SECItem *seed, SECItem *result, PRBool isFIPS)
 {
     unsigned char state[PHASH_STATE_MAX_LEN];
@@ -148,11 +148,11 @@ TLS_PRF(const SECItem *secret, const char *label, SECItem *seed,
 	goto loser;
     tmp.len = result->len;
 
-    status = sftk_P_hash(HASH_AlgMD5, &S1, label, seed, result, isFIPS);
+    status = TLS_P_hash(HASH_AlgMD5, &S1, label, seed, result, isFIPS);
     if (status != SECSuccess)
 	goto loser;
 
-    status = sftk_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp, isFIPS);
+    status = TLS_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp, isFIPS);
     if (status != SECSuccess)
 	goto loser;
 

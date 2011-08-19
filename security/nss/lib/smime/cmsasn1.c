@@ -37,7 +37,7 @@
 /*
  * CMS ASN.1 templates
  *
- * $Id: cmsasn1.c,v 1.7.2.2 2011/02/01 00:33:23 rrelyea%redhat.com Exp $
+ * $Id: cmsasn1.c,v 1.9 2011/01/31 23:56:30 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"

@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: shvfy.c,v 1.13 2010/04/29 00:17:52 rrelyea%redhat.com Exp $ */
+/* $Id: shvfy.c,v 1.15 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -48,6 +48,208 @@
 #include "stdio.h"
 #include "prmem.h"
 
+/*
+ * Most modern version of Linux support a speed optimization scheme where an
+ * application called prelink modifies programs and shared libraries to quickly
+ * load if they fit into an already designed address space. In short, prelink
+ * scans the list of programs and libraries on your system, assigns them a
+ * predefined space in the the address space, then provides the fixups to the
+ * library.
+
+ * The modification of the shared library is correctly detected by the freebl
+ * FIPS checksum scheme where we check a signed hash of the library against the
+ * library itself.
+ * 
+ * The prelink command itself can reverse the process of modification and
+ * output the prestine shared library as it was before prelink made it's
+ * changes. If FREEBL_USE_PRELINK is set Freebl uses prelink to output the
+ * original copy of the shared library before prelink modified it.
+ */
+#ifdef FREEBL_USE_PRELINK
+#ifndef FREELB_PRELINK_COMMAND
+#define FREEBL_PRELINK_COMMAND "/usr/sbin/prelink -u -o -"
+#endif
+#include "private/pprio.h"
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+
+/*
+ * This function returns an NSPR PRFileDesc * which the caller can read to
+ * obtain the prestine value of the shared library, before any OS related
+ * changes to it (usually address fixups). 
+ *
+ * If prelink is installed, this
+ * file descriptor is a pipe connecting the output of 
+ *            /usr/sbin/prelink -u -o - {Library}
+ * and *pid returns the process id of the prelink child.
+ *
+ * If prelink is not installed, it returns a normal readonly handle to the
+ * library itself and *pid is set to '0'.
+ */
+PRFileDesc *
+bl_OpenUnPrelink(const char *shName, int *pid)
+{
+    char *command= strdup(FREEBL_PRELINK_COMMAND);
+    char *argString = NULL;
+    char  **argv = NULL;
+    char *shNameArg = NULL;
+    char *cp;
+    pid_t child;
+    int argc = 0, argNext = 0;
+    struct stat statBuf;
+    int pipefd[2] = {-1,-1};
+    int ret;
+
+    *pid = 0;
+
+    /* make sure the prelink command exists first. If not, fall back to
+     * just reading the file */
+    for (cp = command; *cp ; cp++) {
+	if (*cp == ' ') {
+	    *cp++ = 0;
+	    argString = cp;
+	    break;
+        }
+    }
+    memset (&statBuf, 0, sizeof(statBuf));
+    /* stat the file, follow the link */
+    ret = stat(command, &statBuf);
+    if (ret < 0) {
+	free(command);
+	return PR_Open(shName, PR_RDONLY, 0);
+    }
+    /* file exits, make sure it's an executable */
+    if (!S_ISREG(statBuf.st_mode) || 
+			((statBuf.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) == 0)) {
+	free(command);
+	return PR_Open(shName, PR_RDONLY, 0);
+    }
+
+    /* OK, the prelink command exists and looks correct, use it */
+    /* build the arglist while we can still malloc */
+    /* count the args if any */
+    if (argString && *argString) {
+	/* argString may have leading spaces, strip them off*/
+	for (cp = argString; *cp && *cp == ' '; cp++);
+	argString = cp;
+	if (*cp) {
+	    /* there is at least one arg.. */
+	    argc = 1;
+	}
+
+        /* count the rest: Note there is no provision for escaped
+         * spaces here */
+	for (cp = argString; *cp ; cp++) {
+	    if (*cp == ' ') {
+		while (*cp && *cp == ' ') cp++;
+		if (*cp) argc++;
+	    }
+	}
+    }
+
+    /* add the additional args: argv[0] (command), shName, NULL*/
+    argc += 3;
+    argv = PORT_NewArray(char *, argc);
+    if (argv == NULL) {
+	goto loser;
+    }
+
+    /* fill in the arglist */
+    argv[argNext++] = command;
+    if (argString && *argString) {
+	argv[argNext++] = argString;
+	for (cp = argString; *cp; cp++) {
+	    if (*cp == ' ') {
+		*cp++ = 0;
+		while (*cp && *cp == ' ') cp++;
+		if (*cp) argv[argNext++] = cp;
+	    }
+	}
+    }
+    /* exec doesn't advertise taking const char **argv, do the paranoid
+     * copy */
+    shNameArg = strdup(shName);
+    if (shNameArg == NULL) {
+	goto loser;
+    }
+    argv[argNext++] = shNameArg;
+    argv[argNext++] = 0;
+    
+    ret = pipe(pipefd);
+    if (ret < 0) {
+	goto loser;
+    }
+
+    /* use vfork() so we don't trigger the pthread_at_fork() handlers */
+    child = vfork();
+    if (child < 0) goto loser;
+    if (child == 0) {
+	/* set up the file descriptors */
+	/* if we need to support BSD, this will need to be an open of 
+	 * /dev/null and dup2(nullFD, 0)*/
+	close(0);
+	/* associate pipefd[1] with stdout */
+	if (pipefd[1] != 1) dup2(pipefd[1], 1);
+	close(2);
+	close(pipefd[0]);
+	/* should probably close the other file descriptors? */
+
+
+	execv(command, argv);
+	/* avoid at_exit() handlers */
+	_exit(1); /* shouldn't reach here except on an error */
+    }
+    close(pipefd[1]);
+    pipefd[1] = -1;
+
+    /* this is safe because either vfork() as full fork() semantics, and thus
+     * already has it's own address space, or because vfork() has paused
+     * the parent util the exec or exit */
+    free(command);
+    free(shNameArg);
+    PORT_Free(argv);
+
+    *pid = child;
+
+    return PR_ImportPipe(pipefd[0]);
+
+loser:
+    if (pipefd[0] != -1) {
+	close(pipefd[0]);
+    }
+    if (pipefd[1] != -1) {
+	close(pipefd[1]);
+    }
+    free(command);
+    free(shNameArg);
+    PORT_Free(argv);
+
+    return NULL;
+}
+
+/*
+ * bl_CloseUnPrelink -
+ *
+ * This closes the file descripter and reaps and children openned and crated by
+ * b;_OpenUnprelink. It's primary difference between it and just close is
+ * that it calls wait on the pid if one is supplied, preventing zombie children
+ * from hanging around.
+ */
+void
+bl_CloseUnPrelink( PRFileDesc *file, int pid)
+{
+    /* close the file descriptor */
+    PR_Close(file);
+    /* reap the child */
+    if (pid) {
+	waitpid(pid, NULL, 0);
+    }
+}
+#endif
 
 /* #define DEBUG_SHVERIFY 1 */
 
@@ -105,8 +307,26 @@ readItem(PRFileDesc *fd, SECItem *item)
 PRBool
 BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 {
+    PRBool result = PR_FALSE; /* if anything goes wrong,
+			       * the signature does not verify */
     /* find our shared library name */
     char *shName = PR_GetLibraryFilePathname(name, addr);
+    if (!shName) {
+	goto loser;
+    }
+    result = BLAPI_SHVerifyFile(shName);
+
+loser:
+    if (shName != NULL) {
+	PR_Free(shName);
+    }
+
+    return result;
+}
+
+PRBool
+BLAPI_SHVerifyFile(const char *shName)
+{
     char *checkName = NULL;
     PRFileDesc *checkFD = NULL;
     PRFileDesc *shFD = NULL;
@@ -117,10 +337,13 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
     SECStatus rv;
     DSAPublicKey key;
     int count;
+#ifdef FREEBL_USE_PRELINK
+    int pid = 0;
+#endif
 
     PRBool result = PR_FALSE; /* if anything goes wrong,
 			       * the signature does not verify */
-    unsigned char buf[512];
+    unsigned char buf[4096];
     unsigned char hashBuf[SHA1_LENGTH];
 
     PORT_Memset(&key,0,sizeof(key));
@@ -197,7 +420,11 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
     checkFD = NULL;
 
     /* open our library file */
+#ifdef FREEBL_USE_PRELINK
+    shFD = bl_OpenUnPrelink(shName,&pid);
+#else
     shFD = PR_Open(shName, PR_RDONLY, 0);
+#endif
     if (shFD == NULL) {
 #ifdef DEBUG_SHVERIFY
         fprintf(stderr, "Failed to open the library file %s: (%d, %d)\n",
@@ -218,7 +445,11 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 	SHA1_Update(hashcx, buf, bytesRead);
 	count += bytesRead;
     }
+#ifdef FREEBL_USE_PRELINK
+    bl_CloseUnPrelink(shFD, pid);
+#else
     PR_Close(shFD);
+#endif
     shFD = NULL;
 
     SHA1_End(hashcx, hash.data, &hash.len, hash.len);
@@ -255,9 +486,6 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 
 
 loser:
-    if (shName != NULL) {
-	PR_Free(shName);
-    }
     if (checkName != NULL) {
 	PORT_Free(checkName);
     }
@@ -292,8 +520,11 @@ loser:
 PRBool
 BLAPI_VerifySelf(const char *name)
 {
-    /* to separate shlib to verify if name is NULL */
     if (name == NULL) {
+	/*
+	 * If name is NULL, freebl is statically linked into softoken.
+	 * softoken will call BLAPI_SHVerify next to verify itself.
+	 */
 	return PR_TRUE;
     }
     return BLAPI_SHVerify(name, (PRFuncPtr) decodeInt);

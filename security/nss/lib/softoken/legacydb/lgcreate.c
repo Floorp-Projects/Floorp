@@ -143,7 +143,7 @@ lg_createCertObject(SDB *sdb, CK_OBJECT_HANDLE *handle,
     /*
      * Add a NULL S/MIME profile if necessary.
      */
-    email = lg_getString(CKA_NETSCAPE_EMAIL, templ, count);
+    email = lg_getString(CKA_NSS_EMAIL, templ, count);
     if (email) {
 	certDBEntrySMime *entry;
 
@@ -168,17 +168,15 @@ lg_MapTrust(CK_TRUST trust, PRBool clientAuth)
     unsigned int trustCA = clientAuth ? CERTDB_TRUSTED_CLIENT_CA :
 							CERTDB_TRUSTED_CA;
     switch (trust) {
-    case CKT_NETSCAPE_TRUSTED:
-	return CERTDB_VALID_PEER|CERTDB_TRUSTED;
-    case CKT_NETSCAPE_TRUSTED_DELEGATOR:
+    case CKT_NSS_TRUSTED:
+	return CERTDB_TERMINAL_RECORD|CERTDB_TRUSTED;
+    case CKT_NSS_TRUSTED_DELEGATOR:
 	return CERTDB_VALID_CA|trustCA;
-    case CKT_NETSCAPE_UNTRUSTED:
-	return CERTDB_NOT_TRUSTED;
-    case CKT_NETSCAPE_MUST_VERIFY:
-	return 0;
-    case CKT_NETSCAPE_VALID: /* implies must verify */
-	return CERTDB_VALID_PEER;
-    case CKT_NETSCAPE_VALID_DELEGATOR: /* implies must verify */
+    case CKT_NSS_MUST_VERIFY_TRUST:
+	return CERTDB_MUST_VERIFY;
+    case CKT_NSS_NOT_TRUSTED:
+	return CERTDB_TERMINAL_RECORD;
+    case CKT_NSS_VALID_DELEGATOR: /* implies must verify */
 	return CERTDB_VALID_CA;
     default:
 	break;
@@ -198,10 +196,10 @@ lg_createTrustObject(SDB *sdb, CK_OBJECT_HANDLE *handle,
     const CK_ATTRIBUTE *serial = NULL;
     NSSLOWCERTCertificate *cert = NULL;
     const CK_ATTRIBUTE *trust;
-    CK_TRUST sslTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
-    CK_TRUST clientTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
-    CK_TRUST emailTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
-    CK_TRUST signTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
+    CK_TRUST sslTrust = CKT_NSS_TRUST_UNKNOWN;
+    CK_TRUST clientTrust = CKT_NSS_TRUST_UNKNOWN;
+    CK_TRUST emailTrust = CKT_NSS_TRUST_UNKNOWN;
+    CK_TRUST signTrust = CKT_NSS_TRUST_UNKNOWN;
     CK_BBOOL stepUp;
     NSSLOWCERTCertTrust dbTrust = { 0 };
     SECStatus rv;
@@ -323,7 +321,7 @@ lg_createSMimeObject(SDB *sdb, CK_OBJECT_HANDLE *handle,
     }
 
     /* lookup Time */
-    time = lg_FindAttribute(CKA_NETSCAPE_SMIME_TIMESTAMP,templ,count);
+    time = lg_FindAttribute(CKA_NSS_SMIME_TIMESTAMP,templ,count);
     if (time) {
 	rawTime.data = (unsigned char *)time->pValue;
 	rawTime.len = time->ulValueLen ;
@@ -332,7 +330,7 @@ lg_createSMimeObject(SDB *sdb, CK_OBJECT_HANDLE *handle,
     }
 
 
-    email = lg_getString(CKA_NETSCAPE_EMAIL,templ,count);
+    email = lg_getString(CKA_NSS_EMAIL,templ,count);
     if (!email) {
 	ck_rv = CKR_ATTRIBUTE_VALUE_INVALID;
 	goto loser;
@@ -399,8 +397,8 @@ lg_createCrlObject(SDB *sdb, CK_OBJECT_HANDLE *handle,
     derCrl.data = (unsigned char *)crl->pValue;
     derCrl.len = crl->ulValueLen ;
 
-    url = lg_getString(CKA_NETSCAPE_URL,templ,count);
-    isKRL = lg_isTrue(CKA_NETSCAPE_KRL,templ,count);
+    url = lg_getString(CKA_NSS_URL,templ,count);
+    isKRL = lg_isTrue(CKA_NSS_KRL,templ,count);
 
     /* Store CRL by SUBJECT */
     rv = nsslowcert_AddCrl(certHandle, &derCrl, &derSubj, url, isKRL);
@@ -520,7 +518,7 @@ lg_createPublicKeyObject(SDB *sdb, CK_KEY_TYPE key_type,
 	crv = CKR_ATTRIBUTE_VALUE_INVALID;
 	goto done;
     }
-    nsslowkey_DestroyPrivateKey(priv);
+    lg_nsslowkey_DestroyPrivateKey(priv);
     crv = CKR_OK;
 
     *handle = lg_mkHandle(sdb, pubKey, LG_TOKEN_TYPE_PUB);
@@ -727,7 +725,7 @@ fail:
     if (label) PORT_Free(label);
     *handle = lg_mkHandle(sdb,&pubKey,LG_TOKEN_TYPE_PRIV);
     if (pubKey.data) PORT_Free(pubKey.data);
-    nsslowkey_DestroyPrivateKey(privKey);
+    lg_nsslowkey_DestroyPrivateKey(privKey);
     if (rv != SECSuccess) return crv;
 
     return CKR_OK;
@@ -929,7 +927,7 @@ lg_createSecretKeyObject(SDB *sdb, CK_KEY_TYPE key_type,
 
 loser:
     if (label) PORT_Free(label);
-    if (privKey) nsslowkey_DestroyPrivateKey(privKey);
+    if (privKey) lg_nsslowkey_DestroyPrivateKey(privKey);
     if (pubKey.data) PORT_Free(pubKey.data);
 
     return crv;
@@ -987,13 +985,13 @@ lg_CreateObject(SDB *sdb, CK_OBJECT_HANDLE *handle,
     case CKO_CERTIFICATE:
 	crv = lg_createCertObject(sdb,handle,templ,count);
 	break;
-    case CKO_NETSCAPE_TRUST:
+    case CKO_NSS_TRUST:
 	crv = lg_createTrustObject(sdb,handle,templ,count);
 	break;
-    case CKO_NETSCAPE_CRL:
+    case CKO_NSS_CRL:
 	crv = lg_createCrlObject(sdb,handle,templ,count);
 	break;
-    case CKO_NETSCAPE_SMIME:
+    case CKO_NSS_SMIME:
 	crv = lg_createSMimeObject(sdb,handle,templ,count);
 	break;
     case CKO_PRIVATE_KEY:

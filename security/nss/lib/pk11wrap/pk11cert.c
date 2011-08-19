@@ -1367,6 +1367,69 @@ loser:
     return NULL;
 }
 
+static PRCallOnceType keyIDHashCallOnce;
+
+static PRStatus PR_CALLBACK
+pk11_keyIDHash_populate(void *wincx)
+{
+    CERTCertList     *certList;
+    CERTCertListNode *node = NULL;
+    SECItem           subjKeyID = {siBuffer, NULL, 0};
+    SECItem          *slotid = NULL;
+    SECMODModuleList *modules, *mlp;
+    SECMODListLock   *moduleLock;
+    int               i;
+
+    certList = PK11_ListCerts(PK11CertListUser, wincx);
+    if (!certList) {
+	return PR_FAILURE;
+    }
+
+    for (node = CERT_LIST_HEAD(certList);
+         !CERT_LIST_END(node, certList);
+         node = CERT_LIST_NEXT(node)) {
+	if (CERT_FindSubjectKeyIDExtension(node->cert, 
+	                                   &subjKeyID) == SECSuccess && 
+	    subjKeyID.data != NULL) {
+	    cert_AddSubjectKeyIDMapping(&subjKeyID, node->cert);
+	    SECITEM_FreeItem(&subjKeyID, PR_FALSE);
+	}
+    }
+    CERT_DestroyCertList(certList);
+
+    /*
+     * Record the state of each slot in a hash. The concatenation of slotID
+     * and moduleID is used as its key, with the slot series as its value.
+     */
+    slotid = SECITEM_AllocItem(NULL, NULL,
+                               sizeof(CK_SLOT_ID) + sizeof(SECMODModuleID));
+    if (!slotid) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return PR_FAILURE;
+    }
+    moduleLock = SECMOD_GetDefaultModuleListLock();
+    if (!moduleLock) {
+	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return PR_FAILURE;
+    }
+    SECMOD_GetReadLock(moduleLock);
+    modules = SECMOD_GetDefaultModuleList();
+    for (mlp = modules; mlp; mlp = mlp->next) {
+	for (i = 0; i < mlp->module->slotCount; i++) {
+	    memcpy(slotid->data, &mlp->module->slots[i]->slotID,
+	           sizeof(CK_SLOT_ID));
+	    memcpy(&slotid->data[sizeof(CK_SLOT_ID)], &mlp->module->moduleID,
+	           sizeof(SECMODModuleID));
+	    cert_UpdateSubjectKeyIDSlotCheck(slotid,
+	                                     mlp->module->slots[i]->series);
+	}
+    }
+    SECMOD_ReleaseReadLock(moduleLock);
+    SECITEM_FreeItem(slotid, PR_TRUE);
+
+    return PR_SUCCESS;
+}
+
 /*
  * We're looking for a cert which we have the private key for that's on the
  * list of recipients. This searches one slot.
@@ -1379,11 +1442,77 @@ pk11_FindCertObjectByRecipientNew(PK11SlotInfo *slot, NSSCMSRecipient **recipien
 {
     NSSCMSRecipient *ri = NULL;
     int i;
+    PRBool tokenRescanDone = PR_FALSE;
 
     for (i=0; (ri = recipientlist[i]) != NULL; i++) {
 	CERTCertificate *cert = NULL;
 	if (ri->kind == RLSubjKeyID) {
 	    SECItem *derCert = cert_FindDERCertBySubjectKeyID(ri->id.subjectKeyID);
+	    if (!derCert && !tokenRescanDone) {
+		/*
+		 * We didn't find the cert by its key ID. If we have slots
+		 * with removable tokens, a failure from
+		 * cert_FindDERCertBySubjectKeyID doesn't necessarily imply
+		 * that the cert is unavailable - the token might simply
+		 * have been inserted after the initial run of
+		 * pk11_keyIDHash_populate (wrapped by PR_CallOnceWithArg),
+		 * or a different token might have been present in that
+		 * slot, initially. Let's check for new tokens...
+		 */
+		PK11SlotList *sl = PK11_GetAllTokens(CKM_INVALID_MECHANISM,
+		                                     PR_FALSE, PR_FALSE, pwarg);
+		if (sl) {
+		    PK11SlotListElement *le;
+		    SECItem *slotid = SECITEM_AllocItem(NULL, NULL,
+		                   sizeof(CK_SLOT_ID) + sizeof(SECMODModuleID));
+		    if (!slotid) {
+			PORT_SetError(SEC_ERROR_NO_MEMORY);
+			return NULL;
+		    }
+		    for (le = sl->head; le; le = le->next) {
+			memcpy(slotid->data, &le->slot->slotID,
+			       sizeof(CK_SLOT_ID));
+			memcpy(&slotid->data[sizeof(CK_SLOT_ID)],
+			       &le->slot->module->moduleID,
+			       sizeof(SECMODModuleID));
+			/*
+			 * Any changes with the slot since our last check?
+			 * If so, re-read the certs in that specific slot.
+			 */
+			if (cert_SubjectKeyIDSlotCheckSeries(slotid)
+			    != PK11_GetSlotSeries(le->slot)) {
+			    CERTCertListNode *node = NULL;
+			    SECItem subjKeyID = {siBuffer, NULL, 0};
+			    CERTCertList *cl = PK11_ListCertsInSlot(le->slot);
+			    if (!cl) {
+				continue;
+			    }
+			    for (node = CERT_LIST_HEAD(cl);
+			         !CERT_LIST_END(node, cl);
+			         node = CERT_LIST_NEXT(node)) {
+				if (CERT_IsUserCert(node->cert) &&
+				    CERT_FindSubjectKeyIDExtension(node->cert,
+				                   &subjKeyID) == SECSuccess) {
+				    if (subjKeyID.data) {
+					cert_AddSubjectKeyIDMapping(&subjKeyID,
+					                            node->cert);
+					cert_UpdateSubjectKeyIDSlotCheck(slotid,
+					          PK11_GetSlotSeries(le->slot));
+				    }
+				    SECITEM_FreeItem(&subjKeyID, PR_FALSE);
+				}
+			    }
+			    CERT_DestroyCertList(cl);
+			}
+		    }
+		    PK11_FreeSlotList(sl);
+		    SECITEM_FreeItem(slotid, PR_TRUE);
+		}
+		/* only check once per message/recipientlist */
+		tokenRescanDone = PR_TRUE;
+		/* do another lookup (hopefully we found that cert...) */
+		derCert = cert_FindDERCertBySubjectKeyID(ri->id.subjectKeyID);
+	    }
 	    if (derCert) {
 		cert = PK11_FindCertFromDERCertItem(slot, derCert, pwarg);
 		SECITEM_FreeItem(derCert, PR_TRUE);
@@ -1556,34 +1685,6 @@ loser:
     if (*slotPtr) PK11_FreeSlot(*slotPtr);
     *slotPtr = NULL;
     return NULL;
-}
-
-static PRCallOnceType keyIDHashCallOnce;
-
-static PRStatus PR_CALLBACK
-pk11_keyIDHash_populate(void *wincx)
-{
-    CERTCertList     *certList;
-    CERTCertListNode *node = NULL;
-    SECItem           subjKeyID = {siBuffer, NULL, 0};
-
-    certList = PK11_ListCerts(PK11CertListUser, wincx);
-    if (!certList) {
-	return PR_FAILURE;
-    }
-
-    for (node = CERT_LIST_HEAD(certList);
-         !CERT_LIST_END(node, certList);
-         node = CERT_LIST_NEXT(node)) {
-	if (CERT_FindSubjectKeyIDExtension(node->cert, 
-	                                   &subjKeyID) == SECSuccess && 
-	    subjKeyID.data != NULL) {
-	    cert_AddSubjectKeyIDMapping(&subjKeyID, node->cert);
-	    SECITEM_FreeItem(&subjKeyID, PR_FALSE);
-	}
-    }
-    CERT_DestroyCertList(certList);
-    return PR_SUCCESS;
 }
 
 /*
@@ -2060,14 +2161,14 @@ PK11_FindCertFromDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
 }
 
 CERTCertificate *
-PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, SECItem *inDerCert,
+PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, const SECItem *inDerCert,
 								 void *wincx)
 
 {
-    NSSCertificate *c;
     NSSDER derCert;
     NSSToken *tok;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+    nssCryptokiObject *co = NULL;
     SECStatus rv;
 
     tok = PK11Slot_GetNSSToken(slot);
@@ -2077,26 +2178,12 @@ PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, SECItem *inDerCert,
 	PK11_FreeSlot(slot);
 	return NULL;
     }
-    c = NSSTrustDomain_FindCertificateByEncodedCertificate(td, &derCert);
-    if (c) {
-	PRBool isToken = PR_FALSE;
-	NSSToken **tp;
-	NSSToken **tokens = nssPKIObject_GetTokens(&c->object, NULL);
-	if (tokens) {
-	    for (tp = tokens; *tp; tp++) {
-		if (*tp == tok) {
-		    isToken = PR_TRUE;
-		    break;
-		}
-	    }
-	    if (!isToken) {
-		NSSCertificate_Destroy(c);
-		c = NULL;
-	    }
-	    nssTokenArray_Destroy(tokens);
-	}
-    }
-    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
+
+    co = nssToken_FindCertificateByEncodedCertificate(tok, NULL, &derCert,
+                                          nssTokenSearchType_TokenOnly, NULL);
+
+    return co ? PK11_MakeCertFromHandle(slot, co->handle, NULL) : NULL;
+
 } 
 
 /*
@@ -2188,11 +2275,8 @@ PK11_ImportCertForKeyToSlot(PK11SlotInfo *slot, CERTCertificate *cert,
 PRBool
 KEAPQGCompare(CERTCertificate *server,CERTCertificate *cert) {
 
-    if ( SECKEY_KEAParamCompare(server,cert) == SECEqual ) {
-        return PR_TRUE;
-    } else {
-	return PR_FALSE;
-    }
+    /* not implemented */
+    return PR_FALSE;
 }
 
 PRBool
@@ -2349,6 +2433,7 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     PRBool isCA = PR_FALSE;
     char *nickname = NULL;
     unsigned int certType;
+    SECStatus rv;
 
     if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique) ||
         (type == PK11CertListCAUnique) || (type == PK11CertListUserUnique) ) {
@@ -2391,9 +2476,13 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
 
 	/* put slot certs at the end */
 	if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
-	    CERT_AddCertToListTailWithData(certList,newCert,nickname);
+	    rv = CERT_AddCertToListTailWithData(certList,newCert,nickname);
 	} else {
-	    CERT_AddCertToListHeadWithData(certList,newCert,nickname);
+	    rv = CERT_AddCertToListHeadWithData(certList,newCert,nickname);
+	}
+	/* if we didn't add the cert to the list, don't leak it */
+	if (rv != SECSuccess) {
+	    CERT_DestroyCertificate(newCert);
 	}
     } else {
 	/* add multiple instances to the cert list */
@@ -2414,9 +2503,13 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
 
 	    /* put slot certs at the end */
 	    if (slot && !PK11_IsInternal(slot)) {
-		CERT_AddCertToListTailWithData(certList,newCert,nickname);
+		rv = CERT_AddCertToListTailWithData(certList,newCert,nickname);
 	    } else {
-		CERT_AddCertToListHeadWithData(certList,newCert,nickname);
+		rv = CERT_AddCertToListHeadWithData(certList,newCert,nickname);
+	    }
+	    /* if we didn't add the cert to the list, don't leak it */
+	    if (rv != SECSuccess) {
+		CERT_DestroyCertificate(newCert);
 	    }
 	}
 	nssCryptokiObjectArray_Destroy(instances);
@@ -2498,6 +2591,7 @@ listCertsCallback(CERTCertificate* cert, void*arg)
     nssCryptokiObject *instance, **ci;
     nssCryptokiObject **instances;
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
+    SECStatus rv;
 
     if (c == NULL) {
         return SECFailure;
@@ -2520,11 +2614,15 @@ listCertsCallback(CERTCertificate* cert, void*arg)
 	return SECFailure;
     }
     nickname = STAN_GetCERTCertificateNameForInstance(cdata->list->arena,
-	c, instance);
+						      c, instance);
     nssCryptokiObjectArray_Destroy(instances);
 
-    return CERT_AddCertToListTailWithData(cdata->list, 
-				CERT_DupCertificate(cert),nickname);
+    CERT_DupCertificate(cert);
+    rv = CERT_AddCertToListTailWithData(cdata->list, cert, nickname);
+    if (rv != SECSuccess) {
+	CERT_DestroyCertificate(cert);
+    }
+    return rv;
 }
 
 CERTCertList *

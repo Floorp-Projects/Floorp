@@ -74,7 +74,5 @@ CSRCS = \
 	pkix_targetcertchecker.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = pkixchecker
 

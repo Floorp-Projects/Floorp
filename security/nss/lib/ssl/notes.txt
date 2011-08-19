@@ -91,8 +91,8 @@ user dialog to finish).  It is not the same as EWOULDBLOCK.
 
 Rank (order) of locks
 
-[ReadLock ->]\ [firstHandshake ->] [ssl3Handshake ->] recvbuf \ -> "spec"
-[WriteLock->]/                                        xmitbuf /
+recvLock ->\ firstHandshake -> recvbuf -> ssl3Handshake -> xmitbuf -> "spec"
+sendLock ->/
 
 crypto and hash Data that must be protected while turning plaintext into
 ciphertext:

@@ -40,11 +40,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.c,v 1.47.2.1 2011/04/07 22:31:40 wtc%google.com Exp $ */
+/* $Id: mpi.c,v 1.50 2011/04/07 22:35:18 wtc%google.com Exp $ */
 
 #include "mpi-priv.h"
 #if defined(OSF1)
 #include <c_asm.h>
+#endif
+
+#if defined(__arm__) && \
+    ((defined(__thumb__) && !defined(__thumb2__)) || defined(__ARM_ARCH_3__))
+/* 16-bit thumb or ARM v3 doesn't work inlined assember version */
+#undef MP_ASSEMBLY_MULTIPLY
+#undef MP_ASSEMBLY_SQUARE
 #endif
 
 #if MP_LOGTAB
@@ -2939,8 +2946,6 @@ void     s_mp_exch(mp_int *a, mp_int *b)
    Shift mp leftward by p digits, growing if needed, and zero-filling
    the in-shifted digits at the right end.  This is a convenient
    alternative to multiplication by powers of the radix
-   The value of USED(mp) must already have been set to the value for
-   the shifted result.
  */   
 
 mp_err   s_mp_lshd(mp_int *mp, mp_size p)
@@ -4210,6 +4215,7 @@ mp_err   s_mp_div(mp_int *rem, 	/* i: dividend, o: remainder */
   if(mp_cmp_z(div) == 0)
     return MP_RANGE;
 
+  DIGITS(&t) = 0;
   /* Shortcut if divisor is power of two */
   if((ix = s_mp_ispow2(div)) >= 0) {
     MP_CHECKOK( mp_copy(rem, quot) );
@@ -4219,7 +4225,6 @@ mp_err   s_mp_div(mp_int *rem, 	/* i: dividend, o: remainder */
     return MP_OKAY;
   }
 
-  DIGITS(&t) = 0;
   MP_SIGN(rem) = ZPOS;
   MP_SIGN(div) = ZPOS;
 
@@ -4747,7 +4752,7 @@ mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
   ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
 
   bytes = mp_unsigned_octet_size(mp);
-  ARGCHK(bytes <= maxlen, MP_BADARG);
+  ARGCHK(bytes >= 0 && bytes <= maxlen, MP_BADARG);
 
   /* Iterate over each digit... */
   for(ix = USED(mp) - 1; ix >= 0; ix--) {
@@ -4779,7 +4784,7 @@ mp_to_signed_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
   ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
 
   bytes = mp_unsigned_octet_size(mp);
-  ARGCHK(bytes <= maxlen, MP_BADARG);
+  ARGCHK(bytes >= 0 && bytes <= maxlen, MP_BADARG);
 
   /* Iterate over each digit... */
   for(ix = USED(mp) - 1; ix >= 0; ix--) {
@@ -4819,7 +4824,7 @@ mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size length)
   ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
 
   bytes = mp_unsigned_octet_size(mp);
-  ARGCHK(bytes <= length, MP_BADARG);
+  ARGCHK(bytes >= 0 && bytes <= length, MP_BADARG);
 
   /* place any needed leading zeros */
   for (;length > bytes; --length) {

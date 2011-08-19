@@ -89,6 +89,7 @@ static struct secmodargSlotFlagTable secmod_argSlotFlagTable[] = {
 	SECMOD_ARG_ENTRY(SEED,SECMOD_SEED_FLAG),
 	SECMOD_ARG_ENTRY(PublicCerts,SECMOD_FRIENDLY_FLAG),
 	SECMOD_ARG_ENTRY(RANDOM,SECMOD_RANDOM_FLAG),
+	SECMOD_ARG_ENTRY(Disable, PK11_DISABLE_FLAG),
 };
 
 #define SECMOD_HANDLE_STRING_ARG(param,target,value,command) \

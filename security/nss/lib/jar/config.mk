@@ -48,7 +48,7 @@ PROGRAM        =
 # NSS_X86 means the target is a 32-bits x86 CPU architecture
 # NSS_X64 means the target is a 64-bits x64 CPU architecture
 # NSS_X86_OR_X64 means the target is either x86 or x64
-ifeq (,$(filter-out x386 x86 x86_64,$(CPU_ARCH)))
+ifeq (,$(filter-out i386 x386 x86 x86_64,$(CPU_ARCH)))
         DEFINES += -DNSS_X86_OR_X64
 ifdef USE_64
         DEFINES += -DNSS_X64

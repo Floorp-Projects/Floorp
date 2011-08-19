@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dsa.c,v 1.20.22.1 2010/12/04 18:59:01 rrelyea%redhat.com Exp $ */
+/* $Id: dsa.c,v 1.21 2010/12/04 18:57:16 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"

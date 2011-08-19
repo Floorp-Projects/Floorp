@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.4 $ $Date: 2009/02/09 07:55:52 $";
+static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.5 $ $Date: 2010/09/09 21:14:24 $";
 #endif /* DEBUG */
 
 /*
@@ -123,6 +123,7 @@ nssCKFWHash_Create
   rv->mutex = nssCKFWInstance_CreateMutex(fwInstance, arena, pError);
   if (!rv->mutex) {
     if( CKR_OK == *pError ) {
+      (void)nss_ZFreeIf(rv);
       *pError = CKR_GENERAL_ERROR;
     }
     return (nssCKFWHash *)NULL;

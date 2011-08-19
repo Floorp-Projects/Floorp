@@ -82,10 +82,48 @@ ifeq ($(FREEBL_NO_DEPEND),1)
 else
 	MAPFILE_SOURCE = freebl.def
 endif
+
+# FREEBL_USE_PRELINK
+#
+# Most modern version of Linux support a speed optimization scheme where an
+# application called prelink modifies programs and shared libraries to quickly
+# load if they fit into an already designed address space. In short, prelink
+# scans the list of programs and libraries on your system, assigns them a
+# predefined space in the the address space, then provides the fixups to the
+# library.
+#
+# The modification of the shared library is correctly detected by the freebl
+# FIPS checksum scheme where we check a signed hash of the library against the
+# library itself.
+#
+# The prelink command itself can reverse the process of modification and output
+# the prestine shared library as it was before prelink made it's changes.
+# This option tells Freebl could use prelink to output the original copy of
+# the shared library before prelink modified it.
+#
+# FREEBL_PRELINK_COMMAND
+#
+# This is an optional environment variable which can override the default
+# prelink command. It could be used on systems that did something similiar to 
+# prelink but used a different command and syntax. The only requirement is the 
+# program must take the library as the last argument, the program must output 
+# the original library to standard out, and the program does not need to take 
+# any quoted or imbedded spaces in its arguments (except the path to the 
+# library itself, which can have imbedded spaces or special characters).
+#
+ifdef FREEBL_USE_PRELINK
+	DEFINES += -DFREEBL_USE_PRELINK
+ifdef LINUX
+	DEFINES += -D__GNU_SOURCE=1
+endif
+endif
+ifdef FREEBL_PRELINK_COMMAND
+	DEFINES +=-DFREEBL_PRELINK_COMMAND=\"$(FREEBL_PRELINK_COMMAND)\"
+endif
 # NSS_X86 means the target is a 32-bits x86 CPU architecture
 # NSS_X64 means the target is a 64-bits x64 CPU architecture
 # NSS_X86_OR_X64 means the target is either x86 or x64
-ifeq (,$(filter-out x386 x86 x86_64,$(CPU_ARCH)))
+ifeq (,$(filter-out i386 x386 x86 x86_64,$(CPU_ARCH)))
         DEFINES += -DNSS_X86_OR_X64
 ifdef USE_64
         DEFINES += -DNSS_X64
@@ -180,6 +218,12 @@ ifeq ($(CPU_ARCH),x86)
     # The floating point ECC code doesn't work on Linux x86 (bug 311432).
     #ECL_USE_FP = 1
 endif
+ifeq ($(CPU_ARCH),arm)
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+    DEFINES += -DMP_USE_UINT_DIGIT
+    DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
+    MPI_SRCS += mpi_arm.c
+endif
 endif # Linux
 
 ifeq ($(OS_TARGET),AIX)
@@ -215,7 +259,9 @@ else
     MPI_SRCS += mpi_hp.c 
     ASFILES  += hpma512.s hppa20.s 
     DEFINES  += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
+ifndef NS_USE_GCC
     ARCHFLAG = -Aa +e +DA2.0 +DS2.0
+endif
 endif
 endif
 endif
