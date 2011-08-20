@@ -475,6 +475,8 @@ GfxInfo::Init()
   mAdapterVendorID2 = ParseIDFromDeviceID(mDeviceID2, "VEN_", 4);
   mAdapterDeviceID  = ParseIDFromDeviceID(mDeviceID,  "&DEV_", 4);
   mAdapterDeviceID2 = ParseIDFromDeviceID(mDeviceID2, "&DEV_", 4);
+  mAdapterSubsysID  = ParseIDFromDeviceID(mDeviceID,  "&SUBSYS_", 8);
+  mAdapterSubsysID2 = ParseIDFromDeviceID(mDeviceID2, "&SUBSYS_", 8);
 
   const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
   if (spoofedDriverVersionString) {
@@ -695,6 +697,7 @@ GfxInfo::AddCrashReportAnnotations()
   /* AppendPrintf only supports 32 character strings, mrghh. */
   note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
   note.AppendPrintf("AdapterDeviceID: %04x, ", deviceID);
+  note.AppendPrintf("AdapterSubsysID: %08x, ", mAdapterSubsysID);
   note.AppendPrintf("AdapterDriverVersion: ");
   note.Append(NS_LossyConvertUTF16toASCII(adapterDriverVersionString));
 
@@ -717,6 +720,7 @@ GfxInfo::AddCrashReportAnnotations()
     GetAdapterDriverVersion2(adapterDriverVersionString2);
     note.AppendPrintf("AdapterVendorID2: %04x, ", vendorID2);
     note.AppendPrintf("AdapterDeviceID2: %04x, ", deviceID2);
+    note.AppendPrintf("AdapterSubsysID2: %08x, ", mAdapterSubsysID2);
     note.AppendPrintf("AdapterDriverVersion2: ");
     note.Append(NS_LossyConvertUTF16toASCII(adapterDriverVersionString2));
   }
