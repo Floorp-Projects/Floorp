@@ -118,7 +118,8 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
                                bool *triedToWrap)
   {
-    return xpc::dom::NodeListBase::create(cx, scope, this, triedToWrap);
+    return mozilla::dom::binding::NodeListBase::create(cx, scope, this,
+                                                       triedToWrap);
   }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ANONYMOUS_CONTENT_LIST_IID)

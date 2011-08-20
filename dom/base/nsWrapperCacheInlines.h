@@ -64,10 +64,10 @@ nsWrapperCache::SetWrapper(JSObject* aWrapper)
     NS_ASSERTION(aWrapper, "Use ClearWrapper!");
 
     JSObject *obj = GetJSObjectFromBits();
-    if (obj && xpc::dom::isExpandoObject(obj)) {
-        NS_ASSERTION(xpc::dom::instanceIsProxy(aWrapper),
+    if (obj && mozilla::dom::binding::isExpandoObject(obj)) {
+        NS_ASSERTION(mozilla::dom::binding::instanceIsProxy(aWrapper),
                      "We have an expando but this isn't a DOM proxy?");
-        js::SetProxyExtra(aWrapper, xpc::dom::JSPROXYSLOT_EXPANDO,
+        js::SetProxyExtra(aWrapper, mozilla::dom::binding::JSPROXYSLOT_EXPANDO,
                           js::ObjectValue(*obj));
     }
 
@@ -84,24 +84,24 @@ nsWrapperCache::GetExpandoObjectPreserveColor() const
 
     if (!IsProxy()) {
         // If we support non-proxy dom binding objects then this should be:
-        //return xpc::dom::isExpandoObject(obj) ? obj : js::GetSlot(obj, EXPANDO_SLOT);
+        //return mozilla::dom::binding::isExpandoObject(obj) ? obj : js::GetSlot(obj, EXPANDO_SLOT);
         return NULL;
     }
 
     // FIXME unmark gray?
-    if (xpc::dom::instanceIsProxy(obj)) {
+    if (mozilla::dom::binding::instanceIsProxy(obj)) {
         return GetExpandoFromSlot(obj);
     }
 
-    return xpc::dom::isExpandoObject(obj) ? obj : NULL;
+    return mozilla::dom::binding::isExpandoObject(obj) ? obj : NULL;
 }
 
 inline JSObject*
 nsWrapperCache::GetExpandoFromSlot(JSObject *obj)
 {
-    NS_ASSERTION(xpc::dom::instanceIsProxy(obj),
+    NS_ASSERTION(mozilla::dom::binding::instanceIsProxy(obj),
                  "Asking for an expando but this isn't a DOM proxy?");
-    const js::Value &v = js::GetProxyExtra(obj, xpc::dom::JSPROXYSLOT_EXPANDO);
+    const js::Value &v = js::GetProxyExtra(obj, mozilla::dom::binding::JSPROXYSLOT_EXPANDO);
     return v.isUndefined() ? NULL : v.toObjectOrNull();
 }
 
@@ -115,7 +115,7 @@ nsWrapperCache::ClearWrapper()
     }
 
     JSObject *expando;
-    if (xpc::dom::instanceIsProxy(obj)) {
+    if (mozilla::dom::binding::instanceIsProxy(obj)) {
         expando = GetExpandoFromSlot(obj);
     }
     else {

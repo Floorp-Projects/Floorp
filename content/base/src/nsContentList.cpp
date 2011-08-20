@@ -187,9 +187,9 @@ NS_IMPL_RELEASE_INHERITED(nsSimpleContentList, nsBaseContentList)
 
 JSObject*
 nsSimpleContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
-                                bool *failed)
+                                bool *triedToWrap)
 {
-  return xpc::dom::NodeListBase::create(cx, scope, this, failed);
+  return mozilla::dom::binding::NodeListBase::create(cx, scope, this, triedToWrap);
 }
 
 // nsFormContentList
@@ -504,11 +504,11 @@ nsContentList::~nsContentList()
 
 JSObject*
 nsContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
-                          bool *failed)
+                          bool *triedToWrap)
 {
-  return xpc::dom::NodeListBase::create(cx, scope,
-                                        static_cast<nsIHTMLCollection*>(this),
-                                        this, failed);
+  return mozilla::dom::binding::NodeListBase::create(cx, scope,
+                                                     static_cast<nsIHTMLCollection*>(this),
+                                                     this, triedToWrap);
 }
 
 DOMCI_DATA(ContentList, nsContentList)

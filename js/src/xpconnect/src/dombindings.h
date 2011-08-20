@@ -48,8 +48,9 @@ class nsINode;
 class nsINodeList;
 class nsIHTMLCollection;
 
-namespace xpc {
+namespace mozilla {
 namespace dom {
+namespace binding {
 
 inline nsWrapperCache*
 GetWrapperCache(nsWrapperCache *cache)
@@ -179,6 +180,7 @@ class NodeList : public NodeListBase {
     static T *getNodeList(JSObject *obj);
 };
 
+}
 }
 }
 
