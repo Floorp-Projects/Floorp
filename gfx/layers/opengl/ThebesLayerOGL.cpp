@@ -734,16 +734,12 @@ ThebesLayerOGL::InvalidateRegion(const nsIntRegion &aRegion)
 }
 
 void
-ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                            const nsIntPoint& aOffset)
+ThebesLayerOGL::Validate()
 {
   if (!mBuffer && !CreateSurface()) {
     return;
   }
   NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
-
-  mOGLManager->MakeCurrent();
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   TextureImage::ContentType contentType =
     CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
@@ -751,11 +747,8 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   gfxMatrix transform2d;
   PRUint32 flags = 0;
-  if (GetEffectiveTransform().Is2D(&transform2d)) {
-    if (transform2d.HasNonIntegerTranslation()) {
-      flags |= ThebesLayerBufferOGL::PAINT_WILL_RESAMPLE;
-    }
-  } else {
+  if (!GetEffectiveTransform().Is2D(&transform2d) ||
+      transform2d.HasNonIntegerTranslation()) {
     flags |= ThebesLayerBufferOGL::PAINT_WILL_RESAMPLE;
   }
 
@@ -783,9 +776,23 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
       mValidRegion.Or(mValidRegion, tmp);
     }
   }
+}
 
-  // Drawing thebes layers can change the current context, reset it.
+void
+ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                            const nsIntPoint& aOffset)
+{
+  NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
+  
+  gfxMatrix transform2d;
+  PRUint32 flags = 0;
+  if (!GetEffectiveTransform().Is2D(&transform2d) ||
+      transform2d.HasNonIntegerTranslation()) {
+    flags |= ThebesLayerBufferOGL::PAINT_WILL_RESAMPLE;
+  }
+
   gl()->MakeCurrent();
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
   mBuffer->RenderTo(aOffset, mOGLManager, flags);
