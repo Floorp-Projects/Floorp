@@ -632,7 +632,7 @@ SyncEngine.prototype = {
  
     // Array of just the IDs from this._modified. This is what we iterate over
     // so we can modify this._modified during the iteration.
-    this._modifiedIDs = [id for (id in this._modified)];
+    this._modifiedIDs = Object.keys(this._modified);
     this._log.info(this._modifiedIDs.length +
                    " outgoing items pre-reconciliation");
 
@@ -1003,7 +1003,7 @@ SyncEngine.prototype = {
         if (modified > this.lastSync)
           this.lastSync = modified;
 
-        let failed_ids = [id for (id in resp.obj.failed)];
+        let failed_ids = Object.keys(resp.obj.failed);
         if (failed_ids.length)
           this._log.debug("Records that will be uploaded again because "
                           + "the server couldn't store them: "
