@@ -319,9 +319,33 @@ ListBase<LC>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 template<class LC>
 bool
+ListBase<LC>::getItemAt(ListType *list, uint32 i, IndexGetterType &item)
+{
+    JS_STATIC_ASSERT(!hasIndexGetter);
+    return false;
+}
+
+template<class LC>
+bool
+ListBase<LC>::setItemAt(ListType *list, uint32 i, IndexSetterType item)
+{
+    JS_STATIC_ASSERT(!hasIndexSetter);
+    return false;
+}
+
+template<class LC>
+bool
 ListBase<LC>::getNamedItem(ListType *list, const nsAString& aName, NameGetterType &item)
 {
     JS_STATIC_ASSERT(!hasNameGetter);
+    return false;
+}
+
+template<class LC>
+bool
+ListBase<LC>::setNamedItem(ListType *list, const nsAString& aName, NameSetterType item)
+{
+    JS_STATIC_ASSERT(!hasNameSetter);
     return false;
 }
 
@@ -580,6 +604,17 @@ GetArrayIndexFromId(JSContext *cx, jsid id)
     return IdToInt32(cx, id);
 }
 
+static void
+FillPropertyDescriptor(PropertyDescriptor *desc, JSObject *obj, jsval v, bool readonly)
+{
+    desc->obj = obj;
+    desc->value = v;
+    desc->attrs = (readonly ? JSPROP_READONLY : 0) | JSPROP_ENUMERATE;
+    desc->getter = NULL;
+    desc->setter = NULL;
+    desc->shortid = 0;
+}
+
 template<class LC>
 bool
 ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -597,6 +632,24 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
         }
     }
 
+    if (set) {
+        if (hasNameSetter && JSID_IS_STRING(id)) {
+            FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
+            return true;
+        }
+
+        if (hasIndexSetter) {
+            int32 index = GetArrayIndexFromId(cx, id);
+            if (index >= 0) {
+                FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
+                return true;
+            }
+        }
+
+        desc->obj = NULL;
+        return true;
+    }
+
     if (hasNameGetter && JSID_IS_STRING(id) && !hasNative(cx, proxy, id)) {
         jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
         bool hasResult;
@@ -607,12 +660,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
             jsval v;
             if (!Wrap(cx, proxy, result, &v))
                 return false;
-            desc->obj = proxy;
-            desc->value = v;
-            desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE;
-            desc->getter = NULL;
-            desc->setter = NULL;
-            desc->shortid = 0;
+            FillPropertyDescriptor(desc, proxy, v, !hasNameSetter);
         }
         else {
             desc->obj = NULL;
@@ -628,12 +676,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
                 jsval v;
                 if (!Wrap(cx, proxy, result, &v))
                     return false;
-                desc->obj = proxy;
-                desc->value = v;
-                desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE;
-                desc->getter = NULL;
-                desc->setter = NULL;
-                desc->shortid = 0;
+                FillPropertyDescriptor(desc, proxy, v, !hasIndexSetter);
                 return true;
             }
         }
@@ -698,6 +741,32 @@ template<class LC>
 bool
 ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
 {
+    if (hasNameSetter && JSID_IS_STRING(id)) {
+        jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
+        xpc_qsDOMString nameString(cx, name, &name,
+                                   xpc_qsDOMString::eDefaultNullBehavior,
+                                   xpc_qsDOMString::eDefaultUndefinedBehavior);
+        if (!nameString.IsValid())
+            return false;
+
+        nsCOMPtr<nsISupports> ref;
+        NameSetterType value;
+        jsval v;
+        return Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v) &&
+               setNamedItem(getListObject(proxy), nameString, value);
+    }
+
+    if (hasIndexSetter) {
+        int32 index = GetArrayIndexFromId(cx, id);
+        if (index >= 0) {
+            nsCOMPtr<nsISupports> ref;
+            IndexSetterType value;
+            jsval v;
+            return Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v) &&
+                   setItemAt(getListObject(proxy), index, value);
+        }
+    }
+
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
         return true;
 

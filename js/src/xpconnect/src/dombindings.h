@@ -103,14 +103,20 @@ class Getter : public Op<Type>
 {
 };
 
-template<class Getter>
+template<typename Type>
+class Setter : public Op<Type>
+{
+};
+
+template<class Getter, class Setter=NoOp>
 class Ops
 {
 public:
     typedef Getter G;
+    typedef Setter S;
 };
 
-typedef Ops<NoOp> NoOps;
+typedef Ops<NoOp, NoOp> NoOps;
  
 template<class ListType, class Base, class IndexOps, class NameOps=NoOps>
 class DerivedListClass {
@@ -151,10 +157,14 @@ protected:
     typedef typename LC::LT ListType;
     typedef typename LC::B Base;
     typedef typename LC::IO::G::T IndexGetterType;
+    typedef typename LC::IO::S::T IndexSetterType;
     typedef typename LC::NO::G::T NameGetterType;
+    typedef typename LC::NO::S::T NameSetterType;
     enum {
         hasIndexGetter = LC::IO::G::hasOp,
-        hasNameGetter = LC::NO::G::hasOp
+        hasIndexSetter = LC::IO::S::hasOp,
+        hasNameGetter = LC::NO::G::hasOp,
+        hasNameSetter = LC::NO::S::hasOp
     };
 
 private:
@@ -188,11 +198,13 @@ private:
     static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
     static inline bool getItemAt(ListType *list, uint32 i, IndexGetterType &item);
+    static inline bool setItemAt(ListType *list, uint32 i, IndexSetterType item);
 
     static inline bool namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterType &result,
                                  bool *hasResult);
 
     static inline bool getNamedItem(ListType *list, const nsAString& aName, NameGetterType &item);
+    static inline bool setNamedItem(ListType *list, const nsAString& aName, NameSetterType item);
 
     static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *proto, bool *hitp);
 
