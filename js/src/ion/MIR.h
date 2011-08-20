@@ -1141,8 +1141,6 @@ class MMul : public MBinaryArithInstruction
         canOverflow_(true),
         canBeNegativeZero_(true)
     {
-        setCommutative();
-        setIdempotent();
         setResultType(MIRType_Value);
     }
 
