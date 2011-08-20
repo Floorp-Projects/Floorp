@@ -28,7 +28,7 @@ var divCollection = document.getElementsByTagName('div');
 
 ok("foo" in divCollection, "'foo' should be in the div collection");
 ok("bar" in divCollection, "'bar' should be in the div collection");
-ok(!("" in divCollection), "empty string shouldn't be in the div collection");
+ok("" in divCollection, "empty string should be in the div collection");
 ok(!("foobar" in divCollection), "'foobar' shouldn't be in the div collection");
 
 var select = $('select');

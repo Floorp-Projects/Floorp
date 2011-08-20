@@ -201,14 +201,9 @@ private:
     static inline bool getNamedItem(ListType *list, const nsAString& aName, NameGetterType &item);
     static inline bool setNamedItem(ListType *list, const nsAString& aName, NameSetterType item);
 
-    static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *proto, bool *hitp);
-
-    static bool hasNative(JSContext *cx, JSObject *proxy, jsid id)
-    {
-        bool found;
-        // We ignore an error from nativeGet.
-        return !nativeGet(cx, proxy, js::GetObjectProto(proxy), id, &found, NULL) || found;
-    }
+    static bool getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bool *found,
+                                       js::Value *vp);
+    static bool hasPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id);
 
 public:
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *list,
