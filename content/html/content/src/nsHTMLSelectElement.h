@@ -47,7 +47,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
-#include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsISelectControlFrame.h"
 #include "nsIHTMLCollection.h"
 #include "nsIConstraintValidation.h"
@@ -68,8 +67,8 @@ class nsHTMLSelectElement;
  * select.options in DOM)
  */
 class nsHTMLOptionCollection: public nsIDOMHTMLOptionsCollection,
-                              public nsIDOMNSHTMLOptionCollection,
-                              public nsIHTMLCollection
+                              public nsIHTMLCollection,
+                              public nsWrapperCache
 {
 public:
   nsHTMLOptionCollection(nsHTMLSelectElement* aSelect);
@@ -77,22 +76,20 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap);
+
   // nsIDOMHTMLOptionsCollection interface
   NS_DECL_NSIDOMHTMLOPTIONSCOLLECTION
-
-  // nsIDOMNSHTMLOptionCollection interface
-  NS_DECL_NSIDOMNSHTMLOPTIONCOLLECTION
 
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
 
   virtual nsIContent* GetNodeAt(PRUint32 aIndex);
-  virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache** aCache);
   virtual nsINode* GetParentObject();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
-                                           nsIHTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
+                                                         nsIHTMLCollection)
 
   // Helpers for nsHTMLSelectElement
   /**

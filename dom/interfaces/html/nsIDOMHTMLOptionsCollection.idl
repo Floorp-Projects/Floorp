@@ -37,6 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMHTMLElement.idl"
+#include "nsIDOMHTMLCollection.idl"
+
+interface nsIDOMHTMLOptionElement;
+interface nsIDOMHTMLSelectElement;
 
 /**
  * The nsIDOMHTMLOptionsCollection interface is the interface to a
@@ -50,12 +54,38 @@
  */
 
 // Introduced in DOM Level 2:
-[scriptable, uuid(bce0213c-f70f-488f-b93f-688acca55d63)]
+[scriptable, uuid(429b041b-06df-486c-9a3a-a1d901cc76a2)]
 interface nsIDOMHTMLOptionsCollection : nsISupports
 {
            attribute unsigned long   length;
                                         // raises(DOMException) on setting
 
+  // FIXME item should just be inherited from nsIDOMHTMLCollection
   nsIDOMNode         item(in unsigned long index);
-  nsIDOMNode         namedItem(in DOMString name);
+
+  // FIXME namedItem (and getNamedItem) should return a NodeList if there are
+  //       multiple matching items
+  [getter,forward(getNamedItem)] nsIDOMNode namedItem(in DOMString name);
+
+  /**
+   * Get the node for the name.  Returns null if no node exists for the name.
+   */
+  [noscript,notxpcom,nostdcall] nsISupports getNamedItem(in DOMString name,
+                                                         out nsWrapperCachePtr cache);
+
+           attribute long             selectedIndex;
+
+  [setter,noscript] void    setOption(in unsigned long index,
+                                      in nsIDOMHTMLOptionElement option);
+
+  [noscript] readonly attribute nsIDOMHTMLSelectElement select;
+
+  // This add method implementation means the following
+  // since IDL doesn't support overloading.
+  //   void add(in nsIDOMHTMLOptionElement,
+  //            [optional] in nsIDOMHTMLOptionElement)
+  //   void add(in nsIDOMHTMLOptionElement, in long)
+  void                      add(in nsIDOMHTMLOptionElement option,
+                                [optional] in nsIVariant before);
+  void                      remove(in long index);
 };
