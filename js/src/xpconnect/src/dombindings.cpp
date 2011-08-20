@@ -160,34 +160,28 @@ WrapNativeParent(JSContext *cx, JSObject *scope, T *p)
 }
 
 JSObject *
-NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,
-                     nsINodeList *aNodeList, bool *triedToWrap)
+NodeList::create(JSContext *cx, XPCWrappedNativeScope *scope, nsINodeList *aNodeList,
+                 bool *triedToWrap)
 {
-    return NodeList<nsINodeList>::create(cx, scope, aNodeList, aNodeList, triedToWrap);
+    return NodeListBase::create(cx, scope, aNodeList, aNodeList, triedToWrap);
 }
 
 JSObject *
-NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,
-                     nsIHTMLCollection *aHTMLCollection,
-                     nsWrapperCache *aWrapperCache, bool *triedToWrap)
+HTMLCollection::create(JSContext *cx, XPCWrappedNativeScope *scope,
+                       nsIHTMLCollection *aHTMLCollection,
+                       nsWrapperCache *aWrapperCache, bool *triedToWrap)
 {
-    return NodeList<nsIHTMLCollection>::create(cx, scope, aHTMLCollection,
-                                               aWrapperCache, triedToWrap);
+    return HTMLCollectionBase::create(cx, scope, aHTMLCollection, aWrapperCache, triedToWrap);
 }
 
 template<class T>
-NodeList<T>::NodeList()
-{
-}
-
-template<class T>
-NodeList<T> NodeList<T>::instance;
+ListBase<T> ListBase<T>::instance;
 
 JSBool
 interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool *bp);
 
 template<>
-Class NodeList<nsINodeList>::sInterfaceClass = {
+Class NodeListBase::sInterfaceClass = {
     "NodeList",
     0,
     JS_PropertyStub,        /* addProperty */
@@ -207,17 +201,17 @@ Class NodeList<nsINodeList>::sInterfaceClass = {
 };
 
 template<>
-NodeList<nsINodeList>::Properties NodeList<nsINodeList>::sProtoProperties[] = {
+NodeListBase::Properties NodeListBase::sProtoProperties[] = {
     { s_length_id, length_getter, NULL }
 };
 
 template<>
-NodeList<nsINodeList>::Methods NodeList<nsINodeList>::sProtoMethods[] = {
+NodeListBase::Methods NodeListBase::sProtoMethods[] = {
     { s_item_id, &item, 1 }
 };
 
 template<>
-Class NodeList<nsIHTMLCollection>::sInterfaceClass = {
+Class HTMLCollectionBase::sInterfaceClass = {
     "HTMLCollection",
     0,
     JS_PropertyStub,        /* addProperty */
@@ -238,15 +232,15 @@ Class NodeList<nsIHTMLCollection>::sInterfaceClass = {
 
 template<>
 JSBool
-NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp);
+HTMLCollectionBase::namedItem(JSContext *cx, uintN argc, jsval *vp);
 
 template<>
-NodeList<nsIHTMLCollection>::Properties NodeList<nsIHTMLCollection>::sProtoProperties[] = {
+HTMLCollectionBase::Properties HTMLCollectionBase::sProtoProperties[] = {
     { s_length_id, length_getter, NULL }
 };
 
 template<>
-NodeList<nsIHTMLCollection>::Methods NodeList<nsIHTMLCollection>::sProtoMethods[] = {
+HTMLCollectionBase::Methods HTMLCollectionBase::sProtoMethods[] = {
     { s_item_id, &item, 1 },
     { s_namedItem_id, &namedItem, 1 }
 };
@@ -254,11 +248,11 @@ NodeList<nsIHTMLCollection>::Methods NodeList<nsIHTMLCollection>::sProtoMethods[
 void
 Register(nsDOMClassInfoData *aData)
 {
-#define REGISTER_PROTO(_dom_class, T) \
-    aData[eDOMClassInfo_##_dom_class##_id].mDefineDOMInterface = NodeList<T>::getPrototype
+#define REGISTER_PROTO(_dom_class) \
+    aData[eDOMClassInfo_##_dom_class##_id].mDefineDOMInterface = _dom_class##Base::getPrototype
 
-    REGISTER_PROTO(NodeList, nsINodeList);
-    REGISTER_PROTO(HTMLCollection, nsIHTMLCollection);
+    REGISTER_PROTO(NodeList);
+    REGISTER_PROTO(HTMLCollection);
 
 #undef REGISTER_PROTO
 }
@@ -276,33 +270,33 @@ DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine, nsresul
 
 template<class T>
 T*
-NodeList<T>::getNodeList(JSObject *obj)
+ListBase<T>::getListObject(JSObject *obj)
 {
     if (xpc::WrapperFactory::IsXrayWrapper(obj))
         obj = js::UnwrapObject(obj);
-    JS_ASSERT(objIsNodeList(obj));
+    JS_ASSERT(objIsList(obj));
     return static_cast<T *>(js::GetProxyPrivate(obj).toPrivate());
 }
 
 template<class T>
 uint32
-NodeList<T>::getProtoShape(JSObject *obj)
+ListBase<T>::getProtoShape(JSObject *obj)
 {
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
+    JS_ASSERT(objIsList(obj));
     return js::GetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE).toPrivateUint32();
 }
 
 template<class T>
 void
-NodeList<T>::setProtoShape(JSObject *obj, uint32 shape)
+ListBase<T>::setProtoShape(JSObject *obj, uint32 shape)
 {
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
+    JS_ASSERT(objIsList(obj));
     js::SetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE, PrivateUint32Value(shape));
 }
 
 template<class T>
 bool
-NodeList<T>::instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *callee)
+ListBase<T>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee)
 {
     if (XPCWrapper::IsSecurityWrapper(obj)) {
         if (callee && js::GetObjectGlobal(obj) == js::GetObjectGlobal(callee)) {
@@ -315,7 +309,7 @@ NodeList<T>::instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *ca
         }
     }
 
-    if (!js::IsProxy(obj) || (js::GetProxyHandler(obj) != &NodeList<T>::instance)) {
+    if (!objIsList(obj)) {
         // FIXME: Throw a proper DOM exception.
         JS_ReportError(cx, "type error: wrong object");
         return false;
@@ -335,12 +329,12 @@ WrapObject(JSContext *cx, JSObject *scope, nsISupports *result,
 
 template<class T>
 JSBool
-NodeList<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+ListBase<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    if (!instanceIsNodeListObject(cx, obj, NULL))
+    if (!instanceIsListObject(cx, obj, NULL))
         return false;
     PRUint32 length;
-    getNodeList(obj)->GetLength(&length);
+    getListObject(obj)->GetLength(&length);
     JS_ASSERT(int32(length) >= 0);
     *vp = UINT_TO_JSVAL(length);
     return true;
@@ -348,26 +342,25 @@ NodeList<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 template<>
 nsISupports*
-NodeList<nsINodeList>::getNamedItem(nsINodeList *list, const nsAString& aName,
-                                    nsWrapperCache **aCache)
+NodeListBase::getNamedItem(nsINodeList *list, const nsAString& aName, nsWrapperCache **aCache)
 {
     return NULL;
 }
 template<>
 nsISupports*
-NodeList<nsIHTMLCollection>::getNamedItem(nsIHTMLCollection *list, const nsAString& aName,
-                                          nsWrapperCache **aCache)
+HTMLCollectionBase::getNamedItem(nsIHTMLCollection *list, const nsAString& aName,
+                                 nsWrapperCache **aCache)
 {
     return list->GetNamedItem(aName, aCache);
 }
 
 template<class T>
 JSBool
-NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
+ListBase<T>::item(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (!obj || !instanceIsNodeListObject(cx, obj, callee))
+    if (!obj || !instanceIsListObject(cx, obj, callee))
         return false;
     if (argc < 1)
         return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -375,24 +368,23 @@ NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
     uint32 u;
     if (!JS_ValueToECMAUint32(cx, argv[0], &u))
         return false;
-    T *nodeList = getNodeList(obj);
-    nsIContent *result = nodeList->GetNodeAt(u);
+    T *list = getListObject(obj);
+    nsIContent *result = list->GetNodeAt(u);
     return WrapObject(cx, obj, result, result, vp);
 }
 
 
 template<>
 bool
-NodeList<nsINodeList>::hasNamedItem(jsid id)
+NodeListBase::hasNamedItem(jsid id)
 {
     return false;
 }
 
 template<>
 bool
-NodeList<nsINodeList>::namedItem(JSContext *cx, JSObject *obj, jsval *name,
-                                 nsISupports **result, nsWrapperCache **cache,
-                                 bool *hasResult)
+NodeListBase::namedItem(JSContext *cx, JSObject *obj, jsval *name, nsISupports **result,
+                        nsWrapperCache **cache, bool *hasResult)
 {
     *hasResult = false;
     return true;
@@ -400,23 +392,22 @@ NodeList<nsINodeList>::namedItem(JSContext *cx, JSObject *obj, jsval *name,
 
 template<>
 bool
-NodeList<nsIHTMLCollection>::hasNamedItem(jsid id)
+HTMLCollectionBase::hasNamedItem(jsid id)
 {
     return JSID_IS_STRING(id);
 }
 
 template<>
 bool
-NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *obj, jsval *name,
-                                       nsISupports **result, nsWrapperCache **cache,
-                                       bool *hasResult)
+HTMLCollectionBase::namedItem(JSContext *cx, JSObject *obj, jsval *name, nsISupports **result,
+                              nsWrapperCache **cache, bool *hasResult)
 {
     xpc_qsDOMString nameString(cx, *name, name,
                                xpc_qsDOMString::eDefaultNullBehavior,
                                xpc_qsDOMString::eDefaultUndefinedBehavior);
     if (!nameString.IsValid())
         return false;
-    nsIHTMLCollection *collection = getNodeList(obj);
+    nsIHTMLCollection *collection = getListObject(obj);
     *result = getNamedItem(collection, nameString, cache);
     *hasResult = !!*result;
     return true;
@@ -424,11 +415,11 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *obj, jsval *name
 
 template<>
 JSBool
-NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
+HTMLCollectionBase::namedItem(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (!obj || !instanceIsNodeListObject(cx, obj, callee))
+    if (!obj || !instanceIsListObject(cx, obj, callee))
         return false;
     if (argc < 1)
         return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -485,7 +476,7 @@ interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool 
 
 template<class T>
 JSObject *
-NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
+ListBase<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
 {
     if(!scope->NewDOMBindingsEnabled()) {
         *enabled = false;
@@ -563,7 +554,7 @@ NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *ena
 
 template<class T>
 JSObject *
-NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
+ListBase<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
                     nsWrapperCache* aWrapperCache, bool *triedToWrap)
 {
     *triedToWrap = true;
@@ -583,7 +574,7 @@ NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
     JSObject *proto = getPrototype(cx, scope, triedToWrap);
     if (!proto)
         return NULL;
-    JSObject *obj = NewProxyObject(cx, &NodeList<T>::instance,
+    JSObject *obj = NewProxyObject(cx, &ListBase<T>::instance,
                                    PrivateValue(aNodeList),
                                    proto, parent);
     if (!obj)
@@ -640,7 +631,7 @@ GetArrayIndexFromId(JSContext *cx, jsid id)
 
 template<class T>
 bool
-NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+ListBase<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                       PropertyDescriptor *desc)
 {
     JSObject *expando;
@@ -681,8 +672,8 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
 
     int32 index = GetArrayIndexFromId(cx, id);
     if (index >= 0) {
-        T *nodeList = getNodeList(proxy);
-        nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
+        T *list = getListObject(proxy);
+        nsIContent *result = list->GetNodeAt(PRUint32(index));
         if (result) {
             jsval v;
             if (!WrapObject(cx, proxy, result, result, &v))
@@ -703,7 +694,7 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
 
 template<class T>
 bool
-NodeList<T>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+ListBase<T>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                    PropertyDescriptor *desc)
 {
     if (!getOwnPropertyDescriptor(cx, proxy, id, set, desc))
@@ -730,7 +721,7 @@ JSClass ExpandoClass = {
 
 template<class T>
 JSObject *
-NodeList<T>::ensureExpandoObject(JSContext *cx, JSObject *obj)
+ListBase<T>::ensureExpandoObject(JSContext *cx, JSObject *obj)
 {
     NS_ASSERTION(instanceIsProxy(obj), "expected a DOM proxy object");
     JSObject *expando = getExpandoObject(obj);
@@ -754,7 +745,7 @@ NodeList<T>::ensureExpandoObject(JSContext *cx, JSObject *obj)
 
 template<class T>
 bool
-NodeList<T>::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+ListBase<T>::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                             PropertyDescriptor *desc)
 {
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
@@ -770,7 +761,7 @@ NodeList<T>::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
 
 template<class T>
 bool
-NodeList<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+ListBase<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     JSObject *expando;
     if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy)) &&
@@ -778,7 +769,7 @@ NodeList<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &p
         return false;
 
     PRUint32 length;
-    getNodeList(proxy)->GetLength(&length);
+    getListObject(proxy)->GetLength(&length);
     JS_ASSERT(int32(length) >= 0);
     for (int32 i = 0; i < int32(length); ++i) {
         if (!props.append(INT_TO_JSID(i)))
@@ -790,7 +781,7 @@ NodeList<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &p
 
 template<class T>
 bool
-NodeList<T>::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+ListBase<T>::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     JSBool b = true;
 
@@ -809,7 +800,7 @@ NodeList<T>::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 
 template<class T>
 bool
-NodeList<T>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+ListBase<T>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     // FIXME: enumerate proto as well
     return getOwnPropertyNames(cx, proxy, props);
@@ -817,7 +808,7 @@ NodeList<T>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 
 template<class T>
 bool
-NodeList<T>::fix(JSContext *cx, JSObject *proxy, Value *vp)
+ListBase<T>::fix(JSContext *cx, JSObject *proxy, Value *vp)
 {
     vp->setUndefined();
     return true;
@@ -825,7 +816,7 @@ NodeList<T>::fix(JSContext *cx, JSObject *proxy, Value *vp)
 
 template<class T>
 bool
-NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+ListBase<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     JSObject *expando = getExpandoObject(proxy);
     if (expando) {
@@ -845,7 +836,7 @@ NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 
     int32 index = GetArrayIndexFromId(cx, id);
     if (index >= 0) {
-        if (getNodeList(proxy)->GetNodeAt(PRUint32(index))) {
+        if (getListObject(proxy)->GetNodeAt(PRUint32(index))) {
             *bp = true;
             return true;
         }
@@ -857,14 +848,14 @@ NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 
 template<class T>
 bool
-NodeList<T>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+ListBase<T>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     return ProxyHandler::has(cx, proxy, id, bp);
 }
 
 template<class T>
 bool
-NodeList<T>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
+ListBase<T>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
 {
     JSPropertyDescriptor desc;
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
@@ -893,7 +884,7 @@ NodeList<T>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
 
 template<class T>
 bool
-NodeList<T>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
+ListBase<T>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
                               jsid id, Value *vp, bool *hitp)
 {
     if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
@@ -910,7 +901,7 @@ NodeList<T>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver
 
 template<class T>
 bool
-NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
+ListBase<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
 {
     JS_ASSERT(xpc::WrapperFactory::IsXrayWrapper(proxy));
 
@@ -947,7 +938,7 @@ NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Property
 
 template<class T>
 bool
-NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
+ListBase<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
     JSObject *expando = getExpandoObject(proxy);
     if (expando) {
@@ -971,8 +962,8 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
 
     int32 index = GetArrayIndexFromId(cx, id);
     if (index >= 0) {
-        T *nodeList = getNodeList(proxy);
-        nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
+        T *list = getListObject(proxy);
+        nsIContent *result = list->GetNodeAt(PRUint32(index));
         if (result)
             return WrapObject(cx, proxy, result, result, vp);
     }
@@ -984,7 +975,7 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
     if (hit) {
         if (id == s_length_id) {
             PRUint32 length;
-            getNodeList(proxy)->GetLength(&length);
+            getListObject(proxy)->GetLength(&length);
             JS_ASSERT(int32(length) >= 0);
             vp->setInt32(length);
             return true;
@@ -1003,7 +994,7 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
 
 template<class T>
 bool
-NodeList<T>::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
+ListBase<T>::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                  Value *vp)
 {
     return ProxyHandler::set(cx, proxy, proxy, id, strict, vp);
@@ -1011,21 +1002,21 @@ NodeList<T>::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bo
 
 template<class T>
 bool
-NodeList<T>::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+ListBase<T>::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     return ProxyHandler::keys(cx, proxy, props);
 }
 
 template<class T>
 bool
-NodeList<T>::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
+ListBase<T>::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
     return ProxyHandler::iterate(cx, proxy, flags, vp);
 }
 
 template<class T>
 bool
-NodeList<T>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
+ListBase<T>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
 {
     *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &sInterfaceClass;
     return true;
@@ -1033,7 +1024,7 @@ NodeList<T>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *
 
 template<class T>
 JSString *
-NodeList<T>::obj_toString(JSContext *cx, JSObject *proxy)
+ListBase<T>::obj_toString(JSContext *cx, JSObject *proxy)
 {
     const char *clazz = sInterfaceClass.name;
     size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
@@ -1058,20 +1049,20 @@ NodeList<T>::obj_toString(JSContext *cx, JSObject *proxy)
 
 template<class T>
 void
-NodeList<T>::finalize(JSContext *cx, JSObject *proxy)
+ListBase<T>::finalize(JSContext *cx, JSObject *proxy)
 {
-    T *nodeList = getNodeList(proxy);
+    T *list = getListObject(proxy);
     nsWrapperCache *cache;
-    CallQueryInterface(nodeList, &cache);
+    CallQueryInterface(list, &cache);
     if (cache) {
         cache->ClearWrapper();
     }
-    NS_RELEASE(nodeList);
+    NS_RELEASE(list);
 }
 
 template
 nsIHTMLCollection*
-NodeList<nsIHTMLCollection>::getNodeList(JSObject *obj);
+HTMLCollectionBase::getListObject(JSObject *obj);
 
 }
 }
