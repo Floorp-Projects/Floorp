@@ -250,12 +250,19 @@ DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine, nsresul
 
 template<class LC>
 typename ListBase<LC>::ListType*
+ListBase<LC>::getNative(JSObject *obj)
+{
+    return static_cast<ListType*>(js::GetProxyPrivate(obj).toPrivate());
+}
+
+template<class LC>
+typename ListBase<LC>::ListType*
 ListBase<LC>::getListObject(JSObject *obj)
 {
     if (xpc::WrapperFactory::IsXrayWrapper(obj))
         obj = js::UnwrapObject(obj);
     JS_ASSERT(objIsList(obj));
-    return static_cast<ListType *>(js::GetProxyPrivate(obj).toPrivate());
+    return getNative(obj);
 }
 
 template<class LC>
@@ -426,6 +433,13 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *en
 
     *enabled = true;
 
+    return getPrototype(cx, scope);
+}
+
+template<class LC>
+JSObject *
+ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
+{
     nsDataHashtable<nsDepCharHashKey, JSObject*> &cache =
         scope->GetCachedDOMPrototypes();
 
@@ -438,15 +452,11 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *en
         return NULL;
     }
 
-    JSObject *global = scope->GetGlobalJSObject();
-
-    // We need to pass the object prototype to JS_NewObject. If we pass NULL then the JS engine
-    // will look up a prototype on the global by using the class' name and we'll recurse into
-    // getPrototype.
-    JSObject* proto;
-    if (!js_GetClassPrototype(cx, global, JSProto_Object, &proto))
+    JSObject* proto = Base::getPrototype(cx, scope);
+    if (!proto)
         return NULL;
 
+    JSObject *global = scope->GetGlobalJSObject();
     interfacePrototype = JS_NewObject(cx, NULL, proto, global);
     if (!interfacePrototype)
         return NULL;
@@ -797,7 +807,7 @@ ListBase<LC>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 
 template<class LC>
 bool
-ListBase<LC>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
+ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache)
 {
     JSPropertyDescriptor desc;
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
@@ -805,8 +815,10 @@ ListBase<LC>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
         if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
             return false;
         if (desc.obj != proto || desc.getter != sProtoProperties[n].getter ||
-            desc.setter != sProtoProperties[n].setter)
-            return true; // don't cache
+            desc.setter != sProtoProperties[n].setter) {
+            *shouldCache = false;
+            return true;
+        }
     }
 
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
@@ -816,26 +828,27 @@ ListBase<LC>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
         if (desc.obj != proto || desc.getter || JSVAL_IS_PRIMITIVE(desc.value) ||
             n >= js::GetNumSlots(proto) || js::GetSlot(proto, n) != desc.value ||
             !JS_IsNativeFunction(JSVAL_TO_OBJECT(desc.value), sProtoMethods[n].native)) {
-            return true; // don't cache
+            *shouldCache = false;
+            return true;
         }
     }
 
-    setProtoShape(proxy, js::GetObjectShape(proto));
-    return true;
+    return Base::shouldCacheProtoShape(cx, js::GetObjectProto(proto), shouldCache);
 }
 
 template<class LC>
 bool
-ListBase<LC>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                               JSObject *proto, jsid id, Value *vp, bool *hitp)
+ListBase<LC>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *proto, bool *hitp)
 {
     if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
-        if (!cacheProtoShape(cx, proxy, proto))
+        bool shouldCache;
+        if (!shouldCacheProtoShape(cx, proto, &shouldCache))
             return false;
-        if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
+        if (!shouldCache) {
             *hitp = false;
-            return JS_GetPropertyById(cx, proto, id, vp);
+            return true;
         }
+        setProtoShape(proxy, js::GetObjectShape(proto));
     }
     *hitp = true;
     return true;
@@ -875,13 +888,18 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Propert
         }
     }
 
-    return true;
+    return Base::resolveNativeName(cx, proxy, id, desc);
 }
 
 template<class LC>
 bool
 ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id, bool *found, Value *vp)
 {
+#ifdef DEBUG
+    bool shouldCache;
+    JS_ASSERT(shouldCacheProtoShape(cx, proto, &shouldCache) && shouldCache);
+#endif
+
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
         if (id == sProtoProperties[n].id) {
             *found = true;
@@ -903,7 +921,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
         }
     }
 
-    return true;
+    return Base::nativeGet(cx, proxy, js::GetObjectProto(proto), id, found, vp);
 }
 
 template<class LC>
@@ -940,7 +958,7 @@ ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
 
     JSObject *proto = js::GetObjectProto(proxy);
     bool hit;
-    if (!checkForCacheHit(cx, proxy, receiver, proto, id, vp, &hit))
+    if (!checkForCacheHit(cx, proxy, proto, &hit))
         return false;
     if (hit) {
         if (id == s_length_id) {
@@ -1026,6 +1044,19 @@ ListBase<LC>::finalize(JSContext *cx, JSObject *proxy)
         cache->ClearWrapper();
     }
     NS_RELEASE(list);
+}
+
+
+JSObject*
+NoBase::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
+{
+    // We need to pass the object prototype to JS_NewObject. If we pass NULL then the JS engine
+    // will look up a prototype on the global by using the class' name and we'll recurse into
+    // getPrototype.
+    JSObject* proto;
+    if (!js_GetClassPrototype(cx, scope->GetGlobalJSObject(), JSProto_Object, &proto))
+        return NULL;
+    return proto;
 }
 
 
