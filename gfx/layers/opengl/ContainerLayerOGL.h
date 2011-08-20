@@ -89,6 +89,7 @@ public:
 
   LayerOGL* GetFirstChildOGL();
 
+  virtual void Validate();
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
 
