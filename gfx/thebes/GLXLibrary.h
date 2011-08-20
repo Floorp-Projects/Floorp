@@ -106,6 +106,7 @@ public:
                           GLXDrawable drawable,
                           int buffer);
     void xWaitGL();
+    void xWaitX();
 
     PRBool EnsureInitialized();
 
@@ -204,6 +205,9 @@ private:
 
     typedef void (GLAPIENTRY * PFNGLXWAITGL) ();
     PFNGLXWAITGL xWaitGLInternal;
+    
+    typedef void (GLAPIENTRY * PFNGLXWAITX) ();
+    PFNGLXWAITGL xWaitXInternal;
 
 #ifdef DEBUG
     void BeforeGLXCall();

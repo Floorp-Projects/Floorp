@@ -531,6 +531,8 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
+  virtual void Validate() {}
+
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset) = 0;
 

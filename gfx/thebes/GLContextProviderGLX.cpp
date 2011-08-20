@@ -124,6 +124,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xQueryVersionInternal, { "glXQueryVersion", NULL } },
         { (PRFuncPtr*) &xGetCurrentContextInternal, { "glXGetCurrentContext", NULL } },
         { (PRFuncPtr*) &xWaitGLInternal, { "glXWaitGL", NULL } },
+        { (PRFuncPtr*) &xWaitXInternal, { "glXWaitX", NULL } },
         /* functions introduced in GLX 1.1 */
         { (PRFuncPtr*) &xQueryExtensionsStringInternal, { "glXQueryExtensionsString", NULL } },
         { (PRFuncPtr*) &xGetClientStringInternal, { "glXGetClientString", NULL } },
@@ -297,6 +298,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
                  "glXChooseFBConfig() failed to match our requested format and violated its spec (!)");
 
     gfxXlibSurface *xs = static_cast<gfxXlibSurface*>(aSurface);
+    NS_ABORT_IF_FALSE(xs->XDisplay() == display, "This is bad");
 
     int pixmapAttribs[] = { GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
                             GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGBA_EXT,
@@ -330,7 +332,6 @@ GLXLibrary::BindTexImage(GLXPixmap aPixmap)
 
     Display *display = DefaultXDisplay();
     // Make sure all X drawing to the surface has finished before binding to a texture.
-    XSync(DefaultXDisplay(), False);
     xBindTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT, NULL);
 }
 
@@ -618,6 +619,14 @@ GLXLibrary::xWaitGL()
     AFTER_GLX_CALL;
 }
 
+void
+GLXLibrary::xWaitX()
+{
+    BEFORE_GLX_CALL;
+    xWaitXInternal();
+    AFTER_GLX_CALL;
+}
+
 GLXLibrary sGLXLibrary;
 
 class GLContextGLX : public GLContext
@@ -773,6 +782,11 @@ TRY_AGAIN_NO_SHARING:
         sGLXLibrary.xSwapBuffers(mDisplay, mDrawable);
         sGLXLibrary.xWaitGL();
         return PR_TRUE;
+    }
+
+    void WaitForDrawing()
+    {
+        sGLXLibrary.xWaitX();
     }
 
     PRBool TextureImageSupportsGetBackingSurface()
