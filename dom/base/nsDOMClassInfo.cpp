@@ -4184,7 +4184,7 @@ nsDOMClassInfo::Init()
   sDisableGlobalScopePollutionSupport =
     Preferences::GetBool("browser.dom.global_scope_pollution.disabled");
 
-  xpc::dom::Register(sClassInfoData);
+  mozilla::dom::binding::Register(sClassInfoData);
 
   sIsInitialized = PR_TRUE;
 
@@ -6170,9 +6170,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     // Lookup new DOM bindings.
     if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-      xpc::dom::DefineInterface define =
+      mozilla::dom::binding::DefineInterface define =
         sClassInfoData[name_struct->mDOMClassInfoID].mDefineDOMInterface;
-      if (define && xpc::dom::DefineConstructor(cx, obj, define, &rv)) {
+      if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
         *did_resolve = NS_SUCCEEDED(rv);
 
         return rv;
@@ -8427,9 +8427,9 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
   if (!JSVAL_IS_PRIMITIVE(collection)) {
     // We already have a node list in our reserved slot, use it.
     JSObject *obj = JSVAL_TO_OBJECT(collection);
-    if (xpc::dom::NodeList<nsIHTMLCollection>::objIsNodeList(obj)) {
+    if (mozilla::dom::binding::NodeList<nsIHTMLCollection>::objIsNodeList(obj)) {
       nsIHTMLCollection *native =
-        xpc::dom::NodeList<nsIHTMLCollection>::getNodeList(obj);
+        mozilla::dom::binding::NodeList<nsIHTMLCollection>::getNodeList(obj);
       NS_ADDREF(*nodeList = static_cast<nsContentList*>(native));
     }
     else {

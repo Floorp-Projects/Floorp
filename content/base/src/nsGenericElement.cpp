@@ -1559,7 +1559,7 @@ JSObject*
 nsChildContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
                                bool *triedToWrap)
 {
-  return xpc::dom::NodeListBase::create(cx, scope, this, triedToWrap);
+  return mozilla::dom::binding::NodeListBase::create(cx, scope, this, triedToWrap);
 }
 
 NS_IMETHODIMP

@@ -49,8 +49,9 @@
 
 using namespace js;
 
-namespace xpc {
+namespace mozilla {
 namespace dom {
+namespace binding {
 
 
 static jsid s_constructor_id = JSID_VOID;
@@ -709,7 +710,7 @@ NodeList<T>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool
         return false;
     if (desc->obj)
         return true;
-    if (WrapperFactory::IsXrayWrapper(proxy))
+    if (xpc::WrapperFactory::IsXrayWrapper(proxy))
         return resolveNativeName(cx, proxy, id, desc);
     return JS_GetPropertyDescriptorById(cx, js::GetObjectProto(proxy), id, JSRESOLVE_QUALIFIED,
                                         desc);
@@ -911,7 +912,7 @@ template<class T>
 bool
 NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
 {
-    JS_ASSERT(WrapperFactory::IsXrayWrapper(proxy));
+    JS_ASSERT(xpc::WrapperFactory::IsXrayWrapper(proxy));
 
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
         if (id == sProtoProperties[n].id) {
@@ -1072,5 +1073,6 @@ template
 nsIHTMLCollection*
 NodeList<nsIHTMLCollection>::getNodeList(JSObject *obj);
 
+}
 }
 }

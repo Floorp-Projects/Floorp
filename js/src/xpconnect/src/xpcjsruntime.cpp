@@ -2164,7 +2164,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
         JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
         {
             // Scope the JSAutoRequest so it goes out of scope before calling
-            // xpc::dom::DefineStaticJSVals.
+            // mozilla::dom::binding::DefineStaticJSVals.
             JSAutoRequest ar(cx);
             for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
             {
@@ -2179,7 +2179,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
             }
         }
 
-        ok = xpc::dom::DefineStaticJSVals(cx);
+        ok = mozilla::dom::binding::DefineStaticJSVals(cx);
     }
     if (!ok)
         return JS_FALSE;

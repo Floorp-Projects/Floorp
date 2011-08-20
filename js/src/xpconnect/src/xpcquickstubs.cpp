@@ -884,7 +884,7 @@ castNative(JSContext *cx,
         }
         else
         {
-            NS_ABORT_IF_FALSE(xpc::dom::instanceIsProxy(cur),
+            NS_ABORT_IF_FALSE(mozilla::dom::binding::instanceIsProxy(cur),
                               "what kind of wrapper is this?");
             native = static_cast<nsISupports*>(js::GetProxyPrivate(cur).toPrivate());
             entries = nsnull;
@@ -971,7 +971,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
     JSObject *obj2;
-    if(xpc::dom::instanceIsProxy(src))
+    if(mozilla::dom::binding::instanceIsProxy(src))
     {
         wrapper = nsnull;
         obj2 = src;

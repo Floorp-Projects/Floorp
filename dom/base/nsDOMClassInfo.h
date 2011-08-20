@@ -102,7 +102,7 @@ struct nsDOMClassInfoData
   bool mChromeOnly;
   bool mDisabled;
   // For new style DOM bindings.
-  xpc::dom::DefineInterface mDefineDOMInterface;
+  mozilla::dom::binding::DefineInterface mDefineDOMInterface;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
