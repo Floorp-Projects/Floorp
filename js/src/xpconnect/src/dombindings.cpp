@@ -560,6 +560,37 @@ bool
 ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                        PropertyDescriptor *desc)
 {
+    if (set) {
+        if (hasIndexSetter) {
+            int32 index = GetArrayIndexFromId(cx, id);
+            if (index >= 0) {
+                FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
+                return true;
+            }
+        }
+
+        if (hasNameSetter && JSID_IS_STRING(id)) {
+            FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
+            return true;
+        }
+    }
+    else {
+        if (hasIndexGetter) {
+            int32 index = GetArrayIndexFromId(cx, id);
+            if (index >= 0) {
+                IndexGetterType result;
+                if (!getItemAt(getListObject(proxy), PRUint32(index), result))
+                    return true;
+
+                jsval v;
+                if (!Wrap(cx, proxy, result, &v))
+                    return false;
+                FillPropertyDescriptor(desc, proxy, v, !hasIndexSetter);
+                return true;
+            }
+        }
+    }
+
     JSObject *expando;
     if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy))) {
         uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
@@ -572,25 +603,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
         }
     }
 
-    if (set) {
-        if (hasNameSetter && JSID_IS_STRING(id)) {
-            FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
-            return true;
-        }
-
-        if (hasIndexSetter) {
-            int32 index = GetArrayIndexFromId(cx, id);
-            if (index >= 0) {
-                FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
-                return true;
-            }
-        }
-
-        desc->obj = NULL;
-        return true;
-    }
-
-    if (hasNameGetter && JSID_IS_STRING(id) && !hasNative(cx, proxy, id)) {
+    if (hasNameGetter && !set && JSID_IS_STRING(id) && !hasPropertyOnPrototype(cx, proxy, id)) {
         jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
         bool hasResult;
         NameGetterType result;
@@ -601,24 +614,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
             if (!Wrap(cx, proxy, result, &v))
                 return false;
             FillPropertyDescriptor(desc, proxy, v, !hasNameSetter);
-        }
-        else {
-            desc->obj = NULL;
-        }
-        return true;
-    }
-
-    if (hasIndexGetter) {
-        int32 index = GetArrayIndexFromId(cx, id);
-        if (index >= 0) {
-            IndexGetterType result;
-            if (getItemAt(getListObject(proxy), PRUint32(index), result)) {
-                jsval v;
-                if (!Wrap(cx, proxy, result, &v))
-                    return false;
-                FillPropertyDescriptor(desc, proxy, v, !hasIndexSetter);
-                return true;
-            }
+            return true;
         }
     }
 
@@ -681,6 +677,17 @@ template<class LC>
 bool
 ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
 {
+    if (hasIndexSetter) {
+        int32 index = GetArrayIndexFromId(cx, id);
+        if (index >= 0) {
+            nsCOMPtr<nsISupports> ref;
+            IndexSetterType value;
+            jsval v;
+            return Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v) &&
+                   setItemAt(getListObject(proxy), index, value);
+        }
+    }
+
     if (hasNameSetter && JSID_IS_STRING(id)) {
         jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
         xpc_qsDOMString nameString(cx, name, &name,
@@ -692,19 +699,10 @@ ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDe
         nsCOMPtr<nsISupports> ref;
         NameSetterType value;
         jsval v;
-        return Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v) &&
-               setNamedItem(getListObject(proxy), nameString, value);
-    }
-
-    if (hasIndexSetter) {
-        int32 index = GetArrayIndexFromId(cx, id);
-        if (index >= 0) {
-            nsCOMPtr<nsISupports> ref;
-            IndexSetterType value;
-            jsval v;
-            return Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v) &&
-                   setItemAt(getListObject(proxy), index, value);
-        }
+        if (!Unwrap(cx, desc->value, &value, getter_AddRefs(ref), &v))
+            return false;
+        if (setNamedItem(getListObject(proxy), nameString, value))
+            return true;
     }
 
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
@@ -722,11 +720,6 @@ template<class LC>
 bool
 ListBase<LC>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    JSObject *expando;
-    if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy)) &&
-        !GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props))
-        return false;
-
     PRUint32 length;
     getListObject(proxy)->GetLength(&length);
     JS_ASSERT(int32(length) >= 0);
@@ -734,7 +727,13 @@ ListBase<LC>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &
         if (!props.append(INT_TO_JSID(i)))
             return false;
     }
-    // FIXME: Add named items?
+
+    JSObject *expando;
+    if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy)) &&
+        !GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+        return false;
+
+    // FIXME: Add named items
     return true;
 }
 
@@ -777,6 +776,15 @@ template<class LC>
 bool
 ListBase<LC>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
+    if (hasIndexGetter) {
+        int32 index = GetArrayIndexFromId(cx, id);
+        if (index >= 0) {
+            IndexGetterType result;
+            *bp = getItemAt(getListObject(proxy), PRUint32(index), result);
+            return true;
+        }
+    }
+
     JSObject *expando = getExpandoObject(proxy);
     if (expando) {
         JSBool b = JS_TRUE;
@@ -786,21 +794,10 @@ ListBase<LC>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
             return ok;
     }
 
-    if (hasNameGetter && JSID_IS_STRING(id) && !hasNative(cx, proxy, id)) {
+    if (hasNameGetter && JSID_IS_STRING(id) && !hasPropertyOnPrototype(cx, proxy, id)) {
         jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
         NameGetterType result;
         return namedItem(cx, proxy, &name, result, bp);
-    }
-
-    if (hasIndexGetter) {
-        int32 index = GetArrayIndexFromId(cx, id);
-        if (index >= 0) {
-            IndexGetterType result;
-            if (getItemAt(getListObject(proxy), PRUint32(index), result)) {
-                *bp = true;
-                return true;
-            }
-        }
     }
 
     *bp = false;
@@ -843,24 +840,6 @@ ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *should
     }
 
     return Base::shouldCacheProtoShape(cx, js::GetObjectProto(proto), shouldCache);
-}
-
-template<class LC>
-bool
-ListBase<LC>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *proto, bool *hitp)
-{
-    if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
-        bool shouldCache;
-        if (!shouldCacheProtoShape(cx, proto, &shouldCache))
-            return false;
-        if (!shouldCache) {
-            *hitp = false;
-            return true;
-        }
-        setProtoShape(proxy, js::GetObjectShape(proto));
-    }
-    *hitp = true;
-    return true;
 }
 
 template<class LC>
@@ -935,18 +914,100 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
 
 template<class LC>
 bool
+ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bool *found,
+                                     js::Value *vp)
+{
+    JSObject *proto = js::GetObjectProto(proxy);
+    bool hit;
+    if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
+        if (!shouldCacheProtoShape(cx, proto, &hit))
+            return false;
+        if (hit)
+            setProtoShape(proxy, js::GetObjectShape(proto));
+    }
+    else {
+        hit = true;
+    }
+
+    if (hit) {
+        if (id == s_length_id) {
+            if (vp) {
+                PRUint32 length;
+                getListObject(proxy)->GetLength(&length);
+                JS_ASSERT(int32(length) >= 0);
+                vp->setInt32(length);
+            }
+            *found = true;
+            return true;
+        }
+        if (!nativeGet(cx, proxy, proto, id, found, vp))
+            return false;
+        if (*found)
+            return true;
+    }
+
+    JSBool hasProp;
+    if (!JS_HasPropertyById(cx, proto, id, &hasProp))
+        return false;
+
+    *found = hasProp;
+    if (!hasProp || !vp)
+        return true;
+
+    return JS_GetPropertyById(cx, proto, id, vp);
+}
+
+template<class LC>
+bool
+ListBase<LC>::hasPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id)
+{
+    JSAutoEnterCompartment ac;
+    if (xpc::WrapperFactory::IsXrayWrapper(proxy)) {
+        proxy = js::UnwrapObject(proxy);
+        if (!ac.enter(cx, proxy))
+            return false;
+    }
+    JS_ASSERT(objIsList(proxy));
+
+    bool found;
+    // We ignore an error from getPropertyOnPrototype.
+    return !getPropertyOnPrototype(cx, proxy, id, &found, NULL) || found;
+}
+
+template<class LC>
+bool
 ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
+    if (hasIndexGetter) {
+        int32 index = GetArrayIndexFromId(cx, id);
+        if (index >= 0) {
+            IndexGetterType result;
+            if (!getItemAt(getListObject(proxy), PRUint32(index), result)) {
+                vp->setUndefined();
+                return true;
+            }
+            return Wrap(cx, proxy, result, vp);
+        }
+    }
+
     JSObject *expando = getExpandoObject(proxy);
     if (expando) {
         JSBool hasProp;
         if (!JS_HasPropertyById(cx, expando, id, &hasProp))
             return false;
+
         if (hasProp)
             return JS_GetPropertyById(cx, expando, id, vp);
     }
 
-    if (hasNameGetter && JSID_IS_STRING(id) && !hasNative(cx, proxy, id)) {
+    bool found;
+    if (!getPropertyOnPrototype(cx, proxy, id, &found, vp))
+        return false;
+
+    if (found)
+        return true;
+
+    if (hasNameGetter && JSID_IS_STRING(id)) {
         jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
         bool hasResult;
         NameGetterType result;
@@ -956,35 +1017,8 @@ ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
             return Wrap(cx, proxy, result, vp);
     }
 
-    if (hasIndexGetter) {
-        int32 index = GetArrayIndexFromId(cx, id);
-        if (index >= 0) {
-            IndexGetterType result;
-            if (getItemAt(getListObject(proxy), PRUint32(index), result))
-                return Wrap(cx, proxy, result, vp);
-        }
-    }
-
-    JSObject *proto = js::GetObjectProto(proxy);
-    bool hit;
-    if (!checkForCacheHit(cx, proxy, proto, &hit))
-        return false;
-    if (hit) {
-        if (id == s_length_id) {
-            PRUint32 length;
-            getListObject(proxy)->GetLength(&length);
-            JS_ASSERT(int32(length) >= 0);
-            vp->setInt32(length);
-            return true;
-        }
-        bool found;
-        if (!nativeGet(cx, proxy, proto, id, &found, vp))
-            return false;
-        if (found)
-            return true;
-    }
-
-    return JS_GetPropertyById(cx, proto, id, vp);
+    vp->setUndefined();
+    return true;
 }
 
 template<class LC>
