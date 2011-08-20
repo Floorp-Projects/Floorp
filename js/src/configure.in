@@ -1992,11 +1992,14 @@ case "$target" in
 *-darwin*) 
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    # If we're building with --enable-profiling, we need a frame pointer.
+
+    MOZ_OPTIMIZE_FLAGS="-O3  -fstrict-aliasing -fno-stack-protector"
+    # We normally want -fomit-frame-pointer, but we want an explicit
+    # -fno-omit-frame-pointer if we're using a sampling profiler.
     if test -z "$MOZ_PROFILING"; then
-        MOZ_OPTIMIZE_FLAGS="-O3 -fomit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fomit-frame-pointer"
     else
-        MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-omit-frame-pointer"
     fi
     _PEDANTIC=
     CFLAGS="$CFLAGS -fpascal-strings -fno-common"

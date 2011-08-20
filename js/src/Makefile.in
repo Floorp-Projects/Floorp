@@ -77,36 +77,6 @@ GRE_MODULE	    = 1
 
 LIBS		= $(NSPR_LIBS) 
 
-ifdef GNU_CXX
-ifdef INTEL_CXX
-# icc gets special optimize flags
-ifdef MOZ_PROFILE_GENERATE
-MODULE_OPTIMIZE_FLAGS = -O0
-else
-MODULE_OPTIMIZE_FLAGS = -O2 -ip
-endif
-else # not INTEL_CXX
-
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fno-stack-protector
-
-# We normally want -fomit-frame-pointer, but we want an explicit
-# -fno-omit-frame-pointer if we're using a sampling profiler.
-ifndef MOZ_PROFILING
-MODULE_OPTIMIZE_FLAGS += -fomit-frame-pointer
-else
-MODULE_OPTIMIZE_FLAGS += -fno-omit-frame-pointer
-endif
-
-endif
-else # not GNU_CXX
-ifeq ($(OS_ARCH),SunOS)
-MODULE_OPTIMIZE_FLAGS = -xO4
-endif
-ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -O2
-endif
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
