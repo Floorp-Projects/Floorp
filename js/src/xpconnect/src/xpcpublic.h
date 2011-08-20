@@ -262,10 +262,9 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
 
 } // namespace memory
 } // namespace xpconnect
-} // namespace mozilla
 
-namespace xpc {
 namespace dom {
+namespace binding {
 
 extern int HandlerFamily;
 inline void* ProxyFamily() { return &HandlerFamily; }
@@ -296,7 +295,8 @@ extern bool
 DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine,
                   nsresult *aResult);
 
-}
-}
+} // namespace binding
+} // namespace dom
+} // namespace mozilla
 
 #endif

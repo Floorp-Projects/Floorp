@@ -256,7 +256,7 @@ CanXray(JSObject *obj, bool *proxy)
         *proxy = false;
         return true;
     }
-    return (*proxy = dom::instanceIsProxy(obj));
+    return (*proxy = mozilla::dom::binding::instanceIsProxy(obj));
 }
 
 JSObject *

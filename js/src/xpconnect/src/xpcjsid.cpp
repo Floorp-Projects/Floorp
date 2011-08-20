@@ -528,7 +528,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                 return NS_ERROR_FAILURE;
         }
 
-        if (xpc::dom::instanceIsProxy(obj))
+        if (mozilla::dom::binding::instanceIsProxy(obj))
         {
             nsISupports *identity =
                 static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());

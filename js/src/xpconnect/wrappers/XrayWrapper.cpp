@@ -456,7 +456,7 @@ XrayToString(JSContext *cx, uintN argc, jsval *vp)
     }
 
     nsAutoString result(NS_LITERAL_STRING("[object XrayWrapper "));
-    if (dom::instanceIsProxy(&js::GetProxyPrivate(wrapper).toObject())) {
+    if (mozilla::dom::binding::instanceIsProxy(&js::GetProxyPrivate(wrapper).toObject())) {
         JSString *wrapperStr = js::GetProxyHandler(wrapper)->obj_toString(cx, wrapper);
         size_t length;
         const jschar* chars = JS_GetStringCharsAndLength(cx, wrapperStr, &length);

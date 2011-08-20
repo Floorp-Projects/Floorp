@@ -909,7 +909,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
     }
-    else if(xpc::dom::instanceIsProxy(obj))
+    else if(mozilla::dom::binding::instanceIsProxy(obj))
     {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "js::GetProxyPrivate(obj)");
         nsISupports *identity =
@@ -1545,7 +1545,7 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
     if(obj2)
         return (nsISupports*)xpc_GetJSPrivate(obj2);
 
-    if(xpc::dom::instanceIsProxy(aJSObj)) {
+    if(mozilla::dom::binding::instanceIsProxy(aJSObj)) {
         // FIXME: Provide a fast non-refcounting way to get the canonical
         //        nsISupports from the proxy.
         nsISupports *supports =
@@ -1585,7 +1585,7 @@ nsXPConnect::GetJSObjectOfWrapper(JSContext * aJSContext,
         *_retval = obj2;
         return NS_OK;
     }
-    if(xpc::dom::instanceIsProxy(aJSObj))
+    if(mozilla::dom::binding::instanceIsProxy(aJSObj))
     {
         *_retval = aJSObj;
         return NS_OK;
