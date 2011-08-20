@@ -102,6 +102,7 @@ private:
   nsString mDeviceKeyDebug;
   PRUint32 mAdapterVendorID;
   PRUint32 mAdapterDeviceID;
+  PRUint32 mAdapterSubsysID;
   nsString mDeviceString2;
   nsString mDriverVersion2;
   nsString mDeviceID2;
@@ -109,6 +110,7 @@ private:
   nsString mDeviceKey2;
   PRUint32 mAdapterVendorID2;
   PRUint32 mAdapterDeviceID2;
+  PRUint32 mAdapterSubsysID2;
   PRUint32 mWindowsVersion;
   PRBool mHasDualGPU;
   PRBool mIsGPU2Active;
