@@ -112,18 +112,44 @@ public:
 
 typedef Ops<NoOp> NoOps;
  
-template<class ListType, class IndexOps, class NameOps=NoOps>
-class ListClass {
+template<class ListType, class Base, class IndexOps, class NameOps=NoOps>
+class DerivedListClass {
 public:
     typedef ListType LT;
+    typedef Base B;
     typedef IndexOps IO;
     typedef NameOps NO;
+};
+
+class NoBase {
+public:
+    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
+    static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache)
+    {
+        *shouldCache = true;
+        return true;
+    }
+    static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, js::PropertyDescriptor *desc)
+    {
+        return true;
+    }
+    static bool nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id, bool *found,
+                          js::Value *vp)
+    {
+        *found = false;
+        return true;
+    }
+};
+
+template<class ListType, class IndexOps, class NameOps=NoOps>
+class ListClass : public DerivedListClass<ListType, NoBase, IndexOps, NameOps> {
 };
 
 template<class LC>
 class ListBase : public ProxyHandler {
 protected:
     typedef typename LC::LT ListType;
+    typedef typename LC::B Base;
     typedef typename LC::IO::G::T IndexGetterType;
     typedef typename LC::NO::G::T NameGetterType;
     enum {
@@ -152,8 +178,6 @@ private:
     static Properties sProtoProperties[];
     static Methods sProtoMethods[];
 
-    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
-
     static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
 
     static uint32 getProtoShape(JSObject *obj);
@@ -170,9 +194,7 @@ private:
 
     static inline bool getNamedItem(ListType *list, const nsAString& aName, NameGetterType &item);
 
-    static bool cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto);
-    static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
-                                 jsid id, js::Value *vp, bool *hitp);
+    static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *proto, bool *hitp);
 
     static bool hasNative(JSContext *cx, JSObject *proxy, jsid id)
     {
@@ -181,11 +203,8 @@ private:
         return !nativeGet(cx, proxy, js::GetObjectProto(proxy), id, &found, NULL) || found;
     }
 
-    static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
-                                  js::PropertyDescriptor *desc);
-
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *aList,
-                            nsWrapperCache* aWrapperCache, bool *triedToWrap);
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *list,
+                            nsWrapperCache* cache, bool *triedToWrap);
 
 public:
     template <typename I>
@@ -194,6 +213,8 @@ public:
         return create(cx, scope, aList, GetWrapperCache(aList), triedToWrap);
     }
     
+    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
+
     bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                js::PropertyDescriptor *desc);
     bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -218,8 +239,11 @@ public:
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
     void finalize(JSContext *cx, JSObject *proxy);
 
+    static bool proxyHandlerIsList(js::ProxyHandler *handler) {
+        return handler == &instance;
+    }
     static bool objIsList(JSObject *obj) {
-        return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;
+        return js::IsProxy(obj) && proxyHandlerIsList(js::GetProxyHandler(obj));
     }
     static bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     virtual bool isInstanceOf(JSObject *prototype)
@@ -228,8 +252,13 @@ public:
     }
     static ListType *getListObject(JSObject *obj);
 
+    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
+    static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache);
+    static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
+                                  js::PropertyDescriptor *desc);
     static bool nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id, bool *found,
                           js::Value *vp);
+    static ListType *getNative(JSObject *proxy);
 };
 
 struct nsISupportsResult
