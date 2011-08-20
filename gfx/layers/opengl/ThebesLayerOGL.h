@@ -73,7 +73,6 @@ public:
   void Destroy();
   Layer* GetLayer();
   virtual PRBool IsEmpty();
-  virtual void Validate();
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
 

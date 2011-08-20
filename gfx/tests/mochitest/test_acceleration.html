@@ -71,10 +71,6 @@ switch(osName)
     }
     break;
 
-  case "Linux":
-    isnot(acceleratedWindows, 0, "Acceleration enabled on Linux");
-    break;
-
   default:
     is(acceleratedWindows, 0, "Acceleration not supported on '" + osName + "'");
 }

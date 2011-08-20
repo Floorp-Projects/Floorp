@@ -126,7 +126,6 @@ private:
  */
 class NS_GFX ScopedXErrorHandler
 {
-public:
     // trivial wrapper around XErrorEvent, just adding ctor initializing by zero.
     struct ErrorEvent
     {
@@ -137,8 +136,6 @@ public:
             memset(this, 0, sizeof(ErrorEvent));
         }
     };
-
-private:
 
     // this ScopedXErrorHandler's ErrorEvent object
     ErrorEvent mXError;
