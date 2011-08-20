@@ -306,7 +306,21 @@ typedef BOOL (WINAPI*SetupDiDestroyDeviceInfoListFunc)(
   HDEVINFO DeviceInfoSet
 );
 
-
+// The device ID is a string like PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD
+// this function is used to extract the id's out of it
+PRUint32
+ParseIDFromDeviceID(const nsAString &key, const char *prefix, int length)
+{
+  nsAutoString id(key);
+  ToUpperCase(id);
+  PRInt32 start = id.Find(prefix);
+  if (start != -1) {
+    id.Cut(0, start + strlen(prefix));
+    id.Truncate(length);
+  }
+  nsresult err;
+  return id.ToInteger(&err, 16);
+}
 
 /* Other interesting places for info:
  *   IDXGIAdapter::GetDesc()
@@ -457,43 +471,11 @@ GfxInfo::Init()
     FreeLibrary(setupapi);
   }
 
-  nsAutoString vendor(mDeviceID);
-  ToUpperCase(vendor);
-  PRInt32 start = vendor.Find(NS_LITERAL_CSTRING("VEN_"));
-  if (start != -1) {
-    vendor.Cut(0, start + strlen("VEN_"));
-    vendor.Truncate(4);
-  }
-  nsresult err;
-  mAdapterVendorID = vendor.ToInteger(&err, 16);
-  
-  vendor = mDeviceID2;
-  ToUpperCase(vendor);
-  start = vendor.Find(NS_LITERAL_CSTRING("VEN_"));
-  if (start != -1) {
-    vendor.Cut(0, start + strlen("VEN_"));
-    vendor.Truncate(4);
-  }
-  mAdapterVendorID2 = vendor.ToInteger(&err, 16);
+  mAdapterVendorID  = ParseIDFromDeviceID(mDeviceID,  "VEN_", 4);
+  mAdapterVendorID2 = ParseIDFromDeviceID(mDeviceID2, "VEN_", 4);
+  mAdapterDeviceID  = ParseIDFromDeviceID(mDeviceID,  "&DEV_", 4);
+  mAdapterDeviceID2 = ParseIDFromDeviceID(mDeviceID2, "&DEV_", 4);
 
-  nsAutoString device(mDeviceID);
-  ToUpperCase(device);
-  start = device.Find(NS_LITERAL_CSTRING("&DEV_"));
-  if (start != -1) {
-    device.Cut(0, start + strlen("&DEV_"));
-    device.Truncate(4);
-  }
-  mAdapterDeviceID = device.ToInteger(&err, 16);
-  
-  device = mDeviceID2;
-  ToUpperCase(device);
-  start = device.Find(NS_LITERAL_CSTRING("&DEV_"));
-  if (start != -1) {
-    device.Cut(0, start + strlen("&DEV_"));
-    device.Truncate(4);
-  }
-  mAdapterDeviceID2 = device.ToInteger(&err, 16);
-  
   const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
   if (spoofedDriverVersionString) {
     mDriverVersion.AssignASCII(spoofedDriverVersionString);
