@@ -4888,14 +4888,7 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   NS_ASSERTION(sgo, "nativeObj not a global object!");
 
   nsGlobalWindow *win = nsGlobalWindow::FromSupports(nativeObj);
-  if (win->IsOuterWindow()) {
-    if (!win->EnsureInnerWindow()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    *parentObj = win->GetCurrentInnerWindowInternal()->FastGetGlobalJSObject();
-    return NS_OK;
-  }
+  NS_ASSERTION(win->IsInnerWindow(), "Should be inner window.");
 
   JSObject *winObj = win->FastGetGlobalJSObject();
   if (!winObj) {
