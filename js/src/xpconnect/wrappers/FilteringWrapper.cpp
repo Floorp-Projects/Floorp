@@ -138,6 +138,8 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
 #define COW FilteringWrapper<CrossCompartmentWrapper, ExposedPropertiesOnly>
 #define XOW FilteringWrapper<XrayWrapper<CrossCompartmentWrapper>, \
                              CrossOriginAccessiblePropertiesOnly>
+#define PXOW   FilteringWrapper<XrayProxy, \
+                                CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentWrapper, CrossOriginAccessiblePropertiesOnly>
 #define LW    FilteringWrapper<XrayWrapper<Wrapper>, \
                                SameOriginOrCrossOriginAccessiblePropertiesOnly>
@@ -151,6 +153,8 @@ template<> SCSOW SCSOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
 template<> COW COW::singleton(0);
 template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                               WrapperFactory::PARTIALLY_TRANSPARENT);
+template<> PXOW PXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
+                                WrapperFactory::PARTIALLY_TRANSPARENT);
 template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                                   WrapperFactory::PARTIALLY_TRANSPARENT);
 template<> LW  LW::singleton(0);
@@ -159,6 +163,7 @@ template<> XLW XLW::singleton(0);
 template class SOW;
 template class COW;
 template class XOW;
+template class PXOW;
 template class NNXOW;
 template class LW;
 template class XLW;
