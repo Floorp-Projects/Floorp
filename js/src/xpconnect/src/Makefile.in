@@ -49,7 +49,9 @@ MODULE		= xpconnect
 LIBRARY_NAME    = xpconnect_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
-EXPORTS = xpcpublic.h
+EXPORTS = \
+		xpcpublic.h \
+		dombindings_gen.h
 
 CPPSRCS		= \
 		nsScriptError.cpp \
@@ -172,11 +174,50 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  $(ENABLE_TRACEABLE_FLAGS) \
 	  $(srcdir)/dom_quickstubs.qsconf
 
+dombindings.$(OBJ_SUFFIX): dombindings_gen.h \
+                           dombindings_gen.cpp
+
+dombindings_gen.h: $(srcdir)/dombindings.conf \
+                   $(srcdir)/dombindingsgen.py \
+                   $(srcdir)/codegen.py \
+                   $(topsrcdir)/xpcom/idl-parser/header.py \
+                   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                   $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/other-licenses/ply \
+	  -I$(topsrcdir)/xpcom/idl-parser \
+	  $(srcdir)/dombindingsgen.py \
+	  --idlpath=$(DEPTH)/dist/idl \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
+	  --header-output dombindings_gen.h \
+	  $(srcdir)/dombindings.conf
+
+exports:: dombindings_gen.h
+
+dombindings_gen.cpp: $(srcdir)/dombindings.conf \
+                     $(srcdir)/dombindingsgen.py \
+                     $(srcdir)/codegen.py \
+                     $(topsrcdir)/xpcom/idl-parser/header.py \
+                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                     $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/other-licenses/ply \
+	  -I$(topsrcdir)/xpcom/idl-parser \
+	  $(srcdir)/dombindingsgen.py \
+	  --idlpath=$(DEPTH)/dist/idl \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
+	  --stub-output dombindings_gen.cpp \
+	  --makedepend-output $(MDDEPDIR)/dombindingsgen.pp \
+	  $(srcdir)/dombindings.conf
+
 GARBAGE += \
 		dom_quickstubs.h \
 		dom_quickstubs.cpp \
+		dombindings_gen.h \
+		dombindings_gen.cpp \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \
+		$(MDDEPDIR)/dombindingsgen.pp \
 		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
 		$(wildcard $(topsrcdir)/xpcom/idl-parser/*.pyc) \
 		$(NULL)
