@@ -454,20 +454,33 @@ XrayToString(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportError(cx, "XrayToString called on an incompatible object");
         return false;
     }
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-    JSObject *wrappednative = wn->GetFlatJSObject();
-
-    XPCCallContext ccx(JS_CALLER, cx, wrappednative);
-    char *wrapperStr = wn->ToString(ccx);
-    if (!wrapperStr) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
 
     nsAutoString result(NS_LITERAL_STRING("[object XrayWrapper "));
-    result.AppendASCII(wrapperStr);
-    JS_smprintf_free(wrapperStr);
+    if (dom::instanceIsProxy(&js::GetProxyPrivate(wrapper).toObject())) {
+        JSString *wrapperStr = js::GetProxyHandler(wrapper)->obj_toString(cx, wrapper);
+        size_t length;
+        const jschar* chars = JS_GetStringCharsAndLength(cx, wrapperStr, &length);
+        if (!chars) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
+        result.Append(chars, length);
+    }
+    else {
+        JSObject *holder = GetHolder(wrapper);
+        XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
+        JSObject *wrappednative = wn->GetFlatJSObject();
+
+        XPCCallContext ccx(JS_CALLER, cx, wrappednative);
+        char *wrapperStr = wn->ToString(ccx);
+        if (!wrapperStr) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
+        result.AppendASCII(wrapperStr);
+        JS_smprintf_free(wrapperStr);
+    }
+
     result.Append(']');
 
     JSString *str = JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(result.get()),
@@ -1061,7 +1074,7 @@ XrayProxy::~XrayProxy()
 }
 
 static JSObject *
-GetHolderObject(JSContext *cx, JSObject *wrapper)
+GetHolderObject(JSContext *cx, JSObject *wrapper, bool createHolder = true)
 {
     if (!js::GetProxyExtra(wrapper, 0).isUndefined())
         return &js::GetProxyExtra(wrapper, 0).toObject();
@@ -1081,6 +1094,31 @@ XrayProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
     if (!holder)
         return false;
 
+    bool status;
+    Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
+    desc->obj = NULL; // default value
+    if (!this->enter(cx, wrapper, id, action, &status))
+        return status;
+
+    AutoLeaveHelper<CrossCompartmentWrapper> helper(*this, cx, wrapper);
+
+    JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
+    if (XrayUtils::IsTransparent(cx, wrapper)) {
+        {
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, obj))
+                return false;
+            if (!JS_GetPropertyDescriptorById(cx, obj, id,
+                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                              desc))
+                return false;
+        }
+
+        if (desc->obj)
+            desc->obj = wrapper;
+        return JS_WrapPropertyDescriptor(cx, desc);
+    }
+
     if (!JS_GetPropertyDescriptorById(cx, holder, id, JSRESOLVE_QUALIFIED, desc))
         return false;
     if (desc->obj) {
@@ -1088,13 +1126,33 @@ XrayProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
         return true;
     }
 
-    if (!Proxy::getPropertyDescriptor(cx, wrapper, id, set, desc))
+    if (!js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, set, desc))
+        return false;
+    if (desc->obj) {
+        desc->obj = wrapper;
+        return true;
+    }
+
+    if (!js::GetProxyHandler(obj)->getPropertyDescriptor(cx, wrapper, id, set, desc))
         return false;
 
-    if (!desc->obj)
-        return true;
+    if (!desc->obj) {
+        if (id != nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
+            return true;
+
+        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, holder, "toString");
+        if (!toString)
+            return false;
+
+        desc->attrs = 0;
+        desc->getter = NULL;
+        desc->setter = NULL;
+        desc->shortid = 0;
+        desc->value.setObject(*JS_GetFunctionObject(toString));
+    }
 
     desc->obj = wrapper;
+
     return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
                                  desc->attrs);
 }
@@ -1103,32 +1161,144 @@ bool
 XrayProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                     bool set, js::PropertyDescriptor *desc)
 {
-    return Proxy::getOwnPropertyDescriptor(cx, wrapper, id, set, desc);
+    JSObject *holder = GetHolderObject(cx, wrapper);
+    if (!holder)
+        return false;
+
+    bool status;
+    Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
+    desc->obj = NULL; // default value
+    if (!this->enter(cx, wrapper, id, action, &status))
+        return status;
+
+    AutoLeaveHelper<CrossCompartmentWrapper> helper(*this, cx, wrapper);
+
+    JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
+    if (XrayUtils::IsTransparent(cx, wrapper)) {
+        {
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, obj))
+                return false;
+            if (!JS_GetPropertyDescriptorById(cx, obj, id,
+                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                              desc))
+                return false;
+        }
+
+        if (desc->obj)
+            desc->obj = desc->obj == obj ? wrapper : NULL;
+        return JS_WrapPropertyDescriptor(cx, desc);
+    }
+
+    if (!JS_GetPropertyDescriptorById(cx, holder, id, JSRESOLVE_QUALIFIED, desc))
+        return false;
+    if (desc->obj) {
+        desc->obj = wrapper;
+        return true;
+    }
+
+    if (!js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, set, desc))
+        return false;
+
+    desc->obj = wrapper;
+
+    return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
+                                 desc->attrs);
 }
 
 bool
 XrayProxy::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                           js::PropertyDescriptor *desc)
 {
-    return Proxy::defineProperty(cx, wrapper, id, desc);
+    JSObject *holder = GetHolderObject(cx, wrapper);
+    if (!holder)
+        return false;
+
+    JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
+    if (XrayUtils::IsTransparent(cx, wrapper)) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, obj) || !JS_WrapPropertyDescriptor(cx, desc))
+            return false;
+
+        return JS_DefinePropertyById(cx, obj, id, desc->value, desc->getter, desc->setter,
+                                     desc->attrs);
+    }
+
+    PropertyDescriptor existing_desc;
+    if (!getOwnPropertyDescriptor(cx, wrapper, id, true, &existing_desc))
+        return false;
+
+    if (existing_desc.obj && (existing_desc.attrs & JSPROP_PERMANENT))
+        return true; // silently ignore attempt to overwrite native property
+
+    return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
+                                 desc->attrs);
+}
+
+static bool
+EnumerateProxyNames(JSContext *cx, JSObject *wrapper, uintN flags, js::AutoIdVector &props)
+{
+    JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
+
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (XrayUtils::IsTransparent(cx, wrapper)) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, obj))
+            return false;
+
+        return js::GetPropertyNames(cx, obj, flags, &props);
+    }
+
+    if (WrapperFactory::IsPartiallyTransparent(wrapper)) {
+        JS_ReportError(cx, "Not allowed to enumerate cross origin objects");
+        return false;
+    }
+
+    if (flags & (JSITER_OWNONLY | JSITER_HIDDEN))
+        return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
+
+    return js::GetProxyHandler(obj)->enumerate(cx, wrapper, props);
 }
 
 bool
 XrayProxy::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
 {
-    return Proxy::getOwnPropertyNames(cx, wrapper, props);
+    return EnumerateProxyNames(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
 bool
 XrayProxy::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
-    return Proxy::delete_(cx, wrapper, id, bp);
+    JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
+    if (XrayUtils::IsTransparent(cx, wrapper)) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, obj))
+            return false;
+
+        JSBool b;
+        jsval v;
+        if (!JS_DeletePropertyById2(cx, obj, id, &v) || !JS_ValueToBoolean(cx, v, &b))
+            return false;
+
+        *bp = b;
+
+        return true;
+    }
+
+    if (!js::GetProxyHandler(obj)->delete_(cx, wrapper, id, bp))
+        return false;
+
+    JSObject *holder;
+    if (*bp && (holder = GetHolderObject(cx, wrapper, false)))
+        JS_DeletePropertyById(cx, holder, id);
+
+    return true;
 }
 
 bool
 XrayProxy::enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
 {
-    return Proxy::enumerate(cx, wrapper, props);
+    return EnumerateProxyNames(cx, wrapper, 0, props);
 }
 
 XrayProxy
