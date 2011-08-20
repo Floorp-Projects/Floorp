@@ -1022,18 +1022,29 @@ NodeList<T>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *
     return true;
 }
 
-template<>
+template<class T>
 JSString *
-NodeList<nsIHTMLCollection>::obj_toString(JSContext *cx, JSObject *proxy)
+NodeList<T>::obj_toString(JSContext *cx, JSObject *proxy)
 {
-    return JS_NewStringCopyZ(cx, "[object HTMLCollection]");
-}
+    const char *clazz = sInterfaceClass.name;
+    size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
+    jschar *chars = (jschar *)JS_malloc(cx, (nchars + 1) * sizeof(jschar));
+    if (!chars)
+        return NULL;
 
-template<>
-JSString *
-NodeList<nsINodeList>::obj_toString(JSContext *cx, JSObject *proxy)
-{
-    return JS_NewStringCopyZ(cx, "[object NodeList]");
+    const char *prefix = "[object ";
+    nchars = 0;
+    while ((chars[nchars] = (jschar)*prefix) != 0)
+        nchars++, prefix++;
+    while ((chars[nchars] = (jschar)*clazz) != 0)
+        nchars++, clazz++;
+    chars[nchars++] = ']';
+    chars[nchars] = 0;
+
+    JSString *str = JS_NewUCString(cx, chars, nchars);
+    if (!str)
+        JS_free(cx, chars);
+    return str;
 }
 
 template<class T>
