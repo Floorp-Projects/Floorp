@@ -80,25 +80,11 @@ public:
     virtual bool isInstanceOf(JSObject *prototype) = 0;
 };
 
-class NodeListBase : public ProxyHandler {
-public:
-    NodeListBase() : ProxyHandler() {}
-
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
-                            nsINodeList *aNodeList, bool *triedToWrap);
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
-                            nsIHTMLCollection *aHTMLCollection,
-                            nsWrapperCache *aWrapperCache, bool *triedToWrap);
-};
-
-/**
- * T must be either nsINodeList or nsIHTMLCollection.
- */
 template<class T>
-class NodeList : public NodeListBase {
+class ListBase : public ProxyHandler {
     friend void Register(nsDOMClassInfoData *aData);
 
-    static NodeList instance;
+    static ListBase<T> instance;
 
     static js::Class sInterfaceClass;
 
@@ -116,7 +102,7 @@ class NodeList : public NodeListBase {
     static Properties sProtoProperties[];
     static Methods sProtoMethods[];
 
-    static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *callee);
+    static bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
     static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
@@ -140,9 +126,12 @@ class NodeList : public NodeListBase {
 
     static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
                                   js::PropertyDescriptor *desc);
-  public:
-    NodeList();
 
+protected:
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, T *,
+                            nsWrapperCache* aWrapperCache, bool *triedToWrap);
+
+public:
     bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                js::PropertyDescriptor *desc);
     bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -167,17 +156,30 @@ class NodeList : public NodeListBase {
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
     void finalize(JSContext *cx, JSObject *proxy);
 
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, T *,
-                            nsWrapperCache* aWrapperCache, bool *enabled);
-
-    static bool objIsNodeList(JSObject *obj) {
+    static bool objIsList(JSObject *obj) {
         return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;
     }
     virtual bool isInstanceOf(JSObject *prototype)
     {
         return js::GetObjectClass(prototype) == &sInterfaceClass;
     }
-    static T *getNodeList(JSObject *obj);
+    static T *getListObject(JSObject *obj);
+};
+
+typedef ListBase<nsINodeList> NodeListBase;
+class NodeList : public NodeListBase
+{
+public:
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
+                            nsINodeList *aNodeList, bool *triedToWrap);
+};
+typedef ListBase<nsIHTMLCollection> HTMLCollectionBase;
+class HTMLCollection : public HTMLCollectionBase
+{
+public:
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
+                            nsIHTMLCollection *aHTMLCollection,
+                            nsWrapperCache *aWrapperCache, bool *triedToWrap);
 };
 
 }
