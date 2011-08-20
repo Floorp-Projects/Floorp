@@ -650,12 +650,6 @@ public:
     virtual PRBool SwapBuffers() { return PR_FALSE; }
 
     /**
-     * Insert a sync point to wait for any platform specific
-     * drawing to soure surfaces to complete.
-     */
-    virtual void WaitForDrawing() {}
-
-    /**
      * Defines a two-dimensional texture image for context target surface
      */
     virtual PRBool BindTexImage() { return PR_FALSE; }

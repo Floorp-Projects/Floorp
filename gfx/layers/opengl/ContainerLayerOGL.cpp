@@ -332,16 +332,6 @@ ContainerLayerOGL::GetFirstChildOGL()
 }
 
 void
-ContainerLayerOGL::Validate()
-{
-  for (LayerOGL* child = GetFirstChildOGL();
-       child != nsnull;
-       child = mozilla::layers::GetNextSibling(child)) {
-    child->Validate();
-  }
-}
-
-void
 ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                const nsIntPoint& aOffset)
 {
