@@ -59,7 +59,7 @@ class DOMSVGTransformList;
 }
 class nsGlobalWindow;
 class nsIDOMDocument;
-class nsIDOMNSHTMLOptionCollection;
+class nsIDOMHTMLOptionsCollection;
 class nsIDOMNodeList;
 class nsIDOMSVGLength;
 class nsIDOMSVGLengthList;
@@ -941,7 +941,7 @@ public:
                          JSObject *obj, jsid id, jsval *vp, bool *_retval);
 
   static nsresult SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
-                            nsIDOMNSHTMLOptionCollection *aOptCollection);
+                            nsIDOMHTMLOptionsCollection *aOptCollection);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

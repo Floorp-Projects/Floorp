@@ -53,7 +53,6 @@
 #include "nsIDOMHTMLCollection.h" 
 #include "nsIDOMHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
-#include "nsIDOMNSHTMLOptionCollectn.h" 
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsIView.h"

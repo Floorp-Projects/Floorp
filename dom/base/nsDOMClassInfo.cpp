@@ -169,7 +169,6 @@
 // HTMLOptionsCollection includes
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
-#include "nsIDOMNSHTMLOptionCollectn.h"
 
 // ContentList includes
 #include "nsContentList.h"
@@ -2500,7 +2499,6 @@ nsDOMClassInfo::Init()
     // Order is significant.  nsIDOMHTMLOptionsCollection.length shadows
     // nsIDOMHTMLCollection.length, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptionsCollection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
   DOM_CLASSINFO_MAP_END
 
@@ -9210,7 +9208,7 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 // static
 nsresult
 nsHTMLSelectElementSH::SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
-                                 nsIDOMNSHTMLOptionCollection *aOptCollection)
+                                 nsIDOMHTMLOptionsCollection *aOptCollection)
 {
   JSAutoRequest ar(cx);
 
@@ -9248,10 +9246,7 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
     nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
     select->GetOptions(getter_AddRefs(options));
 
-    nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryInterface(options));
-    NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
-
-    nsresult rv = SetOption(cx, vp, n, oc);
+    nsresult rv = SetOption(cx, vp, n, options);
     return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
@@ -9654,7 +9649,7 @@ nsHTMLOptionsCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc =
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> oc =
     do_QueryWrappedNative(wrapper, obj);
   NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
 
