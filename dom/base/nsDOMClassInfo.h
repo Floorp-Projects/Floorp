@@ -197,14 +197,12 @@ protected:
   nsresult ResolveConstructor(JSContext *cx, JSObject *obj,
                               JSObject **objp);
 
-public:
   // Checks if id is a number and returns the number, if aIsNumber is
   // non-null it's set to true if the id is a number and false if it's
   // not a number. If id is not a number this method returns -1
   static PRInt32 GetArrayIndexFromId(JSContext *cx, jsid id,
                                      bool *aIsNumber = nsnull);
 
-protected:
   static inline bool IsReadonlyReplaceable(jsid id)
   {
     return (id == sParent_id       ||

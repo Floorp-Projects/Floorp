@@ -602,6 +602,39 @@ getExpandoObject(JSObject *obj)
     return v.isUndefined() ? NULL : v.toObjectOrNull();
 }
 
+static int32
+IdToInt32(JSContext *cx, jsid id)
+{
+    JSAutoRequest ar(cx);
+
+    jsval idval;
+    jsdouble array_index;
+    jsint i;
+    if (!::JS_IdToValue(cx, id, &idval) ||
+        !::JS_ValueToNumber(cx, idval, &array_index) ||
+        !::JS_DoubleIsInt32(array_index, &i)) {
+        return -1;
+    }
+
+    return i;
+}
+
+static inline int32
+GetArrayIndexFromId(JSContext *cx, jsid id)
+{
+    if (NS_LIKELY(JSID_IS_INT(id)))
+        return JSID_TO_INT(id);
+    if (NS_LIKELY(id == s_length_id))
+        return -1;
+    if (NS_LIKELY(JSID_IS_ATOM(id))) {
+        JSAtom *atom = JSID_TO_ATOM(id);
+        jschar s = *atom->chars();
+        if (NS_LIKELY((unsigned)s >= 'a' && (unsigned)s <= 'z'))
+            return -1;
+    }
+    return IdToInt32(cx, id);
+}
+
 template<class T>
 bool
 NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -641,9 +674,8 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
         return true;
     }
 
-    bool isNumber;
-    int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
-    if (isNumber && index >= 0) {
+    int32 index = GetArrayIndexFromId(cx, id);
+    if (index >= 0) {
         T *nodeList = getNodeList(proxy);
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result) {
@@ -802,9 +834,8 @@ NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
         return namedItem(cx, proxy, &name, &result, &cache, bp);
     }
 
-    bool isNumber;
-    int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
-    if (isNumber && index >= 0) {
+    int32 index = GetArrayIndexFromId(cx, id);
+    if (index >= 0) {
         if (getNodeList(proxy)->GetNodeAt(PRUint32(index))) {
             *bp = true;
             return true;
@@ -929,9 +960,8 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
             return WrapObject(cx, proxy, result, cache, vp);
     }
 
-    bool isNumber;
-    int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
-    if (isNumber && index >= 0) {
+    int32 index = GetArrayIndexFromId(cx, id);
+    if (index >= 0) {
         T *nodeList = getNodeList(proxy);
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result)
