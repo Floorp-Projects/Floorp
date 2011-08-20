@@ -58,8 +58,6 @@ static jsid s_constructor_id = JSID_VOID;
 static jsid s_prototype_id = JSID_VOID;
 
 static jsid s_length_id = JSID_VOID;
-static jsid s_item_id = JSID_VOID;
-static jsid s_namedItem_id = JSID_VOID;
 
 bool
 DefineStaticJSVal(JSContext *cx, jsid &id, const char *string)
@@ -82,8 +80,7 @@ DefineStaticJSVals(JSContext *cx)
     return SET_JSID_TO_STRING(cx, constructor) &&
            SET_JSID_TO_STRING(cx, prototype) &&
            SET_JSID_TO_STRING(cx, length) &&
-           SET_JSID_TO_STRING(cx, item) &&
-           SET_JSID_TO_STRING(cx, namedItem);
+           DefinePropertyStaticJSVals(cx);
 }
 
 
@@ -225,18 +222,6 @@ Unwrap(JSContext *cx, jsval v, NoType **ppArg, nsISupports **ppArgRef, jsval *vp
 template<class LC>
 ListBase<LC> ListBase<LC>::instance;
 
-void
-Register(nsDOMClassInfoData *aData)
-{
-#define REGISTER_PROTO(_dom_class) \
-    aData[eDOMClassInfo_##_dom_class##_id].mDefineDOMInterface = _dom_class::getPrototype
-
-    REGISTER_PROTO(NodeList);
-    REGISTER_PROTO(HTMLCollection);
-
-#undef REGISTER_PROTO
-}
-
 bool
 DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine, nsresult *aResult)
 {
@@ -350,29 +335,6 @@ ListBase<LC>::setNamedItem(ListType *list, const nsAString& aName, NameSetterTyp
 }
 
 template<class LC>
-JSBool
-ListBase<LC>::item(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (!obj || !instanceIsListObject(cx, obj, callee))
-        return false;
-    if (argc < 1)
-        return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-    jsval *argv = JS_ARGV(cx, vp);
-    uint32 u;
-    if (!JS_ValueToECMAUint32(cx, argv[0], &u))
-        return false;
-    IndexGetterType result;
-    if (!getItemAt(getListObject(obj), u, result)) {
-        *vp = JSVAL_NULL;
-        return JS_TRUE;
-    }
-    return Wrap(cx, obj, result, vp);
-}
-
-
-template<class LC>
 bool
 ListBase<LC>::namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterType &result,
                         bool *hasResult)
@@ -384,28 +346,6 @@ ListBase<LC>::namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterTyp
         return false;
     *hasResult = getNamedItem(getListObject(obj), nameString, result);
     return true;
-}
-
-template<class LC>
-JSBool
-ListBase<LC>::namedItem(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (!obj || !instanceIsListObject(cx, obj, callee))
-        return false;
-    if (argc < 1)
-        return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-    jsval *argv = JS_ARGV(cx, vp);
-    bool hasResult;
-    NameGetterType result;
-    if (!namedItem(cx, obj, &argv[0], result, &hasResult))
-        return JS_FALSE;
-    if (!hasResult) {
-        *vp = JSVAL_NULL;
-        return JS_TRUE;
-    }
-    return Wrap(cx, obj, result, vp);
 }
 
 JSBool
@@ -1129,111 +1069,7 @@ NoBase::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
 }
 
 
-// NodeList
-
-template
-JSObject*
-NodeList::create(JSContext *cx, XPCWrappedNativeScope *scope, NodeList::ListType *aList,
-                  nsWrapperCache* aWrapperCache, bool *triedToWrap);
-
-template<>
-Class NodeList::sInterfaceClass = {
-    "NodeList",
-    0,
-    JS_PropertyStub,        /* addProperty */
-    JS_PropertyStub,        /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL,                   /* finalize */
-    NULL,                   /* reserved0 */
-    NULL,                   /* checkAccess */
-    NULL,                   /* call */
-    NULL,                   /* construct */
-    NULL,                   /* xdrObject */
-    interface_hasInstance
-};
-
-template<>
-NodeList::Properties NodeList::sProtoProperties[] = {
-    { s_length_id, length_getter, NULL }
-};
-
-template<>
-NodeList::Methods NodeList::sProtoMethods[] = {
-    { s_item_id, &item, 1 }
-};
-
-template<>
-bool
-NodeList::getItemAt(nsINodeList *list, uint32 i, nsIContent *&item)
-{
-    return !!(item = list->GetNodeAt(i));
-}
-
-
-// HTMLCollection
-
-template
-JSObject*
-HTMLCollection::create(JSContext *cx, XPCWrappedNativeScope *scope,
-                       HTMLCollection::ListType *aList, nsWrapperCache* aWrapperCache,
-                       bool *triedToWrap);
-
-template
-nsIHTMLCollection*
-HTMLCollection::getListObject(JSObject *obj);
-
-template<>
-Class HTMLCollection::sInterfaceClass = {
-    "HTMLCollection",
-    0,
-    JS_PropertyStub,        /* addProperty */
-    JS_PropertyStub,        /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL,                   /* finalize */
-    NULL,                   /* reserved0 */
-    NULL,                   /* checkAccess */
-    NULL,                   /* call */
-    NULL,                   /* construct */
-    NULL,                   /* xdrObject */
-    interface_hasInstance
-};
-
-template<>
-HTMLCollection::Properties HTMLCollection::sProtoProperties[] = {
-    { s_length_id, length_getter, NULL }
-};
-
-template<>
-HTMLCollection::Methods HTMLCollection::sProtoMethods[] = {
-    { s_item_id, &item, 1 },
-    { s_namedItem_id, &namedItem, 1 }
-};
-
-template<>
-bool
-HTMLCollection::getItemAt(nsIHTMLCollection *list, uint32 i, nsIContent *&item)
-{
-    return !!(item = list->GetNodeAt(i));
-}
-
-template<>
-bool
-HTMLCollection::getNamedItem(nsIHTMLCollection *list, const nsAString& aName,
-                             nsISupportsResult &item)
-{
-    item.mResult = list->GetNamedItem(aName, &item.mCache);
-    return !!item.mResult;
-}
-
-
 }
 }
 }
+#include "dombindings_gen.cpp"

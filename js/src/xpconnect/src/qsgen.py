@@ -256,7 +256,8 @@ def checkStubMember(member, isCustom):
     # Check for unknown properties.
     for attrname, value in vars(member).items():
         if value is True and attrname not in ('readonly','optional_argc',
-                                              'traceable','implicit_jscontext'):
+                                              'traceable','implicit_jscontext',
+                                              'getter', 'stringifier'):
             raise UserError("%s %s: unrecognized property %r"
                             % (member.kind.capitalize(), memberId,
                                attrname))
