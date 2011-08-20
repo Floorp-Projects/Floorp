@@ -44,10 +44,6 @@
 #include "jsproxy.h"
 #include "xpcpublic.h"
 
-class nsIContent;
-class nsINodeList;
-class nsIHTMLCollection;
-
 namespace mozilla {
 namespace dom {
 namespace binding {
@@ -69,6 +65,7 @@ GetWrapperCache(void *p)
 {
     return nsnull;
 }
+
 
 class ProxyHandler : public js::ProxyHandler {
 protected:
@@ -194,8 +191,6 @@ private:
     static void setProtoShape(JSObject *obj, uint32 shape);
 
     static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
-    static JSBool item(JSContext *cx, uintN argc, jsval *vp);
-    static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
     static inline bool getItemAt(ListType *list, uint32 i, IndexGetterType &item);
     static inline bool setItemAt(ListType *list, uint32 i, IndexSetterType item);
@@ -215,16 +210,10 @@ private:
         return !nativeGet(cx, proxy, js::GetObjectProto(proxy), id, &found, NULL) || found;
     }
 
+public:
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *list,
                             nsWrapperCache* cache, bool *triedToWrap);
 
-public:
-    template <typename I>
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, I *aList, bool *triedToWrap)
-    {
-        return create(cx, scope, aList, GetWrapperCache(aList), triedToWrap);
-    }
-    
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
     bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -282,14 +271,10 @@ struct nsISupportsResult
     nsWrapperCache *mCache;
 };
 
-typedef ListClass<nsINodeList, Ops<Getter<nsIContent*> > > NodeListClass;
-typedef ListBase<NodeListClass> NodeList;
+}
+}
+}
 
-typedef ListClass<nsIHTMLCollection, Ops<Getter<nsIContent*> >, Ops<Getter<nsISupportsResult> > > HTMLCollectionClass;
-typedef ListBase<HTMLCollectionClass> HTMLCollection;
-
-}
-}
-}
+#include "dombindings_gen.h"
 
 #endif /* dombindings_h */

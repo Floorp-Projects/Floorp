@@ -8427,9 +8427,9 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
   if (!JSVAL_IS_PRIMITIVE(collection)) {
     // We already have a node list in our reserved slot, use it.
     JSObject *obj = JSVAL_TO_OBJECT(collection);
-    if (mozilla::dom::binding::HTMLCollection::objIsList(obj)) {
+    if (mozilla::dom::binding::HTMLCollection::objIsWrapper(obj)) {
       nsIHTMLCollection *native =
-        mozilla::dom::binding::HTMLCollection::getListObject(obj);
+        mozilla::dom::binding::HTMLCollection::getNative(obj);
       NS_ADDREF(*nodeList = static_cast<nsContentList*>(native));
     }
     else {

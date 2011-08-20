@@ -123,19 +123,6 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex)
-  {
-    FlushPendingNotifications();
-
-    return mElements.SafeElementAt(aIndex, nsnull);
-  }
-  virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache **aCache)
-  {
-    nsISupports *item = NamedItemInternal(aName, PR_TRUE);
-    *aCache = nsnull;
-    return item;
-  }
   virtual nsINode* GetParentObject()
   {
     return mForm;
@@ -2566,4 +2553,20 @@ nsFormControlList::GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aContr
 #endif
 
   return NS_OK;
+}
+
+nsIContent*
+nsFormControlList::GetNodeAt(PRUint32 aIndex)
+{
+  FlushPendingNotifications();
+
+  return mElements.SafeElementAt(aIndex, nsnull);
+}
+
+nsISupports*
+nsFormControlList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
+{
+  nsISupports *item = NamedItemInternal(aName, true);
+  *aCache = nsnull;
+  return item;
 }

@@ -71,9 +71,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex);
-  virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache **aCache);
   virtual nsINode* GetParentObject()
   {
     return mParent;
