@@ -277,6 +277,8 @@ template<class T>
 T*
 NodeList<T>::getNodeList(JSObject *obj)
 {
+    if (xpc::WrapperFactory::IsXrayWrapper(obj))
+        obj = js::UnwrapObject(obj);
     JS_ASSERT(objIsNodeList(obj));
     return static_cast<T *>(js::GetProxyPrivate(obj).toPrivate());
 }
@@ -640,14 +642,16 @@ bool
 NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                       PropertyDescriptor *desc)
 {
-    JSObject *expando = getExpandoObject(proxy);
-    uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
-    if (expando && !JS_GetPropertyDescriptorById(cx, expando, id, flags, desc))
-        return false;
-    if (desc->obj) {
-        // Pretend the property lives on the wrapper.
-        desc->obj = proxy;
-        return true;
+    JSObject *expando;
+    if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy))) {
+        uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+        if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc))
+            return false;
+        if (desc->obj) {
+            // Pretend the property lives on the wrapper.
+            desc->obj = proxy;
+            return true;
+        }
     }
 
     if (hasNamedItem(id)) {
@@ -752,6 +756,9 @@ bool
 NodeList<T>::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                             PropertyDescriptor *desc)
 {
+    if (xpc::WrapperFactory::IsXrayWrapper(proxy))
+        return true;
+
     JSObject *expando = ensureExpandoObject(cx, proxy);
     if (!expando)
         return false;
@@ -764,8 +771,9 @@ template<class T>
 bool
 NodeList<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    JSObject *expando = getExpandoObject(proxy);
-    if (expando && !GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+    JSObject *expando;
+    if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy)) &&
+        !GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props))
         return false;
 
     PRUint32 length;
