@@ -505,11 +505,13 @@ class Interface(object):
         self.ops = {
             'index':
                 {
-                    'getter': None
+                    'getter': None,
+                    'setter': None
                 },
             'name':
                 {
-                    'getter': None
+                    'getter': None,
+                    'setter': None
                 },
             'stringifier': None
             }
@@ -816,6 +818,7 @@ class Method(object):
     optional_argc = False
     deprecated = False
     getter = False
+    setter = False
     stringifier = False
     forward = None
 
@@ -863,6 +866,10 @@ class Method(object):
                 if (len(self.params) != 1):
                     raise IDLError("Methods marked as getter must take 1 argument", aloc)
                 self.getter = True
+            elif name == 'setter':
+                if (len(self.params) != 2):
+                    raise IDLError("Methods marked as setter must take 2 arguments", aloc)
+                self.setter = True
             elif name == 'stringifier':
                 if (len(self.params) != 0):
                     raise IDLError("Methods marked as stringifier must take 0 arguments", aloc)
@@ -889,6 +896,17 @@ class Method(object):
             if self.iface.ops[ops]['getter']:
                 raise IDLError("a %s getter was already defined on interface '%s'" % (ops, self.iface.name), self.location)
             self.iface.ops[ops]['getter'] = self
+        if self.setter:
+            if getBuiltinOrNativeTypeName(self.params[0].realtype) == 'unsigned long':
+                ops = 'index'
+            else:
+                if getBuiltinOrNativeTypeName(self.params[0].realtype) != '[domstring]':
+                    print getBuiltinOrNativeTypeName(self.params[0].realtype)
+                    raise IDLError("a setter must take a unsigned long or DOMString argument" % self.iface.name, self.location)
+                ops = 'name'
+            if self.iface.ops[ops]['setter']:
+                raise IDLError("a %s setter was already defined on interface '%s'" % (ops, self.iface.name), self.location)
+            self.iface.ops[ops]['setter'] = self
         if self.stringifier:
             if self.iface.ops['stringifier']:
                 raise IDLError("a stringifier was already defined on interface '%s'" % self.iface.name, self.location)

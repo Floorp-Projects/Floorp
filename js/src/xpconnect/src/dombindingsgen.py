@@ -93,7 +93,9 @@ class DOMClass(UserDict.DictMixin):
         self.isBase = False
         self.nativeClass = nativeClass
         self.indexGetter = None
+        self.indexSetter = None
         self.nameGetter = None
+        self.nameSetter = None
         self.stringifier = False
         self.members = set()
 
@@ -133,6 +135,16 @@ class DOMClass(UserDict.DictMixin):
 
         return template % header.methodNativeName(getter)
 
+    @staticmethod
+    def setterNativeCall(setter):
+        if setter.notxpcom:
+            template = ("    !; // TODO")
+        else:
+            template = ("    nsresult rv = list->%s(index, item);\n"
+                        "    return NS_SUCCEEDED(rv) ? true : Throw(nsnull, rv);\n")
+
+        return template % header.methodNativeName(setter)
+
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         if value:
@@ -142,12 +154,24 @@ class DOMClass(UserDict.DictMixin):
                 else:
                     self.realIndexGetter = value
                 self.indexGetterType = self.getterNativeType(self.realIndexGetter)
+            elif name == 'indexSetter':
+                if value.forward:
+                    self.realIndexSetter = value.iface.namemap[value.forward]
+                else:
+                    self.realIndexSetter = value
+                self.indexSetterType = self.realIndexSetter.params[1].realtype.nativeType("in")
             elif name == 'nameGetter':
                 if value.forward:
                     self.realNameGetter = value.iface.namemap[value.forward]
                 else:
                     self.realNameGetter = value
                 self.nameGetterType = self.getterNativeType(self.realNameGetter)
+            elif name == 'nameSetter':
+                if value.forward:
+                    self.realNameSetter = value.iface.namemap[value.forward]
+                else:
+                    self.realNameSetter = value
+                self.nameSetterType = self.getterNativeType(self.realNameSetter)
 
     def __getitem__(self, key):
         assert type(key) == str
@@ -155,25 +179,37 @@ class DOMClass(UserDict.DictMixin):
         if key == 'indexGet':
             return DOMClass.getterNativeCall(self.realIndexGetter)
 
+        if key == 'indexSet':
+            return DOMClass.setterNativeCall(self.realIndexSetter)
+
         if key == 'nameGet':
             return DOMClass.getterNativeCall(self.realNameGetter)
 
-        def ops(getterType):
+        if key == 'nameSet':
+            return DOMClass.setterNativeCall(self.realNameSetter)
+
+        def ops(getterType, setterType):
             def opType(type):
                 return type + (" " if type.endswith('>') else "")
 
-            if getterType:
+            if getterType or setterType:
                 opsClass = ", Ops<"
-                opsClass += "Getter<" + opType(getterType) + ">"
+                if getterType:
+                    opsClass += "Getter<" + opType(getterType) + ">"
+                else:
+                    # Should we even support this?
+                    opsClass += "NoOp"
+                if setterType:
+                    opsClass += ", Setter<" + opType(setterType) + ">"
                 opsClass += " >"
             else:
                 opsClass = ", NoOps"
             return opsClass
 
         if key == 'indexOps':
-            return ops(self.indexGetter and self.indexGetterType)
+            return ops(self.indexGetter and self.indexGetterType, self.indexSetter and self.indexSetterType)
         if key == 'nameOps':
-            return ops(self.nameGetter and self.nameGetterType) if self.nameGetter else ""
+            return ops(self.nameGetter and self.nameGetterType, self.nameSetter and self.nameSetterType) if self.nameGetter else ""
 
         if key == 'listClass':
             if self.base:
@@ -255,8 +291,12 @@ def completeConfiguration(conf, includePath, cachedir):
                 stubbedInterfaces.append(iface)
             if not clazz.indexGetter and iface.ops['index']['getter']:
                 clazz.indexGetter = iface.ops['index']['getter']
+            if not clazz.indexSetter and iface.ops['index']['setter']:
+                clazz.indexSetter = iface.ops['index']['setter']
             if not clazz.nameGetter and iface.ops['name']['getter']:
                 clazz.nameGetter = iface.ops['name']['getter']
+            if not clazz.nameSetter and iface.ops['name']['setter']:
+                clazz.nameSetter = iface.ops['name']['setter']
             if not clazz.stringifier and iface.ops['stringifier']:
                 clazz.stringifier = iface.ops['stringifier']
             interfaceName = conf.customInheritance.get(iface.name, iface.base)
@@ -294,6 +334,8 @@ def getTypes(classes, map={}):
         types.add(getTranslatedType(clazz.nativeClass))
         if clazz.indexGetter and needsForwardDeclaration(clazz.realIndexGetter.realtype):
             types.add(getTranslatedType(clazz.realIndexGetter.realtype.name))
+        if clazz.indexSetter and needsForwardDeclaration(clazz.realIndexSetter.realtype):
+            types.add(getTranslatedType(clazz.realIndexSetter.realtype.name))
         if clazz.nameGetter and needsForwardDeclaration(clazz.realNameGetter.realtype):
             types.add(getTranslatedType(clazz.realNameGetter.realtype.name))
     return sorted(types)
@@ -458,12 +500,30 @@ indexGetterTemplate = (
 "}\n"
 "\n")
 
+indexSetterTemplate = (
+"template<>\n"
+"bool\n"
+"${name}Wrapper::setItemAt(${nativeClass} *list, uint32 index, ${indexSetterType} item)\n"
+"{\n"
+"${indexSet}"
+"}\n"
+"\n")
+
 nameGetterTemplate = (
 "template<>\n"
 "bool\n"
 "${name}Wrapper::getNamedItem(${nativeClass} *list, const nsAString& index, ${nameGetterType} &item)\n"
 "{\n"
 "${nameGet}"
+"}\n"
+"\n")
+
+nameSetterTemplate = (
+"template<>\n"
+"bool\n"
+"${name}Wrapper::setNamedItem(${nativeClass} *list, const nsAString& index, ${nameSetterType} item)\n"
+"{\n"
+"${nameSet}"
 "}\n"
 "\n")
 
@@ -581,6 +641,8 @@ def writeStubFile(filename, config, interfaces):
         for clazz in config.classes.itervalues():
             assert clazz.indexGetter
             ids.add(clazz.indexGetter.name)
+            if clazz.indexSetter:
+                ids.add(clazz.indexSetter.name)
             if clazz.nameGetter:
                 ids.add(clazz.nameGetter.name)
             if clazz.stringifier:
@@ -627,9 +689,13 @@ def writeStubFile(filename, config, interfaces):
             if clazz.indexGetter:
                 #methodsList.append("    { s_%s_id, &item, 1 }" % clazz.indexGetter.name)
                 f.write(string.Template(indexGetterTemplate).substitute(clazz))
+            if clazz.indexSetter:
+                f.write(string.Template(indexSetterTemplate).substitute(clazz))
             if clazz.nameGetter:
                 #methodsList.append("    { s_%s_id, &namedItem, 1 }" % clazz.nameGetter.name)
                 f.write(string.Template(nameGetterTemplate).substitute(clazz))
+            if clazz.nameSetter:
+                f.write(string.Template(nameSetterTemplate).substitute(clazz))
             for member in clazz.members:
                 if member.name == 'length':
                     if not member.readonly:
