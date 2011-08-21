@@ -746,27 +746,26 @@ let TabItems = {
     this.tempCanvas.height = 112;
 
     // When a tab is opened, create the TabItem
-    this._eventListeners["open"] = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
-        return;
+    this._eventListeners.open = function (event) {
+      let tab = event.target;
 
-      self.link(tab);
+      if (!tab.pinned)
+        self.link(tab);
     }
     // When a tab's content is loaded, show the canvas and hide the cached data
     // if necessary.
-    this._eventListeners["attrModified"] = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
-        return;
+    this._eventListeners.attrModified = function (event) {
+      let tab = event.target;
 
-      self.update(tab);
+      if (!tab.pinned)
+        self.update(tab);
     }
     // When a tab is closed, unlink.
-    this._eventListeners["close"] = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
-        return;
+    this._eventListeners.close = function (event) {
+      let tab = event.target;
 
       // XXX bug #635975 - don't unlink the tab if the dom window is closing.
-      if (!UI.isDOMWindowClosing)
+      if (!tab.pinned && !UI.isDOMWindowClosing)
         self.unlink(tab);
     }
     for (let name in this._eventListeners) {
@@ -774,8 +773,8 @@ let TabItems = {
     }
 
     // For each tab, create the link.
-    AllTabs.tabs.forEach(function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
+    AllTabs.tabs.forEach(function (tab) {
+      if (tab.pinned)
         return;
 
       self.link(tab, {immediately: true});
