@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.34 2010/05/21 00:43:51 wtc%google.com Exp $
+ * $Id: certi.h,v 1.35 2011/01/29 22:17:20 nelson%bolyard.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -235,13 +235,20 @@ SECStatus ShutdownCRLCache(void);
 extern char * cert_GetCertificateEmailAddresses(CERTCertificate *cert);
 
 /*
- * These functions are used to map subjectKeyID extension values to certs.
+ * These functions are used to map subjectKeyID extension values to certs
+ * and to keep track of the checks for user certificates in each slot
  */
 SECStatus
 cert_CreateSubjectKeyIDHashTable(void);
 
 SECStatus
 cert_AddSubjectKeyIDMapping(SECItem *subjKeyID, CERTCertificate *cert);
+
+SECStatus
+cert_UpdateSubjectKeyIDSlotCheck(SECItem *slotid, int series);
+
+int
+cert_SubjectKeyIDSlotCheckSeries(SECItem *slotid);
 
 /*
  * Call this function to remove an entry from the mapping table.

@@ -293,3 +293,9 @@ NSS_Get_NSS_PointerToCMSGenericWrapperDataTemplate;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.13 {    # NSS 3.13 release
+;+    global:
+NSSSMIME_GetVersion;
+;+    local:
+;+       *;
+;+};

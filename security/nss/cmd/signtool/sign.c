@@ -306,7 +306,7 @@ create_pk7 (char *dir, char *keyName, int *keyType)
 
     if (status) {
 	PR_fprintf(errorFD, "%s: PROBLEM signing data (%s)\n",
-	    PROGRAM_NAME, SECU_ErrorString ((int16) PORT_GetError()));
+	    PROGRAM_NAME, SECU_Strerror(PORT_GetError()));
 	errorCount++;
 	return - 1;
     }

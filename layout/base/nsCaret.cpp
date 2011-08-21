@@ -643,7 +643,8 @@ void nsCaret::InvalidateTextOverflowBlock()
         nsLayoutUtils::FindNearestBlockAncestor(caretFrame);
       if (block) {
         const nsStyleTextReset* style = block->GetStyleTextReset();
-        if (style->mTextOverflow.mType != NS_STYLE_TEXT_OVERFLOW_CLIP) {
+        if (style->mTextOverflow.mLeft.mType != NS_STYLE_TEXT_OVERFLOW_CLIP ||
+            style->mTextOverflow.mRight.mType != NS_STYLE_TEXT_OVERFLOW_CLIP) {
           block->InvalidateOverflowRect();
         }
       }
