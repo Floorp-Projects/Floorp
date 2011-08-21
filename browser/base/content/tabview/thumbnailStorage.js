@@ -44,6 +44,7 @@
 let ThumbnailStorage = {
   CACHE_CLIENT_IDENTIFIER: "tabview-cache",
   CACHE_PREFIX: "moz-panorama:",
+  PREF_DISK_CACHE_SSL: "browser.cache.disk_cache_ssl",
 
   // Holds the cache session reference
   _cacheSession: null,
@@ -53,6 +54,15 @@ let ThumbnailStorage = {
 
   // Holds the storage stream reference
   _storageStream: null,
+
+  // Holds the progress listener reference
+  _progressListener: null,
+
+  // Used to keep track of disk_cache_ssl preference
+  enablePersistentHttpsCaching: null,
+
+  // Used to keep track of browsers whose thumbs we shouldn't save
+  excludedBrowsers: [],
 
   // ----------
   // Function: toString
@@ -77,6 +87,40 @@ let ThumbnailStorage = {
     this._storageStream = Components.Constructor(
       "@mozilla.org/storagestream;1", "nsIStorageStream", 
       "init");
+
+    // store the preference value
+    this.enablePersistentHttpsCaching =
+      Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
+
+    Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this, false);
+
+    let self = this;
+    // tabs are already loaded before UI is initialized so cache-control
+    // values are unknown.  We add browsers with https to the list for now.
+    gBrowser.browsers.forEach(function(browser) {
+      let checkAndAddToList = function(browserObj) {
+        if (!self.enablePersistentHttpsCaching &&
+            browserObj.currentURI.schemeIs("https"))
+          self.excludedBrowsers.push(browserObj);
+      };
+      if (browser.contentDocument.readyState != "complete" ||
+          browser.webProgress.isLoadingDocument) {
+        browser.addEventListener("load", function onLoad() {
+          browser.removeEventListener("load", onLoad, true);
+          checkAndAddToList(browser);
+        }, true);
+      } else {
+        checkAndAddToList(browser);
+      }
+    });
+    gBrowser.addTabsProgressListener(this);
+  },
+
+  // Function: uninit
+  // Should be called when window is unloaded.
+  uninit: function ThumbnailStorage_uninit() {
+    gBrowser.removeTabsProgressListener(this);
+    Services.prefs.removeObserver(this.PREF_DISK_CACHE_SSL, this);
   },
 
   // ----------
@@ -107,6 +151,12 @@ let ThumbnailStorage = {
     }
   },
 
+  // Function: _shouldSaveThumbnail
+  // Checks whether to save tab's thumbnail or not.
+  _shouldSaveThumbnail : function ThumbnailStorage__shouldSaveThumbnail(tab) {
+    return (this.excludedBrowsers.indexOf(tab.linkedBrowser) == -1);
+  },
+
   // ----------
   // Function: saveThumbnail
   // Saves the <imageData> to the cache using the given <url> as key.
@@ -115,8 +165,8 @@ let ThumbnailStorage = {
   saveThumbnail: function ThumbnailStorage_saveThumbnail(tab, imageData, callback) {
     Utils.assert(tab, "tab");
     Utils.assert(imageData, "imageData");
-
-    if (!StoragePolicy.canStoreThumbnailForTab(tab)) {
+    
+    if (!this._shouldSaveThumbnail(tab)) {
       tab._tabViewTabItem._sendToSubscribers("deniedToCacheImageData");
       if (callback)
         callback(false);
@@ -238,6 +288,61 @@ let ThumbnailStorage = {
 
     this._openCacheEntry(url, Ci.nsICache.ACCESS_READ,
         onCacheEntryAvailable, onCacheEntryUnavailable);
+  },
+
+  // ----------
+  // Function: observe
+  // Implements the observer interface.
+  observe: function ThumbnailStorage_observe(subject, topic, data) {
+    this.enablePersistentHttpsCaching =
+      Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
+  },
+
+  // ----------
+  // Implements progress listener interface.
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsISupports]),
+
+  onStateChange: function ThumbnailStorage_onStateChange(
+    browser, webProgress, request, flag, status) {
+    if (flag & Ci.nsIWebProgressListener.STATE_START &&
+        flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+      // ensure the dom window is the top one
+      if (webProgress.DOMWindow.parent == webProgress.DOMWindow) {
+        let index = this.excludedBrowsers.indexOf(browser);
+        if (index != -1)
+          this.excludedBrowsers.splice(index, 1);
+      }
+    }
+    if (flag & Ci.nsIWebProgressListener.STATE_STOP &&
+        flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+      // ensure the dom window is the top one
+      if (webProgress.DOMWindow.parent == webProgress.DOMWindow &&
+          request && request instanceof Ci.nsIHttpChannel) {
+        request.QueryInterface(Ci.nsIHttpChannel);
+
+        let inhibitPersistentThumb = false;
+        if (request.isNoStoreResponse()) {
+           inhibitPersistentThumb = true;
+        } else if (!this.enablePersistentHttpsCaching &&
+                   request.URI.schemeIs("https")) {
+          let cacheControlHeader;
+          try {
+            cacheControlHeader = request.getResponseHeader("Cache-Control");
+          } catch(e) {
+            // this error would occur when "Cache-Control" doesn't exist in
+            // the eaders
+          }
+          if (cacheControlHeader && !(/public/i).test(cacheControlHeader))
+            inhibitPersistentThumb = true;
+        }
+
+        if (inhibitPersistentThumb &&
+            this.excludedBrowsers.indexOf(browser) == -1)
+          this.excludedBrowsers.push(browser);
+      }
+    }
   }
 }
 

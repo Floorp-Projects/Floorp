@@ -776,22 +776,5 @@ let Utils = {
 
     // Return the modified object
     return target;
-  },
-
-  // ----------
-  // Function: attempt
-  // Tries to execute a number of functions. Returns immediately the return
-  // value of the first non-failed function without executing successive
-  // functions, or null.
-  attempt: function () {
-    let args = arguments;
-
-    for (let i = 0; i < args.length; i++) {
-      try {
-        return args[i]();
-      } catch (e) {}
-    }
-
-    return null;
   }
 };
