@@ -179,16 +179,13 @@ PP_DEB_FILES =	debian/control \
 		debian/fennec.postinst \
 		$(NULL)
 
-ifdef MOZ_ENABLE_CONTENTMANAGER
-PP_DEB_FILES += debian/fennec.aegis \
-               $(NULL)
-endif
 ifeq ($(MOZ_PLATFORM_MAEMO),6)
-PP_DEB_FILES += debian/backup \
-                debian/restore \
-		 debian/fennec.conf \
-		 debian/fennec-cud.sh \
-		 debian/fennec-rfs.sh \
+PP_DEB_FILES += debian/fennec.aegis \
+		debian/backup \
+		debian/restore \
+		debian/fennec.conf \
+		debian/fennec-cud.sh \
+		debian/fennec-rfs.sh \
 		 debian/fennec.policy \
                 $(NULL)
 endif
@@ -242,7 +239,7 @@ endif
 
 # a defined CONTENTMANAGER implicitly means MOZ_PLATFORM_MAEMO is equals 6
 # in case you use CONTENTMANGER you need to sign your package to gain tracker access.
-ifdef MOZ_ENABLE_CONTENTMANAGER
+ifeq ($(MOZ_PLATFORM_MAEMO),6)
 	if test -e "/usr/bin/aegis-deb-add"; then \
 	   fakeroot aegis-deb-add -control $(DEBDESTDIR)/DEBIAN/control .. debian/fennec.aegis=_aegis; \
 	else \
