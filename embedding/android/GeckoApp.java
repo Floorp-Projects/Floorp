@@ -421,6 +421,7 @@ abstract public class GeckoApp
     public void onStart()
     {
         Log.i(LOG_FILE_NAME, "start");
+        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_START));
         super.onStart();
     }
 

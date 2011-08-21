@@ -328,6 +328,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
             mozilla::services::GetObserverService();
         NS_NAMED_LITERAL_STRING(minimize, "heap-minimize");
         obsServ->NotifyObservers(nsnull, "memory-pressure", minimize.get());
+        obsServ->NotifyObservers(nsnull, "application-background", nsnull);
 
         break;
     }
@@ -355,6 +356,14 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         if (prefs) {
             prefs->SavePrefFile(nsnull);
         }
+
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_START: {
+        nsCOMPtr<nsIObserverService> obsServ =
+            mozilla::services::GetObserverService();
+        obsServ->NotifyObservers(nsnull, "application-foreground", nsnull);
 
         break;
     }
