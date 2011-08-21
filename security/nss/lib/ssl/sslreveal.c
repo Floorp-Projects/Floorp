@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslreveal.c,v 1.7.2.1 2010/08/03 18:52:13 wtc%google.com Exp $ */
+/* $Id: sslreveal.c,v 1.8 2010/08/03 18:48:45 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"

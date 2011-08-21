@@ -59,12 +59,12 @@
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "nsIProperties.h"
-#include "nsIProxyObjectManager.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsIRandomGenerator.h"
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierUtils.h"
+#include "nsUrlClassifierProxies.h"
 #include "nsURILoader.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -181,8 +181,7 @@ class nsUrlClassifierDBServiceWorker;
 // Singleton instance.
 static nsUrlClassifierDBService* sUrlClassifierDBService;
 
-// Thread that we do the updates on.
-static nsIThread* gDbBackgroundThread = nsnull;
+nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nsnull;
 
 // Once we've committed to shutting down, don't do work in the background
 // thread.
@@ -3920,12 +3919,7 @@ nsUrlClassifierDBService::Init()
   }
 
   // Proxy for calling the worker on the background thread
-  rv = NS_GetProxyForObject(gDbBackgroundThread,
-                            NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                            mWorker,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(mWorkerProxy));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mWorkerProxy = new UrlClassifierDBServiceWorkerProxy(mWorker);
 
   mCompleters.Init();
 
@@ -4038,14 +4032,8 @@ nsUrlClassifierDBService::LookupURI(nsIURI* uri,
   if (!callback)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIUrlClassifierLookupCallback> proxyCallback;
-  // The proxy callback uses the current thread.
-  rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
-                            NS_GET_IID(nsIUrlClassifierLookupCallback),
-                            callback,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(proxyCallback));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIUrlClassifierLookupCallback> proxyCallback =
+    new UrlClassifierLookupCallbackProxy(callback);
 
   // Queue this lookup and call the lookup function to flush the queue if
   // necessary.
@@ -4062,13 +4050,8 @@ nsUrlClassifierDBService::GetTables(nsIUrlClassifierCallback* c)
 
   nsresult rv;
   // The proxy callback uses the current thread.
-  nsCOMPtr<nsIUrlClassifierCallback> proxyCallback;
-  rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
-                            NS_GET_IID(nsIUrlClassifierCallback),
-                            c,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(proxyCallback));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIUrlClassifierCallback> proxyCallback =
+    new UrlClassifierCallbackProxy(c);
 
   return mWorkerProxy->GetTables(proxyCallback);
 }
@@ -4103,13 +4086,8 @@ nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer,
   nsresult rv;
 
   // The proxy observer uses the current thread
-  nsCOMPtr<nsIUrlClassifierUpdateObserver> proxyObserver;
-  rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
-                            NS_GET_IID(nsIUrlClassifierUpdateObserver),
-                            observer,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(proxyObserver));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIUrlClassifierUpdateObserver> proxyObserver =
+    new UrlClassifierUpdateObserverProxy(observer);
 
   return mWorkerProxy->BeginUpdate(proxyObserver, updateTables, clientKey);
 }
@@ -4284,3 +4262,10 @@ nsUrlClassifierDBService::Shutdown()
 
   return NS_OK;
 }
+
+nsIThread*
+nsUrlClassifierDBService::BackgroundThread()
+{
+  return gDbBackgroundThread;
+}
+

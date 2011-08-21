@@ -56,7 +56,5 @@ CSRCS = \
 	pkix_verifynode.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = pkixresults
 

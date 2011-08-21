@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.71 2010/05/21 00:43:51 wtc%google.com Exp $
+ * $Id: crl.c,v 1.72 2011/07/24 13:48:10 wtc%google.com Exp $
  */
  
 #include "cert.h"
@@ -75,9 +75,8 @@ static const SEC_ASN1Template SEC_CERTExtensionsTemplate[] = {
 };
 
 /*
- * XXX Also, these templates, especially the Krl/FORTEZZA ones, need to
- * be tested; Lisa did the obvious translation but they still should be
- * verified.
+ * XXX Also, these templates need to be tested; Lisa did the obvious
+ * translation but they still should be verified.
  */
 
 const SEC_ASN1Template CERT_IssuerAndSNTemplate[] = {
@@ -93,55 +92,8 @@ const SEC_ASN1Template CERT_IssuerAndSNTemplate[] = {
     { 0 }
 };
 
-static const SEC_ASN1Template cert_KrlEntryTemplate[] = {
-    { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(CERTCrlEntry) },
-    { SEC_ASN1_OCTET_STRING,
-	  offsetof(CERTCrlEntry,serialNumber) },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrlEntry,revocationDate) },
-    { 0 }
-};
-
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 SEC_ASN1_MKSUB(CERT_TimeChoiceTemplate)
-
-static const SEC_ASN1Template cert_KrlTemplate[] = {
-    { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(CERTCrl) },
-    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
-	  offsetof(CERTCrl,signatureAlg),
-	  SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-    { SEC_ASN1_SAVE,
-	  offsetof(CERTCrl,derName) },
-    { SEC_ASN1_INLINE,
-	  offsetof(CERTCrl,name),
-	  CERT_NameTemplate },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrl,lastUpdate) },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrl,nextUpdate) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_SEQUENCE_OF,
-	  offsetof(CERTCrl,entries),
-	  cert_KrlEntryTemplate },
-    { 0 }
-};
-
-static const SEC_ASN1Template cert_SignedKrlTemplate[] = {
-    { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(CERTSignedCrl) },
-    { SEC_ASN1_SAVE,
-	  offsetof(CERTSignedCrl,signatureWrap.data) },
-    { SEC_ASN1_INLINE,
-	  offsetof(CERTSignedCrl,crl),
-	  cert_KrlTemplate },
-    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
-	  offsetof(CERTSignedCrl,signatureWrap.signatureAlgorithm),
-	  SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-    { SEC_ASN1_BIT_STRING,
-	  offsetof(CERTSignedCrl,signatureWrap.signature) },
-    { 0 }
-};
 
 static const SEC_ASN1Template cert_CrlKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE,
@@ -470,7 +422,7 @@ SECStatus CERT_CompleteCRLDecodeEntries(CERTSignedCrl* crl)
 }
 
 /*
- * take a DER CRL or KRL  and decode it into a CRL structure
+ * take a DER CRL and decode it into a CRL structure
  * allow reusing the input DER without making a copy
  */
 CERTSignedCrl *
@@ -578,11 +530,8 @@ CERT_DecodeDERCrlWithFlags(PRArenaPool *narena, SECItem *derSignedCrl,
 
         break;
 
-    case SEC_KRL_TYPE:
-	rv = SEC_QuickDERDecodeItem
-	     (arena, crl, cert_SignedKrlTemplate, derSignedCrl);
-	break;
     default:
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	rv = SECFailure;
 	break;
     }
@@ -614,7 +563,7 @@ loser:
 }
 
 /*
- * take a DER CRL or KRL  and decode it into a CRL structure
+ * take a DER CRL and decode it into a CRL structure
  */
 CERTSignedCrl *
 CERT_DecodeDERCrl(PRArenaPool *narena, SECItem *derSignedCrl, int type)
@@ -716,6 +665,12 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 
     PORT_Assert(newCrl);
     PORT_Assert(derCrl);
+    PORT_Assert(type == SEC_CRL_TYPE);
+
+    if (type != SEC_CRL_TYPE) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
 
     /* we can't use the cache here because we must look in the same
        token */
@@ -739,21 +694,7 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 	    goto done;
 	}
         if (!SEC_CrlIsNewer(&newCrl->crl,&oldCrl->crl)) {
-
-            if (type == SEC_CRL_TYPE) {
-                PORT_SetError(SEC_ERROR_OLD_CRL);
-            } else {
-                PORT_SetError(SEC_ERROR_OLD_KRL);
-            }
-
-            goto done;
-        }
-
-        if ((SECITEM_CompareItem(&newCrl->crl.derName,
-                &oldCrl->crl.derName) != SECEqual) &&
-            (type == SEC_KRL_TYPE) ) {
-
-            PORT_SetError(SEC_ERROR_CKL_CONFLICT);
+            PORT_SetError(SEC_ERROR_OLD_CRL);
             goto done;
         }
 

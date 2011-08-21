@@ -1106,8 +1106,8 @@ static void luCommonDetailsAE()
         "   -t trustargs");
     FPS "%-25s trustargs is of the form x,y,z where x is for SSL, y is for S/MIME,\n", "");
     FPS "%-25s and z is for code signing. Use ,, for no explicit trust.\n", "");
-    FPS "%-25s p \t valid peer\n", "");
-    FPS "%-25s P \t trusted peer (implies p)\n", "");
+    FPS "%-25s p \t prohibited\n", "");
+    FPS "%-25s P \t trusted peer\n", "");
     FPS "%-25s c \t valid CA\n", "");
     FPS "%-25s T \t trusted CA to issue client certs (implies c)\n", "");
     FPS "%-25s C \t trusted CA to issue server certs (implies c)\n", "");

@@ -53,11 +53,6 @@ var ContextCommands = {
     Browser.addTab(ContextHelper.popupState.linkURL, false, Browser.selectedTab);
   },
 
-  saveLink: function cc_saveLink() {
-    let browser = ContextHelper.popupState.target;
-    ContentAreaUtils.saveURL(ContextHelper.popupState.linkURL, null, "SaveLinkTitle", false, true, browser.documentURI);
-  },
-
   saveImage: function cc_saveImage() {
     let popupState = ContextHelper.popupState;
     let browser = popupState.target;

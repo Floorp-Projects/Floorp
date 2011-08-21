@@ -892,11 +892,11 @@ PK11_MoveSymKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation,
  *  for the key. Most PKCS #11 modules fail if you specify the CKA_VALUE_LEN 
  *  attribute for keys with fixed length. The exception is DES2. If you
  *  select a CKM_DES3_CBC mechanism, this code will not add the CKA_VALUE_LEN
- *  paramter and use the key size to determine which underlying DES keygen
+ *  parameter and use the key size to determine which underlying DES keygen
  *  function to use (CKM_DES2_KEY_GEN or CKM_DES3_KEY_GEN).
  *
  * keyType must be -1 for most algorithms. Some PBE algorthims cannot 
- *  determine the correct key type from the mechanism or the paramters,
+ *  determine the correct key type from the mechanism or the parameters,
  *  so key type must be specified. Other PKCS #11 mechanisms may do so in
  *  the future. Currently there is no need to export this publically.
  *  Keep it private until there is a need in case we need to expand the
@@ -972,7 +972,7 @@ pk11_TokenKeyGenWithFlagsAndKeyType(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
  *  for the key. Most PKCS #11 modules fail if you specify the CKA_VALUE_LEN 
  *  attribute for keys with fixed length. The exception is DES2. If you
  *  select a CKM_DES3_CBC mechanism, this code will not add the CKA_VALUE_LEN
- *  paramter and use the key size to determine which underlying DES keygen
+ *  parameter and use the key size to determine which underlying DES keygen
  *  function to use (CKM_DES2_KEY_GEN or CKM_DES3_KEY_GEN).
  *
  * CK_FLAGS flags: key operation flags
