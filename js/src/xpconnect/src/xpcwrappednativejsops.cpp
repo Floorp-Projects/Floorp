@@ -1576,7 +1576,7 @@ XPC_WN_CallMethod(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef DEBUG_slimwrappers
     {
-        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        JSFunction* fun = funobj->getFunctionPrivate();
         JSString *funid = JS_GetFunctionId(fun);
         JSAutoByteString bytes;
         const char *funname = !funid ? "" : bytes.encode(cx, funid) ? bytes.ptr() : "<error>";
@@ -1615,7 +1615,7 @@ XPC_WN_GetterSetter(JSContext *cx, uintN argc, jsval *vp)
         JSAutoByteString bytes;
         if(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION)
         {
-            JSString *funid = JS_GetFunctionId(GET_FUNCTION_PRIVATE(cx, funobj));
+            JSString *funid = JS_GetFunctionId(funobj->getFunctionPrivate());
             funname = !funid ? "" : bytes.encode(cx, funid) ? bytes.ptr() : "<error>";
         }
         SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);

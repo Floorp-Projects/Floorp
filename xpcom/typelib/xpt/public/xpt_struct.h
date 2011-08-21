@@ -337,14 +337,12 @@ struct XPTTypeDescriptorPrefix {
 
 /* flag bits -- fur and jband were right, I was miserably wrong */
 #define XPT_TDP_POINTER          0x80
-#define XPT_TDP_UNIQUE_POINTER   0x40
 #define XPT_TDP_REFERENCE        0x20
 #define XPT_TDP_FLAGMASK         0xe0
 #define XPT_TDP_TAGMASK          (~XPT_TDP_FLAGMASK)
 #define XPT_TDP_TAG(tdp)         ((tdp).flags & XPT_TDP_TAGMASK)
 
 #define XPT_TDP_IS_POINTER(flags)        (flags & XPT_TDP_POINTER)
-#define XPT_TDP_IS_UNIQUE_POINTER(flags) (flags & XPT_TDP_UNIQUE_POINTER)
 #define XPT_TDP_IS_REFERENCE(flags)      (flags & XPT_TDP_REFERENCE)
 
 /* 

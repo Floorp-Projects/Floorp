@@ -452,7 +452,7 @@ int sa_stream_drain(sa_stream_t *s);
 
 /** Returns the minimum number of bytes which must be written before any
     audio is played by the hardware. */
-int sa_stream_get_min_write(sa_stream_t *s, size_t *samples);
+int sa_stream_get_min_write(sa_stream_t *s, size_t *size);
 
 /** Return a human readable error */
 const char *sa_strerror(int code);

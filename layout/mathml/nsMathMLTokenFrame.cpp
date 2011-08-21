@@ -220,8 +220,8 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
     mBoundingMetrics += childSize.mBoundingMetrics;
   }
 
-  nsRefPtr<nsFontMetrics> fm =
-    PresContext()->GetMetricsFor(GetStyleFont()->mFont);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   nscoord ascent = fm->MaxAscent();
   nscoord descent = fm->MaxDescent();
 

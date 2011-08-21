@@ -543,7 +543,7 @@ nsStorageInputStream::Seek(PRUint32 aPosition)
     return NS_OK;
 }
 
-NS_COM nsresult
+nsresult
 NS_NewStorageStream(PRUint32 segmentSize, PRUint32 maxSize, nsIStorageStream **result)
 {
     NS_ENSURE_ARG(result);

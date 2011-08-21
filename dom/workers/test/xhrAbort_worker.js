@@ -75,6 +75,7 @@ function runTest() {
   };
 
   xhr.open("GET", "testXHR.txt");
+  xhr.overrideMimeType("text/plain");
   xhr.send(null);
 }
 

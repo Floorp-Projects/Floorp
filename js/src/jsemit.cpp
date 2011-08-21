@@ -4979,7 +4979,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 
         fun = pn->pn_funbox->function();
-        JS_ASSERT(FUN_INTERPRETED(fun));
+        JS_ASSERT(fun->isInterpreted());
         if (fun->script()) {
             /*
              * This second pass is needed to emit JSOP_NOP with a source note
@@ -4994,7 +4994,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         JS_ASSERT_IF(pn->pn_funbox->tcflags & TCF_FUN_HEAVYWEIGHT,
-                     FUN_KIND(fun) == JSFUN_INTERPRETED);
+                     fun->kind() == JSFUN_INTERPRETED);
 
         /* Generate code for the function's body. */
         void *cg2mark = JS_ARENA_MARK(cg->codePool);
@@ -5077,7 +5077,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return false;
             if (pn->pn_cookie.isFree()) {
                 CG_SWITCH_TO_PROLOG(cg);
-                op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
+                op = fun->isFlatClosure() ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
                 EMIT_INDEX_OP(op, index);
 
                 /* Make blockChain determination quicker. */

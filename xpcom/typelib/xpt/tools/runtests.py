@@ -158,7 +158,6 @@ class TypelibCompareMixin:
         self.assertEqual(type(t1), type(t2), "type types should be equal")
         self.assertEqual(t1.pointer, t2.pointer,
                          "pointer flag should be equal for %s and %s" % (t1, t2))
-        self.assertEqual(t1.unique_pointer, t2.unique_pointer)
         self.assertEqual(t1.reference, t2.reference)
         if isinstance(t1, xpt.SimpleType):
             self.assertEqual(t1.tag, t2.tag)

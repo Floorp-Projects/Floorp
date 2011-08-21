@@ -44,6 +44,7 @@
 #include "History.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/Preferences.h"
 #include "nsHashPropertyBag.h"
 #include "nsIFilePicker.h"
 #include "nsIWindowWatcher.h"
@@ -111,6 +112,7 @@
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
+using mozilla::Preferences;
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -154,21 +156,39 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
     MOZ_COUNT_DTOR(MemoryReportRequestParent);
 }
 
-ContentParent* ContentParent::gSingleton;
+nsTArray<ContentParent*>* ContentParent::gContentParents;
 
 ContentParent*
-ContentParent::GetSingleton(PRBool aForceNew)
+ContentParent::GetNewOrUsed()
 {
-    if (gSingleton && !gSingleton->IsAlive())
-        gSingleton = nsnull;
-    
-    if (!gSingleton && aForceNew) {
-        nsRefPtr<ContentParent> parent = new ContentParent();
-        gSingleton = parent;
-        parent->Init();
+    if (!gContentParents)
+        gContentParents = new nsTArray<ContentParent*>();
+
+    PRInt32 maxContentProcesses = Preferences::GetInt("dom.ipc.processCount", 1);
+    if (maxContentProcesses < 1)
+        maxContentProcesses = 1;
+
+    if (gContentParents->Length() >= PRUint32(maxContentProcesses)) {
+        ContentParent* p = (*gContentParents)[rand() % gContentParents->Length()];
+        NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in gContentParents?");
+        return p;
+    }
+        
+    nsRefPtr<ContentParent> p = new ContentParent();
+    p->Init();
+    gContentParents->AppendElement(p);
+    return p;
+}
+
+void
+ContentParent::GetAll(nsTArray<ContentParent*>& aArray)
+{
+    if (!gContentParents) {
+        aArray.Clear();
+        return;
     }
 
-    return gSingleton;
+    aArray = *gContentParents;
 }
 
 void
@@ -195,7 +215,7 @@ ContentParent::Init()
         threadInt->SetObserver(this);
     }
     if (obs) {
-        obs->NotifyObservers(nsnull, "ipc:content-created", nsnull);
+        obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-created", nsnull);
     }
 
 #ifdef ACCESSIBILITY
@@ -274,6 +294,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 #endif
     }
 
+    mMessageManager->Disconnect();
+
     // clear the child memory reporters
     InfallibleTArray<MemoryReport> empty;
     SetChildMemoryReporters(empty);
@@ -294,6 +316,14 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         threadInt->SetObserver(mOldObserver);
     if (mRunToCompletionDepth)
         mRunToCompletionDepth = 0;
+
+    if (gContentParents) {
+        gContentParents->RemoveElement(this);
+        if (!gContentParents->Length()) {
+            delete gContentParents;
+            gContentParents = NULL;
+        }
+    }
 
     mIsAlive = false;
 
@@ -362,6 +392,7 @@ ContentParent::ContentParent()
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
     , mProcessStartTime(time(NULL))
+    , mSendPermissionUpdates(false)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
@@ -372,6 +403,7 @@ ContentParent::ContentParent()
     nsChromeRegistryChrome* chromeRegistry =
         static_cast<nsChromeRegistryChrome*>(registrySvc.get());
     chromeRegistry->SendRegisteredChrome(this);
+    mMessageManager = nsFrameMessageManager::NewProcessMessageManager(this);
 }
 
 ContentParent::~ContentParent()
@@ -380,10 +412,8 @@ ContentParent::~ContentParent()
         base::CloseProcessHandle(OtherProcess());
 
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    //If the previous content process has died, a new one could have
-    //been started since.
-    if (gSingleton == this)
-        gSingleton = nsnull;
+    NS_ASSERTION(!gContentParents || !gContentParents->Contains(this),
+                 "Should have been removed in ActorDestroy");
 }
 
 bool
@@ -459,7 +489,7 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
     }
 
     // Ask for future changes
-    permissionManager->ChildRequestPermissions();
+    mSendPermissionUpdates = true;
 #endif
 
     return true;
@@ -595,6 +625,19 @@ ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32
     bits->AppendElements(aIconSize * aIconSize * 4);
 
     AndroidBridge::Bridge()->GetIconForExtension(aFileExt, aIconSize, bits->Elements());
+#endif
+    return true;
+}
+
+bool
+ContentParent::RecvGetShowPasswordSetting(PRBool* showPassword)
+{
+    // default behavior is to show the last password character
+    *showPassword = PR_TRUE;
+#ifdef ANDROID
+    NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
+    if (AndroidBridge::Bridge() != nsnull)
+        *showPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
 #endif
     return true;
 }
@@ -1070,7 +1113,7 @@ bool
 ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
                                InfallibleTArray<nsString>* aRetvals)
 {
-  nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sParentProcessManager;
+  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
                         aMsg,PR_TRUE, aJSON, nsnull, aRetvals);
@@ -1081,7 +1124,7 @@ ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
 bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 {
-  nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sParentProcessManager;
+  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
                         aMsg, PR_FALSE, aJSON, nsnull, nsnull);

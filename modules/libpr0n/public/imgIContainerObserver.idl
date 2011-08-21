@@ -38,13 +38,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "gfxidltypes.idl"
 
 %{C++
 #include "nsRect.h"
 %}
 
 interface imgIContainer;
+[ptr] native nsIntRect(nsIntRect);
 
 /**
  * imgIContainerObserver interface

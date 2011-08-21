@@ -387,12 +387,6 @@ var Browser = {
     let event = document.createEvent("Events");
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
-
-    // If we have an opener this was not the first window opened and will not
-    // receive an initial resize event. instead we fire the resize handler manually
-    // Bug 610834
-    if (window.opener)
-      resizeHandler({ target: window });
   },
 
   _alertShown: function _alertShown() {
@@ -2936,8 +2930,7 @@ Tab.prototype = {
     if (isDefault) {
       if (browser.scale != this._defaultZoomLevel) {
         browser.scale = this._defaultZoomLevel;
-      }
-      else {
+      } else {
         // If the scale level has not changed we want to be sure the content
         // render correctly since the page refresh process could have been
         // stalled during page load. In this case if the page has the exact

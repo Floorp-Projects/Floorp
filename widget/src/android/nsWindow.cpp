@@ -95,8 +95,8 @@ class ContentCreationNotifier : public nsIObserver
                        const PRUnichar* aData)
     {
         if (!strcmp(aTopic, "ipc:content-created")) {
-            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-            NS_ABORT_IF_FALSE(cp, "Must have content process if notified of its creation");
+            nsCOMPtr<nsIObserver> cpo = do_QueryInterface(aSubject);
+            ContentParent* cp = static_cast<ContentParent*>(cpo.get());
             unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
         } else if (!strcmp(aTopic, "xpcom-shutdown")) {
             nsCOMPtr<nsIObserverService>
@@ -448,14 +448,6 @@ nsWindow::Resize(PRInt32 aX,
 
     PRBool needSizeDispatch = aWidth != mBounds.width || aHeight != mBounds.height;
 
-    if (IsTopLevel()) {
-        ALOG("... ignoring Resize sizes on toplevel window");
-        aX = 0;
-        aY = 0;
-        aWidth = gAndroidBounds.width;
-        aHeight = gAndroidBounds.height;
-    }
-
     mBounds.x = aX;
     mBounds.y = aY;
     mBounds.width = aWidth;
@@ -586,6 +578,8 @@ nsWindow::BringToFront()
     nsGUIEvent event(PR_TRUE, NS_ACTIVATE, this);
     DispatchEvent(&event);
 
+    // force a window resize
+    nsAppShell::gAppShell->ResendLastResizeEvent(this);
     nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 }
 
@@ -739,11 +733,19 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
         return;
 
     switch (ae->Type()) {
+        case AndroidGeckoEvent::FORCED_RESIZE:
+            win->mBounds.width = 0;
+            win->mBounds.height = 0;
+            // also resize the children
+            for (PRUint32 i = 0; i < win->mChildren.Length(); i++) {
+                win->mChildren[i]->mBounds.width = 0;
+                win->mChildren[i]->mBounds.height = 0;
+            }
         case AndroidGeckoEvent::SIZE_CHANGED: {
             int nw = ae->P0().x;
             int nh = ae->P0().y;
 
-            if (nw != gAndroidBounds.width ||
+            if (ae->Type() == AndroidGeckoEvent::FORCED_RESIZE || nw != gAndroidBounds.width ||
                 nh != gAndroidBounds.height) {
 
                 gAndroidBounds.width = nw;
@@ -772,9 +774,10 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 break;
 
             // Tell the content process the new screen size.
-            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-            if (cp)
-                unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
+            nsTArray<ContentParent*> cplist;
+            ContentParent::GetAll(cplist);
+            for (PRUint32 i = 0; i < cplist.Length(); ++i)
+                unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
 
             if (gContentCreationNotifier)
                 break;

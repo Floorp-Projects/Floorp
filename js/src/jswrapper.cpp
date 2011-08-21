@@ -455,7 +455,6 @@ AutoCompartment::enter()
         JS_ASSERT(scopeChain->isNative());
 
         frame.construct();
-
         if (!context->stack.pushDummyFrame(context, destination, *scopeChain, &frame.ref()))
             return false;
 
@@ -485,7 +484,7 @@ ErrorCopier::~ErrorCopier()
         cx->isExceptionPending())
     {
         Value exc = cx->getPendingException();
-        if (exc.isObject() && exc.toObject().isError()) {
+        if (exc.isObject() && exc.toObject().isError() && exc.toObject().getPrivate()) {
             cx->clearPendingException();
             ac.leave();
             JSObject *copyobj = js_CopyErrorObject(cx, &exc.toObject(), scope);

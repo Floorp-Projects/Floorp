@@ -73,6 +73,7 @@
 	0	md2_-H		MD2_Hash
 	0	md5_-H		MD5_Hash
 	0	sha1_-H		SHA1_Hash
+	0	sha224_-H	SHA224_Hash
 	0	sha256_-H	SHA256_Hash
 	0	sha384_-H	SHA384_Hash
 	0	sha512_-H	SHA512_Hash

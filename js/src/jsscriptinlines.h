@@ -136,7 +136,7 @@ JSScript::getFunction(size_t index)
     JS_ASSERT(funobj->isFunction());
     JS_ASSERT(funobj == (JSObject *) funobj->getPrivate());
     JSFunction *fun = (JSFunction *) funobj;
-    JS_ASSERT(FUN_INTERPRETED(fun));
+    JS_ASSERT(fun->isInterpreted());
     return fun;
 }
 

@@ -396,7 +396,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
         }
 
         if (clasp == &js_FunctionClass) {
-            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+            JSFunction *fun = obj->getFunctionPrivate();
             JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (!str)
                 return false;
@@ -464,6 +464,23 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     type = JOF_TYPE(cs->format);
     switch (type) {
       case JOF_BYTE:
+          // Scan the trynotes to find the associated catch block
+          // and make the try opcode look like a jump instruction
+          // with an offset. This simplifies code coverage analysis
+          // based on this disassembled output.
+          if (op == JSOP_TRY) {
+              JSTryNoteArray *trynotes = script->trynotes();
+              uint32 i;
+              for(i = 0; i < trynotes->length; i++) {
+                  JSTryNote note = trynotes->vector[i];
+                  if (note.kind == JSTRY_CATCH && note.start == loc + 1) {
+                      Sprint(sp, " %u (%+d)",
+                             (unsigned int) (loc+note.length+1),
+                             (int) (note.length+1));
+                      break;
+                  }
+              }
+          }
         break;
 
       case JOF_JUMP:
@@ -4927,7 +4944,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
 
     JS_ASSERT(jp->fun);
     JS_ASSERT(!jp->script);
-    if (!FUN_INTERPRETED(jp->fun)) {
+    if (!jp->fun->isInterpreted()) {
         js_printf(jp, native_code_str);
         return JS_TRUE;
     }
@@ -4966,7 +4983,7 @@ js_DecompileFunction(JSPrinter *jp)
         return JS_FALSE;
     js_puts(jp, "(");
 
-    if (!FUN_INTERPRETED(fun)) {
+    if (!fun->isInterpreted()) {
         js_printf(jp, ") {\n");
         jp->indent += 4;
         js_printf(jp, native_code_str);

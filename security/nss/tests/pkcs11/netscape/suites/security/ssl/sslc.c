@@ -259,8 +259,7 @@ int SetServerSecParms(struct ThreadData *td) {
   
   if ( (NULL == td->cert)  && ( NO_CERT != REP_ServerCert )) {
     PR_fprintf(PR_STDERR, "Can't find certificate %s\n", nicknames[REP_ServerCert]);
-    PR_fprintf(PR_STDERR, "Server: Seclib error: %s\n",
-	       SECU_ErrorString ((int16) PR_GetError()));
+    PR_fprintf(PR_STDERR, "Server: Seclib error: %s\n", SECU_Strerror(PR_GetError()));
     return Error(12);
   }
   

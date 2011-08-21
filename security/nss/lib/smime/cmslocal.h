@@ -42,7 +42,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: cmslocal.h,v 1.5.142.1 2011/01/28 23:08:27 rrelyea%redhat.com Exp $
+ * $Id: cmslocal.h,v 1.6 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
  */
 
 #ifndef _CMSLOCAL_H_

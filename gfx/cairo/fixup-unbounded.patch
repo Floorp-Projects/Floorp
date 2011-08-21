@@ -1,0 +1,22 @@
+diff --git a/gfx/cairo/cairo/src/cairo-image-surface.c b/gfx/cairo/cairo/src/cairo-image-surface.c
+--- a/gfx/cairo/cairo/src/cairo-image-surface.c
++++ b/gfx/cairo/cairo/src/cairo-image-surface.c
+@@ -1797,17 +1797,17 @@ _cairo_image_surface_fixup_unbounded_box
+ 					    cairo_boxes_t *boxes)
+ {
+     cairo_boxes_t clear;
+     cairo_box_t box;
+     cairo_status_t status;
+     struct _cairo_boxes_chunk *chunk;
+     int i;
+ 
+-    if (boxes->num_boxes <= 1 && clip_region == NULL)
++    if (boxes->num_boxes < 1 && clip_region == NULL)
+ 	return _cairo_image_surface_fixup_unbounded (dst, extents, NULL);
+ 
+     _cairo_boxes_init (&clear);
+ 
+     box.p1.x = _cairo_fixed_from_int (extents->unbounded.x + extents->unbounded.width);
+     box.p1.y = _cairo_fixed_from_int (extents->unbounded.y);
+     box.p2.x = _cairo_fixed_from_int (extents->unbounded.x);
+     box.p2.y = _cairo_fixed_from_int (extents->unbounded.y + extents->unbounded.height);

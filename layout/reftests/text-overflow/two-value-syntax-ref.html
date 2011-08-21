@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: text-overflow:<left> <right>
+-->
+<html><head>
+<title>text-overflow: text-overflow:&lt;left&gt; &lt;right&gt;</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:hidden;
+  width:100%;
+  white-space:nowrap;
+}
+span {
+  margin: 0 -2px;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction:rtl;
+}
+.lro {
+  unicode-bidi: bidi-override;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+
+</style>
+
+</head><body>
+
+<div style="float:left;">
+|||||
+<div class="test t1"><span>&nbsp;&#x2026;||&#x2026;</span></div>
+<div class="test rtl t1"><span>&nbsp;&#x2026;||&#x2026;</span></div>
+<div class="test t2"><span>&nbsp;&#x2026;||||</span></div>
+<div class="test rtl t2"><span>||||&#x2026;</span></div>
+<div class="test t3"><span>||||&#x2026;</span></div>
+<div class="test rtl t3"><span>&nbsp;&#x2026;||||</span></div>
+<div class="test t4"><span>||||.</span></div>
+<div class="test rtl t4"><span>&nbsp;.||||</span></div>
+<div class="test t5"><span>&nbsp;.||||</span></div>
+<div class="test rtl t5"><span>||||.</span></div>
+<div class="test t6"><span>&nbsp;.||,</span></div>
+<div class="test rtl t6"><span>&nbsp;,||.</span></div>
+<div class="test t7"><span>&nbsp;&#x2026;||,</span></div>
+<div class="test rtl t7"><span>&nbsp;,||&#x2026;</span></div>
+<div class="test t8"><span>&nbsp;.||&#x2026;</span></div>
+<div class="test rtl t8"><span>&nbsp;&#x2026;||.</span></div>
+</div>
+
+
+</body>
+</html>

@@ -138,6 +138,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 167496-1.html 167496-1-ref.html
 == 169749-1.html 169749-1-ref.html
 == 172073-1.html 172073-1-ref.html
+== 175190-1.html 175190-1-ref.html
 == 179596-1a.html 179596-1a-ref.html
 == 179596-1b.html 179596-1b-ref.html
 == 179596-2.html 179596-2-ref.html
@@ -146,6 +147,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 180085-1.html 180085-1-ref.html
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
+== 186317-1.html 186317-1-ref.html
 == 192902-1.html 192902-ref.html
 == 192767-01.xul 192767-11.xul
 == 192767-02.xul 192767-12.xul
@@ -268,6 +270,7 @@ fails-if(Android) != 192767-17.xul 192767-37.xul
 == 252920-1.html 252920-1-ref.html
 == 253701-1.html 253701-1-ref.html
 == 255820-1.html 255820-1-ref.html
+== 260406-1.html 260406-1-ref.html
 == 261826-1.xul 261826-1-ref.xul
 == 262151-1.html 262151-1-ref.html
 == 262998-1.html 262998-1-ref.html
@@ -588,7 +591,7 @@ fails-if(Android) != 367247-l-hidden.html 367247-l-scroll.html
 == 367612-1e.html 367612-1-ref.html
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
-== 368020-1.html 368020-1-ref.html
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 368020-1.html 368020-1-ref.html
 == 368020-2.html 368020-2-ref.html
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085

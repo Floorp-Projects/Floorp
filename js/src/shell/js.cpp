@@ -1115,7 +1115,7 @@ Quit(JSContext *cx, uintN argc, jsval *vp)
     gQuitting = JS_TRUE;
 #ifdef JS_THREADSAFE
     if (gWorkerThreadPool)
-        js::workers::terminateAll(gWorkerThreadPool);
+        js::workers::terminateAll(JS_GetRuntime(cx), gWorkerThreadPool);
 #endif
     return JS_FALSE;
 }
@@ -1564,7 +1564,7 @@ ValueToScript(JSContext *cx, jsval v)
         } else if (clasp == Jsvalify(&js_GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->floatingFrame()->fun();
-            script = FUN_SCRIPT(fun);
+            script = fun->script();
         }
     }
 
@@ -1572,7 +1572,7 @@ ValueToScript(JSContext *cx, jsval v)
         fun = JS_ValueToFunction(cx, v);
         if (!fun)
             return NULL;
-        script = FUN_SCRIPT(fun);
+        script = fun->maybeScript();
         if (!script) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
                                  JSSMSG_SCRIPTS_ONLY);
@@ -2006,7 +2006,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
     JSScript *script = ValueToScript(cx, v);
     if (!script)
         return false;
-    if (VALUE_IS_FUNCTION(cx, v)) {
+    if (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isFunction()) {
         JSFunction *fun = JS_ValueToFunction(cx, v);
         if (fun && (fun->flags & ~7U)) {
             uint16 flags = fun->flags;
@@ -2021,10 +2021,10 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
 
 #undef SHOW_FLAG
 
-            if (FUN_INTERPRETED(fun)) {
-                if (FUN_NULL_CLOSURE(fun))
+            if (fun->isInterpreted()) {
+                if (fun->isNullClosure())
                     Sprint(sp, " NULL_CLOSURE");
-                else if (FUN_FLAT_CLOSURE(fun))
+                else if (fun->isFlatClosure())
                     Sprint(sp, " FLAT_CLOSURE");
 
                 JSScript *script = fun->script();
@@ -2713,7 +2713,7 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
                 return JS_FALSE;
             argv[0] = OBJECT_TO_JSVAL(obj);
         }
-        if (VALUE_IS_FUNCTION(cx, argv[0])) {
+        if (!JSVAL_IS_PRIMITIVE(argv[0]) && JSVAL_TO_OBJECT(argv[0])->isFunction()) {
             funobj = JSVAL_TO_OBJECT(argv[0]);
         } else {
             JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
@@ -3272,6 +3272,245 @@ Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
     return !gCanceled;
 }
 
+typedef struct ScatterThreadData ScatterThreadData;
+typedef struct ScatterData ScatterData;
+
+typedef enum ScatterStatus {
+    SCATTER_WAIT,
+    SCATTER_GO,
+    SCATTER_CANCEL
+} ScatterStatus;
+
+struct ScatterData {
+    ScatterThreadData   *threads;
+    jsval               *results;
+    PRLock              *lock;
+    PRCondVar           *cvar;
+    ScatterStatus       status;
+};
+
+struct ScatterThreadData {
+    jsint               index;
+    ScatterData         *shared;
+    PRThread            *thr;
+    JSContext           *cx;
+    jsval               fn;
+};
+
+static void
+DoScatteredWork(JSContext *cx, ScatterThreadData *td)
+{
+    jsval *rval = &td->shared->results[td->index];
+
+    if (!JS_CallFunctionValue(cx, NULL, td->fn, 0, NULL, rval)) {
+        *rval = JSVAL_VOID;
+        JS_GetPendingException(cx, rval);
+        JS_ClearPendingException(cx);
+    }
+}
+
+static void
+RunScatterThread(void *arg)
+{
+    int stackDummy;
+    ScatterThreadData *td;
+    ScatterStatus st;
+    JSContext *cx;
+
+    if (PR_FAILURE == PR_SetThreadPrivate(gStackBaseThreadIndex, &stackDummy))
+        return;
+
+    td = (ScatterThreadData *)arg;
+    cx = td->cx;
+
+    /* Wait for our signal. */
+    PR_Lock(td->shared->lock);
+    while ((st = td->shared->status) == SCATTER_WAIT)
+        PR_WaitCondVar(td->shared->cvar, PR_INTERVAL_NO_TIMEOUT);
+    PR_Unlock(td->shared->lock);
+
+    if (st == SCATTER_CANCEL)
+        return;
+
+    /* We are good to go. */
+    JS_SetContextThread(cx);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
+    JS_BeginRequest(cx);
+    DoScatteredWork(cx, td);
+    JS_EndRequest(cx);
+    JS_ClearContextThread(cx);
+}
+
+/*
+ * scatter(fnArray) - Call each function in `fnArray` without arguments, each
+ * in a different thread. When all threads have finished, return an array: the
+ * return values. Errors are not propagated; if any of the function calls
+ * fails, the corresponding element in the results array gets the exception
+ * object, if any, else (undefined).
+ */
+static JSBool
+Scatter(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsuint i;
+    jsuint n;  /* number of threads */
+    JSObject *inArr;
+    JSObject *arr;
+    JSObject *global;
+    ScatterData sd;
+    JSBool ok;
+
+    sd.lock = NULL;
+    sd.cvar = NULL;
+    sd.results = NULL;
+    sd.threads = NULL;
+    sd.status = SCATTER_WAIT;
+
+    if (argc == 0 || JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0])) {
+        JS_ReportError(cx, "the first argument must be an object");
+        goto fail;
+    }
+
+    inArr = JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]);
+    ok = JS_GetArrayLength(cx, inArr, &n);
+    if (!ok)
+        goto out;
+    if (n == 0)
+        goto success;
+
+    sd.lock = PR_NewLock();
+    if (!sd.lock)
+        goto fail;
+
+    sd.cvar = PR_NewCondVar(sd.lock);
+    if (!sd.cvar)
+        goto fail;
+
+    sd.results = (jsval *) malloc(n * sizeof(jsval));
+    if (!sd.results)
+        goto fail;
+    for (i = 0; i < n; i++) {
+        sd.results[i] = JSVAL_VOID;
+        ok = JS_AddValueRoot(cx, &sd.results[i]);
+        if (!ok) {
+            while (i-- > 0)
+                JS_RemoveValueRoot(cx, &sd.results[i]);
+            free(sd.results);
+            sd.results = NULL;
+            goto fail;
+        }
+    }
+
+    sd.threads = (ScatterThreadData *) malloc(n * sizeof(ScatterThreadData));
+    if (!sd.threads)
+        goto fail;
+    for (i = 0; i < n; i++) {
+        sd.threads[i].index = i;
+        sd.threads[i].shared = &sd;
+        sd.threads[i].thr = NULL;
+        sd.threads[i].cx = NULL;
+        sd.threads[i].fn = JSVAL_NULL;
+
+        ok = JS_AddValueRoot(cx, &sd.threads[i].fn);
+        if (ok && !JS_GetElement(cx, inArr, i, &sd.threads[i].fn)) {
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
+            ok = JS_FALSE;
+        }
+        if (!ok) {
+            while (i-- > 0)
+                JS_RemoveValueRoot(cx, &sd.threads[i].fn);
+            free(sd.threads);
+            sd.threads = NULL;
+            goto fail;
+        }
+    }
+
+    global = JS_GetGlobalObject(cx);
+    for (i = 1; i < n; i++) {
+        JSContext *newcx = NewContext(JS_GetRuntime(cx));
+        if (!newcx)
+            goto fail;
+
+        {
+            JSAutoRequest req(newcx);
+            JS_SetGlobalObject(newcx, global);
+        }
+        JS_ClearContextThread(newcx);
+        sd.threads[i].cx = newcx;
+    }
+
+    for (i = 1; i < n; i++) {
+        PRThread *t = PR_CreateThread(PR_USER_THREAD,
+                                      RunScatterThread,
+                                      &sd.threads[i],
+                                      PR_PRIORITY_NORMAL,
+                                      PR_GLOBAL_THREAD,
+                                      PR_JOINABLE_THREAD,
+                                      0);
+        if (!t) {
+            /* Failed to start thread. */
+            PR_Lock(sd.lock);
+            sd.status = SCATTER_CANCEL;
+            PR_NotifyAllCondVar(sd.cvar);
+            PR_Unlock(sd.lock);
+            while (i-- > 1)
+                PR_JoinThread(sd.threads[i].thr);
+            goto fail;
+        }
+
+        sd.threads[i].thr = t;
+    }
+    PR_Lock(sd.lock);
+    sd.status = SCATTER_GO;
+    PR_NotifyAllCondVar(sd.cvar);
+    PR_Unlock(sd.lock);
+
+    DoScatteredWork(cx, &sd.threads[0]);
+
+    {
+        JSAutoSuspendRequest suspended(cx);
+        for (i = 1; i < n; i++) {
+            PR_JoinThread(sd.threads[i].thr);
+        }
+    }
+
+success:
+    arr = JS_NewArrayObject(cx, n, sd.results);
+    if (!arr)
+        goto fail;
+    *vp = OBJECT_TO_JSVAL(arr);
+    ok = JS_TRUE;
+
+out:
+    if (sd.threads) {
+        JSContext *acx;
+
+        for (i = 0; i < n; i++) {
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
+            acx = sd.threads[i].cx;
+            if (acx) {
+                JS_SetContextThread(acx);
+                DestroyContext(acx, true);
+            }
+        }
+        free(sd.threads);
+    }
+    if (sd.results) {
+        for (i = 0; i < n; i++)
+            JS_RemoveValueRoot(cx, &sd.results[i]);
+        free(sd.results);
+    }
+    if (sd.cvar)
+        PR_DestroyCondVar(sd.cvar);
+    if (sd.lock)
+        PR_DestroyLock(sd.lock);
+
+    return ok;
+
+fail:
+    ok = JS_FALSE;
+    goto out;
+}
+
 static bool
 InitWatchdog(JSRuntime *rt)
 {
@@ -3456,7 +3695,7 @@ CancelExecution(JSRuntime *rt)
         gExitCode = EXITCODE_TIMEOUT;
 #ifdef JS_THREADSAFE
     if (gWorkerThreadPool)
-        js::workers::terminateAll(gWorkerThreadPool);
+        js::workers::terminateAll(rt, gWorkerThreadPool);
 #endif
     JS_TriggerAllOperationCallbacks(rt);
 
@@ -3975,19 +4214,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("evalInFrame",    EvalInFrame,    2,0),
     JS_FN("shapeOf",        ShapeOf,        1,0),
     JS_FN("resolver",       Resolver,       1,0),
-    JS_FN("pauseProfilers", js_PauseProfilers, 0,0),
-    JS_FN("resumeProfilers", js_ResumeProfilers, 0,0),
-#ifdef MOZ_CALLGRIND
-    JS_FN("startCallgrind", js_StartCallgrind,  0,0),
-    JS_FN("stopCallgrind",  js_StopCallgrind,   0,0),
-    JS_FN("dumpCallgrind",  js_DumpCallgrind,   1,0),
-#endif
-#ifdef MOZ_VTUNE
-    JS_FN("startVtune",     js_StartVtune,    1,0),
-    JS_FN("stopVtune",      js_StopVtune,     0,0),
-    JS_FN("pauseVtune",     js_PauseVtune,    0,0),
-    JS_FN("resumeVtune",    js_ResumeVtune,   0,0),
-#endif
 #ifdef MOZ_TRACEVIS
     JS_FN("startTraceVis",  StartTraceVisNative, 1,0),
     JS_FN("stopTraceVis",   StopTraceVisNative,  0,0),
@@ -3997,6 +4223,7 @@ static JSFunctionSpec shell_functions[] = {
 #endif
 #ifdef JS_THREADSAFE
     JS_FN("sleep",          Sleep_fn,       1,0),
+    JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FN("snarf",          Snarf,          0,0),
     JS_FN("read",           Snarf,          0,0),
@@ -4114,19 +4341,6 @@ static const char *const shell_help_messages[] = {
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 "resolver(src[, proto])   Create object with resolve hook that copies properties\n"
 "                         from src. If proto is omitted, use Object.prototype.",
-"pauseProfilers()         Pause all profilers that can be paused",
-"resumeProfilers()        Resume profilers if they are paused",
-#ifdef MOZ_CALLGRIND
-"startCallgrind()         Start callgrind instrumentation",
-"stopCallgrind()          Stop callgrind instrumentation",
-"dumpCallgrind([name])    Dump callgrind counters",
-#endif
-#ifdef MOZ_VTUNE
-"startVtune([filename])   Start vtune instrumentation",
-"stopVtune()              Stop vtune instrumentation",
-"pauseVtune()             Pause vtune collection",
-"resumeVtune()            Resume vtune collection",
-#endif
 #ifdef MOZ_TRACEVIS
 "startTraceVis(filename)  Start TraceVis recording (stops any current recording)",
 "stopTraceVis()           Stop TraceVis recording",
@@ -4136,6 +4350,7 @@ static const char *const shell_help_messages[] = {
 #endif
 #ifdef JS_THREADSAFE
 "sleep(dt)                Sleep for dt seconds",
+"scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
 "snarf(filename)          Read filename into returned string",
 "read(filename)           Synonym for snarf",
@@ -4168,20 +4383,50 @@ static const char *const shell_help_messages[] = {
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
-"startProfiling()         Start a profiling session.\n"
+"startProfiling([profileName])\n"
+"                         Start a profiling session\n"
 "                         Profiler must be running with programatic sampling",
-"stopProfiling()          Stop a running profiling session\n"
+"stopProfiling([profileName])\n"
+"                         Stop a running profiling session",
+"pauseProfilers([profileName])\n"
+"                         Pause a running profiling session",
+"resumeProfilers([profileName])\n"
+"                         Resume a paused profiling session",
+"dumpProfile([outfile[, profileName]])\n"
+"                         Dump out current profile info (only valid for callgrind)",
+# ifdef MOZ_CALLGRIND
+"startCallgrind()         Start Callgrind instrumentation",
+"stopCallgrind()          Stop Callgrind instrumentation",
+"dumpCallgrind([outfile]) Dump current Callgrind counters to file or stdout",
+# endif
+# ifdef MOZ_VTUNE
+"startVtune()             Start Vtune instrumentation",
+"stopVtune()              Stop Vtune instrumentation",
+"pauseVtune()             Pause Vtune collection",
+"resumeVtune()            Resume Vtune collection",
+# endif
 #endif
 };
 
 #ifdef MOZ_PROFILING
-#define PROFILING_FUNCTION_COUNT 2
+# define PROFILING_FUNCTION_COUNT 5
+# ifdef MOZ_CALLGRIND
+#  define CALLGRIND_FUNCTION_COUNT 3
+# else
+#  define CALLGRIND_FUNCTION_COUNT 0
+# endif
+# ifdef MOZ_VTUNE
+#  define VTUNE_FUNCTION_COUNT 4
+# else
+#  define VTUNE_FUNCTION_COUNT 0
+# endif
+# define EXTERNAL_FUNCTION_COUNT (PROFILING_FUNCTION_COUNT + CALLGRIND_FUNCTION_COUNT + VTUNE_FUNCTION_COUNT)
 #else
-#define PROFILING_FUNCTION_COUNT 0
+# define EXTERNAL_FUNCTION_COUNT 0
 #endif
 
 /* Help messages must match shell functions. */
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - PROFILING_FUNCTION_COUNT ==
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - EXTERNAL_FUNCTION_COUNT ==
                  JS_ARRAY_LENGTH(shell_functions) - 1 /* JS_FS_END */);
 
 #ifdef DEBUG
@@ -4192,7 +4437,7 @@ CheckHelpMessages()
     const char *lp;
 
     /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - PROFILING_FUNCTION_COUNT; ++m) {
+    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
@@ -4205,6 +4450,9 @@ CheckHelpMessages()
 #endif
 
 #undef PROFILING_FUNCTION_COUNT
+#undef CALLGRIND_FUNCTION_COUNT
+#undef VTUNE_FUNCTION_COUNT
+#undef EXTERNAL_FUNCTION_COUNT
 
 static JSBool
 Help(JSContext *cx, uintN argc, jsval *vp)
@@ -5056,7 +5304,14 @@ BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     JSObject *scriptArgs = JS_NewArrayObject(cx, 0, NULL);
     if (!scriptArgs)
         return false;
-    if (!JS_DefineProperty(cx, obj, "scriptArgs", OBJECT_TO_JSVAL(scriptArgs), NULL, NULL, 0))
+
+    /* 
+     * Script arguments are bound as a normal |arguments| property on the
+     * global object. It has no special significance, like |arguments| in
+     * function scope does -- this identifier is used de-facto across shell
+     * implementations, see bug 675269.
+     */
+    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(scriptArgs), NULL, NULL, 0))
         return false;
 
     for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {
@@ -5111,10 +5366,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     if (op->getBoolOption('b'))
         printTiming = true;
 
-    if (op->getBoolOption('D')) {
+    if (op->getBoolOption('D'))
         enableDisassemblyDumps = true;
-        JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
-    }
 
     /* |scriptArgs| gets bound on the global before any code is run. */
     if (!BindScriptArgs(cx, obj, op))
@@ -5249,7 +5502,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 #endif  /* JSDEBUGGER */
 
     if (enableDisassemblyDumps)
-        JS_DumpAllProfiles(cx);
+        JS_DumpCompartmentBytecode(cx);
  
     return result;
 }
@@ -5386,7 +5639,7 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
         || !op.addOptionalMultiStringArg("scriptArgs",
-                                         "String arguments to bind as |scriptArgs| in the "
+                                         "String arguments to bind as |arguments| in the "
                                          "shell's global")) {
         return EXIT_FAILURE;
     }
@@ -5444,6 +5697,10 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
+
+    /* Must be done before creating the global object */
+    if (op.getBoolOption('D'))
+        JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
 
     result = Shell(cx, &op, envp);
 

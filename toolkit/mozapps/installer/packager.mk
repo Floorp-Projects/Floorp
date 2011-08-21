@@ -390,12 +390,22 @@ ifdef RUN_TEST_PROGRAM
 _ABS_RUN_TEST_PROGRAM = $(call core_abspath,$(RUN_TEST_PROGRAM))
 endif
 
+ifdef LIBXUL_SDK
+PRECOMPILE_DIR=XCurProcD
+PRECOMPILE_RESOURCE=app
+PRECOMPILE_GRE=$(LIBXUL_DIST)/bin
+else
+PRECOMPILE_DIR=GreD
+PRECOMPILE_RESOURCE=gre
+PRECOMPILE_GRE=$$PWD
+endif
+
 GENERATE_CACHE = \
-  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$$PWD" -a "$$PWD" -f $(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js -e "populate_startupcache('omni.jar', 'startupCache.zip');" && \
+  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js -e "populate_startupcache('$(PRECOMPILE_DIR)', 'omni.jar', 'startupCache.zip');" && \
   rm -rf jsloader && \
   $(UNZIP) startupCache.zip && \
   rm startupCache.zip && \
-  $(ZIP) -r9m omni.jar jsloader
+  $(ZIP) -r9m omni.jar jsloader/resource/$(PRECOMPILE_RESOURCE)
 endif
 endif
 
@@ -495,7 +505,6 @@ endif # !CROSS_COMPILE
 NO_PKG_FILES += \
 	core \
 	bsdecho \
-	gtscc \
 	js \
 	js-config \
 	jscpucfg \

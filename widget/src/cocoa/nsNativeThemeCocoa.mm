@@ -1624,7 +1624,7 @@ ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* a
 
   float unifiedToolbarHeight = [(ToolbarWindow*)aWindow unifiedToolbarHeight];
   return inBoxRect.origin.x == 0 &&
-         inBoxRect.size.width == [aWindow frame].size.width &&
+         inBoxRect.size.width >= [aWindow frame].size.width &&
          inBoxRect.origin.y <= 0.0 &&
          inBoxRect.origin.y + inBoxRect.size.height <= unifiedToolbarHeight;
 }

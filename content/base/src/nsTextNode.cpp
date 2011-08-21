@@ -205,6 +205,16 @@ nsTextNode::UnbindFromAttribute()
   return NS_OK;
 }
 
+nsresult
+nsTextNode::AppendTextForNormalize(const PRUnichar* aBuffer, PRUint32 aLength,
+                                   PRBool aNotify, nsIContent* aNextSibling)
+{
+  CharacterDataChangeInfo::Details details = {
+    CharacterDataChangeInfo::Details::eMerge, aNextSibling
+  };
+  return SetTextInternal(mText.GetLength(), 0, aBuffer, aLength, aNotify, &details);
+}
+
 #ifdef DEBUG
 void
 nsTextNode::List(FILE* out, PRInt32 aIndent) const

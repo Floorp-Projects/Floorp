@@ -316,8 +316,6 @@ static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
-    JS_AbortIfWrongThread(rt);
-
     JSContext *cx;
     JSBool first;
     JSContextCallback cxCallback;
@@ -429,14 +427,13 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 {
-    JSRuntime *rt = cx->runtime;
-    JS_AbortIfWrongThread(rt);
-
+    JSRuntime *rt;
     JSContextCallback cxCallback;
     JSBool last;
 
     JS_ASSERT(!cx->enumerators);
 
+    rt = cx->runtime;
 #ifdef JS_THREADSAFE
     /*
      * For API compatibility we allow to destroy contexts without a thread in
@@ -1102,7 +1099,7 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
     JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
     bytes = NULL;
     if (IsFunctionObject(v)) {
-        atom = GET_FUNCTION_PRIVATE(cx, &v.toObject())->atom;
+        atom = v.toObject().getFunctionPrivate()->atom;
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
                                         v, atom);
         if (!bytes)

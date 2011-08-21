@@ -42,7 +42,11 @@
 
 #include "nsWindowDbg.h"
 
-#if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT)
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gWindowsLog;
+#endif
+
+#if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT) || 1
 
 typedef struct {
   char * mStr;
@@ -409,7 +413,9 @@ void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves)
   }
   if (aShowAllEvents || (!aShowAllEvents && gLastEventMsg != (long)msg)) {
     if (aShowMouseMoves || (!aShowMouseMoves && msg != 0x0020 && msg != 0x0200 && msg != 0x0084)) {
-      printf("%6d - 0x%04X %s\n", gEventCounter++, msg, gAllEvents[inx].mStr ? gAllEvents[inx].mStr : "Unknown");
+      PR_LOG(gWindowsLog, PR_LOG_ALWAYS, 
+             ("%6d - 0x%04X %s\n", gEventCounter++, msg, 
+              gAllEvents[inx].mStr ? gAllEvents[inx].mStr : "Unknown"));
       gLastEventMsg = msg;
     }
   }
@@ -421,7 +427,8 @@ void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves)
 void DDError(const char *msg, HRESULT hr)
 {
   /*XXX make nicer */
-  fprintf(stderr, "direct draw error %s: 0x%08lx\n", msg, hr);
+  PR_LOG(gWindowsLog, PR_LOG_ERROR,
+         ("direct draw error %s: 0x%08lx\n", msg, hr));
 }
 #endif
 
@@ -430,7 +437,7 @@ PRBool is_vk_down(int vk)
 {
    SHORT st = GetKeyState(vk);
 #ifdef DEBUG
-   printf("is_vk_down vk=%x st=%x\n",vk, st);
+   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("is_vk_down vk=%x st=%x\n",vk, st));
 #endif
    return (st < 0);
 }

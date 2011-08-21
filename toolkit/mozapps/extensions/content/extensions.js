@@ -62,7 +62,7 @@ const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
 
 const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
-#ifdef MOZ_COMPATABILITY_NIGHTLY
+#ifdef MOZ_COMPATIBILITY_NIGHTLY
 const PREF_CHECK_COMPATIBILITY = PREF_CHECK_COMPATIBILITY_BASE +
                                  ".nightly";
 #else
@@ -1106,7 +1106,7 @@ var gViewController = {
             if (installs.length > 0) {
               // Display the normal install confirmation for the installs
               AddonManager.installAddonsFromWebpage("application/x-xpinstall",
-                                                    this, null, installs);
+                                                    window, null, installs);
             }
             return;
           }
@@ -1486,7 +1486,7 @@ var gCategories = {
     // If there was no last view or no existing category matched the last view
     // then the list will default to selecting the search category and we never
     // want to show that as the first view so switch to the default category
-    if (this.node.selectedItem == this._search)
+    if (!this.node.selectedItem || this.node.selectedItem == this._search)
       this.node.value = VIEW_DEFAULT;
 
     var self = this;

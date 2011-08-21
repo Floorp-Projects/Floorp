@@ -287,6 +287,7 @@ struct TraceMonitor {
     JS_FRIEND_API(void) getCodeAllocStats(size_t &total, size_t &frag_size, size_t &free_size) const;
     JS_FRIEND_API(size_t) getVMAllocatorsMainSize() const;
     JS_FRIEND_API(size_t) getVMAllocatorsReserveSize() const;
+    JS_FRIEND_API(size_t) getTraceMonitorSize() const;
 };
 
 namespace mjit {

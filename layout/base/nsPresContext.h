@@ -324,17 +324,6 @@ public:
   }
 
   /**
-   * Get the font metrics for a given font.
-   *
-   * If aUseUserFontSet is false, don't build or use the user font set.
-   * This is intended only for nsRuleNode::CalcLengthWithInitialFont
-   * (which is used from media query matching, which is in turn called
-   * when building the user font set).
-   */
-  NS_HIDDEN_(already_AddRefed<nsFontMetrics>)
-  GetMetricsFor(const nsFont& aFont, PRBool aUseUserFontSet = PR_TRUE);
-
-  /**
    * Get the default font corresponding to the given ID.  This object is
    * read-only, you must copy the font to modify it.
    * 
@@ -982,6 +971,8 @@ public:
     PropertyTable()->DeleteAllFor(aFrame);
   }
   inline void ForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
+
+  void DestroyImageLoaders();
 
   PRBool GetContainsUpdatePluginGeometryFrame()
   {

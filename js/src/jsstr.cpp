@@ -3521,7 +3521,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     if (!js_GetMethod(cx, &v.toObject(), id, JSGET_NO_METHOD_BARRIER, &fval))
         return false;
     if (js_IsCallable(fval)) {
-        if (!ExternalInvoke(cx, v, fval, 0, NULL, &rval))
+        if (!Invoke(cx, v, fval, 0, NULL, &rval))
             return false;
     }
 
