@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: lginit.c,v 1.14.22.1 2011/01/06 19:55:02 wtc%google.com Exp $ */
+/* $Id: lginit.c,v 1.16 2011/01/06 19:33:14 wtc%google.com Exp $ */
 
 #include "lowkeyi.h"
 #include "pcert.h"
@@ -44,6 +44,26 @@
 #include "lgdb.h"
 #include "secoid.h"
 #include "prenv.h"
+#include "softkver.h"
+
+/* Library identity and versioning */
+
+#if defined(DEBUG)
+#define _DEBUG_STRING " (debug)"
+#else
+#define _DEBUG_STRING ""
+#endif
+
+/*
+ * Version information for the 'ident' and 'what commands
+ *
+ * NOTE: the first component of the concatenated rcsid string
+ * must not end in a '$' to prevent rcs keyword substitution.
+ */
+const char __nss_dbm_rcsid[] = "$Header: NSS " SOFTOKEN_VERSION _DEBUG_STRING
+        "  " __DATE__ " " __TIME__ " $";
+const char __nss_dbm_sccsid[] = "@(#)NSS " SOFTOKEN_VERSION _DEBUG_STRING
+        "  " __DATE__ " " __TIME__;
 
 typedef struct LGPrivateStr {
     NSSLOWCERTCertDBHandle *certDB;
@@ -462,11 +482,11 @@ lg_getKeyDB(SDB *sdb)
     return lgdb_p->keyDB;
 }
 
-PRBool parentForkedAfterC_Initialize;
+PRBool lg_parentForkedAfterC_Initialize;
 
 void lg_SetForkState(PRBool forked)
 {
-    parentForkedAfterC_Initialize = forked;
+    lg_parentForkedAfterC_Initialize = forked;
 }
 
 CK_RV
@@ -606,6 +626,9 @@ legacy_Open(const char *configdir, const char *certPrefix,
     CK_RV crv = CKR_OK;
     SECStatus rv;
     PRBool readOnly = (flags == SDB_RDONLY)? PR_TRUE: PR_FALSE;
+    volatile char c; /* force a reference that won't get optimized away */
+
+    c = __nss_dbm_rcsid[0] + __nss_dbm_sccsid[0];
 
     rv = SECOID_Init();
     if (SECSuccess != rv) {

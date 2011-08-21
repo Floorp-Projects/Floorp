@@ -37,7 +37,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.20 2007/05/10 01:12:21 nelson%bolyard.com Exp $
+ * $Id: smimeutil.c,v 1.21 2011/08/01 07:08:09 kaie%kuix.de Exp $
  */
 
 #include "secmime.h"
@@ -793,3 +793,8 @@ NSSSMIME_VersionCheck(const char *importedVersion)
     return NSS_VersionCheck(importedVersion);
 }
 
+const char *
+NSSSMIME_GetVersion(void)
+{
+    return NSS_VERSION;
+}

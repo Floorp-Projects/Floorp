@@ -412,18 +412,16 @@
                          oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                          label="&search.scopeBookmarks.label;"
                          accesskey="&search.scopeBookmarks.accesskey;"/>
-          <!--
-          <toolbarbutton id="scopeBarDownloads" class="small-margin"
-                         type="radio" group="scopeBar"
-                         oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                         label="&search.scopeDownloads.label;"
-                         accesskey="&search.scopeDownloads.accesskey;"/>
-          -->
           <toolbarbutton id="scopeBarHistory" class="small-margin"
                          type="radio" group="scopeBar"
                          oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                          label="&search.scopeHistory.label;"
                          accesskey="&search.scopeHistory.accesskey;"/>
+          <toolbarbutton id="scopeBarDownloads" class="small-margin"
+                         type="radio" group="scopeBar"
+                         oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                         label="&search.scopeDownloads.label;"
+                         accesskey="&search.scopeDownloads.accesskey;"/>
           <toolbarbutton id="scopeBarFolder" class="small-margin"
                          type="radio" group="scopeBar"
                          oncommand="PlacesQueryBuilder.onScopeSelected(this);"

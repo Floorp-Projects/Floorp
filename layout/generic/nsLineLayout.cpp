@@ -2560,15 +2560,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
 
     overflowAreas.ScrollableOverflow().UnionRect(
       psd->mFrame->mOverflowAreas.ScrollableOverflow(), adjustedBounds);
-
-    // Text-shadow overflow
-    if (mPresContext->CompatibilityMode() != eCompatibility_NavQuirks) {
-      nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(adjustedBounds,
-                                                                 psd->mFrame->mFrame);
-      adjustedBounds.UnionRect(adjustedBounds, shadowRect);
-    }
-
-    // Text shadow is only part of visual overflow and not scrollable overflow.
     overflowAreas.VisualOverflow().UnionRect(
       psd->mFrame->mOverflowAreas.VisualOverflow(), adjustedBounds);
   }

@@ -147,6 +147,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
 
+  // nsIContent interface
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
   virtual nsSVGString& GetResultImageName() = 0;
   // Return a list of all image names used as sources. Default is to
   // return no sources.

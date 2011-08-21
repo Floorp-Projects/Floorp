@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.h,v 1.23 2008/12/04 18:16:34 rrelyea%redhat.com Exp $ */
+/* $Id: mpi.h,v 1.24 2010/07/20 01:26:02 wtc%google.com Exp $ */
 
 #ifndef _H_MPI_
 #define _H_MPI_
@@ -62,9 +62,7 @@
 #undef ULLONG_MAX
 #endif
 
-#if defined( macintosh )
-#include <Types.h>
-#elif defined( _WIN32_WCE)
+#if defined( _WIN32_WCE)
 /* #include <sys/types.h> What do we need here ?? */
 #else
 #include <sys/types.h>

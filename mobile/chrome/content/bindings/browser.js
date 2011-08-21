@@ -5,8 +5,6 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-dump("!! remote browser loaded\n");
-
 let WebProgressListener = {
   init: function() {
     let flags = Ci.nsIWebProgress.NOTIFY_LOCATION |

@@ -168,6 +168,7 @@ pixman-image-transform.patch: Reset the transform on pixman images when using th
 
 fix-cairo-surface-wrapper-flush-build-warning.patch: Ensures that _cairo_surface_wrapper_flush always returns a status, to silence the build warning
 
+fixup-unbounded.patch: Hack to work around bad assumption.
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

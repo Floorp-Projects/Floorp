@@ -1348,7 +1348,7 @@ PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
 {
     CK_MECHANISM_TYPE type;
     SECItem *param = NULL;
-    PK11SymKey *symKey;
+    PK11SymKey *symKey = NULL;
     SECOidTag	pbeAlg;
     CK_KEY_TYPE keyType = -1;
     int keyLen = 0;
@@ -1377,14 +1377,15 @@ PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
     } else {
 	param = PK11_ParamFromAlgid(algid);
     }
+
     if(param == NULL) {
-	return NULL;
+	goto loser;
     }
 
     type = PK11_AlgtagToMechanism(pbeAlg);	
     if (type == CKM_INVALID_MECHANISM) {
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-	return NULL;
+	goto loser;
     }
     if(faulty3DES && (type == CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC)) {
 	type = CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC;
@@ -1392,7 +1393,10 @@ PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
     symKey = pk11_RawPBEKeyGenWithKeyType(slot, type, param, keyType, keyLen, 
 					pwitem, wincx);
 
-    SECITEM_ZfreeItem(param, PR_TRUE);
+loser:
+    if (param) {
+	SECITEM_ZfreeItem(param, PR_TRUE);
+    }
     return symKey;
 }
 
@@ -1442,14 +1446,14 @@ loser:
 }
 
 /*
- * public, supports pkcs5 v2
+ * Public, supports pkcs5 v2
  *
- * get a the crypto mechanism directly from the pbe algorithmid.
+ * Get the crypto mechanism directly from the pbe algorithmid.
  *
- * it's important to go directly from the algorithm id so that we can
+ * It's important to go directly from the algorithm id so that we can
  * handle both the PKCS #5 v1, PKCS #12, and PKCS #5 v2 cases.
  *
- * This function returns both the mechanism an the paramter for the mechanism.
+ * This function returns both the mechanism and the parameter for the mechanism.
  * The caller is responsible for freeing the parameter.
  */
 CK_MECHANISM_TYPE

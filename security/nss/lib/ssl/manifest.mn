@@ -46,6 +46,11 @@ EXPORTS = \
 	preenc.h \
 	$(NULL)
 
+PRIVATE_EXPORTS = \
+	sslerrstrs.h \
+	SSLerrs.h \
+ 	$(NULL)
+
 MODULE = nss
 MAPFILE = $(OBJDIR)/ssl.def
 
@@ -59,6 +64,8 @@ CSRCS = \
 	ssldef.c \
 	sslenum.c \
 	sslerr.c \
+	sslerrstrs.c \
+	sslinit.c \
 	ssl3ext.c \
 	sslgathr.c \
 	sslmutex.c \

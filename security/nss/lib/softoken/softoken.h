@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.23 2009/02/26 06:57:15 nelson%bolyard.com Exp $ */
+/* $Id: softoken.h,v 1.27 2010/08/05 00:19:26 wtc%google.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -94,6 +94,12 @@ SECStatus RSA_HashSign(SECOidTag hashOid,
 			unsigned int *sigLen, unsigned int maxLen,
 			unsigned char *hash, unsigned int hashLen);
 extern
+SECStatus RSA_SignPSS(CK_RSA_PKCS_PSS_PARAMS *pss_params,
+		      NSSLOWKEYPrivateKey *key, 
+		      unsigned char *output, unsigned int *output_len, 
+		      unsigned int max_output_len, const unsigned char *input,
+		      unsigned int input_len);
+extern
 SECStatus RSA_CheckSign(NSSLOWKEYPublicKey *key, unsigned char *sign,
 			    unsigned int signLength, unsigned char *hash,
 			    unsigned int hashLength);
@@ -102,6 +108,11 @@ SECStatus RSA_HashCheckSign(SECOidTag hashOid,
 			    NSSLOWKEYPublicKey *key, unsigned char *sig,
 			    unsigned int sigLen, unsigned char *digest,
 			    unsigned int digestLen);
+extern
+SECStatus RSA_CheckSignPSS(CK_RSA_PKCS_PSS_PARAMS *pss_params,
+			   NSSLOWKEYPublicKey *key,
+			   const unsigned char *sign, unsigned int sign_len,
+			   const unsigned char *hash, unsigned int hash_len);
 extern
 SECStatus RSA_CheckSignRecover(NSSLOWKEYPublicKey *key, unsigned char *data,
     			    unsigned int *data_len,unsigned int max_output_len, 
@@ -265,7 +276,7 @@ extern PRBool sftk_fatalError;
 /*
 ** macros to check for forked child process after C_Initialize
 */
-#if defined(XP_UNIX) && !defined(NO_CHECK_FORK)
+#if defined(XP_UNIX) && !defined(NO_FORK_CHECK)
 
 #ifdef DEBUG
 

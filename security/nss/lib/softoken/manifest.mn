@@ -39,8 +39,6 @@ CORE_DEPTH = ../../..
 MODULE = nss
 DIRS = legacydb
 
-REQUIRES = dbm
-
 LIBRARY_NAME = softokn
 LIBRARY_VERSION = 3
 MAPFILE = $(OBJDIR)/softokn.def

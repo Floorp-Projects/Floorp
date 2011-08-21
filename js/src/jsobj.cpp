@@ -6699,15 +6699,22 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
     /* This should only called during live debugging. */
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    if (!start)
-        start = cx->maybefp();
-    FrameRegsIter i(cx);
-    while (!i.done() && i.fp() != start)
-        ++i;
+    FrameRegsIter i(cx, StackIter::GO_THROUGH_SAVED);
+    if (!start) {
+        if (i.done()) {
+            fprintf(stderr, "no stack for cx = %p\n", (void*) cx);
+            return;
+        }
+        start = i.fp();
+    } else {
+        while (!i.done() && i.fp() != start)
+            ++i;
 
-    if (i.done()) {
-        fprintf(stderr, "fp = %p not found in cx = %p\n", (void *)start, (void *)cx);
-        return;
+        if (i.done()) {
+            fprintf(stderr, "fp = %p not found in cx = %p\n",
+                    (void *)start, (void *)cx);
+            return;
+        }
     }
 
     for (; !i.done(); ++i) {

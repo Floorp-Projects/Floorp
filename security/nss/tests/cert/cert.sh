@@ -645,48 +645,48 @@ cert_smime_client()
   #
   echo "$SCRIPTNAME: Importing Certificates =============================="
   CU_ACTION="Import Bob's cert into Alice's db"
-  certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+  certu -E -t ",," -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
         -i ${R_BOBDIR}/Bob.cert 2>&1
 
   CU_ACTION="Import Dave's cert into Alice's DB"
-  certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+  certu -E -t ",," -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
         -i ${R_DAVEDIR}/Dave.cert 2>&1
 
   CU_ACTION="Import Dave's cert into Bob's DB"
-  certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
+  certu -E -t ",," -d ${P_R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_DAVEDIR}/Dave.cert 2>&1
 
   CU_ACTION="Import Eve's cert into Alice's DB"
-  certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+  certu -E -t ",," -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
         -i ${R_EVEDIR}/Eve.cert 2>&1
 
   CU_ACTION="Import Eve's cert into Bob's DB"
-  certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
+  certu -E -t ",," -d ${P_R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_EVEDIR}/Eve.cert 2>&1
 
   if [ -n "$NSS_ENABLE_ECC" ] ; then
       echo "$SCRIPTNAME: Importing EC Certificates =============================="
       CU_ACTION="Import Bob's EC cert into Alice's db"
-      certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+      certu -E -t ",," -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
           -i ${R_BOBDIR}/Bob-ec.cert 2>&1
 
       CU_ACTION="Import Dave's EC cert into Alice's DB"
-      certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+      certu -E -t ",," -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
           -i ${R_DAVEDIR}/Dave-ec.cert 2>&1
 
       CU_ACTION="Import Dave's EC cert into Bob's DB"
-      certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
+      certu -E -t ",," -d ${P_R_BOBDIR} -f ${R_PWFILE} \
           -i ${R_DAVEDIR}/Dave-ec.cert 2>&1
 
 ## XXXX Do not import Eve's EC cert until we can make sure that
 ## the email addresses listed in the Subject Alt Name Extension 
 ## inside Eve's ECC and non-ECC certs are different.
 #     CU_ACTION="Import Eve's EC cert into Alice's DB"
-#     certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+#     certu -E -t ",," -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
 #         -i ${R_EVEDIR}/Eve-ec.cert 2>&1
 
 #     CU_ACTION="Import Eve's EC cert into Bob's DB"
-#     certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
+#     certu -E -t ",," -d ${P_R_BOBDIR} -f ${R_PWFILE} \
 #         -i ${R_EVEDIR}/Eve-ec.cert 2>&1
   fi
 
