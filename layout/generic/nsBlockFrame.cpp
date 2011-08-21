@@ -1492,18 +1492,9 @@ nsBlockFrame::ComputeOverflowAreas(const nsHTMLReflowState& aReflowState,
   nsOverflowAreas areas(bounds, bounds);
 
   if (!IsClippingChildren(this, aReflowState)) {
-    PRBool inQuirks = (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks);
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line) {
-
-      // Text-shadow overflows
-      if (!inQuirks && line->IsInline()) {
-        nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(
-                              line->GetVisualOverflowArea(), this);
-        areas.VisualOverflow().UnionRect(areas.VisualOverflow(), shadowRect);
-      }
-
       areas.UnionWith(line->GetOverflowAreas());
     }
 
