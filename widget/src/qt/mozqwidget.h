@@ -321,7 +321,7 @@ private:
 */
 class MozMGraphicsView : public MWindow
 {
-
+    Q_OBJECT
 public:
     MozMGraphicsView(MozQWidget* aTopLevel, QWidget* aParent = nsnull)
      : MWindow(aParent)
@@ -330,6 +330,22 @@ public:
     {
         MozMSceneWindow* page = new MozMSceneWindow(aTopLevel);
         page->appear(this);
+        QObject::connect(this, SIGNAL(switcherEntered()), this, SLOT(onSwitcherEntered()));
+        QObject::connect(this, SIGNAL(switcherExited()), this, SLOT(onSwitcherExited()));
+    }
+
+public Q_SLOTS:
+    void onSwitcherEntered() {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (!os)
+            return;
+        os->NotifyObservers(nsnull, "application-background", nsnull);
+    }
+    void onSwitcherExited() {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (!os)
+            return;
+        os->NotifyObservers(nsnull, "application-foreground", nsnull);
     }
 
 protected:
