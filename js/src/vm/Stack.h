@@ -268,6 +268,13 @@ CallArgsFromSp(uintN argc, Value *sp)
 
 /*****************************************************************************/
 
+/*
+ * For calls to natives, the InvokeArgsGuard object provides a record of the
+ * call for the debugger's callstack. For this to work, the InvokeArgsGuard
+ * record needs to know when the call is actually active (because the
+ * InvokeArgsGuard can be pushed long before and popped long after the actual
+ * call, during which time many stack-observing things can happen).
+ */
 class CallArgsList : public CallArgs
 {
     friend class StackSegment;
@@ -1848,7 +1855,8 @@ class FrameRegsIter
     }
 
   public:
-    FrameRegsIter(JSContext *cx) : iter_(cx) { settle(); }
+    FrameRegsIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
+        : iter_(cx, opt) { settle(); }
 
     bool done() const { return iter_.done(); }
     FrameRegsIter &operator++() { ++iter_; settle(); return *this; }

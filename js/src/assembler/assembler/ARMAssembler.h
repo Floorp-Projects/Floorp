@@ -328,6 +328,19 @@ namespace JSC {
             m_buffer.putInt(op | RN(rn) | RD(rd) | op2);
         }
 
+        // Work out the pre-shifted constant necessary to encode the specified
+        // logical shift left for op2 immediates. Only even shifts can be
+        // applied.
+        //
+        // Input validity is asserted in debug builds.
+        ARMWord getOp2RotLSL(int lsl)
+        {
+            ASSERT((lsl >= 0) && (lsl <= 24));
+            ASSERT(!(lsl % 2));
+
+            return (-(lsl/2) & 0xf) << 8;
+        }
+
         void and_r(int rd, int rn, ARMWord op2, Condition cc = AL)
         {
             spewInsWithOp2("and", cc, rd, rn, op2);
@@ -1666,24 +1679,6 @@ namespace JSC {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
-        }
-
-        void fdtr_u(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
-        {
-            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
-            ASSERT(offset <= 0xff);
-            emitInst(static_cast<ARMWord>(cc) | FDTR | DT_UP | (isLoad ? DT_LOAD : 0), dd, rn, offset);
-        }
-
-        void fdtr_d(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
-        {
-            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
-            js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
-            ASSERT(offset <= 0xff);
-            emitInst(static_cast<ARMWord>(cc) | FDTR | (isLoad ? DT_LOAD : 0), dd, rn, offset);
         }
 
         void fmsr_r(int dd, int rn, Condition cc = AL)

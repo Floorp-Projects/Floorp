@@ -92,6 +92,11 @@ sha1_NewContext(void) {
 }
 
 static void *
+sha224_NewContext(void) {
+	return (void *) PK11_CreateDigestContext(SEC_OID_SHA224);
+}
+
+static void *
 sha256_NewContext(void) {
 	return (void *) PK11_CreateDigestContext(SEC_OID_SHA256);
 }
@@ -184,6 +189,17 @@ const SECHashObject SECHashObjects[] = {
     SHA512_BLOCK_LENGTH,
     HASH_AlgSHA512
   },
+  { SHA224_LENGTH,
+    (void * (*)(void)) sha224_NewContext,
+    (void * (*)(void *)) PK11_CloneContext,
+    (void (*)(void *, PRBool)) PK11_DestroyContext,
+    (void (*)(void *)) PK11_DigestBegin,
+    (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
+    (void (*)(void *, unsigned char *, unsigned int *, unsigned int))
+							PK11_DigestFinal,
+    SHA224_BLOCK_LENGTH,
+    HASH_AlgSHA224
+  },
 };
 
 const SECHashObject * 
@@ -201,6 +217,7 @@ HASH_GetHashTypeByOidTag(SECOidTag hashOid)
     case SEC_OID_MD2:	 ht = HASH_AlgMD2;    break;
     case SEC_OID_MD5:	 ht = HASH_AlgMD5;    break;
     case SEC_OID_SHA1:	 ht = HASH_AlgSHA1;   break;
+    case SEC_OID_SHA224: ht = HASH_AlgSHA224; break;
     case SEC_OID_SHA256: ht = HASH_AlgSHA256; break;
     case SEC_OID_SHA384: ht = HASH_AlgSHA384; break;
     case SEC_OID_SHA512: ht = HASH_AlgSHA512; break;
@@ -220,6 +237,7 @@ HASH_GetHashOidTagByHMACOidTag(SECOidTag hmacOid)
     /* no oid exists for HMAC_MD2 */
     /* NSS does not define a oid for HMAC_MD4 */
     case SEC_OID_HMAC_SHA1:   hashOid = SEC_OID_SHA1;   break;
+    case SEC_OID_HMAC_SHA224: hashOid = SEC_OID_SHA224; break;
     case SEC_OID_HMAC_SHA256: hashOid = SEC_OID_SHA256; break;
     case SEC_OID_HMAC_SHA384: hashOid = SEC_OID_SHA384; break;
     case SEC_OID_HMAC_SHA512: hashOid = SEC_OID_SHA512; break;
@@ -239,6 +257,7 @@ HASH_GetHMACOidTagByHashOidTag(SECOidTag hashOid)
     /* no oid exists for HMAC_MD2 */
     /* NSS does not define a oid for HMAC_MD4 */
     case SEC_OID_SHA1:   hmacOid = SEC_OID_HMAC_SHA1;   break;
+    case SEC_OID_SHA224: hmacOid = SEC_OID_HMAC_SHA224; break;
     case SEC_OID_SHA256: hmacOid = SEC_OID_HMAC_SHA256; break;
     case SEC_OID_SHA384: hmacOid = SEC_OID_HMAC_SHA384; break;
     case SEC_OID_SHA512: hmacOid = SEC_OID_HMAC_SHA512; break;

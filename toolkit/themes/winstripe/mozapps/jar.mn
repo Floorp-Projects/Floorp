@@ -126,7 +126,7 @@ toolkit.jar:
         skin/classic/aero/mozapps/passwordmgr/key-16.png                   (passwordmgr/key-16.png)
         skin/classic/aero/mozapps/passwordmgr/key-64.png                   (passwordmgr/key-64.png)
 #ifdef MOZ_PLACES
-        skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon-aero.png)
+        skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)
         skin/classic/aero/mozapps/places/tagContainerIcon.png              (places/tagContainerIcon-aero.png)
 #endif
         skin/classic/aero/mozapps/plugins/contentPluginBlocked.png         (plugins/contentPluginBlocked.png)

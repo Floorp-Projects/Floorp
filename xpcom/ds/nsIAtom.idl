@@ -118,7 +118,7 @@ protected:
  * Find an atom that matches the given UTF-8 string.
  * The string is assumed to be zero terminated.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const char* aUTF8String);
+extern nsIAtom* NS_NewAtom(const char* aUTF8String);
 
 inline already_AddRefed<nsIAtom> do_GetAtom(const char* aUTF8String)
     { return NS_NewAtom(aUTF8String); }
@@ -126,7 +126,7 @@ inline already_AddRefed<nsIAtom> do_GetAtom(const char* aUTF8String)
 /**
  * Find an atom that matches the given UTF-8 string.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const nsACString& aUTF8String);
+extern nsIAtom* NS_NewAtom(const nsACString& aUTF8String);
 inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& aUTF8String)
     { return NS_NewAtom(aUTF8String); }
 
@@ -134,15 +134,15 @@ inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& aUTF8String)
  * Find an atom that matches the given UTF-16 string.
  * The string is assumed to be zero terminated.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* aUTF16String);
+extern nsIAtom* NS_NewAtom(const PRUnichar* aUTF16String);
 inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* aUTF16String)
     { return NS_NewAtom(aUTF16String); }
 
 /**
  * Find an atom that matches the given UTF-16 string.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const nsAString& aUTF16String);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAString& aUTF16String);
+extern nsIAtom* NS_NewAtom(const nsAString& aUTF16String);
+extern nsIAtom* NS_NewPermanentAtom(const nsAString& aUTF16String);
 inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aUTF16String)
     { return NS_NewAtom(aUTF16String); }
 
@@ -150,18 +150,18 @@ inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aUTF16String)
  * Return a count of the total number of atoms currently
  * alive in the system.
  */
-extern NS_COM nsrefcnt NS_GetNumberOfAtoms(void);
+extern nsrefcnt NS_GetNumberOfAtoms(void);
 
 /**
  * Return a pointer for a static atom for the string or null if there's 
  * no static atom for this string.
  */
-extern NS_COM nsIAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
+extern nsIAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
 
 /**
  * Seal the static atom table
  */
-extern NS_COM void NS_SealStaticAtomTable();
+extern void NS_SealStaticAtomTable();
 
 class nsAtomString : public nsString
 {

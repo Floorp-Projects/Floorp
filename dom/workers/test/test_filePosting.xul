@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=664783
+-->
+<window title="Mozilla Bug 664783"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=664783"
+     target="_blank">Mozilla Bug 664783</a>
+
+  <div id="content" style="display: none">
+    <input id="fileList" type="file"></input>
+  </div>
+
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 664783 **/
+
+  var fileNum = 0;
+
+  /**
+   * Create a file which contains the given data.
+   */
+  function createFileWithData(fileData) {
+    var testFile = Components.classes["@mozilla.org/file/directory_service;1"]
+                       .getService(Components.interfaces.nsIProperties)
+                       .get("ProfD", Components.interfaces.nsIFile);
+    testFile.append("workerFilePosting" + fileNum++);
+
+    var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                        .createInstance(Components.interfaces.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write(fileData, fileData.length);
+    outStream.close();
+
+    var fileList = document.getElementById('fileList');
+    fileList.value = testFile.path;
+
+    return fileList.files[0];
+  }
+
+  /**
+   * Create a worker which posts the same file given. Used to test cloning of files.
+   * Checks the size, type, name and path of the file posted from the worker to ensure it
+   * is the same as the original.
+   */
+  function postFile(file) {
+    var worker = new Worker("file_worker.js");
+
+    worker.onerror = function(event) {
+      ok(false, "Worker had an error: " + event.data);
+      SimpleTest.finish();
+    };
+
+    worker.onmessage = function(event) {
+      is(event.data.size, file.size, "size of file posted from worker does not match file posted to worker.");
+      is(event.data.type, file.type, "type of file posted from worker does not match file posted to worker.");
+      is(event.data.name, file.name, "name of file posted from worker does not match file posted to worker.");
+      is(event.data.mozFullPath, file.mozFullPath, "mozFullPath of file posted from worker does not match file posted to worker.");
+      SimpleTest.finish();
+    };
+
+    worker.postMessage(file);
+    SimpleTest.waitForExplicitFinish();
+  }
+
+  // Empty file.
+  postFile(createFileWithData(""));
+
+  // Typical use case.
+  postFile(createFileWithData("Hello"));
+
+  ]]>
+  </script>
+</window>

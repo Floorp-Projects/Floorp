@@ -363,3 +363,26 @@ code {
 .nodeBox.highlighted > .nodeLabel {
   border-color: #3875d7 !important;
 }
+
+.editingAttributeValue {
+  background-color: #492;
+}
+
+#attribute-editor {
+  visibility: hidden;
+  position: absolute;
+  z-index: 5000;
+  background-color: #fff;
+  border: 1px solid #000;
+}
+
+#attribute-editor.editing {
+  visibility: visible;
+}
+
+#attribute-editor-input {
+  border: none;
+  padding: 2px 5px;
+  font-family: Menlo, Andale Mono, monospace;
+  font-size: 11px;
+}

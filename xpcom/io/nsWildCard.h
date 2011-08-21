@@ -70,9 +70,9 @@
 #define INVALID_SXP -2
 #define VALID_SXP 1
 
-NS_COM int NS_WildCardValid(const char *expr);
+int NS_WildCardValid(const char *expr);
 
-NS_COM int NS_WildCardValid(const PRUnichar *expr);
+int NS_WildCardValid(const PRUnichar *expr);
 
 /* return values for the search routines */
 #define MATCH 0
@@ -87,10 +87,10 @@ NS_COM int NS_WildCardValid(const PRUnichar *expr);
  * Returns 0 on match and 1 on non-match.
  */
 
-NS_COM int NS_WildCardMatch(const char *str, const char *expr,
+int NS_WildCardMatch(const char *str, const char *expr,
                             PRBool case_insensitive);
 
-NS_COM int NS_WildCardMatch(const PRUnichar *str, const PRUnichar *expr,
+int NS_WildCardMatch(const PRUnichar *str, const PRUnichar *expr,
                             PRBool case_insensitive);
 
 #endif /* nsWildCard_h__ */

@@ -202,6 +202,20 @@ nsNullPrincipalURI::GetSpec(nsACString &_spec)
   return NS_OK;
 }
 
+// result may contain unescaped UTF-8 characters
+NS_IMETHODIMP
+nsNullPrincipalURI::GetSpecIgnoringRef(nsACString &result)
+{
+  return GetSpec(result);
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::GetHasRef(PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNullPrincipalURI::SetSpec(const nsACString &aSpec)
 {

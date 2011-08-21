@@ -357,6 +357,7 @@ class ChildViewMouseTracker {
 public:
 
   static void MouseMoved(NSEvent* aEvent);
+  static void MouseScrolled(NSEvent* aEvent);
   static void OnDestroyView(ChildView* aView);
   static void OnDestroyWindow(NSWindow* aWindow);
   static BOOL WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
@@ -370,6 +371,7 @@ public:
   static ChildView* sLastMouseEventView;
   static NSEvent* sLastMouseMoveEvent;
   static NSWindow* sWindowUnderMouse;
+  static NSPoint sLastScrollEventScreenLocation;
 };
 
 //-------------------------------------------------------------------------

@@ -387,7 +387,7 @@ nsStringInputStream::Write(IPC::Message *aMsg)
     WriteParam(aMsg, value);
 }
 
-NS_COM nsresult
+nsresult
 NS_NewByteInputStream(nsIInputStream** aStreamResult,
                       const char* aStringToRead, PRInt32 aLength,
                       nsAssignmentType aAssignment)
@@ -425,7 +425,7 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
     return NS_OK;
 }
 
-NS_COM nsresult
+nsresult
 NS_NewStringInputStream(nsIInputStream** aStreamResult,
                         const nsAString& aStringToRead)
 {
@@ -441,7 +441,7 @@ NS_NewStringInputStream(nsIInputStream** aStreamResult,
     return rv;
 }
 
-NS_COM nsresult
+nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
                          const nsACString& aStringToRead)
 {

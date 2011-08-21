@@ -1,6 +1,6 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r653
+Current revision: r686
 
 == Applied local patches ==
 
@@ -14,6 +14,8 @@ In this order:
   angle-r712.patch - this is ANGLE r712
   angle-win64.patch - Win64 support. This is ANGLE r697
   angle-r707.patch - this is ANGLE r707 for Win64 bug fix
+  angle-r719.patch - this is ANGLE r719
+  angle-r711.patch - this is ANGLE r711
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

@@ -77,7 +77,11 @@ static const PRUint32 vendorATI = 0x1002;
 GfxInfo::GfxInfo()
   : mAdapterVendorID(0),
     mAdapterDeviceID(0),
-    mWindowsVersion(0)
+    mAdapterVendorID2(0),
+    mAdapterDeviceID2(0),
+    mWindowsVersion(0),
+    mHasDualGPU(PR_FALSE),
+    mIsGPU2Active(PR_FALSE)
 {
 }
 
@@ -199,8 +203,6 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
   return NS_ERROR_FAILURE;
 }
 
-/* XXX: GfxInfo doesn't handle multiple GPUs. We should try to do that. Bug #591057 */
-
 static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
 {
   HKEY key;
@@ -304,7 +306,21 @@ typedef BOOL (WINAPI*SetupDiDestroyDeviceInfoListFunc)(
   HDEVINFO DeviceInfoSet
 );
 
-
+// The device ID is a string like PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD
+// this function is used to extract the id's out of it
+PRUint32
+ParseIDFromDeviceID(const nsAString &key, const char *prefix, int length)
+{
+  nsAutoString id(key);
+  ToUpperCase(id);
+  PRInt32 start = id.Find(prefix);
+  if (start != -1) {
+    id.Cut(0, start + strlen(prefix));
+    id.Truncate(length);
+  }
+  nsresult err;
+  return id.ToInteger(&err, 16);
+}
 
 /* Other interesting places for info:
  *   IDXGIAdapter::GetDesc()
@@ -409,7 +425,40 @@ GfxInfo::Init()
               result = RegQueryValueExW(key, L"DriverDate", NULL, NULL, (LPBYTE)value, &dwcbData);
               if (result == ERROR_SUCCESS)
                 mDriverDate = value;
-              RegCloseKey(key);
+              RegCloseKey(key); 
+
+              // Check for second adapter:
+              //
+              // A second adapter will have the same driver key as the first adapter except for 
+              // the last character, where '1' will be swapped for '0' or vice-versa.
+              // We know driverKey.Length() > 0 since driverKeyPre is a prefix of driverKey.
+              if (driverKey[driverKey.Length()-1] == '0') {
+                driverKey.SetCharAt('1', driverKey.Length()-1);
+              } else {
+                driverKey.SetCharAt('0', driverKey.Length()-1);
+              }
+              result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey.BeginReading(), 0, KEY_QUERY_VALUE, &key);
+              if (result == ERROR_SUCCESS) {
+                mHasDualGPU = PR_TRUE;
+                mDeviceKey2 = driverKey;
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"DriverVersion", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result == ERROR_SUCCESS)
+                  mDriverVersion2 = value;
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"DriverDate", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result == ERROR_SUCCESS)
+                  mDriverDate2 = value;
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"Device Description", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result == ERROR_SUCCESS)
+                  mDeviceString2 = value;
+                dwcbData = sizeof(value);
+                result = RegQueryValueExW(key, L"MatchingDeviceId", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result == ERROR_SUCCESS)
+                  mDeviceID2 = value;
+                RegCloseKey(key);
+              }  
               break;
             }
           }
@@ -422,6 +471,13 @@ GfxInfo::Init()
     FreeLibrary(setupapi);
   }
 
+  mAdapterVendorID  = ParseIDFromDeviceID(mDeviceID,  "VEN_", 4);
+  mAdapterVendorID2 = ParseIDFromDeviceID(mDeviceID2, "VEN_", 4);
+  mAdapterDeviceID  = ParseIDFromDeviceID(mDeviceID,  "&DEV_", 4);
+  mAdapterDeviceID2 = ParseIDFromDeviceID(mDeviceID2, "&DEV_", 4);
+  mAdapterSubsysID  = ParseIDFromDeviceID(mDeviceID,  "&SUBSYS_", 8);
+  mAdapterSubsysID2 = ParseIDFromDeviceID(mDeviceID2, "&SUBSYS_", 8);
+
   const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
   if (spoofedDriverVersionString) {
     mDriverVersion.AssignASCII(spoofedDriverVersionString);
@@ -430,16 +486,6 @@ GfxInfo::Init()
   const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_VENDOR_ID");
   if (spoofedVendor) {
      PR_sscanf(spoofedVendor, "%x", &mAdapterVendorID);
-  } else {
-    nsAutoString vendor(mDeviceID);
-    ToUpperCase(vendor);
-    PRInt32 start = vendor.Find(NS_LITERAL_CSTRING("VEN_"));
-    if (start != -1) {
-      vendor.Cut(0, start + strlen("VEN_"));
-      vendor.Truncate(4);
-    }
-    nsresult err;
-    mAdapterVendorID = vendor.ToInteger(&err, 16);
   }
 
   mHasDriverVersionMismatch = PR_FALSE;
@@ -468,16 +514,6 @@ GfxInfo::Init()
   const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
   if (spoofedDevice) {
     PR_sscanf(spoofedDevice, "%x", &mAdapterDeviceID);
-  } else {
-    nsAutoString device(mDeviceID);
-    ToUpperCase(device);
-    PRInt32 start = device.Find(NS_LITERAL_CSTRING("&DEV_"));
-    if (start != -1) {
-      device.Cut(0, start + strlen("&DEV_"));
-      device.Truncate(4);
-    }
-    nsresult err;
-    mAdapterDeviceID = device.ToInteger(&err, 16);
   }
 
   const char *spoofedWindowsVersion = PR_GetEnv("MOZ_GFX_SPOOF_WINDOWS_VERSION");
@@ -500,6 +536,14 @@ GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
   return NS_OK;
 }
 
+/* readonly attribute DOMString adapterDescription2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
+{
+  aAdapterDescription = mDeviceString2;
+  return NS_OK;
+}
+
 /* readonly attribute DOMString adapterRAM; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
@@ -509,11 +553,29 @@ GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
   return NS_OK;
 }
 
+/* readonly attribute DOMString adapterRAM2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
+{
+  if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD)))
+    aAdapterRAM = L"Unknown";
+  return NS_OK;
+}
+
 /* readonly attribute DOMString adapterDriver; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 {
   if (NS_FAILED(GetKeyValue(mDeviceKey.BeginReading(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ)))
+    aAdapterDriver = L"Unknown";
+  return NS_OK;
+}
+
+/* readonly attribute DOMString adapterDriver2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriver2(nsAString & aAdapterDriver)
+{
+  if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ)))
     aAdapterDriver = L"Unknown";
   return NS_OK;
 }
@@ -534,6 +596,22 @@ GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
   return NS_OK;
 }
 
+/* readonly attribute DOMString adapterDriverVersion2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion)
+{
+  aAdapterDriverVersion = mDriverVersion2;
+  return NS_OK;
+}
+
+/* readonly attribute DOMString adapterDriverDate2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
+{
+  aAdapterDriverDate = mDriverDate2;
+  return NS_OK;
+}
+
 /* readonly attribute unsigned long adapterVendorID; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
@@ -542,11 +620,35 @@ GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
   return NS_OK;
 }
 
+/* readonly attribute unsigned long adapterVendorID2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
+{
+  *aAdapterVendorID = mAdapterVendorID2;
+  return NS_OK;
+}
+
 /* readonly attribute unsigned long adapterDeviceID; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
   *aAdapterDeviceID = mAdapterDeviceID;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned long adapterDeviceID2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
+{
+  *aAdapterDeviceID = mAdapterDeviceID2;
+  return NS_OK;
+}
+
+/* readonly attribute boolean isGPU2Active; */
+NS_IMETHODIMP
+GfxInfo::GetIsGPU2Active(PRBool* aIsGPU2Active)
+{
+  *aIsGPU2Active = mIsGPU2Active;
   return NS_OK;
 }
 
@@ -595,6 +697,7 @@ GfxInfo::AddCrashReportAnnotations()
   /* AppendPrintf only supports 32 character strings, mrghh. */
   note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
   note.AppendPrintf("AdapterDeviceID: %04x, ", deviceID);
+  note.AppendPrintf("AdapterSubsysID: %08x, ", mAdapterSubsysID);
   note.AppendPrintf("AdapterDriverVersion: ");
   note.Append(NS_LossyConvertUTF16toASCII(adapterDriverVersionString));
 
@@ -607,6 +710,20 @@ GfxInfo::AddCrashReportAnnotations()
   }
   note.Append("\n");
 
+  if (mHasDualGPU) {
+    PRUint32 deviceID2, vendorID2;
+    nsAutoString adapterDriverVersionString2;
+
+    note.Append("Has dual GPUs. GPU #2: ");
+    GetAdapterDeviceID2(&deviceID2);
+    GetAdapterVendorID2(&vendorID2);
+    GetAdapterDriverVersion2(adapterDriverVersionString2);
+    note.AppendPrintf("AdapterVendorID2: %04x, ", vendorID2);
+    note.AppendPrintf("AdapterDeviceID2: %04x, ", deviceID2);
+    note.AppendPrintf("AdapterSubsysID2: %08x, ", mAdapterSubsysID2);
+    note.AppendPrintf("AdapterDriverVersion2: ");
+    note.Append(NS_LossyConvertUTF16toASCII(adapterDriverVersionString2));
+  }
   CrashReporter::AppendAppNotesToCrashReport(note);
 
 #endif

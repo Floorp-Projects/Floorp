@@ -145,6 +145,19 @@ nsMozIconURI::GetSpec(nsACString &aSpec)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMozIconURI::GetSpecIgnoringRef(nsACString &result)
+{
+  return GetSpec(result);
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetHasRef(PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
 // takes a string like ?size=32&contentType=text/html and returns a new string 
 // containing just the attribute value. i.e you could pass in this string with
 // an attribute name of 'size=', this will return 32

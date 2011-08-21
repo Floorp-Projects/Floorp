@@ -88,6 +88,9 @@ space :=$(nullstr) # EOL
 
 core_winabspath = $(firstword $(subst /, ,$(call core_abspath,$(1)))):$(subst $(space),,$(patsubst %,\\%,$(wordlist 2,$(words $(subst /, ,$(call core_abspath,$(1)))), $(strip $(subst /, ,$(call core_abspath,$(1)))))))
 
+# LIBXUL_DIST is not defined under js/src, thus we make it mean DIST there.
+LIBXUL_DIST ?= $(DIST)
+
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
 # build products (typelibs, components, chrome).
 #
@@ -743,10 +746,10 @@ endif
 MERGE_FILES = $(foreach f,$(1),$(call MERGE_FILE,$(f)))
 
 ifeq (OS2,$(OS_ARCH))
-RUN_TEST_PROGRAM = $(topsrcdir)/build/os2/test_os2.cmd "$(DIST)"
+RUN_TEST_PROGRAM = $(topsrcdir)/build/os2/test_os2.cmd "$(LIBXUL_DIST)"
 else
 ifneq (WINNT,$(OS_ARCH))
-RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
+RUN_TEST_PROGRAM = $(LIBXUL_DIST)/bin/run-mozilla.sh
 endif # ! WINNT
 endif # ! OS2
 

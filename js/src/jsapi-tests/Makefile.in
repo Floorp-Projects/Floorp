@@ -83,6 +83,8 @@ CPPSRCS = \
   testScriptObject.cpp \
   testSetProperty.cpp \
   testStringBuffer.cpp \
+  testThreadGC.cpp \
+  testThreads.cpp \
   testTrap.cpp \
   testUTF8.cpp \
   testVersion.cpp \

@@ -1492,18 +1492,9 @@ nsBlockFrame::ComputeOverflowAreas(const nsHTMLReflowState& aReflowState,
   nsOverflowAreas areas(bounds, bounds);
 
   if (!IsClippingChildren(this, aReflowState)) {
-    PRBool inQuirks = (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks);
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line) {
-
-      // Text-shadow overflows
-      if (!inQuirks && line->IsInline()) {
-        nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(
-                              line->GetVisualOverflowArea(), this);
-        areas.VisualOverflow().UnionRect(areas.VisualOverflow(), shadowRect);
-      }
-
       areas.UnionWith(line->GetOverflowAreas());
     }
 
@@ -2371,12 +2362,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         metrics.ascent = metrics.height;
       }
 
-      nsRenderingContext *rc = aState.mReflowState.rendContext;
-      nsLayoutUtils::SetFontFromStyle(rc, GetStyleContext());
+      nsRefPtr<nsFontMetrics> fm;
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+      aState.mReflowState.rendContext->SetFont(fm); // FIXME: needed?
 
       nscoord minAscent =
-        nsLayoutUtils::GetCenteredFontBaseline(rc->FontMetrics(),
-                                               aState.mMinLineHeight);
+        nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
       aState.mY += NS_MAX(minAscent, metrics.ascent) +

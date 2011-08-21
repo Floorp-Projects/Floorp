@@ -53,8 +53,6 @@ ok(bhist != null, "Could not get Browser History Service");
 var ghist = Cc["@mozilla.org/browser/global-history;2"].
             getService(Ci.nsIGlobalHistory2);
 ok(ghist != null, "Could not get Global History Service");
-var ghist3 = ghist.QueryInterface(Ci.nsIGlobalHistory3);
-ok(ghist3 != null, "Could not get Global History Service");
 var ios = Cc["@mozilla.org/network/io-service;1"].
           getService(Components.interfaces.nsIIOService);
 ok(ios != null, "Could not get IO Service");
@@ -113,7 +111,6 @@ StreamListener.prototype = {
   // nsIChannelEventSink
   asyncOnChannelRedirect: function (aOldChannel, aNewChannel, aFlags, callback) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    ghist3.addDocumentRedirect(aOldChannel, aNewChannel, aFlags, true);
     // If redirecting, store the new channel
     this.mChannel = aNewChannel;
     callback.onRedirectVerifyCallback(Components.results.NS_OK);

@@ -176,7 +176,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
                     if (!pobj->branded()) {
                         PCMETER(brandfills++);
 #ifdef DEBUG_notme
-                        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
+                        JSFunction *fun = JSVAL_TO_OBJECT(v)->getFunctionPrivate();
                         JSAutoByteString funNameBytes;
                         if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
                             fprintf(stderr,

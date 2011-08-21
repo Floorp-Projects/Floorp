@@ -46,9 +46,6 @@ CSRCS = \
 	shlibsign.c \
 	$(NULL)
 
-# headers for the MODULE (defined above) are implicitly required.
-REQUIRES = dbm seccmd
-
 # WINNT uses EXTRA_LIBS as the list of libs to link in.
 # Unix uses     OS_LIBS for that purpose.
 # We can solve this via conditional makefile code, but 

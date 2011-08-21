@@ -257,9 +257,9 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   ////////////
   // Prepare the radical symbol and the overline bar
 
-  renderingContext.SetFont(GetStyleFont()->mFont,
-                           aPresContext->GetUserFontSet());
-  nsFontMetrics* fm = renderingContext.FontMetrics();
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  renderingContext.SetFont(fm);
 
   // For radical glyphs from TeX fonts and some of the radical glyphs from
   // Mathematica fonts, the thickness of the overline can be obtained from the

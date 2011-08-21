@@ -45,8 +45,11 @@
 using namespace mozilla;
 using mozilla::dom::ContentChild;
 
-PRBool nsLookAndFeel::mInitialized = PR_FALSE;
+PRBool nsLookAndFeel::mInitializedSystemColors = PR_FALSE;
 AndroidSystemColors nsLookAndFeel::mSystemColors;
+
+PRBool nsLookAndFeel::mInitializedShowPassword = PR_FALSE;
+PRBool nsLookAndFeel::mShowPassword = PR_TRUE;
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel()
@@ -68,7 +71,7 @@ nsLookAndFeel::~nsLookAndFeel()
 nsresult
 nsLookAndFeel::GetSystemColors()
 {
-    if (mInitialized)
+    if (mInitializedSystemColors)
         return NS_OK;
 
     if (!AndroidBridge::Bridge())
@@ -76,7 +79,7 @@ nsLookAndFeel::GetSystemColors()
 
     AndroidBridge::Bridge()->GetSystemColors(&mSystemColors);
 
-    mInitialized = PR_TRUE;
+    mInitializedSystemColors = PR_TRUE;
 
     return NS_OK;
 }
@@ -102,7 +105,7 @@ nsLookAndFeel::CallRemoteGetSystemColors()
     // so just copy the memory block
     memcpy(&mSystemColors, colors.Elements(), sizeof(nscolor) * colorsCount);
 
-    mInitialized = PR_TRUE;
+    mInitializedSystemColors = PR_TRUE;
 
     return NS_OK;
 }
@@ -112,7 +115,7 @@ nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 {
     nsresult rv = NS_OK;
 
-    if (!mInitialized) {
+    if (!mInitializedSystemColors) {
         if (XRE_GetProcessType() == GeckoProcessType_Default)
             rv = GetSystemColors();
         else
@@ -459,4 +462,21 @@ nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
             break;
     }
     return rv;
+}
+
+/*virtual*/
+PRBool nsLookAndFeel::GetEchoPassword()
+{
+    if (!mInitializedShowPassword) {
+        if (XRE_GetProcessType() == GeckoProcessType_Default) {
+            if (AndroidBridge::Bridge())
+                mShowPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
+            else
+                NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available!");
+        } else {
+            ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
+        }
+        mInitializedShowPassword = PR_TRUE;
+    }
+    return mShowPassword;
 }

@@ -419,7 +419,7 @@ class CheckStaticAtomSizes
   }
 };
 
-NS_COM nsresult
+nsresult
 NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, PRUint32 aAtomCount)
 {
   // this does three things:
@@ -490,13 +490,13 @@ NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, PRUint32 aAtomCount)
   return NS_OK;
 }
 
-NS_COM nsIAtom*
+nsIAtom*
 NS_NewAtom(const char* aUTF8String)
 {
   return NS_NewAtom(nsDependentCString(aUTF8String));
 }
 
-NS_COM nsIAtom*
+nsIAtom*
 NS_NewAtom(const nsACString& aUTF8String)
 {
   AtomTableEntry *he = GetAtomHashEntry(aUTF8String.Data(),
@@ -521,13 +521,13 @@ NS_NewAtom(const nsACString& aUTF8String)
   return atom;
 }
 
-NS_COM nsIAtom*
+nsIAtom*
 NS_NewAtom(const PRUnichar* aUTF16String)
 {
   return NS_NewAtom(nsDependentString(aUTF16String));
 }
 
-NS_COM nsIAtom*
+nsIAtom*
 NS_NewAtom(const nsAString& aUTF16String)
 {
   AtomTableEntry *he = GetAtomHashEntry(aUTF16String.Data(),
@@ -547,7 +547,7 @@ NS_NewAtom(const nsAString& aUTF16String)
   return atom;
 }
 
-NS_COM nsIAtom*
+nsIAtom*
 NS_NewPermanentAtom(const nsAString& aUTF16String)
 {
   AtomTableEntry *he = GetAtomHashEntry(aUTF16String.Data(),
@@ -568,13 +568,13 @@ NS_NewPermanentAtom(const nsAString& aUTF16String)
   return atom;
 }
 
-NS_COM nsrefcnt
+nsrefcnt
 NS_GetNumberOfAtoms(void)
 {
   return gAtomTable.entryCount;
 }
 
-NS_COM nsIAtom*
+nsIAtom*
 NS_GetStaticAtom(const nsAString& aUTF16String)
 {
   NS_PRECONDITION(gStaticAtomTable, "Static atom table not created yet.");
@@ -586,7 +586,7 @@ NS_GetStaticAtom(const nsAString& aUTF16String)
   return atom;
 }
 
-NS_COM void
+void
 NS_SealStaticAtomTable()
 {
   gStaticAtomTableSealed = PR_TRUE;

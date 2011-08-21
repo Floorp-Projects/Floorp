@@ -52,8 +52,6 @@ CSRCS = \
 	utilwrap.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 MAPFILE = $(OBJDIR)/nss.def
 
 LIBRARY_NAME = nss

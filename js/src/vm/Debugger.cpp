@@ -520,7 +520,7 @@ Debugger::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
             Value exc = cx->getPendingException();
             Value rv;
             cx->clearPendingException();
-            if (ExternalInvoke(cx, ObjectValue(*object), fval, 1, &exc, &rv))
+            if (Invoke(cx, ObjectValue(*object), fval, 1, &exc, &rv))
                 return vp ? parseResumptionValue(ac, true, rv, vp, false) : JSTRAP_CONTINUE;
         }
 
@@ -626,7 +626,7 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
     return atom &&
            js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, &fval) &&
            (!js_IsCallable(fval) ||
-            ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
+            Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
 
 JSTrapStatus
@@ -647,7 +647,7 @@ Debugger::fireDebuggerStatement(JSContext *cx, Value *vp)
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
-    bool ok = ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
@@ -672,7 +672,7 @@ Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
-    bool ok = ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 2, argv, &rv);
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 2, argv, &rv);
     JSTrapStatus st = parseResumptionValue(ac, ok, rv, vp);
     if (st == JSTRAP_CONTINUE)
         cx->setPendingException(exc);
@@ -697,7 +697,7 @@ Debugger::fireEnterFrame(JSContext *cx)
         return;
     }
     Value rv;
-    if (!ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
+    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
         handleUncaughtException(ac, NULL, true);
 }
 
@@ -722,7 +722,7 @@ Debugger::fireNewScript(JSContext *cx, JSScript *script, JSObject *obj, NewScrip
     Value argv[1];
     argv[0].setObject(*dsobj);
     Value rv;
-    if (!ExternalInvoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
+    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
         handleUncaughtException(ac, NULL, true);
 }
 
@@ -2659,6 +2659,10 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
 {
     assertSameCompartment(cx, scobj, fp);
 
+    /* Execute assumes an already-computed 'this" value. */
+    if (!ComputeThis(cx, fp))
+        return false;
+
     /*
      * NB: This function breaks the assumption that the compiler can see all
      * calls and properly compute a static level. In order to get around this,
@@ -2674,7 +2678,7 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
     if (!script)
         return false;
 
-    bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
+    bool ok = ExecuteKernel(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
     return ok;
 }
 
@@ -3005,6 +3009,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
         if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
             return false;
 
+        ErrorCopier ec(ac, dbg->toJSObject());
         if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
             return false;
     }
@@ -3041,6 +3046,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
         if (!ac.enter())
             return false;
 
+        ErrorCopier ec(ac, dbg->toJSObject());
         if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
             return false;
     }
@@ -3379,7 +3385,7 @@ ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
      * compartment and populate args.rval().
      */
     Value rval;
-    bool ok = ExternalInvoke(cx, thisv, calleev, callArgc, callArgv, &rval);
+    bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, &rval);
     return dbg->newCompletionValue(ac, ok, rval, &args.rval());
 }
 

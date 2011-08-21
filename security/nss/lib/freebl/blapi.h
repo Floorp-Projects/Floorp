@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.33.22.2 2010/12/04 18:59:01 rrelyea%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.41 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1089,6 +1089,24 @@ extern void SHA1_Clone(SHA1Context *dest, SHA1Context *src);
 
 /******************************************/
 
+extern SHA224Context *SHA224_NewContext(void);
+extern void SHA224_DestroyContext(SHA224Context *cx, PRBool freeit);
+extern void SHA224_Begin(SHA224Context *cx);
+extern void SHA224_Update(SHA224Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+extern void SHA224_End(SHA224Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+extern SECStatus SHA224_HashBuf(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+extern SECStatus SHA224_Hash(unsigned char *dest, const char *src);
+extern void SHA224_TraceState(SHA224Context *cx);
+extern unsigned int SHA224_FlattenSize(SHA224Context *cx);
+extern SECStatus SHA224_Flatten(SHA224Context *cx,unsigned char *space);
+extern SHA224Context * SHA224_Resurrect(unsigned char *space, void *arg);
+extern void SHA224_Clone(SHA224Context *dest, SHA224Context *src);
+
+/******************************************/
+
 extern SHA256Context *SHA256_NewContext(void);
 extern void SHA256_DestroyContext(SHA256Context *cx, PRBool freeit);
 extern void SHA256_Begin(SHA256Context *cx);
@@ -1142,12 +1160,16 @@ extern SHA384Context * SHA384_Resurrect(unsigned char *space, void *arg);
 extern void SHA384_Clone(SHA384Context *dest, SHA384Context *src);
 
 /****************************************
- * implement TLS Pseudo Random Function (PRF)
+ * implement TLS 1.0 Pseudo Random Function (PRF) and TLS P_hash function
  */
 
 extern SECStatus
 TLS_PRF(const SECItem *secret, const char *label, SECItem *seed, 
          SECItem *result, PRBool isFIPS);
+
+extern SECStatus
+TLS_P_hash(HASH_HashType hashAlg, const SECItem *secret, const char *label,
+           SECItem *seed, SECItem *result, PRBool isFIPS);
 
 /******************************************/
 /*
@@ -1235,6 +1257,12 @@ PRNGTEST_Generate(PRUint8 *bytes, unsigned int bytes_len,
 extern SECStatus
 PRNGTEST_Uninstantiate(void);
 
+/*
+ * Mask generation function MGF1
+ */
+extern SECStatus
+MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
+     const unsigned char *mgfSeed, unsigned int mgfSeedLen);
 
 /* Generate PQGParams and PQGVerify structs.
  * Length of seed and length of h both equal length of P. 
@@ -1306,6 +1334,11 @@ extern void BL_Unload(void);
  *  Verify a given Shared library signature                               *
  **************************************************************************/
 PRBool BLAPI_SHVerify(const char *name, PRFuncPtr addr);
+
+/**************************************************************************
+ *  Verify a given filename's signature                               *
+ **************************************************************************/
+PRBool BLAPI_SHVerifyFile(const char *shName);
 
 /**************************************************************************
  *  Verify Are Own Shared library signature                               *

@@ -970,6 +970,7 @@ if test -n "$_WIN32_MSVC"; then
     AC_DEFINE(HAVE_IO_H)
     AC_DEFINE(HAVE_SETBUF)
     AC_DEFINE(HAVE_ISATTY)
+    AC_DEFINE(HAVE_STDCALL)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -2107,6 +2108,8 @@ case "$target" in
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
     MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
+    # Debug builds should always have frame pointers
+    MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
 
     if test "x$lto_is_enabled" = "xyes"; then
         echo "Skipping -dead_strip because lto is enabled."
@@ -2253,6 +2256,8 @@ ia64*-hpux*)
     else
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
     fi
+    # Debug builds should always have frame pointers
+    MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
     ;;
 
 *-*linux*)
@@ -2278,7 +2283,8 @@ ia64*-hpux*)
         fi
         MOZ_PGO_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS"
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK $MOZ_FRAMEPTR_FLAGS"
-        MOZ_DEBUG_FLAGS="-g"
+        # Debug builds should always have frame pointers
+        MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -2371,7 +2377,8 @@ ia64*-hpux*)
         CFLAGS="$CFLAGS -we4553"
         CXXFLAGS="$CXXFLAGS -we4553"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
-        MOZ_DEBUG_FLAGS='-Zi'
+        # Debug builds should always have frame pointers
+        MOZ_DEBUG_FLAGS='-Zi -Oy-'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
         # If we're building with --enable-profiling, we need -Oy-, which forces a frame pointer.
@@ -3588,53 +3595,6 @@ then
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
 fi
 
-dnl ========================================================
-dnl See if mmap sees writes
-dnl For cross compiling, just define it as no, which is a safe default
-dnl ========================================================
-AC_MSG_CHECKING(whether mmap() sees write()s)
-
-changequote(,)
-mmap_test_prog='
-    #include <stdlib.h>
-    #include <unistd.h>
-    #include <sys/mman.h>
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <fcntl.h>
-
-    char fname[] = "conftest.file";
-    char zbuff[1024]; /* Fractional page is probably worst case */
-
-    int main() {
-	char *map;
-	int fd;
-	int i;
-	unlink(fname);
-	fd = open(fname, O_RDWR | O_CREAT, 0660);
-	if(fd<0) return 1;
-	unlink(fname);
-	write(fd, zbuff, sizeof(zbuff));
-	lseek(fd, 0, SEEK_SET);
-	map = (char*)mmap(0, sizeof(zbuff), PROT_READ, MAP_SHARED, fd, 0);
-	if(map==(char*)-1) return 2;
-	for(i=0; fname[i]; i++) {
-	    int rc = write(fd, &fname[i], 1);
-	    if(map[i]!=fname[i]) return 4;
-	}
-	return 0;
-    }
-'
-changequote([,])
-
-AC_TRY_RUN($mmap_test_prog , result="yes", result="no", result="yes")
-
-AC_MSG_RESULT("$result")
-
-if test "$result" = "no"; then
-    AC_DEFINE(MMAP_MISSES_WRITES)
-fi
-
 
 dnl Checks for library functions.
 dnl ========================================================
@@ -4778,7 +4738,6 @@ MOZ_DISABLE_DOMCRYPTO=
 NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
-NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
@@ -5194,7 +5153,7 @@ incorrect])
     fi
 
     MOZ_ENABLE_QTMOBILITY=
-    PKG_CHECK_MODULES(_QTMOBILITY, QtSensors,
+    PKG_CHECK_MODULES(_QTMOBILITY, QtSensors QtFeedback QtLocation,
                       MOZ_ENABLE_QTMOBILITY=1,
                       MOZ_ENABLE_QTMOBILITY=)
     if test "$MOZ_ENABLE_QTMOBILITY"; then
@@ -5202,11 +5161,13 @@ incorrect])
        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
        MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
     else
-       AC_CHECK_LIB(QtSensors, main, [
+       AC_CHECK_LIB(QtSensors QtFeedback QtLocation, main, [
           MOZ_ENABLE_QTMOBILITY=1
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtMobility"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtSensors"
-          MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors"
+          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtFeedback"
+          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtLocation"
+          MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors -lQtFeedback -lQtLocation"
        ])
     fi
     if test "$MOZ_ENABLE_QTMOBILITY"; then
@@ -8764,19 +8725,6 @@ for p in $NECKO_PROTOCOLS; do
 done
 
 dnl
-dnl option to disable necko's disk cache
-dnl
-MOZ_ARG_DISABLE_BOOL(necko-disk-cache,
-[  --disable-necko-disk-cache
-                          Disable necko disk cache],
-    NECKO_DISK_CACHE=,
-    NECKO_DISK_CACHE=1)
-AC_SUBST(NECKO_DISK_CACHE)
-if test "$NECKO_DISK_CACHE"; then
-    AC_DEFINE(NECKO_DISK_CACHE)
-fi
-
-dnl
 dnl option to disable necko's wifi scanner
 dnl
 MOZ_ARG_DISABLE_BOOL(necko-wifi,
@@ -9322,7 +9270,7 @@ xpcom/xpcom-private.h
 # (apparently) only need this hack when egrep's "pattern" is particularly
 # long (as in the following code).  See bug 655339.
 case "$host" in
-x86_64-apple-darwin*)
+*-apple-darwin*)
     FIXED_EGREP="arch -arch i386 egrep"
     ;;
 *)
@@ -9365,6 +9313,16 @@ _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
  * C++ implementations should define these macros only when __STDC_LIMIT_MACROS
  * is defined before <stdint.h> is included. */
 #define __STDC_LIMIT_MACROS
+
+/* Force-include hunspell_alloc_hooks.h for hunspell, so that we don't need to
+ * modify it directly.
+ *
+ * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/Makefile.in,
+ * unless --enable-system-hunspell is defined.
+ */
+#if defined(HUNSPELL_STATIC)
+#include "hunspell_alloc_hooks.h"
+#endif
 
 #endif /* _MOZILLA_CONFIG_H_ */
 

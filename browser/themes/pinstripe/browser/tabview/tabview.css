@@ -210,6 +210,17 @@ html[dir=rtl] .groupItem.activeGroupItem {
 
 .groupItem .close {
   z-index: 10;
+  top: 0px;
+  right: 0px;
+  width: 22px;
+  height: 22px;
+  background-position: bottom left;
+}
+
+html[dir=rtl] .groupItem .close {
+  right: auto;
+  left: 0px;
+  background-position: bottom right;
 }
 
 .phantom {

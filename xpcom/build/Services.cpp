@@ -64,7 +64,7 @@ using namespace mozilla::services;
 #define MOZ_SERVICE(NAME, TYPE, CONTRACT_ID)                            \
   static TYPE* g##NAME = nsnull;                                        \
                                                                         \
-  NS_COM already_AddRefed<TYPE>                                         \
+  already_AddRefed<TYPE>                                         \
   mozilla::services::Get##NAME()                                        \
   {                                                                     \
     if (!g##NAME) {                                                     \

@@ -20,13 +20,14 @@ function test()
   const windowFeatures = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
   testWin = Services.ww.openWindow(null, windowUrl, "_blank", windowFeatures, null);
-
-  testWin.addEventListener("load", initEditor, false);
+  testWin.addEventListener("load", function onWindowLoad() {
+    testWin.removeEventListener("load", onWindowLoad, false);
+    waitForFocus(initEditor, testWin);
+  }, false);
 }
 
 function initEditor()
 {
-  testWin.removeEventListener("load", initEditor, false);
   testDoc = testWin.document;
 
   let hbox = testDoc.querySelector("hbox");
@@ -319,7 +320,8 @@ function editorLoaded()
   testWin.close();
 
   testWin = testDoc = editor = null;
-  finish();
+
+  waitForFocus(finish, window);
 }
 
 function testBackspaceKey()

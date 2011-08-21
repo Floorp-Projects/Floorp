@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.4 $ $Date: 2010/04/25 23:37:40 $";
+static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.5 $ $Date: 2011/02/02 17:13:40 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -88,7 +88,7 @@ static char *
 nss_ckcapi_GetOidString
 (
   unsigned char *oidTag,
-  int oidTagSize,
+  unsigned int oidTagSize,
   CK_RV *pError
 )
 {
@@ -96,7 +96,7 @@ nss_ckcapi_GetOidString
   char *oidStr;
   char *cstr;
   unsigned long value;
-  int oidSize;
+  unsigned int oidSize;
 
   if (DER_OBJECT_ID != *oidTag) {
     /* wasn't an oid */
@@ -164,8 +164,8 @@ ckcapi_GetRawHash
    unsigned char *hashData;
    char *oidStr;
    CK_RV error;
-   int oidSize;
-   int size;
+   unsigned int oidSize;
+   unsigned int size;
    /*
     * there are 2 types of hashes NSS typically tries to sign, regular
     * RSA signature format (with encoded DER_OIDS), and SSL3 Signed hashes.
