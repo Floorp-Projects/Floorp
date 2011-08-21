@@ -703,9 +703,8 @@ let UI = {
     });
 
     // TabOpen
-    this._eventListeners.open = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
-        return;
+    this._eventListeners.open = function (event) {
+      let tab = event.target;
 
       // if it's an app tab, add it to all the group items
       if (tab.pinned)
@@ -715,9 +714,8 @@ let UI = {
     };
     
     // TabClose
-    this._eventListeners.close = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
-        return;
+    this._eventListeners.close = function (event) {
+      let tab = event.target;
 
       // if it's an app tab, remove it from all the group items
       if (tab.pinned)
@@ -773,9 +771,8 @@ let UI = {
     };
 
     // TabMove
-    this._eventListeners.move = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
-        return;
+    this._eventListeners.move = function (event) {
+      let tab = event.target;
 
       if (GroupItems.groupItems.length > 0) {
         if (tab.pinned) {
@@ -790,26 +787,21 @@ let UI = {
     };
 
     // TabSelect
-    this._eventListeners.select = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
-        return;
-
-      self.onTabSelect(tab);
+    this._eventListeners.select = function (event) {
+      self.onTabSelect(event.target);
     };
 
     // TabPinned
-    this._eventListeners.pinned = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
-        return;
+    this._eventListeners.pinned = function (event) {
+      let tab = event.target;
 
       TabItems.handleTabPin(tab);
       GroupItems.addAppTab(tab);
     };
 
     // TabUnpinned
-    this._eventListeners.unpinned = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
-        return;
+    this._eventListeners.unpinned = function (event) {
+      let tab = event.target;
 
       TabItems.handleTabUnpin(tab);
       GroupItems.removeAppTab(tab);
