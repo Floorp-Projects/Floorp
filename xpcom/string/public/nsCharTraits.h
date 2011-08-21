@@ -151,7 +151,7 @@ struct nsCharTraits<PRUnichar>
     typedef PRUint16  unsigned_char_type;
     typedef char      incompatible_char_type;
 
-    NS_COM static char_type *sEmptyBuffer;
+    static char_type *sEmptyBuffer;
 
     static
     void
@@ -441,7 +441,7 @@ struct nsCharTraits<char>
     typedef unsigned char  unsigned_char_type;
     typedef PRUnichar      incompatible_char_type;
 
-    NS_COM static char_type *sEmptyBuffer;
+    static char_type *sEmptyBuffer;
 
     static
     void

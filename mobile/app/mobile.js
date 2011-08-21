@@ -163,6 +163,9 @@ pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 6000);
 pref("alerts.height", 50);
 
+/* download helper */
+pref("browser.helperApps.deleteTempFileOnExit", false);
+
 /* password manager */
 pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
@@ -369,7 +372,7 @@ pref("plugins.force.wmode", "opaque");
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
 // base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://www.google.com/loc/json");
+pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
 
 // enable geo
 pref("geo.enabled", true);

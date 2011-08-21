@@ -116,7 +116,7 @@ void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
   }
 }
 
-void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioData,
+void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioData,
                                                          PRUint32 aAudioDataLength,
                                                          PRUint64 aEndTimeSampleOffset)
 {
@@ -136,7 +136,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
     }
     mSignalBufferLength = currentBufferSize;
   }
-  SoundDataValue* audioData = aAudioData;
+  AudioDataValue* audioData = aAudioData;
   PRUint32 audioDataLength = aAudioDataLength;
   PRUint32 signalBufferTail = mSignalBufferLength - mSignalBufferPosition;
 
@@ -153,7 +153,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
     PRUint32 i;
     float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
     for (i = 0; i < signalBufferTail; ++i) {
-      signalBuffer[i] = MOZ_CONVERT_SOUND_SAMPLE(audioData[i]);
+      signalBuffer[i] = MOZ_CONVERT_AUDIO_SAMPLE(audioData[i]);
     }
     audioData += signalBufferTail;
     audioDataLength -= signalBufferTail;
@@ -172,7 +172,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
       }
     }
 
-    // Inform the element that we've written sound data.
+    // Inform the element that we've written audio data.
     nsCOMPtr<nsIRunnable> event =
       new nsAudioAvailableEventRunner(mDecoder, mSignalBuffer.forget(),
                                       mSignalBufferLength, time);
@@ -194,7 +194,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
     PRUint32 i;
     float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
     for (i = 0; i < audioDataLength; ++i) {
-      signalBuffer[i] = MOZ_CONVERT_SOUND_SAMPLE(audioData[i]);
+      signalBuffer[i] = MOZ_CONVERT_AUDIO_SAMPLE(audioData[i]);
     }
     mSignalBufferPosition += audioDataLength;
   }

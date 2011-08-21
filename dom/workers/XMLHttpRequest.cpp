@@ -259,7 +259,6 @@ class XMLHttpRequest
     SLOT_channel = 0,
     SLOT_responseXML,
     SLOT_responseText,
-    SLOT_mozResponseArrayBuffer,
     SLOT_status,
     SLOT_statusText,
     SLOT_readyState,
@@ -389,8 +388,6 @@ private:
     if (!JS_SetReservedSlot(aCx, obj, SLOT_channel, JSVAL_NULL) ||
         !JS_SetReservedSlot(aCx, obj, SLOT_responseXML, JSVAL_NULL) ||
         !JS_SetReservedSlot(aCx, obj, SLOT_responseText, emptyString) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_mozResponseArrayBuffer,
-                            JSVAL_NULL) ||
         !JS_SetReservedSlot(aCx, obj, SLOT_status, zero) ||
         !JS_SetReservedSlot(aCx, obj, SLOT_statusText, emptyString) ||
         !JS_SetReservedSlot(aCx, obj, SLOT_readyState, zero) ||
@@ -732,6 +729,25 @@ private:
 
     return priv->SetRequestHeader(aCx, header, value);
   }
+
+  static JSBool
+  OverrideMimeType(JSContext* aCx, uintN aArgc, jsval* aVp)
+  {
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+
+    XMLHttpRequestPrivate* priv =
+      GetInstancePrivate(aCx, obj, sFunctions[7].name);
+    if (!priv) {
+      return false;
+    }
+
+    JSString* mimeType;
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "S", &mimeType)) {
+      return false;
+    }
+
+    return priv->OverrideMimeType(aCx, mimeType);
+  }
 };
 
 JSClass XMLHttpRequest::sClass = {
@@ -751,7 +767,6 @@ JSPropertySpec XMLHttpRequest::sProperties[] = {
   GENERIC_READONLY_PROPERTY(channel)
   GENERIC_READONLY_PROPERTY(responseXML)
   GENERIC_READONLY_PROPERTY(responseText)
-  GENERIC_READONLY_PROPERTY(mozResponseArrayBuffer)
   GENERIC_READONLY_PROPERTY(status)
   GENERIC_READONLY_PROPERTY(statusText)
   GENERIC_READONLY_PROPERTY(readyState)
@@ -790,6 +805,7 @@ JSFunctionSpec XMLHttpRequest::sFunctions[] = {
   JS_FN("send", Send, 0, FUNCTION_FLAGS),
   JS_FN("sendAsBinary", SendAsBinary, 1, FUNCTION_FLAGS),
   JS_FN("setRequestHeader", SetRequestHeader, 2, FUNCTION_FLAGS),
+  JS_FN("overrideMimeType", OverrideMimeType, 1, FUNCTION_FLAGS),
   JS_FS_END
 };
 

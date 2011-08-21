@@ -1802,7 +1802,7 @@ _cairo_image_surface_fixup_unbounded_boxes (cairo_image_surface_t *dst,
     struct _cairo_boxes_chunk *chunk;
     int i;
 
-    if (boxes->num_boxes <= 1 && clip_region == NULL)
+    if (boxes->num_boxes < 1 && clip_region == NULL)
 	return _cairo_image_surface_fixup_unbounded (dst, extents, NULL);
 
     _cairo_boxes_init (&clear);

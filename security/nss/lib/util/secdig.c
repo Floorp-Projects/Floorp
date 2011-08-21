@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secdig.c,v 1.9 2007/11/07 02:37:22 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: secdig.c,v 1.10 2010/08/18 05:56:55 emaldona%redhat.com Exp $ */
 #include "secdig.h"
 
 #include "secoid.h"
@@ -74,6 +74,7 @@ SGN_CreateDigestInfo(SECOidTag algorithm, unsigned char *sig, unsigned len)
       case SEC_OID_MD2:
       case SEC_OID_MD5:
       case SEC_OID_SHA1:
+      case SEC_OID_SHA224:
       case SEC_OID_SHA256:
       case SEC_OID_SHA384:
       case SEC_OID_SHA512:

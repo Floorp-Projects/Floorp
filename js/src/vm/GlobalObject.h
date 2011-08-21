@@ -132,6 +132,12 @@ class GlobalObject : public ::JSObject {
      */
     JSObject *createBlankPrototype(JSContext *cx, js::Class *clasp);
 
+    /*
+     * Identical to createBlankPrototype, but uses proto as the [[Prototype]]
+     * of the returned blank prototype.
+     */
+    JSObject *createBlankPrototypeInheriting(JSContext *cx, js::Class *clasp, JSObject &proto);
+
     void setThrowTypeError(JSFunction *fun) {
         // Our bootstrapping code is currently too convoluted to correctly and
         // confidently assert this.

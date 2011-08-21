@@ -887,15 +887,13 @@ nsDocShellTreeOwner::AddChromeListeners()
   GetDOMEventTarget(mWebBrowser, getter_AddRefs(target));
 
   nsEventListenerManager* elmP = target->GetListenerManager(PR_TRUE);
-  if (elmP)
-  {
-    rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
-                                      NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("drop"),
-                                      NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT);
+  if (elmP) {
+    elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
+                                 NS_EVENT_FLAG_BUBBLE |
+                                 NS_EVENT_FLAG_SYSTEM_EVENT);
+    elmP->AddEventListenerByType(this, NS_LITERAL_STRING("drop"),
+                                 NS_EVENT_FLAG_BUBBLE |
+                                 NS_EVENT_FLAG_SYSTEM_EVENT);
   }
 
   return rv;

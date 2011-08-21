@@ -1454,6 +1454,10 @@ pref("dom.max_script_run_time", 10);
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
 pref("dom.ipc.plugins.timeoutSecs", 45);
+// How long a plugin process will wait for a response from the parent
+// to a synchronous request before terminating itself. After this
+// point the child assumes the parent is hung.
+pref("dom.ipc.plugins.parentTimeoutSecs", 15);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
@@ -1461,6 +1465,7 @@ pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
+pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 #endif
 
 // Disable oopp for standard java. They run their own process isolation (which
@@ -1477,6 +1482,8 @@ pref("dom.ipc.plugins.enabled.602plugin.so", false);
 #endif
 #endif
 #endif
+
+pref("dom.ipc.processCount", 1);
 
 pref("svg.smil.enabled", true);
 

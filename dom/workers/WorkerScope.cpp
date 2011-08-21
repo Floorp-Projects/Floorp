@@ -1,4 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,6 +50,8 @@
 #include "Events.h"
 #include "EventTarget.h"
 #include "Exceptions.h"
+#include "File.h"
+#include "FileReaderSync.h"
 #include "ListenerManager.h"
 #include "Location.h"
 #include "Navigator.h"
@@ -875,6 +878,8 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
 
   // Init other classes we care about.
   if (!events::InitClasses(aCx, global, false) ||
+      !file::InitClasses(aCx, global) ||
+      !filereadersync::InitClass(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
       !xhr::InitClasses(aCx, global, eventTargetProto) ||
       !location::InitClass(aCx, global) ||

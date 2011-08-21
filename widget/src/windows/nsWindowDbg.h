@@ -67,7 +67,7 @@
 #define SHOW_MOUSEMOVE_EVENTS   PR_FALSE
 #endif // defined(EVENT_DEBUG_OUTPUT)
 
-#if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT)
+#if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT) || 1
 void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves);
 #endif // defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT)
 
@@ -77,7 +77,7 @@ typedef struct {
   int    mId;
 } MSGFEventMsgInfo;
 
-#define DISPLAY_NMM_PRT(_arg) printf((_arg));
+#define DISPLAY_NMM_PRT(_arg) PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ((_arg)));
 #else
 #define DISPLAY_NMM_PRT(_arg)
 #endif // defined(POPUP_ROLLUP_DEBUG_OUTPUT)

@@ -48,6 +48,7 @@ DIRS = lib  \
  certcgi \
  certutil  \
  checkcert  \
+ chktest  \
  crlutil  \
  crmftest \
  dbtest \

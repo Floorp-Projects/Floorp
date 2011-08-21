@@ -52,6 +52,12 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 
+namespace mozilla {
+namespace dom {
+class ContentParent;
+}
+}
+
 class nsAXPCNativeCallContext;
 struct JSContext;
 struct JSObject;
@@ -125,6 +131,10 @@ public:
   NS_DECL_NSISYNCMESSAGESENDER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
   NS_DECL_NSICHROMEFRAMEMESSAGEMANAGER
+  NS_DECL_NSITREEITEMFRAMEMESSAGEMANAGER
+
+  static nsFrameMessageManager*
+  NewProcessMessageManager(mozilla::dom::ContentParent* aProcess);
 
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           PRBool aSync, const nsAString& aJSON,

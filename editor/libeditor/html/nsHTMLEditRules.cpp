@@ -6789,6 +6789,12 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
   NS_ENSURE_SUCCESS(res, res);
   if (isEmpty && (rootNode != list) && mReturnInEmptyLIKillsList)
   {
+    // get the list offset now -- before we might eventually split the list
+    nsCOMPtr<nsIDOMNode> listparent;
+    PRInt32 offset;
+    res = nsEditor::GetNodeLocation(list, address_of(listparent), &offset);
+    NS_ENSURE_SUCCESS(res, res);
+
     // are we the last list item in the list?
     PRBool bIsLast;
     res = mHTMLEditor->IsLastEditableChild(aListItem, &bIsLast);
@@ -6802,10 +6808,6 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
     }
 
     // are we in a sublist?
-    nsCOMPtr<nsIDOMNode> listparent;
-    PRInt32 offset;
-    res = nsEditor::GetNodeLocation(list, address_of(listparent), &offset);
-    NS_ENSURE_SUCCESS(res, res);
     if (nsHTMLEditUtils::IsList(listparent))  //in a sublist
     {
       // if so, move this list item out of this list and into the grandparent list
@@ -9261,4 +9263,7 @@ nsHTMLEditRules::DocumentModifiedWorker()
 
   // Try to recreate the bogus node if needed.
   CreateBogusNodeIfNeeded(selection);
+
+  // Reset the spell checker
+  mEditor->SyncRealTimeSpell();
 }

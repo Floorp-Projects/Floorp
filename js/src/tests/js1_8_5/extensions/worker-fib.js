@@ -9,10 +9,10 @@ if (typeof Worker != 'undefined') {
     JSTest.waitForExplicitFinish();
     var w = Worker(workerDir + "worker-fib-child.js");
     w.onmessage = function (event) {
-        reportCompare("21", event.data, "worker-fib");
+        reportCompare("55", event.data, "worker-fib");
         JSTest.testFinished();
     };
-    w.postMessage("8\t" + workerDir); // 0 1 1 2 3 5 8 13 21
+    w.postMessage("10\t" + workerDir); // 0 1 1 2 3 5 8 13 21 34 55
 } else {
     reportCompare(0, 0, "Test skipped. Shell workers required.");
 }

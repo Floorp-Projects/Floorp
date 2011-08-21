@@ -546,10 +546,6 @@ public:
                         nsCycleCollectionTraversalCallback &cb);
     
     // nsCycleCollectionLanguageRuntime
-    virtual void NotifyLeaveMainThread();
-    virtual void NotifyEnterCycleCollectionThread();
-    virtual void NotifyLeaveCycleCollectionThread();
-    virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                           bool explainExpectedLiveGarbage);
     virtual nsresult FinishTraverse();
@@ -3826,30 +3822,6 @@ private:
     nsXPCComponents_Exception*      mException;
     nsXPCComponents_Constructor*    mConstructor;
     nsXPCComponents_Utils*          mUtils;
-};
-
-/***************************************************************************/
-
-class nsXPCComponents_Interfaces :
-            public nsIScriptableInterfaces,
-            public nsIXPCScriptable,
-            public nsIClassInfo,
-            public nsISecurityCheckedComponent
-{
-public:
-    // all the interface method declarations...
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISCRIPTABLEINTERFACES
-    NS_DECL_NSIXPCSCRIPTABLE
-    NS_DECL_NSICLASSINFO
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
-
-public:
-    nsXPCComponents_Interfaces();
-    virtual ~nsXPCComponents_Interfaces();
-
-private:
-    nsCOMPtr<nsIInterfaceInfoManager> mManager;
 };
 
 

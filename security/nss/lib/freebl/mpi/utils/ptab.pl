@@ -1,4 +1,4 @@
-#!/usr/linguist/bin/perl
+#!/usr/bin/perl
 
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: ptab.pl,v 1.2 2005/02/02 22:28:23 gerv%gerv.net Exp $
+# $Id: ptab.pl,v 1.3 2011/05/23 23:45:11 wtc%google.com Exp $
 #
 
 while(<>) {

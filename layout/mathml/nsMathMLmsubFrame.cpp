@@ -153,8 +153,8 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   // get min subscript shift limit from x-height
   // = h(x) - 4/5 * sigma_5, Rule 18b, App. G, TeXbook
   nscoord xHeight = 0;
-  nsRefPtr<nsFontMetrics> fm =
-    aPresContext->GetMetricsFor(baseFrame->GetStyleFont()->mFont);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(baseFrame, getter_AddRefs(fm));
 
   xHeight = fm->XHeight();
   nscoord minShiftFromXHeight = (nscoord) 

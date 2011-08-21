@@ -1698,7 +1698,9 @@ nsFtpState::Init(nsFtpChannel *channel)
 
     // Skip leading slash
     char *fwdPtr = path.BeginWriting();
-    if (fwdPtr && (*fwdPtr == '/'))
+    if (!fwdPtr)
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (*fwdPtr == '/')
         fwdPtr++;
     if (*fwdPtr != '\0') {
         // now unescape it... %xx reduced inline to resulting character

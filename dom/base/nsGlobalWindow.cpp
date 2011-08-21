@@ -262,6 +262,7 @@ using mozilla::TimeDuration;
 
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sWindowsById = nsnull;
+bool nsGlobalWindow::sWarnedAboutWindowInternal = false;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
@@ -1036,8 +1037,6 @@ nsGlobalWindow::~nsGlobalWindow()
 
   CleanUp(PR_TRUE);
 
-  NS_ASSERTION(!mHasDeviceMotion, "Window still registered with device motion.");
-
 #ifdef DEBUG
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
@@ -1045,6 +1044,9 @@ nsGlobalWindow::~nsGlobalWindow()
   if (mURLProperty) {
     mURLProperty->ClearWindowReference();
   }
+
+  DisableDeviceMotionUpdates();
+  mHasDeviceMotion = PR_FALSE;
 
   nsLayoutStatics::Release();
 }
@@ -1163,9 +1165,6 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   if (inner) {
     inner->CleanUp(aIgnoreModalDialog);
   }
-
-  DisableDeviceMotionUpdates();
-  mHasDeviceMotion = PR_FALSE;
 
   if (mCleanMessageManager) {
     NS_ABORT_IF_FALSE(mIsChrome, "only chrome should have msg manager cleaned");
@@ -1348,6 +1347,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
+    foundInterface = static_cast<nsIDOMWindowInternal*>(this);
+    if (!sWarnedAboutWindowInternal) {
+      sWarnedAboutWindowInternal = true;
+      nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                      "nsIDOMWindowInternalWarning",
+                                      nsnull, 0, nsnull, EmptyString(), 0, 0,
+                                      nsIScriptError::warningFlag,
+                                      "Extensions", mWindowID);
+    }
+  } else
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
@@ -4926,8 +4936,7 @@ nsGlobalWindow::Focus()
     return NS_OK;
   }
 
-  nsIDOMWindow *caller =
-    static_cast<nsIDOMWindow*>(nsContentUtils::GetWindowFromCaller());
+  nsIDOMWindow *caller = nsContentUtils::GetWindowFromCaller();
   nsCOMPtr<nsIDOMWindow> opener;
   GetOpener(getter_AddRefs(opener));
 
@@ -7365,8 +7374,8 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
 
   nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
-  return manager->AddEventListener(aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
+  manager->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
+  return NS_OK;
 }
 
 nsEventListenerManager*
@@ -11115,13 +11124,6 @@ nsNavigator::JavaEnabled(PRBool *aReturn)
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavigator::TaintEnabled(PRBool *aReturn)
-{
-  *aReturn = PR_FALSE;
   return NS_OK;
 }
 

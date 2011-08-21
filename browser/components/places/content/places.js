@@ -277,17 +277,30 @@ var PlacesOrganizer = {
    *          the node to set up scope from
    */
   _setSearchScopeForNode: function PO__setScopeForNode(aNode) {
-    var itemId = aNode.itemId;
+    let itemId = aNode.itemId;
+
+    // Set default buttons status.
+    let bookmarksButton = document.getElementById("scopeBarAll");
+    bookmarksButton.hidden = false;
+    let downloadsButton = document.getElementById("scopeBarDownloads");
+    downloadsButton.hidden = true;
+
     if (PlacesUtils.nodeIsHistoryContainer(aNode) ||
         itemId == PlacesUIUtils.leftPaneQueries["History"]) {
       PlacesQueryBuilder.setScope("history");
     }
-    // Default to All Bookmarks for all other nodes, per bug 469437.
-    else
+    else if (itemId == PlacesUIUtils.leftPaneQueries["Downloads"]) {
+      downloadsButton.hidden = false;
+      bookmarksButton.hidden = true;
+      PlacesQueryBuilder.setScope("downloads");
+    }
+    else {
+      // Default to All Bookmarks for all other nodes, per bug 469437.
       PlacesQueryBuilder.setScope("bookmarks");
+    }
 
     // Enable or disable the folder scope button.
-    var folderButton = document.getElementById("scopeBarFolder");
+    let folderButton = document.getElementById("scopeBarFolder");
     folderButton.hidden = !PlacesUtils.nodeIsFolder(aNode) ||
                           itemId == PlacesUIUtils.allBookmarksFolderId;
   },
@@ -901,9 +914,21 @@ var PlacesSearchBox = {
         options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
         content.load([query], options);
       }
-      else
+      else {
         content.applyFilter(filterString);
+      }
       break;
+    case "downloads": {
+        let query = PlacesUtils.history.getNewQuery();
+        query.searchTerms = filterString;
+        query.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD], 1);
+        let options = currentOptions.clone();
+        // Make sure we're getting uri results.
+        options.resultType = currentOptions.RESULT_TYPE_URI;
+        options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
+        content.load([query], options);
+      break;
+    }
     default:
       throw "Invalid filterCollection on search";
       break;
@@ -933,17 +958,28 @@ var PlacesSearchBox = {
 
   /**
    * Updates the display with the title of the current collection.
-   * @param   title
+   * @param   aTitle
    *          The title of the current collection.
    */
-  updateCollectionTitle: function PSB_updateCollectionTitle(title) {
-    if (title)
-      this.searchFilter.placeholder =
-        PlacesUIUtils.getFormattedString("searchCurrentDefault", [title]);
-    else
-      this.searchFilter.placeholder = this.filterCollection == "history" ?
-                                      PlacesUIUtils.getString("searchHistory") :
-                                      PlacesUIUtils.getString("searchBookmarks");
+  updateCollectionTitle: function PSB_updateCollectionTitle(aTitle) {
+    let title = "";
+    if (aTitle) {
+      title = PlacesUIUtils.getFormattedString("searchCurrentDefault",
+                                               [aTitle]);
+    }
+    else {
+      switch(this.filterCollection) {
+        case "history":
+          title = PlacesUIUtils.getString("searchHistory");
+          break;
+        case "downloads":
+          title = PlacesUIUtils.getString("searchDownloads");
+          break;
+        default:
+          title = PlacesUIUtils.getString("searchBookmarks");                                    
+      }
+    }
+    this.searchFilter.placeholder = title;
   },
 
   /**
@@ -1025,6 +1061,9 @@ var PlacesQueryBuilder = {
     case "scopeBarFolder":
       this.setScope("collection");
       break;
+    case "scopeBarDownloads":
+      this.setScope("downloads");
+      break;
     case "scopeBarAll":
       this.setScope("bookmarks");
       break;
@@ -1040,7 +1079,8 @@ var PlacesQueryBuilder = {
    * PSB_search()).  If there is an active search, it's performed again to
    * update the content tree.
    * @param   aScope
-   *          the search scope, "bookmarks", "collection", or "history"
+   *          The search scope: "bookmarks", "collection", "downloads" or
+   *          "history".
    */
   setScope: function PQB_setScope(aScope) {
     // Determine filterCollection, folders, and scopeButtonId based on aScope.
@@ -1071,6 +1111,10 @@ var PlacesQueryBuilder = {
       folders.push(PlacesUtils.bookmarksMenuFolderId,
                    PlacesUtils.toolbarFolderId,
                    PlacesUtils.unfiledBookmarksFolderId);
+      break;
+    case "downloads":
+      filterCollection = "downloads";
+      scopeButtonId = "scopeBarDownloads";
       break;
     default:
       throw "Invalid search scope";

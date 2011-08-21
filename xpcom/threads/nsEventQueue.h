@@ -44,7 +44,7 @@
 #include "nsIRunnable.h"
 
 // A threadsafe FIFO event queue...
-class NS_COM nsEventQueue
+class nsEventQueue
 {
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 

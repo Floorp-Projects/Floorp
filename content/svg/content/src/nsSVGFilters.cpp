@@ -288,6 +288,20 @@ NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
 }
 
 //----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGFE::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sFiltersMap
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGFEBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
 // nsSVGElement methods
 
 nsSVGElement::LengthAttributesInfo
@@ -2751,8 +2765,7 @@ NS_IMETHODIMP_(PRBool)
 nsSVGFEFloodElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
-    sFEFloodMap,
-    sFiltersMap
+    sFEFloodMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||

@@ -367,7 +367,7 @@
 
           // Only add the suffix when the URL bar value isn't already "URL-like",
           // and only if we get a keyboard event, to match user expectations.
-          if (!/^\s*(www|https?)\b|\/\s*$/i.test(url) &&
+          if (/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(url) &&
               (aTriggeringEvent instanceof KeyEvent)) {
 #ifdef XP_MACOSX
             let accel = aTriggeringEvent.metaKey;
@@ -402,24 +402,15 @@
 
               // Tack www. and suffix on.  If user has appended directories, insert
               // suffix before them (bug 279035).  Be careful not to get two slashes.
-              // Also, don't add the suffix if it's in the original url (bug 233853).
 
               let firstSlash = url.indexOf("/");
-              let existingSuffix = url.indexOf(suffix.substring(0, suffix.length - 1));
-
-              // * Logic for slash and existing suffix (example)
-              // No slash, no suffix: Add suffix (mozilla)
-              // No slash, yes suffix: Add slash (mozilla.com)
-              // Yes slash, no suffix: Insert suffix (mozilla/stuff)
-              // Yes slash, suffix before slash: Do nothing (mozilla.com/stuff)
-              // Yes slash, suffix after slash: Insert suffix (mozilla/?stuff=.com)
 
               if (firstSlash >= 0) {
-                if (existingSuffix == -1 || existingSuffix > firstSlash)
-                  url = url.substring(0, firstSlash) + suffix +
-                        url.substring(firstSlash + 1);
-              } else
-                url = url + (existingSuffix == -1 ? suffix : "/");
+                url = url.substring(0, firstSlash) + suffix +
+                      url.substring(firstSlash + 1);
+              } else {
+                url = url + suffix;
+              }
 
               url = "http://www." + url;
             }

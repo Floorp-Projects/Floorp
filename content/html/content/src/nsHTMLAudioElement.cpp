@@ -226,7 +226,7 @@ nsHTMLAudioElement::MozWriteAudio(const jsval &aData, JSContext *aCx, PRUint32 *
   // Don't write more than can be written without blocking.
   PRUint32 writeLen = NS_MIN(mAudioStream->Available(), dataLength);
 
-  nsresult rv = mAudioStream->Write(JS_GetTypedArrayData(tsrc), writeLen, PR_TRUE);
+  nsresult rv = mAudioStream->Write(JS_GetTypedArrayData(tsrc), writeLen);
   if (NS_FAILED(rv)) {
     return rv;
   }

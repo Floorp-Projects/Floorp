@@ -37,7 +37,7 @@
 /*
  * CMS message methods.
  *
- * $Id: cmsmessage.c,v 1.6.192.1 2011/01/28 23:08:27 rrelyea%redhat.com Exp $
+ * $Id: cmsmessage.c,v 1.7 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"

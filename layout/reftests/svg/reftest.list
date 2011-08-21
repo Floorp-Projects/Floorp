@@ -64,7 +64,8 @@ fails-if(Android) == dynamic-conditions-01.svg pass.svg # bug 652050
 == dynamic-clipPath-01.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 == dynamic-feImage-01.svg pass.svg
-== dynamic-filter-contents-01.svg dynamic-filter-contents-01-ref.svg
+== dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
+== dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
 == dynamic-gradient-contents-01.svg pass.svg
 == dynamic-gradient-contents-02.svg pass.svg
 == dynamic-inner-svg-01.svg pass.svg
@@ -111,6 +112,7 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == filter-basic-03.svg pass.svg
 == filter-foreignObject-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
+== filter-scaled-01.svg pass.svg
 == filter-translated-01.svg filter-translated-01-ref.svg
 == filters-and-group-opacity-01.svg filters-and-group-opacity-01-ref.svg
 == foreignObject-01.svg pass.svg

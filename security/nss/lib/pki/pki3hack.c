@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.100.2.1 $ $Date: 2011/03/26 16:55:01 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.102 $ $Date: 2011/04/13 00:10:26 $";
 #endif /* DEBUG */
 
 /*
@@ -555,17 +555,17 @@ nssDecodedPKIXCertificate_Destroy (
 
 /* see pk11cert.c:pk11_HandleTrustObject */
 static unsigned int
-get_nss3trust_from_nss4trust(CK_TRUST t)
+get_nss3trust_from_nss4trust(nssTrustLevel t)
 {
     unsigned int rt = 0;
     if (t == nssTrustLevel_Trusted) {
-	rt |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
+	rt |= CERTDB_TERMINAL_RECORD | CERTDB_TRUSTED;
     }
     if (t == nssTrustLevel_TrustedDelegator) {
-	rt |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA /*| CERTDB_NS_TRUSTED_CA*/;
+	rt |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA;
     }
-    if (t == nssTrustLevel_Valid) {
-	rt |= CERTDB_VALID_PEER;
+    if (t == nssTrustLevel_NotTrusted) {
+	rt |= CERTDB_TERMINAL_RECORD;
     }
     if (t == nssTrustLevel_ValidDelegator) {
 	rt |= CERTDB_VALID_CA;
@@ -922,13 +922,13 @@ get_stan_trust(unsigned int t, PRBool isClientAuth)
     if (t & CERTDB_TRUSTED) {
 	return nssTrustLevel_Trusted;
     }
+    if (t & CERTDB_TERMINAL_RECORD) {
+	return nssTrustLevel_NotTrusted;
+    }
     if (t & CERTDB_VALID_CA) {
 	return nssTrustLevel_ValidDelegator;
     }
-    if (t & CERTDB_VALID_PEER) {
-	return nssTrustLevel_Valid;
-    }
-    return nssTrustLevel_NotTrusted;
+    return nssTrustLevel_MustVerify;
 }
 
 NSS_EXTERN NSSCertificate *

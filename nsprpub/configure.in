@@ -49,8 +49,8 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=8
-MOD_PATCH_VERSION=9
+MOD_MINOR_VERSION=9
+MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -170,11 +170,39 @@ case "$target" in
     fi
 
     if test -z "$android_toolchain" ; then
-       android_toolchain="$android_ndk"/build/prebuilt/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/arm-eabi-4.4.0
+        AC_MSG_CHECKING([for android toolchain directory])
+
+        kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
+
+        android_toolchain="$android_ndk"/build/prebuilt/$kernel_name-x86/arm-eabi-4.4.0
+
+        # With newer NDK, the toolchain path has changed.
+        if ! test -d "$android_toolchain" ; then
+            android_toolchain="$android_ndk"/toolchains/arm-$kernel_name-androideabi-4.4.3/prebuilt/$kernel_name-x86
+        fi
+
+        if test -d "$android_toolchain" ; then
+            AC_MSG_RESULT([$android_toolchain])
+        else
+            AC_MSG_ERROR([not found. You have to specify --with-android-toolchain=/path/to/ndk/toolchain.])
+        fi
     fi
 
     if test -z "$android_platform" ; then
-       android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+        AC_MSG_CHECKING([for android platform directory])
+
+        android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+
+        # With newer NDK, the platform path has changed.
+        if ! test -d "$android_platform" ; then
+            android_platform="$android_ndk"/platforms/android-5/arch-arm
+        fi
+
+        if test -d "$android_platform" ; then
+            AC_MSG_RESULT([$android_platform])
+        else
+            AC_MSG_ERROR([not found. You have to specify --with-android-platform=/path/to/ndk/platform.])
+        fi
     fi
 
     dnl set up compilers
@@ -499,7 +527,11 @@ if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-if test "$target" != "$host"; then
+
+dnl Explicitly honor $CROSS_COMPILE to allow cross-compiling
+dnl between toolkits on the same architecture, as when
+dnl targeting the iOS Simulator from OS X.
+if test "$target" != "$host" -o -n "$CROSS_COMPILE"; then
     echo "cross compiling from $host to $target"
     cross_compiling=yes
 
@@ -541,11 +573,20 @@ if test "$target" != "$host"; then
         dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
         dnl checks will fail.  Fake a working SDK in that case.
         _SAVE_CFLAGS=$CFLAGS 
-        _SAVE_CXXFLAGS=$CXXLAGS
+        _SAVE_CXXFLAGS=$CXXFLAGS
         CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
         CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
-        ;;        
-    esac            
+        ;;
+      *:arm*-apple-darwin*)
+        dnl The arm compiler doesn't appear to know about its root by default,
+        dnl so explicitly pass it one here. Later on we'll put this in CFLAGS
+        dnl anyway.
+        _SAVE_CFLAGS=$CFLAGS
+        _SAVE_CXXFLAGS=$CXXFLAGS
+        CFLAGS="-isysroot $MACOS_SDK_DIR $CFLAGS"
+        CXXFLAGS="-isysroot $MACOS_SDK_DIR $CXXFLAGS"
+        ;;
+    esac
 
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", echo)
     unset ac_cv_prog_CC
@@ -557,7 +598,7 @@ if test "$target" != "$host"; then
     fi
 
     case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
+      powerpc-apple-darwin8*:i?86-apple-darwin*|*:arm*-apple-darwin*)
         dnl Revert the changes made above.  From this point on, the target
         dnl compiler will never be used without applying the SDK to CFLAGS
         dnl (see --with-macos-sdk below).
@@ -1306,6 +1347,9 @@ case "$target" in
     AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in
+        arm*)
+            CPU_ARCH=arm
+            ;;
         i*86*)
             if test -n "$USE_64"; then
                 CPU_ARCH=x86_64
@@ -1320,6 +1364,7 @@ case "$target" in
     if test "`echo $CC | grep -c '\-arch '`" = "0"; then
         CC="$CC -arch $CPU_ARCH"
     fi
+    AC_CHECK_HEADER(crt_externs.h)
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@ -headerpad_max_install_names'
     _OPTIMIZE_FLAGS=-O2

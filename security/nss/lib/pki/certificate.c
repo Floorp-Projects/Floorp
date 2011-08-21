@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.67 $ $Date: 2010/04/03 18:27:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.68 $ $Date: 2011/07/12 21:29:17 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -960,6 +960,44 @@ nssCertificateList_AddReferences (
     (void)nssCertificateList_DoCallback(certList, add_ref_callback, NULL);
 }
 
+
+/*
+ * Is this trust record safe to apply to all certs of the same issuer/SN 
+ * independent of the cert matching the hash. This is only true is the trust 
+ * is unknown or distrusted. In general this feature is only useful to 
+ * explicitly distrusting certs. It is not safe to use to trust certs, so 
+ * only allow unknown and untrusted trust types.
+ */
+PRBool
+nssTrust_IsSafeToIgnoreCertHash(nssTrustLevel serverAuth, 
+		nssTrustLevel clientAuth, nssTrustLevel codeSigning, 
+		nssTrustLevel email, PRBool stepup)
+{
+    /* step up is a trust type, if it's on, we must have a hash for the cert */
+    if (stepup) {
+	return PR_FALSE;
+    }
+    if ((serverAuth != nssTrustLevel_Unknown) && 
+	(serverAuth != nssTrustLevel_NotTrusted)) {
+	return PR_FALSE;
+    }
+    if ((clientAuth != nssTrustLevel_Unknown) && 
+	(clientAuth != nssTrustLevel_NotTrusted)) {
+	return PR_FALSE;
+    }
+    if ((codeSigning != nssTrustLevel_Unknown) && 
+	(codeSigning != nssTrustLevel_NotTrusted)) {
+	return PR_FALSE;
+    }
+    if ((email != nssTrustLevel_Unknown) && 
+	(email != nssTrustLevel_NotTrusted)) {
+	return PR_FALSE;
+    }
+    /* record only has Unknown and Untrusted entries, ok to accept without a 
+     * hash */
+    return PR_TRUE;
+}
+
 NSS_IMPLEMENT NSSTrust *
 nssTrust_Create (
   nssPKIObject *object,
@@ -1009,7 +1047,19 @@ nssTrust_Create (
 	    nssPKIObject_Unlock(object);
 	    return (NSSTrust *)NULL;
 	}
-	if (PORT_Memcmp(sha1_hashin,sha1_hashcmp,SHA1_LENGTH) != 0) {
+	/* if no hash is specified, then trust applies to all certs with
+	 * this issuer/SN. NOTE: This is only true for entries that
+	 * have distrust and unknown record */
+	if (!(
+            /* we continue if there is no hash, and the trust type is
+	     * safe to accept without a hash ... or ... */
+	     ((sha1_hash.size == 0)  && 
+		nssTrust_IsSafeToIgnoreCertHash(serverAuth,clientAuth,
+		codeSigning, emailProtection,stepUp)) 
+	   ||
+            /* we have a hash of the correct size, and it matches */
+            ((sha1_hash.size == SHA1_LENGTH) && (PORT_Memcmp(sha1_hashin,
+	        sha1_hashcmp,SHA1_LENGTH) == 0))   )) {
 	    nssPKIObject_Unlock(object);
 	    return (NSSTrust *)NULL;
 	}

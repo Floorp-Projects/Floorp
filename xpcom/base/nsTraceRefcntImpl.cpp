@@ -73,7 +73,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_COM void
+void
 NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
                  double *meanResult, double *stdDevResult)
 {
@@ -507,7 +507,7 @@ class nsDefaultComparator <BloatEntry*, BloatEntry*> {
 
 #endif /* NS_IMPL_REFCNT_LOGGING */
 
-NS_COM nsresult
+nsresult
 nsTraceRefcntImpl::DumpStatistics(StatisticsType type, FILE* out)
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
@@ -570,7 +570,7 @@ nsTraceRefcntImpl::DumpStatistics(StatisticsType type, FILE* out)
   return NS_OK;
 }
 
-NS_COM void
+void
 nsTraceRefcntImpl::ResetStatistics()
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
@@ -879,7 +879,7 @@ static void PrintStackFrame(void *aPC, void *aClosure)
 
 }
 
-NS_COM void
+void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 {
   NS_StackWalk(PrintStackFrame, 2, aStream);
@@ -894,7 +894,7 @@ nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 #include <stdlib.h> // for free()
 #endif // MOZ_DEMANGLE_SYMBOLS
 
-NS_COM void
+void
 nsTraceRefcntImpl::DemangleSymbol(const char * aSymbol,
                               char * aBuffer,
                               int aBufLen)
@@ -1260,12 +1260,12 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
 #endif
 }
 
-NS_COM void
+void
 nsTraceRefcntImpl::Startup()
 {
 }
 
-NS_COM void
+void
 nsTraceRefcntImpl::Shutdown()
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
@@ -1309,7 +1309,7 @@ nsTraceRefcntImpl::Shutdown()
 #endif
 }
 
-NS_COM void
+void
 nsTraceRefcntImpl::SetActivityIsLegal(PRBool aLegal)
 {
 #ifdef NS_IMPL_REFCNT_LOGGING

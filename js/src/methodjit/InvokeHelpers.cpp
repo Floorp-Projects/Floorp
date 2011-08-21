@@ -114,6 +114,7 @@ top:
                 continue;
 
             jsbytecode *pc = script->main + tn->start + tn->length;
+            cx->regs().pc = pc;
             JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(cx->regs().sp == fp->base() + tn->stackDepth);
 
@@ -179,13 +180,20 @@ InlineReturn(VMFrame &f)
     JS_ASSERT(f.fp() != f.entryfp);
     JS_ASSERT(!js_IsActiveWithOrBlock(f.cx, &f.fp()->scopeChain(), 0));
     f.cx->stack.popInlineFrame(f.regs);
+
+    JS_ASSERT(*f.regs.pc == JSOP_CALL ||
+              *f.regs.pc == JSOP_NEW ||
+              *f.regs.pc == JSOP_EVAL ||
+              *f.regs.pc == JSOP_FUNCALL ||
+              *f.regs.pc == JSOP_FUNAPPLY);
+    f.regs.pc += JSOP_CALL_LENGTH;
 }
 
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32 argc)
 {
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
-    if (!Invoke(f.cx, args))
+    if (!InvokeKernel(f.cx, args))
         THROW();
 
     types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
@@ -195,7 +203,7 @@ void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
-    if (!InvokeConstructor(f.cx, args))
+    if (!InvokeConstructorKernel(f.cx, args))
         THROW();
 
     types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
@@ -403,7 +411,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         if (!UncachedInlineCall(f, INITIAL_CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
             THROW();
     } else {
-        if (!InvokeConstructor(cx, args))
+        if (!InvokeConstructorKernel(cx, args))
             THROW();
         types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
     }
@@ -431,7 +439,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
     if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), args.calleev())) {
-        if (!Invoke(f.cx, args))
+        if (!InvokeKernel(f.cx, args))
             THROW();
 
         types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
@@ -455,7 +463,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallRes
 
     if (IsFunctionObject(args.calleev(), &ucr->callee)) {
         ucr->callee = &args.callee();
-        ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
+        ucr->fun = ucr->callee->getFunctionPrivate();
 
         if (ucr->fun->isInterpreted()) {
             InitialFrameFlags initial = lowered ? INITIAL_LOWERED : INITIAL_NONE;
@@ -472,7 +480,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallRes
         }
     }
 
-    if (!Invoke(f.cx, args))
+    if (!InvokeKernel(f.cx, args))
         THROW();
 
     types::TypeScript::Monitor(f.cx, f.script(), f.pc(), args.rval());
@@ -837,20 +845,6 @@ FrameIsFinished(JSContext *cx)
         : cx->fp()->finishedInInterpreter();
 }
 
-
-/* Simulate an inline_return by advancing the pc. */
-static inline void
-AdvanceReturnPC(JSContext *cx)
-{
-    JS_ASSERT(*cx->regs().pc == JSOP_CALL ||
-              *cx->regs().pc == JSOP_NEW ||
-              *cx->regs().pc == JSOP_EVAL ||
-              *cx->regs().pc == JSOP_FUNCALL ||
-              *cx->regs().pc == JSOP_FUNAPPLY);
-    cx->regs().pc += JSOP_CALL_LENGTH;
-}
-
-
 /*
  * Given a frame that is about to return, make sure its return value and
  * activation objects are fixed up. Then, pop the frame and advance the
@@ -902,7 +896,6 @@ HandleFinishedFrame(VMFrame &f, StackFrame *entryFrame)
 
     if (cx->fp() != entryFrame) {
         InlineReturn(f);
-        AdvanceReturnPC(cx);
     }
 
     return returnOK;
@@ -942,7 +935,6 @@ EvaluateExcessFrame(VMFrame &f, StackFrame *entryFrame)
         if (!JaegerShotAtSafePoint(cx, ncode, false))
             return false;
         InlineReturn(f);
-        AdvanceReturnPC(cx);
         return true;
     }
 
@@ -1005,7 +997,8 @@ ResetTraceHintAt(JSScript *script, js::mjit::JITScript *jit,
     
     JS_ASSERT(ic.jumpTargetPC == pc);
 
-    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index, script);
+    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index,
+               static_cast<void*>(script));
 
     Repatcher repatcher(jit);
 
@@ -1471,7 +1464,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         untrap.retrap();
         enter.leave();
         f.regs.sp = nextsp + 2 + f.u.call.dynamicArgc;
-        if (!Invoke(cx, CallArgsFromSp(f.u.call.dynamicArgc, f.regs.sp)))
+        if (!InvokeKernel(cx, CallArgsFromSp(f.u.call.dynamicArgc, f.regs.sp)))
             return js_InternalThrow(f);
         nextsp[-1] = nextsp[0];
         f.regs.pc = nextpc;

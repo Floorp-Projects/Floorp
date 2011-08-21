@@ -930,7 +930,7 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
     CK_OBJECT_HANDLE privKeyID;
     CK_MECHANISM mechanism;
     CK_ATTRIBUTE *attrs = keyTemplate;
-    SECItem *param_free = NULL, *ck_id;
+    SECItem *param_free = NULL, *ck_id = NULL;
     CK_RV crv;
     CK_SESSION_HANDLE rwsession;
     PK11SymKey *newKey = NULL;
@@ -996,10 +996,12 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 	    if (rwsession != CK_INVALID_SESSION) 
 		PK11_EnterSlotMonitor(slot);
 	}
+        /* This is a lot a work to deal with fussy PKCS #11 modules
+         * that can't bother to return BAD_DATA when presented with an
+         * invalid session! */
 	if (rwsession == CK_INVALID_SESSION) {
-	    PK11_FreeSymKey(newKey);
 	    PORT_SetError(SEC_ERROR_BAD_DATA);
-	    return NULL;
+	    goto loser;
 	}
 	crv = PK11_GETTAB(slot)->C_UnwrapKey(rwsession, &mechanism, 
 					 newKey->objectID,
@@ -1013,11 +1015,12 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 	    PK11_ExitSlotMonitor(slot);
 	}
 	PK11_FreeSymKey(newKey);
+	newKey = NULL;
     } else {
 	crv = CKR_FUNCTION_NOT_SUPPORTED;
     }
 
-    if(ck_id) {
+    if (ck_id) {
 	SECITEM_FreeItem(ck_id, PR_TRUE);
 	ck_id = NULL;
     }
@@ -1045,6 +1048,15 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 	return NULL;
     }
     return PK11_MakePrivKey(slot, nullKey, PR_FALSE, privKeyID, wincx);
+
+loser:
+    if (newKey) {
+	PK11_FreeSymKey(newKey);
+    }
+    if (ck_id) {
+	SECITEM_FreeItem(ck_id, PR_TRUE);
+    }
+    return NULL;
 }
 
 /*

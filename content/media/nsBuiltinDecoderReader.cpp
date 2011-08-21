@@ -228,10 +228,10 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64& aOutStartTime)
     }
   }
   if (HasAudio()) {
-    SoundData* soundData = DecodeToFirstData(&nsBuiltinDecoderReader::DecodeAudioData,
+    AudioData* audioData = DecodeToFirstData(&nsBuiltinDecoderReader::DecodeAudioData,
                                              mAudioQueue);
-    if (soundData) {
-      audioStartTime = soundData->mTime;
+    if (audioData) {
+      audioStartTime = audioData->mTime;
     }
   }
 
@@ -321,7 +321,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
           }
         }
       }
-      const SoundData* audio = mAudioQueue.PeekFront();
+      const AudioData* audio = mAudioQueue.PeekFront();
       if (!audio)
         break;
       PRInt64 startSample = 0;
@@ -329,7 +329,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
         return NS_ERROR_FAILURE;
       }
       if (startSample + audio->mSamples <= targetSample) {
-        // Our seek target lies after the samples in this SoundData. Pop it
+        // Our seek target lies after the samples in this AudioData. Pop it
         // off the queue, and keep decoding forwards.
         delete mAudioQueue.PopFront();
         audio = nsnull;
@@ -347,7 +347,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
         break;
       }
 
-      // The seek target lies somewhere in this SoundData's samples, strip off
+      // The seek target lies somewhere in this AudioData's samples, strip off
       // any samples which lie before the seek target, so we'll begin playback
       // exactly at the seek target.
       NS_ASSERTION(targetSample >= startSample, "Target must at or be after data start.");
@@ -362,15 +362,15 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       }
       PRUint32 samples = audio->mSamples - static_cast<PRUint32>(samplesToPrune);
       PRUint32 channels = audio->mChannels;
-      nsAutoArrayPtr<SoundDataValue> audioData(new SoundDataValue[samples * channels]);
+      nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[samples * channels]);
       memcpy(audioData.get(),
              audio->mAudioData.get() + (samplesToPrune * channels),
-             samples * channels * sizeof(SoundDataValue));
+             samples * channels * sizeof(AudioDataValue));
       PRInt64 duration;
       if (!SamplesToUsecs(samples, mInfo.mAudioRate, duration)) {
         return NS_ERROR_FAILURE;
       }
-      nsAutoPtr<SoundData> data(new SoundData(audio->mOffset,
+      nsAutoPtr<AudioData> data(new AudioData(audio->mOffset,
                                               aTarget,
                                               duration,
                                               samples,

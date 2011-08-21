@@ -1316,6 +1316,14 @@ GetCompartmentTjitDataAllocatorsReserveSize(JSCompartment *c)
          : 0;
 }
 
+PRInt64
+GetCompartmentTjitDataTraceMonitorSize(JSCompartment *c)
+{
+    return c->hasTraceMonitor()
+         ? c->traceMonitor()->getTraceMonitorSize()
+         : 0;
+}
+
 #endif  // JS_TRACER
 
 void
@@ -1338,6 +1346,7 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     curr->tjitCode = GetCompartmentTjitCodeSize(compartment);
     curr->tjitDataAllocatorsMain = GetCompartmentTjitDataAllocatorsMainSize(compartment);
     curr->tjitDataAllocatorsReserve = GetCompartmentTjitDataAllocatorsReserveSize(compartment);
+    curr->tjitDataNonAllocators = GetCompartmentTjitDataTraceMonitorSize(compartment);
 #endif
     JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory);
 }
@@ -1815,6 +1824,15 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        stats.tjitDataAllocatorsReserve,
     "Memory used by the trace JIT and held in reserve for the compartment's "
     "VMAllocators in case of OOM.",
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+                                              "tjit-data/trace-monitor"),
+                       nsIMemoryReporter::KIND_HEAP,
+                       stats.tjitDataNonAllocators,
+    "Memory used by the trace JIT that is stored in the TraceMonitor.  This "
+    "includes the TraceMonitor object itself, plus its TraceNativeStorage, "
+    "RecordAttemptMap, and LoopProfileMap.",
                        callback, closure);
 #endif
 
