@@ -3153,7 +3153,7 @@ NS_IMPL_ISUPPORTS0(Identity)
 
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSObject *proto,
-                        bool wantXrays)
+                        bool wantXrays, const nsACString &sandboxName)
 {
     // Create the sandbox global object
     nsresult rv;
@@ -3239,6 +3239,10 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
             return NS_ERROR_UNEXPECTED;
         }
     }
+
+    xpc::CompartmentPrivate *compartmentPrivate =
+        static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, compartment));
+    compartmentPrivate->location = sandboxName;
 
     return NS_OK;
 }
@@ -3351,6 +3355,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
     JSObject *proto = nsnull;
     bool wantXrays = true;
+    nsCString sandboxName;
+
     if (argc > 1) {
         if (!JSVAL_IS_OBJECT(argv[1]))
             return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
@@ -3382,9 +3388,26 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
             wantXrays = JSVAL_TO_BOOLEAN(option);
         }
+
+        if (!JS_HasProperty(cx, optionsObject, "sandboxName", &found))
+            return NS_ERROR_INVALID_ARG;
+
+        if (found) {
+            if (!JS_GetProperty(cx, optionsObject, "sandboxName", &option) ||
+                !JSVAL_IS_STRING(option)) {
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+            }
+
+            char *tmp = JS_EncodeString(cx, JSVAL_TO_STRING(option));
+            if (!tmp) {
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+            }
+
+            sandboxName.Adopt(tmp, strlen(tmp));
+        }
     }
 
-    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, wantXrays);
+    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, wantXrays, sandboxName);
 
     if (NS_FAILED(rv)) {
         return ThrowAndFail(rv, cx, _retval);
