@@ -37,32 +37,91 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdlib.h>
-#include "nsNativeAppSupportBase.h"
-#include "nsString.h"
+#include <QTimer>
+#include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "nsNativeAppSupportQt.h"
+#include "nsCOMPtr.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
-#ifdef MOZ_ENABLE_LIBCONIC
-#include <glib-object.h>
-#endif
-
-#if (MOZ_PLATFORM_MAEMO == 5)
-#include <libosso.h>
-#endif
-
-class nsNativeAppSupportQt : public nsNativeAppSupportBase
+#ifdef MOZ_ENABLE_QMSYSTEM2
+void
+nsNativeAppSupportQt::activityChanged(MeeGo::QmActivity::Activity activity)
 {
-public:
-  NS_IMETHOD Start(PRBool* aRetVal);
-  NS_IMETHOD Stop(PRBool* aResult);
-#if (MOZ_PLATFORM_MAEMO == 5)
-  // Osso context must be initialized for maemo5 otherwise we will be killed in ~20 seconds
-  osso_context_t *m_osso_context;
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (!os)
+        return;
+
+    if (MeeGo::QmActivity::Inactive == activity) {
+        os->NotifyObservers(nsnull, "system-idle", nsnull);
+    } else {
+        os->NotifyObservers(nsnull, "system-active", nsnull);
+    }
+}
+
+void
+nsNativeAppSupportQt::displayStateChanged(MeeGo::QmDisplayState::DisplayState state)
+{
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (!os)
+        return;
+
+    switch (state) {
+    case MeeGo::QmDisplayState::On:
+        os->NotifyObservers(nsnull, "system-display-on", nsnull);
+        break;
+    case MeeGo::QmDisplayState::Off:
+        os->NotifyObservers(nsnull, "system-display-dimmed", nsnull);
+        break;
+    case MeeGo::QmDisplayState::Dimmed:
+        os->NotifyObservers(nsnull, "system-display-off", nsnull);
+        break;
+    default:
+        NS_WARNING("Unknown display state");
+        break;
+    }
+}
+
+void nsNativeAppSupportQt::deviceModeChanged(MeeGo::QmDeviceMode::DeviceMode mode)
+{
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (!os)
+        return;
+
+    switch (mode) {
+    case MeeGo::QmDeviceMode::DeviceMode::Normal:
+        os->NotifyObservers(nsnull, "profile-change-net-restore", nsnull);
+        break;
+    case MeeGo::QmDeviceMode::DeviceMode::Flight:
+        os->NotifyObservers(nsnull, "profile-change-net-teardown", nsnull);
+        break;
+    case MeeGo::QmDeviceMode::DeviceMode::Error:
+    default:
+        NS_WARNING("Unknown DeviceMode");
+        break;
+    }
+}
+
+void nsNativeAppSupportQt::RefreshStates()
+{
+  activityChanged(mActivity.get());
+  displayStateChanged(mDisplayState.get());
+  deviceModeChanged(mDeviceMode.getMode());
+}
 #endif
-};
 
 NS_IMETHODIMP
 nsNativeAppSupportQt::Start(PRBool* aRetVal)
 {
   NS_ASSERTION(gAppData, "gAppData must not be null.");
+
+#ifdef MOZ_ENABLE_QMSYSTEM2
+  connect(&mActivity, SIGNAL(activityChanged(MeeGo::QmActivity::Activity)), this, SLOT(activityChanged(MeeGo::QmActivity::Activity)));
+  connect(&mDeviceMode, SIGNAL(deviceModeChanged(MeeGo::QmDeviceMode::DeviceMode)), this, SLOT(deviceModeChanged(MeeGo::QmDeviceMode::DeviceMode)));
+  connect(&mDisplayState, SIGNAL(displayStateChanged(MeeGo::QmDisplayState::DisplayState)), this, SLOT(displayStateChanged(MeeGo::QmDisplayState::DisplayState)));
+  // Init states withing next event loop iteration
+  QTimer::singleShot(0, this, SLOT(RefreshStates()));
+#endif
 
   *aRetVal = PR_TRUE;
 #ifdef MOZ_ENABLE_LIBCONIC
