@@ -714,6 +714,7 @@ let UI = {
         }
       } else if (topic == "private-browsing-change-granted") {
         if (data == "enter" || data == "exit") {
+          hideSearch();
           self._privateBrowsing.transitionMode = data;
           self.storageBusy();
         }
