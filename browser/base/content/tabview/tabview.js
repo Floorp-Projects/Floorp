@@ -71,6 +71,7 @@ let AllTabs = {
 
 #include iq.js
 #include storage.js
+#include storagePolicy.js
 #include items.js
 #include groupitems.js
 #include tabitems.js
