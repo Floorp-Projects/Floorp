@@ -135,7 +135,7 @@ SessionStartup.prototype = {
         this._initialState = JSON.parse(iniString);
       }
       catch (exJSON) {
-        var s = new Cu.Sandbox("about:blank");
+        var s = new Cu.Sandbox("about:blank", {sandboxName: 'nsSessionStartup'});
         this._initialState = Cu.evalInSandbox("(" + iniString + ")", s);
       }
 
