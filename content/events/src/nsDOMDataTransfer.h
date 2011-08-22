@@ -105,6 +105,13 @@ protected:
                     PRUint32 aDragImageX,
                     PRUint32 aDragImageY);
 
+  ~nsDOMDataTransfer()
+  {
+    if (mFiles) {
+      mFiles->Disconnect();
+    }
+  }
+
   static const char sEffects[8][9];
 
 public:
