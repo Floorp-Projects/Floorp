@@ -387,12 +387,9 @@ ValueFromStringHelper(nsCSSProperty aPropID,
   }
   nsDependentSubstring subString(aString, subStringBegin);
   if (!nsStyleAnimation::ComputeValue(aPropID, aTargetElement, subString,
-                                      PR_TRUE, aStyleAnimValue)) {
+                                      PR_TRUE, aStyleAnimValue,
+                                      aIsContextSensitive)) {
     return PR_FALSE;
-  }
-  if (aIsContextSensitive) {
-    // XXX
-    *aIsContextSensitive = PR_TRUE;
   }
   if (isNegative) {
     InvertSign(aStyleAnimValue);
