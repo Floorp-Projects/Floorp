@@ -7,6 +7,7 @@ found in the LICENSE file.
   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+<meta charset="utf-8">
 <title>WebGL Lots of polygons example.</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
@@ -33,6 +34,9 @@ function init() {
 function main() {
   var wtu = WebGLTestUtils;
   var canvas = document.getElementById("example");
+  canvas.addEventListener("webglcontextlost", function(e) { e.preventDefault(); }, false);
+  canvas.addEventListener("webglcontextrestored", function(e) { }, false);
+
   var gl = wtu.create3DContext(canvas);
   var program = wtu.setupTexturedQuad(gl);
 

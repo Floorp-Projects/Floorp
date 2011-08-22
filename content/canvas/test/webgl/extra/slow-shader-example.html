@@ -7,6 +7,7 @@ found in the LICENSE file.
   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+<meta charset="utf-8">
 <title>WebGL Slow Shader example.</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
@@ -18,9 +19,7 @@ found in the LICENSE file.
 <div id="description"></div>
 <div id="console"></div>
 <script id="slow" type="text/something-not-javascript">
-#if defined(GL_ES)
 precision mediump float;
-#endif
 uniform sampler2D tex;
 varying vec2 texCoord;
 void main() {
@@ -33,9 +32,13 @@ window.onload = main;
 debug("Tests drawing a very slow shader.");
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("example");
+canvas.addEventListener("webglcontextlost", function(e) { e.preventDefault(); }, false);
+canvas.addEventListener("webglcontextrestored", function(e) { }, false);
 var gl = wtu.create3DContext(canvas);
-var texSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-debug("Max Texture size: " + texSize);
+var maxTexSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+var texSize = Math.min(maxTexSize, 1024);
+debug("Max Texture size: " + maxTexSize);
+debug("Texture size: " + texSize);
 var shaderSource =
     document.getElementById("slow").text.replace(/\$size/g, texSize + ".0");
 wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after getting a context");
@@ -111,5 +114,3 @@ successfullyParsed = true;
 </script>
 </body>
 </html>
-
-
