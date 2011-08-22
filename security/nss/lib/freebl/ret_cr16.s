@@ -48,10 +48,12 @@ ret_cr16
 	.PROC
 	.CALLINFO 	FRAME=0, NO_CALLS
 	.EXPORT 	ret_cr16,ENTRY
-	.ENTER
+	.ENTRY
 ;	BV		%r0(%rp)
 	BV		0(%rp)
 	MFCTL		%cr16,%ret0
-        .LEAVE
+        BV %r0(%rp)
+        .EXIT
+        NOP
         .PROCEND
         .END

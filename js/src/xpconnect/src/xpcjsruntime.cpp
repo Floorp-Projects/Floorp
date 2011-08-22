@@ -1578,22 +1578,30 @@ CompartmentStats::CompartmentStats(JSContext *cx, JSCompartment *c)
     {
         if(c->principals->codebase)
         {
-            // A hack: replace forward slashes with '\\' so they aren't
-            // treated as path separators.  Users of the reporters
-            // (such as about:memory) have to undo this change.
             name.Assign(c->principals->codebase);
-            name.ReplaceChar('/', '\\');
 
             // If it's the system compartment, append the address.
             // This means that multiple system compartments (and there
             // can be many) can be distinguished.
             if(c->isSystemCompartment)
             {
+                if (c->data && 
+                    !((xpc::CompartmentPrivate*)c->data)->location.IsEmpty())
+                {
+                    name.AppendLiteral(", ");
+                    name.Append(((xpc::CompartmentPrivate*)c->data)->location);
+                }
+
                 // ample; 64-bit address max is 18 chars
                 static const int maxLength = 31;
                 nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
                 name.Append(address);
             }
+
+            // A hack: replace forward slashes with '\\' so they aren't
+            // treated as path separators.  Users of the reporters
+            // (such as about:memory) have to undo this change.
+            name.ReplaceChar('/', '\\');
         }
         else
         {

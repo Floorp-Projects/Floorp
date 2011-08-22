@@ -472,7 +472,7 @@ RunTests(PRUint32 segSize, PRUint32 segCount)
 ////////////////////////////////////////////////////////////////////////////////
 
 #if 0
-extern NS_COM void
+extern void
 TestSegmentedBuffer();
 #endif
 

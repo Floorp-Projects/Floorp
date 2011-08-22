@@ -46,7 +46,7 @@
  * compute the checksum for the NSS cryptographic boundary libraries
  * and compare the checksum with the value in .chk file.
  *
- * $Id: shlibsign.c,v 1.18.20.1 2011/04/08 04:04:27 wtc%google.com Exp $
+ * $Id: shlibsign.c,v 1.19 2011/04/08 04:02:53 wtc%google.com Exp $
  */
 
 #ifdef XP_UNIX

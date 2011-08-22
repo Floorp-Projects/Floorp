@@ -1482,6 +1482,8 @@ pref("dom.ipc.plugins.enabled.602plugin.so", false);
 #endif
 #endif
 
+pref("dom.ipc.processCount", 1);
+
 pref("svg.smil.enabled", true);
 
 pref("font.minimum-size.ar", 0);

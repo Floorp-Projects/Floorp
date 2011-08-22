@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-NS_COM int NS_FASTCALL
+int NS_FASTCALL
 Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs, const nsTStringComparator_CharT& comp )
   {
     typedef nsTSubstring_CharT::size_type size_type;

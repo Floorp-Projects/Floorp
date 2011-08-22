@@ -114,6 +114,7 @@ top:
                 continue;
 
             jsbytecode *pc = script->main + tn->start + tn->length;
+            cx->regs().pc = pc;
             JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(cx->regs().sp == fp->base() + tn->stackDepth);
 
@@ -191,14 +192,14 @@ InlineReturn(VMFrame &f)
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32 argc)
 {
-    if (!Invoke(f.cx, CallArgsFromSp(argc, f.regs.sp)))
+    if (!InvokeKernel(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
 }
 
 void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
-    if (!InvokeConstructor(f.cx, CallArgsFromSp(argc, f.regs.sp)))
+    if (!InvokeConstructorKernel(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
 }
 
@@ -378,7 +379,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         if (!UncachedInlineCall(f, CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
             THROW();
     } else {
-        if (!InvokeConstructor(cx, args))
+        if (!InvokeConstructorKernel(cx, args))
             THROW();
     }
 }
@@ -397,7 +398,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
     if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), args.calleev())) {
-        if (!Invoke(f.cx, args))
+        if (!InvokeKernel(f.cx, args))
             THROW();
         return;
     }
@@ -419,7 +420,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 
     if (IsFunctionObject(args.calleev(), &ucr->callee)) {
         ucr->callee = &args.callee();
-        ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
+        ucr->fun = ucr->callee->getFunctionPrivate();
 
         if (ucr->fun->isInterpreted()) {
             if (!UncachedInlineCall(f, NO_CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
@@ -434,7 +435,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         }
     }
 
-    if (!Invoke(f.cx, args))
+    if (!InvokeKernel(f.cx, args))
         THROW();
 
     return;

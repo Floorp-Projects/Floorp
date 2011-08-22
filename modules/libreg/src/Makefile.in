@@ -68,11 +68,6 @@ SDK_LIBRARY = $(LIBRARY)
 include $(topsrcdir)/config/config.mk
 
 DEFINES         += -DUSE_BUFFERED_REGISTRY_IO	
-# Memory mapped files are not supported under QNX, Neutrino, HP-UX and BeOS
-#ifeq (,$(filter BeOS HP-UX QNX,$(OS_ARCH)))
-#CSRCS		+= mmapio.c
-#DEFINES		+= -DUSE_MMAP_REGISTRY_IO
-#endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -153,6 +153,20 @@ xpcshell-tests:
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 
+xpcshell-tests-remote: DM_TRANS?=adb
+xpcshell-tests-remote:
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build/mobile \
+	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
+	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  $(EXTRA_TEST_ARGS) \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  --objdir=$(DEPTH) \
+	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
+
 # Execute a single test, specified in $(SOLO_FILE), but don't automatically
 # start the test. Instead, present the xpcshell prompt so the user can
 # attach a debugger and then start the test.
@@ -182,6 +196,23 @@ check-one:
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 
+check-one-remote: DM_TRANS?=adb
+check-one-remote:
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build/mobile \
+	  $(testxpcsrcdir)/remotexpcshelltests.py \
+	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  --test-path=$(SOLO_FILE) \
+	  --profile-name=$(MOZ_APP_NAME) \
+	  --verbose \
+	  $(EXTRA_TEST_ARGS) \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  --objdir=$(DEPTH) \
+          --noSetup \
+	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 endif # XPCSHELL_TESTS
 
 ifdef CPP_UNIT_TESTS
@@ -898,9 +929,6 @@ ifdef SHARED_LIBRARY
 	  $(SHARED_LIBRARY_NAME) $(DIST)/$(MOZ_APP_NAME)
 endif
 endif # SHARED_LIBRARY || PROGRAM
-else  # ! WINNT_
-# Force rebuilding all objects on the second pass
-$(OBJS): FORCE
 endif # WINNT_
 endif # MOZ_PROFILE_USE
 ifdef MOZ_PROFILE_GENERATE

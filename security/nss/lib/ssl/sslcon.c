@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.40.2.1 2011/03/30 17:38:42 wtc%google.com Exp $ */
+/* $Id: sslcon.c,v 1.42 2011/08/01 07:08:09 kaie%kuix.de Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -3851,4 +3851,10 @@ NSSSSL_VersionCheck(const char *importedVersion)
 
     c = __nss_ssl_rcsid[0] + __nss_ssl_sccsid[0]; 
     return NSS_VersionCheck(importedVersion);
+}
+
+const char *
+NSSSSL_GetVersion(void)
+{
+    return NSS_VERSION;
 }

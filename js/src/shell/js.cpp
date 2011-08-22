@@ -1554,7 +1554,7 @@ ValueToScript(JSContext *cx, jsval v)
         } else if (clasp == Jsvalify(&js_GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->floatingFrame()->fun();
-            script = FUN_SCRIPT(fun);
+            script = fun->script();
         }
     }
 
@@ -1562,7 +1562,7 @@ ValueToScript(JSContext *cx, jsval v)
         fun = JS_ValueToFunction(cx, v);
         if (!fun)
             return NULL;
-        script = FUN_SCRIPT(fun);
+        script = fun->maybeScript();
         if (!script) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
                                  JSSMSG_SCRIPTS_ONLY);
@@ -1992,7 +1992,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
     JSScript *script = ValueToScript(cx, v);
     if (!script)
         return false;
-    if (VALUE_IS_FUNCTION(cx, v)) {
+    if (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isFunction()) {
         JSFunction *fun = JS_ValueToFunction(cx, v);
         if (fun && (fun->flags & ~7U)) {
             uint16 flags = fun->flags;
@@ -2007,10 +2007,10 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
 
 #undef SHOW_FLAG
 
-            if (FUN_INTERPRETED(fun)) {
-                if (FUN_NULL_CLOSURE(fun))
+            if (fun->isInterpreted()) {
+                if (fun->isNullClosure())
                     Sprint(sp, " NULL_CLOSURE");
-                else if (FUN_FLAT_CLOSURE(fun))
+                else if (fun->isFlatClosure())
                     Sprint(sp, " FLAT_CLOSURE");
 
                 JSScript *script = fun->script();
@@ -2698,7 +2698,7 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
                 return JS_FALSE;
             argv[0] = OBJECT_TO_JSVAL(obj);
         }
-        if (VALUE_IS_FUNCTION(cx, argv[0])) {
+        if (!JSVAL_IS_PRIMITIVE(argv[0]) && JSVAL_TO_OBJECT(argv[0])->isFunction()) {
             funobj = JSVAL_TO_OBJECT(argv[0]);
         } else {
             JSFunction *fun = JS_ValueToFunction(cx, argv[0]);

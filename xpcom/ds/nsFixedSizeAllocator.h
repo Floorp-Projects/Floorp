@@ -134,7 +134,7 @@
 
 #define NS_SIZE_IN_HEAP(_size) (_size)
 
-class NS_COM nsFixedSizeAllocator
+class nsFixedSizeAllocator
 {
 protected:
     PLArenaPool mPool;

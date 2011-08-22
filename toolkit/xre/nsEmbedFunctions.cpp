@@ -712,7 +712,7 @@ TestShellParent* gTestShellParent = nsnull;
 TestShellParent* GetOrCreateTestShellParent()
 {
     if (!gTestShellParent) {
-        ContentParent* parent = ContentParent::GetSingleton();
+        ContentParent* parent = ContentParent::GetNewOrUsed();
         NS_ENSURE_TRUE(parent, nsnull);
         gTestShellParent = parent->CreateTestShell();
         NS_ENSURE_TRUE(gTestShellParent, nsnull);
@@ -758,7 +758,8 @@ XRE_ShutdownTestShell()
 {
   if (!gTestShellParent)
     return true;
-  return ContentParent::GetSingleton()->DestroyTestShell(gTestShellParent);
+  return static_cast<ContentParent*>(gTestShellParent->Manager())->
+    DestroyTestShell(gTestShellParent);
 }
 
 #ifdef MOZ_X11

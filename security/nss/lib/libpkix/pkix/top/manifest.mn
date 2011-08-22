@@ -54,7 +54,5 @@ CSRCS = \
 	pkix_build.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = pkixtop
 

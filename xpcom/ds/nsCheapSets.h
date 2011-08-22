@@ -44,7 +44,7 @@
  * A string set that takes up minimal size when there are 0 or 1 strings in the
  * set.  Use for cases where sizes of 0 and 1 are even slightly common.
  */
-class NS_COM nsCheapStringSet {
+class nsCheapStringSet {
 public:
   nsCheapStringSet() : mValOrHash(nsnull)
   {
@@ -119,7 +119,7 @@ private:
  * An integer set that takes up only 4 bytes when there are 0 or 1 integers
  * in the set.  Use for cases where sizes of 0 and 1 are even slightly common.
  */
-class NS_COM nsCheapInt32Set {
+class nsCheapInt32Set {
 public:
   nsCheapInt32Set() : mValOrHash(nsnull)
   {

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.54 $ $Date: 2010/04/03 18:27:30 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.56 $ $Date: 2011/07/12 21:29:20 $";
 #endif /* DEBUG */
 
 #include "pkcs11.h"
@@ -522,7 +522,7 @@ nssToken_ImportCertificate (
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT,           subject);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER,     serial);
     if (email) {
-	NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_EMAIL,    email);
+	NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NSS_EMAIL,    email);
     }
     NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
     /* see if the cert is already there */
@@ -714,7 +714,7 @@ nssToken_FindCertificatesByNickname (
 
 /* XXX
  * This function *does not* use the token object cache, because not even
- * the softoken will return a value for CKA_NETSCAPE_EMAIL from a call
+ * the softoken will return a value for CKA_NSS_EMAIL from a call
  * to GetAttributes.  The softoken does allow searches with that attribute,
  * it just won't return a value for it.
  */
@@ -733,7 +733,7 @@ nssToken_FindCertificatesByEmail (
     CK_ULONG etsize;
     nssCryptokiObject **objects;
     NSS_CK_TEMPLATE_START(email_template, attr, etsize);
-    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_EMAIL, email);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NSS_EMAIL, email);
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
@@ -1071,14 +1071,14 @@ get_ck_trust (
 {
     CK_TRUST t;
     switch (nssTrust) {
-    case nssTrustLevel_NotTrusted: t = CKT_NETSCAPE_UNTRUSTED; break;
-    case nssTrustLevel_TrustedDelegator: t = CKT_NETSCAPE_TRUSTED_DELEGATOR; 
+    case nssTrustLevel_NotTrusted: t = CKT_NSS_NOT_TRUSTED; break;
+    case nssTrustLevel_TrustedDelegator: t = CKT_NSS_TRUSTED_DELEGATOR; 
 	break;
-    case nssTrustLevel_ValidDelegator: t = CKT_NETSCAPE_VALID_DELEGATOR; break;
-    case nssTrustLevel_Trusted: t = CKT_NETSCAPE_TRUSTED; break;
-    case nssTrustLevel_Valid: t = CKT_NETSCAPE_VALID; break;
+    case nssTrustLevel_ValidDelegator: t = CKT_NSS_VALID_DELEGATOR; break;
+    case nssTrustLevel_Trusted: t = CKT_NSS_TRUSTED; break;
+    case nssTrustLevel_MustVerify: t = CKT_NSS_MUST_VERIFY_TRUST; break;
     case nssTrustLevel_Unknown:
-    default: t = CKT_NETSCAPE_TRUST_UNKNOWN; break;
+    default: t = CKT_NSS_TRUST_UNKNOWN; break;
     }
     return t;
 }
@@ -1099,7 +1099,7 @@ nssToken_ImportTrust (
 )
 {
     nssCryptokiObject *object;
-    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
+    CK_OBJECT_CLASS tobjc = CKO_NSS_TRUST;
     CK_TRUST ckSA, ckCA, ckCS, ckEP;
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE trust_tmpl[11];
@@ -1158,7 +1158,7 @@ nssToken_FindTrustForCertificate (
   nssTokenSearchType searchType
 )
 {
-    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
+    CK_OBJECT_CLASS tobjc = CKO_NSS_TRUST;
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE tobj_template[5];
     CK_ULONG tobj_size;
@@ -1172,9 +1172,7 @@ nssToken_FindTrustForCertificate (
     }
 
     NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
-    if (searchType == nssTokenSearchType_SessionOnly) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    if (searchType == nssTokenSearchType_TokenOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS,          tobjc);
@@ -1203,7 +1201,7 @@ nssToken_ImportCRL (
 )
 {
     nssCryptokiObject *object;
-    CK_OBJECT_CLASS crlobjc = CKO_NETSCAPE_CRL;
+    CK_OBJECT_CLASS crlobjc = CKO_NSS_CRL;
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE crl_tmpl[6];
     CK_ULONG crlsize;
@@ -1217,11 +1215,11 @@ nssToken_ImportCRL (
     NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS,        crlobjc);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT,      subject);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_VALUE,        encoding);
-    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_URL, url);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NSS_URL, url);
     if (isKRL) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_NETSCAPE_KRL, &g_ck_true);
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_NSS_KRL, &g_ck_true);
     } else {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_NETSCAPE_KRL, &g_ck_false);
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_NSS_KRL, &g_ck_false);
     }
     NSS_CK_TEMPLATE_FINISH(crl_tmpl, attr, crlsize);
 
@@ -1244,7 +1242,7 @@ nssToken_FindCRLsBySubject (
   PRStatus *statusOpt
 )
 {
-    CK_OBJECT_CLASS crlobjc = CKO_NETSCAPE_CRL;
+    CK_OBJECT_CLASS crlobjc = CKO_NSS_CRL;
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE crlobj_template[3];
     CK_ULONG crlobj_size;

@@ -43,7 +43,7 @@
 #include "prclist.h"
 
 /*
-** RFC 4055 specifies three different RSA key types.
+** RFC 4055 Section 1.2 specifies three different RSA key types.
 **
 ** rsaKey maps to keys with SEC_OID_PKCS1_RSA_ENCRYPTION and can be used for
 ** both encryption and signatures with old (PKCS #1 v1.5) and new (PKCS #1
@@ -60,9 +60,9 @@ typedef enum {
     nullKey = 0, 
     rsaKey = 1, 
     dsaKey = 2, 
-    fortezzaKey = 3,
+    fortezzaKey = 3, /* deprecated */
     dhKey = 4, 
-    keaKey = 5,
+    keaKey = 5, /* deprecated */
     ecKey = 6,
     rsaPssKey = 7,
     rsaOaepKey = 8
@@ -74,6 +74,7 @@ typedef enum {
 
 SEC_BEGIN_PROTOS
 extern const SEC_ASN1Template SECKEY_RSAPublicKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_RSAPSSParamsTemplate[];
 extern const SEC_ASN1Template SECKEY_DSAPublicKeyTemplate[];
 extern const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[];
 extern const SEC_ASN1Template SECKEY_DHParamKeyTemplate[];
@@ -81,8 +82,9 @@ extern const SEC_ASN1Template SECKEY_PQGParamsTemplate[];
 extern const SEC_ASN1Template SECKEY_DSAPrivateKeyExportTemplate[];
 
 /* Windows DLL accessor functions */
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_DSAPublicKeyTemplate;
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_RSAPublicKeyTemplate;
+SEC_ASN1_CHOOSER_DECLARE(SECKEY_DSAPublicKeyTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SECKEY_RSAPublicKeyTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SECKEY_RSAPSSParamsTemplate)
 SEC_END_PROTOS
 
 
@@ -98,6 +100,16 @@ struct SECKEYRSAPublicKeyStr {
 };
 typedef struct SECKEYRSAPublicKeyStr SECKEYRSAPublicKey;
 
+/* 
+** RSA-PSS parameters
+*/
+struct SECKEYRSAPSSParamsStr {
+    SECAlgorithmID *hashAlg;
+    SECAlgorithmID *maskAlg;
+    SECItem saltLength;
+    SECItem trailerField;
+};
+typedef struct SECKEYRSAPSSParamsStr SECKEYRSAPSSParams;
 
 /*
 ** DSA Public Key and related structures
