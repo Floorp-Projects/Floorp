@@ -371,7 +371,8 @@ ValueFromStringHelper(nsCSSProperty aPropID,
                       Element* aTargetElement,
                       nsPresContext* aPresContext,
                       const nsAString& aString,
-                      nsStyleAnimation::Value& aStyleAnimValue)
+                      nsStyleAnimation::Value& aStyleAnimValue,
+                      PRBool* aIsContextSensitive)
 {
   // If value is negative, we'll strip off the "-" so the CSS parser won't
   // barf, and then manually make the parsed value negative.
@@ -388,6 +389,10 @@ ValueFromStringHelper(nsCSSProperty aPropID,
   if (!nsStyleAnimation::ComputeValue(aPropID, aTargetElement, subString,
                                       PR_TRUE, aStyleAnimValue)) {
     return PR_FALSE;
+  }
+  if (aIsContextSensitive) {
+    // XXX
+    *aIsContextSensitive = PR_TRUE;
   }
   if (isNegative) {
     InvertSign(aStyleAnimValue);
@@ -409,7 +414,8 @@ void
 nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
                                     Element* aTargetElement,
                                     const nsAString& aString,
-                                    nsSMILValue& aValue)
+                                    nsSMILValue& aValue,
+                                    PRBool* aIsContextSensitive)
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Outparam should be null-typed");
   nsPresContext* presContext = GetPresContextForElement(aTargetElement);
@@ -420,7 +426,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
 
   nsStyleAnimation::Value parsedValue;
   if (ValueFromStringHelper(aPropID, aTargetElement, presContext,
-                            aString, parsedValue)) {
+                            aString, parsedValue, aIsContextSensitive)) {
     sSingleton.Init(aValue);
     aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue, presContext);
   }
