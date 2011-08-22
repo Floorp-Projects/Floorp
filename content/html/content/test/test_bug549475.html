@@ -47,9 +47,9 @@ function sanitizeValue(aType, aValue)
     case "password":
     case "search":
     case "tel":
-    case "email":
       return aValue.replace(/[\n\r]/g, "");
     case "url":
+    case "email":
       return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, "");
     case "date":
     case "month":
