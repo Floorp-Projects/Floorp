@@ -61,7 +61,7 @@ typedef struct LGObjectCacheStr {
 
 static const CK_OBJECT_HANDLE lg_classArray[] = {
     0, CKO_PRIVATE_KEY, CKO_PUBLIC_KEY, CKO_SECRET_KEY,
-    CKO_NETSCAPE_TRUST, CKO_NETSCAPE_CRL, CKO_NETSCAPE_SMIME,
+    CKO_NSS_TRUST, CKO_NSS_CRL, CKO_NSS_SMIME,
      CKO_CERTIFICATE };
 
 #define handleToClass(handle) \
@@ -290,7 +290,7 @@ lg_getSMime(LGObjectCache *obj)
     certDBEntrySMime *entry;
     NSSLOWCERTCertDBHandle *certHandle;
 
-    if (obj->objclass != CKO_NETSCAPE_SMIME) {
+    if (obj->objclass != CKO_NSS_SMIME) {
 	return NULL;
     }
     if (obj->objectInfo) {
@@ -314,7 +314,7 @@ lg_getCrl(LGObjectCache *obj)
     PRBool isKrl;
     NSSLOWCERTCertDBHandle *certHandle;
 
-    if (obj->objclass != CKO_NETSCAPE_CRL) {
+    if (obj->objclass != CKO_NSS_CRL) {
 	return NULL;
     }
     if (obj->objectInfo) {
@@ -339,7 +339,7 @@ lg_getCert(LGObjectCache *obj, NSSLOWCERTCertDBHandle *certHandle)
     NSSLOWCERTCertificate *cert;
     CK_OBJECT_CLASS objClass = obj->objclass;
 
-    if ((objClass != CKO_CERTIFICATE) && (objClass != CKO_NETSCAPE_TRUST)) {
+    if ((objClass != CKO_CERTIFICATE) && (objClass != CKO_NSS_TRUST)) {
 	return NULL;
     }
     if (objClass == CKO_CERTIFICATE && obj->objectInfo) {
@@ -358,7 +358,7 @@ lg_getTrust(LGObjectCache *obj, NSSLOWCERTCertDBHandle *certHandle)
 {
     NSSLOWCERTTrust *trust;
 
-    if (obj->objclass != CKO_NETSCAPE_TRUST) {
+    if (obj->objclass != CKO_NSS_TRUST) {
 	return NULL;
     }
     if (obj->objectInfo) {
@@ -386,10 +386,10 @@ lg_GetPublicKey(LGObjectCache *obj)
     if (privKey == NULL) {
 	return NULL;
     }
-    pubKey = nsslowkey_ConvertToPublicKey(privKey);
-    nsslowkey_DestroyPrivateKey(privKey);
+    pubKey = lg_nsslowkey_ConvertToPublicKey(privKey);
+    lg_nsslowkey_DestroyPrivateKey(privKey);
     obj->objectInfo = (void *) pubKey;
-    obj->infoFree = (LGFreeFunc) nsslowkey_DestroyPublicKey ;
+    obj->infoFree = (LGFreeFunc) lg_nsslowkey_DestroyPublicKey ;
     return pubKey;
 }
 
@@ -418,7 +418,7 @@ lg_GetPrivateKeyWithDB(LGObjectCache *obj, NSSLOWKEYDBHandle *keyHandle)
 	return NULL;
     }
     obj->objectInfo = (void *) privKey;
-    obj->infoFree = (LGFreeFunc) nsslowkey_DestroyPrivateKey ;
+    obj->infoFree = (LGFreeFunc) lg_nsslowkey_DestroyPrivateKey ;
     return privKey;
 }
 
@@ -1083,10 +1083,10 @@ lg_FindSMIMEAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
     case CKA_PRIVATE:
     case CKA_MODIFIABLE:
 	return LG_CLONE_ATTR(attribute,type,lg_StaticFalseAttr);
-    case CKA_NETSCAPE_EMAIL:
+    case CKA_NSS_EMAIL:
 	return lg_CopyAttribute(attribute,type,obj->dbKey.data,
 						obj->dbKey.len-1);
-    case CKA_NETSCAPE_SMIME_TIMESTAMP:
+    case CKA_NSS_SMIME_TIMESTAMP:
     case CKA_SUBJECT:
     case CKA_VALUE:
 	break;
@@ -1098,7 +1098,7 @@ lg_FindSMIMEAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
 	return CKR_OBJECT_HANDLE_INVALID;
     }
     switch (type) {
-    case CKA_NETSCAPE_SMIME_TIMESTAMP:
+    case CKA_NSS_SMIME_TIMESTAMP:
 	return lg_CopyAttribute(attribute,type,entry->optionsDate.data,
 					entry->optionsDate.len);
     case CKA_SUBJECT:
@@ -1172,26 +1172,25 @@ lg_FindTrustAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
 trust:
 	if (trustFlags & CERTDB_TRUSTED_CA ) {
 	    return lg_ULongAttribute(attribute, type,
-				     CKT_NETSCAPE_TRUSTED_DELEGATOR);
+				     CKT_NSS_TRUSTED_DELEGATOR);
 	}
 	if (trustFlags & CERTDB_TRUSTED) {
-	    return lg_ULongAttribute(attribute, type, CKT_NETSCAPE_TRUSTED);
+	    return lg_ULongAttribute(attribute, type, CKT_NSS_TRUSTED);
 	}
-	if (trustFlags & CERTDB_NOT_TRUSTED) {
-	    return lg_ULongAttribute(attribute, type, CKT_NETSCAPE_UNTRUSTED);
+	if (trustFlags & CERTDB_MUST_VERIFY) {
+	    return lg_ULongAttribute(attribute, type, 
+				     CKT_NSS_MUST_VERIFY_TRUST);
 	}
 	if (trustFlags & CERTDB_TRUSTED_UNKNOWN) {
-	    return lg_ULongAttribute(attribute, type,
-				     CKT_NETSCAPE_TRUST_UNKNOWN);
+	    return lg_ULongAttribute(attribute, type, CKT_NSS_TRUST_UNKNOWN);
 	}
 	if (trustFlags & CERTDB_VALID_CA) {
-	    return lg_ULongAttribute(attribute, type,
-				     CKT_NETSCAPE_VALID_DELEGATOR);
+	    return lg_ULongAttribute(attribute, type, CKT_NSS_VALID_DELEGATOR);
 	}
-	if (trustFlags & CERTDB_VALID_PEER) {
-	    return lg_ULongAttribute(attribute, type, CKT_NETSCAPE_VALID);
+	if (trustFlags & CERTDB_TERMINAL_RECORD) {
+	    return lg_ULongAttribute(attribute, type, CKT_NSS_NOT_TRUSTED);
 	}
-	return lg_ULongAttribute(attribute, type, CKT_NETSCAPE_MUST_VERIFY);
+	return lg_ULongAttribute(attribute, type, CKT_NSS_TRUST_UNKNOWN);
     case CKA_TRUST_STEP_UP_APPROVED:
 	if (trust->trust->sslFlags & CERTDB_GOVT_APPROVED_CA) {
 	    return LG_CLONE_ATTR(attribute,type,lg_StaticTrueAttr);
@@ -1237,14 +1236,14 @@ lg_FindCrlAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
     case CKA_PRIVATE:
     case CKA_MODIFIABLE:
 	return LG_CLONE_ATTR(attribute,type,lg_StaticFalseAttr);
-    case CKA_NETSCAPE_KRL:
+    case CKA_NSS_KRL:
 	return ((obj->handle == LG_TOKEN_KRL_HANDLE) 
 		? LG_CLONE_ATTR(attribute,type,lg_StaticTrueAttr)
 		: LG_CLONE_ATTR(attribute,type,lg_StaticFalseAttr));
     case CKA_SUBJECT:
 	return lg_CopyAttribute(attribute,type,obj->dbKey.data,
 						obj->dbKey.len);
-    case CKA_NETSCAPE_URL:
+    case CKA_NSS_URL:
     case CKA_VALUE:
 	break;
     default:
@@ -1255,7 +1254,7 @@ lg_FindCrlAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
 	return CKR_OBJECT_HANDLE_INVALID;
     }
     switch (type) {
-    case CKA_NETSCAPE_URL:
+    case CKA_NSS_URL:
 	if (crl->url == NULL) {
 	    return LG_CLONE_ATTR(attribute,type,lg_StaticNullAttr);
 	}
@@ -1294,7 +1293,7 @@ lg_FindCertAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
     case CKA_SUBJECT:
     case CKA_ISSUER:
     case CKA_SERIAL_NUMBER:
-    case CKA_NETSCAPE_EMAIL:
+    case CKA_NSS_EMAIL:
 	break;
     default:
 	return lg_invalidAttribute(attribute);
@@ -1323,12 +1322,12 @@ lg_FindCertAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
 	if (pubKey == NULL) break;
 	item = lg_GetPubItem(pubKey);
 	if (item == NULL) {
-	    nsslowkey_DestroyPublicKey(pubKey);
+	    lg_nsslowkey_DestroyPublicKey(pubKey);
 	    break;
 	}
 	SHA1_HashBuf(hash,item->data,item->len);
 	/* item is imbedded in pubKey, just free the key */
-	nsslowkey_DestroyPublicKey(pubKey);
+	lg_nsslowkey_DestroyPublicKey(pubKey);
 	return lg_CopyAttribute(attribute, type, hash, SHA1_LENGTH);
     case CKA_LABEL:
 	return cert->nickname 
@@ -1344,7 +1343,7 @@ lg_FindCertAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
     case CKA_SERIAL_NUMBER:
 	return lg_CopyAttribute(attribute,type,cert->derSN.data,
 						cert->derSN.len);
-    case CKA_NETSCAPE_EMAIL:
+    case CKA_NSS_EMAIL:
 	return (cert->emailAddr && cert->emailAddr[0])
 	    ? lg_CopyAttribute(attribute, type, cert->emailAddr,
 	                             PORT_Strlen(cert->emailAddr))
@@ -1379,11 +1378,11 @@ lg_GetSingleAttribute(LGObjectCache *obj, CK_ATTRIBUTE *attribute)
     switch (obj->objclass) {
     case CKO_CERTIFICATE:
 	return lg_FindCertAttribute(obj,type,attribute);
-    case CKO_NETSCAPE_CRL:
+    case CKO_NSS_CRL:
 	return lg_FindCrlAttribute(obj,type,attribute);
-    case CKO_NETSCAPE_TRUST:
+    case CKO_NSS_TRUST:
 	return lg_FindTrustAttribute(obj,type,attribute);
-    case CKO_NETSCAPE_SMIME:
+    case CKO_NSS_SMIME:
 	return lg_FindSMIMEAttribute(obj,type,attribute);
     case CKO_PUBLIC_KEY:
 	return lg_FindPublicKeyAttribute(obj,type,attribute);
@@ -1501,7 +1500,7 @@ lg_SetCertAttribute(LGObjectCache *obj, CK_ATTRIBUTE_TYPE type,
 
     /* we can't change  the EMAIL values, but let the
      * upper layers feel better about the fact we tried to set these */
-    if (type == CKA_NETSCAPE_EMAIL) {
+    if (type == CKA_NSS_EMAIL) {
 	return CKR_OK;
     }
 
@@ -1763,10 +1762,10 @@ lg_SetSingleAttribute(LGObjectCache *obj, const CK_ATTRIBUTE *attr,
 	crv = lg_SetCertAttribute(obj,attr->type,
 				  attr->pValue,attr->ulValueLen);
 	break;
-    case CKO_NETSCAPE_CRL:
+    case CKO_NSS_CRL:
 	/* change URL */
 	break;
-    case CKO_NETSCAPE_TRUST:
+    case CKO_NSS_TRUST:
 	crv = lg_SetTrustAttribute(obj,attr);
 	break;
     case CKO_PRIVATE_KEY:

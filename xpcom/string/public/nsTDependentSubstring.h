@@ -57,9 +57,9 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
 
     public:
 
-      NS_COM void Rebind( const substring_type&, PRUint32 startPos, PRUint32 length = size_type(-1) );
+      void Rebind( const substring_type&, PRUint32 startPos, PRUint32 length = size_type(-1) );
 
-      NS_COM void Rebind( const char_type* start, const char_type* end );
+      void Rebind( const char_type* start, const char_type* end );
 
       nsTDependentSubstring_CharT( const substring_type& str, PRUint32 startPos, PRUint32 length = size_type(-1) )
         : substring_type()

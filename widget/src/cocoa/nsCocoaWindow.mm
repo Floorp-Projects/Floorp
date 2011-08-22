@@ -220,6 +220,15 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *screen)
   if (aRect.y - screenBounds.y + aRect.height > screenBounds.height) {
     aRect.y += screenBounds.height - (aRect.y - screenBounds.y + aRect.height);
   }
+
+  // If the left/top edge of the window is off the screen in either direction,
+  // then set the window to start at the left/top edge of the screen.
+  if (aRect.x < screenBounds.x || aRect.x > (screenBounds.x + screenBounds.width)) {
+    aRect.x = screenBounds.x;
+  }
+  if (aRect.y < screenBounds.y || aRect.y > (screenBounds.y + screenBounds.height)) {
+    aRect.y = screenBounds.y;
+  }
 }
 
 // Some applications like Camino use native popup windows
@@ -248,8 +257,29 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   // we have to provide an autorelease pool (see bug 559075).
   nsAutoreleasePool localPool;
 
+  // Find the screen that overlaps aRect the most,
+  // if none are found default to the mainScreen.
+  NSScreen *targetScreen = [NSScreen mainScreen];
+  NSArray *screens = [NSScreen screens];
+  if (screens) {
+    int largestIntersectArea = 0;
+    int i = [screens count];
+    while (i--) {
+      NSScreen *screen = [screens objectAtIndex:i];
+      nsIntRect screenBounds(nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
+
+      nsIntRegion intersect;
+      intersect.And(screenBounds, aRect);
+      int area = intersect.GetBounds().width * intersect.GetBounds().height;
+
+      if (area > largestIntersectArea) {
+        largestIntersectArea = area;
+        targetScreen = screen;
+      }
+    }
+  }
   nsIntRect newBounds = aRect;
-  FitRectToVisibleAreaForScreen(newBounds, [NSScreen mainScreen]);
+  FitRectToVisibleAreaForScreen(newBounds, targetScreen);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = eWindowType_toplevel;

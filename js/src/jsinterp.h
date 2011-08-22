@@ -145,31 +145,42 @@ inline bool
 ComputeThis(JSContext *cx, StackFrame *fp);
 
 /*
- * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
- * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,
- * i.e., there must have been no un-popped pushes to cx->stack. Furthermore,
- * |args.getvp()[0]| should be the callee, |args.getvp()[1]| should be |this|,
- * and the range [args.getvp() + 2, args.getvp() + 2 + args.getArgc()) should
- * be initialized actual arguments.
+ * InvokeKernel assumes that the given args have been pushed on the top of the
+ * VM stack. Additionally, if 'args' is contained in a CallArgsList, that they
+ * have already been marked 'active'.
  */
 extern bool
-Invoke(JSContext *cx, const CallArgs &args, MaybeConstruct construct = NO_CONSTRUCT);
+InvokeKernel(JSContext *cx, const CallArgs &args, MaybeConstruct construct = NO_CONSTRUCT);
 
 /*
- * For calls to natives, the InvokeArgsGuard object provides a record of the
- * call for the debugger's callstack. For this to work, the InvokeArgsGuard
- * record needs to know when the call is actually active (because the
- * InvokeArgsGuard can be pushed long before and popped long after the actual
- * call, during which time many stack-observing things can happen).
+ * Invoke assumes that 'args' has been pushed (via ContextStack::pushInvokeArgs)
+ * and is currently at the top of the VM stack.
  */
 inline bool
 Invoke(JSContext *cx, InvokeArgsGuard &args, MaybeConstruct construct = NO_CONSTRUCT)
 {
     args.setActive();
-    bool ok = Invoke(cx, ImplicitCast<CallArgs>(args), construct);
+    bool ok = InvokeKernel(cx, args, construct);
     args.setInactive();
     return ok;
 }
+
+/*
+ * This Invoke overload places the least requirements on the caller: it may be
+ * called at any time and it takes care of copying the given callee, this, and
+ * arguments onto the stack.
+ */
+extern bool
+Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
+       Value *rval);
+
+/*
+ * This helper takes care of the infinite-recursion check necessary for
+ * getter/setter calls.
+ */
+extern bool
+InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
+                     Value *rval);
 
 /*
  * Natives like sort/forEach/replace call Invoke repeatedly with the same
@@ -198,39 +209,33 @@ Invoke(JSContext *cx, InvokeArgsGuard &args, MaybeConstruct construct = NO_CONST
 class InvokeSessionGuard;
 
 /*
- * "External" calls may come from C or C++ code using a JSContext on which no
- * JS is running (!cx->fp), so they may need to push a dummy StackFrame.
+ * InvokeConstructor* implement a function call from a constructor context
+ * (e.g. 'new') handling the the creation of the new 'this' object.
  */
+extern JS_REQUIRES_STACK bool
+InvokeConstructorKernel(JSContext *cx, const CallArgs &args);
 
-extern bool
-ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
-               uintN argc, Value *argv, Value *rval);
+/* See the InvokeArgsGuard overload of Invoke. */
+inline bool
+InvokeConstructor(JSContext *cx, InvokeArgsGuard &args)
+{
+    args.setActive();
+    bool ok = InvokeConstructorKernel(cx, ImplicitCast<CallArgs>(args));
+    args.setInactive();
+    return ok;
+}
 
+/* See the fval overload of Invoke. */
 extern bool
-ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
-                 JSAccessMode mode, uintN argc, Value *argv, Value *rval);
+InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval);
 
 /*
- * These two functions invoke a function called from a constructor context
- * (e.g. 'new'). InvokeConstructor handles the general case where a new object
- * needs to be created for/by the constructor. ConstructWithGivenThis directly
- * calls the constructor with the given 'this', hence the caller must
- * understand the semantics of the constructor call.
+ * InvokeConstructorWithGivenThis directly calls the constructor with the given
+ * 'this'; the caller must choose the semantically correct 'this'.
  */
-
-extern JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const CallArgs &args);
-
 extern JS_REQUIRES_STACK bool
 InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
                                uintN argc, Value *argv, Value *rval);
-
-extern bool
-ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
-                          Value *rval);
-
-extern bool
-ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChain, Value *rval);
 
 /*
  * Executes a script with the given scopeChain/this. The 'type' indicates
@@ -239,8 +244,12 @@ ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChain, Value *rv
  * stack to simulate executing an eval in that frame.
  */
 extern bool
-Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
-        ExecuteType type, StackFrame *evalInFrame, Value *result);
+ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+              ExecuteType type, StackFrame *evalInFrame, Value *result);
+
+/* Execute a script with the given scopeChain as global code. */
+extern bool
+Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, Value *rval);
 
 /* Flags to toggle js::Interpret() execution. */
 enum InterpMode

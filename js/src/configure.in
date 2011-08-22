@@ -1992,11 +1992,14 @@ case "$target" in
 *-darwin*) 
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    # If we're building with --enable-profiling, we need a frame pointer.
+
+    MOZ_OPTIMIZE_FLAGS="-O3  -fstrict-aliasing -fno-stack-protector"
+    # We normally want -fomit-frame-pointer, but we want an explicit
+    # -fno-omit-frame-pointer if we're using a sampling profiler.
     if test -z "$MOZ_PROFILING"; then
-        MOZ_OPTIMIZE_FLAGS="-O3 -fomit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fomit-frame-pointer"
     else
-        MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
+        MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-omit-frame-pointer"
     fi
     _PEDANTIC=
     CFLAGS="$CFLAGS -fpascal-strings -fno-common"
@@ -2012,6 +2015,8 @@ case "$target" in
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
     MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
+    # Debug builds should always have frame pointers
+    MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
 
     if test "x$lto_is_enabled" = "xyes"; then
         echo "Skipping -dead_strip because lto is enabled."
@@ -2160,6 +2165,8 @@ ia64*-hpux*)
     fi
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
+    # Debug builds should always have frame pointers
+    MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
     ;;
 
 *-*linux*)
@@ -2185,7 +2192,8 @@ ia64*-hpux*)
         fi
         MOZ_PGO_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS"
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK $MOZ_FRAMEPTR_FLAGS"
-        MOZ_DEBUG_FLAGS="-g"
+        # Debug builds should always have frame pointers
+        MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -2301,7 +2309,8 @@ ia64*-hpux*)
         CFLAGS="$CFLAGS -we4553"
         CXXFLAGS="$CXXFLAGS -we4553"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
-        MOZ_DEBUG_FLAGS='-Zi'
+        # Debug builds should always have frame pointers
+        MOZ_DEBUG_FLAGS='-Zi -Oy-'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
         # If we're building with --enable-profiling, we need -Oy-, which forces a frame pointer.
@@ -3492,53 +3501,6 @@ then
 			;;
 	esac
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
-fi
-
-dnl ========================================================
-dnl See if mmap sees writes
-dnl For cross compiling, just define it as no, which is a safe default
-dnl ========================================================
-AC_MSG_CHECKING(whether mmap() sees write()s)
-
-changequote(,)
-mmap_test_prog='
-    #include <stdlib.h>
-    #include <unistd.h>
-    #include <sys/mman.h>
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <fcntl.h>
-
-    char fname[] = "conftest.file";
-    char zbuff[1024]; /* Fractional page is probably worst case */
-
-    int main() {
-	char *map;
-	int fd;
-	int i;
-	unlink(fname);
-	fd = open(fname, O_RDWR | O_CREAT, 0660);
-	if(fd<0) return 1;
-	unlink(fname);
-	write(fd, zbuff, sizeof(zbuff));
-	lseek(fd, 0, SEEK_SET);
-	map = (char*)mmap(0, sizeof(zbuff), PROT_READ, MAP_SHARED, fd, 0);
-	if(map==(char*)-1) return 2;
-	for(i=0; fname[i]; i++) {
-	    int rc = write(fd, &fname[i], 1);
-	    if(map[i]!=fname[i]) return 4;
-	}
-	return 0;
-    }
-'
-changequote([,])
-
-AC_TRY_RUN($mmap_test_prog , result="yes", result="no", result="yes")
-
-AC_MSG_RESULT("$result")
-
-if test "$result" = "no"; then
-    AC_DEFINE(MMAP_MISSES_WRITES)
 fi
 
 

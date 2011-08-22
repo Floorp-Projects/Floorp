@@ -256,7 +256,8 @@ FeedWriter.prototype = {
   __contentSandbox: null,
   get _contentSandbox() {
     if (!this.__contentSandbox)
-      this.__contentSandbox = new Cu.Sandbox(this._window);
+      this.__contentSandbox = new Cu.Sandbox(this._window, 
+                                             {sandboxName: 'FeedWriter'});
 
     return this.__contentSandbox;
   },

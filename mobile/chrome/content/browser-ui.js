@@ -272,31 +272,33 @@ var BrowserUI = {
     let awesomePanel = document.getElementById("awesome-panels");
     let awesomeHeader = document.getElementById("awesome-header");
 
-    let willShowPanel = (!this._activePanel && aPanel);
-    if (willShowPanel) {
-      this.pushDialog(aPanel);
-      this._edit.attachController();
-      this._editURI();
-      awesomePanel.hidden = awesomeHeader.hidden = false;
-    };
-
-    if (aPanel) {
-      aPanel.open();
-      if (this._edit.value == "")
-        this._showURI();
-    }
-
     let willHidePanel = (this._activePanel && !aPanel);
     if (willHidePanel) {
       awesomePanel.hidden = true;
       awesomeHeader.hidden = false;
       this._edit.reset();
       this._edit.detachController();
-      this.popDialog();
     }
 
-    if (this._activePanel)
+    if (this._activePanel) {
+      this.popDialog();
       this._activePanel.close();
+    }
+
+    let willShowPanel = (!this._activePanel && aPanel);
+    if (willShowPanel) {
+      this._edit.attachController();
+      this._editURI();
+      awesomePanel.hidden = awesomeHeader.hidden = false;
+    };
+
+    if (aPanel) {
+      this.pushDialog(aPanel);
+      aPanel.open();
+
+      if (this._edit.value == "")
+        this._showURI();
+    }
 
     // If the keyboard will cover the full screen, we do not want to show it right away.
     let isReadOnly = (aPanel != AllPagesList || this._isKeyboardFullscreen() || (!willShowPanel && this._edit.readOnly));
@@ -888,16 +890,16 @@ var BrowserUI = {
       return;
     }
 
-    // Check active panel
-    if (this.activePanel) {
-      this.activePanel = null;
+    // Check open dialogs
+    let dialog = this.activeDialog;
+    if (dialog && dialog != this.activePanel) {
+      dialog.close();
       return;
     }
 
-    // Check open dialogs
-    let dialog = this.activeDialog;
-    if (dialog) {
-      dialog.close();
+    // Check active panel
+    if (this.activePanel) {
+      this.activePanel = null;
       return;
     }
 
@@ -1261,11 +1263,13 @@ var BrowserUI = {
         break;
       case "cmd_remoteTabs":
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
+          // We have to set activePanel before showing sync's dialog
+          // to make the sure the dialog stacking is correct.
+          this.activePanel = RemoteTabsList;
           WeaveGlue.open();
         } else if (!Weave.Service.isLoggedIn && !Services.prefs.getBoolPref("browser.sync.enabled")) {
           // unchecked the relative command button
           document.getElementById("remotetabs-button").removeAttribute("checked");
-          this.activePanel = null;
 
           BrowserUI.showPanel("prefs-container");
           let prefsBox = document.getElementById("prefs-list");
@@ -1277,11 +1281,10 @@ var BrowserUI = {
               prefsBox.scrollBoxObject.scrollTo(0, syncAreaY - prefsBoxY);
             }, 0);
           }
-
-          return;
+        } else {
+          this.activePanel = RemoteTabsList;
         }
 
-        this.activePanel = RemoteTabsList;
         break;
       case "cmd_quit":
         // Only close one window

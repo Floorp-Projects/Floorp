@@ -79,9 +79,6 @@ let Storage = {
 
       // ___ Tabs
       AllTabs.tabs.forEach(function(tab) {
-        if (tab.ownerDocument.defaultView != gWindow)
-          return;
-
         self.saveTab(tab, null);
       });
 

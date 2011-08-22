@@ -1150,8 +1150,7 @@ public:
         // as long as this is a sane mapping, (*2) should just work
         dest = (FPRegisterID) (dest * 2);
         ASSERT((address.offset & 0x3) == 0);
-        // address.offset is the offset in bytes, fmem_imm_off is expecting the offset in words.
-        m_assembler.fmem_imm_off(true, false, true, dest, address.base, address.offset >> 2);
+        m_assembler.floatTransfer(true, dest, address.base, address.offset);
         m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, (FPRegisterID)(dest*2), dest);
     }
     void loadFloat(BaseIndex address, FPRegisterID dest)
@@ -1200,7 +1199,7 @@ public:
 
     void storeFloat(FPRegisterID src, ImplicitAddress address)
     {
-        m_assembler.fmem_imm_off(false, false, true, src, address.base, address.offset);
+        m_assembler.floatTransfer(false, src, address.base, address.offset);
     }
 
     void storeFloat(FPRegisterID src, BaseIndex address)

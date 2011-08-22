@@ -4014,7 +4014,7 @@ SessionStoreService.prototype = {
     this._restoreCount = -1;
   },
 
-  /**
+   /**
    * Set the given window's busy state
    * @param aWindow the window
    * @param aValue the window's busy state

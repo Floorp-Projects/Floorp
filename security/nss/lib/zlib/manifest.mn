@@ -44,15 +44,18 @@ PRIVATE_EXPORTS = zlib.h zconf.h
 CSRCS =	adler32.c 	\
 	compress.c 	\
 	crc32.c 	\
-	gzio.c  	\
-	uncompr.c 	\
 	deflate.c 	\
-	trees.c 	\
-	zutil.c 	\
-	inflate.c 	\
+	gzclose.c	\
+	gzlib.c		\
+	gzread.c	\
+	gzwrite.c	\
 	infback.c 	\
+	inffast.c	\
+	inflate.c 	\
 	inftrees.c 	\
-	inffast.c 	\
+	trees.c 	\
+	uncompr.c 	\
+	zutil.c 	\
 	$(NULL)
 
 LIBRARY_NAME = zlib

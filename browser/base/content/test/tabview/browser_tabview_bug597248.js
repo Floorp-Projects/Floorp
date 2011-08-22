@@ -22,7 +22,7 @@ function setupOne(win) {
   afterAllTabsLoaded(function () setupTwo(win), win);
 }
 
-let restoreWin;
+let restoredWin;
 
 function setupTwo(win) {
   let contentWindow = win.TabView.getContentWindow();

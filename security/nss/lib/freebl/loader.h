@@ -37,14 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.26.22.2 2010/12/04 18:59:01 rrelyea%redhat.com Exp $ */
+/* $Id: loader.h,v 1.34 2011/03/29 15:12:44 wtc%google.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x030C
+#define FREEBL_VERSION 0x030D
 
 struct FREEBLVectorStr {
 
@@ -541,7 +541,6 @@ struct FREEBLVectorStr {
  SECStatus (* p_PRNGTEST_Uninstantiate)(void);
    /* Version 3.011 came to here */
 
-
  SECStatus (*p_RSA_PopulatePrivateKey)(RSAPrivateKey *key);
 
  SECStatus (*p_DSA_NewRandom)(PLArenaPool * arena, const SECItem * q,
@@ -568,8 +567,38 @@ struct FREEBLVectorStr {
                             const SECItem  *q, const SECItem * x2,
                             const SECItem * gx4, const SECItem * x2s,
                             const SECItem * B, SECItem * K);
- 
-   /* Version 3.012 came to here */
+
+  /* Version 3.012 came to here */
+
+ SECStatus (* p_MGF1)(HASH_HashType hashAlg,
+                      unsigned char *mask, unsigned int maskLen,
+                      const unsigned char *mgfSeed, unsigned int mgfSeedLen);
+
+ SECStatus (* p_TLS_P_hash)(HASH_HashType hashAlg,
+                            const SECItem *secret,
+                            const char *label,
+                            SECItem *seed,
+                            SECItem *result,
+                            PRBool isFIPS);
+
+ SHA224Context *(*p_SHA224_NewContext)(void);
+ void (* p_SHA224_DestroyContext)(SHA224Context *cx, PRBool freeit);
+ void (* p_SHA224_Begin)(SHA224Context *cx);
+ void (* p_SHA224_Update)(SHA224Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+ void (* p_SHA224_End)(SHA224Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+ SECStatus (*p_SHA224_HashBuf)(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+ SECStatus (*p_SHA224_Hash)(unsigned char *dest, const char *src);
+ void (*p_SHA224_TraceState)(SHA224Context *cx);
+ unsigned int (* p_SHA224_FlattenSize)(SHA224Context *cx);
+ SECStatus (* p_SHA224_Flatten)(SHA224Context *cx,unsigned char *space);
+ SHA224Context * (* p_SHA224_Resurrect)(unsigned char *space, void *arg);
+ void (* p_SHA224_Clone)(SHA224Context *dest, SHA224Context *src);
+ PRBool (*p_BLAPI_SHVerifyFile)(const char *name);
+
+  /* Version 3.013 came to here */
 
 };
 

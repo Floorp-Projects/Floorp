@@ -137,7 +137,7 @@ interface nsIProxyObjectManager : nsISupports
  * manager themselves every single time, thus making the calling code more
  * readable.  The parameters are the same as for GetProxyForObject.
  */
-extern NS_COM nsresult
+extern nsresult
 NS_GetProxyForObject(nsIEventTarget *target, REFNSIID iid, nsISupports* object,
                      PRInt32 proxyType, void** result);
 #endif

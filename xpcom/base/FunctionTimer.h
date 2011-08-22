@@ -133,7 +133,7 @@
 
 namespace mozilla {
 
-class NS_COM FunctionTimerLog
+class FunctionTimerLog
 {
 public:
     FunctionTimerLog(const char *fname);
@@ -148,7 +148,7 @@ private:
     TimeStamp mLatest;
 };
 
-class NS_COM FunctionTimer
+class FunctionTimer
 {
     static nsAutoPtr<FunctionTimerLog> sLog;
     static char *sBuf1;

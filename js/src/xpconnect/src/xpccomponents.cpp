@@ -503,7 +503,7 @@ nsXPCComponents_InterfacesByID::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_InterfacesByID";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1075,7 +1075,7 @@ nsXPCComponents_ClassesByID::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_ClassesByID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_ClassesByID";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1346,7 +1346,7 @@ nsXPCComponents_Results::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_Results::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_Results";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1575,7 +1575,7 @@ nsXPCComponents_ID::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_ID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_ID";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1803,7 +1803,7 @@ nsXPCComponents_Exception::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_Exception::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_Exception";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -2098,7 +2098,7 @@ nsXPCConstructor::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCConstructor::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCConstructor";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -2364,7 +2364,7 @@ nsXPCComponents_Constructor::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_Constructor::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_Constructor";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -3153,7 +3153,7 @@ NS_IMPL_ISUPPORTS0(Identity)
 
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSObject *proto,
-                        bool wantXrays)
+                        bool wantXrays, const nsACString &sandboxName)
 {
     // Create the sandbox global object
     nsresult rv;
@@ -3239,6 +3239,10 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
             return NS_ERROR_UNEXPECTED;
         }
     }
+
+    xpc::CompartmentPrivate *compartmentPrivate =
+        static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, compartment));
+    compartmentPrivate->location = sandboxName;
 
     return NS_OK;
 }
@@ -3351,6 +3355,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
     JSObject *proto = nsnull;
     bool wantXrays = true;
+    nsCString sandboxName;
+
     if (argc > 1) {
         if (!JSVAL_IS_OBJECT(argv[1]))
             return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
@@ -3382,9 +3388,26 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
             wantXrays = JSVAL_TO_BOOLEAN(option);
         }
+
+        if (!JS_HasProperty(cx, optionsObject, "sandboxName", &found))
+            return NS_ERROR_INVALID_ARG;
+
+        if (found) {
+            if (!JS_GetProperty(cx, optionsObject, "sandboxName", &option) ||
+                !JSVAL_IS_STRING(option)) {
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+            }
+
+            char *tmp = JS_EncodeString(cx, JSVAL_TO_STRING(option));
+            if (!tmp) {
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+            }
+
+            sandboxName.Adopt(tmp, strlen(tmp));
+        }
     }
 
-    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, wantXrays);
+    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, wantXrays, sandboxName);
 
     if (NS_FAILED(rv)) {
         return ThrowAndFail(rv, cx, _retval);

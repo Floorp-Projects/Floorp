@@ -1234,7 +1234,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (cg->inFunction()) {
         /*
          * We initialize fun->u.i.script to be the script constructed above
-         * so that the debugger has a valid FUN_SCRIPT(fun).
+         * so that the debugger has a valid fun->script().
          */
         fun = cg->fun();
         JS_ASSERT(fun->isInterpreted());

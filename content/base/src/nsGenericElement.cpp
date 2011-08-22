@@ -1059,8 +1059,9 @@ nsINode::AddEventListener(const nsAString& aType,
 
   nsEventListenerManager* listener_manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(listener_manager);
-  return listener_manager->AddEventListener(aType, aListener, aUseCapture,
-                                            aWantsUntrusted);
+  listener_manager->AddEventListener(aType, aListener, aUseCapture,
+                                     aWantsUntrusted);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -137,26 +137,7 @@ typedef FILE          * XP_File;
 /* Alternate fileI/O function mappings */
 /*-------------------------------------*/
 
-#if USE_MMAP_REGISTRY_IO
-  /*-----------------------------------------------*/
-  /* NSPR mememory-mapped I/O (write through)      */
-  /* unfortunately this isn't supported on the Mac */
-  /*-----------------------------------------------*/
-#define USE_NSPR_MODES
-
-#include "mmapio.h"
-#define XP_FileSeek(file,offset,whence) mmio_FileSeek((file),(offset),(whence))
-#define XP_FileRead(dest,count,file)    mmio_FileRead((file), (dest), (count))
-#define XP_FileWrite(src,count,file)    mmio_FileWrite((file), (src), (count))
-#define XP_FileTell(file)               mmio_FileTell(file)
-#define XP_FileClose(file)              mmio_FileClose(file)
-#define XP_FileOpen(path, mode)         mmio_FileOpen((path), mode )
-#define XP_FileFlush(file)              ((void)1)
-#define XP_FileSetBufferSize(file, bufsize) (-1)
-
-typedef MmioFile* XP_File;
-
-#elif USE_BUFFERED_REGISTRY_IO
+#if USE_BUFFERED_REGISTRY_IO
   /*-----------------------------------------------*/
   /* home-grown XP buffering                       */
   /* writes are buffered too so use flush!         */

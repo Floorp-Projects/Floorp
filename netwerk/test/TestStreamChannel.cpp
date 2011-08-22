@@ -42,7 +42,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIProxyObjectManager.h"
 #include "nsIRequest.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"

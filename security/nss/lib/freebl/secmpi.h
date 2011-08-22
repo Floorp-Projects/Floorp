@@ -47,10 +47,13 @@
     CHECK_MPI_OK(mp_read_unsigned_octets((mp), (it).data, (it).len))
 
 #define MPINT_TO_SECITEM(mp, it, arena)                         \
-    SECITEM_AllocItem(arena, (it), mp_unsigned_octet_size(mp)); \
+ do { int mpintLen = mp_unsigned_octet_size(mp);                \
+    if (mpintLen <= 0) {err = MP_RANGE; goto cleanup;}          \
+    SECITEM_AllocItem(arena, (it), mpintLen);                   \
     if ((it)->data == NULL) {err = MP_MEM; goto cleanup;}       \
     err = mp_to_unsigned_octets(mp, (it)->data, (it)->len);     \
-    if (err < 0) goto cleanup; else err = MP_OKAY;
+    if (err < 0) goto cleanup; else err = MP_OKAY;              \
+  } while (0)
 
 #define MP_TO_SEC_ERROR(err)                                          \
     switch (err) {                                                    \

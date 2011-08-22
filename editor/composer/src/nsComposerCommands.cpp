@@ -431,7 +431,8 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
   {
     PRBool isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
     {
       // It is enabled if we are in any list type
@@ -543,7 +544,8 @@ nsOutdentCommand::IsCommandEnabled(const char * aCommandName,
   if (editor && htmlEditor)
   {
     PRBool canIndent, isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return htmlEditor->GetIndentState(&canIndent, outCmdEnabled);
   }
@@ -1051,7 +1053,8 @@ nsAbsolutePositioningCommand::IsCommandEnabled(const char * aCommandName,
   if (htmlEditor)
   {
     PRBool isEditable = PR_FALSE;
-    NS_SUCCEEDED(editor->GetIsSelectionEditable(&isEditable));
+    nsresult rv = editor->GetIsSelectionEditable(&isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
       return htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
   }
