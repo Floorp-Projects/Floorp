@@ -1455,9 +1455,6 @@ mjit::Compiler::generateMethod()
             continue;
         }
 
-        if (loop && !a->parent)
-            loop->setOuterPC(PC);
-
         frame.setPC(PC);
         frame.setInTryBlock(opinfo->inTryBlock);
 
@@ -1519,6 +1516,12 @@ mjit::Compiler::generateMethod()
         }
         frame.assertValidRegisterState();
         a->jumpMap[uint32(PC - script->code)] = masm.label();
+
+        // Now that we have the PC's register allocation, make sure it gets
+        // explicitly updated if this is the loop entry and new loop registers
+        // are allocated later on.
+        if (loop && !a->parent)
+            loop->setOuterPC(PC);
 
         SPEW_OPCODE();
         JS_ASSERT(frame.stackDepth() == opinfo->stackDepth);
