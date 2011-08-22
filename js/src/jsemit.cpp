@@ -93,8 +93,9 @@ static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
            uintN stackDepth, size_t start, size_t end);
 
-static JSBool
-EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg);
+static bool
+EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg,
+            JSOp *psuffix = NULL);
 
 static JSBool
 EmitLeaveBlock(JSContext *cx, JSCodeGenerator *cg, JSOp op, JSObjectBox *box);
@@ -1863,15 +1864,27 @@ EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, uintN index)
  * Such prefixing currently requires a suffix to restore the "zero segment"
  * register setting, but this could be optimized further.
  */
-static JSBool
-EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg)
+static bool
+EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg, JSOp *psuffix)
 {
     JSOp bigSuffix;
 
     bigSuffix = EmitBigIndexPrefix(cx, cg, index);
     if (bigSuffix == JSOP_FALSE)
-        return JS_FALSE;
+        return false;
     EMIT_UINT16_IMM_OP(op, index);
+
+    /*
+     * For decomposed ops, the suffix needs to go after the decomposed version.
+     * This means the suffix will run in the interpreter in both the base
+     * and decomposed paths, which works as suffix ops are idempotent.
+     */
+    JS_ASSERT(!!(js_CodeSpec[op].format & JOF_DECOMPOSE) == (psuffix != NULL));
+    if (psuffix) {
+        *psuffix = bigSuffix;
+        return true;
+    }
+
     return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
 }
 
@@ -1886,7 +1899,8 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg)
     JS_END_MACRO
 
 static bool
-EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
+           JSOp *psuffix = NULL)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
@@ -1900,7 +1914,7 @@ EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     if (!cg->makeAtomIndex(pn->pn_atom, &index))
         return false;
 
-    return EmitIndexOp(cx, op, index, cg);
+    return EmitIndexOp(cx, op, index, cg, psuffix);
 }
 
 static JSBool
@@ -2855,7 +2869,7 @@ EmitSpecialPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 
 static JSBool
 EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
-           JSBool callContext)
+           JSBool callContext, JSOp *psuffix = NULL)
 {
     JSParseNode *pn2, *pndot, *pnup, *pndown;
     ptrdiff_t top;
@@ -2946,13 +2960,14 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
         return JS_FALSE;
     }
 
-    return EmitAtomOp(cx, pn, op, cg);
+    return EmitAtomOp(cx, pn, op, cg, psuffix);
 }
 
 static bool
 EmitPropIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
-    if (!EmitPropOp(cx, pn, op, cg, false))
+    JSOp suffix = JSOP_NOP;
+    if (!EmitPropOp(cx, pn, op, cg, false, &suffix))
         return false;
     if (js_Emit1(cx, cg, JSOP_NOP) < 0)
         return false;
@@ -2962,6 +2977,9 @@ EmitPropIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
      * before the decomposed version.
      */
     int start = CG_OFFSET(cg);
+
+    if (suffix != JSOP_NOP && js_Emit1(cx, cg, suffix) < 0)
+        return false;
 
     const JSCodeSpec *cs = &js_CodeSpec[op];
     JS_ASSERT(cs->format & JOF_PROP);
@@ -2998,13 +3016,17 @@ EmitPropIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 
     UpdateDecomposeLength(cg, start);
 
+    if (suffix != JSOP_NOP && js_Emit1(cx, cg, suffix) < 0)
+        return false;
+
     return true;
 }
 
 static bool
 EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
-    if (!EmitAtomOp(cx, pn, op, cg))
+    JSOp suffix = JSOP_NOP;
+    if (!EmitAtomOp(cx, pn, op, cg, &suffix))
         return false;
     if (js_Emit1(cx, cg, JSOP_NOP) < 0)
         return false;
@@ -3013,6 +3035,9 @@ EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     cg->stackDepth--;
 
     int start = CG_OFFSET(cg);
+
+    if (suffix != JSOP_NOP && js_Emit1(cx, cg, suffix) < 0)
+        return false;
 
     const JSCodeSpec *cs = &js_CodeSpec[op];
     JS_ASSERT((cs->format & JOF_NAME) || (cs->format & JOF_GNAME));
@@ -3048,6 +3073,9 @@ EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
         return false;
 
     UpdateDecomposeLength(cg, start);
+
+    if (suffix != JSOP_NOP && js_Emit1(cx, cg, suffix) < 0)
+        return false;
 
     return true;
 }
