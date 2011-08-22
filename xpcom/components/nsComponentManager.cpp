@@ -46,11 +46,13 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
+
 #include <stdlib.h>
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nspr.h"
 #include "nsCRT.h" // for atoll
+
 // Arena used by component manager for storing contractid string, dll
 // location strings and small objects
 // CAUTION: Arena align mask needs to be defined before including plarena.h
@@ -107,7 +109,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 using namespace mozilla;
 
-NS_COM PRLogModuleInfo* nsComponentManagerLog = nsnull;
+PRLogModuleInfo* nsComponentManagerLog = nsnull;
 
 #if 0 || defined (DEBUG_timeless)
  #define SHOW_DENIED_ON_SHUTDOWN
@@ -1993,7 +1995,7 @@ nsFactoryEntry::GetFactory()
 // Static Access Functions
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_COM nsresult
+nsresult
 NS_GetComponentManager(nsIComponentManager* *result)
 {
     if (!nsComponentManagerImpl::gComponentManager)
@@ -2003,7 +2005,7 @@ NS_GetComponentManager(nsIComponentManager* *result)
     return NS_OK;
 }
 
-NS_COM nsresult
+nsresult
 NS_GetServiceManager(nsIServiceManager* *result)
 {
     if (!nsComponentManagerImpl::gComponentManager)
@@ -2014,7 +2016,7 @@ NS_GetServiceManager(nsIServiceManager* *result)
 }
 
 
-NS_COM nsresult
+nsresult
 NS_GetComponentRegistrar(nsIComponentRegistrar* *result)
 {
     if (!nsComponentManagerImpl::gComponentManager)

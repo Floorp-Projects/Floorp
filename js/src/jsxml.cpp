@@ -1643,7 +1643,7 @@ GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 
     if (!js_FindClassObject(cx, NULL, JSProto_XML, Valueify(&v)))
         return JS_FALSE;
-    if (!VALUE_IS_FUNCTION(cx, v)) {
+    if (JSVAL_IS_PRIMITIVE(v) || !JSVAL_TO_OBJECT(v)->isFunction()) {
         *vp = JSVAL_VOID;
         return JS_TRUE;
     }
@@ -5153,7 +5153,8 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
     JSFunction *fun;
     char numBuf[12];
 
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, *vp));
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp));
+    JS_ASSERT(JSVAL_TO_OBJECT(*vp)->isFunction());
 
     *objp = ToObject(cx, Valueify(&vp[1]));
     if (!*objp)
@@ -5177,7 +5178,7 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
         }
     }
 
-    fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp));
+    fun = JSVAL_TO_OBJECT(*vp)->getFunctionPrivate();
     JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
     JSAutoByteString funNameBytes;
     if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
@@ -7500,7 +7501,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     for (;;) {
         if (!js_GetProperty(cx, target, id, Valueify(vp)))
             return false;
-        if (VALUE_IS_FUNCTION(cx, *vp))
+        if (!JSVAL_IS_PRIMITIVE(*vp) && JSVAL_TO_OBJECT(*vp)->isFunction())
             return true;
         target = target->getProto();
         if (target == NULL || !target->isNative())

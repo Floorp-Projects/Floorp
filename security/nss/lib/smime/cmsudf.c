@@ -37,7 +37,7 @@
 /*
  * CMS User Define Types
  *
- * $Id: cmsudf.c,v 1.1.2.4 2011/02/11 03:57:50 emaldona%redhat.com Exp $
+ * $Id: cmsudf.c,v 1.3 2011/02/11 01:53:17 emaldona%redhat.com Exp $
  */
 
 #include "cmslocal.h"

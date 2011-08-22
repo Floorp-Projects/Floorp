@@ -1108,6 +1108,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::mac_graphite_theme);
   }
 
+  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MacLionTheme, metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::mac_lion_theme);
+  }
+
   rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DWMCompositor, metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::windows_compositor);

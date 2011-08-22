@@ -513,6 +513,7 @@ protected:
   PRBool ParseSize();
   PRBool ParseTextDecoration();
   PRBool ParseTextDecorationLine(nsCSSValue& aValue);
+  PRBool ParseTextOverflow(nsCSSValue& aValue);
 
   PRBool ParseShadowItem(nsCSSValue& aValue, PRBool aIsBoxShadow);
   PRBool ParseShadowList(nsCSSProperty aProperty);
@@ -5601,6 +5602,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseMarks(aValue);
       case eCSSProperty_text_decoration_line:
         return ParseTextDecorationLine(aValue);
+      case eCSSProperty_text_overflow:
+        return ParseTextOverflow(aValue);
       default:
         NS_ABORT_IF_FALSE(PR_FALSE, "should not reach here");
         return PR_FALSE;
@@ -8118,6 +8121,27 @@ CSSParserImpl::ParseTextDecorationLine(nsCSSValue& aValue)
   return PR_FALSE;
 }
 
+PRBool
+CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
+{
+  if (ParseVariant(aValue, VARIANT_INHERIT, nsnull)) {
+    // 'inherit' and 'initial' must be alone
+    return PR_TRUE;
+  }
+
+  nsCSSValue left;
+  if (!ParseVariant(left, VARIANT_KEYWORD | VARIANT_STRING,
+                    nsCSSProps::kTextOverflowKTable))
+    return PR_FALSE;
+
+  nsCSSValue right;
+  if (ParseVariant(right, VARIANT_KEYWORD | VARIANT_STRING,
+                    nsCSSProps::kTextOverflowKTable))
+    aValue.SetPairValue(left, right);
+  else
+    aValue.SetPairValue(left, left);
+  return PR_TRUE;
+}
 
 PRBool
 CSSParserImpl::ParseTransitionProperty()

@@ -128,6 +128,12 @@ var obj = { valueOf:(function valueOf() {
 
 /***********/
 
+var proxy = Proxy.createFunction({}, function f() { assertStackIs([f, "global-code"]) });
+proxy();
+new proxy();
+
+/***********/
+
 for (var i = 0; i < 10; ++i) {
     /* No loss for scripts. */
     (function f() {

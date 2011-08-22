@@ -305,6 +305,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mContentFocused = PR_FALSE;
   mWidgetVisible = PR_TRUE;
   mPluginWindowVisible = PR_FALSE;
+  mPluginDocumentActiveState = PR_TRUE;
   mNumCachedAttrs = 0;
   mNumCachedParams = 0;
   mCachedAttrParamNames = nsnull;
@@ -3241,7 +3242,7 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
   mPluginWindow->clipRect.left = 0;
   mPluginWindow->clipRect.top = 0;
 
-  if (mPluginWindowVisible) {
+  if (mPluginWindowVisible && mPluginDocumentActiveState) {
     mPluginWindow->clipRect.right = mPluginWindow->width;
     mPluginWindow->clipRect.bottom = mPluginWindow->height;
   } else {
@@ -3269,6 +3270,12 @@ nsPluginInstanceOwner::UpdateWindowVisibility(PRBool aVisible)
   UpdateWindowPositionAndClipRect(PR_TRUE);
 }
 
+void
+nsPluginInstanceOwner::UpdateDocumentActiveState(PRBool aIsActive)
+{
+  mPluginDocumentActiveState = aIsActive;
+  UpdateWindowPositionAndClipRect(PR_TRUE);
+}
 #endif // XP_MACOSX
 
 void

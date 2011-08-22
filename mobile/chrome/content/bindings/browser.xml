@@ -134,7 +134,7 @@
                 }
                 break;
 
-              case "MozScrolledAreaChanged":
+              case "MozScrolledAreaChanged": {
                 self._contentDocumentWidth = json.width;
                 self._contentDocumentHeight = json.height;
                 self._contentDocumentLeft = (json.left < 0) ? json.left : 0;
@@ -143,6 +143,15 @@
                 let view = self.getRootView();
                 view.scrollBy(0, 0);
                 break;
+              }
+
+              case "Content:UpdateDisplayPort": {
+                // Recalculate whether the visible area is actually in bounds
+                let view = self.getRootView();
+                view.scrollBy(0, 0);
+                view._updateCacheViewport();
+                break;
+              }
             }
           }
         })
@@ -572,6 +581,7 @@
           this.messageManager.addMessageListener("pagehide", this._messageListenerLocal);
           this.messageManager.addMessageListener("DOMPopupBlocked", this._messageListenerLocal);
           this.messageManager.addMessageListener("MozScrolledAreaChanged", this._messageListenerLocal);
+          this.messageManager.addMessageListener("Content:UpdateDisplayPort", this._messageListenerLocal);
 
           this._webProgress._init();
 

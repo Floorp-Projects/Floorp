@@ -548,7 +548,7 @@ JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark)
 JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
-    return FUN_SCRIPT(fun);
+    return fun->maybeScript();
 }
 
 JS_PUBLIC_API(JSNative)
@@ -1095,8 +1095,8 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     size_t nbytes;
 
     nbytes = sizeof *fun;
-    nbytes += JS_GetObjectTotalSize(cx, FUN_OBJECT(fun));
-    if (FUN_INTERPRETED(fun))
+    nbytes += JS_GetObjectTotalSize(cx, fun);
+    if (fun->isInterpreted())
         nbytes += JS_GetScriptTotalSize(cx, fun->script());
     if (fun->atom)
         nbytes += GetAtomTotalSize(cx, fun->atom);
@@ -2202,7 +2202,7 @@ JS_DumpBytecode(JSContext *cx, JSScript *script)
 
     fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename, script->lineno);
     js_Disassemble(cx, script, true, &sprinter);
-    fprintf(stdout, "%s\n", sprinter.base);
+    fputs(sprinter.base, stdout);
     fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename, script->lineno);
 #endif
 }

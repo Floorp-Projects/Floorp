@@ -5,8 +5,6 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-dump("!! remote browser loaded\n");
-
 let WebProgressListener = {
   init: function() {
     let flags = Ci.nsIWebProgress.NOTIFY_LOCATION |
@@ -623,6 +621,13 @@ let ContentScroll =  {
           height: aEvent.height,
           left: aEvent.x
         });
+
+        // Send event only after painting to make sure content views in the parent process have
+        // been updated.
+        addEventListener("MozAfterPaint", function afterPaint() {
+          removeEventListener("MozAfterPaint", afterPaint, false);
+          sendAsyncMessage("Content:UpdateDisplayPort");
+        }, false);
 
         break;
       }

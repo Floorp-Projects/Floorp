@@ -673,7 +673,7 @@ nsSupportsArray::Clone(nsISupportsArray* *result)
   return NS_OK;
 }
 
-NS_COM nsresult
+nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
 {
   nsresult rv;

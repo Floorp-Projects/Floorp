@@ -16,6 +16,7 @@ script extension-methods-reject-null-undefined-this.js
 skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
 script function-properties.js
 script iterator-in-catch.js
+script JSON-string-replacer-overflow.js
 skip-if(!xulRuntime.shell) script legacy-JSON.js # needs parseLegacyJSON
 fails script nested-delete-name-in-evalcode.js # bug 604301, at a minimum
 script proxy-strict.js
