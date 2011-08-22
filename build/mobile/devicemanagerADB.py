@@ -32,7 +32,11 @@ class DeviceManagerADB(DeviceManager):
       self.tmpDir = None
     try:
       # a test to see if we have root privs
-      self.checkCmd(["shell", "ls", "/sbin"])
+      files = self.listFiles("/data/data")
+      if (len(files) == 1):
+        if (files[0].find("Permission denied") != -1):
+          print "NOT running as root"
+          raise Exception("not running as root")
     except:
       try:
         self.checkCmd(["root"])
@@ -103,7 +107,7 @@ class DeviceManagerADB(DeviceManager):
     try:
       if (not self.dirExists(remoteDir)):
         self.mkDirs(remoteDir+"/x")
-      for root, dirs, files in os.walk(localDir):
+      for root, dirs, files in os.walk(localDir, followlinks='true'):
         relRoot = os.path.relpath(root, localDir)
         for file in files:
           localFile = os.path.join(root, file)
@@ -139,8 +143,12 @@ class DeviceManagerADB(DeviceManager):
   #  success: True
   #  failure: False
   def fileExists(self, filepath):
-    self.checkCmd(["shell", "ls", filepath])
-    return True
+    p = self.runCmd(["shell", "ls", "-a", filepath])
+    data = p.stdout.readlines()
+    if (len(data) == 1):
+      if (data[0].rstrip() == filepath):
+        return True
+    return False
 
   def removeFile(self, filename):
     return self.runCmd(["shell", "rm", filename]).stdout.read()
