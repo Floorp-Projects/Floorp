@@ -507,12 +507,6 @@ void ARMAssembler::doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID b
             return;
         }
     }
-    if (offset <= 0x3ffff && offset >= 0) {
-        add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 10) | (11 << 8));
-        fdtr_u(isLoad, srcDst, ARMRegisters::S0, (offset >> 2) & 0xff);
-        return;
-    }
-    offset = -offset;
 
     // Slow case for long-range accesses.
     ldr_un_imm(ARMRegisters::S0, offset);
