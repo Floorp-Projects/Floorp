@@ -41,6 +41,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsClientRect.h"
 #include "nsIFrame.h"
+#include "nsContentUtils.h"
 
 DOMCI_DATA(PaintRequest, nsPaintRequest)
 
@@ -83,15 +84,28 @@ nsPaintRequest::GetReason(nsAString& aResult)
 
 DOMCI_DATA(PaintRequestList, nsPaintRequestList)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsPaintRequestList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPaintRequestList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPaintRequestList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsPaintRequestList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_INTERFACE_TABLE_HEAD(nsPaintRequestList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_TABLE1(nsPaintRequestList, nsIDOMPaintRequestList)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsPaintRequestList)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PaintRequestList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsPaintRequestList)
-NS_IMPL_RELEASE(nsPaintRequestList)
-
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPaintRequestList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPaintRequestList)
 
 NS_IMETHODIMP    
 nsPaintRequestList::GetLength(PRUint32* aLength)
@@ -103,6 +117,12 @@ nsPaintRequestList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP    
 nsPaintRequestList::Item(PRUint32 aIndex, nsIDOMPaintRequest** aReturn)
 {
-  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex));
+  NS_IF_ADDREF(*aReturn = nsPaintRequestList::GetItemAt(aIndex));
   return NS_OK;
+}
+
+nsIDOMPaintRequest*
+nsPaintRequestList::GetItemAt(PRUint32 aIndex)
+{
+  return mArray.SafeObjectAt(aIndex);
 }

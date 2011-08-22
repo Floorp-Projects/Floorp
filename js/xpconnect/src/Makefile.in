@@ -97,6 +97,7 @@ LOCAL_INCLUDES = \
 		-I$(srcdir)/../loader \
 		-I$(topsrcdir)/caps/include \
 		-I$(topsrcdir)/content/base/src \
+		-I$(topsrcdir)/content/events/src \
 		-I$(topsrcdir)/content/html/content/src \
 		-I$(topsrcdir)/content/html/document/src \
 		-I$(topsrcdir)/content/svg/content/src \
