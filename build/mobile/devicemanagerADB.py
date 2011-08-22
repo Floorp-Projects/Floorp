@@ -5,12 +5,17 @@ import os
 
 class DeviceManagerADB(DeviceManager):
 
-  def __init__(self, host = None, port = 20701, retrylimit = 5, packageName = "org.mozilla.fennec_unofficial"):
+  def __init__(self, host = None, port = 20701, retrylimit = 5, packageName = None):
     self.host = host
     self.port = port
     self.retrylimit = retrylimit
     self.retries = 0
     self._sock = None
+    if packageName == None:
+      if os.getenv('USER'):
+        packageName = 'org.mozilla.fennec_' + os.getenv('USER')
+      else:
+        packageName = 'org.mozilla.fennec_'
     self.Init(packageName)
 
   def Init(self, packageName):
@@ -381,18 +386,11 @@ class DeviceManagerADB(DeviceManager):
       return devroot + '/fennec'
     elif (self.dirExists(devroot + '/firefox')):
       return devroot + '/firefox'
-    elif (self.dirExists('/data/data/org.mozilla.fennec')):
-      return '/data/data/org.mozilla.fennec'
-    elif (self.dirExists('/data/data/org.mozilla.firefox')):
-      return '/data/data/org.mozilla.firefox'
-    elif (self.dirExists('/data/data/org.mozilla.fennec_unofficial')):
-      return '/data/data/org.mozilla.fennec_unofficial'
-    elif (self.dirExists('/data/data/org.mozilla.fennec_aurora')):
-      return '/data/data/org.mozilla.fennec_aurora'
-    elif (self.dirExists('/data/data/org.mozilla.firefox_beta')):
-      return '/data/data/org.mozilla.firefox_beta'
+    elif (self.packageName and self.dirExists('/data/data/' + self.packageName)):
+      return '/data/data/' + self.packageName
 
     # Failure (either not installed or not a recognized platform)
+    print "devicemanagerADB: getAppRoot failed"
     return None
 
   # Gets the directory location on the device for a specific test type
