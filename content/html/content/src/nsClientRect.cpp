@@ -41,6 +41,7 @@
 #include "nsDOMClassInfoID.h"
 
 #include "nsPresContext.h"
+#include "dombindings.h"
 
 DOMCI_DATA(ClientRect, nsClientRect)
 
@@ -102,14 +103,28 @@ nsClientRect::GetHeight(float* aResult)
 
 DOMCI_DATA(ClientRectList, nsClientRectList)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsClientRectList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsClientRectList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsClientRectList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsClientRectList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_INTERFACE_TABLE_HEAD(nsClientRectList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_TABLE1(nsClientRectList, nsIDOMClientRectList)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsClientRectList)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ClientRectList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsClientRectList)
-NS_IMPL_RELEASE(nsClientRectList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsClientRectList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsClientRectList)
 
 
 NS_IMETHODIMP    
@@ -122,8 +137,22 @@ nsClientRectList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP    
 nsClientRectList::Item(PRUint32 aIndex, nsIDOMClientRect** aReturn)
 {
-  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex));
+  NS_IF_ADDREF(*aReturn = nsClientRectList::GetItemAt(aIndex));
   return NS_OK;
+}
+
+nsIDOMClientRect*
+nsClientRectList::GetItemAt(PRUint32 aIndex)
+{
+  return mArray.SafeObjectAt(aIndex);
+}
+
+JSObject*
+nsClientRectList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                             bool *triedToWrap)
+{
+  return mozilla::dom::binding::ClientRectList::create(cx, scope, this,
+                                                       triedToWrap);
 }
 
 static double

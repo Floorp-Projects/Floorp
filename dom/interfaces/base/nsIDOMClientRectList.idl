@@ -42,5 +42,6 @@
 interface nsIDOMClientRectList : nsISupports
 {
   readonly attribute unsigned long length;
-  nsIDOMClientRect              item(in unsigned long index);
+  [getter,forward(getItemAt)] nsIDOMClientRect        item(in unsigned long index);
+  [noscript,notxpcom,nostdcall] nsIDOMClientRect getItemAt(in unsigned long index);
 };
