@@ -68,19 +68,22 @@ class DOMSVGNumber;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGNumberList : public nsIDOMSVGNumberList
+class DOMSVGNumberList : public nsIDOMSVGNumberList,
+                         public nsWrapperCache
 {
   friend class DOMSVGNumber;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGNumberList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGNumberList)
   NS_DECL_NSIDOMSVGNUMBERLIST
 
   DOMSVGNumberList(DOMSVGAnimatedNumberList *aAList,
                    const SVGNumberList &aInternalList)
     : mAList(aAList)
   {
+    SetIsProxy();
+
     // aInternalList must be passed in explicitly because we can't use
     // InternalList() here. (Because it depends on IsAnimValList, which depends
     // on this object having been assigned to aAList's mBaseVal or mAnimVal,
@@ -98,6 +101,14 @@ public:
     }
   }
 
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap);
+
+  nsISupports* GetParentObject()
+  {
+    return static_cast<nsIContent*>(Element());
+  }
+
   /**
    * This will normally be the same as InternalList().Length(), except if we've
    * hit OOM in which case our length will be zero.
@@ -108,8 +119,6 @@ public:
                       "DOM wrapper's list length is out of sync");
     return mItems.Length();
   }
-
-  nsIDOMSVGNumber* GetItemWithoutAddRef(PRUint32 aIndex);
 
   /// Called to notify us to syncronize our length and detach excess items.
   void InternalListLengthWillChange(PRUint32 aNewLength);
