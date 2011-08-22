@@ -261,7 +261,7 @@ class XPCShellTests(object):
       test['head'] is a whitespace delimited list of head files.
       return the list of head files as paths including the subdir if the head file exists
 
-      On a remote system, this is overloaded to list files in a remote directory structure.
+      On a remote system, this may be overloaded to list files in a remote directory structure.
     """
     return [os.path.join(test['here'], f).strip() for f in sorted(test['head'].split(' ')) if os.path.isfile(os.path.join(test['here'], f))]
 
@@ -270,7 +270,7 @@ class XPCShellTests(object):
       test['tail'] is a whitespace delimited list of head files.
       return the list of tail files as paths including the subdir if the tail file exists
 
-      On a remote system, this is overloaded to list files in a remote directory structure.
+      On a remote system, this may be overloaded to list files in a remote directory structure.
     """
     return [os.path.join(test['here'], f).strip() for f in sorted(test['tail'].split(' ')) if os.path.isfile(os.path.join(test['here'], f))]
 
@@ -280,7 +280,7 @@ class XPCShellTests(object):
       When running check-interactive and check-one, the directory is well-defined and
       retained for inspection once the tests complete.
 
-      On a remote system, we overload this to use a remote path structure.
+      On a remote system, this may be overloaded to use a remote path structure.
     """
     if self.interactive or self.singleFile:
       profileDir = os.path.join(gettempdir(), self.profileName, "xpcshellprofile")
@@ -301,7 +301,7 @@ class XPCShellTests(object):
     """
       Enable leaks (only) detection to its own log file and set environment variables.
 
-      On a remote system, we overload this to use a remote filename and path structure
+      On a remote system, this may be overloaded to use a remote filename and path structure
     """
     filename = "runxpcshelltests_leaks.log"
 
@@ -381,12 +381,20 @@ class XPCShellTests(object):
              '-e', 'const _HEAD_FILES = [%s];' % cmdH,
              '-e', 'const _TAIL_FILES = [%s];' % cmdT]
 
+  def buildCmdTestFile(self, name):
+    """
+      Build the command line arguments for the test file.
+      On a remote system, this may be overloaded to use a remote path structure.
+    """
+    return ['-e', 'const _TEST_FILE = ["%s"];' %
+              replaceBackSlashes(name)]
+
   def runTests(self, xpcshell, xrePath=None, appPath=None, symbolsPath=None,
                manifest=None, testdirs=[], testPath=None,
                interactive=False, verbose=False, keepGoing=False, logfiles=True,
                thisChunk=1, totalChunks=1, debugger=None,
                debuggerArgs=None, debuggerInteractive=False,
-               profileName=None, mozInfo=None):
+               profileName=None, mozInfo=None, **otherOptions):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -410,6 +418,7 @@ class XPCShellTests(object):
     |profileName|, if set, specifies the name of the application for the profile
       directory if running only a subset of tests.
     |mozInfo|, if set, specifies specifies build configuration information, either as a filename containing JSON, or a dict.
+    |otherOptions| may be present for the convenience of subclasses
     """
 
     global gotSIGINT 
@@ -491,8 +500,7 @@ class XPCShellTests(object):
       self.leakLogFile = self.setupLeakLogging()
 
       # The test file will have to be loaded after the head files.
-      cmdT = ['-e', 'const _TEST_FILE = ["%s"];' %
-                replaceBackSlashes(name)]
+      cmdT = self.buildCmdTestFile(name)
 
       try:
         self.log.info("TEST-INFO | %s | running test ..." % name)
@@ -515,8 +523,9 @@ class XPCShellTests(object):
         def print_stdout(stdout):
           """Print stdout line-by-line to avoid overflowing buffers."""
           self.log.info(">>>>>>>")
-          for line in stdout.splitlines():
-            self.log.info(line)
+          if (stdout):
+            for line in stdout.splitlines():
+              self.log.info(line)
           self.log.info("<<<<<<<")
 
         result = not ((self.getReturnCode(proc) != 0) or
