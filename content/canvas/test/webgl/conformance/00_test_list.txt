@@ -5,7 +5,9 @@ bad-arguments-test.html
 buffer-bind-test.html
 buffer-data-array-buffer.html
 buffer-preserve-test.html
+buffer-offscreen-test.html
 canvas-test.html
+canvas-zero-size.html
 constants.html
 context-attributes-alpha-depth-stencil-antialias.html
 context-lost-restored.html
@@ -14,6 +16,8 @@ context-type-test.html
 copy-tex-image-and-sub-image-2d.html
 draw-arrays-out-of-bounds.html
 draw-elements-out-of-bounds.html
+drawingbuffer-static-canvas-test.html
+drawingbuffer-test.html
 error-reporting.html
 framebuffer-object-attachment.html
 framebuffer-test.html
@@ -24,13 +28,16 @@ gl-drawelements.html
 gl-enable-enum-test.html
 gl-enable-vertex-attrib.html
 gl-enum-tests.html
+gl-fragcoord.html
+shaders/00_test_list.txt
 gl-get-active-attribute.html
 gl-get-active-uniform.html
 gl-get-calls.html
+gl-geterror.html
 gl-getshadersource.html
 gl-getstring.html
 gl-min-attribs.html
-# gl-min-textures.html
+gl-min-textures.html
 gl-min-uniforms.html
 gl-object-get-calls.html
 gl-pixelstorei.html
@@ -41,11 +48,13 @@ gl-uniform-arrays.html
 gl-uniform-bool.html
 gl-uniformmatrix4fv.html
 gl-unknown-uniform.html
-gl-vertex-attrib.html
 gl-vertex-attrib-zero-issues.html
+gl-vertex-attrib.html
 gl-vertexattribpointer.html
+gl-vertexattribpointer-offsets.html
 #glsl-2types-of-textures-on-same-unit.html
 glsl-conformance.html
+glsl-long-variable-names.html
 incorrect-context-object-behaviour.html
 index-validation-copies-indices.html
 index-validation-crash-with-buffer-sub-data.html
@@ -64,14 +73,16 @@ object-deletion-behaviour.html
 oes-standard-derivatives.html
 oes-texture-float.html
 oes-vertex-array-object.html
-# origin-clean-conformance.html # is obsolete because of bug 656277
+origin-clean-conformance.html
 point-size.html
+premultiplyalpha-test.html
 program-test.html
 read-pixels-pack-alignment.html
 read-pixels-test.html
 renderbuffer-initialization.html
 resource-sharing-test.html
 tex-image-and-sub-image-2d-with-array-buffer-view.html
+tex-image-and-sub-image-2d-with-canvas.html
 tex-image-and-sub-image-2d-with-image-data.html
 tex-image-and-sub-image-2d-with-image.html
 tex-image-and-sub-image-2d-with-video.html
@@ -87,6 +98,7 @@ texture-active-bind.html
 texture-complete.html
 texture-formats-test.html
 texture-npot.html
+texture-npot-video.html
 texture-transparent-pixels-initialized.html
 triangle.html
 type-conversion-test.html
@@ -95,5 +107,3 @@ uniform-samplers-test.html
 uninitialized-test.html
 viewport-unchanged-upon-resize.html
 webgl-specific.html
-more/00_test_list.txt
-
