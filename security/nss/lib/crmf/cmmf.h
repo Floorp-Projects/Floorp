@@ -637,7 +637,7 @@ extern int
  *    inIndex
  *        The index of the CMMFCertResponse the user wants a copy of.
  * NOTES:
- *    This funciton creates a copy of the CMMFCertResponse at the index 
+ *    This function creates a copy of the CMMFCertResponse at the index 
  *    corresponding to the parameter 'inIndex'.  Indexing is done like a
  *    traditional C array, ie the valid indexes are (0...numResponses-1).
  *    The user must call CMMF_DestroyCertResponse after the return value is 

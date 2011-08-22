@@ -40,7 +40,7 @@
 #define CKCAPI_H 1
 
 #ifdef DEBUG
-static const char CKCAPI_CVS_ID[] = "@(#) $RCSfile: ckcapi.h,v $ $Revision: 1.3 $ $Date: 2008/08/11 08:14:10 $";
+static const char CKCAPI_CVS_ID[] = "@(#) $RCSfile: ckcapi.h,v $ $Revision: 1.4 $ $Date: 2011/02/02 17:13:40 $";
 #endif /* DEBUG */
 
 #include "nssckmdt.h"
@@ -248,13 +248,13 @@ ckcapi_ReverseData
 /*
  * unwrap a single DER value
  */
-char *
+unsigned char *
 nss_ckcapi_DERUnwrap
 (
-  char *src, 
-  int size, 
-  int *outSize, 
-  char **next
+  unsigned char *src, 
+  unsigned int size, 
+  unsigned int *outSize, 
+  unsigned char **next
 );
 
 /*

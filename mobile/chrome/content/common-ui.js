@@ -1345,6 +1345,7 @@ var SelectionHelper = {
     switch (aEvent.type) {
       case "PanBegin":
         window.removeEventListener("PanBegin", this, true);
+        window.removeEventListener("TapUp", this, true);
         window.addEventListener("PanFinished", this, true);
         this._start.hidden = true;
         this._end.hidden = true;
@@ -1365,6 +1366,7 @@ var SelectionHelper = {
           window.addEventListener("TapMove", this, true);
         } else {
           window.addEventListener("PanBegin", this, true);
+          window.addEventListener("TapUp", this, true);
           this.target = null;
         }
         break;
@@ -1375,8 +1377,9 @@ var SelectionHelper = {
           this.deltaX = -1;
           this.deltaY = -1;
         } else {
-          window.removeEventListener("PanBegin", self, true);
-          self.hide(aEvent);
+          window.removeEventListener("PanBegin", this, true);
+          window.removeEventListener("TapUp", this, true);
+          this.hide(aEvent);
         }
         break;
       case "TapMove":

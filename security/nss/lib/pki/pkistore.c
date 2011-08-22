@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.33.40.1 $ $Date: 2010/12/17 20:14:38 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.34 $ $Date: 2010/12/17 02:34:07 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
