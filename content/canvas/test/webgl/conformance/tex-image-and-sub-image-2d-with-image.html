@@ -1,12 +1,10 @@
 <!--
-Copyright (c) 2011 The Chromium Authors. All rights reserved.
+Copyright (c) 2010 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
  -->
-<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
@@ -16,7 +14,6 @@ var wtu = WebGLTestUtils;
 var gl = null;
 var textureLoc = null;
 var successfullyParsed = false;
-var imgCanvas;
 
 function init()
 {
@@ -33,7 +30,7 @@ function init()
     gl.clearColor(0,0,0,1);
     gl.clearDepth(1);
 
-    textureLoc = gl.getUniformLocation(program, "tex");
+    textureLoc = gl.getUniformLocation(gl.program, "tex");
 
     wtu.loadTexture(gl, "resources/red-green.png", runTest);
 }
@@ -85,47 +82,15 @@ function runOneIteration(image, useTexSubImage2D, flipY, topColor, bottomColor)
                         "shouldBe " + topColor);
 }
 
-function runTestOnImage(image) {
+function runTest(image)
+{
     var red = [255, 0, 0];
     var green = [0, 255, 0];
     runOneIteration(image, false, true, red, green);
     runOneIteration(image, false, false, green, red);
     runOneIteration(image, true, true, red, green);
     runOneIteration(image, true, false, green, red);
-}
 
-function runTest(image)
-{
-    runTestOnImage(image);
-
-    imgCanvas = document.createElement("canvas");
-    imgCanvas.width = 1;
-    imgCanvas.height = 2;
-    var imgCtx = imgCanvas.getContext("2d");
-    imgCtx.drawImage(image, 0, 0);
-
-    // apparently Image is different than <img>.
-    var newImage =  new Image();
-    newImage.onload = function() {
-        runTest2(newImage);
-    };
-    newImage.src = imgCanvas.toDataURL();
-}
-
-function runTest2(image) {
-    runTestOnImage(image);
-
-    var newImage = document.createElement("img");
-    newImage.onload = function() {
-        runTest3(newImage);
-    };
-    newImage.src = imgCanvas.toDataURL();
-}
-
-function runTest3(image) {
-    runTestOnImage(image);
-
-    glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
     finishTest();
 }
 

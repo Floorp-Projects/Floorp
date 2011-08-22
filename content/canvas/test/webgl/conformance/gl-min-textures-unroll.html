@@ -7,7 +7,7 @@ found in the LICENSE file.
   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>WebGL the minimum number of attributes are supported.</title>
+<title>WebGL the minimum number of uniforms are supported.</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"> </script>
@@ -19,29 +19,30 @@ found in the LICENSE file.
 <div id="console"></div>
 <script id="vshader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
-attribute vec4 v0;
-attribute vec4 v1;
-attribute vec4 v2;
-attribute vec4 v3;
-attribute vec4 v4;
-attribute vec4 v5;
-attribute vec4 v6;
-varying vec4 color;
 void main()
 {
     gl_Position = vPosition;
-    color = v0 + v1 + v2 + v3 + v4 + v5 + v6;
 }
 </script>
 
 <script id="fshader" type="x-shader/x-fragment">
+#define NUM_TEXTURES 8 // See spec
 #ifdef GL_ES
 precision mediump float;
 #endif
-varying vec4 color;
+uniform sampler2D uni[8];
 void main()
 {
-    gl_FragColor = color;
+    vec4 c = vec4(0,0,0,0);
+    c += texture2D(uni[0], vec2(0.5, 0.5));
+    c += texture2D(uni[1], vec2(0.5, 0.5));
+    c += texture2D(uni[2], vec2(0.5, 0.5));
+    c += texture2D(uni[3], vec2(0.5, 0.5));
+    c += texture2D(uni[4], vec2(0.5, 0.5));
+    c += texture2D(uni[5], vec2(0.5, 0.5));
+    c += texture2D(uni[6], vec2(0.5, 0.5));
+    c += texture2D(uni[7], vec2(0.5, 0.5));
+    gl_FragColor = c;
 }
 </script>
 <script>
@@ -50,31 +51,25 @@ var canvas = document.getElementById("example");
 var gl = wtu.create3DContext(canvas);
 var program = wtu.setupTexturedQuad(gl);
 
+//------------------------------------------------------------------------------
 var program = wtu.setupProgram(
     gl,
     [wtu.loadShaderFromScript(gl, 'vshader', gl.VERTEX_SHADER),
      wtu.loadShaderFromScript(gl, 'fshader', gl.FRAGMENT_SHADER)],
-    ['vPosition', 'v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6'],
-    [0, 1, 2, 3, 4, 5, 6, 7]);
+    ['vPosition'], [0]);
 
-for (var ii = 0; ii < 7; ++ii) {
-  var v = (ii + 1) / 28;
-  var vertexObject = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      v, v/2, v/4, v/8,
-      v, v/2, v/4, v/8,
-      v, v/2, v/4, v/8,
-      v, v/2, v/4, v/8,
-      v, v/2, v/4, v/8,
-      v, v/2, v/4, v/8]), gl.STATIC_DRAW);
-  gl.enableVertexAttribArray(ii + 1);
-  gl.vertexAttribPointer(ii + 1, 4, gl.FLOAT, false, 0, 0);
+for (var ii = 0; ii < 8; ++ii) {
+  var loc = gl.getUniformLocation(program, "uni[" + ii + "]");
+  gl.activeTexture(gl.TEXTURE0 + ii);
+  var tex = gl.createTexture();
+  wtu.fillTexture(gl, tex, 1, 1, [32, 16, 8, ii * 9], 0);
+  gl.uniform1i(loc, ii);
 }
 
 wtu.drawQuad(gl);
 glErrorShouldBe(gl, gl.NO_ERROR, "Should be no errors from setup.");
-wtu.checkCanvasRect(gl, 0, 0, canvas.width, canvas.height, [255, 127, 64, 32], "Should render 255,127,64,32 (+/-1)", 1);
+wtu.checkCanvas(gl, [255, 128, 64, 252],
+                "Should render using all texture units");
 
 successfullyParsed = true;
 

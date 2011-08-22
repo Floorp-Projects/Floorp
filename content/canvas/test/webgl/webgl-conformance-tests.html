@@ -1,12 +1,7 @@
-<!--
-Copyright (c) 2011 Mozilla Foundation. All rights reserved.
-Use of this source code is governed by a BSD-style license that can be
-found in the LICENSE file.
--->
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<meta charset="utf-8">
 <title>
 WebGL Conformance Test Runner.
 </title>
@@ -48,7 +43,7 @@ function start() {
         context = canvas.getContext("webgl");
     } catch(e) {
     }
-    if (!context) {
+		if (!context) {
       try {
           context = canvas.getContext("experimental-webgl");
       } catch(e) {
@@ -84,7 +79,6 @@ function start() {
     div.appendChild(button);
     var a = reporter.localDoc.createElement('a');
     a.href = url;
-    a.target = "_blank";
     var node = reporter.localDoc.createTextNode(url);
     a.appendChild(node);
     div.appendChild(a);
@@ -257,8 +251,7 @@ function start() {
     for (var url in this.pagesByURL) {
       var page = this.pagesByURL[url];
       if (!(page.totalTests == 0 && page.totalTimeouts == 0)) {
-        tx += url + ": " + page.totalSuccessful + " / " +
-            page.totalTests + " / " + page.totalTimeouts + "\n";
+	tx += url + ": " + page.totalSuccessful + " / " + page.totalTests + " / " + page.totalTimeouts + "\n";
       }
     }
     tx += "\n";

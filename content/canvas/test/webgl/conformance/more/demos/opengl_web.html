@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
-<meta charset="utf-8">
 
 <title>OpenGL for the web</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
 <script type="application/x-javascript" src="../util.js"></script>
 
@@ -249,8 +249,9 @@ window.addEventListener("load", init, false);
     </script>
 
     <script id="ppix-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform vec4 LightSpecular;
       uniform vec4 MaterialSpecular;
       uniform float MaterialShininess;
@@ -301,8 +302,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="depth-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       varying float depth;
       void main()
       {
@@ -323,8 +325,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="identity-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
 
       varying vec4 texCoord0;
@@ -335,8 +338,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="premult-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
 
       varying vec4 texCoord0;
@@ -350,8 +354,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="unpremult-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
 
       varying vec4 texCoord0;
@@ -366,8 +371,9 @@ window.addEventListener("load", init, false);
     </script>
 
     <script id="hblur-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform float step;
       float kernel[7] = float[](0.046, 0.111, 0.202, 0.283, 0.202, 0.111, 0.046);
@@ -389,8 +395,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="vblur-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform float step;
       float kernel[7] = float[](0.046, 0.111, 0.202, 0.283, 0.202, 0.111, 0.046);
@@ -412,8 +419,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="hdof-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform sampler2D Depth;
       uniform float step;
@@ -444,8 +452,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="vdof-frag" type="x-shader/x-fragment">
-      precision mediump float;
-
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform sampler2D Depth;
       uniform float step;
