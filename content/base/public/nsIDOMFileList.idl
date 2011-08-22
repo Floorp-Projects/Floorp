@@ -43,5 +43,6 @@ interface nsIDOMFile;
 interface nsIDOMFileList : nsISupports
 {
   readonly attribute unsigned long length;
-  nsIDOMFile item(in unsigned long index);
+  [getter,forward(getItemAt)] nsIDOMFile item(in unsigned long index);
+  [noscript,notxpcom,nostdcall] nsIDOMFile getItemAt(in unsigned long index);
 };
