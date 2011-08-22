@@ -43,6 +43,7 @@
 #include "jsapi.h"
 #include "jsproxy.h"
 #include "xpcpublic.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {
