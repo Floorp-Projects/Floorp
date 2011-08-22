@@ -43,6 +43,7 @@
 #include "MIRGraph.h"
 #include "IonLIR.h"
 #include "IonLIR-inl.h"
+#include "IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;
@@ -112,6 +113,10 @@ LSnapshot::New(MIRGenerator *gen, MSnapshot *mir)
     LSnapshot *snapshot = new LSnapshot(mir);
     if (!snapshot->init(gen))
         return NULL;
+
+    IonSpew(IonSpew_Snapshots, "Generating LIR snapshot %p from MIR (%p)",
+            (void *)snapshot, (void *)mir);
+
     return snapshot;
 }
 
@@ -240,6 +245,15 @@ LInstruction::printOperands(FILE *fp)
         if (i != numOperands() - 1)
             fprintf(fp, ",");
     }
+}
+
+void
+LInstruction::assignSnapshot(LSnapshot *snapshot)
+{
+    JS_ASSERT(!snapshot_);
+    snapshot_ = snapshot;
+    IonSpew(IonSpew_Snapshots, "Assigning snapshot %p to instruction %p",
+            (void *)snapshot, (void *)this);
 }
 
 void

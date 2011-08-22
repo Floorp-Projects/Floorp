@@ -232,6 +232,7 @@ class SnapshotWriter
     // These are only used to assert sanity.
     uint32 nslots_;
     uint32 slotsWritten_;
+    SnapshotOffset lastStart_;
 
     void writeSlotHeader(JSValueType type, uint32 regCode);
 

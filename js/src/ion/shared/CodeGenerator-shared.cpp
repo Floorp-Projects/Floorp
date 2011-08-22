@@ -43,6 +43,7 @@
 #include "ion/IonFrames.h"
 #include "ion/MIR.h"
 #include "CodeGenerator-shared-inl.h"
+#include "ion/IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;
@@ -90,6 +91,9 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
                     (gen->fun() ? gen->fun()->nargs + 1 : 0);
     JS_ASSERT(nslots >= nfixed);
     uint32 exprStack = nslots - nfixed;
+
+    IonSpew(IonSpew_Snapshots, "Encoding snapshot %p (nfixed %d) (exprStack %d)",
+            (void *)snapshot, nfixed, exprStack);
 
     SnapshotOffset offset = snapshots_.start(gen->fun(), gen->script, snapshot->mir()->pc(),
                                              masm.framePushed(), exprStack);
