@@ -1,12 +1,10 @@
 <!--
-Copyright (c) 2011 The Chromium Authors. All rights reserved.
+Copyright (c) 2010 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
  -->
-<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
@@ -23,8 +21,8 @@ var depthBuffer;
 var stencilBuffer;
 var depthStencilBuffer;
 var colorBuffer;
-var width;
-var height;
+var width = 2;
+var height = 2;
 
 function testAttachment(attachment, buffer, isConflicted)
 {
@@ -33,13 +31,7 @@ function testAttachment(attachment, buffer, isConflicted)
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, buffer);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    // If the framebuffer is in an error state for multiple reasons,
-    // we can't guarantee which one will be reported.
-    if ((width == 0 || height == 0) && !isConflicted) {
-        // Zero-sized renderbuffers are supposed to result in an incomplete attachment.
-        // However, certain combination may violate implementation specific restrictions.
-        shouldBeTrue("gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT || gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_UNSUPPORTED");
-    } else if (isConflicted) {
+    if (isConflicted) {
         shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_UNSUPPORTED");
         gl.clear(gl.COLOR_BUFFER_BIT);
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION);
@@ -57,15 +49,8 @@ function testAttachments(attachment0, buffer0, attachment1, buffer1, isConflicte
     glErrorShouldBe(gl, gl.NO_ERROR);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment1, gl.RENDERBUFFER, buffer1);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    // If the framebuffer is in an error state for multiple reasons,
-    // we can't guarantee which one will be reported.
-    if ((width == 0 || height == 0) && !isConflicted) {
-        // Zero-sized renderbuffers are supposed to result in an incomplete attachment.
-        // However, certain combination may violate implementation specific restrictions.
-        shouldBeTrue("gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT || gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_UNSUPPORTED");
-    } else if (isConflicted) {
+    if (isConflicted)
         shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_UNSUPPORTED");
-    }
 }
 
 function testColorRenderbuffer(internalformat)
@@ -83,100 +68,83 @@ function testDepthStencilRenderbuffer()
     gl.bindRenderbuffer(gl.RENDERBUFFER, depthStencilBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
     glErrorShouldBe(gl, gl.NO_ERROR);
-
-    // OpenGL itself doesn't seem to guarantee that e.g. a 2 x 0
-    // renderbuffer will report 2 for its width when queried.
-    if (!(height == 0 && width > 0))
-        shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_WIDTH)", "width");
-    if (!(width == 0 && height > 0))
-        shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_HEIGHT)", "height");
+    shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_WIDTH)", "width");
+    shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_HEIGHT)", "height");
     shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_INTERNAL_FORMAT)", "gl.DEPTH_STENCIL");
     shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_RED_SIZE)", "0");
     shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_GREEN_SIZE)", "0");
     shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_BLUE_SIZE)", "0");
     shouldBe("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_ALPHA_SIZE)", "0");
-    // Avoid verifying these for zero-sized renderbuffers for the time
-    // being since it appears that even OpenGL doesn't guarantee them.
-    if (width > 0 && height > 0) {
-        shouldBeTrue("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_DEPTH_SIZE) > 0");
-        shouldBeTrue("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_STENCIL_SIZE) > 0");
-    }
+    shouldBeTrue("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_DEPTH_SIZE) > 0");
+    shouldBeTrue("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_STENCIL_SIZE) > 0");
     glErrorShouldBe(gl, gl.NO_ERROR);
     testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, false);
 }
 
 description("Test framebuffer object attachment behaviors");
 
-for (width = 0; width <= 2; width += 2)
-{
-    for (height = 0; height <= 2; height += 2)
-    {
-        debug("Dimensions " + width + " x " + height);
+debug("Create renderbuffers");
+shouldBeNonNull("gl = create3DContext()");
+shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
+gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
+gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, width, height);
+glErrorShouldBe(gl, gl.NO_ERROR);
+shouldBeNonNull("depthBuffer = gl.createRenderbuffer()");
+gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+glErrorShouldBe(gl, gl.NO_ERROR);
+shouldBeNonNull("stencilBuffer = gl.createRenderbuffer()");
+gl.bindRenderbuffer(gl.RENDERBUFFER, stencilBuffer);
+gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, width, height);
+glErrorShouldBe(gl, gl.NO_ERROR);
+shouldBeNonNull("depthStencilBuffer = gl.createRenderbuffer()");
+gl.bindRenderbuffer(gl.RENDERBUFFER, depthStencilBuffer);
+gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+glErrorShouldBe(gl, gl.NO_ERROR);
 
-        debug("Create renderbuffers");
-        shouldBeNonNull("gl = create3DContext()");
-        shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
-        gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, width, height);
-        glErrorShouldBe(gl, gl.NO_ERROR);
-        shouldBeNonNull("depthBuffer = gl.createRenderbuffer()");
-        gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
-        glErrorShouldBe(gl, gl.NO_ERROR);
-        shouldBeNonNull("stencilBuffer = gl.createRenderbuffer()");
-        gl.bindRenderbuffer(gl.RENDERBUFFER, stencilBuffer);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, width, height);
-        glErrorShouldBe(gl, gl.NO_ERROR);
-        shouldBeNonNull("depthStencilBuffer = gl.createRenderbuffer()");
-        gl.bindRenderbuffer(gl.RENDERBUFFER, depthStencilBuffer);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
-        glErrorShouldBe(gl, gl.NO_ERROR);
+debug("Attach depth using DEPTH_ATTACHMENT");
+testAttachment(gl.DEPTH_ATTACHMENT, depthBuffer, false);
+debug("Attach depth using STENCIL_ATTACHMENT");
+testAttachment(gl.STENCIL_ATTACHMENT, depthBuffer, true);
+debug("Attach depth using DEPTH_STENCIL_ATTACHMENT");
+testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthBuffer, true);
+debug("Attach stencil using STENCIL_ATTACHMENT");
+testAttachment(gl.STENCIL_ATTACHMENT, stencilBuffer, false);
+debug("Attach stencil using DEPTH_ATTACHMENT");
+testAttachment(gl.DEPTH_ATTACHMENT, stencilBuffer, true);
+debug("Attach stencil using DEPTH_STENCIL_ATTACHMENT");
+testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, stencilBuffer, true);
+debug("Attach depthStencil using DEPTH_STENCIL_ATTACHMENT");
+testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, false);
+debug("Attach depthStencil using DEPTH_ATTACHMENT");
+testAttachment(gl.DEPTH_ATTACHMENT, depthStencilBuffer, true);
+debug("Attach depthStencil using STENCIL_ATTACHMENT");
+testAttachment(gl.STENCIL_ATTACHMENT, depthStencilBuffer, true);
 
-        debug("Attach depth using DEPTH_ATTACHMENT");
-        testAttachment(gl.DEPTH_ATTACHMENT, depthBuffer, false);
-        debug("Attach depth using STENCIL_ATTACHMENT");
-        testAttachment(gl.STENCIL_ATTACHMENT, depthBuffer, true);
-        debug("Attach depth using DEPTH_STENCIL_ATTACHMENT");
-        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthBuffer, true);
-        debug("Attach stencil using STENCIL_ATTACHMENT");
-        testAttachment(gl.STENCIL_ATTACHMENT, stencilBuffer, false);
-        debug("Attach stencil using DEPTH_ATTACHMENT");
-        testAttachment(gl.DEPTH_ATTACHMENT, stencilBuffer, true);
-        debug("Attach stencil using DEPTH_STENCIL_ATTACHMENT");
-        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, stencilBuffer, true);
-        debug("Attach depthStencil using DEPTH_STENCIL_ATTACHMENT");
-        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, false);
-        debug("Attach depthStencil using DEPTH_ATTACHMENT");
-        testAttachment(gl.DEPTH_ATTACHMENT, depthStencilBuffer, true);
-        debug("Attach depthStencil using STENCIL_ATTACHMENT");
-        testAttachment(gl.STENCIL_ATTACHMENT, depthStencilBuffer, true);
+debug("Attach depth, then stencil, causing conflict");
+testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, true);
+debug("Attach stencil, then depth, causing conflict");
+testAttachments(gl.STENCIL_ATTACHMENT, stencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, true);
+debug("Attach depth, then depthStencil, causing conflict");
+testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, true);
+debug("Attach depthStencil, then depth, causing conflict");
+testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, true);
+debug("Attach stencil, then depthStencil, causing conflict");
+testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, true);
+debug("Attach depthStencil, then stencil, causing conflict");
+testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, true);
 
-        debug("Attach depth, then stencil, causing conflict");
-        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, true);
-        debug("Attach stencil, then depth, causing conflict");
-        testAttachments(gl.STENCIL_ATTACHMENT, stencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, true);
-        debug("Attach depth, then depthStencil, causing conflict");
-        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, true);
-        debug("Attach depthStencil, then depth, causing conflict");
-        testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, true);
-        debug("Attach stencil, then depthStencil, causing conflict");
-        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, true);
-        debug("Attach depthStencil, then stencil, causing conflict");
-        testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, true);
+debug("Attach color renderbuffer with internalformat == RGBA4");
+testColorRenderbuffer(gl.RGBA4);
 
-        debug("Attach color renderbuffer with internalformat == RGBA4");
-        testColorRenderbuffer(gl.RGBA4);
+debug("Attach color renderbuffer with internalformat == RGB5_A1");
+testColorRenderbuffer(gl.RGB5_A1);
 
-        debug("Attach color renderbuffer with internalformat == RGB5_A1");
-        testColorRenderbuffer(gl.RGB5_A1);
+debug("Attach color renderbuffer with internalformat == RGB565");
+testColorRenderbuffer(gl.RGB565);
 
-        debug("Attach color renderbuffer with internalformat == RGB565");
-        testColorRenderbuffer(gl.RGB565);
-
-        debug("Create and attach depthStencil renderbuffer");
-        testDepthStencilRenderbuffer();
-    }
-}
+debug("Create and attach depthStencil renderbuffer");
+testDepthStencilRenderbuffer();
 
 successfullyParsed = true;
 </script>
