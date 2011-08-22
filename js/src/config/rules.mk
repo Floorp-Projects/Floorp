@@ -2097,7 +2097,6 @@ showhost:
 	@echo "HOST_LIBRARY       = $(HOST_LIBRARY)"
 
 showbuildmods::
-	@echo "Build Modules	= $(BUILD_MODULES)"
 	@echo "Module dirs	= $(BUILD_MODULE_DIRS)"
 
 documentation:
