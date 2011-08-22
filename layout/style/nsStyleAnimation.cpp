@@ -1926,48 +1926,13 @@ LookupStyleContext(dom::Element* aElement)
   return nsComputedDOMStyle::GetStyleContextForElement(aElement, nsnull, shell);
 }
 
-
-/**
- * Helper function: StyleWithRuleAdded
- * Creates a custom style context as a sibling of the given element's
- * nsStyleContext with the given css::StyleRule added.
- *
- * @param aTargetElement  The element whose style context we'll use as a
- *                        sibling for our custom style context.
- * @param aStyleRule      The style rule to add to the style context.
- * @return The generated custom nsStyleContext, or nsnull on failure.
- */
-already_AddRefed<nsStyleContext>
-StyleWithRuleAdded(dom::Element* aTargetElement,
-                   css::StyleRule* aStyleRule)
-{
-  NS_ABORT_IF_FALSE(aTargetElement, "null target element");
-  NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
-                    "element needs to be in a document "
-                    "if we're going to look up its style context");
-  NS_ABORT_IF_FALSE(aStyleRule, "null style rule");
-
-  // Look up style context for our target element
-  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
-  if (!styleContext) {
-    return nsnull;
-  }
-
-  aStyleRule->RuleMatched();
-
-  // Create a temporary nsStyleContext for the style rule
-  nsCOMArray<nsIStyleRule> ruleArray;
-  ruleArray.AppendObject(aStyleRule);
-  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
-  return styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
-}
-
 PRBool
 nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                                dom::Element* aTargetElement,
                                const nsAString& aSpecifiedValue,
                                PRBool aUseSVGMode,
-                               Value& aComputedValue)
+                               Value& aComputedValue,
+                               PRBool* aIsContextSensitive)
 {
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
   NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
@@ -1984,18 +1949,66 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
   if (!styleRule) {
     return PR_FALSE;
   }
-  nsRefPtr<nsStyleContext> tmpStyleContext =
-    StyleWithRuleAdded(aTargetElement, styleRule);
-  if (!tmpStyleContext) {
-    return PR_FALSE;
-  }
 
- if (nsCSSProps::IsShorthand(aProperty) ||
-     nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
+  if (nsCSSProps::IsShorthand(aProperty) ||
+      nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
     // Just capture the specified value
     aComputedValue.SetUnparsedStringValue(nsString(aSpecifiedValue));
+    if (aIsContextSensitive) {
+      // Since we're just returning the string as-is, aComputedValue isn't going
+      // to change depending on the context
+      *aIsContextSensitive = PR_FALSE;
+    }
     return PR_TRUE;
   }
+
+  // Look up style context for our target element
+  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
+  if (!styleContext) {
+    return PR_FALSE;
+  }
+  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
+
+  nsRefPtr<nsStyleContext> tmpStyleContext;
+  if (aIsContextSensitive) {
+    nsCOMArray<nsIStyleRule> ruleArray;
+    ruleArray.AppendObject(styleSet->InitialStyleRule());
+    ruleArray.AppendObject(styleRule);
+    styleRule->RuleMatched();
+    tmpStyleContext =
+      styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
+    if (!tmpStyleContext) {
+      return PR_FALSE;
+    }
+
+    // Force walk of rule tree
+    nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
+    tmpStyleContext->GetStyleData(sid);
+
+    // If the rule node will have cached style data if the value is not
+    // context-sensitive. So if there's nothing cached, it's not context
+    // sensitive.
+    *aIsContextSensitive =
+      !tmpStyleContext->GetRuleNode()->NodeHasCachedData(sid);
+  }
+
+  // If we're not concerned whether the property is context sensitive then just
+  // add the rule to a new temporary style context alongside the target
+  // element's style context.
+  // Also, if we previously discovered that this property IS context-sensitive
+  // then we need to throw the temporary style context out since the property's
+  // value may have been biased by the 'initial' values supplied.
+  if (!aIsContextSensitive || *aIsContextSensitive) {
+    nsCOMArray<nsIStyleRule> ruleArray;
+    ruleArray.AppendObject(styleRule);
+    styleRule->RuleMatched();
+    tmpStyleContext =
+      styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
+    if (!tmpStyleContext) {
+      return PR_FALSE;
+    }
+  }
+
   // Extract computed value of our property from the temporary style rule
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
 }
