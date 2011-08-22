@@ -65,6 +65,9 @@ Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
 let FormWrapper = {
   _log: Log4Moz.repository.getLogger("Sync.Engine.Forms"),
 
+  _getEntryCols: ["name", "value"],
+  _guidCols:     ["guid"],
+
   getAllEntries: function getAllEntries() {
     // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes
     let query = Svc.Form.DBConnection.createAsyncStatement(
@@ -73,14 +76,14 @@ let FormWrapper = {
         "((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * " +
         "timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) DESC " +
       "LIMIT 500");
-    return Async.querySpinningly(query, ["name", "value"]);
+    return Async.querySpinningly(query, this._getEntryCols);
   },
 
   getEntry: function getEntry(guid) {
     let query = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT fieldname name, value FROM moz_formhistory WHERE guid = :guid");
     query.params.guid = guid;
-    return Async.querySpinningly(query, ["name", "value"])[0];
+    return Async.querySpinningly(query, this._getEntryCols)[0];
   },
 
   getGUID: function getGUID(name, value) {
@@ -92,7 +95,7 @@ let FormWrapper = {
     getQuery.params.value = value;
 
     // Give the GUID if we found one.
-    let item = Async.querySpinningly(getQuery, ["guid"])[0];
+    let item = Async.querySpinningly(getQuery, this._guidCols)[0];
 
     if (!item) {
       // Shouldn't happen, but Bug 597400...
@@ -124,7 +127,7 @@ let FormWrapper = {
     let query = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT guid FROM moz_formhistory WHERE guid = :guid LIMIT 1");
     query.params.guid = guid;
-    return Async.querySpinningly(query, ["guid"]).length == 1;
+    return Async.querySpinningly(query, this._guidCols).length == 1;
   },
 
   replaceGUID: function replaceGUID(oldGUID, newGUID) {
