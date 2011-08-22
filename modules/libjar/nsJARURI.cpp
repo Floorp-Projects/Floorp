@@ -585,19 +585,6 @@ nsJARURI::SetFilePath(const nsACString& filePath)
 }
 
 NS_IMETHODIMP
-nsJARURI::GetParam(nsACString& param)
-{
-    param.Truncate();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARURI::SetParam(const nsACString& param)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 nsJARURI::GetQuery(nsACString& query)
 {
     return mJAREntry->GetQuery(query);
