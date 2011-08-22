@@ -8,7 +8,10 @@
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=533291">Mozilla Bug 533291</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<!-- Bug 628848: The following should be display: none but we currently don't
+     handle percentage lengths properly when the whole fragment is display: none
+     -->
+<div id="content" style="visibility: hidden">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
      onload="this.pauseAnimations()">
   <g id="circleParent">
@@ -21,7 +24,7 @@
 <![CDATA[
 /** Test for SMIL values that are context-sensitive **/
 
-/* See bug 533291.
+/* See bugs 533291 and 562815.
    
    The format of each test is basically:
    1) create some animated and frozen state
@@ -79,7 +82,16 @@ function main()
       testCurrentColorChange,
       testCurrentColorChangeUsingStyle,
       testInheritChange,
-      testInheritChangeUsingStyle
+      testInheritChangeUsingStyle,
+      testEmUnitChangeOnProp,
+      testEmUnitChangeOnPropBase,
+      testEmUnitChangeOnLength,
+      testPercentUnitChangeOnProp,
+      testPercentUnitChangeOnLength,
+      testRelativeFontSize,
+      testRelativeFontWeight,
+      testRelativeFont,
+      testCalcFontSize
      ];
 
   while (tests.length) {
@@ -221,6 +233,229 @@ function testInheritChangeUsingStyle()
      + "(using style attr)");
 
   gCircleParent.removeAttribute("style");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testEmUnitChangeOnProp()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "2em");
+
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "20px",
+     "Checking animated font-size=2em after animating ends");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "40px",
+     "Checking animated font-size=2em after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testEmUnitChangeOnPropBase()
+{
+  // Test the case where the base value for our animation sandwich is
+  // context-sensitive.
+  // Currently, this is taken care of by the compositor which keeps a cached
+  // base value and compares it with the current base value. This test then just
+  // serves as a regression test in case the compositor's behaviour changes.
+  setupTest();
+  gSvg.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  gCircleParent.setAttribute("font-size", "1em"); // Base: 10px
+  var anim = createAnimBy("font-size", "10px");
+
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "20px",
+     "Checking animated font-size=20px after anim ends");
+
+  gSvg.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "30px",
+     "Checking animated font-size=30px after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testEmUnitChangeOnLength()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("cx", "2em");
+
+  gSvg.setCurrentTime(0);
+  is(gCircle.cx.animVal.value, 20,
+     "Checking animated length=2em after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  // Bug 508206: We should really detect this change and update immediately but
+  // currently we don't until we get sampled again
+  todo_is(gCircle.cx.animVal.value, 40,
+     "Checking animated length=2em after updating context but before sampling");
+
+  gSvg.setCurrentTime(0);
+  is(gCircle.cx.animVal.value, 40,
+     "Checking animated length=2em after updating context and after " +
+     "resampling");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testPercentUnitChangeOnProp()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "150%");
+
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "15px",
+     "Checking animated font-size=150% after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "30px",
+     "Checking animated font-size=150% after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testPercentUnitChangeOnLength()
+{
+  setupTest();
+  var oldHeight = gSvg.getAttribute("height");
+  gSvg.setAttribute("height", "100px"); // At first: viewport height: 100px
+  var anim = createAnimSetTo("cy", "100%");
+
+  gSvg.setCurrentTime(0); // Force synchronous sample so animation takes effect
+  // Due to bug 627594 (SVGLength.value for percent value lengths doesn't
+  // reflect updated viewport until reflow) the following will fail.
+  // Check that it does indeed fail so that when that bug is fixed this test
+  // can be updated.
+  todo_is(gCircle.cy.animVal.value, 100,
+     "Checking animated length=100% after animating but before reflow");
+  gSvg.forceRedraw();
+  // Even after doing a reflow though we'll still fail due to bug 508206
+  // (Relative units used in animation don't update immediately)
+  todo_is(gCircle.cy.animVal.value, 100,
+     "Checking animated length=100% after animating but before resampling");
+  gSvg.setCurrentTime(0);
+  // Now we should be up to date
+  is(gCircle.cy.animVal.value, 100,
+     "Checking animated length=100% after animating");
+
+  gSvg.setAttribute("height", "50px"); // Change: height: 50px
+  gSvg.forceRedraw(); // Bug 627594
+  gSvg.setCurrentTime(0); // Bug 508206
+  is(gCircle.cy.animVal.value, 50,
+     "Checking animated length=100% after updating context");
+
+  gSvg.setAttribute("height", oldHeight);
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testRelativeFontSize()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "larger");
+
+  gSvg.setCurrentTime(0);
+  var fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  // CSS 2 suggests a scaling factor of 1.2 so we should be looking at something
+  // around about 12 or so
+  ok(fsize > 10 && fsize < 20,
+    "Checking animated font-size > 10px after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  ok(fsize > 20, "Checking animated font-size > 20px after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testRelativeFontWeight()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-weight", "100"); // At first: font-weight 100
+  var anim = createAnimSetTo("font-weight", "bolder");
+  // CSS 2: 'bolder': Specifies the next weight that is assigned to a font
+  // that is darker than the inherited one. If there is no such weight, it
+  // simply results in the next darker numerical value (and the font remains
+  // unchanged), unless the inherited value was '900', in which case the
+  // resulting weight is also '900'.
+
+  gSvg.setCurrentTime(0);
+  var weight =
+    parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-weight"));
+  ok(weight > 100, "Checking animated font-weight > 100 after animating");
+
+  gCircleParent.setAttribute("font-weight", "800"); // Change: font-weight 800
+  gSvg.setCurrentTime(0);
+  weight = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-weight"));
+  is(weight, 900,
+     "Checking animated font-weight = 900 after updating context");
+
+  gCircleParent.removeAttribute("font-weight");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testRelativeFont()
+{
+  // Test a relative font-size as part of a 'font' spec since the code path
+  // is different in this case
+  // It turns out that, due to the way we store shorthand font properties, we
+  // don't need to worry about marking such values as context-sensitive since we
+  // seem to store them in their relative form. If, however, we change the way
+  // we store shorthand font properties in the future, this will serve as
+  // a useful regression test.
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  // We must be sure to set every part of the shorthand property to some
+  // non-context sensitive value because we want to test that even if only the
+  // font-size is relative we will update it appropriately.
+  var anim =
+    createAnimSetTo("font", "normal normal bold larger/normal sans-serif");
+
+  gSvg.setCurrentTime(0);
+  var fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  ok(fsize > 10 && fsize < 20,
+    "Checking size of shorthand 'font' > 10px after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  fsize  = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  ok(fsize > 20,
+     "Checking size of shorthand 'font' > 20px after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testCalcFontSize()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "-moz-calc(110% + 0.1em)");
+
+  gSvg.setCurrentTime(0);
+  var fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  // Font size should be 1.1 * 10px + 0.1 * 10px = 12
+  is(fsize, 12, "Checking animated calc font-size == 12px after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  is(fsize, 24, "Checking animated calc font-size == 24px after updating " +
+                "context");
+
+  gCircleParent.removeAttribute("font-size");
   gCircle.removeChild(gCircle.firstChild);
 }
 
