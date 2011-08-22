@@ -178,7 +178,8 @@ var Scratchpad = {
         this._previousLocation != this.gBrowser.contentWindow.location.href) {
       let contentWindow = this.gBrowser.selectedBrowser.contentWindow;
       this._contentSandbox = new Cu.Sandbox(contentWindow,
-        { sandboxPrototype: contentWindow, wantXrays: false });
+        { sandboxPrototype: contentWindow, wantXrays: false, 
+          sandboxName: 'scratchpad-content'});
 
       this._previousBrowserWindow = this.browserWindow;
       this._previousBrowser = this.gBrowser.selectedBrowser;
@@ -211,7 +212,8 @@ var Scratchpad = {
     if (!this._chromeSandbox ||
         this.browserWindow != this._previousBrowserWindow) {
       this._chromeSandbox = new Cu.Sandbox(this.browserWindow,
-        { sandboxPrototype: this.browserWindow, wantXrays: false });
+        { sandboxPrototype: this.browserWindow, wantXrays: false, 
+          sandboxName: 'scratchpad-chrome'});
 
       this._previousBrowserWindow = this.browserWindow;
     }

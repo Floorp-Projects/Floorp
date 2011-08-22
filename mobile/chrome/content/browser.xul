@@ -639,9 +639,6 @@
           <richlistitem class="context-command" id="context-bookmark-link" type="link" onclick="ContextCommands.bookmarkLink();">
             <label value="&contextBookmarkLink.label;"/>
           </richlistitem>
-          <richlistitem class="context-command" id="context-savelink" type="link-saveable" onclick="ContextCommands.saveLink();">
-            <label value="&contextSaveLink.label;"/>
-          </richlistitem>
           <richlistitem class="context-command" id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage();">
             <label value="&contextSaveImage.label;"/>
           </richlistitem>

@@ -38,7 +38,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.24 $ $Date: 2010/01/08 02:00:58 $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.25 $ $Date: 2011/04/13 00:10:25 $";
 #endif /* DEBUG */
 
 /*
@@ -143,7 +143,7 @@ typedef enum {
     nssTrustLevel_NotTrusted = 1,
     nssTrustLevel_Trusted = 2,
     nssTrustLevel_TrustedDelegator = 3,
-    nssTrustLevel_Valid = 4,
+    nssTrustLevel_MustVerify = 4,
     nssTrustLevel_ValidDelegator = 5
 } nssTrustLevel;
 

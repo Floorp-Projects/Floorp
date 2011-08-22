@@ -37,7 +37,7 @@
 /*
  * CMS contentInfo methods.
  *
- * $Id: cmscinfo.c,v 1.7.192.3 2011/02/11 03:57:50 emaldona%redhat.com Exp $
+ * $Id: cmscinfo.c,v 1.10 2011/02/11 01:53:17 emaldona%redhat.com Exp $
  */
 
 #include "cmslocal.h"

@@ -53,7 +53,6 @@
 #if !defined(XP_OS2)
 #include "nsOperaProfileMigrator.h"
 #endif
-#include "nsSeamonkeyProfileMigrator.h"
 #if defined(XP_WIN) && !defined(__MINGW32__)
 #include "nsIEProfileMigrator.h"
 #elif defined(XP_MACOSX)
@@ -85,7 +84,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGNOMEShellService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
 #if defined(XP_WIN) && !defined(__MINGW32__)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
 #elif defined(XP_MACOSX)
@@ -114,7 +112,6 @@ NS_DEFINE_NAMED_CID(NS_SAFARIPROFILEMIGRATOR_CID);
 #if !defined(XP_OS2)
 NS_DEFINE_NAMED_CID(NS_OPERAPROFILEMIGRATOR_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_SEAMONKEYPROFILEMIGRATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID);
 
 static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
@@ -136,7 +133,6 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
 #if !defined(XP_OS2)
     { &kNS_OPERAPROFILEMIGRATOR_CID, false, NULL, nsOperaProfileMigratorConstructor },
 #endif
-    { &kNS_SEAMONKEYPROFILEMIGRATOR_CID, false, NULL, nsSeamonkeyProfileMigratorConstructor },
     { &kNS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID, false, NULL, nsPrivateBrowsingServiceWrapperConstructor },
     { NULL }
 };
@@ -173,7 +169,6 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 #if !defined(XP_OS2)
     { NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera", &kNS_OPERAPROFILEMIGRATOR_CID },
 #endif
-    { NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey", &kNS_SEAMONKEYPROFILEMIGRATOR_CID },
     { NS_PRIVATE_BROWSING_SERVICE_CONTRACTID, &kNS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID },
     { NULL }
 };

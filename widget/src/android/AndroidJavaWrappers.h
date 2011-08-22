@@ -492,6 +492,7 @@ public:
         SURFACE_DESTROYED = 14,
         GECKO_EVENT_SYNC = 15,
         FORCED_RESIZE = 16,
+        ACTIVITY_START = 17,
         dummy_java_enum_list_end
     };
 
