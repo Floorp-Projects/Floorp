@@ -19,68 +19,87 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 <![CDATA[
-/** Test for SMIL fill modes **/
+/** Test for SMIL values that are context-sensitive **/
+
+/* See bug 533291.
+   
+   The format of each test is basically:
+   1) create some animated and frozen state
+   2) test the animated values
+   3) change the context
+   4) test that context-sensitive animation values have changed
+
+   Ideally, after changing the context (3), the animated state would instantly
+   update. However, this is not currently the case for many situations.
+
+     For CSS properties we have bug 545282 - In animations involving 'inherit'
+     / 'currentColor', changes to inherited value / 'color' don't show up in
+     animated value immediately
+
+     For SVG lengths we have bug 508206 - Relative units used in
+     animation don't update immediately
+
+     (There are a few of todo_is's in the following tests so that if those bugs
+     are ever resolved we'll know to update this test case accordingly.)
+
+   So in between (3) and (4) we force a sample. This is currently done by
+   calling SVGSVGElement.setCurrentTime with the same current time which has the
+   side effect of forcing a sample.
+
+   What we *are* testing is that we're not too zealous with caching animation
+   values whilst in the frozen state. Normally we'd say, "Hey, we're frozen,
+   let's just use the same animation result as last time" but for some
+   context-sensitive animation values that doesn't work.
+*/
 
 /* Global Variables */
 const SVGNS = "http://www.w3.org/2000/svg";
+
+// Animation parameters -- not used for <set> animation
 const ANIM_DUR = "4s";
 const TIME_ANIM_END = "4";
 const TIME_AFTER_ANIM_END = "5";
 
-// SETTIMEOUT_INTERVAL: This value just needs to be at least as large as
-// nsSMILAnimationController::kTimerInterval, so we can queue up a callback
-// for this far in the future and be assured that an animation sample will
-// have happened before the callback fires (because we presumably already
-// have an animation sample in the setTimeout queue, with a lower timeout
-// value than this).
-// NOTE: We only need to use timeouts here because of Bug 545282.
-const SETTIMEOUT_INTERVAL = 60;
-
-const gTestArray =
-  [ testBaseValueChange,
-    testCurrentColorChange,
-    testCurrentColorChangeUsingStyle,
-    testInheritChange,
-    testInheritChangeUsingStyle
-   ];
-
-// Index of current test in gTestArray
-var gNextTestIndex = 0;
-
 const gSvg = document.getElementById("svg");
 const gCircle = document.getElementById("circle");
 const gCircleParent = document.getElementById("circleParent");
-
 
 SimpleTest.waitForExplicitFinish();
 
 // MAIN FUNCTION
 // -------------
 
-function main() {
+function main()
+{
   ok(gSvg.animationsPaused(), "should be paused by <svg> load handler");
   is(gSvg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
-  if (gNextTestIndex != 0) {
-    ok(false, "expecting to start at first test in array.");
+  const tests =
+    [ testBaseValueChange,
+      testCurrentColorChange,
+      testCurrentColorChangeUsingStyle,
+      testInheritChange,
+      testInheritChangeUsingStyle
+     ];
+
+  while (tests.length) {
+    tests.shift()();
   }
-  // Kick off first test.  (It will kick off the one after it, and so on.)
-  runNextTest();
+  SimpleTest.finish();
 }
 
 // HELPER FUNCTIONS
 // ----------------
-function createAnimFromTo(attrName, fromVal, toVal) {
-  var anim = document.createElementNS(SVGNS,"animate");
+function createAnimSetTo(attrName, toVal)
+{
+  var anim = document.createElementNS(SVGNS,"set");
   anim.setAttribute("attributeName", attrName);
-  anim.setAttribute("dur", ANIM_DUR);
-  anim.setAttribute("begin", "0s");
-  anim.setAttribute("from", fromVal);
   anim.setAttribute("to", toVal);
-  anim.setAttribute("fill", "freeze");
   return gCircle.appendChild(anim);
 }
-function createAnimBy(attrName, byVal) {
+
+function createAnimBy(attrName, byVal)
+{
   var anim = document.createElementNS(SVGNS,"animate");
   anim.setAttribute("attributeName", attrName);
   anim.setAttribute("dur", ANIM_DUR);
@@ -97,17 +116,6 @@ function setupTest() {
   if (gCircle.firstChild) {
     ok(false, "Previous test didn't clean up after itself.");
   }
-}
-
-function runNextTest() {
-  if (gNextTestIndex == gTestArray.length) {
-    // No tests left! we're done.
-    SimpleTest.finish();
-    return;
-  }
-
-  // Call next test (and increment next-test index)
-  gTestArray[gNextTestIndex++]();
 }
 
 // THE TESTS
@@ -130,106 +138,90 @@ function testBaseValueChange()
      "Checking animated cx after anim ends & after changing base val");
 
   anim.parentNode.removeChild(anim); // clean up
-  runNextTest();
 }
 
 function testCurrentColorChange()
 {
   gCircle.setAttribute("color", "red"); // At first: currentColor=red
-  var anim = createAnimFromTo("fill", "yellow", "currentColor");
+  var anim = createAnimSetTo("fill", "currentColor");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0); // trigger synchronous sample
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=currentColor after anim ends");
+     "Checking animated fill=currentColor after animating");
 
   gCircle.setAttribute("color", "lime"); // Change: currentColor=lime
-  setTimeout(testCurrentColorChange_final, SETTIMEOUT_INTERVAL);
-}
-
-function testCurrentColorChange_final()
-{
+  // Bug 545282: We should really detect this change and update immediately but
+  // currently we don't until we get sampled again
+  todo_is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
+     "Checking animated fill=currentColor after updating context but before " +
+     "sampling");
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=currentColor after anim ends and 'color' changes");
+     "Checking animated fill=currentColor after updating context");
 
   // Clean up
   gCircle.removeAttribute("color");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-
-  // Kick off next test
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
 }
 
 function testCurrentColorChangeUsingStyle()
 {
   setupTest();
   gCircle.setAttribute("style", "color: red"); // At first: currentColor=red
-  var anim = createAnimFromTo("fill", "yellow", "currentColor");
+  var anim = createAnimSetTo("fill", "currentColor");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=currentColor after anim ends (using style attr)");
+     "Checking animated fill=currentColor after animating (using style attr)");
 
   gCircle.setAttribute("style", "color: lime"); // Change: currentColor=lime
-  setTimeout(testCurrentColorChangeUsingStyle_final, SETTIMEOUT_INTERVAL);
-}
-
-function testCurrentColorChangeUsingStyle_final()
-{
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=currentColor after anim ends and 'color' changes "
+     "Checking animated fill=currentColor after updating context "
      + "(using style attr)");
 
   // Clean up
   gCircle.removeAttribute("style");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
 }
 
 function testInheritChange()
 {
   setupTest();
   gCircleParent.setAttribute("fill", "red"); // At first: inherit=red
-  var anim = createAnimFromTo("fill", "yellow", "inherit");
+  var anim = createAnimSetTo("fill", "inherit");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=inherit after anim ends");
+     "Checking animated fill=inherit after animating");
 
   gCircleParent.setAttribute("fill", "lime"); // Change: inherit=lime
-  setTimeout(testInheritChange_final, SETTIMEOUT_INTERVAL);
-}
-
-function testInheritChange_final() {
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=inherit after anim ends and parent val changes");
+     "Checking animated fill=inherit after updating context");
 
   gCircleParent.removeAttribute("fill");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
 }
 
 function testInheritChangeUsingStyle()
 {
   setupTest();
   gCircleParent.setAttribute("style", "fill: red"); // At first: inherit=red
-  var anim = createAnimFromTo("fill", "yellow", "inherit");
+  var anim = createAnimSetTo("fill", "inherit");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=inherit after anim ends (using style attr)");
+     "Checking animated fill=inherit after animating (using style attr)");
 
   gCircleParent.setAttribute("style", "fill: lime"); // Change: inherit=lime
-  setTimeout(testInheritChangeUsingStyle_final, SETTIMEOUT_INTERVAL);
-}
-
-function testInheritChangeUsingStyle_final() {
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=inherit after anim ends and parent val changes "
+     "Checking animated fill=inherit after updating context "
      + "(using style attr)");
 
   gCircleParent.removeAttribute("style");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
 }
 
 window.addEventListener("load", main, false);
