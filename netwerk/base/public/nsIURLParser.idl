@@ -95,14 +95,13 @@ interface nsIURLParser : nsISupports
                           out long port);
 
     /**
-     * ParsePath breaks the path string up into its 4 major components: a file path,
-     * a param string, a query string, and a reference string.
+     * ParsePath breaks the path string up into its 3 major components: a file path,
+     * a query string, and a reference string.
      *
-     * path = <filepath>;<param>?<query>#<ref>
+     * path = <filepath>?<query>#<ref>
      */
     void parsePath       (in string path,                  in long pathLen,
                           out unsigned long filepathPos,  out long filepathLen,
-                          out unsigned long paramPos,     out long paramLen,
                           out unsigned long queryPos,     out long queryLen,
                           out unsigned long refPos,       out long refLen);
 

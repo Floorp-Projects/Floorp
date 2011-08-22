@@ -117,7 +117,6 @@ nsBaseURLParser::ParseURL(const char *spec, PRInt32 specLen,
             case '/': // start of filepath
             case '?': // start of query
             case '#': // start of ref
-            case ';': // start of param
                 if (!slash)
                     slash = p;
                 break;
@@ -240,7 +239,6 @@ nsBaseURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
 NS_IMETHODIMP
 nsBaseURLParser::ParsePath(const char *path, PRInt32 pathLen,
                            PRUint32 *filepathPos, PRInt32 *filepathLen,
-                           PRUint32 *paramPos, PRInt32 *paramLen,
                            PRUint32 *queryPos, PRInt32 *queryLen,
                            PRUint32 *refPos, PRInt32 *refLen)
 {
@@ -249,7 +247,7 @@ nsBaseURLParser::ParsePath(const char *path, PRInt32 pathLen,
     if (pathLen < 0)
         pathLen = strlen(path);
 
-    // path = [/]<segment1>/<segment2>/<...>/<segmentN>;<param>?<query>#<ref>
+    // path = [/]<segment1>/<segment2>/<...>/<segmentN>?<query>#<ref>
 
     // XXX PL_strnpbrk would be nice, but it's buggy
 
@@ -283,8 +281,6 @@ nsBaseURLParser::ParsePath(const char *path, PRInt32 pathLen,
     else
         SET_RESULT(ref, 0, -1);
 
-    // search backwards for param
-    const char *param_beg = 0;
     const char *end;
     if (query_beg)
         end = query_beg - 1;
@@ -292,20 +288,6 @@ nsBaseURLParser::ParsePath(const char *path, PRInt32 pathLen,
         end = ref_beg - 1;
     else
         end = path + pathLen;
-    for (p = end - 1; p >= path && *p != '/'; --p) {
-        if (*p == ';') {
-            // found param
-            param_beg = p + 1;
-        }
-    }
-
-    if (param_beg) {
-        // found <filepath>;<param>
-        SET_RESULT(param, param_beg - path, end - param_beg);
-        end = param_beg - 1;
-    }
-    else
-        SET_RESULT(param, 0, -1);
 
     // an empty file path is no file path
     if (end != path)
@@ -437,7 +419,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
 #endif
                 // Ignore apparent authority; path is everything after it
                 for (p = spec + 2; p < spec + specLen; ++p) {
-                    if (*p == '/' || *p == '?' || *p == '#' || *p == ';')
+                    if (*p == '/' || *p == '?' || *p == '#')
                         break;
                 }
             }
@@ -667,7 +649,7 @@ nsAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
     const char *end = spec + specLen;
     const char *p;
     for (p = spec + nslash; p < end; ++p) {
-        if (*p == '/' || *p == '?' || *p == '#' || *p == ';')
+        if (*p == '/' || *p == '?' || *p == '#')
             break;
     }
     if (p < end) {

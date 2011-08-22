@@ -70,18 +70,16 @@ parse_path(nsIURLParser *urlParser, char *path, PRInt32 pathLen)
 {
     PRINT_FIELD(path);
 
-    PRUint32 filePos, paramPos, queryPos, refPos;
-    PRInt32 fileLen, paramLen, queryLen, refLen;
+    PRUint32 filePos, queryPos, refPos;
+    PRInt32 fileLen, queryLen, refLen;
 
     urlParser->ParsePath(path, pathLen,
                          &filePos, &fileLen,
-                         &paramPos, &paramLen,
                          &queryPos, &queryLen,
                          &refPos, &refLen);
 
     if (fileLen != -1)
         parse_file_path(urlParser, path + filePos, fileLen);
-    PRINT_SUBFIELD(path, param);
     PRINT_SUBFIELD(path, query);
     PRINT_SUBFIELD(path, ref);
 }

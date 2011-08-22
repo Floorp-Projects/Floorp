@@ -672,6 +672,9 @@ endif
 PWD := $(CURDIR)
 endif
 
+ifdef .PYMAKE
+NSINSTALL = %nsinstall nsinstall
+else
 ifdef NSINSTALL_BIN
 NSINSTALL = $(NSINSTALL_BIN)
 else
@@ -681,7 +684,7 @@ else
 NSINSTALL = $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
 endif # OS2
 endif # NSINSTALL_BIN
-
+endif # .PYMAKE
 
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2, $(OS_ARCH)))
 INSTALL		= $(NSINSTALL)
