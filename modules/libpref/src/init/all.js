@@ -3331,5 +3331,11 @@ pref("network.buffer.cache.size",  32768);
 // Desktop Notification
 pref("notification.feature.enabled", false);
 
+// Alert sliding effect
+pref("alerts.slideIncrement", 1);
+pref("alerts.slideIncrementTime", 10);
+pref("alerts.totalOpenTime", 4000);
+pref("alerts.disableSlidingEffect", false);
+ 
 //3D Transforms
 pref("layout.3d-transforms.enabled, false);
