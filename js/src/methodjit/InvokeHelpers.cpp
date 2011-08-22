@@ -525,6 +525,8 @@ js_InternalThrow(VMFrame &f)
 {
     JSContext *cx = f.cx;
 
+    ExpandInlineFrames(cx->compartment);
+
     // The current frame may have an associated orphaned native, if the native
     // or SplatApplyArgs threw an exception.
     RemoveOrphanedNative(cx, f.fp());
@@ -621,14 +623,6 @@ js_InternalThrow(VMFrame &f)
          * its entry frame's ncode). See ClearAllFrames.
          */
         cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
-
-        /*
-         * Expanding inline frames will ensure that prevpc values are filled in
-         * for all frames on this VMFrame, without needing to walk the entire
-         * stack: downFramesExpanded() on a StackFrame also means the prevpc()
-         * values are also filled in.
-         */
-        ExpandInlineFrames(cx->compartment);
 
         if (!script->ensureRanBytecode(cx)) {
             js_ReportOutOfMemory(cx);
