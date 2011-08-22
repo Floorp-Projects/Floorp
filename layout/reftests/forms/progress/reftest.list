@@ -19,3 +19,6 @@
 # transformations will not behave exactly the same for <progress> and two divs.
 # However, it would be possible to manually check those.
 # == transformations.html transformations-ref.html
+
+# Tests for bugs:
+== block-invalidate.html block-invalidate-ref.html
