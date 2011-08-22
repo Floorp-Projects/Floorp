@@ -75,7 +75,5 @@ CSRCS = \
 	pkix_pl_string.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = pkixsystem
 

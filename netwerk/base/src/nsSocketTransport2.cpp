@@ -60,7 +60,6 @@
 #include "prerr.h"
 
 #include "nsIServiceManager.h"
-#include "nsIProxyObjectManager.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"

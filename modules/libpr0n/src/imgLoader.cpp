@@ -62,7 +62,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsIFileURL.h"
 #include "nsThreadUtils.h"
