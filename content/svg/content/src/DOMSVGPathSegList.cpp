@@ -42,6 +42,8 @@
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "SVGPathSegUtils.h"
+#include "dombindings.h"
+#include "nsContentUtils.h"
 
 // See the comment in this file's header.
 
@@ -50,7 +52,19 @@ namespace mozilla {
 static nsSVGAttrTearoffTable<void, DOMSVGPathSegList>
   sSVGPathSegListTearoffTable;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGPathSegList, mElement)
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPathSegList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPathSegList)
+  // No unlinking of mElement, we'd need to null out the value pointer (the
+  // object it points to is held by the element) and null-check it everywhere.
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGPathSegList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mElement, nsIContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGPathSegList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGPathSegList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGPathSegList)
@@ -60,6 +74,7 @@ DOMCI_DATA(SVGPathSegList, mozilla::DOMSVGPathSegList)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPathSegList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPathSegList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPathSegList)
@@ -97,8 +112,16 @@ DOMSVGPathSegList::~DOMSVGPathSegList()
   sSVGPathSegListTearoffTable.RemoveTearoff(key);
 }
 
+JSObject*
+DOMSVGPathSegList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                              bool *triedToWrap)
+{
+  return mozilla::dom::binding::SVGPathSegList::create(cx, scope, this,
+                                                       triedToWrap);
+}
+
 nsIDOMSVGPathSeg*
-DOMSVGPathSegList::GetItemWithoutAddRef(PRUint32 aIndex)
+DOMSVGPathSegList::GetItemAt(PRUint32 aIndex)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -327,7 +350,7 @@ NS_IMETHODIMP
 DOMSVGPathSegList::GetItem(PRUint32 aIndex,
                            nsIDOMSVGPathSeg **_retval)
 {
-  *_retval = GetItemWithoutAddRef(aIndex);
+  *_retval = GetItemAt(aIndex);
   if (!*_retval) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
