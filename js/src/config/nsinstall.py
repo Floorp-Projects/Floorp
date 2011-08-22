@@ -101,7 +101,7 @@ def nsinstall(argv):
         sys.exit(1)
       if options.m:
         os.chmod(args[0], options.m)
-      sys.exit()
+      return 0
     if options.m:
       os.makedirs(args[0], options.m)
     else:
