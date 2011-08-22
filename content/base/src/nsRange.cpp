@@ -2499,7 +2499,8 @@ nsRange::GetClientRects(nsIDOMClientRectList** aResult)
   if (!mStartParent)
     return NS_OK;
 
-  nsRefPtr<nsClientRectList> rectList = new nsClientRectList();
+  nsRefPtr<nsClientRectList> rectList =
+    new nsClientRectList(static_cast<nsIDOMRange*>(this));
   if (!rectList)
     return NS_ERROR_OUT_OF_MEMORY;
 
