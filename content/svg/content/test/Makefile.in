@@ -57,7 +57,6 @@ _TEST_FILES = \
 		a_href_helper_04.svg \
 		test_animLengthObjectIdentity.xhtml \
 		test_animLengthReadonly.xhtml \
-		test_animLengthRelativeUnits.xhtml \
 		test_animLengthUnits.xhtml \
 		test_bbox.xhtml \
 		test_bbox-with-invalid-viewBox.xhtml \
