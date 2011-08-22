@@ -52,7 +52,5 @@ CSRCS = \
 	pkix_comcertselparams.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = pkixcertsel
 

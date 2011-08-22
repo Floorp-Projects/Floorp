@@ -75,7 +75,8 @@ nsProxyAutoConfig.prototype = {
         }
 
         // allocate a fresh Sandbox to clear global scope for new PAC script
-        this._sandBox = new Components.utils.Sandbox(pacURI);
+        this._sandBox = new Components.utils.Sandbox(pacURI, 
+                                                     {sandboxName: 'nsProxyAutoConfig'});
         Components.utils.evalInSandbox(pacUtils, this._sandBox);
 
         // add predefined functions to pac

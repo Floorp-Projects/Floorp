@@ -322,6 +322,12 @@ var Browser = {
     os.addObserver(SessionHistoryObserver, "browser:purge-session-history", false);
     os.addObserver(ContentCrashObserver, "ipc:content-shutdown", false);
     os.addObserver(MemoryObserver, "memory-pressure", false);
+    os.addObserver(ActivityObserver, "application-background", false);
+    os.addObserver(ActivityObserver, "application-foreground", false);
+    os.addObserver(ActivityObserver, "system-active", false);
+    os.addObserver(ActivityObserver, "system-idle", false);
+    os.addObserver(ActivityObserver, "system-display-on", false);
+    os.addObserver(ActivityObserver, "system-display-off", false);
 
     // Listens for change in the viewable area
 #if MOZ_PLATFORM_MAEMO == 6
@@ -486,6 +492,12 @@ var Browser = {
     os.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
     os.removeObserver(ContentCrashObserver, "ipc:content-shutdown");
     os.removeObserver(MemoryObserver, "memory-pressure");
+    os.removeObserver(ActivityObserver, "application-background", false);
+    os.removeObserver(ActivityObserver, "application-foreground", false);
+    os.removeObserver(ActivityObserver, "system-active", false);
+    os.removeObserver(ActivityObserver, "system-idle", false);
+    os.removeObserver(ActivityObserver, "system-display-on", false);
+    os.removeObserver(ActivityObserver, "system-display-off", false);
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);
@@ -2585,6 +2597,34 @@ var MemoryObserver = {
   }
 };
 
+var ActivityObserver = {
+  _inBackground : false,
+  _notActive : false,
+  _isDisplayOff : false,
+  observe: function ao_observe(aSubject, aTopic, aData) {
+    if (aTopic == "application-background") {
+      this._inBackground = true;
+    } else if (aTopic == "application-foreground") {
+      this._inBackground = false;
+    } else if (aTopic == "system-idle") {
+      this._notActive = true;
+    } else if (aTopic == "system-active") {
+      this._notActive = false;
+    } else if (aTopic == "system-display-on") {
+      this._isDisplayOff = false;
+    } else if (aTopic == "system-display-off") {
+      this._isDisplayOff = true;
+    }
+    let activeTabState = !this._inBackground && !this._notActive && !this._isDisplayOff;
+    if (Browser.selectedTab.active != activeTabState) {
+      // On Maemo all backgrounded applications getting portrait orientation
+      // so if browser had landscape mode then we need timeout in order
+      // to finish last rotate/paint operation and have nice lookine browser in TS
+      setTimeout(function() { Browser.selectedTab.active = activeTabState; }, 0);
+    }
+  }
+};
+
 function getNotificationBox(aBrowser) {
   return Browser.getNotificationBox(aBrowser);
 }
@@ -2930,8 +2970,7 @@ Tab.prototype = {
     if (isDefault) {
       if (browser.scale != this._defaultZoomLevel) {
         browser.scale = this._defaultZoomLevel;
-      }
-      else {
+      } else {
         // If the scale level has not changed we want to be sure the content
         // render correctly since the page refresh process could have been
         // stalled during page load. In this case if the page has the exact

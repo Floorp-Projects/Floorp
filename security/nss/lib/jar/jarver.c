@@ -124,7 +124,7 @@ JAR_parse_manifest(JAR *jar, char *raw_manifest, long length,
 {
     int filename_free = 0;
 
-    /* fill in the path, if supplied. This is a the location
+    /* fill in the path, if supplied. This is the location
 	 of the jar file on disk, if known */
 
     if (jar->filename == NULL && path) {

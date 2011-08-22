@@ -59,7 +59,7 @@ window.onload = function() {
     gStateObject = JSON.parse(sessionData.value);
   }
   catch (exJSON) {
-    var s = new Cu.Sandbox("about:blank");
+    var s = new Cu.Sandbox("about:blank", {sandboxName: 'aboutSessionRestore'});
     gStateObject = Cu.evalInSandbox("(" + sessionData.value + ")", s);
     // If we couldn't parse the string with JSON.parse originally, make sure
     // that the value in the textbox will be parsable.

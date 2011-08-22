@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keyhi.h,v 1.17 2008/06/14 14:20:00 wtc%google.com Exp $ */
+/* $Id: keyhi.h,v 1.18 2011/07/24 13:48:12 wtc%google.com Exp $ */
 
 #ifndef _KEYHI_H_
 #define _KEYHI_H_
@@ -67,17 +67,11 @@ extern SECStatus SECKEY_CopySubjectPublicKeyInfo(PLArenaPool *arena,
 
 /*
 ** Update the PQG parameters for a cert's public key.
-** Only done for DSA and Fortezza certs
+** Only done for DSA certs
 */
 extern SECStatus
 SECKEY_UpdateCertPQG(CERTCertificate * subjectCert);
 
-
-/* Compare the KEA parameters of two public keys.  
- * Only used by fortezza.      */
-
-extern SECStatus
-SECKEY_KEAParamCompare(CERTCertificate *cert1,CERTCertificate *cert2);
 
 /*
 ** Return the strength of the public key in bytes

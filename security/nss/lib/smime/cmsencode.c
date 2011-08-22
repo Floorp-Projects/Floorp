@@ -37,7 +37,7 @@
 /*
  * CMS encoding.
  *
- * $Id: cmsencode.c,v 1.6.66.5 2011/02/11 03:57:50 emaldona%redhat.com Exp $
+ * $Id: cmsencode.c,v 1.11 2011/02/11 01:53:17 emaldona%redhat.com Exp $
  */
 
 #include "cmslocal.h"

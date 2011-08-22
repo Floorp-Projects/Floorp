@@ -38,7 +38,7 @@
  * Diffie-Hellman parameter generation, key generation, and secret derivation.
  * KEA secret generation and verification.
  *
- * $Id: dh.c,v 1.8 2008/11/18 19:48:22 rrelyea%redhat.com Exp $
+ * $Id: dh.c,v 1.9 2010/07/20 01:26:02 wtc%google.com Exp $
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -219,7 +219,8 @@ DH_Derive(SECItem *publicValue,
 {
     mp_int p, Xa, Yb, ZZ;
     mp_err err = MP_OKAY;
-    unsigned int len = 0, nb;
+    int len = 0;
+    unsigned int nb;
     unsigned char *secret = NULL;
     if (!publicValue || !prime || !privateValue || !derivedSecret) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -241,6 +242,10 @@ DH_Derive(SECItem *publicValue,
     CHECK_MPI_OK( mp_exptmod(&Yb, &Xa, &p, &ZZ) );
     /* number of bytes in the derived secret */
     len = mp_unsigned_octet_size(&ZZ);
+    if (len <= 0) {
+        err = MP_BADARG;
+        goto cleanup;
+    }
     /* allocate a buffer which can hold the entire derived secret. */
     secret = PORT_Alloc(len);
     /* grab the derived secret */

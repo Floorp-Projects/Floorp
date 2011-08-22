@@ -41,7 +41,7 @@
 
 /*
  * Use this function to create the CRMFSinglePubInfo* variables that will 
- * populate the inPubInfoArray paramter for the funciton
+ * populate the inPubInfoArray parameter for the function
  * CRMF_CreatePKIPublicationInfo.
  *
  * "inPubMethod" specifies which publication method will be used

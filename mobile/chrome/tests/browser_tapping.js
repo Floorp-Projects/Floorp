@@ -263,7 +263,7 @@ gTests.push({
   contextPlainLinkTest: function() {
     waitForContextMenu(function(aJSON) {
       is(aJSON.linkTitle, "A blank page - nothing interesting", "Text content should be the content of the second link");
-      ok(checkContextTypes(["link", "link-saveable","link-openable"]), "Plain link context types");
+      ok(checkContextTypes(["link", "link-openable"]), "Plain link context types");
     }, gCurrentTest.contextPlainImageTest);
 
     let browser = gCurrentTab.browser;
@@ -292,7 +292,7 @@ gTests.push({
 
   contextNestedImageTest: function() {
     waitForContextMenu(function() {
-      ok(checkContextTypes(["link", "link-saveable","image","image-shareable","image-loaded","link-openable"]), "Nested image context types");
+      ok(checkContextTypes(["link","image","image-shareable","image-loaded","link-openable"]), "Nested image context types");
     }, runNextTest);
 
     let browser = gCurrentTab.browser;
