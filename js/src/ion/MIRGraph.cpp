@@ -209,8 +209,18 @@ MBasicBlock::setSlot(uint32 slot, MDefinition *ins)
         } while (true);
 
         // Rewrite every copy.
-        for (uint32 copy = var.firstCopy; copy != lowest; copy = slots_[copy].nextCopy)
+        for (uint32 copy = var.firstCopy; copy != lowest;) {
             slots_[copy].copyOf = lowest;
+
+            uint32 next = slots_[copy].nextCopy;
+
+            // The node whose "nextCopy" field is |lowest| is now the
+            // terminator of the list.
+            if (slots_[copy].nextCopy == lowest)
+                slots_[copy].nextCopy = NotACopy;
+
+            copy = next;
+        }
 
         // Make the lowest the new store.
         slots_[lowest].copyOf = NotACopy;
