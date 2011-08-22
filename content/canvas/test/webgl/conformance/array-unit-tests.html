@@ -1,6 +1,6 @@
 <!--
-Copyright (c) 2011 The Chromium Authors. All rights reserved.
-Copyright (C) 2011 Apple Computer, Inc.  All rights reserved.
+Copyright (c) 2009 The Chromium Authors. All rights reserved.
+Copyright (C) 2009 Apple Computer, Inc.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -28,10 +28,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
@@ -512,11 +510,7 @@ function testConstructionWithOutOfRangeValues(type, name) {
     shouldThrowIndexSizeErr(function() {
         var buffer = new ArrayBuffer(4);
         var array = new type(buffer, 4, 0x3FFFFFFF);
-    }, "Construction of " + name + " with out-of-range number of elements");
-    shouldThrowIndexSizeErr(function() {
-        var buffer = new ArrayBuffer(4);
-        var array = new type(buffer, 8);
-    }, "Construction of " + name + " with out-of-range offset");
+    }, "Construction of " + name + " with out-of-range values");
 }
 
 function testConstructionWithNegativeOutOfRangeValues(type, name) {
@@ -578,21 +572,6 @@ function testConstructionWithBothArrayBufferAndLength(type, name, elementSizeInB
         testPassed("Array lengths matched with explicit and implicit creation of ArrayBuffer");
     } else {
         testFailed("Array lengths DID NOT MATCH with explicit and implicit creation of ArrayBuffer");
-    }
-}
-
-function testConstructionWithSubPortionOfArrayBuffer(type, name, elementSizeInBytes) {
-    if (elementSizeInBytes > 1) {
-        // Test construction with a valid sub-portion of an array buffer
-        // (whose size is not an integral multiple of the element size).
-        var size = 4 * elementSizeInBytes + (elementSizeInBytes / 2);
-        var buf = new ArrayBuffer(size);
-        try {
-            var array = new type(buf, 0, 2);
-            testPassed("new " + name + "(new ArrayBuffer(" + size + "), 0, 2) succeeded");
-        } catch (e) {
-            testFailed("new " + name + "(new ArrayBuffer(" + size + "), 0, 2) failed: " + e);
-        }
     }
 }
 
@@ -725,12 +704,6 @@ function testNaNConversion(type, name) {
         results[i] = array[i];
       }
       break;
-    case Float64Array:
-      for (var i = 0; i < array.length; ++i) {
-        array[i] = NaN;
-        results[i] = array[i];
-      }
-      break;
     case Int8Array:
       for (var i = 0; i < array.length; ++i) {
         array[i] = NaN;
@@ -773,7 +746,7 @@ function testNaNConversion(type, name) {
     }
 
     // Some types preserve NaN values; all other types convert NaN to zero.
-    if (type === Float32Array || type === Float64Array) {
+    if (type === Float32Array) {
       assert('initial NaN preserved', isNaN(new type([NaN])[0]));
       for (var i = 0; i < array.length; ++i)
         assert('NaN preserved via setter', isNaN(results[i]));
@@ -803,13 +776,6 @@ function runTests() {
        unsigned: false,
        integral: false,
        elementSizeInBytes: 4,
-       testValues:     [ -500.5, 500.5 ],
-       expectedValues: [ -500.5, 500.5 ]
-      },
-      {name: "Float64Array",
-       unsigned: false,
-       integral: false,
-       elementSizeInBytes: 8,
        testValues:     [ -500.5, 500.5 ],
        expectedValues: [ -500.5, 500.5 ]
       },
@@ -900,7 +866,6 @@ function runTests() {
     testConstructionWithUnalignedLength(type, name, testCase.elementSizeInBytes);
     testConstructionOfHugeArray(type, name, testCase.elementSizeInBytes);
     testConstructionWithBothArrayBufferAndLength(type, name, testCase.elementSizeInBytes);
-    testConstructionWithSubPortionOfArrayBuffer(type, name, testCase.elementSizeInBytes);
     testSubarrayWithOutOfRangeValues(type, name, testCase.elementSizeInBytes);
     testSubarrayWithDefaultValues(type, name, testCase.elementSizeInBytes);
     testSettingFromArrayWithOutOfRangeOffset(type, name);

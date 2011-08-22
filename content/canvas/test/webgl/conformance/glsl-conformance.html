@@ -1,12 +1,13 @@
 <!--
-Copyright (c) 2011 The Chromium Authors. All rights reserved.
+Copyright (c) 2009 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 -->
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>WebGL GLSL Conformance Tests</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
@@ -33,8 +34,7 @@ void main()
 <script id="fshaderWithPrecision" type="text/something-not-javascript">
 void main()
 {
-    mediump vec4 color = vec4(1.0, 0.0, 0.0, 1.0);
-    gl_FragColor = color;
+    gl_FragColor = mediump vec4(1.0,0.0,0.0,1.0);
 }
 </script>
 <script id="vshaderWithDefaultPrecision" type="text/something-not-javascript">
@@ -191,7 +191,7 @@ void main()
 attribute vec4 vPosition;
 void main()
 {
-    mediump vec3 k = vec3(1, 2, 3);
+    highp vec3 k = vec3(1, 2, 3);
     gl_Position = k;
 }
 </script>
@@ -305,143 +305,6 @@ void main()
 void main()
 {
     gl_FragColor = vec4(0,0,0,0);
-}
-</script>
-<script id="fshaderWithFunctionRecursion" type="text/something-not-javascript">
-void a();
-void b();
-void main()
-{
-    a();
-}
-void a()
-{
-    b();
-}
-void b()
-{
-    a();
-}
-</script>
-<script id="fshaderWithIntReturnValue" type="text/something-not-javascript">
-int functionResult();
-
-void main()
-{
-    int r = functionResult();
-    gl_FragColor = vec4(r, r, r, r);
-}
-
-int functionResult()
-{
-    return 1;
-}
-</script>
-<script id="fshaderWithIVec2ReturnValue" type="text/something-not-javascript">
-ivec2 functionResult();
-
-void main()
-{
-    ivec2 r = functionResult();
-    gl_FragColor = vec4(r.x, r.y, r.x, r.y);
-}
-
-ivec2 functionResult()
-{
-    return ivec2(1, 1);
-}
-</script>
-<script id="fshaderWithIVec3ReturnValue" type="text/something-not-javascript">
-ivec3 functionResult();
-
-void main()
-{
-    ivec3 r = functionResult();
-    gl_FragColor = vec4(r.x, r.y, r.z, r.x);
-}
-
-ivec3 functionResult()
-{
-    return ivec3(1, 1, 1);
-}
-</script>
-<script id="fshaderWithIVec4ReturnValue" type="text/something-not-javascript">
-ivec4 functionResult();
-
-void main()
-{
-    ivec4 r = functionResult();
-    gl_FragColor = vec4(r.x, r.y, r.z, r.w);
-}
-
-ivec4 functionResult()
-{
-    return ivec4(1, 1, 1, 1);
-}
-
-</script>
-<script id="fshaderWithFloatReturnValue" type="text/something-not-javascript">
-precision mediump float;
-
-float functionResult();
-
-void main()
-{
-    float r = functionResult();
-    gl_FragColor = vec4(r, r, r, r);
-}
-
-float functionResult()
-{
-    return 1.0;
-}
-</script>
-<script id="fshaderWithVec2ReturnValue" type="text/something-not-javascript">
-precision mediump float;
-
-vec2 functionResult();
-
-void main()
-{
-    vec2 r = functionResult();
-    gl_FragColor = vec4(r.x, r.y, r.x, r.y);
-}
-
-vec2 functionResult()
-{
-    return vec2(1.0, 1.0);
-}
-</script>
-<script id="fshaderWithVec3ReturnValue" type="text/something-not-javascript">
-precision mediump float;
-
-vec3 functionResult();
-
-void main()
-{
-    vec3 r = functionResult();
-    gl_FragColor = vec4(r.x, r.y, r.z, r.x);
-}
-
-vec3 functionResult()
-{
-    return vec3(1.0, 1.0, 1.0);
-}
-</script>
-<script id="fshaderWithVec4ReturnValue" type="text/something-not-javascript">
-precision mediump float;
-
-vec4 functionResult();
-
-void main()
-{
-    vec4 r = functionResult();
-    gl_FragColor = vec4(r.x, r.y, r.z, r.w);
-}
-
-vec4 functionResult()
-{
-    return vec4(1.0, 1.0, 1.0, 1.0);
 }
 </script>
 <canvas id="canvas" width="2" height="2"> </canvas>
@@ -665,20 +528,20 @@ if (!gl) {
       linkSuccess: false,
       passMsg: 'vertex shader uses #include should fail',
     },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWith257CharacterIdentifier',
-      fShaderSuccess: false,
-      linkSuccess: false,
-      passMsg: 'shader that uses 257 character identifier should fail',
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWith256CharacterIdentifier',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: 'shader that uses 256 character identifier should succeed',
-    },
+    //{ vShaderId: 'vshader',
+    //  vShaderSuccess: true,
+    //  fShaderId: 'fshaderWith257CharacterIdentifier',
+    //  fShaderSuccess: false,
+    //  linkSuccess: false,
+    //  passMsg: 'shader that uses 257 character identifier should fail',
+    //},
+    //{ vShaderId: 'vshader',
+    //  vShaderSuccess: true,
+    //  fShaderId: 'fshaderWith256CharacterIdentifier',
+    //  fShaderSuccess: true,
+    //  linkSuccess: true,
+    //  passMsg: 'shader that uses 256 character identifier should succeed',
+    //},
     { vShaderId: 'vshader',
       vShaderSuccess: true,
       fShaderId: 'fshaderWithLongLine',
@@ -691,8 +554,7 @@ if (!gl) {
           return str;
         }
         str = expand(str, new RegExp(" ", 'g'), "  ", 12);
-        var manyZeros = expand("0", new RegExp("0", 'g'), "00", 8).substring(2);
-        str = expand(str, new RegExp("0", 'g'), manyZeros, 1);
+        str = expand(str, new RegExp("0", 'g'), "00", 8);
         str = expand(str, new RegExp("fooo", 'g'), "fooofooo", 6);
         str = expand(str, new RegExp("long", 'g'), "longlong", 6);
         //debug("len:" + str.length);
@@ -724,70 +586,7 @@ if (!gl) {
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: "error directive using characters outside of allowed set fails",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithFunctionRecursion',
-      fShaderSuccess: false,
-      linkSuccess: false,
-      passMsg: "Shaders with recursive function calls should fail",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithIntReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with int return value from function call should succeed",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithIVec2ReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with ivec2 return value from function call should succeed",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithIVec3ReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with ivec3 return value from function call should succeed",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithIVec4ReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with ivec4 return value from function call should succeed",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithFloatReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with float return value from function call should succeed",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithVec2ReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with vec2 return value from function call should succeed",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithVec3ReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with vec3 return value from function call should succeed",
-    },
-    { vShaderId: 'vshader',
-      vShaderSuccess: true,
-      fShaderId: 'fshaderWithVec4ReturnValue',
-      fShaderSuccess: true,
-      linkSuccess: true,
-      passMsg: "Shader with vec4 return value from function call should succeed",
-    },
+    }
   ];
 
   // Read in all the shader source.
@@ -802,115 +601,88 @@ if (!gl) {
   var simpleFragShader = document.getElementById('fshader').text;
 
   function addExternalShaders(filename, passMsg) {
-    var lines = wtu.readFileList(filename);
-    for (var ii = 0; ii < lines.length; ++ii) {
-      var info = {
-        vShaderId:      'vshader',
-        vShaderSource:  simpleVertShader,
-        vShaderSuccess: true,
-        fShaderId:      'fshader',
-        fShaderSource:  simpleFragShader,
-        fShaderSuccess: true,
-        linkSuccess:    true,
-      };
-
-      var line = lines[ii];
-      var files = line.split(/ +/);
-      var passMsg = "";
-      for (var jj = 0; jj < files.length; ++jj) {
-        var file = files[jj];
-        var shaderSource = wtu.readFile(file);
-        var firstLine = shaderSource.split("\n")[0];
-        var success = undefined;
-        if (wtu.endsWith(firstLine, " fail") ||
-            wtu.endsWith(firstLine, " fail.")) {
-          success = false;
-        } else if (wtu.endsWith(firstLine, " succeed") ||
-                   wtu.endsWith(firstLine, " succeed.")) {
-          success = true;
-        }
-        if (success === undefined) {
-          testFailed("bad first line in " + file + ":" + firstLine);
-          continue;
-        }
-        if (!wtu.startsWith(firstLine, "// ")) {
-          testFailed("bad first line in " + file + ":" + firstLine);
-          continue;
-        }
-        passMsg = passMsg + (passMsg.length ? ", " : "") + firstLine.substr(3);
-        if (wtu.endsWith(file, ".vert")) {
-          info.vShaderId = file;
-          info.vShaderSource = shaderSource;
-          info.vShaderSuccess = success;
-        } else if (wtu.endsWith(file, ".frag")) {
-          info.fShaderId = file;
-          info.fShaderSource = shaderSource;
-          info.fShaderSuccess = success;
-        }
+    var files = wtu.readFileList(filename);
+    for (var ii = 0; ii < files.length; ++ii) {
+      var file = files[ii];
+      var shaderSource = wtu.readFile(file);
+      var firstLine = shaderSource.split("\n")[0];
+      var success = undefined;
+      if (wtu.endsWith(firstLine, " fail") ||
+          wtu.endsWith(firstLine, " fail.")) {
+        success = false;
+      } else if (wtu.endsWith(firstLine, " succeed") ||
+                 wtu.endsWith(firstLine, " succeed.")) {
+        success = true;
       }
-      info.linkSuccess = info.vShaderSuccess && info.fShaderSuccess;
-      info.passMsg = passMsg;
-      shaderInfo.push(info);
+      if (success === undefined) {
+        testFailed("bad first line in " + file);
+        continue;
+      }
+      if (!wtu.startsWith(firstLine, "// ")) {
+        testFailed("bad first line in " + file);
+        continue;
+      }
+      var passMsg = firstLine.substr(3);
+      if (wtu.endsWith(file, ".vert")) {
+        shaderInfo.push({
+            vShaderId: file,
+            vShaderSource: shaderSource,
+            vShaderSuccess: success,
+            fShaderId: 'fshader',
+            fShaderSource: simpleFragShader,
+            fShaderSuccess: true,
+            linkSuccess: success,
+            passMsg: passMsg,
+          });
+      } else if (wtu.endsWith(file, ".frag")) {
+        shaderInfo.push({
+            vShaderId: 'vshader',
+            vShaderSource: simpleVertShader,
+            vShaderSuccess: true,
+            fShaderId: file,
+            fShaderSource: shaderSource,
+            fShaderSuccess: success,
+            linkSuccess: success,
+            passMsg: passMsg,
+          });
+      }
     }
   }
 
   addExternalShaders('shaders/00_shaders.txt');
-
-  var vShaderDB = { };
-  var fShaderDB = { };
 
   for (var ii = 0; ii < shaderInfo.length; ++ii) {
     var info = shaderInfo[ii];
     var passMsg = '[' + info.vShaderId + '/' + info.fShaderId + ']: ' +
                   info.passMsg
     log(passMsg);
-
     //debug(info.fShaderId);
     var vSource = info.vShaderPrep ? info.vShaderPrep(info.vShaderSource) :
       info.vShaderSource;
-
-    // Reuse identical shaders so we test shared shader.
-    var vShader = vShaderDB[vSource];
-    if (!vShader) {
-      vShader = wtu.loadShader(gl, vSource, gl.VERTEX_SHADER);
-      if (info.vShaderTest) {
-        if (!info.vShaderTest(vShader)) {
-          testFailed(passMsg);
-          continue;
-        }
-      }
-      if ((vShader != null) != info.vShaderSuccess) {
+    var vShader = wtu.loadShader(gl, vSource, gl.VERTEX_SHADER);
+    if (info.vShaderTest) {
+      if (!info.vShaderTest(vShader)) {
         testFailed(passMsg);
         continue;
-      }
-      // Save the shaders so we test shared shader.
-      if (vShader) {
-        vShaderDB[vSource] = vShader;
       }
     }
-
+    if ((vShader != null) != info.vShaderSuccess) {
+      testFailed(passMsg);
+      continue;
+    }
     var fSource = info.fShaderPrep ? info.fShaderPrep(info.fShaderSource) :
       info.fShaderSource;
-
-    // Reuse identical shaders so we test shared shader.
-    var fShader = fShaderDB[fSource];
-    if (!fShader) {
-      fShader = wtu.loadShader(gl, fSource, gl.FRAGMENT_SHADER);
-      if (info.fShaderTest) {
-        if (!info.fShaderTest(fShader)) {
-          testFailed(passMsg);
-          continue;
-        }
-      }
-      //debug(fShader == null ? "fail" : "succeed");
-      if ((fShader != null) != info.fShaderSuccess) {
+    var fShader = wtu.loadShader(gl, fSource, gl.FRAGMENT_SHADER);
+    if (info.fShaderTest) {
+      if (!info.fShaderTest(fShader)) {
         testFailed(passMsg);
         continue;
       }
-      // Safe the shaders so we test shared shader.
-      if (fShader) {
-        fShaderDB[fSource] = fShader;
-      }
+    }
+    //debug(fShader == null ? "fail" : "succeed");
+    if ((fShader != null) != info.fShaderSuccess) {
+      testFailed(passMsg);
+      continue;
     }
 
     if (vShader && fShader) {
@@ -942,6 +714,9 @@ successfullyParsed = true;
 
 </script>
 <script src="../resources/js-test-post.js"></script>
+
+<script>
+</script>
 
 </body>
 </html>
